@@ -74,7 +74,7 @@ class BuildSystem {
     try {
       await this.initialize();
       await this.buildJavaScript();
-      
+
       // Skip static assets in memory test mode
       if (!this.options.skipStaticAssets) {
         await this.copyStaticAssets();
@@ -245,7 +245,7 @@ class BuildSystem {
       if (bundleConfig.minify) {
         args.push('--minify');
       }
-      
+
       // Add define options if present
       if (bundleConfig.define) {
         for (const [key, value] of Object.entries(bundleConfig.define)) {
@@ -291,9 +291,12 @@ class BuildSystem {
     return new Promise((resolve, reject) => {
       // Log the command being run for debugging
       if (this.options.verbose) {
-        console.log('Running esbuild with args:', ['esbuild', ...args].join(' '));
+        console.log(
+          'Running esbuild with args:',
+          ['esbuild', ...args].join(' ')
+        );
       }
-      
+
       // Use npx to run esbuild
       const proc = spawn('npx', ['esbuild', ...args], {
         stdio: this.options.verbose ? 'inherit' : 'pipe',

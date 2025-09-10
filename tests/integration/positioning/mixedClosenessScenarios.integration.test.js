@@ -3,7 +3,14 @@
  * Tests complex interactions between manual and automatic closeness relationships
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
 import { createEntityInstance } from '../../common/entities/entityFactories.js';
 import EstablishSittingClosenessHandler from '../../../src/logic/operationHandlers/establishSittingClosenessHandler.js';
@@ -73,30 +80,30 @@ describe('Mixed Closeness Scenarios Integration', () => {
         instanceId: furnitureId,
         baseComponents: {
           'positioning:allows_sitting': {
-            spots: [null, null, null]
-          }
-        }
+            spots: [null, null, null],
+          },
+        },
       });
 
       const aliceEntity = createEntityInstance({
         instanceId: aliceId,
         baseComponents: {
-          'core:actor': {}
-        }
+          'core:actor': {},
+        },
       });
 
       const bobEntity = createEntityInstance({
         instanceId: bobId,
         baseComponents: {
-          'core:actor': {}
-        }
+          'core:actor': {},
+        },
       });
 
       const charlieEntity = createEntityInstance({
         instanceId: charlieId,
         baseComponents: {
-          'core:actor': {}
-        }
+          'core:actor': {},
+        },
       });
 
       entityManager.addEntity(furnitureEntity);
@@ -107,46 +114,61 @@ describe('Mixed Closeness Scenarios Integration', () => {
       // Phase 1: Alice and Charlie establish manual closeness (get_close action)
       // This simulates the result of a get_close action
       entityManager.addComponent(aliceId, 'positioning:closeness', {
-        partners: [charlieId]
+        partners: [charlieId],
       });
       entityManager.addComponent(charlieId, 'positioning:closeness', {
-        partners: [aliceId]
+        partners: [aliceId],
       });
 
       // Verify manual closeness established
-      let aliceCloseness = entityManager.getComponent(aliceId, 'positioning:closeness');
-      let charlieCloseness = entityManager.getComponent(charlieId, 'positioning:closeness');
+      let aliceCloseness = entityManager.getComponent(
+        aliceId,
+        'positioning:closeness'
+      );
+      let charlieCloseness = entityManager.getComponent(
+        charlieId,
+        'positioning:closeness'
+      );
 
       expect(aliceCloseness.partners).toEqual([charlieId]);
       expect(charlieCloseness.partners).toEqual([aliceId]);
 
       // Phase 2: Alice and Bob sit adjacent (automatic closeness)
       entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
-        spots: [aliceId, bobId, null]
+        spots: [aliceId, bobId, null],
       });
 
       entityManager.addComponent(aliceId, 'positioning:sitting_on', {
         furniture_id: furnitureId,
-        spot_index: 0
+        spot_index: 0,
       });
 
       entityManager.addComponent(bobId, 'positioning:sitting_on', {
         furniture_id: furnitureId,
-        spot_index: 1
+        spot_index: 1,
       });
 
       // Establish automatic closeness
-      await establishHandler.execute({
-        furniture_id: furnitureId,
-        actor_id: bobId,
-        spot_index: 1,
-        result_variable: 'closenessEstablished'
-      }, executionContext);
+      await establishHandler.execute(
+        {
+          furniture_id: furnitureId,
+          actor_id: bobId,
+          spot_index: 1,
+          result_variable: 'closenessEstablished',
+        },
+        executionContext
+      );
 
       // Verify Alice now has both manual (Charlie) and automatic (Bob) closeness
-      aliceCloseness = entityManager.getComponent(aliceId, 'positioning:closeness');
-      const bobCloseness = entityManager.getComponent(bobId, 'positioning:closeness');
-      
+      aliceCloseness = entityManager.getComponent(
+        aliceId,
+        'positioning:closeness'
+      );
+      const bobCloseness = entityManager.getComponent(
+        bobId,
+        'positioning:closeness'
+      );
+
       expect(aliceCloseness.partners).toContain(charlieId); // Manual
       expect(aliceCloseness.partners).toContain(bobId); // Automatic
       expect(aliceCloseness.partners.length).toBe(2);
@@ -155,24 +177,36 @@ describe('Mixed Closeness Scenarios Integration', () => {
       // Phase 3: Alice stands up (should remove automatic but preserve manual)
       // Update furniture to remove Alice
       entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
-        spots: [null, bobId, null]
+        spots: [null, bobId, null],
       });
-      
+
       // Remove Alice's sitting component
       entityManager.removeComponent(aliceId, 'positioning:sitting_on');
 
       // Use handler to remove automatic closeness
-      await removeHandler.execute({
-        furniture_id: furnitureId,
-        actor_id: aliceId,
-        spot_index: 0,
-        result_variable: 'closenessRemoved'
-      }, executionContext);
+      await removeHandler.execute(
+        {
+          furniture_id: furnitureId,
+          actor_id: aliceId,
+          spot_index: 0,
+          result_variable: 'closenessRemoved',
+        },
+        executionContext
+      );
 
       // Verify Alice retains manual closeness with Charlie but loses automatic with Bob
-      aliceCloseness = entityManager.getComponent(aliceId, 'positioning:closeness');
-      charlieCloseness = entityManager.getComponent(charlieId, 'positioning:closeness');
-      const bobClosenessAfter = entityManager.getComponent(bobId, 'positioning:closeness');
+      aliceCloseness = entityManager.getComponent(
+        aliceId,
+        'positioning:closeness'
+      );
+      charlieCloseness = entityManager.getComponent(
+        charlieId,
+        'positioning:closeness'
+      );
+      const bobClosenessAfter = entityManager.getComponent(
+        bobId,
+        'positioning:closeness'
+      );
 
       expect(aliceCloseness.partners).toEqual([charlieId]); // Only manual remains
       expect(charlieCloseness.partners).toEqual([aliceId]); // Manual preserved
@@ -187,7 +221,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
         bob: 'test:bob_circle',
         charlie: 'test:charlie_circle',
         diana: 'test:diana_circle',
-        eve: 'test:eve_circle'
+        eve: 'test:eve_circle',
       };
 
       // Create furniture
@@ -195,9 +229,9 @@ describe('Mixed Closeness Scenarios Integration', () => {
         instanceId: furnitureId,
         baseComponents: {
           'positioning:allows_sitting': {
-            spots: [null, null, null, null, null]
-          }
-        }
+            spots: [null, null, null, null, null],
+          },
+        },
       });
       entityManager.addEntity(furnitureEntity);
 
@@ -206,73 +240,85 @@ describe('Mixed Closeness Scenarios Integration', () => {
         const actorEntity = createEntityInstance({
           instanceId: id,
           baseComponents: {
-            'core:actor': {}
-          }
+            'core:actor': {},
+          },
         });
         entityManager.addEntity(actorEntity);
       }
 
       // Phase 1: Create manual closeness circle (Alice-Bob-Charlie)
       entityManager.addComponent(actors.alice, 'positioning:closeness', {
-        partners: [actors.bob, actors.charlie]
+        partners: [actors.bob, actors.charlie],
       });
       entityManager.addComponent(actors.bob, 'positioning:closeness', {
-        partners: [actors.alice, actors.charlie]
+        partners: [actors.alice, actors.charlie],
       });
       entityManager.addComponent(actors.charlie, 'positioning:closeness', {
-        partners: [actors.alice, actors.bob]
+        partners: [actors.alice, actors.bob],
       });
 
       // Phase 2: Diana and Eve sit adjacent
       entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
-        spots: [actors.diana, actors.eve, null, null, null]
-      });
-      
-      entityManager.addComponent(actors.diana, 'positioning:sitting_on', {
-        furniture_id: furnitureId,
-        spot_index: 0
-      });
-      
-      entityManager.addComponent(actors.eve, 'positioning:sitting_on', {
-        furniture_id: furnitureId,
-        spot_index: 1
+        spots: [actors.diana, actors.eve, null, null, null],
       });
 
-      await establishHandler.execute({
+      entityManager.addComponent(actors.diana, 'positioning:sitting_on', {
         furniture_id: furnitureId,
-        actor_id: actors.eve,
+        spot_index: 0,
+      });
+
+      entityManager.addComponent(actors.eve, 'positioning:sitting_on', {
+        furniture_id: furnitureId,
         spot_index: 1,
-        result_variable: 'eveCloseness'
-      }, executionContext);
+      });
+
+      await establishHandler.execute(
+        {
+          furniture_id: furnitureId,
+          actor_id: actors.eve,
+          spot_index: 1,
+          result_variable: 'eveCloseness',
+        },
+        executionContext
+      );
 
       // Phase 3: Charlie sits next to Eve (bridging circles)
       entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
-        spots: [actors.diana, actors.eve, actors.charlie, null, null]
+        spots: [actors.diana, actors.eve, actors.charlie, null, null],
       });
-      
+
       entityManager.addComponent(actors.charlie, 'positioning:sitting_on', {
         furniture_id: furnitureId,
-        spot_index: 2
+        spot_index: 2,
       });
 
       // Charlie already has manual closeness with Alice and Bob
       // Now establish automatic closeness with Eve
-      await establishHandler.execute({
-        furniture_id: furnitureId,
-        actor_id: actors.charlie,
-        spot_index: 2,
-        result_variable: 'charlieAutoCloseness'
-      }, executionContext);
+      await establishHandler.execute(
+        {
+          furniture_id: furnitureId,
+          actor_id: actors.charlie,
+          spot_index: 2,
+          result_variable: 'charlieAutoCloseness',
+        },
+        executionContext
+      );
 
       // Verify Charlie has both manual and automatic relationships
-      const charlieCloseness = entityManager.getComponent(actors.charlie, 'positioning:closeness');
+      const charlieCloseness = entityManager.getComponent(
+        actors.charlie,
+        'positioning:closeness'
+      );
       expect(charlieCloseness.partners).toContain(actors.alice); // Manual
       expect(charlieCloseness.partners).toContain(actors.bob); // Manual
       expect(charlieCloseness.partners).toContain(actors.eve); // Automatic
       expect(charlieCloseness.partners.length).toBe(3);
 
       // Verify Eve only has automatic relationships
-      const eveCloseness = entityManager.getComponent(actors.eve, 'positioning:closeness');
+      const eveCloseness = entityManager.getComponent(
+        actors.eve,
+        'positioning:closeness'
+      );
       expect(eveCloseness.partners).toContain(actors.diana); // Automatic
       expect(eveCloseness.partners).toContain(actors.charlie); // Automatic
       expect(eveCloseness.partners.length).toBe(2);
@@ -289,9 +335,9 @@ describe('Mixed Closeness Scenarios Integration', () => {
         instanceId: furnitureId,
         baseComponents: {
           'positioning:allows_sitting': {
-            spots: [null, null, null, null]
-          }
-        }
+            spots: [null, null, null, null],
+          },
+        },
       });
       entityManager.addEntity(furnitureEntity);
 
@@ -300,90 +346,121 @@ describe('Mixed Closeness Scenarios Integration', () => {
         const actorEntity = createEntityInstance({
           instanceId: actorId,
           baseComponents: {
-            'core:actor': {}
-          }
+            'core:actor': {},
+          },
         });
         entityManager.addEntity(actorEntity);
       }
 
       // Pattern 1: All sit
       const spots = [...actors];
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', { spots });
-      
+      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+        spots,
+      });
+
       for (let i = 0; i < actors.length; i++) {
         entityManager.addComponent(actors[i], 'positioning:sitting_on', {
           furniture_id: furnitureId,
-          spot_index: i
+          spot_index: i,
         });
 
-        await establishHandler.execute({
-          furniture_id: furnitureId,
-          actor_id: actors[i],
-          spot_index: i,
-          result_variable: 'closenessResult'
-        }, executionContext);
+        await establishHandler.execute(
+          {
+            furniture_id: furnitureId,
+            actor_id: actors[i],
+            spot_index: i,
+            result_variable: 'closenessResult',
+          },
+          executionContext
+        );
       }
 
       // Verify initial closeness
-      let actor2Closeness = entityManager.getComponent(actors[1], 'positioning:closeness');
+      let actor2Closeness = entityManager.getComponent(
+        actors[1],
+        'positioning:closeness'
+      );
       expect(actor2Closeness.partners.length).toBe(2); // Adjacent to actors[0] and actors[2]
 
       // Pattern 2: Odd-indexed actors stand (1 and 3)
       const newSpots = [actors[0], null, actors[2], null];
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', { spots: newSpots });
-      
+      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+        spots: newSpots,
+      });
+
       for (let i = 1; i < actors.length; i += 2) {
         entityManager.removeComponent(actors[i], 'positioning:sitting_on');
-        
-        await removeHandler.execute({
-          furniture_id: furnitureId,
-          actor_id: actors[i],
-          spot_index: i,
-          result_variable: 'closenessRemoved'
-        }, executionContext);
+
+        await removeHandler.execute(
+          {
+            furniture_id: furnitureId,
+            actor_id: actors[i],
+            spot_index: i,
+            result_variable: 'closenessRemoved',
+          },
+          executionContext
+        );
       }
 
       // Verify closeness after odd actors stand
-      const actor0Closeness = entityManager.getComponent(actors[0], 'positioning:closeness');
-      actor2Closeness = entityManager.getComponent(actors[2], 'positioning:closeness');
-      
+      const actor0Closeness = entityManager.getComponent(
+        actors[0],
+        'positioning:closeness'
+      );
+      actor2Closeness = entityManager.getComponent(
+        actors[2],
+        'positioning:closeness'
+      );
+
       expect(actor0Closeness).toBeNull(); // No adjacent actors
       expect(actor2Closeness).toBeNull(); // No adjacent actors
 
       // Pattern 3: Odd actors sit back in different spots
       entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
-        spots: [actors[0], actors[3], actors[2], actors[1]] // Rearranged
+        spots: [actors[0], actors[3], actors[2], actors[1]], // Rearranged
       });
-      
+
       entityManager.addComponent(actors[3], 'positioning:sitting_on', {
         furniture_id: furnitureId,
-        spot_index: 1
+        spot_index: 1,
       });
-      
+
       entityManager.addComponent(actors[1], 'positioning:sitting_on', {
         furniture_id: furnitureId,
-        spot_index: 3
+        spot_index: 3,
       });
 
       // Re-establish closeness for new arrangement
-      await establishHandler.execute({
-        furniture_id: furnitureId,
-        actor_id: actors[3],
-        spot_index: 1,
-        result_variable: 'actor3Closeness'
-      }, executionContext);
+      await establishHandler.execute(
+        {
+          furniture_id: furnitureId,
+          actor_id: actors[3],
+          spot_index: 1,
+          result_variable: 'actor3Closeness',
+        },
+        executionContext
+      );
 
-      await establishHandler.execute({
-        furniture_id: furnitureId,
-        actor_id: actors[1],
-        spot_index: 3,
-        result_variable: 'actor1Closeness'
-      }, executionContext);
+      await establishHandler.execute(
+        {
+          furniture_id: furnitureId,
+          actor_id: actors[1],
+          spot_index: 3,
+          result_variable: 'actor1Closeness',
+        },
+        executionContext
+      );
 
       // Verify new closeness relationships
-      const newActor0Closeness = entityManager.getComponent(actors[0], 'positioning:closeness');
-      const newActor3Closeness = entityManager.getComponent(actors[3], 'positioning:closeness');
-      
+      const newActor0Closeness = entityManager.getComponent(
+        actors[0],
+        'positioning:closeness'
+      );
+      const newActor3Closeness = entityManager.getComponent(
+        actors[3],
+        'positioning:closeness'
+      );
+
       expect(newActor0Closeness.partners).toEqual([actors[3]]);
       expect(newActor3Closeness.partners).toContain(actors[0]);
       expect(newActor3Closeness.partners).toContain(actors[2]);
@@ -391,16 +468,22 @@ describe('Mixed Closeness Scenarios Integration', () => {
 
     it('should handle cascading closeness removal', async () => {
       const furnitureId = 'test:cascade_bench';
-      const actors = ['test:cas_1', 'test:cas_2', 'test:cas_3', 'test:cas_4', 'test:cas_5'];
+      const actors = [
+        'test:cas_1',
+        'test:cas_2',
+        'test:cas_3',
+        'test:cas_4',
+        'test:cas_5',
+      ];
 
       // Create furniture
       const furnitureEntity = createEntityInstance({
         instanceId: furnitureId,
         baseComponents: {
           'positioning:allows_sitting': {
-            spots: new Array(5).fill(null)
-          }
-        }
+            spots: new Array(5).fill(null),
+          },
+        },
       });
       entityManager.addEntity(furnitureEntity);
 
@@ -412,50 +495,68 @@ describe('Mixed Closeness Scenarios Integration', () => {
             'core:actor': {},
             'positioning:sitting_on': {
               furniture_id: furnitureId,
-              spot_index: i
-            }
-          }
+              spot_index: i,
+            },
+          },
         });
         entityManager.addEntity(actorEntity);
       }
 
       // Set furniture spots
       entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
-        spots: [...actors]
+        spots: [...actors],
       });
 
       // Establish closeness for all
       for (let i = 0; i < actors.length; i++) {
-        await establishHandler.execute({
-          furniture_id: furnitureId,
-          actor_id: actors[i],
-          spot_index: i,
-          result_variable: 'closenessResult'
-        }, executionContext);
+        await establishHandler.execute(
+          {
+            furniture_id: furnitureId,
+            actor_id: actors[i],
+            spot_index: i,
+            result_variable: 'closenessResult',
+          },
+          executionContext
+        );
       }
 
       // Remove middle actor (cas_3 at index 2) - should affect neighbors
       const middleIndex = 2;
       const newSpots = [...actors];
       newSpots[middleIndex] = null;
-      
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
-        spots: newSpots
-      });
-      
-      entityManager.removeComponent(actors[middleIndex], 'positioning:sitting_on');
 
-      await removeHandler.execute({
-        furniture_id: furnitureId,
-        actor_id: actors[middleIndex],
-        spot_index: middleIndex,
-        result_variable: 'middleRemoved'
-      }, executionContext);
+      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+        spots: newSpots,
+      });
+
+      entityManager.removeComponent(
+        actors[middleIndex],
+        'positioning:sitting_on'
+      );
+
+      await removeHandler.execute(
+        {
+          furniture_id: furnitureId,
+          actor_id: actors[middleIndex],
+          spot_index: middleIndex,
+          result_variable: 'middleRemoved',
+        },
+        executionContext
+      );
 
       // Verify closeness changes
-      const leftNeighborCloseness = entityManager.getComponent(actors[1], 'positioning:closeness');
-      const rightNeighborCloseness = entityManager.getComponent(actors[3], 'positioning:closeness');
-      const removedActorCloseness = entityManager.getComponent(actors[2], 'positioning:closeness');
+      const leftNeighborCloseness = entityManager.getComponent(
+        actors[1],
+        'positioning:closeness'
+      );
+      const rightNeighborCloseness = entityManager.getComponent(
+        actors[3],
+        'positioning:closeness'
+      );
+      const removedActorCloseness = entityManager.getComponent(
+        actors[2],
+        'positioning:closeness'
+      );
 
       // Middle actor should have no closeness
       expect(removedActorCloseness).toBeNull();
@@ -480,7 +581,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
         alice: 'test:cross_alice',
         bob: 'test:cross_bob',
         charlie: 'test:cross_charlie',
-        diana: 'test:cross_diana'
+        diana: 'test:cross_diana',
       };
 
       // Create two furniture items
@@ -488,18 +589,18 @@ describe('Mixed Closeness Scenarios Integration', () => {
         instanceId: couch1Id,
         baseComponents: {
           'positioning:allows_sitting': {
-            spots: [null, null]
-          }
-        }
+            spots: [null, null],
+          },
+        },
       });
 
       const couch2Entity = createEntityInstance({
         instanceId: couch2Id,
         baseComponents: {
           'positioning:allows_sitting': {
-            spots: [null, null]
-          }
-        }
+            spots: [null, null],
+          },
+        },
       });
 
       entityManager.addEntity(couch1Entity);
@@ -510,62 +611,80 @@ describe('Mixed Closeness Scenarios Integration', () => {
         const actorEntity = createEntityInstance({
           instanceId: id,
           baseComponents: {
-            'core:actor': {}
-          }
+            'core:actor': {},
+          },
         });
         entityManager.addEntity(actorEntity);
       }
 
       // Alice and Bob sit on couch1
       entityManager.addComponent(couch1Id, 'positioning:allows_sitting', {
-        spots: [actors.alice, actors.bob]
+        spots: [actors.alice, actors.bob],
       });
-      
+
       entityManager.addComponent(actors.alice, 'positioning:sitting_on', {
         furniture_id: couch1Id,
-        spot_index: 0
+        spot_index: 0,
       });
-      
+
       entityManager.addComponent(actors.bob, 'positioning:sitting_on', {
         furniture_id: couch1Id,
-        spot_index: 1
+        spot_index: 1,
       });
 
       // Charlie and Diana sit on couch2
       entityManager.addComponent(couch2Id, 'positioning:allows_sitting', {
-        spots: [actors.charlie, actors.diana]
+        spots: [actors.charlie, actors.diana],
       });
-      
+
       entityManager.addComponent(actors.charlie, 'positioning:sitting_on', {
         furniture_id: couch2Id,
-        spot_index: 0
+        spot_index: 0,
       });
-      
+
       entityManager.addComponent(actors.diana, 'positioning:sitting_on', {
         furniture_id: couch2Id,
-        spot_index: 1
+        spot_index: 1,
       });
 
       // Establish closeness for both couches
-      await establishHandler.execute({
-        furniture_id: couch1Id,
-        actor_id: actors.bob,
-        spot_index: 1,
-        result_variable: 'couch1Closeness'
-      }, executionContext);
+      await establishHandler.execute(
+        {
+          furniture_id: couch1Id,
+          actor_id: actors.bob,
+          spot_index: 1,
+          result_variable: 'couch1Closeness',
+        },
+        executionContext
+      );
 
-      await establishHandler.execute({
-        furniture_id: couch2Id,
-        actor_id: actors.diana,
-        spot_index: 1,
-        result_variable: 'couch2Closeness'
-      }, executionContext);
+      await establishHandler.execute(
+        {
+          furniture_id: couch2Id,
+          actor_id: actors.diana,
+          spot_index: 1,
+          result_variable: 'couch2Closeness',
+        },
+        executionContext
+      );
 
       // Verify closeness is furniture-specific
-      const aliceCloseness = entityManager.getComponent(actors.alice, 'positioning:closeness');
-      const bobCloseness = entityManager.getComponent(actors.bob, 'positioning:closeness');
-      const charlieCloseness = entityManager.getComponent(actors.charlie, 'positioning:closeness');
-      const dianaCloseness = entityManager.getComponent(actors.diana, 'positioning:closeness');
+      const aliceCloseness = entityManager.getComponent(
+        actors.alice,
+        'positioning:closeness'
+      );
+      const bobCloseness = entityManager.getComponent(
+        actors.bob,
+        'positioning:closeness'
+      );
+      const charlieCloseness = entityManager.getComponent(
+        actors.charlie,
+        'positioning:closeness'
+      );
+      const dianaCloseness = entityManager.getComponent(
+        actors.diana,
+        'positioning:closeness'
+      );
 
       // Couch1 actors should only be close to each other
       expect(aliceCloseness.partners).toEqual([actors.bob]);
@@ -592,18 +711,18 @@ describe('Mixed Closeness Scenarios Integration', () => {
         instanceId: bench1Id,
         baseComponents: {
           'positioning:allows_sitting': {
-            spots: [null, null]
-          }
-        }
+            spots: [null, null],
+          },
+        },
       });
 
       const bench2Entity = createEntityInstance({
         instanceId: bench2Id,
         baseComponents: {
           'positioning:allows_sitting': {
-            spots: [null, null]
-          }
-        }
+            spots: [null, null],
+          },
+        },
       });
 
       entityManager.addEntity(bench1Entity);
@@ -613,22 +732,22 @@ describe('Mixed Closeness Scenarios Integration', () => {
       const movingActor = createEntityInstance({
         instanceId: actorId,
         baseComponents: {
-          'core:actor': {}
-        }
+          'core:actor': {},
+        },
       });
 
       const buddy1 = createEntityInstance({
         instanceId: buddy1Id,
         baseComponents: {
-          'core:actor': {}
-        }
+          'core:actor': {},
+        },
       });
 
       const buddy2 = createEntityInstance({
         instanceId: buddy2Id,
         baseComponents: {
-          'core:actor': {}
-        }
+          'core:actor': {},
+        },
       });
 
       entityManager.addEntity(movingActor);
@@ -637,79 +756,103 @@ describe('Mixed Closeness Scenarios Integration', () => {
 
       // Phase 1: Actor and buddy1 sit on bench1
       entityManager.addComponent(bench1Id, 'positioning:allows_sitting', {
-        spots: [actorId, buddy1Id]
+        spots: [actorId, buddy1Id],
       });
-      
+
       entityManager.addComponent(actorId, 'positioning:sitting_on', {
         furniture_id: bench1Id,
-        spot_index: 0
+        spot_index: 0,
       });
-      
+
       entityManager.addComponent(buddy1Id, 'positioning:sitting_on', {
         furniture_id: bench1Id,
-        spot_index: 1
+        spot_index: 1,
       });
 
-      await establishHandler.execute({
-        furniture_id: bench1Id,
-        actor_id: buddy1Id,
-        spot_index: 1,
-        result_variable: 'bench1Closeness'
-      }, executionContext);
+      await establishHandler.execute(
+        {
+          furniture_id: bench1Id,
+          actor_id: buddy1Id,
+          spot_index: 1,
+          result_variable: 'bench1Closeness',
+        },
+        executionContext
+      );
 
       // Verify initial closeness
-      let actorCloseness = entityManager.getComponent(actorId, 'positioning:closeness');
+      let actorCloseness = entityManager.getComponent(
+        actorId,
+        'positioning:closeness'
+      );
       expect(actorCloseness.partners).toEqual([buddy1Id]);
 
       // Phase 2: Actor stands up from bench1
       entityManager.addComponent(bench1Id, 'positioning:allows_sitting', {
-        spots: [null, buddy1Id]
+        spots: [null, buddy1Id],
       });
-      
+
       entityManager.removeComponent(actorId, 'positioning:sitting_on');
 
-      await removeHandler.execute({
-        furniture_id: bench1Id,
-        actor_id: actorId,
-        spot_index: 0,
-        result_variable: 'removedFromBench1'
-      }, executionContext);
+      await removeHandler.execute(
+        {
+          furniture_id: bench1Id,
+          actor_id: actorId,
+          spot_index: 0,
+          result_variable: 'removedFromBench1',
+        },
+        executionContext
+      );
 
       // Verify closeness removed
-      actorCloseness = entityManager.getComponent(actorId, 'positioning:closeness');
+      actorCloseness = entityManager.getComponent(
+        actorId,
+        'positioning:closeness'
+      );
       expect(actorCloseness).toBeNull();
 
       // Phase 3: Actor sits on bench2 with buddy2
       entityManager.addComponent(buddy2Id, 'positioning:sitting_on', {
         furniture_id: bench2Id,
-        spot_index: 0
+        spot_index: 0,
       });
-      
+
       entityManager.addComponent(actorId, 'positioning:sitting_on', {
         furniture_id: bench2Id,
-        spot_index: 1
-      });
-      
-      entityManager.addComponent(bench2Id, 'positioning:allows_sitting', {
-        spots: [buddy2Id, actorId]
+        spot_index: 1,
       });
 
-      await establishHandler.execute({
-        furniture_id: bench2Id,
-        actor_id: actorId,
-        spot_index: 1,
-        result_variable: 'bench2Closeness'
-      }, executionContext);
+      entityManager.addComponent(bench2Id, 'positioning:allows_sitting', {
+        spots: [buddy2Id, actorId],
+      });
+
+      await establishHandler.execute(
+        {
+          furniture_id: bench2Id,
+          actor_id: actorId,
+          spot_index: 1,
+          result_variable: 'bench2Closeness',
+        },
+        executionContext
+      );
 
       // Verify new closeness on bench2
-      actorCloseness = entityManager.getComponent(actorId, 'positioning:closeness');
-      const buddy2Closeness = entityManager.getComponent(buddy2Id, 'positioning:closeness');
-      
+      actorCloseness = entityManager.getComponent(
+        actorId,
+        'positioning:closeness'
+      );
+      const buddy2Closeness = entityManager.getComponent(
+        buddy2Id,
+        'positioning:closeness'
+      );
+
       expect(actorCloseness.partners).toEqual([buddy2Id]);
       expect(buddy2Closeness.partners).toEqual([actorId]);
 
       // Verify buddy1 still has no closeness (alone on bench1)
-      const buddy1Closeness = entityManager.getComponent(buddy1Id, 'positioning:closeness');
+      const buddy1Closeness = entityManager.getComponent(
+        buddy1Id,
+        'positioning:closeness'
+      );
       expect(buddy1Closeness).toBeNull();
     });
   });
@@ -725,9 +868,9 @@ describe('Mixed Closeness Scenarios Integration', () => {
         instanceId: furnitureId,
         baseComponents: {
           'positioning:allows_sitting': {
-            spots: [null, null, null, null]
-          }
-        }
+            spots: [null, null, null, null],
+          },
+        },
       });
       entityManager.addEntity(furnitureEntity);
 
@@ -736,8 +879,8 @@ describe('Mixed Closeness Scenarios Integration', () => {
         const actorEntity = createEntityInstance({
           instanceId: actorId,
           baseComponents: {
-            'core:actor': {}
-          }
+            'core:actor': {},
+          },
         });
         entityManager.addEntity(actorEntity);
       }
@@ -746,12 +889,15 @@ describe('Mixed Closeness Scenarios Integration', () => {
       for (let i = 0; i < circleActors.length; i++) {
         const partners = circleActors.filter((_, idx) => idx !== i);
         entityManager.addComponent(circleActors[i], 'positioning:closeness', {
-          partners: partners
+          partners: partners,
         });
       }
 
       // Verify circle established
-      const initialCirc1Closeness = entityManager.getComponent(circleActors[0], 'positioning:closeness');
+      const initialCirc1Closeness = entityManager.getComponent(
+        circleActors[0],
+        'positioning:closeness'
+      );
       expect(initialCirc1Closeness.partners.length).toBe(2);
       expect(initialCirc1Closeness.partners).toContain(circleActors[1]);
       expect(initialCirc1Closeness.partners).toContain(circleActors[2]);
@@ -759,44 +905,56 @@ describe('Mixed Closeness Scenarios Integration', () => {
       // One circle member sits down
       entityManager.addComponent(circleActors[0], 'positioning:sitting_on', {
         furniture_id: furnitureId,
-        spot_index: 0
+        spot_index: 0,
       });
-      
+
       entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
-        spots: [circleActors[0], null, null, null]
+        spots: [circleActors[0], null, null, null],
       });
 
       // Outsider sits adjacent
       entityManager.addComponent(outsiderActor, 'positioning:sitting_on', {
         furniture_id: furnitureId,
-        spot_index: 1
+        spot_index: 1,
       });
-      
+
       entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
-        spots: [circleActors[0], outsiderActor, null, null]
+        spots: [circleActors[0], outsiderActor, null, null],
       });
 
       // Establish automatic closeness
-      await establishHandler.execute({
-        furniture_id: furnitureId,
-        actor_id: outsiderActor,
-        spot_index: 1,
-        result_variable: 'outsiderCloseness'
-      }, executionContext);
+      await establishHandler.execute(
+        {
+          furniture_id: furnitureId,
+          actor_id: outsiderActor,
+          spot_index: 1,
+          result_variable: 'outsiderCloseness',
+        },
+        executionContext
+      );
 
       // Verify circle member now has both manual and automatic relationships
-      const circ1Closeness = entityManager.getComponent(circleActors[0], 'positioning:closeness');
+      const circ1Closeness = entityManager.getComponent(
+        circleActors[0],
+        'positioning:closeness'
+      );
       expect(circ1Closeness.partners.length).toBe(3);
       expect(circ1Closeness.partners).toContain(circleActors[1]); // Manual
       expect(circ1Closeness.partners).toContain(circleActors[2]); // Manual
       expect(circ1Closeness.partners).toContain(outsiderActor); // Automatic
 
       // Verify outsider only has automatic relationship
-      const outsiderCloseness = entityManager.getComponent(outsiderActor, 'positioning:closeness');
+      const outsiderCloseness = entityManager.getComponent(
+        outsiderActor,
+        'positioning:closeness'
+      );
       expect(outsiderCloseness.partners).toEqual([circleActors[0]]);
 
       // Verify other circle members unchanged
-      const circ2Closeness = entityManager.getComponent(circleActors[1], 'positioning:closeness');
+      const circ2Closeness = entityManager.getComponent(
+        circleActors[1],
+        'positioning:closeness'
+      );
       expect(circ2Closeness.partners.length).toBe(2);
       expect(circ2Closeness.partners).not.toContain(outsiderActor);
     });
@@ -813,9 +971,9 @@ describe('Mixed Closeness Scenarios Integration', () => {
         instanceId: furnitureId,
         baseComponents: {
           'positioning:allows_sitting': {
-            spots: [null, null, null, null, null]
-          }
-        }
+            spots: [null, null, null, null, null],
+          },
+        },
       });
       entityManager.addEntity(furnitureEntity);
 
@@ -824,8 +982,8 @@ describe('Mixed Closeness Scenarios Integration', () => {
         const actorEntity = createEntityInstance({
           instanceId: actorId,
           baseComponents: {
-            'core:actor': {}
-          }
+            'core:actor': {},
+          },
         });
         entityManager.addEntity(actorEntity);
       }
@@ -833,67 +991,79 @@ describe('Mixed Closeness Scenarios Integration', () => {
       // Create two separate manual closeness circles
       // Circle 1
       entityManager.addComponent(circle1[0], 'positioning:closeness', {
-        partners: [circle1[1]]
+        partners: [circle1[1]],
       });
       entityManager.addComponent(circle1[1], 'positioning:closeness', {
-        partners: [circle1[0]]
+        partners: [circle1[0]],
       });
 
       // Circle 2
       entityManager.addComponent(circle2[0], 'positioning:closeness', {
-        partners: [circle2[1]]
+        partners: [circle2[1]],
       });
       entityManager.addComponent(circle2[1], 'positioning:closeness', {
-        partners: [circle2[0]]
+        partners: [circle2[0]],
       });
 
       // Members from each circle sit with gap between
       entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
-        spots: [circle1[0], null, circle2[0], null, null]
+        spots: [circle1[0], null, circle2[0], null, null],
       });
-      
+
       entityManager.addComponent(circle1[0], 'positioning:sitting_on', {
         furniture_id: furnitureId,
-        spot_index: 0
+        spot_index: 0,
       });
-      
+
       entityManager.addComponent(circle2[0], 'positioning:sitting_on', {
         furniture_id: furnitureId,
-        spot_index: 2
+        spot_index: 2,
       });
 
       // Bridge actor sits between them
       entityManager.addComponent(bridge, 'positioning:sitting_on', {
         furniture_id: furnitureId,
-        spot_index: 1
+        spot_index: 1,
       });
-      
+
       entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
-        spots: [circle1[0], bridge, circle2[0], null, null]
+        spots: [circle1[0], bridge, circle2[0], null, null],
       });
 
       // Establish automatic closeness for bridge
-      await establishHandler.execute({
-        furniture_id: furnitureId,
-        actor_id: bridge,
-        spot_index: 1,
-        result_variable: 'bridgeCloseness'
-      }, executionContext);
+      await establishHandler.execute(
+        {
+          furniture_id: furnitureId,
+          actor_id: bridge,
+          spot_index: 1,
+          result_variable: 'bridgeCloseness',
+        },
+        executionContext
+      );
 
       // Verify bridge connects both circles
-      const bridgeCloseness = entityManager.getComponent(bridge, 'positioning:closeness');
+      const bridgeCloseness = entityManager.getComponent(
+        bridge,
+        'positioning:closeness'
+      );
       expect(bridgeCloseness.partners).toContain(circle1[0]);
       expect(bridgeCloseness.partners).toContain(circle2[0]);
       expect(bridgeCloseness.partners.length).toBe(2);
 
       // Verify circles remain separate (only connected via bridge)
-      const c1aCloseness = entityManager.getComponent(circle1[0], 'positioning:closeness');
-      const c2aCloseness = entityManager.getComponent(circle2[0], 'positioning:closeness');
-      
+      const c1aCloseness = entityManager.getComponent(
+        circle1[0],
+        'positioning:closeness'
+      );
+      const c2aCloseness = entityManager.getComponent(
+        circle2[0],
+        'positioning:closeness'
+      );
+
       expect(c1aCloseness.partners).toContain(circle1[1]); // Manual within circle
       expect(c1aCloseness.partners).toContain(bridge); // Automatic to bridge
       expect(c1aCloseness.partners).not.toContain(circle2[0]); // Not directly connected
-      
+
       expect(c2aCloseness.partners).toContain(circle2[1]); // Manual within circle
       expect(c2aCloseness.partners).toContain(bridge); // Automatic to bridge
       expect(c2aCloseness.partners).not.toContain(circle1[0]); // Not directly connected

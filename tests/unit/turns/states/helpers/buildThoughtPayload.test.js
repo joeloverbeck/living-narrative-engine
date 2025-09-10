@@ -25,7 +25,11 @@ describe('buildThoughtPayload', () => {
     const decisionMeta = {
       thoughts: 'This is suspicious...',
       notes: [
-        { text: 'Noticed something odd', subject: 'observation', subjectType: 'event' }
+        {
+          text: 'Noticed something odd',
+          subject: 'observation',
+          subjectType: 'event',
+        },
       ],
     };
 
@@ -35,7 +39,11 @@ describe('buildThoughtPayload', () => {
       entityId: mockEntityId,
       thoughts: 'This is suspicious...',
       notes: [
-        { text: 'Noticed something odd', subject: 'observation', subjectType: 'event' }
+        {
+          text: 'Noticed something odd',
+          subject: 'observation',
+          subjectType: 'event',
+        },
       ],
     });
   });

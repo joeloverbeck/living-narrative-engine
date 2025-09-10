@@ -29,19 +29,23 @@ describe('intimacy:adjust_clothing action integration', () => {
   });
 
   it('handles multiple targets correctly', async () => {
-    const scenario = testFixture.createMultiActorScenario(['Alice', 'Bob', 'Charlie']);
-    
+    const scenario = testFixture.createMultiActorScenario([
+      'Alice',
+      'Bob',
+      'Charlie',
+    ]);
+
     // Create a garment entity
     const garmentEntity = {
       id: 'garment1',
       components: {
         'core:name': { text: 'shirt' },
-        'core:position': { locationId: 'room1' }
-      }
+        'core:position': { locationId: 'room1' },
+      },
     };
-    
+
     testFixture.reset([...scenario.allEntities, garmentEntity]);
-    
+
     // Test multi-target action with primaryId and secondaryId
     await testFixture.eventBus.dispatch('core:attempt_action', {
       eventName: 'core:attempt_action',
@@ -49,7 +53,7 @@ describe('intimacy:adjust_clothing action integration', () => {
       actionId: 'intimacy:adjust_clothing',
       primaryId: scenario.target.id,
       secondaryId: 'garment1',
-      originalInput: 'adjust clothing'
+      originalInput: 'adjust clothing',
     });
 
     const perceptibleEvent = testFixture.events.find(
@@ -61,33 +65,33 @@ describe('intimacy:adjust_clothing action integration', () => {
 
   it('works with different entity names and locations', async () => {
     const scenario = testFixture.createCloseActors(['Sarah', 'James'], {
-      location: 'garden'
+      location: 'garden',
     });
-    
+
     const garmentEntity = {
       id: 'garment1',
       components: {
         'core:name': { text: 'jacket' },
-        'core:position': { locationId: 'garden' }
-      }
+        'core:position': { locationId: 'garden' },
+      },
     };
-    
+
     testFixture.reset([scenario.actor, scenario.target, garmentEntity]);
-    
+
     await testFixture.eventBus.dispatch('core:attempt_action', {
       eventName: 'core:attempt_action',
       actorId: scenario.actor.id,
       actionId: 'intimacy:adjust_clothing',
       primaryId: scenario.target.id,
       secondaryId: 'garment1',
-      originalInput: 'adjust clothing'
+      originalInput: 'adjust clothing',
     });
 
     const perceptibleEvent = testFixture.events.find(
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();
-    expect(perceptibleEvent.payload.descriptionText).toContain("Sarah");
+    expect(perceptibleEvent.payload.descriptionText).toContain('Sarah');
     expect(perceptibleEvent.payload.locationId).toBe('garden');
   });
 
@@ -109,26 +113,26 @@ describe('intimacy:adjust_clothing action integration', () => {
 
   it('handles self-targeting with location verification', async () => {
     const scenario = testFixture.createCloseActors(['Emily', 'Michael'], {
-      location: 'park'
+      location: 'park',
     });
-    
+
     const garmentEntity = {
       id: 'garment1',
       components: {
         'core:name': { text: 'dress' },
-        'core:position': { locationId: 'park' }
-      }
+        'core:position': { locationId: 'park' },
+      },
     };
-    
+
     testFixture.reset([scenario.actor, scenario.target, garmentEntity]);
-    
+
     await testFixture.eventBus.dispatch('core:attempt_action', {
       eventName: 'core:attempt_action',
       actorId: scenario.actor.id,
       actionId: 'intimacy:adjust_clothing',
       primaryId: scenario.actor.id,
       secondaryId: 'garment1',
-      originalInput: 'adjust clothing self'
+      originalInput: 'adjust clothing self',
     });
 
     const perceptibleEvent = testFixture.events.find(

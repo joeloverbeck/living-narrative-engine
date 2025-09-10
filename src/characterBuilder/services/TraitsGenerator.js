@@ -374,17 +374,22 @@ export class TraitsGenerator {
     // Validate cliches (must be object with categories or tropesAndStereotypes)
     if (cliches !== null && cliches !== undefined) {
       if (typeof cliches !== 'object') {
-        throw TraitsGenerationError.forValidation('cliches', 'must be an object or null');
+        throw TraitsGenerationError.forValidation(
+          'cliches',
+          'must be an object or null'
+        );
       }
-      
+
       // Ensure cliches have at least some content
-      const hasCategories = cliches.categories && Object.keys(cliches.categories).length > 0;
-      const hasTropes = cliches.tropesAndStereotypes && cliches.tropesAndStereotypes.length > 0;
-      
+      const hasCategories =
+        cliches.categories && Object.keys(cliches.categories).length > 0;
+      const hasTropes =
+        cliches.tropesAndStereotypes && cliches.tropesAndStereotypes.length > 0;
+
       if (!hasCategories && !hasTropes) {
         this.#logger.warn('TraitsGenerator: Clichés object is empty', {
           conceptId: concept.id,
-          directionId: direction.id
+          directionId: direction.id,
         });
       }
     }

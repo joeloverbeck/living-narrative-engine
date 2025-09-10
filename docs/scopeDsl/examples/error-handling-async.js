@@ -8,31 +8,31 @@ import { ErrorCodes } from '../../../src/scopeDsl/constants/errorCodes.js';
 
 /**
  * Example async resolver with comprehensive error handling
- * 
+ *
  * This resolver demonstrates how to properly handle errors in async operations,
  * including promises, async/await, and parallel async operations.
  */
-export default function createAsyncResolver({ 
-  logger, 
+export default function createAsyncResolver({
+  logger,
   errorHandler,
   dataFetcher,
-  cache 
+  cache,
 }) {
   // Validate dependencies
   validateDependency(logger, 'ILogger', console, {
     requiredMethods: ['info', 'warn', 'error', 'debug'],
   });
-  
+
   if (errorHandler) {
     validateDependency(errorHandler, 'IScopeDslErrorHandler', logger, {
       requiredMethods: ['handleError', 'getErrorBuffer'],
     });
   }
-  
+
   validateDependency(dataFetcher, 'IDataFetcher', logger, {
     requiredMethods: ['fetch', 'fetchBatch'],
   });
-  
+
   if (cache) {
     validateDependency(cache, 'ICache', logger, {
       requiredMethods: ['get', 'set', 'has'],
@@ -44,7 +44,7 @@ export default function createAsyncResolver({
    */
   async function fetchWithErrorHandling(id, ctx) {
     const startTime = Date.now();
-    
+
     try {
       // Check cache first
       if (cache && cache.has(id)) {
@@ -54,7 +54,7 @@ export default function createAsyncResolver({
       // Fetch with timeout
       const timeoutMs = 5000;
       const fetchPromise = dataFetcher.fetch(id);
-      const timeoutPromise = new Promise((_, reject) => 
+      const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Fetch timeout')), timeoutMs)
       );
 
@@ -68,10 +68,10 @@ export default function createAsyncResolver({
       return result;
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       // Determine specific error code based on error type
       let errorCode = ErrorCodes.RESOLUTION_FAILED_GENERIC;
-      
+
       if (error.message === 'Fetch timeout') {
         errorCode = ErrorCodes.TIMEOUT;
       } else if (error.code === 'ECONNREFUSED') {
@@ -124,7 +124,7 @@ export default function createAsyncResolver({
       } else {
         errors.push({
           id: 'unknown',
-          error: outcome.reason
+          error: outcome.reason,
         });
       }
     });
@@ -132,7 +132,7 @@ export default function createAsyncResolver({
     // Handle partial failure scenario
     if (errors.length > 0) {
       const errorMessage = `Partial fetch failure: ${errors.length} of ${ids.length} failed`;
-      
+
       if (errorHandler) {
         // Log warning but don't throw if we have some results
         if (results.length > 0) {
@@ -159,25 +159,27 @@ export default function createAsyncResolver({
    */
   async function fetchWithRetry(id, ctx, maxRetries = 3) {
     let lastError;
-    
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         return await fetchWithErrorHandling(id, ctx);
       } catch (error) {
         lastError = error;
-        
+
         // Don't retry on certain errors
-        if (error.code === ErrorCodes.INVALID_DATA_GENERIC ||
-            error.code === ErrorCodes.MISSING_CONTEXT_GENERIC) {
-          throw error;  // Re-throw immediately for non-retriable errors
+        if (
+          error.code === ErrorCodes.INVALID_DATA_GENERIC ||
+          error.code === ErrorCodes.MISSING_CONTEXT_GENERIC
+        ) {
+          throw error; // Re-throw immediately for non-retriable errors
         }
 
         if (attempt < maxRetries) {
           // Exponential backoff: 100ms, 200ms, 400ms...
           const delay = Math.min(100 * Math.pow(2, attempt - 1), 2000);
           logger.debug(`Retry attempt ${attempt} after ${delay}ms for ${id}`);
-          
-          await new Promise(resolve => setTimeout(resolve, delay));
+
+          await new Promise((resolve) => setTimeout(resolve, delay));
         }
       }
     }
@@ -205,12 +207,12 @@ export default function createAsyncResolver({
         yield { success: true, item: processed };
       } catch (error) {
         // Yield error but continue processing
-        yield { 
-          success: false, 
-          item, 
-          error: error.message 
+        yield {
+          success: false,
+          item,
+          error: error.message,
         };
-        
+
         // Log error but don't stop stream
         logger.warn(`Stream processing error for item ${item.id}`, error);
       }
@@ -222,8 +224,8 @@ export default function createAsyncResolver({
    */
   async function processItem(item, ctx) {
     // Simulate async processing
-    await new Promise(resolve => setTimeout(resolve, 10));
-    
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
     if (!item || !item.id) {
       if (errorHandler) {
         errorHandler.handleError(
@@ -240,7 +242,7 @@ export default function createAsyncResolver({
     return {
       ...item,
       processed: true,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
   }
 
@@ -289,7 +291,7 @@ export default function createAsyncResolver({
         }
       } finally {
         this.running--;
-        this.process();  // Process next item in queue
+        this.process(); // Process next item in queue
       }
     }
   }
@@ -307,7 +309,7 @@ export default function createAsyncResolver({
       const asyncCtx = {
         ...ctx,
         async: true,
-        startTime: Date.now()
+        startTime: Date.now(),
       };
 
       try {
@@ -346,7 +348,7 @@ export default function createAsyncResolver({
         }
       } catch (error) {
         const duration = Date.now() - asyncCtx.startTime;
-        
+
         // Add timing information to error context
         if (errorHandler) {
           errorHandler.handleError(
@@ -359,7 +361,7 @@ export default function createAsyncResolver({
           throw error;
         }
       }
-    }
+    },
   };
 }
 
@@ -368,7 +370,7 @@ export default function createAsyncResolver({
  */
 export function createCancellableOperation(asyncFn, errorHandler) {
   let cancelled = false;
-  
+
   const promise = new Promise(async (resolve, reject) => {
     try {
       const result = await asyncFn(() => cancelled);
@@ -395,7 +397,9 @@ export function createCancellableOperation(asyncFn, errorHandler) {
 
   return {
     promise,
-    cancel: () => { cancelled = true; }
+    cancel: () => {
+      cancelled = true;
+    },
   };
 }
 
@@ -405,7 +409,7 @@ export function createCancellableOperation(asyncFn, errorHandler) {
 export async function withProgress(asyncFn, onProgress, errorHandler, ctx) {
   try {
     let progressCount = 0;
-    
+
     const progressReporter = (current, total) => {
       progressCount++;
       onProgress({ current, total, count: progressCount });

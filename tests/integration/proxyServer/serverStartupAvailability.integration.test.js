@@ -175,10 +175,13 @@ describe('LLM Proxy Server Startup and Availability - Integration', () => {
     });
 
     it('should have readiness endpoint available', async () => {
-      const response = await fetch(`http://127.0.0.1:${SERVER_PORT}/health/ready`, {
-        method: 'GET',
-        timeout: CONNECTION_TEST_TIMEOUT,
-      });
+      const response = await fetch(
+        `http://127.0.0.1:${SERVER_PORT}/health/ready`,
+        {
+          method: 'GET',
+          timeout: CONNECTION_TEST_TIMEOUT,
+        }
+      );
 
       // Should get a response from readiness endpoint (may be 200 or 503 depending on state)
       expect(response).toBeDefined();
@@ -196,7 +199,7 @@ describe('LLM Proxy Server Startup and Availability - Integration', () => {
       // Should get metrics response
       expect(response).toBeDefined();
       expect(response.status).toBe(200);
-      
+
       // Should return Prometheus format
       const contentType = response.headers.get('Content-Type');
       expect(contentType).toContain('text/plain');
@@ -205,18 +208,21 @@ describe('LLM Proxy Server Startup and Availability - Integration', () => {
 
   describe('LLM Request Endpoint Availability', () => {
     it('should have llm-request endpoint available but reject invalid requests', async () => {
-      const response = await fetch(`http://127.0.0.1:${SERVER_PORT}/api/llm-request`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Origin: 'http://localhost:8080',
-        },
-        body: JSON.stringify({
-          // Invalid request - missing required fields
-          invalidField: 'test'
-        }),
-        timeout: CONNECTION_TEST_TIMEOUT,
-      });
+      const response = await fetch(
+        `http://127.0.0.1:${SERVER_PORT}/api/llm-request`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Origin: 'http://localhost:8080',
+          },
+          body: JSON.stringify({
+            // Invalid request - missing required fields
+            invalidField: 'test',
+          }),
+          timeout: CONNECTION_TEST_TIMEOUT,
+        }
+      );
 
       // Should get a response (likely 400 for validation error, not connection refused)
       expect(response).toBeDefined();
@@ -227,18 +233,21 @@ describe('LLM Proxy Server Startup and Availability - Integration', () => {
 
   describe('Traces Endpoint Availability', () => {
     it('should have traces endpoint available', async () => {
-      const response = await fetch(`http://127.0.0.1:${SERVER_PORT}/api/traces`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Origin: 'http://localhost:8080',
-        },
-        body: JSON.stringify({
-          // Basic trace data - may not be valid but should get a response
-          action: 'test'
-        }),
-        timeout: CONNECTION_TEST_TIMEOUT,
-      });
+      const response = await fetch(
+        `http://127.0.0.1:${SERVER_PORT}/api/traces`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Origin: 'http://localhost:8080',
+          },
+          body: JSON.stringify({
+            // Basic trace data - may not be valid but should get a response
+            action: 'test',
+          }),
+          timeout: CONNECTION_TEST_TIMEOUT,
+        }
+      );
 
       // Should get a response from traces endpoint (not connection refused)
       expect(response).toBeDefined();
@@ -251,18 +260,15 @@ describe('LLM Proxy Server Startup and Availability - Integration', () => {
 
   describe('CORS Configuration', () => {
     it('should handle CORS properly for allowed origins', async () => {
-      const response = await fetch(
-        `http://127.0.0.1:${SERVER_PORT}/health`,
-        {
-          method: 'OPTIONS', // Preflight request
-          headers: {
-            Origin: 'http://localhost:8080',
-            'Access-Control-Request-Method': 'GET',
-            'Access-Control-Request-Headers': 'Content-Type',
-          },
-          timeout: CONNECTION_TEST_TIMEOUT,
-        }
-      );
+      const response = await fetch(`http://127.0.0.1:${SERVER_PORT}/health`, {
+        method: 'OPTIONS', // Preflight request
+        headers: {
+          Origin: 'http://localhost:8080',
+          'Access-Control-Request-Method': 'GET',
+          'Access-Control-Request-Headers': 'Content-Type',
+        },
+        timeout: CONNECTION_TEST_TIMEOUT,
+      });
 
       // OPTIONS requests typically return 200 or 204 No Content for CORS preflight
       expect([200, 204]).toContain(response.status);
@@ -271,22 +277,16 @@ describe('LLM Proxy Server Startup and Availability - Integration', () => {
 
     it('should be configured with correct CORS origins for API endpoints', async () => {
       // Test CORS configuration with health endpoint (simpler than LLM requests)
-      const testOrigins = [
-        'http://localhost:8080',
-        'http://127.0.0.1:8080',
-      ];
+      const testOrigins = ['http://localhost:8080', 'http://127.0.0.1:8080'];
 
       for (const origin of testOrigins) {
-        const response = await fetch(
-          `http://127.0.0.1:${SERVER_PORT}/health`,
-          {
-            method: 'GET',
-            headers: {
-              Origin: origin,
-            },
-            timeout: 5000,
-          }
-        );
+        const response = await fetch(`http://127.0.0.1:${SERVER_PORT}/health`, {
+          method: 'GET',
+          headers: {
+            Origin: origin,
+          },
+          timeout: 5000,
+        });
 
         // Should not get CORS errors for allowed origins
         expect(response.status).not.toBe(403);

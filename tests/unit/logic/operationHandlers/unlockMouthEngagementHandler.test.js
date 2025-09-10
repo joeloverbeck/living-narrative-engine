@@ -43,7 +43,7 @@ describe('UnlockMouthEngagementHandler', () => {
     mockLogger = makeLogger();
     mockEntityManager = makeEntityManager();
     mockEventDispatcher = makeEventDispatcher();
-    
+
     handler = new UnlockMouthEngagementHandler({
       logger: mockLogger,
       entityManager: mockEntityManager,
@@ -67,17 +67,16 @@ describe('UnlockMouthEngagementHandler', () => {
       // Mock successful unlock operation
       mouthEngagementUtils.updateMouthEngagementLock.mockResolvedValue({
         success: true,
-        updatedParts: ['mouth_1']
+        updatedParts: ['mouth_1'],
       });
 
       // Execute
-      await handler.execute(
-        { actor_id: 'actor_1' },
-        mockExecutionContext
-      );
+      await handler.execute({ actor_id: 'actor_1' }, mockExecutionContext);
 
       // Verify utility was called correctly
-      expect(mouthEngagementUtils.updateMouthEngagementLock).toHaveBeenCalledWith(
+      expect(
+        mouthEngagementUtils.updateMouthEngagementLock
+      ).toHaveBeenCalledWith(
         mockEntityManager,
         'actor_1',
         false // Unlock the mouth
@@ -102,21 +101,16 @@ describe('UnlockMouthEngagementHandler', () => {
       // Mock successful unlock operation (idempotent)
       mouthEngagementUtils.updateMouthEngagementLock.mockResolvedValue({
         success: true,
-        alreadyUnlocked: true
+        alreadyUnlocked: true,
       });
 
       // Execute
-      await handler.execute(
-        { actor_id: 'actor_1' },
-        mockExecutionContext
-      );
+      await handler.execute({ actor_id: 'actor_1' }, mockExecutionContext);
 
       // Should still call utility (idempotent operation)
-      expect(mouthEngagementUtils.updateMouthEngagementLock).toHaveBeenCalledWith(
-        mockEntityManager,
-        'actor_1',
-        false
-      );
+      expect(
+        mouthEngagementUtils.updateMouthEngagementLock
+      ).toHaveBeenCalledWith(mockEntityManager, 'actor_1', false);
 
       // Should not error
       expect(mockEventDispatcher.dispatch).not.toHaveBeenCalledWith(
@@ -129,10 +123,7 @@ describe('UnlockMouthEngagementHandler', () => {
       mouthEngagementUtils.updateMouthEngagementLock.mockResolvedValue(null);
 
       // Execute
-      await handler.execute(
-        { actor_id: 'actor_1' },
-        mockExecutionContext
-      );
+      await handler.execute({ actor_id: 'actor_1' }, mockExecutionContext);
 
       // Should warn about no mouth found
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -150,13 +141,13 @@ describe('UnlockMouthEngagementHandler', () => {
   describe('Error Cases', () => {
     test('should handle missing actor_id', async () => {
       await handler.execute({}, mockExecutionContext);
-      
+
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: 'UNLOCK_MOUTH_ENGAGEMENT: invalid "actor_id"',
           details: expect.objectContaining({
-            params: {}
+            params: {},
           }),
         })
       );
@@ -164,20 +155,20 @@ describe('UnlockMouthEngagementHandler', () => {
 
     test('should handle utility function errors', async () => {
       const mockError = new Error('Utility function failed');
-      mouthEngagementUtils.updateMouthEngagementLock.mockRejectedValue(mockError);
-      
-      await handler.execute(
-        { actor_id: 'actor_1' },
-        mockExecutionContext
+      mouthEngagementUtils.updateMouthEngagementLock.mockRejectedValue(
+        mockError
       );
-      
+
+      await handler.execute({ actor_id: 'actor_1' }, mockExecutionContext);
+
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          message: 'UNLOCK_MOUTH_ENGAGEMENT: failed to unlock mouth engagement for entity actor_1',
+          message:
+            'UNLOCK_MOUTH_ENGAGEMENT: failed to unlock mouth engagement for entity actor_1',
           details: expect.objectContaining({
             actor_id: 'actor_1',
-            error: 'Utility function failed'
+            error: 'Utility function failed',
           }),
         })
       );

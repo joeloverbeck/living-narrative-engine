@@ -156,10 +156,10 @@ describe('LLMConfigurationManager Performance Tests', () => {
       // The reads during initialization should return safe defaults
       expect([null, 'gpt-4', 'claude']).toContain(results[0]); // Could be null or any valid config
       expect(Array.isArray(results[1])).toBe(true); // Should return an array (empty or with options)
-      
+
       // After initialization completes, verify the manager is operational
       expect(configManager.isOperational()).toBe(true);
-      
+
       // Now that it's initialized, subsequent reads should work correctly
       const postInitActiveId = await configManager.getActiveConfigId();
       expect(['gpt-4', 'claude']).toContain(postInitActiveId);
@@ -286,10 +286,10 @@ describe('LLMConfigurationManager Performance Tests', () => {
           promises.push(
             manager
               .init({ llmConfigLoader: localMockConfigLoader })
-              .then(() => ({ 
-                success: true, 
-                manager, 
-                operational: manager.isOperational() 
+              .then(() => ({
+                success: true,
+                manager,
+                operational: manager.isOperational(),
               }))
           );
         }

@@ -3,7 +3,14 @@
  * @see src/actions/tracing/span.js
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import Span from '../../../../src/actions/tracing/span.js';
 
 describe('Span', () => {
@@ -352,8 +359,10 @@ describe('Span', () => {
     });
 
     it('should handle negative duration edge case', () => {
-      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-      
+      const consoleWarnSpy = jest
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {});
+
       // Mock performance.now() to return decreasing values (simulating clock drift/precision issues)
       mockPerformanceNow.mockRestore();
       mockPerformanceNow = jest

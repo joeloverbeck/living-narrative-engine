@@ -4,7 +4,14 @@
  * dependency validation infrastructure, cross-reference validation, and mod loading pipeline.
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import ModValidationOrchestrator from '../../../src/validation/modValidationOrchestrator.js';
 import ModDependencyValidator from '../../../src/modding/modDependencyValidator.js';
@@ -25,51 +32,62 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
 
   beforeEach(async () => {
     testBed = createTestBed();
-    
+
     // Setup test mods directory
     testModsPath = path.join(process.cwd(), 'test-mods-' + Date.now());
     await fs.mkdir(testModsPath, { recursive: true });
-    
+
     // Create and configure container
     container = new AppContainer();
     await configureMinimalContainer(container);
-    
+
     // Replace the schema loader with a mock to avoid network requests in tests
     const mockSchemaLoader = createMockSchemaLoader();
-    container.register(coreTokens.SchemaLoader, () => mockSchemaLoader, { singleton: true });
-    
+    container.register(coreTokens.SchemaLoader, () => mockSchemaLoader, {
+      singleton: true,
+    });
+
     // Mock the schema validator to bypass schema validation
     const mockSchemaValidator = {
-      validateAgainstSchema: jest.fn().mockReturnValue({ isValid: true, errors: [] }),
+      validateAgainstSchema: jest
+        .fn()
+        .mockReturnValue({ isValid: true, errors: [] }),
       isSchemaLoaded: jest.fn().mockReturnValue(true),
       addSchema: jest.fn(),
       getValidator: jest.fn().mockReturnValue(() => true),
-      validate: jest.fn().mockReturnValue({ isValid: true, errors: [] }) // Add validate method for ModReferenceExtractor
+      validate: jest.fn().mockReturnValue({ isValid: true, errors: [] }), // Add validate method for ModReferenceExtractor
     };
-    container.register(coreTokens.ISchemaValidator, () => mockSchemaValidator, { singleton: true });
-    
+    container.register(coreTokens.ISchemaValidator, () => mockSchemaValidator, {
+      singleton: true,
+    });
+
     // Mock the manifest loader to avoid filesystem operations
     let skipAutoIncludeCore = false;
     mockModManifestLoader = {
       // Provide a way for individual tests to disable auto-include behavior
-      setSkipAutoIncludeCore: (skip) => { skipAutoIncludeCore = skip; },
-      
+      setSkipAutoIncludeCore: (skip) => {
+        skipAutoIncludeCore = skip;
+      },
+
       loadRequestedManifests: jest.fn().mockImplementation((modIds) => {
         const manifestsMap = new Map();
-        
+
         // Create a copy of modIds to avoid mutating the original array
         const allModIds = [...modIds];
-        
+
         // Always include core mod as it's commonly depended upon (unless disabled by test)
-        const shouldAutomaticallyIncludeCore = !skipAutoIncludeCore && 
-          !allModIds.includes('core') && 
-          allModIds.some(id => ['positioning', 'intimacy', 'anatomy'].includes(id));
-          
+        const shouldAutomaticallyIncludeCore =
+          !skipAutoIncludeCore &&
+          !allModIds.includes('core') &&
+          allModIds.some((id) =>
+            ['positioning', 'intimacy', 'anatomy'].includes(id)
+          );
+
         if (shouldAutomaticallyIncludeCore) {
           allModIds.push('core');
         }
-        
-        allModIds.forEach(modId => {
+
+        allModIds.forEach((modId) => {
           // Handle different dependency scenarios for different tests
           let dependencies = [];
           if (modId === 'positioning') {
@@ -77,51 +95,63 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
           } else if (modId === 'intimacy') {
             dependencies = [
               { id: 'core', version: '^1.0.0', required: true },
-              { id: 'positioning', version: '^1.0.0', required: true }
+              { id: 'positioning', version: '^1.0.0', required: true },
             ];
           } else if (modId === 'anatomy') {
             dependencies = [{ id: 'core', version: '^1.0.0', required: true }];
           } else if (modId === 'broken') {
             // Simulate missing dependency for broken test
-            dependencies = [{ id: 'missing', version: '^1.0.0', required: true }];
+            dependencies = [
+              { id: 'missing', version: '^1.0.0', required: true },
+            ];
           } else if (modId === 'mod-a') {
             dependencies = [{ id: 'mod-b', version: '^1.0.0', required: true }];
           } else if (modId === 'mod-b') {
             dependencies = [{ id: 'mod-a', version: '^1.0.0', required: true }];
-          } else if (modId.startsWith('mod-') && modId !== 'mod-a' && modId !== 'mod-b') {
+          } else if (
+            modId.startsWith('mod-') &&
+            modId !== 'mod-a' &&
+            modId !== 'mod-b'
+          ) {
             dependencies = [{ id: 'core', version: '^1.0.0', required: true }];
           }
           // 'core' mod has no dependencies
-          
+
           manifestsMap.set(modId, {
             id: modId,
             version: '1.0.0',
             name: modId,
-            dependencies
+            dependencies,
           });
         });
         return Promise.resolve(manifestsMap);
       }),
-      loadModManifests: jest.fn().mockResolvedValue(new Map())
+      loadModManifests: jest.fn().mockResolvedValue(new Map()),
     };
-    container.register(coreTokens.ModManifestLoader, () => mockModManifestLoader, { singleton: true });
-    
+    container.register(
+      coreTokens.ModManifestLoader,
+      () => mockModManifestLoader,
+      { singleton: true }
+    );
+
     // Create orchestrator manually with dependencies from container
     const logger = container.resolve(coreTokens.ILogger);
-    const modLoadOrderResolver = container.resolve(coreTokens.ModLoadOrderResolver);
+    const modLoadOrderResolver = container.resolve(
+      coreTokens.ModLoadOrderResolver
+    );
     const modManifestLoader = container.resolve(coreTokens.ModManifestLoader);
     const pathResolver = container.resolve(coreTokens.IPathResolver);
     const configuration = container.resolve(coreTokens.IConfiguration);
-    
+
     // Create mock cross-reference validator
     const mockCrossReferenceValidator = {
       validateModReferences: jest.fn().mockResolvedValue({
         hasViolations: false,
-        violations: []
+        violations: [],
       }),
-      validateAllModReferences: jest.fn().mockResolvedValue(new Map())
+      validateAllModReferences: jest.fn().mockResolvedValue(new Map()),
     };
-    
+
     orchestrator = new ModValidationOrchestrator({
       logger,
       modDependencyValidator: ModDependencyValidator,
@@ -129,7 +159,7 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
       modLoadOrderResolver,
       modManifestLoader,
       pathResolver,
-      configuration
+      configuration,
     });
   });
 
@@ -149,24 +179,24 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
     it('should integrate with existing ModDependencyValidator', async () => {
       // Create test mod ecosystem
       const mods = {
-        'core': {
+        core: {
           id: 'core',
           version: '1.0.0',
-          dependencies: []
+          dependencies: [],
         },
-        'positioning': {
+        positioning: {
           id: 'positioning',
           version: '1.0.0',
-          dependencies: [{ id: 'core', version: '^1.0.0', required: true }]
+          dependencies: [{ id: 'core', version: '^1.0.0', required: true }],
         },
-        'intimacy': {
+        intimacy: {
           id: 'intimacy',
           version: '1.0.0',
           dependencies: [
             { id: 'core', version: '^1.0.0', required: true },
-            { id: 'positioning', version: '^1.0.0', required: true }
-          ]
-        }
+            { id: 'positioning', version: '^1.0.0', required: true },
+          ],
+        },
       };
 
       // Create mod directories and manifests
@@ -184,20 +214,28 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
       orchestrator._resolveModPath = (modId) => path.join(testModsPath, modId);
 
       // Create a violation scenario
-      const positioningActionPath = path.join(testModsPath, 'positioning', 'actions');
+      const positioningActionPath = path.join(
+        testModsPath,
+        'positioning',
+        'actions'
+      );
       await fs.mkdir(positioningActionPath, { recursive: true });
       await fs.writeFile(
         path.join(positioningActionPath, 'turn_around.action.json'),
-        JSON.stringify({
-          id: 'positioning:turn_around',
-          forbidden_components: {
-            actor: ['intimacy:kissing'] // Violation: intimacy not declared as dependency
-          }
-        }, null, 2)
+        JSON.stringify(
+          {
+            id: 'positioning:turn_around',
+            forbidden_components: {
+              actor: ['intimacy:kissing'], // Violation: intimacy not declared as dependency
+            },
+          },
+          null,
+          2
+        )
       );
 
       const results = await orchestrator.validateEcosystem({
-        modsToValidate: ['core', 'positioning', 'intimacy']
+        modsToValidate: ['core', 'positioning', 'intimacy'],
       });
 
       // Should pass dependency validation
@@ -220,32 +258,32 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
     it('should integrate with ModLoadOrderResolver', async () => {
       // Create mods with complex dependencies
       const mods = {
-        'core': {
+        core: {
           id: 'core',
           version: '1.0.0',
-          dependencies: []
+          dependencies: [],
         },
-        'anatomy': {
+        anatomy: {
           id: 'anatomy',
           version: '1.0.0',
-          dependencies: [{ id: 'core', version: '^1.0.0', required: true }]
+          dependencies: [{ id: 'core', version: '^1.0.0', required: true }],
         },
-        'positioning': {
+        positioning: {
           id: 'positioning',
           version: '1.0.0',
           dependencies: [
             { id: 'core', version: '^1.0.0', required: true },
-            { id: 'anatomy', version: '^1.0.0', required: true }
-          ]
+            { id: 'anatomy', version: '^1.0.0', required: true },
+          ],
         },
-        'intimacy': {
+        intimacy: {
           id: 'intimacy',
           version: '1.0.0',
           dependencies: [
             { id: 'anatomy', version: '^1.0.0', required: true },
-            { id: 'positioning', version: '^1.0.0', required: true }
-          ]
-        }
+            { id: 'positioning', version: '^1.0.0', required: true },
+          ],
+        },
       };
 
       // Create mod directories and manifests
@@ -262,12 +300,17 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
       orchestrator._resolveModPath = (modId) => path.join(testModsPath, modId);
 
       const results = await orchestrator.validateEcosystem({
-        modsToValidate: ['core', 'anatomy', 'positioning', 'intimacy']
+        modsToValidate: ['core', 'anatomy', 'positioning', 'intimacy'],
       });
 
       expect(results.loadOrder).toBeDefined();
       expect(results.loadOrder.isValid).toBe(true);
-      expect(results.loadOrder.order).toEqual(['core', 'anatomy', 'positioning', 'intimacy']);
+      expect(results.loadOrder.order).toEqual([
+        'core',
+        'anatomy',
+        'positioning',
+        'intimacy',
+      ]);
     });
   });
 
@@ -275,16 +318,16 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
     it('should validate mods for loading with existing pipeline', async () => {
       // Create simple valid mod setup
       const mods = {
-        'core': {
+        core: {
           id: 'core',
           version: '1.0.0',
-          dependencies: []
+          dependencies: [],
         },
-        'positioning': {
+        positioning: {
           id: 'positioning',
           version: '1.0.0',
-          dependencies: [{ id: 'core', version: '^1.0.0', required: true }]
-        }
+          dependencies: [{ id: 'core', version: '^1.0.0', required: true }],
+        },
       };
 
       // Create mod directories and manifests
@@ -300,10 +343,13 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
       // Mock the path resolution
       orchestrator._resolveModPath = (modId) => path.join(testModsPath, modId);
 
-      const loadResult = await orchestrator.validateForLoading(['positioning'], {
-        strictMode: false,
-        allowWarnings: true
-      });
+      const loadResult = await orchestrator.validateForLoading(
+        ['positioning'],
+        {
+          strictMode: false,
+          allowWarnings: true,
+        }
+      );
 
       expect(loadResult.canLoad).toBe(true);
       expect(loadResult.dependencies.isValid).toBe(true);
@@ -313,15 +359,15 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
     it('should fail loading validation with missing dependencies', async () => {
       // Disable automatic core inclusion for this test
       mockModManifestLoader.setSkipAutoIncludeCore(true);
-      
+
       // Create mod with missing dependency
       const mods = {
-        'positioning': {
+        positioning: {
           id: 'positioning',
           version: '1.0.0',
-          dependencies: [{ id: 'core', version: '^1.0.0', required: true }]
+          dependencies: [{ id: 'core', version: '^1.0.0', required: true }],
           // Note: core mod is not created
-        }
+        },
       };
 
       // Create mod directory and manifest
@@ -340,7 +386,7 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
       let errorThrown = false;
       try {
         await orchestrator.validateForLoading(['positioning'], {
-          strictMode: true
+          strictMode: true,
         });
       } catch (error) {
         errorThrown = true;
@@ -348,9 +394,11 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
         expect(error.name).toBe('ModValidationError');
         expect(error.message).toContain('validation failed');
       }
-      
+
       if (!errorThrown) {
-        throw new Error('Should have thrown an error for missing dependencies in strict mode');
+        throw new Error(
+          'Should have thrown an error for missing dependencies in strict mode'
+        );
       }
     });
   });
@@ -358,18 +406,22 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
   describe('Error Handling Integration', () => {
     it('should handle ModDependencyValidator failures gracefully', async () => {
       // Import ModDependencyError for proper error type
-      const ModDependencyError = (await import('../../../src/errors/modDependencyError.js')).default;
-      
+      const ModDependencyError = (
+        await import('../../../src/errors/modDependencyError.js')
+      ).default;
+
       // Mock the ModDependencyValidator to throw a ModDependencyError for this test
       const originalValidate = ModDependencyValidator.validate;
       ModDependencyValidator.validate = jest.fn().mockImplementation(() => {
-        throw new ModDependencyError('Circular dependency detected: mod-a <-> mod-b');
+        throw new ModDependencyError(
+          'Circular dependency detected: mod-a <-> mod-b'
+        );
       });
 
       try {
         await orchestrator.validateEcosystem({
           modsToValidate: ['mod-a', 'mod-b'],
-          failFast: true
+          failFast: true,
         });
         // If we get here, the test should fail because we expected an error
         expect(true).toBe(false); // Force failure
@@ -386,16 +438,16 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
     it('should continue validation when failFast is false', async () => {
       // Create mod with issues but continue validation
       const mods = {
-        'core': {
+        core: {
           id: 'core',
           version: '1.0.0',
-          dependencies: []
+          dependencies: [],
         },
-        'broken': {
+        broken: {
           id: 'broken',
           version: '1.0.0',
-          dependencies: [{ id: 'missing', version: '^1.0.0', required: true }]
-        }
+          dependencies: [{ id: 'missing', version: '^1.0.0', required: true }],
+        },
       };
 
       // Create mod directories and manifests
@@ -413,7 +465,7 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
 
       const results = await orchestrator.validateEcosystem({
         modsToValidate: ['core', 'broken'],
-        failFast: false
+        failFast: false,
       });
 
       expect(results.isValid).toBe(false);
@@ -426,18 +478,18 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
     it('should maintain performance with large mod ecosystems', async () => {
       // Create large ecosystem (20 mods)
       const mods = {
-        'core': {
+        core: {
           id: 'core',
           version: '1.0.0',
-          dependencies: []
-        }
+          dependencies: [],
+        },
       };
 
       for (let i = 1; i <= 19; i++) {
         mods[`mod-${i}`] = {
           id: `mod-${i}`,
           version: '1.0.0',
-          dependencies: [{ id: 'core', version: '^1.0.0', required: true }]
+          dependencies: [{ id: 'core', version: '^1.0.0', required: true }],
         };
       }
 
@@ -456,7 +508,7 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
 
       const startTime = performance.now();
       const results = await orchestrator.validateEcosystem({
-        modsToValidate: Object.keys(mods)
+        modsToValidate: Object.keys(mods),
       });
       const endTime = performance.now();
 
@@ -468,11 +520,11 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
     it('should track performance metrics correctly', async () => {
       // Create simple mod setup
       const mods = {
-        'core': {
+        core: {
           id: 'core',
           version: '1.0.0',
-          dependencies: []
-        }
+          dependencies: [],
+        },
       };
 
       // Create mod directory and manifest
@@ -487,14 +539,18 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
       orchestrator._resolveModPath = (modId) => path.join(testModsPath, modId);
 
       const results = await orchestrator.validateEcosystem({
-        modsToValidate: ['core']
+        modsToValidate: ['core'],
       });
 
       expect(results.performance).toBeDefined();
       expect(results.performance.totalTime).toBeGreaterThan(0);
       expect(results.performance.phases).toBeDefined();
-      expect(results.performance.phases.get('manifest-loading')).toBeGreaterThan(0);
-      expect(results.performance.phases.get('dependency-validation')).toBeGreaterThan(0);
+      expect(
+        results.performance.phases.get('manifest-loading')
+      ).toBeGreaterThan(0);
+      expect(
+        results.performance.phases.get('dependency-validation')
+      ).toBeGreaterThan(0);
     });
   });
 
@@ -502,14 +558,14 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
     it('should work with ModManifestProcessor when validation is enabled', async () => {
       // Get the ModManifestProcessor from container
       const processor = container.resolve(coreTokens.ModManifestProcessor);
-      
+
       // Create simple mod setup
       const mods = {
-        'core': {
+        core: {
           id: 'core',
           version: '1.0.0',
-          dependencies: []
-        }
+          dependencies: [],
+        },
       };
 
       // Create mod directory and manifest
@@ -521,11 +577,10 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
       );
 
       // Process manifests with validation enabled
-      const result = await processor.processManifests(
-        ['core'],
-        'test-world',
-        { validateCrossReferences: true, strictMode: false }
-      );
+      const result = await processor.processManifests(['core'], 'test-world', {
+        validateCrossReferences: true,
+        strictMode: false,
+      });
 
       expect(result.loadedManifestsMap).toBeDefined();
       expect(result.finalModOrder).toEqual(['core']);

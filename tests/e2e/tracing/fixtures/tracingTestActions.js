@@ -11,16 +11,16 @@ import { expect } from '@jest/globals';
 export const TEST_ACTIONS = {
   // Simple movement action for basic tracing
   GO: 'core:go',
-  
+
   // More complex action for detailed tracing
   ATTACK: 'core:attack',
-  
+
   // Action that typically fails for error testing
   INVALID_ACTION: 'test:invalid',
-  
+
   // Long-running action for performance testing
   LONG_OPERATION: 'test:longOperation',
-  
+
   // Action with complex parameters
   COMPLEX_ACTION: 'test:complexAction',
 };
@@ -50,7 +50,7 @@ export const TEST_ACTORS = {
       },
     },
   },
-  
+
   COMPLEX_ACTOR: {
     id: 'test-actor-complex',
     name: 'Complex Test Actor',
@@ -92,7 +92,7 @@ export const TEST_ACTORS = {
       },
     },
   },
-  
+
   MINIMAL_ACTOR: {
     id: 'test-actor-minimal',
     name: 'Minimal Actor',
@@ -116,7 +116,7 @@ export const TEST_TURN_ACTIONS = {
     },
     timestamp: Date.now(),
   },
-  
+
   COMPLEX_ATTACK: {
     actionDefinitionId: TEST_ACTIONS.ATTACK,
     commandString: 'attack goblin with sword',
@@ -132,7 +132,7 @@ export const TEST_TURN_ACTIONS = {
     },
     timestamp: Date.now(),
   },
-  
+
   INVALID_ACTION: {
     actionDefinitionId: TEST_ACTIONS.INVALID_ACTION,
     commandString: 'do something impossible',
@@ -141,7 +141,7 @@ export const TEST_TURN_ACTIONS = {
     },
     timestamp: Date.now(),
   },
-  
+
   LONG_OPERATION: {
     actionDefinitionId: TEST_ACTIONS.LONG_OPERATION,
     commandString: 'perform long calculation',
@@ -151,7 +151,7 @@ export const TEST_TURN_ACTIONS = {
     },
     timestamp: Date.now(),
   },
-  
+
   COMPLEX_PARAMETERS: {
     actionDefinitionId: TEST_ACTIONS.COMPLEX_ACTION,
     commandString: 'execute complex action',
@@ -198,7 +198,7 @@ export const EXPECTED_TRACE_STRUCTURES = {
     duration: expect.any(Number),
     phases: expect.any(Array),
   },
-  
+
   DETAILED_TRACE: {
     actionId: expect.any(String),
     actorId: expect.any(String),
@@ -213,7 +213,7 @@ export const EXPECTED_TRACE_STRUCTURES = {
       }),
     ]),
   },
-  
+
   ERROR_TRACE: {
     actionId: expect.any(String),
     actorId: expect.any(String),
@@ -236,7 +236,7 @@ export const TRACING_CONFIGS = {
     enablePerformanceMonitoring: false,
     enableQueueProcessing: false,
   },
-  
+
   DETAILED: {
     enabled: true,
     tracedActions: ['*'],
@@ -245,7 +245,7 @@ export const TRACING_CONFIGS = {
     enablePerformanceMonitoring: true,
     enableQueueProcessing: true,
   },
-  
+
   SELECTIVE: {
     enabled: true,
     tracedActions: [TEST_ACTIONS.GO, TEST_ACTIONS.ATTACK],
@@ -255,7 +255,7 @@ export const TRACING_CONFIGS = {
     enablePerformanceMonitoring: true,
     enableQueueProcessing: true,
   },
-  
+
   PERFORMANCE: {
     enabled: true,
     tracedActions: ['*'],
@@ -269,7 +269,7 @@ export const TRACING_CONFIGS = {
       queueProcessing: 50, // 50ms
     },
   },
-  
+
   DISABLED: {
     enabled: false,
     tracedActions: [],
@@ -290,21 +290,25 @@ export const LOAD_SCENARIOS = {
     actionDelay: 10, // 10ms between actions
     actions: [TEST_ACTIONS.GO],
   },
-  
+
   MODERATE_LOAD: {
     actionCount: 20,
     concurrency: 2,
     actionDelay: 50, // 50ms between actions
     actions: [TEST_ACTIONS.GO, TEST_ACTIONS.ATTACK],
   },
-  
+
   HEAVY_LOAD: {
     actionCount: 50,
     concurrency: 5,
     actionDelay: 5, // 5ms between actions
-    actions: [TEST_ACTIONS.GO, TEST_ACTIONS.ATTACK, TEST_ACTIONS.COMPLEX_ACTION],
+    actions: [
+      TEST_ACTIONS.GO,
+      TEST_ACTIONS.ATTACK,
+      TEST_ACTIONS.COMPLEX_ACTION,
+    ],
   },
-  
+
   BURST_LOAD: {
     actionCount: 100,
     concurrency: 10,
@@ -322,26 +326,26 @@ export const ERROR_SCENARIOS = {
     recoverable: false,
     expectedErrorType: 'ActionNotFoundError',
   },
-  
+
   EXECUTION_FAILURE: {
     error: new Error('Action execution failed'),
     recoverable: true,
     expectedErrorType: 'ActionExecutionError',
   },
-  
+
   TIMEOUT_ERROR: {
     error: new Error('Action timeout'),
     recoverable: true,
     expectedErrorType: 'ActionTimeoutError',
     timeout: 1000,
   },
-  
+
   SYSTEM_ERROR: {
     error: new Error('System error occurred'),
     recoverable: false,
     expectedErrorType: 'SystemError',
   },
-  
+
   VALIDATION_ERROR: {
     error: new Error('Parameter validation failed'),
     recoverable: false,
@@ -357,17 +361,17 @@ export const PERFORMANCE_EXPECTATIONS = {
     max: 1, // 1ms maximum overhead for trace capture
     typical: 0.5, // Typical overhead should be under 0.5ms
   },
-  
+
   QUEUE_PROCESSING: {
     max: 100, // 100ms maximum for queue processing
     typical: 20, // Typical processing should be under 20ms
   },
-  
+
   FILE_WRITE: {
     max: 500, // 500ms maximum for file write operations
     typical: 50, // Typical file writes should be under 50ms
   },
-  
+
   MEMORY_USAGE: {
     maxIncrease: 10 * 1024 * 1024, // 10MB maximum increase during tests
     maxTotal: 100 * 1024 * 1024, // 100MB maximum total usage
@@ -420,14 +424,16 @@ export function createTestActor(id, components = {}) {
  */
 export function generateLoadTestActions(scenario) {
   const actions = [];
-  
+
   for (let i = 0; i < scenario.actionCount; i++) {
     const actionId = scenario.actions[i % scenario.actions.length];
-    actions.push(createTestAction(actionId, {
-      commandString: `load-test-${i} ${actionId}`,
-      parameters: { testIndex: i, timestamp: Date.now() },
-    }));
+    actions.push(
+      createTestAction(actionId, {
+        commandString: `load-test-${i} ${actionId}`,
+        parameters: { testIndex: i, timestamp: Date.now() },
+      })
+    );
   }
-  
+
   return actions;
 }

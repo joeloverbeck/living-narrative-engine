@@ -21,7 +21,8 @@ class KeyboardShortcutsManager {
     });
     this.#logger = logger;
     // Use provided document context or fall back to global document
-    this.#document = documentContext || (typeof document !== 'undefined' ? document : null);
+    this.#document =
+      documentContext || (typeof document !== 'undefined' ? document : null);
     this.#boundHandler = this.#handleKeydown.bind(this);
     this.#enabled = false; // Explicitly start disabled
     this.#registerDefaultShortcuts();
@@ -159,7 +160,9 @@ class KeyboardShortcutsManager {
 
     // Check if panel is required
     if (shortcut.requiresPanel) {
-      const panel = this.#document ? this.#document.querySelector('.lne-critical-log-panel') : null;
+      const panel = this.#document
+        ? this.#document.querySelector('.lne-critical-log-panel')
+        : null;
       if (!panel || panel.hidden) return;
     }
 
@@ -185,11 +188,7 @@ class KeyboardShortcutsManager {
 
     // Don't trigger shortcuts when typing in input fields
     const tagName = e.target.tagName ? e.target.tagName.toLowerCase() : '';
-    if (
-      tagName === 'input' ||
-      tagName === 'textarea' ||
-      tagName === 'select'
-    ) {
+    if (tagName === 'input' || tagName === 'textarea' || tagName === 'select') {
       return false;
     }
 

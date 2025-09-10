@@ -106,9 +106,11 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
       if (result && typeof result.then === 'function') {
         return result.catch((error) => {
           // Enhanced recursion detection
-          const isErrorEvent = description.includes('system_error_occurred') || description.includes('error');
+          const isErrorEvent =
+            description.includes('system_error_occurred') ||
+            description.includes('error');
           const hasErrorKeywords = description.match(/(error|exception|fail)/i);
-          
+
           if (isErrorEvent || hasErrorKeywords || this.#isHandlingError) {
             // Use console directly to avoid potential recursion
             console.error(
@@ -141,9 +143,11 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
       return result;
     } catch (error) {
       // Enhanced recursion detection for synchronous errors
-      const isErrorEvent = description.includes('system_error_occurred') || description.includes('error');
+      const isErrorEvent =
+        description.includes('system_error_occurred') ||
+        description.includes('error');
       const hasErrorKeywords = description.match(/(error|exception|fail)/i);
-      
+
       if (isErrorEvent || hasErrorKeywords || this.#isHandlingError) {
         // Use console directly to avoid potential recursion
         console.error(
@@ -280,7 +284,7 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
    * @param {boolean} enabled - Whether to enable or disable batch mode
    * @param {object} [options] - Batch mode configuration options
    * @param {number} [options.maxRecursionDepth] - Maximum recursion depth in batch mode
-   * @param {number} [options.maxGlobalRecursion] - Maximum global recursion in batch mode  
+   * @param {number} [options.maxGlobalRecursion] - Maximum global recursion in batch mode
    * @param {number} [options.timeoutMs] - Auto-disable timeout in milliseconds
    * @param {string} [options.context] - Context description for logging
    * @returns {void}

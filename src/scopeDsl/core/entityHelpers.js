@@ -267,14 +267,12 @@ export function createEvaluationContext(
     ((!actor.components && actor.componentTypeIds) ||
       actor.components instanceof Map)
   ) {
-    
     actor = addComponentsToEntity(actor, actor.id);
   }
 
   const location = locationProvider.getLocation();
 
   // Enhanced debug logging for scope resolution issues
-  
 
   // Create flattened context for easier JSON Logic access
   // This allows queries like {"var": "components.core:tags.tags"} to work directly

@@ -384,10 +384,6 @@ describe('filterResolver', () => {
         };
 
         resolver.resolve(node, ctx);
-
-        
-
-        
       });
 
       it('should not throw when trace is not provided', () => {

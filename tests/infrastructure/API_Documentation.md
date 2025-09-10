@@ -20,7 +20,8 @@ This document provides complete API specifications for the Living Narrative Engi
 
 ##### `createStandardHandlers(entityManager, eventBus, logger)`
 
-**Signature**: 
+**Signature**:
+
 ```javascript
 static createStandardHandlers(
   entityManager: IEntityManager,
@@ -32,11 +33,13 @@ static createStandardHandlers(
 **Purpose**: Creates the standard set of 8 operation handlers used by most mod categories.
 
 **Parameters**:
+
 - `entityManager` (required): Entity management service implementing `getEntityInstance()`, `addEntity()`, `removeEntity()`
 - `eventBus` (required): Event dispatching service implementing `dispatch()`, `subscribe()`, `unsubscribe()`
 - `logger` (required): Logging service implementing `info()`, `warn()`, `error()`, `debug()`
 
 **Returns**: Object with handler properties:
+
 - `QUERY_COMPONENT`: Component query operations
 - `GET_NAME`: Entity name retrieval
 - `GET_TIMESTAMP`: Current timestamp generation
@@ -51,6 +54,7 @@ static createStandardHandlers(
 **Error Handling**: Throws descriptive errors for missing/invalid dependencies
 
 **Usage**:
+
 ```javascript
 const handlers = ModTestHandlerFactory.createStandardHandlers(
   entityManager,
@@ -62,7 +66,8 @@ await handlers.GET_NAME.execute(['entity-id']);
 
 ##### `createHandlersWithAddComponent(entityManager, eventBus, logger)`
 
-**Signature**: 
+**Signature**:
+
 ```javascript
 static createHandlersWithAddComponent(
   entityManager: IEntityManager,
@@ -76,23 +81,30 @@ static createHandlersWithAddComponent(
 **Parameters**: Same as `createStandardHandlers`
 
 **Returns**: All standard handlers plus:
+
 - `ADD_COMPONENT`: Component addition operations
 
 **Performance**: Mean: ~3-4ms, P95: ~6ms
 
 **Usage**:
+
 ```javascript
 const handlers = ModTestHandlerFactory.createHandlersWithAddComponent(
   entityManager,
   eventBus,
   logger
 );
-await handlers.ADD_COMPONENT.execute(['entity-id', 'component:type', '{"data": "value"}']);
+await handlers.ADD_COMPONENT.execute([
+  'entity-id',
+  'component:type',
+  '{"data": "value"}',
+]);
 ```
 
 ##### `createMinimalHandlers(entityManager, eventBus, logger)`
 
-**Signature**: 
+**Signature**:
+
 ```javascript
 static createMinimalHandlers(
   entityManager: IEntityManager,
@@ -104,6 +116,7 @@ static createMinimalHandlers(
 **Purpose**: Creates minimal set of 4 essential handlers for lightweight testing.
 
 **Returns**: Essential handlers only:
+
 - `GET_NAME`: Entity name retrieval
 - `DISPATCH_PERCEPTIBLE_EVENT`: Visible event dispatch
 - `END_TURN`: Turn completion
@@ -113,7 +126,8 @@ static createMinimalHandlers(
 
 ##### `createCustomHandlers(entityManager, eventBus, logger, options)`
 
-**Signature**: 
+**Signature**:
+
 ```javascript
 static createCustomHandlers(
   entityManager: IEntityManager,
@@ -126,6 +140,7 @@ static createCustomHandlers(
 **Purpose**: Creates configurable handler set based on options.
 
 **Parameters**:
+
 - Standard dependency parameters
 - `options` (optional): Configuration object
   - `includeAddComponent` (boolean): Include ADD_COMPONENT handler
@@ -136,7 +151,8 @@ static createCustomHandlers(
 
 ##### `getHandlerFactoryForCategory(category)`
 
-**Signature**: 
+**Signature**:
+
 ```javascript
 static getHandlerFactoryForCategory(category: string): HandlerFactoryFunction
 ```
@@ -144,9 +160,11 @@ static getHandlerFactoryForCategory(category: string): HandlerFactoryFunction
 **Purpose**: Returns appropriate factory function for mod category.
 
 **Parameters**:
+
 - `category`: Mod category identifier
 
 **Category Mappings**:
+
 - `'exercise'` → `createStandardHandlers`
 - `'violence'` → `createStandardHandlers`
 - `'intimacy'` → `createStandardHandlers`
@@ -158,7 +176,8 @@ static getHandlerFactoryForCategory(category: string): HandlerFactoryFunction
 
 ##### `createSafeDispatcher(eventBus)`
 
-**Signature**: 
+**Signature**:
+
 ```javascript
 static createSafeDispatcher(eventBus: IEventBus): SafeEventDispatcher
 ```
@@ -166,6 +185,7 @@ static createSafeDispatcher(eventBus: IEventBus): SafeEventDispatcher
 **Purpose**: Creates safe event dispatcher wrapper with Jest mock integration.
 
 **Parameters**:
+
 - `eventBus` (required): Event dispatching service
 
 **Returns**: Safe dispatcher with `dispatch()` method that returns `Promise<true>`
@@ -186,7 +206,8 @@ static createSafeDispatcher(eventBus: IEventBus): SafeEventDispatcher
 
 ##### `forAction(modId, actionId)`
 
-**Signature**: 
+**Signature**:
+
 ```javascript
 async forAction(modId: string, actionId: string): Promise<TestActionData>
 ```
@@ -194,22 +215,26 @@ async forAction(modId: string, actionId: string): Promise<TestActionData>
 **Purpose**: Loads action test data with automatic file discovery and fallback patterns.
 
 **Parameters**:
+
 - `modId` (required): Mod identifier (e.g., 'exercise', 'violence')
 - `actionId` (required): Action identifier (e.g., 'pushup', 'punch')
 
 **Returns**: `TestActionData` object:
+
 - `actionFile`: Parsed JSON action data or `null`
 - `ruleFile`: Parsed JSON rule data or `null`
 - `modId`: Original mod identifier
 - `actionId`: Original action identifier
 
 **File Discovery Pattern** (attempts in order):
+
 1. `data/mods/{modId}/actions/{modId}_{actionId}_action.js`
 2. `data/mods/{modId}/actions/{actionId}_action.js`
 3. `data/mods/{modId}/actions/{modId}_{actionId}.js`
 4. `data/mods/{modId}/actions/{actionId}.js`
 
 **Rule Discovery Pattern**:
+
 1. `data/mods/{modId}/rules/{modId}_{actionId}_rules.js`
 2. `data/mods/{modId}/rules/{actionId}_rules.js`
 3. `data/mods/{modId}/rules/{modId}_{actionId}.js`
@@ -220,6 +245,7 @@ async forAction(modId: string, actionId: string): Promise<TestActionData>
 **Error Handling**: Graceful fallback through file patterns, throws only if no files found
 
 **Usage**:
+
 ```javascript
 const fixture = new ModTestFixture();
 const testData = await fixture.forAction('exercise', 'pushup');
@@ -233,7 +259,8 @@ if (testData.ruleFile) {
 
 ##### `forRule(modId, ruleId)`
 
-**Signature**: 
+**Signature**:
+
 ```javascript
 async forRule(modId: string, ruleId: string): Promise<TestRuleData>
 ```
@@ -241,10 +268,12 @@ async forRule(modId: string, ruleId: string): Promise<TestRuleData>
 **Purpose**: Loads rule test data with automatic file discovery.
 
 **Parameters**:
+
 - `modId` (required): Mod identifier
 - `ruleId` (required): Rule identifier
 
 **Returns**: `TestRuleData` object:
+
 - `ruleFile`: Parsed JSON rule array or `null`
 - `modId`: Original mod identifier
 - `ruleId`: Original rule identifier
@@ -265,7 +294,8 @@ async forRule(modId: string, ruleId: string): Promise<TestRuleData>
 
 ##### `new ModEntityBuilder(entityId)`
 
-**Signature**: 
+**Signature**:
+
 ```javascript
 constructor(entityId: string)
 ```
@@ -273,6 +303,7 @@ constructor(entityId: string)
 **Purpose**: Initialize builder with entity ID.
 
 **Parameters**:
+
 - `entityId` (required): Unique entity identifier
 
 **Performance**: Mean: <1ms
@@ -281,7 +312,8 @@ constructor(entityId: string)
 
 ##### `withName(name)`
 
-**Signature**: 
+**Signature**:
+
 ```javascript
 withName(name: string): ModEntityBuilder
 ```
@@ -289,6 +321,7 @@ withName(name: string): ModEntityBuilder
 **Purpose**: Set entity display name (adds `core:name` component).
 
 **Parameters**:
+
 - `name` (required): Display name for entity
 
 **Returns**: Builder instance (chainable)
@@ -297,7 +330,8 @@ withName(name: string): ModEntityBuilder
 
 ##### `atLocation(locationId)`
 
-**Signature**: 
+**Signature**:
+
 ```javascript
 atLocation(locationId: string): ModEntityBuilder
 ```
@@ -305,6 +339,7 @@ atLocation(locationId: string): ModEntityBuilder
 **Purpose**: Set entity location (adds `core:position` component).
 
 **Parameters**:
+
 - `locationId` (required): Location identifier
 
 **Returns**: Builder instance (chainable)
@@ -313,7 +348,8 @@ atLocation(locationId: string): ModEntityBuilder
 
 ##### `closeToEntity(otherEntityId)`
 
-**Signature**: 
+**Signature**:
+
 ```javascript
 closeToEntity(otherEntityId: string): ModEntityBuilder
 ```
@@ -321,6 +357,7 @@ closeToEntity(otherEntityId: string): ModEntityBuilder
 **Purpose**: Position entity close to another entity for interaction scenarios.
 
 **Parameters**:
+
 - `otherEntityId` (required): Target entity identifier
 
 **Returns**: Builder instance (chainable)
@@ -329,7 +366,8 @@ closeToEntity(otherEntityId: string): ModEntityBuilder
 
 ##### `withComponent(componentId, data)`
 
-**Signature**: 
+**Signature**:
+
 ```javascript
 withComponent(componentId: string, data: object): ModEntityBuilder
 ```
@@ -337,6 +375,7 @@ withComponent(componentId: string, data: object): ModEntityBuilder
 **Purpose**: Add arbitrary component to entity.
 
 **Parameters**:
+
 - `componentId` (required): Component type identifier (e.g., 'exercise:stamina')
 - `data` (required): Component data object
 
@@ -346,7 +385,8 @@ withComponent(componentId: string, data: object): ModEntityBuilder
 
 ##### `build()`
 
-**Signature**: 
+**Signature**:
+
 ```javascript
 build(): Entity
 ```
@@ -354,12 +394,14 @@ build(): Entity
 **Purpose**: Finalize and return constructed entity.
 
 **Returns**: Complete entity object:
+
 - `id`: Entity identifier
 - `components`: Object containing all added components
 
 **Performance**: Mean: ~2-3ms for basic entities, ~5-8ms for complex entities
 
 **Usage**:
+
 ```javascript
 const entity = new ModEntityBuilder('test-actor')
   .withName('Test Actor')
@@ -384,7 +426,8 @@ const entity = new ModEntityBuilder('test-actor')
 
 ##### `new ModAssertionHelpers(entityManager)`
 
-**Signature**: 
+**Signature**:
+
 ```javascript
 constructor(entityManager: IEntityManager)
 ```
@@ -392,13 +435,15 @@ constructor(entityManager: IEntityManager)
 **Purpose**: Initialize helpers with entity manager reference.
 
 **Parameters**:
+
 - `entityManager` (required): Entity management service for component assertions
 
 #### Instance Methods
 
 ##### `assertActionSuccess(options)`
 
-**Signature**: 
+**Signature**:
+
 ```javascript
 assertActionSuccess(options: ActionSuccessOptions): void
 ```
@@ -406,6 +451,7 @@ assertActionSuccess(options: ActionSuccessOptions): void
 **Purpose**: Assert action execution completed successfully with expected side effects.
 
 **Parameters**:
+
 - `options` (required): Assertion configuration object
   - `shouldEndTurn` (boolean): Whether action should have ended the turn
   - `shouldHavePerceptibleEvent` (boolean): Whether action should have generated perceptible events
@@ -415,6 +461,7 @@ assertActionSuccess(options: ActionSuccessOptions): void
 **Performance**: Mean: ~2-4ms
 
 **Usage**:
+
 ```javascript
 assertionHelpers.assertActionSuccess({
   shouldEndTurn: true,
@@ -424,7 +471,8 @@ assertionHelpers.assertActionSuccess({
 
 ##### `assertComponentAdded(entityManager, entityId, componentId)`
 
-**Signature**: 
+**Signature**:
+
 ```javascript
 assertComponentAdded(
   entityManager: IEntityManager,
@@ -436,6 +484,7 @@ assertComponentAdded(
 **Purpose**: Assert specific component was added to entity.
 
 **Parameters**:
+
 - `entityManager` (required): Entity manager to query
 - `entityId` (required): Target entity identifier
 - `componentId` (required): Expected component type
@@ -448,7 +497,8 @@ assertComponentAdded(
 
 ##### `assertPerceptibleEvent(eventOptions)`
 
-**Signature**: 
+**Signature**:
+
 ```javascript
 assertPerceptibleEvent(eventOptions: PerceptibleEventOptions): void
 ```
@@ -456,6 +506,7 @@ assertPerceptibleEvent(eventOptions: PerceptibleEventOptions): void
 **Purpose**: Assert perceptible event was dispatched with expected data.
 
 **Parameters**:
+
 - `eventOptions` (required): Event assertion configuration
   - `eventType` (string): Expected event type
   - `eventData` (object): Expected event payload data
@@ -469,6 +520,7 @@ assertPerceptibleEvent(eventOptions: PerceptibleEventOptions): void
 Based on TSTAIMIG-002 validation testing with 1000+ iterations per method:
 
 ### ModTestHandlerFactory Performance
+
 - `createStandardHandlers`: Mean: 2.1ms, P95: 4.8ms, P99: 7.2ms
 - `createHandlersWithAddComponent`: Mean: 3.4ms, P95: 6.1ms, P99: 9.0ms
 - `createMinimalHandlers`: Mean: 1.8ms, P95: 3.5ms, P99: 5.1ms
@@ -476,16 +528,19 @@ Based on TSTAIMIG-002 validation testing with 1000+ iterations per method:
 - `createSafeDispatcher`: Mean: 0.5ms, P95: 1.2ms, P99: 1.8ms
 
 ### ModTestFixture Performance
+
 - `forAction` (success): Mean: 11.2ms, P95: 18.3ms, P99: 24.7ms
 - `forAction` (with fallbacks): Mean: 22.5ms, P95: 35.1ms, P99: 42.8ms
 - `forRule` (success): Mean: 10.8ms, P95: 16.9ms, P99: 22.4ms
 
 ### ModEntityBuilder Performance
+
 - Basic entity build: Mean: 2.3ms, P95: 4.1ms, P99: 6.0ms
 - Complex entity build: Mean: 6.8ms, P95: 11.2ms, P99: 15.7ms
 - Positioning methods: Mean: 3.1ms, P95: 5.8ms, P99: 8.4ms
 
 ### ModAssertionHelpers Performance
+
 - `assertActionSuccess`: Mean: 2.7ms, P95: 4.9ms, P99: 7.1ms
 - `assertComponentAdded`: Mean: 4.2ms, P95: 7.3ms, P99: 10.8ms
 - `assertPerceptibleEvent`: Mean: 3.5ms, P95: 6.2ms, P99: 9.1ms
@@ -493,14 +548,20 @@ Based on TSTAIMIG-002 validation testing with 1000+ iterations per method:
 ## Integration Patterns
 
 ### Standard Test Pattern
+
 ```javascript
 describe('Mod Action Test', () => {
   let entityManager, eventBus, logger, fixture, assertionHelpers;
-  
+
   beforeEach(() => {
     entityManager = new SimpleEntityManager([]);
     eventBus = { dispatch: jest.fn().mockResolvedValue(true) };
-    logger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
+    logger = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+    };
     fixture = new ModTestFixture();
     assertionHelpers = new ModAssertionHelpers(entityManager);
   });
@@ -508,31 +569,31 @@ describe('Mod Action Test', () => {
   it('should execute action successfully', async () => {
     // Load test data
     const testData = await fixture.forAction('exercise', 'pushup');
-    
+
     // Create handlers
     const handlers = ModTestHandlerFactory.createStandardHandlers(
       entityManager,
       eventBus,
       logger
     );
-    
+
     // Setup entities
     const actor = new ModEntityBuilder('test-actor')
       .withName('Test Actor')
       .atLocation('gym')
       .withComponent('core:actor', {})
       .build();
-    
+
     entityManager.addEntity(actor);
-    
+
     // Execute action
     await handlers.DISPATCH_PERCEPTIBLE_EVENT.execute([
       'EXERCISE_PERFORMED',
       JSON.stringify({ actor: 'test-actor', exercise: 'pushup' }),
     ]);
-    
+
     await handlers.END_TURN.execute([]);
-    
+
     // Assert results
     assertionHelpers.assertActionSuccess({
       shouldEndTurn: true,
@@ -545,6 +606,7 @@ describe('Mod Action Test', () => {
 ### Category-Specific Patterns
 
 #### Positioning Category (requires ADD_COMPONENT)
+
 ```javascript
 const handlers = ModTestHandlerFactory.createHandlersWithAddComponent(
   entityManager,
@@ -558,10 +620,15 @@ await handlers.ADD_COMPONENT.execute([
   JSON.stringify({ furniture: 'chair', comfort: 'high' }),
 ]);
 
-assertionHelpers.assertComponentAdded(entityManager, 'actor-id', 'positioning:sitting');
+assertionHelpers.assertComponentAdded(
+  entityManager,
+  'actor-id',
+  'positioning:sitting'
+);
 ```
 
 #### Violence Category (standard handlers)
+
 ```javascript
 const handlers = ModTestHandlerFactory.createStandardHandlers(
   entityManager,
@@ -583,7 +650,9 @@ assertionHelpers.assertActionSuccess({
 ## Migration Guidelines
 
 ### From Manual Handler Creation
+
 **Before**:
+
 ```javascript
 const handlers = {
   GET_NAME: new GetNameHandler({ entityManager, logger, safeEventDispatcher }),
@@ -593,6 +662,7 @@ const handlers = {
 ```
 
 **After**:
+
 ```javascript
 const handlers = ModTestHandlerFactory.createStandardHandlers(
   entityManager,
@@ -602,13 +672,16 @@ const handlers = ModTestHandlerFactory.createStandardHandlers(
 ```
 
 **Benefits**:
+
 - 90%+ reduction in handler setup code
 - Consistent configuration across all tests
 - Automatic dependency injection and validation
 - Category-specific handler selection
 
 ### From Manual Entity Creation
+
 **Before**:
+
 ```javascript
 const entity = {
   id: 'test-actor',
@@ -623,6 +696,7 @@ entityManager.addEntity(entity);
 ```
 
 **After**:
+
 ```javascript
 const entity = new ModEntityBuilder('test-actor')
   .withName('Test Actor')
@@ -630,34 +704,46 @@ const entity = new ModEntityBuilder('test-actor')
   .withComponent('core:actor', {})
   .withComponent('exercise:stamina', { current: 85, max: 100 })
   .build();
-  
+
 entityManager.addEntity(entity);
 ```
 
 **Benefits**:
+
 - Fluent, readable entity construction
 - Automatic component structure consistency
 - Built-in positioning and relationship methods
 - Type safety and validation
 
 ### From Manual Assertions
+
 **Before**:
+
 ```javascript
-expect(eventBus.dispatch).toHaveBeenCalledWith('EVENT_TYPE', expect.any(Object));
+expect(eventBus.dispatch).toHaveBeenCalledWith(
+  'EVENT_TYPE',
+  expect.any(Object)
+);
 const entity = entityManager.getEntityInstance('entity-id');
 expect(entity.components).toHaveProperty('component:type');
 ```
 
 **After**:
+
 ```javascript
 assertionHelpers.assertActionSuccess({
   shouldEndTurn: true,
   shouldHavePerceptibleEvent: true,
 });
-assertionHelpers.assertComponentAdded(entityManager, 'entity-id', 'component:type');
+assertionHelpers.assertComponentAdded(
+  entityManager,
+  'entity-id',
+  'component:type'
+);
 ```
 
 **Benefits**:
+
 - Domain-specific assertions with clear intent
 - Consistent validation patterns across tests
 - Better error messages and debugging support
@@ -671,6 +757,6 @@ assertionHelpers.assertComponentAdded(entityManager, 'entity-id', 'component:typ
 ✅ **ModAssertionHelpers**: 100% method coverage, specialized assertions validated  
 ✅ **Integration Testing**: End-to-end workflows validated across all 5 mod categories  
 ✅ **Performance Baselines**: Established with comprehensive statistical analysis  
-✅ **Category Patterns**: Validated handler selection logic for all mod categories  
+✅ **Category Patterns**: Validated handler selection logic for all mod categories
 
 All infrastructure components are validated and ready for AI-assisted migration workflows.

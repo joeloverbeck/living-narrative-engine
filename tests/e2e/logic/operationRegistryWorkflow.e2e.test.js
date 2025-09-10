@@ -50,16 +50,18 @@ describe('Operation Registry Workflow E2E', () => {
 
     // Register core entity definitions manually for testing
     const dataRegistry = container.resolve(tokens.IDataRegistry);
-    
+
     // Register core:actor definition
-    dataRegistry.store('entityDefinitions', 'core:actor',
+    dataRegistry.store(
+      'entityDefinitions',
+      'core:actor',
       new EntityDefinition('core:actor', {
         id: 'core:actor',
         components: {
           'core:description': { name: '' },
           'core:stats': { health: 100, maxHealth: 100 },
           'core:inventory': { items: [] },
-        }
+        },
       })
     );
 
@@ -96,7 +98,10 @@ describe('Operation Registry Workflow E2E', () => {
       });
 
       // Act - Register the handler
-      const isNew = operationRegistry.register(customOperationType, customHandler);
+      const isNew = operationRegistry.register(
+        customOperationType,
+        customHandler
+      );
 
       // Assert registration
       expect(isNew).toBe(true);
@@ -149,9 +154,15 @@ describe('Operation Registry Workflow E2E', () => {
       // Arrange
       const calls = [];
       const handlers = {
-        'TEST_OP_1': jest.fn(async () => { calls.push('op1'); }),
-        'TEST_OP_2': jest.fn(async () => { calls.push('op2'); }),
-        'TEST_OP_3': jest.fn(async () => { calls.push('op3'); }),
+        TEST_OP_1: jest.fn(async () => {
+          calls.push('op1');
+        }),
+        TEST_OP_2: jest.fn(async () => {
+          calls.push('op2');
+        }),
+        TEST_OP_3: jest.fn(async () => {
+          calls.push('op3');
+        }),
       };
 
       // Act - Register multiple handlers
@@ -175,9 +186,9 @@ describe('Operation Registry Workflow E2E', () => {
 
       // Assert
       expect(calls).toEqual(['op1', 'op2', 'op3']);
-      
+
       // Verify each handler was called exactly once
-      Object.values(handlers).forEach(handler => {
+      Object.values(handlers).forEach((handler) => {
         expect(handler).toHaveBeenCalledTimes(1);
       });
     });
@@ -185,21 +196,17 @@ describe('Operation Registry Workflow E2E', () => {
     it('should preserve core operation handlers', () => {
       // Arrange - Check that some core handlers are registered
       // Note: Core handlers are registered during container initialization
-      const someHandlers = [
-        'SET_VARIABLE',
-        'END_TURN',
-        'LOG',
-      ];
+      const someHandlers = ['SET_VARIABLE', 'END_TURN', 'LOG'];
 
       // Assert - At least some handlers should be registered
-      const registeredHandlers = someHandlers.filter(opType => 
-        operationRegistry.getHandler(opType) !== undefined
+      const registeredHandlers = someHandlers.filter(
+        (opType) => operationRegistry.getHandler(opType) !== undefined
       );
-      
+
       expect(registeredHandlers.length).toBeGreaterThan(0);
-      
+
       // Check that registered handlers are functions
-      registeredHandlers.forEach(opType => {
+      registeredHandlers.forEach((opType) => {
         const handler = operationRegistry.getHandler(opType);
         expect(typeof handler).toBe('function');
       });
@@ -223,7 +230,10 @@ describe('Operation Registry Workflow E2E', () => {
       };
 
       // Act - Should not throw, but logs error
-      const result = await operationInterpreter.execute(unknownOperation, context);
+      const result = await operationInterpreter.execute(
+        unknownOperation,
+        context
+      );
 
       // Assert - Should return undefined without throwing
       expect(result).toBeUndefined();
@@ -310,7 +320,7 @@ describe('Operation Registry Workflow E2E', () => {
       operationRegistry.register(variations[0], handler);
 
       // Assert - All variations should resolve to the same handler
-      variations.forEach(variant => {
+      variations.forEach((variant) => {
         const retrieved = operationRegistry.getHandler(variant);
         expect(retrieved).toBe(handler);
       });
@@ -348,7 +358,7 @@ describe('Operation Registry Workflow E2E', () => {
       ];
 
       // Act & Assert
-      specialOps.forEach(opType => {
+      specialOps.forEach((opType) => {
         const handler = jest.fn();
         const isNew = operationRegistry.register(opType, handler);
         expect(isNew).toBe(true);
@@ -362,7 +372,7 @@ describe('Operation Registry Workflow E2E', () => {
       // Arrange
       const results = [];
       let nextOp = null;
-      
+
       // Register test handlers
       operationRegistry.register('TEST_CHAIN_1', async (params, ctx) => {
         results.push('chain1');
@@ -389,9 +399,18 @@ describe('Operation Registry Workflow E2E', () => {
       };
 
       // Execute chain manually
-      await operationInterpreter.execute({ type: 'TEST_CHAIN_1', parameters: {} }, context);
-      await operationInterpreter.execute({ type: 'TEST_CHAIN_2', parameters: {} }, context);
-      await operationInterpreter.execute({ type: 'TEST_CHAIN_3', parameters: {} }, context);
+      await operationInterpreter.execute(
+        { type: 'TEST_CHAIN_1', parameters: {} },
+        context
+      );
+      await operationInterpreter.execute(
+        { type: 'TEST_CHAIN_2', parameters: {} },
+        context
+      );
+      await operationInterpreter.execute(
+        { type: 'TEST_CHAIN_3', parameters: {} },
+        context
+      );
 
       // Assert
       expect(results).toEqual(['chain1', 'chain2', 'chain3']);
@@ -436,7 +455,9 @@ describe('Operation Registry Workflow E2E', () => {
 
       // Assert - Context should be passed through
       expect(capturedContext).toBeDefined();
-      expect(capturedContext.evaluationContext).toEqual(context.evaluationContext);
+      expect(capturedContext.evaluationContext).toEqual(
+        context.evaluationContext
+      );
       expect(capturedContext.eventBus).toBe(eventBus);
       expect(capturedContext.entityManager).toBe(entityManager);
       expect(capturedContext.logger).toBe(logger);

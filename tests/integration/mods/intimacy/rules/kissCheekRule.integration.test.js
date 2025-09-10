@@ -25,7 +25,7 @@ describe('intimacy_handle_kiss_cheek rule integration', () => {
 
   it('performs kiss cheek action successfully', async () => {
     const scenario = testFixture.createCloseActors(['Actor', 'Target'], {
-      location: 'room1'
+      location: 'room1',
     });
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);

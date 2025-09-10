@@ -68,7 +68,7 @@ describe('preValidationUtils', () => {
           'HAS_COMPONENT',
         ];
 
-        knownTypes.forEach(type => {
+        knownTypes.forEach((type) => {
           const operation = {
             type,
             parameters: {},
@@ -117,8 +117,12 @@ describe('preValidationUtils', () => {
         };
         const result = validateOperationStructure(operation);
         expect(result.isValid).toBe(false);
-        expect(result.error).toBe('Macro reference should not have a type field');
-        expect(result.suggestions).toContain('Remove the type field when using macro reference');
+        expect(result.error).toBe(
+          'Macro reference should not have a type field'
+        );
+        expect(result.suggestions).toContain(
+          'Remove the type field when using macro reference'
+        );
       });
 
       it('should fail for missing type field in regular operation', () => {
@@ -128,7 +132,9 @@ describe('preValidationUtils', () => {
         const result = validateOperationStructure(operation);
         expect(result.isValid).toBe(false);
         expect(result.error).toBe('Missing required "type" field in operation');
-        expect(result.suggestions[0]).toBe('Add a "type" field with one of the valid operation types');
+        expect(result.suggestions[0]).toBe(
+          'Add a "type" field with one of the valid operation types'
+        );
       });
 
       it('should fail for non-string type field', () => {
@@ -139,7 +145,9 @@ describe('preValidationUtils', () => {
         const result = validateOperationStructure(operation);
         expect(result.isValid).toBe(false);
         expect(result.error).toBe('Operation "type" field must be a string');
-        expect(result.suggestions).toContain('Ensure the type field is a string value like "QUERY_COMPONENT"');
+        expect(result.suggestions).toContain(
+          'Ensure the type field is a string value like "QUERY_COMPONENT"'
+        );
       });
 
       it('should fail for unknown operation type', () => {
@@ -149,7 +157,9 @@ describe('preValidationUtils', () => {
         };
         const result = validateOperationStructure(operation);
         expect(result.isValid).toBe(false);
-        expect(result.error).toBe('Unknown operation type "UNKNOWN_OPERATION_TYPE"');
+        expect(result.error).toBe(
+          'Unknown operation type "UNKNOWN_OPERATION_TYPE"'
+        );
         expect(result.suggestions[0]).toBe('Valid operation types include:');
         expect(result.suggestions.length).toBeGreaterThan(1);
       });
@@ -161,8 +171,12 @@ describe('preValidationUtils', () => {
         };
         const result = validateOperationStructure(operation);
         expect(result.isValid).toBe(false);
-        expect(result.error).toBe('Missing "parameters" field for operation type "QUERY_COMPONENT"');
-        expect(result.suggestions).toContain('Add a "parameters" object with the required fields for this operation type');
+        expect(result.error).toBe(
+          'Missing "parameters" field for operation type "QUERY_COMPONENT"'
+        );
+        expect(result.suggestions).toContain(
+          'Add a "parameters" object with the required fields for this operation type'
+        );
       });
 
       it('should use custom path in error reporting', () => {
@@ -216,12 +230,8 @@ describe('preValidationUtils', () => {
           type: 'IF',
           parameters: {
             condition: {},
-            then_actions: [
-              { type: 'LOG', parameters: { message: 'then' } },
-            ],
-            else_actions: [
-              { type: 'LOG', parameters: { message: 'else' } },
-            ],
+            then_actions: [{ type: 'LOG', parameters: { message: 'then' } }],
+            else_actions: [{ type: 'LOG', parameters: { message: 'else' } }],
           },
         };
         const result = validateAllOperations(data);
@@ -243,9 +253,7 @@ describe('preValidationUtils', () => {
 
       it('should fail for invalid operations in actions field', () => {
         const data = {
-          actions: [
-            { type: 'INVALID_TYPE', parameters: {} },
-          ],
+          actions: [{ type: 'INVALID_TYPE', parameters: {} }],
         };
         const result = validateAllOperations(data);
         expect(result.isValid).toBe(false);
@@ -335,9 +343,7 @@ describe('preValidationUtils', () => {
               condition: {},
             },
             // Place then_actions at the operation level, not inside parameters
-            then_actions: [
-              { type: 'INVALID_NESTED', parameters: {} },
-            ],
+            then_actions: [{ type: 'INVALID_NESTED', parameters: {} }],
           },
         ];
         const result = validateAllOperations(operations, 'root', true);
@@ -352,9 +358,7 @@ describe('preValidationUtils', () => {
       it('should validate a complete rule structure', () => {
         const rule = {
           event_type: 'core:entity_moved',
-          actions: [
-            { type: 'LOG', parameters: { message: 'Entity moved' } },
-          ],
+          actions: [{ type: 'LOG', parameters: { message: 'Entity moved' } }],
         };
         const result = validateRuleStructure(rule);
         expect(result.isValid).toBe(true);
@@ -390,14 +394,16 @@ describe('preValidationUtils', () => {
 
       it('should fail for missing event_type', () => {
         const rule = {
-          actions: [
-            { type: 'LOG', parameters: {} },
-          ],
+          actions: [{ type: 'LOG', parameters: {} }],
         };
         const result = validateRuleStructure(rule);
         expect(result.isValid).toBe(false);
-        expect(result.error).toBe('Missing required "event_type" field in rule');
-        expect(result.suggestions).toContain('Add an "event_type" field with a namespaced event ID like "core:entity_thought"');
+        expect(result.error).toBe(
+          'Missing required "event_type" field in rule'
+        );
+        expect(result.suggestions).toContain(
+          'Add an "event_type" field with a namespaced event ID like "core:entity_thought"'
+        );
       });
 
       it('should fail for missing actions field', () => {
@@ -407,7 +413,9 @@ describe('preValidationUtils', () => {
         const result = validateRuleStructure(rule);
         expect(result.isValid).toBe(false);
         expect(result.error).toBe('Missing required "actions" field in rule');
-        expect(result.suggestions).toContain('Add an "actions" array with at least one operation');
+        expect(result.suggestions).toContain(
+          'Add an "actions" array with at least one operation'
+        );
       });
 
       it('should fail for non-array actions field', () => {
@@ -418,7 +426,9 @@ describe('preValidationUtils', () => {
         const result = validateRuleStructure(rule);
         expect(result.isValid).toBe(false);
         expect(result.error).toBe('Rule "actions" field must be an array');
-        expect(result.suggestions).toContain('Change the actions field to an array of operations');
+        expect(result.suggestions).toContain(
+          'Change the actions field to an array of operations'
+        );
       });
 
       it('should fail for empty actions array', () => {
@@ -429,15 +439,15 @@ describe('preValidationUtils', () => {
         const result = validateRuleStructure(rule);
         expect(result.isValid).toBe(false);
         expect(result.error).toBe('Rule "actions" array cannot be empty');
-        expect(result.suggestions).toContain('Add at least one operation to the actions array');
+        expect(result.suggestions).toContain(
+          'Add at least one operation to the actions array'
+        );
       });
 
       it('should fail for invalid operations in actions', () => {
         const rule = {
           event_type: 'core:test_event',
-          actions: [
-            { type: 'INVALID_OPERATION', parameters: {} },
-          ],
+          actions: [{ type: 'INVALID_OPERATION', parameters: {} }],
         };
         const result = validateRuleStructure(rule);
         expect(result.isValid).toBe(false);
@@ -489,10 +499,7 @@ describe('preValidationUtils', () => {
 
     it('should skip validation for unknown schemas', () => {
       const data = null;
-      const result = performPreValidation(
-        data,
-        'schema://unknown/schema.json'
-      );
+      const result = performPreValidation(data, 'schema://unknown/schema.json');
       expect(result.isValid).toBe(true);
     });
 
@@ -509,8 +516,17 @@ describe('preValidationUtils', () => {
 
   describe('formatPreValidationError', () => {
     it('should return success message for valid result', () => {
-      const result = { isValid: true, error: null, path: null, suggestions: null };
-      const message = formatPreValidationError(result, 'test.json', 'test-schema');
+      const result = {
+        isValid: true,
+        error: null,
+        path: null,
+        suggestions: null,
+      };
+      const message = formatPreValidationError(
+        result,
+        'test.json',
+        'test-schema'
+      );
       expect(message).toBe('No pre-validation errors');
     });
 
@@ -521,7 +537,11 @@ describe('preValidationUtils', () => {
         path: 'root.field',
         suggestions: null,
       };
-      const message = formatPreValidationError(result, 'test.json', 'test-schema');
+      const message = formatPreValidationError(
+        result,
+        'test.json',
+        'test-schema'
+      );
       expect(message).toContain("Pre-validation failed for 'test.json'");
       expect(message).toContain('Location: root.field');
       expect(message).toContain('Error: Test error message');
@@ -549,13 +569,19 @@ describe('preValidationUtils', () => {
           'Valid types: QUERY_COMPONENT, MODIFY_COMPONENT',
         ],
       };
-      const message = formatPreValidationError(result, 'rule.json', 'rule-schema');
+      const message = formatPreValidationError(
+        result,
+        'rule.json',
+        'rule-schema'
+      );
       expect(message).toContain("Pre-validation failed for 'rule.json'");
       expect(message).toContain('Location: actions[0]');
       expect(message).toContain('Error: Missing type field');
       expect(message).toContain('Suggestions:');
       expect(message).toContain('- Add a type field');
-      expect(message).toContain('- Valid types: QUERY_COMPONENT, MODIFY_COMPONENT');
+      expect(message).toContain(
+        '- Valid types: QUERY_COMPONENT, MODIFY_COMPONENT'
+      );
     });
 
     it('should format multiline message correctly', () => {
@@ -565,7 +591,11 @@ describe('preValidationUtils', () => {
         path: 'deep.nested.path',
         suggestions: ['Fix 1', 'Fix 2', 'Fix 3'],
       };
-      const message = formatPreValidationError(result, 'complex.json', 'schema');
+      const message = formatPreValidationError(
+        result,
+        'complex.json',
+        'schema'
+      );
       const lines = message.split('\n');
       expect(lines).toHaveLength(7); // Header + location + error + suggestions header + 3 suggestions
       expect(lines[0]).toContain('complex.json');

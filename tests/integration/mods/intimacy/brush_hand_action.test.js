@@ -28,7 +28,7 @@ describe('intimacy:brush_hand action integration', () => {
 
   it('successfully executes brush hand action between close actors', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    
+
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
     const successEvent = testFixture.events.find(
@@ -48,7 +48,7 @@ describe('intimacy:brush_hand action integration', () => {
 
   it('perception log shows correct message for brush hand action', async () => {
     const scenario = testFixture.createCloseActors(['Sarah', 'James'], {
-      location: 'garden'
+      location: 'garden',
     });
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
@@ -57,13 +57,17 @@ describe('intimacy:brush_hand action integration', () => {
       descriptionText: "Sarah brushes James's hand with their own.",
       locationId: 'garden',
       actorId: scenario.actor.id,
-      targetId: scenario.target.id
+      targetId: scenario.target.id,
     });
   });
 
   it('handles multiple close partners correctly', async () => {
-    const scenario = testFixture.createMultiActorScenario(['Alice', 'Bob', 'Charlie']);
-    
+    const scenario = testFixture.createMultiActorScenario([
+      'Alice',
+      'Bob',
+      'Charlie',
+    ]);
+
     // First brush Bob's hand
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -78,7 +82,10 @@ describe('intimacy:brush_hand action integration', () => {
     testFixture.events.length = 0;
 
     // Then brush Charlie's hand
-    await testFixture.executeAction(scenario.actor.id, scenario.observers[0].id);
+    await testFixture.executeAction(
+      scenario.actor.id,
+      scenario.observers[0].id
+    );
 
     perceptibleEvent = testFixture.events.find(
       (e) => e.eventType === 'core:perceptible_event'

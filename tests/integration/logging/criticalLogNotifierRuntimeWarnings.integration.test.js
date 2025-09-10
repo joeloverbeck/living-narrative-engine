@@ -31,20 +31,20 @@ describe('CriticalLogNotifier - Runtime Debug Messages Integration', () => {
 
   beforeEach(() => {
     testBed = createTestBed();
-    
+
     // Set up DOM for DocumentContext
     dom = new JSDOM('<!DOCTYPE html><div id="test"></div>');
     global.document = dom.window.document;
     global.window = dom.window;
     global.HTMLElement = dom.window.HTMLElement;
     documentContext = new DocumentContext(dom.window.document);
-    
+
     // Create shared mock logger for both CriticalLogNotifier and ValidatedEventDispatcher
     sharedMockLogger = testBed.createMockLogger();
     jest.spyOn(sharedMockLogger, 'warn');
     jest.spyOn(sharedMockLogger, 'error');
     jest.spyOn(sharedMockLogger, 'debug');
-    
+
     // Mock EventBus
     mockEventBus = {
       dispatch: jest.fn().mockResolvedValue(undefined),
@@ -107,7 +107,9 @@ describe('CriticalLogNotifier - Runtime Debug Messages Integration', () => {
     // Assert - Check that the bootstrap debug message was logged
     // ValidatedEventDispatcher treats core:critical_notification_shown as a bootstrap event
     expect(sharedMockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("VED: EventDefinition not found for 'core:critical_notification_shown' (expected during bootstrap)")
+      expect.stringContaining(
+        "VED: EventDefinition not found for 'core:critical_notification_shown' (expected during bootstrap)"
+      )
     );
 
     // Verify the event was still dispatched despite the warning
@@ -127,7 +129,9 @@ describe('CriticalLogNotifier - Runtime Debug Messages Integration', () => {
 
     // Act - Trigger multiple critical logs rapidly (simulating mod loading errors)
     for (let i = 0; i < 5; i++) {
-      sharedMockLogger.error(`Test error ${i} to trigger multiple notifications`);
+      sharedMockLogger.error(
+        `Test error ${i} to trigger multiple notifications`
+      );
     }
 
     // Wait for async processing (multiple animation frames + timers)
@@ -138,14 +142,17 @@ describe('CriticalLogNotifier - Runtime Debug Messages Integration', () => {
 
     // Assert - Should have multiple debug messages
     const debugCalls = sharedMockLogger.debug.mock.calls.filter(
-      ([msg]) => msg && msg.includes("VED: EventDefinition not found for 'core:critical_notification_shown' (expected during bootstrap)")
+      ([msg]) =>
+        msg &&
+        msg.includes(
+          "VED: EventDefinition not found for 'core:critical_notification_shown' (expected during bootstrap)"
+        )
     );
-    
+
     expect(debugCalls.length).toBeGreaterThanOrEqual(5);
   });
 
   it('should not produce debug messages when event definition is properly loaded', async () => {
-
     // Mock a properly loaded event definition
     const eventDefinition = {
       id: 'core:critical_notification_shown',
@@ -190,9 +197,13 @@ describe('CriticalLogNotifier - Runtime Debug Messages Integration', () => {
 
     // Assert - Should NOT have any event definition debug messages
     const debugCalls = sharedMockLogger.debug.mock.calls.filter(
-      ([msg]) => msg && msg.includes("VED: EventDefinition not found for 'core:critical_notification_shown'")
+      ([msg]) =>
+        msg &&
+        msg.includes(
+          "VED: EventDefinition not found for 'core:critical_notification_shown'"
+        )
     );
-    
+
     expect(debugCalls.length).toBe(0);
   });
 
@@ -229,9 +240,13 @@ describe('CriticalLogNotifier - Runtime Debug Messages Integration', () => {
 
     // Assert - Should handle concurrent processing without issues
     const debugCalls = sharedMockLogger.debug.mock.calls.filter(
-      ([msg]) => msg && msg.includes("VED: EventDefinition not found for 'core:critical_notification_shown' (expected during bootstrap)")
+      ([msg]) =>
+        msg &&
+        msg.includes(
+          "VED: EventDefinition not found for 'core:critical_notification_shown' (expected during bootstrap)"
+        )
     );
-    
+
     // Should have debug messages but should be manageable (no more than expected)
     expect(debugCalls.length).toBeGreaterThan(0);
     expect(debugCalls.length).toBeLessThanOrEqual(15); // Some buffer for async timing

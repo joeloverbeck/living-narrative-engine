@@ -20,7 +20,8 @@ export const SharedFixtures = {
         },
         {
           name: 'enhanced_actors',
-          content: 'base:enhanced_actors := entities(core:actor)[{"==": [{"var": "entity.components.base:special.enhanced"}, true]}]',
+          content:
+            'base:enhanced_actors := entities(core:actor)[{"==": [{"var": "entity.components.base:special.enhanced"}, true]}]',
         },
       ],
       components: [
@@ -45,11 +46,13 @@ export const SharedFixtures = {
       scopes: [
         {
           name: 'super_actors',
-          content: 'extension:super_actors := entities(core:actor)[{"and": [{"condition_ref": "base:is-enhanced"}, {">": [{"var": "entity.components.base:special.power"}, 50]}]}]',
+          content:
+            'extension:super_actors := entities(core:actor)[{"and": [{"condition_ref": "base:is-enhanced"}, {">": [{"var": "entity.components.base:special.power"}, 50]}]}]',
         },
         {
           name: 'base_and_super',
-          content: 'extension:base_and_super := base:enhanced_actors + extension:super_actors',
+          content:
+            'extension:base_and_super := base:enhanced_actors + extension:super_actors',
         },
       ],
       conditions: [
@@ -100,7 +103,8 @@ export const SharedFixtures = {
       scopes: [
         {
           name: 'tiered_entities',
-          content: 'base_mod:tiered_entities := core_mod:all_entities[{">": [{"var": "entity.components.core_mod:tier.level"}, 1]}]',
+          content:
+            'base_mod:tiered_entities := core_mod:all_entities[{">": [{"var": "entity.components.core_mod:tier.level"}, 1]}]',
         },
       ],
     },
@@ -108,7 +112,8 @@ export const SharedFixtures = {
       scopes: [
         {
           name: 'high_tier_entities',
-          content: 'ext_mod:high_tier_entities := base_mod:tiered_entities[{">": [{"var": "entity.components.core_mod:tier.level"}, 5]}]',
+          content:
+            'ext_mod:high_tier_entities := base_mod:tiered_entities[{">": [{"var": "entity.components.core_mod:tier.level"}, 5]}]',
         },
       ],
     },
@@ -116,11 +121,13 @@ export const SharedFixtures = {
       scopes: [
         {
           name: 'elite_entities',
-          content: 'adv_mod:elite_entities := ext_mod:high_tier_entities[{">=": [{"var": "entity.components.core_mod:tier.level"}, 10]}]',
+          content:
+            'adv_mod:elite_entities := ext_mod:high_tier_entities[{">=": [{"var": "entity.components.core_mod:tier.level"}, 10]}]',
         },
         {
           name: 'all_tiers_union',
-          content: 'adv_mod:all_tiers_union := core_mod:all_entities + base_mod:tiered_entities + ext_mod:high_tier_entities',
+          content:
+            'adv_mod:all_tiers_union := core_mod:all_entities + base_mod:tiered_entities + ext_mod:high_tier_entities',
         },
       ],
     },
@@ -138,7 +145,8 @@ export const SharedFixtures = {
         },
         {
           name: 'player_entities',
-          content: 'core_utils:player_entities := entities(core:actor)[{"var": "entity.components.core:actor.isPlayer", "==": true}]',
+          content:
+            'core_utils:player_entities := entities(core:actor)[{"var": "entity.components.core:actor.isPlayer", "==": true}]',
         },
       ],
     },
@@ -146,11 +154,13 @@ export const SharedFixtures = {
       scopes: [
         {
           name: 'combat_actors',
-          content: 'gameplay:combat_actors := core_utils:basic_actors[{"has": [{"var": "entity.components"}, "gameplay:combat"]}]',
+          content:
+            'gameplay:combat_actors := core_utils:basic_actors[{"has": [{"var": "entity.components"}, "gameplay:combat"]}]',
         },
         {
           name: 'non_combat_actors',
-          content: 'gameplay:non_combat_actors := core_utils:basic_actors[{"!": {"has": [{"var": "entity.components"}, "gameplay:combat"]}}]',
+          content:
+            'gameplay:non_combat_actors := core_utils:basic_actors[{"!": {"has": [{"var": "entity.components"}, "gameplay:combat"]}}]',
         },
       ],
       components: [
@@ -174,11 +184,13 @@ export const SharedFixtures = {
       scopes: [
         {
           name: 'social_actors',
-          content: 'social:interactive_actors := core_utils:basic_actors[{"has": [{"var": "entity.components"}, "social:personality"]}]',
+          content:
+            'social:interactive_actors := core_utils:basic_actors[{"has": [{"var": "entity.components"}, "social:personality"]}]',
         },
         {
           name: 'mixed_actors',
-          content: 'social:mixed_actors := gameplay:combat_actors + social:interactive_actors',
+          content:
+            'social:mixed_actors := gameplay:combat_actors + social:interactive_actors',
         },
       ],
       components: [
@@ -208,7 +220,8 @@ export const SharedFixtures = {
       scopes: [
         {
           name: 'default_behavior',
-          content: 'base:target_selection := entities(core:actor)[{"var": "entity.components.core:actor.isPlayer", "==": false}]',
+          content:
+            'base:target_selection := entities(core:actor)[{"var": "entity.components.core:actor.isPlayer", "==": false}]',
         },
         {
           name: 'basic_filter',
@@ -220,11 +233,13 @@ export const SharedFixtures = {
       scopes: [
         {
           name: 'enhanced_behavior',
-          content: 'base:target_selection := entities(core:actor)[{"and": [{"var": "entity.components.core:actor.isPlayer", "==": false}, {">": [{"var": "entity.components.override:priority.value"}, 0]}]}]',
+          content:
+            'base:target_selection := entities(core:actor)[{"and": [{"var": "entity.components.core:actor.isPlayer", "==": false}, {">": [{"var": "entity.components.override:priority.value"}, 0]}]}]',
         },
         {
           name: 'override_filter',
-          content: 'override:enhanced_filter := base:target_selection[{">": [{"var": "entity.components.override:priority.value"}, 5]}]',
+          content:
+            'override:enhanced_filter := base:target_selection[{">": [{"var": "entity.components.override:priority.value"}, 5]}]',
         },
       ],
       components: [
@@ -258,7 +273,8 @@ export const SharedFixtures = {
         },
         {
           name: 'extensible_base',
-          content: 'core_ext:extensible := core_ext:all_entities[{"has": [{"var": "entity.components"}, "core:actor"]}]',
+          content:
+            'core_ext:extensible := core_ext:all_entities[{"has": [{"var": "entity.components"}, "core:actor"]}]',
         },
       ],
     },
@@ -266,11 +282,13 @@ export const SharedFixtures = {
       scopes: [
         {
           name: 'extension_a_entities',
-          content: 'ext_a:enhanced := core_ext:extensible[{"has": [{"var": "entity.components"}, "ext_a:feature"]}]',
+          content:
+            'ext_a:enhanced := core_ext:extensible[{"has": [{"var": "entity.components"}, "ext_a:feature"]}]',
         },
         {
           name: 'extension_a_contribution',
-          content: 'core_ext:extensible_enhanced := core_ext:extensible + ext_a:enhanced',
+          content:
+            'core_ext:extensible_enhanced := core_ext:extensible + ext_a:enhanced',
         },
       ],
       components: [
@@ -293,11 +311,13 @@ export const SharedFixtures = {
       scopes: [
         {
           name: 'extension_b_entities',
-          content: 'ext_b:special := core_ext:extensible[{"has": [{"var": "entity.components"}, "ext_b:special"]}]',
+          content:
+            'ext_b:special := core_ext:extensible[{"has": [{"var": "entity.components"}, "ext_b:special"]}]',
         },
         {
           name: 'extension_b_contribution',
-          content: 'core_ext:extensible_special := core_ext:extensible + ext_b:special',
+          content:
+            'core_ext:extensible_special := core_ext:extensible + ext_b:special',
         },
       ],
       components: [
@@ -324,7 +344,8 @@ export const SharedFixtures = {
         },
         {
           name: 'intersection',
-          content: 'combined:intersection := ext_a:enhanced[{"has": [{"var": "entity.components"}, "ext_b:special"]}]',
+          content:
+            'combined:intersection := ext_a:enhanced[{"has": [{"var": "entity.components"}, "ext_b:special"]}]',
         },
       ],
     },

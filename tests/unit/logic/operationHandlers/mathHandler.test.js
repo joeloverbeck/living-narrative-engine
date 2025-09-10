@@ -9,7 +9,10 @@ jest.mock('json-logic-js', () => ({
   apply: jest.fn(),
 }));
 
-import MathHandler, { resolveOperand, evaluateExpression } from '../../../../src/logic/operationHandlers/mathHandler.js';
+import MathHandler, {
+  resolveOperand,
+  evaluateExpression,
+} from '../../../../src/logic/operationHandlers/mathHandler.js';
 
 const makeLogger = () => ({
   info: jest.fn(),
@@ -43,7 +46,7 @@ describe('MathHandler', () => {
       }
       return undefined;
     });
-    
+
     handler = new MathHandler({
       logger,
       safeEventDispatcher,
@@ -115,12 +118,18 @@ describe('MathHandler', () => {
   describe('Parameter Validation Edge Cases', () => {
     test('handles null params', () => {
       handler.execute(null, execCtx);
-      expect(logger.warn).toHaveBeenCalledWith('MATH: params missing or invalid.', { params: null });
+      expect(logger.warn).toHaveBeenCalledWith(
+        'MATH: params missing or invalid.',
+        { params: null }
+      );
     });
 
     test('handles undefined params', () => {
       handler.execute(undefined, execCtx);
-      expect(logger.warn).toHaveBeenCalledWith('MATH: params missing or invalid.', { params: undefined });
+      expect(logger.warn).toHaveBeenCalledWith(
+        'MATH: params missing or invalid.',
+        { params: undefined }
+      );
     });
 
     test('handles empty result_variable', () => {
@@ -129,7 +138,9 @@ describe('MathHandler', () => {
         expression: { operator: 'add', operands: [1, 2] },
       };
       handler.execute(params, execCtx);
-      expect(logger.warn).toHaveBeenCalledWith('MATH: "result_variable" must be a non-empty string.');
+      expect(logger.warn).toHaveBeenCalledWith(
+        'MATH: "result_variable" must be a non-empty string.'
+      );
     });
 
     test('handles whitespace-only result_variable', () => {
@@ -138,7 +149,9 @@ describe('MathHandler', () => {
         expression: { operator: 'add', operands: [1, 2] },
       };
       handler.execute(params, execCtx);
-      expect(logger.warn).toHaveBeenCalledWith('MATH: "result_variable" must be a non-empty string.');
+      expect(logger.warn).toHaveBeenCalledWith(
+        'MATH: "result_variable" must be a non-empty string.'
+      );
     });
 
     test('handles null expression', () => {
@@ -147,7 +160,9 @@ describe('MathHandler', () => {
         expression: null,
       };
       handler.execute(params, execCtx);
-      expect(logger.warn).toHaveBeenCalledWith('MATH: "expression" must be an object.');
+      expect(logger.warn).toHaveBeenCalledWith(
+        'MATH: "expression" must be an object.'
+      );
     });
 
     test('handles non-object expression', () => {
@@ -156,7 +171,9 @@ describe('MathHandler', () => {
         expression: 'invalid',
       };
       handler.execute(params, execCtx);
-      expect(logger.warn).toHaveBeenCalledWith('MATH: "expression" must be an object.');
+      expect(logger.warn).toHaveBeenCalledWith(
+        'MATH: "expression" must be an object.'
+      );
     });
 
     test('handles missing evaluationContext', () => {
@@ -169,7 +186,8 @@ describe('MathHandler', () => {
       expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
         'core:system_error_occurred',
         expect.objectContaining({
-          message: 'ensureEvaluationContext: executionContext.evaluationContext.context is missing or invalid.',
+          message:
+            'ensureEvaluationContext: executionContext.evaluationContext.context is missing or invalid.',
         })
       );
     });
@@ -193,7 +211,9 @@ describe('MathHandler', () => {
       };
       handler.execute(params, execCtx);
       expect(execCtx.evaluationContext.context.res).toBeNull();
-      expect(logger.warn).toHaveBeenCalledWith("MATH: Unknown operator 'power'.");
+      expect(logger.warn).toHaveBeenCalledWith(
+        "MATH: Unknown operator 'power'."
+      );
     });
 
     test('performs multiply operation', () => {
@@ -244,7 +264,9 @@ describe('resolveOperand', () => {
   test('resolves variable references', () => {
     mockJsonLogic.apply.mockReturnValue(123);
     const context = { value: 123 };
-    expect(resolveOperand({ var: 'value' }, context, logger, dispatcher)).toBe(123);
+    expect(resolveOperand({ var: 'value' }, context, logger, dispatcher)).toBe(
+      123
+    );
   });
 
   test('handles variable resolution errors', () => {
@@ -260,8 +282,8 @@ describe('resolveOperand', () => {
         message: 'MATH: Error resolving variable operand.',
         details: expect.objectContaining({
           error: 'Variable resolution failed',
-          stack: expect.stringContaining('Error: Variable resolution failed')
-        })
+          stack: expect.stringContaining('Error: Variable resolution failed'),
+        }),
       })
     );
   });
@@ -273,13 +295,18 @@ describe('resolveOperand', () => {
 
   test('warns about invalid operands', () => {
     expect(resolveOperand('invalid', {}, logger, dispatcher)).toBe(NaN);
-    expect(logger.warn).toHaveBeenCalledWith('MATH: Invalid operand encountered.', { operand: 'invalid' });
+    expect(logger.warn).toHaveBeenCalledWith(
+      'MATH: Invalid operand encountered.',
+      { operand: 'invalid' }
+    );
   });
 
   test('handles non-numeric variable resolution', () => {
     mockJsonLogic.apply.mockReturnValue('hello');
     const context = { text: 'hello' };
-    expect(resolveOperand({ var: 'text' }, context, logger, dispatcher)).toBe(NaN);
+    expect(resolveOperand({ var: 'text' }, context, logger, dispatcher)).toBe(
+      NaN
+    );
   });
 });
 
@@ -298,22 +325,81 @@ describe('evaluateExpression', () => {
   });
 
   test('returns NaN for invalid operands array', () => {
-    expect(evaluateExpression({ operator: 'add', operands: [1] }, {}, logger, dispatcher)).toBe(NaN);
-    expect(evaluateExpression({ operator: 'add', operands: [1, 2, 3] }, {}, logger, dispatcher)).toBe(NaN);
-    expect(evaluateExpression({ operator: 'add', operands: 'not-array' }, {}, logger, dispatcher)).toBe(NaN);
+    expect(
+      evaluateExpression(
+        { operator: 'add', operands: [1] },
+        {},
+        logger,
+        dispatcher
+      )
+    ).toBe(NaN);
+    expect(
+      evaluateExpression(
+        { operator: 'add', operands: [1, 2, 3] },
+        {},
+        logger,
+        dispatcher
+      )
+    ).toBe(NaN);
+    expect(
+      evaluateExpression(
+        { operator: 'add', operands: 'not-array' },
+        {},
+        logger,
+        dispatcher
+      )
+    ).toBe(NaN);
   });
 
   test('warns about non-numeric operands', () => {
     const expr = { operator: 'add', operands: ['a', 'b'] };
     expect(evaluateExpression(expr, {}, logger, dispatcher)).toBe(NaN);
-    expect(logger.warn).toHaveBeenCalledWith('MATH: operands must resolve to numbers.', { left: NaN, right: NaN });
+    expect(logger.warn).toHaveBeenCalledWith(
+      'MATH: operands must resolve to numbers.',
+      { left: NaN, right: NaN }
+    );
   });
 
   test('performs all mathematical operations', () => {
-    expect(evaluateExpression({ operator: 'add', operands: [3, 2] }, {}, logger, dispatcher)).toBe(5);
-    expect(evaluateExpression({ operator: 'subtract', operands: [3, 2] }, {}, logger, dispatcher)).toBe(1);
-    expect(evaluateExpression({ operator: 'multiply', operands: [3, 2] }, {}, logger, dispatcher)).toBe(6);
-    expect(evaluateExpression({ operator: 'divide', operands: [6, 2] }, {}, logger, dispatcher)).toBe(3);
-    expect(evaluateExpression({ operator: 'modulo', operands: [7, 3] }, {}, logger, dispatcher)).toBe(1);
+    expect(
+      evaluateExpression(
+        { operator: 'add', operands: [3, 2] },
+        {},
+        logger,
+        dispatcher
+      )
+    ).toBe(5);
+    expect(
+      evaluateExpression(
+        { operator: 'subtract', operands: [3, 2] },
+        {},
+        logger,
+        dispatcher
+      )
+    ).toBe(1);
+    expect(
+      evaluateExpression(
+        { operator: 'multiply', operands: [3, 2] },
+        {},
+        logger,
+        dispatcher
+      )
+    ).toBe(6);
+    expect(
+      evaluateExpression(
+        { operator: 'divide', operands: [6, 2] },
+        {},
+        logger,
+        dispatcher
+      )
+    ).toBe(3);
+    expect(
+      evaluateExpression(
+        { operator: 'modulo', operands: [7, 3] },
+        {},
+        logger,
+        dispatcher
+      )
+    ).toBe(1);
   });
 });

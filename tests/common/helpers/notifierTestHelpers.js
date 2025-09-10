@@ -61,7 +61,7 @@ export function simulateClick(element) {
 
 /**
  * Simulate keyboard event
- * @param {Document} document - Document instance  
+ * @param {Document} document - Document instance
  * @param {string} key - Key name
  * @param {object} options - Event options
  * @returns {void}
@@ -71,8 +71,8 @@ export function simulateKeyboard(document, key, options = {}) {
   const event = new (document.defaultView || window).KeyboardEvent('keydown', {
     key: key,
     code: key,
-    keyCode: key === 'Escape' ? 27 : (key === 'L' ? 76 : 0),
-    which: key === 'Escape' ? 27 : (key === 'L' ? 76 : 0),
+    keyCode: key === 'Escape' ? 27 : key === 'L' ? 76 : 0,
+    which: key === 'Escape' ? 27 : key === 'L' ? 76 : 0,
     ctrlKey: options.ctrlKey || false,
     altKey: options.altKey || false,
     shiftKey: options.shiftKey || false,
@@ -80,7 +80,7 @@ export function simulateKeyboard(document, key, options = {}) {
     bubbles: true,
     cancelable: true,
   });
-  
+
   document.dispatchEvent(event);
 }
 
@@ -104,7 +104,11 @@ export function simulateRightClick(element) {
  * @param {number} timeout - Maximum wait time in milliseconds
  * @returns {Promise<boolean>} Whether the visibility condition was met
  */
-export async function waitForVisibility(element, shouldBeVisible, timeout = 1000) {
+export async function waitForVisibility(
+  element,
+  shouldBeVisible,
+  timeout = 1000
+) {
   return new Promise((resolve) => {
     const checkInterval = 50;
     let elapsed = 0;

@@ -28,7 +28,7 @@ class FixedIndexLLMController {
   async init() {
     // Simulate the real initialization logic
     await this.updateCurrentLLMDisplay();
-    
+
     // Try to resolve the LLM selection modal (like the real controller does)
     try {
       const llmSelectionModal = this.#container.resolve('LlmSelectionModal');
@@ -42,7 +42,7 @@ class FixedIndexLLMController {
 
   async updateCurrentLLMDisplay() {
     if (!this.#llmAdapter) return false;
-    
+
     try {
       // Test that we can call methods on the adapter
       const currentLlmId = await this.#llmAdapter.getCurrentActiveLlmId();
@@ -105,7 +105,7 @@ describe('IndexLLMController - Complete Fix Verification', () => {
     expect(() => {
       container.resolve('ILLMAdapter');
     }).toThrow('AppContainer: No service registered for key "ILLMAdapter"');
-    
+
     // But the correct token works
     expect(() => {
       container.resolve(tokens.LLMAdapter);

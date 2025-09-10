@@ -31,8 +31,8 @@ jest.mock('../../../../src/logic/services/closenessCircleService.js');
 function createExecutionContext() {
   return {
     evaluationContext: {
-      context: {}
-    }
+      context: {},
+    },
   };
 }
 
@@ -48,29 +48,29 @@ function setupEntityManager(scenario) {
       mockEntityManager.getComponentData.mockReturnValue({ spots: [] });
       break;
     case 'full-furniture':
-      mockEntityManager.getComponentData.mockReturnValue({ 
-        spots: ['actor:1', 'actor:2', 'actor:3'] 
+      mockEntityManager.getComponentData.mockReturnValue({
+        spots: ['actor:1', 'actor:2', 'actor:3'],
       });
       break;
     case 'corrupted-spots':
-      mockEntityManager.getComponentData.mockReturnValue({ 
-        spots: 'not-an-array' 
+      mockEntityManager.getComponentData.mockReturnValue({
+        spots: 'not-an-array',
       });
       break;
     case 'null-spots':
-      mockEntityManager.getComponentData.mockReturnValue({ 
-        spots: null 
+      mockEntityManager.getComponentData.mockReturnValue({
+        spots: null,
       });
       break;
     case 'oversized-furniture':
-      mockEntityManager.getComponentData.mockReturnValue({ 
-        spots: new Array(11).fill(null) // 11 spots (exceeds max of 10)
+      mockEntityManager.getComponentData.mockReturnValue({
+        spots: new Array(11).fill(null), // 11 spots (exceeds max of 10)
       });
       break;
     default:
       mockEntityManager.getComponentData.mockReturnValue(null);
   }
-  
+
   return mockEntityManager;
 }
 
@@ -121,15 +121,17 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
     proximityUtils.validateProximityParameters.mockReturnValue(true);
     proximityUtils.findAdjacentOccupants.mockReturnValue([]);
     evaluationContextUtils.ensureEvaluationContext.mockReturnValue(true);
-    contextVariableUtils.tryWriteContextVariable.mockReturnValue({ success: true });
-    
+    contextVariableUtils.tryWriteContextVariable.mockReturnValue({
+      success: true,
+    });
+
     // Setup ComponentStateValidator mocks
     ComponentStateValidator.mockImplementation(() => ({
       validateFurnitureComponent: jest.fn(),
       validateClosenessComponent: jest.fn(),
       validateBidirectionalCloseness: jest.fn(),
     }));
-    
+
     // Setup error class mocks
     InvalidArgumentError.mockImplementation((message) => {
       const error = new Error(message);
@@ -142,20 +144,20 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
     describe('Malformed Entity IDs', () => {
       it('should handle malformed entity IDs gracefully', async () => {
         const invalidIds = [
-          '',                    // Empty string
-          '   ',                 // Whitespace only
-          'no-colon',           // Missing namespace separator
-          ':missing-mod',       // Missing mod ID
-          'missing-id:',        // Missing identifier
-          'mod::double-colon',  // Double colon
-          'mod:id:extra',       // Extra colons
-          'mod-dash:id',        // Invalid mod ID characters
-          'mod:id@special',     // Invalid identifier characters
-          null,                 // Null value
-          undefined,            // Undefined value
-          123,                  // Number
-          {},                   // Object
-          []                    // Array
+          '', // Empty string
+          '   ', // Whitespace only
+          'no-colon', // Missing namespace separator
+          ':missing-mod', // Missing mod ID
+          'missing-id:', // Missing identifier
+          'mod::double-colon', // Double colon
+          'mod:id:extra', // Extra colons
+          'mod-dash:id', // Invalid mod ID characters
+          'mod:id@special', // Invalid identifier characters
+          null, // Null value
+          undefined, // Undefined value
+          123, // Number
+          {}, // Object
+          [], // Array
         ];
 
         for (const invalidId of invalidIds) {
@@ -166,29 +168,37 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
           });
 
           // Test invalid furniture_id
-          const result1 = await handler.execute({
-            furniture_id: invalidId,
-            actor_id: 'game:alice',
-            spot_index: 1
-          }, executionContext);
-          
+          const result1 = await handler.execute(
+            {
+              furniture_id: invalidId,
+              actor_id: 'game:alice',
+              spot_index: 1,
+            },
+            executionContext
+          );
+
           expect(result1.success).toBe(false);
           expect(result1.error).toContain('Parameter validation failed');
-          
+
           // Test invalid actor_id
           jest.clearAllMocks();
-          proximityUtils.validateProximityParameters.mockImplementation((furnitureId, actorId) => {
-            if (actorId === invalidId) {
-              throw new Error(`Invalid entity ID: ${invalidId}`);
+          proximityUtils.validateProximityParameters.mockImplementation(
+            (furnitureId, actorId) => {
+              if (actorId === invalidId) {
+                throw new Error(`Invalid entity ID: ${invalidId}`);
+              }
             }
-          });
-          
-          const result2 = await handler.execute({
-            furniture_id: 'furniture:couch',
-            actor_id: invalidId,
-            spot_index: 1
-          }, executionContext);
-          
+          );
+
+          const result2 = await handler.execute(
+            {
+              furniture_id: 'furniture:couch',
+              actor_id: invalidId,
+              spot_index: 1,
+            },
+            executionContext
+          );
+
           expect(result2.success).toBe(false);
           expect(result2.error).toContain('Parameter validation failed');
         }
@@ -198,34 +208,43 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
     describe('Spot Index Validation', () => {
       it('should handle extreme spot index values', async () => {
         const invalidSpotIndices = [
-          -1,                   // Negative
-          -999,                 // Large negative
-          10,                   // Above maximum
-          100,                  // Far above maximum
-          1.5,                  // Decimal
-          NaN,                  // Not a number
-          Infinity,             // Infinity
-          -Infinity,            // Negative infinity
-          '0',                  // String number
-          '1',                  // String number
-          null,                 // Null
-          undefined             // Undefined
+          -1, // Negative
+          -999, // Large negative
+          10, // Above maximum
+          100, // Far above maximum
+          1.5, // Decimal
+          NaN, // Not a number
+          Infinity, // Infinity
+          -Infinity, // Negative infinity
+          '0', // String number
+          '1', // String number
+          null, // Null
+          undefined, // Undefined
         ];
 
         const furnitureComponent = {
-          spots: [null, null, null] // 3 spots available
+          spots: [null, null, null], // 3 spots available
         };
 
         for (const invalidSpot of invalidSpotIndices) {
           jest.clearAllMocks();
-          
+
           // Setup mocks for this iteration
-          mockEntityManager.getComponentData.mockReturnValue(furnitureComponent);
-          proximityUtils.validateProximityParameters.mockImplementation((furnitureId, actorId, spotIndex) => {
-            if (typeof spotIndex !== 'number' || spotIndex < 0 || spotIndex >= 10 || !Number.isInteger(spotIndex)) {
-              throw new Error(`Invalid spot index: ${spotIndex}`);
+          mockEntityManager.getComponentData.mockReturnValue(
+            furnitureComponent
+          );
+          proximityUtils.validateProximityParameters.mockImplementation(
+            (furnitureId, actorId, spotIndex) => {
+              if (
+                typeof spotIndex !== 'number' ||
+                spotIndex < 0 ||
+                spotIndex >= 10 ||
+                !Number.isInteger(spotIndex)
+              ) {
+                throw new Error(`Invalid spot index: ${spotIndex}`);
+              }
             }
-          });
+          );
 
           const mockValidator = {
             validateFurnitureComponent: jest.fn(),
@@ -233,11 +252,14 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
           };
           ComponentStateValidator.mockImplementation(() => mockValidator);
 
-          const result = await handler.execute({
-            furniture_id: 'furniture:couch',
-            actor_id: 'game:alice',
-            spot_index: invalidSpot
-          }, executionContext);
+          const result = await handler.execute(
+            {
+              furniture_id: 'furniture:couch',
+              actor_id: 'game:alice',
+              spot_index: invalidSpot,
+            },
+            executionContext
+          );
 
           // Should either fail validation or exceed bounds
           expect(result.success).toBe(false);
@@ -250,7 +272,7 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
     it('should handle corrupted furniture component', async () => {
       // Spots is not an array
       mockEntityManager.getComponentData.mockReturnValue({
-        spots: 'not-an-array'
+        spots: 'not-an-array',
       });
 
       const mockValidator = {
@@ -261,11 +283,14 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
       };
       ComponentStateValidator.mockImplementation(() => mockValidator);
 
-      const result = await handler.execute({
-        furniture_id: 'furniture:corrupted',
-        actor_id: 'game:alice',
-        spot_index: 1
-      }, executionContext);
+      const result = await handler.execute(
+        {
+          furniture_id: 'furniture:corrupted',
+          actor_id: 'game:alice',
+          spot_index: 1,
+        },
+        executionContext
+      );
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Furniture spots must be an array');
@@ -273,7 +298,7 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
 
     it('should handle furniture with empty spots array', async () => {
       mockEntityManager.getComponentData.mockReturnValue({
-        spots: []
+        spots: [],
       });
 
       const mockValidator = {
@@ -284,11 +309,14 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
       };
       ComponentStateValidator.mockImplementation(() => mockValidator);
 
-      const result = await handler.execute({
-        furniture_id: 'furniture:empty',
-        actor_id: 'game:alice',
-        spot_index: 0
-      }, executionContext);
+      const result = await handler.execute(
+        {
+          furniture_id: 'furniture:empty',
+          actor_id: 'game:alice',
+          spot_index: 0,
+        },
+        executionContext
+      );
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Furniture has no spots');
@@ -296,22 +324,27 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
 
     it('should handle furniture exceeding maximum capacity', async () => {
       mockEntityManager.getComponentData.mockReturnValue({
-        spots: new Array(11).fill(null) // 11 spots (exceeds max of 10)
+        spots: new Array(11).fill(null), // 11 spots (exceeds max of 10)
       });
 
       const mockValidator = {
         validateFurnitureComponent: jest.fn().mockImplementation(() => {
-          throw new InvalidArgumentError('Furniture exceeds maximum capacity of 10 spots');
+          throw new InvalidArgumentError(
+            'Furniture exceeds maximum capacity of 10 spots'
+          );
         }),
         validateClosenessComponent: jest.fn(),
       };
       ComponentStateValidator.mockImplementation(() => mockValidator);
 
-      const result = await handler.execute({
-        furniture_id: 'furniture:oversized',
-        actor_id: 'game:alice',
-        spot_index: 10
-      }, executionContext);
+      const result = await handler.execute(
+        {
+          furniture_id: 'furniture:oversized',
+          actor_id: 'game:alice',
+          spot_index: 10,
+        },
+        executionContext
+      );
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Furniture exceeds maximum capacity');
@@ -322,29 +355,36 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
     it('should handle circular closeness references', async () => {
       // Setup circular reference: A → B → C → A
       let getComponentCallCount = 0;
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        getComponentCallCount++;
-        
-        // First call is for furniture validation
-        if (getComponentCallCount === 1) {
-          return { spots: ['game:alice', 'game:bob', 'game:charlie'] };
-        }
-        
-        if (componentType === 'positioning:closeness') {
-          switch (entityId) {
-            case 'game:alice': return { partners: ['game:bob'] };
-            case 'game:bob': return { partners: ['game:charlie'] };
-            case 'game:charlie': return { partners: ['game:alice'] };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          getComponentCallCount++;
+
+          // First call is for furniture validation
+          if (getComponentCallCount === 1) {
+            return { spots: ['game:alice', 'game:bob', 'game:charlie'] };
           }
+
+          if (componentType === 'positioning:closeness') {
+            switch (entityId) {
+              case 'game:alice':
+                return { partners: ['game:bob'] };
+              case 'game:bob':
+                return { partners: ['game:charlie'] };
+              case 'game:charlie':
+                return { partners: ['game:alice'] };
+            }
+          }
+          if (componentType === 'positioning:allows_sitting') {
+            return {
+              spots: ['game:alice', 'game:bob', 'game:charlie', 'game:dave'],
+            };
+          }
+          return null;
         }
-        if (componentType === 'positioning:allows_sitting') {
-          return { spots: ['game:alice', 'game:bob', 'game:charlie', 'game:dave'] };
-        }
-        return null;
-      });
+      );
 
       proximityUtils.findAdjacentOccupants.mockReturnValue(['game:charlie']);
-      
+
       const mockValidator = {
         validateFurnitureComponent: jest.fn(),
         validateClosenessComponent: jest.fn(),
@@ -353,11 +393,14 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
       ComponentStateValidator.mockImplementation(() => mockValidator);
 
       // Should handle gracefully without infinite loops
-      const result = await handler.execute({
-        furniture_id: 'furniture:couch',
-        actor_id: 'game:dave',
-        spot_index: 3
-      }, executionContext);
+      const result = await handler.execute(
+        {
+          furniture_id: 'furniture:couch',
+          actor_id: 'game:dave',
+          spot_index: 3,
+        },
+        executionContext
+      );
 
       expect(result.success).toBeDefined();
       // Verify no infinite loop occurred (test completes)
@@ -365,32 +408,48 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
     });
 
     it('should handle self-referential closeness', async () => {
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (componentType === 'positioning:closeness' && entityId === 'game:alice') {
-          return { partners: ['game:alice'] }; // Self-reference
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (
+            componentType === 'positioning:closeness' &&
+            entityId === 'game:alice'
+          ) {
+            return { partners: ['game:alice'] }; // Self-reference
+          }
+          if (componentType === 'positioning:allows_sitting') {
+            return { spots: ['game:alice', null] };
+          }
+          return null;
         }
-        if (componentType === 'positioning:allows_sitting') {
-          return { spots: ['game:alice', null] };
-        }
-        return null;
-      });
+      );
 
       const mockValidator = {
         validateFurnitureComponent: jest.fn(),
-        validateClosenessComponent: jest.fn().mockImplementation((actorId, component) => {
-          if (component && component.partners && component.partners.includes(actorId)) {
-            throw new InvalidArgumentError('Self-referential closeness detected');
-          }
-        }),
+        validateClosenessComponent: jest
+          .fn()
+          .mockImplementation((actorId, component) => {
+            if (
+              component &&
+              component.partners &&
+              component.partners.includes(actorId)
+            ) {
+              throw new InvalidArgumentError(
+                'Self-referential closeness detected'
+              );
+            }
+          }),
         validateBidirectionalCloseness: jest.fn(),
       };
       ComponentStateValidator.mockImplementation(() => mockValidator);
 
-      const result = await handler.execute({
-        furniture_id: 'furniture:couch',
-        actor_id: 'game:alice',
-        spot_index: 0
-      }, executionContext);
+      const result = await handler.execute(
+        {
+          furniture_id: 'furniture:couch',
+          actor_id: 'game:alice',
+          spot_index: 0,
+        },
+        executionContext
+      );
 
       // Should handle the self-reference error
       expect(result.success).toBeDefined();
@@ -401,14 +460,16 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
     it('should handle sequential operations correctly', async () => {
       // JavaScript is single-threaded, operations are inherently atomic
       const operations = [];
-      
+
       // Setup furniture with 3 spots
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (componentType === 'positioning:allows_sitting') {
-          return { spots: [null, null, null] };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (componentType === 'positioning:allows_sitting') {
+            return { spots: [null, null, null] };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       const mockValidator = {
         validateFurnitureComponent: jest.fn(),
@@ -416,38 +477,54 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
         validateBidirectionalCloseness: jest.fn(),
       };
       ComponentStateValidator.mockImplementation(() => mockValidator);
-      
+
       // Execute multiple operations in parallel
       for (let i = 0; i < 10; i++) {
-        operations.push(handler.execute({
-          furniture_id: 'furniture:shared',
-          actor_id: `game:actor_${i}`,
-          spot_index: i % 3
-        }, executionContext).catch(err => ({ error: err })));
+        operations.push(
+          handler
+            .execute(
+              {
+                furniture_id: 'furniture:shared',
+                actor_id: `game:actor_${i}`,
+                spot_index: i % 3,
+              },
+              executionContext
+            )
+            .catch((err) => ({ error: err }))
+        );
       }
 
       const results = await Promise.all(operations);
-      
+
       // All operations should complete without data corruption
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result).toBeDefined();
         // Either success or controlled error
-        expect(result.success !== undefined || result.error !== undefined).toBe(true);
+        expect(result.success !== undefined || result.error !== undefined).toBe(
+          true
+        );
       });
     });
 
     it('should maintain data consistency across async operations', async () => {
       const updateLog = [];
-      
+
       // Track all component updates
-      mockEntityManager.addComponent.mockImplementation((entityId, componentType, data) => {
-        updateLog.push({ entityId, componentType, data, timestamp: Date.now() });
-        return Promise.resolve();
-      });
+      mockEntityManager.addComponent.mockImplementation(
+        (entityId, componentType, data) => {
+          updateLog.push({
+            entityId,
+            componentType,
+            data,
+            timestamp: Date.now(),
+          });
+          return Promise.resolve();
+        }
+      );
 
       // Setup furniture
       mockEntityManager.getComponentData.mockReturnValue({
-        spots: [null, null, null]
+        spots: [null, null, null],
       });
 
       proximityUtils.findAdjacentOccupants
@@ -463,22 +540,28 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
 
       // Execute operations that modify shared state
       await Promise.all([
-        handler.execute({
-          furniture_id: 'furniture:bench',
-          actor_id: 'game:actor1',
-          spot_index: 0
-        }, executionContext),
-        handler.execute({
-          furniture_id: 'furniture:bench',
-          actor_id: 'game:actor2',
-          spot_index: 1
-        }, executionContext)
+        handler.execute(
+          {
+            furniture_id: 'furniture:bench',
+            actor_id: 'game:actor1',
+            spot_index: 0,
+          },
+          executionContext
+        ),
+        handler.execute(
+          {
+            furniture_id: 'furniture:bench',
+            actor_id: 'game:actor2',
+            spot_index: 1,
+          },
+          executionContext
+        ),
       ]);
 
       // Verify updates occurred
       expect(updateLog.length).toBeGreaterThan(0);
       // Each update should have a timestamp
-      updateLog.forEach(entry => {
+      updateLog.forEach((entry) => {
         expect(entry.timestamp).toBeDefined();
         expect(typeof entry.timestamp).toBe('number');
       });
@@ -488,22 +571,25 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
   describe('Edge Furniture Configurations', () => {
     it('should handle single-spot furniture correctly', async () => {
       mockEntityManager.getComponentData.mockReturnValue({
-        spots: [null] // Single spot
+        spots: [null], // Single spot
       });
 
       proximityUtils.findAdjacentOccupants.mockReturnValue([]);
-      
+
       const mockValidator = {
         validateFurnitureComponent: jest.fn(),
         validateClosenessComponent: jest.fn(),
       };
       ComponentStateValidator.mockImplementation(() => mockValidator);
 
-      const result = await handler.execute({
-        furniture_id: 'furniture:stool',
-        actor_id: 'game:alice',
-        spot_index: 0
-      }, executionContext);
+      const result = await handler.execute(
+        {
+          furniture_id: 'furniture:stool',
+          actor_id: 'game:alice',
+          spot_index: 0,
+        },
+        executionContext
+      );
 
       // Should succeed but establish no closeness (no adjacent spots)
       expect(result.success).toBe(true);
@@ -513,13 +599,16 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
     it('should handle furniture at maximum capacity', async () => {
       const maxSpots = new Array(10).fill('game:actor');
       maxSpots[5] = null; // One empty spot
-      
+
       mockEntityManager.getComponentData.mockReturnValue({
-        spots: maxSpots
+        spots: maxSpots,
       });
 
-      proximityUtils.findAdjacentOccupants.mockReturnValue(['game:actor', 'game:actor']);
-      
+      proximityUtils.findAdjacentOccupants.mockReturnValue([
+        'game:actor',
+        'game:actor',
+      ]);
+
       const mockValidator = {
         validateFurnitureComponent: jest.fn(),
         validateClosenessComponent: jest.fn(),
@@ -527,11 +616,14 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
       };
       ComponentStateValidator.mockImplementation(() => mockValidator);
 
-      const result = await handler.execute({
-        furniture_id: 'furniture:large-couch',
-        actor_id: 'game:alice',
-        spot_index: 5
-      }, executionContext);
+      const result = await handler.execute(
+        {
+          furniture_id: 'furniture:large-couch',
+          actor_id: 'game:alice',
+          spot_index: 5,
+        },
+        executionContext
+      );
 
       expect(result.success).toBe(true);
       expect(result.adjacentActors).toHaveLength(2); // Actors at spots 4 and 6
@@ -541,7 +633,7 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
   describe('Error Recovery Scenarios', () => {
     it('should recover from partial update failures', async () => {
       let callCount = 0;
-      
+
       // Fail on third call
       mockEntityManager.addComponent.mockImplementation(() => {
         callCount++;
@@ -552,14 +644,14 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
       });
 
       mockEntityManager.getComponentData.mockReturnValue({
-        spots: ['alice', 'bob', null]
+        spots: ['alice', 'bob', null],
       });
 
       proximityUtils.findAdjacentOccupants.mockReturnValue(['alice']);
       movementUtils.updateMovementLock.mockImplementation(() => {
         return Promise.reject(new Error('Database error'));
       });
-      
+
       const mockValidator = {
         validateFurnitureComponent: jest.fn(),
         validateClosenessComponent: jest.fn(),
@@ -567,11 +659,14 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
       };
       ComponentStateValidator.mockImplementation(() => mockValidator);
 
-      const result = await handler.execute({
-        furniture_id: 'furniture:couch',
-        actor_id: 'charlie',
-        spot_index: 2
-      }, executionContext);
+      const result = await handler.execute(
+        {
+          furniture_id: 'furniture:couch',
+          actor_id: 'charlie',
+          spot_index: 2,
+        },
+        executionContext
+      );
 
       // Should handle the error gracefully
       expect(result.success).toBe(false);
@@ -580,25 +675,27 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
 
     it('should validate final state even after successful updates', async () => {
       // Setup successful updates but inconsistent final state
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (componentType === 'positioning:allows_sitting') {
-          return { spots: [null, 'game:bob', null] };
-        }
-        if (componentType === 'positioning:closeness') {
-          // Return unidirectional relationship after update
-          if (entityId === 'game:alice') {
-            return { partners: ['game:bob'] };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (componentType === 'positioning:allows_sitting') {
+            return { spots: [null, 'game:bob', null] };
           }
-          if (entityId === 'game:bob') {
-            return { partners: [] }; // Missing reverse relationship
+          if (componentType === 'positioning:closeness') {
+            // Return unidirectional relationship after update
+            if (entityId === 'game:alice') {
+              return { partners: ['game:bob'] };
+            }
+            if (entityId === 'game:bob') {
+              return { partners: [] }; // Missing reverse relationship
+            }
           }
+          return null;
         }
-        return null;
-      });
+      );
 
       proximityUtils.findAdjacentOccupants.mockReturnValue(['game:bob']);
       movementUtils.updateMovementLock.mockResolvedValue();
-      
+
       const mockValidator = {
         validateFurnitureComponent: jest.fn(),
         validateClosenessComponent: jest.fn(),
@@ -608,11 +705,14 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
       };
       ComponentStateValidator.mockImplementation(() => mockValidator);
 
-      const result = await handler.execute({
-        furniture_id: 'furniture:couch',
-        actor_id: 'game:alice',
-        spot_index: 0
-      }, executionContext);
+      const result = await handler.execute(
+        {
+          furniture_id: 'furniture:couch',
+          actor_id: 'game:alice',
+          spot_index: 0,
+        },
+        executionContext
+      );
 
       // Should log warning about inconsistency but not throw
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -626,19 +726,21 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
 
   describe('Boundary Conditions', () => {
     it('should handle null closeness components gracefully', async () => {
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (componentType === 'positioning:closeness') {
-          return null; // No closeness component
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (componentType === 'positioning:closeness') {
+            return null; // No closeness component
+          }
+          if (componentType === 'positioning:allows_sitting') {
+            return { spots: ['game:alice', null, 'game:bob'] };
+          }
+          return null;
         }
-        if (componentType === 'positioning:allows_sitting') {
-          return { spots: ['game:alice', null, 'game:bob'] };
-        }
-        return null;
-      });
+      );
 
       proximityUtils.findAdjacentOccupants.mockReturnValue(['game:alice']);
       movementUtils.updateMovementLock.mockResolvedValue();
-      
+
       const mockValidator = {
         validateFurnitureComponent: jest.fn(),
         validateClosenessComponent: jest.fn(),
@@ -646,11 +748,14 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
       };
       ComponentStateValidator.mockImplementation(() => mockValidator);
 
-      const result = await handler.execute({
-        furniture_id: 'furniture:bench',
-        actor_id: 'game:charlie',
-        spot_index: 1
-      }, executionContext);
+      const result = await handler.execute(
+        {
+          furniture_id: 'furniture:bench',
+          actor_id: 'game:charlie',
+          spot_index: 1,
+        },
+        executionContext
+      );
 
       expect(result.success).toBe(true);
     });
@@ -678,11 +783,14 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
     });
 
     it('should handle undefined parameters gracefully', async () => {
-      const result = await handler.execute({
-        furniture_id: undefined,
-        actor_id: 'game:alice',
-        spot_index: 0
-      }, executionContext);
+      const result = await handler.execute(
+        {
+          furniture_id: undefined,
+          actor_id: 'game:alice',
+          spot_index: 0,
+        },
+        executionContext
+      );
 
       expect(result.success).toBe(false);
       expect(result.error).toBeDefined();
@@ -699,11 +807,14 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
       };
       ComponentStateValidator.mockImplementation(() => mockValidator);
 
-      const result = await handler.execute({
-        furniture_id: 'furniture:missing',
-        actor_id: 'game:alice',
-        spot_index: 0
-      }, executionContext);
+      const result = await handler.execute(
+        {
+          furniture_id: 'furniture:missing',
+          actor_id: 'game:alice',
+          spot_index: 0,
+        },
+        executionContext
+      );
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Furniture component not found');
@@ -717,11 +828,11 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
       const results = [];
 
       mockEntityManager.getComponentData.mockReturnValue({
-        spots: [null, null, null]
+        spots: [null, null, null],
       });
 
       proximityUtils.findAdjacentOccupants.mockReturnValue([]);
-      
+
       const mockValidator = {
         validateFurnitureComponent: jest.fn(),
         validateClosenessComponent: jest.fn(),
@@ -729,11 +840,16 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
       ComponentStateValidator.mockImplementation(() => mockValidator);
 
       for (let i = 0; i < iterations; i++) {
-        results.push(await handler.execute({
-          furniture_id: 'furniture:bench',
-          actor_id: `game:actor_${i}`,
-          spot_index: i % 3
-        }, executionContext));
+        results.push(
+          await handler.execute(
+            {
+              furniture_id: 'furniture:bench',
+              actor_id: `game:actor_${i}`,
+              spot_index: i % 3,
+            },
+            executionContext
+          )
+        );
       }
 
       const endTime = Date.now();
@@ -742,23 +858,28 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
       // Should complete 100 operations in less than 1 second
       expect(totalTime).toBeLessThan(1000);
       expect(results).toHaveLength(iterations);
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result.success).toBe(true);
       });
     });
 
     it('should handle memory efficiently with large furniture', async () => {
       // Create furniture with maximum spots
-      const largeSpots = new Array(10).fill(null).map((_, i) => `game:actor_${i}`);
+      const largeSpots = new Array(10)
+        .fill(null)
+        .map((_, i) => `game:actor_${i}`);
       largeSpots[5] = null; // One empty spot
 
       mockEntityManager.getComponentData.mockReturnValue({
-        spots: largeSpots
+        spots: largeSpots,
       });
 
-      proximityUtils.findAdjacentOccupants.mockReturnValue(['game:actor_4', 'game:actor_6']);
+      proximityUtils.findAdjacentOccupants.mockReturnValue([
+        'game:actor_4',
+        'game:actor_6',
+      ]);
       movementUtils.updateMovementLock.mockResolvedValue();
-      
+
       const mockValidator = {
         validateFurnitureComponent: jest.fn(),
         validateClosenessComponent: jest.fn(),
@@ -767,12 +888,15 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
       ComponentStateValidator.mockImplementation(() => mockValidator);
 
       const memoryBefore = process.memoryUsage().heapUsed;
-      
-      const result = await handler.execute({
-        furniture_id: 'furniture:large',
-        actor_id: 'game:alice',
-        spot_index: 5
-      }, executionContext);
+
+      const result = await handler.execute(
+        {
+          furniture_id: 'furniture:large',
+          actor_id: 'game:alice',
+          spot_index: 5,
+        },
+        executionContext
+      );
 
       const memoryAfter = process.memoryUsage().heapUsed;
       const memoryIncrease = memoryAfter - memoryBefore;

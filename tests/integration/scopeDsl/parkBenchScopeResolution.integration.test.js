@@ -1,6 +1,6 @@
 /**
  * Integration test to reproduce and fix the park bench scope resolution issue
- * 
+ *
  * The issue: A park bench entity with components split between definition and instance
  * is not being found by the scope 'positioning:available_furniture' during filtering.
  */
@@ -21,10 +21,10 @@ describe('Park Bench Scope Resolution Integration', () => {
     // Create real logger with addLog method for trace support
     mockLogger = {
       debug: jest.fn(),
-      info: jest.fn(), 
+      info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
-      addLog: jest.fn()
+      addLog: jest.fn(),
     };
 
     // Create entity manager
@@ -40,24 +40,30 @@ describe('Park Bench Scope Resolution Integration', () => {
       },
       hasComponent: (entityId, componentTypeId) => {
         const entity = entityManager.getEntityInstance(entityId);
-        return entity && entity.hasComponent && entity.hasComponent(componentTypeId);
+        return (
+          entity && entity.hasComponent && entity.hasComponent(componentTypeId)
+        );
       },
       getComponentData: (entityId, componentTypeId) => {
         const entity = entityManager.getEntityInstance(entityId);
-        return entity && entity.getComponentData && entity.getComponentData(componentTypeId);
+        return (
+          entity &&
+          entity.getComponentData &&
+          entity.getComponentData(componentTypeId)
+        );
       },
     };
 
     // Create location provider
     mockLocationProvider = {
-      getLocation: () => ({ id: 'test:park_location' })
+      getLocation: () => ({ id: 'test:park_location' }),
     };
 
     // Create scope engine
     scopeEngine = new ScopeEngine({
       entitiesGateway: gateway,
       locationProvider: mockLocationProvider,
-      logger: mockLogger
+      logger: mockLogger,
     });
   });
 
@@ -71,9 +77,9 @@ describe('Park Bench Scope Resolution Integration', () => {
       id: 'test:park_bench',
       components: {
         'positioning:allows_sitting': {
-          spots: [null, null]
-        }
-      }
+          spots: [null, null],
+        },
+      },
     };
 
     // Arrange: Create park bench instance (adds core:position via override)
@@ -82,9 +88,9 @@ describe('Park Bench Scope Resolution Integration', () => {
       definitionId: 'test:park_bench',
       componentOverrides: {
         'core:position': {
-          locationId: 'test:park_location'
-        }
-      }
+          locationId: 'test:park_location',
+        },
+      },
     };
 
     // Arrange: Create actor in same location
@@ -92,14 +98,14 @@ describe('Park Bench Scope Resolution Integration', () => {
       id: 'test:actor',
       components: {
         'core:position': {
-          locationId: 'test:park_location'
-        }
-      }
+          locationId: 'test:park_location',
+        },
+      },
     };
 
     const actorInstance = {
       instanceId: 'test:actor_instance',
-      definitionId: 'test:actor'
+      definitionId: 'test:actor',
     };
 
     // Create entities using the entity factory
@@ -107,12 +113,12 @@ describe('Park Bench Scope Resolution Integration', () => {
       instanceId: parkBenchInstance.instanceId,
       definitionId: parkBenchDefinition.id,
       baseComponents: parkBenchDefinition.components,
-      overrides: parkBenchInstance.componentOverrides
+      overrides: parkBenchInstance.componentOverrides,
     });
     const actor = createEntityInstance({
       instanceId: actorInstance.instanceId,
       definitionId: actorDefinition.id,
-      baseComponents: actorDefinition.components
+      baseComponents: actorDefinition.components,
     });
 
     // Add entities to manager using addEntity to preserve Entity instance methods
@@ -123,16 +129,23 @@ describe('Park Bench Scope Resolution Integration', () => {
     const basicQuery = 'entities(positioning:allows_sitting)';
 
     // Parse the query to get the AST
-    const { parseDslExpression } = await import('../../../src/scopeDsl/parser/parser.js');
+    const { parseDslExpression } = await import(
+      '../../../src/scopeDsl/parser/parser.js'
+    );
     const ast = parseDslExpression(basicQuery);
 
     // Create runtime context needed by scope engine
     const runtimeCtx = {
       entityManager: entityManager,
-      location: { id: 'test:park_location' }
+      location: { id: 'test:park_location' },
     };
 
-    const basicResult = await scopeEngine.resolve(ast, actor, runtimeCtx, mockLogger);
+    const basicResult = await scopeEngine.resolve(
+      ast,
+      actor,
+      runtimeCtx,
+      mockLogger
+    );
 
     // Assert: Should find the park bench
     expect(basicResult.size).toBe(1);
@@ -145,9 +158,9 @@ describe('Park Bench Scope Resolution Integration', () => {
       id: 'test:park_bench',
       components: {
         'positioning:allows_sitting': {
-          spots: [null, null]
-        }
-      }
+          spots: [null, null],
+        },
+      },
     };
 
     const parkBenchInstance = {
@@ -155,16 +168,16 @@ describe('Park Bench Scope Resolution Integration', () => {
       definitionId: 'test:park_bench',
       componentOverrides: {
         'core:position': {
-          locationId: 'test:park_location'
-        }
-      }
+          locationId: 'test:park_location',
+        },
+      },
     };
 
     const parkBench = createEntityInstance({
       instanceId: parkBenchInstance.instanceId,
       definitionId: parkBenchDefinition.id,
       baseComponents: parkBenchDefinition.components,
-      overrides: parkBenchInstance.componentOverrides
+      overrides: parkBenchInstance.componentOverrides,
     });
     entityManager.addEntity(parkBench);
 
@@ -172,7 +185,9 @@ describe('Park Bench Scope Resolution Integration', () => {
     expect(parkBench.hasComponent('positioning:allows_sitting')).toBe(true);
     expect(parkBench.hasComponent('core:position')).toBe(true);
 
-    const positioningComponent = parkBench.getComponentData('positioning:allows_sitting');
+    const positioningComponent = parkBench.getComponentData(
+      'positioning:allows_sitting'
+    );
     expect(positioningComponent).toEqual({ spots: [null, null] });
 
     const positionComponent = parkBench.getComponentData('core:position');
@@ -190,9 +205,9 @@ describe('Park Bench Scope Resolution Integration', () => {
       id: 'test:park_bench',
       components: {
         'positioning:allows_sitting': {
-          spots: [null, null]
-        }
-      }
+          spots: [null, null],
+        },
+      },
     };
 
     const parkBenchInstance = {
@@ -200,28 +215,32 @@ describe('Park Bench Scope Resolution Integration', () => {
       definitionId: 'test:park_bench',
       componentOverrides: {
         'core:position': {
-          locationId: 'test:park_location'
-        }
-      }
+          locationId: 'test:park_location',
+        },
+      },
     };
 
     const parkBench = createEntityInstance({
       instanceId: parkBenchInstance.instanceId,
       definitionId: parkBenchDefinition.id,
       baseComponents: parkBenchDefinition.components,
-      overrides: parkBenchInstance.componentOverrides
+      overrides: parkBenchInstance.componentOverrides,
     });
-    
+
     // Add entity to manager using addEntity to preserve Entity instance methods
     entityManager.addEntity(parkBench);
 
     // Act: Query for entities with positioning:allows_sitting
-    const entitiesWithSitting = gateway.getEntitiesWithComponent('positioning:allows_sitting');
+    const entitiesWithSitting = gateway.getEntitiesWithComponent(
+      'positioning:allows_sitting'
+    );
 
     // Assert: Should find the park bench
     expect(entitiesWithSitting).toHaveLength(1);
     expect(entitiesWithSitting[0].id).toBe('test:park_bench_instance');
-    expect(entitiesWithSitting[0].hasComponent('positioning:allows_sitting')).toBe(true);
+    expect(
+      entitiesWithSitting[0].hasComponent('positioning:allows_sitting')
+    ).toBe(true);
     expect(entitiesWithSitting[0].hasComponent('core:position')).toBe(true);
   });
 });

@@ -247,7 +247,6 @@ describe('registerLoaders (with Mock DI Container)', () => {
       tokens.SummaryPhase,
     ];
 
-
     // Check that each expected token was registered with a factory
     expectedTokens.forEach((token) => {
       if (!token) {
@@ -278,7 +277,6 @@ describe('registerLoaders (with Mock DI Container)', () => {
     expect(mockContainer.register.mock.calls[1][2]).toEqual({
       lifecycle: 'singleton',
     });
-
   });
 
   it('should resolve SchemaLoader successfully (happy path) and respect singleton lifecycle', () => {

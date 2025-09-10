@@ -1,7 +1,7 @@
 /**
  * @file Integration tests for sit down closeness workflow
  * Tests automatic closeness establishment when actors sit adjacently
- * 
+ *
  * NOTE: This test requires namespaced entity IDs (modId:identifier format)
  * as enforced by proximityUtils.validateProximityParameters()
  */
@@ -68,9 +68,9 @@ describe('Sit Down Closeness Workflow Integration', () => {
       instanceId: furnitureId,
       baseComponents: {
         'positioning:allows_sitting': {
-          spots: [aliceId, null, null]
-        }
-      }
+          spots: [aliceId, null, null],
+        },
+      },
     });
 
     const aliceEntity = createEntityInstance({
@@ -78,14 +78,14 @@ describe('Sit Down Closeness Workflow Integration', () => {
       baseComponents: {
         'positioning:sitting_on': {
           furniture_id: furnitureId,
-          spot_index: 0
-        }
-      }
+          spot_index: 0,
+        },
+      },
     });
 
     const bobEntity = createEntityInstance({
       instanceId: bobId,
-      baseComponents: {}
+      baseComponents: {},
     });
 
     // Add entities to manager
@@ -98,41 +98,49 @@ describe('Sit Down Closeness Workflow Integration', () => {
       furniture_id: furnitureId,
       actor_id: bobId,
       spot_index: 1,
-      result_variable: 'closenessEstablished'
+      result_variable: 'closenessEstablished',
     };
 
     await handler.execute(parameters, executionContext);
 
     // Assert: Both actors should have closeness components
-    const aliceCloseness = entityManager.getComponentData(aliceId, 'positioning:closeness');
-    const bobCloseness = entityManager.getComponentData(bobId, 'positioning:closeness');
+    const aliceCloseness = entityManager.getComponentData(
+      aliceId,
+      'positioning:closeness'
+    );
+    const bobCloseness = entityManager.getComponentData(
+      bobId,
+      'positioning:closeness'
+    );
 
     expect(aliceCloseness).toEqual({
-      partners: [bobId]
+      partners: [bobId],
     });
 
     expect(bobCloseness).toEqual({
-      partners: [aliceId]
+      partners: [aliceId],
     });
 
     // Assert: Result variable should be set to true
-    expect(executionContext.evaluationContext.context.closenessEstablished).toBe(true);
+    expect(
+      executionContext.evaluationContext.context.closenessEstablished
+    ).toBe(true);
   });
 
   it('should verify operation registration works with sit down rule', async () => {
     // This test verifies that the ESTABLISH_SITTING_CLOSENESS operation
     // is properly registered and can be referenced in rules
-    
+
     // Arrange: Create a simple rule-like structure that references the operation
     // NOTE: Using namespaced IDs in parameters as required by production code
     const mockRule = {
-      "type": "ESTABLISH_SITTING_CLOSENESS",
-      "parameters": {
-        "furniture_id": "test:furniture",
-        "actor_id": "test:actor",
-        "spot_index": 0,
-        "result_variable": "testResult"
-      }
+      type: 'ESTABLISH_SITTING_CLOSENESS',
+      parameters: {
+        furniture_id: 'test:furniture',
+        actor_id: 'test:actor',
+        spot_index: 0,
+        result_variable: 'testResult',
+      },
     };
 
     // Assert: The operation type should be valid

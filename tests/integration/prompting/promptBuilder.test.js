@@ -121,7 +121,7 @@ describe('PromptBuilder (template-based)', () => {
       '<perception_log>\nTest perception 1\nTest perception 2\n</perception_log>'
     );
     expect(prompt).toContain(
-      '<thoughts>\nRecent thoughts (avoid repeating or barely rephrasing these):\n- Test thought 1\n- Test thought 2\n\n-----\nGenerate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you\'re thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.\n</thoughts>'
+      "<thoughts>\nRecent thoughts (avoid repeating or barely rephrasing these):\n- Test thought 1\n- Test thought 2\n\n-----\nGenerate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you're thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.\n</thoughts>"
     );
     expect(prompt).toContain(
       '<notes>\n## Other\n### General\n- Test note 1\n- Test note 2\n</notes>'
@@ -168,7 +168,7 @@ describe('PromptBuilder (template-based)', () => {
 
     // Should contain sections with content
     expect(prompt).toContain(
-      '<thoughts>\nRecent thoughts (avoid repeating or barely rephrasing these):\n- I have a thought\n\n-----\nGenerate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you\'re thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.\n</thoughts>'
+      "<thoughts>\nRecent thoughts (avoid repeating or barely rephrasing these):\n- I have a thought\n\n-----\nGenerate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you're thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.\n</thoughts>"
     );
     expect(prompt).toContain('<goals>\n- Complete the quest\n</goals>');
 

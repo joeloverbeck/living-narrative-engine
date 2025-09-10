@@ -22,7 +22,7 @@ export class AnatomyInitializationService {
   #unsubscribeEntityCreated = null;
   #pendingGenerations = new Set(); // Currently processing generations
   #generationPromises = new Map(); // Track generation promises for waiting
-  
+
   // Queue for sequential anatomy generation
   #generationQueue = [];
   #isProcessingQueue = false;
@@ -120,10 +120,10 @@ export class AnatomyInitializationService {
     if (!this.#isProcessingQueue) {
       this.#isProcessingQueue = true;
     }
-    
+
     while (this.#generationQueue.length > 0) {
       const instanceId = this.#generationQueue.shift();
-      
+
       try {
         // Mark as pending before starting generation
         this.#pendingGenerations.add(instanceId);
@@ -159,7 +159,7 @@ export class AnatomyInitializationService {
         // Don't throw - we don't want to break entity creation if anatomy generation fails
       }
     }
-    
+
     this.#isProcessingQueue = false;
     this.#logger.debug(
       'AnatomyInitializationService: Finished processing anatomy generation queue'
@@ -210,8 +210,12 @@ export class AnatomyInitializationService {
   async waitForAllGenerationsToComplete(timeoutMs = 10000) {
     // Wait for queue to be empty and no pending generations
     const startTime = Date.now();
-    
-    while (this.#generationQueue.length > 0 || this.#pendingGenerations.size > 0 || this.#isProcessingQueue) {
+
+    while (
+      this.#generationQueue.length > 0 ||
+      this.#pendingGenerations.size > 0 ||
+      this.#isProcessingQueue
+    ) {
       if (Date.now() - startTime > timeoutMs) {
         const queueSize = this.#generationQueue.length;
         const pendingSize = this.#pendingGenerations.size;
@@ -219,9 +223,9 @@ export class AnatomyInitializationService {
           `AnatomyInitializationService: Timeout waiting for anatomy generation to complete. Queue: ${queueSize}, Pending: ${pendingSize}`
         );
       }
-      
+
       // Wait a bit before checking again
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
     }
 
     this.#logger.debug(
@@ -297,7 +301,9 @@ export class AnatomyInitializationService {
    * @returns {boolean} True if any generations are pending
    */
   hasPendingGenerations() {
-    return this.#pendingGenerations.size > 0 || this.#generationQueue.length > 0;
+    return (
+      this.#pendingGenerations.size > 0 || this.#generationQueue.length > 0
+    );
   }
 
   /**

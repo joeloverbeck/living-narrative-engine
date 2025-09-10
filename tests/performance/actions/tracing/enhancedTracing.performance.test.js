@@ -209,7 +209,7 @@ describe('Enhanced Tracing Performance Tests', () => {
         const q1Index = Math.floor(measurements.length * 0.25);
         const q3Index = Math.floor(measurements.length * 0.75);
         const iqrMeasurements = measurements.slice(q1Index, q3Index + 1);
-        
+
         // Return median of IQR measurements for better stability
         return iqrMeasurements[Math.floor(iqrMeasurements.length / 2)];
       };
@@ -253,12 +253,16 @@ describe('Enhanced Tracing Performance Tests', () => {
     it('should maintain acceptable absolute performance', () => {
       // Test absolute performance thresholds for realistic data sizes
       const testSizes = [10, 50, 100];
-      
+
       for (const size of testSizes) {
         const testData = {
           items: Array(size)
             .fill()
-            .map((_, i) => ({ id: i, value: `item_${i}`, metadata: { index: i } })),
+            .map((_, i) => ({
+              id: i,
+              value: `item_${i}`,
+              metadata: { index: i },
+            })),
         };
 
         // Warm-up
@@ -278,15 +282,17 @@ describe('Enhanced Tracing Performance Tests', () => {
           { summarize: true }
         );
         const endTime = performance.now();
-        
+
         const operationTime = endTime - startTime;
-        
+
         // Absolute thresholds based on data size
         let maxTime;
-        if (size <= 10) maxTime = 2;      // 2ms for small data
-        else if (size <= 50) maxTime = 5; // 5ms for medium data
-        else maxTime = 10;                // 10ms for larger data
-        
+        if (size <= 10)
+          maxTime = 2; // 2ms for small data
+        else if (size <= 50)
+          maxTime = 5; // 5ms for medium data
+        else maxTime = 10; // 10ms for larger data
+
         expect(operationTime).toBeLessThan(maxTime);
       }
     });

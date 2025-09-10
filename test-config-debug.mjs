@@ -1,8 +1,10 @@
 import { TestConfigurationFactory } from './tests/common/testConfigurationFactory.js';
 
 // Create the configs
-const toolCallingConfig = TestConfigurationFactory.createLLMConfig('tool-calling');
-const limitedConfig = TestConfigurationFactory.createLLMConfig('limited-context');
+const toolCallingConfig =
+  TestConfigurationFactory.createLLMConfig('tool-calling');
+const limitedConfig =
+  TestConfigurationFactory.createLLMConfig('limited-context');
 
 console.log('Tool calling modelIdentifier:', toolCallingConfig.modelIdentifier);
 console.log('Limited modelIdentifier:', limitedConfig.modelIdentifier);

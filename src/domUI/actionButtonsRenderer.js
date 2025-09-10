@@ -464,7 +464,7 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
     try {
       // Batch CSS custom properties for better performance
       const properties = [];
-      
+
       if (visual.backgroundColor) {
         properties.push(['--custom-bg-color', visual.backgroundColor]);
       }
@@ -603,10 +603,26 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
     const container = this.elements.listContainerElement;
 
     // Use event delegation for better performance
-    this._addDomListener(container, 'mouseenter', this._handleDelegatedHoverEnter.bind(this));
-    this._addDomListener(container, 'mouseleave', this._handleDelegatedHoverLeave.bind(this));
-    this._addDomListener(container, 'focusin', this._handleDelegatedHoverEnter.bind(this));
-    this._addDomListener(container, 'focusout', this._handleDelegatedHoverLeave.bind(this));
+    this._addDomListener(
+      container,
+      'mouseenter',
+      this._handleDelegatedHoverEnter.bind(this)
+    );
+    this._addDomListener(
+      container,
+      'mouseleave',
+      this._handleDelegatedHoverLeave.bind(this)
+    );
+    this._addDomListener(
+      container,
+      'focusin',
+      this._handleDelegatedHoverEnter.bind(this)
+    );
+    this._addDomListener(
+      container,
+      'focusout',
+      this._handleDelegatedHoverLeave.bind(this)
+    );
   }
 
   /**
@@ -653,7 +669,7 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
       button.addEventListener('focus', this.boundHoverHandlers.enter);
       button.addEventListener('blur', this.boundHoverHandlers.leave);
     }
-    
+
     // Mark as having listeners for cleanup compatibility
     button.dataset.hasHoverListeners = 'true';
   }

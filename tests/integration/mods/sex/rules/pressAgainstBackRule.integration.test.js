@@ -11,14 +11,12 @@ import { ModAssertionHelpers } from '../../../../common/mods/ModAssertionHelpers
 
 /**
  * Creates standardized anatomy setup for press against back rule testing.
- * 
+ *
  * @returns {object} Object with actor, target, and all anatomy entities
  */
 function setupAnatomyComponents() {
   // Create main room
-  const room = new ModEntityBuilder('room1')
-    .asRoom('Test Room')
-    .build();
+  const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
   // Create actor entity with anatomy
   const actor = new ModEntityBuilder('alice')
@@ -88,11 +86,14 @@ describe('press against back rule integration', () => {
 
   beforeEach(async () => {
     // Create test fixture with auto-loaded files for the press_against_back action
-    testFixture = await ModTestFixture.forAction('sex', 'sex:press_against_back');
-    
+    testFixture = await ModTestFixture.forAction(
+      'sex',
+      'sex:press_against_back'
+    );
+
     // Setup anatomy entities
     const entities = setupAnatomyComponents();
-    
+
     // Load all entities into the test environment
     testFixture.reset(Object.values(entities));
   });
@@ -110,7 +111,7 @@ describe('press against back rule integration', () => {
     // Assert action executed successfully with proper events and variable setting
     ModAssertionHelpers.assertActionSuccess(
       testFixture.events,
-      'Alice presses herself against Bob\'s back, her breasts getting squeezed against Bob\'s flesh.',
+      "Alice presses herself against Bob's back, her breasts getting squeezed against Bob's flesh.",
       {
         shouldEndTurn: true,
         shouldHavePerceptibleEvent: true,
@@ -144,9 +145,9 @@ describe('press against back rule integration', () => {
     expect(eventTypes.indexOf('core:perceptible_event')).toBeLessThan(
       eventTypes.indexOf('core:display_successful_action_result')
     );
-    expect(eventTypes.indexOf('core:display_successful_action_result')).toBeLessThan(
-      eventTypes.indexOf('core:turn_ended')
-    );
+    expect(
+      eventTypes.indexOf('core:display_successful_action_result')
+    ).toBeLessThan(eventTypes.indexOf('core:turn_ended'));
   });
 
   it('does not fire rule for non-matching conditions', async () => {
@@ -161,7 +162,7 @@ describe('press against back rule integration', () => {
     ];
 
     testFixture.reset(minimalEntities);
-    
+
     const initialEventCount = testFixture.events.length;
 
     // Dispatch a different action that shouldn't trigger this rule

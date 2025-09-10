@@ -9,6 +9,7 @@ This document explores the implementation of a new logging categorization system
 ## Problem Statement
 
 The current logging system has a fundamental flaw:
+
 - **Pattern-based categorization** matches words in log messages (e.g., "failed", "error") rather than using actual log levels
 - **100% of error.jsonl entries** are miscategorized debug logs that merely contain error-related keywords
 - **Developer confusion** when debugging specific modules, as logs appear in unexpected files
@@ -99,7 +100,7 @@ logs/YYYY-MM-DD/
 
 **Current State**: The `LogMetadataEnricher` class already has a `detectSource()` method that extracts source location from stack traces, but it only returns `filename:line` format. This needs to be enhanced to extract full paths for category mapping.
 
-```javascript
+````javascript
 class LogMetadataEnricher {
   /**
    * Enhanced source category detection
@@ -109,22 +110,22 @@ class LogMetadataEnricher {
     // Use existing detectSource as base
     const sourceLocation = this.detectSource(skipFrames);
     if (!sourceLocation) return 'general';
-    
+
     // Enhance to extract full path from existing stack parsing
     const fullPath = this.#extractFullPathFromStack(skipFrames);
-    
+
     // Map path to category
     return this.#mapPathToCategory(fullPath);
   }
-  
+
   #extractFullPathFromStack(skipFrames) {
     try {
       const stack = new Error().stack;
       if (!stack) return null;
-      
+
       const lines = stack.split('
 ');
-      
+
       // Use existing browser patterns from #browserPatterns Map
       for (let i = skipFrames; i < lines.length; i++) {
         const line = lines[i].trim();
@@ -138,10 +139,10 @@ class LogMetadataEnricher {
       return null;
     }
   }
-  
+
   #mapPathToCategory(path) {
     if (!path) return 'general';
-    
+
     // Comprehensive source path mappings for all directories
     const categoryMappings = [
       { pattern: /src\/actions\//i, category: 'actions' },
@@ -195,13 +196,13 @@ class LogMetadataEnricher {
       { pattern: /tests\//i, category: 'tests' },
       { pattern: /llm-proxy-server\//i, category: 'llm-proxy' },
     ];
-    
+
     for (const mapping of categoryMappings) {
       if (mapping.pattern.test(path)) {
         return mapping.category;
       }
     }
-    
+
     return 'general';
   }
 }
@@ -223,13 +224,13 @@ Improve the stack trace parsing to extract full paths:
     // Webpack/bundled format
     /webpack:\/\/\/(.+?):(\d+):(\d+)/,
   ];
-  
+
   for (const pattern of patterns) {
     const match = line.match(pattern);
     if (match) {
       const fullPath = match[1];
       const lineNumber = match[2];
-      
+
       // Return both full path and line for categorization
       return {
         fullPath,
@@ -238,10 +239,10 @@ Improve the stack trace parsing to extract full paths:
       };
     }
   }
-  
+
   return null;
 }
-```
+````
 
 ### Phase 2: Category Detection Refactoring
 
@@ -253,35 +254,35 @@ Improve the stack trace parsing to extract full paths:
 
 **Architecture Issue**: Category detection exists in both client-side (`LogCategoryDetector`) and server-side (`LogStorageService#detectCategory`). This duplication should be addressed.
 
-```javascript
+````javascript
 class LogCategoryDetector {
   constructor(config = {}) {
     this.#cache = new LRUCache(config.cacheSize || 200);
     this.#useSourceBased = config.useSourceBased !== false;
-    
+
     // IMPORTANT: Remove the problematic error pattern that matches keywords
     // Current pattern at line ~155: /\berror\b|exception|failed|failure|catch|throw|stack\s*trace/i
     // This causes false positives when debug logs contain these words
-    
+
     // Keep domain patterns only as fallback for when source detection fails
     this.#initializeFallbackPatterns();
   }
-  
+
   detectCategory(message, metadata = {}) {
     // Priority 1: Use log level for errors and warnings
     if (metadata.level === 'error') return 'error';
     if (metadata.level === 'warn') return 'warning';
-    
+
     // Priority 2: Use source-based categorization if available
     if (this.#useSourceBased && metadata.sourceCategory) {
       return metadata.sourceCategory;
     }
-    
+
     // Priority 3: Fallback to message patterns (without error pattern)
     // This maintains backward compatibility when source detection fails
     return this.#detectFromMessage(message);
   }
-  
+
   #initializeFallbackPatterns() {
     // Remove the error pattern entirely - it's now handled by log level
     // Keep only domain-specific patterns as fallback
@@ -305,26 +306,26 @@ class LogCategoryDetector {
   constructor(config = {}) {
     this.#cache = new LRUCache(config.cacheSize || 200);
     this.#useSourceBased = config.useSourceBased !== false;
-    
+
     // Remove the problematic error pattern
     // Keep domain patterns only as fallback
     this.#initializeFallbackPatterns();
   }
-  
+
   detectCategory(message, metadata = {}) {
     // Priority 1: Use log level for errors and warnings
     if (metadata.level === 'error') return 'error';
     if (metadata.level === 'warn') return 'warning';
-    
+
     // Priority 2: Use source-based categorization
     if (this.#useSourceBased && metadata.sourceCategory) {
       return metadata.sourceCategory;
     }
-    
+
     // Priority 3: Fallback to message patterns (without error pattern)
     return this.#detectFromMessage(message);
   }
-  
+
   #initializeFallbackPatterns() {
     // Remove the error pattern entirely
     // Keep only domain-specific patterns as fallback
@@ -336,7 +337,7 @@ class LogCategoryDetector {
     ]);
   }
 }
-```
+````
 
 ### Phase 3: Server-Side Processing
 
@@ -346,51 +347,51 @@ class LogCategoryDetector {
 
 **Current State**: The `LogStorageService` class has its own `#detectCategory()` method that duplicates client-side pattern matching. This creates a maintenance burden and potential inconsistencies.
 
-```javascript
+````javascript
 class LogStorageService {
   #getFilePath(log, date) {
     // Priority routing based on log level
     if (log.level === 'error') {
       return path.join(this.#config.baseLogPath, date, 'error.jsonl');
     }
-    
+
     if (log.level === 'warn') {
       return path.join(this.#config.baseLogPath, date, 'warning.jsonl');
     }
-    
+
     // Use source-based category from client or fallback to server detection
     const category = log.sourceCategory || log.category || this.#detectCategory(log) || 'general';
     return path.join(this.#config.baseLogPath, date, `${category}.jsonl`);
   }
-  
+
   #detectCategory(log) {
     // NOTE: This method duplicates client-side logic
     // Should be simplified to only handle edge cases where client didn't provide category
-    
+
     // Use explicit category if provided
     if (log.category && typeof log.category === 'string') {
       return log.category.toLowerCase();
     }
-    
+
     // Minimal fallback pattern matching for backward compatibility
     // Remove duplicate pattern matching logic once client-side migration is complete
     return 'general';
   }
-  
+
   async storeLogs(logs) {
     // Group logs by date and file path
     const grouped = new Map();
-    
+
     for (const log of logs) {
       const date = this.#getDateString(log.timestamp);
       const filePath = this.#getFilePath(log, date);
-      
+
       if (!grouped.has(filePath)) {
         grouped.set(filePath, []);
       }
       grouped.get(filePath).push(log);
     }
-    
+
     // Write to respective files
     for (const [filePath, logsForFile] of grouped) {
       await this.#writeToFile(filePath, logsForFile);
@@ -404,37 +405,37 @@ class LogStorageService {
     if (log.level === 'error') {
       return path.join(this.#config.baseLogPath, date, 'error.jsonl');
     }
-    
+
     if (log.level === 'warn') {
       return path.join(this.#config.baseLogPath, date, 'warning.jsonl');
     }
-    
+
     // Use source-based category for other levels
     const category = log.category || 'general';
     return path.join(this.#config.baseLogPath, date, `${category}.jsonl`);
   }
-  
+
   async storeLogs(logs) {
     // Group logs by date and file path
     const grouped = new Map();
-    
+
     for (const log of logs) {
       const date = this.#getDateString(log.timestamp);
       const filePath = this.#getFilePath(log, date);
-      
+
       if (!grouped.has(filePath)) {
         grouped.set(filePath, []);
       }
       grouped.get(filePath).push(log);
     }
-    
+
     // Write to respective files
     for (const [filePath, logsForFile] of grouped) {
       await this.#writeToFile(filePath, logsForFile);
     }
   }
 }
-```
+````
 
 ### Phase 4: Configuration & Migration
 
@@ -449,10 +450,10 @@ class LogStorageService {
   "mode": "development",
   "fallbackToConsole": true,
   "logLevel": "INFO",
-  
+
   // New source-based categorization configuration
   "categorization": {
-    "strategy": "source-based",  // "source-based" | "pattern-based" | "hybrid"
+    "strategy": "source-based", // "source-based" | "pattern-based" | "hybrid"
     "enableStackTraceExtraction": true,
     "sourceMappings": {
       "src/actions": "actions",
@@ -512,15 +513,15 @@ class LogStorageService {
       "warn": "warning.jsonl"
     }
   },
-  
+
   // Existing remote configuration remains unchanged
   "remote": {
     "endpoint": "http://localhost:3001/api/debug-log",
     "batchSize": 25,
-    "flushInterval": 250,
+    "flushInterval": 250
     // ... rest of remote config
   },
-  
+
   // Existing categories configuration for backward compatibility
   // Can be deprecated once source-based is fully adopted
   "categories": {
@@ -546,21 +547,25 @@ class LogStorageService {
 ## Benefits
 
 ### 1. Accurate Error Tracking
+
 - **Error logs contain only actual errors** (level="error")
 - **Warning logs contain only warnings** (level="warn")
 - **No false positives** from keyword matching
 
 ### 2. Improved Debugging Experience
+
 - **Module-specific logs** are easy to find (e.g., `actions.jsonl` for action debugging)
 - **Predictable log locations** based on source code structure
 - **Reduced cognitive load** when troubleshooting specific components
 
 ### 3. Performance Improvements
+
 - **Reduced regex operations** (only fallback patterns)
 - **Simpler categorization logic** (direct path mapping)
 - **Better cache efficiency** with source-based keys
 
 ### 4. Scalability
+
 - **Easy to add new categories** as codebase grows
 - **Configurable mappings** without code changes
 - **Flexible hierarchy** supports nested categorization
@@ -570,14 +575,16 @@ class LogStorageService {
 ### Duplicate Category Detection
 
 **Issue**: Category detection logic exists in both client-side (`LogCategoryDetector`) and server-side (`LogStorageService#detectCategory`). This creates:
+
 - Maintenance burden
 - Potential inconsistencies
 - Redundant processing
 
-**Solution**: 
+**Solution**:
+
 1. **Primary**: Client-side should be the source of truth for categorization
 2. **Server-side**: Should only handle edge cases where client didn't provide category
-3. **Migration Path**: 
+3. **Migration Path**:
    - Phase 1: Client sends both `category` (pattern-based) and `sourceCategory` (source-based)
    - Phase 2: Server prefers `sourceCategory` when available
    - Phase 3: Deprecate server-side pattern matching
@@ -587,12 +594,14 @@ class LogStorageService {
 **Issue**: The proposed system creates 40+ separate log files per day instead of ~10.
 
 **Considerations**:
+
 - **File System Impact**: More file handles, more inodes
 - **Write Performance**: Potential for more frequent file operations
 - **Rotation Complexity**: More files to rotate and manage
 - **Backup/Archive**: More files to compress and store
 
 **Mitigations**:
+
 1. **Buffering Strategy**: Increase write buffer size to reduce I/O operations
 2. **Hierarchical Organization**: Consider grouping related categories:
    ```
@@ -621,9 +630,10 @@ class LogStorageService {
 **Issue**: Existing configuration structure doesn't support source-based categorization.
 
 **Migration Strategy**:
+
 1. **Backward Compatible**: Keep existing `categories` configuration
 2. **Feature Flag**: Add `categorization.strategy` field
-3. **Gradual Rollout**: 
+3. **Gradual Rollout**:
    - Default to `"hybrid"` mode initially
    - Allow `"pattern-based"` for rollback
    - Move to `"source-based"` when stable
@@ -635,6 +645,7 @@ class LogStorageService {
 **Challenge**: Stack traces may be unavailable or corrupted in production builds
 
 **Mitigation**:
+
 - Fallback to message-based categorization when stack unavailable
 - Use source maps for production builds
 - Cache successful source extractions
@@ -644,6 +655,7 @@ class LogStorageService {
 **Challenge**: Webpack and other bundlers modify file paths
 
 **Mitigation**:
+
 - Support webpack-specific stack formats
 - Use source maps for path resolution
 - Provide configuration for custom path transformations
@@ -653,6 +665,7 @@ class LogStorageService {
 **Challenge**: Stack trace extraction adds overhead
 
 **Mitigation**:
+
 - Aggressive caching of source extractions
 - Lazy evaluation for non-critical logs
 - Configurable extraction depth
@@ -662,6 +675,7 @@ class LogStorageService {
 **Challenge**: Different browsers format stack traces differently
 
 **Mitigation**:
+
 - Multiple regex patterns for different browsers
 - Comprehensive testing across browsers
 - Graceful degradation to fallback categorization
@@ -713,30 +727,35 @@ class LogStorageService {
 ## Implementation Timeline
 
 ### Week 1: Foundation
+
 - [ ] Implement enhanced source extraction with full path support
 - [ ] Update LogMetadataEnricher to detect all 40+ categories
 - [ ] Create comprehensive path-to-category mapping
 - [ ] Handle existing `detectSource()` method integration
 
 ### Week 2: Core Changes
+
 - [ ] Refactor LogCategoryDetector to remove error pattern
 - [ ] Implement source-based detection with fallback
 - [ ] Update server-side LogStorageService
 - [ ] Address client/server duplication issue
 
 ### Week 3: Configuration & Testing
+
 - [ ] Add configuration management with backward compatibility
 - [ ] Implement feature flags for strategy selection
 - [ ] Write comprehensive tests for 40+ categories
 - [ ] Performance benchmarking with increased file count
 
 ### Week 4: Migration & Documentation
+
 - [ ] Create migration utilities for existing logs
 - [ ] Update documentation with all categories
 - [ ] Performance optimization for 40+ files
 - [ ] Gradual rollout plan with monitoring
 
 ### Week 5: Optimization & Polish
+
 - [ ] Implement hierarchical directory structure if needed
 - [ ] Optimize buffer strategies for multiple files
 - [ ] Add monitoring and metrics
@@ -745,21 +764,25 @@ class LogStorageService {
 ## Alternative Approaches Considered
 
 ### 1. Decorator-Based Logging
+
 - Use decorators to annotate log sources
 - **Pros**: Explicit, no stack trace needed
 - **Cons**: Requires code changes throughout codebase
 
 ### 2. Module-Level Logger Instances
+
 - Create separate logger instances per module
 - **Pros**: Clear ownership, no detection needed
 - **Cons**: Major refactoring required
 
 ### 3. Build-Time Transformation
+
 - Use babel plugin to inject source information
 - **Pros**: Zero runtime overhead
 - **Cons**: Complex build configuration
 
 ### 4. Hybrid Approach (Selected)
+
 - Combine level-based and source-based categorization
 - **Pros**: Solves immediate problem, maintainable
 - **Cons**: Still requires stack trace extraction
@@ -767,16 +790,19 @@ class LogStorageService {
 ## Risk Assessment
 
 ### High Priority Risks
+
 1. **Stack trace unavailability** - Mitigation: Robust fallback system
 2. **Performance regression** - Mitigation: Comprehensive benchmarking
 3. **Browser incompatibility** - Mitigation: Multi-browser testing
 
 ### Medium Priority Risks
+
 1. **Configuration complexity** - Mitigation: Good defaults, clear docs
 2. **Migration errors** - Mitigation: Gradual rollout, monitoring
 3. **Cache invalidation** - Mitigation: TTL-based cache, size limits
 
 ### Low Priority Risks
+
 1. **Edge case failures** - Mitigation: Comprehensive error handling
 2. **Documentation gaps** - Mitigation: Inline comments, examples
 3. **Future extensibility** - Mitigation: Modular design
@@ -876,18 +902,18 @@ describe('Source-based categorization', () => {
       message: 'Action failed', // Contains "failed" but not categorized as error
       timestamp: new Date().toISOString(),
     };
-    
+
     // Mock stack trace
     const mockStack = `
       Error
         at ActionResolver.resolve (src/actions/actionResolver.js:145:10)
         at GameEngine.tick (src/engine/gameEngine.js:234:15)
     `;
-    
+
     jest.spyOn(Error, 'stack', 'get').mockReturnValue(mockStack);
-    
+
     const metadata = enricher.enrich(log);
-    
+
     expect(metadata.sourceCategory).toBe('actions');
     expect(metadata.level).toBe('debug');
     // Should NOT be categorized as error despite "failed" in message
@@ -897,4 +923,4 @@ describe('Source-based categorization', () => {
 
 ---
 
-*End of Brainstorming Document*
+_End of Brainstorming Document_

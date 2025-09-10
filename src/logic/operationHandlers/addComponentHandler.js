@@ -71,16 +71,28 @@ class AddComponentHandler extends ComponentOperationHandler {
 
     // Add verbose logging for debugging
     log.debug('ADD_COMPONENT: Starting execution with params:', params);
-    log.debug('ADD_COMPONENT: ExecutionContext evaluationContext:', executionContext?.evaluationContext);
+    log.debug(
+      'ADD_COMPONENT: ExecutionContext evaluationContext:',
+      executionContext?.evaluationContext
+    );
 
     // 1. Validate Parameters
     if (!assertParamsObject(params, log, 'ADD_COMPONENT')) {
-      log.warn('ADD_COMPONENT: Parameter validation failed - params object is invalid');
+      log.warn(
+        'ADD_COMPONENT: Parameter validation failed - params object is invalid'
+      );
       return;
     }
 
     const { entity_ref, component_type, value } = params;
-    log.debug('ADD_COMPONENT: Extracted params - entity_ref:', entity_ref, 'component_type:', component_type, 'value:', value);
+    log.debug(
+      'ADD_COMPONENT: Extracted params - entity_ref:',
+      entity_ref,
+      'component_type:',
+      component_type,
+      'value:',
+      value
+    );
 
     // 2. Resolve and validate entity reference
     const validated = this.validateEntityAndType(
@@ -91,11 +103,21 @@ class AddComponentHandler extends ComponentOperationHandler {
       executionContext
     );
     if (!validated) {
-      log.warn('ADD_COMPONENT: Entity/type validation failed - entity_ref:', entity_ref, 'component_type:', component_type);
+      log.warn(
+        'ADD_COMPONENT: Entity/type validation failed - entity_ref:',
+        entity_ref,
+        'component_type:',
+        component_type
+      );
       return;
     }
     const { entityId, type: trimmedComponentType } = validated;
-    log.debug('ADD_COMPONENT: Validation successful - entityId:', entityId, 'trimmedComponentType:', trimmedComponentType);
+    log.debug(
+      'ADD_COMPONENT: Validation successful - entityId:',
+      entityId,
+      'trimmedComponentType:',
+      trimmedComponentType
+    );
 
     // 4. Validate value object
     if (!this.#validateValueObject(value, log)) {
@@ -106,19 +128,22 @@ class AddComponentHandler extends ComponentOperationHandler {
 
     // 5. Execute Add Component
     try {
-      log.debug('ADD_COMPONENT: About to call entityManager.addComponent with:', {
-        entityId,
-        trimmedComponentType,
-        value
-      });
-      
+      log.debug(
+        'ADD_COMPONENT: About to call entityManager.addComponent with:',
+        {
+          entityId,
+          trimmedComponentType,
+          value,
+        }
+      );
+
       // EntityManager.addComponent handles both adding new and replacing existing
       const result = await this.#entityManager.addComponent(
         entityId,
         trimmedComponentType,
         value
       );
-      
+
       log.debug('ADD_COMPONENT: entityManager.addComponent returned:', result);
       log.debug(
         `ADD_COMPONENT: Successfully added/replaced component "${trimmedComponentType}" on entity "${entityId}".`

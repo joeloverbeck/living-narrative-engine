@@ -28,11 +28,18 @@ describe('validateAgainstSchema additional branches', () => {
     validator.isSchemaLoaded.mockReturnValue(true);
     const errors = [{ instancePath: '', message: 'bad', params: {} }];
     validator.validate.mockReturnValue({ isValid: false, errors });
-    jest.spyOn(ajvAnyOfErrorFormatter, 'formatAjvErrorsEnhanced').mockReturnValue('Validation errors:\n  - root: bad');
+    jest
+      .spyOn(ajvAnyOfErrorFormatter, 'formatAjvErrorsEnhanced')
+      .mockReturnValue('Validation errors:\n  - root: bad');
     expect(() =>
       validateAgainstSchema(validator, 'schema', {}, logger)
-    ).toThrow('Schema validation failed.\nDetails:\nValidation errors:\n  - root: bad');
+    ).toThrow(
+      'Schema validation failed.\nDetails:\nValidation errors:\n  - root: bad'
+    );
     expect(logger.error).not.toHaveBeenCalled();
-    expect(ajvAnyOfErrorFormatter.formatAjvErrorsEnhanced).toHaveBeenCalledWith(errors, {});
+    expect(ajvAnyOfErrorFormatter.formatAjvErrorsEnhanced).toHaveBeenCalledWith(
+      errors,
+      {}
+    );
   });
 });

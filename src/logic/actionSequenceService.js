@@ -42,7 +42,7 @@ class ActionSequenceService extends BaseService {
 
   /**
    * Executes a sequence of actions with the specified context.
-   * 
+   *
    * @param {object} sequence - Sequence object containing actions array
    * @param {object} sequence.actions - Array of operations to execute
    * @param {ExecutionContext} context - Execution context containing evaluation data, logger, etc.
@@ -50,14 +50,18 @@ class ActionSequenceService extends BaseService {
    */
   async execute(sequence, context) {
     if (!sequence || !Array.isArray(sequence.actions)) {
-      throw new Error('ActionSequenceService.execute: sequence must have an actions array');
+      throw new Error(
+        'ActionSequenceService.execute: sequence must have an actions array'
+      );
     }
 
     if (!context || typeof context !== 'object') {
       throw new Error('ActionSequenceService.execute: context is required');
     }
 
-    this.#logger.debug(`ActionSequenceService: Executing sequence with ${sequence.actions.length} actions`);
+    this.#logger.debug(
+      `ActionSequenceService: Executing sequence with ${sequence.actions.length} actions`
+    );
 
     // Create enhanced context with required services
     const enhancedContext = {
@@ -73,9 +77,14 @@ class ActionSequenceService extends BaseService {
         this.#logger,
         this.#operationInterpreter
       );
-      this.#logger.debug('ActionSequenceService: Sequence execution completed successfully');
+      this.#logger.debug(
+        'ActionSequenceService: Sequence execution completed successfully'
+      );
     } catch (error) {
-      this.#logger.error('ActionSequenceService: Sequence execution failed', error);
+      this.#logger.error(
+        'ActionSequenceService: Sequence execution failed',
+        error
+      );
       throw error;
     }
   }

@@ -267,5 +267,4 @@ describe('Scope DSL - Union Operator Integration', () => {
       }).toThrow();
     });
   });
-
 });

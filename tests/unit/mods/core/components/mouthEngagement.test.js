@@ -12,7 +12,9 @@ describe('core:mouth_engagement component', () => {
     });
 
     it('has appropriate description', () => {
-      expect(mouthEngagementComponent.description).toContain('mouth availability');
+      expect(mouthEngagementComponent.description).toContain(
+        'mouth availability'
+      );
     });
 
     it('has correct schema type', () => {

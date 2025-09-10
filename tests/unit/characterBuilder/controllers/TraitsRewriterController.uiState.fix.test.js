@@ -3,7 +3,14 @@
  * @description Tests that the warnings are resolved after adding required DOM elements
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { TraitsRewriterController } from '../../../../src/characterBuilder/controllers/TraitsRewriterController.js';
 import { createTestBed } from '../../../common/testBed.js';
 
@@ -75,14 +82,19 @@ describe('TraitsRewriterController - UI State Fixes', () => {
         'generateThematicDirections',
         'getThematicDirections',
       ]),
-      eventBus: testBed.createMock('ISafeEventDispatcher', ['dispatch', 'subscribe', 'unsubscribe']),
-      schemaValidator: testBed.createMock('ISchemaValidator', ['validate']),
-      traitsRewriterGenerator: testBed.createMock('TraitsRewriterGenerator', ['generateRewrittenTraits']),
-      traitsRewriterDisplayEnhancer: testBed.createMock('TraitsRewriterDisplayEnhancer', [
-        'enhanceForDisplay',
-        'formatForExport',
-        'generateExportFilename'
+      eventBus: testBed.createMock('ISafeEventDispatcher', [
+        'dispatch',
+        'subscribe',
+        'unsubscribe',
       ]),
+      schemaValidator: testBed.createMock('ISchemaValidator', ['validate']),
+      traitsRewriterGenerator: testBed.createMock('TraitsRewriterGenerator', [
+        'generateRewrittenTraits',
+      ]),
+      traitsRewriterDisplayEnhancer: testBed.createMock(
+        'TraitsRewriterDisplayEnhancer',
+        ['enhanceForDisplay', 'formatForExport', 'generateExportFilename']
+      ),
     };
 
     // Spy on console methods to capture warnings
@@ -111,15 +123,22 @@ describe('TraitsRewriterController - UI State Fixes', () => {
       await controller.initialize();
 
       // Assert - The specific warnings from error_logs.txt should NOT be logged
-      const warnCalls = mockDependencies.logger.warn.mock.calls.map(call => call[0]);
-      
-      const hasUIStateManagerNotInitialized = warnCalls.some(call => 
-        call.includes('UIStateManager not initialized, cannot show state'));
-      const hasUIStateManagerNotAvailable = warnCalls.some(call => 
-        call.includes('UIStateManager not available, skipping initial state'));
-      const hasMissingStateElements = warnCalls.some(call => 
-        call.includes('Missing state elements: loadingState, resultsState, errorState'));
-        
+      const warnCalls = mockDependencies.logger.warn.mock.calls.map(
+        (call) => call[0]
+      );
+
+      const hasUIStateManagerNotInitialized = warnCalls.some((call) =>
+        call.includes('UIStateManager not initialized, cannot show state')
+      );
+      const hasUIStateManagerNotAvailable = warnCalls.some((call) =>
+        call.includes('UIStateManager not available, skipping initial state')
+      );
+      const hasMissingStateElements = warnCalls.some((call) =>
+        call.includes(
+          'Missing state elements: loadingState, resultsState, errorState'
+        )
+      );
+
       expect(hasUIStateManagerNotInitialized).toBe(false);
       expect(hasUIStateManagerNotAvailable).toBe(false);
       expect(hasMissingStateElements).toBe(false);
@@ -130,10 +149,12 @@ describe('TraitsRewriterController - UI State Fixes', () => {
       expect(document.getElementById('loading-state')).not.toBeNull();
       expect(document.getElementById('results-state')).not.toBeNull();
       expect(document.getElementById('error-state')).not.toBeNull();
-      
+
       // And existing elements should still be there
       expect(document.getElementById('generation-progress')).not.toBeNull();
-      expect(document.getElementById('rewritten-traits-container')).not.toBeNull();
+      expect(
+        document.getElementById('rewritten-traits-container')
+      ).not.toBeNull();
       expect(document.getElementById('generation-error')).not.toBeNull();
       expect(document.getElementById('empty-state')).not.toBeNull();
     });
@@ -147,17 +168,21 @@ describe('TraitsRewriterController - UI State Fixes', () => {
       expect(mockDependencies.logger.info).toHaveBeenCalledWith(
         'TraitsRewriterController: Complete implementation initialized'
       );
-      
+
       // And should NOT have any UI state manager warnings
       const allLogCalls = [
-        ...mockDependencies.logger.warn.mock.calls.map(call => call[0]),
-        ...mockDependencies.logger.error.mock.calls.map(call => call[0])
+        ...mockDependencies.logger.warn.mock.calls.map((call) => call[0]),
+        ...mockDependencies.logger.error.mock.calls.map((call) => call[0]),
       ];
-      
-      const hasUIStateManagerIssues = allLogCalls.some(call => 
-        call.includes('UIStateManager') && 
-        (call.includes('not initialized') || call.includes('not available') || call.includes('Missing state elements')));
-      
+
+      const hasUIStateManagerIssues = allLogCalls.some(
+        (call) =>
+          call.includes('UIStateManager') &&
+          (call.includes('not initialized') ||
+            call.includes('not available') ||
+            call.includes('Missing state elements'))
+      );
+
       expect(hasUIStateManagerIssues).toBe(false);
     });
   });

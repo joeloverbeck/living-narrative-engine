@@ -274,16 +274,27 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
       ...providerSpecificPayloadAdditions,
       // Merge request-specific LLM parameters (e.g., temperature, max_tokens)
       // These override any defaults from llmConfig.defaultParameters
-      ...(requestOptions.temperature !== undefined && { temperature: requestOptions.temperature }),
-      ...(requestOptions.maxTokens !== undefined && { max_tokens: requestOptions.maxTokens }),
+      ...(requestOptions.temperature !== undefined && {
+        temperature: requestOptions.temperature,
+      }),
+      ...(requestOptions.maxTokens !== undefined && {
+        max_tokens: requestOptions.maxTokens,
+      }),
       ...(requestOptions.topP !== undefined && { top_p: requestOptions.topP }),
       ...(requestOptions.topK !== undefined && { top_k: requestOptions.topK }),
-      ...(requestOptions.frequencyPenalty !== undefined && { frequency_penalty: requestOptions.frequencyPenalty }),
-      ...(requestOptions.presencePenalty !== undefined && { presence_penalty: requestOptions.presencePenalty }),
+      ...(requestOptions.frequencyPenalty !== undefined && {
+        frequency_penalty: requestOptions.frequencyPenalty,
+      }),
+      ...(requestOptions.presencePenalty !== undefined && {
+        presence_penalty: requestOptions.presencePenalty,
+      }),
     };
-    
+
     // Log if request-specific parameters were applied
-    if (requestOptions.temperature !== undefined || requestOptions.maxTokens !== undefined) {
+    if (
+      requestOptions.temperature !== undefined ||
+      requestOptions.maxTokens !== undefined
+    ) {
       this.logger.debug(
         `${this.constructor.name} (${llmId}): Applied request-specific LLM parameters.`,
         {
@@ -295,7 +306,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
         }
       );
     }
-    
+
     this.logger.debug(
       `${this.constructor.name} (${llmId}): Assembled provider request payload.`,
       {

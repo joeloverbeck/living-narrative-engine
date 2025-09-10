@@ -4,16 +4,16 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import createBasicResolver from '../../../../docs/scopeDsl/examples/error-handling-basic.js';
-import createValidationResolver, { 
-  createValidationChain, 
-  getValidatedProperty 
+import createValidationResolver, {
+  createValidationChain,
+  getValidatedProperty,
 } from '../../../../docs/scopeDsl/examples/error-handling-validation.js';
 import createAsyncResolver, {
   createCancellableOperation,
-  withProgress
+  withProgress,
 } from '../../../../docs/scopeDsl/examples/error-handling-async.js';
 import createPerformanceResolver, {
-  createProductionErrorHandler
+  createProductionErrorHandler,
 } from '../../../../docs/scopeDsl/examples/error-handling-performance.js';
 import { ErrorCodes } from '../../../../src/scopeDsl/constants/errorCodes.js';
 
@@ -79,7 +79,7 @@ describe('Error Handling Documentation Examples', () => {
       });
 
       const ctx = { actorEntity: { id: 'actor1' } };
-      
+
       expect(() => {
         resolver.resolve({ type: 'basic' }, ctx);
       }).toThrow('Node must have a value property');
@@ -98,11 +98,11 @@ describe('Error Handling Documentation Examples', () => {
         errorHandler: mockErrorHandler,
       });
 
-      const ctx = { 
+      const ctx = {
         actorEntity: { id: 'actor1' },
-        depth: 15  // Exceeds MAX_DEPTH of 10
+        depth: 15, // Exceeds MAX_DEPTH of 10
       };
-      
+
       expect(() => {
         resolver.resolve({ type: 'basic', value: 'test' }, ctx);
       }).toThrow();
@@ -133,13 +133,13 @@ describe('Error Handling Documentation Examples', () => {
 
     beforeEach(() => {
       mockEntityManager = {
-        getEntity: jest.fn(id => ({ id, components: {} })),
-        hasEntity: jest.fn(id => id === 'valid-entity'),
+        getEntity: jest.fn((id) => ({ id, components: {} })),
+        hasEntity: jest.fn((id) => id === 'valid-entity'),
       };
 
       mockComponentRegistry = {
         getComponent: jest.fn(),
-        hasComponent: jest.fn(id => id === 'core:stats'),
+        hasComponent: jest.fn((id) => id === 'core:stats'),
       };
     });
 
@@ -154,10 +154,13 @@ describe('Error Handling Documentation Examples', () => {
       const ctx = { actorEntity: { id: 'actor1' }, dispatcher: jest.fn() };
 
       expect(() => {
-        resolver.resolve({ 
-          type: 'validation', 
-          entityId: 123 // number will trigger validation (truthy but not string)
-        }, ctx);
+        resolver.resolve(
+          {
+            type: 'validation',
+            entityId: 123, // number will trigger validation (truthy but not string)
+          },
+          ctx
+        );
       }).toThrow('Invalid entity ID');
 
       expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
@@ -169,10 +172,10 @@ describe('Error Handling Documentation Examples', () => {
     });
 
     it('should validate component ID format', () => {
-      // First, let's test that component validation isn't triggered for type: 'validation' 
-      // unless it's specifically a component node. Let's remove this test entirely 
+      // First, let's test that component validation isn't triggered for type: 'validation'
+      // unless it's specifically a component node. Let's remove this test entirely
       // since the validation resolver doesn't actually validate componentId for general validation nodes
-      
+
       const resolver = createValidationResolver({
         logger: mockLogger,
         errorHandler: mockErrorHandler,
@@ -181,12 +184,15 @@ describe('Error Handling Documentation Examples', () => {
       });
 
       const ctx = { actorEntity: { id: 'actor1' }, dispatcher: jest.fn() };
-      
+
       // Test that validation succeeds when no componentId is provided in a validation node
-      const result = resolver.resolve({ 
-        type: 'validation'
-      }, ctx);
-      
+      const result = resolver.resolve(
+        {
+          type: 'validation',
+        },
+        ctx
+      );
+
       expect(result.valid).toBe(true);
     });
 
@@ -215,7 +221,7 @@ describe('Error Handling Documentation Examples', () => {
       const node = {
         type: 'validation',
         data: 'not-a-number',
-        schema: { type: 'number', min: 0, max: 100 }
+        schema: { type: 'number', min: 0, max: 100 },
       };
 
       expect(() => {
@@ -243,7 +249,7 @@ describe('Error Handling Documentation Examples', () => {
       ];
 
       const chain = createValidationChain(validators, mockErrorHandler);
-      
+
       expect(() => chain(-1, {})).toThrow('Must be positive');
       expect(() => chain(101, {})).toThrow('Must be <= 100');
       expect(chain(50, {})).toBe(true);
@@ -253,9 +259,9 @@ describe('Error Handling Documentation Examples', () => {
       const entity = {
         components: {
           'core:stats': {
-            health: 100
-          }
-        }
+            health: 100,
+          },
+        },
       };
 
       const value = getValidatedProperty(
@@ -316,19 +322,16 @@ describe('Error Handling Documentation Examples', () => {
       });
 
       await expect(
-        resolver.resolve(
-          { type: 'async', subtype: 'single', id: 'fail' },
-          {}
-        )
+        resolver.resolve({ type: 'async', subtype: 'single', id: 'fail' }, {})
       ).rejects.toThrow();
 
       expect(mockErrorHandler.handleError).toHaveBeenCalled();
     });
 
     it('should handle timeout', async () => {
-      // Mock the fetch to reject with a timeout error immediately 
+      // Mock the fetch to reject with a timeout error immediately
       // to simulate what would happen after timeout
-      mockDataFetcher.fetch = jest.fn(() => 
+      mockDataFetcher.fetch = jest.fn(() =>
         Promise.reject(new Error('Fetch timeout'))
       );
 
@@ -365,15 +368,15 @@ describe('Error Handling Documentation Examples', () => {
       });
 
       const result = await resolver.resolve(
-        { 
-          type: 'async', 
-          subtype: 'batch', 
-          ids: ['success1', 'fail1', 'success2', 'fail2'] 
+        {
+          type: 'async',
+          subtype: 'batch',
+          ids: ['success1', 'fail1', 'success2', 'fail2'],
         },
         {}
       );
 
-      expect(result).toHaveLength(2);  // Only successful results
+      expect(result).toHaveLength(2); // Only successful results
       expect(mockLogger.warn).toHaveBeenCalled();
     });
   });
@@ -381,7 +384,7 @@ describe('Error Handling Documentation Examples', () => {
   describe('Async Helper Functions', () => {
     it('should create cancellable operation', async () => {
       const asyncFn = jest.fn(async (isCancelled) => {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
         if (isCancelled()) throw new Error('Cancelled');
         return 'result';
       });
@@ -414,7 +417,11 @@ describe('Error Handling Documentation Examples', () => {
 
       expect(result).toBe('complete');
       expect(onProgress).toHaveBeenCalledTimes(3);
-      expect(onProgress).toHaveBeenCalledWith({ current: 3, total: 3, count: 3 });
+      expect(onProgress).toHaveBeenCalledWith({
+        current: 3,
+        total: 3,
+        count: 3,
+      });
     });
   });
 
@@ -438,9 +445,13 @@ describe('Error Handling Documentation Examples', () => {
       });
 
       const ctx = {
-        actorEntity: { id: 'actor1', name: 'Test', data: { complex: 'object' } },
+        actorEntity: {
+          id: 'actor1',
+          name: 'Test',
+          data: { complex: 'object' },
+        },
         depth: 5,
-        otherData: 'should-be-excluded'
+        otherData: 'should-be-excluded',
       };
 
       expect(() => {
@@ -450,7 +461,7 @@ describe('Error Handling Documentation Examples', () => {
       // Error handler should have been called with minimal context
       const callArgs = mockErrorHandler.handleError.mock.calls[0];
       const errorContext = callArgs[1];
-      
+
       expect(errorContext).toHaveProperty('actorEntityId');
       expect(errorContext).not.toHaveProperty('otherData');
 

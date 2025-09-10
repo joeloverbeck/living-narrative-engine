@@ -310,7 +310,7 @@ describe('Thematic Direction Update Events - Integration Test', () => {
     it('should handle multiple simultaneous updates within recursion limits', async () => {
       // NOTE: EventBus has recursion protection that limits same-event dispatching to depth 3
       // This test validates that the system correctly respects these safety limits
-      
+
       const capturedEvents = [];
       const listener = jest.fn((event) => {
         capturedEvents.push(event.payload);
@@ -350,7 +350,7 @@ describe('Thematic Direction Update Events - Integration Test', () => {
     it('should handle batch updates respecting recursion protection limits', async () => {
       // This test demonstrates the actual production behavior where EventBus
       // recursion protection limits the number of same-type events that can be dispatched
-      
+
       const capturedEvents = [];
       const listener = jest.fn((event) => {
         capturedEvents.push(event.payload);
@@ -381,56 +381,67 @@ describe('Thematic Direction Update Events - Integration Test', () => {
       // Verify that we get all 5 events (one for each field)
       const fields = capturedEvents.map((event) => event.field);
       expect(fields).toHaveLength(5);
-      
+
       // Each field should be unique - all 5 fields should have been updated
       expect(new Set(fields).size).toBe(5);
-      
+
       // All events should be from the correct direction
       capturedEvents.forEach((event) => {
         expect(event.directionId).toBe(testDirection.id);
         expect(typeof event.field).toBe('string');
         expect(typeof event.oldValue).toBe('string');
         expect(typeof event.newValue).toBe('string');
-        
+
         // Field should be one of the fields we tried to update
-        expect(['title', 'description', 'coreTension', 'uniqueTwist', 'narrativePotential'])
-          .toContain(event.field);
+        expect([
+          'title',
+          'description',
+          'coreTension',
+          'uniqueTwist',
+          'narrativePotential',
+        ]).toContain(event.field);
       });
 
-      eventBus.unsubscribe(CHARACTER_BUILDER_EVENTS.DIRECTION_UPDATED, listener);
+      eventBus.unsubscribe(
+        CHARACTER_BUILDER_EVENTS.DIRECTION_UPDATED,
+        listener
+      );
     });
 
     it('should demonstrate sequential updates as workaround for bulk operations', async () => {
       // This test shows how to perform bulk updates by doing them sequentially
       // in smaller batches to work with recursion protection
-      
+
       const allEvents = [];
       const listener = jest.fn((event) => {
         allEvents.push(event.payload);
       });
-      
+
       eventBus.subscribe(CHARACTER_BUILDER_EVENTS.DIRECTION_UPDATED, listener);
 
       // Update fields one at a time to avoid recursion protection
       await characterBuilderService.updateThematicDirection(testDirection.id, {
-        title: 'Sequential Title 1'
+        title: 'Sequential Title 1',
       });
       await new Promise((resolve) => setTimeout(resolve, 50));
 
       await characterBuilderService.updateThematicDirection(testDirection.id, {
-        description: 'Sequential Description 1'
+        description: 'Sequential Description 1',
       });
       await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Should receive 2 events
       expect(listener).toHaveBeenCalledTimes(2);
       expect(allEvents).toHaveLength(2);
-      
-      const fields = allEvents.map(e => e.field);
+
+      const fields = allEvents.map((e) => e.field);
       expect(fields).toContain('title');
       expect(fields).toContain('description');
 
-      eventBus.unsubscribe(CHARACTER_BUILDER_EVENTS.DIRECTION_UPDATED, listener);
+      eventBus.unsubscribe(
+        CHARACTER_BUILDER_EVENTS.DIRECTION_UPDATED,
+        listener
+      );
     });
   });
 

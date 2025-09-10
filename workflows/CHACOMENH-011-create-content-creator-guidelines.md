@@ -20,7 +20,7 @@ The psychological components (motivations, internal tensions, core dilemmas) add
 
 Create: `docs/content-creation/psychological-components-guide.md`
 
-```markdown
+````markdown
 # Psychological Components Guide for Content Creators
 
 ## Overview
@@ -36,18 +36,22 @@ These components are **optional** but highly recommended for main characters, an
 ## Component Definitions
 
 ### Motivations
+
 **Purpose:** Explain the deep psychological reasons behind a character's actions, distinct from their concrete goals.
 
 **Key Distinction:**
+
 - ❌ Goal: "I want to become captain of the guard"
 - ✅ Motivation: "I need to prove I'm more than my father's disappointment"
 
 **Writing Format:** First-person perspective, revealing inner psychology
 
 ### Internal Tensions
+
 **Purpose:** Create realistic internal conflict through competing desires or beliefs.
 
 **Key Characteristics:**
+
 - Shows contradictory impulses
 - Creates dynamic character behavior
 - Explains inconsistent actions
@@ -55,9 +59,11 @@ These components are **optional** but highly recommended for main characters, an
 **Writing Format:** First-person, expressing conflicting desires with "but," "yet," or "however"
 
 ### Core Dilemmas
+
 **Purpose:** Present philosophical or moral questions the character grapples with.
 
 **Key Requirements:**
+
 - MUST be phrased as questions
 - Should have no easy answers
 - Drive character development
@@ -69,12 +75,14 @@ These components are **optional** but highly recommended for main characters, an
 ### Effective Motivations
 
 #### DO:
+
 - Reveal emotional needs behind actions
 - Connect to character's past experiences
 - Show vulnerability and humanity
 - Use emotional language
 
 #### DON'T:
+
 - List goals or objectives
 - Describe what they want to achieve
 - Use third-person perspective
@@ -94,12 +102,14 @@ These components are **optional** but highly recommended for main characters, an
 ### Crafting Internal Tensions
 
 #### DO:
+
 - Present genuine contradictions
 - Show emotional complexity
 - Make both desires understandable
 - Use contrasting conjunctions
 
 #### DON'T:
+
 - Create artificial conflicts
 - Make one side obviously wrong
 - Oversimplify the tension
@@ -119,12 +129,14 @@ These components are **optional** but highly recommended for main characters, an
 ### Formulating Core Dilemmas
 
 #### DO:
+
 - Ask profound questions
 - Touch on universal themes
 - Connect to character's situation
 - Allow multiple valid answers
 
 #### DON'T:
+
 - Ask questions with obvious answers
 - Make them too abstract
 - Forget the question marks
@@ -144,6 +156,7 @@ These components are **optional** but highly recommended for main characters, an
 ## Character Archetypes & Templates
 
 ### The Reluctant Leader
+
 ```json
 {
   "motivations": "I never wanted power, but I've seen what happens when the wrong people wield it. I lead not from ambition but from a crushing sense of responsibility that I wish someone else would take.",
@@ -151,8 +164,10 @@ These components are **optional** but highly recommended for main characters, an
   "core_dilemmas": "Do people follow me or the image I present? If leadership requires deception, am I still worthy of trust?"
 }
 ```
+````
 
 ### The Reformed Villain
+
 ```json
 {
   "motivations": "Every good deed is penance for the monster I was. I save others because I couldn't save myself from becoming what I hated. The weight of my past drives every act of kindness.",
@@ -162,6 +177,7 @@ These components are **optional** but highly recommended for main characters, an
 ```
 
 ### The Idealistic Revolutionary
+
 ```json
 {
   "motivations": "I've seen too much injustice to stay silent. Every oppressed voice echoes my own past helplessness. I fight because standing still feels like drowning in others' suffering.",
@@ -173,18 +189,21 @@ These components are **optional** but highly recommended for main characters, an
 ## Integration with Other Components
 
 ### Aligning with Personality
+
 Ensure psychological components complement, not contradict, personality traits:
 
 **Personality:** "Cheerful and optimistic"
 **Motivations:** "I maintain constant cheerfulness because if I stop smiling, I might never start again. The darkness I'm running from terrifies me."
 
 ### Connecting to Background (Profile)
+
 Link psychological elements to character history:
 
 **Profile:** "Former soldier who lost their unit"
 **Internal Tensions:** "I need to form new bonds but can't bear the thought of losing anyone again."
 
 ### Influencing Goals
+
 Show how psychology drives objectives:
 
 **Core Dilemma:** "Is preventing future wars worth becoming a tyrant?"
@@ -193,38 +212,46 @@ Show how psychology drives objectives:
 ## Common Pitfalls to Avoid
 
 ### 1. Making Motivations Too Surface-Level
+
 ❌ "I want money because I like nice things"
 ✅ "I hoard wealth because poverty once made me invisible, and I swear I'll never be overlooked again"
 
 ### 2. Creating Contradictions That Make No Sense
+
 ❌ "I love animals but also hate all living things"
 ✅ "I'm drawn to animals' unconditional loyalty while distrusting human complexity"
 
 ### 3. Asking Dilemmas with Obvious Answers
+
 ❌ "Should I be mean or kind?"
 ✅ "Does kindness without power create change, or does it merely comfort the conscience?"
 
 ### 4. Writing in Third Person
+
 ❌ "They seek validation from others"
 ✅ "I seek validation from others"
 
 ### 5. Over-Explaining
+
 ❌ "I am sad because when I was seven years old, on a Tuesday in March..."
 ✅ "That March day when I was seven changed everything. I've been running from it ever since."
 
 ## Advanced Techniques
 
 ### Layered Motivations
+
 Create depth through multiple interconnected drives:
 
 "I pursue knowledge relentlessly—partly to honor my mentor's memory, partly to prove my parents wrong about my potential, but mostly because learning delays confronting who I am without these pursuits."
 
 ### Evolving Tensions
+
 Design tensions that can shift with character development:
 
 "I used to crave solitude while fearing loneliness. Now I seek connection while fearing I've forgotten how to truly connect."
 
 ### Cascading Dilemmas
+
 Link questions that build on each other:
 
 "If I am not my achievements, who am I? If I stop achieving, will I cease to exist? But if I only exist through achievement, have I ever truly lived?"
@@ -232,16 +259,19 @@ Link questions that build on each other:
 ## Testing Your Components
 
 ### Internal Consistency Check
+
 - Do motivations explain the character's actions?
 - Do tensions create believable inconsistency?
 - Do dilemmas drive character growth?
 
 ### Voice Authenticity
+
 - Read aloud—does it sound natural?
 - Would this character actually think this way?
 - Is the emotional tone consistent?
 
 ### LLM Response Test
+
 - Generate sample responses with your character
 - Check if psychological elements influence behavior
 - Verify consistency across multiple interactions
@@ -249,6 +279,7 @@ Link questions that build on each other:
 ## Quick Reference Card
 
 ### Component Checklist
+
 - [ ] Motivations reveal WHY, not WHAT
 - [ ] Tensions show genuine internal conflict
 - [ ] Dilemmas are phrased as questions
@@ -258,12 +289,15 @@ Link questions that build on each other:
 - [ ] Avoids common pitfalls
 
 ### Word Count Guidelines
+
 - **Motivations:** 50-200 words
 - **Internal Tensions:** 40-150 words
 - **Core Dilemmas:** 30-100 words
 
 ### Emotional Depth Indicators
+
 Strong components typically include:
+
 - Vulnerability
 - Contradiction
 - Specificity
@@ -274,6 +308,7 @@ Strong components typically include:
 ## Examples from Published Works
 
 ### Literary Example (Hamlet-inspired)
+
 ```json
 {
   "motivations": "I must avenge my father, yet every action feels like a betrayal of my own nature. I am trapped between the son I should be and the man I am.",
@@ -283,6 +318,7 @@ Strong components typically include:
 ```
 
 ### Game Character Example (Geralt-inspired)
+
 ```json
 {
   "motivations": "I maintain neutrality because choosing sides once cost me everything. My detachment is armor, not apathy—I care too much to risk caring at all.",
@@ -294,16 +330,19 @@ Strong components typically include:
 ## Workshop Exercises
 
 ### Exercise 1: Motivation Mining
+
 1. Write a character's surface goal
 2. Ask "why?" five times, going deeper each time
 3. The fifth answer is your motivation seed
 
 ### Exercise 2: Tension Building
+
 1. List two things your character wants
 2. Find ways they conflict
 3. Express both desires in one sentence using "but" or "yet"
 
 ### Exercise 3: Dilemma Discovery
+
 1. Identify character's core value
 2. Create situation where that value hurts someone
 3. Phrase as question with no clear answer
@@ -328,22 +367,26 @@ A: Balance heavy psychological elements with moments of hope, humor, or determin
 ## Resources and References
 
 ### Recommended Reading
+
 - "Creating Character Depth" by Mark Johnson
 - "The Psychology of Fictional Characters" by Sarah Chen
 - "Internal Conflict in Narrative" by James Rivera
 
 ### Component Templates
+
 Available in: `/data/templates/psychological-components/`
 
 ### Community Examples
+
 Share and discuss at: [community-forum-link]
 
 ---
 
-*Last Updated: [Date]*
-*Version: 1.0*
-*Feedback: [feedback-link]*
-```
+_Last Updated: [Date]_
+_Version: 1.0_
+_Feedback: [feedback-link]_
+
+````
 
 ### 2. Quick Reference File
 
@@ -380,7 +423,7 @@ Create: `docs/content-creation/psychological-components-quick-ref.md`
 | Connect to past | Be generic |
 | Create depth | Over-explain |
 | Ask hard questions | Give answers |
-```
+````
 
 ### 3. Workshop Materials File
 
@@ -392,6 +435,7 @@ Create: `docs/content-creation/workshop-exercises.md`
 ## Workshop 1: Finding Character Motivations
 
 ### The "Five Whys" Exercise
+
 Transform surface goals into deep motivations:
 
 1. **Goal:** "I want to become rich"
@@ -409,18 +453,21 @@ Transform surface goals into deep motivations:
 ## Implementation Tasks
 
 ### Documentation Creation
+
 - [ ] Write main guide document
 - [ ] Create quick reference card
 - [ ] Develop workshop exercises
 - [ ] Add examples library
 
 ### Integration Points
+
 - [ ] Link from main README
 - [ ] Reference in component JSON files
 - [ ] Include in developer docs
 - [ ] Add to mod creation guide
 
 ### Review Process
+
 - [ ] Content creator review
 - [ ] Technical accuracy check
 - [ ] Example validation
@@ -442,12 +489,14 @@ Transform surface goals into deep motivations:
 ## Distribution
 
 ### Documentation Locations
+
 - Main guide: `/docs/content-creation/`
 - Quick reference: `/docs/content-creation/`
 - Templates: `/data/templates/`
 - Examples: `/data/examples/`
 
 ### Format Versions
+
 - Markdown (primary)
 - PDF (generated)
 - HTML (for web docs)
@@ -462,4 +511,4 @@ Transform surface goals into deep motivations:
 
 ---
 
-*Ticket created from character-components-analysis.md report*
+_Ticket created from character-components-analysis.md report_

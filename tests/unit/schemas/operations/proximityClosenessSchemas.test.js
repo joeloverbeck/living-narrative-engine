@@ -45,13 +45,15 @@ describe('Proximity Closeness Operation Schemas', () => {
       const baseSchema = JSON.parse(fs.readFileSync(baseSchemaPath, 'utf8'));
 
       const establishSchemaPath =
-        process.cwd() + '/data/schemas/operations/establishSittingCloseness.schema.json';
+        process.cwd() +
+        '/data/schemas/operations/establishSittingCloseness.schema.json';
       const establishSchema = JSON.parse(
         fs.readFileSync(establishSchemaPath, 'utf8')
       );
 
       const removeSchemaPath =
-        process.cwd() + '/data/schemas/operations/removeSittingCloseness.schema.json';
+        process.cwd() +
+        '/data/schemas/operations/removeSittingCloseness.schema.json';
       const removeSchema = JSON.parse(
         fs.readFileSync(removeSchemaPath, 'utf8')
       );
@@ -379,7 +381,7 @@ describe('Proximity Closeness Operation Schemas', () => {
           parameters: {
             furniture_id: 'furniture:couch',
             actor_id: 'game:alice',
-            spot_index: '2',  // String is valid for variable references
+            spot_index: '2', // String is valid for variable references
           },
         };
 
@@ -581,7 +583,7 @@ describe('Proximity Closeness Operation Schemas', () => {
           parameters: {
             furniture_id: 'furniture:couch',
             actor_id: 'game:alice',
-            spot_index: '5',  // String is valid for variable references
+            spot_index: '5', // String is valid for variable references
           },
         };
 
@@ -883,7 +885,7 @@ describe('Proximity Closeness Operation Schemas', () => {
       const invalidParams = {
         furniture_id: 123, // Should be string
         actor_id: 'test', // Valid string to avoid missing field error
-        spot_index: '5',   // Should be integer
+        spot_index: '5', // Should be integer
       };
 
       const establishOperation = {
@@ -908,11 +910,11 @@ describe('Proximity Closeness Operation Schemas', () => {
 
       expect(establishResult.isValid).toBe(false);
       expect(removeResult.isValid).toBe(false);
-      
+
       // Both should have errors for furniture_id and spot_index
       expect(establishResult.errors.length).toBeGreaterThan(0);
       expect(removeResult.errors.length).toBeGreaterThan(0);
-      
+
       // Both should have the same number of errors
       expect(establishResult.errors.length).toBe(removeResult.errors.length);
     });

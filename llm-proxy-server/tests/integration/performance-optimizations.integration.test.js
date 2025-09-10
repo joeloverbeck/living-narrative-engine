@@ -38,70 +38,70 @@ describe('Performance Optimizations Integration Tests', () => {
 
       mockLogger = createMockLogger();
 
-    // Setup RetryManager mock
-    proxyApiUtils.RetryManager.mockImplementation(() => ({
-      executeWithRetry: jest.fn(),
-    }));
+      // Setup RetryManager mock
+      proxyApiUtils.RetryManager.mockImplementation(() => ({
+        executeWithRetry: jest.fn(),
+      }));
 
-    // Create mock services
-    mockFileSystemReader = {
-      readFile: jest.fn(),
-    };
+      // Create mock services
+      mockFileSystemReader = {
+        readFile: jest.fn(),
+      };
 
-    mockAppConfigService = {
-      isCacheEnabled: jest.fn().mockReturnValue(true),
-      getCacheConfig: jest.fn().mockReturnValue({
-        enabled: true,
-        defaultTtl: 300000,
+      mockAppConfigService = {
+        isCacheEnabled: jest.fn().mockReturnValue(true),
+        getCacheConfig: jest.fn().mockReturnValue({
+          enabled: true,
+          defaultTtl: 300000,
+          maxSize: 1000,
+          apiKeyCacheTtl: 300000,
+        }),
+        getApiKeyCacheTtl: jest.fn().mockReturnValue(300000),
+        isHttpAgentEnabled: jest.fn().mockReturnValue(true),
+        getHttpAgentConfig: jest.fn().mockReturnValue({
+          enabled: true,
+          keepAlive: true,
+          maxSockets: 50,
+          maxFreeSockets: 10,
+          timeout: 60000,
+          freeSocketTimeout: 30000,
+          maxTotalSockets: 500,
+        }),
+        getProxyProjectRootPathForApiKeyFiles: jest
+          .fn()
+          .mockReturnValue('/test/path'),
+      };
+
+      // Initialize services
+      cacheService = new CacheService(mockLogger, {
         maxSize: 1000,
-        apiKeyCacheTtl: 300000,
-      }),
-      getApiKeyCacheTtl: jest.fn().mockReturnValue(300000),
-      isHttpAgentEnabled: jest.fn().mockReturnValue(true),
-      getHttpAgentConfig: jest.fn().mockReturnValue({
-        enabled: true,
+        defaultTtl: 300000,
+      });
+
+      httpAgentService = new HttpAgentService(mockLogger, {
         keepAlive: true,
         maxSockets: 50,
         maxFreeSockets: 10,
         timeout: 60000,
         freeSocketTimeout: 30000,
-        maxTotalSockets: 500,
-      }),
-      getProxyProjectRootPathForApiKeyFiles: jest
-        .fn()
-        .mockReturnValue('/test/path'),
-    };
+      });
 
-    // Initialize services
-    cacheService = new CacheService(mockLogger, {
-      maxSize: 1000,
-      defaultTtl: 300000,
-    });
+      apiKeyService = new ApiKeyService(
+        mockLogger,
+        mockFileSystemReader,
+        mockAppConfigService,
+        cacheService
+      );
 
-    httpAgentService = new HttpAgentService(mockLogger, {
-      keepAlive: true,
-      maxSockets: 50,
-      maxFreeSockets: 10,
-      timeout: 60000,
-      freeSocketTimeout: 30000,
-    });
+      llmRequestService = new LlmRequestService(
+        mockLogger,
+        httpAgentService,
+        mockAppConfigService,
+        proxyApiUtils.RetryManager
+      );
 
-    apiKeyService = new ApiKeyService(
-      mockLogger,
-      mockFileSystemReader,
-      mockAppConfigService,
-      cacheService
-    );
-
-    llmRequestService = new LlmRequestService(
-      mockLogger,
-      httpAgentService,
-      mockAppConfigService,
-      proxyApiUtils.RetryManager
-    );
-
-    // Reset mocks
-    jest.clearAllMocks();
+      // Reset mocks
+      jest.clearAllMocks();
     } catch (error) {
       // Ensure timers are cleaned up if setup fails
       jest.clearAllTimers();

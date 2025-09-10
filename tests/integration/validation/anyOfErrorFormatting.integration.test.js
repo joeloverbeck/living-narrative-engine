@@ -112,7 +112,10 @@ describe('AnyOf Error Formatting Integration', () => {
         },
       };
 
-      const result = validator.validate('schema://test/operation.schema.json', data);
+      const result = validator.validate(
+        'schema://test/operation.schema.json',
+        data
+      );
       expect(result.isValid).toBe(false);
 
       const formattedError = validator.formatAjvErrors(result.errors, data);
@@ -127,11 +130,16 @@ describe('AnyOf Error Formatting Integration', () => {
         parameters: {},
       };
 
-      const result = validator.validate('schema://test/operation.schema.json', data);
+      const result = validator.validate(
+        'schema://test/operation.schema.json',
+        data
+      );
       expect(result.isValid).toBe(false);
 
       const formattedError = validator.formatAjvErrors(result.errors, data);
-      expect(formattedError).toContain("Unknown or invalid operation type: 'unknownOperation'");
+      expect(formattedError).toContain(
+        "Unknown or invalid operation type: 'unknownOperation'"
+      );
       expect(formattedError).toContain('moveEntity');
       expect(formattedError).toContain('attackEntity');
       expect(formattedError).toContain('useItem');
@@ -144,7 +152,10 @@ describe('AnyOf Error Formatting Integration', () => {
         },
       };
 
-      const result = validator.validate('schema://test/operation.schema.json', data);
+      const result = validator.validate(
+        'schema://test/operation.schema.json',
+        data
+      );
       expect(result.isValid).toBe(false);
 
       const formattedError = validator.formatAjvErrors(result.errors, data);
@@ -162,7 +173,10 @@ describe('AnyOf Error Formatting Integration', () => {
         extraField: 'should not be here',
       };
 
-      const result = validator.validate('schema://test/operation.schema.json', data);
+      const result = validator.validate(
+        'schema://test/operation.schema.json',
+        data
+      );
       expect(result.isValid).toBe(false);
 
       const formattedError = validator.formatAjvErrors(result.errors, data);
@@ -180,7 +194,10 @@ describe('AnyOf Error Formatting Integration', () => {
         },
       };
 
-      const result = validator.validate('schema://test/operation.schema.json', data);
+      const result = validator.validate(
+        'schema://test/operation.schema.json',
+        data
+      );
       expect(result.isValid).toBe(false);
 
       const formattedError = validator.formatAjvErrors(result.errors, data);
@@ -262,7 +279,9 @@ describe('AnyOf Error Formatting Integration', () => {
 
       expect(thrownError).toBeDefined();
       expect(thrownError.message).toContain('Validation failed');
-      expect(thrownError.message).toContain('Unknown or invalid operation type');
+      expect(thrownError.message).toContain(
+        'Unknown or invalid operation type'
+      );
       expect(thrownError.message).toContain('unknownType');
     });
   });
@@ -272,7 +291,7 @@ describe('AnyOf Error Formatting Integration', () => {
       // Create a schema that will generate many errors
       const properties = {};
       const anyOfSchemas = [];
-      
+
       // Create 20 different operation types with different requirements
       for (let i = 0; i < 20; i++) {
         anyOfSchemas.push({
@@ -311,9 +330,12 @@ describe('AnyOf Error Formatting Integration', () => {
         },
       };
 
-      const result = validator.validate('schema://test/large.schema.json', data);
+      const result = validator.validate(
+        'schema://test/large.schema.json',
+        data
+      );
       expect(result.isValid).toBe(false);
-      
+
       // Should have many errors (one for each anyOf branch)
       expect(result.errors.length).toBeGreaterThan(20);
 
@@ -322,7 +344,7 @@ describe('AnyOf Error Formatting Integration', () => {
       expect(formattedError).toContain("Operation type 'operation5'");
       expect(formattedError).toContain('value5');
       expect(formattedError).toContain('Missing required property');
-      
+
       // Should not show errors from other operation types
       expect(formattedError).not.toContain('operation1');
       expect(formattedError).not.toContain('operation10');
@@ -334,11 +356,16 @@ describe('AnyOf Error Formatting Integration', () => {
         randomField: 'value',
       };
 
-      const result = validator.validate('schema://test/large.schema.json', data);
+      const result = validator.validate(
+        'schema://test/large.schema.json',
+        data
+      );
       expect(result.isValid).toBe(false);
 
       const formattedError = validator.formatAjvErrors(result.errors, data);
-      expect(formattedError).toContain("Unknown or invalid operation type: 'completelyInvalid'");
+      expect(formattedError).toContain(
+        "Unknown or invalid operation type: 'completelyInvalid'"
+      );
       expect(formattedError).toContain('Valid operation types include');
       expect(formattedError).toContain('operation0');
       // Should limit the display
@@ -376,8 +403,14 @@ describe('AnyOf Error Formatting Integration', () => {
         required: ['id', 'title'],
       };
 
-      await validator.addSchema(characterConceptSchema, characterConceptSchema.$id);
-      await validator.addSchema(thematicDirectionSchema, thematicDirectionSchema.$id);
+      await validator.addSchema(
+        characterConceptSchema,
+        characterConceptSchema.$id
+      );
+      await validator.addSchema(
+        thematicDirectionSchema,
+        thematicDirectionSchema.$id
+      );
     });
 
     it('should format character concept validation errors clearly', () => {

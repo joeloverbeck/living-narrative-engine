@@ -13,7 +13,7 @@ export class StateConsistencyValidator {
 
   /**
    * Creates a new StateConsistencyValidator instance for system-wide state validation.
-   * 
+   *
    * @param {object} dependencies - Dependency injection object
    * @param {ILogger} dependencies.logger - Logger instance for debugging and error logging
    * @param {IEntityManager} dependencies.entityManager - Entity manager instance for entity operations
@@ -23,7 +23,11 @@ export class StateConsistencyValidator {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
     });
     validateDependency(entityManager, 'IEntityManager', logger, {
-      requiredMethods: ['getEntitiesWithComponent', 'getComponentData', 'addComponent'],
+      requiredMethods: [
+        'getEntitiesWithComponent',
+        'getComponentData',
+        'addComponent',
+      ],
     });
 
     this.#logger = logger;
@@ -33,7 +37,7 @@ export class StateConsistencyValidator {
   /**
    * Validates all closeness relationships for bidirectional consistency.
    * Detects unidirectional relationships where A has B as partner but not vice versa.
-   * 
+   *
    * @returns {Array<object>} Array of consistency issues found
    */
   validateAllClosenessRelationships() {
@@ -41,11 +45,16 @@ export class StateConsistencyValidator {
     const checkedPairs = new Set();
 
     // Get all entities with closeness components
-    const entitiesWithCloseness = this.#entityManager.getEntitiesWithComponent('positioning:closeness');
+    const entitiesWithCloseness = this.#entityManager.getEntitiesWithComponent(
+      'positioning:closeness'
+    );
 
     for (const entity of entitiesWithCloseness) {
       const entityId = entity.id;
-      const closenessData = this.#entityManager.getComponentData(entityId, 'positioning:closeness');
+      const closenessData = this.#entityManager.getComponentData(
+        entityId,
+        'positioning:closeness'
+      );
 
       if (!closenessData || !closenessData.partners) continue;
 
@@ -56,9 +65,16 @@ export class StateConsistencyValidator {
         checkedPairs.add(pairKey);
 
         // Check for bidirectional relationship
-        const partnerCloseness = this.#entityManager.getComponentData(partnerId, 'positioning:closeness');
+        const partnerCloseness = this.#entityManager.getComponentData(
+          partnerId,
+          'positioning:closeness'
+        );
 
-        if (!partnerCloseness || !partnerCloseness.partners || !partnerCloseness.partners.includes(entityId)) {
+        if (
+          !partnerCloseness ||
+          !partnerCloseness.partners ||
+          !partnerCloseness.partners.includes(entityId)
+        ) {
           issues.push({
             type: 'unidirectional_closeness',
             from: entityId,
@@ -70,7 +86,9 @@ export class StateConsistencyValidator {
     }
 
     if (issues.length > 0) {
-      this.#logger.warn('Closeness relationship consistency issues found', { issues });
+      this.#logger.warn('Closeness relationship consistency issues found', {
+        issues,
+      });
     }
 
     return issues;
@@ -79,24 +97,37 @@ export class StateConsistencyValidator {
   /**
    * Validates movement locks to detect orphaned locks without corresponding states.
    * A lock is orphaned if the entity has no closeness partners and is not sitting.
-   * 
+   *
    * @returns {Array<object>} Array of orphaned movement lock issues
    */
   validateMovementLocks() {
     const issues = [];
 
-    const entitiesWithMovement = this.#entityManager.getEntitiesWithComponent('core:movement');
+    const entitiesWithMovement =
+      this.#entityManager.getEntitiesWithComponent('core:movement');
 
     for (const entity of entitiesWithMovement) {
       const entityId = entity.id;
-      const movementData = this.#entityManager.getComponentData(entityId, 'core:movement');
+      const movementData = this.#entityManager.getComponentData(
+        entityId,
+        'core:movement'
+      );
 
       if (movementData && movementData.locked) {
         // Check if entity has closeness partners or is sitting
-        const closenessData = this.#entityManager.getComponentData(entityId, 'positioning:closeness');
-        const sittingData = this.#entityManager.getComponentData(entityId, 'positioning:sitting_on');
+        const closenessData = this.#entityManager.getComponentData(
+          entityId,
+          'positioning:closeness'
+        );
+        const sittingData = this.#entityManager.getComponentData(
+          entityId,
+          'positioning:sitting_on'
+        );
 
-        if ((!closenessData || closenessData.partners.length === 0) && !sittingData) {
+        if (
+          (!closenessData || closenessData.partners.length === 0) &&
+          !sittingData
+        ) {
           issues.push({
             type: 'orphaned_movement_lock',
             entityId,
@@ -116,24 +147,32 @@ export class StateConsistencyValidator {
   /**
    * Validates furniture occupancy consistency between furniture spots and occupant sitting components.
    * Detects missing sitting components and mismatched furniture/spot references.
-   * 
+   *
    * @returns {Array<object>} Array of furniture occupancy issues
    */
   validateFurnitureOccupancy() {
     const issues = [];
 
-    const furnitureEntities = this.#entityManager.getEntitiesWithComponent('positioning:allows_sitting');
+    const furnitureEntities = this.#entityManager.getEntitiesWithComponent(
+      'positioning:allows_sitting'
+    );
 
     for (const furniture of furnitureEntities) {
       const furnitureId = furniture.id;
-      const furnitureData = this.#entityManager.getComponentData(furnitureId, 'positioning:allows_sitting');
+      const furnitureData = this.#entityManager.getComponentData(
+        furnitureId,
+        'positioning:allows_sitting'
+      );
 
       if (!furnitureData || !furnitureData.spots) continue;
 
       furnitureData.spots.forEach((occupantId, spotIndex) => {
         if (occupantId) {
           // Check if occupant has corresponding sitting component
-          const sittingData = this.#entityManager.getComponentData(occupantId, 'positioning:sitting_on');
+          const sittingData = this.#entityManager.getComponentData(
+            occupantId,
+            'positioning:sitting_on'
+          );
 
           if (!sittingData) {
             issues.push({
@@ -143,7 +182,10 @@ export class StateConsistencyValidator {
               spotIndex,
               message: `${occupantId} is in furniture ${furnitureId} spot ${spotIndex} but has no sitting component`,
             });
-          } else if (sittingData.furniture_id !== furnitureId || sittingData.spot_index !== spotIndex) {
+          } else if (
+            sittingData.furniture_id !== furnitureId ||
+            sittingData.spot_index !== spotIndex
+          ) {
             issues.push({
               type: 'sitting_mismatch',
               furnitureId,
@@ -159,7 +201,9 @@ export class StateConsistencyValidator {
     }
 
     if (issues.length > 0) {
-      this.#logger.warn('Furniture occupancy consistency issues found', { issues });
+      this.#logger.warn('Furniture occupancy consistency issues found', {
+        issues,
+      });
     }
 
     return issues;
@@ -168,7 +212,7 @@ export class StateConsistencyValidator {
   /**
    * Performs a complete validation of all state consistency checks.
    * Runs all validation methods and returns a comprehensive report.
-   * 
+   *
    * @returns {object} Validation report with all issues found
    */
   performFullValidation() {
@@ -195,7 +239,9 @@ export class StateConsistencyValidator {
         },
       });
     } else {
-      this.#logger.info('State consistency validation passed - no issues found');
+      this.#logger.info(
+        'State consistency validation passed - no issues found'
+      );
     }
 
     return report;
@@ -203,7 +249,7 @@ export class StateConsistencyValidator {
 
   /**
    * Attempts to repair detected consistency issues.
-   * 
+   *
    * @param {Array<object>} issues - Array of issues to repair
    * @returns {Promise<object>} Repair report with success/failure counts
    */
@@ -233,7 +279,8 @@ export class StateConsistencyValidator {
             // Cannot auto-repair - would need to know furniture details
             repairReport.failed.push({
               issue,
-              reason: 'Cannot auto-repair missing sitting component - manual intervention required',
+              reason:
+                'Cannot auto-repair missing sitting component - manual intervention required',
             });
             break;
 
@@ -263,17 +310,26 @@ export class StateConsistencyValidator {
 
   /**
    * Repairs unidirectional closeness by removing the one-way relationship.
-   * 
+   *
    * @param {object} issue - The unidirectional closeness issue
    * @private
    */
   async #repairUnidirectionalCloseness(issue) {
-    const closenessData = this.#entityManager.getComponentData(issue.from, 'positioning:closeness');
+    const closenessData = this.#entityManager.getComponentData(
+      issue.from,
+      'positioning:closeness'
+    );
     if (closenessData && closenessData.partners) {
-      const updatedPartners = closenessData.partners.filter(id => id !== issue.to);
-      await this.#entityManager.addComponent(issue.from, 'positioning:closeness', {
-        partners: updatedPartners,
-      });
+      const updatedPartners = closenessData.partners.filter(
+        (id) => id !== issue.to
+      );
+      await this.#entityManager.addComponent(
+        issue.from,
+        'positioning:closeness',
+        {
+          partners: updatedPartners,
+        }
+      );
       this.#logger.debug('Repaired unidirectional closeness', {
         from: issue.from,
         removedPartner: issue.to,
@@ -283,12 +339,15 @@ export class StateConsistencyValidator {
 
   /**
    * Repairs orphaned movement lock by unlocking the entity.
-   * 
+   *
    * @param {object} issue - The orphaned lock issue
    * @private
    */
   async #repairOrphanedLock(issue) {
-    const movementData = this.#entityManager.getComponentData(issue.entityId, 'core:movement');
+    const movementData = this.#entityManager.getComponentData(
+      issue.entityId,
+      'core:movement'
+    );
     if (movementData) {
       await this.#entityManager.addComponent(issue.entityId, 'core:movement', {
         ...movementData,
@@ -302,15 +361,19 @@ export class StateConsistencyValidator {
 
   /**
    * Repairs sitting component mismatch by updating it to match furniture state.
-   * 
+   *
    * @param {object} issue - The sitting mismatch issue
    * @private
    */
   async #repairSittingMismatch(issue) {
-    await this.#entityManager.addComponent(issue.occupantId, 'positioning:sitting_on', {
-      furniture_id: issue.furnitureId,
-      spot_index: issue.spotIndex,
-    });
+    await this.#entityManager.addComponent(
+      issue.occupantId,
+      'positioning:sitting_on',
+      {
+        furniture_id: issue.furnitureId,
+        spot_index: issue.spotIndex,
+      }
+    );
     this.#logger.debug('Repaired sitting component mismatch', {
       occupantId: issue.occupantId,
       furnitureId: issue.furnitureId,

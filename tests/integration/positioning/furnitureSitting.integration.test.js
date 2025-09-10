@@ -320,7 +320,7 @@ describe('furniture sitting system', () => {
       await testEnv.dispatchAction({
         actionId: 'positioning:get_up_from_furniture',
         actorId: actor,
-        targetId: chair,  // Required for rule operations to resolve 'target' entity_ref
+        targetId: chair, // Required for rule operations to resolve 'target' entity_ref
       });
 
       // Check that sitting_on component is removed
@@ -645,7 +645,7 @@ describe('furniture sitting system', () => {
         actor2,
         'positioning:closeness'
       );
-      
+
       expect(aliceCloseness).toBeNull();
       expect(bobCloseness).toBeNull();
 
@@ -707,7 +707,7 @@ describe('furniture sitting system', () => {
         actor2,
         'positioning:closeness'
       );
-      
+
       // Since Alice and Bob were adjacent, the handler removes their closeness
       expect(aliceCloseness).toBeNull();
       expect(bobCloseness).toBeNull();
@@ -754,7 +754,7 @@ describe('furniture sitting system', () => {
       // Create second and third actors
       const actor2 = 'test:actor2';
       const actor3 = 'test:actor3';
-      
+
       testEnv.entityManager.addComponent(actor2, ACTOR_COMPONENT_ID, {});
       testEnv.entityManager.addComponent(actor2, NAME_COMPONENT_ID, {
         name: 'Bob',
@@ -825,7 +825,7 @@ describe('furniture sitting system', () => {
         actor3,
         'positioning:closeness'
       );
-      
+
       expect(aliceCloseness).toBeNull();
       expect(charlieCloseness).toBeNull();
 

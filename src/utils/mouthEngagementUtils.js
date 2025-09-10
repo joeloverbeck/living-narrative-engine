@@ -25,16 +25,20 @@ import { deepClone } from './cloneUtils.js';
  * @param {boolean} locked - Whether mouth engagement should be locked.
  * @returns {Promise<MouthEngagementUpdateResult|null>} Update result or null if no mouth found.
  */
-export async function updateMouthEngagementLock(entityManager, entityId, locked) {
+export async function updateMouthEngagementLock(
+  entityManager,
+  entityId,
+  locked
+) {
   // Validate inputs
   if (!entityManager) {
     throw new Error('EntityManager is required');
   }
-  
+
   if (!entityId || typeof entityId !== 'string') {
     throw new Error('Valid entityId string is required');
   }
-  
+
   if (typeof locked !== 'boolean') {
     throw new Error('Locked parameter must be a boolean');
   }
@@ -56,11 +60,7 @@ export async function updateMouthEngagementLock(entityManager, entityId, locked)
   }
 
   // Legacy path: check entity directly for mouth engagement
-  return await updateLegacyMouthEngagement(
-    entityManager,
-    entityId,
-    locked
-  );
+  return await updateLegacyMouthEngagement(entityManager, entityId, locked);
 }
 
 /**
@@ -91,18 +91,18 @@ async function updateAnatomyBasedMouthEngagement(
         partId,
         'anatomy:part'
       );
-      
+
       if (partComponent && partComponent.subType === 'mouth') {
         // Get or create mouth engagement component
         let mouthEngagement = entityManager.getComponentData(
           partId,
           'core:mouth_engagement'
         );
-        
+
         if (!mouthEngagement) {
           mouthEngagement = { locked: false, forcedOverride: false };
         }
-        
+
         // Clone and update the mouth engagement component
         const updatedEngagement = cloneComponent(mouthEngagement);
         updatedEngagement.locked = locked;
@@ -113,19 +113,17 @@ async function updateAnatomyBasedMouthEngagement(
           'core:mouth_engagement',
           updatedEngagement
         );
-        
-        updatedParts.push({ 
-          partId, 
-          engagement: updatedEngagement 
+
+        updatedParts.push({
+          partId,
+          engagement: updatedEngagement,
         });
       }
     }
   }
 
   // Return summary of updates
-  return updatedParts.length > 0 
-    ? { updatedParts, locked } 
-    : null;
+  return updatedParts.length > 0 ? { updatedParts, locked } : null;
 }
 
 /**
@@ -137,29 +135,25 @@ async function updateAnatomyBasedMouthEngagement(
  * @returns {Promise<{locked: boolean}>} Update result with locked state
  * @private
  */
-async function updateLegacyMouthEngagement(
-  entityManager,
-  entityId,
-  locked
-) {
+async function updateLegacyMouthEngagement(entityManager, entityId, locked) {
   // Check for existing mouth engagement component
   const existing = entityManager.getComponentData(
-    entityId, 
+    entityId,
     'core:mouth_engagement'
   );
-  
-  const engagement = existing 
+
+  const engagement = existing
     ? cloneComponent(existing)
     : { locked: false, forcedOverride: false };
-  
+
   engagement.locked = locked;
-  
+
   await entityManager.addComponent(
-    entityId, 
-    'core:mouth_engagement', 
+    entityId,
+    'core:mouth_engagement',
     engagement
   );
-  
+
   return { locked };
 }
 
@@ -207,13 +201,13 @@ export function isMouthLocked(entityManager, entityId) {
         partId,
         'anatomy:part'
       );
-      
+
       if (partComponent && partComponent.subType === 'mouth') {
         const engagement = entityManager.getComponentData(
           partId,
           'core:mouth_engagement'
         );
-        
+
         if (engagement && engagement.locked) {
           return true; // At least one mouth is locked
         }
@@ -227,7 +221,7 @@ export function isMouthLocked(entityManager, entityId) {
     entityId,
     'core:mouth_engagement'
   );
-  
+
   return engagement ? engagement.locked : false;
 }
 
@@ -241,7 +235,7 @@ export function isMouthLocked(entityManager, entityId) {
  */
 export function getMouthParts(entityManager, entityId) {
   const mouthParts = [];
-  
+
   if (!entityManager || !entityId) {
     return mouthParts;
   }
@@ -259,21 +253,21 @@ export function getMouthParts(entityManager, entityId) {
         partId,
         'anatomy:part'
       );
-      
+
       if (partComponent && partComponent.subType === 'mouth') {
         const engagement = entityManager.getComponentData(
           partId,
           'core:mouth_engagement'
         );
-        
+
         mouthParts.push({
           partId,
           partComponent,
-          engagement
+          engagement,
         });
       }
     }
   }
-  
+
   return mouthParts;
 }

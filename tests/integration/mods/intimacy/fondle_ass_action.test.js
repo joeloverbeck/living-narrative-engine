@@ -29,7 +29,7 @@ describe('intimacy:fondle_ass action integration', () => {
 
   it('performs fondle ass action over clothing successfully', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
-    
+
     // Add anatomy and clothing components
     scenario.target.components['anatomy:body'] = { body: { root: 'torso1' } };
     scenario.target.components['clothing:equipment'] = {
@@ -41,7 +41,7 @@ describe('intimacy:fondle_ass action integration', () => {
         },
       },
     };
-    
+
     const complexEntities = [
       {
         id: 'skirt1',
@@ -84,7 +84,7 @@ describe('intimacy:fondle_ass action integration', () => {
         },
       },
     ];
-    
+
     testFixture.reset([scenario.actor, scenario.target, ...complexEntities]);
 
     await testFixture.eventBus.dispatch('core:attempt_action', {
@@ -124,7 +124,7 @@ describe('intimacy:fondle_ass action integration', () => {
 
   it('handles missing clothing target gracefully', async () => {
     const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
-    
+
     scenario.actor.components['positioning:closeness'] = { partners: [] };
     testFixture.reset([scenario.actor]);
 
@@ -144,7 +144,7 @@ describe('intimacy:fondle_ass action integration', () => {
 
   it('verifies message content for fondle ass action with clothing', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
-    
+
     // Add anatomy and clothing components
     scenario.target.components['anatomy:body'] = { body: { root: 'torso1' } };
     scenario.target.components['clothing:equipment'] = {
@@ -156,7 +156,7 @@ describe('intimacy:fondle_ass action integration', () => {
         },
       },
     };
-    
+
     const complexEntities = [
       {
         id: 'pants1',
@@ -189,7 +189,7 @@ describe('intimacy:fondle_ass action integration', () => {
         },
       },
     ];
-    
+
     testFixture.reset([scenario.actor, scenario.target, ...complexEntities]);
 
     await testFixture.eventBus.dispatch('core:attempt_action', {

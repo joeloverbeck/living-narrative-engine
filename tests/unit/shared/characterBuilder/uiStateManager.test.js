@@ -18,7 +18,9 @@ describe('UIStateManager', () => {
       style: { display: 'none' },
       textContent: '',
       querySelector: jest.fn(),
-      classList: { contains: jest.fn((className) => className === 'cb-empty-state') },
+      classList: {
+        contains: jest.fn((className) => className === 'cb-empty-state'),
+      },
     };
 
     mockLoadingState = {
@@ -26,7 +28,9 @@ describe('UIStateManager', () => {
       querySelector: jest.fn().mockReturnValue({
         textContent: '',
       }),
-      classList: { contains: jest.fn((className) => className === 'cb-loading-state') },
+      classList: {
+        contains: jest.fn((className) => className === 'cb-loading-state'),
+      },
     };
 
     mockErrorState = {
@@ -34,13 +38,17 @@ describe('UIStateManager', () => {
       querySelector: jest.fn().mockReturnValue({
         textContent: '',
       }),
-      classList: { contains: jest.fn((className) => className === 'cb-error-state') },
+      classList: {
+        contains: jest.fn((className) => className === 'cb-error-state'),
+      },
     };
 
     mockResultsState = {
       style: { display: 'none' },
       querySelector: jest.fn(),
-      classList: { contains: jest.fn((className) => className === 'cb-results-state') },
+      classList: {
+        contains: jest.fn((className) => className === 'cb-results-state'),
+      },
     };
 
     uiStateManager = new UIStateManager({

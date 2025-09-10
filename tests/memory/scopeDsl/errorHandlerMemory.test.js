@@ -63,7 +63,7 @@ describe('ScopeDslErrorHandler Memory Testing', () => {
   afterEach(() => {
     errorHandler.clearErrorBuffer();
     jest.clearAllMocks();
-    
+
     // Force GC between tests if available
     if (global.gc) {
       global.gc();
@@ -102,7 +102,10 @@ describe('ScopeDslErrorHandler Memory Testing', () => {
             'memoryPressureResolver'
           );
         } catch (e) {
-          if (e instanceof ScopeDslError || e.constructor.name === 'ScopeDslError') {
+          if (
+            e instanceof ScopeDslError ||
+            e.constructor.name === 'ScopeDslError'
+          ) {
             successCount++;
           }
         }
@@ -136,7 +139,7 @@ describe('ScopeDslErrorHandler Memory Testing', () => {
 
     it('should handle extremely large contexts without memory explosion', () => {
       const iterations = 500;
-      
+
       // Create progressively larger contexts
       const contexts = Array.from({ length: iterations }, (_, i) => ({
         depth: 0,
@@ -162,7 +165,10 @@ describe('ScopeDslErrorHandler Memory Testing', () => {
             'largeContextResolver'
           );
         } catch (e) {
-          if (e instanceof ScopeDslError || e.constructor.name === 'ScopeDslError') {
+          if (
+            e instanceof ScopeDslError ||
+            e.constructor.name === 'ScopeDslError'
+          ) {
             successCount++;
           }
         }
@@ -220,7 +226,10 @@ describe('ScopeDslErrorHandler Memory Testing', () => {
             'recoveryResolver'
           );
         } catch (e) {
-          if (e instanceof ScopeDslError || e.constructor.name === 'ScopeDslError') {
+          if (
+            e instanceof ScopeDslError ||
+            e.constructor.name === 'ScopeDslError'
+          ) {
             recoverySuccess++;
           }
         }
@@ -239,7 +248,8 @@ describe('ScopeDslErrorHandler Memory Testing', () => {
       });
 
       // Should successfully clean up memory
-      const cleanupEfficiency = (memoryAfterExhaustion - memoryAfterCleanup) / memoryAfterExhaustion;
+      const cleanupEfficiency =
+        (memoryAfterExhaustion - memoryAfterCleanup) / memoryAfterExhaustion;
       expect(cleanupEfficiency).toBeGreaterThan(0.1); // At least 10% memory freed
 
       // Should maintain good performance after recovery
@@ -260,10 +270,10 @@ describe('ScopeDslErrorHandler Memory Testing', () => {
           try {
             errorHandler.handleError(
               new Error(`Cycle ${cycle} error ${i}`),
-              { 
-                depth: 0, 
-                cycle, 
-                data: Array(10).fill(`cycle-${cycle}-data`) 
+              {
+                depth: 0,
+                cycle,
+                data: Array(10).fill(`cycle-${cycle}-data`),
               },
               'cycleResolver'
             );
@@ -293,9 +303,10 @@ describe('ScopeDslErrorHandler Memory Testing', () => {
       }
 
       // Analyze memory patterns across cycles
-      const growthRates = memorySnapshots.map(s => s.growth);
+      const growthRates = memorySnapshots.map((s) => s.growth);
       const maxGrowth = Math.max(...growthRates);
-      const avgGrowth = growthRates.reduce((sum, g) => sum + g, 0) / growthRates.length;
+      const avgGrowth =
+        growthRates.reduce((sum, g) => sum + g, 0) / growthRates.length;
 
       // Memory growth should be bounded and consistent
       expect(maxGrowth).toBeLessThan(50 * 1024 * 1024); // <50MB max growth per cycle
@@ -316,25 +327,25 @@ describe('ScopeDslErrorHandler Memory Testing', () => {
       const testDuration = 10000; // 10 seconds
       const sampleInterval = 1000; // Sample every second
       const memorySnapshots = [];
-      
+
       const startTime = Date.now();
       const startMemory = process.memoryUsage().heapUsed;
       let totalErrors = 0;
 
       while (Date.now() - startTime < testDuration) {
         const batchStart = Date.now();
-        
+
         // Generate a batch of errors
         for (let i = 0; i < 100; i++) {
           totalErrors++;
-          
+
           try {
             errorHandler.handleError(
               new Error(`Continuous error ${totalErrors}`),
-              { 
-                depth: 0, 
+              {
+                depth: 0,
                 timestamp: Date.now(),
-                data: `data-${totalErrors % 100}` // Reuse data to test for proper cleanup
+                data: `data-${totalErrors % 100}`, // Reuse data to test for proper cleanup
               },
               'continuousResolver'
             );
@@ -376,11 +387,12 @@ describe('ScopeDslErrorHandler Memory Testing', () => {
       const totalMemoryGrowth = endMemory - startMemory;
 
       // Analyze memory trend
-      const memoryGrowths = memorySnapshots.map((snapshot, index) => 
+      const memoryGrowths = memorySnapshots.map((snapshot, index) =>
         index === 0 ? 0 : snapshot.memory - memorySnapshots[index - 1].memory
       );
 
-      const avgGrowthPerSample = memoryGrowths.reduce((sum, g) => sum + g, 0) / memoryGrowths.length;
+      const avgGrowthPerSample =
+        memoryGrowths.reduce((sum, g) => sum + g, 0) / memoryGrowths.length;
       const maxGrowthPerSample = Math.max(...memoryGrowths);
 
       // Memory should not grow unbounded (increased tolerance for CI environments)
@@ -403,24 +415,35 @@ describe('ScopeDslErrorHandler Memory Testing', () => {
     it('should generate memory usage report', () => {
       // This test runs last and generates a summary report
       console.log('\n=== Memory Testing Report ===\n');
-      
+
       if (memoryMetrics.pressure.length > 0) {
         console.log('Memory Pressure:');
         memoryMetrics.pressure.forEach((m) => {
           console.log(`  - ${m.iterations} iterations`);
-          console.log(`    Memory Increase: ${(m.memoryIncrease / 1024 / 1024).toFixed(2)}MB`);
+          console.log(
+            `    Memory Increase: ${(m.memoryIncrease / 1024 / 1024).toFixed(2)}MB`
+          );
           console.log(`    Success Rate: ${(m.successRate * 100).toFixed(1)}%`);
-          console.log(`    Avg Memory per Error: ${(m.avgMemoryPerError / 1024).toFixed(2)}KB`);
+          console.log(
+            `    Avg Memory per Error: ${(m.avgMemoryPerError / 1024).toFixed(2)}KB`
+          );
         });
       }
 
       if (memoryMetrics.recovery.length > 0) {
         console.log('\nMemory Recovery:');
         memoryMetrics.recovery.forEach((m) => {
-          const cleanupEfficiency = ((m.memoryAfterExhaustion - m.memoryAfterCleanup) / m.memoryAfterExhaustion * 100);
-          console.log(`  - Cleanup Efficiency: ${cleanupEfficiency.toFixed(1)}%`);
+          const cleanupEfficiency =
+            ((m.memoryAfterExhaustion - m.memoryAfterCleanup) /
+              m.memoryAfterExhaustion) *
+            100;
+          console.log(
+            `  - Cleanup Efficiency: ${cleanupEfficiency.toFixed(1)}%`
+          );
           console.log(`    Recovery Duration: ${m.recoveryDuration}ms`);
-          console.log(`    Recovery Success: ${(m.recoverySuccessRate * 100).toFixed(1)}%`);
+          console.log(
+            `    Recovery Success: ${(m.recoverySuccessRate * 100).toFixed(1)}%`
+          );
         });
       }
 
@@ -428,19 +451,29 @@ describe('ScopeDslErrorHandler Memory Testing', () => {
         console.log('\nMemory Leak Detection:');
         memoryMetrics.leaks.forEach((m) => {
           if (m.cycles) {
-            console.log(`  - ${m.cycles} cycles of ${m.errorsPerCycle} errors each`);
-            console.log(`    Max Growth: ${(m.maxGrowth / 1024 / 1024).toFixed(2)}MB`);
-            console.log(`    Avg Growth: ${(m.avgGrowth / 1024 / 1024).toFixed(2)}MB`);
+            console.log(
+              `  - ${m.cycles} cycles of ${m.errorsPerCycle} errors each`
+            );
+            console.log(
+              `    Max Growth: ${(m.maxGrowth / 1024 / 1024).toFixed(2)}MB`
+            );
+            console.log(
+              `    Avg Growth: ${(m.avgGrowth / 1024 / 1024).toFixed(2)}MB`
+            );
           } else {
             console.log(`  - ${m.totalErrors} errors over ${m.duration}ms`);
-            console.log(`    Total Growth: ${(m.totalMemoryGrowth / 1024 / 1024).toFixed(2)}MB`);
-            console.log(`    Avg Growth/Sample: ${(m.avgGrowthPerSample / 1024 / 1024).toFixed(2)}MB`);
+            console.log(
+              `    Total Growth: ${(m.totalMemoryGrowth / 1024 / 1024).toFixed(2)}MB`
+            );
+            console.log(
+              `    Avg Growth/Sample: ${(m.avgGrowthPerSample / 1024 / 1024).toFixed(2)}MB`
+            );
           }
         });
       }
 
       console.log('\n==============================\n');
-      
+
       // Test passes if we got here
       expect(true).toBe(true);
     });

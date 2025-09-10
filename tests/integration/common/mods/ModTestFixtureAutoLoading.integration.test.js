@@ -4,7 +4,10 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { ModTestFixture, ModActionTestFixture } from '../../../common/mods/ModTestFixture.js';
+import {
+  ModTestFixture,
+  ModActionTestFixture,
+} from '../../../common/mods/ModTestFixture.js';
 import { createTestBed } from '../../../common/testBed.js';
 
 describe('ModTestFixture - Auto-Loading Integration', () => {
@@ -20,79 +23,109 @@ describe('ModTestFixture - Auto-Loading Integration', () => {
 
   describe('Real File Auto-Loading Tests', () => {
     it('should auto-load intimacy:kiss_cheek files', async () => {
-      const fixture = await ModTestFixture.forActionAutoLoad('intimacy', 'intimacy:kiss_cheek');
+      const fixture = await ModTestFixture.forActionAutoLoad(
+        'intimacy',
+        'intimacy:kiss_cheek'
+      );
 
       expect(fixture).toBeInstanceOf(ModActionTestFixture);
       expect(fixture.modId).toBe('intimacy');
       expect(fixture.actionId).toBe('intimacy:kiss_cheek');
       expect(fixture.ruleFile).toBeDefined();
       expect(fixture.conditionFile).toBeDefined();
-      
+
       // Verify rule file structure
       expect(fixture.ruleFile.rule_id).toBe('handle_kiss_cheek');
       expect(fixture.ruleFile.event_type).toBe('core:attempt_action');
-      expect(fixture.ruleFile.condition.condition_ref).toBe('intimacy:event-is-action-kiss-cheek');
-      
+      expect(fixture.ruleFile.condition.condition_ref).toBe(
+        'intimacy:event-is-action-kiss-cheek'
+      );
+
       // Verify condition file structure
-      expect(fixture.conditionFile.id).toBe('intimacy:event-is-action-kiss-cheek');
+      expect(fixture.conditionFile.id).toBe(
+        'intimacy:event-is-action-kiss-cheek'
+      );
       expect(fixture.conditionFile.logic).toBeDefined();
     });
 
     it('should auto-load positioning:kneel_before files', async () => {
-      const fixture = await ModTestFixture.forActionAutoLoad('positioning', 'positioning:kneel_before');
+      const fixture = await ModTestFixture.forActionAutoLoad(
+        'positioning',
+        'positioning:kneel_before'
+      );
 
       expect(fixture).toBeInstanceOf(ModActionTestFixture);
       expect(fixture.modId).toBe('positioning');
       expect(fixture.actionId).toBe('positioning:kneel_before');
       expect(fixture.ruleFile).toBeDefined();
       expect(fixture.conditionFile).toBeDefined();
-      
+
       // Verify the files are loaded correctly
       expect(fixture.ruleFile.rule_id).toBeDefined();
-      expect(fixture.conditionFile.id).toBe('positioning:event-is-action-kneel-before');
+      expect(fixture.conditionFile.id).toBe(
+        'positioning:event-is-action-kneel-before'
+      );
     });
 
     it('should auto-load violence:sucker_punch files', async () => {
-      const fixture = await ModTestFixture.forActionAutoLoad('violence', 'violence:sucker_punch');
+      const fixture = await ModTestFixture.forActionAutoLoad(
+        'violence',
+        'violence:sucker_punch'
+      );
 
       expect(fixture).toBeInstanceOf(ModActionTestFixture);
       expect(fixture.modId).toBe('violence');
       expect(fixture.actionId).toBe('violence:sucker_punch');
       expect(fixture.ruleFile).toBeDefined();
       expect(fixture.conditionFile).toBeDefined();
-      
+
       // Verify file structure
       expect(fixture.ruleFile.rule_id).toBe('handle_sucker_punch');
-      expect(fixture.conditionFile.id).toBe('violence:event-is-action-sucker-punch');
+      expect(fixture.conditionFile.id).toBe(
+        'violence:event-is-action-sucker-punch'
+      );
     });
 
     it('should auto-load sex:fondle_breasts files', async () => {
-      const fixture = await ModTestFixture.forActionAutoLoad('sex', 'sex:fondle_breasts');
+      const fixture = await ModTestFixture.forActionAutoLoad(
+        'sex',
+        'sex:fondle_breasts'
+      );
 
       expect(fixture).toBeInstanceOf(ModActionTestFixture);
       expect(fixture.modId).toBe('sex');
       expect(fixture.actionId).toBe('sex:fondle_breasts');
       expect(fixture.ruleFile).toBeDefined();
       expect(fixture.conditionFile).toBeDefined();
-      
+
       // Verify file structure
       expect(fixture.ruleFile.rule_id).toBe('handle_fondle_breasts');
-      expect(fixture.conditionFile.id).toBe('sex:event-is-action-fondle-breasts');
+      expect(fixture.conditionFile.id).toBe(
+        'sex:event-is-action-fondle-breasts'
+      );
     });
 
     it('should work with handle_ prefixed rule files', async () => {
       // Test with an action that has handle_ prefix in rule file
-      const fixture = await ModTestFixture.forActionAutoLoad('intimacy', 'intimacy:massage_shoulders');
+      const fixture = await ModTestFixture.forActionAutoLoad(
+        'intimacy',
+        'intimacy:massage_shoulders'
+      );
 
       expect(fixture).toBeInstanceOf(ModActionTestFixture);
       expect(fixture.ruleFile.rule_id).toBe('handle_massage_shoulders');
-      expect(fixture.conditionFile.id).toBe('intimacy:event-is-action-massage-shoulders');
+      expect(fixture.conditionFile.id).toBe(
+        'intimacy:event-is-action-massage-shoulders'
+      );
     });
   });
 
   describe('Backward Compatibility with Real Files', () => {
     it('should work with enhanced forAction method (auto-loading)', async () => {
-      const fixture = await ModTestFixture.forAction('intimacy', 'intimacy:kiss_cheek');
+      const fixture = await ModTestFixture.forAction(
+        'intimacy',
+        'intimacy:kiss_cheek'
+      );
 
       expect(fixture).toBeInstanceOf(ModActionTestFixture);
       expect(fixture.ruleFile).toBeDefined();
@@ -100,7 +133,10 @@ describe('ModTestFixture - Auto-Loading Integration', () => {
     });
 
     it('should work with enhanced forRule method (auto-loading)', async () => {
-      const fixture = await ModTestFixture.forRule('intimacy', 'intimacy:kiss_cheek');
+      const fixture = await ModTestFixture.forRule(
+        'intimacy',
+        'intimacy:kiss_cheek'
+      );
 
       expect(fixture.ruleFile).toBeDefined();
       expect(fixture.conditionFile).toBeDefined();
@@ -110,34 +146,56 @@ describe('ModTestFixture - Auto-Loading Integration', () => {
   describe('Error Handling with Real File Scenarios', () => {
     it('should throw clear error for non-existent mod', async () => {
       await expect(
-        ModTestFixture.forActionAutoLoad('nonexistent_mod', 'nonexistent:action')
-      ).rejects.toThrow(/Could not load rule file for nonexistent_mod:nonexistent:action/);
+        ModTestFixture.forActionAutoLoad(
+          'nonexistent_mod',
+          'nonexistent:action'
+        )
+      ).rejects.toThrow(
+        /Could not load rule file for nonexistent_mod:nonexistent:action/
+      );
     });
 
     it('should throw clear error for non-existent action', async () => {
       await expect(
-        ModTestFixture.forActionAutoLoad('intimacy', 'intimacy:nonexistent_action')
-      ).rejects.toThrow(/Could not load rule file for intimacy:intimacy:nonexistent_action/);
+        ModTestFixture.forActionAutoLoad(
+          'intimacy',
+          'intimacy:nonexistent_action'
+        )
+      ).rejects.toThrow(
+        /Could not load rule file for intimacy:intimacy:nonexistent_action/
+      );
     });
 
     it('should provide helpful error messages with attempted paths', async () => {
       await expect(
-        ModTestFixture.forActionAutoLoad('intimacy', 'intimacy:nonexistent_action')
+        ModTestFixture.forActionAutoLoad(
+          'intimacy',
+          'intimacy:nonexistent_action'
+        )
       ).rejects.toThrow(/Tried paths:/);
-      
+
       await expect(
-        ModTestFixture.forActionAutoLoad('intimacy', 'intimacy:nonexistent_action')
+        ModTestFixture.forActionAutoLoad(
+          'intimacy',
+          'intimacy:nonexistent_action'
+        )
       ).rejects.toThrow(/data\/mods\/intimacy\/rules\//);
-      
+
       await expect(
-        ModTestFixture.forActionAutoLoad('intimacy', 'intimacy:nonexistent_action')
+        ModTestFixture.forActionAutoLoad(
+          'intimacy',
+          'intimacy:nonexistent_action'
+        )
       ).rejects.toThrow(/nonexistent_action\.rule\.json/);
     });
   });
 
   describe('Fixture Functionality with Auto-Loaded Files', () => {
     it('should create working test environment with auto-loaded files', async () => {
-      const fixture = await ModTestFixture.forActionAutoLoad('intimacy', 'intimacy:kiss_cheek');
+      const fixture = await ModTestFixture.forActionAutoLoad(
+        'intimacy',
+        'intimacy:kiss_cheek'
+      );
 
       // Should be able to create standard actor-target setup
       const scenario = fixture.createStandardActorTarget(['Alice', 'Bob']);
@@ -149,8 +207,11 @@ describe('ModTestFixture - Auto-Loading Integration', () => {
     });
 
     it('should execute actions correctly with auto-loaded files', async () => {
-      const fixture = await ModTestFixture.forActionAutoLoad('intimacy', 'intimacy:kiss_cheek');
-      
+      const fixture = await ModTestFixture.forActionAutoLoad(
+        'intimacy',
+        'intimacy:kiss_cheek'
+      );
+
       // Create test scenario
       const scenario = fixture.createStandardActorTarget(['Alice', 'Bob']);
 
@@ -159,23 +220,26 @@ describe('ModTestFixture - Auto-Loading Integration', () => {
 
       // Verify events were generated
       expect(fixture.events.length).toBeGreaterThan(0);
-      
+
       // Should have success event (turn_ended with success: true)
-      const successEvents = fixture.events.filter(e => 
-        e.eventType === 'core:turn_ended' && e.payload?.success === true
+      const successEvents = fixture.events.filter(
+        (e) => e.eventType === 'core:turn_ended' && e.payload?.success === true
       );
       expect(successEvents.length).toBeGreaterThan(0);
     });
 
     it('should handle assertion helpers correctly with auto-loaded files', async () => {
-      const fixture = await ModTestFixture.forActionAutoLoad('intimacy', 'intimacy:kiss_cheek');
-      
+      const fixture = await ModTestFixture.forActionAutoLoad(
+        'intimacy',
+        'intimacy:kiss_cheek'
+      );
+
       const scenario = fixture.createStandardActorTarget(['Alice', 'Bob']);
       await fixture.executeAction(scenario.actor.id, scenario.target.id);
 
       // Should be able to assert action success (this contains internal assertions)
       fixture.assertActionSuccess("Alice leans in to kiss Bob's cheek softly.");
-      
+
       // Explicit assertion to satisfy linter
       expect(fixture.events.length).toBeGreaterThan(0);
     });
@@ -184,11 +248,14 @@ describe('ModTestFixture - Auto-Loading Integration', () => {
   describe('Performance with Auto-Loading', () => {
     it('should load files efficiently for multiple fixture creations', async () => {
       const startTime = Date.now();
-      
+
       // Create multiple fixtures with auto-loading
       const fixtures = await Promise.all([
         ModTestFixture.forActionAutoLoad('intimacy', 'intimacy:kiss_cheek'),
-        ModTestFixture.forActionAutoLoad('positioning', 'positioning:kneel_before'),
+        ModTestFixture.forActionAutoLoad(
+          'positioning',
+          'positioning:kneel_before'
+        ),
         ModTestFixture.forActionAutoLoad('violence', 'violence:sucker_punch'),
       ]);
 
@@ -197,10 +264,10 @@ describe('ModTestFixture - Auto-Loading Integration', () => {
 
       // Should complete reasonably quickly (within 1 second)
       expect(duration).toBeLessThan(1000);
-      
+
       // All fixtures should be created successfully
       expect(fixtures).toHaveLength(3);
-      fixtures.forEach(fixture => {
+      fixtures.forEach((fixture) => {
         expect(fixture).toBeInstanceOf(ModActionTestFixture);
       });
     });
@@ -209,8 +276,11 @@ describe('ModTestFixture - Auto-Loading Integration', () => {
   describe('Mixed Usage Patterns', () => {
     it('should handle mixed auto-loading and explicit file provision', async () => {
       // First, get files through auto-loading to verify they exist
-      const autoLoadedFixture = await ModTestFixture.forActionAutoLoad('intimacy', 'intimacy:kiss_cheek');
-      
+      const autoLoadedFixture = await ModTestFixture.forActionAutoLoad(
+        'intimacy',
+        'intimacy:kiss_cheek'
+      );
+
       // Then create another fixture with explicit files
       const explicitFixture = await ModTestFixture.forAction(
         'intimacy',
@@ -221,13 +291,18 @@ describe('ModTestFixture - Auto-Loading Integration', () => {
 
       // Both should work identically
       expect(explicitFixture.ruleFile).toEqual(autoLoadedFixture.ruleFile);
-      expect(explicitFixture.conditionFile).toEqual(autoLoadedFixture.conditionFile);
+      expect(explicitFixture.conditionFile).toEqual(
+        autoLoadedFixture.conditionFile
+      );
     });
 
     it('should handle partial auto-loading (only condition file)', async () => {
       // Get the rule file first
-      const autoLoadedFixture = await ModTestFixture.forActionAutoLoad('intimacy', 'intimacy:kiss_cheek');
-      
+      const autoLoadedFixture = await ModTestFixture.forActionAutoLoad(
+        'intimacy',
+        'intimacy:kiss_cheek'
+      );
+
       // Create fixture with explicit rule file but auto-loaded condition file
       const mixedFixture = await ModTestFixture.forAction(
         'intimacy',
@@ -237,13 +312,18 @@ describe('ModTestFixture - Auto-Loading Integration', () => {
       );
 
       expect(mixedFixture.ruleFile).toEqual(autoLoadedFixture.ruleFile);
-      expect(mixedFixture.conditionFile).toEqual(autoLoadedFixture.conditionFile);
+      expect(mixedFixture.conditionFile).toEqual(
+        autoLoadedFixture.conditionFile
+      );
     });
 
     it('should handle partial auto-loading (only rule file)', async () => {
       // Get the condition file first
-      const autoLoadedFixture = await ModTestFixture.forActionAutoLoad('intimacy', 'intimacy:kiss_cheek');
-      
+      const autoLoadedFixture = await ModTestFixture.forActionAutoLoad(
+        'intimacy',
+        'intimacy:kiss_cheek'
+      );
+
       // Create fixture with explicit condition file but auto-loaded rule file
       const mixedFixture = await ModTestFixture.forAction(
         'intimacy',
@@ -253,29 +333,48 @@ describe('ModTestFixture - Auto-Loading Integration', () => {
       );
 
       expect(mixedFixture.ruleFile).toEqual(autoLoadedFixture.ruleFile);
-      expect(mixedFixture.conditionFile).toEqual(autoLoadedFixture.conditionFile);
+      expect(mixedFixture.conditionFile).toEqual(
+        autoLoadedFixture.conditionFile
+      );
     });
   });
 
   describe('Path Convention Validation', () => {
     it('should correctly predict paths for existing files', () => {
-      const { rulePaths, conditionPaths } = ModTestFixture.getConventionalPaths('intimacy', 'intimacy:kiss_cheek');
+      const { rulePaths, conditionPaths } = ModTestFixture.getConventionalPaths(
+        'intimacy',
+        'intimacy:kiss_cheek'
+      );
 
       // Verify the correct paths are included
-      expect(rulePaths).toContain('data/mods/intimacy/rules/kiss_cheek.rule.json');
-      expect(conditionPaths).toContain('data/mods/intimacy/conditions/event-is-action-kiss-cheek.condition.json');
+      expect(rulePaths).toContain(
+        'data/mods/intimacy/rules/kiss_cheek.rule.json'
+      );
+      expect(conditionPaths).toContain(
+        'data/mods/intimacy/conditions/event-is-action-kiss-cheek.condition.json'
+      );
     });
 
     it('should correctly predict paths for handle_ prefixed rules', () => {
-      const { rulePaths } = ModTestFixture.getConventionalPaths('intimacy', 'intimacy:massage_shoulders');
+      const { rulePaths } = ModTestFixture.getConventionalPaths(
+        'intimacy',
+        'intimacy:massage_shoulders'
+      );
 
-      expect(rulePaths).toContain('data/mods/intimacy/rules/handle_massage_shoulders.rule.json');
+      expect(rulePaths).toContain(
+        'data/mods/intimacy/rules/handle_massage_shoulders.rule.json'
+      );
     });
 
     it('should correctly handle hyphenation for condition files', () => {
-      const { conditionPaths } = ModTestFixture.getConventionalPaths('intimacy', 'intimacy:nibble_earlobe_playfully');
+      const { conditionPaths } = ModTestFixture.getConventionalPaths(
+        'intimacy',
+        'intimacy:nibble_earlobe_playfully'
+      );
 
-      expect(conditionPaths).toContain('data/mods/intimacy/conditions/event-is-action-nibble-earlobe-playfully.condition.json');
+      expect(conditionPaths).toContain(
+        'data/mods/intimacy/conditions/event-is-action-nibble-earlobe-playfully.condition.json'
+      );
     });
   });
 });

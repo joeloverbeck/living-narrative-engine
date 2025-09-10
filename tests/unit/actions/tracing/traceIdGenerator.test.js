@@ -25,7 +25,7 @@ describe('TraceIdGenerator', () => {
   beforeEach(() => {
     // Mock Date.now for deterministic tests - using 2024-01-15T10:30:45.123Z
     originalDateNow = Date.now;
-    Date.now = jest.fn(() => 1705315845123); 
+    Date.now = jest.fn(() => 1705315845123);
 
     // Mock performance.now for deterministic tests
     originalPerformanceNow = performance.now;
@@ -343,7 +343,9 @@ describe('TraceIdGenerator', () => {
     });
 
     it('should truncate long action IDs', () => {
-      const trace = { actionId: 'very-long-action-id-that-exceeds-thirty-characters-limit' };
+      const trace = {
+        actionId: 'very-long-action-id-that-exceeds-thirty-characters-limit',
+      };
       const id = generator.generateId(trace);
 
       expect(id).toContain('very-long-action-id-that-excee'); // Truncated to 30 chars
@@ -541,8 +543,8 @@ describe('TraceIdGenerator', () => {
 
   describe('Performance and Memory', () => {
     it('should handle rapid ID generation without memory leaks', () => {
-      const generator = new TraceIdGenerator({ 
-        strategy: NamingStrategy.SEQUENTIAL // Use sequential for guaranteed uniqueness 
+      const generator = new TraceIdGenerator({
+        strategy: NamingStrategy.SEQUENTIAL, // Use sequential for guaranteed uniqueness
       });
       const trace = { actionId: 'test' };
       const ids = new Set();

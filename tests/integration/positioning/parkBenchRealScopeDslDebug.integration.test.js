@@ -24,17 +24,17 @@ describe('Park Bench Real Scope DSL Debug', () => {
   beforeEach(async () => {
     logger = createMockLogger();
     dataRegistry = new InMemoryDataRegistry({ logger });
-    
+
     // Create real entity manager (not mock)
     entityManager = new SimpleEntityManager([]);
-    
+
     // Initialize JSON Logic evaluator
     jsonLogicEval = new JsonLogicEvaluationService({ logger });
-    
+
     // Create and initialize scope registry
     scopeRegistry = new ScopeRegistry({ logger });
     scopeRegistry.clear();
-    
+
     // Create the AST manually to ensure null is preserved correctly
     const availableFurnitureAST = {
       type: 'Filter',
@@ -43,34 +43,34 @@ describe('Park Bench Real Scope DSL Debug', () => {
           {
             '==': [
               { var: 'entity.components.core:position.locationId' },
-              { var: 'actor.components.core:position.locationId' }
-            ]
+              { var: 'actor.components.core:position.locationId' },
+            ],
           },
           {
             some: [
               { var: 'entity.components.positioning:allows_sitting.spots' },
-              { '==': [{ var: '' }, null] }  // Actual null, not string "null"
-            ]
-          }
-        ]
+              { '==': [{ var: '' }, null] }, // Actual null, not string "null"
+            ],
+          },
+        ],
       },
       parent: {
         type: 'ArrayIterationStep',
         parent: {
           type: 'Source',
           kind: 'entities',
-          param: 'positioning:allows_sitting'
-        }
-      }
+          param: 'positioning:allows_sitting',
+        },
+      },
     };
-    
+
     scopeRegistry.initialize({
       'positioning:available_furniture': {
         expr: 'entities(positioning:allows_sitting)[][filter]', // Simplified expression for reference
-        ast: availableFurnitureAST
-      }
+        ast: availableFurnitureAST,
+      },
     });
-    
+
     // Create real scope engine with scope registry
     scopeEngine = new ScopeEngine({
       scopeRegistry,
@@ -86,15 +86,19 @@ describe('Park Bench Real Scope DSL Debug', () => {
     it('should create park bench entity and verify component queries', async () => {
       // Manually create park bench entity like runtime does
       const parkBenchId = 'p_erotica:park_bench_instance';
-      
+
       // Create park bench entity first, then add components
       entityManager.createEntity(parkBenchId);
       await entityManager.addComponent(parkBenchId, 'core:position', {
         locationId: 'p_erotica:park_instance',
       });
-      await entityManager.addComponent(parkBenchId, 'positioning:allows_sitting', {
-        spots: [null, null],
-      });
+      await entityManager.addComponent(
+        parkBenchId,
+        'positioning:allows_sitting',
+        {
+          spots: [null, null],
+        }
+      );
 
       // Also create actor entity in same location
       const actorId = 'p_erotica:ane_arrieta_instance';
@@ -114,21 +118,32 @@ describe('Park Bench Real Scope DSL Debug', () => {
       expect(entityInstance.id).toBe(parkBenchId);
 
       // Check for positioning:allows_sitting component
-      const hasAllowsSitting = entityManager.hasComponent(parkBenchId, 'positioning:allows_sitting');
+      const hasAllowsSitting = entityManager.hasComponent(
+        parkBenchId,
+        'positioning:allows_sitting'
+      );
       expect(hasAllowsSitting).toBe(true);
 
       // This should trigger our enhanced logging
-      logger.info('[TEST] Calling EntityManager.getEntitiesWithComponent for positioning:allows_sitting...');
-      const entitiesWithSitting = entityManager.getEntitiesWithComponent('positioning:allows_sitting');
-      
-      logger.info(`[TEST] EntityManager returned ${entitiesWithSitting?.length || 0} entities with positioning:allows_sitting`);
-      
+      logger.info(
+        '[TEST] Calling EntityManager.getEntitiesWithComponent for positioning:allows_sitting...'
+      );
+      const entitiesWithSitting = entityManager.getEntitiesWithComponent(
+        'positioning:allows_sitting'
+      );
+
+      logger.info(
+        `[TEST] EntityManager returned ${entitiesWithSitting?.length || 0} entities with positioning:allows_sitting`
+      );
+
       expect(entitiesWithSitting).toBeDefined();
       expect(Array.isArray(entitiesWithSitting)).toBe(true);
       expect(entitiesWithSitting.length).toBeGreaterThan(0);
-      
+
       // Should contain the park bench
-      const parkBenchEntity = entitiesWithSitting.find(entity => entity.id === parkBenchId);
+      const parkBenchEntity = entitiesWithSitting.find(
+        (entity) => entity.id === parkBenchId
+      );
       expect(parkBenchEntity).toBeDefined();
     });
   });
@@ -138,15 +153,19 @@ describe('Park Bench Real Scope DSL Debug', () => {
       // Create entities first
       const parkBenchId = 'p_erotica:park_bench_instance';
       const actorId = 'p_erotica:ane_arrieta_instance';
-      
+
       // Create park bench entity
       entityManager.createEntity(parkBenchId);
       await entityManager.addComponent(parkBenchId, 'core:position', {
         locationId: 'p_erotica:park_instance',
       });
-      await entityManager.addComponent(parkBenchId, 'positioning:allows_sitting', {
-        spots: [null, null],
-      });
+      await entityManager.addComponent(
+        parkBenchId,
+        'positioning:allows_sitting',
+        {
+          spots: [null, null],
+        }
+      );
 
       // Create actor entity in same location
       entityManager.createEntity(actorId);
@@ -156,10 +175,10 @@ describe('Park Bench Real Scope DSL Debug', () => {
       await entityManager.addComponent(actorId, 'core:position', {
         locationId: 'p_erotica:park_instance',
       });
-      
+
       // Get fresh entity instance with all components properly initialized
       const actorEntity = entityManager.getEntityInstance(actorId);
-      
+
       // Verify the actor entity has the expected structure
       expect(actorEntity).toBeDefined();
       expect(actorEntity.hasComponent('core:position')).toBe(true);
@@ -167,13 +186,17 @@ describe('Park Bench Real Scope DSL Debug', () => {
         locationId: 'p_erotica:park_instance',
       });
 
-      logger.info('[TEST] Resolving positioning:available_furniture scope using real Scope DSL engine...');
-      
+      logger.info(
+        '[TEST] Resolving positioning:available_furniture scope using real Scope DSL engine...'
+      );
+
       // Verify entities are there before resolution
       const parkBenchCheck = entityManager.getEntityInstance(parkBenchId);
       expect(parkBenchCheck).toBeDefined();
       expect(parkBenchCheck.hasComponent('core:position')).toBe(true);
-      expect(parkBenchCheck.hasComponent('positioning:allows_sitting')).toBe(true);
+      expect(parkBenchCheck.hasComponent('positioning:allows_sitting')).toBe(
+        true
+      );
 
       // Create runtime context (this is what the real scope DSL engine needs)
       const runtimeCtx = {
@@ -183,7 +206,10 @@ describe('Park Bench Real Scope DSL Debug', () => {
       };
 
       // Parse the scope reference and resolve using real Scope DSL engine
-      const scopeRefAST = { type: 'ScopeReference', scopeId: 'positioning:available_furniture' };
+      const scopeRefAST = {
+        type: 'ScopeReference',
+        scopeId: 'positioning:available_furniture',
+      };
       const scopeResult = await scopeEngine.resolve(
         scopeRefAST,
         actorEntity,
@@ -207,12 +233,16 @@ describe('Park Bench Real Scope DSL Debug', () => {
       // Create entities first
       const parkBenchId = 'p_erotica:park_bench_instance';
       const actorId = 'p_erotica:ane_arrieta_instance';
-      
+
       // Create park bench entity
       entityManager.createEntity(parkBenchId);
-      await entityManager.addComponent(parkBenchId, 'positioning:allows_sitting', {
-        spots: [null, null],
-      });
+      await entityManager.addComponent(
+        parkBenchId,
+        'positioning:allows_sitting',
+        {
+          spots: [null, null],
+        }
+      );
 
       // Create actor entity
       entityManager.createEntity(actorId);
@@ -228,10 +258,14 @@ describe('Park Bench Real Scope DSL Debug', () => {
         location: { id: 'p_erotica:park_instance' }, // Add current location for scope resolution
       };
 
-      logger.info('[TEST] Testing entities(positioning:allows_sitting) source resolution...');
+      logger.info(
+        '[TEST] Testing entities(positioning:allows_sitting) source resolution...'
+      );
 
       // Parse and test the source resolution directly using scope engine
-      const sourceAST = parseDslExpression('entities(positioning:allows_sitting)');
+      const sourceAST = parseDslExpression(
+        'entities(positioning:allows_sitting)'
+      );
       const sourceResult = await scopeEngine.resolve(
         sourceAST,
         actorEntity,

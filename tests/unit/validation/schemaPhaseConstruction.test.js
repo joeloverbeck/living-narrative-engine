@@ -19,18 +19,18 @@ describe('SchemaPhase Construction Debug', () => {
 
   it('should resolve all phase dependencies without error', () => {
     console.log('Testing phase dependency resolution...');
-    
+
     const phaseTokens = [
       'SchemaPhase',
-      'GameConfigPhase', 
+      'GameConfigPhase',
       'ManifestPhase',
       'ContentPhase',
       'WorldPhase',
-      'SummaryPhase'
+      'SummaryPhase',
     ];
-    
+
     const resolvedPhases = [];
-    
+
     for (const token of phaseTokens) {
       try {
         console.log(`Resolving ${token}...`);
@@ -43,14 +43,14 @@ describe('SchemaPhase Construction Debug', () => {
         throw error;
       }
     }
-    
+
     expect(resolvedPhases).toHaveLength(6);
     console.log(`All ${resolvedPhases.length} phases resolved successfully`);
   });
 
   it('should construct ModsLoader with phases array', () => {
     console.log('Testing ModsLoader construction...');
-    
+
     let modsLoader;
     try {
       modsLoader = testBed.container.resolve('ModsLoader');
@@ -60,21 +60,21 @@ describe('SchemaPhase Construction Debug', () => {
       console.error('Stack trace:', error.stack);
       throw error;
     }
-    
+
     expect(modsLoader).toBeDefined();
     console.log('ModsLoader construction successful');
   });
 
   it('should test SchemaPhase dependencies individually', () => {
     console.log('Testing SchemaPhase dependencies...');
-    
+
     const dependencies = [
       'SchemaLoader',
-      'IConfiguration', 
+      'IConfiguration',
       'ISchemaValidator',
-      'ILogger'
+      'ILogger',
     ];
-    
+
     for (const dep of dependencies) {
       try {
         console.log(`Resolving dependency ${dep}...`);
@@ -85,7 +85,7 @@ describe('SchemaPhase Construction Debug', () => {
         throw error;
       }
     }
-    
+
     console.log('All SchemaPhase dependencies resolved successfully');
     expect(true).toBe(true);
   });

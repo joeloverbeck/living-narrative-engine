@@ -28,7 +28,7 @@ describe('intimacy:kiss_cheek action integration', () => {
 
   it('successfully executes kiss cheek action between close actors', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
-      location: 'room1'
+      location: 'room1',
     });
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
@@ -50,7 +50,7 @@ describe('intimacy:kiss_cheek action integration', () => {
 
   it('perception log shows correct message for kiss cheek action', async () => {
     const scenario = testFixture.createCloseActors(['Sarah', 'James'], {
-      location: 'garden'
+      location: 'garden',
     });
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
@@ -59,14 +59,17 @@ describe('intimacy:kiss_cheek action integration', () => {
       descriptionText: "Sarah leans in to kiss James's cheek softly.",
       locationId: 'garden',
       actorId: scenario.actor.id,
-      targetId: scenario.target.id
+      targetId: scenario.target.id,
     });
   });
 
   it('handles multiple close partners correctly', async () => {
-    const scenario = testFixture.createMultiActorScenario(['Alice', 'Bob', 'Charlie'], {
-      location: 'room1'
-    });
+    const scenario = testFixture.createMultiActorScenario(
+      ['Alice', 'Bob', 'Charlie'],
+      {
+        location: 'room1',
+      }
+    );
 
     // First kiss Bob's cheek
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
@@ -82,7 +85,10 @@ describe('intimacy:kiss_cheek action integration', () => {
     testFixture.events.length = 0;
 
     // Then kiss Charlie's cheek
-    await testFixture.executeAction(scenario.actor.id, scenario.observers[0].id);
+    await testFixture.executeAction(
+      scenario.actor.id,
+      scenario.observers[0].id
+    );
 
     perceptibleEvent = testFixture.events.find(
       (e) => e.eventType === 'core:perceptible_event'
@@ -95,7 +101,7 @@ describe('intimacy:kiss_cheek action integration', () => {
 
   it('action only fires for correct action ID', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
-      location: 'room1'
+      location: 'room1',
     });
 
     // Try with a different action
@@ -113,7 +119,7 @@ describe('intimacy:kiss_cheek action integration', () => {
 
   it('generates proper perceptible event for observers', async () => {
     const scenario = testFixture.createCloseActors(['Elena', 'Marcus'], {
-      location: 'bedroom'
+      location: 'bedroom',
     });
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
@@ -122,7 +128,9 @@ describe('intimacy:kiss_cheek action integration', () => {
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();
-    expect(perceptibleEvent.payload.perceptionType).toBe('action_target_general');
+    expect(perceptibleEvent.payload.perceptionType).toBe(
+      'action_target_general'
+    );
     expect(perceptibleEvent.payload.descriptionText).toBe(
       "Elena leans in to kiss Marcus's cheek softly."
     );
@@ -131,7 +139,7 @@ describe('intimacy:kiss_cheek action integration', () => {
 
   it('validates perceptible event message matches action success message', async () => {
     const scenario = testFixture.createCloseActors(['Diana', 'Victor'], {
-      location: 'library'
+      location: 'library',
     });
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);

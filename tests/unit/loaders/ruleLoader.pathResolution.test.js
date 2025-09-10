@@ -265,13 +265,13 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
         }
       );
 
-      const dataA = { 
-        event_type: 'core:eventA', 
-        actions: [{ type: 'LOG', parameters: { message: 'Test action A' } }] 
+      const dataA = {
+        event_type: 'core:eventA',
+        actions: [{ type: 'LOG', parameters: { message: 'Test action A' } }],
       };
-      const dataB = { 
-        event_type: 'core:eventB', 
-        actions: [{ type: 'LOG', parameters: { message: 'Test action B' } }] 
+      const dataB = {
+        event_type: 'core:eventB',
+        actions: [{ type: 'LOG', parameters: { message: 'Test action B' } }],
       };
       mockFetcher.fetch.mockImplementation(async (filePath) => {
         if (filePath === resolvedPathA) return Promise.resolve(dataA);

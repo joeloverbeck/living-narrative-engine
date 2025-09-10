@@ -1249,14 +1249,14 @@ describe('PerformanceMonitor', () => {
 
     it('should return copies of metric data (not references)', () => {
       monitor.recordMetric('test.metric', 100);
-      
+
       const metrics1 = monitor.getRecordedMetrics();
       const metrics2 = monitor.getRecordedMetrics();
-      
+
       // Should be equal but not the same reference
       expect(metrics1).toEqual(metrics2);
       expect(metrics1['test.metric']).not.toBe(metrics2['test.metric']);
-      
+
       // Modifying returned data should not affect internal state
       metrics1['test.metric'].value = 999;
       const metrics3 = monitor.getRecordedMetrics();
@@ -1281,7 +1281,7 @@ describe('PerformanceMonitor', () => {
     it('should not affect alerts when clearing metrics', () => {
       const stopMonitoring = monitor.startMonitoring();
       monitor.recordMetric('test.metric', 42);
-      
+
       let alerts = monitor.getAlerts({ type: 'metric_recorded' });
       expect(alerts).toHaveLength(1);
 
@@ -1307,13 +1307,13 @@ describe('PerformanceMonitor', () => {
       // This test verifies that the monitoring system can check trace durations
       // Note: The specific long_trace alert test was removed due to timer mocking complexity
       // but the underlying functionality is covered by the metrics calculation tests
-      
+
       monitor.setThresholds({ maxTotalDurationMs: 1000 });
-      
+
       const rootSpan = structuredTrace.startSpan('TestTrace');
       timeCounter += 1500;
       structuredTrace.endSpan(rootSpan);
-      
+
       const metrics = monitor.getRealtimeMetrics();
       // The span should have been completed with a duration
       expect(metrics.completedSpans).toBe(1);
@@ -1326,14 +1326,14 @@ describe('PerformanceMonitor', () => {
       // Create nested span structure
       const rootSpan = structuredTrace.startSpan('Root');
       timeCounter += 100;
-      
+
       const childSpan1 = structuredTrace.startSpan('Child1');
       timeCounter += 50;
-      
+
       const childSpan2 = structuredTrace.startSpan('Child2');
       timeCounter += 200; // This makes it slow
       structuredTrace.endSpan(childSpan2);
-      
+
       structuredTrace.endSpan(childSpan1);
       structuredTrace.endSpan(rootSpan);
 

@@ -13,14 +13,12 @@ import { ModAssertionHelpers } from '../../../common/mods/ModAssertionHelpers.js
 
 /**
  * Creates standardized anatomy setup for press against back scenarios.
- * 
+ *
  * @returns {object} Object with actor, target, and all anatomy entities
  */
 function setupAnatomyComponents() {
   // Create main room
-  const room = new ModEntityBuilder('room1')
-    .asRoom('Test Room')
-    .build();
+  const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
   // Create actor entity with anatomy
   const actor = new ModEntityBuilder('alice')
@@ -90,11 +88,14 @@ describe('sex:press_against_back action integration', () => {
 
   beforeEach(async () => {
     // Create test fixture with auto-loaded files
-    testFixture = await ModTestFixture.forAction('sex', 'sex:press_against_back');
-    
+    testFixture = await ModTestFixture.forAction(
+      'sex',
+      'sex:press_against_back'
+    );
+
     // Setup anatomy entities
     const entities = setupAnatomyComponents();
-    
+
     // Load all entities into the test environment
     testFixture.reset(Object.values(entities));
   });
@@ -113,7 +114,7 @@ describe('sex:press_against_back action integration', () => {
     // Assert action executed successfully with proper events
     ModAssertionHelpers.assertActionSuccess(
       testFixture.events,
-      'Alice presses herself against Bob\'s back, her breasts getting squeezed against Bob\'s flesh.',
+      "Alice presses herself against Bob's back, her breasts getting squeezed against Bob's flesh.",
       {
         shouldEndTurn: true,
         shouldHavePerceptibleEvent: true,
@@ -133,7 +134,7 @@ describe('sex:press_against_back action integration', () => {
     ];
 
     testFixture.reset(minimalEntities);
-    
+
     const initialEventCount = testFixture.events.length;
 
     await testFixture.eventBus.dispatch('core:attempt_action', {

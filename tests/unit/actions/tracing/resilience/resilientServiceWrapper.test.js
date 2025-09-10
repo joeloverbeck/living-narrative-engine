@@ -424,12 +424,12 @@ describe('ResilientServiceWrapper', () => {
 
     it('should successfully retry and clear fallback mode', async () => {
       const error = new Error('Temporary error');
-      
+
       // First call fails, then succeeds on retry
       mockService.someMethod
         .mockRejectedValueOnce(error)
         .mockResolvedValueOnce('retry-success');
-      
+
       // Set up initial fallback mode
       wrapper['getFallbackMode'] = jest.fn().mockReturnValue('degraded');
       const originalGetFallbackMode = wrapper.getFallbackMode.bind(wrapper);

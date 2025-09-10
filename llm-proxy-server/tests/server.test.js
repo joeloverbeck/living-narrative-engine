@@ -273,6 +273,10 @@ describe('server initialization', () => {
 
   test('initializes and listens on configured port', async () => {
     await loadServer();
-    expect(app.listen).toHaveBeenCalledWith(port, '0.0.0.0', expect.any(Function));
+    expect(app.listen).toHaveBeenCalledWith(
+      port,
+      '0.0.0.0',
+      expect.any(Function)
+    );
   });
 });

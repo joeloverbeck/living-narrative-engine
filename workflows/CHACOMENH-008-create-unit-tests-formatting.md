@@ -47,7 +47,7 @@ describe('CharacterDataFormatter - Psychological Components', () => {
   beforeEach(() => {
     testBed = createTestBed();
     mockLogger = testBed.createMockLogger();
-    
+
     formatter = new CharacterDataFormatter({
       logger: mockLogger,
     });
@@ -81,13 +81,16 @@ describe('CharacterDataFormatter - Psychological Components', () => {
 describe('formatMotivationsSection', () => {
   it('should format valid motivations text with proper markdown', () => {
     // Arrange
-    const motivationsText = 'I seek power because I fear being powerless again.';
-    
+    const motivationsText =
+      'I seek power because I fear being powerless again.';
+
     // Act
     const result = formatter.formatMotivationsSection(motivationsText);
-    
+
     // Assert
-    expect(result).toBe('## Your Core Motivations\nI seek power because I fear being powerless again.\n');
+    expect(result).toBe(
+      '## Your Core Motivations\nI seek power because I fear being powerless again.\n'
+    );
     expect(mockLogger.debug).toHaveBeenCalledWith(
       'CharacterDataFormatter: Formatted motivations section',
       expect.objectContaining({ textLength: 49 })
@@ -97,7 +100,7 @@ describe('formatMotivationsSection', () => {
   it('should return empty string for null input', () => {
     // Act
     const result = formatter.formatMotivationsSection(null);
-    
+
     // Assert
     expect(result).toBe('');
     expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -108,7 +111,7 @@ describe('formatMotivationsSection', () => {
   it('should return empty string for undefined input', () => {
     // Act
     const result = formatter.formatMotivationsSection(undefined);
-    
+
     // Assert
     expect(result).toBe('');
   });
@@ -116,7 +119,7 @@ describe('formatMotivationsSection', () => {
   it('should return empty string for empty string input', () => {
     // Act
     const result = formatter.formatMotivationsSection('');
-    
+
     // Assert
     expect(result).toBe('');
     expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -127,7 +130,7 @@ describe('formatMotivationsSection', () => {
   it('should handle whitespace-only input', () => {
     // Act
     const result = formatter.formatMotivationsSection('   \n\t   ');
-    
+
     // Assert
     expect(result).toBe('');
     expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -141,10 +144,10 @@ describe('formatMotivationsSection', () => {
 - First, I need to prove myself
 - Second, I can't let them win
 - Third, it's _who I am_`;
-    
+
     // Act
     const result = formatter.formatMotivationsSection(complexText);
-    
+
     // Assert
     expect(result).toContain('**multiple**');
     expect(result).toContain('- First');
@@ -154,10 +157,10 @@ describe('formatMotivationsSection', () => {
   it('should handle very long text', () => {
     // Arrange
     const longText = 'A'.repeat(1000);
-    
+
     // Act
     const result = formatter.formatMotivationsSection(longText);
-    
+
     // Assert
     expect(result).toContain('A'.repeat(1000));
     expect(result.length).toBeGreaterThan(1000);
@@ -172,12 +175,14 @@ describe('formatInternalTensionsSection', () => {
   it('should format valid tensions text with proper markdown', () => {
     // Arrange
     const tensionsText = 'I want revenge but also want to forgive.';
-    
+
     // Act
     const result = formatter.formatInternalTensionsSection(tensionsText);
-    
+
     // Assert
-    expect(result).toBe('## Your Internal Tensions\nI want revenge but also want to forgive.\n');
+    expect(result).toBe(
+      '## Your Internal Tensions\nI want revenge but also want to forgive.\n'
+    );
     expect(mockLogger.debug).toHaveBeenCalledWith(
       'CharacterDataFormatter: Formatted internal tensions section',
       expect.objectContaining({ textLength: 41 })
@@ -189,10 +194,10 @@ describe('formatInternalTensionsSection', () => {
     const complexTensions = `I crave independence, yet I fear being alone.
 I want to trust, but betrayal has taught me otherwise.
 I seek peace while being drawn to conflict.`;
-    
+
     // Act
     const result = formatter.formatInternalTensionsSection(complexTensions);
-    
+
     // Assert
     expect(result).toContain('I crave independence');
     expect(result).toContain('I want to trust');
@@ -205,7 +210,7 @@ I seek peace while being drawn to conflict.`;
     const resultNumber = formatter.formatInternalTensionsSection(123);
     const resultObject = formatter.formatInternalTensionsSection({});
     const resultArray = formatter.formatInternalTensionsSection([]);
-    
+
     // Assert
     expect(resultNumber).toBe('');
     expect(resultObject).toBe('');
@@ -221,12 +226,14 @@ describe('formatCoreDilemmasSection', () => {
   it('should format valid dilemmas text with proper markdown', () => {
     // Arrange
     const dilemmasText = 'Can I achieve justice without becoming a monster?';
-    
+
     // Act
     const result = formatter.formatCoreDilemmasSection(dilemmasText);
-    
+
     // Assert
-    expect(result).toBe('## Your Core Dilemmas\nCan I achieve justice without becoming a monster?\n');
+    expect(result).toBe(
+      '## Your Core Dilemmas\nCan I achieve justice without becoming a monster?\n'
+    );
     expect(mockLogger.debug).toHaveBeenCalledWith(
       'CharacterDataFormatter: Formatted core dilemmas section',
       expect.objectContaining({ textLength: 50 })
@@ -238,10 +245,10 @@ describe('formatCoreDilemmasSection', () => {
     const multipleQuestions = `Is loyalty to friends more important than loyalty to principles?
 Can I be true to myself while meeting others' expectations?
 Does redemption require forgetting the past or embracing it?`;
-    
+
     // Act
     const result = formatter.formatCoreDilemmasSection(multipleQuestions);
-    
+
     // Assert
     expect(result).toContain('Is loyalty to friends');
     expect(result).toContain('Can I be true to myself');
@@ -251,11 +258,12 @@ Does redemption require forgetting the past or embracing it?`;
 
   it('should preserve question marks and formatting', () => {
     // Arrange
-    const formattedQuestions = 'What if I\'m wrong? What if **everything** I believe is a lie?';
-    
+    const formattedQuestions =
+      "What if I'm wrong? What if **everything** I believe is a lie?";
+
     // Act
     const result = formatter.formatCoreDilemmasSection(formattedQuestions);
-    
+
     // Assert
     expect(result).toContain('?');
     expect(result).toContain('**everything**');
@@ -280,25 +288,25 @@ describe('formatCharacterPersona integration', () => {
       likes: 'Solitude',
       dislikes: 'Crowds',
     };
-    
+
     // Act
     const result = formatter.formatCharacterPersona(characterData);
-    
+
     // Assert
     const sections = result.split('##');
-    const sectionTitles = sections.map(s => s.split('\n')[0].trim());
-    
+    const sectionTitles = sections.map((s) => s.split('\n')[0].trim());
+
     expect(sectionTitles).toContain('Your Profile');
     expect(sectionTitles).toContain('Your Core Motivations');
     expect(sectionTitles).toContain('Your Internal Tensions');
     expect(sectionTitles).toContain('Your Core Dilemmas');
     expect(sectionTitles).toContain('Your Likes');
-    
+
     // Verify order
     const profileIndex = sectionTitles.indexOf('Your Profile');
     const motivationsIndex = sectionTitles.indexOf('Your Core Motivations');
     const likesIndex = sectionTitles.indexOf('Your Likes');
-    
+
     expect(motivationsIndex).toBeGreaterThan(profileIndex);
     expect(likesIndex).toBeGreaterThan(motivationsIndex);
   });
@@ -311,10 +319,10 @@ describe('formatCharacterPersona integration', () => {
       personality: 'Simple personality',
       // No psychological components
     };
-    
+
     // Act
     const result = formatter.formatCharacterPersona(characterData);
-    
+
     // Assert
     expect(result).toContain('YOU ARE Simple Character');
     expect(result).toContain('## Your Description');
@@ -332,10 +340,10 @@ describe('formatCharacterPersona integration', () => {
       // No internal tensions
       coreDilemmas: 'What is my purpose?',
     };
-    
+
     // Act
     const result = formatter.formatCharacterPersona(characterData);
-    
+
     // Assert
     expect(result).toContain('## Your Core Motivations');
     expect(result).toContain('I must find my purpose');
@@ -354,15 +362,19 @@ describe('formatCharacterPersona integration', () => {
       coreDilemmas: 'My questions?',
       likes: 'Things I like',
     };
-    
+
     // Act
     const result = formatter.formatCharacterPersona(characterData);
-    
+
     // Assert
     // Check for single newline between sections
     expect(result).toMatch(/## Your Profile\n.*\n\n## Your Core Motivations/s);
-    expect(result).toMatch(/## Your Core Motivations\n.*\n\n## Your Internal Tensions/s);
-    expect(result).toMatch(/## Your Internal Tensions\n.*\n\n## Your Core Dilemmas/s);
+    expect(result).toMatch(
+      /## Your Core Motivations\n.*\n\n## Your Internal Tensions/s
+    );
+    expect(result).toMatch(
+      /## Your Internal Tensions\n.*\n\n## Your Core Dilemmas/s
+    );
     expect(result).toMatch(/## Your Core Dilemmas\n.*\n\n## Your Likes/s);
   });
 });
@@ -386,22 +398,25 @@ describe('edge cases and error handling', () => {
       () => {},
       Symbol('test'),
     ];
-    
+
     // Act & Assert
-    inputs.forEach(input => {
+    inputs.forEach((input) => {
       expect(() => formatter.formatMotivationsSection(input)).not.toThrow();
-      expect(() => formatter.formatInternalTensionsSection(input)).not.toThrow();
+      expect(() =>
+        formatter.formatInternalTensionsSection(input)
+      ).not.toThrow();
       expect(() => formatter.formatCoreDilemmasSection(input)).not.toThrow();
     });
   });
 
   it('should handle special markdown characters', () => {
     // Arrange
-    const specialText = '# Not a header\n* Not a list\n> Not a quote\n`Not code`';
-    
+    const specialText =
+      '# Not a header\n* Not a list\n> Not a quote\n`Not code`';
+
     // Act
     const result = formatter.formatMotivationsSection(specialText);
-    
+
     // Assert
     expect(result).toContain('# Not a header');
     expect(result).toContain('* Not a list');
@@ -411,15 +426,15 @@ describe('edge cases and error handling', () => {
 
   it('should handle unicode and emoji', () => {
     // Arrange
-    const unicodeText = 'I feel 😊 but also 😢. C\'est la vie! 你好';
-    
+    const unicodeText = "I feel 😊 but also 😢. C'est la vie! 你好";
+
     // Act
     const result = formatter.formatMotivationsSection(unicodeText);
-    
+
     // Assert
     expect(result).toContain('😊');
     expect(result).toContain('😢');
-    expect(result).toContain('C\'est la vie');
+    expect(result).toContain("C'est la vie");
     expect(result).toContain('你好');
   });
 });
@@ -442,12 +457,12 @@ describe('performance', () => {
       likes: 'G'.repeat(1000),
       dislikes: 'H'.repeat(1000),
     };
-    
+
     // Act
     const startTime = performance.now();
     const result = formatter.formatCharacterPersona(largeData);
     const endTime = performance.now();
-    
+
     // Assert
     expect(endTime - startTime).toBeLessThan(50); // Should complete quickly
     expect(result.length).toBeGreaterThan(7000);
@@ -458,11 +473,13 @@ describe('performance', () => {
 ## Test Coverage Requirements
 
 ### Coverage Targets
+
 - Branch coverage: ≥ 80%
 - Function coverage: ≥ 90%
 - Line coverage: ≥ 90%
 
 ### Critical Paths
+
 1. Valid input with content
 2. Null/undefined inputs
 3. Empty string inputs
@@ -503,6 +520,7 @@ npm run test:unit tests/unit/prompting/
 ## Debugging Tips
 
 ### Console Output
+
 ```javascript
 // Temporarily add to see formatted output
 console.log('Formatted result:\n', result);
@@ -510,6 +528,7 @@ console.log('Section count:', result.split('##').length);
 ```
 
 ### Focused Testing
+
 ```javascript
 // Use during development
 it.only('specific test to debug', () => {
@@ -527,4 +546,4 @@ it.only('specific test to debug', () => {
 
 ---
 
-*Ticket created from character-components-analysis.md report*
+_Ticket created from character-components-analysis.md report_

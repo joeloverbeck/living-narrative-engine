@@ -100,15 +100,12 @@ export class EntityRepositoryAdapter {
 
     // Enhanced debug logging for park bench
     if (entity.id === 'p_erotica:park_bench_instance') {
-      this.#logger.info(
-        `[DEBUG] Adding park bench to repository:`,
-        {
-          entityId: entity.id,
-          componentTypeIds: entity.componentTypeIds,
-          componentCount: entity.componentTypeIds?.length || 0,
-          componentsBeforeIndexing: Array.from(entity.componentTypeIds || [])
-        }
-      );
+      this.#logger.info(`[DEBUG] Adding park bench to repository:`, {
+        entityId: entity.id,
+        componentTypeIds: entity.componentTypeIds,
+        componentCount: entity.componentTypeIds?.length || 0,
+        componentsBeforeIndexing: Array.from(entity.componentTypeIds || []),
+      });
     }
 
     this.#mapManager.add(entity.id, entity);
@@ -118,16 +115,17 @@ export class EntityRepositoryAdapter {
 
     // Log component index state after adding park bench
     if (entity.id === 'p_erotica:park_bench_instance') {
-      const allowsSittingIndex = this.#componentIndex.get('positioning:allows_sitting');
-      this.#logger.info(
-        `[DEBUG] After indexing park bench:`,
-        {
-          entityId: entity.id,
-          allowsSittingIndexSize: allowsSittingIndex?.size || 0,
-          allowsSittingIndexEntities: allowsSittingIndex ? Array.from(allowsSittingIndex) : [],
-          totalComponentIndexSize: this.#componentIndex.size
-        }
+      const allowsSittingIndex = this.#componentIndex.get(
+        'positioning:allows_sitting'
       );
+      this.#logger.info(`[DEBUG] After indexing park bench:`, {
+        entityId: entity.id,
+        allowsSittingIndexSize: allowsSittingIndex?.size || 0,
+        allowsSittingIndexEntities: allowsSittingIndex
+          ? Array.from(allowsSittingIndex)
+          : [],
+        totalComponentIndexSize: this.#componentIndex.size,
+      });
     }
 
     this.#logger.debug(
@@ -303,7 +301,7 @@ export class EntityRepositoryAdapter {
       this.#componentIndex.set(componentType, new Set());
     }
     this.#componentIndex.get(componentType).add(entityId);
-    
+
     // Debug logging for positioning:allows_sitting component
     if (componentType === 'positioning:allows_sitting') {
       this.#logger.info(
@@ -312,11 +310,13 @@ export class EntityRepositoryAdapter {
           entityId,
           componentType,
           indexSize: this.#componentIndex.get(componentType).size,
-          allEntitiesWithComponent: Array.from(this.#componentIndex.get(componentType))
+          allEntitiesWithComponent: Array.from(
+            this.#componentIndex.get(componentType)
+          ),
         }
       );
     }
-    
+
     this.#logger.debug(
       `Indexed component '${componentType}' for entity '${entityId}'`
     );
@@ -356,11 +356,11 @@ export class EntityRepositoryAdapter {
           entityId: entity.id,
           componentTypeIds: entity.componentTypeIds,
           hasComponentTypeIds: !!entity.componentTypeIds,
-          componentTypeIdsLength: entity.componentTypeIds?.length || 0
+          componentTypeIdsLength: entity.componentTypeIds?.length || 0,
         }
       );
     }
-    
+
     if (entity.componentTypeIds) {
       for (const componentType of entity.componentTypeIds) {
         // Extra logging for park bench

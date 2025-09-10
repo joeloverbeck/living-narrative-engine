@@ -59,7 +59,12 @@ export default {
   // Performance tests should be run separately with npm run test:performance
   // Memory tests should be run separately with npm run test:memory
   // E2E tests should be run separately with npm run test:e2e
-  testPathIgnorePatterns: ['/node_modules/', '<rootDir>/tests/performance/', '<rootDir>/tests/memory/', '<rootDir>/tests/e2e/'],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '<rootDir>/tests/performance/',
+    '<rootDir>/tests/memory/',
+    '<rootDir>/tests/e2e/',
+  ],
 
   // By default, Jest will look for files ending with .js, .jsx, .ts, .tsx, .cjs, .mjs.
   // Your `babel.config.js` is set up to transpile based on your current Node version,

@@ -132,7 +132,7 @@ export class RecoveryManager {
     // Check if circuit should be reset based on reset timeout
     const resetTimeout = this.#config.circuitBreaker?.resetTimeout || 60000;
     const timeSinceOpen = Date.now() - (breaker.openTime || 0);
-    
+
     if (timeSinceOpen >= resetTimeout) {
       // Circuit should be reset - remove it and reset error count
       this.#circuitBreakers.delete(componentName);

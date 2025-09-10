@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:motivations",
+  "description": "Stores the character's underlying psychological motivations that drive their actions, distinct from their goals.",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["text"],
+    "properties": {
+      "text": {
+        "type": "string",
+        "description": "A string describing the character's core motivations, written from their first-person perspective. For example: 'I push myself to excel because I need to prove I'm more than just my family name. Every achievement is a step away from their shadow, every failure a reminder that maybe they were right about me.'"
+      }
+    }
+  }
+}

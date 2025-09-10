@@ -58,7 +58,13 @@ export default function createScopeReferenceResolver({
      * @returns {Set<string>} Set of entity IDs from the referenced scope
      */
     resolve(node, ctx) {
-      const { dispatcher, actorEntity, runtimeCtx: _runtimeCtx, trace, cycleDetector: contextCycleDetector } = ctx;
+      const {
+        dispatcher,
+        actorEntity,
+        runtimeCtx: _runtimeCtx,
+        trace,
+        cycleDetector: contextCycleDetector,
+      } = ctx;
 
       // Validate context has required properties
       if (!actorEntity) {
@@ -101,7 +107,11 @@ export default function createScopeReferenceResolver({
 
       // Add trace logging if available
       if (trace) {
-        trace.addLog('info', `Resolving scope reference: ${scopeId}`, 'ScopeReferenceResolver');
+        trace.addLog(
+          'info',
+          `Resolving scope reference: ${scopeId}`,
+          'ScopeReferenceResolver'
+        );
       }
 
       // Check for circular references using the resolution-scoped cycle detector
@@ -135,7 +145,11 @@ export default function createScopeReferenceResolver({
 
         // Add trace logging for successful resolution
         if (trace) {
-          trace.addLog('info', `Scope reference ${scopeId} resolved to ${result.size} entities`, 'ScopeReferenceResolver');
+          trace.addLog(
+            'info',
+            `Scope reference ${scopeId} resolved to ${result.size} entities`,
+            'ScopeReferenceResolver'
+          );
         }
 
         return result;

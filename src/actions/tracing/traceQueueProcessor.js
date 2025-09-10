@@ -602,7 +602,7 @@ export class TraceQueueProcessor {
       this.#resetFailureTracking();
     } catch (error) {
       this.#logger.error('TraceQueueProcessor: Batch processing failed', error);
-      
+
       // Only handle batch failure for sequential processing
       // In parallel mode, items have already handled their own failures
       if (!this.#config.enableParallelProcessing || batch.length === 1) {
@@ -701,7 +701,7 @@ export class TraceQueueProcessor {
         const chunkResults = await Promise.allSettled(
           chunk.map((item) => this.#processItem(item, true)) // Pass flag for parallel mode
         );
-        
+
         // Track results and check for failures
         chunkResults.forEach((result) => {
           allResults.push(result);
@@ -714,8 +714,12 @@ export class TraceQueueProcessor {
       // If any items failed, throw error to trigger batch failure handling
       // Note: Individual item failures and retries are already handled by #processItem
       if (hasFailures) {
-        const failureCount = allResults.filter(r => r.status === 'rejected').length;
-        throw new Error(`Batch processing failed: ${failureCount}/${allResults.length} items failed`);
+        const failureCount = allResults.filter(
+          (r) => r.status === 'rejected'
+        ).length;
+        throw new Error(
+          `Batch processing failed: ${failureCount}/${allResults.length} items failed`
+        );
       }
     } else {
       // Process items sequentially
@@ -736,10 +740,16 @@ export class TraceQueueProcessor {
     const itemStartTime = Date.now();
 
     // Check if this item is already being processed or has been processed
-    if (this.#processedTraceIds.has(item.id) || this.#processingBatch.has(item.id)) {
-      this.#logger.debug('TraceQueueProcessor: Item already processed or processing', {
-        itemId: item.id,
-      });
+    if (
+      this.#processedTraceIds.has(item.id) ||
+      this.#processingBatch.has(item.id)
+    ) {
+      this.#logger.debug(
+        'TraceQueueProcessor: Item already processed or processing',
+        {
+          itemId: item.id,
+        }
+      );
       return;
     }
 
@@ -808,7 +818,7 @@ export class TraceQueueProcessor {
       if (isParallel) {
         await this.#handleItemFailure(item, error);
       }
-      
+
       // Always re-throw for batch handling
       throw error;
     } finally {

@@ -3,7 +3,14 @@
  * @description Tests that positioning actions correctly integrate with mouth engagement conditions
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { PrerequisiteEvaluationService } from '../../../../src/actions/validation/prerequisiteEvaluationService.js';
 import { ActionValidationContextBuilder } from '../../../../src/actions/validation/actionValidationContextBuilder.js';
 import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
@@ -64,9 +71,9 @@ describe('Positioning Actions - Mouth Engagement Integration', () => {
     };
 
     // Create real services for integration testing
-    jsonLogicService = new JsonLogicEvaluationService({ 
+    jsonLogicService = new JsonLogicEvaluationService({
       logger: mockLogger,
-      gameDataRepository: mockGameDataRepository 
+      gameDataRepository: mockGameDataRepository,
     });
 
     // Create and register custom operators
@@ -90,12 +97,14 @@ describe('Positioning Actions - Mouth Engagement Integration', () => {
     });
 
     // Setup the mouth availability condition
-    mockGameDataRepository.getConditionDefinition.mockImplementation((conditionId) => {
-      if (conditionId === 'core:actor-mouth-available') {
-        return mouthAvailableCondition;
+    mockGameDataRepository.getConditionDefinition.mockImplementation(
+      (conditionId) => {
+        if (conditionId === 'core:actor-mouth-available') {
+          return mouthAvailableCondition;
+        }
+        return undefined;
       }
-      return undefined;
-    });
+    );
   });
 
   afterEach(() => {
@@ -110,27 +119,34 @@ describe('Positioning Actions - Mouth Engagement Integration', () => {
 
         // Setup entity with available mouth (mouth engagement component with locked: false)
         mockEntityManager.getEntityInstance.mockReturnValue(actor);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (entityId === actorId && componentId === 'anatomy:body') {
-            return { root: 'test:body_root' };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === actorId && componentId === 'anatomy:body') {
+              return { root: 'test:body_root' };
+            }
+            if (
+              entityId === 'test:mouth_part' &&
+              componentId === 'core:mouth_engagement'
+            ) {
+              return { locked: false }; // Mouth is not locked
+            }
+            return undefined;
           }
-          if (entityId === 'test:mouth_part' && componentId === 'core:mouth_engagement') {
-            return { locked: false }; // Mouth is not locked
-          }
-          return undefined;
-        });
+        );
         mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
           'core:name',
           'anatomy:body',
         ]);
 
         // Setup bodyGraphService for custom operators
-        mockBodyGraphService.findPartsByType.mockImplementation((rootId, partType) => {
-          if (rootId === 'test:body_root' && partType === 'mouth') {
-            return ['test:mouth_part'];
+        mockBodyGraphService.findPartsByType.mockImplementation(
+          (rootId, partType) => {
+            if (rootId === 'test:body_root' && partType === 'mouth') {
+              return ['test:mouth_part'];
+            }
+            return [];
           }
-          return [];
-        });
+        );
         mockBodyGraphService.buildAdjacencyCache.mockImplementation(() => {});
 
         const result = prereqService.evaluate(
@@ -148,27 +164,34 @@ describe('Positioning Actions - Mouth Engagement Integration', () => {
 
         // Setup entity with mouth but no engagement component (defaults to available)
         mockEntityManager.getEntityInstance.mockReturnValue(actor);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (entityId === actorId && componentId === 'anatomy:body') {
-            return { root: 'test:body_root' };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === actorId && componentId === 'anatomy:body') {
+              return { root: 'test:body_root' };
+            }
+            if (
+              entityId === 'test:mouth_part' &&
+              componentId === 'core:mouth_engagement'
+            ) {
+              return null; // No engagement component
+            }
+            return undefined;
           }
-          if (entityId === 'test:mouth_part' && componentId === 'core:mouth_engagement') {
-            return null; // No engagement component
-          }
-          return undefined;
-        });
+        );
         mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
           'core:name',
           'anatomy:body',
         ]);
 
         // Setup bodyGraphService for custom operators
-        mockBodyGraphService.findPartsByType.mockImplementation((rootId, partType) => {
-          if (rootId === 'test:body_root' && partType === 'mouth') {
-            return ['test:mouth_part'];
+        mockBodyGraphService.findPartsByType.mockImplementation(
+          (rootId, partType) => {
+            if (rootId === 'test:body_root' && partType === 'mouth') {
+              return ['test:mouth_part'];
+            }
+            return [];
           }
-          return [];
-        });
+        );
         mockBodyGraphService.buildAdjacencyCache.mockImplementation(() => {});
 
         const result = prereqService.evaluate(
@@ -186,21 +209,25 @@ describe('Positioning Actions - Mouth Engagement Integration', () => {
 
         // Setup entity with no mouth parts (condition should pass - no mouth means available)
         mockEntityManager.getEntityInstance.mockReturnValue(actor);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (entityId === actorId && componentId === 'anatomy:body') {
-            return { root: 'test:body_root' };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === actorId && componentId === 'anatomy:body') {
+              return { root: 'test:body_root' };
+            }
+            return undefined;
           }
-          return undefined;
-        });
+        );
         mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
           'core:name',
           'anatomy:body',
         ]);
 
         // Setup bodyGraphService for custom operators - no mouth parts
-        mockBodyGraphService.findPartsByType.mockImplementation((rootId, partType) => {
-          return []; // No mouth parts
-        });
+        mockBodyGraphService.findPartsByType.mockImplementation(
+          (rootId, partType) => {
+            return []; // No mouth parts
+          }
+        );
         mockBodyGraphService.buildAdjacencyCache.mockImplementation(() => {});
 
         const result = prereqService.evaluate(
@@ -222,27 +249,34 @@ describe('Positioning Actions - Mouth Engagement Integration', () => {
 
         // Setup entity with engaged mouth (mouth engagement component with locked: true)
         mockEntityManager.getEntityInstance.mockReturnValue(actor);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (entityId === actorId && componentId === 'anatomy:body') {
-            return { root: 'test:body_root' };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === actorId && componentId === 'anatomy:body') {
+              return { root: 'test:body_root' };
+            }
+            if (
+              entityId === 'test:mouth_part' &&
+              componentId === 'core:mouth_engagement'
+            ) {
+              return { locked: true }; // Mouth is locked/engaged
+            }
+            return undefined;
           }
-          if (entityId === 'test:mouth_part' && componentId === 'core:mouth_engagement') {
-            return { locked: true }; // Mouth is locked/engaged
-          }
-          return undefined;
-        });
+        );
         mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
           'core:name',
           'anatomy:body',
         ]);
 
         // Setup bodyGraphService for custom operators
-        mockBodyGraphService.findPartsByType.mockImplementation((rootId, partType) => {
-          if (rootId === 'test:body_root' && partType === 'mouth') {
-            return ['test:mouth_part'];
+        mockBodyGraphService.findPartsByType.mockImplementation(
+          (rootId, partType) => {
+            if (rootId === 'test:body_root' && partType === 'mouth') {
+              return ['test:mouth_part'];
+            }
+            return [];
           }
-          return [];
-        });
+        );
         mockBodyGraphService.buildAdjacencyCache.mockImplementation(() => {});
 
         const result = prereqService.evaluate(
@@ -267,21 +301,25 @@ describe('Positioning Actions - Mouth Engagement Integration', () => {
 
         // Setup basic entity
         mockEntityManager.getEntityInstance.mockReturnValue(actor);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (entityId === actorId && componentId === 'anatomy:body') {
-            return { root: 'test:body_root' };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === actorId && componentId === 'anatomy:body') {
+              return { root: 'test:body_root' };
+            }
+            return undefined;
           }
-          return undefined;
-        });
+        );
         mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
           'core:name',
           'anatomy:body',
         ]);
 
         // Setup bodyGraphService for custom operators - no mouth parts
-        mockBodyGraphService.findPartsByType.mockImplementation((rootId, partType) => {
-          return []; // No mouth parts
-        });
+        mockBodyGraphService.findPartsByType.mockImplementation(
+          (rootId, partType) => {
+            return []; // No mouth parts
+          }
+        );
         mockBodyGraphService.buildAdjacencyCache.mockImplementation(() => {});
 
         // Find the mouth availability prerequisite
@@ -300,9 +338,9 @@ describe('Positioning Actions - Mouth Engagement Integration', () => {
         );
 
         expect(result).toBe(true);
-        expect(mockGameDataRepository.getConditionDefinition).toHaveBeenCalledWith(
-          'core:actor-mouth-available'
-        );
+        expect(
+          mockGameDataRepository.getConditionDefinition
+        ).toHaveBeenCalledWith('core:actor-mouth-available');
       });
     });
   });
@@ -335,9 +373,9 @@ describe('Positioning Actions - Mouth Engagement Integration', () => {
       );
 
       // Should handle gracefully - this depends on implementation
-      expect(mockGameDataRepository.getConditionDefinition).toHaveBeenCalledWith(
-        'core:actor-mouth-available'
-      );
+      expect(
+        mockGameDataRepository.getConditionDefinition
+      ).toHaveBeenCalledWith('core:actor-mouth-available');
     });
   });
 

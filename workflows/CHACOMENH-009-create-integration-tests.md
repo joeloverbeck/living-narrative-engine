@@ -61,10 +61,10 @@ describe('Psychological Components Integration', () => {
 
   beforeAll(async () => {
     testBed = await createIntegrationTestBed();
-    
+
     // Initialize real services
     dataRegistry = new DataRegistry({ logger: testBed.logger });
-    componentLoader = new ComponentLoader({ 
+    componentLoader = new ComponentLoader({
       logger: testBed.logger,
       dataRegistry: dataRegistry,
     });
@@ -94,7 +94,9 @@ describe('Psychological Components Integration', () => {
 
     it('should load internal tensions component from JSON file', () => {
       // Assert
-      const component = dataRegistry.getComponent(INTERNAL_TENSIONS_COMPONENT_ID);
+      const component = dataRegistry.getComponent(
+        INTERNAL_TENSIONS_COMPONENT_ID
+      );
       expect(component).toBeDefined();
       expect(component.id).toBe('core:internal_tensions');
       expect(component.dataSchema.properties.text).toBeDefined();
@@ -117,7 +119,7 @@ describe('Psychological Components Integration', () => {
       ];
 
       // Assert
-      components.forEach(componentId => {
+      components.forEach((componentId) => {
         const component = dataRegistry.getComponent(componentId);
         expect(component.dataSchema.type).toBe('object');
         expect(component.dataSchema.required).toContain('text');
@@ -133,14 +135,14 @@ describe('Psychological Components Integration', () => {
         id: 'test-character',
         components: {
           'core:actor': { name: 'Integration Test Character' },
-          'core:motivations': { 
-            text: 'I seek knowledge to understand my past.' 
+          'core:motivations': {
+            text: 'I seek knowledge to understand my past.',
           },
-          'core:internal_tensions': { 
-            text: 'I want answers but fear what I might discover.' 
+          'core:internal_tensions': {
+            text: 'I want answers but fear what I might discover.',
           },
-          'core:core_dilemmas': { 
-            text: 'Is ignorance truly bliss?' 
+          'core:core_dilemmas': {
+            text: 'Is ignorance truly bliss?',
           },
         },
       };
@@ -168,9 +170,9 @@ describe('Psychological Components Integration', () => {
         id: 'invalid-character',
         components: {
           'core:actor': { name: 'Invalid Test' },
-          'core:motivations': { 
+          'core:motivations': {
             // Missing required 'text' field
-            wrongField: 'This should fail validation' 
+            wrongField: 'This should fail validation',
           },
         },
       };
@@ -223,17 +225,17 @@ describe('Enhanced Character Prompts Integration', () => {
 
   beforeAll(async () => {
     testBed = await createIntegrationTestBed();
-    
+
     // Initialize services with real dependencies
     extractor = new ActorDataExtractor({
       logger: testBed.logger,
       dataManager: testBed.dataManager,
     });
-    
+
     formatter = new CharacterDataFormatter({
       logger: testBed.logger,
     });
-    
+
     promptProvider = new AIPromptContentProvider({
       logger: testBed.logger,
       formatter: formatter,
@@ -255,14 +257,14 @@ describe('Enhanced Character Prompts Integration', () => {
           'core:description': { text: 'A complex individual' },
           'core:personality': { text: 'Thoughtful and introspective' },
           'core:profile': { text: 'Years of experience have shaped me' },
-          'core:motivations': { 
-            text: 'I seek to understand the nature of existence itself.' 
+          'core:motivations': {
+            text: 'I seek to understand the nature of existence itself.',
           },
-          'core:internal_tensions': { 
-            text: 'I crave certainty but know that doubt drives discovery.' 
+          'core:internal_tensions': {
+            text: 'I crave certainty but know that doubt drives discovery.',
           },
-          'core:core_dilemmas': { 
-            text: 'Can truth exist without consciousness to perceive it?' 
+          'core:core_dilemmas': {
+            text: 'Can truth exist without consciousness to perceive it?',
           },
           'core:likes': { text: 'Philosophy and quiet contemplation' },
           'core:dislikes': { text: 'Shallow conversations' },
@@ -275,19 +277,29 @@ describe('Enhanced Character Prompts Integration', () => {
 
       // Assert
       expect(formattedPersona).toContain('YOU ARE Complete Character');
-      expect(formattedPersona).toContain('## Your Description\nA complex individual');
-      expect(formattedPersona).toContain('## Your Core Motivations\nI seek to understand');
-      expect(formattedPersona).toContain('## Your Internal Tensions\nI crave certainty');
-      expect(formattedPersona).toContain('## Your Core Dilemmas\nCan truth exist');
-      
+      expect(formattedPersona).toContain(
+        '## Your Description\nA complex individual'
+      );
+      expect(formattedPersona).toContain(
+        '## Your Core Motivations\nI seek to understand'
+      );
+      expect(formattedPersona).toContain(
+        '## Your Internal Tensions\nI crave certainty'
+      );
+      expect(formattedPersona).toContain(
+        '## Your Core Dilemmas\nCan truth exist'
+      );
+
       // Verify section order
       const descIndex = formattedPersona.indexOf('## Your Description');
       const profileIndex = formattedPersona.indexOf('## Your Profile');
       const motivIndex = formattedPersona.indexOf('## Your Core Motivations');
-      const tensionsIndex = formattedPersona.indexOf('## Your Internal Tensions');
+      const tensionsIndex = formattedPersona.indexOf(
+        '## Your Internal Tensions'
+      );
       const dilemmasIndex = formattedPersona.indexOf('## Your Core Dilemmas');
       const likesIndex = formattedPersona.indexOf('## Your Likes');
-      
+
       expect(profileIndex).toBeGreaterThan(descIndex);
       expect(motivIndex).toBeGreaterThan(profileIndex);
       expect(tensionsIndex).toBeGreaterThan(motivIndex);
@@ -302,12 +314,12 @@ describe('Enhanced Character Prompts Integration', () => {
         components: {
           'core:actor': { name: 'Partial Character' },
           'core:description': { text: 'A simpler character' },
-          'core:motivations': { 
-            text: 'I just want to survive another day.' 
+          'core:motivations': {
+            text: 'I just want to survive another day.',
           },
           // No internal tensions
-          'core:core_dilemmas': { 
-            text: 'Is survival enough?' 
+          'core:core_dilemmas': {
+            text: 'Is survival enough?',
           },
         },
       };
@@ -347,7 +359,7 @@ describe('Enhanced Character Prompts Integration', () => {
       expect(formattedPersona).not.toContain('## Your Core Motivations');
       expect(formattedPersona).not.toContain('## Your Internal Tensions');
       expect(formattedPersona).not.toContain('## Your Core Dilemmas');
-      
+
       // Should still be valid prompt
       expect(formattedPersona.length).toBeGreaterThan(100);
       expect(formattedPersona.split('##').length).toBeGreaterThan(3);
@@ -361,14 +373,14 @@ describe('Enhanced Character Prompts Integration', () => {
         id: 'formatted-character',
         components: {
           'core:actor': { name: 'Formatted Character' },
-          'core:motivations': { 
-            text: '**Bold** motivations with _italic_ emphasis and\n- bullet points\n- for clarity' 
+          'core:motivations': {
+            text: '**Bold** motivations with _italic_ emphasis and\n- bullet points\n- for clarity',
           },
-          'core:internal_tensions': { 
-            text: 'Tensions with "quotes" and special chars: & < >' 
+          'core:internal_tensions': {
+            text: 'Tensions with "quotes" and special chars: & < >',
           },
-          'core:core_dilemmas': { 
-            text: 'Questions? More questions? Even more questions???' 
+          'core:core_dilemmas': {
+            text: 'Questions? More questions? Even more questions???',
           },
         },
       };
@@ -423,7 +435,8 @@ describe('Enhanced Character Prompts Integration', () => {
       // Act & Assert
       expect(() => {
         const extractedData = extractor.extractPromptData(malformedActor);
-        const formattedPersona = formatter.formatCharacterPersona(extractedData);
+        const formattedPersona =
+          formatter.formatCharacterPersona(extractedData);
         expect(formattedPersona).toBeDefined();
         expect(formattedPersona).not.toContain('## Your Core Motivations');
       }).not.toThrow();
@@ -443,11 +456,11 @@ describe('System-Level Integration', () => {
     // 3. Extracting data for prompts
     // 4. Formatting complete prompts
     // 5. Sending to LLM proxy (mocked)
-    
+
     // Arrange
     const gameEngine = await createGameEngine(testBed);
     await gameEngine.initialize();
-    
+
     // Create character with psychological components
     const character = await gameEngine.createCharacter({
       name: 'System Test Character',
@@ -455,10 +468,10 @@ describe('System-Level Integration', () => {
       internalTensions: 'System-level tensions',
       coreDilemmas: 'System-level questions?',
     });
-    
+
     // Act
     const prompt = await gameEngine.generateCharacterPrompt(character.id);
-    
+
     // Assert
     expect(prompt).toContain('System Test Character');
     expect(prompt).toContain('System-level motivations');
@@ -539,12 +552,14 @@ npm run test:ci
 ## Troubleshooting
 
 ### Common Issues
+
 1. **File not found**: Ensure component JSON files exist
 2. **Schema validation fails**: Check JSON structure
 3. **Timeout errors**: Increase Jest timeout for integration tests
 4. **Service initialization**: Verify dependency injection
 
 ### Debug Helpers
+
 ```javascript
 // Add verbose logging
 testBed.logger.setLevel('debug');
@@ -564,4 +579,4 @@ console.log('Formatted:', formattedPersona);
 
 ---
 
-*Ticket created from character-components-analysis.md report*
+_Ticket created from character-components-analysis.md report_

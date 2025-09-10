@@ -15,7 +15,7 @@ describe('CriticalLogNotifier - DocumentContext Integration', () => {
 
   beforeEach(() => {
     testBed = createTestBed();
-    
+
     // Create mock document that mimics browser document
     // Create mock body element for DOM operations
     const mockBodyElement = {
@@ -24,7 +24,7 @@ describe('CriticalLogNotifier - DocumentContext Integration', () => {
       classList: {
         add: jest.fn(),
         remove: jest.fn(),
-        contains: jest.fn().mockReturnValue(false)
+        contains: jest.fn().mockReturnValue(false),
       },
       addEventListener: jest.fn(),
       removeEventListener: jest.fn(),
@@ -33,7 +33,7 @@ describe('CriticalLogNotifier - DocumentContext Integration', () => {
       getAttribute: jest.fn(),
       setAttribute: jest.fn(),
       textContent: '',
-      innerHTML: ''
+      innerHTML: '',
     };
 
     mockDocument = {
@@ -47,7 +47,7 @@ describe('CriticalLogNotifier - DocumentContext Integration', () => {
         classList: {
           add: jest.fn(),
           remove: jest.fn(),
-          contains: jest.fn().mockReturnValue(false)
+          contains: jest.fn().mockReturnValue(false),
         },
         addEventListener: jest.fn(),
         removeEventListener: jest.fn(),
@@ -56,15 +56,17 @@ describe('CriticalLogNotifier - DocumentContext Integration', () => {
         getAttribute: jest.fn(),
         setAttribute: jest.fn(),
         textContent: '',
-        innerHTML: ''
-      }))
+        innerHTML: '',
+      })),
     };
 
     // Create mock hybrid logger with required methods
     mockHybridLogger = {
       getCriticalLogs: jest.fn().mockReturnValue([]),
-      getCriticalBufferStats: jest.fn().mockReturnValue({ warnings: 0, errors: 0 }),
-      clearCriticalBuffer: jest.fn()
+      getCriticalBufferStats: jest
+        .fn()
+        .mockReturnValue({ warnings: 0, errors: 0 }),
+      clearCriticalBuffer: jest.fn(),
     };
   });
 
@@ -73,17 +75,17 @@ describe('CriticalLogNotifier - DocumentContext Integration', () => {
       // Arrange
       const mockLogger = testBed.createMockLogger();
       const mockEventDispatcher = testBed.eventDispatcher;
-      
+
       // Create DocumentContext (which only has query/create methods, not getDocument)
       const documentContext = new DocumentContext(mockDocument, mockLogger);
-      
+
       // Verify DocumentContext doesn't have getDocument method
       expect(documentContext.getDocument).toBeUndefined();
       expect(typeof documentContext.query).toBe('function');
       expect(typeof documentContext.create).toBe('function');
 
       // Act & Assert
-      // The getDocument() error should no longer occur - it may fail for other reasons 
+      // The getDocument() error should no longer occur - it may fail for other reasons
       // (like DOM mocking), but not the specific getDocument() error
       let thrownError = null;
       try {
@@ -93,8 +95,8 @@ describe('CriticalLogNotifier - DocumentContext Integration', () => {
           validatedEventDispatcher: mockEventDispatcher,
           hybridLogger: mockHybridLogger,
           config: {
-            enableVisualNotifications: true
-          }
+            enableVisualNotifications: true,
+          },
         });
       } catch (error) {
         thrownError = error;
@@ -102,7 +104,9 @@ describe('CriticalLogNotifier - DocumentContext Integration', () => {
 
       // The specific getDocument error should not occur anymore
       if (thrownError) {
-        expect(thrownError.message).not.toContain('this.documentContext.getDocument is not a function');
+        expect(thrownError.message).not.toContain(
+          'this.documentContext.getDocument is not a function'
+        );
         // It may fail for other DOM-related reasons in tests, but not the original error
       }
     });
@@ -110,18 +114,19 @@ describe('CriticalLogNotifier - DocumentContext Integration', () => {
     it('should successfully pass document object to KeyboardShortcutsManager via DocumentContext.document', () => {
       // This verifies that the fix allows KeyboardShortcutsManager to receive the underlying document
       const mockLogger = testBed.createMockLogger();
-      
+
       // Test the KeyboardShortcutsManager directly to verify it accepts the document object
       const documentContext = new DocumentContext(mockDocument, mockLogger);
-      
-      const KeyboardShortcutsManager = require('../../../src/logging/keyboardShortcutsManager.js').default;
-      
+
+      const KeyboardShortcutsManager =
+        require('../../../src/logging/keyboardShortcutsManager.js').default;
+
       // This should work now that we pass documentContext.document (the underlying document)
       let keyboardManager;
       expect(() => {
         keyboardManager = new KeyboardShortcutsManager({
           logger: mockLogger,
-          documentContext: documentContext.document  // Pass the underlying document
+          documentContext: documentContext.document, // Pass the underlying document
         });
       }).not.toThrow();
 
@@ -138,10 +143,10 @@ describe('CriticalLogNotifier - DocumentContext Integration', () => {
       // Assert - DocumentContext should only have these methods per IDocumentContext interface
       expect(typeof documentContext.query).toBe('function');
       expect(typeof documentContext.create).toBe('function');
-      
+
       // These methods should NOT exist (the bug was calling getDocument())
       expect(documentContext.getDocument).toBeUndefined();
-      
+
       // But DocumentContext should have a document getter that returns the underlying document
       expect(documentContext.document).toBe(mockDocument);
     });
@@ -152,13 +157,14 @@ describe('CriticalLogNotifier - DocumentContext Integration', () => {
       const documentContext = new DocumentContext(mockDocument, mockLogger);
 
       // Import KeyboardShortcutsManager to test it directly
-      const KeyboardShortcutsManager = require('../../../src/logging/keyboardShortcutsManager.js').default;
-      
+      const KeyboardShortcutsManager =
+        require('../../../src/logging/keyboardShortcutsManager.js').default;
+
       // Should not throw when passed DocumentContext object
       expect(() => {
         new KeyboardShortcutsManager({
           logger: mockLogger,
-          documentContext: documentContext  // Pass DocumentContext directly, not getDocument()
+          documentContext: documentContext, // Pass DocumentContext directly, not getDocument()
         });
       }).not.toThrow();
     });

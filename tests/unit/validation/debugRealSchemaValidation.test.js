@@ -16,9 +16,9 @@ describe('Debug Real Schema Validation', () => {
 
   it('should show exactly why entity_thought rule fails validation', async () => {
     const ajv = createTestAjv();
-    const validator = new AjvSchemaValidator({ 
+    const validator = new AjvSchemaValidator({
       logger: testBed.mockLogger,
-      ajvInstance: ajv 
+      ajvInstance: ajv,
     });
 
     // Simplified rule with just the failing parts
@@ -34,16 +34,16 @@ describe('Debug Real Schema Validation', () => {
             pairs: [
               {
                 component_type: 'core:name',
-                result_variable: 'thinkerNameComponent'
-              }
-            ]
-          }
+                result_variable: 'thinkerNameComponent',
+              },
+            ],
+          },
         },
         {
           type: 'IF',
           parameters: {
             condition: {
-              var: 'context.thinkerNameComponent'
+              var: 'context.thinkerNameComponent',
             },
             then_actions: [
               {
@@ -51,21 +51,24 @@ describe('Debug Real Schema Validation', () => {
                 parameters: {
                   entity_id: '{event.payload.entityId}',
                   thoughts: '{event.payload.thoughts}',
-                  notes: '{event.payload.notes}'
-                }
-              }
-            ]
-          }
-        }
-      ]
+                  notes: '{event.payload.notes}',
+                },
+              },
+            ],
+          },
+        },
+      ],
     };
 
-    const result = validator.validate('schema://living-narrative-engine/rule.schema.json', entityThoughtRule);
-    
+    const result = validator.validate(
+      'schema://living-narrative-engine/rule.schema.json',
+      entityThoughtRule
+    );
+
     if (!result.isValid) {
       console.error('VALIDATION FAILED');
       console.error('Number of errors:', result.errors.length);
-      
+
       // Show only first few errors to understand the pattern
       const firstErrors = result.errors.slice(0, 5);
       firstErrors.forEach((error, index) => {
@@ -74,44 +77,49 @@ describe('Debug Real Schema Validation', () => {
         console.error(`  Schema path: ${error.schemaPath}`);
         console.error(`  Keyword: ${error.keyword}`);
         console.error(`  Message: ${error.message}`);
-        
+
         if (error.params) {
           console.error(`  Params:`, JSON.stringify(error.params));
         }
       });
-      
+
       // Look for specific schema mismatch errors
-      const schemaMismatchErrors = result.errors.filter(error => 
-        error.message && error.message.includes('should be equal to constant')
+      const schemaMismatchErrors = result.errors.filter(
+        (error) =>
+          error.message && error.message.includes('should be equal to constant')
       );
-      
+
       if (schemaMismatchErrors.length > 0) {
-        console.error(`\nFound ${schemaMismatchErrors.length} schema mismatch errors:`);
+        console.error(
+          `\nFound ${schemaMismatchErrors.length} schema mismatch errors:`
+        );
         schemaMismatchErrors.slice(0, 3).forEach((error, index) => {
-          console.error(`  ${index + 1}. ${error.instancePath}: ${error.message}`);
+          console.error(
+            `  ${index + 1}. ${error.instancePath}: ${error.message}`
+          );
           if (error.params && error.params.allowedValue) {
             console.error(`     Expected: ${error.params.allowedValue}`);
           }
         });
       }
     }
-    
+
     // Don't fail the test, just show what happens
     console.log('Test completed - validation result:', result.isValid);
   });
 
   it('should test IF operation validation specifically', async () => {
     const ajv = createTestAjv();
-    const validator = new AjvSchemaValidator({ 
+    const validator = new AjvSchemaValidator({
       logger: testBed.mockLogger,
-      ajvInstance: ajv 
+      ajvInstance: ajv,
     });
 
     const ifOperation = {
       type: 'IF',
       parameters: {
         condition: {
-          var: 'context.thinkerNameComponent'
+          var: 'context.thinkerNameComponent',
         },
         then_actions: [
           {
@@ -119,21 +127,26 @@ describe('Debug Real Schema Validation', () => {
             parameters: {
               entity_id: '{event.payload.entityId}',
               thoughts: '{event.payload.thoughts}',
-              notes: '{event.payload.notes}'
-            }
-          }
-        ]
-      }
+              notes: '{event.payload.notes}',
+            },
+          },
+        ],
+      },
     };
 
-    const result = validator.validate('schema://living-narrative-engine/operation.schema.json', ifOperation);
-    
+    const result = validator.validate(
+      'schema://living-narrative-engine/operation.schema.json',
+      ifOperation
+    );
+
     console.log('IF operation validation result:', result.isValid);
-    
+
     if (!result.isValid) {
       console.error('IF operation errors:');
       result.errors.slice(0, 3).forEach((error, index) => {
-        console.error(`  ${index + 1}. ${error.instancePath}: ${error.message}`);
+        console.error(
+          `  ${index + 1}. ${error.instancePath}: ${error.message}`
+        );
         if (error.params && error.params.allowedValue) {
           console.error(`     Expected: ${error.params.allowedValue}`);
         }

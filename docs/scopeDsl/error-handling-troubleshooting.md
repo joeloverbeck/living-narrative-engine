@@ -27,11 +27,13 @@ This comprehensive troubleshooting guide helps developers diagnose and resolve c
 **Error Code**: Often occurs before error can be assigned a code
 
 **Root Causes**:
+
 - Context object contains self-references
 - Entity objects with bidirectional relationships
 - Cached objects with parent/child references
 
 **Solution**:
+
 ```javascript
 // The error handler automatically sanitizes circular references
 // But you can pre-sanitize for better performance:
@@ -45,6 +47,7 @@ errorHandler.handleError(error, safeContext, 'MyResolver');
 ```
 
 **Prevention**:
+
 - Pass only necessary data in context
 - Use IDs instead of full object references
 - Implement toJSON() methods on complex objects
@@ -56,29 +59,32 @@ errorHandler.handleError(error, safeContext, 'MyResolver');
 **Symptom**: Errors always have code `SCOPE_9999` (unknown)
 
 **Root Causes**:
+
 - Error message doesn't match any category patterns
 - Custom error types not mapped to codes
 - Typos in error messages
 
 **Solution**:
+
 ```javascript
 // Explicitly provide error codes
 errorHandler.handleError(
   'Custom error message',
   ctx,
   'MyResolver',
-  ErrorCodes.SPECIFIC_ERROR_CODE  // Provide specific code
+  ErrorCodes.SPECIFIC_ERROR_CODE // Provide specific code
 );
 
 // Or ensure messages match patterns
 errorHandler.handleError(
-  'Actor entity is missing',  // "missing" triggers MISSING_CONTEXT
+  'Actor entity is missing', // "missing" triggers MISSING_CONTEXT
   ctx,
   'MyResolver'
 );
 ```
 
 **Prevention**:
+
 - Always provide explicit error codes for known errors
 - Use consistent error message patterns
 - Add new error codes as needed
@@ -90,16 +96,18 @@ errorHandler.handleError(
 **Symptom**: Slow error processing, high memory usage
 
 **Root Causes**:
+
 - Large context objects being serialized
 - Error buffer growing too large
 - Debug mode enabled in production
 
 **Solution**:
+
 ```javascript
 // 1. Minimize context size
 const minimalContext = {
   id: ctx.actorEntity.id,
-  depth: ctx.depth
+  depth: ctx.depth,
 };
 
 // 2. Clear buffer periodically
@@ -112,12 +120,13 @@ const errorHandler = new ScopeDslErrorHandler({
   logger,
   config: {
     isDevelopment: false,
-    maxBufferSize: 50  // Smaller buffer
-  }
+    maxBufferSize: 50, // Smaller buffer
+  },
 });
 ```
 
 **Prevention**:
+
 - Set NODE_ENV=production in production
 - Implement buffer management strategy
 - Profile error handling in load tests
@@ -129,11 +138,13 @@ const errorHandler = new ScopeDslErrorHandler({
 **Symptom**: `Cannot read property 'handleError' of undefined`
 
 **Root Causes**:
+
 - Error handler not injected into resolver
 - Dependency injection misconfigured
 - Legacy resolver not updated
 
 **Solution**:
+
 ```javascript
 // Make error handler optional with fallback
 export default function createResolver({ logger, errorHandler = null }) {
@@ -147,12 +158,13 @@ export default function createResolver({ logger, errorHandler = null }) {
           throw new Error('Actor entity required');
         }
       }
-    }
+    },
   };
 }
 ```
 
 **Prevention**:
+
 - Use progressive migration strategy
 - Update dependency injection configuration
 - Test resolvers with and without error handler
@@ -164,18 +176,20 @@ export default function createResolver({ logger, errorHandler = null }) {
 **Symptom**: Errors lack stack traces even in development mode
 
 **Root Causes**:
+
 - NODE_ENV not set correctly
 - Error handler misconfigured
 - Error object not properly constructed
 
 **Solution**:
+
 ```javascript
 // Ensure development mode is detected
 const errorHandler = new ScopeDslErrorHandler({
   logger,
   config: {
-    isDevelopment: true  // Force development mode
-  }
+    isDevelopment: true, // Force development mode
+  },
 });
 
 // Or set environment variable
@@ -183,6 +197,7 @@ process.env.NODE_ENV = 'development';
 ```
 
 **Prevention**:
+
 - Use .env files for environment configuration
 - Validate NODE_ENV on startup
 - Add startup logging for configuration
@@ -194,26 +209,29 @@ process.env.NODE_ENV = 'development';
 **Symptom**: Same error appears multiple times in buffer
 
 **Root Causes**:
+
 - Error being caught and re-thrown multiple times
 - Retry logic without proper error handling
 - Multiple error handlers in chain
 
 **Solution**:
+
 ```javascript
 // Track handled errors
 const handledErrors = new WeakSet();
 
 function handleOnce(error, ctx, resolver) {
   if (handledErrors.has(error)) {
-    throw error;  // Already handled, just re-throw
+    throw error; // Already handled, just re-throw
   }
-  
+
   handledErrors.add(error);
   errorHandler.handleError(error, ctx, resolver);
 }
 ```
 
 **Prevention**:
+
 - Handle errors at appropriate level only
 - Avoid catching and re-throwing same error
 - Use single error handler per resolution chain
@@ -232,9 +250,9 @@ const debugHandler = new ScopeDslErrorHandler({
     },
     warn: console.warn,
     info: console.info,
-    debug: console.debug
+    debug: console.debug,
   },
-  config: { isDevelopment: true }
+  config: { isDevelopment: true },
 });
 ```
 
@@ -246,9 +264,9 @@ function traceableResolve(node, ctx, dispatcher) {
   const tracedCtx = {
     ...ctx,
     path: [...(ctx.path || []), node.id],
-    timestamps: [...(ctx.timestamps || []), Date.now()]
+    timestamps: [...(ctx.timestamps || []), Date.now()],
   };
-  
+
   try {
     return dispatcher(node, tracedCtx);
   } catch (error) {
@@ -265,21 +283,21 @@ function traceableResolve(node, ctx, dispatcher) {
 // Analyze error patterns
 function analyzeErrors(errorHandler) {
   const errors = errorHandler.getErrorBuffer();
-  
+
   // Group by error code
   const byCode = errors.reduce((acc, err) => {
     acc[err.code] = (acc[err.code] || 0) + 1;
     return acc;
   }, {});
-  
+
   // Find most common resolver
   const byResolver = errors.reduce((acc, err) => {
     acc[err.resolver] = (acc[err.resolver] || 0) + 1;
     return acc;
   }, {});
-  
+
   console.table({ byCode, byResolver });
-  
+
   // Find error hot spots
   const recentErrors = errors.slice(-10);
   console.log('Recent errors:', recentErrors);
@@ -292,11 +310,11 @@ function analyzeErrors(errorHandler) {
 // Create test harness for error conditions
 function testErrorHandling(resolver, errorHandler) {
   const testCases = [
-    { ctx: {}, expectedCode: 'SCOPE_1001' },  // Missing actor
+    { ctx: {}, expectedCode: 'SCOPE_1001' }, // Missing actor
     { ctx: { actorEntity: null }, expectedCode: 'SCOPE_1001' },
-    { ctx: { actorEntity: {}, depth: 100 }, expectedCode: 'SCOPE_4002' }
+    { ctx: { actorEntity: {}, depth: 100 }, expectedCode: 'SCOPE_4002' },
   ];
-  
+
   testCases.forEach(({ ctx, expectedCode }) => {
     try {
       resolver.resolve({ type: 'test' }, ctx);
@@ -316,13 +334,14 @@ function testErrorHandling(resolver, errorHandler) {
 **Problem**: Error buffer consuming too much memory
 
 **Solution**:
+
 ```javascript
 class ManagedErrorHandler {
   constructor(errorHandler) {
     this.errorHandler = errorHandler;
     this.startMemoryManagement();
   }
-  
+
   startMemoryManagement() {
     setInterval(() => {
       const buffer = this.errorHandler.getErrorBuffer();
@@ -342,12 +361,13 @@ class ManagedErrorHandler {
 **Problem**: Error handling taking too long
 
 **Solution**:
+
 ```javascript
 // Profile error handling
 function profileErrorHandling(errorHandler) {
   const originalHandle = errorHandler.handleError.bind(errorHandler);
-  
-  errorHandler.handleError = function(message, context, resolver, code) {
+
+  errorHandler.handleError = function (message, context, resolver, code) {
     const start = performance.now();
     try {
       originalHandle(message, context, resolver, code);
@@ -368,11 +388,12 @@ function profileErrorHandling(errorHandler) {
 **Symptom**: Tests fail when error handler is used
 
 **Solution**:
+
 ```javascript
 // Create test-friendly error handler
 function createTestErrorHandler() {
   const errors = [];
-  
+
   return {
     handleError(message, context, resolver, code) {
       const error = new Error(message);
@@ -389,7 +410,7 @@ function createTestErrorHandler() {
     // Test helper
     getLastError() {
       return errors[errors.length - 1];
-    }
+    },
   };
 }
 ```
@@ -399,11 +420,12 @@ function createTestErrorHandler() {
 **Symptom**: Errors in async operations lack proper context
 
 **Solution**:
+
 ```javascript
 async function asyncResolve(node, ctx) {
   // Capture context before async operation
   const asyncContext = { ...ctx, asyncOperation: true };
-  
+
   try {
     const result = await fetchData(node.id);
     return result;
@@ -411,7 +433,7 @@ async function asyncResolve(node, ctx) {
     // Use captured context
     errorHandler.handleError(
       error,
-      asyncContext,  // Original context preserved
+      asyncContext, // Original context preserved
       'AsyncResolver',
       ErrorCodes.ASYNC_OPERATION_FAILED
     );
@@ -428,24 +450,26 @@ async function asyncResolve(node, ctx) {
 class EnvironmentAwareErrorHandler {
   constructor(logger) {
     const isDev = this.detectEnvironment();
-    
+
     this.handler = new ScopeDslErrorHandler({
       logger,
       config: {
         isDevelopment: isDev,
-        maxBufferSize: isDev ? 100 : 25
-      }
+        maxBufferSize: isDev ? 100 : 25,
+      },
     });
-    
-    logger.info(`Error handler initialized in ${isDev ? 'development' : 'production'} mode`);
+
+    logger.info(
+      `Error handler initialized in ${isDev ? 'development' : 'production'} mode`
+    );
   }
-  
+
   detectEnvironment() {
     // Multiple detection methods
     return (
       process.env.NODE_ENV === 'development' ||
       process.env.DEBUG === 'true' ||
-      process.env.NODE_ENV === undefined  // Default to dev if not set
+      process.env.NODE_ENV === undefined // Default to dev if not set
     );
   }
 }
@@ -457,7 +481,7 @@ class EnvironmentAwareErrorHandler {
 // Handle container-specific paths in stack traces
 function sanitizeStackTrace(stack) {
   if (!stack) return stack;
-  
+
   // Remove container paths
   return stack
     .replace(/\/app\//g, './')
@@ -471,16 +495,18 @@ function sanitizeStackTrace(stack) {
 ### Q: How do I add a new error code?
 
 **A**: Add to `src/scopeDsl/constants/errorCodes.js`:
+
 ```javascript
 export const ErrorCodes = {
   // ... existing codes
-  MY_NEW_ERROR: 'SCOPE_XXXX',  // Use appropriate range
+  MY_NEW_ERROR: 'SCOPE_XXXX', // Use appropriate range
 };
 ```
 
 ### Q: Can I customize error messages?
 
 **A**: Yes, pass custom messages to handleError:
+
 ```javascript
 errorHandler.handleError(
   `Custom message with details: ${details}`,
@@ -493,6 +519,7 @@ errorHandler.handleError(
 ### Q: How do I handle errors in async resolvers?
 
 **A**: Use try-catch with async/await:
+
 ```javascript
 async resolve(node, ctx) {
   try {
@@ -506,6 +533,7 @@ async resolve(node, ctx) {
 ### Q: Should I clear the error buffer?
 
 **A**: Yes, periodically:
+
 - In production: Clear after sending to monitoring
 - In development: Clear after debugging session
 - In tests: Clear between test cases
@@ -513,31 +541,32 @@ async resolve(node, ctx) {
 ### Q: How do I test error handling?
 
 **A**: Use test utilities:
+
 ```javascript
 it('should handle missing actor', () => {
   const errorHandler = createTestErrorHandler();
   const resolver = createResolver({ errorHandler });
-  
-  expect(() => resolver.resolve(node, {}))
-    .toThrow('Actor entity required');
-  
-  expect(errorHandler.getLastError().code)
-    .toBe('SCOPE_1001');
+
+  expect(() => resolver.resolve(node, {})).toThrow('Actor entity required');
+
+  expect(errorHandler.getLastError().code).toBe('SCOPE_1001');
 });
 ```
 
 ### Q: Can I disable error handling temporarily?
 
 **A**: Use null error handler:
+
 ```javascript
-const resolver = createResolver({ 
-  errorHandler: null  // Falls back to direct throws
+const resolver = createResolver({
+  errorHandler: null, // Falls back to direct throws
 });
 ```
 
 ### Q: How do I monitor errors in production?
 
 **A**: Integrate with monitoring service:
+
 ```javascript
 setInterval(() => {
   const errors = errorHandler.getErrorBuffer();
@@ -545,7 +574,7 @@ setInterval(() => {
     monitoringService.reportErrors(errors);
     errorHandler.clearErrorBuffer();
   }
-}, 300000);  // Every 5 minutes
+}, 300000); // Every 5 minutes
 ```
 
 ## Related Documentation
@@ -559,10 +588,11 @@ setInterval(() => {
 ## Support
 
 For additional help:
+
 1. Check the [main troubleshooting guide](./troubleshooting.md)
 2. Review test files for examples
 3. Contact the development team
 
 ---
 
-*Last updated: 2024-01-15*
+_Last updated: 2024-01-15_

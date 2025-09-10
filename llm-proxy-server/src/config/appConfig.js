@@ -917,7 +917,8 @@ class AppConfigService {
    * @returns {string} Returns empty string
    */
   getDebugLoggingPath() {
-    return '';  }
+    return '';
+  }
 
   /**
    * Gets the debug logging retention days.

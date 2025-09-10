@@ -742,7 +742,7 @@ describe('RecoveryManager', () => {
       const componentName = 'TimeoutTestComponent';
       const originalDateNow = Date.now;
       let mockTime = 1000000;
-      
+
       // Configure with specific reset timeout
       const customConfig = {
         circuitBreaker: {
@@ -789,7 +789,7 @@ describe('RecoveryManager', () => {
         };
         await customRecoveryManager.attemptRecovery(error);
       }
-      
+
       // Circuit should still be closed after 3 errors (threshold is 5)
       expect(customRecoveryManager.isCircuitOpen(componentName)).toBe(false);
 
@@ -800,7 +800,7 @@ describe('RecoveryManager', () => {
       const componentName = 'DefaultTimeoutComponent';
       const originalDateNow = Date.now;
       let mockTime = 1000000;
-      
+
       // No circuit breaker config provided
       const defaultManager = new RecoveryManager({
         logger: mockLogger,
@@ -836,7 +836,7 @@ describe('RecoveryManager', () => {
 
     it('should handle circuit breaker with custom isOpen method', async () => {
       const componentName = 'CustomBreakerComponent';
-      
+
       // First disable the component to create a circuit breaker
       const criticalError = {
         id: 'error-custom-breaker',
@@ -846,7 +846,7 @@ describe('RecoveryManager', () => {
       };
 
       await recoveryManager.attemptRecovery(criticalError);
-      
+
       // The circuit breaker should have an isOpen method that returns a function
       const result = recoveryManager.isCircuitOpen(componentName);
       expect(result).toBe(true);
@@ -862,7 +862,7 @@ describe('RecoveryManager', () => {
         retryManager: {
           retry: jest.fn().mockImplementation(() => {
             throw new Error('Unexpected internal error');
-          })
+          }),
         },
       });
 
@@ -887,7 +887,7 @@ describe('RecoveryManager', () => {
         'Retry failed, falling back to fallback strategy',
         expect.objectContaining({
           component: 'RetryFailureComponent',
-          error: 'Unexpected internal error'
+          error: 'Unexpected internal error',
         })
       );
     });
@@ -898,12 +898,12 @@ describe('RecoveryManager', () => {
         id: 'error-action-failure',
         type: 'INVALID_ACTION_TYPE', // This will trigger default case
         severity: TraceErrorSeverity.LOW,
-        context: { 
+        context: {
           componentName: 'ErrorComponent',
           get throwError() {
             // Throw an error when accessing certain properties
             throw new Error('Context access error');
-          }
+          },
         },
       };
 
@@ -962,7 +962,7 @@ describe('RecoveryManager', () => {
       // We need to trigger a path that would select RESTART_SERVICE
       // Since the current implementation doesn't have a direct path to RESTART_SERVICE
       // in selectRecoveryStrategy, we'll need to test it directly
-      
+
       // Create a custom error that we'll force through restart service path
       const errorInfo = {
         id: 'error-needs-restart',
@@ -1011,7 +1011,7 @@ describe('RecoveryManager', () => {
 
       // Verify the constant exists and has expected value
       expect(RecoveryAction.RESTART_SERVICE).toBe('restart');
-      
+
       // Verify the result structure matches expected format
       expect(expectedRestartResult.action).toBe('restart');
       expect(expectedRestartResult.shouldContinue).toBe(false);
@@ -1024,13 +1024,16 @@ describe('RecoveryManager', () => {
     it('should throw error when executeOriginalOperation is called', async () => {
       // Access the private method through reflection isn't directly possible
       // but we can test that the method exists and would throw
-      
+
       // Create a test that verifies the error message matches expected
-      const expectedErrorMessage = 'Original operation re-execution not implemented';
-      
+      const expectedErrorMessage =
+        'Original operation re-execution not implemented';
+
       // Since we can't directly call the private method, we verify the error structure
       const testError = new Error(expectedErrorMessage);
-      expect(testError.message).toBe('Original operation re-execution not implemented');
+      expect(testError.message).toBe(
+        'Original operation re-execution not implemented'
+      );
     });
   });
 
@@ -1050,7 +1053,7 @@ describe('RecoveryManager', () => {
           context: { componentName },
         };
         await recoveryManager.attemptRecovery(errorInfo);
-        
+
         // Advance time by 1 minute between errors
         mockTime += 60000;
       }
@@ -1077,14 +1080,14 @@ describe('RecoveryManager', () => {
       const componentName = 'ResetTimeComponent';
       const originalDateNow = Date.now;
       let mockTime = 1000000;
-      
+
       // Create a new recovery manager for this test
       const testRecoveryManager = new RecoveryManager({
         logger: mockLogger,
         config: mockConfig,
         retryManager: mockRetryManager,
       });
-      
+
       Date.now = jest.fn(() => mockTime);
 
       // Generate first error

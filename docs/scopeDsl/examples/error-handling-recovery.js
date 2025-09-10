@@ -49,15 +49,12 @@ export default function createRecoveryResolver({
 
     resolve(node, ctx) {
       // Recovery Pattern 1: Retry with exponential backoff
-      const resultWithRetry = withRetry(
-        () => performResolution(node, ctx),
-        {
-          maxAttempts: config.maxRetries,
-          delay: config.retryDelay,
-          backoff: 'exponential',
-          shouldRetry: (error) => isRetriableError(error),
-        }
-      );
+      const resultWithRetry = withRetry(() => performResolution(node, ctx), {
+        maxAttempts: config.maxRetries,
+        delay: config.retryDelay,
+        backoff: 'exponential',
+        shouldRetry: (error) => isRetriableError(error),
+      });
 
       if (resultWithRetry.success) {
         return resultWithRetry.value;
@@ -116,7 +113,11 @@ export default function createRecoveryResolver({
 
       // Recovery Pattern 5: Partial result with error flag
       if (node.allowPartial) {
-        const partialResult = buildPartialResult(node, ctx, resultWithRetry.error);
+        const partialResult = buildPartialResult(
+          node,
+          ctx,
+          resultWithRetry.error
+        );
         logger.warn('Returning partial result', {
           nodeType: node.type,
           completeness: partialResult.completeness,
@@ -171,16 +172,21 @@ export default function createRecoveryResolver({
 
         // Check if error is retriable
         if (!shouldRetry(error)) {
-          logger.debug('Error is not retriable', { errorType: error.constructor.name });
+          logger.debug('Error is not retriable', {
+            errorType: error.constructor.name,
+          });
           break;
         }
 
         if (attempt < maxAttempts) {
-          const waitTime = backoff === 'exponential' 
-            ? delay * Math.pow(2, attempt - 1)
-            : delay;
+          const waitTime =
+            backoff === 'exponential'
+              ? delay * Math.pow(2, attempt - 1)
+              : delay;
 
-          logger.debug(`Retry attempt ${attempt} failed, waiting ${waitTime}ms`);
+          logger.debug(
+            `Retry attempt ${attempt} failed, waiting ${waitTime}ms`
+          );
 
           // Simple synchronous wait (in real code, use async/await)
           const start = Date.now();
@@ -252,7 +258,7 @@ export default function createRecoveryResolver({
     if (!cache || !cache.get) return null;
 
     const cacheKey = buildCacheKey(node, ctx);
-    
+
     try {
       const cached = cache.get(cacheKey);
       if (cached) {
@@ -299,13 +305,13 @@ export default function createRecoveryResolver({
    */
   function getDefaultValue(node) {
     const defaults = {
-      'recoverable': [],
-      'resilient': { items: [] },
-      'list': [],
-      'count': 0,
-      'boolean': false,
-      'string': '',
-      'object': {},
+      recoverable: [],
+      resilient: { items: [] },
+      list: [],
+      count: 0,
+      boolean: false,
+      string: '',
+      object: {},
     };
 
     return defaults[node.type] ?? defaults[node.returnType];
@@ -370,7 +376,7 @@ export default function createRecoveryResolver({
       partial.completeness = 0;
     } else if (node.type === 'object') {
       partial.data = {};
-      
+
       // Try to fill in any fields we can
       if (node.fields) {
         let completed = 0;
@@ -415,7 +421,8 @@ export default function createRecoveryResolver({
         'Service is busy',
         'Rate limit exceeded',
       ];
-      const errorMessage = errorTypes[Math.floor(Math.random() * errorTypes.length)];
+      const errorMessage =
+        errorTypes[Math.floor(Math.random() * errorTypes.length)];
       throw new Error(errorMessage);
     }
 

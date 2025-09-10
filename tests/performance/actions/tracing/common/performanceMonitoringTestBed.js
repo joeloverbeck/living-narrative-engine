@@ -2,7 +2,7 @@
  * @file Performance Monitoring Test Bed
  * @description Specialized test environment for validating performance monitoring integration
  * during realistic gaming scenarios with comprehensive measurement and validation
- * 
+ *
  * Supports Priority 2.2: Performance Monitoring Integration (MEDIUM) from
  * reports/actions-tracing-architecture-analysis.md
  */
@@ -29,7 +29,7 @@ export class PerformanceMonitoringTestBed {
     this.performanceMonitor = null;
     this.structuredTrace = null;
     this.actionFilter = null;
-    
+
     // Performance tracking
     this.measurements = {
       monitoringOverhead: [],
@@ -37,19 +37,19 @@ export class PerformanceMonitoringTestBed {
       memorySnapshots: [],
       alertTimestamps: [],
     };
-    
+
     // Gaming simulation
     this.activeActions = new Map();
     this.completedActions = [];
     this.simulatedErrors = [];
-    
+
     // Test configuration
     this.config = {
       monitoring: PERFORMANCE_MONITORING_CONFIGS.STANDARD_GAMING,
       pattern: 'EXPLORATION',
       enableDetailedLogging: false,
     };
-    
+
     this.initialized = false;
   }
 
@@ -78,13 +78,18 @@ export class PerformanceMonitoringTestBed {
 
     // Configure sampling if specified
     if (this.config.monitoring.samplingConfig) {
-      this.performanceMonitor.enableSampling(this.config.monitoring.samplingConfig);
+      this.performanceMonitor.enableSampling(
+        this.config.monitoring.samplingConfig
+      );
     }
 
     this.initialized = true;
 
     if (this.config.enableDetailedLogging) {
-      console.log('Performance monitoring test bed initialized with config:', this.config);
+      console.log(
+        'Performance monitoring test bed initialized with config:',
+        this.config
+      );
     }
   }
 
@@ -114,11 +119,11 @@ export class PerformanceMonitoringTestBed {
     }
 
     this.config.monitoring = { ...this.config.monitoring, ...config };
-    
+
     if (config.thresholds) {
       this.performanceMonitor.setThresholds(config.thresholds);
     }
-    
+
     if (config.samplingConfig) {
       this.performanceMonitor.enableSampling(config.samplingConfig);
     }
@@ -141,7 +146,8 @@ export class PerformanceMonitoringTestBed {
     this.clearMeasurements();
 
     // Start monitoring and capture the stop function
-    const stopMonitoring = this.performanceMonitor.startMonitoring(monitoringOptions);
+    const stopMonitoring =
+      this.performanceMonitor.startMonitoring(monitoringOptions);
 
     return {
       stop: () => {
@@ -177,14 +183,14 @@ export class PerformanceMonitoringTestBed {
       let monitoringOverhead = 0;
       if (measureOverhead) {
         const overheadStart = performance.now();
-        
+
         // Start span for action execution
         const span = this.structuredTrace.startSpan(uniqueActionId, {
           actorId: actionData.actorId,
           pattern: actionData.context.pattern,
           originalActionId: actionData.actionId, // Keep reference to original
         });
-        
+
         monitoringOverhead = performance.now() - overheadStart;
         this.measurements.monitoringOverhead.push(monitoringOverhead);
 
@@ -198,8 +204,10 @@ export class PerformanceMonitoringTestBed {
 
       // Simulate error based on error rate (after span is created so it gets tracked)
       if (errorRate > 0 && Math.random() < errorRate) {
-        const simulatedError = new Error(`Simulated error in action ${actionData.actionId}`);
-        
+        const simulatedError = new Error(
+          `Simulated error in action ${actionData.actionId}`
+        );
+
         // Record error in the span if we have one
         if (measureOverhead) {
           const activeAction = this.activeActions.get(uniqueActionId);
@@ -251,11 +259,13 @@ export class PerformanceMonitoringTestBed {
       this.measurements.actionDurations.push(totalDuration);
 
       // Record performance metrics
-      this.performanceMonitor.recordMetric(`action.${actionData.actionId}.duration`, totalDuration);
+      this.performanceMonitor.recordMetric(
+        `action.${actionData.actionId}.duration`,
+        totalDuration
+      );
       this.performanceMonitor.trackOperation(actionData.actionId, startTime);
 
       return completedAction;
-
     } catch (error) {
       // Handle simulated errors
       const errorAction = {
@@ -302,14 +312,16 @@ export class PerformanceMonitoringTestBed {
         try {
           // Pass errorRate to simulateActionExecution for proper span tracking of errors
           const executionOptions = { ...options, errorRate };
-          const result = await this.simulateActionExecution(actionData, executionOptions);
+          const result = await this.simulateActionExecution(
+            actionData,
+            executionOptions
+          );
           results.push(result);
-          
+
           // Optional debug log (disabled for performance)
           // if (i < 3) {
           //   console.log(`Action ${i + 1} result:`, { actionId: result.actionId, success: result.success });
           // }
-
         } catch (error) {
           // This catch block should only handle unexpected errors, not simulated ones
           const errorResult = {
@@ -323,7 +335,7 @@ export class PerformanceMonitoringTestBed {
           results.push(errorResult);
           this.completedActions.push(errorResult);
           this.simulatedErrors.push(errorResult);
-          
+
           // Optional debug log for failures (disabled for performance)
           // if (results.filter(r => !r.success).length <= 3) {
           //   console.error(`Action ${i + 1} failed:`, { actionId: errorResult.actionId, error: error.message });
@@ -338,13 +350,16 @@ export class PerformanceMonitoringTestBed {
     } else {
       // Parallel execution in batches
       const batches = this.#createBatches(sequence, parallelism);
-      
+
       for (const batch of batches) {
         const batchPromises = batch.map(async (actionData) => {
           try {
             // Pass errorRate to simulateActionExecution for proper span tracking of errors
             const executionOptions = { ...options, errorRate };
-            return await this.simulateActionExecution(actionData, executionOptions);
+            return await this.simulateActionExecution(
+              actionData,
+              executionOptions
+            );
           } catch (error) {
             // This catch block should only handle unexpected errors, not simulated ones
             const errorResult = {
@@ -355,10 +370,10 @@ export class PerformanceMonitoringTestBed {
               error: error.message,
               success: false,
             };
-            
+
             this.completedActions.push(errorResult);
             this.simulatedErrors.push(errorResult);
-            
+
             return errorResult;
           }
         });
@@ -398,7 +413,10 @@ export class PerformanceMonitoringTestBed {
 
     // Validate memory usage accuracy
     if (this.measurements.memorySnapshots.length > 0) {
-      const recentSnapshot = this.measurements.memorySnapshots[this.measurements.memorySnapshots.length - 1];
+      const recentSnapshot =
+        this.measurements.memorySnapshots[
+          this.measurements.memorySnapshots.length - 1
+        ];
       const reportedMemory = recentSnapshot.usage.estimatedSizeMB;
       const expectedMemory = this.#calculateExpectedMemory();
 
@@ -415,8 +433,8 @@ export class PerformanceMonitoringTestBed {
       // This would need expected alerts to be provided for full validation
       validation.alerts = {
         totalAlerts: alerts.length,
-        alertTypes: [...new Set(alerts.map(a => a.type))],
-        alertSeverities: [...new Set(alerts.map(a => a.severity))],
+        alertTypes: [...new Set(alerts.map((a) => a.type))],
+        alertSeverities: [...new Set(alerts.map((a) => a.severity))],
       };
     }
 
@@ -424,7 +442,7 @@ export class PerformanceMonitoringTestBed {
     const metrics = this.performanceMonitor.getRealtimeMetrics();
     validation.realtimeMetrics = {
       completedSpans: metrics.completedSpans,
-      expectedSpans: this.completedActions.filter(a => a.success).length,
+      expectedSpans: this.completedActions.filter((a) => a.success).length,
       errorCount: metrics.errorCount,
       expectedErrors: this.simulatedErrors.length,
       memoryUsage: metrics.memoryUsageMB,
@@ -439,27 +457,37 @@ export class PerformanceMonitoringTestBed {
   getMeasurementSummary() {
     const summary = {
       totalActions: this.completedActions.length,
-      successfulActions: this.completedActions.filter(a => a.success).length,
-      failedActions: this.completedActions.filter(a => !a.success).length,
+      successfulActions: this.completedActions.filter((a) => a.success).length,
+      failedActions: this.completedActions.filter((a) => !a.success).length,
       totalErrors: this.simulatedErrors.length,
-      
+
       performance: {
-        averageActionDuration: this.#calculateAverage(this.measurements.actionDurations),
-        maxActionDuration: Math.max(...(this.measurements.actionDurations || [0])),
-        minActionDuration: Math.min(...(this.measurements.actionDurations || [0])),
-        
-        averageMonitoringOverhead: this.#calculateAverage(this.measurements.monitoringOverhead),
-        maxMonitoringOverhead: Math.max(...(this.measurements.monitoringOverhead || [0])),
-        
+        averageActionDuration: this.#calculateAverage(
+          this.measurements.actionDurations
+        ),
+        maxActionDuration: Math.max(
+          ...(this.measurements.actionDurations || [0])
+        ),
+        minActionDuration: Math.min(
+          ...(this.measurements.actionDurations || [0])
+        ),
+
+        averageMonitoringOverhead: this.#calculateAverage(
+          this.measurements.monitoringOverhead
+        ),
+        maxMonitoringOverhead: Math.max(
+          ...(this.measurements.monitoringOverhead || [0])
+        ),
+
         memoryGrowth: this.#calculateMemoryGrowth(),
       },
-      
+
       monitoring: {
         totalAlerts: this.performanceMonitor.getAlerts().length,
         monitoringStatus: this.performanceMonitor.getMonitoringStatus(),
         realtimeMetrics: this.performanceMonitor.getRealtimeMetrics(),
       },
-      
+
       measurements: {
         overheadSamples: this.measurements.monitoringOverhead.length,
         durationSamples: this.measurements.actionDurations.length,
@@ -478,11 +506,11 @@ export class PerformanceMonitoringTestBed {
     this.measurements.actionDurations = [];
     this.measurements.memorySnapshots = [];
     this.measurements.alertTimestamps = [];
-    
+
     this.completedActions = [];
     this.simulatedErrors = [];
     this.activeActions.clear();
-    
+
     this.performanceMonitor.clearAlerts();
     this.performanceMonitor.clearRecordedMetrics();
   }
@@ -533,10 +561,10 @@ export class PerformanceMonitoringTestBed {
     }
     if (durationMs < 5) {
       // Use setImmediate for very short delays (faster than setTimeout)
-      return new Promise(resolve => setImmediate(resolve));
+      return new Promise((resolve) => setImmediate(resolve));
     }
     // Use setTimeout for longer delays
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       setTimeout(resolve, durationMs);
     });
   }
@@ -556,10 +584,13 @@ export class PerformanceMonitoringTestBed {
 
   #calculateMemoryGrowth() {
     if (this.measurements.memorySnapshots.length < 2) return 0;
-    
+
     const first = this.measurements.memorySnapshots[0];
-    const last = this.measurements.memorySnapshots[this.measurements.memorySnapshots.length - 1];
-    
+    const last =
+      this.measurements.memorySnapshots[
+        this.measurements.memorySnapshots.length - 1
+      ];
+
     return last.usage.estimatedSizeMB - first.usage.estimatedSizeMB;
   }
 
@@ -567,7 +598,7 @@ export class PerformanceMonitoringTestBed {
     // Rough estimation based on completed actions and their expected memory usage
     const baseMemory = 5; // 5MB base
     const memoryPerAction = 0.1; // 0.1MB per action
-    return baseMemory + (this.completedActions.length * memoryPerAction);
+    return baseMemory + this.completedActions.length * memoryPerAction;
   }
 }
 

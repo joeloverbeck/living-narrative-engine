@@ -1,18 +1,23 @@
 # New Clothing Items Specification
 
 ## Overview
+
 This specification defines three new clothing items to be added to the Living Narrative Engine clothing mod:
+
 1. Navy-blue cotton tank top
-2. Cotton twill trousers  
+2. Cotton twill trousers
 3. Leather slippers
 
 ## Analysis Summary
+
 After analyzing the existing clothing definitions in `data/mods/clothing/entities/definitions/`, the following items were confirmed as not existing:
+
 - **Tank tops**: No tank tops found (only t-shirts, crop tops, camisoles)
 - **Cotton twill trousers**: While cotton chinos exist with twill mentioned in description, no dedicated cotton twill trousers
 - **Slippers**: No slippers found (only shoes, boots, sneakers, pumps, etc.)
 
 ## Color Descriptor Requirement
+
 **Note**: The color "navy-blue" is not currently in the `descriptors:color_extended` enum. The existing options include "navy" and "deep-navy". For this specification, we'll use "navy" but recommend adding "navy-blue" to the enum if a more specific shade is desired.
 
 ## New Clothing Item Definitions
@@ -137,7 +142,9 @@ After analyzing the existing clothing definitions in `data/mods/clothing/entitie
 ## Implementation Notes
 
 ### Component Structure
+
 All three items follow the standard clothing entity pattern with:
+
 - `clothing:wearable`: Defines layer and equipment slots
 - `core:material`: Specifies the material (cotton or leather)
 - `core:name`: The display name of the item
@@ -149,23 +156,27 @@ All three items follow the standard clothing entity pattern with:
 **Important**: All torso upper garments (including sleeveless ones like tank tops) must include both left and right arm clothing slots in their equipment slots configuration. This maintains consistency with the existing clothing system and prevents layering conflicts. Even though tank tops don't physically cover the arms, they occupy these slots for proper equipment management.
 
 ### Equipment Slots
+
 - **Tank top**: `torso_upper` (primary) + `left_arm_clothing`, `right_arm_clothing` (secondary) - follows standard torso upper garment pattern
-- **Trousers**: `legs` 
+- **Trousers**: `legs`
 - **Slippers**: `feet`
 
 ### Layer Configuration
+
 - **Tank top**: Can be worn as underwear or base layer
 - **Trousers**: Can be worn as base or outer layer
 - **Slippers**: Base layer only
 
 ### Coverage Mapping
+
 - **Tank top**: Covers `torso_upper` with base priority
-- **Trousers**: Covers `torso_lower` with base priority  
+- **Trousers**: Covers `torso_lower` with base priority
 - **Slippers**: No coverage mapping (following pattern of other footwear)
 
 ## Validation Requirements
 
 Before implementation, ensure:
+
 1. All component schemas referenced exist and are properly loaded
 2. The material types (cotton, leather) are valid in the material enum
 3. The color descriptors used are valid in their respective enums
@@ -174,6 +185,7 @@ Before implementation, ensure:
 ## Testing Considerations
 
 After implementation, test:
+
 1. Items can be loaded without validation errors
 2. Items can be equipped to appropriate slots
 3. Layer conflicts are properly handled
@@ -183,6 +195,7 @@ After implementation, test:
 ## Future Enhancements
 
 Consider adding:
+
 1. More color variations (add "navy-blue" to color_extended enum)
 2. Size variants if sizing system is implemented
 3. Durability values for the material component

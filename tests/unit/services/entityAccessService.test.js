@@ -87,21 +87,27 @@ describe('resolveEntity', () => {
     const logger = new MockLogger();
     const invalidManager = {}; // missing getEntityInstance method
     expect(resolveEntity('testId', invalidManager, logger)).toBeNull();
-    expect(logger.warnMessages[0]).toContain('resolveEntity: invalid entityManager provided for ID lookup');
+    expect(logger.warnMessages[0]).toContain(
+      'resolveEntity: invalid entityManager provided for ID lookup'
+    );
   });
 
   it('logs debug message for invalid non-null entity values', () => {
     const logger = new MockLogger();
     const invalidEntity = { notAnEntity: true }; // not null/undefined but missing getComponentData
     expect(resolveEntity(invalidEntity, null, logger)).toBeNull();
-    expect(logger.debugMessages[0]).toContain('resolveEntity: provided value is not a valid entity');
+    expect(logger.debugMessages[0]).toContain(
+      'resolveEntity: provided value is not a valid entity'
+    );
   });
 
   it('logs debug message when entity resolution fails', () => {
     const logger = new MockLogger();
     const mgr = new MockManager(); // empty manager
     expect(resolveEntity('nonexistent', mgr, logger)).toBeNull();
-    expect(logger.debugMessages[0]).toContain('resolveEntity: could not resolve entity for ID');
+    expect(logger.debugMessages[0]).toContain(
+      'resolveEntity: could not resolve entity for ID'
+    );
   });
 });
 
@@ -129,17 +135,25 @@ describe('getComponent', () => {
       throw new Error('Entity method failed');
     };
 
-    const mgr = new MockManager(new Map([['testId', new MockEntity({ test: 'managerValue' })]]));
-    
+    const mgr = new MockManager(
+      new Map([['testId', new MockEntity({ test: 'managerValue' })]])
+    );
+
     // Should fall back to manager when entity method fails
-    expect(getComponent('testId', 'test', { entityManager: mgr })).toBe('managerValue');
+    expect(getComponent('testId', 'test', { entityManager: mgr })).toBe(
+      'managerValue'
+    );
   });
 
   it('falls back to manager when no entity found but ID is string', () => {
-    const mgr = new MockManager(new Map([['validId', new MockEntity({ comp: 'value' })]]));
-    
+    const mgr = new MockManager(
+      new Map([['validId', new MockEntity({ comp: 'value' })]])
+    );
+
     // Entity resolution fails but manager can still handle string ID
-    expect(getComponent('validId', 'comp', { entityManager: mgr })).toBe('value');
+    expect(getComponent('validId', 'comp', { entityManager: mgr })).toBe(
+      'value'
+    );
   });
 
   it('returns null when manager getComponentData fails', () => {
@@ -147,15 +161,15 @@ describe('getComponent', () => {
       getEntityInstance: () => null,
       getComponentData: () => {
         throw new Error('Manager failed');
-      }
+      },
     };
-    
+
     expect(getComponent('testId', 'comp', { entityManager: mgr })).toBeNull();
   });
 
   it('falls back to componentAccessService for plain objects', () => {
     const plainObject = { someProperty: 'value' };
-    
+
     // This should fall back to defaultComponentAccess.fetchComponent
     const result = getComponent(plainObject, 'nonexistentComponent');
     expect(result).toBeNull(); // ComponentAccessService returns null for non-existent components
@@ -168,9 +182,11 @@ describe('getComponent', () => {
 
     const mgr = new MockManager(new Map([['testId', failingEntity]]));
     mgr.getComponentData = () => 'managerSuccess'; // Manager returns actual value
-    
+
     // Should use the manager fallback and return the manager's result
-    expect(getComponent('testId', 'test', { entityManager: mgr })).toBe('managerSuccess');
+    expect(getComponent('testId', 'test', { entityManager: mgr })).toBe(
+      'managerSuccess'
+    );
   });
 
   it('returns null when manager fallback returns undefined', () => {
@@ -179,7 +195,7 @@ describe('getComponent', () => {
 
     const mgr = new MockManager(new Map([['testId', failingEntity]]));
     mgr.getComponentData = () => undefined; // Manager also returns undefined
-    
+
     expect(getComponent('testId', 'test', { entityManager: mgr })).toBeNull();
   });
 });
@@ -210,7 +226,9 @@ describe('setComponent', () => {
     expect(setComponent(ent, null, 'data', { logger })).toBe(false);
     expect(setComponent(ent, undefined, 'data', { logger })).toBe(false);
     expect(logger.debugMessages.length).toBeGreaterThan(0);
-    expect(logger.debugMessages[0]).toContain('setComponent: invalid componentId');
+    expect(logger.debugMessages[0]).toContain(
+      'setComponent: invalid componentId'
+    );
   });
 
   it('writes to components property when addComponent method missing', () => {
@@ -225,61 +243,73 @@ describe('setComponent', () => {
     const logger = new MockLogger();
     const ent = new MockEntityMinimal();
     expect(setComponent(ent, 'comp', 'data', { logger })).toBe(false);
-    expect(logger.debugMessages[0]).toContain('setComponent: target entity does not support component updates');
+    expect(logger.debugMessages[0]).toContain(
+      'setComponent: target entity does not support component updates'
+    );
   });
 
   it('writes via manager fallback when entity resolution fails but manager available', () => {
     const targetEntity = new MockEntityWithComponents({ existing: 'old' });
     const mgr = new MockManager(new Map([['entityId', targetEntity]]));
-    
+
     // Pass non-entity object that will fail resolveEntity but string ID should work via manager
-    expect(setComponent('entityId', 'testComp', 'testData', { entityManager: mgr })).toBe(true);
+    expect(
+      setComponent('entityId', 'testComp', 'testData', { entityManager: mgr })
+    ).toBe(true);
     expect(targetEntity.components.testComp).toBe('testData');
   });
 
   it('handles manager fallback with addComponent method', () => {
     const targetEntity = new MockEntity();
     const mgr = new MockManager(new Map([['entityId', targetEntity]]));
-    
-    expect(setComponent('entityId', 'comp', 'value', { entityManager: mgr })).toBe(true);
+
+    expect(
+      setComponent('entityId', 'comp', 'value', { entityManager: mgr })
+    ).toBe(true);
     expect(targetEntity.getComponentData('comp')).toBe('value');
   });
 
   it('returns false when manager fallback entity lacks component support', () => {
     const targetEntity = new MockEntityMinimal(); // has getComponentData but no addComponent or components
     const mgr = new MockManager(new Map([['entityId', targetEntity]]));
-    
-    expect(setComponent('entityId', 'comp', 'value', { entityManager: mgr })).toBe(false);
+
+    expect(
+      setComponent('entityId', 'comp', 'value', { entityManager: mgr })
+    ).toBe(false);
   });
 
   it('handles manager fallback with components property when addComponent unavailable', () => {
     const targetEntity = new MockEntityWithComponents({ existing: 'value' });
     // Create a manager that has full methods but different from the standard path
     const mgr = {
-      getEntityInstance: (id) => id === 'entityId' ? targetEntity : null,
+      getEntityInstance: (id) => (id === 'entityId' ? targetEntity : null),
       getComponentData: (entityId, componentId) => {
         const ent = entityId === 'entityId' ? targetEntity : null;
         return ent ? ent.getComponentData(componentId) : undefined;
-      }
+      },
     };
-    
+
     // This should trigger the manager fallback path at lines 171-177
-    expect(setComponent('entityId', 'newComp', 'newValue', { entityManager: mgr })).toBe(true);
+    expect(
+      setComponent('entityId', 'newComp', 'newValue', { entityManager: mgr })
+    ).toBe(true);
     expect(targetEntity.components.newComp).toBe('newValue');
   });
 
   it('handles manager fallback with addComponent method in manager path', () => {
     const targetEntity = new MockEntity();
     const mgr = {
-      getEntityInstance: (id) => id === 'entityId' ? targetEntity : null,
+      getEntityInstance: (id) => (id === 'entityId' ? targetEntity : null),
       getComponentData: (entityId, componentId) => {
         const ent = entityId === 'entityId' ? targetEntity : null;
         return ent ? ent.getComponentData(componentId) : undefined;
-      }
+      },
     };
-    
+
     // This should trigger the manager fallback addComponent path at lines 171-173
-    expect(setComponent('entityId', 'comp', 'value', { entityManager: mgr })).toBe(true);
+    expect(
+      setComponent('entityId', 'comp', 'value', { entityManager: mgr })
+    ).toBe(true);
     expect(targetEntity.getComponentData('comp')).toBe('value');
   });
 });

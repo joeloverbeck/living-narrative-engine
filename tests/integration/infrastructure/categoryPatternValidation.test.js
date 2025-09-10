@@ -62,7 +62,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
 
   describe('Exercise Category Pattern Validation', () => {
     it('should validate exercise category uses standard handlers', () => {
-      const factoryMethod = ModTestHandlerFactory.getHandlerFactoryForCategory('exercise');
+      const factoryMethod =
+        ModTestHandlerFactory.getHandlerFactoryForCategory('exercise');
       const handlers = factoryMethod(entityManager, eventBus, logger);
 
       // Exercise category should use standard handlers
@@ -96,8 +97,14 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       entityManager.addEntity(exerciseActor);
 
       // Validate exercise-specific components
-      assertionHelpers.assertComponentAdded('exercise-actor', 'exercise:stamina');
-      assertionHelpers.assertComponentAdded('exercise-actor', 'exercise:fitness_level');
+      assertionHelpers.assertComponentAdded(
+        'exercise-actor',
+        'exercise:stamina'
+      );
+      assertionHelpers.assertComponentAdded(
+        'exercise-actor',
+        'exercise:fitness_level'
+      );
 
       const entity = entityManager.getEntityInstance('exercise-actor');
       expect(entity.components['exercise:stamina']).toEqual({
@@ -118,11 +125,12 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       // ModTestFixture uses readFile directly, not access
       // Clear any previous mocks
       fs.promises.readFile.mockClear();
-      
+
       fs.promises.readFile
         .mockRejectedValueOnce(new Error('File not found')) // First rule path fails
         .mockRejectedValueOnce(new Error('File not found')) // Second rule path fails
-        .mockResolvedValueOnce( // Third rule path succeeds
+        .mockResolvedValueOnce(
+          // Third rule path succeeds
           JSON.stringify({
             id: 'exercise:show_off_biceps',
             category: 'exercise',
@@ -131,13 +139,17 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         )
         .mockRejectedValueOnce(new Error('File not found')) // First condition path fails
         .mockRejectedValueOnce(new Error('File not found')) // Second condition path fails
-        .mockResolvedValueOnce( // Third condition path succeeds
+        .mockResolvedValueOnce(
+          // Third condition path succeeds
           JSON.stringify({
-            condition: 'event-is-action-show-off-biceps'
+            condition: 'event-is-action-show-off-biceps',
           })
         );
 
-      const testData = await ModTestFixture.forAction('exercise', 'show_off_biceps');
+      const testData = await ModTestFixture.forAction(
+        'exercise',
+        'show_off_biceps'
+      );
       expect(testData.actionFile).toBeDefined();
 
       // Verify correct fallback pattern was used (3 rule attempts + 3 condition attempts)
@@ -159,8 +171,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         actor_id: 'exercise-actor',
         contextual_data: {
           exercise: 'jogging',
-          intensity: 'moderate'
-        }
+          intensity: 'moderate',
+        },
       });
 
       expect(eventBus.dispatch).toHaveBeenCalledWith(
@@ -172,8 +184,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
           perceptionType: 'visual',
           contextualData: expect.objectContaining({
             exercise: 'jogging',
-            intensity: 'moderate'
-          })
+            intensity: 'moderate',
+          }),
         })
       );
 
@@ -188,7 +200,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
 
   describe('Violence Category Pattern Validation', () => {
     it('should validate violence category uses standard handlers', () => {
-      const factoryMethod = ModTestHandlerFactory.getHandlerFactoryForCategory('violence');
+      const factoryMethod =
+        ModTestHandlerFactory.getHandlerFactoryForCategory('violence');
       const handlers = factoryMethod(entityManager, eventBus, logger);
 
       // Violence category should use standard handlers
@@ -207,9 +220,9 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         .withName('Aggressive Character')
         .atLocation('hostile-area')
         .withComponent('core:actor', {})
-        .withComponent('violence:aggressor', { 
-          aggressionLevel: 'high', 
-          combatSkill: 7 
+        .withComponent('violence:aggressor', {
+          aggressionLevel: 'high',
+          combatSkill: 7,
         })
         .withComponent('violence:health', { current: 100, max: 100 })
         .build();
@@ -226,7 +239,10 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       entityManager.addEntity(victimActor);
 
       // Validate violence-specific components
-      assertionHelpers.assertComponentAdded('aggressor-actor', 'violence:aggressor');
+      assertionHelpers.assertComponentAdded(
+        'aggressor-actor',
+        'violence:aggressor'
+      );
       assertionHelpers.assertComponentAdded('victim-actor', 'violence:health');
 
       const aggressor = entityManager.getEntityInstance('aggressor-actor');
@@ -251,10 +267,10 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
 
       await handlers.DISPATCH_PERCEPTIBLE_EVENT.execute([
         'VIOLENCE_INITIATED',
-        JSON.stringify({ 
-          aggressor: 'aggressor-actor', 
+        JSON.stringify({
+          aggressor: 'aggressor-actor',
           victim: 'victim-actor',
-          action: 'punch' 
+          action: 'punch',
         }),
       ]);
 
@@ -268,7 +284,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
 
   describe('Intimacy Category Pattern Validation', () => {
     it('should validate intimacy category uses standard handlers', () => {
-      const factoryMethod = ModTestHandlerFactory.getHandlerFactoryForCategory('intimacy');
+      const factoryMethod =
+        ModTestHandlerFactory.getHandlerFactoryForCategory('intimacy');
       const handlers = factoryMethod(entityManager, eventBus, logger);
 
       // Intimacy category should use standard handlers
@@ -286,14 +303,14 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         .withName('Romantic Lead')
         .atLocation('intimate-setting')
         .withComponent('core:actor', {})
-        .withComponent('intimacy:romantic_interest', { 
+        .withComponent('intimacy:romantic_interest', {
           target: 'romantic-partner',
           level: 'high',
-          relationship: 'dating'
+          relationship: 'dating',
         })
-        .withComponent('intimacy:emotional_state', { 
+        .withComponent('intimacy:emotional_state', {
           mood: 'affectionate',
-          arousal: 'moderate'
+          arousal: 'moderate',
         })
         .build();
 
@@ -302,9 +319,9 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         .atLocation('intimate-setting')
         .closeToEntity('romantic-actor')
         .withComponent('core:actor', {})
-        .withComponent('intimacy:consent', { 
+        .withComponent('intimacy:consent', {
           level: 'enthusiastic',
-          boundaries: ['kissing', 'cuddling']
+          boundaries: ['kissing', 'cuddling'],
         })
         .build();
 
@@ -312,8 +329,14 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       entityManager.addEntity(partnerActor);
 
       // Validate intimacy-specific components
-      assertionHelpers.assertComponentAdded('romantic-actor', 'intimacy:romantic_interest');
-      assertionHelpers.assertComponentAdded('romantic-partner', 'intimacy:consent');
+      assertionHelpers.assertComponentAdded(
+        'romantic-actor',
+        'intimacy:romantic_interest'
+      );
+      assertionHelpers.assertComponentAdded(
+        'romantic-partner',
+        'intimacy:consent'
+      );
 
       const romantic = entityManager.getEntityInstance('romantic-actor');
       expect(romantic.components['intimacy:romantic_interest']).toEqual({
@@ -333,10 +356,10 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       // Intimacy events are typically perceptible but private
       await handlers.DISPATCH_PERCEPTIBLE_EVENT.execute([
         'INTIMACY_INITIATED',
-        JSON.stringify({ 
+        JSON.stringify({
           participants: ['romantic-actor', 'romantic-partner'],
           action: 'kiss_cheek',
-          setting: 'private'
+          setting: 'private',
         }),
       ]);
 
@@ -352,7 +375,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
 
   describe('Sex Category Pattern Validation', () => {
     it('should validate sex category uses standard handlers', () => {
-      const factoryMethod = ModTestHandlerFactory.getHandlerFactoryForCategory('sex');
+      const factoryMethod =
+        ModTestHandlerFactory.getHandlerFactoryForCategory('sex');
       const handlers = factoryMethod(entityManager, eventBus, logger);
 
       // Sex category should use standard handlers (same as intimacy)
@@ -369,13 +393,13 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         .withName('Adult Participant')
         .atLocation('private-bedroom')
         .withComponent('core:actor', {})
-        .withComponent('sex:participant', { 
+        .withComponent('sex:participant', {
           experience: 'experienced',
-          preferences: ['gentle', 'communicative']
+          preferences: ['gentle', 'communicative'],
         })
         .withComponent('sex:anatomy', {
           bodyType: 'adult',
-          sensitiveAreas: ['neck', 'back']
+          sensitiveAreas: ['neck', 'back'],
         })
         .build();
 
@@ -384,10 +408,10 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         .atLocation('private-bedroom')
         .closeToEntity('adult-participant')
         .withComponent('core:actor', {})
-        .withComponent('sex:consent', { 
+        .withComponent('sex:consent', {
           explicit: true,
           boundaries: ['safe_words', 'communication'],
-          comfort_level: 'high'
+          comfort_level: 'high',
         })
         .build();
 
@@ -395,8 +419,14 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       entityManager.addEntity(consentingPartner);
 
       // Validate sex-specific components
-      assertionHelpers.assertComponentAdded('adult-participant', 'sex:participant');
-      assertionHelpers.assertComponentAdded('consenting-partner', 'sex:consent');
+      assertionHelpers.assertComponentAdded(
+        'adult-participant',
+        'sex:participant'
+      );
+      assertionHelpers.assertComponentAdded(
+        'consenting-partner',
+        'sex:consent'
+      );
 
       const participant = entityManager.getEntityInstance('adult-participant');
       expect(participant.components['sex:participant']).toEqual({
@@ -415,11 +445,11 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       // Sex events are perceptible to participants but private
       await handlers.DISPATCH_PERCEPTIBLE_EVENT.execute([
         'SEXUAL_ACTION',
-        JSON.stringify({ 
+        JSON.stringify({
           participants: ['adult-participant', 'consenting-partner'],
           action: 'caress',
           intensity: 'gentle',
-          consent_confirmed: true
+          consent_confirmed: true,
         }),
       ]);
 
@@ -433,7 +463,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
 
   describe('Positioning Category Pattern Validation', () => {
     it('should validate positioning category uses handlers with ADD_COMPONENT', () => {
-      const factoryMethod = ModTestHandlerFactory.getHandlerFactoryForCategory('positioning');
+      const factoryMethod =
+        ModTestHandlerFactory.getHandlerFactoryForCategory('positioning');
       const handlers = factoryMethod(entityManager, eventBus, logger);
 
       // Positioning category MUST have ADD_COMPONENT handler
@@ -457,24 +488,24 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         .withName('Mobile Character')
         .atLocation('furnished-room')
         .withComponent('core:actor', {})
-        .withComponent('positioning:standing', { 
+        .withComponent('positioning:standing', {
           posture: 'upright',
-          balance: 'stable'
+          balance: 'stable',
         })
-        .withComponent('positioning:mobility', { 
+        .withComponent('positioning:mobility', {
           speed: 'normal',
-          agility: 'high'
+          agility: 'high',
         })
         .build();
 
       const furniture = new ModEntityBuilder('comfortable-chair')
         .withName('Comfortable Chair')
         .atLocation('furnished-room')
-        .withComponent('positioning:furniture', { 
+        .withComponent('positioning:furniture', {
           type: 'chair',
           capacity: 1,
           available: true,
-          comfort_level: 'high'
+          comfort_level: 'high',
         })
         .build();
 
@@ -482,8 +513,14 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       entityManager.addEntity(furniture);
 
       // Validate positioning-specific components
-      assertionHelpers.assertComponentAdded('mobile-actor', 'positioning:standing');
-      assertionHelpers.assertComponentAdded('comfortable-chair', 'positioning:furniture');
+      assertionHelpers.assertComponentAdded(
+        'mobile-actor',
+        'positioning:standing'
+      );
+      assertionHelpers.assertComponentAdded(
+        'comfortable-chair',
+        'positioning:furniture'
+      );
 
       const actor = entityManager.getEntityInstance('mobile-actor');
       expect(actor.components['positioning:standing']).toEqual({
@@ -516,14 +553,18 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         value: {
           furniture: 'chair',
           comfort: 'comfortable',
-          transition: 'smooth'
-        }
+          transition: 'smooth',
+        },
       });
 
       // Verify component was added
-      assertionHelpers.assertComponentAdded('positionable-actor', 'positioning:sitting');
+      assertionHelpers.assertComponentAdded(
+        'positionable-actor',
+        'positioning:sitting'
+      );
 
-      const updatedActor = entityManager.getEntityInstance('positionable-actor');
+      const updatedActor =
+        entityManager.getEntityInstance('positionable-actor');
       expect(updatedActor.components).toHaveProperty('positioning:sitting');
       expect(updatedActor.components['positioning:sitting']).toEqual({
         furniture: 'chair',
@@ -545,9 +586,10 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       // ModTestFixture uses readFile directly, not access
       // Clear any previous mocks
       fs.promises.readFile.mockClear();
-      
+
       fs.promises.readFile
-        .mockResolvedValueOnce( // Rule file succeeds on first attempt
+        .mockResolvedValueOnce(
+          // Rule file succeeds on first attempt
           JSON.stringify({
             id: 'positioning:sit_on_chair',
             category: 'positioning',
@@ -555,18 +597,26 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
             effects: [
               {
                 operation: 'ADD_COMPONENT',
-                args: ['self', 'positioning:sitting', '{"furniture": "{{FURNITURE}}"}'],
+                args: [
+                  'self',
+                  'positioning:sitting',
+                  '{"furniture": "{{FURNITURE}}"}',
+                ],
               },
             ],
           })
         )
-        .mockResolvedValueOnce( // Condition file succeeds on first attempt
+        .mockResolvedValueOnce(
+          // Condition file succeeds on first attempt
           JSON.stringify({
-            condition: 'event-is-action-sit-on-chair'
+            condition: 'event-is-action-sit-on-chair',
           })
         );
 
-      const testData = await ModTestFixture.forAction('positioning', 'sit_on_chair');
+      const testData = await ModTestFixture.forAction(
+        'positioning',
+        'sit_on_chair'
+      );
       expect(testData.actionFile).toBeDefined();
 
       const actionData = JSON.parse(testData.actionFile);
@@ -577,23 +627,33 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
 
   describe('Cross-Category Pattern Consistency', () => {
     it('should validate consistent handler factory selection across categories', () => {
-      const categories = ['exercise', 'violence', 'intimacy', 'sex', 'positioning'];
+      const categories = [
+        'exercise',
+        'violence',
+        'intimacy',
+        'sex',
+        'positioning',
+      ];
       const factoryResults = {};
 
-      categories.forEach(category => {
-        const factoryMethod = ModTestHandlerFactory.getHandlerFactoryForCategory(category);
+      categories.forEach((category) => {
+        const factoryMethod =
+          ModTestHandlerFactory.getHandlerFactoryForCategory(category);
         const handlers = factoryMethod(entityManager, eventBus, logger);
         factoryResults[category] = {
           handlerCount: Object.keys(handlers).length,
-          hasAddComponent: Object.prototype.hasOwnProperty.call(handlers, 'ADD_COMPONENT'),
-          commonHandlers: ['GET_NAME', 'END_TURN', 'LOG_MESSAGE'].every(h => 
+          hasAddComponent: Object.prototype.hasOwnProperty.call(
+            handlers,
+            'ADD_COMPONENT'
+          ),
+          commonHandlers: ['GET_NAME', 'END_TURN', 'LOG_MESSAGE'].every((h) =>
             Object.prototype.hasOwnProperty.call(handlers, h)
           ),
         };
       });
 
       // Standard categories should have 8 handlers
-      ['exercise', 'violence', 'intimacy', 'sex'].forEach(category => {
+      ['exercise', 'violence', 'intimacy', 'sex'].forEach((category) => {
         expect(factoryResults[category].handlerCount).toBe(8);
         expect(factoryResults[category].hasAddComponent).toBe(false);
         expect(factoryResults[category].commonHandlers).toBe(true);
@@ -639,7 +699,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       };
 
       // All entities should have consistent base structure
-      Object.values(categoryEntities).forEach(entity => {
+      Object.values(categoryEntities).forEach((entity) => {
         expect(entity).toHaveProperty('id');
         expect(entity).toHaveProperty('components');
         expect(entity.components).toHaveProperty('core:actor');
@@ -647,17 +707,31 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       });
 
       // Category-specific components should be present
-      expect(categoryEntities.exercise.components).toHaveProperty('exercise:stamina');
-      expect(categoryEntities.violence.components).toHaveProperty('violence:health');
-      expect(categoryEntities.intimacy.components).toHaveProperty('intimacy:consent');
+      expect(categoryEntities.exercise.components).toHaveProperty(
+        'exercise:stamina'
+      );
+      expect(categoryEntities.violence.components).toHaveProperty(
+        'violence:health'
+      );
+      expect(categoryEntities.intimacy.components).toHaveProperty(
+        'intimacy:consent'
+      );
       expect(categoryEntities.sex.components).toHaveProperty('sex:consent');
-      expect(categoryEntities.positioning.components).toHaveProperty('positioning:standing');
+      expect(categoryEntities.positioning.components).toHaveProperty(
+        'positioning:standing'
+      );
     });
 
     it('should validate consistent assertion patterns across categories', () => {
-      const testCategories = ['exercise', 'violence', 'intimacy', 'sex', 'positioning'];
-      
-      testCategories.forEach(category => {
+      const testCategories = [
+        'exercise',
+        'violence',
+        'intimacy',
+        'sex',
+        'positioning',
+      ];
+
+      testCategories.forEach((category) => {
         const actor = new ModEntityBuilder(`${category}-test-actor`)
           .withName(`${category} Test Actor`)
           .withComponent('core:actor', {})
@@ -685,44 +759,57 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
     });
 
     it('should validate consistent file loading patterns across categories', async () => {
-      const testCategories = ['exercise', 'violence', 'intimacy', 'sex', 'positioning'];
-      
+      const testCategories = [
+        'exercise',
+        'violence',
+        'intimacy',
+        'sex',
+        'positioning',
+      ];
+
       // Clear any previous mocks and reset
       fs.promises.readFile.mockReset();
-      
+
       // Mock successful file loading for all categories
       // ModTestFixture uses readFile directly, not access
       // Use path-based mocking to handle parallel execution correctly
       fs.promises.readFile.mockImplementation((filePath) => {
         // Extract the category from the file path
         const pathStr = filePath.toString();
-        
+
         // Check which category this path belongs to
         for (const category of testCategories) {
           if (pathStr.includes(`mods/${category}/`)) {
             // Check if this is a rule file or condition file
             if (pathStr.includes('/rules/')) {
               // Return rule file for this category
-              return Promise.resolve(JSON.stringify({
-                id: `${category}:test_action`,
-                category: category,
-                name: `Test ${category} Action`,
-              }));
+              return Promise.resolve(
+                JSON.stringify({
+                  id: `${category}:test_action`,
+                  category: category,
+                  name: `Test ${category} Action`,
+                })
+              );
             } else if (pathStr.includes('/conditions/')) {
               // Return condition file
-              return Promise.resolve(JSON.stringify({
-                condition: `event-is-action-test-action`
-              }));
+              return Promise.resolve(
+                JSON.stringify({
+                  condition: `event-is-action-test-action`,
+                })
+              );
             }
           }
         }
-        
+
         // If path doesn't match any expected pattern, reject
         return Promise.reject(new Error(`File not found: ${filePath}`));
       });
-      
+
       const loadPromises = testCategories.map(async (category) => {
-        const testData = await ModTestFixture.forAction(category, 'test_action');
+        const testData = await ModTestFixture.forAction(
+          category,
+          'test_action'
+        );
         expect(testData.actionFile).toBeDefined();
 
         const actionData = JSON.parse(testData.actionFile);
@@ -731,7 +818,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       });
 
       const results = await Promise.all(loadPromises);
-      
+
       // All categories should successfully load with consistent structure
       results.forEach((actionData, index) => {
         expect(actionData).toHaveProperty('id');
@@ -744,16 +831,23 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
 
   describe('Unknown Category Pattern Validation', () => {
     it('should validate unknown categories default to standard handlers', () => {
-      const unknownCategories = ['custom', 'fantasy', 'scifi', 'horror', 'comedy'];
-      
-      unknownCategories.forEach(category => {
-        const factoryMethod = ModTestHandlerFactory.getHandlerFactoryForCategory(category);
+      const unknownCategories = [
+        'custom',
+        'fantasy',
+        'scifi',
+        'horror',
+        'comedy',
+      ];
+
+      unknownCategories.forEach((category) => {
+        const factoryMethod =
+          ModTestHandlerFactory.getHandlerFactoryForCategory(category);
         const handlers = factoryMethod(entityManager, eventBus, logger);
-        
+
         // Unknown categories should default to standard handlers (8 handlers)
         expect(Object.keys(handlers)).toHaveLength(8);
         expect(handlers).not.toHaveProperty('ADD_COMPONENT');
-        
+
         // Should have all standard handlers
         expect(handlers).toHaveProperty('QUERY_COMPONENT');
         expect(handlers).toHaveProperty('GET_NAME');
@@ -768,12 +862,13 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
 
     it('should validate empty/null categories handle gracefully', () => {
       const edgeCases = ['', null, undefined, 'unknown'];
-      
-      edgeCases.forEach(category => {
-        const factoryMethod = ModTestHandlerFactory.getHandlerFactoryForCategory(category);
+
+      edgeCases.forEach((category) => {
+        const factoryMethod =
+          ModTestHandlerFactory.getHandlerFactoryForCategory(category);
         expect(factoryMethod).toBeDefined();
         expect(typeof factoryMethod).toBe('function');
-        
+
         const handlers = factoryMethod(entityManager, eventBus, logger);
         expect(handlers).toBeDefined();
         expect(Object.keys(handlers)).toHaveLength(8); // Default to standard handlers

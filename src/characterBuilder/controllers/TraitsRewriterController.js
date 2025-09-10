@@ -287,14 +287,16 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
       'core:relationships',
     ];
 
-    const hasTraits = traitKeys.some((key) => parsed.components && parsed.components[key]);
+    const hasTraits = traitKeys.some(
+      (key) => parsed.components && parsed.components[key]
+    );
     if (!hasTraits) {
       throw new TraitsRewriterError(
         'Character definition must include at least one trait to rewrite inside the components property',
         'NO_TRAITS',
-        { 
-          availableComponents: Object.keys(parsed.components), 
-          expectedTraitKeys: traitKeys 
+        {
+          availableComponents: Object.keys(parsed.components),
+          expectedTraitKeys: traitKeys,
         }
       );
     }

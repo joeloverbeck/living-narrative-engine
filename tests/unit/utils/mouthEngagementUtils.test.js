@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, jest } from '@jest/globals';
 import {
   updateMouthEngagementLock,
   isMouthLocked,
-  getMouthParts
+  getMouthParts,
 } from '../../../src/utils/mouthEngagementUtils.js';
 
 const createMockEntityManager = () => ({
@@ -29,7 +29,7 @@ describe('mouthEngagementUtils', () => {
         await expect(
           updateMouthEngagementLock(mockEntityManager, '', true)
         ).rejects.toThrow('Valid entityId string is required');
-        
+
         await expect(
           updateMouthEngagementLock(mockEntityManager, null, true)
         ).rejects.toThrow('Valid entityId string is required');
@@ -46,14 +46,16 @@ describe('mouthEngagementUtils', () => {
       test('should lock mouth part in anatomy-based entity', async () => {
         // Setup anatomy structure
         mockEntityManager.getComponentData
-          .mockReturnValueOnce({ // anatomy:body
+          .mockReturnValueOnce({
+            // anatomy:body
             body: {
               root: 'torso_1',
-              parts: { mouth: 'mouth_1' }
-            }
+              parts: { mouth: 'mouth_1' },
+            },
           })
-          .mockReturnValueOnce({ // anatomy:part
-            subType: 'mouth'
+          .mockReturnValueOnce({
+            // anatomy:part
+            subType: 'mouth',
           })
           .mockReturnValueOnce(null); // No existing engagement
 
@@ -66,11 +68,13 @@ describe('mouthEngagementUtils', () => {
 
         // Verify
         expect(result).toEqual({
-          updatedParts: [{
-            partId: 'mouth_1',
-            engagement: { locked: true, forcedOverride: false }
-          }],
-          locked: true
+          updatedParts: [
+            {
+              partId: 'mouth_1',
+              engagement: { locked: true, forcedOverride: false },
+            },
+          ],
+          locked: true,
         });
 
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
@@ -83,18 +87,21 @@ describe('mouthEngagementUtils', () => {
       test('should unlock mouth part in anatomy-based entity', async () => {
         // Setup anatomy structure with existing engagement
         mockEntityManager.getComponentData
-          .mockReturnValueOnce({ // anatomy:body
+          .mockReturnValueOnce({
+            // anatomy:body
             body: {
               root: 'torso_1',
-              parts: { mouth: 'mouth_1' }
-            }
+              parts: { mouth: 'mouth_1' },
+            },
           })
-          .mockReturnValueOnce({ // anatomy:part
-            subType: 'mouth'
+          .mockReturnValueOnce({
+            // anatomy:part
+            subType: 'mouth',
           })
-          .mockReturnValueOnce({ // Existing engagement
+          .mockReturnValueOnce({
+            // Existing engagement
             locked: true,
-            forcedOverride: false
+            forcedOverride: false,
           });
 
         // Execute
@@ -106,11 +113,13 @@ describe('mouthEngagementUtils', () => {
 
         // Verify
         expect(result).toEqual({
-          updatedParts: [{
-            partId: 'mouth_1',
-            engagement: { locked: false, forcedOverride: false }
-          }],
-          locked: false
+          updatedParts: [
+            {
+              partId: 'mouth_1',
+              engagement: { locked: false, forcedOverride: false },
+            },
+          ],
+          locked: false,
         });
 
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
@@ -123,14 +132,15 @@ describe('mouthEngagementUtils', () => {
       test('should handle multiple mouth parts', async () => {
         // Setup entity with two mouths
         mockEntityManager.getComponentData
-          .mockReturnValueOnce({ // anatomy:body
+          .mockReturnValueOnce({
+            // anatomy:body
             body: {
               root: 'torso_1',
-              parts: { 
+              parts: {
                 mouth: 'mouth_1',
-                secondary_mouth: 'mouth_2'
-              }
-            }
+                secondary_mouth: 'mouth_2',
+              },
+            },
           })
           .mockReturnValueOnce({ subType: 'mouth' }) // mouth_1 part
           .mockReturnValueOnce(null) // mouth_1 engagement
@@ -152,11 +162,12 @@ describe('mouthEngagementUtils', () => {
       test('should return null if no mouth parts found', async () => {
         // Setup entity without mouth
         mockEntityManager.getComponentData
-          .mockReturnValueOnce({ // anatomy:body
+          .mockReturnValueOnce({
+            // anatomy:body
             body: {
               root: 'torso_1',
-              parts: { head: 'head_1' } // No mouth
-            }
+              parts: { head: 'head_1' }, // No mouth
+            },
           })
           .mockReturnValueOnce({ subType: 'head' }); // Not a mouth
 
@@ -175,15 +186,16 @@ describe('mouthEngagementUtils', () => {
       test('should skip non-mouth parts', async () => {
         // Setup entity with mixed parts
         mockEntityManager.getComponentData
-          .mockReturnValueOnce({ // anatomy:body
+          .mockReturnValueOnce({
+            // anatomy:body
             body: {
               root: 'torso_1',
-              parts: { 
+              parts: {
                 head: 'head_1',
                 mouth: 'mouth_1',
-                hand: 'hand_1'
-              }
-            }
+                hand: 'hand_1',
+              },
+            },
           })
           .mockReturnValueOnce({ subType: 'head' }) // head part
           .mockReturnValueOnce({ subType: 'mouth' }) // mouth part
@@ -209,9 +221,10 @@ describe('mouthEngagementUtils', () => {
         // Setup legacy entity
         mockEntityManager.getComponentData
           .mockReturnValueOnce(null) // No anatomy:body
-          .mockReturnValueOnce({ // Existing engagement
+          .mockReturnValueOnce({
+            // Existing engagement
             locked: false,
-            forcedOverride: false
+            forcedOverride: false,
           });
 
         // Execute
@@ -256,9 +269,10 @@ describe('mouthEngagementUtils', () => {
         // Setup
         mockEntityManager.getComponentData
           .mockReturnValueOnce(null) // No anatomy:body
-          .mockReturnValueOnce({ // Existing engagement with forcedOverride
+          .mockReturnValueOnce({
+            // Existing engagement with forcedOverride
             locked: false,
-            forcedOverride: true
+            forcedOverride: true,
           });
 
         // Execute
@@ -281,11 +295,12 @@ describe('mouthEngagementUtils', () => {
   describe('isMouthLocked', () => {
     test('should return true if anatomy mouth is locked', () => {
       mockEntityManager.getComponentData
-        .mockReturnValueOnce({ // anatomy:body
+        .mockReturnValueOnce({
+          // anatomy:body
           body: {
             root: 'torso_1',
-            parts: { mouth: 'mouth_1' }
-          }
+            parts: { mouth: 'mouth_1' },
+          },
         })
         .mockReturnValueOnce({ subType: 'mouth' })
         .mockReturnValueOnce({ locked: true });
@@ -296,11 +311,12 @@ describe('mouthEngagementUtils', () => {
 
     test('should return false if no mouths are locked', () => {
       mockEntityManager.getComponentData
-        .mockReturnValueOnce({ // anatomy:body
+        .mockReturnValueOnce({
+          // anatomy:body
           body: {
             root: 'torso_1',
-            parts: { mouth: 'mouth_1' }
-          }
+            parts: { mouth: 'mouth_1' },
+          },
         })
         .mockReturnValueOnce({ subType: 'mouth' })
         .mockReturnValueOnce({ locked: false });
@@ -344,14 +360,15 @@ describe('mouthEngagementUtils', () => {
 
     test('should return true if any mouth in multi-mouth entity is locked', () => {
       mockEntityManager.getComponentData
-        .mockReturnValueOnce({ // anatomy:body
+        .mockReturnValueOnce({
+          // anatomy:body
           body: {
             root: 'torso_1',
-            parts: { 
+            parts: {
               mouth: 'mouth_1',
-              secondary_mouth: 'mouth_2'
-            }
-          }
+              secondary_mouth: 'mouth_2',
+            },
+          },
         })
         .mockReturnValueOnce({ subType: 'mouth' }) // mouth_1 part
         .mockReturnValueOnce({ locked: false }) // mouth_1 not locked
@@ -369,31 +386,35 @@ describe('mouthEngagementUtils', () => {
       const engagement = { locked: false, forcedOverride: false };
 
       mockEntityManager.getComponentData
-        .mockReturnValueOnce({ // anatomy:body
+        .mockReturnValueOnce({
+          // anatomy:body
           body: {
             root: 'torso_1',
-            parts: { mouth: 'mouth_1' }
-          }
+            parts: { mouth: 'mouth_1' },
+          },
         })
         .mockReturnValueOnce(partComponent)
         .mockReturnValueOnce(engagement);
 
       const result = getMouthParts(mockEntityManager, 'entity_1');
-      
-      expect(result).toEqual([{
-        partId: 'mouth_1',
-        partComponent,
-        engagement
-      }]);
+
+      expect(result).toEqual([
+        {
+          partId: 'mouth_1',
+          partComponent,
+          engagement,
+        },
+      ]);
     });
 
     test('should return empty array for entity without mouths', () => {
       mockEntityManager.getComponentData
-        .mockReturnValueOnce({ // anatomy:body
+        .mockReturnValueOnce({
+          // anatomy:body
           body: {
             root: 'torso_1',
-            parts: { head: 'head_1' }
-          }
+            parts: { head: 'head_1' },
+          },
         })
         .mockReturnValueOnce({ subType: 'head' }); // Not a mouth
 
@@ -417,22 +438,25 @@ describe('mouthEngagementUtils', () => {
       const partComponent = { subType: 'mouth', name: 'mouth' };
 
       mockEntityManager.getComponentData
-        .mockReturnValueOnce({ // anatomy:body
+        .mockReturnValueOnce({
+          // anatomy:body
           body: {
             root: 'torso_1',
-            parts: { mouth: 'mouth_1' }
-          }
+            parts: { mouth: 'mouth_1' },
+          },
         })
         .mockReturnValueOnce(partComponent)
         .mockReturnValueOnce(null); // No engagement
 
       const result = getMouthParts(mockEntityManager, 'entity_1');
-      
-      expect(result).toEqual([{
-        partId: 'mouth_1',
-        partComponent,
-        engagement: null
-      }]);
+
+      expect(result).toEqual([
+        {
+          partId: 'mouth_1',
+          partComponent,
+          engagement: null,
+        },
+      ]);
     });
 
     test('should return multiple mouth parts', () => {
@@ -442,14 +466,15 @@ describe('mouthEngagementUtils', () => {
       const engagement2 = { locked: false, forcedOverride: false };
 
       mockEntityManager.getComponentData
-        .mockReturnValueOnce({ // anatomy:body
+        .mockReturnValueOnce({
+          // anatomy:body
           body: {
             root: 'torso_1',
-            parts: { 
+            parts: {
               mouth: 'mouth_1',
-              secondary_mouth: 'mouth_2'
-            }
-          }
+              secondary_mouth: 'mouth_2',
+            },
+          },
         })
         .mockReturnValueOnce(partComponent1)
         .mockReturnValueOnce(engagement1)
@@ -457,7 +482,7 @@ describe('mouthEngagementUtils', () => {
         .mockReturnValueOnce(engagement2);
 
       const result = getMouthParts(mockEntityManager, 'entity_1');
-      
+
       expect(result).toHaveLength(2);
       expect(result[0].partId).toBe('mouth_1');
       expect(result[1].partId).toBe('mouth_2');

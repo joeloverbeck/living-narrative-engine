@@ -463,7 +463,7 @@ export class StorageTestBed {
    */
   #createMockDirectoryManager() {
     const cachedDirectories = new Set();
-    
+
     return {
       ensureDirectoryExists: jest.fn(async (directoryPath) => {
         // Simple mock that succeeds for valid paths
@@ -472,7 +472,7 @@ export class StorageTestBed {
           .replace(/^\.\//, '')
           .replace(/\/+/g, '/')
           .replace(/\/$/, '');
-          
+
         // Validate for invalid patterns
         if (normalizedPath.includes('../') || normalizedPath.includes('\0')) {
           return {
@@ -485,12 +485,12 @@ export class StorageTestBed {
             errors: ['Path contains directory traversal sequences'],
           };
         }
-        
+
         const cached = cachedDirectories.has(normalizedPath);
         if (!cached) {
           cachedDirectories.add(normalizedPath);
         }
-        
+
         const result = {
           success: true,
           path: normalizedPath,
@@ -498,41 +498,41 @@ export class StorageTestBed {
           created: !cached,
           writable: true,
         };
-        
+
         // Only add cached property if it's true
         if (cached) {
           result.cached = true;
         }
-        
+
         return result;
       }),
-      
+
       validateDirectoryPath: jest.fn((directoryPath) => {
         const normalizedPath = directoryPath
           .replace(/\\/g, '/')
           .replace(/^\.\//, '')
           .replace(/\/+/g, '/')
           .replace(/\/$/, '');
-          
+
         const errors = [];
-        
+
         if (normalizedPath.includes('../')) {
           errors.push('Path contains directory traversal sequences');
         }
-        
+
         if (normalizedPath.includes('\0')) {
           errors.push('Path contains null bytes');
         }
-        
+
         if (normalizedPath.length > 255) {
           errors.push('Path exceeds maximum length (255 characters)');
         }
-        
+
         const invalidChars = /[<>:"|?*\0]/;
         if (invalidChars.test(normalizedPath)) {
           errors.push('Path contains invalid characters');
         }
-        
+
         // Check for reserved names
         const reservedNames = ['con', 'prn', 'aux', 'nul', 'com1', 'lpt1'];
         const segments = normalizedPath.split('/');
@@ -541,32 +541,32 @@ export class StorageTestBed {
             errors.push(`Path contains reserved name: ${segment}`);
           }
         }
-        
+
         return {
           isValid: errors.length === 0,
           errors,
           normalizedPath,
         };
       }),
-      
+
       selectDirectory: jest.fn(async () => {
         return {
           name: 'test-directory',
           kind: 'directory',
         };
       }),
-      
+
       ensureSubdirectoryExists: jest.fn(async (parentHandle, subdirName) => {
         return {
           name: `${parentHandle.name || 'parent'}/${subdirName}`,
           kind: 'directory',
         };
       }),
-      
+
       clearCache: jest.fn(() => {
         cachedDirectories.clear();
       }),
-      
+
       getCachedDirectories: jest.fn(() => {
         return Array.from(cachedDirectories);
       }),
@@ -591,7 +591,7 @@ export class StorageTestBed {
     const originalNow = Date.now;
     const startTime = originalNow();
     Date.now = jest.fn(() => startTime + milliseconds);
-    
+
     // Register cleanup to restore Date.now
     this.addCleanupTask(() => {
       Date.now = originalNow;

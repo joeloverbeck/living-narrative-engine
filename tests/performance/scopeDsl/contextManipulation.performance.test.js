@@ -1,7 +1,7 @@
 /**
  * @file Context Manipulation Performance Test Suite
  * @description Performance tests for context manipulation operations in ScopeDSL
- * 
+ *
  * Tests extracted from E2E tests to ensure proper performance measurement isolation.
  * Focuses on context size limits, merging performance, and scalability analysis.
  */
@@ -146,7 +146,10 @@ describe('Context Manipulation Performance', () => {
       }
 
       // Log performance metrics for analysis
-      console.log('Context Manipulation Performance Metrics:', performanceMetrics);
+      console.log(
+        'Context Manipulation Performance Metrics:',
+        performanceMetrics
+      );
     });
   });
 
@@ -157,7 +160,9 @@ describe('Context Manipulation Performance', () => {
 
       for (const size of sizes) {
         const context = {
-          actorEntity: createEntityInstance({ instanceId: `validation_actor_${size}` }),
+          actorEntity: createEntityInstance({
+            instanceId: `validation_actor_${size}`,
+          }),
           runtimeCtx: { entityManager },
           dispatcher: { resolve: async () => new Set() },
           cycleDetector: { enter: () => true, leave: () => {} },
@@ -167,10 +172,10 @@ describe('Context Manipulation Performance', () => {
 
         // Add properties for validation testing
         for (let i = 0; i < size; i++) {
-          context[`validation_prop_${i}`] = { 
-            type: 'test', 
+          context[`validation_prop_${i}`] = {
+            type: 'test',
             value: `test_value_${i}`,
-            metadata: { index: i, category: 'performance_test' }
+            metadata: { index: i, category: 'performance_test' },
           };
         }
 
@@ -199,7 +204,9 @@ describe('Context Manipulation Performance', () => {
 
       for (const size of mergingSizes) {
         const baseContext = {
-          actorEntity: createEntityInstance({ instanceId: `merge_base_${size}` }),
+          actorEntity: createEntityInstance({
+            instanceId: `merge_base_${size}`,
+          }),
           runtimeCtx: { entityManager },
           dispatcher: { resolve: async () => new Set() },
           cycleDetector: { enter: () => true, leave: () => {} },

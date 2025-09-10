@@ -24,9 +24,7 @@
         "default": "average"
       }
     },
-    "required": [
-      "build"
-    ],
+    "required": ["build"],
     "additionalProperties": false
   }
 }

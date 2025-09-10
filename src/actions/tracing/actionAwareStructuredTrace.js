@@ -629,7 +629,12 @@ class ActionAwareStructuredTrace extends StructuredTrace {
    * @param {object} evaluationData - Scope evaluation data
    * @param {object} [enhancedData] - Enhanced evaluation details from resolvers
    */
-  captureScopeEvaluation(actionId, targetKey, evaluationData, enhancedData = null) {
+  captureScopeEvaluation(
+    actionId,
+    targetKey,
+    evaluationData,
+    enhancedData = null
+  ) {
     if (!this.#actionTraceFilter.shouldTrace(actionId)) {
       return;
     }
@@ -671,26 +676,26 @@ class ActionAwareStructuredTrace extends StructuredTrace {
     }
 
     // Extract entity discovery data from trace logs
-    const entityDiscoveryLogs = traceLogs.filter(log => 
-      log.source === 'ScopeEngine.entityDiscovery'
+    const entityDiscoveryLogs = traceLogs.filter(
+      (log) => log.source === 'ScopeEngine.entityDiscovery'
     );
 
     // Extract filter evaluation data from trace logs
-    const filterEvaluationLogs = traceLogs.filter(log => 
-      log.source === 'ScopeEngine.filterEvaluation'
+    const filterEvaluationLogs = traceLogs.filter(
+      (log) => log.source === 'ScopeEngine.filterEvaluation'
     );
 
     const enhancedData = {
       scope,
       timestamp: Date.now(),
-      entityDiscovery: entityDiscoveryLogs.map(log => ({
+      entityDiscovery: entityDiscoveryLogs.map((log) => ({
         componentId: log.data?.componentId,
         totalEntities: log.data?.totalEntities,
         foundEntities: log.data?.foundEntities,
         entityDetails: log.data?.entityDetails,
-        resultIds: log.data?.resultIds
+        resultIds: log.data?.resultIds,
       })),
-      filterEvaluations: filterEvaluationLogs.map(log => ({
+      filterEvaluations: filterEvaluationLogs.map((log) => ({
         itemId: log.data?.itemId,
         filterPassed: log.data?.filterPassed,
         evaluationResult: log.data?.evaluationResult,
@@ -699,12 +704,12 @@ class ActionAwareStructuredTrace extends StructuredTrace {
           hasAllowsSittingComponent: log.data?.hasAllowsSittingComponent,
           actorLocationId: log.data?.actorLocationId,
           entityLocationId: log.data?.entityLocationId,
-          allowsSittingSpots: log.data?.allowsSittingSpots
+          allowsSittingSpots: log.data?.allowsSittingSpots,
         },
         locationMismatch: log.data?.locationMismatch,
         spotAvailability: log.data?.spotAvailability,
-        filterAnalysis: log.data?.filterAnalysis
-      }))
+        filterAnalysis: log.data?.filterAnalysis,
+      })),
     };
 
     // Store in a special enhanced scope evaluation stage

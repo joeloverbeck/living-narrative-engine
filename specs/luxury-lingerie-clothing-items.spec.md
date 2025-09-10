@@ -26,7 +26,7 @@
 
 - Addition of 5 new luxury clothing items with complete specifications
 - Extension of material system to include "microfiber" and "satin"
-- Extension of color descriptor system to include "taupe" and "smoke-black" 
+- Extension of color descriptor system to include "taupe" and "smoke-black"
 - Extension of texture system to include "matte"
 - Proper integration with existing clothing architecture
 
@@ -52,7 +52,7 @@ This specification defines the addition of 5 new luxury clothing items to the Li
 
 1. **Satin cowl neck camisole** - Luxurious upper body undergarment
 2. **Seamless plunge bra (microfiber, nude color)** - Modern intimate apparel with different material from existing silk version
-3. **High-waisted pencil skirt (black)** - Professional fitted lower body garment  
+3. **High-waisted pencil skirt (black)** - Professional fitted lower body garment
 4. **Matte sheer tights (smoke black)** - Sophisticated hosiery
 5. **Block-heel slingbacks (leather, taupe)** - Elegant professional footwear
 
@@ -181,10 +181,11 @@ The system SHALL extend the texture descriptor system:
 **REQUIRED MODIFICATION:**
 
 Add to existing enum array:
+
 ```json
 "enum": [
   "linen",
-  "denim", 
+  "denim",
   "silk",
   "stretch-silk",
   "leather",
@@ -215,6 +216,7 @@ Add to existing enum array:
 **REQUIRED MODIFICATION:**
 
 Add to existing enum array:
+
 ```json
 "enum": [
   "amber",
@@ -243,6 +245,7 @@ Add to existing enum array:
 **REQUIRED MODIFICATION:**
 
 Add to existing enum array:
+
 ```json
 "enum": [
   "smooth",
@@ -596,7 +599,7 @@ The new items can be combined to create sophisticated professional looks:
 ```
 Professional Look:
 - Seamless plunge bra (microfiber, nude) - torso_upper, underwear
-- Matte sheer tights (smoke black) - feet, underwear  
+- Matte sheer tights (smoke black) - feet, underwear
 - High-waisted pencil skirt (black) - torso_lower, base
 - Block-heel slingbacks (taupe) - feet, base
 ```

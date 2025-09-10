@@ -221,14 +221,14 @@ describe('scopeReferenceResolver', () => {
         // This test is covered by the dependency validation in the constructor
         // The actual scenario would be handled during runtime when scopeRegistry
         // becomes unavailable or returns null/undefined
-        
+
         // Test the runtime scenario where scopeRegistry exists but becomes unavailable
         const unreliableScopeRegistry = {
           getScopeAst: jest.fn(() => {
             throw new Error('Registry service unavailable');
           }),
         };
-        
+
         resolver = createScopeReferenceResolver({
           scopeRegistry: unreliableScopeRegistry,
           cycleDetector,
@@ -245,7 +245,9 @@ describe('scopeReferenceResolver', () => {
 
         // This should throw due to registry failure, but would be caught
         // by higher-level error handling in real usage
-        expect(() => resolver.resolve(node, ctx)).toThrow('Registry service unavailable');
+        expect(() => resolver.resolve(node, ctx)).toThrow(
+          'Registry service unavailable'
+        );
       });
     });
 
@@ -345,7 +347,9 @@ describe('scopeReferenceResolver', () => {
         expect(result).toBeInstanceOf(Set);
         expect(result.size).toBe(2);
         // Verify that context cycle detection is used
-        expect(mockContextCycleDetector.enter).toHaveBeenCalledWith('test:scope');
+        expect(mockContextCycleDetector.enter).toHaveBeenCalledWith(
+          'test:scope'
+        );
         expect(mockContextCycleDetector.leave).toHaveBeenCalled();
       });
 

@@ -7,6 +7,7 @@
 This report has been verified against the actual codebase with the following findings:
 
 ### Confirmed Accurate
+
 - ✅ Movement lock pattern exists exactly as described (`core:movement`, handlers, utilities)
 - ✅ Dependency hierarchy is correct (positioning → core, intimacy → positioning + anatomy)
 - ✅ Anatomy structure with `humanoid_mouth.entity.json` exists with proper `subType: "mouth"`
@@ -14,9 +15,11 @@ This report has been verified against the actual codebase with the following fin
 - ✅ Positioning actions lack mouth-related prerequisites
 
 ### Correction Required
+
 - ⚠️ `turn_around.action.json` DOES contain the architectural violation with `"intimacy:kissing"` in forbidden_components (previously stated as speculation, now confirmed)
 
 ### Implementation Status
+
 - ❌ No `core:mouth_engagement` component exists yet
 - ❌ No LOCK/UNLOCK_MOUTH_ENGAGEMENT operations exist yet
 - ❌ No mouth availability conditions exist yet
@@ -37,6 +40,7 @@ This report proposes implementing a **mouth engagement locking system** in the `
 The engine already implements a successful resource locking pattern for movement control:
 
 #### Component Structure (`core:movement`)
+
 ```json
 {
   "id": "core:movement",
@@ -77,6 +81,7 @@ The engine already implements a successful resource locking pattern for movement
 ### Current Problem Analysis
 
 #### Dependency Hierarchy
+
 ```
 core (base module)
   ↑
@@ -86,6 +91,7 @@ intimacy (depends on positioning + anatomy)
 ```
 
 This hierarchy means:
+
 - ✅ `intimacy` can reference `positioning` components
 - ❌ `positioning` cannot reference `intimacy` components
 
@@ -98,11 +104,13 @@ This hierarchy means:
    - `step_back.action.json`
 
 2. **Architectural Violation**: `turn_around.action.json` currently has:
+
    ```json
    "forbidden_components": {
      "actor": ["intimacy:kissing"]
    }
    ```
+
    **VERIFIED**: This violation exists in the codebase and needs to be fixed. The `positioning` mod cannot reference `intimacy` components due to the dependency hierarchy.
 
 3. **Future Scaling Issues**: As more mouth-related activities are added (eating, drinking, oral sex), the problem will compound without a centralized solution.
@@ -152,7 +160,12 @@ Implement a resource lock for mouth engagement that parallels the movement lock 
   "id": "core:actor-mouth-available",
   "description": "Checks if the actor has a mouth that is not currently engaged/locked",
   "logic": {
-    "hasPartWithComponentValue": ["actor", "core:mouth_engagement", "locked", false]
+    "hasPartWithComponentValue": [
+      "actor",
+      "core:mouth_engagement",
+      "locked",
+      false
+    ]
   }
 }
 ```
@@ -363,7 +376,11 @@ import { deepClone } from './cloneUtils.js';
  * @param {boolean} locked - Whether mouth engagement should be locked.
  * @returns {object|null} Updated mouth engagement component or null if no mouth found.
  */
-export async function updateMouthEngagementLock(entityManager, entityId, locked) {
+export async function updateMouthEngagementLock(
+  entityManager,
+  entityId,
+  locked
+) {
   // Check if entity has anatomy:body component
   const bodyComponent = entityManager.getComponentData(
     entityId,
@@ -384,18 +401,18 @@ export async function updateMouthEngagementLock(entityManager, entityId, locked)
           partId,
           'anatomy:part'
         );
-        
+
         if (partComponent && partComponent.subType === 'mouth') {
           // Get or create mouth engagement component
           let mouthEngagement = entityManager.getComponentData(
             partId,
             'core:mouth_engagement'
           );
-          
+
           if (!mouthEngagement) {
             mouthEngagement = { locked: false, forcedOverride: false };
           }
-          
+
           // Clone and update the mouth engagement component
           const updatedEngagement =
             typeof structuredClone === 'function'
@@ -419,20 +436,31 @@ export async function updateMouthEngagementLock(entityManager, entityId, locked)
   }
 
   // Legacy path: check entity directly for mouth engagement
-  const existing = entityManager.getComponentData(entityId, 'core:mouth_engagement');
+  const existing = entityManager.getComponentData(
+    entityId,
+    'core:mouth_engagement'
+  );
   if (existing) {
     const engagement =
       typeof structuredClone === 'function'
         ? structuredClone(existing)
         : deepClone(existing);
     engagement.locked = locked;
-    await entityManager.addComponent(entityId, 'core:mouth_engagement', engagement);
+    await entityManager.addComponent(
+      entityId,
+      'core:mouth_engagement',
+      engagement
+    );
     return engagement;
   }
 
   // No mouth engagement component found - create it with the locked state
   const newEngagement = { locked, forcedOverride: false };
-  await entityManager.addComponent(entityId, 'core:mouth_engagement', newEngagement);
+  await entityManager.addComponent(
+    entityId,
+    'core:mouth_engagement',
+    newEngagement
+  );
   return newEngagement;
 }
 ```
@@ -454,9 +482,16 @@ export async function updateMouthEngagementLock(entityManager, entityId, locked)
 
 3. **Register Handlers**:
    Update `src/dependencyInjection/registrations/interpreterRegistrations.js`:
+
    ```javascript
-   registry.register('LOCK_MOUTH_ENGAGEMENT', bind(tokens.LockMouthEngagementHandler));
-   registry.register('UNLOCK_MOUTH_ENGAGEMENT', bind(tokens.UnlockMouthEngagementHandler));
+   registry.register(
+     'LOCK_MOUTH_ENGAGEMENT',
+     bind(tokens.LockMouthEngagementHandler)
+   );
+   registry.register(
+     'UNLOCK_MOUTH_ENGAGEMENT',
+     bind(tokens.UnlockMouthEngagementHandler)
+   );
    ```
 
 4. **Update Core Manifest**:
@@ -465,6 +500,7 @@ export async function updateMouthEngagementLock(entityManager, entityId, locked)
 ### Phase 2: Anatomy Integration
 
 Update `data/mods/anatomy/entities/definitions/humanoid_mouth.entity.json`:
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
@@ -499,6 +535,7 @@ Update `data/mods/anatomy/entities/definitions/humanoid_mouth.entity.json`:
 For each of these positioning actions, add the mouth availability prerequisite:
 
 **Example: kneel_before.action.json**
+
 ```json
 {
   "prerequisites": [
@@ -515,12 +552,14 @@ For each of these positioning actions, add the mouth availability prerequisite:
 ```
 
 Actions to update:
+
 - `kneel_before.action.json`
 - `place_yourself_behind.action.json`
 - `turn_your_back.action.json`
 - `step_back.action.json`
 
 For `turn_around.action.json`:
+
 1. Remove the invalid `"intimacy:kissing"` from forbidden_components
 2. Add the mouth availability prerequisite
 
@@ -529,6 +568,7 @@ For `turn_around.action.json`:
 #### Update lean_in_for_deep_kiss.rule.json
 
 Add after the ADD_COMPONENT actions:
+
 ```json
 {
   "type": "LOCK_MOUTH_ENGAGEMENT",
@@ -547,6 +587,7 @@ Add after the ADD_COMPONENT actions:
 #### Update break_kiss_gently.rule.json
 
 Add before removing the kissing components:
+
 ```json
 {
   "type": "UNLOCK_MOUTH_ENGAGEMENT",
@@ -563,6 +604,7 @@ Add before removing the kissing components:
 ```
 
 Apply similar updates to:
+
 - `pull_back_breathlessly.rule.json`
 - `pull_back_in_revulsion.rule.json`
 
@@ -615,7 +657,7 @@ Apply similar updates to:
 
 ### For Mod Developers
 
-1. **Check Mouth Availability**: 
+1. **Check Mouth Availability**:
    - Use `core:actor-mouth-available` condition in prerequisites
    - Don't check for specific activities (kissing, eating)
    - Trust the lock state
@@ -673,6 +715,7 @@ Apply similar updates to:
 The mouth engagement locking system provides a clean, architecturally sound solution to the current logical inconsistencies in action availability. By following the proven movement lock pattern, we maintain consistency across the codebase while respecting module dependencies.
 
 This implementation:
+
 - Solves the immediate kissing/positioning conflict
 - Provides a foundation for future mouth-related systems
 - Maintains clean architecture without dependency violations
@@ -704,11 +747,11 @@ describe('Mouth Engagement - Kissing and Positioning Conflict', () => {
     // Setup: Two actors in same location
     const actor1 = await createTestActor('actor1', { hasMouth: true });
     const actor2 = await createTestActor('actor2', { hasMouth: true });
-    
+
     // Act: Start kissing
     await actionSystem.execute('intimacy:lean_in_for_deep_kiss', {
       actorId: 'actor1',
-      targetId: 'actor2'
+      targetId: 'actor2',
     });
 
     // Assert: Mouth is locked
@@ -723,11 +766,11 @@ describe('Mouth Engagement - Kissing and Positioning Conflict', () => {
     const availableActions = actionSystem.getAvailableActions('actor1');
     expect(availableActions).not.toContain('positioning:kneel_before');
     expect(availableActions).not.toContain('positioning:turn_your_back');
-    
+
     // Act: End kiss
     await actionSystem.execute('intimacy:break_kiss_gently', {
       actorId: 'actor1',
-      targetId: 'actor2'
+      targetId: 'actor2',
     });
 
     // Assert: Mouth unlocked and actions available
@@ -736,7 +779,7 @@ describe('Mouth Engagement - Kissing and Positioning Conflict', () => {
       'core:mouth_engagement'
     );
     expect(updatedEngagement.locked).toBe(false);
-    
+
     const updatedActions = actionSystem.getAvailableActions('actor1');
     expect(updatedActions).toContain('positioning:kneel_before');
   });

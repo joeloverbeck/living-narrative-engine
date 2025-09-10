@@ -1,6 +1,6 @@
 /**
  * @file Integration test for turn around and kneel before interaction with multiple actors
- * 
+ *
  * This test is separated from the main test suite because it needs to run in isolation
  * due to dynamic entity creation affecting scope resolution when run with other tests.
  */
@@ -140,7 +140,7 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
       clearCache: jest.fn(),
       getAllParts: jest.fn().mockReturnValue([]),
     };
-    
+
     const customOperators = new JsonLogicCustomOperators({
       entityManager,
       bodyGraphService: mockBodyGraphService,
@@ -190,13 +190,11 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
     });
 
     // Create ActionValidationContextBuilder with all required parameters
-    const actionValidationContextBuilder = new ActionValidationContextBuilder(
-      {
-        actionErrorContextBuilder,
-        logger,
-        entityManager,
-      }
-    );
+    const actionValidationContextBuilder = new ActionValidationContextBuilder({
+      actionErrorContextBuilder,
+      logger,
+      entityManager,
+    });
 
     // Create prerequisite evaluation service
     const prerequisiteEvaluationService = new PrerequisiteEvaluationService({
@@ -234,12 +232,12 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
     // Create action index and build it first
     actionIndex = new ActionIndex({ logger, entityManager });
     actionIndex.buildIndex([turnAroundAction, kneelBeforeAction]);
-    
+
     // Create action command formatter
     const actionFormatter = new ActionCommandFormatter({
       getEntityDisplayName,
     });
-    
+
     // Create the action pipeline orchestrator
     actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex,
@@ -310,27 +308,46 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
       dispatch: jest.fn().mockImplementation(async (event) => {
         if (event.type === ATTEMPT_ACTION_ID) {
           const { actionId, actorId, targetId } = event.payload;
-          logger.info(`Attempting action: ${actionId} from ${actorId} to ${targetId}`);
-          
+          logger.info(
+            `Attempting action: ${actionId} from ${actorId} to ${targetId}`
+          );
+
           // Simulate the turn_around action
           if (actionId === 'positioning:turn_around') {
             const targetEntity = entityManager.getEntityInstance(targetId);
-            const facingAwayComponent = targetEntity.components['positioning:facing_away'];
-            
-            if (!facingAwayComponent || !facingAwayComponent.facing_away_from?.includes(actorId)) {
+            const facingAwayComponent =
+              targetEntity.components['positioning:facing_away'];
+
+            if (
+              !facingAwayComponent ||
+              !facingAwayComponent.facing_away_from?.includes(actorId)
+            ) {
               // Not currently facing away, so turn them around (add component)
-              entityManager.addComponent(targetEntity.id, 'positioning:facing_away', {
-                facing_away_from: [actorId],
-              });
+              entityManager.addComponent(
+                targetEntity.id,
+                'positioning:facing_away',
+                {
+                  facing_away_from: [actorId],
+                }
+              );
             } else {
               // Currently facing away, toggle to face (remove from list)
-              const updatedList = facingAwayComponent.facing_away_from.filter(id => id !== actorId);
+              const updatedList = facingAwayComponent.facing_away_from.filter(
+                (id) => id !== actorId
+              );
               if (updatedList.length > 0) {
-                entityManager.addComponent(targetEntity.id, 'positioning:facing_away', {
-                  facing_away_from: updatedList,
-                });
+                entityManager.addComponent(
+                  targetEntity.id,
+                  'positioning:facing_away',
+                  {
+                    facing_away_from: updatedList,
+                  }
+                );
               } else {
-                entityManager.removeComponent(targetEntity.id, 'positioning:facing_away');
+                entityManager.removeComponent(
+                  targetEntity.id,
+                  'positioning:facing_away'
+                );
               }
             }
           }
@@ -345,7 +362,6 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
   });
 
   it('should correctly handle multiple actors with mixed facing states', async () => {
-
     // Add a third actor
     const actor3 = entityManager.createEntity('test:actor3');
     entityManager.addComponent('test:actor3', NAME_COMPONENT_ID, {
@@ -380,7 +396,7 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
     const discoveryResult =
       await actionDiscoveryService.getValidActions(actor2Entity);
     const availableActions = discoveryResult.actions || [];
-    
+
     // Find all kneel_before actions
     const kneelActions = availableActions.filter(
       (a) => a.id === 'positioning:kneel_before'
@@ -396,7 +412,7 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
 
     // Should NOT be able to kneel before actor1 (facing away)
     expect(kneelToActor1).toBeUndefined();
-    
+
     // Should be able to kneel before actor3 (not facing away)
     expect(kneelToActor3).toBeDefined();
     if (kneelToActor3) {

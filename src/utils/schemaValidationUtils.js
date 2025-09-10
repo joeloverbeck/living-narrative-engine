@@ -8,7 +8,10 @@
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 import { formatAjvErrors } from './ajvUtils.js';
 import { formatAjvErrorsEnhanced } from './ajvAnyOfErrorFormatter.js';
-import { performPreValidation, formatPreValidationError } from './preValidationUtils.js';
+import {
+  performPreValidation,
+  formatPreValidationError,
+} from './preValidationUtils.js';
 
 /**
  * Validates data against a schema using the provided validator.
@@ -82,12 +85,16 @@ export function validateAgainstSchema(
   // Perform pre-validation checks to catch common issues before running full AJV validation
   if (!skipPreValidation) {
     const preValidationResult = performPreValidation(data, schemaId, filePath);
-    
+
     if (!preValidationResult.isValid) {
       // Pre-validation failed - provide specific, actionable error
       const fileName = filePath ? filePath.split('/').pop() : 'unknown file';
-      const preValidationError = formatPreValidationError(preValidationResult, fileName, schemaId);
-      
+      const preValidationError = formatPreValidationError(
+        preValidationResult,
+        fileName,
+        schemaId
+      );
+
       logger.error(`Pre-validation failed for '${fileName}'`, {
         ...failureContext,
         schemaId,
@@ -95,17 +102,20 @@ export function validateAgainstSchema(
         preValidationPath: preValidationResult.path,
         preValidationSuggestions: preValidationResult.suggestions,
       });
-      
-      const baseMessage = failureThrowMessage || `Pre-validation failed for '${fileName}'`;
+
+      const baseMessage =
+        failureThrowMessage || `Pre-validation failed for '${fileName}'`;
       const finalMessage = appendErrorDetails
         ? `${baseMessage}\nDetails:\n${preValidationError}`
         : baseMessage;
-      
+
       throw new Error(finalMessage);
     }
-    
+
     // Pre-validation passed, log success for debugging
-    logger.debug(`Pre-validation passed for '${filePath || 'data'}' against schema '${schemaId}'`);
+    logger.debug(
+      `Pre-validation passed for '${filePath || 'data'}' against schema '${schemaId}'`
+    );
   }
 
   const validationResult = validator.validate(schemaId, data);

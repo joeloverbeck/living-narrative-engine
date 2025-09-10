@@ -57,7 +57,7 @@ describe('ScopeReferenceResolver Error Handler Integration', () => {
     it('should inject errorHandler into scopeReferenceResolver', () => {
       // This test verifies that the ScopeEngine properly injects the errorHandler
       // by testing error handling directly through the engine's resolve method
-      
+
       const ast = { type: 'ScopeReference', scopeId: 'nonexistent:scope' };
       const actorEntity = { id: 'test-actor' };
 
@@ -146,7 +146,12 @@ describe('ScopeReferenceResolver Error Handler Integration', () => {
       // Mock successful scope lookup
       scopeRegistry.getScopeAst.mockReturnValue(mockScopeAst);
 
-      const result = scopeEngine.resolve(ast, actorEntity, runtimeContext, trace);
+      const result = scopeEngine.resolve(
+        ast,
+        actorEntity,
+        runtimeContext,
+        trace
+      );
 
       expect(result).toBeInstanceOf(Set);
       expect(trace.addLog).toHaveBeenCalledWith(
@@ -164,10 +169,10 @@ describe('ScopeReferenceResolver Error Handler Integration', () => {
     it('should maintain cycle detection behavior with error handling', () => {
       // This test ensures that cycle detection still works correctly
       // when error handling is integrated
-      
-      const mockScopeAst = { 
-        type: 'ScopeReference', 
-        scopeId: 'recursive:scope' // Self-referencing scope
+
+      const mockScopeAst = {
+        type: 'ScopeReference',
+        scopeId: 'recursive:scope', // Self-referencing scope
       };
       const ast = { type: 'ScopeReference', scopeId: 'recursive:scope' };
       const actorEntity = { id: 'test-actor' };
@@ -186,9 +191,11 @@ describe('ScopeReferenceResolver Error Handler Integration', () => {
     it('should accumulate errors in error buffer', () => {
       const errors = [];
       errorHandler.getErrorBuffer.mockReturnValue(errors);
-      errorHandler.handleError.mockImplementation((message, context, source, code) => {
-        errors.push({ message, context, source, code });
-      });
+      errorHandler.handleError.mockImplementation(
+        (message, context, source, code) => {
+          errors.push({ message, context, source, code });
+        }
+      );
 
       // Trigger multiple errors
       const ast1 = { type: 'ScopeReference', scopeId: 'missing1:scope' };

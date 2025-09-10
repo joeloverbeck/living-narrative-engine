@@ -40,7 +40,7 @@ describe('Union Operator Performance', () => {
   beforeAll(async () => {
     // Get shared container for performance
     container = await PerformanceTestBed.getSharedContainer();
-    
+
     // Resolve required services
     entityManager = container.resolve(tokens.IEntityManager);
     registry = container.resolve(tokens.IDataRegistry);
@@ -176,7 +176,8 @@ describe('Union Operator Performance', () => {
       const sortedTimings = timings.sort((a, b) => a - b);
       const avgTime = timings.reduce((sum, t) => sum + t, 0) / timings.length;
       const p95Index = Math.floor(sortedTimings.length * 0.95);
-      const p95Time = sortedTimings[p95Index] || sortedTimings[sortedTimings.length - 1];
+      const p95Time =
+        sortedTimings[p95Index] || sortedTimings[sortedTimings.length - 1];
 
       // Performance assertions
       expect(avgTime).toBeLessThan(100); // Should complete in under 100ms average
@@ -275,7 +276,7 @@ describe('Union Operator Performance', () => {
 
         const avgTime = timings.reduce((sum, t) => sum + t, 0) / timings.length;
         const unionCount = (unionExpr.match(/\|/g) || []).length + 1;
-        
+
         chainMetrics.push({
           expression: unionExpr,
           unionCount,
@@ -288,9 +289,9 @@ describe('Union Operator Performance', () => {
       }
 
       // Verify that time per union operation remains reasonable as chains get longer
-      const timePerUnionValues = chainMetrics.map(m => m.timePerUnion);
+      const timePerUnionValues = chainMetrics.map((m) => m.timePerUnion);
       const baselineTimePerUnion = timePerUnionValues[0];
-      
+
       for (let i = 1; i < timePerUnionValues.length; i++) {
         // Time per union shouldn't increase significantly with chain length
         // Increased threshold from 1.5x to 2.0x to account for normal system variance
@@ -298,7 +299,7 @@ describe('Union Operator Performance', () => {
         const actualTimePerUnion = timePerUnionValues[i];
         const expectedThreshold = baselineTimePerUnion * 2.0;
         const absoluteDifference = actualTimePerUnion - baselineTimePerUnion;
-        
+
         // Fail only if both ratio exceeds 2x AND absolute difference > 1ms
         if (actualTimePerUnion > expectedThreshold && absoluteDifference > 1) {
           expect(actualTimePerUnion).toBeLessThan(expectedThreshold);
@@ -346,7 +347,8 @@ describe('Union Operator Performance', () => {
       const avgTime = timings.reduce((sum, t) => sum + t, 0) / timings.length;
       const sortedTimings = timings.sort((a, b) => a - b);
       const p95Index = Math.floor(sortedTimings.length * 0.95);
-      const p95Time = sortedTimings[p95Index] || sortedTimings[sortedTimings.length - 1];
+      const p95Time =
+        sortedTimings[p95Index] || sortedTimings[sortedTimings.length - 1];
 
       // Complex nested unions should still be fast
       expect(avgTime).toBeLessThan(20); // <20ms average
@@ -380,7 +382,7 @@ describe('Union Operator Performance', () => {
 
         const ast = parseDslExpression('actor.followers | actor.partners');
         const result = engine.resolve(ast, actorEntity, runtimeCtx);
-        
+
         // Verify result correctness
         expect(result.size).toBe(1000);
 
@@ -400,15 +402,16 @@ describe('Union Operator Performance', () => {
       // Check for memory leaks - memory usage shouldn't grow indefinitely
       const firstCheckpoint = memoryCheckpoints[1]; // Skip baseline
       const lastCheckpoint = memoryCheckpoints[memoryCheckpoints.length - 1];
-      
+
       // Ensure we have enough checkpoints for meaningful analysis
       expect(memoryCheckpoints.length).toBeGreaterThan(2);
       expect(firstCheckpoint).toBeDefined();
       expect(lastCheckpoint).toBeDefined();
-      
-      const memoryGrowth = lastCheckpoint.memoryUsage - firstCheckpoint.memoryUsage;
+
+      const memoryGrowth =
+        lastCheckpoint.memoryUsage - firstCheckpoint.memoryUsage;
       const acceptableGrowth = 50 * 1024 * 1024; // 50MB max growth
-      
+
       expect(memoryGrowth).toBeLessThan(acceptableGrowth);
     });
 
@@ -419,7 +422,10 @@ describe('Union Operator Performance', () => {
 
       actorEntity.addComponent('social:relationships', {
         followers: baseItems,
-        partners: [...overlapItems, ...Array.from({ length: 400 }, (_, i) => `partner${i}`)],
+        partners: [
+          ...overlapItems,
+          ...Array.from({ length: 400 }, (_, i) => `partner${i}`),
+        ],
       });
 
       const iterations = 30;
@@ -443,13 +449,13 @@ describe('Union Operator Performance', () => {
         const duration = performance.now() - start;
 
         timings.push(duration);
-        
+
         // Verify deduplication worked correctly
         expect(result.size).toBe(1200); // 800 + 400 unique partners
       }
 
       const avgTime = timings.reduce((sum, t) => sum + t, 0) / timings.length;
-      
+
       // Deduplication should be efficient even with overlaps
       expect(avgTime).toBeLessThan(80); // <80ms with deduplication
     });
@@ -486,8 +492,9 @@ describe('Union Operator Performance', () => {
             const ast = parseDslExpression('actor.followers | actor.partners');
             const result = engine.resolve(ast, actorEntity, runtimeCtx);
             const duration = performance.now() - start;
-            
-            if (result.size === 200) { // Verify correctness
+
+            if (result.size === 200) {
+              // Verify correctness
               validTimings.push(duration);
             }
           } catch {
@@ -495,7 +502,9 @@ describe('Union Operator Performance', () => {
           }
         }
 
-        const avgTime = validTimings.reduce((sum, t) => sum + t, 0) / (validTimings.length || 1);
+        const avgTime =
+          validTimings.reduce((sum, t) => sum + t, 0) /
+          (validTimings.length || 1);
         const successRate = validTimings.length / validOpsPerWindow;
 
         windowMetrics.push({
@@ -506,16 +515,16 @@ describe('Union Operator Performance', () => {
       }
 
       // Performance should remain stable after errors
-      const avgTimes = windowMetrics.map(m => m.avgTime);
+      const avgTimes = windowMetrics.map((m) => m.avgTime);
       const firstWindowTime = avgTimes[0];
       const lastWindowTime = avgTimes[avgTimes.length - 1];
 
       // Performance shouldn't degrade significantly
       // Use 2.5x tolerance to account for CI environment variability (GC, JIT, system load)
       expect(lastWindowTime).toBeLessThan(firstWindowTime * 2.5);
-      
+
       // Success rates should remain high
-      windowMetrics.forEach(metric => {
+      windowMetrics.forEach((metric) => {
         expect(metric.successRate).toBeGreaterThan(0.7); // At least 70% success
       });
     });

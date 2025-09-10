@@ -27,23 +27,25 @@ describe('SafeErrorLogger - Timeout Warnings Integration', () => {
   it('should reproduce "Auto-disabling game loading mode after 60000ms timeout" warning', (done) => {
     // Arrange
     const mockLogger = testBed.createMockLogger();
-    
+
     // Mock SafeErrorLogger implementation
     class MockSafeErrorLogger {
       #gameLoadingTimeout = null;
       #gameLoadingMode = false;
       #logger;
-      
+
       constructor(logger) {
         this.#logger = logger;
       }
 
       withGameLoadingMode(context) {
         this.#gameLoadingMode = true;
-        
+
         // Set up timeout (using short timeout for testing)
         this.#gameLoadingTimeout = setTimeout(() => {
-          this.#logger.warn('SafeErrorLogger: Auto-disabling game loading mode after 60000ms timeout');
+          this.#logger.warn(
+            'SafeErrorLogger: Auto-disabling game loading mode after 60000ms timeout'
+          );
           this.#gameLoadingMode = false;
           this.#gameLoadingTimeout = null;
         }, 100); // 100ms for testing instead of 60000ms
@@ -54,7 +56,7 @@ describe('SafeErrorLogger - Timeout Warnings Integration', () => {
             return new Promise(() => {
               // Never resolves, causing timeout
             });
-          }
+          },
         };
       }
 
@@ -67,8 +69,9 @@ describe('SafeErrorLogger - Timeout Warnings Integration', () => {
 
     // Act
     const safeErrorLogger = new MockSafeErrorLogger(mockLogger);
-    const gameLoadingContext = safeErrorLogger.withGameLoadingMode('test-context');
-    
+    const gameLoadingContext =
+      safeErrorLogger.withGameLoadingMode('test-context');
+
     // Start a long-running operation that will timeout
     gameLoadingContext.context();
 
@@ -77,7 +80,7 @@ describe('SafeErrorLogger - Timeout Warnings Integration', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'SafeErrorLogger: Auto-disabling game loading mode after 60000ms timeout'
       );
-      
+
       safeErrorLogger.destroy();
       done();
     }, 150); // Wait longer than the timeout
@@ -86,22 +89,24 @@ describe('SafeErrorLogger - Timeout Warnings Integration', () => {
   it('should not produce timeout warning when game loading completes normally', (done) => {
     // Arrange
     const mockLogger = testBed.createMockLogger();
-    
+
     // Mock SafeErrorLogger with proper completion
     class MockSafeErrorLogger {
       #gameLoadingTimeout = null;
       #gameLoadingMode = false;
       #logger;
-      
+
       constructor(logger) {
         this.#logger = logger;
       }
 
       withGameLoadingMode(context) {
         this.#gameLoadingMode = true;
-        
+
         this.#gameLoadingTimeout = setTimeout(() => {
-          this.#logger.warn('SafeErrorLogger: Auto-disabling game loading mode after 60000ms timeout');
+          this.#logger.warn(
+            'SafeErrorLogger: Auto-disabling game loading mode after 60000ms timeout'
+          );
           this.#gameLoadingMode = false;
           this.#gameLoadingTimeout = null;
         }, 200); // Longer timeout
@@ -115,7 +120,7 @@ describe('SafeErrorLogger - Timeout Warnings Integration', () => {
                 resolve();
               }, 50);
             });
-          }
+          },
         };
       }
 
@@ -136,17 +141,19 @@ describe('SafeErrorLogger - Timeout Warnings Integration', () => {
 
     // Act
     const safeErrorLogger = new MockSafeErrorLogger(mockLogger);
-    const gameLoadingContext = safeErrorLogger.withGameLoadingMode('test-context');
-    
+    const gameLoadingContext =
+      safeErrorLogger.withGameLoadingMode('test-context');
+
     gameLoadingContext.context().then(() => {
       // Assert - Should not have timeout warning
       setTimeout(() => {
         const warnCalls = mockLogger.warn.mock.calls.filter(
-          ([msg]) => msg && msg.includes('Auto-disabling game loading mode after')
+          ([msg]) =>
+            msg && msg.includes('Auto-disabling game loading mode after')
         );
-        
+
         expect(warnCalls.length).toBe(0);
-        
+
         safeErrorLogger.destroy();
         done();
       }, 100);
@@ -156,13 +163,15 @@ describe('SafeErrorLogger - Timeout Warnings Integration', () => {
   it('should reproduce the specific timeout pattern from game initialization', (done) => {
     // Arrange
     const mockLogger = testBed.createMockLogger();
-    
+
     // Simulate the exact scenario from the logs:
     // gameEngine.js:329 → safeErrorLogger.js:172 → startNewGame → 60000ms timeout
     function simulateGameInitializationTimeout() {
       return new Promise((resolve, reject) => {
         const timeoutId = setTimeout(() => {
-          mockLogger.warn('SafeErrorLogger: Auto-disabling game loading mode after 60000ms timeout');
+          mockLogger.warn(
+            'SafeErrorLogger: Auto-disabling game loading mode after 60000ms timeout'
+          );
           resolve();
         }, 100); // Short timeout for testing
 
@@ -185,44 +194,49 @@ describe('SafeErrorLogger - Timeout Warnings Integration', () => {
   it('should handle multiple concurrent game loading contexts', (done) => {
     // Arrange
     const mockLogger = testBed.createMockLogger();
-    
+
     // Mock multiple game loading contexts
     class MockSafeErrorLogger {
       #timeouts = new Set();
       #logger;
-      
+
       constructor(logger) {
         this.#logger = logger;
       }
 
       createGameLoadingContext(contextId) {
-        const timeoutId = setTimeout(() => {
-          this.#logger.warn(`SafeErrorLogger: Auto-disabling game loading mode after 60000ms timeout (context: ${contextId})`);
-          this.#timeouts.delete(timeoutId);
-        }, 100 + Math.random() * 50); // Slight variation in timeout
+        const timeoutId = setTimeout(
+          () => {
+            this.#logger.warn(
+              `SafeErrorLogger: Auto-disabling game loading mode after 60000ms timeout (context: ${contextId})`
+            );
+            this.#timeouts.delete(timeoutId);
+          },
+          100 + Math.random() * 50
+        ); // Slight variation in timeout
 
         this.#timeouts.add(timeoutId);
-        
+
         return {
           context: () => {
             return new Promise(() => {
               // Never resolves
             });
-          }
+          },
         };
       }
 
       destroy() {
-        this.#timeouts.forEach(timeoutId => clearTimeout(timeoutId));
+        this.#timeouts.forEach((timeoutId) => clearTimeout(timeoutId));
         this.#timeouts.clear();
       }
     }
 
     // Act - Create multiple contexts
     const safeErrorLogger = new MockSafeErrorLogger(mockLogger);
-    
+
     const contexts = ['mod-loading', 'system-init', 'world-init'];
-    contexts.forEach(contextId => {
+    contexts.forEach((contextId) => {
       const context = safeErrorLogger.createGameLoadingContext(contextId);
       context.context();
     });
@@ -230,11 +244,13 @@ describe('SafeErrorLogger - Timeout Warnings Integration', () => {
     // Assert - Wait for all timeouts to trigger
     setTimeout(() => {
       const warnCalls = mockLogger.warn.mock.calls.filter(
-        ([msg]) => msg && msg.includes('Auto-disabling game loading mode after 60000ms timeout')
+        ([msg]) =>
+          msg &&
+          msg.includes('Auto-disabling game loading mode after 60000ms timeout')
       );
-      
+
       expect(warnCalls.length).toBe(3);
-      
+
       safeErrorLogger.destroy();
       done();
     }, 200);

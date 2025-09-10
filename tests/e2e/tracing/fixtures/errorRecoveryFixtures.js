@@ -3,15 +3,15 @@
  * @description Test data, scenarios, and configurations for error recovery workflow testing
  */
 
-import { 
-  TraceErrorType, 
-  TraceErrorSeverity 
+import {
+  TraceErrorType,
+  TraceErrorSeverity,
 } from '../../../../src/actions/tracing/errors/traceErrorHandler.js';
 import { RecoveryAction } from '../../../../src/actions/tracing/recovery/recoveryManager.js';
-import { 
-  ERROR_CATEGORIES, 
-  ERROR_SEVERITY, 
-  RECOVERY_POTENTIAL 
+import {
+  ERROR_CATEGORIES,
+  ERROR_SEVERITY,
+  RECOVERY_POTENTIAL,
 } from '../../../../src/actions/tracing/errorClassification.js';
 
 /**
@@ -28,8 +28,11 @@ export const ERROR_SCENARIOS = {
     retryable: true,
     transient: true,
     maxRetries: 3,
-    description: 'Network timeout error that should trigger exponential backoff retry',
-    get error() { return this.createError(); },
+    description:
+      'Network timeout error that should trigger exponential backoff retry',
+    get error() {
+      return this.createError();
+    },
   },
 
   RESOURCE_NOT_FOUND: {
@@ -41,7 +44,9 @@ export const ERROR_SCENARIOS = {
     retryable: true, // Changed to match ErrorClassifier's CONDITIONAL recovery = retryable logic
     transient: false,
     description: 'Resource not found error requiring fallback behavior',
-    get error() { return this.createError(); },
+    get error() {
+      return this.createError();
+    },
   },
 
   MEMORY_CRITICAL: {
@@ -53,7 +58,9 @@ export const ERROR_SCENARIOS = {
     retryable: false,
     transient: false,
     description: 'Critical memory error requiring emergency shutdown',
-    get error() { return this.createError(); },
+    get error() {
+      return this.createError();
+    },
   },
 
   VALIDATION_ERROR: {
@@ -64,8 +71,11 @@ export const ERROR_SCENARIOS = {
     expectedRecovery: 'continue',
     retryable: false,
     transient: false,
-    description: 'Validation error that should continue with degraded functionality',
-    get error() { return this.createError(); },
+    description:
+      'Validation error that should continue with degraded functionality',
+    get error() {
+      return this.createError();
+    },
   },
 
   SERIALIZATION_ERROR: {
@@ -78,7 +88,9 @@ export const ERROR_SCENARIOS = {
     transient: false,
     maxRetries: 2,
     description: 'Serialization error that should retry then fallback',
-    get error() { return this.createError(); },
+    get error() {
+      return this.createError();
+    },
   },
 
   FILE_SYSTEM_ERROR: {
@@ -94,7 +106,9 @@ export const ERROR_SCENARIOS = {
     retryable: false,
     transient: false,
     description: 'File system error requiring fallback to in-memory storage',
-    get error() { return this.createError(); },
+    get error() {
+      return this.createError();
+    },
   },
 };
 
@@ -231,19 +245,19 @@ export const createFailingAction = (errorScenario) => {
 export const generateErrorStorm = (pattern) => {
   const storm = ERROR_STORM_PATTERNS[pattern];
   const errors = [];
-  
+
   for (let i = 0; i < storm.errorCount; i++) {
     const errorType = storm.errorTypes[i % storm.errorTypes.length];
     const scenario = ERROR_SCENARIOS[errorType];
-    
+
     errors.push({
       ...scenario,
       error: scenario.createError(), // Create the error instance
-      timestamp: Date.now() + (i * storm.duration / storm.errorCount),
+      timestamp: Date.now() + (i * storm.duration) / storm.errorCount,
       index: i,
     });
   }
-  
+
   return errors;
 };
 
@@ -252,7 +266,7 @@ export const generateErrorStorm = (pattern) => {
  */
 export const validateRecoveryOutcome = (actual, expected) => {
   const validations = [];
-  
+
   if (expected.recoveryAction) {
     validations.push({
       name: 'Recovery Action',
@@ -261,7 +275,7 @@ export const validateRecoveryOutcome = (actual, expected) => {
       actual: actual.recoveryAction,
     });
   }
-  
+
   if (expected.shouldContinue !== undefined) {
     validations.push({
       name: 'Should Continue',
@@ -270,7 +284,7 @@ export const validateRecoveryOutcome = (actual, expected) => {
       actual: actual.shouldContinue,
     });
   }
-  
+
   if (expected.attempts) {
     validations.push({
       name: 'Retry Attempts',
@@ -279,6 +293,6 @@ export const validateRecoveryOutcome = (actual, expected) => {
       actual: actual.attempts,
     });
   }
-  
+
   return validations;
 };

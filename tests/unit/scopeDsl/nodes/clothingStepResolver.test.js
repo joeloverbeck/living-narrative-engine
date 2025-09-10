@@ -302,7 +302,7 @@ describe('ClothingStepResolver', () => {
   describe('Error Handling Integration', () => {
     it('should call errorHandler for invalid entity ID', () => {
       mockContext.dispatcher.resolve.mockReturnValue(new Set([''])); // Empty string passes type check but fails validation
-      
+
       const node = {
         type: 'Step',
         field: 'topmost_clothing',
@@ -310,7 +310,7 @@ describe('ClothingStepResolver', () => {
       };
 
       mockErrorHandler.handleError.mockClear();
-      
+
       const result = resolver.resolve(node, mockContext);
 
       expect(result).toEqual(new Set());
@@ -318,7 +318,7 @@ describe('ClothingStepResolver', () => {
         'Invalid entity ID provided to ClothingStepResolver',
         expect.objectContaining({
           entityId: '',
-          field: 'topmost_clothing'
+          field: 'topmost_clothing',
         }),
         'ClothingStepResolver',
         ErrorCodes.INVALID_ENTITY_ID
@@ -333,14 +333,14 @@ describe('ClothingStepResolver', () => {
       };
 
       mockErrorHandler.handleError.mockClear();
-      
+
       const result = resolver.resolve(node, mockContext);
 
       expect(result).toEqual(new Set());
       expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
         expect.stringContaining('Invalid clothing reference'),
         expect.objectContaining({
-          field: 'invalid_clothing_field'
+          field: 'invalid_clothing_field',
         }),
         'ClothingStepResolver',
         ErrorCodes.INVALID_ENTITY_ID
@@ -351,7 +351,7 @@ describe('ClothingStepResolver', () => {
       mockEntitiesGateway.getComponentData.mockImplementation(() => {
         throw new Error('Component retrieval failed');
       });
-      
+
       const node = {
         type: 'Step',
         field: 'topmost_clothing',
@@ -359,7 +359,7 @@ describe('ClothingStepResolver', () => {
       };
 
       mockErrorHandler.handleError.mockClear();
-      
+
       const result = resolver.resolve(node, mockContext);
 
       expect(result).toEqual(new Set());
@@ -368,7 +368,7 @@ describe('ClothingStepResolver', () => {
         expect.objectContaining({
           entityId: 'actor_1',
           field: 'topmost_clothing',
-          originalError: 'Component retrieval failed'
+          originalError: 'Component retrieval failed',
         }),
         'ClothingStepResolver',
         ErrorCodes.COMPONENT_RESOLUTION_FAILED
@@ -379,14 +379,14 @@ describe('ClothingStepResolver', () => {
       const invalidNode = null;
 
       mockErrorHandler.handleError.mockClear();
-      
+
       const result = resolver.resolve(invalidNode, mockContext);
 
       expect(result).toEqual(new Set());
       expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
         'Invalid node provided to ClothingStepResolver',
         expect.objectContaining({
-          node: null
+          node: null,
         }),
         'ClothingStepResolver',
         ErrorCodes.INVALID_NODE_STRUCTURE
@@ -395,7 +395,7 @@ describe('ClothingStepResolver', () => {
 
     it('should call errorHandler for missing dispatcher', () => {
       const contextWithoutDispatcher = { trace: { addLog: jest.fn() } };
-      
+
       const node = {
         type: 'Step',
         field: 'topmost_clothing',
@@ -403,7 +403,7 @@ describe('ClothingStepResolver', () => {
       };
 
       mockErrorHandler.handleError.mockClear();
-      
+
       const result = resolver.resolve(node, contextWithoutDispatcher);
 
       expect(result).toEqual(new Set());
@@ -411,7 +411,7 @@ describe('ClothingStepResolver', () => {
         'Invalid context or missing dispatcher',
         expect.objectContaining({
           hasContext: true,
-          hasDispatcher: false
+          hasDispatcher: false,
         }),
         'ClothingStepResolver',
         ErrorCodes.MISSING_DISPATCHER

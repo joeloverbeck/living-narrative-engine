@@ -19,12 +19,14 @@ While automated tests verify code correctness, manual testing is essential for v
 ### Environment Setup
 
 #### Prerequisites
+
 - [ ] Latest code from feature branch
 - [ ] Browser DevTools accessible (Chrome/Firefox recommended)
 - [ ] LLM proxy server running (`npm run dev`)
 - [ ] Test data files prepared
 
 #### Initial Verification
+
 - [ ] Application starts without errors (`npm run dev`)
 - [ ] No console errors in browser
 - [ ] Component files exist in `data/mods/core/components/`:
@@ -35,7 +37,9 @@ While automated tests verify code correctness, manual testing is essential for v
 ### Component Loading Tests
 
 #### Test 1: Verify Component Registration
+
 **Steps:**
+
 1. Open browser DevTools console
 2. Run: `window.gameEngine?.dataRegistry?.components?.has('core:motivations')`
 3. Run: `window.gameEngine?.dataRegistry?.components?.has('core:internal_tensions')`
@@ -44,7 +48,9 @@ While automated tests verify code correctness, manual testing is essential for v
 **Expected:** All three commands return `true`
 
 #### Test 2: Inspect Component Schemas
+
 **Steps:**
+
 1. In console, run: `window.gameEngine?.dataRegistry?.getComponent('core:motivations')`
 2. Verify schema structure includes:
    - `id: "core:motivations"`
@@ -56,27 +62,30 @@ While automated tests verify code correctness, manual testing is essential for v
 ### Character Creation Tests
 
 #### Test 3: Create Character with All Psychological Components
+
 **Test Data:**
+
 ```json
 {
   "id": "test-complete",
   "components": {
     "core:actor": { "name": "Complete Test Character" },
     "core:description": { "text": "A test character with depth" },
-    "core:motivations": { 
-      "text": "I test features because quality matters to me." 
+    "core:motivations": {
+      "text": "I test features because quality matters to me."
     },
-    "core:internal_tensions": { 
-      "text": "I want perfection but know iteration is key." 
+    "core:internal_tensions": {
+      "text": "I want perfection but know iteration is key."
     },
-    "core:core_dilemmas": { 
-      "text": "Is a bug-free system truly achievable?" 
+    "core:core_dilemmas": {
+      "text": "Is a bug-free system truly achievable?"
     }
   }
 }
 ```
 
 **Steps:**
+
 1. Create character using game UI or console command
 2. Verify character appears in entity list
 3. Inspect character data in DevTools
@@ -84,20 +93,23 @@ While automated tests verify code correctness, manual testing is essential for v
 **Expected:** Character created successfully with all components
 
 #### Test 4: Create Character with Partial Components
+
 **Test Data:**
+
 ```json
 {
   "id": "test-partial",
   "components": {
     "core:actor": { "name": "Partial Test Character" },
-    "core:motivations": { 
-      "text": "I only have motivations defined." 
+    "core:motivations": {
+      "text": "I only have motivations defined."
     }
   }
 }
 ```
 
 **Steps:**
+
 1. Create character with only motivations
 2. Verify character creation succeeds
 3. Check other components are undefined (not errors)
@@ -105,7 +117,9 @@ While automated tests verify code correctness, manual testing is essential for v
 **Expected:** Character works normally with only some psychological components
 
 #### Test 5: Create Legacy Character (Backward Compatibility)
+
 **Test Data:**
+
 ```json
 {
   "id": "test-legacy",
@@ -118,6 +132,7 @@ While automated tests verify code correctness, manual testing is essential for v
 ```
 
 **Steps:**
+
 1. Create character without new components
 2. Verify character functions normally
 3. Confirm no errors or warnings
@@ -127,38 +142,48 @@ While automated tests verify code correctness, manual testing is essential for v
 ### Prompt Generation Tests
 
 #### Test 6: Verify Prompt Structure
+
 **Steps:**
+
 1. Trigger AI turn for character with all components
 2. In Network tab, intercept request to LLM proxy
 3. Inspect prompt payload structure
 
 **Expected Prompt Structure:**
+
 ```markdown
 YOU ARE Complete Test Character.
 This is your identity...
 
 ## Your Description
+
 A test character with depth
 
 ## Your Profile
+
 [if present]
 
 ## Your Core Motivations
+
 I test features because quality matters to me.
 
 ## Your Internal Tensions
+
 I want perfection but know iteration is key.
 
 ## Your Core Dilemmas
+
 Is a bug-free system truly achievable?
 
 ## Your Likes
+
 [if present]
 
 [... other sections ...]
 ```
 
 **Validation Points:**
+
 - [ ] Header uses character name
 - [ ] Sections appear in correct order
 - [ ] Psychological sections after Profile, before Likes
@@ -167,12 +192,15 @@ Is a bug-free system truly achievable?
 - [ ] No extra escaping or formatting issues
 
 #### Test 7: Verify Section Ordering
+
 **Steps:**
+
 1. Create character with all components
 2. Generate prompt
 3. Verify section order
 
 **Expected Order:**
+
 1. Description
 2. Personality
 3. Profile
@@ -190,7 +218,9 @@ Is a bug-free system truly achievable?
 ### LLM Response Quality Tests
 
 #### Test 8: Enhanced Response Coherence
+
 **Steps:**
+
 1. Create two characters:
    - One WITH psychological components
    - One WITHOUT psychological components
@@ -198,6 +228,7 @@ Is a bug-free system truly achievable?
 3. Compare response quality
 
 **Evaluation Criteria:**
+
 - [ ] Character WITH components shows deeper personality
 - [ ] Motivations reflected in decision-making
 - [ ] Internal tensions create nuanced responses
@@ -205,7 +236,9 @@ Is a bug-free system truly achievable?
 - [ ] Overall more coherent character voice
 
 #### Test 9: Consistency Check
+
 **Steps:**
+
 1. Generate multiple AI responses for same character
 2. Verify psychological traits remain consistent
 3. Check for contradictions
@@ -215,7 +248,9 @@ Is a bug-free system truly achievable?
 ### Edge Case Tests
 
 #### Test 10: Empty Component Values
+
 **Test Data:**
+
 ```json
 {
   "core:motivations": { "text": "" },
@@ -225,6 +260,7 @@ Is a bug-free system truly achievable?
 ```
 
 **Steps:**
+
 1. Create character with empty/whitespace values
 2. Generate prompt
 3. Verify sections omitted (not empty sections)
@@ -232,19 +268,22 @@ Is a bug-free system truly achievable?
 **Expected:** Empty components excluded from prompt
 
 #### Test 11: Special Characters and Formatting
+
 **Test Data:**
+
 ```json
 {
-  "core:motivations": { 
-    "text": "I use **markdown** and _emphasis_ and special chars: & < > \" ' @#$%" 
+  "core:motivations": {
+    "text": "I use **markdown** and _emphasis_ and special chars: & < > \" ' @#$%"
   },
-  "core:core_dilemmas": { 
-    "text": "Can I handle questions? Multiple questions?? Even more???" 
+  "core:core_dilemmas": {
+    "text": "Can I handle questions? Multiple questions?? Even more???"
   }
 }
 ```
 
 **Steps:**
+
 1. Create character with special formatting
 2. Generate and inspect prompt
 3. Verify characters preserved correctly
@@ -252,7 +291,9 @@ Is a bug-free system truly achievable?
 **Expected:** All formatting and special characters preserved
 
 #### Test 12: Very Long Text
+
 **Steps:**
+
 1. Create character with 1000+ character text in each component
 2. Generate prompt
 3. Verify no truncation or errors
@@ -262,7 +303,9 @@ Is a bug-free system truly achievable?
 ### Performance Tests
 
 #### Test 13: Load Time Impact
+
 **Steps:**
+
 1. Measure app load time without new components
 2. Measure app load time with new components
 3. Compare times
@@ -270,7 +313,9 @@ Is a bug-free system truly achievable?
 **Expected:** Negligible impact (< 100ms difference)
 
 #### Test 14: Prompt Generation Speed
+
 **Steps:**
+
 1. Time prompt generation for character with all components
 2. Time prompt generation for character without new components
 3. Compare times
@@ -280,7 +325,9 @@ Is a bug-free system truly achievable?
 ### Save/Load Tests
 
 #### Test 15: Persistence Verification
+
 **Steps:**
+
 1. Create character with psychological components
 2. Save game state
 3. Reload page
@@ -292,7 +339,9 @@ Is a bug-free system truly achievable?
 ### UI Integration Tests (If Character Builder Updated)
 
 #### Test 16: Character Builder Support
+
 **Steps:**
+
 1. Open character builder tool
 2. Check for new component fields
 3. Enter test data
@@ -305,13 +354,14 @@ Is a bug-free system truly achievable?
 
 If issues found, report with:
 
-```markdown
+````markdown
 ### Issue: [Brief description]
 
 **Test Case:** #[number]
 **Environment:** [Browser, OS, branch]
 
 **Steps to Reproduce:**
+
 1. [Step 1]
 2. [Step 2]
 3. [Step 3]
@@ -323,10 +373,13 @@ If issues found, report with:
 **Screenshots:** [If applicable]
 
 **Test Data Used:**
+
 ```json
 [Include exact JSON]
 ```
-```
+````
+
+````
 
 ## Validation Sign-Off
 
@@ -377,7 +430,7 @@ gameEngine.getEntity('quick-test');
 
 // Generate prompt manually
 gameEngine.generatePrompt('quick-test');
-```
+````
 
 ## Acceptance Criteria
 
@@ -399,4 +452,4 @@ gameEngine.generatePrompt('quick-test');
 
 ---
 
-*Ticket created from character-components-analysis.md report*
+_Ticket created from character-components-analysis.md report_

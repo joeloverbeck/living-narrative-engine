@@ -16,9 +16,9 @@ describe('TraitsGenerator - Cliché Handling Integration', () => {
         categories: {
           names: ['Generic Name 1', 'Generic Name 2'],
           personalityTraits: ['Brooding', 'Mysterious'],
-          backgroundElements: ['Orphaned', 'Tragic past']
+          backgroundElements: ['Orphaned', 'Tragic past'],
         },
-        tropesAndStereotypes: ['Hero Journey', 'Chosen One']
+        tropesAndStereotypes: ['Hero Journey', 'Chosen One'],
       };
 
       const prompt = buildTraitsGenerationPrompt(
@@ -26,12 +26,12 @@ describe('TraitsGenerator - Cliché Handling Integration', () => {
         {
           title: 'Test',
           description: 'Test desc',
-          coreTension: 'Test tension'
+          coreTension: 'Test tension',
         },
         {
           coreMotivation: 'Motivation',
           internalContradiction: 'Contradiction',
-          centralQuestion: 'Question?'
+          centralQuestion: 'Question?',
         },
         cliches
       );
@@ -57,12 +57,12 @@ describe('TraitsGenerator - Cliché Handling Integration', () => {
         {
           title: 'Test',
           description: 'Test desc',
-          coreTension: 'Test tension'
+          coreTension: 'Test tension',
         },
         {
           coreMotivation: 'Motivation',
           internalContradiction: 'Contradiction',
-          centralQuestion: 'Question?'
+          centralQuestion: 'Question?',
         },
         null
       );
@@ -80,12 +80,12 @@ describe('TraitsGenerator - Cliché Handling Integration', () => {
         {
           title: 'Test',
           description: 'Test desc',
-          coreTension: 'Test tension'
+          coreTension: 'Test tension',
         },
         {
           coreMotivation: 'Motivation',
           internalContradiction: 'Contradiction',
-          centralQuestion: 'Question?'
+          centralQuestion: 'Question?',
         },
         {}
       );
@@ -99,8 +99,8 @@ describe('TraitsGenerator - Cliché Handling Integration', () => {
       const cliches = {
         categories: {
           names: ['John Doe'],
-          skillsAbilities: ['Master of everything']
-        }
+          skillsAbilities: ['Master of everything'],
+        },
       };
 
       const prompt = buildTraitsGenerationPrompt(
@@ -108,12 +108,12 @@ describe('TraitsGenerator - Cliché Handling Integration', () => {
         {
           title: 'Test Direction',
           description: 'Test description',
-          coreTension: 'Test tension'
+          coreTension: 'Test tension',
         },
         {
           coreMotivation: 'Test motivation',
           internalContradiction: 'Test contradiction',
-          centralQuestion: 'Test question?'
+          centralQuestion: 'Test question?',
         },
         cliches
       );
@@ -127,7 +127,7 @@ describe('TraitsGenerator - Cliché Handling Integration', () => {
 
     it('should handle clichés with only tropesAndStereotypes', () => {
       const cliches = {
-        tropesAndStereotypes: ['The Chosen One', 'Dark Past']
+        tropesAndStereotypes: ['The Chosen One', 'Dark Past'],
       };
 
       const prompt = buildTraitsGenerationPrompt(
@@ -135,12 +135,12 @@ describe('TraitsGenerator - Cliché Handling Integration', () => {
         {
           title: 'Test Direction',
           description: 'Test description',
-          coreTension: 'Test tension'
+          coreTension: 'Test tension',
         },
         {
           coreMotivation: 'Test motivation',
           internalContradiction: 'Test contradiction',
-          centralQuestion: 'Test question?'
+          centralQuestion: 'Test question?',
         },
         cliches
       );

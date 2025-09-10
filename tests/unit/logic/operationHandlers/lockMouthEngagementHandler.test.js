@@ -43,7 +43,7 @@ describe('LockMouthEngagementHandler', () => {
     mockLogger = makeLogger();
     mockEntityManager = makeEntityManager();
     mockEventDispatcher = makeEventDispatcher();
-    
+
     handler = new LockMouthEngagementHandler({
       logger: mockLogger,
       entityManager: mockEntityManager,
@@ -72,53 +72,61 @@ describe('LockMouthEngagementHandler', () => {
   describe('Parameter Validation', () => {
     test('should reject missing actor_id', async () => {
       await handler.execute({}, mockExecutionContext);
-      
+
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: 'LOCK_MOUTH_ENGAGEMENT: invalid "actor_id"',
           details: expect.objectContaining({
-            params: {}
+            params: {},
           }),
         })
       );
-      expect(mouthEngagementUtils.updateMouthEngagementLock).not.toHaveBeenCalled();
+      expect(
+        mouthEngagementUtils.updateMouthEngagementLock
+      ).not.toHaveBeenCalled();
     });
 
     test('should reject empty actor_id', async () => {
       await handler.execute({ actor_id: '  ' }, mockExecutionContext);
-      
+
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: 'LOCK_MOUTH_ENGAGEMENT: invalid "actor_id"',
         })
       );
-      expect(mouthEngagementUtils.updateMouthEngagementLock).not.toHaveBeenCalled();
+      expect(
+        mouthEngagementUtils.updateMouthEngagementLock
+      ).not.toHaveBeenCalled();
     });
 
     test('should reject null actor_id', async () => {
       await handler.execute({ actor_id: null }, mockExecutionContext);
-      
+
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: 'LOCK_MOUTH_ENGAGEMENT: invalid "actor_id"',
         })
       );
-      expect(mouthEngagementUtils.updateMouthEngagementLock).not.toHaveBeenCalled();
+      expect(
+        mouthEngagementUtils.updateMouthEngagementLock
+      ).not.toHaveBeenCalled();
     });
 
     test('should reject non-string actor_id', async () => {
       await handler.execute({ actor_id: 123 }, mockExecutionContext);
-      
+
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: 'LOCK_MOUTH_ENGAGEMENT: invalid "actor_id"',
         })
       );
-      expect(mouthEngagementUtils.updateMouthEngagementLock).not.toHaveBeenCalled();
+      expect(
+        mouthEngagementUtils.updateMouthEngagementLock
+      ).not.toHaveBeenCalled();
     });
   });
 
@@ -127,21 +135,19 @@ describe('LockMouthEngagementHandler', () => {
       const params = { actor_id: 'test-actor-123' };
       mouthEngagementUtils.updateMouthEngagementLock.mockResolvedValue({
         locked: true,
-        updatedParts: [{ partId: 'mouth_1', engagement: { locked: true } }]
+        updatedParts: [{ partId: 'mouth_1', engagement: { locked: true } }],
       });
 
       await handler.execute(params, mockExecutionContext);
 
-      expect(mouthEngagementUtils.updateMouthEngagementLock).toHaveBeenCalledWith(
-        mockEntityManager,
-        'test-actor-123',
-        true
-      );
+      expect(
+        mouthEngagementUtils.updateMouthEngagementLock
+      ).toHaveBeenCalledWith(mockEntityManager, 'test-actor-123', true);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Successfully locked mouth engagement'),
         expect.objectContaining({
           actorId: 'test-actor-123',
-          result: 'Updated 1 mouth parts'
+          result: 'Updated 1 mouth parts',
         })
       );
       expect(mockEventDispatcher.dispatch).not.toHaveBeenCalled();
@@ -163,7 +169,7 @@ describe('LockMouthEngagementHandler', () => {
     test('should handle legacy entity update', async () => {
       const params = { actor_id: 'legacy-actor' };
       mouthEngagementUtils.updateMouthEngagementLock.mockResolvedValue({
-        locked: true
+        locked: true,
       });
 
       await handler.execute(params, mockExecutionContext);
@@ -172,7 +178,7 @@ describe('LockMouthEngagementHandler', () => {
         expect.stringContaining('Successfully locked mouth engagement'),
         expect.objectContaining({
           actorId: 'legacy-actor',
-          result: 'Direct component updated'
+          result: 'Direct component updated',
         })
       );
       expect(mockEventDispatcher.dispatch).not.toHaveBeenCalled();
@@ -181,31 +187,27 @@ describe('LockMouthEngagementHandler', () => {
     test('should trim actor_id before processing', async () => {
       const params = { actor_id: '  test-actor  ' };
       mouthEngagementUtils.updateMouthEngagementLock.mockResolvedValue({
-        locked: true
+        locked: true,
       });
 
       await handler.execute(params, mockExecutionContext);
 
-      expect(mouthEngagementUtils.updateMouthEngagementLock).toHaveBeenCalledWith(
-        mockEntityManager,
-        'test-actor',
-        true
-      );
+      expect(
+        mouthEngagementUtils.updateMouthEngagementLock
+      ).toHaveBeenCalledWith(mockEntityManager, 'test-actor', true);
     });
 
     test('should handle different actor_id formats', async () => {
       const params = { actor_id: 'core:actor:player' };
       mouthEngagementUtils.updateMouthEngagementLock.mockResolvedValue({
-        locked: true
+        locked: true,
       });
 
       await handler.execute(params, mockExecutionContext);
 
-      expect(mouthEngagementUtils.updateMouthEngagementLock).toHaveBeenCalledWith(
-        mockEntityManager,
-        'core:actor:player',
-        true
-      );
+      expect(
+        mouthEngagementUtils.updateMouthEngagementLock
+      ).toHaveBeenCalledWith(mockEntityManager, 'core:actor:player', true);
     });
   });
 
@@ -279,7 +281,7 @@ describe('LockMouthEngagementHandler', () => {
 
       const params = { actor_id: 'test-actor' };
       mouthEngagementUtils.updateMouthEngagementLock.mockResolvedValue({
-        locked: true
+        locked: true,
       });
 
       await handler.execute(params, contextWithLogger);
@@ -291,7 +293,7 @@ describe('LockMouthEngagementHandler', () => {
     test('should use default logger when no context logger', async () => {
       const params = { actor_id: 'test-actor' };
       mouthEngagementUtils.updateMouthEngagementLock.mockResolvedValue({
-        locked: true
+        locked: true,
       });
 
       await handler.execute(params, {});

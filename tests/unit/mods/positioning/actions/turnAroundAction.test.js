@@ -34,14 +34,14 @@ describe('positioning:turn_around action', () => {
 
     it('has correct prerequisites', () => {
       expect(turnAroundAction.prerequisites).toHaveLength(2);
-      
+
       expect(turnAroundAction.prerequisites[0]).toEqual({
         logic: {
           condition_ref: 'core:actor-can-move',
         },
         failure_message: 'You cannot move right now.',
       });
-      
+
       expect(turnAroundAction.prerequisites[1]).toEqual({
         logic: {
           condition_ref: 'core:actor-mouth-available',

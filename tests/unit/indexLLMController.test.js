@@ -75,7 +75,7 @@ describe('IndexLLMController - Dependency Resolution', () => {
     // LLMAdapter should be resolvable
     const llmAdapter = container.resolve(tokens.LLMAdapter);
     expect(llmAdapter).toBeDefined();
-    
+
     // Other expected services should also be available
     expect(container.resolve(tokens.ILogger)).toBeDefined();
     expect(container.resolve(tokens.LlmConfigLoader)).toBeDefined();
@@ -84,23 +84,23 @@ describe('IndexLLMController - Dependency Resolution', () => {
 
   it('should successfully initialize IndexLLMController with LLMAdapter', async () => {
     const bootstrap = new CharacterBuilderBootstrap();
-    
+
     // Create a test controller that mimics IndexLLMController
     class TestIndexLLMController {
       #container;
       #llmAdapter;
-      
+
       constructor({ container }) {
         this.#container = container;
         // This is what the real IndexLLMController does
         this.#llmAdapter = container.resolve(tokens.LLMAdapter);
       }
-      
+
       async initialize() {
         // Verify we got the adapter
         return this.#llmAdapter !== null && this.#llmAdapter !== undefined;
       }
-      
+
       async init() {
         return true;
       }
@@ -115,7 +115,7 @@ describe('IndexLLMController - Dependency Resolution', () => {
 
     expect(controller).toBeDefined();
     expect(container).toBeDefined();
-    
+
     // Verify the LLMAdapter is actually available
     const llmAdapter = container.resolve(tokens.LLMAdapter);
     expect(llmAdapter).toBeDefined();

@@ -17,18 +17,19 @@ describe('Real Schema Validation - Schema Loading and Basic Validation', () => {
   it('should validate the actual entity_thought rule file', async () => {
     // Use the test AJV instance that has all schemas pre-loaded
     const ajv = createTestAjv();
-    
+
     // Create an AJV validator wrapper
-    const validator = new AjvSchemaValidator({ 
+    const validator = new AjvSchemaValidator({
       logger: testBed.mockLogger,
-      ajvInstance: ajv 
+      ajvInstance: ajv,
     });
 
     // Test data - the actual rule structure from entity_thought.rule.json
     const entityThoughtRule = {
       $schema: 'schema://living-narrative-engine/rule.schema.json',
       rule_id: 'entity_thought',
-      comment: 'Handles entity thoughts (without speech) by dispatching a UI thought display event. Mirrors the structure of entity_speech.rule.json but for thoughts only.',
+      comment:
+        'Handles entity thoughts (without speech) by dispatching a UI thought display event. Mirrors the structure of entity_speech.rule.json but for thoughts only.',
       event_type: 'core:entity_thought',
       actions: [
         {
@@ -39,14 +40,14 @@ describe('Real Schema Validation - Schema Loading and Basic Validation', () => {
             pairs: [
               {
                 component_type: 'core:name',
-                result_variable: 'thinkerNameComponent'
+                result_variable: 'thinkerNameComponent',
               },
               {
                 component_type: 'core:position',
-                result_variable: 'thinkerPositionComponent'
-              }
-            ]
-          }
+                result_variable: 'thinkerPositionComponent',
+              },
+            ],
+          },
         },
         {
           type: 'IF',
@@ -55,64 +56,75 @@ describe('Real Schema Validation - Schema Loading and Basic Validation', () => {
             condition: {
               and: [
                 {
-                  var: 'context.thinkerNameComponent'
+                  var: 'context.thinkerNameComponent',
                 },
                 {
-                  var: 'context.thinkerPositionComponent'
-                }
-              ]
+                  var: 'context.thinkerPositionComponent',
+                },
+              ],
             },
             then_actions: [
               {
                 type: 'GET_TIMESTAMP',
-                comment: 'Get the current ISO timestamp for perception logging.',
+                comment:
+                  'Get the current ISO timestamp for perception logging.',
                 parameters: {
-                  result_variable: 'currentTimestamp'
-                }
+                  result_variable: 'currentTimestamp',
+                },
               },
               {
                 type: 'DISPATCH_PERCEPTIBLE_EVENT',
-                comment: 'Dispatch a perceptible event for the thought act, to be logged.',
+                comment:
+                  'Dispatch a perceptible event for the thought act, to be logged.',
                 parameters: {
                   location_id: '{context.thinkerPositionComponent.locationId}',
-                  description_text: '{context.thinkerNameComponent.text} is lost in thought',
+                  description_text:
+                    '{context.thinkerNameComponent.text} is lost in thought',
                   perception_type: 'thought_internal',
                   actor_id: '{event.payload.entityId}',
                   target_id: null,
                   involved_entities: [],
                   contextual_data: {
-                    thoughts: '{event.payload.thoughts}'
-                  }
-                }
+                    thoughts: '{event.payload.thoughts}',
+                  },
+                },
               },
               {
                 type: 'DISPATCH_THOUGHT',
-                comment: 'Dispatch core:display_thought event for UI rendering.',
+                comment:
+                  'Dispatch core:display_thought event for UI rendering.',
                 parameters: {
                   entity_id: '{event.payload.entityId}',
-                  thoughts: '{event.payload.thoughts}'
+                  thoughts: '{event.payload.thoughts}',
                   // notes field omitted - it's optional and would need to be an array
-                }
-              }
-            ]
-          }
-        }
-      ]
+                },
+              },
+            ],
+          },
+        },
+      ],
     };
 
     // Validate against the rule schema
-    const result = validator.validate('schema://living-narrative-engine/rule.schema.json', entityThoughtRule);
-    
+    const result = validator.validate(
+      'schema://living-narrative-engine/rule.schema.json',
+      entityThoughtRule
+    );
+
     // The current schema validation setup has issues with operation type resolution
     // This is a known issue where the discriminator pattern in operation.schema.json
     // doesn't properly route to operation-specific schemas in the test environment.
     // For now, we'll mark this as an expected failure until the schema loading is fixed.
-    
+
     if (!result.isValid) {
       // Log for debugging but don't fail the test
-      console.log('Note: Rule validation currently fails due to schema loading issues in test environment.');
-      console.log('This is a known issue with operation schema discriminator resolution.');
-      
+      console.log(
+        'Note: Rule validation currently fails due to schema loading issues in test environment.'
+      );
+      console.log(
+        'This is a known issue with operation schema discriminator resolution.'
+      );
+
       // Skip this test for now
       expect(true).toBe(true);
     } else {
@@ -125,9 +137,9 @@ describe('Real Schema Validation - Schema Loading and Basic Validation', () => {
   it('should validate individual operations from the rule', async () => {
     // Use the test AJV instance
     const ajv = createTestAjv();
-    const validator = new AjvSchemaValidator({ 
+    const validator = new AjvSchemaValidator({
       logger: testBed.mockLogger,
-      ajvInstance: ajv 
+      ajvInstance: ajv,
     });
 
     // Test individual operations
@@ -138,37 +150,38 @@ describe('Real Schema Validation - Schema Loading and Basic Validation', () => {
         pairs: [
           {
             component_type: 'core:name',
-            result_variable: 'thinkerNameComponent'
-          }
-        ]
-      }
+            result_variable: 'thinkerNameComponent',
+          },
+        ],
+      },
     };
 
     const dispatchThoughtOp = {
       type: 'DISPATCH_THOUGHT',
       parameters: {
         entity_id: '{event.payload.entityId}',
-        thoughts: '{event.payload.thoughts}'
+        thoughts: '{event.payload.thoughts}',
         // notes is optional and must be an array when provided
-      }
+      },
     };
 
     // Test operations that we know have working schemas
     const operations = [
-      { 
-        name: 'DISPATCH_THOUGHT', 
+      {
+        name: 'DISPATCH_THOUGHT',
         data: dispatchThoughtOp,
-        schemaId: 'schema://living-narrative-engine/operations/dispatchThought.schema.json'
-      }
+        schemaId:
+          'schema://living-narrative-engine/operations/dispatchThought.schema.json',
+      },
     ];
 
     for (const operation of operations) {
       // Check if the schema is loaded
       const isLoaded = validator.isSchemaLoaded(operation.schemaId);
-      
+
       if (isLoaded) {
         const result = validator.validate(operation.schemaId, operation.data);
-        
+
         if (!result.isValid) {
           console.error(`${operation.name} operation validation errors:`);
           result.errors.forEach((error, index) => {
@@ -178,11 +191,13 @@ describe('Real Schema Validation - Schema Loading and Basic Validation', () => {
             console.error('---');
           });
         }
-        
+
         expect(result.isValid).toBe(true);
       } else {
         // Schema not loaded - this is a test environment issue
-        console.log(`Note: ${operation.schemaId} not loaded in test environment`);
+        console.log(
+          `Note: ${operation.schemaId} not loaded in test environment`
+        );
         // Skip validation for schemas that aren't loaded
         expect(true).toBe(true);
       }
@@ -191,9 +206,9 @@ describe('Real Schema Validation - Schema Loading and Basic Validation', () => {
 
   it('should check if all required schemas are loaded', async () => {
     const ajv = createTestAjv();
-    const validator = new AjvSchemaValidator({ 
+    const validator = new AjvSchemaValidator({
       logger: testBed.mockLogger,
-      ajvInstance: ajv 
+      ajvInstance: ajv,
     });
 
     const requiredSchemas = [
@@ -202,7 +217,7 @@ describe('Real Schema Validation - Schema Loading and Basic Validation', () => {
       'schema://living-narrative-engine/operations/queryComponents.schema.json',
       'schema://living-narrative-engine/operations/if.schema.json',
       'schema://living-narrative-engine/operations/dispatchThought.schema.json',
-      'schema://living-narrative-engine/common.schema.json'
+      'schema://living-narrative-engine/common.schema.json',
     ];
 
     const loadedSchemas = validator.getLoadedSchemaIds();
@@ -211,7 +226,7 @@ describe('Real Schema Validation - Schema Loading and Basic Validation', () => {
     for (const schemaId of requiredSchemas) {
       const isLoaded = validator.isSchemaLoaded(schemaId);
       console.log(`${schemaId}: ${isLoaded ? 'LOADED' : 'MISSING'}`);
-      
+
       if (!isLoaded) {
         console.error(`Missing schema: ${schemaId}`);
       }

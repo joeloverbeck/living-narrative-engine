@@ -16,9 +16,7 @@ import {
 } from '../../utils/proximityUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { updateMovementLock } from '../../utils/movementUtils.js';
-import {
-  tryWriteContextVariable,
-} from '../../utils/contextVariableUtils.js';
+import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import * as closenessCircleService from '../services/closenessCircleService.js';
 import { ComponentStateValidator } from '../../utils/componentStateValidator.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
@@ -47,7 +45,12 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher - Event dispatcher for error handling.
    * @param {typeof closenessCircleService} deps.closenessCircleService - Service for closeness circle operations.
    */
-  constructor({ logger, entityManager, safeEventDispatcher, closenessCircleService }) {
+  constructor({
+    logger,
+    entityManager,
+    safeEventDispatcher,
+    closenessCircleService,
+  }) {
     super('EstablishSittingClosenessHandler', {
       logger: { value: logger },
       entityManager: {
@@ -82,44 +85,60 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
   async execute(parameters, executionContext) {
     const logger = this.getLogger(executionContext);
     const operationId = `establish_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     try {
       // Phase 1: Enhanced parameter validation
       this.#validateParameters(parameters, operationId, logger);
-      
+
       // Phase 2: Component state validation
       const { furnitureComponent } = await this.#validateComponentState(
         parameters,
         logger
       );
-      
+
       // Phase 3: Adjacent actor discovery with validation
       const adjacentActors = await this.#findValidatedAdjacentActors(
-        parameters, 
+        parameters,
         furnitureComponent,
         logger
       );
-      
+
       if (adjacentActors.length === 0) {
-        return this.#handleNoAdjacentActors(parameters, operationId, executionContext, logger);
+        return this.#handleNoAdjacentActors(
+          parameters,
+          operationId,
+          executionContext,
+          logger
+        );
       }
-      
+
       // Phase 4: Establish closeness with proper merge handling
       await this.#establishClosenessWithValidation(
-        parameters, 
-        adjacentActors, 
+        parameters,
+        adjacentActors,
         operationId,
         executionContext,
         logger
       );
-      
+
       // Phase 5: Validate final state
       await this.#validateFinalState(parameters, adjacentActors, logger);
-      
-      return this.#handleSuccess(parameters, adjacentActors, operationId, executionContext, logger);
-      
+
+      return this.#handleSuccess(
+        parameters,
+        adjacentActors,
+        operationId,
+        executionContext,
+        logger
+      );
     } catch (error) {
-      return this.#handleError(error, parameters, operationId, executionContext, logger);
+      return this.#handleError(
+        error,
+        parameters,
+        operationId,
+        executionContext,
+        logger
+      );
     }
   }
 
@@ -135,9 +154,9 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
   #validateParameters(parameters, operationId, logger) {
     try {
       validateProximityParameters(
-        parameters.furniture_id, 
-        parameters.actor_id, 
-        parameters.spot_index, 
+        parameters.furniture_id,
+        parameters.actor_id,
+        parameters.spot_index,
         logger
       );
     } catch (error) {
@@ -159,15 +178,15 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
    */
   async #validateComponentState(parameters, logger) {
     const validator = new ComponentStateValidator({ logger });
-    
+
     const furnitureComponent = this.#entityManager.getComponentData(
-      parameters.furniture_id, 
+      parameters.furniture_id,
       'positioning:allows_sitting'
     );
-    
+
     validator.validateFurnitureComponent(
-      parameters.furniture_id, 
-      furnitureComponent, 
+      parameters.furniture_id,
+      furnitureComponent,
       'establish closeness'
     );
 
@@ -179,12 +198,12 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
     }
 
     const actorClosenessComponent = this.#entityManager.getComponentData(
-      parameters.actor_id, 
+      parameters.actor_id,
       'positioning:closeness'
     );
-    
+
     validator.validateClosenessComponent(
-      parameters.actor_id, 
+      parameters.actor_id,
       actorClosenessComponent,
       'establish closeness'
     );
@@ -203,20 +222,26 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
    */
   async #findValidatedAdjacentActors(parameters, furnitureComponent, logger) {
     const validator = new ComponentStateValidator({ logger });
-    const adjacentActors = findAdjacentOccupants(furnitureComponent, parameters.spot_index);
-    
+    const adjacentActors = findAdjacentOccupants(
+      furnitureComponent,
+      parameters.spot_index
+    );
+
     // Validate each adjacent actor exists and has valid components
     const validActors = [];
     for (const actorId of adjacentActors) {
       try {
-        const actorCloseness = this.#entityManager.getComponentData(actorId, 'positioning:closeness');
+        const actorCloseness = this.#entityManager.getComponentData(
+          actorId,
+          'positioning:closeness'
+        );
         validator.validateClosenessComponent(actorId, actorCloseness);
         validActors.push(actorId);
       } catch (error) {
-        logger.warn('Adjacent actor validation failed, skipping', { 
-          actorId, 
+        logger.warn('Adjacent actor validation failed, skipping', {
+          actorId,
           furnitureId: parameters.furniture_id,
-          error: error.message
+          error: error.message,
         });
       }
     }
@@ -235,27 +260,33 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
    * @returns {Promise<void>}
    * @private
    */
-  async #establishClosenessWithValidation(parameters, adjacentActors, _operationId, _executionContext, _logger) {
+  async #establishClosenessWithValidation(
+    parameters,
+    adjacentActors,
+    _operationId,
+    _executionContext,
+    _logger
+  ) {
     // For seated actors, only establish adjacent relationships (not transitive)
     // Each adjacent actor should have bidirectional closeness with the sitting actor only
-    
+
     for (const adjacentActorId of adjacentActors) {
       // Get current components
       const actorCloseness = this.#entityManager.getComponentData(
-        parameters.actor_id, 
+        parameters.actor_id,
         'positioning:closeness'
       );
       const adjacentCloseness = this.#entityManager.getComponentData(
-        adjacentActorId, 
+        adjacentActorId,
         'positioning:closeness'
       );
-      
+
       // Get current partners lists or initialize empty arrays
-      const actorPartners = Array.isArray(actorCloseness?.partners) 
-        ? [...actorCloseness.partners] 
+      const actorPartners = Array.isArray(actorCloseness?.partners)
+        ? [...actorCloseness.partners]
         : [];
-      const adjacentPartners = Array.isArray(adjacentCloseness?.partners) 
-        ? [...adjacentCloseness.partners] 
+      const adjacentPartners = Array.isArray(adjacentCloseness?.partners)
+        ? [...adjacentCloseness.partners]
         : [];
 
       // Add each actor to the other's partners list if not already present
@@ -267,16 +298,26 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
       }
 
       // Use closeness circle service's repair function to ensure uniqueness and sorting
-      const repairedActorPartners = this.#closenessCircleService.repair(actorPartners);
-      const repairedAdjacentPartners = this.#closenessCircleService.repair(adjacentPartners);
+      const repairedActorPartners =
+        this.#closenessCircleService.repair(actorPartners);
+      const repairedAdjacentPartners =
+        this.#closenessCircleService.repair(adjacentPartners);
 
       // Update both actors with their new partners lists
-      await this.#entityManager.addComponent(parameters.actor_id, 'positioning:closeness', {
-        partners: repairedActorPartners
-      });
-      await this.#entityManager.addComponent(adjacentActorId, 'positioning:closeness', {
-        partners: repairedAdjacentPartners
-      });
+      await this.#entityManager.addComponent(
+        parameters.actor_id,
+        'positioning:closeness',
+        {
+          partners: repairedActorPartners,
+        }
+      );
+      await this.#entityManager.addComponent(
+        adjacentActorId,
+        'positioning:closeness',
+        {
+          partners: repairedAdjacentPartners,
+        }
+      );
     }
 
     // Update movement locks for all affected actors
@@ -297,21 +338,21 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
    */
   async #validateFinalState(parameters, adjacentActors, logger) {
     const validator = new ComponentStateValidator({ logger });
-    
+
     try {
       // Validate bidirectional relationships were created
       for (const adjacentActorId of adjacentActors) {
         validator.validateBidirectionalCloseness(
-          this.#entityManager, 
-          parameters.actor_id, 
+          this.#entityManager,
+          parameters.actor_id,
           adjacentActorId
         );
       }
     } catch (error) {
-      logger.error('Final state validation failed', { 
-        error: error.message, 
+      logger.error('Final state validation failed', {
+        error: error.message,
         actorId: parameters.actor_id,
-        adjacentActors
+        adjacentActors,
       });
       // Don't throw - closeness was established, just log the inconsistency
     }
@@ -332,7 +373,7 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
       operationId,
       actorId: parameters.actor_id,
       furnitureId: parameters.furniture_id,
-      spotIndex: parameters.spot_index
+      spotIndex: parameters.spot_index,
     });
 
     if (parameters.result_variable) {
@@ -359,14 +400,20 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
    * @returns {object} Success result object
    * @private
    */
-  #handleSuccess(parameters, adjacentActors, operationId, executionContext, logger) {
+  #handleSuccess(
+    parameters,
+    adjacentActors,
+    operationId,
+    executionContext,
+    logger
+  ) {
     logger.info('Sitting closeness established successfully', {
       operationId,
       actorId: parameters.actor_id,
       furnitureId: parameters.furniture_id,
       spotIndex: parameters.spot_index,
       adjacentActors: adjacentActors,
-      relationshipsEstablished: adjacentActors.length
+      relationshipsEstablished: adjacentActors.length,
     });
 
     if (parameters.result_variable) {
@@ -386,8 +433,8 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
         actorId: parameters.actor_id,
         furnitureId: parameters.furniture_id,
         adjacentActors: adjacentActors,
-        operationId
-      }
+        operationId,
+      },
     });
 
     return { success: true, adjacentActors };
@@ -411,7 +458,7 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
       furnitureId: parameters.furniture_id,
       spotIndex: parameters.spot_index,
       error: error.message,
-      errorType: error.constructor.name
+      errorType: error.constructor.name,
     });
 
     if (parameters.result_variable) {
@@ -432,7 +479,7 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
         actorId: parameters.actor_id,
         furnitureId: parameters.furniture_id,
         operationId,
-        error: error.message
+        error: error.message,
       },
       logger
     );

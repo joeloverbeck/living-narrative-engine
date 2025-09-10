@@ -216,13 +216,17 @@ describe('High Concurrency E2E', () => {
       promise,
       new Promise((_, reject) =>
         setTimeout(
-          () => reject(new Error(`Operation '${operationName}' timed out after ${timeoutMs}ms`)),
+          () =>
+            reject(
+              new Error(
+                `Operation '${operationName}' timed out after ${timeoutMs}ms`
+              )
+            ),
           timeoutMs
         )
       ),
     ]);
   }
-
 
   /**
    * Creates dataset for concurrency testing
@@ -255,38 +259,40 @@ describe('High Concurrency E2E', () => {
 
     // OPTIMIZED: Create all entity definitions first, then batch create instances
     const entityPromises = [];
-    
+
     for (let i = 0; i < size; i++) {
       const actorId = `concurrency-actor-${i}`;
-      
+
       // Store definition synchronously
       const definition = new EntityDefinition(actorId, {
         description: 'Concurrency test actor',
         components: {
           'core:actor': { isPlayer: i === 0 },
-          'core:stats': { 
+          'core:stats': {
             level: Math.floor(Math.random() * 10) + 1,
             strength: Math.floor(Math.random() * 30) + 10,
-            agility: Math.floor(Math.random() * 25) + 5
+            agility: Math.floor(Math.random() * 25) + 5,
           },
-          'core:health': { 
+          'core:health': {
             current: Math.floor(Math.random() * 80) + 20,
-            max: 100
+            max: 100,
           },
           'core:position': { locationId: 'concurrency-test-location' },
         },
       });
       registry.store('entityDefinitions', actorId, definition);
-      
+
       // Queue entity creation
       entityPromises.push(
-        entityManager.createEntityInstance(actorId, {
-          instanceId: actorId,
-          definitionId: actorId,
-        }).then(() => entityManager.getEntityInstance(actorId))
+        entityManager
+          .createEntityInstance(actorId, {
+            instanceId: actorId,
+            definitionId: actorId,
+          })
+          .then(() => entityManager.getEntityInstance(actorId))
       );
     }
-    
+
     // OPTIMIZED: Create all entities in parallel
     const createdEntities = await Promise.all(entityPromises);
     entities.push(...createdEntities);
@@ -301,18 +307,24 @@ describe('High Concurrency E2E', () => {
   async function createConcurrencyGameContext() {
     // Validate required services before creating context
     if (!jsonLogicService) {
-      throw new Error('jsonLogicService is not initialized - required for filter operations');
+      throw new Error(
+        'jsonLogicService is not initialized - required for filter operations'
+      );
     }
-    
+
     if (!entityManager) {
       throw new Error('entityManager is not initialized');
     }
-    
-    const location = await entityManager.getEntityInstance('concurrency-test-location');
+
+    const location = await entityManager.getEntityInstance(
+      'concurrency-test-location'
+    );
     if (!location) {
-      throw new Error('Test location not found - ensure createConcurrencyDataset was called first');
+      throw new Error(
+        'Test location not found - ensure createConcurrencyDataset was called first'
+      );
     }
-    
+
     return {
       currentLocation: location,
       entityManager: entityManager,
@@ -361,7 +373,11 @@ describe('High Concurrency E2E', () => {
         );
 
         promises.push(
-          operationPromise.catch((error) => ({ error, scopeId, operationIndex: i }))
+          operationPromise.catch((error) => ({
+            error,
+            scopeId,
+            operationIndex: i,
+          }))
         );
       }
 
@@ -377,7 +393,10 @@ describe('High Concurrency E2E', () => {
       // Log any failures for debugging
       if (failedResults.length > 0) {
         failedResults.forEach(({ error, scopeId, operationIndex }) => {
-          logger.error(`Operation ${operationIndex} failed for scope ${scopeId}:`, error);
+          logger.error(
+            `Operation ${operationIndex} failed for scope ${scopeId}:`,
+            error
+          );
         });
       }
 

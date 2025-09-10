@@ -111,7 +111,6 @@ describe('StepResolver', () => {
 
         expect(() => resolver.resolve(node, undefined)).toThrow();
       });
-
     });
 
     describe('basic field resolution', () => {
@@ -164,7 +163,6 @@ describe('StepResolver', () => {
         const result = resolver.resolve(node, ctx);
 
         expect(result).toEqual(new Set());
-        
       });
 
       it('should handle undefined field values from entities', () => {
@@ -488,10 +486,6 @@ describe('StepResolver', () => {
         entitiesGateway.getComponentData.mockReturnValue('test-value');
 
         resolver.resolve(node, ctx);
-
-        
-
-        
       });
 
       it('should not log trace messages when trace is not provided', () => {

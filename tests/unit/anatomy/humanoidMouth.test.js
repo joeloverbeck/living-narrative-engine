@@ -19,7 +19,7 @@ describe('Humanoid Mouth Entity - Mouth Engagement', () => {
     expect(mouthDefinition.components['core:mouth_engagement']).toBeDefined();
     expect(mouthDefinition.components['core:mouth_engagement']).toEqual({
       locked: false,
-      forcedOverride: false
+      forcedOverride: false,
     });
   });
 
@@ -30,8 +30,12 @@ describe('Humanoid Mouth Entity - Mouth Engagement', () => {
     expect(mouthDefinition.components['core:name']).toBeDefined();
     expect(mouthDefinition.components['core:name'].text).toBe('mouth');
     expect(mouthDefinition.components['anatomy:sockets']).toBeDefined();
-    expect(mouthDefinition.components['anatomy:sockets'].sockets).toHaveLength(1);
-    expect(mouthDefinition.components['anatomy:sockets'].sockets[0].id).toBe('teeth');
+    expect(mouthDefinition.components['anatomy:sockets'].sockets).toHaveLength(
+      1
+    );
+    expect(mouthDefinition.components['anatomy:sockets'].sockets[0].id).toBe(
+      'teeth'
+    );
   });
 
   test('should have correct default values for mouth engagement', () => {
@@ -48,7 +52,9 @@ describe('Humanoid Mouth Entity - Mouth Engagement', () => {
   });
 
   test('should have valid JSON schema reference', () => {
-    expect(mouthDefinition.$schema).toBe('schema://living-narrative-engine/entity-definition.schema.json');
+    expect(mouthDefinition.$schema).toBe(
+      'schema://living-narrative-engine/entity-definition.schema.json'
+    );
   });
 
   test('should have correct entity ID', () => {

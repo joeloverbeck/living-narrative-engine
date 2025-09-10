@@ -130,51 +130,62 @@ export class ModManifestProcessor {
 
     // If validation orchestrator is available and cross-reference validation is requested
     if (this.#modValidationOrchestrator && validateCrossReferences) {
-      this.#logger.info('Using ModValidationOrchestrator for comprehensive validation');
-      
+      this.#logger.info(
+        'Using ModValidationOrchestrator for comprehensive validation'
+      );
+
       try {
-        const validationResult = await this.#modValidationOrchestrator.validateForLoading(
-          requestedIds,
-          { strictMode, allowWarnings: !strictMode }
-        );
-        
+        const validationResult =
+          await this.#modValidationOrchestrator.validateForLoading(
+            requestedIds,
+            { strictMode, allowWarnings: !strictMode }
+          );
+
         if (!validationResult.canLoad) {
-          throw new ModDependencyError('Pre-loading validation failed - cannot load mods');
+          throw new ModDependencyError(
+            'Pre-loading validation failed - cannot load mods'
+          );
         }
-        
+
         validationWarnings = validationResult.warnings || [];
-        
+
         if (validationWarnings.length > 0) {
-          this.#logger.warn(`Loading with ${validationWarnings.length} validation warnings`);
-          validationWarnings.forEach(warning => {
+          this.#logger.warn(
+            `Loading with ${validationWarnings.length} validation warnings`
+          );
+          validationWarnings.forEach((warning) => {
             this.#logger.warn(`  - ${warning}`);
           });
         }
-        
+
         // The orchestrator already loaded manifests, use them
-        const loadedManifestsMap = await this.#modManifestLoader.getLoadedManifests() || new Map();
-        
+        const loadedManifestsMap =
+          (await this.#modManifestLoader.getLoadedManifests()) || new Map();
+
         // Store all manifests in registry
         for (const [modId, manifestObj] of loadedManifestsMap.entries()) {
           this.#registry.store('mod_manifests', modId, manifestObj);
         }
-        
+
         // Use the load order from validation result if available
         const finalModOrder = validationResult.loadOrder || requestedIds;
         this.#registry.store('meta', 'final_mod_order', finalModOrder);
-        
-        return { 
-          loadedManifestsMap, 
-          finalModOrder, 
+
+        return {
+          loadedManifestsMap,
+          finalModOrder,
           incompatibilityCount: 0,
-          validationWarnings 
+          validationWarnings,
         };
       } catch (error) {
         if (strictMode) {
           throw error;
         }
         // Fall back to traditional validation if orchestrator fails
-        this.#logger.warn('Validation orchestrator failed, falling back to traditional validation', error);
+        this.#logger.warn(
+          'Validation orchestrator failed, falling back to traditional validation',
+          error
+        );
       }
     }
 
@@ -229,11 +240,11 @@ export class ModManifestProcessor {
 
     this.#registry.store('meta', 'final_mod_order', finalModOrder);
 
-    return { 
-      loadedManifestsMap, 
-      finalModOrder, 
+    return {
+      loadedManifestsMap,
+      finalModOrder,
       incompatibilityCount,
-      validationWarnings 
+      validationWarnings,
     };
   }
 }

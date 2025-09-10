@@ -15,16 +15,18 @@ import { tokens } from './dependencyInjection/tokens.js';
 async function updateLLMDisplay(container) {
   const llmNameElement = document.getElementById('active-llm-name');
   if (!llmNameElement) return;
-  
+
   try {
     const llmAdapter = container.resolve(tokens.LLMAdapter);
     const currentLlmId = await llmAdapter.getCurrentActiveLlmId();
-    
+
     if (currentLlmId) {
       // Get the display name for the current LLM
       const availableOptions = await llmAdapter.getAvailableLlmOptions();
-      const currentOption = availableOptions.find(opt => opt.configId === currentLlmId);
-      
+      const currentOption = availableOptions.find(
+        (opt) => opt.configId === currentLlmId
+      );
+
       if (currentOption) {
         llmNameElement.textContent = currentOption.displayName || currentLlmId;
       } else {

@@ -35,9 +35,8 @@ describe('ActionTracingConfigMigration', () => {
       };
 
       // Act
-      const result = ActionTracingConfigMigration.migrateConfig(
-        configWithoutTracing
-      );
+      const result =
+        ActionTracingConfigMigration.migrateConfig(configWithoutTracing);
 
       // Assert
       expect(result).not.toBe(configWithoutTracing); // Should be new object
@@ -83,7 +82,8 @@ describe('ActionTracingConfigMigration', () => {
   describe('getDefaultActionTracingConfig', () => {
     it('should return complete default configuration', () => {
       // Act
-      const defaults = ActionTracingConfigMigration.getDefaultActionTracingConfig();
+      const defaults =
+        ActionTracingConfigMigration.getDefaultActionTracingConfig();
 
       // Assert - Verify structure
       expect(defaults).toBeDefined();
@@ -114,8 +114,10 @@ describe('ActionTracingConfigMigration', () => {
 
     it('should return new object instance each time', () => {
       // Act
-      const defaults1 = ActionTracingConfigMigration.getDefaultActionTracingConfig();
-      const defaults2 = ActionTracingConfigMigration.getDefaultActionTracingConfig();
+      const defaults1 =
+        ActionTracingConfigMigration.getDefaultActionTracingConfig();
+      const defaults2 =
+        ActionTracingConfigMigration.getDefaultActionTracingConfig();
 
       // Assert
       expect(defaults1).not.toBe(defaults2);
@@ -804,7 +806,8 @@ describe('ActionTracingConfigMigration', () => {
       };
 
       // Act
-      const result = ActionTracingConfigMigration.mergeWithDefaults(mixedConfig);
+      const result =
+        ActionTracingConfigMigration.mergeWithDefaults(mixedConfig);
 
       // Assert
       expect(result.enabled).toBe(true); // kept valid

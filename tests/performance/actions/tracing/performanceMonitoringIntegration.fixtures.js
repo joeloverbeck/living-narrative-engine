@@ -2,7 +2,7 @@
  * @file Performance monitoring integration test fixtures
  * @description Test data and scenarios for validating performance monitoring workflows
  * during realistic gaming action execution patterns
- * 
+ *
  * Supports Priority 2.2: Performance Monitoring Integration (MEDIUM) from
  * reports/actions-tracing-architecture-analysis.md
  */
@@ -258,7 +258,8 @@ export const LOAD_TEST_PATTERNS = {
  */
 export function createTestActionData(actionId, pattern = 'EXPLORATION') {
   const patternData = GAMING_ACTION_PATTERNS[pattern];
-  const actionData = patternData.find(a => a.actionId === actionId) || patternData[0];
+  const actionData =
+    patternData.find((a) => a.actionId === actionId) || patternData[0];
 
   return {
     actionId: actionData.actionId,
@@ -313,12 +314,18 @@ export function generateActionSequence(pattern, count) {
 export const MONITORING_VALIDATION = {
   // Validate monitoring overhead stays below threshold
   validateMonitoringOverhead(measurements, thresholdMs = 1.0) {
-    const average = measurements.reduce((sum, m) => sum + m, 0) / measurements.length;
+    const average =
+      measurements.reduce((sum, m) => sum + m, 0) / measurements.length;
     const max = Math.max(...measurements);
-    const p95 = measurements.sort((a, b) => a - b)[Math.floor(measurements.length * 0.95)];
+    const p95 = measurements.sort((a, b) => a - b)[
+      Math.floor(measurements.length * 0.95)
+    ];
 
     return {
-      isValid: average < thresholdMs && max < (thresholdMs * 2) && p95 < (thresholdMs * 1.5),
+      isValid:
+        average < thresholdMs &&
+        max < thresholdMs * 2 &&
+        p95 < thresholdMs * 1.5,
       average,
       max,
       p95,
@@ -333,11 +340,12 @@ export const MONITORING_VALIDATION = {
     const falsePositives = [];
 
     for (const expected of expectedAlerts) {
-      const match = actualAlerts.find(actual => 
-        actual.type === expected.expectedAlertType &&
-        actual.severity === expected.expectedSeverity &&
-        actual.operation.includes(expected.actionId) &&
-        Math.abs(actual.timestamp - expected.timestamp) < toleranceMs
+      const match = actualAlerts.find(
+        (actual) =>
+          actual.type === expected.expectedAlertType &&
+          actual.severity === expected.expectedSeverity &&
+          actual.operation.includes(expected.actionId) &&
+          Math.abs(actual.timestamp - expected.timestamp) < toleranceMs
       );
 
       if (match) {
@@ -349,7 +357,7 @@ export const MONITORING_VALIDATION = {
 
     // Find false positives (alerts that weren't expected)
     for (const actual of actualAlerts) {
-      const wasExpected = matches.some(m => m.actual === actual);
+      const wasExpected = matches.some((m) => m.actual === actual);
       if (!wasExpected) {
         falsePositives.push(actual);
       }

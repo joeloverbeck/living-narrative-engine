@@ -2,7 +2,14 @@
  * @file Unit tests for environmentUtils module
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import {
   detectEnvironment,
   getEnvironmentVariable,
@@ -27,7 +34,7 @@ describe('environmentUtils', () => {
   });
 
   afterEach(() => {
-    Object.keys(originalGlobals).forEach(key => {
+    Object.keys(originalGlobals).forEach((key) => {
       if (originalGlobals[key] !== undefined) {
         globalThis[key] = originalGlobals[key];
       } else {
@@ -50,9 +57,9 @@ describe('environmentUtils', () => {
 
   describe('getEnvironmentVariable', () => {
     it('should get from process.env', () => {
-      globalThis.process = { 
+      globalThis.process = {
         versions: { node: '16.0.0' },
-        env: { TEST_VAR: 'node-value' }
+        env: { TEST_VAR: 'node-value' },
       };
       expect(getEnvironmentVariable('TEST_VAR')).toBe('node-value');
     });
@@ -71,9 +78,9 @@ describe('environmentUtils', () => {
 
   describe('getEnvironmentMode', () => {
     it('should normalize NODE_ENV', () => {
-      globalThis.process = { 
+      globalThis.process = {
         versions: { node: '16.0.0' },
-        env: { NODE_ENV: 'prod' }
+        env: { NODE_ENV: 'prod' },
       };
       expect(getEnvironmentMode()).toBe('production');
     });
@@ -81,9 +88,9 @@ describe('environmentUtils', () => {
 
   describe('shouldSkipDebugConfig', () => {
     it('should return true for truthy values', () => {
-      globalThis.process = { 
+      globalThis.process = {
         versions: { node: '16.0.0' },
-        env: { SKIP_DEBUG_CONFIG: 'true' }
+        env: { SKIP_DEBUG_CONFIG: 'true' },
       };
       expect(shouldSkipDebugConfig()).toBe(true);
     });
@@ -91,11 +98,11 @@ describe('environmentUtils', () => {
 
   describe('getEnvironmentConfig', () => {
     it('should return complete config', () => {
-      globalThis.process = { 
+      globalThis.process = {
         versions: { node: '16.0.0' },
-        env: { NODE_ENV: 'development' }
+        env: { NODE_ENV: 'development' },
       };
-      
+
       const config = getEnvironmentConfig();
       expect(config.environment).toBe('node');
       expect(config.mode).toBe('development');
@@ -104,31 +111,30 @@ describe('environmentUtils', () => {
 
   describe('hasEnvironmentVariable', () => {
     it('should return true for existing variable', () => {
-      globalThis.process = { 
+      globalThis.process = {
         versions: { node: '16.0.0' },
-        env: { TEST_VAR: 'value' }
+        env: { TEST_VAR: 'value' },
       };
       expect(hasEnvironmentVariable('TEST_VAR')).toBe(true);
     });
 
     it('should return false for empty string', () => {
-      globalThis.process = { 
+      globalThis.process = {
         versions: { node: '16.0.0' },
-        env: { TEST_VAR: '' }
+        env: { TEST_VAR: '' },
       };
       expect(hasEnvironmentVariable('TEST_VAR')).toBe(false);
     });
-
   });
 
   describe('createProcessEnvShim', () => {
     it('should return real process.env in Node.js', () => {
       const mockEnv = { NODE_ENV: 'test' };
-      globalThis.process = { 
+      globalThis.process = {
         versions: { node: '16.0.0' },
-        env: mockEnv
+        env: mockEnv,
       };
-      
+
       const result = createProcessEnvShim();
       expect(result).toBe(mockEnv);
     });
@@ -136,7 +142,7 @@ describe('environmentUtils', () => {
     it('should create shim in browser', () => {
       delete globalThis.process;
       globalThis.__NODE_ENV__ = 'production';
-      
+
       const result = createProcessEnvShim();
       expect(result.NODE_ENV).toBe('production');
     });

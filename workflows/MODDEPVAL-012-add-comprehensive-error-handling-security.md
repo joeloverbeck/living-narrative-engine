@@ -206,32 +206,32 @@ export const securityConfig = {
     blockedPaths: ['node_modules', '.git', 'secrets'],
     readTimeout: 5000, // 5 seconds
   },
-  
+
   jsonParsing: {
     maxDepth: 50,
     maxKeys: 1000,
     maxStringLength: 100000,
     maxArrayLength: 10000,
   },
-  
+
   scopeDsl: {
     maxExpressionLength: 5000,
     maxNestingLevel: 20,
     maxReferences: 100,
     timeoutMs: 1000,
   },
-  
+
   resources: {
     maxMemoryUsage: 512 * 1024 * 1024, // 512MB
     maxProcessingTime: 30000, // 30 seconds
     maxConcurrentOperations: 10,
   },
-  
+
   circuitBreaker: {
     failureThreshold: 5,
     recoveryTimeout: 60000, // 1 minute
     monitoringWindow: 300000, // 5 minutes
-  }
+  },
 };
 ```
 
@@ -242,23 +242,30 @@ export const securityConfig = {
 ```javascript
 // Enhanced with error handling and security
 class ModReferenceExtractor {
-  constructor({ logger, eventBus, errorHandler, inputSanitizer, resourceMonitor }) {
+  constructor({
+    logger,
+    eventBus,
+    errorHandler,
+    inputSanitizer,
+    resourceMonitor,
+  }) {
     // Add security and error handling dependencies
   }
 
   async extractReferences(modPath) {
-    const guard = this.resourceMonitor.createOperationGuard(`extract-${modPath}`);
-    
+    const guard = this.resourceMonitor.createOperationGuard(
+      `extract-${modPath}`
+    );
+
     try {
       // Sanitize input path
       const sanitizedPath = this.inputSanitizer.sanitizeFilePath(modPath);
-      
+
       // Check resource limits
       this.resourceMonitor.checkResourceLimits();
-      
+
       // Existing extraction logic with try-catch wrapping
       return await this.performExtraction(sanitizedPath);
-      
     } catch (error) {
       return this.errorHandler.handleExtractionError(error, { modPath });
     } finally {
@@ -273,12 +280,12 @@ class ModReferenceExtractor {
 ```javascript
 // Enhanced with security and error handling
 class ModCrossReferenceValidator {
-  constructor({ 
-    logger, 
-    eventBus, 
-    errorHandler, 
-    resourceMonitor, 
-    circuitBreaker 
+  constructor({
+    logger,
+    eventBus,
+    errorHandler,
+    resourceMonitor,
+    circuitBreaker,
   }) {
     // Add security and error handling dependencies
   }
@@ -287,13 +294,12 @@ class ModCrossReferenceValidator {
     try {
       // Resource monitoring
       this.resourceMonitor.checkResourceLimits();
-      
+
       // Use circuit breaker for validation operations
       return await this.circuitBreaker.executeOperation(
         () => this.performValidation(modReferences),
         { operation: 'cross-reference-validation' }
       );
-      
     } catch (error) {
       return this.errorHandler.handleValidationError(error, { modReferences });
     }
@@ -335,7 +341,7 @@ class ValidationMonitor {
       errorsProcessed: 0,
       securityViolations: 0,
       degradationEvents: 0,
-      circuitBreakerTrips: 0
+      circuitBreakerTrips: 0,
     };
   }
 
@@ -364,28 +370,32 @@ describe('InputSanitizer', () => {
   describe('Path Traversal Protection', () => {
     it('should prevent directory traversal attacks', () => {
       const maliciousPath = '../../../etc/passwd';
-      expect(() => sanitizer.sanitizeFilePath(maliciousPath))
-        .toThrow(ModSecurityError);
+      expect(() => sanitizer.sanitizeFilePath(maliciousPath)).toThrow(
+        ModSecurityError
+      );
     });
 
     it('should block access to sensitive directories', () => {
       const sensitiveePath = 'data/mods/../node_modules/package.json';
-      expect(() => sanitizer.sanitizeFilePath(sensitivePath))
-        .toThrow(ModSecurityError);
+      expect(() => sanitizer.sanitizeFilePath(sensitivePath)).toThrow(
+        ModSecurityError
+      );
     });
   });
 
   describe('JSON Bomb Protection', () => {
     it('should prevent deeply nested JSON structures', () => {
       const jsonBomb = createDeeplyNestedObject(100);
-      expect(() => sanitizer.sanitizeJsonContent(jsonBomb))
-        .toThrow(ModSecurityError);
+      expect(() => sanitizer.sanitizeJsonContent(jsonBomb)).toThrow(
+        ModSecurityError
+      );
     });
 
     it('should prevent large array attacks', () => {
       const largeArray = new Array(50000).fill('data');
-      expect(() => sanitizer.sanitizeJsonContent({ data: largeArray }))
-        .toThrow(ModSecurityError);
+      expect(() => sanitizer.sanitizeJsonContent({ data: largeArray })).toThrow(
+        ModSecurityError
+      );
     });
   });
 });
@@ -399,22 +409,20 @@ describe('ModValidationErrorHandler', () => {
   describe('Error Classification', () => {
     it('should classify corruption errors correctly', () => {
       const corruptionError = new Error('Unexpected token in JSON');
-      const result = errorHandler.handleExtractionError(
-        corruptionError, 
-        { filePath: 'test.json' }
-      );
-      
+      const result = errorHandler.handleExtractionError(corruptionError, {
+        filePath: 'test.json',
+      });
+
       expect(result.errorType).toBe('CORRUPTION');
       expect(result.recoverable).toBe(false);
     });
 
     it('should apply graceful degradation for recoverable errors', () => {
       const accessError = new Error('ENOENT: file not found');
-      const result = errorHandler.handleExtractionError(
-        accessError, 
-        { filePath: 'missing.json' }
-      );
-      
+      const result = errorHandler.handleExtractionError(accessError, {
+        filePath: 'missing.json',
+      });
+
       expect(result.errorType).toBe('ACCESS');
       expect(result.degradationApplied).toBe(true);
       expect(result.partialResults).toBeDefined();
@@ -430,21 +438,23 @@ describe('ModValidationErrorHandler', () => {
 describe('FileOperationCircuitBreaker', () => {
   it('should open circuit after threshold failures', async () => {
     const failingOperation = () => Promise.reject(new Error('File error'));
-    
+
     // Trigger failures up to threshold
     for (let i = 0; i < 5; i++) {
-      await expect(circuitBreaker.executeOperation(failingOperation))
-        .rejects.toThrow();
+      await expect(
+        circuitBreaker.executeOperation(failingOperation)
+      ).rejects.toThrow();
     }
-    
+
     expect(circuitBreaker.state).toBe('OPEN');
-    
+
     // Next call should fail fast
     const startTime = Date.now();
-    await expect(circuitBreaker.executeOperation(failingOperation))
-      .rejects.toThrow('Circuit breaker is OPEN');
+    await expect(
+      circuitBreaker.executeOperation(failingOperation)
+    ).rejects.toThrow('Circuit breaker is OPEN');
     const endTime = Date.now();
-    
+
     expect(endTime - startTime).toBeLessThan(100); // Fail fast
   });
 });
@@ -459,17 +469,17 @@ describe('Security Integration', () => {
     const maliciousMod = {
       'mod-manifest.json': JSON.stringify({
         id: '../../../system',
-        dependencies: ['core']
+        dependencies: ['core'],
       }),
       'rules/exploit.json': JSON.stringify({
-        conditions: '{{'.repeat(1000) // ReDoS attempt
-      })
+        conditions: '{{'.repeat(1000), // ReDoS attempt
+      }),
     };
-    
+
     await createTestMod('malicious', maliciousMod);
-    
+
     const result = await validator.validateMod('malicious');
-    
+
     expect(result.securityViolations).toHaveLength(2);
     expect(result.securityViolations[0].level).toBe('CRITICAL');
     expect(mockLogger.error).toHaveBeenCalledWith(
@@ -478,17 +488,18 @@ describe('Security Integration', () => {
   });
 
   it('should maintain system stability under resource pressure', async () => {
-    const largeMods = Array.from({ length: 100 }, (_, i) => 
-      createLargeMod(`test-mod-${i}`, 1000) // 1000 references each
+    const largeMods = Array.from(
+      { length: 100 },
+      (_, i) => createLargeMod(`test-mod-${i}`, 1000) // 1000 references each
     );
-    
+
     const results = await Promise.allSettled(
-      largeMods.map(mod => validator.validateMod(mod.id))
+      largeMods.map((mod) => validator.validateMod(mod.id))
     );
-    
-    const successful = results.filter(r => r.status === 'fulfilled');
+
+    const successful = results.filter((r) => r.status === 'fulfilled');
     expect(successful.length).toBeGreaterThan(90); // 90% success rate minimum
-    
+
     // System should not crash
     expect(process.memoryUsage().heapUsed).toBeLessThan(
       securityConfig.resources.maxMemoryUsage
@@ -500,6 +511,7 @@ describe('Security Integration', () => {
 ## Success Criteria
 
 ### Security Measures
+
 - [ ] Path traversal attacks prevented (100% blocked)
 - [ ] JSON bomb attacks mitigated (size/depth limits enforced)
 - [ ] ReDoS attacks prevented in Scope DSL parsing
@@ -507,6 +519,7 @@ describe('Security Integration', () => {
 - [ ] All security violations logged and reported
 
 ### Error Handling
+
 - [ ] All error types classified and handled appropriately
 - [ ] Graceful degradation applied for recoverable errors
 - [ ] System stability maintained under error conditions
@@ -514,6 +527,7 @@ describe('Security Integration', () => {
 - [ ] Error recovery strategies tested and verified
 
 ### Resilience
+
 - [ ] Circuit breaker prevents cascade failures
 - [ ] Resource monitoring prevents system overload
 - [ ] Operation timeouts prevent hanging processes
@@ -521,6 +535,7 @@ describe('Security Integration', () => {
 - [ ] System continues operating under partial failures
 
 ### Monitoring
+
 - [ ] Error rates tracked and reported
 - [ ] Security incident logging implemented
 - [ ] System health monitoring active
@@ -537,7 +552,7 @@ describe('Security Integration', () => {
 ## Estimated Effort
 
 - **Development**: 4-5 days
-- **Testing**: 2-3 days  
+- **Testing**: 2-3 days
 - **Security Review**: 1 day
 - **Integration**: 1-2 days
 - **Total**: 8-11 days

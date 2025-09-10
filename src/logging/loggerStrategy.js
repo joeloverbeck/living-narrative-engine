@@ -255,15 +255,15 @@ class LoggerStrategy {
             // Validate mockLogger has required ILogger methods
             const requiredMethods = ['info', 'warn', 'error', 'debug'];
             const missingMethods = requiredMethods.filter(
-              method => typeof dependencies.mockLogger[method] !== 'function'
+              (method) => typeof dependencies.mockLogger[method] !== 'function'
             );
-            
+
             if (missingMethods.length > 0) {
               throw new Error(
                 `Mock logger missing required methods: ${missingMethods.join(', ')}`
               );
             }
-            
+
             logger = dependencies.mockLogger;
           } else {
             // Use NoOpLogger for tests by default
@@ -329,7 +329,10 @@ class LoggerStrategy {
           }, 0);
         } catch (eventError) {
           // If event dispatching fails, just use console
-          console.error('[LoggerStrategy] Failed to dispatch logger creation error:', eventError);
+          console.error(
+            '[LoggerStrategy] Failed to dispatch logger creation error:',
+            eventError
+          );
         }
       }
     }
@@ -357,20 +360,25 @@ class LoggerStrategy {
     try {
       // Create SafeErrorLogger wrapper - now returns utilities, not a wrapped logger
       const eventBus = this.#dependencies.eventBus || null;
-      
+
       if (!eventBus) {
         // If no eventBus available, return the original logger without SafeErrorLogger wrapping
         // This is expected during early bootstrap before eventBus is registered
-        this.#dependencies.consoleLogger?.debug?.('[LoggerStrategy] EventBus not available during bootstrap - SafeErrorLogger wrapping deferred');
+        this.#dependencies.consoleLogger?.debug?.(
+          '[LoggerStrategy] EventBus not available during bootstrap - SafeErrorLogger wrapping deferred'
+        );
         return logger;
       }
-      
+
       // SafeErrorLogger returns utilities, not a wrapped logger, so we return the original logger
       createSafeErrorLogger({ logger, eventBus });
       return logger;
     } catch (wrapError) {
       // If wrapping fails, continue with original logger but log warning
-      console.warn('[LoggerStrategy] Failed to wrap logger with SafeErrorLogger:', wrapError);
+      console.warn(
+        '[LoggerStrategy] Failed to wrap logger with SafeErrorLogger:',
+        wrapError
+      );
       return logger;
     }
   }
@@ -392,7 +400,6 @@ class LoggerStrategy {
     const logLevel = config.logLevel || 'INFO';
     return new ConsoleLogger(logLevel);
   }
-
 
   /**
    * Validates and merges configuration.

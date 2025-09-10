@@ -174,7 +174,6 @@ const cacheService = new CacheService(proxyLogger, {
 const httpAgentConfig = appConfigService.getHttpAgentConfig();
 const httpAgentService = new HttpAgentService(proxyLogger, httpAgentConfig);
 
-
 // Initialize ApiKeyService with caching support
 const apiKeyService = new ApiKeyService(
   proxyLogger,
@@ -290,7 +289,6 @@ app.post(
 // Register trace routes for action tracing system
 app.use('/api/traces', traceRoutes);
 
-
 // Register health check routes
 app.use('/health', healthRoutes);
 
@@ -354,7 +352,6 @@ process.on('beforeExit', async (_code) => {
   proxyLogger.debug('LLM Proxy Server: Graceful beforeExit handler completed');
 });
 
-
 // Asynchronous IIFE for server startup
 (async () => {
   // LlmConfigService.initialize() is called here.
@@ -362,7 +359,6 @@ process.on('beforeExit', async (_code) => {
   // as per AC3.
   // proxyLogger.info('LLM Proxy Server: Initializing LlmConfigService...'); // This is redundant as LlmConfigService logs its own start.
   await llmConfigService.initialize();
-
 
   server = app.listen(PORT, '0.0.0.0', () => {
     proxyLogger.info('--- LLM Proxy Server Startup Summary ---');
@@ -485,9 +481,10 @@ process.on('beforeExit', async (_code) => {
     }
 
     // Log Maintenance Scheduler Status (debug logging functionality removed)
-    const reason = process.env.NODE_ENV === 'test'
-      ? 'test environment'
-      : 'debug logging disabled';
+    const reason =
+      process.env.NODE_ENV === 'test'
+        ? 'test environment'
+        : 'debug logging disabled';
     proxyLogger.info(
       `LLM Proxy Server: Log Maintenance Scheduler NOT INITIALIZED (${reason})`
     );

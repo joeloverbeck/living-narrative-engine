@@ -13,19 +13,19 @@ describe('DispatchThoughtHandler', () => {
 
   beforeEach(() => {
     mockDispatcher = {
-      dispatch: jest.fn()
+      dispatch: jest.fn(),
     };
-    
+
     mockLogger = {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
 
     handler = new DispatchThoughtHandler({
       dispatcher: mockDispatcher,
-      logger: mockLogger
+      logger: mockLogger,
     });
   });
 
@@ -38,7 +38,7 @@ describe('DispatchThoughtHandler', () => {
       expect(() => {
         new DispatchThoughtHandler({
           dispatcher: {},
-          logger: mockLogger
+          logger: mockLogger,
         });
       }).toThrow();
     });
@@ -49,24 +49,21 @@ describe('DispatchThoughtHandler', () => {
       event: { payload: { entityId: 'test-entity' } },
       context: {},
       ruleId: 'test-rule',
-      logger: null // Will use handler's logger
+      logger: null, // Will use handler's logger
     };
 
     it('should dispatch thought event with valid parameters', () => {
       const params = {
         entity_id: 'test-entity',
-        thoughts: 'I am thinking about testing'
+        thoughts: 'I am thinking about testing',
       };
 
       handler.execute(params, executionContext);
 
-      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_THOUGHT_ID,
-        {
-          entityId: 'test-entity',
-          thoughts: 'I am thinking about testing'
-        }
-      );
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(DISPLAY_THOUGHT_ID, {
+        entityId: 'test-entity',
+        thoughts: 'I am thinking about testing',
+      });
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'DispatchThoughtHandler: DISPATCH_THOUGHT: dispatching display_thought',
         expect.any(Object)
@@ -81,33 +78,30 @@ describe('DispatchThoughtHandler', () => {
           {
             text: 'Optional test note',
             subject: 'testing',
-            subjectType: 'concept'
-          }
-        ]
+            subjectType: 'concept',
+          },
+        ],
       };
 
       handler.execute(params, executionContext);
 
-      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_THOUGHT_ID,
-        {
-          entityId: 'test-entity',
-          thoughts: 'I am thinking about testing',
-          notes: [
-            {
-              text: 'Optional test note',
-              subject: 'testing',
-              subjectType: 'concept'
-            }
-          ]
-        }
-      );
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(DISPLAY_THOUGHT_ID, {
+        entityId: 'test-entity',
+        thoughts: 'I am thinking about testing',
+        notes: [
+          {
+            text: 'Optional test note',
+            subject: 'testing',
+            subjectType: 'concept',
+          },
+        ],
+      });
     });
 
     it('should not include notes when undefined', () => {
       const params = {
         entity_id: 'test-entity',
-        thoughts: 'I am thinking about testing'
+        thoughts: 'I am thinking about testing',
       };
 
       handler.execute(params, executionContext);
@@ -120,7 +114,7 @@ describe('DispatchThoughtHandler', () => {
       const params = {
         entity_id: 'test-entity',
         thoughts: 'I am thinking about testing',
-        notes: []
+        notes: [],
       };
 
       handler.execute(params, executionContext);
@@ -138,7 +132,7 @@ describe('DispatchThoughtHandler', () => {
 
     it('should return early if entity_id is missing', () => {
       const params = {
-        thoughts: 'I am thinking'
+        thoughts: 'I am thinking',
       };
 
       handler.execute(params, executionContext);
@@ -147,14 +141,14 @@ describe('DispatchThoughtHandler', () => {
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
         'core:system_error_occurred',
         expect.objectContaining({
-          message: expect.stringContaining('entity_id')
+          message: expect.stringContaining('entity_id'),
         })
       );
     });
 
     it('should return early if thoughts is missing', () => {
       const params = {
-        entity_id: 'test-entity'
+        entity_id: 'test-entity',
       };
 
       handler.execute(params, executionContext);
@@ -163,7 +157,7 @@ describe('DispatchThoughtHandler', () => {
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
         'core:system_error_occurred',
         expect.objectContaining({
-          message: expect.stringContaining('thoughts')
+          message: expect.stringContaining('thoughts'),
         })
       );
     });
@@ -171,7 +165,7 @@ describe('DispatchThoughtHandler', () => {
     it('should handle dispatch errors gracefully', () => {
       const params = {
         entity_id: 'test-entity',
-        thoughts: 'I am thinking'
+        thoughts: 'I am thinking',
       };
 
       const error = new Error('Dispatch failed');
@@ -194,8 +188,8 @@ describe('DispatchThoughtHandler', () => {
         'core:system_error_occurred',
         expect.objectContaining({
           details: expect.objectContaining({
-            errorMessage: 'Dispatch failed'
-          })
+            errorMessage: 'Dispatch failed',
+          }),
         })
       );
     });
@@ -205,17 +199,17 @@ describe('DispatchThoughtHandler', () => {
         debug: jest.fn(),
         info: jest.fn(),
         warn: jest.fn(),
-        error: jest.fn()
+        error: jest.fn(),
       };
 
       const contextWithLogger = {
         ...executionContext,
-        logger: contextLogger
+        logger: contextLogger,
       };
 
       const params = {
         entity_id: 'test-entity',
-        thoughts: 'I am thinking'
+        thoughts: 'I am thinking',
       };
 
       handler.execute(params, contextWithLogger);

@@ -8,26 +8,26 @@ import { ErrorCodes } from '../../../src/scopeDsl/constants/errorCodes.js';
 
 /**
  * Performance-optimized resolver with efficient error handling
- * 
+ *
  * This resolver demonstrates techniques to minimize error handling overhead
  * while maintaining comprehensive error reporting.
  */
-export default function createPerformanceResolver({ 
-  logger, 
+export default function createPerformanceResolver({
+  logger,
   errorHandler,
-  metricsCollector 
+  metricsCollector,
 }) {
   // Validate dependencies
   validateDependency(logger, 'ILogger', console, {
     requiredMethods: ['info', 'warn', 'error', 'debug'],
   });
-  
+
   if (errorHandler) {
     validateDependency(errorHandler, 'IScopeDslErrorHandler', logger, {
       requiredMethods: ['handleError', 'getErrorBuffer', 'clearErrorBuffer'],
     });
   }
-  
+
   if (metricsCollector) {
     validateDependency(metricsCollector, 'IMetricsCollector', logger, {
       requiredMethods: ['recordMetric', 'getMetrics'],
@@ -54,14 +54,14 @@ export default function createPerformanceResolver({
    */
   function getErrorCode(message) {
     const lowerMessage = message.toLowerCase();
-    
+
     // Fast path: exact match in cache
     for (const [keyword, code] of ERROR_CODE_MAP) {
       if (lowerMessage.includes(keyword)) {
         return code;
       }
     }
-    
+
     return ErrorCodes.UNKNOWN_ERROR;
   }
 
@@ -70,7 +70,7 @@ export default function createPerformanceResolver({
    */
   function createMinimalContext(ctx, includeFields = []) {
     const minimal = {};
-    
+
     // Only include specified fields
     for (const field of includeFields) {
       if (ctx[field] !== undefined) {
@@ -82,7 +82,7 @@ export default function createPerformanceResolver({
         }
       }
     }
-    
+
     return minimal;
   }
 
@@ -92,11 +92,11 @@ export default function createPerformanceResolver({
   function handleErrorFast(message, ctx, resolverName, errorCode) {
     // Skip expensive operations in production
     const isDevelopment = process.env.NODE_ENV !== 'production';
-    
+
     if (!isDevelopment) {
       // Minimal context in production
       const minimalCtx = createMinimalContext(ctx, ['depth', 'actorEntity']);
-      
+
       if (errorHandler) {
         errorHandler.handleError(message, minimalCtx, resolverName, errorCode);
       } else {
@@ -125,7 +125,7 @@ export default function createPerformanceResolver({
 
     add(error) {
       this.errors.push(error);
-      
+
       // Auto-flush on size threshold
       if (this.errors.length >= 10) {
         this.flush();
@@ -140,7 +140,7 @@ export default function createPerformanceResolver({
 
       // Process errors in batch
       const errorSummary = this.summarizeErrors(this.errors);
-      
+
       if (this.errorHandler) {
         // Report summary instead of individual errors
         this.errorHandler.handleError(
@@ -160,7 +160,7 @@ export default function createPerformanceResolver({
 
     summarizeErrors(errors) {
       const codes = new Map();
-      
+
       for (const error of errors) {
         const code = error.code || 'UNKNOWN';
         codes.set(code, (codes.get(code) || 0) + 1);
@@ -168,7 +168,7 @@ export default function createPerformanceResolver({
 
       return {
         message: `${errors.length} errors occurred`,
-        codes: Object.fromEntries(codes)
+        codes: Object.fromEntries(codes),
       };
     }
   }
@@ -184,14 +184,14 @@ export default function createPerformanceResolver({
       this.resetTime = resetTime;
       this.failures = 0;
       this.lastFailureTime = null;
-      this.state = 'closed';  // closed, open, half-open
+      this.state = 'closed'; // closed, open, half-open
     }
 
     canExecute() {
       if (this.state === 'closed') {
         return true;
       }
-      
+
       if (this.state === 'open') {
         const timeSinceFailure = Date.now() - this.lastFailureTime;
         if (timeSinceFailure > this.resetTime) {
@@ -200,8 +200,8 @@ export default function createPerformanceResolver({
         }
         return false;
       }
-      
-      return true;  // half-open - allow one attempt
+
+      return true; // half-open - allow one attempt
     }
 
     recordSuccess() {
@@ -212,7 +212,7 @@ export default function createPerformanceResolver({
     recordFailure() {
       this.failures++;
       this.lastFailureTime = Date.now();
-      
+
       if (this.failures >= this.threshold) {
         this.state = 'open';
       }
@@ -244,7 +244,7 @@ export default function createPerformanceResolver({
       if (!this.cache.has(key)) {
         return undefined;
       }
-      
+
       // Move to end (most recently used)
       const value = this.cache.get(key);
       this.cache.delete(key);
@@ -258,7 +258,7 @@ export default function createPerformanceResolver({
         const firstKey = this.cache.keys().next().value;
         this.cache.delete(firstKey);
       }
-      
+
       // Remove and re-add to move to end
       this.cache.delete(key);
       this.cache.set(key, value);
@@ -276,7 +276,7 @@ export default function createPerformanceResolver({
    */
   function validateWithCache(value, validatorKey, validator) {
     const cacheKey = `${validatorKey}:${JSON.stringify(value)}`;
-    
+
     // Check cache first
     const cached = validationCache.get(cacheKey);
     if (cached !== undefined) {
@@ -300,7 +300,7 @@ export default function createPerformanceResolver({
   const MAX_DEPTH = 10;
   function checkDepth(ctx) {
     const depth = ctx.depth || 0;
-    
+
     // Fast path: most common case
     if (depth <= MAX_DEPTH) {
       return true;
@@ -333,22 +333,22 @@ export default function createPerformanceResolver({
       if (error.name === 'ScopeDslError') {
         throw error;
       }
-      
+
       if (this.shouldSample()) {
         if (errorHandler) {
           // Include skipped count in context
           const sampledCtx = {
             ...ctx,
-            skippedErrors: this.skippedCount
+            skippedErrors: this.skippedCount,
           };
-          
+
           errorHandler.handleError(
             error,
             sampledCtx,
             resolver,
             getErrorCode(error.message || error)
           );
-          
+
           this.skippedCount = 0;
         } else {
           throw error;
@@ -361,7 +361,7 @@ export default function createPerformanceResolver({
     }
   }
 
-  const errorSampler = new ErrorSampler(0.1);  // Sample 10% of errors
+  const errorSampler = new ErrorSampler(0.1); // Sample 10% of errors
 
   /**
    * Performance metrics tracking
@@ -370,7 +370,7 @@ export default function createPerformanceResolver({
     return function tracked(...args) {
       const start = performance.now();
       let success = false;
-      
+
       try {
         const result = fn(...args);
         success = true;
@@ -380,16 +380,16 @@ export default function createPerformanceResolver({
         throw error;
       } finally {
         const duration = performance.now() - start;
-        
+
         if (metricsCollector) {
           metricsCollector.recordMetric({
             operation,
             duration,
             success,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           });
         }
-        
+
         // Warn on slow operations
         if (duration > 100) {
           logger.warn(`Slow operation: ${operation} took ${duration}ms`);
@@ -403,7 +403,7 @@ export default function createPerformanceResolver({
       return node.type === 'performance';
     },
 
-    resolve: trackPerformance('resolve', function(node, ctx) {
+    resolve: trackPerformance('resolve', function (node, ctx) {
       // Check circuit breaker first
       const breaker = getCircuitBreaker('resolve');
       if (!breaker.canExecute()) {
@@ -439,20 +439,19 @@ export default function createPerformanceResolver({
         const result = {
           id: node.id,
           type: node.type,
-          processed: true
+          processed: true,
         };
 
         breaker.recordSuccess();
         return result;
-
       } catch (error) {
         breaker.recordFailure();
-        
+
         // If error is already a ScopeDslError, just re-throw it to avoid double processing
         if (error.name === 'ScopeDslError') {
           throw error;
         }
-        
+
         // Use error sampling in high-volume mode
         if (node.highVolume) {
           errorSampler.handleError(error, ctx, 'PerformanceResolver');
@@ -475,13 +474,13 @@ export default function createPerformanceResolver({
     // Buffer management methods
     manageErrorBuffer() {
       const buffer = errorHandler.getErrorBuffer();
-      
+
       // Clear buffer if at or above threshold
       if (buffer.length >= 50) {
         // Optionally process before clearing
         const summary = this.summarizeBuffer(buffer);
         logger.info('Error buffer summary before clear', summary);
-        
+
         errorHandler.clearErrorBuffer();
       }
     },
@@ -490,12 +489,13 @@ export default function createPerformanceResolver({
       const summary = {
         total: buffer.length,
         byCode: {},
-        byResolver: {}
+        byResolver: {},
       };
 
       for (const error of buffer) {
         summary.byCode[error.code] = (summary.byCode[error.code] || 0) + 1;
-        summary.byResolver[error.resolver] = (summary.byResolver[error.resolver] || 0) + 1;
+        summary.byResolver[error.resolver] =
+          (summary.byResolver[error.resolver] || 0) + 1;
       }
 
       return summary;
@@ -506,7 +506,7 @@ export default function createPerformanceResolver({
       batchProcessor.flush();
       validationCache.clear();
       circuitBreakers.clear();
-    }
+    },
   };
 }
 
@@ -514,29 +514,32 @@ export default function createPerformanceResolver({
  * Create optimized error handler for production
  */
 export function createProductionErrorHandler(logger) {
-  return new Proxy({}, {
-    get(target, prop) {
-      if (prop === 'handleError') {
-        return (message, context, resolver, code) => {
-          // Minimal logging in production
-          logger.error(`[${resolver}] ${code || 'ERROR'}: ${message}`);
-          
-          // Throw minimal error
-          const error = new Error(message);
-          error.code = code;
-          throw error;
-        };
-      }
-      
-      if (prop === 'getErrorBuffer') {
-        return () => [];  // No buffering in production
-      }
-      
-      if (prop === 'clearErrorBuffer') {
-        return () => {};  // No-op
-      }
-      
-      return undefined;
+  return new Proxy(
+    {},
+    {
+      get(target, prop) {
+        if (prop === 'handleError') {
+          return (message, context, resolver, code) => {
+            // Minimal logging in production
+            logger.error(`[${resolver}] ${code || 'ERROR'}: ${message}`);
+
+            // Throw minimal error
+            const error = new Error(message);
+            error.code = code;
+            throw error;
+          };
+        }
+
+        if (prop === 'getErrorBuffer') {
+          return () => []; // No buffering in production
+        }
+
+        if (prop === 'clearErrorBuffer') {
+          return () => {}; // No-op
+        }
+
+        return undefined;
+      },
     }
-  });
+  );
 }

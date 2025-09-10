@@ -1,16 +1,16 @@
 {
-    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-    "id": "anatomy:human_penis_small",
-    "description": "A small human male genital organ",
-    "components": {
-        "anatomy:part": {
-            "subType": "penis"
-        },
-        "descriptors:size_category": {
-            "size": "small"
-        },
-        "core:name": {
-            "text": "small penis"
-        }
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_penis_small",
+  "description": "A small human male genital organ",
+  "components": {
+    "anatomy:part": {
+      "subType": "penis"
+    },
+    "descriptors:size_category": {
+      "size": "small"
+    },
+    "core:name": {
+      "text": "small penis"
     }
+  }
 }

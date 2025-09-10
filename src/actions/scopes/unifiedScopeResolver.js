@@ -365,16 +365,19 @@ export class UnifiedScopeResolver {
    */
   #resolveScopeInternal(scopeName, context, validateEntities) {
     const source = 'UnifiedScopeResolver.#resolveScopeInternal';
-    
+
     // Debug logging for sit_down action issue
     if (scopeName === 'positioning:available_furniture') {
-      this.#logger.info('[DEBUG] UnifiedScopeResolver: Resolving available_furniture scope', {
-        scopeName,
-        actorId: context.actor?.id,
-        actionId: context.actionId,
-        hasActor: !!context.actor,
-        hasTrace: !!context.trace,
-      });
+      this.#logger.info(
+        '[DEBUG] UnifiedScopeResolver: Resolving available_furniture scope',
+        {
+          scopeName,
+          actorId: context.actor?.id,
+          actionId: context.actionId,
+          hasActor: !!context.actor,
+          hasTrace: !!context.trace,
+        }
+      );
     }
 
     // Get scope definition
@@ -412,14 +415,17 @@ export class UnifiedScopeResolver {
     try {
       // Debug logging for sit_down action issue
       if (scopeName === 'positioning:available_furniture') {
-        this.#logger.info('[DEBUG] UnifiedScopeResolver: Before scope engine resolve', {
-          scopeName,
-          actorId: actorResult.value?.id,
-          hasAst: !!astResult.value,
-          runtimeCtxKeys: Object.keys(runtimeCtx || {}),
-        });
+        this.#logger.info(
+          '[DEBUG] UnifiedScopeResolver: Before scope engine resolve',
+          {
+            scopeName,
+            actorId: actorResult.value?.id,
+            hasAst: !!astResult.value,
+            runtimeCtxKeys: Object.keys(runtimeCtx || {}),
+          }
+        );
       }
-      
+
       const resolvedIds = this.#scopeEngine.resolve(
         astResult.value,
         actorResult.value,
@@ -429,14 +435,17 @@ export class UnifiedScopeResolver {
 
       // Debug logging for sit_down action issue
       if (scopeName === 'positioning:available_furniture') {
-        this.#logger.info('[DEBUG] UnifiedScopeResolver: After scope engine resolve', {
-          scopeName,
-          resolvedIds: resolvedIds ? Array.from(resolvedIds) : null,
-          resolvedCount: resolvedIds ? resolvedIds.size : 0,
-          isSet: resolvedIds instanceof Set,
-        });
+        this.#logger.info(
+          '[DEBUG] UnifiedScopeResolver: After scope engine resolve',
+          {
+            scopeName,
+            resolvedIds: resolvedIds ? Array.from(resolvedIds) : null,
+            resolvedCount: resolvedIds ? resolvedIds.size : 0,
+            isSet: resolvedIds instanceof Set,
+          }
+        );
       }
-      
+
       if (!resolvedIds || !(resolvedIds instanceof Set)) {
         throw new Error(
           `Scope engine returned invalid result: ${typeof resolvedIds}`

@@ -18,7 +18,7 @@ describe('Error Handling Examples - Integration Tests', () => {
 
   beforeEach(() => {
     originalNodeEnv = process.env.NODE_ENV;
-    
+
     // Create real logger with tracking
     const logs = [];
     logger = {
@@ -27,7 +27,7 @@ describe('Error Handling Examples - Integration Tests', () => {
       error: (msg, data) => logs.push({ level: 'error', msg, data }),
       debug: (msg, data) => logs.push({ level: 'debug', msg, data }),
       getLogs: () => logs,
-      clearLogs: () => logs.length = 0,
+      clearLogs: () => (logs.length = 0),
     };
 
     // Create real error handler
@@ -35,8 +35,8 @@ describe('Error Handling Examples - Integration Tests', () => {
       logger,
       config: {
         isDevelopment: true,
-        maxBufferSize: 50
-      }
+        maxBufferSize: 50,
+      },
     });
   });
 
@@ -55,7 +55,7 @@ describe('Error Handling Examples - Integration Tests', () => {
 
       // Check error was logged
       const logs = logger.getLogs();
-      expect(logs.some(log => log.level === 'error')).toBe(true);
+      expect(logs.some((log) => log.level === 'error')).toBe(true);
 
       // Check error is in buffer
       const buffer = errorHandler.getErrorBuffer();
@@ -71,17 +71,19 @@ describe('Error Handling Examples - Integration Tests', () => {
       const errors = [];
       for (let i = 0; i < 5; i++) {
         try {
-          resolver.resolve({ type: 'basic' }, ctx);  // Missing value
+          resolver.resolve({ type: 'basic' }, ctx); // Missing value
         } catch (e) {
           errors.push(e);
         }
       }
 
       expect(errors).toHaveLength(5);
-      
+
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer.length).toBe(5);
-      expect(buffer.every(e => e.code === ErrorCodes.INVALID_NODE_STRUCTURE)).toBe(true);
+      expect(
+        buffer.every((e) => e.code === ErrorCodes.INVALID_NODE_STRUCTURE)
+      ).toBe(true);
     });
   });
 
@@ -92,7 +94,10 @@ describe('Error Handling Examples - Integration Tests', () => {
     beforeEach(() => {
       // Create mock implementations that simulate real behavior
       const entities = new Map([
-        ['entity1', { id: 'entity1', components: { 'core:stats': { health: 100 } } }],
+        [
+          'entity1',
+          { id: 'entity1', components: { 'core:stats': { health: 100 } } },
+        ],
         ['entity2', { id: 'entity2', components: {} }],
       ]);
 
@@ -101,9 +106,13 @@ describe('Error Handling Examples - Integration Tests', () => {
         hasEntity: (id) => entities.has(id),
       };
 
-      const components = new Set(['core:stats', 'core:inventory', 'core:position']);
+      const components = new Set([
+        'core:stats',
+        'core:inventory',
+        'core:position',
+      ]);
       componentRegistry = {
-        getComponent: (id) => components.has(id) ? {} : null,
+        getComponent: (id) => (components.has(id) ? {} : null),
         hasComponent: (id) => components.has(id),
       };
     });
@@ -116,26 +125,32 @@ describe('Error Handling Examples - Integration Tests', () => {
         componentRegistry,
       });
 
-      const ctx = { 
-        actorEntity: { id: 'actor1' }, 
-        dispatcher: (node, ctx) => ({ resolved: true })
+      const ctx = {
+        actorEntity: { id: 'actor1' },
+        dispatcher: (node, ctx) => ({ resolved: true }),
       };
 
       // Test with valid entity
-      const result = resolver.resolve({
-        type: 'validation',
-        entityId: 'entity1'
-      }, ctx);
+      const result = resolver.resolve(
+        {
+          type: 'validation',
+          entityId: 'entity1',
+        },
+        ctx
+      );
 
       expect(result.valid).toBe(true);
       expect(errorHandler.getErrorBuffer()).toHaveLength(0);
 
       // Test with invalid entity
       expect(() => {
-        resolver.resolve({
-          type: 'validation',
-          entityId: 'nonexistent'
-        }, ctx);
+        resolver.resolve(
+          {
+            type: 'validation',
+            entityId: 'nonexistent',
+          },
+          ctx
+        );
       }).toThrow();
 
       const buffer = errorHandler.getErrorBuffer();
@@ -151,10 +166,10 @@ describe('Error Handling Examples - Integration Tests', () => {
         componentRegistry,
       });
 
-      const ctx = { 
-        actorEntity: { id: 'actor1' }, 
+      const ctx = {
+        actorEntity: { id: 'actor1' },
         dispatcher: (node, ctx) => ({ resolved: true }),
-        depth: 5
+        depth: 5,
       };
 
       // Test depth validation
@@ -163,14 +178,16 @@ describe('Error Handling Examples - Integration Tests', () => {
         resolver.resolve({ type: 'validation' }, deepCtx);
       }).toThrow();
 
-      expect(errorHandler.getErrorBuffer()[0].code).toBe(ErrorCodes.MAX_DEPTH_EXCEEDED);
+      expect(errorHandler.getErrorBuffer()[0].code).toBe(
+        ErrorCodes.MAX_DEPTH_EXCEEDED
+      );
 
       // Test circular reference detection
       const visitedSet = new Set(['node1', 'node2']);
-      const circularCtx = { 
-        ...ctx, 
+      const circularCtx = {
+        ...ctx,
         visited: visitedSet,
-        currentNodeId: 'node1'  // Already visited
+        currentNodeId: 'node1', // Already visited
       };
 
       expect(() => {
@@ -178,7 +195,9 @@ describe('Error Handling Examples - Integration Tests', () => {
       }).toThrow();
 
       const buffer = errorHandler.getErrorBuffer();
-      const circularError = buffer.find(e => e.code === ErrorCodes.CYCLE_DETECTED);
+      const circularError = buffer.find(
+        (e) => e.code === ErrorCodes.CYCLE_DETECTED
+      );
       expect(circularError).toBeDefined();
     });
   });
@@ -196,20 +215,20 @@ describe('Error Handling Examples - Integration Tests', () => {
 
       dataFetcher = {
         fetch: async (id) => {
-          await new Promise(resolve => setTimeout(resolve, 10));
-          
+          await new Promise((resolve) => setTimeout(resolve, 10));
+
           if (id === 'error') {
             throw new Error('Network error');
           }
-          
+
           if (id === 'slow') {
-            await new Promise(resolve => setTimeout(resolve, 6000));
+            await new Promise((resolve) => setTimeout(resolve, 6000));
           }
-          
+
           return dataStore.get(id) || null;
         },
         fetchBatch: async (ids) => {
-          return Promise.all(ids.map(id => dataFetcher.fetch(id)));
+          return Promise.all(ids.map((id) => dataFetcher.fetch(id)));
         },
       };
 
@@ -231,21 +250,27 @@ describe('Error Handling Examples - Integration Tests', () => {
       });
 
       // First fetch - should hit dataFetcher
-      const result1 = await resolver.resolve({
-        type: 'async',
-        subtype: 'single',
-        id: 'item1'
-      }, {});
+      const result1 = await resolver.resolve(
+        {
+          type: 'async',
+          subtype: 'single',
+          id: 'item1',
+        },
+        {}
+      );
 
       expect(result1).toEqual({ id: 'item1', name: 'Item One' });
       expect(cache.has('item1')).toBe(true);
 
       // Second fetch - should hit cache
-      const result2 = await resolver.resolve({
-        type: 'async',
-        subtype: 'single',
-        id: 'item1'
-      }, {});
+      const result2 = await resolver.resolve(
+        {
+          type: 'async',
+          subtype: 'single',
+          id: 'item1',
+        },
+        {}
+      );
 
       expect(result2).toEqual(result1);
     });
@@ -258,19 +283,22 @@ describe('Error Handling Examples - Integration Tests', () => {
         cache,
       });
 
-      const results = await resolver.resolve({
-        type: 'async',
-        subtype: 'batch',
-        ids: ['item1', 'error', 'item2', 'nonexistent']
-      }, {});
+      const results = await resolver.resolve(
+        {
+          type: 'async',
+          subtype: 'batch',
+          ids: ['item1', 'error', 'item2', 'nonexistent'],
+        },
+        {}
+      );
 
       // Should have results for successful fetches
       expect(results.length).toBeGreaterThan(0);
-      expect(results.some(r => r.result?.id === 'item1')).toBe(true);
-      expect(results.some(r => r.result?.id === 'item2')).toBe(true);
+      expect(results.some((r) => r.result?.id === 'item1')).toBe(true);
+      expect(results.some((r) => r.result?.id === 'item2')).toBe(true);
 
       // Check warnings were logged for failures
-      const warnings = logger.getLogs().filter(l => l.level === 'warn');
+      const warnings = logger.getLogs().filter((l) => l.level === 'warn');
       expect(warnings.length).toBeGreaterThan(0);
     });
 
@@ -284,15 +312,18 @@ describe('Error Handling Examples - Integration Tests', () => {
 
       const items = [
         { id: 'item1' },
-        { id: null },  // Will cause error
-        { id: 'item2' }
+        { id: null }, // Will cause error
+        { id: 'item2' },
       ];
 
-      const results = await resolver.resolve({
-        type: 'async',
-        subtype: 'stream',
-        items
-      }, {});
+      const results = await resolver.resolve(
+        {
+          type: 'async',
+          subtype: 'stream',
+          items,
+        },
+        {}
+      );
 
       expect(results).toHaveLength(3);
       expect(results[0].success).toBe(true);
@@ -319,10 +350,13 @@ describe('Error Handling Examples - Integration Tests', () => {
         metricsCollector,
       });
 
-      const result = resolver.resolve({
-        type: 'performance',
-        id: 'test1'
-      }, {});
+      const result = resolver.resolve(
+        {
+          type: 'performance',
+          id: 'test1',
+        },
+        {}
+      );
 
       expect(result.processed).toBe(true);
 
@@ -336,21 +370,25 @@ describe('Error Handling Examples - Integration Tests', () => {
     it('should demonstrate development vs production behavior', () => {
       // Test development mode
       process.env.NODE_ENV = 'development';
-      
+
       const devResolver = createPerformanceResolver({
         logger,
         errorHandler: new ScopeDslErrorHandler({
           logger,
-          config: { isDevelopment: true }
+          config: { isDevelopment: true },
         }),
         metricsCollector,
       });
 
       const fullCtx = {
-        actorEntity: { id: 'actor1', name: 'Test', data: { lots: 'of', nested: 'data' } },
+        actorEntity: {
+          id: 'actor1',
+          name: 'Test',
+          data: { lots: 'of', nested: 'data' },
+        },
         targetEntity: { id: 'target1' },
-        depth: 15,  // Exceeds limit
-        extra: 'data'
+        depth: 15, // Exceeds limit
+        extra: 'data',
       };
 
       expect(() => {
@@ -358,17 +396,17 @@ describe('Error Handling Examples - Integration Tests', () => {
       }).toThrow();
 
       const devLogs = logger.getLogs();
-      expect(devLogs.some(l => l.level === 'error')).toBe(true);
+      expect(devLogs.some((l) => l.level === 'error')).toBe(true);
 
       // Test production mode
       logger.clearLogs();
       process.env.NODE_ENV = 'production';
-      
+
       const prodResolver = createPerformanceResolver({
         logger,
         errorHandler: new ScopeDslErrorHandler({
           logger,
-          config: { isDevelopment: false }
+          config: { isDevelopment: false },
         }),
         metricsCollector,
       });
@@ -378,7 +416,7 @@ describe('Error Handling Examples - Integration Tests', () => {
       }).toThrow();
 
       const prodLogs = logger.getLogs();
-      expect(prodLogs.some(l => l.level === 'error')).toBe(true);
+      expect(prodLogs.some((l) => l.level === 'error')).toBe(true);
     });
 
     it('should manage error buffer effectively', () => {
@@ -398,17 +436,17 @@ describe('Error Handling Examples - Integration Tests', () => {
       }
 
       // Check buffer before management
-      expect(errorHandler.getErrorBuffer().length).toBe(50);  // Max buffer size
+      expect(errorHandler.getErrorBuffer().length).toBe(50); // Max buffer size
 
       // Manage buffer
       resolver.manageErrorBuffer();
 
       // Buffer should be cleared
       expect(errorHandler.getErrorBuffer().length).toBe(0);
-      
+
       // Summary should have been logged
-      const infoLogs = logger.getLogs().filter(l => l.level === 'info');
-      expect(infoLogs.some(l => l.msg.includes('summary'))).toBe(true);
+      const infoLogs = logger.getLogs().filter((l) => l.level === 'info');
+      expect(infoLogs.some((l) => l.msg.includes('summary'))).toBe(true);
     });
   });
 
@@ -418,13 +456,13 @@ describe('Error Handling Examples - Integration Tests', () => {
         logger,
         config: {
           isDevelopment: true,
-          maxBufferSize: 10
-        }
+          maxBufferSize: 10,
+        },
       });
 
-      const resolver = createBasicResolver({ 
-        logger, 
-        errorHandler: smallBufferHandler 
+      const resolver = createBasicResolver({
+        logger,
+        errorHandler: smallBufferHandler,
       });
 
       // Generate more errors than buffer size
@@ -445,18 +483,31 @@ describe('Error Handling Examples - Integration Tests', () => {
         logger,
         errorHandler,
         entityManager: { hasEntity: () => false, getEntity: () => null },
-        componentRegistry: { hasComponent: () => false, getComponent: () => null },
+        componentRegistry: {
+          hasComponent: () => false,
+          getComponent: () => null,
+        },
       });
 
-      const ctx = { 
-        actorEntity: { id: 'actor1' }, 
-        dispatcher: () => {}
+      const ctx = {
+        actorEntity: { id: 'actor1' },
+        dispatcher: () => {},
       };
 
       // Generate different error types
       const errorScenarios = [
-        { node: { type: 'validation', entityId: 'missing' }, expectedCategory: 'resolution_failure' },
-        { node: { type: 'validation', data: 'string', schema: { type: 'number' } }, expectedCategory: 'data_validation' },
+        {
+          node: { type: 'validation', entityId: 'missing' },
+          expectedCategory: 'resolution_failure',
+        },
+        {
+          node: {
+            type: 'validation',
+            data: 'string',
+            schema: { type: 'number' },
+          },
+          expectedCategory: 'data_validation',
+        },
       ];
 
       for (const scenario of errorScenarios) {
@@ -469,9 +520,9 @@ describe('Error Handling Examples - Integration Tests', () => {
 
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer.length).toBeGreaterThan(0);
-      
+
       // Check that errors have appropriate categories
-      const categories = [...new Set(buffer.map(e => e.category))];
+      const categories = [...new Set(buffer.map((e) => e.category))];
       expect(categories.length).toBeGreaterThan(1);
     });
   });

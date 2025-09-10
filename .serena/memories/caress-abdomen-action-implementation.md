@@ -1,11 +1,13 @@
 # Caress Abdomen Action Implementation Summary
 
 ## Overview
+
 Successfully implemented the `intimacy:caress_abdomen` action as specified in `specs/caress-abdomen-action.md`.
 
 ## Files Created/Modified
 
 ### Created Files:
+
 1. **data/mods/intimacy/actions/caress_abdomen.action.json**
    - Multi-target action definition
    - Primary target: actor facing away (using `intimacy:close_actors_facing_away` scope)
@@ -29,22 +31,26 @@ Successfully implemented the `intimacy:caress_abdomen` action as specified in `s
    - All 10 tests passing
 
 ### Modified Files:
+
 1. **data/mods/intimacy/mod-manifest.json**
    - Added new action, condition, and rule to appropriate sections
    - Maintained alphabetical ordering
 
 ## Key Technical Details
+
 - Follows multi-target action pattern like `adjust_clothing`
 - Uses `contextFrom: "primary"` for secondary scope to access primary target's clothing
 - Properly sets `targetId` to `primaryId` in rule for perception handling
 - Message format includes wrapping arms and sensual caressing as specified
 
 ## Test Results
+
 - All 10 new tests passing
 - No regressions in existing intimacy tests (33 test suites, 214 tests all passing)
 - ESLint compliance verified
 
 ## Success Criteria Met
+
 ✅ Action appears in UI when prerequisites are met
 ✅ Multi-target resolution works correctly  
 ✅ Message format matches specification exactly

@@ -254,9 +254,7 @@ describe('EntityInstanceLoader', () => {
       expect(result.failures).toHaveLength(1);
       expect(result.failures[0]).toHaveProperty('error');
       // The actual error message contains validation details
-      expect(result.failures[0].error.message).toContain(
-        'Unexpected property'
-      );
+      expect(result.failures[0].error.message).toContain('Unexpected property');
     });
 
     it('should accept valid entity instance', async () => {

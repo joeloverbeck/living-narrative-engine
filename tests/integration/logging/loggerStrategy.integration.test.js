@@ -226,7 +226,7 @@ describe('LoggerStrategy Integration', () => {
       });
 
       // Wait for the async dispatch to occur
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       // Should have reported the error
       expect(eventBus.dispatch).toHaveBeenCalledWith({

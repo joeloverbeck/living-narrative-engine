@@ -1,10 +1,17 @@
 /**
  * @file Integration tests for batch mode event handling during game loading
- * @description Tests that the game loading process correctly enables EventBus batch mode 
+ * @description Tests that the game loading process correctly enables EventBus batch mode
  * to handle legitimate bulk events without triggering recursion guards
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import GameEngine from '../../../src/engine/gameEngine.js';
 import createSafeErrorLogger from '../../../src/utils/safeErrorLogger.js';
@@ -21,38 +28,54 @@ describe('Game Loading Batch Mode Integration', () => {
   beforeEach(() => {
     testBed = createTestBed();
     mockLogger = testBed.createMockLogger();
-    
+
     // Mock EventBus with batch mode functionality
     mockEventBus = {
       setBatchMode: jest.fn(),
       isBatchModeEnabled: jest.fn().mockReturnValue(false),
       getBatchModeOptions: jest.fn().mockReturnValue(null),
-      dispatch: jest.fn().mockResolvedValue(undefined)
+      dispatch: jest.fn().mockResolvedValue(undefined),
     };
-    
+
     // Mock SafeEventDispatcher with batch mode functionality
     mockSafeEventDispatcher = {
       setBatchMode: jest.fn(),
-      dispatch: jest.fn().mockResolvedValue(undefined)
+      dispatch: jest.fn().mockResolvedValue(undefined),
     };
-    
+
     // Create comprehensive mock container that resolves all required dependencies
     mockContainer = {
       resolve: jest.fn().mockImplementation((token) => {
         if (token === tokens.EventBus) return mockEventBus;
         if (token === tokens.ILogger) return mockLogger;
-        if (token === tokens.IEntityManager) return testBed.createMock('IEntityManager', ['clearAll']);
-        if (token === tokens.ITurnManager) return testBed.createMock('ITurnManager', ['stop', 'start']);
-        if (token === tokens.GamePersistenceService) return testBed.createMock('GamePersistenceService', []);
-        if (token === tokens.PlaytimeTracker) return testBed.createMock('PlaytimeTracker', ['reset', 'endSessionAndAccumulate', 'startSession']);
-        if (token === tokens.ISafeEventDispatcher) return mockSafeEventDispatcher;
-        if (token === tokens.IInitializationService) return {
-          runInitializationSequence: jest.fn().mockResolvedValue({ success: true })
-        };
+        if (token === tokens.IEntityManager)
+          return testBed.createMock('IEntityManager', ['clearAll']);
+        if (token === tokens.ITurnManager)
+          return testBed.createMock('ITurnManager', ['stop', 'start']);
+        if (token === tokens.GamePersistenceService)
+          return testBed.createMock('GamePersistenceService', []);
+        if (token === tokens.PlaytimeTracker)
+          return testBed.createMock('PlaytimeTracker', [
+            'reset',
+            'endSessionAndAccumulate',
+            'startSession',
+          ]);
+        if (token === tokens.ISafeEventDispatcher)
+          return mockSafeEventDispatcher;
+        if (token === tokens.IInitializationService)
+          return {
+            runInitializationSequence: jest
+              .fn()
+              .mockResolvedValue({ success: true }),
+          };
         // Return a generic mock for any other token
-        return testBed.createMock(token, ['dispatch', 'subscribe', 'unsubscribe']);
+        return testBed.createMock(token, [
+          'dispatch',
+          'subscribe',
+          'unsubscribe',
+        ]);
       }),
-      isRegistered: jest.fn().mockReturnValue(false)
+      isRegistered: jest.fn().mockReturnValue(false),
     };
   });
 
@@ -65,7 +88,7 @@ describe('Game Loading Batch Mode Integration', () => {
       // Arrange
       gameEngine = new GameEngine({
         container: mockContainer,
-        logger: mockLogger
+        logger: mockLogger,
       });
 
       // Act
@@ -76,7 +99,7 @@ describe('Game Loading Batch Mode Integration', () => {
         maxRecursionDepth: 25, // Base limit - EventBus will apply event-specific overrides
         maxGlobalRecursion: 200, // Higher limit for game-initialization to handle complex bulk operations
         timeoutMs: 60000,
-        context: 'game-initialization'
+        context: 'game-initialization',
       });
     });
 
@@ -84,7 +107,7 @@ describe('Game Loading Batch Mode Integration', () => {
       // Arrange
       gameEngine = new GameEngine({
         container: mockContainer,
-        logger: mockLogger
+        logger: mockLogger,
       });
 
       // Act
@@ -97,24 +120,40 @@ describe('Game Loading Batch Mode Integration', () => {
     it('should disable batch mode even if game loading fails', async () => {
       // Arrange
       const initializationService = {
-        runInitializationSequence: jest.fn().mockRejectedValue(new Error('Initialization failed'))
+        runInitializationSequence: jest
+          .fn()
+          .mockRejectedValue(new Error('Initialization failed')),
       };
-      
+
       mockContainer.resolve.mockImplementation((token) => {
-        if (token === tokens.IInitializationService) return initializationService;
+        if (token === tokens.IInitializationService)
+          return initializationService;
         if (token === tokens.EventBus) return mockEventBus;
         if (token === tokens.ILogger) return mockLogger;
-        if (token === tokens.IEntityManager) return testBed.createMock('IEntityManager', ['clearAll']);
-        if (token === tokens.ITurnManager) return testBed.createMock('ITurnManager', ['stop', 'start']);
-        if (token === tokens.GamePersistenceService) return testBed.createMock('GamePersistenceService', []);
-        if (token === tokens.PlaytimeTracker) return testBed.createMock('PlaytimeTracker', ['reset', 'endSessionAndAccumulate', 'startSession']);
-        if (token === tokens.ISafeEventDispatcher) return mockSafeEventDispatcher;
-        return testBed.createMock(token, ['dispatch', 'subscribe', 'unsubscribe']);
+        if (token === tokens.IEntityManager)
+          return testBed.createMock('IEntityManager', ['clearAll']);
+        if (token === tokens.ITurnManager)
+          return testBed.createMock('ITurnManager', ['stop', 'start']);
+        if (token === tokens.GamePersistenceService)
+          return testBed.createMock('GamePersistenceService', []);
+        if (token === tokens.PlaytimeTracker)
+          return testBed.createMock('PlaytimeTracker', [
+            'reset',
+            'endSessionAndAccumulate',
+            'startSession',
+          ]);
+        if (token === tokens.ISafeEventDispatcher)
+          return mockSafeEventDispatcher;
+        return testBed.createMock(token, [
+          'dispatch',
+          'subscribe',
+          'unsubscribe',
+        ]);
       });
-      
+
       gameEngine = new GameEngine({
         container: mockContainer,
-        logger: mockLogger
+        logger: mockLogger,
       });
 
       // Act & Assert
@@ -128,13 +167,13 @@ describe('Game Loading Batch Mode Integration', () => {
       // Arrange
       const safeErrorLogger = createSafeErrorLogger({
         logger: mockLogger,
-        safeEventDispatcher: mockSafeEventDispatcher
+        safeEventDispatcher: mockSafeEventDispatcher,
       });
 
       // Act
       safeErrorLogger.enableGameLoadingMode({
         context: 'game-initialization',
-        timeoutMs: 60000
+        timeoutMs: 60000,
       });
 
       // Assert
@@ -142,7 +181,7 @@ describe('Game Loading Batch Mode Integration', () => {
         maxRecursionDepth: 25,
         maxGlobalRecursion: 200,
         timeoutMs: 60000,
-        context: 'game-initialization'
+        context: 'game-initialization',
       });
     });
 
@@ -150,13 +189,13 @@ describe('Game Loading Batch Mode Integration', () => {
       // Arrange
       const safeErrorLogger = createSafeErrorLogger({
         logger: mockLogger,
-        safeEventDispatcher: mockSafeEventDispatcher
+        safeEventDispatcher: mockSafeEventDispatcher,
       });
 
       // Act
       safeErrorLogger.enableGameLoadingMode({
         context: 'bulk-operation',
-        timeoutMs: 30000
+        timeoutMs: 30000,
       });
 
       // Assert
@@ -164,7 +203,7 @@ describe('Game Loading Batch Mode Integration', () => {
         maxRecursionDepth: 25,
         maxGlobalRecursion: 50,
         timeoutMs: 30000,
-        context: 'bulk-operation'
+        context: 'bulk-operation',
       });
     });
   });
@@ -174,31 +213,52 @@ describe('Game Loading Batch Mode Integration', () => {
       // Arrange
       const initializationError = new Error('World data not found');
       const initializationService = {
-        runInitializationSequence: jest.fn().mockRejectedValue(initializationError)
+        runInitializationSequence: jest
+          .fn()
+          .mockRejectedValue(initializationError),
       };
-      
+
       mockContainer.resolve.mockImplementation((token) => {
-        if (token === tokens.IInitializationService) return initializationService;
+        if (token === tokens.IInitializationService)
+          return initializationService;
         if (token === tokens.EventBus) return mockEventBus;
         if (token === tokens.ILogger) return mockLogger;
-        if (token === tokens.IEntityManager) return testBed.createMock('IEntityManager', ['clearAll']);
-        if (token === tokens.ITurnManager) return testBed.createMock('ITurnManager', ['stop', 'start']);
-        if (token === tokens.GamePersistenceService) return testBed.createMock('GamePersistenceService', []);
-        if (token === tokens.PlaytimeTracker) return testBed.createMock('PlaytimeTracker', ['reset', 'endSessionAndAccumulate', 'startSession']);
-        if (token === tokens.ISafeEventDispatcher) return mockSafeEventDispatcher;
-        return testBed.createMock(token, ['dispatch', 'subscribe', 'unsubscribe']);
+        if (token === tokens.IEntityManager)
+          return testBed.createMock('IEntityManager', ['clearAll']);
+        if (token === tokens.ITurnManager)
+          return testBed.createMock('ITurnManager', ['stop', 'start']);
+        if (token === tokens.GamePersistenceService)
+          return testBed.createMock('GamePersistenceService', []);
+        if (token === tokens.PlaytimeTracker)
+          return testBed.createMock('PlaytimeTracker', [
+            'reset',
+            'endSessionAndAccumulate',
+            'startSession',
+          ]);
+        if (token === tokens.ISafeEventDispatcher)
+          return mockSafeEventDispatcher;
+        return testBed.createMock(token, [
+          'dispatch',
+          'subscribe',
+          'unsubscribe',
+        ]);
       });
-      
+
       gameEngine = new GameEngine({
         container: mockContainer,
-        logger: mockLogger
+        logger: mockLogger,
       });
 
       // Act & Assert
-      await expect(gameEngine.startNewGame('invalidWorld')).rejects.toThrow('World data not found');
-      
+      await expect(gameEngine.startNewGame('invalidWorld')).rejects.toThrow(
+        'World data not found'
+      );
+
       // Verify batch mode was enabled and then disabled
-      expect(mockSafeEventDispatcher.setBatchMode).toHaveBeenCalledWith(true, expect.any(Object));
+      expect(mockSafeEventDispatcher.setBatchMode).toHaveBeenCalledWith(
+        true,
+        expect.any(Object)
+      );
       expect(mockSafeEventDispatcher.setBatchMode).toHaveBeenCalledWith(false);
     });
 
@@ -206,7 +266,7 @@ describe('Game Loading Batch Mode Integration', () => {
       // Arrange
       gameEngine = new GameEngine({
         container: mockContainer,
-        logger: mockLogger
+        logger: mockLogger,
       });
 
       // Act
@@ -214,10 +274,14 @@ describe('Game Loading Batch Mode Integration', () => {
 
       // Assert
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('SafeErrorLogger: Enabled batch mode for game-initialization')
+        expect.stringContaining(
+          'SafeErrorLogger: Enabled batch mode for game-initialization'
+        )
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('maxRecursionDepth: 25, maxGlobalRecursion: 200')
+        expect.stringContaining(
+          'maxRecursionDepth: 25, maxGlobalRecursion: 200'
+        )
       );
     });
   });
@@ -227,14 +291,17 @@ describe('Game Loading Batch Mode Integration', () => {
       // Arrange
       gameEngine = new GameEngine({
         container: mockContainer,
-        logger: mockLogger
+        logger: mockLogger,
       });
 
       // Act
       await gameEngine.startNewGame('testWorld');
 
       // Assert
-      const batchModeCall = mockSafeEventDispatcher.setBatchMode.mock.calls.find(call => call[0] === true);
+      const batchModeCall =
+        mockSafeEventDispatcher.setBatchMode.mock.calls.find(
+          (call) => call[0] === true
+        );
       expect(batchModeCall[1].timeoutMs).toBe(60000); // 1 minute timeout
       expect(batchModeCall[1].context).toBe('game-initialization');
     });
@@ -242,11 +309,11 @@ describe('Game Loading Batch Mode Integration', () => {
     it('should properly coordinate with existing batch operations', () => {
       // This test verifies that SafeErrorLogger's withGameLoadingMode
       // works correctly for coordinating batch mode across operations
-      
+
       // Arrange
       const safeErrorLogger = createSafeErrorLogger({
         logger: mockLogger,
-        safeEventDispatcher: mockSafeEventDispatcher
+        safeEventDispatcher: mockSafeEventDispatcher,
       });
 
       // Act
@@ -257,7 +324,7 @@ describe('Game Loading Batch Mode Integration', () => {
         },
         {
           context: 'game-initialization',
-          timeoutMs: 30000
+          timeoutMs: 30000,
         }
       );
 
@@ -267,7 +334,7 @@ describe('Game Loading Batch Mode Integration', () => {
         maxRecursionDepth: 25,
         maxGlobalRecursion: 200,
         timeoutMs: 30000,
-        context: 'game-initialization'
+        context: 'game-initialization',
       });
     });
   });

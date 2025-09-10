@@ -348,7 +348,7 @@ describe('Server - Comprehensive Tests', () => {
     const loggerCtor = (await import('../../../src/consoleLogger.js'))
       .ConsoleLogger;
     consoleLoggerInstance = loggerCtor.mock.results[0].value;
-    
+
     // Wait for app.listen to be called and trigger its callback
     if (app.listen.mock.calls.length > 0) {
       const listenCallback = app.listen.mock.calls[0][2]; // Third argument is the callback
@@ -357,7 +357,7 @@ describe('Server - Comprehensive Tests', () => {
         listenCallback();
       }
     }
-    
+
     rootHandler = app.get.mock.calls.find((c) => c[0] === '/')[1];
     errorHandler = app.use.mock.calls.find(
       (c) => typeof c[0] === 'function' && c[0].length === 4

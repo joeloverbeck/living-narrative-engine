@@ -90,7 +90,7 @@ class LogCategoryDetector {
   #initializePatterns(customPatterns) {
     // NOTE: Error pattern removed - now handled via level-based routing
     // Pattern previously at priority 100: /\berror\b(?!\s+log)|exception|failed|failure|catch|throw|stack\s*trace/i
-    
+
     // Priority 1: Specific domain patterns (high priority)
     this.#patterns.set('ecs', {
       pattern:
@@ -209,10 +209,12 @@ class LogCategoryDetector {
       hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32bit integer
     }
-    
+
     // Include metadata in cache key if present
     const baseKey = `${prefix}:${str.length}:${hash}`;
-    return Object.keys(metadata).length > 0 ? `${baseKey}:${JSON.stringify(metadata)}` : baseKey;
+    return Object.keys(metadata).length > 0
+      ? `${baseKey}:${JSON.stringify(metadata)}`
+      : baseKey;
   }
 
   /**
@@ -236,7 +238,7 @@ class LogCategoryDetector {
       matches.sort((a, b) => b.priority - a.priority);
       return matches[0].category;
     }
-    
+
     return undefined;
   }
 
@@ -264,9 +266,20 @@ class LogCategoryDetector {
 
     // Allow common categories that might be added dynamically
     const knownCategories = [
-      'ecs', 'engine', 'ai', 'anatomy', 'persistence', 'actions', 'turns', 
-      'events', 'validation', 'ui', 'network', 'configuration', 
-      'initialization', 'performance'
+      'ecs',
+      'engine',
+      'ai',
+      'anatomy',
+      'persistence',
+      'actions',
+      'turns',
+      'events',
+      'validation',
+      'ui',
+      'network',
+      'configuration',
+      'initialization',
+      'performance',
     ];
 
     return knownCategories.includes(hint);
@@ -289,9 +302,12 @@ class LogCategoryDetector {
     // Priority 1: Use log level for errors and warnings
     if (metadata.level === 'error') return 'error';
     if (metadata.level === 'warn') return 'warning';
-    
+
     // Priority 2: Use category hint if provided and valid
-    if (metadata.categoryHint && this.#validateCategoryHint(metadata.categoryHint)) {
+    if (
+      metadata.categoryHint &&
+      this.#validateCategoryHint(metadata.categoryHint)
+    ) {
       return metadata.categoryHint;
     }
 
@@ -302,7 +318,9 @@ class LogCategoryDetector {
 
     // Generate cache key using hash for memory efficiency (include metadata)
     const cacheKey =
-      this.#cacheEnabled && this.#cache ? this.#hashString(message, metadata) : null;
+      this.#cacheEnabled && this.#cache
+        ? this.#hashString(message, metadata)
+        : null;
 
     // Check cache first
     if (cacheKey && this.#cache.has(cacheKey)) {
@@ -329,7 +347,9 @@ class LogCategoryDetector {
    * @returns {(string|undefined)[]} Array of detected categories
    */
   detectCategories(messages, metadataArray = []) {
-    return messages.map((message, index) => this.detectCategory(message, metadataArray[index] || {}));
+    return messages.map((message, index) =>
+      this.detectCategory(message, metadataArray[index] || {})
+    );
   }
 
   /**
@@ -396,25 +416,36 @@ class LogCategoryDetector {
    */
   getValidCategoryHints() {
     const hints = ['error', 'warning', 'info', 'debug']; // Level-based categories
-    
+
     // Add pattern categories
     for (const category of this.#patterns.keys()) {
       hints.push(category);
     }
-    
+
     // Add common dynamic categories
     const commonCategories = [
-      'ecs', 'engine', 'ai', 'anatomy', 'persistence', 'actions', 'turns', 
-      'events', 'validation', 'ui', 'network', 'configuration', 
-      'initialization', 'performance'
+      'ecs',
+      'engine',
+      'ai',
+      'anatomy',
+      'persistence',
+      'actions',
+      'turns',
+      'events',
+      'validation',
+      'ui',
+      'network',
+      'configuration',
+      'initialization',
+      'performance',
     ];
-    
+
     for (const category of commonCategories) {
       if (!hints.includes(category)) {
         hints.push(category);
       }
     }
-    
+
     return hints.sort();
   }
 

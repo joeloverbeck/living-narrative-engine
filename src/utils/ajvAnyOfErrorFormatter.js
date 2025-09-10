@@ -10,24 +10,26 @@
  */
 function groupErrorsByOperationType(errors) {
   const grouped = new Map();
-  
+
   // Find anyOf branch indices and their corresponding operation types
-  errors.forEach(error => {
+  errors.forEach((error) => {
     // Look for const validation in anyOf branches (e.g., #/anyOf/0/properties/type/const)
-    const anyOfMatch = error.schemaPath.match(/#\/anyOf\/([0-9]+)\/properties\/type\/const/);
+    const anyOfMatch = error.schemaPath.match(
+      /#\/anyOf\/([0-9]+)\/properties\/type\/const/
+    );
     if (anyOfMatch && error.params?.allowedValue) {
       const branchIndex = parseInt(anyOfMatch[1]);
       const operationType = error.params.allowedValue;
-      
+
       // Collect all errors from this anyOf branch
-      const branchErrors = errors.filter(e => 
+      const branchErrors = errors.filter((e) =>
         e.schemaPath.startsWith(`#/anyOf/${branchIndex}/`)
       );
-      
+
       grouped.set(operationType, branchErrors);
     }
   });
-  
+
   return grouped;
 }
 
@@ -42,24 +44,24 @@ function findIntendedOperationType(data, groupedErrors, errors) {
   if (data?.type && typeof data.type === 'string') {
     return data.type;
   }
-  
+
   // Otherwise, find the operation type with the fewest/most specific errors
   let bestMatch = null;
   let fewestErrors = Infinity;
-  
+
   for (const [operationType, errors] of groupedErrors) {
     // Skip if this operation type has a const mismatch (wrong type)
-    const hasTypeMismatch = errors.some(e => 
-      e.keyword === 'const' && e.schemaPath.includes('/type/const')
+    const hasTypeMismatch = errors.some(
+      (e) => e.keyword === 'const' && e.schemaPath.includes('/type/const')
     );
     if (hasTypeMismatch) continue;
-    
+
     if (errors.length < fewestErrors) {
       fewestErrors = errors.length;
       bestMatch = operationType;
     }
   }
-  
+
   return bestMatch;
 }
 
@@ -73,76 +75,81 @@ export function formatAnyOfErrors(errors, data) {
   if (!errors || errors.length === 0) {
     return 'No validation errors';
   }
-  
+
   // Check if this is an anyOf/oneOf validation with operation types
-  const isOperationValidation = errors.some(e => 
-    e.schemaPath.includes('anyOf') && 
-    (e.schemaPath.includes('/properties/type/const') || e.keyword === 'anyOf')
+  const isOperationValidation = errors.some(
+    (e) =>
+      e.schemaPath.includes('anyOf') &&
+      (e.schemaPath.includes('/properties/type/const') || e.keyword === 'anyOf')
   );
-  
+
   if (!isOperationValidation) {
     // Fall back to standard formatting for non-operation validations
     return formatStandardErrors(errors);
   }
-  
+
   // Group errors by operation type
   const groupedErrors = groupErrorsByOperationType(errors);
-  
+
   // Find the most likely intended operation
   const intendedType = findIntendedOperationType(data, groupedErrors, errors);
-  
+
   if (intendedType) {
     // For a known type, find errors from the matching anyOf branch
     // First, check if we have it in grouped errors
     const relevantErrors = groupedErrors.get(intendedType) || [];
-    
+
     if (relevantErrors.length > 0) {
       const lines = [`Operation type '${intendedType}' validation failed:`];
-      
+
       // Filter out the type const error itself
-      const paramErrors = relevantErrors.filter(e => 
-        !(e.keyword === 'const' && e.schemaPath.includes('/type/const'))
+      const paramErrors = relevantErrors.filter(
+        (e) => !(e.keyword === 'const' && e.schemaPath.includes('/type/const'))
       );
-      
-      paramErrors.forEach(error => {
+
+      paramErrors.forEach((error) => {
         const path = error.instancePath || 'root';
         const message = formatSingleError(error);
         lines.push(`  - ${path}: ${message}`);
       });
-      
+
       return lines.join('\n');
     }
-    
+
     // If the type is valid but we have other errors, find errors from the correct branch
     // by looking for the branch index that doesn't have a type mismatch
-    for (let i = 0; i < 100; i++) { // Assume max 100 anyOf branches
+    for (let i = 0; i < 100; i++) {
+      // Assume max 100 anyOf branches
       const branchPath = `#/anyOf/${i}/`;
-      const branchErrors = errors.filter(e => e.schemaPath.startsWith(branchPath));
-      
+      const branchErrors = errors.filter((e) =>
+        e.schemaPath.startsWith(branchPath)
+      );
+
       if (branchErrors.length > 0) {
         // Check if this branch has a type mismatch
-        const hasTypeMismatch = branchErrors.some(e => 
-          e.keyword === 'const' && 
-          e.schemaPath.includes('/type/const') &&
-          e.params?.allowedValue !== intendedType
+        const hasTypeMismatch = branchErrors.some(
+          (e) =>
+            e.keyword === 'const' &&
+            e.schemaPath.includes('/type/const') &&
+            e.params?.allowedValue !== intendedType
         );
-        
+
         if (!hasTypeMismatch) {
           // This is likely the correct branch for our type
           const lines = [`Operation type '${intendedType}' validation failed:`];
-          
-          branchErrors.forEach(error => {
+
+          branchErrors.forEach((error) => {
             const path = error.instancePath || 'root';
             const message = formatSingleError(error);
             lines.push(`  - ${path}: ${message}`);
           });
-          
+
           return lines.join('\n');
         }
       }
     }
   }
-  
+
   // If we can't determine the intended type, show a summary
   return formatOperationTypeSummary(groupedErrors, data);
 }
@@ -176,13 +183,13 @@ function formatSingleError(error) {
  */
 function formatStandardErrors(errors) {
   const lines = ['Validation errors:'];
-  
-  errors.forEach(error => {
+
+  errors.forEach((error) => {
     const path = error.instancePath || 'root';
     const message = formatSingleError(error);
     lines.push(`  - ${path}: ${message}`);
   });
-  
+
   return lines.join('\\n');
 }
 
@@ -194,7 +201,7 @@ function formatStandardErrors(errors) {
  */
 function formatOperationTypeSummary(groupedErrors, data) {
   const lines = [];
-  
+
   // Check if this might be a macro reference formatted incorrectly
   if (data?.macro && typeof data.macro === 'string') {
     lines.push('Invalid macro reference format detected.');
@@ -203,14 +210,14 @@ function formatOperationTypeSummary(groupedErrors, data) {
     lines.push('Do NOT include a "type" field with macro references.');
     return lines.join('\n');
   }
-  
+
   if (data?.type) {
     lines.push(`Unknown or invalid operation type: '${data.type}'`);
     lines.push('Valid operation types include:');
     const types = Array.from(groupedErrors.keys());
     // Show more types for better debugging
     const displayTypes = types.slice(0, 15);
-    displayTypes.forEach(type => lines.push(`  - ${type}`));
+    displayTypes.forEach((type) => lines.push(`  - ${type}`));
     if (types.length > 15) {
       lines.push(`  ... and ${types.length - 15} more`);
     }
@@ -228,12 +235,12 @@ function formatOperationTypeSummary(groupedErrors, data) {
     lines.push('');
     lines.push('Common operation types:');
     const types = Array.from(groupedErrors.keys()).slice(0, 12);
-    types.forEach(type => lines.push(`  - ${type}`));
+    types.forEach((type) => lines.push(`  - ${type}`));
     if (groupedErrors.size > 12) {
       lines.push(`  ... and ${groupedErrors.size - 12} more`);
     }
   }
-  
+
   return lines.join('\n');
 }
 
@@ -247,16 +254,18 @@ export function formatAjvErrorsEnhanced(errors, data) {
   if (!errors || errors.length === 0) {
     return 'No validation errors';
   }
-  
+
   // Early detection for common issues that should have been caught by pre-validation
   // This serves as a fallback in case pre-validation was skipped
   if (errors.length > 100) {
     // Large number of errors usually indicates a missing type field or similar structural issue
-    const hasOperationErrors = errors.some(e => 
-      e.schemaPath && e.schemaPath.includes('/anyOf/') && 
-      e.schemaPath.includes('/properties/type/const')
+    const hasOperationErrors = errors.some(
+      (e) =>
+        e.schemaPath &&
+        e.schemaPath.includes('/anyOf/') &&
+        e.schemaPath.includes('/properties/type/const')
     );
-    
+
     if (hasOperationErrors) {
       // This looks like operation validation with missing/invalid type
       if (!data?.type && !data?.macro) {
@@ -266,18 +275,19 @@ export function formatAjvErrorsEnhanced(errors, data) {
       }
     }
   }
-  
+
   // Check if this appears to be an anyOf validation (even with smaller error counts)
-  const hasAnyOfErrors = errors.some(e => 
-    e.keyword === 'anyOf' || 
-    (e.schemaPath && e.schemaPath.includes('/anyOf/'))
+  const hasAnyOfErrors = errors.some(
+    (e) =>
+      e.keyword === 'anyOf' ||
+      (e.schemaPath && e.schemaPath.includes('/anyOf/'))
   );
-  
+
   if (hasAnyOfErrors || errors.length > 50) {
     // Try the intelligent anyOf formatter
     return formatAnyOfErrors(errors, data);
   }
-  
+
   // For standard errors, use standard formatting
   return formatStandardErrors(errors);
 }

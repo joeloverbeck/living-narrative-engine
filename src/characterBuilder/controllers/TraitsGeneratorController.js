@@ -1760,8 +1760,6 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
 
     return count;
   }
-
-
 }
 
 export default TraitsGeneratorController;

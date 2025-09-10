@@ -22,14 +22,14 @@ describe('Sit Down Scope Resolution - Integration', () => {
   beforeEach(() => {
     // Clear any global entity cache to prevent test interference
     clearEntityCache();
-    
+
     // Create logger with addLog method for trace support
     mockLogger = {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
-      addLog: jest.fn()
+      addLog: jest.fn(),
     };
 
     // Create entity manager
@@ -47,11 +47,11 @@ describe('Sit Down Scope Resolution - Integration', () => {
         properties: {
           spots: {
             type: 'array',
-            items: { type: ['null', 'string'] }
-          }
+            items: { type: ['null', 'string'] },
+          },
         },
-        required: ['spots']
-      }
+        required: ['spots'],
+      },
     });
 
     registry.store('components', 'core:position', {
@@ -59,10 +59,10 @@ describe('Sit Down Scope Resolution - Integration', () => {
       dataSchema: {
         type: 'object',
         properties: {
-          locationId: { type: 'string' }
+          locationId: { type: 'string' },
         },
-        required: ['locationId']
-      }
+        required: ['locationId'],
+      },
     });
 
     registry.store('components', 'core:actor', {
@@ -70,9 +70,9 @@ describe('Sit Down Scope Resolution - Integration', () => {
       dataSchema: {
         type: 'object',
         properties: {
-          isPlayerControlled: { type: 'boolean' }
-        }
-      }
+          isPlayerControlled: { type: 'boolean' },
+        },
+      },
     });
 
     registry.store('components', 'core:name', {
@@ -80,10 +80,10 @@ describe('Sit Down Scope Resolution - Integration', () => {
       dataSchema: {
         type: 'object',
         properties: {
-          text: { type: 'string' }
+          text: { type: 'string' },
         },
-        required: ['text']
-      }
+        required: ['text'],
+      },
     });
 
     // Create scope engine with no parameters (it will use runtime context)
@@ -103,8 +103,8 @@ describe('Sit Down Scope Resolution - Integration', () => {
         baseComponents: {
           'core:name': { text: 'park bench' },
           'core:position': { locationId: 'test:park' },
-          'positioning:allows_sitting': { spots: [null, null] }
-        }
+          'positioning:allows_sitting': { spots: [null, null] },
+        },
       });
 
       // Create actor entity using factory
@@ -114,8 +114,8 @@ describe('Sit Down Scope Resolution - Integration', () => {
         baseComponents: {
           'core:name': { text: 'Test Actor' },
           'core:actor': { isPlayerControlled: false },
-          'core:position': { locationId: 'test:park' }
-        }
+          'core:position': { locationId: 'test:park' },
+        },
       });
 
       // Add entities to manager
@@ -126,7 +126,7 @@ describe('Sit Down Scope Resolution - Integration', () => {
       const runtimeCtx = {
         entityManager: entityManager,
         registry: registry,
-        jsonLogicEval: jsonLogicEval
+        jsonLogicEval: jsonLogicEval,
       };
 
       // Parse the scope expression with filtering
@@ -152,15 +152,10 @@ describe('Sit Down Scope Resolution - Integration', () => {
       // Resolve the scope - convert actor Entity to plain object with components
       const actorForScope = {
         id: actor.id,
-        components: actor.getAllComponents()
+        components: actor.getAllComponents(),
       };
-      
-      const result = scopeEngine.resolve(
-        ast,
-        actorForScope,
-        runtimeCtx
-      );
 
+      const result = scopeEngine.resolve(ast, actorForScope, runtimeCtx);
 
       // Verify the park bench was found
       expect(result).toBeDefined();
@@ -168,7 +163,9 @@ describe('Sit Down Scope Resolution - Integration', () => {
       expect(result.has('test:park_bench_instance')).toBe(true);
 
       // Additional verification: Check that getEntitiesWithComponent works
-      const entitiesWithSitting = entityManager.getEntitiesWithComponent('positioning:allows_sitting');
+      const entitiesWithSitting = entityManager.getEntitiesWithComponent(
+        'positioning:allows_sitting'
+      );
       expect(entitiesWithSitting).toBeDefined();
       expect(entitiesWithSitting.length).toBe(1);
       expect(entitiesWithSitting[0].id).toBe('test:park_bench_instance');
@@ -182,8 +179,8 @@ describe('Sit Down Scope Resolution - Integration', () => {
         baseComponents: {
           'core:name': { text: 'park bench' },
           'core:position': { locationId: 'test:different_location' },
-          'positioning:allows_sitting': { spots: [null, null] }
-        }
+          'positioning:allows_sitting': { spots: [null, null] },
+        },
       });
 
       // Create actor at park using factory
@@ -193,8 +190,8 @@ describe('Sit Down Scope Resolution - Integration', () => {
         baseComponents: {
           'core:name': { text: 'Test Actor' },
           'core:actor': { isPlayerControlled: false },
-          'core:position': { locationId: 'test:park' }
-        }
+          'core:position': { locationId: 'test:park' },
+        },
       });
 
       // Add entities
@@ -224,18 +221,14 @@ describe('Sit Down Scope Resolution - Integration', () => {
       // Resolve the scope - convert actor Entity to plain object with components
       const actorForScope = {
         id: actor.id,
-        components: actor.getAllComponents()
+        components: actor.getAllComponents(),
       };
-      
-      const result = scopeEngine.resolve(
-        ast,
-        actorForScope,
-        {
-          entityManager: entityManager,
-          registry: registry,
-          jsonLogicEval: jsonLogicEval
-        }
-      );
+
+      const result = scopeEngine.resolve(ast, actorForScope, {
+        entityManager: entityManager,
+        registry: registry,
+        jsonLogicEval: jsonLogicEval,
+      });
 
       // Should find no entities since they're at different locations
       expect(result).toBeDefined();
@@ -250,10 +243,10 @@ describe('Sit Down Scope Resolution - Integration', () => {
         baseComponents: {
           'core:name': { text: 'occupied bench' },
           'core:position': { locationId: 'test:park' },
-          'positioning:allows_sitting': { 
-            spots: ['occupant1', 'occupant2'] // All spots occupied
-          }
-        }
+          'positioning:allows_sitting': {
+            spots: ['occupant1', 'occupant2'], // All spots occupied
+          },
+        },
       });
 
       // Create available bench (has null spots) using factory
@@ -263,10 +256,10 @@ describe('Sit Down Scope Resolution - Integration', () => {
         baseComponents: {
           'core:name': { text: 'available bench' },
           'core:position': { locationId: 'test:park' },
-          'positioning:allows_sitting': { 
-            spots: [null, 'occupant1'] // One spot available
-          }
-        }
+          'positioning:allows_sitting': {
+            spots: [null, 'occupant1'], // One spot available
+          },
+        },
       });
 
       // Create actor using factory
@@ -276,8 +269,8 @@ describe('Sit Down Scope Resolution - Integration', () => {
         baseComponents: {
           'core:name': { text: 'Test Actor' },
           'core:actor': { isPlayerControlled: false },
-          'core:position': { locationId: 'test:park' }
-        }
+          'core:position': { locationId: 'test:park' },
+        },
       });
 
       // Add entities
@@ -308,18 +301,14 @@ describe('Sit Down Scope Resolution - Integration', () => {
       // Resolve the scope - convert actor Entity to plain object with components
       const actorForScope = {
         id: actor.id,
-        components: actor.getAllComponents()
+        components: actor.getAllComponents(),
       };
-      
-      const result = scopeEngine.resolve(
-        ast,
-        actorForScope,
-        {
-          entityManager: entityManager,
-          registry: registry,
-          jsonLogicEval: jsonLogicEval
-        }
-      );
+
+      const result = scopeEngine.resolve(ast, actorForScope, {
+        entityManager: entityManager,
+        registry: registry,
+        jsonLogicEval: jsonLogicEval,
+      });
 
       // Should find only the available bench
       expect(result).toBeDefined();

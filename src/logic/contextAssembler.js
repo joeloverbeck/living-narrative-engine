@@ -206,7 +206,7 @@ export function createNestedExecutionContext(
 /**
  * Creates an evaluation context by extracting actor/target IDs from event payload.
  * This function provides a simplified interface that matches E2E test expectations.
- * 
+ *
  * @param {GameEvent} event - Event with payload containing actorId/targetId
  * @param {EntityManager} entityManager - Entity manager for lookups
  * @param {ILogger} logger - Logger instance
@@ -234,7 +234,7 @@ export function createEvaluationContext(event, entityManager, logger) {
     context.actor = createEntityContext(actorId, entityManager, logger);
   }
 
-  // Add target context if targetId exists  
+  // Add target context if targetId exists
   if (targetId) {
     context.target = createEntityContext(targetId, entityManager, logger);
   }

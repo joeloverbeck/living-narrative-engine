@@ -58,7 +58,9 @@ describe('Loaders Registration Configuration', () => {
     expect(anatomyRecipeLoader).toBeDefined();
     expect(anatomyBlueprintLoader).toBeDefined();
     expect(anatomyRecipeLoader.constructor.name).toBe('AnatomyRecipeLoader');
-    expect(anatomyBlueprintLoader.constructor.name).toBe('AnatomyBlueprintLoader');
+    expect(anatomyBlueprintLoader.constructor.name).toBe(
+      'AnatomyBlueprintLoader'
+    );
   });
 
   it('should register all required anatomy loaders', async () => {

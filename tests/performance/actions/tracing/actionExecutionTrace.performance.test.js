@@ -52,12 +52,12 @@ describe('ActionExecutionTrace - Performance Tests', () => {
       console.log(
         `Trace creation performance: ${iterations} traces in ${duration.toFixed(2)}ms (avg: ${avgTimePerTrace.toFixed(3)}ms/trace)`
       );
-      
+
       // Provide helpful context if test approaches threshold
       if (duration > 150) {
         console.log(
           `Warning: Performance approaching threshold (${duration.toFixed(2)}ms > 150ms). ` +
-          `This may indicate system load or actual performance degradation.`
+            `This may indicate system load or actual performance degradation.`
         );
       }
     });

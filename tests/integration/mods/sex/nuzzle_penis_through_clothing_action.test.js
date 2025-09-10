@@ -13,14 +13,12 @@ import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 
 /**
  * Creates standardized anatomy and clothing setup for nuzzle penis through clothing scenarios.
- * 
+ *
  * @returns {object} Object with actor, target, and all anatomy/clothing entities
  */
 function setupPenisClothingScenario() {
   // Create main room
-  const room = new ModEntityBuilder('room1')
-    .asRoom('Test Room')
-    .build();
+  const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
   // Create actor entity
   const actor = new ModEntityBuilder('alice')
@@ -72,9 +70,7 @@ function setupPenisClothingScenario() {
     .build();
 
   // Create clothing entity as separate entity
-  const pants = new ModEntityBuilder('pants1')
-    .withName('pants')
-    .build();
+  const pants = new ModEntityBuilder('pants1').withName('pants').build();
 
   return {
     room,
@@ -91,11 +87,14 @@ describe('sex:nuzzle_penis_through_clothing action integration', () => {
 
   beforeEach(async () => {
     // Create test fixture with auto-loaded files
-    testFixture = await ModTestFixture.forAction('sex', 'sex:nuzzle_penis_through_clothing');
-    
+    testFixture = await ModTestFixture.forAction(
+      'sex',
+      'sex:nuzzle_penis_through_clothing'
+    );
+
     // Setup anatomy and clothing entities
     const entities = setupPenisClothingScenario();
-    
+
     // Load all entities into the test environment
     testFixture.reset(Object.values(entities));
   });
@@ -141,7 +140,7 @@ describe('sex:nuzzle_penis_through_clothing action integration', () => {
     ];
 
     testFixture.reset(minimalEntities);
-    
+
     const initialEventCount = testFixture.events.length;
 
     await testFixture.eventBus.dispatch('core:attempt_action', {

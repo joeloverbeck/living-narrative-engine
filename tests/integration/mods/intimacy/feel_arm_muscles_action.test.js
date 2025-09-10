@@ -29,12 +29,12 @@ describe('intimacy:feel_arm_muscles action integration', () => {
   it('performs feel arm muscles action successfully', async () => {
     // Create complex anatomy setup manually
     const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    
+
     // Add anatomy components for Bob
     scenario.target.components['anatomy:body'] = {
-      body: { root: 'torso1' }
+      body: { root: 'torso1' },
     };
-    
+
     const anatomyEntities = [
       {
         id: 'torso1',
@@ -69,7 +69,7 @@ describe('intimacy:feel_arm_muscles action integration', () => {
         },
       },
     ];
-    
+
     testFixture.reset([scenario.actor, scenario.target, ...anatomyEntities]);
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
@@ -111,7 +111,7 @@ describe('intimacy:feel_arm_muscles action integration', () => {
 
   it('handles missing target gracefully', async () => {
     const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
-    
+
     scenario.actor.components['positioning:closeness'] = { partners: [] };
     testFixture.reset([scenario.actor]);
 
@@ -132,12 +132,12 @@ describe('intimacy:feel_arm_muscles action integration', () => {
 
   it('correctly processes muscular arms description', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    
+
     // Add anatomy components for Bob
     scenario.target.components['anatomy:body'] = {
-      body: { root: 'torso1' }
+      body: { root: 'torso1' },
     };
-    
+
     const anatomyEntities = [
       {
         id: 'torso1',
@@ -161,7 +161,7 @@ describe('intimacy:feel_arm_muscles action integration', () => {
         },
       },
     ];
-    
+
     testFixture.reset([scenario.actor, scenario.target, ...anatomyEntities]);
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);

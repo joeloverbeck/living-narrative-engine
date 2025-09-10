@@ -138,8 +138,7 @@ export default function createStepResolver({
    * @param {string} message - Message to log.
    * @param {object} data - Additional log data.
    */
-  function logStepResolution(trace, message, data) {
-  }
+  function logStepResolution(trace, message, data) {}
 
   return {
     /**

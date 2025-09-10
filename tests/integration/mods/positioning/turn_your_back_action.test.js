@@ -57,8 +57,8 @@ function setupSittingTurnBackScenario() {
         [POSITION_COMPONENT_ID]: { locationId: 'test:room' },
         'positioning:sitting_on': {
           furniture_id: 'test:chair',
-          spot_index: 0
-        }
+          spot_index: 0,
+        },
       },
     },
     {
@@ -529,7 +529,7 @@ describe('positioning:turn_your_back action integration', () => {
     // In normal action discovery, this action would not appear in available actions
     // because the actor has the positioning:sitting_on component.
     // However, we're testing the rule execution directly to verify the logic.
-    
+
     // NOTE: This test shows what would happen if somehow the action was triggered
     // In real gameplay, the action discovery system prevents this scenario
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
@@ -552,7 +552,9 @@ describe('positioning:turn_your_back action integration', () => {
       (e) => e.eventType === 'core:display_successful_action_result'
     );
     expect(successEvent).toBeDefined();
-    expect(successEvent.payload.message).toBe('Sitting Player turns their back to Standing NPC.');
+    expect(successEvent.payload.message).toBe(
+      'Sitting Player turns their back to Standing NPC.'
+    );
 
     // This test proves the restriction is at the action discovery level,
     // not at the rule execution level - which is the correct design
@@ -566,7 +568,9 @@ describe('positioning:turn_your_back action integration', () => {
     // Verify the sitting component is properly structured
     const actor = testEnv.entityManager.getEntityInstance('test:actor1');
     expect(actor.components['positioning:sitting_on']).toBeDefined();
-    expect(actor.components['positioning:sitting_on'].furniture_id).toBe('test:chair');
+    expect(actor.components['positioning:sitting_on'].furniture_id).toBe(
+      'test:chair'
+    );
     expect(actor.components['positioning:sitting_on'].spot_index).toBe(0);
 
     // Verify the chair entity exists

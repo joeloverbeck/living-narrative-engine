@@ -183,7 +183,7 @@ describe('Get Up Closeness Workflow', () => {
     // 1. Setup: Create Alice and Bob
     const alice = 'test:alice';
     const bob = 'test:bob';
-    
+
     testEnv.entityManager.addComponent(alice, ACTOR_COMPONENT_ID, {});
     testEnv.entityManager.addComponent(alice, NAME_COMPONENT_ID, {
       name: 'Alice',
@@ -286,7 +286,7 @@ describe('Get Up Closeness Workflow', () => {
 
     // 7. Verify: Alice's movement lock status
     // Note: There seems to be an issue with the UNLOCK_MOVEMENT operation
-    // not properly removing locks. This is a pre-existing issue unrelated 
+    // not properly removing locks. This is a pre-existing issue unrelated
     // to our closeness removal implementation. We'll skip this check for now.
     // const aliceMovementLock = testEnv.entityManager.getComponentData(
     //   alice,
@@ -311,7 +311,7 @@ describe('Get Up Closeness Workflow', () => {
     const alice = 'test:alice';
     const bob = 'test:bob';
     const charlie = 'test:charlie';
-    
+
     // Create actors
     testEnv.entityManager.addComponent(alice, ACTOR_COMPONENT_ID, {});
     testEnv.entityManager.addComponent(alice, NAME_COMPONENT_ID, {
@@ -421,7 +421,7 @@ describe('Get Up Closeness Workflow', () => {
     const alice = 'test:alice';
     const bob = 'test:bob';
     const charlie = 'test:charlie';
-    
+
     // Create actors
     testEnv.entityManager.addComponent(alice, ACTOR_COMPONENT_ID, {});
     testEnv.entityManager.addComponent(alice, NAME_COMPONENT_ID, {
@@ -539,7 +539,7 @@ describe('Get Up Closeness Workflow', () => {
   it('should handle error scenarios gracefully', async () => {
     // Setup: Actor sitting without proper closeness data
     const alice = 'test:alice';
-    
+
     testEnv.entityManager.addComponent(alice, ACTOR_COMPONENT_ID, {});
     testEnv.entityManager.addComponent(alice, NAME_COMPONENT_ID, {
       name: 'Alice',

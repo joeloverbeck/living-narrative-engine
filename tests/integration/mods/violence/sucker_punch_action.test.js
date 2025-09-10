@@ -10,7 +10,6 @@ import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import suckerPunchRule from '../../../../data/mods/violence/rules/handle_sucker_punch.rule.json';
 import eventIsActionSuckerPunch from '../../../../data/mods/violence/conditions/event-is-action-sucker-punch.condition.json';
 
-
 describe('Violence Mod: Sucker Punch Action Integration', () => {
   let testFixture;
 
@@ -36,9 +35,7 @@ describe('Violence Mod: Sucker Punch Action Integration', () => {
       // Execute the action
       await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
-      testFixture.assertActionSuccess(
-        'Alice sucker-punches Beth in the head.'
-      );
+      testFixture.assertActionSuccess('Alice sucker-punches Beth in the head.');
     });
 
     it('does not fire rule for different action', async () => {

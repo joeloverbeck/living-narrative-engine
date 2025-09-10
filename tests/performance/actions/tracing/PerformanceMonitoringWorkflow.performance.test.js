@@ -1,16 +1,16 @@
 /**
  * @file Performance Monitoring Workflow Performance Test Suite
- * @description Priority 2.2: Performance Monitoring Integration (MEDIUM) 
- * 
+ * @description Priority 2.2: Performance Monitoring Integration (MEDIUM)
+ *
  * This comprehensive performance test suite validates the performance monitoring integration
  * during realistic gaming scenarios, focusing on:
  * 1. Real-time performance monitoring during action execution
  * 2. Alert generation and threshold detection systems
  * 3. Performance data aggregation accuracy across full stack
  * 4. Critical path analysis results in realistic gaming workflows
- * 
+ *
  * Based on reports/actions-tracing-architecture-analysis.md Priority 2.2
- * 
+ *
  * Performance Requirements:
  * - Monitoring overhead: <1ms per monitored operation
  * - Alert responsiveness: Threshold violations detected within 100ms
@@ -18,13 +18,7 @@
  * - Throughput: Handle gaming workloads without performance degradation
  */
 
-import {
-  describe,
-  beforeEach,
-  afterEach,
-  test,
-  expect,
-} from '@jest/globals';
+import { describe, beforeEach, afterEach, test, expect } from '@jest/globals';
 
 import { PerformanceMonitoringTestBed } from './common/performanceMonitoringTestBed.js';
 import {
@@ -62,7 +56,7 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
       }
       monitoringSession = null;
     }
-    
+
     if (testBed) {
       await testBed.cleanup();
       testBed = null;
@@ -71,7 +65,7 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
 
   /**
    * Scenario 1: Real-time Performance Monitoring During Action Execution
-   * 
+   *
    * Tests that performance monitoring accurately tracks action execution metrics
    * in real-time with minimal overhead during typical gaming scenarios.
    */
@@ -84,27 +78,34 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
 
       // Execute a sequence of typical exploration actions (reduced count for faster testing)
       const actionCount = 50; // Reduced from 100
-      const results = await testBed.simulateActionSequence('EXPLORATION', actionCount, {
-        parallelism: 1, // Start with sequential execution to avoid race conditions
-        delayBetweenActionsMs: 0,
-        errorRate: 0, // No errors for this test
-        measureOverhead: true,
-      });
+      const results = await testBed.simulateActionSequence(
+        'EXPLORATION',
+        actionCount,
+        {
+          parallelism: 1, // Start with sequential execution to avoid race conditions
+          delayBetweenActionsMs: 0,
+          errorRate: 0, // No errors for this test
+          measureOverhead: true,
+        }
+      );
 
       // Validate monitoring overhead
       const summary = testBed.getMeasurementSummary();
-      
+
       // Action execution should be successful
-      expect(summary.successfulActions).toBeGreaterThanOrEqual(actionCount * 0.95); // Allow 5% failure tolerance
-      
+      expect(summary.successfulActions).toBeGreaterThanOrEqual(
+        actionCount * 0.95
+      ); // Allow 5% failure tolerance
+
       expect(summary.totalActions).toBe(actionCount);
       expect(summary.successfulActions).toBe(actionCount);
 
       // Critical requirement: monitoring overhead should be minimal (adjusted for faster execution)
-      const overheadValidation = MONITORING_VALIDATION.validateMonitoringOverhead(
-        testBed.measurements.monitoringOverhead,
-        3.0 // Relaxed to 3ms threshold to handle system load variations
-      );
+      const overheadValidation =
+        MONITORING_VALIDATION.validateMonitoringOverhead(
+          testBed.measurements.monitoringOverhead,
+          3.0 // Relaxed to 3ms threshold to handle system load variations
+        );
 
       expect(overheadValidation.isValid).toBe(true);
       expect(overheadValidation.average).toBeLessThan(3.0); // Relaxed from 2.0ms to prevent flakiness
@@ -113,7 +114,9 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
 
       // Validate real-time metrics accuracy
       const realtimeMetrics = monitoringSession.getRealtimeMetrics();
-      expect(realtimeMetrics.completedSpans).toBeGreaterThanOrEqual(actionCount * 0.9);
+      expect(realtimeMetrics.completedSpans).toBeGreaterThanOrEqual(
+        actionCount * 0.9
+      );
       expect(realtimeMetrics.errorCount).toBe(0);
       // Real-time metrics should be available and accurate
       expect(realtimeMetrics.activeSpans).toBeGreaterThanOrEqual(0);
@@ -121,12 +124,14 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
       // Validate performance expectations for exploration pattern
       const avgDuration = summary.performance.averageActionDuration;
       const expectation = PERFORMANCE_EXPECTATIONS.EXPLORATION;
-      
+
       // Note: Lower bound removed as it tests simulated delays which use setImmediate for <5ms delays
       // and can complete near-instantly, causing flakiness. The test's real purpose is validating
       // monitoring overhead (lines 104-112), not the artificial timing of simulated actions.
       expect(avgDuration).toBeLessThan(expectation.averageDurationMs * 2.0); // More lenient upper bound
-      expect(summary.performance.maxActionDuration).toBeLessThan(expectation.maxDurationMs * 15); // Very lenient for fast test environment
+      expect(summary.performance.maxActionDuration).toBeLessThan(
+        expectation.maxDurationMs * 15
+      ); // Very lenient for fast test environment
 
       // Stop monitoring and get final summary
       const finalSummary = monitoringSession.stop();
@@ -141,18 +146,26 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
       const actionsPerPattern = 10; // Reduced from 25
 
       for (const pattern of patterns) {
-        const results = await testBed.simulateActionSequence(pattern, actionsPerPattern, {
-          measureOverhead: true,
-        });
+        const results = await testBed.simulateActionSequence(
+          pattern,
+          actionsPerPattern,
+          {
+            measureOverhead: true,
+          }
+        );
 
         expect(results.length).toBe(actionsPerPattern);
-        expect(results.filter(r => r.success).length).toBe(actionsPerPattern);
+        expect(results.filter((r) => r.success).length).toBe(actionsPerPattern);
 
         // Validate pattern-specific expectations
         const expectation = PERFORMANCE_EXPECTATIONS[pattern];
-        const avgDuration = results.reduce((sum, r) => sum + r.actualDuration, 0) / results.length;
-        
-        expect(avgDuration).toBeGreaterThan(expectation.averageDurationMs * 0.3); // Very lenient lower bound for fast tests
+        const avgDuration =
+          results.reduce((sum, r) => sum + r.actualDuration, 0) /
+          results.length;
+
+        expect(avgDuration).toBeGreaterThan(
+          expectation.averageDurationMs * 0.3
+        ); // Very lenient lower bound for fast tests
         expect(avgDuration).toBeLessThan(expectation.averageDurationMs * 4.0); // Very lenient upper bound
       }
 
@@ -162,13 +175,15 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
       });
 
       expect(validation.overhead.isValid).toBe(true);
-      expect(validation.realtimeMetrics.completedSpans).toBeGreaterThanOrEqual((patterns.length * actionsPerPattern) * 0.9);
+      expect(validation.realtimeMetrics.completedSpans).toBeGreaterThanOrEqual(
+        patterns.length * actionsPerPattern * 0.9
+      );
     }, 10000); // 10s timeout (reduced from 45s)
   });
 
   /**
    * Scenario 2: Alert Generation and Threshold Detection Systems
-   * 
+   *
    * Tests that performance monitoring accurately detects threshold violations
    * and generates appropriate alerts with correct severity levels.
    */
@@ -195,7 +210,7 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
       for (const scenario of ALERT_TRIGGER_SCENARIOS.SLOW_OPERATIONS) {
         const actionData = createTestActionData(scenario.actionId);
         actionData.expectedDuration = scenario.simulatedDurationMs;
-        
+
         await testBed.simulateActionExecution(actionData, {
           simulateDelay: true,
           measureOverhead: false, // Focus on alert generation
@@ -211,7 +226,7 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
       for (const scenario of ALERT_TRIGGER_SCENARIOS.CRITICAL_OPERATIONS) {
         const actionData = createTestActionData(scenario.actionId);
         actionData.expectedDuration = scenario.simulatedDurationMs;
-        
+
         await testBed.simulateActionExecution(actionData);
 
         expectedAlerts.push({
@@ -221,19 +236,25 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
       }
 
       // Wait a moment for alert processing
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Validate alert generation
       const alerts = monitoringSession.getAlerts();
       expect(alerts.length).toBeGreaterThan(0);
 
       // Check for slow operation alerts
-      const slowAlerts = alerts.filter(a => a.type === 'slow_operation');
-      expect(slowAlerts.length).toBeGreaterThanOrEqual(ALERT_TRIGGER_SCENARIOS.SLOW_OPERATIONS.length);
+      const slowAlerts = alerts.filter((a) => a.type === 'slow_operation');
+      expect(slowAlerts.length).toBeGreaterThanOrEqual(
+        ALERT_TRIGGER_SCENARIOS.SLOW_OPERATIONS.length
+      );
 
       // Check for critical operation alerts
-      const criticalAlerts = alerts.filter(a => a.type === 'critical_operation');
-      expect(criticalAlerts.length).toBeGreaterThanOrEqual(ALERT_TRIGGER_SCENARIOS.CRITICAL_OPERATIONS.length);
+      const criticalAlerts = alerts.filter(
+        (a) => a.type === 'critical_operation'
+      );
+      expect(criticalAlerts.length).toBeGreaterThanOrEqual(
+        ALERT_TRIGGER_SCENARIOS.CRITICAL_OPERATIONS.length
+      );
 
       // Validate alert properties
       for (const alert of alerts) {
@@ -244,16 +265,18 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
         expect(alert).toHaveProperty('value');
         expect(alert).toHaveProperty('threshold');
         expect(alert).toHaveProperty('timestamp');
-        
+
         // Validate alert timing (should be generated promptly)
         expect(alert.timestamp).toBeGreaterThan(alertStartTime);
         expect(alert.timestamp - alertStartTime).toBeLessThan(10000); // Within 10 seconds
       }
 
       // Validate alert severity assignment
-      const warningAlerts = alerts.filter(a => a.severity === 'warning');
-      const criticalAlertsFound = alerts.filter(a => a.severity === 'critical');
-      
+      const warningAlerts = alerts.filter((a) => a.severity === 'warning');
+      const criticalAlertsFound = alerts.filter(
+        (a) => a.severity === 'critical'
+      );
+
       expect(warningAlerts.length).toBeGreaterThan(0); // Should have warning alerts
       expect(criticalAlertsFound.length).toBeGreaterThan(0); // Should have critical alerts
     }, 8000); // Reduced from 20s
@@ -278,7 +301,7 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
       for (let i = 0; i < 6; i++) {
         const actionData = createTestActionData('test:concurrent_action');
         actionData.expectedDuration = 200; // Longer duration to ensure actions overlap and trigger concurrency alerts
-        
+
         // Start all actions in parallel (no await)
         highConcurrencyActions.push(
           testBed.simulateActionExecution(actionData, {
@@ -288,15 +311,17 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
       }
 
       // Wait a moment for concurrency detection
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Check for concurrency alerts before actions complete
       let alerts = monitoringSession.getAlerts();
-      const concurrencyAlerts = alerts.filter(a => a.type === 'high_concurrency');
-      
+      const concurrencyAlerts = alerts.filter(
+        (a) => a.type === 'high_concurrency'
+      );
+
       // Should detect high concurrency
       expect(concurrencyAlerts.length).toBeGreaterThan(0);
-      
+
       const concurrencyAlert = concurrencyAlerts[0];
       expect(concurrencyAlert.value).toBeGreaterThan(3); // Above threshold
       expect(concurrencyAlert.severity).toBe('warning');
@@ -313,7 +338,7 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
 
   /**
    * Scenario 3: Performance Data Aggregation Accuracy Across Full Stack
-   * 
+   *
    * Tests that performance monitoring accurately aggregates and correlates
    * performance data across the entire tracing stack.
    */
@@ -323,7 +348,12 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
 
       // Execute mixed workload with known characteristics (reduced counts for faster testing)
       const workloadPhases = [
-        { pattern: 'EXPLORATION', count: 15, parallelism: 1, expectedAvgMs: 5.5 }, // Reduced counts and adjusted expectations
+        {
+          pattern: 'EXPLORATION',
+          count: 15,
+          parallelism: 1,
+          expectedAvgMs: 5.5,
+        }, // Reduced counts and adjusted expectations
         { pattern: 'COMBAT', count: 10, parallelism: 2, expectedAvgMs: 12.5 },
         { pattern: 'SOCIAL', count: 8, parallelism: 1, expectedAvgMs: 17.5 },
         { pattern: 'INVENTORY', count: 12, parallelism: 3, expectedAvgMs: 8.8 },
@@ -333,17 +363,23 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
 
       for (const phase of workloadPhases) {
         const phaseStart = performance.now();
-        
-        const results = await testBed.simulateActionSequence(phase.pattern, phase.count, {
-          parallelism: phase.parallelism,
-          measureOverhead: true,
-          errorRate: 0.01, // 1% error rate
-        });
+
+        const results = await testBed.simulateActionSequence(
+          phase.pattern,
+          phase.count,
+          {
+            parallelism: phase.parallelism,
+            measureOverhead: true,
+            errorRate: 0.01, // 1% error rate
+          }
+        );
 
         const phaseEnd = performance.now();
-        const avgDuration = results.length > 0 
-          ? results.reduce((sum, r) => sum + r.actualDuration, 0) / results.length
-          : 0;
+        const avgDuration =
+          results.length > 0
+            ? results.reduce((sum, r) => sum + r.actualDuration, 0) /
+              results.length
+            : 0;
 
         phaseResults.push({
           ...phase,
@@ -361,18 +397,27 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
 
       // Validate aggregated metrics
       const summary = testBed.getMeasurementSummary();
-      const totalExpectedActions = workloadPhases.reduce((sum, p) => sum + p.count, 0);
-      
-      expect(summary.totalActions).toBeGreaterThanOrEqual(totalExpectedActions * 0.95); // Allow reasonable variance
-      expect(summary.successfulActions).toBeGreaterThanOrEqual(totalExpectedActions * 0.90); // Allow 10% variance
+      const totalExpectedActions = workloadPhases.reduce(
+        (sum, p) => sum + p.count,
+        0
+      );
+
+      expect(summary.totalActions).toBeGreaterThanOrEqual(
+        totalExpectedActions * 0.95
+      ); // Allow reasonable variance
+      expect(summary.successfulActions).toBeGreaterThanOrEqual(
+        totalExpectedActions * 0.9
+      ); // Allow 10% variance
 
       // Validate real-time metrics correlation
       const realtimeMetrics = monitoringSession.getRealtimeMetrics();
       expect(realtimeMetrics.completedSpans).toBeGreaterThanOrEqual(0);
-      
+
       // Error counts may differ due to timing and parallel execution - validate they're both reasonable
       expect(realtimeMetrics.errorCount).toBeGreaterThanOrEqual(0);
-      expect(realtimeMetrics.errorCount).toBeLessThanOrEqual(summary.totalActions);
+      expect(realtimeMetrics.errorCount).toBeLessThanOrEqual(
+        summary.totalActions
+      );
       expect(summary.failedActions).toBeGreaterThanOrEqual(0);
       expect(summary.failedActions).toBeLessThanOrEqual(summary.totalActions);
 
@@ -387,9 +432,11 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
       // Validate recorded metrics exist and are reasonable
       const recordedMetrics = testBed.performanceMonitor.getRecordedMetrics();
       expect(Object.keys(recordedMetrics).length).toBeGreaterThan(0);
-      
+
       // Check for operation-specific metrics
-      const operationMetrics = Object.keys(recordedMetrics).filter(key => key.startsWith('operation.'));
+      const operationMetrics = Object.keys(recordedMetrics).filter((key) =>
+        key.startsWith('operation.')
+      );
       expect(operationMetrics.length).toBeGreaterThan(0);
     }, 10000); // Reduced from 40s
 
@@ -409,31 +456,48 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
 
       // Execute sustained load
       while (performance.now() - startTime < sustainedPattern.durationMs) {
-        const actionData = createTestActionData('sustained:action', sustainedPattern.actionPattern);
-        
+        const actionData = createTestActionData(
+          'sustained:action',
+          sustainedPattern.actionPattern
+        );
+
         const result = await testBed.simulateActionExecution(actionData, {
           measureOverhead: true,
         });
-        
+
         sustainedResults.push(result);
 
         // Wait for next action interval
-        await new Promise(resolve => setTimeout(resolve, Math.max(0, actionInterval - 10)));
+        await new Promise((resolve) =>
+          setTimeout(resolve, Math.max(0, actionInterval - 10))
+        );
       }
 
       // Validate sustained load performance
       expect(sustainedResults.length).toBeGreaterThan(totalActions * 0.6); // More lenient variance
-      expect(sustainedResults.filter(r => r.success).length).toBe(sustainedResults.length);
+      expect(sustainedResults.filter((r) => r.success).length).toBe(
+        sustainedResults.length
+      );
 
       // Validate performance remains stable under load
-      const firstHalf = sustainedResults.slice(0, Math.floor(sustainedResults.length / 2));
-      const secondHalf = sustainedResults.slice(Math.floor(sustainedResults.length / 2));
+      const firstHalf = sustainedResults.slice(
+        0,
+        Math.floor(sustainedResults.length / 2)
+      );
+      const secondHalf = sustainedResults.slice(
+        Math.floor(sustainedResults.length / 2)
+      );
 
-      const firstHalfAvg = firstHalf.reduce((sum, r) => sum + r.actualDuration, 0) / firstHalf.length;
-      const secondHalfAvg = secondHalf.reduce((sum, r) => sum + r.actualDuration, 0) / secondHalf.length;
+      const firstHalfAvg =
+        firstHalf.reduce((sum, r) => sum + r.actualDuration, 0) /
+        firstHalf.length;
+      const secondHalfAvg =
+        secondHalf.reduce((sum, r) => sum + r.actualDuration, 0) /
+        secondHalf.length;
 
       // Performance should not degrade significantly over time
-      const performanceDrift = Math.abs(secondHalfAvg - firstHalfAvg) / firstHalfAvg;
+      const performanceDrift =
+        Math.abs(secondHalfAvg - firstHalfAvg) / firstHalfAvg;
       expect(performanceDrift).toBeLessThan(0.5); // Less than 50% drift
 
       // Validate monitoring overhead remains consistent
@@ -444,7 +508,7 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
 
   /**
    * Scenario 4: Critical Path Analysis Results in Realistic Gaming Workflows
-   * 
+   *
    * Tests that performance monitoring provides accurate critical path analysis
    * and bottleneck identification during complex gaming workflows.
    */
@@ -454,7 +518,7 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
       // The reduced duration actions should still trigger appropriate alerts
       testBed.setMonitoringConfig({
         thresholds: {
-          slowOperationMs: 25,  // Adjusted for reduced action durations
+          slowOperationMs: 25, // Adjusted for reduced action durations
           criticalOperationMs: 200, // Adjusted for reduced action durations
           maxConcurrency: 10,
           maxTotalDurationMs: 5000,
@@ -468,21 +532,57 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
       // Simulate complex nested workflow (e.g., combat with inventory management)
       const complexWorkflow = [
         // Initial setup actions (reduced durations)
-        { actionId: 'setup:initialize_combat', expectedDuration: 8, critical: false },
-        { actionId: 'setup:load_inventory', expectedDuration: 10, critical: false },
-        
+        {
+          actionId: 'setup:initialize_combat',
+          expectedDuration: 8,
+          critical: false,
+        },
+        {
+          actionId: 'setup:load_inventory',
+          expectedDuration: 10,
+          critical: false,
+        },
+
         // Critical path: main combat loop
-        { actionId: 'combat:calculate_damage', expectedDuration: 35, critical: true }, // Guaranteed slow (25ms threshold + margin)
-        { actionId: 'combat:apply_effects', expectedDuration: 15, critical: true },
-        { actionId: 'combat:update_stats', expectedDuration: 11, critical: true },
-        
+        {
+          actionId: 'combat:calculate_damage',
+          expectedDuration: 35,
+          critical: true,
+        }, // Guaranteed slow (25ms threshold + margin)
+        {
+          actionId: 'combat:apply_effects',
+          expectedDuration: 15,
+          critical: true,
+        },
+        {
+          actionId: 'combat:update_stats',
+          expectedDuration: 11,
+          critical: true,
+        },
+
         // Nested inventory operations
-        { actionId: 'inventory:check_durability', expectedDuration: 6, critical: false },
-        { actionId: 'inventory:auto_repair', expectedDuration: 45, critical: true }, // Guaranteed bottleneck (well above 25ms threshold)
-        
+        {
+          actionId: 'inventory:check_durability',
+          expectedDuration: 6,
+          critical: false,
+        },
+        {
+          actionId: 'inventory:auto_repair',
+          expectedDuration: 45,
+          critical: true,
+        }, // Guaranteed bottleneck (well above 25ms threshold)
+
         // Final combat resolution
-        { actionId: 'combat:determine_outcome', expectedDuration: 9, critical: true },
-        { actionId: 'combat:award_experience', expectedDuration: 5, critical: false },
+        {
+          actionId: 'combat:determine_outcome',
+          expectedDuration: 9,
+          critical: true,
+        },
+        {
+          actionId: 'combat:award_experience',
+          expectedDuration: 5,
+          critical: false,
+        },
       ];
 
       // Execute the complex workflow
@@ -490,7 +590,7 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
       for (const step of complexWorkflow) {
         const actionData = createTestActionData(step.actionId, 'COMBAT');
         actionData.expectedDuration = step.expectedDuration;
-        
+
         const result = await testBed.simulateActionExecution(actionData, {
           measureOverhead: true,
         });
@@ -500,42 +600,52 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
       }
 
       // Analyze critical path performance
-      const criticalPathActions = workflowResults.filter(r => r.critical);
-      const nonCriticalActions = workflowResults.filter(r => !r.critical);
+      const criticalPathActions = workflowResults.filter((r) => r.critical);
+      const nonCriticalActions = workflowResults.filter((r) => !r.critical);
 
-      const criticalPathDuration = criticalPathActions.reduce((sum, a) => sum + a.actualDuration, 0);
-      const totalWorkflowDuration = workflowResults.reduce((sum, a) => sum + a.actualDuration, 0);
+      const criticalPathDuration = criticalPathActions.reduce(
+        (sum, a) => sum + a.actualDuration,
+        0
+      );
+      const totalWorkflowDuration = workflowResults.reduce(
+        (sum, a) => sum + a.actualDuration,
+        0
+      );
 
       // Critical path should represent significant portion of total time
       const criticalPathRatio = criticalPathDuration / totalWorkflowDuration;
       expect(criticalPathRatio).toBeGreaterThan(0.6); // Critical path is major contributor
 
       // Identify the slowest operation (bottleneck)
-      const slowestAction = workflowResults.reduce((slowest, current) => 
+      const slowestAction = workflowResults.reduce((slowest, current) =>
         current.actualDuration > slowest.actualDuration ? current : slowest
       );
 
       // Validate that we found a bottleneck (any slow operation is fine for this test)
       expect(slowestAction.actualDuration).toBeGreaterThan(30); // Should be significantly slow (expect auto_repair to be slowest at ~45ms)
       expect(slowestAction.actionId).toBeDefined();
-      
+
       // Log the actual bottleneck for verification
-      console.log(`Primary bottleneck: ${slowestAction.actionId} (${slowestAction.actualDuration.toFixed(1)}ms)`);
+      console.log(
+        `Primary bottleneck: ${slowestAction.actionId} (${slowestAction.actualDuration.toFixed(1)}ms)`
+      );
 
       // Validate monitoring captured the bottleneck
       const alerts = monitoringSession.getAlerts();
-      const slowOperationAlerts = alerts.filter(a => 
-        a.type === 'slow_operation' || a.type === 'critical_operation'
+      const slowOperationAlerts = alerts.filter(
+        (a) => a.type === 'slow_operation' || a.type === 'critical_operation'
       );
-      
+
       expect(slowOperationAlerts.length).toBeGreaterThan(0);
-      
+
       // Should have captured some slow operation alerts
       expect(slowOperationAlerts.length).toBeGreaterThan(0);
 
       // Validate metrics tracking for workflow components
       const realtimeMetrics = monitoringSession.getRealtimeMetrics();
-      expect(realtimeMetrics.completedSpans).toBeGreaterThanOrEqual(complexWorkflow.length * 0.9);
+      expect(realtimeMetrics.completedSpans).toBeGreaterThanOrEqual(
+        complexWorkflow.length * 0.9
+      );
     }, 8000); // Reduced from 25s
 
     test('should correlate performance across pipeline stages', async () => {
@@ -544,13 +654,41 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
       // Simulate multi-stage pipeline (action discovery -> execution -> post-processing)
       const pipelineStages = [
         // Stage 1: Discovery
-        { stage: 'discovery', actions: ['discover:scan_environment', 'discover:identify_targets', 'discover:filter_actions'] },
+        {
+          stage: 'discovery',
+          actions: [
+            'discover:scan_environment',
+            'discover:identify_targets',
+            'discover:filter_actions',
+          ],
+        },
         // Stage 2: Processing
-        { stage: 'processing', actions: ['process:validate_prerequisites', 'process:prepare_execution', 'process:allocate_resources'] },
+        {
+          stage: 'processing',
+          actions: [
+            'process:validate_prerequisites',
+            'process:prepare_execution',
+            'process:allocate_resources',
+          ],
+        },
         // Stage 3: Execution
-        { stage: 'execution', actions: ['execute:perform_action', 'execute:apply_effects', 'execute:update_state'] },
+        {
+          stage: 'execution',
+          actions: [
+            'execute:perform_action',
+            'execute:apply_effects',
+            'execute:update_state',
+          ],
+        },
         // Stage 4: Cleanup
-        { stage: 'cleanup', actions: ['cleanup:release_resources', 'cleanup:update_logs', 'cleanup:notify_observers'] },
+        {
+          stage: 'cleanup',
+          actions: [
+            'cleanup:release_resources',
+            'cleanup:update_logs',
+            'cleanup:notify_observers',
+          ],
+        },
       ];
 
       const stageResults = new Map();
@@ -562,7 +700,7 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
 
         for (const actionId of stage.actions) {
           const actionData = createTestActionData(actionId);
-          
+
           const result = await testBed.simulateActionExecution(actionData, {
             measureOverhead: true,
           });
@@ -576,41 +714,48 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
         stageResults.set(stage.stage, {
           actions: stageActionResults,
           totalDuration: stageDuration,
-          averageActionDuration: stageActionResults.reduce((sum, a) => sum + a.actualDuration, 0) / stageActionResults.length,
+          averageActionDuration:
+            stageActionResults.reduce((sum, a) => sum + a.actualDuration, 0) /
+            stageActionResults.length,
           actionCount: stageActionResults.length,
         });
       }
 
       // Validate pipeline stage correlation
       const stages = Array.from(stageResults.entries());
-      
+
       // Each stage should have completed successfully
       for (const [stageName, stageData] of stages) {
         expect(stageData.actionCount).toBe(3); // 3 actions per stage
-        expect(stageData.actions.every(a => a.success)).toBe(true);
+        expect(stageData.actions.every((a) => a.success)).toBe(true);
         expect(stageData.averageActionDuration).toBeGreaterThan(0);
       }
 
       // Validate performance correlation across stages
-      const totalPipelineActions = stages.reduce((sum, [, data]) => sum + data.actionCount, 0);
+      const totalPipelineActions = stages.reduce(
+        (sum, [, data]) => sum + data.actionCount,
+        0
+      );
       const summary = testBed.getMeasurementSummary();
-      
+
       expect(summary.totalActions).toBe(totalPipelineActions);
       expect(summary.successfulActions).toBe(totalPipelineActions);
 
       // Execution stage should typically be slower than discovery stage
       const discoveryStage = stageResults.get('discovery');
       const executionStage = stageResults.get('execution');
-      
+
       // With reduced durations, the relationship between stages may vary more
       expect(executionStage.averageActionDuration).toBeGreaterThanOrEqual(
-        discoveryStage.averageActionDuration * 0.4  // Very lenient due to fast execution
+        discoveryStage.averageActionDuration * 0.4 // Very lenient due to fast execution
       ); // Allow significant variance for fast tests
 
       // Validate monitoring overhead across all stages
       const validation = testBed.validateMonitoringAccuracy();
       expect(validation.overhead.isValid).toBe(true);
-      expect(validation.realtimeMetrics.completedSpans).toBeGreaterThanOrEqual(totalPipelineActions * 0.9);
+      expect(validation.realtimeMetrics.completedSpans).toBeGreaterThanOrEqual(
+        totalPipelineActions * 0.9
+      );
     }, 8000); // Reduced from 30s
   });
 });

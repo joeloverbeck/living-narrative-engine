@@ -4,13 +4,7 @@
  * @see ../../../../src/characterBuilder/services/TraitsGenerator.js
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { TraitsGenerator } from '../../../../src/characterBuilder/services/TraitsGenerator.js';
 
 // Shared mock response object to eliminate duplication
@@ -27,8 +21,7 @@ const MOCK_PARSED_RESPONSE = {
   personality: [
     {
       trait: 'friendly',
-      explanation:
-        'This person is naturally friendly and welcoming to others',
+      explanation: 'This person is naturally friendly and welcoming to others',
     },
   ],
   strengths: ['brave'],
@@ -87,7 +80,9 @@ const createMockLlmStrategyFactory = () => ({
 
 const createMockLlmConfigManager = () => ({
   loadConfiguration: jest.fn(),
-  getActiveConfiguration: jest.fn().mockResolvedValue({ configId: 'test-config' }),
+  getActiveConfiguration: jest
+    .fn()
+    .mockResolvedValue({ configId: 'test-config' }),
   setActiveConfiguration: jest.fn(),
 });
 
@@ -113,15 +108,19 @@ const setupSuccessfulMockResponse = (mocks) => {
 jest.mock(
   '../../../../src/characterBuilder/prompts/traitsGenerationPrompt.js',
   () => ({
-    buildTraitsGenerationPrompt: jest.fn((concept, direction, userInputs, cliches) => {
-      // Simulate the real implementation's behavior
-      // The real formatClichesForPrompt would access cliches.categories which fails on arrays
-      if (Array.isArray(cliches)) {
-        // This simulates what happens when cliches is an array - accessing .categories fails
-        throw new TypeError("Cannot read properties of undefined (reading 'length')");
+    buildTraitsGenerationPrompt: jest.fn(
+      (concept, direction, userInputs, cliches) => {
+        // Simulate the real implementation's behavior
+        // The real formatClichesForPrompt would access cliches.categories which fails on arrays
+        if (Array.isArray(cliches)) {
+          // This simulates what happens when cliches is an array - accessing .categories fails
+          throw new TypeError(
+            "Cannot read properties of undefined (reading 'length')"
+          );
+        }
+        return 'mock prompt';
       }
-      return 'mock prompt';
-    }),
+    ),
     validateTraitsGenerationResponse: jest.fn(() => ({})),
     TRAITS_RESPONSE_SCHEMA: {
       type: 'object',
@@ -186,31 +185,34 @@ describe('TraitsGenerator - Null Cliches Reproduction', () => {
       ['null', null],
       ['undefined', undefined],
       ['empty object', {}],
-    ])('should NOT throw error when cliches is %s', (description, clichesValue) => {
-      it(`should handle ${description} cliches correctly`, async () => {
-        // Arrange: Create parameters with test cliches value
-        const params = {
-          concept: TEST_CONCEPT,
-          direction: TEST_DIRECTION,
-          userInputs: TEST_USER_INPUTS,
-        };
-        
-        // Only add cliches property if it's not undefined
-        if (clichesValue !== undefined) {
-          params.cliches = clichesValue;
-        }
+    ])(
+      'should NOT throw error when cliches is %s',
+      (description, clichesValue) => {
+        it(`should handle ${description} cliches correctly`, async () => {
+          // Arrange: Create parameters with test cliches value
+          const params = {
+            concept: TEST_CONCEPT,
+            direction: TEST_DIRECTION,
+            userInputs: TEST_USER_INPUTS,
+          };
 
-        setupSuccessfulMockResponse(mocks);
+          // Only add cliches property if it's not undefined
+          if (clichesValue !== undefined) {
+            params.cliches = clichesValue;
+          }
 
-        // Act: Should NOT throw an error - valid cliches values
-        const result = await traitsGenerator.generateTraits(params);
+          setupSuccessfulMockResponse(mocks);
 
-        // Assert: Should have successfully generated traits
-        expect(result).toBeDefined();
-        expect(result.names).toEqual(MOCK_PARSED_RESPONSE.names);
-        expect(result.metadata).toBeDefined();
-      });
-    });
+          // Act: Should NOT throw an error - valid cliches values
+          const result = await traitsGenerator.generateTraits(params);
+
+          // Assert: Should have successfully generated traits
+          expect(result).toBeDefined();
+          expect(result.names).toEqual(MOCK_PARSED_RESPONSE.names);
+          expect(result.metadata).toBeDefined();
+        });
+      }
+    );
 
     it('should throw TraitsGenerationError when cliches is an array (invalid type)', async () => {
       // Arrange: Create parameters with array cliches (invalid)
@@ -222,7 +224,7 @@ describe('TraitsGenerator - Null Cliches Reproduction', () => {
       };
 
       // Act & Assert: Should throw error when trying to access properties on array
-      // Note: The production code doesn't explicitly validate against arrays, 
+      // Note: The production code doesn't explicitly validate against arrays,
       // but fails when trying to access .categories property
       await expect(traitsGenerator.generateTraits(params)).rejects.toThrow(
         "Cannot read properties of undefined (reading 'length')"

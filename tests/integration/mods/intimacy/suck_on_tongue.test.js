@@ -29,18 +29,26 @@ describe('intimacy:suck_on_tongue action integration', () => {
 
   it('successfully executes suck on tongue for initiator (initiator: true)', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
-      location: 'room1'
+      location: 'room1',
     });
 
     // Add kissing components for this specific action
-    testFixture.entityManager.addComponent(scenario.actor.id, 'intimacy:kissing', {
-      partner: scenario.target.id,
-      initiator: true
-    });
-    testFixture.entityManager.addComponent(scenario.target.id, 'intimacy:kissing', {
-      partner: scenario.actor.id,
-      initiator: false
-    });
+    testFixture.entityManager.addComponent(
+      scenario.actor.id,
+      'intimacy:kissing',
+      {
+        partner: scenario.target.id,
+        initiator: true,
+      }
+    );
+    testFixture.entityManager.addComponent(
+      scenario.target.id,
+      'intimacy:kissing',
+      {
+        partner: scenario.actor.id,
+        initiator: false,
+      }
+    );
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -59,18 +67,26 @@ describe('intimacy:suck_on_tongue action integration', () => {
 
   it('successfully executes suck on tongue for receiver (initiator: false)', async () => {
     const scenario = testFixture.createCloseActors(['Sarah', 'James'], {
-      location: 'garden'
+      location: 'garden',
     });
 
     // Add kissing components with receiver as actor
-    testFixture.entityManager.addComponent(scenario.actor.id, 'intimacy:kissing', {
-      partner: scenario.target.id,
-      initiator: false
-    });
-    testFixture.entityManager.addComponent(scenario.target.id, 'intimacy:kissing', {
-      partner: scenario.actor.id,
-      initiator: true
-    });
+    testFixture.entityManager.addComponent(
+      scenario.actor.id,
+      'intimacy:kissing',
+      {
+        partner: scenario.target.id,
+        initiator: false,
+      }
+    );
+    testFixture.entityManager.addComponent(
+      scenario.target.id,
+      'intimacy:kissing',
+      {
+        partner: scenario.actor.id,
+        initiator: true,
+      }
+    );
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -89,18 +105,26 @@ describe('intimacy:suck_on_tongue action integration', () => {
 
   it('perception log shows correct message for suck on tongue', async () => {
     const scenario = testFixture.createCloseActors(['Emma', 'David'], {
-      location: 'bedroom'
+      location: 'bedroom',
     });
 
     // Add kissing components
-    testFixture.entityManager.addComponent(scenario.actor.id, 'intimacy:kissing', {
-      partner: scenario.target.id,
-      initiator: true
-    });
-    testFixture.entityManager.addComponent(scenario.target.id, 'intimacy:kissing', {
-      partner: scenario.actor.id,
-      initiator: false
-    });
+    testFixture.entityManager.addComponent(
+      scenario.actor.id,
+      'intimacy:kissing',
+      {
+        partner: scenario.target.id,
+        initiator: true,
+      }
+    );
+    testFixture.entityManager.addComponent(
+      scenario.target.id,
+      'intimacy:kissing',
+      {
+        partner: scenario.actor.id,
+        initiator: false,
+      }
+    );
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -108,24 +132,32 @@ describe('intimacy:suck_on_tongue action integration', () => {
       descriptionText: "Emma has sucked on David's tongue.",
       locationId: 'bedroom',
       actorId: scenario.actor.id,
-      targetId: scenario.target.id
+      targetId: scenario.target.id,
     });
   });
 
   it('preserves kissing component state (no ADD_COMPONENT or REMOVE_COMPONENT operations)', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
-      location: 'room1'
+      location: 'room1',
     });
 
     // Add kissing components
-    testFixture.entityManager.addComponent(scenario.actor.id, 'intimacy:kissing', {
-      partner: scenario.target.id,
-      initiator: true
-    });
-    testFixture.entityManager.addComponent(scenario.target.id, 'intimacy:kissing', {
-      partner: scenario.actor.id,
-      initiator: false
-    });
+    testFixture.entityManager.addComponent(
+      scenario.actor.id,
+      'intimacy:kissing',
+      {
+        partner: scenario.target.id,
+        initiator: true,
+      }
+    );
+    testFixture.entityManager.addComponent(
+      scenario.target.id,
+      'intimacy:kissing',
+      {
+        partner: scenario.actor.id,
+        initiator: false,
+      }
+    );
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -144,19 +176,30 @@ describe('intimacy:suck_on_tongue action integration', () => {
   });
 
   it('handles multiple kissing partners correctly', async () => {
-    const scenario = testFixture.createMultiActorScenario(['Alice', 'Bob', 'Charlie'], {
-      location: 'room1'
-    });
+    const scenario = testFixture.createMultiActorScenario(
+      ['Alice', 'Bob', 'Charlie'],
+      {
+        location: 'room1',
+      }
+    );
 
     // Add kissing components between Alice and Bob only
-    testFixture.entityManager.addComponent(scenario.actor.id, 'intimacy:kissing', {
-      partner: scenario.target.id,
-      initiator: true
-    });
-    testFixture.entityManager.addComponent(scenario.target.id, 'intimacy:kissing', {
-      partner: scenario.actor.id,
-      initiator: false
-    });
+    testFixture.entityManager.addComponent(
+      scenario.actor.id,
+      'intimacy:kissing',
+      {
+        partner: scenario.target.id,
+        initiator: true,
+      }
+    );
+    testFixture.entityManager.addComponent(
+      scenario.target.id,
+      'intimacy:kissing',
+      {
+        partner: scenario.actor.id,
+        initiator: false,
+      }
+    );
 
     // Suck on current partner Bob's tongue
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
@@ -171,18 +214,26 @@ describe('intimacy:suck_on_tongue action integration', () => {
 
   it('action only fires for correct action ID', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
-      location: 'room1'
+      location: 'room1',
     });
 
     // Add kissing components
-    testFixture.entityManager.addComponent(scenario.actor.id, 'intimacy:kissing', {
-      partner: scenario.target.id,
-      initiator: true
-    });
-    testFixture.entityManager.addComponent(scenario.target.id, 'intimacy:kissing', {
-      partner: scenario.actor.id,
-      initiator: false
-    });
+    testFixture.entityManager.addComponent(
+      scenario.actor.id,
+      'intimacy:kissing',
+      {
+        partner: scenario.target.id,
+        initiator: true,
+      }
+    );
+    testFixture.entityManager.addComponent(
+      scenario.target.id,
+      'intimacy:kissing',
+      {
+        partner: scenario.actor.id,
+        initiator: false,
+      }
+    );
 
     // Try with a different action
     await testFixture.eventBus.dispatch('core:attempt_action', {
@@ -199,18 +250,26 @@ describe('intimacy:suck_on_tongue action integration', () => {
 
   it('validates complete event flow sequence', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
-      location: 'room1'
+      location: 'room1',
     });
 
     // Add kissing components
-    testFixture.entityManager.addComponent(scenario.actor.id, 'intimacy:kissing', {
-      partner: scenario.target.id,
-      initiator: true
-    });
-    testFixture.entityManager.addComponent(scenario.target.id, 'intimacy:kissing', {
-      partner: scenario.actor.id,
-      initiator: false
-    });
+    testFixture.entityManager.addComponent(
+      scenario.actor.id,
+      'intimacy:kissing',
+      {
+        partner: scenario.target.id,
+        initiator: true,
+      }
+    );
+    testFixture.entityManager.addComponent(
+      scenario.target.id,
+      'intimacy:kissing',
+      {
+        partner: scenario.actor.id,
+        initiator: false,
+      }
+    );
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -236,18 +295,26 @@ describe('intimacy:suck_on_tongue action integration', () => {
 
   it('works with different entity names and locations', async () => {
     const scenario = testFixture.createCloseActors(['Sophia', 'Marcus'], {
-      location: 'moonlit_balcony'
+      location: 'moonlit_balcony',
     });
 
     // Add kissing components
-    testFixture.entityManager.addComponent(scenario.actor.id, 'intimacy:kissing', {
-      partner: scenario.target.id,
-      initiator: true
-    });
-    testFixture.entityManager.addComponent(scenario.target.id, 'intimacy:kissing', {
-      partner: scenario.actor.id,
-      initiator: false
-    });
+    testFixture.entityManager.addComponent(
+      scenario.actor.id,
+      'intimacy:kissing',
+      {
+        partner: scenario.target.id,
+        initiator: true,
+      }
+    );
+    testFixture.entityManager.addComponent(
+      scenario.target.id,
+      'intimacy:kissing',
+      {
+        partner: scenario.actor.id,
+        initiator: false,
+      }
+    );
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -284,19 +351,30 @@ describe('intimacy:suck_on_tongue action integration', () => {
     ];
 
     for (const testCase of testCases) {
-      const scenario = testFixture.createCloseActors([testCase.actorName, testCase.targetName], {
-        location: 'room1'
-      });
+      const scenario = testFixture.createCloseActors(
+        [testCase.actorName, testCase.targetName],
+        {
+          location: 'room1',
+        }
+      );
 
       // Set kissing components based on who is initiator
-      testFixture.entityManager.addComponent(scenario.actor.id, 'intimacy:kissing', {
-        partner: scenario.target.id,
-        initiator: testCase.isActorInitiator
-      });
-      testFixture.entityManager.addComponent(scenario.target.id, 'intimacy:kissing', {
-        partner: scenario.actor.id,
-        initiator: !testCase.isActorInitiator
-      });
+      testFixture.entityManager.addComponent(
+        scenario.actor.id,
+        'intimacy:kissing',
+        {
+          partner: scenario.target.id,
+          initiator: testCase.isActorInitiator,
+        }
+      );
+      testFixture.entityManager.addComponent(
+        scenario.target.id,
+        'intimacy:kissing',
+        {
+          partner: scenario.actor.id,
+          initiator: !testCase.isActorInitiator,
+        }
+      );
 
       await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 

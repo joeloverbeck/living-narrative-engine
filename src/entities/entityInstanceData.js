@@ -79,8 +79,7 @@ class EntityInstanceData {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
     });
     this.#logger = ensureValidLogger(logger, 'EntityInstanceData');
-    
-    
+
     // Use cloneDeep for initialOverrides to ensure deep copy and freeze to
     // discourage external mutation.
     this.#overrides = freeze(
@@ -249,7 +248,7 @@ class EntityInstanceData {
     const keys = new Set(Object.keys(this.definition.components));
     Object.keys(this.#overrides).forEach((key) => keys.add(key));
     const result = Array.from(keys);
-    
+
     // Debug logging for park bench issue
     if (this.instanceId === 'p_erotica:park_bench_instance') {
       this.#logger.info(
@@ -258,11 +257,11 @@ class EntityInstanceData {
           instanceId: this.instanceId,
           definitionComponents: Object.keys(this.definition.components),
           overrides: Object.keys(this.#overrides),
-          result: result
+          result: result,
         }
       );
     }
-    
+
     return result;
   }
 }

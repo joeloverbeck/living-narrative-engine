@@ -63,16 +63,16 @@ export class UIStateManager {
     // Define expected display values based on element type
     // These match the CSS definitions for these elements
     const expectedDisplayValues = {
-      emptyState: 'flex',    // CSS defines .cb-empty-state as flex
-      loadingState: 'flex',  // CSS defines .cb-loading-state as flex
-      errorState: 'flex',    // CSS defines .cb-error-state as flex
+      emptyState: 'flex', // CSS defines .cb-empty-state as flex
+      loadingState: 'flex', // CSS defines .cb-loading-state as flex
+      errorState: 'flex', // CSS defines .cb-error-state as flex
       resultsState: 'block', // Results are typically block
     };
 
     Object.entries(this.#elements).forEach(([key, element]) => {
       if (element) {
         let displayValue = expectedDisplayValues[key] || 'block';
-        
+
         // Check for specific CSS classes that indicate flex display
         // This is more reliable than getComputedStyle in test environments
         if (element.classList) {
@@ -86,7 +86,7 @@ export class UIStateManager {
             displayValue = 'block';
           }
         }
-        
+
         this.#originalDisplayValues.set(key, displayValue);
       }
     });
@@ -112,7 +112,8 @@ export class UIStateManager {
       // Get the element key for this state
       const elementKey = this.#getElementKeyForState(state);
       // Use the original display value or fall back to 'block'
-      const originalDisplay = this.#originalDisplayValues.get(elementKey) || 'block';
+      const originalDisplay =
+        this.#originalDisplayValues.get(elementKey) || 'block';
       element.style.display = originalDisplay;
 
       // Update message if provided (including empty string)

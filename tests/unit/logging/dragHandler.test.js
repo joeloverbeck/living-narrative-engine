@@ -81,7 +81,7 @@ describe('DragHandler', () => {
       callbacks,
       logger,
     });
-    
+
     // Enable drag functionality
     dragHandler.enable();
   });
@@ -89,11 +89,11 @@ describe('DragHandler', () => {
   afterEach(() => {
     jest.clearAllTimers();
     jest.useRealTimers();
-    
+
     if (dragHandler) {
       dragHandler.destroy();
     }
-    
+
     dom.window.close();
     delete global.document;
     delete global.window;
@@ -139,13 +139,13 @@ describe('DragHandler', () => {
       });
 
       element.dispatchEvent(mousedownEvent);
-      
+
       // Should not start immediately
       expect(callbacks.onDragStart).not.toHaveBeenCalled();
-      
+
       // Fast-forward time to trigger long press
       jest.advanceTimersByTime(500);
-      
+
       expect(callbacks.onDragStart).toHaveBeenCalled();
       expect(container.classList.contains('dragging')).toBe(true);
     });
@@ -173,7 +173,6 @@ describe('DragHandler', () => {
       expect(container.style.top).toBeTruthy();
     });
 
-
     it('should cancel drag if mouseup before long press completes', () => {
       const mousedownEvent = new window.MouseEvent('mousedown', {
         clientX: 100,
@@ -181,10 +180,10 @@ describe('DragHandler', () => {
         bubbles: true,
       });
       element.dispatchEvent(mousedownEvent);
-      
+
       // Release before 500ms
       jest.advanceTimersByTime(200);
-      
+
       const mouseupEvent = new window.MouseEvent('mouseup', {
         clientX: 100,
         clientY: 100,
@@ -210,13 +209,13 @@ describe('DragHandler', () => {
       });
 
       element.dispatchEvent(touchstartEvent);
-      
+
       // Should not start immediately
       expect(callbacks.onDragStart).not.toHaveBeenCalled();
-      
+
       // Fast-forward time to trigger long press
       jest.advanceTimersByTime(500);
-      
+
       expect(callbacks.onDragStart).toHaveBeenCalled();
       expect(global.navigator.vibrate).toHaveBeenCalledWith(50);
     });
@@ -242,7 +241,6 @@ describe('DragHandler', () => {
       expect(container.style.top).toBeTruthy();
     });
 
-
     it('should ignore multi-touch events', () => {
       const touchstartEvent = new window.TouchEvent('touchstart', {
         touches: [
@@ -265,7 +263,6 @@ describe('DragHandler', () => {
       dragHandler.enable();
     });
 
-
     it('should ignore non-Escape keys during drag', () => {
       // Start drag
       const mousedownEvent = new window.MouseEvent('mousedown', {
@@ -287,15 +284,20 @@ describe('DragHandler', () => {
     });
   });
 
-
   describe('Constraint Boundaries', () => {
     beforeEach(() => {
       jest.useFakeTimers();
       dragHandler.enable();
-      
+
       // Mock viewport dimensions
-      Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true });
-      Object.defineProperty(window, 'innerHeight', { value: 768, writable: true });
+      Object.defineProperty(window, 'innerWidth', {
+        value: 1024,
+        writable: true,
+      });
+      Object.defineProperty(window, 'innerHeight', {
+        value: 768,
+        writable: true,
+      });
     });
 
     it('should constrain position within viewport boundaries', () => {
@@ -338,7 +340,7 @@ describe('DragHandler', () => {
 
     it('should disable panel pointer events during drag', () => {
       const panel = container.querySelector('.lne-log-panel');
-      
+
       // Start drag
       const mousedownEvent = new window.MouseEvent('mousedown', {
         clientX: 100,
@@ -350,26 +352,31 @@ describe('DragHandler', () => {
 
       expect(panel.style.pointerEvents).toBe('none');
     });
-
   });
 
   describe('Cleanup', () => {
     it('should clean up event listeners on disable', () => {
       dragHandler.enable();
-      
+
       const removeEventListenerSpy = jest.spyOn(element, 'removeEventListener');
-      
+
       dragHandler.disable();
-      
-      expect(removeEventListenerSpy).toHaveBeenCalledWith('mousedown', expect.any(Function));
-      expect(removeEventListenerSpy).toHaveBeenCalledWith('touchstart', expect.any(Function));
+
+      expect(removeEventListenerSpy).toHaveBeenCalledWith(
+        'mousedown',
+        expect.any(Function)
+      );
+      expect(removeEventListenerSpy).toHaveBeenCalledWith(
+        'touchstart',
+        expect.any(Function)
+      );
       expect(element.style.cursor).toBe('pointer');
     });
 
     it('should clean up all references on destroy', () => {
       dragHandler.enable();
       dragHandler.destroy();
-      
+
       // Try to enable after destroy - should not throw but won't do anything
       expect(() => dragHandler.enable()).not.toThrow();
     });
@@ -377,7 +384,7 @@ describe('DragHandler', () => {
     it('should cancel active drag on disable', () => {
       jest.useFakeTimers();
       dragHandler.enable();
-      
+
       // Start drag
       const mousedownEvent = new window.MouseEvent('mousedown', {
         clientX: 100,
@@ -386,11 +393,11 @@ describe('DragHandler', () => {
       });
       element.dispatchEvent(mousedownEvent);
       jest.advanceTimersByTime(500);
-      
+
       expect(container.classList.contains('dragging')).toBe(true);
-      
+
       dragHandler.disable();
-      
+
       expect(container.classList.contains('dragging')).toBe(false);
     });
   });

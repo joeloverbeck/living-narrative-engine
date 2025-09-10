@@ -1,41 +1,53 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Test Source Categorization</title>
-</head>
-<body>
+  </head>
+  <body>
     <h1>Source Map Resolution Test</h1>
     <p>Open the browser console to see if source maps are loading correctly.</p>
-    <p>Check the network tab to verify /bundle.js.map is loaded successfully.</p>
-    <p>Then check llm-proxy-server/logs/2025-09-01/ for categorized log files.</p>
-    
+    <p>
+      Check the network tab to verify /bundle.js.map is loaded successfully.
+    </p>
+    <p>
+      Then check llm-proxy-server/logs/2025-09-01/ for categorized log files.
+    </p>
+
     <div id="status"></div>
 
     <script src="/bundle.js"></script>
     <script>
-        // This will trigger logging from the bundled application
-        console.log('Test page loaded - source maps should be fetched');
-        
-        // Show status
-        const statusEl = document.getElementById('status');
-        
-        // Check if source map loaded
-        fetch('/bundle.js.map')
-            .then(response => {
-                if (response.ok) {
-                    statusEl.innerHTML = '<p style="color: green;">✓ Source map loaded successfully!</p>';
-                    statusEl.innerHTML += '<p>Now check the log files in llm-proxy-server/logs/2025-09-01/</p>';
-                    statusEl.innerHTML += '<p>You should see categorized files like:</p>';
-                    statusEl.innerHTML += '<ul><li>actions.jsonl</li><li>entities.jsonl</li><li>engine.jsonl</li><li>etc...</li></ul>';
-                } else {
-                    statusEl.innerHTML = '<p style="color: red;">✗ Source map failed to load (404)</p>';
-                }
-            })
-            .catch(err => {
-                statusEl.innerHTML = '<p style="color: red;">✗ Error loading source map: ' + err + '</p>';
-            });
+      // This will trigger logging from the bundled application
+      console.log('Test page loaded - source maps should be fetched');
+
+      // Show status
+      const statusEl = document.getElementById('status');
+
+      // Check if source map loaded
+      fetch('/bundle.js.map')
+        .then((response) => {
+          if (response.ok) {
+            statusEl.innerHTML =
+              '<p style="color: green;">✓ Source map loaded successfully!</p>';
+            statusEl.innerHTML +=
+              '<p>Now check the log files in llm-proxy-server/logs/2025-09-01/</p>';
+            statusEl.innerHTML +=
+              '<p>You should see categorized files like:</p>';
+            statusEl.innerHTML +=
+              '<ul><li>actions.jsonl</li><li>entities.jsonl</li><li>engine.jsonl</li><li>etc...</li></ul>';
+          } else {
+            statusEl.innerHTML =
+              '<p style="color: red;">✗ Source map failed to load (404)</p>';
+          }
+        })
+        .catch((err) => {
+          statusEl.innerHTML =
+            '<p style="color: red;">✗ Error loading source map: ' +
+            err +
+            '</p>';
+        });
     </script>
-</body>
+  </body>
 </html>

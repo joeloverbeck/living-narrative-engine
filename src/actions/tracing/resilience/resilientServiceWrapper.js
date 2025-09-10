@@ -247,9 +247,15 @@ export class ResilientServiceWrapper {
 
   #handleDisabledService(methodName, args) {
     // First check if the service has a fallback method
-    if (this.#wrappedService && typeof this.#wrappedService.getFallbackData === 'function') {
+    if (
+      this.#wrappedService &&
+      typeof this.#wrappedService.getFallbackData === 'function'
+    ) {
       try {
-        return this.#wrappedService.getFallbackData.apply(this.#wrappedService, args);
+        return this.#wrappedService.getFallbackData.apply(
+          this.#wrappedService,
+          args
+        );
       } catch (fallbackError) {
         this.#logger.error('Fallback method failed for disabled service', {
           service: this.#serviceName,
@@ -258,7 +264,7 @@ export class ResilientServiceWrapper {
         });
       }
     }
-    
+
     // Return appropriate fallback based on method type
     if (methodName === 'writeTrace' || methodName === 'outputTrace') {
       return Promise.resolve(); // No-op for write methods
@@ -290,7 +296,7 @@ export class ResilientServiceWrapper {
         });
       }
     }
-    
+
     // Standard fallbacks for common methods
     if (methodName === 'writeTrace' || methodName === 'outputTrace') {
       return Promise.resolve(); // No-op for write methods
@@ -328,7 +334,7 @@ export class ResilientServiceWrapper {
     // Disable if more than 5 errors in the current 5-minute window
     return this.#errorCount > 5;
   }
-  
+
   /**
    * Jest-compatible delay implementation
    *
@@ -337,7 +343,7 @@ export class ResilientServiceWrapper {
    * @private
    */
   #waitForDelay(ms) {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const timer = setTimeout(resolve, ms);
       if (typeof timer === 'object' && timer.unref) {
         timer.unref();

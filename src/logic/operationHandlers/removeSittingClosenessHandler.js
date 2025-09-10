@@ -14,14 +14,11 @@ import {
   getAdjacentSpots,
   validateProximityParameters,
 } from '../../utils/proximityUtils.js';
+import { ComponentStateValidator } from '../../utils/componentStateValidator.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { updateMovementLock } from '../../utils/movementUtils.js';
-import {
-  tryWriteContextVariable,
-} from '../../utils/contextVariableUtils.js';
-import {
-  ensureEvaluationContext,
-} from '../../utils/evaluationContextUtils.js';
+import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
+import { ensureEvaluationContext } from '../../utils/evaluationContextUtils.js';
 import * as closenessCircleService from '../services/closenessCircleService.js';
 
 /**
@@ -38,6 +35,8 @@ class RemoveSittingClosenessHandler extends BaseOperationHandler {
   #dispatcher;
   /** @type {typeof closenessCircleService} */
   #closenessCircleService;
+  /** @type {ComponentStateValidator} */
+  #componentStateValidator;
 
   /**
    * Create a new RemoveSittingClosenessHandler instance.
@@ -48,12 +47,21 @@ class RemoveSittingClosenessHandler extends BaseOperationHandler {
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher - Event dispatcher for error handling.
    * @param {typeof closenessCircleService} deps.closenessCircleService - Service for closeness circle operations.
    */
-  constructor({ logger, entityManager, safeEventDispatcher, closenessCircleService }) {
+  constructor({
+    logger,
+    entityManager,
+    safeEventDispatcher,
+    closenessCircleService,
+  }) {
     super('RemoveSittingClosenessHandler', {
       logger: { value: logger },
       entityManager: {
         value: entityManager,
-        requiredMethods: ['getComponentData', 'addComponent', 'removeComponent'],
+        requiredMethods: [
+          'getComponentData',
+          'addComponent',
+          'removeComponent',
+        ],
       },
       safeEventDispatcher: {
         value: safeEventDispatcher,
@@ -67,6 +75,7 @@ class RemoveSittingClosenessHandler extends BaseOperationHandler {
     this.#entityManager = entityManager;
     this.#dispatcher = safeEventDispatcher;
     this.#closenessCircleService = closenessCircleService;
+    this.#componentStateValidator = new ComponentStateValidator({ logger });
   }
 
   /**
@@ -82,14 +91,25 @@ class RemoveSittingClosenessHandler extends BaseOperationHandler {
    */
   async execute(parameters, executionContext) {
     const logger = this.getLogger(executionContext);
-    
+
     try {
-      // Validate parameters
+      // Phase 1: Parameter validation
       validateProximityParameters(
         parameters.furniture_id,
         parameters.actor_id,
         parameters.spot_index,
         logger
+      );
+
+      // Phase 2: Component state validation
+      const furnitureComponent = this.#entityManager.getComponentData(
+        parameters.furniture_id,
+        'positioning:allows_sitting'
+      );
+      this.#componentStateValidator.validateFurnitureComponent(
+        parameters.furniture_id,
+        furnitureComponent,
+        'remove sitting closeness operation'
       );
 
       // Get departing actor's current closeness state
@@ -98,7 +118,18 @@ class RemoveSittingClosenessHandler extends BaseOperationHandler {
         'positioning:closeness'
       );
 
-      if (!departingActorCloseness || !Array.isArray(departingActorCloseness.partners) || departingActorCloseness.partners.length === 0) {
+      // Validate departing actor's closeness component
+      this.#componentStateValidator.validateClosenessComponent(
+        parameters.actor_id,
+        departingActorCloseness,
+        'remove sitting closeness operation'
+      );
+
+      if (
+        !departingActorCloseness ||
+        !Array.isArray(departingActorCloseness.partners) ||
+        departingActorCloseness.partners.length === 0
+      ) {
         // No closeness to remove - operation succeeds with no action needed
         logger.info('No closeness relationships to remove', {
           actorId: parameters.actor_id,
@@ -107,7 +138,9 @@ class RemoveSittingClosenessHandler extends BaseOperationHandler {
         });
 
         if (parameters.result_variable) {
-          if (!ensureEvaluationContext(executionContext, this.#dispatcher, logger)) {
+          if (
+            !ensureEvaluationContext(executionContext, this.#dispatcher, logger)
+          ) {
             return;
           }
           tryWriteContextVariable(
@@ -136,7 +169,9 @@ class RemoveSittingClosenessHandler extends BaseOperationHandler {
         });
 
         if (parameters.result_variable) {
-          if (!ensureEvaluationContext(executionContext, this.#dispatcher, logger)) {
+          if (
+            !ensureEvaluationContext(executionContext, this.#dispatcher, logger)
+          ) {
             return;
           }
           tryWriteContextVariable(
@@ -158,21 +193,43 @@ class RemoveSittingClosenessHandler extends BaseOperationHandler {
       );
 
       // Apply component updates for all affected actors
-      for (const [actorId, updatedPartners] of Object.entries(updatedPartnerData)) {
+      for (const [actorId, updatedPartners] of Object.entries(
+        updatedPartnerData
+      )) {
         if (updatedPartners.length === 0) {
           // Remove component if no partners remain
-          await this.#entityManager.removeComponent(actorId, 'positioning:closeness');
+          await this.#entityManager.removeComponent(
+            actorId,
+            'positioning:closeness'
+          );
         } else {
           // Update component with remaining partners
-          await this.#entityManager.addComponent(actorId, 'positioning:closeness', {
-            partners: updatedPartners
-          });
+          await this.#entityManager.addComponent(
+            actorId,
+            'positioning:closeness',
+            {
+              partners: updatedPartners,
+            }
+          );
         }
       }
 
       // Update movement locks for affected actors
       const allAffectedActors = [parameters.actor_id, ...formerAdjacentActors];
       await this.#updateMovementLocksAfterRemoval(allAffectedActors);
+
+      // Phase 3: Final state validation
+      for (const actorId of Object.keys(updatedPartnerData)) {
+        const finalClosenessComponent = this.#entityManager.getComponentData(
+          actorId,
+          'positioning:closeness'
+        );
+        this.#componentStateValidator.validateClosenessComponent(
+          actorId,
+          finalClosenessComponent,
+          'post-removal validation'
+        );
+      }
 
       // Log success
       logger.info('Sitting closeness removed successfully', {
@@ -185,7 +242,9 @@ class RemoveSittingClosenessHandler extends BaseOperationHandler {
 
       // Store result if requested
       if (parameters.result_variable) {
-        if (!ensureEvaluationContext(executionContext, this.#dispatcher, logger)) {
+        if (
+          !ensureEvaluationContext(executionContext, this.#dispatcher, logger)
+        ) {
           return;
         }
         tryWriteContextVariable(
@@ -248,7 +307,10 @@ class RemoveSittingClosenessHandler extends BaseOperationHandler {
     }
 
     // Calculate which spots were adjacent to the vacated spot
-    const adjacentSpotIndices = getAdjacentSpots(vacatedSpotIndex, furnitureComponent.spots.length);
+    const adjacentSpotIndices = getAdjacentSpots(
+      vacatedSpotIndex,
+      furnitureComponent.spots.length
+    );
 
     // Find actors currently occupying those adjacent spots
     const adjacentActors = [];
@@ -273,17 +335,28 @@ class RemoveSittingClosenessHandler extends BaseOperationHandler {
    * @returns {Record<string, string[]>} Updated partner data for all affected actors.
    * @private
    */
-  #removeSittingBasedCloseness(departingActorId, formerAdjacentActors, currentPartners) {
+  #removeSittingBasedCloseness(
+    departingActorId,
+    formerAdjacentActors,
+    currentPartners
+  ) {
     const updatedPartnerData = {};
-    
+
     // Process the departing actor first
-    const departingActorCloseness = this.#entityManager.getComponentData(departingActorId, 'positioning:closeness');
-    if (departingActorCloseness && Array.isArray(departingActorCloseness.partners)) {
+    const departingActorCloseness = this.#entityManager.getComponentData(
+      departingActorId,
+      'positioning:closeness'
+    );
+    if (
+      departingActorCloseness &&
+      Array.isArray(departingActorCloseness.partners)
+    ) {
       // Remove former adjacent actors from departing actor's list (these are sitting-based)
-      let updatedPartners = departingActorCloseness.partners.filter(partner => 
-        !this.#isSittingBasedRelationship(partner, formerAdjacentActors)
+      let updatedPartners = departingActorCloseness.partners.filter(
+        (partner) =>
+          !this.#isSittingBasedRelationship(partner, formerAdjacentActors)
       );
-      
+
       // Use closeness circle service to deduplicate and sort the partners array
       updatedPartners = this.#closenessCircleService.repair(updatedPartners);
       updatedPartnerData[departingActorId] = updatedPartners;
@@ -291,21 +364,26 @@ class RemoveSittingClosenessHandler extends BaseOperationHandler {
       // Even if no closeness component, ensure we track that it should have no partners
       updatedPartnerData[departingActorId] = [];
     }
-    
+
     // Process all current partners to ensure bidirectional consistency
     // This includes both adjacent and non-adjacent partners
     for (const partnerId of currentPartners) {
-      const partnerCloseness = this.#entityManager.getComponentData(partnerId, 'positioning:closeness');
-      
+      const partnerCloseness = this.#entityManager.getComponentData(
+        partnerId,
+        'positioning:closeness'
+      );
+
       if (partnerCloseness && Array.isArray(partnerCloseness.partners)) {
         let updatedPartners = [...partnerCloseness.partners];
-        
+
         // Only remove the departing actor if this partner was adjacent
         // Non-adjacent partners keep their manual relationships
         if (formerAdjacentActors.includes(partnerId)) {
-          updatedPartners = updatedPartners.filter(partner => partner !== departingActorId);
+          updatedPartners = updatedPartners.filter(
+            (partner) => partner !== departingActorId
+          );
         }
-        
+
         // Use closeness circle service to deduplicate and sort the partners array
         updatedPartners = this.#closenessCircleService.repair(updatedPartners);
         updatedPartnerData[partnerId] = updatedPartners;
@@ -313,7 +391,7 @@ class RemoveSittingClosenessHandler extends BaseOperationHandler {
       // Note: If a partner doesn't have a closeness component, we don't add them to updatedPartnerData
       // This preserves the existing state (no component = no closeness)
     }
-    
+
     return updatedPartnerData;
   }
 
@@ -349,12 +427,13 @@ class RemoveSittingClosenessHandler extends BaseOperationHandler {
           actorId,
           'positioning:closeness'
         );
-        
+
         // If no closeness component or empty partners, unlock movement
-        const shouldUnlock = !closenessComponent || 
-                           !Array.isArray(closenessComponent.partners) ||
-                           closenessComponent.partners.length === 0;
-        
+        const shouldUnlock =
+          !closenessComponent ||
+          !Array.isArray(closenessComponent.partners) ||
+          closenessComponent.partners.length === 0;
+
         if (shouldUnlock) {
           await updateMovementLock(this.#entityManager, actorId, false);
         }

@@ -696,7 +696,8 @@ export class DebugLoggingConfigValidator {
             rule: 'hybrid-no-fallback',
             message:
               'Hybrid strategy should preserve old patterns for fallback',
-            suggestion: 'Consider setting migration.preserveOldPatterns to true',
+            suggestion:
+              'Consider setting migration.preserveOldPatterns to true',
           });
         }
       }
@@ -768,7 +769,8 @@ export class DebugLoggingConfigValidator {
             rule: 'file-buffer-flush-imbalance',
             message:
               'Large file buffer with short flush interval may cause performance issues',
-            suggestion: 'Consider increasing flush interval or reducing buffer size',
+            suggestion:
+              'Consider increasing flush interval or reducing buffer size',
           });
         }
 
@@ -794,7 +796,10 @@ export class DebugLoggingConfigValidator {
 
       return { errors, warnings };
     } catch (error) {
-      this.#logger.error('Error during categorization semantic validation', error);
+      this.#logger.error(
+        'Error during categorization semantic validation',
+        error
+      );
       return {
         errors: [
           {
@@ -881,7 +886,10 @@ export class DebugLoggingConfigValidator {
         formattedErrors: errors.join('; '),
       };
     } catch (error) {
-      this.#logger.error('Error during categorization strategy validation', error);
+      this.#logger.error(
+        'Error during categorization strategy validation',
+        error
+      );
       return {
         isValid: false,
         errors: [`Strategy validation error: ${error.message}`],

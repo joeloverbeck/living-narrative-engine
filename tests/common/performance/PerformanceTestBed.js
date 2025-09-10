@@ -34,7 +34,7 @@ export class PerformanceTestBed {
   /**
    * Get or create a shared container instance
    * Reuses container across tests to avoid initialization overhead
-   * 
+   *
    * @returns {Promise<AppContainer>} Configured container
    */
   static async getSharedContainer() {
@@ -47,7 +47,7 @@ export class PerformanceTestBed {
   /**
    * Create a lightweight container with minimal services
    * Only initializes services required for scope testing
-   * 
+   *
    * @returns {Promise<AppContainer>} Configured container
    */
   static async createLightweightContainer() {
@@ -56,9 +56,9 @@ export class PerformanceTestBed {
     process.env.SKIP_DEBUG_CONFIG = 'true';
     process.env.DEBUG_LOG_MODE = 'test';
     process.env.NODE_ENV = 'test';
-    
+
     const container = new AppContainer();
-    
+
     // Create minimal DOM elements if not cached
     if (!this.#domElements) {
       this.#domElements = this.createMinimalDOMElements();
@@ -67,9 +67,9 @@ export class PerformanceTestBed {
     // Configure with minimal options - skip unnecessary systems
     await configureContainer(container, {
       ...this.#domElements,
-      includeUI: false,  // Skip UI components
-      includeCharacterBuilder: false,  // Skip character builder
-      includeGameSystems: true  // Need this for scope testing
+      includeUI: false, // Skip UI components
+      includeCharacterBuilder: false, // Skip character builder
+      includeGameSystems: true, // Need this for scope testing
     });
 
     return container;
@@ -77,7 +77,7 @@ export class PerformanceTestBed {
 
   /**
    * Create minimal DOM elements required for container
-   * 
+   *
    * @returns {Object} DOM elements
    */
   static createMinimalDOMElements() {
@@ -102,13 +102,13 @@ export class PerformanceTestBed {
       outputDiv,
       inputElement,
       titleElement,
-      document
+      document,
     };
   }
 
   /**
    * Batch create entity definitions for performance
-   * 
+   *
    * @param {string} prefix - Entity ID prefix
    * @param {number} count - Number of entities to create
    * @param {Function} componentGenerator - Function to generate components for each entity
@@ -116,10 +116,10 @@ export class PerformanceTestBed {
    */
   static createEntityDefinitionsBatch(prefix, count, componentGenerator) {
     const definitions = [];
-    
+
     for (let i = 0; i < count; i++) {
       const id = `${prefix}-${i}`;
-      
+
       // Check cache first
       if (this.#entityCache.has(id)) {
         definitions.push(this.#entityCache.get(id));
@@ -129,7 +129,7 @@ export class PerformanceTestBed {
       const def = {
         id,
         description: `${prefix} entity ${i}`,
-        components: componentGenerator(i)
+        components: componentGenerator(i),
       };
 
       const entityDef = new EntityDefinition(id, def);
@@ -143,7 +143,7 @@ export class PerformanceTestBed {
   /**
    * Batch register and create entity instances
    * More efficient than individual creation
-   * 
+   *
    * @param {Array<EntityDefinition>} definitions - Entity definitions
    * @param {Object} registry - Data registry service
    * @param {Object} entityManager - Entity manager service
@@ -157,11 +157,11 @@ export class PerformanceTestBed {
 
     // Then batch create instances
     const instances = await Promise.all(
-      definitions.map(def => 
+      definitions.map((def) =>
         entityManager.createEntityInstance(def.id, {
           instanceId: def.id,
           definitionId: def.id,
-          components: def.components
+          components: def.components,
         })
       )
     );
@@ -171,18 +171,18 @@ export class PerformanceTestBed {
 
   /**
    * Create a large test dataset optimized for performance
-   * 
+   *
    * @param {number} actorCount - Number of actors to create
    * @param {Object} services - Container services
    * @returns {Promise<Object>} Test dataset
    */
   static async createOptimizedTestDataset(actorCount, services) {
     const { registry, entityManager } = services;
-    
+
     // Create unique location ID for each test
     const testId = Date.now() + Math.random().toString(36).substring(2, 9);
     const locationId = `test-location-${testId}`;
-    
+
     // Create location first
     const locationDef = new EntityDefinition(locationId, {
       id: locationId,
@@ -190,16 +190,16 @@ export class PerformanceTestBed {
       components: {
         'core:location': {
           name: 'Test Arena',
-          exits: []
-        }
-      }
+          exits: [],
+        },
+      },
     });
-    
+
     registry.store('entityDefinitions', locationDef.id, locationDef);
     const location = await entityManager.createEntityInstance(locationDef.id, {
       instanceId: locationDef.id,
       definitionId: locationDef.id,
-      components: locationDef.components
+      components: locationDef.components,
     });
 
     // Batch create actors
@@ -215,17 +215,17 @@ export class PerformanceTestBed {
             physical: {
               strength: {
                 base: {
-                  value: Math.floor(Math.random() * 20) + 10
-                }
-              }
-            }
-          }
+                  value: Math.floor(Math.random() * 20) + 10,
+                },
+              },
+            },
+          },
         },
         'core:health': {
           current: Math.floor(Math.random() * 100) + 1,
-          max: 100
+          max: 100,
         },
-        'core:location': { locationId: locationDef.id }
+        'core:location': { locationId: locationDef.id },
       })
     );
 
@@ -238,16 +238,16 @@ export class PerformanceTestBed {
       itemCount,
       (i) => ({
         'core:item': { name: `Test Item ${i}` },
-        'core:value': Math.floor(Math.random() * 500)
+        'core:value': Math.floor(Math.random() * 500),
       })
     );
 
     await this.batchCreateEntities(itemDefs, registry, entityManager);
 
     return {
-      actors: actorDefs.map(d => ({ id: d.id })),
-      items: itemDefs.map(d => ({ id: d.id })),
-      location: { id: locationDef.id }
+      actors: actorDefs.map((d) => ({ id: d.id })),
+      items: itemDefs.map((d) => ({ id: d.id })),
+      location: { id: locationDef.id },
     };
   }
 
@@ -258,7 +258,7 @@ export class PerformanceTestBed {
   static cleanup() {
     // Clear caches
     this.#entityCache.clear();
-    
+
     // Clean up DOM
     if (this.#domElements) {
       document.body.innerHTML = '';
@@ -266,7 +266,10 @@ export class PerformanceTestBed {
     }
 
     // Clean up container
-    if (this.#sharedContainer && typeof this.#sharedContainer.cleanup === 'function') {
+    if (
+      this.#sharedContainer &&
+      typeof this.#sharedContainer.cleanup === 'function'
+    ) {
       this.#sharedContainer.cleanup();
       this.#sharedContainer = null;
     }

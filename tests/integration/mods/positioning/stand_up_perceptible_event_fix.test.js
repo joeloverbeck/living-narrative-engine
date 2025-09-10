@@ -22,7 +22,7 @@ import addFormats from 'ajv-formats';
 
 /**
  * Creates standardized kneeling positioning scenario for stand up tests.
- * 
+ *
  * @returns {object} Object with actor and witness entities
  */
 function setupKneelingStandUpScenario() {
@@ -40,7 +40,10 @@ function setupKneelingStandUpScenario() {
   const witness = new ModEntityBuilder('test:witness1')
     .withName('Bob')
     .atLocation('throne_room')
-    .withComponent(PERCEPTION_LOG_COMPONENT_ID, { logEntries: [], maxEntries: 50 })
+    .withComponent(PERCEPTION_LOG_COMPONENT_ID, {
+      logEntries: [],
+      maxEntries: 50,
+    })
     .asActor()
     .build();
 
@@ -88,7 +91,11 @@ describe('positioning:stand_up perceptible event fix', () => {
     // Create test environment with both rules and enhanced handlers
     testEnv = createRuleTestEnvironment({
       createHandlers: (entityManager, eventBus, logger) =>
-        ModTestHandlerFactory.createHandlersWithPerceptionLogging(entityManager, eventBus, logger),
+        ModTestHandlerFactory.createHandlersWithPerceptionLogging(
+          entityManager,
+          eventBus,
+          logger
+        ),
       entities: [],
       rules: [expandedStandUpRule, logPerceptibleEventsRule],
       conditions: {

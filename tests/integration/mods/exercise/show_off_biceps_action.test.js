@@ -51,22 +51,14 @@ describe('Exercise Mod: Show Off Biceps Action', () => {
           expect(prerequisite.logic.or).toHaveLength(2);
 
           // Check for muscular arms condition
-          expect(prerequisite.logic.or[0].hasPartOfTypeWithComponentValue).toEqual([
-            'actor',
-            'arm',
-            'descriptors:build',
-            'build',
-            'muscular',
-          ]);
+          expect(
+            prerequisite.logic.or[0].hasPartOfTypeWithComponentValue
+          ).toEqual(['actor', 'arm', 'descriptors:build', 'build', 'muscular']);
 
           // Check for hulking arms condition
-          expect(prerequisite.logic.or[1].hasPartOfTypeWithComponentValue).toEqual([
-            'actor',
-            'arm',
-            'descriptors:build',
-            'build',
-            'hulking',
-          ]);
+          expect(
+            prerequisite.logic.or[1].hasPartOfTypeWithComponentValue
+          ).toEqual(['actor', 'arm', 'descriptors:build', 'build', 'hulking']);
         },
       });
     });

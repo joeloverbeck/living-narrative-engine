@@ -10,7 +10,13 @@
         }
       },
       {
-        "hasPartOfTypeWithComponentValue": ["actor", "mouth", "core:mouth_engagement", "locked", false]
+        "hasPartOfTypeWithComponentValue": [
+          "actor",
+          "mouth",
+          "core:mouth_engagement",
+          "locked",
+          false
+        ]
       },
       {
         "and": [
@@ -19,7 +25,13 @@
           },
           {
             "not": {
-              "hasPartOfTypeWithComponentValue": ["actor", "mouth", "core:mouth_engagement", "locked", true]
+              "hasPartOfTypeWithComponentValue": [
+                "actor",
+                "mouth",
+                "core:mouth_engagement",
+                "locked",
+                true
+              ]
             }
           }
         ]

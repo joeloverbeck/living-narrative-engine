@@ -182,10 +182,6 @@ describe('StepResolver', () => {
       dispatcher.resolve.mockReturnValue(new Set(['entity1', 'entity2']));
 
       resolver.resolve(node, ctx);
-
-      
-      
-      
     });
 
     it('should not throw when trace is not provided', () => {

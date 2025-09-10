@@ -56,19 +56,23 @@ describe('actor-mouth-available condition', () => {
       };
 
       // Mock the anatomy:body component
-      mockEntityManager.getComponentData
-        .mockImplementation((entityId, componentId) => {
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
           if (componentId === 'anatomy:body' && entityId === 'actor123') {
             return { root: 'body123' };
           }
           if (componentId === 'anatomy:part' && entityId === 'mouth-part-123') {
             return { subType: 'mouth' };
           }
-          if (componentId === 'core:mouth_engagement' && entityId === 'mouth-part-123') {
+          if (
+            componentId === 'core:mouth_engagement' &&
+            entityId === 'mouth-part-123'
+          ) {
             return { locked: false };
           }
           return null;
-        });
+        }
+      );
 
       // Mock finding mouth parts
       mockBodyGraphService.findPartsByType.mockReturnValue(['mouth-part-123']);
@@ -78,21 +82,33 @@ describe('actor-mouth-available condition', () => {
       const conditionLogic = {
         or: [
           {
-            hasPartOfTypeWithComponentValue: ['actor', 'mouth', 'core:mouth_engagement', 'locked', false]
+            hasPartOfTypeWithComponentValue: [
+              'actor',
+              'mouth',
+              'core:mouth_engagement',
+              'locked',
+              false,
+            ],
           },
           {
             and: [
               {
-                hasPartOfType: ['actor', 'mouth']
+                hasPartOfType: ['actor', 'mouth'],
               },
               {
                 not: {
-                  hasPartOfTypeWithComponentValue: ['actor', 'mouth', 'core:mouth_engagement', 'locked', true]
-                }
-              }
-            ]
-          }
-        ]
+                  hasPartOfTypeWithComponentValue: [
+                    'actor',
+                    'mouth',
+                    'core:mouth_engagement',
+                    'locked',
+                    true,
+                  ],
+                },
+              },
+            ],
+          },
+        ],
       };
 
       const result = jsonLogicService.evaluate(conditionLogic, context);
@@ -107,19 +123,23 @@ describe('actor-mouth-available condition', () => {
       };
 
       // Mock the anatomy:body component
-      mockEntityManager.getComponentData
-        .mockImplementation((entityId, componentId) => {
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
           if (componentId === 'anatomy:body' && entityId === 'actor123') {
             return { root: 'body123' };
           }
           if (componentId === 'anatomy:part' && entityId === 'mouth-part-123') {
             return { subType: 'mouth' };
           }
-          if (componentId === 'core:mouth_engagement' && entityId === 'mouth-part-123') {
+          if (
+            componentId === 'core:mouth_engagement' &&
+            entityId === 'mouth-part-123'
+          ) {
             return null; // No engagement component
           }
           return null;
-        });
+        }
+      );
 
       // Mock finding mouth parts
       mockBodyGraphService.findPartsByType.mockReturnValue(['mouth-part-123']);
@@ -128,21 +148,33 @@ describe('actor-mouth-available condition', () => {
       const conditionLogic = {
         or: [
           {
-            hasPartOfTypeWithComponentValue: ['actor', 'mouth', 'core:mouth_engagement', 'locked', false]
+            hasPartOfTypeWithComponentValue: [
+              'actor',
+              'mouth',
+              'core:mouth_engagement',
+              'locked',
+              false,
+            ],
           },
           {
             and: [
               {
-                hasPartOfType: ['actor', 'mouth']
+                hasPartOfType: ['actor', 'mouth'],
               },
               {
                 not: {
-                  hasPartOfTypeWithComponentValue: ['actor', 'mouth', 'core:mouth_engagement', 'locked', true]
-                }
-              }
-            ]
-          }
-        ]
+                  hasPartOfTypeWithComponentValue: [
+                    'actor',
+                    'mouth',
+                    'core:mouth_engagement',
+                    'locked',
+                    true,
+                  ],
+                },
+              },
+            ],
+          },
+        ],
       };
 
       const result = jsonLogicService.evaluate(conditionLogic, context);
@@ -159,19 +191,23 @@ describe('actor-mouth-available condition', () => {
       };
 
       // Mock the anatomy:body component
-      mockEntityManager.getComponentData
-        .mockImplementation((entityId, componentId) => {
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
           if (componentId === 'anatomy:body' && entityId === 'actor123') {
             return { root: 'body123' };
           }
           if (componentId === 'anatomy:part' && entityId === 'mouth-part-123') {
             return { subType: 'mouth' };
           }
-          if (componentId === 'core:mouth_engagement' && entityId === 'mouth-part-123') {
+          if (
+            componentId === 'core:mouth_engagement' &&
+            entityId === 'mouth-part-123'
+          ) {
             return { locked: true }; // Mouth is locked
           }
           return null;
-        });
+        }
+      );
 
       // Mock finding mouth parts
       mockBodyGraphService.findPartsByType.mockReturnValue(['mouth-part-123']);
@@ -180,21 +216,33 @@ describe('actor-mouth-available condition', () => {
       const conditionLogic = {
         or: [
           {
-            hasPartOfTypeWithComponentValue: ['actor', 'mouth', 'core:mouth_engagement', 'locked', false]
+            hasPartOfTypeWithComponentValue: [
+              'actor',
+              'mouth',
+              'core:mouth_engagement',
+              'locked',
+              false,
+            ],
           },
           {
             and: [
               {
-                hasPartOfType: ['actor', 'mouth']
+                hasPartOfType: ['actor', 'mouth'],
               },
               {
                 not: {
-                  hasPartOfTypeWithComponentValue: ['actor', 'mouth', 'core:mouth_engagement', 'locked', true]
-                }
-              }
-            ]
-          }
-        ]
+                  hasPartOfTypeWithComponentValue: [
+                    'actor',
+                    'mouth',
+                    'core:mouth_engagement',
+                    'locked',
+                    true,
+                  ],
+                },
+              },
+            ],
+          },
+        ],
       };
 
       const result = jsonLogicService.evaluate(conditionLogic, context);
@@ -209,13 +257,14 @@ describe('actor-mouth-available condition', () => {
       };
 
       // Mock the anatomy:body component
-      mockEntityManager.getComponentData
-        .mockImplementation((entityId, componentId) => {
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
           if (componentId === 'anatomy:body' && entityId === 'actor123') {
             return { root: 'body123' };
           }
           return null;
-        });
+        }
+      );
 
       // Mock no mouth parts found
       mockBodyGraphService.findPartsByType.mockReturnValue([]);
@@ -225,25 +274,37 @@ describe('actor-mouth-available condition', () => {
         or: [
           {
             not: {
-              hasPartOfType: ['actor', 'mouth']
-            }
+              hasPartOfType: ['actor', 'mouth'],
+            },
           },
           {
-            hasPartOfTypeWithComponentValue: ['actor', 'mouth', 'core:mouth_engagement', 'locked', false]
+            hasPartOfTypeWithComponentValue: [
+              'actor',
+              'mouth',
+              'core:mouth_engagement',
+              'locked',
+              false,
+            ],
           },
           {
             and: [
               {
-                hasPartOfType: ['actor', 'mouth']
+                hasPartOfType: ['actor', 'mouth'],
               },
               {
                 not: {
-                  hasPartOfTypeWithComponentValue: ['actor', 'mouth', 'core:mouth_engagement', 'locked', true]
-                }
-              }
-            ]
-          }
-        ]
+                  hasPartOfTypeWithComponentValue: [
+                    'actor',
+                    'mouth',
+                    'core:mouth_engagement',
+                    'locked',
+                    true,
+                  ],
+                },
+              },
+            ],
+          },
+        ],
       };
 
       const result = jsonLogicService.evaluate(conditionLogic, context);
@@ -264,21 +325,33 @@ describe('actor-mouth-available condition', () => {
       const conditionLogic = {
         or: [
           {
-            hasPartOfTypeWithComponentValue: ['actor', 'mouth', 'core:mouth_engagement', 'locked', false]
+            hasPartOfTypeWithComponentValue: [
+              'actor',
+              'mouth',
+              'core:mouth_engagement',
+              'locked',
+              false,
+            ],
           },
           {
             and: [
               {
-                hasPartOfType: ['actor', 'mouth']
+                hasPartOfType: ['actor', 'mouth'],
               },
               {
                 not: {
-                  hasPartOfTypeWithComponentValue: ['actor', 'mouth', 'core:mouth_engagement', 'locked', true]
-                }
-              }
-            ]
-          }
-        ]
+                  hasPartOfTypeWithComponentValue: [
+                    'actor',
+                    'mouth',
+                    'core:mouth_engagement',
+                    'locked',
+                    true,
+                  ],
+                },
+              },
+            ],
+          },
+        ],
       };
 
       const result = jsonLogicService.evaluate(conditionLogic, context);
@@ -291,21 +364,33 @@ describe('actor-mouth-available condition', () => {
       const conditionLogic = {
         or: [
           {
-            hasPartOfTypeWithComponentValue: ['actor', 'mouth', 'core:mouth_engagement', 'locked', false]
+            hasPartOfTypeWithComponentValue: [
+              'actor',
+              'mouth',
+              'core:mouth_engagement',
+              'locked',
+              false,
+            ],
           },
           {
             and: [
               {
-                hasPartOfType: ['actor', 'mouth']
+                hasPartOfType: ['actor', 'mouth'],
               },
               {
                 not: {
-                  hasPartOfTypeWithComponentValue: ['actor', 'mouth', 'core:mouth_engagement', 'locked', true]
-                }
-              }
-            ]
-          }
-        ]
+                  hasPartOfTypeWithComponentValue: [
+                    'actor',
+                    'mouth',
+                    'core:mouth_engagement',
+                    'locked',
+                    true,
+                  ],
+                },
+              },
+            ],
+          },
+        ],
       };
 
       const result = jsonLogicService.evaluate(conditionLogic, context);
@@ -322,8 +407,8 @@ describe('actor-mouth-available condition', () => {
       };
 
       // Mock the anatomy:body component
-      mockEntityManager.getComponentData
-        .mockImplementation((entityId, componentId) => {
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
           if (componentId === 'anatomy:body' && entityId === 'actor123') {
             return { root: 'body123' };
           }
@@ -341,30 +426,46 @@ describe('actor-mouth-available condition', () => {
             }
           }
           return null;
-        });
+        }
+      );
 
       // Mock finding multiple mouth parts
-      mockBodyGraphService.findPartsByType.mockReturnValue(['mouth-part-1', 'mouth-part-2']);
+      mockBodyGraphService.findPartsByType.mockReturnValue([
+        'mouth-part-1',
+        'mouth-part-2',
+      ]);
       mockBodyGraphService.buildAdjacencyCache.mockReturnValue();
 
       const conditionLogic = {
         or: [
           {
-            hasPartOfTypeWithComponentValue: ['actor', 'mouth', 'core:mouth_engagement', 'locked', false]
+            hasPartOfTypeWithComponentValue: [
+              'actor',
+              'mouth',
+              'core:mouth_engagement',
+              'locked',
+              false,
+            ],
           },
           {
             and: [
               {
-                hasPartOfType: ['actor', 'mouth']
+                hasPartOfType: ['actor', 'mouth'],
               },
               {
                 not: {
-                  hasPartOfTypeWithComponentValue: ['actor', 'mouth', 'core:mouth_engagement', 'locked', true]
-                }
-              }
-            ]
-          }
-        ]
+                  hasPartOfTypeWithComponentValue: [
+                    'actor',
+                    'mouth',
+                    'core:mouth_engagement',
+                    'locked',
+                    true,
+                  ],
+                },
+              },
+            ],
+          },
+        ],
       };
 
       const result = jsonLogicService.evaluate(conditionLogic, context);
@@ -381,19 +482,23 @@ describe('actor-mouth-available condition', () => {
       };
 
       // Mock the anatomy:body component
-      mockEntityManager.getComponentData
-        .mockImplementation((entityId, componentId) => {
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
           if (componentId === 'anatomy:body' && entityId === 'npc456') {
             return { root: 'body456' };
           }
           if (componentId === 'anatomy:part' && entityId === 'mouth-part-456') {
             return { subType: 'mouth' };
           }
-          if (componentId === 'core:mouth_engagement' && entityId === 'mouth-part-456') {
+          if (
+            componentId === 'core:mouth_engagement' &&
+            entityId === 'mouth-part-456'
+          ) {
             return { locked: false };
           }
           return null;
-        });
+        }
+      );
 
       // Mock finding mouth parts
       mockBodyGraphService.findPartsByType.mockReturnValue(['mouth-part-456']);
@@ -402,24 +507,39 @@ describe('actor-mouth-available condition', () => {
       const conditionLogicWithNestedPath = {
         or: [
           {
-            hasPartOfTypeWithComponentValue: ['event.target', 'mouth', 'core:mouth_engagement', 'locked', false]
+            hasPartOfTypeWithComponentValue: [
+              'event.target',
+              'mouth',
+              'core:mouth_engagement',
+              'locked',
+              false,
+            ],
           },
           {
             and: [
               {
-                hasPartOfType: ['event.target', 'mouth']
+                hasPartOfType: ['event.target', 'mouth'],
               },
               {
                 not: {
-                  hasPartOfTypeWithComponentValue: ['event.target', 'mouth', 'core:mouth_engagement', 'locked', true]
-                }
-              }
-            ]
-          }
-        ]
+                  hasPartOfTypeWithComponentValue: [
+                    'event.target',
+                    'mouth',
+                    'core:mouth_engagement',
+                    'locked',
+                    true,
+                  ],
+                },
+              },
+            ],
+          },
+        ],
       };
 
-      const result = jsonLogicService.evaluate(conditionLogicWithNestedPath, context);
+      const result = jsonLogicService.evaluate(
+        conditionLogicWithNestedPath,
+        context
+      );
       expect(result).toBe(true);
     });
 
@@ -431,19 +551,23 @@ describe('actor-mouth-available condition', () => {
       };
 
       // Mock the anatomy:body component
-      mockEntityManager.getComponentData
-        .mockImplementation((entityId, componentId) => {
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
           if (componentId === 'anatomy:body' && entityId === 'actor123') {
             return { root: 'body123' };
           }
           if (componentId === 'anatomy:part' && entityId === 'mouth-part-123') {
             return { subType: 'mouth' };
           }
-          if (componentId === 'core:mouth_engagement' && entityId === 'mouth-part-123') {
+          if (
+            componentId === 'core:mouth_engagement' &&
+            entityId === 'mouth-part-123'
+          ) {
             return { locked: 'yes' }; // Invalid type for locked
           }
           return null;
-        });
+        }
+      );
 
       // Mock finding mouth parts
       mockBodyGraphService.findPartsByType.mockReturnValue(['mouth-part-123']);
@@ -452,21 +576,33 @@ describe('actor-mouth-available condition', () => {
       const conditionLogic = {
         or: [
           {
-            hasPartOfTypeWithComponentValue: ['actor', 'mouth', 'core:mouth_engagement', 'locked', false]
+            hasPartOfTypeWithComponentValue: [
+              'actor',
+              'mouth',
+              'core:mouth_engagement',
+              'locked',
+              false,
+            ],
           },
           {
             and: [
               {
-                hasPartOfType: ['actor', 'mouth']
+                hasPartOfType: ['actor', 'mouth'],
               },
               {
                 not: {
-                  hasPartOfTypeWithComponentValue: ['actor', 'mouth', 'core:mouth_engagement', 'locked', true]
-                }
-              }
-            ]
-          }
-        ]
+                  hasPartOfTypeWithComponentValue: [
+                    'actor',
+                    'mouth',
+                    'core:mouth_engagement',
+                    'locked',
+                    true,
+                  ],
+                },
+              },
+            ],
+          },
+        ],
       };
 
       const result = jsonLogicService.evaluate(conditionLogic, context);

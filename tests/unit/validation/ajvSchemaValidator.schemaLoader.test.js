@@ -3,13 +3,7 @@
  * @description Tests the #createSchemaLoader method and its branches
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
 import { createMockLogger } from '../../common/mockFactories/index.js';
 import Ajv from 'ajv';
@@ -34,13 +28,16 @@ describe('AjvSchemaValidator - Schema Loader Coverage', () => {
         $id: 'test://schema-with-ref',
         type: 'object',
         properties: {
-          item: { $ref: './items/weapon.schema.json' }
-        }
+          item: { $ref: './items/weapon.schema.json' },
+        },
       };
 
       // First add will compile and try to resolve the ref
       try {
-        await validator.addSchema(schemaWithMissingRef, schemaWithMissingRef.$id);
+        await validator.addSchema(
+          schemaWithMissingRef,
+          schemaWithMissingRef.$id
+        );
         // If it doesn't throw, validate won't work
         const validatorFn = validator.getValidator(schemaWithMissingRef.$id);
         if (validatorFn) {
@@ -64,8 +61,8 @@ describe('AjvSchemaValidator - Schema Loader Coverage', () => {
         $id: 'schema://living-narrative-engine/base.json',
         type: 'object',
         properties: {
-          id: { type: 'string' }
-        }
+          id: { type: 'string' },
+        },
       };
       await validator.addSchema(baseSchema, baseSchema.$id);
 
@@ -77,19 +74,19 @@ describe('AjvSchemaValidator - Schema Loader Coverage', () => {
           { $ref: '../base.json' },
           {
             properties: {
-              childProp: { type: 'number' }
-            }
-          }
-        ]
+              childProp: { type: 'number' },
+            },
+          },
+        ],
       };
 
       // This should work because base.json exists
       await validator.addSchema(childSchema, childSchema.$id);
-      
+
       // Verify it works
       const validatorFn = validator.getValidator(childSchema.$id);
       expect(validatorFn).toBeDefined();
-      
+
       const result = validatorFn({ id: 'test', childProp: 123 });
       expect(result.isValid).toBe(true);
     });
@@ -103,16 +100,16 @@ describe('AjvSchemaValidator - Schema Loader Coverage', () => {
       const schema1 = {
         $id: 'schema://living-narrative-engine/types/common.json',
         definitions: {
-          id: { type: 'string' }
-        }
+          id: { type: 'string' },
+        },
       };
-      
+
       const schema2 = {
         $id: 'schema://living-narrative-engine/components/entity.json',
         type: 'object',
         properties: {
-          id: { $ref: '../types/common.json#/definitions/id' }
-        }
+          id: { $ref: '../types/common.json#/definitions/id' },
+        },
       };
 
       await validator.addSchema(schema1, schema1.$id);
@@ -132,10 +129,10 @@ describe('AjvSchemaValidator - Schema Loader Coverage', () => {
         $id: 'custom://namespace/components/item.json',
         type: 'object',
         properties: {
-          name: { type: 'string' }
-        }
+          name: { type: 'string' },
+        },
       };
-      
+
       await validator.addSchema(customSchema, customSchema.$id);
 
       // Add a schema that tries to reference it with a relative path
@@ -145,9 +142,9 @@ describe('AjvSchemaValidator - Schema Loader Coverage', () => {
         properties: {
           inventory: {
             type: 'array',
-            items: { $ref: '../components/item.json' }
-          }
-        }
+            items: { $ref: '../components/item.json' },
+          },
+        },
       };
 
       await validator.addSchema(referencingSchema, referencingSchema.$id);
@@ -167,15 +164,15 @@ describe('AjvSchemaValidator - Schema Loader Coverage', () => {
         $id: 'test://bad-ref-schema',
         type: 'object',
         properties: {
-          broken: { $ref: './nonexistent.json' }
-        }
+          broken: { $ref: './nonexistent.json' },
+        },
       };
 
       try {
         await validator.addSchema(schemaWithBadRef, schemaWithBadRef.$id);
         // The schema gets added but with unresolved ref
         expect(validator.isSchemaLoaded(schemaWithBadRef.$id)).toBe(true);
-        
+
         // Try to use it - this should fail
         const validatorFn = validator.getValidator(schemaWithBadRef.$id);
         if (validatorFn) {
@@ -198,9 +195,9 @@ describe('AjvSchemaValidator - Schema Loader Coverage', () => {
       const targetSchema = {
         $id: 'schema://absolute/target.json',
         type: 'string',
-        minLength: 5
+        minLength: 5,
       };
-      
+
       await validator.addSchema(targetSchema, targetSchema.$id);
 
       // Add a schema with absolute reference
@@ -208,8 +205,8 @@ describe('AjvSchemaValidator - Schema Loader Coverage', () => {
         $id: 'test://absolute-ref',
         type: 'object',
         properties: {
-          field: { $ref: 'schema://absolute/target.json' }
-        }
+          field: { $ref: 'schema://absolute/target.json' },
+        },
       };
 
       await validator.addSchema(referencingSchema, referencingSchema.$id);
@@ -217,13 +214,13 @@ describe('AjvSchemaValidator - Schema Loader Coverage', () => {
       // Validate that the reference works
       const validatorFn = validator.getValidator(referencingSchema.$id);
       expect(validatorFn).toBeDefined();
-      
+
       const result = validatorFn({ field: 'short' });
       expect(result.isValid).toBe(true); // Exactly 5 characters, meets minLength: 5
-      
+
       const result2 = validatorFn({ field: 'long enough' });
       expect(result2.isValid).toBe(true);
-      
+
       // Test with a string that's actually too short
       const result3 = validatorFn({ field: 'test' });
       expect(result3.isValid).toBe(false); // Only 4 characters, fails minLength: 5
@@ -262,7 +259,7 @@ describe('AjvSchemaValidator - Schema Loader Coverage', () => {
         compile: jest.fn(),
         get schemas() {
           throw new Error('Cannot access schemas');
-        }
+        },
       };
 
       const validator = new AjvSchemaValidator({
@@ -273,7 +270,7 @@ describe('AjvSchemaValidator - Schema Loader Coverage', () => {
       // This should catch the error and return empty array
       const ids = validator.getLoadedSchemaIds();
       expect(ids).toEqual([]);
-      
+
       // Check that error was logged
       expect(mockLogger.error).toHaveBeenCalledWith(
         'AjvSchemaValidator: Error getting loaded schema IDs',
@@ -292,9 +289,9 @@ describe('AjvSchemaValidator - Schema Loader Coverage', () => {
       const schemaData = {
         type: 'object',
         properties: {
-          alias: { type: 'boolean' }
+          alias: { type: 'boolean' },
         },
-        required: ['alias']
+        required: ['alias'],
       };
 
       // Use loadSchemaObject

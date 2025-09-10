@@ -296,7 +296,7 @@ describe('ScopeEngine - Additional Coverage Tests', () => {
         'ScopeEngine',
         { targets: [locationId] }
       );
-      
+
       // Verify the correct result is returned
       expect(result).toEqual(new Set([locationId]));
     });

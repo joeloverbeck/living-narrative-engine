@@ -7,6 +7,7 @@
 When creating conditions that check if a body part is "available" for use in an action, follow this semantic pattern:
 
 #### Semantic Meaning
+
 - **"Available"** means the part is not currently engaged/locked in another action
 - **"Available"** does NOT mean the part must exist
 - An entity without a specific body part should generally be allowed to perform actions (unless the part is absolutely required)
@@ -25,7 +26,13 @@ For conditions checking if a body part is available (e.g., `actor-mouth-availabl
         }
       },
       {
-        "hasPartOfTypeWithComponentValue": ["entity", "partType", "namespace:engagement", "locked", false]
+        "hasPartOfTypeWithComponentValue": [
+          "entity",
+          "partType",
+          "namespace:engagement",
+          "locked",
+          false
+        ]
       },
       {
         "and": [
@@ -34,7 +41,13 @@ For conditions checking if a body part is available (e.g., `actor-mouth-availabl
           },
           {
             "not": {
-              "hasPartOfTypeWithComponentValue": ["entity", "partType", "namespace:engagement", "locked", true]
+              "hasPartOfTypeWithComponentValue": [
+                "entity",
+                "partType",
+                "namespace:engagement",
+                "locked",
+                true
+              ]
             }
           }
         ]
@@ -88,11 +101,14 @@ describe('Part Unavailable Cases', () => {
 ### Pattern: Part Requirement vs Part Availability
 
 #### Part Requirement
+
 For actions that absolutely require a body part to exist:
+
 - Use `hasPartOfType` to check existence
 - Fail if the part doesn't exist
 
 Example: `actor-has-mouth` (different from `actor-mouth-available`):
+
 ```json
 {
   "logic": {
@@ -102,7 +118,9 @@ Example: `actor-has-mouth` (different from `actor-mouth-available`):
 ```
 
 #### Part Availability
+
 For actions that can proceed if the part is not engaged:
+
 - Use the availability pattern shown above
 - Allow if part doesn't exist OR is not locked
 
@@ -128,11 +146,13 @@ Note the failure message focuses on engagement, not existence.
 ## Testing Guidelines
 
 ### Unit Tests
+
 - Test each branch of the OR logic separately
 - Include edge cases (malformed data, missing components)
 - Test with different entity paths (actor, event.target, etc.)
 
 ### Integration Tests
+
 - Verify condition references resolve correctly
 - Test with actual action prerequisites
 - Ensure custom operators are registered
@@ -155,6 +175,7 @@ Note the failure message focuses on engagement, not existence.
 ## Custom Operator Requirements
 
 Conditions using body part checks require these custom operators:
+
 - `hasPartOfType`: Checks if entity has parts of a specific type
 - `hasPartOfTypeWithComponentValue`: Checks if entity has parts with specific component values
 

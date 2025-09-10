@@ -29,30 +29,57 @@ describe('StateConsistencyValidator', () => {
 
   describe('Constructor', () => {
     it('should validate logger dependency', () => {
-      expect(() => new StateConsistencyValidator({ logger: null, entityManager: mockEntityManager }))
-        .toThrow('Missing required dependency: ILogger');
+      expect(
+        () =>
+          new StateConsistencyValidator({
+            logger: null,
+            entityManager: mockEntityManager,
+          })
+      ).toThrow('Missing required dependency: ILogger');
     });
 
     it('should validate entityManager dependency', () => {
-      expect(() => new StateConsistencyValidator({ logger: mockLogger, entityManager: null }))
-        .toThrow('Missing required dependency: IEntityManager');
+      expect(
+        () =>
+          new StateConsistencyValidator({
+            logger: mockLogger,
+            entityManager: null,
+          })
+      ).toThrow('Missing required dependency: IEntityManager');
     });
 
     it('should require logger with required methods', () => {
       const invalidLogger = { info: jest.fn() };
-      expect(() => new StateConsistencyValidator({ logger: invalidLogger, entityManager: mockEntityManager }))
-        .toThrow("Invalid or missing method 'warn' on dependency 'ILogger'");
+      expect(
+        () =>
+          new StateConsistencyValidator({
+            logger: invalidLogger,
+            entityManager: mockEntityManager,
+          })
+      ).toThrow("Invalid or missing method 'warn' on dependency 'ILogger'");
     });
 
     it('should require entityManager with required methods', () => {
       const invalidEntityManager = { getComponentData: jest.fn() };
-      expect(() => new StateConsistencyValidator({ logger: mockLogger, entityManager: invalidEntityManager }))
-        .toThrow("Invalid or missing method 'getEntitiesWithComponent' on dependency 'IEntityManager'");
+      expect(
+        () =>
+          new StateConsistencyValidator({
+            logger: mockLogger,
+            entityManager: invalidEntityManager,
+          })
+      ).toThrow(
+        "Invalid or missing method 'getEntitiesWithComponent' on dependency 'IEntityManager'"
+      );
     });
 
     it('should create validator with valid dependencies', () => {
-      expect(() => new StateConsistencyValidator({ logger: mockLogger, entityManager: mockEntityManager }))
-        .not.toThrow();
+      expect(
+        () =>
+          new StateConsistencyValidator({
+            logger: mockLogger,
+            entityManager: mockEntityManager,
+          })
+      ).not.toThrow();
     });
   });
 
@@ -68,22 +95,21 @@ describe('StateConsistencyValidator', () => {
       });
 
       it('should return empty array when all relationships are bidirectional', () => {
-        const entities = [
-          { id: 'core:actor1' },
-          { id: 'core:actor2' },
-        ];
+        const entities = [{ id: 'core:actor1' }, { id: 'core:actor2' }];
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (componentId === 'positioning:closeness') {
-            if (entityId === 'core:actor1') {
-              return { partners: ['core:actor2'] };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'positioning:closeness') {
+              if (entityId === 'core:actor1') {
+                return { partners: ['core:actor2'] };
+              }
+              if (entityId === 'core:actor2') {
+                return { partners: ['core:actor1'] };
+              }
             }
-            if (entityId === 'core:actor2') {
-              return { partners: ['core:actor1'] };
-            }
+            return null;
           }
-          return null;
-        });
+        );
 
         const issues = validator.validateAllClosenessRelationships();
 
@@ -114,22 +140,21 @@ describe('StateConsistencyValidator', () => {
       });
 
       it('should skip already checked pairs', () => {
-        const entities = [
-          { id: 'core:actor1' },
-          { id: 'core:actor2' },
-        ];
+        const entities = [{ id: 'core:actor1' }, { id: 'core:actor2' }];
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (componentId === 'positioning:closeness') {
-            if (entityId === 'core:actor1') {
-              return { partners: ['core:actor2'] };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'positioning:closeness') {
+              if (entityId === 'core:actor1') {
+                return { partners: ['core:actor2'] };
+              }
+              if (entityId === 'core:actor2') {
+                return { partners: ['core:actor1'] };
+              }
             }
-            if (entityId === 'core:actor2') {
-              return { partners: ['core:actor1'] };
-            }
+            return null;
           }
-          return null;
-        });
+        );
 
         const issues = validator.validateAllClosenessRelationships();
 
@@ -141,22 +166,21 @@ describe('StateConsistencyValidator', () => {
 
     describe('Issue detection', () => {
       it('should detect unidirectional relationship from A to B', () => {
-        const entities = [
-          { id: 'core:actor1' },
-          { id: 'core:actor2' },
-        ];
+        const entities = [{ id: 'core:actor1' }, { id: 'core:actor2' }];
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (componentId === 'positioning:closeness') {
-            if (entityId === 'core:actor1') {
-              return { partners: ['core:actor2'] };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'positioning:closeness') {
+              if (entityId === 'core:actor1') {
+                return { partners: ['core:actor2'] };
+              }
+              if (entityId === 'core:actor2') {
+                return { partners: [] };
+              }
             }
-            if (entityId === 'core:actor2') {
-              return { partners: [] };
-            }
+            return null;
           }
-          return null;
-        });
+        );
 
         const issues = validator.validateAllClosenessRelationships();
 
@@ -174,22 +198,21 @@ describe('StateConsistencyValidator', () => {
       });
 
       it('should detect unidirectional relationship from B to A', () => {
-        const entities = [
-          { id: 'core:actor1' },
-          { id: 'core:actor2' },
-        ];
+        const entities = [{ id: 'core:actor1' }, { id: 'core:actor2' }];
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (componentId === 'positioning:closeness') {
-            if (entityId === 'core:actor1') {
-              return { partners: [] };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'positioning:closeness') {
+              if (entityId === 'core:actor1') {
+                return { partners: [] };
+              }
+              if (entityId === 'core:actor2') {
+                return { partners: ['core:actor1'] };
+              }
             }
-            if (entityId === 'core:actor2') {
-              return { partners: ['core:actor1'] };
-            }
+            return null;
           }
-          return null;
-        });
+        );
 
         const issues = validator.validateAllClosenessRelationships();
 
@@ -209,15 +232,17 @@ describe('StateConsistencyValidator', () => {
           { id: 'core:actor3' },
         ];
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (componentId === 'positioning:closeness') {
-            if (entityId === 'core:actor1') {
-              return { partners: ['core:actor2', 'core:actor3'] };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'positioning:closeness') {
+              if (entityId === 'core:actor1') {
+                return { partners: ['core:actor2', 'core:actor3'] };
+              }
+              // actor2 and actor3 have no closeness components
             }
-            // actor2 and actor3 have no closeness components
+            return null;
           }
-          return null;
-        });
+        );
 
         const issues = validator.validateAllClosenessRelationships();
 
@@ -239,12 +264,17 @@ describe('StateConsistencyValidator', () => {
       it('should handle partner with missing closeness component', () => {
         const entities = [{ id: 'core:actor1' }];
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (entityId === 'core:actor1' && componentId === 'positioning:closeness') {
-            return { partners: ['core:actor2'] };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (
+              entityId === 'core:actor1' &&
+              componentId === 'positioning:closeness'
+            ) {
+              return { partners: ['core:actor2'] };
+            }
+            return null;
           }
-          return null;
-        });
+        );
 
         const issues = validator.validateAllClosenessRelationships();
 
@@ -279,15 +309,17 @@ describe('StateConsistencyValidator', () => {
       it('should accept locked movement with closeness partners', () => {
         const entities = [{ id: 'core:actor1' }];
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (componentId === 'core:movement') {
-            return { locked: true };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'core:movement') {
+              return { locked: true };
+            }
+            if (componentId === 'positioning:closeness') {
+              return { partners: ['core:actor2'] };
+            }
+            return null;
           }
-          if (componentId === 'positioning:closeness') {
-            return { partners: ['core:actor2'] };
-          }
-          return null;
-        });
+        );
 
         const issues = validator.validateMovementLocks();
 
@@ -298,15 +330,17 @@ describe('StateConsistencyValidator', () => {
       it('should accept locked movement with sitting state', () => {
         const entities = [{ id: 'core:actor1' }];
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (componentId === 'core:movement') {
-            return { locked: true };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'core:movement') {
+              return { locked: true };
+            }
+            if (componentId === 'positioning:sitting_on') {
+              return { furniture_id: 'core:chair', spot_index: 0 };
+            }
+            return null;
           }
-          if (componentId === 'positioning:sitting_on') {
-            return { furniture_id: 'core:chair', spot_index: 0 };
-          }
-          return null;
-        });
+        );
 
         const issues = validator.validateMovementLocks();
 
@@ -330,15 +364,17 @@ describe('StateConsistencyValidator', () => {
       it('should detect orphaned movement lock with no closeness or sitting', () => {
         const entities = [{ id: 'core:actor1' }];
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (componentId === 'core:movement') {
-            return { locked: true };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'core:movement') {
+              return { locked: true };
+            }
+            if (componentId === 'positioning:closeness') {
+              return { partners: [] };
+            }
+            return null;
           }
-          if (componentId === 'positioning:closeness') {
-            return { partners: [] };
-          }
-          return null;
-        });
+        );
 
         const issues = validator.validateMovementLocks();
 
@@ -346,20 +382,26 @@ describe('StateConsistencyValidator', () => {
         expect(issues[0]).toEqual({
           type: 'orphaned_movement_lock',
           entityId: 'core:actor1',
-          message: 'core:actor1 has movement locked but no closeness partners or sitting state',
+          message:
+            'core:actor1 has movement locked but no closeness partners or sitting state',
         });
-        expect(mockLogger.warn).toHaveBeenCalledWith('Movement lock consistency issues found', { issues });
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'Movement lock consistency issues found',
+          { issues }
+        );
       });
 
       it('should detect orphaned lock when closeness component is null', () => {
         const entities = [{ id: 'core:actor1' }];
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (componentId === 'core:movement') {
-            return { locked: true };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'core:movement') {
+              return { locked: true };
+            }
+            return null;
           }
-          return null;
-        });
+        );
 
         const issues = validator.validateMovementLocks();
 
@@ -368,17 +410,16 @@ describe('StateConsistencyValidator', () => {
       });
 
       it('should detect multiple orphaned locks', () => {
-        const entities = [
-          { id: 'core:actor1' },
-          { id: 'core:actor2' },
-        ];
+        const entities = [{ id: 'core:actor1' }, { id: 'core:actor2' }];
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (componentId === 'core:movement') {
-            return { locked: true };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'core:movement') {
+              return { locked: true };
+            }
+            return null;
           }
-          return null;
-        });
+        );
 
         const issues = validator.validateMovementLocks();
 
@@ -403,7 +444,9 @@ describe('StateConsistencyValidator', () => {
       it('should handle furniture with empty spots', () => {
         const entities = [{ id: 'core:chair' }];
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-        mockEntityManager.getComponentData.mockReturnValue({ spots: [null, null] });
+        mockEntityManager.getComponentData.mockReturnValue({
+          spots: [null, null],
+        });
 
         const issues = validator.validateFurnitureOccupancy();
 
@@ -414,15 +457,23 @@ describe('StateConsistencyValidator', () => {
       it('should validate matching sitting components', () => {
         const entities = [{ id: 'core:chair' }];
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (entityId === 'core:chair' && componentId === 'positioning:allows_sitting') {
-            return { spots: ['core:actor1', null] };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (
+              entityId === 'core:chair' &&
+              componentId === 'positioning:allows_sitting'
+            ) {
+              return { spots: ['core:actor1', null] };
+            }
+            if (
+              entityId === 'core:actor1' &&
+              componentId === 'positioning:sitting_on'
+            ) {
+              return { furniture_id: 'core:chair', spot_index: 0 };
+            }
+            return null;
           }
-          if (entityId === 'core:actor1' && componentId === 'positioning:sitting_on') {
-            return { furniture_id: 'core:chair', spot_index: 0 };
-          }
-          return null;
-        });
+        );
 
         const issues = validator.validateFurnitureOccupancy();
 
@@ -457,12 +508,17 @@ describe('StateConsistencyValidator', () => {
       it('should detect missing sitting component', () => {
         const entities = [{ id: 'core:chair' }];
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (entityId === 'core:chair' && componentId === 'positioning:allows_sitting') {
-            return { spots: ['core:actor1'] };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (
+              entityId === 'core:chair' &&
+              componentId === 'positioning:allows_sitting'
+            ) {
+              return { spots: ['core:actor1'] };
+            }
+            return null;
           }
-          return null;
-        });
+        );
 
         const issues = validator.validateFurnitureOccupancy();
 
@@ -472,23 +528,35 @@ describe('StateConsistencyValidator', () => {
           furnitureId: 'core:chair',
           occupantId: 'core:actor1',
           spotIndex: 0,
-          message: 'core:actor1 is in furniture core:chair spot 0 but has no sitting component',
+          message:
+            'core:actor1 is in furniture core:chair spot 0 but has no sitting component',
         });
-        expect(mockLogger.warn).toHaveBeenCalledWith('Furniture occupancy consistency issues found', { issues });
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'Furniture occupancy consistency issues found',
+          { issues }
+        );
       });
 
       it('should detect furniture mismatch in sitting component', () => {
         const entities = [{ id: 'core:chair' }];
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (entityId === 'core:chair' && componentId === 'positioning:allows_sitting') {
-            return { spots: ['core:actor1'] };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (
+              entityId === 'core:chair' &&
+              componentId === 'positioning:allows_sitting'
+            ) {
+              return { spots: ['core:actor1'] };
+            }
+            if (
+              entityId === 'core:actor1' &&
+              componentId === 'positioning:sitting_on'
+            ) {
+              return { furniture_id: 'core:bench', spot_index: 0 };
+            }
+            return null;
           }
-          if (entityId === 'core:actor1' && componentId === 'positioning:sitting_on') {
-            return { furniture_id: 'core:bench', spot_index: 0 };
-          }
-          return null;
-        });
+        );
 
         const issues = validator.validateFurnitureOccupancy();
 
@@ -507,15 +575,23 @@ describe('StateConsistencyValidator', () => {
       it('should detect spot index mismatch', () => {
         const entities = [{ id: 'core:bench' }];
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (entityId === 'core:bench' && componentId === 'positioning:allows_sitting') {
-            return { spots: [null, 'core:actor1'] };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (
+              entityId === 'core:bench' &&
+              componentId === 'positioning:allows_sitting'
+            ) {
+              return { spots: [null, 'core:actor1'] };
+            }
+            if (
+              entityId === 'core:actor1' &&
+              componentId === 'positioning:sitting_on'
+            ) {
+              return { furniture_id: 'core:bench', spot_index: 0 };
+            }
+            return null;
           }
-          if (entityId === 'core:actor1' && componentId === 'positioning:sitting_on') {
-            return { furniture_id: 'core:bench', spot_index: 0 };
-          }
-          return null;
-        });
+        );
 
         const issues = validator.validateFurnitureOccupancy();
 
@@ -528,13 +604,18 @@ describe('StateConsistencyValidator', () => {
       it('should detect multiple issues in same furniture', () => {
         const entities = [{ id: 'core:bench' }];
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (entityId === 'core:bench' && componentId === 'positioning:allows_sitting') {
-            return { spots: ['core:actor1', 'core:actor2'] };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (
+              entityId === 'core:bench' &&
+              componentId === 'positioning:allows_sitting'
+            ) {
+              return { spots: ['core:actor1', 'core:actor2'] };
+            }
+            // Neither actor has sitting component
+            return null;
           }
-          // Neither actor has sitting component
-          return null;
-        });
+        );
 
         const issues = validator.validateFurnitureOccupancy();
 
@@ -557,24 +638,28 @@ describe('StateConsistencyValidator', () => {
       expect(report.movementLockIssues).toEqual([]);
       expect(report.furnitureOccupancyIssues).toEqual([]);
       expect(report.totalIssues).toBe(0);
-      expect(mockLogger.info).toHaveBeenCalledWith('State consistency validation passed - no issues found');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'State consistency validation passed - no issues found'
+      );
     });
 
     it('should aggregate all issues and log warning', () => {
       const entities = [{ id: 'core:actor1' }];
       mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === 'positioning:closeness') {
-          return { partners: ['core:actor2'] };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'positioning:closeness') {
+            return { partners: ['core:actor2'] };
+          }
+          if (componentId === 'core:movement') {
+            return { locked: true };
+          }
+          if (componentId === 'positioning:allows_sitting') {
+            return { spots: ['core:actor3'] };
+          }
+          return null;
         }
-        if (componentId === 'core:movement') {
-          return { locked: true };
-        }
-        if (componentId === 'positioning:allows_sitting') {
-          return { spots: ['core:actor3'] };
-        }
-        return null;
-      });
+      );
 
       const report = validator.performFullValidation();
 
@@ -593,7 +678,9 @@ describe('StateConsistencyValidator', () => {
 
       const report = validator.performFullValidation();
 
-      expect(report.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      expect(report.timestamp).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+      );
     });
   });
 
@@ -687,7 +774,9 @@ describe('StateConsistencyValidator', () => {
 
         expect(report.successful).toBe(0);
         expect(report.failed).toHaveLength(1);
-        expect(report.failed[0].reason).toContain('manual intervention required');
+        expect(report.failed[0].reason).toContain(
+          'manual intervention required'
+        );
       });
 
       it('should handle unknown issue types', async () => {
@@ -699,7 +788,9 @@ describe('StateConsistencyValidator', () => {
 
         expect(report.successful).toBe(0);
         expect(report.failed).toHaveLength(1);
-        expect(report.failed[0].reason).toBe('No repair strategy for issue type');
+        expect(report.failed[0].reason).toBe(
+          'No repair strategy for issue type'
+        );
       });
 
       it('should handle repair exceptions', async () => {
@@ -708,7 +799,9 @@ describe('StateConsistencyValidator', () => {
           entityId: 'core:actor1',
         };
         mockEntityManager.getComponentData.mockReturnValue({ locked: true });
-        mockEntityManager.addComponent.mockRejectedValue(new Error('Database error'));
+        mockEntityManager.addComponent.mockRejectedValue(
+          new Error('Database error')
+        );
 
         const report = await validator.repairIssues([issue]);
 
@@ -722,8 +815,16 @@ describe('StateConsistencyValidator', () => {
       it('should handle multiple issues with mixed success', async () => {
         const issues = [
           { type: 'orphaned_movement_lock', entityId: 'core:actor1' },
-          { type: 'missing_sitting_component', furnitureId: 'core:chair', occupantId: 'core:actor2' },
-          { type: 'unidirectional_closeness', from: 'core:actor3', to: 'core:actor4' },
+          {
+            type: 'missing_sitting_component',
+            furnitureId: 'core:chair',
+            occupantId: 'core:actor2',
+          },
+          {
+            type: 'unidirectional_closeness',
+            from: 'core:actor3',
+            to: 'core:actor4',
+          },
         ];
         mockEntityManager.getComponentData.mockImplementation((entityId) => {
           if (entityId === 'core:actor1') {
@@ -741,7 +842,10 @@ describe('StateConsistencyValidator', () => {
         expect(report.attempted).toBe(3);
         expect(report.successful).toBe(2);
         expect(report.failed).toHaveLength(1);
-        expect(mockLogger.info).toHaveBeenCalledWith('Issue repair completed', report);
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          'Issue repair completed',
+          report
+        );
       });
 
       it('should handle empty issues array', async () => {
@@ -760,55 +864,65 @@ describe('StateConsistencyValidator', () => {
         const entities = [
           { id: 'core:actor1' },
           { id: 'core:actor2' },
-          { id: 'core:actor3' }
+          { id: 'core:actor3' },
         ];
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (componentId === 'positioning:closeness') {
-            if (entityId === 'core:actor1') {
-              return { partners: ['core:actor2'] };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'positioning:closeness') {
+              if (entityId === 'core:actor1') {
+                return { partners: ['core:actor2'] };
+              }
+              if (entityId === 'core:actor2') {
+                return { partners: ['core:actor3'] };
+              }
+              if (entityId === 'core:actor3') {
+                return { partners: ['core:actor1'] };
+              }
             }
-            if (entityId === 'core:actor2') {
-              return { partners: ['core:actor3'] };
-            }
-            if (entityId === 'core:actor3') {
-              return { partners: ['core:actor1'] };
-            }
+            return null;
           }
-          return null;
-        });
+        );
 
         const issues = validator.validateAllClosenessRelationships();
 
         // Circular references are valid as long as they're bidirectional
         // This test should detect unidirectional relationships within the circle
         expect(issues).toHaveLength(3); // Each relationship is unidirectional
-        expect(issues.some(i => i.from === 'core:actor1' && i.to === 'core:actor2')).toBe(true);
-        expect(issues.some(i => i.from === 'core:actor2' && i.to === 'core:actor3')).toBe(true);
-        expect(issues.some(i => i.from === 'core:actor3' && i.to === 'core:actor1')).toBe(true);
+        expect(
+          issues.some((i) => i.from === 'core:actor1' && i.to === 'core:actor2')
+        ).toBe(true);
+        expect(
+          issues.some((i) => i.from === 'core:actor2' && i.to === 'core:actor3')
+        ).toBe(true);
+        expect(
+          issues.some((i) => i.from === 'core:actor3' && i.to === 'core:actor1')
+        ).toBe(true);
       });
 
       it('should handle bidirectional circular references correctly', () => {
         const entities = [
           { id: 'core:actor1' },
           { id: 'core:actor2' },
-          { id: 'core:actor3' }
+          { id: 'core:actor3' },
         ];
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (componentId === 'positioning:closeness') {
-            if (entityId === 'core:actor1') {
-              return { partners: ['core:actor2', 'core:actor3'] };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'positioning:closeness') {
+              if (entityId === 'core:actor1') {
+                return { partners: ['core:actor2', 'core:actor3'] };
+              }
+              if (entityId === 'core:actor2') {
+                return { partners: ['core:actor1', 'core:actor3'] };
+              }
+              if (entityId === 'core:actor3') {
+                return { partners: ['core:actor1', 'core:actor2'] };
+              }
             }
-            if (entityId === 'core:actor2') {
-              return { partners: ['core:actor1', 'core:actor3'] };
-            }
-            if (entityId === 'core:actor3') {
-              return { partners: ['core:actor1', 'core:actor2'] };
-            }
+            return null;
           }
-          return null;
-        });
+        );
 
         const issues = validator.validateAllClosenessRelationships();
 
@@ -818,18 +932,18 @@ describe('StateConsistencyValidator', () => {
       });
 
       it('should detect self-referential closeness', () => {
-        const entities = [
-          { id: 'core:actor1' }
-        ];
+        const entities = [{ id: 'core:actor1' }];
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (componentId === 'positioning:closeness') {
-            if (entityId === 'core:actor1') {
-              return { partners: ['core:actor1'] }; // Self-reference
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'positioning:closeness') {
+              if (entityId === 'core:actor1') {
+                return { partners: ['core:actor1'] }; // Self-reference
+              }
             }
+            return null;
           }
-          return null;
-        });
+        );
 
         const issues = validator.validateAllClosenessRelationships();
 
@@ -845,27 +959,33 @@ describe('StateConsistencyValidator', () => {
           { id: 'core:actor1' },
           { id: 'core:actor2' },
           { id: 'core:actor3' },
-          { id: 'core:actor4' }
+          { id: 'core:actor4' },
         ];
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (componentId === 'positioning:closeness') {
-            // Creating fully bidirectional relationships
-            if (entityId === 'core:actor1') {
-              return { partners: ['core:actor2', 'core:actor3'] };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'positioning:closeness') {
+              // Creating fully bidirectional relationships
+              if (entityId === 'core:actor1') {
+                return { partners: ['core:actor2', 'core:actor3'] };
+              }
+              if (entityId === 'core:actor2') {
+                return {
+                  partners: ['core:actor1', 'core:actor3', 'core:actor4'],
+                };
+              }
+              if (entityId === 'core:actor3') {
+                return {
+                  partners: ['core:actor1', 'core:actor2', 'core:actor4'],
+                };
+              }
+              if (entityId === 'core:actor4') {
+                return { partners: ['core:actor2', 'core:actor3'] };
+              }
             }
-            if (entityId === 'core:actor2') {
-              return { partners: ['core:actor1', 'core:actor3', 'core:actor4'] };
-            }
-            if (entityId === 'core:actor3') {
-              return { partners: ['core:actor1', 'core:actor2', 'core:actor4'] };
-            }
-            if (entityId === 'core:actor4') {
-              return { partners: ['core:actor2', 'core:actor3'] };
-            }
+            return null;
           }
-          return null;
-        });
+        );
 
         const issues = validator.validateAllClosenessRelationships();
 
@@ -878,57 +998,65 @@ describe('StateConsistencyValidator', () => {
           { id: 'core:actor1' },
           { id: 'core:actor2' },
           { id: 'core:actor3' },
-          { id: 'core:actor4' }
+          { id: 'core:actor4' },
         ];
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (componentId === 'positioning:closeness') {
-            if (entityId === 'core:actor1') {
-              return { partners: ['core:actor2'] };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'positioning:closeness') {
+              if (entityId === 'core:actor1') {
+                return { partners: ['core:actor2'] };
+              }
+              if (entityId === 'core:actor2') {
+                return { partners: ['core:actor3'] };
+              }
+              if (entityId === 'core:actor3') {
+                return { partners: ['core:actor4'] };
+              }
+              if (entityId === 'core:actor4') {
+                return { partners: [] }; // Breaks the circle
+              }
             }
-            if (entityId === 'core:actor2') {
-              return { partners: ['core:actor3'] };
-            }
-            if (entityId === 'core:actor3') {
-              return { partners: ['core:actor4'] };
-            }
-            if (entityId === 'core:actor4') {
-              return { partners: [] }; // Breaks the circle
-            }
+            return null;
           }
-          return null;
-        });
+        );
 
         const issues = validator.validateAllClosenessRelationships();
 
         // All relationships are unidirectional
         expect(issues).toHaveLength(3);
-        expect(issues.every(i => i.type === 'unidirectional_closeness')).toBe(true);
+        expect(issues.every((i) => i.type === 'unidirectional_closeness')).toBe(
+          true
+        );
       });
 
       it('should handle deeply nested circular references', () => {
         const entities = [];
         const numActors = 10;
-        
+
         // Create a long chain of actors
         for (let i = 1; i <= numActors; i++) {
           entities.push({ id: `core:actor${i}` });
         }
-        
+
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (componentId === 'positioning:closeness') {
-            const match = entityId.match(/core:actor(\d+)/);
-            if (match) {
-              const num = parseInt(match[1]);
-              const nextNum = num === numActors ? 1 : num + 1;
-              const prevNum = num === 1 ? numActors : num - 1;
-              // Each actor is connected to next and previous, forming a circle
-              return { partners: [`core:actor${nextNum}`, `core:actor${prevNum}`] };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'positioning:closeness') {
+              const match = entityId.match(/core:actor(\d+)/);
+              if (match) {
+                const num = parseInt(match[1]);
+                const nextNum = num === numActors ? 1 : num + 1;
+                const prevNum = num === 1 ? numActors : num - 1;
+                // Each actor is connected to next and previous, forming a circle
+                return {
+                  partners: [`core:actor${nextNum}`, `core:actor${prevNum}`],
+                };
+              }
             }
+            return null;
           }
-          return null;
-        });
+        );
 
         const issues = validator.validateAllClosenessRelationships();
 
@@ -940,34 +1068,38 @@ describe('StateConsistencyValidator', () => {
         const entities = [
           { id: 'core:actor1' },
           { id: 'core:actor2' },
-          { id: 'core:actor3' }
+          { id: 'core:actor3' },
         ];
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-        
+
         let callCount = 0;
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          callCount++;
-          // Prevent infinite recursion by limiting calls
-          if (callCount > 100) {
-            throw new Error('Too many calls - possible infinite loop');
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            callCount++;
+            // Prevent infinite recursion by limiting calls
+            if (callCount > 100) {
+              throw new Error('Too many calls - possible infinite loop');
+            }
+
+            if (componentId === 'positioning:closeness') {
+              if (entityId === 'core:actor1') {
+                return { partners: ['core:actor2'] };
+              }
+              if (entityId === 'core:actor2') {
+                return { partners: ['core:actor3'] };
+              }
+              if (entityId === 'core:actor3') {
+                return { partners: ['core:actor1'] };
+              }
+            }
+            return null;
           }
-          
-          if (componentId === 'positioning:closeness') {
-            if (entityId === 'core:actor1') {
-              return { partners: ['core:actor2'] };
-            }
-            if (entityId === 'core:actor2') {
-              return { partners: ['core:actor3'] };
-            }
-            if (entityId === 'core:actor3') {
-              return { partners: ['core:actor1'] };
-            }
-          }
-          return null;
-        });
+        );
 
         // Should not throw and should complete normally
-        expect(() => validator.validateAllClosenessRelationships()).not.toThrow();
+        expect(() =>
+          validator.validateAllClosenessRelationships()
+        ).not.toThrow();
         expect(callCount).toBeLessThan(20); // Should only need a few calls
       });
     });
@@ -975,11 +1107,23 @@ describe('StateConsistencyValidator', () => {
     describe('repairIssues - circular reference handling', () => {
       it('should repair circular unidirectional references', async () => {
         const issues = [
-          { type: 'unidirectional_closeness', from: 'core:actor1', to: 'core:actor2' },
-          { type: 'unidirectional_closeness', from: 'core:actor2', to: 'core:actor3' },
-          { type: 'unidirectional_closeness', from: 'core:actor3', to: 'core:actor1' }
+          {
+            type: 'unidirectional_closeness',
+            from: 'core:actor1',
+            to: 'core:actor2',
+          },
+          {
+            type: 'unidirectional_closeness',
+            from: 'core:actor2',
+            to: 'core:actor3',
+          },
+          {
+            type: 'unidirectional_closeness',
+            from: 'core:actor3',
+            to: 'core:actor1',
+          },
         ];
-        
+
         mockEntityManager.getComponentData.mockImplementation((entityId) => {
           if (entityId === 'core:actor1') {
             return { partners: ['core:actor2'] };
@@ -998,7 +1142,7 @@ describe('StateConsistencyValidator', () => {
 
         expect(report.attempted).toBe(3);
         expect(report.successful).toBe(3);
-        
+
         // Should remove the unidirectional relationships
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
           'core:actor1',
@@ -1021,18 +1165,18 @@ describe('StateConsistencyValidator', () => {
         const issue = {
           type: 'unidirectional_closeness',
           from: 'core:actor1',
-          to: 'core:actor1'
+          to: 'core:actor1',
         };
-        
+
         mockEntityManager.getComponentData.mockReturnValue({
-          partners: ['core:actor1', 'core:actor2']
+          partners: ['core:actor1', 'core:actor2'],
         });
         mockEntityManager.addComponent.mockResolvedValue(undefined);
 
         const report = await validator.repairIssues([issue]);
 
         expect(report.successful).toBe(1);
-        
+
         // Should remove self-reference but keep other partners
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
           'core:actor1',

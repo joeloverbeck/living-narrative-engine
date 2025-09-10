@@ -170,7 +170,7 @@ export default function createClothingStepResolver({
 
     const { field, parent } = node;
     let parentResults;
-    
+
     try {
       parentResults = ctx.dispatcher.resolve(parent, ctx);
     } catch (error) {

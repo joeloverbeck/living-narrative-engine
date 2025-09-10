@@ -23,20 +23,20 @@ describe('Operation Schema Validation - anyOf Resolution', () => {
       description: 'Test operation schema with anyOf',
       anyOf: [
         {
-          $ref: '#/$defs/QueryComponentOperation'
+          $ref: '#/$defs/QueryComponentOperation',
         },
         {
-          $ref: '#/$defs/IfOperation'
-        }
+          $ref: '#/$defs/IfOperation',
+        },
       ],
       $defs: {
         QueryComponentOperation: {
           type: 'object',
           properties: {
             type: { const: 'QUERY_COMPONENT' },
-            parameters: { type: 'object' }
+            parameters: { type: 'object' },
           },
-          required: ['type', 'parameters']
+          required: ['type', 'parameters'],
         },
         IfOperation: {
           type: 'object',
@@ -46,14 +46,14 @@ describe('Operation Schema Validation - anyOf Resolution', () => {
               type: 'object',
               properties: {
                 condition: { type: 'object' },
-                then_actions: { type: 'array' }
+                then_actions: { type: 'array' },
               },
-              required: ['condition', 'then_actions']
-            }
+              required: ['condition', 'then_actions'],
+            },
           },
-          required: ['type', 'parameters']
-        }
-      }
+          required: ['type', 'parameters'],
+        },
+      },
     };
 
     // Test data - valid IF operation
@@ -64,31 +64,40 @@ describe('Operation Schema Validation - anyOf Resolution', () => {
         condition: {
           and: [
             { var: 'context.thinkerNameComponent' },
-            { var: 'context.thinkerPositionComponent' }
-          ]
+            { var: 'context.thinkerPositionComponent' },
+          ],
         },
         then_actions: [
           {
             type: 'GET_TIMESTAMP',
-            parameters: { result_variable: 'currentTimestamp' }
-          }
-        ]
-      }
+            parameters: { result_variable: 'currentTimestamp' },
+          },
+        ],
+      },
     };
 
     // Create validator and add schema
     const validator = new AjvSchemaValidator({ logger: testBed.mockLogger });
-    
+
     // Add the operation schema
-    validator.addSchema(operationSchema, 'schema://living-narrative-engine/operation.schema.json');
-    
+    validator.addSchema(
+      operationSchema,
+      'schema://living-narrative-engine/operation.schema.json'
+    );
+
     // Validate the IF operation
-    const result = validator.validate('schema://living-narrative-engine/operation.schema.json', ifOperationData);
-    
+    const result = validator.validate(
+      'schema://living-narrative-engine/operation.schema.json',
+      ifOperationData
+    );
+
     if (!result.isValid) {
-      console.error('Validation errors:', JSON.stringify(result.errors, null, 2));
+      console.error(
+        'Validation errors:',
+        JSON.stringify(result.errors, null, 2)
+      );
     }
-    
+
     expect(result.isValid).toBe(true);
     expect(result.errors).toBeNull();
   });
@@ -101,20 +110,20 @@ describe('Operation Schema Validation - anyOf Resolution', () => {
       title: 'Operation Schema',
       anyOf: [
         {
-          $ref: '#/$defs/QueryComponentOperation'
+          $ref: '#/$defs/QueryComponentOperation',
         },
         {
-          $ref: '#/$defs/IfOperation'
-        }
+          $ref: '#/$defs/IfOperation',
+        },
       ],
       $defs: {
         QueryComponentOperation: {
           type: 'object',
           properties: {
             type: { const: 'QUERY_COMPONENT' },
-            parameters: { type: 'object' }
+            parameters: { type: 'object' },
           },
-          required: ['type', 'parameters']
+          required: ['type', 'parameters'],
         },
         IfOperation: {
           type: 'object',
@@ -124,14 +133,14 @@ describe('Operation Schema Validation - anyOf Resolution', () => {
               type: 'object',
               properties: {
                 condition: { type: 'object' },
-                then_actions: { type: 'array' }
+                then_actions: { type: 'array' },
               },
-              required: ['condition', 'then_actions']
-            }
+              required: ['condition', 'then_actions'],
+            },
           },
-          required: ['type', 'parameters']
-        }
-      }
+          required: ['type', 'parameters'],
+        },
+      },
     };
 
     // Test data - valid QUERY_COMPONENT operation
@@ -140,23 +149,32 @@ describe('Operation Schema Validation - anyOf Resolution', () => {
       parameters: {
         entity_ref: 'actor',
         component_type: 'core:name',
-        result_variable: 'thinkerNameComponent'
-      }
+        result_variable: 'thinkerNameComponent',
+      },
     };
 
     // Create validator and add schema
     const validator = new AjvSchemaValidator({ logger: testBed.mockLogger });
-    
+
     // Add the operation schema
-    validator.addSchema(operationSchema, 'schema://living-narrative-engine/operation.schema.json');
-    
+    validator.addSchema(
+      operationSchema,
+      'schema://living-narrative-engine/operation.schema.json'
+    );
+
     // Validate the QUERY_COMPONENT operation
-    const result = validator.validate('schema://living-narrative-engine/operation.schema.json', queryComponentData);
-    
+    const result = validator.validate(
+      'schema://living-narrative-engine/operation.schema.json',
+      queryComponentData
+    );
+
     if (!result.isValid) {
-      console.error('Validation errors:', JSON.stringify(result.errors, null, 2));
+      console.error(
+        'Validation errors:',
+        JSON.stringify(result.errors, null, 2)
+      );
     }
-    
+
     expect(result.isValid).toBe(true);
     expect(result.errors).toBeNull();
   });
@@ -175,16 +193,16 @@ describe('Operation Schema Validation - anyOf Resolution', () => {
             pairs: [
               {
                 component_type: 'core:name',
-                result_variable: 'thinkerNameComponent'
-              }
-            ]
-          }
+                result_variable: 'thinkerNameComponent',
+              },
+            ],
+          },
         },
         {
           type: 'IF',
           parameters: {
             condition: {
-              var: 'context.thinkerNameComponent'
+              var: 'context.thinkerNameComponent',
             },
             then_actions: [
               {
@@ -192,13 +210,13 @@ describe('Operation Schema Validation - anyOf Resolution', () => {
                 parameters: {
                   entity_id: '{event.payload.entityId}',
                   thoughts: '{event.payload.thoughts}',
-                  notes: '{event.payload.notes}'
-                }
-              }
-            ]
-          }
-        }
-      ]
+                  notes: '{event.payload.notes}',
+                },
+              },
+            ],
+          },
+        },
+      ],
     };
 
     // Create simple rule schema for testing
@@ -212,11 +230,11 @@ describe('Operation Schema Validation - anyOf Resolution', () => {
         actions: {
           type: 'array',
           items: {
-            $ref: 'schema://living-narrative-engine/operation.schema.json'
-          }
-        }
+            $ref: 'schema://living-narrative-engine/operation.schema.json',
+          },
+        },
       },
-      required: ['rule_id', 'event_type', 'actions']
+      required: ['rule_id', 'event_type', 'actions'],
     };
 
     // Create operation schema with real structure
@@ -225,14 +243,14 @@ describe('Operation Schema Validation - anyOf Resolution', () => {
       $id: 'schema://living-narrative-engine/operation.schema.json',
       anyOf: [
         {
-          $ref: '#/$defs/QueryComponentsOperation'
+          $ref: '#/$defs/QueryComponentsOperation',
         },
         {
-          $ref: '#/$defs/IfOperation'
+          $ref: '#/$defs/IfOperation',
         },
         {
-          $ref: '#/$defs/DispatchThoughtOperation'
-        }
+          $ref: '#/$defs/DispatchThoughtOperation',
+        },
       ],
       $defs: {
         QueryComponentsOperation: {
@@ -243,12 +261,12 @@ describe('Operation Schema Validation - anyOf Resolution', () => {
               type: 'object',
               properties: {
                 entity_ref: { type: 'string' },
-                pairs: { type: 'array' }
+                pairs: { type: 'array' },
               },
-              required: ['entity_ref', 'pairs']
-            }
+              required: ['entity_ref', 'pairs'],
+            },
           },
-          required: ['type', 'parameters']
+          required: ['type', 'parameters'],
         },
         IfOperation: {
           type: 'object',
@@ -258,12 +276,12 @@ describe('Operation Schema Validation - anyOf Resolution', () => {
               type: 'object',
               properties: {
                 condition: { type: 'object' },
-                then_actions: { type: 'array' }
+                then_actions: { type: 'array' },
               },
-              required: ['condition', 'then_actions']
-            }
+              required: ['condition', 'then_actions'],
+            },
           },
-          required: ['type', 'parameters']
+          required: ['type', 'parameters'],
         },
         DispatchThoughtOperation: {
           type: 'object',
@@ -274,37 +292,49 @@ describe('Operation Schema Validation - anyOf Resolution', () => {
               properties: {
                 entity_id: { type: 'string' },
                 thoughts: { type: 'string' },
-                notes: { type: 'string' }
+                notes: { type: 'string' },
               },
-              required: ['entity_id', 'thoughts']
-            }
+              required: ['entity_id', 'thoughts'],
+            },
           },
-          required: ['type', 'parameters']
-        }
-      }
+          required: ['type', 'parameters'],
+        },
+      },
     };
 
     // Create validator and add schemas
     const validator = testBed.createAjvValidator();
-    
-    validator.addSchema(operationSchema, 'schema://living-narrative-engine/operation.schema.json');
-    validator.addSchema(ruleSchema, 'schema://living-narrative-engine/rule.schema.json');
-    
+
+    validator.addSchema(
+      operationSchema,
+      'schema://living-narrative-engine/operation.schema.json'
+    );
+    validator.addSchema(
+      ruleSchema,
+      'schema://living-narrative-engine/rule.schema.json'
+    );
+
     // This should validate successfully
-    const result = validator.validate('schema://living-narrative-engine/rule.schema.json', ruleData);
-    
+    const result = validator.validate(
+      'schema://living-narrative-engine/rule.schema.json',
+      ruleData
+    );
+
     if (!result.isValid) {
-      console.error('Rule validation errors:', JSON.stringify(result.errors, null, 2));
-      
+      console.error(
+        'Rule validation errors:',
+        JSON.stringify(result.errors, null, 2)
+      );
+
       // Log specific error details to help diagnose the anyOf issue
-      result.errors.forEach(error => {
+      result.errors.forEach((error) => {
         console.error(`Error at path: ${error.instancePath}`);
         console.error(`Schema path: ${error.schemaPath}`);
         console.error(`Message: ${error.message}`);
         console.error(`Data: ${JSON.stringify(error.data)}`);
       });
     }
-    
+
     // This test might fail initially, but it will help us understand the anyOf resolution issue
     expect(result.isValid).toBe(true);
   });

@@ -66,7 +66,7 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
       const iterations = 10; // Balanced for statistical stability and performance
       const errorsPerIteration = 500;
       const memorySnapshots = [];
-      
+
       // Warmup phase to stabilize memory measurements
       for (let i = 0; i < 30; i++) {
         try {
@@ -106,7 +106,7 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
 
         // Clear buffer to simulate normal usage
         errorHandler.clearErrorBuffer();
-        
+
         // Additional GC hint after clearing buffer to encourage cleanup of error objects
         if (global.gc) {
           global.gc();
@@ -178,7 +178,7 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
     it('should properly manage buffer size under extreme load', () => {
       const maxBufferSize = 100; // Default buffer size
       const totalErrors = 10000; // Generate many more errors than buffer can hold
-      
+
       // Warmup phase for buffer test
       for (let w = 0; w < 20; w++) {
         try {
@@ -193,10 +193,10 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
       }
       errorHandler.clearErrorBuffer();
       if (global.gc) global.gc();
-      
+
       // Track memory at different stages
       const memoryCheckpoints = [];
-      
+
       // Initial memory
       if (global.gc) global.gc();
       const initialMemory = process.memoryUsage().heapUsed;
@@ -264,7 +264,7 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
       expect(sustainedGrowth).toBeLessThan(100 * 1024 * 1024); // <100MB sustained growth for 10k errors
       // Memory recovery after clear may be affected by GC timing, so allow some tolerance
       expect(clearRecovery).toBeGreaterThan(-1 * 1024 * 1024); // Allow up to 1MB apparent "negative recovery" due to GC timing
-      
+
       // Total memory used should be reasonable for 10k errors
       const totalGrowth = afterManyMemory - initialMemory;
       expect(totalGrowth).toBeLessThan(120 * 1024 * 1024); // <120MB total for 10k errors (realistic for JS error objects with stack traces)
@@ -273,16 +273,22 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
     it('should handle memory efficiently with different error types', () => {
       const errorTypes = [
         { type: 'simple', create: (i) => new Error(`Simple ${i}`) },
-        { type: 'complex', create: (i) => new Error(`Complex ${i}\n${new Error().stack}`) },
-        { type: 'custom', create: (i) => {
-          const err = new Error(`Custom ${i}`);
-          err.context = { depth: i, data: Array(10).fill('data') };
-          return err;
-        }},
+        {
+          type: 'complex',
+          create: (i) => new Error(`Complex ${i}\n${new Error().stack}`),
+        },
+        {
+          type: 'custom',
+          create: (i) => {
+            const err = new Error(`Custom ${i}`);
+            err.context = { depth: i, data: Array(10).fill('data') };
+            return err;
+          },
+        },
       ];
 
       // Warmup phase for error type testing
-      errorTypes.forEach(errorType => {
+      errorTypes.forEach((errorType) => {
         for (let w = 0; w < 20; w++) {
           try {
             errorHandler.handleError(
@@ -296,7 +302,7 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
         }
         errorHandler.clearErrorBuffer();
       });
-      
+
       if (global.gc) global.gc();
 
       const typeMetrics = [];
@@ -336,7 +342,7 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
       }
 
       // Compare memory usage across error types using statistical analysis
-      const avgMemories = typeMetrics.map(m => m.avgMemPerError);
+      const avgMemories = typeMetrics.map((m) => m.avgMemPerError);
       const sortedAvgs = [...avgMemories].sort((a, b) => a - b);
       const medianAvg = sortedAvgs[Math.floor(sortedAvgs.length / 2)];
       // const minAvg = Math.min(...avgMemories);
@@ -345,7 +351,7 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
       // Memory usage shouldn't vary drastically between error types
       // Use median for more stable comparison
       expect(maxAvg).toBeLessThan(medianAvg * 3); // Max 3x difference from median
-      
+
       // All types should have reasonable memory usage
       // Threshold accounts for JavaScript Error objects with:
       // - Full stack traces (can be several KB depending on call depth)
@@ -353,7 +359,7 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
       // - Metadata (timestamps, categories, error codes)
       // - V8 memory allocation overhead and non-deterministic behavior
       // Note: This tests for memory leaks (which would be 100KB+), not absolute efficiency
-      typeMetrics.forEach(metric => {
+      typeMetrics.forEach((metric) => {
         expect(metric.avgMemPerError).toBeLessThan(25000); // <25KB per error average (accounts for variable stack trace sizes and environment variations)
       });
     });
@@ -364,7 +370,7 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
       const testDuration = 2000; // 2 seconds
       // const samplingInterval = 500; // Sample every 500ms
       const memorySamples = [];
-      
+
       const startTime = Date.now();
       let errorCount = 0;
 
@@ -401,19 +407,28 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
 
       // Analyze memory stability
       if (memorySamples.length >= 3) {
-        const firstThird = memorySamples.slice(0, Math.floor(memorySamples.length / 3));
-        const lastThird = memorySamples.slice(Math.floor(memorySamples.length * 2 / 3));
+        const firstThird = memorySamples.slice(
+          0,
+          Math.floor(memorySamples.length / 3)
+        );
+        const lastThird = memorySamples.slice(
+          Math.floor((memorySamples.length * 2) / 3)
+        );
 
-        const firstAvgHeap = firstThird.reduce((sum, s) => sum + s.heapUsed, 0) / firstThird.length;
-        const lastAvgHeap = lastThird.reduce((sum, s) => sum + s.heapUsed, 0) / lastThird.length;
+        const firstAvgHeap =
+          firstThird.reduce((sum, s) => sum + s.heapUsed, 0) /
+          firstThird.length;
+        const lastAvgHeap =
+          lastThird.reduce((sum, s) => sum + s.heapUsed, 0) / lastThird.length;
 
         // Memory should be stable (not continuously growing)
         const growthRate = (lastAvgHeap - firstAvgHeap) / firstAvgHeap;
         expect(Math.abs(growthRate)).toBeLessThan(0.5); // <50% growth/shrinkage
 
         // Check for memory spikes
-        const heapValues = memorySamples.map(s => s.heapUsed);
-        const avgHeap = heapValues.reduce((sum, v) => sum + v, 0) / heapValues.length;
+        const heapValues = memorySamples.map((s) => s.heapUsed);
+        const avgHeap =
+          heapValues.reduce((sum, v) => sum + v, 0) / heapValues.length;
         const maxHeap = Math.max(...heapValues);
         const spikeRatio = maxHeap / avgHeap;
 
@@ -428,12 +443,12 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
         'clear',
         'refill',
         'partial-clear',
-        'final-clear'
+        'final-clear',
       ];
 
       const memoryTrace = [];
-      
-      operations.forEach(operation => {
+
+      operations.forEach((operation) => {
         if (global.gc) global.gc();
         const memBefore = process.memoryUsage().heapUsed;
 
@@ -512,14 +527,16 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
       });
 
       // Verify memory patterns
-      const clearOps = memoryTrace.filter(t => t.operation.includes('clear'));
-      clearOps.forEach(clearOp => {
+      const clearOps = memoryTrace.filter((t) => t.operation.includes('clear'));
+      clearOps.forEach((clearOp) => {
         expect(clearOp.bufferSize).toBe(0); // Buffer should be empty after clear
       });
 
       // Memory after final clear should be close to initial state
       const firstOp = memoryTrace[0];
-      const finalClearOp = memoryTrace.find(t => t.operation === 'final-clear');
+      const finalClearOp = memoryTrace.find(
+        (t) => t.operation === 'final-clear'
+      );
       if (finalClearOp) {
         const totalGrowth = finalClearOp.memAfter - firstOp.memBefore;
         expect(totalGrowth).toBeLessThan(5 * 1024 * 1024); // <5MB residual growth
@@ -528,7 +545,7 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
 
     it('should handle garbage collection pressure gracefully', () => {
       const gcMetrics = [];
-      
+
       // Function to trigger GC pressure
       const createGCPressure = () => {
         const tempArrays = [];
@@ -542,7 +559,7 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
       for (let round = 0; round < 5; round++) {
         // Create GC pressure
         createGCPressure();
-        
+
         if (global.gc) global.gc();
         const memBefore = process.memoryUsage();
         const timeBefore = performance.now();
@@ -576,16 +593,17 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
       }
 
       // Performance should be consistent despite GC pressure
-      const durations = gcMetrics.map(m => m.duration);
-      const avgDuration = durations.reduce((sum, d) => sum + d, 0) / durations.length;
-      
-      durations.forEach(duration => {
+      const durations = gcMetrics.map((m) => m.duration);
+      const avgDuration =
+        durations.reduce((sum, d) => sum + d, 0) / durations.length;
+
+      durations.forEach((duration) => {
         const deviation = Math.abs(duration - avgDuration) / avgDuration;
         expect(deviation).toBeLessThan(0.5); // <50% deviation from average
       });
 
       // Success rate should remain high
-      gcMetrics.forEach(metric => {
+      gcMetrics.forEach((metric) => {
         expect(metric.successRate).toBeGreaterThan(0.95); // >95% success
       });
     });

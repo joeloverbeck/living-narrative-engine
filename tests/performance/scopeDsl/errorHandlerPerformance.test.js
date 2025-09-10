@@ -5,7 +5,7 @@
  * IMPORTANT: ScopeDslErrorHandler.handleError() ALWAYS throws a ScopeDslError.
  * These tests measure the complete error processing pipeline including:
  * - Error info creation and categorization
- * - Context sanitization 
+ * - Context sanitization
  * - Buffer management
  * - Environment-appropriate logging
  * - Exception creation and throwing
@@ -80,7 +80,7 @@ describe('ScopeDslErrorHandler Performance', () => {
 
       for (let i = 0; i < iterations; i++) {
         const start = performance.now();
-        
+
         try {
           errorHandler.handleError(
             new Error(`Granular test error ${i}`),
@@ -91,12 +91,14 @@ describe('ScopeDslErrorHandler Performance', () => {
           // Expected - measure total processing time
           const totalTime = performance.now() - start;
           measurements.total.push(totalTime);
-          
+
           // Track buffer growth
           measurements.bufferSizes.push(errorHandler.getErrorBuffer().length);
-          
+
           // Track if error is of expected type
-          const isExpectedError = e instanceof ScopeDslError || e.constructor.name === 'ScopeDslError';
+          const isExpectedError =
+            e instanceof ScopeDslError ||
+            e.constructor.name === 'ScopeDslError';
           allErrorsValid = allErrorsValid && isExpectedError;
         }
       }
@@ -105,17 +107,21 @@ describe('ScopeDslErrorHandler Performance', () => {
       expect(allErrorsValid).toBe(true);
 
       // Analyze measurements
-      const avgTotal = measurements.total.reduce((a, b) => a + b, 0) / measurements.total.length;
+      const avgTotal =
+        measurements.total.reduce((a, b) => a + b, 0) /
+        measurements.total.length;
       const maxTotal = Math.max(...measurements.total);
       const minTotal = Math.min(...measurements.total);
 
       // Performance assertions (relaxed for CI environment and first-run JIT effects)
       expect(avgTotal).toBeLessThan(2.0); // Average under 2ms (CI tolerance)
       expect(maxTotal).toBeLessThan(50.0); // Worst case under 50ms (CI tolerance, accounts for JIT warmup)
-      
+
       // Buffer should grow to expected size
-      expect(Math.max(...measurements.bufferSizes)).toBe(Math.min(iterations, 100));
-      
+      expect(Math.max(...measurements.bufferSizes)).toBe(
+        Math.min(iterations, 100)
+      );
+
       // Verify performance consistency (variance shouldn't be excessive)
       const variance = maxTotal - minTotal;
       expect(variance).toBeLessThan(45.0); // Max 45ms variance (CI tolerance for JIT effects)
@@ -502,7 +508,10 @@ describe('ScopeDslErrorHandler Performance', () => {
           } catch (e) {
             // Expected - handleError always throws ScopeDslError
             // Count every exception as a successful error handling operation
-            if (e instanceof ScopeDslError || e.constructor.name === 'ScopeDslError') {
+            if (
+              e instanceof ScopeDslError ||
+              e.constructor.name === 'ScopeDslError'
+            ) {
               successCount++;
             }
           }
@@ -511,7 +520,9 @@ describe('ScopeDslErrorHandler Performance', () => {
         // Pace the batches (approximately 10ms intervals)
         const batchDuration = performance.now() - batchStart;
         if (batchDuration < 10) {
-          await new Promise((resolve) => setTimeout(resolve, 10 - batchDuration));
+          await new Promise((resolve) =>
+            setTimeout(resolve, 10 - batchDuration)
+          );
         }
       }
 
@@ -549,7 +560,10 @@ describe('ScopeDslErrorHandler Performance', () => {
           } catch (e) {
             // Expected - handleError always throws ScopeDslError
             // Count every exception as a successful error handling operation
-            if (e instanceof ScopeDslError || e.constructor.name === 'ScopeDslError') {
+            if (
+              e instanceof ScopeDslError ||
+              e.constructor.name === 'ScopeDslError'
+            ) {
               windowErrors++;
             }
           }
@@ -583,7 +597,9 @@ describe('ScopeDslErrorHandler Performance', () => {
       // Performance should be stable across windows
       const rateVariance = avgRate > 0 ? (maxRate - minRate) / avgRate : 0;
       // Use environment-aware thresholds to account for CI variability
-      const isCI = typeof process !== 'undefined' && (process.env.CI === 'true' || process.env.NODE_ENV === 'test');
+      const isCI =
+        typeof process !== 'undefined' &&
+        (process.env.CI === 'true' || process.env.NODE_ENV === 'test');
       const varianceThreshold = isCI ? 1.5 : 1.0; // More lenient for CI environments
       expect(rateVariance).toBeLessThan(varianceThreshold); // CI: <150% variance, Local: <100% variance
 

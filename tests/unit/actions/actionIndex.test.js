@@ -520,15 +520,15 @@ describe('ActionIndex', () => {
         {
           id: 'dual-requirement',
           name: 'Dual Requirement Action',
-          required_components: { 
-            actor: ['core:combat', 'core:inventory'] 
+          required_components: {
+            actor: ['core:combat', 'core:inventory'],
           },
         },
         {
           id: 'single-requirement',
           name: 'Single Requirement Action',
-          required_components: { 
-            actor: ['core:combat'] 
+          required_components: {
+            actor: ['core:combat'],
           },
         },
       ];
@@ -548,7 +548,7 @@ describe('ActionIndex', () => {
       // Should include single-requirement (has core:combat)
       expect(candidates).toHaveLength(1);
       expect(candidates[0].id).toBe('single-requirement');
-      expect(candidates.map(a => a.id)).not.toContain('dual-requirement');
+      expect(candidates.map((a) => a.id)).not.toContain('dual-requirement');
     });
 
     it('should include actions when actor has ALL required components plus extras', () => {
@@ -556,8 +556,8 @@ describe('ActionIndex', () => {
         {
           id: 'dual-requirement',
           name: 'Dual Requirement Action',
-          required_components: { 
-            actor: ['core:combat', 'core:inventory'] 
+          required_components: {
+            actor: ['core:combat', 'core:inventory'],
           },
         },
       ];

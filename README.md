@@ -91,6 +91,42 @@ The Living Narrative Engine includes several specialized tools for character cre
 - WCAG AA compliant accessibility features
 - Keyboard shortcuts for power users (Ctrl+Enter to generate, Ctrl+E to export)
 
+## Proximity System Robustness
+
+The proximity-based closeness system includes comprehensive edge case handling to ensure reliable and consistent game state management:
+
+- **Input Validation**: All parameters validated with detailed error messages and namespace format checking
+- **Component Validation**: State consistency checks for all positioning components
+- **Error Recovery**: Graceful degradation on failures with comprehensive error codes
+- **State Consistency**: System-wide validation tools available for debugging and maintenance
+
+### Key Features:
+
+- Validates entity ID namespace format (`modId:identifier`)
+- Ensures bidirectional relationship integrity between actors
+- Detects and reports orphaned movement locks
+- Handles corrupted component data gracefully
+- Provides detailed error codes and troubleshooting guides
+- Performance-optimized validation (< 10ms overhead per operation)
+
+### Documentation:
+
+- **Error Reference**: See `docs/error-codes/proximity-errors.md` for complete error code reference
+- **Troubleshooting Guide**: See `docs/troubleshooting/proximity-issues.md` for common issues and solutions
+- **Debug Tools**: StateConsistencyValidator available for system-wide state inspection
+
+### Debug Example:
+
+```javascript
+// Check system consistency
+const validator = new StateConsistencyValidator({ logger, entityManager });
+const report = validator.performFullValidation();
+if (report.totalIssues > 0) {
+  console.warn(`Found ${report.totalIssues} consistency issues`);
+  await validator.repairIssues(report.closenessIssues);
+}
+```
+
 ## Getting Started
 
 This project primarily runs in the browser using JavaScript, with a Node.js-based proxy server for handling requests to

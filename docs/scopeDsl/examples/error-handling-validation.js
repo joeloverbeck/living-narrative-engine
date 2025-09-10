@@ -3,36 +3,40 @@
  * @description Demonstrates comprehensive validation with proper error handling
  */
 
-import { validateDependency, assertPresent, assertNonBlankString } from '../../../src/utils/dependencyUtils.js';
+import {
+  validateDependency,
+  assertPresent,
+  assertNonBlankString,
+} from '../../../src/utils/dependencyUtils.js';
 import { ErrorCodes } from '../../../src/scopeDsl/constants/errorCodes.js';
 
 /**
  * Example resolver with comprehensive validation patterns
- * 
+ *
  * This resolver demonstrates various validation techniques with appropriate
  * error codes and messages for different validation failures.
  */
-export default function createValidationResolver({ 
-  logger, 
+export default function createValidationResolver({
+  logger,
   errorHandler,
   entityManager,
-  componentRegistry 
+  componentRegistry,
 }) {
   // Validate all dependencies
   validateDependency(logger, 'ILogger', console, {
     requiredMethods: ['info', 'warn', 'error', 'debug'],
   });
-  
+
   if (errorHandler) {
     validateDependency(errorHandler, 'IScopeDslErrorHandler', logger, {
       requiredMethods: ['handleError', 'getErrorBuffer'],
     });
   }
-  
+
   validateDependency(entityManager, 'IEntityManager', logger, {
     requiredMethods: ['getEntity', 'hasEntity'],
   });
-  
+
   validateDependency(componentRegistry, 'IComponentRegistry', logger, {
     requiredMethods: ['getComponent', 'hasComponent'],
   });
@@ -247,7 +251,9 @@ export default function createValidationResolver({
           ErrorCodes.MAX_DEPTH_EXCEEDED
         );
       } else {
-        throw new Error(`Resolution depth ${depth} exceeds maximum ${MAX_DEPTH}`);
+        throw new Error(
+          `Resolution depth ${depth} exceeds maximum ${MAX_DEPTH}`
+        );
       }
     }
 
@@ -261,7 +267,9 @@ export default function createValidationResolver({
           ErrorCodes.CYCLE_DETECTED
         );
       } else {
-        throw new Error(`Circular reference detected for node: ${ctx.currentNodeId}`);
+        throw new Error(
+          `Circular reference detected for node: ${ctx.currentNodeId}`
+        );
       }
     }
   }
@@ -337,7 +345,9 @@ export default function createValidationResolver({
             ErrorCodes.INVALID_DATA_GENERIC
           );
         } else {
-          throw new Error(`String '${data}' does not match pattern ${schema.pattern}`);
+          throw new Error(
+            `String '${data}' does not match pattern ${schema.pattern}`
+          );
         }
       }
     }
@@ -370,16 +380,16 @@ export default function createValidationResolver({
           'context',
           'node',
           node.entityId ? 'entity' : null,
-          node.data ? 'data' : null
-        ].filter(Boolean)
+          node.data ? 'data' : null,
+        ].filter(Boolean),
       };
-    }
+    },
   };
 }
 
 /**
  * Helper function to create validation chain
- * 
+ *
  * @param {Array} validators - Array of validation functions
  * @param {object} errorHandler - Error handler instance
  * @returns {Function} Combined validator
@@ -408,7 +418,7 @@ export function createValidationChain(validators, errorHandler) {
 
 /**
  * Create a validated property accessor
- * 
+ *
  * @param {object} entity - Entity to access
  * @param {string} path - Property path (e.g., 'components.core:stats.health')
  * @param {object} errorHandler - Error handler instance
@@ -421,7 +431,7 @@ export function getValidatedProperty(entity, path, errorHandler, ctx) {
 
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i];
-    
+
     if (current == null) {
       const partialPath = parts.slice(0, i).join('.');
       if (errorHandler) {
@@ -432,7 +442,9 @@ export function getValidatedProperty(entity, path, errorHandler, ctx) {
           ErrorCodes.INVALID_DATA_GENERIC
         );
       } else {
-        throw new Error(`Cannot access '${part}' of null/undefined at path '${partialPath}'`);
+        throw new Error(
+          `Cannot access '${part}' of null/undefined at path '${partialPath}'`
+        );
       }
     }
 

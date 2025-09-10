@@ -140,8 +140,14 @@ describe('Speech Bubble Portrait Modal Integration', () => {
 
       // Verify portrait image was created with correct properties
       expect(mockPortraitImg.style.cursor).toBe('pointer');
-      expect(mockPortraitImg.setAttribute).toHaveBeenCalledWith('tabindex', '0');
-      expect(mockPortraitImg.setAttribute).toHaveBeenCalledWith('role', 'button');
+      expect(mockPortraitImg.setAttribute).toHaveBeenCalledWith(
+        'tabindex',
+        '0'
+      );
+      expect(mockPortraitImg.setAttribute).toHaveBeenCalledWith(
+        'role',
+        'button'
+      );
       expect(mockPortraitImg.setAttribute).toHaveBeenCalledWith(
         'aria-label',
         'View full portrait of AI Assistant'
@@ -174,8 +180,14 @@ describe('Speech Bubble Portrait Modal Integration', () => {
 
       // Verify portrait is clickable
       expect(mockPortraitImg.style.cursor).toBe('pointer');
-      expect(mockPortraitImg.setAttribute).toHaveBeenCalledWith('role', 'button');
-      expect(mockPortraitImg.setAttribute).toHaveBeenCalledWith('tabindex', '0');
+      expect(mockPortraitImg.setAttribute).toHaveBeenCalledWith(
+        'role',
+        'button'
+      );
+      expect(mockPortraitImg.setAttribute).toHaveBeenCalledWith(
+        'tabindex',
+        '0'
+      );
 
       // Simulate click
       mockPortraitImg.click();
@@ -197,16 +209,22 @@ describe('Speech Bubble Portrait Modal Integration', () => {
       // Create multiple portrait images for different entities
       const mockPortrait1 = testBed.createMockElement('img');
       const mockPortrait2 = testBed.createMockElement('img');
-      
+
       mockPortrait1.click = jest.fn(() => {
         if (mockPortrait1._clickHandler) {
-          mockPortrait1._clickHandler({ type: 'click', preventDefault: jest.fn() });
+          mockPortrait1._clickHandler({
+            type: 'click',
+            preventDefault: jest.fn(),
+          });
         }
       });
-      
+
       mockPortrait2.click = jest.fn(() => {
         if (mockPortrait2._clickHandler) {
-          mockPortrait2._clickHandler({ type: 'click', preventDefault: jest.fn() });
+          mockPortrait2._clickHandler({
+            type: 'click',
+            preventDefault: jest.fn(),
+          });
         }
       });
 
@@ -227,10 +245,11 @@ describe('Speech Bubble Portrait Modal Integration', () => {
           .fn()
           .mockImplementation(() => testBed.createMockElement('button')),
       };
-      
+
       mockDomElementFactory.img = jest.fn(() => {
         portraitCallCount++;
-        const portrait = portraitCallCount === 1 ? mockPortrait1 : mockPortrait2;
+        const portrait =
+          portraitCallCount === 1 ? mockPortrait1 : mockPortrait2;
         portrait.addEventListener = jest.fn((eventType, handler) => {
           if (eventType === 'click') {
             portrait._clickHandler = handler;
@@ -265,7 +284,8 @@ describe('Speech Bubble Portrait Modal Integration', () => {
             return 'Unknown';
           }),
           getEntityPortraitPath: jest.fn((entityId) => {
-            if (entityId === 'ai-character-1') return '/images/ai-assistant.jpg';
+            if (entityId === 'ai-character-1')
+              return '/images/ai-assistant.jpg';
             if (entityId === 'human-player-1') return '/images/player.jpg';
             return '/test.jpg';
           }),
@@ -388,7 +408,9 @@ describe('Speech Bubble Portrait Modal Integration', () => {
       }).not.toThrow();
 
       // Should handle gracefully without creating portrait
-      expect(mockEntityDisplayDataProvider.getEntityPortraitPath).toHaveBeenCalledWith('ai-character-1');
+      expect(
+        mockEntityDisplayDataProvider.getEntityPortraitPath
+      ).toHaveBeenCalledWith('ai-character-1');
     });
   });
 
@@ -400,8 +422,14 @@ describe('Speech Bubble Portrait Modal Integration', () => {
       });
 
       // Verify portrait has correct ARIA attributes
-      expect(mockPortraitImg.setAttribute).toHaveBeenCalledWith('role', 'button');
-      expect(mockPortraitImg.setAttribute).toHaveBeenCalledWith('tabindex', '0');
+      expect(mockPortraitImg.setAttribute).toHaveBeenCalledWith(
+        'role',
+        'button'
+      );
+      expect(mockPortraitImg.setAttribute).toHaveBeenCalledWith(
+        'tabindex',
+        '0'
+      );
       expect(mockPortraitImg.setAttribute).toHaveBeenCalledWith(
         'aria-label',
         'View full portrait of AI Assistant'

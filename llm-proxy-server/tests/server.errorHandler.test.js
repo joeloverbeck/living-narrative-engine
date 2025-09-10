@@ -53,7 +53,7 @@ beforeEach(() => {
   expressMock = jest.fn(() => app);
   expressMock.json = jest.fn(() => 'json-mw');
   expressMock.Router = jest.fn(() => mockRouter);
-  
+
   jest.doMock('express', () => ({
     __esModule: true,
     default: expressMock,

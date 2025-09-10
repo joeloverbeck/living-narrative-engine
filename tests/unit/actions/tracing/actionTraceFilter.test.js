@@ -602,7 +602,9 @@ describe('ActionTraceFilter - Basic Functionality', () => {
 
       expect(() => {
         filter.shouldTrace(null);
-      }).toThrow('actionId must be a non-empty string in ActionTraceFilter.shouldTrace');
+      }).toThrow(
+        'actionId must be a non-empty string in ActionTraceFilter.shouldTrace'
+      );
     });
 
     it('should throw InvalidArgumentError for undefined actionId', () => {
@@ -613,7 +615,9 @@ describe('ActionTraceFilter - Basic Functionality', () => {
 
       expect(() => {
         filter.shouldTrace(undefined);
-      }).toThrow('actionId must be a non-empty string in ActionTraceFilter.shouldTrace');
+      }).toThrow(
+        'actionId must be a non-empty string in ActionTraceFilter.shouldTrace'
+      );
     });
 
     it('should throw InvalidArgumentError for empty string actionId', () => {
@@ -624,7 +628,9 @@ describe('ActionTraceFilter - Basic Functionality', () => {
 
       expect(() => {
         filter.shouldTrace('');
-      }).toThrow('actionId must be a non-empty string in ActionTraceFilter.shouldTrace');
+      }).toThrow(
+        'actionId must be a non-empty string in ActionTraceFilter.shouldTrace'
+      );
     });
 
     it('should throw InvalidArgumentError for non-string actionId', () => {
@@ -635,19 +641,27 @@ describe('ActionTraceFilter - Basic Functionality', () => {
 
       expect(() => {
         filter.shouldTrace(123);
-      }).toThrow('actionId must be a non-empty string in ActionTraceFilter.shouldTrace');
+      }).toThrow(
+        'actionId must be a non-empty string in ActionTraceFilter.shouldTrace'
+      );
 
       expect(() => {
         filter.shouldTrace({});
-      }).toThrow('actionId must be a non-empty string in ActionTraceFilter.shouldTrace');
+      }).toThrow(
+        'actionId must be a non-empty string in ActionTraceFilter.shouldTrace'
+      );
 
       expect(() => {
         filter.shouldTrace([]);
-      }).toThrow('actionId must be a non-empty string in ActionTraceFilter.shouldTrace');
+      }).toThrow(
+        'actionId must be a non-empty string in ActionTraceFilter.shouldTrace'
+      );
 
       expect(() => {
         filter.shouldTrace(true);
-      }).toThrow('actionId must be a non-empty string in ActionTraceFilter.shouldTrace');
+      }).toThrow(
+        'actionId must be a non-empty string in ActionTraceFilter.shouldTrace'
+      );
     });
 
     it('should not throw for valid string actionId when enabled=false', () => {
@@ -686,7 +700,9 @@ describe('ActionTraceFilter - Basic Functionality', () => {
       // Now validation should happen
       expect(() => {
         filter.shouldTrace(null);
-      }).toThrow('actionId must be a non-empty string in ActionTraceFilter.shouldTrace');
+      }).toThrow(
+        'actionId must be a non-empty string in ActionTraceFilter.shouldTrace'
+      );
     });
   });
 
@@ -770,7 +786,15 @@ describe('ActionTraceFilter - Basic Functionality', () => {
     it('should skip non-string actions in tracedActions array', () => {
       const config = {
         enabled: true,
-        tracedActions: ['core:go', null, undefined, 123, '', '  ', 'test:action'],
+        tracedActions: [
+          'core:go',
+          null,
+          undefined,
+          123,
+          '',
+          '  ',
+          'test:action',
+        ],
         verbosity: 'standard',
         includeComponentData: false,
         includePrerequisites: false,
@@ -788,7 +812,15 @@ describe('ActionTraceFilter - Basic Functionality', () => {
       const config = {
         enabled: true,
         tracedActions: ['*'],
-        excludedActions: ['debug:*', null, undefined, 123, '', '  ', 'skip:action'],
+        excludedActions: [
+          'debug:*',
+          null,
+          undefined,
+          123,
+          '',
+          '  ',
+          'skip:action',
+        ],
         verbosity: 'standard',
         includeComponentData: false,
         includePrerequisites: false,
@@ -891,7 +923,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
 
       // Invalid regex should not match anything
       expect(filter.shouldTrace('any:action')).toBe(false);
-      
+
       // Should not have cached the invalid pattern
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Invalid regex pattern will be ignored'),
@@ -940,8 +972,9 @@ describe('ActionTraceFilter - Basic Functionality', () => {
       filter.addTracedActions('/^test:.*$/');
 
       // Should not recompile (no additional debug message about compilation)
-      const compilationCalls = mockLogger.debug.mock.calls.filter(call => 
-        call[0] && call[0].includes('Compiled and cached regex pattern')
+      const compilationCalls = mockLogger.debug.mock.calls.filter(
+        (call) =>
+          call[0] && call[0].includes('Compiled and cached regex pattern')
       );
       expect(compilationCalls.length).toBe(0);
     });
@@ -1084,7 +1117,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
         logger: mockLogger,
       });
 
-      // Clear constructor debug logs  
+      // Clear constructor debug logs
       mockLogger.debug.mockClear();
 
       const result = filter.shouldTrace('__system:init');

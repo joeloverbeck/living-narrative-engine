@@ -48,6 +48,7 @@ const componentLoader = {
 ```
 
 If using glob patterns, verify pattern matches new files:
+
 - `data/mods/core/components/motivations.component.json` ✓
 - `data/mods/core/components/internal_tensions.component.json` ✓
 - `data/mods/core/components/core_dilemmas.component.json` ✓
@@ -55,13 +56,15 @@ If using glob patterns, verify pattern matches new files:
 ### 2. Verify Auto-Discovery
 
 If loader uses auto-discovery (likely case):
+
 ```javascript
 // No changes needed if pattern like:
-'data/mods/*/components/*.component.json'
+'data/mods/*/components/*.component.json';
 // This will automatically include new files
 ```
 
 If loader uses explicit file lists:
+
 ```javascript
 // Would need to add:
 const components = [
@@ -84,11 +87,12 @@ const defaultComponents = {
     'core:description': {},
     'core:personality': {},
     // Should we add psychological components here?
-  }
+  },
 };
 ```
 
 **Decision Point**: Should psychological components be automatically added?
+
 - **No** (Recommended): Keep them optional for backward compatibility
 - **Yes**: Would need to add default empty values
 
@@ -113,6 +117,7 @@ const essentialComponentSchemas = [
 ### Option A: No Changes Needed (Likely)
 
 If the loader uses glob patterns and auto-discovery:
+
 ```javascript
 // Existing configuration already handles new files
 {
@@ -133,9 +138,9 @@ const coreComponents = [
   'actor.component.json',
   'description.component.json',
   // ... existing components ...
-  'motivations.component.json',        // NEW
-  'internal_tensions.component.json',  // NEW
-  'core_dilemmas.component.json',      // NEW
+  'motivations.component.json', // NEW
+  'internal_tensions.component.json', // NEW
+  'core_dilemmas.component.json', // NEW
 ];
 ```
 
@@ -155,11 +160,13 @@ const psychologicalDefaults = {
 ## Testing Checklist
 
 ### Startup Verification
+
 - [ ] Application starts without errors
 - [ ] No schema validation errors in console
 - [ ] Component registry includes new components
 
 ### Runtime Verification
+
 - [ ] New components can be added to entities
 - [ ] Components validate against schemas
 - [ ] No performance degradation at startup
@@ -192,6 +199,7 @@ console.log('Loaded components:', Object.keys(componentRegistry));
 **Recommendation**: Do NOT add default injection rules
 
 **Rationale**:
+
 - Maintains backward compatibility
 - Keeps components truly optional
 - Reduces memory footprint for entities
@@ -199,6 +207,7 @@ console.log('Loaded components:', Object.keys(componentRegistry));
 - Simplifies testing
 
 **Implementation**:
+
 - No changes to defaultComponentInjector.js
 - Components added only when explicitly needed
 - Content creators decide which characters need them
@@ -224,6 +233,7 @@ window.gameEngine?.dataRegistry?.components?.has('core:motivations')
 ## Rollback Plan
 
 If issues arise:
+
 1. Remove any added configuration entries
 2. Verify original files unchanged
 3. Clear browser cache
@@ -241,20 +251,23 @@ Most likely no rollback needed as changes are additive.
 ## Related Considerations
 
 ### Memory Impact
+
 - Three additional schema validations at startup
 - Minimal impact (< 1KB per schema)
 - No runtime impact unless components used
 
 ### Performance Impact
+
 - Negligible startup impact (< 10ms)
 - No runtime performance change
 - Schema validation cached after first use
 
 ### Compatibility Impact
+
 - Full backward compatibility maintained
 - Existing saves/games unaffected
 - Optional adoption path
 
 ---
 
-*Ticket created from character-components-analysis.md report*
+_Ticket created from character-components-analysis.md report_

@@ -96,10 +96,7 @@ export class ModEntityBuilder {
    * @returns {ModEntityBuilder} This builder for chaining
    */
   inSameLocationAs(otherEntity) {
-    assertPresent(
-      otherEntity,
-      'Other entity is required'
-    );
+    assertPresent(otherEntity, 'Other entity is required');
 
     if (
       !otherEntity.components ||
@@ -140,10 +137,7 @@ export class ModEntityBuilder {
       'Component ID',
       'ModEntityBuilder.withComponent'
     );
-    assertPresent(
-      componentData,
-      'Component data is required'
-    );
+    assertPresent(componentData, 'Component data is required');
 
     this.entityData.components[componentId] = componentData;
     return this;

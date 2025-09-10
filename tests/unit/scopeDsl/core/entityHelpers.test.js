@@ -39,7 +39,6 @@ describe('entityHelpers', () => {
       const trace = { addLog: jest.fn() };
       const result = getOrBuildComponents('e2', null, gateway, trace);
       expect(result).toEqual({});
-      
     });
 
     it('returns null when entity parameter is provided but null', () => {
@@ -339,8 +338,6 @@ describe('entityHelpers', () => {
         locationProvider,
         trace
       );
-
-      
     });
 
     it('logs debug information when trace is provided and component lookup fallback is used', () => {
@@ -363,7 +360,6 @@ describe('entityHelpers', () => {
         trace
       );
 
-      
       expect(result.entity.components).toEqual({
         'core:name': { text: 'Fallback Component' },
       });
@@ -387,7 +383,6 @@ describe('entityHelpers', () => {
         trace
       );
 
-      
       expect(result.entity.id).toBe('item1');
     });
 
@@ -410,7 +405,6 @@ describe('entityHelpers', () => {
       createEvaluationContext(entity, actor, gateway, locationProvider, trace);
 
       // Check that debug logging was called with correct parameters
-      
     });
 
     it('includes target in runtime context when provided', () => {
@@ -494,26 +488,40 @@ describe('entityHelpers', () => {
     it('logs cache hit statistics when trace provided and cache hits reach 1000 interval', () => {
       const actor = { id: 'actor1', componentTypeIds: [] };
       const gateway = {
-        getEntityInstance: jest.fn(() => ({ id: 'entity1' }))
+        getEntityInstance: jest.fn(() => ({ id: 'entity1' })),
       };
       const locationProvider = { getLocation: jest.fn(() => ({ id: 'loc1' })) };
       const trace = { addLog: jest.fn() };
 
       // Clear cache and create scenario for cache hits
       clearEntityCache();
-      
+
       // First call creates cache entry (this is a cache miss)
-      createEvaluationContext('entity1', actor, gateway, locationProvider, trace);
-      
+      createEvaluationContext(
+        'entity1',
+        actor,
+        gateway,
+        locationProvider,
+        trace
+      );
+
       // Simulate exactly 1000 more cache hits to reach the 1000 hit milestone
       for (let i = 0; i < 1000; i++) {
-        createEvaluationContext('entity1', actor, gateway, locationProvider, trace);
+        createEvaluationContext(
+          'entity1',
+          actor,
+          gateway,
+          locationProvider,
+          trace
+        );
       }
 
       // Verify cache hit logging was called
       expect(trace.addLog).toHaveBeenCalledWith(
         'debug',
-        expect.stringMatching(/Cache stats: 1000 hits, 1 misses \(99\.9% hit rate\)/),
+        expect.stringMatching(
+          /Cache stats: 1000 hits, 1 misses \(99\.9% hit rate\)/
+        ),
         'createEvaluationContext'
       );
     });
@@ -521,7 +529,7 @@ describe('entityHelpers', () => {
     it('triggers cache eviction when cache size limit is exceeded', () => {
       const actor = { id: 'actor1', componentTypeIds: [] };
       const gateway = {
-        getEntityInstance: jest.fn((id) => ({ id }))
+        getEntityInstance: jest.fn((id) => ({ id })),
       };
       const locationProvider = { getLocation: jest.fn(() => ({ id: 'loc1' })) };
 
@@ -537,7 +545,7 @@ describe('entityHelpers', () => {
 
       // Verify that gateway was called for each unique entity
       expect(gateway.getEntityInstance).toHaveBeenCalledTimes(10001);
-      
+
       // Create another entity to verify cache still works after eviction
       createEvaluationContext('test_entity', actor, gateway, locationProvider);
       expect(gateway.getEntityInstance).toHaveBeenCalledWith('test_entity');
@@ -553,7 +561,7 @@ describe('entityHelpers', () => {
         getAllComponents() {
           return {
             'core:name': { text: 'Entity With Method' },
-            'core:position': { x: 100, y: 200 }
+            'core:position': { x: 100, y: 200 },
           };
         }
       }
@@ -562,15 +570,20 @@ describe('entityHelpers', () => {
       const entity = new MockEntityWithGetAllComponents();
       const gateway = {
         getEntityInstance: jest.fn(() => entity),
-        getComponentData: jest.fn() // This should not be called
+        getComponentData: jest.fn(), // This should not be called
       };
       const locationProvider = { getLocation: jest.fn(() => ({ id: 'loc1' })) };
 
-      const result = createEvaluationContext('entity_with_method', actor, gateway, locationProvider);
+      const result = createEvaluationContext(
+        'entity_with_method',
+        actor,
+        gateway,
+        locationProvider
+      );
 
       expect(result.entity.components).toEqual({
         'core:name': { text: 'Entity With Method' },
-        'core:position': { x: 100, y: 200 }
+        'core:position': { x: 100, y: 200 },
       });
       expect(gateway.getComponentData).not.toHaveBeenCalled(); // Verify getAllComponents was used instead
     });
@@ -585,7 +598,7 @@ describe('entityHelpers', () => {
         getAllComponents() {
           return {
             'core:actor': { type: 'advanced_npc' },
-            'core:stats': { health: 100, mana: 50 }
+            'core:stats': { health: 100, mana: 50 },
           };
         }
       }
@@ -594,15 +607,20 @@ describe('entityHelpers', () => {
       const entity = { id: 'simple_entity' };
       const gateway = {
         getEntityInstance: jest.fn(() => entity),
-        getComponentData: jest.fn() // This should not be called for the actor
+        getComponentData: jest.fn(), // This should not be called for the actor
       };
       const locationProvider = { getLocation: jest.fn(() => ({ id: 'loc1' })) };
 
-      const result = createEvaluationContext(entity, actorEntity, gateway, locationProvider);
+      const result = createEvaluationContext(
+        entity,
+        actorEntity,
+        gateway,
+        locationProvider
+      );
 
       expect(result.actor.components).toEqual({
         'core:actor': { type: 'advanced_npc' },
-        'core:stats': { health: 100, mana: 50 }
+        'core:stats': { health: 100, mana: 50 },
       });
       expect(gateway.getComponentData).not.toHaveBeenCalled(); // getAllComponents should be used
     });
@@ -616,7 +634,7 @@ describe('entityHelpers', () => {
       // Pre-process the actor
       const processedActor = {
         id: 'actor1',
-        components: { 'core:actor': { type: 'pre_processed' } }
+        components: { 'core:actor': { type: 'pre_processed' } },
       };
 
       const result = createEvaluationContext(
@@ -625,13 +643,13 @@ describe('entityHelpers', () => {
         gateway,
         locationProvider,
         null, // trace
-        null, // runtimeContext  
+        null, // runtimeContext
         processedActor // processedActor parameter
       );
 
       expect(result.actor).toBe(processedActor); // Should use pre-processed actor
       expect(result.actor.components).toEqual({
-        'core:actor': { type: 'pre_processed' }
+        'core:actor': { type: 'pre_processed' },
       });
     });
 
@@ -641,7 +659,7 @@ describe('entityHelpers', () => {
         id: 'item1',
         quantity: 5,
         type: 'consumable',
-        name: 'Health Potion'
+        name: 'Health Potion',
       };
       const gateway = { getEntityInstance: jest.fn(() => null) }; // No entity found
       const locationProvider = { getLocation: jest.fn(() => ({ id: 'loc1' })) };
@@ -664,7 +682,7 @@ describe('entityHelpers', () => {
   describe('preprocessActorForEvaluation', () => {
     it('throws error when actorEntity is null', () => {
       const gateway = { getComponentData: jest.fn() };
-      
+
       expect(() => {
         preprocessActorForEvaluation(null, gateway);
       }).toThrow('preprocessActorForEvaluation: Invalid actor entity');
@@ -672,7 +690,7 @@ describe('entityHelpers', () => {
 
     it('throws error when actorEntity is undefined', () => {
       const gateway = { getComponentData: jest.fn() };
-      
+
       expect(() => {
         preprocessActorForEvaluation(undefined, gateway);
       }).toThrow('preprocessActorForEvaluation: Invalid actor entity');
@@ -681,7 +699,7 @@ describe('entityHelpers', () => {
     it('throws error when actorEntity has no id', () => {
       const gateway = { getComponentData: jest.fn() };
       const actorEntity = { componentTypeIds: ['core:actor'] };
-      
+
       expect(() => {
         preprocessActorForEvaluation(actorEntity, gateway);
       }).toThrow('preprocessActorForEvaluation: Invalid actor entity');
@@ -692,8 +710,8 @@ describe('entityHelpers', () => {
         id: 'actor1',
         components: {
           'core:actor': { type: 'npc' },
-          'core:name': { text: 'Test Actor' }
-        }
+          'core:name': { text: 'Test Actor' },
+        },
       };
       const gateway = { getComponentData: jest.fn() };
 
@@ -702,7 +720,7 @@ describe('entityHelpers', () => {
       expect(result).toBe(actorEntity); // Same reference since no processing needed
       expect(result.components).toEqual({
         'core:actor': { type: 'npc' },
-        'core:name': { text: 'Test Actor' }
+        'core:name': { text: 'Test Actor' },
       });
     });
 
@@ -713,7 +731,7 @@ describe('entityHelpers', () => {
 
       const actorEntity = {
         id: 'actor1',
-        components: componentMap
+        components: componentMap,
       };
       const gateway = { getComponentData: jest.fn() };
 
@@ -721,7 +739,7 @@ describe('entityHelpers', () => {
 
       expect(result.components).toEqual({
         'core:actor': { type: 'npc' },
-        'core:name': { text: 'Map Actor' }
+        'core:name': { text: 'Map Actor' },
       });
       expect(result.components).not.toBeInstanceOf(Map);
       expect(result.id).toBe('actor1');
@@ -742,7 +760,7 @@ describe('entityHelpers', () => {
       const result = preprocessActorForEvaluation(actorEntity, gateway);
 
       expect(result.components).toEqual({
-        'core:actor': { type: 'custom' }
+        'core:actor': { type: 'custom' },
       });
       expect(result.components).not.toBeInstanceOf(Map);
       expect(Object.getPrototypeOf(result)).toBe(CustomActor.prototype);
@@ -751,24 +769,30 @@ describe('entityHelpers', () => {
     it('builds components from componentTypeIds for plain actor', () => {
       const actorEntity = {
         id: 'actor1',
-        componentTypeIds: ['core:actor', 'core:name']
+        componentTypeIds: ['core:actor', 'core:name'],
       };
       const gateway = {
         getComponentData: jest.fn((entityId, componentId) => {
           if (componentId === 'core:actor') return { type: 'player' };
           if (componentId === 'core:name') return { text: 'Player One' };
           return null;
-        })
+        }),
       };
 
       const result = preprocessActorForEvaluation(actorEntity, gateway);
 
       expect(result.components).toEqual({
         'core:actor': { type: 'player' },
-        'core:name': { text: 'Player One' }
+        'core:name': { text: 'Player One' },
       });
-      expect(gateway.getComponentData).toHaveBeenCalledWith('actor1', 'core:actor');
-      expect(gateway.getComponentData).toHaveBeenCalledWith('actor1', 'core:name');
+      expect(gateway.getComponentData).toHaveBeenCalledWith(
+        'actor1',
+        'core:actor'
+      );
+      expect(gateway.getComponentData).toHaveBeenCalledWith(
+        'actor1',
+        'core:name'
+      );
     });
 
     it('uses getAllComponents method when available on Entity class', () => {
@@ -781,7 +805,7 @@ describe('entityHelpers', () => {
         getAllComponents() {
           return {
             'core:actor': { type: 'entity_based' },
-            'core:name': { text: 'Entity Actor' }
+            'core:name': { text: 'Entity Actor' },
           };
         }
       }
@@ -793,7 +817,7 @@ describe('entityHelpers', () => {
 
       expect(result.components).toEqual({
         'core:actor': { type: 'entity_based' },
-        'core:name': { text: 'Entity Actor' }
+        'core:name': { text: 'Entity Actor' },
       });
       expect(gateway.getComponentData).not.toHaveBeenCalled(); // Should use getAllComponents instead
     });
@@ -821,7 +845,7 @@ describe('entityHelpers', () => {
           if (componentId === 'core:actor') return { type: 'complex' };
           if (componentId === 'core:name') return { text: 'Complex Actor' };
           return null;
-        })
+        }),
       };
 
       const result = preprocessActorForEvaluation(actorEntity, gateway);
@@ -832,7 +856,7 @@ describe('entityHelpers', () => {
       expect(result.componentTypeIds).toEqual(['core:actor', 'core:name']);
       expect(result.components).toEqual({
         'core:actor': { type: 'complex' },
-        'core:name': { text: 'Complex Actor' }
+        'core:name': { text: 'Complex Actor' },
       });
 
       // Verify prototype chain preservation

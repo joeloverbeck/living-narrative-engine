@@ -883,8 +883,9 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
       const scopeTrace = trace.getActionTrace('_current_scope_evaluation');
       expect(scopeTrace).toBeDefined();
       expect(scopeTrace.stages.operator_evaluations).toBeDefined();
-      
-      const evaluations = scopeTrace.stages.operator_evaluations.data.evaluations;
+
+      const evaluations =
+        scopeTrace.stages.operator_evaluations.data.evaluations;
       expect(evaluations).toHaveLength(1);
       expect(evaluations[0].operator).toBe('isSocketCovered');
       expect(evaluations[0].entityId).toBe('entity-123');
@@ -913,7 +914,8 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
       });
 
       const scopeTrace = trace.getActionTrace('_current_scope_evaluation');
-      const evaluations = scopeTrace.stages.operator_evaluations.data.evaluations;
+      const evaluations =
+        scopeTrace.stages.operator_evaluations.data.evaluations;
       expect(evaluations).toHaveLength(2);
       expect(evaluations[0].operator).toBe('isValidTarget');
       expect(evaluations[1].operator).toBe('hasPermission');
@@ -973,12 +975,16 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
         },
       ];
 
-      trace.captureEnhancedScopeEvaluation('core:go', 'actor.furniture', traceLogs);
+      trace.captureEnhancedScopeEvaluation(
+        'core:go',
+        'actor.furniture',
+        traceLogs
+      );
 
       const actionTrace = trace.getActionTrace('core:go');
       expect(actionTrace).toBeDefined();
       expect(actionTrace.stages.enhanced_scope_evaluation).toBeDefined();
-      
+
       const enhancedData = actionTrace.stages.enhanced_scope_evaluation.data;
       expect(enhancedData).toBeDefined();
       // Based on the implementation, check the actual structure of the captured data
@@ -1000,12 +1006,16 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
 
       // Should handle empty or null trace logs
       trace.captureEnhancedScopeEvaluation('core:go', 'test.scope', []);
-      
+
       const actionTrace = trace.getActionTrace('core:go');
       expect(actionTrace).toBeDefined();
       expect(actionTrace.stages.enhanced_scope_evaluation).toBeDefined();
-      expect(actionTrace.stages.enhanced_scope_evaluation.data.entityDiscovery).toEqual([]);
-      expect(actionTrace.stages.enhanced_scope_evaluation.data.filterEvaluations).toEqual([]);
+      expect(
+        actionTrace.stages.enhanced_scope_evaluation.data.entityDiscovery
+      ).toEqual([]);
+      expect(
+        actionTrace.stages.enhanced_scope_evaluation.data.filterEvaluations
+      ).toEqual([]);
     });
 
     it('should not capture if action is not traced', async () => {
@@ -1014,7 +1024,7 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
       });
 
       trace.captureEnhancedScopeEvaluation('core:go', 'test.scope', []);
-      
+
       expect(trace.getActionTrace('core:go')).toBeNull();
     });
   });
@@ -1040,7 +1050,7 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
 
       const actionTrace = trace.getActionTrace('core:go');
       expect(actionTrace.stages.test_stage).toBeDefined();
-      
+
       const capturedData = actionTrace.stages.test_stage.data;
       expect(capturedData._enhanced).toBeDefined();
       expect(capturedData._enhanced.category).toBe('performance');
@@ -1059,7 +1069,9 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
         logger: testBed.mockLogger,
       });
 
-      trace.captureEnhancedActionData('test_stage', 'core:go', { test: 'data' });
+      trace.captureEnhancedActionData('test_stage', 'core:go', {
+        test: 'data',
+      });
 
       // Should fall back to regular shouldTrace
       expect(mockFilter.shouldTrace).toHaveBeenCalledWith('core:go');
@@ -1088,7 +1100,7 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
 
       const actionTrace = trace.getActionTrace('core:go');
       const capturedData = actionTrace.stages.test_stage.data;
-      
+
       // Should remove performance, diagnostic, debug based on minimal verbosity
       expect(capturedData.important).toBe('keep');
       expect(capturedData.performance).toBeUndefined();
@@ -1108,13 +1120,18 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
 
       // Add various data with different verbosity levels
       trace.captureActionData('stage1', 'core:go', { data: 'test1' });
-      trace.captureEnhancedActionData('stage2', 'core:go', { data: 'test2' }, {
-        category: 'performance',
-      });
+      trace.captureEnhancedActionData(
+        'stage2',
+        'core:go',
+        { data: 'test2' },
+        {
+          category: 'performance',
+        }
+      );
 
       // Test exportFilteredTraceData (lines 1280-1319)
       const exported = trace.exportFilteredTraceData('standard');
-      
+
       expect(exported).toBeDefined();
       expect(exported['core:go']).toBeDefined();
       expect(exported['core:go'].stages).toBeDefined();
@@ -1126,13 +1143,19 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
       });
 
       // Add data with different categories - need to explicitly set verbosity to see all data
-      trace.captureActionData('component_filtering', 'core:go', { data: 'business' });
+      trace.captureActionData('component_filtering', 'core:go', {
+        data: 'business',
+      });
       trace.captureActionData('timing_data', 'core:go', { data: 'perf' });
       trace.captureActionData('error_details', 'core:go', { data: 'diag' });
 
       // Export only specific categories (line 1290, 1329-1354)
-      const exported = trace.exportFilteredTraceData('verbose', ['business_logic', 'performance', 'diagnostic']);
-      
+      const exported = trace.exportFilteredTraceData('verbose', [
+        'business_logic',
+        'performance',
+        'diagnostic',
+      ]);
+
       expect(exported['core:go']).toBeDefined();
       expect(exported['core:go'].stages).toBeDefined();
       const stages = exported['core:go'].stages;
@@ -1148,13 +1171,18 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
       });
 
       // Add enhanced data with verbosity level
-      trace.captureEnhancedActionData('stage1', 'core:go', { data: 'test' }, {
-        category: 'core',
-      });
+      trace.captureEnhancedActionData(
+        'stage1',
+        'core:go',
+        { data: 'test' },
+        {
+          category: 'core',
+        }
+      );
 
       const mockEnhancedData = {
         data: 'test',
-        _enhanced: { verbosityLevel: 'verbose' }
+        _enhanced: { verbosityLevel: 'verbose' },
       };
 
       // Manually set enhanced data to test verbosity filtering (line 1300)
@@ -1166,7 +1194,7 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
       };
 
       const exported = trace.exportFilteredTraceData('minimal');
-      
+
       // Should skip verbose data when exporting at minimal level
       expect(exported['core:go'].stages.stage2).toBeUndefined();
     });
@@ -1186,7 +1214,7 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
 
       // Test toJSON method (lines 1398-1422)
       const json = trace.toJSON();
-      
+
       expect(json.timestamp).toBeDefined();
       expect(json.traceType).toBe('action_aware_structured');
       expect(json.actorId).toBe('actor-123');
@@ -1206,19 +1234,19 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
       // Add stages with time gaps to test duration calculation (lines 1432-1441)
       const now = Date.now();
       trace.captureActionData('stage1', 'core:go', { data: 'test1' });
-      
+
       // Manually update timestamp to simulate time passing
       const actionTrace = trace.getActionTrace('core:go');
       actionTrace.stages.stage1.timestamp = now;
-      
+
       // Add second stage with later timestamp
       setTimeout(() => {
         trace.captureActionData('stage2', 'core:go', { data: 'test2' });
       }, 10);
 
       // Wait and then check
-      await new Promise(resolve => setTimeout(resolve, 20));
-      
+      await new Promise((resolve) => setTimeout(resolve, 20));
+
       const json = trace.toJSON();
       expect(json.actions['core:go'].totalDuration).toBeGreaterThan(0);
     });
@@ -1231,7 +1259,7 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
 
       // Don't add any data - test with empty trace
       const json = trace.toJSON();
-      
+
       expect(json.timestamp).toBeDefined();
       expect(json.traceType).toBe('action_aware_structured');
       expect(json.actorId).toBe('test-actor');
@@ -1247,7 +1275,7 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
       // Create action trace without stages to test edge case
       trace.captureActionData('test', 'core:go', { test: 'data' });
       const actionTrace = trace.getActionTrace('core:go');
-      
+
       // Clear stages to simulate edge case
       actionTrace.stages = {};
 
@@ -1279,7 +1307,7 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
 
       // Should log error about capturing action data
       expect(testBed.mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining("Error capturing action data"),
+        expect.stringContaining('Error capturing action data'),
         expect.any(Error)
       );
     });

@@ -102,7 +102,9 @@ describe('SpeechBubbleRenderer - Thought Functionality', () => {
     });
 
     // Setup DocumentContext create method (used by RendererBase validation)
-    mockDocumentContext.create.mockImplementation((tagName) => createMockElement(tagName));
+    mockDocumentContext.create.mockImplementation((tagName) =>
+      createMockElement(tagName)
+    );
 
     // Setup document methods for backward compatibility
     mockDocumentContext.document.getElementById = jest.fn((id) => {
@@ -117,19 +119,31 @@ describe('SpeechBubbleRenderer - Thought Functionality', () => {
       return null;
     });
 
-    mockDocumentContext.document.createDocumentFragment = jest.fn().mockReturnValue({
-      appendChild: jest.fn(),
-    });
+    mockDocumentContext.document.createDocumentFragment = jest
+      .fn()
+      .mockReturnValue({
+        appendChild: jest.fn(),
+      });
 
     // Mock DOM element creation using the helper function
 
-    mockDomElementFactory.create.mockImplementation((tag) => createMockElement(tag));
-    mockDomElementFactory.span.mockImplementation(() => createMockElement('span'));
-    mockDomElementFactory.img.mockImplementation(() => createMockElement('img'));
+    mockDomElementFactory.create.mockImplementation((tag) =>
+      createMockElement(tag)
+    );
+    mockDomElementFactory.span.mockImplementation(() =>
+      createMockElement('span')
+    );
+    mockDomElementFactory.img.mockImplementation(() =>
+      createMockElement('img')
+    );
 
     // Setup entity display data provider
-    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Test Character');
-    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue('/path/to/portrait.jpg');
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue(
+      'Test Character'
+    );
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(
+      '/path/to/portrait.jpg'
+    );
 
     // Setup entity manager
     const mockEntity = {
@@ -173,8 +187,11 @@ describe('SpeechBubbleRenderer - Thought Functionality', () => {
       };
 
       // Get the subscription callback
-      const subscriptionCalls = mockValidatedEventDispatcher.subscribe.mock.calls;
-      const thoughtSubscription = subscriptionCalls.find(call => call[0] === DISPLAY_THOUGHT_ID);
+      const subscriptionCalls =
+        mockValidatedEventDispatcher.subscribe.mock.calls;
+      const thoughtSubscription = subscriptionCalls.find(
+        (call) => call[0] === DISPLAY_THOUGHT_ID
+      );
       const thoughtHandler = thoughtSubscription[1];
 
       // Spy on renderThought method
@@ -188,21 +205,29 @@ describe('SpeechBubbleRenderer - Thought Functionality', () => {
     });
 
     it('should warn on invalid DISPLAY_THOUGHT_ID event object', () => {
-      const subscriptionCalls = mockValidatedEventDispatcher.subscribe.mock.calls;
-      const thoughtSubscription = subscriptionCalls.find(call => call[0] === DISPLAY_THOUGHT_ID);
+      const subscriptionCalls =
+        mockValidatedEventDispatcher.subscribe.mock.calls;
+      const thoughtSubscription = subscriptionCalls.find(
+        (call) => call[0] === DISPLAY_THOUGHT_ID
+      );
       const thoughtHandler = thoughtSubscription[1];
 
       thoughtHandler(null);
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Received invalid DISPLAY_THOUGHT_ID event object'),
+        expect.stringContaining(
+          'Received invalid DISPLAY_THOUGHT_ID event object'
+        ),
         null
       );
     });
 
     it('should warn on missing payload', () => {
-      const subscriptionCalls = mockValidatedEventDispatcher.subscribe.mock.calls;
-      const thoughtSubscription = subscriptionCalls.find(call => call[0] === DISPLAY_THOUGHT_ID);
+      const subscriptionCalls =
+        mockValidatedEventDispatcher.subscribe.mock.calls;
+      const thoughtSubscription = subscriptionCalls.find(
+        (call) => call[0] === DISPLAY_THOUGHT_ID
+      );
       const thoughtHandler = thoughtSubscription[1];
 
       const eventObject = { type: DISPLAY_THOUGHT_ID };
@@ -210,20 +235,25 @@ describe('SpeechBubbleRenderer - Thought Functionality', () => {
       thoughtHandler(eventObject);
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Received invalid DISPLAY_THOUGHT_ID event object'),
+        expect.stringContaining(
+          'Received invalid DISPLAY_THOUGHT_ID event object'
+        ),
         eventObject
       );
     });
 
     it('should warn on invalid payload fields', () => {
-      const subscriptionCalls = mockValidatedEventDispatcher.subscribe.mock.calls;
-      const thoughtSubscription = subscriptionCalls.find(call => call[0] === DISPLAY_THOUGHT_ID);
+      const subscriptionCalls =
+        mockValidatedEventDispatcher.subscribe.mock.calls;
+      const thoughtSubscription = subscriptionCalls.find(
+        (call) => call[0] === DISPLAY_THOUGHT_ID
+      );
       const thoughtHandler = thoughtSubscription[1];
 
       const eventObject = {
         type: DISPLAY_THOUGHT_ID,
         payload: {
-          entityId: '',  // Invalid empty string
+          entityId: '', // Invalid empty string
           thoughts: 'Valid thoughts',
         },
       };
@@ -252,8 +282,12 @@ describe('SpeechBubbleRenderer - Thought Functionality', () => {
       expect(mockDomElementFactory.create).toHaveBeenCalledWith('div', {
         cls: 'thought-bubble',
       });
-      expect(mockDomElementFactory.span).toHaveBeenCalledWith('thought-speaker-intro');
-      expect(mockDomElementFactory.span).toHaveBeenCalledWith('thought-content');
+      expect(mockDomElementFactory.span).toHaveBeenCalledWith(
+        'thought-speaker-intro'
+      );
+      expect(mockDomElementFactory.span).toHaveBeenCalledWith(
+        'thought-content'
+      );
       expect(mockEntityDisplayDataProvider.getEntityName).toHaveBeenCalledWith(
         'test-entity-123',
         'Unknown Character'
@@ -265,7 +299,11 @@ describe('SpeechBubbleRenderer - Thought Functionality', () => {
         entityId: 'test-entity-123',
         thoughts: 'This is suspicious...',
         notes: [
-          { text: 'Noticed something odd', subject: 'observation', subjectType: 'event' }
+          {
+            text: 'Noticed something odd',
+            subject: 'observation',
+            subjectType: 'event',
+          },
         ],
       };
 
@@ -306,7 +344,9 @@ describe('SpeechBubbleRenderer - Thought Functionality', () => {
 
       renderer.renderThought(payload);
 
-      expect(mockThoughtEntry.classList.add).toHaveBeenCalledWith('player-thought');
+      expect(mockThoughtEntry.classList.add).toHaveBeenCalledWith(
+        'player-thought'
+      );
     });
 
     it('should error when effectiveSpeechContainer is missing', () => {
@@ -320,9 +360,10 @@ describe('SpeechBubbleRenderer - Thought Functionality', () => {
       renderer.renderThought(payload);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Cannot render thought: effectiveSpeechContainer, domElementFactory, or entityManager missing')
+        expect.stringContaining(
+          'Cannot render thought: effectiveSpeechContainer, domElementFactory, or entityManager missing'
+        )
       );
     });
   });
-
 });
