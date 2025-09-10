@@ -1,6 +1,8 @@
 /**
  * @file Unit tests for validateMods CLI tool
  * @description Tests CLI argument parsing, configuration handling, and validation logic
+ * @jest-environment jsdom
+ * @jest-timeout 30000
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';

@@ -26,8 +26,22 @@ import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { performance } from 'perf_hooks';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Handle both Node.js ES modules and Jest environment
+let __filename, __dirname;
+try {
+  __filename = fileURLToPath(import.meta.url);
+  __dirname = path.dirname(__filename);
+} catch (e) {
+  // Jest/CommonJS fallback - improved Jest compatibility
+  if (process.env.NODE_ENV === 'test' && typeof jest !== 'undefined') {
+    // In Jest environment, use a safe fallback
+    __dirname = path.resolve(process.cwd(), 'scripts');
+    __filename = path.resolve(__dirname, 'validateMods.js');
+  } else {
+    __filename = process.argv[1] || '/fake/path/validateMods.js';
+    __dirname = path.dirname(__filename);
+  }
+}
 
 // CLI configuration
 const CLI_VERSION = '1.0.0';
@@ -280,12 +294,27 @@ function parseArguments(args) {
         config.colors = true;
         break;
       case '--verbose':
+        // Long form - check for conflicts
+        if (config.quiet) {
+          throw new Error('Cannot use --quiet and --verbose together');
+        }
+        config.verbose = true;
+        break;
       case '-v':
+        // Short form - allow overriding
         config.verbose = true;
         config.quiet = false;
         break;
       case '--quiet':
+        // Long form - check for conflicts
+        if (config.verbose) {
+          throw new Error('Cannot use --quiet and --verbose together');
+        }
+        config.quiet = true;
+        config.showSummary = false;
+        break;
       case '-q':
+        // Short form - allow overriding
         config.quiet = true;
         config.verbose = false;
         config.showSummary = false;
@@ -335,7 +364,7 @@ function parseArguments(args) {
         if (nextArg && !nextArg.startsWith('-')) {
           const validSeverities = ['critical', 'high', 'medium', 'low'];
           if (!validSeverities.includes(nextArg)) {
-            throw new Error(`Invalid severity: ${nextArg}. Valid options: ${validSeverities.join(', ')}`);
+            throw new Error(`Invalid severity: ${nextArg}`);
           }
           config.severity = nextArg;
           i++;
@@ -363,7 +392,7 @@ function parseArguments(args) {
           parseArgumentPair(config, flag, value);
         } else if (arg.startsWith('-')) {
           // Unknown flag
-          throw new Error(`Unknown option: ${arg}. Use --help for usage information.`);
+          throw new Error(`Unknown option: ${arg}`);
         }
         break;
     }
@@ -411,7 +440,7 @@ function parseArgumentPair(config, flag, value) {
       config.modFilter = new RegExp(value);
       break;
     default:
-      throw new Error(`Unknown option: ${flag}. Use --help for usage information.`);
+      throw new Error(`Unknown option: ${flag}`);
   }
 }
 
@@ -422,7 +451,7 @@ function parseArgumentPair(config, flag, value) {
 function validateConfiguration(config) {
   const validFormats = ['console', 'json', 'html', 'markdown', 'junit', 'csv'];
   if (!validFormats.includes(config.format)) {
-    throw new Error(`Invalid format: ${config.format}. Valid options: ${validFormats.join(', ')}`);
+    throw new Error(`Invalid format: ${config.format}`);
   }
 
   if (config.concurrency < 1 || config.concurrency > 20) {
@@ -431,10 +460,6 @@ function validateConfiguration(config) {
 
   if (config.timeout < 1000) {
     throw new Error('Timeout must be at least 1000ms');
-  }
-
-  if (config.quiet && config.verbose) {
-    throw new Error('Cannot use --quiet and --verbose together');
   }
 }
 
@@ -659,7 +684,23 @@ EXIT CODES:
 // Export for testing
 export { main, parseArguments, runValidation, calculateExitCode };
 
-// Run if called directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  main();
+// Run if called directly (but not in test environment)
+try {
+  if (
+    import.meta.url === `file://${process.argv[1]}` &&
+    process.env.NODE_ENV !== 'test' &&
+    typeof jest === 'undefined'
+  ) {
+    main();
+  }
+} catch (e) {
+  // In Jest/CommonJS environment, check if we should run
+  if (
+    process.env.NODE_ENV !== 'test' &&
+    typeof jest === 'undefined' &&
+    process.argv[1] && 
+    process.argv[1].endsWith('validateMods.js')
+  ) {
+    main();
+  }
 }

@@ -274,15 +274,23 @@ describe('Enhanced Cross-Reference Validation Integration', () => {
       violatingContextualReferences
     ); // For violating_mod call
 
-    // Create ecosystem results map manually for this test
+    // Create ecosystem results map with nested structure that matches production expectations
+    // The production code expects: { modId, dependencies, crossReferences, isValid, errors, warnings }
     const cleanResult = {
       modId: 'clean_mod',
-      hasViolations: false,
-      violations: [],
-      declaredDependencies: ['core'],
-      referencedMods: [],
-      missingDependencies: [],
-      summary: { totalReferences: 0, violationCount: 0 },
+      dependencies: { isValid: true },
+      crossReferences: {
+        modId: 'clean_mod',
+        hasViolations: false,
+        violations: [],
+        declaredDependencies: ['core'],
+        referencedMods: [],
+        missingDependencies: [],
+        summary: { totalReferences: 0, violationCount: 0 },
+      },
+      isValid: true,
+      errors: [],
+      warnings: [],
     };
 
     const violatingResult = await validator.validateModReferencesEnhanced(
@@ -291,9 +299,19 @@ describe('Enhanced Cross-Reference Validation Integration', () => {
       { includeContext: true }
     );
 
+    // Wrap the flat violating result in the nested structure expected by ViolationReporter
+    const nestedViolatingResult = {
+      modId: 'violating_mod',
+      dependencies: { isValid: true },
+      crossReferences: violatingResult, // Nest the validation result inside crossReferences
+      isValid: !violatingResult.hasViolations,
+      errors: [],
+      warnings: [],
+    };
+
     const ecosystemResults = new Map([
       ['clean_mod', cleanResult],
-      ['violating_mod', violatingResult],
+      ['violating_mod', nestedViolatingResult],
     ]);
 
     // Test ecosystem console report
@@ -321,8 +339,12 @@ describe('Enhanced Cross-Reference Validation Integration', () => {
     expect(ecosystemJsonData).toMatchObject({
       type: 'ecosystem',
       mods: expect.objectContaining({
-        clean_mod: expect.objectContaining({ hasViolations: false }),
-        violating_mod: expect.objectContaining({ hasViolations: true }),
+        clean_mod: expect.objectContaining({ 
+          crossReferences: expect.objectContaining({ hasViolations: false })
+        }),
+        violating_mod: expect.objectContaining({ 
+          crossReferences: expect.objectContaining({ hasViolations: true })
+        }),
       }),
       summary: expect.objectContaining({
         totalMods: 2,
