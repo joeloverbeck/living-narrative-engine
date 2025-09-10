@@ -115,7 +115,7 @@ describe('Integration: ModsLoader can load the core mod (real files)', () => {
     // const nodeDataFetcher = new NodeDataFetcher();
     // container.register(tokens.IDataFetcher, nodeDataFetcher);
 
-    registerLoaders(container);
+    await registerLoaders(container);
     const logger = container.resolve(tokens.ILogger);
     // Spy on logger.error for critical errors
     const errorSpy = jest.spyOn(logger, 'error');

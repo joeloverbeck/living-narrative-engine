@@ -91,6 +91,13 @@
     "dev": "concurrently \"npm run start\" \"npm run dev --prefix llm-proxy-server\"",
     "validate-cross-refs": "node scripts/validateCrossReferences.js",
     "validate-cross-refs:json": "node scripts/validateCrossReferences.js --format=json",
+    "validate:ecosystem": "node scripts/validateModReferences.js --format=console",
+    "validate:ecosystem:json": "node scripts/validateModReferences.js --format=json --output=validation-report.json",
+    "validate:mod": "node scripts/validateModReferences.js --mod=",
+    "update-manifest:validate": "node scripts/updateManifest.js --validate-references",
+    "update-manifest:strict": "node scripts/updateManifest.js --validate-references --fail-on-violations",
+    "test:mods": "npm run validate:ecosystem && echo 'Mod validation passed'",
+    "build:with-validation": "npm run validate:ecosystem && npm run build",
     "validate-cross-refs:html": "node scripts/validateCrossReferences.js --format=html --output=cross-ref-report.html",
     "validate-cross-refs:verbose": "node scripts/validateCrossReferences.js --verbose",
     "validate-cross-refs:basic": "node scripts/validateCrossReferences.js --no-enhanced"

@@ -67,8 +67,25 @@ async function main() {
     const manifestLoader = container.resolve(coreTokens.ModManifestLoader);
     const logger = container.resolve(coreTokens.ILogger);
     
+    // Discover all mod IDs first
+    const modsPath = path.join(process.cwd(), 'data', 'mods');
+    const entries = await fs.readdir(modsPath, { withFileTypes: true });
+    const modIds = [];
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        // Check if it has a mod-manifest.json
+        const manifestPath = path.join(modsPath, entry.name, 'mod-manifest.json');
+        try {
+          await fs.access(manifestPath);
+          modIds.push(entry.name);
+        } catch {
+          // No manifest, skip
+        }
+      }
+    }
+    
     // Load manifests using existing infrastructure
-    const manifestsMap = await manifestLoader.loadAllManifests();
+    const manifestsMap = await manifestLoader.loadRequestedManifests(modIds);
     logger.info(`Loaded ${manifestsMap.size} mod manifests`);
     
     let results;
@@ -156,7 +173,43 @@ async function loadDependencies() {
     // Load DI container and tokens
     const containerModule = await import('../src/dependencyInjection/containerConfig.js');
     const tokensModule = await import('../src/dependencyInjection/tokens/tokens-core.js');
-    const violationReporterModule = await import('../src/validation/violationReporter.js');
+    // Try to import ViolationReporter, with fallback if not available
+    let violationReporterModule;
+    try {
+      violationReporterModule = await import('../src/validation/violationReporter.js');
+    } catch (error) {
+      // Fallback if ViolationReporter doesn't exist yet
+      console.warn('ViolationReporter not found, using fallback reporting');
+      violationReporterModule = {
+        default: class ViolationReporter {
+          constructor({ logger }) {
+            this.logger = logger;
+          }
+          generateReport(results, format, options) {
+            if (format === 'json') {
+              return options.pretty ? JSON.stringify(results, null, 2) : JSON.stringify(results);
+            }
+            // Simple console format fallback
+            let report = '';
+            if (results instanceof Map) {
+              for (const [modId, result] of results) {
+                if (result.hasViolations) {
+                  report += `\nMod: ${modId}\n`;
+                  result.violations.forEach(v => {
+                    report += `  - ${v.severity}: ${v.message}\n`;
+                  });
+                }
+              }
+            } else if (results.hasViolations) {
+              results.violations.forEach(v => {
+                report += `- ${v.severity}: ${v.message}\n`;
+              });
+            }
+            return report || 'No violations found';
+          }
+        }
+      };
+    }
     
     container = containerModule.container;
     coreTokens = tokensModule.coreTokens;

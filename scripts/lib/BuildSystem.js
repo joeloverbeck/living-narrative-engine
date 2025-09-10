@@ -27,6 +27,7 @@ class BuildSystem {
       parallel: true,
       verbose: false,
       fast: false,
+      memoryTest: false,
       ...options,
     };
 
@@ -49,6 +50,17 @@ class BuildSystem {
       this.buildOptions.treeShaking = false;
       this.options.skipValidation = true;
     }
+
+    // Apply memory test mode optimizations (most aggressive)
+    if (this.options.memoryTest) {
+      this.buildOptions.sourcemap = false;
+      this.buildOptions.minify = false;
+      this.buildOptions.treeShaking = false;
+      this.options.skipValidation = true;
+      this.options.skipStaticAssets = true;
+      this.options.skipFileVerification = true;
+      this.options.minimal = true;
+    }
   }
 
   /**
@@ -62,9 +74,13 @@ class BuildSystem {
     try {
       await this.initialize();
       await this.buildJavaScript();
-      await this.copyStaticAssets();
+      
+      // Skip static assets in memory test mode
+      if (!this.options.skipStaticAssets) {
+        await this.copyStaticAssets();
+      }
 
-      // Skip validation in fast mode
+      // Skip validation in fast mode or memory test mode
       if (!this.options.skipValidation) {
         await this.validate();
       }
@@ -91,8 +107,8 @@ class BuildSystem {
       // Ensure required directories exist
       await this.ensureDirectories();
 
-      // Verify source files exist (skip in fast mode)
-      if (!this.options.fast) {
+      // Verify source files exist (skip in fast mode or memory test mode)
+      if (!this.options.fast && !this.options.skipFileVerification) {
         await this.verifySourceFiles();
       }
 
