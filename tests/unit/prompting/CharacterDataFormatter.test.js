@@ -474,6 +474,264 @@ describe('CharacterDataFormatter', () => {
         /## Your Personality\nConfident\.\n\n## Your Profile/
       );
     });
+
+    it('should include psychological sections when data is present', () => {
+      const characterData = {
+        name: 'Psychological Character',
+        personality: 'Complex and introspective.',
+        profile: 'A character with deep psychological development.',
+        motivations: 'I seek to understand the nature of existence.',
+        internalTensions: 'I desire connection but fear intimacy.',
+        coreDilemmas: 'Is it better to be loved or to be right?',
+        likes: 'Philosophy and quiet moments.',
+      };
+
+      const result = formatter.formatCharacterPersona(characterData);
+
+      // Check identity header
+      expect(result).toContain('YOU ARE Psychological Character.');
+      
+      // Check all psychological sections are present and in correct order
+      expect(result).toContain('## Your Personality');
+      expect(result).toContain('Complex and introspective.');
+      
+      expect(result).toContain('## Your Profile');
+      expect(result).toContain('A character with deep psychological development.');
+      
+      expect(result).toContain('## Your Core Motivations');
+      expect(result).toContain('I seek to understand the nature of existence.');
+      
+      expect(result).toContain('## Your Internal Tensions');
+      expect(result).toContain('I desire connection but fear intimacy.');
+      
+      expect(result).toContain('## Your Core Dilemmas');
+      expect(result).toContain('Is it better to be loved or to be right?');
+      
+      expect(result).toContain('## Your Likes');
+      expect(result).toContain('Philosophy and quiet moments.');
+
+      // Check proper ordering: psychological sections should come after profile, before likes
+      const profileIndex = result.indexOf('## Your Profile');
+      const motivationsIndex = result.indexOf('## Your Core Motivations');
+      const tensionsIndex = result.indexOf('## Your Internal Tensions');
+      const dilemmasIndex = result.indexOf('## Your Core Dilemmas');
+      const likesIndex = result.indexOf('## Your Likes');
+
+      expect(profileIndex).toBeLessThan(motivationsIndex);
+      expect(motivationsIndex).toBeLessThan(tensionsIndex);
+      expect(tensionsIndex).toBeLessThan(dilemmasIndex);
+      expect(dilemmasIndex).toBeLessThan(likesIndex);
+    });
+
+    it('should handle partial psychological data gracefully', () => {
+      const characterData = {
+        name: 'Partial Psych Character',
+        personality: 'Partially developed.',
+        motivations: 'I have one clear motivation.',
+        // internalTensions and coreDilemmas missing
+        likes: 'Simple pleasures.',
+      };
+
+      const result = formatter.formatCharacterPersona(characterData);
+
+      expect(result).toContain('YOU ARE Partial Psych Character.');
+      expect(result).toContain('## Your Core Motivations');
+      expect(result).toContain('I have one clear motivation.');
+      expect(result).not.toContain('## Your Internal Tensions');
+      expect(result).not.toContain('## Your Core Dilemmas');
+      expect(result).toContain('## Your Likes');
+      expect(result).toContain('Simple pleasures.');
+    });
+
+    it('should work without psychological data (backward compatibility)', () => {
+      const characterData = {
+        name: 'Traditional Character',
+        personality: 'Simple and straightforward.',
+        likes: 'Traditional things.',
+      };
+
+      const result = formatter.formatCharacterPersona(characterData);
+
+      expect(result).toContain('YOU ARE Traditional Character.');
+      expect(result).toContain('## Your Personality');
+      expect(result).toContain('Simple and straightforward.');
+      expect(result).not.toContain('## Your Core Motivations');
+      expect(result).not.toContain('## Your Internal Tensions');
+      expect(result).not.toContain('## Your Core Dilemmas');
+      expect(result).toContain('## Your Likes');
+      expect(result).toContain('Traditional things.');
+    });
+  });
+
+  describe('formatMotivationsSection', () => {
+    it('should format valid motivations text', () => {
+      const input = 'I seek power because I fear being powerless.';
+      const expected = `## Your Core Motivations
+I seek power because I fear being powerless.
+`;
+
+      const result = formatter.formatMotivationsSection(input);
+      expect(result).toBe(expected);
+    });
+
+    it('should return empty string for null input', () => {
+      const result = formatter.formatMotivationsSection(null);
+      expect(result).toBe('');
+    });
+
+    it('should return empty string for undefined input', () => {
+      const result = formatter.formatMotivationsSection(undefined);
+      expect(result).toBe('');
+    });
+
+    it('should handle empty string', () => {
+      const result = formatter.formatMotivationsSection('');
+      expect(result).toBe('');
+    });
+
+    it('should handle whitespace-only string', () => {
+      const result = formatter.formatMotivationsSection('   \n\t   ');
+      expect(result).toBe('');
+    });
+
+    it('should trim whitespace from valid input', () => {
+      const input = '  I am driven by a need for approval.  ';
+      const expected = `## Your Core Motivations
+I am driven by a need for approval.
+`;
+
+      const result = formatter.formatMotivationsSection(input);
+      expect(result).toBe(expected);
+    });
+
+    it('should handle non-string input', () => {
+      const result = formatter.formatMotivationsSection(123);
+      expect(result).toBe('');
+    });
+
+    it('should log debug information for valid input', () => {
+      const input = 'Test motivation';
+      formatter.formatMotivationsSection(input);
+      
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'CharacterDataFormatter: Formatted motivations section',
+        { textLength: 15 }
+      );
+    });
+  });
+
+  describe('formatInternalTensionsSection', () => {
+    it('should format valid tensions text', () => {
+      const input = 'I want to be loved but fear vulnerability.';
+      const expected = `## Your Internal Tensions
+I want to be loved but fear vulnerability.
+`;
+
+      const result = formatter.formatInternalTensionsSection(input);
+      expect(result).toBe(expected);
+    });
+
+    it('should return empty string for null input', () => {
+      const result = formatter.formatInternalTensionsSection(null);
+      expect(result).toBe('');
+    });
+
+    it('should return empty string for undefined input', () => {
+      const result = formatter.formatInternalTensionsSection(undefined);
+      expect(result).toBe('');
+    });
+
+    it('should handle empty string', () => {
+      const result = formatter.formatInternalTensionsSection('');
+      expect(result).toBe('');
+    });
+
+    it('should handle whitespace-only string', () => {
+      const result = formatter.formatInternalTensionsSection('   \n\t   ');
+      expect(result).toBe('');
+    });
+
+    it('should trim whitespace from valid input', () => {
+      const input = '  My desire for freedom conflicts with my need for security.  ';
+      const expected = `## Your Internal Tensions
+My desire for freedom conflicts with my need for security.
+`;
+
+      const result = formatter.formatInternalTensionsSection(input);
+      expect(result).toBe(expected);
+    });
+
+    it('should handle non-string input', () => {
+      const result = formatter.formatInternalTensionsSection({});
+      expect(result).toBe('');
+    });
+
+    it('should log debug information for valid input', () => {
+      const input = 'Test tension';
+      formatter.formatInternalTensionsSection(input);
+      
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'CharacterDataFormatter: Formatted internal tensions section',
+        { textLength: 12 }
+      );
+    });
+  });
+
+  describe('formatCoreDilemmasSection', () => {
+    it('should format valid dilemmas text', () => {
+      const input = 'Should I prioritize duty or happiness?';
+      const expected = `## Your Core Dilemmas
+Should I prioritize duty or happiness?
+`;
+
+      const result = formatter.formatCoreDilemmasSection(input);
+      expect(result).toBe(expected);
+    });
+
+    it('should return empty string for null input', () => {
+      const result = formatter.formatCoreDilemmasSection(null);
+      expect(result).toBe('');
+    });
+
+    it('should return empty string for undefined input', () => {
+      const result = formatter.formatCoreDilemmasSection(undefined);
+      expect(result).toBe('');
+    });
+
+    it('should handle empty string', () => {
+      const result = formatter.formatCoreDilemmasSection('');
+      expect(result).toBe('');
+    });
+
+    it('should handle whitespace-only string', () => {
+      const result = formatter.formatCoreDilemmasSection('   \n\t   ');
+      expect(result).toBe('');
+    });
+
+    it('should trim whitespace from valid input', () => {
+      const input = '  What is the meaning of true strength?  ';
+      const expected = `## Your Core Dilemmas
+What is the meaning of true strength?
+`;
+
+      const result = formatter.formatCoreDilemmasSection(input);
+      expect(result).toBe(expected);
+    });
+
+    it('should handle non-string input', () => {
+      const result = formatter.formatCoreDilemmasSection([]);
+      expect(result).toBe('');
+    });
+
+    it('should log debug information for valid input', () => {
+      const input = 'Test dilemma';
+      formatter.formatCoreDilemmasSection(input);
+      
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'CharacterDataFormatter: Formatted core dilemmas section',
+        { textLength: 12 }
+      );
+    });
   });
 
   describe('edge cases and error handling', () => {

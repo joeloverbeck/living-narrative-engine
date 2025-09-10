@@ -1,0 +1,27 @@
+// Scope for actors that this entity is facing away from who have exposed ass cheeks
+// Combines positioning validation (facing away + closeness) with anatomy and clothing checks
+// Used by actions that require the actor to be behind someone with exposed ass anatomy
+// Note: ass_cheek is the body part type, left_ass and right_ass are socket IDs
+sex:actors_with_exposed_ass_facing_away := actor.components.positioning:closeness.partners[][{
+  "and": [
+    {
+      "condition_ref": "positioning:actor-in-entity-facing-away"
+    },
+    {
+      "or": [
+        {
+          "and": [
+            {"hasPartOfType": [".", "ass_cheek"]},
+            {"not": {"isSocketCovered": [".", "left_ass"]}}
+          ]
+        },
+        {
+          "and": [
+            {"hasPartOfType": [".", "ass_cheek"]},
+            {"not": {"isSocketCovered": [".", "right_ass"]}}
+          ]
+        }
+      ]
+    }
+  ]
+}]
