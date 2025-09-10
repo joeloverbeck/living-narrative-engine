@@ -194,7 +194,13 @@ class ViolationReporter {
     const { colors = true, showSuggestions = true } = options;
     const lines = [];
     const modsWithViolations = Array.from(results.entries()).filter(
-      ([, report]) => report.hasViolations
+      ([, report]) => {
+        // Handle both flat structure (hasViolations) and nested structure (crossReferences.hasViolations)
+        return report && (
+          report.hasViolations || 
+          (report.crossReferences && report.crossReferences.hasViolations)
+        );
+      }
     );
 
     lines.push('Living Narrative Engine - Cross-Reference Validation Report');
@@ -208,7 +214,14 @@ class ViolationReporter {
     }
 
     const totalViolations = modsWithViolations.reduce(
-      (sum, [, report]) => sum + report.violations.length,
+      (sum, [, report]) => {
+        // Handle both flat and nested structures
+        if (report.crossReferences) {
+          return sum + report.crossReferences.violations.length;
+        } else {
+          return sum + report.violations.length;
+        }
+      },
       0
     );
 
@@ -218,9 +231,10 @@ class ViolationReporter {
     lines.push('');
 
     // Enhanced summary table with severity if available
-    const hasSeverityData = modsWithViolations.some(([, report]) =>
-      report.violations.some((v) => v.severity)
-    );
+    const hasSeverityData = modsWithViolations.some(([, report]) => {
+      const violations = report.crossReferences ? report.crossReferences.violations : report.violations;
+      return violations.some((v) => v.severity);
+    });
 
     if (hasSeverityData) {
       lines.push('Violation Summary by Severity:');
@@ -252,11 +266,17 @@ class ViolationReporter {
     lines.push('-'.repeat(60));
 
     modsWithViolations
-      .sort((a, b) => b[1].violations.length - a[1].violations.length) // Sort by violation count
+      .sort((a, b) => {
+        const aViolations = a[1].crossReferences ? a[1].crossReferences.violations : a[1].violations;
+        const bViolations = b[1].crossReferences ? b[1].crossReferences.violations : b[1].violations;
+        return bViolations.length - aViolations.length; // Sort by violation count
+      })
       .forEach(([modId, report]) => {
-        const violationCount = report.violations.length.toString();
-        const missingDeps = report.missingDependencies.join(', ');
-        lines.push(modId.padEnd(20) + violationCount.padEnd(12) + missingDeps);
+        const violations = report.crossReferences ? report.crossReferences.violations : report.violations;
+        const missingDeps = report.crossReferences ? report.crossReferences.missingDependencies : report.missingDependencies;
+        const violationCount = violations.length.toString();
+        const depsStr = missingDeps ? missingDeps.join(', ') : '';
+        lines.push(modId.padEnd(20) + violationCount.padEnd(12) + depsStr);
       });
 
     lines.push('');
@@ -268,7 +288,8 @@ class ViolationReporter {
       lines.push('');
       lines.push(`📦 ${modId}:`);
 
-      const violationsByMod = this._groupByMod(report.violations);
+      const violations = report.crossReferences ? report.crossReferences.violations : report.violations;
+      const violationsByMod = this._groupByMod(violations);
 
       for (const [referencedMod, violations] of violationsByMod) {
         lines.push(`  ❌ Missing dependency: ${referencedMod}`);
@@ -462,7 +483,8 @@ class ViolationReporter {
     const totals = { critical: 0, high: 0, medium: 0, low: 0 };
 
     modsWithViolations.forEach(([, report]) => {
-      report.violations.forEach((violation) => {
+      const violations = report.crossReferences ? report.crossReferences.violations : report.violations;
+      violations.forEach((violation) => {
         const severity = violation.severity || 'low';
         if (Object.prototype.hasOwnProperty.call(totals, severity)) {
           totals[severity]++;
@@ -481,16 +503,30 @@ class ViolationReporter {
     const totalMods = results.size;
     const values = Array.from(results.values());
     
-    // Handle the nested validation result structure
-    // Each result has: { modId, dependencies, crossReferences, isValid, errors, warnings }
-    // crossReferences contains: { hasViolations, violations, ... }
-    const modsWithViolations = values.filter(
-      (r) => r && r.crossReferences && r.crossReferences.hasViolations
-    ).length;
-    const totalViolations = values.reduce(
-      (sum, r) => sum + (r && r.crossReferences && r.crossReferences.violations ? r.crossReferences.violations.length : 0),
-      0
-    );
+    // Handle both nested and flat validation result structures
+    // Nested: { modId, dependencies, crossReferences: { hasViolations, violations, ... }, isValid, errors, warnings }
+    // Flat: { modId, hasViolations, violations, ... }
+    const modsWithViolations = values.filter((r) => {
+      return r && (
+        r.hasViolations ||
+        (r.crossReferences && r.crossReferences.hasViolations)
+      );
+    }).length;
+    
+    const totalViolations = values.reduce((sum, r) => {
+      if (!r) return sum;
+      
+      // Handle nested structure
+      if (r.crossReferences && r.crossReferences.violations) {
+        return sum + r.crossReferences.violations.length;
+      }
+      // Handle flat structure
+      else if (r.violations) {
+        return sum + r.violations.length;
+      }
+      
+      return sum;
+    }, 0);
 
     return {
       totalMods,
