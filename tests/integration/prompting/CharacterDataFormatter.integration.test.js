@@ -195,7 +195,295 @@ describe('CharacterDataFormatter Integration Tests', () => {
     });
   });
 
+  describe('Psychological Components Integration', () => {
+    it('should format character with psychological components through AIPromptContentProvider', () => {
+      const gameState = {
+        actorPromptData: {
+          name: 'Dr. Sophia Chen',
+          description: {
+            hair: 'black, pulled back in a professional bun',
+            eyes: 'dark, intelligent and calculating',
+            wearing: 'white lab coat over business attire',
+          },
+          personality:
+            'Brilliant and driven, yet haunted by past mistakes. Perfectionist with a hidden compassionate side.',
+          profile:
+            'A renowned neuroscientist who pioneered breakthrough treatments, but struggles with guilt over a patient she couldn\'t save.',
+          motivations:
+            'I am driven by a desperate need to prove that I can save lives and make amends for past failures. Every patient I treat is a chance for redemption.',
+          internalTensions:
+            'I want to help everyone but fear that my past mistakes make me unworthy. I crave recognition yet feel guilty about wanting acclaim.',
+          coreDilemmas:
+            'Can someone who has failed catastrophically ever truly redeem themselves? Is my drive to help others genuine altruism or selfish ego?',
+          likes: 'Scientific research, classical music, solving complex problems',
+          dislikes: 'Incompetence, wasted time, reminders of past failures',
+        },
+        actorState: { components: {} },
+      };
+
+      const result = aiPromptProvider.getCharacterPersonaContent(gameState);
+
+      // Verify identity header
+      expect(result).toContain('YOU ARE Dr. Sophia Chen.');
+      expect(result).toContain(
+        'This is your identity. All thoughts, actions, and words must stem from this core truth.'
+      );
+
+      // Verify traditional sections are present
+      expect(result).toContain('## Your Description');
+      expect(result).toContain('**Hair**: black, pulled back in a professional bun');
+      expect(result).toContain('## Your Personality');
+      expect(result).toContain('Brilliant and driven, yet haunted by past mistakes');
+      expect(result).toContain('## Your Profile');
+      expect(result).toContain('A renowned neuroscientist who pioneered breakthrough');
+
+      // Verify psychological sections are present and in correct order
+      expect(result).toContain('## Your Core Motivations');
+      expect(result).toContain('I am driven by a desperate need to prove that I can save lives');
+      expect(result).toContain('## Your Internal Tensions');
+      expect(result).toContain('I want to help everyone but fear that my past mistakes');
+      expect(result).toContain('## Your Core Dilemmas');
+      expect(result).toContain('Can someone who has failed catastrophically ever truly redeem themselves');
+
+      // Verify remaining sections are present
+      expect(result).toContain('## Your Likes');
+      expect(result).toContain('Scientific research, classical music');
+      expect(result).toContain('## Your Dislikes');
+      expect(result).toContain('Incompetence, wasted time');
+
+      // Verify section ordering: psychological components should be between profile and likes
+      const profileIndex = result.indexOf('## Your Profile');
+      const motivationsIndex = result.indexOf('## Your Core Motivations');
+      const tensionsIndex = result.indexOf('## Your Internal Tensions');
+      const dilemmasIndex = result.indexOf('## Your Core Dilemmas');
+      const likesIndex = result.indexOf('## Your Likes');
+
+      expect(profileIndex).toBeLessThan(motivationsIndex);
+      expect(motivationsIndex).toBeLessThan(tensionsIndex);
+      expect(tensionsIndex).toBeLessThan(dilemmasIndex);
+      expect(dilemmasIndex).toBeLessThan(likesIndex);
+    });
+
+    it('should handle partial psychological components gracefully', () => {
+      const gameState = {
+        actorPromptData: {
+          name: 'Alex Rivers',
+          personality: 'Optimistic and energetic with hidden depths.',
+          profile: 'A young adventurer seeking purpose in the world.',
+          motivations: 'I seek to prove myself worthy of the legacy left by my mentor.',
+          // internalTensions and coreDilemmas are missing
+          likes: 'Adventure, helping others, sunny days',
+        },
+        actorState: { components: {} },
+      };
+
+      const result = aiPromptProvider.getCharacterPersonaContent(gameState);
+
+      expect(result).toContain('YOU ARE Alex Rivers.');
+      expect(result).toContain('## Your Personality');
+      expect(result).toContain('## Your Profile');
+      expect(result).toContain('## Your Core Motivations');
+      expect(result).toContain('I seek to prove myself worthy of the legacy');
+      expect(result).not.toContain('## Your Internal Tensions');
+      expect(result).not.toContain('## Your Core Dilemmas');
+      expect(result).toContain('## Your Likes');
+      expect(result).toContain('Adventure, helping others');
+    });
+
+    it('should maintain backward compatibility without psychological components', () => {
+      const gameState = {
+        actorPromptData: {
+          name: 'Traditional Character',
+          personality: 'Simple and straightforward personality.',
+          profile: 'A basic character without psychological complexity.',
+          likes: 'Simple pleasures',
+          dislikes: 'Complicated situations',
+        },
+        actorState: { components: {} },
+      };
+
+      const result = aiPromptProvider.getCharacterPersonaContent(gameState);
+
+      expect(result).toContain('YOU ARE Traditional Character.');
+      expect(result).toContain('## Your Personality');
+      expect(result).toContain('Simple and straightforward personality');
+      expect(result).toContain('## Your Profile');
+      expect(result).toContain('A basic character without psychological complexity');
+      expect(result).not.toContain('## Your Core Motivations');
+      expect(result).not.toContain('## Your Internal Tensions');
+      expect(result).not.toContain('## Your Core Dilemmas');
+      expect(result).toContain('## Your Likes');
+      expect(result).toContain('Simple pleasures');
+    });
+  });
+
   describe('Complex Character Data Scenarios', () => {
+    it('should format character with all possible optional sections', () => {
+      const complexCharacterData = {
+        name: 'Aria Blackthorne',
+        description: {
+          hair: 'silver-white, flowing',
+          eyes: 'violet, otherworldly',
+          skin: 'pale, luminescent',
+          height: 'tall, ethereal',
+          build: 'slender, graceful',
+          wearing:
+            'flowing midnight robes with silver thread | ornate silver circlet | leather-bound grimoire at her side',
+          distinguishing: 'intricate tattoos covering her arms',
+        },
+        personality:
+          'Mysterious and wise, with an ancient soul. Speaks in riddles and sees beyond the veil of reality.',
+        profile:
+          'An enigmatic sorceress from the Shadowlands, keeper of forbidden knowledge and guardian of ancient secrets.',
+        likes:
+          'Starlit nights, ancient tomes, herbal teas, and meaningful conversations about the nature of existence',
+        dislikes:
+          'Ignorance, destruction of knowledge, loud noises, and those who abuse power',
+        secrets:
+          'Is actually centuries old and has been alive since the Great War of Shadows',
+        fears: 'The return of the Dark Lords, losing her memories to the curse',
+        speechPatterns: [
+          'Speaks in archaic, formal language',
+          'Often references ancient history and prophecies',
+          'Uses metaphorical language and riddles',
+          'Pauses thoughtfully before important statements',
+        ],
+      };
+
+      const result = formatter.formatCharacterPersona(complexCharacterData);
+
+      // Verify comprehensive formatting
+      expect(result).toContain('YOU ARE Aria Blackthorne.');
+      expect(result).toContain(
+        'This is your identity. All thoughts, actions, and words must stem from this core truth.'
+      );
+
+      // All description attributes
+      expect(result).toContain('**Hair**: silver-white, flowing');
+      expect(result).toContain('**Eyes**: violet, otherworldly');
+      expect(result).toContain('**Skin**: pale, luminescent');
+      expect(result).toContain('**Height**: tall, ethereal');
+      expect(result).toContain('**Build**: slender, graceful');
+      expect(result).toContain(
+        '**Wearing**: flowing midnight robes with silver thread | ornate silver circlet | leather-bound grimoire at her side'
+      );
+      expect(result).toContain(
+        '**Distinguishing**: intricate tattoos covering her arms'
+      );
+
+      // All optional sections
+      expect(result).toContain('## Your Personality');
+      expect(result).toContain('Mysterious and wise, with an ancient soul');
+      expect(result).toContain('## Your Profile');
+      expect(result).toContain('An enigmatic sorceress from the Shadowlands');
+      expect(result).toContain('## Your Likes');
+      expect(result).toContain('Starlit nights, ancient tomes');
+      expect(result).toContain('## Your Dislikes');
+      expect(result).toContain('Ignorance, destruction of knowledge');
+      expect(result).toContain('## Your Secrets');
+      expect(result).toContain('Is actually centuries old');
+      expect(result).toContain('## Your Fears');
+      expect(result).toContain('The return of the Dark Lords');
+
+      // All speech patterns
+      expect(result).toContain('## Your Speech Patterns');
+      expect(result).toContain('- Speaks in archaic, formal language');
+      expect(result).toContain(
+        '- Often references ancient history and prophecies'
+      );
+      expect(result).toContain('- Uses metaphorical language and riddles');
+      expect(result).toContain(
+        '- Pauses thoughtfully before important statements'
+      );
+    });
+
+    it('should format character with complete psychological profile', () => {
+      const psychologicalCharacterData = {
+        name: 'Commander Sarah Mitchell',
+        description: {
+          hair: 'short, auburn with silver streaks',
+          eyes: 'steel gray, battle-hardened',
+          build: 'athletic, scarred from combat',
+          wearing: 'military dress uniform with numerous commendations',
+        },
+        personality:
+          'Disciplined and strategic, yet struggles with the weight of command and the lives she\'s responsible for.',
+        profile:
+          'A decorated war veteran who rose through the ranks to become a respected commander, but carries the burden of difficult wartime decisions.',
+        motivations:
+          'I am driven to protect those under my command and prove that the sacrifices made in war were meaningful. Every mission must succeed to honor the fallen.',
+        internalTensions:
+          'I must appear strong and decisive for my troops while battling my own doubts and trauma. I want to show vulnerability but fear it will undermine my authority.',
+        coreDilemmas:
+          'Is it possible to be a good leader while making decisions that cost lives? Can I honor the dead by continuing to fight, or am I perpetuating the cycle of violence?',
+        likes: 'Strategic planning, mentoring young officers, quiet moments of reflection',
+        dislikes: 'Unnecessary casualties, political interference in military operations, being called a hero',
+        secrets: 'Suffers from nightmares about the soldiers she couldn\'t save',
+        fears: 'Making a decision that leads to unnecessary deaths, losing the trust of her troops',
+        speechPatterns: [
+          'Uses precise military terminology',
+          'Speaks with measured authority',
+          'Often references tactical principles in civilian contexts',
+          'Pauses before difficult decisions',
+        ],
+      };
+
+      const result = formatter.formatCharacterPersona(psychologicalCharacterData);
+
+      // Verify identity and core sections
+      expect(result).toContain('YOU ARE Commander Sarah Mitchell.');
+      expect(result).toContain(
+        'This is your identity. All thoughts, actions, and words must stem from this core truth.'
+      );
+
+      // Verify traditional sections
+      expect(result).toContain('## Your Description');
+      expect(result).toContain('**Hair**: short, auburn with silver streaks');
+      expect(result).toContain('**Eyes**: steel gray, battle-hardened');
+      expect(result).toContain('## Your Personality');
+      expect(result).toContain('Disciplined and strategic, yet struggles with the weight of command');
+      expect(result).toContain('## Your Profile');
+      expect(result).toContain('A decorated war veteran who rose through the ranks');
+
+      // Verify psychological sections are present and properly formatted
+      expect(result).toContain('## Your Core Motivations');
+      expect(result).toContain('I am driven to protect those under my command');
+      expect(result).toContain('Every mission must succeed to honor the fallen');
+      
+      expect(result).toContain('## Your Internal Tensions');
+      expect(result).toContain('I must appear strong and decisive for my troops while battling my own doubts');
+      expect(result).toContain('I want to show vulnerability but fear it will undermine my authority');
+      
+      expect(result).toContain('## Your Core Dilemmas');
+      expect(result).toContain('Is it possible to be a good leader while making decisions that cost lives');
+      expect(result).toContain('Can I honor the dead by continuing to fight');
+
+      // Verify remaining traditional sections
+      expect(result).toContain('## Your Likes');
+      expect(result).toContain('Strategic planning, mentoring young officers');
+      expect(result).toContain('## Your Dislikes');
+      expect(result).toContain('Unnecessary casualties, political interference');
+      expect(result).toContain('## Your Secrets');
+      expect(result).toContain('Suffers from nightmares about the soldiers');
+      expect(result).toContain('## Your Fears');
+      expect(result).toContain('Making a decision that leads to unnecessary deaths');
+      expect(result).toContain('## Your Speech Patterns');
+      expect(result).toContain('- Uses precise military terminology');
+      expect(result).toContain('- Speaks with measured authority');
+
+      // Verify psychological sections are in correct order (after profile, before likes)
+      const profileIndex = result.indexOf('## Your Profile');
+      const motivationsIndex = result.indexOf('## Your Core Motivations');
+      const tensionsIndex = result.indexOf('## Your Internal Tensions');
+      const dilemmasIndex = result.indexOf('## Your Core Dilemmas');
+      const likesIndex = result.indexOf('## Your Likes');
+
+      expect(profileIndex).toBeLessThan(motivationsIndex);
+      expect(motivationsIndex).toBeLessThan(tensionsIndex);
+      expect(tensionsIndex).toBeLessThan(dilemmasIndex);
+      expect(dilemmasIndex).toBeLessThan(likesIndex);
+    });
+
     it('should format character with all possible optional sections', () => {
       const complexCharacterData = {
         name: 'Aria Blackthorne',

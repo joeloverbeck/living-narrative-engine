@@ -301,6 +301,15 @@ export async function registerLoaders(container) {
   registrar.singletonFactory(tokens.ModManifestProcessor, (c) => {
     const resolver = c.resolve(tokens.ModLoadOrderResolver); // Expects an object
 
+    // Safely resolve optional validation orchestrator - available only in server environments
+    let modValidationOrchestrator = null;
+    try {
+      modValidationOrchestrator = c.resolve(tokens.IModValidationOrchestrator);
+    } catch (error) {
+      // Orchestrator not available in browser environment - this is expected behavior
+      modValidationOrchestrator = null;
+    }
+
     return new ModManifestProcessor({
       logger: c.resolve(tokens.ILogger),
       modManifestLoader: c.resolve(tokens.ModManifestLoader),
@@ -310,7 +319,7 @@ export async function registerLoaders(container) {
       modVersionValidator: validateModEngineVersions,
       modLoadOrderResolver: resolver,
       configuration: c.resolve(tokens.IConfiguration),
-      modValidationOrchestrator: c.resolve(tokens.IModValidationOrchestrator), // Add validation orchestrator
+      modValidationOrchestrator, // Optional - null in browser, available in server
     });
   });
 

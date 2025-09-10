@@ -272,6 +272,84 @@ export class CharacterDataFormatter {
   }
 
   /**
+   * Format motivations section
+   * @param {string} motivationsText - Core psychological motivations
+   * @returns {string} Markdown formatted motivations section
+   */
+  formatMotivationsSection(motivationsText) {
+    if (!motivationsText || typeof motivationsText !== 'string') {
+      this.#logger.debug('CharacterDataFormatter: No motivations text provided');
+      return '';
+    }
+
+    const trimmedText = motivationsText.trim();
+    if (trimmedText.length === 0) {
+      this.#logger.debug('CharacterDataFormatter: Empty motivations text after trimming');
+      return '';
+    }
+
+    const result = `## Your Core Motivations
+${trimmedText}
+`;
+    this.#logger.debug('CharacterDataFormatter: Formatted motivations section', {
+      textLength: trimmedText.length
+    });
+    return result;
+  }
+
+  /**
+   * Format internal tensions section
+   * @param {string} tensionsText - Internal conflicts and competing desires
+   * @returns {string} Markdown formatted tensions section
+   */
+  formatInternalTensionsSection(tensionsText) {
+    if (!tensionsText || typeof tensionsText !== 'string') {
+      this.#logger.debug('CharacterDataFormatter: No internal tensions text provided');
+      return '';
+    }
+
+    const trimmedText = tensionsText.trim();
+    if (trimmedText.length === 0) {
+      this.#logger.debug('CharacterDataFormatter: Empty tensions text after trimming');
+      return '';
+    }
+
+    const result = `## Your Internal Tensions
+${trimmedText}
+`;
+    this.#logger.debug('CharacterDataFormatter: Formatted internal tensions section', {
+      textLength: trimmedText.length
+    });
+    return result;
+  }
+
+  /**
+   * Format core dilemmas section
+   * @param {string} dilemmasText - Fundamental questions the character grapples with
+   * @returns {string} Markdown formatted dilemmas section
+   */
+  formatCoreDilemmasSection(dilemmasText) {
+    if (!dilemmasText || typeof dilemmasText !== 'string') {
+      this.#logger.debug('CharacterDataFormatter: No core dilemmas text provided');
+      return '';
+    }
+
+    const trimmedText = dilemmasText.trim();
+    if (trimmedText.length === 0) {
+      this.#logger.debug('CharacterDataFormatter: Empty dilemmas text after trimming');
+      return '';
+    }
+
+    const result = `## Your Core Dilemmas
+${trimmedText}
+`;
+    this.#logger.debug('CharacterDataFormatter: Formatted core dilemmas section', {
+      textLength: trimmedText.length
+    });
+    return result;
+  }
+
+  /**
    * Main formatting method that assembles complete character persona
    *
    * @param {object} characterData - Complete character data from actorPromptData
@@ -297,6 +375,9 @@ export class CharacterDataFormatter {
       secrets,
       fears,
       speechPatterns,
+      motivations,
+      internalTensions,
+      coreDilemmas,
     } = characterData;
 
     let result = '';
@@ -320,6 +401,22 @@ export class CharacterDataFormatter {
     const profileSection = this.formatProfileSection(profile);
     if (profileSection) {
       result += profileSection + '\n';
+    }
+
+    // Psychological components (place after profile, before likes)
+    const motivationsSection = this.formatMotivationsSection(motivations);
+    if (motivationsSection) {
+      result += motivationsSection + '\n';
+    }
+
+    const tensionsSection = this.formatInternalTensionsSection(internalTensions);
+    if (tensionsSection) {
+      result += tensionsSection + '\n';
+    }
+
+    const dilemmasSection = this.formatCoreDilemmasSection(coreDilemmas);
+    if (dilemmasSection) {
+      result += dilemmasSection + '\n';
     }
 
     const likesSection = this.formatOptionalSection('Likes', likes);

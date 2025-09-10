@@ -472,11 +472,14 @@ async function performManifestUpdate(modName, modPath, manifestPath, opts) {
     };
   }
   
+  // Create a deep copy of the existing manifest to preserve it for comparison
+  const manifestCopy = JSON.parse(JSON.stringify(existingManifest));
+  
   // Scan directory structure (using existing logic)
-  const scanResult = await scanModDirectory(modPath, existingManifest, opts);
+  const scanResult = await scanModDirectory(modPath, manifestCopy, opts);
   
   // Build new manifest (existing logic with enhancements)
-  const newManifest = { ...existingManifest, ...scanResult.manifest };
+  const newManifest = scanResult.manifest;
   
   // Validation-aware manifest writing
   let manifestUpdated = false;
@@ -1020,9 +1023,15 @@ function getArgValue(args, flag) {
 async function main() {
   const args = process.argv.slice(2);
   
-  if (args.length === 0) {
+  // Show help if explicitly requested
+  if (args.includes('--help') || args.includes('-h')) {
     printUsage();
-    process.exit(1);
+    process.exit(0);
+  }
+  
+  // Default to batch mode if no arguments provided
+  if (args.length === 0) {
+    args.push('--batch');
   }
   
   try {
@@ -1071,8 +1080,10 @@ async function main() {
  * Prints comprehensive usage information
  */
 function printUsage() {
-  console.log('Usage: node updateManifest.js <mod-name> [options]');
+  console.log('Usage: node updateManifest.js [<mod-name>] [options]');
   console.log('       node updateManifest.js --batch [options]');
+  console.log('');
+  console.log('When run without arguments, updates all mods (batch mode).');
   console.log('');
   console.log('Arguments:');
   console.log('  <mod-name>                   Name of specific mod to update');
@@ -1154,7 +1165,7 @@ module.exports = {
   parseCommandLineOptions,
   ValidationError,
   // Maintain existing export for backward compatibility
-  updateModManifestLegacy
+  updateManifestLegacy
 };
 
 // Run if called directly (CommonJS pattern)
