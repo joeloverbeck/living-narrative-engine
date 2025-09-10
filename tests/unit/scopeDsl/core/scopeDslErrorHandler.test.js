@@ -468,8 +468,9 @@ describe('ScopeDslErrorHandler', () => {
 
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer).toHaveLength(3); // Should be limited to 3
-      expect(buffer[0].message).toBe('error 3'); // First two should be dropped
-      expect(buffer[2].message).toBe('error 5');
+      expect(buffer[0].message).toBe('error 4'); // Overwrote position 0 (was error 1)
+      expect(buffer[1].message).toBe('error 5'); // Overwrote position 1 (was error 2)
+      expect(buffer[2].message).toBe('error 3'); // Original position 2
     });
 
     it('should clear buffer when requested', () => {
