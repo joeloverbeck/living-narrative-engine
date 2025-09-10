@@ -53,12 +53,18 @@ const argv = yargs(hideBin(process.argv))
     type: 'boolean',
     default: false,
   })
+  .option('memory-test', {
+    description: 'Memory test mode (minimal build for memory testing only)',
+    type: 'boolean',
+    default: false,
+  })
   .example('$0', 'Build in development mode')
   .example('$0 --mode production', 'Build for production')
   .example('$0 --watch', 'Build and watch for changes')
   .example('$0 --validate-only', 'Validate existing build')
   .example('$0 --verbose --no-parallel', 'Debug build issues')
   .example('$0 --fast', 'Fast build for tests')
+  .example('$0 --memory-test', 'Minimal build for memory testing')
   .help()
   .alias('help', 'h')
   .version(false).argv;
@@ -84,6 +90,10 @@ async function main() {
 
     if (argv.fast) {
       console.log(chalk.yellow(`Fast mode: enabled (optimized for tests)`));
+    }
+
+    if (argv.memoryTest) {
+      console.log(chalk.yellow(`Memory test mode: enabled (minimal build for memory testing)`));
     }
 
     console.log('');
@@ -124,6 +134,7 @@ async function runBuild() {
     parallel: argv.parallel,
     verbose: argv.verbose,
     fast: argv.fast,
+    memoryTest: argv.memoryTest,
   });
 
   await buildSystem.build();

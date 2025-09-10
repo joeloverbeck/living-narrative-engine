@@ -311,6 +311,7 @@ export async function registerLoaders(container) {
       modVersionValidator: validateModEngineVersions,
       modLoadOrderResolver: resolver,
       configuration: c.resolve(tokens.IConfiguration),
+      modValidationOrchestrator: c.resolve(tokens.IModValidationOrchestrator), // Add validation orchestrator
     });
   });
 
@@ -470,8 +471,8 @@ export async function registerLoaders(container) {
   // for build-time validation. Skip registration to prevent esbuild bundling failures.
   
   try {
-    // Only attempt registration in Node.js environment
-    if (typeof window === 'undefined' && typeof globalThis !== 'undefined' && globalThis.process) {
+    // Only attempt registration in Node.js environment (including test environment with jsdom)
+    if ((typeof window === 'undefined' || (typeof globalThis.process !== 'undefined' && globalThis.process.env.NODE_ENV === 'test')) && typeof globalThis !== 'undefined' && globalThis.process) {
       // Server-side environment - register validation services
       // Dynamic imports with string concatenation to avoid esbuild static analysis
       const validationBasePath = '../../validation/';
@@ -499,8 +500,38 @@ export async function registerLoaders(container) {
           referenceExtractor: c.resolve(tokens.IModReferenceExtractor)
         })
       );
+      
+      // Dynamic import for ModValidationOrchestrator
+      const modValidationOrchestratorModule = await import(validationBasePath + 'modValidationOrchestrator.js');
+      const ModValidationOrchestrator = modValidationOrchestratorModule.default;
+      
+      // Register ModValidationOrchestrator
+      registrar.singletonFactory(
+        tokens.IModValidationOrchestrator,
+        (c) => new ModValidationOrchestrator({
+          logger: c.resolve(tokens.ILogger),
+          modDependencyValidator: ModDependencyValidator, // Pass the class itself
+          modCrossReferenceValidator: c.resolve(tokens.IModCrossReferenceValidator),
+          modLoadOrderResolver: c.resolve(tokens.ModLoadOrderResolver),
+          modManifestLoader: c.resolve(tokens.ModManifestLoader),
+          pathResolver: c.resolve(tokens.IPathResolver),
+          configuration: c.resolve(tokens.IConfiguration)
+        })
+      );
+      
+      // Dynamic import for ViolationReporter  
+      const violationReporterModule = await import(validationBasePath + 'violationReporter.js');
+      const ViolationReporter = violationReporterModule.default;
+      
+      // Register ViolationReporter
+      registrar.singletonFactory(
+        tokens.IViolationReporter,
+        (c) => new ViolationReporter({
+          logger: c.resolve(tokens.ILogger)
+        })
+      );
 
-      safeDebug('Registered mod cross-reference validation services (server-side only)');
+      safeDebug('Registered mod cross-reference validation services and orchestrator (server-side only)');
     } else {
       // Browser environment - skip validation services
       safeDebug('Skipped mod cross-reference validation services (browser environment)');

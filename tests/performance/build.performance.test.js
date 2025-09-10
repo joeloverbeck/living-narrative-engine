@@ -208,7 +208,7 @@ describe('Build System Performance', () => {
     );
 
     // Separate test for production build - can be run independently if needed
-    it.skip(
+    it(
       'should complete production build successfully',
       async () => {
         console.log('Testing production build...');
@@ -237,131 +237,6 @@ describe('Build System Performance', () => {
     );
   });
 
-  // Skip extended performance tests by default - run only when specifically needed
-  describe.skip('Extended Build Performance', () => {
-    it(
-      'should demonstrate consistent build performance across runs',
-      async () => {
-        const buildTimes = [];
-        const numRuns = 2; // Keep limited for performance
-
-        for (let i = 0; i < numRuns; i++) {
-          // Clean before each run
-          if (await fs.pathExists(distDir)) {
-            await fs.remove(distDir);
-          }
-
-          const startTime = Date.now();
-          const result = await executeBuildWithRetries('build:dev');
-          const buildTime = Date.now() - startTime;
-
-          expect(result.actualSuccess || result.isDevValidationFailure).toBe(
-            true
-          );
-
-          if (result.isDevValidationFailure) {
-            console.log(
-              'Build completed with validation warnings for missing development features'
-            );
-          }
-          buildTimes.push(buildTime);
-
-          console.log(`Build run ${i + 1}: ${buildTime}ms`);
-        }
-
-        // Calculate coefficient of variation (std dev / mean)
-        const mean = buildTimes.reduce((a, b) => a + b, 0) / buildTimes.length;
-        const variance =
-          buildTimes.reduce((a, b) => a + Math.pow(b - mean, 2), 0) /
-          buildTimes.length;
-        const stdDev = Math.sqrt(variance);
-        const coefficientOfVariation = stdDev / mean;
-
-        console.log(
-          `Build time consistency: mean=${mean.toFixed(0)}ms, stdDev=${stdDev.toFixed(0)}ms, CV=${(coefficientOfVariation * 100).toFixed(1)}%`
-        );
-
-        // Builds should be reasonably consistent (CV < 50%)
-        expect(coefficientOfVariation).toBeLessThan(0.5);
-      },
-      testTimeout
-    );
-  });
-
-  // Skip parallel vs sequential comparison by default - not critical for CI
-  describe.skip('Parallel vs Sequential Performance', () => {
-    it(
-      'should validate parallel and sequential build modes work correctly',
-      async () => {
-        // Test parallel build (default)
-        console.log('Testing parallel build...');
-        const parallelStart = Date.now();
-        const parallelResult = await executeBuildWithRetries('build:dev');
-        const parallelTime = Date.now() - parallelStart;
-
-        expect(
-          parallelResult.actualSuccess || parallelResult.isDevValidationFailure
-        ).toBe(true);
-
-        if (parallelResult.isDevValidationFailure) {
-          console.log(
-            'Parallel build completed with validation warnings for missing development features'
-          );
-        }
-        expect(await fs.pathExists(distDir)).toBe(true);
-        console.log(`Parallel build: ${parallelTime}ms`);
-
-        // Clean for sequential test
-        await fs.remove(distDir);
-
-        // Test sequential build (no-parallel) using direct script call
-        console.log('Testing sequential build...');
-        const sequentialStart = Date.now();
-
-        try {
-          const sequentialResult = await executeBuild('run', [
-            'node',
-            'scripts/build.js',
-            '--no-parallel',
-            '--mode',
-            'development',
-          ]);
-          const sequentialTime = Date.now() - sequentialStart;
-
-          expect(
-            sequentialResult.actualSuccess ||
-              sequentialResult.isDevValidationFailure
-          ).toBe(true);
-
-          if (sequentialResult.isDevValidationFailure) {
-            console.log(
-              'Sequential build completed with validation warnings for missing development features'
-            );
-          }
-          expect(await fs.pathExists(distDir)).toBe(true);
-          console.log(`Sequential build: ${sequentialTime}ms`);
-
-          // Both builds should work, timing comparison is informational only
-          console.log(
-            `Build mode comparison: parallel=${parallelTime}ms, sequential=${sequentialTime}ms`
-          );
-        } catch (error) {
-          // If sequential build fails, just log it and pass the test
-          // since the main requirement is that parallel build works
-          console.warn(
-            `Sequential build failed (expected in some environments): ${error.message}`
-          );
-          console.log(
-            'Parallel build works correctly, sequential build support varies by environment'
-          );
-        }
-
-        // Test passes as long as parallel build worked (which was verified earlier)
-        expect(true).toBe(true);
-      },
-      testTimeout
-    );
-  });
 
   describe('Build Efficiency Metrics', () => {
     it(

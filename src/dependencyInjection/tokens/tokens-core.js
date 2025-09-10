@@ -254,4 +254,6 @@ export const coreTokens = freeze({
   // Mod Cross-Reference Validation
   IModReferenceExtractor: 'IModReferenceExtractor',
   IModCrossReferenceValidator: 'IModCrossReferenceValidator',
+  IModValidationOrchestrator: 'IModValidationOrchestrator',
+  IViolationReporter: 'IViolationReporter',
 });

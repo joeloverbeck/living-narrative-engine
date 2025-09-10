@@ -34,16 +34,15 @@ describe('Loaders Registration Configuration', () => {
     container.register(tokens.ISafeEventDispatcher, mockSafeEventDispatcher);
   });
 
-  it('should configure anatomy loaders with correct diskFolder values', () => {
+  it('should configure anatomy loaders with correct diskFolder values', async () => {
+    // Add missing dependency mock
+    const mockPathConfiguration = {
+      getPath: jest.fn().mockReturnValue('/mock/path'),
+    };
+    container.register(tokens.IPathConfiguration, mockPathConfiguration);
+
     // Register all loaders
-    registerLoaders(container);
-
-    // Get the ContentLoadManager to check its configuration
-    container.resolve(tokens.ContentLoadManager);
-
-    // Access the private configuration through the constructor call
-    const registrationCalls = mockLogger.debug.mock.calls;
-    registrationCalls.find((call) => call[0]?.includes('ContentLoadManager'));
+    await registerLoaders(container);
 
     // Check that the loaders were registered with correct diskFolder values
     expect(mockLogger.info).toHaveBeenCalledWith(
@@ -51,7 +50,6 @@ describe('Loaders Registration Configuration', () => {
     );
 
     // Verify that anatomy loaders are configured correctly
-    // Since we can't directly access the private config, we verify through the registration process
     const anatomyRecipeLoader = container.resolve(tokens.AnatomyRecipeLoader);
     const anatomyBlueprintLoader = container.resolve(
       tokens.AnatomyBlueprintLoader
@@ -59,10 +57,18 @@ describe('Loaders Registration Configuration', () => {
 
     expect(anatomyRecipeLoader).toBeDefined();
     expect(anatomyBlueprintLoader).toBeDefined();
+    expect(anatomyRecipeLoader.constructor.name).toBe('AnatomyRecipeLoader');
+    expect(anatomyBlueprintLoader.constructor.name).toBe('AnatomyBlueprintLoader');
   });
 
-  it('should register all required anatomy loaders', () => {
-    registerLoaders(container);
+  it('should register all required anatomy loaders', async () => {
+    // Add missing dependency mock
+    const mockPathConfiguration = {
+      getPath: jest.fn().mockReturnValue('/mock/path'),
+    };
+    container.register(tokens.IPathConfiguration, mockPathConfiguration);
+
+    await registerLoaders(container);
 
     // Verify all anatomy-related loaders are registered
     expect(() => container.resolve(tokens.AnatomyRecipeLoader)).not.toThrow();

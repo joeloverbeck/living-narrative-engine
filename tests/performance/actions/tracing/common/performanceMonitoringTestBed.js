@@ -165,6 +165,7 @@ export class PerformanceMonitoringTestBed {
       simulateDelay = true,
       measureOverhead = true,
       trackMemory = true,
+      errorRate = 0,
     } = options;
 
     // Create unique action identifier to avoid conflicts in parallel execution
@@ -193,6 +194,20 @@ export class PerformanceMonitoringTestBed {
           startTime,
           actionData,
         });
+      }
+
+      // Simulate error based on error rate (after span is created so it gets tracked)
+      if (errorRate > 0 && Math.random() < errorRate) {
+        const simulatedError = new Error(`Simulated error in action ${actionData.actionId}`);
+        
+        // Record error in the span if we have one
+        if (measureOverhead) {
+          const activeAction = this.activeActions.get(uniqueActionId);
+          if (activeAction) {
+            activeAction.span.recordError(simulatedError);
+          }
+        }
+        throw simulatedError;
       }
 
       // Simulate action execution time
@@ -285,12 +300,9 @@ export class PerformanceMonitoringTestBed {
         const actionData = sequence[i];
 
         try {
-          // Randomly inject errors based on error rate
-          if (Math.random() < errorRate) {
-            throw new Error(`Simulated error in action ${actionData.actionId}`);
-          }
-
-          const result = await this.simulateActionExecution(actionData, options);
+          // Pass errorRate to simulateActionExecution for proper span tracking of errors
+          const executionOptions = { ...options, errorRate };
+          const result = await this.simulateActionExecution(actionData, executionOptions);
           results.push(result);
           
           // Optional debug log (disabled for performance)
@@ -299,12 +311,18 @@ export class PerformanceMonitoringTestBed {
           // }
 
         } catch (error) {
+          // This catch block should only handle unexpected errors, not simulated ones
           const errorResult = {
             ...actionData,
+            actualDuration: 0,
+            monitoringOverhead: 0,
+            timestamp: performance.now(),
             error: error.message,
             success: false,
           };
           results.push(errorResult);
+          this.completedActions.push(errorResult);
+          this.simulatedErrors.push(errorResult);
           
           // Optional debug log for failures (disabled for performance)
           // if (results.filter(r => !r.success).length <= 3) {
@@ -324,18 +342,24 @@ export class PerformanceMonitoringTestBed {
       for (const batch of batches) {
         const batchPromises = batch.map(async (actionData) => {
           try {
-            // Randomly inject errors based on error rate
-            if (Math.random() < errorRate) {
-              throw new Error(`Simulated error in action ${actionData.actionId}`);
-            }
-
-            return await this.simulateActionExecution(actionData, options);
+            // Pass errorRate to simulateActionExecution for proper span tracking of errors
+            const executionOptions = { ...options, errorRate };
+            return await this.simulateActionExecution(actionData, executionOptions);
           } catch (error) {
-            return {
+            // This catch block should only handle unexpected errors, not simulated ones
+            const errorResult = {
               ...actionData,
+              actualDuration: 0,
+              monitoringOverhead: 0,
+              timestamp: performance.now(),
               error: error.message,
               success: false,
             };
+            
+            this.completedActions.push(errorResult);
+            this.simulatedErrors.push(errorResult);
+            
+            return errorResult;
           }
         });
 

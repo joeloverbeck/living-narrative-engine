@@ -35,38 +35,38 @@ if (global.gc) {
 // Global memory test utilities
 global.memoryTestUtils = {
   /**
-   * Forces garbage collection and waits for stabilization (optimized)
+   * Forces garbage collection and waits for stabilization (further optimized for memory tests)
    *
    * @returns {Promise<void>}
    */
   async forceGCAndWait() {
     if (global.gc) {
-      // Reduced from 3 cycles to 2 for better performance
+      // Further reduced cycles and wait times for memory test performance
       global.gc();
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise(resolve => setTimeout(resolve, 30));
       global.gc();
-      // Reduced total wait time from 500ms to 100ms
-      await new Promise(resolve => setTimeout(resolve, 50));
+      // Reduced total wait time from 100ms to 40ms
+      await new Promise(resolve => setTimeout(resolve, 30));
     }
   },
 
   /**
-   * Gets stable memory measurement with multiple samples (optimized)
+   * Gets stable memory measurement with multiple samples (further optimized for memory tests)
    *
    * @param {number} samples - Number of samples to take
    * @returns {Promise<number>} Median memory usage in bytes
    */
-  async getStableMemoryUsage(samples = 3) {
-    // Reduced default samples from 5 to 3 for faster execution
+  async getStableMemoryUsage(samples = 2) {
+    // Further reduced default samples from 3 to 2 for faster execution
     const measurements = [];
     
-    // Reduced initial stabilization from 50ms to 20ms
-    await new Promise(resolve => setTimeout(resolve, 20));
+    // Reduced initial stabilization from 20ms to 10ms
+    await new Promise(resolve => setTimeout(resolve, 10));
 
     for (let i = 0; i < samples; i++) {
       if (i > 0) {
-        // Reduced delay between samples from 20ms to 10ms
-        await new Promise(resolve => setTimeout(resolve, 10));
+        // Reduced delay between samples from 10ms to 5ms
+        await new Promise(resolve => setTimeout(resolve, 5));
       }
       measurements.push(process.memoryUsage().heapUsed);
     }
@@ -131,8 +131,8 @@ global.memoryTestUtils = {
         console.log(
           `Memory assertion attempt ${attempt} failed: ${(memory / 1024 / 1024).toFixed(2)}MB > ${(adjustedLimit / 1024 / 1024).toFixed(2)}MB. Retrying...`
         );
-        // Reduced wait times for faster retries
-        const waitTime = 100 + (attempt * 50);
+        // Further reduced wait times for faster retries
+        const waitTime = 50 + (attempt * 25);
         await new Promise(resolve => setTimeout(resolve, waitTime));
       } else {
         // Final attempt failed

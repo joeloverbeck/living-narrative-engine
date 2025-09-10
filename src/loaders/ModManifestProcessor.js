@@ -26,6 +26,7 @@ export class ModManifestProcessor {
   #modDependencyValidator;
   #modVersionValidator;
   #modLoadOrderResolver;
+  #modValidationOrchestrator;
 
   /**
    * @param {object} deps - Constructor dependencies.
@@ -36,6 +37,7 @@ export class ModManifestProcessor {
    * @param {typeof import('../modding/modDependencyValidator.js')} deps.modDependencyValidator - Dependency validator helper.
    * @param {typeof import('../modding/modVersionValidator.js').default} deps.modVersionValidator - Version compatibility validator.
    * @param {import('../modding/modLoadOrderResolver.js')} deps.modLoadOrderResolver - Load order resolver module.
+   * @param {import('../validation/modValidationOrchestrator.js').default} [deps.modValidationOrchestrator] - Optional validation orchestrator for comprehensive validation.
    */
   constructor({
     modManifestLoader,
@@ -45,6 +47,7 @@ export class ModManifestProcessor {
     modDependencyValidator,
     modVersionValidator,
     modLoadOrderResolver,
+    modValidationOrchestrator,
   }) {
     this.#modManifestLoader = modManifestLoader;
     this.#logger = logger;
@@ -53,6 +56,7 @@ export class ModManifestProcessor {
     this.#modDependencyValidator = modDependencyValidator;
     this.#modVersionValidator = modVersionValidator;
     this.#modLoadOrderResolver = modLoadOrderResolver;
+    this.#modValidationOrchestrator = modValidationOrchestrator;
   }
 
   /**
@@ -113,11 +117,68 @@ export class ModManifestProcessor {
    *
    * @param {string[]} requestedIds - IDs of mods requested by the game config.
    * @param {string} worldName - The name of the world being loaded.
-   * @returns {Promise<{loadedManifestsMap: Map<string, ModManifest>, finalModOrder: string[], incompatibilityCount: number}>}
+   * @param {Object} [options] - Optional validation options
+   * @param {boolean} [options.validateCrossReferences=false] - Whether to perform cross-reference validation
+   * @param {boolean} [options.strictMode=false] - Whether to fail on validation warnings
+   * @returns {Promise<{loadedManifestsMap: Map<string, ModManifest>, finalModOrder: string[], incompatibilityCount: number, validationWarnings?: string[]}>}
    * Object containing the loaded manifests, resolved order and incompatibility count.
    * @throws {ModDependencyError|Error} Propagates validation errors.
    */
-  async processManifests(requestedIds, worldName) {
+  async processManifests(requestedIds, worldName, options = {}) {
+    const { validateCrossReferences = false, strictMode = false } = options;
+    let validationWarnings = [];
+
+    // If validation orchestrator is available and cross-reference validation is requested
+    if (this.#modValidationOrchestrator && validateCrossReferences) {
+      this.#logger.info('Using ModValidationOrchestrator for comprehensive validation');
+      
+      try {
+        const validationResult = await this.#modValidationOrchestrator.validateForLoading(
+          requestedIds,
+          { strictMode, allowWarnings: !strictMode }
+        );
+        
+        if (!validationResult.canLoad) {
+          throw new ModDependencyError('Pre-loading validation failed - cannot load mods');
+        }
+        
+        validationWarnings = validationResult.warnings || [];
+        
+        if (validationWarnings.length > 0) {
+          this.#logger.warn(`Loading with ${validationWarnings.length} validation warnings`);
+          validationWarnings.forEach(warning => {
+            this.#logger.warn(`  - ${warning}`);
+          });
+        }
+        
+        // The orchestrator already loaded manifests, use them
+        const loadedManifestsMap = await this.#modManifestLoader.getLoadedManifests() || new Map();
+        
+        // Store all manifests in registry
+        for (const [modId, manifestObj] of loadedManifestsMap.entries()) {
+          this.#registry.store('mod_manifests', modId, manifestObj);
+        }
+        
+        // Use the load order from validation result if available
+        const finalModOrder = validationResult.loadOrder || requestedIds;
+        this.#registry.store('meta', 'final_mod_order', finalModOrder);
+        
+        return { 
+          loadedManifestsMap, 
+          finalModOrder, 
+          incompatibilityCount: 0,
+          validationWarnings 
+        };
+      } catch (error) {
+        if (strictMode) {
+          throw error;
+        }
+        // Fall back to traditional validation if orchestrator fails
+        this.#logger.warn('Validation orchestrator failed, falling back to traditional validation', error);
+      }
+    }
+
+    // Traditional validation flow (backward compatible)
     // Load all manifests including dependencies recursively
     const loadedManifestsMap = await this.#loadManifestsWithDependencies(
       requestedIds,
@@ -168,7 +229,12 @@ export class ModManifestProcessor {
 
     this.#registry.store('meta', 'final_mod_order', finalModOrder);
 
-    return { loadedManifestsMap, finalModOrder, incompatibilityCount };
+    return { 
+      loadedManifestsMap, 
+      finalModOrder, 
+      incompatibilityCount,
+      validationWarnings 
+    };
   }
 }
 

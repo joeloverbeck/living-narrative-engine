@@ -6,10 +6,13 @@
 // and update its `mod-manifest.json` file with all the `.json` files found.
 // This version automatically discovers new content directories in the mod folder
 // and handles nested directories like entities/definitions and entities/instances.
+// Now includes optional cross-reference validation after update.
 //
 // Usage:
 // node scripts/updateManifest.js <mod_name>  // Update specific mod
 // node scripts/updateManifest.js             // Update all mods
+// node scripts/updateManifest.js <mod_name> --validate-references  // Update and validate
+// node scripts/updateManifest.js <mod_name> --validate-references --fail-on-violations  // Strict mode
 
 const fs = require('fs/promises');
 const path = require('path');
@@ -498,10 +501,122 @@ async function updateModManifest(modName) {
 }
 
 /**
+ * Parse command line options
+ * @returns {Object} Parsed options
+ */
+function parseOptions() {
+  const args = process.argv.slice(2);
+  const options = {
+    modName: null,
+    validateReferences: false,
+    failOnViolations: false
+  };
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === '--validate-references') {
+      options.validateReferences = true;
+    } else if (arg === '--fail-on-violations') {
+      options.failOnViolations = true;
+    } else if (!arg.startsWith('--')) {
+      // First non-flag argument is the mod name
+      if (!options.modName) {
+        options.modName = arg;
+      }
+    }
+  }
+
+  return options;
+}
+
+/**
+ * Validate cross-references for a mod using the validation orchestrator
+ * @param {string} modName - Name of the mod to validate
+ * @param {Object} options - Validation options
+ * @returns {Promise<{success: boolean, violationCount?: number, errors?: string[]}>}
+ */
+async function validateModCrossReferences(modName, options = {}) {
+  const { failOnViolations = false } = options;
+  
+  try {
+    // Dynamically import the necessary modules for validation
+    const { createRequire } = await import('module');
+    const require = createRequire(import.meta.url || process.cwd());
+    
+    // Import container and tokens
+    const containerModule = await import('../src/dependencyInjection/container.js');
+    const tokensModule = await import('../src/dependencyInjection/tokens/tokens-core.js');
+    
+    const container = containerModule.container;
+    const tokens = tokensModule.tokens;
+    
+    // Wait for container initialization
+    await container.ready();
+    
+    // Get the validation orchestrator
+    const validationOrchestrator = container.resolve(tokens.IModValidationOrchestrator);
+    
+    if (!validationOrchestrator) {
+      console.warn('⚠️  Validation orchestrator not available, skipping validation');
+      return { success: true };
+    }
+    
+    console.log('🔍 Running cross-reference validation...');
+    
+    // Validate the mod
+    const result = await validationOrchestrator.validateMod(modName, {
+      skipCrossReferences: false,
+      includeContext: true
+    });
+    
+    if (result.crossReferences && result.crossReferences.hasViolations) {
+      const violationCount = result.crossReferences.violations.length;
+      console.log(`⚠️  Found ${violationCount} cross-reference violations:`);
+      
+      // Display violations
+      result.crossReferences.violations.forEach(violation => {
+        console.log(`   - ${violation.file}: ${violation.message}`);
+        if (violation.fix) {
+          console.log(`     Fix: ${violation.fix}`);
+        }
+      });
+      
+      if (failOnViolations) {
+        return {
+          success: false,
+          violationCount,
+          errors: result.crossReferences.violations.map(v => v.message)
+        };
+      } else {
+        console.log('\n⚠️  Validation warnings found but continuing (use --fail-on-violations to enforce)');
+        return { success: true, violationCount };
+      }
+    } else {
+      console.log('✅ No cross-reference violations found');
+      return { success: true, violationCount: 0 };
+    }
+    
+  } catch (error) {
+    console.error('❌ Cross-reference validation failed:', error.message);
+    
+    if (failOnViolations) {
+      return {
+        success: false,
+        errors: [error.message]
+      };
+    } else {
+      console.warn('⚠️  Validation failed but continuing (use --fail-on-violations to enforce)');
+      return { success: true };
+    }
+  }
+}
+
+/**
  * Main function to run the script logic.
  */
 async function main() {
-  const modName = process.argv[2]; // No default value
+  const options = parseOptions();
+  const { modName, validateReferences, failOnViolations } = options;
 
   if (modName) {
     // Update single mod
@@ -515,6 +630,15 @@ async function main() {
         }
       }
       process.exit(1);
+    }
+    
+    // Perform validation if requested
+    if (validateReferences) {
+      const validationResult = await validateModCrossReferences(modName, { failOnViolations });
+      if (!validationResult.success) {
+        console.error(`\n❌ Validation failed for mod "${modName}"`);
+        process.exit(1);
+      }
     }
   } else {
     // Update all mods
