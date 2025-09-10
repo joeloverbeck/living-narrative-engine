@@ -3,7 +3,8 @@
  * @see src/entities/entityInstanceData.js
  */
 
-import { cloneDeep } from 'lodash';
+import lodash from 'lodash';
+const { cloneDeep } = lodash;
 import { freeze } from '../utils/cloneUtils.js';
 import { validateDependency } from '../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../utils/loggerUtils.js';

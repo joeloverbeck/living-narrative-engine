@@ -2,7 +2,7 @@
  * @file Helper class for validating LLM configuration objects.
  */
 
-import { ConfigurationError } from '../../errors/configurationError';
+import { ConfigurationError } from '../../errors/configurationError.js';
 import { LLMStrategyFactoryError } from '../errors/LLMStrategyFactoryError.js';
 import { getLlmId } from '../utils/llmUtils.js';
 

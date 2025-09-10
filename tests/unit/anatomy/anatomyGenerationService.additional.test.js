@@ -187,7 +187,7 @@ describe('AnatomyGenerationService – additional', () => {
       expect(result).toEqual({
         generated: ['a'],
         skipped: ['b'],
-        failed: ['c'],
+        failed: [{ entityId: 'c', error: 'fail' }],
       });
       expect(spy).toHaveBeenCalledTimes(3);
     });

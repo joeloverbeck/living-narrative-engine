@@ -11,7 +11,7 @@
 
 /** @typedef {import('../../data/schemas/game.schema.json')} GameConfig */ // Assuming this type exists
 
-import { CORE_MOD_ID } from '../constants/core';
+import { CORE_MOD_ID } from '../constants/core.js';
 import AbstractLoader from './abstractLoader.js';
 import { formatAjvErrors } from '../utils/ajvUtils.js';
 import { validateAgainstSchema } from '../utils/schemaValidationUtils.js';

@@ -259,8 +259,7 @@ export class IntegrationTestBed extends BaseTestBed {
       isInitialized: jest.fn().mockReturnValue(true),
       isOperational: jest.fn().mockReturnValue(true),
       getAIDecision: jest.fn().mockResolvedValue({
-        success: true,
-        result: JSON.stringify({
+        content: JSON.stringify({
           characterName: 'Test Character',
           rewrittenTraits: {
             'core:personality':

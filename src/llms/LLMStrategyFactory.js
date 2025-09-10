@@ -2,7 +2,7 @@
 import { IHttpClient } from './interfaces/IHttpClient.js';
 import { ILogger } from '../interfaces/ILogger.js';
 import { ILLMStrategy } from './interfaces/ILLMStrategy.js';
-import { ConfigurationError } from '../errors/configurationError';
+import { ConfigurationError } from '../errors/configurationError.js';
 import { LLMStrategyFactoryError } from './errors/LLMStrategyFactoryError.js';
 import { initLogger } from '../utils/index.js';
 import { LLMConfigValidator } from './helpers/llmConfigValidator.js';

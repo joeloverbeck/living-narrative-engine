@@ -21,7 +21,7 @@ import {
 } from './registrations/aiRegistrations.js';
 import { registerTurnLifecycle } from './registrations/turnLifecycleRegistrations.js';
 import { registerOrchestration } from './registrations/orchestrationRegistrations.js';
-import { registerUI } from './registrations/uiRegistrations.js';
+// UI registrations will be dynamically imported only when needed
 import { registerCharacterBuilder } from './registrations/characterBuilderRegistrations.js';
 
 /**
@@ -193,6 +193,8 @@ export async function configureBaseContainer(container, options = {}) {
       if (logger) {
         logger.debug('[BaseContainerConfig] Registering UI components...');
       }
+      // Dynamically import UI registrations only when needed
+      const { registerUI } = await import('./registrations/uiRegistrations.js');
       registerUI(container, uiElements);
     }
 

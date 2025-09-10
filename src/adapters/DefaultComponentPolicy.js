@@ -1,4 +1,5 @@
-import { cloneDeep } from 'lodash';
+import lodash from 'lodash';
+const { cloneDeep } = lodash;
 import { IDefaultComponentPolicy } from '../ports/IDefaultComponentPolicy.js';
 import {
   ACTOR_COMPONENT_ID,

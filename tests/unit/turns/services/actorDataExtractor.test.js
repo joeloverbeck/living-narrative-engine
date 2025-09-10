@@ -12,8 +12,12 @@ import {
   STRENGTHS_COMPONENT_ID,
   WEAKNESSES_COMPONENT_ID,
   SECRETS_COMPONENT_ID,
+  FEARS_COMPONENT_ID,
   SPEECH_PATTERNS_COMPONENT_ID,
   APPARENT_AGE_COMPONENT_ID,
+  MOTIVATIONS_COMPONENT_ID,
+  INTERNAL_TENSIONS_COMPONENT_ID,
+  DILEMMAS_COMPONENT_ID,
 } from '../../../../src/constants/componentIds.js';
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 
@@ -361,6 +365,124 @@ describe('ActorDataExtractor', () => {
       };
       result = extractor.extractPromptData(actorState);
       expect(result.speechPatterns).toBeUndefined();
+    });
+
+    describe('psychological components extraction', () => {
+      test('should extract all three psychological components when present', () => {
+        const actorState = {
+          [NAME_COMPONENT_ID]: { text: 'Test Character' },
+          [MOTIVATIONS_COMPONENT_ID]: {
+            text: 'I seek power because I fear being powerless again.',
+          },
+          [INTERNAL_TENSIONS_COMPONENT_ID]: {
+            text: 'I want revenge but also want to forgive.',
+          },
+          [DILEMMAS_COMPONENT_ID]: {
+            text: 'Can I achieve justice without becoming a monster?',
+          },
+        };
+        const result = extractor.extractPromptData(actorState);
+        
+        expect(result.motivations).toBe('I seek power because I fear being powerless again.');
+        expect(result.internalTensions).toBe('I want revenge but also want to forgive.');
+        expect(result.coreDilemmas).toBe('Can I achieve justice without becoming a monster?');
+      });
+
+      test('should return undefined for psychological components when absent', () => {
+        const actorState = {
+          [NAME_COMPONENT_ID]: { text: 'Test Character' },
+          [DESCRIPTION_COMPONENT_ID]: { text: 'A simple character' },
+        };
+        const result = extractor.extractPromptData(actorState);
+        
+        expect(result.motivations).toBeUndefined();
+        expect(result.internalTensions).toBeUndefined();
+        expect(result.coreDilemmas).toBeUndefined();
+      });
+
+      test('should handle mixed presence of psychological components', () => {
+        const actorState = {
+          [NAME_COMPONENT_ID]: { text: 'Test Character' },
+          [MOTIVATIONS_COMPONENT_ID]: {
+            text: 'To protect those I love.',
+          },
+          // internal tensions missing
+          [DILEMMAS_COMPONENT_ID]: {
+            text: 'How far is too far when protecting family?',
+          },
+        };
+        const result = extractor.extractPromptData(actorState);
+        
+        expect(result.motivations).toBe('To protect those I love.');
+        expect(result.internalTensions).toBeUndefined();
+        expect(result.coreDilemmas).toBe('How far is too far when protecting family?');
+      });
+
+      test('should return undefined for empty text in psychological components', () => {
+        const actorState = {
+          [NAME_COMPONENT_ID]: { text: 'Test Character' },
+          [MOTIVATIONS_COMPONENT_ID]: { text: '' },
+          [INTERNAL_TENSIONS_COMPONENT_ID]: { text: '   ' }, // whitespace only
+          [DILEMMAS_COMPONENT_ID]: { text: null },
+        };
+        const result = extractor.extractPromptData(actorState);
+        
+        expect(result.motivations).toBeUndefined();
+        expect(result.internalTensions).toBeUndefined();
+        expect(result.coreDilemmas).toBeUndefined();
+      });
+
+      test('should trim whitespace from psychological component text', () => {
+        const actorState = {
+          [NAME_COMPONENT_ID]: { text: 'Test Character' },
+          [MOTIVATIONS_COMPONENT_ID]: {
+            text: '  To find my purpose  ',
+          },
+          [INTERNAL_TENSIONS_COMPONENT_ID]: {
+            text: '\n\tDesire for freedom vs need for security\t\n',
+          },
+          [DILEMMAS_COMPONENT_ID]: {
+            text: '  Can I trust again?  ',
+          },
+        };
+        const result = extractor.extractPromptData(actorState);
+        
+        expect(result.motivations).toBe('To find my purpose');
+        expect(result.internalTensions).toBe('Desire for freedom vs need for security');
+        expect(result.coreDilemmas).toBe('Can I trust again?');
+      });
+
+      test('should handle psychological components with invalid data types', () => {
+        const actorState = {
+          [NAME_COMPONENT_ID]: { text: 'Test Character' },
+          [MOTIVATIONS_COMPONENT_ID]: 'Just a string', // not {text: ...}
+          [INTERNAL_TENSIONS_COMPONENT_ID]: null,
+          [DILEMMAS_COMPONENT_ID]: { notText: 'wrong property' },
+        };
+        const result = extractor.extractPromptData(actorState);
+        
+        expect(result.motivations).toBeUndefined();
+        expect(result.internalTensions).toBeUndefined();
+        expect(result.coreDilemmas).toBeUndefined();
+      });
+
+      test('should extract psychological components alongside other optional attributes', () => {
+        const actorState = {
+          [NAME_COMPONENT_ID]: { text: 'Complex Character' },
+          [PERSONALITY_COMPONENT_ID]: { text: 'Brooding and intense' },
+          [FEARS_COMPONENT_ID]: { text: 'Being alone' },
+          [MOTIVATIONS_COMPONENT_ID]: { text: 'To find belonging' },
+          [INTERNAL_TENSIONS_COMPONENT_ID]: { text: 'Push people away vs need connection' },
+          [DILEMMAS_COMPONENT_ID]: { text: 'Is vulnerability weakness?' },
+        };
+        const result = extractor.extractPromptData(actorState);
+        
+        expect(result.personality).toBe('Brooding and intense');
+        expect(result.fears).toBe('Being alone');
+        expect(result.motivations).toBe('To find belonging');
+        expect(result.internalTensions).toBe('Push people away vs need connection');
+        expect(result.coreDilemmas).toBe('Is vulnerability weakness?');
+      });
     });
 
     describe('apparent age extraction', () => {

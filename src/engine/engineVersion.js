@@ -3,7 +3,7 @@
 
 import semver from 'semver';
 import { freeze } from '../utils/cloneUtils.js';
-import pkg from '../../package.json' assert { type: 'json' };
+import pkg from '../../package.json' with { type: 'json' };
 
 // Load the version from package.json
 const versionFromPackage = pkg.version;

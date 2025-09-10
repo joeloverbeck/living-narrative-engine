@@ -4,7 +4,7 @@
  * @module turns/factories/GenericStrategyFactory
  */
 
-import { ITurnStrategyFactory } from '../interfaces/ITurnStrategyFactory';
+import { ITurnStrategyFactory } from '../interfaces/ITurnStrategyFactory.js';
 import { GenericTurnStrategy } from '../strategies/genericTurnStrategy.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
