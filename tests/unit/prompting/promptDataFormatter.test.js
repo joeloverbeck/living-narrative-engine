@@ -44,7 +44,8 @@ Recent thoughts (avoid repeating or barely rephrasing these):
 - First thought
 - Second thought
 
-Generate a fresh, unique thought that builds upon your mental state.
+-----
+Generate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you're thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.
 </thoughts>`
       );
     });
@@ -65,7 +66,8 @@ Recent thoughts (avoid repeating or barely rephrasing these):
 - Valid thought
 - Another valid thought
 
-Generate a fresh, unique thought that builds upon your mental state.
+-----
+Generate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you're thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.
 </thoughts>`
       );
     });
@@ -87,16 +89,16 @@ Generate a fresh, unique thought that builds upon your mental state.
     test('returns basic guidance when thoughts array is empty', () => {
       const result = formatter.formatThoughtsVoiceGuidance([]);
       expect(result).toBe(
-        "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style."
+        "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style. CRITICAL: Generate thoughts that occur IMMEDIATELY BEFORE performing your chosen action - you do NOT know what will happen as a result of your action yet. Do not assume outcomes, reactions, or results. Think about your intentions and reasoning for the action, not its anticipated effects."
       );
     });
 
     test('returns basic guidance when thoughts array is null/undefined', () => {
       expect(formatter.formatThoughtsVoiceGuidance(null)).toBe(
-        "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style."
+        "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style. CRITICAL: Generate thoughts that occur IMMEDIATELY BEFORE performing your chosen action - you do NOT know what will happen as a result of your action yet. Do not assume outcomes, reactions, or results. Think about your intentions and reasoning for the action, not its anticipated effects."
       );
       expect(formatter.formatThoughtsVoiceGuidance(undefined)).toBe(
-        "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style."
+        "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style. CRITICAL: Generate thoughts that occur IMMEDIATELY BEFORE performing your chosen action - you do NOT know what will happen as a result of your action yet. Do not assume outcomes, reactions, or results. Think about your intentions and reasoning for the action, not its anticipated effects."
       );
     });
 
@@ -106,7 +108,7 @@ Generate a fresh, unique thought that builds upon your mental state.
       const result = formatter.formatThoughtsVoiceGuidance(thoughts);
 
       expect(result).toBe(
-        "INNER VOICE GUIDANCE: Your thoughts must be fresh and unique - do not repeat or barely rephrase the previous thoughts shown above. Build upon your existing mental state with new insights, reactions, or perspectives that authentically reflect your character's unique mental voice, personality patterns, and internal speech style."
+        "INNER VOICE GUIDANCE: Your thoughts must be fresh and unique - do not repeat or barely rephrase the previous thoughts shown above. Build upon your existing mental state with new insights, reactions, or perspectives that authentically reflect your character's unique mental voice, personality patterns, and internal speech style. CRITICAL: Generate thoughts that occur IMMEDIATELY BEFORE performing your chosen action - you do NOT know what will happen as a result of your action yet. Do not assume outcomes, reactions, or results. Think about your intentions and reasoning for the action, not its anticipated effects."
       );
     });
 
@@ -122,7 +124,7 @@ Generate a fresh, unique thought that builds upon your mental state.
       const result2 = formatter.formatThoughtsVoiceGuidance(multipleThoughts);
 
       const expectedGuidance =
-        "INNER VOICE GUIDANCE: Your thoughts must be fresh and unique - do not repeat or barely rephrase the previous thoughts shown above. Build upon your existing mental state with new insights, reactions, or perspectives that authentically reflect your character's unique mental voice, personality patterns, and internal speech style.";
+        "INNER VOICE GUIDANCE: Your thoughts must be fresh and unique - do not repeat or barely rephrase the previous thoughts shown above. Build upon your existing mental state with new insights, reactions, or perspectives that authentically reflect your character's unique mental voice, personality patterns, and internal speech style. CRITICAL: Generate thoughts that occur IMMEDIATELY BEFORE performing your chosen action - you do NOT know what will happen as a result of your action yet. Do not assume outcomes, reactions, or results. Think about your intentions and reasoning for the action, not its anticipated effects.";
 
       expect(result1).toBe(expectedGuidance);
       expect(result2).toBe(expectedGuidance);
@@ -176,6 +178,9 @@ Generate a fresh, unique thought that builds upon your mental state.
       expect(result).toContain(
         'Generate a fresh, unique thought that builds upon your mental state.'
       );
+      expect(result).toContain(
+        'Your thought should reflect what you\'re thinking RIGHT BEFORE taking your chosen action'
+      );
       expect(result).toContain('- Test thought');
     });
 
@@ -184,7 +189,7 @@ Generate a fresh, unique thought that builds upon your mental state.
       const result = formatter.formatThoughtsSection(thoughts);
 
       expect(result).toMatch(/^<thoughts>.*<\/thoughts>$/s);
-      expect(result.split('\n')).toHaveLength(6); // Expected number of lines in new format
+      expect(result.split('\n')).toHaveLength(7); // Expected number of lines in new format
     });
   });
 
@@ -249,7 +254,8 @@ Generate a fresh, unique thought that builds upon your mental state.
 Recent thoughts (avoid repeating or barely rephrasing these):
 - Test thought
 
-Generate a fresh, unique thought that builds upon your mental state.
+-----
+Generate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you're thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.
 </thoughts>`
       );
       expect(result.notesSection).toBe('');
@@ -266,7 +272,7 @@ Generate a fresh, unique thought that builds upon your mental state.
         promptDataWithThoughts
       );
       expect(resultWithThoughts.thoughtsVoiceGuidance).toBe(
-        "INNER VOICE GUIDANCE: Your thoughts must be fresh and unique - do not repeat or barely rephrase the previous thoughts shown above. Build upon your existing mental state with new insights, reactions, or perspectives that authentically reflect your character's unique mental voice, personality patterns, and internal speech style."
+        "INNER VOICE GUIDANCE: Your thoughts must be fresh and unique - do not repeat or barely rephrase the previous thoughts shown above. Build upon your existing mental state with new insights, reactions, or perspectives that authentically reflect your character's unique mental voice, personality patterns, and internal speech style. CRITICAL: Generate thoughts that occur IMMEDIATELY BEFORE performing your chosen action - you do NOT know what will happen as a result of your action yet. Do not assume outcomes, reactions, or results. Think about your intentions and reasoning for the action, not its anticipated effects."
       );
 
       // Test with empty thoughts array
@@ -276,7 +282,7 @@ Generate a fresh, unique thought that builds upon your mental state.
 
       const resultEmpty = formatter.formatPromptData(promptDataEmpty);
       expect(resultEmpty.thoughtsVoiceGuidance).toBe(
-        "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style."
+        "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style. CRITICAL: Generate thoughts that occur IMMEDIATELY BEFORE performing your chosen action - you do NOT know what will happen as a result of your action yet. Do not assume outcomes, reactions, or results. Think about your intentions and reasoning for the action, not its anticipated effects."
       );
 
       // Test with no thoughts array
@@ -284,7 +290,7 @@ Generate a fresh, unique thought that builds upon your mental state.
 
       const resultMissing = formatter.formatPromptData(promptDataMissing);
       expect(resultMissing.thoughtsVoiceGuidance).toBe(
-        "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style."
+        "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style. CRITICAL: Generate thoughts that occur IMMEDIATELY BEFORE performing your chosen action - you do NOT know what will happen as a result of your action yet. Do not assume outcomes, reactions, or results. Think about your intentions and reasoning for the action, not its anticipated effects."
       );
     });
 
@@ -348,7 +354,7 @@ Generate a fresh, unique thought that builds upon your mental state.
       expect(result.notesSection).toBe('');
       expect(result.goalsSection).toBe('');
       expect(result.thoughtsVoiceGuidance).toBe(
-        "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style."
+        "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style. CRITICAL: Generate thoughts that occur IMMEDIATELY BEFORE performing your chosen action - you do NOT know what will happen as a result of your action yet. Do not assume outcomes, reactions, or results. Think about your intentions and reasoning for the action, not its anticipated effects."
       );
     });
 
@@ -367,7 +373,8 @@ Generate a fresh, unique thought that builds upon your mental state.
 Recent thoughts (avoid repeating or barely rephrasing these):
 - I have a thought
 
-Generate a fresh, unique thought that builds upon your mental state.
+-----
+Generate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you're thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.
 </thoughts>`
       );
       expect(result.notesSection).toBe('');

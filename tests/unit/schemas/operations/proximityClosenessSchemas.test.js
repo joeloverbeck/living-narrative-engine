@@ -373,13 +373,43 @@ describe('Proximity Closeness Operation Schemas', () => {
         );
       });
 
-      it('should reject non-integer spot_index', () => {
+      it('should accept string spot_index for variable references', () => {
         const operation = {
           type: 'ESTABLISH_SITTING_CLOSENESS',
           parameters: {
             furniture_id: 'furniture:couch',
             actor_id: 'game:alice',
-            spot_index: '2',
+            spot_index: '2',  // String is valid for variable references
+          },
+        };
+
+        const result = schemaValidator.validate(schemaId, operation);
+        expect(result.isValid).toBe(true);
+        expect(result.errors).toBeNull();
+      });
+
+      it('should accept string variable reference format for spot_index', () => {
+        const operation = {
+          type: 'ESTABLISH_SITTING_CLOSENESS',
+          parameters: {
+            furniture_id: 'furniture:couch',
+            actor_id: 'game:alice',
+            spot_index: '{context.spotIndex}',
+          },
+        };
+
+        const result = schemaValidator.validate(schemaId, operation);
+        expect(result.isValid).toBe(true);
+        expect(result.errors).toBeNull();
+      });
+
+      it('should reject boolean spot_index', () => {
+        const operation = {
+          type: 'ESTABLISH_SITTING_CLOSENESS',
+          parameters: {
+            furniture_id: 'furniture:couch',
+            actor_id: 'game:alice',
+            spot_index: true,
           },
         };
 
@@ -388,8 +418,29 @@ describe('Proximity Closeness Operation Schemas', () => {
         expect(result.errors).toContainEqual(
           expect.objectContaining({
             instancePath: '/parameters/spot_index',
-            keyword: 'type',
-            message: 'must be integer',
+            keyword: 'oneOf',
+            message: 'must match exactly one schema in oneOf',
+          })
+        );
+      });
+
+      it('should reject null spot_index', () => {
+        const operation = {
+          type: 'ESTABLISH_SITTING_CLOSENESS',
+          parameters: {
+            furniture_id: 'furniture:couch',
+            actor_id: 'game:alice',
+            spot_index: null,
+          },
+        };
+
+        const result = schemaValidator.validate(schemaId, operation);
+        expect(result.isValid).toBe(false);
+        expect(result.errors).toContainEqual(
+          expect.objectContaining({
+            instancePath: '/parameters/spot_index',
+            keyword: 'oneOf',
+            message: 'must match exactly one schema in oneOf',
           })
         );
       });
@@ -522,6 +573,36 @@ describe('Proximity Closeness Operation Schemas', () => {
 
         const result = schemaValidator.validate(schemaId, operation);
         expect(result.isValid).toBe(true);
+      });
+
+      it('should accept string spot_index for variable references', () => {
+        const operation = {
+          type: 'REMOVE_SITTING_CLOSENESS',
+          parameters: {
+            furniture_id: 'furniture:couch',
+            actor_id: 'game:alice',
+            spot_index: '5',  // String is valid for variable references
+          },
+        };
+
+        const result = schemaValidator.validate(schemaId, operation);
+        expect(result.isValid).toBe(true);
+        expect(result.errors).toBeNull();
+      });
+
+      it('should accept string variable reference format for spot_index', () => {
+        const operation = {
+          type: 'REMOVE_SITTING_CLOSENESS',
+          parameters: {
+            furniture_id: 'furniture:couch',
+            actor_id: 'game:alice',
+            spot_index: '{context.sittingInfo.spot_index}',
+          },
+        };
+
+        const result = schemaValidator.validate(schemaId, operation);
+        expect(result.isValid).toBe(true);
+        expect(result.errors).toBeNull();
       });
     });
 
@@ -671,6 +752,69 @@ describe('Proximity Closeness Operation Schemas', () => {
             instancePath: '/parameters/spot_index',
             keyword: 'maximum',
             message: 'must be <= 9',
+          })
+        );
+      });
+
+      it('should reject boolean spot_index', () => {
+        const operation = {
+          type: 'REMOVE_SITTING_CLOSENESS',
+          parameters: {
+            furniture_id: 'furniture:couch',
+            actor_id: 'game:alice',
+            spot_index: false,
+          },
+        };
+
+        const result = schemaValidator.validate(schemaId, operation);
+        expect(result.isValid).toBe(false);
+        expect(result.errors).toContainEqual(
+          expect.objectContaining({
+            instancePath: '/parameters/spot_index',
+            keyword: 'oneOf',
+            message: 'must match exactly one schema in oneOf',
+          })
+        );
+      });
+
+      it('should reject null spot_index', () => {
+        const operation = {
+          type: 'REMOVE_SITTING_CLOSENESS',
+          parameters: {
+            furniture_id: 'furniture:couch',
+            actor_id: 'game:alice',
+            spot_index: null,
+          },
+        };
+
+        const result = schemaValidator.validate(schemaId, operation);
+        expect(result.isValid).toBe(false);
+        expect(result.errors).toContainEqual(
+          expect.objectContaining({
+            instancePath: '/parameters/spot_index',
+            keyword: 'oneOf',
+            message: 'must match exactly one schema in oneOf',
+          })
+        );
+      });
+
+      it('should reject decimal spot_index', () => {
+        const operation = {
+          type: 'REMOVE_SITTING_CLOSENESS',
+          parameters: {
+            furniture_id: 'furniture:couch',
+            actor_id: 'game:alice',
+            spot_index: 3.7,
+          },
+        };
+
+        const result = schemaValidator.validate(schemaId, operation);
+        expect(result.isValid).toBe(false);
+        expect(result.errors).toContainEqual(
+          expect.objectContaining({
+            instancePath: '/parameters/spot_index',
+            keyword: 'oneOf',
+            message: 'must match exactly one schema in oneOf',
           })
         );
       });

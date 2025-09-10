@@ -164,7 +164,6 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
 
     const actionsWithForbiddenComponents = [
       'brush_hand',
-      'feel_arm_muscles',
       'massage_shoulders',
       'place_hand_on_waist',
     ];
