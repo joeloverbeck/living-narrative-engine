@@ -40,7 +40,7 @@ import { VisualizerStateController } from '../../domUI/visualizer/VisualizerStat
 import SaveGameUI from '../../domUI/saveGameUI.js';
 import LoadGameUI from '../../domUI/loadGameUI.js';
 import { PortraitModalRenderer } from '../../domUI/portraitModalRenderer.js';
-import { EngineUIManager } from '../../domUI'; // Corrected import path if EngineUIManager is also in domUI/index.js or directly from its file
+import { EngineUIManager } from '../../domUI/engineUIManager.js';
 
 // --- JSDoc Imports ---
 /** @typedef {import('../appContainer.js').default} AppContainer */

@@ -1103,6 +1103,48 @@ function printUsage() {
   console.log('  npm run update-manifest positioning --pre-validation --post-validation');
 }
 
+/**
+ * Backward compatibility function - maintains existing API
+ * @param {string} modName - Mod name
+ * @param {Object} legacyOptions - Legacy options format
+ * @returns {Promise<Object>} Legacy result format
+ */
+async function updateManifestLegacy(modName, legacyOptions = {}) {
+  // Map legacy options to new format
+  const modernOptions = {
+    force: legacyOptions.force || false,
+    verbose: legacyOptions.verbose || false,
+    dryRun: legacyOptions.dryRun || false,
+
+    // Default validation off for backward compatibility
+    validateReferences: false,
+    failOnViolations: false,
+    validationFormat: 'console',
+    showSuggestions: true,
+  };
+
+  const result = await updateModManifest(modName, modernOptions);
+
+  // Return legacy format
+  return {
+    success: result.success,
+    modName: result.modName,
+    error:
+      result.errors.length > 0
+        ? {
+            type: 'MANIFEST_UPDATE_ERROR',
+            message: result.errors.join('; '),
+            path: result.modPath,
+          }
+        : null,
+
+    // Legacy fields
+    manifestUpdated: result.manifestUpdated,
+    filesProcessed: result.filesProcessed,
+    warnings: result.warnings,
+  };
+}
+
 // Export functions for testing
 module.exports = {
   updateModManifest,
@@ -1110,7 +1152,9 @@ module.exports = {
   runValidation,
   updateAllManifests,
   parseCommandLineOptions,
-  ValidationError
+  ValidationError,
+  // Maintain existing export for backward compatibility
+  updateModManifestLegacy
 };
 
 // Run if called directly (CommonJS pattern)

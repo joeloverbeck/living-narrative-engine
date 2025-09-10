@@ -468,9 +468,18 @@ class ModValidationOrchestrator {
       const modsPath = path.join(process.cwd(), 'data', 'mods');
       const entries = await fs.readdir(modsPath, { withFileTypes: true });
 
+      // Directories to exclude from validation (examples, documentation, etc.)
+      const excludedDirs = ['examples'];
+
       const modIds = [];
       for (const entry of entries) {
         if (entry.isDirectory()) {
+          // Skip excluded directories
+          if (excludedDirs.includes(entry.name)) {
+            this.#logger.debug(`Skipping excluded directory: ${entry.name}`);
+            continue;
+          }
+
           // Check if it has a mod-manifest.json
           const manifestPath = path.join(
             modsPath,

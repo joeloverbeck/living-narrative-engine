@@ -479,11 +479,16 @@ class ViolationReporter {
    */
   _generateEcosystemSummary(results) {
     const totalMods = results.size;
-    const modsWithViolations = Array.from(results.values()).filter(
-      (r) => r.hasViolations
+    const values = Array.from(results.values());
+    
+    // Handle the nested validation result structure
+    // Each result has: { modId, dependencies, crossReferences, isValid, errors, warnings }
+    // crossReferences contains: { hasViolations, violations, ... }
+    const modsWithViolations = values.filter(
+      (r) => r && r.crossReferences && r.crossReferences.hasViolations
     ).length;
-    const totalViolations = Array.from(results.values()).reduce(
-      (sum, r) => sum + r.violations.length,
+    const totalViolations = values.reduce(
+      (sum, r) => sum + (r && r.crossReferences && r.crossReferences.violations ? r.crossReferences.violations.length : 0),
       0
     );
 

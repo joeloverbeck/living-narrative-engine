@@ -175,7 +175,7 @@ export class AnatomyGenerationService {
    * Generates anatomy for multiple entities
    *
    * @param {string[]} entityIds - Array of entity instance IDs
-   * @returns {Promise<{generated: string[], skipped: string[], failed: string[]}>} Result lists of processed entity IDs.
+   * @returns {Promise<{generated: string[], skipped: string[], failed: Array<{entityId: string, error: string}>}>} Result lists of processed entity IDs.
    */
   async generateAnatomyForEntities(entityIds) {
     const results = {
@@ -197,7 +197,10 @@ export class AnatomyGenerationService {
           `AnatomyGenerationService: Failed to process entity '${entityId}'`,
           { error }
         );
-        results.failed.push(entityId);
+        results.failed.push({
+          entityId,
+          error: error.message || 'Unknown error',
+        });
       }
     }
 

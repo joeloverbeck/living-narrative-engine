@@ -1,7 +1,7 @@
 // src/llms/strategies/base/baseOpenRouterStrategy.js
 // --- FILE START ---
 import { BaseChatLLMStrategy } from './baseChatLLMStrategy.js';
-import { ConfigurationError } from '../../../errors/configurationError';
+import { ConfigurationError } from '../../../errors/configurationError.js';
 import { LLMStrategyError } from '../../errors/LLMStrategyError.js';
 import { logPreview } from '../../../utils/index.js';
 import { getLlmId, validateEnvironmentContext } from '../../utils/llmUtils.js';

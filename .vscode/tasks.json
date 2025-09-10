@@ -1,0 +1,161 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Validate Mods: Ecosystem",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "validate:ecosystem"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": {
+        "owner": "mod-validation",
+        "pattern": [
+          {
+            "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "severity": 4,
+            "message": 5
+          }
+        ]
+      }
+    },
+    {
+      "label": "Validate Mods: Current File",
+      "type": "shell",
+      "command": "npm",
+      "args": [
+        "run",
+        "validate:mod",
+        "${fileBasenameNoExtension}"
+      ],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": {
+        "owner": "mod-validation",
+        "pattern": [
+          {
+            "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "severity": 4,
+            "message": 5
+          }
+        ]
+      }
+    },
+    {
+      "label": "Validate Mods: Strict Mode",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "validate:strict"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Validate Mods: Quick Check",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "validate:quick"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Validate Mods: Generate HTML Report",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "validate:html"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "dependsOn": []
+    },
+    {
+      "label": "Validate Mods: Specific Mod",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "validate:mod", "${input:modName}"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Update Manifest with Validation",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "update-manifest:validate", "${input:modName}"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Validate: CI Mode",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "validate:ci"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated"
+      },
+      "problemMatcher": {
+        "owner": "junit",
+        "pattern": [
+          {
+            "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "severity": 4,
+            "message": 5
+          }
+        ]
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "modName",
+      "description": "Mod name to validate or update",
+      "default": "positioning",
+      "type": "promptString"
+    }
+  ]
+}

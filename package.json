@@ -5,6 +5,10 @@
   "engines": {
     "node": ">=16.0.0"
   },
+  "bin": {
+    "living-narrative-validate": "./bin/living-narrative-validate.js",
+    "ln-validate": "./bin/living-narrative-validate.js"
+  },
   "dependencies": {
     "@msgpack/msgpack": "^3.1.1",
     "@testing-library/dom": "^10.4.0",
@@ -75,6 +79,17 @@
     "test:single": "jest --env=jsdom --silent=false --runInBand",
     "test:ci": "npm run test:unit && npm run test:integration && npm run test:e2e",
     "create-mod": "node scripts/createMod.mjs",
+    "validate": "node scripts/validateMods.js",
+    "validate:ecosystem": "node scripts/validateMods.js --ecosystem",
+    "validate:mod": "node scripts/validateMods.js --mod",
+    "validate:strict": "node scripts/validateMods.js --strict",
+    "validate:json": "node scripts/validateMods.js --format json",
+    "validate:html": "node scripts/validateMods.js --format html --output validation-report.html",
+    "validate:quick": "node scripts/validateMods.js --no-dependencies --quiet",
+    "validate:dependencies": "node scripts/validateMods.js --no-cross-references",
+    "validate:cross-refs": "node scripts/validateMods.js --no-dependencies",
+    "validate:critical": "node scripts/validateMods.js --severity critical",
+    "validate:ci": "node scripts/validateMods.js --strict --format junit --output test-results.xml",
     "update-manifest": "node scripts/updateManifest.js",
     "update-manifest:validate": "node scripts/updateManifest.js --validate-references",
     "update-manifest:strict": "node scripts/updateManifest.js --validate-references --fail-on-violations",

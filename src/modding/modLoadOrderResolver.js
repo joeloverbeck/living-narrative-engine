@@ -5,7 +5,7 @@
  */
 
 import ModDependencyError from '../errors/modDependencyError.js';
-import { CORE_MOD_ID } from '../constants/core';
+import { CORE_MOD_ID } from '../constants/core.js';
 import { assertIsLogger, assertIsMap } from '../utils/argValidation.js';
 import { buildDependencyGraph, createMinHeap } from '../utils/graphUtils.js';
 

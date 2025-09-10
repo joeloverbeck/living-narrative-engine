@@ -9,7 +9,8 @@
 
 import { resolvePath } from '../../utils/objectUtils.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
-import { cloneDeep } from 'lodash';
+import lodash from 'lodash';
+const { cloneDeep } = lodash;
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 import { ensureEvaluationContext } from '../../utils/evaluationContextUtils.js';
 import {

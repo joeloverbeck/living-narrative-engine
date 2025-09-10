@@ -705,9 +705,319 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
   }
 
   /**
+   * Inject a generation failure at a specific phase
+   * @param {string} phase - Phase to inject failure ('validation', 'generation', 'cache', 'description')
+   * @param {Error} [error] - Custom error to throw
+   */
+  injectGenerationFailure(phase, error = null) {
+    const failureError = error || new Error(`Injected failure at ${phase} phase`);
+    
+    switch (phase) {
+      case 'validation':
+        // Mock recipe validation to fail
+        if (this.anatomyGenerationWorkflow && this.anatomyGenerationWorkflow.validateRecipe) {
+          const original = this.anatomyGenerationWorkflow.validateRecipe;
+          this.anatomyGenerationWorkflow.validateRecipe = jest.fn(() => {
+            this.anatomyGenerationWorkflow.validateRecipe = original; // Restore after use
+            throw failureError;
+          });
+        }
+        break;
+        
+      case 'generation':
+        // Mock anatomy generation to fail
+        if (this.anatomyGenerationWorkflow && this.anatomyGenerationWorkflow.generate) {
+          const original = this.anatomyGenerationWorkflow.generate;
+          this.anatomyGenerationWorkflow.generate = jest.fn().mockRejectedValue(failureError);
+          // Store original for restoration
+          this.anatomyGenerationWorkflow._originalGenerate = original;
+        }
+        break;
+        
+      case 'cache':
+        // Mock cache building to fail
+        if (this.graphBuildingWorkflow && this.graphBuildingWorkflow.buildCache) {
+          const original = this.graphBuildingWorkflow.buildCache;
+          this.graphBuildingWorkflow.buildCache = jest.fn().mockRejectedValue(failureError);
+          this.graphBuildingWorkflow._originalBuildCache = original;
+        }
+        break;
+        
+      case 'description':
+        // Mock description generation to fail
+        if (this.anatomyDescriptionService && this.anatomyDescriptionService.generateAll) {
+          const original = this.anatomyDescriptionService.generateAll;
+          this.anatomyDescriptionService.generateAll = jest.fn().mockRejectedValue(failureError);
+          this.anatomyDescriptionService._originalGenerateAll = original;
+        }
+        break;
+    }
+    
+    this.processingLog.push({
+      action: 'injectedFailure',
+      timestamp: Date.now(),
+      phase,
+      error: failureError.message,
+    });
+  }
+
+  /**
+   * Restore all mocked methods to original implementations
+   */
+  restoreOriginalMethods() {
+    // Restore generation workflow
+    if (this.anatomyGenerationWorkflow?._originalGenerate) {
+      this.anatomyGenerationWorkflow.generate = this.anatomyGenerationWorkflow._originalGenerate;
+      delete this.anatomyGenerationWorkflow._originalGenerate;
+    }
+    
+    // Restore cache workflow
+    if (this.graphBuildingWorkflow?._originalBuildCache) {
+      this.graphBuildingWorkflow.buildCache = this.graphBuildingWorkflow._originalBuildCache;
+      delete this.graphBuildingWorkflow._originalBuildCache;
+    }
+    
+    // Restore description service
+    if (this.anatomyDescriptionService?._originalGenerateAll) {
+      this.anatomyDescriptionService.generateAll = this.anatomyDescriptionService._originalGenerateAll;
+      delete this.anatomyDescriptionService._originalGenerateAll;
+    }
+  }
+
+  /**
+   * Simulate cache corruption
+   * @param {string} corruptionType - Type of corruption ('invalidReferences', 'missingNodes', 'circularDependency')
+   */
+  corruptCache(corruptionType) {
+    if (!this.anatomyCacheManager) {
+      throw new Error('Cache manager not available');
+    }
+    
+    switch (corruptionType) {
+      case 'invalidReferences':
+        // Add fake entries to cache
+        this.anatomyCacheManager.set('fake-entity-1', {
+          entityId: 'fake-entity-1',
+          partType: 'corrupted',
+          parentId: 'non-existent-parent',
+          children: ['non-existent-child'],
+        });
+        break;
+        
+      case 'missingNodes':
+        // Remove some nodes but keep references
+        const entries = Array.from(this.anatomyCacheManager.entries());
+        if (entries.length > 1) {
+          // Delete a middle node but keep its references
+          const [nodeId] = entries[Math.floor(entries.length / 2)];
+          this.anatomyCacheManager.delete(nodeId);
+        }
+        break;
+        
+      case 'circularDependency':
+        // Create circular reference
+        const firstEntry = Array.from(this.anatomyCacheManager.entries())[0];
+        if (firstEntry) {
+          const [firstId, firstNode] = firstEntry;
+          // Make it reference itself as parent
+          firstNode.parentId = firstId;
+          this.anatomyCacheManager.set(firstId, firstNode);
+        }
+        break;
+    }
+    
+    this.processingLog.push({
+      action: 'corruptedCache',
+      timestamp: Date.now(),
+      corruptionType,
+    });
+  }
+
+  /**
+   * Validate that rollback completed successfully
+   * @param {string} entityId - Entity that was being generated
+   * @returns {Object} Validation results
+   */
+  validateRollbackCompleteness(entityId) {
+    const validation = {
+      success: true,
+      orphanedEntities: [],
+      remainingComponents: [],
+      cacheEntries: [],
+    };
+    
+    // Check for orphaned anatomy parts
+    const anatomyParts = this.entityManager.getEntitiesWithComponent('anatomy:part');
+    for (const part of anatomyParts) {
+      const partData = part.getComponentData('anatomy:part');
+      if (partData?.ownerId === entityId) {
+        validation.orphanedEntities.push(part.id);
+        validation.success = false;
+      }
+    }
+    
+    // Check if anatomy body was cleared
+    const entity = this.entityManager.getEntityInstance(entityId);
+    if (entity) {
+      const anatomyData = entity.getComponentData('anatomy:body');
+      if (anatomyData?.body) {
+        validation.remainingComponents.push('anatomy:body still has body data');
+        validation.success = false;
+      }
+    }
+    
+    // Check cache is clean
+    if (this.anatomyCacheManager.size() > 0) {
+      const entries = Array.from(this.anatomyCacheManager.entries());
+      for (const [cacheId] of entries) {
+        // Check if this cache entry is related to our entity
+        validation.cacheEntries.push(cacheId);
+      }
+    }
+    
+    this.processingLog.push({
+      action: 'validatedRollback',
+      timestamp: Date.now(),
+      entityId,
+      success: validation.success,
+      issues: {
+        orphaned: validation.orphanedEntities.length,
+        components: validation.remainingComponents.length,
+        cache: validation.cacheEntries.length,
+      },
+    });
+    
+    return validation;
+  }
+
+  /**
+   * Capture the sequence of entity deletions during rollback
+   * @returns {Array} Array to store deletion sequence
+   */
+  captureRollbackSequence() {
+    const sequence = [];
+    
+    // Mock removeEntityInstance to capture sequence
+    const originalRemove = this.entityManager.removeEntityInstance.bind(this.entityManager);
+    this.entityManager.removeEntityInstance = jest.fn(async (entityId) => {
+      sequence.push({
+        entityId,
+        timestamp: Date.now(),
+      });
+      return originalRemove(entityId);
+    });
+    
+    // Store original for restoration
+    this.entityManager._originalRemoveEntityInstance = originalRemove;
+    
+    return sequence;
+  }
+
+  /**
+   * Restore entity manager methods
+   */
+  restoreEntityManager() {
+    if (this.entityManager._originalRemoveEntityInstance) {
+      this.entityManager.removeEntityInstance = this.entityManager._originalRemoveEntityInstance;
+      delete this.entityManager._originalRemoveEntityInstance;
+    }
+  }
+
+  /**
+   * Create a constraint violation scenario
+   * @param {string} violationType - Type of violation ('missingRequired', 'exclusion', 'slotLimit')
+   * @returns {Object} Scenario configuration
+   */
+  createConstraintViolationScenario(violationType) {
+    const scenario = {
+      recipe: null,
+      blueprint: null,
+      expectedError: null,
+    };
+    
+    switch (violationType) {
+      case 'missingRequired':
+        scenario.recipe = {
+          id: 'test:missing_required',
+          blueprintId: 'test:incomplete',
+          constraints: {
+            requires: [
+              { partType: 'head', min: 1 },
+              { partType: 'leg', min: 2 }, // Will be missing
+            ],
+          },
+        };
+        scenario.blueprint = {
+          id: 'test:incomplete',
+          root: 'test:humanoid_torso',
+          slots: {
+            head_socket: { partId: 'test:humanoid_head', required: true },
+          },
+        };
+        scenario.expectedError = 'Required part type not satisfied';
+        break;
+        
+      case 'exclusion':
+        scenario.recipe = {
+          id: 'test:exclusion',
+          blueprintId: 'test:conflicting',
+          constraints: {
+            excludes: [
+              { parts: ['arm', 'wing'], message: 'Cannot have both' },
+            ],
+          },
+        };
+        scenario.blueprint = {
+          id: 'test:conflicting',
+          root: 'test:humanoid_torso',
+          slots: {
+            arm_socket: { partId: 'test:humanoid_arm', required: true },
+            wing_socket: { partId: 'test:wing', required: true },
+          },
+        };
+        scenario.expectedError = 'Exclusion constraint violated';
+        break;
+        
+      case 'slotLimit':
+        scenario.recipe = {
+          id: 'test:slot_limit',
+          blueprintId: 'test:over_limit',
+          slots: {
+            arm: { max: 2 },
+          },
+        };
+        scenario.blueprint = {
+          id: 'test:over_limit',
+          root: 'test:humanoid_torso',
+          slots: {
+            arm1: { partId: 'test:humanoid_arm', required: true },
+            arm2: { partId: 'test:humanoid_arm', required: true },
+            arm3: { partId: 'test:humanoid_arm', required: true }, // Exceeds limit
+          },
+        };
+        scenario.expectedError = 'Slot limit exceeded';
+        break;
+    }
+    
+    this.processingLog.push({
+      action: 'createdConstraintScenario',
+      timestamp: Date.now(),
+      violationType,
+      recipeId: scenario.recipe?.id,
+    });
+    
+    return scenario;
+  }
+
+  /**
    * Cleanup enhanced test bed resources
    */
   cleanup() {
+    // Restore any mocked methods
+    this.restoreOriginalMethods();
+    this.restoreEntityManager();
+    
+    // Call parent cleanup
     super.cleanup();
     this.dataGenerator.clear();
     this.clearProcessingLog();

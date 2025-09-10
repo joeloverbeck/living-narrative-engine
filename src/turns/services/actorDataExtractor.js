@@ -15,6 +15,9 @@ import {
   SPEECH_PATTERNS_COMPONENT_ID,
   ANATOMY_BODY_COMPONENT_ID,
   APPARENT_AGE_COMPONENT_ID,
+  MOTIVATIONS_COMPONENT_ID,
+  INTERNAL_TENSIONS_COMPONENT_ID,
+  DILEMMAS_COMPONENT_ID,
 } from '../../constants/componentIds.js';
 import { ensureTerminalPunctuation } from '../../utils/textUtils.js';
 // --- TICKET AIPF-REFACTOR-009 START: Import and Use Standardized Fallback Strings ---
@@ -22,7 +25,7 @@ import {
   DEFAULT_FALLBACK_CHARACTER_NAME,
   DEFAULT_FALLBACK_DESCRIPTION_RAW,
 } from '../../constants/textDefaults.js';
-import { IActorDataExtractor } from '../../interfaces/IActorDataExtractor';
+import { IActorDataExtractor } from '../../interfaces/IActorDataExtractor.js';
 // --- TICKET AIPF-REFACTOR-009 END ---
 
 // ActorPromptDataDTO is defined in AIGameStateDTO.js as per the provided context
@@ -147,6 +150,9 @@ class ActorDataExtractor extends IActorDataExtractor {
       { key: 'weaknesses', componentId: WEAKNESSES_COMPONENT_ID },
       { key: 'secrets', componentId: SECRETS_COMPONENT_ID },
       { key: 'fears', componentId: FEARS_COMPONENT_ID },
+      { key: 'motivations', componentId: MOTIVATIONS_COMPONENT_ID },
+      { key: 'internalTensions', componentId: INTERNAL_TENSIONS_COMPONENT_ID },
+      { key: 'coreDilemmas', componentId: DILEMMAS_COMPONENT_ID },
     ];
 
     for (const attr of optionalTextAttributes) {

@@ -1,4 +1,5 @@
-import { cloneDeep } from 'lodash';
+import lodash from 'lodash';
+const { cloneDeep } = lodash;
 
 /**
  * Deeply clones the provided object using lodash.

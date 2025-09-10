@@ -24,6 +24,7 @@ import { ClothingManagementService } from '../../../src/clothing/services/clothi
 import AnatomyBlueprintRepository from '../../../src/anatomy/repositories/anatomyBlueprintRepository.js';
 import { AnatomyClothingCache } from '../../../src/anatomy/cache/AnatomyClothingCache.js';
 import { ANATOMY_CLOTHING_CACHE_CONFIG } from '../../../src/anatomy/constants/anatomyConstants.js';
+import { AnatomyCacheManager } from '../../../src/anatomy/anatomyCacheManager.js';
 import { IsSocketCoveredOperator } from '../../../src/logic/operators/isSocketCoveredOperator.js';
 import {
   createMockLogger,
@@ -296,6 +297,11 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       { logger: mocks.logger },
       ANATOMY_CLOTHING_CACHE_CONFIG
     );
+
+    // Create anatomy cache manager
+    this.anatomyCacheManager = new AnatomyCacheManager({
+      logger: mocks.logger,
+    });
 
     // Create anatomy blueprint repository for decomposed services
     this.anatomyBlueprintRepository = new AnatomyBlueprintRepository({

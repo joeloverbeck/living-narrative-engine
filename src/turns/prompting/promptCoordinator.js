@@ -5,7 +5,7 @@
 
 import { PromptSession } from './promptSession.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
-import IPromptCoordinator from '../../interfaces/IPromptCoordinator';
+import IPromptCoordinator from '../../interfaces/IPromptCoordinator.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger

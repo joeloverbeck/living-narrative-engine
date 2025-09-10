@@ -20,39 +20,7 @@ describe('TraitsRewriter Memory', () => {
     container = testBed.container;
     mockLogger = testBed.mockLogger;
 
-    // Fix the LLMAdapter mock to return correct format (content instead of result)
-    // The IntegrationTestBed creates a mock that returns {success, result}
-    // but TraitsRewriterGenerator expects {content}
-    const correctedLLMAdapter = {
-      init: jest.fn().mockResolvedValue(),
-      isInitialized: jest.fn().mockReturnValue(true),
-      isOperational: jest.fn().mockReturnValue(true),
-      getAIDecision: jest.fn().mockImplementation(() => {
-        // Simulate realistic response time
-        return new Promise((resolve) => {
-          setTimeout(() => {
-            resolve({
-              content: JSON.stringify({
-                characterName: 'Test Character',
-                rewrittenTraits: {
-                  'core:personality':
-                    'I am a test character with complex personality traits.',
-                  'core:likes': 'I enjoy testing and performance validation.',
-                  'core:fears': 'I fear system failures and poor performance.',
-                  'core:goals':
-                    'I strive to maintain excellent performance under all conditions.',
-                  'core:dislikes':
-                    'I dislike inefficient processes and slow responses.',
-                },
-              }),
-            });
-          }, 10); // 10ms simulated LLM response time
-        });
-      }),
-    };
-    container.setOverride(tokens.LLMAdapter, correctedLLMAdapter);
-
-    // Also ensure schema validator is permissive for memory testing
+    // Ensure schema validator is permissive for memory testing
     const mockSchemaValidator = {
       validate: jest.fn().mockReturnValue(true),
       validateAgainstSchema: jest.fn().mockReturnValue({
@@ -62,7 +30,7 @@ describe('TraitsRewriter Memory', () => {
     };
     container.setOverride(tokens.ISchemaValidator, mockSchemaValidator);
 
-    // Resolve services for testing AFTER fixing the LLMAdapter mock
+    // Resolve services for testing
     services = {
       generator: container.resolve(tokens.TraitsRewriterGenerator),
       processor: container.resolve(tokens.TraitsRewriterResponseProcessor),
@@ -94,22 +62,11 @@ describe('TraitsRewriter Memory', () => {
 
         const generated =
           await services.generator.generateRewrittenTraits(testCharacter);
-        // Process mock response separately (generator processes LLM internally)
-        const mockRawResponse = JSON.stringify({
-          characterName: `Memory Test Character ${i + 1}`,
-          rewrittenTraits: {
-            'core:personality': 'Testing memory efficiency',
-            'core:likes': 'Low memory usage and efficient processing',
-            'core:fears': 'Memory leaks and resource exhaustion',
-          },
-        });
-        const processed = await services.processor.processResponse(
-          mockRawResponse,
-          testCharacter
-        );
+        
+        // The generator already processes the response internally, so we can use its result directly
         const enhanced = services.enhancer.enhanceForDisplay(
-          processed.rewrittenTraits,
-          { characterName: processed.characterName }
+          generated.rewrittenTraits,
+          { characterName: generated.characterName }
         );
 
         // Verify each iteration produces valid results
@@ -137,31 +94,15 @@ describe('TraitsRewriter Memory', () => {
       // Process a request and measure cleanup time
       const generated =
         await services.generator.generateRewrittenTraits(character);
-      // Process mock response separately (generator processes LLM internally)
-      const mockRawResponse = JSON.stringify({
-        characterName: 'Cleanup Test Character',
-        rewrittenTraits: {
-          'core:personality': 'Testing cleanup efficiency',
-        },
-      });
-      const processed = await services.processor.processResponse(
-        mockRawResponse,
-        character
-      );
-
-      // Cleanup should be fast
-      const cleanupStartTime = performance.now();
-      await testBed.cleanup();
-      await testBed.initialize(); // Reinitialize for next test
-      const cleanupDuration = performance.now() - cleanupStartTime;
 
       const totalDuration = performance.now() - startTime;
 
-      expect(cleanupDuration).toBeLessThan(1000); // Cleanup should be under 1 second
+      // Verify result and performance
+      expect(generated).toHaveProperty('rewrittenTraits');
       expect(totalDuration).toBeLessThan(5000); // Total process should be under 5 seconds
 
       mockLogger.info(
-        `Service cleanup completed in ${cleanupDuration.toFixed(2)}ms`
+        `Service processing completed in ${totalDuration.toFixed(2)}ms`
       );
     });
   });

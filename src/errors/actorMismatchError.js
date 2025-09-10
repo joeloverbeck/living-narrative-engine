@@ -1,4 +1,4 @@
-import { ActorError } from './actorError';
+import { ActorError } from './actorError.js';
 
 /**
  * Error thrown when an operation expects a specific actor but receives a different one,
