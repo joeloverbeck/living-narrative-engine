@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:internal_tensions",
+  "description": "Stores the internal conflicts and competing desires within the character's psyche.",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["text"],
+    "properties": {
+      "text": {
+        "type": "string",
+        "description": "A string describing the character's internal tensions and conflicts, written from their first-person perspective. For example: 'I want to trust others, but everyone I've trusted has betrayed me. I crave independence, yet I fear being alone. I desire peace but find myself drawn to conflict.'"
+      }
+    }
+  }
+}

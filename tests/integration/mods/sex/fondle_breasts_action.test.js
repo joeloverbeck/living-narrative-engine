@@ -13,14 +13,12 @@ import { ModAssertionHelpers } from '../../../common/mods/ModAssertionHelpers.js
 
 /**
  * Creates standardized anatomy setup for fondle breasts scenarios.
- * 
+ *
  * @returns {object} Object with actor, target, and all anatomy entities
  */
 function setupAnatomyComponents() {
   // Create main room
-  const room = new ModEntityBuilder('room1')
-    .asRoom('Test Room')
-    .build();
+  const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
   // Create actor entity with body reference
   const actor = new ModEntityBuilder('alice')
@@ -80,10 +78,10 @@ describe('sex:fondle_breasts action integration', () => {
   beforeEach(async () => {
     // Create test fixture with auto-loaded files
     testFixture = await ModTestFixture.forAction('sex', 'sex:fondle_breasts');
-    
+
     // Setup anatomy entities
     const entities = setupAnatomyComponents();
-    
+
     // Load all entities into the test environment
     testFixture.reset(Object.values(entities));
   });
@@ -101,7 +99,7 @@ describe('sex:fondle_breasts action integration', () => {
     // Assert action executed successfully with proper events
     ModAssertionHelpers.assertActionSuccess(
       testFixture.events,
-      'Alice eagerly fondles Beth\'s breasts.',
+      "Alice eagerly fondles Beth's breasts.",
       {
         shouldEndTurn: true,
         shouldHavePerceptibleEvent: true,
@@ -121,7 +119,7 @@ describe('sex:fondle_breasts action integration', () => {
     ];
 
     testFixture.reset(minimalEntities);
-    
+
     const initialEventCount = testFixture.events.length;
 
     await testFixture.eventBus.dispatch('core:attempt_action', {

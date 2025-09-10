@@ -3,7 +3,10 @@
  */
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { ENTITY_THOUGHT_ID, DISPLAY_THOUGHT_ID } from '../../../src/constants/eventIds.js';
+import {
+  ENTITY_THOUGHT_ID,
+  DISPLAY_THOUGHT_ID,
+} from '../../../src/constants/eventIds.js';
 
 // Mock the helper functions but not the main handler we're testing
 jest.mock('../../../src/turns/states/helpers/buildSpeechPayload.js', () => ({
@@ -50,9 +53,9 @@ describe('Thought-Only LLM Interaction Integration', () => {
             text: 'The room seems unusually quiet',
             subject: 'environment',
             subjectType: 'location',
-            context: 'Upon entering the tavern'
-          }
-        ]
+            context: 'Upon entering the tavern',
+          },
+        ],
       };
 
       const entityId = 'llm-character-001';
@@ -64,18 +67,20 @@ describe('Thought-Only LLM Interaction Integration', () => {
       const expectedThoughtPayload = {
         entityId,
         thoughts: llmDecisionMeta.thoughts,
-        notes: llmDecisionMeta.notes
+        notes: llmDecisionMeta.notes,
       };
       buildThoughtPayload.mockReturnValue(expectedThoughtPayload);
 
       // Set up dispatchThoughtEvent to simulate event dispatching
-      dispatchThoughtEvent.mockImplementation(async (turnCtx, handler, actorId, payload) => {
-        // Simulate the event being dispatched to the event bus
-        await mockSafeEventDispatcher.dispatch(ENTITY_THOUGHT_ID, {
-          entityId: actorId,
-          ...payload
-        });
-      });
+      dispatchThoughtEvent.mockImplementation(
+        async (turnCtx, handler, actorId, payload) => {
+          // Simulate the event being dispatched to the event bus
+          await mockSafeEventDispatcher.dispatch(ENTITY_THOUGHT_ID, {
+            entityId: actorId,
+            ...payload,
+          });
+        }
+      );
 
       // Simulate the processing flow
       const mockTurnCtx = { getActor: () => ({ id: entityId }) };
@@ -88,7 +93,12 @@ describe('Thought-Only LLM Interaction Integration', () => {
       expect(thoughtPayload).toEqual(expectedThoughtPayload);
 
       // Dispatch the thought event
-      await dispatchThoughtEvent(mockTurnCtx, mockHandler, entityId, thoughtPayload);
+      await dispatchThoughtEvent(
+        mockTurnCtx,
+        mockHandler,
+        entityId,
+        thoughtPayload
+      );
 
       // Verify the thought event was dispatched
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
@@ -96,7 +106,7 @@ describe('Thought-Only LLM Interaction Integration', () => {
         {
           entityId,
           thoughts: llmDecisionMeta.thoughts,
-          notes: llmDecisionMeta.notes
+          notes: llmDecisionMeta.notes,
         }
       );
     });
@@ -104,7 +114,7 @@ describe('Thought-Only LLM Interaction Integration', () => {
     it('should handle thought-only scenario through DispatchThoughtHandler', async () => {
       const thoughtHandler = new DispatchThoughtHandler({
         dispatcher: mockSafeEventDispatcher,
-        logger: mockLogger
+        logger: mockLogger,
       });
 
       const thoughtParams = {
@@ -114,13 +124,13 @@ describe('Thought-Only LLM Interaction Integration', () => {
           {
             text: 'Suspicious newcomer asking about the missing merchant',
             subject: 'stranger',
-            subjectType: 'character'
-          }
-        ]
+            subjectType: 'character',
+          },
+        ],
       };
 
       const mockExecutionContext = {
-        getLogger: () => mockLogger
+        getLogger: () => mockLogger,
       };
 
       // Execute the handler
@@ -132,7 +142,7 @@ describe('Thought-Only LLM Interaction Integration', () => {
         {
           entityId: thoughtParams.entity_id,
           thoughts: thoughtParams.thoughts,
-          notes: thoughtParams.notes
+          notes: thoughtParams.notes,
         }
       );
 
@@ -141,8 +151,8 @@ describe('Thought-Only LLM Interaction Integration', () => {
         expect.objectContaining({
           payload: expect.objectContaining({
             entityId: thoughtParams.entity_id,
-            thoughts: thoughtParams.thoughts
-          })
+            thoughts: thoughtParams.thoughts,
+          }),
         })
       );
     });
@@ -151,7 +161,7 @@ describe('Thought-Only LLM Interaction Integration', () => {
       const emptyDecisionMeta = {
         speech: '',
         thoughts: '',
-        notes: null
+        notes: null,
       };
 
       const entityId = 'silent-character';
@@ -174,14 +184,14 @@ describe('Thought-Only LLM Interaction Integration', () => {
     it('should prioritize speech over thoughts when both are present', async () => {
       const mixedDecisionMeta = {
         speech: 'Hello there, friend!',
-        thoughts: 'I hope they don\'t notice my nervousness.',
+        thoughts: "I hope they don't notice my nervousness.",
         notes: [
           {
             text: 'Acting casual to avoid suspicion',
             subject: 'behavior',
-            subjectType: 'emotion'
-          }
-        ]
+            subjectType: 'emotion',
+          },
+        ],
       };
 
       const entityId = 'nervous-npc';
@@ -190,7 +200,7 @@ describe('Thought-Only LLM Interaction Integration', () => {
       const speechPayload = {
         speechContent: mixedDecisionMeta.speech,
         thoughts: mixedDecisionMeta.thoughts,
-        notes: mixedDecisionMeta.notes
+        notes: mixedDecisionMeta.notes,
       };
       buildSpeechPayload.mockReturnValue(speechPayload);
 
@@ -210,7 +220,7 @@ describe('Thought-Only LLM Interaction Integration', () => {
       const invalidDecisionMeta = {
         speech: '',
         thoughts: null, // Invalid thoughts
-        notes: 'invalid notes format'
+        notes: 'invalid notes format',
       };
 
       const entityId = 'error-test-character';
@@ -225,7 +235,7 @@ describe('Thought-Only LLM Interaction Integration', () => {
     it('should handle DispatchThoughtHandler validation errors', () => {
       const thoughtHandler = new DispatchThoughtHandler({
         dispatcher: mockSafeEventDispatcher,
-        logger: mockLogger
+        logger: mockLogger,
       });
 
       // Invalid params - empty entity_id should fail validation
@@ -235,7 +245,7 @@ describe('Thought-Only LLM Interaction Integration', () => {
       };
 
       const mockExecutionContext = {
-        getLogger: () => mockLogger
+        getLogger: () => mockLogger,
       };
 
       // Execute with invalid params
@@ -246,12 +256,12 @@ describe('Thought-Only LLM Interaction Integration', () => {
         'core:display_thought',
         expect.any(Object)
       );
-      
+
       // Should dispatch a validation error event instead (via safeDispatchError)
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
         'core:system_error_occurred',
         expect.objectContaining({
-          message: 'Invalid "entity_id" parameter'
+          message: 'Invalid "entity_id" parameter',
         })
       );
     });
@@ -259,7 +269,7 @@ describe('Thought-Only LLM Interaction Integration', () => {
     it('should handle DispatchThoughtHandler with invalid thoughts parameter', () => {
       const thoughtHandler = new DispatchThoughtHandler({
         dispatcher: mockSafeEventDispatcher,
-        logger: mockLogger
+        logger: mockLogger,
       });
 
       // Invalid params - empty thoughts should fail validation
@@ -269,7 +279,7 @@ describe('Thought-Only LLM Interaction Integration', () => {
       };
 
       const mockExecutionContext = {
-        getLogger: () => mockLogger
+        getLogger: () => mockLogger,
       };
 
       // Execute with invalid params
@@ -280,12 +290,12 @@ describe('Thought-Only LLM Interaction Integration', () => {
         'core:display_thought',
         expect.any(Object)
       );
-      
+
       // Should dispatch a validation error event instead (via safeDispatchError)
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
         'core:system_error_occurred',
         expect.objectContaining({
-          message: 'Invalid "thoughts" parameter'
+          message: 'Invalid "thoughts" parameter',
         })
       );
     });

@@ -149,7 +149,8 @@ export const FILE_NAME_SCENARIOS = {
   STANDARD: {
     actionId: 'move-north',
     actorId: 'player-1',
-    expected: /trace_move-north_player-1_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}_\d{3}Z\.json/,
+    expected:
+      /trace_move-north_player-1_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}_\d{3}Z\.json/,
   },
   SPECIAL_CHARS: {
     actionId: 'test:action/special',
@@ -311,8 +312,8 @@ export function calculateTraceSize(trace) {
  */
 export function validateStoredTrace(trace) {
   const required = ['id', 'timestamp', 'actionId', 'actorId'];
-  const missing = required.filter(field => !(field in trace));
-  
+  const missing = required.filter((field) => !(field in trace));
+
   return {
     isValid: missing.length === 0,
     missing,

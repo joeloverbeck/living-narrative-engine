@@ -148,9 +148,7 @@ class LogFilter {
       filtered = filtered.filter((log) => {
         const message = (log.message || '').toLowerCase();
         const category = (log.category || '').toLowerCase();
-        return (
-          message.includes(searchLower) || category.includes(searchLower)
-        );
+        return message.includes(searchLower) || category.includes(searchLower);
       });
     }
 
@@ -222,9 +220,7 @@ class LogFilter {
       `"${(log.message || '').replace(/"/g, '""')}"`,
     ]);
 
-    return [headers.join(','), ...rows.map((row) => row.join(','))].join(
-      '\n'
-    );
+    return [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
   }
 }
 

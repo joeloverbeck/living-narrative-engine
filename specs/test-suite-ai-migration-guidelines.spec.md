@@ -11,6 +11,7 @@ This specification provides comprehensive guidelines for migrating Living Narrat
 ### Why Not Automated Scripts?
 
 While automated migration tooling could theoretically be created including:
+
 - AST parsing scripts for code analysis
 - Template generation systems
 - Automated validation frameworks
@@ -59,16 +60,19 @@ The following infrastructure components should be utilized during migration:
 **Note:** Current tests use complex handler creation patterns with direct imports. Migration should simplify these while preserving behavior.
 
 #### Core Test Helpers
+
 - **ModTestHandlerFactory**: Factory for creating test handlers with consistent setup
 - **ModTestFixture**: Comprehensive test fixture with auto-loading capabilities
 - **ModEntityBuilder**: Fluent API for creating test entities with components
 - **ModAssertionHelpers**: Standardized assertions for common test scenarios
 
 #### Base Classes
+
 - **ModActionTestBase**: Base class for action tests with standard test suite generation
 - **ModRuleTestBase**: Base class for rule tests (if created)
 
 #### Test Utilities
+
 - **createRuleTestEnvironment()**: Creates isolated test environment for rule testing
 - **validateDependency()**: Ensures proper dependency injection (from `src/utils/dependencyUtils.js`)
 - **Event capture and validation helpers**
@@ -77,9 +81,11 @@ The following infrastructure components should be utilized during migration:
 ## Category-Specific Migration Guidelines
 
 ### Exercise Category (2 files)
+
 **Pattern**: Schema validation tests
 
 **Current Structure** (as seen in `show_off_biceps_action.test.js`):
+
 - Direct JSON imports of action files (`import showOffBicepsAction from '...'`)
 - Manual property assertions using Jest expect statements
 - Visual styling validation (color accessibility checks)
@@ -87,6 +93,7 @@ The following infrastructure components should be utilized during migration:
 - Test organization into describe blocks by feature area
 
 **Migration Approach**:
+
 ```javascript
 // Before: Direct JSON import and manual assertions
 import showOffBicepsAction from '../../../../data/mods/exercise/actions/show_off_biceps.action.json';
@@ -103,7 +110,12 @@ it('should have correct action properties', () => {
 import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
 
 beforeEach(() => {
-  testFixture = ModTestFixture.forAction('exercise', 'exercise:show_off_biceps', ruleFile, conditionFile);
+  testFixture = ModTestFixture.forAction(
+    'exercise',
+    'exercise:show_off_biceps',
+    ruleFile,
+    conditionFile
+  );
 });
 
 it('should have correct action properties', () => {
@@ -117,54 +129,65 @@ it('should have correct action properties', () => {
 ```
 
 ### Violence Category (4 files)
+
 **Pattern**: Runtime integration with entity relationships
 
 **Current Structure**:
+
 - Entity creation and positioning
 - Action execution
 - Event validation
 - Relationship verification
 
 **Migration Approach**:
+
 - Extend ModActionTestBase
 - Use ModEntityBuilder for entity setup (note: uses constructor directly, not createActor())
 - Leverage assertActionSuccess() for validation
 - Use ModEntityBuilder's atLocation() and closeToEntity() for positioning
 
 ### Positioning Category (13 files)
+
 **Pattern**: Component addition and positioning state changes
 
 **Current Structure**:
+
 - Complex entity positioning setup
 - Component addition verification
 - State transition validation
 - Multi-entity interactions
 
 **Migration Approach**:
+
 - Use ModTestFixture for comprehensive setup
 - Implement custom positioning helpers
 - Verify component changes with assertComponentAdded()
 - Validate state transitions systematically
 
 ### Sex Category (10 files)
+
 **Pattern**: Anatomy requirements and explicit content validation
 
 **Current Structure**:
+
 - Anatomy component setup
 - Clothing state management
 - Action prerequisites based on anatomy
 - Complex multi-component validation
 
 **Migration Approach**:
+
 - Create setupAnatomyComponents() helper method
 - Use ModEntityBuilder's withComponent() for anatomy setup
 - Use ModEntityBuilder's withClothing() for clothing components
 - Validate with standard assertions and custom anatomy checks
 
 ### Intimacy Category (27 files)
+
 **Pattern**: Standard runtime integration with relationship validation
 
 **Current Structure** (as seen in `kiss_cheek_action.test.js`):
+
 - Complex handler creation with manual dependency injection
 - Rule and condition file imports with macro expansion
 - createRuleTestEnvironment() usage for setup
@@ -173,6 +196,7 @@ it('should have correct action properties', () => {
 - Event validation through captured event arrays
 
 **Migration Approach**:
+
 - Extend ModActionTestBase to replace manual handler setup
 - Use ModTestFixture to replace createRuleTestEnvironment() complexity
 - Apply assertActionSuccess() for event validation
@@ -203,13 +227,14 @@ it('should have correct action properties', () => {
 ### Phase 2: Migration Execution
 
 1. **Create New Test Structure**
+
    ```javascript
    // Standard structure for action tests
    class [ActionId]ActionTest extends ModActionTestBase {
      constructor() {
        super('[modId]', '[modId]:[actionId]', [actionId]Rule, eventIsAction[ActionId]);
      }
-     
+
      // Add custom setup methods as needed
    }
    ```
@@ -229,6 +254,7 @@ it('should have correct action properties', () => {
 ### Phase 3: Validation
 
 1. **Execute Tests**
+
    ```bash
    npm run test:integration tests/integration/mods/[category]/[testfile].test.js
    ```
@@ -258,12 +284,14 @@ it('should have correct action properties', () => {
 ## Quality Assurance Checklist
 
 ### Pre-Migration Verification
+
 - [ ] Original test executes successfully
 - [ ] Test purpose and coverage understood
 - [ ] Infrastructure components identified
 - [ ] Migration approach planned
 
 ### During Migration
+
 - [ ] Test structure follows conventions
 - [ ] Proper base class extended
 - [ ] Assertion helpers utilized appropriately
@@ -271,6 +299,7 @@ it('should have correct action properties', () => {
 - [ ] Event validation uses standard helpers
 
 ### Post-Migration Validation
+
 - [ ] All tests pass successfully
 - [ ] Coverage maintained or improved
 - [ ] Performance within acceptable range
@@ -278,6 +307,7 @@ it('should have correct action properties', () => {
 - [ ] Documentation updated
 
 ### Code Quality
+
 - [ ] Follows project naming conventions
 - [ ] Proper dependency injection used
 - [ ] Error handling appropriate
@@ -289,16 +319,19 @@ it('should have correct action properties', () => {
 ### Observed Current Patterns
 
 **Exercise Category** - Schema validation tests are simpler, using direct JSON imports:
+
 - File naming: `[action_name]_action.test.js`
 - Structure: Direct property assertions with detailed validation
 - Focus: Static JSON structure validation, not runtime behavior
 
 **Intimacy Category** - Complex runtime integration tests:
-- File naming: `[action_name]_action.test.js` 
+
+- File naming: `[action_name]_action.test.js`
 - Structure: Extensive handler creation, macro expansion, rule testing
 - Focus: Full rule engine integration with mocked handlers
 
 **Key Observations**:
+
 - Tests currently don't use ModActionTestBase pattern widely
 - ModEntityBuilder exists but may not have all methods shown in examples
 - ModAssertionHelpers exists but with different API than spec assumed
@@ -312,13 +345,13 @@ it('should have correct action properties', () => {
 // Legacy Pattern
 describe('Mod: Action Test', () => {
   let testEnvironment;
-  
+
   beforeEach(() => {
     testEnvironment = createTestEnvironment();
     // Manual entity setup
     // Manual component addition
   });
-  
+
   it('should execute action', () => {
     // Manual action execution
     // Manual event validation
@@ -350,13 +383,13 @@ setupCustomEntities() {
     .withComponent('anatomy:chest', { /* data */ })
     .withClothing({ /* clothing data */ })
     .build();
-    
+
   const target = new ModEntityBuilder('target1')
     .withName('TestTarget')
     .inSameLocationAs(actor)
     .withComponent('positioning:orientation', { facing: 'away' })
     .build();
-    
+
   return { actor, target };
 }
 ```
@@ -367,17 +400,17 @@ setupCustomEntities() {
 // Use ModAssertionHelpers for consistent validation
 it('should generate correct events', async () => {
   const { actor, target } = this.setupEntities();
-  
+
   await this.executeAction(actor.id, target.id);
-  
+
   ModAssertionHelpers.assertActionSuccess(
     this.capturedEvents,
     'Expected success message',
     { shouldEndTurn: true, shouldHavePerceptibleEvent: true }
   );
-  
+
   ModAssertionHelpers.assertComponentAdded(
-    this.entityManager,  // Note: requires entityManager instance
+    this.entityManager, // Note: requires entityManager instance
     actor.id,
     'componentName',
     expectedData
@@ -388,19 +421,22 @@ it('should generate correct events', async () => {
 ## Anti-Patterns to Avoid
 
 ### Don't: Manual Event Filtering
+
 ```javascript
 // Avoid
-const successEvent = events.filter(e => e.type === 'success')[0];
+const successEvent = events.filter((e) => e.type === 'success')[0];
 expect(successEvent).toBeDefined();
 ```
 
 ### Do: Use Assertion Helpers
+
 ```javascript
 // Prefer
 ModAssertionHelpers.assertActionSuccess(events, expectedMessage);
 ```
 
 ### Don't: Duplicate Entity Setup
+
 ```javascript
 // Avoid repeating entity setup in each test
 it('test 1', () => {
@@ -415,6 +451,7 @@ it('test 2', () => {
 ```
 
 ### Do: Create Reusable Setup Methods
+
 ```javascript
 // Prefer
 setupTestEntities() {
@@ -473,18 +510,21 @@ Recommended migration order based on complexity and learning curve:
 ### Common Issues and Solutions
 
 **Issue**: Test fails after migration
+
 - Verify all setup steps preserved
 - Check event capture timing
 - Ensure proper async/await usage
 - Validate entity relationships
 
 **Issue**: Performance regression
+
 - Profile test execution
 - Reduce unnecessary setup
 - Optimize entity creation
 - Cache reusable data
 
 **Issue**: Missing assertions
+
 - Review original test thoroughly
 - Check for implicit validations
 - Ensure helper methods cover all cases

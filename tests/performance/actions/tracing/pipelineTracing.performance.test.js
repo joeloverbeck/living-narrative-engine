@@ -520,14 +520,20 @@ describe('Pipeline Tracing Performance', () => {
         expect(result.trace).toBeDefined();
         expect(Array.isArray(result.actions)).toBe(true);
         expect(Array.isArray(result.errors)).toBe(true);
-        
+
         // Results should be functionally equivalent to sequential execution
-        expect(result.actions.length).toBe(sequentialResults[index].actions.length);
-        expect(result.errors.length).toBe(sequentialResults[index].errors.length);
+        expect(result.actions.length).toBe(
+          sequentialResults[index].actions.length
+        );
+        expect(result.errors.length).toBe(
+          sequentialResults[index].errors.length
+        );
       });
 
       // Verify no race conditions occurred - all actors should have distinct results
-      const actorIds = concurrentResults.map((_, index) => `concurrent-${index}`);
+      const actorIds = concurrentResults.map(
+        (_, index) => `concurrent-${index}`
+      );
       expect(new Set(actorIds).size).toBe(10); // All unique
 
       // Verify concurrent execution completes in reasonable time (not hung)

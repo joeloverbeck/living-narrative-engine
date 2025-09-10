@@ -95,7 +95,7 @@ The source mappings define how file paths map to category names. The system incl
   "categorization": {
     "sourceMappings": {
       "src/actions": "actions",
-      "src/logic": "logic", 
+      "src/logic": "logic",
       "src/entities": "entities",
       "src/ai": "ai",
       "src/domUI": "domUI",
@@ -388,7 +388,7 @@ Here's a comprehensive configuration example using all features:
   "mode": "hybrid",
   "fallbackToConsole": true,
   "logLevel": "INFO",
-  
+
   "categorization": {
     "strategy": "hybrid",
     "enableStackTraceExtraction": true,
@@ -429,7 +429,7 @@ Here's a comprehensive configuration example using all features:
       }
     }
   },
-  
+
   "remote": {
     "endpoint": "http://localhost:3001/api/debug-log",
     "batchSize": 100,
@@ -442,7 +442,7 @@ Here's a comprehensive configuration example using all features:
     "requestTimeout": 5000,
     "compression": false
   },
-  
+
   "categories": {
     "actions": {
       "enabled": true,
@@ -465,7 +465,7 @@ Here's a comprehensive configuration example using all features:
       "level": "error"
     }
   },
-  
+
   "console": {
     "enabled": true,
     "useColors": true,
@@ -473,19 +473,19 @@ Here's a comprehensive configuration example using all features:
     "showCategory": true,
     "groupSimilar": true
   },
-  
+
   "performance": {
     "enableMetrics": true,
     "metricsInterval": 60000,
     "memoryWarningThreshold": 100,
     "slowLogThreshold": 1000
   },
-  
+
   "filtering": {
     "enabled": true,
     "strategy": "mask"
   },
-  
+
   "criticalLogging": {
     "alwaysShowInConsole": true,
     "enableVisualNotifications": true,
@@ -507,9 +507,9 @@ The configuration is automatically loaded by the `DebugLogConfigLoader`:
 ```javascript
 import DebugLogConfigLoader from '../src/configuration/debugLogConfigLoader.js';
 
-const loader = new DebugLogConfigLoader({ 
+const loader = new DebugLogConfigLoader({
   logger: consoleLogger,
-  validator: configValidator
+  validator: configValidator,
 });
 
 const config = loader.loadConfig();
@@ -599,7 +599,7 @@ Additional validation beyond schema requirements:
 - **Performance threshold validation**: Validates performance settings are reasonable
 - **Category consistency**: Ensures category definitions are consistent
 
-### Security Validation  
+### Security Validation
 
 Security-focused validation to prevent vulnerabilities:
 
@@ -665,6 +665,7 @@ npx ajv validate -s data/schemas/debug-logging-config.schema.json -d config/debu
 For high-volume logging scenarios:
 
 1. **Enable caching**:
+
    ```json
    {
      "categorization": {
@@ -681,6 +682,7 @@ For high-volume logging scenarios:
    ```
 
 2. **Reduce stack trace depth**:
+
    ```json
    {
      "categorization": {

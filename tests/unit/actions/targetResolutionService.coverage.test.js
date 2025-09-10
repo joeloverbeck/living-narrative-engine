@@ -85,8 +85,12 @@ describe('TargetResolutionService - Coverage for Missing Lines', () => {
       // Verify result is correct
       expect(result.success).toBe(true);
       expect(result.value).toHaveLength(2);
-      expect(result.value[0]).toEqual(ActionTargetContext.forEntity('entity-1'));
-      expect(result.value[1]).toEqual(ActionTargetContext.forEntity('entity-2'));
+      expect(result.value[0]).toEqual(
+        ActionTargetContext.forEntity('entity-1')
+      );
+      expect(result.value[1]).toEqual(
+        ActionTargetContext.forEntity('entity-2')
+      );
     });
 
     it('should fallback to direct execution when trace.withSpan is not available', () => {
@@ -115,7 +119,9 @@ describe('TargetResolutionService - Coverage for Missing Lines', () => {
       // Verify result is correct
       expect(result.success).toBe(true);
       expect(result.value).toHaveLength(1);
-      expect(result.value[0]).toEqual(ActionTargetContext.forEntity('entity-1'));
+      expect(result.value[0]).toEqual(
+        ActionTargetContext.forEntity('entity-1')
+      );
     });
 
     it('should handle trace being null', () => {
@@ -136,7 +142,9 @@ describe('TargetResolutionService - Coverage for Missing Lines', () => {
       // Verify result is correct
       expect(result.success).toBe(true);
       expect(result.value).toHaveLength(1);
-      expect(result.value[0]).toEqual(ActionTargetContext.forEntity('entity-1'));
+      expect(result.value[0]).toEqual(
+        ActionTargetContext.forEntity('entity-1')
+      );
     });
   });
 
@@ -158,7 +166,9 @@ describe('TargetResolutionService - Coverage for Missing Lines', () => {
 
       // Verify debug logging was called for sit_down
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('[DEBUG] TargetResolutionService resolving scope for sit_down:'),
+        expect.stringContaining(
+          '[DEBUG] TargetResolutionService resolving scope for sit_down:'
+        ),
         expect.objectContaining({
           scopeName: 'positioning:available_furniture',
           actionId: 'positioning:sit_down',
@@ -168,7 +178,9 @@ describe('TargetResolutionService - Coverage for Missing Lines', () => {
       );
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('[DEBUG] Context built for UnifiedScopeResolver:'),
+        expect.stringContaining(
+          '[DEBUG] Context built for UnifiedScopeResolver:'
+        ),
         expect.objectContaining({
           hasActor: true,
           actorId: 'test-actor',
@@ -177,7 +189,9 @@ describe('TargetResolutionService - Coverage for Missing Lines', () => {
       );
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('[DEBUG] UnifiedScopeResolver result for sit_down:'),
+        expect.stringContaining(
+          '[DEBUG] UnifiedScopeResolver result for sit_down:'
+        ),
         expect.objectContaining({
           success: true,
           hasValue: true,
@@ -208,19 +222,25 @@ describe('TargetResolutionService - Coverage for Missing Lines', () => {
 
       // Verify debug logging was called for available_furniture scope
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('[DEBUG] TargetResolutionService resolving scope for sit_down:'),
+        expect.stringContaining(
+          '[DEBUG] TargetResolutionService resolving scope for sit_down:'
+        ),
         expect.objectContaining({
           scopeName: 'positioning:available_furniture',
         })
       );
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('[DEBUG] Context built for UnifiedScopeResolver:'),
+        expect.stringContaining(
+          '[DEBUG] Context built for UnifiedScopeResolver:'
+        ),
         expect.anything()
       );
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('[DEBUG] UnifiedScopeResolver result for sit_down:'),
+        expect.stringContaining(
+          '[DEBUG] UnifiedScopeResolver result for sit_down:'
+        ),
         expect.objectContaining({
           success: true,
           hasValue: true,
@@ -253,7 +273,7 @@ describe('TargetResolutionService - Coverage for Missing Lines', () => {
       );
 
       // Verify debug logging was NOT called
-      const debugCalls = mockLogger.info.mock.calls.filter(call =>
+      const debugCalls = mockLogger.info.mock.calls.filter((call) =>
         call[0].includes('[DEBUG]')
       );
       expect(debugCalls).toHaveLength(0);
@@ -287,7 +307,9 @@ describe('TargetResolutionService - Coverage for Missing Lines', () => {
 
       // Verify trace.info was called with appropriate message
       expect(mockTrace.info).toHaveBeenCalledWith(
-        expect.stringContaining("Scope 'combat:enemies' resolved to no targets"),
+        expect.stringContaining(
+          "Scope 'combat:enemies' resolved to no targets"
+        ),
         expect.any(String)
       );
 
@@ -319,7 +341,9 @@ describe('TargetResolutionService - Coverage for Missing Lines', () => {
 
       // Verify trace.info was called with appropriate message for 'none' scope
       expect(mockTrace.info).toHaveBeenCalledWith(
-        expect.stringContaining("Scope 'none' resolved to no targets - returning noTarget context"),
+        expect.stringContaining(
+          "Scope 'none' resolved to no targets - returning noTarget context"
+        ),
         expect.any(String)
       );
 
@@ -389,12 +413,16 @@ describe('TargetResolutionService - Coverage for Missing Lines', () => {
 
       // Verify debug logging for sit_down
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('[DEBUG] TargetResolutionService resolving scope for sit_down:'),
+        expect.stringContaining(
+          '[DEBUG] TargetResolutionService resolving scope for sit_down:'
+        ),
         expect.any(Object)
       );
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('[DEBUG] UnifiedScopeResolver result for sit_down:'),
+        expect.stringContaining(
+          '[DEBUG] UnifiedScopeResolver result for sit_down:'
+        ),
         expect.objectContaining({
           success: true,
           hasValue: true,
@@ -405,7 +433,9 @@ describe('TargetResolutionService - Coverage for Missing Lines', () => {
 
       // Verify empty result handling
       expect(mockTrace.info).toHaveBeenCalledWith(
-        expect.stringContaining("Scope 'positioning:available_furniture' resolved to no targets"),
+        expect.stringContaining(
+          "Scope 'positioning:available_furniture' resolved to no targets"
+        ),
         expect.any(String)
       );
 

@@ -5,7 +5,14 @@
  * through the proper mouth availability prerequisite.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import { PrerequisiteEvaluationService } from '../../../../src/actions/validation/prerequisiteEvaluationService.js';
 import { ActionValidationContextBuilder } from '../../../../src/actions/validation/actionValidationContextBuilder.js';
 import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
@@ -57,9 +64,9 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
     };
 
     // Create real services for integration testing
-    jsonLogicService = new JsonLogicEvaluationService({ 
+    jsonLogicService = new JsonLogicEvaluationService({
       logger: mockLogger,
-      gameDataRepository: mockGameDataRepository 
+      gameDataRepository: mockGameDataRepository,
     });
 
     // Create and register custom operators
@@ -83,15 +90,17 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
     });
 
     // Setup the condition definitions
-    mockGameDataRepository.getConditionDefinition.mockImplementation((conditionId) => {
-      if (conditionId === 'core:actor-mouth-available') {
-        return mouthAvailableCondition;
+    mockGameDataRepository.getConditionDefinition.mockImplementation(
+      (conditionId) => {
+        if (conditionId === 'core:actor-mouth-available') {
+          return mouthAvailableCondition;
+        }
+        if (conditionId === 'core:actor-can-move') {
+          return actorCanMoveCondition;
+        }
+        return undefined;
       }
-      if (conditionId === 'core:actor-can-move') {
-        return actorCanMoveCondition;
-      }
-      return undefined;
-    });
+    );
   });
 
   afterEach(() => {
@@ -102,29 +111,29 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
     it('should not reference any intimacy components', () => {
       // Convert action definition to string to search for violations
       const actionJson = JSON.stringify(turnAroundAction);
-      
+
       // Should not contain any reference to intimacy mod
       expect(actionJson).not.toContain('intimacy:');
       expect(actionJson).not.toContain('intimacy:kissing');
-      
+
       // Should not have forbidden_components section
       expect(turnAroundAction.forbidden_components).toBeUndefined();
     });
 
     it('should only reference core and positioning components', () => {
       const actionJson = JSON.stringify(turnAroundAction);
-      
+
       // Extract all component references (format: "modId:componentId")
       const componentReferences = actionJson.match(/"\w+:\w+"/g) || [];
-      
-      componentReferences.forEach(ref => {
+
+      componentReferences.forEach((ref) => {
         const cleanRef = ref.replace(/"/g, '');
         if (cleanRef.includes(':')) {
           const [modId] = cleanRef.split(':');
-          
+
           // Should only reference core or positioning mods (or schema for $schema)
           expect(['core', 'positioning', 'schema']).toContain(modId);
-          
+
           // Should NOT reference intimacy or anatomy mods
           expect(modId).not.toBe('intimacy');
           expect(modId).not.toBe('anatomy');
@@ -135,24 +144,26 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
     it('should have mouth availability prerequisite', () => {
       expect(turnAroundAction.prerequisites).toBeDefined();
       expect(Array.isArray(turnAroundAction.prerequisites)).toBe(true);
-      
+
       // Find the mouth availability prerequisite
       const mouthPrereq = turnAroundAction.prerequisites.find(
-        prereq => prereq.logic?.condition_ref === 'core:actor-mouth-available'
+        (prereq) => prereq.logic?.condition_ref === 'core:actor-mouth-available'
       );
-      
+
       expect(mouthPrereq).toBeDefined();
-      expect(mouthPrereq.failure_message).toBe('You cannot do that while your mouth is engaged.');
+      expect(mouthPrereq.failure_message).toBe(
+        'You cannot do that while your mouth is engaged.'
+      );
     });
 
     it('should have movement availability prerequisite', () => {
       expect(turnAroundAction.prerequisites).toBeDefined();
-      
+
       // Find the movement prerequisite
       const movePrereq = turnAroundAction.prerequisites.find(
-        prereq => prereq.logic?.condition_ref === 'core:actor-can-move'
+        (prereq) => prereq.logic?.condition_ref === 'core:actor-can-move'
       );
-      
+
       expect(movePrereq).toBeDefined();
       expect(movePrereq.failure_message).toBe('You cannot move right now.');
     });
@@ -165,42 +176,58 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
 
       // Setup entity with available mouth (mouth engagement component with locked: false)
       mockEntityManager.getEntityInstance.mockReturnValue(actor);
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'anatomy:body') {
-          return { root: 'test:body_root' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'anatomy:body') {
+            return { root: 'test:body_root' };
+          }
+          if (
+            entityId === 'test:mouth_part' &&
+            componentId === 'core:mouth_engagement'
+          ) {
+            return { locked: false }; // Mouth is not locked
+          }
+          // Movement component should be on a body part (e.g., legs), not the actor directly
+          if (
+            entityId === 'test:legs_part' &&
+            componentId === 'core:movement'
+          ) {
+            return { locked: false }; // Movement is not locked
+          }
+          return undefined;
         }
-        if (entityId === 'test:mouth_part' && componentId === 'core:mouth_engagement') {
-          return { locked: false }; // Mouth is not locked
-        }
-        // Movement component should be on a body part (e.g., legs), not the actor directly
-        if (entityId === 'test:legs_part' && componentId === 'core:movement') {
-          return { locked: false }; // Movement is not locked
-        }
-        return undefined;
-      });
+      );
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
         'core:name',
         'anatomy:body',
       ]);
 
       // Setup bodyGraphService for custom operators
-      mockBodyGraphService.findPartsByType.mockImplementation((rootId, partType) => {
-        if (rootId === 'test:body_root' && partType === 'mouth') {
-          return ['test:mouth_part'];
+      mockBodyGraphService.findPartsByType.mockImplementation(
+        (rootId, partType) => {
+          if (rootId === 'test:body_root' && partType === 'mouth') {
+            return ['test:mouth_part'];
+          }
+          return [];
         }
-        return [];
-      });
+      );
       mockBodyGraphService.buildAdjacencyCache.mockImplementation(() => {});
-      
+
       // Mock hasPartWithComponentValue for movement check
-      mockBodyGraphService.hasPartWithComponentValue.mockImplementation((bodyComponent, componentId, propertyPath, expectedValue) => {
-        if (componentId === 'core:movement' && propertyPath === 'locked' && expectedValue === false) {
-          // Movement is available
-          return { found: true, partId: 'test:legs_part' };
+      mockBodyGraphService.hasPartWithComponentValue.mockImplementation(
+        (bodyComponent, componentId, propertyPath, expectedValue) => {
+          if (
+            componentId === 'core:movement' &&
+            propertyPath === 'locked' &&
+            expectedValue === false
+          ) {
+            // Movement is available
+            return { found: true, partId: 'test:legs_part' };
+          }
+          return { found: false };
         }
-        return { found: false };
-      });
-      
+      );
+
       // Mock getAllParts to return all body parts for movement check
       mockBodyGraphService.getAllParts.mockImplementation((rootId) => {
         if (rootId === 'test:body_root') {
@@ -224,40 +251,56 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
 
       // Setup entity with locked mouth (as would happen during kissing)
       mockEntityManager.getEntityInstance.mockReturnValue(actor);
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'anatomy:body') {
-          return { root: 'test:body_root' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'anatomy:body') {
+            return { root: 'test:body_root' };
+          }
+          if (
+            entityId === 'test:mouth_part' &&
+            componentId === 'core:mouth_engagement'
+          ) {
+            return { locked: true }; // Mouth IS locked (simulating kissing)
+          }
+          if (
+            entityId === 'test:legs_part' &&
+            componentId === 'core:movement'
+          ) {
+            return { locked: false }; // Movement is not locked
+          }
+          return undefined;
         }
-        if (entityId === 'test:mouth_part' && componentId === 'core:mouth_engagement') {
-          return { locked: true }; // Mouth IS locked (simulating kissing)
-        }
-        if (entityId === 'test:legs_part' && componentId === 'core:movement') {
-          return { locked: false }; // Movement is not locked
-        }
-        return undefined;
-      });
+      );
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
         'core:name',
         'anatomy:body',
       ]);
 
       // Setup bodyGraphService for custom operators
-      mockBodyGraphService.findPartsByType.mockImplementation((rootId, partType) => {
-        if (rootId === 'test:body_root' && partType === 'mouth') {
-          return ['test:mouth_part'];
+      mockBodyGraphService.findPartsByType.mockImplementation(
+        (rootId, partType) => {
+          if (rootId === 'test:body_root' && partType === 'mouth') {
+            return ['test:mouth_part'];
+          }
+          return [];
         }
-        return [];
-      });
+      );
       mockBodyGraphService.buildAdjacencyCache.mockImplementation(() => {});
-      
+
       // Mock hasPartWithComponentValue for movement check
-      mockBodyGraphService.hasPartWithComponentValue.mockImplementation((bodyComponent, componentId, propertyPath, expectedValue) => {
-        if (componentId === 'core:movement' && propertyPath === 'locked' && expectedValue === false) {
-          // Movement is available
-          return { found: true, partId: 'test:legs_part' };
+      mockBodyGraphService.hasPartWithComponentValue.mockImplementation(
+        (bodyComponent, componentId, propertyPath, expectedValue) => {
+          if (
+            componentId === 'core:movement' &&
+            propertyPath === 'locked' &&
+            expectedValue === false
+          ) {
+            // Movement is available
+            return { found: true, partId: 'test:legs_part' };
+          }
+          return { found: false };
         }
-        return { found: false };
-      });
+      );
 
       const result = prereqService.evaluate(
         turnAroundAction.prerequisites,
@@ -275,44 +318,64 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
 
       // Setup entity with locked movement
       mockEntityManager.getEntityInstance.mockReturnValue(actor);
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'anatomy:body') {
-          return { root: 'test:body_root' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'anatomy:body') {
+            return { root: 'test:body_root' };
+          }
+          if (
+            entityId === 'test:mouth_part' &&
+            componentId === 'core:mouth_engagement'
+          ) {
+            return { locked: false }; // Mouth is not locked
+          }
+          if (
+            entityId === 'test:legs_part' &&
+            componentId === 'core:movement'
+          ) {
+            return { locked: true }; // Movement IS locked
+          }
+          return undefined;
         }
-        if (entityId === 'test:mouth_part' && componentId === 'core:mouth_engagement') {
-          return { locked: false }; // Mouth is not locked
-        }
-        if (entityId === 'test:legs_part' && componentId === 'core:movement') {
-          return { locked: true }; // Movement IS locked
-        }
-        return undefined;
-      });
+      );
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
         'core:name',
         'anatomy:body',
       ]);
 
       // Setup bodyGraphService for custom operators
-      mockBodyGraphService.findPartsByType.mockImplementation((rootId, partType) => {
-        if (rootId === 'test:body_root' && partType === 'mouth') {
-          return ['test:mouth_part'];
+      mockBodyGraphService.findPartsByType.mockImplementation(
+        (rootId, partType) => {
+          if (rootId === 'test:body_root' && partType === 'mouth') {
+            return ['test:mouth_part'];
+          }
+          return [];
         }
-        return [];
-      });
+      );
       mockBodyGraphService.buildAdjacencyCache.mockImplementation(() => {});
-      
+
       // Mock hasPartWithComponentValue for movement check - this time movement is locked
-      mockBodyGraphService.hasPartWithComponentValue.mockImplementation((bodyComponent, componentId, propertyPath, expectedValue) => {
-        if (componentId === 'core:movement' && propertyPath === 'locked' && expectedValue === false) {
-          // Movement is NOT available (locked)
+      mockBodyGraphService.hasPartWithComponentValue.mockImplementation(
+        (bodyComponent, componentId, propertyPath, expectedValue) => {
+          if (
+            componentId === 'core:movement' &&
+            propertyPath === 'locked' &&
+            expectedValue === false
+          ) {
+            // Movement is NOT available (locked)
+            return { found: false };
+          }
+          if (
+            componentId === 'core:movement' &&
+            propertyPath === 'locked' &&
+            expectedValue === true
+          ) {
+            // Movement is locked
+            return { found: true, partId: 'test:legs_part' };
+          }
           return { found: false };
         }
-        if (componentId === 'core:movement' && propertyPath === 'locked' && expectedValue === true) {
-          // Movement is locked
-          return { found: true, partId: 'test:legs_part' };
-        }
-        return { found: false };
-      });
+      );
 
       const result = prereqService.evaluate(
         turnAroundAction.prerequisites,
@@ -330,39 +393,52 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
 
       // Setup entity without mouth parts (non-humanoid entity)
       mockEntityManager.getEntityInstance.mockReturnValue(actor);
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'anatomy:body') {
-          return { root: 'test:body_root' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'anatomy:body') {
+            return { root: 'test:body_root' };
+          }
+          // Movement component on body part
+          if (
+            entityId === 'test:legs_part' &&
+            componentId === 'core:movement'
+          ) {
+            return { locked: false }; // Movement is not locked
+          }
+          return undefined;
         }
-        // Movement component on body part
-        if (entityId === 'test:legs_part' && componentId === 'core:movement') {
-          return { locked: false }; // Movement is not locked
-        }
-        return undefined;
-      });
+      );
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
         'core:name',
         'anatomy:body',
       ]);
 
       // Setup bodyGraphService - no mouth parts
-      mockBodyGraphService.findPartsByType.mockImplementation((rootId, partType) => {
-        if (rootId === 'test:body_root' && partType === 'mouth') {
-          return []; // No mouth parts
+      mockBodyGraphService.findPartsByType.mockImplementation(
+        (rootId, partType) => {
+          if (rootId === 'test:body_root' && partType === 'mouth') {
+            return []; // No mouth parts
+          }
+          return [];
         }
-        return [];
-      });
+      );
       mockBodyGraphService.buildAdjacencyCache.mockImplementation(() => {});
-      
+
       // Mock hasPartWithComponentValue for movement check
-      mockBodyGraphService.hasPartWithComponentValue.mockImplementation((bodyComponent, componentId, propertyPath, expectedValue) => {
-        if (componentId === 'core:movement' && propertyPath === 'locked' && expectedValue === false) {
-          // Movement is available
-          return { found: true, partId: 'test:legs_part' };
+      mockBodyGraphService.hasPartWithComponentValue.mockImplementation(
+        (bodyComponent, componentId, propertyPath, expectedValue) => {
+          if (
+            componentId === 'core:movement' &&
+            propertyPath === 'locked' &&
+            expectedValue === false
+          ) {
+            // Movement is available
+            return { found: true, partId: 'test:legs_part' };
+          }
+          return { found: false };
         }
-        return { found: false };
-      });
-      
+      );
+
       // Mock getAllParts to return body parts (no mouth)
       mockBodyGraphService.getAllParts.mockImplementation((rootId) => {
         if (rootId === 'test:body_root') {
@@ -388,9 +464,9 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
       // without errors proves there are no dependency violations
       expect(turnAroundAction).toBeDefined();
       expect(turnAroundAction.id).toBe('positioning:turn_around');
-      
+
       // Prerequisites should reference only core conditions
-      turnAroundAction.prerequisites.forEach(prereq => {
+      turnAroundAction.prerequisites.forEach((prereq) => {
         if (prereq.logic?.condition_ref) {
           expect(prereq.logic.condition_ref).toMatch(/^core:/);
         }
@@ -407,18 +483,18 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
       expect(turnAroundAction.prerequisites).toEqual([
         {
           logic: {
-            condition_ref: 'core:actor-can-move'
+            condition_ref: 'core:actor-can-move',
           },
-          failure_message: 'You cannot move right now.'
+          failure_message: 'You cannot move right now.',
         },
         {
           logic: {
-            condition_ref: 'core:actor-mouth-available'
+            condition_ref: 'core:actor-mouth-available',
           },
-          failure_message: 'You cannot do that while your mouth is engaged.'
-        }
+          failure_message: 'You cannot do that while your mouth is engaged.',
+        },
       ]);
-      
+
       // Ensure no forbidden_components
       expect(turnAroundAction.forbidden_components).toBeUndefined();
     });

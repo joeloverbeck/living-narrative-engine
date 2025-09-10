@@ -201,7 +201,9 @@ describe('ProcessingCommandState helpers', () => {
     await state._dispatchSpeech(ctx, actor, decisionMeta);
 
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("has no 'speech' or 'thoughts' fields in decisionMeta")
+      expect.stringContaining(
+        "has no 'speech' or 'thoughts' fields in decisionMeta"
+      )
     );
   });
 
@@ -213,7 +215,9 @@ describe('ProcessingCommandState helpers', () => {
     await state._dispatchSpeech(ctx, actor, decisionMeta);
 
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("has no 'speech' or 'thoughts' fields in decisionMeta")
+      expect.stringContaining(
+        "has no 'speech' or 'thoughts' fields in decisionMeta"
+      )
     );
   });
 
@@ -272,16 +276,22 @@ describe('ProcessingCommandState helpers', () => {
     const actor = { id: 'a1' };
     const dispatcher = { dispatch: jest.fn().mockResolvedValue(undefined) };
     const ctx = makeCtx(actor, { getSafeEventDispatcher: () => dispatcher });
-    
+
     // Mock the dispatchThoughtEvent module
-    const dispatchThoughtEventModule = await import('../../../../src/turns/states/helpers/dispatchThoughtEvent.js');
-    const thoughtEventSpy = jest.spyOn(dispatchThoughtEventModule, 'dispatchThoughtEvent').mockResolvedValue(undefined);
-    
-    await state._dispatchSpeech(ctx, actor, { thoughts: 'thinking about stuff' });
-    
+    const dispatchThoughtEventModule = await import(
+      '../../../../src/turns/states/helpers/dispatchThoughtEvent.js'
+    );
+    const thoughtEventSpy = jest
+      .spyOn(dispatchThoughtEventModule, 'dispatchThoughtEvent')
+      .mockResolvedValue(undefined);
+
+    await state._dispatchSpeech(ctx, actor, {
+      thoughts: 'thinking about stuff',
+    });
+
     expect(thoughtEventSpy).toHaveBeenCalledWith(ctx, mockHandler, 'a1', {
       entityId: 'a1',
-      thoughts: 'thinking about stuff'
+      thoughts: 'thinking about stuff',
     });
     thoughtEventSpy.mockRestore();
   });
@@ -294,7 +304,9 @@ describe('ProcessingCommandState helpers', () => {
     await state._dispatchSpeech(ctx, actor, decisionMeta);
 
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("has no 'speech' or 'thoughts' fields in decisionMeta")
+      expect.stringContaining(
+        "has no 'speech' or 'thoughts' fields in decisionMeta"
+      )
     );
   });
 });

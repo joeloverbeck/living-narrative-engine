@@ -237,7 +237,7 @@ class EnhancedConsoleLogger {
         // eslint-disable-next-line no-console
         console.log(output);
     }
-    
+
     // Force flush on Windows to prevent terminal buffering that causes
     // logs to only appear when terminal focus changes
     this.#forceFlushOnWindows();

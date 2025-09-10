@@ -224,7 +224,9 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
       // Assert: Handler should complete and return a result object
       expect(result).toBeDefined();
       expect(result.success).toBe(true);
-      expect(result.adjacentActors.sort()).toEqual(['test:alice', 'test:charlie'].sort());
+      expect(result.adjacentActors.sort()).toEqual(
+        ['test:alice', 'test:charlie'].sort()
+      );
 
       // Check Bob's closeness - should only have direct neighbors
       const bobCloseness = entityManager.getComponentData(
@@ -419,10 +421,13 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
       // The production code may not dispatch events in all error cases
       // If no events are dispatched, that's acceptable behavior
       const errorEvent = events.find(
-        (e) => e.type === 'core:system_error_occurred' || 
-               (e.payload && e.payload.message && e.payload.message.includes('ESTABLISH_SITTING_CLOSENESS'))
+        (e) =>
+          e.type === 'core:system_error_occurred' ||
+          (e.payload &&
+            e.payload.message &&
+            e.payload.message.includes('ESTABLISH_SITTING_CLOSENESS'))
       );
-      
+
       // The test passes whether or not an error event is dispatched
       // since the handler gracefully handles the error internally
       if (errorEvent) {
@@ -471,7 +476,9 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
       );
 
       // Assert - The production code stores true when operation succeeds (even with no adjacent actors)
-      expect(executionContext.evaluationContext.context.sittingResult).toBe(true);
+      expect(executionContext.evaluationContext.context.sittingResult).toBe(
+        true
+      );
     });
   });
 });

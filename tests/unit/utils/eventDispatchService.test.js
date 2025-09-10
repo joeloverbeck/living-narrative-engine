@@ -272,7 +272,7 @@ describe('EventDispatchService', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         `SafeEventDispatcher unavailable for ${eventId}`
       );
-      
+
       // Restore for cleanup
       mockSafeEventDispatcher.dispatch = originalDispatch;
     });
@@ -292,7 +292,7 @@ describe('EventDispatchService', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         `SafeEventDispatcher unavailable for ${eventId}`
       );
-      
+
       // Restore for cleanup
       mockSafeEventDispatcher.dispatch = originalDispatch;
     });
@@ -384,7 +384,7 @@ describe('EventDispatchService', () => {
           { throwOnInvalidDispatcher: true }
         );
       }).toThrow(InvalidDispatcherError);
-      
+
       // Restore for cleanup
       mockSafeEventDispatcher.dispatch = originalDispatch;
     });
@@ -399,7 +399,7 @@ describe('EventDispatchService', () => {
         service.dispatchSystemError('Test', {});
       }).not.toThrow();
       expect(mockLogger.error).toHaveBeenCalled();
-      
+
       // Restore for cleanup
       mockSafeEventDispatcher.dispatch = originalDispatch;
     });
@@ -414,7 +414,9 @@ describe('EventDispatchService', () => {
       const details = { test: true };
 
       // Act
-      const result = await service.dispatchSystemError(message, details, { async: true });
+      const result = await service.dispatchSystemError(message, details, {
+        async: true,
+      });
 
       // Assert
       expect(result).toBeUndefined();
@@ -434,7 +436,9 @@ describe('EventDispatchService', () => {
       const details = { test: true };
 
       // Act
-      const result = await service.dispatchSystemError(message, details, { async: true });
+      const result = await service.dispatchSystemError(message, details, {
+        async: true,
+      });
 
       // Assert
       expect(result).toBeUndefined();
@@ -493,7 +497,7 @@ describe('EventDispatchService', () => {
       expect(() => {
         service.dispatchValidationError('Test');
       }).toThrow(InvalidDispatcherError);
-      
+
       // Restore for cleanup
       mockSafeEventDispatcher.dispatch = originalDispatch;
     });
@@ -545,7 +549,11 @@ describe('EventDispatchService', () => {
         const context = 'test context';
 
         // Act
-        const result = await service.dispatchWithErrorHandling(eventName, payload, context);
+        const result = await service.dispatchWithErrorHandling(
+          eventName,
+          payload,
+          context
+        );
 
         // Assert
         expect(result).toBe(true);
@@ -569,12 +577,18 @@ describe('EventDispatchService', () => {
         const context = 'test context';
 
         // Act
-        const result = await service.dispatchWithErrorHandling(eventName, payload, context);
+        const result = await service.dispatchWithErrorHandling(
+          eventName,
+          payload,
+          context
+        );
 
         // Assert
         expect(result).toBe(true);
         expect(mockEventTrace.captureDispatchSuccess).toHaveBeenCalled();
-        expect(mockEventDispatchTracer.writeTrace).toHaveBeenCalledWith(mockEventTrace);
+        expect(mockEventDispatchTracer.writeTrace).toHaveBeenCalledWith(
+          mockEventTrace
+        );
         expect(mockLogger.warn).toHaveBeenCalledWith(
           'Failed to write event dispatch trace',
           writeError
@@ -583,12 +597,18 @@ describe('EventDispatchService', () => {
 
       it('should handle trace write errors gracefully on dispatch failure', async () => {
         // Arrange
-        const dispatchError = { message: 'Dispatch failed', stack: 'test stack' };
-        const writeError = { message: 'Trace write failed', stack: 'test stack' };
+        const dispatchError = {
+          message: 'Dispatch failed',
+          stack: 'test stack',
+        };
+        const writeError = {
+          message: 'Trace write failed',
+          stack: 'test stack',
+        };
         mockActionTraceFilter.isEnabled.mockReturnValue(true);
         mockActionTraceFilter.shouldTrace.mockReturnValue(true);
         mockEventDispatchTracer.writeTrace.mockRejectedValue(writeError);
-        
+
         // First call fails (original event), second call succeeds (system error)
         mockSafeEventDispatcher.dispatch
           .mockRejectedValueOnce(dispatchError)
@@ -599,7 +619,11 @@ describe('EventDispatchService', () => {
         const context = 'test context';
 
         // Act
-        const result = await service.dispatchWithErrorHandling(eventName, payload, context);
+        const result = await service.dispatchWithErrorHandling(
+          eventName,
+          payload,
+          context
+        );
 
         // Assert
         expect(result).toBe(false);
@@ -607,7 +631,9 @@ describe('EventDispatchService', () => {
           dispatchError,
           expect.objectContaining({ context })
         );
-        expect(mockEventDispatchTracer.writeTrace).toHaveBeenCalledWith(mockEventTrace);
+        expect(mockEventDispatchTracer.writeTrace).toHaveBeenCalledWith(
+          mockEventTrace
+        );
         expect(mockLogger.warn).toHaveBeenCalledWith(
           'Failed to write event dispatch trace',
           writeError
@@ -625,7 +651,11 @@ describe('EventDispatchService', () => {
         const context = 'test context';
 
         // Act
-        const result = await service.dispatchWithErrorHandling(eventName, payload, context);
+        const result = await service.dispatchWithErrorHandling(
+          eventName,
+          payload,
+          context
+        );
 
         // Assert
         expect(result).toBe(true);
@@ -640,19 +670,30 @@ describe('EventDispatchService', () => {
         mockSafeEventDispatcher.dispatch.mockResolvedValue(true);
 
         const eventName = 'ATTEMPT_ACTION_ID';
-        const payload = { action: { definitionId: 'test:action' }, data: 'test' };
+        const payload = {
+          action: { definitionId: 'test:action' },
+          data: 'test',
+        };
         const context = 'test context';
 
         // Act
-        const result = await service.dispatchWithErrorHandling(eventName, payload, context);
+        const result = await service.dispatchWithErrorHandling(
+          eventName,
+          payload,
+          context
+        );
 
         // Assert
         expect(result).toBe(true);
-        expect(mockActionTraceFilter.shouldTrace).toHaveBeenCalledWith('test:action');
+        expect(mockActionTraceFilter.shouldTrace).toHaveBeenCalledWith(
+          'test:action'
+        );
         expect(mockEventDispatchTracer.createTrace).toHaveBeenCalledWith(
           expect.objectContaining({
             eventName,
-            payload: expect.objectContaining({ action: { definitionId: 'test:action' } }),
+            payload: expect.objectContaining({
+              action: { definitionId: 'test:action' },
+            }),
             context,
           })
         );
@@ -669,11 +710,17 @@ describe('EventDispatchService', () => {
         const context = 'test context';
 
         // Act
-        const result = await service.dispatchWithErrorHandling(eventName, payload, context);
+        const result = await service.dispatchWithErrorHandling(
+          eventName,
+          payload,
+          context
+        );
 
         // Assert
         expect(result).toBe(true);
-        expect(mockActionTraceFilter.shouldTrace).toHaveBeenCalledWith('OTHER_EVENT_TYPE');
+        expect(mockActionTraceFilter.shouldTrace).toHaveBeenCalledWith(
+          'OTHER_EVENT_TYPE'
+        );
       });
     });
 

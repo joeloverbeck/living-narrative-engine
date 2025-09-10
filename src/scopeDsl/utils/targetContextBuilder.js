@@ -100,7 +100,6 @@ class TargetContextBuilder {
       if (targetDef.contextFrom && resolvedTargets[targetDef.contextFrom]) {
         const primaryTargets = resolvedTargets[targetDef.contextFrom];
 
-
         if (Array.isArray(primaryTargets) && primaryTargets.length > 0) {
           const primaryTargetId = primaryTargets[0].id;
           context.target = this.#buildEntityContext(primaryTargetId);

@@ -60,7 +60,7 @@ Find the ActorPromptDataDTO typedef and update it:
 ### Key Changes Explained
 
 1. **Fixed Missing Properties**:
-   - Added `@property {string} [strengths]` 
+   - Added `@property {string} [strengths]`
    - Added `@property {string} [weaknesses]`
 
 2. **New Psychological Properties**:
@@ -85,11 +85,13 @@ Find the ActorPromptDataDTO typedef and update it:
 ## Validation Requirements
 
 ### Type Safety
+
 - All new properties are optional (using `[propertyName]` syntax)
 - Property types match data structure (string for text components)
 - Maintain backward compatibility with existing code
 
 ### Documentation Standards
+
 - Each property must have a description
 - Use consistent JSDoc format
 - Mark optional properties correctly
@@ -97,12 +99,14 @@ Find the ActorPromptDataDTO typedef and update it:
 ## Testing Checklist
 
 ### Code Validation
+
 - [ ] No syntax errors in JSDoc comments
 - [ ] Type definitions follow JSDoc standards
 - [ ] All properties properly documented
 - [ ] Optional properties marked with brackets
 
 ### Integration Testing
+
 - [ ] Type checking tools recognize new properties
 - [ ] IDE autocomplete shows new properties
 - [ ] No type errors in consuming code
@@ -148,6 +152,7 @@ const promptData = {
 ## Dependencies for Next Steps
 
 This type definition update enables:
+
 - CHACOMENH-004: Data extraction can use typed properties
 - CHACOMENH-005: Formatter knows expected data structure
 - CHACOMENH-007/008: Tests can validate against types
@@ -155,11 +160,13 @@ This type definition update enables:
 ## Migration Impact
 
 ### No Breaking Changes
+
 - All new properties are optional
 - Existing code will continue to work
 - Type checking becomes more accurate
 
 ### Future Code Benefits
+
 - Better IDE autocomplete
 - Clearer API contracts
 - Easier debugging with proper types
@@ -182,4 +189,4 @@ This type definition update enables:
 
 ---
 
-*Ticket created from character-components-analysis.md report*
+_Ticket created from character-components-analysis.md report_

@@ -53,12 +53,12 @@ class ValidationCache {
   #memoryCache;
   #cacheStats;
   #cacheDir;
-  
+
   constructor({ logger, options = {} }) {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
     });
-    
+
     this.#logger = logger;
     this.#options = {
       cacheDir: path.join(process.cwd(), '.cache', 'mod-validation'),
@@ -66,9 +66,9 @@ class ValidationCache {
       maxSize: 100, // 100MB
       persistent: true,
       compressionLevel: 'fast',
-      ...options
+      ...options,
     };
-    
+
     this.#memoryCache = new Map();
     this.#cacheStats = {
       hits: 0,
@@ -76,7 +76,7 @@ class ValidationCache {
       invalidations: 0,
       writes: 0,
       reads: 0,
-      memoryUsage: 0
+      memoryUsage: 0,
     };
     this.#cacheDir = this.#options.cacheDir;
   }
@@ -91,10 +91,13 @@ class ValidationCache {
         await fs.mkdir(this.#cacheDir, { recursive: true });
         await this.#loadPersistedCache();
         await this.#cleanupExpiredEntries();
-        
+
         this.#logger.debug(`Validation cache initialized: ${this.#cacheDir}`);
       } catch (error) {
-        this.#logger.warn('Failed to initialize persistent cache, using memory-only mode', error);
+        this.#logger.warn(
+          'Failed to initialize persistent cache, using memory-only mode',
+          error
+        );
         this.#options.persistent = false;
       }
     }
@@ -108,11 +111,11 @@ class ValidationCache {
    */
   async get(cacheKey, contentHash) {
     const startTime = performance.now();
-    
+
     try {
       // Check memory cache first
       let entry = this.#memoryCache.get(cacheKey);
-      
+
       // Check persistent cache if not in memory
       if (!entry && this.#options.persistent) {
         entry = await this.#loadFromDisk(cacheKey);
@@ -120,26 +123,29 @@ class ValidationCache {
           this.#memoryCache.set(cacheKey, entry);
         }
       }
-      
+
       // Validate cache entry
       if (entry && this.#isCacheEntryValid(entry, contentHash)) {
         this.#cacheStats.hits++;
         this.#cacheStats.reads++;
-        
+
         const duration = performance.now() - startTime;
-        this.#logger.debug(`Cache hit for ${cacheKey} (${duration.toFixed(2)}ms)`);
-        
+        this.#logger.debug(
+          `Cache hit for ${cacheKey} (${duration.toFixed(2)}ms)`
+        );
+
         return entry.result;
       }
-      
+
       // Cache miss
       this.#cacheStats.misses++;
-      
+
       const duration = performance.now() - startTime;
-      this.#logger.debug(`Cache miss for ${cacheKey} (${duration.toFixed(2)}ms)`);
-      
+      this.#logger.debug(
+        `Cache miss for ${cacheKey} (${duration.toFixed(2)}ms)`
+      );
+
       return null;
-      
     } catch (error) {
       this.#logger.warn(`Cache read failed for ${cacheKey}`, error);
       this.#cacheStats.misses++;
@@ -157,7 +163,7 @@ class ValidationCache {
    */
   async set(cacheKey, contentHash, result, metadata = {}) {
     const startTime = performance.now();
-    
+
     try {
       const entry = {
         hash: contentHash,
@@ -168,29 +174,30 @@ class ValidationCache {
           size: this.#calculateResultSize(result),
           files: metadata.files || [],
           dependencies: metadata.dependencies || [],
-          ...metadata
-        }
+          ...metadata,
+        },
       };
-      
+
       // Store in memory cache
       this.#memoryCache.set(cacheKey, entry);
       this.#updateMemoryUsage();
-      
+
       // Store in persistent cache
       if (this.#options.persistent) {
         await this.#saveToDisk(cacheKey, entry);
       }
-      
+
       this.#cacheStats.writes++;
-      
+
       const duration = performance.now() - startTime;
-      this.#logger.debug(`Cached result for ${cacheKey} (${duration.toFixed(2)}ms)`);
-      
+      this.#logger.debug(
+        `Cached result for ${cacheKey} (${duration.toFixed(2)}ms)`
+      );
+
       // Trigger cleanup if cache is getting large
       if (this.#memoryCache.size % 100 === 0) {
         setImmediate(() => this.#performMaintenance());
       }
-      
     } catch (error) {
       this.#logger.warn(`Failed to cache result for ${cacheKey}`, error);
     }
@@ -205,42 +212,43 @@ class ValidationCache {
   async invalidate(changedFiles = [], affectedMods = []) {
     const startTime = performance.now();
     let invalidatedCount = 0;
-    
+
     try {
       const keysToInvalidate = new Set();
-      
+
       // Find entries affected by file changes
       for (const [cacheKey, entry] of this.#memoryCache) {
         const shouldInvalidate = this.#shouldInvalidateEntry(
-          entry, 
-          changedFiles, 
+          entry,
+          changedFiles,
           affectedMods
         );
-        
+
         if (shouldInvalidate) {
           keysToInvalidate.add(cacheKey);
         }
       }
-      
+
       // Remove invalidated entries
       for (const key of keysToInvalidate) {
         this.#memoryCache.delete(key);
-        
+
         if (this.#options.persistent) {
           await this.#removeFromDisk(key);
         }
-        
+
         invalidatedCount++;
       }
-      
+
       this.#cacheStats.invalidations += invalidatedCount;
       this.#updateMemoryUsage();
-      
+
       const duration = performance.now() - startTime;
-      this.#logger.debug(`Invalidated ${invalidatedCount} cache entries (${duration.toFixed(2)}ms)`);
-      
+      this.#logger.debug(
+        `Invalidated ${invalidatedCount} cache entries (${duration.toFixed(2)}ms)`
+      );
+
       return invalidatedCount;
-      
     } catch (error) {
       this.#logger.warn('Cache invalidation failed', error);
       return 0;
@@ -255,11 +263,11 @@ class ValidationCache {
     try {
       this.#memoryCache.clear();
       this.#updateMemoryUsage();
-      
+
       if (this.#options.persistent) {
         await this.#clearPersistentCache();
       }
-      
+
       // Reset stats
       this.#cacheStats = {
         hits: 0,
@@ -267,11 +275,10 @@ class ValidationCache {
         invalidations: 0,
         writes: 0,
         reads: 0,
-        memoryUsage: 0
+        memoryUsage: 0,
       };
-      
+
       this.#logger.info('Validation cache cleared');
-      
     } catch (error) {
       this.#logger.warn('Failed to clear cache', error);
     }
@@ -282,17 +289,20 @@ class ValidationCache {
    * @returns {Object} Cache performance statistics
    */
   getStats() {
-    const hitRate = this.#cacheStats.hits + this.#cacheStats.misses > 0
-      ? (this.#cacheStats.hits / (this.#cacheStats.hits + this.#cacheStats.misses)) * 100
-      : 0;
-    
+    const hitRate =
+      this.#cacheStats.hits + this.#cacheStats.misses > 0
+        ? (this.#cacheStats.hits /
+            (this.#cacheStats.hits + this.#cacheStats.misses)) *
+          100
+        : 0;
+
     return {
       ...this.#cacheStats,
       hitRate: hitRate.toFixed(2) + '%',
       entryCount: this.#memoryCache.size,
       memoryUsageMB: (this.#cacheStats.memoryUsage / 1024 / 1024).toFixed(2),
       cacheDir: this.#cacheDir,
-      persistent: this.#options.persistent
+      persistent: this.#options.persistent,
     };
   }
 
@@ -308,18 +318,18 @@ class ValidationCache {
     if (entry.hash !== contentHash) {
       return false;
     }
-    
+
     // Check age
     const age = Date.now() - entry.timestamp;
     if (age > this.#options.maxAge) {
       return false;
     }
-    
+
     // Check validator version compatibility
     if (entry.version !== this.#getValidatorVersion()) {
       return false;
     }
-    
+
     return true;
   }
 
@@ -334,28 +344,28 @@ class ValidationCache {
   #shouldInvalidateEntry(entry, changedFiles, affectedMods) {
     // Check if any tracked files changed
     if (entry.metadata.files && changedFiles.length > 0) {
-      const hasChangedFiles = entry.metadata.files.some(file =>
-        changedFiles.some(changed => 
-          changed === file || changed.includes(path.basename(file))
+      const hasChangedFiles = entry.metadata.files.some((file) =>
+        changedFiles.some(
+          (changed) => changed === file || changed.includes(path.basename(file))
         )
       );
-      
+
       if (hasChangedFiles) {
         return true;
       }
     }
-    
+
     // Check if any dependency mods changed
     if (entry.metadata.dependencies && affectedMods.length > 0) {
-      const hasAffectedDeps = entry.metadata.dependencies.some(dep =>
+      const hasAffectedDeps = entry.metadata.dependencies.some((dep) =>
         affectedMods.includes(dep)
       );
-      
+
       if (hasAffectedDeps) {
         return true;
       }
     }
-    
+
     return false;
   }
 
@@ -367,15 +377,14 @@ class ValidationCache {
     try {
       // Clean expired entries
       await this.#cleanupExpiredEntries();
-      
+
       // Enforce cache size limits
       await this.#enforceSizeLimits();
-      
+
       // Compact persistent cache if needed
       if (this.#options.persistent) {
         await this.#compactPersistentCache();
       }
-      
     } catch (error) {
       this.#logger.warn('Cache maintenance failed', error);
     }
@@ -388,19 +397,19 @@ class ValidationCache {
   async #cleanupExpiredEntries() {
     const now = Date.now();
     let cleanedCount = 0;
-    
+
     for (const [key, entry] of this.#memoryCache) {
       const age = now - entry.timestamp;
       if (age > this.#options.maxAge) {
         this.#memoryCache.delete(key);
         cleanedCount++;
-        
+
         if (this.#options.persistent) {
           await this.#removeFromDisk(key);
         }
       }
     }
-    
+
     if (cleanedCount > 0) {
       this.#logger.debug(`Cleaned ${cleanedCount} expired cache entries`);
       this.#updateMemoryUsage();
@@ -413,27 +422,30 @@ class ValidationCache {
    */
   async #enforceSizeLimits() {
     const maxSizeBytes = this.#options.maxSize * 1024 * 1024;
-    
+
     if (this.#cacheStats.memoryUsage > maxSizeBytes) {
-      const entries = Array.from(this.#memoryCache.entries())
-        .sort((a, b) => a[1].timestamp - b[1].timestamp); // Sort by age (oldest first)
-      
+      const entries = Array.from(this.#memoryCache.entries()).sort(
+        (a, b) => a[1].timestamp - b[1].timestamp
+      ); // Sort by age (oldest first)
+
       let removedCount = 0;
       for (const [key, entry] of entries) {
         if (this.#cacheStats.memoryUsage <= maxSizeBytes) {
           break;
         }
-        
+
         this.#memoryCache.delete(key);
         removedCount++;
-        
+
         if (this.#options.persistent) {
           await this.#removeFromDisk(key);
         }
       }
-      
+
       if (removedCount > 0) {
-        this.#logger.debug(`Evicted ${removedCount} cache entries to enforce size limits`);
+        this.#logger.debug(
+          `Evicted ${removedCount} cache entries to enforce size limits`
+        );
         this.#updateMemoryUsage();
       }
     }
@@ -442,16 +454,16 @@ class ValidationCache {
   // Persistent cache methods
   async #loadFromDisk(cacheKey) {
     const filePath = this.#getCacheFilePath(cacheKey);
-    
+
     try {
       const content = await fs.readFile(filePath, 'utf8');
       const entry = JSON.parse(content);
-      
+
       // Decompress if needed
       if (entry.compressed) {
         entry.result = await this.#decompress(entry.result);
       }
-      
+
       return entry;
     } catch (error) {
       // File doesn't exist or is corrupted
@@ -461,7 +473,7 @@ class ValidationCache {
 
   async #saveToDisk(cacheKey, entry) {
     const filePath = this.#getCacheFilePath(cacheKey);
-    
+
     try {
       // Compress if configured
       let entryToSave = { ...entry };
@@ -469,16 +481,19 @@ class ValidationCache {
         entryToSave.result = await this.#compress(entry.result);
         entryToSave.compressed = true;
       }
-      
+
       await fs.writeFile(filePath, JSON.stringify(entryToSave), 'utf8');
     } catch (error) {
-      this.#logger.warn(`Failed to save cache entry to disk: ${cacheKey}`, error);
+      this.#logger.warn(
+        `Failed to save cache entry to disk: ${cacheKey}`,
+        error
+      );
     }
   }
 
   async #removeFromDisk(cacheKey) {
     const filePath = this.#getCacheFilePath(cacheKey);
-    
+
     try {
       await fs.unlink(filePath);
     } catch (error) {
@@ -487,7 +502,8 @@ class ValidationCache {
   }
 
   #getCacheFilePath(cacheKey) {
-    const fileName = crypto.createHash('md5').update(cacheKey).digest('hex') + '.json';
+    const fileName =
+      crypto.createHash('md5').update(cacheKey).digest('hex') + '.json';
     return path.join(this.#cacheDir, fileName);
   }
 
@@ -550,12 +566,12 @@ class PerformanceOptimizedValidationOrchestrator {
   #cache;
   #fileWatcher;
   #performanceMetrics;
-  
-  constructor({ 
-    logger, 
-    baseOrchestrator, 
+
+  constructor({
+    logger,
+    baseOrchestrator,
     cacheOptions = {},
-    performanceOptions = {}
+    performanceOptions = {},
   }) {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
@@ -563,12 +579,12 @@ class PerformanceOptimizedValidationOrchestrator {
     validateDependency(baseOrchestrator, 'IModValidationOrchestrator', logger, {
       requiredMethods: ['validateEcosystem', 'validateMod'],
     });
-    
+
     this.#logger = logger;
     this.#baseOrchestrator = baseOrchestrator;
     this.#cache = new ValidationCache({ logger, options: cacheOptions });
     this.#performanceMetrics = new Map();
-    
+
     // Performance configuration
     this.#options = {
       enableCaching: true,
@@ -577,7 +593,7 @@ class PerformanceOptimizedValidationOrchestrator {
       maxConcurrency: performanceOptions.maxConcurrency || 5,
       batchSize: performanceOptions.batchSize || 10,
       timeoutMs: performanceOptions.timeoutMs || 120000,
-      ...performanceOptions
+      ...performanceOptions,
     };
   }
 
@@ -587,12 +603,14 @@ class PerformanceOptimizedValidationOrchestrator {
    */
   async initialize() {
     await this.#cache.initialize();
-    
+
     if (this.#options.enableIncrementalValidation) {
       await this.#setupFileWatching();
     }
-    
-    this.#logger.info('Performance-optimized validation orchestrator initialized');
+
+    this.#logger.info(
+      'Performance-optimized validation orchestrator initialized'
+    );
   }
 
   /**
@@ -603,51 +621,54 @@ class PerformanceOptimizedValidationOrchestrator {
   async validateEcosystem(options = {}) {
     const startTime = performance.now();
     const performanceId = `ecosystem-${Date.now()}`;
-    
+
     this.#logger.info('Starting performance-optimized ecosystem validation');
-    
+
     try {
       // Check for cached ecosystem validation
       if (this.#options.enableCaching && !options.skipCache) {
-        const cacheResult = await this.#tryGetCachedEcosystemValidation(options);
+        const cacheResult =
+          await this.#tryGetCachedEcosystemValidation(options);
         if (cacheResult) {
           this.#recordPerformance(performanceId, {
             type: 'ecosystem',
             cached: true,
-            duration: performance.now() - startTime
+            duration: performance.now() - startTime,
           });
           return cacheResult;
         }
       }
-      
+
       // Perform optimized validation
       const result = await this.#performOptimizedEcosystemValidation(options);
-      
+
       // Cache results if successful
       if (this.#options.enableCaching && result.isValid) {
         await this.#cacheEcosystemValidation(options, result);
       }
-      
+
       const duration = performance.now() - startTime;
       this.#recordPerformance(performanceId, {
         type: 'ecosystem',
         cached: false,
         duration,
-        modsValidated: result.crossReferences?.size || 0
+        modsValidated: result.crossReferences?.size || 0,
       });
-      
+
       // Add performance data to result
       result.performance = {
         ...result.performance,
         optimized: true,
         cacheStats: this.#cache.getStats(),
-        executionTime: duration
+        executionTime: duration,
       };
-      
+
       return result;
-      
     } catch (error) {
-      this.#logger.error('Performance-optimized ecosystem validation failed', error);
+      this.#logger.error(
+        'Performance-optimized ecosystem validation failed',
+        error
+      );
       throw error;
     }
   }
@@ -661,12 +682,12 @@ class PerformanceOptimizedValidationOrchestrator {
   async validateMod(modId, options = {}) {
     const startTime = performance.now();
     const performanceId = `mod-${modId}-${Date.now()}`;
-    
+
     try {
       // Generate cache key based on mod content and options
       const cacheKey = await this.#generateModCacheKey(modId, options);
       const contentHash = await this.#calculateModContentHash(modId);
-      
+
       // Try cache first
       if (this.#options.enableCaching && !options.skipCache) {
         const cachedResult = await this.#cache.get(cacheKey, contentHash);
@@ -675,36 +696,38 @@ class PerformanceOptimizedValidationOrchestrator {
             type: 'mod',
             modId,
             cached: true,
-            duration: performance.now() - startTime
+            duration: performance.now() - startTime,
           });
           return cachedResult;
         }
       }
-      
+
       // Perform validation
       const result = await this.#baseOrchestrator.validateMod(modId, options);
-      
+
       // Cache successful results
       if (this.#options.enableCaching && result.isValid) {
         const metadata = {
           files: await this.#getModFiles(modId),
-          dependencies: result.dependencies?.declaredDependencies || []
+          dependencies: result.dependencies?.declaredDependencies || [],
         };
         await this.#cache.set(cacheKey, contentHash, result, metadata);
       }
-      
+
       const duration = performance.now() - startTime;
       this.#recordPerformance(performanceId, {
         type: 'mod',
         modId,
         cached: false,
-        duration
+        duration,
       });
-      
+
       return result;
-      
     } catch (error) {
-      this.#logger.error(`Performance-optimized mod validation failed for ${modId}`, error);
+      this.#logger.error(
+        `Performance-optimized mod validation failed for ${modId}`,
+        error
+      );
       throw error;
     }
   }
@@ -719,50 +742,54 @@ class PerformanceOptimizedValidationOrchestrator {
     if (!this.#options.enableIncrementalValidation) {
       return this.validateEcosystem(options);
     }
-    
+
     const startTime = performance.now();
-    
+
     try {
       // Determine affected mods
       const affectedMods = await this.#determineAffectedMods(changedFiles);
-      
+
       if (affectedMods.length === 0) {
         this.#logger.info('No mods affected by changes, skipping validation');
         return { isValid: true, incremental: true, affectedMods: [] };
       }
-      
-      this.#logger.info(`Incremental validation for ${affectedMods.length} affected mods`);
-      
+
+      this.#logger.info(
+        `Incremental validation for ${affectedMods.length} affected mods`
+      );
+
       // Invalidate affected cache entries
       if (this.#options.enableCaching) {
-        const invalidatedCount = await this.#cache.invalidate(changedFiles, affectedMods);
+        const invalidatedCount = await this.#cache.invalidate(
+          changedFiles,
+          affectedMods
+        );
         this.#logger.debug(`Invalidated ${invalidatedCount} cache entries`);
       }
-      
+
       // Validate only affected mods
       const results = new Map();
-      const validationPromises = affectedMods.map(async modId => {
+      const validationPromises = affectedMods.map(async (modId) => {
         const result = await this.validateMod(modId, options);
         results.set(modId, result);
         return { modId, result };
       });
-      
+
       await Promise.all(validationPromises);
-      
+
       const duration = performance.now() - startTime;
-      
+
       return {
-        isValid: Array.from(results.values()).every(r => r.isValid),
+        isValid: Array.from(results.values()).every((r) => r.isValid),
         incremental: true,
         affectedMods,
         results,
         performance: {
           executionTime: duration,
           modsValidated: affectedMods.length,
-          filesChanged: changedFiles.length
-        }
+          filesChanged: changedFiles.length,
+        },
       };
-      
     } catch (error) {
       this.#logger.error('Incremental validation failed', error);
       throw error;
@@ -776,12 +803,13 @@ class PerformanceOptimizedValidationOrchestrator {
   getPerformanceStats() {
     const stats = {
       cache: this.#cache.getStats(),
-      recentOperations: Array.from(this.#performanceMetrics.values())
-        .slice(-20), // Last 20 operations
+      recentOperations: Array.from(this.#performanceMetrics.values()).slice(
+        -20
+      ), // Last 20 operations
       averageValidationTime: this.#calculateAverageValidationTime(),
-      totalOperations: this.#performanceMetrics.size
+      totalOperations: this.#performanceMetrics.size,
     };
-    
+
     return stats;
   }
 
@@ -805,22 +833,22 @@ class PerformanceOptimizedValidationOrchestrator {
     if (!this.#options.enableParallelProcessing) {
       return this.#baseOrchestrator.validateEcosystem(options);
     }
-    
+
     // Load all manifests once
     const manifestsMap = await this.#loadManifests();
     const modIds = Array.from(manifestsMap.keys());
-    
+
     // Process mods in parallel batches
     const results = new Map();
     const batchSize = this.#options.batchSize;
-    
+
     for (let i = 0; i < modIds.length; i += batchSize) {
       const batch = modIds.slice(i, i + batchSize);
-      const batchPromises = batch.map(async modId => {
+      const batchPromises = batch.map(async (modId) => {
         try {
           const result = await this.validateMod(modId, {
             ...options,
-            manifestsMap // Pass pre-loaded manifests
+            manifestsMap, // Pass pre-loaded manifests
           });
           return { modId, result, success: true };
         } catch (error) {
@@ -828,25 +856,27 @@ class PerformanceOptimizedValidationOrchestrator {
           return { modId, error: error.message, success: false };
         }
       });
-      
+
       const batchResults = await Promise.all(batchPromises);
-      
+
       batchResults.forEach(({ modId, result, error, success }) => {
         if (success) {
           results.set(modId, result);
         } else {
-          results.set(modId, { 
-            isValid: false, 
+          results.set(modId, {
+            isValid: false,
             errors: [error],
-            modId 
+            modId,
           });
         }
       });
-      
+
       // Progress logging
-      this.#logger.debug(`Completed batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(modIds.length / batchSize)}`);
+      this.#logger.debug(
+        `Completed batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(modIds.length / batchSize)}`
+      );
     }
-    
+
     // Aggregate results into ecosystem format
     return this.#aggregateEcosystemResults(results, manifestsMap);
   }
@@ -861,7 +891,7 @@ class PerformanceOptimizedValidationOrchestrator {
     try {
       const cacheKey = this.#generateEcosystemCacheKey(options);
       const contentHash = await this.#calculateEcosystemContentHash();
-      
+
       return await this.#cache.get(cacheKey, contentHash);
     } catch (error) {
       this.#logger.debug('Failed to get cached ecosystem validation', error);
@@ -879,13 +909,13 @@ class PerformanceOptimizedValidationOrchestrator {
     try {
       const cacheKey = this.#generateEcosystemCacheKey(options);
       const contentHash = await this.#calculateEcosystemContentHash();
-      
+
       const metadata = {
         files: await this.#getAllModFiles(),
         dependencies: await this.#getAllModDependencies(),
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
-      
+
       await this.#cache.set(cacheKey, contentHash, result, metadata);
     } catch (error) {
       this.#logger.warn('Failed to cache ecosystem validation', error);
@@ -905,11 +935,11 @@ class PerformanceOptimizedValidationOrchestrator {
       validationTypes: {
         dependencies: options.validateDependencies !== false,
         crossReferences: !options.skipCrossReferences,
-        loadOrder: options.checkLoadOrder || false
+        loadOrder: options.checkLoadOrder || false,
       },
-      strictMode: options.strictMode || false
+      strictMode: options.strictMode || false,
     };
-    
+
     const keyString = JSON.stringify(keyComponents);
     return crypto.createHash('sha256').update(keyString).digest('hex');
   }
@@ -923,9 +953,9 @@ class PerformanceOptimizedValidationOrchestrator {
   async #calculateModContentHash(modId) {
     const modPath = this.#resolveModPath(modId);
     const files = await this.#getModFiles(modId);
-    
+
     const hash = crypto.createHash('sha256');
-    
+
     for (const file of files.sort()) {
       try {
         const content = await fs.readFile(path.join(modPath, file), 'utf8');
@@ -935,7 +965,7 @@ class PerformanceOptimizedValidationOrchestrator {
         hash.update(`${file}:ERROR`);
       }
     }
-    
+
     return hash.digest('hex');
   }
 
@@ -947,7 +977,7 @@ class PerformanceOptimizedValidationOrchestrator {
    */
   async #determineAffectedMods(changedFiles) {
     const affectedMods = new Set();
-    
+
     for (const filePath of changedFiles) {
       // Extract mod ID from file path
       const modMatch = filePath.match(/data\/mods\/([^\/]+)\//);
@@ -955,23 +985,23 @@ class PerformanceOptimizedValidationOrchestrator {
         affectedMods.add(modMatch[1]);
       }
     }
-    
+
     // Also check for mods that depend on affected mods
     const manifestsMap = await this.#loadManifests();
     const directlyAffected = Array.from(affectedMods);
-    
+
     for (const [modId, manifest] of manifestsMap) {
       if (manifest.dependencies) {
-        const dependsOnAffected = manifest.dependencies.some(dep =>
+        const dependsOnAffected = manifest.dependencies.some((dep) =>
           directlyAffected.includes(dep.id)
         );
-        
+
         if (dependsOnAffected) {
           affectedMods.add(modId);
         }
       }
     }
-    
+
     return Array.from(affectedMods);
   }
 
@@ -984,14 +1014,14 @@ class PerformanceOptimizedValidationOrchestrator {
   #recordPerformance(operationId, metrics) {
     this.#performanceMetrics.set(operationId, {
       ...metrics,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
-    
+
     // Keep only recent metrics to prevent memory growth
     if (this.#performanceMetrics.size > 1000) {
       const entries = Array.from(this.#performanceMetrics.entries());
       const toKeep = entries.slice(-500); // Keep 500 most recent
-      
+
       this.#performanceMetrics.clear();
       toKeep.forEach(([id, data]) => {
         this.#performanceMetrics.set(id, data);
@@ -1006,11 +1036,11 @@ class PerformanceOptimizedValidationOrchestrator {
    */
   #calculateAverageValidationTime() {
     const recentOps = Array.from(this.#performanceMetrics.values())
-      .filter(op => !op.cached) // Only non-cached operations
+      .filter((op) => !op.cached) // Only non-cached operations
       .slice(-50); // Last 50 operations
-    
+
     if (recentOps.length === 0) return 0;
-    
+
     const totalTime = recentOps.reduce((sum, op) => sum + op.duration, 0);
     return totalTime / recentOps.length;
   }
@@ -1056,10 +1086,10 @@ class IncrementalValidationManager extends EventEmitter {
   #debounceTimer;
   #pendingChanges;
   #options;
-  
+
   constructor({ logger, validator, options = {} }) {
     super();
-    
+
     this.#logger = logger;
     this.#validator = validator;
     this.#pendingChanges = new Set();
@@ -1068,16 +1098,11 @@ class IncrementalValidationManager extends EventEmitter {
       watchPatterns: [
         'data/mods/**/*.json',
         'data/mods/**/*.scope',
-        'data/mods/*/mod-manifest.json'
+        'data/mods/*/mod-manifest.json',
       ],
-      ignorePatterns: [
-        'node_modules/**',
-        '.git/**',
-        '**/*.tmp',
-        '**/.*'
-      ],
+      ignorePatterns: ['node_modules/**', '.git/**', '**/*.tmp', '**/.*'],
       enableIncrementalValidation: true,
-      ...options
+      ...options,
     };
   }
 
@@ -1089,30 +1114,30 @@ class IncrementalValidationManager extends EventEmitter {
     if (this.#watcher) {
       await this.stopWatching();
     }
-    
+
     this.#watcher = chokidar.watch(this.#options.watchPatterns, {
       ignored: this.#options.ignorePatterns,
       ignoreInitial: true,
-      persistent: true
+      persistent: true,
     });
-    
+
     this.#watcher.on('change', (filePath) => {
       this.#handleFileChange(filePath, 'change');
     });
-    
+
     this.#watcher.on('add', (filePath) => {
       this.#handleFileChange(filePath, 'add');
     });
-    
+
     this.#watcher.on('unlink', (filePath) => {
       this.#handleFileChange(filePath, 'delete');
     });
-    
+
     this.#watcher.on('error', (error) => {
       this.#logger.error('File watcher error', error);
       this.emit('error', error);
     });
-    
+
     this.#logger.info('Incremental validation file watching started');
     this.emit('watching-started');
   }
@@ -1128,7 +1153,7 @@ class IncrementalValidationManager extends EventEmitter {
       this.#logger.info('File watching stopped');
       this.emit('watching-stopped');
     }
-    
+
     if (this.#debounceTimer) {
       clearTimeout(this.#debounceTimer);
       this.#debounceTimer = null;
@@ -1143,21 +1168,23 @@ class IncrementalValidationManager extends EventEmitter {
    */
   async validateFiles(filePaths, options = {}) {
     const startTime = performance.now();
-    
+
     try {
       this.emit('validation-started', { filePaths });
-      
-      const result = await this.#validator.validateIncremental(filePaths, options);
-      
-      const duration = performance.now() - startTime;
-      this.emit('validation-completed', { 
-        result, 
+
+      const result = await this.#validator.validateIncremental(
         filePaths,
-        duration 
+        options
+      );
+
+      const duration = performance.now() - startTime;
+      this.emit('validation-completed', {
+        result,
+        filePaths,
+        duration,
       });
-      
+
       return result;
-      
     } catch (error) {
       this.emit('validation-failed', { error, filePaths });
       throw error;
@@ -1172,15 +1199,15 @@ class IncrementalValidationManager extends EventEmitter {
    */
   #handleFileChange(filePath, changeType) {
     this.#pendingChanges.add({ filePath, changeType, timestamp: Date.now() });
-    
+
     this.#logger.debug(`File ${changeType}: ${filePath}`);
     this.emit('file-changed', { filePath, changeType });
-    
+
     // Debounce validation
     if (this.#debounceTimer) {
       clearTimeout(this.#debounceTimer);
     }
-    
+
     this.#debounceTimer = setTimeout(async () => {
       await this.#processPendingChanges();
     }, this.#options.debounceMs);
@@ -1194,17 +1221,19 @@ class IncrementalValidationManager extends EventEmitter {
     if (this.#pendingChanges.size === 0) {
       return;
     }
-    
+
     const changes = Array.from(this.#pendingChanges);
     this.#pendingChanges.clear();
-    
-    const filePaths = changes.map(change => change.filePath);
-    
+
+    const filePaths = changes.map((change) => change.filePath);
+
     try {
       if (this.#options.enableIncrementalValidation) {
         await this.validateFiles(filePaths);
       } else {
-        this.#logger.debug(`${changes.length} files changed, but incremental validation is disabled`);
+        this.#logger.debug(
+          `${changes.length} files changed, but incremental validation is disabled`
+        );
       }
     } catch (error) {
       this.#logger.error('Failed to process pending changes', error);
@@ -1227,7 +1256,7 @@ class ValidationPerformanceMonitor {
   #metrics;
   #startTimes;
   #logger;
-  
+
   constructor(logger) {
     this.#logger = logger;
     this.#metrics = {
@@ -1238,10 +1267,10 @@ class ValidationPerformanceMonitor {
         cacheHits: 0,
         cacheMisses: 0,
         averageTime: 0,
-        lastUpdated: Date.now()
+        lastUpdated: Date.now(),
       },
       performanceByType: new Map(),
-      recentOperations: []
+      recentOperations: [],
     };
     this.#startTimes = new Map();
   }
@@ -1254,7 +1283,7 @@ class ValidationPerformanceMonitor {
   startOperation(operationId, metadata = {}) {
     this.#startTimes.set(operationId, {
       startTime: performance.now(),
-      metadata
+      metadata,
     });
   }
 
@@ -1269,10 +1298,10 @@ class ValidationPerformanceMonitor {
       this.#logger.warn(`No start time recorded for operation: ${operationId}`);
       return;
     }
-    
+
     const endTime = performance.now();
     const duration = endTime - startData.startTime;
-    
+
     const operationMetrics = {
       operationId,
       duration,
@@ -1283,11 +1312,11 @@ class ValidationPerformanceMonitor {
         isValid: result.isValid,
         violationCount: this.#extractViolationCount(result),
         cached: result.cached || false,
-        ...result
+        ...result,
       },
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
-    
+
     this.#recordOperationMetrics(operationMetrics);
     this.#startTimes.delete(operationId);
   }
@@ -1307,30 +1336,32 @@ class ValidationPerformanceMonitor {
    * @returns {Object} Performance statistics
    */
   getStats(options = {}) {
-    const { 
+    const {
       includeRecentOperations = true,
       includePerformanceByType = true,
-      recentOperationLimit = 50 
+      recentOperationLimit = 50,
     } = options;
-    
+
     const stats = {
       aggregate: { ...this.#metrics.aggregateStats },
-      operationCount: this.#metrics.operations.size
+      operationCount: this.#metrics.operations.size,
     };
-    
+
     if (includeRecentOperations) {
-      stats.recentOperations = this.#metrics.recentOperations
-        .slice(-recentOperationLimit);
+      stats.recentOperations =
+        this.#metrics.recentOperations.slice(-recentOperationLimit);
     }
-    
+
     if (includePerformanceByType) {
-      stats.performanceByType = Object.fromEntries(this.#metrics.performanceByType);
+      stats.performanceByType = Object.fromEntries(
+        this.#metrics.performanceByType
+      );
     }
-    
+
     // Calculate derived metrics
     stats.aggregate.cacheHitRate = this.#calculateCacheHitRate();
     stats.aggregate.averageTime = this.#calculateAverageOperationTime();
-    
+
     return stats;
   }
 
@@ -1343,9 +1374,9 @@ class ValidationPerformanceMonitor {
     const insights = {
       recommendations: [],
       warnings: [],
-      performance: 'good' // good | fair | poor
+      performance: 'good', // good | fair | poor
     };
-    
+
     // Analyze cache performance
     const cacheHitRate = this.#calculateCacheHitRate();
     if (cacheHitRate < 30) {
@@ -1353,24 +1384,29 @@ class ValidationPerformanceMonitor {
       insights.recommendations.push('Consider increasing cache size or TTL');
       insights.performance = 'fair';
     }
-    
+
     // Analyze operation performance
     const avgTime = this.#calculateAverageOperationTime();
-    if (avgTime > 5000) { // 5 seconds
+    if (avgTime > 5000) {
+      // 5 seconds
       insights.warnings.push('Slow validation operations detected');
-      insights.recommendations.push('Consider enabling parallel processing or increasing concurrency');
+      insights.recommendations.push(
+        'Consider enabling parallel processing or increasing concurrency'
+      );
       insights.performance = avgTime > 10000 ? 'poor' : 'fair';
     }
-    
+
     // Analyze operation frequency
     const recentOps = this.#metrics.recentOperations.filter(
-      op => Date.now() - op.timestamp < 300000 // Last 5 minutes
+      (op) => Date.now() - op.timestamp < 300000 // Last 5 minutes
     );
-    
+
     if (recentOps.length > 100) {
-      insights.recommendations.push('High validation frequency detected - consider incremental validation');
+      insights.recommendations.push(
+        'High validation frequency detected - consider incremental validation'
+      );
     }
-    
+
     return insights;
   }
 
@@ -1386,13 +1422,13 @@ class ValidationPerformanceMonitor {
         cacheHits: 0,
         cacheMisses: 0,
         averageTime: 0,
-        lastUpdated: Date.now()
+        lastUpdated: Date.now(),
       },
       performanceByType: new Map(),
-      recentOperations: []
+      recentOperations: [],
     };
     this.#startTimes.clear();
-    
+
     this.#logger.info('Performance metrics reset');
   }
 
@@ -1403,32 +1439,36 @@ class ValidationPerformanceMonitor {
    */
   #recordOperationMetrics(operationMetrics) {
     // Store operation
-    this.#metrics.operations.set(operationMetrics.operationId, operationMetrics);
-    
+    this.#metrics.operations.set(
+      operationMetrics.operationId,
+      operationMetrics
+    );
+
     // Update aggregate stats
     this.#metrics.aggregateStats.totalOperations++;
     this.#metrics.aggregateStats.totalTime += operationMetrics.duration;
     this.#metrics.aggregateStats.lastUpdated = Date.now();
-    
+
     // Update performance by type
     const operationType = operationMetrics.metadata.type || 'unknown';
     if (!this.#metrics.performanceByType.has(operationType)) {
       this.#metrics.performanceByType.set(operationType, {
         count: 0,
         totalTime: 0,
-        averageTime: 0
+        averageTime: 0,
       });
     }
-    
+
     const typeStats = this.#metrics.performanceByType.get(operationType);
     typeStats.count++;
     typeStats.totalTime += operationMetrics.duration;
     typeStats.averageTime = typeStats.totalTime / typeStats.count;
-    
+
     // Add to recent operations (keep last 1000)
     this.#metrics.recentOperations.push(operationMetrics);
     if (this.#metrics.recentOperations.length > 1000) {
-      this.#metrics.recentOperations = this.#metrics.recentOperations.slice(-500);
+      this.#metrics.recentOperations =
+        this.#metrics.recentOperations.slice(-500);
     }
   }
 
@@ -1463,11 +1503,11 @@ class ValidationPerformanceMonitor {
     if (result.violations && Array.isArray(result.violations)) {
       return result.violations.length;
     }
-    
+
     if (result.crossReferences && result.crossReferences.violations) {
       return result.crossReferences.violations.length;
     }
-    
+
     return 0;
   }
 }
@@ -1496,39 +1536,51 @@ export function registerPerformanceServices(container) {
       cacheDir: '.cache/mod-validation',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       maxSize: 100, // 100MB
-      persistent: true
-    }
+      persistent: true,
+    },
   });
-  
+
   // Register performance monitor
-  container.register(tokens.IValidationPerformanceMonitor, ValidationPerformanceMonitor, {
-    dependencies: [tokens.ILogger]
-  });
-  
+  container.register(
+    tokens.IValidationPerformanceMonitor,
+    ValidationPerformanceMonitor,
+    {
+      dependencies: [tokens.ILogger],
+    }
+  );
+
   // Register incremental validation manager
-  container.register(tokens.IIncrementalValidationManager, IncrementalValidationManager, {
-    dependencies: [tokens.ILogger, tokens.IModValidationOrchestrator],
-    options: {
-      debounceMs: 1000,
-      enableIncrementalValidation: true
+  container.register(
+    tokens.IIncrementalValidationManager,
+    IncrementalValidationManager,
+    {
+      dependencies: [tokens.ILogger, tokens.IModValidationOrchestrator],
+      options: {
+        debounceMs: 1000,
+        enableIncrementalValidation: true,
+      },
     }
-  });
-  
+  );
+
   // Register performance-optimized orchestrator
-  container.register(tokens.IPerformanceOptimizedValidationOrchestrator, PerformanceOptimizedValidationOrchestrator, {
-    dependencies: [
-      tokens.ILogger,
-      tokens.IModValidationOrchestrator, // Base orchestrator
-      tokens.IValidationCache,
-      tokens.IValidationPerformanceMonitor
-    ],
-    options: {
-      enableCaching: true,
-      enableIncrementalValidation: true,
-      enableParallelProcessing: true,
-      maxConcurrency: 5
+  container.register(
+    tokens.IPerformanceOptimizedValidationOrchestrator,
+    PerformanceOptimizedValidationOrchestrator,
+    {
+      dependencies: [
+        tokens.ILogger,
+        tokens.IModValidationOrchestrator, // Base orchestrator
+        tokens.IValidationCache,
+        tokens.IValidationPerformanceMonitor,
+      ],
+      options: {
+        enableCaching: true,
+        enableIncrementalValidation: true,
+        enableParallelProcessing: true,
+        maxConcurrency: 5,
+      },
     }
-  });
+  );
 }
 ```
 
@@ -1544,53 +1596,60 @@ export function registerPerformanceServices(container) {
  */
 async function main() {
   const args = process.argv.slice(2);
-  
+
   try {
     const config = parseArguments(args);
-    
+
     // Use performance-optimized orchestrator if available
     let orchestrator;
     try {
-      orchestrator = container.resolve(tokens.IPerformanceOptimizedValidationOrchestrator);
+      orchestrator = container.resolve(
+        tokens.IPerformanceOptimizedValidationOrchestrator
+      );
       await orchestrator.initialize();
     } catch (error) {
       // Fallback to base orchestrator
       orchestrator = container.resolve(tokens.IModValidationOrchestrator);
     }
-    
+
     // Enable performance monitoring
-    const performanceMonitor = container.resolve(tokens.IValidationPerformanceMonitor);
+    const performanceMonitor = container.resolve(
+      tokens.IValidationPerformanceMonitor
+    );
     const operationId = `cli-${Date.now()}`;
-    
+
     performanceMonitor.startOperation(operationId, {
       type: config.ecosystem ? 'ecosystem' : 'mod',
       cli: true,
-      config: config
+      config: config,
     });
-    
+
     // Run validation
     const results = await runValidation(orchestrator, config);
-    
+
     performanceMonitor.endOperation(operationId, results);
-    
+
     // Show performance stats if requested
     if (config.showPerformance) {
       const stats = performanceMonitor.getStats();
       console.log('\n⚡ Performance Statistics:');
-      console.log(`   • Operation time: ${stats.aggregate.averageTime.toFixed(2)}ms`);
-      console.log(`   • Cache hit rate: ${stats.aggregate.cacheHitRate.toFixed(1)}%`);
-      
+      console.log(
+        `   • Operation time: ${stats.aggregate.averageTime.toFixed(2)}ms`
+      );
+      console.log(
+        `   • Cache hit rate: ${stats.aggregate.cacheHitRate.toFixed(1)}%`
+      );
+
       const insights = performanceMonitor.getInsights();
       if (insights.recommendations.length > 0) {
         console.log('   • Recommendations:');
-        insights.recommendations.forEach(rec => {
+        insights.recommendations.forEach((rec) => {
           console.log(`     - ${rec}`);
         });
       }
     }
-    
+
     // ... rest of existing code ...
-    
   } catch (error) {
     // ... existing error handling ...
   }
@@ -1599,15 +1658,15 @@ async function main() {
 // Add performance options to argument parsing
 function parseArguments(args) {
   const config = { ...DEFAULT_CONFIG };
-  
+
   // ... existing parsing ...
-  
+
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    
+
     switch (arg) {
       // ... existing cases ...
-      
+
       case '--show-performance':
       case '--perf':
         config.showPerformance = true;
@@ -1626,7 +1685,7 @@ function parseArguments(args) {
         break;
     }
   }
-  
+
   return config;
 }
 ```
@@ -1644,9 +1703,9 @@ describe('ValidationCache - Performance Tests', () => {
 
   beforeEach(async () => {
     testBed = createTestBed();
-    cache = new ValidationCache({ 
+    cache = new ValidationCache({
       logger: testBed.createMockLogger(),
-      options: { persistent: false } // Memory-only for tests
+      options: { persistent: false }, // Memory-only for tests
     });
     await cache.initialize();
   });
@@ -1655,49 +1714,49 @@ describe('ValidationCache - Performance Tests', () => {
     it('should handle rapid cache operations efficiently', async () => {
       const iterations = 1000;
       const startTime = performance.now();
-      
+
       // Rapid cache sets
-      const setPromises = Array.from({ length: iterations }, (_, i) => 
+      const setPromises = Array.from({ length: iterations }, (_, i) =>
         cache.set(`key-${i}`, `hash-${i}`, { result: `data-${i}` })
       );
       await Promise.all(setPromises);
-      
+
       // Rapid cache gets
       const getPromises = Array.from({ length: iterations }, (_, i) =>
         cache.get(`key-${i}`, `hash-${i}`)
       );
       const results = await Promise.all(getPromises);
-      
+
       const endTime = performance.now();
       const totalTime = endTime - startTime;
-      
-      expect(results.filter(r => r !== null)).toHaveLength(iterations);
+
+      expect(results.filter((r) => r !== null)).toHaveLength(iterations);
       expect(totalTime).toBeLessThan(5000); // Should complete in <5 seconds
-      
+
       const stats = cache.getStats();
       expect(parseFloat(stats.hitRate)).toBeGreaterThan(95); // >95% hit rate
     });
 
     it('should maintain performance with large cache sizes', async () => {
       const largeDataSize = 10000;
-      
+
       // Fill cache with large dataset
       for (let i = 0; i < largeDataSize; i++) {
         await cache.set(`large-key-${i}`, `hash-${i}`, {
-          largeData: Array(100).fill(`data-item-${i}`)
+          largeData: Array(100).fill(`data-item-${i}`),
         });
       }
-      
+
       // Test retrieval performance
       const retrievalStart = performance.now();
       const results = await Promise.all([
         cache.get('large-key-100', 'hash-100'),
         cache.get('large-key-5000', 'hash-5000'),
-        cache.get('large-key-9999', 'hash-9999')
+        cache.get('large-key-9999', 'hash-9999'),
       ]);
       const retrievalTime = performance.now() - retrievalStart;
-      
-      expect(results.every(r => r !== null)).toBe(true);
+
+      expect(results.every((r) => r !== null)).toBe(true);
       expect(retrievalTime).toBeLessThan(100); // Should be fast even with large cache
     });
   });
@@ -1705,28 +1764,28 @@ describe('ValidationCache - Performance Tests', () => {
   describe('Memory Management', () => {
     it('should not leak memory during intensive operations', async () => {
       const initialMemory = process.memoryUsage().heapUsed;
-      
+
       // Perform many cache operations
       for (let round = 0; round < 10; round++) {
-        const promises = Array.from({ length: 100 }, (_, i) => 
-          cache.set(`round-${round}-key-${i}`, `hash-${i}`, { 
-            data: Array(50).fill(`data-${i}`) 
+        const promises = Array.from({ length: 100 }, (_, i) =>
+          cache.set(`round-${round}-key-${i}`, `hash-${i}`, {
+            data: Array(50).fill(`data-${i}`),
           })
         );
         await Promise.all(promises);
-        
+
         // Periodic cache clearing
         if (round % 3 === 0) {
           await cache.clear();
         }
-        
+
         // Force garbage collection
         if (global.gc) global.gc();
       }
-      
+
       const finalMemory = process.memoryUsage().heapUsed;
       const memoryGrowth = finalMemory - initialMemory;
-      
+
       // Memory growth should be reasonable (less than 50MB)
       expect(memoryGrowth).toBeLessThan(50 * 1024 * 1024);
     });
@@ -1744,38 +1803,39 @@ describe('Parallel Validation - Performance Tests', () => {
       performanceOptions: {
         enableParallelProcessing: true,
         maxConcurrency: 5,
-        batchSize: 10
-      }
+        batchSize: 10,
+      },
     });
-    
+
     await orchestrator.initialize();
-    
+
     // Create large mod ecosystem
     await testBed.createLargeModEcosystem(50); // 50 mods
-    
+
     // Test parallel validation
     const parallelStart = performance.now();
     const parallelResult = await orchestrator.validateEcosystem();
     const parallelTime = performance.now() - parallelStart;
-    
+
     // Test sequential validation for comparison
-    const sequentialOrchestrator = new PerformanceOptimizedValidationOrchestrator({
-      logger: testBed.createMockLogger(),
-      baseOrchestrator: testBed.createMockOrchestrator(),
-      performanceOptions: {
-        enableParallelProcessing: false,
-        maxConcurrency: 1
-      }
-    });
-    
+    const sequentialOrchestrator =
+      new PerformanceOptimizedValidationOrchestrator({
+        logger: testBed.createMockLogger(),
+        baseOrchestrator: testBed.createMockOrchestrator(),
+        performanceOptions: {
+          enableParallelProcessing: false,
+          maxConcurrency: 1,
+        },
+      });
+
     const sequentialStart = performance.now();
     const sequentialResult = await sequentialOrchestrator.validateEcosystem();
     const sequentialTime = performance.now() - sequentialStart;
-    
+
     // Parallel should be significantly faster
     const improvement = sequentialTime / parallelTime;
     expect(improvement).toBeGreaterThan(2); // At least 2x improvement
-    
+
     // Results should be equivalent
     expect(parallelResult.isValid).toBe(sequentialResult.isValid);
   });
@@ -1798,18 +1858,21 @@ describe('Parallel Validation - Performance Tests', () => {
 ## Implementation Notes
 
 ### Performance Optimization Strategy
+
 - **Caching first**: Aggressive caching with intelligent invalidation
 - **Incremental validation**: Only validate what has changed
 - **Parallel processing**: Leverage multiple cores for independent operations
 - **Memory management**: Prevent memory leaks in long-running processes
 
 ### Cache Design Principles
+
 - **Content-based invalidation**: Use file hashes for precise change detection
 - **Dependency-aware**: Invalidate dependent results when dependencies change
 - **Size management**: LRU eviction with configurable size limits
 - **Persistence**: Optional disk persistence for cross-session caching
 
 ### Monitoring and Observability
+
 - **Performance metrics**: Track operation times, cache performance, memory usage
 - **Insights generation**: Provide actionable recommendations for optimization
 - **Progress reporting**: Real-time feedback for long operations
@@ -1818,6 +1881,7 @@ describe('Parallel Validation - Performance Tests', () => {
 ## Next Steps
 
 After completion:
+
 1. **MODDEPVAL-011**: Create integration tests for end-to-end validation workflow
 2. **Performance tuning**: Profile and optimize for real-world usage patterns
 3. **Documentation**: Create performance optimization guides for users

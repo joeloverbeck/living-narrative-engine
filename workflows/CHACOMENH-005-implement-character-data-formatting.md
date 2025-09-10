@@ -26,6 +26,7 @@ The CharacterDataFormatter service converts raw character component data into ma
 ### Formatting Patterns
 
 Each component formatter should:
+
 - Validate input (check for null/undefined/empty)
 - Log debug information
 - Return markdown-formatted section
@@ -131,7 +132,7 @@ Locate the `formatCharacterPersona` method and integrate the new sections:
 ```javascript
 formatCharacterPersona(characterData) {
   // ... validation code ...
-  
+
   const {
     name,
     description,
@@ -197,27 +198,35 @@ YOU ARE [Character Name].
 This is your identity. All thoughts, actions, and words must stem from this core truth.
 
 ## Your Description
+
 [Physical description]
 
 ## Your Personality
+
 [Personality traits]
 
 ## Your Profile
+
 [Background story]
 
 ## Your Core Motivations
+
 [Why the character acts - psychological drivers]
 
 ## Your Internal Tensions
+
 [Conflicting desires and internal struggles]
 
 ## Your Core Dilemmas
+
 [Fundamental questions without easy answers]
 
 ## Your Likes
+
 [Things enjoyed]
 
 ## Your Dislikes
+
 [Things avoided]
 
 [... rest of sections ...]
@@ -249,8 +258,9 @@ For each formatting method, test:
 describe('formatMotivationsSection', () => {
   it('should format valid motivations text', () => {
     const input = 'I seek power because I fear being powerless.';
-    const expected = '## Your Core Motivations\nI seek power because I fear being powerless.\n';
-    
+    const expected =
+      '## Your Core Motivations\nI seek power because I fear being powerless.\n';
+
     const result = formatter.formatMotivationsSection(input);
     expect(result).toBe(expected);
   });
@@ -270,18 +280,21 @@ describe('formatMotivationsSection', () => {
 ## Validation Checklist
 
 ### Code Quality
+
 - [ ] Methods follow existing naming patterns
 - [ ] Consistent parameter validation
 - [ ] Appropriate debug logging
 - [ ] JSDoc comments complete and accurate
 
 ### Formatting Consistency
+
 - [ ] Section headers use ## level
 - [ ] Consistent spacing (single newline between sections)
 - [ ] First-person perspective maintained
 - [ ] Markdown formatting preserved
 
 ### Integration
+
 - [ ] Sections appear in logical order
 - [ ] Optional sections handled gracefully
 - [ ] No impact on existing sections
@@ -303,12 +316,14 @@ describe('formatMotivationsSection', () => {
 ## Performance Considerations
 
 ### Optimization Notes
+
 - String concatenation is acceptable for this use case
 - No need for StringBuilder pattern (small strings)
 - Trim once and reuse result
 - Early return for invalid input
 
 ### Memory Usage
+
 - Minimal impact (text formatting only)
 - No data persistence
 - Garbage collection friendly
@@ -336,6 +351,7 @@ this.#logger.debug('Character data received', {
 ## Rollback Plan
 
 If issues arise:
+
 1. Remove three new formatting methods
 2. Remove calls from formatCharacterPersona
 3. Remove destructuring additions
@@ -344,6 +360,7 @@ If issues arise:
 ## Future Enhancements
 
 Consider for future iterations:
+
 - Markdown validation
 - Character limit enforcement
 - Template customization
@@ -360,4 +377,4 @@ Consider for future iterations:
 
 ---
 
-*Ticket created from character-components-analysis.md report*
+_Ticket created from character-components-analysis.md report_

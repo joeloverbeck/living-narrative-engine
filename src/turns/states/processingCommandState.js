@@ -15,7 +15,10 @@
  */
 
 import { AbstractTurnState } from './abstractTurnState.js';
-import { ENTITY_SPOKE_ID, ENTITY_THOUGHT_ID } from '../../constants/eventIds.js';
+import {
+  ENTITY_SPOKE_ID,
+  ENTITY_THOUGHT_ID,
+} from '../../constants/eventIds.js';
 import { CommandProcessingWorkflow } from './helpers/commandProcessingWorkflow.js';
 import { ProcessingWorkflow } from './workflows/processingWorkflow.js';
 import { ProcessingExceptionHandler } from './helpers/processingExceptionHandler.js';
@@ -318,7 +321,12 @@ export class ProcessingCommandState extends AbstractTurnState {
         logger.debug(
           `${this.getStateName()}: Actor ${actorId} had thoughts but no speech. Dispatching ${ENTITY_THOUGHT_ID}.`
         );
-        await dispatchThoughtEvent(turnCtx, this._handler, actorId, thoughtPayload);
+        await dispatchThoughtEvent(
+          turnCtx,
+          this._handler,
+          actorId,
+          thoughtPayload
+        );
       } else if (speechRaw !== null && speechRaw !== undefined) {
         logger.debug(
           `${this.getStateName()}: Actor ${actorId} had a non-string or empty speech field in decisionMeta. No ${ENTITY_SPOKE_ID} or ${ENTITY_THOUGHT_ID} event dispatched. (Type: ${typeof speechRaw}, Value: "${String(speechRaw)}")`

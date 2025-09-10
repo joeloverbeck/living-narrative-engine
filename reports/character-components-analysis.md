@@ -5,6 +5,7 @@
 This report analyzes the feasibility of adding three new character components to the Living Narrative Engine: **motivations**, **internal tensions**, and **core dilemmas**. Based on a comprehensive analysis of the existing codebase, these components are sufficiently distinct from existing components and can be successfully integrated into the prompt generation system.
 
 **Key Findings:**
+
 - All three proposed components are distinct from existing character components
 - Implementation requires modifications to 7 core files and creation of 3 new component definitions
 - The components can be made optional while maintaining backward compatibility
@@ -54,33 +55,43 @@ YOU ARE [Character Name].
 This is your identity. All thoughts, actions, and words must stem from this core truth.
 
 ## Your Description
+
 [Physical attributes]
 
 ## Your Personality
+
 [Personality traits]
 
 ## Your Profile
+
 [Background story]
 
 ## Your Likes
+
 [Things character enjoys]
 
 ## Your Dislikes
+
 [Things character avoids]
 
 ## Your Strengths
+
 [Capabilities]
 
 ## Your Weaknesses
+
 [Limitations]
 
 ## Your Secrets
+
 [Hidden information]
 
 ## Your Fears
+
 [What scares them]
 
 ## Your Speech Patterns
+
 - [Example 1]
 - [Example 2]
 ```
@@ -92,11 +103,13 @@ This is your identity. All thoughts, actions, and words must stem from this core
 **Definition**: The underlying psychological drivers that explain WHY characters do what they do, distinct from WHAT they want to achieve (goals).
 
 **Distinctiveness from Existing Components:**
+
 - **Different from goals**: Goals are concrete objectives ("become captain of the guard"), while motivations are psychological drivers ("prove myself worthy because I feel inadequate")
 - **Different from personality**: Personality describes traits ("brave, loyal"), while motivations explain the psychology behind behaviors
 - **Different from profile**: Profile provides history, while motivations explain current psychological state
 
 **Example Data Structure:**
+
 ```json
 {
   "text": "I act tough and aggressive because deep down I feel insecure about my small stature. I seek validation through displays of strength because I never received approval from my father."
@@ -108,11 +121,13 @@ This is your identity. All thoughts, actions, and words must stem from this core
 **Definition**: Conflicting desires or beliefs within the character that create psychological tension and drive complex behavior.
 
 **Distinctiveness from Existing Components:**
+
 - **Different from fears**: Fears are things to avoid, tensions are competing desires
 - **Different from weaknesses**: Weaknesses are limitations, tensions are conflicts
 - **Different from personality**: Personality is static traits, tensions are dynamic conflicts
 
 **Example Data Structure:**
+
 ```json
 {
   "text": "I desperately want romantic connection, but every relationship I've had has ended in disaster. I crave independence, yet I fear being alone."
@@ -124,11 +139,13 @@ This is your identity. All thoughts, actions, and words must stem from this core
 **Definition**: Fundamental questions the character grapples with, always phrased as questions that have no easy answers.
 
 **Distinctiveness from Existing Components:**
+
 - **Different from goals**: Goals are objectives to achieve, dilemmas are questions to ponder
 - **Different from secrets**: Secrets are hidden facts, dilemmas are open questions
 - **Different from profile**: Profile is established history, dilemmas are ongoing struggles
 
 **Example Data Structure:**
+
 ```json
 {
   "text": "Is it right for me to enforce laws I know are unjust? Can I truly protect people by working within a corrupt system?"
@@ -139,20 +156,21 @@ This is your identity. All thoughts, actions, and words must stem from this core
 
 ### Comparison Matrix
 
-| Component | Purpose | Temporal Focus | Format | Psychological Depth |
-|-----------|---------|---------------|---------|-------------------|
-| **Goals** | What to achieve | Future | Array with timestamps | Surface-level objectives |
-| **Motivations** | Why they act | Present | Explanations | Deep psychological drivers |
-| **Personality** | How they behave | Static | Traits | Behavioral patterns |
-| **Internal Tensions** | Conflicting desires | Ongoing | Contradictions | Internal conflict |
-| **Profile** | Who they were | Past | Narrative | Historical context |
-| **Core Dilemmas** | Questions they face | Ongoing | Questions | Philosophical struggles |
-| **Fears** | What to avoid | Present | Statements | Emotional responses |
-| **Secrets** | Hidden information | Past/Present | Facts | Concealed truths |
+| Component             | Purpose             | Temporal Focus | Format                | Psychological Depth        |
+| --------------------- | ------------------- | -------------- | --------------------- | -------------------------- |
+| **Goals**             | What to achieve     | Future         | Array with timestamps | Surface-level objectives   |
+| **Motivations**       | Why they act        | Present        | Explanations          | Deep psychological drivers |
+| **Personality**       | How they behave     | Static         | Traits                | Behavioral patterns        |
+| **Internal Tensions** | Conflicting desires | Ongoing        | Contradictions        | Internal conflict          |
+| **Profile**           | Who they were       | Past           | Narrative             | Historical context         |
+| **Core Dilemmas**     | Questions they face | Ongoing        | Questions             | Philosophical struggles    |
+| **Fears**             | What to avoid       | Present        | Statements            | Emotional responses        |
+| **Secrets**           | Hidden information  | Past/Present   | Facts                 | Concealed truths           |
 
 ### Overlap Analysis
 
 **Minimal Overlap Identified:**
+
 - Each component serves a distinct narrative purpose
 - Components complement rather than duplicate each other
 - Clear boundaries between component responsibilities
@@ -171,6 +189,7 @@ This is your identity. All thoughts, actions, and words must stem from this core
 
 1. **`src/constants/componentIds.js`**
    - Add three new component ID constants
+
    ```javascript
    export const MOTIVATIONS_COMPONENT_ID = 'core:motivations';
    export const INTERNAL_TENSIONS_COMPONENT_ID = 'core:internal_tensions';
@@ -209,6 +228,7 @@ This is your identity. All thoughts, actions, and words must stem from this core
 ### Step 1: Create Component JSON Files
 
 **motivations.component.json:**
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
@@ -229,6 +249,7 @@ This is your identity. All thoughts, actions, and words must stem from this core
 ```
 
 **internal_tensions.component.json:**
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
@@ -249,6 +270,7 @@ This is your identity. All thoughts, actions, and words must stem from this core
 ```
 
 **core_dilemmas.component.json:**
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
@@ -271,6 +293,7 @@ This is your identity. All thoughts, actions, and words must stem from this core
 ### Step 2: Update Component IDs
 
 Add to `src/constants/componentIds.js`:
+
 ```javascript
 // Psychological character aspects
 export const MOTIVATIONS_COMPONENT_ID = 'core:motivations';
@@ -281,6 +304,7 @@ export const CORE_DILEMMAS_COMPONENT_ID = 'core:core_dilemmas';
 ### Step 3: Update Actor Data Extractor
 
 In `src/turns/services/actorDataExtractor.js`, add to the imports:
+
 ```javascript
 import {
   // ... existing imports ...
@@ -291,6 +315,7 @@ import {
 ```
 
 Add to optionalTextAttributes array:
+
 ```javascript
 const optionalTextAttributes = [
   // ... existing attributes ...
@@ -373,6 +398,7 @@ formatCoreDilemmasSection(dilemmasText) {
 ```
 
 Update `formatCharacterPersona()` method to include new sections:
+
 ```javascript
 // Add after existing destructuring
 const {
@@ -402,6 +428,7 @@ if (dilemmasSection) {
 ### Step 5: Update Type Definitions
 
 In `src/turns/dtos/AIGameStateDTO.js`, update ActorPromptDataDTO:
+
 ```javascript
 /**
  * @typedef {Object} ActorPromptDataDTO
@@ -456,15 +483,18 @@ In `src/turns/dtos/AIGameStateDTO.js`, update ActorPromptDataDTO:
 ## Risk Assessment
 
 ### Low Risk Items
+
 - Component definitions are isolated JSON files
 - Changes to formatters are additive, not destructive
 - Optional nature ensures backward compatibility
 
 ### Medium Risk Items
+
 - Actor data extractor modifications could affect existing functionality if not careful
 - Type definition updates need coordination across codebase
 
 ### Mitigation Strategies
+
 1. Comprehensive test coverage before deployment
 2. Feature flag for gradual rollout
 3. Backup of existing character data before migration
@@ -501,5 +531,5 @@ The modular nature of the Living Narrative Engine's architecture makes this enha
 
 ---
 
-*Report generated: [Current Date]*  
-*Prepared for: Living Narrative Engine Development Team*
+_Report generated: [Current Date]_  
+_Prepared for: Living Narrative Engine Development Team_

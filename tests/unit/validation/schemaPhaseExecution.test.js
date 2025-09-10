@@ -26,19 +26,19 @@ describe('Schema Phase Execution Debug', () => {
 
   it('should execute SchemaPhase and log start message', async () => {
     const mockLogger = testBed.container.resolve('ILogger');
-    
+
     console.log('Testing SchemaPhase execution...');
-    
+
     // Create minimal load context
     const loadContext = {
       startTime: Date.now(),
       config: {},
-      stats: {}
+      stats: {},
     };
 
     let executionError = null;
     let result = null;
-    
+
     try {
       result = await schemaPhase.execute(loadContext);
       console.log('SchemaPhase executed successfully');
@@ -50,17 +50,28 @@ describe('Schema Phase Execution Debug', () => {
 
     // Check if the logger was called with start message
     const loggerCalls = mockLogger.info.mock?.calls || [];
-    const startMessageFound = loggerCalls.some(call => 
-      call && call[0] && call[0].includes('SchemaPhase starting')
+    const startMessageFound = loggerCalls.some(
+      (call) => call && call[0] && call[0].includes('SchemaPhase starting')
     );
-    
-    console.log('Logger info calls:', loggerCalls.map(call => call?.[0]).filter(Boolean));
+
+    console.log(
+      'Logger info calls:',
+      loggerCalls.map((call) => call?.[0]).filter(Boolean)
+    );
     console.log('Start message found:', startMessageFound);
-    
+
     if (executionError) {
-      console.log('Execution failed with error:', executionError.constructor.name, ':', executionError.message);
+      console.log(
+        'Execution failed with error:',
+        executionError.constructor.name,
+        ':',
+        executionError.message
+      );
     } else {
-      console.log('Execution completed, result:', result ? Object.keys(result) : 'null');
+      console.log(
+        'Execution completed, result:',
+        result ? Object.keys(result) : 'null'
+      );
     }
 
     // Test passes if we can identify what's happening

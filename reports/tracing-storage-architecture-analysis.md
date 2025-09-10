@@ -11,7 +11,7 @@ The Living Narrative Engine's tracing system implements a **dual storage archite
 ### Key Findings
 
 - ✅ **Fully Implemented Dual Storage**: Both IndexedDB and file system storage are completely implemented
-- ⚠️ **IndexedDB Currently Unused**: Configuration directs all traces to file system storage  
+- ⚠️ **IndexedDB Currently Unused**: Configuration directs all traces to file system storage
 - ✅ **Export Capabilities**: Browser can export IndexedDB traces via File System Access API or downloads
 - ✅ **Fallback Mechanisms**: System gracefully handles storage failures with queue processing
 - 🔍 **Configuration-Driven**: Storage mode determined by `outputDirectory` presence in config
@@ -56,6 +56,7 @@ The tracing system supports two distinct storage modes:
 The adapter provides a complete key-value storage interface for browser-based trace persistence:
 
 #### Key Features
+
 - **Database Name**: `ActionTraces`
 - **Object Store**: `traces` with `timestamp` index
 - **Automatic Initialization**: Database created on first use
@@ -63,6 +64,7 @@ The adapter provides a complete key-value storage interface for browser-based tr
 - **Error Recovery**: Graceful handling of IndexedDB unavailability
 
 #### Storage Structure
+
 ```javascript
 {
   key: "action_traces",  // Fixed storage key
@@ -78,6 +80,7 @@ The adapter provides a complete key-value storage interface for browser-based tr
 ```
 
 #### Core Methods
+
 - `initialize()`: Sets up IndexedDB database and object stores
 - `setItem(key, value)`: Stores trace data with timestamp
 - `getItem(key)`: Retrieves stored traces
@@ -89,17 +92,19 @@ The adapter provides a complete key-value storage interface for browser-based tr
 ### Integration Points
 
 #### Dependency Injection Registration
+
 **Location**: `src/dependencyInjection/registrations/actionTracingRegistrations.js`
 
 ```javascript
 container.register(
   actionTracingTokens.IIndexedDBStorageAdapter,
-  (c) => new IndexedDBStorageAdapter({
-    logger: c.resolve(tokens.ILogger),
-    dbName: 'ActionTraces',
-    dbVersion: 1,
-    storeName: 'traces',
-  }),
+  (c) =>
+    new IndexedDBStorageAdapter({
+      logger: c.resolve(tokens.ILogger),
+      dbName: 'ActionTraces',
+      dbVersion: 1,
+      storeName: 'traces',
+    }),
   { lifecycle: 'singleton' }
 );
 ```
@@ -115,6 +120,7 @@ The IndexedDB adapter is registered as a singleton and injected into `ActionTrac
 When `outputDirectory` is configured, traces are written to the file system:
 
 #### Storage Structure
+
 ```
 traces/
 └── sit-down/              # Configured directory
@@ -124,6 +130,7 @@ traces/
 ```
 
 #### Key Features
+
 - **Multi-format Support**: JSON and human-readable text formats
 - **Rotation Management**: Automatic cleanup when limits exceeded
 - **Directory Management**: Creates/manages trace subdirectories
@@ -132,6 +139,7 @@ traces/
 ## Storage Mode Selection Logic
 
 ### Configuration-Based Routing
+
 **Location**: `src/actions/tracing/actionTraceOutputService.js:266-336`
 
 ```javascript
@@ -142,27 +150,28 @@ async writeTrace(trace, priority) {
     await this.#writeTraceMultiFormat(trace);
     return;
   }
-  
+
   // Otherwise use IndexedDB with queue processing
   if (this.#queueProcessor) {
     this.#queueProcessor.enqueue(trace, priority);
     return;
   }
-  
+
   // Fallback to simple queue with IndexedDB
   // ...
 }
 ```
 
 ### Current Configuration
+
 **Location**: `config/trace-config.json`
 
 ```json
 {
   "actionTracing": {
     "enabled": true,
-    "outputDirectory": "./traces/sit-down",  // This enables file output
-    "outputFormats": ["json", "text"],
+    "outputDirectory": "./traces/sit-down", // This enables file output
+    "outputFormats": ["json", "text"]
     // ...
   }
 }
@@ -173,6 +182,7 @@ async writeTrace(trace, priority) {
 ## Export Functionality
 
 ### TraceExportButton Component
+
 **Location**: `src/domUI/components/traceExportButton.js`
 
 Provides UI for exporting traces from IndexedDB:
@@ -192,18 +202,19 @@ Provides UI for exporting traces from IndexedDB:
    - Limited by browser download size limits
 
 #### Export Process Flow
+
 ```javascript
 exportTracesToFileSystem() {
   if (!window.showDirectoryPicker) {
     return exportTracesAsDownload();  // Fallback
   }
-  
+
   // 1. User selects directory
   const dir = await showDirectoryPicker();
-  
+
   // 2. Create export subdirectory
   const exportDir = `traces_${timestamp}`;
-  
+
   // 3. Write each trace as individual file
   for (const trace of traces) {
     await writeFile(exportDir, trace);
@@ -227,6 +238,7 @@ Despite full implementation, IndexedDB storage is not used because:
 #### Evidence of Non-Usage
 
 **Search Results**:
+
 - `TraceExportButton` only exists in its definition file
 - No imports or instantiations found in codebase
 - No HTML container elements for mounting
@@ -246,16 +258,19 @@ Current production usage exclusively uses file system storage:
 ### IndexedDB Tests
 
 **Unit Tests** (`tests/unit/storage/indexedDBStorageAdapter.test.js`):
+
 - Comprehensive mock-based testing
 - All methods covered
 - Error scenarios tested
 - No actual browser environment required
 
 **Integration Tests**:
+
 - Queue processing with mock storage
 - No real IndexedDB integration tests
 
 ### Missing Test Coverage
+
 - Browser environment E2E tests
 - Export functionality testing
 - Real IndexedDB operations
@@ -282,16 +297,19 @@ Current production usage exclusively uses file system storage:
 ### 1. Clarify Storage Strategy
 
 **Option A: Remove IndexedDB Support**
+
 - If server-side file storage is the permanent choice
 - Removes ~1000 lines of unused code
 - Simplifies architecture and testing
 
 **Option B: Enable Browser-Only Mode**
+
 - Remove `outputDirectory` from config for browser deployment
 - Implement UI integration for export button
 - Add proper browser E2E tests
 
 **Option C: Hybrid Storage Mode**
+
 - Use IndexedDB for temporary browser storage
 - Sync to server periodically
 - Best of both worlds for resilience
@@ -323,6 +341,7 @@ Current production usage exclusively uses file system storage:
 ### 4. Testing Enhancements
 
 If keeping IndexedDB support:
+
 - Add browser environment E2E tests
 - Test export functionality with real File System Access API
 - Validate IndexedDB performance with large datasets
@@ -333,6 +352,7 @@ If keeping IndexedDB support:
 The Living Narrative Engine implements a sophisticated dual storage architecture for action traces, supporting both IndexedDB (browser) and file system (server) storage. However, **the IndexedDB implementation is currently unused** due to configuration that directs all traces to file storage.
 
 **Key Decision Required**: Determine whether to:
+
 1. Maintain dual storage for future flexibility (requires testing and documentation)
 2. Remove IndexedDB to simplify the codebase (saves ~1000 lines)
 3. Activate browser storage for specific deployment scenarios
@@ -342,19 +362,22 @@ The current state represents technical debt - fully implemented but unused code 
 ## Appendix: File Locations
 
 ### Core Implementation Files
+
 - `src/storage/indexedDBStorageAdapter.js` - IndexedDB storage adapter
 - `src/actions/tracing/actionTraceOutputService.js` - Storage routing logic
 - `src/actions/tracing/fileTraceOutputHandler.js` - File system handler
 - `src/domUI/components/traceExportButton.js` - Export UI component
 
 ### Configuration
+
 - `config/trace-config.json` - Current trace configuration
 - `src/dependencyInjection/registrations/actionTracingRegistrations.js` - DI setup
 
 ### Tests
+
 - `tests/unit/storage/indexedDBStorageAdapter.test.js` - IndexedDB unit tests
 - Various integration tests using mock storage adapters
 
 ---
 
-*Report generated through static code analysis. Recommendations based on current implementation and usage patterns.*
+_Report generated through static code analysis. Recommendations based on current implementation and usage patterns._

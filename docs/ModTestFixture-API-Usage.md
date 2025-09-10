@@ -7,35 +7,48 @@ This document outlines the correct API usage for ModTestFixture and related test
 ## Key API Changes
 
 ### ❌ Old (Incorrect) API Usage
+
 ```javascript
 // These methods DO NOT exist:
 const fixture = ModTestFixture.createFixture({
   type: 'action',
   logger: mockLogger,
-  modId: 'intimacy'
+  modId: 'intimacy',
 });
 
 const handler = ModTestHandlerFactory.createHandler({
   type: 'action',
   logger: mockLogger,
-  actionId: 'kiss_cheek'
+  actionId: 'kiss_cheek',
 });
 
 const builder = new ModEntityBuilder(); // Missing required ID parameter
 ```
 
 ### ✅ New (Correct) API Usage
+
 ```javascript
 // Use the correct static factory methods:
-const fixture = await ModTestFixture.forActionAutoLoad('intimacy', 'intimacy:kiss_cheek');
+const fixture = await ModTestFixture.forActionAutoLoad(
+  'intimacy',
+  'intimacy:kiss_cheek'
+);
 
 // Or use specific factory methods:
-const fixture = await ModTestFixture.forAction('intimacy', 'intimacy:kiss_cheek', ruleFile, conditionFile);
+const fixture = await ModTestFixture.forAction(
+  'intimacy',
+  'intimacy:kiss_cheek',
+  ruleFile,
+  conditionFile
+);
 const fixture = await ModTestFixture.forRule('intimacy', 'intimacy:kiss_cheek');
 const fixture = await ModTestFixture.forCategory('intimacy');
 
 // Use fixture's built-in methods instead of separate handlers:
-const scenario = fixture.createStandardActorTarget(['Actor Name', 'Target Name']);
+const scenario = fixture.createStandardActorTarget([
+  'Actor Name',
+  'Target Name',
+]);
 await fixture.executeAction(scenario.actor.id, scenario.target.id);
 
 // Entity creation is handled by the fixture:
@@ -62,31 +75,40 @@ describe('Action Testing Example', () => {
 
   it('should execute action workflow correctly', async () => {
     // Step 1: Create fixture with auto-loaded files
-    const fixture = await ModTestFixture.forActionAutoLoad('intimacy', 'intimacy:kiss_cheek');
+    const fixture = await ModTestFixture.forActionAutoLoad(
+      'intimacy',
+      'intimacy:kiss_cheek'
+    );
 
     expect(fixture).toBeDefined();
     expect(fixture.modId).toBe('intimacy');
     expect(fixture.actionId).toBe('intimacy:kiss_cheek');
 
     // Step 2: Create test entities using fixture helpers
-    const scenario = fixture.createStandardActorTarget(['Test Actor', 'Test Target']);
-    
+    const scenario = fixture.createStandardActorTarget([
+      'Test Actor',
+      'Test Target',
+    ]);
+
     expect(scenario.actor).toBeDefined();
     expect(scenario.target).toBeDefined();
 
     // Step 3: Execute action
     await fixture.executeAction(scenario.actor.id, scenario.target.id);
-    
+
     // Step 4: Verify results
     expect(fixture.events.length).toBeGreaterThan(0);
-    
+
     // Step 5: Use assertion helpers
-    fixture.assertActionSuccess("Test Actor leans in to kiss Test Target's cheek softly.");
+    fixture.assertActionSuccess(
+      "Test Actor leans in to kiss Test Target's cheek softly."
+    );
     fixture.assertPerceptibleEvent({
-      descriptionText: "Test Actor leans in to kiss Test Target's cheek softly.",
+      descriptionText:
+        "Test Actor leans in to kiss Test Target's cheek softly.",
       locationId: 'room1',
       actorId: scenario.actor.id,
-      targetId: scenario.target.id
+      targetId: scenario.target.id,
     });
 
     // Step 6: Cleanup
@@ -99,23 +121,23 @@ describe('Action Testing Example', () => {
 
 ### ModTestFixture Static Methods
 
-| Method | Purpose | Parameters | Returns |
-|--------|---------|------------|---------|
-| `forActionAutoLoad(modId, actionId, options?)` | Auto-loads rule and condition files for an action | modId, full actionId, optional config | ModActionTestFixture |
-| `forAction(modId, actionId, ruleFile?, conditionFile?)` | Creates action test fixture with explicit files | modId, actionId, optional files | ModActionTestFixture |
-| `forRule(modId, actionId, ruleFile?, conditionFile?)` | Creates rule test fixture | modId, actionId, optional files | ModActionTestFixture |
-| `forCategory(modId, options?)` | Creates category test fixture | modId, optional config | ModCategoryTestFixture |
+| Method                                                  | Purpose                                           | Parameters                            | Returns                |
+| ------------------------------------------------------- | ------------------------------------------------- | ------------------------------------- | ---------------------- |
+| `forActionAutoLoad(modId, actionId, options?)`          | Auto-loads rule and condition files for an action | modId, full actionId, optional config | ModActionTestFixture   |
+| `forAction(modId, actionId, ruleFile?, conditionFile?)` | Creates action test fixture with explicit files   | modId, actionId, optional files       | ModActionTestFixture   |
+| `forRule(modId, actionId, ruleFile?, conditionFile?)`   | Creates rule test fixture                         | modId, actionId, optional files       | ModActionTestFixture   |
+| `forCategory(modId, options?)`                          | Creates category test fixture                     | modId, optional config                | ModCategoryTestFixture |
 
 ### ModActionTestFixture Instance Methods
 
-| Method | Purpose | Parameters | Returns |
-|--------|---------|------------|---------|
-| `createStandardActorTarget(names)` | Creates actor and target entities | [actorName, targetName] | {actor, target} |
-| `executeAction(actorId, targetId)` | Executes the action | actorId, targetId | Promise<void> |
-| `assertActionSuccess(expectedMessage)` | Asserts action executed successfully | expected message | void |
-| `assertPerceptibleEvent(eventData)` | Asserts perceptible event was generated | event properties | void |
-| `clearEvents()` | Clears the event list | none | void |
-| `cleanup()` | Cleans up resources | none | void |
+| Method                                 | Purpose                                 | Parameters              | Returns         |
+| -------------------------------------- | --------------------------------------- | ----------------------- | --------------- |
+| `createStandardActorTarget(names)`     | Creates actor and target entities       | [actorName, targetName] | {actor, target} |
+| `executeAction(actorId, targetId)`     | Executes the action                     | actorId, targetId       | Promise<void>   |
+| `assertActionSuccess(expectedMessage)` | Asserts action executed successfully    | expected message        | void            |
+| `assertPerceptibleEvent(eventData)`    | Asserts perceptible event was generated | event properties        | void            |
+| `clearEvents()`                        | Clears the event list                   | none                    | void            |
+| `cleanup()`                            | Cleans up resources                     | none                    | void            |
 
 ## Important Notes
 
@@ -128,7 +150,7 @@ describe('Action Testing Example', () => {
 ## Common Pitfalls to Avoid
 
 1. ❌ Don't use `ModTestFixture.createFixture()` - this method doesn't exist
-2. ❌ Don't use `ModTestHandlerFactory.createHandler()` - use fixture methods instead  
+2. ❌ Don't use `ModTestHandlerFactory.createHandler()` - use fixture methods instead
 3. ❌ Don't create `new ModEntityBuilder()` without parameters - use fixture helpers
 4. ❌ Don't forget to `await` the factory methods - they return Promises
 5. ❌ Don't use partial action IDs - always include the mod prefix

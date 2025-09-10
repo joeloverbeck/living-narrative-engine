@@ -313,13 +313,13 @@ class GameEngine {
     this.#logger.debug(
       `GameEngine: startNewGame called for world "${worldName}".`
     );
-    
+
     // Create safe error logger with SafeEventDispatcher batch mode management
     const safeErrorLogger = createSafeErrorLogger({
       logger: this.#logger,
-      safeEventDispatcher: this.#safeEventDispatcher
+      safeEventDispatcher: this.#safeEventDispatcher,
     });
-    
+
     // Use game loading mode to handle legitimate bulk events during initialization
     return await safeErrorLogger.withGameLoadingMode(
       async () => {
@@ -346,7 +346,7 @@ class GameEngine {
       },
       {
         context: 'game-initialization',
-        timeoutMs: 60000 // 1 minute timeout for game loading
+        timeoutMs: 60000, // 1 minute timeout for game loading
       }
     );
   }

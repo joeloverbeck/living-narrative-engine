@@ -11,11 +11,17 @@
     },
     {
       "type": "GET_NAME",
-      "parameters": { "entity_ref": "primary", "result_variable": "primaryName" }
+      "parameters": {
+        "entity_ref": "primary",
+        "result_variable": "primaryName"
+      }
     },
     {
       "type": "GET_NAME",
-      "parameters": { "entity_ref": "secondary", "result_variable": "secondaryName" }
+      "parameters": {
+        "entity_ref": "secondary",
+        "result_variable": "secondaryName"
+      }
     },
     {
       "type": "QUERY_COMPONENT",

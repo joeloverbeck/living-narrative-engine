@@ -29,17 +29,17 @@ describe('intimacy:cup_face_while_kissing action integration', () => {
 
   it('successfully executes cup face while kissing for initiator (initiator: true)', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    
+
     // Add kissing components
     scenario.actor.components['intimacy:kissing'] = {
       partner: scenario.target.id,
-      initiator: true
+      initiator: true,
     };
     scenario.target.components['intimacy:kissing'] = {
       partner: scenario.actor.id,
-      initiator: false
+      initiator: false,
     };
-    
+
     testFixture.reset([scenario.actor, scenario.target]);
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
@@ -61,19 +61,19 @@ describe('intimacy:cup_face_while_kissing action integration', () => {
 
   it('successfully executes cup face while kissing for receiver (initiator: false)', async () => {
     const scenario = testFixture.createCloseActors(['Sarah', 'James'], {
-      location: 'garden'
+      location: 'garden',
     });
-    
+
     // Add kissing components - Sarah as receiver, James as initiator
     scenario.actor.components['intimacy:kissing'] = {
       partner: scenario.target.id,
-      initiator: false
+      initiator: false,
     };
     scenario.target.components['intimacy:kissing'] = {
       partner: scenario.actor.id,
-      initiator: true
+      initiator: true,
     };
-    
+
     testFixture.reset([scenario.actor, scenario.target]);
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
@@ -95,28 +95,29 @@ describe('intimacy:cup_face_while_kissing action integration', () => {
 
   it('perception log shows correct message for cup face while kissing', async () => {
     const scenario = testFixture.createCloseActors(['Emma', 'David'], {
-      location: 'bedroom'
+      location: 'bedroom',
     });
-    
+
     // Add kissing components
     scenario.actor.components['intimacy:kissing'] = {
       partner: scenario.target.id,
-      initiator: true
+      initiator: true,
     };
     scenario.target.components['intimacy:kissing'] = {
       partner: scenario.actor.id,
-      initiator: false
+      initiator: false,
     };
-    
+
     testFixture.reset([scenario.actor, scenario.target]);
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
     testFixture.assertPerceptibleEvent({
-      descriptionText: "Emma has possessively cupped David's face while kissing.",
+      descriptionText:
+        "Emma has possessively cupped David's face while kissing.",
       locationId: 'bedroom',
       actorId: scenario.actor.id,
-      targetId: scenario.target.id
+      targetId: scenario.target.id,
     });
   });
 
@@ -213,17 +214,17 @@ describe('intimacy:cup_face_while_kissing action integration', () => {
 
   it('action only fires for correct action ID', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    
+
     // Add kissing components
     scenario.actor.components['intimacy:kissing'] = {
       partner: scenario.target.id,
-      initiator: true
+      initiator: true,
     };
     scenario.target.components['intimacy:kissing'] = {
       partner: scenario.actor.id,
-      initiator: false
+      initiator: false,
     };
-    
+
     testFixture.reset([scenario.actor, scenario.target]);
 
     // Try with a different action
@@ -241,17 +242,17 @@ describe('intimacy:cup_face_while_kissing action integration', () => {
 
   it('validates complete event flow sequence', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    
+
     // Add kissing components
     scenario.actor.components['intimacy:kissing'] = {
       partner: scenario.target.id,
-      initiator: true
+      initiator: true,
     };
     scenario.target.components['intimacy:kissing'] = {
       partner: scenario.actor.id,
-      initiator: false
+      initiator: false,
     };
-    
+
     testFixture.reset([scenario.actor, scenario.target]);
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
@@ -278,19 +279,19 @@ describe('intimacy:cup_face_while_kissing action integration', () => {
 
   it('works with different entity names and locations', async () => {
     const scenario = testFixture.createCloseActors(['Sophia', 'Marcus'], {
-      location: 'moonlit_balcony'
+      location: 'moonlit_balcony',
     });
-    
+
     // Add kissing components
     scenario.actor.components['intimacy:kissing'] = {
       partner: scenario.target.id,
-      initiator: true
+      initiator: true,
     };
     scenario.target.components['intimacy:kissing'] = {
       partner: scenario.actor.id,
-      initiator: false
+      initiator: false,
     };
-    
+
     testFixture.reset([scenario.actor, scenario.target]);
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
@@ -320,18 +321,21 @@ describe('intimacy:cup_face_while_kissing action integration', () => {
     ];
 
     for (const testCase of testCases) {
-      const scenario = testFixture.createCloseActors([testCase.actorName, testCase.targetName]);
-      
+      const scenario = testFixture.createCloseActors([
+        testCase.actorName,
+        testCase.targetName,
+      ]);
+
       // Add kissing components
       scenario.actor.components['intimacy:kissing'] = {
         partner: scenario.target.id,
-        initiator: testCase.actorInitiator
+        initiator: testCase.actorInitiator,
       };
       scenario.target.components['intimacy:kissing'] = {
         partner: scenario.actor.id,
-        initiator: !testCase.actorInitiator
+        initiator: !testCase.actorInitiator,
       };
-      
+
       testFixture.reset([scenario.actor, scenario.target]);
 
       await testFixture.executeAction(scenario.actor.id, scenario.target.id);

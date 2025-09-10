@@ -20,6 +20,9 @@ class ScopeDslErrorHandler {
   #isDevelopment;
   #errorBuffer;
   #maxBufferSize;
+  #bufferIndex;
+  #sanitizationWeakSet;
+  #categoryCache;
 
   /**
    * Creates a new ScopeDslErrorHandler instance
@@ -42,6 +45,9 @@ class ScopeDslErrorHandler {
         globalThis.process.env?.NODE_ENV !== 'production');
     this.#errorBuffer = [];
     this.#maxBufferSize = config.maxBufferSize ?? 100;
+    this.#bufferIndex = 0;
+    this.#sanitizationWeakSet = new WeakSet();
+    this.#categoryCache = new Map();
   }
 
   /**
@@ -55,7 +61,7 @@ class ScopeDslErrorHandler {
    */
   handleError(error, context, resolverName, errorCode = null) {
     let errorInfo;
-    
+
     try {
       // Create standardized error information
       errorInfo = this.#createErrorInfo(
@@ -99,7 +105,10 @@ class ScopeDslErrorHandler {
       // Use console as fallback if logger fails
       try {
         // eslint-disable-next-line no-console
-        console.error(`[ScopeDSL:${errorInfo.resolverName}] Logging failed:`, logError.message);
+        console.error(
+          `[ScopeDSL:${errorInfo.resolverName}] Logging failed:`,
+          logError.message
+        );
       } catch {
         // Even console failed, but we still need to throw the original error
       }
@@ -123,6 +132,7 @@ class ScopeDslErrorHandler {
    */
   clearErrorBuffer() {
     this.#errorBuffer = [];
+    this.#bufferIndex = 0;
   }
 
   /**
@@ -148,7 +158,8 @@ class ScopeDslErrorHandler {
       code: errorCode || this.#generateErrorCode(category),
       timestamp,
       sanitizedContext,
-      originalError: error instanceof Error && this.#isDevelopment ? error.stack : null,
+      originalError:
+        error instanceof Error && this.#isDevelopment ? error.stack : null,
     };
   }
 
@@ -160,15 +171,19 @@ class ScopeDslErrorHandler {
    */
   #bufferError(errorInfo) {
     try {
-      this.#errorBuffer.push(errorInfo);
-
-      // Maintain buffer size limit
-      if (this.#errorBuffer.length > this.#maxBufferSize) {
-        this.#errorBuffer.shift();
+      // Use circular buffer to avoid expensive shift operations
+      if (this.#errorBuffer.length < this.#maxBufferSize) {
+        // Buffer not full yet, simple push
+        this.#errorBuffer.push(errorInfo);
+      } else {
+        // Buffer is full, overwrite oldest entry
+        this.#errorBuffer[this.#bufferIndex] = errorInfo;
+        this.#bufferIndex = (this.#bufferIndex + 1) % this.#maxBufferSize;
       }
     } catch (error) {
       // If buffer operations fail, reset buffer to prevent corruption
       this.#errorBuffer = [];
+      this.#bufferIndex = 0;
       // Re-throw to let caller handle gracefully
       throw new Error(`Buffer operation failed: ${error.message}`);
     }
@@ -214,7 +229,16 @@ class ScopeDslErrorHandler {
    * @private
    */
   #categorizeError(message, context) {
-    const lowerMessage = message.toLowerCase();
+    // Use cached toLowerCase result for performance
+    let lowerMessage = this.#categoryCache.get(message);
+    if (lowerMessage === undefined) {
+      lowerMessage = message.toLowerCase();
+      // Limit cache size to prevent memory leaks
+      if (this.#categoryCache.size >= 100) {
+        this.#categoryCache.clear();
+      }
+      this.#categoryCache.set(message, lowerMessage);
+    }
 
     // Context-related errors (check context first)
     if (
@@ -323,8 +347,9 @@ class ScopeDslErrorHandler {
     }
 
     try {
-      // Create new WeakSet for each sanitization since WeakSet doesn't have clear()
-      const seen = new WeakSet();
+      // Reuse WeakSet for better performance (clear it for each sanitization)
+      this.#sanitizationWeakSet = new WeakSet();
+      const seen = this.#sanitizationWeakSet;
 
       const sanitize = (obj, depth = 0) => {
         try {
@@ -332,7 +357,7 @@ class ScopeDslErrorHandler {
           if (depth > 3) {
             return '[Max Depth Exceeded]';
           }
-          
+
           // Check for circular references
           if (obj && typeof obj === 'object' && seen.has(obj)) {
             return '[Circular Reference]';
@@ -370,7 +395,13 @@ class ScopeDslErrorHandler {
                 result[key] = '[Function]';
               } else if (obj[key] instanceof Error) {
                 result[key] = obj[key].message;
-              } else if (obj[key] && typeof obj[key] === 'object' && obj[key].constructor && obj[key].constructor.name !== 'Object' && obj[key].constructor.name !== 'Array') {
+              } else if (
+                obj[key] &&
+                typeof obj[key] === 'object' &&
+                obj[key].constructor &&
+                obj[key].constructor.name !== 'Object' &&
+                obj[key].constructor.name !== 'Array'
+              ) {
                 // Complex objects like DOM nodes, etc.
                 result[key] = `[${obj[key].constructor.name}]`;
               } else {
@@ -390,11 +421,14 @@ class ScopeDslErrorHandler {
       return sanitize(context);
     } catch (outerError) {
       // Ultimate fallback if all sanitization fails
-      return { 
+      return {
         error: 'Context sanitization completely failed',
         reason: outerError.message,
         type: typeof context,
-        hasKeys: context && typeof context === 'object' ? Object.keys(context).length > 0 : false
+        hasKeys:
+          context && typeof context === 'object'
+            ? Object.keys(context).length > 0
+            : false,
       };
     }
   }
@@ -411,19 +445,25 @@ class ScopeDslErrorHandler {
       return false;
     }
 
+    // Fast checks first to bail early
+    if (obj.constructor !== Object) {
+      return false; // Not a plain object
+    }
+
     const keys = Object.keys(obj);
     if (keys.length > 5) {
       return false; // Too many keys, might be complex
     }
 
-    // Check if all values are primitive types
-    for (const key of keys) {
+    // Check if all values are primitive types (optimized loop)
+    for (let i = 0; i < keys.length; i++) {
       try {
-        const value = obj[key];
-        if (value !== null && typeof value === 'object') {
+        const value = obj[keys[i]];
+        const valueType = typeof value;
+        if (valueType === 'object' && value !== null) {
           return false; // Contains nested objects
         }
-        if (typeof value === 'function') {
+        if (valueType === 'function') {
           return false; // Contains functions
         }
       } catch {

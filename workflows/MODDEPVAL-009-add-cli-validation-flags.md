@@ -37,34 +37,34 @@ const DEFAULT_CONFIG = {
   // Validation scope
   mods: null,              // null = all mods, or array of mod names
   ecosystem: true,         // validate entire ecosystem vs individual mods
-  
+
   // Validation types
   dependencies: true,      // validate dependencies
   crossReferences: true,   // validate cross-references
   loadOrder: false,        // validate load order
-  
+
   // Output options
   format: 'console',       // console, json, html, markdown, junit, csv
   output: null,           // output file path (null = stdout)
   colors: null,           // null = auto-detect, true/false = force
   verbose: false,         // verbose output
   quiet: false,           // minimal output
-  
+
   // Behavior options
   failFast: false,        // stop on first failure
   continueOnError: true,  // continue validation even if individual mods fail
   showSuggestions: true,  // show fix suggestions
   showSummary: true,      // show summary at end
-  
+
   // Performance options
   concurrency: 3,         // concurrent validation limit
   timeout: 60000,         // validation timeout per mod (ms)
-  
+
   // Advanced options
   strictMode: false,      // treat warnings as errors
   includeMetadata: false, // include detailed metadata in output
   cacheResults: true,     // cache validation results
-  
+
   // Filter options
   severity: null,         // filter by severity (critical, high, medium, low)
   violationType: null,    // filter by violation type
@@ -76,40 +76,40 @@ const DEFAULT_CONFIG = {
  */
 async function main() {
   const args = process.argv.slice(2);
-  
+
   try {
     // Parse command line arguments
     const config = parseArguments(args);
-    
+
     // Handle help and version
     if (config.help) {
       showHelp();
       process.exit(0);
     }
-    
+
     if (config.version) {
       console.log(`Living Narrative Engine Mod Validator v${CLI_VERSION}`);
       process.exit(0);
     }
-    
+
     // Initialize validation components
     const orchestrator = container.resolve(tokens.IModValidationOrchestrator);
     const reporter = container.resolve(tokens.IViolationReporter);
     const logger = container.resolve(tokens.ILogger);
-    
+
     // Configure logging based on verbosity
     configureLogging(logger, config);
-    
+
     console.log('🔍 Living Narrative Engine - Mod Validation Tool');
     console.log(`   Version: ${CLI_VERSION}`);
     console.log(`   Timestamp: ${new Date().toISOString()}`);
     console.log('');
-    
+
     // Run validation
     const startTime = performance.now();
     const results = await runValidation(orchestrator, config);
     const endTime = performance.now();
-    
+
     // Generate and output report
     const reportOptions = {
       colors: config.colors !== false && (config.colors === true || process.stdout.isTTY),
@@ -119,9 +119,9 @@ async function main() {
       severity: config.severity,
       violationType: config.violationType
     };
-    
+
     const report = reporter.generateReport(results, config.format, reportOptions);
-    
+
     if (config.output) {
       await fs.writeFile(config.output, report);
       if (!config.quiet) {
@@ -130,16 +130,16 @@ async function main() {
     } else {
       console.log(report);
     }
-    
+
     // Show summary
     if (config.showSummary && !config.quiet) {
       showValidationSummary(results, endTime - startTime);
     }
-    
+
     // Determine exit code
     const exitCode = calculateExitCode(results, config);
     process.exit(exitCode);
-    
+
   } catch (error) {
     console.error('❌ Validation failed:', error.message);
     if (args.includes('--verbose') || args.includes('-v')) {
@@ -156,11 +156,11 @@ async function main() {
  */
 function parseArguments(args) {
   const config = { ...DEFAULT_CONFIG };
-  
+
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     const nextArg = args[i + 1];
-    
+
     switch (arg) {
       // Help and version
       case '--help':
@@ -170,7 +170,7 @@ function parseArguments(args) {
       case '--version':
         config.version = true;
         break;
-      
+
       // Validation scope
       case '--mod':
       case '-m':
@@ -186,7 +186,7 @@ function parseArguments(args) {
         config.ecosystem = true;
         config.mods = null;
         break;
-      
+
       // Validation types
       case '--no-dependencies':
         config.dependencies = false;
@@ -197,7 +197,7 @@ function parseArguments(args) {
       case '--check-load-order':
         config.loadOrder = true;
         break;
-      
+
       // Output options
       case '--format':
       case '-f':
@@ -230,7 +230,7 @@ function parseArguments(args) {
         config.verbose = false;
         config.showSummary = false;
         break;
-      
+
       // Behavior options
       case '--fail-fast':
         config.failFast = true;
@@ -248,7 +248,7 @@ function parseArguments(args) {
       case '--no-summary':
         config.showSummary = false;
         break;
-      
+
       // Performance options
       case '--concurrency':
       case '-c':
@@ -269,7 +269,7 @@ function parseArguments(args) {
           i++;
         }
         break;
-      
+
       // Filter options
       case '--severity':
         if (nextArg && !nextArg.startsWith('-')) {
@@ -287,7 +287,7 @@ function parseArguments(args) {
           i++;
         }
         break;
-      
+
       // Advanced options
       case '--include-metadata':
         config.includeMetadata = true;
@@ -295,7 +295,7 @@ function parseArguments(args) {
       case '--no-cache':
         config.cacheResults = false;
         break;
-      
+
       // Handle --flag=value format
       default:
         if (arg.includes('=')) {
@@ -308,10 +308,10 @@ function parseArguments(args) {
         break;
     }
   }
-  
+
   // Validation
   validateConfiguration(config);
-  
+
   return config;
 }
 
@@ -364,15 +364,15 @@ function validateConfiguration(config) {
   if (!validFormats.includes(config.format)) {
     throw new Error(`Invalid format: ${config.format}. Valid options: ${validFormats.join(', ')}`);
   }
-  
+
   if (config.concurrency < 1 || config.concurrency > 20) {
     throw new Error('Concurrency must be between 1 and 20');
   }
-  
+
   if (config.timeout < 1000) {
     throw new Error('Timeout must be at least 1000ms');
   }
-  
+
   if (config.quiet && config.verbose) {
     throw new Error('Cannot use --quiet and --verbose together');
   }
@@ -395,7 +395,7 @@ async function runValidation(orchestrator, config) {
     console.log(`   Types: ${getValidationTypes(config).join(', ')}`);
     console.log('');
   }
-  
+
   const validationOptions = {
     skipCrossReferences: !config.crossReferences,
     failFast: config.failFast,
@@ -404,29 +404,29 @@ async function runValidation(orchestrator, config) {
     continueOnError: config.continueOnError,
     timeout: config.timeout
   };
-  
+
   let results;
-  
+
   if (config.ecosystem) {
     results = await orchestrator.validateEcosystem(validationOptions);
   } else {
     // Validate specific mods
     const modResults = new Map();
     const errors = [];
-    
+
     for (const modId of config.mods) {
       try {
         if (!config.quiet) {
           console.log(`🔍 Validating mod: ${modId}`);
         }
-        
+
         const modResult = await orchestrator.validateMod(modId, {
           skipCrossReferences: !config.crossReferences,
           includeContext: true
         });
-        
+
         modResults.set(modId, modResult);
-        
+
       } catch (error) {
         errors.push({ modId, error: error.message });
         if (config.failFast) {
@@ -434,13 +434,13 @@ async function runValidation(orchestrator, config) {
         }
       }
     }
-    
+
     results = modResults;
     if (errors.length > 0) {
       results.errors = errors;
     }
   }
-  
+
   return results;
 }
 
@@ -469,11 +469,11 @@ function configureLogging(logger, config) {
 function showValidationSummary(results, executionTime) {
   console.log('\n📊 Validation Summary:');
   console.log(`   • Execution time: ${executionTime.toFixed(2)}ms`);
-  
+
   if (results instanceof Map) {
     // Individual mod results
     console.log(`   • Mods validated: ${results.size}`);
-    const modsWithViolations = Array.from(results.values()).filter(r => 
+    const modsWithViolations = Array.from(results.values()).filter(r =>
       r.crossReferences?.hasViolations
     ).length;
     console.log(`   • Mods with violations: ${modsWithViolations}`);
@@ -497,9 +497,9 @@ function showValidationSummary(results, executionTime) {
 function calculateExitCode(results, config) {
   let hasErrors = false;
   let hasViolations = false;
-  
+
   if (results instanceof Map) {
-    hasViolations = Array.from(results.values()).some(r => 
+    hasViolations = Array.from(results.values()).some(r =>
       r.crossReferences?.hasViolations
     );
     hasErrors = results.errors && results.errors.length > 0;
@@ -510,7 +510,7 @@ function calculateExitCode(results, config) {
         .some(r => r.hasViolations);
     }
   }
-  
+
   if (hasErrors) {
     return 2; // System/dependency errors
   } else if (hasViolations && config.strictMode) {
@@ -616,14 +616,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     "validate:strict": "node scripts/validateMods.js --strict",
     "validate:json": "node scripts/validateMods.js --format json",
     "validate:html": "node scripts/validateMods.js --format html --output validation-report.html",
-    
+
     "validate:quick": "node scripts/validateMods.js --no-dependencies --quiet",
     "validate:dependencies": "node scripts/validateMods.js --no-cross-references",
     "validate:cross-refs": "node scripts/validateMods.js --no-dependencies",
-    
+
     "validate:critical": "node scripts/validateMods.js --severity critical",
     "validate:ci": "node scripts/validateMods.js --strict --format junit --output test-results.xml",
-    
+
     "update-manifest": "node scripts/updateManifest.js",
     "update-manifest:validate": "node scripts/updateManifest.js --validate-references",
     "update-manifest:strict": "node scripts/updateManifest.js --validate-references --fail-on-violations"
@@ -650,30 +650,33 @@ async function updateManifestLegacy(modName, legacyOptions = {}) {
     force: legacyOptions.force || false,
     verbose: legacyOptions.verbose || false,
     dryRun: legacyOptions.dryRun || false,
-    
+
     // Default validation off for backward compatibility
     validateReferences: false,
     failOnViolations: false,
     validationFormat: 'console',
-    showSuggestions: true
+    showSuggestions: true,
   };
-  
+
   const result = await updateModManifest(modName, modernOptions);
-  
+
   // Return legacy format
   return {
     success: result.success,
     modName: result.modName,
-    error: result.errors.length > 0 ? {
-      type: 'MANIFEST_UPDATE_ERROR',
-      message: result.errors.join('; '),
-      path: result.modPath
-    } : null,
-    
+    error:
+      result.errors.length > 0
+        ? {
+            type: 'MANIFEST_UPDATE_ERROR',
+            message: result.errors.join('; '),
+            path: result.modPath,
+          }
+        : null,
+
     // Legacy fields
     manifestUpdated: result.manifestUpdated,
     filesProcessed: result.filesProcessed,
-    warnings: result.warnings
+    warnings: result.warnings,
   };
 }
 
@@ -720,13 +723,13 @@ _validate_mods_completion() {
     local cur prev opts
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    
+
     # Available options
-    opts="--help --version --mod --ecosystem --no-dependencies --no-cross-references 
-          --check-load-order --format --output --colors --no-colors --verbose --quiet 
-          --fail-fast --strict --no-suggestions --no-summary --concurrency --timeout 
+    opts="--help --version --mod --ecosystem --no-dependencies --no-cross-references
+          --check-load-order --format --output --colors --no-colors --verbose --quiet
+          --fail-fast --strict --no-suggestions --no-summary --concurrency --timeout
           --severity --mod-filter --include-metadata --no-cache"
-    
+
     case "${prev}" in
         --format|-f)
             COMPREPLY=($(compgen -W "console json html markdown junit csv" -- ${cur}))
@@ -759,7 +762,7 @@ _validate_mods_completion() {
             return 0
             ;;
     esac
-    
+
     COMPREPLY=($(compgen -W "${opts}" -- ${cur}))
     return 0
 }
@@ -789,25 +792,25 @@ const __dirname = path.dirname(__filename);
  */
 export async function loadConfiguration(cliConfig = {}) {
   const configs = [];
-  
+
   // 1. Default configuration
   configs.push(await loadDefaultConfig());
-  
+
   // 2. Global configuration
   const globalConfig = await loadGlobalConfig();
   if (globalConfig) configs.push(globalConfig);
-  
+
   // 3. Project configuration
   const projectConfig = await loadProjectConfig();
   if (projectConfig) configs.push(projectConfig);
-  
+
   // 4. Local configuration
   const localConfig = await loadLocalConfig();
   if (localConfig) configs.push(localConfig);
-  
+
   // 5. CLI configuration (highest priority)
   configs.push(cliConfig);
-  
+
   // Merge configurations
   return mergeConfigurations(configs);
 }
@@ -824,7 +827,7 @@ async function loadDefaultConfig() {
       strictMode: false,
       continueOnError: true,
       timeout: 60000,
-      concurrency: 3
+      concurrency: 3,
     },
     output: {
       format: 'console',
@@ -832,13 +835,13 @@ async function loadDefaultConfig() {
       verbose: false,
       quiet: false,
       showSuggestions: true,
-      showSummary: true
+      showSummary: true,
     },
     filters: {
       severity: null,
       violationType: null,
-      modFilter: null
-    }
+      modFilter: null,
+    },
   };
 }
 
@@ -848,9 +851,14 @@ async function loadDefaultConfig() {
 async function loadGlobalConfig() {
   const configPaths = [
     path.join(process.env.HOME || '', '.living-narrative-validate.json'),
-    path.join(process.env.HOME || '', '.config', 'living-narrative-validate', 'config.json')
+    path.join(
+      process.env.HOME || '',
+      '.config',
+      'living-narrative-validate',
+      'config.json'
+    ),
   ];
-  
+
   for (const configPath of configPaths) {
     try {
       const content = await fs.readFile(configPath, 'utf8');
@@ -860,7 +868,7 @@ async function loadGlobalConfig() {
       continue;
     }
   }
-  
+
   return null;
 }
 
@@ -871,9 +879,9 @@ async function loadProjectConfig() {
   const configPaths = [
     'living-narrative-validate.json',
     '.living-narrative-validate.json',
-    'validate.config.json'
+    'validate.config.json',
   ];
-  
+
   for (const configPath of configPaths) {
     try {
       const content = await fs.readFile(configPath, 'utf8');
@@ -882,7 +890,7 @@ async function loadProjectConfig() {
       continue;
     }
   }
-  
+
   return null;
 }
 
@@ -914,15 +922,19 @@ function mergeConfigurations(configs) {
  */
 function deepMerge(target, source) {
   const result = { ...target };
-  
+
   for (const key in source) {
-    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+    if (
+      source[key] &&
+      typeof source[key] === 'object' &&
+      !Array.isArray(source[key])
+    ) {
       result[key] = deepMerge(result[key] || {}, source[key]);
     } else {
       result[key] = source[key];
     }
   }
-  
+
   return result;
 }
 ```
@@ -953,7 +965,7 @@ export class ValidationCLIError extends Error {
  */
 export function handleCLIError(error, config = {}) {
   console.error(chalk.red('❌ Error:'), error.message);
-  
+
   if (error instanceof ValidationCLIError) {
     // Show error-specific suggestions
     if (error.suggestions.length > 0) {
@@ -962,16 +974,16 @@ export function handleCLIError(error, config = {}) {
         console.error(chalk.yellow(`   ${i + 1}. ${suggestion}`));
       });
     }
-    
+
     // Show context-specific help
     showContextualHelp(error.type, config);
   }
-  
+
   if (config.verbose && error.stack) {
     console.error('\n🔍 Stack trace:');
     console.error(error.stack);
   }
-  
+
   console.error(`\n📖 Use ${chalk.cyan('--help')} for usage information.`);
 }
 
@@ -980,28 +992,28 @@ export function handleCLIError(error, config = {}) {
  */
 function showContextualHelp(errorType, config) {
   const contextHelp = {
-    'INVALID_MOD': [
+    INVALID_MOD: [
       'Check that the mod exists in the data/mods/ directory',
       'Verify the mod name is spelled correctly',
-      'Use --ecosystem to validate all mods'
+      'Use --ecosystem to validate all mods',
     ],
-    'INVALID_FORMAT': [
+    INVALID_FORMAT: [
       'Supported formats: console, json, html, markdown, junit, csv',
       'Use --format console for terminal output',
-      'Use --format json for machine-readable output'
+      'Use --format json for machine-readable output',
     ],
-    'VALIDATION_TIMEOUT': [
+    VALIDATION_TIMEOUT: [
       'Increase timeout with --timeout <milliseconds>',
       'Reduce concurrency with --concurrency <number>',
-      'Try validating specific mods instead of entire ecosystem'
+      'Try validating specific mods instead of entire ecosystem',
     ],
-    'DEPENDENCY_INJECTION_FAILED': [
+    DEPENDENCY_INJECTION_FAILED: [
       'Ensure all required dependencies are properly installed',
       'Check that the project is properly built',
-      'Try running npm install to restore dependencies'
-    ]
+      'Try running npm install to restore dependencies',
+    ],
   };
-  
+
   const help = contextHelp[errorType];
   if (help && help.length > 0) {
     console.error('\n🎯 Specific help:');
@@ -1016,7 +1028,7 @@ function showContextualHelp(errorType, config) {
  */
 export async function validateEnvironment() {
   const issues = [];
-  
+
   // Check for required directories
   try {
     await fs.access('data/mods');
@@ -1024,23 +1036,25 @@ export async function validateEnvironment() {
     issues.push({
       type: 'MISSING_MODS_DIRECTORY',
       message: 'Mods directory not found',
-      suggestion: 'Ensure you are running from the project root directory'
+      suggestion: 'Ensure you are running from the project root directory',
     });
   }
-  
+
   // Check for dependency injection container
   try {
-    const { container } = await import('../src/dependencyInjection/container.js');
+    const { container } = await import(
+      '../src/dependencyInjection/container.js'
+    );
     // Test container resolution
     await container.resolve('ILogger');
   } catch (error) {
     issues.push({
       type: 'DEPENDENCY_INJECTION_FAILED',
       message: 'Dependency injection system not available',
-      suggestion: 'Run npm install and ensure project is properly built'
+      suggestion: 'Run npm install and ensure project is properly built',
     });
   }
-  
+
   return issues;
 }
 ```
@@ -1051,70 +1065,66 @@ export async function validateEnvironment() {
 // .vscode/tasks.json - VS Code task integration
 
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "Validate Mods: Ecosystem",
-            "type": "shell",
-            "command": "npm",
-            "args": ["run", "validate:ecosystem"],
-            "group": "test",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared"
-            },
-            "problemMatcher": {
-                "pattern": [
-                    {
-                        "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                        "file": 1,
-                        "line": 2,
-                        "column": 3,
-                        "severity": 4,
-                        "message": 5
-                    }
-                ]
-            }
-        },
-        {
-            "label": "Validate Mods: Current File",
-            "type": "shell",
-            "command": "npm",
-            "args": [
-                "run",
-                "validate:mod",
-                "${workspaceFolder}/data/mods/${fileBasenameNoExtension}"
-            ],
-            "group": "test",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared"
-            }
-        },
-        {
-            "label": "Update Manifest with Validation",
-            "type": "shell",
-            "command": "npm",
-            "args": [
-                "run",
-                "update-manifest:validate",
-                "${input:modName}"
-            ],
-            "group": "build"
-        }
-    ],
-    "inputs": [
-        {
-            "id": "modName",
-            "description": "Mod name to update",
-            "default": "positioning",
-            "type": "promptString"
-        }
-    ]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Validate Mods: Ecosystem",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "validate:ecosystem"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": {
+        "pattern": [
+          {
+            "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "severity": 4,
+            "message": 5
+          }
+        ]
+      }
+    },
+    {
+      "label": "Validate Mods: Current File",
+      "type": "shell",
+      "command": "npm",
+      "args": [
+        "run",
+        "validate:mod",
+        "${workspaceFolder}/data/mods/${fileBasenameNoExtension}"
+      ],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Update Manifest with Validation",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "update-manifest:validate", "${input:modName}"],
+      "group": "build"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "modName",
+      "description": "Mod name to update",
+      "default": "positioning",
+      "type": "promptString"
+    }
+  ]
 }
 ```
 
@@ -1143,39 +1153,39 @@ jobs:
     strategy:
       matrix:
         validation-type: [quick, full, strict]
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: npm ci
-    
-    - name: Run validation
-      run: |
-        case "${{ matrix.validation-type }}" in
-          quick)
-            npm run validate:quick --format=junit --output=results-quick.xml
-            ;;
-          full)
-            npm run validate:ecosystem --format=junit --output=results-full.xml
-            ;;
-          strict)
-            npm run validate:strict --format=junit --output=results-strict.xml
-            ;;
-        esac
-    
-    - name: Upload test results
-      uses: actions/upload-artifact@v3
-      if: always()
-      with:
-        name: validation-results-${{ matrix.validation-type }}
-        path: results-*.xml
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run validation
+        run: |
+          case "${{ matrix.validation-type }}" in
+            quick)
+              npm run validate:quick --format=junit --output=results-quick.xml
+              ;;
+            full)
+              npm run validate:ecosystem --format=junit --output=results-full.xml
+              ;;
+            strict)
+              npm run validate:strict --format=junit --output=results-strict.xml
+              ;;
+          esac
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: validation-results-${{ matrix.validation-type }}
+          path: results-*.xml
 ```
 
 ## Testing Requirements
@@ -1186,14 +1196,18 @@ jobs:
 // tests/unit/scripts/validateMods.test.js
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { parseArguments, runValidation, calculateExitCode } from '../../../scripts/validateMods.js';
+import {
+  parseArguments,
+  runValidation,
+  calculateExitCode,
+} from '../../../scripts/validateMods.js';
 
 describe('ValidateMods CLI', () => {
   describe('Argument Parsing', () => {
     it('should parse basic validation options', () => {
       const args = ['--mod', 'positioning', '--format', 'json', '--verbose'];
       const config = parseArguments(args);
-      
+
       expect(config.mods).toEqual(['positioning']);
       expect(config.ecosystem).toBe(false);
       expect(config.format).toBe('json');
@@ -1203,7 +1217,7 @@ describe('ValidateMods CLI', () => {
     it('should parse --flag=value format', () => {
       const args = ['--format=html', '--output=report.html', '--concurrency=5'];
       const config = parseArguments(args);
-      
+
       expect(config.format).toBe('html');
       expect(config.output).toBe('report.html');
       expect(config.concurrency).toBe(5);
@@ -1225,29 +1239,29 @@ describe('ValidateMods CLI', () => {
   describe('Exit Code Calculation', () => {
     it('should return 0 for successful validation', () => {
       const results = new Map([
-        ['mod1', { crossReferences: { hasViolations: false } }]
+        ['mod1', { crossReferences: { hasViolations: false } }],
       ]);
       const config = { strictMode: false };
-      
+
       expect(calculateExitCode(results, config)).toBe(0);
     });
 
     it('should return 1 for violations in strict mode', () => {
       const results = new Map([
-        ['mod1', { crossReferences: { hasViolations: true } }]
+        ['mod1', { crossReferences: { hasViolations: true } }],
       ]);
       const config = { strictMode: true };
-      
+
       expect(calculateExitCode(results, config)).toBe(1);
     });
 
     it('should return 2 for system errors', () => {
-      const results = { 
+      const results = {
         dependencies: { isValid: false },
-        errors: ['Dependency validation failed']
+        errors: ['Dependency validation failed'],
       };
       const config = { strictMode: false };
-      
+
       expect(calculateExitCode(results, config)).toBe(2);
     });
   });
@@ -1257,7 +1271,7 @@ describe('ValidateMods CLI', () => {
       // Test configuration merging
       const cliConfig = { format: 'json', verbose: true };
       const config = await loadConfiguration(cliConfig);
-      
+
       expect(config.format).toBe('json');
       expect(config.verbose).toBe(true);
     });
@@ -1269,17 +1283,17 @@ describe('ValidateMods CLI Integration', () => {
   it('should validate real mod with CLI interface', async () => {
     const testBed = createTestBed();
     await testBed.createTestModWithViolation('test-mod');
-    
+
     const config = {
       mods: ['test-mod'],
       ecosystem: false,
       format: 'json',
-      strictMode: true
+      strictMode: true,
     };
-    
+
     const orchestrator = testBed.mockValidationOrchestrator();
     const results = await runValidation(orchestrator, config);
-    
+
     expect(results).toBeDefined();
     expect(calculateExitCode(results, config)).toBe(1);
   });
@@ -1302,18 +1316,21 @@ describe('ValidateMods CLI Integration', () => {
 ## Implementation Notes
 
 ### User Experience Focus
+
 - **Progressive disclosure**: Basic usage simple, advanced features discoverable
 - **Clear error messages**: Actionable suggestions for common problems
 - **Flexible output**: Support for human and machine consumption
 - **Performance awareness**: Options to control resource usage
 
 ### Development Workflow Integration
+
 - **Existing tools**: Enhance rather than replace existing workflows
 - **Configuration**: Flexible configuration for team standardization
 - **IDE integration**: Native support for popular development environments
 - **CI/CD ready**: First-class support for automated pipelines
 
 ### Maintenance Strategy
+
 - **Backward compatibility**: Maintain existing APIs indefinitely
 - **Versioning**: Clear version management for CLI tools
 - **Documentation**: Comprehensive help and usage examples
@@ -1322,6 +1339,7 @@ describe('ValidateMods CLI Integration', () => {
 ## Next Steps
 
 After completion:
+
 1. **MODDEPVAL-010**: Implement performance optimization and caching
 2. **Documentation**: Create comprehensive CLI usage guides
 3. **Team adoption**: Roll out enhanced CLI to development team

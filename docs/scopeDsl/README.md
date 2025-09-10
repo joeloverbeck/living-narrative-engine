@@ -445,6 +445,7 @@ When scope resolution fails, you'll receive standardized error messages with spe
 ### Common Error Scenarios
 
 #### Missing Context (SCOPE_1xxx)
+
 ```
 // Error: SCOPE_1001 - Missing actor
 my_scope := actor  // But actor not provided in context
@@ -453,6 +454,7 @@ my_scope := actor  // But actor not provided in context
 ```
 
 #### Invalid Data (SCOPE_2xxx)
+
 ```
 // Error: SCOPE_2005 - Invalid component ID
 my_scope := entities(actor)  // Missing namespace
@@ -462,6 +464,7 @@ my_scope := entities(core:actor)
 ```
 
 #### Resolution Failures (SCOPE_3xxx)
+
 ```
 // Error: SCOPE_3001 - Scope not found
 my_scope := other_mod:undefined_scope
@@ -471,6 +474,7 @@ my_scope := other_mod:existing_scope
 ```
 
 #### System Errors (SCOPE_4xxx)
+
 ```
 // Error: SCOPE_4001 - Circular dependency
 scope_a := scope_b
@@ -483,15 +487,15 @@ scope_b := location
 
 ### Error Code Categories
 
-| Range | Category | Description |
-|-------|----------|-------------|
-| 1xxx | Context | Missing or invalid context data |
-| 2xxx | Data Validation | Invalid data format or structure |
-| 3xxx | Resolution | Failed resolution operations |
-| 4xxx | System | System limits and constraints |
-| 5xxx | Parse | Syntax and parsing errors |
-| 6xxx | Configuration | Setup and configuration issues |
-| 9xxx | Unknown | Unclassified or fallback errors |
+| Range | Category        | Description                      |
+| ----- | --------------- | -------------------------------- |
+| 1xxx  | Context         | Missing or invalid context data  |
+| 2xxx  | Data Validation | Invalid data format or structure |
+| 3xxx  | Resolution      | Failed resolution operations     |
+| 4xxx  | System          | System limits and constraints    |
+| 5xxx  | Parse           | Syntax and parsing errors        |
+| 6xxx  | Configuration   | Setup and configuration issues   |
+| 9xxx  | Unknown         | Unclassified or fallback errors  |
 
 ### Debugging Tips
 

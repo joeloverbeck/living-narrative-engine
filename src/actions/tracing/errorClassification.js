@@ -195,7 +195,7 @@ export class ErrorClassifier {
     if (!error) {
       return ERROR_CATEGORIES.UNKNOWN;
     }
-    
+
     const errorMessage = error.message || '';
     const errorType = error.constructor?.name || '';
     const combined = `${errorMessage} ${errorType}`;
@@ -228,7 +228,7 @@ export class ErrorClassifier {
     if (!error) {
       return ERROR_SEVERITY.LOW;
     }
-    
+
     // Handle null/undefined context gracefully
     const safeContext = context || {};
 
@@ -320,7 +320,7 @@ export class ErrorClassifier {
     if (!error) {
       return false;
     }
-    
+
     const transientPatterns = [
       /timeout/i,
       /connection/i,

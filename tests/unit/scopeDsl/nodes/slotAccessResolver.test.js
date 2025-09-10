@@ -662,9 +662,6 @@ describe('SlotAccessResolver', () => {
   });
 
   describe('trace logging', () => {
-
-
-
     it('should work without trace context', () => {
       mockContext.trace = null;
 
@@ -1214,7 +1211,6 @@ describe('SlotAccessResolver', () => {
       const result = resolver.resolve(node, mockContextLocal);
 
       expect(result).toEqual(new Set());
-      
     });
 
     it('should handle null entities gateway gracefully during construction', () => {
@@ -1314,20 +1310,20 @@ describe('SlotAccessResolver', () => {
           field: 'torso_upper',
           parent: {
             type: 'Step',
-            field: 'topmost_clothing'
+            field: 'topmost_clothing',
           },
         };
 
         // Reset the mock to track calls
         mockErrorHandler.handleError.mockClear();
-        
+
         const result = resolver.resolve(node, mockContext);
 
         expect(result).toEqual(new Set());
         expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
           'No equipped items data found',
           expect.objectContaining({
-            slotName: 'torso_upper'
+            slotName: 'torso_upper',
           }),
           'SlotAccessResolver',
           ErrorCodes.MISSING_CONTEXT_GENERIC
@@ -1340,19 +1336,19 @@ describe('SlotAccessResolver', () => {
           field: 'invalid_slot',
           parent: {
             type: 'Step',
-            field: 'topmost_clothing'
+            field: 'topmost_clothing',
           },
         };
 
         mockErrorHandler.handleError.mockClear();
-        
+
         const result = resolver.resolve(node, mockContext);
 
         expect(result).toEqual(new Set());
         expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
           expect.stringContaining('Invalid slot identifier'),
           expect.objectContaining({
-            slotName: 'invalid_slot'
+            slotName: 'invalid_slot',
           }),
           'SlotAccessResolver',
           ErrorCodes.INVALID_ENTITY_ID
@@ -1365,7 +1361,7 @@ describe('SlotAccessResolver', () => {
           equipped: { torso_upper: { base: 'shirt_1' } },
           mode: 'invalid_mode',
         };
-        
+
         mockContext.dispatcher.resolve.mockReturnValue(
           new Set([invalidModeClothing])
         );
@@ -1375,19 +1371,19 @@ describe('SlotAccessResolver', () => {
           field: 'torso_upper',
           parent: {
             type: 'Step',
-            field: 'topmost_clothing'
+            field: 'topmost_clothing',
           },
         };
 
         mockErrorHandler.handleError.mockClear();
-        
+
         const result = resolver.resolve(node, mockContext);
 
         expect(result).toEqual(new Set());
         expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
           expect.stringContaining('Invalid clothing mode'),
           expect.objectContaining({
-            mode: 'invalid_mode'
+            mode: 'invalid_mode',
           }),
           'SlotAccessResolver',
           ErrorCodes.INVALID_DATA_GENERIC
@@ -1405,7 +1401,7 @@ describe('SlotAccessResolver', () => {
           field: 'torso_upper',
           parent: {
             type: 'Step',
-            field: 'topmost_clothing'
+            field: 'topmost_clothing',
           },
         };
 
@@ -1429,15 +1425,20 @@ describe('SlotAccessResolver', () => {
       );
 
       // Mock coverage mapping for cross-slot coverage
-      mockEntitiesGateway.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === 'clothing:coverage_mapping' && entityId === 'pants_id') {
-          return {
-            covers: ['torso_upper'], // Pants cover torso_upper slot
-            coveragePriority: 'outer',
-          };
+      mockEntitiesGateway.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (
+            componentId === 'clothing:coverage_mapping' &&
+            entityId === 'pants_id'
+          ) {
+            return {
+              covers: ['torso_upper'], // Pants cover torso_upper slot
+              coveragePriority: 'outer',
+            };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       // Add entityId to clothing access for coverage resolution
       clothingAccess.entityId = 'test_entity';
@@ -1472,23 +1473,25 @@ describe('SlotAccessResolver', () => {
       );
 
       // Mock coverage mapping for multiple items
-      mockEntitiesGateway.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === 'clothing:coverage_mapping') {
-          if (entityId === 'long_coat_id') {
-            return {
-              covers: ['torso_upper', 'torso_lower'],
-              coveragePriority: 'outer',
-            };
+      mockEntitiesGateway.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'clothing:coverage_mapping') {
+            if (entityId === 'long_coat_id') {
+              return {
+                covers: ['torso_upper', 'torso_lower'],
+                coveragePriority: 'outer',
+              };
+            }
+            if (entityId === 'belt_id') {
+              return {
+                covers: ['torso_upper'],
+                coveragePriority: 'base',
+              };
+            }
           }
-          if (entityId === 'belt_id') {
-            return {
-              covers: ['torso_upper'],
-              coveragePriority: 'base',
-            };
-          }
+          return null;
         }
-        return null;
-      });
+      );
 
       clothingAccess.entityId = 'test_entity';
       mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
@@ -1515,15 +1518,20 @@ describe('SlotAccessResolver', () => {
         'outer' // Only outer layer
       );
 
-      mockEntitiesGateway.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === 'clothing:coverage_mapping' && entityId === 'jewelry_id') {
-          return {
-            covers: ['torso_upper'],
-            coveragePriority: 'base',
-          };
+      mockEntitiesGateway.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (
+            componentId === 'clothing:coverage_mapping' &&
+            entityId === 'jewelry_id'
+          ) {
+            return {
+              covers: ['torso_upper'],
+              coveragePriority: 'base',
+            };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       clothingAccess.entityId = 'test_entity';
       mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
@@ -1545,11 +1553,17 @@ describe('SlotAccessResolver', () => {
     it('should validate clothing slot names correctly', () => {
       // Test isClothingSlot function through canResolve
       const validSlots = [
-        'torso_upper', 'torso_lower', 'legs', 'feet', 
-        'head_gear', 'hands', 'left_arm_clothing', 'right_arm_clothing'
+        'torso_upper',
+        'torso_lower',
+        'legs',
+        'feet',
+        'head_gear',
+        'hands',
+        'left_arm_clothing',
+        'right_arm_clothing',
       ];
 
-      validSlots.forEach(slot => {
+      validSlots.forEach((slot) => {
         const node = {
           type: 'Step',
           field: slot,
@@ -1573,10 +1587,10 @@ describe('SlotAccessResolver', () => {
         {
           torso_upper: {
             outer: 'coat_id',
-            base: 'shirt_id', 
+            base: 'shirt_id',
             underwear: 'undershirt_id',
-            accessories: 'necklace_id'
-          }
+            accessories: 'necklace_id',
+          },
         },
         'all'
       );
@@ -1604,7 +1618,7 @@ describe('SlotAccessResolver', () => {
         },
         'topmost'
       );
-      
+
       clothingAccess.entityId = 'test_entity';
       mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
@@ -1629,7 +1643,7 @@ describe('SlotAccessResolver', () => {
         },
         'topmost'
       );
-      
+
       clothingAccess.entityId = 'test_entity';
       mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
@@ -1650,14 +1664,14 @@ describe('SlotAccessResolver', () => {
         { torso_upper: { base: 'shirt_id' } },
         'base'
       );
-      
+
       // Add performance monitor to context
       const mockPerformanceMonitor = {
         startTimer: jest.fn().mockReturnValue('timer_id'),
         endTimer: jest.fn(),
         recordMetric: jest.fn(),
       };
-      
+
       mockContext.performanceMonitor = mockPerformanceMonitor;
       mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
@@ -1676,15 +1690,17 @@ describe('SlotAccessResolver', () => {
         { torso_upper: { base: 'shirt_id' } },
         'topmost'
       );
-      
+
       // Mock getComponentData to throw for coverage mapping
-      mockEntitiesGateway.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === 'clothing:coverage_mapping') {
-          throw new Error('Coverage mapping failed');
+      mockEntitiesGateway.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'clothing:coverage_mapping') {
+            throw new Error('Coverage mapping failed');
+          }
+          return null;
         }
-        return null;
-      });
-      
+      );
+
       clothingAccess.entityId = 'test_entity';
       mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
@@ -1706,7 +1722,7 @@ describe('SlotAccessResolver', () => {
         { torso_upper: { base: 'enhanced_shirt' } },
         'base'
       );
-      
+
       // Add trace context for enhanced validation
       mockContext.trace = { addLog: jest.fn() };
       mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
@@ -1718,7 +1734,7 @@ describe('SlotAccessResolver', () => {
       };
 
       const result = resolver.resolve(node, mockContext);
-      
+
       // Enhanced coverage should still return the item
       expect(result).toEqual(new Set(['enhanced_shirt']));
     });
@@ -1728,7 +1744,7 @@ describe('SlotAccessResolver', () => {
         { torso_upper: null }, // Null slot data
         'base'
       );
-      
+
       mockContext.trace = { addLog: jest.fn() };
       mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
@@ -1749,7 +1765,7 @@ describe('SlotAccessResolver', () => {
         { torso_upper: { base: 'shirt_id' } },
         'topmost'
       );
-      
+
       clothingAccess.entityId = 'test_entity';
       mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
@@ -1768,7 +1784,7 @@ describe('SlotAccessResolver', () => {
         { torso_upper: { outer: 'fallback_jacket' } },
         'outer'
       );
-      
+
       clothingAccess.entityId = 'test_entity';
       mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
@@ -1799,7 +1815,7 @@ describe('SlotAccessResolver', () => {
         { legs: { base: 'pants' } }, // No torso_upper
         'topmost'
       );
-      
+
       clothingAccess.entityId = 'test_entity';
       mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
@@ -1810,7 +1826,7 @@ describe('SlotAccessResolver', () => {
       };
 
       const result = resolver.resolve(node, mockContext);
-      
+
       expect(result).toEqual(new Set());
       expect(mockSpan.addEvent).toHaveBeenCalledWith(
         'no_slot_data',
@@ -1831,7 +1847,7 @@ describe('SlotAccessResolver', () => {
         },
         'topmost'
       );
-      
+
       mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
       const node = {
@@ -1850,11 +1866,11 @@ describe('SlotAccessResolver', () => {
           layer: 'outer',
         })
       );
-      
+
       expect(mockSpan.addEvent).toHaveBeenCalledWith(
         'priority_calculated',
         expect.objectContaining({
-          itemId: 'shirt_id', 
+          itemId: 'shirt_id',
           layer: 'base',
         })
       );
@@ -1870,7 +1886,7 @@ describe('SlotAccessResolver', () => {
         },
         'topmost'
       );
-      
+
       mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
       const node = {
@@ -1899,7 +1915,9 @@ describe('SlotAccessResolver', () => {
         // Missing equipped and mode will cause validation error
       };
 
-      mockContext.dispatcher.resolve.mockReturnValue(new Set([invalidClothingAccess]));
+      mockContext.dispatcher.resolve.mockReturnValue(
+        new Set([invalidClothingAccess])
+      );
 
       const node = {
         type: 'Step',
@@ -1991,7 +2009,7 @@ describe('SlotAccessResolver', () => {
         {}, // Empty equipped
         'topmost'
       );
-      
+
       clothingAccess.entityId = 'test_entity';
       mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
@@ -2014,7 +2032,7 @@ describe('SlotAccessResolver', () => {
         },
         'topmost'
       );
-      
+
       clothingAccess.entityId = 'test_entity';
       mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
@@ -2039,7 +2057,7 @@ describe('SlotAccessResolver', () => {
 
       // Mock no coverage mapping found
       mockEntitiesGateway.getComponentData.mockReturnValue(null);
-      
+
       clothingAccess.entityId = 'test_entity';
       mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
@@ -2063,16 +2081,21 @@ describe('SlotAccessResolver', () => {
       );
 
       // Mock coverage mapping that doesn't cover torso_upper
-      mockEntitiesGateway.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === 'clothing:coverage_mapping' && entityId === 'pants_id') {
-          return {
-            covers: ['legs', 'feet'], // Doesn't cover torso_upper
-            coveragePriority: 'base',
-          };
+      mockEntitiesGateway.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (
+            componentId === 'clothing:coverage_mapping' &&
+            entityId === 'pants_id'
+          ) {
+            return {
+              covers: ['legs', 'feet'], // Doesn't cover torso_upper
+              coveragePriority: 'base',
+            };
+          }
+          return null;
         }
-        return null;
-      });
-      
+      );
+
       clothingAccess.entityId = 'test_entity';
       mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 

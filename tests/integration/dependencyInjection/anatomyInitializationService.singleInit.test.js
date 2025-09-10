@@ -109,12 +109,14 @@ describe('AnatomyInitializationService - Single Initialization', () => {
     });
 
     // Now get the actual registered service and spy on it
-    const anatomyService = container.resolve(tokens.AnatomyInitializationService);
-    
+    const anatomyService = container.resolve(
+      tokens.AnatomyInitializationService
+    );
+
     // Spy on the initialize method to track calls
     const originalInitialize = anatomyService.initialize.bind(anatomyService);
     let callCount = 0;
-    anatomyService.initialize = jest.fn(function() {
+    anatomyService.initialize = jest.fn(function () {
       callCount++;
       return originalInitialize();
     });
@@ -137,7 +139,7 @@ describe('AnatomyInitializationService - Single Initialization', () => {
     // Initialize through SystemInitializer
     const systemInitializer = container.resolve(tokens.SystemInitializer);
     await systemInitializer.initializeAll();
-    
+
     // Verify it was initialized once by SystemInitializer
     expect(anatomyService.initialize).toHaveBeenCalledTimes(1);
     expect(callCount).toBe(1);
@@ -148,7 +150,7 @@ describe('AnatomyInitializationService - Single Initialization', () => {
     // Verify initialize was called twice total but only executed once (due to guard in the service)
     expect(anatomyService.initialize).toHaveBeenCalledTimes(2);
     expect(callCount).toBe(2); // Called twice
-    
+
     // The actual service logs this warning when already initialized
     expect(mockLogger.warn).toHaveBeenCalledWith(
       'AnatomyInitializationService: Already initialized'
@@ -158,17 +160,20 @@ describe('AnatomyInitializationService - Single Initialization', () => {
   it('should not attempt manual initialization in baseContainerConfig', async () => {
     // Spy on the AnatomyInitializationService constructor to detect if initialize is called during registration
     let initializeCalledDuringRegistration = false;
-    
+
     // Mock the AnatomyInitializationService before configuring the container
-    const OriginalAnatomyInitService = require('../../../src/anatomy/anatomyInitializationService.js').AnatomyInitializationService;
+    const OriginalAnatomyInitService =
+      require('../../../src/anatomy/anatomyInitializationService.js').AnatomyInitializationService;
     const mockInitialize = jest.fn();
-    
+
     // Track if initialize is called during the configuration phase
-    jest.spyOn(OriginalAnatomyInitService.prototype, 'initialize').mockImplementation(function() {
-      // If this is called, it means manual initialization happened
-      initializeCalledDuringRegistration = true;
-      mockInitialize();
-    });
+    jest
+      .spyOn(OriginalAnatomyInitService.prototype, 'initialize')
+      .mockImplementation(function () {
+        // If this is called, it means manual initialization happened
+        initializeCalledDuringRegistration = true;
+        mockInitialize();
+      });
 
     // Configure base container with anatomy systems
     await configureBaseContainer(container, {
@@ -185,18 +190,18 @@ describe('AnatomyInitializationService - Single Initialization', () => {
     expect(() => {
       anatomyService = container.resolve(tokens.AnatomyInitializationService);
     }).not.toThrow();
-    
+
     expect(anatomyService).not.toBeNull();
     expect(anatomyService).toBeDefined();
-    
+
     // Verify that the service is tagged with INITIALIZABLE
     const taggedServices = container.resolveByTag(INITIALIZABLE[0]);
     const hasAnatomyService = taggedServices.some(
-      service => service === anatomyService
+      (service) => service === anatomyService
     );
-    
+
     expect(hasAnatomyService).toBe(true);
-    
+
     // Restore the original implementation
     OriginalAnatomyInitService.prototype.initialize.mockRestore();
   });

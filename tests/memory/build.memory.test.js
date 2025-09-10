@@ -21,7 +21,9 @@ describe('Build System - Memory Tests', () => {
     return new Promise((resolve, reject) => {
       // Add --memory-test flag for memory tests to minimize build time and operations
       const buildArgs =
-        useMemoryTestMode && command.startsWith('build') ? [...args, '--memory-test'] : args;
+        useMemoryTestMode && command.startsWith('build')
+          ? [...args, '--memory-test']
+          : args;
       const child = spawn('npm', ['run', command, ...buildArgs], {
         cwd: process.cwd(),
         stdio: ['ignore', 'pipe', 'pipe'],
@@ -151,8 +153,10 @@ describe('Build System - Memory Tests', () => {
       // Selective cleanup - only remove JavaScript bundles, keep directory structure
       try {
         const files = await fs.readdir(distDir);
-        const jsFiles = files.filter(f => f.endsWith('.js') || f.endsWith('.js.map'));
-        await Promise.all(jsFiles.map(f => fs.remove(path.join(distDir, f))));
+        const jsFiles = files.filter(
+          (f) => f.endsWith('.js') || f.endsWith('.js.map')
+        );
+        await Promise.all(jsFiles.map((f) => fs.remove(path.join(distDir, f))));
       } catch (e) {
         // If selective cleanup fails, fall back to full removal
         await fs.remove(distDir);
@@ -169,7 +173,7 @@ describe('Build System - Memory Tests', () => {
   afterEach(async () => {
     // Minimal cleanup after tests - only if test failed or explicitly needed
     // Let beforeEach handle cleanup for better performance
-    
+
     // Force garbage collection after each test
     await global.memoryTestUtils.forceGCAndWait();
 
@@ -179,8 +183,10 @@ describe('Build System - Memory Tests', () => {
 
   describe('Build Resource Usage', () => {
     it('should complete build with reasonable memory usage and detect memory leaks', async () => {
-      console.log('Testing consolidated build memory usage and leak detection...');
-      
+      console.log(
+        'Testing consolidated build memory usage and leak detection...'
+      );
+
       // Force GC and get initial stable memory measurement
       await global.memoryTestUtils.forceGCAndWait();
       const initialMemory = await global.memoryTestUtils.getStableMemoryUsage();
@@ -192,13 +198,16 @@ describe('Build System - Memory Tests', () => {
 
       // Execute the first build and measure memory usage
       const result1 = await executeBuildWithRetries('build:dev');
-      
+
       // Force GC and get memory after first build
       await global.memoryTestUtils.forceGCAndWait();
-      const firstBuildMemory = await global.memoryTestUtils.getStableMemoryUsage();
+      const firstBuildMemory =
+        await global.memoryTestUtils.getStableMemoryUsage();
       const firstBuildTime = process.hrtime.bigint();
 
-      expect(result1.actualSuccess || result1.isDevValidationFailure).toBe(true);
+      expect(result1.actualSuccess || result1.isDevValidationFailure).toBe(
+        true
+      );
 
       if (result1.isDevValidationFailure) {
         console.log(
@@ -213,7 +222,9 @@ describe('Build System - Memory Tests', () => {
       // Calculate CPU time for first build
       const cpuTimeInMs = Number(firstBuildTime - initialTime) / 1000000;
 
-      console.log(`First build memory usage: ${memoryIncreaseInMB.toFixed(2)}MB increase`);
+      console.log(
+        `First build memory usage: ${memoryIncreaseInMB.toFixed(2)}MB increase`
+      );
       console.log(`First build CPU time: ${cpuTimeInMs.toFixed(0)}ms`);
       console.log(
         `Memory after first build: ${(firstBuildMemory / 1024 / 1024).toFixed(2)}MB`
@@ -254,19 +265,23 @@ describe('Build System - Memory Tests', () => {
 
       // Force GC and stabilize before second measurement
       await global.memoryTestUtils.forceGCAndWait();
-      const beforeSecondBuild = await global.memoryTestUtils.getStableMemoryUsage();
+      const beforeSecondBuild =
+        await global.memoryTestUtils.getStableMemoryUsage();
 
       // Execute second build
       const result2 = await executeBuildWithRetries('build:dev');
-      expect(result2.actualSuccess || result2.isDevValidationFailure).toBe(true);
+      expect(result2.actualSuccess || result2.isDevValidationFailure).toBe(
+        true
+      );
 
       // Force GC and measure after second build
       await global.memoryTestUtils.forceGCAndWait();
-      const afterSecondBuild = await global.memoryTestUtils.getStableMemoryUsage();
+      const afterSecondBuild =
+        await global.memoryTestUtils.getStableMemoryUsage();
 
       console.log(
         `Second build: Before=${(beforeSecondBuild / 1024 / 1024).toFixed(2)}MB, ` +
-        `After=${(afterSecondBuild / 1024 / 1024).toFixed(2)}MB`
+          `After=${(afterSecondBuild / 1024 / 1024).toFixed(2)}MB`
       );
 
       // Check that memory doesn't continuously grow between builds (indicates a leak)
@@ -302,7 +317,7 @@ describe('Build System - Memory Tests', () => {
 
     it('should handle optimized builds efficiently', async () => {
       console.log('Testing optimized build efficiency...');
-      
+
       // Force GC and get initial measurement
       await global.memoryTestUtils.forceGCAndWait();
       const initialMemory = await global.memoryTestUtils.getStableMemoryUsage();
@@ -348,7 +363,9 @@ describe('Build System - Memory Tests', () => {
       // Performance assertion: optimized builds should be significantly faster
       // Target: under 15 seconds for the entire test (reduced from previous baseline)
       expect(buildTimeMs).toBeLessThan(15000); // 15 seconds maximum
-      console.log(`✅ Optimized build completed in ${(buildTimeMs / 1000).toFixed(2)} seconds`);
+      console.log(
+        `✅ Optimized build completed in ${(buildTimeMs / 1000).toFixed(2)} seconds`
+      );
     });
   });
 });

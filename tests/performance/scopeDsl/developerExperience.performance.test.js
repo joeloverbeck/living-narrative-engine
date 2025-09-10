@@ -1,7 +1,7 @@
 /**
  * @file Developer Experience Performance Test Suite
  * @description Performance tests for developer experience features in ScopeDSL
- * 
+ *
  * Tests extracted from E2E tests to focus on performance characteristics
  * of profiling, tracing, and developer tools integration.
  */
@@ -115,7 +115,9 @@ describe('Developer Experience Performance', () => {
       expect(result).toBeDefined();
       expect(result).toBeInstanceOf(Set);
 
-      console.log(`Profiling integration test completed in ${duration.toFixed(2)}ms`);
+      console.log(
+        `Profiling integration test completed in ${duration.toFixed(2)}ms`
+      );
     });
 
     test('should measure scope resolution performance accurately', async () => {
@@ -161,10 +163,10 @@ describe('Developer Experience Performance', () => {
         iterations,
         totalTime: totalTime.toFixed(2),
         averageTime: averageTime.toFixed(2),
-        results: results.map(r => ({
+        results: results.map((r) => ({
           duration: r.duration.toFixed(2),
-          success: r.success
-        }))
+          success: r.success,
+        })),
       });
     });
 
@@ -249,7 +251,9 @@ describe('Developer Experience Performance', () => {
       expect(measure.duration).toBeDefined();
       expect(measure.duration).toBeGreaterThan(0);
 
-      console.log(`Performance.measure integration: ${measure.duration.toFixed(2)}ms`);
+      console.log(
+        `Performance.measure integration: ${measure.duration.toFixed(2)}ms`
+      );
 
       // Clean up
       performance.clearMarks();
@@ -265,9 +269,9 @@ describe('Developer Experience Performance', () => {
 
       for (let i = 0; i < iterations; i++) {
         const traceContext = createTraceContext();
-        
+
         const startTime = performance.now();
-        
+
         const result = await ScopeTestUtilities.resolveScopeE2E(
           'test:json_logic_filter',
           testActors.player,
@@ -275,7 +279,7 @@ describe('Developer Experience Performance', () => {
           { scopeRegistry, scopeEngine },
           { trace: traceContext }
         );
-        
+
         const endTime = performance.now();
         const duration = endTime - startTime;
 
@@ -283,15 +287,16 @@ describe('Developer Experience Performance', () => {
         expect(result).toBeDefined();
       }
 
-      const averageTracingTime = tracingTimes.reduce((a, b) => a + b, 0) / tracingTimes.length;
-      
+      const averageTracingTime =
+        tracingTimes.reduce((a, b) => a + b, 0) / tracingTimes.length;
+
       // Tracing should not significantly impact performance
       expect(averageTracingTime).toBeLessThan(1000); // Less than 1 second
 
       console.log('Tracing Performance Metrics:', {
         iterations,
         averageTime: averageTracingTime.toFixed(2),
-        times: tracingTimes.map(t => t.toFixed(2))
+        times: tracingTimes.map((t) => t.toFixed(2)),
       });
     });
   });

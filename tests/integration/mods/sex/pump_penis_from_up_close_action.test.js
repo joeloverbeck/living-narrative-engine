@@ -13,14 +13,12 @@ import { ModAssertionHelpers } from '../../../common/mods/ModAssertionHelpers.js
 
 /**
  * Creates standardized anatomy setup for pump penis from up close scenarios.
- * 
+ *
  * @returns {object} Object with actor, target, and all anatomy entities
  */
 function setupAnatomyComponents() {
   // Create main room
-  const room = new ModEntityBuilder('room1')
-    .asRoom('Test Room')
-    .build();
+  const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
   // Create actor entity
   const actor = new ModEntityBuilder('alice')
@@ -70,11 +68,14 @@ describe('sex:pump_penis_from_up_close action integration', () => {
 
   beforeEach(async () => {
     // Create test fixture with auto-loaded files
-    testFixture = await ModTestFixture.forAction('sex', 'sex:pump_penis_from_up_close');
-    
+    testFixture = await ModTestFixture.forAction(
+      'sex',
+      'sex:pump_penis_from_up_close'
+    );
+
     // Setup anatomy entities
     const entities = setupAnatomyComponents();
-    
+
     // Load all entities into the test environment
     testFixture.reset(Object.values(entities));
   });
@@ -93,7 +94,7 @@ describe('sex:pump_penis_from_up_close action integration', () => {
     // Assert action executed successfully with proper events
     ModAssertionHelpers.assertActionSuccess(
       testFixture.events,
-      'From up close, Alice\'s breath hot against Bob\'s genitals, Alice pumps Bob\'s penis sensually while kneeling.',
+      "From up close, Alice's breath hot against Bob's genitals, Alice pumps Bob's penis sensually while kneeling.",
       {
         shouldEndTurn: true,
         shouldHavePerceptibleEvent: true,
@@ -113,7 +114,7 @@ describe('sex:pump_penis_from_up_close action integration', () => {
     ];
 
     testFixture.reset(minimalEntities);
-    
+
     const initialEventCount = testFixture.events.length;
 
     await testFixture.eventBus.dispatch('core:attempt_action', {

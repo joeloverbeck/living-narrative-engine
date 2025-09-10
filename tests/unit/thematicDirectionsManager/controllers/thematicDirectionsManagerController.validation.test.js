@@ -35,10 +35,10 @@ describe('ThematicDirectionsManagerController - Validation Tests', () => {
       if (controller && !controller.isDestroyed) {
         await controller.destroy();
       }
-      
+
       await testBase.cleanup();
       jest.restoreAllMocks();
-      
+
       controller = null;
     } catch (error) {
       console.error('Cleanup failed:', error);
@@ -52,7 +52,7 @@ describe('ThematicDirectionsManagerController - Validation Tests', () => {
         description: { min: 20, max: 2000 },
         coreTension: { min: 10, max: 500 },
         uniqueTwist: { min: 10, max: 1000 },
-        narrativePotential: { min: 10, max: 1000 }
+        narrativePotential: { min: 10, max: 1000 },
       };
 
       // Verify constraint structure
@@ -66,13 +66,28 @@ describe('ThematicDirectionsManagerController - Validation Tests', () => {
       const testCases = [
         { field: 'title', value: '', valid: false, reason: 'empty' },
         { field: 'title', value: 'ab', valid: false, reason: 'too short' },
-        { field: 'title', value: 'Valid Title', valid: true, reason: 'valid length' },
-        { field: 'description', value: 'short', valid: false, reason: 'too short' },
-        { field: 'description', value: 'This is a valid description that meets minimum length.', valid: true, reason: 'valid length' }
+        {
+          field: 'title',
+          value: 'Valid Title',
+          valid: true,
+          reason: 'valid length',
+        },
+        {
+          field: 'description',
+          value: 'short',
+          valid: false,
+          reason: 'too short',
+        },
+        {
+          field: 'description',
+          value: 'This is a valid description that meets minimum length.',
+          valid: true,
+          reason: 'valid length',
+        },
       ];
 
       // Verify test case structure is correct
-      testCases.forEach(testCase => {
+      testCases.forEach((testCase) => {
         expect(testCase.field).toBeDefined();
         expect(testCase.value).toBeDefined();
         expect(typeof testCase.valid).toBe('boolean');
@@ -83,10 +98,10 @@ describe('ThematicDirectionsManagerController - Validation Tests', () => {
     it('should handle whitespace in validation', () => {
       const whitespaceTests = [
         { value: '   ', trimmed: '', isEmpty: true },
-        { value: '  Valid Title  ', trimmed: 'Valid Title', isEmpty: false }
+        { value: '  Valid Title  ', trimmed: 'Valid Title', isEmpty: false },
       ];
 
-      whitespaceTests.forEach(test => {
+      whitespaceTests.forEach((test) => {
         expect(test.value.trim()).toBe(test.trimmed);
         expect(test.value.trim().length === 0).toBe(test.isEmpty);
       });
@@ -100,26 +115,32 @@ describe('ThematicDirectionsManagerController - Validation Tests', () => {
       const newValue = 'Updated Title';
 
       // Mock the service method
-      testBase.mocks.characterBuilderService.updateThematicDirection.mockResolvedValue(true);
+      testBase.mocks.characterBuilderService.updateThematicDirection.mockResolvedValue(
+        true
+      );
 
       // Test the service call directly since internal methods are private
       await testBase.mocks.characterBuilderService.updateThematicDirection(
-        directionId, 
-        { [fieldName]: newValue.trim() }
-      );
-      
-      expect(testBase.mocks.characterBuilderService.updateThematicDirection).toHaveBeenCalledWith(
         directionId,
         { [fieldName]: newValue.trim() }
       );
+
+      expect(
+        testBase.mocks.characterBuilderService.updateThematicDirection
+      ).toHaveBeenCalledWith(directionId, { [fieldName]: newValue.trim() });
     });
 
     it('should handle field save errors', async () => {
       const error = new Error('Save failed');
-      testBase.mocks.characterBuilderService.updateThematicDirection.mockRejectedValue(error);
+      testBase.mocks.characterBuilderService.updateThematicDirection.mockRejectedValue(
+        error
+      );
 
       await expect(
-        testBase.mocks.characterBuilderService.updateThematicDirection('test-id', { title: 'New Title' })
+        testBase.mocks.characterBuilderService.updateThematicDirection(
+          'test-id',
+          { title: 'New Title' }
+        )
       ).rejects.toThrow('Save failed');
     });
   });

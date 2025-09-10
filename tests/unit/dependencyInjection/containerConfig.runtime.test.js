@@ -44,14 +44,17 @@ jest.mock('../../../src/dependencyInjection/tokens.js', () => ({
   tokens: {
     ILogger: 'ILogger',
     IEntityManager: 'IEntityManager',
-    IDataRegistry: 'IDataRegistry', 
+    IDataRegistry: 'IDataRegistry',
     ISchemaValidator: 'ISchemaValidator',
   },
 }));
 
 // Now import the modules we need after mocks are set up
 import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
-import { isTestEnvironment, getEnvironmentMode } from '../../../src/utils/environmentUtils.js';
+import {
+  isTestEnvironment,
+  getEnvironmentMode,
+} from '../../../src/utils/environmentUtils.js';
 import { loadAndApplyLoggerConfig } from '../../../src/configuration/utils/loggerConfigUtils.js';
 import { loadAndApplyTraceConfig } from '../../../src/configuration/utils/traceConfigUtils.js';
 import { configureBaseContainer } from '../../../src/dependencyInjection/baseContainerConfig.js';
@@ -67,14 +70,14 @@ describe('containerConfig - Runtime Error Reproduction', () => {
   beforeEach(() => {
     // Save original process object
     originalProcess = globalThis.process;
-    
+
     // Setup mocks
     mockContainer = {
       register: jest.fn(),
       resolve: jest.fn(),
       isRegistered: jest.fn().mockReturnValue(true),
     };
-    
+
     mockLogger = {
       info: jest.fn(),
       debug: jest.fn(),
@@ -93,13 +96,13 @@ describe('containerConfig - Runtime Error Reproduction', () => {
 
     // Setup LoggerStrategy mock to return our mock logger
     LoggerStrategy.mockImplementation(() => mockLogger);
-    
+
     // Setup ConsoleLogger mock to return our mock logger
     ConsoleLogger.mockImplementation(() => mockLogger);
-    
+
     // Setup container to resolve the logger
     mockContainer.resolve.mockReturnValue(mockLogger);
-    
+
     // Setup config loading mocks
     loadAndApplyLoggerConfig.mockResolvedValue(undefined);
     loadAndApplyTraceConfig.mockResolvedValue(undefined);
@@ -116,14 +119,16 @@ describe('containerConfig - Runtime Error Reproduction', () => {
     it('should handle missing process object when determining logger mode', async () => {
       // Simulate browser environment where process is not defined
       delete globalThis.process;
-      
+
       // Setup environment utilities to return development mode for browser
       isTestEnvironment.mockReturnValue(false);
       getEnvironmentMode.mockReturnValue('development');
 
       // Should not throw ReferenceError when accessing process.env.NODE_ENV
-      await expect(configureContainer(mockContainer, mockUiElements)).resolves.not.toThrow();
-      
+      await expect(
+        configureContainer(mockContainer, mockUiElements)
+      ).resolves.not.toThrow();
+
       // Should have created LoggerStrategy with development mode (fallback)
       expect(LoggerStrategy).toHaveBeenCalledWith({
         mode: 'development',
@@ -136,13 +141,15 @@ describe('containerConfig - Runtime Error Reproduction', () => {
 
     it('should handle process object without env property', async () => {
       globalThis.process = { version: 'v16.0.0' }; // Process exists but no env
-      
+
       // Setup environment utilities for non-test, development environment
       isTestEnvironment.mockReturnValue(false);
       getEnvironmentMode.mockReturnValue('development');
 
-      await expect(configureContainer(mockContainer, mockUiElements)).resolves.not.toThrow();
-      
+      await expect(
+        configureContainer(mockContainer, mockUiElements)
+      ).resolves.not.toThrow();
+
       // Should fallback to development mode when process.env is undefined
       expect(LoggerStrategy).toHaveBeenCalledWith({
         mode: 'development',
@@ -159,13 +166,13 @@ describe('containerConfig - Runtime Error Reproduction', () => {
           NODE_ENV: 'test',
         },
       };
-      
+
       // Setup environment utilities for test environment
       isTestEnvironment.mockReturnValue(true);
       getEnvironmentMode.mockReturnValue('test');
 
       await configureContainer(mockContainer, mockUiElements);
-      
+
       // Should use test mode when NODE_ENV is test
       expect(LoggerStrategy).toHaveBeenCalledWith({
         mode: 'test',
@@ -182,13 +189,13 @@ describe('containerConfig - Runtime Error Reproduction', () => {
           NODE_ENV: 'production',
         },
       };
-      
+
       // Setup environment utilities for production (but not test)
       isTestEnvironment.mockReturnValue(false);
       getEnvironmentMode.mockReturnValue('development');
 
       await configureContainer(mockContainer, mockUiElements);
-      
+
       // Should use development mode for production (per the original logic)
       expect(LoggerStrategy).toHaveBeenCalledWith({
         mode: 'development',
@@ -205,7 +212,7 @@ describe('containerConfig - Runtime Error Reproduction', () => {
       // Test various process object states
       const testCases = [
         undefined, // No process at all
-        {}, // Empty process object  
+        {}, // Empty process object
         { env: {} }, // Process with empty env
         { env: null }, // Process with null env
         { env: { NODE_ENV: 'test' } }, // Normal case
@@ -213,22 +220,27 @@ describe('containerConfig - Runtime Error Reproduction', () => {
 
       for (const processValue of testCases) {
         globalThis.process = processValue;
-        
+
         // Setup environment utilities to handle various states
-        if (processValue && processValue.env && processValue.env.NODE_ENV === 'test') {
+        if (
+          processValue &&
+          processValue.env &&
+          processValue.env.NODE_ENV === 'test'
+        ) {
           isTestEnvironment.mockReturnValue(true);
           getEnvironmentMode.mockReturnValue('test');
         } else {
           isTestEnvironment.mockReturnValue(false);
           getEnvironmentMode.mockReturnValue('development');
         }
-        
+
         // Should not throw regardless of process object state
-        await expect(configureContainer(mockContainer, mockUiElements)).resolves.not.toThrow();
-        
+        await expect(
+          configureContainer(mockContainer, mockUiElements)
+        ).resolves.not.toThrow();
+
         jest.clearAllMocks();
       }
     });
-
   });
 });

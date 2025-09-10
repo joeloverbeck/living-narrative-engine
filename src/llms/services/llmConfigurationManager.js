@@ -387,7 +387,7 @@ export class LLMConfigurationManager extends ILLMConfigurationManager {
       this.#logger.debug(
         `LLMConfigurationManager: Active config changed from '${oldConfigId || 'none'}' to '${configId}'.`
       );
-      
+
       // Persist the new selection
       const saved = LLMSelectionPersistence.save(configId);
       if (!saved) {
@@ -395,7 +395,7 @@ export class LLMConfigurationManager extends ILLMConfigurationManager {
           `LLMConfigurationManager: Failed to persist LLM selection '${configId}' to localStorage.`
         );
       }
-      
+
       return true;
     }
 

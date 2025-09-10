@@ -24,10 +24,7 @@ export function detectEnvironment() {
   }
 
   // Check for Web Worker environment
-  if (
-    typeof importScripts === 'function' &&
-    typeof navigator !== 'undefined'
-  ) {
+  if (typeof importScripts === 'function' && typeof navigator !== 'undefined') {
     return 'webworker';
   }
 
@@ -76,7 +73,11 @@ export function isTestEnvironment() {
  */
 export function getEnvironmentVariable(key, defaultValue = '') {
   // Try Node.js process.env first
-  if (isNodeEnvironment() && process.env && typeof process.env[key] === 'string') {
+  if (
+    isNodeEnvironment() &&
+    process.env &&
+    typeof process.env[key] === 'string'
+  ) {
     return process.env[key];
   }
 
@@ -111,7 +112,7 @@ export function getEnvironmentMode() {
 
   // Get NODE_ENV or equivalent
   const nodeEnv = getEnvironmentVariable('NODE_ENV', 'development');
-  
+
   // Normalize to expected values
   switch (nodeEnv.toLowerCase()) {
     case 'test':
@@ -133,7 +134,7 @@ export function getEnvironmentMode() {
  */
 export function shouldSkipDebugConfig() {
   const skipValue = getEnvironmentVariable('SKIP_DEBUG_CONFIG', 'false');
-  
+
   // Handle various truthy values
   return (
     skipValue === 'true' ||
@@ -150,7 +151,7 @@ export function shouldSkipDebugConfig() {
 export function getEnvironmentConfig() {
   const env = detectEnvironment();
   const mode = getEnvironmentMode();
-  
+
   return {
     environment: env,
     mode,
@@ -160,11 +161,12 @@ export function getEnvironmentConfig() {
     isDevelopment: mode === 'development',
     isProduction: mode === 'production',
     skipDebugConfig: shouldSkipDebugConfig(),
-    
+
     // Common environment variables
     nodeEnv: getEnvironmentVariable('NODE_ENV', 'development'),
     debugLogMode: getEnvironmentVariable('DEBUG_LOG_MODE', ''),
-    debugLogSilent: getEnvironmentVariable('DEBUG_LOG_SILENT', 'false') === 'true',
+    debugLogSilent:
+      getEnvironmentVariable('DEBUG_LOG_SILENT', 'false') === 'true',
   };
 }
 
@@ -194,11 +196,11 @@ export function createProcessEnvShim() {
 
   // Create a browser-compatible shim
   const envShim = {};
-  
+
   // Add common environment variables that might be injected at build time
   const commonEnvVars = [
     'NODE_ENV',
-    'DEBUG_LOG_MODE', 
+    'DEBUG_LOG_MODE',
     'DEBUG_LOG_SILENT',
     'SKIP_DEBUG_CONFIG',
     'PROXY_HOST',

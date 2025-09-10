@@ -44,7 +44,8 @@ describe('Exercise Mod: Show Off Biceps Rule', () => {
       await testFixture.executeAction(scenario.actor.id, null);
 
       testFixture.assertPerceptibleEvent({
-        descriptionText: 'Mike flexes their arms, showing off the bulging biceps and triceps.',
+        descriptionText:
+          'Mike flexes their arms, showing off the bulging biceps and triceps.',
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: null,
@@ -118,7 +119,7 @@ describe('Exercise Mod: Show Off Biceps Rule', () => {
 
     it('should set correct variables for logging', () => {
       const actions = testFixture.ruleFile.actions;
-      
+
       // Check logMessage variable
       const logMessageAction = actions[2];
       expect(logMessageAction.type).toBe('SET_VARIABLE');
@@ -130,14 +131,18 @@ describe('Exercise Mod: Show Off Biceps Rule', () => {
       // Check perceptionType variable
       const perceptionTypeAction = actions[3];
       expect(perceptionTypeAction.type).toBe('SET_VARIABLE');
-      expect(perceptionTypeAction.parameters.variable_name).toBe('perceptionType');
+      expect(perceptionTypeAction.parameters.variable_name).toBe(
+        'perceptionType'
+      );
       expect(perceptionTypeAction.parameters.value).toBe('action_self_general');
 
       // Check locationId variable
       const locationIdAction = actions[4];
       expect(locationIdAction.type).toBe('SET_VARIABLE');
       expect(locationIdAction.parameters.variable_name).toBe('locationId');
-      expect(locationIdAction.parameters.value).toBe('{context.actorPosition.locationId}');
+      expect(locationIdAction.parameters.value).toBe(
+        '{context.actorPosition.locationId}'
+      );
 
       // Check targetId variable (should be null for self-targeting action)
       const targetIdAction = actions[5];

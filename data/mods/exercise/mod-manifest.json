@@ -17,14 +17,8 @@
     }
   ],
   "content": {
-    "actions": [
-      "show_off_biceps.action.json"
-    ],
-    "rules": [
-      "handle_show_off_biceps.rule.json"
-    ],
-    "conditions": [
-      "event-is-action-show-off-biceps.condition.json"
-    ]
+    "actions": ["show_off_biceps.action.json"],
+    "rules": ["handle_show_off_biceps.rule.json"],
+    "conditions": ["event-is-action-show-off-biceps.condition.json"]
   }
 }

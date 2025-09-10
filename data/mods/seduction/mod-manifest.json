@@ -17,14 +17,8 @@
     }
   ],
   "content": {
-    "actions": [
-      "draw_attention_to_breasts.action.json"
-    ],
-    "rules": [
-      "draw_attention_to_breasts.rule.json"
-    ],
-    "conditions": [
-      "event-is-action-draw-attention-to-breasts.condition.json"
-    ]
+    "actions": ["draw_attention_to_breasts.action.json"],
+    "rules": ["draw_attention_to_breasts.rule.json"],
+    "conditions": ["event-is-action-draw-attention-to-breasts.condition.json"]
   }
 }

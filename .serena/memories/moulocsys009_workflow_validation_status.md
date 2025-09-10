@@ -7,32 +7,37 @@
 ## Validation Results
 
 ### Correct Assumptions ✅
+
 - File paths accurate: All 4 positioning action files exist
 - Action IDs match: kneel_before, place_yourself_behind, turn_your_back, step_back
-- Conditions exist: core:actor-mouth-available, core:actor-can-move 
+- Conditions exist: core:actor-mouth-available, core:actor-can-move
 - Schema file exists at correct path
 - Overall technical approach is sound
 
 ### Critical Issues Found ❌
 
 #### 1. Schema Property Error (High Priority)
+
 - **Workflow shows**: "failureMessage" (camelCase)
 - **Schema requires**: "failure_message" (underscore)
 - **Impact**: Schema validation would fail
 - **Location**: Lines 24-161, all prerequisite examples
 
 #### 2. Prerequisites Structure Error
+
 - **Workflow assumes**: Missing prerequisites property
 - **Reality**: All files have empty "prerequisites": [] arrays
 - **Impact**: Need to add to existing arrays, not create new property
 
 #### 3. Test Pattern Errors
+
 - **References non-existent**: createTestActor() helper function
 - **Uses incorrect API**: actionSystem.canPerformAction(), actionSystem.getAvailableActions()
 - **Wrong test structure**: Doesn't match existing /tests/unit/mods/positioning/ patterns
 - **Location**: Lines 183-366, all test examples
 
 #### 4. Current Action File States
+
 - kneel_before.action.json: Empty prerequisites: []
 - place_yourself_behind.action.json: Empty prerequisites: []
 - turn_your_back.action.json: Empty prerequisites: []
@@ -57,13 +62,15 @@
    - Use actual test utilities from /tests/common/
 
 ## Next Steps
+
 1. Apply corrections to workflow file
 2. Verify all examples use correct schema format
 3. Ensure test patterns match existing codebase conventions
 4. Validate prerequisite structure aligns with current action files
 
 ## Key Files Referenced
-- /data/mods/positioning/actions/*.action.json (4 files)
+
+- /data/mods/positioning/actions/\*.action.json (4 files)
 - /data/mods/core/conditions/actor-mouth-available.condition.json
 - /data/mods/core/conditions/actor-can-move.condition.json
 - /data/schemas/action.schema.json

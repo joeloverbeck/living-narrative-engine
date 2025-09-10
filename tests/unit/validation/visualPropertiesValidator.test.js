@@ -31,8 +31,17 @@ jest.mock('../../../src/utils/colorValidation.js', () => ({
     // Accept rgb/rgba patterns
     if (/^rgba?\(/.test(color)) return true;
     // Accept common named colors
-    const namedColors = ['red', 'white', 'black', 'blue', 'green', 'yellow', 
-                         'transparent', 'currentColor', 'darkslateblue'];
+    const namedColors = [
+      'red',
+      'white',
+      'black',
+      'blue',
+      'green',
+      'yellow',
+      'transparent',
+      'currentColor',
+      'darkslateblue',
+    ];
     return namedColors.includes(color.toLowerCase());
   }),
   getColorErrorMessage: jest.fn((color) => {
@@ -41,7 +50,7 @@ jest.mock('../../../src/utils/colorValidation.js', () => ({
     }
     return `Invalid CSS color value: "${color}". Expected hex (#RGB or #RRGGBB), rgb(), rgba(), or named color.`;
   }),
-}))
+}));
 
 describe('visualPropertiesValidator', () => {
   describe('validateVisualProperties', () => {
@@ -86,7 +95,9 @@ describe('visualPropertiesValidator', () => {
 
       expect(() => {
         validateVisualProperties(visual, 'test:action');
-      }).toThrow(/Invalid visual properties for action test:action:\nbackgroundColor:/);
+      }).toThrow(
+        /Invalid visual properties for action test:action:\nbackgroundColor:/
+      );
     });
 
     it('should throw error for non-object visual properties', () => {
@@ -111,7 +122,9 @@ describe('visualPropertiesValidator', () => {
 
       expect(() => {
         validateVisualProperties(visual, 'test:action');
-      }).toThrow(/Invalid visual properties for action test:action:\nUnknown visual properties: unknownProperty/);
+      }).toThrow(
+        /Invalid visual properties for action test:action:\nUnknown visual properties: unknownProperty/
+      );
     });
 
     it('should handle empty object', () => {

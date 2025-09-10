@@ -15,21 +15,32 @@ import { promises as fs } from 'fs';
 class ModValidationError extends ModDependencyError {
   constructor(validationResults) {
     const messages = [];
-    
-    if (validationResults.dependencies && !validationResults.dependencies.isValid) {
-      messages.push(`Dependency validation failed: ${validationResults.dependencies.errors?.length || 0} errors`);
+
+    if (
+      validationResults.dependencies &&
+      !validationResults.dependencies.isValid
+    ) {
+      messages.push(
+        `Dependency validation failed: ${validationResults.dependencies.errors?.length || 0} errors`
+      );
     }
-    
+
     if (validationResults.crossReferences) {
-      const violationCount = validationResults.crossReferences instanceof Map
-        ? Array.from(validationResults.crossReferences.values()).reduce((sum, r) => sum + r.violations?.length || 0, 0)
-        : validationResults.crossReferences.violations?.length || 0;
-      
+      const violationCount =
+        validationResults.crossReferences instanceof Map
+          ? Array.from(validationResults.crossReferences.values()).reduce(
+              (sum, r) => sum + r.violations?.length || 0,
+              0
+            )
+          : validationResults.crossReferences.violations?.length || 0;
+
       if (violationCount > 0) {
-        messages.push(`Cross-reference validation failed: ${violationCount} violations`);
+        messages.push(
+          `Cross-reference validation failed: ${violationCount} violations`
+        );
       }
     }
-    
+
     super(`Mod ecosystem validation failed:\n${messages.join('\n')}`);
     this.name = 'ModValidationError';
     this.validationResults = validationResults;
@@ -48,7 +59,7 @@ class ModValidationOrchestrator {
   #modManifestLoader;
   #pathResolver;
   #configuration;
-  
+
   /**
    * @param {Object} dependencies
    * @param {import('../utils/loggerUtils.js').ILogger} dependencies.logger
@@ -59,27 +70,35 @@ class ModValidationOrchestrator {
    * @param {import('../interfaces/coreServices.js').IPathResolver} dependencies.pathResolver
    * @param {import('../interfaces/coreServices.js').IConfiguration} dependencies.configuration
    */
-  constructor({ 
-    logger, 
-    modDependencyValidator, 
-    modCrossReferenceValidator, 
+  constructor({
+    logger,
+    modDependencyValidator,
+    modCrossReferenceValidator,
     modLoadOrderResolver,
     modManifestLoader,
     pathResolver,
-    configuration
+    configuration,
   }) {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
     });
-    
+
     // ModDependencyValidator is a class with static methods
-    if (!modDependencyValidator || typeof modDependencyValidator.validate !== 'function') {
+    if (
+      !modDependencyValidator ||
+      typeof modDependencyValidator.validate !== 'function'
+    ) {
       throw new Error('ModDependencyValidator must have a validate method');
     }
-    
-    validateDependency(modCrossReferenceValidator, 'IModCrossReferenceValidator', logger, {
-      requiredMethods: ['validateModReferences', 'validateAllModReferences'],
-    });
+
+    validateDependency(
+      modCrossReferenceValidator,
+      'IModCrossReferenceValidator',
+      logger,
+      {
+        requiredMethods: ['validateModReferences', 'validateAllModReferences'],
+      }
+    );
     validateDependency(modLoadOrderResolver, 'IModLoadOrderResolver', logger, {
       requiredMethods: ['resolve'],
     });
@@ -92,7 +111,7 @@ class ModValidationOrchestrator {
     validateDependency(configuration, 'IConfiguration', logger, {
       requiredMethods: ['getContentTypeSchemaId'],
     });
-    
+
     this.#logger = logger;
     this.#modDependencyValidator = modDependencyValidator;
     this.#modCrossReferenceValidator = modCrossReferenceValidator;
@@ -111,14 +130,14 @@ class ModValidationOrchestrator {
    * @returns {Promise<ModEcosystemValidationResult>} Complete validation results
    */
   async validateEcosystem(options = {}) {
-    const { 
-      skipCrossReferences = false, 
-      failFast = false, 
-      modsToValidate = null 
+    const {
+      skipCrossReferences = false,
+      failFast = false,
+      modsToValidate = null,
     } = options;
-    
+
     this.#logger.info('Starting comprehensive mod ecosystem validation');
-    
+
     const startTime = performance.now();
     const results = {
       dependencies: null,
@@ -126,36 +145,39 @@ class ModValidationOrchestrator {
       loadOrder: null,
       performance: {
         startTime,
-        phases: new Map()
+        phases: new Map(),
       },
       isValid: false,
       errors: [],
-      warnings: []
+      warnings: [],
     };
-    
+
     try {
       // Phase 1: Load and validate manifests
       const manifestsMap = await this.#loadAndValidateManifests(modsToValidate);
-      results.performance.phases.set('manifest-loading', performance.now() - startTime);
-      
+      results.performance.phases.set(
+        'manifest-loading',
+        performance.now() - startTime
+      );
+
       // Phase 2: Dependency validation (prerequisite for cross-reference validation)
       this.#logger.info('Phase 2: Validating mod dependencies');
       const depStartTime = performance.now();
-      
+
       // Use static validate method from ModDependencyValidator
       try {
         this.#modDependencyValidator.validate(manifestsMap, this.#logger);
         results.dependencies = {
           isValid: true,
           errors: [],
-          warnings: []
+          warnings: [],
         };
       } catch (error) {
         if (error instanceof ModDependencyError) {
           results.dependencies = {
             isValid: false,
             errors: [error.message],
-            warnings: []
+            warnings: [],
           };
           this.#logger.error('Dependency validation failed', error);
           if (failFast) {
@@ -166,75 +188,106 @@ class ModValidationOrchestrator {
           throw error;
         }
       }
-      
-      results.performance.phases.set('dependency-validation', performance.now() - depStartTime);
-      
+
+      results.performance.phases.set(
+        'dependency-validation',
+        performance.now() - depStartTime
+      );
+
       // Phase 3: Load order resolution (uses dependency validation results)
       if (results.dependencies.isValid) {
         this.#logger.info('Phase 3: Resolving mod load order');
         const loadOrderStartTime = performance.now();
-        
+
         try {
           // Get mod IDs for load order resolution
-          const requestedIds = modsToValidate || Array.from(manifestsMap.keys());
-          const loadOrder = this.#modLoadOrderResolver.resolve(requestedIds, manifestsMap);
+          const requestedIds =
+            modsToValidate || Array.from(manifestsMap.keys());
+          const loadOrder = this.#modLoadOrderResolver.resolve(
+            requestedIds,
+            manifestsMap
+          );
           results.loadOrder = {
             order: loadOrder,
-            isValid: true
+            isValid: true,
           };
-          results.performance.phases.set('load-order-resolution', performance.now() - loadOrderStartTime);
+          results.performance.phases.set(
+            'load-order-resolution',
+            performance.now() - loadOrderStartTime
+          );
         } catch (error) {
           this.#logger.warn('Load order resolution failed', error);
-          results.warnings.push(`Load order resolution failed: ${error.message}`);
+          results.warnings.push(
+            `Load order resolution failed: ${error.message}`
+          );
         }
       }
-      
+
       // Phase 4: Cross-reference validation (depends on valid dependencies)
       if (!skipCrossReferences && results.dependencies.isValid) {
         this.#logger.info('Phase 4: Validating cross-mod references');
         const crossRefStartTime = performance.now();
-        
+
         try {
-          results.crossReferences = await this.#modCrossReferenceValidator.validateAllModReferences(manifestsMap);
-          results.performance.phases.set('cross-reference-validation', performance.now() - crossRefStartTime);
-          
-          const hasViolations = Array.from(results.crossReferences.values()).some(r => r.hasViolations);
+          results.crossReferences =
+            await this.#modCrossReferenceValidator.validateAllModReferences(
+              manifestsMap
+            );
+          results.performance.phases.set(
+            'cross-reference-validation',
+            performance.now() - crossRefStartTime
+          );
+
+          const hasViolations = Array.from(
+            results.crossReferences.values()
+          ).some((r) => r.hasViolations);
           if (hasViolations) {
-            const totalViolations = Array.from(results.crossReferences.values())
-              .reduce((sum, r) => sum + r.violations.length, 0);
-            this.#logger.warn(`Cross-reference validation found ${totalViolations} violations`);
-            
+            const totalViolations = Array.from(
+              results.crossReferences.values()
+            ).reduce((sum, r) => sum + r.violations.length, 0);
+            this.#logger.warn(
+              `Cross-reference validation found ${totalViolations} violations`
+            );
+
             if (failFast) {
               throw new ModValidationError(results);
             }
-            results.warnings.push(`Cross-reference validation found ${totalViolations} violations`);
+            results.warnings.push(
+              `Cross-reference validation found ${totalViolations} violations`
+            );
           }
         } catch (error) {
           this.#logger.error('Cross-reference validation failed', error);
-          results.errors.push(`Cross-reference validation failed: ${error.message}`);
+          results.errors.push(
+            `Cross-reference validation failed: ${error.message}`
+          );
         }
       } else if (skipCrossReferences) {
         this.#logger.info('Phase 4: Cross-reference validation skipped');
       }
-      
+
       // Determine overall validation status
-      results.isValid = results.dependencies?.isValid && 
-                       results.errors.length === 0 && 
-                       (!results.crossReferences || 
-                        !Array.from(results.crossReferences.values()).some(r => r.hasViolations));
-      
+      results.isValid =
+        results.dependencies?.isValid &&
+        results.errors.length === 0 &&
+        (!results.crossReferences ||
+          !Array.from(results.crossReferences.values()).some(
+            (r) => r.hasViolations
+          ));
+
       const totalTime = performance.now() - startTime;
       results.performance.totalTime = totalTime;
-      
-      this.#logger.info(`Ecosystem validation complete: ${results.isValid ? 'PASSED' : 'FAILED'} (${totalTime.toFixed(2)}ms)`);
-      
+
+      this.#logger.info(
+        `Ecosystem validation complete: ${results.isValid ? 'PASSED' : 'FAILED'} (${totalTime.toFixed(2)}ms)`
+      );
+
       return results;
-      
     } catch (error) {
       const totalTime = performance.now() - startTime;
       results.performance.totalTime = totalTime;
       results.errors.push(error.message);
-      
+
       this.#logger.error('Ecosystem validation failed', error);
       throw error;
     }
@@ -248,62 +301,75 @@ class ModValidationOrchestrator {
    */
   async validateMod(modId, options = {}) {
     const { skipCrossReferences = false, includeContext = true } = options;
-    
+
     this.#logger.info(`Starting validation for mod: ${modId}`);
-    
+
     try {
       // Load all manifests for context
       const allModIds = await this.#discoverAllModIds();
-      const manifestsMap = await this.#modManifestLoader.loadRequestedManifests(allModIds);
-      
+      const manifestsMap =
+        await this.#modManifestLoader.loadRequestedManifests(allModIds);
+
       if (!manifestsMap.has(modId)) {
         throw new Error(`Mod '${modId}' not found in ecosystem`);
       }
-      
+
       const results = {
         modId,
         dependencies: null,
         crossReferences: null,
         isValid: false,
         errors: [],
-        warnings: []
+        warnings: [],
       };
-      
+
       // Validate dependencies for this mod
       const modManifest = manifestsMap.get(modId);
-      results.dependencies = await this.#validateModDependencies(modId, modManifest, manifestsMap);
-      
+      results.dependencies = await this.#validateModDependencies(
+        modId,
+        modManifest,
+        manifestsMap
+      );
+
       if (!results.dependencies.isValid) {
         results.errors.push('Dependency validation failed');
         if (!includeContext) {
           return results;
         }
       }
-      
+
       // Cross-reference validation
       if (!skipCrossReferences && results.dependencies.isValid) {
         try {
           const modPath = this._resolveModPath(modId, modManifest);
-          results.crossReferences = await this.#modCrossReferenceValidator.validateModReferences(
-            modPath, 
-            manifestsMap
-          );
-          
+          results.crossReferences =
+            await this.#modCrossReferenceValidator.validateModReferences(
+              modPath,
+              manifestsMap
+            );
+
           if (results.crossReferences.hasViolations) {
-            results.warnings.push(`${results.crossReferences.violations.length} cross-reference violations`);
+            results.warnings.push(
+              `${results.crossReferences.violations.length} cross-reference violations`
+            );
           }
         } catch (error) {
-          this.#logger.error(`Cross-reference validation failed for mod ${modId}`, error);
-          results.errors.push(`Cross-reference validation failed: ${error.message}`);
+          this.#logger.error(
+            `Cross-reference validation failed for mod ${modId}`,
+            error
+          );
+          results.errors.push(
+            `Cross-reference validation failed: ${error.message}`
+          );
         }
       }
-      
-      results.isValid = results.dependencies.isValid && 
-                       results.errors.length === 0 &&
-                       (!results.crossReferences || !results.crossReferences.hasViolations);
-      
+
+      results.isValid =
+        results.dependencies.isValid &&
+        results.errors.length === 0 &&
+        (!results.crossReferences || !results.crossReferences.hasViolations);
+
       return results;
-      
     } catch (error) {
       this.#logger.error(`Validation failed for mod ${modId}`, error);
       throw error;
@@ -318,60 +384,74 @@ class ModValidationOrchestrator {
    */
   async validateForLoading(modIds, options = {}) {
     const { strictMode = false, allowWarnings = true } = options;
-    
+
     this.#logger.info(`Validating ${modIds.length} mods for loading`);
-    
+
     try {
       // Load manifests for all requested mods
-      const manifestsMap = await this.#modManifestLoader.loadRequestedManifests(modIds);
-      
+      const manifestsMap =
+        await this.#modManifestLoader.loadRequestedManifests(modIds);
+
       // Check dependency validation for loading subset
-      const dependencyResult = await this.#validateLoadingDependencies(manifestsMap);
-      
+      const dependencyResult =
+        await this.#validateLoadingDependencies(manifestsMap);
+
       if (!dependencyResult.isValid && strictMode) {
         throw new ModValidationError({ dependencies: dependencyResult });
       }
-      
+
       // Quick cross-reference check for critical issues
       const crossRefWarnings = [];
       for (const modId of modIds) {
         if (!manifestsMap.has(modId)) continue;
-        
+
         try {
           const modPath = this._resolveModPath(modId, manifestsMap.get(modId));
-          const report = await this.#modCrossReferenceValidator.validateModReferences(
-            modPath, 
-            manifestsMap
-          );
-          
+          const report =
+            await this.#modCrossReferenceValidator.validateModReferences(
+              modPath,
+              manifestsMap
+            );
+
           if (report.hasViolations) {
-            const criticalViolations = report.violations.filter(v => v.severity === 'critical');
+            const criticalViolations = report.violations.filter(
+              (v) => v.severity === 'critical'
+            );
             if (criticalViolations.length > 0 && strictMode) {
-              throw new ModValidationError({ 
-                crossReferences: new Map([[modId, report]]) 
+              throw new ModValidationError({
+                crossReferences: new Map([[modId, report]]),
               });
             }
-            
+
             if (report.violations.length > 0) {
-              crossRefWarnings.push(`${modId}: ${report.violations.length} cross-reference issues`);
+              crossRefWarnings.push(
+                `${modId}: ${report.violations.length} cross-reference issues`
+              );
             }
           }
         } catch (error) {
-          this.#logger.warn(`Cross-reference validation failed for ${modId}`, error);
-          crossRefWarnings.push(`${modId}: validation failed - ${error.message}`);
+          this.#logger.warn(
+            `Cross-reference validation failed for ${modId}`,
+            error
+          );
+          crossRefWarnings.push(
+            `${modId}: validation failed - ${error.message}`
+          );
         }
       }
-      
+
       const result = {
         canLoad: dependencyResult.isValid,
         dependencies: dependencyResult,
         warnings: crossRefWarnings,
         loadOrder: modIds,
-        recommendations: this.#generateLoadingRecommendations(dependencyResult, crossRefWarnings)
+        recommendations: this.#generateLoadingRecommendations(
+          dependencyResult,
+          crossRefWarnings
+        ),
       };
-      
+
       return result;
-      
     } catch (error) {
       this.#logger.error('Loading validation failed', error);
       throw error;
@@ -387,12 +467,16 @@ class ModValidationOrchestrator {
     try {
       const modsPath = path.join(process.cwd(), 'data', 'mods');
       const entries = await fs.readdir(modsPath, { withFileTypes: true });
-      
+
       const modIds = [];
       for (const entry of entries) {
         if (entry.isDirectory()) {
           // Check if it has a mod-manifest.json
-          const manifestPath = path.join(modsPath, entry.name, 'mod-manifest.json');
+          const manifestPath = path.join(
+            modsPath,
+            entry.name,
+            'mod-manifest.json'
+          );
           try {
             await fs.access(manifestPath);
             modIds.push(entry.name);
@@ -401,7 +485,7 @@ class ModValidationOrchestrator {
           }
         }
       }
-      
+
       return modIds;
     } catch (error) {
       this.#logger.error('Failed to discover mod IDs', error);
@@ -417,19 +501,21 @@ class ModValidationOrchestrator {
    */
   async #loadAndValidateManifests(modsToValidate) {
     this.#logger.info('Phase 1: Loading and validating mod manifests');
-    
+
     try {
       // If no specific mods requested, discover all
-      const modIds = modsToValidate || await this.#discoverAllModIds();
-      
+      const modIds = modsToValidate || (await this.#discoverAllModIds());
+
       // Load manifests using the loadRequestedManifests method
-      const manifestsMap = await this.#modManifestLoader.loadRequestedManifests(modIds);
-      
+      const manifestsMap =
+        await this.#modManifestLoader.loadRequestedManifests(modIds);
+
       return manifestsMap;
-      
     } catch (error) {
       this.#logger.error('Manifest loading failed', error);
-      throw new ModDependencyError(`Failed to load mod manifests: ${error.message}`);
+      throw new ModDependencyError(
+        `Failed to load mod manifests: ${error.message}`
+      );
     }
   }
 
@@ -445,39 +531,41 @@ class ModValidationOrchestrator {
     try {
       // Create single-mod context for dependency validation
       const singleModMap = new Map([[modId, manifest]]);
-      
+
       // Add declared dependencies to context
       if (manifest.dependencies) {
-        manifest.dependencies.forEach(dep => {
+        manifest.dependencies.forEach((dep) => {
           const depId = typeof dep === 'string' ? dep : dep.id;
           if (manifestsMap.has(depId)) {
             singleModMap.set(depId, manifestsMap.get(depId));
           }
         });
       }
-      
+
       // Use static validate method
       try {
         this.#modDependencyValidator.validate(singleModMap, this.#logger);
         return {
           isValid: true,
           errors: [],
-          warnings: []
+          warnings: [],
         };
       } catch (error) {
         return {
           isValid: false,
           errors: [error.message],
-          warnings: []
+          warnings: [],
         };
       }
-      
     } catch (error) {
-      this.#logger.error(`Dependency validation failed for mod ${modId}`, error);
+      this.#logger.error(
+        `Dependency validation failed for mod ${modId}`,
+        error
+      );
       return {
         isValid: false,
         errors: [error.message],
-        warnings: []
+        warnings: [],
       };
     }
   }
@@ -496,22 +584,21 @@ class ModValidationOrchestrator {
         return {
           isValid: true,
           errors: [],
-          warnings: []
+          warnings: [],
         };
       } catch (error) {
         return {
           isValid: false,
           errors: [error.message],
-          warnings: []
+          warnings: [],
         };
       }
-      
     } catch (error) {
       this.#logger.error('Loading dependency validation failed', error);
       return {
         isValid: false,
         errors: [error.message],
-        warnings: []
+        warnings: [],
       };
     }
   }
@@ -525,22 +612,26 @@ class ModValidationOrchestrator {
    */
   #generateLoadingRecommendations(dependencyResult, crossRefWarnings) {
     const recommendations = [];
-    
+
     if (!dependencyResult.isValid) {
       recommendations.push('Resolve dependency issues before loading');
     }
-    
+
     if (crossRefWarnings.length > 0) {
-      recommendations.push('Review cross-reference warnings for potential runtime issues');
+      recommendations.push(
+        'Review cross-reference warnings for potential runtime issues'
+      );
       if (crossRefWarnings.length > 5) {
-        recommendations.push('Consider running full ecosystem validation to address systemic issues');
+        recommendations.push(
+          'Consider running full ecosystem validation to address systemic issues'
+        );
       }
     }
-    
+
     if (dependencyResult.warnings && dependencyResult.warnings.length > 0) {
       recommendations.push('Address dependency warnings for optimal stability');
     }
-    
+
     return recommendations;
   }
 
@@ -553,7 +644,10 @@ class ModValidationOrchestrator {
    */
   _resolveModPath(modId, manifest) {
     // Use pathResolver if available, otherwise use default structure
-    if (this.#pathResolver && typeof this.#pathResolver.resolveModPath === 'function') {
+    if (
+      this.#pathResolver &&
+      typeof this.#pathResolver.resolveModPath === 'function'
+    ) {
       return this.#pathResolver.resolveModPath(modId);
     }
     return path.join(process.cwd(), 'data', 'mods', modId);

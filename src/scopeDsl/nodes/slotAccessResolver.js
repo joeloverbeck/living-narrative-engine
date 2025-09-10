@@ -145,12 +145,15 @@ export default function createSlotAccessResolver({
         if (errorHandler) {
           errorHandler.handleError(
             `Coverage resolution error for ${targetSlot}: ${error.message}`,
-            { targetSlot, originalError: error.message, duration: performance.now() - startTime },
+            {
+              targetSlot,
+              originalError: error.message,
+              duration: performance.now() - startTime,
+            },
             'SlotAccessResolver',
             ErrorCodes.SLOT_ACCESS_FAILED
           );
         }
-
 
         if (COVERAGE_FEATURES.enableErrorRecovery) {
           return null; // Trigger fallback to legacy
@@ -260,7 +263,6 @@ export default function createSlotAccessResolver({
           };
 
           coverageCandidates.push(candidate);
-
         }
       }
     }
@@ -315,7 +317,7 @@ export default function createSlotAccessResolver({
     }
 
     const { equipped, mode, entityId } = clothingAccess;
-    
+
     if (!equipped) {
       if (errorHandler) {
         errorHandler.handleError(
@@ -390,7 +392,6 @@ export default function createSlotAccessResolver({
     }
 
     if (candidates.length === 0) {
-
       // Structured trace: Log no slot data found
       if (structuredTrace) {
         const activeSpan = structuredTrace.getActiveSpan();
@@ -511,7 +512,6 @@ export default function createSlotAccessResolver({
       structuredTrace.endSpan(finalSelectionSpan);
     }
 
-
     return selectedCandidate.itemId;
   }
 
@@ -542,7 +542,6 @@ export default function createSlotAccessResolver({
     const { field, parent } = node;
     const parentResults = ctx.dispatcher.resolve(parent, ctx);
     const resultSet = new Set();
-
 
     for (const item of parentResults) {
       // Handle arrays that might contain clothing access objects
@@ -585,7 +584,6 @@ export default function createSlotAccessResolver({
         }
       }
     }
-
 
     return resultSet;
   }

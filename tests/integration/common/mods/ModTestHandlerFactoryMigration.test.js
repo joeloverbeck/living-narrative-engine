@@ -161,17 +161,21 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         // Find all entities in the given location
         const entityIds = entityManager.getEntityIds();
         const entitiesInLocation = [];
-        
+
         for (const entityId of entityIds) {
           const entity = entityManager.getEntityInstance(entityId);
-          if (entity && entity.components && entity.components['core:position']) {
+          if (
+            entity &&
+            entity.components &&
+            entity.components['core:position']
+          ) {
             const position = entity.components['core:position'];
             if (position.locationId === locationId) {
               entitiesInLocation.push(entityId);
             }
           }
         }
-        
+
         return new Set(entitiesInLocation);
       };
     }

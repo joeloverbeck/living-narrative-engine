@@ -637,7 +637,10 @@ describe('BaseOpenRouterStrategy', () => {
             temperature: 0.9,
             maxTokens: 2000,
             topP: 0.95,
-            toolSchema: { type: 'object', properties: { test: { type: 'string' } } },
+            toolSchema: {
+              type: 'object',
+              properties: { test: { type: 'string' } },
+            },
             toolName: 'test_tool',
             toolDescription: 'Test tool description',
           },
@@ -651,7 +654,7 @@ describe('BaseOpenRouterStrategy', () => {
         const callBody = JSON.parse(
           mockHttpClient.request.mock.calls[0][1].body
         );
-        
+
         // Request options temperature should override default
         expect(callBody.temperature).toBe(0.9);
         expect(callBody.max_tokens).toBe(2000);
@@ -677,7 +680,7 @@ describe('BaseOpenRouterStrategy', () => {
         const callBody = JSON.parse(
           mockHttpClient.request.mock.calls[0][1].body
         );
-        
+
         // Request options should be applied even without defaults
         expect(callBody.temperature).toBe(0.8);
         expect(callBody.max_tokens).toBe(1500);

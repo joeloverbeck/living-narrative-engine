@@ -64,11 +64,15 @@ describe('Human Futa Blueprint', () => {
 
       expect(blueprint.slots.left_testicle).toBeDefined();
       expect(blueprint.slots.left_testicle.socket).toBe('left_testicle');
-      expect(blueprint.slots.left_testicle.requirements.partType).toBe('testicle');
+      expect(blueprint.slots.left_testicle.requirements.partType).toBe(
+        'testicle'
+      );
 
       expect(blueprint.slots.right_testicle).toBeDefined();
       expect(blueprint.slots.right_testicle.socket).toBe('right_testicle');
-      expect(blueprint.slots.right_testicle.requirements.partType).toBe('testicle');
+      expect(blueprint.slots.right_testicle.requirements.partType).toBe(
+        'testicle'
+      );
     });
   });
 
@@ -123,41 +127,41 @@ describe('Human Futa Blueprint', () => {
 
     it('should have breast sockets from female anatomy', () => {
       const sockets = torsoEntity.components['anatomy:sockets'].sockets;
-      
-      const leftChest = sockets.find(s => s.id === 'left_chest');
+
+      const leftChest = sockets.find((s) => s.id === 'left_chest');
       expect(leftChest).toBeDefined();
       expect(leftChest.allowedTypes).toContain('breast');
-      
-      const rightChest = sockets.find(s => s.id === 'right_chest');
+
+      const rightChest = sockets.find((s) => s.id === 'right_chest');
       expect(rightChest).toBeDefined();
       expect(rightChest.allowedTypes).toContain('breast');
     });
 
     it('should have genital sockets from male anatomy', () => {
       const sockets = torsoEntity.components['anatomy:sockets'].sockets;
-      
-      const penis = sockets.find(s => s.id === 'penis');
+
+      const penis = sockets.find((s) => s.id === 'penis');
       expect(penis).toBeDefined();
       expect(penis.allowedTypes).toContain('penis');
-      
-      const leftTesticle = sockets.find(s => s.id === 'left_testicle');
+
+      const leftTesticle = sockets.find((s) => s.id === 'left_testicle');
       expect(leftTesticle).toBeDefined();
       expect(leftTesticle.allowedTypes).toContain('testicle');
-      
-      const rightTesticle = sockets.find(s => s.id === 'right_testicle');
+
+      const rightTesticle = sockets.find((s) => s.id === 'right_testicle');
       expect(rightTesticle).toBeDefined();
       expect(rightTesticle.allowedTypes).toContain('testicle');
     });
 
     it('should have standard humanoid sockets', () => {
       const sockets = torsoEntity.components['anatomy:sockets'].sockets;
-      
-      expect(sockets.find(s => s.id === 'neck')).toBeDefined();
-      expect(sockets.find(s => s.id === 'left_shoulder')).toBeDefined();
-      expect(sockets.find(s => s.id === 'right_shoulder')).toBeDefined();
-      expect(sockets.find(s => s.id === 'left_hip')).toBeDefined();
-      expect(sockets.find(s => s.id === 'right_hip')).toBeDefined();
-      expect(sockets.find(s => s.id === 'asshole')).toBeDefined();
+
+      expect(sockets.find((s) => s.id === 'neck')).toBeDefined();
+      expect(sockets.find((s) => s.id === 'left_shoulder')).toBeDefined();
+      expect(sockets.find((s) => s.id === 'right_shoulder')).toBeDefined();
+      expect(sockets.find((s) => s.id === 'left_hip')).toBeDefined();
+      expect(sockets.find((s) => s.id === 'right_hip')).toBeDefined();
+      expect(sockets.find((s) => s.id === 'asshole')).toBeDefined();
     });
   });
 
@@ -174,8 +178,8 @@ describe('Human Futa Blueprint', () => {
     });
 
     it('should have patterns for breasts', () => {
-      const breastPattern = recipe.patterns.find(p => 
-        p.matches && p.matches.includes('left_breast')
+      const breastPattern = recipe.patterns.find(
+        (p) => p.matches && p.matches.includes('left_breast')
       );
       expect(breastPattern).toBeDefined();
       expect(breastPattern.matches).toContain('left_breast');
@@ -184,8 +188,8 @@ describe('Human Futa Blueprint', () => {
     });
 
     it('should have patterns for testicles', () => {
-      const testiclePattern = recipe.patterns.find(p => 
-        p.matches && p.matches.includes('left_testicle')
+      const testiclePattern = recipe.patterns.find(
+        (p) => p.matches && p.matches.includes('left_testicle')
       );
       expect(testiclePattern).toBeDefined();
       expect(testiclePattern.matches).toContain('left_testicle');
@@ -194,14 +198,14 @@ describe('Human Futa Blueprint', () => {
     });
 
     it('should have standard humanoid patterns', () => {
-      const armPattern = recipe.patterns.find(p => 
-        p.matches && p.matches.includes('left_arm')
+      const armPattern = recipe.patterns.find(
+        (p) => p.matches && p.matches.includes('left_arm')
       );
       expect(armPattern).toBeDefined();
       expect(armPattern.partType).toBe('arm');
 
-      const legPattern = recipe.patterns.find(p => 
-        p.matches && p.matches.includes('left_leg')
+      const legPattern = recipe.patterns.find(
+        (p) => p.matches && p.matches.includes('left_leg')
       );
       expect(legPattern).toBeDefined();
       expect(legPattern.partType).toBe('leg');

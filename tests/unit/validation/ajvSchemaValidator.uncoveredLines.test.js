@@ -34,8 +34,10 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
         return jest.fn().mockImplementation(() => null);
       });
 
-      const AjvSchemaValidatorMocked = (await import('../../../src/validation/ajvSchemaValidator.js')).default;
-      
+      const AjvSchemaValidatorMocked = (
+        await import('../../../src/validation/ajvSchemaValidator.js')
+      ).default;
+
       expect(() => {
         new AjvSchemaValidatorMocked({
           logger: mockLogger,
@@ -47,10 +49,12 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
   describe('Lines 68-129 - Schema Loader Function Coverage', () => {
     it('should execute schema loader for relative ./ paths', async () => {
       jest.resetModules();
-      
+
       // We need to create a situation where the schema loader is actually invoked
-      const AjvSchemaValidator = (await import('../../../src/validation/ajvSchemaValidator.js')).default;
-      
+      const AjvSchemaValidator = (
+        await import('../../../src/validation/ajvSchemaValidator.js')
+      ).default;
+
       const validator = new AjvSchemaValidator({
         logger: mockLogger,
       });
@@ -58,7 +62,7 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
       // First add a base schema that can be referenced
       const baseSchema = {
         $id: 'schema://living-narrative-engine/subdir/test.json',
-        type: 'string'
+        type: 'string',
       };
       await validator.addSchema(baseSchema, baseSchema.$id);
 
@@ -67,26 +71,31 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
         $id: 'schema://living-narrative-engine/subdir/referring.json',
         type: 'object',
         properties: {
-          field: { $ref: './test.json' }  // This will trigger schema loader
-        }
+          field: { $ref: './test.json' }, // This will trigger schema loader
+        },
       };
 
       // The schema loader should be invoked when processing the $ref
-      await validator.addSchema(schemaWithRelativeRef, schemaWithRelativeRef.$id);
-      
+      await validator.addSchema(
+        schemaWithRelativeRef,
+        schemaWithRelativeRef.$id
+      );
+
       // Check that debug messages were logged (indicating loader was called)
       const debugCalls = mockLogger.debug.mock.calls;
-      const hasLoaderMessage = debugCalls.some(call => 
-        call[0] && call[0].includes('schema')
+      const hasLoaderMessage = debugCalls.some(
+        (call) => call[0] && call[0].includes('schema')
       );
       expect(hasLoaderMessage).toBe(true);
     });
 
     it('should execute schema loader for relative ../ paths', async () => {
       jest.resetModules();
-      
-      const AjvSchemaValidator = (await import('../../../src/validation/ajvSchemaValidator.js')).default;
-      
+
+      const AjvSchemaValidator = (
+        await import('../../../src/validation/ajvSchemaValidator.js')
+      ).default;
+
       const validator = new AjvSchemaValidator({
         logger: mockLogger,
       });
@@ -94,7 +103,7 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
       // Add a parent schema
       const parentSchema = {
         $id: 'schema://living-narrative-engine/parent.json',
-        type: 'number'
+        type: 'number',
       };
       await validator.addSchema(parentSchema, parentSchema.$id);
 
@@ -103,21 +112,23 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
         $id: 'schema://living-narrative-engine/child/sub.json',
         type: 'object',
         properties: {
-          parent: { $ref: '../parent.json' }  // This will trigger schema loader for ../
-        }
+          parent: { $ref: '../parent.json' }, // This will trigger schema loader for ../
+        },
       };
 
       await validator.addSchema(childSchema, childSchema.$id);
-      
+
       // Verify the schema was added successfully
       expect(validator.isSchemaLoaded(childSchema.$id)).toBe(true);
     });
 
     it('should throw error when schema has unresolved reference', async () => {
       jest.resetModules();
-      
-      const AjvSchemaValidator = (await import('../../../src/validation/ajvSchemaValidator.js')).default;
-      
+
+      const AjvSchemaValidator = (
+        await import('../../../src/validation/ajvSchemaValidator.js')
+      ).default;
+
       const validator = new AjvSchemaValidator({
         logger: mockLogger,
       });
@@ -126,31 +137,35 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
         $id: 'schema://living-narrative-engine/bad-ref.json',
         type: 'object',
         properties: {
-          missing: { $ref: './does-not-exist.json' }
-        }
+          missing: { $ref: './does-not-exist.json' },
+        },
       };
 
       // Adding the schema with bad reference should throw during addSchema
       // because it calls getSchema to verify, which triggers compilation
-      await expect(validator.addSchema(schemaWithBadRef, schemaWithBadRef.$id)).rejects.toThrow(
+      await expect(
+        validator.addSchema(schemaWithBadRef, schemaWithBadRef.$id)
+      ).rejects.toThrow(
         "can't resolve reference ./does-not-exist.json from id schema://living-narrative-engine/bad-ref.json"
       );
-      
+
       // Verify error was logged
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Error adding schema'),
         expect.objectContaining({
           schemaId: schemaWithBadRef.$id,
-          error: expect.any(Error)
+          error: expect.any(Error),
         })
       );
     });
 
     it('should find schema by searching loaded schema IDs', async () => {
       jest.resetModules();
-      
-      const AjvSchemaValidator = (await import('../../../src/validation/ajvSchemaValidator.js')).default;
-      
+
+      const AjvSchemaValidator = (
+        await import('../../../src/validation/ajvSchemaValidator.js')
+      ).default;
+
       const validator = new AjvSchemaValidator({
         logger: mockLogger,
       });
@@ -159,16 +174,16 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
       const schemas = [
         {
           $id: 'schema://custom/path/schema1.json',
-          type: 'string'
+          type: 'string',
         },
         {
           $id: 'schema://living-narrative-engine/types/common.json',
-          type: 'object'
+          type: 'object',
         },
         {
           $id: 'schema://another/types/common.json',
-          type: 'array'
-        }
+          type: 'array',
+        },
       ];
 
       for (const schema of schemas) {
@@ -180,12 +195,12 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
         $id: 'schema://another/components/test.json',
         type: 'object',
         properties: {
-          common: { $ref: '../types/common.json' }  // Should find schema://another/types/common.json
-        }
+          common: { $ref: '../types/common.json' }, // Should find schema://another/types/common.json
+        },
       };
 
       await validator.addSchema(referencingSchema, referencingSchema.$id);
-      
+
       // Check that all schemas are loaded
       const loadedIds = validator.getLoadedSchemaIds();
       expect(loadedIds).toContain(referencingSchema.$id);
@@ -193,9 +208,11 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
 
     it('should handle absolute URI resolution in loader', async () => {
       jest.resetModules();
-      
-      const AjvSchemaValidator = (await import('../../../src/validation/ajvSchemaValidator.js')).default;
-      
+
+      const AjvSchemaValidator = (
+        await import('../../../src/validation/ajvSchemaValidator.js')
+      ).default;
+
       const validator = new AjvSchemaValidator({
         logger: mockLogger,
       });
@@ -204,7 +221,7 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
       const targetSchema = {
         $id: 'schema://absolute/path/target.json',
         type: 'string',
-        pattern: '^[A-Z]+$'
+        pattern: '^[A-Z]+$',
       };
       await validator.addSchema(targetSchema, targetSchema.$id);
 
@@ -213,18 +230,18 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
         $id: 'schema://other/referring.json',
         type: 'object',
         properties: {
-          field: { $ref: 'schema://absolute/path/target.json' }  // Absolute URI
-        }
+          field: { $ref: 'schema://absolute/path/target.json' }, // Absolute URI
+        },
       };
 
       await validator.addSchema(referencingSchema, referencingSchema.$id);
-      
+
       // Test that the reference works
       const validatorFn = validator.getValidator(referencingSchema.$id);
       if (validatorFn) {
         const valid = validatorFn({ field: 'ABC' });
         expect(valid.isValid).toBe(true);
-        
+
         const invalid = validatorFn({ field: 'abc' });
         expect(invalid.isValid).toBe(false);
       }
@@ -240,15 +257,17 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
         });
       });
 
-      const AjvSchemaValidatorMocked = (await import('../../../src/validation/ajvSchemaValidator.js')).default;
-      
+      const AjvSchemaValidatorMocked = (
+        await import('../../../src/validation/ajvSchemaValidator.js')
+      ).default;
+
       // This should throw during constructor
       expect(() => {
         new AjvSchemaValidatorMocked({
           logger: mockLogger,
         });
       }).toThrow('Failed to initialize Ajv');
-      
+
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('CRITICAL - Failed to instantiate Ajv'),
         expect.any(Error)
@@ -258,18 +277,20 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
     it('should handle getValidator when ajv.getSchema throws', async () => {
       // Test error handling in getValidator method
       jest.resetModules();
-      
-      const AjvSchemaValidator = (await import('../../../src/validation/ajvSchemaValidator.js')).default;
+
+      const AjvSchemaValidator = (
+        await import('../../../src/validation/ajvSchemaValidator.js')
+      ).default;
       const validator = new AjvSchemaValidator({
         logger: mockLogger,
       });
 
       // Try to get a validator for a non-existent schema
       const result = validator.getValidator('test://non-existent-schema');
-      
+
       // Should return undefined for non-existent schema
       expect(result).toBeUndefined();
-      
+
       // Now test with an invalid schema ID
       const invalidResult = validator.getValidator('');
       expect(invalidResult).toBeUndefined();
@@ -284,8 +305,10 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
       // Test the edge case where schemas might be undefined
       // This is primarily defensive programming
       jest.resetModules();
-      
-      const AjvSchemaValidator = (await import('../../../src/validation/ajvSchemaValidator.js')).default;
+
+      const AjvSchemaValidator = (
+        await import('../../../src/validation/ajvSchemaValidator.js')
+      ).default;
       const validator = new AjvSchemaValidator({
         logger: mockLogger,
       });

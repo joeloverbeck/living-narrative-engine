@@ -531,7 +531,7 @@ describe('Single Target Multiple Entities E2E', () => {
 
       // Create player with many items (testing performance bounds)
       const manyItemIds = Array.from({ length: 25 }, (_, i) => `item_${i}`);
-      
+
       // Build entity specs for batch creation
       const entitySpecs = [
         {

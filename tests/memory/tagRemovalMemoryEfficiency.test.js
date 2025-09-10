@@ -252,7 +252,7 @@ describe('Tag Removal Memory Efficiency Tests', () => {
       if (memoryTestUtils) {
         await memoryTestUtils.forceGCAndWait();
       }
-      
+
       const initialMemory = process.memoryUsage();
 
       // Process notes and measure memory
@@ -266,7 +266,7 @@ describe('Tag Removal Memory Efficiency Tests', () => {
       if (memoryTestUtils) {
         await memoryTestUtils.forceGCAndWait();
       }
-      
+
       const peakMemory = process.memoryUsage();
       measurements.peakHeapUsed = peakMemory.heapUsed;
       measurements.heapUsedDelta = peakMemory.heapUsed - initialMemory.heapUsed;
@@ -284,7 +284,7 @@ describe('Tag Removal Memory Efficiency Tests', () => {
       expect(measurements.heapUsedDelta).toBeLessThan(
         memoryBaselines.maxHeapUsedDelta
       );
-      
+
       // RSS check with retry mechanism for robustness against system variability
       if (memoryTestUtils) {
         await memoryTestUtils.assertMemoryWithRetry(
@@ -296,7 +296,7 @@ describe('Tag Removal Memory Efficiency Tests', () => {
         // Fallback for environments without memory test utilities
         expect(measurements.rss).toBeLessThan(memoryBaselines.maxRss);
       }
-      
+
       expect(measurements.external).toBeLessThan(memoryBaselines.maxExternal);
 
       // Verify processing success

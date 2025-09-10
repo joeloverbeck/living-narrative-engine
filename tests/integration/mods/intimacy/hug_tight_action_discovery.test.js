@@ -3,7 +3,7 @@
  * @description Tests that the hug_tight action is properly defined and structured.
  * Note: Full action discovery testing would require complex scope engine setup.
  * This test validates the action definition structure for correct integration.
- * 
+ *
  * This test is migrated to use ModTestFixture pattern for consistency,
  * but primarily tests action definition structure rather than execution.
  */
@@ -18,7 +18,10 @@ describe('intimacy:hug_tight action definition', () => {
   beforeEach(async () => {
     // Initialize a basic test fixture for consistency
     // Note: This test primarily validates action structure, not execution
-    testFixture = await ModTestFixture.forAction('intimacy', 'intimacy:hug_tight');
+    testFixture = await ModTestFixture.forAction(
+      'intimacy',
+      'intimacy:hug_tight'
+    );
   });
 
   afterEach(() => {

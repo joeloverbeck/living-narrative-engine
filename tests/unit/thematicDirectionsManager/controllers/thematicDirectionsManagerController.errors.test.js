@@ -35,10 +35,10 @@ describe('ThematicDirectionsManagerController - Error Handling Tests', () => {
       if (controller && !controller.isDestroyed) {
         await controller.destroy();
       }
-      
+
       await testBase.cleanup();
       jest.restoreAllMocks();
-      
+
       controller = null;
     } catch (error) {
       console.error('Cleanup failed:', error);
@@ -48,7 +48,9 @@ describe('ThematicDirectionsManagerController - Error Handling Tests', () => {
   describe('Service Error Handling', () => {
     it('should handle refresh dropdown errors', async () => {
       const error = new Error('Fetch failed');
-      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockRejectedValue(error);
+      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockRejectedValue(
+        error
+      );
 
       await controller.refreshDropdown();
 
@@ -60,7 +62,9 @@ describe('ThematicDirectionsManagerController - Error Handling Tests', () => {
 
     it('should handle service initialization failure', async () => {
       const error = new Error('Service initialization failed');
-      testBase.mocks.characterBuilderService.initialize.mockRejectedValue(error);
+      testBase.mocks.characterBuilderService.initialize.mockRejectedValue(
+        error
+      );
 
       try {
         await testBase.mocks.characterBuilderService.initialize();
@@ -71,7 +75,9 @@ describe('ThematicDirectionsManagerController - Error Handling Tests', () => {
 
     it('should handle data loading failures', async () => {
       const error = new Error('Network error');
-      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockRejectedValue(error);
+      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockRejectedValue(
+        error
+      );
 
       try {
         await testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts();
@@ -156,28 +162,32 @@ describe('ThematicDirectionsManagerController - Error Handling Tests', () => {
       const testData = [
         {
           direction: { id: 'dir-1', title: 'Direction 1' },
-          concept: { id: 'concept-1', concept: 'Concept 1' }
+          concept: { id: 'concept-1', concept: 'Concept 1' },
         },
         {
           direction: { id: 'dir-2', title: 'Orphaned Direction 1' },
-          concept: null
+          concept: null,
         },
         {
           direction: { id: 'dir-3', title: 'Orphaned Direction 2' },
-          concept: null
-        }
+          concept: null,
+        },
       ];
 
-      const orphanedDirections = testData.filter(item => !item.concept);
+      const orphanedDirections = testData.filter((item) => !item.concept);
       expect(orphanedDirections).toHaveLength(2);
     });
 
     it('should handle cleanup errors gracefully', async () => {
       const error = new Error('Delete failed');
-      testBase.mocks.characterBuilderService.deleteThematicDirection.mockRejectedValue(error);
+      testBase.mocks.characterBuilderService.deleteThematicDirection.mockRejectedValue(
+        error
+      );
 
       await expect(
-        testBase.mocks.characterBuilderService.deleteThematicDirection('orphan-id')
+        testBase.mocks.characterBuilderService.deleteThematicDirection(
+          'orphan-id'
+        )
       ).rejects.toThrow('Delete failed');
     });
   });
@@ -198,7 +208,7 @@ describe('ThematicDirectionsManagerController - Error Handling Tests', () => {
       orphanedEditor1.className = 'in-place-editor';
       const orphanedEditor2 = document.createElement('div');
       orphanedEditor2.className = 'in-place-editor';
-      
+
       document.body.appendChild(orphanedEditor1);
       document.body.appendChild(orphanedEditor2);
 
@@ -212,10 +222,10 @@ describe('ThematicDirectionsManagerController - Error Handling Tests', () => {
 
     it('should handle timeout cleanup', () => {
       const timeoutId = setTimeout(() => {}, 1000);
-      
+
       expect(timeoutId).toBeDefined();
       expect(typeof timeoutId).toBe('number');
-      
+
       clearTimeout(timeoutId);
     });
   });

@@ -7,7 +7,7 @@
  * - Error handling overhead: <5ms average, <100ms 95th percentile
  * - No resolver >3x slower than average (relaxed for CI stability)
  * - Consistent performance across multiple runs
- * 
+ *
  * Recent Changes:
  * - Increased timing thresholds for CI environment stability
  * - Enhanced statistical analysis using 95th percentile instead of max
@@ -51,13 +51,15 @@ describe('Node Resolvers Performance', () => {
   beforeAll(async () => {
     // Get shared container for performance
     container = await PerformanceTestBed.getSharedContainer();
-    
+
     // Resolve required services
     scopeEngine = container.resolve(tokens.IScopeEngine);
     dslParser = container.resolve(tokens.DslParser);
     entityManager = container.resolve(tokens.IEntityManager);
     registry = container.resolve(tokens.IDataRegistry);
-    jsonLogicEvaluationService = container.resolve(tokens.JsonLogicEvaluationService);
+    jsonLogicEvaluationService = container.resolve(
+      tokens.JsonLogicEvaluationService
+    );
 
     // Create test dataset
     testDataset = await PerformanceTestBed.createOptimizedTestDataset(100, {
@@ -164,7 +166,9 @@ describe('Node Resolvers Performance', () => {
           for (let i = 0; i < 50; i++) {
             try {
               const ast = dslParser.parse(test.scope);
-              const testActor = entityManager.getEntityInstance(testDataset.actors[0]?.id);
+              const testActor = entityManager.getEntityInstance(
+                testDataset.actors[0]?.id
+              );
               if (testActor) {
                 scopeEngine.resolve(ast, testActor, runtimeContext);
               }
@@ -179,15 +183,25 @@ describe('Node Resolvers Performance', () => {
 
             try {
               const ast = dslParser.parse(test.scope);
-              const testActor = entityManager.getEntityInstance(testDataset.actors[i % testDataset.actors.length]?.id);
+              const testActor = entityManager.getEntityInstance(
+                testDataset.actors[i % testDataset.actors.length]?.id
+              );
               if (testActor) {
-                const result = scopeEngine.resolve(ast, testActor, runtimeContext);
-                
+                const result = scopeEngine.resolve(
+                  ast,
+                  testActor,
+                  runtimeContext
+                );
+
                 const duration = performance.now() - start;
                 timings.push({ duration, success: true, result });
               } else {
                 const duration = performance.now() - start;
-                timings.push({ duration, success: false, error: new Error('Actor not found') });
+                timings.push({
+                  duration,
+                  success: false,
+                  error: new Error('Actor not found'),
+                });
               }
             } catch (error) {
               const duration = performance.now() - start;
@@ -197,14 +211,19 @@ describe('Node Resolvers Performance', () => {
 
           // Calculate metrics with statistical analysis
           const successfulTimings = timings.filter((t) => t.success);
-          const durations = successfulTimings.map((t) => t.duration).sort((a, b) => a - b);
-          
+          const durations = successfulTimings
+            .map((t) => t.duration)
+            .sort((a, b) => a - b);
+
           const avgTime =
             durations.reduce((sum, t) => sum + t, 0) / (durations.length || 1);
-          
+
           // Use 95th percentile instead of max for more stable measurements
           const p95Index = Math.floor(durations.length * 0.95);
-          const maxTime = durations.length > 0 ? durations[p95Index] || durations[durations.length - 1] : 0;
+          const maxTime =
+            durations.length > 0
+              ? durations[p95Index] || durations[durations.length - 1]
+              : 0;
           const minTime = durations.length > 0 ? durations[0] : 0;
           const successRate = successfulTimings.length / iterations;
 
@@ -219,7 +238,7 @@ describe('Node Resolvers Performance', () => {
           // Performance assertions - relaxed for CI stability
           expect(avgTime).toBeLessThan(5); // <5ms average
           expect(maxTime).toBeLessThan(25); // <25ms 95th percentile (increased for CI variance)
-          
+
           // Success rate check - skip for sourceResolver due to test data setup issues
           const expectedSuccessRate = test.name === 'sourceResolver' ? 0 : 0.3;
           expect(successRate).toBeGreaterThanOrEqual(expectedSuccessRate); // At least 30% success - accounts for test data limitations
@@ -269,11 +288,16 @@ describe('Node Resolvers Performance', () => {
 
           // Use statistical analysis for error timing
           const sortedTimings = timings.sort((a, b) => a - b);
-          const avgErrorTime = sortedTimings.reduce((sum, t) => sum + t, 0) / sortedTimings.length;
-          
+          const avgErrorTime =
+            sortedTimings.reduce((sum, t) => sum + t, 0) / sortedTimings.length;
+
           // Use 95th percentile for more stable measurements
           const p95Index = Math.floor(sortedTimings.length * 0.95);
-          const maxErrorTime = sortedTimings.length > 0 ? sortedTimings[p95Index] || sortedTimings[sortedTimings.length - 1] : 0;
+          const maxErrorTime =
+            sortedTimings.length > 0
+              ? sortedTimings[p95Index] ||
+                sortedTimings[sortedTimings.length - 1]
+              : 0;
 
           // Error handling should be fast - relaxed for CI stability
           expect(avgErrorTime).toBeLessThan(5); // <5ms average
@@ -284,26 +308,29 @@ describe('Node Resolvers Performance', () => {
 
     it('should show consistent performance across all resolvers', () => {
       const resolverNames = Object.keys(performanceMetrics);
-      
+
       if (resolverNames.length === 0) {
         // Skip if no metrics collected
         return;
       }
 
-      const avgTimes = resolverNames.map((name) => performanceMetrics[name].avgTime);
-      const overallAvg = avgTimes.reduce((sum, t) => sum + t, 0) / avgTimes.length;
-      
+      const avgTimes = resolverNames.map(
+        (name) => performanceMetrics[name].avgTime
+      );
+      const overallAvg =
+        avgTimes.reduce((sum, t) => sum + t, 0) / avgTimes.length;
+
       // Check that no resolver is significantly slower than others
       for (const name of resolverNames) {
         const metrics = performanceMetrics[name];
-        
+
         // Skip deviation check for very fast operations (<1ms) where noise dominates
         if (overallAvg < 1.0) {
           continue;
         }
-        
+
         const deviation = Math.abs(metrics.avgTime - overallAvg) / overallAvg;
-        
+
         // No resolver should be more than 5x slower than average - increased from 3x for CI stability
         // At microsecond-level timings (<5ms), system noise (GC, JIT, CPU scheduling) can cause
         // temporary spikes that exceed 3x but are not indicative of actual performance issues
@@ -331,7 +358,9 @@ describe('Node Resolvers Performance', () => {
 
           try {
             const ast = dslParser.parse(scope);
-            const testActor = entityManager.getEntityInstance(testDataset.actors[0]?.id);
+            const testActor = entityManager.getEntityInstance(
+              testDataset.actors[0]?.id
+            );
             if (testActor) {
               scopeEngine.resolve(ast, testActor, runtimeContext);
             }
@@ -363,7 +392,9 @@ describe('Node Resolvers Performance', () => {
         try {
           // Create a subset of actors for testing
           const ast = dslParser.parse(scope);
-          const testActor = entityManager.getEntityInstance(testDataset.actors[0]?.id);
+          const testActor = entityManager.getEntityInstance(
+            testDataset.actors[0]?.id
+          );
           if (testActor) {
             scopeEngine.resolve(ast, testActor, runtimeContext);
           }
@@ -373,7 +404,7 @@ describe('Node Resolvers Performance', () => {
 
         const duration = performance.now() - start;
         const avgTimePerEntity = duration / count;
-        
+
         scalingMetrics.push({
           count,
           duration,
@@ -384,7 +415,7 @@ describe('Node Resolvers Performance', () => {
       // Verify linear or better scaling
       const efficiencies = scalingMetrics.map((m) => m.avgTimePerEntity);
       const firstEfficiency = efficiencies[0];
-      
+
       for (let i = 1; i < efficiencies.length; i++) {
         // Later operations shouldn't be significantly slower per entity
         expect(efficiencies[i]).toBeLessThan(firstEfficiency * 1.5);
@@ -400,11 +431,13 @@ describe('Node Resolvers Performance', () => {
       for (let i = 0; i < iterations; i++) {
         // Intentionally cause an error
         const invalidScope = `actor.nonExistent.path[${i}]`;
-        
+
         const errorStart = performance.now();
         try {
           const ast = dslParser.parse(invalidScope);
-          const testActor = entityManager.getEntityInstance(testDataset.actors[0]?.id);
+          const testActor = entityManager.getEntityInstance(
+            testDataset.actors[0]?.id
+          );
           if (testActor) {
             scopeEngine.resolve(ast, testActor, runtimeContext);
           }
@@ -417,7 +450,9 @@ describe('Node Resolvers Performance', () => {
         const recoveryStart = performance.now();
         try {
           const ast = dslParser.parse('actor');
-          const testActor = entityManager.getEntityInstance(testDataset.actors[0]?.id);
+          const testActor = entityManager.getEntityInstance(
+            testDataset.actors[0]?.id
+          );
           if (testActor) {
             scopeEngine.resolve(ast, testActor, runtimeContext);
           }
@@ -470,7 +505,9 @@ describe('Node Resolvers Performance', () => {
         for (let i = 0; i < 50; i++) {
           try {
             const ast = dslParser.parse('actor.name');
-            const testActor = entityManager.getEntityInstance(testDataset.actors[0]?.id);
+            const testActor = entityManager.getEntityInstance(
+              testDataset.actors[0]?.id
+            );
             if (testActor) {
               scopeEngine.resolve(ast, testActor, runtimeContext);
               successCount++;

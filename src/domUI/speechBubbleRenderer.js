@@ -4,7 +4,11 @@
  */
 
 import { BoundDomRendererBase } from './boundDomRendererBase.js';
-import { DISPLAY_SPEECH_ID, DISPLAY_THOUGHT_ID, PORTRAIT_CLICKED } from '../constants/eventIds.js';
+import {
+  DISPLAY_SPEECH_ID,
+  DISPLAY_THOUGHT_ID,
+  PORTRAIT_CLICKED,
+} from '../constants/eventIds.js';
 import { validateDependency } from '../utils/dependencyUtils.js';
 import {
   PLAYER_COMPONENT_ID,
@@ -547,9 +551,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
     }
 
     // Add the thought content in italics
-    const thoughtContentSpan = this.domElementFactory.span(
-      'thought-content'
-    );
+    const thoughtContentSpan = this.domElementFactory.span('thought-content');
     if (thoughtContentSpan) {
       thoughtContentSpan.textContent = thoughts;
       thoughtBubbleDiv.appendChild(thoughtContentSpan);

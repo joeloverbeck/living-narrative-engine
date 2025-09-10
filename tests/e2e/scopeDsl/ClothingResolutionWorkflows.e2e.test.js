@@ -80,7 +80,7 @@ describe('Clothing Resolution Workflows E2E', () => {
   beforeAll(async () => {
     // Set up test world and actors once
     const registry = container.resolve(tokens.IDataRegistry);
-    
+
     testWorld = await ActionTestUtilities.createStandardTestWorld({
       entityManager,
       registry,
@@ -123,7 +123,7 @@ describe('Clothing Resolution Workflows E2E', () => {
       ...(clothingTestActor ? [clothingTestActor.id] : []),
       ...Object.values(testActors).map((a) => a.id),
     ];
-    
+
     if (additionalEntityId) {
       entities.push(additionalEntityId);
     }
@@ -140,14 +140,14 @@ describe('Clothing Resolution Workflows E2E', () => {
 
   /**
    * Helper to create lightweight test actors with specific clothing configs
-   * 
+   *
    * @param {string} actorId - Unique actor ID
    * @param {object} clothingEquipment - Clothing equipment configuration
    * @returns {Promise<string>} The created actor ID
    */
   async function createTestActor(actorId, clothingEquipment = {}) {
     const registry = container.resolve(tokens.IDataRegistry);
-    
+
     // Check if entity already exists
     try {
       const existingEntity = entityManager.getEntityInstance(actorId);
@@ -351,7 +351,7 @@ describe('Clothing Resolution Workflows E2E', () => {
     }
 
     // Batch create instances, checking for existing entities
-    const instancePromises = clothingItems.map(async item => {
+    const instancePromises = clothingItems.map(async (item) => {
       try {
         const existingEntity = entityManager.getEntityInstance(item.id);
         if (existingEntity) {
@@ -366,7 +366,7 @@ describe('Clothing Resolution Workflows E2E', () => {
         definitionId: item.id,
       });
     });
-    
+
     await Promise.all(instancePromises);
     clothingItemsCreated = true;
   }
@@ -614,7 +614,7 @@ describe('Clothing Resolution Workflows E2E', () => {
 
       // Ensure clothing items exist
       await ensureClothingItemEntities();
-      
+
       const gameContext = createGameContext(partialActorId);
 
       const results = await ScopeTestUtilities.resolveScopeE2E(

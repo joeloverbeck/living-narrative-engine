@@ -322,5 +322,4 @@ describe('ActionTraceConfigLoader - DI Integration', () => {
       expect(operationTime).toBeLessThan(PERFORMANCE_THRESHOLDS.SINGLE_TEST_MS);
     });
   });
-
 });

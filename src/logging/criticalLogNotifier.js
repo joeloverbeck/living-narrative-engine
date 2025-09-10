@@ -267,7 +267,7 @@ class CriticalLogNotifier extends RendererBase {
 
     // Filter bar
     const filterBar = this.#createFilterBar();
-    
+
     panel.appendChild(header);
     panel.appendChild(filterBar);
     panel.appendChild(logList);
@@ -296,14 +296,14 @@ class CriticalLogNotifier extends RendererBase {
     const levelFilter = this.documentContext.create('select');
     levelFilter.className = 'lne-level-filter';
     levelFilter.setAttribute('aria-label', 'Filter by level');
-    
+
     const levelOptions = [
       { value: 'all', text: 'All Levels' },
       { value: 'warn', text: 'Warnings' },
-      { value: 'error', text: 'Errors' }
+      { value: 'error', text: 'Errors' },
     ];
-    
-    levelOptions.forEach(option => {
+
+    levelOptions.forEach((option) => {
       const optionElement = this.documentContext.create('option');
       optionElement.value = option.value;
       optionElement.textContent = option.text;
@@ -314,21 +314,21 @@ class CriticalLogNotifier extends RendererBase {
     const categoryFilter = this.documentContext.create('select');
     categoryFilter.className = 'lne-category-filter';
     categoryFilter.setAttribute('aria-label', 'Filter by category');
-    
+
     // Time range filter
     const timeFilter = this.documentContext.create('select');
     timeFilter.className = 'lne-time-filter';
     timeFilter.setAttribute('aria-label', 'Filter by time range');
-    
+
     const timeOptions = [
       { value: 'all', text: 'All Time' },
       { value: 'last5min', text: 'Last 5 min' },
       { value: 'last15min', text: 'Last 15 min' },
       { value: 'last30min', text: 'Last 30 min' },
-      { value: 'lasthour', text: 'Last hour' }
+      { value: 'lasthour', text: 'Last hour' },
     ];
-    
-    timeOptions.forEach(option => {
+
+    timeOptions.forEach((option) => {
       const optionElement = this.documentContext.create('option');
       optionElement.value = option.value;
       optionElement.textContent = option.text;
@@ -364,10 +364,10 @@ class CriticalLogNotifier extends RendererBase {
       { value: 'csv', label: 'CSV', icon: '📊' },
       { value: 'text', label: 'Text', icon: '📝' },
       { value: 'markdown', label: 'Markdown', icon: '📑' },
-      { value: 'clipboard', label: 'Copy to Clipboard', icon: '📋' }
+      { value: 'clipboard', label: 'Copy to Clipboard', icon: '📋' },
     ];
 
-    formats.forEach(format => {
+    formats.forEach((format) => {
       const button = this.documentContext.create('button');
       button.className = 'lne-export-option';
       button.setAttribute('data-format', format.value);
@@ -390,8 +390,8 @@ class CriticalLogNotifier extends RendererBase {
         onFilterChange: (filteredLogs, stats) => {
           this.#updateLogDisplay(filteredLogs);
           this.#updateFilterStats(stats);
-        }
-      }
+        },
+      },
     });
   }
 
@@ -403,9 +403,9 @@ class CriticalLogNotifier extends RendererBase {
   #initializeKeyboardManager() {
     this.#keyboardManager = new KeyboardShortcutsManager({
       logger: this.logger,
-      documentContext: this.documentContext.document
+      documentContext: this.documentContext.document,
     });
-    
+
     this.#keyboardManager.setActionCallback((action, event) => {
       this.#handleShortcutAction(action, event);
     });
@@ -488,7 +488,7 @@ class CriticalLogNotifier extends RendererBase {
       this.#logFilter.setFilter({ level: e.target.value });
     });
 
-    // Category filter  
+    // Category filter
     this._addDomListener(categoryFilter, 'change', (e) => {
       this.#logFilter.setFilter({ category: e.target.value });
     });
@@ -507,7 +507,7 @@ class CriticalLogNotifier extends RendererBase {
   #attachExportListeners() {
     const exportBtn = this.#panel.querySelector('.lne-export-btn');
     const exportMenu = this.#panel.querySelector('.lne-export-menu');
-    
+
     this._addDomListener(exportBtn, 'click', (e) => {
       e.stopPropagation();
       exportMenu.hidden = !exportMenu.hidden;
@@ -527,7 +527,10 @@ class CriticalLogNotifier extends RendererBase {
       this.documentContext.query('body'),
       'click',
       (event) => {
-        if (!exportBtn.contains(event.target) && !exportMenu.contains(event.target)) {
+        if (
+          !exportBtn.contains(event.target) &&
+          !exportMenu.contains(event.target)
+        ) {
           exportMenu.hidden = true;
         }
       }
@@ -606,7 +609,7 @@ class CriticalLogNotifier extends RendererBase {
     if (!this.#isExpanded) {
       this.#handleExpand();
     }
-    
+
     const searchInput = this.#panel.querySelector('.lne-search-input');
     if (searchInput) {
       searchInput.focus();
@@ -621,9 +624,10 @@ class CriticalLogNotifier extends RendererBase {
    */
   async exportLogs(format = 'json', options = {}) {
     try {
-      const logs = options.filtered && this.#logFilter
-        ? this.#logFilter.getFilteredLogs()
-        : this.#recentLogs;
+      const logs =
+        options.filtered && this.#logFilter
+          ? this.#logFilter.getFilteredLogs()
+          : this.#recentLogs;
 
       const exportOptions = {
         filters: this.#logFilter?.getFilter(),
@@ -666,8 +670,10 @@ class CriticalLogNotifier extends RendererBase {
           const success = await this.#exporter.copyToClipboard(content);
 
           this.validatedEventDispatcher.dispatch('core:export_notification', {
-            message: success ? 'Logs copied to clipboard' : 'Failed to copy to clipboard', 
-            type: success ? 'success' : 'error'
+            message: success
+              ? 'Logs copied to clipboard'
+              : 'Failed to copy to clipboard',
+            type: success ? 'success' : 'error',
           });
           return;
         }
@@ -679,18 +685,18 @@ class CriticalLogNotifier extends RendererBase {
 
       // Download file
       this.#exporter.downloadAsFile(content, filename, mimeType);
-      
+
       this.validatedEventDispatcher.dispatch('core:export_notification', {
-        message: `Exported ${logs.length} logs as ${format.toUpperCase()}`, 
-        type: 'success'
+        message: `Exported ${logs.length} logs as ${format.toUpperCase()}`,
+        type: 'success',
       });
 
       this.logger.debug(`Export completed: ${format}, ${logs.length} logs`);
     } catch (error) {
       this.logger.error('Export failed', error);
       this.validatedEventDispatcher.dispatch('core:export_notification', {
-        message: 'Export failed - see console for details', 
-        type: 'error'
+        message: 'Export failed - see console for details',
+        type: 'error',
       });
     }
   }
@@ -702,11 +708,11 @@ class CriticalLogNotifier extends RendererBase {
    */
   #updateFilterUI() {
     const filterCriteria = this.#logFilter.getFilter();
-    
+
     const levelFilter = this.#panel.querySelector('.lne-level-filter');
     const categoryFilter = this.#panel.querySelector('.lne-category-filter');
     const timeFilter = this.#panel.querySelector('.lne-time-filter');
-    
+
     if (levelFilter) levelFilter.value = filterCriteria.level;
     if (categoryFilter) categoryFilter.value = filterCriteria.category;
     if (timeFilter) timeFilter.value = filterCriteria.timeRange;
@@ -735,7 +741,7 @@ class CriticalLogNotifier extends RendererBase {
     if (filterStats) {
       filterStats.textContent = `${stats.filtered} of ${stats.total} logs (${stats.warnings} warnings, ${stats.errors} errors)`;
     }
-    
+
     // Update category filter options
     this.#updateCategoryOptions(this.#logFilter.getCategories());
   }
@@ -753,7 +759,7 @@ class CriticalLogNotifier extends RendererBase {
     const currentValue = categoryFilter.value;
     categoryFilter.innerHTML = '';
 
-    categories.forEach(category => {
+    categories.forEach((category) => {
       const option = this.documentContext.create('option');
       option.value = category;
       option.textContent = category === 'all' ? 'All Categories' : category;
@@ -1069,7 +1075,7 @@ class CriticalLogNotifier extends RendererBase {
     this.logger.debug(`${this._logPrefix} Panel expanded`);
 
     this.validatedEventDispatcher.dispatch('core:critical_log_panel_expanded', {
-      logCount: this.#recentLogs.length
+      logCount: this.#recentLogs.length,
     });
   }
 
@@ -1097,7 +1103,10 @@ class CriticalLogNotifier extends RendererBase {
 
     this.logger.debug(`${this._logPrefix} Panel collapsed`);
 
-    this.validatedEventDispatcher.dispatch('core:critical_log_panel_collapsed', {});
+    this.validatedEventDispatcher.dispatch(
+      'core:critical_log_panel_collapsed',
+      {}
+    );
   }
 
   /**
@@ -1127,7 +1136,9 @@ class CriticalLogNotifier extends RendererBase {
    */
   #loadPosition() {
     try {
-      const customPosition = localStorage.getItem('lne-critical-notifier-position-custom');
+      const customPosition = localStorage.getItem(
+        'lne-critical-notifier-position-custom'
+      );
       if (customPosition === 'true') {
         const saved = localStorage.getItem('lne-critical-notifier-position');
         if (saved && this.#isValidPosition(saved)) {
@@ -1170,7 +1181,10 @@ class CriticalLogNotifier extends RendererBase {
       localStorage.setItem('lne-critical-notifier-position-custom', 'true');
       this.logger.debug(`${this._logPrefix} Position saved: ${position}`);
     } catch (e) {
-      this.logger.warn(`${this._logPrefix} Failed to save position preference`, e);
+      this.logger.warn(
+        `${this._logPrefix} Failed to save position preference`,
+        e
+      );
     }
   }
 
@@ -1182,7 +1196,12 @@ class CriticalLogNotifier extends RendererBase {
    * @returns {boolean} True if valid
    */
   #isValidPosition(position) {
-    const validPositions = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+    const validPositions = [
+      'top-left',
+      'top-right',
+      'bottom-left',
+      'bottom-right',
+    ];
     return validPositions.includes(position);
   }
 
@@ -1202,7 +1221,9 @@ class CriticalLogNotifier extends RendererBase {
       container: this.#container,
       callbacks: {
         onDragStart: () => {
-          this.logger.debug(`${this._logPrefix} User started dragging notification`);
+          this.logger.debug(
+            `${this._logPrefix} User started dragging notification`
+          );
         },
         onDragEnd: (position) => {
           this.updatePosition(position);
@@ -1258,7 +1279,10 @@ class CriticalLogNotifier extends RendererBase {
       this.#isDismissed = false;
     }, 30000); // 30 seconds
 
-    this.validatedEventDispatcher.dispatch('core:critical_notifications_dismissed', {});
+    this.validatedEventDispatcher.dispatch(
+      'core:critical_notifications_dismissed',
+      {}
+    );
   }
 
   /**
@@ -1330,8 +1354,10 @@ class CriticalLogNotifier extends RendererBase {
 
     this.#position = this.#config.notificationPosition;
     this.updatePosition(this.#position);
-    
-    this.logger.debug(`${this._logPrefix} Position reset to default: ${this.#position}`);
+
+    this.logger.debug(
+      `${this._logPrefix} Position reset to default: ${this.#position}`
+    );
   }
 
   dispose() {
@@ -1435,11 +1461,11 @@ class CriticalLogNotifier extends RendererBase {
   #addToCriticalBuffer(entry) {
     // Set flag to prevent recursion during event dispatching
     this.#processingCriticalLog = true;
-    
+
     try {
       // Add to buffer with size limit
       this.#criticalBuffer.push(entry);
-      
+
       // Trim buffer if it exceeds max size
       if (this.#criticalBuffer.length > this.#maxBufferSize) {
         this.#criticalBuffer.shift(); // Remove oldest entry
@@ -1463,12 +1489,11 @@ class CriticalLogNotifier extends RendererBase {
    */
   #getCriticalLogs(options = {}) {
     const limit = options.limit || this.#maxRecentLogs;
-    
+
     // Return the most recent logs up to the limit
     const startIndex = Math.max(0, this.#criticalBuffer.length - limit);
     return this.#criticalBuffer.slice(startIndex);
   }
-
 
   /**
    * Clears the critical buffer.

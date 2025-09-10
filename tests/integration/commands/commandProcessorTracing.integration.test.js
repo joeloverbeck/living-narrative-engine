@@ -247,5 +247,4 @@ describe('CommandProcessor Tracing Integration', () => {
     expect(stats.totalErrors).toBe(0);
     expect(stats.errorRate).toBe(0);
   });
-
 });

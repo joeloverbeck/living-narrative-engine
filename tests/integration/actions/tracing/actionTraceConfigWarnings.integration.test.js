@@ -27,7 +27,7 @@ describe('ActionTraceConfig - Configuration Warnings Integration', () => {
   it('should reproduce "Both count rotation policy and maxFileAge are specified" warning from validator', async () => {
     // Arrange
     const mockLogger = testBed.createMockLogger();
-    
+
     // Create a configuration that has both count policy and maxFileAge
     const conflictingConfig = {
       logRotation: {
@@ -44,7 +44,11 @@ describe('ActionTraceConfig - Configuration Warnings Integration', () => {
     // Mock the validator module - first check if it exists
     let ActionTraceConfigValidator;
     try {
-      ActionTraceConfigValidator = (await import('../../../../src/actions/tracing/actionTraceConfigValidator.js')).default;
+      ActionTraceConfigValidator = (
+        await import(
+          '../../../../src/actions/tracing/actionTraceConfigValidator.js'
+        )
+      ).default;
     } catch (error) {
       // If the file doesn't exist, create a mock implementation
       ActionTraceConfigValidator = class MockActionTraceConfigValidator {
@@ -54,8 +58,13 @@ describe('ActionTraceConfig - Configuration Warnings Integration', () => {
 
         async validateConfiguration(config) {
           // Simulate the validation logic that produces the warning
-          if (config.logRotation?.policy === 'count' && config.logRotation?.maxFileAge) {
-            this.logger.warn("Config validation warning: Both 'count' rotation policy and maxFileAge are specified. maxFileAge will be ignored when using count-based rotation.");
+          if (
+            config.logRotation?.policy === 'count' &&
+            config.logRotation?.maxFileAge
+          ) {
+            this.logger.warn(
+              "Config validation warning: Both 'count' rotation policy and maxFileAge are specified. maxFileAge will be ignored when using count-based rotation."
+            );
           }
           return { valid: true, errors: [] };
         }
@@ -68,14 +77,16 @@ describe('ActionTraceConfig - Configuration Warnings Integration', () => {
 
     // Assert
     expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Both 'count' rotation policy and maxFileAge are specified. maxFileAge will be ignored when using count-based rotation.")
+      expect.stringContaining(
+        "Both 'count' rotation policy and maxFileAge are specified. maxFileAge will be ignored when using count-based rotation."
+      )
     );
   });
 
   it('should reproduce "Configuration warning" from loader', async () => {
     // Arrange
     const mockLogger = testBed.createMockLogger();
-    
+
     const conflictingConfig = {
       logRotation: {
         policy: 'count',
@@ -87,7 +98,11 @@ describe('ActionTraceConfig - Configuration Warnings Integration', () => {
     // Mock the config loader module
     let ActionTraceConfigLoader;
     try {
-      ActionTraceConfigLoader = (await import('../../../../src/actions/tracing/actionTraceConfigLoader.js')).default;
+      ActionTraceConfigLoader = (
+        await import(
+          '../../../../src/actions/tracing/actionTraceConfigLoader.js'
+        )
+      ).default;
     } catch (error) {
       // Create a mock implementation
       ActionTraceConfigLoader = class MockActionTraceConfigLoader {
@@ -97,7 +112,9 @@ describe('ActionTraceConfig - Configuration Warnings Integration', () => {
 
         async loadConfig() {
           // Simulate the configuration loading that produces the warning
-          this.logger.warn("Configuration warning: Both 'count' rotation policy and maxFileAge are specified. maxFileAge will be ignored when using count-based rotation.");
+          this.logger.warn(
+            "Configuration warning: Both 'count' rotation policy and maxFileAge are specified. maxFileAge will be ignored when using count-based rotation."
+          );
           return conflictingConfig;
         }
       };
@@ -109,14 +126,16 @@ describe('ActionTraceConfig - Configuration Warnings Integration', () => {
 
     // Assert
     expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Configuration warning: Both 'count' rotation policy and maxFileAge are specified. maxFileAge will be ignored when using count-based rotation.")
+      expect.stringContaining(
+        "Configuration warning: Both 'count' rotation policy and maxFileAge are specified. maxFileAge will be ignored when using count-based rotation."
+      )
     );
   });
 
   it('should not produce warnings when configuration is consistent', async () => {
     // Arrange
     const mockLogger = testBed.createMockLogger();
-    
+
     // Create a consistent configuration with only count policy
     const consistentConfig = {
       logRotation: {
@@ -138,29 +157,40 @@ describe('ActionTraceConfig - Configuration Warnings Integration', () => {
 
       async validateConfiguration(config) {
         // Only warn if both are specified
-        if (config.logRotation?.policy === 'count' && config.logRotation?.maxFileAge) {
-          this.logger.warn("Config validation warning: Both 'count' rotation policy and maxFileAge are specified. maxFileAge will be ignored when using count-based rotation.");
+        if (
+          config.logRotation?.policy === 'count' &&
+          config.logRotation?.maxFileAge
+        ) {
+          this.logger.warn(
+            "Config validation warning: Both 'count' rotation policy and maxFileAge are specified. maxFileAge will be ignored when using count-based rotation."
+          );
         }
         return { valid: true, errors: [] };
       }
     };
 
     // Act
-    const validator = new MockActionTraceConfigValidator({ logger: mockLogger });
+    const validator = new MockActionTraceConfigValidator({
+      logger: mockLogger,
+    });
     await validator.validateConfiguration(consistentConfig);
 
     // Assert - Should not have any warnings
     const warnCalls = mockLogger.warn.mock.calls.filter(
-      ([msg]) => msg && msg.includes("Both 'count' rotation policy and maxFileAge are specified")
+      ([msg]) =>
+        msg &&
+        msg.includes(
+          "Both 'count' rotation policy and maxFileAge are specified"
+        )
     );
-    
+
     expect(warnCalls.length).toBe(0);
   });
 
   it('should reproduce warnings during system initialization sequence', async () => {
     // Arrange
     const mockLogger = testBed.createMockLogger();
-    
+
     // Simulate the initialization sequence that triggers the warnings:
     // tracingConfigurationInitializer → actionTraceConfigValidator → actionTraceConfigLoader
     async function simulateInitializationSequence() {
@@ -173,11 +203,15 @@ describe('ActionTraceConfig - Configuration Warnings Integration', () => {
       };
 
       // Simulate validator phase
-      mockLogger.warn("Config validation warning: Both 'count' rotation policy and maxFileAge are specified. maxFileAge will be ignored when using count-based rotation.");
-      
+      mockLogger.warn(
+        "Config validation warning: Both 'count' rotation policy and maxFileAge are specified. maxFileAge will be ignored when using count-based rotation."
+      );
+
       // Simulate loader phase
-      mockLogger.warn("Configuration warning: Both 'count' rotation policy and maxFileAge are specified. maxFileAge will be ignored when using count-based rotation.");
-      
+      mockLogger.warn(
+        "Configuration warning: Both 'count' rotation policy and maxFileAge are specified. maxFileAge will be ignored when using count-based rotation."
+      );
+
       return conflictingConfig;
     }
 
@@ -186,24 +220,28 @@ describe('ActionTraceConfig - Configuration Warnings Integration', () => {
 
     // Assert - Should have both warnings from validator and loader
     const warnCalls = mockLogger.warn.mock.calls.filter(
-      ([msg]) => msg && msg.includes("Both 'count' rotation policy and maxFileAge are specified")
+      ([msg]) =>
+        msg &&
+        msg.includes(
+          "Both 'count' rotation policy and maxFileAge are specified"
+        )
     );
-    
+
     expect(warnCalls.length).toBe(2);
-    
+
     // Verify the specific warning variants
     expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Config validation warning:")
+      expect.stringContaining('Config validation warning:')
     );
     expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Configuration warning:")
+      expect.stringContaining('Configuration warning:')
     );
   });
 
   it('should handle multiple conflicting configurations gracefully', async () => {
     // Arrange
     const mockLogger = testBed.createMockLogger();
-    
+
     const multipleConflictingConfigs = [
       {
         logRotation: {
@@ -235,8 +273,13 @@ describe('ActionTraceConfig - Configuration Warnings Integration', () => {
       }
 
       async validateConfiguration(config) {
-        if (config.logRotation?.policy === 'count' && config.logRotation?.maxFileAge) {
-          this.logger.warn("Config validation warning: Both 'count' rotation policy and maxFileAge are specified. maxFileAge will be ignored when using count-based rotation.");
+        if (
+          config.logRotation?.policy === 'count' &&
+          config.logRotation?.maxFileAge
+        ) {
+          this.logger.warn(
+            "Config validation warning: Both 'count' rotation policy and maxFileAge are specified. maxFileAge will be ignored when using count-based rotation."
+          );
         }
         return { valid: true, errors: [] };
       }
@@ -244,16 +287,20 @@ describe('ActionTraceConfig - Configuration Warnings Integration', () => {
 
     // Act - Process multiple configs
     const validator = new MockValidator({ logger: mockLogger });
-    
+
     for (const config of multipleConflictingConfigs) {
       await validator.validateConfiguration(config);
     }
 
     // Assert - Should have one warning per config
     const warnCalls = mockLogger.warn.mock.calls.filter(
-      ([msg]) => msg && msg.includes("Both 'count' rotation policy and maxFileAge are specified")
+      ([msg]) =>
+        msg &&
+        msg.includes(
+          "Both 'count' rotation policy and maxFileAge are specified"
+        )
     );
-    
+
     expect(warnCalls.length).toBe(3);
   });
 });

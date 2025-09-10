@@ -164,22 +164,32 @@ describe('Action Schema Validation Integration', () => {
 
       console.log(`
 Action Format Summary:`);
-      console.log(`  String targets format: ${stringTargetActions.length} actions`);
-      console.log(`  Object targets format: ${objectTargetActions.length} actions`);
-      console.log(`  Total actions: ${stringTargetActions.length + objectTargetActions.length} actions`);
+      console.log(
+        `  String targets format: ${stringTargetActions.length} actions`
+      );
+      console.log(
+        `  Object targets format: ${objectTargetActions.length} actions`
+      );
+      console.log(
+        `  Total actions: ${stringTargetActions.length + objectTargetActions.length} actions`
+      );
 
       const multiTargetActions = objectTargetActions.filter(
         (a) => a.targetCount > 1
       );
-      console.log(`  Multi-target actions: ${multiTargetActions.length} actions`);
+      console.log(
+        `  Multi-target actions: ${multiTargetActions.length} actions`
+      );
 
       // All actions should use the targets format
       expect(stringTargetActions.length + objectTargetActions.length).toBe(
         actionFiles.length
       );
-      
+
       // Verify no root-level scope properties exist
-      expect(stringTargetActions.length + objectTargetActions.length).toBeGreaterThan(0);
+      expect(
+        stringTargetActions.length + objectTargetActions.length
+      ).toBeGreaterThan(0);
     });
   });
 
@@ -231,7 +241,7 @@ Actions with deprecated root-level scope property:`);
 
       // All actions should have targets property
       expect(actionsWithoutTargets.length).toBe(0);
-      
+
       // No actions should have root-level scope property
       expect(actionsWithRootScope.length).toBe(0);
     });

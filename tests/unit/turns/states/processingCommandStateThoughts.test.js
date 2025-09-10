@@ -4,24 +4,36 @@
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { ProcessingCommandState } from '../../../../src/turns/states/processingCommandState.js';
-import { ENTITY_SPOKE_ID, ENTITY_THOUGHT_ID } from '../../../../src/constants/eventIds.js';
+import {
+  ENTITY_SPOKE_ID,
+  ENTITY_THOUGHT_ID,
+} from '../../../../src/constants/eventIds.js';
 
 // Mock the helper functions
 jest.mock('../../../../src/turns/states/helpers/buildSpeechPayload.js', () => ({
   buildSpeechPayload: jest.fn(),
 }));
 
-jest.mock('../../../../src/turns/states/helpers/buildThoughtPayload.js', () => ({
-  buildThoughtPayload: jest.fn(),
-}));
+jest.mock(
+  '../../../../src/turns/states/helpers/buildThoughtPayload.js',
+  () => ({
+    buildThoughtPayload: jest.fn(),
+  })
+);
 
-jest.mock('../../../../src/turns/states/helpers/dispatchSpeechEvent.js', () => ({
-  dispatchSpeechEvent: jest.fn(),
-}));
+jest.mock(
+  '../../../../src/turns/states/helpers/dispatchSpeechEvent.js',
+  () => ({
+    dispatchSpeechEvent: jest.fn(),
+  })
+);
 
-jest.mock('../../../../src/turns/states/helpers/dispatchThoughtEvent.js', () => ({
-  dispatchThoughtEvent: jest.fn(),
-}));
+jest.mock(
+  '../../../../src/turns/states/helpers/dispatchThoughtEvent.js',
+  () => ({
+    dispatchThoughtEvent: jest.fn(),
+  })
+);
 
 jest.mock('../../../../src/turns/states/helpers/contextUtils.js', () => ({
   getLogger: jest.fn(),
@@ -41,7 +53,7 @@ describe('ProcessingCommandState - Thought Handling', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     mockLogger = {
       debug: jest.fn(),
       info: jest.fn(),
@@ -67,7 +79,10 @@ describe('ProcessingCommandState - Thought Handling', () => {
 
   describe('_dispatchSpeech method', () => {
     it('should dispatch speech event when payload is available', async () => {
-      const decisionMeta = { speech: 'Hello there!', thoughts: 'Nice to meet them.' };
+      const decisionMeta = {
+        speech: 'Hello there!',
+        thoughts: 'Nice to meet them.',
+      };
       const speechPayload = { speechContent: 'Hello there!' };
 
       buildSpeechPayload.mockReturnValue(speechPayload);
@@ -77,21 +92,26 @@ describe('ProcessingCommandState - Thought Handling', () => {
 
       expect(buildSpeechPayload).toHaveBeenCalledWith(decisionMeta);
       expect(dispatchSpeechEvent).toHaveBeenCalledWith(
-        mockTurnCtx, 
-        state._handler, 
-        mockActor.id, 
+        mockTurnCtx,
+        state._handler,
+        mockActor.id,
         speechPayload
       );
       expect(buildThoughtPayload).not.toHaveBeenCalled();
       expect(dispatchThoughtEvent).not.toHaveBeenCalled();
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(`Actor ${mockActor.id} spoke: "Hello there!". Dispatching ${ENTITY_SPOKE_ID}`)
+        expect.stringContaining(
+          `Actor ${mockActor.id} spoke: "Hello there!". Dispatching ${ENTITY_SPOKE_ID}`
+        )
       );
     });
 
     it('should dispatch thought event when speech payload is null but thoughts exist', async () => {
       const decisionMeta = { speech: '', thoughts: 'I should stay quiet...' };
-      const thoughtPayload = { entityId: mockActor.id, thoughts: 'I should stay quiet...' };
+      const thoughtPayload = {
+        entityId: mockActor.id,
+        thoughts: 'I should stay quiet...',
+      };
 
       buildSpeechPayload.mockReturnValue(null);
       buildThoughtPayload.mockReturnValue(thoughtPayload);
@@ -100,29 +120,46 @@ describe('ProcessingCommandState - Thought Handling', () => {
       await state._dispatchSpeech(mockTurnCtx, mockActor, decisionMeta);
 
       expect(buildSpeechPayload).toHaveBeenCalledWith(decisionMeta);
-      expect(buildThoughtPayload).toHaveBeenCalledWith(decisionMeta, mockActor.id);
+      expect(buildThoughtPayload).toHaveBeenCalledWith(
+        decisionMeta,
+        mockActor.id
+      );
       expect(dispatchThoughtEvent).toHaveBeenCalledWith(
-        mockTurnCtx, 
-        state._handler, 
-        mockActor.id, 
+        mockTurnCtx,
+        state._handler,
+        mockActor.id,
         thoughtPayload
       );
       expect(dispatchSpeechEvent).not.toHaveBeenCalled();
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(`Actor ${mockActor.id} had thoughts but no speech. Dispatching ${ENTITY_THOUGHT_ID}`)
+        expect.stringContaining(
+          `Actor ${mockActor.id} had thoughts but no speech. Dispatching ${ENTITY_THOUGHT_ID}`
+        )
       );
     });
 
     it('should dispatch thought event with notes when available', async () => {
-      const decisionMeta = { 
-        speech: '', 
+      const decisionMeta = {
+        speech: '',
         thoughts: 'Interesting...',
-        notes: [{ text: 'Something suspicious', subject: 'observation', subjectType: 'event' }]
+        notes: [
+          {
+            text: 'Something suspicious',
+            subject: 'observation',
+            subjectType: 'event',
+          },
+        ],
       };
-      const thoughtPayload = { 
-        entityId: mockActor.id, 
+      const thoughtPayload = {
+        entityId: mockActor.id,
         thoughts: 'Interesting...',
-        notes: [{ text: 'Something suspicious', subject: 'observation', subjectType: 'event' }]
+        notes: [
+          {
+            text: 'Something suspicious',
+            subject: 'observation',
+            subjectType: 'event',
+          },
+        ],
       };
 
       buildSpeechPayload.mockReturnValue(null);
@@ -131,11 +168,14 @@ describe('ProcessingCommandState - Thought Handling', () => {
 
       await state._dispatchSpeech(mockTurnCtx, mockActor, decisionMeta);
 
-      expect(buildThoughtPayload).toHaveBeenCalledWith(decisionMeta, mockActor.id);
+      expect(buildThoughtPayload).toHaveBeenCalledWith(
+        decisionMeta,
+        mockActor.id
+      );
       expect(dispatchThoughtEvent).toHaveBeenCalledWith(
-        mockTurnCtx, 
-        state._handler, 
-        mockActor.id, 
+        mockTurnCtx,
+        state._handler,
+        mockActor.id,
         thoughtPayload
       );
     });
@@ -149,11 +189,16 @@ describe('ProcessingCommandState - Thought Handling', () => {
       await state._dispatchSpeech(mockTurnCtx, mockActor, decisionMeta);
 
       expect(buildSpeechPayload).toHaveBeenCalledWith(decisionMeta);
-      expect(buildThoughtPayload).toHaveBeenCalledWith(decisionMeta, mockActor.id);
+      expect(buildThoughtPayload).toHaveBeenCalledWith(
+        decisionMeta,
+        mockActor.id
+      );
       expect(dispatchSpeechEvent).not.toHaveBeenCalled();
       expect(dispatchThoughtEvent).not.toHaveBeenCalled();
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(`Actor ${mockActor.id} had a non-string or empty speech field in decisionMeta. No ${ENTITY_SPOKE_ID} or ${ENTITY_THOUGHT_ID} event dispatched`)
+        expect.stringContaining(
+          `Actor ${mockActor.id} had a non-string or empty speech field in decisionMeta. No ${ENTITY_SPOKE_ID} or ${ENTITY_THOUGHT_ID} event dispatched`
+        )
       );
     });
 
@@ -166,7 +211,9 @@ describe('ProcessingCommandState - Thought Handling', () => {
       await state._dispatchSpeech(mockTurnCtx, mockActor, decisionMeta);
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(`Actor ${mockActor.id} has no 'speech' or 'thoughts' fields in decisionMeta. No events dispatched`)
+        expect.stringContaining(
+          `Actor ${mockActor.id} has no 'speech' or 'thoughts' fields in decisionMeta. No events dispatched`
+        )
       );
     });
 

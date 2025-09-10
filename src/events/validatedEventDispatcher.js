@@ -30,7 +30,6 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
   #schemaValidator;
   #logger;
 
-
   /**
    * Creates an instance of ValidatedEventDispatcher.
    *
@@ -86,7 +85,10 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
       if (!eventDefinition) {
         // Special handling for bootstrap events that may be dispatched before they're registered
         // during initialization
-        if (eventName === 'core:system_error_occurred' || eventName === 'core:critical_notification_shown') {
+        if (
+          eventName === 'core:system_error_occurred' ||
+          eventName === 'core:critical_notification_shown'
+        ) {
           this.#logger.debug(
             `VED: EventDefinition not found for '${eventName}' (expected during bootstrap). Proceeding with dispatch.`
           );
@@ -201,10 +203,8 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
     try {
       // Enhanced circuit breaker for error events
       const isErrorEvent = eventName === 'core:system_error_occurred';
-      
+
       // The circuit breaker logic is now handled above with the Set approach
-
-
 
       try {
         // Enhanced safety around logger calls
@@ -226,16 +226,22 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
             );
           }
         }
-        
+
         await this.#eventBus.dispatch(eventName, payload);
-        
+
         if (isErrorEvent) {
-          console.debug(`VED: Error event '${eventName}' dispatch successful (using console).`);
+          console.debug(
+            `VED: Error event '${eventName}' dispatch successful (using console).`
+          );
         } else {
           try {
-            this.#logger.debug(`VED: Event '${eventName}' dispatch successful.`);
+            this.#logger.debug(
+              `VED: Event '${eventName}' dispatch successful.`
+            );
           } catch {
-            console.debug(`VED: Event '${eventName}' dispatch successful (logger failed).`);
+            console.debug(
+              `VED: Event '${eventName}' dispatch successful (logger failed).`
+            );
           }
         }
         return true;
@@ -244,8 +250,10 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
       }
     } catch (dispatchError) {
       // Enhanced error handling to prevent recursion
-      const isErrorEvent = eventName === 'core:system_error_occurred' || eventName.includes('error');
-      
+      const isErrorEvent =
+        eventName === 'core:system_error_occurred' ||
+        eventName.includes('error');
+
       if (isErrorEvent) {
         // Use console for error events to prevent recursion
         console.error(

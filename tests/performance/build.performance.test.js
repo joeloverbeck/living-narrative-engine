@@ -22,8 +22,9 @@ describe('Build System Performance', () => {
   const executeBuild = async (command, args = [], useFastMode = true) => {
     return new Promise((resolve, reject) => {
       // Always use --fast flag for performance tests to reduce build time
-      const buildArgs =
-        command.startsWith('build') ? [...args, '--fast'] : args;
+      const buildArgs = command.startsWith('build')
+        ? [...args, '--fast']
+        : args;
       const child = spawn('npm', ['run', command, ...buildArgs], {
         cwd: process.cwd(),
         stdio: ['ignore', 'pipe', 'pipe'],
@@ -187,7 +188,7 @@ describe('Build System Performance', () => {
         expect(await fs.pathExists(distDir)).toBe(true);
         console.log(`Development build completed in ${devBuildTime}ms`);
         buildResults.dev = { time: devBuildTime, success: true };
-        
+
         // Cache the successful build output for other tests
         cachedBuildOutput = devResult;
 
@@ -237,14 +238,13 @@ describe('Build System Performance', () => {
     );
   });
 
-
   describe('Build Efficiency Metrics', () => {
     it(
       'should produce valid build output with reasonable bundle sizes',
       async () => {
         // Use cached output if available, otherwise build
         let result;
-        if (cachedBuildOutput && await fs.pathExists(distDir)) {
+        if (cachedBuildOutput && (await fs.pathExists(distDir))) {
           console.log('Using cached build output for efficiency metrics...');
           result = cachedBuildOutput;
         } else {
@@ -252,15 +252,15 @@ describe('Build System Performance', () => {
           result = await executeBuildWithRetries('build:dev'); // Use dev build for faster testing
           cachedBuildOutput = result;
         }
-        
+
         // Add more detailed logging
         console.log('Build result:', {
           actualSuccess: result.actualSuccess,
           isDevValidationFailure: result.isDevValidationFailure,
           stdout: result.stdout?.substring(0, 500),
-          stderr: result.stderr?.substring(0, 500)
+          stderr: result.stderr?.substring(0, 500),
         });
-        
+
         expect(result.actualSuccess || result.isDevValidationFailure).toBe(
           true
         );
@@ -308,17 +308,24 @@ describe('Build System Performance', () => {
         Object.entries(bundleSizes)
           .sort(([, a], [, b]) => b - a) // Sort by size descending
           .forEach(([bundle, size]) => {
-            const percentage = ((bundleSizes[bundle] * 1024 * 1024) / totalSize * 100).toFixed(1);
+            const percentage = (
+              ((bundleSizes[bundle] * 1024 * 1024) / totalSize) *
+              100
+            ).toFixed(1);
             console.log(`  ${bundle}: ${size.toFixed(2)}MB (${percentage}%)`);
           });
 
         const totalSizeInMB = totalSize / (1024 * 1024);
         console.log(`\n📊 Total bundle size: ${totalSizeInMB.toFixed(2)}MB`);
-        console.log(`📁 Note: This includes ${jsBundles.length} JavaScript bundles plus copied data directory (9.4MB)`);
-        
+        console.log(
+          `📁 Note: This includes ${jsBundles.length} JavaScript bundles plus copied data directory (9.4MB)`
+        );
+
         // Provide context for size expectations
         if (totalSizeInMB > 100) {
-          console.log(`⚠️  Large build size detected. Consider implementing bundle splitting or lazy loading if performance is affected.`);
+          console.log(
+            `⚠️  Large build size detected. Consider implementing bundle splitting or lazy loading if performance is affected.`
+          );
         }
 
         // Total bundle size should be reasonable (updated based on actual codebase scale)
@@ -328,5 +335,4 @@ describe('Build System Performance', () => {
       testTimeout
     );
   });
-
 });

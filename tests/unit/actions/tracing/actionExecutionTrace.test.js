@@ -227,7 +227,7 @@ describe('ActionExecutionTrace', () => {
 
       // Second error should be ignored gracefully (no exception)
       expect(() => trace.captureError(error2)).not.toThrow();
-      
+
       // Original error should be preserved
       expect(trace.getError().message).toBe('First error');
     });

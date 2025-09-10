@@ -779,5 +779,4 @@ describe('Complete Action Discovery Workflow E2E', () => {
       });
     });
   });
-
 });

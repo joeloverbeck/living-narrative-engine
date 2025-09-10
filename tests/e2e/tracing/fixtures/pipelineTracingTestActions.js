@@ -17,7 +17,7 @@ export const PIPELINE_TEST_ACTIONS = {
     targets: ['direction'],
     prerequisites: ['can_move', 'has_position'],
   },
-  
+
   // Complex action with multiple components for detailed tracing
   COMPLEX_INTERACTION: {
     id: 'core:interact',
@@ -26,7 +26,7 @@ export const PIPELINE_TEST_ACTIONS = {
     targets: ['target_entity'],
     prerequisites: ['has_position', 'within_range', 'can_interact'],
   },
-  
+
   // Action that typically fails for error testing
   INVALID_ACTION: {
     id: 'test:invalid',
@@ -34,7 +34,7 @@ export const PIPELINE_TEST_ACTIONS = {
     type: 'invalid',
     malformed: true,
   },
-  
+
   // Multi-target action for complex pipeline testing
   MULTI_TARGET_ACTION: {
     id: 'core:examine_area',
@@ -44,7 +44,7 @@ export const PIPELINE_TEST_ACTIONS = {
     prerequisites: ['has_perception'],
     multiTarget: true,
   },
-  
+
   // Legacy format action for compatibility testing
   LEGACY_ACTION: {
     id: 'legacy:old_format',
@@ -79,7 +79,7 @@ export const PIPELINE_TEST_ACTORS = {
       },
     },
   },
-  
+
   COMPLEX_ACTOR: {
     id: 'test-actor-complex',
     name: 'Complex Test Actor',
@@ -132,7 +132,7 @@ export const PIPELINE_TEST_ACTORS = {
       },
     },
   },
-  
+
   MINIMAL_ACTOR: {
     id: 'test-actor-minimal',
     name: 'Minimal Actor',
@@ -142,7 +142,7 @@ export const PIPELINE_TEST_ACTORS = {
       },
     },
   },
-  
+
   MULTI_COMPONENT_ACTOR: {
     id: 'test-actor-multi',
     name: 'Multi-Component Actor',
@@ -199,7 +199,7 @@ export const PIPELINE_SCENARIOS = {
       targets: ['enemy_actors'],
     },
   ],
-  
+
   MULTI_TARGET_SCENARIOS: [
     {
       targetType: 'inventory_items',
@@ -213,11 +213,12 @@ export const PIPELINE_SCENARIOS = {
     },
     {
       targetType: 'nearby_actors',
-      scopeQuery: 'location.actors[{"var": "distance"}, {"<": [{"var": ""}, 5]}]',
+      scopeQuery:
+        'location.actors[{"var": "distance"}, {"<": [{"var": ""}, 5]}]',
       expectedCount: 1,
     },
   ],
-  
+
   LEGACY_SCENARIOS: [
     {
       format: 'legacy_v1',
@@ -248,17 +249,17 @@ export const PERFORMANCE_THRESHOLDS = {
   ACTION_FORMATTING: 150,
   TARGET_RESOLUTION: 300,
   SCOPE_EVALUATION: 250,
-  
+
   // Overall pipeline thresholds (ms)
   PIPELINE_TOTAL: 1000,
   STAGE_OVERHEAD: 50,
   CAPTURE_OVERHEAD: 1,
-  
+
   // Memory thresholds (increased for pipeline tracing reliability)
   MAX_MEMORY_MB: 200, // Increased from 150 to account for mock overhead
   MEMORY_GROWTH_LIMIT_MB: 15, // Increased from 10 for complex pipeline operations
   MEMORY_GROWTH_LIMIT_PERCENT: 50, // Maximum 50% growth allowed
-  
+
   // Performance analysis thresholds
   ACCEPTABLE_SLOWDOWN_PERCENT: 10,
   CRITICAL_SLOWDOWN_PERCENT: 25,
@@ -311,7 +312,7 @@ export const EXPECTED_TRACE_STRUCTURES = {
       }),
     }),
   },
-  
+
   SCOPE_EVALUATION_TRACE: {
     type: 'scope_evaluation',
     scopeQueries: expect.any(Array),
@@ -321,27 +322,27 @@ export const EXPECTED_TRACE_STRUCTURES = {
       entityCount: expect.any(Number),
     }),
   },
-  
+
   DEPENDENCY_RESOLUTION_TRACE: {
     type: 'dependency_resolution',
     dependencies: expect.any(Array),
     resolutionOrder: expect.any(Array),
     circularDependencyCheck: expect.any(String),
   },
-  
+
   LEGACY_DETECTION_TRACE: {
     type: 'legacy_detection',
     detectedFormat: expect.any(String),
     conversionStrategy: expect.any(String),
   },
-  
+
   COMPATIBILITY_LAYER_TRACE: {
     type: 'compatibility_layer',
     originalAction: expect.any(Object),
     convertedAction: expect.any(Object),
     conversionSteps: expect.any(Array),
   },
-  
+
   PERFORMANCE_TRACE: {
     type: 'performance',
     totalDuration: expect.any(Number),
@@ -432,7 +433,7 @@ export function createLegacyTestAction(config = {}) {
  */
 export function generateLoadTestActions(count = 10, baseConfig = {}) {
   const actions = [];
-  
+
   for (let i = 0; i < count; i++) {
     const action = createPipelineTestAction({
       id: `load:test-action-${i}`,
@@ -443,7 +444,7 @@ export function generateLoadTestActions(count = 10, baseConfig = {}) {
     });
     actions.push(action);
   }
-  
+
   return actions;
 }
 

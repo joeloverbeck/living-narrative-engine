@@ -88,7 +88,7 @@ class ScopeEngine extends IScopeEngine {
         if (em?.getEntities) {
           return em.getEntities();
         }
-        
+
         // Fallback: try different entity storage patterns
         if (em?.entities) {
           // If entities is a Map, use .values()
@@ -104,7 +104,7 @@ class ScopeEngine extends IScopeEngine {
             return Object.values(em.entities);
           }
         }
-        
+
         // Final fallback
         return [];
       },
@@ -278,7 +278,7 @@ class ScopeEngine extends IScopeEngine {
    */
   resolve(ast, actorEntity, runtimeCtx, trace = null) {
     const source = 'ScopeEngine';
-    
+
     trace?.addLog('step', 'Starting scope resolution.', source, { ast });
 
     // Create isolated cycle detector and depth guard for this resolution
@@ -296,14 +296,26 @@ class ScopeEngine extends IScopeEngine {
       trace,
       dispatcher: {
         resolve: (node, innerCtx) =>
-          this._resolveWithDepthAndCycleChecking(node, innerCtx, dispatcher, cycleDetector, depthGuard),
+          this._resolveWithDepthAndCycleChecking(
+            node,
+            innerCtx,
+            dispatcher,
+            cycleDetector,
+            depthGuard
+          ),
       },
       depth: 0,
       cycleDetector,
       depthGuard,
     };
 
-    const result = this._resolveWithDepthAndCycleChecking(ast, ctx, dispatcher, cycleDetector, depthGuard);
+    const result = this._resolveWithDepthAndCycleChecking(
+      ast,
+      ctx,
+      dispatcher,
+      cycleDetector,
+      depthGuard
+    );
 
     const finalTargets = Array.from(result);
     trace?.addLog(
@@ -326,13 +338,23 @@ class ScopeEngine extends IScopeEngine {
    * @returns {Set} Set of resolved values
    * @private
    */
-  _resolveWithDepthAndCycleChecking(node, ctx, dispatcher, cycleDetector, depthGuard) {
+  _resolveWithDepthAndCycleChecking(
+    node,
+    ctx,
+    dispatcher,
+    cycleDetector,
+    depthGuard
+  ) {
     // Check depth
     depthGuard.ensure(ctx.depth);
 
     // Generate key for cycle detection
     let nodeKey;
-    if (node.type === 'Union' || node.type === 'Filter' || node.type === 'ArrayIterationStep') {
+    if (
+      node.type === 'Union' ||
+      node.type === 'Filter' ||
+      node.type === 'ArrayIterationStep'
+    ) {
       // For union, filter, and array iteration nodes, create a unique key based on the node object reference
       // This prevents false cycle detection when multiple nodes of the same type are nested
       nodeKey = `${node.type}:${Math.random().toString(36).substr(2, 9)}`;

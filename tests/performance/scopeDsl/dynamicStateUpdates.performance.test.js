@@ -153,7 +153,10 @@ describe('Dynamic State Updates Performance', () => {
     try {
       scopeRegistry.initialize(initialScopes);
     } catch (e) {
-      console.warn('Could not initialize scope registry for performance tests', e);
+      console.warn(
+        'Could not initialize scope registry for performance tests',
+        e
+      );
     }
   }
 

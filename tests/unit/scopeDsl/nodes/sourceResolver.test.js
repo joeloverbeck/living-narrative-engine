@@ -343,7 +343,6 @@ describe('sourceResolver', () => {
     });
 
     describe('trace logging', () => {
-
       it('should not throw when trace is not provided', () => {
         const node = { type: 'Source', kind: 'actor' };
         const ctx = { actorEntity: { id: 'actor123' } };

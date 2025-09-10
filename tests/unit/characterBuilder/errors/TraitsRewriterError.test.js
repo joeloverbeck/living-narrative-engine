@@ -164,7 +164,10 @@ describe('TraitsRewriterError', () => {
 
       it('should work with null context', () => {
         const reason = 'Missing required fields';
-        const error = TraitsRewriterError.forInvalidCharacterDefinition(reason, null);
+        const error = TraitsRewriterError.forInvalidCharacterDefinition(
+          reason,
+          null
+        );
 
         expect(error.context.errorCode).toBe(
           TRAITS_REWRITER_ERROR_CODES.INVALID_CHARACTER_DEFINITION
@@ -174,7 +177,10 @@ describe('TraitsRewriterError', () => {
 
       it('should work with undefined context', () => {
         const reason = 'Missing required fields';
-        const error = TraitsRewriterError.forInvalidCharacterDefinition(reason, undefined);
+        const error = TraitsRewriterError.forInvalidCharacterDefinition(
+          reason,
+          undefined
+        );
 
         expect(error.context.errorCode).toBe(
           TRAITS_REWRITER_ERROR_CODES.INVALID_CHARACTER_DEFINITION
@@ -217,7 +223,11 @@ describe('TraitsRewriterError', () => {
 
       it('should work with null context and null cause', () => {
         const reason = 'Generation failure';
-        const error = TraitsRewriterError.forGenerationFailure(reason, null, null);
+        const error = TraitsRewriterError.forGenerationFailure(
+          reason,
+          null,
+          null
+        );
 
         expect(error.context.errorCode).toBe(
           TRAITS_REWRITER_ERROR_CODES.GENERATION_FAILED
@@ -228,7 +238,11 @@ describe('TraitsRewriterError', () => {
 
       it('should work with undefined context and undefined cause', () => {
         const reason = 'Generation failure';
-        const error = TraitsRewriterError.forGenerationFailure(reason, undefined, undefined);
+        const error = TraitsRewriterError.forGenerationFailure(
+          reason,
+          undefined,
+          undefined
+        );
 
         expect(error.context.errorCode).toBe(
           TRAITS_REWRITER_ERROR_CODES.GENERATION_FAILED
@@ -262,7 +276,11 @@ describe('TraitsRewriterError', () => {
       it('should work with null context', () => {
         const field = 'traits';
         const reason = 'Invalid format';
-        const error = TraitsRewriterError.forValidationFailure(field, reason, null);
+        const error = TraitsRewriterError.forValidationFailure(
+          field,
+          reason,
+          null
+        );
 
         expect(error.message).toBe(`Validation failed for ${field}: ${reason}`);
         expect(error.context.errorCode).toBe(
@@ -276,7 +294,11 @@ describe('TraitsRewriterError', () => {
       it('should work with undefined context', () => {
         const field = 'traits';
         const reason = 'Invalid format';
-        const error = TraitsRewriterError.forValidationFailure(field, reason, undefined);
+        const error = TraitsRewriterError.forValidationFailure(
+          field,
+          reason,
+          undefined
+        );
 
         expect(error.message).toBe(`Validation failed for ${field}: ${reason}`);
         expect(error.context.errorCode).toBe(
@@ -322,7 +344,10 @@ describe('TraitsRewriterError', () => {
 
       it('should work with undefined context', () => {
         const characterName = 'TestCharacter';
-        const error = TraitsRewriterError.forMissingTraits(characterName, undefined);
+        const error = TraitsRewriterError.forMissingTraits(
+          characterName,
+          undefined
+        );
 
         expect(error.message).toBe(
           `No extractable traits found for character: ${characterName}`
@@ -364,7 +389,11 @@ describe('TraitsRewriterError', () => {
 
       it('should work with undefined context and undefined cause', () => {
         const reason = 'API rate limit exceeded';
-        const error = TraitsRewriterError.forLLMFailure(reason, undefined, undefined);
+        const error = TraitsRewriterError.forLLMFailure(
+          reason,
+          undefined,
+          undefined
+        );
 
         expect(error.message).toBe(`LLM request failed: ${reason}`);
         expect(error.context.errorCode).toBe(
@@ -409,7 +438,11 @@ describe('TraitsRewriterError', () => {
 
       it('should work with undefined context and undefined cause', () => {
         const reason = 'Invalid JSON response';
-        const error = TraitsRewriterError.forParsingFailure(reason, undefined, undefined);
+        const error = TraitsRewriterError.forParsingFailure(
+          reason,
+          undefined,
+          undefined
+        );
 
         expect(error.message).toBe(`Response parsing failed: ${reason}`);
         expect(error.context.errorCode).toBe(
@@ -491,7 +524,11 @@ describe('TraitsRewriterError', () => {
 
       it('should work with undefined context and undefined cause', () => {
         const reason = 'File write permission denied';
-        const error = TraitsRewriterError.forExportFailure(reason, undefined, undefined);
+        const error = TraitsRewriterError.forExportFailure(
+          reason,
+          undefined,
+          undefined
+        );
 
         expect(error.message).toBe(`Export operation failed: ${reason}`);
         expect(error.context.errorCode).toBe(
@@ -528,7 +565,11 @@ describe('TraitsRewriterError', () => {
       it('should work with null context', () => {
         const format = 'xml';
         const supportedFormats = ['json', 'txt', 'csv'];
-        const error = TraitsRewriterError.forInvalidFormat(format, supportedFormats, null);
+        const error = TraitsRewriterError.forInvalidFormat(
+          format,
+          supportedFormats,
+          null
+        );
 
         expect(error.message).toBe(
           `Invalid format '${format}'. Supported formats: ${supportedFormats.join(', ')}`
@@ -544,7 +585,11 @@ describe('TraitsRewriterError', () => {
       it('should work with undefined context', () => {
         const format = 'xml';
         const supportedFormats = ['json', 'txt', 'csv'];
-        const error = TraitsRewriterError.forInvalidFormat(format, supportedFormats, undefined);
+        const error = TraitsRewriterError.forInvalidFormat(
+          format,
+          supportedFormats,
+          undefined
+        );
 
         expect(error.message).toBe(
           `Invalid format '${format}'. Supported formats: ${supportedFormats.join(', ')}`
@@ -583,7 +628,11 @@ describe('TraitsRewriterError', () => {
 
       it('should work with null context and null cause', () => {
         const reason = 'Content contains unsafe patterns';
-        const error = TraitsRewriterError.forSanitizationFailure(reason, null, null);
+        const error = TraitsRewriterError.forSanitizationFailure(
+          reason,
+          null,
+          null
+        );
 
         expect(error.message).toBe(`Content sanitization failed: ${reason}`);
         expect(error.context.errorCode).toBe(
@@ -595,7 +644,11 @@ describe('TraitsRewriterError', () => {
 
       it('should work with undefined context and undefined cause', () => {
         const reason = 'Content contains unsafe patterns';
-        const error = TraitsRewriterError.forSanitizationFailure(reason, undefined, undefined);
+        const error = TraitsRewriterError.forSanitizationFailure(
+          reason,
+          undefined,
+          undefined
+        );
 
         expect(error.message).toBe(`Content sanitization failed: ${reason}`);
         expect(error.context.errorCode).toBe(

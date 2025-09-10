@@ -18,20 +18,24 @@ export default class SchemaPhase extends LoaderPhase {
    */
   constructor({ schemaLoader, config, validator, logger }) {
     super('schema');
-    
+
     // Debug logging for SchemaPhase construction
     if (logger) {
       logger.debug('SchemaPhase: Constructor starting...');
-      logger.debug(`SchemaPhase: schemaLoader = ${schemaLoader ? 'provided' : 'missing'}`);
+      logger.debug(
+        `SchemaPhase: schemaLoader = ${schemaLoader ? 'provided' : 'missing'}`
+      );
       logger.debug(`SchemaPhase: config = ${config ? 'provided' : 'missing'}`);
-      logger.debug(`SchemaPhase: validator = ${validator ? 'provided' : 'missing'}`);
+      logger.debug(
+        `SchemaPhase: validator = ${validator ? 'provided' : 'missing'}`
+      );
     }
-    
+
     this.schemaLoader = schemaLoader;
     this.config = config;
     this.validator = validator;
     this.logger = logger;
-    
+
     if (logger) {
       logger.debug('SchemaPhase: Constructor completed successfully');
     }

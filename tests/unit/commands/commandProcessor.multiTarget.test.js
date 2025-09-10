@@ -340,7 +340,6 @@ describe('CommandProcessor - Additional Multi-Target Tests', () => {
       expect(dispatchedPayload.resolvedTargetCount).toBe(0);
       expect(dispatchedPayload.hasContextDependencies).toBe(false);
     });
-
   });
 
   describe('Error Handling and Edge Cases', () => {
@@ -474,7 +473,5 @@ describe('CommandProcessor - Additional Multi-Target Tests', () => {
         'Internal error: Malformed action prevented execution.'
       );
     });
-
   });
-
 });

@@ -8,7 +8,7 @@
  * - Memory growth stabilizes (no continuous leaks)
  * - Efficient cleanup of processed traces
  * - Queue size management prevents unbounded growth
- * 
+ *
  * @see src/actions/tracing/traceQueueProcessor.js
  */
 
@@ -76,7 +76,9 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
     it('should maintain memory efficiency under sustained processing', async () => {
       // Skip memory API tests in environments where performance.memory is unavailable
       if (typeof performance === 'undefined' || !performance.memory) {
-        console.log('Skipping memory efficiency test: performance.memory API not available in this environment');
+        console.log(
+          'Skipping memory efficiency test: performance.memory API not available in this environment'
+        );
         return;
       }
 
@@ -88,11 +90,11 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
       });
 
       const memorySnapshots = [];
-      
+
       // Process multiple batches to test sustained memory usage
       for (let batch = 0; batch < 5; batch++) {
         const traces = createPerformanceTraces(40);
-        
+
         // Take memory snapshot before processing
         memorySnapshots.push({
           phase: `batch-${batch}-start`,
@@ -101,12 +103,12 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
         });
 
         // Process traces
-        traces.forEach(trace => {
+        traces.forEach((trace) => {
           processor.enqueue(trace, TracePriority.NORMAL);
         });
 
         await waitForProcessing(800);
-        
+
         // Take memory snapshot after processing
         memorySnapshots.push({
           phase: `batch-${batch}-end`,
@@ -117,23 +119,29 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
 
       // Analyze memory usage patterns
       expect(memorySnapshots.length).toBeGreaterThanOrEqual(2); // Ensure we have data
-      
+
       const initialMemory = memorySnapshots[0].heapUsed;
       const finalMemory = memorySnapshots[memorySnapshots.length - 1].heapUsed;
       const memoryIncrease = finalMemory - initialMemory;
 
-      expect(memoryIncrease).toBeLessThan(MEMORY_SLA_REQUIREMENTS.MEMORY_INCREASE_LIMIT);
-      
+      expect(memoryIncrease).toBeLessThan(
+        MEMORY_SLA_REQUIREMENTS.MEMORY_INCREASE_LIMIT
+      );
+
       // Check for memory stability (shouldn't continuously grow)
       const midPoint = Math.floor(memorySnapshots.length / 2);
       const midMemory = memorySnapshots[midPoint].heapUsed;
       const laterGrowth = finalMemory - midMemory;
       const earlyGrowth = midMemory - initialMemory;
-      
+
       // Later growth should be less than or equal to early growth * stability ratio
-      expect(laterGrowth).toBeLessThanOrEqual(earlyGrowth * MEMORY_SLA_REQUIREMENTS.STABILITY_RATIO);
-      
-      console.log(`Memory Performance: ${(memoryIncrease / 1024 / 1024).toFixed(2)}MB increase over ${memorySnapshots.length / 2} batches`);
+      expect(laterGrowth).toBeLessThanOrEqual(
+        earlyGrowth * MEMORY_SLA_REQUIREMENTS.STABILITY_RATIO
+      );
+
+      console.log(
+        `Memory Performance: ${(memoryIncrease / 1024 / 1024).toFixed(2)}MB increase over ${memorySnapshots.length / 2} batches`
+      );
     });
 
     it('should efficiently cleanup processed traces', async () => {
@@ -144,39 +152,47 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
       });
 
       const traces = createPerformanceTraces(100);
-      
+
       // Record initial memory
       const initialMemory = performance?.memory?.usedJSHeapSize || 0;
-      
+
       // Process traces
-      traces.forEach(trace => {
+      traces.forEach((trace) => {
         processor.enqueue(trace, TracePriority.NORMAL);
       });
 
       await waitForProcessing(2000);
-      
+
       // Check queue state after processing
       const stats = processor.getQueueStats();
-      
+
       // Queue should be mostly empty after processing
-      expect(stats.totalSize).toBeLessThan(traces.length * MEMORY_SLA_REQUIREMENTS.CLEANUP_EFFICIENCY);
-      
+      expect(stats.totalSize).toBeLessThan(
+        traces.length * MEMORY_SLA_REQUIREMENTS.CLEANUP_EFFICIENCY
+      );
+
       // Memory should be reasonable
       const metrics = processor.getMetrics();
       expect(metrics.totalProcessed).toBeGreaterThan(0);
-      
+
       // Check final memory usage if available
       const finalMemory = performance?.memory?.usedJSHeapSize || 0;
-      
+
       if (initialMemory > 0 && finalMemory > 0) {
         const memoryGrowth = finalMemory - initialMemory;
-        expect(memoryGrowth).toBeLessThan(MEMORY_SLA_REQUIREMENTS.MEMORY_INCREASE_LIMIT);
-        console.log(`Memory growth during cleanup test: ${(memoryGrowth / 1024 / 1024).toFixed(2)}MB`);
+        expect(memoryGrowth).toBeLessThan(
+          MEMORY_SLA_REQUIREMENTS.MEMORY_INCREASE_LIMIT
+        );
+        console.log(
+          `Memory growth during cleanup test: ${(memoryGrowth / 1024 / 1024).toFixed(2)}MB`
+        );
       } else {
         console.log('Memory monitoring not available in this environment');
       }
-      
-      console.log(`Cleanup Performance: ${stats.totalSize} remaining out of ${traces.length} processed`);
+
+      console.log(
+        `Cleanup Performance: ${stats.totalSize} remaining out of ${traces.length} processed`
+      );
     });
 
     it('should prevent memory leaks during extended operation', async () => {
@@ -193,7 +209,7 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
       // Run multiple processing cycles
       for (let cycle = 0; cycle < cycles; cycle++) {
         const traces = createPerformanceTraces(tracesPerCycle);
-        
+
         // Record memory before cycle
         if (performance?.memory) {
           memoryReadings.push({
@@ -204,7 +220,7 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
         }
 
         // Process traces
-        traces.forEach(trace => {
+        traces.forEach((trace) => {
           processor.enqueue(trace, TracePriority.NORMAL);
         });
 
@@ -232,19 +248,26 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
         const totalIncrease = lastReading - firstReading;
 
         // Should not have excessive memory growth
-        expect(totalIncrease).toBeLessThan(MEMORY_SLA_REQUIREMENTS.MEMORY_INCREASE_LIMIT);
+        expect(totalIncrease).toBeLessThan(
+          MEMORY_SLA_REQUIREMENTS.MEMORY_INCREASE_LIMIT
+        );
 
         // Check for linear growth pattern (no exponential leak)
-        const midpointReading = memoryReadings[Math.floor(memoryReadings.length / 2)].heapUsed;
+        const midpointReading =
+          memoryReadings[Math.floor(memoryReadings.length / 2)].heapUsed;
         const firstHalfGrowth = midpointReading - firstReading;
         const secondHalfGrowth = lastReading - midpointReading;
 
         // Second half growth should not be significantly larger than first half
         expect(secondHalfGrowth).toBeLessThanOrEqual(firstHalfGrowth * 1.5);
 
-        console.log(`Extended Operation: ${(totalIncrease / 1024 / 1024).toFixed(2)}MB total increase over ${cycles} cycles`);
+        console.log(
+          `Extended Operation: ${(totalIncrease / 1024 / 1024).toFixed(2)}MB total increase over ${cycles} cycles`
+        );
       } else if (!performance?.memory) {
-        console.log('Skipping extended operation memory analysis: performance.memory API not available');
+        console.log(
+          'Skipping extended operation memory analysis: performance.memory API not available'
+        );
       }
     });
   });
@@ -260,7 +283,7 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
 
       const traces = createPerformanceTraces(100); // More traces than queue can handle
       let droppedCount = 0;
-      
+
       // Track dropped traces
       mockEventBus.dispatch.mockImplementation((event) => {
         if (event.type === 'BACKPRESSURE' || event.type === 'ITEM_DROPPED') {
@@ -271,7 +294,7 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
       const initialMemory = performance?.memory?.usedJSHeapSize || 0;
 
       // Enqueue traces rapidly
-      traces.forEach(trace => {
+      traces.forEach((trace) => {
         processor.enqueue(trace, TracePriority.NORMAL);
       });
 
@@ -279,13 +302,13 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
 
       // Check that memory limits were respected
       const finalMemory = performance?.memory?.usedJSHeapSize || 0;
-      
+
       const stats = processor.getQueueStats();
       const metrics = processor.getMetrics();
 
       // Should have dropped some traces to maintain memory limits
       expect(metrics.totalDropped).toBeGreaterThan(0);
-      
+
       // Queue size should be manageable
       expect(stats.totalSize).toBeLessThan(75); // Should be less than 1.5x maxQueueSize
 
@@ -293,12 +316,16 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
       if (initialMemory > 0 && finalMemory > 0) {
         const memoryGrowth = finalMemory - initialMemory;
         expect(memoryGrowth).toBeLessThan(2 * 1024 * 1024); // 2MB max
-        console.log(`Memory growth during backpressure: ${(memoryGrowth / 1024 / 1024).toFixed(2)}MB`);
+        console.log(
+          `Memory growth during backpressure: ${(memoryGrowth / 1024 / 1024).toFixed(2)}MB`
+        );
       } else {
         console.log('Memory monitoring not available for backpressure test');
       }
 
-      console.log(`Backpressure Test: ${metrics.totalDropped} traces dropped, ${stats.totalSize} remaining in queue`);
+      console.log(
+        `Backpressure Test: ${metrics.totalDropped} traces dropped, ${stats.totalSize} remaining in queue`
+      );
     });
   });
 
@@ -332,7 +359,7 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
    */
   function createPerformanceTraces(count) {
     const traces = [];
-    
+
     for (let i = 0; i < count; i++) {
       const trace = traceFactory.createTrace({
         actionId: `memory-test-${i}`,
@@ -349,12 +376,12 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
       trace.captureDispatchResult({
         success: true,
         timestamp: Date.now(),
-        metadata: { duration: Math.random() * 50 + 5 } // 5-55ms duration
+        metadata: { duration: Math.random() * 50 + 5 }, // 5-55ms duration
       });
 
       traces.push(trace);
     }
-    
+
     return traces;
   }
 
@@ -364,6 +391,6 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
    * @returns {Promise} Promise that resolves after timeout
    */
   function waitForProcessing(timeout = 1000) {
-    return new Promise(resolve => setTimeout(resolve, timeout));
+    return new Promise((resolve) => setTimeout(resolve, timeout));
   }
 });

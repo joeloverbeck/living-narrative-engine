@@ -3,7 +3,14 @@
  * @see keyboardShortcutsManager.js
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import KeyboardShortcutsManager from '../../../src/logging/keyboardShortcutsManager.js';
 import { createTestBed } from '../../common/testBed.js';
 
@@ -50,7 +57,7 @@ describe('KeyboardShortcutsManager - Core Functionality', () => {
 
     it('should register default shortcuts on initialization', () => {
       const helpText = keyboardManager.getHelpText();
-      
+
       expect(helpText).toContain('Escape');
       expect(helpText).toContain('Ctrl+Shift+L');
       expect(helpText).toContain('Ctrl+Shift+C');
@@ -61,12 +68,12 @@ describe('KeyboardShortcutsManager - Core Functionality', () => {
     it('should not be enabled by default', () => {
       // Clear any calls from setup
       document.addEventListener.mockClear();
-      
-      // Create fresh instance to test default state  
+
+      // Create fresh instance to test default state
       const freshManager = new KeyboardShortcutsManager({
         logger: mockLogger,
       });
-      
+
       expect(document.addEventListener).not.toHaveBeenCalled();
     });
   });
@@ -96,7 +103,8 @@ describe('KeyboardShortcutsManager - Core Functionality', () => {
 
       const helpText = keyboardManager.getHelpText();
       // Should only appear once due to normalization
-      const matches = (helpText.match(/Same normalized shortcut/g) || []).length;
+      const matches = (helpText.match(/Same normalized shortcut/g) || [])
+        .length;
       expect(matches).toBe(1);
     });
 
@@ -115,31 +123,35 @@ describe('KeyboardShortcutsManager - Core Functionality', () => {
   describe('Enable/Disable Functionality', () => {
     it('should enable keyboard shortcuts', () => {
       document.addEventListener.mockClear();
-      
+
       keyboardManager.enable();
-      
+
       expect(document.addEventListener).toHaveBeenCalledWith(
         'keydown',
         expect.any(Function)
       );
-      expect(mockLogger.debug).toHaveBeenCalledWith('Keyboard shortcuts enabled');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Keyboard shortcuts enabled'
+      );
     });
 
     it('should disable keyboard shortcuts', () => {
       keyboardManager.enable();
       keyboardManager.disable();
-      
+
       expect(document.removeEventListener).toHaveBeenCalledWith(
         'keydown',
         expect.any(Function)
       );
-      expect(mockLogger.debug).toHaveBeenCalledWith('Keyboard shortcuts disabled');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Keyboard shortcuts disabled'
+      );
     });
 
     it('should not enable if already enabled', () => {
       keyboardManager.enable();
       jest.clearAllMocks();
-      
+
       keyboardManager.enable();
       expect(document.addEventListener).not.toHaveBeenCalled();
     });
@@ -147,10 +159,10 @@ describe('KeyboardShortcutsManager - Core Functionality', () => {
     it('should not disable if already disabled', () => {
       // Ensure manager is disabled (which it should be by default)
       expect(keyboardManager.getHelpText()).toContain('Keyboard Shortcuts:');
-      
+
       // Clear any previous calls from setup
       document.removeEventListener.mockClear();
-      
+
       // Try to disable when already disabled
       keyboardManager.disable();
       expect(document.removeEventListener).not.toHaveBeenCalled();
@@ -161,7 +173,7 @@ describe('KeyboardShortcutsManager - Core Functionality', () => {
     it('should set action callback', () => {
       const newCallback = jest.fn();
       keyboardManager.setActionCallback(newCallback);
-      
+
       // Test by simulating a keydown event
       keyboardManager.enable();
       const mockEvent = {
@@ -174,13 +186,13 @@ describe('KeyboardShortcutsManager - Core Functionality', () => {
 
       // Get the event handler and call it directly
       const eventHandler = document.addEventListener.mock.calls.find(
-        call => call[0] === 'keydown'
+        (call) => call[0] === 'keydown'
       );
-      
+
       expect(eventHandler).toBeTruthy();
       expect(eventHandler).toBeDefined();
       eventHandler[1](mockEvent);
-      
+
       expect(newCallback).toHaveBeenCalledWith('toggle-panel', mockEvent);
     });
 
@@ -195,9 +207,9 @@ describe('KeyboardShortcutsManager - Core Functionality', () => {
       };
 
       const eventHandlerCall = document.addEventListener.mock.calls.find(
-        call => call[0] === 'keydown'
+        (call) => call[0] === 'keydown'
       );
-      
+
       expect(eventHandlerCall).toBeTruthy();
       const eventHandler = eventHandlerCall[1];
       expect(() => eventHandler(mockEvent)).not.toThrow();
@@ -211,7 +223,7 @@ describe('KeyboardShortcutsManager - Core Functionality', () => {
 
     const getEventHandler = () => {
       const eventHandlerCall = document.addEventListener.mock.calls.find(
-        call => call[0] === 'keydown'
+        (call) => call[0] === 'keydown'
       );
       expect(eventHandlerCall).toBeTruthy();
       return eventHandlerCall[1];
@@ -336,14 +348,14 @@ describe('KeyboardShortcutsManager - Core Functionality', () => {
   describe('Panel-Required Shortcuts', () => {
     beforeEach(() => {
       keyboardManager.enable();
-      
+
       // Mock document.querySelector for panel detection
       document.querySelector = jest.fn();
     });
 
     const getEventHandler = () => {
       const eventHandlerCall = document.addEventListener.mock.calls.find(
-        call => call[0] === 'keydown'
+        (call) => call[0] === 'keydown'
       );
       expect(eventHandlerCall).toBeTruthy();
       return eventHandlerCall[1];
@@ -405,7 +417,7 @@ describe('KeyboardShortcutsManager - Core Functionality', () => {
 
     const getEventHandler = () => {
       const eventHandlerCall = document.addEventListener.mock.calls.find(
-        call => call[0] === 'keydown'
+        (call) => call[0] === 'keydown'
       );
       expect(eventHandlerCall).toBeTruthy();
       return eventHandlerCall[1];
@@ -429,16 +441,22 @@ describe('KeyboardShortcutsManager - Core Functionality', () => {
       testShortcut({ key: 'D', ctrlKey: true, shiftKey: true }, 'dismiss');
       testShortcut({ key: 'E', ctrlKey: true, shiftKey: true }, 'export');
       testShortcut({ key: 'F', ctrlKey: true, shiftKey: true }, 'focus-search');
-      
+
       // Verify all shortcuts were called
       expect(mockCallback).toHaveBeenCalledTimes(4);
     });
 
     it('should handle all filtering shortcuts', () => {
-      testShortcut({ key: 'W', ctrlKey: true, shiftKey: true }, 'filter-warnings');
-      testShortcut({ key: 'R', ctrlKey: true, shiftKey: true }, 'filter-errors');
+      testShortcut(
+        { key: 'W', ctrlKey: true, shiftKey: true },
+        'filter-warnings'
+      );
+      testShortcut(
+        { key: 'R', ctrlKey: true, shiftKey: true },
+        'filter-errors'
+      );
       testShortcut({ key: 'A', ctrlKey: true, shiftKey: true }, 'filter-all');
-      
+
       // Verify all filtering shortcuts were called
       expect(mockCallback).toHaveBeenCalledTimes(3);
     });
@@ -451,7 +469,7 @@ describe('KeyboardShortcutsManager - Core Functionality', () => {
       testShortcut({ key: 'ArrowDown' }, 'next-log');
       testShortcut({ key: 'Home' }, 'first-log');
       testShortcut({ key: 'End' }, 'last-log');
-      
+
       // Verify all navigation shortcuts were called
       expect(mockCallback).toHaveBeenCalledTimes(4);
     });
@@ -460,7 +478,7 @@ describe('KeyboardShortcutsManager - Core Functionality', () => {
   describe('Help Text Generation', () => {
     it('should generate comprehensive help text', () => {
       const helpText = keyboardManager.getHelpText();
-      
+
       expect(helpText).toContain('Keyboard Shortcuts:');
       expect(helpText).toContain('Escape');
       expect(helpText).toContain('Close panel');
@@ -476,11 +494,13 @@ describe('KeyboardShortcutsManager - Core Functionality', () => {
 
       const helpText = keyboardManager.getHelpText();
       const lines = helpText.split('\n');
-      
+
       // Find the test line
-      const testLine = lines.find(line => line.includes('Test shortcut with long name'));
+      const testLine = lines.find((line) =>
+        line.includes('Test shortcut with long name')
+      );
       expect(testLine).toBeTruthy();
-      
+
       // Should have consistent padding
       expect(testLine).toMatch(/^\s+\S+.*-\s+Test shortcut with long name$/);
     });
@@ -490,11 +510,11 @@ describe('KeyboardShortcutsManager - Core Functionality', () => {
     it('should clean up properly on destroy', () => {
       keyboardManager.enable();
       keyboardManager.setActionCallback(mockCallback);
-      
+
       keyboardManager.destroy();
-      
+
       expect(document.removeEventListener).toHaveBeenCalled();
-      
+
       // Verify internal state is cleaned - shortcuts should be cleared
       const helpText = keyboardManager.getHelpText();
       expect(helpText).toBe('Keyboard Shortcuts:');
@@ -518,11 +538,11 @@ describe('KeyboardShortcutsManager - Core Functionality', () => {
       };
 
       const eventHandlerCall = document.addEventListener.mock.calls.find(
-        call => call[0] === 'keydown'
+        (call) => call[0] === 'keydown'
       );
       expect(eventHandlerCall).toBeTruthy();
       const eventHandler = eventHandlerCall[1];
-      
+
       expect(() => eventHandler(mockEvent)).not.toThrow();
       expect(mockCallback).toHaveBeenCalledWith('close-panel', mockEvent);
     });
@@ -535,11 +555,11 @@ describe('KeyboardShortcutsManager - Core Functionality', () => {
       };
 
       const eventHandlerCall = document.addEventListener.mock.calls.find(
-        call => call[0] === 'keydown'
+        (call) => call[0] === 'keydown'
       );
       expect(eventHandlerCall).toBeTruthy();
       const eventHandler = eventHandlerCall[1];
-      
+
       expect(() => eventHandler(mockEvent)).not.toThrow();
       // Should not call callback due to null target
       expect(mockCallback).not.toHaveBeenCalled();
@@ -554,11 +574,11 @@ describe('KeyboardShortcutsManager - Core Functionality', () => {
       };
 
       const eventHandlerCall = document.addEventListener.mock.calls.find(
-        call => call[0] === 'keydown'
+        (call) => call[0] === 'keydown'
       );
       expect(eventHandlerCall).toBeTruthy();
       const eventHandler = eventHandlerCall[1];
-      
+
       expect(() => eventHandler(mockEvent)).not.toThrow();
       expect(mockCallback).toHaveBeenCalledWith('toggle-panel', mockEvent);
       // Should not throw error when preventDefault is missing

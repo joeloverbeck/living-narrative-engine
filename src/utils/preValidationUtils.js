@@ -10,7 +10,7 @@
  */
 const KNOWN_OPERATION_TYPES = [
   'QUERY_COMPONENT',
-  'QUERY_COMPONENTS', 
+  'QUERY_COMPONENTS',
   'MODIFY_COMPONENT',
   'ADD_COMPONENT',
   'REMOVE_COMPONENT',
@@ -49,7 +49,7 @@ const KNOWN_OPERATION_TYPES = [
   'ESTABLISH_SITTING_CLOSENESS',
   'REMOVE_SITTING_CLOSENESS',
   'LOCK_MOUTH_ENGAGEMENT',
-  'UNLOCK_MOUTH_ENGAGEMENT'
+  'UNLOCK_MOUTH_ENGAGEMENT',
 ];
 
 /**
@@ -74,7 +74,9 @@ export function validateOperationStructure(operation, path = 'root') {
       isValid: false,
       error: 'Operation must be an object',
       path,
-      suggestions: ['Ensure the operation is a valid JSON object with type and parameters fields']
+      suggestions: [
+        'Ensure the operation is a valid JSON object with type and parameters fields',
+      ],
     };
   }
 
@@ -86,7 +88,10 @@ export function validateOperationStructure(operation, path = 'root') {
         isValid: false,
         error: 'Macro reference should not have a type field',
         path,
-        suggestions: ['Remove the type field when using macro reference', 'Use either {"macro": "namespace:id"} OR {"type": "OPERATION_TYPE", "parameters": {...}}']
+        suggestions: [
+          'Remove the type field when using macro reference',
+          'Use either {"macro": "namespace:id"} OR {"type": "OPERATION_TYPE", "parameters": {...}}',
+        ],
       };
     }
     return { isValid: true, error: null, path: null, suggestions: null };
@@ -100,9 +105,11 @@ export function validateOperationStructure(operation, path = 'root') {
       path,
       suggestions: [
         'Add a "type" field with one of the valid operation types',
-        'Valid operation types include: ' + KNOWN_OPERATION_TYPES.slice(0, 5).join(', ') + '...',
-        `If this is a macro reference, use {"macro": "namespace:id"} instead`
-      ]
+        'Valid operation types include: ' +
+          KNOWN_OPERATION_TYPES.slice(0, 5).join(', ') +
+          '...',
+        `If this is a macro reference, use {"macro": "namespace:id"} instead`,
+      ],
     };
   }
 
@@ -112,7 +119,9 @@ export function validateOperationStructure(operation, path = 'root') {
       isValid: false,
       error: 'Operation "type" field must be a string',
       path,
-      suggestions: ['Ensure the type field is a string value like "QUERY_COMPONENT"']
+      suggestions: [
+        'Ensure the type field is a string value like "QUERY_COMPONENT"',
+      ],
     };
   }
 
@@ -125,8 +134,10 @@ export function validateOperationStructure(operation, path = 'root') {
       suggestions: [
         'Valid operation types include:',
         ...KNOWN_OPERATION_TYPES.slice(0, 10),
-        KNOWN_OPERATION_TYPES.length > 10 ? `... and ${KNOWN_OPERATION_TYPES.length - 10} more` : ''
-      ].filter(Boolean)
+        KNOWN_OPERATION_TYPES.length > 10
+          ? `... and ${KNOWN_OPERATION_TYPES.length - 10} more`
+          : '',
+      ].filter(Boolean),
     };
   }
 
@@ -136,7 +147,9 @@ export function validateOperationStructure(operation, path = 'root') {
       isValid: false,
       error: `Missing "parameters" field for operation type "${operation.type}"`,
       path,
-      suggestions: ['Add a "parameters" object with the required fields for this operation type']
+      suggestions: [
+        'Add a "parameters" object with the required fields for this operation type',
+      ],
     };
   }
 
@@ -150,7 +163,11 @@ export function validateOperationStructure(operation, path = 'root') {
  * @param {boolean} inOperationContext - Whether we're currently in a context where operations are expected
  * @returns {PreValidationResult} First validation error found, or success
  */
-export function validateAllOperations(data, basePath = 'root', inOperationContext = false) {
+export function validateAllOperations(
+  data,
+  basePath = 'root',
+  inOperationContext = false
+) {
   if (!data) {
     return { isValid: true, error: null, path: null, suggestions: null };
   }
@@ -163,7 +180,11 @@ export function validateAllOperations(data, basePath = 'root', inOperationContex
         return result;
       }
       // Also recursively validate the operation's internal structure
-      const recursiveResult = validateAllOperations(data[i], `${basePath}[${i}]`, false);
+      const recursiveResult = validateAllOperations(
+        data[i],
+        `${basePath}[${i}]`,
+        false
+      );
       if (!recursiveResult.isValid) {
         return recursiveResult;
       }
@@ -175,11 +196,15 @@ export function validateAllOperations(data, basePath = 'root', inOperationContex
   if (typeof data === 'object' && !Array.isArray(data)) {
     // Check common fields that contain operations
     const operationFields = ['actions', 'then_actions', 'else_actions'];
-    
+
     for (const field of operationFields) {
       if (data[field]) {
         // These fields contain arrays of operations
-        const result = validateAllOperations(data[field], `${basePath}.${field}`, true);
+        const result = validateAllOperations(
+          data[field],
+          `${basePath}.${field}`,
+          true
+        );
         if (!result.isValid) {
           return result;
         }
@@ -188,8 +213,17 @@ export function validateAllOperations(data, basePath = 'root', inOperationContex
 
     // For other object properties, recurse but NOT in operation context
     for (const [key, value] of Object.entries(data)) {
-      if (!operationFields.includes(key) && key !== 'type' && key !== 'parameters' && key !== 'macro') {
-        const result = validateAllOperations(value, `${basePath}.${key}`, false);
+      if (
+        !operationFields.includes(key) &&
+        key !== 'type' &&
+        key !== 'parameters' &&
+        key !== 'macro'
+      ) {
+        const result = validateAllOperations(
+          value,
+          `${basePath}.${key}`,
+          false
+        );
         if (!result.isValid) {
           return result;
         }
@@ -212,7 +246,7 @@ export function validateRuleStructure(ruleData, filePath = 'unknown') {
       isValid: false,
       error: 'Rule data must be an object',
       path: 'root',
-      suggestions: ['Ensure the rule file contains a valid JSON object']
+      suggestions: ['Ensure the rule file contains a valid JSON object'],
     };
   }
 
@@ -222,7 +256,9 @@ export function validateRuleStructure(ruleData, filePath = 'unknown') {
       isValid: false,
       error: 'Missing required "event_type" field in rule',
       path: 'root',
-      suggestions: ['Add an "event_type" field with a namespaced event ID like "core:entity_thought"']
+      suggestions: [
+        'Add an "event_type" field with a namespaced event ID like "core:entity_thought"',
+      ],
     };
   }
 
@@ -231,7 +267,7 @@ export function validateRuleStructure(ruleData, filePath = 'unknown') {
       isValid: false,
       error: 'Missing required "actions" field in rule',
       path: 'root',
-      suggestions: ['Add an "actions" array with at least one operation']
+      suggestions: ['Add an "actions" array with at least one operation'],
     };
   }
 
@@ -240,7 +276,7 @@ export function validateRuleStructure(ruleData, filePath = 'unknown') {
       isValid: false,
       error: 'Rule "actions" field must be an array',
       path: 'actions',
-      suggestions: ['Change the actions field to an array of operations']
+      suggestions: ['Change the actions field to an array of operations'],
     };
   }
 
@@ -249,7 +285,7 @@ export function validateRuleStructure(ruleData, filePath = 'unknown') {
       isValid: false,
       error: 'Rule "actions" array cannot be empty',
       path: 'actions',
-      suggestions: ['Add at least one operation to the actions array']
+      suggestions: ['Add at least one operation to the actions array'],
     };
   }
 
@@ -269,7 +305,7 @@ export function performPreValidation(data, schemaId, filePath = 'unknown') {
   if (schemaId === 'schema://living-narrative-engine/rule.schema.json') {
     return validateRuleStructure(data, filePath);
   }
-  
+
   // For other schemas, skip pre-validation to avoid conflicts
   return { isValid: true, error: null, path: null, suggestions: null };
 }
@@ -289,12 +325,12 @@ export function formatPreValidationError(result, fileName, schemaId) {
   const lines = [
     `Pre-validation failed for '${fileName}':`,
     `  Location: ${result.path}`,
-    `  Error: ${result.error}`
+    `  Error: ${result.error}`,
   ];
 
   if (result.suggestions && result.suggestions.length > 0) {
     lines.push('  Suggestions:');
-    result.suggestions.forEach(suggestion => {
+    result.suggestions.forEach((suggestion) => {
       lines.push(`    - ${suggestion}`);
     });
   }

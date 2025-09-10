@@ -16,7 +16,9 @@ import { EnhancedSpeechPatternsValidator } from '../../../../src/characterBuilde
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 
 // Mock dependencies
-jest.mock('../../../../src/characterBuilder/validators/EnhancedSpeechPatternsValidator.js');
+jest.mock(
+  '../../../../src/characterBuilder/validators/EnhancedSpeechPatternsValidator.js'
+);
 jest.mock('../../../../src/utils/domUtils.js', () => ({
   DomUtils: {
     createElement: jest.fn(),
@@ -81,9 +83,9 @@ describe('SpeechPatternsGeneratorController', () => {
     // Mock global objects that are used in the production code
     global.Blob = jest.fn().mockImplementation((content, options) => ({
       content,
-      type: options?.type || 'text/plain'
+      type: options?.type || 'text/plain',
     }));
-    
+
     global.URL = {
       createObjectURL: jest.fn(() => 'mock-blob-url'),
       revokeObjectURL: jest.fn(),
@@ -97,7 +99,7 @@ describe('SpeechPatternsGeneratorController', () => {
     global.performance.mark = jest.fn();
     global.performance.measure = jest.fn(() => ({ duration: 100 }));
 
-    global.requestAnimationFrame = jest.fn(cb => setTimeout(cb, 0));
+    global.requestAnimationFrame = jest.fn((cb) => setTimeout(cb, 0));
 
     // Mock logger
     mockLogger = {
@@ -135,9 +137,9 @@ describe('SpeechPatternsGeneratorController', () => {
     // Mock speech patterns generator
     mockSpeechPatternsGenerator = {
       generateSpeechPatterns: jest.fn(),
-      getServiceInfo: jest.fn().mockReturnValue({ 
+      getServiceInfo: jest.fn().mockReturnValue({
         name: 'Mock Speech Patterns Generator',
-        version: '1.0.0'
+        version: '1.0.0',
       }),
     };
 
@@ -148,8 +150,18 @@ describe('SpeechPatternsGeneratorController', () => {
       generateExportFilename: jest.fn(),
       getSupportedExportFormats: jest.fn(() => [
         { id: 'txt', name: 'Text', extension: '.txt', mimeType: 'text/plain' },
-        { id: 'json', name: 'JSON', extension: '.json', mimeType: 'application/json' },
-        { id: 'markdown', name: 'Markdown', extension: '.md', mimeType: 'text/markdown' },
+        {
+          id: 'json',
+          name: 'JSON',
+          extension: '.json',
+          mimeType: 'application/json',
+        },
+        {
+          id: 'markdown',
+          name: 'Markdown',
+          extension: '.md',
+          mimeType: 'text/markdown',
+        },
         { id: 'csv', name: 'CSV', extension: '.csv', mimeType: 'text/csv' },
       ]),
       getAvailableTemplates: jest.fn(() => [
@@ -173,7 +185,9 @@ describe('SpeechPatternsGeneratorController', () => {
     };
 
     // Mock enhanced validator constructor
-    EnhancedSpeechPatternsValidator.mockImplementation(() => mockEnhancedValidator);
+    EnhancedSpeechPatternsValidator.mockImplementation(
+      () => mockEnhancedValidator
+    );
 
     // Mock DOM elements
     mockElements = {
@@ -274,24 +288,26 @@ describe('SpeechPatternsGeneratorController', () => {
    */
   async function createInitializedController(dependencies) {
     const controller = new SpeechPatternsGeneratorController(dependencies);
-    
+
     // Mock the base class methods that are called during initialize()
     jest.spyOn(controller, '_cacheElements').mockImplementation(() => {
       // Simulate successful element caching
     });
     jest.spyOn(controller, '_loadInitialData').mockResolvedValue();
     jest.spyOn(controller, '_initializeUIState').mockResolvedValue();
-    
+
     // Mock _getElement to return our mock elements
     jest.spyOn(controller, '_getElement').mockImplementation((elementName) => {
       return mockElements[elementName] || null;
     });
-    
+
     jest.spyOn(controller, '_setupEventListeners').mockImplementation(() => {
       // Call the actual implementation to set up event listeners
-      SpeechPatternsGeneratorController.prototype._setupEventListeners.call(controller);
+      SpeechPatternsGeneratorController.prototype._setupEventListeners.call(
+        controller
+      );
     });
-    
+
     await controller.initialize();
     return controller;
   }
@@ -318,16 +334,16 @@ describe('SpeechPatternsGeneratorController', () => {
       },
       classList: {
         _classes: new Set(),
-        add: jest.fn(function(className) {
+        add: jest.fn(function (className) {
           this._classes.add(className);
         }),
-        remove: jest.fn(function(className) {
+        remove: jest.fn(function (className) {
           this._classes.delete(className);
         }),
-        contains: jest.fn(function(className) {
+        contains: jest.fn(function (className) {
           return this._classes.has(className);
         }),
-        toggle: jest.fn(function(className) {
+        toggle: jest.fn(function (className) {
           if (this._classes.has(className)) {
             this._classes.delete(className);
             return false;
@@ -358,7 +374,10 @@ describe('SpeechPatternsGeneratorController', () => {
       // Add DOM API methods that are used in production code
       closest: jest.fn((selector) => {
         // Mock implementation that returns the element if it matches the selector class
-        if (selector === '.speech-pattern-item' && element.classList.contains('speech-pattern-item')) {
+        if (
+          selector === '.speech-pattern-item' &&
+          element.classList.contains('speech-pattern-item')
+        ) {
           return element;
         }
         return null;
@@ -417,7 +436,9 @@ describe('SpeechPatternsGeneratorController', () => {
 
       controller = new SpeechPatternsGeneratorController(dependencies);
 
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.SpeechPatternsGenerator);
+      expect(mockContainer.resolve).toHaveBeenCalledWith(
+        tokens.SpeechPatternsGenerator
+      );
     });
 
     it('should handle container resolution failure gracefully', () => {
@@ -521,18 +542,22 @@ describe('SpeechPatternsGeneratorController', () => {
         eventBus: mockEventBus,
         schemaValidator: mockSchemaValidator,
       });
-      
+
       // Mock individual lifecycle methods but NOT _cacheElements
-      jest.spyOn(controller, '_setupEventListeners').mockImplementation(() => {});
+      jest
+        .spyOn(controller, '_setupEventListeners')
+        .mockImplementation(() => {});
       jest.spyOn(controller, '_loadInitialData').mockResolvedValue();
       jest.spyOn(controller, '_initializeUIState').mockResolvedValue();
-      
+
       await controller.initialize();
     });
 
     it('should cache required elements successfully', () => {
       // Elements should be cached during initialization
-      expect(document.getElementById).toHaveBeenCalledWith('character-definition');
+      expect(document.getElementById).toHaveBeenCalledWith(
+        'character-definition'
+      );
       expect(document.getElementById).toHaveBeenCalledWith('generate-btn');
       expect(document.getElementById).toHaveBeenCalledWith('loading-state');
     });
@@ -543,7 +568,10 @@ describe('SpeechPatternsGeneratorController', () => {
         if (id === 'progress-container' || id === 'time-estimate') {
           return null;
         }
-        return mockElements[id.replace(/-([a-z])/g, (g) => g[1].toUpperCase())] || null;
+        return (
+          mockElements[id.replace(/-([a-z])/g, (g) => g[1].toUpperCase())] ||
+          null
+        );
       });
 
       // Re-create controller to trigger element caching
@@ -570,16 +598,12 @@ describe('SpeechPatternsGeneratorController', () => {
     });
 
     it('should setup character input event listeners', () => {
-      expect(mockElements.characterDefinition.addEventListener).toHaveBeenCalledWith(
-        'input',
-        expect.any(Function),
-        expect.any(Object)
-      );
-      expect(mockElements.characterDefinition.addEventListener).toHaveBeenCalledWith(
-        'blur',
-        expect.any(Function),
-        expect.any(Object)
-      );
+      expect(
+        mockElements.characterDefinition.addEventListener
+      ).toHaveBeenCalledWith('input', expect.any(Function), expect.any(Object));
+      expect(
+        mockElements.characterDefinition.addEventListener
+      ).toHaveBeenCalledWith('blur', expect.any(Function), expect.any(Object));
     });
 
     it('should setup button event listeners', () => {
@@ -615,11 +639,13 @@ describe('SpeechPatternsGeneratorController', () => {
     it('should create debounced validation function', () => {
       // Trigger input event to test debounced validation setup
       mockElements.characterDefinition.value = 'test input';
-      const inputHandler = mockElements.characterDefinition.addEventListener.mock.calls
-        .find(call => call[0] === 'input')[1];
-      
+      const inputHandler =
+        mockElements.characterDefinition.addEventListener.mock.calls.find(
+          (call) => call[0] === 'input'
+        )[1];
+
       inputHandler();
-      
+
       // Should not throw and should handle debounced validation
       expect(inputHandler).toBeDefined();
     });
@@ -637,40 +663,49 @@ describe('SpeechPatternsGeneratorController', () => {
 
     it('should handle character input changes', () => {
       mockElements.characterDefinition.value = '  test input  ';
-      
-      const inputHandler = mockElements.characterDefinition.addEventListener.mock.calls
-        .find(call => call[0] === 'input')[1];
-      
+
+      const inputHandler =
+        mockElements.characterDefinition.addEventListener.mock.calls.find(
+          (call) => call[0] === 'input'
+        )[1];
+
       inputHandler();
-      
+
       // Should clear validation errors
       expect(mockElements.characterInputError.style.display).toBe('none');
     });
 
     it('should trigger debounced validation for substantial input', () => {
-      mockElements.characterDefinition.value = 'This is substantial input content that should trigger validation';
-      
-      const inputHandler = mockElements.characterDefinition.addEventListener.mock.calls
-        .find(call => call[0] === 'input')[1];
-      
+      mockElements.characterDefinition.value =
+        'This is substantial input content that should trigger validation';
+
+      const inputHandler =
+        mockElements.characterDefinition.addEventListener.mock.calls.find(
+          (call) => call[0] === 'input'
+        )[1];
+
       // Should not throw when handling substantial input
       expect(() => inputHandler()).not.toThrow();
     });
 
     it('should skip validation for short input', () => {
       mockElements.characterDefinition.value = 'short';
-      
-      const inputHandler = mockElements.characterDefinition.addEventListener.mock.calls
-        .find(call => call[0] === 'input')[1];
-      
+
+      const inputHandler =
+        mockElements.characterDefinition.addEventListener.mock.calls.find(
+          (call) => call[0] === 'input'
+        )[1];
+
       // Should handle short input without validation
       expect(() => inputHandler()).not.toThrow();
     });
 
     it('should handle blur event for enhanced validation', () => {
-      const blurHandler = mockElements.characterDefinition.addEventListener.mock.calls
-        .find(call => call[0] === 'blur')[1];
-      
+      const blurHandler =
+        mockElements.characterDefinition.addEventListener.mock.calls.find(
+          (call) => call[0] === 'blur'
+        )[1];
+
       expect(() => blurHandler()).not.toThrow();
     });
   });
@@ -689,7 +724,7 @@ describe('SpeechPatternsGeneratorController', () => {
       const validCharacterData = {
         'core:name': { text: 'John Doe' },
         'core:personality': { traits: ['brave', 'loyal'] },
-        'core:profile': { age: 30 }
+        'core:profile': { age: 30 },
       };
 
       // Mock enhanced validator to return valid for this test
@@ -698,42 +733,51 @@ describe('SpeechPatternsGeneratorController', () => {
         errors: [],
         warnings: [],
         suggestions: [],
-        quality: { overallScore: 0.9 }
+        quality: { overallScore: 0.9 },
       });
 
-      mockElements.characterDefinition.value = JSON.stringify(validCharacterData);
-      
+      mockElements.characterDefinition.value =
+        JSON.stringify(validCharacterData);
+
       // Test basic validation by calling the blur handler
-      const blurHandler = mockElements.characterDefinition.addEventListener.mock.calls
-        .find(call => call[0] === 'blur')[1];
-      
+      const blurHandler =
+        mockElements.characterDefinition.addEventListener.mock.calls.find(
+          (call) => call[0] === 'blur'
+        )[1];
+
       await blurHandler();
-      
+
       // Should display validation success (display can be block for success message)
       // Check that no error class is added instead of checking display
-      expect(mockElements.characterDefinition.classList.add).not.toHaveBeenCalledWith('error');
+      expect(
+        mockElements.characterDefinition.classList.add
+      ).not.toHaveBeenCalledWith('error');
     });
 
     it('should handle JSON syntax errors', async () => {
       mockElements.characterDefinition.value = '{ invalid json }';
-      
-      const blurHandler = mockElements.characterDefinition.addEventListener.mock.calls
-        .find(call => call[0] === 'blur')[1];
-      
+
+      const blurHandler =
+        mockElements.characterDefinition.addEventListener.mock.calls.find(
+          (call) => call[0] === 'blur'
+        )[1];
+
       await blurHandler();
-      
+
       // Should display validation error
       expect(mockElements.characterInputError.style.display).toBe('block');
     });
 
     it('should handle empty input gracefully', async () => {
       mockElements.characterDefinition.value = '';
-      
-      const blurHandler = mockElements.characterDefinition.addEventListener.mock.calls
-        .find(call => call[0] === 'blur')[1];
-      
+
+      const blurHandler =
+        mockElements.characterDefinition.addEventListener.mock.calls.find(
+          (call) => call[0] === 'blur'
+        )[1];
+
       await blurHandler();
-      
+
       // Should clear validation display
       expect(() => blurHandler()).not.toThrow();
     });
@@ -744,23 +788,25 @@ describe('SpeechPatternsGeneratorController', () => {
         errors: [],
         warnings: ['Minor warning'],
         suggestions: ['Consider adding more detail'],
-        quality: { overallScore: 0.8 }
+        quality: { overallScore: 0.8 },
       };
 
       mockEnhancedValidator.validateInput.mockResolvedValue(validationResult);
 
       const characterData = {
         'core:name': { text: 'Jane Doe' },
-        'core:personality': { traits: ['intelligent'] }
+        'core:personality': { traits: ['intelligent'] },
       };
 
       mockElements.characterDefinition.value = JSON.stringify(characterData);
-      
-      const blurHandler = mockElements.characterDefinition.addEventListener.mock.calls
-        .find(call => call[0] === 'blur')[1];
-      
+
+      const blurHandler =
+        mockElements.characterDefinition.addEventListener.mock.calls.find(
+          (call) => call[0] === 'blur'
+        )[1];
+
       await blurHandler();
-      
+
       expect(mockEnhancedValidator.validateInput).toHaveBeenCalledWith(
         characterData,
         {
@@ -775,17 +821,22 @@ describe('SpeechPatternsGeneratorController', () => {
       mockEnhancedValidator.validateInput.mockRejectedValue(validatorError);
 
       const characterData = {
-        'core:name': { text: 'John Smith' }
+        'core:name': { text: 'John Smith' },
       };
 
       mockElements.characterDefinition.value = JSON.stringify(characterData);
-      
-      const blurHandler = mockElements.characterDefinition.addEventListener.mock.calls
-        .find(call => call[0] === 'blur')[1];
-      
+
+      const blurHandler =
+        mockElements.characterDefinition.addEventListener.mock.calls.find(
+          (call) => call[0] === 'blur'
+        )[1];
+
       await blurHandler();
-      
-      expect(mockLogger.error).toHaveBeenCalledWith('Enhanced validation failed:', validatorError);
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Enhanced validation failed:',
+        validatorError
+      );
     });
   });
 
@@ -803,7 +854,7 @@ describe('SpeechPatternsGeneratorController', () => {
       const characterData = {
         'core:name': { text: 'Alice' },
         'core:personality': { traits: ['kind', 'determined'] },
-        'core:profile': { background: 'Healer' }
+        'core:profile': { background: 'Healer' },
       };
 
       // Mock enhanced validator to return valid for this test
@@ -812,35 +863,41 @@ describe('SpeechPatternsGeneratorController', () => {
         errors: [],
         warnings: [],
         suggestions: [],
-        quality: { overallScore: 0.85 }
+        quality: { overallScore: 0.85 },
       });
 
       mockElements.characterDefinition.value = JSON.stringify(characterData);
-      
-      const blurHandler = mockElements.characterDefinition.addEventListener.mock.calls
-        .find(call => call[0] === 'blur')[1];
-      
+
+      const blurHandler =
+        mockElements.characterDefinition.addEventListener.mock.calls.find(
+          (call) => call[0] === 'blur'
+        )[1];
+
       await blurHandler();
-      
+
       // Should pass validation with required components
       // Either no error class added, or success message shown
-      const errorClassAdded = mockElements.characterDefinition.classList.add.mock.calls
-        .some(call => call[0] === 'error');
+      const errorClassAdded =
+        mockElements.characterDefinition.classList.add.mock.calls.some(
+          (call) => call[0] === 'error'
+        );
       expect(errorClassAdded).toBe(false);
     });
 
     it('should detect missing required components', async () => {
       const characterData = {
-        'some:other': { data: 'value' }
+        'some:other': { data: 'value' },
       };
 
       mockElements.characterDefinition.value = JSON.stringify(characterData);
-      
-      const blurHandler = mockElements.characterDefinition.addEventListener.mock.calls
-        .find(call => call[0] === 'blur')[1];
-      
+
+      const blurHandler =
+        mockElements.characterDefinition.addEventListener.mock.calls.find(
+          (call) => call[0] === 'blur'
+        )[1];
+
       await blurHandler();
-      
+
       // Should show validation error
       expect(mockElements.characterInputError.style.display).toBe('block');
     });
@@ -848,7 +905,7 @@ describe('SpeechPatternsGeneratorController', () => {
     it('should support legacy format without components wrapper', async () => {
       const legacyCharacterData = {
         'core:name': { text: 'Bob' },
-        'core:personality': { traits: ['brave'] }
+        'core:personality': { traits: ['brave'] },
       };
 
       // Mock enhanced validator to return valid for legacy format
@@ -857,20 +914,25 @@ describe('SpeechPatternsGeneratorController', () => {
         errors: [],
         warnings: [],
         suggestions: [],
-        quality: { overallScore: 0.75 }
+        quality: { overallScore: 0.75 },
       });
 
-      mockElements.characterDefinition.value = JSON.stringify(legacyCharacterData);
-      
-      const blurHandler = mockElements.characterDefinition.addEventListener.mock.calls
-        .find(call => call[0] === 'blur')[1];
-      
+      mockElements.characterDefinition.value =
+        JSON.stringify(legacyCharacterData);
+
+      const blurHandler =
+        mockElements.characterDefinition.addEventListener.mock.calls.find(
+          (call) => call[0] === 'blur'
+        )[1];
+
       await blurHandler();
-      
+
       // Should handle legacy format
       // Either no error class added, or success message shown
-      const errorClassAdded = mockElements.characterDefinition.classList.add.mock.calls
-        .some(call => call[0] === 'error');
+      const errorClassAdded =
+        mockElements.characterDefinition.classList.add.mock.calls.some(
+          (call) => call[0] === 'error'
+        );
       expect(errorClassAdded).toBe(false);
     });
 
@@ -878,8 +940,8 @@ describe('SpeechPatternsGeneratorController', () => {
       const newFormatData = {
         components: {
           'core:name': { text: 'Charlie' },
-          'core:personality': { traits: ['clever'] }
-        }
+          'core:personality': { traits: ['clever'] },
+        },
       };
 
       // Mock enhanced validator to return valid for new format
@@ -888,19 +950,23 @@ describe('SpeechPatternsGeneratorController', () => {
         errors: [],
         warnings: [],
         suggestions: [],
-        quality: { overallScore: 0.75 }
+        quality: { overallScore: 0.75 },
       });
 
       mockElements.characterDefinition.value = JSON.stringify(newFormatData);
-      
-      const blurHandler = mockElements.characterDefinition.addEventListener.mock.calls
-        .find(call => call[0] === 'blur')[1];
-      
+
+      const blurHandler =
+        mockElements.characterDefinition.addEventListener.mock.calls.find(
+          (call) => call[0] === 'blur'
+        )[1];
+
       await blurHandler();
-      
+
       // Should handle new format without adding error class
-      const errorClassAdded = mockElements.characterDefinition.classList.add.mock.calls
-        .some(call => call[0] === 'error');
+      const errorClassAdded =
+        mockElements.characterDefinition.classList.add.mock.calls.some(
+          (call) => call[0] === 'error'
+        );
       expect(errorClassAdded).toBe(false);
     });
 
@@ -909,13 +975,13 @@ describe('SpeechPatternsGeneratorController', () => {
         { text: 'David' },
         { name: 'Emma' },
         { value: 'Frank' },
-        { personal: { firstName: 'Grace', lastName: 'Jones' } }
+        { personal: { firstName: 'Grace', lastName: 'Jones' } },
       ];
 
       for (const nameComponent of testCases) {
         const characterData = {
           'core:name': nameComponent,
-          'core:personality': { traits: ['unique'] }
+          'core:personality': { traits: ['unique'] },
         };
 
         // Mock enhanced validator to return valid for all name formats
@@ -924,22 +990,26 @@ describe('SpeechPatternsGeneratorController', () => {
           errors: [],
           warnings: [],
           suggestions: [],
-          quality: { overallScore: 0.7 }
+          quality: { overallScore: 0.7 },
         });
 
         // Clear previous mock calls
         mockElements.characterDefinition.classList.add.mockClear();
 
         mockElements.characterDefinition.value = JSON.stringify(characterData);
-        
-        const blurHandler = mockElements.characterDefinition.addEventListener.mock.calls
-          .find(call => call[0] === 'blur')[1];
-        
+
+        const blurHandler =
+          mockElements.characterDefinition.addEventListener.mock.calls.find(
+            (call) => call[0] === 'blur'
+          )[1];
+
         await blurHandler();
-        
+
         // Should successfully extract name without error
-        const errorClassAdded = mockElements.characterDefinition.classList.add.mock.calls
-          .some(call => call[0] === 'error');
+        const errorClassAdded =
+          mockElements.characterDefinition.classList.add.mock.calls.some(
+            (call) => call[0] === 'error'
+          );
         expect(errorClassAdded).toBe(false);
       }
     });
@@ -947,16 +1017,18 @@ describe('SpeechPatternsGeneratorController', () => {
     it('should validate content depth', async () => {
       const shallowData = {
         'core:name': { text: 'X' },
-        'core:personality': { x: '1' }
+        'core:personality': { x: '1' },
       };
 
       mockElements.characterDefinition.value = JSON.stringify(shallowData);
-      
-      const blurHandler = mockElements.characterDefinition.addEventListener.mock.calls
-        .find(call => call[0] === 'blur')[1];
-      
+
+      const blurHandler =
+        mockElements.characterDefinition.addEventListener.mock.calls.find(
+          (call) => call[0] === 'blur'
+        )[1];
+
       await blurHandler();
-      
+
       // Should detect lack of detailed content
       expect(mockElements.characterInputError.style.display).toBe('block');
     });
@@ -964,16 +1036,18 @@ describe('SpeechPatternsGeneratorController', () => {
     it('should handle empty character name', async () => {
       const characterData = {
         'core:name': { text: '' },
-        'core:personality': { traits: ['mysterious'] }
+        'core:personality': { traits: ['mysterious'] },
       };
 
       mockElements.characterDefinition.value = JSON.stringify(characterData);
-      
-      const blurHandler = mockElements.characterDefinition.addEventListener.mock.calls
-        .find(call => call[0] === 'blur')[1];
-      
+
+      const blurHandler =
+        mockElements.characterDefinition.addEventListener.mock.calls.find(
+          (call) => call[0] === 'blur'
+        )[1];
+
       await blurHandler();
-      
+
       // Should show error for empty name
       expect(mockElements.characterInputError.style.display).toBe('block');
     });
@@ -992,10 +1066,10 @@ describe('SpeechPatternsGeneratorController', () => {
     it('should update loading progress with stage information', () => {
       mockElements.loadingMessage.textContent = '';
       mockElements.progressBar.style.width = '';
-      
+
       // Call private method through controller (accessing private methods for testing)
       const updateProgressMethod = controller.constructor.prototype.constructor;
-      
+
       // Test progress update components exist
       expect(mockElements.loadingMessage).toBeDefined();
       expect(mockElements.progressBar).toBeDefined();
@@ -1004,7 +1078,7 @@ describe('SpeechPatternsGeneratorController', () => {
     it('should calculate time estimates based on stage and progress', () => {
       const startTime = performance.now() - 5000; // 5 seconds ago
       const progress = 30;
-      
+
       // Test that performance.now is being called for time calculations
       expect(performance.now).toBeDefined();
     });
@@ -1012,9 +1086,9 @@ describe('SpeechPatternsGeneratorController', () => {
     it('should format time estimates correctly', () => {
       const timeEstimate = {
         remaining: 45000, // 45 seconds
-        confidence: 0.85
+        confidence: 0.85,
       };
-      
+
       // Time formatting logic exists in the controller
       expect(timeEstimate.remaining).toBeGreaterThan(0);
       expect(timeEstimate.confidence).toBeGreaterThan(0);
@@ -1023,17 +1097,17 @@ describe('SpeechPatternsGeneratorController', () => {
     it('should announce progress to screen readers', () => {
       const stage = 'processing';
       const progress = 50;
-      
+
       // Should handle screen reader announcements
       expect(mockElements.screenReaderAnnouncement).toBeDefined();
     });
 
     it('should update progress bar with animation', () => {
       const progress = 75;
-      
+
       // Should use requestAnimationFrame for smooth updates
       expect(global.requestAnimationFrame).toBeDefined();
-      
+
       global.requestAnimationFrame(() => {
         // Animation callback should execute
         expect(true).toBe(true);
@@ -1042,8 +1116,8 @@ describe('SpeechPatternsGeneratorController', () => {
 
     it('should handle different progress stages', () => {
       const stages = ['validation', 'processing', 'response', 'rendering'];
-      
-      stages.forEach(stage => {
+
+      stages.forEach((stage) => {
         // Each stage should have corresponding message handling
         expect(stage).toBeDefined();
       });
@@ -1063,13 +1137,10 @@ describe('SpeechPatternsGeneratorController', () => {
       // Set up valid character definition
       const characterData = {
         'core:name': { text: 'Test Character' },
-        'core:personality': { traits: ['brave', 'intelligent'] }
+        'core:personality': { traits: ['brave', 'intelligent'] },
       };
       mockElements.characterDefinition.value = JSON.stringify(characterData);
     });
-
-
-
 
     // Removed: Test for AbortController cancellation - too complex timing setup for the value it adds
 
@@ -1077,22 +1148,24 @@ describe('SpeechPatternsGeneratorController', () => {
       // Set up valid character definition
       const characterData = {
         'core:name': { text: 'Error Test Character' },
-        'core:personality': { traits: ['test'] }
+        'core:personality': { traits: ['test'] },
       };
       mockElements.characterDefinition.value = JSON.stringify(characterData);
-      
+
       // Mock validation to pass
       mockEnhancedValidator.validateInput.mockResolvedValue({
         isValid: true,
         errors: [],
         warnings: [],
         suggestions: [],
-        quality: { overallScore: 0.9 }
+        quality: { overallScore: 0.9 },
       });
 
       // Mock generation to fail
       const generationError = new Error('Generation failed');
-      mockSpeechPatternsGenerator.generateSpeechPatterns.mockRejectedValue(generationError);
+      mockSpeechPatternsGenerator.generateSpeechPatterns.mockRejectedValue(
+        generationError
+      );
 
       // Test that error handling is set up
       expect(mockElements.generateBtn.addEventListener).toHaveBeenCalledWith(
@@ -1100,7 +1173,7 @@ describe('SpeechPatternsGeneratorController', () => {
         expect.any(Function),
         expect.any(Object)
       );
-      
+
       // Test that speech patterns generator is available for error handling
       expect(mockSpeechPatternsGenerator.generateSpeechPatterns).toBeDefined();
       expect(mockLogger.error).toBeDefined();
@@ -1110,30 +1183,30 @@ describe('SpeechPatternsGeneratorController', () => {
       // Set up valid character definition
       const characterData = {
         'core:name': { text: 'Performance Test Character' },
-        'core:personality': { traits: ['test'] }
+        'core:personality': { traits: ['test'] },
       };
       mockElements.characterDefinition.value = JSON.stringify(characterData);
-      
+
       // Mock validation to pass
       mockEnhancedValidator.validateInput.mockResolvedValue({
         isValid: true,
         errors: [],
         warnings: [],
         suggestions: [],
-        quality: { overallScore: 0.9 }
+        quality: { overallScore: 0.9 },
       });
-      
+
       mockSpeechPatternsGenerator.generateSpeechPatterns.mockResolvedValue({
         speechPatterns: ['Pattern 1', 'Pattern 2'],
         characterName: 'Performance Test Character',
-        totalCount: 2
+        totalCount: 2,
       });
 
       // Test that performance API is available and mocked
       expect(performance.mark).toBeDefined();
       expect(performance.measure).toBeDefined();
       expect(performance.now).toBeDefined();
-      
+
       // Verify the controller has access to performance tracking
       expect(typeof performance.now()).toBe('number');
     });
@@ -1159,21 +1232,28 @@ describe('SpeechPatternsGeneratorController', () => {
         speechPatterns: ['Export Pattern 1', 'Export Pattern 2'],
         characterName: 'Export Test Character',
         generatedAt: new Date().toISOString(),
-        totalCount: 2
+        totalCount: 2,
       };
-      
+
       // Simulate successful generation to enable export
-      mockSpeechPatternsGenerator.generateSpeechPatterns.mockResolvedValue(mockPatterns);
-      const clickHandler = mockElements.generateBtn.addEventListener.mock.calls
-        .find(call => call[0] === 'click')[1];
+      mockSpeechPatternsGenerator.generateSpeechPatterns.mockResolvedValue(
+        mockPatterns
+      );
+      const clickHandler =
+        mockElements.generateBtn.addEventListener.mock.calls.find(
+          (call) => call[0] === 'click'
+        )[1];
     });
 
     it('should export to JSON format', async () => {
       // Set up export mocks
-      const jsonContent = '{"patterns": ["Export Pattern 1", "Export Pattern 2"]}';
+      const jsonContent =
+        '{"patterns": ["Export Pattern 1", "Export Pattern 2"]}';
       mockDisplayEnhancer.formatAsJson.mockReturnValue(jsonContent);
       mockDisplayEnhancer.formatForExport.mockReturnValue(jsonContent);
-      mockDisplayEnhancer.generateExportFilename.mockReturnValue('export_test_character.json');
+      mockDisplayEnhancer.generateExportFilename.mockReturnValue(
+        'export_test_character.json'
+      );
       mockElements.exportFormat.value = 'json';
 
       // Verify export handler was registered
@@ -1182,17 +1262,16 @@ describe('SpeechPatternsGeneratorController', () => {
         expect.any(Function),
         expect.any(Object)
       );
-      
+
       // Verify export components are available
       expect(mockDisplayEnhancer).toBeDefined();
       expect(mockDisplayEnhancer.formatForExport).toBeDefined();
       expect(global.Blob).toBeDefined();
       expect(global.URL.createObjectURL).toBeDefined();
-      
+
       // Test that export format selection is set up
       expect(mockElements.exportFormat.value).toBe('json');
     });
-
 
     it('should prevent export when no patterns generated', async () => {
       // Create a fresh controller without generated patterns
@@ -1208,11 +1287,13 @@ describe('SpeechPatternsGeneratorController', () => {
       // Reset Blob mock to ensure clean state
       global.Blob.mockClear();
 
-      const exportHandler = mockElements.exportBtn.addEventListener.mock.calls
-        .find(call => call[0] === 'click')[1];
-      
+      const exportHandler =
+        mockElements.exportBtn.addEventListener.mock.calls.find(
+          (call) => call[0] === 'click'
+        )[1];
+
       exportHandler();
-      
+
       // Should not create blob or download when no patterns
       expect(global.Blob).not.toHaveBeenCalled();
     });
@@ -1233,7 +1314,7 @@ describe('SpeechPatternsGeneratorController', () => {
       // Initially no patterns - export button should be disabled
       mockElements.exportBtn.disabled = true;
       expect(mockElements.exportBtn.disabled).toBeTruthy();
-      
+
       // After patterns are generated, button should be enabled
       // This is simulated by setting patterns
       controller['_lastGeneratedPatterns'] = [{ pattern: 'test' }];
@@ -1248,9 +1329,10 @@ describe('SpeechPatternsGeneratorController', () => {
       expect(mockElements.clearBtn.disabled).toBeTruthy();
 
       // Set some character input
-      mockElements.characterDefinition.value = '{"core:name": {"text": "Clear Test"}}';
+      mockElements.characterDefinition.value =
+        '{"core:name": {"text": "Clear Test"}}';
       mockElements.clearBtn.disabled = false;
-      
+
       // Clear button should be enabled when there's content
       expect(mockElements.clearBtn.disabled).toBeFalsy();
     });
@@ -1258,11 +1340,11 @@ describe('SpeechPatternsGeneratorController', () => {
     it('should disable all buttons during generation', async () => {
       // This test verifies that the UI properly disables buttons during async generation
       // The actual button disabling is handled internally by the controller
-      
+
       // Set up valid character definition
       const characterData = {
         'core:name': { text: 'Generation Test Character' },
-        'core:personality': { traits: ['patient'] }
+        'core:personality': { traits: ['patient'] },
       };
       mockElements.characterDefinition.value = JSON.stringify(characterData);
 
@@ -1272,14 +1354,14 @@ describe('SpeechPatternsGeneratorController', () => {
         errors: [],
         warnings: [],
         suggestions: [],
-        quality: { overallScore: 0.9 }
+        quality: { overallScore: 0.9 },
       });
 
       // Mock successful generation
       mockSpeechPatternsGenerator.generateSpeechPatterns.mockResolvedValue({
         speechPatterns: ['Pattern 1', 'Pattern 2'],
         characterName: 'Generation Test Character',
-        totalCount: 2
+        totalCount: 2,
       });
 
       // The controller has event handlers registered
@@ -1288,12 +1370,12 @@ describe('SpeechPatternsGeneratorController', () => {
         expect.any(Function),
         expect.any(Object)
       );
-      
+
       // Track that we properly initialized buttons
       expect(mockElements.generateBtn).toBeDefined();
       expect(mockElements.exportBtn).toBeDefined();
       expect(mockElements.clearBtn).toBeDefined();
-      
+
       // The implementation would handle button states during generation
       // This is tested indirectly through the generation workflow test above
       // which verifies proper async handling and error states
@@ -1325,30 +1407,32 @@ describe('SpeechPatternsGeneratorController', () => {
       // Set up valid character definition
       const characterData = {
         'core:name': { text: 'Error Display Test' },
-        'core:personality': { traits: ['test'] }
+        'core:personality': { traits: ['test'] },
       };
       mockElements.characterDefinition.value = JSON.stringify(characterData);
-      
+
       // Mock validation to pass
       mockEnhancedValidator.validateInput.mockResolvedValue({
         isValid: true,
         errors: [],
         warnings: [],
         suggestions: [],
-        quality: { overallScore: 0.9 }
+        quality: { overallScore: 0.9 },
       });
-      
+
       const testError = new Error('Test error message');
       testError.name = 'SpeechPatternsGenerationError';
-      
-      mockSpeechPatternsGenerator.generateSpeechPatterns.mockRejectedValue(testError);
+
+      mockSpeechPatternsGenerator.generateSpeechPatterns.mockRejectedValue(
+        testError
+      );
 
       // Verify elements exist for error display
       expect(mockElements.errorState).toBeDefined();
       expect(mockElements.errorMessage).toBeDefined();
       expect(mockElements.loadingState).toBeDefined();
       expect(mockElements.resultsState).toBeDefined();
-      
+
       // Verify error handler was registered
       expect(mockElements.generateBtn.addEventListener).toHaveBeenCalledWith(
         'click',
@@ -1363,29 +1447,33 @@ describe('SpeechPatternsGeneratorController', () => {
       // Set up valid character definition first
       const characterData = {
         'core:name': { text: 'Abort Test Character' },
-        'core:personality': { traits: ['test'] }
+        'core:personality': { traits: ['test'] },
       };
       mockElements.characterDefinition.value = JSON.stringify(characterData);
-      
+
       // Mock validation to pass
       mockEnhancedValidator.validateInput.mockResolvedValue({
         isValid: true,
         errors: [],
         warnings: [],
         suggestions: [],
-        quality: { overallScore: 0.9 }
+        quality: { overallScore: 0.9 },
       });
-      
+
       const abortError = new Error('Operation was aborted');
       abortError.name = 'AbortError';
-      
-      mockSpeechPatternsGenerator.generateSpeechPatterns.mockRejectedValue(abortError);
 
-      const clickHandler = mockElements.generateBtn.addEventListener.mock.calls
-        .find(call => call[0] === 'click')[1];
-      
+      mockSpeechPatternsGenerator.generateSpeechPatterns.mockRejectedValue(
+        abortError
+      );
+
+      const clickHandler =
+        mockElements.generateBtn.addEventListener.mock.calls.find(
+          (call) => call[0] === 'click'
+        )[1];
+
       await clickHandler();
-      
+
       // When an abort error occurs, it should be handled differently from other errors
       // AbortError typically means user cancelled, so it shouldn't show as an error
       // The implementation may log this as debug or info, but won't show error UI
@@ -1406,27 +1494,35 @@ describe('SpeechPatternsGeneratorController', () => {
       mockElements.characterDefinition.classList.add('error');
 
       // Trigger input to clear errors
-      const inputHandler = mockElements.characterDefinition.addEventListener.mock.calls
-        .find(call => call[0] === 'input')[1];
-      
+      const inputHandler =
+        mockElements.characterDefinition.addEventListener.mock.calls.find(
+          (call) => call[0] === 'input'
+        )[1];
+
       inputHandler();
-      
+
       expect(mockElements.characterInputError.style.display).toBe('none');
       expect(mockElements.characterInputError.innerHTML).toBe('');
-      expect(mockElements.characterDefinition.classList.remove).toHaveBeenCalledWith('error');
+      expect(
+        mockElements.characterDefinition.classList.remove
+      ).toHaveBeenCalledWith('error');
     });
 
     it('should show validation errors with proper formatting', async () => {
       const invalidData = '{ invalid: json }';
       mockElements.characterDefinition.value = invalidData;
-      
-      const blurHandler = mockElements.characterDefinition.addEventListener.mock.calls
-        .find(call => call[0] === 'blur')[1];
-      
+
+      const blurHandler =
+        mockElements.characterDefinition.addEventListener.mock.calls.find(
+          (call) => call[0] === 'blur'
+        )[1];
+
       await blurHandler();
-      
+
       expect(mockElements.characterInputError.style.display).toBe('block');
-      expect(mockElements.characterDefinition.classList.add).toHaveBeenCalledWith('error');
+      expect(
+        mockElements.characterDefinition.classList.add
+      ).toHaveBeenCalledWith('error');
     });
   });
 
@@ -1445,24 +1541,34 @@ describe('SpeechPatternsGeneratorController', () => {
         isValid: false,
         errors: ['Missing required component: core:name'],
         warnings: ['Consider adding more personality traits'],
-        suggestions: ['Add core:likes and core:dislikes for better character depth'],
-        quality: { overallScore: 0.4 }
+        suggestions: [
+          'Add core:likes and core:dislikes for better character depth',
+        ],
+        quality: { overallScore: 0.4 },
       };
 
       mockEnhancedValidator.validateInput.mockResolvedValue(validationResult);
 
       const characterData = { 'some:component': { value: 'test' } };
       mockElements.characterDefinition.value = JSON.stringify(characterData);
-      
-      const blurHandler = mockElements.characterDefinition.addEventListener.mock.calls
-        .find(call => call[0] === 'blur')[1];
-      
+
+      const blurHandler =
+        mockElements.characterDefinition.addEventListener.mock.calls.find(
+          (call) => call[0] === 'blur'
+        )[1];
+
       await blurHandler();
-      
+
       expect(mockElements.characterInputError.style.display).toBe('block');
-      expect(mockElements.characterInputError.innerHTML).toContain('validation-errors');
-      expect(mockElements.characterInputError.innerHTML).toContain('validation-warnings');
-      expect(mockElements.characterInputError.innerHTML).toContain('validation-suggestions');
+      expect(mockElements.characterInputError.innerHTML).toContain(
+        'validation-errors'
+      );
+      expect(mockElements.characterInputError.innerHTML).toContain(
+        'validation-warnings'
+      );
+      expect(mockElements.characterInputError.innerHTML).toContain(
+        'validation-suggestions'
+      );
     });
 
     it('should display quality score with appropriate styling', async () => {
@@ -1471,28 +1577,32 @@ describe('SpeechPatternsGeneratorController', () => {
         errors: [],
         warnings: [],
         suggestions: [],
-        quality: { overallScore: 0.85 }
+        quality: { overallScore: 0.85 },
       };
 
       mockEnhancedValidator.validateInput.mockResolvedValue(validationResult);
 
       const characterData = {
         'core:name': { text: 'Quality Test Character' },
-        'core:personality': { traits: ['excellent', 'detailed'] }
+        'core:personality': { traits: ['excellent', 'detailed'] },
       };
       mockElements.characterDefinition.value = JSON.stringify(characterData);
-      
-      const blurHandler = mockElements.characterDefinition.addEventListener.mock.calls
-        .find(call => call[0] === 'blur')[1];
-      
+
+      const blurHandler =
+        mockElements.characterDefinition.addEventListener.mock.calls.find(
+          (call) => call[0] === 'blur'
+        )[1];
+
       await blurHandler();
-      
+
       // The validation result should trigger quality score display
       // Since we have a high score (0.85), expect success styling
       expect(mockElements.characterInputError.style.display).toBe('block');
       // Check that no error class was added (high quality score is good)
-      const errorClassAdded = mockElements.characterDefinition.classList.add.mock.calls
-        .some(call => call[0] === 'error');
+      const errorClassAdded =
+        mockElements.characterDefinition.classList.add.mock.calls.some(
+          (call) => call[0] === 'error'
+        );
       expect(errorClassAdded).toBe(false);
     });
 
@@ -1502,32 +1612,42 @@ describe('SpeechPatternsGeneratorController', () => {
         errors: [],
         warnings: [],
         suggestions: [],
-        quality: { overallScore: 0.9 }
+        quality: { overallScore: 0.9 },
       };
 
       mockEnhancedValidator.validateInput.mockResolvedValue(validationResult);
 
       const characterData = {
         'core:name': { text: 'Success Test Character' },
-        'core:personality': { traits: ['excellent', 'detailed', 'comprehensive'] },
-        'core:profile': { background: 'Very detailed background with lots of content' }
+        'core:personality': {
+          traits: ['excellent', 'detailed', 'comprehensive'],
+        },
+        'core:profile': {
+          background: 'Very detailed background with lots of content',
+        },
       };
       mockElements.characterDefinition.value = JSON.stringify(characterData);
-      
-      const blurHandler = mockElements.characterDefinition.addEventListener.mock.calls
-        .find(call => call[0] === 'blur')[1];
-      
+
+      const blurHandler =
+        mockElements.characterDefinition.addEventListener.mock.calls.find(
+          (call) => call[0] === 'blur'
+        )[1];
+
       await blurHandler();
-      
+
       // With a high quality score and valid data, we should see success styling
       expect(mockElements.characterInputError.style.display).toBe('block');
       // Verify no error class was added
-      const errorClassAdded = mockElements.characterDefinition.classList.add.mock.calls
-        .some(call => call[0] === 'error');
+      const errorClassAdded =
+        mockElements.characterDefinition.classList.add.mock.calls.some(
+          (call) => call[0] === 'error'
+        );
       expect(errorClassAdded).toBe(false);
-      // Verify success class was added  
-      const successClassAdded = mockElements.characterDefinition.classList.add.mock.calls
-        .some(call => call[0] === 'success');
+      // Verify success class was added
+      const successClassAdded =
+        mockElements.characterDefinition.classList.add.mock.calls.some(
+          (call) => call[0] === 'success'
+        );
       // If no success class is explicitly added, at least ensure no error
       expect(errorClassAdded).toBe(false);
     });
@@ -1535,25 +1655,36 @@ describe('SpeechPatternsGeneratorController', () => {
     it('should show validation progress indicator', async () => {
       // Mock a delay in validation
       mockEnhancedValidator.validateInput.mockImplementation(
-        () => new Promise(resolve => setTimeout(() => resolve({
-          isValid: true,
-          errors: [],
-          warnings: [],
-          suggestions: []
-        }), 100))
+        () =>
+          new Promise((resolve) =>
+            setTimeout(
+              () =>
+                resolve({
+                  isValid: true,
+                  errors: [],
+                  warnings: [],
+                  suggestions: [],
+                }),
+              100
+            )
+          )
       );
 
       const characterData = {
-        'core:name': { text: 'Progress Test Character' }
+        'core:name': { text: 'Progress Test Character' },
       };
       mockElements.characterDefinition.value = JSON.stringify(characterData);
-      
-      const blurPromise = mockElements.characterDefinition.addEventListener.mock.calls
-        .find(call => call[0] === 'blur')[1]();
-      
+
+      const blurPromise =
+        mockElements.characterDefinition.addEventListener.mock.calls.find(
+          (call) => call[0] === 'blur'
+        )[1]();
+
       // Should show progress initially
-      expect(mockElements.characterInputError.innerHTML).toContain('validation-progress');
-      
+      expect(mockElements.characterInputError.innerHTML).toContain(
+        'validation-progress'
+      );
+
       await blurPromise;
     });
 
@@ -1563,21 +1694,25 @@ describe('SpeechPatternsGeneratorController', () => {
         errors: [],
         warnings: ['Warning 1', 'Warning 2'],
         suggestions: ['Suggestion 1', 'Suggestion 2'],
-        quality: { overallScore: 0.6 }
+        quality: { overallScore: 0.6 },
       };
 
       mockEnhancedValidator.validateInput.mockResolvedValue(validationResult);
 
       const characterData = { 'some:component': { value: 'test' } };
       mockElements.characterDefinition.value = JSON.stringify(characterData);
-      
-      const blurHandler = mockElements.characterDefinition.addEventListener.mock.calls
-        .find(call => call[0] === 'blur')[1];
-      
+
+      const blurHandler =
+        mockElements.characterDefinition.addEventListener.mock.calls.find(
+          (call) => call[0] === 'blur'
+        )[1];
+
       await blurHandler();
-      
+
       // Should set up collapsible sections
-      expect(document.querySelectorAll).toHaveBeenCalledWith('.validation-section');
+      expect(document.querySelectorAll).toHaveBeenCalledWith(
+        '.validation-section'
+      );
     });
 
     it('should handle different quality levels', async () => {
@@ -1586,7 +1721,7 @@ describe('SpeechPatternsGeneratorController', () => {
         { score: 0.7, expectError: false },
         { score: 0.5, expectError: false },
         { score: 0.3, expectError: true },
-        { score: 0.1, expectError: true }
+        { score: 0.1, expectError: true },
       ];
 
       for (const level of qualityLevels) {
@@ -1595,7 +1730,7 @@ describe('SpeechPatternsGeneratorController', () => {
           errors: level.score < 0.5 ? ['Quality too low'] : [],
           warnings: [],
           suggestions: [],
-          quality: { overallScore: level.score }
+          quality: { overallScore: level.score },
         };
 
         mockEnhancedValidator.validateInput.mockResolvedValue(validationResult);
@@ -1606,20 +1741,24 @@ describe('SpeechPatternsGeneratorController', () => {
 
         const characterData = {
           'core:name': { text: 'Quality Level Test' },
-          'core:personality': { traits: ['test'] }
+          'core:personality': { traits: ['test'] },
         };
         mockElements.characterDefinition.value = JSON.stringify(characterData);
-        
-        const blurHandler = mockElements.characterDefinition.addEventListener.mock.calls
-          .find(call => call[0] === 'blur')[1];
-        
+
+        const blurHandler =
+          mockElements.characterDefinition.addEventListener.mock.calls.find(
+            (call) => call[0] === 'blur'
+          )[1];
+
         await blurHandler();
-        
+
         // Check if error class was added based on quality level
-        const errorClassAdded = mockElements.characterDefinition.classList.add.mock.calls
-          .some(call => call[0] === 'error');
+        const errorClassAdded =
+          mockElements.characterDefinition.classList.add.mock.calls.some(
+            (call) => call[0] === 'error'
+          );
         expect(errorClassAdded).toBe(level.expectError);
-        
+
         // Check display state
         if (level.expectError) {
           expect(mockElements.characterInputError.style.display).toBe('block');
@@ -1642,7 +1781,7 @@ describe('SpeechPatternsGeneratorController', () => {
     it('should handle keyboard shortcuts for generation (Ctrl+Enter)', () => {
       const characterData = {
         'core:name': { text: 'Keyboard Test Character' },
-        'core:personality': { traits: ['responsive'] }
+        'core:personality': { traits: ['responsive'] },
       };
       mockElements.characterDefinition.value = JSON.stringify(characterData);
 
@@ -1650,13 +1789,14 @@ describe('SpeechPatternsGeneratorController', () => {
       const keydownEvent = {
         key: 'Enter',
         ctrlKey: true,
-        preventDefault: jest.fn()
+        preventDefault: jest.fn(),
       };
 
       // Find the document keydown listener
-      const keydownListeners = document.addEventListener.mock.calls
-        .filter(call => call[0] === 'keydown');
-      
+      const keydownListeners = document.addEventListener.mock.calls.filter(
+        (call) => call[0] === 'keydown'
+      );
+
       expect(keydownListeners.length).toBeGreaterThan(0);
 
       // Test the keyboard handler
@@ -1671,25 +1811,30 @@ describe('SpeechPatternsGeneratorController', () => {
       const mockPatterns = {
         speechPatterns: ['Keyboard Export Pattern'],
         characterName: 'Keyboard Export Character',
-        totalCount: 1
+        totalCount: 1,
       };
-      mockSpeechPatternsGenerator.generateSpeechPatterns.mockResolvedValue(mockPatterns);
+      mockSpeechPatternsGenerator.generateSpeechPatterns.mockResolvedValue(
+        mockPatterns
+      );
 
       // Generate patterns first
-      const clickHandler = mockElements.generateBtn.addEventListener.mock.calls
-        .find(call => call[0] === 'click')[1];
+      const clickHandler =
+        mockElements.generateBtn.addEventListener.mock.calls.find(
+          (call) => call[0] === 'click'
+        )[1];
       await clickHandler();
 
       // Simulate Ctrl+E keydown
       const keydownEvent = {
         key: 'e',
         ctrlKey: true,
-        preventDefault: jest.fn()
+        preventDefault: jest.fn(),
       };
 
-      const keydownListeners = document.addEventListener.mock.calls
-        .filter(call => call[0] === 'keydown');
-      
+      const keydownListeners = document.addEventListener.mock.calls.filter(
+        (call) => call[0] === 'keydown'
+      );
+
       const keydownHandler = keydownListeners[0][1];
       keydownHandler(keydownEvent);
 
@@ -1704,12 +1849,13 @@ describe('SpeechPatternsGeneratorController', () => {
         key: 'Delete',
         ctrlKey: true,
         shiftKey: true,
-        preventDefault: jest.fn()
+        preventDefault: jest.fn(),
       };
 
-      const keydownListeners = document.addEventListener.mock.calls
-        .filter(call => call[0] === 'keydown');
-      
+      const keydownListeners = document.addEventListener.mock.calls.filter(
+        (call) => call[0] === 'keydown'
+      );
+
       const keydownHandler = keydownListeners[0][1];
       keydownHandler(keydownEvent);
 
@@ -1718,12 +1864,13 @@ describe('SpeechPatternsGeneratorController', () => {
 
     it('should handle ESC key to cancel generation', () => {
       const keydownEvent = {
-        key: 'Escape'
+        key: 'Escape',
       };
 
-      const keydownListeners = document.addEventListener.mock.calls
-        .filter(call => call[0] === 'keydown');
-      
+      const keydownListeners = document.addEventListener.mock.calls.filter(
+        (call) => call[0] === 'keydown'
+      );
+
       const keydownHandler = keydownListeners[0][1];
       keydownHandler(keydownEvent);
 
@@ -1734,14 +1881,22 @@ describe('SpeechPatternsGeneratorController', () => {
     it('should handle arrow key navigation through pattern results', async () => {
       // Generate some patterns first
       const mockPatterns = {
-        speechPatterns: ['Navigation Pattern 1', 'Navigation Pattern 2', 'Navigation Pattern 3'],
+        speechPatterns: [
+          'Navigation Pattern 1',
+          'Navigation Pattern 2',
+          'Navigation Pattern 3',
+        ],
         characterName: 'Navigation Test Character',
-        totalCount: 3
+        totalCount: 3,
       };
-      mockSpeechPatternsGenerator.generateSpeechPatterns.mockResolvedValue(mockPatterns);
+      mockSpeechPatternsGenerator.generateSpeechPatterns.mockResolvedValue(
+        mockPatterns
+      );
 
-      const clickHandler = mockElements.generateBtn.addEventListener.mock.calls
-        .find(call => call[0] === 'click')[1];
+      const clickHandler =
+        mockElements.generateBtn.addEventListener.mock.calls.find(
+          (call) => call[0] === 'click'
+        )[1];
       await clickHandler();
 
       // Mock pattern elements
@@ -1763,13 +1918,14 @@ describe('SpeechPatternsGeneratorController', () => {
       const arrowDownEvent = {
         key: 'ArrowDown',
         target: mockPattern1,
-        preventDefault: jest.fn()
+        preventDefault: jest.fn(),
       };
 
       // Find pattern navigation listener
-      const keydownListeners = document.addEventListener.mock.calls
-        .filter(call => call[0] === 'keydown');
-      
+      const keydownListeners = document.addEventListener.mock.calls.filter(
+        (call) => call[0] === 'keydown'
+      );
+
       const navigationHandler = keydownListeners[1][1]; // Second keydown listener is for navigation
       if (navigationHandler) {
         navigationHandler(arrowDownEvent);
@@ -1782,12 +1938,16 @@ describe('SpeechPatternsGeneratorController', () => {
       const mockPatterns = {
         speechPatterns: ['Vim Pattern 1', 'Vim Pattern 2'],
         characterName: 'Vim Navigation Character',
-        totalCount: 2
+        totalCount: 2,
       };
-      mockSpeechPatternsGenerator.generateSpeechPatterns.mockResolvedValue(mockPatterns);
+      mockSpeechPatternsGenerator.generateSpeechPatterns.mockResolvedValue(
+        mockPatterns
+      );
 
-      const clickHandler = mockElements.generateBtn.addEventListener.mock.calls
-        .find(call => call[0] === 'click')[1];
+      const clickHandler =
+        mockElements.generateBtn.addEventListener.mock.calls.find(
+          (call) => call[0] === 'click'
+        )[1];
       await clickHandler();
 
       // Mock pattern elements
@@ -1803,12 +1963,13 @@ describe('SpeechPatternsGeneratorController', () => {
       const jKeyEvent = {
         key: 'j',
         target: mockPattern1,
-        preventDefault: jest.fn()
+        preventDefault: jest.fn(),
       };
 
-      const keydownListeners = document.addEventListener.mock.calls
-        .filter(call => call[0] === 'keydown');
-      
+      const keydownListeners = document.addEventListener.mock.calls.filter(
+        (call) => call[0] === 'keydown'
+      );
+
       const navigationHandler = keydownListeners[1][1];
       if (navigationHandler) {
         navigationHandler(jKeyEvent);
@@ -1819,7 +1980,7 @@ describe('SpeechPatternsGeneratorController', () => {
       const kKeyEvent = {
         key: 'k',
         target: mockPattern2,
-        preventDefault: jest.fn()
+        preventDefault: jest.fn(),
       };
 
       if (navigationHandler) {
@@ -1833,12 +1994,16 @@ describe('SpeechPatternsGeneratorController', () => {
       const mockPatterns = {
         speechPatterns: ['Home Pattern', 'Middle Pattern', 'End Pattern'],
         characterName: 'Home End Navigation Character',
-        totalCount: 3
+        totalCount: 3,
       };
-      mockSpeechPatternsGenerator.generateSpeechPatterns.mockResolvedValue(mockPatterns);
+      mockSpeechPatternsGenerator.generateSpeechPatterns.mockResolvedValue(
+        mockPatterns
+      );
 
-      const clickHandler = mockElements.generateBtn.addEventListener.mock.calls
-        .find(call => call[0] === 'click')[1];
+      const clickHandler =
+        mockElements.generateBtn.addEventListener.mock.calls.find(
+          (call) => call[0] === 'click'
+        )[1];
       await clickHandler();
 
       // Mock pattern container and patterns
@@ -1859,12 +2024,13 @@ describe('SpeechPatternsGeneratorController', () => {
       const homeKeyEvent = {
         key: 'Home',
         target: mockMiddlePattern,
-        preventDefault: jest.fn()
+        preventDefault: jest.fn(),
       };
 
-      const keydownListeners = document.addEventListener.mock.calls
-        .filter(call => call[0] === 'keydown');
-      
+      const keydownListeners = document.addEventListener.mock.calls.filter(
+        (call) => call[0] === 'keydown'
+      );
+
       const navigationHandler = keydownListeners[1][1];
       if (navigationHandler) {
         navigationHandler(homeKeyEvent);
@@ -1875,7 +2041,7 @@ describe('SpeechPatternsGeneratorController', () => {
       const endKeyEvent = {
         key: 'End',
         target: mockMiddlePattern,
-        preventDefault: jest.fn()
+        preventDefault: jest.fn(),
       };
 
       if (navigationHandler) {
@@ -1888,38 +2054,42 @@ describe('SpeechPatternsGeneratorController', () => {
       // Set up valid character definition
       const characterData = {
         'core:name': { text: 'Screen Reader Test Character' },
-        'core:personality': { traits: ['test'] }
+        'core:personality': { traits: ['test'] },
       };
       mockElements.characterDefinition.value = JSON.stringify(characterData);
-      
+
       // Mock validation to pass
       mockEnhancedValidator.validateInput.mockResolvedValue({
         isValid: true,
         errors: [],
         warnings: [],
         suggestions: [],
-        quality: { overallScore: 0.9 }
+        quality: { overallScore: 0.9 },
       });
-      
+
       // Generate patterns first
       const mockPatterns = {
         speechPatterns: ['Screen Reader Pattern 1', 'Screen Reader Pattern 2'],
         characterName: 'Screen Reader Test Character',
-        totalCount: 2
+        totalCount: 2,
       };
-      mockSpeechPatternsGenerator.generateSpeechPatterns.mockResolvedValue(mockPatterns);
+      mockSpeechPatternsGenerator.generateSpeechPatterns.mockResolvedValue(
+        mockPatterns
+      );
 
-      const clickHandler = mockElements.generateBtn.addEventListener.mock.calls
-        .find(call => call[0] === 'click')[1];
+      const clickHandler =
+        mockElements.generateBtn.addEventListener.mock.calls.find(
+          (call) => call[0] === 'click'
+        )[1];
       await clickHandler();
 
       // Mock pattern elements with proper structure
       const mockPattern1 = createMockElement('article');
       const mockPattern2 = createMockElement('article');
-      
+
       mockPattern1.classList.add('speech-pattern-item');
       mockPattern2.classList.add('speech-pattern-item');
-      
+
       // Mock pattern number elements
       const mockPatternNumber1 = createMockElement('div');
       const mockPatternNumber2 = createMockElement('div');
@@ -1927,7 +2097,7 @@ describe('SpeechPatternsGeneratorController', () => {
       mockPatternNumber2.textContent = '2';
       mockPatternNumber1.classList.add('pattern-number');
       mockPatternNumber2.classList.add('pattern-number');
-      
+
       // Set up querySelector to return pattern numbers
       mockPattern1.querySelector = jest.fn((selector) => {
         if (selector === '.pattern-number') return mockPatternNumber1;
@@ -1937,7 +2107,7 @@ describe('SpeechPatternsGeneratorController', () => {
         if (selector === '.pattern-number') return mockPatternNumber2;
         return null;
       });
-      
+
       // Set up sibling relationships for navigation
       mockPattern1.nextElementSibling = mockPattern2;
       mockPattern2.previousElementSibling = mockPattern1;
@@ -1946,21 +2116,22 @@ describe('SpeechPatternsGeneratorController', () => {
       const arrowDownEvent = {
         key: 'ArrowDown',
         target: mockPattern1,
-        preventDefault: jest.fn()
+        preventDefault: jest.fn(),
       };
 
       // Find the navigation handler (may be first or second keydown listener)
-      const keydownListeners = document.addEventListener.mock.calls
-        .filter(call => call[0] === 'keydown');
-      
+      const keydownListeners = document.addEventListener.mock.calls.filter(
+        (call) => call[0] === 'keydown'
+      );
+
       // Try each keydown listener to find the one that handles navigation
       for (const [, handler] of keydownListeners) {
         // Reset screen reader announcement
         mockElements.screenReaderAnnouncement.textContent = '';
-        
+
         // Call the handler
         handler(arrowDownEvent);
-        
+
         // Check if this handler updated the screen reader announcement
         if (mockPattern2.focus.mock.calls.length > 0) {
           // Navigation happened, verify focus and announcement
@@ -1971,7 +2142,7 @@ describe('SpeechPatternsGeneratorController', () => {
           break;
         }
       }
-      
+
       // Verify that navigation behavior was tested
       expect(arrowDownEvent.preventDefault).toHaveBeenCalled();
     });
@@ -2001,8 +2172,10 @@ describe('SpeechPatternsGeneratorController', () => {
       });
 
       // Test format change handler
-      const formatChangeHandler = mockElements.exportFormat.addEventListener.mock.calls
-        .find(call => call[0] === 'change')[1];
+      const formatChangeHandler =
+        mockElements.exportFormat.addEventListener.mock.calls.find(
+          (call) => call[0] === 'change'
+        )[1];
 
       if (formatChangeHandler) {
         // Test with text format (should show templates)
@@ -2031,51 +2204,67 @@ describe('SpeechPatternsGeneratorController', () => {
 
     it('should clear all input and results', async () => {
       // Set up some content
-      mockElements.characterDefinition.value = '{"core:name": {"text": "Clear Test"}}';
+      mockElements.characterDefinition.value =
+        '{"core:name": {"text": "Clear Test"}}';
       mockElements.characterInputError.style.display = 'block';
-      
+
       // Generate some patterns first
       const mockPatterns = {
         speechPatterns: ['Clear Pattern'],
         characterName: 'Clear Test Character',
-        totalCount: 1
+        totalCount: 1,
       };
-      mockSpeechPatternsGenerator.generateSpeechPatterns.mockResolvedValue(mockPatterns);
+      mockSpeechPatternsGenerator.generateSpeechPatterns.mockResolvedValue(
+        mockPatterns
+      );
 
-      const generateHandler = mockElements.generateBtn.addEventListener.mock.calls
-        .find(call => call[0] === 'click')[1];
+      const generateHandler =
+        mockElements.generateBtn.addEventListener.mock.calls.find(
+          (call) => call[0] === 'click'
+        )[1];
       await generateHandler();
 
       // Now clear everything
-      const clearHandler = mockElements.clearBtn.addEventListener.mock.calls
-        .find(call => call[0] === 'click')[1];
-      
+      const clearHandler =
+        mockElements.clearBtn.addEventListener.mock.calls.find(
+          (call) => call[0] === 'click'
+        )[1];
+
       clearHandler();
 
       expect(mockElements.characterDefinition.value).toBe('');
       expect(mockElements.characterInputError.style.display).toBe('none');
-      expect(mockElements.screenReaderAnnouncement.textContent).toBe('All content cleared');
+      expect(mockElements.screenReaderAnnouncement.textContent).toBe(
+        'All content cleared'
+      );
     });
 
     it('should cancel ongoing generation when clearing', async () => {
       // Set up content
-      mockElements.characterDefinition.value = '{"core:name": {"text": "Cancel Test"}}';
-      
+      mockElements.characterDefinition.value =
+        '{"core:name": {"text": "Cancel Test"}}';
+
       // Mock slow generation
       let abortController;
-      mockSpeechPatternsGenerator.generateSpeechPatterns.mockImplementation((data, options) => {
-        abortController = options?.abortSignal;
-        return new Promise(resolve => setTimeout(resolve, 1000));
-      });
+      mockSpeechPatternsGenerator.generateSpeechPatterns.mockImplementation(
+        (data, options) => {
+          abortController = options?.abortSignal;
+          return new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+      );
 
       // Start generation
-      const generateHandler = mockElements.generateBtn.addEventListener.mock.calls
-        .find(call => call[0] === 'click')[1];
+      const generateHandler =
+        mockElements.generateBtn.addEventListener.mock.calls.find(
+          (call) => call[0] === 'click'
+        )[1];
       const generationPromise = generateHandler();
 
       // Clear during generation
-      const clearHandler = mockElements.clearBtn.addEventListener.mock.calls
-        .find(call => call[0] === 'click')[1];
+      const clearHandler =
+        mockElements.clearBtn.addEventListener.mock.calls.find(
+          (call) => call[0] === 'click'
+        )[1];
       clearHandler();
 
       // Should abort the generation
@@ -2093,15 +2282,16 @@ describe('SpeechPatternsGeneratorController', () => {
         expect.any(Function),
         expect.any(Object)
       );
-      
+
       // Find the back handler
-      const backHandler = mockElements.backBtn.addEventListener.mock.calls
-        .find(call => call[0] === 'click')[1];
-      
+      const backHandler = mockElements.backBtn.addEventListener.mock.calls.find(
+        (call) => call[0] === 'click'
+      )[1];
+
       // Verify the handler exists and is a function
       expect(backHandler).toBeDefined();
       expect(typeof backHandler).toBe('function');
-      
+
       // Test that it can be called without error (navigation will be mocked by jsdom)
       expect(() => backHandler()).not.toThrow();
     });

@@ -23,7 +23,7 @@ class ModReferenceExtractor {
   _logger;
   // eslint-disable-next-line no-unused-private-class-members
   _ajvValidator; // Reserved for future schema validation in MODDEPVAL-002
-  
+
   /**
    * Creates a new ModReferenceExtractor instance
    *
@@ -38,7 +38,7 @@ class ModReferenceExtractor {
     validateDependency(ajvValidator, 'IAjvValidator', logger, {
       requiredMethods: ['validate'],
     });
-    
+
     this._logger = logger;
     this._ajvValidator = ajvValidator;
   }
@@ -51,21 +51,27 @@ class ModReferenceExtractor {
    * @throws {Error} If modPath is invalid or inaccessible
    */
   async extractReferences(modPath) {
-    string.assertNonBlank(modPath, 'modPath', 'ModReferenceExtractor.extractReferences', this._logger);
-    
+    string.assertNonBlank(
+      modPath,
+      'modPath',
+      'ModReferenceExtractor.extractReferences',
+      this._logger
+    );
+
     try {
       const modId = path.basename(modPath);
       this._logger.debug(`Starting reference extraction for mod: ${modId}`);
-      
+
       const references = new Map();
       await this._scanDirectory(modPath, references, modId);
-      
+
       // Remove self-references (references to the mod being analyzed)
       references.delete(modId);
-      
-      this._logger.info(`Extracted references for mod '${modId}': ${Array.from(references.keys()).join(', ')}`);
+
+      this._logger.info(
+        `Extracted references for mod '${modId}': ${Array.from(references.keys()).join(', ')}`
+      );
       return references;
-      
     } catch (error) {
       this._logger.error(`Failed to extract references from ${modPath}`, error);
       throw error;
@@ -75,42 +81,57 @@ class ModReferenceExtractor {
   /**
    * Enhanced reference extraction with file context information
    * Extension of existing extractReferences to include file locations
-   * 
+   *
    * @param {string} modPath - Path to mod directory
-   * @returns {Promise<Map<string, Array<{componentId: string, contexts: Array<Object>}>>>} 
+   * @returns {Promise<Map<string, Array<{componentId: string, contexts: Array<Object>}>>>}
    * References with file context information
    */
   async extractReferencesWithFileContext(modPath) {
-    string.assertNonBlank(modPath, 'modPath', 'ModReferenceExtractor.extractReferencesWithFileContext', this._logger);
-    
+    string.assertNonBlank(
+      modPath,
+      'modPath',
+      'ModReferenceExtractor.extractReferencesWithFileContext',
+      this._logger
+    );
+
     try {
       const modId = path.basename(modPath);
-      this._logger.debug(`Starting contextual reference extraction for mod: ${modId}`);
-      
+      this._logger.debug(
+        `Starting contextual reference extraction for mod: ${modId}`
+      );
+
       // First get basic references using existing method
       const basicReferences = await this.extractReferences(modPath);
       const contextualReferences = new Map();
-      
+
       // For each reference, re-scan files to capture context
       for (const [referencedModId, componentIds] of basicReferences) {
         const componentsWithContext = [];
-        
+
         for (const componentId of componentIds) {
-          const contexts = await this._findReferenceContexts(modPath, referencedModId, componentId);
+          const contexts = await this._findReferenceContexts(
+            modPath,
+            referencedModId,
+            componentId
+          );
           componentsWithContext.push({
             componentId,
-            contexts: contexts || []
+            contexts: contexts || [],
           });
         }
-        
+
         contextualReferences.set(referencedModId, componentsWithContext);
       }
-      
-      this._logger.debug(`Extracted contextual references for mod '${modId}': ${contextualReferences.size} referenced mods`);
+
+      this._logger.debug(
+        `Extracted contextual references for mod '${modId}': ${contextualReferences.size} referenced mods`
+      );
       return contextualReferences;
-      
     } catch (error) {
-      this._logger.error(`Failed to extract contextual references from ${modPath}`, error);
+      this._logger.error(
+        `Failed to extract contextual references from ${modPath}`,
+        error
+      );
       throw error;
     }
   }
@@ -125,10 +146,10 @@ class ModReferenceExtractor {
    */
   async _scanDirectory(dirPath, references, modId) {
     const entries = await fs.readdir(dirPath, { withFileTypes: true });
-    
+
     for (const entry of entries) {
       const fullPath = path.join(dirPath, entry.name);
-      
+
       if (entry.isDirectory()) {
         await this._scanDirectory(fullPath, references, modId);
       } else if (entry.isFile()) {
@@ -147,7 +168,7 @@ class ModReferenceExtractor {
   async _extractFromFile(filePath, references) {
     const ext = path.extname(filePath);
     const basename = path.basename(filePath);
-    
+
     try {
       switch (ext) {
         case '.json':
@@ -164,12 +185,15 @@ class ModReferenceExtractor {
       }
     } catch (error) {
       // Enhanced error context
-      this._logger.warn(`Failed to process ${basename} (${ext}): ${error.message}`, {
-        filePath,
-        fileType: ext,
-        error: error.name
-      });
-      
+      this._logger.warn(
+        `Failed to process ${basename} (${ext}): ${error.message}`,
+        {
+          filePath,
+          fileType: ext,
+          error: error.name,
+        }
+      );
+
       // Continue processing - don't fail entire extraction for one bad file
     }
   }
@@ -184,9 +208,9 @@ class ModReferenceExtractor {
   async _extractFromJsonFile(filePath, references) {
     const content = await fs.readFile(filePath, 'utf8');
     const data = JSON.parse(content);
-    
+
     const fileType = this._detectJsonFileType(filePath);
-    
+
     switch (fileType) {
       case 'action':
         this._extractFromActionFile(data, references);
@@ -230,28 +254,31 @@ class ModReferenceExtractor {
    * Extracts references from Scope DSL files (.scope)
    *
    * @private
-   * @param {string} filePath - Scope file path  
+   * @param {string} filePath - Scope file path
    * @param {ModReferenceMap} references - Reference map to populate
    */
   async _extractFromScopeFile(filePath, references) {
     const content = await fs.readFile(filePath, 'utf8');
     const fileName = path.basename(filePath);
-    
+
     try {
       this._logger.debug(`Processing scope file: ${fileName}`);
-      
+
       // Use existing scope definition parser from scopeDsl module
       const scopeDefinitions = parseScopeDefinitions(content, filePath);
-      
+
       // Extract references from parsed scope definitions
       for (const [scopeName, { ast }] of scopeDefinitions) {
         this._extractReferencesFromScopeAST(scopeName, ast, references);
       }
-      
-      this._logger.debug(`Extracted ${references.size} mod references from ${fileName}`);
-      
+
+      this._logger.debug(
+        `Extracted ${references.size} mod references from ${fileName}`
+      );
     } catch (error) {
-      this._logger.warn(`Failed to parse scope file ${fileName}: ${error.message}`);
+      this._logger.warn(
+        `Failed to parse scope file ${fileName}: ${error.message}`
+      );
       // Fallback to regex-based extraction for partial results
       this._extractScopeReferencesWithRegex(content, references);
     }
@@ -275,7 +302,7 @@ class ModReferenceExtractor {
         this._addScopeReference(modId, scopeId, references);
       }
     }
-    
+
     // Extract from AST tree (right side of :=)
     this._extractFromScopeExpression(ast, references);
   }
@@ -288,41 +315,45 @@ class ModReferenceExtractor {
    * - Filter: { type: 'Filter', logic: object, parent: object }
    * - Union: { type: 'Union', left: object, right: object }
    * - ArrayIterationStep: { type: 'ArrayIterationStep', parent: object }
-   * 
+   *
    * @private
    * @param {object} node - AST node from parseDslExpression
    * @param {ModReferenceMap} references - Reference map to populate
    */
   _extractFromScopeExpression(node, references) {
     if (!node) return;
-    
+
     switch (node.type) {
       case 'Step':
         this._extractFromStepNode(node, references);
         break;
-        
+
       case 'Filter':
         this._extractFromFilterNode(node, references);
         break;
-        
+
       case 'Union':
         this._extractFromUnionNode(node, references);
         break;
-        
+
       case 'ArrayIterationStep':
         // Process parent node for array iteration
         if (node.parent) {
           this._extractFromScopeExpression(node.parent, references);
         }
         break;
-        
+
       case 'Source':
         // Source nodes may contain entity references
         if (node.param && node.param.includes(':')) {
-          this._extractModReferencesFromString(node.param, references, 'source_param');
+          this._extractModReferencesFromString(
+            node.param,
+            references,
+            'source_param'
+          );
         }
         break;
-        
+
       default:
         this._logger.debug(`Processing AST node type: ${node.type}`);
         break;
@@ -340,9 +371,13 @@ class ModReferenceExtractor {
     // Step nodes represent field access like .components.modId:componentId
     if (node.field && node.field.includes(':')) {
       // Field contains a mod reference
-      this._extractModReferencesFromString(node.field, references, 'step_field');
+      this._extractModReferencesFromString(
+        node.field,
+        references,
+        'step_field'
+      );
     }
-    
+
     // Process parent node
     if (node.parent) {
       this._extractFromScopeExpression(node.parent, references);
@@ -361,7 +396,7 @@ class ModReferenceExtractor {
     if (node.parent) {
       this._extractFromScopeExpression(node.parent, references);
     }
-    
+
     // Process JSON Logic in filter
     if (node.logic) {
       this._extractFromJsonLogic(node.logic, references);
@@ -373,7 +408,7 @@ class ModReferenceExtractor {
    *
    * @private
    * @param {object} node - Union node from AST
-   * @param {ModReferenceMap} references - Reference map to populate  
+   * @param {ModReferenceMap} references - Reference map to populate
    */
   _extractFromUnionNode(node, references) {
     // Process left and right branches of the union
@@ -398,11 +433,11 @@ class ModReferenceExtractor {
     if (modId === 'core' || modId === 'none' || modId === 'self') {
       return;
     }
-    
+
     if (!references.has(modId)) {
       references.set(modId, new Set());
     }
-    
+
     references.get(modId).add(componentId);
     this._logger.debug(`Found scope reference: ${modId}:${componentId}`);
   }
@@ -461,19 +496,19 @@ class ModReferenceExtractor {
     const patterns = [
       // Standard modId:componentId pattern (including hyphens for compatibility)
       /\b([a-zA-Z][a-zA-Z0-9_]*):([a-zA-Z][a-zA-Z0-9_-]*)\b/g,
-      
+
       // Scope DSL patterns in JSON strings (preview for MODDEPVAL-003)
       /\b([a-zA-Z][a-zA-Z0-9_]*):([a-zA-Z][a-zA-Z0-9_-]*)\s*:=/g,
-      
+
       // Component access patterns: modId:componentId.field
-      /\b([a-zA-Z][a-zA-Z0-9_]*):([a-zA-Z][a-zA-Z0-9_-]*)\.[a-zA-Z_][a-zA-Z0-9_]*\b/g
+      /\b([a-zA-Z][a-zA-Z0-9_]*):([a-zA-Z][a-zA-Z0-9_-]*)\.[a-zA-Z_][a-zA-Z0-9_]*\b/g,
     ];
 
-    patterns.forEach(pattern => {
+    patterns.forEach((pattern) => {
       let match;
       while ((match = pattern.exec(str)) !== null) {
         const [, modId, componentId] = match;
-        
+
         // Skip core references and special cases
         if (modId === 'core' || modId === 'none' || modId === 'self') {
           continue;
@@ -482,12 +517,14 @@ class ModReferenceExtractor {
         if (!references.has(modId)) {
           references.set(modId, new Set());
         }
-        
+
         references.get(modId).add(componentId);
-        
+
         // Log context for debugging
         if (context) {
-          this._logger.debug(`Found reference ${modId}:${componentId} in ${context}`);
+          this._logger.debug(
+            `Found reference ${modId}:${componentId} in ${context}`
+          );
         }
       }
     });
@@ -502,15 +539,15 @@ class ModReferenceExtractor {
    */
   _detectJsonFileType(filePath) {
     const basename = path.basename(filePath);
-    
+
     if (basename.endsWith('.action.json')) return 'action';
-    if (basename.endsWith('.rule.json')) return 'rule';  
+    if (basename.endsWith('.rule.json')) return 'rule';
     if (basename.endsWith('.condition.json')) return 'condition';
     if (basename.endsWith('.component.json')) return 'component';
     if (basename.endsWith('.event.json')) return 'event';
     if (basename.endsWith('.blueprint.json')) return 'blueprint';
     if (basename.endsWith('.recipe.json')) return 'recipe';
-    
+
     return 'unknown';
   }
 
@@ -524,35 +561,63 @@ class ModReferenceExtractor {
   _extractFromActionFile(actionData, references) {
     // Required components - typically arrays of component IDs
     if (actionData.required_components) {
-      for (const [_entityType, components] of Object.entries(actionData.required_components)) {
+      for (const [_entityType, components] of Object.entries(
+        actionData.required_components
+      )) {
         if (Array.isArray(components)) {
-          components.forEach(comp => this._extractModReferencesFromString(comp, references, 'required_components'));
+          components.forEach((comp) =>
+            this._extractModReferencesFromString(
+              comp,
+              references,
+              'required_components'
+            )
+          );
         }
       }
     }
 
     // Forbidden components - same structure as required
     if (actionData.forbidden_components) {
-      for (const [_entityType, components] of Object.entries(actionData.forbidden_components)) {
+      for (const [_entityType, components] of Object.entries(
+        actionData.forbidden_components
+      )) {
         if (Array.isArray(components)) {
-          components.forEach(comp => this._extractModReferencesFromString(comp, references, 'forbidden_components'));
+          components.forEach((comp) =>
+            this._extractModReferencesFromString(
+              comp,
+              references,
+              'forbidden_components'
+            )
+          );
         }
       }
     }
 
     // Target scopes - reference to scope definitions
     if (actionData.targets?.scope) {
-      this._extractModReferencesFromString(actionData.targets.scope, references, 'target_scope');
+      this._extractModReferencesFromString(
+        actionData.targets.scope,
+        references,
+        'target_scope'
+      );
     }
 
     // Handle targets as string (alternative format)
     if (typeof actionData.targets === 'string') {
-      this._extractModReferencesFromString(actionData.targets, references, 'targets_string');
+      this._extractModReferencesFromString(
+        actionData.targets,
+        references,
+        'targets_string'
+      );
     }
 
     // Handle target as string (singular form)
     if (typeof actionData.target === 'string') {
-      this._extractModReferencesFromString(actionData.target, references, 'target_string');
+      this._extractModReferencesFromString(
+        actionData.target,
+        references,
+        'target_string'
+      );
     }
 
     // Operation handlers may contain component operations
@@ -576,21 +641,37 @@ class ModReferenceExtractor {
   _extractFromRuleFile(ruleData, references) {
     // Condition references - link to other mods' conditions
     if (ruleData.condition_ref) {
-      this._extractModReferencesFromString(ruleData.condition_ref, references, 'condition_ref');
+      this._extractModReferencesFromString(
+        ruleData.condition_ref,
+        references,
+        'condition_ref'
+      );
     }
 
     // Condition object with condition_ref nested
     if (ruleData.condition?.condition_ref) {
-      this._extractModReferencesFromString(ruleData.condition.condition_ref, references, 'nested_condition_ref');
+      this._extractModReferencesFromString(
+        ruleData.condition.condition_ref,
+        references,
+        'nested_condition_ref'
+      );
     }
 
     // Direct condition as string reference
     if (typeof ruleData.condition === 'string') {
-      this._extractModReferencesFromString(ruleData.condition, references, 'condition_string');
+      this._extractModReferencesFromString(
+        ruleData.condition,
+        references,
+        'condition_string'
+      );
     }
 
     // Inline JSON Logic conditions
-    if (ruleData.condition && typeof ruleData.condition === 'object' && !ruleData.condition.condition_ref) {
+    if (
+      ruleData.condition &&
+      typeof ruleData.condition === 'object' &&
+      !ruleData.condition.condition_ref
+    ) {
       this._extractFromJsonLogic(ruleData.condition, references);
     }
 
@@ -606,7 +687,10 @@ class ModReferenceExtractor {
 
     // Rule metadata may contain mod references
     if (ruleData.metadata) {
-      const metadataRefs = this._extractReferencesFromObject(ruleData.metadata, 'rule-metadata');
+      const metadataRefs = this._extractReferencesFromObject(
+        ruleData.metadata,
+        'rule-metadata'
+      );
       // Merge metadata references
       for (const [modId, componentIds] of metadataRefs) {
         if (!references.has(modId)) {
@@ -620,7 +704,7 @@ class ModReferenceExtractor {
   }
 
   /**
-   * Extracts references from condition files  
+   * Extracts references from condition files
    *
    * @private
    * @param {object} conditionData - Parsed condition JSON
@@ -633,7 +717,10 @@ class ModReferenceExtractor {
     }
 
     // Some conditions may have metadata or dependencies
-    const genericRefs = this._extractReferencesFromObject(conditionData, 'condition');
+    const genericRefs = this._extractReferencesFromObject(
+      conditionData,
+      'condition'
+    );
     // Merge generic references
     for (const [modId, componentIds] of genericRefs) {
       if (!references.has(modId)) {
@@ -655,7 +742,10 @@ class ModReferenceExtractor {
   _extractFromComponentFile(componentData, references) {
     // Component schemas may reference other mod components
     if (componentData.dataSchema) {
-      const schemaRefs = this._extractReferencesFromObject(componentData.dataSchema, 'component-schema');
+      const schemaRefs = this._extractReferencesFromObject(
+        componentData.dataSchema,
+        'component-schema'
+      );
       // Merge schema references
       for (const [modId, componentIds] of schemaRefs) {
         if (!references.has(modId)) {
@@ -669,7 +759,10 @@ class ModReferenceExtractor {
 
     // Default values might contain mod references
     if (componentData.defaultData) {
-      const defaultRefs = this._extractReferencesFromObject(componentData.defaultData, 'component-defaults');
+      const defaultRefs = this._extractReferencesFromObject(
+        componentData.defaultData,
+        'component-defaults'
+      );
       // Merge default references
       for (const [modId, componentIds] of defaultRefs) {
         if (!references.has(modId)) {
@@ -683,7 +776,10 @@ class ModReferenceExtractor {
 
     // Validation rules may contain component references
     if (componentData.validation) {
-      const validationRefs = this._extractReferencesFromObject(componentData.validation, 'component-validation');
+      const validationRefs = this._extractReferencesFromObject(
+        componentData.validation,
+        'component-validation'
+      );
       // Merge validation references
       for (const [modId, componentIds] of validationRefs) {
         if (!references.has(modId)) {
@@ -706,7 +802,10 @@ class ModReferenceExtractor {
   _extractFromEventFile(eventData, references) {
     // Event payload schemas may reference components
     if (eventData.payloadSchema) {
-      const payloadRefs = this._extractReferencesFromObject(eventData.payloadSchema, 'event-payload');
+      const payloadRefs = this._extractReferencesFromObject(
+        eventData.payloadSchema,
+        'event-payload'
+      );
       // Merge payload references
       for (const [modId, componentIds] of payloadRefs) {
         if (!references.has(modId)) {
@@ -745,7 +844,10 @@ class ModReferenceExtractor {
    */
   _extractFromBlueprintFile(blueprintData, references) {
     // Blueprints define anatomy structures with potential cross-mod references
-    const blueprintRefs = this._extractReferencesFromObject(blueprintData, 'blueprint');
+    const blueprintRefs = this._extractReferencesFromObject(
+      blueprintData,
+      'blueprint'
+    );
     // Merge blueprint references
     for (const [modId, componentIds] of blueprintRefs) {
       if (!references.has(modId)) {
@@ -760,7 +862,7 @@ class ModReferenceExtractor {
   /**
    * Extracts references from recipe files (anatomy system)
    *
-   * @private  
+   * @private
    * @param {object} recipeData - Parsed recipe JSON
    * @param {ModReferenceMap} references - Reference map to populate
    */
@@ -793,10 +895,10 @@ class ModReferenceExtractor {
     // Handle JSON Logic operators that commonly contain mod references
     const COMPONENT_OPERATORS = [
       'has_component',
-      'get_component_value', 
+      'get_component_value',
       'set_component_value',
       'remove_component',
-      'add_component'
+      'add_component',
     ];
 
     for (const [operator, operands] of Object.entries(jsonLogic)) {
@@ -805,16 +907,24 @@ class ModReferenceExtractor {
         if (Array.isArray(operands) && operands.length >= 2) {
           const componentRef = operands[1];
           if (typeof componentRef === 'string') {
-            this._extractModReferencesFromString(componentRef, references, `json_logic_${operator}`);
+            this._extractModReferencesFromString(
+              componentRef,
+              references,
+              `json_logic_${operator}`
+            );
           }
         }
       } else if (Array.isArray(operands)) {
         // Recursive processing for arrays
-        operands.forEach(operand => {
+        operands.forEach((operand) => {
           if (typeof operand === 'object') {
             this._extractFromJsonLogic(operand, references);
           } else if (typeof operand === 'string') {
-            this._extractModReferencesFromString(operand, references, 'json_logic_operand');
+            this._extractModReferencesFromString(
+              operand,
+              references,
+              'json_logic_operand'
+            );
           }
         });
       } else if (typeof operands === 'object') {
@@ -822,7 +932,11 @@ class ModReferenceExtractor {
         this._extractFromJsonLogic(operands, references);
       } else if (typeof operands === 'string') {
         // String operands may contain references
-        this._extractModReferencesFromString(operands, references, 'json_logic_string');
+        this._extractModReferencesFromString(
+          operands,
+          references,
+          'json_logic_string'
+        );
       }
     }
   }
@@ -836,7 +950,9 @@ class ModReferenceExtractor {
    */
   _extractFromOperationHandlers(operations, references) {
     if (Array.isArray(operations)) {
-      operations.forEach(op => this._extractFromSingleOperation(op, references));
+      operations.forEach((op) =>
+        this._extractFromSingleOperation(op, references)
+      );
     } else if (typeof operations === 'object') {
       this._extractFromSingleOperation(operations, references);
     }
@@ -856,26 +972,45 @@ class ModReferenceExtractor {
 
     // Component operations often have 'component' or 'componentId' fields
     if (operation.component) {
-      this._extractModReferencesFromString(operation.component, references, 'operation_component');
+      this._extractModReferencesFromString(
+        operation.component,
+        references,
+        'operation_component'
+      );
     }
-    
+
     if (operation.componentId) {
-      this._extractModReferencesFromString(operation.componentId, references, 'operation_componentId');
+      this._extractModReferencesFromString(
+        operation.componentId,
+        references,
+        'operation_componentId'
+      );
     }
 
     // Target specifications may contain mod references
     if (operation.target) {
-      this._extractModReferencesFromString(operation.target, references, 'operation_target');
+      this._extractModReferencesFromString(
+        operation.target,
+        references,
+        'operation_target'
+      );
     }
 
     // Component type specifications
     if (operation.component_type) {
-      this._extractModReferencesFromString(operation.component_type, references, 'operation_component_type');
+      this._extractModReferencesFromString(
+        operation.component_type,
+        references,
+        'operation_component_type'
+      );
     }
 
     // Parameters may contain nested references
     if (operation.parameters) {
-      const paramRefs = this._extractReferencesFromObject(operation.parameters, 'operation_parameters');
+      const paramRefs = this._extractReferencesFromObject(
+        operation.parameters,
+        'operation_parameters'
+      );
       // Merge parameter references
       for (const [modId, componentIds] of paramRefs) {
         if (!references.has(modId)) {
@@ -888,7 +1023,10 @@ class ModReferenceExtractor {
     }
 
     // Recursively process nested operation data
-    const operationRefs = this._extractReferencesFromObject(operation, 'operation');
+    const operationRefs = this._extractReferencesFromObject(
+      operation,
+      'operation'
+    );
     // Merge operation references
     for (const [modId, componentIds] of operationRefs) {
       if (!references.has(modId)) {
@@ -902,32 +1040,40 @@ class ModReferenceExtractor {
 
   /**
    * Finds all contextual occurrences of a specific mod:component reference
-   * 
+   *
    * @private
    * @param {string} modPath - Path to mod directory
    * @param {string} modId - Target mod ID to find
-   * @param {string} componentId - Target component ID to find  
+   * @param {string} componentId - Target component ID to find
    * @returns {Promise<Array<Object>>} Array of context objects with file, line, column, snippet, type
    */
   async _findReferenceContexts(modPath, modId, componentId) {
     const contexts = [];
     const targetReference = `${modId}:${componentId}`;
-    
+
     try {
-      await this._scanDirectoryForContext(modPath, targetReference, contexts, modPath);
-      
-      this._logger.debug(`Found ${contexts.length} contexts for ${targetReference}`);
+      await this._scanDirectoryForContext(
+        modPath,
+        targetReference,
+        contexts,
+        modPath
+      );
+
+      this._logger.debug(
+        `Found ${contexts.length} contexts for ${targetReference}`
+      );
       return contexts;
-      
     } catch (error) {
-      this._logger.warn(`Failed to find contexts for ${targetReference}: ${error.message}`);
+      this._logger.warn(
+        `Failed to find contexts for ${targetReference}: ${error.message}`
+      );
       return [];
     }
   }
 
   /**
    * Recursively scans directory for specific reference contexts
-   * 
+   *
    * @private
    * @param {string} dirPath - Directory to scan
    * @param {string} targetReference - The mod:component reference to find
@@ -936,21 +1082,31 @@ class ModReferenceExtractor {
    */
   async _scanDirectoryForContext(dirPath, targetReference, contexts, basePath) {
     const entries = await fs.readdir(dirPath, { withFileTypes: true });
-    
+
     for (const entry of entries) {
       const fullPath = path.join(dirPath, entry.name);
-      
+
       if (entry.isDirectory()) {
-        await this._scanDirectoryForContext(fullPath, targetReference, contexts, basePath);
+        await this._scanDirectoryForContext(
+          fullPath,
+          targetReference,
+          contexts,
+          basePath
+        );
       } else if (entry.isFile()) {
-        await this._extractContextFromFile(fullPath, targetReference, contexts, basePath);
+        await this._extractContextFromFile(
+          fullPath,
+          targetReference,
+          contexts,
+          basePath
+        );
       }
     }
   }
 
   /**
    * Extracts context information for a specific reference from a file
-   * 
+   *
    * @private
    * @param {string} filePath - File to process
    * @param {string} targetReference - The mod:component reference to find
@@ -960,42 +1116,49 @@ class ModReferenceExtractor {
   async _extractContextFromFile(filePath, targetReference, contexts, basePath) {
     const ext = path.extname(filePath);
     const basename = path.basename(filePath);
-    
+
     try {
       const content = await fs.readFile(filePath, 'utf8');
       const lines = content.split('\n');
-      
+
       // Search for the target reference in each line
       for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
         const line = lines[lineIndex];
         const columnIndex = line.indexOf(targetReference);
-        
+
         if (columnIndex !== -1) {
           // Found the reference, create context object
           const context = {
             file: path.relative(basePath, filePath),
             line: lineIndex + 1, // 1-based line numbers
             column: columnIndex + 1, // 1-based column numbers
-            snippet: this._createContextSnippet(line, columnIndex, targetReference.length),
+            snippet: this._createContextSnippet(
+              line,
+              columnIndex,
+              targetReference.length
+            ),
             type: this._determineContextType(filePath, line, ext),
             isBlocking: this._isBlockingContext(filePath, line, ext),
             isOptional: this._isOptionalContext(filePath, line, ext),
-            isUserFacing: this._isUserFacingContext(filePath, line, ext)
+            isUserFacing: this._isUserFacingContext(filePath, line, ext),
           };
-          
+
           contexts.push(context);
-          this._logger.debug(`Found context: ${context.file}:${context.line} (${context.type})`);
+          this._logger.debug(
+            `Found context: ${context.file}:${context.line} (${context.type})`
+          );
         }
       }
-      
     } catch (error) {
-      this._logger.warn(`Failed to process ${basename} for context: ${error.message}`);
+      this._logger.warn(
+        `Failed to process ${basename} for context: ${error.message}`
+      );
     }
   }
 
   /**
    * Creates a context snippet around the found reference
-   * 
+   *
    * @private
    * @param {string} line - The line containing the reference
    * @param {number} startPos - Starting position of the reference
@@ -1006,19 +1169,19 @@ class ModReferenceExtractor {
     const snippetRadius = 20; // Characters to show before/after
     const start = Math.max(0, startPos - snippetRadius);
     const end = Math.min(line.length, startPos + refLength + snippetRadius);
-    
+
     let snippet = line.substring(start, end).trim();
-    
+
     // Add ellipsis if truncated
     if (start > 0) snippet = '...' + snippet;
     if (end < line.length) snippet = snippet + '...';
-    
+
     return snippet;
   }
 
   /**
    * Determines the context type based on file path and content
-   * 
+   *
    * @private
    * @param {string} filePath - File path
    * @param {string} line - Line content
@@ -1027,7 +1190,7 @@ class ModReferenceExtractor {
    */
   _determineContextType(filePath, line, ext) {
     const basename = path.basename(filePath);
-    
+
     // File type-based detection
     if (basename.endsWith('.action.json')) return 'action';
     if (basename.endsWith('.rule.json')) return 'rule';
@@ -1035,18 +1198,18 @@ class ModReferenceExtractor {
     if (basename.endsWith('.component.json')) return 'component';
     if (basename.endsWith('.event.json')) return 'event';
     if (ext === '.scope') return 'scope';
-    
+
     // Content-based detection for generic JSON files
     if (line.includes('required_components')) return 'action';
     if (line.includes('condition_ref')) return 'rule';
     if (line.includes('has_component')) return 'condition';
-    
+
     return 'unknown';
   }
 
   /**
    * Determines if the context represents a blocking operation
-   * 
+   *
    * @private
    * @param {string} filePath - File path
    * @param {string} line - Line content
@@ -1055,22 +1218,23 @@ class ModReferenceExtractor {
    */
   _isBlockingContext(filePath, line, ext) {
     const basename = path.basename(filePath);
-    
+
     // Rule files are typically blocking
     if (basename.endsWith('.rule.json')) return true;
-    
+
     // Required components are blocking
     if (line.includes('required_components')) return true;
-    
+
     // Conditions in rules are blocking
-    if (line.includes('condition_ref') || line.includes('"condition"')) return true;
-    
+    if (line.includes('condition_ref') || line.includes('"condition"'))
+      return true;
+
     return false;
   }
 
   /**
    * Determines if the context reference is optional
-   * 
+   *
    * @private
    * @param {string} filePath - File path
    * @param {string} line - Line content
@@ -1080,19 +1244,19 @@ class ModReferenceExtractor {
   _isOptionalContext(filePath, line, ext) {
     // Forbidden components are optional violations (could be removed)
     if (line.includes('forbidden_components')) return true;
-    
+
     // Target scopes might be optional
     if (line.includes('target') && !line.includes('required')) return true;
-    
+
     // Event handlers might be optional
     if (line.includes('handlers')) return true;
-    
+
     return false;
   }
 
   /**
    * Determines if the context affects user-facing functionality
-   * 
+   *
    * @private
    * @param {string} filePath - File path
    * @param {string} line - Line content
@@ -1101,16 +1265,21 @@ class ModReferenceExtractor {
    */
   _isUserFacingContext(filePath, line, ext) {
     const basename = path.basename(filePath);
-    
+
     // Actions are typically user-facing
     if (basename.endsWith('.action.json')) return true;
-    
+
     // Event files might be user-facing
     if (basename.endsWith('.event.json')) return true;
-    
+
     // UI-related content
-    if (line.includes('description') || line.includes('name') || line.includes('display')) return true;
-    
+    if (
+      line.includes('description') ||
+      line.includes('name') ||
+      line.includes('display')
+    )
+      return true;
+
     return false;
   }
 
@@ -1123,34 +1292,36 @@ class ModReferenceExtractor {
    */
   _extractScopeReferencesWithRegex(content, references) {
     this._logger.debug('Using fallback regex extraction for scope file');
-    
+
     // Multiple patterns to catch different scope syntax variations
     const patterns = [
       // Assignment targets: modId:scopeId :=
       /^([a-zA-Z][a-zA-Z0-9_]*):([a-zA-Z][a-zA-Z0-9_-]*)\s*:=/gm,
-      
+
       // Component access: .components.modId:componentId
       /\.components\.([a-zA-Z][a-zA-Z0-9_]*):([a-zA-Z][a-zA-Z0-9_-]*)/g,
-      
-      // Direct references: modId:identifier  
+
+      // Direct references: modId:identifier
       /\b([a-zA-Z][a-zA-Z0-9_]*):([a-zA-Z][a-zA-Z0-9_-]*)\b/g,
-      
+
       // JSON Logic embedded in scope filters
-      /"([a-zA-Z][a-zA-Z0-9_]*):([a-zA-Z][a-zA-Z0-9_-]*)"/g
+      /"([a-zA-Z][a-zA-Z0-9_]*):([a-zA-Z][a-zA-Z0-9_-]*)"/g,
     ];
-    
+
     patterns.forEach((pattern, index) => {
       let match;
       while ((match = pattern.exec(content)) !== null) {
         const [, modId, componentId] = match;
-        
+
         // Skip core and special references
         if (modId === 'core' || modId === 'none' || modId === 'self') {
           continue;
         }
-        
+
         this._addScopeReference(modId, componentId, references);
-        this._logger.debug(`Regex fallback found: ${modId}:${componentId} (pattern ${index})`);
+        this._logger.debug(
+          `Regex fallback found: ${modId}:${componentId} (pattern ${index})`
+        );
       }
     });
   }

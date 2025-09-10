@@ -29,7 +29,6 @@ describe('Seduction Mod: Draw Attention to Breasts Rule', () => {
       // Execute the self-targeting action
       await testFixture.executeAction(scenario.actor.id, null);
 
-       
       testFixture.assertActionSuccess(
         'Sarah angles to flatter her bustline, drawing attention to her breasts.'
       );
@@ -40,9 +39,9 @@ describe('Seduction Mod: Draw Attention to Breasts Rule', () => {
 
       await testFixture.executeAction(scenario.actor.id, null);
 
-       
       testFixture.assertPerceptibleEvent({
-        descriptionText: 'Lisa angles to flatter her bustline, drawing attention to her breasts.',
+        descriptionText:
+          'Lisa angles to flatter her bustline, drawing attention to her breasts.',
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: null,
@@ -64,14 +63,16 @@ describe('Seduction Mod: Draw Attention to Breasts Rule', () => {
       await testFixture.eventBus.dispatch('core:attempt_action', payload);
 
       // Should not have any perceptible events from our rule
-       
+
       testFixture.assertOnlyExpectedEvents(['core:attempt_action']);
     });
   });
 
   describe('Rule Structure Validation', () => {
     it('should have proper rule identification', () => {
-      expect(testFixture.ruleFile.rule_id).toBe('handle_draw_attention_to_breasts');
+      expect(testFixture.ruleFile.rule_id).toBe(
+        'handle_draw_attention_to_breasts'
+      );
       expect(testFixture.ruleFile.comment).toBe(
         "Handles the 'seduction:draw_attention_to_breasts' action. Generates descriptive text mentioning the actor's topmost clothing item in the upper torso area."
       );
@@ -117,7 +118,7 @@ describe('Seduction Mod: Draw Attention to Breasts Rule', () => {
 
     it('should set correct variables for logging', () => {
       const actions = testFixture.ruleFile.actions;
-      
+
       // Check logMessage variable
       const logMessageAction = actions[2];
       expect(logMessageAction.type).toBe('SET_VARIABLE');
@@ -129,14 +130,18 @@ describe('Seduction Mod: Draw Attention to Breasts Rule', () => {
       // Check perceptionType variable
       const perceptionTypeAction = actions[3];
       expect(perceptionTypeAction.type).toBe('SET_VARIABLE');
-      expect(perceptionTypeAction.parameters.variable_name).toBe('perceptionType');
+      expect(perceptionTypeAction.parameters.variable_name).toBe(
+        'perceptionType'
+      );
       expect(perceptionTypeAction.parameters.value).toBe('action_self_general');
 
       // Check locationId variable
       const locationIdAction = actions[4];
       expect(locationIdAction.type).toBe('SET_VARIABLE');
       expect(locationIdAction.parameters.variable_name).toBe('locationId');
-      expect(locationIdAction.parameters.value).toBe('{context.actorPosition.locationId}');
+      expect(locationIdAction.parameters.value).toBe(
+        '{context.actorPosition.locationId}'
+      );
 
       // Check targetId variable (should be null for self-targeting action)
       const targetIdAction = actions[5];

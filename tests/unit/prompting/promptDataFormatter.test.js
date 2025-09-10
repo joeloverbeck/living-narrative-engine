@@ -179,7 +179,7 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
         'Generate a fresh, unique thought that builds upon your mental state.'
       );
       expect(result).toContain(
-        'Your thought should reflect what you\'re thinking RIGHT BEFORE taking your chosen action'
+        "Your thought should reflect what you're thinking RIGHT BEFORE taking your chosen action"
       );
       expect(result).toContain('- Test thought');
     });

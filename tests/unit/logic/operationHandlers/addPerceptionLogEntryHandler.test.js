@@ -407,9 +407,9 @@ describe('AddPerceptionLogEntryHandler', () => {
     const NPC1 = 'npc:batch_one';
     const NPC2 = 'npc:batch_two';
     const NPC3 = 'npc:batch_three';
-    
+
     /** @type {AddPerceptionLogEntryHandler} */ let h;
-    
+
     beforeEach(() => {
       h = new AddPerceptionLogEntryHandler({
         logger: log,
@@ -423,11 +423,11 @@ describe('AddPerceptionLogEntryHandler', () => {
       em.getEntitiesInLocation.mockReturnValue(new Set([NPC1, NPC2]));
       em.hasComponent.mockReturnValue(true);
       em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
-      
+
       // Mock the optimized batch method
       em.batchAddComponentsOptimized = jest.fn().mockResolvedValue({
         updateCount: 2,
-        errors: []
+        errors: [],
       });
 
       await h.execute({ location_id: LOC, entry });
@@ -438,22 +438,24 @@ describe('AddPerceptionLogEntryHandler', () => {
           {
             instanceId: NPC1,
             componentTypeId: PERCEPTION_LOG_COMPONENT_ID,
-            componentData: { maxEntries: 10, logEntries: [entry] }
+            componentData: { maxEntries: 10, logEntries: [entry] },
           },
           {
             instanceId: NPC2,
             componentTypeId: PERCEPTION_LOG_COMPONENT_ID,
-            componentData: { maxEntries: 10, logEntries: [entry] }
-          }
+            componentData: { maxEntries: 10, logEntries: [entry] },
+          },
         ],
         true
       );
-      
+
       // Regular addComponent should not be called
       expect(em.addComponent).not.toHaveBeenCalled();
-      
+
       expect(log.debug).toHaveBeenCalledWith(
-        expect.stringContaining('wrote entry to 2/2 perceivers in loc:batch_test (batch mode)')
+        expect.stringContaining(
+          'wrote entry to 2/2 perceivers in loc:batch_test (batch mode)'
+        )
       );
     });
 
@@ -462,32 +464,37 @@ describe('AddPerceptionLogEntryHandler', () => {
       em.getEntitiesInLocation.mockReturnValue(new Set([NPC1, NPC2, NPC3]));
       em.hasComponent.mockReturnValue(true);
       em.getComponentData.mockReturnValue({ maxEntries: 5, logEntries: [] });
-      
+
       // Mock optimized batch with some errors
       em.batchAddComponentsOptimized = jest.fn().mockResolvedValue({
         updateCount: 2,
         errors: [
           {
-            spec: { instanceId: NPC2, componentTypeId: PERCEPTION_LOG_COMPONENT_ID },
-            error: new Error('Update failed for NPC2')
-          }
-        ]
+            spec: {
+              instanceId: NPC2,
+              componentTypeId: PERCEPTION_LOG_COMPONENT_ID,
+            },
+            error: new Error('Update failed for NPC2'),
+          },
+        ],
       });
 
       await h.execute({ location_id: LOC, entry });
 
       expect(em.batchAddComponentsOptimized).toHaveBeenCalled();
-      
+
       // Should dispatch error for the failed update
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          message: expect.stringContaining('failed to update npc:batch_two')
+          message: expect.stringContaining('failed to update npc:batch_two'),
         })
       );
-      
+
       expect(log.debug).toHaveBeenCalledWith(
-        expect.stringContaining('wrote entry to 2/3 perceivers in loc:batch_test (batch mode)')
+        expect.stringContaining(
+          'wrote entry to 2/3 perceivers in loc:batch_test (batch mode)'
+        )
       );
     });
 
@@ -496,7 +503,7 @@ describe('AddPerceptionLogEntryHandler', () => {
       em.getEntitiesInLocation.mockReturnValue(new Set([NPC1, NPC2]));
       em.hasComponent.mockReturnValue(true);
       em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
-      
+
       // Don't mock batchAddComponentsOptimized - it doesn't exist
       delete em.batchAddComponentsOptimized;
       em.addComponent.mockResolvedValue(true);
@@ -515,9 +522,11 @@ describe('AddPerceptionLogEntryHandler', () => {
         PERCEPTION_LOG_COMPONENT_ID,
         { maxEntries: 10, logEntries: [entry] }
       );
-      
+
       expect(log.debug).toHaveBeenCalledWith(
-        expect.stringContaining('wrote entry to 2/2 perceivers in loc:batch_test')
+        expect.stringContaining(
+          'wrote entry to 2/2 perceivers in loc:batch_test'
+        )
       );
       expect(log.debug).not.toHaveBeenCalledWith(
         expect.stringContaining('(batch mode)')
@@ -529,10 +538,10 @@ describe('AddPerceptionLogEntryHandler', () => {
       em.getEntitiesInLocation.mockReturnValue(new Set([NPC1, NPC2, NPC3]));
       em.hasComponent.mockReturnValue(true);
       em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
-      
+
       // No optimized method
       delete em.batchAddComponentsOptimized;
-      
+
       // Make NPC2 fail
       em.addComponent.mockImplementation(async (id) => {
         if (id === NPC2) {
@@ -544,15 +553,15 @@ describe('AddPerceptionLogEntryHandler', () => {
       await h.execute({ location_id: LOC, entry });
 
       expect(em.addComponent).toHaveBeenCalledTimes(3);
-      
+
       // Should dispatch error for failed update
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          message: expect.stringContaining('failed to update npc:batch_two')
+          message: expect.stringContaining('failed to update npc:batch_two'),
         })
       );
-      
+
       // Should report partial success
       expect(log.debug).toHaveBeenCalledWith(
         expect.stringContaining('wrote entry to 2/3 perceivers')
@@ -564,12 +573,12 @@ describe('AddPerceptionLogEntryHandler', () => {
       em.getEntitiesInLocation.mockReturnValue(new Set([NPC1, NPC2]));
       em.hasComponent.mockReturnValue(true);
       em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
-      
+
       // Mock optimized batch to throw error
-      em.batchAddComponentsOptimized = jest.fn().mockRejectedValue(
-        new Error('Batch operation failed')
-      );
-      
+      em.batchAddComponentsOptimized = jest
+        .fn()
+        .mockRejectedValue(new Error('Batch operation failed'));
+
       // Individual updates should succeed
       em.addComponent.mockResolvedValue(true);
 
@@ -577,18 +586,20 @@ describe('AddPerceptionLogEntryHandler', () => {
 
       // Should try batch first
       expect(em.batchAddComponentsOptimized).toHaveBeenCalled();
-      
+
       // Should log the batch failure
       expect(log.error).toHaveBeenCalledWith(
         'AddPerceptionLogEntryHandler: ADD_PERCEPTION_LOG_ENTRY: Batch update failed',
         expect.any(Error)
       );
-      
+
       // Should fall back to individual updates
       expect(em.addComponent).toHaveBeenCalledTimes(2);
-      
+
       expect(log.debug).toHaveBeenCalledWith(
-        expect.stringContaining('wrote entry to 2/2 perceivers in loc:batch_test (fallback mode)')
+        expect.stringContaining(
+          'wrote entry to 2/2 perceivers in loc:batch_test (fallback mode)'
+        )
       );
     });
 
@@ -597,12 +608,12 @@ describe('AddPerceptionLogEntryHandler', () => {
       em.getEntitiesInLocation.mockReturnValue(new Set([NPC1, NPC2, NPC3]));
       em.hasComponent.mockReturnValue(true);
       em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
-      
+
       // Batch update fails completely
-      em.batchAddComponentsOptimized = jest.fn().mockRejectedValue(
-        new Error('Batch failed')
-      );
-      
+      em.batchAddComponentsOptimized = jest
+        .fn()
+        .mockRejectedValue(new Error('Batch failed'));
+
       // Some individual updates also fail in recovery
       em.addComponent.mockImplementation(async (id) => {
         if (id === NPC2) {
@@ -618,21 +629,23 @@ describe('AddPerceptionLogEntryHandler', () => {
         'AddPerceptionLogEntryHandler: ADD_PERCEPTION_LOG_ENTRY: Batch update failed',
         expect.any(Error)
       );
-      
+
       // Should try all individual updates
       expect(em.addComponent).toHaveBeenCalledTimes(3);
-      
+
       // Should dispatch error for the failed recovery update
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          message: expect.stringContaining('failed to update npc:batch_two')
+          message: expect.stringContaining('failed to update npc:batch_two'),
         })
       );
-      
+
       // Should report partial success in fallback mode
       expect(log.debug).toHaveBeenCalledWith(
-        expect.stringContaining('wrote entry to 2/3 perceivers in loc:batch_test (fallback mode)')
+        expect.stringContaining(
+          'wrote entry to 2/3 perceivers in loc:batch_test (fallback mode)'
+        )
       );
     });
 
@@ -640,7 +653,7 @@ describe('AddPerceptionLogEntryHandler', () => {
       const entry = makeEntry('no_perceivers');
       const ITEM = 'item:rock';
       em.getEntitiesInLocation.mockReturnValue(new Set([ITEM, NPC1]));
-      
+
       // Only NPC1 has perception, but we'll make it not have the component
       em.hasComponent.mockImplementation(
         (id, comp) => comp === PERCEPTION_LOG_COMPONENT_ID && false
@@ -653,9 +666,11 @@ describe('AddPerceptionLogEntryHandler', () => {
         expect(em.batchAddComponentsOptimized).not.toHaveBeenCalled();
       }
       expect(em.addComponent).not.toHaveBeenCalled();
-      
+
       expect(log.debug).toHaveBeenCalledWith(
-        expect.stringContaining('No perceivers found in location loc:batch_test')
+        expect.stringContaining(
+          'No perceivers found in location loc:batch_test'
+        )
       );
     });
   });

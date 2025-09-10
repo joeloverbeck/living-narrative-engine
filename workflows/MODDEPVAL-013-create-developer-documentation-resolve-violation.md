@@ -16,24 +16,31 @@ Create comprehensive developer documentation for the mod dependency validation s
 # Mod Dependency Validation System
 
 ## Overview
+
 The mod dependency validation system ensures architectural integrity by validating that all cross-mod references are properly declared as dependencies.
 
 ## System Architecture
+
 [Detailed architecture diagrams and component interactions]
 
 ## Usage Guide
+
 [Step-by-step usage instructions for developers]
 
 ## API Reference
+
 [Complete API documentation with examples]
 
 ## Configuration
+
 [Configuration options and best practices]
 
 ## Troubleshooting
+
 [Common issues and solutions]
 
 ## Migration Guide
+
 [How to adopt the system in existing projects]
 ```
 
@@ -45,7 +52,7 @@ The mod dependency validation system ensures architectural integrity by validati
 /**
  * @class ModReferenceExtractor
  * @description Core class for extracting mod references from various file formats
- * 
+ *
  * @example
  * const extractor = container.get('IModReferenceExtractor');
  * const references = await extractor.extractFromMod('positioning');
@@ -53,9 +60,9 @@ The mod dependency validation system ensures architectural integrity by validati
  */
 
 /**
- * @class ModCrossReferenceValidator  
+ * @class ModCrossReferenceValidator
  * @description Validates cross-references against declared dependencies
- * 
+ *
  * @example
  * const validator = container.get('IModCrossReferenceValidator');
  * const violations = await validator.validateReferences(references);
@@ -67,7 +74,7 @@ The mod dependency validation system ensures architectural integrity by validati
 /**
  * @class ViolationReporter
  * @description Generates formatted reports for dependency violations
- * 
+ *
  * @example
  * const reporter = container.get('IViolationReporter');
  * const report = await reporter.generateReport(violations, { format: 'html' });
@@ -89,34 +96,33 @@ async function validateModDependencies() {
   // Setup
   const container = createContainer();
   registerValidationDependencies(container);
-  
+
   // Get validators
   const extractor = container.get('IModReferenceExtractor');
   const validator = container.get('IModCrossReferenceValidator');
   const reporter = container.get('IViolationReporter');
-  
+
   try {
     // Extract references from all mods
     const allReferences = await extractor.extractFromAllMods('data/mods');
-    
+
     // Validate cross-references
     const violations = await validator.validateReferences(allReferences);
-    
+
     if (violations.length === 0) {
       console.log('✅ All mod dependencies are valid!');
       return;
     }
-    
+
     // Generate report
     const report = await reporter.generateReport(violations, {
       format: 'console',
       includeContext: true,
-      groupByMod: true
+      groupByMod: true,
     });
-    
+
     console.log(report);
     process.exit(1);
-    
   } catch (error) {
     console.error('Validation failed:', error.message);
     process.exit(1);
@@ -143,13 +149,17 @@ program
   .command('validate')
   .description('Validate all mod dependencies')
   .option('-p, --path <path>', 'Path to mods directory', 'data/mods')
-  .option('-f, --format <format>', 'Report format (console|json|html)', 'console')
+  .option(
+    '-f, --format <format>',
+    'Report format (console|json|html)',
+    'console'
+  )
   .option('--fix', 'Attempt to auto-fix violations where possible')
   .option('--strict', 'Fail on warnings as well as errors')
   .action(validateModsCommand);
 
 program
-  .command('check <modId>')  
+  .command('check <modId>')
   .description('Validate specific mod dependencies')
   .option('-v, --verbose', 'Show detailed reference information')
   .action(async (modId, options) => {
@@ -171,38 +181,41 @@ import { ModDependencyValidator } from '../src/validation/modDependencyValidator
 async function updateManifestWithValidation(modPath, options = {}) {
   const validator = new ModDependencyValidator({
     logger: console,
-    enableCrossReferenceValidation: options.validate !== false
+    enableCrossReferenceValidation: options.validate !== false,
   });
-  
+
   try {
     // Pre-validation
     if (options.validateBefore) {
       console.log('🔍 Pre-update validation...');
       const preViolations = await validator.validateMod(modPath);
       if (preViolations.length > 0 && options.strict) {
-        throw new Error(`Pre-validation failed: ${preViolations.length} violations`);
+        throw new Error(
+          `Pre-validation failed: ${preViolations.length} violations`
+        );
       }
     }
-    
+
     // Update manifest
     const updatedManifest = await updateManifest(modPath, options);
-    
+
     // Post-validation
     console.log('✅ Post-update validation...');
     const postViolations = await validator.validateMod(modPath);
-    
+
     if (postViolations.length > 0) {
-      console.warn(`⚠️ ${postViolations.length} validation issues found after update`);
-      
+      console.warn(
+        `⚠️ ${postViolations.length} validation issues found after update`
+      );
+
       if (options.autoFix) {
         console.log('🔧 Attempting auto-fix...');
         const fixResults = await validator.attemptAutoFix(postViolations);
         console.log(`Fixed ${fixResults.fixed}/${fixResults.total} violations`);
       }
     }
-    
+
     return updatedManifest;
-    
   } catch (error) {
     console.error('Update with validation failed:', error.message);
     throw error;
@@ -212,7 +225,7 @@ async function updateManifestWithValidation(modPath, options = {}) {
 
 ### Configuration Documentation
 
-```javascript
+````javascript
 // docs/configuration/validation-config.md
 
 # Validation Configuration
@@ -229,7 +242,7 @@ export const validationConfig = {
     followSymlinks: false,
     maxFileSize: 10 * 1024 * 1024, // 10MB
   },
-  
+
   // Reference extraction options
   extraction: {
     enableJsonLogicTraversal: true,
@@ -237,7 +250,7 @@ export const validationConfig = {
     maxNestingDepth: 50,
     cacheResults: true,
   },
-  
+
   // Validation behavior
   validation: {
     strictMode: false, // Treat warnings as errors
@@ -245,7 +258,7 @@ export const validationConfig = {
     allowCoreReferences: true, // Allow references to 'core' without dependency
     checkCircularDependencies: true,
   },
-  
+
   // Reporting options
   reporting: {
     defaultFormat: 'console',
@@ -253,7 +266,7 @@ export const validationConfig = {
     groupByMod: true,
     showSuccessMessage: true,
   },
-  
+
   // Performance options
   performance: {
     enableCaching: true,
@@ -261,7 +274,7 @@ export const validationConfig = {
     maxConcurrentOperations: 10,
     enableIncrementalValidation: true,
   },
-  
+
   // Security options
   security: {
     enableInputSanitization: true,
@@ -269,11 +282,12 @@ export const validationConfig = {
     maxMemoryUsage: 512 * 1024 * 1024, // 512MB
   }
 };
-```
+````
 
 ## Environment-Specific Configuration
 
 ### Development
+
 ```javascript
 // validation.config.dev.js
 export const devConfig = {
@@ -286,13 +300,14 @@ export const devConfig = {
     ...baseConfig.reporting,
     includeContext: true,
     showFixSuggestions: true,
-  }
+  },
 };
 ```
 
 ### Production
+
 ```javascript
-// validation.config.prod.js  
+// validation.config.prod.js
 export const prodConfig = {
   ...baseConfig,
   validation: {
@@ -302,10 +317,11 @@ export const prodConfig = {
   security: {
     ...baseConfig.security,
     enableInputSanitization: true, // Always enabled
-  }
+  },
 };
 ```
-```
+
+````
 
 ### Troubleshooting Guide
 
@@ -320,10 +336,12 @@ export const prodConfig = {
 Two or more mods depend on each other, creating a circular reference.
 
 ### Example
-```
+````
+
 mod-a depends on mod-b
 mod-b depends on mod-a
-```
+
+````
 
 ### Solution
 1. Identify the circular reference in the validation report
@@ -343,10 +361,12 @@ A mod references content from another mod that doesn't exist or isn't loaded.
     { "var": "intimacy:kissing.intensity" }
   ]
 }
-```
+````
 
 ### Solutions
+
 1. Add the missing dependency to mod-manifest.json:
+
 ```json
 {
   "dependencies": ["intimacy"]
@@ -358,29 +378,35 @@ A mod references content from another mod that doesn't exist or isn't loaded.
 ## Issue: "Scope DSL parsing failed"
 
 ### Cause
+
 Invalid syntax in .scope files
 
 ### Common Syntax Errors
+
 - Missing colons in definitions: `modId scopeId := expression`
 - Invalid JSON Logic in expressions
 - Unmatched brackets or parentheses
 
 ### Solution
+
 Check scope file syntax and validate JSON Logic expressions
 
 ## Issue: "Performance degradation during validation"
 
 ### Causes
+
 - Large number of files to process
-- Complex nested JSON structures  
+- Complex nested JSON structures
 - Insufficient system resources
 
 ### Solutions
+
 1. Enable incremental validation
 2. Increase memory limits in configuration
 3. Use file pattern exclusions to reduce scope
 4. Enable caching for repeated validations
-```
+
+````
 
 ### Violation Resolution: Positioning/Intimacy Case
 
@@ -409,7 +435,7 @@ The `positioning` mod contains references to `intimacy:kissing` content without 
 - **Severity**: HIGH - Runtime failures possible
 - **Risk**: Undefined behavior when intimacy mod not loaded
 - **Affected Systems**: Positioning rules, furniture interactions
-```
+````
 
 #### Resolution Implementation
 
@@ -442,27 +468,27 @@ describe('Positioning/Intimacy Violation Resolution', () => {
   it('should pass validation after dependency addition', async () => {
     // Arrange
     const validator = createValidator();
-    
+
     // Act
     const violations = await validator.validateMod('positioning');
-    
+
     // Assert
-    const intimacyViolations = violations.filter(v => 
-      v.referencedMod === 'intimacy'
+    const intimacyViolations = violations.filter(
+      (v) => v.referencedMod === 'intimacy'
     );
-    
+
     expect(intimacyViolations).toHaveLength(0);
   });
 
   it('should maintain functional compatibility', async () => {
     // Test that positioning features still work after dependency fix
     const engine = createTestEngine(['core', 'intimacy', 'positioning']);
-    
+
     const result = await engine.processRule('handle_get_up_from_furniture', {
       entity: 'test-actor',
-      furniture: 'test-chair'
+      furniture: 'test-chair',
     });
-    
+
     expect(result.success).toBe(true);
     expect(result.intimacyState).toBeDefined(); // Can access intimacy state
   });
@@ -479,26 +505,28 @@ import { join } from 'path';
 
 async function resolvePositioningViolation() {
   console.log('🔧 Resolving positioning/intimacy dependency violation...');
-  
+
   try {
     // Step 1: Update manifest
     const manifestPath = join('data/mods/positioning/mod-manifest.json');
     const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-    
+
     if (!manifest.dependencies.includes('intimacy')) {
       manifest.dependencies.push('intimacy');
       manifest.version = incrementPatchVersion(manifest.version);
-      
+
       writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
       console.log('✅ Updated positioning mod manifest');
     }
-    
+
     // Step 2: Validate fix
     const validator = createValidator();
     const violations = await validator.validateMod('positioning');
-    
-    const intimacyViolations = violations.filter(v => v.referencedMod === 'intimacy');
-    
+
+    const intimacyViolations = violations.filter(
+      (v) => v.referencedMod === 'intimacy'
+    );
+
     if (intimacyViolations.length === 0) {
       console.log('✅ Violation resolved successfully');
       console.log(`Remaining violations: ${violations.length}`);
@@ -506,12 +534,11 @@ async function resolvePositioningViolation() {
       console.error('❌ Violation not fully resolved');
       console.log('Remaining intimacy violations:', intimacyViolations);
     }
-    
+
     // Step 3: Update documentation
     await updateResolutionDocumentation();
-    
+
     console.log('🎉 Resolution complete!');
-    
   } catch (error) {
     console.error('❌ Resolution failed:', error.message);
     process.exit(1);
@@ -546,8 +573,11 @@ ${new Date().toISOString()}
 - CI/CD pipeline includes dependency validation
 - Developer documentation updated with examples
   `;
-  
-  writeFileSync('docs/resolutions/positioning-intimacy-resolved.md', docContent);
+
+  writeFileSync(
+    'docs/resolutions/positioning-intimacy-resolved.md',
+    docContent
+  );
 }
 
 // Run if called directly
@@ -590,24 +620,28 @@ docs/
 # docs/tutorials/
 
 ## Tutorial 1: Getting Started with Mod Validation
+
 - Basic concepts
 - Setting up validation
 - Running first validation
 - Understanding reports
 
-## Tutorial 2: Integration with Existing Workflows  
+## Tutorial 2: Integration with Existing Workflows
+
 - Adding to build scripts
 - CI/CD integration
 - Pre-commit hooks
 - IDE integration
 
 ## Tutorial 3: Advanced Configuration
+
 - Custom validation rules
 - Performance tuning
 - Security configuration
 - Error handling customization
 
 ## Tutorial 4: Troubleshooting and Debugging
+
 - Common issues and solutions
 - Debugging validation failures
 - Performance troubleshooting
@@ -645,17 +679,17 @@ docs/
 describe('Documentation Examples', () => {
   it('should validate all code examples in documentation', async () => {
     const exampleFiles = await glob('docs/**/*.js');
-    
+
     for (const file of exampleFiles) {
       const content = await readFile(file, 'utf8');
-      
+
       // Syntax validation
       try {
         new Function(content); // Basic syntax check
       } catch (error) {
         fail(`Syntax error in ${file}: ${error.message}`);
       }
-      
+
       // Runtime validation (if executable)
       if (content.includes('// @executable')) {
         const result = await executeExample(file);
@@ -666,9 +700,12 @@ describe('Documentation Examples', () => {
 
   it('should validate API examples match actual implementation', async () => {
     const apiExamples = extractApiExamples('docs/validation/api-reference.md');
-    
+
     for (const example of apiExamples) {
-      const actualApi = await getApiSignature(example.className, example.methodName);
+      const actualApi = await getApiSignature(
+        example.className,
+        example.methodName
+      );
       expect(example.signature).toMatchApiSignature(actualApi);
     }
   });
@@ -688,24 +725,24 @@ describe('Positioning/Intimacy Resolution', () => {
   it('should completely resolve the violation', async () => {
     const validator = createValidator();
     const violations = await validator.validateMod('positioning');
-    
-    const intimacyViolations = violations.filter(v => 
-      v.referencedMod === 'intimacy' && v.type === 'MISSING_DEPENDENCY'
+
+    const intimacyViolations = violations.filter(
+      (v) => v.referencedMod === 'intimacy' && v.type === 'MISSING_DEPENDENCY'
     );
-    
+
     expect(intimacyViolations).toHaveLength(0);
   });
 
   it('should maintain positioning mod functionality', async () => {
     const testBed = createModTestBed(['core', 'intimacy', 'positioning']);
-    
+
     // Test furniture interaction with intimacy integration
     const result = await testBed.executeRule('handle_get_up_from_furniture', {
       entity: 'test-actor',
       furniture: 'test-bed',
-      intimacyContext: { partner: 'test-partner' }
+      intimacyContext: { partner: 'test-partner' },
     });
-    
+
     expect(result.success).toBe(true);
     expect(result.positionChanged).toBe(true);
     expect(result.intimacyStateUpdated).toBe(true);
@@ -714,11 +751,11 @@ describe('Positioning/Intimacy Resolution', () => {
   it('should not introduce new violations', async () => {
     const validator = createValidator();
     const allViolations = await validator.validateAllMods();
-    
-    const newViolations = allViolations.filter(v => 
-      v.introducedBy === 'positioning-intimacy-resolution'
+
+    const newViolations = allViolations.filter(
+      (v) => v.introducedBy === 'positioning-intimacy-resolution'
     );
-    
+
     expect(newViolations).toHaveLength(0);
   });
 });
@@ -727,6 +764,7 @@ describe('Positioning/Intimacy Resolution', () => {
 ## Success Criteria
 
 ### Documentation Quality
+
 - [ ] Complete API reference with examples for all public methods
 - [ ] Step-by-step tutorials covering basic to advanced usage
 - [ ] Configuration guide with all options documented
@@ -734,24 +772,28 @@ describe('Positioning/Intimacy Resolution', () => {
 - [ ] Migration guide for adopting the validation system
 
 ### Code Examples
+
 - [ ] All examples executable and tested
 - [ ] Examples cover 90% of common use cases
 - [ ] Integration examples for popular build tools
 - [ ] Real-world project examples included
 
 ### Violation Resolution
+
 - [ ] Positioning/intimacy violation completely resolved
 - [ ] No new violations introduced by the fix
 - [ ] Functional compatibility maintained
 - [ ] Resolution process documented for future reference
 
 ### Developer Experience
+
 - [ ] Clear onboarding process (< 15 minutes to first validation)
 - [ ] Helpful error messages with actionable suggestions
 - [ ] IDE integration examples provided
 - [ ] CLI tools intuitive and well-documented
 
 ### Maintenance
+
 - [ ] Documentation versioned and maintained
 - [ ] Examples automatically tested in CI
 - [ ] Breaking changes clearly documented

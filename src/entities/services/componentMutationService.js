@@ -409,7 +409,7 @@ export class ComponentMutationService {
   /**
    * Optimized batch add that reduces event emissions.
    * Updates multiple components on entities with minimal event dispatching.
-   * 
+   *
    * @param {Array<{instanceId: string, componentTypeId: string, componentData: object}>} componentSpecs
    * @param {boolean} emitBatchEvent - Whether to emit a single batch event instead of individual events
    * @returns {Promise<object>} Results with successes and errors
@@ -424,7 +424,9 @@ export class ComponentMutationService {
       try {
         // Validate the component spec
         if (!spec.instanceId || !spec.componentTypeId) {
-          throw new Error('Invalid component spec: missing instanceId or componentTypeId');
+          throw new Error(
+            'Invalid component spec: missing instanceId or componentTypeId'
+          );
         }
 
         const entity = this.#fetchEntity(spec.instanceId);
@@ -453,7 +455,10 @@ export class ComponentMutationService {
 
         // Update component index if this is a new component
         if (isNewComponent) {
-          this.#entityRepository.indexComponentAdd(spec.instanceId, spec.componentTypeId);
+          this.#entityRepository.indexComponentAdd(
+            spec.instanceId,
+            spec.componentTypeId
+          );
         }
 
         // Store update info for batch event
@@ -462,7 +467,7 @@ export class ComponentMutationService {
           componentTypeId: spec.componentTypeId,
           componentData: validatedData,
           oldComponentData,
-          isNewComponent
+          isNewComponent,
         });
 
         results.push({ spec, success: true });
@@ -482,7 +487,7 @@ export class ComponentMutationService {
     if (emitBatchEvent && updates.length > 0) {
       this.#eventDispatcher.dispatch('core:components_batch_added', {
         updates,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
       this.#logger.debug(
         `Emitted batch event for ${updates.length} component updates`

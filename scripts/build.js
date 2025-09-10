@@ -93,7 +93,11 @@ async function main() {
     }
 
     if (argv.memoryTest) {
-      console.log(chalk.yellow(`Memory test mode: enabled (minimal build for memory testing)`));
+      console.log(
+        chalk.yellow(
+          `Memory test mode: enabled (minimal build for memory testing)`
+        )
+      );
     }
 
     console.log('');

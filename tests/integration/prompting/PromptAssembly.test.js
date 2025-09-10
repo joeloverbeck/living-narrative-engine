@@ -129,7 +129,7 @@ describe('Prompt Assembly with template-based system', () => {
 
     // Should include the thoughts section with the thought and enhanced guidance text
     expect(prompt).toContain(
-      '<thoughts>\nRecent thoughts (avoid repeating or barely rephrasing these):\n- OnlyThought\n\n-----\nGenerate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you\'re thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.\n</thoughts>'
+      "<thoughts>\nRecent thoughts (avoid repeating or barely rephrasing these):\n- OnlyThought\n\n-----\nGenerate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you're thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.\n</thoughts>"
     );
     expect(prompt).toContain('OnlyThought');
   });
@@ -139,7 +139,7 @@ describe('Prompt Assembly with template-based system', () => {
 
     // Should include both thoughts formatted correctly with enhanced formatting
     expect(prompt).toContain(
-      '<thoughts>\nRecent thoughts (avoid repeating or barely rephrasing these):\n- First thought\n- Second thought\n\n-----\nGenerate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you\'re thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.\n</thoughts>'
+      "<thoughts>\nRecent thoughts (avoid repeating or barely rephrasing these):\n- First thought\n- Second thought\n\n-----\nGenerate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you're thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.\n</thoughts>"
     );
     expect(prompt).toContain('First thought');
     expect(prompt).toContain('Second thought');

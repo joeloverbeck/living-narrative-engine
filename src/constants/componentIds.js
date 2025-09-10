@@ -23,6 +23,11 @@ export const SECRETS_COMPONENT_ID = 'core:secrets';
 export const FEARS_COMPONENT_ID = 'core:fears';
 export const SPEECH_PATTERNS_COMPONENT_ID = 'core:speech_patterns';
 
+// Psychological character aspects
+export const MOTIVATIONS_COMPONENT_ID = 'core:motivations';
+export const INTERNAL_TENSIONS_COMPONENT_ID = 'core:internal_tensions';
+export const DILEMMAS_COMPONENT_ID = 'core:dilemmas';
+
 export const PORTRAIT_COMPONENT_ID = 'core:portrait';
 
 export const SHORT_TERM_MEMORY_COMPONENT_ID = 'core:short_term_memory';

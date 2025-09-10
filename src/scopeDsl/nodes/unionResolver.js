@@ -63,7 +63,6 @@ export default function createUnionResolver({ errorHandler = null } = {}) {
 
       const source = 'UnionResolver';
 
-
       // Recursively resolve left and right nodes - pass full context
       const leftResult = dispatcher.resolve(node.left, ctx);
       const rightResult = dispatcher.resolve(node.right, ctx);
@@ -71,13 +70,20 @@ export default function createUnionResolver({ errorHandler = null } = {}) {
       // Validate both operands are valid for union operations
       // Valid types: Set, Array, or other iterables that aren't primitive strings/numbers
       const isValidUnionOperand = (operand) => {
-        return operand && 
-               typeof operand === 'object' &&
-               typeof operand[Symbol.iterator] === 'function' &&
-               (operand instanceof Set || Array.isArray(operand) || operand.constructor !== String);
+        return (
+          operand &&
+          typeof operand === 'object' &&
+          typeof operand[Symbol.iterator] === 'function' &&
+          (operand instanceof Set ||
+            Array.isArray(operand) ||
+            operand.constructor !== String)
+        );
       };
 
-      if (!isValidUnionOperand(leftResult) || !isValidUnionOperand(rightResult)) {
+      if (
+        !isValidUnionOperand(leftResult) ||
+        !isValidUnionOperand(rightResult)
+      ) {
         const error = new Error(
           `Cannot union ${typeof leftResult} with ${typeof rightResult} - both operands must be iterable collections (Set, Array, etc.)`
         );
@@ -142,7 +148,6 @@ export default function createUnionResolver({ errorHandler = null } = {}) {
       for (const item of rightResult) {
         addToResult(item);
       }
-
 
       return result;
     },

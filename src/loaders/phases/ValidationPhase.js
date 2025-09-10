@@ -38,41 +38,51 @@ export default class ValidationPhase extends LoaderPhase {
    */
   async execute(ctx) {
     this.logger.info('— ValidationPhase starting —');
-    
+
     // Skip validation if orchestrator is not available
     if (!this.validationOrchestrator) {
-      this.logger.debug('ValidationPhase: No validation orchestrator available, skipping');
+      this.logger.debug(
+        'ValidationPhase: No validation orchestrator available, skipping'
+      );
       return ctx;
     }
 
     try {
       const { skipCrossReferences = false, failFast = false } = this.options;
-      
+
       // Validate the loaded mods
-      const validationResult = await this.validationOrchestrator.validateForLoading(
-        ctx.finalModOrder || ctx.requestedMods,
-        {
-          strictMode: failFast,
-          allowWarnings: !failFast
-        }
-      );
+      const validationResult =
+        await this.validationOrchestrator.validateForLoading(
+          ctx.finalModOrder || ctx.requestedMods,
+          {
+            strictMode: failFast,
+            allowWarnings: !failFast,
+          }
+        );
 
       // Check if validation passed
       if (!validationResult.canLoad) {
-        const errorMessage = 'Mod validation failed - cannot proceed with loading';
+        const errorMessage =
+          'Mod validation failed - cannot proceed with loading';
         this.logger.error(errorMessage);
-        
+
         // Log specific issues
-        if (validationResult.dependencies && !validationResult.dependencies.isValid) {
-          this.logger.error('Dependency validation errors:', validationResult.dependencies.errors);
+        if (
+          validationResult.dependencies &&
+          !validationResult.dependencies.isValid
+        ) {
+          this.logger.error(
+            'Dependency validation errors:',
+            validationResult.dependencies.errors
+          );
         }
-        
+
         if (validationResult.warnings && validationResult.warnings.length > 0) {
-          validationResult.warnings.forEach(warning => {
+          validationResult.warnings.forEach((warning) => {
             this.logger.warn(`Validation warning: ${warning}`);
           });
         }
-        
+
         throw new ModsLoaderPhaseError(
           ModsLoaderErrorCode.VALIDATION,
           errorMessage,
@@ -83,16 +93,21 @@ export default class ValidationPhase extends LoaderPhase {
 
       // Log warnings if any
       if (validationResult.warnings && validationResult.warnings.length > 0) {
-        this.logger.warn(`ValidationPhase: ${validationResult.warnings.length} validation warnings found`);
-        validationResult.warnings.forEach(warning => {
+        this.logger.warn(
+          `ValidationPhase: ${validationResult.warnings.length} validation warnings found`
+        );
+        validationResult.warnings.forEach((warning) => {
           this.logger.warn(`  - ${warning}`);
         });
       }
 
       // Log recommendations if any
-      if (validationResult.recommendations && validationResult.recommendations.length > 0) {
+      if (
+        validationResult.recommendations &&
+        validationResult.recommendations.length > 0
+      ) {
         this.logger.info('ValidationPhase recommendations:');
-        validationResult.recommendations.forEach(rec => {
+        validationResult.recommendations.forEach((rec) => {
           this.logger.info(`  - ${rec}`);
         });
       }
@@ -102,18 +117,17 @@ export default class ValidationPhase extends LoaderPhase {
         ...ctx,
         validationWarnings: validationResult.warnings || [],
         validationRecommendations: validationResult.recommendations || [],
-        validationPassed: true
+        validationPassed: true,
       };
 
       this.logger.info('— ValidationPhase completed successfully —');
       return Object.freeze(next);
-      
     } catch (error) {
       // If it's already a ModsLoaderPhaseError, re-throw
       if (error instanceof ModsLoaderPhaseError) {
         throw error;
       }
-      
+
       // Wrap other errors
       throw new ModsLoaderPhaseError(
         ModsLoaderErrorCode.VALIDATION,

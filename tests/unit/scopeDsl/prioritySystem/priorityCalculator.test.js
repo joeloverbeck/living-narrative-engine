@@ -1,48 +1,58 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 
 // Mock the priorityConstants module
-jest.mock('../../../../src/scopeDsl/prioritySystem/priorityConstants.js', () => {
-  const mockPriorityConfig = {
-    enableCaching: true,
-    enableTieBreaking: true,
-    enableContextualModifiers: false,
-    enableValidation: true,
-    maxCacheSize: 1000,
-    logInvalidPriorities: true,
-    defaultCoveragePriority: 'direct',
-    defaultLayer: 'base',
-  };
+jest.mock(
+  '../../../../src/scopeDsl/prioritySystem/priorityConstants.js',
+  () => {
+    const mockPriorityConfig = {
+      enableCaching: true,
+      enableTieBreaking: true,
+      enableContextualModifiers: false,
+      enableValidation: true,
+      maxCacheSize: 1000,
+      logInvalidPriorities: true,
+      defaultCoveragePriority: 'direct',
+      defaultLayer: 'base',
+    };
 
-  return {
-    COVERAGE_PRIORITY: Object.freeze({
-      outer: 100,
-      base: 200,
-      underwear: 300,
-      direct: 400,
-    }),
-    LAYER_PRIORITY_WITHIN_COVERAGE: Object.freeze({
-      outer: 10,
-      base: 20,
-      underwear: 30,
-      accessories: 40,
-    }),
-    VALID_COVERAGE_PRIORITIES: Object.freeze([
-      'outer',
-      'base',
-      'underwear', 
-      'direct',
-    ]),
-    VALID_LAYERS: Object.freeze([
-      'outer',
-      'base',
-      'underwear',
-      'accessories',
-    ]),
-    PRIORITY_CONFIG: mockPriorityConfig,
-    // Export the config for test access
-    __mockPriorityConfig: mockPriorityConfig,
-  };
-});
+    return {
+      COVERAGE_PRIORITY: Object.freeze({
+        outer: 100,
+        base: 200,
+        underwear: 300,
+        direct: 400,
+      }),
+      LAYER_PRIORITY_WITHIN_COVERAGE: Object.freeze({
+        outer: 10,
+        base: 20,
+        underwear: 30,
+        accessories: 40,
+      }),
+      VALID_COVERAGE_PRIORITIES: Object.freeze([
+        'outer',
+        'base',
+        'underwear',
+        'direct',
+      ]),
+      VALID_LAYERS: Object.freeze([
+        'outer',
+        'base',
+        'underwear',
+        'accessories',
+      ]),
+      PRIORITY_CONFIG: mockPriorityConfig,
+      // Export the config for test access
+      __mockPriorityConfig: mockPriorityConfig,
+    };
+  }
+);
 
 import {
   calculateCoveragePriorityOptimized,
@@ -547,7 +557,7 @@ describe('PriorityCalculator', () => {
       // Should still get a result (fallback values applied at lower level)
       expect(typeof result).toBe('number');
       expect(result).toBe(420); // Both fallbacks applied at base level
-      
+
       // Should not log warnings since validation is disabled
       expect(mockLogger.warn).not.toHaveBeenCalled();
     });
@@ -568,7 +578,7 @@ describe('PriorityCalculator', () => {
       expect(sorted).toHaveLength(2);
       expect(sorted[0].priority).toBe(220);
       expect(sorted[1].priority).toBe(220);
-      
+
       // With simple sort, order should be maintained as input
       expect(sorted[0].itemId).toBe('direct_item');
       expect(sorted[1].itemId).toBe('coverage_item');
@@ -629,7 +639,10 @@ describe('PriorityCalculator', () => {
       expect(getCacheStats().size).toBe(2);
 
       // Trigger eviction
-      const result3 = calculateCoveragePriorityOptimized('underwear', 'underwear');
+      const result3 = calculateCoveragePriorityOptimized(
+        'underwear',
+        'underwear'
+      );
 
       expect(getCacheStats().size).toBe(2); // Size maintained
       expect(result1).toBe(110);
@@ -637,7 +650,10 @@ describe('PriorityCalculator', () => {
       expect(result3).toBe(330);
 
       // Verify cache still works for recent entries
-      const result3Again = calculateCoveragePriorityOptimized('underwear', 'underwear');
+      const result3Again = calculateCoveragePriorityOptimized(
+        'underwear',
+        'underwear'
+      );
       expect(result3Again).toBe(330);
     });
   });
@@ -693,14 +709,14 @@ describe('PriorityCalculator', () => {
       // Enable contextual modifiers
       mockPriorityConfig.enableContextualModifiers = true;
 
-      const candidate = { 
+      const candidate = {
         coveragePriority: 'outer',
         layer: 'accessories',
-        damaged: true 
+        damaged: true,
       };
-      const context = { 
+      const context = {
         weather: 'cold',
-        social: 'formal' 
+        social: 'formal',
       };
 
       const result = applyContextualModifiers(110, candidate, context);

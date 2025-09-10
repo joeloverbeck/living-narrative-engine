@@ -823,7 +823,6 @@ describe('Dynamic State Updates E2E', () => {
       // Fresh resolution should include the updated entity
       expect(freshIds).toContain(testEntityId);
     });
-
   });
 
   describe('Integration with Action Discovery', () => {

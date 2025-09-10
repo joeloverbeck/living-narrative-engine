@@ -85,19 +85,34 @@ class DragHandler {
     }
 
     // Element-level events
-    this.#element.addEventListener('mousedown', this.#boundHandlers.mousedown, { passive: false });
-    this.#element.addEventListener('touchstart', this.#boundHandlers.touchstart, {
+    this.#element.addEventListener('mousedown', this.#boundHandlers.mousedown, {
       passive: false,
     });
-    this.#element.addEventListener('contextmenu', this.#boundHandlers.contextmenu);
+    this.#element.addEventListener(
+      'touchstart',
+      this.#boundHandlers.touchstart,
+      {
+        passive: false,
+      }
+    );
+    this.#element.addEventListener(
+      'contextmenu',
+      this.#boundHandlers.contextmenu
+    );
 
     // Document-level events for drag operations
-    document.addEventListener('mousemove', this.#boundHandlers.mousemove, { passive: false });
-    document.addEventListener('mouseup', this.#boundHandlers.mouseup, { passive: false });
+    document.addEventListener('mousemove', this.#boundHandlers.mousemove, {
+      passive: false,
+    });
+    document.addEventListener('mouseup', this.#boundHandlers.mouseup, {
+      passive: false,
+    });
     document.addEventListener('touchmove', this.#boundHandlers.touchmove, {
       passive: false,
     });
-    document.addEventListener('touchend', this.#boundHandlers.touchend, { passive: false });
+    document.addEventListener('touchend', this.#boundHandlers.touchend, {
+      passive: false,
+    });
     document.addEventListener('keydown', this.#boundHandlers.keydown);
 
     // Add visual indicator
@@ -117,9 +132,18 @@ class DragHandler {
     }
 
     // Remove element-level event listeners
-    this.#element.removeEventListener('mousedown', this.#boundHandlers.mousedown);
-    this.#element.removeEventListener('touchstart', this.#boundHandlers.touchstart);
-    this.#element.removeEventListener('contextmenu', this.#boundHandlers.contextmenu);
+    this.#element.removeEventListener(
+      'mousedown',
+      this.#boundHandlers.mousedown
+    );
+    this.#element.removeEventListener(
+      'touchstart',
+      this.#boundHandlers.touchstart
+    );
+    this.#element.removeEventListener(
+      'contextmenu',
+      this.#boundHandlers.contextmenu
+    );
 
     // Remove document-level listeners
     document.removeEventListener('mousemove', this.#boundHandlers.mousemove);
@@ -328,7 +352,6 @@ class DragHandler {
       this.#callbacks.onDragStart();
     }
 
-
     this.#logger.debug('Drag started');
   }
 
@@ -362,7 +385,12 @@ class DragHandler {
     this.#container.style.top = `${newTop}px`;
 
     // Show snap guides if near edges
-    this.#showSnapGuides(newLeft, newTop, containerRect.width, containerRect.height);
+    this.#showSnapGuides(
+      newLeft,
+      newTop,
+      containerRect.width,
+      containerRect.height
+    );
   }
 
   /**
@@ -426,7 +454,7 @@ class DragHandler {
 
     if (this.#isDragging) {
       this.#isDragging = false;
-      
+
       // Remove dragging class
       this.#container.classList.remove('dragging');
 
@@ -486,26 +514,37 @@ class DragHandler {
       const bottomDistance = viewportHeight - rect.bottom;
 
       // Snap to edges if within threshold
-      if (leftDistance < this.#snapThreshold || rightDistance < this.#snapThreshold || 
-          topDistance < this.#snapThreshold || bottomDistance < this.#snapThreshold) {
-        
+      if (
+        leftDistance < this.#snapThreshold ||
+        rightDistance < this.#snapThreshold ||
+        topDistance < this.#snapThreshold ||
+        bottomDistance < this.#snapThreshold
+      ) {
         // Determine which edge is closest
-        const minDistance = Math.min(leftDistance, rightDistance, topDistance, bottomDistance);
-        
+        const minDistance = Math.min(
+          leftDistance,
+          rightDistance,
+          topDistance,
+          bottomDistance
+        );
+
         if (minDistance === leftDistance) {
           position = centerY < viewportHeight / 2 ? 'top-left' : 'bottom-left';
         } else if (minDistance === rightDistance) {
-          position = centerY < viewportHeight / 2 ? 'top-right' : 'bottom-right';
+          position =
+            centerY < viewportHeight / 2 ? 'top-right' : 'bottom-right';
         } else if (minDistance === topDistance) {
           position = centerX < viewportWidth / 2 ? 'top-left' : 'top-right';
-        } else { // bottomDistance
-          position = centerX < viewportWidth / 2 ? 'bottom-left' : 'bottom-right';
+        } else {
+          // bottomDistance
+          position =
+            centerX < viewportWidth / 2 ? 'bottom-left' : 'bottom-right';
         }
       } else {
         // Not near edges - determine quadrant based on center position
         const isLeft = centerX < viewportWidth / 2;
         const isTop = centerY < viewportHeight / 2;
-        
+
         if (isLeft && isTop) {
           position = 'top-left';
         } else if (!isLeft && isTop) {

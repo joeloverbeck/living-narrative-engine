@@ -18,7 +18,7 @@ describe('ArrayIterationResolver', () => {
     trace = {
       addLog: jest.fn(),
     };
-    
+
     // Mock error handler
     errorHandler = {
       handleError: jest.fn(),
@@ -410,7 +410,9 @@ describe('ArrayIterationResolver', () => {
 
     it('should handle error handler in constructor', () => {
       // Should not throw when creating with error handler
-      expect(() => createArrayIterationResolver({ errorHandler })).not.toThrow();
+      expect(() =>
+        createArrayIterationResolver({ errorHandler })
+      ).not.toThrow();
     });
 
     it('should work without error handler (backward compatibility)', () => {
@@ -443,7 +445,7 @@ describe('ArrayIterationResolver', () => {
 
       // Should still process the array
       expect(result.size).toBe(10001);
-      
+
       // Should report the error
       expect(errorHandler.handleError).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -464,20 +466,25 @@ describe('ArrayIterationResolver', () => {
       const ctx = { dispatcher, trace, actorEntity };
 
       // Return non-array values
-      dispatcher.resolve.mockReturnValue(new Set(['not-an-array', 123, { obj: true }]));
+      dispatcher.resolve.mockReturnValue(
+        new Set(['not-an-array', 123, { obj: true }])
+      );
 
       const result = resolverWithErrorHandler.resolve(node, ctx);
 
       // Result should be empty for non-arrays
       expect(result.size).toBe(0);
-      
+
       // Should report errors for each non-array value
       expect(errorHandler.handleError).toHaveBeenCalledTimes(3);
       expect(errorHandler.handleError).toHaveBeenCalledWith(
         expect.objectContaining({
           message: 'Expected array but got string',
         }),
-        expect.objectContaining({ actualType: 'string', value: 'not-an-array' }),
+        expect.objectContaining({
+          actualType: 'string',
+          value: 'not-an-array',
+        }),
         'ArrayIterationResolver',
         ErrorCodes.DATA_TYPE_MISMATCH
       );
@@ -498,7 +505,7 @@ describe('ArrayIterationResolver', () => {
 
       // Should pass through entity IDs
       expect(result).toEqual(new Set(['entity1', 'entity2']));
-      
+
       // Should not report errors for Source node pass-through
       expect(errorHandler.handleError).not.toHaveBeenCalled();
     });
@@ -534,7 +541,7 @@ describe('ArrayIterationResolver', () => {
         'ArrayIterationResolver',
         ErrorCodes.ARRAY_ITERATION_FAILED
       );
-      
+
       // Result should be empty since the clothing object failed
       expect(result.size).toBe(0);
     });
@@ -548,16 +555,14 @@ describe('ArrayIterationResolver', () => {
       const ctx = { dispatcher, trace, actorEntity };
 
       dispatcher.resolve.mockReturnValue(
-        new Set([
-          ['item1', null, 'item2', undefined, 'item3'],
-        ])
+        new Set([['item1', null, 'item2', undefined, 'item3']])
       );
 
       const result = resolverWithErrorHandler.resolve(node, ctx);
 
       // Should filter out null and undefined
       expect(result).toEqual(new Set(['item1', 'item2', 'item3']));
-      
+
       // Should not report errors for null/undefined in arrays
       expect(errorHandler.handleError).not.toHaveBeenCalled();
     });
@@ -601,7 +606,7 @@ describe('ArrayIterationResolver', () => {
 
       // Should process arrays and skip non-arrays
       expect(result).toEqual(new Set(['item1', 'item2', 'item3']));
-      
+
       // Should report error only for the non-null, non-undefined, non-array value
       expect(errorHandler.handleError).toHaveBeenCalledTimes(1);
       expect(errorHandler.handleError).toHaveBeenCalledWith(

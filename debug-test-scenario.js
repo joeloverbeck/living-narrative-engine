@@ -16,7 +16,7 @@ describe('Debug Error Event Flow', () => {
   beforeEach(() => {
     logger = new ConsoleLogger();
     logger.setLogLevel('error');
-    
+
     const mockGameDataRepository = {
       getEventDefinition: (id) => {
         if (id === 'core:system_error_occurred') {
@@ -35,12 +35,12 @@ describe('Debug Error Event Flow', () => {
           };
         }
         return null;
-      }
+      },
     };
-    
+
     const mockSchemaValidator = {
       isValid: () => true,
-      validate: () => ({ isValid: true })
+      validate: () => ({ isValid: true }),
     };
 
     eventBus = new EventBus({ logger });
@@ -68,23 +68,35 @@ describe('Debug Error Event Flow', () => {
     await Promise.all([
       safeEventDispatcher.dispatch('core:system_error_occurred', {
         message: 'Error 1',
-        details: { raw: 'Entity ID: entity-1', timestamp: new Date().toISOString() }
+        details: {
+          raw: 'Entity ID: entity-1',
+          timestamp: new Date().toISOString(),
+        },
       }),
       safeEventDispatcher.dispatch('core:system_error_occurred', {
         message: 'Error 2',
-        details: { raw: 'Entity ID: entity-2', timestamp: new Date().toISOString() }
+        details: {
+          raw: 'Entity ID: entity-2',
+          timestamp: new Date().toISOString(),
+        },
       }),
       safeEventDispatcher.dispatch('core:system_error_occurred', {
         message: 'Error 3',
-        details: { raw: 'Entity ID: entity-3', timestamp: new Date().toISOString() }
-      })
+        details: {
+          raw: 'Entity ID: entity-3',
+          timestamp: new Date().toISOString(),
+        },
+      }),
     ]);
 
-    await new Promise(resolve => setTimeout(resolve, 20));
+    await new Promise((resolve) => setTimeout(resolve, 20));
 
     console.log('Captured events:', capturedEvents.length);
-    console.log('Events:', capturedEvents.map(e => e.payload.message));
-    
+    console.log(
+      'Events:',
+      capturedEvents.map((e) => e.payload.message)
+    );
+
     expect(capturedEvents).toHaveLength(3);
   });
 });

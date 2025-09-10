@@ -74,7 +74,13 @@ describe('ModTestHandlerFactory Performance Tests', () => {
    * @param {number} warmupIterations - Number of warmup iterations to reduce JIT compilation noise
    * @returns {object} Performance results object
    */
-  function runPerformanceTest(testName, factoryMethod, args, iterations = 100, warmupIterations = 10) {
+  function runPerformanceTest(
+    testName,
+    factoryMethod,
+    args,
+    iterations = 100,
+    warmupIterations = 10
+  ) {
     const times = [];
 
     // Warmup iterations to reduce JIT compilation impact
@@ -92,7 +98,7 @@ describe('ModTestHandlerFactory Performance Tests', () => {
       times.reduce((sum, time) => sum + time, 0) / times.length;
     const minTime = Math.min(...times);
     const maxTime = Math.max(...times);
-    
+
     // Use median for more stable results, less affected by outliers
     const sortedTimes = [...times].sort((a, b) => a - b);
     const medianTime = sortedTimes[Math.floor(sortedTimes.length / 2)];
@@ -167,12 +173,13 @@ describe('ModTestHandlerFactory Performance Tests', () => {
       // Minimal handlers should be faster, but due to fixed validation overhead
       // and microsecond-level timing noise, relative comparisons are unstable.
       // For operations this fast (~0.045ms), we only validate absolute performance.
-      
+
       // Minimal handlers should be under 15ms (less than standard's 20ms threshold)
       expect(minimalResults.averageTime).toBeLessThan(15);
-      
+
       // Log relative performance for informational purposes only
-      const performanceRatio = (minimalResults.medianTime / standardResults.medianTime) * 100;
+      const performanceRatio =
+        (minimalResults.medianTime / standardResults.medianTime) * 100;
       if (performanceRatio > 100) {
         console.log(
           `Note: Minimal handlers slower than standard (${performanceRatio.toFixed(1)}%) due to timing noise at microsecond scale`
@@ -299,10 +306,10 @@ describe('ModTestHandlerFactory Performance Tests', () => {
           20
         );
 
-        results.push({ 
-          size, 
+        results.push({
+          size,
           averageTime: result.averageTime,
-          medianTime: result.medianTime 
+          medianTime: result.medianTime,
         });
       });
 
@@ -323,9 +330,9 @@ describe('ModTestHandlerFactory Performance Tests', () => {
         expect(largeMedian).toBeLessThanOrEqual(
           threshold,
           `Performance degraded beyond acceptable threshold: ` +
-          `small entity manager median=${smallMedian.toFixed(3)}ms, ` +
-          `large entity manager median=${largeMedian.toFixed(3)}ms ` +
-          `(ratio: ${(largeMedian / smallMedian).toFixed(2)}x, threshold: 3x)`
+            `small entity manager median=${smallMedian.toFixed(3)}ms, ` +
+            `large entity manager median=${largeMedian.toFixed(3)}ms ` +
+            `(ratio: ${(largeMedian / smallMedian).toFixed(2)}x, threshold: 3x)`
         );
       } else {
         // For very fast operations (< 0.5ms), use absolute threshold
@@ -333,15 +340,18 @@ describe('ModTestHandlerFactory Performance Tests', () => {
         expect(largeMedian).toBeLessThan(
           5,
           `Factory operation too slow: ${largeMedian.toFixed(3)}ms ` +
-          `(should be < 5ms for any entity manager size)`
+            `(should be < 5ms for any entity manager size)`
         );
       }
 
-      console.log('Performance by entity count:', results.map(r => ({
-        size: r.size,
-        averageTime: r.averageTime.toFixed(3),
-        medianTime: r.medianTime.toFixed(3)
-      })));
+      console.log(
+        'Performance by entity count:',
+        results.map((r) => ({
+          size: r.size,
+          averageTime: r.averageTime.toFixed(3),
+          medianTime: r.medianTime.toFixed(3),
+        }))
+      );
     });
 
     it('should maintain performance with concurrent factory calls', async () => {

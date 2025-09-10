@@ -166,21 +166,29 @@ let processedActor = ctx[cacheKey];
 **Implementation Summary:**
 
 The error handling has been completely refactored with:
+
 - **Centralized Error Handler** (`scopeDslErrorHandler.js`, 453 lines) with environment-aware processing
 - **Enhanced Error Factory** (`errorFactory.js`, 178 lines) with template-based error creation
 - **Comprehensive Error Codes** (`errorCodes.js`) with hierarchical numbering (1xxx-9xxx)
 - **Error Categories** (`errorCategories.js`) for automatic classification
 - **Complete Resolver Integration** - All resolvers now use the centralized handler
-- **Removed all console.* calls** from resolver code
+- **Removed all console.\* calls** from resolver code
 
 **Evidence of Resolution:**
 
 ```javascript
 // filterResolver.js - CURRENT implementation
 if (!actorEntity) {
-  const error = new Error('FilterResolver: actorEntity is undefined in context');
+  const error = new Error(
+    'FilterResolver: actorEntity is undefined in context'
+  );
   if (errorHandler) {
-    errorHandler.handleError(error, ctx, 'FilterResolver', ErrorCodes.MISSING_ACTOR);
+    errorHandler.handleError(
+      error,
+      ctx,
+      'FilterResolver',
+      ErrorCodes.MISSING_ACTOR
+    );
   } else {
     throw error; // Fallback for backward compatibility
   }
@@ -825,7 +833,7 @@ const features = {
 
 - ✅ Engine instantiates and passes error handler to resolvers (lines 219-242)
 - ✅ All 8 resolver factory functions accept optional error handler
-- ✅ All console.* calls removed from resolver code
+- ✅ All console.\* calls removed from resolver code
 - ✅ Debug-specific code blocks eliminated (saved ~200 lines)
 - ✅ Full backward compatibility maintained through optional parameters
 

@@ -52,8 +52,10 @@ describe('ActorDataExtractor - Psychological Components', () => {
   beforeEach(() => {
     testBed = createTestBed();
     mockLogger = testBed.createMockLogger();
-    mockDataManager = testBed.createMock('dataManager', ['getEntitiesWithComponent']);
-    
+    mockDataManager = testBed.createMock('dataManager', [
+      'getEntitiesWithComponent',
+    ]);
+
     extractor = new ActorDataExtractor({
       logger: mockLogger,
       dataManager: mockDataManager,
@@ -81,17 +83,19 @@ it('should extract motivations when component exists', () => {
     id: 'test-actor',
     components: {
       'core:actor': { name: 'Test Character' },
-      'core:motivations': { 
-        text: 'I seek power because I fear being powerless again.' 
-      }
-    }
+      'core:motivations': {
+        text: 'I seek power because I fear being powerless again.',
+      },
+    },
   };
 
   // Act
   const result = extractor.extractPromptData(actorState);
 
   // Assert
-  expect(result.motivations).toBe('I seek power because I fear being powerless again.');
+  expect(result.motivations).toBe(
+    'I seek power because I fear being powerless again.'
+  );
   expect(result.id).toBe('test-actor');
   expect(result.name).toBe('Test Character');
 });
@@ -101,9 +105,9 @@ it('should return undefined for motivations when component is missing', () => {
   const actorState = {
     id: 'test-actor',
     components: {
-      'core:actor': { name: 'Test Character' }
+      'core:actor': { name: 'Test Character' },
       // No motivations component
-    }
+    },
   };
 
   // Act
@@ -120,8 +124,8 @@ it('should handle empty motivations text', () => {
     id: 'test-actor',
     components: {
       'core:actor': { name: 'Test Character' },
-      'core:motivations': { text: '' }
-    }
+      'core:motivations': { text: '' },
+    },
   };
 
   // Act
@@ -141,17 +145,19 @@ it('should extract internal tensions when component exists', () => {
     id: 'test-actor',
     components: {
       'core:actor': { name: 'Test Character' },
-      'core:internal_tensions': { 
-        text: 'I want revenge but also want to forgive.' 
-      }
-    }
+      'core:internal_tensions': {
+        text: 'I want revenge but also want to forgive.',
+      },
+    },
   };
 
   // Act
   const result = extractor.extractPromptData(actorState);
 
   // Assert
-  expect(result.internalTensions).toBe('I want revenge but also want to forgive.');
+  expect(result.internalTensions).toBe(
+    'I want revenge but also want to forgive.'
+  );
 });
 
 it('should handle missing internal tensions gracefully', () => {
@@ -159,8 +165,8 @@ it('should handle missing internal tensions gracefully', () => {
   const actorState = {
     id: 'test-actor',
     components: {
-      'core:actor': { name: 'Test Character' }
-    }
+      'core:actor': { name: 'Test Character' },
+    },
   };
 
   // Act
@@ -181,17 +187,19 @@ it('should extract core dilemmas when component exists', () => {
     id: 'test-actor',
     components: {
       'core:actor': { name: 'Test Character' },
-      'core:core_dilemmas': { 
-        text: 'Can I achieve justice without becoming a monster?' 
-      }
-    }
+      'core:core_dilemmas': {
+        text: 'Can I achieve justice without becoming a monster?',
+      },
+    },
   };
 
   // Act
   const result = extractor.extractPromptData(actorState);
 
   // Assert
-  expect(result.coreDilemmas).toBe('Can I achieve justice without becoming a monster?');
+  expect(result.coreDilemmas).toBe(
+    'Can I achieve justice without becoming a monster?'
+  );
 });
 ```
 
@@ -206,16 +214,16 @@ it('should extract all three psychological components when present', () => {
     id: 'test-actor',
     components: {
       'core:actor': { name: 'Complex Character' },
-      'core:motivations': { 
-        text: 'I must prove myself worthy.' 
+      'core:motivations': {
+        text: 'I must prove myself worthy.',
       },
-      'core:internal_tensions': { 
-        text: 'I crave approval yet resent needing it.' 
+      'core:internal_tensions': {
+        text: 'I crave approval yet resent needing it.',
       },
-      'core:core_dilemmas': { 
-        text: 'Is my worth determined by others or myself?' 
-      }
-    }
+      'core:core_dilemmas': {
+        text: 'Is my worth determined by others or myself?',
+      },
+    },
   };
 
   // Act
@@ -223,8 +231,12 @@ it('should extract all three psychological components when present', () => {
 
   // Assert
   expect(result.motivations).toBe('I must prove myself worthy.');
-  expect(result.internalTensions).toBe('I crave approval yet resent needing it.');
-  expect(result.coreDilemmas).toBe('Is my worth determined by others or myself?');
+  expect(result.internalTensions).toBe(
+    'I crave approval yet resent needing it.'
+  );
+  expect(result.coreDilemmas).toBe(
+    'Is my worth determined by others or myself?'
+  );
 });
 ```
 
@@ -237,14 +249,14 @@ it('should handle partial psychological components correctly', () => {
     id: 'test-actor',
     components: {
       'core:actor': { name: 'Partial Character' },
-      'core:motivations': { 
-        text: 'I seek redemption.' 
+      'core:motivations': {
+        text: 'I seek redemption.',
       },
       // No internal_tensions
-      'core:core_dilemmas': { 
-        text: 'Can past sins be forgiven?' 
-      }
-    }
+      'core:core_dilemmas': {
+        text: 'Can past sins be forgiven?',
+      },
+    },
   };
 
   // Act
@@ -267,11 +279,11 @@ describe('edge cases and error handling', () => {
       id: 'test-actor',
       components: {
         'core:actor': { name: 'Test Character' },
-        'core:motivations': { 
+        'core:motivations': {
           // Missing 'text' property
-          wrongProperty: 'Some value' 
-        }
-      }
+          wrongProperty: 'Some value',
+        },
+      },
     };
 
     // Act
@@ -288,8 +300,8 @@ describe('edge cases and error handling', () => {
       id: 'test-actor',
       components: {
         'core:actor': { name: 'Test Character' },
-        'core:motivations': null
-      }
+        'core:motivations': null,
+      },
     };
 
     // Act
@@ -305,8 +317,8 @@ describe('edge cases and error handling', () => {
       id: 'test-actor',
       components: {
         'core:actor': { name: 'Test Character' },
-        'core:motivations': { text: '   \n\t   ' }
-      }
+        'core:motivations': { text: '   \n\t   ' },
+      },
     };
 
     // Act
@@ -330,8 +342,8 @@ describe('backward compatibility', () => {
         'core:actor': { name: 'Legacy Character' },
         'core:description': { text: 'A tall figure' },
         'core:personality': { text: 'Brave and bold' },
-        'core:profile': { text: 'A veteran warrior' }
-      }
+        'core:profile': { text: 'A veteran warrior' },
+      },
     };
 
     // Act
@@ -349,9 +361,9 @@ describe('backward compatibility', () => {
     const actorState = {
       id: 'test-actor',
       components: {
-        'core:actor': { name: 'Test Character' }
+        'core:actor': { name: 'Test Character' },
         // No optional components
-      }
+      },
     };
 
     // Act
@@ -376,7 +388,7 @@ describe('performance', () => {
   it('should extract components efficiently', () => {
     // Arrange
     const actorState = createLargeActorState(); // Helper to create complex state
-    
+
     // Act
     const startTime = performance.now();
     const result = extractor.extractPromptData(actorState);
@@ -392,11 +404,13 @@ describe('performance', () => {
 ## Test Coverage Requirements
 
 ### Required Coverage
+
 - Branch coverage: ≥ 80%
 - Function coverage: ≥ 90%
 - Line coverage: ≥ 90%
 
 ### Critical Paths to Cover
+
 1. Component exists with valid text
 2. Component missing entirely
 3. Component exists with empty/null text
@@ -435,6 +449,7 @@ npm run test:unit tests/unit/turns/services/
 ## Debugging Failed Tests
 
 ### Common Issues
+
 1. **Import paths incorrect**: Verify relative paths
 2. **Mock setup incomplete**: Check all dependencies mocked
 3. **Component IDs mismatch**: Ensure using constants
@@ -463,4 +478,4 @@ it.only('should extract motivations', () => {
 
 ---
 
-*Ticket created from character-components-analysis.md report*
+_Ticket created from character-components-analysis.md report_

@@ -99,7 +99,7 @@ describe('E2E: LLM Configuration Management', () => {
     // Arrange - Ensure we're testing the default configuration
     // Previous tests may have switched to a different configuration
     await testBed.switchLLMConfig('test-llm-toolcalling');
-    
+
     // Act - Get current config
     const { config } = await testBed.getCurrentLLMConfig();
 

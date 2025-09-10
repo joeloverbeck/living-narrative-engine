@@ -57,7 +57,9 @@ describe('proximityUtils', () => {
         expect(() => getAdjacentSpots(1.5, 3)).toThrow(InvalidArgumentError);
         expect(() => getAdjacentSpots('1', 3)).toThrow(InvalidArgumentError);
         expect(() => getAdjacentSpots(null, 3)).toThrow(InvalidArgumentError);
-        expect(() => getAdjacentSpots(undefined, 3)).toThrow(InvalidArgumentError);
+        expect(() => getAdjacentSpots(undefined, 3)).toThrow(
+          InvalidArgumentError
+        );
       });
 
       it('should throw error for invalid total spots', () => {
@@ -97,10 +99,10 @@ describe('proximityUtils', () => {
 
       it('should handle edge positions correctly', () => {
         const furniture = { spots: ['alice', 'bob', null, 'david'] };
-        
+
         // First position - only right neighbor
         expect(findAdjacentOccupants(furniture, 0)).toEqual(['bob']);
-        
+
         // Last position - only left neighbor (which is null)
         expect(findAdjacentOccupants(furniture, 3)).toEqual([]);
       });
@@ -258,7 +260,7 @@ describe('proximityUtils', () => {
         expect(() =>
           validateProximityParameters(123, 'core:actor_1', 0, mockLogger)
         ).toThrow('Furniture ID must be a string');
-        
+
         expect(() =>
           validateProximityParameters({}, 'core:actor_1', 0, mockLogger)
         ).toThrow('Furniture ID must be a string');
@@ -283,37 +285,70 @@ describe('proximityUtils', () => {
       it('should throw error for furniture ID without namespace', () => {
         expect(() =>
           validateProximityParameters('no-colon', 'core:actor_1', 0, mockLogger)
-        ).toThrow('Furniture ID must be in namespaced format (modId:identifier)');
+        ).toThrow(
+          'Furniture ID must be in namespaced format (modId:identifier)'
+        );
       });
 
       it('should throw error for furniture ID with multiple colons', () => {
         expect(() =>
-          validateProximityParameters('mod:double:colon', 'core:actor_1', 0, mockLogger)
-        ).toThrow('Furniture ID must have exactly one colon separating mod ID and identifier');
+          validateProximityParameters(
+            'mod:double:colon',
+            'core:actor_1',
+            0,
+            mockLogger
+          )
+        ).toThrow(
+          'Furniture ID must have exactly one colon separating mod ID and identifier'
+        );
       });
 
       it('should throw error for furniture ID missing mod ID', () => {
         expect(() =>
-          validateProximityParameters(':missing-mod', 'core:actor_1', 0, mockLogger)
+          validateProximityParameters(
+            ':missing-mod',
+            'core:actor_1',
+            0,
+            mockLogger
+          )
         ).toThrow('Furniture ID must have a valid mod ID before the colon');
       });
 
       it('should throw error for furniture ID missing identifier', () => {
         expect(() =>
-          validateProximityParameters('missing-id:', 'core:actor_1', 0, mockLogger)
+          validateProximityParameters(
+            'missing-id:',
+            'core:actor_1',
+            0,
+            mockLogger
+          )
         ).toThrow('Furniture ID must have a valid identifier after the colon');
       });
 
       it('should throw error for invalid characters in mod ID', () => {
         expect(() =>
-          validateProximityParameters('mod@special:furniture', 'core:actor_1', 0, mockLogger)
-        ).toThrow('Mod ID must contain only alphanumeric characters, underscores, and hyphens');
+          validateProximityParameters(
+            'mod@special:furniture',
+            'core:actor_1',
+            0,
+            mockLogger
+          )
+        ).toThrow(
+          'Mod ID must contain only alphanumeric characters, underscores, and hyphens'
+        );
       });
 
       it('should throw error for invalid characters in identifier', () => {
         expect(() =>
-          validateProximityParameters('mod:furniture@special', 'core:actor_1', 0, mockLogger)
-        ).toThrow('Identifier must contain only alphanumeric characters, underscores, and hyphens');
+          validateProximityParameters(
+            'mod:furniture@special',
+            'core:actor_1',
+            0,
+            mockLogger
+          )
+        ).toThrow(
+          'Identifier must contain only alphanumeric characters, underscores, and hyphens'
+        );
       });
     });
 
@@ -326,7 +361,12 @@ describe('proximityUtils', () => {
 
       it('should throw error for undefined actor ID', () => {
         expect(() =>
-          validateProximityParameters('core:furniture_1', undefined, 0, mockLogger)
+          validateProximityParameters(
+            'core:furniture_1',
+            undefined,
+            0,
+            mockLogger
+          )
         ).toThrow('Actor ID is required');
       });
 
@@ -350,121 +390,231 @@ describe('proximityUtils', () => {
 
       it('should throw error for actor ID without namespace', () => {
         expect(() =>
-          validateProximityParameters('core:furniture_1', 'no-colon', 0, mockLogger)
+          validateProximityParameters(
+            'core:furniture_1',
+            'no-colon',
+            0,
+            mockLogger
+          )
         ).toThrow('Actor ID must be in namespaced format (modId:identifier)');
       });
 
       it('should throw error for actor ID with multiple colons', () => {
         expect(() =>
-          validateProximityParameters('core:furniture_1', 'mod:double:colon', 0, mockLogger)
-        ).toThrow('Actor ID must have exactly one colon separating mod ID and identifier');
+          validateProximityParameters(
+            'core:furniture_1',
+            'mod:double:colon',
+            0,
+            mockLogger
+          )
+        ).toThrow(
+          'Actor ID must have exactly one colon separating mod ID and identifier'
+        );
       });
 
       it('should throw error for actor ID missing mod ID', () => {
         expect(() =>
-          validateProximityParameters('core:furniture_1', ':missing-mod', 0, mockLogger)
+          validateProximityParameters(
+            'core:furniture_1',
+            ':missing-mod',
+            0,
+            mockLogger
+          )
         ).toThrow('Actor ID must have a valid mod ID before the colon');
       });
 
       it('should throw error for actor ID missing identifier', () => {
         expect(() =>
-          validateProximityParameters('core:furniture_1', 'missing-id:', 0, mockLogger)
+          validateProximityParameters(
+            'core:furniture_1',
+            'missing-id:',
+            0,
+            mockLogger
+          )
         ).toThrow('Actor ID must have a valid identifier after the colon');
       });
 
       it('should throw error for invalid characters in actor mod ID', () => {
         expect(() =>
-          validateProximityParameters('core:furniture_1', 'mod@special:actor', 0, mockLogger)
-        ).toThrow('Actor ID mod ID must contain only alphanumeric characters, underscores, and hyphens');
+          validateProximityParameters(
+            'core:furniture_1',
+            'mod@special:actor',
+            0,
+            mockLogger
+          )
+        ).toThrow(
+          'Actor ID mod ID must contain only alphanumeric characters, underscores, and hyphens'
+        );
       });
 
       it('should throw error for invalid characters in actor identifier', () => {
         expect(() =>
-          validateProximityParameters('core:furniture_1', 'mod:actor@special', 0, mockLogger)
-        ).toThrow('Actor ID identifier must contain only alphanumeric characters, underscores, and hyphens');
+          validateProximityParameters(
+            'core:furniture_1',
+            'mod:actor@special',
+            0,
+            mockLogger
+          )
+        ).toThrow(
+          'Actor ID identifier must contain only alphanumeric characters, underscores, and hyphens'
+        );
       });
     });
 
     describe('invalid spot index', () => {
       it('should throw error for null spot index', () => {
         expect(() =>
-          validateProximityParameters('core:furniture_1', 'mod:actor_1', null, mockLogger)
+          validateProximityParameters(
+            'core:furniture_1',
+            'mod:actor_1',
+            null,
+            mockLogger
+          )
         ).toThrow('Spot index is required');
       });
 
       it('should throw error for undefined spot index', () => {
         expect(() =>
-          validateProximityParameters('core:furniture_1', 'mod:actor_1', undefined, mockLogger)
+          validateProximityParameters(
+            'core:furniture_1',
+            'mod:actor_1',
+            undefined,
+            mockLogger
+          )
         ).toThrow('Spot index is required');
       });
 
       it('should throw error for non-number spot index', () => {
         expect(() =>
-          validateProximityParameters('core:furniture_1', 'mod:actor_1', 'spot', mockLogger)
+          validateProximityParameters(
+            'core:furniture_1',
+            'mod:actor_1',
+            'spot',
+            mockLogger
+          )
         ).toThrow('Spot index must be a number');
       });
 
       it('should throw error for string number spot index', () => {
         expect(() =>
-          validateProximityParameters('core:furniture_1', 'mod:actor_1', '2', mockLogger)
+          validateProximityParameters(
+            'core:furniture_1',
+            'mod:actor_1',
+            '2',
+            mockLogger
+          )
         ).toThrow('Spot index must be a number');
       });
 
       it('should throw error for non-integer spot index', () => {
         expect(() =>
-          validateProximityParameters('core:furniture_1', 'mod:actor_1', 1.5, mockLogger)
+          validateProximityParameters(
+            'core:furniture_1',
+            'mod:actor_1',
+            1.5,
+            mockLogger
+          )
         ).toThrow('Spot index must be an integer');
       });
 
       it('should throw error for NaN spot index', () => {
         expect(() =>
-          validateProximityParameters('core:furniture_1', 'mod:actor_1', NaN, mockLogger)
+          validateProximityParameters(
+            'core:furniture_1',
+            'mod:actor_1',
+            NaN,
+            mockLogger
+          )
         ).toThrow('Spot index must be an integer');
       });
 
       it('should throw error for Infinity spot index', () => {
         expect(() =>
-          validateProximityParameters('core:furniture_1', 'mod:actor_1', Infinity, mockLogger)
+          validateProximityParameters(
+            'core:furniture_1',
+            'mod:actor_1',
+            Infinity,
+            mockLogger
+          )
         ).toThrow('Spot index must be an integer');
       });
 
       it('should throw error for negative spot index', () => {
         expect(() =>
-          validateProximityParameters('core:furniture_1', 'mod:actor_1', -1, mockLogger)
+          validateProximityParameters(
+            'core:furniture_1',
+            'mod:actor_1',
+            -1,
+            mockLogger
+          )
         ).toThrow('Spot index must be non-negative');
-        
+
         expect(() =>
-          validateProximityParameters('core:furniture_1', 'mod:actor_1', -999, mockLogger)
+          validateProximityParameters(
+            'core:furniture_1',
+            'mod:actor_1',
+            -999,
+            mockLogger
+          )
         ).toThrow('Spot index must be non-negative');
       });
 
       it('should throw error for spot index above maximum', () => {
         expect(() =>
-          validateProximityParameters('core:furniture_1', 'mod:actor_1', 10, mockLogger)
-        ).toThrow('Spot index must be between 0 and 9 (maximum furniture capacity)');
-        
+          validateProximityParameters(
+            'core:furniture_1',
+            'mod:actor_1',
+            10,
+            mockLogger
+          )
+        ).toThrow(
+          'Spot index must be between 0 and 9 (maximum furniture capacity)'
+        );
+
         expect(() =>
-          validateProximityParameters('core:furniture_1', 'mod:actor_1', 100, mockLogger)
-        ).toThrow('Spot index must be between 0 and 9 (maximum furniture capacity)');
+          validateProximityParameters(
+            'core:furniture_1',
+            'mod:actor_1',
+            100,
+            mockLogger
+          )
+        ).toThrow(
+          'Spot index must be between 0 and 9 (maximum furniture capacity)'
+        );
       });
     });
 
     describe('invalid logger', () => {
       it('should throw error when logger is null', () => {
         expect(() =>
-          validateProximityParameters('core:furniture_1', 'mod:actor_1', 0, null)
+          validateProximityParameters(
+            'core:furniture_1',
+            'mod:actor_1',
+            0,
+            null
+          )
         ).toThrow('Logger is required');
       });
 
       it('should throw error when logger is undefined', () => {
         expect(() =>
-          validateProximityParameters('core:furniture_1', 'mod:actor_1', 0, undefined)
+          validateProximityParameters(
+            'core:furniture_1',
+            'mod:actor_1',
+            0,
+            undefined
+          )
         ).toThrow('Logger is required');
       });
 
       it('should throw error when logger is not an object', () => {
         expect(() =>
-          validateProximityParameters('core:furniture_1', 'mod:actor_1', 0, 'not-object')
+          validateProximityParameters(
+            'core:furniture_1',
+            'mod:actor_1',
+            0,
+            'not-object'
+          )
         ).toThrow('Logger must be an object');
 
         expect(() =>
@@ -478,41 +628,43 @@ describe('proximityUtils', () => {
         ).toThrow('Logger must have info method');
 
         expect(() =>
-          validateProximityParameters('core:furniture_1', 'mod:actor_1', 0, { info: jest.fn() })
+          validateProximityParameters('core:furniture_1', 'mod:actor_1', 0, {
+            info: jest.fn(),
+          })
         ).toThrow('Logger must have warn method');
 
         expect(() =>
-          validateProximityParameters('core:furniture_1', 'mod:actor_1', 0, { 
-            info: jest.fn(), 
-            warn: jest.fn() 
+          validateProximityParameters('core:furniture_1', 'mod:actor_1', 0, {
+            info: jest.fn(),
+            warn: jest.fn(),
           })
         ).toThrow('Logger must have error method');
 
         expect(() =>
-          validateProximityParameters('core:furniture_1', 'mod:actor_1', 0, { 
-            info: jest.fn(), 
-            warn: jest.fn(), 
-            error: jest.fn() 
+          validateProximityParameters('core:furniture_1', 'mod:actor_1', 0, {
+            info: jest.fn(),
+            warn: jest.fn(),
+            error: jest.fn(),
           })
         ).toThrow('Logger must have debug method');
       });
 
       it('should throw error when logger methods are not functions', () => {
         expect(() =>
-          validateProximityParameters('core:furniture_1', 'mod:actor_1', 0, { 
+          validateProximityParameters('core:furniture_1', 'mod:actor_1', 0, {
             info: 'not-function',
-            warn: jest.fn(), 
+            warn: jest.fn(),
             error: jest.fn(),
-            debug: jest.fn()
+            debug: jest.fn(),
           })
         ).toThrow('Logger info must be a function');
 
         expect(() =>
-          validateProximityParameters('core:furniture_1', 'mod:actor_1', 0, { 
+          validateProximityParameters('core:furniture_1', 'mod:actor_1', 0, {
             info: jest.fn(),
-            warn: null, 
+            warn: null,
             error: jest.fn(),
-            debug: jest.fn()
+            debug: jest.fn(),
           })
         ).toThrow('Logger warn must be a function');
       });
@@ -520,24 +672,36 @@ describe('proximityUtils', () => {
 
     describe('error accumulation and reporting', () => {
       it('should accumulate and report multiple validation errors', () => {
-        expect(() =>
-          validateProximityParameters(null, '', 10, null)
-        ).toThrow(InvalidArgumentError);
+        expect(() => validateProximityParameters(null, '', 10, null)).toThrow(
+          InvalidArgumentError
+        );
 
-        expect(() =>
-          validateProximityParameters(null, '', 10, null)
-        ).toThrow(/Parameter validation failed.*Furniture ID is required.*Actor ID cannot be empty or whitespace only.*Spot index must be between 0 and 9.*Logger is required/);
+        expect(() => validateProximityParameters(null, '', 10, null)).toThrow(
+          /Parameter validation failed.*Furniture ID is required.*Actor ID cannot be empty or whitespace only.*Spot index must be between 0 and 9.*Logger is required/
+        );
       });
 
       it('should report furniture and actor ID errors together', () => {
         expect(() =>
-          validateProximityParameters('invalid-no-colon', 'also:invalid:double', 0, mockLogger)
-        ).toThrow(/Furniture ID must be in namespaced format.*Actor ID must have exactly one colon separating/);
+          validateProximityParameters(
+            'invalid-no-colon',
+            'also:invalid:double',
+            0,
+            mockLogger
+          )
+        ).toThrow(
+          /Furniture ID must be in namespaced format.*Actor ID must have exactly one colon separating/
+        );
       });
 
       it('should include all parameters in error log context', () => {
         expect(() =>
-          validateProximityParameters('core:furniture', 'mod:actor', -1, mockLogger)
+          validateProximityParameters(
+            'core:furniture',
+            'mod:actor',
+            -1,
+            mockLogger
+          )
         ).toThrow();
 
         expect(mockLogger.error).toHaveBeenCalledWith(
@@ -554,30 +718,49 @@ describe('proximityUtils', () => {
 
       it('should include ISO timestamp in error log', () => {
         expect(() =>
-          validateProximityParameters('core:furniture', 'mod:actor', -1, mockLogger)
+          validateProximityParameters(
+            'core:furniture',
+            'mod:actor',
+            -1,
+            mockLogger
+          )
         ).toThrow();
 
         const errorCall = mockLogger.error.mock.calls[0][1];
-        expect(errorCall.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+        expect(errorCall.timestamp).toMatch(
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+        );
       });
 
       it('should handle logger failure gracefully during error reporting', () => {
         const faultyLogger = {
           info: jest.fn(),
           warn: jest.fn(),
-          error: jest.fn(() => { throw new Error('Logger failed'); }),
+          error: jest.fn(() => {
+            throw new Error('Logger failed');
+          }),
           debug: jest.fn(),
         };
 
         expect(() =>
-          validateProximityParameters('core:furniture', 'mod:actor', -1, faultyLogger)
+          validateProximityParameters(
+            'core:furniture',
+            'mod:actor',
+            -1,
+            faultyLogger
+          )
         ).toThrow('Spot index must be non-negative');
       });
     });
 
     describe('successful validation logging', () => {
       it('should log successful validation at debug level', () => {
-        validateProximityParameters('core:furniture_1', 'mod:actor_1', 5, mockLogger);
+        validateProximityParameters(
+          'core:furniture_1',
+          'mod:actor_1',
+          5,
+          mockLogger
+        );
 
         expect(mockLogger.debug).toHaveBeenCalledWith(
           'Proximity parameters validated successfully',
@@ -594,11 +777,18 @@ describe('proximityUtils', () => {
           info: jest.fn(),
           warn: jest.fn(),
           error: jest.fn(),
-          debug: jest.fn(() => { throw new Error('Debug logging failed'); }),
+          debug: jest.fn(() => {
+            throw new Error('Debug logging failed');
+          }),
         };
 
-        expect(() => 
-          validateProximityParameters('core:furniture_1', 'mod:actor_1', 5, faultyLogger)
+        expect(() =>
+          validateProximityParameters(
+            'core:furniture_1',
+            'mod:actor_1',
+            5,
+            faultyLogger
+          )
         ).not.toThrow();
       });
     });
@@ -621,13 +811,15 @@ describe('proximityUtils', () => {
 
   describe('default export', () => {
     it('should export all functions as default object', async () => {
-      const proximityUtils = await import('../../../src/utils/proximityUtils.js');
+      const proximityUtils = await import(
+        '../../../src/utils/proximityUtils.js'
+      );
       const defaultExport = proximityUtils.default;
-      
+
       expect(defaultExport).toHaveProperty('getAdjacentSpots');
       expect(defaultExport).toHaveProperty('findAdjacentOccupants');
       expect(defaultExport).toHaveProperty('validateProximityParameters');
-      
+
       expect(typeof defaultExport.getAdjacentSpots).toBe('function');
       expect(typeof defaultExport.findAdjacentOccupants).toBe('function');
       expect(typeof defaultExport.validateProximityParameters).toBe('function');

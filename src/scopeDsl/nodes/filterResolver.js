@@ -141,9 +141,14 @@ export default function createFilterResolver({
 
       // Add trace logging for before filtering
       if (trace) {
-        trace.addLog('info', `Applying filter to ${initialSize} items.`, source, {
-          logic: node.logic,
-        });
+        trace.addLog(
+          'info',
+          `Applying filter to ${initialSize} items.`,
+          source,
+          {
+            logic: node.logic,
+          }
+        );
       }
 
       // Preprocess actor once for all filtering operations (performance optimization)
@@ -207,8 +212,7 @@ export default function createFilterResolver({
             }
 
             const evalResult = logicEval.evaluate(node.logic, evalCtx);
-            
-            
+
             if (evalResult) {
               result.add(item);
             }

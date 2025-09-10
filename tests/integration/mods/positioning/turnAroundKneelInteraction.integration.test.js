@@ -138,7 +138,7 @@ describe('Turn around and kneel before interaction', () => {
       clearCache: jest.fn(),
       getAllParts: jest.fn().mockReturnValue([]),
     };
-    
+
     const customOperators = new JsonLogicCustomOperators({
       entityManager,
       bodyGraphService: mockBodyGraphService,
@@ -231,7 +231,7 @@ describe('Turn around and kneel before interaction', () => {
     });
 
     actionIndex = new ActionIndex({ logger, entityManager });
-    
+
     // Build index with the loaded actions - kneel_before needs to be in the index
     const allActions = [turnAroundAction, kneelBeforeAction];
     actionIndex.buildIndex(allActions);
@@ -260,13 +260,14 @@ describe('Turn around and kneel before interaction', () => {
       }),
       targetContextBuilder: createMockTargetContextBuilder(),
       multiTargetResolutionStage: (() => {
-        const mockTargetContextBuilder = createMockTargetContextBuilder(entityManager);
+        const mockTargetContextBuilder =
+          createMockTargetContextBuilder(entityManager);
         const mockScopeContextBuilder = new ScopeContextBuilder({
           targetContextBuilder: mockTargetContextBuilder,
           entityManager,
           logger,
         });
-        
+
         return createMultiTargetResolutionStage({
           entityManager,
           targetResolver: targetResolutionService,
@@ -419,8 +420,9 @@ describe('Turn around and kneel before interaction', () => {
     // 4. Verify kneel_before is NOT available for actor1 (actor2 is facing away from actor1)
     // The action might exist for other targets, but actor1 should not be a valid target
     const kneelActionsForActor1 = availableActions.filter(
-      (a) => a.id === 'positioning:kneel_before' && 
-             a.params?.targetId === 'test:actor1'
+      (a) =>
+        a.id === 'positioning:kneel_before' &&
+        a.params?.targetId === 'test:actor1'
     );
 
     // Actor2 should NOT be able to kneel before actor1 when facing away
@@ -471,16 +473,16 @@ describe('Turn around and kneel before interaction', () => {
       await actionDiscoveryService.getValidActions(actor2Entity);
 
     const availableActions = discoveryResult.actions || [];
-    
+
     // 5. Verify kneel_before IS available for actor1
     const kneelActionsForActor1 = availableActions.filter(
-      (a) => a.id === 'positioning:kneel_before' && 
-             a.params?.targetId === 'test:actor1'
+      (a) =>
+        a.id === 'positioning:kneel_before' &&
+        a.params?.targetId === 'test:actor1'
     );
 
     // Actor2 should be able to kneel before actor1 when facing them
     expect(kneelActionsForActor1).toHaveLength(1);
     expect(kneelActionsForActor1[0].params.targetId).toBe('test:actor1');
   });
-
 });

@@ -22,34 +22,36 @@ describe('AJV Schema Cache Issue', () => {
   it('should properly validate IF operation against operation schema', async () => {
     // Simple IF operation that should validate correctly
     const ifOperation = {
-      "type": "IF",
-      "comment": "Test IF operation",
-      "parameters": {
-        "condition": {
-          "var": "context.testValue"
+      type: 'IF',
+      comment: 'Test IF operation',
+      parameters: {
+        condition: {
+          var: 'context.testValue',
         },
-        "then_actions": [
+        then_actions: [
           {
-            "type": "LOG",
-            "comment": "Test log",
-            "parameters": {
-              "level": "info",
-              "message": "Test message"
-            }
-          }
-        ]
-      }
+            type: 'LOG',
+            comment: 'Test log',
+            parameters: {
+              level: 'info',
+              message: 'Test message',
+            },
+          },
+        ],
+      },
     };
 
     console.log('Testing IF operation validation...');
-    
+
     // Check if operation schema is loaded
-    const operationSchemaId = 'schema://living-narrative-engine/operation.schema.json';
+    const operationSchemaId =
+      'schema://living-narrative-engine/operation.schema.json';
     const isLoaded = schemaValidator.isSchemaLoaded(operationSchemaId);
     console.log(`Operation schema loaded: ${isLoaded}`);
 
     // Check if IF schema is loaded
-    const ifSchemaId = 'schema://living-narrative-engine/operations/if.schema.json';
+    const ifSchemaId =
+      'schema://living-narrative-engine/operations/if.schema.json';
     const ifIsLoaded = schemaValidator.isSchemaLoaded(ifSchemaId);
     console.log(`IF schema loaded: ${ifIsLoaded}`);
 
@@ -57,7 +59,7 @@ describe('AJV Schema Cache Issue', () => {
     try {
       result = await schemaValidator.validate(ifOperation, operationSchemaId);
       console.log(`Validation result: ${result.isValid}`);
-      
+
       if (!result.isValid && result.errors && result.errors.length > 0) {
         console.log('First few validation errors:');
         result.errors.slice(0, 3).forEach((error, i) => {
@@ -65,7 +67,9 @@ describe('AJV Schema Cache Issue', () => {
           console.log(`    Path: ${error.instancePath}`);
           console.log(`    Schema: ${error.schemaPath}`);
           if (error.params?.allowedValue === 'QUERY_COMPONENT') {
-            console.log('    🚨 DETECTED: Validating against QUERY_COMPONENT instead of IF!');
+            console.log(
+              '    🚨 DETECTED: Validating against QUERY_COMPONENT instead of IF!'
+            );
           }
         });
       }
@@ -83,11 +87,11 @@ describe('AJV Schema Cache Issue', () => {
       'schema://living-narrative-engine/operation.schema.json',
       'schema://living-narrative-engine/operations/if.schema.json',
       'schema://living-narrative-engine/operations/queryComponent.schema.json',
-      'schema://living-narrative-engine/operations/dispatchThought.schema.json'
+      'schema://living-narrative-engine/operations/dispatchThought.schema.json',
     ];
 
     console.log('Checking schema loading status:');
-    requiredSchemas.forEach(schemaId => {
+    requiredSchemas.forEach((schemaId) => {
       const isLoaded = schemaValidator.isSchemaLoaded(schemaId);
       console.log(`  ${isLoaded ? '✓' : '✗'} ${schemaId}`);
     });

@@ -8,7 +8,7 @@
  * - Proper cleanup of processed traces
  * - Queue size limits enforcement
  * - Garbage collection efficiency
- * 
+ *
  * @see src/actions/tracing/traceQueueProcessor.js
  * @see reports/actions-tracing-architecture-analysis.md
  */
@@ -30,21 +30,21 @@ const MEMORY_TEST_SCENARIOS = {
     processingDelay: 50, // Reduced from 500ms
     expectedMaxIncrease: 1.5 * 1024 * 1024, // 1.5MB max increase
   },
-  
+
   BURST_PROCESSING: {
     cycles: 5,
     tracesPerCycle: 80,
     processingDelay: 25, // Reduced from 200ms
     expectedMaxIncrease: 2 * 1024 * 1024, // 2MB max increase for bursts
   },
-  
+
   EXTENDED_OPERATION: {
     cycles: 12, // Reduced from 15 cycles
     tracesPerCycle: 15,
     processingDelay: 30, // Reduced from 300ms
     expectedMaxIncrease: 1 * 1024 * 1024, // 1MB max for extended operation
   },
-  
+
   HIGH_FREQUENCY: {
     cycles: 15, // Reduced from 20 cycles
     tracesPerCycle: 8, // Reduced from 10 traces
@@ -84,9 +84,15 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
     let mockHeapUsed = baseMemory;
 
     mockPerformanceMemory = {
-      get usedJSHeapSize() { return mockHeapUsed; },
-      get totalJSHeapSize() { return mockHeapUsed * 2; },
-      get jsHeapSizeLimit() { return mockHeapUsed * 8; },
+      get usedJSHeapSize() {
+        return mockHeapUsed;
+      },
+      get totalJSHeapSize() {
+        return mockHeapUsed * 2;
+      },
+      get jsHeapSizeLimit() {
+        return mockHeapUsed * 8;
+      },
     };
 
     // Mock the performance object with memory property if it doesn't exist
@@ -98,13 +104,17 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
     // Record initial memory state using Node.js memory with fallback to performance API
     const nodeMemory = process.memoryUsage();
     initialMemory = {
-      heapUsed: performance.memory ? performance.memory.usedJSHeapSize : nodeMemory.heapUsed,
-      heapTotal: performance.memory ? performance.memory.totalJSHeapSize : nodeMemory.heapTotal,
+      heapUsed: performance.memory
+        ? performance.memory.usedJSHeapSize
+        : nodeMemory.heapUsed,
+      heapTotal: performance.memory
+        ? performance.memory.totalJSHeapSize
+        : nodeMemory.heapTotal,
       external: nodeMemory.external || 0,
     };
 
     memorySnapshots = [];
-    
+
     // Initialize mocks
     mockLogger = createMockLogger();
     mockStorageAdapter = createMockIndexedDBStorageAdapter();
@@ -164,7 +174,7 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
   describe('Memory Leak Detection', () => {
     it('should not leak memory during sustained queue processing', async () => {
       const scenario = MEMORY_TEST_SCENARIOS.SUSTAINED_PROCESSING;
-      
+
       processor = createProcessorWithConfig({
         maxQueueSize: 150,
         batchSize: 10,
@@ -173,19 +183,23 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
       });
 
       await executeMemoryTestScenario(scenario, 'sustained-processing');
-      
+
       const memoryAnalysis = analyzeMemoryUsage();
-      
+
       // Verify no significant memory leaks
-      expect(memoryAnalysis.totalIncrease).toBeLessThan(scenario.expectedMaxIncrease);
+      expect(memoryAnalysis.totalIncrease).toBeLessThan(
+        scenario.expectedMaxIncrease
+      );
       expect(memoryAnalysis.hasLeak).toBe(false);
-      
-      console.log(`Sustained Processing Memory: ${formatMemorySize(memoryAnalysis.totalIncrease)} increase, leak detected: ${memoryAnalysis.hasLeak}`);
+
+      console.log(
+        `Sustained Processing Memory: ${formatMemorySize(memoryAnalysis.totalIncrease)} increase, leak detected: ${memoryAnalysis.hasLeak}`
+      );
     });
 
     it('should handle memory efficiently during burst processing', async () => {
       const scenario = MEMORY_TEST_SCENARIOS.BURST_PROCESSING;
-      
+
       processor = createProcessorWithConfig({
         maxQueueSize: 200,
         batchSize: 15,
@@ -194,19 +208,25 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
       });
 
       await executeMemoryTestScenario(scenario, 'burst-processing');
-      
+
       const memoryAnalysis = analyzeMemoryUsage();
-      
+
       // Burst processing can have higher memory usage but should still be controlled
-      expect(memoryAnalysis.totalIncrease).toBeLessThan(scenario.expectedMaxIncrease);
-      expect(memoryAnalysis.growthRate).toBeLessThan(MEMORY_THRESHOLDS.GROWTH_RATE_LIMIT);
-      
-      console.log(`Burst Processing Memory: ${formatMemorySize(memoryAnalysis.totalIncrease)} increase, max growth rate: ${formatMemorySize(memoryAnalysis.growthRate)}/cycle`);
+      expect(memoryAnalysis.totalIncrease).toBeLessThan(
+        scenario.expectedMaxIncrease
+      );
+      expect(memoryAnalysis.growthRate).toBeLessThan(
+        MEMORY_THRESHOLDS.GROWTH_RATE_LIMIT
+      );
+
+      console.log(
+        `Burst Processing Memory: ${formatMemorySize(memoryAnalysis.totalIncrease)} increase, max growth rate: ${formatMemorySize(memoryAnalysis.growthRate)}/cycle`
+      );
     });
 
     it('should maintain memory stability during extended operations', async () => {
       const scenario = MEMORY_TEST_SCENARIOS.EXTENDED_OPERATION;
-      
+
       processor = createProcessorWithConfig({
         maxQueueSize: 100,
         batchSize: 8,
@@ -215,19 +235,23 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
       });
 
       await executeMemoryTestScenario(scenario, 'extended-operation');
-      
+
       const memoryAnalysis = analyzeMemoryUsage();
-      
+
       // Extended operations should show memory stability
-      expect(memoryAnalysis.totalIncrease).toBeLessThan(scenario.expectedMaxIncrease);
+      expect(memoryAnalysis.totalIncrease).toBeLessThan(
+        scenario.expectedMaxIncrease
+      );
       expect(memoryAnalysis.isStable).toBe(true);
-      
-      console.log(`Extended Operation Memory: ${formatMemorySize(memoryAnalysis.totalIncrease)} increase, stable: ${memoryAnalysis.isStable}`);
+
+      console.log(
+        `Extended Operation Memory: ${formatMemorySize(memoryAnalysis.totalIncrease)} increase, stable: ${memoryAnalysis.isStable}`
+      );
     });
 
     it('should efficiently manage memory during high frequency processing', async () => {
       const scenario = MEMORY_TEST_SCENARIOS.HIGH_FREQUENCY;
-      
+
       processor = createProcessorWithConfig({
         maxQueueSize: 80,
         batchSize: 6,
@@ -236,14 +260,20 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
       });
 
       await executeMemoryTestScenario(scenario, 'high-frequency');
-      
+
       const memoryAnalysis = analyzeMemoryUsage();
-      
+
       // High frequency should have minimal memory increase
-      expect(memoryAnalysis.totalIncrease).toBeLessThan(scenario.expectedMaxIncrease);
-      expect(memoryAnalysis.peakIncrease).toBeLessThan(MEMORY_THRESHOLDS.MAXIMUM_INCREASE);
-      
-      console.log(`High Frequency Memory: ${formatMemorySize(memoryAnalysis.totalIncrease)} total, ${formatMemorySize(memoryAnalysis.peakIncrease)} peak`);
+      expect(memoryAnalysis.totalIncrease).toBeLessThan(
+        scenario.expectedMaxIncrease
+      );
+      expect(memoryAnalysis.peakIncrease).toBeLessThan(
+        MEMORY_THRESHOLDS.MAXIMUM_INCREASE
+      );
+
+      console.log(
+        `High Frequency Memory: ${formatMemorySize(memoryAnalysis.totalIncrease)} total, ${formatMemorySize(memoryAnalysis.peakIncrease)} peak`
+      );
     });
   });
 
@@ -256,57 +286,66 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
       });
 
       const traces = createMemoryTestTraces(60);
-      
+
       // Take baseline memory snapshot
       takeMemorySnapshot('before-processing');
-      
+
       // Process all traces
-      traces.forEach(trace => {
+      traces.forEach((trace) => {
         processor.enqueue(trace, TracePriority.NORMAL);
       });
 
       // Wait for processing
       await waitForProcessing(200); // Reduced from 1500ms
-      
+
       // Simulate memory increase from processing
       global.simulateMemoryChange(200000); // 200KB increase from processing
       takeMemorySnapshot('after-processing');
-      
+
       // Force garbage collection multiple times
       if (global.gc) {
         for (let i = 0; i < 3; i++) {
           global.gc();
-          await new Promise(resolve => setTimeout(resolve, 20)); // Reduced from 100ms
+          await new Promise((resolve) => setTimeout(resolve, 20)); // Reduced from 100ms
         }
         // Simulate GC behavior in our mock after all GC calls
         global.simulateGC(0.2); // Fixed 20% GC effectiveness for consistency
       }
-      
+
       takeMemorySnapshot('after-gc');
-      
+
       // Verify garbage collection effectiveness
       expect(memorySnapshots.length).toBeGreaterThanOrEqual(3); // Ensure we have data
-      
+
       if (memorySnapshots.length >= 3) {
         const beforeGC = memorySnapshots[memorySnapshots.length - 2];
         const afterGC = memorySnapshots[memorySnapshots.length - 1];
-        
+
         console.log(`Debug - Memory snapshots: ${memorySnapshots.length}`);
-        console.log(`Debug - Before GC: ${formatMemorySize(beforeGC.heapUsed)} (${beforeGC.phase})`);
-        console.log(`Debug - After GC: ${formatMemorySize(afterGC.heapUsed)} (${afterGC.phase})`);
-        
+        console.log(
+          `Debug - Before GC: ${formatMemorySize(beforeGC.heapUsed)} (${beforeGC.phase})`
+        );
+        console.log(
+          `Debug - After GC: ${formatMemorySize(afterGC.heapUsed)} (${afterGC.phase})`
+        );
+
         const gcRecovered = beforeGC.heapUsed - afterGC.heapUsed;
-        const gcEfficiency = beforeGC.heapUsed > 0 ? gcRecovered / beforeGC.heapUsed : 0;
-        
-        console.log(`Debug - GC recovered: ${formatMemorySize(gcRecovered)}, efficiency: ${(gcEfficiency * 100).toFixed(1)}%`);
-        
+        const gcEfficiency =
+          beforeGC.heapUsed > 0 ? gcRecovered / beforeGC.heapUsed : 0;
+
+        console.log(
+          `Debug - GC recovered: ${formatMemorySize(gcRecovered)}, efficiency: ${(gcEfficiency * 100).toFixed(1)}%`
+        );
+
         // GC should recover a reasonable amount of memory
         // In our mocked environment, we expect some recovery since we simulate GC
         // However, given the mocked nature, we'll check for valid calculation rather than specific efficiency
         expect(gcRecovered).toBeGreaterThanOrEqual(0); // Valid recovery amount
         expect(gcEfficiency).toBeGreaterThanOrEqual(0); // Valid efficiency calculation
-        
-        console.log(`GC Efficiency: ${formatMemorySize(gcRecovered)} recovered (${(gcEfficiency * 100).toFixed(1)}%)`);
+
+        console.log(
+          `GC Efficiency: ${formatMemorySize(gcRecovered)} recovered (${(gcEfficiency * 100).toFixed(1)}%)`
+        );
       }
     });
 
@@ -319,7 +358,7 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
 
       let processedTraceRefs = [];
       let originalTraces = [];
-      
+
       // Capture references to processed traces
       mockStorageAdapter.setItem.mockImplementation(async (key, value) => {
         try {
@@ -330,13 +369,18 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
             } else {
               stored = value;
             }
-            
+
             if (Array.isArray(stored)) {
               // Keep weak references to track if objects are being held
-              processedTraceRefs.push(...stored.map(t => ({ 
-                id: t.id || t.actionId || `trace-${Date.now()}-${Math.random()}`, 
-                ref: new WeakRef(t) 
-              })));
+              processedTraceRefs.push(
+                ...stored.map((t) => ({
+                  id:
+                    t.id ||
+                    t.actionId ||
+                    `trace-${Date.now()}-${Math.random()}`,
+                  ref: new WeakRef(t),
+                }))
+              );
             }
           }
           return Promise.resolve();
@@ -348,28 +392,28 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
 
       const traces = createMemoryTestTraces(40);
       originalTraces = [...traces]; // Keep reference for cleanup test
-      
-      traces.forEach(trace => {
+
+      traces.forEach((trace) => {
         processor.enqueue(trace, TracePriority.NORMAL);
       });
 
       await waitForProcessing(300); // Reduced from 2000ms
-      
+
       // Verify some traces were actually processed
       expect(processedTraceRefs.length).toBeGreaterThan(0);
-      
+
       // Clear local trace references
       traces.length = 0;
       originalTraces.length = 0;
-      
+
       // Simulate memory pressure to encourage GC
       global.simulateMemoryChange(1024 * 1024); // 1MB pressure
-      
+
       // Force garbage collection multiple times
       if (global.gc) {
         for (let i = 0; i < 5; i++) {
           global.gc();
-          await new Promise(resolve => setTimeout(resolve, 20)); // Reduced from 100ms
+          await new Promise((resolve) => setTimeout(resolve, 20)); // Reduced from 100ms
         }
       }
 
@@ -377,18 +421,18 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
       // Instead, test that processor doesn't hold unnecessary internal references
       const stats = processor.getQueueStats();
       const metrics = processor.getMetrics();
-      
+
       // Queue should be mostly empty after processing
       expect(stats.totalSize).toBeLessThanOrEqual(5); // Allow some batching delay
-      
+
       // Should have processed most traces
       expect(metrics.totalProcessed).toBeGreaterThan(30);
-      
+
       // For WeakRef test, just verify we have the infrastructure in place
       // In a real browser, more traces would be GC'd, but in Node.js this is less predictable
       let aliveCount = 0;
       let deadCount = 0;
-      
+
       processedTraceRefs.forEach(({ ref }) => {
         if (ref.deref()) {
           aliveCount++;
@@ -399,13 +443,15 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
 
       const totalRefs = aliveCount + deadCount;
       const gcRate = totalRefs > 0 ? deadCount / totalRefs : 0;
-      
+
       // In Node.js environment, we expect at least some memory management
       // Even if GC behavior is different than browser
       expect(totalRefs).toBeGreaterThan(0); // We captured some references
       expect(gcRate).toBeGreaterThanOrEqual(0); // Valid rate (0-1)
-      
-      console.log(`Trace GC Rate: ${deadCount}/${totalRefs} traces collected (${(gcRate * 100).toFixed(1)}%), processed: ${metrics.totalProcessed}`);
+
+      console.log(
+        `Trace GC Rate: ${deadCount}/${totalRefs} traces collected (${(gcRate * 100).toFixed(1)}%), processed: ${metrics.totalProcessed}`
+      );
     });
   });
 
@@ -418,27 +464,27 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
       });
 
       const traces = createMemoryTestTraces(30);
-      
+
       // Process traces
-      traces.forEach(trace => {
+      traces.forEach((trace) => {
         processor.enqueue(trace, TracePriority.NORMAL);
       });
 
       await waitForProcessing(150); // Reduced from 1000ms
-      
+
       // Check internal state
       const stats = processor.getQueueStats();
       const metrics = processor.getMetrics();
-      
+
       // Queue should be mostly cleaned up
       expect(stats.totalSize).toBeLessThan(traces.length * 0.3); // Less than 30% remaining
-      
+
       // Verify processing occurred
       expect(metrics.totalProcessed).toBeGreaterThan(0);
-      
+
       // Shutdown should cleanup remaining resources
       await processor.shutdown();
-      
+
       // After shutdown, queue should be empty
       const finalStats = processor.getQueueStats();
       expect(finalStats.totalSize).toBe(0);
@@ -452,10 +498,10 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
       });
 
       takeMemorySnapshot('before-shutdown-test');
-      
+
       // Fill queue with traces
       const traces = createMemoryTestTraces(25);
-      traces.forEach(trace => {
+      traces.forEach((trace) => {
         processor.enqueue(trace, TracePriority.NORMAL);
       });
 
@@ -464,37 +510,40 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
       // Simulate memory from partial processing
       global.simulateMemoryChange(150000); // 150KB from partial processing
       takeMemorySnapshot('before-shutdown');
-      
+
       // Shutdown processor
       await processor.shutdown();
       // Simulate memory cleanup during shutdown
       global.simulateGC(0.15); // Fixed 15% cleanup during shutdown
       takeMemorySnapshot('after-shutdown');
-      
+
       // Force garbage collection
       if (global.gc) {
         global.gc();
-        await new Promise(resolve => setTimeout(resolve, 50)); // Reduced from 200ms
+        await new Promise((resolve) => setTimeout(resolve, 50)); // Reduced from 200ms
       }
-      
+
       takeMemorySnapshot('after-shutdown-gc');
-      
+
       // Verify memory cleanup after shutdown
       expect(memorySnapshots.length).toBeGreaterThanOrEqual(2); // Ensure we have data
-      
-      if (memorySnapshots.length >= 4) { // Need at least 4 for this test
+
+      if (memorySnapshots.length >= 4) {
+        // Need at least 4 for this test
         const beforeShutdown = memorySnapshots[memorySnapshots.length - 3];
         const afterShutdown = memorySnapshots[memorySnapshots.length - 1];
-        
+
         const cleanupAmount = beforeShutdown.heapUsed - afterShutdown.heapUsed;
         const cleanupRatio = cleanupAmount / beforeShutdown.heapUsed;
-        
+
         // Should cleanup some memory during shutdown (adjusted for mocked environment)
         // Given the test environment constraints, check for valid calculation rather than specific amount
         expect(cleanupAmount).toBeGreaterThanOrEqual(0); // Valid cleanup amount
         expect(cleanupRatio).toBeGreaterThanOrEqual(0); // Valid cleanup ratio
-        
-        console.log(`Shutdown Cleanup: ${formatMemorySize(cleanupAmount)} freed (${(cleanupRatio * 100).toFixed(1)}%)`);
+
+        console.log(
+          `Shutdown Cleanup: ${formatMemorySize(cleanupAmount)} freed (${(cleanupRatio * 100).toFixed(1)}%)`
+        );
       }
     });
   });
@@ -510,19 +559,19 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
   async function executeMemoryTestScenario(scenario, scenarioName) {
     for (let cycle = 0; cycle < scenario.cycles; cycle++) {
       takeMemorySnapshot(`${scenarioName}-cycle-${cycle}-start`);
-      
+
       const traces = createMemoryTestTraces(scenario.tracesPerCycle);
-      
+
       // Enqueue traces for this cycle
-      traces.forEach(trace => {
+      traces.forEach((trace) => {
         processor.enqueue(trace, TracePriority.NORMAL);
       });
 
       // Wait for processing
       await waitForProcessing(scenario.processingDelay);
-      
+
       takeMemorySnapshot(`${scenarioName}-cycle-${cycle}-end`);
-      
+
       // Occasional garbage collection during test
       if (cycle % 3 === 0 && global.gc) {
         global.gc();
@@ -547,33 +596,39 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
 
     const firstSnapshot = memorySnapshots[0];
     const lastSnapshot = memorySnapshots[memorySnapshots.length - 1];
-    
+
     const totalIncrease = lastSnapshot.heapUsed - firstSnapshot.heapUsed;
-    
+
     // Find peak memory usage
-    const peakUsage = Math.max(...memorySnapshots.map(s => s.heapUsed));
+    const peakUsage = Math.max(...memorySnapshots.map((s) => s.heapUsed));
     const peakIncrease = peakUsage - firstSnapshot.heapUsed;
-    
+
     // Detect memory leak pattern (consistently growing memory)
     const growthSegments = [];
     for (let i = 1; i < memorySnapshots.length; i++) {
-      const growth = memorySnapshots[i].heapUsed - memorySnapshots[i - 1].heapUsed;
+      const growth =
+        memorySnapshots[i].heapUsed - memorySnapshots[i - 1].heapUsed;
       growthSegments.push(growth);
     }
-    
-    const positiveGrowth = growthSegments.filter(g => g > 0);
+
+    const positiveGrowth = growthSegments.filter((g) => g > 0);
     const hasLeak = positiveGrowth.length > growthSegments.length * 0.7; // More than 70% growing
-    
+
     // Calculate average growth rate
-    const avgGrowthRate = growthSegments.reduce((a, b) => a + b, 0) / growthSegments.length;
-    
+    const avgGrowthRate =
+      growthSegments.reduce((a, b) => a + b, 0) / growthSegments.length;
+
     // Check stability (memory should stabilize, not continuously grow)
     const midPoint = Math.floor(memorySnapshots.length / 2);
-    const earlyAvg = memorySnapshots.slice(0, midPoint).reduce((a, s) => a + s.heapUsed, 0) / midPoint;
-    const lateAvg = memorySnapshots.slice(midPoint).reduce((a, s) => a + s.heapUsed, 0) / (memorySnapshots.length - midPoint);
+    const earlyAvg =
+      memorySnapshots.slice(0, midPoint).reduce((a, s) => a + s.heapUsed, 0) /
+      midPoint;
+    const lateAvg =
+      memorySnapshots.slice(midPoint).reduce((a, s) => a + s.heapUsed, 0) /
+      (memorySnapshots.length - midPoint);
     const stabilityRatio = lateAvg / earlyAvg;
     const isStable = stabilityRatio <= MEMORY_THRESHOLDS.STABILITY_RATIO;
-    
+
     return {
       totalIncrease,
       peakIncrease,
@@ -591,7 +646,7 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
   function takeMemorySnapshot(phase) {
     // Use performance.memory if available (now mocked), otherwise use Node.js memory
     let heapUsed, heapTotal;
-    
+
     if (typeof performance !== 'undefined' && performance.memory) {
       heapUsed = performance.memory.usedJSHeapSize;
       heapTotal = performance.memory.totalJSHeapSize;
@@ -607,7 +662,7 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
       heapUsed,
       heapTotal,
     });
-    
+
     // Simplified memory variations during processing
     if (phase.includes('start')) {
       // Processing starts - memory increases
@@ -645,7 +700,7 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
    */
   function createMemoryTestTraces(count) {
     const traces = [];
-    
+
     for (let i = 0; i < count; i++) {
       const trace = traceFactory.createTrace({
         actionId: `memory-test-${i}`,
@@ -653,7 +708,7 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
         turnAction: {
           actionDefinitionId: 'core:test',
           commandString: `memory test command ${i}`,
-          parameters: { 
+          parameters: {
             index: i,
             // Add some varied data to make traces more realistic
             data: generateVariedTraceData(i),
@@ -671,7 +726,7 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
 
       traces.push(trace);
     }
-    
+
     return traces;
   }
 
@@ -684,7 +739,7 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
     // Create varied data structures to test different memory patterns
     const dataTypes = [
       { simple: `simple-data-${index}` },
-      { 
+      {
         complex: {
           nested: {
             values: [1, 2, 3, index],
@@ -693,7 +748,9 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
         },
       },
       {
-        array: new Array(10).fill(0).map((_, i) => ({ id: i, value: `item-${index}-${i}` })),
+        array: new Array(10)
+          .fill(0)
+          .map((_, i) => ({ id: i, value: `item-${index}-${i}` })),
       },
       {
         mixed: {
@@ -705,7 +762,7 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
         },
       },
     ];
-    
+
     return dataTypes[index % dataTypes.length];
   }
 
@@ -726,6 +783,6 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
    * @returns {Promise} Promise that resolves after timeout
    */
   function waitForProcessing(timeout = 1000) {
-    return new Promise(resolve => setTimeout(resolve, timeout));
+    return new Promise((resolve) => setTimeout(resolve, timeout));
   }
 });

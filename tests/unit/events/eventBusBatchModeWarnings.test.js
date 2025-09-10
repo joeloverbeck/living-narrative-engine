@@ -4,7 +4,14 @@
  * progressive warnings at 50%, 75%, and 90% of recursion limits
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import EventBus from '../../../src/events/eventBus.js';
 
 describe('EventBus Batch Mode and Warnings', () => {
@@ -17,15 +24,15 @@ describe('EventBus Batch Mode and Warnings', () => {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
-    
+
     // Spy on console methods since warnings use console directly
     consoleSpy = {
       warn: jest.spyOn(console, 'warn').mockImplementation(() => {}),
-      error: jest.spyOn(console, 'error').mockImplementation(() => {})
+      error: jest.spyOn(console, 'error').mockImplementation(() => {}),
     };
-    
+
     eventBus = new EventBus({ logger: mockLogger });
   });
 
@@ -42,7 +49,7 @@ describe('EventBus Batch Mode and Warnings', () => {
         maxRecursionDepth: 15,
         maxGlobalRecursion: 50,
         timeoutMs: 60000,
-        context: 'game-initialization'
+        context: 'game-initialization',
       });
 
       // Assert
@@ -51,14 +58,14 @@ describe('EventBus Batch Mode and Warnings', () => {
         maxRecursionDepth: 15,
         maxGlobalRecursion: 50,
         timeoutMs: 60000,
-        context: 'game-initialization'
+        context: 'game-initialization',
       });
     });
 
     it('should disable batch mode and clear options', () => {
       // Arrange
       eventBus.setBatchMode(true, { context: 'test' });
-      
+
       // Act
       eventBus.setBatchMode(false);
 
@@ -72,12 +79,12 @@ describe('EventBus Batch Mode and Warnings', () => {
       const shortTimeout = 100;
       eventBus.setBatchMode(true, {
         timeoutMs: shortTimeout,
-        context: 'timeout-test'
+        context: 'timeout-test',
       });
 
       // Assert
       expect(eventBus.isBatchModeEnabled()).toBe(true);
-      
+
       setTimeout(() => {
         expect(eventBus.isBatchModeEnabled()).toBe(false);
         expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -94,14 +101,15 @@ describe('EventBus Batch Mode and Warnings', () => {
       eventBus.setBatchMode(true, {
         maxRecursionDepth: 10,
         maxGlobalRecursion: 20,
-        context: 'warning-test'
+        context: 'warning-test',
       });
 
       // Create a recursive event scenario
       let recursionCount = 0;
       eventBus.subscribe('test:recursive', async () => {
         recursionCount++;
-        if (recursionCount <= 5) { // Continue until depth 5 to trigger 50% warning
+        if (recursionCount <= 5) {
+          // Continue until depth 5 to trigger 50% warning
           await eventBus.dispatch('test:recursive');
         }
       });
@@ -111,7 +119,9 @@ describe('EventBus Batch Mode and Warnings', () => {
 
       // Assert - Should warn at 50% (5 out of 10)
       expect(consoleSpy.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Recursion depth warning - 50% of limit reached')
+        expect.stringContaining(
+          'Recursion depth warning - 50% of limit reached'
+        )
       );
       expect(consoleSpy.warn).toHaveBeenCalledWith(
         expect.stringContaining('test:recursive')
@@ -126,17 +136,18 @@ describe('EventBus Batch Mode and Warnings', () => {
       eventBus.setBatchMode(true, {
         maxRecursionDepth: 10,
         maxGlobalRecursion: 20,
-        context: 'global-warning-test'
+        context: 'global-warning-test',
       });
 
       // Create multiple events to reach global recursion limit
       const eventNames = ['event1', 'event2', 'event3', 'event4'];
       let dispatchedCount = 0;
 
-      eventNames.forEach(eventName => {
+      eventNames.forEach((eventName) => {
         eventBus.subscribe(eventName, async () => {
           dispatchedCount++;
-          if (dispatchedCount <= 15) { // Continue until 15 to trigger 75% warning
+          if (dispatchedCount <= 15) {
+            // Continue until 15 to trigger 75% warning
             const nextEvent = eventNames[dispatchedCount % eventNames.length];
             await eventBus.dispatch(nextEvent);
           }
@@ -148,7 +159,9 @@ describe('EventBus Batch Mode and Warnings', () => {
 
       // Assert - Should warn at 75% (15 out of 20)
       expect(consoleSpy.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Global recursion warning - 75% of limit reached')
+        expect.stringContaining(
+          'Global recursion warning - 75% of limit reached'
+        )
       );
       expect(consoleSpy.warn).toHaveBeenCalledWith(
         expect.stringContaining('(15/20)')
@@ -160,13 +173,14 @@ describe('EventBus Batch Mode and Warnings', () => {
       eventBus.setBatchMode(true, {
         maxRecursionDepth: 10,
         maxGlobalRecursion: 50,
-        context: '90percent-test'
+        context: '90percent-test',
       });
 
       let recursionCount = 0;
       eventBus.subscribe('test:90percent', async () => {
         recursionCount++;
-        if (recursionCount <= 9) { // Continue until depth 9 to trigger 90% warning
+        if (recursionCount <= 9) {
+          // Continue until depth 9 to trigger 90% warning
           await eventBus.dispatch('test:90percent');
         }
       });
@@ -176,7 +190,9 @@ describe('EventBus Batch Mode and Warnings', () => {
 
       // Assert - Should warn at 90% (9 out of 10)
       expect(consoleSpy.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Recursion depth warning - 90% of limit reached')
+        expect.stringContaining(
+          'Recursion depth warning - 90% of limit reached'
+        )
       );
       expect(consoleSpy.warn).toHaveBeenCalledWith(
         expect.stringContaining('(9/10)')
@@ -190,7 +206,7 @@ describe('EventBus Batch Mode and Warnings', () => {
       eventBus.setBatchMode(true, {
         maxRecursionDepth: 3,
         maxGlobalRecursion: 10,
-        context: 'limit-test'
+        context: 'limit-test',
       });
 
       let callCount = 0;
@@ -217,13 +233,13 @@ describe('EventBus Batch Mode and Warnings', () => {
       eventBus.setBatchMode(true, {
         maxRecursionDepth: 10,
         maxGlobalRecursion: 5,
-        context: 'global-limit-test'
+        context: 'global-limit-test',
       });
 
       const eventNames = ['event1', 'event2'];
       let totalCalls = 0;
 
-      eventNames.forEach(eventName => {
+      eventNames.forEach((eventName) => {
         eventBus.subscribe(eventName, async () => {
           totalCalls++;
           const nextEvent = eventNames[totalCalls % eventNames.length];
@@ -271,7 +287,7 @@ describe('EventBus Batch Mode and Warnings', () => {
       eventBus.setBatchMode(true, {
         maxRecursionDepth: 5,
         maxGlobalRecursion: 10,
-        context: 'batch-limits'
+        context: 'batch-limits',
       });
 
       let callCount = 0;
@@ -300,7 +316,7 @@ describe('EventBus Batch Mode and Warnings', () => {
       eventBus.setBatchMode(true, {
         maxRecursionDepth: 10,
         maxGlobalRecursion: 20,
-        context: 'critical-test'
+        context: 'critical-test',
       });
 
       let callCount = 0;

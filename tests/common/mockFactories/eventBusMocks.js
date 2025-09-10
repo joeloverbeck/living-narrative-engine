@@ -11,7 +11,7 @@ export const createMockSafeEventDispatcher = () =>
     dispatch: jest.fn().mockResolvedValue(true),
     subscribe: jest.fn().mockReturnValue(() => {}),
     unsubscribe: jest.fn(),
-    setBatchMode: jest.fn()
+    setBatchMode: jest.fn(),
   });
 
 export const createMockValidatedEventDispatcher = () =>

@@ -173,10 +173,10 @@ describe('ActionCategorizationService - Memory Tests', () => {
       // Helper function to get adaptive tolerance based on action count
       // Lower action counts get higher tolerance due to initialization overhead
       const getDeviationTolerance = (actionCount) => {
-        if (actionCount <= 5) return 400;   // 400% for very low counts (initialization dominates)
-        if (actionCount <= 10) return 350;  // 350% for low counts
-        if (actionCount <= 20) return 300;  // 300% for medium counts
-        return 250;                         // 250% for higher counts (original tolerance)
+        if (actionCount <= 5) return 400; // 400% for very low counts (initialization dominates)
+        if (actionCount <= 10) return 350; // 350% for low counts
+        if (actionCount <= 20) return 300; // 300% for medium counts
+        return 250; // 250% for higher counts (original tolerance)
       };
 
       memoryUsagePerAction.forEach((usage, index) => {

@@ -49,7 +49,7 @@ describe('ajvAnyOfErrorFormatter', () => {
 
       const data = { type: 'operation5' };
       const result = formatAjvErrorsEnhanced(errors, data);
-      
+
       expect(result).toContain("Operation type 'operation5'");
       expect(result.length).toBeLessThan(JSON.stringify(errors).length);
     });
@@ -114,7 +114,7 @@ describe('ajvAnyOfErrorFormatter', () => {
 
       const data = { type: 'moveEntity', parameters: {} };
       const result = formatAnyOfErrors(errors, data);
-      
+
       expect(result).toContain("Operation type 'moveEntity'");
       expect(result).toContain('targetPosition');
     });
@@ -146,7 +146,7 @@ describe('ajvAnyOfErrorFormatter', () => {
 
       const data = { type: 'operation1', param1: 123 };
       const result = formatAnyOfErrors(errors, data);
-      
+
       expect(result).toContain("Operation type 'operation1'");
       expect(result).toContain("Expected type 'string'");
     });
@@ -171,8 +171,10 @@ describe('ajvAnyOfErrorFormatter', () => {
 
       const data = { type: 'unknownOp' };
       const result = formatAnyOfErrors(errors, data);
-      
-      expect(result).toContain("Unknown or invalid operation type: 'unknownOp'");
+
+      expect(result).toContain(
+        "Unknown or invalid operation type: 'unknownOp'"
+      );
       expect(result).toContain('validOp1');
       expect(result).toContain('validOp2');
     });
@@ -190,8 +192,10 @@ describe('ajvAnyOfErrorFormatter', () => {
 
       const data = { parameters: {} };
       const result = formatAnyOfErrors(errors, data);
-      
-      expect(result).toContain('Missing operation type - this operation needs a "type" field');
+
+      expect(result).toContain(
+        'Missing operation type - this operation needs a "type" field'
+      );
       expect(result).toContain('operation1');
     });
 
@@ -215,7 +219,7 @@ describe('ajvAnyOfErrorFormatter', () => {
 
       const data = { type: 'myOperation', parameters: { field1: 'wrong' } };
       const result = formatAnyOfErrors(errors, data);
-      
+
       expect(result).toContain("Operation type 'myOperation'");
       expect(result).toContain("Expected type 'number'");
       expect(result).not.toContain('must be equal to myOperation');
@@ -265,7 +269,7 @@ describe('ajvAnyOfErrorFormatter', () => {
       // Data without explicit type - should infer operation2 has fewer errors
       const data = { field1: 123, field2: 'text' };
       const result = formatAnyOfErrors(errors, data);
-      
+
       // Should pick operation2 as it has fewer errors
       expect(result).toBeDefined();
       expect(result.length).toBeGreaterThan(0);
@@ -291,7 +295,7 @@ describe('ajvAnyOfErrorFormatter', () => {
 
       const data = { type: 'strictOperation', unexpectedField: 'value' };
       const result = formatAnyOfErrors(errors, data);
-      
+
       expect(result).toContain("Operation type 'strictOperation'");
       expect(result).toContain("Unexpected property 'unexpectedField'");
     });
@@ -315,7 +319,8 @@ describe('ajvAnyOfErrorFormatter', () => {
       const errors = [
         {
           instancePath: '/parameters/options/nested/field',
-          schemaPath: '#/anyOf/0/properties/parameters/properties/options/properties/nested/properties/field/type',
+          schemaPath:
+            '#/anyOf/0/properties/parameters/properties/options/properties/nested/properties/field/type',
           keyword: 'type',
           params: { type: 'boolean' },
           message: 'must be boolean',
@@ -353,8 +358,10 @@ describe('ajvAnyOfErrorFormatter', () => {
 
       const data = {}; // No type specified
       const result = formatAnyOfErrors(errors, data);
-      
-      expect(result).toContain('Missing operation type - this operation needs a "type" field');
+
+      expect(result).toContain(
+        'Missing operation type - this operation needs a "type" field'
+      );
       expect(result).toContain('operation0');
       expect(result).toContain('operation9');
       expect(result).toContain('... and 3 more');
@@ -382,7 +389,7 @@ describe('ajvAnyOfErrorFormatter', () => {
       // Data with no type field, all branches have const type mismatches
       const data = { parameters: {} };
       const result = formatAnyOfErrors(errors, data);
-      
+
       // Should handle the case where no best match is found
       expect(result).toContain('Missing operation type');
       expect(result).toContain('operation1');
@@ -403,7 +410,8 @@ describe('ajvAnyOfErrorFormatter', () => {
         // Branch 1 - matching type but with other errors
         {
           instancePath: '/parameters/field1',
-          schemaPath: '#/anyOf/1/properties/parameters/properties/field1/required',
+          schemaPath:
+            '#/anyOf/1/properties/parameters/properties/field1/required',
           keyword: 'required',
           params: { missingProperty: 'requiredField' },
           message: 'must have required property requiredField',
@@ -417,10 +425,15 @@ describe('ajvAnyOfErrorFormatter', () => {
         },
       ];
 
-      const data = { type: 'operation2', parameters: { field1: {}, field2: 123 } };
+      const data = {
+        type: 'operation2',
+        parameters: { field1: {}, field2: 123 },
+      };
       const result = formatAnyOfErrors(errors, data);
-      
-      expect(result).toContain("Operation type 'operation2' validation failed:");
+
+      expect(result).toContain(
+        "Operation type 'operation2' validation failed:"
+      );
       expect(result).toContain('requiredField');
       expect(result).toContain("Expected type 'string'");
     });
@@ -442,10 +455,12 @@ describe('ajvAnyOfErrorFormatter', () => {
       // Data with macro field (incorrect format - should not have type field)
       const data = { macro: 'core:myMacro', type: 'invalidType' };
       const result = formatAnyOfErrors(errors, data);
-      
+
       expect(result).toContain('Invalid macro reference format detected');
       expect(result).toContain('{"macro": "namespace:macroId"}');
-      expect(result).toContain('Do NOT include a "type" field with macro references');
+      expect(result).toContain(
+        'Do NOT include a "type" field with macro references'
+      );
     });
 
     // Test for line 215: More than 15 operation types in error summary
@@ -464,8 +479,10 @@ describe('ajvAnyOfErrorFormatter', () => {
 
       const data = { type: 'unknownOperation' };
       const result = formatAnyOfErrors(errors, data);
-      
-      expect(result).toContain("Unknown or invalid operation type: 'unknownOperation'");
+
+      expect(result).toContain(
+        "Unknown or invalid operation type: 'unknownOperation'"
+      );
       expect(result).toContain('operation0');
       expect(result).toContain('operation14'); // Should show first 15
       expect(result).toContain('... and 5 more'); // 20 - 15 = 5 more
@@ -488,9 +505,13 @@ describe('ajvAnyOfErrorFormatter', () => {
       // Data with non-string type field
       const data = { type: 123, parameters: {} }; // type is a number, not string
       const result = formatAjvErrorsEnhanced(errors, data);
-      
-      expect(result).toContain('Critical structural issue: Invalid "type" field value');
-      expect(result).toContain('The "type" field must be a string, but got number');
+
+      expect(result).toContain(
+        'Critical structural issue: Invalid "type" field value'
+      );
+      expect(result).toContain(
+        'The "type" field must be a string, but got number'
+      );
       expect(result).toContain('Pre-validation should have caught this');
     });
 
@@ -511,10 +532,16 @@ describe('ajvAnyOfErrorFormatter', () => {
       // Data with no type or macro field
       const data = { parameters: { someField: 'value' } };
       const result = formatAjvErrorsEnhanced(errors, data);
-      
-      expect(result).toContain('Critical structural issue: Missing "type" field in operation');
-      expect(result).toContain('Add a "type" field with a valid operation type');
-      expect(result).toContain('{"macro": "namespace:id"} for macro references');
+
+      expect(result).toContain(
+        'Critical structural issue: Missing "type" field in operation'
+      );
+      expect(result).toContain(
+        'Add a "type" field with a valid operation type'
+      );
+      expect(result).toContain(
+        '{"macro": "namespace:id"} for macro references'
+      );
       expect(result).toContain('Pre-validation should have caught this');
     });
 
@@ -538,7 +565,7 @@ describe('ajvAnyOfErrorFormatter', () => {
 
       const data = { type: 'updateEntity', parameters: {} };
       const result = formatAnyOfErrors(errors, data);
-      
+
       // Should handle anyOf error with specific type
       expect(result).toBeDefined();
       expect(result.length).toBeGreaterThan(0);
@@ -581,7 +608,7 @@ describe('ajvAnyOfErrorFormatter', () => {
 
       const data = { field1: 123, field2: {} };
       const result = formatAnyOfErrors(errors, data);
-      
+
       // Should handle case where no clear intended type can be determined
       expect(result).toBeDefined();
       expect(result.length).toBeGreaterThan(0);
@@ -656,7 +683,7 @@ describe('ajvAnyOfErrorFormatter', () => {
       // No data.type and all operations have type mismatches
       const data = { other: {} };
       const result = formatAnyOfErrors(errors, data);
-      
+
       // When findIntendedOperationType returns null, formatOperationTypeSummary is called
       expect(result).toContain('Missing operation type');
     });
@@ -690,7 +717,7 @@ describe('ajvAnyOfErrorFormatter', () => {
           keyword: 'type',
           params: { type: 'string' },
         },
-        // Operation 2 branch - has fewer errors  
+        // Operation 2 branch - has fewer errors
         {
           instancePath: '',
           schemaPath: '#/anyOf/1/properties/type/const',
@@ -709,7 +736,7 @@ describe('ajvAnyOfErrorFormatter', () => {
       // Data without an explicit type, will need to infer from error counts
       const data = { param1: {}, param2: {}, param3: 123 };
       const result = formatAnyOfErrors(errors, data);
-      
+
       // Should contain information about the operation with fewer errors
       expect(result).toBeDefined();
       expect(result).not.toContain('null');

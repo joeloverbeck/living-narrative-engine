@@ -32,7 +32,7 @@ class IndexLLMController {
   async init() {
     // Update the current LLM display
     await this.updateCurrentLLMDisplay();
-    
+
     // Initialize the LLM selection modal
     // Try to resolve the modal, but handle the case where UI might not be registered
     let llmSelectionModal = null;
@@ -42,7 +42,7 @@ class IndexLLMController {
     } catch (error) {
       // If UI components aren't registered, register just the LlmSelectionModal
       console.info('LlmSelectionModal not found, registering it directly');
-      
+
       // Ensure DocumentContext is registered
       if (!this.#container.isRegistered(tokens.DocumentContext)) {
         this.#container.register(
@@ -51,30 +51,36 @@ class IndexLLMController {
           { lifecycle: 'singleton' }
         );
       }
-      
+
       // Register the LlmSelectionModal as a singleton
       this.#container.register(
         tokens.LlmSelectionModal,
-        () => new LlmSelectionModal({
-          logger: this.#container.resolve(tokens.ILogger),
-          documentContext: this.#container.resolve(tokens.DocumentContext),
-          llmAdapter: this.#container.resolve(tokens.LLMAdapter),
-          validatedEventDispatcher: this.#container.resolve(tokens.IValidatedEventDispatcher),
-        }),
+        () =>
+          new LlmSelectionModal({
+            logger: this.#container.resolve(tokens.ILogger),
+            documentContext: this.#container.resolve(tokens.DocumentContext),
+            llmAdapter: this.#container.resolve(tokens.LLMAdapter),
+            validatedEventDispatcher: this.#container.resolve(
+              tokens.IValidatedEventDispatcher
+            ),
+          }),
         { lifecycle: 'singleton' }
       );
-      
+
       // Now resolve it
       llmSelectionModal = this.#container.resolve(tokens.LlmSelectionModal);
     }
-    
+
     // Add event listener to update display when modal is closed
     const modalElement = document.getElementById('llm-selection-modal');
     if (modalElement && llmSelectionModal) {
       // Use MutationObserver to detect when modal is hidden
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
-          if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+          if (
+            mutation.type === 'attributes' &&
+            mutation.attributeName === 'style'
+          ) {
             const isHidden = modalElement.style.display === 'none';
             if (isHidden) {
               // Modal was closed, update the display
@@ -83,13 +89,13 @@ class IndexLLMController {
           }
         });
       });
-      
-      observer.observe(modalElement, { 
-        attributes: true, 
-        attributeFilter: ['style'] 
+
+      observer.observe(modalElement, {
+        attributes: true,
+        attributeFilter: ['style'],
       });
     }
-    
+
     console.info('LLM selector initialized successfully on index page');
   }
 
@@ -99,17 +105,21 @@ class IndexLLMController {
   async updateCurrentLLMDisplay() {
     const llmNameElement = document.getElementById('current-llm-name');
     if (!llmNameElement) return;
-    
+
     try {
       const currentLlmId = await this.#llmAdapter.getCurrentActiveLlmId();
-      
+
       if (currentLlmId) {
         // Get the display name for the current LLM
-        const availableOptions = await this.#llmAdapter.getAvailableLlmOptions();
-        const currentOption = availableOptions.find(opt => opt.configId === currentLlmId);
-        
+        const availableOptions =
+          await this.#llmAdapter.getAvailableLlmOptions();
+        const currentOption = availableOptions.find(
+          (opt) => opt.configId === currentLlmId
+        );
+
         if (currentOption) {
-          llmNameElement.textContent = currentOption.displayName || currentLlmId;
+          llmNameElement.textContent =
+            currentOption.displayName || currentLlmId;
         } else {
           llmNameElement.textContent = currentLlmId;
         }
@@ -140,7 +150,7 @@ async function initializeLLMSelector() {
     console.info('Index page LLM selector initialized successfully');
   } catch (error) {
     console.error('Failed to initialize index page LLM selector:', error);
-    
+
     // Update display to show error state
     const llmNameElement = document.getElementById('current-llm-name');
     if (llmNameElement) {

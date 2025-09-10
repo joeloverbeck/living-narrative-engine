@@ -21,13 +21,13 @@ describe('Park Bench Component Indexing - Integration', () => {
   beforeEach(() => {
     testBed = createTestBed();
     logger = testBed.createMockLogger();
-    
+
     // Create repository
     entityRepository = new EntityRepositoryAdapter({
       mapManager: new MapManager(),
       logger,
     });
-    
+
     // Create query manager
     entityQueryManager = new EntityQueryManager({
       entityRepository,
@@ -46,9 +46,9 @@ describe('Park Bench Component Indexing - Integration', () => {
           'core:description': { value: 'A wooden park bench' },
           'core:position': { locationId: 'test_location' },
           'positioning:allows_sitting': {
-            spots: [null, null] // Two available spots
-          }
-        }
+            spots: [null, null], // Two available spots
+          },
+        },
       });
 
       // Create park bench instance data
@@ -59,27 +59,40 @@ describe('Park Bench Component Indexing - Integration', () => {
       );
 
       // Verify the instance data has the component
-      expect(parkBenchInstanceData.hasComponent('positioning:allows_sitting')).toBe(true);
-      expect(parkBenchInstanceData.allComponentTypeIds).toContain('positioning:allows_sitting');
+      expect(
+        parkBenchInstanceData.hasComponent('positioning:allows_sitting')
+      ).toBe(true);
+      expect(parkBenchInstanceData.allComponentTypeIds).toContain(
+        'positioning:allows_sitting'
+      );
 
       // Create entity from instance data
       const parkBenchEntity = new Entity(parkBenchInstanceData);
-      
+
       // Verify the entity has the component in its componentTypeIds
-      expect(parkBenchEntity.componentTypeIds).toContain('positioning:allows_sitting');
-      expect(parkBenchEntity.hasComponent('positioning:allows_sitting')).toBe(true);
-      
+      expect(parkBenchEntity.componentTypeIds).toContain(
+        'positioning:allows_sitting'
+      );
+      expect(parkBenchEntity.hasComponent('positioning:allows_sitting')).toBe(
+        true
+      );
+
       // Add entity to repository
       entityRepository.add(parkBenchEntity);
-      
+
       // Verify the component index was updated
-      const entitiesWithAllowsSitting = entityRepository.getEntityIdsByComponent('positioning:allows_sitting');
+      const entitiesWithAllowsSitting =
+        entityRepository.getEntityIdsByComponent('positioning:allows_sitting');
       expect(entitiesWithAllowsSitting).toBeInstanceOf(Set);
       expect(entitiesWithAllowsSitting.size).toBe(1);
-      expect(entitiesWithAllowsSitting.has('p_erotica:park_bench_instance')).toBe(true);
-      
+      expect(
+        entitiesWithAllowsSitting.has('p_erotica:park_bench_instance')
+      ).toBe(true);
+
       // Verify EntityQueryManager can find the entity
-      const foundEntities = entityQueryManager.getEntitiesWithComponent('positioning:allows_sitting');
+      const foundEntities = entityQueryManager.getEntitiesWithComponent(
+        'positioning:allows_sitting'
+      );
       expect(foundEntities).toHaveLength(1);
       expect(foundEntities[0].id).toBe('p_erotica:park_bench_instance');
     });
@@ -91,38 +104,37 @@ describe('Park Bench Component Indexing - Integration', () => {
         description: 'Generic furniture',
         components: {
           'positioning:allows_sitting': {
-            spots: [null]
-          }
-        }
+            spots: [null],
+          },
+        },
       });
 
       // Create multiple furniture instances
-      const chair1 = new Entity(new EntityInstanceData(
-        'chair_1',
-        furnitureDefinition,
-        {}
-      ));
-      
-      const chair2 = new Entity(new EntityInstanceData(
-        'chair_2',
-        furnitureDefinition,
-        {}
-      ));
+      const chair1 = new Entity(
+        new EntityInstanceData('chair_1', furnitureDefinition, {})
+      );
+
+      const chair2 = new Entity(
+        new EntityInstanceData('chair_2', furnitureDefinition, {})
+      );
 
       // Add both to repository
       entityRepository.add(chair1);
       entityRepository.add(chair2);
-      
+
       // Verify both are indexed
-      const entitiesWithAllowsSitting = entityRepository.getEntityIdsByComponent('positioning:allows_sitting');
+      const entitiesWithAllowsSitting =
+        entityRepository.getEntityIdsByComponent('positioning:allows_sitting');
       expect(entitiesWithAllowsSitting.size).toBe(2);
       expect(entitiesWithAllowsSitting.has('chair_1')).toBe(true);
       expect(entitiesWithAllowsSitting.has('chair_2')).toBe(true);
-      
+
       // Verify query manager finds both
-      const foundEntities = entityQueryManager.getEntitiesWithComponent('positioning:allows_sitting');
+      const foundEntities = entityQueryManager.getEntitiesWithComponent(
+        'positioning:allows_sitting'
+      );
       expect(foundEntities).toHaveLength(2);
-      const foundIds = foundEntities.map(e => e.id).sort();
+      const foundIds = foundEntities.map((e) => e.id).sort();
       expect(foundIds).toEqual(['chair_1', 'chair_2']);
     });
 
@@ -133,31 +145,32 @@ describe('Park Bench Component Indexing - Integration', () => {
         description: 'A park bench',
         components: {
           'positioning:allows_sitting': {
-            spots: [null, null]
-          }
-        }
+            spots: [null, null],
+          },
+        },
       });
 
       // Create instance with override that changes the spots
-      const benchWithOverride = new Entity(new EntityInstanceData(
-        'bench_override',
-        parkBenchDefinition,
-        {
+      const benchWithOverride = new Entity(
+        new EntityInstanceData('bench_override', parkBenchDefinition, {
           'positioning:allows_sitting': {
-            spots: [null, null, null] // Three spots instead of two
-          }
-        }
-      ));
+            spots: [null, null, null], // Three spots instead of two
+          },
+        })
+      );
 
       // Add to repository
       entityRepository.add(benchWithOverride);
-      
+
       // Verify it's indexed
-      const entitiesWithAllowsSitting = entityRepository.getEntityIdsByComponent('positioning:allows_sitting');
+      const entitiesWithAllowsSitting =
+        entityRepository.getEntityIdsByComponent('positioning:allows_sitting');
       expect(entitiesWithAllowsSitting.has('bench_override')).toBe(true);
-      
+
       // Verify the override data is used
-      const componentData = benchWithOverride.getComponentData('positioning:allows_sitting');
+      const componentData = benchWithOverride.getComponentData(
+        'positioning:allows_sitting'
+      );
       expect(componentData.spots).toHaveLength(3);
     });
 
@@ -167,26 +180,27 @@ describe('Park Bench Component Indexing - Integration', () => {
         name: 'Table',
         description: 'A table',
         components: {
-          'core:name': { value: 'Table' }
-        }
+          'core:name': { value: 'Table' },
+        },
       });
 
-      const table = new Entity(new EntityInstanceData(
-        'table_1',
-        tableDefinition,
-        {}
-      ));
+      const table = new Entity(
+        new EntityInstanceData('table_1', tableDefinition, {})
+      );
 
       // Add to repository
       entityRepository.add(table);
-      
+
       // Verify it's not in the positioning:allows_sitting index
-      const entitiesWithAllowsSitting = entityRepository.getEntityIdsByComponent('positioning:allows_sitting');
+      const entitiesWithAllowsSitting =
+        entityRepository.getEntityIdsByComponent('positioning:allows_sitting');
       expect(entitiesWithAllowsSitting.has('table_1')).toBe(false);
-      
+
       // Verify query manager doesn't find it
-      const foundEntities = entityQueryManager.getEntitiesWithComponent('positioning:allows_sitting');
-      expect(foundEntities.every(e => e.id !== 'table_1')).toBe(true);
+      const foundEntities = entityQueryManager.getEntitiesWithComponent(
+        'positioning:allows_sitting'
+      );
+      expect(foundEntities.every((e) => e.id !== 'table_1')).toBe(true);
     });
 
     it('should handle component removal from index when entity is removed', () => {
@@ -195,27 +209,29 @@ describe('Park Bench Component Indexing - Integration', () => {
         name: 'Bench',
         description: 'A bench',
         components: {
-          'positioning:allows_sitting': { spots: [null] }
-        }
+          'positioning:allows_sitting': { spots: [null] },
+        },
       });
 
-      const bench = new Entity(new EntityInstanceData(
-        'bench_to_remove',
-        benchDefinition,
-        {}
-      ));
+      const bench = new Entity(
+        new EntityInstanceData('bench_to_remove', benchDefinition, {})
+      );
 
       entityRepository.add(bench);
-      
+
       // Verify it's indexed
-      let entitiesWithAllowsSitting = entityRepository.getEntityIdsByComponent('positioning:allows_sitting');
+      let entitiesWithAllowsSitting = entityRepository.getEntityIdsByComponent(
+        'positioning:allows_sitting'
+      );
       expect(entitiesWithAllowsSitting.has('bench_to_remove')).toBe(true);
-      
+
       // Remove the entity
       entityRepository.remove('bench_to_remove');
-      
+
       // Verify it's removed from index
-      entitiesWithAllowsSitting = entityRepository.getEntityIdsByComponent('positioning:allows_sitting');
+      entitiesWithAllowsSitting = entityRepository.getEntityIdsByComponent(
+        'positioning:allows_sitting'
+      );
       expect(entitiesWithAllowsSitting.has('bench_to_remove')).toBe(false);
     });
   });
@@ -229,35 +245,43 @@ describe('Park Bench Component Indexing - Integration', () => {
         description: 'Something you can sit on',
         components: {
           'core:position': { locationId: 'park' },
-          'positioning:allows_sitting': { spots: [null] }
-        }
+          'positioning:allows_sitting': { spots: [null] },
+        },
       });
 
       const nonSittableDefinition = new EntityDefinition('test:non_sittable', {
         name: 'Non-Sittable',
         description: 'Something you cannot sit on',
         components: {
-          'core:position': { locationId: 'park' }
-        }
+          'core:position': { locationId: 'park' },
+        },
       });
 
       // Add entities
-      const bench = new Entity(new EntityInstanceData('bench', sittableDefinition, {}));
-      const chair = new Entity(new EntityInstanceData('chair', sittableDefinition, {}));
-      const tree = new Entity(new EntityInstanceData('tree', nonSittableDefinition, {}));
-      
+      const bench = new Entity(
+        new EntityInstanceData('bench', sittableDefinition, {})
+      );
+      const chair = new Entity(
+        new EntityInstanceData('chair', sittableDefinition, {})
+      );
+      const tree = new Entity(
+        new EntityInstanceData('tree', nonSittableDefinition, {})
+      );
+
       entityRepository.add(bench);
       entityRepository.add(chair);
       entityRepository.add(tree);
-      
+
       // Simulate scope resolution: find all entities with positioning:allows_sitting
-      const sittableEntities = entityQueryManager.getEntitiesWithComponent('positioning:allows_sitting');
-      
+      const sittableEntities = entityQueryManager.getEntitiesWithComponent(
+        'positioning:allows_sitting'
+      );
+
       // Should find bench and chair, but not tree
       expect(sittableEntities).toHaveLength(2);
-      const sittableIds = sittableEntities.map(e => e.id).sort();
+      const sittableIds = sittableEntities.map((e) => e.id).sort();
       expect(sittableIds).toEqual(['bench', 'chair']);
-      
+
       // Verify all found entities have the component
       for (const entity of sittableEntities) {
         expect(entity.hasComponent('positioning:allows_sitting')).toBe(true);

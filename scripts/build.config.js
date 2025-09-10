@@ -106,16 +106,22 @@ module.exports = {
       __PROXY_USE_HTTPS__: JSON.stringify(
         process.env.PROXY_USE_HTTPS || 'false'
       ),
-      
+
       // Core environment variables for browser compatibility
       __NODE_ENV__: JSON.stringify(process.env.NODE_ENV || 'development'),
       __DEBUG_LOG_MODE__: JSON.stringify(process.env.DEBUG_LOG_MODE || ''),
-      __DEBUG_LOG_SILENT__: JSON.stringify(process.env.DEBUG_LOG_SILENT || 'false'),
-      __SKIP_DEBUG_CONFIG__: JSON.stringify(process.env.SKIP_DEBUG_CONFIG || 'false'),
-      
+      __DEBUG_LOG_SILENT__: JSON.stringify(
+        process.env.DEBUG_LOG_SILENT || 'false'
+      ),
+      __SKIP_DEBUG_CONFIG__: JSON.stringify(
+        process.env.SKIP_DEBUG_CONFIG || 'false'
+      ),
+
       // Test mode detection for browser
-      __TEST_MODE__: JSON.stringify(process.env.NODE_ENV === 'test' ? 'true' : 'false'),
-      
+      __TEST_MODE__: JSON.stringify(
+        process.env.NODE_ENV === 'test' ? 'true' : 'false'
+      ),
+
       // Development mode helpers
       __DEVELOPMENT__: JSON.stringify(process.env.NODE_ENV !== 'production'),
       __PRODUCTION__: JSON.stringify(process.env.NODE_ENV === 'production'),

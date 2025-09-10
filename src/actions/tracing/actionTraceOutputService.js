@@ -1142,17 +1142,22 @@ export class ActionTraceOutputService {
           entityDiscovery: enhancedScopeData.data.entityDiscovery,
           filterEvaluations: enhancedScopeData.data.filterEvaluations,
           summary: {
-            entitiesDiscovered: enhancedScopeData.data.entityDiscovery?.reduce(
-              (sum, discovery) => sum + (discovery.foundEntities || 0), 0
-            ) || 0,
-            entitiesEvaluated: enhancedScopeData.data.filterEvaluations?.length || 0,
-            entitiesPassed: enhancedScopeData.data.filterEvaluations?.filter(
-              evaluation => evaluation.filterPassed
-            ).length || 0,
-            entitiesFailed: enhancedScopeData.data.filterEvaluations?.filter(
-              evaluation => !evaluation.filterPassed
-            ).length || 0
-          }
+            entitiesDiscovered:
+              enhancedScopeData.data.entityDiscovery?.reduce(
+                (sum, discovery) => sum + (discovery.foundEntities || 0),
+                0
+              ) || 0,
+            entitiesEvaluated:
+              enhancedScopeData.data.filterEvaluations?.length || 0,
+            entitiesPassed:
+              enhancedScopeData.data.filterEvaluations?.filter(
+                (evaluation) => evaluation.filterPassed
+              ).length || 0,
+            entitiesFailed:
+              enhancedScopeData.data.filterEvaluations?.filter(
+                (evaluation) => !evaluation.filterPassed
+              ).length || 0,
+          },
         };
       }
 

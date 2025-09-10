@@ -226,7 +226,6 @@ describe('ScopeEngine', () => {
         expect(result).toEqual(new Set(['item1', 'item2', 'item3']));
       });
 
-
       test('edge can access property on filtered array of objects', () => {
         const ast = parseDslExpression(
           'actor.core:exits[][{"==": [{"var": "locked"}, false]}].target'

@@ -119,7 +119,9 @@ describe('ModTestHandlerFactory - Deep Validation (TSTAIMIG-002)', () => {
       expect(handlers.QUERY_COMPONENT).toBeInstanceOf(QueryComponentHandler);
       expect(handlers.GET_NAME).toBeInstanceOf(GetNameHandler);
       expect(handlers.GET_TIMESTAMP).toBeInstanceOf(GetTimestampHandler);
-      expect(handlers.DISPATCH_PERCEPTIBLE_EVENT).toBeInstanceOf(DispatchPerceptibleEventHandler);
+      expect(handlers.DISPATCH_PERCEPTIBLE_EVENT).toBeInstanceOf(
+        DispatchPerceptibleEventHandler
+      );
       expect(handlers.DISPATCH_EVENT).toBeInstanceOf(DispatchEventHandler);
       expect(handlers.END_TURN).toBeInstanceOf(EndTurnHandler);
       expect(handlers.SET_VARIABLE).toBeInstanceOf(SetVariableHandler);
@@ -200,12 +202,16 @@ describe('ModTestHandlerFactory - Deep Validation (TSTAIMIG-002)', () => {
       { category: 'violence', expectedFactory: 'createStandardHandlers' },
       { category: 'intimacy', expectedFactory: 'createStandardHandlers' },
       { category: 'sex', expectedFactory: 'createStandardHandlers' },
-      { category: 'positioning', expectedFactory: 'createHandlersWithAddComponent' },
+      {
+        category: 'positioning',
+        expectedFactory: 'createHandlersWithAddComponent',
+      },
     ];
 
     categoryTests.forEach(({ category, expectedFactory }) => {
       it(`should create handlers for ${category} category patterns`, () => {
-        const factoryMethod = ModTestHandlerFactory.getHandlerFactoryForCategory(category);
+        const factoryMethod =
+          ModTestHandlerFactory.getHandlerFactoryForCategory(category);
         expect(factoryMethod).toBeDefined();
         expect(typeof factoryMethod).toBe('function');
 
@@ -228,9 +234,10 @@ describe('ModTestHandlerFactory - Deep Validation (TSTAIMIG-002)', () => {
     });
 
     it('should return default factory for unknown categories', () => {
-      const factoryMethod = ModTestHandlerFactory.getHandlerFactoryForCategory('unknown');
+      const factoryMethod =
+        ModTestHandlerFactory.getHandlerFactoryForCategory('unknown');
       const handlers = factoryMethod(entityManager, eventBus, logger);
-      
+
       // Should behave like createStandardHandlers
       expect(handlers).toHaveProperty('QUERY_COMPONENT');
       expect(handlers).toHaveProperty('GET_NAME');
@@ -244,17 +251,31 @@ describe('ModTestHandlerFactory - Deep Validation (TSTAIMIG-002)', () => {
       // Missing entityManager
       expect(() => {
         ModTestHandlerFactory.createStandardHandlers(null, eventBus, logger);
-      }).toThrow('ModTestHandlerFactory.createStandardHandlers: entityManager is required');
+      }).toThrow(
+        'ModTestHandlerFactory.createStandardHandlers: entityManager is required'
+      );
 
       // Missing eventBus
       expect(() => {
-        ModTestHandlerFactory.createStandardHandlers(entityManager, null, logger);
-      }).toThrow('ModTestHandlerFactory.createStandardHandlers: eventBus is required');
+        ModTestHandlerFactory.createStandardHandlers(
+          entityManager,
+          null,
+          logger
+        );
+      }).toThrow(
+        'ModTestHandlerFactory.createStandardHandlers: eventBus is required'
+      );
 
       // Missing logger
       expect(() => {
-        ModTestHandlerFactory.createStandardHandlers(entityManager, eventBus, null);
-      }).toThrow('ModTestHandlerFactory.createStandardHandlers: logger is required');
+        ModTestHandlerFactory.createStandardHandlers(
+          entityManager,
+          eventBus,
+          null
+        );
+      }).toThrow(
+        'ModTestHandlerFactory.createStandardHandlers: logger is required'
+      );
     });
 
     it('should validate entityManager has required methods', () => {
@@ -263,7 +284,11 @@ describe('ModTestHandlerFactory - Deep Validation (TSTAIMIG-002)', () => {
       };
 
       expect(() => {
-        ModTestHandlerFactory.createStandardHandlers(invalidEntityManager, eventBus, logger);
+        ModTestHandlerFactory.createStandardHandlers(
+          invalidEntityManager,
+          eventBus,
+          logger
+        );
       }).toThrow();
     });
 
@@ -273,7 +298,11 @@ describe('ModTestHandlerFactory - Deep Validation (TSTAIMIG-002)', () => {
       };
 
       expect(() => {
-        ModTestHandlerFactory.createStandardHandlers(entityManager, invalidEventBus, logger);
+        ModTestHandlerFactory.createStandardHandlers(
+          entityManager,
+          invalidEventBus,
+          logger
+        );
       }).toThrow();
     });
 
@@ -283,7 +312,11 @@ describe('ModTestHandlerFactory - Deep Validation (TSTAIMIG-002)', () => {
       };
 
       expect(() => {
-        ModTestHandlerFactory.createStandardHandlers(entityManager, eventBus, invalidLogger);
+        ModTestHandlerFactory.createStandardHandlers(
+          entityManager,
+          eventBus,
+          invalidLogger
+        );
       }).toThrow();
     });
   });
@@ -309,15 +342,18 @@ describe('ModTestHandlerFactory - Deep Validation (TSTAIMIG-002)', () => {
     });
 
     it('should create safe event dispatcher for handler integration', () => {
-      const safeDispatcher = ModTestHandlerFactory.createSafeDispatcher(eventBus);
-      
+      const safeDispatcher =
+        ModTestHandlerFactory.createSafeDispatcher(eventBus);
+
       expect(safeDispatcher).toBeDefined();
       expect(safeDispatcher).toHaveProperty('dispatch');
       expect(typeof safeDispatcher.dispatch).toBe('function');
 
       // Test safe dispatcher functionality
       safeDispatcher.dispatch('test-event', { data: 'test' });
-      expect(eventBus.dispatch).toHaveBeenCalledWith('test-event', { data: 'test' });
+      expect(eventBus.dispatch).toHaveBeenCalledWith('test-event', {
+        data: 'test',
+      });
     });
 
     it('should handle condition file processing through handlers', () => {
@@ -341,7 +377,9 @@ describe('ModTestHandlerFactory - Deep Validation (TSTAIMIG-002)', () => {
     it('should handle createSafeDispatcher with invalid eventBus', () => {
       expect(() => {
         ModTestHandlerFactory.createSafeDispatcher(null);
-      }).toThrow('ModTestHandlerFactory.createSafeDispatcher: eventBus is required');
+      }).toThrow(
+        'ModTestHandlerFactory.createSafeDispatcher: eventBus is required'
+      );
 
       expect(() => {
         ModTestHandlerFactory.createSafeDispatcher({});
@@ -360,7 +398,9 @@ describe('ModTestHandlerFactory - Deep Validation (TSTAIMIG-002)', () => {
         // Test null entityManager
         expect(() => {
           ModTestHandlerFactory[methodName](null, eventBus, logger);
-        }).toThrow(`ModTestHandlerFactory.${methodName}: entityManager is required`);
+        }).toThrow(
+          `ModTestHandlerFactory.${methodName}: entityManager is required`
+        );
 
         // Test null eventBus
         expect(() => {
@@ -384,36 +424,40 @@ describe('ModTestHandlerFactory - Deep Validation (TSTAIMIG-002)', () => {
       );
 
       // Create proper execution context
-      const executionContext = createExecutionContext({ 
-        actorId: 'test-actor' 
+      const executionContext = createExecutionContext({
+        actorId: 'test-actor',
       });
 
       // Test GET_NAME handler execution with proper parameters
       const getNameParams = {
         entity_ref: 'actor',
         result_variable: 'testName',
-        default_value: 'Default Name'
+        default_value: 'Default Name',
       };
       await handlers.GET_NAME.execute(getNameParams, executionContext);
-      
+
       // Verify name was stored in context
       expect(executionContext.evaluationContext.context.testName).toBeDefined();
-      expect(typeof executionContext.evaluationContext.context.testName).toBe('string');
+      expect(typeof executionContext.evaluationContext.context.testName).toBe(
+        'string'
+      );
 
       // Test QUERY_COMPONENT handler execution
       const queryParams = {
         entity_ref: 'actor',
         component_type: 'core:name',
-        result_variable: 'queryResult'
+        result_variable: 'queryResult',
       };
       await handlers.QUERY_COMPONENT.execute(queryParams, executionContext);
-      
+
       // Verify query result was stored in context
-      expect(executionContext.evaluationContext.context.queryResult).toBeDefined();
+      expect(
+        executionContext.evaluationContext.context.queryResult
+      ).toBeDefined();
 
       // Test LOG_MESSAGE handler execution
       const logParams = {
-        message: 'Test message'
+        message: 'Test message',
       };
       await handlers.LOG_MESSAGE.execute(logParams, executionContext);
       expect(logger.info).toHaveBeenCalled();
@@ -427,18 +471,21 @@ describe('ModTestHandlerFactory - Deep Validation (TSTAIMIG-002)', () => {
       );
 
       // Create proper execution context
-      const executionContext = createExecutionContext({ 
-        actorId: 'test-actor' 
+      const executionContext = createExecutionContext({
+        actorId: 'test-actor',
       });
 
       // Test ADD_COMPONENT handler execution with proper parameters
       const addComponentParams = {
         entity_ref: 'actor',
         component_type: 'test:component',
-        value: { value: 'test' }
+        value: { value: 'test' },
       };
-      
-      await handlers.ADD_COMPONENT.execute(addComponentParams, executionContext);
+
+      await handlers.ADD_COMPONENT.execute(
+        addComponentParams,
+        executionContext
+      );
 
       // Verify component was added
       const entity = entityManager.getEntityInstance('test-actor');
@@ -484,7 +531,7 @@ describe('ModTestHandlerFactory - Deep Validation (TSTAIMIG-002)', () => {
 
       // Each handler set should be independent
       expect(handlers1).not.toBe(handlers2);
-      
+
       // But should have same structure
       expect(Object.keys(handlers1)).toEqual(Object.keys(handlers2));
     });

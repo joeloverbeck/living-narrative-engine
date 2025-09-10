@@ -1,4 +1,4 @@
-// updateManifest.js (Version 3)
+// updateManifest.js (Version 4 - Enhanced with Comprehensive Validation Integration)
 /* eslint-env node */
 //
 // Description:
@@ -6,16 +6,20 @@
 // and update its `mod-manifest.json` file with all the `.json` files found.
 // This version automatically discovers new content directories in the mod folder
 // and handles nested directories like entities/definitions and entities/instances.
-// Now includes optional cross-reference validation after update.
+// Now includes comprehensive cross-reference validation integration with multiple formats,
+// batch processing, and extensive CLI options.
 //
 // Usage:
-// node scripts/updateManifest.js <mod_name>  // Update specific mod
-// node scripts/updateManifest.js             // Update all mods
-// node scripts/updateManifest.js <mod_name> --validate-references  // Update and validate
-// node scripts/updateManifest.js <mod_name> --validate-references --fail-on-violations  // Strict mode
+// node scripts/updateManifest.js <mod_name>                    // Update specific mod
+// node scripts/updateManifest.js                               // Update all mods  
+// node scripts/updateManifest.js <mod_name> --validate-references // Update and validate
+// node scripts/updateManifest.js <mod_name> -v -s             // Validate with strict mode
+// node scripts/updateManifest.js <mod_name> --validate --format=json --output=report.json
+// node scripts/updateManifest.js <mod_name> --pre-validation --post-validation
 
 const fs = require('fs/promises');
 const path = require('path');
+const { ValidationError } = require('../src/errors/validationError.js');
 
 // --- CONFIGURATION ---
 const MODS_BASE_PATH = path.join('data', 'mods');
@@ -26,6 +30,35 @@ const IGNORE_DIRS = new Set(['.git', '.idea', 'node_modules']);
 // Map folder names to manifest keys for special cases
 const FOLDER_TO_KEY_MAP = {
   'anatomy-formatting': 'anatomyFormatting',
+};
+
+/**
+ * Enhanced options interface for manifest updates with validation
+ */
+const DEFAULT_OPTIONS = {
+  // Existing options
+  force: false,
+  verbose: false,
+  dryRun: false,
+  
+  // New validation options
+  validateReferences: false,
+  failOnViolations: false,
+  validationFormat: 'console', // console, json, html, markdown, none
+  validationOutput: null,       // file path for validation report
+  skipValidationOnDryRun: true, // skip validation during dry runs
+  validationStrictMode: false,  // strict validation (fail on warnings)
+  showSuggestions: true,        // show fix suggestions in validation output
+  
+  // Enhanced validation options
+  preValidation: false,         // validate before scanning files
+  postValidation: true,         // validate after manifest update
+  validateDependencies: true,   // include dependency validation
+  validateCrossReferences: true, // include cross-reference validation
+  validationTimeout: 30000,    // validation timeout in milliseconds
+  
+  // Batch processing options
+  concurrency: 3,              // concurrent mod processing limit
 };
 
 /**
@@ -181,525 +214,910 @@ async function getAllModNames() {
 }
 
 /**
- * Update the manifest for a specific mod
- *
- * @param {string} modName - The name of the mod to update
- * @returns {Promise<{success: boolean, modName: string, error?: {type: string, message: string, path?: string}}>}
+ * Main manifest update function with integrated validation
+ * @param {string} modName - Name of the mod to update
+ * @param {Object} options - Update and validation options
+ * @returns {Promise<Object>} Update result with validation information
  */
-async function updateModManifest(modName) {
+async function updateModManifest(modName, options = {}) {
+  const opts = { ...DEFAULT_OPTIONS, ...options };
+  
   console.log(`Starting manifest update for mod: "${modName}"`);
-
+  
   const modPath = path.join(MODS_BASE_PATH, modName);
   const manifestPath = path.join(modPath, MANIFEST_FILENAME);
+  
+  // Initialize validation components if needed
+  let validationOrchestrator = null;
+  let violationReporter = null;
+  
+  if (opts.validateReferences && !opts.skipValidationOnDryRun) {
+    try {
+      // Dynamically import validation components using the existing pattern
+      const { configureContainer } = require('../src/dependencyInjection/containerConfig.js');
+      const { coreTokens } = require('../src/dependencyInjection/tokens/tokens-core.js');
+      const AppContainer = require('../src/dependencyInjection/appContainer.js').default;
+      
+      // Create a minimal container for validation
+      const container = new AppContainer();
+      await configureContainer(container, {
+        outputDiv: null,
+        inputElement: null,
+        titleElement: null,
+        document: null
+      });
+      
+      validationOrchestrator = container.resolve(coreTokens.IModValidationOrchestrator);
+      violationReporter = container.resolve(coreTokens.IViolationReporter);
+    } catch (error) {
+      console.warn('⚠️  Validation components not available:', error.message);
+      console.warn('   Continuing without validation...');
+      opts.validateReferences = false;
+    }
+  }
+
+  const result = {
+    success: false,
+    modName,
+    timestamp: new Date().toISOString(),
+    
+    // Existing result fields
+    manifestUpdated: false,
+    filesProcessed: 0,
+    errors: [],
+    warnings: [],
+    
+    // New validation fields
+    validation: {
+      performed: false,
+      preValidation: null,
+      postValidation: null,
+      violations: [],
+      suggestions: []
+    },
+    
+    // Performance tracking
+    performance: {
+      startTime: Date.now(),
+      phases: {}
+    }
+  };
 
   try {
-    // 2. Read and parse the existing manifest file.
-    console.log(`Reading manifest at: ${manifestPath}`);
-    const manifestContent = await fs.readFile(manifestPath, 'utf8');
-    const manifest = JSON.parse(manifestContent);
-
-    if (!manifest.content || typeof manifest.content !== 'object') {
-      console.error('Error: Manifest does not have a valid "content" object.');
-      return {
-        success: false,
-        modName,
-        error: {
-          type: 'INVALID_MANIFEST',
-          message: 'Manifest does not have a valid "content" object',
-          path: manifestPath,
-        },
-      };
+    // Verify mod directory exists
+    const modStats = await fs.stat(modPath);
+    if (!modStats.isDirectory()) {
+      throw new Error(`Mod path is not a directory: ${modPath}`);
     }
 
-    // --- NEW LOGIC: Auto-discover content directories ---
+    // Phase 1: Pre-validation (optional)
+    if (opts.preValidation && validationOrchestrator) {
+      console.log('🔍 Phase 1: Pre-update validation...');
+      const preValidationStart = Date.now();
+      
+      try {
+        const preValidationResult = await runValidation(
+          validationOrchestrator,
+          violationReporter,
+          modName,
+          opts
+        );
+        
+        result.validation.preValidation = preValidationResult;
+        result.performance.phases.preValidation = Date.now() - preValidationStart;
+        
+        if (preValidationResult.hasViolations && opts.validationStrictMode) {
+          throw new ValidationError(
+            `Pre-validation failed with ${preValidationResult.violationCount} violations`,
+            null,
+            preValidationResult
+          );
+        }
+        
+      } catch (error) {
+        if (opts.failOnViolations) {
+          throw error;
+        }
+        console.warn('⚠️  Pre-validation failed:', error.message);
+        result.warnings.push(`Pre-validation failed: ${error.message}`);
+      }
+    }
+
+    // Phase 2: Existing manifest update logic (enhanced with validation context)
+    console.log('📝 Phase 2: Updating manifest...');
+    const updateStart = Date.now();
+    
+    const updateResult = await performManifestUpdate(modName, modPath, manifestPath, opts);
+    
+    // Merge update results
+    result.manifestUpdated = updateResult.manifestUpdated;
+    result.filesProcessed = updateResult.filesProcessed;
+    result.errors.push(...updateResult.errors);
+    result.warnings.push(...updateResult.warnings);
+    result.performance.phases.manifestUpdate = Date.now() - updateStart;
+
+    // Phase 3: Post-validation (default)
+    if (opts.postValidation && validationOrchestrator && result.manifestUpdated) {
+      console.log('🔍 Phase 3: Post-update validation...');
+      const postValidationStart = Date.now();
+      
+      try {
+        const postValidationResult = await runValidation(
+          validationOrchestrator,
+          violationReporter,
+          modName,
+          opts
+        );
+        
+        result.validation.postValidation = postValidationResult;
+        result.validation.performed = true;
+        result.performance.phases.postValidation = Date.now() - postValidationStart;
+        
+        // Handle validation results
+        if (postValidationResult.hasViolations) {
+          const violationCount = postValidationResult.violationCount;
+          console.log(`⚠️  Found ${violationCount} cross-reference violations`);
+          
+          // Store violations for result
+          result.validation.violations = postValidationResult.violations;
+          result.validation.suggestions = postValidationResult.suggestions;
+          
+          // Output validation report
+          await outputValidationReport(
+            violationReporter,
+            postValidationResult,
+            opts,
+            modName
+          );
+          
+          if (opts.failOnViolations) {
+            throw new ValidationError(
+              `Post-validation failed with ${violationCount} violations`,
+              null,
+              postValidationResult
+            );
+          }
+          
+          result.warnings.push(`${violationCount} cross-reference violations found`);
+          
+        } else {
+          console.log('✅ No cross-reference violations found');
+        }
+        
+      } catch (error) {
+        if (opts.failOnViolations || error instanceof ValidationError) {
+          throw error;
+        }
+        console.warn('⚠️  Post-validation failed:', error.message);
+        result.warnings.push(`Post-validation failed: ${error.message}`);
+      }
+    }
+
+    // Success
+    result.success = true;
+    result.performance.totalTime = Date.now() - result.performance.startTime;
+    
+    console.log(`✅ Manifest update completed for "${modName}" (${result.performance.totalTime}ms)`);
+    
+    // Summary output
+    if (opts.verbose || result.validation.performed) {
+      outputSummary(result, opts);
+    }
+    
+    return result;
+
+  } catch (error) {
+    result.performance.totalTime = Date.now() - result.performance.startTime;
+    result.errors.push(error.message);
+    
+    console.error(`❌ Manifest update failed for "${modName}":`, error.message);
+    
+    // Enhanced error context for validation errors
+    if (error instanceof ValidationError) {
+      result.validation.performed = true;
+      result.validation.violations = error.validationErrors?.violations || [];
+      
+      if (opts.validationFormat !== 'none' && violationReporter && error.validationErrors) {
+        const report = violationReporter.generateReport(
+          error.validationErrors,
+          opts.validationFormat,
+          { showSuggestions: opts.showSuggestions }
+        );
+        console.error(report);
+      }
+    }
+    
+    return result;
+  }
+}
+
+/**
+ * Enhanced manifest update logic with validation context
+ * @param {string} modName - Mod name
+ * @param {string} modPath - Mod directory path
+ * @param {string} manifestPath - Manifest file path
+ * @param {Object} opts - Options
+ * @returns {Promise<Object>} Update results
+ */
+async function performManifestUpdate(modName, modPath, manifestPath, opts) {
+  // Load existing manifest
+  let existingManifest = {};
+  let manifestExists = false;
+  
+  try {
+    const manifestContent = await fs.readFile(manifestPath, 'utf8');
+    existingManifest = JSON.parse(manifestContent);
+    manifestExists = true;
+    
+    if (opts.verbose) {
+      console.log(`📖 Loaded existing manifest (${Object.keys(existingManifest).length} properties)`);
+    }
+  } catch (error) {
+    if (opts.verbose) {
+      console.log('📋 No existing manifest found, will create new one');
+    }
+  }
+
+  if (!existingManifest.content || typeof existingManifest.content !== 'object') {
+    if (manifestExists) {
+      throw new Error('Manifest does not have a valid "content" object');
+    }
+    // Create new manifest structure
+    existingManifest = {
+      id: modName,
+      version: '1.0.0',
+      name: modName,
+      dependencies: [],
+      content: {}
+    };
+  }
+  
+  // Scan directory structure (using existing logic)
+  const scanResult = await scanModDirectory(modPath, existingManifest, opts);
+  
+  // Build new manifest (existing logic with enhancements)
+  const newManifest = { ...existingManifest, ...scanResult.manifest };
+  
+  // Validation-aware manifest writing
+  let manifestUpdated = false;
+  if (!opts.dryRun) {
+    // Check if manifest actually changed
+    const manifestChanged = !manifestExists || 
+                           JSON.stringify(existingManifest, null, 2) !== 
+                           JSON.stringify(newManifest, null, 2);
+    
+    if (manifestChanged || opts.force) {
+      await fs.writeFile(manifestPath, JSON.stringify(newManifest, null, 2) + '\n');
+      manifestUpdated = true;
+      
+      if (opts.verbose) {
+        console.log(`💾 Manifest ${manifestExists ? 'updated' : 'created'}: ${manifestPath}`);
+      }
+    } else if (opts.verbose) {
+      console.log('📄 Manifest unchanged, no update needed');
+    }
+  } else {
+    console.log('🔥 Dry run: manifest changes not written');
+    manifestUpdated = false; // Don't trigger validation on dry run
+  }
+
+  return {
+    manifestUpdated,
+    filesProcessed: scanResult.filesProcessed || 0,
+    errors: scanResult.errors || [],
+    warnings: scanResult.warnings || []
+  };
+}
+
+/**
+ * Scans mod directory and processes content (consolidates existing logic)
+ * @param {string} modPath - Mod directory path
+ * @param {Object} manifest - Current manifest
+ * @param {Object} opts - Options
+ * @returns {Promise<Object>} Scan results
+ */
+async function scanModDirectory(modPath, manifest, opts) {
+  const result = {
+    manifest: { ...manifest },
+    filesProcessed: 0,
+    errors: [],
+    warnings: []
+  };
+  
+  try {
+    // Auto-discover content directories (existing logic)
     console.log('Discovering content directories...');
     const modDirEntries = await fs.readdir(modPath, { withFileTypes: true });
 
     for (const dirent of modDirEntries) {
-      // Check if it's a directory and not in the ignore list.
       if (dirent.isDirectory() && !IGNORE_DIRS.has(dirent.name)) {
-        // Use the mapped key if available, otherwise use the folder name
         const manifestKey = FOLDER_TO_KEY_MAP[dirent.name] || dirent.name;
 
-        // If this directory is not already a key in manifest.content, add it!
-        if (
-          !Object.prototype.hasOwnProperty.call(manifest.content, manifestKey)
-        ) {
+        if (!Object.prototype.hasOwnProperty.call(result.manifest.content, manifestKey)) {
           console.log(
             `  - Discovered new content directory: "${dirent.name}" (key: "${manifestKey}"). Adding to manifest.`
           );
-          manifest.content[manifestKey] = []; // Initialize with an empty array.
+          result.manifest.content[manifestKey] = [];
         }
       }
     }
-    // --- END NEW LOGIC ---
 
-    const contentTypes = Object.keys(manifest.content);
+    // Process each content directory (existing logic)
+    const contentTypes = Object.keys(result.manifest.content);
     console.log(`Content types to process: ${contentTypes.join(', ')}`);
 
-    // 3. Scan each content directory and update the manifest object.
     for (const contentType of contentTypes) {
-      // Special case: anatomyFormatting maps to anatomy-formatting folder
-      const folderName =
-        contentType === 'anatomyFormatting'
-          ? 'anatomy-formatting'
-          : contentType;
-      const contentDirPath = path.join(modPath, folderName);
-      let files = [];
-
-      try {
-        // Check if the directory exists
-        const dirStat = await fs.stat(contentDirPath);
-
-        if (dirStat.isDirectory()) {
-          // Special handling for "entities" directory with nested structure
-          if (contentType === 'entities') {
-            // Check if entities has definitions and instances subdirectories
-            const entitiesDirPath = path.join(modPath, 'entities');
-            const definitionsPath = path.join(entitiesDirPath, 'definitions');
-            const instancesPath = path.join(entitiesDirPath, 'instances');
-
-            // Check if manifest uses nested structure (entities.definitions/instances)
-            if (
-              typeof manifest.content.entities === 'object' &&
-              !Array.isArray(manifest.content.entities)
-            ) {
-              // Handle nested structure
-              if (
-                await fs
-                  .stat(definitionsPath)
-                  .then(() => true)
-                  .catch(() => false)
-              ) {
-                const definitionFiles =
-                  await scanDirectoryRecursively(definitionsPath);
-                if (!manifest.content.entities.definitions) {
-                  manifest.content.entities.definitions = [];
-                }
-                manifest.content.entities.definitions = definitionFiles.sort();
-                console.log(
-                  `  - Scanned "entities.definitions": Found ${definitionFiles.length} file(s).`
-                );
-              }
-
-              if (
-                await fs
-                  .stat(instancesPath)
-                  .then(() => true)
-                  .catch(() => false)
-              ) {
-                const instanceFiles =
-                  await scanDirectoryRecursively(instancesPath);
-                if (!manifest.content.entities.instances) {
-                  manifest.content.entities.instances = [];
-                }
-                manifest.content.entities.instances = instanceFiles.sort();
-                console.log(
-                  `  - Scanned "entities.instances": Found ${instanceFiles.length} file(s).`
-                );
-              }
-            } else {
-              // Handle flat structure (legacy support for entityDefinitions/entityInstances at top level)
-              // Handle entityDefinitions
-              if (
-                manifest.content.entityDefinitions &&
-                (await fs
-                  .stat(definitionsPath)
-                  .then(() => true)
-                  .catch(() => false))
-              ) {
-                const definitionFiles =
-                  await scanDirectoryRecursively(definitionsPath);
-                manifest.content.entityDefinitions = definitionFiles.sort();
-                console.log(
-                  `  - Scanned "entityDefinitions": Found ${definitionFiles.length} file(s).`
-                );
-              }
-
-              // Handle entityInstances
-              if (
-                manifest.content.entityInstances &&
-                (await fs
-                  .stat(instancesPath)
-                  .then(() => true)
-                  .catch(() => false))
-              ) {
-                const instanceFiles =
-                  await scanDirectoryRecursively(instancesPath);
-                manifest.content.entityInstances = instanceFiles.sort();
-                console.log(
-                  `  - Scanned "entityInstances": Found ${instanceFiles.length} file(s).`
-                );
-              }
-
-              // Keep the entities directory empty since we've mapped its contents
-              manifest.content.entities = [];
-              console.log(
-                `  - Mapped "entities" directory contents to entityDefinitions and entityInstances.`
-              );
-            }
-          } else if (contentType === 'scopes') {
-            // Special handling for "scopes" directory with .scope files
-            files = await scanScopeDirectoryRecursively(contentDirPath);
-
-            console.log(
-              `  - Scanned "${contentType}": Found ${files.length} .scope file(s).`
-            );
-
-            // If files were found in subdirectories, log the structure
-            if (files.length > 0) {
-              const subdirs = new Set();
-              files.forEach((file) => {
-                const dir = path.dirname(file);
-                if (dir !== '.') {
-                  subdirs.add(dir);
-                }
-              });
-              if (subdirs.size > 0) {
-                console.log(
-                  `    Subdirectories found: ${Array.from(subdirs).join(', ')}`
-                );
-              }
-            }
-
-            manifest.content[contentType] = files.sort();
-          } else if (contentType === 'blueprints') {
-            // Special handling for "blueprints" directory with .blueprint.json files
-            files = await scanBlueprintDirectoryRecursively(contentDirPath);
-
-            console.log(
-              `  - Scanned "${contentType}": Found ${files.length} .blueprint.json file(s).`
-            );
-
-            // If files were found in subdirectories, log the structure
-            if (files.length > 0) {
-              const subdirs = new Set();
-              files.forEach((file) => {
-                const dir = path.dirname(file);
-                if (dir !== '.') {
-                  subdirs.add(dir);
-                }
-              });
-              if (subdirs.size > 0) {
-                console.log(
-                  `    Subdirectories found: ${Array.from(subdirs).join(', ')}`
-                );
-              }
-            }
-
-            manifest.content[contentType] = files.sort();
-          } else if (contentType === 'recipes') {
-            // Special handling for "recipes" directory with .recipe.json files
-            files = await scanRecipeDirectoryRecursively(contentDirPath);
-
-            console.log(
-              `  - Scanned "${contentType}": Found ${files.length} .recipe.json file(s).`
-            );
-
-            // If files were found in subdirectories, log the structure
-            if (files.length > 0) {
-              const subdirs = new Set();
-              files.forEach((file) => {
-                const dir = path.dirname(file);
-                if (dir !== '.') {
-                  subdirs.add(dir);
-                }
-              });
-              if (subdirs.size > 0) {
-                console.log(
-                  `    Subdirectories found: ${Array.from(subdirs).join(', ')}`
-                );
-              }
-            }
-
-            manifest.content[contentType] = files.sort();
-          } else if (contentType === 'anatomyFormatting') {
-            // Handle anatomy-formatting directory (path already mapped above)
-            files = await scanDirectoryRecursively(contentDirPath);
-
-            console.log(
-              `  - Scanned "anatomyFormatting" (folder: anatomy-formatting): Found ${files.length} file(s).`
-            );
-
-            manifest.content[contentType] = files.sort();
-          } else {
-            // Use recursive scanning to handle nested directories
-            files = await scanDirectoryRecursively(contentDirPath);
-
-            console.log(
-              `  - Scanned "${contentType}": Found ${files.length} file(s).`
-            );
-
-            // If files were found in subdirectories, log the structure
-            if (files.length > 0) {
-              const subdirs = new Set();
-              files.forEach((file) => {
-                const dir = path.dirname(file);
-                if (dir !== '.') {
-                  subdirs.add(dir);
-                }
-              });
-              if (subdirs.size > 0) {
-                console.log(
-                  `    Subdirectories found: ${Array.from(subdirs).join(', ')}`
-                );
-              }
-            }
-
-            manifest.content[contentType] = files.sort();
-          }
-        }
-      } catch (error) {
-        if (error.code === 'ENOENT') {
-          // This can happen if a key exists in the manifest but the folder was deleted.
-          // We will clear its entry in the manifest.
-          console.log(
-            `  - Directory not found for "${contentType}", ensuring it is empty in manifest.`
-          );
-        } else {
-          throw error;
-        }
-      }
+      const processResult = await processContentType(modPath, contentType, result.manifest, opts);
+      result.filesProcessed += processResult.filesProcessed;
+      result.errors.push(...processResult.errors);
+      result.warnings.push(...processResult.warnings);
     }
-
-    // 4. Write the updated, formatted JSON back to the manifest file.
-    const updatedManifestContent = JSON.stringify(manifest, null, 2);
-    await fs.writeFile(manifestPath, updatedManifestContent, 'utf8');
-
-    console.log('\n✅ Manifest update complete!');
-    console.log(`Successfully updated: ${manifestPath}`);
-    return { success: true, modName }; // Success
+    
+    return result;
+    
   } catch (error) {
-    let errorInfo = { success: false, modName };
-
-    if (error.code === 'ENOENT') {
-      console.error(`\nError: Could not find mod directory or manifest file.`);
-      console.error(`Looked for manifest at: ${manifestPath}`);
-      errorInfo.error = {
-        type: 'ENOENT',
-        message: 'Could not find mod directory or manifest file',
-        path: manifestPath,
-      };
-    } else if (error instanceof SyntaxError) {
-      console.error(`\nError: Failed to parse JSON in ${manifestPath}.`);
-      console.error(error.message);
-      errorInfo.error = {
-        type: 'SYNTAX_ERROR',
-        message: `Failed to parse JSON: ${error.message}`,
-        path: manifestPath,
-      };
-    } else {
-      console.error('\nAn unexpected error occurred:');
-      console.error(error);
-      errorInfo.error = {
-        type: 'UNKNOWN',
-        message: error.message || 'An unexpected error occurred',
-      };
-    }
-    return errorInfo; // Failure with details
+    result.errors.push(`Directory scan failed: ${error.message}`);
+    return result;
   }
 }
 
 /**
- * Parse command line options
- * @returns {Object} Parsed options
+ * Processes a specific content type directory (consolidates existing logic)
+ * @param {string} modPath - Mod path
+ * @param {string} contentType - Content type to process
+ * @param {Object} manifest - Manifest object
+ * @param {Object} opts - Options
+ * @returns {Promise<Object>} Processing results
  */
-function parseOptions() {
-  const args = process.argv.slice(2);
-  const options = {
-    modName: null,
-    validateReferences: false,
-    failOnViolations: false
+async function processContentType(modPath, contentType, manifest, opts) {
+  const result = {
+    filesProcessed: 0,
+    errors: [],
+    warnings: []
   };
+  
+  try {
+    // Special case: anatomyFormatting maps to anatomy-formatting folder
+    const folderName = contentType === 'anatomyFormatting' ? 'anatomy-formatting' : contentType;
+    const contentDirPath = path.join(modPath, folderName);
+    let files = [];
 
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    if (arg === '--validate-references') {
-      options.validateReferences = true;
-    } else if (arg === '--fail-on-violations') {
-      options.failOnViolations = true;
-    } else if (!arg.startsWith('--')) {
-      // First non-flag argument is the mod name
-      if (!options.modName) {
-        options.modName = arg;
+    // Check if the directory exists
+    const dirStat = await fs.stat(contentDirPath);
+
+    if (dirStat.isDirectory()) {
+      if (contentType === 'entities') {
+        // Handle entities with nested structure (existing logic)
+        await processEntitiesDirectory(modPath, manifest, result);
+      } else if (contentType === 'scopes') {
+        files = await scanScopeDirectoryRecursively(contentDirPath);
+        console.log(`  - Scanned "${contentType}": Found ${files.length} .scope file(s).`);
+        manifest.content[contentType] = files.sort();
+        result.filesProcessed += files.length;
+      } else if (contentType === 'blueprints') {
+        files = await scanBlueprintDirectoryRecursively(contentDirPath);
+        console.log(`  - Scanned "${contentType}": Found ${files.length} .blueprint.json file(s).`);
+        manifest.content[contentType] = files.sort();
+        result.filesProcessed += files.length;
+      } else if (contentType === 'recipes') {
+        files = await scanRecipeDirectoryRecursively(contentDirPath);
+        console.log(`  - Scanned "${contentType}": Found ${files.length} .recipe.json file(s).`);
+        manifest.content[contentType] = files.sort();
+        result.filesProcessed += files.length;
+      } else {
+        files = await scanDirectoryRecursively(contentDirPath);
+        console.log(`  - Scanned "${contentType}": Found ${files.length} file(s).`);
+        manifest.content[contentType] = files.sort();
+        result.filesProcessed += files.length;
+      }
+      
+      // Log subdirectory structure if found
+      if (files.length > 0 && contentType !== 'entities') {
+        const subdirs = new Set();
+        files.forEach((file) => {
+          const dir = path.dirname(file);
+          if (dir !== '.') {
+            subdirs.add(dir);
+          }
+        });
+        if (subdirs.size > 0 && opts.verbose) {
+          console.log(`    Subdirectories found: ${Array.from(subdirs).join(', ')}`);
+        }
+      }
+    }
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      console.log(`  - Directory not found for "${contentType}", ensuring it is empty in manifest.`);
+      manifest.content[contentType] = [];
+    } else {
+      result.errors.push(`Error processing ${contentType}: ${error.message}`);
+    }
+  }
+  
+  return result;
+}
+
+/**
+ * Processes entities directory with nested structure (existing logic)
+ * @param {string} modPath - Mod path
+ * @param {Object} manifest - Manifest object
+ * @param {Object} result - Result accumulator
+ */
+async function processEntitiesDirectory(modPath, manifest, result) {
+  const entitiesDirPath = path.join(modPath, 'entities');
+  const definitionsPath = path.join(entitiesDirPath, 'definitions');
+  const instancesPath = path.join(entitiesDirPath, 'instances');
+
+  // Check if manifest uses nested structure
+  if (typeof manifest.content.entities === 'object' && !Array.isArray(manifest.content.entities)) {
+    // Handle nested structure
+    if (await fs.stat(definitionsPath).then(() => true).catch(() => false)) {
+      const definitionFiles = await scanDirectoryRecursively(definitionsPath);
+      if (!manifest.content.entities.definitions) {
+        manifest.content.entities.definitions = [];
+      }
+      manifest.content.entities.definitions = definitionFiles.sort();
+      console.log(`  - Scanned "entities.definitions": Found ${definitionFiles.length} file(s).`);
+      result.filesProcessed += definitionFiles.length;
+    }
+
+    if (await fs.stat(instancesPath).then(() => true).catch(() => false)) {
+      const instanceFiles = await scanDirectoryRecursively(instancesPath);
+      if (!manifest.content.entities.instances) {
+        manifest.content.entities.instances = [];
+      }
+      manifest.content.entities.instances = instanceFiles.sort();
+      console.log(`  - Scanned "entities.instances": Found ${instanceFiles.length} file(s).`);
+      result.filesProcessed += instanceFiles.length;
+    }
+  } else {
+    // Handle flat structure (legacy support)
+    if (manifest.content.entityDefinitions &&
+        await fs.stat(definitionsPath).then(() => true).catch(() => false)) {
+      const definitionFiles = await scanDirectoryRecursively(definitionsPath);
+      manifest.content.entityDefinitions = definitionFiles.sort();
+      console.log(`  - Scanned "entityDefinitions": Found ${definitionFiles.length} file(s).`);
+      result.filesProcessed += definitionFiles.length;
+    }
+
+    if (manifest.content.entityInstances &&
+        await fs.stat(instancesPath).then(() => true).catch(() => false)) {
+      const instanceFiles = await scanDirectoryRecursively(instancesPath);
+      manifest.content.entityInstances = instanceFiles.sort();
+      console.log(`  - Scanned "entityInstances": Found ${instanceFiles.length} file(s).`);
+      result.filesProcessed += instanceFiles.length;
+    }
+
+    // Keep the entities directory empty since we've mapped its contents
+    manifest.content.entities = [];
+    console.log('  - Mapped "entities" directory contents to entityDefinitions and entityInstances.');
+  }
+}
+
+/**
+ * Runs comprehensive validation for a mod
+ * @param {Object} validationOrchestrator - Validation orchestrator instance
+ * @param {Object} violationReporter - Violation reporter instance
+ * @param {string} modName - Mod name to validate
+ * @param {Object} opts - Validation options
+ * @returns {Promise<Object>} Validation results
+ */
+async function runValidation(validationOrchestrator, violationReporter, modName, opts) {
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Validation timeout')), opts.validationTimeout);
+  });
+  
+  const validationPromise = validationOrchestrator.validateMod(modName, {
+    skipCrossReferences: !opts.validateCrossReferences,
+    includeContext: true
+  });
+  
+  try {
+    const validationResult = await Promise.race([validationPromise, timeoutPromise]);
+    
+    const hasViolations = validationResult.crossReferences?.hasViolations || false;
+    const violations = validationResult.crossReferences?.violations || [];
+    const violationCount = violations.length;
+    
+    // Generate suggestions
+    const suggestions = violations
+      .filter(v => v.suggestedFixes && v.suggestedFixes.length > 0)
+      .map(v => v.suggestedFixes.find(f => f.priority === 'primary'))
+      .filter(Boolean);
+    
+    return {
+      hasViolations,
+      violations,
+      violationCount,
+      suggestions,
+      dependencyValidation: validationResult.dependencies,
+      isValid: validationResult.isValid,
+      rawResult: validationResult
+    };
+    
+  } catch (error) {
+    throw new Error(`Validation failed: ${error.message}`);
+  }
+}
+
+/**
+ * Outputs validation report in specified format
+ * @param {Object} violationReporter - Reporter instance
+ * @param {Object} validationResult - Validation results
+ * @param {Object} opts - Output options
+ * @param {string} modName - Mod name for context
+ */
+async function outputValidationReport(violationReporter, validationResult, opts, modName) {
+  if (opts.validationFormat === 'none') {
+    return;
+  }
+  
+  try {
+    const report = violationReporter.generateReport(
+      validationResult.rawResult.crossReferences,
+      opts.validationFormat,
+      {
+        colors: opts.validationFormat === 'console',
+        showSuggestions: opts.showSuggestions,
+        verbose: opts.verbose
+      }
+    );
+    
+    if (opts.validationOutput) {
+      const outputPath = opts.validationOutput.replace('{modName}', modName);
+      await fs.writeFile(outputPath, report);
+      console.log(`📊 Validation report written to: ${outputPath}`);
+    } else {
+      console.log(report);
+    }
+    
+  } catch (error) {
+    console.warn('⚠️  Failed to generate validation report:', error.message);
+  }
+}
+
+/**
+ * Outputs summary of update and validation results
+ * @param {Object} result - Complete result object
+ * @param {Object} opts - Options for output formatting
+ */
+function outputSummary(result, opts) {
+  console.log('\n📋 Summary:');
+  console.log(`   • Files processed: ${result.filesProcessed}`);
+  console.log(`   • Manifest updated: ${result.manifestUpdated ? 'Yes' : 'No'}`);
+  console.log(`   • Total time: ${result.performance.totalTime}ms`);
+  
+  if (result.validation.performed) {
+    console.log('   • Validation performed: Yes');
+    
+    if (result.validation.postValidation) {
+      const v = result.validation.postValidation;
+      console.log(`   • Violations found: ${v.violationCount}`);
+      console.log(`   • Suggestions available: ${v.suggestions.length}`);
+      
+      if (v.hasViolations && opts.showSuggestions && v.suggestions.length > 0) {
+        console.log('\n💡 Quick Fixes:');
+        v.suggestions.slice(0, 3).forEach((suggestion, i) => {
+          console.log(`   ${i + 1}. ${suggestion.description}`);
+        });
       }
     }
   }
+  
+  if (result.warnings.length > 0) {
+    console.log(`   • Warnings: ${result.warnings.length}`);
+    if (opts.verbose) {
+      result.warnings.forEach(warning => {
+        console.log(`     - ${warning}`);
+      });
+    }
+  }
+  
+  if (result.errors.length > 0) {
+    console.log(`   • Errors: ${result.errors.length}`);
+    result.errors.forEach(error => {
+      console.log(`     - ${error}`);
+    });
+  }
+}
 
+/**
+ * Enhanced batch manifest updates with validation
+ * @param {Object} options - Batch processing options
+ * @returns {Promise<Object>} Batch results
+ */
+async function updateAllManifests(options = {}) {
+  const opts = { ...DEFAULT_OPTIONS, ...options };
+  const modsPath = path.join(process.cwd(), 'data', 'mods');
+  
+  console.log('🔄 Starting batch manifest update with validation...');
+  
+  const results = {
+    processed: [],
+    successful: [],
+    failed: [],
+    validationSummary: {
+      totalViolations: 0,
+      modsWithViolations: 0,
+      commonViolations: new Map()
+    },
+    performance: {
+      startTime: Date.now(),
+      totalTime: 0
+    }
+  };
+  
+  try {
+    const modDirectories = (await fs.readdir(modsPath, { withFileTypes: true }))
+      .filter(dirent => dirent.isDirectory())
+      .map(dirent => dirent.name);
+    
+    console.log(`📦 Found ${modDirectories.length} mods to process`);
+    
+    // Process mods concurrently with limit
+    const concurrencyLimit = opts.concurrency || 3;
+    const promises = [];
+    
+    for (let i = 0; i < modDirectories.length; i += concurrencyLimit) {
+      const batch = modDirectories.slice(i, i + concurrencyLimit);
+      
+      const batchPromise = Promise.allSettled(
+        batch.map(async modName => {
+          const modResult = await updateModManifest(modName, opts);
+          return { modName, result: modResult };
+        })
+      );
+      
+      promises.push(batchPromise);
+    }
+    
+    // Process all batches
+    const batchResults = await Promise.all(promises);
+    
+    // Aggregate results
+    batchResults.forEach(batch => {
+      batch.forEach(modResult => {
+        if (modResult.status === 'fulfilled') {
+          const { modName, result } = modResult.value;
+          results.processed.push(modName);
+          
+          if (result.success) {
+            results.successful.push(modName);
+          } else {
+            results.failed.push(modName);
+          }
+          
+          // Aggregate validation data
+          if (result.validation.performed && result.validation.postValidation) {
+            const validation = result.validation.postValidation;
+            if (validation.hasViolations) {
+              results.validationSummary.modsWithViolations++;
+              results.validationSummary.totalViolations += validation.violationCount;
+              
+              // Track common violations
+              validation.violations.forEach(violation => {
+                const key = `${violation.referencedMod}:${violation.referencedComponent}`;
+                const count = results.validationSummary.commonViolations.get(key) || 0;
+                results.validationSummary.commonViolations.set(key, count + 1);
+              });
+            }
+          }
+        } else {
+          console.error(`❌ Failed to process mod: ${modResult.reason}`);
+          results.failed.push('unknown');
+        }
+      });
+    });
+    
+    results.performance.totalTime = Date.now() - results.performance.startTime;
+    
+    // Output batch summary
+    console.log('\n📊 Batch Processing Summary:');
+    console.log(`   • Total mods: ${modDirectories.length}`);
+    console.log(`   • Successful: ${results.successful.length}`);
+    console.log(`   • Failed: ${results.failed.length}`);
+    console.log(`   • Processing time: ${results.performance.totalTime}ms`);
+    
+    if (opts.validateReferences) {
+      console.log(`   • Mods with violations: ${results.validationSummary.modsWithViolations}`);
+      console.log(`   • Total violations: ${results.validationSummary.totalViolations}`);
+      
+      if (results.validationSummary.commonViolations.size > 0) {
+        console.log('\n🔍 Most Common Violations:');
+        const sortedViolations = Array.from(results.validationSummary.commonViolations.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5);
+        
+        sortedViolations.forEach(([violation, count]) => {
+          console.log(`   • ${violation} (${count} mods)`);
+        });
+      }
+    }
+    
+    return results;
+    
+  } catch (error) {
+    console.error('❌ Batch processing failed:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * Enhanced command line argument parsing with validation options
+ * @param {string[]} args - Command line arguments
+ * @returns {Object} Parsed options
+ */
+function parseCommandLineOptions(args) {
+  const options = {
+    modName: null,
+    
+    // Validation options
+    validateReferences: args.includes('--validate-references') || 
+                       args.includes('--validate') ||
+                       args.includes('-v'),
+    failOnViolations: args.includes('--fail-on-violations') || 
+                     args.includes('--strict') ||
+                     args.includes('-s'),
+    validationFormat: getArgValue(args, '--validation-format') || 
+                     getArgValue(args, '--format') || 'console',
+    validationOutput: getArgValue(args, '--validation-output') || 
+                     getArgValue(args, '--output'),
+    preValidation: args.includes('--pre-validation'),
+    postValidation: !args.includes('--no-post-validation'),
+    validationStrictMode: args.includes('--validation-strict') || 
+                         args.includes('--strict-validation'),
+    showSuggestions: !args.includes('--no-suggestions'),
+    validationTimeout: parseInt(getArgValue(args, '--validation-timeout') || '30000', 10),
+    
+    // General options
+    verbose: args.includes('--verbose') || args.includes('-V'),
+    dryRun: args.includes('--dry-run') || args.includes('-d'),
+    force: args.includes('--force') || args.includes('-f'),
+    concurrency: parseInt(getArgValue(args, '--concurrency') || '3', 10),
+    batch: args.includes('--batch') || args.includes('--all')
+  };
+  
+  // Get mod name (first non-flag argument)
+  for (const arg of args) {
+    if (!arg.startsWith('--') && !arg.startsWith('-') && !options.modName) {
+      options.modName = arg;
+      break;
+    }
+  }
+  
+  // Validation format validation
+  const validFormats = ['console', 'json', 'html', 'markdown', 'none'];
+  if (!validFormats.includes(options.validationFormat)) {
+    throw new Error(`Invalid validation format: ${options.validationFormat}. Valid options: ${validFormats.join(', ')}`);
+  }
+  
   return options;
 }
 
 /**
- * Validate cross-references for a mod using the validation orchestrator
- * @param {string} modName - Name of the mod to validate
- * @param {Object} options - Validation options
- * @returns {Promise<{success: boolean, violationCount?: number, errors?: string[]}>}
+ * Utility to get command line argument values
+ * @param {string[]} args - Arguments array
+ * @param {string} flag - Flag to find value for
+ * @returns {string|null} Argument value or null
  */
-async function validateModCrossReferences(modName, options = {}) {
-  const { failOnViolations = false } = options;
+function getArgValue(args, flag) {
+  const flagIndex = args.findIndex(arg => arg.startsWith(`${flag}=`));
+  if (flagIndex !== -1) {
+    return args[flagIndex].split('=')[1];
+  }
+  
+  const nextIndex = args.findIndex(arg => arg === flag);
+  if (nextIndex !== -1 && args[nextIndex + 1] && !args[nextIndex + 1].startsWith('-')) {
+    return args[nextIndex + 1];
+  }
+  
+  return null;
+}
+
+/**
+ * Enhanced main function with comprehensive CLI support
+ */
+async function main() {
+  const args = process.argv.slice(2);
+  
+  if (args.length === 0) {
+    printUsage();
+    process.exit(1);
+  }
   
   try {
-    // Dynamically import the necessary modules for validation
-    const { createRequire } = await import('module');
-    const require = createRequire(import.meta.url || process.cwd());
+    const options = parseCommandLineOptions(args);
     
-    // Import container and tokens
-    const containerModule = await import('../src/dependencyInjection/container.js');
-    const tokensModule = await import('../src/dependencyInjection/tokens/tokens-core.js');
-    
-    const container = containerModule.container;
-    const tokens = tokensModule.tokens;
-    
-    // Wait for container initialization
-    await container.ready();
-    
-    // Get the validation orchestrator
-    const validationOrchestrator = container.resolve(tokens.IModValidationOrchestrator);
-    
-    if (!validationOrchestrator) {
-      console.warn('⚠️  Validation orchestrator not available, skipping validation');
-      return { success: true };
-    }
-    
-    console.log('🔍 Running cross-reference validation...');
-    
-    // Validate the mod
-    const result = await validationOrchestrator.validateMod(modName, {
-      skipCrossReferences: false,
-      includeContext: true
-    });
-    
-    if (result.crossReferences && result.crossReferences.hasViolations) {
-      const violationCount = result.crossReferences.violations.length;
-      console.log(`⚠️  Found ${violationCount} cross-reference violations:`);
+    if (options.batch || !options.modName) {
+      // Batch processing - update all mods
+      const result = await updateAllManifests(options);
       
-      // Display violations
-      result.crossReferences.violations.forEach(violation => {
-        console.log(`   - ${violation.file}: ${violation.message}`);
-        if (violation.fix) {
-          console.log(`     Fix: ${violation.fix}`);
-        }
-      });
+      // Exit with appropriate code
+      const hasErrors = result.failed.length > 0;
+      const hasViolations = result.validationSummary.totalViolations > 0;
       
-      if (failOnViolations) {
-        return {
-          success: false,
-          violationCount,
-          errors: result.crossReferences.violations.map(v => v.message)
-        };
+      if (hasErrors) {
+        process.exit(2); // Error in manifest updates
+      } else if (hasViolations && options.failOnViolations) {
+        process.exit(1); // Validation violations
       } else {
-        console.log('\n⚠️  Validation warnings found but continuing (use --fail-on-violations to enforce)');
-        return { success: true, violationCount };
+        process.exit(0); // Success
       }
+      
     } else {
-      console.log('✅ No cross-reference violations found');
-      return { success: true, violationCount: 0 };
+      // Single mod processing
+      const result = await updateModManifest(options.modName, options);
+      
+      // Exit with appropriate code
+      const hasErrors = result.errors.length > 0;
+      const hasViolations = result.validation.postValidation?.hasViolations || false;
+      
+      if (hasErrors) {
+        process.exit(2); // Error in manifest update
+      } else if (hasViolations && options.failOnViolations) {
+        process.exit(1); // Validation violations
+      } else {
+        process.exit(0); // Success
+      }
     }
     
   } catch (error) {
-    console.error('❌ Cross-reference validation failed:', error.message);
-    
-    if (failOnViolations) {
-      return {
-        success: false,
-        errors: [error.message]
-      };
-    } else {
-      console.warn('⚠️  Validation failed but continuing (use --fail-on-violations to enforce)');
-      return { success: true };
-    }
+    console.error('❌ Fatal error:', error.message);
+    process.exit(3);
   }
 }
 
 /**
- * Main function to run the script logic.
+ * Prints comprehensive usage information
  */
-async function main() {
-  const options = parseOptions();
-  const { modName, validateReferences, failOnViolations } = options;
-
-  if (modName) {
-    // Update single mod
-    const result = await updateModManifest(modName);
-    if (!result.success) {
-      console.error(`\n❌ Failed to update mod "${result.modName}"`);
-      if (result.error) {
-        console.error(`   Error: ${result.error.message}`);
-        if (result.error.path) {
-          console.error(`   Path: ${result.error.path}`);
-        }
-      }
-      process.exit(1);
-    }
-    
-    // Perform validation if requested
-    if (validateReferences) {
-      const validationResult = await validateModCrossReferences(modName, { failOnViolations });
-      if (!validationResult.success) {
-        console.error(`\n❌ Validation failed for mod "${modName}"`);
-        process.exit(1);
-      }
-    }
-  } else {
-    // Update all mods
-    console.log('No mod name provided. Updating all mod manifests...\n');
-
-    const modNames = await getAllModNames();
-    if (modNames.length === 0) {
-      console.error('No mods found in the mods directory.');
-      process.exit(1);
-    }
-
-    console.log(`Found ${modNames.length} mod(s): ${modNames.join(', ')}\n`);
-
-    const successfulMods = [];
-    const failedMods = [];
-
-    for (const mod of modNames) {
-      console.log(`\n${'='.repeat(50)}`);
-      console.log(`Processing mod: ${mod}`);
-      console.log(`${'='.repeat(50)}\n`);
-
-      const result = await updateModManifest(mod);
-      if (result.success) {
-        successfulMods.push(result.modName);
-      } else {
-        failedMods.push(result);
-      }
-    }
-
-    // Summary
-    console.log(`\n${'='.repeat(50)}`);
-    console.log('SUMMARY');
-    console.log(`${'='.repeat(50)}`);
-    console.log(`Total mods processed: ${modNames.length}\n`);
-
-    // Show successful mods
-    if (successfulMods.length > 0) {
-      console.log(`✅ Successfully updated ${successfulMods.length} mod(s):`);
-      successfulMods.forEach((mod) => {
-        console.log(`   - ${mod}`);
-      });
-    }
-
-    // Show failed mods with error details
-    if (failedMods.length > 0) {
-      console.log(`\n❌ Failed to update ${failedMods.length} mod(s):`);
-      failedMods.forEach((result) => {
-        console.log(`   - ${result.modName}`);
-        if (result.error) {
-          console.log(`     Error: ${result.error.message}`);
-          if (result.error.path) {
-            console.log(`     Path: ${result.error.path}`);
-          }
-        }
-      });
-    }
-
-    if (failedMods.length > 0) {
-      process.exit(1);
-    }
-  }
+function printUsage() {
+  console.log('Usage: node updateManifest.js <mod-name> [options]');
+  console.log('       node updateManifest.js --batch [options]');
+  console.log('');
+  console.log('Arguments:');
+  console.log('  <mod-name>                   Name of specific mod to update');
+  console.log('');
+  console.log('General Options:');
+  console.log('  --batch, --all               Update all mods');
+  console.log('  --verbose, -V                Enable verbose output');
+  console.log('  --dry-run, -d                Show what would be done without making changes');
+  console.log('  --force, -f                  Force update even if manifest unchanged');
+  console.log('  --concurrency N              Concurrent processing limit for batch (default: 3)');
+  console.log('');
+  console.log('Validation Options:');
+  console.log('  --validate-references, -v    Enable cross-reference validation');
+  console.log('  --fail-on-violations, -s     Fail if violations are found');
+  console.log('  --validation-format FORMAT   Report format (console|json|html|markdown|none)');
+  console.log('  --validation-output FILE     Write validation report to file');
+  console.log('  --pre-validation             Validate before updating manifest');
+  console.log('  --no-post-validation         Skip validation after updating manifest');
+  console.log('  --validation-strict          Strict validation mode');
+  console.log('  --no-suggestions             Hide fix suggestions');
+  console.log('  --validation-timeout MS      Validation timeout (default: 30000)');
+  console.log('');
+  console.log('Examples:');
+  console.log('  npm run update-manifest positioning --validate-references');
+  console.log('  npm run update-manifest intimacy --validate --strict');
+  console.log('  npm run update-manifest core --validate --format=json --output=report.json');
+  console.log('  npm run update-manifest --batch --validate --verbose');
+  console.log('  npm run update-manifest positioning --pre-validation --post-validation');
 }
 
-main();
+// Export functions for testing
+module.exports = {
+  updateModManifest,
+  performManifestUpdate,
+  runValidation,
+  updateAllManifests,
+  parseCommandLineOptions,
+  ValidationError
+};
+
+// Run if called directly (CommonJS pattern)
+if (require.main === module) {
+  main().catch(error => {
+    console.error('❌ Fatal error:', error.message);
+    process.exit(3);
+  });
+}
+

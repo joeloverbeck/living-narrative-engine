@@ -622,7 +622,6 @@ describe('TraceDirectoryManager', () => {
         expect.any(Error)
       );
     });
-
   });
 
   describe('Permission Handling', () => {
@@ -883,10 +882,7 @@ describe('TraceDirectoryManager', () => {
     });
 
     it('should return null for null parent handle', async () => {
-      const result = await manager.ensureSubdirectoryExists(
-        null,
-        'child-dir'
-      );
+      const result = await manager.ensureSubdirectoryExists(null, 'child-dir');
 
       expect(result).toBe(null);
       expect(mockLogger.error).toHaveBeenCalledWith(

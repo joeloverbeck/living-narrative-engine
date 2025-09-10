@@ -1,4 +1,11 @@
-import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  test,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 
 // Core system components
 import EventBus from '../../../src/events/eventBus.js';
@@ -28,28 +35,32 @@ describe('Mouth Engagement - Anatomy Integration', () => {
     logger = createMockLogger();
     eventBus = new EventBus({ logger });
     entityManager = new SimpleEntityManager([]);
-    
+
     // Setup operation registry with handlers
     operationRegistry = new OperationRegistry({ logger });
-    
+
     const lockHandler = new LockMouthEngagementHandler({
       logger,
       entityManager,
-      safeEventDispatcher: eventBus
+      safeEventDispatcher: eventBus,
     });
-    operationRegistry.register('LOCK_MOUTH_ENGAGEMENT', (...args) => lockHandler.execute(...args));
-    
+    operationRegistry.register('LOCK_MOUTH_ENGAGEMENT', (...args) =>
+      lockHandler.execute(...args)
+    );
+
     const unlockHandler = new UnlockMouthEngagementHandler({
       logger,
       entityManager,
-      safeEventDispatcher: eventBus
+      safeEventDispatcher: eventBus,
     });
-    operationRegistry.register('UNLOCK_MOUTH_ENGAGEMENT', (...args) => unlockHandler.execute(...args));
-    
+    operationRegistry.register('UNLOCK_MOUTH_ENGAGEMENT', (...args) =>
+      unlockHandler.execute(...args)
+    );
+
     // Initialize operation interpreter
     operationInterpreter = new OperationInterpreter({
       logger,
-      operationRegistry
+      operationRegistry,
     });
 
     // Setup JSON Logic for condition evaluation
@@ -81,60 +92,60 @@ describe('Mouth Engagement - Anatomy Integration', () => {
     // Create actor with anatomy system
     const actorId = 'test-actor-anatomy';
     await entityManager.createEntity(actorId);
-    
+
     // Add anatomy with mouth (simulating humanoid_mouth entity)
     await entityManager.addComponent(actorId, 'anatomy:body', {
       body: {
         root: 'torso_1',
-        parts: { mouth: 'mouth_1' }
-      }
+        parts: { mouth: 'mouth_1' },
+      },
     });
-    
+
     // Create mouth part entity with default components from humanoid_mouth
     await entityManager.createEntity('mouth_1');
     await entityManager.addComponent('mouth_1', 'anatomy:part', {
-      subType: 'mouth'
+      subType: 'mouth',
     });
     await entityManager.addComponent('mouth_1', 'anatomy:sockets', {
       sockets: [
         {
           id: 'teeth',
           allowedTypes: ['teeth'],
-          nameTpl: '{{type}}'
-        }
-      ]
+          nameTpl: '{{type}}',
+        },
+      ],
     });
     await entityManager.addComponent('mouth_1', 'core:name', {
-      text: 'mouth'
+      text: 'mouth',
     });
     // This component would be added by default when entity definition is updated
     await entityManager.addComponent('mouth_1', 'core:mouth_engagement', {
       locked: false,
-      forcedOverride: false
+      forcedOverride: false,
     });
 
     // Get mouth parts using utility function
     const mouthParts = getMouthParts(entityManager, actorId);
     expect(mouthParts).toHaveLength(1);
-    
+
     const mouth = mouthParts[0];
     expect(mouth.engagement).toEqual({
       locked: false,
-      forcedOverride: false
+      forcedOverride: false,
     });
 
     // Test locking
     const operation = {
       type: 'LOCK_MOUTH_ENGAGEMENT',
-      parameters: { actor_id: actorId }
+      parameters: { actor_id: actorId },
     };
-    
+
     const context = {
       evaluationContext: { actor: { id: actorId } },
       entityManager,
-      logger
+      logger,
     };
-    
+
     await operationInterpreter.execute(operation, context);
 
     // Verify locked
@@ -145,80 +156,89 @@ describe('Mouth Engagement - Anatomy Integration', () => {
   test('should properly update mouth lock state for condition evaluation', async () => {
     const actorId = 'test-actor-condition';
     await entityManager.createEntity(actorId);
-    
+
     // Add anatomy with mouth
     await entityManager.addComponent(actorId, 'anatomy:body', {
       body: {
         root: 'torso_1',
-        parts: { mouth: 'mouth_1' }
-      }
+        parts: { mouth: 'mouth_1' },
+      },
     });
-    
+
     // Create mouth part with engagement component
     await entityManager.createEntity('mouth_1');
     await entityManager.addComponent('mouth_1', 'anatomy:part', {
-      subType: 'mouth'
+      subType: 'mouth',
     });
     await entityManager.addComponent('mouth_1', 'core:mouth_engagement', {
       locked: false,
-      forcedOverride: false
+      forcedOverride: false,
     });
 
     // Initially the mouth should not be locked
-    let mouthEngagement = entityManager.getComponentData('mouth_1', 'core:mouth_engagement');
+    let mouthEngagement = entityManager.getComponentData(
+      'mouth_1',
+      'core:mouth_engagement'
+    );
     expect(mouthEngagement.locked).toBe(false);
 
     // Lock mouth
     const lockOperation = {
       type: 'LOCK_MOUTH_ENGAGEMENT',
-      parameters: { actor_id: actorId }
+      parameters: { actor_id: actorId },
     };
-    
+
     const context = {
       evaluationContext: { actor: { id: actorId } },
       entityManager,
-      logger
+      logger,
     };
-    
+
     await operationInterpreter.execute(lockOperation, context);
 
     // Verify the mouth is actually locked
-    mouthEngagement = entityManager.getComponentData('mouth_1', 'core:mouth_engagement');
+    mouthEngagement = entityManager.getComponentData(
+      'mouth_1',
+      'core:mouth_engagement'
+    );
     expect(mouthEngagement.locked).toBe(true);
-    
+
     // Unlock mouth
     const unlockOperation = {
       type: 'UNLOCK_MOUTH_ENGAGEMENT',
-      parameters: { actor_id: actorId }
+      parameters: { actor_id: actorId },
     };
-    
+
     await operationInterpreter.execute(unlockOperation, context);
-    
+
     // Verify the mouth is unlocked again
-    mouthEngagement = entityManager.getComponentData('mouth_1', 'core:mouth_engagement');
+    mouthEngagement = entityManager.getComponentData(
+      'mouth_1',
+      'core:mouth_engagement'
+    );
     expect(mouthEngagement.locked).toBe(false);
   });
 
   test('should handle unlock operation with anatomy mouths', async () => {
     const actorId = 'test-actor-unlock';
     await entityManager.createEntity(actorId);
-    
+
     // Add anatomy with mouth
     await entityManager.addComponent(actorId, 'anatomy:body', {
       body: {
         root: 'torso_1',
-        parts: { mouth: 'mouth_1' }
-      }
+        parts: { mouth: 'mouth_1' },
+      },
     });
-    
+
     // Create mouth part with engagement component already locked
     await entityManager.createEntity('mouth_1');
     await entityManager.addComponent('mouth_1', 'anatomy:part', {
-      subType: 'mouth'
+      subType: 'mouth',
     });
     await entityManager.addComponent('mouth_1', 'core:mouth_engagement', {
-      locked: true,  // Start locked
-      forcedOverride: false
+      locked: true, // Start locked
+      forcedOverride: false,
     });
 
     // Verify initially locked
@@ -228,15 +248,15 @@ describe('Mouth Engagement - Anatomy Integration', () => {
     // Test unlocking
     const operation = {
       type: 'UNLOCK_MOUTH_ENGAGEMENT',
-      parameters: { actor_id: actorId }
+      parameters: { actor_id: actorId },
     };
-    
+
     const context = {
       evaluationContext: { actor: { id: actorId } },
       entityManager,
-      logger
+      logger,
     };
-    
+
     await operationInterpreter.execute(operation, context);
 
     // Verify unlocked
@@ -247,37 +267,37 @@ describe('Mouth Engagement - Anatomy Integration', () => {
   test('should preserve forcedOverride value during lock/unlock', async () => {
     const actorId = 'test-actor-preserve';
     await entityManager.createEntity(actorId);
-    
+
     // Add anatomy with mouth
     await entityManager.addComponent(actorId, 'anatomy:body', {
       body: {
         root: 'torso_1',
-        parts: { mouth: 'mouth_1' }
-      }
+        parts: { mouth: 'mouth_1' },
+      },
     });
-    
+
     // Create mouth part with forcedOverride set
     await entityManager.createEntity('mouth_1');
     await entityManager.addComponent('mouth_1', 'anatomy:part', {
-      subType: 'mouth'
+      subType: 'mouth',
     });
     await entityManager.addComponent('mouth_1', 'core:mouth_engagement', {
       locked: false,
-      forcedOverride: true  // This should be preserved
+      forcedOverride: true, // This should be preserved
     });
 
     // Lock the mouth
     const lockOperation = {
       type: 'LOCK_MOUTH_ENGAGEMENT',
-      parameters: { actor_id: actorId }
+      parameters: { actor_id: actorId },
     };
-    
+
     const context = {
       evaluationContext: { actor: { id: actorId } },
       entityManager,
-      logger
+      logger,
     };
-    
+
     await operationInterpreter.execute(lockOperation, context);
 
     // Verify forcedOverride is preserved
@@ -288,9 +308,9 @@ describe('Mouth Engagement - Anatomy Integration', () => {
     // Unlock the mouth
     const unlockOperation = {
       type: 'UNLOCK_MOUTH_ENGAGEMENT',
-      parameters: { actor_id: actorId }
+      parameters: { actor_id: actorId },
     };
-    
+
     await operationInterpreter.execute(unlockOperation, context);
 
     // Verify forcedOverride is still preserved
@@ -302,27 +322,27 @@ describe('Mouth Engagement - Anatomy Integration', () => {
   test('should handle entities with no mouths gracefully', async () => {
     const actorId = 'test-actor-no-mouth';
     await entityManager.createEntity(actorId);
-    
+
     // Add anatomy without mouth parts
     await entityManager.addComponent(actorId, 'anatomy:body', {
       body: {
         root: 'torso_1',
-        parts: { 
+        parts: {
           head: 'head_1',
-          arm_left: 'arm_left_1'
-        }
-      }
+          arm_left: 'arm_left_1',
+        },
+      },
     });
-    
+
     // Create non-mouth parts
     await entityManager.createEntity('head_1');
     await entityManager.addComponent('head_1', 'anatomy:part', {
-      subType: 'head'
+      subType: 'head',
     });
-    
+
     await entityManager.createEntity('arm_left_1');
     await entityManager.addComponent('arm_left_1', 'anatomy:part', {
-      subType: 'arm'
+      subType: 'arm',
     });
 
     // Get mouth parts should return empty array
@@ -332,16 +352,18 @@ describe('Mouth Engagement - Anatomy Integration', () => {
     // Lock operation should handle gracefully
     const operation = {
       type: 'LOCK_MOUTH_ENGAGEMENT',
-      parameters: { actor_id: actorId }
+      parameters: { actor_id: actorId },
     };
-    
+
     const context = {
       evaluationContext: { actor: { id: actorId } },
       entityManager,
-      logger
+      logger,
     };
-    
+
     // Should not throw error
-    await expect(operationInterpreter.execute(operation, context)).resolves.not.toThrow();
+    await expect(
+      operationInterpreter.execute(operation, context)
+    ).resolves.not.toThrow();
   });
 });

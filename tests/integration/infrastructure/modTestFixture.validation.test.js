@@ -11,7 +11,11 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
-import { ModTestFixture, ModActionTestFixture, ModRuleTestFixture } from '../../common/mods/ModTestFixture.js';
+import {
+  ModTestFixture,
+  ModActionTestFixture,
+  ModRuleTestFixture,
+} from '../../common/mods/ModTestFixture.js';
 import { promises as fs } from 'fs';
 
 // Mock file system for auto-loading tests
@@ -75,7 +79,10 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
           .mockResolvedValueOnce(JSON.stringify(mockRuleFile)) // rule file
           .mockResolvedValueOnce(JSON.stringify(mockConditionFile)); // condition file
 
-        const fixture = await ModTestFixture.forAction('test_mod', 'test_action');
+        const fixture = await ModTestFixture.forAction(
+          'test_mod',
+          'test_action'
+        );
 
         expect(fixture).toBeDefined();
         expect(fixture).toBeInstanceOf(ModActionTestFixture);
@@ -104,7 +111,9 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
 
         await expect(
           ModTestFixture.forAction('test_mod', 'test_action')
-        ).rejects.toThrow('ModTestFixture.forAction failed for test_mod:test_action');
+        ).rejects.toThrow(
+          'ModTestFixture.forAction failed for test_mod:test_action'
+        );
       });
     });
 
@@ -146,7 +155,10 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
           .mockResolvedValueOnce(JSON.stringify(mockRuleFile))
           .mockResolvedValueOnce(JSON.stringify(mockConditionFile));
 
-        const fixture = await ModTestFixture.forActionAutoLoad('test_mod', 'test_action');
+        const fixture = await ModTestFixture.forActionAutoLoad(
+          'test_mod',
+          'test_action'
+        );
 
         expect(fixture).toBeDefined();
         expect(fixture).toBeInstanceOf(ModActionTestFixture);
@@ -159,7 +171,10 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
           .mockResolvedValueOnce(JSON.stringify(mockRuleFile))
           .mockResolvedValueOnce(JSON.stringify(mockConditionFile));
 
-        const fixture = await ModTestFixture.forRuleAutoLoad('test_mod', 'test_rule');
+        const fixture = await ModTestFixture.forRuleAutoLoad(
+          'test_mod',
+          'test_rule'
+        );
 
         expect(fixture).toBeDefined();
         expect(fixture).toBeInstanceOf(ModRuleTestFixture);
@@ -167,10 +182,15 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
       });
 
       it('should throw clear errors when explicit auto-loading fails', async () => {
-        fs.readFile.mockRejectedValue(new Error('ENOENT: no such file or directory'));
+        fs.readFile.mockRejectedValue(
+          new Error('ENOENT: no such file or directory')
+        );
 
         await expect(
-          ModTestFixture.forActionAutoLoad('nonexistent_mod', 'nonexistent_action')
+          ModTestFixture.forActionAutoLoad(
+            'nonexistent_mod',
+            'nonexistent_action'
+          )
         ).rejects.toThrow();
       });
     });
@@ -179,46 +199,81 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
   describe('Multiple File Naming Conventions Support', () => {
     describe('Rule file naming conventions', () => {
       it('should try multiple rule file patterns', () => {
-        const paths = ModTestFixture.getConventionalPaths('intimacy', 'kiss_cheek');
-        
-        expect(paths.rulePaths).toContain('data/mods/intimacy/rules/kiss_cheek.rule.json');
-        expect(paths.rulePaths).toContain('data/mods/intimacy/rules/handle_kiss_cheek.rule.json');
-        expect(paths.rulePaths).toContain('data/mods/intimacy/rules/intimacy_kiss_cheek.rule.json');
+        const paths = ModTestFixture.getConventionalPaths(
+          'intimacy',
+          'kiss_cheek'
+        );
+
+        expect(paths.rulePaths).toContain(
+          'data/mods/intimacy/rules/kiss_cheek.rule.json'
+        );
+        expect(paths.rulePaths).toContain(
+          'data/mods/intimacy/rules/handle_kiss_cheek.rule.json'
+        );
+        expect(paths.rulePaths).toContain(
+          'data/mods/intimacy/rules/intimacy_kiss_cheek.rule.json'
+        );
       });
 
       it('should handle namespaced action IDs correctly', () => {
-        const paths = ModTestFixture.getConventionalPaths('intimacy', 'intimacy:kiss_cheek');
-        
+        const paths = ModTestFixture.getConventionalPaths(
+          'intimacy',
+          'intimacy:kiss_cheek'
+        );
+
         // Should extract action name from full ID
-        expect(paths.rulePaths).toContain('data/mods/intimacy/rules/kiss_cheek.rule.json');
-        expect(paths.rulePaths).toContain('data/mods/intimacy/rules/handle_kiss_cheek.rule.json');
+        expect(paths.rulePaths).toContain(
+          'data/mods/intimacy/rules/kiss_cheek.rule.json'
+        );
+        expect(paths.rulePaths).toContain(
+          'data/mods/intimacy/rules/handle_kiss_cheek.rule.json'
+        );
       });
     });
 
     describe('Condition file naming conventions', () => {
       it('should try multiple condition file patterns with hyphen conversion', () => {
-        const paths = ModTestFixture.getConventionalPaths('intimacy', 'kiss_cheek');
-        
-        expect(paths.conditionPaths).toContain('data/mods/intimacy/conditions/event-is-action-kiss-cheek.condition.json');
-        expect(paths.conditionPaths).toContain('data/mods/intimacy/conditions/kiss-cheek.condition.json');
-        expect(paths.conditionPaths).toContain('data/mods/intimacy/conditions/event-is-action-intimacy-kiss-cheek.condition.json');
+        const paths = ModTestFixture.getConventionalPaths(
+          'intimacy',
+          'kiss_cheek'
+        );
+
+        expect(paths.conditionPaths).toContain(
+          'data/mods/intimacy/conditions/event-is-action-kiss-cheek.condition.json'
+        );
+        expect(paths.conditionPaths).toContain(
+          'data/mods/intimacy/conditions/kiss-cheek.condition.json'
+        );
+        expect(paths.conditionPaths).toContain(
+          'data/mods/intimacy/conditions/event-is-action-intimacy-kiss-cheek.condition.json'
+        );
       });
 
       it('should convert underscores to hyphens for condition files', () => {
-        const paths = ModTestFixture.getConventionalPaths('positioning', 'kneel_before');
-        
+        const paths = ModTestFixture.getConventionalPaths(
+          'positioning',
+          'kneel_before'
+        );
+
         // All condition paths should use hyphens
-        paths.conditionPaths.forEach(path => {
+        paths.conditionPaths.forEach((path) => {
           expect(path).not.toContain('kneel_before'); // No underscores in filename part
           expect(path).toContain('kneel-before'); // Should have hyphens
         });
       });
 
       it('should handle complex action names with multiple underscores', () => {
-        const paths = ModTestFixture.getConventionalPaths('sex', 'fondle_breast_gently');
-        
-        expect(paths.conditionPaths).toContain('data/mods/sex/conditions/event-is-action-fondle-breast-gently.condition.json');
-        expect(paths.conditionPaths).toContain('data/mods/sex/conditions/fondle-breast-gently.condition.json');
+        const paths = ModTestFixture.getConventionalPaths(
+          'sex',
+          'fondle_breast_gently'
+        );
+
+        expect(paths.conditionPaths).toContain(
+          'data/mods/sex/conditions/event-is-action-fondle-breast-gently.condition.json'
+        );
+        expect(paths.conditionPaths).toContain(
+          'data/mods/sex/conditions/fondle-breast-gently.condition.json'
+        );
       });
     });
 
@@ -232,14 +287,19 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
           .mockRejectedValueOnce(new Error('ENOENT')) // First condition pattern fails
           .mockResolvedValueOnce(JSON.stringify(mockConditionFile)); // Second condition pattern succeeds
 
-        const fixture = await ModTestFixture.forAction('test_mod', 'test_action');
-        
+        const fixture = await ModTestFixture.forAction(
+          'test_mod',
+          'test_action'
+        );
+
         expect(fixture).toBeDefined();
         expect(fs.readFile).toHaveBeenCalledTimes(5); // Multiple attempts were made
       });
 
       it('should provide detailed error messages with attempted paths', async () => {
-        fs.readFile.mockRejectedValue(new Error('ENOENT: no such file or directory'));
+        fs.readFile.mockRejectedValue(
+          new Error('ENOENT: no such file or directory')
+        );
 
         await expect(
           ModTestFixture.forActionAutoLoad('missing_mod', 'missing_action')
@@ -277,17 +337,23 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
     it('should provide rule data access through test environment setup', () => {
       expect(fixture.ruleFile).toEqual(mockRuleFile);
       expect(fixture.conditionFile).toEqual(mockConditionFile);
-      
+
       // Rule should be accessible through the test environment
       expect(fixture.testEnv.dataRegistry).toBeDefined();
-      expect(typeof fixture.testEnv.dataRegistry.getAllSystemRules).toBe('function');
+      expect(typeof fixture.testEnv.dataRegistry.getAllSystemRules).toBe(
+        'function'
+      );
     });
 
     it('should provide condition data access through test environment setup', () => {
-      expect(typeof fixture.testEnv.dataRegistry.getConditionDefinition).toBe('function');
-      
+      expect(typeof fixture.testEnv.dataRegistry.getConditionDefinition).toBe(
+        'function'
+      );
+
       // Test condition access
-      const condition = fixture.testEnv.dataRegistry.getConditionDefinition(mockConditionFile.id);
+      const condition = fixture.testEnv.dataRegistry.getConditionDefinition(
+        mockConditionFile.id
+      );
       expect(condition).toBeDefined();
       expect(condition).toEqual(mockConditionFile);
     });
@@ -298,7 +364,7 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
       expect(fixture.actionId).toBe('test_action');
       expect(fixture.ruleFile).toEqual(mockRuleFile);
       expect(fixture.conditionFile).toEqual(mockConditionFile);
-      
+
       // Should also provide access through convenient getters
       expect(fixture.entityManager).toBe(fixture.testEnv.entityManager);
       expect(fixture.eventBus).toBe(fixture.testEnv.eventBus);
@@ -338,7 +404,7 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
       // Should have created handlers appropriate for the category
       expect(fixture.testEnv.handlers).toBeDefined();
       expect(fixture.testEnv.handlers).toHaveProperty('ADD_COMPONENT'); // positioning category
-      
+
       fixture.cleanup();
     });
 
@@ -352,7 +418,7 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
 
       // Should provide entity management through scenarios
       const scenario = fixture.createStandardActorTarget(['Alice', 'Bob']);
-      
+
       expect(scenario).toHaveProperty('actor');
       expect(scenario).toHaveProperty('target');
       expect(scenario.actor).toHaveProperty('id');
@@ -372,7 +438,7 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
       // Should have cleanup methods
       expect(typeof fixture.cleanup).toBe('function');
       expect(typeof fixture.reset).toBe('function');
-      
+
       // Cleanup should not throw
       expect(() => fixture.cleanup()).not.toThrow();
     });
@@ -398,13 +464,15 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
 
     it('should create close actors scenario', () => {
       const scenario = fixture.createCloseActors(['Alice', 'Bob']);
-      
+
       expect(scenario).toHaveProperty('actor');
       expect(scenario).toHaveProperty('target');
-      
+
       // Both entities should have closeness components
       expect(scenario.actor.components).toHaveProperty('positioning:closeness');
-      expect(scenario.target.components).toHaveProperty('positioning:closeness');
+      expect(scenario.target.components).toHaveProperty(
+        'positioning:closeness'
+      );
     });
 
     it('should create anatomy scenario for body-related actions', () => {
@@ -412,24 +480,28 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
         ['Alice', 'Bob'],
         ['torso', 'breast', 'breast']
       );
-      
+
       expect(scenario).toHaveProperty('actor');
       expect(scenario).toHaveProperty('target');
       expect(scenario).toHaveProperty('bodyParts');
       expect(scenario).toHaveProperty('allEntities');
-      
+
       expect(scenario.bodyParts).toHaveLength(3);
       expect(scenario.target.components).toHaveProperty('anatomy:body');
     });
 
     it('should create multi-actor scenario with observers', () => {
-      const scenario = fixture.createMultiActorScenario(['Alice', 'Bob', 'Charlie']);
-      
+      const scenario = fixture.createMultiActorScenario([
+        'Alice',
+        'Bob',
+        'Charlie',
+      ]);
+
       expect(scenario).toHaveProperty('actor');
       expect(scenario).toHaveProperty('target');
       expect(scenario).toHaveProperty('observers');
       expect(scenario).toHaveProperty('allEntities');
-      
+
       expect(scenario.observers).toHaveLength(1); // Charlie as observer
       expect(scenario.allEntities).toHaveLength(3);
     });
@@ -437,7 +509,9 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
 
   describe('Error Handling for Missing Files', () => {
     it('should provide detailed diagnostics when files cannot be found', async () => {
-      fs.readFile.mockRejectedValue(new Error('ENOENT: no such file or directory'));
+      fs.readFile.mockRejectedValue(
+        new Error('ENOENT: no such file or directory')
+      );
 
       await expect(
         ModTestFixture.loadModFiles('nonexistent_mod', 'nonexistent_action')
@@ -472,13 +546,16 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
 
   describe('Utility Methods', () => {
     it('should provide getConventionalPaths for debugging', () => {
-      const paths = ModTestFixture.getConventionalPaths('intimacy', 'kiss_cheek');
-      
+      const paths = ModTestFixture.getConventionalPaths(
+        'intimacy',
+        'kiss_cheek'
+      );
+
       expect(paths).toHaveProperty('rulePaths');
       expect(paths).toHaveProperty('conditionPaths');
       expect(Array.isArray(paths.rulePaths)).toBe(true);
       expect(Array.isArray(paths.conditionPaths)).toBe(true);
-      
+
       expect(paths.rulePaths.length).toBeGreaterThan(0);
       expect(paths.conditionPaths.length).toBeGreaterThan(0);
     });
@@ -489,8 +566,11 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
         .mockResolvedValueOnce(JSON.stringify(mockRuleFile))
         .mockResolvedValueOnce(JSON.stringify(mockConditionFile));
 
-      const result = await ModTestFixture.tryAutoLoadFiles('test_mod', 'test_action');
-      
+      const result = await ModTestFixture.tryAutoLoadFiles(
+        'test_mod',
+        'test_action'
+      );
+
       expect(result).toHaveProperty('ruleFile');
       expect(result).toHaveProperty('conditionFile');
       expect(result.ruleFile).toEqual(mockRuleFile);
@@ -500,8 +580,11 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
     it('should return null values when tryAutoLoadFiles fails', async () => {
       fs.readFile.mockRejectedValue(new Error('File not found'));
 
-      const result = await ModTestFixture.tryAutoLoadFiles('missing_mod', 'missing_action');
-      
+      const result = await ModTestFixture.tryAutoLoadFiles(
+        'missing_mod',
+        'missing_action'
+      );
+
       expect(result).toEqual({
         ruleFile: null,
         conditionFile: null,

@@ -18,7 +18,7 @@ describe('LLM Configuration Count Reporting Integration', () => {
   beforeEach(() => {
     // Set the environment variable to point to the actual config file location
     process.env.LLM_CONFIG_PATH = '../config/llm-configs.json';
-    
+
     logger = new ConsoleLogger();
     fileSystemReader = new NodeFileSystemReader();
     appConfigService = getAppConfigService(logger);

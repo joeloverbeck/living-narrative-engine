@@ -28,7 +28,7 @@ describe('intimacy:suck_on_neck_to_leave_hickey action integration', () => {
 
   it('successfully executes suck on neck to leave hickey action between close actors', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
-      location: 'room1'
+      location: 'room1',
     });
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
@@ -50,7 +50,7 @@ describe('intimacy:suck_on_neck_to_leave_hickey action integration', () => {
 
   it('perception log shows correct message for suck on neck to leave hickey action', async () => {
     const scenario = testFixture.createCloseActors(['Sarah', 'James'], {
-      location: 'garden'
+      location: 'garden',
     });
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
@@ -59,14 +59,17 @@ describe('intimacy:suck_on_neck_to_leave_hickey action integration', () => {
       descriptionText: "Sarah has sucked on James's neck, leaving a hickey.",
       locationId: 'garden',
       actorId: scenario.actor.id,
-      targetId: scenario.target.id
+      targetId: scenario.target.id,
     });
   });
 
   it('handles multiple close partners correctly', async () => {
-    const scenario = testFixture.createMultiActorScenario(['Alice', 'Bob', 'Charlie'], {
-      location: 'room1'
-    });
+    const scenario = testFixture.createMultiActorScenario(
+      ['Alice', 'Bob', 'Charlie'],
+      {
+        location: 'room1',
+      }
+    );
 
     // First suck on Bob's neck to leave a hickey
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
@@ -82,7 +85,10 @@ describe('intimacy:suck_on_neck_to_leave_hickey action integration', () => {
     testFixture.events.length = 0;
 
     // Then suck on Charlie's neck to leave a hickey
-    await testFixture.executeAction(scenario.actor.id, scenario.observers[0].id);
+    await testFixture.executeAction(
+      scenario.actor.id,
+      scenario.observers[0].id
+    );
 
     perceptibleEvent = testFixture.events.find(
       (e) => e.eventType === 'core:perceptible_event'
@@ -95,7 +101,7 @@ describe('intimacy:suck_on_neck_to_leave_hickey action integration', () => {
 
   it('action only fires for correct action ID', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
-      location: 'room1'
+      location: 'room1',
     });
 
     // Try with a different action
@@ -113,7 +119,7 @@ describe('intimacy:suck_on_neck_to_leave_hickey action integration', () => {
 
   it('generates proper perceptible event for observers', async () => {
     const scenario = testFixture.createCloseActors(['Elena', 'Marcus'], {
-      location: 'bedroom'
+      location: 'bedroom',
     });
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
@@ -122,7 +128,9 @@ describe('intimacy:suck_on_neck_to_leave_hickey action integration', () => {
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();
-    expect(perceptibleEvent.payload.perceptionType).toBe('action_target_general');
+    expect(perceptibleEvent.payload.perceptionType).toBe(
+      'action_target_general'
+    );
     expect(perceptibleEvent.payload.descriptionText).toBe(
       "Elena has sucked on Marcus's neck, leaving a hickey."
     );
@@ -131,7 +139,7 @@ describe('intimacy:suck_on_neck_to_leave_hickey action integration', () => {
 
   it('validates perceptible event message matches action success message', async () => {
     const scenario = testFixture.createCloseActors(['Diana', 'Victor'], {
-      location: 'library'
+      location: 'library',
     });
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
@@ -147,20 +155,25 @@ describe('intimacy:suck_on_neck_to_leave_hickey action integration', () => {
     expect(perceptibleEvent).toBeDefined();
 
     // Both should have the same descriptive message
-    const expectedMessage = "Diana has sucked on Victor's neck, leaving a hickey.";
+    const expectedMessage =
+      "Diana has sucked on Victor's neck, leaving a hickey.";
     expect(successEvent.payload.message).toBe(expectedMessage);
     expect(perceptibleEvent.payload.descriptionText).toBe(expectedMessage);
   });
 
   it('works correctly when actor is behind target', async () => {
     const scenario = testFixture.createCloseActors(['Emma', 'Liam'], {
-      location: 'living_room'
+      location: 'living_room',
     });
 
     // Add facing_away component to target
-    testFixture.entityManager.addComponent(scenario.target.id, 'positioning:facing_away', {
-      facing_away_from: [scenario.actor.id]
-    });
+    testFixture.entityManager.addComponent(
+      scenario.target.id,
+      'positioning:facing_away',
+      {
+        facing_away_from: [scenario.actor.id],
+      }
+    );
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -175,7 +188,7 @@ describe('intimacy:suck_on_neck_to_leave_hickey action integration', () => {
 
   it('demonstrates intimate and possessive nature of the action', async () => {
     const scenario = testFixture.createCloseActors(['Aria', 'Kai'], {
-      location: 'private_room'
+      location: 'private_room',
     });
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);

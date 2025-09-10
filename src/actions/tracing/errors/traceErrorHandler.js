@@ -210,7 +210,7 @@ export class TraceErrorHandler {
         code: undefined,
       };
     }
-    
+
     return {
       name: error?.name || 'UnknownError',
       message: error?.message || 'No error message',
@@ -260,7 +260,7 @@ export class TraceErrorHandler {
     if (errors.length > 50) {
       errors.splice(0, errors.length - 50);
     }
-    
+
     // Also enforce a global limit on total components to prevent memory leaks
     if (this.#errorHistory.size > 100) {
       // Remove the oldest component's errors

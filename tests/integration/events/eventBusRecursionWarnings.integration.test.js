@@ -20,10 +20,10 @@ describe('EventBus - Recursion Warnings Integration', () => {
 
   beforeEach(() => {
     testBed = createTestBed();
-    
+
     // Spy on console.warn to capture EventBus warnings
     jest.spyOn(console, 'warn').mockImplementation(() => {});
-    
+
     // Create EventBus with logger only (maxRecursionDepth configured via setBatchMode)
     eventBus = new EventBus({
       logger: testBed.createMockLogger(),
@@ -52,10 +52,11 @@ describe('EventBus - Recursion Warnings Integration', () => {
     // This simulates the anatomy generation workflow that causes the recursion
     eventBus.subscribe('core:component_added', () => {
       recursionDepth++;
-      
+
       // Simulate the pattern from anatomyGenerationWorkflow.js that causes recursion:
       // component_added → entity_created → anatomy_generation → more component_added events
-      if (recursionDepth < 51) { // Stop after reaching 50% of 100
+      if (recursionDepth < 51) {
+        // Stop after reaching 50% of 100
         eventBus.dispatch('core:component_added', {
           entityId: `test_entity_${recursionDepth}`,
           componentId: 'core:anatomy_slot',
@@ -66,11 +67,11 @@ describe('EventBus - Recursion Warnings Integration', () => {
     });
 
     // Act - Enable batch mode and trigger the recursive scenario
-    eventBus.setBatchMode(true, { 
+    eventBus.setBatchMode(true, {
       context: 'game-initialization',
-      maxRecursionDepth: 15 // This gets overridden to 100 for component_added in game-initialization
+      maxRecursionDepth: 15, // This gets overridden to 100 for component_added in game-initialization
     });
-    
+
     eventBus.dispatch('core:component_added', {
       entityId: 'initial_entity',
       componentId: 'core:anatomy_slot',
@@ -80,7 +81,9 @@ describe('EventBus - Recursion Warnings Integration', () => {
 
     // Assert - Should have logged the 50% warning (50/100)
     expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining('EventBus: Recursion depth warning - 50% of limit reached for event "core:component_added" (50/100) (batch mode: game-initialization)')
+      expect.stringContaining(
+        'EventBus: Recursion depth warning - 50% of limit reached for event "core:component_added" (50/100) (batch mode: game-initialization)'
+      )
     );
   });
 
@@ -96,7 +99,7 @@ describe('EventBus - Recursion Warnings Integration', () => {
     // Set up event handler for deeper recursion
     eventBus.subscribe('core:component_added', () => {
       recursionDepth++;
-      
+
       // Go deeper to trigger 75% warning (75/100)
       if (recursionDepth < 76) {
         eventBus.dispatch('core:component_added', {
@@ -109,11 +112,11 @@ describe('EventBus - Recursion Warnings Integration', () => {
     });
 
     // Act
-    eventBus.setBatchMode(true, { 
+    eventBus.setBatchMode(true, {
       context: 'game-initialization',
-      maxRecursionDepth: 15 // This gets overridden to 100 for component_added in game-initialization
+      maxRecursionDepth: 15, // This gets overridden to 100 for component_added in game-initialization
     });
-    
+
     eventBus.dispatch('core:component_added', {
       entityId: 'initial_entity',
       componentId: 'core:anatomy_slot',
@@ -123,10 +126,14 @@ describe('EventBus - Recursion Warnings Integration', () => {
 
     // Assert - Should have both 50% and 75% warnings
     expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining('EventBus: Recursion depth warning - 50% of limit reached')
+      expect.stringContaining(
+        'EventBus: Recursion depth warning - 50% of limit reached'
+      )
     );
     expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining('EventBus: Recursion depth warning - 75% of limit reached for event "core:component_added" (75/100) (batch mode: game-initialization)')
+      expect.stringContaining(
+        'EventBus: Recursion depth warning - 75% of limit reached for event "core:component_added" (75/100) (batch mode: game-initialization)'
+      )
     );
   });
 
@@ -142,7 +149,7 @@ describe('EventBus - Recursion Warnings Integration', () => {
     // Set up event handler for maximum safe recursion
     eventBus.subscribe('core:component_added', () => {
       recursionDepth++;
-      
+
       // Go to 90% warning level (90/100)
       if (recursionDepth < 91) {
         eventBus.dispatch('core:component_added', {
@@ -155,11 +162,11 @@ describe('EventBus - Recursion Warnings Integration', () => {
     });
 
     // Act
-    eventBus.setBatchMode(true, { 
+    eventBus.setBatchMode(true, {
       context: 'game-initialization',
-      maxRecursionDepth: 15 // This gets overridden to 100 for component_added in game-initialization
+      maxRecursionDepth: 15, // This gets overridden to 100 for component_added in game-initialization
     });
-    
+
     eventBus.dispatch('core:component_added', {
       entityId: 'initial_entity',
       componentId: 'core:anatomy_slot',
@@ -169,13 +176,19 @@ describe('EventBus - Recursion Warnings Integration', () => {
 
     // Assert - Should have all three warnings
     expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining('EventBus: Recursion depth warning - 50% of limit reached')
+      expect.stringContaining(
+        'EventBus: Recursion depth warning - 50% of limit reached'
+      )
     );
     expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining('EventBus: Recursion depth warning - 75% of limit reached')
+      expect.stringContaining(
+        'EventBus: Recursion depth warning - 75% of limit reached'
+      )
     );
     expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining('EventBus: Recursion depth warning - 90% of limit reached for event "core:component_added" (90/100) (batch mode: game-initialization)')
+      expect.stringContaining(
+        'EventBus: Recursion depth warning - 90% of limit reached for event "core:component_added" (90/100) (batch mode: game-initialization)'
+      )
     );
   });
 
@@ -191,7 +204,8 @@ describe('EventBus - Recursion Warnings Integration', () => {
     let entityCount = 0;
 
     eventBus.subscribe('core:entity_created', (event) => {
-      if (entityCount < 51) { // Increased to trigger 50% warning at depth 50
+      if (entityCount < 51) {
+        // Increased to trigger 50% warning at depth 50
         // Simulate anatomy generation adding components
         eventBus.dispatch('core:component_added', {
           entityId: event.payload.entityId,
@@ -203,7 +217,8 @@ describe('EventBus - Recursion Warnings Integration', () => {
     });
 
     eventBus.subscribe('core:component_added', () => {
-      if (entityCount < 51) { // Increased to trigger warnings
+      if (entityCount < 51) {
+        // Increased to trigger warnings
         entityCount++;
         // Simulate creation of blueprint slot entities which triggers more entity_created events
         eventBus.dispatch('core:entity_created', {
@@ -215,11 +230,11 @@ describe('EventBus - Recursion Warnings Integration', () => {
     });
 
     // Act - Enable batch mode and start the cascade
-    eventBus.setBatchMode(true, { 
+    eventBus.setBatchMode(true, {
       context: 'game-initialization',
-      maxRecursionDepth: 15 // This gets overridden to 100 for component_added in game-initialization
+      maxRecursionDepth: 15, // This gets overridden to 100 for component_added in game-initialization
     });
-    
+
     eventBus.dispatch('core:entity_created', {
       entityId: 'initial_actor',
       blueprintId: 'core:actor',
@@ -228,11 +243,16 @@ describe('EventBus - Recursion Warnings Integration', () => {
 
     // Assert - Should reproduce the recursion warnings seen in the logs
     const warnCalls = console.warn.mock.calls.filter(
-      ([msg]) => msg && msg.includes('Recursion depth warning') && msg.includes('core:component_added')
+      ([msg]) =>
+        msg &&
+        msg.includes('Recursion depth warning') &&
+        msg.includes('core:component_added')
     );
-    
+
     expect(warnCalls.length).toBeGreaterThan(0);
-    expect(warnCalls.some(([msg]) => msg.includes('50% of limit reached'))).toBe(true);
+    expect(
+      warnCalls.some(([msg]) => msg.includes('50% of limit reached'))
+    ).toBe(true);
   });
 
   it('should reproduce batch mode timeout warning', async () => {
@@ -243,17 +263,19 @@ describe('EventBus - Recursion Warnings Integration', () => {
     });
 
     // Act - Enable batch mode and let it timeout
-    eventBus.setBatchMode(true, { 
+    eventBus.setBatchMode(true, {
       context: 'game-initialization',
-      timeoutMs: 100
+      timeoutMs: 100,
     });
-    
+
     // Don't dispatch any completion event, let it timeout
-    await new Promise(resolve => setTimeout(resolve, 150)); // Wait longer than timeout
-    
+    await new Promise((resolve) => setTimeout(resolve, 150)); // Wait longer than timeout
+
     // Assert - Should have logged the timeout debug message
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('EventBus: Auto-disabling batch mode after 100ms timeout for context: game-initialization')
+      expect.stringContaining(
+        'EventBus: Auto-disabling batch mode after 100ms timeout for context: game-initialization'
+      )
     );
   });
 });

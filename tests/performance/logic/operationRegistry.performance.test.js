@@ -1,20 +1,14 @@
 /**
  * @file operationRegistry.performance.test.js
  * @description Performance tests for OperationRegistry handler registration and lookup
- * 
+ *
  * Performance Thresholds:
  * - Sequential registrations: <100ms for 1000 operations
  * - Concurrent lookups: <50ms for 1000 lookups
  * - Large registry lookups: <0.1ms average with 10,000 handlers
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
 
 describe('OperationRegistry Performance', () => {
@@ -70,7 +64,9 @@ describe('OperationRegistry Performance', () => {
       for (let i = 0; i < 1000; i++) {
         const opIndex = i % numHandlers;
         lookupPromises.push(
-          Promise.resolve(operationRegistry.getHandler(`CONCURRENT_OP_${opIndex}`))
+          Promise.resolve(
+            operationRegistry.getHandler(`CONCURRENT_OP_${opIndex}`)
+          )
         );
       }
 

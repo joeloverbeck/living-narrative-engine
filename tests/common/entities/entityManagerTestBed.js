@@ -221,8 +221,10 @@ export class EntityManagerTestBed extends FactoryTestBed {
    */
   async batchCreateEntities(entitySpecs, options = {}) {
     // Setup all definitions that will be needed
-    const uniqueDefKeys = [...new Set(entitySpecs.map(spec => spec.definitionKey))];
-    const definitions = uniqueDefKeys.map(key => {
+    const uniqueDefKeys = [
+      ...new Set(entitySpecs.map((spec) => spec.definitionKey)),
+    ];
+    const definitions = uniqueDefKeys.map((key) => {
       const def = TestData.Definitions[key];
       if (!def) {
         throw new Error(`Unknown test definition key: ${key}`);
@@ -232,18 +234,24 @@ export class EntityManagerTestBed extends FactoryTestBed {
     this.setupDefinitions(...definitions);
 
     // Convert our test specs to the format expected by entityManager.batchCreateEntities
-    const managerSpecs = entitySpecs.map(spec => ({
+    const managerSpecs = entitySpecs.map((spec) => ({
       definitionId: TestData.Definitions[spec.definitionKey].id,
       opts: {
         instanceId: spec.instanceId,
-        componentOverrides: spec.overrides
-      }
+        componentOverrides: spec.overrides,
+      },
     }));
 
     // Use the entity manager's batch creation if available
-    if (this.entityManager.hasBatchSupport && this.entityManager.hasBatchSupport()) {
-      const result = await this.entityManager.batchCreateEntities(managerSpecs, options);
-      return result.successes.map(s => s.entity);
+    if (
+      this.entityManager.hasBatchSupport &&
+      this.entityManager.hasBatchSupport()
+    ) {
+      const result = await this.entityManager.batchCreateEntities(
+        managerSpecs,
+        options
+      );
+      return result.successes.map((s) => s.entity);
     }
 
     // Fallback to sequential creation if batch not available
@@ -251,7 +259,7 @@ export class EntityManagerTestBed extends FactoryTestBed {
     for (const spec of entitySpecs) {
       const entity = await this.createEntity(spec.definitionKey, {
         instanceId: spec.instanceId,
-        overrides: spec.overrides
+        overrides: spec.overrides,
       });
       entities.push(entity);
     }

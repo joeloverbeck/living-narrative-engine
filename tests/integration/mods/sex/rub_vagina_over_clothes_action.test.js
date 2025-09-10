@@ -13,14 +13,12 @@ import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 
 /**
  * Creates standardized anatomy and clothing setup for rub vagina over clothes scenarios.
- * 
+ *
  * @returns {object} Object with actor, target, and all anatomy/clothing entities
  */
 function setupVaginaClothingScenario() {
   // Create main room
-  const room = new ModEntityBuilder('room1')
-    .asRoom('Test Room')
-    .build();
+  const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
   // Create actor entity
   const actor = new ModEntityBuilder('alice')
@@ -72,9 +70,7 @@ function setupVaginaClothingScenario() {
     .build();
 
   // Create clothing entity as separate entity
-  const panties = new ModEntityBuilder('panties1')
-    .withName('panties')
-    .build();
+  const panties = new ModEntityBuilder('panties1').withName('panties').build();
 
   return {
     room,
@@ -91,11 +87,14 @@ describe('sex:rub_vagina_over_clothes action integration', () => {
 
   beforeEach(async () => {
     // Create test fixture with auto-loaded files
-    testFixture = await ModTestFixture.forAction('sex', 'sex:rub_vagina_over_clothes');
-    
+    testFixture = await ModTestFixture.forAction(
+      'sex',
+      'sex:rub_vagina_over_clothes'
+    );
+
     // Setup anatomy and clothing entities
     const entities = setupVaginaClothingScenario();
-    
+
     // Load all entities into the test environment
     testFixture.reset(Object.values(entities));
   });
@@ -141,7 +140,7 @@ describe('sex:rub_vagina_over_clothes action integration', () => {
     ];
 
     testFixture.reset(minimalEntities);
-    
+
     const initialEventCount = testFixture.events.length;
 
     await testFixture.eventBus.dispatch('core:attempt_action', {

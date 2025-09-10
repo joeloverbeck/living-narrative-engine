@@ -138,29 +138,29 @@ describe('High Concurrency Memory Management', () => {
     if (!globalContainer) {
       // Create container and DOM elements once for entire test suite
       globalContainer = new AppContainer();
-      
+
       const outputDiv = document.createElement('div');
       outputDiv.id = 'outputDiv';
       const messageList = document.createElement('ul');
       messageList.id = 'message-list';
       outputDiv.appendChild(messageList);
       document.body.appendChild(outputDiv);
-      
+
       const inputElement = document.createElement('input');
       inputElement.id = 'inputBox';
       document.body.appendChild(inputElement);
-      
+
       const titleElement = document.createElement('h1');
       titleElement.id = 'gameTitle';
       document.body.appendChild(titleElement);
-      
+
       await configureContainer(globalContainer, {
         outputDiv,
         inputElement,
         titleElement,
         document,
       });
-      
+
       // Extract services once
       globalServices = {
         entityManager: globalContainer.resolve(tokens.IEntityManager),
@@ -168,15 +168,19 @@ describe('High Concurrency Memory Management', () => {
         scopeEngine: globalContainer.resolve(tokens.IScopeEngine),
         dslParser: globalContainer.resolve(tokens.DslParser),
         logger: globalContainer.resolve(tokens.ILogger),
-        jsonLogicService: globalContainer.resolve(tokens.JsonLogicEvaluationService),
-        spatialIndexManager: globalContainer.resolve(tokens.ISpatialIndexManager),
+        jsonLogicService: globalContainer.resolve(
+          tokens.JsonLogicEvaluationService
+        ),
+        spatialIndexManager: globalContainer.resolve(
+          tokens.ISpatialIndexManager
+        ),
         registry: globalContainer.resolve(tokens.IDataRegistry),
         validator: globalContainer.resolve(tokens.ISchemaValidator),
       };
 
       // Register required component schemas for testing
       await registerMemoryTestComponentSchemas(globalServices.validator);
-      
+
       // Set up test conditions once
       ScopeTestUtilities.setupScopeTestConditions(globalServices.registry, [
         {
@@ -297,7 +301,10 @@ describe('High Concurrency Memory Management', () => {
                         ],
                       },
                       {
-                        '>=': [{ var: 'entity.components.core:stats.level' }, 3],
+                        '>=': [
+                          { var: 'entity.components.core:stats.level' },
+                          3,
+                        ],
                       },
                     ],
                   },
@@ -307,7 +314,7 @@ describe('High Concurrency Memory Management', () => {
           },
         },
       ]);
-      
+
       // Create scope definitions once
       globalScopeDefinitions = ScopeTestUtilities.createTestScopes(
         { dslParser: globalServices.dslParser, logger: globalServices.logger },
@@ -339,7 +346,7 @@ describe('High Concurrency Memory Management', () => {
           },
         ]
       );
-      
+
       // Create entity pool once
       globalEntityPool = await createGlobalEntityPool(globalServices);
     }
@@ -351,7 +358,7 @@ describe('High Concurrency Memory Management', () => {
   async function createGlobalEntityPool(services) {
     const poolSize = 25; // Optimized pool size
     const entities = [];
-    
+
     // Create test location once
     const locationDefinition = new EntityDefinition(
       'memory-concurrency-location',
@@ -367,30 +374,39 @@ describe('High Concurrency Memory Management', () => {
       'memory-concurrency-location',
       locationDefinition
     );
-    
+
     try {
-      await services.entityManager.getEntityInstance('memory-concurrency-location');
+      await services.entityManager.getEntityInstance(
+        'memory-concurrency-location'
+      );
     } catch {
-      await services.entityManager.createEntityInstance('memory-concurrency-location', {
-        instanceId: 'memory-concurrency-location',
-        definitionId: 'memory-concurrency-location',
-      });
+      await services.entityManager.createEntityInstance(
+        'memory-concurrency-location',
+        {
+          instanceId: 'memory-concurrency-location',
+          definitionId: 'memory-concurrency-location',
+        }
+      );
     }
-    
+
     // Create actor entities once
     for (let i = 0; i < poolSize; i++) {
       const actorId = `pool-actor-${i}`;
-      
-      const entity = await createMemoryTestActor(actorId, {
-        isPlayer: i === 0,
-        level: Math.floor(i / 10) + 1,
-        strength: 10 + (i % 20),
-        agility: 5 + (i % 15),
-        health: 30 + (i % 50),
-      }, services);
+
+      const entity = await createMemoryTestActor(
+        actorId,
+        {
+          isPlayer: i === 0,
+          level: Math.floor(i / 10) + 1,
+          strength: 10 + (i % 20),
+          agility: 5 + (i % 15),
+          health: 30 + (i % 50),
+        },
+        services
+      );
       entities.push(entity);
     }
-    
+
     return {
       entities,
       location: await services.entityManager.getEntityInstance(
@@ -404,7 +420,7 @@ describe('High Concurrency Memory Management', () => {
     if (global.gc) {
       global.gc();
     }
-    
+
     // Use global container and services
     container = globalContainer;
     entityManager = globalServices.entityManager;
@@ -416,10 +432,10 @@ describe('High Concurrency Memory Management', () => {
     spatialIndexManager = globalServices.spatialIndexManager;
     registry = globalServices.registry;
     entityPool = globalEntityPool;
-    
+
     // Initialize scope registry with pre-created scopes
     scopeRegistry.initialize(globalScopeDefinitions);
-    
+
     // Establish baseline memory usage
     memoryMetrics.baselineMemory = process.memoryUsage().heapUsed;
   });
@@ -490,10 +506,10 @@ describe('High Concurrency Memory Management', () => {
    */
   async function createMemoryTestDataset(size) {
     const optimizedSize = getOptimizedEntityCount(size);
-    
+
     // Use global pool directly
     const entities = entityPool.entities.slice(0, optimizedSize);
-    
+
     return entities;
   }
 
@@ -1603,7 +1619,7 @@ describe('High Concurrency Memory Management', () => {
       // Keep DOM for potential reuse in other test files
       // document.body.innerHTML = '';
     }
-    
+
     // Global resources are kept for potential reuse
     // Only perform final GC
     if (global.gc) {

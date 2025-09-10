@@ -21,7 +21,7 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 class UnlockMouthEngagementHandler extends BaseOperationHandler {
   /** @type {EntityManager} */
   #entityManager;
-  
+
   /** @type {ISafeEventDispatcher} */
   #dispatcher;
 
@@ -45,7 +45,7 @@ class UnlockMouthEngagementHandler extends BaseOperationHandler {
         requiredMethods: ['dispatch'],
       },
     });
-    
+
     this.#entityManager = entityManager;
     this.#dispatcher = safeEventDispatcher;
   }
@@ -106,9 +106,11 @@ class UnlockMouthEngagementHandler extends BaseOperationHandler {
       if (result) {
         logger.debug(
           `[UnlockMouthEngagementHandler] Successfully unlocked mouth engagement for entity: ${actorId}`,
-          { 
-            actorId, 
-            result: result.updatedParts ? `Updated ${result.updatedParts.length} mouth parts` : 'Direct component updated'
+          {
+            actorId,
+            result: result.updatedParts
+              ? `Updated ${result.updatedParts.length} mouth parts`
+              : 'Direct component updated',
           }
         );
 
@@ -126,10 +128,10 @@ class UnlockMouthEngagementHandler extends BaseOperationHandler {
       safeDispatchError(
         this.#dispatcher,
         `UNLOCK_MOUTH_ENGAGEMENT: failed to unlock mouth engagement for entity ${actorId}`,
-        { 
-          actor_id: actorId, 
-          error: err.message, 
-          stack: err.stack 
+        {
+          actor_id: actorId,
+          error: err.message,
+          stack: err.stack,
         },
         logger
       );

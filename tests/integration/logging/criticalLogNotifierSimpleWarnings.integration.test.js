@@ -74,41 +74,56 @@ describe('ValidatedEventDispatcher - Missing Event Definition Warning', () => {
   it('should reproduce "EventDefinition not found for core:critical_notification_shown" warning', async () => {
     // Act - Dispatch the event that's missing from event definitions
     // This simulates exactly what happens in the browser logs
-    await validatedEventDispatcher.dispatch('core:critical_notification_shown', {
-      level: 'error',
-      count: 1,
-    });
+    await validatedEventDispatcher.dispatch(
+      'core:critical_notification_shown',
+      {
+        level: 'error',
+        count: 1,
+      }
+    );
 
     // Assert - Check that the debug message was logged (no warning for bootstrap events)
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("VED: EventDefinition not found for 'core:critical_notification_shown' (expected during bootstrap). Proceeding with dispatch.")
+      expect.stringContaining(
+        "VED: EventDefinition not found for 'core:critical_notification_shown' (expected during bootstrap). Proceeding with dispatch."
+      )
     );
 
     // Verify the event was still dispatched despite the warning
-    expect(mockEventBus.dispatch).toHaveBeenCalledWith('core:critical_notification_shown', {
-      level: 'error',
-      count: 1,
-    });
+    expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+      'core:critical_notification_shown',
+      {
+        level: 'error',
+        count: 1,
+      }
+    );
   });
 
   it('should reproduce multiple warnings during repeated event dispatches', async () => {
     // Act - Dispatch the same missing event multiple times (simulating mod loading errors)
     for (let i = 0; i < 3; i++) {
-      await validatedEventDispatcher.dispatch('core:critical_notification_shown', {
-        level: 'warning',
-        count: i + 1,
-      });
+      await validatedEventDispatcher.dispatch(
+        'core:critical_notification_shown',
+        {
+          level: 'warning',
+          count: i + 1,
+        }
+      );
     }
 
     // Assert - Should have debug messages for bootstrap events (no warnings)
     const debugCalls = mockLogger.debug.mock.calls.filter(
-      ([msg]) => msg && msg.includes("VED: EventDefinition not found for 'core:critical_notification_shown' (expected during bootstrap)")
+      ([msg]) =>
+        msg &&
+        msg.includes(
+          "VED: EventDefinition not found for 'core:critical_notification_shown' (expected during bootstrap)"
+        )
     );
     expect(debugCalls.length).toBe(3);
-    
+
     // Check that no warnings were generated for this bootstrap event
     const warnCalls = mockLogger.warn.mock.calls.filter(
-      ([msg]) => msg && msg.includes("core:critical_notification_shown")
+      ([msg]) => msg && msg.includes('core:critical_notification_shown')
     );
     expect(warnCalls.length).toBe(0);
   });
@@ -139,14 +154,19 @@ describe('ValidatedEventDispatcher - Missing Event Definition Warning', () => {
     });
 
     // Act - Dispatch the event that now has a definition
-    await properValidatedEventDispatcher.dispatch('core:critical_notification_shown', {
-      level: 'error',
-      count: 1,
-    });
+    await properValidatedEventDispatcher.dispatch(
+      'core:critical_notification_shown',
+      {
+        level: 'error',
+        count: 1,
+      }
+    );
 
     // Assert - Should NOT have any event definition warnings
     expect(mockLogger.warn).not.toHaveBeenCalledWith(
-      expect.stringContaining("EventDefinition not found for 'core:critical_notification_shown'")
+      expect.stringContaining(
+        "EventDefinition not found for 'core:critical_notification_shown'"
+      )
     );
   });
 
@@ -158,14 +178,16 @@ describe('ValidatedEventDispatcher - Missing Event Definition Warning', () => {
 
     // Assert - Should produce similar warning for any missing event
     expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("VED: EventDefinition not found for 'core:some_other_missing_event'. Cannot validate payload. Proceeding with dispatch.")
+      expect.stringContaining(
+        "VED: EventDefinition not found for 'core:some_other_missing_event'. Cannot validate payload. Proceeding with dispatch."
+      )
     );
   });
 
   it('should handle the exact sequence that produces warnings during game initialization', async () => {
     // Arrange - Simulate the sequence from the browser logs:
     // Multiple events dispatched during mod loading/initialization when event definitions aren't loaded yet
-    
+
     const eventsFromLogs = [
       'core:critical_notification_shown',
       'core:critical_notification_shown', // Repeated several times in logs
@@ -183,13 +205,14 @@ describe('ValidatedEventDispatcher - Missing Event Definition Warning', () => {
 
     // Assert - Should have logged debug messages for bootstrap events, no warnings
     const debugCalls = mockLogger.debug.mock.calls.filter(
-      ([msg]) => msg && msg.includes("(expected during bootstrap)")
+      ([msg]) => msg && msg.includes('(expected during bootstrap)')
     );
     expect(debugCalls.length).toBe(4);
-    
+
     // Check that no warnings were generated for bootstrap events
     const warnCalls = mockLogger.warn.mock.calls.filter(
-      ([msg]) => msg && eventsFromLogs.some(eventType => msg.includes(eventType))
+      ([msg]) =>
+        msg && eventsFromLogs.some((eventType) => msg.includes(eventType))
     );
     expect(warnCalls.length).toBe(0);
 

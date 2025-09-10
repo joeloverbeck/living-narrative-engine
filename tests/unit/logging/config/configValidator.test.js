@@ -1200,7 +1200,7 @@ describe('DebugLoggingConfigValidator', () => {
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain(
-        'Invalid strategy \'invalid-strategy\'. Must be one of: source-based, pattern-based, hybrid'
+        "Invalid strategy 'invalid-strategy'. Must be one of: source-based, pattern-based, hybrid"
       );
     });
 
@@ -1258,7 +1258,9 @@ describe('DebugLoggingConfigValidator', () => {
       const result = validator.validateCategorizationStrategy(config);
 
       expect(result.isValid).toBe(true);
-      expect(result.warnings).toEqual(['No categorization configuration found']);
+      expect(result.warnings).toEqual([
+        'No categorization configuration found',
+      ]);
     });
 
     it('should handle exceptions during strategy validation', () => {
@@ -1282,7 +1284,7 @@ describe('DebugLoggingConfigValidator', () => {
         'src/entities': 'entities',
         'src/engine': 'engine',
         'src/logging': 'logging',
-        'tests': 'tests',
+        tests: 'tests',
       };
 
       const result = validator.validateSourceMappings(sourceMappings);
@@ -1296,7 +1298,9 @@ describe('DebugLoggingConfigValidator', () => {
       const result = validator.validateSourceMappings(null);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Source mappings must be a non-null object');
+      expect(result.errors).toContain(
+        'Source mappings must be a non-null object'
+      );
     });
 
     it('should reject empty source mappings', () => {
@@ -1310,7 +1314,9 @@ describe('DebugLoggingConfigValidator', () => {
       const result = validator.validateSourceMappings('not-an-object');
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Source mappings must be a non-null object');
+      expect(result.errors).toContain(
+        'Source mappings must be a non-null object'
+      );
     });
 
     it('should reject invalid path keys', () => {
@@ -1322,7 +1328,9 @@ describe('DebugLoggingConfigValidator', () => {
       const result = validator.validateSourceMappings(sourceMappings);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Source path \'\' must be a non-empty string');
+      expect(result.errors).toContain(
+        "Source path '' must be a non-empty string"
+      );
     });
 
     it('should reject invalid category values', () => {
@@ -1335,7 +1343,7 @@ describe('DebugLoggingConfigValidator', () => {
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain(
-        'Category \'\' for path \'src/actions\' must be a non-empty string'
+        "Category '' for path 'src/actions' must be a non-empty string"
       );
     });
 
@@ -1350,10 +1358,10 @@ describe('DebugLoggingConfigValidator', () => {
 
       expect(result.isValid).toBe(true);
       expect(result.warnings).toContain(
-        'Source path \'../suspicious/path\' contains suspicious characters'
+        "Source path '../suspicious/path' contains suspicious characters"
       );
       expect(result.warnings).toContain(
-        'Source path \'src\\windows\\path\' contains suspicious characters'
+        "Source path 'src\\windows\\path' contains suspicious characters"
       );
     });
 
@@ -1522,7 +1530,7 @@ describe('DebugLoggingConfigValidator', () => {
 
       expect(result.isValid).toBe(true);
       expect(result.warnings).toContain(
-        'Fallback category \'nonexistent\' is not configured in categories'
+        "Fallback category 'nonexistent' is not configured in categories"
       );
     });
 

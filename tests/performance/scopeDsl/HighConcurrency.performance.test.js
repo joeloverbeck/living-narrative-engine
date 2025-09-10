@@ -549,7 +549,7 @@ describe('High Concurrency Performance - Optimized', () => {
       // Warmup cycles to stabilize performance (not included in metrics)
       const warmupCycles = 3;
       const concurrentOps = 30;
-      
+
       for (let warmup = 0; warmup < warmupCycles; warmup++) {
         await measureConcurrentPerformance(
           'perf-concurrency:moderate_filter',

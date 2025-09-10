@@ -122,8 +122,6 @@ export class ActionIndex {
       }
     }
 
-
-    
     this.#logger.debug(
       `Action index built. ${this.#byActorComponent.size} component-to-action maps created.`
     );
@@ -201,28 +199,34 @@ export class ActionIndex {
     // but we need to ensure actor has ALL required components
     const candidates = Array.from(candidateSet).filter((action) => {
       const requiredActorComponents = action.required_components?.actor;
-      
+
       // If no required components or empty array, include the action
-      if (!requiredActorComponents || !Array.isArray(requiredActorComponents) || requiredActorComponents.length === 0) {
+      if (
+        !requiredActorComponents ||
+        !Array.isArray(requiredActorComponents) ||
+        requiredActorComponents.length === 0
+      ) {
         return true;
       }
-      
+
       // Check if actor has ALL required components
-      const hasAllRequired = requiredActorComponents.every((componentType) => 
+      const hasAllRequired = requiredActorComponents.every((componentType) =>
         actorComponentTypes.includes(componentType)
       );
-      
+
       if (!hasAllRequired) {
         trace?.info(
           `Excluding action '${action.id}' - actor missing required components.`,
           source,
-          { 
+          {
             required: requiredActorComponents,
-            actorHas: actorComponentTypes.filter(c => requiredActorComponents.includes(c))
+            actorHas: actorComponentTypes.filter((c) =>
+              requiredActorComponents.includes(c)
+            ),
           }
         );
       }
-      
+
       return hasAllRequired;
     });
 
@@ -235,7 +239,6 @@ export class ActionIndex {
     this.#logger.debug(
       `ActionIndex: Retrieved ${candidates.length} candidate actions for actor ${actorEntity.id}.`
     );
-
 
     return candidates;
   }

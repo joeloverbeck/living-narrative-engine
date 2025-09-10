@@ -290,11 +290,13 @@ export class EntityLifecycleManager {
           {
             entityId: entity.id,
             componentTypeIds: entity.componentTypeIds,
-            hasAllowsSitting: entity.componentTypeIds?.includes('positioning:allows_sitting')
+            hasAllowsSitting: entity.componentTypeIds?.includes(
+              'positioning:allows_sitting'
+            ),
           }
         );
       }
-      
+
       // Add to repository
       this.#entityRepository.add(entity);
 
@@ -329,11 +331,13 @@ export class EntityLifecycleManager {
           {
             entityId: entity.id,
             componentTypeIds: entity.componentTypeIds,
-            hasAllowsSitting: entity.componentTypeIds?.includes('positioning:allows_sitting')
+            hasAllowsSitting: entity.componentTypeIds?.includes(
+              'positioning:allows_sitting'
+            ),
           }
         );
       }
-      
+
       // Add to repository
       this.#entityRepository.add(entity);
 

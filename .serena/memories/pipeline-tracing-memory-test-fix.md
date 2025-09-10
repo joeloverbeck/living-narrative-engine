@@ -1,15 +1,19 @@
 # Pipeline Tracing Memory Test Fix
 
 ## Issue
+
 Flaky memory tests in `tests/memory/actions/tracing/PipelineTracingIntegration.memory.test.js` at lines 72:43 and 177:27.
 
 ## Root Cause
+
 The flakiness was due to overly strict memory thresholds that didn't account for:
-1. Mock test bed overhead 
+
+1. Mock test bed overhead
 2. Non-deterministic garbage collection timing
 3. Complex pipeline tracing mock structures
 
 ## Solution Applied
+
 1. **Increased base thresholds** in `tests/e2e/tracing/fixtures/pipelineTracingTestActions.js`:
    - MAX_MEMORY_MB: 150 → 200
    - MEMORY_GROWTH_LIMIT_MB: 10 → 15
@@ -25,4 +29,5 @@ The flakiness was due to overly strict memory thresholds that didn't account for
    - Cleared all references to help garbage collection
 
 ## Result
+
 Tests now pass consistently without flakiness. The issue was test-related, not a production code problem.

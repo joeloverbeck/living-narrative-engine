@@ -29,7 +29,9 @@ describe('handle_brush_hand rule integration', () => {
     // Test that the condition works correctly
     const condition = eventIsActionBrushHand.logic;
     const mockLogger = createMockLogger();
-    const jsonLogicService = new JsonLogicEvaluationService({ logger: mockLogger });
+    const jsonLogicService = new JsonLogicEvaluationService({
+      logger: mockLogger,
+    });
 
     // Check what the condition expects
     expect(condition).toEqual({
@@ -60,7 +62,7 @@ describe('handle_brush_hand rule integration', () => {
 
   it('performs brush hand action successfully', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Beth'], {
-      location: 'room1'
+      location: 'room1',
     });
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
@@ -77,7 +79,7 @@ describe('handle_brush_hand rule integration', () => {
 
   it('perceptible event contains correct message', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Beth'], {
-      location: 'room1'
+      location: 'room1',
     });
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
@@ -86,13 +88,13 @@ describe('handle_brush_hand rule integration', () => {
       descriptionText: "Alice brushes Beth's hand with their own.",
       locationId: 'room1',
       actorId: scenario.actor.id,
-      targetId: scenario.target.id
+      targetId: scenario.target.id,
     });
   });
 
   it('rule does not fire for different action', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Beth'], {
-      location: 'room1'
+      location: 'room1',
     });
 
     // Try with a different action
@@ -109,9 +111,12 @@ describe('handle_brush_hand rule integration', () => {
   });
 
   it('works with multiple actors in location', async () => {
-    const scenario = testFixture.createMultiActorScenario(['Alice', 'Beth', 'Charlie'], {
-      location: 'room1'
-    });
+    const scenario = testFixture.createMultiActorScenario(
+      ['Alice', 'Beth', 'Charlie'],
+      {
+        location: 'room1',
+      }
+    );
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -127,7 +132,7 @@ describe('handle_brush_hand rule integration', () => {
 
   it('works with different actor and target names', async () => {
     const scenario = testFixture.createCloseActors(['John', 'Mary'], {
-      location: 'room1'
+      location: 'room1',
     });
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);

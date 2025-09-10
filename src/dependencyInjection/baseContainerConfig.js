@@ -174,7 +174,10 @@ export async function configureBaseContainer(container, options = {}) {
     registerEventBusAdapters(container);
 
     // Register action categorization services
-    if (logger) logger.debug('[BaseContainerConfig] Registering action categorization services...');
+    if (logger)
+      logger.debug(
+        '[BaseContainerConfig] Registering action categorization services...'
+      );
     try {
       registerActionCategorization(container);
     } catch (error) {

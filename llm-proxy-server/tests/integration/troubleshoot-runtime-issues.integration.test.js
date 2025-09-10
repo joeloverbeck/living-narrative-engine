@@ -20,7 +20,7 @@ describe('Runtime Troubleshooting Issues - Integration Tests', () => {
     it('should correctly report LLM configuration count in server startup', async () => {
       // This test verifies the fix for server.js:456
       // The issue was accessing llmConfigs.llms instead of llmConfigs.configs
-      
+
       // Mock the LLM configuration service to avoid file system dependencies
       const { LlmConfigService } = await import(
         '../../src/config/llmConfigService.js'
@@ -36,19 +36,19 @@ describe('Runtime Troubleshooting Issues - Integration Tests', () => {
             config2: { configId: 'config2', displayName: 'Config 2' },
             config3: { configId: 'config3', displayName: 'Config 3' },
             config4: { configId: 'config4', displayName: 'Config 4' },
-          }
-        }
+          },
+        },
       }));
 
       // Mock file system reader (not used with mocked loader, but required for constructor)
       const mockFileSystemReader = {
         readFile: jest.fn(),
-        existsSync: jest.fn(() => true)
+        existsSync: jest.fn(() => true),
       };
 
       // Mock app config service to return a valid (non-existent) path
       const mockAppConfig = {
-        getLlmConfigPath: () => '/mock/config/llm-configs.json'
+        getLlmConfigPath: () => '/mock/config/llm-configs.json',
       };
 
       const llmConfigService = new LlmConfigService(
@@ -71,7 +71,7 @@ describe('Runtime Troubleshooting Issues - Integration Tests', () => {
       const configCount = Object.keys(llmConfigs.configs).length;
       expect(configCount).toBe(4);
       expect(configCount).toBeGreaterThan(0);
-      
+
       // Verify the mock loader was called
       expect(mockLoader).toHaveBeenCalledTimes(1);
     });
@@ -85,9 +85,8 @@ describe('Runtime Troubleshooting Issues - Integration Tests', () => {
       // - Health check was calling cacheService.size() but method is cacheService.getSize()
       // - Health check was calling cacheService.getMemoryUsage() but method is cacheService.getMemoryInfo()
 
-      const CacheService = (
-        await import('../../src/services/cacheService.js')
-      ).default;
+      const CacheService = (await import('../../src/services/cacheService.js'))
+        .default;
 
       const mockLogger = {
         debug: jest.fn(),
@@ -120,19 +119,20 @@ describe('Runtime Troubleshooting Issues - Integration Tests', () => {
     it('should have correct API key path configuration', () => {
       // Mock the app config service to avoid dependency on .env file
       // This test verifies that the path configuration logic works correctly
-      
+
       const mockAppConfigService = {
-        getProxyProjectRootPathForApiKeyFiles: () => 
-          '/home/user/projects/living-narrative-engine/.private/api-keys'
+        getProxyProjectRootPathForApiKeyFiles: () =>
+          '/home/user/projects/living-narrative-engine/.private/api-keys',
       };
 
-      const apiKeyPath = mockAppConfigService.getProxyProjectRootPathForApiKeyFiles();
+      const apiKeyPath =
+        mockAppConfigService.getProxyProjectRootPathForApiKeyFiles();
 
       expect(apiKeyPath).toBeDefined();
       expect(apiKeyPath).not.toBe('/path/to/secure/api_key_files_on_server'); // Should not be placeholder
       expect(apiKeyPath).toContain('.private/api-keys'); // Should point to real path
       expect(apiKeyPath).toContain('living-narrative-engine'); // Should be in project
-      
+
       // Additional verification that the mocked path matches expected structure
       expect(typeof apiKeyPath).toBe('string');
       expect(apiKeyPath.length).toBeGreaterThan(0);

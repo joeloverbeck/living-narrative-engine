@@ -18,7 +18,7 @@ import { SimpleEntityManager } from '../../../common/entities/index.js';
 import { createMockLogger } from '../../../common/mockFactories.js';
 
 // Constants
-import { 
+import {
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
 } from '../../../../src/constants/componentIds.js';
@@ -35,28 +35,32 @@ describe('Kissing-Positioning Conflict - Integration', () => {
     logger = createMockLogger();
     eventBus = new EventBus({ logger });
     entityManager = new SimpleEntityManager([]);
-    
+
     // Setup operation registry with handlers
     operationRegistry = new OperationRegistry({ logger });
-    
+
     const lockHandler = new LockMouthEngagementHandler({
       logger,
       entityManager,
-      safeEventDispatcher: eventBus
+      safeEventDispatcher: eventBus,
     });
-    operationRegistry.register('LOCK_MOUTH_ENGAGEMENT', (...args) => lockHandler.execute(...args));
-    
+    operationRegistry.register('LOCK_MOUTH_ENGAGEMENT', (...args) =>
+      lockHandler.execute(...args)
+    );
+
     const unlockHandler = new UnlockMouthEngagementHandler({
       logger,
       entityManager,
-      safeEventDispatcher: eventBus
+      safeEventDispatcher: eventBus,
     });
-    operationRegistry.register('UNLOCK_MOUTH_ENGAGEMENT', (...args) => unlockHandler.execute(...args));
-    
+    operationRegistry.register('UNLOCK_MOUTH_ENGAGEMENT', (...args) =>
+      unlockHandler.execute(...args)
+    );
+
     // Initialize operation interpreter
     operationInterpreter = new OperationInterpreter({
       logger,
-      operationRegistry
+      operationRegistry,
     });
   });
 
@@ -73,40 +77,42 @@ describe('Kissing-Positioning Conflict - Integration', () => {
   async function createTestActorWithMouth(id, name) {
     await entityManager.createEntity(id);
     await entityManager.addComponent(id, NAME_COMPONENT_ID, { text: name });
-    await entityManager.addComponent(id, POSITION_COMPONENT_ID, { locationId: 'room1' });
-    
+    await entityManager.addComponent(id, POSITION_COMPONENT_ID, {
+      locationId: 'room1',
+    });
+
     // Add anatomy with mouth (following the existing test pattern)
     await entityManager.addComponent(id, 'anatomy:body', {
       body: {
         root: 'torso_1',
-        parts: { mouth: `${id}_mouth` }
-      }
+        parts: { mouth: `${id}_mouth` },
+      },
     });
-    
+
     // Create mouth part entity with components expected by mouth engagement handlers
     const mouthId = `${id}_mouth`;
     await entityManager.createEntity(mouthId);
     await entityManager.addComponent(mouthId, 'anatomy:part', {
-      subType: 'mouth'
+      subType: 'mouth',
     });
     await entityManager.addComponent(mouthId, 'anatomy:sockets', {
       sockets: [
         {
           id: 'teeth',
           allowedTypes: ['teeth'],
-          nameTpl: '{{type}}'
-        }
-      ]
+          nameTpl: '{{type}}',
+        },
+      ],
     });
     await entityManager.addComponent(mouthId, 'core:name', {
-      text: 'mouth'
+      text: 'mouth',
     });
     // This component is what the lock handler expects
     await entityManager.addComponent(mouthId, 'core:mouth_engagement', {
       locked: false,
-      forcedOverride: false
+      forcedOverride: false,
     });
-    
+
     return id;
   }
 
@@ -125,34 +131,40 @@ describe('Kissing-Positioning Conflict - Integration', () => {
     // Step 1: Simulate adding kissing components (what the rule would do)
     await entityManager.addComponent(actor1Id, 'intimacy:kissing', {
       partner: actor2Id,
-      initiator: true
+      initiator: true,
     });
     await entityManager.addComponent(actor2Id, 'intimacy:kissing', {
       partner: actor1Id,
-      initiator: false
+      initiator: false,
     });
 
     // Step 2: Lock mouth engagement (what the updated rules now do)
     const context1 = {
       evaluationContext: { actor: { id: actor1Id } },
       entityManager,
-      logger
+      logger,
     };
     const context2 = {
       evaluationContext: { actor: { id: actor2Id } },
       entityManager,
-      logger
+      logger,
     };
 
-    await operationInterpreter.execute({
-      type: 'LOCK_MOUTH_ENGAGEMENT',
-      parameters: { actor_id: actor1Id }
-    }, context1);
+    await operationInterpreter.execute(
+      {
+        type: 'LOCK_MOUTH_ENGAGEMENT',
+        parameters: { actor_id: actor1Id },
+      },
+      context1
+    );
 
-    await operationInterpreter.execute({
-      type: 'LOCK_MOUTH_ENGAGEMENT',
-      parameters: { actor_id: actor2Id }
-    }, context2);
+    await operationInterpreter.execute(
+      {
+        type: 'LOCK_MOUTH_ENGAGEMENT',
+        parameters: { actor_id: actor2Id },
+      },
+      context2
+    );
 
     return { context1, context2 };
   }
@@ -160,17 +172,28 @@ describe('Kissing-Positioning Conflict - Integration', () => {
   /**
    * Helper function to simulate kiss end workflow
    */
-  async function simulateKissEndWorkflow(actor1Id, actor2Id, context1, context2) {
+  async function simulateKissEndWorkflow(
+    actor1Id,
+    actor2Id,
+    context1,
+    context2
+  ) {
     // Unlock mouth engagement (what the updated kiss end rules now do)
-    await operationInterpreter.execute({
-      type: 'UNLOCK_MOUTH_ENGAGEMENT',
-      parameters: { actor_id: actor1Id }
-    }, context1);
+    await operationInterpreter.execute(
+      {
+        type: 'UNLOCK_MOUTH_ENGAGEMENT',
+        parameters: { actor_id: actor1Id },
+      },
+      context1
+    );
 
-    await operationInterpreter.execute({
-      type: 'UNLOCK_MOUTH_ENGAGEMENT',
-      parameters: { actor_id: actor2Id }
-    }, context2);
+    await operationInterpreter.execute(
+      {
+        type: 'UNLOCK_MOUTH_ENGAGEMENT',
+        parameters: { actor_id: actor2Id },
+      },
+      context2
+    );
 
     // Remove kissing components (what the rule would do)
     entityManager.removeComponent(actor1Id, 'intimacy:kissing');
@@ -181,17 +204,26 @@ describe('Kissing-Positioning Conflict - Integration', () => {
     it('should lock and unlock mouths during kiss lifecycle', async () => {
       const actor1Id = await createTestActorWithMouth('alice', 'Alice');
       const actor2Id = await createTestActorWithMouth('bob', 'Bob');
-      
+
       // Initially both mouths should be unlocked
       expect(isMouthLocked(actor1Id)).toBe(false);
       expect(isMouthLocked(actor2Id)).toBe(false);
 
       // Simulate kiss start workflow
-      const { context1, context2 } = await simulateKissWorkflow(actor1Id, actor2Id);
+      const { context1, context2 } = await simulateKissWorkflow(
+        actor1Id,
+        actor2Id
+      );
 
       // Verify kiss established and mouths locked
-      const kissing1 = entityManager.getComponentData(actor1Id, 'intimacy:kissing');
-      const kissing2 = entityManager.getComponentData(actor2Id, 'intimacy:kissing');
+      const kissing1 = entityManager.getComponentData(
+        actor1Id,
+        'intimacy:kissing'
+      );
+      const kissing2 = entityManager.getComponentData(
+        actor2Id,
+        'intimacy:kissing'
+      );
       expect(kissing1.partner).toBe(actor2Id);
       expect(kissing2.partner).toBe(actor1Id);
       expect(isMouthLocked(actor1Id)).toBe(true);
@@ -201,8 +233,12 @@ describe('Kissing-Positioning Conflict - Integration', () => {
       await simulateKissEndWorkflow(actor1Id, actor2Id, context1, context2);
 
       // Verify kiss ended and mouths unlocked
-      expect(entityManager.getComponentData(actor1Id, 'intimacy:kissing')).toBeNull();
-      expect(entityManager.getComponentData(actor2Id, 'intimacy:kissing')).toBeNull();
+      expect(
+        entityManager.getComponentData(actor1Id, 'intimacy:kissing')
+      ).toBeNull();
+      expect(
+        entityManager.getComponentData(actor2Id, 'intimacy:kissing')
+      ).toBeNull();
       expect(isMouthLocked(actor1Id)).toBe(false);
       expect(isMouthLocked(actor2Id)).toBe(false);
     });
@@ -213,7 +249,10 @@ describe('Kissing-Positioning Conflict - Integration', () => {
       const actor2Id = await createTestActorWithMouth('test2', 'TestActor2');
 
       // Start kiss workflow
-      const { context1, context2 } = await simulateKissWorkflow(actor1Id, actor2Id);
+      const { context1, context2 } = await simulateKissWorkflow(
+        actor1Id,
+        actor2Id
+      );
 
       // Verify locked
       expect(isMouthLocked(actor1Id)).toBe(true);
@@ -228,51 +267,78 @@ describe('Kissing-Positioning Conflict - Integration', () => {
     });
 
     it('should handle interrupted kiss scenarios', async () => {
-      const actor1Id = await createTestActorWithMouth('interrupted1', 'InterruptedActor1');
-      const actor2Id = await createTestActorWithMouth('interrupted2', 'InterruptedActor2');
+      const actor1Id = await createTestActorWithMouth(
+        'interrupted1',
+        'InterruptedActor1'
+      );
+      const actor2Id = await createTestActorWithMouth(
+        'interrupted2',
+        'InterruptedActor2'
+      );
 
       // Start kiss workflow
-      const { context1, context2 } = await simulateKissWorkflow(actor1Id, actor2Id);
+      const { context1, context2 } = await simulateKissWorkflow(
+        actor1Id,
+        actor2Id
+      );
 
       // Verify kiss established
       expect(isMouthLocked(actor1Id)).toBe(true);
       expect(isMouthLocked(actor2Id)).toBe(true);
-      
+
       // Simulate abrupt kiss interruption (only unlock one actor's mouth)
-      await operationInterpreter.execute({
-        type: 'UNLOCK_MOUTH_ENGAGEMENT',
-        parameters: { actor_id: actor1Id }
-      }, context1);
-      
+      await operationInterpreter.execute(
+        {
+          type: 'UNLOCK_MOUTH_ENGAGEMENT',
+          parameters: { actor_id: actor1Id },
+        },
+        context1
+      );
+
       // Verify partial unlock state
       expect(isMouthLocked(actor1Id)).toBe(false);
       expect(isMouthLocked(actor2Id)).toBe(true);
-      
+
       // Complete the cleanup
-      await operationInterpreter.execute({
-        type: 'UNLOCK_MOUTH_ENGAGEMENT',
-        parameters: { actor_id: actor2Id }
-      }, context2);
-      
+      await operationInterpreter.execute(
+        {
+          type: 'UNLOCK_MOUTH_ENGAGEMENT',
+          parameters: { actor_id: actor2Id },
+        },
+        context2
+      );
+
       entityManager.removeComponent(actor1Id, 'intimacy:kissing');
       entityManager.removeComponent(actor2Id, 'intimacy:kissing');
-      
+
       // Verify final clean state
       expect(isMouthLocked(actor1Id)).toBe(false);
       expect(isMouthLocked(actor2Id)).toBe(false);
     });
 
     it('should maintain kiss component state during mouth lock operations', async () => {
-      const actor1Id = await createTestActorWithMouth('state_test1', 'StateTestActor1');
-      const actor2Id = await createTestActorWithMouth('state_test2', 'StateTestActor2');
+      const actor1Id = await createTestActorWithMouth(
+        'state_test1',
+        'StateTestActor1'
+      );
+      const actor2Id = await createTestActorWithMouth(
+        'state_test2',
+        'StateTestActor2'
+      );
 
       // Start kiss workflow
       await simulateKissWorkflow(actor1Id, actor2Id);
 
       // Verify kissing components remain intact throughout mouth locking
-      let kissing1 = entityManager.getComponentData(actor1Id, 'intimacy:kissing');
-      let kissing2 = entityManager.getComponentData(actor2Id, 'intimacy:kissing');
-      
+      let kissing1 = entityManager.getComponentData(
+        actor1Id,
+        'intimacy:kissing'
+      );
+      let kissing2 = entityManager.getComponentData(
+        actor2Id,
+        'intimacy:kissing'
+      );
+
       expect(kissing1).toBeTruthy();
       expect(kissing2).toBeTruthy();
       expect(kissing1.partner).toBe(actor2Id);
@@ -288,28 +354,34 @@ describe('Kissing-Positioning Conflict - Integration', () => {
       const context1 = {
         evaluationContext: { actor: { id: actor1Id } },
         entityManager,
-        logger
+        logger,
       };
       const context2 = {
         evaluationContext: { actor: { id: actor2Id } },
         entityManager,
-        logger
+        logger,
       };
 
-      await operationInterpreter.execute({
-        type: 'UNLOCK_MOUTH_ENGAGEMENT',
-        parameters: { actor_id: actor1Id }
-      }, context1);
+      await operationInterpreter.execute(
+        {
+          type: 'UNLOCK_MOUTH_ENGAGEMENT',
+          parameters: { actor_id: actor1Id },
+        },
+        context1
+      );
 
-      await operationInterpreter.execute({
-        type: 'UNLOCK_MOUTH_ENGAGEMENT',
-        parameters: { actor_id: actor2Id }
-      }, context2);
+      await operationInterpreter.execute(
+        {
+          type: 'UNLOCK_MOUTH_ENGAGEMENT',
+          parameters: { actor_id: actor2Id },
+        },
+        context2
+      );
 
       // Verify kissing components still exist while mouths are unlocked
       kissing1 = entityManager.getComponentData(actor1Id, 'intimacy:kissing');
       kissing2 = entityManager.getComponentData(actor2Id, 'intimacy:kissing');
-      
+
       expect(kissing1).toBeTruthy();
       expect(kissing2).toBeTruthy();
       expect(isMouthLocked(actor1Id)).toBe(false);
@@ -332,21 +404,24 @@ describe('Kissing-Positioning Conflict - Integration', () => {
 
       // Charlie should have unlocked mouth
       expect(isMouthLocked(charlieId)).toBe(false);
-      
+
       // Charlie should be able to have independent mouth state changes
       const charlieContext = {
         evaluationContext: { actor: { id: charlieId } },
         entityManager,
-        logger
+        logger,
       };
-      
-      await operationInterpreter.execute({
-        type: 'LOCK_MOUTH_ENGAGEMENT',
-        parameters: { actor_id: charlieId }
-      }, charlieContext);
-      
+
+      await operationInterpreter.execute(
+        {
+          type: 'LOCK_MOUTH_ENGAGEMENT',
+          parameters: { actor_id: charlieId },
+        },
+        charlieContext
+      );
+
       expect(isMouthLocked(charlieId)).toBe(true);
-      
+
       // Alice and Bob should still be locked from their kiss
       expect(isMouthLocked(aliceId)).toBe(true);
       expect(isMouthLocked(bobId)).toBe(true);
@@ -360,8 +435,10 @@ describe('Kissing-Positioning Conflict - Integration', () => {
       const bob2Id = await createTestActorWithMouth('bob2', 'Bob2');
 
       // Simulate two concurrent kisses
-      const { context1: context1A, context2: context1B } = await simulateKissWorkflow(alice1Id, bob1Id);
-      const { context1: context2A, context2: context2B } = await simulateKissWorkflow(alice2Id, bob2Id);
+      const { context1: context1A, context2: context1B } =
+        await simulateKissWorkflow(alice1Id, bob1Id);
+      const { context1: context2A, context2: context2B } =
+        await simulateKissWorkflow(alice2Id, bob2Id);
 
       // All actors should have locked mouths
       expect(isMouthLocked(alice1Id)).toBe(true);
@@ -404,10 +481,22 @@ describe('Kissing-Positioning Conflict - Integration', () => {
       expect(isMouthLocked(pair2Actor2)).toBe(false);
 
       // Verify kissing components are separate
-      const p1a1Kissing = entityManager.getComponentData(pair1Actor1, 'intimacy:kissing');
-      const p1a2Kissing = entityManager.getComponentData(pair1Actor2, 'intimacy:kissing');
-      const p2a1Kissing = entityManager.getComponentData(pair2Actor1, 'intimacy:kissing');
-      const p2a2Kissing = entityManager.getComponentData(pair2Actor2, 'intimacy:kissing');
+      const p1a1Kissing = entityManager.getComponentData(
+        pair1Actor1,
+        'intimacy:kissing'
+      );
+      const p1a2Kissing = entityManager.getComponentData(
+        pair1Actor2,
+        'intimacy:kissing'
+      );
+      const p2a1Kissing = entityManager.getComponentData(
+        pair2Actor1,
+        'intimacy:kissing'
+      );
+      const p2a2Kissing = entityManager.getComponentData(
+        pair2Actor2,
+        'intimacy:kissing'
+      );
 
       expect(p1a1Kissing).toBeTruthy();
       expect(p1a2Kissing).toBeTruthy();
@@ -427,22 +516,31 @@ describe('Kissing-Positioning Conflict - Integration', () => {
       // Multiple rapid kiss cycles
       for (let i = 0; i < 3; i++) {
         // Start kiss
-        const { context1, context2 } = await simulateKissWorkflow(actor1Id, actor2Id);
-        
+        const { context1, context2 } = await simulateKissWorkflow(
+          actor1Id,
+          actor2Id
+        );
+
         expect(isMouthLocked(actor1Id)).toBe(true);
         expect(isMouthLocked(actor2Id)).toBe(true);
-        
+
         // End kiss
         await simulateKissEndWorkflow(actor1Id, actor2Id, context1, context2);
-        
+
         expect(isMouthLocked(actor1Id)).toBe(false);
         expect(isMouthLocked(actor2Id)).toBe(false);
       }
     });
 
     it('should maintain data consistency through workflow transitions', async () => {
-      const actor1Id = await createTestActorWithMouth('consistency1', 'ConsistencyActor1');
-      const actor2Id = await createTestActorWithMouth('consistency2', 'ConsistencyActor2');
+      const actor1Id = await createTestActorWithMouth(
+        'consistency1',
+        'ConsistencyActor1'
+      );
+      const actor2Id = await createTestActorWithMouth(
+        'consistency2',
+        'ConsistencyActor2'
+      );
 
       // Get initial mouth part data
       const initialMouthParts1 = getMouthParts(entityManager, actor1Id);
@@ -452,7 +550,10 @@ describe('Kissing-Positioning Conflict - Integration', () => {
       expect(initialMouthParts2).toHaveLength(1);
 
       // Start kiss workflow
-      const { context1, context2 } = await simulateKissWorkflow(actor1Id, actor2Id);
+      const { context1, context2 } = await simulateKissWorkflow(
+        actor1Id,
+        actor2Id
+      );
 
       // Verify mouth part structure remains intact
       const lockedMouthParts1 = getMouthParts(entityManager, actor1Id);
@@ -460,8 +561,12 @@ describe('Kissing-Positioning Conflict - Integration', () => {
 
       expect(lockedMouthParts1).toHaveLength(1);
       expect(lockedMouthParts2).toHaveLength(1);
-      expect(lockedMouthParts1[0].partComponent).toEqual(initialMouthParts1[0].partComponent);
-      expect(lockedMouthParts2[0].partComponent).toEqual(initialMouthParts2[0].partComponent);
+      expect(lockedMouthParts1[0].partComponent).toEqual(
+        initialMouthParts1[0].partComponent
+      );
+      expect(lockedMouthParts2[0].partComponent).toEqual(
+        initialMouthParts2[0].partComponent
+      );
 
       // End kiss workflow
       await simulateKissEndWorkflow(actor1Id, actor2Id, context1, context2);
@@ -472,53 +577,77 @@ describe('Kissing-Positioning Conflict - Integration', () => {
 
       expect(finalMouthParts1).toHaveLength(1);
       expect(finalMouthParts2).toHaveLength(1);
-      expect(finalMouthParts1[0].partComponent).toEqual(initialMouthParts1[0].partComponent);
-      expect(finalMouthParts2[0].partComponent).toEqual(initialMouthParts2[0].partComponent);
+      expect(finalMouthParts1[0].partComponent).toEqual(
+        initialMouthParts1[0].partComponent
+      );
+      expect(finalMouthParts2[0].partComponent).toEqual(
+        initialMouthParts2[0].partComponent
+      );
     });
   });
 
   describe('Error Recovery in Kiss Workflows', () => {
     it('should handle partial workflow failures gracefully', async () => {
-      const actor1Id = await createTestActorWithMouth('failure1', 'FailureActor1');
-      const actor2Id = await createTestActorWithMouth('failure2', 'FailureActor2');
+      const actor1Id = await createTestActorWithMouth(
+        'failure1',
+        'FailureActor1'
+      );
+      const actor2Id = await createTestActorWithMouth(
+        'failure2',
+        'FailureActor2'
+      );
 
       // Start kiss workflow but simulate failure after partial completion
       await entityManager.addComponent(actor1Id, 'intimacy:kissing', {
         partner: actor2Id,
-        initiator: true
+        initiator: true,
       });
-      
+
       // Only lock first actor's mouth (simulating partial failure)
       const context1 = {
         evaluationContext: { actor: { id: actor1Id } },
         entityManager,
-        logger
+        logger,
       };
-      
-      await operationInterpreter.execute({
-        type: 'LOCK_MOUTH_ENGAGEMENT',
-        parameters: { actor_id: actor1Id }
-      }, context1);
+
+      await operationInterpreter.execute(
+        {
+          type: 'LOCK_MOUTH_ENGAGEMENT',
+          parameters: { actor_id: actor1Id },
+        },
+        context1
+      );
 
       // Verify partial state
       expect(isMouthLocked(actor1Id)).toBe(true);
       expect(isMouthLocked(actor2Id)).toBe(false);
-      expect(entityManager.getComponentData(actor1Id, 'intimacy:kissing')).toBeTruthy();
-      expect(entityManager.getComponentData(actor2Id, 'intimacy:kissing')).toBeNull();
+      expect(
+        entityManager.getComponentData(actor1Id, 'intimacy:kissing')
+      ).toBeTruthy();
+      expect(
+        entityManager.getComponentData(actor2Id, 'intimacy:kissing')
+      ).toBeNull();
 
       // Recovery: complete the workflow or clean up
-      await operationInterpreter.execute({
-        type: 'UNLOCK_MOUTH_ENGAGEMENT',
-        parameters: { actor_id: actor1Id }
-      }, context1);
-      
+      await operationInterpreter.execute(
+        {
+          type: 'UNLOCK_MOUTH_ENGAGEMENT',
+          parameters: { actor_id: actor1Id },
+        },
+        context1
+      );
+
       entityManager.removeComponent(actor1Id, 'intimacy:kissing');
 
       // Verify clean recovery
       expect(isMouthLocked(actor1Id)).toBe(false);
       expect(isMouthLocked(actor2Id)).toBe(false);
-      expect(entityManager.getComponentData(actor1Id, 'intimacy:kissing')).toBeNull();
-      expect(entityManager.getComponentData(actor2Id, 'intimacy:kissing')).toBeNull();
+      expect(
+        entityManager.getComponentData(actor1Id, 'intimacy:kissing')
+      ).toBeNull();
+      expect(
+        entityManager.getComponentData(actor2Id, 'intimacy:kissing')
+      ).toBeNull();
     });
   });
 });

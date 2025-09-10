@@ -1,6 +1,6 @@
 /**
  * @file Runtime error reproduction test for TraitsRewriterGenerator
- * 
+ *
  * This test reproduces the actual runtime error that occurs when
  * TraitsRewriterGenerator incorrectly calls ConfigurableLLMAdapter.getAIDecision
  * with an object instead of a string as the first parameter.
@@ -57,23 +57,25 @@ describe('TraitsRewriterGenerator - Runtime Error Reproduction', () => {
 
     // Simulate the actual ConfigurableLLMAdapter.getAIDecision behavior
     // It expects a string as the first parameter (gameSummary)
-    mockLlmStrategyFactory.getAIDecision.mockImplementation(async (gameSummary, abortSignal, requestOptions) => {
-      // This mimics the actual validation in llmRequestExecutor.js
-      if (typeof gameSummary !== 'string') {
-        throw new Error('LLMRequestExecutor: gameSummary must be a string');
+    mockLlmStrategyFactory.getAIDecision.mockImplementation(
+      async (gameSummary, abortSignal, requestOptions) => {
+        // This mimics the actual validation in llmRequestExecutor.js
+        if (typeof gameSummary !== 'string') {
+          throw new Error('LLMRequestExecutor: gameSummary must be a string');
+        }
+
+        // Return a successful response if validation passes
+        return {
+          content: JSON.stringify({
+            characterName: 'Test Character',
+            rewrittenTraits: {
+              'core:personality': 'I am analytical and methodical...',
+            },
+            generatedAt: new Date().toISOString(),
+          }),
+        };
       }
-      
-      // Return a successful response if validation passes
-      return {
-        content: JSON.stringify({
-          characterName: 'Test Character',
-          rewrittenTraits: {
-            'core:personality': 'I am analytical and methodical...',
-          },
-          generatedAt: new Date().toISOString(),
-        }),
-      };
-    });
+    );
 
     mockLlmJsonService.parseAndRepair.mockImplementation((content) => {
       return JSON.parse(content);
@@ -113,23 +115,23 @@ describe('TraitsRewriterGenerator - Runtime Error Reproduction', () => {
 
       // After the fix, this should work correctly
       const result = await generator.generateRewrittenTraits(characterDef);
-      
+
       // Verify the result has the expected structure
       expect(result).toHaveProperty('characterName');
       expect(result).toHaveProperty('rewrittenTraits');
       expect(result.rewrittenTraits).toHaveProperty('core:personality');
-      
+
       // Verify that getAIDecision was called correctly (with string as first param)
       expect(mockLlmStrategyFactory.getAIDecision).toHaveBeenCalled();
-      
+
       // The first argument should now be a string (the prompt)
       const firstCallArgs = mockLlmStrategyFactory.getAIDecision.mock.calls[0];
       expect(typeof firstCallArgs[0]).toBe('string');
       expect(firstCallArgs[0]).toContain('Juan Mendarte'); // The prompt should contain the character name
-      
+
       // The second argument should be null (abort signal)
       expect(firstCallArgs[1]).toBeNull();
-      
+
       // The third argument should be the request options object
       expect(typeof firstCallArgs[2]).toBe('object');
       expect(firstCallArgs[2]).toHaveProperty('temperature');
@@ -147,22 +149,27 @@ describe('TraitsRewriterGenerator - Runtime Error Reproduction', () => {
           text: 'Spending time after work at home to be around Julen. Watching Julen bend over while cleaning. Traditional Spanish cooking.',
         },
         'core:dislikes': {
-          text: 'Julen showing any signs of independence. Reminders of María\'s argumentative nature.',
+          text: "Julen showing any signs of independence. Reminders of María's argumentative nature.",
         },
         'core:fears': {
           text: 'That Julen will mature enough to recognize the predatory nature of their relationship and leave him completely alone.',
         },
         'core:goals': {
           goals: [
-            { text: 'Gradually increase physical contact with Julen through seemingly innocent gestures.' },
-            { text: 'To get Julen used to serving Juan whenever the older man wants.' },
+            {
+              text: 'Gradually increase physical contact with Julen through seemingly innocent gestures.',
+            },
+            {
+              text: 'To get Julen used to serving Juan whenever the older man wants.',
+            },
           ],
         },
         'core:speech_patterns': {
           patterns: [
             {
               pattern: 'planning his manipulation strategies',
-              example: 'The boy just needs the right pressure applied... gentle but steady.',
+              example:
+                'The boy just needs the right pressure applied... gentle but steady.',
             },
           ],
         },
@@ -170,7 +177,7 @@ describe('TraitsRewriterGenerator - Runtime Error Reproduction', () => {
 
       // This should work without throwing the gameSummary error
       const result = await generator.generateRewrittenTraits(fullCharacterDef);
-      
+
       expect(result).toHaveProperty('characterName');
       expect(result).toHaveProperty('rewrittenTraits');
       expect(result.originalTraitCount).toBeGreaterThan(0);

@@ -71,7 +71,7 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
     const result = await fn();
     const endTime = process.hrtime.bigint();
     const duration = Number(endTime - startTime) / 1000000; // Convert to milliseconds
-    
+
     return { result, duration };
   }
 
@@ -175,12 +175,20 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
     });
 
     it('should handle category selection within performance baseline', async () => {
-      const categories = ['exercise', 'violence', 'intimacy', 'sex', 'positioning'];
-      
+      const categories = [
+        'exercise',
+        'violence',
+        'intimacy',
+        'sex',
+        'positioning',
+      ];
+
       const stats = await performanceTest(
         () => {
-          const randomCategory = categories[Math.floor(Math.random() * categories.length)];
-          const factoryMethod = ModTestHandlerFactory.getHandlerFactoryForCategory(randomCategory);
+          const randomCategory =
+            categories[Math.floor(Math.random() * categories.length)];
+          const factoryMethod =
+            ModTestHandlerFactory.getHandlerFactoryForCategory(randomCategory);
           return factoryMethod(entityManager, eventBus, logger);
         },
         {
@@ -279,9 +287,7 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
     it('should perform rule loading within performance baseline', async () => {
       fs.promises.access.mockResolvedValue();
       fs.promises.readFile.mockResolvedValue(
-        JSON.stringify([
-          { condition: '{"==": [1, 1]}', effects: [] },
-        ])
+        JSON.stringify([{ condition: '{"==": [1, 1]}', effects: [] }])
       );
 
       const stats = await performanceTest(
@@ -399,17 +405,21 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
           const mockEvents = [
             {
               eventType: 'core:display_successful_action_result',
-              payload: { message: 'Test success' }
+              payload: { message: 'Test success' },
             },
             {
               eventType: 'core:turn_ended',
-              payload: { success: true }
-            }
+              payload: { success: true },
+            },
           ];
-          return ModAssertionHelpers.assertActionSuccess(mockEvents, 'Test success', {
-            shouldEndTurn: true,
-            shouldHavePerceptibleEvent: false,
-          });
+          return ModAssertionHelpers.assertActionSuccess(
+            mockEvents,
+            'Test success',
+            {
+              shouldEndTurn: true,
+              shouldHavePerceptibleEvent: false,
+            }
+          );
         },
         {
           operation: 'ModAssertionHelpers.assertActionSuccess',
@@ -459,14 +469,14 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
                 locationId: 'test-location',
                 actorId: 'test-actor',
                 perceptionType: 'action_target_general',
-                involvedEntities: []
-              }
-            }
+                involvedEntities: [],
+              },
+            },
           ];
           return ModAssertionHelpers.assertPerceptibleEvent(mockEvents, {
             descriptionText: 'Test event',
             locationId: 'test-location',
-            actorId: 'test-actor'
+            actorId: 'test-actor',
           });
         },
         {
@@ -494,11 +504,11 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
           const mockEvents = [
             {
               eventType: 'core:display_successful_action_result',
-              payload: { message: 'Combined test success' }
+              payload: { message: 'Combined test success' },
             },
             {
               eventType: 'core:turn_ended',
-              payload: { success: true }
+              payload: { success: true },
             },
             {
               eventType: 'core:perceptible_event',
@@ -507,18 +517,22 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
                 locationId: 'test-location',
                 actorId: 'test-actor',
                 perceptionType: 'action_target_general',
-                involvedEntities: []
-              }
-            }
+                involvedEntities: [],
+              },
+            },
           ];
-          ModAssertionHelpers.assertActionSuccess(mockEvents, 'Combined test success', {
-            shouldEndTurn: true,
-            shouldHavePerceptibleEvent: false,
-          });
+          ModAssertionHelpers.assertActionSuccess(
+            mockEvents,
+            'Combined test success',
+            {
+              shouldEndTurn: true,
+              shouldHavePerceptibleEvent: false,
+            }
+          );
           return ModAssertionHelpers.assertPerceptibleEvent(mockEvents, {
             descriptionText: 'Combined test',
             locationId: 'test-location',
-            actorId: 'test-actor'
+            actorId: 'test-actor',
           });
         },
         {
@@ -555,7 +569,10 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
       const stats = await performanceTest(
         async () => {
           // Step 1: Load test data
-          const testData = await ModTestFixture.forAction('performance', 'workflow_test');
+          const testData = await ModTestFixture.forAction(
+            'performance',
+            'workflow_test'
+          );
 
           // Step 2: Create handlers
           const handlers = ModTestHandlerFactory.createStandardHandlers(
@@ -581,17 +598,21 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
           const mockEvents = [
             {
               eventType: 'core:display_successful_action_result',
-              payload: { message: 'Workflow test success' }
+              payload: { message: 'Workflow test success' },
             },
             {
               eventType: 'core:turn_ended',
-              payload: { success: true }
-            }
+              payload: { success: true },
+            },
           ];
-          ModAssertionHelpers.assertActionSuccess(mockEvents, 'Workflow test success', {
-            shouldEndTurn: true,
-            shouldHavePerceptibleEvent: false,
-          });
+          ModAssertionHelpers.assertActionSuccess(
+            mockEvents,
+            'Workflow test success',
+            {
+              shouldEndTurn: true,
+              shouldHavePerceptibleEvent: false,
+            }
+          );
 
           return { testData, handlers, entity };
         },
@@ -620,7 +641,11 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
           const concurrentOps = Array.from({ length: 5 }, (_, i) => {
             return Promise.all([
               ModTestFixture.forAction('concurrent', `test_${i}`),
-              ModTestHandlerFactory.createStandardHandlers(entityManager, eventBus, logger),
+              ModTestHandlerFactory.createStandardHandlers(
+                entityManager,
+                eventBus,
+                logger
+              ),
               new ModEntityBuilder(`concurrent-entity-${i}`)
                 .withName(`Concurrent Entity ${i}`)
                 .withComponent('core:actor', {})
@@ -651,7 +676,7 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
       if (global.gc) {
         global.gc();
       }
-      
+
       const initialMemory = process.memoryUsage();
 
       // Test entity creation and management memory usage
@@ -736,32 +761,50 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
     it('should establish baseline metrics for regression testing', async () => {
       const baselineMetrics = {
         handlerFactory: await performanceTest(
-          () => ModTestHandlerFactory.createStandardHandlers(entityManager, eventBus, logger),
-          { operation: 'Handler Factory Baseline', iterations: 500, maxDuration: 5 }
+          () =>
+            ModTestHandlerFactory.createStandardHandlers(
+              entityManager,
+              eventBus,
+              logger
+            ),
+          {
+            operation: 'Handler Factory Baseline',
+            iterations: 500,
+            maxDuration: 5,
+          }
         ),
         entityBuilder: await performanceTest(
-          () => new ModEntityBuilder('baseline-entity')
-            .withName('Baseline Entity')
-            .withComponent('core:actor', {})
-            .build(),
-          { operation: 'Entity Builder Baseline', iterations: 500, maxDuration: 3 }
+          () =>
+            new ModEntityBuilder('baseline-entity')
+              .withName('Baseline Entity')
+              .withComponent('core:actor', {})
+              .build(),
+          {
+            operation: 'Entity Builder Baseline',
+            iterations: 500,
+            maxDuration: 3,
+          }
         ),
         assertions: await performanceTest(
           () => {
             const mockEvents = [
               {
                 eventType: 'core:display_successful_action_result',
-                payload: { message: 'Baseline test success' }
+                payload: { message: 'Baseline test success' },
               },
               {
                 eventType: 'core:turn_ended',
-                payload: { success: true }
-              }
+                payload: { success: true },
+              },
             ];
-            return ModAssertionHelpers.assertActionSuccess(mockEvents, 'Baseline test success', { 
-              shouldEndTurn: true, 
-              shouldHavePerceptibleEvent: false 
-            });
+            return ModAssertionHelpers.assertActionSuccess(
+              mockEvents,
+              'Baseline test success',
+              {
+                shouldEndTurn: true,
+                shouldHavePerceptibleEvent: false,
+              }
+            );
           },
           { operation: 'Assertions Baseline', iterations: 500, maxDuration: 4 }
         ),
@@ -774,7 +817,7 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
         console.log(`    Mean: ${stats.mean}ms`);
         console.log(`    P95: ${stats.p95}ms`);
         console.log(`    P99: ${stats.p99}ms`);
-        
+
         // All baseline operations should be fast
         expect(stats.mean).toBeLessThan(stats.maxDuration);
         expect(stats.p95).toBeLessThan(stats.maxDuration * 2);
@@ -788,7 +831,7 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
         metrics: Object.fromEntries(
           Object.entries(baselineMetrics).map(([key, stats]) => [
             key,
-            { mean: stats.mean, p95: stats.p95, p99: stats.p99 }
+            { mean: stats.mean, p95: stats.p95, p99: stats.p99 },
           ])
         ),
       };

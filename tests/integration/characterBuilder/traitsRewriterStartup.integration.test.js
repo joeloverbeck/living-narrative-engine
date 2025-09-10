@@ -12,7 +12,7 @@ if (typeof window !== 'undefined') {
 }
 
 // Default successful response for all requests
-mockFetch.mockImplementation(() => 
+mockFetch.mockImplementation(() =>
   Promise.resolve({
     ok: true,
     json: async () => ({
@@ -35,12 +35,12 @@ class MockXMLHttpRequest {
     this.ontimeout = null;
     this.onabort = null;
   }
-  
+
   open() {
     // Do nothing - prevent actual connection
     this.readyState = 1;
   }
-  
+
   send() {
     // Simulate successful response
     this.readyState = 4;
@@ -49,7 +49,7 @@ class MockXMLHttpRequest {
       $id: 'schema://living-narrative-engine/test.json',
       type: 'object',
     });
-    
+
     // Trigger state change callback asynchronously
     setTimeout(() => {
       if (this.onreadystatechange) {
@@ -60,22 +60,22 @@ class MockXMLHttpRequest {
       }
     }, 0);
   }
-  
+
   setRequestHeader() {
     // Do nothing
   }
-  
+
   abort() {
     // Do nothing
     if (this.onabort) {
       this.onabort();
     }
   }
-  
+
   getAllResponseHeaders() {
     return '';
   }
-  
+
   getResponseHeader() {
     return null;
   }
@@ -113,7 +113,7 @@ describe('TraitsRewriter Application Startup', () => {
 
     // Reset fetch mock for each test
     mockFetch.mockClear();
-    
+
     // Re-apply default successful response for schema requests
     mockFetch.mockResolvedValue({
       ok: true,
@@ -183,11 +183,13 @@ describe('TraitsRewriter Application Startup', () => {
 
     // Filter out expected network-related errors from jsdom
     // These occur during test setup and are not actual application errors
-    const nonNetworkErrors = console.error.mock.calls.filter(call => {
+    const nonNetworkErrors = console.error.mock.calls.filter((call) => {
       const errorString = call[0]?.toString() || '';
-      return !errorString.includes('ECONNREFUSED') && 
-             !errorString.includes('connect') &&
-             !errorString.includes('XMLHttpRequest');
+      return (
+        !errorString.includes('ECONNREFUSED') &&
+        !errorString.includes('connect') &&
+        !errorString.includes('XMLHttpRequest')
+      );
     });
 
     // Verify no non-network errors were logged

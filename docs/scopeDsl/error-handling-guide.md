@@ -70,8 +70,8 @@ const errorHandler = new ScopeDslErrorHandler({
   logger: logger,
   config: {
     isDevelopment: process.env.NODE_ENV !== 'production',
-    maxBufferSize: 100
-  }
+    maxBufferSize: 100,
+  },
 });
 ```
 
@@ -85,10 +85,10 @@ try {
 } catch (error) {
   // Use error handler to process and re-throw standardized error
   errorHandler.handleError(
-    error,                      // Original error or message
-    context,                    // Resolution context for debugging
-    'MyResolver',              // Name of your resolver
-    ErrorCodes.SPECIFIC_ERROR  // Optional specific error code
+    error, // Original error or message
+    context, // Resolution context for debugging
+    'MyResolver', // Name of your resolver
+    ErrorCodes.SPECIFIC_ERROR // Optional specific error code
   );
 }
 ```
@@ -99,16 +99,16 @@ try {
 
 The error handler automatically categorizes errors based on message patterns:
 
-| Category | Pattern Keywords | Code Range |
-|----------|-----------------|------------|
-| `MISSING_CONTEXT` | missing, undefined, null | 1xxx |
-| `INVALID_DATA` | invalid, malformed, corrupt | 2xxx |
-| `RESOLUTION_FAILURE` | resolve, not found, failed | 3xxx |
-| `CYCLE_DETECTED` | cycle, circular | 4xxx |
-| `DEPTH_EXCEEDED` | depth, limit, exceed | 4xxx |
-| `PARSE_ERROR` | parse, syntax | 5xxx |
-| `CONFIGURATION` | config, setting, option | 6xxx |
-| `UNKNOWN` | (fallback) | 9xxx |
+| Category             | Pattern Keywords            | Code Range |
+| -------------------- | --------------------------- | ---------- |
+| `MISSING_CONTEXT`    | missing, undefined, null    | 1xxx       |
+| `INVALID_DATA`       | invalid, malformed, corrupt | 2xxx       |
+| `RESOLUTION_FAILURE` | resolve, not found, failed  | 3xxx       |
+| `CYCLE_DETECTED`     | cycle, circular             | 4xxx       |
+| `DEPTH_EXCEEDED`     | depth, limit, exceed        | 4xxx       |
+| `PARSE_ERROR`        | parse, syntax               | 5xxx       |
+| `CONFIGURATION`      | config, setting, option     | 6xxx       |
+| `UNKNOWN`            | (fallback)                  | 9xxx       |
 
 ### Using Specific Error Codes
 
@@ -121,7 +121,7 @@ if (!actorEntity) {
     'Actor entity missing from context',
     ctx,
     'FilterResolver',
-    ErrorCodes.MISSING_ACTOR  // SCOPE_1001
+    ErrorCodes.MISSING_ACTOR // SCOPE_1001
   );
 }
 
@@ -130,7 +130,7 @@ if (depth > MAX_DEPTH) {
     `Maximum depth ${MAX_DEPTH} exceeded`,
     ctx,
     'StepResolver',
-    ErrorCodes.MAX_DEPTH_EXCEEDED  // SCOPE_4002
+    ErrorCodes.MAX_DEPTH_EXCEEDED // SCOPE_4002
   );
 }
 ```
@@ -176,10 +176,10 @@ const errorHandler = new ScopeDslErrorHandler({
   config: {
     // Auto-detects by default, or explicitly set
     isDevelopment: process.env.NODE_ENV !== 'production',
-    
+
     // Buffer size for error analysis (default: 100)
-    maxBufferSize: 100
-  }
+    maxBufferSize: 100,
+  },
 });
 ```
 
@@ -190,18 +190,22 @@ const errorHandler = new ScopeDslErrorHandler({
 ```javascript
 export default function createMyResolver({
   // Other dependencies...
-  errorHandler = null  // Optional for backward compatibility
+  errorHandler = null, // Optional for backward compatibility
 }) {
   // Validate if provided
   if (errorHandler) {
     validateDependency(errorHandler, 'IScopeDslErrorHandler', console, {
-      requiredMethods: ['handleError', 'getErrorBuffer']
+      requiredMethods: ['handleError', 'getErrorBuffer'],
     });
   }
-  
+
   return {
-    canResolve(node) { /* ... */ },
-    resolve(node, ctx) { /* ... */ }
+    canResolve(node) {
+      /* ... */
+    },
+    resolve(node, ctx) {
+      /* ... */
+    },
   };
 }
 ```
@@ -224,7 +228,7 @@ resolve(node, ctx) {
       throw new Error('Actor entity is required');
     }
   }
-  
+
   try {
     // Main resolution logic
     const result = performResolution(node, ctx);
@@ -249,7 +253,7 @@ resolve(node, ctx) {
 ```javascript
 function determineErrorCode(error) {
   const message = error.message.toLowerCase();
-  
+
   if (message.includes('not found')) {
     return ErrorCodes.RESOLUTION_FAILED_GENERIC;
   }
@@ -259,7 +263,7 @@ function determineErrorCode(error) {
   if (message.includes('cycle')) {
     return ErrorCodes.CYCLE_DETECTED;
   }
-  
+
   return ErrorCodes.UNKNOWN_ERROR;
 }
 ```
@@ -299,22 +303,20 @@ errorHandler.clearErrorBuffer();
 // In a debug endpoint or test
 function analyzeErrors() {
   const errors = errorHandler.getErrorBuffer();
-  
+
   // Find most common error
   const errorCounts = {};
-  errors.forEach(e => {
+  errors.forEach((e) => {
     errorCounts[e.code] = (errorCounts[e.code] || 0) + 1;
   });
-  
+
   // Identify patterns
-  const contextErrors = errors.filter(e => 
-    e.category === 'missing_context'
-  );
-  
+  const contextErrors = errors.filter((e) => e.category === 'missing_context');
+
   return {
     total: errors.length,
     byCode: errorCounts,
-    contextErrors: contextErrors.length
+    contextErrors: contextErrors.length,
   };
 }
 ```
@@ -331,7 +333,7 @@ errorHandler.handleError(
     actorEntity,
     targetEntity,
     node,
-    depth: currentDepth
+    depth: currentDepth,
   },
   'MyResolver',
   ErrorCodes.SPECIFIC_ERROR
@@ -390,7 +392,7 @@ The error handler automatically sanitizes context to prevent circular reference 
 // Safe: Handler sanitizes circular references
 const circularContext = {
   entity: actorEntity,
-  parent: null
+  parent: null,
 };
 circularContext.parent = circularContext; // Circular!
 
@@ -412,7 +414,7 @@ resolve(node, ctx) {
   this.validateContext(ctx);
   this.validateNode(node);
   this.validateDepth(ctx.depth);
-  
+
   // Proceed with resolution
   return this.performResolution(node, ctx);
 }
@@ -426,7 +428,7 @@ validateContext(ctx) {
       ErrorCodes.MISSING_ACTOR
     );
   }
-  
+
   if (!ctx.dispatcher) {
     errorHandler.handleError(
       'Missing dispatcher',
@@ -477,7 +479,7 @@ resolve(node, ctx) {
         context: ctx,
         resolver: 'MyResolver'
       };
-      
+
       // Try fallback resolution
       try {
         return this.fallbackResolution(node, ctx);
@@ -602,7 +604,7 @@ Cache error code lookups for frequently occurring errors:
 const ERROR_CODE_MAP = new Map([
   ['missing actor', ErrorCodes.MISSING_ACTOR],
   ['invalid data', ErrorCodes.INVALID_DATA_GENERIC],
-  ['depth exceeded', ErrorCodes.MAX_DEPTH_EXCEEDED]
+  ['depth exceeded', ErrorCodes.MAX_DEPTH_EXCEEDED],
 ]);
 
 function getErrorCode(message) {
@@ -649,15 +651,17 @@ Reduce overhead in production by conditionally including detail:
 ```javascript
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
-const errorContext = isDevelopment ? {
-  fullEntity: ctx.actorEntity,
-  stack: new Error().stack,
-  timestamp: Date.now(),
-  ...ctx
-} : {
-  actorId: ctx.actorEntity?.id,
-  resolver: 'MyResolver'
-};
+const errorContext = isDevelopment
+  ? {
+      fullEntity: ctx.actorEntity,
+      stack: new Error().stack,
+      timestamp: Date.now(),
+      ...ctx,
+    }
+  : {
+      actorId: ctx.actorEntity?.id,
+      resolver: 'MyResolver',
+    };
 
 errorHandler.handleError(error, errorContext, 'MyResolver');
 ```
@@ -679,6 +683,7 @@ new ScopeDslErrorHandler({
 ```
 
 **Parameters:**
+
 - `logger` (required): Logger instance implementing ILogger interface
 - `config` (optional): Configuration object
   - `isDevelopment`: Boolean indicating development mode (default: auto-detect from NODE_ENV)
@@ -700,6 +705,7 @@ handleError(
 ```
 
 **Parameters:**
+
 - `message`: Error message string or Error object
 - `context`: Resolution context (will be sanitized automatically)
 - `resolverName`: Name of the resolver for identification
@@ -708,6 +714,7 @@ handleError(
 **Throws:** `ScopeDslError` with standardized format
 
 **Example:**
+
 ```javascript
 errorHandler.handleError(
   'Missing required field',
@@ -735,6 +742,7 @@ getErrorBuffer(): Array<{
 **Returns:** Array of buffered error objects
 
 **Example:**
+
 ```javascript
 const recentErrors = errorHandler.getErrorBuffer();
 console.log(`${recentErrors.length} errors in buffer`);
@@ -749,6 +757,7 @@ clearErrorBuffer(): void
 ```
 
 **Example:**
+
 ```javascript
 // Clear after analysis
 errorHandler.clearErrorBuffer();
@@ -767,7 +776,7 @@ const ERROR_CATEGORIES = {
   DEPTH_EXCEEDED: /depth|limit|maximum.*exceeded/i,
   PARSE_ERROR: /parse|syntax|unexpected token/i,
   CONFIGURATION: /config|setting|option|initialization/i,
-  UNKNOWN: /.*/  // Fallback
+  UNKNOWN: /.*/, // Fallback
 };
 ```
 
@@ -794,10 +803,11 @@ class ScopeDslError extends Error {
 **Cause**: The resolution context is missing the required actor entity.
 
 **Solution**:
+
 ```javascript
 // Ensure actor is passed in initial context
 const context = {
-  actorEntity: getActorEntity(actorId),  // Must not be null/undefined
+  actorEntity: getActorEntity(actorId), // Must not be null/undefined
   dispatcher: resolveDispatcher,
   // ... other context
 };
@@ -810,11 +820,12 @@ const context = {
 **Cause**: Scope resolution has recursive references or is too deeply nested.
 
 **Solution**:
+
 ```javascript
 // Add depth tracking
 resolve(node, ctx) {
   const depth = (ctx.depth || 0) + 1;
-  
+
   if (depth > MAX_DEPTH) {
     errorHandler.handleError(
       `Depth ${depth} exceeds maximum ${MAX_DEPTH}`,
@@ -823,7 +834,7 @@ resolve(node, ctx) {
       ErrorCodes.MAX_DEPTH_EXCEEDED
     );
   }
-  
+
   // Pass depth to child resolutions
   const childCtx = { ...ctx, depth };
   return dispatcher(node.child, childCtx);
@@ -837,11 +848,12 @@ resolve(node, ctx) {
 **Cause**: Scope references create a cycle (A → B → C → A).
 
 **Solution**:
+
 ```javascript
 // Track visited nodes
 resolve(node, ctx) {
   const visited = ctx.visited || new Set();
-  
+
   if (visited.has(node.id)) {
     errorHandler.handleError(
       `Circular reference detected: ${node.id}`,
@@ -850,7 +862,7 @@ resolve(node, ctx) {
       ErrorCodes.CYCLE_DETECTED
     );
   }
-  
+
   visited.add(node.id);
   const childCtx = { ...ctx, visited };
   // Continue resolution...
@@ -864,6 +876,7 @@ resolve(node, ctx) {
 **Cause**: Invalid syntax in scope DSL expression.
 
 **Solution**:
+
 ```javascript
 // Validate syntax before parsing
 try {
@@ -883,7 +896,9 @@ try {
 **Symptom**: Only seeing error codes without context in production.
 
 **Solution**:
+
 1. Use error buffer to collect patterns:
+
 ```javascript
 // Periodic analysis in production
 setInterval(() => {
@@ -895,13 +910,14 @@ setInterval(() => {
 ```
 
 2. Enable development mode temporarily:
+
 ```javascript
 // For debugging specific issues
 const errorHandler = new ScopeDslErrorHandler({
   logger,
   config: {
-    isDevelopment: true  // Temporary for debugging
-  }
+    isDevelopment: true, // Temporary for debugging
+  },
 });
 ```
 

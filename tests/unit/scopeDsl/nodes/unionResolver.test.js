@@ -213,7 +213,6 @@ describe('unionResolver', () => {
     });
 
     describe('trace logging', () => {
-
       it('should not throw when trace is not provided', () => {
         const leftResult = new Set(['entity1']);
         const rightResult = new Set(['entity2']);
@@ -349,7 +348,9 @@ describe('unionResolver', () => {
         });
 
         it('should use error handler when actorEntity is missing', () => {
-          const resolverWithHandler = createUnionResolver({ errorHandler: mockErrorHandler });
+          const resolverWithHandler = createUnionResolver({
+            errorHandler: mockErrorHandler,
+          });
           const node = {
             type: 'Union',
             left: { type: 'Source' },
@@ -395,7 +396,9 @@ describe('unionResolver', () => {
         });
 
         it('should use error handler when operand is not iterable', () => {
-          const resolverWithHandler = createUnionResolver({ errorHandler: mockErrorHandler });
+          const resolverWithHandler = createUnionResolver({
+            errorHandler: mockErrorHandler,
+          });
           const leftResult = null;
           const rightResult = new Set(['entity1']);
 
@@ -448,14 +451,18 @@ describe('unionResolver', () => {
       });
 
       describe('memory threshold validation', () => {
-
         it('should use error handler for memory threshold exceeded', () => {
-          const resolverWithHandler = createUnionResolver({ errorHandler: mockErrorHandler });
-          
+          const resolverWithHandler = createUnionResolver({
+            errorHandler: mockErrorHandler,
+          });
+
           // Create large sets that exceed the 10000 threshold
           const leftItems = Array.from({ length: 7000 }, (_, i) => `left-${i}`);
-          const rightItems = Array.from({ length: 4000 }, (_, i) => `right-${i}`);
-          
+          const rightItems = Array.from(
+            { length: 4000 },
+            (_, i) => `right-${i}`
+          );
+
           const leftResult = new Set(leftItems);
           const rightResult = new Set(rightItems);
 
@@ -490,7 +497,7 @@ describe('unionResolver', () => {
 
         it('should not trigger memory warning for small unions', () => {
           const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-          
+
           const leftResult = new Set(['entity1', 'entity2']);
           const rightResult = new Set(['entity3', 'entity4']);
 
@@ -513,7 +520,7 @@ describe('unionResolver', () => {
           expect(consoleSpy).not.toHaveBeenCalled();
           expect(result).toBeInstanceOf(Set);
           expect(result.size).toBe(4);
-          
+
           consoleSpy.mockRestore();
         });
       });
@@ -521,7 +528,7 @@ describe('unionResolver', () => {
       describe('backward compatibility', () => {
         it('should work without errorHandler parameter', () => {
           const backwardResolver = createUnionResolver();
-          
+
           const leftResult = new Set(['entity1']);
           const rightResult = new Set(['entity2']);
 
@@ -547,7 +554,7 @@ describe('unionResolver', () => {
 
         it('should work with undefined errorHandler', () => {
           const backwardResolver = createUnionResolver({ errorHandler: null });
-          
+
           const leftResult = new Set(['entity1']);
           const rightResult = new Set(['entity2']);
 

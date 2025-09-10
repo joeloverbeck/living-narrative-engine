@@ -115,7 +115,6 @@ describe('StepResolver - components edge access', () => {
       expect(components).toEqual({});
 
       // Should log a warning
-      
     });
 
     it('should fallback to entitiesGateway.getComponentData when entity lacks getComponentData method', () => {

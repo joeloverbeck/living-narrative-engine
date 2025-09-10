@@ -322,7 +322,6 @@ describe('Depth and Cycle Boundary Testing E2E', () => {
         )
       ).rejects.toThrow(ScopeDepthError);
     });
-
   });
 
   /**

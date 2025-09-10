@@ -33,17 +33,14 @@ describe('Dual-Format Action Tracing Integration', () => {
 
   afterEach(async () => {
     await cleanupTempDirectory(tempDirectory);
-    
+
     // Clean up any accidentally created directories from error tests
     const fs = await import('fs/promises');
     const path = await import('path');
-    
+
     // Check and clean up relative paths that might have been created
-    const accidentalPaths = [
-      'dev/null/readonly',
-      'nonexistent/directory/path'
-    ];
-    
+    const accidentalPaths = ['dev/null/readonly', 'nonexistent/directory/path'];
+
     for (const accidentalPath of accidentalPaths) {
       try {
         await fs.rm(accidentalPath, { recursive: true, force: true });
@@ -60,7 +57,7 @@ describe('Dual-Format Action Tracing Integration', () => {
         // Path doesn't exist, which is fine
       }
     }
-    
+
     if (mockLlmProxyServer) {
       await mockLlmProxyServer.stop();
     }

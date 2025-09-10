@@ -35,10 +35,10 @@ describe('ThematicDirectionsManagerController - Display Tests', () => {
       if (controller && !controller.isDestroyed) {
         await controller.destroy();
       }
-      
+
       await testBase.cleanup();
       jest.restoreAllMocks();
-      
+
       controller = null;
     } catch (error) {
       console.error('Cleanup failed:', error);
@@ -49,7 +49,7 @@ describe('ThematicDirectionsManagerController - Display Tests', () => {
     it('should handle empty directions data', () => {
       // Test with undefined/null directionsData
       const testData = null;
-      
+
       // Verify data handling patterns
       expect(Array.isArray([])).toBe(true);
       expect(testData).toBeNull();
@@ -59,12 +59,12 @@ describe('ThematicDirectionsManagerController - Display Tests', () => {
       const testDirections = [
         {
           direction: { id: 'dir-1', title: 'Direction 1' },
-          concept: { id: 'concept-1', concept: 'Concept 1' }
+          concept: { id: 'concept-1', concept: 'Concept 1' },
         },
         {
           direction: { id: 'dir-2', title: 'Direction 2' },
-          concept: null // Orphaned direction
-        }
+          concept: null, // Orphaned direction
+        },
       ];
 
       // Test data structure is valid
@@ -82,28 +82,28 @@ describe('ThematicDirectionsManagerController - Display Tests', () => {
             description: 'A magical quest',
             coreTension: 'Good vs evil',
             uniqueTwist: 'Dragons are friendly',
-            narrativePotential: 'Epic storyline'
+            narrativePotential: 'Epic storyline',
           },
-          concept: { id: 'concept-1', concept: 'Fantasy Concept' }
+          concept: { id: 'concept-1', concept: 'Fantasy Concept' },
         },
         {
           direction: {
-            id: 'dir-2', 
+            id: 'dir-2',
             title: 'Sci-Fi Space',
             description: 'Futuristic journey',
             coreTension: 'Technology vs humanity',
             uniqueTwist: 'AI rebellion',
-            narrativePotential: 'Complex themes'
+            narrativePotential: 'Complex themes',
           },
-          concept: { id: 'concept-2', concept: 'Sci-Fi Concept' }
-        }
+          concept: { id: 'concept-2', concept: 'Sci-Fi Concept' },
+        },
       ];
 
       // Test filtering logic
-      const fantasyDirection = testDirections.find(d => 
+      const fantasyDirection = testDirections.find((d) =>
         d.direction.title.toLowerCase().includes('fantasy')
       );
-      const sciFiDirection = testDirections.find(d =>
+      const sciFiDirection = testDirections.find((d) =>
         d.direction.description.toLowerCase().includes('futuristic')
       );
 
@@ -121,7 +121,7 @@ describe('ThematicDirectionsManagerController - Display Tests', () => {
         concept: 'A brave warrior seeking redemption',
         status: 'active',
         createdAt: new Date('2023-01-01').toISOString(),
-        thematicDirections: [{ id: 'dir-1' }, { id: 'dir-2' }]
+        thematicDirections: [{ id: 'dir-1' }, { id: 'dir-2' }],
       };
 
       // Test the display functionality through data validation
@@ -135,18 +135,18 @@ describe('ThematicDirectionsManagerController - Display Tests', () => {
       const conceptDisplayContainer = document.createElement('div');
       conceptDisplayContainer.id = 'concept-display-container';
       conceptDisplayContainer.style.display = 'none';
-      
+
       const conceptDisplayContent = document.createElement('div');
       conceptDisplayContent.id = 'concept-display-content';
       conceptDisplayContainer.appendChild(conceptDisplayContent);
-      
+
       document.body.appendChild(conceptDisplayContainer);
 
       // Verify DOM elements exist and can be manipulated
       expect(conceptDisplayContainer).toBeTruthy();
       expect(conceptDisplayContent).toBeTruthy();
       expect(conceptDisplayContainer.style.display).toBe('none');
-      
+
       // Cleanup
       conceptDisplayContainer.remove();
     });
@@ -156,7 +156,7 @@ describe('ThematicDirectionsManagerController - Display Tests', () => {
     it('should show success notification structure', () => {
       const message = 'Operation successful';
       const duration = 3000;
-      
+
       // Test notification parameters
       expect(typeof message).toBe('string');
       expect(typeof duration).toBe('number');
@@ -173,11 +173,11 @@ describe('ThematicDirectionsManagerController - Display Tests', () => {
       document.body.appendChild(emptyState);
 
       const customMessage = 'Custom empty message';
-      
+
       // Test message handling
       messageElement.textContent = customMessage;
       expect(messageElement.textContent).toBe(customMessage);
-      
+
       // Cleanup
       emptyState.remove();
     });

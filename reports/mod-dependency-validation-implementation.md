@@ -36,7 +36,7 @@ Meanwhile, `intimacy` mod correctly declares `positioning` as a dependency:
     "version": "^1.0.0"
   },
   {
-    "id": "positioning", 
+    "id": "positioning",
     "version": "^1.0.0"
   }
 ]
@@ -58,7 +58,7 @@ This creates several issues:
 ```
 core (foundation)
 ├── anatomy
-├── descriptors  
+├── descriptors
 ├── positioning
 └── clothing
 
@@ -113,6 +113,7 @@ Namespaced references follow the pattern `modId:identifier`:
 **Integration Approach**: Follow patterns from existing validators like `ajvSchemaValidator.js` and `eventValidationService.js`
 
 **Responsibilities**:
+
 - Traverse mod directory structure
 - Parse different file types (JSON, Scope DSL)
 - Extract all namespaced references (`modId:*` patterns)
@@ -120,6 +121,7 @@ Namespaced references follow the pattern `modId:identifier`:
 - **NEW**: Integrate with existing validation pipeline
 
 **Key Features**:
+
 ```javascript
 class ModReferenceExtractor {
   constructor({ logger, ajvValidator }) {
@@ -135,11 +137,21 @@ class ModReferenceExtractor {
     // Example: { "intimacy": Set(["kissing"]), "core": Set(["actor"]) }
   }
 
-  extractFromAction(actionData) { /* ... */ }
-  extractFromCondition(conditionData) { /* ... */ }
-  extractFromRule(ruleData) { /* ... */ }
-  extractFromScope(scopeContent) { /* ... */ }
-  extractFromComponent(componentData) { /* ... */ }
+  extractFromAction(actionData) {
+    /* ... */
+  }
+  extractFromCondition(conditionData) {
+    /* ... */
+  }
+  extractFromRule(ruleData) {
+    /* ... */
+  }
+  extractFromScope(scopeContent) {
+    /* ... */
+  }
+  extractFromComponent(componentData) {
+    /* ... */
+  }
 }
 ```
 
@@ -162,18 +174,21 @@ class ModReferenceExtractor {
 
 **ARCHITECTURE UPDATE**: Work alongside existing `src/modding/modDependencyValidator.js` rather than replacing it.
 
-**Integration Strategy**: 
+**Integration Strategy**:
+
 - Extend existing `ModDependencyValidator` patterns
 - Use existing dependency resolution infrastructure
 - Follow established error handling patterns
 
 **Responsibilities**:
+
 - Cross-reference extracted mod references with dependency declarations
 - Generate detailed violation reports compatible with existing error formats
 - Integrate with current mod loading pipeline
 - Work with existing `ModLoadOrderResolver`
 
 **Key Features**:
+
 ```javascript
 class ModCrossReferenceValidator {
   constructor({ logger, modDependencyValidator, referenceExtractor }) {
@@ -212,6 +227,7 @@ class ModCrossReferenceValidator {
 **Location**: Extend `scripts/updateManifest.js` (582 lines of sophisticated scanning logic)
 
 **ARCHITECTURE UPDATE**: The existing manifest update script is far more complex than initially assessed, with:
+
 - Recursive directory scanning for multiple file types
 - Special handling for entities, scopes, blueprints, recipes
 - Advanced error handling and reporting
@@ -226,6 +242,7 @@ class ModCrossReferenceValidator {
 5. **Leverage Existing Infrastructure**: Use current error handling and reporting patterns
 
 **Implementation Approach**:
+
 ```javascript
 // In updateManifest.js - enhance existing function
 async function updateModManifest(modName, options = {}) {
@@ -237,20 +254,27 @@ async function updateModManifest(modName, options = {}) {
   // NEW: Pre-validation step (opt-in via options.validateReferences)
   if (options.validateReferences) {
     try {
-      const validator = new ModCrossReferenceValidator({ /* dependencies */ });
-      const validation = await validator.validateModReferences(modPath, manifestsMap);
-      
+      const validator = new ModCrossReferenceValidator({
+        /* dependencies */
+      });
+      const validation = await validator.validateModReferences(
+        modPath,
+        manifestsMap
+      );
+
       if (validation.hasViolations) {
-        console.error(`❌ Cross-reference validation failed for mod "${modName}"`);
+        console.error(
+          `❌ Cross-reference validation failed for mod "${modName}"`
+        );
         console.error(validation.report);
-        return { 
-          success: false, 
-          modName, 
-          error: { 
+        return {
+          success: false,
+          modName,
+          error: {
             type: 'CROSS_REFERENCE_VIOLATION',
             message: validation.report,
-            path: modPath 
-          }
+            path: modPath,
+          },
         };
       }
     } catch (error) {
@@ -261,12 +285,12 @@ async function updateModManifest(modName, options = {}) {
         error: {
           type: 'VALIDATION_ERROR',
           message: error.message,
-          path: modPath
-        }
+          path: modPath,
+        },
       };
     }
   }
-  
+
   // Continue with existing manifest update logic...
 }
 ```
@@ -274,6 +298,7 @@ async function updateModManifest(modName, options = {}) {
 ### 4. Validation Report Structure
 
 **Violation Report Format**:
+
 ```javascript
 {
   modId: "positioning",
@@ -299,12 +324,14 @@ async function updateModManifest(modName, options = {}) {
 ### Phase 1: Reference Extraction Enhancement (Week 1)
 
 **Deliverables**:
+
 - `ModReferenceExtractor` class integrated with existing validation infrastructure
 - Unit tests following existing test patterns in `/tests/common/`
 - Support for actions, conditions, rules, components, events (JSON files)
 - Integration with existing `AjvSchemaValidator` patterns
 
 **Success Criteria**:
+
 - Extract all mod references from positioning mod JSON files
 - Identify the intimacy violation case in `turn_around.action.json`
 - 90%+ test coverage using existing test utilities
@@ -313,12 +340,14 @@ async function updateModManifest(modName, options = {}) {
 ### Phase 2: Scope DSL Integration (Week 2)
 
 **Deliverables**:
+
 - Scope DSL parsing support for `.scope` files
 - Handle complex syntax: `modId:scopeId := entity.components.modId:componentId`
 - JSON Logic condition traversal enhancement
 - Integration with existing scope resolution system
 
 **Success Criteria**:
+
 - Parse all file types in intimacy and positioning mods
 - Extract complex scope expressions from `.scope` files
 - Handle nested JSON structures and condition references
@@ -327,12 +356,14 @@ async function updateModManifest(modName, options = {}) {
 ### Phase 3: Cross-Reference Validation Integration (Week 3)
 
 **Deliverables**:
+
 - `ModCrossReferenceValidator` class working alongside existing `ModDependencyValidator`
 - Violation detection and reporting compatible with existing error handling
 - Integration with current mod loading pipeline
 - Enhanced validation reports
 
 **Success Criteria**:
+
 - Detect positioning → intimacy violation using existing dependency data
 - Generate detailed error reports using established error patterns
 - Validate all existing mods with zero false positives
@@ -341,12 +372,14 @@ async function updateModManifest(modName, options = {}) {
 ### Phase 4: UpdateManifest Integration & Testing (Week 4)
 
 **Deliverables**:
+
 - Integration with existing `updateManifest.js` workflow (582 lines)
 - Comprehensive test suite leveraging existing test infrastructure
 - Backward compatibility with opt-in validation flag
 - Documentation following existing patterns
 
 **Success Criteria**:
+
 - `npm run update-manifest --validate-references` fails on violations
 - Existing `npm run update-manifest` continues to work unchanged
 - Clear error messages compatible with current output format
@@ -382,6 +415,7 @@ async function updateModManifest(modName, options = {}) {
 ### Error Handling (Following Existing Patterns)
 
 **Use Established Error Infrastructure**:
+
 - `ModDependencyError` from `src/errors/modDependencyError.js`
 - Error handling patterns from existing `ModDependencyValidator`
 - Logging patterns from existing validation services
@@ -392,6 +426,7 @@ async function updateModManifest(modName, options = {}) {
 4. **Recovery Strategies**: Follow existing fail-fast vs. warning patterns from `ModDependencyValidator`
 
 **Error Categories** (consistent with existing infrastructure):
+
 ```javascript
 // Follow existing ModDependencyError pattern
 class CrossReferenceViolationError extends ModDependencyError {

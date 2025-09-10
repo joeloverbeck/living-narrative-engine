@@ -1017,42 +1017,50 @@ describe('PortraitModalRenderer', () => {
     describe('Image Loading Timeout', () => {
       it('should handle image loading timeout gracefully', () => {
         jest.useFakeTimers();
-        
-        renderer.showModal('/path/to/portrait.jpg', 'Speaker Name', mockOriginalElement);
-        
+
+        renderer.showModal(
+          '/path/to/portrait.jpg',
+          'Speaker Name',
+          mockOriginalElement
+        );
+
         // Loading should start
         expect(mockLoadingSpinner.style.display).toBe('block');
-        
+
         // Simulate a very long delay without triggering onload or onerror
         jest.advanceTimersByTime(30000);
-        
+
         // Manually trigger error as if timeout occurred
         if (mockImageInstance.onerror) {
           mockImageInstance.onerror();
         }
-        
+
         // Loading spinner should be hidden after error
         expect(mockLoadingSpinner.style.display).toBe('none');
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('Failed to load portrait image')
         );
-        
+
         jest.useRealTimers();
       });
     });
 
     describe('Network Failure Scenarios', () => {
       it('should handle network error with retry suggestion', () => {
-        renderer.showModal('/path/to/portrait.jpg', 'Speaker Name', mockOriginalElement);
-        
+        renderer.showModal(
+          '/path/to/portrait.jpg',
+          'Speaker Name',
+          mockOriginalElement
+        );
+
         // Simulate network error
         const networkError = new Error('Network error');
         networkError.type = 'network';
-        
+
         if (mockImageInstance.onerror) {
           mockImageInstance.onerror(networkError);
         }
-        
+
         expect(mockLogger.error).toHaveBeenCalled();
         expect(renderer._lastStatusMessage).toEqual({
           message: 'Failed to load portrait',
@@ -1061,27 +1069,35 @@ describe('PortraitModalRenderer', () => {
       });
 
       it('should handle 404 not found errors', () => {
-        renderer.showModal('/path/to/missing.jpg', 'Speaker Name', mockOriginalElement);
-        
+        renderer.showModal(
+          '/path/to/missing.jpg',
+          'Speaker Name',
+          mockOriginalElement
+        );
+
         // Simulate 404 error
         if (mockImageInstance.onerror) {
           mockImageInstance.onerror();
         }
-        
+
         expect(mockLoadingSpinner.style.display).toBe('none');
         expect(renderer._lastStatusMessage.type).toBe('error');
       });
 
       it('should handle CORS errors', () => {
-        renderer.showModal('https://external.com/portrait.jpg', 'Speaker Name', mockOriginalElement);
-        
+        renderer.showModal(
+          'https://external.com/portrait.jpg',
+          'Speaker Name',
+          mockOriginalElement
+        );
+
         // Simulate CORS error
         const corsError = new Error('CORS policy blocked');
-        
+
         if (mockImageInstance.onerror) {
           mockImageInstance.onerror(corsError);
         }
-        
+
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('Failed to load portrait image')
         );
@@ -1092,59 +1108,63 @@ describe('PortraitModalRenderer', () => {
       it('should handle rapid show/hide cycles without race conditions', () => {
         // First show
         renderer.showModal('/path1.jpg', 'Speaker 1', mockOriginalElement);
-        
+
         // Store reference to first image instance
         const firstImage = mockImageInstance;
-        
+
         // Immediately hide before load completes
         renderer.hide();
-        
+
         // Image src should be cleared on hide
         expect(mockImageElement.src).toBe('');
-        
+
         // Show another image - this creates a new Image instance
         renderer.showModal('/path2.jpg', 'Speaker 2', mockOriginalElement);
-        
+
         // Store reference to second image instance
         const secondImage = mockImageInstance;
-        
+
         // First image loads after being hidden (simulating race condition)
         if (firstImage.onload) {
           firstImage.onload();
         }
-        
+
         // The implementation may update the src from the first image
         // This is a known limitation of the async image loading
         // What matters is that the modal state is correct
         expect(renderer.isVisible).toBe(true);
         expect(mockModalTitle.textContent).toBe('Speaker 2');
-        
+
         // Second image loads
         if (secondImage.onload) {
           secondImage.onload();
         }
-        
+
         // Now should definitely show the second image
         expect(mockImageElement.src).toBe('/path2.jpg');
       });
 
       it('should cancel pending image loads when modal is closed', () => {
-        renderer.showModal('/path/to/portrait.jpg', 'Speaker Name', mockOriginalElement);
-        
+        renderer.showModal(
+          '/path/to/portrait.jpg',
+          'Speaker Name',
+          mockOriginalElement
+        );
+
         // Store the image instance before hiding
         const pendingImage = mockImageInstance;
-        
+
         // Close before image loads
         renderer.hide();
-        
+
         // Verify image was cleared when modal was hidden
         expect(mockImageElement.src).toBe('');
-        
+
         // Image loads after modal is closed (simulating async load completion)
         if (pendingImage.onload) {
           pendingImage.onload();
         }
-        
+
         // The implementation may set the src even after close due to async nature
         // This is acceptable behavior as long as the modal is hidden
         // What matters is that the modal is not visible
@@ -1157,27 +1177,27 @@ describe('PortraitModalRenderer', () => {
           { path: '/path2.jpg', name: 'Speaker 2' },
           { path: '/path3.jpg', name: 'Speaker 3' },
         ];
-        
+
         // Store image instances
         const imageInstances = [];
-        
+
         // Rapid fire showModal calls
-        portraits.forEach(portrait => {
+        portraits.forEach((portrait) => {
           renderer.showModal(portrait.path, portrait.name, mockOriginalElement);
           imageInstances.push(mockImageInstance);
         });
-        
+
         // Only the last one should be active
         expect(mockModalTitle.textContent).toBe('Speaker 3');
-        
+
         // Image should still be empty until loaded
         expect(mockImageElement.src).toBe('');
-        
+
         // Load the last image
         if (mockImageInstance.onload) {
           mockImageInstance.onload();
         }
-        
+
         // Now it should show the last image
         expect(mockImageElement.src).toBe('/path3.jpg');
       });
@@ -1185,32 +1205,40 @@ describe('PortraitModalRenderer', () => {
 
     describe('Event Listener Cleanup', () => {
       it('should remove all event listeners on destroy', () => {
-        renderer.showModal('/path/to/portrait.jpg', 'Speaker Name', mockOriginalElement);
-        
+        renderer.showModal(
+          '/path/to/portrait.jpg',
+          'Speaker Name',
+          mockOriginalElement
+        );
+
         // Track event listeners
         const addedListeners = mockAddDomListener.mock.calls;
-        
+
         renderer.destroy();
-        
+
         // Verify cleanup was called
         expect(mockSuperDestroy).toHaveBeenCalled();
-        
+
         // Verify no lingering references
         expect(mockImageElement.src).toBe('');
       });
 
       it('should prevent memory leaks from uncompleted image loads', () => {
-        renderer.showModal('/path/to/portrait.jpg', 'Speaker Name', mockOriginalElement);
-        
+        renderer.showModal(
+          '/path/to/portrait.jpg',
+          'Speaker Name',
+          mockOriginalElement
+        );
+
         // Store the image instance before destroy
         const pendingImage = mockImageInstance;
-        
+
         // Destroy before image loads
         renderer.destroy();
-        
+
         // Image src should be cleared on destroy
         expect(mockImageElement.src).toBe('');
-        
+
         // Image completes after destroy (simulating async completion)
         if (pendingImage.onload) {
           // This should not throw an error
@@ -1218,7 +1246,7 @@ describe('PortraitModalRenderer', () => {
             pendingImage.onload();
           }).not.toThrow();
         }
-        
+
         // Verify cleanup was called
         expect(mockSuperDestroy).toHaveBeenCalled();
       });
@@ -1233,41 +1261,49 @@ describe('PortraitModalRenderer', () => {
 
       it('should handle very long portrait paths', () => {
         const longPath = '/very/long/path/'.repeat(50) + 'portrait.jpg';
-        
+
         renderer.showModal(longPath, 'Speaker Name', mockOriginalElement);
-        
+
         if (mockImageInstance.onload) {
           mockImageInstance.onload();
         }
-        
+
         expect(mockImageElement.src).toBe(longPath);
       });
 
       it('should handle special characters in speaker names', () => {
         const specialName = 'Speaker & <Name> "Test" \'Quote\'';
-        
-        renderer.showModal('/path/to/portrait.jpg', specialName, mockOriginalElement);
-        
+
+        renderer.showModal(
+          '/path/to/portrait.jpg',
+          specialName,
+          mockOriginalElement
+        );
+
         expect(mockModalTitle.textContent).toBe(specialName);
-        
+
         if (mockImageInstance.onload) {
           mockImageInstance.onload();
         }
-        
+
         expect(mockImageElement.alt).toBe(`Portrait of ${specialName}`);
       });
 
       it('should handle destroyed original element gracefully', () => {
-        renderer.showModal('/path/to/portrait.jpg', 'Speaker Name', mockOriginalElement);
-        
+        renderer.showModal(
+          '/path/to/portrait.jpg',
+          'Speaker Name',
+          mockOriginalElement
+        );
+
         // Simulate original element being removed from DOM
         mockOriginalElement.offsetParent = null;
         mockOriginalElement.focus = jest.fn(() => {
           throw new Error('Element not in DOM');
         });
-        
+
         renderer.hide();
-        
+
         expect(mockLogger.warn).toHaveBeenCalledWith(
           expect.stringContaining('Could not return focus to original element'),
           expect.any(Error)

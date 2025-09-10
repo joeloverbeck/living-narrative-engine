@@ -20,7 +20,7 @@ export class PipelineTracingIntegrationTestBed {
     this.turnExecutionFacade = null;
     this.actionService = null;
     this.entityService = null;
-    
+
     // Pipeline tracing components
     this.tracingComponents = {
       filter: null,
@@ -28,13 +28,13 @@ export class PipelineTracingIntegrationTestBed {
       performanceAnalyzer: null,
       performanceMonitor: null,
     };
-    
+
     // Test data tracking
     this.capturedTraces = [];
     this.performanceMetrics = [];
     this.performanceAlerts = [];
     this.errors = [];
-    
+
     // Test configuration
     this.tracingConfig = {
       enabled: true,
@@ -49,12 +49,12 @@ export class PipelineTracingIntegrationTestBed {
       enableThresholdAlerting: false,
       enableAllFeatures: false,
     };
-    
+
     // Performance tracking
     this.executionTimes = new Map();
     this.memorySnapshots = [];
     this.stageMetrics = new Map();
-    
+
     this.initialized = false;
   }
 
@@ -75,10 +75,10 @@ export class PipelineTracingIntegrationTestBed {
 
     // Initialize tracing components
     await this.#initializePipelineTracingComponents();
-    
+
     // Setup performance monitoring
     this.#setupPerformanceMonitoring();
-    
+
     // Setup error capture
     this.#setupErrorCapture();
 
@@ -122,24 +122,28 @@ export class PipelineTracingIntegrationTestBed {
     };
 
     // Create performance monitor
-    this.tracingComponents.performanceMonitor = new PerformanceMonitor(mockTrace, {
-      slowOperationMs: 100,
-      criticalOperationMs: 500,
-    });
+    this.tracingComponents.performanceMonitor = new PerformanceMonitor(
+      mockTrace,
+      {
+        slowOperationMs: 100,
+        criticalOperationMs: 500,
+      }
+    );
 
     // Create performance analyzer
-    this.tracingComponents.performanceAnalyzer = new PipelinePerformanceAnalyzer({
-      performanceMonitor: this.tracingComponents.performanceMonitor,
-      logger,
-      stageThresholds: {
-        component_filtering: 100,
-        prerequisite_evaluation: 200,
-        multi_target_resolution: 500,
-        action_formatting: 150,
-        target_resolution: 300,
-        pipeline_total: 1000,
-      },
-    });
+    this.tracingComponents.performanceAnalyzer =
+      new PipelinePerformanceAnalyzer({
+        performanceMonitor: this.tracingComponents.performanceMonitor,
+        logger,
+        stageThresholds: {
+          component_filtering: 100,
+          prerequisite_evaluation: 200,
+          multi_target_resolution: 500,
+          action_formatting: 150,
+          target_resolution: 300,
+          pipeline_total: 1000,
+        },
+      });
 
     logger.info('Pipeline tracing components initialized');
   }
@@ -155,9 +159,11 @@ export class PipelineTracingIntegrationTestBed {
       startTime: null,
       stageTimings: new Map(),
       // eslint-disable-next-line no-undef
-      memoryBaseline: (typeof process !== 'undefined' && process.memoryUsage) ? 
-        // eslint-disable-next-line no-undef
-        process.memoryUsage().heapUsed : 0,
+      memoryBaseline:
+        typeof process !== 'undefined' && process.memoryUsage
+          ? // eslint-disable-next-line no-undef
+            process.memoryUsage().heapUsed
+          : 0,
     };
   }
 
@@ -187,7 +193,7 @@ export class PipelineTracingIntegrationTestBed {
       id: testActor.id,
       initialData: testActor.components || {},
     });
-    
+
     // The turn execution facade setup is handled during initialization
     // No need to call addActor separately as it's handled in initializeTestEnvironment
   }
@@ -226,7 +232,7 @@ export class PipelineTracingIntegrationTestBed {
 
     await this.entityService.createEntity({
       type: 'core:item',
-      id: 'test-item-2', 
+      id: 'test-item-2',
       initialData: {
         'core:item': {
           name: 'Test Item 2',
@@ -298,14 +304,17 @@ export class PipelineTracingIntegrationTestBed {
     try {
       // Create action-aware structured trace
       if (options.actorId) {
-        this.tracingComponents.structuredTrace = new ActionAwareStructuredTrace({
-          actionTraceFilter: this.tracingComponents.filter,
-          actorId: options.actorId,
-          context: { testMode: true },
-          logger: this.facades.logger,
-          performanceMonitor: this.tracingConfig.enablePerformanceTracking ? 
-            this.tracingComponents.performanceMonitor : null,
-        });
+        this.tracingComponents.structuredTrace = new ActionAwareStructuredTrace(
+          {
+            actionTraceFilter: this.tracingComponents.filter,
+            actorId: options.actorId,
+            context: { testMode: true },
+            logger: this.facades.logger,
+            performanceMonitor: this.tracingConfig.enablePerformanceTracking
+              ? this.tracingComponents.performanceMonitor
+              : null,
+          }
+        );
       }
 
       // Mock pipeline execution - in a real scenario this would call the actual pipeline
@@ -322,7 +331,6 @@ export class PipelineTracingIntegrationTestBed {
       this.#updatePerformanceMetrics(executionTime, testAction);
 
       return result;
-
     } catch (error) {
       // Capture error with trace context
       const errorTrace = {
@@ -332,15 +340,19 @@ export class PipelineTracingIntegrationTestBed {
         errorClassification: 'pipeline_error',
         timestamp: Date.now(),
         testAction: testAction.id,
-        legacyContext: error.isLegacyConversionError ? {
-          originalFormat: testAction.format,
-          conversionAttempted: true,
-          fallbackStrategy: 'error_fallback',
-        } : undefined,
+        legacyContext: error.isLegacyConversionError
+          ? {
+              originalFormat: testAction.format,
+              conversionAttempted: true,
+              fallbackStrategy: 'error_fallback',
+            }
+          : undefined,
         conversionAttempted: error.isLegacyConversionError || false,
-        fallbackStrategy: error.isLegacyConversionError ? 'error_fallback' : undefined,
+        fallbackStrategy: error.isLegacyConversionError
+          ? 'error_fallback'
+          : undefined,
       };
-      
+
       this.errors.push(errorTrace);
       this.capturedTraces.push(errorTrace);
 
@@ -348,7 +360,9 @@ export class PipelineTracingIntegrationTestBed {
         return {
           success: false,
           error: error.message,
-          conversionError: error.isLegacyConversionError ? error.message : undefined,
+          conversionError: error.isLegacyConversionError
+            ? error.message
+            : undefined,
         };
       }
 
@@ -366,20 +380,29 @@ export class PipelineTracingIntegrationTestBed {
    */
   async #mockPipelineExecution(testAction, options) {
     // Simulate pipeline stages
-    const stages = ['component_filtering', 'prerequisite_evaluation', 'target_resolution', 'action_formatting'];
+    const stages = [
+      'component_filtering',
+      'prerequisite_evaluation',
+      'target_resolution',
+      'action_formatting',
+    ];
     const stageResults = {};
 
     for (const stage of stages) {
       const stageStart = performance.now();
-      
+
       // Add artificial delay if specified
       if (testAction.artificialDelay && testAction.stage === stage) {
         await this.#delay(testAction.artificialDelay);
       }
 
       // Mock stage processing
-      stageResults[stage] = this.#mockStageProcessing(stage, testAction, options);
-      
+      stageResults[stage] = this.#mockStageProcessing(
+        stage,
+        testAction,
+        options
+      );
+
       const stageDuration = performance.now() - stageStart;
       this.stageMetrics.set(`${testAction.id}-${stage}`, stageDuration);
 
@@ -404,11 +427,17 @@ export class PipelineTracingIntegrationTestBed {
     return {
       success: true,
       discoveredActions: this.#mockDiscoveredActions(testAction),
-      resolvedTargets: options.expectMultipleTargets ? ['target1', 'target2', 'target3'] : ['target1'],
+      resolvedTargets: options.expectMultipleTargets
+        ? ['target1', 'target2', 'target3']
+        : ['target1'],
       resolvedDependencies: options.expectDependencies ? ['dep1', 'dep2'] : [],
       conversionApplied: options.expectLegacyConversion || false,
-      convertedAction: options.expectLegacyConversion ? { ...testAction, converted: true } : undefined,
-      integrationValidation: options.validateIntegration ? { passed: true } : undefined,
+      convertedAction: options.expectLegacyConversion
+        ? { ...testAction, converted: true }
+        : undefined,
+      integrationValidation: options.validateIntegration
+        ? { passed: true }
+        : undefined,
       stageResults,
     };
   }
@@ -438,7 +467,9 @@ export class PipelineTracingIntegrationTestBed {
         };
       case 'target_resolution':
         return {
-          resolvedTargets: options.expectMultipleTargets ? ['target1', 'target2'] : ['target1'],
+          resolvedTargets: options.expectMultipleTargets
+            ? ['target1', 'target2']
+            : ['target1'],
           targetCount: options.expectMultipleTargets ? 2 : 1,
           resolutionMethod: 'standard',
         };
@@ -491,7 +522,9 @@ export class PipelineTracingIntegrationTestBed {
         },
       },
       legacyProcessing: options.expectLegacyConversion || false,
-      compatibilityMetrics: options.expectLegacyConversion ? { conversionTime: 5 } : undefined,
+      compatibilityMetrics: options.expectLegacyConversion
+        ? { conversionTime: 5 }
+        : undefined,
     };
 
     // Add multi-target stage if applicable
@@ -510,7 +543,10 @@ export class PipelineTracingIntegrationTestBed {
     this.capturedTraces.push(pipelineTrace);
 
     // Add additional traces based on configuration
-    if (this.tracingConfig.enableScopeTracing || options.expectMultipleTargets) {
+    if (
+      this.tracingConfig.enableScopeTracing ||
+      options.expectMultipleTargets
+    ) {
       this.capturedTraces.push({
         type: 'scope_evaluation',
         scopeQueries: ['nearby_items', 'adjacent_actors'],
@@ -519,7 +555,10 @@ export class PipelineTracingIntegrationTestBed {
       });
     }
 
-    if (this.tracingConfig.enableDependencyTracking || options.expectDependencies) {
+    if (
+      this.tracingConfig.enableDependencyTracking ||
+      options.expectDependencies
+    ) {
       this.capturedTraces.push({
         type: 'dependency_resolution',
         dependencies: ['dep1', 'dep2'],
@@ -528,7 +567,10 @@ export class PipelineTracingIntegrationTestBed {
       });
     }
 
-    if (this.tracingConfig.enableLegacyTracking || options.expectLegacyConversion) {
+    if (
+      this.tracingConfig.enableLegacyTracking ||
+      options.expectLegacyConversion
+    ) {
       this.capturedTraces.push({
         type: 'legacy_detection',
         detectedFormat: testAction.format || 'current',
@@ -625,7 +667,7 @@ export class PipelineTracingIntegrationTestBed {
    * @private
    */
   async #delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -643,7 +685,8 @@ export class PipelineTracingIntegrationTestBed {
    * @returns {object} Performance metrics
    */
   getPerformanceMetrics() {
-    const lastMetric = this.performanceMetrics[this.performanceMetrics.length - 1] || {};
+    const lastMetric =
+      this.performanceMetrics[this.performanceMetrics.length - 1] || {};
     return {
       ...lastMetric,
       overallPerformance: 'acceptable',
@@ -684,7 +727,7 @@ export class PipelineTracingIntegrationTestBed {
    * @returns {Array} Performance recommendations
    */
   getPerformanceRecommendations() {
-    return this.performanceAlerts.map(alert => ({
+    return this.performanceAlerts.map((alert) => ({
       stage: alert.stage,
       priority: 'medium',
       message: `Consider optimizing ${alert.stage} stage (${alert.actualDuration}ms > ${alert.threshold}ms)`,
@@ -748,8 +791,8 @@ export class PipelineTracingIntegrationTestBed {
    */
   #identifyBottlenecks() {
     const bottlenecks = [];
-    
-    this.performanceAlerts.forEach(alert => {
+
+    this.performanceAlerts.forEach((alert) => {
       if (alert.type === 'threshold_violation') {
         bottlenecks.push({
           stage: alert.stage,
@@ -770,19 +813,27 @@ export class PipelineTracingIntegrationTestBed {
    * @private
    */
   #calculateStageMetrics() {
-    const stages = ['component_filtering', 'prerequisite_evaluation', 'target_resolution', 'action_formatting'];
+    const stages = [
+      'component_filtering',
+      'prerequisite_evaluation',
+      'target_resolution',
+      'action_formatting',
+    ];
     const metrics = {};
 
-    stages.forEach(stage => {
+    stages.forEach((stage) => {
       const stageTimes = Array.from(this.stageMetrics.entries())
         .filter(([key]) => key.includes(stage))
         .map(([, value]) => value);
 
       if (stageTimes.length > 0) {
         metrics[stage] = {
-          avgDuration: stageTimes.reduce((sum, time) => sum + time, 0) / stageTimes.length,
+          avgDuration:
+            stageTimes.reduce((sum, time) => sum + time, 0) / stageTimes.length,
           maxDuration: Math.max(...stageTimes),
-          violations: this.performanceAlerts.filter(alert => alert.stage === stage).length,
+          violations: this.performanceAlerts.filter(
+            (alert) => alert.stage === stage
+          ).length,
         };
       } else {
         // Mock data for stages that haven't been measured
@@ -805,7 +856,7 @@ export class PipelineTracingIntegrationTestBed {
     if (this.facades && this.facades.cleanup) {
       await this.facades.cleanup();
     }
-    
+
     // Clear captured data
     this.capturedTraces = [];
     this.performanceMetrics = [];
@@ -813,7 +864,7 @@ export class PipelineTracingIntegrationTestBed {
     this.errors = [];
     this.executionTimes.clear();
     this.stageMetrics.clear();
-    
+
     // Explicitly null out large objects to help GC
     this.tracingComponents = {
       filter: null,
@@ -821,7 +872,7 @@ export class PipelineTracingIntegrationTestBed {
       performanceAnalyzer: null,
       performanceMonitor: null,
     };
-    
+
     this.facades = null;
     this.turnExecutionFacade = null;
     this.actionService = null;
@@ -829,12 +880,12 @@ export class PipelineTracingIntegrationTestBed {
     this.performanceCapture = null;
     this.errorCapture = null;
     this.memorySnapshots = [];
-    
+
     // Force garbage collection if available
     if (global.gc) {
       global.gc();
     }
-    
+
     this.initialized = false;
   }
 }

@@ -1,31 +1,29 @@
 {
-    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-    "id": "anatomy:human_leg_athletic",
-    "description": "An athletic human leg",
-    "components": {
-        "anatomy:part": {
-            "subType": "leg"
-        },
-        "anatomy:sockets": {
-            "sockets": [
-                {
-                    "id": "ankle",
-                    "allowedTypes": [
-                        "foot"
-                    ],
-                    "nameTpl": "{{effective_orientation}} {{type}}"
-                }
-            ]
-        },
-        "descriptors:build": {
-            "build": "athletic"
-        },
-        "core:name": {
-            "text": "athletic leg"
-        },
-        "core:movement": {
-            "locked": false,
-            "forcedOverride": false
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_leg_athletic",
+  "description": "An athletic human leg",
+  "components": {
+    "anatomy:part": {
+      "subType": "leg"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "ankle",
+          "allowedTypes": ["foot"],
+          "nameTpl": "{{effective_orientation}} {{type}}"
         }
+      ]
+    },
+    "descriptors:build": {
+      "build": "athletic"
+    },
+    "core:name": {
+      "text": "athletic leg"
+    },
+    "core:movement": {
+      "locked": false,
+      "forcedOverride": false
     }
+  }
 }

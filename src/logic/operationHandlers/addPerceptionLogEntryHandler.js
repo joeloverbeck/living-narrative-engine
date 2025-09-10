@@ -100,7 +100,7 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
 
     // Prepare batch updates
     const componentSpecs = [];
-    
+
     /* ── prepare batch updates ──────────────────────────────────── */
     for (const id of entityIds) {
       if (!this.#entityManager.hasComponent(id, PERCEPTION_LOG_COMPONENT_ID)) {
@@ -133,7 +133,7 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
       componentSpecs.push({
         instanceId: id,
         componentTypeId: PERCEPTION_LOG_COMPONENT_ID,
-        componentData: updatedComponent
+        componentData: updatedComponent,
       });
     }
 
@@ -141,13 +141,16 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
     if (componentSpecs.length > 0) {
       try {
         // Check if the optimized batch method exists
-        if (typeof this.#entityManager.batchAddComponentsOptimized === 'function') {
+        if (
+          typeof this.#entityManager.batchAddComponentsOptimized === 'function'
+        ) {
           // Use optimized batch update that emits a single event
-          const { updateCount, errors } = await this.#entityManager.batchAddComponentsOptimized(
-            componentSpecs,
-            true // emit single batch event
-          );
-          
+          const { updateCount, errors } =
+            await this.#entityManager.batchAddComponentsOptimized(
+              componentSpecs,
+              true // emit single batch event
+            );
+
           if (errors && errors.length > 0) {
             for (const { spec, error } of errors) {
               safeDispatchError(
@@ -157,7 +160,7 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
               );
             }
           }
-          
+
           log.debug(
             `ADD_PERCEPTION_LOG_ENTRY: wrote entry to ${updateCount}/${entityIds.size} perceivers in ${locationId} (batch mode)`
           );
@@ -180,7 +183,7 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
               );
             }
           }
-          
+
           log.debug(
             `ADD_PERCEPTION_LOG_ENTRY: wrote entry to ${updated}/${entityIds.size} perceivers in ${locationId}`
           );
@@ -205,7 +208,7 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
             );
           }
         }
-        
+
         log.debug(
           `ADD_PERCEPTION_LOG_ENTRY: wrote entry to ${updated}/${entityIds.size} perceivers in ${locationId} (fallback mode)`
         );

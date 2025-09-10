@@ -274,7 +274,6 @@ describe('FilterResolver Edge Cases', () => {
       resolver.resolve(node, ctx);
 
       // Should have logged warnings for null/undefined
-      
     });
   });
 });

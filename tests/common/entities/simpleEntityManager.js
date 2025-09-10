@@ -171,14 +171,14 @@ export default class SimpleEntityManager {
   addComponent(id, type, data) {
     // Clear cache first to ensure fresh data is returned
     this.entityInstanceCache.delete(id);
-    
+
     let ent = this.entities.get(id);
     if (!ent) {
       ent = { id, components: {} };
       this.entities.set(id, ent);
     }
     ent.components[type] = deepClone(data);
-    
+
     return Promise.resolve(true);
   }
 
@@ -342,14 +342,17 @@ export default class SimpleEntityManager {
    */
   addEntity(entityObject) {
     if (!entityObject || !entityObject.id) {
-      throw new Error('SimpleEntityManager.addEntity: entityObject must have an id property');
+      throw new Error(
+        'SimpleEntityManager.addEntity: entityObject must have an id property'
+      );
     }
 
     // Check if this is an Entity instance with methods
-    const isEntityInstance = entityObject.hasComponent && 
-                              typeof entityObject.hasComponent === 'function' &&
-                              entityObject.getAllComponents &&
-                              typeof entityObject.getAllComponents === 'function';
+    const isEntityInstance =
+      entityObject.hasComponent &&
+      typeof entityObject.hasComponent === 'function' &&
+      entityObject.getAllComponents &&
+      typeof entityObject.getAllComponents === 'function';
 
     let entityToStore;
     if (isEntityInstance) {
@@ -359,7 +362,7 @@ export default class SimpleEntityManager {
         id: entityObject.id,
         components: entityObject.getAllComponents(),
         // Store reference to original entity for method preservation
-        _originalEntity: entityObject
+        _originalEntity: entityObject,
       };
     } else {
       // For plain objects, clone as before

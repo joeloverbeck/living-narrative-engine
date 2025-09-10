@@ -1996,7 +1996,7 @@ describe('CharacterDatabase', () => {
 
       it('should handle transaction error', async () => {
         const errorMessage = 'Transaction failed';
-        
+
         // Set up mock transaction to trigger error
         const failingTransaction = {
           ...mockTransaction,
@@ -2102,9 +2102,9 @@ describe('CharacterDatabase', () => {
           'Updated cliche data is required'
         );
 
-        await expect(database.updateCliche('cliche-1', 'string')).rejects.toThrow(
-          'Updated cliche data is required'
-        );
+        await expect(
+          database.updateCliche('cliche-1', 'string')
+        ).rejects.toThrow('Updated cliche data is required');
       });
     });
 
@@ -2386,7 +2386,7 @@ describe('CharacterDatabase', () => {
             id: 'cliche-1',
             conceptId: 'concept-1',
             directionId: 'direction-1',
-            title: 'The Hero\'s Journey',
+            title: "The Hero's Journey",
           },
           {
             id: 'cliche-2',

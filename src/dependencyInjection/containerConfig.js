@@ -7,7 +7,10 @@ import { Registrar } from '../utils/registrarHelpers.js';
 // --- Import Logger ---
 import ConsoleLogger, { LogLevel } from '../logging/consoleLogger.js';
 import LoggerStrategy from '../logging/loggerStrategy.js';
-import { getEnvironmentMode, isTestEnvironment } from '../utils/environmentUtils.js';
+import {
+  getEnvironmentMode,
+  isTestEnvironment,
+} from '../utils/environmentUtils.js';
 
 // --- Import Logger Config Utility ---
 import { loadAndApplyLoggerConfig } from '../configuration/utils/loggerConfigUtils.js';

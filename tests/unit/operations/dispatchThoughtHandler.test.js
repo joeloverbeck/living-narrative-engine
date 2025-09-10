@@ -16,7 +16,7 @@ describe('DispatchThoughtHandler - Optional Notes Handling', () => {
 
   beforeEach(() => {
     testBed = createTestBed();
-    
+
     mockDispatcher = {
       dispatch: jest.fn(),
     };
@@ -48,7 +48,7 @@ describe('DispatchThoughtHandler - Optional Notes Handling', () => {
           message: expect.stringContaining('entity_id'),
         })
       );
-      
+
       // Should not dispatch the main thought event
       expect(mockDispatcher.dispatch).not.toHaveBeenCalledWith(
         DISPLAY_THOUGHT_ID,
@@ -72,7 +72,7 @@ describe('DispatchThoughtHandler - Optional Notes Handling', () => {
           message: expect.stringContaining('thoughts'),
         })
       );
-      
+
       // Should not dispatch the main thought event
       expect(mockDispatcher.dispatch).not.toHaveBeenCalledWith(
         DISPLAY_THOUGHT_ID,
@@ -97,7 +97,7 @@ describe('DispatchThoughtHandler - Optional Notes Handling', () => {
           message: expect.stringContaining('entity_id'),
         })
       );
-      
+
       // Should not dispatch the main thought event
       expect(mockDispatcher.dispatch).not.toHaveBeenCalledWith(
         DISPLAY_THOUGHT_ID,
@@ -122,7 +122,7 @@ describe('DispatchThoughtHandler - Optional Notes Handling', () => {
           message: expect.stringContaining('thoughts'),
         })
       );
-      
+
       // Should not dispatch the main thought event
       expect(mockDispatcher.dispatch).not.toHaveBeenCalledWith(
         DISPLAY_THOUGHT_ID,
@@ -185,7 +185,7 @@ describe('DispatchThoughtHandler - Optional Notes Handling', () => {
         thoughts: 'Deep philosophical thoughts',
         notes: [
           { text: 'Additional context notes' },
-          { text: 'Another note', subject: 'memory', subjectType: 'emotion' }
+          { text: 'Another note', subject: 'memory', subjectType: 'emotion' },
         ],
       };
 
@@ -198,7 +198,7 @@ describe('DispatchThoughtHandler - Optional Notes Handling', () => {
         thoughts: 'Deep philosophical thoughts',
         notes: [
           { text: 'Additional context notes' },
-          { text: 'Another note', subject: 'memory', subjectType: 'emotion' }
+          { text: 'Another note', subject: 'memory', subjectType: 'emotion' },
         ],
       });
     });
@@ -364,7 +364,10 @@ describe('DispatchThoughtHandler - Optional Notes Handling', () => {
       }).not.toThrow();
 
       // Assert
-      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(DISPLAY_THOUGHT_ID, expect.any(Object));
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_THOUGHT_ID,
+        expect.any(Object)
+      );
       // Error event should be dispatched
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
         'core:system_error_occurred',

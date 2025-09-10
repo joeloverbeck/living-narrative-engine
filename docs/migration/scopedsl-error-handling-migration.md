@@ -18,13 +18,13 @@ This guide helps you migrate existing ScopeDSL resolvers to use the new centrali
 
 ### What's Changing
 
-| Old Approach | New Approach |
-|--------------|--------------|
-| Direct `throw new Error()` | Use `errorHandler.handleError()` |
-| Inconsistent error messages | Standardized error codes |
-| No error categorization | Automatic categorization |
-| Limited debugging context | Rich context with sanitization |
-| No error buffering | Circular buffer for analysis |
+| Old Approach                | New Approach                     |
+| --------------------------- | -------------------------------- |
+| Direct `throw new Error()`  | Use `errorHandler.handleError()` |
+| Inconsistent error messages | Standardized error codes         |
+| No error categorization     | Automatic categorization         |
+| Limited debugging context   | Rich context with sanitization   |
+| No error buffering          | Circular buffer for analysis     |
 
 ### Benefits of Migration
 
@@ -39,6 +39,7 @@ This guide helps you migrate existing ScopeDSL resolvers to use the new centrali
 ### Example 1: Basic Error Handling
 
 **Before (Old Pattern):**
+
 ```javascript
 export default function createFilterResolver({ logicEval, entitiesGateway }) {
   return {
@@ -47,11 +48,11 @@ export default function createFilterResolver({ logicEval, entitiesGateway }) {
       if (!ctx.actorEntity) {
         throw new Error('FilterResolver: actorEntity is undefined in context');
       }
-      
+
       if (!node.parent) {
         throw new Error('Filter node must have a parent');
       }
-      
+
       try {
         // Resolution logic
         const parentResults = ctx.dispatcher(node.parent, ctx);
@@ -61,27 +62,28 @@ export default function createFilterResolver({ logicEval, entitiesGateway }) {
         console.error('Filter failed:', err);
         throw err;
       }
-    }
+    },
   };
 }
 ```
 
 **After (New Pattern):**
+
 ```javascript
 import { ErrorCodes } from '../constants/errorCodes.js';
 
-export default function createFilterResolver({ 
-  logicEval, 
+export default function createFilterResolver({
+  logicEval,
   entitiesGateway,
-  errorHandler = null  // New dependency
+  errorHandler = null, // New dependency
 }) {
   // Validate error handler if provided
   if (errorHandler) {
     validateDependency(errorHandler, 'IScopeDslErrorHandler', console, {
-      requiredMethods: ['handleError', 'getErrorBuffer']
+      requiredMethods: ['handleError', 'getErrorBuffer'],
     });
   }
-  
+
   return {
     resolve(node, ctx) {
       // Use error handler for validation
@@ -95,10 +97,12 @@ export default function createFilterResolver({
           );
         } else {
           // Fallback for backward compatibility
-          throw new Error('FilterResolver: actorEntity is undefined in context');
+          throw new Error(
+            'FilterResolver: actorEntity is undefined in context'
+          );
         }
       }
-      
+
       if (!node.parent) {
         if (errorHandler) {
           errorHandler.handleError(
@@ -111,7 +115,7 @@ export default function createFilterResolver({
           throw new Error('Filter node must have a parent');
         }
       }
-      
+
       try {
         // Resolution logic remains the same
         const parentResults = ctx.dispatcher(node.parent, ctx);
@@ -129,7 +133,7 @@ export default function createFilterResolver({
           throw err;
         }
       }
-    }
+    },
   };
 }
 ```
@@ -137,27 +141,29 @@ export default function createFilterResolver({
 ### Example 2: Complex Validation
 
 **Before:**
+
 ```javascript
 resolve(node, ctx) {
   // Multiple validation checks with inconsistent handling
   if (!ctx.actorEntity || !ctx.actorEntity.id) {
     throw new Error('Invalid actor');
   }
-  
+
   if (typeof ctx.actorEntity.id !== 'string') {
     throw new Error('Actor ID must be a string');
   }
-  
+
   if (ctx.depth > 10) {
     console.warn('Deep nesting detected');
     throw new Error('Too deep');
   }
-  
+
   // Resolution logic...
 }
 ```
 
 **After:**
+
 ```javascript
 resolve(node, ctx) {
   // Structured validation with specific error codes
@@ -169,7 +175,7 @@ resolve(node, ctx) {
       ErrorCodes.MISSING_ACTOR
     );
   }
-  
+
   if (!ctx.actorEntity.id || typeof ctx.actorEntity.id !== 'string') {
     errorHandler.handleError(
       `Invalid actor ID: ${ctx.actorEntity.id}`,
@@ -178,7 +184,7 @@ resolve(node, ctx) {
       ErrorCodes.INVALID_ACTOR_ID
     );
   }
-  
+
   const depth = ctx.depth || 0;
   if (depth > MAX_DEPTH) {
     errorHandler.handleError(
@@ -188,7 +194,7 @@ resolve(node, ctx) {
       ErrorCodes.MAX_DEPTH_EXCEEDED
     );
   }
-  
+
   // Resolution logic...
 }
 ```
@@ -196,17 +202,18 @@ resolve(node, ctx) {
 ### Example 3: Circular Reference Detection
 
 **Before:**
+
 ```javascript
 resolve(node, ctx) {
   // Manual circular reference tracking
   const visited = ctx.visited || [];
-  
+
   if (visited.includes(node.id)) {
     throw new Error(`Circular reference: ${node.id}`);
   }
-  
+
   visited.push(node.id);
-  
+
   try {
     // Resolution with manual context
     return doResolve(node, { ...ctx, visited });
@@ -217,15 +224,16 @@ resolve(node, ctx) {
 ```
 
 **After:**
+
 ```javascript
 resolve(node, ctx) {
   // Improved circular reference detection
   const visited = ctx.visited || new Set();
-  
+
   if (visited.has(node.id)) {
     errorHandler.handleError(
       `Circular reference detected in scope chain: ${node.id}`,
-      { 
+      {
         nodeId: node.id,
         visitedNodes: Array.from(visited),
         ...ctx
@@ -234,9 +242,9 @@ resolve(node, ctx) {
       ErrorCodes.CYCLE_DETECTED
     );
   }
-  
+
   visited.add(node.id);
-  
+
   try {
     // Resolution with enhanced context
     return doResolve(node, { ...ctx, visited });
@@ -264,8 +272,8 @@ export default function createMyResolver({ dependency1, dependency2 }) {
 }
 
 // After
-export default function createMyResolver({ 
-  dependency1, 
+export default function createMyResolver({
+  dependency1,
   dependency2,
   errorHandler = null  // Add as optional for backward compatibility
 }) {
@@ -355,17 +363,15 @@ Update your tests to expect the new error format:
 ```javascript
 // Before
 it('should throw on missing actor', () => {
-  expect(() => resolver.resolve(node, {}))
-    .toThrow('actorEntity is undefined');
+  expect(() => resolver.resolve(node, {})).toThrow('actorEntity is undefined');
 });
 
 // After
 it('should throw ScopeDslError on missing actor', () => {
   const errorHandler = new ScopeDslErrorHandler({ logger });
   const resolver = createResolver({ errorHandler });
-  
-  expect(() => resolver.resolve(node, {}))
-    .toThrow('[SCOPE_1001]');
+
+  expect(() => resolver.resolve(node, {})).toThrow('[SCOPE_1001]');
 });
 ```
 
@@ -378,45 +384,48 @@ describe('MyResolver - Error Handling', () => {
   let resolver;
   let errorHandler;
   let mockLogger;
-  
+
   beforeEach(() => {
     mockLogger = {
       error: jest.fn(),
       warn: jest.fn(),
       info: jest.fn(),
-      debug: jest.fn()
+      debug: jest.fn(),
     };
-    
-    errorHandler = new ScopeDslErrorHandler({ 
+
+    errorHandler = new ScopeDslErrorHandler({
       logger: mockLogger,
-      config: { isDevelopment: true }
+      config: { isDevelopment: true },
     });
-    
+
     resolver = createMyResolver({ errorHandler });
   });
-  
+
   it('should handle missing actor with proper error code', () => {
-    const ctx = { /* no actorEntity */ };
-    
-    expect(() => resolver.resolve(node, ctx))
-      .toThrow('[SCOPE_1001]');
-    
+    const ctx = {
+      /* no actorEntity */
+    };
+
+    expect(() => resolver.resolve(node, ctx)).toThrow('[SCOPE_1001]');
+
     // Verify error was logged
     expect(mockLogger.error).toHaveBeenCalledWith(
       expect.stringContaining('MyResolver'),
       expect.objectContaining({ code: 'SCOPE_1001' })
     );
   });
-  
+
   it('should buffer errors for analysis', () => {
-    const ctx = { /* invalid context */ };
-    
+    const ctx = {
+      /* invalid context */
+    };
+
     try {
       resolver.resolve(node, ctx);
     } catch (e) {
       // Expected
     }
-    
+
     const buffer = errorHandler.getErrorBuffer();
     expect(buffer).toHaveLength(1);
     expect(buffer[0].code).toBe('SCOPE_1001');
@@ -439,6 +448,7 @@ describe('MyResolver - Error Handling', () => {
 ### Pitfall 1: Forgetting Backward Compatibility
 
 **Wrong:**
+
 ```javascript
 // This breaks existing code!
 resolve(node, ctx) {
@@ -447,6 +457,7 @@ resolve(node, ctx) {
 ```
 
 **Right:**
+
 ```javascript
 resolve(node, ctx) {
   if (errorHandler) {
@@ -460,6 +471,7 @@ resolve(node, ctx) {
 ### Pitfall 2: Using Wrong Error Codes
 
 **Wrong:**
+
 ```javascript
 // Using generic code for specific error
 if (!ctx.actorEntity) {
@@ -467,19 +479,20 @@ if (!ctx.actorEntity) {
     'Missing actor',
     ctx,
     'Resolver',
-    ErrorCodes.UNKNOWN_ERROR  // Too generic!
+    ErrorCodes.UNKNOWN_ERROR // Too generic!
   );
 }
 ```
 
 **Right:**
+
 ```javascript
 if (!ctx.actorEntity) {
   errorHandler.handleError(
     'Missing actor',
     ctx,
     'Resolver',
-    ErrorCodes.MISSING_ACTOR  // Specific code
+    ErrorCodes.MISSING_ACTOR // Specific code
   );
 }
 ```
@@ -487,6 +500,7 @@ if (!ctx.actorEntity) {
 ### Pitfall 3: Losing Error Details
 
 **Wrong:**
+
 ```javascript
 catch (err) {
   // Lost original error details!
@@ -499,6 +513,7 @@ catch (err) {
 ```
 
 **Right:**
+
 ```javascript
 catch (err) {
   // Preserve original error
@@ -514,6 +529,7 @@ catch (err) {
 ### Pitfall 4: Circular References in Context
 
 **Wrong:**
+
 ```javascript
 // This creates a circular reference!
 const context = { parent: ctx };
@@ -523,10 +539,11 @@ errorHandler.handleError(error, context, 'Resolver');
 ```
 
 **Right:**
+
 ```javascript
 // Error handler sanitizes automatically, but avoid if possible
 const context = {
-  parentId: ctx.id,  // Reference by ID instead
+  parentId: ctx.id, // Reference by ID instead
   // Other safe properties
 };
 
@@ -559,7 +576,7 @@ To temporarily disable without code changes:
 const resolver = createResolver({
   dependency1,
   dependency2,
-  errorHandler: null  // Disables new error handling
+  errorHandler: null, // Disables new error handling
 });
 ```
 
@@ -578,12 +595,14 @@ If complete rollback is needed:
 Use this checklist for each resolver you migrate:
 
 ### Pre-Migration
+
 - [ ] Identify all error throwing locations
 - [ ] Note existing error messages
 - [ ] Review current tests
 - [ ] Check for circular reference risks
 
 ### During Migration
+
 - [ ] Add `errorHandler` parameter to factory
 - [ ] Add parameter validation
 - [ ] Import `ErrorCodes`
@@ -593,6 +612,7 @@ Use this checklist for each resolver you migrate:
 - [ ] Maintain backward compatibility
 
 ### Post-Migration
+
 - [ ] Run existing tests
 - [ ] Add new error handling tests
 - [ ] Test in development mode
@@ -602,6 +622,7 @@ Use this checklist for each resolver you migrate:
 - [ ] Update documentation
 
 ### Verification
+
 - [ ] No regression in functionality
 - [ ] Errors have proper codes
 - [ ] Context is properly sanitized

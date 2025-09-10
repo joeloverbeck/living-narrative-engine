@@ -13,14 +13,12 @@ import { ModAssertionHelpers } from '../../../common/mods/ModAssertionHelpers.js
 
 /**
  * Creates standardized anatomy and clothing setup for grind ass against penis scenarios.
- * 
+ *
  * @returns {object} Object with actor, target, and all anatomy/clothing entities
  */
 function setupGrindingScenario() {
   // Create main room
-  const room = new ModEntityBuilder('room1')
-    .asRoom('Test Room')
-    .build();
+  const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
   // Create actor entity facing away from target
   const actor = new ModEntityBuilder('alice')
@@ -28,7 +26,7 @@ function setupGrindingScenario() {
     .atLocation('room1')
     .closeToEntity('bob')
     .withComponent('positioning:facing_away', {
-      facing_away_from: ['bob']
+      facing_away_from: ['bob'],
     })
     .asActor()
     .build();
@@ -75,9 +73,7 @@ function setupGrindingScenario() {
     .build();
 
   // Create clothing entity as separate entity
-  const pants = new ModEntityBuilder('pants1')
-    .withName('pants')
-    .build();
+  const pants = new ModEntityBuilder('pants1').withName('pants').build();
 
   return {
     room,
@@ -94,11 +90,14 @@ describe('sex:grind_ass_against_penis action integration', () => {
 
   beforeEach(async () => {
     // Create test fixture with auto-loaded files
-    testFixture = await ModTestFixture.forAction('sex', 'sex:grind_ass_against_penis');
-    
+    testFixture = await ModTestFixture.forAction(
+      'sex',
+      'sex:grind_ass_against_penis'
+    );
+
     // Setup anatomy and clothing entities
     const entities = setupGrindingScenario();
-    
+
     // Load all entities into the test environment
     testFixture.reset(Object.values(entities));
   });
@@ -119,7 +118,7 @@ describe('sex:grind_ass_against_penis action integration', () => {
     // Assert action executed successfully with proper events
     ModAssertionHelpers.assertActionSuccess(
       testFixture.events,
-      'Alice rubs their ass sensually against Bob\'s penis through the pants.',
+      "Alice rubs their ass sensually against Bob's penis through the pants.",
       {
         shouldEndTurn: true,
         shouldHavePerceptibleEvent: true,
@@ -139,7 +138,7 @@ describe('sex:grind_ass_against_penis action integration', () => {
     ];
 
     testFixture.reset(minimalEntities);
-    
+
     const initialEventCount = testFixture.events.length;
 
     await testFixture.eventBus.dispatch('core:attempt_action', {

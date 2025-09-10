@@ -25,7 +25,9 @@ describe('ThematicDirectionsManagerController - Basic Tests', () => {
       await testBase.setup();
 
       // Setup basic mock responses
-      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue([]);
+      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        []
+      );
 
       mockLocalStorage = {
         getItem: jest.fn(),
@@ -47,10 +49,10 @@ describe('ThematicDirectionsManagerController - Basic Tests', () => {
       if (controller && !controller.isDestroyed) {
         await controller.destroy();
       }
-      
+
       await testBase.cleanup();
       jest.restoreAllMocks();
-      
+
       controller = null;
       mockLocalStorage = null;
     } catch (error) {

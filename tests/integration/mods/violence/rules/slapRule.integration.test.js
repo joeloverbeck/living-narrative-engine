@@ -8,7 +8,6 @@ import { ModTestFixture } from '../../../../common/mods/ModTestFixture.js';
 import slapRule from '../../../../../data/mods/violence/rules/handle_slap.rule.json';
 import eventIsActionSlap from '../../../../../data/mods/violence/conditions/event-is-action-slap.condition.json';
 
-
 describe('Violence Mod: Slap Rule', () => {
   let testFixture;
 
@@ -34,9 +33,7 @@ describe('Violence Mod: Slap Rule', () => {
       // Execute the action
       await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
-      testFixture.assertActionSuccess(
-        'Alice slaps Beth across the face.'
-      );
+      testFixture.assertActionSuccess('Alice slaps Beth across the face.');
     });
 
     it('creates correct perceptible event for slap action', async () => {
@@ -81,7 +78,9 @@ describe('Violence Mod: Slap Rule', () => {
     });
 
     it('should have correct condition structure', () => {
-      expect(testFixture.conditionFile.id).toBe('violence:event-is-action-slap');
+      expect(testFixture.conditionFile.id).toBe(
+        'violence:event-is-action-slap'
+      );
       expect(testFixture.conditionFile.description).toBe(
         "Checks if the triggering event is for the 'violence:slap' action."
       );
@@ -120,13 +119,15 @@ describe('Violence Mod: Slap Rule', () => {
   describe('Rule Action Structure', () => {
     it('should have correct action sequence', () => {
       expect(testFixture.ruleFile.actions).toHaveLength(8);
-      
+
       // Verify key action types are present
-      const actionTypes = testFixture.ruleFile.actions.map(action => action.type);
+      const actionTypes = testFixture.ruleFile.actions.map(
+        (action) => action.type
+      );
       expect(actionTypes).toContain('GET_NAME'); // Get actor name
       expect(actionTypes).toContain('QUERY_COMPONENT'); // Get actor position
       expect(actionTypes).toContain('SET_VARIABLE'); // Set message variables
-      
+
       // Check that the last action is the macro expansion
       const lastAction = testFixture.ruleFile.actions[7];
       expect(lastAction.macro).toBe('core:logSuccessAndEndTurn');

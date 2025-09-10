@@ -12,16 +12,18 @@ import { ModAssertionHelpers } from '../../../common/mods/ModAssertionHelpers.js
 
 /**
  * Creates a standardized behind-positioning scenario.
- * 
+ *
  * @param {string} actorName - Name for the actor
  * @param {string} targetName - Name for the target
  * @param {string} locationId - Location ID
  * @returns {object} Object with actor, target, and location entities
  */
-function setupBehindPositioningScenario(actorName = 'Player Character', targetName = 'Guard NPC', locationId = 'test:room') {
-  const room = new ModEntityBuilder(locationId)
-    .asRoom('Test Room')
-    .build();
+function setupBehindPositioningScenario(
+  actorName = 'Player Character',
+  targetName = 'Guard NPC',
+  locationId = 'test:room'
+) {
+  const room = new ModEntityBuilder(locationId).asRoom('Test Room').build();
 
   const actor = new ModEntityBuilder('test:player')
     .withName(actorName)
@@ -43,9 +45,7 @@ function setupBehindPositioningScenario(actorName = 'Player Character', targetNa
  * Creates multi-actor behind-positioning scenario.
  */
 function setupMultiActorBehindScenario() {
-  const room = new ModEntityBuilder('test:room')
-    .asRoom('Test Room')
-    .build();
+  const room = new ModEntityBuilder('test:room').asRoom('Test Room').build();
 
   const actor1 = new ModEntityBuilder('test:player1')
     .withName('Player One')
@@ -75,10 +75,10 @@ function setupMultiActorBehindScenario() {
  */
 function setupExistingFacingAwayScenario() {
   const scenario = setupBehindPositioningScenario();
-  
+
   // Modify target to have existing facing_away component
   scenario.target.components['positioning:facing_away'] = {
-    facing_away_from: ['test:existing']
+    facing_away_from: ['test:existing'],
   };
 
   return scenario;
@@ -88,18 +88,22 @@ function setupExistingFacingAwayScenario() {
  * Creates scenario where actor is sitting on furniture.
  */
 function setupSittingBehindScenario() {
-  const scenario = setupBehindPositioningScenario('Sitting Player', 'Standing Guard', 'test:room');
-  
+  const scenario = setupBehindPositioningScenario(
+    'Sitting Player',
+    'Standing Guard',
+    'test:room'
+  );
+
   // Add a bench to the room
   const bench = new ModEntityBuilder('test:bench')
     .withName('Wooden Bench')
     .atLocation('test:room')
     .build();
-  
+
   // Actor is sitting on the bench
   scenario.actor.components['positioning:sitting_on'] = {
     furniture_id: 'test:bench',
-    spot_index: 0
+    spot_index: 0,
   };
 
   return { ...scenario, bench };
@@ -109,11 +113,15 @@ function setupSittingBehindScenario() {
  * Creates scenario where actor is kneeling before someone.
  */
 function setupKneelingBehindScenario() {
-  const scenario = setupBehindPositioningScenario('Kneeling Player', 'Standing Guard', 'test:room');
-  
+  const scenario = setupBehindPositioningScenario(
+    'Kneeling Player',
+    'Standing Guard',
+    'test:room'
+  );
+
   // Actor is kneeling before someone else
   scenario.actor.components['positioning:kneeling_before'] = {
-    entityId: 'test:someone_else'
+    entityId: 'test:someone_else',
   };
 
   return scenario;
@@ -123,7 +131,10 @@ describe('Place Yourself Behind Action Integration Tests', () => {
   let testFixture;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('positioning', 'positioning:place_yourself_behind');
+    testFixture = await ModTestFixture.forAction(
+      'positioning',
+      'positioning:place_yourself_behind'
+    );
   });
 
   afterEach(() => {
@@ -236,7 +247,7 @@ describe('Place Yourself Behind Action Integration Tests', () => {
     // In normal action discovery, this action would not appear in available actions
     // because the actor has the positioning:sitting_on component.
     // However, we're testing the rule execution directly to verify the logic.
-    
+
     // NOTE: This test shows what would happen if somehow the action was triggered
     // In real gameplay, the action discovery system prevents this scenario
     await testFixture.executeAction('test:player', 'test:npc');
@@ -292,7 +303,9 @@ describe('Place Yourself Behind Action Integration Tests', () => {
     // Verify the sitting component is properly structured
     const actor = testFixture.entityManager.getEntityInstance('test:player');
     expect(actor.components['positioning:sitting_on']).toBeDefined();
-    expect(actor.components['positioning:sitting_on'].furniture_id).toBe('test:bench');
+    expect(actor.components['positioning:sitting_on'].furniture_id).toBe(
+      'test:bench'
+    );
     expect(actor.components['positioning:sitting_on'].spot_index).toBe(0);
 
     // Verify the bench entity exists
@@ -309,6 +322,8 @@ describe('Place Yourself Behind Action Integration Tests', () => {
     // Verify the kneeling component is properly structured
     const actor = testFixture.entityManager.getEntityInstance('test:player');
     expect(actor.components['positioning:kneeling_before']).toBeDefined();
-    expect(actor.components['positioning:kneeling_before'].entityId).toBe('test:someone_else');
+    expect(actor.components['positioning:kneeling_before'].entityId).toBe(
+      'test:someone_else'
+    );
   });
 });

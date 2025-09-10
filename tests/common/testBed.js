@@ -356,10 +356,11 @@ export function createTestBed() {
      */
     createAjvValidator() {
       // Dynamic import to avoid circular dependencies
-      const AjvSchemaValidator = require('../../src/validation/ajvSchemaValidator.js').default;
-      
-      return new AjvSchemaValidator({ 
-        logger: mockObjects.mockLogger 
+      const AjvSchemaValidator =
+        require('../../src/validation/ajvSchemaValidator.js').default;
+
+      return new AjvSchemaValidator({
+        logger: mockObjects.mockLogger,
       });
     },
 

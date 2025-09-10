@@ -23,17 +23,17 @@ class PerformanceEventBus {
       timestamp: Date.now(),
     };
     this.events.push(event);
-    
+
     // Trigger any listeners (for compatibility)
     const listeners = this.listeners.get(eventType) || [];
-    listeners.forEach(listener => {
+    listeners.forEach((listener) => {
       try {
         listener(event);
       } catch (error) {
         // Ignore listener errors in performance tests
       }
     });
-    
+
     return Promise.resolve(true);
   }
 
@@ -124,17 +124,17 @@ class PerformanceHandlers {
         execute: jest.fn(() => {
           this.executionCount++;
           return Promise.resolve('TestName');
-        })
+        }),
       },
       LOG_MESSAGE: {
         execute: jest.fn((params) => {
           this.executionCount++;
           this.eventBus.dispatch('LOG_MESSAGE', {
             message: params.message || 'Test message',
-            level: params.level || 'info'
+            level: params.level || 'info',
           });
           return Promise.resolve(true);
-        })
+        }),
       },
       ADD_COMPONENT: {
         execute: jest.fn((params) => {
@@ -147,25 +147,25 @@ class PerformanceHandlers {
             );
             this.eventBus.dispatch('ADD_COMPONENT', {
               entityId: params.entityId,
-              componentId: params.componentId
+              componentId: params.componentId,
             });
           }
           return Promise.resolve(true);
-        })
+        }),
       },
       DISPATCH_EVENT: {
         execute: jest.fn((params) => {
           this.executionCount++;
           this.eventBus.dispatch(params.eventType, params.payload || {});
           return Promise.resolve(true);
-        })
+        }),
       },
       END_TURN: {
         execute: jest.fn(() => {
           this.executionCount++;
           return Promise.resolve(true);
-        })
-      }
+        }),
+      },
     };
   }
 
@@ -176,7 +176,7 @@ class PerformanceHandlers {
 
 /**
  * Lightweight performance test fixture for infrastructure testing.
- * 
+ *
  * This fixture eliminates heavy dependencies like SystemLogicInterpreter,
  * JsonLogicEvaluationService, ActionIndex, etc. and focuses on testing
  * the performance of basic infrastructure components.
@@ -187,7 +187,11 @@ export class PerformanceTestFixture {
     this.eventBus = new PerformanceEventBus();
     this.entityManager = new PerformanceEntityManager();
     this.logger = createMockLogger();
-    this.handlers = new PerformanceHandlers(this.entityManager, this.eventBus, this.logger);
+    this.handlers = new PerformanceHandlers(
+      this.entityManager,
+      this.eventBus,
+      this.logger
+    );
     this.handlerRegistry = this.handlers.createHandlers();
     this.mockRules = [];
   }
@@ -199,9 +203,7 @@ export class PerformanceTestFixture {
     const rule = {
       rule_id: ruleId,
       event_type: 'core:attempt_action',
-      actions: actions || [
-        { type: 'GET_NAME', parameters: {} }
-      ]
+      actions: actions || [{ type: 'GET_NAME', parameters: {} }],
     };
     this.mockRules.push(rule);
     return rule;
@@ -212,18 +214,24 @@ export class PerformanceTestFixture {
    */
   createStandardActorTarget(names = ['Alice', 'Bob'], options = {}) {
     const [actorName, targetName] = names;
-    
-    const actor = this.entityManager.createEntity(`actor_${actorName.toLowerCase()}`, {
-      'core:name': { name: actorName },
-      'core:position': { locationId: 'room1' },
-      ...options.actorComponents || {}
-    });
 
-    const target = this.entityManager.createEntity(`target_${targetName.toLowerCase()}`, {
-      'core:name': { name: targetName },
-      'core:position': { locationId: 'room1' },
-      ...options.targetComponents || {}
-    });
+    const actor = this.entityManager.createEntity(
+      `actor_${actorName.toLowerCase()}`,
+      {
+        'core:name': { name: actorName },
+        'core:position': { locationId: 'room1' },
+        ...(options.actorComponents || {}),
+      }
+    );
+
+    const target = this.entityManager.createEntity(
+      `target_${targetName.toLowerCase()}`,
+      {
+        'core:name': { name: targetName },
+        'core:position': { locationId: 'room1' },
+        ...(options.targetComponents || {}),
+      }
+    );
 
     return { actor, target };
   }
@@ -239,7 +247,7 @@ export class PerformanceTestFixture {
         {
           'core:name': { name: `${namePrefix}${i}` },
           'core:position': { locationId: 'room1' },
-          ...componentTemplate
+          ...componentTemplate,
         }
       );
       entities.push(entity);
@@ -257,13 +265,11 @@ export class PerformanceTestFixture {
       actionId,
       actorId,
       targetId: targetId || null,
-      eventName: 'core:attempt_action'
+      eventName: 'core:attempt_action',
     });
 
     // Execute the rule actions directly for performance testing
-    const actions = ruleActions || [
-      { type: 'GET_NAME', parameters: {} }
-    ];
+    const actions = ruleActions || [{ type: 'GET_NAME', parameters: {} }];
 
     for (const action of actions) {
       const handler = this.handlerRegistry[action.type];
@@ -276,7 +282,7 @@ export class PerformanceTestFixture {
         if (params.message && params.message.includes('{')) {
           params.message = params.message.replace(/{actorId}/g, actorId);
         }
-        
+
         await handler.execute(params);
       }
     }
@@ -319,7 +325,7 @@ export class PerformanceTestFixture {
       eventCount: this.eventBus.eventCount,
       entityCount: this.entityManager.entityCount,
       handlerExecutionCount: this.handlers.executionCount,
-      memoryUsage: process.memoryUsage()
+      memoryUsage: process.memoryUsage(),
     };
   }
 
@@ -350,44 +356,77 @@ export class PerformanceTestScenarios {
   /**
    * Creates a simple action execution scenario.
    */
-  static createSimpleActionScenario(fixture, actorName = 'Alice', targetName = 'Bob') {
-    const { actor, target } = fixture.createStandardActorTarget([actorName, targetName]);
-    const ruleActions = [
-      { type: 'GET_NAME', parameters: {} }
-    ];
-    
+  static createSimpleActionScenario(
+    fixture,
+    actorName = 'Alice',
+    targetName = 'Bob'
+  ) {
+    const { actor, target } = fixture.createStandardActorTarget([
+      actorName,
+      targetName,
+    ]);
+    const ruleActions = [{ type: 'GET_NAME', parameters: {} }];
+
     return {
       actor,
       target,
       ruleActions,
-      execute: () => fixture.executeAction('test:simple_action', actor.id, target.id, ruleActions)
+      execute: () =>
+        fixture.executeAction(
+          'test:simple_action',
+          actor.id,
+          target.id,
+          ruleActions
+        ),
     };
   }
 
   /**
    * Creates a complex action execution scenario with multiple operations.
    */
-  static createComplexActionScenario(fixture, actorName = 'Alice', targetName = 'Bob') {
-    const { actor, target } = fixture.createStandardActorTarget([actorName, targetName]);
+  static createComplexActionScenario(
+    fixture,
+    actorName = 'Alice',
+    targetName = 'Bob'
+  ) {
+    const { actor, target } = fixture.createStandardActorTarget([
+      actorName,
+      targetName,
+    ]);
     const ruleActions = [
       { type: 'GET_NAME', parameters: {} },
-      { type: 'LOG_MESSAGE', parameters: { message: 'Action executed', level: 'info' } },
-      { type: 'ADD_COMPONENT', parameters: { 
-        entityId: '{actorId}', 
-        componentId: 'test:action_result', 
-        componentData: { success: true } 
-      }},
-      { type: 'DISPATCH_EVENT', parameters: { 
-        eventType: 'test:action_completed', 
-        payload: { actorId: '{actorId}' } 
-      }}
+      {
+        type: 'LOG_MESSAGE',
+        parameters: { message: 'Action executed', level: 'info' },
+      },
+      {
+        type: 'ADD_COMPONENT',
+        parameters: {
+          entityId: '{actorId}',
+          componentId: 'test:action_result',
+          componentData: { success: true },
+        },
+      },
+      {
+        type: 'DISPATCH_EVENT',
+        parameters: {
+          eventType: 'test:action_completed',
+          payload: { actorId: '{actorId}' },
+        },
+      },
     ];
-    
+
     return {
       actor,
       target,
       ruleActions,
-      execute: () => fixture.executeAction('test:complex_action', actor.id, target.id, ruleActions)
+      execute: () =>
+        fixture.executeAction(
+          'test:complex_action',
+          actor.id,
+          target.id,
+          ruleActions
+        ),
     };
   }
 
@@ -398,14 +437,20 @@ export class PerformanceTestScenarios {
     const { actor, target } = fixture.createStandardActorTarget();
     const ruleActions = Array.from({ length: eventCount }, (_, i) => ({
       type: 'LOG_MESSAGE',
-      parameters: { message: `Event ${i}`, level: 'info' }
+      parameters: { message: `Event ${i}`, level: 'info' },
     }));
-    
+
     return {
       actor,
       target,
       ruleActions,
-      execute: () => fixture.executeAction('test:large_event_action', actor.id, target.id, ruleActions)
+      execute: () =>
+        fixture.executeAction(
+          'test:large_event_action',
+          actor.id,
+          target.id,
+          ruleActions
+        ),
     };
   }
 }

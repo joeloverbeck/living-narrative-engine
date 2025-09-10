@@ -60,7 +60,7 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
   beforeAll(async () => {
     // Use shared container for all tests - massive performance improvement
     container = await PerformanceTestBed.getSharedContainer();
-    
+
     // Get services once for all tests
     entityManager = container.resolve(tokens.IEntityManager);
     scopeRegistry = container.resolve(tokens.IScopeRegistry);
@@ -78,7 +78,7 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
       resolutionTimes: [],
       concurrentResolutions: 0,
     };
-    
+
     // Reset entity cache for fresh test data
     PerformanceTestBed.resetEntityCache();
   });
@@ -131,35 +131,42 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
         spatialIndexManager: spatialIndexManager,
       };
 
-      // Act - Measure resolution performance
-      const startTime = performance.now();
+      // Act - Measure resolution performance with robust statistical sampling
+      let result;
+      const performanceStats = await measurePerformanceRobust(async () => {
+        result = await ScopeTestUtilities.resolveScopeE2E(
+          'test:high_level_actors',
+          testActor,
+          gameContext,
+          { scopeRegistry, scopeEngine }
+        );
+        return result;
+      }, {
+        warmupRuns: 2,
+        measurementRuns: 5,
+        operationName: `500-entity high-level actors filter`
+      });
 
-      const result = await ScopeTestUtilities.resolveScopeE2E(
-        'test:high_level_actors',
-        testActor,
-        gameContext,
-        { scopeRegistry, scopeEngine }
-      );
+      // Record metrics (use median for consistency)
+      performanceMetrics.resolutionTimes.push(performanceStats.median);
 
-      const endTime = performance.now();
-      const resolutionTime = endTime - startTime;
-
-      // Record metrics
-      performanceMetrics.resolutionTimes.push(resolutionTime);
-
-      // Assert - Verify performance targets
-      // Using 200ms threshold to account for CI environment variance while still catching regressions
-      // (proportional to 1500ms for 10x data in the 10k entity test)
-      expect(resolutionTime).toBeLessThan(200); // < 200ms target with variance tolerance
+      // Assert - Verify performance targets using median and environment-aware threshold
+      const baseThreshold = 200; // Base threshold for local development
+      const threshold = getPerformanceThreshold(baseThreshold, 1.5); // 1.5x for CI
+      
+      expect(performanceStats.median).toBeLessThan(threshold);
       expect(result).toBeInstanceOf(Set);
       expect(result.size).toBeGreaterThan(0);
       expect(result.size).toBeLessThan(entityCount); // Should filter some entities
 
-      // Log performance metrics
+      // Log performance metrics with enhanced statistics
       logger.info('Large dataset resolution performance', {
         entityCount,
-        resolutionTime: `${resolutionTime.toFixed(2)}ms`,
+        medianTime: `${performanceStats.median.toFixed(2)}ms`,
+        meanTime: `${performanceStats.mean.toFixed(2)}ms`,
+        threshold: `${threshold.toFixed(2)}ms`,
         resultCount: result.size,
+        performanceStatus: performanceStats.median < threshold ? 'PASS' : 'FAIL'
       });
     });
 
@@ -188,30 +195,40 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
       const testActor = testEntities.actors[0];
       const gameContext = await createGameContext(testEntities.location.id);
 
-      // Act - Measure resolution with very large dataset
-      const startTime = performance.now();
+      // Act - Measure resolution with very large dataset using robust statistical sampling
+      let result;
+      const performanceStats = await measurePerformanceRobust(async () => {
+        result = await ScopeTestUtilities.resolveScopeE2E(
+          'test:complex_filter',
+          testActor,
+          gameContext,
+          { scopeRegistry, scopeEngine }
+        );
+        return result;
+      }, {
+        warmupRuns: 2,
+        measurementRuns: 5,
+        operationName: `2000-entity complex 3-condition filter`
+      });
 
-      const result = await ScopeTestUtilities.resolveScopeE2E(
-        'test:complex_filter',
-        testActor,
-        gameContext,
-        { scopeRegistry, scopeEngine }
-      );
-
-      const endTime = performance.now();
-      const resolutionTime = endTime - startTime;
-
-      // Assert - Verify graceful handling
-      // 2000 entities (reduced from 10000) with complex 3-condition filter
-      // Expected time: ~800ms (proportionally reduced from original 4500ms for 10k)
-      // Using 1000ms threshold to account for CI environment variance
-      expect(resolutionTime).toBeLessThan(1000); // 1s threshold for 2k entities with complex filtering
+      // Assert - Verify graceful handling using median and environment-aware threshold
+      // 2000 entities with complex 3-condition filter
+      // Base threshold: 800ms (proportionally reduced from original 4500ms for 10k entities)
+      const baseThreshold = 800; // Base threshold for local development
+      const threshold = getPerformanceThreshold(baseThreshold, 1.5); // 1.5x for CI (1200ms)
+      
+      expect(performanceStats.median).toBeLessThan(threshold);
       expect(result).toBeInstanceOf(Set);
 
+      // Log performance metrics with enhanced statistics
       logger.info('Very large dataset resolution performance', {
         entityCount,
-        resolutionTime: `${resolutionTime.toFixed(2)}ms`,
+        medianTime: `${performanceStats.median.toFixed(2)}ms`,
+        meanTime: `${performanceStats.mean.toFixed(2)}ms`,
+        threshold: `${threshold.toFixed(2)}ms`,
         resultCount: result.size,
+        performanceStatus: performanceStats.median < threshold ? 'PASS' : 'FAIL',
+        variabilityPercent: `${((performanceStats.max - performanceStats.min) / performanceStats.mean * 100).toFixed(1)}%`
       });
     });
   });
@@ -288,7 +305,7 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
     test('should handle multiple simultaneous resolutions efficiently', async () => {
       // Arrange - Create test data and various scopes
       const testEntities = await PerformanceTestBed.createOptimizedTestDataset(
-        300,  // Reduced from 500 for faster concurrent tests
+        300, // Reduced from 500 for faster concurrent tests
         { registry, entityManager }
       );
 
@@ -325,18 +342,23 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
       // First, measure sequential baseline
       const sequentialStartTime = performance.now();
       const sequentialResults = [];
-      
+
       for (let i = 0; i < concurrentCount; i++) {
         const actor = actors[i % actors.length];
         const scopeId = `test:scope_${(i % 3) + 1}`;
-        
-        const result = await ScopeTestUtilities.resolveScopeE2E(scopeId, actor, gameContext, {
-          scopeRegistry,
-          scopeEngine,
-        });
+
+        const result = await ScopeTestUtilities.resolveScopeE2E(
+          scopeId,
+          actor,
+          gameContext,
+          {
+            scopeRegistry,
+            scopeEngine,
+          }
+        );
         sequentialResults.push(result);
       }
-      
+
       const sequentialEndTime = performance.now();
       const sequentialTime = sequentialEndTime - sequentialStartTime;
 
@@ -364,17 +386,18 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
 
       // Calculate performance improvement
       const speedupRatio = sequentialTime / concurrentTime;
-      const percentImprovement = ((sequentialTime - concurrentTime) / sequentialTime) * 100;
+      const percentImprovement =
+        ((sequentialTime - concurrentTime) / sequentialTime) * 100;
 
       // Assert - Verify concurrent execution works correctly
       // Note: Since scope resolution is synchronous (CPU-bound), we don't expect
       // performance improvements from Promise.all in JavaScript's single-threaded environment.
       // In fact, concurrent execution might be slightly slower due to promise overhead.
       // We're primarily testing that concurrent resolutions don't interfere with each other.
-      
+
       // Allow concurrent to be up to 50% slower than sequential (due to promise overhead)
       expect(speedupRatio).toBeGreaterThan(0.5); // At least 0.5x speed (can be slower)
-      
+
       // Verify results are correct
       expect(concurrentResults).toHaveLength(concurrentCount);
       expect(concurrentResults.every((r) => r instanceof Set)).toBe(true);
@@ -391,10 +414,11 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
 
     test('should handle resource contention gracefully', async () => {
       // Arrange - Create shared resource scenario
-      const sharedEntities = await PerformanceTestBed.createOptimizedTestDataset(
-        100,
-        { registry, entityManager }
-      );
+      const sharedEntities =
+        await PerformanceTestBed.createOptimizedTestDataset(100, {
+          registry,
+          entityManager,
+        });
 
       // Create scope that will cause contention
       const testScopes = ScopeTestUtilities.createTestScopes(
@@ -510,6 +534,82 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
   // Helper functions
 
   /**
+   * Measures performance with statistical sampling to reduce variance
+   * Includes warm-up runs and environment-aware thresholds
+   *
+   * @param {Function} operation - Async operation to measure
+   * @param {object} options - Measurement options
+   * @param {number} [options.warmupRuns] - Number of warm-up runs for JIT optimization
+   * @param {number} [options.measurementRuns] - Number of measurement runs for statistical sampling
+   * @param {string} [options.operationName] - Name for logging
+   * @returns {Promise<{median: number, mean: number, min: number, max: number, all: number[]}>} Performance statistics
+   */
+  async function measurePerformanceRobust(operation, options = {}) {
+    const {
+      warmupRuns = 2,
+      measurementRuns = 5,
+      operationName = 'operation'
+    } = options;
+
+    // Warm-up runs to establish JIT optimization and cache population
+    logger.info(`Starting ${warmupRuns} warm-up runs for ${operationName}`);
+    for (let i = 0; i < warmupRuns; i++) {
+      await operation();
+    }
+
+    // Measurement runs with timing
+    logger.info(`Starting ${measurementRuns} measurement runs for ${operationName}`);
+    const times = [];
+    for (let i = 0; i < measurementRuns; i++) {
+      const startTime = performance.now();
+      await operation();
+      const endTime = performance.now();
+      const duration = endTime - startTime;
+      times.push(duration);
+    }
+
+    // Calculate statistics
+    const sorted = [...times].sort((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)];
+    const mean = times.reduce((a, b) => a + b, 0) / times.length;
+    const min = Math.min(...times);
+    const max = Math.max(...times);
+
+    logger.info(`${operationName} performance statistics`, {
+      median: `${median.toFixed(2)}ms`,
+      mean: `${mean.toFixed(2)}ms`,
+      min: `${min.toFixed(2)}ms`,
+      max: `${max.toFixed(2)}ms`,
+      variance: `${((max - min) / mean * 100).toFixed(1)}%`,
+      allTimes: times.map(t => `${t.toFixed(2)}ms`)
+    });
+
+    return { median, mean, min, max, all: times };
+  }
+
+  /**
+   * Gets environment-aware performance threshold
+   * Accounts for CI environment variance vs local development
+   *
+   * @param {number} baseThreshold - Base threshold in milliseconds
+   * @param {number} [ciMultiplier] - Multiplier for CI environments
+   * @returns {number} Adjusted threshold
+   */
+  function getPerformanceThreshold(baseThreshold, ciMultiplier = 1.5) {
+    const isCI = process.env.CI || process.env.GITHUB_ACTIONS || process.env.JENKINS_URL;
+    const threshold = isCI ? baseThreshold * ciMultiplier : baseThreshold;
+    
+    logger.info('Performance threshold calculation', {
+      baseThreshold: `${baseThreshold}ms`,
+      isCI,
+      ciMultiplier,
+      finalThreshold: `${threshold}ms`
+    });
+
+    return threshold;
+  }
+
+  /**
    * Creates a game context for scope resolution
    *
    * @param {string} locationId - Location entity ID
@@ -571,57 +671,13 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
 
     // Use batch creation for better performance
     const definitions = [new EntityDefinition(actorDef.id, actorDef)];
-    await PerformanceTestBed.batchCreateEntities(definitions, registry, entityManager);
+    await PerformanceTestBed.batchCreateEntities(
+      definitions,
+      registry,
+      entityManager
+    );
 
     return { actors: [{ id: actorDef.id }] };
   }
 
-  /**
-   *
-   */
-  async function createActorWithRelations() {
-    // Create actors with circular relationships
-    const actors = [];
-    for (let i = 0; i < 5; i++) {
-      const actorDef = {
-        id: `related-actor-${i}`,
-        description: `Related actor ${i}`,
-        components: {
-          'core:actor': { name: `Related Actor ${i}` },
-        },
-      };
-
-      registry.store(
-        'entityDefinitions',
-        actorDef.id,
-        new EntityDefinition(actorDef.id, actorDef)
-      );
-
-      await entityManager.createEntityInstance(actorDef.id, {
-        instanceId: actorDef.id,
-        definitionId: actorDef.id,
-        components: actorDef.components,
-      });
-
-      actors.push({ id: actorDef.id });
-    }
-
-    // Create circular relations
-    for (let i = 0; i < 5; i++) {
-      const relations = [];
-      const nextIndex = (i + 1) % 5;
-      relations.push({
-        type: 'friend',
-        target: actors[nextIndex].id,
-      });
-
-      await entityManager.addComponent(
-        actors[i].id,
-        'core:relations',
-        relations
-      );
-    }
-
-    return { id: actors[0].id };
-  }
 });

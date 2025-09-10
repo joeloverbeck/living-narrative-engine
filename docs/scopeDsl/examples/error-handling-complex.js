@@ -353,12 +353,7 @@ export default function createComplexResolver({
    * @param ctx
    * @param errorHandler
    */
-  function handleDoubleFailure(
-    primaryError,
-    fallbackError,
-    ctx,
-    errorHandler
-  ) {
+  function handleDoubleFailure(primaryError, fallbackError, ctx, errorHandler) {
     const combinedMessage = `Primary resolution failed: ${primaryError.message}. Fallback also failed: ${fallbackError.message}`;
 
     errorHandler.handleError(
@@ -409,7 +404,8 @@ export default function createComplexResolver({
     // Count errors by category
     const categoryCounts = {};
     errors.forEach((error) => {
-      categoryCounts[error.category] = (categoryCounts[error.category] || 0) + 1;
+      categoryCounts[error.category] =
+        (categoryCounts[error.category] || 0) + 1;
     });
 
     // Check for concerning patterns

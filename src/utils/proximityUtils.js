@@ -6,7 +6,6 @@
 import { InvalidArgumentError } from '../errors/invalidArgumentError.js';
 import { assertPresent } from './dependencyUtils.js';
 
-
 /**
  * Calculate adjacent spot indices for a given furniture position
  *
@@ -23,7 +22,7 @@ export function getAdjacentSpots(spotIndex, totalSpots) {
       spotIndex
     );
   }
-  
+
   if (!Number.isInteger(totalSpots) || totalSpots <= 0) {
     throw new InvalidArgumentError(
       `totalSpots must be a positive integer, got ${totalSpots}`,
@@ -31,7 +30,7 @@ export function getAdjacentSpots(spotIndex, totalSpots) {
       totalSpots
     );
   }
-  
+
   if (spotIndex >= totalSpots) {
     throw new InvalidArgumentError(
       `spotIndex ${spotIndex} is out of bounds for totalSpots ${totalSpots}`,
@@ -71,8 +70,11 @@ export function getAdjacentSpots(spotIndex, totalSpots) {
 export function findAdjacentOccupants(furnitureComponent, spotIndex) {
   // Validate furniture component
   assertPresent(furnitureComponent, 'furnitureComponent is required');
-  assertPresent(furnitureComponent.spots, 'furnitureComponent.spots is required');
-  
+  assertPresent(
+    furnitureComponent.spots,
+    'furnitureComponent.spots is required'
+  );
+
   if (!Array.isArray(furnitureComponent.spots)) {
     throw new InvalidArgumentError(
       'furnitureComponent.spots must be an array',
@@ -82,7 +84,7 @@ export function findAdjacentOccupants(furnitureComponent, spotIndex) {
   }
 
   const totalSpots = furnitureComponent.spots.length;
-  
+
   if (totalSpots === 0) {
     throw new InvalidArgumentError(
       'furnitureComponent.spots cannot be empty',
@@ -93,17 +95,17 @@ export function findAdjacentOccupants(furnitureComponent, spotIndex) {
 
   // Get adjacent spot indices
   const adjacentIndices = getAdjacentSpots(spotIndex, totalSpots);
-  
+
   // Collect non-null entity IDs from adjacent spots
   const adjacentOccupants = [];
-  
+
   for (const index of adjacentIndices) {
     const occupant = furnitureComponent.spots[index];
     if (occupant !== null && occupant !== undefined) {
       adjacentOccupants.push(occupant);
     }
   }
-  
+
   return adjacentOccupants;
 }
 
@@ -117,7 +119,12 @@ export function findAdjacentOccupants(furnitureComponent, spotIndex) {
  * @returns {boolean} True if all parameters are valid
  * @throws {InvalidArgumentError} If any parameter is invalid
  */
-export function validateProximityParameters(furnitureId, actorId, spotIndex, logger) {
+export function validateProximityParameters(
+  furnitureId,
+  actorId,
+  spotIndex,
+  logger
+) {
   const errors = [];
 
   try {
@@ -129,22 +136,32 @@ export function validateProximityParameters(furnitureId, actorId, spotIndex, log
     } else if (furnitureId.trim().length === 0) {
       errors.push('Furniture ID cannot be empty or whitespace only');
     } else if (!furnitureId.includes(':')) {
-      errors.push('Furniture ID must be in namespaced format (modId:identifier)');
+      errors.push(
+        'Furniture ID must be in namespaced format (modId:identifier)'
+      );
     } else {
       const parts = furnitureId.split(':');
       if (parts.length !== 2) {
-        errors.push('Furniture ID must have exactly one colon separating mod ID and identifier');
+        errors.push(
+          'Furniture ID must have exactly one colon separating mod ID and identifier'
+        );
       } else {
         const [modId, identifier] = parts;
         if (!modId || modId.trim().length === 0) {
           errors.push('Furniture ID must have a valid mod ID before the colon');
         } else if (!/^[a-zA-Z0-9_-]+$/.test(modId)) {
-          errors.push('Mod ID must contain only alphanumeric characters, underscores, and hyphens');
+          errors.push(
+            'Mod ID must contain only alphanumeric characters, underscores, and hyphens'
+          );
         }
         if (!identifier || identifier.trim().length === 0) {
-          errors.push('Furniture ID must have a valid identifier after the colon');
+          errors.push(
+            'Furniture ID must have a valid identifier after the colon'
+          );
         } else if (!/^[a-zA-Z0-9_-]+$/.test(identifier)) {
-          errors.push('Identifier must contain only alphanumeric characters, underscores, and hyphens');
+          errors.push(
+            'Identifier must contain only alphanumeric characters, underscores, and hyphens'
+          );
         }
       }
     }
@@ -161,18 +178,24 @@ export function validateProximityParameters(furnitureId, actorId, spotIndex, log
     } else {
       const parts = actorId.split(':');
       if (parts.length !== 2) {
-        errors.push('Actor ID must have exactly one colon separating mod ID and identifier');
+        errors.push(
+          'Actor ID must have exactly one colon separating mod ID and identifier'
+        );
       } else {
         const [modId, identifier] = parts;
         if (!modId || modId.trim().length === 0) {
           errors.push('Actor ID must have a valid mod ID before the colon');
         } else if (!/^[a-zA-Z0-9_-]+$/.test(modId)) {
-          errors.push('Actor ID mod ID must contain only alphanumeric characters, underscores, and hyphens');
+          errors.push(
+            'Actor ID mod ID must contain only alphanumeric characters, underscores, and hyphens'
+          );
         }
         if (!identifier || identifier.trim().length === 0) {
           errors.push('Actor ID must have a valid identifier after the colon');
         } else if (!/^[a-zA-Z0-9_-]+$/.test(identifier)) {
-          errors.push('Actor ID identifier must contain only alphanumeric characters, underscores, and hyphens');
+          errors.push(
+            'Actor ID identifier must contain only alphanumeric characters, underscores, and hyphens'
+          );
         }
       }
     }
@@ -187,7 +210,9 @@ export function validateProximityParameters(furnitureId, actorId, spotIndex, log
     } else if (spotIndex < 0) {
       errors.push('Spot index must be non-negative');
     } else if (spotIndex > 9) {
-      errors.push('Spot index must be between 0 and 9 (maximum furniture capacity)');
+      errors.push(
+        'Spot index must be between 0 and 9 (maximum furniture capacity)'
+      );
     }
 
     // Enhanced logger validation
@@ -239,14 +264,15 @@ export function validateProximityParameters(furnitureId, actorId, spotIndex, log
     }
 
     return true;
-
   } catch (error) {
     if (error instanceof InvalidArgumentError) {
       throw error; // Re-throw validation errors
     }
-    
+
     // Handle unexpected validation errors
-    const unexpectedError = new Error(`Unexpected error during parameter validation: ${error.message}`);
+    const unexpectedError = new Error(
+      `Unexpected error during parameter validation: ${error.message}`
+    );
     if (logger && typeof logger.error === 'function') {
       logger.error('Unexpected validation error', {
         originalError: error.message,
@@ -261,5 +287,5 @@ export function validateProximityParameters(furnitureId, actorId, spotIndex, log
 export default {
   getAdjacentSpots,
   findAdjacentOccupants,
-  validateProximityParameters
+  validateProximityParameters,
 };

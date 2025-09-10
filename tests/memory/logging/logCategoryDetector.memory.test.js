@@ -18,7 +18,7 @@ describe('LogCategoryDetector Memory Usage', () => {
     detector = new LogCategoryDetector({
       enableCache: true,
       cacheSize: 1000,
-      cacheTTL: 300000
+      cacheTTL: 300000,
     });
   });
 
@@ -45,7 +45,8 @@ describe('LogCategoryDetector Memory Usage', () => {
         : process.memoryUsage().heapUsed;
 
       // Reduced operation count for faster testing while maintaining validity
-      const operationCount = global.memoryTestUtils && global.memoryTestUtils.isCI() ? 1000 : 2000;
+      const operationCount =
+        global.memoryTestUtils && global.memoryTestUtils.isCI() ? 1000 : 2000;
 
       for (let i = 0; i < operationCount; i++) {
         // Create varied messages to test different detection paths
@@ -59,14 +60,14 @@ describe('LogCategoryDetector Memory Usage', () => {
           `AI system processing neural network ${i}`,
           `Anatomy blueprint created with tissue ${i}`,
           `Configuration settings loaded ${i}`,
-          `Performance monitoring enabled ${i}`
+          `Performance monitoring enabled ${i}`,
         ];
 
         const message = messageVariants[i % messageVariants.length];
         const metadata = {
           level: i % 4 === 0 ? 'error' : i % 3 === 0 ? 'warn' : 'info',
           timestamp: Date.now(),
-          source: `test-source-${i % 10}`
+          source: `test-source-${i % 10}`,
         };
 
         detector.detectCategory(message, metadata);
@@ -92,7 +93,8 @@ describe('LogCategoryDetector Memory Usage', () => {
     });
 
     it('should not exhibit memory leaks during repeated enrichment', async () => {
-      const iterations = global.memoryTestUtils && global.memoryTestUtils.isCI() ? 2 : 3;
+      const iterations =
+        global.memoryTestUtils && global.memoryTestUtils.isCI() ? 2 : 3;
       const memoryMeasurements = [];
 
       for (let iteration = 0; iteration < iterations; iteration++) {
@@ -110,7 +112,7 @@ describe('LogCategoryDetector Memory Usage', () => {
           'Event system dispatching action events',
           'UI renderer updating display elements',
           'Network layer handling HTTP requests',
-          'Configuration manager loading settings'
+          'Configuration manager loading settings',
         ];
 
         // Reduced cycle count for faster testing
@@ -120,7 +122,7 @@ describe('LogCategoryDetector Memory Usage', () => {
               level: 'info',
               timestamp: Date.now(),
               iteration: iteration,
-              cycle: cycle
+              cycle: cycle,
             });
           }
         }
@@ -142,7 +144,8 @@ describe('LogCategoryDetector Memory Usage', () => {
       // Memory growth should stabilize (no continuous leaks)
       if (memoryMeasurements.length >= 3) {
         const firstMeasurement = memoryMeasurements[0];
-        const lastMeasurement = memoryMeasurements[memoryMeasurements.length - 1];
+        const lastMeasurement =
+          memoryMeasurements[memoryMeasurements.length - 1];
 
         // Last iteration should not use significantly more memory than first
         const growthRatio = lastMeasurement / firstMeasurement;
@@ -169,7 +172,7 @@ describe('LogCategoryDetector Memory Usage', () => {
 
       // Generate enough unique messages to test cache limits
       const messageCount = 500; // 5x cache size is sufficient
-      
+
       for (let i = 0; i < messageCount; i++) {
         const uniqueMessage = `Unique message ${i} with different content and patterns`;
         smallCacheDetector.detectCategory(uniqueMessage);
@@ -263,12 +266,14 @@ describe('LogCategoryDetector Memory Usage', () => {
 
         // Create batch data
         for (let i = 0; i < batchSize; i++) {
-          messages.push(`Batch ${batchIndex} message ${i} for category detection`);
+          messages.push(
+            `Batch ${batchIndex} message ${i} for category detection`
+          );
           metadata.push({
             level: 'info',
             timestamp: Date.now(),
             batch: batchIndex,
-            index: i
+            index: i,
           });
         }
 
@@ -310,9 +315,12 @@ describe('LogCategoryDetector Memory Usage', () => {
 
       // Reduced pattern count while maintaining test validity
       const numPatterns = 20;
-      
+
       for (let i = 0; i < numPatterns; i++) {
-        const patternRegex = new RegExp(`test${i}|pattern${i}|category${i}`, 'i');
+        const patternRegex = new RegExp(
+          `test${i}|pattern${i}|category${i}`,
+          'i'
+        );
         detector.addPattern(`dynamic_category_${i}`, patternRegex, 60);
       }
 

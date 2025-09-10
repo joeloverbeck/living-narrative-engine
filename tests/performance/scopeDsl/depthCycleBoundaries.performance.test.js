@@ -1,7 +1,7 @@
 /**
  * @file Depth and Cycle Boundaries Performance Test Suite
  * @description Performance tests for safety mechanisms in ScopeDSL
- * 
+ *
  * Tests extracted from E2E tests to focus on performance impact
  * of depth limit enforcement and cycle detection mechanisms.
  */
@@ -92,7 +92,7 @@ describe('Depth and Cycle Boundaries Performance', () => {
   async function createDepthTestMod(baseDir, modId, scopes) {
     const modDir = path.join(baseDir, 'data', 'mods', modId);
     const scopesDir = path.join(modDir, 'scopes');
-    
+
     await fs.mkdir(scopesDir, { recursive: true });
 
     // Create mod manifest
@@ -100,7 +100,7 @@ describe('Depth and Cycle Boundaries Performance', () => {
       id: modId,
       version: '1.0.0',
       name: modId,
-      dependencies: []
+      dependencies: [],
     };
     await fs.writeFile(
       path.join(modDir, 'mod-manifest.json'),
@@ -122,18 +122,18 @@ describe('Depth and Cycle Boundaries Performance', () => {
   async function loadScopesFromMod(modId, scopeFiles) {
     const modDir = path.join(tempDir, 'data', 'mods', modId);
     const scopesDir = path.join(modDir, 'scopes');
-    
+
     const scopeDefinitions = {};
-    
+
     for (const scopeFile of scopeFiles) {
       const scopePath = path.join(scopesDir, scopeFile);
       const content = await fs.readFile(scopePath, 'utf-8');
-      
+
       // Parse scope definitions from content
       const lines = content
         .split('\n')
         .filter((line) => line.trim() && !line.trim().startsWith('//'));
-      
+
       for (const line of lines) {
         const match = line.match(/^([\w_-]+:[\w_-]+)\s*:=\s*(.+)$/);
         if (match) {
@@ -145,7 +145,7 @@ describe('Depth and Cycle Boundaries Performance', () => {
             logger.warn(`Failed to parse scope ${scopeId}: ${expr}`, e);
             ast = { type: 'Source', kind: 'actor' };
           }
-          
+
           scopeDefinitions[scopeId.trim()] = {
             expr: expr.trim(),
             ast: ast,
@@ -153,7 +153,7 @@ describe('Depth and Cycle Boundaries Performance', () => {
         }
       }
     }
-    
+
     return scopeDefinitions;
   }
 
@@ -299,9 +299,9 @@ describe('Depth and Cycle Boundaries Performance', () => {
 
       console.log('Boundary Conditions Performance:', {
         iterations,
-        times: times.map(t => t.toFixed(2)),
+        times: times.map((t) => t.toFixed(2)),
         averageTime: averageTime.toFixed(2),
-        maxVariance: maxVariance.toFixed(2)
+        maxVariance: maxVariance.toFixed(2),
       });
     });
   });
@@ -315,7 +315,7 @@ describe('Depth and Cycle Boundaries Performance', () => {
 
       for (const depth of depthLevels) {
         const depthScopes = [];
-        
+
         // Create base scope
         depthScopes.push({
           name: 'base',
@@ -390,14 +390,17 @@ describe('Depth and Cycle Boundaries Performance', () => {
         const previousDepth = depthLevels[i - 1];
         const currentTime = depthPerformanceResults[currentDepth].median;
         const previousTime = depthPerformanceResults[previousDepth].median;
-        
+
         // Performance degradation should be linear, not exponential
         // Using a more tolerant threshold due to timing variations in millisecond range
         const degradationRatio = currentTime / previousTime;
         expect(degradationRatio).toBeLessThan(5); // Less than 5x degradation per depth increase (increased from 3 for stability)
       }
 
-      console.log('Depth Enforcement Performance Results:', depthPerformanceResults);
+      console.log(
+        'Depth Enforcement Performance Results:',
+        depthPerformanceResults
+      );
     });
   });
 
@@ -416,25 +419,27 @@ describe('Depth and Cycle Boundaries Performance', () => {
               name: 'cycle_b',
               content: 'simple:cycle_b := simple:cycle_a',
             },
-          ]
+          ],
         },
         {
           name: 'complex_cycle',
           scopes: [
             {
               name: 'cycle_a',
-              content: 'complex:cycle_a := complex:cycle_b[{"var": "entity.components.core:actor.isPlayer", "==": true}]',
+              content:
+                'complex:cycle_a := complex:cycle_b[{"var": "entity.components.core:actor.isPlayer", "==": true}]',
             },
             {
               name: 'cycle_b',
-              content: 'complex:cycle_b := complex:cycle_c[{"var": "entity.components.core:position.locationId", "==": "test"}]',
+              content:
+                'complex:cycle_b := complex:cycle_c[{"var": "entity.components.core:position.locationId", "==": "test"}]',
             },
             {
               name: 'cycle_c',
               content: 'complex:cycle_c := complex:cycle_a',
             },
-          ]
-        }
+          ],
+        },
       ];
 
       const cycleDetectionTimes = {};
@@ -442,7 +447,9 @@ describe('Depth and Cycle Boundaries Performance', () => {
       for (const scenario of cycleScenarios) {
         await createDepthTestMod(tempDir, scenario.name, scenario.scopes);
 
-        const scopeFiles = scenario.scopes.map((scope) => `${scope.name}.scope`);
+        const scopeFiles = scenario.scopes.map(
+          (scope) => `${scope.name}.scope`
+        );
         const scopeDefinitions = await loadScopesFromMod(
           scenario.name,
           scopeFiles
@@ -457,7 +464,7 @@ describe('Depth and Cycle Boundaries Performance', () => {
         const times = [];
         for (let i = 0; i < 3; i++) {
           const startTime = performance.now();
-          
+
           try {
             await ScopeTestUtilities.resolveScopeE2E(
               `${scenario.name.split('_')[0]}:cycle_a`,
@@ -468,12 +475,13 @@ describe('Depth and Cycle Boundaries Performance', () => {
           } catch (error) {
             // Expected to throw cycle error - this is what we're measuring
           }
-          
+
           const endTime = performance.now();
           times.push(endTime - startTime);
         }
 
-        const average = times.reduce((sum, time) => sum + time, 0) / times.length;
+        const average =
+          times.reduce((sum, time) => sum + time, 0) / times.length;
         cycleDetectionTimes[scenario.name] = {
           times,
           average,

@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:dilemmas",
+  "description": "Stores the fundamental questions the character grapples with, always phrased as questions.",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["text"],
+    "properties": {
+      "text": {
+        "type": "string",
+        "description": "A string containing the core questions the character struggles with, written from their first-person perspective. Must be phrased as questions. For example: 'Is loyalty to friends more important than loyalty to principles? Can I be true to myself while meeting others' expectations? Does redemption require forgetting the past or embracing it?'"
+      }
+    }
+  }
+}

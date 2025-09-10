@@ -37,7 +37,9 @@ describe('handle_peck_on_lips rule integration', () => {
   it('condition evaluates correctly', () => {
     // Test that the condition works correctly
     const condition = eventIsActionPeckOnLips.logic;
-    const jsonLogicService = new JsonLogicEvaluationService({ logger: testFixture.logger });
+    const jsonLogicService = new JsonLogicEvaluationService({
+      logger: testFixture.logger,
+    });
 
     // Check what the condition expects
     expect(condition).toEqual({
@@ -68,7 +70,7 @@ describe('handle_peck_on_lips rule integration', () => {
 
   it('performs peck on lips action successfully', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
-    
+
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
     const types = testFixture.events.map((e) => e.eventType);
@@ -76,14 +78,14 @@ describe('handle_peck_on_lips rule integration', () => {
       expect.arrayContaining([
         'core:perceptible_event',
         'core:display_successful_action_result',
-        'core:turn_ended'
+        'core:turn_ended',
       ])
     );
   });
 
   it('perceptible event contains correct message', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
-    
+
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
     const perceptibleEvent = testFixture.events.find(
@@ -97,14 +99,14 @@ describe('handle_peck_on_lips rule integration', () => {
 
   it('rule does not fire for different action', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
-    
+
     // Dispatch event directly with different actionId to test that rule doesn't trigger
     await testFixture.eventBus.dispatch('core:attempt_action', {
       eventName: 'core:attempt_action',
       actorId: scenario.actor.id,
       actionId: 'intimacy:different_action',
       targetId: scenario.target.id,
-      originalInput: 'different_action target'
+      originalInput: 'different_action target',
     });
 
     const types = testFixture.events.map((e) => e.eventType);
@@ -115,19 +117,25 @@ describe('handle_peck_on_lips rule integration', () => {
 
   it('works with multiple actors in location', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
-    
-    // Add an observer in the same location  
+
+    // Add an observer in the same location
     const observerId = testFixture.entityManager.createEntity();
-    testFixture.entityManager.addComponent(observerId, 'core:name', { text: 'Charlie' });
-    testFixture.entityManager.addComponent(observerId, 'core:position', { locationId: scenario.actor.components['core:position'].locationId });
-    
+    testFixture.entityManager.addComponent(observerId, 'core:name', {
+      text: 'Charlie',
+    });
+    testFixture.entityManager.addComponent(observerId, 'core:position', {
+      locationId: scenario.actor.components['core:position'].locationId,
+    });
+
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
     const perceptibleEvent = testFixture.events.find(
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();
-    expect(perceptibleEvent.payload.locationId).toBe(scenario.actor.components['core:position'].locationId);
+    expect(perceptibleEvent.payload.locationId).toBe(
+      scenario.actor.components['core:position'].locationId
+    );
     expect(perceptibleEvent.payload.perceptionType).toBe(
       'action_target_general'
     );
@@ -135,7 +143,7 @@ describe('handle_peck_on_lips rule integration', () => {
 
   it('works with different actor and target names', async () => {
     const scenario = testFixture.createCloseActors(['John', 'Mary']);
-    
+
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
     const perceptibleEvent = testFixture.events.find(

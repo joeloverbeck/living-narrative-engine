@@ -26,6 +26,7 @@ The `actorDataExtractor.js` service is responsible for extracting character comp
 ### Implementation Pattern
 
 The service uses an array-based pattern for optional text attributes:
+
 ```javascript
 const optionalTextAttributes = [
   { key: 'propertyName', componentId: COMPONENT_ID },
@@ -53,9 +54,9 @@ import {
   SECRETS_COMPONENT_ID,
   FEARS_COMPONENT_ID,
   SPEECH_PATTERNS_COMPONENT_ID,
-  MOTIVATIONS_COMPONENT_ID,        // NEW
-  INTERNAL_TENSIONS_COMPONENT_ID,  // NEW
-  CORE_DILEMMAS_COMPONENT_ID,      // NEW
+  MOTIVATIONS_COMPONENT_ID, // NEW
+  INTERNAL_TENSIONS_COMPONENT_ID, // NEW
+  CORE_DILEMMAS_COMPONENT_ID, // NEW
 } from '../../constants/componentIds.js';
 ```
 
@@ -75,9 +76,9 @@ const optionalTextAttributes = [
   { key: 'weaknesses', componentId: WEAKNESSES_COMPONENT_ID },
   { key: 'secrets', componentId: SECRETS_COMPONENT_ID },
   { key: 'fears', componentId: FEARS_COMPONENT_ID },
-  { key: 'motivations', componentId: MOTIVATIONS_COMPONENT_ID },           // NEW
+  { key: 'motivations', componentId: MOTIVATIONS_COMPONENT_ID }, // NEW
   { key: 'internalTensions', componentId: INTERNAL_TENSIONS_COMPONENT_ID }, // NEW
-  { key: 'coreDilemmas', componentId: CORE_DILEMMAS_COMPONENT_ID },        // NEW
+  { key: 'coreDilemmas', componentId: CORE_DILEMMAS_COMPONENT_ID }, // NEW
 ];
 ```
 
@@ -127,7 +128,10 @@ const speechPatternsComponent = this.#getComponent(
   actorState,
   SPEECH_PATTERNS_COMPONENT_ID
 );
-if (speechPatternsComponent?.patterns && Array.isArray(speechPatternsComponent.patterns)) {
+if (
+  speechPatternsComponent?.patterns &&
+  Array.isArray(speechPatternsComponent.patterns)
+) {
   result.speechPatterns = speechPatternsComponent.patterns;
 }
 ```
@@ -150,16 +154,16 @@ const testActor = {
   id: 'test-actor',
   components: {
     'core:actor': { name: 'Test Character' },
-    'core:motivations': { 
-      text: 'I seek power because I fear being powerless again.' 
+    'core:motivations': {
+      text: 'I seek power because I fear being powerless again.',
     },
-    'core:internal_tensions': { 
-      text: 'I want revenge but also want to forgive.' 
+    'core:internal_tensions': {
+      text: 'I want revenge but also want to forgive.',
     },
-    'core:core_dilemmas': { 
-      text: 'Can I achieve justice without becoming a monster?' 
-    }
-  }
+    'core:core_dilemmas': {
+      text: 'Can I achieve justice without becoming a monster?',
+    },
+  },
 };
 
 // Expected extraction result
@@ -176,18 +180,21 @@ const expected = {
 ## Validation Checklist
 
 ### Code Quality
+
 - [ ] Imports are correctly added
 - [ ] Component IDs match constants
 - [ ] Property names match type definitions
 - [ ] No hardcoded strings for component IDs
 
 ### Functionality
+
 - [ ] New components extract correctly when present
 - [ ] Missing components return undefined (not fallback text)
 - [ ] Existing component extraction still works
 - [ ] No null/undefined errors
 
 ### Performance
+
 - [ ] No additional loops or complexity
 - [ ] Maintains O(n) extraction time
 - [ ] No unnecessary component lookups
@@ -207,11 +214,13 @@ const expected = {
 ## Integration Points
 
 ### Downstream Dependencies
+
 - **CharacterDataFormatter**: Will receive the extracted data
 - **AIPromptContentProvider**: Will include in final prompt
 - **LLM Proxy**: Will process enhanced character data
 
 ### Upstream Dependencies
+
 - **Entity State**: Must have components loaded
 - **Component Registry**: Must recognize new component IDs
 - **Schema Validation**: Components must pass validation
@@ -241,6 +250,7 @@ this.#logger.debug('Extracting psychological components', {
 ## Rollback Plan
 
 If issues arise:
+
 1. Remove new entries from optionalTextAttributes array
 2. Remove new imports
 3. Revert to previous version
@@ -255,4 +265,4 @@ If issues arise:
 
 ---
 
-*Ticket created from character-components-analysis.md report*
+_Ticket created from character-components-analysis.md report_

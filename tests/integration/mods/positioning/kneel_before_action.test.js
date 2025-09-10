@@ -13,16 +13,18 @@ import kneelBeforeComponent from '../../../../data/mods/positioning/components/k
 
 /**
  * Creates standardized kneeling positioning scenario.
- * 
+ *
  * @param {string} actorName - Name for the actor
- * @param {string} targetName - Name for the target  
+ * @param {string} targetName - Name for the target
  * @param {string} locationId - Location for the scenario
  * @returns {object} Object with actor, target, and location entities
  */
-function setupKneelingScenario(actorName = 'Alice', targetName = 'King Bob', locationId = 'throne_room') {
-  const room = new ModEntityBuilder(locationId)
-    .asRoom('Throne Room')
-    .build();
+function setupKneelingScenario(
+  actorName = 'Alice',
+  targetName = 'King Bob',
+  locationId = 'throne_room'
+) {
+  const room = new ModEntityBuilder(locationId).asRoom('Throne Room').build();
 
   const actor = new ModEntityBuilder('test:actor1')
     .withName(actorName)
@@ -46,7 +48,7 @@ function setupKneelingScenario(actorName = 'Alice', targetName = 'King Bob', loc
  */
 function setupMultiActorKneelingScenario() {
   const scenario = setupKneelingScenario('Knight', 'Lord', 'courtyard');
-  
+
   const witness = new ModEntityBuilder('test:witness1')
     .withName('Peasant')
     .atLocation('courtyard')
@@ -61,10 +63,10 @@ function setupMultiActorKneelingScenario() {
  */
 function setupAlreadyKneelingScenario() {
   const scenario = setupKneelingScenario();
-  
+
   // Actor is already kneeling to someone else
-  scenario.actor.components['positioning:kneeling_before'] = { 
-    entityId: 'test:existing_target' 
+  scenario.actor.components['positioning:kneeling_before'] = {
+    entityId: 'test:existing_target',
   };
 
   return scenario;
@@ -75,17 +77,17 @@ function setupAlreadyKneelingScenario() {
  */
 function setupSittingScenario() {
   const scenario = setupKneelingScenario('Alice', 'King Bob', 'throne_room');
-  
+
   // Add a chair to the room
   const chair = new ModEntityBuilder('test:chair')
     .withName('Throne Chair')
     .atLocation('throne_room')
     .build();
-  
+
   // Actor is sitting on the chair
   scenario.actor.components['positioning:sitting_on'] = {
     furniture_id: 'test:chair',
-    spot_index: 0
+    spot_index: 0,
   };
 
   return { ...scenario, chair };
@@ -95,7 +97,10 @@ describe('positioning:kneel_before action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('positioning', 'positioning:kneel_before');
+    testFixture = await ModTestFixture.forAction(
+      'positioning',
+      'positioning:kneel_before'
+    );
   });
 
   afterEach(() => {
@@ -126,7 +131,11 @@ describe('positioning:kneel_before action integration', () => {
   });
 
   it('creates correct perceptible event', async () => {
-    const entities = setupKneelingScenario('Sir Galahad', 'Queen Guinevere', 'castle_hall');
+    const entities = setupKneelingScenario(
+      'Sir Galahad',
+      'Queen Guinevere',
+      'castle_hall'
+    );
     testFixture.reset(Object.values(entities));
 
     await testFixture.executeAction('test:actor1', 'test:target1');
@@ -134,7 +143,7 @@ describe('positioning:kneel_before action integration', () => {
     const perceptibleEvent = testFixture.events.find(
       (e) => e.eventType === 'core:perceptible_event'
     );
-    
+
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.descriptionText).toBe(
       'Sir Galahad kneels before Queen Guinevere.'
@@ -186,7 +195,11 @@ describe('positioning:kneel_before action integration', () => {
     testFixture.reset(Object.values(entities));
 
     // Try with a different action
-    await testFixture.executeActionManual('test:actor1', 'core:wait', 'test:target1');
+    await testFixture.executeActionManual(
+      'test:actor1',
+      'core:wait',
+      'test:target1'
+    );
 
     // Should not have any perceptible events from our rule
     const perceptibleEvents = testFixture.events.filter(
@@ -222,7 +235,7 @@ describe('positioning:kneel_before action integration', () => {
     testFixture.reset([room, actor, target]);
 
     await testFixture.executeAction(
-      'p_erotica:iker_aguirre_instance', 
+      'p_erotica:iker_aguirre_instance',
       'p_erotica:amaia_castillo_instance'
     );
 
@@ -271,7 +284,7 @@ describe('positioning:kneel_before action integration', () => {
     // In normal action discovery, this action would not appear in available actions
     // because the actor has the positioning:sitting_on component.
     // However, we're testing the rule execution directly to verify the logic.
-    
+
     // NOTE: This test shows what would happen if somehow the action was triggered
     // In real gameplay, the action discovery system prevents this scenario
     await testFixture.executeAction('test:actor1', 'test:target1');
@@ -302,7 +315,9 @@ describe('positioning:kneel_before action integration', () => {
     // Verify the sitting component is properly structured
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
     expect(actor.components['positioning:sitting_on']).toBeDefined();
-    expect(actor.components['positioning:sitting_on'].furniture_id).toBe('test:chair');
+    expect(actor.components['positioning:sitting_on'].furniture_id).toBe(
+      'test:chair'
+    );
     expect(actor.components['positioning:sitting_on'].spot_index).toBe(0);
 
     // Verify the chair entity exists

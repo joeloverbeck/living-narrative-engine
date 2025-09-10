@@ -28,7 +28,12 @@ describe('Mod Test Infrastructure - Component Integration', () => {
         rule_id: 'handle_test_action',
         event_type: 'core:attempt_action',
         condition: { condition_ref: 'test:event-is-action-test' },
-        actions: [{ type: 'GET_NAME', parameters: { entity_ref: 'actor', result_variable: 'test_name' } }],
+        actions: [
+          {
+            type: 'GET_NAME',
+            parameters: { entity_ref: 'actor', result_variable: 'test_name' },
+          },
+        ],
       };
 
       const mockConditionFile = {
@@ -68,12 +73,19 @@ describe('Mod Test Infrastructure - Component Integration', () => {
           rule_id: `handle_${category}_action`,
           event_type: 'core:attempt_action',
           condition: { condition_ref: `${category}:event-is-action-test` },
-          actions: [{ type: 'GET_NAME', parameters: { entity_ref: 'actor', result_variable: 'test_name' } }],
+          actions: [
+            {
+              type: 'GET_NAME',
+              parameters: { entity_ref: 'actor', result_variable: 'test_name' },
+            },
+          ],
         };
 
         const mockConditionFile = {
           id: `${category}:event-is-action-test`,
-          logic: { '==': [{ var: 'event.payload.actionId' }, `${category}:action`] },
+          logic: {
+            '==': [{ var: 'event.payload.actionId' }, `${category}:action`],
+          },
         };
 
         const fixture = await ModTestFixture.forAction(
@@ -94,7 +106,12 @@ describe('Mod Test Infrastructure - Component Integration', () => {
         rule_id: 'handle_test_action',
         event_type: 'core:attempt_action',
         condition: { condition_ref: 'test:condition' },
-        actions: [{ type: 'GET_NAME', parameters: { entity_ref: 'actor', result_variable: 'test_name' } }],
+        actions: [
+          {
+            type: 'GET_NAME',
+            parameters: { entity_ref: 'actor', result_variable: 'test_name' },
+          },
+        ],
       };
 
       const mockConditionFile = {
@@ -131,12 +148,19 @@ describe('Mod Test Infrastructure - Component Integration', () => {
         rule_id: 'handle_kiss_cheek',
         event_type: 'core:attempt_action',
         condition: { condition_ref: 'intimacy:event-is-action-kiss-cheek' },
-        actions: [{ type: 'GET_NAME', parameters: { entity_ref: 'actor', result_variable: 'test_name' } }],
+        actions: [
+          {
+            type: 'GET_NAME',
+            parameters: { entity_ref: 'actor', result_variable: 'test_name' },
+          },
+        ],
       };
 
       const mockConditionFile = {
         id: 'intimacy:event-is-action-kiss-cheek',
-        logic: { '==': [{ var: 'event.payload.actionId' }, 'intimacy:kiss_cheek'] },
+        logic: {
+          '==': [{ var: 'event.payload.actionId' }, 'intimacy:kiss_cheek'],
+        },
       };
 
       const fixture = await ModTestFixture.forAction(
@@ -171,7 +195,12 @@ describe('Mod Test Infrastructure - Component Integration', () => {
         rule_id: 'handle_anatomy_action',
         event_type: 'core:attempt_action',
         condition: { condition_ref: 'test:condition' },
-        actions: [{ type: 'GET_NAME', parameters: { entity_ref: 'actor', result_variable: 'test_name' } }],
+        actions: [
+          {
+            type: 'GET_NAME',
+            parameters: { entity_ref: 'actor', result_variable: 'test_name' },
+          },
+        ],
       };
 
       const mockConditionFile = {
@@ -204,7 +233,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
 
       // Validate anatomy components
       if (scenario.bodyParts && scenario.bodyParts.length > 0) {
-        scenario.bodyParts.forEach(bodyPart => {
+        scenario.bodyParts.forEach((bodyPart) => {
           expect(bodyPart.components['anatomy:part']).toBeDefined();
           expect(bodyPart.components['core:location']).toBeDefined();
         });
@@ -216,7 +245,12 @@ describe('Mod Test Infrastructure - Component Integration', () => {
         rule_id: 'handle_multi_actor',
         event_type: 'core:attempt_action',
         condition: { condition_ref: 'test:condition' },
-        actions: [{ type: 'GET_NAME', parameters: { entity_ref: 'actor', result_variable: 'test_name' } }],
+        actions: [
+          {
+            type: 'GET_NAME',
+            parameters: { entity_ref: 'actor', result_variable: 'test_name' },
+          },
+        ],
       };
 
       const mockConditionFile = {
@@ -232,21 +266,27 @@ describe('Mod Test Infrastructure - Component Integration', () => {
       );
 
       // Create multi-actor scenario with relationships
-      const scenario = fixture.createMultiActorScenario(['Alice', 'Bob', 'Charlie']);
+      const scenario = fixture.createMultiActorScenario([
+        'Alice',
+        'Bob',
+        'Charlie',
+      ]);
 
       // Validate entity relationships
       expect(scenario.actor.components['core:location'].location).toBe('room1');
-      expect(scenario.target.components['core:location'].location).toBe('room1');
+      expect(scenario.target.components['core:location'].location).toBe(
+        'room1'
+      );
 
       if (scenario.observers && scenario.observers.length > 0) {
-        scenario.observers.forEach(observer => {
+        scenario.observers.forEach((observer) => {
           expect(observer.components['core:location'].location).toBe('room1');
         });
       }
 
       // Validate entities can be found through entity manager
       const allEntities = scenario.allEntities;
-      allEntities.forEach(entity => {
+      allEntities.forEach((entity) => {
         const instance = fixture.entityManager.getEntityInstance(entity.id);
         expect(instance).toBeTruthy();
       });
@@ -264,16 +304,16 @@ describe('Mod Test Infrastructure - Component Integration', () => {
             type: 'LOG_MESSAGE',
             parameters: {
               message: 'Test action executed successfully',
-              level: 'info'
-            }
+              level: 'info',
+            },
           },
           {
             type: 'DISPATCH_EVENT',
             parameters: {
               eventType: 'test:action_completed',
-              payload: { success: true }
-            }
-          }
+              payload: { success: true },
+            },
+          },
         ],
       };
 
@@ -291,7 +331,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
 
       // Create scenario and execute action
       const { actor, target } = fixture.createCloseActors(['Alice', 'Bob']);
-      
+
       await fixture.executeAction(actor.id, target.id);
 
       // Validate that assertion helpers can work with generated events
@@ -305,7 +345,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
         ModAssertionHelpers.assertOnlyExpectedEvents(fixture.events, [
           'core:attempt_action',
           'LOG_MESSAGE',
-          'test:action_completed'
+          'test:action_completed',
         ]);
       }).not.toThrow();
     });
@@ -321,9 +361,9 @@ describe('Mod Test Infrastructure - Component Integration', () => {
             parameters: {
               entity_ref: 'actor',
               component_type: 'test:added_component',
-              value: { added: true }
-            }
-          }
+              value: { added: true },
+            },
+          },
         ],
       };
 
@@ -341,7 +381,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
 
       // Create entities and execute action
       const { actor, target } = fixture.createCloseActors(['Alice', 'Bob']);
-      
+
       await fixture.executeAction(actor.id, target.id);
 
       // Validate that assertion helpers can validate entity changes
@@ -360,7 +400,12 @@ describe('Mod Test Infrastructure - Component Integration', () => {
         rule_id: 'handle_failing_action',
         event_type: 'core:attempt_action',
         condition: { condition_ref: 'test:never-match' },
-        actions: [{ type: 'GET_NAME', parameters: { entity_ref: 'actor', result_variable: 'test_name' } }],
+        actions: [
+          {
+            type: 'GET_NAME',
+            parameters: { entity_ref: 'actor', result_variable: 'test_name' },
+          },
+        ],
       };
 
       const mockConditionFile = {
@@ -377,7 +422,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
 
       // Create scenario and execute action that should fail
       const { actor, target } = fixture.createCloseActors(['Alice', 'Bob']);
-      
+
       await fixture.executeAction(actor.id, target.id);
 
       // Test that assertion helpers provide helpful error messages
@@ -394,20 +439,25 @@ describe('Mod Test Infrastructure - Component Integration', () => {
         event_type: 'core:attempt_action',
         condition: { condition_ref: 'test:orchestration-condition' },
         actions: [
-          { type: 'GET_NAME', parameters: { entity_ref: 'actor', result_variable: 'test_name' } },
-          { 
-            type: 'LOG_MESSAGE', 
-            parameters: { 
+          {
+            type: 'GET_NAME',
+            parameters: { entity_ref: 'actor', result_variable: 'test_name' },
+          },
+          {
+            type: 'LOG_MESSAGE',
+            parameters: {
               message: 'Orchestration test successful',
-              level: 'info'
-            }
-          }
+              level: 'info',
+            },
+          },
         ],
       };
 
       const mockConditionFile = {
         id: 'test:orchestration-condition',
-        logic: { '==': [{ var: 'event.payload.actionId' }, 'test:orchestration'] },
+        logic: {
+          '==': [{ var: 'event.payload.actionId' }, 'test:orchestration'],
+        },
       };
 
       const fixture = await ModTestFixture.forAction(
@@ -424,8 +474,11 @@ describe('Mod Test Infrastructure - Component Integration', () => {
       expect(fixture.logger).toBeDefined();
 
       // Test complete workflow
-      const { actor, target } = fixture.createStandardActorTarget(['Alice', 'Bob']);
-      
+      const { actor, target } = fixture.createStandardActorTarget([
+        'Alice',
+        'Bob',
+      ]);
+
       expect(actor).toBeDefined();
       expect(target).toBeDefined();
 
@@ -446,12 +499,19 @@ describe('Mod Test Infrastructure - Component Integration', () => {
         rule_id: 'handle_inheritance_test',
         event_type: 'core:attempt_action',
         condition: { condition_ref: 'test:inheritance-condition' },
-        actions: [{ type: 'GET_NAME', parameters: { entity_ref: 'actor', result_variable: 'test_name' } }],
+        actions: [
+          {
+            type: 'GET_NAME',
+            parameters: { entity_ref: 'actor', result_variable: 'test_name' },
+          },
+        ],
       };
 
       const mockConditionFile = {
         id: 'test:inheritance-condition',
-        logic: { '==': [{ var: 'event.payload.actionId' }, 'test:inheritance'] },
+        logic: {
+          '==': [{ var: 'event.payload.actionId' }, 'test:inheritance'],
+        },
       };
 
       // Test ModActionTestFixture
@@ -496,9 +556,9 @@ describe('Mod Test Infrastructure - Component Integration', () => {
             parameters: {
               entity_ref: 'actor',
               component_type: 'test:state_component',
-              value: { step: 1 }
-            }
-          }
+              value: { step: 1 },
+            },
+          },
         ],
       };
 
@@ -516,16 +576,18 @@ describe('Mod Test Infrastructure - Component Integration', () => {
 
       // Create initial state
       const { actor, target } = fixture.createCloseActors(['Alice', 'Bob']);
-      
+
       // Execute first action
       await fixture.executeAction(actor.id, target.id);
       const firstEventCount = fixture.events.length;
 
       // Add small delay to ensure async operations complete
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Validate state is maintained
-      expect(fixture.entityManager.hasComponent(actor.id, 'test:state_component')).toBeTruthy();
+      expect(
+        fixture.entityManager.hasComponent(actor.id, 'test:state_component')
+      ).toBeTruthy();
 
       // Reset with same entities
       fixture.reset([actor, target]);
@@ -545,19 +607,32 @@ describe('Mod Test Infrastructure - Component Integration', () => {
 
   describe('Factory Integration', () => {
     it('should create working test instances for all categories', async () => {
-      const categories = ['positioning', 'intimacy', 'sex', 'violence', 'exercise'];
+      const categories = [
+        'positioning',
+        'intimacy',
+        'sex',
+        'violence',
+        'exercise',
+      ];
 
       for (const category of categories) {
         const mockRuleFile = {
           rule_id: `handle_${category}_test`,
           event_type: 'core:attempt_action',
           condition: { condition_ref: `${category}:test-condition` },
-          actions: [{ type: 'GET_NAME', parameters: { entity_ref: 'actor', result_variable: 'test_name' } }],
+          actions: [
+            {
+              type: 'GET_NAME',
+              parameters: { entity_ref: 'actor', result_variable: 'test_name' },
+            },
+          ],
         };
 
         const mockConditionFile = {
           id: `${category}:test-condition`,
-          logic: { '==': [{ var: 'event.payload.actionId' }, `${category}:test` ] },
+          logic: {
+            '==': [{ var: 'event.payload.actionId' }, `${category}:test`],
+          },
         };
 
         // Test action fixture
@@ -584,12 +659,19 @@ describe('Mod Test Infrastructure - Component Integration', () => {
         rule_id: 'handle_auto_detect_test',
         event_type: 'core:attempt_action',
         condition: { condition_ref: 'positioning:auto-detect-condition' },
-        actions: [{ type: 'GET_NAME', parameters: { entity_ref: 'actor', result_variable: 'test_name' } }],
+        actions: [
+          {
+            type: 'GET_NAME',
+            parameters: { entity_ref: 'actor', result_variable: 'test_name' },
+          },
+        ],
       };
 
       const mockConditionFile = {
         id: 'positioning:auto-detect-condition',
-        logic: { '==': [{ var: 'event.payload.actionId' }, 'positioning:auto_detect'] },
+        logic: {
+          '==': [{ var: 'event.payload.actionId' }, 'positioning:auto_detect'],
+        },
       };
 
       const fixture = await ModTestFixture.forAction(
@@ -601,7 +683,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
 
       // Factory should auto-detect positioning category and configure accordingly
       expect(fixture.modId).toBe('positioning');
-      
+
       // Should use positioning-specific handler factory
       expect(fixture.testEnv).toBeTruthy();
       expect(fixture.testEnv.createHandlers).toBeDefined();
@@ -618,20 +700,25 @@ describe('Mod Test Infrastructure - Component Integration', () => {
         event_type: 'core:attempt_action',
         condition: { condition_ref: 'intimacy:seamless-condition' },
         actions: [
-          { type: 'GET_NAME', parameters: { entity_ref: 'actor', result_variable: 'test_name' } },
-          { 
-            type: 'LOG_MESSAGE', 
-            parameters: { 
+          {
+            type: 'GET_NAME',
+            parameters: { entity_ref: 'actor', result_variable: 'test_name' },
+          },
+          {
+            type: 'LOG_MESSAGE',
+            parameters: {
               message: 'Configuration successful',
-              level: 'info'
-            }
-          }
+              level: 'info',
+            },
+          },
         ],
       };
 
       const mockConditionFile = {
         id: 'intimacy:seamless-condition',
-        logic: { '==': [{ var: 'event.payload.actionId' }, 'intimacy:seamless'] },
+        logic: {
+          '==': [{ var: 'event.payload.actionId' }, 'intimacy:seamless'],
+        },
       };
 
       const fixture = await ModTestFixture.forAction(
@@ -647,7 +734,11 @@ describe('Mod Test Infrastructure - Component Integration', () => {
 
       // All components should be properly configured
       expect(fixture.testEnv.dataRegistry.getAllSystemRules()).toHaveLength(1);
-      expect(fixture.testEnv.dataRegistry.getConditionDefinition('intimacy:seamless-condition')).toEqual(mockConditionFile);
+      expect(
+        fixture.testEnv.dataRegistry.getConditionDefinition(
+          'intimacy:seamless-condition'
+        )
+      ).toEqual(mockConditionFile);
 
       // Should be able to execute end-to-end workflow
       const { actor, target } = fixture.createCloseActors(['Alice', 'Bob']);

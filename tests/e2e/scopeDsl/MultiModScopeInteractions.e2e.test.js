@@ -21,7 +21,10 @@ import { configureContainer } from '../../../src/dependencyInjection/containerCo
 import { ScopeTestUtilities } from '../../common/scopeDsl/scopeTestUtilities.js';
 import { ActionTestUtilities } from '../../common/actions/actionTestUtilities.js';
 import { InMemoryModSystem } from '../../common/mods/inMemoryModSystem.js';
-import { SharedFixtures, EntityFixtures } from '../../common/mods/sharedFixtures.js';
+import {
+  SharedFixtures,
+  EntityFixtures,
+} from '../../common/mods/sharedFixtures.js';
 import { createEntityDefinition } from '../../common/entities/entityFactories.js';
 
 /**
@@ -161,14 +164,19 @@ describe('Multi-Mod Scope Interactions E2E', () => {
 
       // Create test entities using batch creation for performance
       const entityConfigs = EntityFixtures.crossModEntities;
-      await modSystem.createTestEntitiesBatch(entityConfigs, entityManager, dataRegistry);
+      await modSystem.createTestEntitiesBatch(
+        entityConfigs,
+        entityManager,
+        dataRegistry
+      );
 
       // Validate key entities were created
       const enhancedActorId = 'enhanced-actor-1';
-      const superActorId = 'super-actor-1'; 
+      const superActorId = 'super-actor-1';
       const normalActorId = 'normal-actor-1';
 
-      const enhancedEntity = await entityManager.getEntityInstance(enhancedActorId);
+      const enhancedEntity =
+        await entityManager.getEntityInstance(enhancedActorId);
       const superEntity = await entityManager.getEntityInstance(superActorId);
       const normalEntity = await entityManager.getEntityInstance(normalActorId);
 
@@ -177,18 +185,30 @@ describe('Multi-Mod Scope Interactions E2E', () => {
       expect(normalEntity).toBeDefined();
 
       // Register mod resources using optimized registration
-      modSystem.registerModResources('base', dataRegistry, container.resolve(tokens.ISchemaValidator));
-      modSystem.registerModResources('extension', dataRegistry, container.resolve(tokens.ISchemaValidator));
+      modSystem.registerModResources(
+        'base',
+        dataRegistry,
+        container.resolve(tokens.ISchemaValidator)
+      );
+      modSystem.registerModResources(
+        'extension',
+        dataRegistry,
+        container.resolve(tokens.ISchemaValidator)
+      );
 
       // Load scope definitions with performance caching
-      const baseScopes = await modSystem.loadScopesFromMod('base', [
-        'actors',
-        'enhanced_actors',
-      ], dslParser, logger);
-      const extensionScopes = await modSystem.loadScopesFromMod('extension', [
-        'super_actors',
-        'base_and_super',
-      ], dslParser, logger);
+      const baseScopes = await modSystem.loadScopesFromMod(
+        'base',
+        ['actors', 'enhanced_actors'],
+        dslParser,
+        logger
+      );
+      const extensionScopes = await modSystem.loadScopesFromMod(
+        'extension',
+        ['super_actors', 'base_and_super'],
+        dslParser,
+        logger
+      );
 
       // Initialize registry with all scopes
       const allScopes = { ...baseScopes, ...extensionScopes };
@@ -279,25 +299,44 @@ describe('Multi-Mod Scope Interactions E2E', () => {
 
       // Create test entities using batch creation for performance
       const entityConfigs = EntityFixtures.tieredEntities;
-      await modSystem.createTestEntitiesBatch(entityConfigs, entityManager, dataRegistry);
+      await modSystem.createTestEntitiesBatch(
+        entityConfigs,
+        entityManager,
+        dataRegistry
+      );
 
       // Register mod resources using optimized registration
-      modSystem.registerModResources('core_mod', dataRegistry, container.resolve(tokens.ISchemaValidator));
+      modSystem.registerModResources(
+        'core_mod',
+        dataRegistry,
+        container.resolve(tokens.ISchemaValidator)
+      );
 
       // Load scope definitions with performance caching
-      const coreScopes = await modSystem.loadScopesFromMod('core_mod', [
-        'all_entities',
-      ], dslParser, logger);
-      const baseScopes = await modSystem.loadScopesFromMod('base_mod', [
-        'tiered_entities',
-      ], dslParser, logger);
-      const extensionScopes = await modSystem.loadScopesFromMod('ext_mod', [
-        'high_tier_entities',
-      ], dslParser, logger);
-      const advancedScopes = await modSystem.loadScopesFromMod('adv_mod', [
-        'elite_entities',
-        'all_tiers_union',
-      ], dslParser, logger);
+      const coreScopes = await modSystem.loadScopesFromMod(
+        'core_mod',
+        ['all_entities'],
+        dslParser,
+        logger
+      );
+      const baseScopes = await modSystem.loadScopesFromMod(
+        'base_mod',
+        ['tiered_entities'],
+        dslParser,
+        logger
+      );
+      const extensionScopes = await modSystem.loadScopesFromMod(
+        'ext_mod',
+        ['high_tier_entities'],
+        dslParser,
+        logger
+      );
+      const advancedScopes = await modSystem.loadScopesFromMod(
+        'adv_mod',
+        ['elite_entities', 'all_tiers_union'],
+        dslParser,
+        logger
+      );
 
       const allScopes = {
         ...coreScopes,
@@ -509,30 +548,55 @@ describe('Multi-Mod Scope Interactions E2E', () => {
       // Create in-memory mods using shared fixture data
       modSystem.createMod('core_utils', fixtures.coreUtilsMod, []);
       modSystem.createMod('gameplay', fixtures.gameplayMod, ['core_utils']);
-      modSystem.createMod('social', fixtures.socialMod, ['core_utils', 'gameplay']);
+      modSystem.createMod('social', fixtures.socialMod, [
+        'core_utils',
+        'gameplay',
+      ]);
 
       // Register mod resources using optimized registration
-      modSystem.registerModResources('core_utils', dataRegistry, container.resolve(tokens.ISchemaValidator));
-      modSystem.registerModResources('gameplay', dataRegistry, container.resolve(tokens.ISchemaValidator));
-      modSystem.registerModResources('social', dataRegistry, container.resolve(tokens.ISchemaValidator));
+      modSystem.registerModResources(
+        'core_utils',
+        dataRegistry,
+        container.resolve(tokens.ISchemaValidator)
+      );
+      modSystem.registerModResources(
+        'gameplay',
+        dataRegistry,
+        container.resolve(tokens.ISchemaValidator)
+      );
+      modSystem.registerModResources(
+        'social',
+        dataRegistry,
+        container.resolve(tokens.ISchemaValidator)
+      );
 
       // Create test entities using batch creation for performance
       const entityConfigs = EntityFixtures.multiNamespaceEntities;
-      await modSystem.createTestEntitiesBatch(entityConfigs, entityManager, dataRegistry);
+      await modSystem.createTestEntitiesBatch(
+        entityConfigs,
+        entityManager,
+        dataRegistry
+      );
 
       // Load scope definitions with performance caching
-      const coreUtilsScopes = await modSystem.loadScopesFromMod('core_utils', [
-        'basic_actors',
-        'player_entities',
-      ], dslParser, logger);
-      const gameplayScopes = await modSystem.loadScopesFromMod('gameplay', [
-        'combat_actors',
-        'non_combat_actors',
-      ], dslParser, logger);
-      const socialScopes = await modSystem.loadScopesFromMod('social', [
-        'social_actors',
-        'mixed_actors',
-      ], dslParser, logger);
+      const coreUtilsScopes = await modSystem.loadScopesFromMod(
+        'core_utils',
+        ['basic_actors', 'player_entities'],
+        dslParser,
+        logger
+      );
+      const gameplayScopes = await modSystem.loadScopesFromMod(
+        'gameplay',
+        ['combat_actors', 'non_combat_actors'],
+        dslParser,
+        logger
+      );
+      const socialScopes = await modSystem.loadScopesFromMod(
+        'social',
+        ['social_actors', 'mixed_actors'],
+        dslParser,
+        logger
+      );
 
       const allScopes = {
         ...coreUtilsScopes,
@@ -840,10 +904,7 @@ describe('Multi-Mod Scope Interactions E2E', () => {
       await createTestMod('core_ext', coreMod);
       await createTestMod('ext_a', extensionA, ['core_ext']);
       await createTestMod('ext_b', extensionB, ['core_ext']);
-      await createTestMod('combined', combinedExtension, [
-        'ext_a',
-        'ext_b',
-      ]);
+      await createTestMod('combined', combinedExtension, ['ext_a', 'ext_b']);
 
       // Register components from extension mods
       registerModResources('core_ext');

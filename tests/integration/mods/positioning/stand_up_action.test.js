@@ -10,16 +10,18 @@ import { ModAssertionHelpers } from '../../../common/mods/ModAssertionHelpers.js
 
 /**
  * Creates standardized kneeling positioning scenario.
- * 
+ *
  * @param {string} actorName - Name for the actor
  * @param {string} locationId - Location for the scenario
  * @param {string} kneelTarget - Entity being knelt to
  * @returns {object} Object with actor and location entities
  */
-function setupKneelingScenario(actorName = 'Alice', locationId = 'throne_room', kneelTarget = 'test:king') {
-  const room = new ModEntityBuilder(locationId)
-    .asRoom('Test Room')
-    .build();
+function setupKneelingScenario(
+  actorName = 'Alice',
+  locationId = 'throne_room',
+  kneelTarget = 'test:king'
+) {
+  const room = new ModEntityBuilder(locationId).asRoom('Test Room').build();
 
   const actor = new ModEntityBuilder('test:actor1')
     .withName(actorName)
@@ -36,7 +38,7 @@ function setupKneelingScenario(actorName = 'Alice', locationId = 'throne_room', 
  */
 function setupMultiActorScenario() {
   const scenario = setupKneelingScenario('Knight', 'courtyard', 'test:lord');
-  
+
   const witness = new ModEntityBuilder('test:witness1')
     .withName('Peasant')
     .atLocation('courtyard')
@@ -50,7 +52,10 @@ describe('positioning:stand_up action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('positioning', 'positioning:stand_up');
+    testFixture = await ModTestFixture.forAction(
+      'positioning',
+      'positioning:stand_up'
+    );
   });
 
   afterEach(() => {
@@ -80,7 +85,11 @@ describe('positioning:stand_up action integration', () => {
   });
 
   it('creates correct perceptible event', async () => {
-    const entities = setupKneelingScenario('Sir Galahad', 'castle_hall', 'test:queen');
+    const entities = setupKneelingScenario(
+      'Sir Galahad',
+      'castle_hall',
+      'test:queen'
+    );
     testFixture.reset(Object.values(entities));
 
     await testFixture.executeAction('test:actor1', 'none');
@@ -88,7 +97,7 @@ describe('positioning:stand_up action integration', () => {
     const perceptibleEvent = testFixture.events.find(
       (e) => e.eventType === 'core:perceptible_event'
     );
-    
+
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.descriptionText).toBe(
       'Sir Galahad stands up from their kneeling position.'
@@ -109,7 +118,7 @@ describe('positioning:stand_up action integration', () => {
       actorId: 'test:actor1',
       actionId: 'core:wait',
       targetId: 'none',
-      originalInput: 'wait'
+      originalInput: 'wait',
     });
 
     // Should not have removed the kneeling component

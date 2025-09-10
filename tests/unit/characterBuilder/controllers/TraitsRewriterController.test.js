@@ -504,7 +504,7 @@ describe('TraitsRewriterController', () => {
       // Create controller and initialize
       controller = new TraitsRewriterController(mockDependencies);
       controller._cacheElements();
-      
+
       const mockResult = {
         rewrittenTraits: {
           'core:personality': "I'm a brave soul",
@@ -917,7 +917,7 @@ describe('TraitsRewriterController', () => {
         },
       });
       mockElements.characterDefinition.value = validJSON;
-      
+
       // Validate input to enable the button
       simulateEvent(mockElements.characterDefinition, 'input');
       await waitForNextTick();
@@ -925,11 +925,11 @@ describe('TraitsRewriterController', () => {
       // First attempt will fail
       simulateEvent(mockElements.rewriteTraitsButton, 'click');
       await waitForNextTick();
-      
+
       // Second attempt should succeed (based on mock setup)
       simulateEvent(mockElements.rewriteTraitsButton, 'click');
       await waitForNextTick();
-      
+
       // Verify the generator was called twice
       expect(
         mockTraitsRewriterGenerator.generateRewrittenTraits

@@ -13,14 +13,12 @@ import { ModAssertionHelpers } from '../../../common/mods/ModAssertionHelpers.js
 
 /**
  * Creates standardized anatomy and clothing setup for rub penis over clothes scenarios.
- * 
+ *
  * @returns {object} Object with actor, target, and all anatomy/clothing entities
  */
 function setupPenisClothingScenario() {
   // Create main room
-  const room = new ModEntityBuilder('room1')
-    .asRoom('Test Room')
-    .build();
+  const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
   // Create actor entity
   const actor = new ModEntityBuilder('alice')
@@ -72,9 +70,7 @@ function setupPenisClothingScenario() {
     .build();
 
   // Create clothing entity as separate entity
-  const pants = new ModEntityBuilder('pants1')
-    .withName('pants')
-    .build();
+  const pants = new ModEntityBuilder('pants1').withName('pants').build();
 
   return {
     room,
@@ -91,11 +87,14 @@ describe('sex:rub_penis_over_clothes action integration', () => {
 
   beforeEach(async () => {
     // Create test fixture with auto-loaded files
-    testFixture = await ModTestFixture.forAction('sex', 'sex:rub_penis_over_clothes');
-    
+    testFixture = await ModTestFixture.forAction(
+      'sex',
+      'sex:rub_penis_over_clothes'
+    );
+
     // Setup anatomy and clothing entities
     const entities = setupPenisClothingScenario();
-    
+
     // Load all entities into the test environment
     testFixture.reset(Object.values(entities));
   });
@@ -111,15 +110,15 @@ describe('sex:rub_penis_over_clothes action integration', () => {
     // Note: primaryId should be the one with the body part, secondaryId should be the clothing item
     await testFixture.executeAction('alice', 'bob', {
       additionalPayload: {
-        primaryId: 'bob',    // The one with the penis (target) 
+        primaryId: 'bob', // The one with the penis (target)
         secondaryId: 'pants1', // The clothing item being rubbed over
-      }
+      },
     });
 
-    // Assert action executed successfully with proper events  
+    // Assert action executed successfully with proper events
     ModAssertionHelpers.assertActionSuccess(
       testFixture.events,
-      'Alice rubs Bob\'s penis over the pants.',
+      "Alice rubs Bob's penis over the pants.",
       {
         shouldEndTurn: true,
         shouldHavePerceptibleEvent: true,
@@ -139,7 +138,7 @@ describe('sex:rub_penis_over_clothes action integration', () => {
     ];
 
     testFixture.reset(minimalEntities);
-    
+
     const initialEventCount = testFixture.events.length;
 
     await testFixture.eventBus.dispatch('core:attempt_action', {
@@ -186,7 +185,9 @@ describe('sex:rub_penis_over_clothes action integration', () => {
     // This test verifies the rule follows expected patterns through auto-loaded configuration
     expect(testFixture.ruleFile.rule_id).toBe('handle_rub_penis_over_clothes');
     expect(testFixture.ruleFile.event_type).toBe('core:attempt_action');
-    expect(testFixture.conditionFile.id).toBe('sex:event-is-action-rub-penis-over-clothes');
+    expect(testFixture.conditionFile.id).toBe(
+      'sex:event-is-action-rub-penis-over-clothes'
+    );
 
     // Verify the macro is present in the actions
     const actions = testFixture.ruleFile.actions;

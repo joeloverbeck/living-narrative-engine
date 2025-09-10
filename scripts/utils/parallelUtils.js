@@ -13,7 +13,7 @@
 async function parallelLimit(tasks, concurrency) {
   const results = [];
   const executing = new Set();
-  
+
   for (const [index, task] of tasks.entries()) {
     const promise = (async () => {
       try {
@@ -23,14 +23,14 @@ async function parallelLimit(tasks, concurrency) {
         results[index] = { status: 'rejected', reason };
       }
     })().finally(() => executing.delete(promise));
-    
+
     executing.add(promise);
-    
+
     if (executing.size >= concurrency) {
       await Promise.race(executing);
     }
   }
-  
+
   await Promise.all(executing);
   return results;
 }

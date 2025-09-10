@@ -109,7 +109,7 @@ export class ActionExecutionTrace {
 
     // Initialize error history for multiple error support
     this.#errorHistory = [];
-    
+
     // Initialize processing lock for concurrency safety
     this.#processingLock = false;
   }
@@ -275,158 +275,165 @@ export class ActionExecutionTrace {
         }
       }
 
-    const errorTime = this.#getHighPrecisionTime();
+      const errorTime = this.#getHighPrecisionTime();
 
-    // End timing if not already ended
-    if (this.#endTime === null) {
-      this.#endTime = errorTime;
-      this.#executionData.endTime = this.#endTime;
-      this.#executionData.duration = this.#endTime - this.#startTime;
-    }
-
-    // Update error context
-    this.#errorContext = {
-      ...this.#errorContext,
-      ...context,
-      phase: context.phase || this.#errorContext.phase || this.#getCurrentPhase(),
-      timing: this.#getTimingContext(),
-      captureTime: errorTime,
-    };
-
-    // Lazy initialize error analysis components if enabled and needed
-    if (this.#errorAnalysisEnabled) {
-      if (!this.#errorClassifier) {
-        this.#errorClassifier = new ErrorClassifier({
-          logger: console, // Fallback logger
-        });
+      // End timing if not already ended
+      if (this.#endTime === null) {
+        this.#endTime = errorTime;
+        this.#executionData.endTime = this.#endTime;
+        this.#executionData.duration = this.#endTime - this.#startTime;
       }
-      if (!this.#stackTraceAnalyzer) {
-        this.#stackTraceAnalyzer = new StackTraceAnalyzer({
-          projectPath:
-            typeof process !== 'undefined' && typeof process.cwd === 'function'
-              ? process.cwd()
-              : '/',
-          logger: console,
-        });
-      }
-    }
 
-    // Classify error if classifier available
-    let classification = null;
-    if (this.#errorClassifier) {
-      try {
-        classification = this.#errorClassifier.classifyError(
-          error,
-          this.#errorContext
-        );
-      } catch (classificationError) {
-        // Log classification failure without console (will be handled by logger)
-        if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test') {
-          console.warn(
-            'Error classification failed:',
-            classificationError.message
+      // Update error context
+      this.#errorContext = {
+        ...this.#errorContext,
+        ...context,
+        phase:
+          context.phase || this.#errorContext.phase || this.#getCurrentPhase(),
+        timing: this.#getTimingContext(),
+        captureTime: errorTime,
+      };
+
+      // Lazy initialize error analysis components if enabled and needed
+      if (this.#errorAnalysisEnabled) {
+        if (!this.#errorClassifier) {
+          this.#errorClassifier = new ErrorClassifier({
+            logger: console, // Fallback logger
+          });
+        }
+        if (!this.#stackTraceAnalyzer) {
+          this.#stackTraceAnalyzer = new StackTraceAnalyzer({
+            projectPath:
+              typeof process !== 'undefined' &&
+              typeof process.cwd === 'function'
+                ? process.cwd()
+                : '/',
+            logger: console,
+          });
+        }
+      }
+
+      // Classify error if classifier available
+      let classification = null;
+      if (this.#errorClassifier) {
+        try {
+          classification = this.#errorClassifier.classifyError(
+            error,
+            this.#errorContext
           );
+        } catch (classificationError) {
+          // Log classification failure without console (will be handled by logger)
+          if (
+            typeof process !== 'undefined' &&
+            process.env?.NODE_ENV === 'test'
+          ) {
+            console.warn(
+              'Error classification failed:',
+              classificationError.message
+            );
+          }
         }
       }
-    }
 
-    // Analyze stack trace if analyzer available
-    let stackAnalysis = null;
-    if (this.#stackTraceAnalyzer && error?.stack) {
-      try {
-        stackAnalysis = this.#stackTraceAnalyzer.parseStackTrace(error.stack);
-      } catch (analysisError) {
-        // Log stack trace analysis failure without console (will be handled by logger)
-        if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test') {
-          console.warn('Stack trace analysis failed:', analysisError.message);
+      // Analyze stack trace if analyzer available
+      let stackAnalysis = null;
+      if (this.#stackTraceAnalyzer && error?.stack) {
+        try {
+          stackAnalysis = this.#stackTraceAnalyzer.parseStackTrace(error.stack);
+        } catch (analysisError) {
+          // Log stack trace analysis failure without console (will be handled by logger)
+          if (
+            typeof process !== 'undefined' &&
+            process.env?.NODE_ENV === 'test'
+          ) {
+            console.warn('Stack trace analysis failed:', analysisError.message);
+          }
         }
       }
-    }
 
-    // Handle timing for error case with classification
-    if (
-      this.#timingEnabled &&
-      this.#phaseTimer &&
-      this.#phaseTimer.isActive()
-    ) {
-      this.#phaseTimer.addMarker('error_occurred', null, {
-        errorType: error?.constructor?.name || 'Unknown',
-        errorMessage: error?.message || 'Unknown error',
-        errorCategory: classification?.category || 'unknown',
-      });
-
-      if (this.#endTime === errorTime) {
-        this.#phaseTimer.endExecution({
-          success: false,
-          error: error?.constructor?.name || 'Unknown',
+      // Handle timing for error case with classification
+      if (
+        this.#timingEnabled &&
+        this.#phaseTimer &&
+        this.#phaseTimer.isActive()
+      ) {
+        this.#phaseTimer.addMarker('error_occurred', null, {
+          errorType: error?.constructor?.name || 'Unknown',
+          errorMessage: error?.message || 'Unknown error',
           errorCategory: classification?.category || 'unknown',
         });
+
+        if (this.#endTime === errorTime) {
+          this.#phaseTimer.endExecution({
+            success: false,
+            error: error?.constructor?.name || 'Unknown',
+            errorCategory: classification?.category || 'unknown',
+          });
+        }
       }
-    }
 
-    this.#executionData.error = {
-      // Existing error information
-      message: error?.message || 'Unknown error',
-      type: error?.constructor?.name || 'Error',
-      name: error?.name || error?.constructor?.name || 'Error',
-      stack: error?.stack || null,
-      timestamp: errorTime,
+      this.#executionData.error = {
+        // Existing error information
+        message: error?.message || 'Unknown error',
+        type: error?.constructor?.name || 'Error',
+        name: error?.name || error?.constructor?.name || 'Error',
+        stack: error?.stack || null,
+        timestamp: errorTime,
 
-      // Extended error properties
-      code: error?.code || null,
-      cause: error?.cause || null,
-      errno: error?.errno || null,
-      syscall: error?.syscall || null,
+        // Extended error properties
+        code: error?.code || null,
+        cause: error?.cause || null,
+        errno: error?.errno || null,
+        syscall: error?.syscall || null,
 
-      // Error context
-      context: {
-        phase: this.#errorContext.phase,
-        executionDuration: this.#executionData.duration,
-        retryCount: this.#errorContext.retryCount,
-        actionId: this.#actionId,
-        actorId: this.#actorId,
-      },
+        // Error context
+        context: {
+          phase: this.#errorContext.phase,
+          executionDuration: this.#executionData.duration,
+          retryCount: this.#errorContext.retryCount,
+          actionId: this.#actionId,
+          actorId: this.#actorId,
+        },
 
-      // Classification results
-      classification: classification || {
-        category: 'unknown',
-        severity: 'medium',
-        recoveryPotential: 'conditional',
-        isTransient: false,
-        isRetryable: false,
-        confidence: 0,
-      },
+        // Classification results
+        classification: classification || {
+          category: 'unknown',
+          severity: 'medium',
+          recoveryPotential: 'conditional',
+          isTransient: false,
+          isRetryable: false,
+          confidence: 0,
+        },
 
-      // Stack trace analysis
-      stackAnalysis: stackAnalysis || null,
+        // Stack trace analysis
+        stackAnalysis: stackAnalysis || null,
 
-      // Error location (from stack trace)
-      location: stackAnalysis
-        ? this.#stackTraceAnalyzer.getErrorLocation(stackAnalysis)
-        : null,
-
-      // Formatted stack trace for readability
-      formattedStack:
-        stackAnalysis && this.#stackTraceAnalyzer
-          ? this.#stackTraceAnalyzer.formatStackTrace(stackAnalysis, {
-              showProjectOnly: false,
-              maxFrames: 15,
-              includeLineNumbers: true,
-              includeAnalysis: false,
-            })
+        // Error location (from stack trace)
+        location: stackAnalysis
+          ? this.#stackTraceAnalyzer.getErrorLocation(stackAnalysis)
           : null,
-    };
 
-    // Add to execution phases
-    this.#executionData.phases.push({
-      phase: 'error_captured',
-      timestamp: errorTime,
-      description: `Error occurred: ${error?.message || 'Unknown error'}`,
-      errorType: error?.constructor?.name || 'Unknown',
-      errorCategory: classification?.category || 'unknown',
-      severity: classification?.severity || 'unknown',
-    });
-    
+        // Formatted stack trace for readability
+        formattedStack:
+          stackAnalysis && this.#stackTraceAnalyzer
+            ? this.#stackTraceAnalyzer.formatStackTrace(stackAnalysis, {
+                showProjectOnly: false,
+                maxFrames: 15,
+                includeLineNumbers: true,
+                includeAnalysis: false,
+              })
+            : null,
+      };
+
+      // Add to execution phases
+      this.#executionData.phases.push({
+        phase: 'error_captured',
+        timestamp: errorTime,
+        description: `Error occurred: ${error?.message || 'Unknown error'}`,
+        errorType: error?.constructor?.name || 'Unknown',
+        errorCategory: classification?.category || 'unknown',
+        severity: classification?.severity || 'unknown',
+      });
     } finally {
       // Always release the processing lock
       this.#processingLock = false;
@@ -515,11 +522,13 @@ export class ActionExecutionTrace {
       result: this.#executionData.dispatchResult,
       error: this.#executionData.error,
       hasError: Boolean(this.#executionData.error),
-      errorData: this.#executionData.error ? {
-        message: this.#executionData.error.message,
-        type: this.#executionData.error.type || 'Unknown',
-        stack: this.#executionData.error.stack,
-      } : null,
+      errorData: this.#executionData.error
+        ? {
+            message: this.#executionData.error.message,
+            type: this.#executionData.error.type || 'Unknown',
+            stack: this.#executionData.error.stack,
+          }
+        : null,
       errorHistory: this.#errorHistory,
       hasMultipleErrors: this.#errorHistory.length > 0,
       duration: this.#executionData.duration, // Also expose at top level for easy access
@@ -587,7 +596,7 @@ export class ActionExecutionTrace {
 
   /**
    * Update existing error with additional information
-   * 
+   *
    * @param {Error} error - New error information
    * @param {object} context - Additional context
    */
@@ -603,13 +612,13 @@ export class ActionExecutionTrace {
 
   /**
    * Add error to history without replacing current error
-   * 
+   *
    * @param {Error} error - Error to add to history
    * @param {object} context - Additional context
    */
   addErrorToHistory(error, context = {}) {
     const errorTime = this.#getHighPrecisionTime();
-    
+
     this.#errorHistory.push({
       message: error?.message || 'Unknown error',
       type: error?.constructor?.name || 'Error',
@@ -624,7 +633,7 @@ export class ActionExecutionTrace {
 
   /**
    * Get error history
-   * 
+   *
    * @returns {Array} Array of historical errors
    */
   getErrorHistory() {
@@ -633,7 +642,7 @@ export class ActionExecutionTrace {
 
   /**
    * Check if trace has multiple errors captured
-   * 
+   *
    * @returns {boolean} True if multiple errors exist
    */
   hasMultipleErrors() {

@@ -3,20 +3,17 @@
  * @description TSTAIMIG-002: Comprehensive validation of constructor, methods, and advanced scenarios
  */
 
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  jest,
-} from '@jest/globals';
-import { ModEntityBuilder, ModEntityScenarios } from '../../common/mods/ModEntityBuilder.js';
+  ModEntityBuilder,
+  ModEntityScenarios,
+} from '../../common/mods/ModEntityBuilder.js';
 
 describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
   describe('Constructor and Basic Methods', () => {
     it('should accept entity ID directly in constructor', () => {
       const builder = new ModEntityBuilder('test-entity-123');
-      
+
       expect(builder).toBeDefined();
       expect(builder.entityData.id).toBe('test-entity-123');
       expect(builder.entityData.components).toEqual({});
@@ -32,10 +29,10 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
     it('should have withName(name) method that works correctly', () => {
       const builder = new ModEntityBuilder('test-entity');
       const result = builder.withName('Test Entity Name');
-      
+
       // Should return builder for chaining
       expect(result).toBe(builder);
-      
+
       // Should set name component correctly
       expect(builder.entityData.components['core:name']).toEqual({
         text: 'Test Entity Name',
@@ -44,7 +41,7 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
 
     it('should validate withName method input', () => {
       const builder = new ModEntityBuilder('test-entity');
-      
+
       expect(() => builder.withName('')).toThrow();
       expect(() => builder.withName(null)).toThrow();
       expect(() => builder.withName(undefined)).toThrow();
@@ -55,9 +52,9 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
       const builder = new ModEntityBuilder('test-entity')
         .withName('Test Entity')
         .atLocation('test-location');
-      
+
       const entity = builder.build();
-      
+
       expect(entity).toEqual({
         id: 'test-entity',
         components: {
@@ -65,7 +62,7 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
           'core:position': { locationId: 'test-location' },
         },
       });
-      
+
       // Should return a copy, not the original
       expect(entity).not.toBe(builder.entityData);
     });
@@ -77,11 +74,17 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
         .atLocation('test-room')
         .asActor()
         .build();
-      
+
       expect(entity.id).toBe('chaining-test');
-      expect(entity.components['core:name']).toEqual({ text: 'Chained Entity' });
-      expect(entity.components['core:description']).toEqual({ text: 'Test Description' });
-      expect(entity.components['core:position']).toEqual({ locationId: 'test-room' });
+      expect(entity.components['core:name']).toEqual({
+        text: 'Chained Entity',
+      });
+      expect(entity.components['core:description']).toEqual({
+        text: 'Test Description',
+      });
+      expect(entity.components['core:position']).toEqual({
+        locationId: 'test-room',
+      });
       expect(entity.components['core:actor']).toEqual({});
     });
   });
@@ -90,7 +93,7 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
     it('should have atLocation(locationId) method that works correctly', () => {
       const builder = new ModEntityBuilder('test-entity');
       const result = builder.atLocation('test-location-123');
-      
+
       expect(result).toBe(builder); // Returns builder for chaining
       expect(builder.entityData.components['core:position']).toEqual({
         locationId: 'test-location-123',
@@ -99,7 +102,7 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
 
     it('should validate atLocation input', () => {
       const builder = new ModEntityBuilder('test-entity');
-      
+
       expect(() => builder.atLocation('')).toThrow();
       expect(() => builder.atLocation(null)).toThrow();
       expect(() => builder.atLocation(undefined)).toThrow();
@@ -111,10 +114,10 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
           'core:position': { locationId: 'shared-location' },
         },
       };
-      
+
       const builder = new ModEntityBuilder('test-entity');
       const result = builder.inSameLocationAs(otherEntity);
-      
+
       expect(result).toBe(builder);
       expect(builder.entityData.components['core:position']).toEqual({
         locationId: 'shared-location',
@@ -123,13 +126,15 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
 
     it('should validate inSameLocationAs input', () => {
       const builder = new ModEntityBuilder('test-entity');
-      
+
       // Null entity
-      expect(() => builder.inSameLocationAs(null)).toThrow('Other entity is required');
-      
+      expect(() => builder.inSameLocationAs(null)).toThrow(
+        'Other entity is required'
+      );
+
       // Entity without components
       expect(() => builder.inSameLocationAs({})).toThrow();
-      
+
       // Entity without position component
       const invalidEntity = { components: {} };
       expect(() => builder.inSameLocationAs(invalidEntity)).toThrow();
@@ -137,13 +142,13 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
 
     it('should have closeToEntity(otherEntity) method that works correctly', () => {
       const builder = new ModEntityBuilder('test-entity');
-      
+
       // Single partner
       builder.closeToEntity('partner1');
       expect(builder.entityData.components['positioning:closeness']).toEqual({
         partners: ['partner1'],
       });
-      
+
       // Multiple partners
       builder.closeToEntity(['partner1', 'partner2', 'partner3']);
       expect(builder.entityData.components['positioning:closeness']).toEqual({
@@ -158,8 +163,10 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
         .closeToEntity(['entity2', 'entity3'])
         .withLocationComponent('room1')
         .build();
-      
-      expect(entity.components['core:position']).toEqual({ locationId: 'room1' });
+
+      expect(entity.components['core:position']).toEqual({
+        locationId: 'room1',
+      });
       expect(entity.components['positioning:closeness']).toEqual({
         partners: ['entity2', 'entity3'],
       });
@@ -171,23 +178,27 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
     it('should have withComponent(componentId, data) method that works correctly', () => {
       const builder = new ModEntityBuilder('test-entity');
       const componentData = { value: 42, active: true };
-      
+
       const result = builder.withComponent('test:component', componentData);
-      
+
       expect(result).toBe(builder);
-      expect(builder.entityData.components['test:component']).toEqual(componentData);
+      expect(builder.entityData.components['test:component']).toEqual(
+        componentData
+      );
     });
 
     it('should validate withComponent input', () => {
       const builder = new ModEntityBuilder('test-entity');
-      
+
       // Invalid component ID
       expect(() => builder.withComponent('', {})).toThrow();
       expect(() => builder.withComponent(null, {})).toThrow();
-      
+
       // Invalid component data
       expect(() => builder.withComponent('test:component', null)).toThrow();
-      expect(() => builder.withComponent('test:component', undefined)).toThrow();
+      expect(() =>
+        builder.withComponent('test:component', undefined)
+      ).toThrow();
     });
 
     it('should have withClothing(clothingData) method that works correctly', () => {
@@ -198,9 +209,11 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
           { id: 'pants1', type: 'pants', equipped: true },
         ],
       };
-      
+
       builder.withClothing(clothingData);
-      expect(builder.entityData.components['clothing:items']).toEqual(clothingData);
+      expect(builder.entityData.components['clothing:items']).toEqual(
+        clothingData
+      );
     });
 
     it('should support multiple component addition', () => {
@@ -209,7 +222,7 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
         .withComponent('test:component2', { value: 2 })
         .withComponent('test:component3', { value: 3 })
         .build();
-      
+
       expect(entity.components['test:component1']).toEqual({ value: 1 });
       expect(entity.components['test:component2']).toEqual({ value: 2 });
       expect(entity.components['test:component3']).toEqual({ value: 3 });
@@ -221,11 +234,11 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
         'test:component2': { value: 2 },
         'test:component3': { value: 3 },
       };
-      
+
       const entity = new ModEntityBuilder('batch-test')
         .withComponents(components)
         .build();
-      
+
       expect(entity.components).toMatchObject(components);
     });
 
@@ -233,10 +246,12 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
       const entity = new ModEntityBuilder('structure-test')
         .withName('Structured Entity')
         .withDescription('Test description')
-        .withComponent('custom:data', { complex: { nested: { value: 'test' } } })
+        .withComponent('custom:data', {
+          complex: { nested: { value: 'test' } },
+        })
         .asActor({ actorType: 'player' })
         .build();
-      
+
       expect(entity.components).toEqual({
         'core:name': { text: 'Structured Entity' },
         'core:description': { text: 'Test description' },
@@ -254,17 +269,23 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
         .closeToEntity(['target1', 'observer1'])
         .asActor()
         .build();
-      
+
       const target = new ModEntityBuilder('target1')
         .withName('Target Entity')
         .atLocation('room1')
         .closeToEntity(['actor1'])
         .asActor()
         .build();
-      
-      expect(actor.components['positioning:closeness'].partners).toContain('target1');
-      expect(target.components['positioning:closeness'].partners).toContain('actor1');
-      expect(actor.components['core:position'].locationId).toBe(target.components['core:position'].locationId);
+
+      expect(actor.components['positioning:closeness'].partners).toContain(
+        'target1'
+      );
+      expect(target.components['positioning:closeness'].partners).toContain(
+        'actor1'
+      );
+      expect(actor.components['core:position'].locationId).toBe(
+        target.components['core:position'].locationId
+      );
     });
 
     it('should support anatomy component setup', () => {
@@ -277,7 +298,7 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
           subType: 'torso',
         })
         .build();
-      
+
       expect(entity.components['anatomy:body']).toEqual({
         body: { root: 'torso1' },
       });
@@ -302,22 +323,22 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
           secondary: 'dagger1',
         })
         .build();
-      
+
       expect(entity.components['clothing:items']).toBeDefined();
       expect(entity.components['equipment:weapons']).toBeDefined();
     });
 
     it('should provide error handling for invalid data', () => {
       const builder = new ModEntityBuilder('error-test');
-      
+
       // Invalid body part configuration
       expect(() => {
         builder.asBodyPart({ subType: '' }); // Empty subType
       }).not.toThrow(); // ModEntityBuilder is permissive, validates at build time if needed
-      
+
       // Invalid facing direction
       builder.facing('invalid-direction'); // Should not throw, allows any direction
-      
+
       const entity = builder.build();
       expect(entity.components['positioning:facing']).toEqual({
         direction: 'invalid-direction',
@@ -330,17 +351,15 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
       const entity = new ModEntityBuilder('kneeler')
         .kneelingBefore('target-entity')
         .build();
-      
+
       expect(entity.components['positioning:kneeling_before']).toEqual({
         entityId: 'target-entity',
       });
     });
 
     it('should support facing direction setup', () => {
-      const entity = new ModEntityBuilder('facer')
-        .facing('north')
-        .build();
-      
+      const entity = new ModEntityBuilder('facer').facing('north').build();
+
       expect(entity.components['positioning:facing']).toEqual({
         direction: 'north',
       });
@@ -350,7 +369,7 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
       const room = new ModEntityBuilder('test-room')
         .asRoom('Test Room Name')
         .build();
-      
+
       expect(room.components['core:name']).toEqual({
         text: 'Test Room Name',
       });
@@ -360,7 +379,7 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
       const entity = new ModEntityBuilder('proximity-test')
         .withLocationComponent('room1')
         .build();
-      
+
       expect(entity.components['core:location']).toEqual({
         location: 'room1',
       });
@@ -372,10 +391,10 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
       const builder = new ModEntityBuilder('validation-test')
         .withName('Valid Entity')
         .atLocation('valid-location');
-      
+
       // Should not throw for valid configuration
       expect(() => builder.validate()).not.toThrow();
-      
+
       const entity = builder.validate().build();
       expect(entity).toBeDefined();
     });
@@ -384,14 +403,14 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
       // Create invalid entity with missing locationId in position component
       const builder = new ModEntityBuilder('invalid-test');
       builder.entityData.components['core:position'] = {}; // Missing locationId
-      
+
       expect(() => builder.validate()).toThrow();
     });
 
     it('should validate name component structure', () => {
       const builder = new ModEntityBuilder('name-validation-test');
       builder.entityData.components['core:name'] = {}; // Missing text
-      
+
       expect(() => builder.validate()).toThrow();
     });
 
@@ -399,7 +418,7 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
       // Empty components object
       const emptyBuilder = new ModEntityBuilder('empty-test');
       expect(() => emptyBuilder.validate()).not.toThrow();
-      
+
       // Builder with only ID
       const minimalEntity = emptyBuilder.build();
       expect(minimalEntity.id).toBe('empty-test');
@@ -414,13 +433,17 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
           names: ['Alice', 'Bob'],
           location: 'test-room',
         });
-        
+
         expect(scenario).toHaveProperty('actor');
         expect(scenario).toHaveProperty('target');
         expect(scenario.actor.components['core:name'].text).toBe('Alice');
         expect(scenario.target.components['core:name'].text).toBe('Bob');
-        expect(scenario.actor.components['core:position'].locationId).toBe('test-room');
-        expect(scenario.target.components['core:position'].locationId).toBe('test-room');
+        expect(scenario.actor.components['core:position'].locationId).toBe(
+          'test-room'
+        );
+        expect(scenario.target.components['core:position'].locationId).toBe(
+          'test-room'
+        );
       });
 
       it('should create actor-target pairs with close proximity', () => {
@@ -429,18 +452,26 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
           location: 'test-room',
           closeProximity: true,
         });
-        
-        expect(scenario.actor.components['positioning:closeness']).toBeDefined();
-        expect(scenario.target.components['positioning:closeness']).toBeDefined();
-        expect(scenario.actor.components['positioning:closeness'].partners).toContain('target1');
-        expect(scenario.target.components['positioning:closeness'].partners).toContain('actor1');
+
+        expect(
+          scenario.actor.components['positioning:closeness']
+        ).toBeDefined();
+        expect(
+          scenario.target.components['positioning:closeness']
+        ).toBeDefined();
+        expect(
+          scenario.actor.components['positioning:closeness'].partners
+        ).toContain('target1');
+        expect(
+          scenario.target.components['positioning:closeness'].partners
+        ).toContain('actor1');
       });
 
       it('should support custom ID prefixes', () => {
         const scenario = ModEntityScenarios.createActorTargetPair({
           idPrefix: 'test_',
         });
-        
+
         expect(scenario.actor.id).toBe('test_actor1');
         expect(scenario.target.id).toBe('test_target1');
       });
@@ -453,17 +484,19 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
           location: 'test-room',
           closeToMain: 2,
         });
-        
+
         expect(scenario).toHaveProperty('actor');
         expect(scenario).toHaveProperty('target');
         expect(scenario).toHaveProperty('observers');
         expect(scenario).toHaveProperty('allEntities');
-        
+
         expect(scenario.observers).toHaveLength(2); // Charlie and Diana
         expect(scenario.allEntities).toHaveLength(4);
-        
+
         // Main actor should be close to specified number of entities
-        expect(scenario.actor.components['positioning:closeness'].partners).toHaveLength(2);
+        expect(
+          scenario.actor.components['positioning:closeness'].partners
+        ).toHaveLength(2);
       });
     });
 
@@ -473,17 +506,19 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
           names: ['Alice', 'Bob'],
           bodyParts: ['torso', 'arm', 'arm'],
         });
-        
+
         expect(scenario).toHaveProperty('actor');
         expect(scenario).toHaveProperty('target');
         expect(scenario).toHaveProperty('bodyParts');
         expect(scenario).toHaveProperty('allEntities');
-        
+
         expect(scenario.bodyParts).toHaveLength(3);
         expect(scenario.target.components['anatomy:body']).toBeDefined();
-        
+
         // Check body part structure
-        const torsoPart = scenario.bodyParts.find(part => part.id === 'torso1');
+        const torsoPart = scenario.bodyParts.find(
+          (part) => part.id === 'torso1'
+        );
         expect(torsoPart).toBeDefined();
         expect(torsoPart.components['anatomy:part'].subType).toBe('torso');
       });
@@ -492,14 +527,14 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
     describe('createRoom helper', () => {
       it('should create room entities correctly', () => {
         const room = ModEntityScenarios.createRoom('room123', 'Test Room');
-        
+
         expect(room.id).toBe('room123');
         expect(room.components['core:name'].text).toBe('Test Room');
       });
 
       it('should use defaults when parameters not provided', () => {
         const room = ModEntityScenarios.createRoom();
-        
+
         expect(room.id).toBe('room1');
         expect(room.components['core:name'].text).toBe('Test Room');
       });
@@ -510,22 +545,30 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
         const standingScenario = ModEntityScenarios.createPositioningScenario({
           positioning: 'standing',
         });
-        
+
         expect(standingScenario).toHaveProperty('actor');
         expect(standingScenario).toHaveProperty('target');
-        
+
         const kneelingScenario = ModEntityScenarios.createPositioningScenario({
           positioning: 'kneeling',
         });
-        
-        expect(kneelingScenario.actor.components['positioning:kneeling_before']).toBeDefined();
-        
-        const facingAwayScenario = ModEntityScenarios.createPositioningScenario({
-          positioning: 'facing_away',
-        });
-        
-        expect(facingAwayScenario.target.components['positioning:facing']).toBeDefined();
-        expect(facingAwayScenario.target.components['positioning:facing'].direction).toBe('away');
+
+        expect(
+          kneelingScenario.actor.components['positioning:kneeling_before']
+        ).toBeDefined();
+
+        const facingAwayScenario = ModEntityScenarios.createPositioningScenario(
+          {
+            positioning: 'facing_away',
+          }
+        );
+
+        expect(
+          facingAwayScenario.target.components['positioning:facing']
+        ).toBeDefined();
+        expect(
+          facingAwayScenario.target.components['positioning:facing'].direction
+        ).toBe('away');
       });
     });
   });
@@ -539,7 +582,7 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
         .withLocationComponent('room1')
         .asActor()
         .build();
-      
+
       // Should have all required components for test fixtures
       expect(actor.components['core:name']).toBeDefined();
       expect(actor.components['core:position']).toBeDefined();
@@ -553,7 +596,7 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
         .atLocation('room1')
         .withComponent('test:component', { value: 'test' })
         .build();
-      
+
       // Entity structure should be compatible with assertion helpers
       expect(entity.id).toBeDefined();
       expect(entity.components).toBeDefined();
@@ -567,21 +610,21 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
         .withComponent('exercise:routine', { type: 'cardio' })
         .build();
       expect(exerciseEntity).toBeDefined();
-      
+
       // Violence category
       const violenceEntity = new ModEntityBuilder('violence-entity')
         .withName('Violence Entity')
         .withComponent('combat:stats', { health: 100 })
         .build();
       expect(violenceEntity).toBeDefined();
-      
+
       // Intimacy category
       const intimacyEntity = new ModEntityBuilder('intimacy-entity')
         .withName('Intimacy Entity')
         .closeToEntity(['partner1'])
         .build();
       expect(intimacyEntity.components['positioning:closeness']).toBeDefined();
-      
+
       // Sex category
       const sexEntity = new ModEntityBuilder('sex-entity')
         .withName('Sex Entity')
@@ -589,14 +632,16 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
         .withClothing({ items: [] })
         .build();
       expect(sexEntity.components['anatomy:body']).toBeDefined();
-      
+
       // Positioning category
       const positioningEntity = new ModEntityBuilder('positioning-entity')
         .withName('Positioning Entity')
         .kneelingBefore('target1')
         .facing('north')
         .build();
-      expect(positioningEntity.components['positioning:kneeling_before']).toBeDefined();
+      expect(
+        positioningEntity.components['positioning:kneeling_before']
+      ).toBeDefined();
       expect(positioningEntity.components['positioning:facing']).toBeDefined();
     });
   });

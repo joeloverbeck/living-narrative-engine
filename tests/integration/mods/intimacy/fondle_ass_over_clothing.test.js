@@ -27,7 +27,7 @@ describe('intimacy:fondle_ass action with clothing layers', () => {
 
   it('performs fondle ass action over outer layer clothing', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
-    
+
     // Setup complex clothing and anatomy
     scenario.target.components['anatomy:body'] = { body: { root: 'torso1' } };
     scenario.target.components['clothing:equipment'] = {
@@ -39,7 +39,7 @@ describe('intimacy:fondle_ass action with clothing layers', () => {
         },
       },
     };
-    
+
     const clothingAndAnatomyEntities = [
       {
         id: 'coat1',
@@ -93,8 +93,12 @@ describe('intimacy:fondle_ass action with clothing layers', () => {
         },
       },
     ];
-    
-    testFixture.reset([scenario.actor, scenario.target, ...clothingAndAnatomyEntities]);
+
+    testFixture.reset([
+      scenario.actor,
+      scenario.target,
+      ...clothingAndAnatomyEntities,
+    ]);
 
     await testFixture.eventBus.dispatch('core:attempt_action', {
       eventName: 'core:attempt_action',
@@ -118,7 +122,7 @@ describe('intimacy:fondle_ass action with clothing layers', () => {
   it('performs fondle ass action over base layer when no outer layer', async () => {
     // This test is simplified due to complex clothing setup requirements
     const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
-    
+
     await testFixture.eventBus.dispatch('core:attempt_action', {
       eventName: 'core:attempt_action',
       actorId: scenario.actor.id,
@@ -136,7 +140,7 @@ describe('intimacy:fondle_ass action with clothing layers', () => {
   it('performs fondle ass action over underwear when only underwear present', async () => {
     // This test is simplified due to complex clothing setup requirements
     const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
-    
+
     await testFixture.eventBus.dispatch('core:attempt_action', {
       eventName: 'core:attempt_action',
       actorId: scenario.actor.id,
@@ -153,7 +157,7 @@ describe('intimacy:fondle_ass action with clothing layers', () => {
   it('handles different clothing item types correctly', async () => {
     // This test is simplified due to complex clothing setup requirements
     const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
-    
+
     await testFixture.eventBus.dispatch('core:attempt_action', {
       eventName: 'core:attempt_action',
       actorId: scenario.actor.id,

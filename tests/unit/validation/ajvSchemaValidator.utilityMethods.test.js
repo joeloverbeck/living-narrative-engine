@@ -48,11 +48,14 @@ describe('AjvSchemaValidator Utility Methods Tests', () => {
       '../../../src/utils/schemaValidationUtils.js'
     );
     const ajvUtils = await import('../../../src/utils/ajvUtils.js');
-    const ajvAnyOfErrorFormatter = await import('../../../src/utils/ajvAnyOfErrorFormatter.js');
+    const ajvAnyOfErrorFormatter = await import(
+      '../../../src/utils/ajvAnyOfErrorFormatter.js'
+    );
 
     mockValidateAgainstSchemaUtil = schemaValidationUtils.validateAgainstSchema;
     mockFormatAjvErrors = ajvUtils.formatAjvErrors;
-    mockFormatAjvErrorsEnhanced = ajvAnyOfErrorFormatter.formatAjvErrorsEnhanced;
+    mockFormatAjvErrorsEnhanced =
+      ajvAnyOfErrorFormatter.formatAjvErrorsEnhanced;
 
     // Clear all mocks
     jest.clearAllMocks();
@@ -181,7 +184,10 @@ describe('AjvSchemaValidator Utility Methods Tests', () => {
 
       // Assert
       expect(result).toBe(expectedFormattedString);
-      expect(mockFormatAjvErrorsEnhanced).toHaveBeenCalledWith(errors, undefined);
+      expect(mockFormatAjvErrorsEnhanced).toHaveBeenCalledWith(
+        errors,
+        undefined
+      );
     });
 
     it('should handle empty errors array', () => {
@@ -195,7 +201,10 @@ describe('AjvSchemaValidator Utility Methods Tests', () => {
 
       // Assert
       expect(result).toBe(expectedFormattedString);
-      expect(mockFormatAjvErrorsEnhanced).toHaveBeenCalledWith(errors, undefined);
+      expect(mockFormatAjvErrorsEnhanced).toHaveBeenCalledWith(
+        errors,
+        undefined
+      );
     });
 
     it('should handle null errors', () => {
@@ -209,7 +218,10 @@ describe('AjvSchemaValidator Utility Methods Tests', () => {
 
       // Assert
       expect(result).toBe(expectedFormattedString);
-      expect(mockFormatAjvErrorsEnhanced).toHaveBeenCalledWith(errors, undefined);
+      expect(mockFormatAjvErrorsEnhanced).toHaveBeenCalledWith(
+        errors,
+        undefined
+      );
     });
 
     it('should pass through complex error objects', () => {
@@ -236,7 +248,10 @@ describe('AjvSchemaValidator Utility Methods Tests', () => {
 
       // Assert
       expect(result).toBe(expectedFormattedString);
-      expect(mockFormatAjvErrorsEnhanced).toHaveBeenCalledWith(complexErrors, undefined);
+      expect(mockFormatAjvErrorsEnhanced).toHaveBeenCalledWith(
+        complexErrors,
+        undefined
+      );
     });
   });
 });

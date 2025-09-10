@@ -10,7 +10,6 @@ import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import slapRule from '../../../../data/mods/violence/rules/handle_slap.rule.json';
 import eventIsActionSlap from '../../../../data/mods/violence/conditions/event-is-action-slap.condition.json';
 
-
 describe('Violence Mod: Slap Action Integration', () => {
   let testFixture;
 
@@ -36,9 +35,7 @@ describe('Violence Mod: Slap Action Integration', () => {
       // Execute the action
       await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
-      testFixture.assertActionSuccess(
-        'Alice slaps Beth across the face.'
-      );
+      testFixture.assertActionSuccess('Alice slaps Beth across the face.');
     });
 
     it('does not fire rule for different action', async () => {
@@ -119,5 +116,4 @@ describe('Violence Mod: Slap Action Integration', () => {
       });
     });
   });
-
 });

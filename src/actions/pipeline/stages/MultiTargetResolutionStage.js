@@ -851,7 +851,6 @@ export class MultiTargetResolutionStage extends PipelineStage {
 
       // Resolve scope using UnifiedScopeResolver
 
-      
       const result = await this.#unifiedScopeResolver.resolve(
         scope,
         resolutionContext,

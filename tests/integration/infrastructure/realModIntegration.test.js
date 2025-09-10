@@ -24,7 +24,10 @@ describe('Real Mod Integration Testing', () => {
     beforeEach(async () => {
       // Note: Using auto-loading to test with real mod files
       try {
-        test = await ModTestFixture.forActionAutoLoad('intimacy', 'intimacy:kiss_cheek');
+        test = await ModTestFixture.forActionAutoLoad(
+          'intimacy',
+          'intimacy:kiss_cheek'
+        );
       } catch (error) {
         // If auto-loading fails, skip these tests as the files might not exist
         test = null;
@@ -43,17 +46,18 @@ describe('Real Mod Integration Testing', () => {
       }
 
       const { actor, target } = test.createCloseActors(['Alice', 'Bob']);
-      
+
       await test.executeAction(actor.id, target.id);
-      
+
       // Validate that the action executed successfully with real files
       // The exact assertion depends on what the real intimacy:kiss_cheek action does
       expect(test.events.length).toBeGreaterThan(0);
-      
+
       // Should have generated some kind of action event
-      const hasActionEvent = test.events.some(event => 
-        event.eventType === 'core:attempt_action' || 
-        event.payload?.actionId === 'intimacy:kiss_cheek'
+      const hasActionEvent = test.events.some(
+        (event) =>
+          event.eventType === 'core:attempt_action' ||
+          event.payload?.actionId === 'intimacy:kiss_cheek'
       );
       expect(hasActionEvent).toBeTruthy();
     });
@@ -64,15 +68,18 @@ describe('Real Mod Integration Testing', () => {
       }
 
       // Create scenario with anatomy components
-      const scenario = test.createAnatomyScenario(['Alice', 'Bob'], ['torso', 'breast']);
-      
+      const scenario = test.createAnatomyScenario(
+        ['Alice', 'Bob'],
+        ['torso', 'breast']
+      );
+
       // Validate that intimacy-specific components are supported
       expect(scenario.actor.components['core:actor']).toBeDefined();
       expect(scenario.target.components['core:actor']).toBeDefined();
-      
+
       // Check for anatomy components if they were created
       if (scenario.bodyParts && scenario.bodyParts.length > 0) {
-        scenario.bodyParts.forEach(bodyPart => {
+        scenario.bodyParts.forEach((bodyPart) => {
           expect(bodyPart.components).toBeDefined();
         });
       }
@@ -84,12 +91,12 @@ describe('Real Mod Integration Testing', () => {
       }
 
       const { actor, target } = test.createCloseActors(['Alice', 'Bob']);
-      
+
       await test.executeAction(actor.id, target.id);
-      
+
       // Validate event patterns are consistent with intimacy category expectations
       // This tests that the real rule and condition files produce expected event structures
-      test.events.forEach(event => {
+      test.events.forEach((event) => {
         expect(event).toHaveProperty('eventType');
         if (event.payload) {
           expect(typeof event.payload).toBe('object');
@@ -106,7 +113,10 @@ describe('Real Mod Integration Testing', () => {
 
     beforeEach(async () => {
       try {
-        test = await ModTestFixture.forActionAutoLoad('positioning', 'positioning:kneel_before');
+        test = await ModTestFixture.forActionAutoLoad(
+          'positioning',
+          'positioning:kneel_before'
+        );
       } catch (error) {
         test = null;
       }
@@ -126,15 +136,16 @@ describe('Real Mod Integration Testing', () => {
       const { actor, target } = test.createCloseActors(['Alice', 'Bob']);
 
       await test.executeAction(actor.id, target.id);
-      
+
       // Validate positioning action execution
       expect(test.events.length).toBeGreaterThan(0);
-      
+
       // Should have action-related events
-      const hasRelevantEvent = test.events.some(event => 
-        event.eventType === 'core:attempt_action' || 
-        event.payload?.actionId === 'positioning:kneel_before' ||
-        event.eventType?.includes('positioning')
+      const hasRelevantEvent = test.events.some(
+        (event) =>
+          event.eventType === 'core:attempt_action' ||
+          event.payload?.actionId === 'positioning:kneel_before' ||
+          event.eventType?.includes('positioning')
       );
       expect(hasRelevantEvent).toBeTruthy();
     });
@@ -147,11 +158,11 @@ describe('Real Mod Integration Testing', () => {
       const { actor, target } = test.createCloseActors(['Alice', 'Bob']);
 
       await test.executeAction(actor.id, target.id);
-      
+
       // Check if positioning components were added (depends on real rule implementation)
       // This is a flexible test that validates component changes occurred
       const initialComponents = Object.keys(actor.components).length;
-      
+
       // If the real positioning action adds components, they should be accessible
       // This test validates the infrastructure can handle component modifications
       expect(test.entityManager.getEntityInstance(actor.id)).toBeTruthy();
@@ -164,20 +175,20 @@ describe('Real Mod Integration Testing', () => {
       }
 
       const { actor, target } = test.createCloseActors(['Alice', 'Bob']);
-      
+
       // Store initial state
       const initialActorComponents = { ...actor.components };
       const initialTargetComponents = { ...target.components };
 
       await test.executeAction(actor.id, target.id);
-      
+
       // Validate that the infrastructure can handle relationship changes
       // The specific changes depend on the real positioning rule implementation
       expect(test.entityManager.getEntityInstance(actor.id)).toBeTruthy();
       expect(test.entityManager.getEntityInstance(target.id)).toBeTruthy();
-      
+
       // Validate event structure for positioning actions
-      test.events.forEach(event => {
+      test.events.forEach((event) => {
         expect(event).toHaveProperty('eventType');
         // Positioning events might have specific payload structures
         if (event.payload && event.payload.actorId) {
@@ -193,11 +204,17 @@ describe('Real Mod Integration Testing', () => {
     beforeEach(async () => {
       try {
         // Try common sex category actions
-        test = await ModTestFixture.forActionAutoLoad('sex', 'sex:fondle_breasts');
+        test = await ModTestFixture.forActionAutoLoad(
+          'sex',
+          'sex:fondle_breasts'
+        );
       } catch (error) {
         try {
           // Fallback to another possible action
-          test = await ModTestFixture.forActionAutoLoad('sex', 'sex:kiss_passionately');
+          test = await ModTestFixture.forActionAutoLoad(
+            'sex',
+            'sex:kiss_passionately'
+          );
         } catch (fallbackError) {
           test = null;
         }
@@ -218,15 +235,16 @@ describe('Real Mod Integration Testing', () => {
       const { actor, target } = test.createCloseActors(['Alice', 'Bob']);
 
       await test.executeAction(actor.id, target.id);
-      
+
       // Validate sex action execution
       expect(test.events.length).toBeGreaterThan(0);
-      
+
       // Should have relevant events
-      const hasActionEvent = test.events.some(event => 
-        event.eventType === 'core:attempt_action' || 
-        event.eventType?.includes('sex') ||
-        event.payload?.actionId?.includes('sex')
+      const hasActionEvent = test.events.some(
+        (event) =>
+          event.eventType === 'core:attempt_action' ||
+          event.eventType?.includes('sex') ||
+          event.payload?.actionId?.includes('sex')
       );
       expect(hasActionEvent).toBeTruthy();
     });
@@ -237,17 +255,21 @@ describe('Real Mod Integration Testing', () => {
       }
 
       // Create anatomy scenario appropriate for sex actions
-      const scenario = test.createAnatomyScenario(['Alice', 'Bob'], ['torso', 'breast', 'breast']);
-      
+      const scenario = test.createAnatomyScenario(
+        ['Alice', 'Bob'],
+        ['torso', 'breast', 'breast']
+      );
+
       // Validate components are properly structured
       expect(scenario.actor.components['core:actor']).toBeDefined();
       expect(scenario.target.components['core:actor']).toBeDefined();
-      
+
       // Sex actions often require close proximity
       expect(scenario.actor.components['core:location']).toBeDefined();
       expect(scenario.target.components['core:location']).toBeDefined();
-      expect(scenario.actor.components['core:location'].location)
-        .toBe(scenario.target.components['core:location'].location);
+      expect(scenario.actor.components['core:location'].location).toBe(
+        scenario.target.components['core:location'].location
+      );
     });
 
     it('should validate sex-specific event patterns', async () => {
@@ -256,14 +278,14 @@ describe('Real Mod Integration Testing', () => {
       }
 
       const { actor, target } = test.createCloseActors(['Alice', 'Bob']);
-      
+
       await test.executeAction(actor.id, target.id);
-      
+
       // Validate event patterns for sex category
-      test.events.forEach(event => {
+      test.events.forEach((event) => {
         expect(event).toHaveProperty('eventType');
         expect(typeof event.eventType).toBe('string');
-        
+
         // Events should have consistent structure
         if (event.payload) {
           expect(typeof event.payload).toBe('object');
@@ -277,10 +299,16 @@ describe('Real Mod Integration Testing', () => {
 
     beforeEach(async () => {
       try {
-        test = await ModTestFixture.forActionAutoLoad('violence', 'violence:punch');
+        test = await ModTestFixture.forActionAutoLoad(
+          'violence',
+          'violence:punch'
+        );
       } catch (error) {
         try {
-          test = await ModTestFixture.forActionAutoLoad('violence', 'violence:kick');
+          test = await ModTestFixture.forActionAutoLoad(
+            'violence',
+            'violence:kick'
+          );
         } catch (fallbackError) {
           test = null;
         }
@@ -299,17 +327,21 @@ describe('Real Mod Integration Testing', () => {
       }
 
       // Violence actions might not require close proximity
-      const { actor, target } = test.createStandardActorTarget(['Alice', 'Bob']);
+      const { actor, target } = test.createStandardActorTarget([
+        'Alice',
+        'Bob',
+      ]);
 
       await test.executeAction(actor.id, target.id);
-      
+
       // Validate violence action execution
       expect(test.events.length).toBeGreaterThan(0);
-      
-      const hasRelevantEvent = test.events.some(event => 
-        event.eventType === 'core:attempt_action' || 
-        event.eventType?.includes('violence') ||
-        event.payload?.actionId?.includes('violence')
+
+      const hasRelevantEvent = test.events.some(
+        (event) =>
+          event.eventType === 'core:attempt_action' ||
+          event.eventType?.includes('violence') ||
+          event.payload?.actionId?.includes('violence')
       );
       expect(hasRelevantEvent).toBeTruthy();
     });
@@ -319,16 +351,19 @@ describe('Real Mod Integration Testing', () => {
         return; // Skip test if no test fixture available
       }
 
-      const { actor, target } = test.createStandardActorTarget(['Alice', 'Bob']);
-      
+      const { actor, target } = test.createStandardActorTarget([
+        'Alice',
+        'Bob',
+      ]);
+
       await test.executeAction(actor.id, target.id);
-      
+
       // Validate that violence actions can target and affect entities
       expect(test.entityManager.getEntityInstance(actor.id)).toBeTruthy();
       expect(test.entityManager.getEntityInstance(target.id)).toBeTruthy();
-      
+
       // Check for any effects or changes
-      test.events.forEach(event => {
+      test.events.forEach((event) => {
         expect(event).toHaveProperty('eventType');
         if (event.payload && event.payload.targetId) {
           expect(event.payload.targetId).toBe(target.id);
@@ -342,10 +377,16 @@ describe('Real Mod Integration Testing', () => {
 
     beforeEach(async () => {
       try {
-        test = await ModTestFixture.forActionAutoLoad('exercise', 'exercise:pushup');
+        test = await ModTestFixture.forActionAutoLoad(
+          'exercise',
+          'exercise:pushup'
+        );
       } catch (error) {
         try {
-          test = await ModTestFixture.forActionAutoLoad('exercise', 'exercise:situp');
+          test = await ModTestFixture.forActionAutoLoad(
+            'exercise',
+            'exercise:situp'
+          );
         } catch (fallbackError) {
           test = null;
         }
@@ -364,17 +405,21 @@ describe('Real Mod Integration Testing', () => {
       }
 
       // Exercise actions might be solo or require minimal setup
-      const { actor, target } = test.createStandardActorTarget(['Alice', 'Bob']);
+      const { actor, target } = test.createStandardActorTarget([
+        'Alice',
+        'Bob',
+      ]);
 
       await test.executeAction(actor.id, target.id);
-      
+
       // Validate exercise action execution
       expect(test.events.length).toBeGreaterThan(0);
-      
-      const hasRelevantEvent = test.events.some(event => 
-        event.eventType === 'core:attempt_action' || 
-        event.eventType?.includes('exercise') ||
-        event.payload?.actionId?.includes('exercise')
+
+      const hasRelevantEvent = test.events.some(
+        (event) =>
+          event.eventType === 'core:attempt_action' ||
+          event.eventType?.includes('exercise') ||
+          event.payload?.actionId?.includes('exercise')
       );
       expect(hasRelevantEvent).toBeTruthy();
     });
@@ -384,15 +429,18 @@ describe('Real Mod Integration Testing', () => {
         return; // Skip test if no test fixture available
       }
 
-      const { actor, target } = test.createStandardActorTarget(['Alice', 'Bob']);
-      
+      const { actor, target } = test.createStandardActorTarget([
+        'Alice',
+        'Bob',
+      ]);
+
       await test.executeAction(actor.id, target.id);
-      
+
       // Validate exercise mechanics work with infrastructure
       expect(test.entityManager.getEntityInstance(actor.id)).toBeTruthy();
-      
+
       // Exercise actions might modify actor components
-      test.events.forEach(event => {
+      test.events.forEach((event) => {
         expect(event).toHaveProperty('eventType');
         if (event.payload && event.payload.actorId) {
           expect(event.payload.actorId).toBe(actor.id);
@@ -412,11 +460,17 @@ describe('Real Mod Integration Testing', () => {
         try {
           let fixture;
           if (category === 'intimacy') {
-            fixture = await ModTestFixture.forActionAutoLoad(category, `${category}:kiss_cheek`);
+            fixture = await ModTestFixture.forActionAutoLoad(
+              category,
+              `${category}:kiss_cheek`
+            );
           } else if (category === 'positioning') {
-            fixture = await ModTestFixture.forActionAutoLoad(category, `${category}:kneel_before`);
+            fixture = await ModTestFixture.forActionAutoLoad(
+              category,
+              `${category}:kneel_before`
+            );
           }
-          
+
           if (fixture) {
             fixtures.push({ category, fixture });
           }
@@ -429,12 +483,12 @@ describe('Real Mod Integration Testing', () => {
       for (const { category, fixture } of fixtures) {
         expect(fixture.modId).toBe(category);
         expect(fixture.testEnv).toBeTruthy();
-        
+
         // Should be able to create scenarios
         const { actor, target } = fixture.createCloseActors(['Alice', 'Bob']);
         expect(actor).toBeDefined();
         expect(target).toBeDefined();
-        
+
         fixture.cleanup();
       }
     });
@@ -445,25 +499,39 @@ describe('Real Mod Integration Testing', () => {
       let positioningTest = null;
 
       try {
-        intimacyTest = await ModTestFixture.forActionAutoLoad('intimacy', 'intimacy:kiss_cheek');
+        intimacyTest = await ModTestFixture.forActionAutoLoad(
+          'intimacy',
+          'intimacy:kiss_cheek'
+        );
       } catch (error) {
         // Skip if not available
       }
 
       try {
-        positioningTest = await ModTestFixture.forActionAutoLoad('positioning', 'positioning:kneel_before');
+        positioningTest = await ModTestFixture.forActionAutoLoad(
+          'positioning',
+          'positioning:kneel_before'
+        );
       } catch (error) {
         // Skip if not available
       }
 
       if (intimacyTest && positioningTest) {
         // Should be able to use both without conflicts
-        const intimacyScenario = intimacyTest.createStandardActorTarget(['Alice', 'Bob'], { idPrefix: 'intimacy_' });
-        const positioningScenario = positioningTest.createStandardActorTarget(['Charlie', 'David'], { idPrefix: 'positioning_' });
-        
+        const intimacyScenario = intimacyTest.createStandardActorTarget(
+          ['Alice', 'Bob'],
+          { idPrefix: 'intimacy_' }
+        );
+        const positioningScenario = positioningTest.createStandardActorTarget(
+          ['Charlie', 'David'],
+          { idPrefix: 'positioning_' }
+        );
+
         expect(intimacyScenario.actor.id).toBeTruthy();
         expect(positioningScenario.actor.id).toBeTruthy();
-        expect(intimacyScenario.actor.id).not.toBe(positioningScenario.actor.id);
+        expect(intimacyScenario.actor.id).not.toBe(
+          positioningScenario.actor.id
+        );
       }
 
       // Cleanup
@@ -480,11 +548,15 @@ describe('Real Mod Integration Testing', () => {
         try {
           let actionId;
           if (category === 'intimacy') actionId = `${category}:kiss_cheek`;
-          else if (category === 'positioning') actionId = `${category}:kneel_before`;
+          else if (category === 'positioning')
+            actionId = `${category}:kneel_before`;
           else if (category === 'sex') actionId = `${category}:fondle_breasts`;
-          
+
           if (actionId) {
-            const test = await ModTestFixture.forActionAutoLoad(category, actionId);
+            const test = await ModTestFixture.forActionAutoLoad(
+              category,
+              actionId
+            );
             categoryTests.push({ category, test });
           }
         } catch (error) {
@@ -499,12 +571,12 @@ describe('Real Mod Integration Testing', () => {
         expect(test.eventBus).toBeDefined();
         expect(test.entityManager).toBeDefined();
         expect(test.logger).toBeDefined();
-        
+
         // All should be able to create basic scenarios
         expect(test.createStandardActorTarget).toBeDefined();
         expect(test.executeAction).toBeDefined();
         expect(test.assertActionSuccess).toBeDefined();
-        
+
         test.cleanup();
       }
     });
@@ -514,13 +586,19 @@ describe('Real Mod Integration Testing', () => {
     it('should handle missing mod files gracefully', async () => {
       // Test with a mod category that definitely doesn't exist
       await expect(async () => {
-        await ModTestFixture.forActionAutoLoad('nonexistent', 'nonexistent:action');
+        await ModTestFixture.forActionAutoLoad(
+          'nonexistent',
+          'nonexistent:action'
+        );
       }).rejects.toThrow(/Could not load rule file/);
     });
 
     it('should provide helpful error messages for file issues', async () => {
       try {
-        await ModTestFixture.forActionAutoLoad('test_category', 'invalid:action');
+        await ModTestFixture.forActionAutoLoad(
+          'test_category',
+          'invalid:action'
+        );
         fail('Should have thrown error');
       } catch (error) {
         expect(error.message).toMatch(/Could not load rule file/);
@@ -534,19 +612,22 @@ describe('Real Mod Integration Testing', () => {
       // Test that infrastructure can handle different real file structures
       const testCases = [
         { category: 'intimacy', action: 'intimacy:kiss_cheek' },
-        { category: 'positioning', action: 'positioning:kneel_before' }
+        { category: 'positioning', action: 'positioning:kneel_before' },
       ];
 
       for (const testCase of testCases) {
         try {
-          const test = await ModTestFixture.forActionAutoLoad(testCase.category, testCase.action);
-          
+          const test = await ModTestFixture.forActionAutoLoad(
+            testCase.category,
+            testCase.action
+          );
+
           // Should handle different rule/condition file structures
           expect(test.ruleFile).toBeDefined();
           expect(test.conditionFile).toBeDefined();
           expect(test.ruleFile.rule_id).toBeTruthy();
           expect(test.conditionFile.id).toBeTruthy();
-          
+
           test.cleanup();
         } catch (error) {
           // Skip if files don't exist

@@ -1,5 +1,5 @@
 /**
- * @file Modal functionality tests for ThematicDirectionsManagerController  
+ * @file Modal functionality tests for ThematicDirectionsManagerController
  * @description Tests modal display, confirmation, and cancellation behavior
  */
 
@@ -53,22 +53,26 @@ describe('ThematicDirectionsManagerController - Modal Tests', () => {
       jest.spyOn(controller, '_getElement').mockImplementation((key) => {
         return document.getElementById(getElementId(key));
       });
-      jest.spyOn(controller, '_setElementText').mockImplementation((key, text) => {
-        const element = document.getElementById(getElementId(key));
-        if (element) {
-          element.textContent = text;
-          return true;
-        }
-        return false;
-      });
-      jest.spyOn(controller, '_showElement').mockImplementation((key, displayType = 'block') => {
-        const element = document.getElementById(getElementId(key));
-        if (element) {
-          element.style.display = displayType;
-          return true;
-        }
-        return false;
-      });
+      jest
+        .spyOn(controller, '_setElementText')
+        .mockImplementation((key, text) => {
+          const element = document.getElementById(getElementId(key));
+          if (element) {
+            element.textContent = text;
+            return true;
+          }
+          return false;
+        });
+      jest
+        .spyOn(controller, '_showElement')
+        .mockImplementation((key, displayType = 'block') => {
+          const element = document.getElementById(getElementId(key));
+          if (element) {
+            element.style.display = displayType;
+            return true;
+          }
+          return false;
+        });
       jest.spyOn(controller, '_hideElement').mockImplementation((key) => {
         const element = document.getElementById(getElementId(key));
         if (element) {
@@ -88,10 +92,10 @@ describe('ThematicDirectionsManagerController - Modal Tests', () => {
       if (controller && !controller.isDestroyed) {
         await controller.destroy();
       }
-      
+
       await testBase.cleanup();
       jest.restoreAllMocks();
-      
+
       controller = null;
     } catch (error) {
       console.error('Cleanup failed:', error);

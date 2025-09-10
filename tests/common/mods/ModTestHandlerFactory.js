@@ -350,30 +350,38 @@ export class ModTestHandlerFactory {
       logger,
       'createHandlersWithPerceptionLogging'
     );
-    
+
     // Ensure entityManager has getEntitiesInLocation for AddPerceptionLogEntryHandler
     if (typeof entityManager.getEntitiesInLocation !== 'function') {
       entityManager.getEntitiesInLocation = (locationId) => {
         // Find all entities in the given location
         const entityIds = entityManager.getEntityIds();
         const entitiesInLocation = [];
-        
+
         for (const entityId of entityIds) {
           const entity = entityManager.getEntityInstance(entityId);
-          if (entity && entity.components && entity.components['core:position']) {
+          if (
+            entity &&
+            entity.components &&
+            entity.components['core:position']
+          ) {
             const position = entity.components['core:position'];
             if (position.locationId === locationId) {
               entitiesInLocation.push(entityId);
             }
           }
         }
-        
+
         return new Set(entitiesInLocation);
       };
     }
 
-    const baseHandlers = this.createStandardHandlers(entityManager, eventBus, logger);
-    
+    const baseHandlers = this.createStandardHandlers(
+      entityManager,
+      eventBus,
+      logger
+    );
+
     const safeDispatcher = {
       dispatch: jest.fn((eventType, payload) => {
         eventBus.dispatch(eventType, payload);

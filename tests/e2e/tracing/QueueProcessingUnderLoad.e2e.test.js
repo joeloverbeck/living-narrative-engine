@@ -1,14 +1,14 @@
 /**
  * @file Queue Processing Under Realistic Load E2E Test Suite
  * @description Priority 1.1: Critical Business Impact - Queue Processing Under Realistic Load (HIGH)
- * 
+ *
  * This comprehensive e2e test suite validates queue processing functionality under realistic
  * gaming scenarios, including priority handling, backpressure management, circuit breaker
  * functionality, and memory efficiency.
- * 
+ *
  * Based on the architecture analysis in reports/actions-tracing-architecture-analysis.md,
  * this addresses the critical gap in e2e testing for queue processing under load.
- * 
+ *
  * Test Scenarios:
  * 1. Mixed priority queue processing with realistic action sequences
  * 2. Backpressure handling when trace volume exceeds capacity
@@ -16,13 +16,7 @@
  * 4. Memory efficiency validation under sustained load
  */
 
-import {
-  describe,
-  beforeEach,
-  afterEach,
-  test,
-  expect,
-} from '@jest/globals';
+import { describe, beforeEach, afterEach, test, expect } from '@jest/globals';
 
 import { TraceQueueProcessor } from '../../../src/actions/tracing/traceQueueProcessor.js';
 import { TracePriority } from '../../../src/actions/tracing/tracePriority.js';
@@ -61,28 +55,32 @@ const EXTENDED_LOAD_SCENARIOS = {
     actionDelay: 15,
     priorityDistribution: {
       [TracePriority.CRITICAL]: 0.05, // 5%
-      [TracePriority.HIGH]: 0.15,     // 15%
-      [TracePriority.NORMAL]: 0.70,   // 70%
-      [TracePriority.LOW]: 0.10,      // 10%
+      [TracePriority.HIGH]: 0.15, // 15%
+      [TracePriority.NORMAL]: 0.7, // 70%
+      [TracePriority.LOW]: 0.1, // 10%
     },
-    actions: [TEST_ACTIONS.GO, TEST_ACTIONS.ATTACK, TEST_ACTIONS.COMPLEX_ACTION],
-    errorRate: 0.10, // 10% error rate
+    actions: [
+      TEST_ACTIONS.GO,
+      TEST_ACTIONS.ATTACK,
+      TEST_ACTIONS.COMPLEX_ACTION,
+    ],
+    errorRate: 0.1, // 10% error rate
   },
-  
+
   BURST_GAMING: {
     actionCount: 150,
     concurrency: 8,
     actionDelay: 2,
     priorityDistribution: {
-      [TracePriority.CRITICAL]: 0.10,
+      [TracePriority.CRITICAL]: 0.1,
       [TracePriority.HIGH]: 0.25,
-      [TracePriority.NORMAL]: 0.50,
+      [TracePriority.NORMAL]: 0.5,
       [TracePriority.LOW]: 0.15,
     },
     actions: [TEST_ACTIONS.GO, TEST_ACTIONS.ATTACK],
     errorRate: 0.15, // Higher error rate during burst
   },
-  
+
   SUSTAINED_LOAD: {
     actionCount: 200,
     concurrency: 5,
@@ -91,16 +89,20 @@ const EXTENDED_LOAD_SCENARIOS = {
       [TracePriority.CRITICAL]: 0.03,
       [TracePriority.HIGH]: 0.12,
       [TracePriority.NORMAL]: 0.75,
-      [TracePriority.LOW]: 0.10,
+      [TracePriority.LOW]: 0.1,
     },
-    actions: [TEST_ACTIONS.GO, TEST_ACTIONS.ATTACK, TEST_ACTIONS.COMPLEX_ACTION],
+    actions: [
+      TEST_ACTIONS.GO,
+      TEST_ACTIONS.ATTACK,
+      TEST_ACTIONS.COMPLEX_ACTION,
+    ],
     errorRate: 0.08,
   },
 };
 
 /**
  * Queue Processing Under Realistic Load E2E Test Suite
- * 
+ *
  * Validates comprehensive queue processing functionality including:
  * - Priority-based queue processing under realistic gaming loads
  * - Backpressure handling and circuit breaker functionality
@@ -127,7 +129,7 @@ describe('Queue Processing Under Realistic Load E2E', () => {
         jsHeapSizeLimit: 4000000,
       };
     }
-    
+
     // Record initial memory state
     if (typeof performance !== 'undefined' && performance.memory) {
       startMemory = performance.memory.usedJSHeapSize;
@@ -171,10 +173,14 @@ describe('Queue Processing Under Realistic Load E2E', () => {
 
   afterEach(async () => {
     // Validate memory usage hasn't grown excessively
-    if (startMemory && typeof performance !== 'undefined' && performance.memory) {
+    if (
+      startMemory &&
+      typeof performance !== 'undefined' &&
+      performance.memory
+    ) {
       const endMemory = performance.memory.usedJSHeapSize;
       const memoryIncrease = endMemory - startMemory;
-      
+
       expect(memoryIncrease).toBeLessThan(
         PERFORMANCE_EXPECTATIONS.MEMORY_USAGE.maxIncrease
       );
@@ -188,14 +194,14 @@ describe('Queue Processing Under Realistic Load E2E', () => {
         // Ignore shutdown errors in cleanup
       }
     }
-    
+
     // Clear test data
     testTraces.length = 0;
   });
 
   /**
    * Test Scenario 1: Mixed Priority Queue Processing with Realistic Action Sequences
-   * 
+   *
    * Validates that the queue processor correctly handles a realistic mix of action priorities
    * typical of actual gaming scenarios, including proper priority ordering and processing.
    */
@@ -204,18 +210,19 @@ describe('Queue Processing Under Realistic Load E2E', () => {
       // Arrange: Create realistic gaming scenario traces
       const scenario = EXTENDED_LOAD_SCENARIOS.REALISTIC_GAMING;
       const traces = createRealisticTraces(scenario);
-      
+
       // Track processing order
       const processedOrder = [];
-      
+
       // Mock storage to track processing order
       mockStorageAdapter.setItem.mockImplementation(async (key, value) => {
         if (key.includes('traces')) {
           // Production code stores arrays of trace records directly (not JSON strings)
           if (Array.isArray(value)) {
-            value.forEach(traceRecord => {
+            value.forEach((traceRecord) => {
               processedOrder.push({
-                actionId: traceRecord.data?.metadata?.actionId || traceRecord.id,
+                actionId:
+                  traceRecord.data?.metadata?.actionId || traceRecord.id,
                 priority: traceRecord.priority || TracePriority.NORMAL,
                 timestamp: traceRecord.timestamp,
               });
@@ -227,7 +234,10 @@ describe('Queue Processing Under Realistic Load E2E', () => {
 
       // Act: Enqueue all traces
       traces.forEach((trace, index) => {
-        const priority = determinePriority(index, scenario.priorityDistribution);
+        const priority = determinePriority(
+          index,
+          scenario.priorityDistribution
+        );
         const success = queueProcessor.enqueue(trace, priority);
         expect(success).toBe(true);
       });
@@ -237,26 +247,31 @@ describe('Queue Processing Under Realistic Load E2E', () => {
 
       // Assert: Verify processing order respects priorities
       expect(processedOrder.length).toBeGreaterThan(0);
-      
+
       // Check that critical traces were processed first
-      const criticalTraces = processedOrder.filter(t => t.priority === TracePriority.CRITICAL);
-      const firstNonCritical = processedOrder.find(t => t.priority !== TracePriority.CRITICAL);
-      
+      const criticalTraces = processedOrder.filter(
+        (t) => t.priority === TracePriority.CRITICAL
+      );
+      const firstNonCritical = processedOrder.find(
+        (t) => t.priority !== TracePriority.CRITICAL
+      );
+
       // Only check priority order if we have both types
       const hasBothTypes = criticalTraces.length > 0 && firstNonCritical;
       expect(hasBothTypes).toBeDefined(); // Ensure we can test priority ordering
-      
+
       if (hasBothTypes) {
-        criticalTraces.forEach(criticalTrace => {
+        criticalTraces.forEach((criticalTrace) => {
           const criticalIndex = processedOrder.indexOf(criticalTrace);
-          const firstNonCriticalIndex = processedOrder.indexOf(firstNonCritical);
+          const firstNonCriticalIndex =
+            processedOrder.indexOf(firstNonCritical);
           expect(criticalIndex).toBeLessThan(firstNonCriticalIndex);
         });
       }
 
       // Verify all traces were eventually processed
       expect(processedOrder.length).toBeGreaterThanOrEqual(traces.length * 0.8); // Allow for some processing delays
-      
+
       // Verify metrics show reasonable performance
       const metrics = queueProcessor.getMetrics();
       expect(metrics.totalProcessed).toBeGreaterThan(0);
@@ -267,7 +282,7 @@ describe('Queue Processing Under Realistic Load E2E', () => {
       // Arrange: Create scenario with error traces
       const scenario = EXTENDED_LOAD_SCENARIOS.REALISTIC_GAMING;
       const traces = createRealisticTracesWithErrors(scenario);
-      
+
       let errorCount = 0;
       let successCount = 0;
 
@@ -276,8 +291,11 @@ describe('Queue Processing Under Realistic Load E2E', () => {
         if (key.includes('traces')) {
           // Production code stores arrays of trace records directly (not JSON strings)
           if (Array.isArray(value)) {
-            value.forEach(traceRecord => {
-              if (traceRecord.data?.error || traceRecord.data?.execution?.status === 'error') {
+            value.forEach((traceRecord) => {
+              if (
+                traceRecord.data?.error ||
+                traceRecord.data?.execution?.status === 'error'
+              ) {
                 errorCount++;
               } else {
                 successCount++;
@@ -290,7 +308,9 @@ describe('Queue Processing Under Realistic Load E2E', () => {
 
       // Act: Process all traces
       traces.forEach((trace, index) => {
-        const priority = trace.hasError ? TracePriority.CRITICAL : determinePriority(index, scenario.priorityDistribution);
+        const priority = trace.hasError
+          ? TracePriority.CRITICAL
+          : determinePriority(index, scenario.priorityDistribution);
         queueProcessor.enqueue(trace, priority);
       });
 
@@ -299,15 +319,17 @@ describe('Queue Processing Under Realistic Load E2E', () => {
       // Assert: Verify error handling
       expect(errorCount).toBeGreaterThan(0);
       expect(successCount).toBeGreaterThan(0);
-      
+
       // Error traces should be processed with critical priority
-      expect(errorCount).toBeLessThanOrEqual(traces.filter(t => t.hasError).length);
+      expect(errorCount).toBeLessThanOrEqual(
+        traces.filter((t) => t.hasError).length
+      );
     });
   });
 
   /**
    * Test Scenario 2: Backpressure Handling When Trace Volume Exceeds Capacity
-   * 
+   *
    * Validates that the queue processor properly handles situations where incoming
    * trace volume exceeds processing capacity, implementing backpressure mechanisms.
    */
@@ -316,15 +338,18 @@ describe('Queue Processing Under Realistic Load E2E', () => {
       // Arrange: Create burst load that exceeds capacity
       const scenario = EXTENDED_LOAD_SCENARIOS.BURST_GAMING;
       const traces = createRealisticTraces(scenario);
-      
+
       let rejectedCount = 0;
       let acceptedCount = 0;
 
       // Act: Rapidly enqueue traces to trigger backpressure
       traces.forEach((trace, index) => {
-        const priority = determinePriority(index, scenario.priorityDistribution);
+        const priority = determinePriority(
+          index,
+          scenario.priorityDistribution
+        );
         const success = queueProcessor.enqueue(trace, priority);
-        
+
         if (success) {
           acceptedCount++;
         } else {
@@ -337,7 +362,7 @@ describe('Queue Processing Under Realistic Load E2E', () => {
 
       // Assert: Verify backpressure behavior
       expect(acceptedCount + rejectedCount).toBe(traces.length);
-      
+
       // Verify rejection behavior is reasonable
       expect(rejectedCount).toBeLessThanOrEqual(traces.length * 0.5); // Not more than 50% rejected
 
@@ -353,10 +378,13 @@ describe('Queue Processing Under Realistic Load E2E', () => {
       // Arrange: First create backpressure
       const burstScenario = EXTENDED_LOAD_SCENARIOS.BURST_GAMING;
       const burstTraces = createRealisticTraces(burstScenario);
-      
+
       // Enqueue burst to create backpressure
       burstTraces.forEach((trace, index) => {
-        const priority = determinePriority(index, burstScenario.priorityDistribution);
+        const priority = determinePriority(
+          index,
+          burstScenario.priorityDistribution
+        );
         queueProcessor.enqueue(trace, priority);
       });
 
@@ -370,7 +398,7 @@ describe('Queue Processing Under Realistic Load E2E', () => {
       });
 
       let recoveryAccepted = 0;
-      recoveryTraces.forEach(trace => {
+      recoveryTraces.forEach((trace) => {
         if (queueProcessor.enqueue(trace, TracePriority.NORMAL)) {
           recoveryAccepted++;
         }
@@ -378,7 +406,7 @@ describe('Queue Processing Under Realistic Load E2E', () => {
 
       // Assert: Should accept new traces after recovery
       expect(recoveryAccepted).toBeGreaterThan(recoveryTraces.length * 0.8);
-      
+
       // Queue should be processing normally
       const finalStats = queueProcessor.getQueueStats();
       expect(finalStats.totalSize).toBeLessThan(100); // Should be manageable
@@ -387,7 +415,7 @@ describe('Queue Processing Under Realistic Load E2E', () => {
 
   /**
    * Test Scenario 3: Circuit Breaker Activation and Recovery During Load Spikes
-   * 
+   *
    * Validates circuit breaker functionality during processing failures under load,
    * including proper failure detection, circuit opening, and recovery mechanisms.
    */
@@ -408,7 +436,10 @@ describe('Queue Processing Under Realistic Load E2E', () => {
 
       // Act: Enqueue traces that will trigger failures
       traces.forEach((trace, index) => {
-        const priority = determinePriority(index, scenario.priorityDistribution);
+        const priority = determinePriority(
+          index,
+          scenario.priorityDistribution
+        );
         queueProcessor.enqueue(trace, priority);
       });
 
@@ -417,7 +448,7 @@ describe('Queue Processing Under Realistic Load E2E', () => {
       // Assert: Check that circuit breaker activated
       const metrics = queueProcessor.getMetrics();
       expect(metrics.totalErrors).toBeGreaterThan(0);
-      
+
       // Should still have processed some traces before circuit opened
       expect(metrics.totalProcessed).toBeGreaterThan(0);
       expect(metrics.totalProcessed).toBeLessThan(traces.length); // Not all processed due to circuit
@@ -440,18 +471,18 @@ describe('Queue Processing Under Realistic Load E2E', () => {
         actionCount: 10,
       });
 
-      failureTraces.forEach(trace => {
+      failureTraces.forEach((trace) => {
         queueProcessor.enqueue(trace, TracePriority.NORMAL);
       });
 
       await waitForProcessing(1000);
-      
+
       const failureMetrics = queueProcessor.getMetrics();
       expect(failureMetrics.totalErrors).toBeGreaterThan(0);
 
       // Now fix the storage
       shouldFail = false;
-      
+
       // Create a new processor instance to simulate recovery (service restart)
       const recoveredProcessor = new TraceQueueProcessor({
         storageAdapter: mockStorageAdapter,
@@ -475,7 +506,7 @@ describe('Queue Processing Under Realistic Load E2E', () => {
         actionCount: 15,
       });
 
-      recoveryTraces.forEach(trace => {
+      recoveryTraces.forEach((trace) => {
         recoveredProcessor.enqueue(trace, TracePriority.NORMAL);
       });
 
@@ -485,7 +516,7 @@ describe('Queue Processing Under Realistic Load E2E', () => {
       const recoveryMetrics = recoveredProcessor.getMetrics();
       expect(recoveryMetrics.totalProcessed).toBeGreaterThan(0);
       expect(recoveryMetrics.totalErrors).toBe(0); // No errors with fixed storage
-      
+
       // Cleanup
       await recoveredProcessor.shutdown();
     });
@@ -493,7 +524,7 @@ describe('Queue Processing Under Realistic Load E2E', () => {
 
   /**
    * Test Scenario 4: Memory Efficiency Validation Under Sustained Load
-   * 
+   *
    * Validates that the queue processor maintains memory efficiency during
    * sustained load, properly cleaning up processed traces and managing memory usage.
    */
@@ -501,12 +532,13 @@ describe('Queue Processing Under Realistic Load E2E', () => {
     test('should maintain memory efficiency during sustained processing', async () => {
       // Track memory at intervals
       const memorySnapshots = [];
-      
+
       const takeMemorySnapshot = () => {
         if (typeof performance !== 'undefined' && performance.memory) {
           // Simulate slight memory growth for testing with deterministic values
-          global.performance.memory.usedJSHeapSize += seededRandom.next() * 50000; // Add 0-50KB
-          
+          global.performance.memory.usedJSHeapSize +=
+            seededRandom.next() * 50000; // Add 0-50KB
+
           memorySnapshots.push({
             timestamp: Date.now(),
             heapUsed: performance.memory.usedJSHeapSize,
@@ -526,7 +558,10 @@ describe('Queue Processing Under Realistic Load E2E', () => {
         });
 
         traces.forEach((trace, index) => {
-          const priority = determinePriority(index, scenario.priorityDistribution);
+          const priority = determinePriority(
+            index,
+            scenario.priorityDistribution
+          );
           queueProcessor.enqueue(trace, priority);
         });
 
@@ -536,10 +571,11 @@ describe('Queue Processing Under Realistic Load E2E', () => {
 
       // Assert: Memory should not grow excessively
       expect(memorySnapshots.length).toBeGreaterThan(1); // Ensure we have data to analyze
-      
+
       if (memorySnapshots.length > 1) {
         const initialMemory = memorySnapshots[0].heapUsed;
-        const finalMemory = memorySnapshots[memorySnapshots.length - 1].heapUsed;
+        const finalMemory =
+          memorySnapshots[memorySnapshots.length - 1].heapUsed;
         const memoryGrowth = finalMemory - initialMemory;
 
         // Memory growth should be reasonable (less than 5MB for sustained processing)
@@ -549,7 +585,7 @@ describe('Queue Processing Under Realistic Load E2E', () => {
         const midPoint = Math.floor(memorySnapshots.length / 2);
         const midMemory = memorySnapshots[midPoint].heapUsed;
         const laterGrowth = finalMemory - midMemory;
-        
+
         // Later growth should be minimal compared to early growth - allow for variance
         expect(laterGrowth).toBeLessThanOrEqual(memoryGrowth * 1.5); // Allow 50% variance
       }
@@ -563,7 +599,7 @@ describe('Queue Processing Under Realistic Load E2E', () => {
       // Arrange: Process traces and verify cleanup
       const scenario = EXTENDED_LOAD_SCENARIOS.REALISTIC_GAMING;
       const traces = createRealisticTraces(scenario);
-      
+
       let storageCallCount = 0;
       mockStorageAdapter.setItem.mockImplementation(async () => {
         storageCallCount++;
@@ -572,7 +608,10 @@ describe('Queue Processing Under Realistic Load E2E', () => {
 
       // Act: Process all traces
       traces.forEach((trace, index) => {
-        const priority = determinePriority(index, scenario.priorityDistribution);
+        const priority = determinePriority(
+          index,
+          scenario.priorityDistribution
+        );
         queueProcessor.enqueue(trace, priority);
       });
 
@@ -581,10 +620,10 @@ describe('Queue Processing Under Realistic Load E2E', () => {
       // Assert: Verify cleanup occurred
       const finalStats = queueProcessor.getQueueStats();
       expect(finalStats.totalSize).toBeLessThan(traces.length * 0.3); // Most should be processed and cleaned
-      
+
       // Storage should have been called for processed batches
       expect(storageCallCount).toBeGreaterThan(0);
-      
+
       // Memory metrics should show processing activity
       const metrics = queueProcessor.getMetrics();
       expect(metrics.totalProcessed).toBeGreaterThan(0);
@@ -621,7 +660,7 @@ describe('Queue Processing Under Realistic Load E2E', () => {
 
       // Add realistic timing and completion using correct ActionExecutionTrace API
       trace.captureDispatchStart();
-      
+
       const success = seededRandom.next() > (scenario.errorRate || 0.1);
       if (success) {
         trace.captureDispatchResult({
@@ -651,10 +690,10 @@ describe('Queue Processing Under Realistic Load E2E', () => {
     ];
 
     const traces = [];
-    
+
     // Use a separate seeded random for error creation
     const errorRandom = new SeededRandom(123);
-    
+
     for (let i = 0; i < scenario.actionCount; i++) {
       const actionId = scenario.actions[i % scenario.actions.length];
       const actor = actors[i % actors.length];
@@ -671,7 +710,7 @@ describe('Queue Processing Under Realistic Load E2E', () => {
 
       // Add realistic timing and controlled error creation
       trace.captureDispatchStart();
-      
+
       const shouldError = errorRandom.next() < (scenario.errorRate || 0.1);
       if (shouldError) {
         // Create error trace - use updateError to handle retries gracefully
@@ -702,14 +741,14 @@ describe('Queue Processing Under Realistic Load E2E', () => {
   function determinePriority(index, distribution) {
     const rand = seededRandom.next();
     let cumulative = 0;
-    
+
     for (const [priority, percentage] of Object.entries(distribution)) {
       cumulative += percentage;
       if (rand <= cumulative) {
         return priority;
       }
     }
-    
+
     return TracePriority.NORMAL; // Default fallback
   }
 
@@ -719,6 +758,6 @@ describe('Queue Processing Under Realistic Load E2E', () => {
    * @returns {Promise} Promise that resolves after timeout
    */
   function waitForProcessing(timeout = 1000) {
-    return new Promise(resolve => setTimeout(resolve, timeout));
+    return new Promise((resolve) => setTimeout(resolve, timeout));
   }
 });

@@ -25,7 +25,7 @@ class TestIndexLLMController {
 
   async updateCurrentLLMDisplay() {
     if (!this.#llmAdapter) return;
-    
+
     try {
       const currentLlmId = await this.#llmAdapter.getCurrentActiveLlmId();
       return currentLlmId || 'Default LLM';
@@ -57,29 +57,33 @@ describe('CharacterBuilderBootstrap - Integration Tests', () => {
           controllerClass: TestIndexLLMController,
           includeModLoading: false,
         })
-      ).rejects.toThrow('AppContainer: No service registered for key "ILLMAdapter"');
+      ).rejects.toThrow(
+        'AppContainer: No service registered for key "ILLMAdapter"'
+      );
     });
 
     it('should register minimal AI services but miss LLMAdapter', async () => {
       const bootstrap = new CharacterBuilderBootstrap();
-      
+
       class ServiceInspectorController {
         constructor({ container }) {
           this.container = container;
         }
-        
+
         async initialize() {
           return this.inspectServices();
         }
-        
+
         async init() {
           return this.inspectServices();
         }
-        
+
         inspectServices() {
           const services = {
             hasLlmConfigLoader: this.hasService('LlmConfigLoader'),
-            hasILLMConfigurationManager: this.hasService('ILLMConfigurationManager'),
+            hasILLMConfigurationManager: this.hasService(
+              'ILLMConfigurationManager'
+            ),
             hasILLMRequestExecutor: this.hasService('ILLMRequestExecutor'),
             hasILLMErrorMapper: this.hasService('ILLMErrorMapper'),
             hasITokenEstimator: this.hasService('ITokenEstimator'),
@@ -87,10 +91,10 @@ describe('CharacterBuilderBootstrap - Integration Tests', () => {
             hasLLMAdapter: this.hasService('LLMAdapter'),
             hasILLMAdapter: this.hasService('ILLMAdapter'),
           };
-          
+
           return services;
         }
-        
+
         hasService(key) {
           try {
             this.container.resolve(key);
@@ -108,7 +112,7 @@ describe('CharacterBuilderBootstrap - Integration Tests', () => {
       });
 
       const services = await controller.init();
-      
+
       // These should be registered by registerMinimalAIForCharacterBuilder
       expect(services.hasLlmConfigLoader).toBe(true);
       expect(services.hasILLMConfigurationManager).toBe(true);
@@ -116,7 +120,7 @@ describe('CharacterBuilderBootstrap - Integration Tests', () => {
       expect(services.hasILLMErrorMapper).toBe(true);
       expect(services.hasITokenEstimator).toBe(true);
       expect(services.hasLlmJsonService).toBe(true);
-      
+
       // These should show the actual registration status
       expect(services.hasLLMAdapter).toBe(true); // LLMAdapter IS registered
       expect(services.hasILLMAdapter).toBe(false); // ILLMAdapter is the wrong token name
@@ -126,20 +130,20 @@ describe('CharacterBuilderBootstrap - Integration Tests', () => {
   describe('Token Resolution Issues', () => {
     it('should show difference between tokens.LLMAdapter and hardcoded string', async () => {
       const bootstrap = new CharacterBuilderBootstrap();
-      
+
       class TokenTestController {
         constructor({ container }) {
           this.container = container;
         }
-        
+
         async initialize() {
           return this.testTokenResolution();
         }
-        
+
         async init() {
           return this.testTokenResolution();
         }
-        
+
         testTokenResolution() {
           const results = {
             tokensLLMAdapterValue: tokens.LLMAdapter,
@@ -147,7 +151,7 @@ describe('CharacterBuilderBootstrap - Integration Tests', () => {
             tokenExists: tokens.LLMAdapter !== undefined,
             tokenMatches: tokens.LLMAdapter === 'LLMAdapter',
           };
-          
+
           return results;
         }
       }
@@ -159,13 +163,13 @@ describe('CharacterBuilderBootstrap - Integration Tests', () => {
       });
 
       const results = await controller.init();
-      
+
       // This demonstrates the token mismatch issue
       expect(results.tokensLLMAdapterValue).toBe('LLMAdapter');
       expect(results.hardcodedString).toBe('ILLMAdapter');
       expect(results.tokenExists).toBe(true);
       expect(results.tokenMatches).toBe(true);
-      
+
       // Show that the hardcoded string doesn't match the actual token
       expect(results.hardcodedString).not.toBe(results.tokensLLMAdapterValue);
     });
@@ -174,7 +178,7 @@ describe('CharacterBuilderBootstrap - Integration Tests', () => {
   describe('Fixed Working State (after fixes)', () => {
     it('should now work with proper token resolution', async () => {
       const bootstrap = new CharacterBuilderBootstrap();
-      
+
       class FixedIndexLLMController {
         #container;
         #llmAdapter;

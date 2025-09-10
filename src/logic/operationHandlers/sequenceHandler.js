@@ -46,8 +46,13 @@ class SequenceHandler extends BaseService {
    * @returns {Promise<object>} Result object indicating successful execution
    */
   async execute(operation, context) {
-    if (!operation?.parameters?.actions || !Array.isArray(operation.parameters.actions)) {
-      throw new Error('SequenceHandler.execute: operation must have parameters.actions array');
+    if (
+      !operation?.parameters?.actions ||
+      !Array.isArray(operation.parameters.actions)
+    ) {
+      throw new Error(
+        'SequenceHandler.execute: operation must have parameters.actions array'
+      );
     }
 
     if (!context || typeof context !== 'object') {
@@ -55,14 +60,18 @@ class SequenceHandler extends BaseService {
     }
 
     const { actions } = operation.parameters;
-    this.#logger.debug(`SequenceHandler: Executing sequence with ${actions.length} actions`);
+    this.#logger.debug(
+      `SequenceHandler: Executing sequence with ${actions.length} actions`
+    );
 
     try {
       // Use ActionSequence service to execute the sequence
       await this.#actionSequence.execute({ actions }, context);
-      
-      this.#logger.debug('SequenceHandler: Sequence execution completed successfully');
-      
+
+      this.#logger.debug(
+        'SequenceHandler: Sequence execution completed successfully'
+      );
+
       return {
         success: true,
         actionsExecuted: actions.length,

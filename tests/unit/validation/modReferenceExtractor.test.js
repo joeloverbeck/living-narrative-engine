@@ -16,10 +16,10 @@ describe('ModReferenceExtractor - Core Functionality', () => {
     testBed = createTestBed();
     mockLogger = testBed.createMockLogger();
     mockAjvValidator = testBed.createMock('ajvValidator', ['validate']);
-    
+
     extractor = new ModReferenceExtractor({
       logger: mockLogger,
-      ajvValidator: mockAjvValidator
+      ajvValidator: mockAjvValidator,
     });
 
     // Reset fs mocks
@@ -35,18 +35,18 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       expect(() => {
         new ModReferenceExtractor({
           logger: null,
-          ajvValidator: mockAjvValidator
+          ajvValidator: mockAjvValidator,
         });
       }).toThrow('Missing required dependency: ILogger');
     });
 
     it('should throw error when logger is missing required methods', () => {
       const invalidLogger = { info: jest.fn() }; // Missing debug, warn, error
-      
+
       expect(() => {
         new ModReferenceExtractor({
           logger: invalidLogger,
-          ajvValidator: mockAjvValidator
+          ajvValidator: mockAjvValidator,
         });
       }).toThrow('Invalid or missing method');
     });
@@ -55,18 +55,18 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       expect(() => {
         new ModReferenceExtractor({
           logger: mockLogger,
-          ajvValidator: null
+          ajvValidator: null,
         });
       }).toThrow('Missing required dependency: IAjvValidator');
     });
 
     it('should throw error when ajvValidator is missing validate method', () => {
       const invalidValidator = { someOtherMethod: jest.fn() };
-      
+
       expect(() => {
         new ModReferenceExtractor({
           logger: mockLogger,
-          ajvValidator: invalidValidator
+          ajvValidator: invalidValidator,
         });
       }).toThrow('Invalid or missing method');
     });
@@ -91,14 +91,16 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
       expect(result).toBeInstanceOf(Map);
       expect(result.size).toBe(0);
-      expect(mockLogger.debug).toHaveBeenCalledWith('Starting reference extraction for mod: path');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Starting reference extraction for mod: path'
+      );
     });
 
     it('should handle directory with no matching files', async () => {
       const testPath = '/test/mod/path';
       fs.readdir.mockResolvedValue([
         { name: 'README.md', isFile: () => true, isDirectory: () => false },
-        { name: 'package.json', isFile: () => true, isDirectory: () => false }
+        { name: 'package.json', isFile: () => true, isDirectory: () => false },
       ]);
 
       const result = await extractor.extractReferences(testPath);
@@ -112,7 +114,9 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       const error = new Error('Permission denied');
       fs.readdir.mockRejectedValue(error);
 
-      await expect(extractor.extractReferences(testPath)).rejects.toThrow('Permission denied');
+      await expect(extractor.extractReferences(testPath)).rejects.toThrow(
+        'Permission denied'
+      );
       expect(mockLogger.error).toHaveBeenCalledWith(
         `Failed to extract references from ${testPath}`,
         error
@@ -124,18 +128,22 @@ describe('ModReferenceExtractor - Core Functionality', () => {
     it('should process JSON files and extract mod references', async () => {
       const testPath = '/test/mod/path';
       const jsonContent = {
-        "forbidden_components": {
-          "actor": ["intimacy:kissing", "positioning:sitting"]
+        forbidden_components: {
+          actor: ['intimacy:kissing', 'positioning:sitting'],
         },
-        "targets": {
-          "primary": {
-            "scope": "core:nearby_actors"
-          }
-        }
+        targets: {
+          primary: {
+            scope: 'core:nearby_actors',
+          },
+        },
       };
 
       fs.readdir.mockResolvedValue([
-        { name: 'test.action.json', isFile: () => true, isDirectory: () => false }
+        {
+          name: 'test.action.json',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
       ]);
       fs.readFile.mockResolvedValue(JSON.stringify(jsonContent));
 
@@ -152,9 +160,9 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
     it('should handle malformed JSON gracefully', async () => {
       const testPath = '/test/mod/path';
-      
+
       fs.readdir.mockResolvedValue([
-        { name: 'invalid.json', isFile: () => true, isDirectory: () => false }
+        { name: 'invalid.json', isFile: () => true, isDirectory: () => false },
       ]);
       fs.readFile.mockResolvedValue('{ invalid json }');
 
@@ -166,17 +174,17 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         expect.stringContaining('Failed to process invalid.json (.json)'),
         expect.objectContaining({
           filePath: expect.stringContaining('invalid.json'),
-          fileType: '.json'
+          fileType: '.json',
         })
       );
     });
 
     it('should skip unsupported file extensions', async () => {
       const testPath = '/test/mod/path';
-      
+
       fs.readdir.mockResolvedValue([
         { name: 'script.js', isFile: () => true, isDirectory: () => false },
-        { name: 'style.css', isFile: () => true, isDirectory: () => false }
+        { name: 'style.css', isFile: () => true, isDirectory: () => false },
       ]);
 
       const result = await extractor.extractReferences(testPath);
@@ -195,9 +203,9 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         positioning:close_actors := actor.components.positioning:closeness.partners
         intimacy:attracted_actors := actor.components.intimacy:attraction.targets
       `;
-      
+
       fs.readdir.mockResolvedValue([
-        { name: 'test.scope', isFile: () => true, isDirectory: () => false }
+        { name: 'test.scope', isFile: () => true, isDirectory: () => false },
       ]);
       fs.readFile.mockResolvedValue(scopeContent);
 
@@ -215,17 +223,18 @@ describe('ModReferenceExtractor - Core Functionality', () => {
     it('should extract mod references from various JSON structures', async () => {
       const testPath = '/test/mod/path';
       const jsonContent = {
-        "stringValue": "intimacy:kissing",
-        "arrayValue": ["positioning:sitting", "movement:walking"],
-        "nestedObject": {
-          "deepValue": "romance:dating",
-          "arrayInObject": ["combat:fighting"]
+        stringValue: 'intimacy:kissing',
+        arrayValue: ['positioning:sitting', 'movement:walking'],
+        nestedObject: {
+          deepValue: 'romance:dating',
+          arrayInObject: ['combat:fighting'],
         },
-        "multipleInString": "Check intimacy:hugging and romance:flirting together"
+        multipleInString:
+          'Check intimacy:hugging and romance:flirting together',
       };
 
       fs.readdir.mockResolvedValue([
-        { name: 'test.json', isFile: () => true, isDirectory: () => false }
+        { name: 'test.json', isFile: () => true, isDirectory: () => false },
       ]);
       fs.readFile.mockResolvedValue(JSON.stringify(jsonContent));
 
@@ -236,7 +245,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       expect(result.has('movement')).toBe(true);
       expect(result.has('romance')).toBe(true);
       expect(result.has('combat')).toBe(true);
-      
+
       expect(result.get('intimacy')).toEqual(new Set(['kissing', 'hugging']));
       expect(result.get('romance')).toEqual(new Set(['dating', 'flirting']));
     });
@@ -244,14 +253,14 @@ describe('ModReferenceExtractor - Core Functionality', () => {
     it('should skip core, none, and self references', async () => {
       const testPath = '/test/mod/path';
       const jsonContent = {
-        "coreRef": "core:actor",
-        "noneRef": "none",
-        "selfRef": "self",
-        "validRef": "intimacy:kissing"
+        coreRef: 'core:actor',
+        noneRef: 'none',
+        selfRef: 'self',
+        validRef: 'intimacy:kissing',
       };
 
       fs.readdir.mockResolvedValue([
-        { name: 'test.json', isFile: () => true, isDirectory: () => false }
+        { name: 'test.json', isFile: () => true, isDirectory: () => false },
       ]);
       fs.readFile.mockResolvedValue(JSON.stringify(jsonContent));
 
@@ -267,16 +276,16 @@ describe('ModReferenceExtractor - Core Functionality', () => {
     it('should handle edge cases in reference patterns', async () => {
       const testPath = '/test/mod/edgetest'; // Changed to avoid mod2 self-reference filtering
       const jsonContent = {
-        "validPattern": "mod1:component1",
-        "invalidPattern1": ":component", // No mod ID
-        "invalidPattern2": "mod:", // No component ID
-        "invalidPattern3": "123mod:component", // Invalid mod ID (starts with number)
-        "validPattern2": "a:b", // Minimal valid case
-        "boundaryTest": "prefix_mod2:component_name suffix"
+        validPattern: 'mod1:component1',
+        invalidPattern1: ':component', // No mod ID
+        invalidPattern2: 'mod:', // No component ID
+        invalidPattern3: '123mod:component', // Invalid mod ID (starts with number)
+        validPattern2: 'a:b', // Minimal valid case
+        boundaryTest: 'prefix_mod2:component_name suffix',
       };
 
       fs.readdir.mockResolvedValue([
-        { name: 'test.json', isFile: () => true, isDirectory: () => false }
+        { name: 'test.json', isFile: () => true, isDirectory: () => false },
       ]);
       fs.readFile.mockResolvedValue(JSON.stringify(jsonContent));
 
@@ -294,18 +303,26 @@ describe('ModReferenceExtractor - Core Functionality', () => {
   describe('Directory Traversal', () => {
     it('should recursively scan nested directories', async () => {
       const testPath = '/test/mod/path';
-      
+
       // Mock nested directory structure
       fs.readdir
         .mockResolvedValueOnce([
           { name: 'actions', isFile: () => false, isDirectory: () => true },
-          { name: 'rules', isFile: () => false, isDirectory: () => true }
+          { name: 'rules', isFile: () => false, isDirectory: () => true },
         ])
         .mockResolvedValueOnce([
-          { name: 'move.action.json', isFile: () => true, isDirectory: () => false }
+          {
+            name: 'move.action.json',
+            isFile: () => true,
+            isDirectory: () => false,
+          },
         ])
         .mockResolvedValueOnce([
-          { name: 'combat.rule.json', isFile: () => true, isDirectory: () => false }
+          {
+            name: 'combat.rule.json',
+            isFile: () => true,
+            isDirectory: () => false,
+          },
         ]);
 
       fs.readFile
@@ -324,16 +341,44 @@ describe('ModReferenceExtractor - Core Functionality', () => {
   describe('File Type Detection', () => {
     it('should correctly identify different JSON file types', async () => {
       const testPath = '/test/mod/path';
-      
+
       fs.readdir.mockResolvedValue([
-        { name: 'move.action.json', isFile: () => true, isDirectory: () => false },
-        { name: 'combat.rule.json', isFile: () => true, isDirectory: () => false },
-        { name: 'status.condition.json', isFile: () => true, isDirectory: () => false },
-        { name: 'health.component.json', isFile: () => true, isDirectory: () => false },
-        { name: 'death.event.json', isFile: () => true, isDirectory: () => false },
-        { name: 'body.blueprint.json', isFile: () => true, isDirectory: () => false },
-        { name: 'potion.recipe.json', isFile: () => true, isDirectory: () => false },
-        { name: 'unknown.json', isFile: () => true, isDirectory: () => false }
+        {
+          name: 'move.action.json',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
+        {
+          name: 'combat.rule.json',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
+        {
+          name: 'status.condition.json',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
+        {
+          name: 'health.component.json',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
+        {
+          name: 'death.event.json',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
+        {
+          name: 'body.blueprint.json',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
+        {
+          name: 'potion.recipe.json',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
+        { name: 'unknown.json', isFile: () => true, isDirectory: () => false },
       ]);
 
       fs.readFile.mockResolvedValue('{"ref": "test:component"}');
@@ -351,27 +396,32 @@ describe('ModReferenceExtractor - Core Functionality', () => {
     it('should detect the positioning mod intimacy dependency violation', async () => {
       const testPath = '/test/mods/positioning';
       const turnAroundContent = {
-        "$schema": "schema://living-narrative-engine/action.schema.json",
-        "id": "positioning:turn_around",
-        "name": "Turn Around",
-        "targets": {
-          "primary": {
-            "scope": "positioning:close_actors_facing_each_other_or_behind_target"
-          }
+        $schema: 'schema://living-narrative-engine/action.schema.json',
+        id: 'positioning:turn_around',
+        name: 'Turn Around',
+        targets: {
+          primary: {
+            scope:
+              'positioning:close_actors_facing_each_other_or_behind_target',
+          },
         },
-        "required_components": {
-          "actor": ["positioning:closeness"]
+        required_components: {
+          actor: ['positioning:closeness'],
         },
-        "forbidden_components": {
-          "actor": ["intimacy:kissing"] // This is the violation!
-        }
+        forbidden_components: {
+          actor: ['intimacy:kissing'], // This is the violation!
+        },
       };
 
       fs.readdir.mockResolvedValue([
-        { name: 'actions', isFile: () => false, isDirectory: () => true }
+        { name: 'actions', isFile: () => false, isDirectory: () => true },
       ]);
       fs.readdir.mockResolvedValueOnce([
-        { name: 'turn_around.action.json', isFile: () => true, isDirectory: () => false }
+        {
+          name: 'turn_around.action.json',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
       ]);
       fs.readFile.mockResolvedValue(JSON.stringify(turnAroundContent));
 
@@ -387,12 +437,12 @@ describe('ModReferenceExtractor - Core Functionality', () => {
   describe('Error Handling and Logging', () => {
     it('should continue processing other files when one file fails', async () => {
       const testPath = '/test/mod/path';
-      
+
       fs.readdir.mockResolvedValue([
         { name: 'good.json', isFile: () => true, isDirectory: () => false },
-        { name: 'bad.json', isFile: () => true, isDirectory: () => false }
+        { name: 'bad.json', isFile: () => true, isDirectory: () => false },
       ]);
-      
+
       fs.readFile
         .mockResolvedValueOnce('{"ref": "test:good"}')
         .mockRejectedValueOnce(new Error('File read error'));
@@ -405,20 +455,24 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         expect.stringContaining('Failed to process bad.json (.json)'),
         expect.objectContaining({
           filePath: expect.stringContaining('bad.json'),
-          fileType: '.json'
+          fileType: '.json',
         })
       );
     });
 
     it('should log appropriate debug messages during processing', async () => {
       const testPath = '/test/mod/testmod';
-      
+
       fs.readdir.mockResolvedValue([]);
 
       await extractor.extractReferences(testPath);
 
-      expect(mockLogger.debug).toHaveBeenCalledWith('Starting reference extraction for mod: testmod');
-      expect(mockLogger.info).toHaveBeenCalledWith('Extracted references for mod \'testmod\': ');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Starting reference extraction for mod: testmod'
+      );
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        "Extracted references for mod 'testmod': "
+      );
     });
   });
 
@@ -429,17 +483,21 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         const mockActionData = {
           required_components: {
             actor: ['positioning:closeness', 'intimacy:arousal'],
-            target: ['core:actor']
-          }
+            target: ['core:actor'],
+          },
         };
-        
+
         fs.readdir.mockResolvedValue([
-          { name: 'test.action.json', isFile: () => true, isDirectory: () => false }
+          {
+            name: 'test.action.json',
+            isFile: () => true,
+            isDirectory: () => false,
+          },
         ]);
         fs.readFile.mockResolvedValue(JSON.stringify(mockActionData));
 
         const result = await extractor.extractReferences(testPath);
-        
+
         expect(result.has('positioning')).toBe(true);
         expect(result.has('intimacy')).toBe(true);
         expect(result.has('core')).toBe(false); // Core should be filtered out
@@ -451,17 +509,21 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         const testPath = '/test/mod/path';
         const mockActionData = {
           forbidden_components: {
-            actor: ['intimacy:kissing', 'violence:attacking']
-          }
+            actor: ['intimacy:kissing', 'violence:attacking'],
+          },
         };
-        
+
         fs.readdir.mockResolvedValue([
-          { name: 'test.action.json', isFile: () => true, isDirectory: () => false }
+          {
+            name: 'test.action.json',
+            isFile: () => true,
+            isDirectory: () => false,
+          },
         ]);
         fs.readFile.mockResolvedValue(JSON.stringify(mockActionData));
 
         const result = await extractor.extractReferences(testPath);
-        
+
         expect(result.get('intimacy')).toContain('kissing');
         expect(result.get('violence')).toContain('attacking');
       });
@@ -470,34 +532,46 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         const testPath = '/test/mod/path';
         const mockActionData = {
           targets: {
-            scope: 'positioning:close_actors_facing_each_other'
-          }
+            scope: 'positioning:close_actors_facing_each_other',
+          },
         };
-        
+
         fs.readdir.mockResolvedValue([
-          { name: 'test.action.json', isFile: () => true, isDirectory: () => false }
+          {
+            name: 'test.action.json',
+            isFile: () => true,
+            isDirectory: () => false,
+          },
         ]);
         fs.readFile.mockResolvedValue(JSON.stringify(mockActionData));
 
         const result = await extractor.extractReferences(testPath);
-        
-        expect(result.get('positioning')).toContain('close_actors_facing_each_other');
+
+        expect(result.get('positioning')).toContain(
+          'close_actors_facing_each_other'
+        );
       });
 
       it('should extract targets as string', async () => {
         const testPath = '/test/mod/path';
         const mockActionData = {
-          targets: 'intimacy:close_actors_facing_each_other'
+          targets: 'intimacy:close_actors_facing_each_other',
         };
-        
+
         fs.readdir.mockResolvedValue([
-          { name: 'test.action.json', isFile: () => true, isDirectory: () => false }
+          {
+            name: 'test.action.json',
+            isFile: () => true,
+            isDirectory: () => false,
+          },
         ]);
         fs.readFile.mockResolvedValue(JSON.stringify(mockActionData));
 
         const result = await extractor.extractReferences(testPath);
-        
-        expect(result.get('intimacy')).toContain('close_actors_facing_each_other');
+
+        expect(result.get('intimacy')).toContain(
+          'close_actors_facing_each_other'
+        );
       });
     });
 
@@ -505,34 +579,44 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       it('should extract condition references', async () => {
         const testPath = '/test/mod/path';
         const mockRuleData = {
-          condition_ref: 'positioning:event-is-action-turn-around'
+          condition_ref: 'positioning:event-is-action-turn-around',
         };
-        
+
         fs.readdir.mockResolvedValue([
-          { name: 'test.rule.json', isFile: () => true, isDirectory: () => false }
+          {
+            name: 'test.rule.json',
+            isFile: () => true,
+            isDirectory: () => false,
+          },
         ]);
         fs.readFile.mockResolvedValue(JSON.stringify(mockRuleData));
 
         const result = await extractor.extractReferences(testPath);
-        
-        expect(result.get('positioning')).toContain('event-is-action-turn-around');
+
+        expect(result.get('positioning')).toContain(
+          'event-is-action-turn-around'
+        );
       });
 
       it('should extract nested condition references', async () => {
         const testPath = '/test/mod/path';
         const mockRuleData = {
           condition: {
-            condition_ref: 'intimacy:has-arousal-level'
-          }
+            condition_ref: 'intimacy:has-arousal-level',
+          },
         };
-        
+
         fs.readdir.mockResolvedValue([
-          { name: 'test.rule.json', isFile: () => true, isDirectory: () => false }
+          {
+            name: 'test.rule.json',
+            isFile: () => true,
+            isDirectory: () => false,
+          },
         ]);
         fs.readFile.mockResolvedValue(JSON.stringify(mockRuleData));
 
         const result = await extractor.extractReferences(testPath);
-        
+
         expect(result.get('intimacy')).toContain('has-arousal-level');
       });
 
@@ -543,18 +627,22 @@ describe('ModReferenceExtractor - Core Functionality', () => {
             {
               type: 'MODIFY_COMPONENT',
               component_type: 'positioning:closeness',
-              target: 'actor'
-            }
-          ]
+              target: 'actor',
+            },
+          ],
         };
-        
+
         fs.readdir.mockResolvedValue([
-          { name: 'test.rule.json', isFile: () => true, isDirectory: () => false }
+          {
+            name: 'test.rule.json',
+            isFile: () => true,
+            isDirectory: () => false,
+          },
         ]);
         fs.readFile.mockResolvedValue(JSON.stringify(mockRuleData));
 
         const result = await extractor.extractReferences(testPath);
-        
+
         expect(result.get('positioning')).toContain('closeness');
       });
     });
@@ -566,19 +654,23 @@ describe('ModReferenceExtractor - Core Functionality', () => {
           dataSchema: {
             properties: {
               partner: {
-                description: 'Reference to intimacy:kissing partner'
-              }
-            }
-          }
+                description: 'Reference to intimacy:kissing partner',
+              },
+            },
+          },
         };
-        
+
         fs.readdir.mockResolvedValue([
-          { name: 'test.component.json', isFile: () => true, isDirectory: () => false }
+          {
+            name: 'test.component.json',
+            isFile: () => true,
+            isDirectory: () => false,
+          },
         ]);
         fs.readFile.mockResolvedValue(JSON.stringify(mockComponentData));
 
         const result = await extractor.extractReferences(testPath);
-        
+
         expect(result.get('intimacy')).toContain('kissing');
       });
 
@@ -587,17 +679,21 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         const mockComponentData = {
           defaultData: {
             component: 'positioning:closeness',
-            value: 'close'
-          }
+            value: 'close',
+          },
         };
-        
+
         fs.readdir.mockResolvedValue([
-          { name: 'test.component.json', isFile: () => true, isDirectory: () => false }
+          {
+            name: 'test.component.json',
+            isFile: () => true,
+            isDirectory: () => false,
+          },
         ]);
         fs.readFile.mockResolvedValue(JSON.stringify(mockComponentData));
 
         const result = await extractor.extractReferences(testPath);
-        
+
         expect(result.get('positioning')).toContain('closeness');
       });
     });
@@ -610,18 +706,18 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         condition: {
           and: [
             { has_component: ['actor', 'intimacy:arousal'] },
-            { has_component: ['target', 'positioning:closeness'] }
-          ]
-        }
+            { has_component: ['target', 'positioning:closeness'] },
+          ],
+        },
       };
-      
+
       fs.readdir.mockResolvedValue([
-        { name: 'test.json', isFile: () => true, isDirectory: () => false }
+        { name: 'test.json', isFile: () => true, isDirectory: () => false },
       ]);
       fs.readFile.mockResolvedValue(JSON.stringify(mockData));
 
       const result = await extractor.extractReferences(testPath);
-      
+
       expect(result.get('intimacy')).toContain('arousal');
       expect(result.get('positioning')).toContain('closeness');
     });
@@ -631,24 +727,35 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       const complexLogic = {
         condition: {
           or: [
-            { 
+            {
               and: [
                 { has_component: ['actor', 'intimacy:kissing'] },
-                { '>=': [{ get_component_value: ['actor', 'intimacy:arousal', 'level'] }, 50] }
-              ]
+                {
+                  '>=': [
+                    {
+                      get_component_value: [
+                        'actor',
+                        'intimacy:arousal',
+                        'level',
+                      ],
+                    },
+                    50,
+                  ],
+                },
+              ],
             },
-            { has_component: ['actor', 'violence:attacking'] }
-          ]
-        }
+            { has_component: ['actor', 'violence:attacking'] },
+          ],
+        },
       };
-      
+
       fs.readdir.mockResolvedValue([
-        { name: 'test.json', isFile: () => true, isDirectory: () => false }
+        { name: 'test.json', isFile: () => true, isDirectory: () => false },
       ]);
       fs.readFile.mockResolvedValue(JSON.stringify(complexLogic));
 
       const result = await extractor.extractReferences(testPath);
-      
+
       expect(result.get('intimacy')).toContain('kissing');
       expect(result.get('intimacy')).toContain('arousal');
       expect(result.get('violence')).toContain('attacking');
@@ -659,20 +766,22 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       const mockData = {
         condition: {
           and: [
-            { set_component_value: ['actor', 'positioning:facing', 'direction'] },
+            {
+              set_component_value: ['actor', 'positioning:facing', 'direction'],
+            },
             { remove_component: ['actor', 'intimacy:kissing'] },
-            { add_component: ['actor', 'violence:fighting', { level: 1 }] }
-          ]
-        }
+            { add_component: ['actor', 'violence:fighting', { level: 1 }] },
+          ],
+        },
       };
-      
+
       fs.readdir.mockResolvedValue([
-        { name: 'test.json', isFile: () => true, isDirectory: () => false }
+        { name: 'test.json', isFile: () => true, isDirectory: () => false },
       ]);
       fs.readFile.mockResolvedValue(JSON.stringify(mockData));
 
       const result = await extractor.extractReferences(testPath);
-      
+
       expect(result.get('positioning')).toContain('facing');
       expect(result.get('intimacy')).toContain('kissing');
       expect(result.get('violence')).toContain('fighting');
@@ -684,29 +793,33 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       const testPath = '/test/mod/path';
       const mockData = {
         actions: [
-          { 
+          {
             type: 'add_component',
             target: 'actor',
             component: 'intimacy:arousal',
-            data: { level: 25 }
+            data: { level: 25 },
           },
           {
             type: 'set_component_value',
-            target: 'actor', 
+            target: 'actor',
             componentId: 'positioning:closeness',
             field: 'distance',
-            value: 'close'
-          }
-        ]
+            value: 'close',
+          },
+        ],
       };
-      
+
       fs.readdir.mockResolvedValue([
-        { name: 'test.rule.json', isFile: () => true, isDirectory: () => false }
+        {
+          name: 'test.rule.json',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
       ]);
       fs.readFile.mockResolvedValue(JSON.stringify(mockData));
 
       const result = await extractor.extractReferences(testPath);
-      
+
       expect(result.get('intimacy')).toContain('arousal');
       expect(result.get('positioning')).toContain('closeness');
     });
@@ -720,19 +833,23 @@ describe('ModReferenceExtractor - Core Functionality', () => {
             parameters: {
               entity_ref: '{event.payload.actorId}',
               component_type: 'positioning:sitting_on',
-              result_variable: 'sittingInfo'
-            }
-          }
-        ]
+              result_variable: 'sittingInfo',
+            },
+          },
+        ],
       };
-      
+
       fs.readdir.mockResolvedValue([
-        { name: 'test.rule.json', isFile: () => true, isDirectory: () => false }
+        {
+          name: 'test.rule.json',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
       ]);
       fs.readFile.mockResolvedValue(JSON.stringify(mockData));
 
       const result = await extractor.extractReferences(testPath);
-      
+
       expect(result.get('positioning')).toContain('sitting_on');
     });
   });
@@ -741,16 +858,17 @@ describe('ModReferenceExtractor - Core Functionality', () => {
     it('should extract component access patterns', async () => {
       const testPath = '/test/mod/path';
       const mockData = {
-        value: 'Check intimacy:arousal.level and positioning:closeness.distance'
+        value:
+          'Check intimacy:arousal.level and positioning:closeness.distance',
       };
-      
+
       fs.readdir.mockResolvedValue([
-        { name: 'test.json', isFile: () => true, isDirectory: () => false }
+        { name: 'test.json', isFile: () => true, isDirectory: () => false },
       ]);
       fs.readFile.mockResolvedValue(JSON.stringify(mockData));
 
       const result = await extractor.extractReferences(testPath);
-      
+
       expect(result.get('intimacy')).toContain('arousal');
       expect(result.get('positioning')).toContain('closeness');
     });
@@ -759,19 +877,25 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       const testPath = '/test/mod/path';
       const mockData = {
         required_components: {
-          actor: ['positioning:closeness']
-        }
+          actor: ['positioning:closeness'],
+        },
       };
-      
+
       fs.readdir.mockResolvedValue([
-        { name: 'test.action.json', isFile: () => true, isDirectory: () => false }
+        {
+          name: 'test.action.json',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
       ]);
       fs.readFile.mockResolvedValue(JSON.stringify(mockData));
 
       await extractor.extractReferences(testPath);
-      
+
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Found reference positioning:closeness in required_components')
+        expect.stringContaining(
+          'Found reference positioning:closeness in required_components'
+        )
       );
     });
   });
@@ -779,15 +903,43 @@ describe('ModReferenceExtractor - Core Functionality', () => {
   describe('File Type Detection', () => {
     it('should correctly identify different JSON file types', async () => {
       const testPath = '/test/mod/path';
-      
+
       fs.readdir.mockResolvedValue([
-        { name: 'move.action.json', isFile: () => true, isDirectory: () => false },
-        { name: 'combat.rule.json', isFile: () => true, isDirectory: () => false },
-        { name: 'status.condition.json', isFile: () => true, isDirectory: () => false },
-        { name: 'health.component.json', isFile: () => true, isDirectory: () => false },
-        { name: 'death.event.json', isFile: () => true, isDirectory: () => false },
-        { name: 'body.blueprint.json', isFile: () => true, isDirectory: () => false },
-        { name: 'potion.recipe.json', isFile: () => true, isDirectory: () => false }
+        {
+          name: 'move.action.json',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
+        {
+          name: 'combat.rule.json',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
+        {
+          name: 'status.condition.json',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
+        {
+          name: 'health.component.json',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
+        {
+          name: 'death.event.json',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
+        {
+          name: 'body.blueprint.json',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
+        {
+          name: 'potion.recipe.json',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
       ]);
 
       fs.readFile.mockResolvedValue('{"ref": "test:component"}');
@@ -804,20 +956,26 @@ describe('ModReferenceExtractor - Core Functionality', () => {
   describe('Enhanced Error Handling', () => {
     it('should provide enhanced error context', async () => {
       const testPath = '/test/mod/path';
-      
+
       fs.readdir.mockResolvedValue([
-        { name: 'malformed.action.json', isFile: () => true, isDirectory: () => false }
+        {
+          name: 'malformed.action.json',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
       ]);
       fs.readFile.mockResolvedValue('{ invalid json }');
 
       await extractor.extractReferences(testPath);
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to process malformed.action.json (.json)'),
+        expect.stringContaining(
+          'Failed to process malformed.action.json (.json)'
+        ),
         expect.objectContaining({
           filePath: expect.stringContaining('malformed.action.json'),
           fileType: '.json',
-          error: expect.any(String)
+          error: expect.any(String),
         })
       );
     });
@@ -825,35 +983,38 @@ describe('ModReferenceExtractor - Core Functionality', () => {
     it('should handle null/undefined data gracefully', async () => {
       const testPath = '/test/mod/path';
       const mockData = null;
-      
+
       fs.readdir.mockResolvedValue([
-        { name: 'empty.action.json', isFile: () => true, isDirectory: () => false }
+        {
+          name: 'empty.action.json',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
       ]);
       fs.readFile.mockResolvedValue(JSON.stringify(mockData));
 
       const result = await extractor.extractReferences(testPath);
-      
+
       expect(result.size).toBe(0);
     });
 
     it('should handle operations with missing fields', async () => {
       const testPath = '/test/mod/path';
       const mockData = {
-        actions: [
-          null,
-          undefined,
-          {},
-          { type: 'UNKNOWN' }
-        ]
+        actions: [null, undefined, {}, { type: 'UNKNOWN' }],
       };
-      
+
       fs.readdir.mockResolvedValue([
-        { name: 'test.rule.json', isFile: () => true, isDirectory: () => false }
+        {
+          name: 'test.rule.json',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
       ]);
       fs.readFile.mockResolvedValue(JSON.stringify(mockData));
 
       const result = await extractor.extractReferences(testPath);
-      
+
       expect(result.size).toBe(0);
     });
   });
@@ -862,27 +1023,32 @@ describe('ModReferenceExtractor - Core Functionality', () => {
     it('should detect the positioning mod intimacy dependency violation', async () => {
       const testPath = '/test/mods/positioning';
       const turnAroundContent = {
-        "$schema": "schema://living-narrative-engine/action.schema.json",
-        "id": "positioning:turn_around",
-        "name": "Turn Around",
-        "targets": {
-          "primary": {
-            "scope": "positioning:close_actors_facing_each_other_or_behind_target"
-          }
+        $schema: 'schema://living-narrative-engine/action.schema.json',
+        id: 'positioning:turn_around',
+        name: 'Turn Around',
+        targets: {
+          primary: {
+            scope:
+              'positioning:close_actors_facing_each_other_or_behind_target',
+          },
         },
-        "required_components": {
-          "actor": ["positioning:closeness"]
+        required_components: {
+          actor: ['positioning:closeness'],
         },
-        "forbidden_components": {
-          "actor": ["intimacy:kissing"] // This is the violation!
-        }
+        forbidden_components: {
+          actor: ['intimacy:kissing'], // This is the violation!
+        },
       };
 
       fs.readdir.mockResolvedValue([
-        { name: 'actions', isFile: () => false, isDirectory: () => true }
+        { name: 'actions', isFile: () => false, isDirectory: () => true },
       ]);
       fs.readdir.mockResolvedValueOnce([
-        { name: 'turn_around.action.json', isFile: () => true, isDirectory: () => false }
+        {
+          name: 'turn_around.action.json',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
       ]);
       fs.readFile.mockResolvedValue(JSON.stringify(turnAroundContent));
 
@@ -897,34 +1063,38 @@ describe('ModReferenceExtractor - Core Functionality', () => {
     it('should handle complex rule files with multiple reference types', async () => {
       const testPath = '/test/mods/positioning';
       const complexRuleContent = {
-        "rule_id": "handle_get_up_from_furniture",
-        "condition": {
-          "condition_ref": "positioning:event-is-action-get-up-from-furniture"
+        rule_id: 'handle_get_up_from_furniture',
+        condition: {
+          condition_ref: 'positioning:event-is-action-get-up-from-furniture',
         },
-        "actions": [
+        actions: [
           {
-            "type": "QUERY_COMPONENT",
-            "parameters": {
-              "component_type": "positioning:sitting_on"
-            }
+            type: 'QUERY_COMPONENT',
+            parameters: {
+              component_type: 'positioning:sitting_on',
+            },
           },
           {
-            "type": "REMOVE_SITTING_CLOSENESS",
-            "parameters": {
-              "furniture_id": "{event.payload.targetId}"
-            }
+            type: 'REMOVE_SITTING_CLOSENESS',
+            parameters: {
+              furniture_id: '{event.payload.targetId}',
+            },
           },
           {
-            "type": "MODIFY_COMPONENT",
-            "parameters": {
-              "component_type": "positioning:allows_sitting"
-            }
-          }
-        ]
+            type: 'MODIFY_COMPONENT',
+            parameters: {
+              component_type: 'positioning:allows_sitting',
+            },
+          },
+        ],
       };
 
       fs.readdir.mockResolvedValue([
-        { name: 'complex.rule.json', isFile: () => true, isDirectory: () => false }
+        {
+          name: 'complex.rule.json',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
       ]);
       fs.readFile.mockResolvedValue(JSON.stringify(complexRuleContent));
 
@@ -939,7 +1109,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
     // Mock the parseScopeDefinitions function
     beforeEach(() => {
       jest.mock('../../../src/scopeDsl/scopeDefinitionParser.js', () => ({
-        parseScopeDefinitions: jest.fn()
+        parseScopeDefinitions: jest.fn(),
       }));
     });
 
@@ -950,9 +1120,9 @@ describe('ModReferenceExtractor - Core Functionality', () => {
           positioning:close_actors := actor.components.positioning:closeness.partners
           intimacy:attracted_actors := actor.components.intimacy:attraction.targets
         `;
-        
+
         fs.readdir.mockResolvedValue([
-          { name: 'test.scope', isFile: () => true, isDirectory: () => false }
+          { name: 'test.scope', isFile: () => true, isDirectory: () => false },
         ]);
         fs.readFile.mockResolvedValue(scopeContent);
 
@@ -969,14 +1139,14 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         const scopeContent = `
           test:scope := actor.components.positioning:closeness.partners
         `;
-        
+
         fs.readdir.mockResolvedValue([
-          { name: 'test.scope', isFile: () => true, isDirectory: () => false }
+          { name: 'test.scope', isFile: () => true, isDirectory: () => false },
         ]);
         fs.readFile.mockResolvedValue(scopeContent);
 
         const result = await extractor.extractReferences(testPath);
-        
+
         expect(result.get('positioning')).toContain('closeness');
       });
     });
@@ -994,14 +1164,14 @@ describe('ModReferenceExtractor - Core Functionality', () => {
             }
           ]
         `;
-        
+
         fs.readdir.mockResolvedValue([
-          { name: 'test.scope', isFile: () => true, isDirectory: () => false }
+          { name: 'test.scope', isFile: () => true, isDirectory: () => false },
         ]);
         fs.readFile.mockResolvedValue(scopeContent);
 
         const result = await extractor.extractReferences(testPath);
-        
+
         expect(result.get('positioning')).toContain('closeness');
         expect(result.get('intimacy')).toContain('attraction');
       });
@@ -1011,14 +1181,14 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         const scopeContent = `
           positioning:all_nearby := actor.components.positioning:closeness.partners | actor.followers
         `;
-        
+
         fs.readdir.mockResolvedValue([
-          { name: 'test.scope', isFile: () => true, isDirectory: () => false }
+          { name: 'test.scope', isFile: () => true, isDirectory: () => false },
         ]);
         fs.readFile.mockResolvedValue(scopeContent);
 
         const result = await extractor.extractReferences(testPath);
-        
+
         expect(result.get('positioning')).toContain('closeness');
       });
 
@@ -1027,14 +1197,14 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         const scopeContent = `
           intimacy:all_connections := actor.partners + actor.components.intimacy:bond.targets
         `;
-        
+
         fs.readdir.mockResolvedValue([
-          { name: 'test.scope', isFile: () => true, isDirectory: () => false }
+          { name: 'test.scope', isFile: () => true, isDirectory: () => false },
         ]);
         fs.readFile.mockResolvedValue(scopeContent);
 
         const result = await extractor.extractReferences(testPath);
-        
+
         expect(result.get('intimacy')).toContain('bond');
       });
 
@@ -1043,14 +1213,14 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         const scopeContent = `
           positioning:furniture_users := actor.components.positioning:sitting.furniture.users[]
         `;
-        
+
         fs.readdir.mockResolvedValue([
-          { name: 'test.scope', isFile: () => true, isDirectory: () => false }
+          { name: 'test.scope', isFile: () => true, isDirectory: () => false },
         ]);
         fs.readFile.mockResolvedValue(scopeContent);
 
         const result = await extractor.extractReferences(testPath);
-        
+
         expect(result.get('positioning')).toContain('sitting');
       });
 
@@ -1061,16 +1231,18 @@ describe('ModReferenceExtractor - Core Functionality', () => {
             "condition_ref": "positioning:both-actors-facing-each-other"
           }]
         `;
-        
+
         fs.readdir.mockResolvedValue([
-          { name: 'test.scope', isFile: () => true, isDirectory: () => false }
+          { name: 'test.scope', isFile: () => true, isDirectory: () => false },
         ]);
         fs.readFile.mockResolvedValue(scopeContent);
 
         const result = await extractor.extractReferences(testPath);
-        
+
         expect(result.get('positioning')).toContain('closeness');
-        expect(result.get('positioning')).toContain('both-actors-facing-each-other');
+        expect(result.get('positioning')).toContain(
+          'both-actors-facing-each-other'
+        );
       });
     });
 
@@ -1081,14 +1253,14 @@ describe('ModReferenceExtractor - Core Functionality', () => {
           invalid syntax without assignment but has intimacy:kissing reference
           and positioning:sitting references
         `;
-        
+
         fs.readdir.mockResolvedValue([
-          { name: 'test.scope', isFile: () => true, isDirectory: () => false }
+          { name: 'test.scope', isFile: () => true, isDirectory: () => false },
         ]);
         fs.readFile.mockResolvedValue(malformedContent);
 
         const result = await extractor.extractReferences(testPath);
-        
+
         // Should still extract references via regex fallback
         expect(result.get('intimacy')).toContain('kissing');
         expect(result.get('positioning')).toContain('sitting');
@@ -1104,14 +1276,14 @@ describe('ModReferenceExtractor - Core Functionality', () => {
           invalid_scope_without_assignment := 
           another:valid := actor.components.intimacy:attraction
         `;
-        
+
         fs.readdir.mockResolvedValue([
-          { name: 'test.scope', isFile: () => true, isDirectory: () => false }
+          { name: 'test.scope', isFile: () => true, isDirectory: () => false },
         ]);
         fs.readFile.mockResolvedValue(partialContent);
 
         const result = await extractor.extractReferences(testPath);
-        
+
         // Should extract what it can
         expect(result.has('positioning')).toBe(true);
         expect(result.has('intimacy')).toBe(true);
@@ -1128,17 +1300,25 @@ describe('ModReferenceExtractor - Core Functionality', () => {
             "condition_ref": "positioning:both-actors-facing-each-other"
           }]
         `;
-        
+
         fs.readdir.mockResolvedValue([
-          { name: 'close_actors_facing_each_other.scope', isFile: () => true, isDirectory: () => false }
+          {
+            name: 'close_actors_facing_each_other.scope',
+            isFile: () => true,
+            isDirectory: () => false,
+          },
         ]);
         fs.readFile.mockResolvedValue(realWorldContent);
 
         const result = await extractor.extractReferences(testPath);
-        
-        expect(result.get('intimacy')).toContain('close_actors_facing_each_other');
+
+        expect(result.get('intimacy')).toContain(
+          'close_actors_facing_each_other'
+        );
         expect(result.get('positioning')).toContain('closeness');
-        expect(result.get('positioning')).toContain('both-actors-facing-each-other');
+        expect(result.get('positioning')).toContain(
+          'both-actors-facing-each-other'
+        );
       });
 
       it('should handle complex union examples', async () => {
@@ -1149,14 +1329,18 @@ describe('ModReferenceExtractor - Core Functionality', () => {
           close_connections := actor.partners + actor.components.intimacy:family
           mixed_example := actor.followers + actor.friends | actor.partners
         `;
-        
+
         fs.readdir.mockResolvedValue([
-          { name: 'union-examples.scope', isFile: () => true, isDirectory: () => false }
+          {
+            name: 'union-examples.scope',
+            isFile: () => true,
+            isDirectory: () => false,
+          },
         ]);
         fs.readFile.mockResolvedValue(unionExamples);
 
         const result = await extractor.extractReferences(testPath);
-        
+
         expect(result.get('intimacy')).toContain('friends');
         expect(result.get('intimacy')).toContain('family');
       });
@@ -1165,19 +1349,21 @@ describe('ModReferenceExtractor - Core Functionality', () => {
     describe('Performance', () => {
       it('should handle large scope files efficiently', async () => {
         const testPath = '/test/mod/path';
-        const largeContent = Array.from({length: 100}, (_, i) => 
-          `mod${i}:scope${i} := actor.components.mod${i}:component${i}.field`
+        const largeContent = Array.from(
+          { length: 100 },
+          (_, i) =>
+            `mod${i}:scope${i} := actor.components.mod${i}:component${i}.field`
         ).join('\n');
-        
+
         fs.readdir.mockResolvedValue([
-          { name: 'large.scope', isFile: () => true, isDirectory: () => false }
+          { name: 'large.scope', isFile: () => true, isDirectory: () => false },
         ]);
         fs.readFile.mockResolvedValue(largeContent);
 
         const startTime = performance.now();
         const result = await extractor.extractReferences(testPath);
         const endTime = performance.now();
-        
+
         expect(endTime - startTime).toBeLessThan(200); // <200ms for 100 definitions
         expect(result.size).toBeGreaterThan(0);
       });
@@ -1192,14 +1378,14 @@ describe('ModReferenceExtractor - Core Functionality', () => {
           self:test := self
           intimacy:valid := actor.components.intimacy:attraction
         `;
-        
+
         fs.readdir.mockResolvedValue([
-          { name: 'test.scope', isFile: () => true, isDirectory: () => false }
+          { name: 'test.scope', isFile: () => true, isDirectory: () => false },
         ]);
         fs.readFile.mockResolvedValue(scopeContent);
 
         const result = await extractor.extractReferences(testPath);
-        
+
         expect(result.has('core')).toBe(false);
         expect(result.has('none')).toBe(false);
         expect(result.has('self')).toBe(false);
@@ -1211,14 +1397,14 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         const scopeContent = `
           test:all_items := entities(intimacy:special_item)
         `;
-        
+
         fs.readdir.mockResolvedValue([
-          { name: 'test.scope', isFile: () => true, isDirectory: () => false }
+          { name: 'test.scope', isFile: () => true, isDirectory: () => false },
         ]);
         fs.readFile.mockResolvedValue(scopeContent);
 
         const result = await extractor.extractReferences(testPath);
-        
+
         expect(result.get('intimacy')).toContain('special_item');
       });
     });

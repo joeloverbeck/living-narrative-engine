@@ -13,14 +13,16 @@ import { ErrorCodes } from '../constants/errorCodes.js';
  * @param {object} deps.errorHandler - Optional error handler for centralized error handling
  * @returns {object} NodeResolver with canResolve and resolve methods
  */
-export default function createArrayIterationResolver({ errorHandler = null } = {}) {
+export default function createArrayIterationResolver({
+  errorHandler = null,
+} = {}) {
   // Only validate if provided (for backward compatibility)
   if (errorHandler) {
     validateDependency(errorHandler, 'IScopeDslErrorHandler', console, {
       requiredMethods: ['handleError', 'getErrorBuffer'],
     });
   }
-  
+
   const MAX_ARRAY_SIZE = 10000; // Configurable limit
   const LAYER_PRIORITY = {
     topmost: ['outer', 'base', 'underwear'],
@@ -148,7 +150,9 @@ export default function createArrayIterationResolver({ errorHandler = null } = {
             if (errorHandler) {
               try {
                 errorHandler.handleError(
-                  new Error(`Array size ${parentValue.length} exceeds limit ${MAX_ARRAY_SIZE}`),
+                  new Error(
+                    `Array size ${parentValue.length} exceeds limit ${MAX_ARRAY_SIZE}`
+                  ),
                   { ...ctx, arraySize: parentValue.length },
                   'ArrayIterationResolver',
                   ErrorCodes.MEMORY_LIMIT
@@ -160,7 +164,7 @@ export default function createArrayIterationResolver({ errorHandler = null } = {
             }
             // Still process the array, but error has been logged
           }
-          
+
           for (const item of parentValue) {
             if (item !== null && item !== undefined) {
               result.add(item);

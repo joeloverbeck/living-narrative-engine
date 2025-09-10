@@ -246,7 +246,7 @@ describe('NoOpLogger - Performance Benchmarks', () => {
       const iqr = q3 - q1;
       const lowerBound = q1 - 1.5 * iqr;
       const upperBound = q3 + 1.5 * iqr;
-      
+
       // Filter out outliers
       const filteredTimings = burstTimings.filter(
         (t) => t >= lowerBound && t <= upperBound
@@ -258,7 +258,7 @@ describe('NoOpLogger - Performance Benchmarks', () => {
       const maxDeviation = Math.max(
         ...filteredTimings.map((t) => Math.abs(t - avgTiming))
       );
-      
+
       // More lenient threshold to account for system noise and remaining JIT effects
       // 3.0 (300%) allows for reasonable variance in micro-benchmarks
       expect(maxDeviation / avgTiming).toBeLessThan(3.0);

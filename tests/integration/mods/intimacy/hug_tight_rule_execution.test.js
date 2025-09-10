@@ -26,9 +26,9 @@ describe('intimacy:hug_tight action rule execution', () => {
 
   it('performs hug tight action successfully', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
-      location: 'living_room'
+      location: 'living_room',
     });
-    
+
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
     const successEvent = testFixture.events.find(
@@ -40,11 +40,12 @@ describe('intimacy:hug_tight action rule execution', () => {
     );
 
     testFixture.assertPerceptibleEvent({
-      descriptionText: 'Alice closes their arms around Bob tenderly, hugging Bob tight.',
+      descriptionText:
+        'Alice closes their arms around Bob tenderly, hugging Bob tight.',
       locationId: 'living_room',
       perceptionType: 'action_target_general',
       actorId: scenario.actor.id,
-      targetId: scenario.target.id
+      targetId: scenario.target.id,
     });
 
     const turnEndedEvent = testFixture.events.find(
@@ -56,9 +57,12 @@ describe('intimacy:hug_tight action rule execution', () => {
   });
 
   it('formats message correctly with different names', async () => {
-    const scenario = testFixture.createCloseActors(['Sir Lancelot', 'Lady Guinevere'], {
-      location: 'castle_hall'
-    });
+    const scenario = testFixture.createCloseActors(
+      ['Sir Lancelot', 'Lady Guinevere'],
+      {
+        location: 'castle_hall',
+      }
+    );
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -72,7 +76,7 @@ describe('intimacy:hug_tight action rule execution', () => {
 
   it('handles action with correct perception type', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
-      location: 'garden'
+      location: 'garden',
     });
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
@@ -81,7 +85,9 @@ describe('intimacy:hug_tight action rule execution', () => {
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();
-    expect(perceptibleEvent.payload.perceptionType).toBe('action_target_general');
+    expect(perceptibleEvent.payload.perceptionType).toBe(
+      'action_target_general'
+    );
     expect(perceptibleEvent.payload.targetId).toBe(scenario.target.id);
     expect(perceptibleEvent.payload.locationId).toBe('garden');
   });

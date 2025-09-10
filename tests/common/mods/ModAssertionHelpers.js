@@ -10,7 +10,7 @@ import { expect } from '@jest/globals';
  *
  * Standardizes the verification patterns commonly used across mod tests,
  * reducing code duplication and improving test consistency.
- * 
+ *
  * Can be used as both static methods and instance methods. Instance methods
  * store common parameters to reduce repetitive passing of entityManager.
  */
@@ -723,7 +723,7 @@ export class ModAssertionHelpers {
       shouldEndTurn = true,
       shouldHavePerceptibleEvent = true,
       events = [],
-      expectedMessage = 'Action completed successfully'
+      expectedMessage = 'Action completed successfully',
     } = options;
 
     // For tests that call handlers directly without an event system,
@@ -738,7 +738,7 @@ export class ModAssertionHelpers {
     // If we have events, use the full validation
     ModAssertionHelpers.assertActionSuccess(events, expectedMessage, {
       shouldEndTurn,
-      shouldHavePerceptibleEvent
+      shouldHavePerceptibleEvent,
     });
   }
 

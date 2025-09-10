@@ -43,10 +43,10 @@ global.memoryTestUtils = {
     if (global.gc) {
       // Further reduced cycles and wait times for memory test performance
       global.gc();
-      await new Promise(resolve => setTimeout(resolve, 30));
+      await new Promise((resolve) => setTimeout(resolve, 30));
       global.gc();
       // Reduced total wait time from 100ms to 40ms
-      await new Promise(resolve => setTimeout(resolve, 30));
+      await new Promise((resolve) => setTimeout(resolve, 30));
     }
   },
 
@@ -59,14 +59,14 @@ global.memoryTestUtils = {
   async getStableMemoryUsage(samples = 2) {
     // Further reduced default samples from 3 to 2 for faster execution
     const measurements = [];
-    
+
     // Reduced initial stabilization from 20ms to 10ms
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     for (let i = 0; i < samples; i++) {
       if (i > 0) {
         // Reduced delay between samples from 10ms to 5ms
-        await new Promise(resolve => setTimeout(resolve, 5));
+        await new Promise((resolve) => setTimeout(resolve, 5));
       }
       measurements.push(process.memoryUsage().heapUsed);
     }
@@ -116,24 +116,24 @@ global.memoryTestUtils = {
    */
   async assertMemoryWithRetry(measurementFn, limitMB, retries = 6) {
     const adjustedLimit = this.getMemoryThreshold(limitMB);
-    
+
     for (let attempt = 1; attempt <= retries; attempt++) {
       // Enhanced GC and stabilization between attempts
       await this.forceGCAndWait();
-      
+
       const memory = await measurementFn();
-      
+
       if (memory < adjustedLimit) {
         return; // Test passed
       }
-      
+
       if (attempt < retries) {
         console.log(
           `Memory assertion attempt ${attempt} failed: ${(memory / 1024 / 1024).toFixed(2)}MB > ${(adjustedLimit / 1024 / 1024).toFixed(2)}MB. Retrying...`
         );
         // Further reduced wait times for faster retries
-        const waitTime = 50 + (attempt * 25);
-        await new Promise(resolve => setTimeout(resolve, waitTime));
+        const waitTime = 50 + attempt * 25;
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
       } else {
         // Final attempt failed
         throw new Error(
@@ -165,8 +165,10 @@ global.memoryTestUtils = {
    */
   assertMemoryGrowthPercentage(initial, final, maxGrowthPercent, context = '') {
     const growthPercent = this.calculateMemoryGrowthPercentage(initial, final);
-    const adjustedMaxGrowth = this.isCI() ? maxGrowthPercent * 2.0 : maxGrowthPercent * 1.5;
-    
+    const adjustedMaxGrowth = this.isCI()
+      ? maxGrowthPercent * 2.0
+      : maxGrowthPercent * 1.5;
+
     if (growthPercent > adjustedMaxGrowth) {
       throw new Error(
         `${context ? context + ': ' : ''}Memory growth ${growthPercent.toFixed(1)}% exceeds limit of ${adjustedMaxGrowth.toFixed(1)}% (Initial: ${(initial / 1024 / 1024).toFixed(2)}MB, Final: ${(final / 1024 / 1024).toFixed(2)}MB)`
@@ -183,12 +185,14 @@ global.memoryTestUtils = {
   getAdaptiveThresholds(baseThresholds) {
     const isCI = this.isCI();
     const multiplier = isCI ? 2.0 : 1.75; // More generous multipliers
-    
+
     return {
       ...baseThresholds,
       MAX_MEMORY_MB: baseThresholds.MAX_MEMORY_MB * multiplier,
-      MEMORY_GROWTH_LIMIT_MB: baseThresholds.MEMORY_GROWTH_LIMIT_MB * multiplier,
-      MEMORY_GROWTH_LIMIT_PERCENT: (baseThresholds.MEMORY_GROWTH_LIMIT_PERCENT || 50) * multiplier,
+      MEMORY_GROWTH_LIMIT_MB:
+        baseThresholds.MEMORY_GROWTH_LIMIT_MB * multiplier,
+      MEMORY_GROWTH_LIMIT_PERCENT:
+        (baseThresholds.MEMORY_GROWTH_LIMIT_PERCENT || 50) * multiplier,
     };
   },
 };

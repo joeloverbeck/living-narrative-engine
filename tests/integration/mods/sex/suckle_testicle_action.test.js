@@ -13,14 +13,12 @@ import { ModAssertionHelpers } from '../../../common/mods/ModAssertionHelpers.js
 
 /**
  * Creates standardized anatomy setup for suckle testicle scenarios.
- * 
+ *
  * @returns {object} Object with actor, target, and all anatomy entities
  */
 function setupAnatomyComponents() {
   // Create main room
-  const room = new ModEntityBuilder('room1')
-    .asRoom('Test Room')
-    .build();
+  const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
   // Create actor entity
   const actor = new ModEntityBuilder('alice')
@@ -71,10 +69,10 @@ describe('sex:suckle_testicle action integration', () => {
   beforeEach(async () => {
     // Create test fixture with auto-loaded files
     testFixture = await ModTestFixture.forAction('sex', 'sex:suckle_testicle');
-    
+
     // Setup anatomy entities
     const entities = setupAnatomyComponents();
-    
+
     // Load all entities into the test environment
     testFixture.reset(Object.values(entities));
   });
@@ -93,7 +91,7 @@ describe('sex:suckle_testicle action integration', () => {
     // Assert action executed successfully with proper events
     ModAssertionHelpers.assertActionSuccess(
       testFixture.events,
-      'Alice suckles on Bob\'s testicle, tracing the hard oval inside with the tongue.',
+      "Alice suckles on Bob's testicle, tracing the hard oval inside with the tongue.",
       {
         shouldEndTurn: true,
         shouldHavePerceptibleEvent: true,
@@ -113,7 +111,7 @@ describe('sex:suckle_testicle action integration', () => {
     ];
 
     testFixture.reset(minimalEntities);
-    
+
     const initialEventCount = testFixture.events.length;
 
     await testFixture.eventBus.dispatch('core:attempt_action', {

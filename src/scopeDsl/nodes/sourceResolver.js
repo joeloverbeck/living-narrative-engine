@@ -130,8 +130,7 @@ export default function createSourceResolver({
 
         case 'entities': {
           const componentId = node.param;
-          
-          
+
           if (!componentId) {
             // No component specified, return empty set
             result = new Set();
@@ -140,23 +139,21 @@ export default function createSourceResolver({
 
           let entities = [];
           let totalEntityCount = 0;
-          
+
           if (componentId.startsWith('!')) {
             // Negated component - entities WITHOUT the component
             const componentName = componentId.slice(1);
             result = collectEntitiesWithoutComponent(componentName);
             totalEntityCount = entitiesGateway.getEntities().length;
-            entities = Array.from(result).map(id => ({ id }));
+            entities = Array.from(result).map((id) => ({ id }));
           } else {
             // Positive component - entities WITH the component
-            entities = entitiesGateway.getEntitiesWithComponent(componentId) || [];
+            entities =
+              entitiesGateway.getEntitiesWithComponent(componentId) || [];
             totalEntityCount = entitiesGateway.getEntities().length;
-            
 
             result = new Set(
-              entities
-                .map((e) => e.id)
-                .filter((id) => typeof id === 'string')
+              entities.map((e) => e.id).filter((id) => typeof id === 'string')
             );
           }
 

@@ -30,7 +30,7 @@ describe('EventBus - Context-Aware Infinite Loop Detection', () => {
           context: 'game-initialization',
           maxRecursionDepth: 25,
           maxGlobalRecursion: 200,
-          timeoutMs: 60000
+          timeoutMs: 60000,
         });
       });
 
@@ -41,7 +41,9 @@ describe('EventBus - Context-Aware Infinite Loop Detection', () => {
         // Create 40 rapid entity creation events (simulating game initialization)
         const promises = [];
         for (let i = 0; i < 40; i++) {
-          promises.push(bus.dispatch('core:entity_created', { entityId: `entity-${i}` }));
+          promises.push(
+            bus.dispatch('core:entity_created', { entityId: `entity-${i}` })
+          );
         }
 
         await Promise.all(promises);
@@ -72,18 +74,18 @@ describe('EventBus - Context-Aware Infinite Loop Detection', () => {
         // This test verifies that the threshold calculation works correctly
         // We can't easily test the timing detection in unit tests due to async nature
         // But we can verify the thresholds are correctly calculated
-        
+
         const handler = jest.fn();
         bus.subscribe('core:entity_created', handler);
-        
-        // The fact that we can dispatch 40 events (simulating normal game init) 
+
+        // The fact that we can dispatch 40 events (simulating normal game init)
         // without triggering infinite loop detection shows the fix works
         // This is the behavior we're trying to achieve - no false positives during init
-        
+
         // Verify the game initialization context is active
         expect(bus.isBatchModeEnabled()).toBe(true);
         expect(bus.getBatchModeOptions().context).toBe('game-initialization');
-        
+
         // This test passes if no errors are thrown during normal bulk operations
         expect(true).toBe(true);
       });
@@ -95,7 +97,7 @@ describe('EventBus - Context-Aware Infinite Loop Detection', () => {
           context: 'bulk-operations',
           maxRecursionDepth: 15,
           maxGlobalRecursion: 50,
-          timeoutMs: 30000
+          timeoutMs: 30000,
         });
       });
 
@@ -106,7 +108,9 @@ describe('EventBus - Context-Aware Infinite Loop Detection', () => {
         // Create 15 rapid component events
         const promises = [];
         for (let i = 0; i < 15; i++) {
-          promises.push(bus.dispatch('core:component_added', { componentId: `comp-${i}` }));
+          promises.push(
+            bus.dispatch('core:component_added', { componentId: `comp-${i}` })
+          );
         }
 
         await Promise.all(promises);
@@ -126,21 +130,23 @@ describe('EventBus - Context-Aware Infinite Loop Detection', () => {
           bus.dispatch('core:component_added', { componentId: `comp-${i}` });
         }
 
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
 
         // Should detect either infinite loop or recursion depth exceeded
         // Since we're hitting limits, check for any error detection
         expect(consoleErrorSpy).toHaveBeenCalled();
-        
+
         // Check that it's one of our expected error types
         const calls = consoleErrorSpy.mock.calls;
-        const hasInfiniteLoopError = calls.some(call => 
+        const hasInfiniteLoopError = calls.some((call) =>
           call[0].includes('Potential infinite loop detected')
         );
-        const hasRecursionError = calls.some(call => 
-          call[0].includes('Maximum recursion depth') && call[0].includes('exceeded')
+        const hasRecursionError = calls.some(
+          (call) =>
+            call[0].includes('Maximum recursion depth') &&
+            call[0].includes('exceeded')
         );
-        
+
         expect(hasInfiniteLoopError || hasRecursionError).toBe(true);
       });
     });
@@ -153,7 +159,9 @@ describe('EventBus - Context-Aware Infinite Loop Detection', () => {
         // Create 10 rapid events (below normal mode threshold of 15)
         const promises = [];
         for (let i = 0; i < 10; i++) {
-          promises.push(bus.dispatch('core:entity_created', { entityId: `entity-${i}` }));
+          promises.push(
+            bus.dispatch('core:entity_created', { entityId: `entity-${i}` })
+          );
         }
 
         await Promise.all(promises);
@@ -189,7 +197,7 @@ describe('EventBus - Context-Aware Infinite Loop Detection', () => {
           bus.dispatch('custom:event', { data: `value-${i}` });
         }
 
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
 
         // Should detect infinite loop or hit recursion limits
         // Either way, errors should be detected for rapid event dispatching
@@ -204,7 +212,7 @@ describe('EventBus - Context-Aware Infinite Loop Detection', () => {
         context: 'game-initialization',
         maxRecursionDepth: 25,
         maxGlobalRecursion: 200,
-        timeoutMs: 60000
+        timeoutMs: 60000,
       });
 
       // Verify batch mode is configured with the right context
@@ -212,7 +220,7 @@ describe('EventBus - Context-Aware Infinite Loop Detection', () => {
       expect(bus.getBatchModeOptions().context).toBe('game-initialization');
       expect(bus.getBatchModeOptions().maxRecursionDepth).toBe(25);
       expect(bus.getBatchModeOptions().maxGlobalRecursion).toBe(200);
-      
+
       // This validates that the context information is available for threshold calculation
       // The actual threshold calculation is tested in the dispatch behavior tests above
     });
@@ -226,14 +234,14 @@ describe('EventBus - Context-Aware Infinite Loop Detection', () => {
         bus.dispatch('custom:event', { data: `value-${i}` });
       }
 
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Should include normal mode threshold information or recursion depth limit
       expect(consoleErrorSpy).toHaveBeenCalled();
-      
+
       // Check that no batch mode context is mentioned
       const calls = consoleErrorSpy.mock.calls;
-      const hasBatchMode = calls.some(call => call[0].includes('batch mode'));
+      const hasBatchMode = calls.some((call) => call[0].includes('batch mode'));
       expect(hasBatchMode).toBe(false);
     });
   });
@@ -241,17 +249,13 @@ describe('EventBus - Context-Aware Infinite Loop Detection', () => {
   describe('Event Type Classification', () => {
     const componentLifecycleEvents = [
       'core:entity_created',
-      'core:component_added', 
-      'core:component_removed'
+      'core:component_added',
+      'core:component_removed',
     ];
 
-    const regularEvents = [
-      'custom:event',
-      'system:initialized',
-      'user:action'
-    ];
+    const regularEvents = ['custom:event', 'system:initialized', 'user:action'];
 
-    componentLifecycleEvents.forEach(eventName => {
+    componentLifecycleEvents.forEach((eventName) => {
       it(`classifies ${eventName} as component lifecycle event`, async () => {
         // Test in normal mode to see different thresholds
         const handler = jest.fn();
@@ -271,7 +275,7 @@ describe('EventBus - Context-Aware Infinite Loop Detection', () => {
       });
     });
 
-    regularEvents.forEach(eventName => {
+    regularEvents.forEach((eventName) => {
       it(`classifies ${eventName} as regular event with strict thresholds`, async () => {
         const handler = jest.fn();
         bus.subscribe(eventName, handler);

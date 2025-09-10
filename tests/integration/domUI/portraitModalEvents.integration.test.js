@@ -319,7 +319,9 @@ describe('Portrait Modal Events Integration', () => {
 
     // Since schemas are not loaded in AjvSchemaValidator, validation is skipped with a warning
     expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("VED: Payload schema 'core:portrait_modal_opened#payload' not found/loaded")
+      expect.stringContaining(
+        "VED: Payload schema 'core:portrait_modal_opened#payload' not found/loaded"
+      )
     );
 
     // But the event should still be dispatched

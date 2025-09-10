@@ -30,15 +30,15 @@ describe('intimacy:accept_kiss_passively action integration', () => {
   it('successfully executes accept kiss passively for receiver (initiator: false)', async () => {
     // Create entities with kissing relationship
     const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    
+
     // Add kissing components to entities
     scenario.actor.components['intimacy:kissing'] = {
       partner: scenario.target.id,
-      initiator: false
+      initiator: false,
     };
     scenario.target.components['intimacy:kissing'] = {
       partner: scenario.actor.id,
-      initiator: true
+      initiator: true,
     };
 
     // Reset with updated entities
@@ -51,8 +51,10 @@ describe('intimacy:accept_kiss_passively action integration', () => {
       (e) => e.eventType === 'core:display_successful_action_result'
     );
     expect(successEvent).toBeDefined();
-    expect(successEvent.payload.message).toBe("Alice accepts Bob's kiss passively.");
-    
+    expect(successEvent.payload.message).toBe(
+      "Alice accepts Bob's kiss passively."
+    );
+
     // Verify turn ended event
     const turnEndedEvent = testFixture.events.find(
       (e) => e.eventType === 'core:turn_ended'
@@ -63,16 +65,16 @@ describe('intimacy:accept_kiss_passively action integration', () => {
 
   it('perception log shows correct message for accept kiss passively', async () => {
     const scenario = testFixture.createCloseActors(['Sarah', 'James'], {
-      location: 'garden'
+      location: 'garden',
     });
 
     scenario.actor.components['intimacy:kissing'] = {
       partner: scenario.target.id,
-      initiator: false
+      initiator: false,
     };
     scenario.target.components['intimacy:kissing'] = {
       partner: scenario.actor.id,
-      initiator: true
+      initiator: true,
     };
 
     testFixture.reset([scenario.actor, scenario.target]);
@@ -83,7 +85,7 @@ describe('intimacy:accept_kiss_passively action integration', () => {
       descriptionText: "Sarah has accepted James's kiss passively.",
       locationId: 'garden',
       actorId: scenario.actor.id,
-      targetId: scenario.target.id
+      targetId: scenario.target.id,
     });
   });
 
@@ -92,11 +94,11 @@ describe('intimacy:accept_kiss_passively action integration', () => {
 
     scenario.actor.components['intimacy:kissing'] = {
       partner: scenario.target.id,
-      initiator: false
+      initiator: false,
     };
     scenario.target.components['intimacy:kissing'] = {
       partner: scenario.actor.id,
-      initiator: true
+      initiator: true,
     };
 
     testFixture.reset([scenario.actor, scenario.target]);
@@ -109,7 +111,9 @@ describe('intimacy:accept_kiss_passively action integration', () => {
       (e) => e.eventType === 'core:display_successful_action_result'
     );
     expect(successEvent).toBeDefined();
-    expect(successEvent.payload.message).toBe("Alice accepts Bob's kiss passively.");
+    expect(successEvent.payload.message).toBe(
+      "Alice accepts Bob's kiss passively."
+    );
 
     const turnEndedEvent = testFixture.events.find(
       (e) => e.eventType === 'core:turn_ended'
@@ -119,16 +123,20 @@ describe('intimacy:accept_kiss_passively action integration', () => {
   });
 
   it('handles multiple kissing partners correctly', async () => {
-    const scenario = testFixture.createMultiActorScenario(['Alice', 'Bob', 'Charlie']);
-    
+    const scenario = testFixture.createMultiActorScenario([
+      'Alice',
+      'Bob',
+      'Charlie',
+    ]);
+
     // Set up kissing relationship between Alice and Bob
     scenario.actor.components['intimacy:kissing'] = {
       partner: scenario.target.id,
-      initiator: false
+      initiator: false,
     };
     scenario.target.components['intimacy:kissing'] = {
       partner: scenario.actor.id,
-      initiator: true
+      initiator: true,
     };
 
     testFixture.reset(scenario.allEntities);
@@ -149,11 +157,11 @@ describe('intimacy:accept_kiss_passively action integration', () => {
 
     scenario.actor.components['intimacy:kissing'] = {
       partner: scenario.target.id,
-      initiator: false
+      initiator: false,
     };
     scenario.target.components['intimacy:kissing'] = {
       partner: scenario.actor.id,
-      initiator: true
+      initiator: true,
     };
 
     testFixture.reset([scenario.actor, scenario.target]);
@@ -176,11 +184,11 @@ describe('intimacy:accept_kiss_passively action integration', () => {
 
     scenario.actor.components['intimacy:kissing'] = {
       partner: scenario.target.id,
-      initiator: false
+      initiator: false,
     };
     scenario.target.components['intimacy:kissing'] = {
       partner: scenario.actor.id,
-      initiator: true
+      initiator: true,
     };
 
     testFixture.reset([scenario.actor, scenario.target]);
@@ -209,16 +217,16 @@ describe('intimacy:accept_kiss_passively action integration', () => {
 
   it('works with different entity names and locations', async () => {
     const scenario = testFixture.createCloseActors(['Emily', 'Michael'], {
-      location: 'park_bench'
+      location: 'park_bench',
     });
 
     scenario.actor.components['intimacy:kissing'] = {
       partner: scenario.target.id,
-      initiator: false
+      initiator: false,
     };
     scenario.target.components['intimacy:kissing'] = {
       partner: scenario.actor.id,
-      initiator: true
+      initiator: true,
     };
 
     testFixture.reset([scenario.actor, scenario.target]);
@@ -238,6 +246,8 @@ describe('intimacy:accept_kiss_passively action integration', () => {
       (e) => e.eventType === 'core:display_successful_action_result'
     );
     expect(successEvent).toBeDefined();
-    expect(successEvent.payload.message).toBe("Emily accepts Michael's kiss passively.");
+    expect(successEvent.payload.message).toBe(
+      "Emily accepts Michael's kiss passively."
+    );
   });
 });

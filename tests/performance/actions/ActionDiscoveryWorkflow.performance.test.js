@@ -121,7 +121,12 @@ describe('Action Discovery Workflow Performance', () => {
         id: `perf:action_${i}`,
         name: `Performance Action ${i}`,
         description: `Test action ${i} for performance benchmarking`,
-        scope: i % 3 === 0 ? 'none' : i % 3 === 1 ? 'core:clear_directions' : 'core:other_actors',
+        scope:
+          i % 3 === 0
+            ? 'none'
+            : i % 3 === 1
+              ? 'core:clear_directions'
+              : 'core:other_actors',
         template: `perform action ${i}`,
         prerequisites: [],
         required_components: {
@@ -335,7 +340,7 @@ describe('Action Discovery Workflow Performance', () => {
     // Create and add more actions for stress testing
     const registry = container.resolve(tokens.IDataRegistry);
     const stressTestActions = [];
-    
+
     for (let i = 0; i < 200; i++) {
       const action = {
         id: `stress:action_${i}`,
@@ -384,7 +389,7 @@ describe('Action Discovery Workflow Performance', () => {
 
     // Should still complete within reasonable time even with 250+ actions
     expect(discoveryTime).toBeLessThan(10000); // 10 seconds max for large sets
-    
+
     // Should return valid results
     expect(result.actions).toBeDefined();
     expect(Array.isArray(result.actions)).toBe(true);
@@ -392,7 +397,9 @@ describe('Action Discovery Workflow Performance', () => {
 
     // Log performance metrics for analysis
     const logger = container.resolve(tokens.ILogger);
-    logger.info(`Action discovery with ${allActions.length} actions took ${discoveryTime}ms`);
+    logger.info(
+      `Action discovery with ${allActions.length} actions took ${discoveryTime}ms`
+    );
     logger.info(`Discovered ${result.actions.length} valid actions`);
   });
 
@@ -432,7 +439,7 @@ describe('Action Discovery Workflow Performance', () => {
 
     // Cache should provide significant speedup
     expect(cachedTime).toBeLessThan(warmupTime / 2);
-    
+
     // Results should be identical
     expect(secondCall).toEqual(firstCall);
 
@@ -452,7 +459,7 @@ describe('Action Discovery Workflow Performance', () => {
 
     // New turn should take longer (cache miss)
     expect(newTurnTime).toBeGreaterThan(cachedTime);
-    
+
     // Should still return valid actions
     expect(newTurnCall).toBeDefined();
     expect(Array.isArray(newTurnCall)).toBe(true);

@@ -21,7 +21,7 @@ export class ErrorRecoveryTestBed {
     // Core facades
     this.facades = null;
     this.logger = null;
-    
+
     // Error recovery components
     this.errorHandler = null;
     this.recoveryManager = null;
@@ -29,17 +29,17 @@ export class ErrorRecoveryTestBed {
     this.errorMetrics = null;
     this.errorClassifier = null;
     this.resilientWrappers = new Map();
-    
+
     // Trace components
     this.traceFactory = null;
-    
+
     // Error tracking
     this.capturedErrors = [];
     this.recoveryAttempts = [];
     this.circuitBreakerStates = new Map();
     this.componentStates = new Map();
     this.errorHistory = [];
-    
+
     // Metrics tracking with bounds to prevent memory leaks
     this.performanceMetrics = {
       errorClassificationTimes: [],
@@ -47,7 +47,7 @@ export class ErrorRecoveryTestBed {
       retryDelays: [],
       maxEntries: 100, // Prevent unbounded growth
     };
-    
+
     // Configuration
     this.config = {
       circuitBreaker: {
@@ -67,17 +67,17 @@ export class ErrorRecoveryTestBed {
         timeWindow: 300000, // 5 minutes
       },
     };
-    
+
     this.initialized = false;
   }
-  
+
   /**
    * Initialize the error recovery test bed
    */
   async initialize(customConfig = {}) {
     // Always merge custom config, even if already initialized
     this.config = { ...this.config, ...customConfig };
-    
+
     if (this.initialized) {
       // If already initialized, just update the config in components that need it
       if (this.recoveryManager && customConfig.circuitBreaker) {
@@ -88,7 +88,10 @@ export class ErrorRecoveryTestBed {
           retryManager: this.retryManager,
         });
       }
-      if (this.errorHandler && (customConfig.circuitBreaker || customConfig.errorThresholds)) {
+      if (
+        this.errorHandler &&
+        (customConfig.circuitBreaker || customConfig.errorThresholds)
+      ) {
         // Update error handler's config
         this.errorHandler = new TraceErrorHandler({
           logger: this.logger,
@@ -101,27 +104,27 @@ export class ErrorRecoveryTestBed {
       }
       return;
     }
-    
+
     // Create facades
     // eslint-disable-next-line no-undef
     this.facades = createMockFacades({}, jest.fn);
     this.logger = this.facades.logger;
-    
+
     // Initialize error recovery components
     this.#initializeErrorComponents();
-    
+
     // Initialize trace components
     this.#initializeTraceComponents();
-    
+
     // Setup error injection hooks
     this.#setupErrorInjection();
-    
+
     // Setup monitoring
     this.#setupMonitoring();
-    
+
     this.initialized = true;
   }
-  
+
   /**
    * Initialize error recovery components
    * @private
@@ -131,17 +134,17 @@ export class ErrorRecoveryTestBed {
     this.errorMetrics = new ErrorMetricsService({
       logger: this.logger,
     });
-    
+
     // Create retry manager
     this.retryManager = new RetryManager();
-    
+
     // Create recovery manager
     this.recoveryManager = new RecoveryManager({
       logger: this.logger,
       config: this.config,
       retryManager: this.retryManager,
     });
-    
+
     // Create error handler
     this.errorHandler = new TraceErrorHandler({
       logger: this.logger,
@@ -149,13 +152,13 @@ export class ErrorRecoveryTestBed {
       recoveryManager: this.recoveryManager,
       config: this.config,
     });
-    
+
     // Create error classifier
     this.errorClassifier = new ErrorClassifier({
       logger: this.logger,
     });
   }
-  
+
   /**
    * Initialize trace components
    * @private
@@ -165,7 +168,7 @@ export class ErrorRecoveryTestBed {
       logger: this.logger,
     });
   }
-  
+
   /**
    * Setup error injection capabilities
    * @private
@@ -175,45 +178,49 @@ export class ErrorRecoveryTestBed {
       nextError: null,
       errorSequence: [],
       sequenceIndex: 0,
-      
+
       injectError: (error) => {
         this.errorInjector.nextError = error;
       },
-      
+
       injectErrorSequence: (errors) => {
         this.errorInjector.errorSequence = errors;
         this.errorInjector.sequenceIndex = 0;
       },
-      
+
       getNextError: () => {
         if (this.errorInjector.nextError) {
           const error = this.errorInjector.nextError;
           this.errorInjector.nextError = null;
           return error;
         }
-        
+
         if (this.errorInjector.errorSequence.length > 0) {
-          const error = this.errorInjector.errorSequence[this.errorInjector.sequenceIndex];
-          this.errorInjector.sequenceIndex = 
-            (this.errorInjector.sequenceIndex + 1) % this.errorInjector.errorSequence.length;
+          const error =
+            this.errorInjector.errorSequence[this.errorInjector.sequenceIndex];
+          this.errorInjector.sequenceIndex =
+            (this.errorInjector.sequenceIndex + 1) %
+            this.errorInjector.errorSequence.length;
           return error;
         }
-        
+
         return null;
       },
     };
   }
-  
+
   /**
    * Setup monitoring and tracking
    * @private
    */
   #setupMonitoring() {
     // Override error handler to capture errors
-    const originalHandleError = this.errorHandler.handleError.bind(this.errorHandler);
+    const originalHandleError = this.errorHandler.handleError.bind(
+      this.errorHandler
+    );
     this.errorHandler.handleError = async (error, context, errorType) => {
       const startTime = Date.now();
-      
+
       // Capture error with debugging info
       this.capturedErrors.push({
         error,
@@ -221,20 +228,25 @@ export class ErrorRecoveryTestBed {
         errorType,
         timestamp: Date.now(),
       });
-      
+
       // Add debugging output for hanging investigation
       if (process.env.NODE_ENV === 'test' || process.env.DEBUG_E2E) {
-        console.log(`[DEBUG] Error captured: ${error?.message}, type: ${errorType}, context: ${JSON.stringify(context)}`);
+        console.log(
+          `[DEBUG] Error captured: ${error?.message}, type: ${errorType}, context: ${JSON.stringify(context)}`
+        );
       }
-      
+
       // Classify error
       const classificationStart = Date.now();
       const classification = this.errorClassifier.classifyError(error, context);
-      this.#addBoundedMetric('errorClassificationTimes', Date.now() - classificationStart);
-      
+      this.#addBoundedMetric(
+        'errorClassificationTimes',
+        Date.now() - classificationStart
+      );
+
       // Handle error
       const result = await originalHandleError(error, context, errorType);
-      
+
       // Track recovery attempt
       this.recoveryAttempts.push({
         error: error ? error.message : 'Unknown error',
@@ -244,27 +256,31 @@ export class ErrorRecoveryTestBed {
         duration: Date.now() - startTime,
         timestamp: Date.now(),
       });
-      
+
       // Add debugging output for recovery tracking
       if (process.env.NODE_ENV === 'test' || process.env.DEBUG_E2E) {
-        console.log(`[DEBUG] Recovery attempt: ${result.recoveryAction}, continue: ${result.shouldContinue}, duration: ${Date.now() - startTime}ms`);
+        console.log(
+          `[DEBUG] Recovery attempt: ${result.recoveryAction}, continue: ${result.shouldContinue}, duration: ${Date.now() - startTime}ms`
+        );
       }
-      
+
       return result;
     };
-    
+
     // Override recovery manager to track attempts
-    const originalAttemptRecovery = this.recoveryManager.attemptRecovery.bind(this.recoveryManager);
+    const originalAttemptRecovery = this.recoveryManager.attemptRecovery.bind(
+      this.recoveryManager
+    );
     this.recoveryManager.attemptRecovery = async (errorInfo) => {
       const startTime = Date.now();
       const result = await originalAttemptRecovery(errorInfo);
-      
+
       this.#addBoundedMetric('recoveryAttemptTimes', Date.now() - startTime);
-      
+
       return result;
     };
   }
-  
+
   /**
    * Create a resilient wrapper for a service
    */
@@ -275,20 +291,23 @@ export class ErrorRecoveryTestBed {
       logger: this.logger,
       serviceName,
     });
-    
+
     this.resilientWrappers.set(serviceName, wrapper);
     return wrapper.createResilientProxy();
   }
-  
+
   /**
    * Execute an action with error recovery
    */
   async executeActionWithRecovery(action, context = {}) {
     // Reduced timeout for E2E tests - faster failure detection
     const timeout = context.timeout || 5000; // 5-second default timeout
-    return this.#withTimeout(this.#executeActionWithRecoveryInternal(action, context), timeout);
+    return this.#withTimeout(
+      this.#executeActionWithRecoveryInternal(action, context),
+      timeout
+    );
   }
-  
+
   /**
    * Internal implementation without timeout wrapper
    * @private
@@ -301,26 +320,26 @@ export class ErrorRecoveryTestBed {
       targets: context.targets || [],
       commandString: context.commandString || `execute ${action.id}`,
     };
-    
+
     // Create trace for the action
     const trace = this.traceFactory.createTrace({
       actionId: action.id,
       actorId: context.actorId || 'test-actor',
       turnAction,
     });
-    
+
     // Start trace with proper dispatch
     trace.captureDispatchStart();
-    
+
     // Wrap action execution in a retryable function
     const executeWithRetry = async (attemptNumber = 1) => {
       try {
         // Execute action (it will throw its own error if needed)
         const result = await action.execute(context);
-        
+
         // Capture successful result (this ends the dispatch)
         trace.captureDispatchResult({ success: true, result });
-        
+
         return {
           success: true,
           result,
@@ -330,37 +349,41 @@ export class ErrorRecoveryTestBed {
         // Handle error with recovery
         const recoveryResult = await this.errorHandler.handleError(
           error,
-          { 
-            actionId: action.id, 
+          {
+            actionId: action.id,
             componentName: action.id, // Use action ID as component name for circuit breaker
-            ...context 
+            ...context,
           },
           action.metadata?.errorType
         );
-        
+
         // If recovery says to retry and we have a retry manager
-        if (recoveryResult.recoveryAction === 'retry' && this.retryManager && attemptNumber < 3) {
+        if (
+          recoveryResult.recoveryAction === 'retry' &&
+          this.retryManager &&
+          attemptNumber < 3
+        ) {
           // Wait with exponential backoff if configured
           if (this.config.retry?.exponentialBackoff) {
             const delay = Math.min(
               this.config.retry.delay * Math.pow(2, attemptNumber - 1),
               this.config.retry.maxDelay || 30000
             );
-            
+
             // Use Jest-compatible timer implementation
             await this.#waitForDelay(delay);
           }
-          
+
           // Retry the action
           return await executeWithRetry(attemptNumber + 1);
         }
-        
-        // Record error in trace (this ends the dispatch) 
+
+        // Record error in trace (this ends the dispatch)
         trace.captureError(error, {
           actionId: action.id,
           actorId: context.actorId || 'test-actor',
         });
-        
+
         return {
           success: false,
           error,
@@ -369,63 +392,69 @@ export class ErrorRecoveryTestBed {
         };
       }
     };
-    
+
     return await executeWithRetry();
   }
-  
+
   /**
    * Simulate an error storm
    */
   async simulateErrorStorm(errors, delayBetween = 0) {
     // Optimized timeout for E2E tests - much faster execution
     const stormTimeout = Math.max(10000, errors.length * 200); // Max 10 seconds, or 200ms per error
-    
-    return this.#withTimeout(this.#simulateErrorStormInternal(errors, delayBetween), stormTimeout);
+
+    return this.#withTimeout(
+      this.#simulateErrorStormInternal(errors, delayBetween),
+      stormTimeout
+    );
   }
-  
+
   /**
    * Internal error storm simulation without timeout wrapper
    * @private
    */
   async #simulateErrorStormInternal(errors, delayBetween) {
     const results = [];
-    
+
     for (const error of errors) {
-      const result = await this.#executeActionWithRecoveryInternal({
-        id: `storm-action-${error.index}`,
-        execute: () => {
-          // Simply throw the error
-          throw error.error;
+      const result = await this.#executeActionWithRecoveryInternal(
+        {
+          id: `storm-action-${error.index}`,
+          execute: () => {
+            // Simply throw the error
+            throw error.error;
+          },
+          metadata: {
+            errorType: error.errorType,
+          },
         },
-        metadata: {
-          errorType: error.errorType,
-        },
-      }, { timeout: 2000 }); // 2-second timeout per error action
-      
+        { timeout: 2000 }
+      ); // 2-second timeout per error action
+
       results.push(result);
-      
+
       if (delayBetween > 0) {
         await this.#waitForDelay(delayBetween);
       }
     }
-    
+
     return results;
   }
-  
+
   /**
    * Check if circuit breaker is open for a component
    */
   isCircuitBreakerOpen(componentName) {
     return this.recoveryManager.isCircuitOpen(componentName);
   }
-  
+
   /**
    * Check if component is disabled
    */
   isComponentDisabled(componentName) {
     return this.errorHandler.shouldDisableComponent(componentName);
   }
-  
+
   /**
    * Get error metrics
    */
@@ -442,7 +471,7 @@ export class ErrorRecoveryTestBed {
       ),
     };
   }
-  
+
   /**
    * Reset test bed state
    */
@@ -461,11 +490,11 @@ export class ErrorRecoveryTestBed {
     this.errorInjector.nextError = null;
     this.errorInjector.errorSequence = [];
     this.errorInjector.sequenceIndex = 0;
-    
+
     // Clear any pending timers if they exist
     this.#clearPendingTimers();
   }
-  
+
   /**
    * Cleanup test bed
    */
@@ -474,7 +503,7 @@ export class ErrorRecoveryTestBed {
     this.resilientWrappers.clear();
     this.initialized = false;
   }
-  
+
   /**
    * Calculate average of an array of numbers
    * @private
@@ -483,32 +512,35 @@ export class ErrorRecoveryTestBed {
     if (numbers.length === 0) return 0;
     return numbers.reduce((sum, n) => sum + n, 0) / numbers.length;
   }
-  
+
   /**
    * Wait for circuit breaker to reset
    */
   async waitForCircuitBreakerReset(componentName, maxWait = 5000) {
     // Add timeout protection to prevent infinite waiting
-    return this.#withTimeout(this.#waitForCircuitBreakerResetInternal(componentName, maxWait), maxWait + 1000);
+    return this.#withTimeout(
+      this.#waitForCircuitBreakerResetInternal(componentName, maxWait),
+      maxWait + 1000
+    );
   }
-  
+
   /**
    * Internal circuit breaker reset waiting without timeout wrapper
    * @private
    */
   async #waitForCircuitBreakerResetInternal(componentName, maxWait) {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < maxWait) {
       if (!this.isCircuitBreakerOpen(componentName)) {
         return true;
       }
       await this.#waitForDelay(100);
     }
-    
+
     return false;
   }
-  
+
   /**
    * Jest-compatible delay implementation optimized for E2E tests
    * @private
@@ -518,16 +550,17 @@ export class ErrorRecoveryTestBed {
     // This dramatically speeds up tests that use exponential backoff
     if (typeof jest !== 'undefined') {
       // Check if fake timers are active by examining setTimeout
-      const isFakeTimer = jest.isMockFunction && jest.isMockFunction(setTimeout);
-      
+      const isFakeTimer =
+        jest.isMockFunction && jest.isMockFunction(setTimeout);
+
       if (isFakeTimer) {
         // Return a promise that resolves immediately when fake timers advance
         return Promise.resolve();
       }
-      
+
       // Even with real timers, use minimal delays in test environment
       if (process.env.NODE_ENV === 'test') {
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
           const timer = setTimeout(resolve, Math.min(ms, 10)); // Max 10ms in tests
           if (typeof timer === 'object' && timer.unref) {
             timer.unref();
@@ -535,16 +568,16 @@ export class ErrorRecoveryTestBed {
         });
       }
     }
-    
+
     // Fallback to real timers with original delay
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const timer = setTimeout(resolve, ms);
       if (typeof timer === 'object' && timer.unref) {
         timer.unref();
       }
     });
   }
-  
+
   /**
    * Add metric with bounds to prevent memory leaks
    * @private
@@ -553,7 +586,7 @@ export class ErrorRecoveryTestBed {
     const metrics = this.performanceMetrics[metricName];
     if (metrics && Array.isArray(metrics)) {
       metrics.push(value);
-      
+
       // Enforce bounds to prevent unbounded growth
       const maxEntries = this.performanceMetrics.maxEntries || 100;
       if (metrics.length > maxEntries) {
@@ -561,7 +594,7 @@ export class ErrorRecoveryTestBed {
       }
     }
   }
-  
+
   /**
    * Clear any pending timers to prevent hangs
    * @private
@@ -570,7 +603,7 @@ export class ErrorRecoveryTestBed {
     // This is a placeholder for more sophisticated timer tracking if needed
     // For now, Jest fake timers should handle cleanup automatically
   }
-  
+
   /**
    * Wrap a promise with a timeout to prevent hanging
    * @private
@@ -581,13 +614,15 @@ export class ErrorRecoveryTestBed {
       const timeoutId = setTimeout(() => {
         const elapsed = Date.now() - startTime;
         if (process.env.NODE_ENV === 'test' || process.env.DEBUG_E2E) {
-          console.log(`[DEBUG] Operation timed out after ${elapsed}ms (limit: ${timeoutMs}ms)`);
+          console.log(
+            `[DEBUG] Operation timed out after ${elapsed}ms (limit: ${timeoutMs}ms)`
+          );
         }
         reject(new Error(`Operation timed out after ${timeoutMs}ms`));
       }, timeoutMs);
-      
+
       promise
-        .then(result => {
+        .then((result) => {
           clearTimeout(timeoutId);
           const elapsed = Date.now() - startTime;
           if (process.env.DEBUG_E2E) {
@@ -595,11 +630,13 @@ export class ErrorRecoveryTestBed {
           }
           resolve(result);
         })
-        .catch(error => {
+        .catch((error) => {
           clearTimeout(timeoutId);
           const elapsed = Date.now() - startTime;
           if (process.env.DEBUG_E2E) {
-            console.log(`[DEBUG] Operation failed in ${elapsed}ms: ${error.message}`);
+            console.log(
+              `[DEBUG] Operation failed in ${elapsed}ms: ${error.message}`
+            );
           }
           reject(error);
         });

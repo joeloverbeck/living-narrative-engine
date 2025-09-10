@@ -1960,7 +1960,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
         timerService: mockTimerService,
       });
 
-      // Mock storage to fail then succeed  
+      // Mock storage to fail then succeed
       mockStorageAdapter.setItem
         .mockRejectedValueOnce(new Error('Storage error'))
         .mockResolvedValue(undefined);
@@ -1974,7 +1974,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
       // Line 387 is triggered when queue processing resumes after errors
       // Check that a resume timer (1000ms) was scheduled
       const timerCalls = mockTimerService.setTimeout.mock.calls;
-      
+
       // Look for any timer call that could be the resume timer
       // The code uses 1000ms delay for resuming after errors
       const hasResumeTimer = timerCalls.some((call) => {
@@ -2081,25 +2081,27 @@ describe('ActionTraceOutputService - Storage Output', () => {
     it('should handle file output handler errors and fallback (lines 522-545)', async () => {
       // Create service with a custom output handler that simulates file output failure
       let fileOutputAttempted = false;
-      const mockOutputHandler = jest.fn().mockImplementation(async (writeData, trace) => {
-        if (!fileOutputAttempted) {
-          fileOutputAttempted = true;
-          // Simulate file output failure by logging warning (lines 536-543)
-          mockLogger.warn(
-            'File output failed, falling back to console logging',
-            {
-              actionId: trace.actionId,
-              actorId: trace.actorId,
-            }
-          );
-        }
-        
-        // Continue with console logging fallback
-        mockLogger.debug('ACTION_TRACE', {
-          actionId: trace.actionId,
-          actorId: trace.actorId,
+      const mockOutputHandler = jest
+        .fn()
+        .mockImplementation(async (writeData, trace) => {
+          if (!fileOutputAttempted) {
+            fileOutputAttempted = true;
+            // Simulate file output failure by logging warning (lines 536-543)
+            mockLogger.warn(
+              'File output failed, falling back to console logging',
+              {
+                actionId: trace.actionId,
+                actorId: trace.actorId,
+              }
+            );
+          }
+
+          // Continue with console logging fallback
+          mockLogger.debug('ACTION_TRACE', {
+            actionId: trace.actionId,
+            actorId: trace.actorId,
+          });
         });
-      });
 
       service = new ActionTraceOutputService({
         logger: mockLogger,
@@ -2124,26 +2126,28 @@ describe('ActionTraceOutputService - Storage Output', () => {
     it('should handle file output handler errors with exceptions (lines 544-553)', async () => {
       // Create service with a custom output handler that simulates file output exception
       let fileOutputAttempted = false;
-      const mockOutputHandler = jest.fn().mockImplementation(async (writeData, trace) => {
-        if (!fileOutputAttempted) {
-          fileOutputAttempted = true;
-          // Simulate file output exception by logging error (lines 545-553)  
-          mockLogger.error(
-            'File output error, falling back to console logging',
-            {
-              error: 'File write error',
-              actionId: trace.actionId,
-              actorId: trace.actorId,
-            }
-          );
-        }
-        
-        // Continue with console logging fallback
-        mockLogger.debug('ACTION_TRACE', {
-          actionId: trace.actionId,
-          actorId: trace.actorId,
+      const mockOutputHandler = jest
+        .fn()
+        .mockImplementation(async (writeData, trace) => {
+          if (!fileOutputAttempted) {
+            fileOutputAttempted = true;
+            // Simulate file output exception by logging error (lines 545-553)
+            mockLogger.error(
+              'File output error, falling back to console logging',
+              {
+                error: 'File write error',
+                actionId: trace.actionId,
+                actorId: trace.actorId,
+              }
+            );
+          }
+
+          // Continue with console logging fallback
+          mockLogger.debug('ACTION_TRACE', {
+            actionId: trace.actionId,
+            actorId: trace.actorId,
+          });
         });
-      });
 
       service = new ActionTraceOutputService({
         logger: mockLogger,
@@ -2176,7 +2180,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
         // No storage adapter provided
       });
 
-      // This should trigger line 937 - early return when no storage adapter  
+      // This should trigger line 937 - early return when no storage adapter
       const result = await service.exportTracesAsDownload();
       expect(result.success).toBe(false);
       expect(result.reason).toBe('No storage adapter available');
@@ -2222,7 +2226,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
 
       // Set up storage to return a trace
       mockStorageAdapter.getItem.mockResolvedValue([
-        { id: 'test', timestamp: Date.now(), data: trace }
+        { id: 'test', timestamp: Date.now(), data: trace },
       ]);
 
       // Export as JSON to trigger formatTraceAsJSON (lines 985-989)
@@ -2245,13 +2249,13 @@ describe('ActionTraceOutputService - Storage Output', () => {
 
       // Set up storage to return traces
       mockStorageAdapter.getItem.mockResolvedValue([
-        { id: 'test', timestamp: Date.now(), data: trace }
+        { id: 'test', timestamp: Date.now(), data: trace },
       ]);
 
       // Export as text to trigger formatTraceAsText error handling (lines 1007-1011)
       const result = await service.exportTracesAsDownload('text');
 
-      // Should successfully export (fallback to JSON.stringify)  
+      // Should successfully export (fallback to JSON.stringify)
       expect(result.success).toBe(true);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Failed to format trace as text',
@@ -2309,10 +2313,18 @@ describe('ActionTraceOutputService - Storage Output', () => {
       // Verify enhanced scope evaluation processing (lines 1139-1153)
       expect(actionResult.enhancedScopeEvaluation).toBeDefined();
       expect(actionResult.enhancedScopeEvaluation.scope).toBe('test.scope');
-      expect(actionResult.enhancedScopeEvaluation.summary.entitiesDiscovered).toBe(8); // 5 + 3
-      expect(actionResult.enhancedScopeEvaluation.summary.entitiesEvaluated).toBe(3);
-      expect(actionResult.enhancedScopeEvaluation.summary.entitiesPassed).toBe(2);
-      expect(actionResult.enhancedScopeEvaluation.summary.entitiesFailed).toBe(1);
+      expect(
+        actionResult.enhancedScopeEvaluation.summary.entitiesDiscovered
+      ).toBe(8); // 5 + 3
+      expect(
+        actionResult.enhancedScopeEvaluation.summary.entitiesEvaluated
+      ).toBe(3);
+      expect(actionResult.enhancedScopeEvaluation.summary.entitiesPassed).toBe(
+        2
+      );
+      expect(actionResult.enhancedScopeEvaluation.summary.entitiesFailed).toBe(
+        1
+      );
     });
 
     it('should handle duration calculation edge cases (line 1181)', async () => {

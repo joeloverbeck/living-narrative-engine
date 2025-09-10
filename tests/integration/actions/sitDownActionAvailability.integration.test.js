@@ -26,47 +26,49 @@ describe('Sit Down Action Availability', () => {
       description: 'Sit down on available furniture',
       targets: 'positioning:available_furniture',
       required_components: {
-        actor: [] // No required components for actor
+        actor: [], // No required components for actor
       },
       forbidden_components: {
-        actor: ['positioning:sitting_on', 'positioning:kneeling_before']
+        actor: ['positioning:sitting_on', 'positioning:kneeling_before'],
       },
       template: 'sit down on {target}',
-      prerequisites: []
+      prerequisites: [],
     };
 
     // Mock the action index to return our sit_down action plus default actions
-    testBed.mocks.actionIndex.getCandidateActions.mockImplementation((actor) => {
-      const actions = [];
-      
-      // Check if actor has forbidden components for sit_down
-      const hasForbiddenComponents = 
-        actor.components?.['positioning:sitting_on'] || 
-        actor.components?.['positioning:kneeling_before'];
-      
-      if (!hasForbiddenComponents) {
-        actions.push(sitDownAction);
+    testBed.mocks.actionIndex.getCandidateActions.mockImplementation(
+      (actor) => {
+        const actions = [];
+
+        // Check if actor has forbidden components for sit_down
+        const hasForbiddenComponents =
+          actor.components?.['positioning:sitting_on'] ||
+          actor.components?.['positioning:kneeling_before'];
+
+        if (!hasForbiddenComponents) {
+          actions.push(sitDownAction);
+        }
+
+        // Also add default actions (core:go and core:look)
+        actions.push({
+          id: 'core:go',
+          name: 'Go',
+          scope: 'actor.location.exits[]',
+          prerequisites: [],
+          template: 'Go {target}',
+        });
+
+        actions.push({
+          id: 'core:look',
+          name: 'Look',
+          scope: 'self',
+          prerequisites: [],
+          template: 'Look around',
+        });
+
+        return actions;
       }
-      
-      // Also add default actions (core:go and core:look)
-      actions.push({
-        id: 'core:go',
-        name: 'Go',
-        scope: 'actor.location.exits[]',
-        prerequisites: [],
-        template: 'Go {target}'
-      });
-      
-      actions.push({
-        id: 'core:look',
-        name: 'Look',
-        scope: 'self',
-        prerequisites: [],
-        template: 'Look around'
-      });
-      
-      return actions;
-    });
+    );
 
     // Set up entity data
     const entitiesData = {
@@ -74,9 +76,9 @@ describe('Sit Down Action Availability', () => {
         id: 'test:actor',
         components: {
           'core:name': { text: 'Test Actor' },
-          'core:position': { location_id: 'test:park' }
+          'core:position': { location_id: 'test:park' },
           // Note: core:actor component is not required for sit_down action
-        }
+        },
       },
       'test:park_bench': {
         id: 'test:park_bench',
@@ -86,54 +88,68 @@ describe('Sit Down Action Availability', () => {
           'positioning:allows_sitting': {
             spots: [
               { spot_id: '1', occupied: false },
-              { spot_id: '2', occupied: false }
-            ]
-          }
-        }
-      }
+              { spot_id: '2', occupied: false },
+            ],
+          },
+        },
+      },
     };
 
     // Mock entity manager
-    testBed.mocks.entityManager.getEntity.mockImplementation((id) => entitiesData[id]);
-    testBed.mocks.entityManager.getAllComponentTypesForEntity.mockImplementation((id) => {
-      const entity = entitiesData[id];
-      return entity ? Object.keys(entity.components) : [];
-    });
+    testBed.mocks.entityManager.getEntity.mockImplementation(
+      (id) => entitiesData[id]
+    );
+    testBed.mocks.entityManager.getAllComponentTypesForEntity.mockImplementation(
+      (id) => {
+        const entity = entitiesData[id];
+        return entity ? Object.keys(entity.components) : [];
+      }
+    );
     testBed.mocks.entityManager.getAllComponents.mockImplementation((id) => {
       const entity = entitiesData[id];
       return entity ? entity.components : {};
     });
-    testBed.mocks.entityManager.getComponentData.mockImplementation((entityId, componentId) => {
-      const entity = entitiesData[entityId];
-      return entity?.components[componentId];
-    });
+    testBed.mocks.entityManager.getComponentData.mockImplementation(
+      (entityId, componentId) => {
+        const entity = entitiesData[entityId];
+        return entity?.components[componentId];
+      }
+    );
 
     // Mock target resolution to resolve the positioning:available_furniture scope
-    testBed.mocks.targetResolutionService.resolveTargets.mockImplementation(() => ({
-      success: true,
-      value: [{
-        entityId: 'test:park_bench',
-        displayName: 'Park Bench'
-      }],
-      errors: []
-    }));
+    testBed.mocks.targetResolutionService.resolveTargets.mockImplementation(
+      () => ({
+        success: true,
+        value: [
+          {
+            entityId: 'test:park_bench',
+            displayName: 'Park Bench',
+          },
+        ],
+        errors: [],
+      })
+    );
 
     // Mock prerequisite evaluation (sit_down has no prerequisites)
-    testBed.mocks.prerequisiteEvaluationService.evaluate.mockImplementation(() => true);
+    testBed.mocks.prerequisiteEvaluationService.evaluate.mockImplementation(
+      () => true
+    );
 
     // Mock action command formatter
-    testBed.mocks.actionCommandFormatter.format.mockImplementation((actionDef, target) => {
-      if (target?.entityId === 'test:park_bench') {
+    testBed.mocks.actionCommandFormatter.format.mockImplementation(
+      (actionDef, target) => {
+        if (target?.entityId === 'test:park_bench') {
+          return {
+            ok: true,
+            value: 'sit down on Park Bench',
+          };
+        }
         return {
           ok: true,
-          value: 'sit down on Park Bench'
+          value: actionDef.template || 'Unknown action',
         };
       }
-      return {
-        ok: true,
-        value: actionDef.template || 'Unknown action'
-      };
-    });
+    );
 
     // Create the action discovery service
     actionDiscoveryService = testBed.createStandardDiscoveryService();
@@ -143,19 +159,24 @@ describe('Sit Down Action Availability', () => {
     const result = await actionDiscoveryService.getValidActions(
       actorEntity,
       {
-        actorLocation: 'test:park'
+        actorLocation: 'test:park',
       },
       { trace: false }
     );
 
     // Log discovered actions for debugging
-    console.log('Discovered actions:', result.actions.map(a => a.id));
-    
+    console.log(
+      'Discovered actions:',
+      result.actions.map((a) => a.id)
+    );
+
     // Verify sit_down is available
     expect(result.actions).toBeDefined();
     expect(Array.isArray(result.actions)).toBe(true);
-    
-    const sitDownAvailable = result.actions.find(a => a.id === 'positioning:sit_down');
+
+    const sitDownAvailable = result.actions.find(
+      (a) => a.id === 'positioning:sit_down'
+    );
     expect(sitDownAvailable).toBeDefined();
     expect(sitDownAvailable?.id).toBe('positioning:sit_down');
     expect(sitDownAvailable?.command).toBe('sit down on Park Bench');
@@ -169,47 +190,49 @@ describe('Sit Down Action Availability', () => {
       description: 'Sit down on available furniture',
       targets: 'positioning:available_furniture',
       required_components: {
-        actor: []
+        actor: [],
       },
       forbidden_components: {
-        actor: ['positioning:sitting_on', 'positioning:kneeling_before']
+        actor: ['positioning:sitting_on', 'positioning:kneeling_before'],
       },
       template: 'sit down on {target}',
-      prerequisites: []
+      prerequisites: [],
     };
 
     // Mock the action index to check forbidden components
-    testBed.mocks.actionIndex.getCandidateActions.mockImplementation((actor) => {
-      const actions = [];
-      
-      // Actor is already sitting, so has forbidden component
-      const hasForbiddenComponents = 
-        actor.components?.['positioning:sitting_on'] || 
-        actor.components?.['positioning:kneeling_before'];
-      
-      if (!hasForbiddenComponents) {
-        actions.push(sitDownAction);
+    testBed.mocks.actionIndex.getCandidateActions.mockImplementation(
+      (actor) => {
+        const actions = [];
+
+        // Actor is already sitting, so has forbidden component
+        const hasForbiddenComponents =
+          actor.components?.['positioning:sitting_on'] ||
+          actor.components?.['positioning:kneeling_before'];
+
+        if (!hasForbiddenComponents) {
+          actions.push(sitDownAction);
+        }
+
+        // Add default actions (always available)
+        actions.push({
+          id: 'core:go',
+          name: 'Go',
+          scope: 'actor.location.exits[]',
+          prerequisites: [],
+          template: 'Go {target}',
+        });
+
+        actions.push({
+          id: 'core:look',
+          name: 'Look',
+          scope: 'self',
+          prerequisites: [],
+          template: 'Look around',
+        });
+
+        return actions;
       }
-      
-      // Add default actions (always available)
-      actions.push({
-        id: 'core:go',
-        name: 'Go',
-        scope: 'actor.location.exits[]',
-        prerequisites: [],
-        template: 'Go {target}'
-      });
-      
-      actions.push({
-        id: 'core:look',
-        name: 'Look',
-        scope: 'self',
-        prerequisites: [],
-        template: 'Look around'
-      });
-      
-      return actions;
-    });
+    );
 
     // Set up entity data with actor already sitting
     const entitiesData = {
@@ -218,8 +241,8 @@ describe('Sit Down Action Availability', () => {
         components: {
           'core:name': { text: 'Test Actor' },
           'core:position': { location_id: 'test:park' },
-          'positioning:sitting_on': { entityId: 'test:other_bench' } // Forbidden component
-        }
+          'positioning:sitting_on': { entityId: 'test:other_bench' }, // Forbidden component
+        },
       },
       'test:park_bench': {
         id: 'test:park_bench',
@@ -229,23 +252,27 @@ describe('Sit Down Action Availability', () => {
           'positioning:allows_sitting': {
             spots: [
               { spot_id: '1', occupied: false },
-              { spot_id: '2', occupied: false }
-            ]
-          }
-        }
-      }
+              { spot_id: '2', occupied: false },
+            ],
+          },
+        },
+      },
     };
 
     // Mock entity manager
-    testBed.mocks.entityManager.getEntity.mockImplementation((id) => entitiesData[id]);
+    testBed.mocks.entityManager.getEntity.mockImplementation(
+      (id) => entitiesData[id]
+    );
     testBed.mocks.entityManager.getAllComponents.mockImplementation((id) => {
       const entity = entitiesData[id];
       return entity ? entity.components : {};
     });
-    testBed.mocks.entityManager.getComponentData.mockImplementation((entityId, componentId) => {
-      const entity = entitiesData[entityId];
-      return entity?.components[componentId];
-    });
+    testBed.mocks.entityManager.getComponentData.mockImplementation(
+      (entityId, componentId) => {
+        const entity = entitiesData[entityId];
+        return entity?.components[componentId];
+      }
+    );
 
     // Create the action discovery service
     actionDiscoveryService = testBed.createStandardDiscoveryService();
@@ -255,16 +282,21 @@ describe('Sit Down Action Availability', () => {
     const result = await actionDiscoveryService.getValidActions(
       actorEntity,
       {
-        actorLocation: 'test:park'
+        actorLocation: 'test:park',
       },
       { trace: false }
     );
 
     // Verify sit_down is NOT available
-    const sitDownFound = result.actions.find(a => a.id === 'positioning:sit_down');
+    const sitDownFound = result.actions.find(
+      (a) => a.id === 'positioning:sit_down'
+    );
     expect(sitDownFound).toBeUndefined();
 
-    console.log('Actions when already sitting:', result.actions.map(a => a.id));
+    console.log(
+      'Actions when already sitting:',
+      result.actions.map((a) => a.id)
+    );
   });
 
   it('should NOT make sit_down available when no furniture with allows_sitting is present', async () => {
@@ -275,46 +307,48 @@ describe('Sit Down Action Availability', () => {
       description: 'Sit down on available furniture',
       targets: 'positioning:available_furniture',
       required_components: {
-        actor: []
+        actor: [],
       },
       forbidden_components: {
-        actor: ['positioning:sitting_on', 'positioning:kneeling_before']
+        actor: ['positioning:sitting_on', 'positioning:kneeling_before'],
       },
       template: 'sit down on {target}',
-      prerequisites: []
+      prerequisites: [],
     };
 
     // Mock the action index to return sit_down action (actor meets requirements)
-    testBed.mocks.actionIndex.getCandidateActions.mockImplementation((actor) => {
-      const actions = [];
-      
-      const hasForbiddenComponents = 
-        actor.components?.['positioning:sitting_on'] || 
-        actor.components?.['positioning:kneeling_before'];
-      
-      if (!hasForbiddenComponents) {
-        actions.push(sitDownAction);
+    testBed.mocks.actionIndex.getCandidateActions.mockImplementation(
+      (actor) => {
+        const actions = [];
+
+        const hasForbiddenComponents =
+          actor.components?.['positioning:sitting_on'] ||
+          actor.components?.['positioning:kneeling_before'];
+
+        if (!hasForbiddenComponents) {
+          actions.push(sitDownAction);
+        }
+
+        // Add default actions
+        actions.push({
+          id: 'core:go',
+          name: 'Go',
+          scope: 'actor.location.exits[]',
+          prerequisites: [],
+          template: 'Go {target}',
+        });
+
+        actions.push({
+          id: 'core:look',
+          name: 'Look',
+          scope: 'self',
+          prerequisites: [],
+          template: 'Look around',
+        });
+
+        return actions;
       }
-      
-      // Add default actions
-      actions.push({
-        id: 'core:go',
-        name: 'Go',
-        scope: 'actor.location.exits[]',
-        prerequisites: [],
-        template: 'Go {target}'
-      });
-      
-      actions.push({
-        id: 'core:look',
-        name: 'Look',
-        scope: 'self',
-        prerequisites: [],
-        template: 'Look around'
-      });
-      
-      return actions;
-    });
+    );
 
     // Set up entity data with no furniture
     const entitiesData = {
@@ -322,29 +356,35 @@ describe('Sit Down Action Availability', () => {
         id: 'test:actor',
         components: {
           'core:name': { text: 'Test Actor' },
-          'core:position': { location_id: 'test:park' }
-        }
-      }
+          'core:position': { location_id: 'test:park' },
+        },
+      },
       // No furniture entities at all
     };
 
     // Mock entity manager
-    testBed.mocks.entityManager.getEntity.mockImplementation((id) => entitiesData[id]);
+    testBed.mocks.entityManager.getEntity.mockImplementation(
+      (id) => entitiesData[id]
+    );
     testBed.mocks.entityManager.getAllComponents.mockImplementation((id) => {
       const entity = entitiesData[id];
       return entity ? entity.components : {};
     });
-    testBed.mocks.entityManager.getComponentData.mockImplementation((entityId, componentId) => {
-      const entity = entitiesData[entityId];
-      return entity?.components[componentId];
-    });
+    testBed.mocks.entityManager.getComponentData.mockImplementation(
+      (entityId, componentId) => {
+        const entity = entitiesData[entityId];
+        return entity?.components[componentId];
+      }
+    );
 
     // Mock target resolution to return no targets (no furniture available)
-    testBed.mocks.targetResolutionService.resolveTargets.mockImplementation(() => ({
-      success: true,
-      value: [], // No valid targets
-      errors: []
-    }));
+    testBed.mocks.targetResolutionService.resolveTargets.mockImplementation(
+      () => ({
+        success: true,
+        value: [], // No valid targets
+        errors: [],
+      })
+    );
 
     // Create the action discovery service
     actionDiscoveryService = testBed.createStandardDiscoveryService();
@@ -354,15 +394,20 @@ describe('Sit Down Action Availability', () => {
     const result = await actionDiscoveryService.getValidActions(
       actorEntity,
       {
-        actorLocation: 'test:park'
+        actorLocation: 'test:park',
       },
       { trace: false }
     );
 
     // Verify sit_down is NOT available (no valid targets)
-    const sitDownFound = result.actions.find(a => a.id === 'positioning:sit_down');
+    const sitDownFound = result.actions.find(
+      (a) => a.id === 'positioning:sit_down'
+    );
     expect(sitDownFound).toBeUndefined();
 
-    console.log('Actions with no furniture:', result.actions.map(a => a.id));
+    console.log(
+      'Actions with no furniture:',
+      result.actions.map((a) => a.id)
+    );
   });
 });

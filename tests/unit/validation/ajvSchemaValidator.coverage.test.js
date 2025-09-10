@@ -38,7 +38,7 @@ describe('AjvSchemaValidator - Coverage Improvement Tests', () => {
         compile: jest.fn(),
         schemas: {},
       };
-      
+
       validator = new AjvSchemaValidator({
         logger: mockLogger,
         ajvInstance: mockAjv,
@@ -47,9 +47,10 @@ describe('AjvSchemaValidator - Coverage Improvement Tests', () => {
 
     it('should handle relative schema reference with ./ prefix', async () => {
       const relativeUri = './operations/test.schema.json';
-      const absoluteId = 'schema://living-narrative-engine/operations/test.schema.json';
+      const absoluteId =
+        'schema://living-narrative-engine/operations/test.schema.json';
       const mockSchema = { type: 'object' };
-      
+
       // Setup mock to return schema for absolute ID
       mockAjv.getSchema.mockImplementation((id) => {
         if (id === absoluteId) {
@@ -63,8 +64,8 @@ describe('AjvSchemaValidator - Coverage Improvement Tests', () => {
         $id: 'test://schema-with-ref',
         type: 'object',
         properties: {
-          operation: { $ref: relativeUri }
-        }
+          operation: { $ref: relativeUri },
+        },
       };
 
       // The schema loader is invoked internally when resolving $refs
@@ -77,9 +78,10 @@ describe('AjvSchemaValidator - Coverage Improvement Tests', () => {
 
     it('should handle relative schema reference with ../ prefix', async () => {
       const relativeUri = '../base-operation.schema.json';
-      const absoluteId = 'schema://living-narrative-engine/base-operation.schema.json';
+      const absoluteId =
+        'schema://living-narrative-engine/base-operation.schema.json';
       const mockSchema = { type: 'string' };
-      
+
       mockAjv.getSchema.mockImplementation((id) => {
         if (id === absoluteId) {
           return { schema: mockSchema };
@@ -91,12 +93,12 @@ describe('AjvSchemaValidator - Coverage Improvement Tests', () => {
         $id: 'test://schema-with-parent-ref',
         type: 'object',
         properties: {
-          base: { $ref: relativeUri }
-        }
+          base: { $ref: relativeUri },
+        },
       };
 
       await validator.addSchema(schemaWithRef, schemaWithRef.$id);
-      
+
       expect(mockAjv.addSchema).toHaveBeenCalled();
     });
 
@@ -115,29 +117,32 @@ describe('AjvSchemaValidator - Coverage Improvement Tests', () => {
       });
 
       // Mock getLoadedSchemaIds to return our matching schema
-      jest.spyOn(validator, 'getLoadedSchemaIds').mockReturnValue([
-        'schema://other/schema.json',
-        matchingId,
-        'schema://another/schema.json'
-      ]);
+      jest
+        .spyOn(validator, 'getLoadedSchemaIds')
+        .mockReturnValue([
+          'schema://other/schema.json',
+          matchingId,
+          'schema://another/schema.json',
+        ]);
 
       const schemaWithRef = {
         $id: 'test://schema-with-matching-ref',
         type: 'object',
         properties: {
-          items: { $ref: relativeUri }
-        }
+          items: { $ref: relativeUri },
+        },
       };
 
       await validator.addSchema(schemaWithRef, schemaWithRef.$id);
-      
+
       expect(mockAjv.addSchema).toHaveBeenCalled();
     });
 
     it('should handle absolute URI by checking existing schema', async () => {
-      const absoluteUri = 'schema://living-narrative-engine/absolute.schema.json';
+      const absoluteUri =
+        'schema://living-narrative-engine/absolute.schema.json';
       const mockSchema = { type: 'boolean' };
-      
+
       mockAjv.getSchema.mockImplementation((id) => {
         if (id === absoluteUri) {
           return { schema: mockSchema };
@@ -149,12 +154,12 @@ describe('AjvSchemaValidator - Coverage Improvement Tests', () => {
         $id: 'test://schema-with-absolute-ref',
         type: 'object',
         properties: {
-          flag: { $ref: absoluteUri }
-        }
+          flag: { $ref: absoluteUri },
+        },
       };
 
       await validator.addSchema(schemaWithRef, schemaWithRef.$id);
-      
+
       expect(mockAjv.addSchema).toHaveBeenCalled();
     });
   });
@@ -164,13 +169,13 @@ describe('AjvSchemaValidator - Coverage Improvement Tests', () => {
       const validator = new AjvSchemaValidator({
         logger: mockLogger,
       });
-      
+
       const schemaId = 'test://load-schema-object';
       const schemaData = {
         type: 'object',
         properties: {
-          test: { type: 'string' }
-        }
+          test: { type: 'string' },
+        },
       };
 
       // Spy on addSchema to verify it's called correctly
@@ -204,8 +209,10 @@ describe('AjvSchemaValidator - Coverage Improvement Tests', () => {
           });
         });
 
-        const AjvSchemaValidatorMocked = (await import('../../../src/validation/ajvSchemaValidator.js')).default;
-        
+        const AjvSchemaValidatorMocked = (
+          await import('../../../src/validation/ajvSchemaValidator.js')
+        ).default;
+
         // This should create a validator but with a problematic Ajv instance
         let validator;
         try {
@@ -234,7 +241,9 @@ describe('AjvSchemaValidator - Coverage Improvement Tests', () => {
         // Use a mock ajv instance that behaves unexpectedly
         const brokenAjv = {
           addSchema: jest.fn(),
-          getSchema: jest.fn(() => { throw new Error('Ajv not ready'); }),
+          getSchema: jest.fn(() => {
+            throw new Error('Ajv not ready');
+          }),
           removeSchema: jest.fn(),
           compile: jest.fn(),
           schemas: {},
@@ -246,7 +255,7 @@ describe('AjvSchemaValidator - Coverage Improvement Tests', () => {
         });
 
         const schemaId = 'test://error-remove';
-        
+
         // This should handle the error gracefully
         const result = validator.removeSchema(schemaId);
         expect(result).toBe(false);
@@ -257,7 +266,9 @@ describe('AjvSchemaValidator - Coverage Improvement Tests', () => {
       it('should return undefined when ajv.getSchema throws', () => {
         const throwingAjv = {
           addSchema: jest.fn(),
-          getSchema: jest.fn(() => { throw new Error('Schema access error'); }),
+          getSchema: jest.fn(() => {
+            throw new Error('Schema access error');
+          }),
           removeSchema: jest.fn(),
           compile: jest.fn(),
           schemas: {},
@@ -304,12 +315,12 @@ describe('AjvSchemaValidator - Coverage Improvement Tests', () => {
 
         const schemas = [
           { $id: 'test://batch1', type: 'string' },
-          { $id: 'test://batch2', type: 'number' }
+          { $id: 'test://batch2', type: 'number' },
         ];
 
-        await expect(
-          validator.addSchemas(schemas)
-        ).rejects.toThrow('Batch operation failed');
+        await expect(validator.addSchemas(schemas)).rejects.toThrow(
+          'Batch operation failed'
+        );
       });
     });
 
@@ -347,7 +358,9 @@ describe('AjvSchemaValidator - Coverage Improvement Tests', () => {
         });
       });
 
-      const AjvSchemaValidatorMocked = (await import('../../../src/validation/ajvSchemaValidator.js')).default;
+      const AjvSchemaValidatorMocked = (
+        await import('../../../src/validation/ajvSchemaValidator.js')
+      ).default;
 
       expect(() => {
         new AjvSchemaValidatorMocked({
@@ -368,7 +381,11 @@ describe('AjvSchemaValidator - Coverage Improvement Tests', () => {
       const mockAjvWithLoader = {
         addSchema: jest.fn((schema) => {
           // Simulate attempting to resolve a $ref
-          if (schema.properties && schema.properties.test && schema.properties.test.$ref) {
+          if (
+            schema.properties &&
+            schema.properties.test &&
+            schema.properties.test.$ref
+          ) {
             const ref = schema.properties.test.$ref;
             if (ref.startsWith('./') || ref.startsWith('../')) {
               // Simulate the loader being called and failing
@@ -394,19 +411,26 @@ describe('AjvSchemaValidator - Coverage Improvement Tests', () => {
         $id: 'test://unresolvable-ref',
         type: 'object',
         properties: {
-          test: { $ref: './nonexistent/schema.json' }
-        }
+          test: { $ref: './nonexistent/schema.json' },
+        },
       };
 
       await expect(
-        validator.addSchema(schemaWithUnresolvableRef, schemaWithUnresolvableRef.$id)
+        validator.addSchema(
+          schemaWithUnresolvableRef,
+          schemaWithUnresolvableRef.$id
+        )
       ).rejects.toThrow('Cannot resolve schema reference');
     });
 
     it('should handle schema loader when absolute URI cannot be resolved', async () => {
       const mockAjvWithLoader = {
         addSchema: jest.fn((schema) => {
-          if (schema.properties && schema.properties.test && schema.properties.test.$ref) {
+          if (
+            schema.properties &&
+            schema.properties.test &&
+            schema.properties.test.$ref
+          ) {
             const ref = schema.properties.test.$ref;
             if (!ref.startsWith('./') && !ref.startsWith('../')) {
               throw new Error(`Cannot resolve schema reference: ${ref}`);
@@ -428,12 +452,15 @@ describe('AjvSchemaValidator - Coverage Improvement Tests', () => {
         $id: 'test://unresolvable-absolute',
         type: 'object',
         properties: {
-          test: { $ref: 'schema://nonexistent/absolute.json' }
-        }
+          test: { $ref: 'schema://nonexistent/absolute.json' },
+        },
       };
 
       await expect(
-        validator.addSchema(schemaWithUnresolvableAbsoluteRef, schemaWithUnresolvableAbsoluteRef.$id)
+        validator.addSchema(
+          schemaWithUnresolvableAbsoluteRef,
+          schemaWithUnresolvableAbsoluteRef.$id
+        )
       ).rejects.toThrow('Cannot resolve schema reference');
     });
   });
@@ -450,8 +477,8 @@ describe('AjvSchemaValidator - Coverage Improvement Tests', () => {
         $id: 'schema://living-narrative-engine/base.schema.json',
         type: 'object',
         properties: {
-          baseProperty: { type: 'string' }
-        }
+          baseProperty: { type: 'string' },
+        },
       };
 
       await validator.addSchema(baseSchema, baseSchema.$id);
@@ -461,13 +488,13 @@ describe('AjvSchemaValidator - Coverage Improvement Tests', () => {
         $id: 'schema://living-narrative-engine/operations/derived.schema.json',
         type: 'object',
         properties: {
-          derivedProperty: { $ref: '../base.schema.json' }
-        }
+          derivedProperty: { $ref: '../base.schema.json' },
+        },
       };
 
       // This should work without throwing
       await validator.addSchema(referencingSchema, referencingSchema.$id);
-      
+
       // Verify the schema was added
       expect(validator.isSchemaLoaded(referencingSchema.$id)).toBe(true);
     });
@@ -482,16 +509,16 @@ describe('AjvSchemaValidator - Coverage Improvement Tests', () => {
         {
           $id: 'schema://living-narrative-engine/common/types.json',
           definitions: {
-            id: { type: 'string', pattern: '^[a-z]+$' }
-          }
+            id: { type: 'string', pattern: '^[a-z]+$' },
+          },
         },
         {
           $id: 'schema://living-narrative-engine/components/base.json',
           type: 'object',
           properties: {
-            id: { $ref: '../common/types.json#/definitions/id' }
-          }
-        }
+            id: { $ref: '../common/types.json#/definitions/id' },
+          },
+        },
       ];
 
       // Add schemas in order
@@ -500,7 +527,7 @@ describe('AjvSchemaValidator - Coverage Improvement Tests', () => {
       }
 
       // Verify all schemas are loaded
-      schemas.forEach(schema => {
+      schemas.forEach((schema) => {
         expect(validator.isSchemaLoaded(schema.$id)).toBe(true);
       });
     });

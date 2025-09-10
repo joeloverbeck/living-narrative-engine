@@ -27,17 +27,17 @@ describe('intimacy_handle_run_fingers_through_hair rule integration', () => {
 
   it('performs run fingers through hair action successfully', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
-    
+
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
     // Note: assertPerceptibleEvent expects an object with expected properties
     const perceptibleEvent = testFixture.events.find(
-      e => e.eventType === 'core:perceptible_event'
+      (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();
-    
+
     // Also check other expected events
-    const eventTypes = testFixture.events.map(e => e.eventType);
+    const eventTypes = testFixture.events.map((e) => e.eventType);
     expect(eventTypes).toContain('core:perceptible_event');
     expect(eventTypes).toContain('core:display_successful_action_result');
     expect(eventTypes).toContain('core:turn_ended');
@@ -45,7 +45,7 @@ describe('intimacy_handle_run_fingers_through_hair rule integration', () => {
 
   it('perceptible event contains correct message', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
-    
+
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
     const perceptibleEvent = testFixture.events.find(
@@ -83,7 +83,7 @@ describe('intimacy_handle_run_fingers_through_hair rule integration', () => {
       actorId: 'actor1',
       actionId: 'intimacy:different_action',
       targetId: 'target1',
-      originalInput: 'different_action target1'
+      originalInput: 'different_action target1',
     });
 
     const types = testFixture.events.map((e) => e.eventType);
@@ -118,16 +118,16 @@ describe('intimacy_handle_run_fingers_through_hair rule integration', () => {
 
     // Note: assertPerceptibleEvent expects an object with expected properties
     const perceptibleEvent = testFixture.events.find(
-      e => e.eventType === 'core:perceptible_event'
+      (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();
-    
+
     // Also check other expected events
-    const eventTypes = testFixture.events.map(e => e.eventType);
+    const eventTypes = testFixture.events.map((e) => e.eventType);
     expect(eventTypes).toContain('core:perceptible_event');
     expect(eventTypes).toContain('core:display_successful_action_result');
     expect(eventTypes).toContain('core:turn_ended');
-    
+
     // Use the already defined perceptibleEvent variable
     expect(perceptibleEvent.payload.descriptionText).toBe(
       "Alice gently runs their fingers through Bob's hair."
@@ -136,22 +136,26 @@ describe('intimacy_handle_run_fingers_through_hair rule integration', () => {
 
   it('works with multiple actors in location', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
-    
+
     // Add an observer in the same location
     testFixture.entityManager.createEntity('observer1');
-    testFixture.entityManager.addComponent('observer1', 'core:name', { text: 'Charlie' });
-    testFixture.entityManager.addComponent('observer1', 'core:position', { locationId: scenario.actor.locationId });
-    
+    testFixture.entityManager.addComponent('observer1', 'core:name', {
+      text: 'Charlie',
+    });
+    testFixture.entityManager.addComponent('observer1', 'core:position', {
+      locationId: scenario.actor.locationId,
+    });
+
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
     // Note: assertPerceptibleEvent expects an object with expected properties
     const perceptibleEvent = testFixture.events.find(
-      e => e.eventType === 'core:perceptible_event'
+      (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();
-    
+
     // Also check other expected events
-    const eventTypes = testFixture.events.map(e => e.eventType);
+    const eventTypes = testFixture.events.map((e) => e.eventType);
     expect(eventTypes).toContain('core:perceptible_event');
     expect(eventTypes).toContain('core:display_successful_action_result');
     expect(eventTypes).toContain('core:turn_ended');

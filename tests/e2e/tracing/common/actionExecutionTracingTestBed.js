@@ -19,18 +19,18 @@ export class ActionExecutionTracingTestBed {
     this.turnExecutionFacade = null;
     this.actionService = null;
     this.entityService = null;
-    
+
     // Simplified tracing components - focus on what we can test
     this.tracingComponents = {
       filter: null,
       factory: null,
     };
-    
+
     // Test data tracking
     this.capturedTraces = [];
     this.performanceMetrics = [];
     this.errors = [];
-    
+
     // Test configuration
     this.tracingConfig = {
       enabled: true,
@@ -38,11 +38,11 @@ export class ActionExecutionTracingTestBed {
       verbosity: 'detailed',
       enablePerformanceMonitoring: true,
     };
-    
+
     // Performance tracking
     this.executionTimes = new Map();
     this.memorySnapshots = [];
-    
+
     this.initialized = false;
   }
 
@@ -63,10 +63,10 @@ export class ActionExecutionTracingTestBed {
 
     // Initialize tracing components
     await this.#initializeTracingComponents();
-    
+
     // Setup performance monitoring
     this.#setupPerformanceMonitoring();
-    
+
     // Setup error capture
     this.#setupErrorCapture();
 
@@ -119,11 +119,26 @@ export class ActionExecutionTracingTestBed {
     // Get trace data with fallbacks and overrides
     const actionId = trace.actionId || 'unknown-action';
     const actorId = trace.actorId || 'unknown-actor';
-    const isComplete = overrides.isComplete !== undefined ? overrides.isComplete : (trace.isComplete !== undefined ? trace.isComplete : true);
-    const hasError = overrides.hasError !== undefined ? overrides.hasError : (trace.hasError !== undefined ? trace.hasError : false);
-    const duration = overrides.duration !== undefined ? overrides.duration : (trace.duration !== undefined && trace.duration !== null ? trace.duration : 0);
+    const isComplete =
+      overrides.isComplete !== undefined
+        ? overrides.isComplete
+        : trace.isComplete !== undefined
+          ? trace.isComplete
+          : true;
+    const hasError =
+      overrides.hasError !== undefined
+        ? overrides.hasError
+        : trace.hasError !== undefined
+          ? trace.hasError
+          : false;
+    const duration =
+      overrides.duration !== undefined
+        ? overrides.duration
+        : trace.duration !== undefined && trace.duration !== null
+          ? trace.duration
+          : 0;
     const phases = trace.getExecutionPhases ? trace.getExecutionPhases() : [];
-    
+
     // If no phases exist but we have duration, create a default phase
     if (phases.length === 0 && duration > 0) {
       phases.push({
@@ -134,7 +149,9 @@ export class ActionExecutionTracingTestBed {
       });
     }
     const errorData = trace.getErrorData ? trace.getErrorData() : null;
-    const performanceData = trace.getPerformanceData ? trace.getPerformanceData() : { captureOverhead: 0.5, timingPrecision: 0.1 };
+    const performanceData = trace.getPerformanceData
+      ? trace.getPerformanceData()
+      : { captureOverhead: 0.5, timingPrecision: 0.1 };
 
     this.capturedTraces.push({
       timestamp: Date.now(),
@@ -161,7 +178,6 @@ export class ActionExecutionTracingTestBed {
     });
   }
 
-
   /**
    * Setup performance monitoring and metrics collection
    *
@@ -177,7 +193,7 @@ export class ActionExecutionTracingTestBed {
           total: performance.memory.totalJSHeapSize,
           limit: performance.memory.jsHeapSizeLimit,
         });
-        
+
         // Keep only last 100 snapshots to prevent memory bloat
         if (this.memorySnapshots.length > 100) {
           this.memorySnapshots = this.memorySnapshots.slice(-50);
@@ -302,15 +318,24 @@ export class ActionExecutionTracingTestBed {
    */
   async executeActionWithTracing(actor, turnAction) {
     const startTime = performance.now();
-    
+
     // Record execution start
-    this.executionTimes.set(`${turnAction.actionDefinitionId}-start`, startTime);
+    this.executionTimes.set(
+      `${turnAction.actionDefinitionId}-start`,
+      startTime
+    );
 
     // Create execution trace if tracing is enabled and filter allows it
     let trace = null;
-    if (this.tracingConfig.enabled && this.tracingComponents.factory && this.tracingComponents.filter) {
-      const shouldTrace = this.tracingComponents.filter.shouldTrace(turnAction.actionDefinitionId);
-      
+    if (
+      this.tracingConfig.enabled &&
+      this.tracingComponents.factory &&
+      this.tracingComponents.filter
+    ) {
+      const shouldTrace = this.tracingComponents.filter.shouldTrace(
+        turnAction.actionDefinitionId
+      );
+
       if (shouldTrace) {
         trace = this.tracingComponents.factory.createTrace({
           actionId: turnAction.actionDefinitionId,
@@ -318,7 +343,7 @@ export class ActionExecutionTracingTestBed {
           turnAction,
           enableTiming: true,
         });
-        
+
         if (trace && trace.captureDispatchStart) {
           trace.captureDispatchStart();
         }
@@ -327,26 +352,37 @@ export class ActionExecutionTracingTestBed {
 
     try {
       // Execute the action through the turn execution facade
-      const result = await this.turnExecutionFacade.executePlayerTurn(actor.id, turnAction.commandString, {
-        actionId: turnAction.actionDefinitionId,
-        parameters: turnAction.parameters,
-      });
-      
+      const result = await this.turnExecutionFacade.executePlayerTurn(
+        actor.id,
+        turnAction.commandString,
+        {
+          actionId: turnAction.actionDefinitionId,
+          parameters: turnAction.parameters,
+        }
+      );
+
       const endTime = performance.now();
       const duration = endTime - startTime;
-      
+
       // Record execution metrics
       this.executionTimes.set(`${turnAction.actionDefinitionId}-end`, endTime);
-      this.executionTimes.set(`${turnAction.actionDefinitionId}-duration`, duration);
+      this.executionTimes.set(
+        `${turnAction.actionDefinitionId}-duration`,
+        duration
+      );
 
       // Complete trace
       if (trace) {
         if (trace.captureDispatchResult) {
           trace.captureDispatchResult({ success: true, ...result });
         }
-        
+
         // Capture trace data for testing (with our calculated duration)
-        this.#captureTrace(trace, { duration, isComplete: true, hasError: false }, turnAction);
+        this.#captureTrace(
+          trace,
+          { duration, isComplete: true, hasError: false },
+          turnAction
+        );
       }
 
       return {
@@ -360,19 +396,29 @@ export class ActionExecutionTracingTestBed {
     } catch (error) {
       const endTime = performance.now();
       const duration = endTime - startTime;
-      
+
       // Record error execution
-      this.executionTimes.set(`${turnAction.actionDefinitionId}-error`, endTime);
-      this.executionTimes.set(`${turnAction.actionDefinitionId}-duration`, duration);
+      this.executionTimes.set(
+        `${turnAction.actionDefinitionId}-error`,
+        endTime
+      );
+      this.executionTimes.set(
+        `${turnAction.actionDefinitionId}-duration`,
+        duration
+      );
 
       // Handle error in trace
       if (trace) {
         if (trace.captureError) {
           trace.captureError(error, { phase: 'execution' });
         }
-        
+
         // Capture error trace (with our calculated values)
-        this.#captureTrace(trace, { duration, isComplete: true, hasError: true }, turnAction);
+        this.#captureTrace(
+          trace,
+          { duration, isComplete: true, hasError: true },
+          turnAction
+        );
       }
 
       throw error;
@@ -387,13 +433,14 @@ export class ActionExecutionTracingTestBed {
    */
   async waitForTraceCompletion(timeout = 5000) {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < timeout) {
       // Check if queue is empty
       if (this.tracingComponents.queueProcessor) {
-        const queueSize = this.tracingComponents.queueProcessor.getQueueSize?.() || 0;
+        const queueSize =
+          this.tracingComponents.queueProcessor.getQueueSize?.() || 0;
         if (queueSize > 0) {
-          await new Promise(resolve => setTimeout(resolve, 50));
+          await new Promise((resolve) => setTimeout(resolve, 50));
           continue;
         }
       }
@@ -401,7 +448,7 @@ export class ActionExecutionTracingTestBed {
       // Check if output service has pending operations
       if (this.tracingComponents.outputService) {
         if (this.tracingComponents.outputService.hasPendingOperations?.()) {
-          await new Promise(resolve => setTimeout(resolve, 50));
+          await new Promise((resolve) => setTimeout(resolve, 50));
           continue;
         }
       }
@@ -411,7 +458,7 @@ export class ActionExecutionTracingTestBed {
     }
 
     // Additional small delay to ensure filesystem operations complete
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
   /**
@@ -430,7 +477,9 @@ export class ActionExecutionTracingTestBed {
    * @returns {object|null} Latest trace or null
    */
   getLatestTrace(actionId) {
-    const traces = this.capturedTraces.filter(t => t.trace.actionId === actionId);
+    const traces = this.capturedTraces.filter(
+      (t) => t.trace.actionId === actionId
+    );
     return traces.length > 0 ? traces[traces.length - 1] : null;
   }
 
@@ -441,7 +490,7 @@ export class ActionExecutionTracingTestBed {
    */
   getWrittenFiles() {
     // Simulate file writing based on captured traces
-    return this.capturedTraces.map(capturedTrace => ({
+    return this.capturedTraces.map((capturedTrace) => ({
       fileName: `${capturedTrace.writeData.actionId.replace(':', '-')}-${capturedTrace.timestamp}.json`,
       writeData: capturedTrace.writeData,
       trace: capturedTrace.trace,
@@ -496,7 +545,7 @@ export class ActionExecutionTracingTestBed {
     if (this.tracingComponents.queueProcessor) {
       await this.tracingComponents.queueProcessor.shutdown?.();
     }
-    
+
     if (this.tracingComponents.outputService) {
       await this.tracingComponents.outputService.shutdown?.();
     }

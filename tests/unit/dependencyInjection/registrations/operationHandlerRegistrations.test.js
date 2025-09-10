@@ -75,8 +75,6 @@ describe('registerOperationHandlers', () => {
       const calls = registerSpy.mock.calls.filter((c) => c[0] === token);
       expect(calls).toHaveLength(1);
     });
-
-
   });
 
   describe('handler factory functions', () => {
