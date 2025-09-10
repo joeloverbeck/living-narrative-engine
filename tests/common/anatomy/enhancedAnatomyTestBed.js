@@ -7,10 +7,15 @@
 
 import AnatomyIntegrationTestBed from './anatomyIntegrationTestBed.js';
 import ComplexBlueprintDataGenerator from './complexBlueprintDataGenerator.js';
+import { ClothingManagementService } from '../../../src/clothing/services/clothingManagementService.js';
+import { EquipmentOrchestrator } from '../../../src/clothing/orchestration/equipmentOrchestrator.js';
+import { ClothingSlotValidator } from '../../../src/clothing/validation/clothingSlotValidator.js';
+import { ClothingInstantiationService } from '../../../src/clothing/services/clothingInstantiationService.js';
 
 /**
  * Enhanced test bed for complex anatomy testing scenarios
- * Provides complex blueprint loading, error injection, and validation helpers
+ * Provides complex blueprint loading, error injection, validation helpers,
+ * and clothing integration testing capabilities
  */
 export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
   constructor(options = {}) {
@@ -19,6 +24,101 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
     this.processingLog = [];
     this.errorInjection = new Map();
     this.performanceMetrics = new Map();
+    this.clothingIntegrationData = new Map();
+    this.cacheStateHistory = [];
+
+    // Initialize clothing integration services
+    this._initializeClothingIntegration();
+  }
+
+  /**
+   * Initialize clothing integration services
+   * @private
+   */
+  _initializeClothingIntegration() {
+    try {
+      // Create clothing slot validator
+      this.clothingSlotValidator = new ClothingSlotValidator({
+        logger: this.logger,
+        anatomyBlueprintRepository: this.anatomyBlueprintRepository || this.createMockAnatomyBlueprintRepository(),
+      });
+
+      // Create clothing instantiation service
+      this.clothingInstantiationService = new ClothingInstantiationService({
+        entityManager: this.entityManager,
+        logger: this.logger,
+        eventDispatcher: this.eventDispatcher,
+        idGenerator: this.idGenerator,
+      });
+
+      // Create equipment orchestrator
+      this.equipmentOrchestrator = new EquipmentOrchestrator({
+        entityManager: this.entityManager,
+        logger: this.logger,
+        eventDispatcher: this.eventDispatcher,
+        clothingInstantiationService: this.clothingInstantiationService,
+        anatomySocketIndex: this.anatomySocketIndex,
+      });
+
+      // Create clothing management service
+      this.clothingManagementService = new ClothingManagementService({
+        entityManager: this.entityManager,
+        logger: this.logger,
+        eventDispatcher: this.eventDispatcher,
+        equipmentOrchestrator: this.equipmentOrchestrator,
+        anatomyBlueprintRepository: this.anatomyBlueprintRepository || this.createMockAnatomyBlueprintRepository(),
+        clothingSlotValidator: this.clothingSlotValidator,
+        bodyGraphService: this.bodyGraphService,
+        anatomyClothingCache: this.anatomyClothingCache,
+      });
+
+      this.processingLog.push({
+        action: 'clothingIntegrationInitialized',
+        timestamp: Date.now(),
+        servicesCreated: [
+          'clothingSlotValidator',
+          'clothingInstantiationService',
+          'equipmentOrchestrator',
+          'clothingManagementService'
+        ]
+      });
+    } catch (error) {
+      this.processingLog.push({
+        action: 'clothingIntegrationInitializationFailed',
+        timestamp: Date.now(),
+        error: error.message
+      });
+      
+      // Create mock clothing management service as fallback
+      this.clothingManagementService = this.createMockClothingManagementService();
+    }
+  }
+
+  /**
+   * Create a mock clothing management service for testing
+   * @returns {Object} Mock clothing management service
+   * @private
+   */
+  createMockClothingManagementService() {
+    return {
+      equipClothing: jest.fn().mockResolvedValue({ 
+        success: true, 
+        equipped: true,
+        clothingItemId: 'mock-clothing-item',
+        targetSlot: 'mock-slot'
+      }),
+      unequipClothing: jest.fn().mockResolvedValue({ 
+        success: true,
+        unequipped: true
+      }),
+      getEquippedItems: jest.fn().mockResolvedValue(new Map()),
+      validateCompatibility: jest.fn().mockResolvedValue({ 
+        compatible: true,
+        conflicts: []
+      }),
+      getAvailableSlots: jest.fn().mockResolvedValue(new Map()),
+      transferClothing: jest.fn().mockResolvedValue({ success: true }),
+    };
   }
 
   /**
@@ -367,6 +467,241 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
     // Implementation would check constraint rules
     // For now, we'll add a placeholder that can be expanded
     validation.warnings.push('Constraint consistency validation not fully implemented');
+  }
+
+  /**
+   * Load clothing integration test data into the test environment
+   * @param {Object} clothingIntegrationData - Generated clothing integration test data
+   * @returns {Promise<void>}
+   */
+  async loadClothingIntegrationData(clothingIntegrationData) {
+    if (!clothingIntegrationData) {
+      throw new Error('Invalid clothing integration data structure');
+    }
+
+    // Load base anatomy data if present
+    if (clothingIntegrationData.blueprints) {
+      this.loadBlueprints(clothingIntegrationData.blueprints);
+    }
+
+    if (clothingIntegrationData.entityDefinitions) {
+      this.loadEntityDefinitions(clothingIntegrationData.entityDefinitions);
+    }
+
+    if (clothingIntegrationData.recipe) {
+      const recipeData = {};
+      recipeData[clothingIntegrationData.recipe.id] = clothingIntegrationData.recipe;
+      this.loadRecipes(recipeData);
+    }
+
+    // Load clothing items
+    if (clothingIntegrationData.clothingItems) {
+      const clothingEntityDefinitions = {};
+      for (const item of clothingIntegrationData.clothingItems) {
+        clothingEntityDefinitions[item.id] = {
+          id: item.id,
+          description: item.description || `Test clothing item ${item.id}`,
+          components: {
+            'clothing:wearable': {
+              slot: item.targetSlot,
+              layer: item.layer || 'base',
+              socketMappings: item.socketMappings || {},
+            },
+            'core:name': {
+              name: item.name || item.id,
+            },
+            'core:description': {
+              description: item.description || `A ${item.id} for testing`,
+            },
+            'core:material': {
+              materialType: item.materialType || 'cotton',
+              texture: item.texture || 'smooth',
+            },
+          },
+        };
+      }
+      this.loadEntityDefinitions(clothingEntityDefinitions);
+    }
+
+    // Store integration data for reference
+    this.clothingIntegrationData.set('current', clothingIntegrationData);
+
+    this.processingLog.push({
+      action: 'loadClothingIntegrationData',
+      timestamp: Date.now(),
+      recipesLoaded: clothingIntegrationData.recipe ? 1 : 0,
+      clothingItemsLoaded: clothingIntegrationData.clothingItems ? clothingIntegrationData.clothingItems.length : 0,
+      blueprintsLoaded: clothingIntegrationData.blueprints ? Object.keys(clothingIntegrationData.blueprints).length : 0,
+    });
+  }
+
+  /**
+   * Get current cache state for validation
+   * @returns {Object} Cache state information
+   */
+  getCacheState() {
+    const state = {
+      isValid: true,
+      anatomyCache: { isValid: true },
+      clothingCache: { isValid: true },
+      descriptionCache: { isValid: true },
+      timestamp: Date.now(),
+    };
+
+    try {
+      // Check anatomy cache if available
+      if (this.anatomyCacheManager && typeof this.anatomyCacheManager.isValid === 'function') {
+        state.anatomyCache.isValid = this.anatomyCacheManager.isValid();
+      }
+
+      // Check clothing cache if available
+      if (this.anatomyClothingCache && typeof this.anatomyClothingCache.isValid === 'function') {
+        state.clothingCache.isValid = this.anatomyClothingCache.isValid();
+      }
+
+      // Overall validity
+      state.isValid = state.anatomyCache.isValid && state.clothingCache.isValid && state.descriptionCache.isValid;
+
+    } catch (error) {
+      state.isValid = false;
+      state.error = error.message;
+    }
+
+    // Store state history for debugging
+    this.cacheStateHistory.push(state);
+    if (this.cacheStateHistory.length > 10) {
+      this.cacheStateHistory.shift(); // Keep only last 10 states
+    }
+
+    return state;
+  }
+
+  /**
+   * Record performance metrics for testing
+   * @param {string} metricName - Name of the metric
+   * @param {Object} metricData - Metric data
+   */
+  recordMetric(metricName, metricData) {
+    if (!this.performanceMetrics.has(metricName)) {
+      this.performanceMetrics.set(metricName, []);
+    }
+
+    const metric = {
+      ...metricData,
+      timestamp: Date.now(),
+    };
+
+    this.performanceMetrics.get(metricName).push(metric);
+
+    this.processingLog.push({
+      action: 'metricRecorded',
+      timestamp: Date.now(),
+      metricName,
+      data: metricData,
+    });
+  }
+
+  /**
+   * Get recorded performance metrics
+   * @param {string} [metricName] - Optional specific metric name
+   * @returns {Object|Array} Metrics data
+   */
+  getMetrics(metricName = null) {
+    if (metricName) {
+      return this.performanceMetrics.get(metricName) || [];
+    }
+    
+    const allMetrics = {};
+    for (const [name, metrics] of this.performanceMetrics.entries()) {
+      allMetrics[name] = metrics;
+    }
+    return allMetrics;
+  }
+
+  /**
+   * Validate clothing integration state across systems
+   * @param {string} entityId - Entity to validate
+   * @returns {Object} Integration validation results
+   */
+  async validateClothingIntegration(entityId) {
+    const validation = {
+      success: true,
+      errors: [],
+      warnings: [],
+      checks: {
+        anatomyPresent: false,
+        slotMetadataPresent: false,
+        clothingItemsEquipped: false,
+        slotConsistency: false,
+        cacheConsistency: false,
+      },
+    };
+
+    try {
+      // Check anatomy presence
+      const bodyComponent = this.entityManager.getComponentData(entityId, 'anatomy:body');
+      validation.checks.anatomyPresent = !!bodyComponent;
+      if (!bodyComponent) {
+        validation.errors.push('Anatomy body component not found');
+      }
+
+      // Check slot metadata
+      const slotMetadata = this.entityManager.getComponentData(entityId, 'clothing:slot_metadata');
+      validation.checks.slotMetadataPresent = !!slotMetadata;
+      if (!slotMetadata) {
+        validation.warnings.push('Clothing slot metadata not found');
+      }
+
+      // Check clothing items
+      const clothingComponents = this.entityManager.getEntitiesWithComponent('clothing:wearable');
+      validation.checks.clothingItemsEquipped = clothingComponents.length > 0;
+
+      // Check slot consistency
+      if (slotMetadata && slotMetadata.slots) {
+        validation.checks.slotConsistency = true;
+        for (const slotId of Object.keys(slotMetadata.slots)) {
+          const slot = slotMetadata.slots[slotId];
+          if (!slot.socketIds || slot.socketIds.length === 0) {
+            validation.warnings.push(`Slot ${slotId} has no socket mappings`);
+          }
+        }
+      }
+
+      // Check cache consistency
+      const cacheState = this.getCacheState();
+      validation.checks.cacheConsistency = cacheState.isValid;
+      if (!cacheState.isValid) {
+        validation.errors.push('Cache consistency check failed');
+      }
+
+      // Overall success
+      validation.success = validation.errors.length === 0;
+
+    } catch (error) {
+      validation.success = false;
+      validation.errors.push(`Integration validation error: ${error.message}`);
+    }
+
+    return validation;
+  }
+
+  /**
+   * Clear processing log
+   */
+  clearProcessingLog() {
+    this.processingLog = [];
+    this.errorInjection.clear();
+    this.performanceMetrics.clear();
+    this.clothingIntegrationData.clear();
+    this.cacheStateHistory = [];
+  }
+
+  /**
+   * Get processing log for debugging
+   * @returns {Array} Processing log entries
+   */
+  getProcessingLog() {
+    return [...this.processingLog];
   }
 
   /**

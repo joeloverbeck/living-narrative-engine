@@ -145,11 +145,17 @@ describe('ActionTraceFilter Performance', () => {
         logger: mockLogger,
       });
 
-      const start = performance.now();
-      for (let i = 0; i < 10000; i++) {
-        filter.shouldTrace(`core:action_${i % 100}`);
-      }
-      const duration = performance.now() - start;
+      const testFunction = () => {
+        for (let i = 0; i < 10000; i++) {
+          filter.shouldTrace(`core:action_${i % 100}`);
+        }
+      };
+
+      const duration = executePerformanceTest(
+        testFunction,
+        50,
+        'Prefix wildcard 10k operations'
+      );
 
       console.log(`Prefix wildcard 10k operations: ${duration.toFixed(2)}ms`);
       expect(duration).toBeLessThan(50);
@@ -162,11 +168,17 @@ describe('ActionTraceFilter Performance', () => {
         logger: mockLogger,
       });
 
-      const start = performance.now();
-      for (let i = 0; i < 10000; i++) {
-        filter.shouldTrace(`mod_${i % 100}:go`);
-      }
-      const duration = performance.now() - start;
+      const testFunction = () => {
+        for (let i = 0; i < 10000; i++) {
+          filter.shouldTrace(`mod_${i % 100}:go`);
+        }
+      };
+
+      const duration = executePerformanceTest(
+        testFunction,
+        50,
+        'Suffix wildcard 10k operations'
+      );
 
       console.log(`Suffix wildcard 10k operations: ${duration.toFixed(2)}ms`);
       expect(duration).toBeLessThan(50);
@@ -179,11 +191,17 @@ describe('ActionTraceFilter Performance', () => {
         logger: mockLogger,
       });
 
-      const start = performance.now();
-      for (let i = 0; i < 10000; i++) {
-        filter.shouldTrace(`any:action_${i}`);
-      }
-      const duration = performance.now() - start;
+      const testFunction = () => {
+        for (let i = 0; i < 10000; i++) {
+          filter.shouldTrace(`any:action_${i}`);
+        }
+      };
+
+      const duration = executePerformanceTest(
+        testFunction,
+        20,
+        'Universal wildcard 10k operations'
+      );
 
       console.log(
         `Universal wildcard 10k operations: ${duration.toFixed(2)}ms`
@@ -202,11 +220,17 @@ describe('ActionTraceFilter Performance', () => {
         logger: mockLogger,
       });
 
-      const start = performance.now();
-      for (let i = 0; i < 10000; i++) {
-        filter.shouldTrace(`core:action_${i}_go`);
-      }
-      const duration = performance.now() - start;
+      const testFunction = () => {
+        for (let i = 0; i < 10000; i++) {
+          filter.shouldTrace(`core:action_${i}_go`);
+        }
+      };
+
+      const duration = executePerformanceTest(
+        testFunction,
+        100,
+        'Simple regex 10k operations'
+      );
 
       console.log(`Simple regex 10k operations: ${duration.toFixed(2)}ms`);
       expect(duration).toBeLessThan(100);
@@ -222,12 +246,18 @@ describe('ActionTraceFilter Performance', () => {
         logger: mockLogger,
       });
 
-      const start = performance.now();
-      for (let i = 0; i < 10000; i++) {
-        const suffix = String(i % 1000).padStart(3, '0');
-        filter.shouldTrace(`core:go_action_${suffix}`);
-      }
-      const duration = performance.now() - start;
+      const testFunction = () => {
+        for (let i = 0; i < 10000; i++) {
+          const suffix = String(i % 1000).padStart(3, '0');
+          filter.shouldTrace(`core:go_action_${suffix}`);
+        }
+      };
+
+      const duration = executePerformanceTest(
+        testFunction,
+        200,
+        'Complex regex 10k operations'
+      );
 
       console.log(`Complex regex 10k operations: ${duration.toFixed(2)}ms`);
       expect(duration).toBeLessThan(200);
@@ -261,11 +291,17 @@ describe('ActionTraceFilter Performance', () => {
         'core:internal',
       ];
 
-      const start = performance.now();
-      for (let i = 0; i < 10000; i++) {
-        filter.shouldTrace(testActions[i % testActions.length]);
-      }
-      const duration = performance.now() - start;
+      const testFunction = () => {
+        for (let i = 0; i < 10000; i++) {
+          filter.shouldTrace(testActions[i % testActions.length]);
+        }
+      };
+
+      const duration = executePerformanceTest(
+        testFunction,
+        100,
+        'Mixed patterns 10k operations'
+      );
 
       console.log(`Mixed patterns 10k operations: ${duration.toFixed(2)}ms`);
       expect(duration).toBeLessThan(100);
@@ -285,11 +321,17 @@ describe('ActionTraceFilter Performance', () => {
         logger: mockLogger,
       });
 
-      const start = performance.now();
-      for (let i = 0; i < 1000; i++) {
-        filter.shouldTrace(`pattern_${i % 100}:action`);
-      }
-      const duration = performance.now() - start;
+      const testFunction = () => {
+        for (let i = 0; i < 1000; i++) {
+          filter.shouldTrace(`pattern_${i % 100}:action`);
+        }
+      };
+
+      const duration = executePerformanceTest(
+        testFunction,
+        50,
+        '100 patterns, 1k operations'
+      );
 
       console.log(`100 patterns, 1k operations: ${duration.toFixed(2)}ms`);
       expect(duration).toBeLessThan(50);
@@ -307,11 +349,17 @@ describe('ActionTraceFilter Performance', () => {
         logger: mockLogger,
       });
 
-      const start = performance.now();
-      for (let i = 0; i < 1000; i++) {
-        filter.shouldTrace(`pattern_${i}:specific`);
-      }
-      const duration = performance.now() - start;
+      const testFunction = () => {
+        for (let i = 0; i < 1000; i++) {
+          filter.shouldTrace(`pattern_${i}:specific`);
+        }
+      };
+
+      const duration = executePerformanceTest(
+        testFunction,
+        100,
+        '1000 patterns, 1k operations'
+      );
 
       console.log(`1000 patterns, 1k operations: ${duration.toFixed(2)}ms`);
       expect(duration).toBeLessThan(100);
@@ -326,11 +374,17 @@ describe('ActionTraceFilter Performance', () => {
         logger: mockLogger,
       });
 
-      const start = performance.now();
-      for (let i = 0; i < 1000; i++) {
-        filter.addTracedActions(`pattern_${i}:*`);
-      }
-      const duration = performance.now() - start;
+      const testFunction = () => {
+        for (let i = 0; i < 1000; i++) {
+          filter.addTracedActions(`pattern_${i}:*`);
+        }
+      };
+
+      const duration = executePerformanceTest(
+        testFunction,
+        10,
+        '1000 pattern additions'
+      );
 
       console.log(`1000 pattern additions: ${duration.toFixed(2)}ms`);
       expect(duration).toBeLessThan(10);
@@ -351,11 +405,17 @@ describe('ActionTraceFilter Performance', () => {
         logger: mockLogger,
       });
 
-      const start = performance.now();
-      for (let i = 0; i < 500; i++) {
-        filter.removeTracedActions(`pattern_${i}:*`);
-      }
-      const duration = performance.now() - start;
+      const testFunction = () => {
+        for (let i = 0; i < 500; i++) {
+          filter.removeTracedActions(`pattern_${i}:*`);
+        }
+      };
+
+      const duration = executePerformanceTest(
+        testFunction,
+        10,
+        '500 pattern removals'
+      );
 
       console.log(`500 pattern removals: ${duration.toFixed(2)}ms`);
       expect(duration).toBeLessThan(10);
@@ -389,11 +449,17 @@ describe('ActionTraceFilter Performance', () => {
         'normal:action', // Should trace
       ];
 
-      const start = performance.now();
-      for (let i = 0; i < 10000; i++) {
-        filter.shouldTrace(testActions[i % testActions.length]);
-      }
-      const duration = performance.now() - start;
+      const testFunction = () => {
+        for (let i = 0; i < 10000; i++) {
+          filter.shouldTrace(testActions[i % testActions.length]);
+        }
+      };
+
+      const duration = executePerformanceTest(
+        testFunction,
+        100,
+        'Exclusion checks 10k operations'
+      );
 
       console.log(`Exclusion checks 10k operations: ${duration.toFixed(2)}ms`);
       expect(duration).toBeLessThan(100);
@@ -409,11 +475,17 @@ describe('ActionTraceFilter Performance', () => {
         logger: mockLogger,
       });
 
-      const start = performance.now();
-      for (let i = 0; i < 10000; i++) {
-        filter.shouldTrace('__system:action');
-      }
-      const duration = performance.now() - start;
+      const testFunction = () => {
+        for (let i = 0; i < 10000; i++) {
+          filter.shouldTrace('__system:action');
+        }
+      };
+
+      const duration = executePerformanceTest(
+        testFunction,
+        10,
+        'System action bypass 10k operations'
+      );
 
       console.log(
         `System action bypass 10k operations: ${duration.toFixed(2)}ms`
@@ -494,11 +566,17 @@ describe('ActionTraceFilter Performance', () => {
       });
 
       // Test with action that doesn't match any pattern (worst case)
-      const start = performance.now();
-      for (let i = 0; i < 1000; i++) {
-        filter.shouldTrace('no:match:here');
-      }
-      const duration = performance.now() - start;
+      const testFunction = () => {
+        for (let i = 0; i < 1000; i++) {
+          filter.shouldTrace('no:match:here');
+        }
+      };
+
+      const duration = executePerformanceTest(
+        testFunction,
+        200,
+        'Worst-case 50 regex patterns, 1k operations'
+      );
 
       console.log(
         `Worst-case 50 regex patterns, 1k operations: ${duration.toFixed(2)}ms`

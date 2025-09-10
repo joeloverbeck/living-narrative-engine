@@ -101,21 +101,26 @@
 
 /**
  * @typedef {object} ActorPromptDataDTO
- * @property {string} name - The character's name, defaulting if not set (e.g., "Unnamed Character").
- * @property {string} description - The character's description, punctuated and defaulted if not set (e.g., "No description available.").
- * @property {string} [personality] - Optional. The character's personality traits.
- * @property {string} [profile] - Optional. The character's profile information.
- * @property {string} [likes] - Optional. Things the character likes.
- * @property {string} [dislikes] - Optional. Things the character dislikes.
- * @property {string} [strengths] - Optional. Character's capabilities and advantages.
- * @property {string} [weaknesses] - Optional. Character's limitations and vulnerabilities.
- * @property {string} [secrets] - Optional. Secrets the character might have.
- * @property {string} [fears] - Optional. Things the character fears.
- * @property {string[]} [speechPatterns] - Optional. An array of trimmed, valid speech patterns. An empty array or undefined if no valid patterns exist.
- * @property {object} [apparentAge] - Optional apparent age data.
- * @property {number} [apparentAge.minAge] - Minimum perceived age.
- * @property {number} [apparentAge.maxAge] - Maximum perceived age.
- * @property {number} [apparentAge.bestGuess] - Most likely age estimate.
+ * @property {string} id - The entity ID of the actor
+ * @property {string} name - The name of the actor
+ * @property {string} [apparentAge] - How old the character appears to be
+ * @property {string} [description] - Physical appearance and visual characteristics
+ * @property {string} [personality] - Character traits and temperament
+ * @property {string} [profile] - Background story and history
+ * @property {string} [likes] - Things the character enjoys
+ * @property {string} [dislikes] - Things the character avoids or dislikes
+ * @property {string} [strengths] - Character's capabilities and advantages
+ * @property {string} [weaknesses] - Character's limitations and vulnerabilities
+ * @property {string} [secrets] - Hidden information about the character
+ * @property {string} [fears] - What the character is afraid of
+ * @property {Array<string>} [speechPatterns] - Examples of how the character speaks
+ * @property {string} [motivations] - Core psychological motivations driving behavior
+ * @property {string} [internalTensions] - Internal conflicts and competing desires
+ * @property {string} [coreDilemmas] - Fundamental questions the character grapples with
+ * @property {Array<object>} [goals] - Character's objectives with timestamps
+ * @property {Array<object>} [memories] - Character's memory entries
+ * @property {Array<object>} [relationships] - Character's relationships with other entities
+ * @property {object} [notes] - Character's notes and observations
  */
 
 // To make this file a module and allow JSDoc types to be potentially imported

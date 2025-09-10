@@ -428,6 +428,505 @@ export default class ComplexBlueprintDataGenerator {
   }
 
   /**
+   * Generates clothing integration test scenario
+   * @param {Object} options - Generation options
+   * @param {boolean} options.includeSlotMetadata - Include slot metadata generation
+   * @param {boolean} options.includeClothingItems - Include clothing items
+   * @param {string} options.complexityLevel - 'basic' or 'complex'
+   * @returns {Object} Clothing integration test data
+   */
+  async generateClothingIntegrationScenario(options = {}) {
+    const {
+      includeSlotMetadata = true,
+      includeClothingItems = true,
+      complexityLevel = 'basic'
+    } = options;
+
+    const data = {
+      // Base anatomy blueprint for clothing integration
+      blueprints: {
+        'test:clothing_integration_humanoid': {
+          id: 'test:clothing_integration_humanoid',
+          root: 'test:torso_with_clothing_slots',
+          slots: {
+            left_arm: {
+              socket: 'left_shoulder',
+              requirements: {
+                partType: 'arm',
+                components: ['anatomy:part']
+              }
+            },
+            right_arm: {
+              socket: 'right_shoulder',
+              requirements: {
+                partType: 'arm',
+                components: ['anatomy:part']
+              }
+            },
+            left_leg: {
+              socket: 'left_hip',
+              requirements: {
+                partType: 'leg',
+                components: ['anatomy:part']
+              }
+            },
+            right_leg: {
+              socket: 'right_hip',
+              requirements: {
+                partType: 'leg',
+                components: ['anatomy:part']
+              }
+            },
+            head: {
+              socket: 'neck',
+              requirements: {
+                partType: 'head',
+                components: ['anatomy:part']
+              }
+            }
+          }
+        }
+      },
+
+      // Entity definitions with clothing-compatible sockets
+      entityDefinitions: {
+        'test:torso_with_clothing_slots': {
+          id: 'test:torso_with_clothing_slots',
+          description: 'Torso with clothing slot compatibility',
+          components: {
+            'anatomy:part': {
+              subType: 'torso',
+            },
+            'anatomy:sockets': {
+              sockets: [
+                {
+                  id: 'left_shoulder',
+                  max: 1,
+                  nameTpl: 'Left Shoulder',
+                  allowedTypes: ['arm'],
+                  clothingSlot: 'torso_upper'
+                },
+                {
+                  id: 'right_shoulder',
+                  max: 1,
+                  nameTpl: 'Right Shoulder', 
+                  allowedTypes: ['arm'],
+                  clothingSlot: 'torso_upper'
+                },
+                {
+                  id: 'left_hip',
+                  max: 1,
+                  nameTpl: 'Left Hip',
+                  allowedTypes: ['leg'],
+                  clothingSlot: 'torso_lower'
+                },
+                {
+                  id: 'right_hip',
+                  max: 1,
+                  nameTpl: 'Right Hip',
+                  allowedTypes: ['leg'],
+                  clothingSlot: 'torso_lower'
+                },
+                {
+                  id: 'neck',
+                  max: 1,
+                  nameTpl: 'Neck',
+                  allowedTypes: ['head'],
+                  clothingSlot: 'neck'
+                }
+              ]
+            },
+            'core:name': {
+              text: 'Torso with Clothing Slots'
+            }
+          }
+        },
+        'test:clothing_arm': {
+          id: 'test:clothing_arm',
+          description: 'Arm with clothing socket compatibility',
+          components: {
+            'anatomy:part': {
+              subType: 'arm',
+            },
+            'anatomy:sockets': {
+              sockets: [
+                {
+                  id: 'wrist',
+                  max: 1,
+                  nameTpl: 'Wrist',
+                  allowedTypes: ['hand'],
+                  clothingSlot: 'wrist'
+                }
+              ]
+            },
+            'core:name': {
+              text: 'Clothing-Compatible Arm'
+            }
+          }
+        },
+        'test:clothing_leg': {
+          id: 'test:clothing_leg', 
+          description: 'Leg with clothing socket compatibility',
+          components: {
+            'anatomy:part': {
+              subType: 'leg',
+            },
+            'anatomy:sockets': {
+              sockets: [
+                {
+                  id: 'ankle',
+                  max: 1,
+                  nameTpl: 'Ankle',
+                  allowedTypes: ['foot'],
+                  clothingSlot: 'foot'
+                }
+              ]
+            },
+            'core:name': {
+              text: 'Clothing-Compatible Leg'
+            }
+          }
+        },
+        'test:clothing_head': {
+          id: 'test:clothing_head',
+          description: 'Head with clothing socket compatibility',
+          components: {
+            'anatomy:part': {
+              subType: 'head',
+            },
+            'anatomy:sockets': {
+              sockets: []
+            },
+            'core:name': {
+              text: 'Clothing-Compatible Head'
+            }
+          }
+        }
+      },
+
+      // Recipe for anatomy generation with clothing support
+      recipe: {
+        id: 'test:clothing_integration_recipe',
+        blueprintId: 'test:clothing_integration_humanoid',
+        parts: [
+          { slotId: 'left_arm', definitionId: 'test:clothing_arm' },
+          { slotId: 'right_arm', definitionId: 'test:clothing_arm' },
+          { slotId: 'left_leg', definitionId: 'test:clothing_leg' },
+          { slotId: 'right_leg', definitionId: 'test:clothing_leg' },
+          { slotId: 'head', definitionId: 'test:clothing_head' }
+        ],
+        enableClothingSlots: includeSlotMetadata
+      }
+    };
+
+    // Add clothing items if requested
+    if (includeClothingItems) {
+      data.clothingItems = [
+        {
+          id: 'test:shirt',
+          name: 'Test Shirt',
+          description: 'A test shirt for integration testing',
+          targetSlot: 'torso_upper',
+          layer: 'base'
+        },
+        {
+          id: 'test:pants',
+          name: 'Test Pants',
+          description: 'Test pants for integration testing',
+          targetSlot: 'torso_lower',
+          layer: 'base'
+        }
+      ];
+
+      if (complexityLevel === 'complex') {
+        data.clothingItems.push(
+          {
+            id: 'test:jacket',
+            name: 'Test Jacket', 
+            description: 'A test jacket for layering',
+            targetSlot: 'torso_upper',
+            layer: 'outer'
+          },
+          {
+            id: 'test:shoes',
+            name: 'Test Shoes',
+            description: 'Test shoes for foot slot',
+            targetSlot: 'foot',
+            layer: 'base'
+          }
+        );
+      }
+    }
+
+    // Add expected slots for validation
+    data.expectedSlots = [
+      {
+        id: 'torso_upper',
+        socketIds: ['left_shoulder', 'right_shoulder'],
+        allowedLayers: ['base', 'outer']
+      },
+      {
+        id: 'torso_lower',
+        socketIds: ['left_hip', 'right_hip'], 
+        allowedLayers: ['base', 'outer']
+      },
+      {
+        id: 'foot',
+        socketIds: ['ankle'],
+        allowedLayers: ['base']
+      }
+    ];
+
+    this.generatedData.set('clothingIntegration', data);
+    return data;
+  }
+
+  /**
+   * Generate layer conflict test scenario
+   * @param {Object} options - Generation options
+   * @param {string} options.conflictType - Type of conflict to generate
+   * @param {string} options.complexityLevel - Complexity level
+   * @returns {Object} Layer conflict test data
+   */
+  async generateLayerConflictScenario(options = {}) {
+    const { conflictType = 'same_layer_same_slot', complexityLevel = 'basic' } = options;
+
+    // Get base integration data
+    const baseData = await this.generateClothingIntegrationScenario({
+      includeSlotMetadata: true,
+      includeClothingItems: false,
+      complexityLevel
+    });
+
+    const data = {
+      ...baseData,
+      conflictingItems: [
+        {
+          id: 'test:conflicting_shirt_1',
+          name: 'First Test Shirt',
+          targetSlot: 'torso_upper',
+          layer: 'base'
+        },
+        {
+          id: 'test:conflicting_shirt_2',
+          name: 'Second Test Shirt',
+          targetSlot: 'torso_upper',
+          layer: 'base'
+        }
+      ],
+      expectedBehavior: conflictType === 'same_layer_same_slot' ? 'reject' : 'replace'
+    };
+
+    this.generatedData.set('layerConflict', data);
+    return data;
+  }
+
+  /**
+   * Generate complex slot mapping test scenario
+   * @param {Object} options - Generation options
+   * @returns {Object} Complex slot mapping test data
+   */
+  async generateComplexSlotMappingScenario(options = {}) {
+    const {
+      slotComplexity = 'multi_socket',
+      includeOrientationSpecific = true,
+      includeLayerVariations = true
+    } = options;
+
+    const data = await this.generateClothingIntegrationScenario({
+      includeSlotMetadata: true,
+      includeClothingItems: false,
+      complexityLevel: 'complex'
+    });
+
+    // Add complex slot mappings
+    if (includeOrientationSpecific) {
+      data.expectedSlots.push(
+        {
+          id: 'arm_left',
+          socketIds: ['left_shoulder', 'wrist_left'],
+          allowedLayers: ['base', 'outer'],
+          orientation: 'left'
+        },
+        {
+          id: 'arm_right',
+          socketIds: ['right_shoulder', 'wrist_right'],
+          allowedLayers: ['base', 'outer'],
+          orientation: 'right'
+        }
+      );
+    }
+
+    if (includeLayerVariations) {
+      data.expectedSlots.forEach(slot => {
+        if (slot.id === 'torso_upper') {
+          slot.allowedLayers = ['base', 'mid', 'outer', 'accessory'];
+        }
+      });
+    }
+
+    this.generatedData.set('complexSlotMapping', data);
+    return data;
+  }
+
+  /**
+   * Generate slot compatibility test scenario
+   * @param {Object} options - Generation options
+   * @returns {Object} Slot compatibility test data
+   */
+  async generateSlotCompatibilityScenario(options = {}) {
+    const { includeIncompatibleItems = true, includeEdgeCases = true } = options;
+
+    const data = await this.generateClothingIntegrationScenario({
+      includeSlotMetadata: true,
+      includeClothingItems: false,
+      complexityLevel: 'basic'
+    });
+
+    data.compatibilityTests = [
+      {
+        itemId: 'test:compatible_shirt',
+        targetSlot: 'torso_upper',
+        expectedResult: 'success'
+      },
+      {
+        itemId: 'test:compatible_pants',
+        targetSlot: 'torso_lower',
+        expectedResult: 'success'
+      }
+    ];
+
+    if (includeIncompatibleItems) {
+      data.compatibilityTests.push(
+        {
+          itemId: 'test:incompatible_helmet',
+          targetSlot: 'torso_upper', // Wrong slot for helmet
+          expectedResult: 'incompatible'
+        },
+        {
+          itemId: 'test:oversized_item',
+          targetSlot: 'foot', // Item too large for slot
+          expectedResult: 'incompatible'
+        }
+      );
+    }
+
+    if (includeEdgeCases) {
+      data.compatibilityTests.push(
+        {
+          itemId: 'test:edge_case_item',
+          targetSlot: 'nonexistent_slot',
+          expectedResult: 'incompatible'
+        }
+      );
+    }
+
+    this.generatedData.set('slotCompatibility', data);
+    return data;
+  }
+
+  /**
+   * Generate orientation-specific socket test scenario
+   * @param {Object} options - Generation options
+   * @returns {Object} Orientation socket test data
+   */
+  async generateOrientationSocketScenario(options = {}) {
+    const { includeSymmetricLimbs = true, includeAsymmetricItems = true } = options;
+
+    const data = await this.generateClothingIntegrationScenario({
+      includeSlotMetadata: true,
+      includeClothingItems: false,
+      complexityLevel: 'complex'
+    });
+
+    if (includeSymmetricLimbs) {
+      data.orientationSpecificItems = [
+        {
+          id: 'test:left_glove',
+          name: 'Left Test Glove',
+          targetSlot: 'hand',
+          orientation: 'left'
+        },
+        {
+          id: 'test:right_glove',
+          name: 'Right Test Glove',
+          targetSlot: 'hand',
+          orientation: 'right'
+        }
+      ];
+    }
+
+    if (includeAsymmetricItems) {
+      data.orientationSpecificItems.push({
+        id: 'test:asymmetric_shoulder_pad',
+        name: 'Asymmetric Shoulder Pad',
+        targetSlot: 'torso_upper',
+        orientation: 'left',
+        asymmetric: true
+      });
+    }
+
+    this.generatedData.set('orientationSocket', data);
+    return data;
+  }
+
+  /**
+   * Generate system synchronization test scenario
+   * @param {Object} options - Generation options
+   * @returns {Object} System sync test data
+   */
+  async generateSystemSyncScenario(options = {}) {
+    const {
+      includeMultipleClothingLayers = true,
+      includeComplexAnatomy = true,
+      includeDescriptionUpdates = true
+    } = options;
+
+    const data = await this.generateClothingIntegrationScenario({
+      includeSlotMetadata: true,
+      includeClothingItems: true,
+      complexityLevel: 'complex'
+    });
+
+    if (includeMultipleClothingLayers) {
+      data.clothingItems = [
+        ...data.clothingItems,
+        {
+          id: 'test:base_layer',
+          name: 'Base Layer',
+          targetSlot: 'torso_upper',
+          layer: 'base'
+        },
+        {
+          id: 'test:mid_layer',
+          name: 'Mid Layer',
+          targetSlot: 'torso_upper',
+          layer: 'mid'
+        },
+        {
+          id: 'test:outer_layer',
+          name: 'Outer Layer',
+          targetSlot: 'torso_upper',
+          layer: 'outer'
+        }
+      ];
+    }
+
+    if (includeDescriptionUpdates) {
+      data.itemDescriptions = {};
+      data.clothingItems.forEach(item => {
+        data.itemDescriptions[item.id] = {
+          shouldAppearInDescription: true,
+          expectedText: item.name.toLowerCase()
+        };
+      });
+    }
+
+    this.generatedData.set('systemSync', data);
+    return data;
+  }
+
+  /**
    * Gets previously generated test data by key
    * @param {string} key - Data key ('multiLevel', 'conflicting', 'mixedSlots', etc.)
    * @returns {Object|null} Generated data or null if not found
