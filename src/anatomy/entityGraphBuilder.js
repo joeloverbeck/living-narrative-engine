@@ -134,6 +134,21 @@ export class EntityGraphBuilder {
       actualRootDefinitionId
     );
 
+    // Verify entity was created successfully before proceeding with component addition
+    const verifyEntity = this.#entityManager.getEntityInstance(rootEntity.id);
+    if (!verifyEntity) {
+      this.#logger.error(
+        `EntityGraphBuilder: Created entity ${rootEntity.id} not immediately available for component addition`,
+        { entityId: rootEntity.id, definitionId: actualRootDefinitionId }
+      );
+      // Wait briefly and retry verification
+      await new Promise(resolve => setTimeout(resolve, 10));
+      const retryVerify = this.#entityManager.getEntityInstance(rootEntity.id);
+      if (!retryVerify) {
+        throw new Error(`Entity creation-verification race condition: ${rootEntity.id}`);
+      }
+    }
+
     if (ownerId) {
       // Add ownership component if specified
       await this.#entityManager.addComponent(rootEntity.id, 'core:owned_by', {
@@ -169,6 +184,21 @@ export class EntityGraphBuilder {
       // Create the child entity
       const childEntity =
         await this.#entityManager.createEntityInstance(partDefinitionId);
+
+      // Verify entity was created successfully before proceeding
+      const verifyChildEntity = this.#entityManager.getEntityInstance(childEntity.id);
+      if (!verifyChildEntity) {
+        this.#logger.error(
+          `EntityGraphBuilder: Created child entity ${childEntity.id} not immediately available`,
+          { entityId: childEntity.id, partDefinitionId, parentId }
+        );
+        // Wait briefly and retry verification
+        await new Promise(resolve => setTimeout(resolve, 10));
+        const retryVerify = this.#entityManager.getEntityInstance(childEntity.id);
+        if (!retryVerify) {
+          throw new Error(`Child entity creation-verification race condition: ${childEntity.id}`);
+        }
+      }
 
       // Add ownership component if specified
       if (ownerId) {

@@ -30,7 +30,7 @@ The current clothing accessibility logic is scattered across multiple files and 
 ## Acceptance Criteria
 
 ### 1. Create Clothing Accessibility Service
-- [ ] **File**: `src/clothing/clothingAccessibilityService.js`
+- [ ] **File**: `src/clothing/services/clothingAccessibilityService.js`
 - [ ] **Centralized API**: Single service for all clothing accessibility queries
 - [ ] **Dependency injection**: Service should be injectable and testable
 - [ ] **Clear interfaces**: Well-defined methods for different types of queries
@@ -66,7 +66,7 @@ The current clothing accessibility logic is scattered across multiple files and 
  * priority calculation, and business rule validation.
  */
 
-import { validateDependency } from '../utils/dependencyUtils.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
 
 export class ClothingAccessibilityService {
   #logger;
@@ -139,13 +139,25 @@ export class ClothingAccessibilityService {
 
 #### Dependency Registration
 ```javascript
-// src/dependencyInjection/registrations/clothingRegistrations.js
-import { ClothingAccessibilityService } from '../clothing/clothingAccessibilityService.js';
-import { tokens } from '../dependencyInjection/tokens.js';
+// src/dependencyInjection/registrations/worldAndEntityRegistrations.js
+// Add to existing file after other clothing service registrations
+import { ClothingAccessibilityService } from '../../clothing/services/clothingAccessibilityService.js';
 
-export function registerClothingServices(container) {
-  container.register(tokens.IClothingAccessibilityService, ClothingAccessibilityService);
-}
+// In the registration section, add:
+registrar.singletonFactory(tokens.ClothingAccessibilityService, (c) => {
+  return new ClothingAccessibilityService({
+    logger: c.resolve(tokens.ILogger),
+    entityManager: c.resolve(tokens.IEntityManager),
+    coverageAnalyzer: createCoverageAnalyzer({
+      entitiesGateway: c.resolve(tokens.IEntitiesGateway),
+      errorHandler: null
+    }),
+    priorityCalculator: null // Will use existing priority system from scopeDsl
+  });
+});
+
+// Also need to add token to src/dependencyInjection/tokens/tokens-core.js:
+// ClothingAccessibilityService: 'ClothingAccessibilityService',
 ```
 
 ### Key Implementation Components
@@ -184,7 +196,8 @@ class CoverageBlockingCalculator {
   }
 
   calculateAccessibility(equipmentState, entityId) {
-    // Use CLOREMLOG-001 coverage analyzer
+    // Use existing coverage analyzer from src/clothing/analysis/coverageAnalyzer.js
+    // The analyzer is already implemented as a factory function
     const coverageAnalysis = this.coverageAnalyzer.analyzeCoverageBlocking(
       equipmentState, 
       entityId
@@ -205,8 +218,8 @@ class ClothingPriorityCalculator {
 
   calculatePriority(itemId, layer, bodyArea, context) {
     // Unified priority calculation combining:
-    // - Coverage priority from COVERAGE_PRIORITY constants
-    // - Layer priority from LAYER_PRIORITY system
+    // - Coverage priority from src/scopeDsl/prioritySystem/priorityConstants.js COVERAGE_PRIORITY
+    // - Layer priority from existing LAYER_PRIORITY in arrayIterationResolver.js
     // - Context-specific modifiers
     
     const cacheKey = `${itemId}:${layer}:${bodyArea}:${context}`;
@@ -305,7 +318,7 @@ const equipItems = clothingService.getAccessibleItems('character123', {
 
 ### Unit Test Structure
 ```javascript
-// tests/unit/clothing/clothingAccessibilityService.test.js
+// tests/unit/clothing/services/clothingAccessibilityService.test.js
 describe('ClothingAccessibilityService', () => {
   describe('getAccessibleItems', () => {
     it('should return only topmost accessible items in topmost mode', () => {
@@ -360,6 +373,7 @@ describe('ClothingAccessibilityService', () => {
 |------|-------------|---------|-------------|
 | Breaking existing integrations | Low | High | Backward compatibility layer |
 | Service registration issues | Low | Medium | Comprehensive DI testing |
+| Conflicts with ClothingManagementService | Medium | Medium | Clear separation of responsibilities |
 | Performance impact during migration | Low | Low | Parallel implementation approach |
 
 ## Definition of Done
@@ -374,9 +388,13 @@ describe('ClothingAccessibilityService', () => {
 ## Dependencies and Integration
 
 ### Upstream Dependencies
-- **CLOREMLOG-001**: Coverage analyzer implementation
 - **Phase 1 completion**: Validated coverage blocking approach
-- **Existing systems**: Coverage mapping component, priority constants, entity manager
+- **Existing systems**: 
+  - Coverage analyzer: `src/clothing/analysis/coverageAnalyzer.js`
+  - Coverage mapping component: `data/mods/clothing/components/coverage_mapping.component.json`
+  - Priority constants: `src/scopeDsl/prioritySystem/priorityConstants.js`
+  - Entity manager: Registered in DI container
+  - Existing ClothingManagementService: `src/clothing/services/clothingManagementService.js`
 
 ### Downstream Impact
 - **CLOREMLOG-006**: Priority system refactoring will use this service

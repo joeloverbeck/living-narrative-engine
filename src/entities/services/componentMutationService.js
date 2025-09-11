@@ -119,10 +119,28 @@ export class ComponentMutationService {
   #fetchEntity(instanceId, componentTypeId) {
     const entity = this.#entityRepository.get(instanceId);
     if (!entity) {
+      // Enhanced error reporting for debugging race conditions
+      const allEntities = this.#entityRepository.getAllEntityIds();
+      const recentEntities = allEntities.slice(-10); // Show last 10 created entities
+      
       this.#logger.error(
         `ComponentMutationService.addComponent: Entity not found with ID: ${instanceId}`,
-        { instanceId, componentTypeId }
+        { 
+          instanceId, 
+          componentTypeId,
+          totalEntities: allEntities.length,
+          recentEntities: recentEntities,
+          repositoryType: this.#entityRepository.constructor.name
+        }
       );
+      
+      // Add timing information if available
+      const now = Date.now();
+      this.#logger.error(
+        `Timing context: Current time ${now}, Entity ID pattern suggests creation time: ${instanceId.includes('-') ? 'UUID format' : 'Custom format'}`,
+        { instanceId, now }
+      );
+      
       throw new EntityNotFoundError(instanceId);
     }
     return entity;

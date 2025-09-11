@@ -95,6 +95,21 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
   }
 
   /**
+   * Create a mock anatomy blueprint repository for testing
+   * @returns {Object} Mock anatomy blueprint repository
+   * @private
+   */
+  createMockAnatomyBlueprintRepository() {
+    return {
+      getBlueprint: jest.fn().mockReturnValue(null),
+      loadBlueprint: jest.fn().mockResolvedValue({}),
+      hasBlueprint: jest.fn().mockReturnValue(false),
+      getAllBlueprints: jest.fn().mockReturnValue(new Map()),
+      clearCache: jest.fn(),
+    };
+  }
+
+  /**
    * Create a mock clothing management service for testing
    * @returns {Object} Mock clothing management service
    * @private
@@ -702,6 +717,263 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
    */
   getProcessingLog() {
     return [...this.processingLog];
+  }
+
+  /**
+   * Load core entity definitions needed for anatomy testing
+   * Provides essential definitions like core:actor that anatomy tests depend on
+   */
+  loadCoreEntityDefinitions() {
+    // Load core:actor entity definition that anatomy tests require
+    this.loadEntityDefinitions({
+      'core:actor': {
+        id: 'core:actor',
+        description: 'Core actor entity for anatomy testing',
+        components: {
+          'core:actor': {},
+          'core:name': { text: 'Test Actor' },
+          'core:description': { description: 'A test actor entity' }
+        }
+      },
+      'test:simple_part': {
+        id: 'test:simple_part',
+        description: 'Simple anatomy part for testing',
+        components: {
+          'anatomy:part': {
+            subType: 'generic_part',
+          },
+          'core:name': { text: 'Test Part' },
+          'core:description': { description: 'A test anatomy part' }
+        }
+      },
+      'anatomy:blueprint_slot': {
+        id: 'anatomy:blueprint_slot',
+        description: 'Blueprint slot entity for anatomy generation',
+        components: {
+          'anatomy:slot': {},
+          'core:name': { text: 'Blueprint Slot' }
+        }
+      }
+    });
+  }
+
+  /**
+   * Load stress test components for performance testing
+   */
+  loadStressTestComponents() {
+    // Load core definitions first
+    this.loadCoreEntityDefinitions();
+    // Load base anatomy components
+    this.loadComponents({
+      'anatomy:body': {
+        id: 'anatomy:body',
+        data: { rootPartId: null, recipeId: null, body: null },
+      },
+      'anatomy:joint': {
+        id: 'anatomy:joint',
+        data: { parentId: null, socketId: null, jointType: null },
+      },
+      'anatomy:part': {
+        id: 'anatomy:part',
+        data: { subType: null },
+      },
+      'anatomy:sockets': {
+        id: 'anatomy:sockets',
+        data: { sockets: [] },
+      },
+      'descriptors:body': {
+        id: 'descriptors:body',
+        data: { descriptors: {} },
+      },
+    });
+
+    // Load stress test entity definitions
+    this.loadEntityDefinitions({
+      'stress:torso': {
+        id: 'stress:torso',
+        components: {
+          'anatomy:part': { subType: 'torso' },
+          'anatomy:sockets': {
+            sockets: Array.from({ length: 10 }, (_, i) => ({
+              id: `socket_${i}`,
+              max: 5,
+              allowedTypes: ['part'],
+            })),
+          },
+        },
+      },
+      'stress:part': {
+        id: 'stress:part',
+        components: {
+          'anatomy:part': { subType: 'part' },
+          'anatomy:sockets': {
+            sockets: Array.from({ length: 3 }, (_, i) => ({
+              id: `sub_socket_${i}`,
+              max: 2,
+              allowedTypes: ['part'],
+            })),
+          },
+        },
+      },
+    });
+  }
+
+  /**
+   * Generate a simple anatomy for testing
+   * @returns {Promise<Object>} Generated anatomy with rootId
+   */
+  async generateSimpleAnatomy() {
+    const entityDef = {
+      id: 'test:simple_torso',
+      components: {
+        'anatomy:part': { subType: 'torso' },
+        'anatomy:sockets': {
+          sockets: [
+            { id: 'left_arm', max: 1, allowedTypes: ['arm'] },
+            { id: 'right_arm', max: 1, allowedTypes: ['arm'] },
+          ],
+        },
+      },
+    };
+
+    this.loadEntityDefinitions({ 'test:simple_torso': entityDef });
+
+    const torso = await this.entityManager.createEntityInstance('test:simple_torso');
+    await this.entityManager.addComponent(torso.id, 'anatomy:body', {
+      rootPartId: torso.id,
+      recipeId: 'test:simple_recipe',
+      body: { root: torso.id },
+    });
+
+    return { rootId: torso.id };
+  }
+
+  /**
+   * Create an anatomy part for testing
+   * @param {string} partId - ID for the part
+   * @returns {Promise<Object>} Created part entity
+   */
+  async createAnatomyPart(partId) {
+    const part = await this.entityManager.createEntityInstance('test:simple_part', {
+      instanceId: partId,
+    });
+    await this.entityManager.addComponent(part.id, 'anatomy:part', {
+      subType: 'generic_part',
+    });
+    await this.entityManager.addComponent(part.id, 'anatomy:sockets', {
+      sockets: [],
+    });
+    return part;
+  }
+
+  /**
+   * Attach a part to a parent
+   * @param {string} parentId - Parent entity ID
+   * @param {string} childId - Child entity ID
+   * @returns {Promise<void>}
+   */
+  async attachPart(parentId, childId) {
+    await this.entityManager.addComponent(childId, 'anatomy:joint', {
+      parentId,
+      socketId: 'generic_socket',
+      jointType: 'attached',
+    });
+  }
+
+  /**
+   * Calculate maximum depth of an anatomy hierarchy
+   * @param {string} rootId - Root entity ID
+   * @returns {number} Maximum depth
+   */
+  calculateMaxDepth(rootId) {
+    const visited = new Set();
+    
+    const calculateDepthRecursive = (entityId, currentDepth = 0) => {
+      if (visited.has(entityId)) {
+        return currentDepth;
+      }
+      visited.add(entityId);
+
+      const children = this.bodyGraphService.getChildren(entityId);
+      if (!children || children.length === 0) {
+        return currentDepth;
+      }
+
+      let maxChildDepth = currentDepth;
+      for (const child of children) {
+        const childDepth = calculateDepthRecursive(child.id, currentDepth + 1);
+        maxChildDepth = Math.max(maxChildDepth, childDepth);
+      }
+
+      return maxChildDepth;
+    };
+
+    return calculateDepthRecursive(rootId);
+  }
+
+  /**
+   * Clean up an entity and all its children
+   * @param {string} rootId - Root entity ID to clean up
+   * @returns {Promise<void>}
+   */
+  async cleanupEntity(rootId) {
+    try {
+      // Get all parts in the anatomy
+      // getAllParts expects a bodyComponent object, not a rootId string
+      const bodyComponent = { root: rootId };
+      const allParts = this.bodyGraphService.getAllParts(bodyComponent);
+      
+      // Delete all parts
+      for (const part of allParts) {
+        await this.entityManager.deleteEntity(part.id);
+      }
+
+      // Also delete the root if not in allParts
+      if (!allParts.find(p => p.id === rootId)) {
+        await this.entityManager.deleteEntity(rootId);
+      }
+
+      // Invalidate caches
+      this.anatomyCacheManager?.invalidateCacheForRoot(rootId);
+    } catch (error) {
+      this.logger.warn(`Failed to fully cleanup entity ${rootId}:`, error);
+    }
+  }
+
+  /**
+   * Create an entity with a specific component for memory testing
+   * @param {string} componentType - Component type to add
+   * @returns {Promise<Object>} Created entity
+   */
+  async createEntityWithComponent(componentType) {
+    const entityId = `test_entity_${Date.now()}_${Math.random()}`;
+    const entity = await this.entityManager.createEntityInstance('core:actor', {
+      instanceId: entityId,
+    });
+    
+    // Add the requested component with minimal data
+    const componentData = this.getMinimalComponentData(componentType);
+    await this.entityManager.addComponent(entity.id, componentType, componentData);
+    
+    return entity;
+  }
+
+  /**
+   * Get minimal component data for a component type
+   * @param {string} componentType - Component type
+   * @returns {Object} Minimal component data
+   * @private
+   */
+  getMinimalComponentData(componentType) {
+    const minimalData = {
+      'anatomy:body': { rootPartId: null, recipeId: null, body: null },
+      'anatomy:part': { subType: 'generic' },
+      'anatomy:joint': { parentId: null, socketId: null, jointType: null },
+      'anatomy:sockets': { sockets: [] },
+      'descriptors:body': { descriptors: {} },
+    };
+
+    return minimalData[componentType] || {};
   }
 
   /**

@@ -927,6 +927,190 @@ export default class ComplexBlueprintDataGenerator {
   }
 
   /**
+   * Generate a large anatomy blueprint with many parts
+   * @param {number} partCount - Target number of parts to generate
+   * @returns {Object} Large anatomy blueprint test data
+   */
+  generateLargeAnatomyBlueprint(partCount) {
+    const blueprintId = `test:large_anatomy_${partCount}`;
+    const rootId = `test:large_root_${partCount}`;
+
+    const data = {
+      blueprints: {
+        [blueprintId]: {
+          id: blueprintId,
+          root: rootId,
+          slots: {}
+        }
+      },
+      entityDefinitions: {
+        [rootId]: {
+          id: rootId,
+          description: `Large root entity with ${partCount} parts`,
+          components: {
+            'anatomy:part': {
+              subType: 'torso',
+            },
+            'anatomy:sockets': {
+              sockets: []
+            },
+            'core:name': {
+              text: `Large Root ${partCount}`,
+            },
+          },
+        }
+      }
+    };
+
+    // Generate sockets and parts
+    const socketCount = Math.min(Math.floor(partCount / 5), 20); // Limit sockets for realism
+    for (let i = 0; i < socketCount; i++) {
+      const socketId = `socket_${i}`;
+      data.entityDefinitions[rootId].components['anatomy:sockets'].sockets.push({
+        id: socketId,
+        max: 5,
+        nameTpl: `Socket ${i}`,
+        allowedTypes: ['part'],
+      });
+
+      // Add slots to blueprint
+      const slotId = `slot_${i}`;
+      data.blueprints[blueprintId].slots[slotId] = {
+        socket: socketId,
+        requirements: {
+          partType: 'part',
+          components: ['anatomy:part']
+        }
+      };
+    }
+
+    // Generate part definitions
+    const partsPerSocket = Math.ceil(partCount / socketCount);
+    for (let i = 0; i < socketCount; i++) {
+      for (let j = 0; j < partsPerSocket && (i * partsPerSocket + j) < partCount; j++) {
+        const partId = `test:part_${i}_${j}`;
+        data.entityDefinitions[partId] = {
+          id: partId,
+          description: `Part ${i}-${j} for large anatomy`,
+          components: {
+            'anatomy:part': {
+              subType: 'part',
+            },
+            'anatomy:sockets': {
+              sockets: j === 0 ? [
+                {
+                  id: `sub_socket_${i}_${j}`,
+                  max: 2,
+                  allowedTypes: ['subpart'],
+                }
+              ] : []
+            },
+            'core:name': {
+              text: `Part ${i}-${j}`,
+            },
+          },
+        };
+      }
+    }
+
+    // Add recipe for the blueprint
+    data.recipe = {
+      id: `test:large_anatomy_${partCount}`,
+      blueprintId: blueprintId
+    };
+
+    this.generatedData.set(`largeAnatomy_${partCount}`, data);
+    return data;
+  }
+
+  /**
+   * Generate a deep hierarchy blueprint
+   * @param {number} depth - Target hierarchy depth
+   * @returns {Object} Deep hierarchy blueprint test data
+   */
+  generateDeepHierarchyBlueprint(depth) {
+    const blueprintId = `test:deep_hierarchy_${depth}`;
+    const rootId = `test:deep_root_${depth}`;
+
+    const data = {
+      blueprints: {
+        [blueprintId]: {
+          id: blueprintId,
+          root: rootId,
+          slots: {}
+        }
+      },
+      entityDefinitions: {}
+    };
+
+    // Generate chain of entities, each with one socket to the next
+    let currentParentId = rootId;
+    for (let level = 0; level < depth; level++) {
+      const entityId = level === 0 ? rootId : `test:level_${level}_entity`;
+      const socketId = `socket_level_${level}`;
+      
+      data.entityDefinitions[entityId] = {
+        id: entityId,
+        description: `Level ${level} entity in deep hierarchy`,
+        components: {
+          'anatomy:part': {
+            subType: 'part', // Use generic 'part' subType that matches blueprint requirements
+          },
+          'anatomy:sockets': {
+            sockets: level < depth - 1 ? [{
+              id: socketId,
+              max: 1,
+              nameTpl: `Level ${level} Socket`,
+              allowedTypes: ['part'],
+            }] : []
+          },
+          'core:name': {
+            text: `Level ${level} Entity`,
+          },
+        },
+      };
+
+      // Add slot to blueprint (except for leaf nodes)
+      if (level < depth - 1) {
+        const slotId = `slot_level_${level}`;
+        const childEntityId = `test:level_${level + 1}_entity`;
+        
+        if (level === 0) {
+          // Root level slot
+          data.blueprints[blueprintId].slots[slotId] = {
+            socket: socketId,
+            requirements: {
+              partType: 'part', // Use generic 'part' type that matches entity definitions
+              components: ['anatomy:part']
+            }
+          };
+        } else {
+          // Nested blueprint slots (simplified for current production capabilities)
+          // In production, we use simpler slot processing
+          data.blueprints[blueprintId].slots[slotId] = {
+            socket: socketId,
+            requirements: {
+              partType: 'part', // Use generic 'part' type that matches entity definitions
+              components: ['anatomy:part']
+            }
+          };
+        }
+      }
+
+      currentParentId = entityId;
+    }
+
+    // Add recipe for the blueprint
+    data.recipe = {
+      id: `test:deep_hierarchy_${depth}`,
+      blueprintId: blueprintId
+    };
+
+    this.generatedData.set(`deepHierarchy_${depth}`, data);
+    return data;
+  }
+
+  /**
    * Gets previously generated test data by key
    * @param {string} key - Data key ('multiLevel', 'conflicting', 'mixedSlots', etc.)
    * @returns {Object|null} Generated data or null if not found
