@@ -191,7 +191,8 @@ llm-proxy-server/.env
 
 # Ignore private mods.
 # Adapt this pattern to how you name your private mod folders.
-# For example, if they start with "p-", use "p-*".
+# Patterns below cover both p_ and p- prefixes for private mods.
+data/mods/p_*
 data/mods/p-*
 
 # Prevent accidental numeric directories (e.g., from shell redirection errors)
