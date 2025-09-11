@@ -66,7 +66,7 @@ export class ComponentMutationService {
     monitoringCoordinator,
   }) {
     validateDependency(entityRepository, 'EntityRepositoryAdapter', console, {
-      requiredMethods: ['get', 'indexComponentAdd', 'indexComponentRemove'],
+      requiredMethods: ['get', 'indexComponentAdd', 'indexComponentRemove', 'getAllEntityIds'],
     });
     validateDependency(validator, 'ISchemaValidator', console, {
       requiredMethods: ['validate'],

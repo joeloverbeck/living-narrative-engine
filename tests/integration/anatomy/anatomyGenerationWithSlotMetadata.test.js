@@ -94,6 +94,16 @@ describe('Anatomy Generation with Slot Metadata', () => {
       expect(slotMetadata.slotMappings.torso_lower.coveredSockets).toContain(
         'right_hip'
       );
+      // Verify ass-related sockets are covered by torso_lower
+      expect(slotMetadata.slotMappings.torso_lower.coveredSockets).toContain(
+        'asshole'
+      );
+      expect(slotMetadata.slotMappings.torso_lower.coveredSockets).toContain(
+        'left_ass'
+      );
+      expect(slotMetadata.slotMappings.torso_lower.coveredSockets).toContain(
+        'right_ass'
+      );
     });
 
     it('should include allowed layers in slot metadata', async () => {
@@ -143,6 +153,16 @@ describe('Anatomy Generation with Slot Metadata', () => {
       );
       expect(slotMetadata.slotMappings.torso_lower.coveredSockets).toContain(
         'right_testicle'
+      );
+      // Verify ass-related sockets are also covered for males
+      expect(slotMetadata.slotMappings.torso_lower.coveredSockets).toContain(
+        'asshole'
+      );
+      expect(slotMetadata.slotMappings.torso_lower.coveredSockets).toContain(
+        'left_ass'
+      );
+      expect(slotMetadata.slotMappings.torso_lower.coveredSockets).toContain(
+        'right_ass'
       );
     });
 

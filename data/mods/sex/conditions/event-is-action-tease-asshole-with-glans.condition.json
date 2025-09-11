@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex:event-is-action-tease-asshole-with-glans",
+  "description": "Checks if the triggering event is for the 'sex:tease_asshole_with_glans' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "sex:tease_asshole_with_glans"]
+  }
+}

@@ -88,7 +88,7 @@
           "$ref": "#/definitions/contentFileList"
         },
         "portraits": {
-          "$ref": "#/definitions/contentFileList"
+          "$ref": "#/definitions/imageFileList"
         },
         "rules": {
           "$ref": "#/definitions/contentFileList"
@@ -135,6 +135,16 @@
         "type": "string",
         "pattern": "^(?!/)(?!.*\\.\\.)[^\\s]+\\.json$",
         "description": "Relative path to a definition file, e.g., \"items/swords/iron_sword.json\"."
+      }
+    },
+    "imageFileList": {
+      "description": "Array of relative paths to image files for portraits. Paths must not start with '/' or contain '..'.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^(?!/)(?!.*\\.\\.)[^\\s]+\\.(png|jpg|jpeg|gif|webp|svg|bmp)$",
+        "description": "Relative path to an image file, e.g., 'characters/hero.png'."
       }
     },
     "dependency": {

@@ -107,8 +107,10 @@ async function main() {
     // Create and configure container with minimal configuration
     const container = new AppContainer();
     
-    // Use minimal container configuration for CLI tools
-    await configureMinimalContainer(container);
+    // Use minimal container configuration for CLI tools with validation services
+    await configureMinimalContainer(container, {
+      includeValidationServices: true
+    });
     
     // Override data fetcher for CLI environment
     const NodeDataFetcher = (await import('../src/data/nodeDataFetcher.js')).default;

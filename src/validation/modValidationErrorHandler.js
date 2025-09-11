@@ -460,5 +460,5 @@ class ModValidationErrorHandler {
   }
 }
 
-export { ModValidationErrorHandler, ErrorType, RecoveryStrategy };
+export { ModValidationErrorHandler };
 export default ModValidationErrorHandler;

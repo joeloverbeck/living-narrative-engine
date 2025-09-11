@@ -1,0 +1,31 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex:tease_asshole_with_glans",
+  "name": "Tease Asshole with Glans",
+  "description": "Tease the target's exposed asshole with the head of your penis.",
+  "targets": {
+    "primary": {
+      "scope": "sex:actors_with_exposed_asshole_facing_away",
+      "placeholder": "primary",
+      "description": "Person to tease from behind"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "template": "tease {primary}'s asshole with your glans",
+  "prerequisites": [
+    {
+      "logic": {
+        "hasPartOfType": ["actor", "penis"]
+      },
+      "failure_message": "You need a penis to perform this action."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#4a148c",
+    "textColor": "#e1bee7",
+    "hoverBackgroundColor": "#6a1b9a",
+    "hoverTextColor": "#f3e5f5"
+  }
+}

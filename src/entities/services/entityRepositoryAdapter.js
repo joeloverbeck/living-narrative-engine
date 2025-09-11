@@ -280,6 +280,15 @@ export class EntityRepositoryAdapter {
   }
 
   /**
+   * Get all entity IDs in the repository.
+   *
+   * @returns {string[]} Array of all entity IDs
+   */
+  getAllEntityIds() {
+    return Array.from(this.#mapManager.keys());
+  }
+
+  /**
    * Get entity IDs that have a specific component type.
    * Returns empty Set if no entities have the component.
    *

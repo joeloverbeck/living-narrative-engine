@@ -36,7 +36,8 @@
       "rub_penis_between_ass_cheeks.action.json",
       "rub_penis_over_clothes.action.json",
       "rub_vagina_over_clothes.action.json",
-      "suckle_testicle.action.json"
+      "suckle_testicle.action.json",
+      "tease_asshole_with_glans.action.json"
     ],
     "conditions": [
       "event-is-action-breathe-teasingly-on-penis.condition.json",
@@ -53,7 +54,8 @@
       "event-is-action-rub-penis-between-ass-cheeks.condition.json",
       "event-is-action-rub-penis-over-clothes.condition.json",
       "event-is-action-rub-vagina-over-clothes.condition.json",
-      "event-is-action-suckle-testicle.condition.json"
+      "event-is-action-suckle-testicle.condition.json",
+      "event-is-action-tease-asshole-with-glans.condition.json"
     ],
     "rules": [
       "handle_breathe_teasingly_on_penis.rule.json",
@@ -70,7 +72,8 @@
       "handle_rub_penis_between_ass_cheeks.rule.json",
       "handle_rub_penis_over_clothes.rule.json",
       "handle_rub_vagina_over_clothes.rule.json",
-      "handle_suckle_testicle.rule.json"
+      "handle_suckle_testicle.rule.json",
+      "handle_tease_asshole_with_glans.rule.json"
     ],
     "scopes": [
       "actor_kneeling_before_target_with_covered_penis.scope",
@@ -80,6 +83,7 @@
       "actors_with_breasts_in_intimacy.scope",
       "actors_with_covered_penis_im_facing_away_from.scope",
       "actors_with_exposed_ass_facing_away.scope",
+      "actors_with_exposed_asshole_facing_away.scope",
       "actors_with_penis_facing_each_other.scope",
       "actors_with_penis_facing_each_other_covered.scope",
       "actors_with_penis_in_intimacy.scope",

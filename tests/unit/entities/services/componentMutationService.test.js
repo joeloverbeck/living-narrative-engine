@@ -13,6 +13,7 @@ const createService = ({ entity, monitoringCoordinator } = {}) => {
     get: jest.fn(() => entity),
     indexComponentAdd: jest.fn(),
     indexComponentRemove: jest.fn(),
+    getAllEntityIds: jest.fn(() => ['entity1', 'entity2', 'entity3']),
   };
   const validator = { validate: jest.fn(() => ({ isValid: true })) };
   const logger = {
