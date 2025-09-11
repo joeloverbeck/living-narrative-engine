@@ -513,5 +513,5 @@ class GracefulDegradation {
   }
 }
 
-export { GracefulDegradation, DegradationStrategy };
+export { GracefulDegradation };
 export default GracefulDegradation;

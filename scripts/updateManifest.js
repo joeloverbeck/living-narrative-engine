@@ -180,6 +180,46 @@ async function scanRecipeDirectoryRecursively(basePath, currentPath = '') {
 }
 
 /**
+ * Recursively scan a directory for portrait image files, maintaining the relative path structure.
+ *
+ * @param {string} basePath - The base path to scan from
+ * @param {string} currentPath - The current directory being scanned
+ * @returns {Promise<string[]>} Array of file paths relative to basePath
+ */
+async function scanPortraitDirectoryRecursively(basePath, currentPath = '') {
+  const fullPath = path.join(basePath, currentPath);
+  const entries = await fs.readdir(fullPath, { withFileTypes: true });
+  const files = [];
+
+  // Supported image file extensions for portraits
+  const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp'];
+
+  for (const entry of entries) {
+    const entryPath = path.join(currentPath, entry.name);
+
+    if (entry.isDirectory()) {
+      // Recursively scan subdirectories
+      const subFiles = await scanPortraitDirectoryRecursively(
+        basePath,
+        entryPath
+      );
+      files.push(...subFiles);
+    } else if (entry.isFile()) {
+      // Check if file has a supported image extension
+      const hasImageExtension = imageExtensions.some(ext => 
+        entry.name.toLowerCase().endsWith(ext)
+      );
+      if (hasImageExtension) {
+        // Add the portrait file with its relative path
+        files.push(entryPath);
+      }
+    }
+  }
+
+  return files;
+}
+
+/**
  * Get all mod names from the mods directory
  *
  * @returns {Promise<string[]>} Array of mod directory names
@@ -540,7 +580,15 @@ async function scanModDirectory(modPath, manifest, opts) {
           console.log(
             `  - Discovered new content directory: "${dirent.name}" (key: "${manifestKey}"). Adding to manifest.`
           );
-          result.manifest.content[manifestKey] = [];
+          // Special handling for entities directory - must be an object with definitions/instances
+          if (manifestKey === 'entities') {
+            result.manifest.content[manifestKey] = { 
+              definitions: [], 
+              instances: [] 
+            };
+          } else {
+            result.manifest.content[manifestKey] = [];
+          }
         }
       }
     }
@@ -607,6 +655,11 @@ async function processContentType(modPath, contentType, manifest, opts) {
         console.log(`  - Scanned "${contentType}": Found ${files.length} .recipe.json file(s).`);
         manifest.content[contentType] = files.sort();
         result.filesProcessed += files.length;
+      } else if (contentType === 'portraits') {
+        files = await scanPortraitDirectoryRecursively(contentDirPath);
+        console.log(`  - Scanned "${contentType}": Found ${files.length} image file(s).`);
+        manifest.content[contentType] = files.sort();
+        result.filesProcessed += files.length;
       } else {
         files = await scanDirectoryRecursively(contentDirPath);
         console.log(`  - Scanned "${contentType}": Found ${files.length} file(s).`);
@@ -631,7 +684,12 @@ async function processContentType(modPath, contentType, manifest, opts) {
   } catch (error) {
     if (error.code === 'ENOENT') {
       console.log(`  - Directory not found for "${contentType}", ensuring it is empty in manifest.`);
-      manifest.content[contentType] = [];
+      // Special handling for entities - must be an object with definitions/instances
+      if (contentType === 'entities') {
+        manifest.content[contentType] = { definitions: [], instances: [] };
+      } else {
+        manifest.content[contentType] = [];
+      }
     } else {
       result.errors.push(`Error processing ${contentType}: ${error.message}`);
     }
@@ -650,6 +708,12 @@ async function processEntitiesDirectory(modPath, manifest, result) {
   const entitiesDirPath = path.join(modPath, 'entities');
   const definitionsPath = path.join(entitiesDirPath, 'definitions');
   const instancesPath = path.join(entitiesDirPath, 'instances');
+
+  // Convert empty array to proper structure if needed
+  if (Array.isArray(manifest.content.entities) && manifest.content.entities.length === 0) {
+    manifest.content.entities = { definitions: [], instances: [] };
+    console.log('  - Converted entities from empty array to proper object structure');
+  }
 
   // Check if manifest uses nested structure
   if (typeof manifest.content.entities === 'object' && !Array.isArray(manifest.content.entities)) {

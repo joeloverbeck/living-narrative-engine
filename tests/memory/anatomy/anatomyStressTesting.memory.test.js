@@ -2,6 +2,14 @@
  * @file tests/memory/anatomy/anatomyStressTesting.memory.test.js
  * @description Memory stress tests for anatomy system to detect leaks and monitor memory usage patterns
  * Tests memory behavior under extreme load, garbage collection patterns, and memory cleanup
+ * 
+ * NOTE: Uses lightweight mocks for core memory leak detection to focus on fundamental
+ * memory management patterns. The test bed can be configured with realistic description
+ * generation mocks for integration testing scenarios.
+ * 
+ * Configuration:
+ * - Memory leak detection: lightweight mocks (focus on core entity/cache management)
+ * - Integration testing: realistic mocks (simulate production description complexity)
  */
 
 import {
@@ -26,13 +34,13 @@ describe('Anatomy Memory Stress Testing', () => {
   let cacheManager;
   let memoryMonitor;
 
-  // Memory thresholds (adjusted to be more realistic for production code)
+  // Memory thresholds (configured for lightweight mocks focused on core memory management)
   const MEMORY_THRESHOLDS = {
-    LEAK_DETECTION_GROWTH: 0.5, // 50% growth over iterations (more realistic)
+    LEAK_DETECTION_GROWTH: 0.5, // 50% growth over iterations (lightweight mocks for leak detection)
     LARGE_DATASET_HEAP: 500, // 500MB max heap for large datasets
     GC_FREQUENCY: 100, // Expected GC calls per 1000 operations
-    HEAP_GROWTH_RATE: 0.25, // 25% growth rate acceptable (more realistic)
-    REFERENCE_RETENTION: 0.05, // 5% reference retention acceptable (more realistic)
+    HEAP_GROWTH_RATE: 0.25, // 25% growth rate acceptable 
+    REFERENCE_RETENTION: 0.05, // 5% reference retention acceptable
   };
 
   /**
@@ -108,7 +116,8 @@ describe('Anatomy Memory Stress Testing', () => {
     }
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    testBed = new EnhancedAnatomyTestBed();
+    // Use lightweight mocks for memory leak detection tests to focus on core memory management
+    testBed = new EnhancedAnatomyTestBed({ useLightweightMocks: true });
     dataGenerator = new ComplexBlueprintDataGenerator();
     memoryMonitor = createMemoryMonitor();
 

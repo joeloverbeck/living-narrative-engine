@@ -432,5 +432,5 @@ class FileOperationCircuitBreaker {
   }
 }
 
-export { FileOperationCircuitBreaker, CircuitBreakerState, CircuitBreakerError };
+export { FileOperationCircuitBreaker, CircuitBreakerError };
 export default FileOperationCircuitBreaker;

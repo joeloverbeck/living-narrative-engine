@@ -135,18 +135,31 @@ export class EntityGraphBuilder {
     );
 
     // Verify entity was created successfully before proceeding with component addition
-    const verifyEntity = this.#entityManager.getEntityInstance(rootEntity.id);
-    if (!verifyEntity) {
-      this.#logger.error(
-        `EntityGraphBuilder: Created entity ${rootEntity.id} not immediately available for component addition`,
+    // Use exponential backoff retry for better reliability under stress conditions
+    let verifyEntity = this.#entityManager.getEntityInstance(rootEntity.id);
+    let retries = 0;
+    const maxRetries = 5;
+    
+    while (!verifyEntity && retries < maxRetries) {
+      this.#logger.warn(
+        `EntityGraphBuilder: Created entity ${rootEntity.id} not immediately available, retry ${retries + 1}/${maxRetries}`,
         { entityId: rootEntity.id, definitionId: actualRootDefinitionId }
       );
-      // Wait briefly and retry verification
-      await new Promise(resolve => setTimeout(resolve, 10));
-      const retryVerify = this.#entityManager.getEntityInstance(rootEntity.id);
-      if (!retryVerify) {
-        throw new Error(`Entity creation-verification race condition: ${rootEntity.id}`);
-      }
+      
+      // Exponential backoff: 10ms, 20ms, 40ms
+      const delay = 10 * Math.pow(2, retries);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      
+      verifyEntity = this.#entityManager.getEntityInstance(rootEntity.id);
+      retries++;
+    }
+    
+    if (!verifyEntity) {
+      this.#logger.error(
+        `EntityGraphBuilder: Entity creation-verification failed after ${maxRetries} retries`,
+        { entityId: rootEntity.id, definitionId: actualRootDefinitionId }
+      );
+      throw new Error(`Entity creation-verification race condition: ${rootEntity.id}`);
     }
 
     if (ownerId) {

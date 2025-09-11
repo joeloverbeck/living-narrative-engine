@@ -36,8 +36,16 @@
     },
     "events": [],
     "macros": [],
-    "portraits": [],
+    "portraits": [
+      "adventurers_guild.png",
+      "hero.png",
+      "receptionist.jpg",
+      "sidekick.png",
+      "sidekick_backup.png"
+    ],
     "rules": [],
-    "worlds": ["isekai.world.json"]
+    "worlds": [
+      "isekai.world.json"
+    ]
   }
 }

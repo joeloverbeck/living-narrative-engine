@@ -1,7 +1,7 @@
 /**
- * @file Integration tests for rub_penis_between_ass_cheeks action discovery
- * @description Tests that the actors_with_exposed_ass_facing_away scope properly filters
- * actors based on ass socket coverage, facing direction, and closeness
+ * @file Integration tests for tease_asshole_with_glans action discovery
+ * @description Tests that the actors_with_exposed_asshole_facing_away scope properly filters
+ * actors based on asshole socket coverage, facing direction, and closeness
  */
 
 import {
@@ -39,20 +39,20 @@ import fs from 'fs';
 import path from 'path';
 
 // Import actual scope file content
-const assScopeContent = fs.readFileSync(
+const assholeScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../data/mods/sex/scopes/actors_with_exposed_ass_facing_away.scope'
+    '../../../data/mods/sex/scopes/actors_with_exposed_asshole_facing_away.scope'
   ),
   'utf8'
 );
 
 // Import actual action files
-import rubPenisBetweenAssCheeksAction from '../../../data/mods/sex/actions/rub_penis_between_ass_cheeks.action.json';
+import teaseAssholeAction from '../../../data/mods/sex/actions/tease_asshole_with_glans.action.json';
 
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
 
-describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () => {
+describe('Tease Asshole With Glans Action Discovery Integration Tests', () => {
   let entityManager;
   let logger;
   let scopeRegistry;
@@ -88,7 +88,7 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
     const dataRegistry = new InMemoryDataRegistry({ logger });
 
     // Store the action
-    dataRegistry.store('actions', rubPenisBetweenAssCheeksAction.id, rubPenisBetweenAssCheeksAction);
+    dataRegistry.store('actions', teaseAssholeAction.id, teaseAssholeAction);
 
     // Store the condition
     dataRegistry.store('conditions', 'positioning:actor-in-entity-facing-away', {
@@ -118,16 +118,16 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
     // Parse and register the scope
     const parser = new DefaultDslParser({ logger });
     const scopeDefinitions = parseScopeDefinitions(
-      assScopeContent,
-      'actors_with_exposed_ass_facing_away.scope'
+      assholeScopeContent,
+      'actors_with_exposed_asshole_facing_away.scope'
     );
 
     scopeRegistry = new ScopeRegistry({ logger });
     scopeRegistry.clear();
 
     scopeRegistry.initialize({
-      'sex:actors_with_exposed_ass_facing_away': scopeDefinitions.get(
-        'sex:actors_with_exposed_ass_facing_away'
+      'sex:actors_with_exposed_asshole_facing_away': scopeDefinitions.get(
+        'sex:actors_with_exposed_asshole_facing_away'
       ),
     });
 
@@ -136,15 +136,12 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
     // Mock prerequisite evaluation to check for penis
     prerequisiteEvaluationService = {
       evaluate: jest.fn().mockImplementation((prerequisites, actionDef, actor, trace) => {
-        console.log('PrerequisiteEvaluationService.evaluate called for action:', actionDef.id);
-        
         // Check if the actor has a penis for this specific action
-        if (actionDef.id === 'sex:rub_penis_between_ass_cheeks' && prerequisites) {
+        if (actionDef.id === 'sex:tease_asshole_with_glans' && prerequisites) {
           // Check if actor has penis using the hasPartOfType operator
           const hasPartOfTypeLogic = { hasPartOfType: ['actor', 'penis'] };
           const context = { actor };
           const hasPenis = jsonLogicEval.evaluate(hasPartOfTypeLogic, context);
-          console.log('Actor has penis in prerequisite check:', hasPenis);
           return hasPenis;
         }
         
@@ -161,7 +158,7 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
     });
 
     gameDataRepository = {
-      getAllActionDefinitions: jest.fn().mockReturnValue([rubPenisBetweenAssCheeksAction]),
+      getAllActionDefinitions: jest.fn().mockReturnValue([teaseAssholeAction]),
       get: jest.fn((type, id) => dataRegistry.get(type, id)),
     };
 
@@ -185,12 +182,8 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
       ? {
           name: 'CustomMockMultiTargetResolution',
           async execute(context) {
-            console.log('Mock stage received context.candidateActions:', context.candidateActions?.map(a => a.id));
-            console.log('Mock stage received context.data?.candidateActions:', context.data?.candidateActions?.map(a => a.id));
-            
             // Get candidate actions from the right place
             const candidateActions = context.candidateActions || context.data?.candidateActions || [];
-            console.log('Mock stage found actions:', candidateActions.map(a => a.id));
             
             // Check if the action's scope conditions are met
             const actionsWithTargets = [];
@@ -211,26 +204,15 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
                 and: [
                   { condition_ref: 'positioning:actor-in-entity-facing-away' },
                   {
-                    or: [
-                      {
-                        and: [
-                          { hasPartOfType: ['.', 'ass_cheek'] },
-                          { not: { isSocketCovered: ['.', 'left_ass'] } }
-                        ]
-                      },
-                      {
-                        and: [
-                          { hasPartOfType: ['.', 'ass_cheek'] },
-                          { not: { isSocketCovered: ['.', 'right_ass'] } }
-                        ]
-                      }
+                    and: [
+                      { hasPartOfType: ['.', 'asshole'] },
+                      { not: { isSocketCovered: ['.', 'asshole'] } }
                     ]
                   }
                 ]
               };
               
               const scopePasses = jsonLogicEval.evaluate(fullScopeLogic, scopeContext);
-              console.log(`Scope evaluation for action ${actionDef.id}: ${scopePasses}`);
               
               if (scopePasses) {
                 actionsWithTargets.push({
@@ -281,15 +263,12 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
           .mockImplementation((actor, trace) => {
             // Return the action only if the actor has the required components
             const allActions = gameDataRepository.getAllActionDefinitions();
-            console.log('getCandidateActions called with actor:', actor.id);
-            console.log('All actions:', allActions.map(a => a.id));
             
             const filtered = allActions.filter(action => {
               // Check if actor has required components
               if (action.required_components?.actor) {
                 for (const comp of action.required_components.actor) {
                   const hasComp = !!entityManager.getComponentData(actor.id, comp);
-                  console.log(`Actor ${actor.id} has ${comp}: ${hasComp}`);
                   if (!hasComp) {
                     return false;
                   }
@@ -298,7 +277,6 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
               return true;
             });
             
-            console.log('Filtered actions:', filtered.map(a => a.id));
             return filtered;
           }),
       },
@@ -340,9 +318,8 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
     function setupEntities(config = {}) {
       const {
         targetFacingAway = true,
-        targetHasAssparts = true,
-        leftAssCovered = false,
-        rightAssCovered = false,
+        targetHasAsshole = true,
+        assholeCovered = false,
         actorHasPenis = true,
       } = config;
 
@@ -371,7 +348,7 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
             'positioning:facing_away': {
               facing_away_from: targetFacingAway ? ['actor1'] : [],
             },
-            ...(targetHasAssparts && {
+            ...(targetHasAsshole && {
               'anatomy:body': {
                 body: {
                   root: 'torso1',
@@ -379,61 +356,33 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
               },
             }),
             // Add clothing components for socket coverage
-            // For partial coverage, we need custom slots; for full coverage, use torso_lower
-            ...((leftAssCovered || rightAssCovered) && {
+            // Use torso_lower slot like actual game mechanics
+            ...(assholeCovered && {
               'clothing:equipment': {
                 equipped: {
-                  // If both are covered, use torso_lower like actual game
-                  ...(leftAssCovered && rightAssCovered && {
-                    torso_lower: {
-                      base: ['underwear_item'],
-                    },
-                  }),
-                  // For partial coverage testing, use custom slots
-                  ...(leftAssCovered && !rightAssCovered && {
-                    left_custom: {
-                      base: ['left_cover'],
-                    },
-                  }),
-                  ...(rightAssCovered && !leftAssCovered && {
-                    right_custom: {
-                      base: ['right_cover'],
-                    },
-                  }),
+                  torso_lower: {
+                    base: ['underwear_item'],
+                  },
                 },
               },
               'clothing:slot_metadata': {
                 slotMappings: {
-                  // Full coverage via torso_lower
-                  ...(leftAssCovered && rightAssCovered && {
-                    torso_lower: {
-                      coveredSockets: [
-                        'left_hip',
-                        'right_hip',
-                        'waist_front',
-                        'waist_back',
-                        'pubic_hair',
-                        'penis',
-                        'left_testicle',
-                        'right_testicle',
-                        'vagina',
-                        'asshole',
-                        'left_ass',
-                        'right_ass'
-                      ],
-                    },
-                  }),
-                  // Partial coverage for testing
-                  ...(leftAssCovered && !rightAssCovered && {
-                    left_custom: {
-                      coveredSockets: ['left_ass'],
-                    },
-                  }),
-                  ...(rightAssCovered && !leftAssCovered && {
-                    right_custom: {
-                      coveredSockets: ['right_ass'],
-                    },
-                  }),
+                  torso_lower: {
+                    coveredSockets: [
+                      'left_hip',
+                      'right_hip',
+                      'waist_front',
+                      'waist_back',
+                      'pubic_hair',
+                      'penis',
+                      'left_testicle',
+                      'right_testicle',
+                      'vagina',
+                      'asshole',
+                      'left_ass',
+                      'right_ass'
+                    ],
+                  },
                 },
               },
             }),
@@ -468,35 +417,25 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
       }
 
       // Add target anatomy if needed
-      if (targetHasAssparts) {
+      if (targetHasAsshole) {
         entities.push(
           {
             id: 'torso1',
             components: {
               'anatomy:part': {
                 parent: null,
-                children: ['leftAss1', 'rightAss1'],
+                children: ['asshole1'],
                 subType: 'torso',
               },
             },
           },
           {
-            id: 'leftAss1',
+            id: 'asshole1',
             components: {
               'anatomy:part': {
                 parent: 'torso1',
                 children: [],
-                subType: 'ass_cheek',
-              },
-            },
-          },
-          {
-            id: 'rightAss1',
-            components: {
-              'anatomy:part': {
-                parent: 'torso1',
-                children: [],
-                subType: 'ass_cheek',
+                subType: 'asshole',
               },
             },
           }
@@ -511,136 +450,20 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
           if (rootId === 'groin1' && partType === 'penis') {
             return ['penis1'];
           }
-          if (rootId === 'torso1' && partType === 'ass_cheek') {
-            return ['leftAss1', 'rightAss1'];
+          if (rootId === 'torso1' && partType === 'asshole') {
+            return ['asshole1'];
           }
           return [];
         }
       );
-
-      // The real isSocketCovered operator will be used - no mocking needed
-      // It will check clothing:equipment and clothing:slot_metadata components
     }
 
     it('should discover action when all conditions are met', async () => {
-      // Arrange - target facing away, has ass parts, not covered, actor has penis
+      // Arrange - target facing away, has asshole, not covered, actor has penis
       setupEntities({
         targetFacingAway: true,
-        targetHasAssparts: true,
-        leftAssCovered: false,
-        rightAssCovered: false,
-        actorHasPenis: true,
-      });
-
-      // Act
-      const actorEntity = entityManager.getEntityInstance('actor1');
-      const result = await actionDiscoveryService.getValidActions(actorEntity, {
-        jsonLogicEval,
-      });
-
-      // Debug: Log all discovered actions and target entity state
-      console.log('All discovered actions:', result.actions.map(a => a.id));
-      console.log('Full result:', JSON.stringify(result, null, 2));
-      const target1 = entityManager.getEntityInstance('target1');
-      console.log('Target1 components:', JSON.stringify(target1.components, null, 2));
-      
-      // Check if scope is being evaluated correctly
-      const scopeContext = {
-        actor: actorEntity,
-        entity: target1,
-      };
-      const hasPartOfTypeResult = jsonLogicEval.evaluate(
-        { hasPartOfType: ['.', 'ass_cheek'] },
-        scopeContext
-      );
-      console.log('Target has ass_cheek parts:', hasPartOfTypeResult);
-      
-      const isSocketCoveredLeftResult = jsonLogicEval.evaluate(
-        { isSocketCovered: ['.', 'left_ass'] },
-        scopeContext
-      );
-      console.log('Target left_ass is covered:', isSocketCoveredLeftResult);
-      
-      const isSocketCoveredRightResult = jsonLogicEval.evaluate(
-        { isSocketCovered: ['.', 'right_ass'] },
-        scopeContext
-      );
-      console.log('Target right_ass is covered:', isSocketCoveredRightResult);
-      
-      // Check facing away condition
-      const facingAwayResult = jsonLogicEval.evaluate(
-        { condition_ref: 'positioning:actor-in-entity-facing-away' },
-        scopeContext
-      );
-      console.log('Actor is in entity facing away:', facingAwayResult);
-      
-      // Check if actor has penis
-      const actorHasPenisResult = jsonLogicEval.evaluate(
-        { hasPartOfType: ['actor', 'penis'] },
-        scopeContext
-      );
-      console.log('Actor has penis:', actorHasPenisResult);
-      
-      // Check if actor has required components
-      console.log('Actor components:', JSON.stringify(actorEntity.components, null, 2));
-      
-      // Try evaluating the full scope
-      const fullScopeLogic = {
-        and: [
-          { condition_ref: 'positioning:actor-in-entity-facing-away' },
-          {
-            or: [
-              {
-                and: [
-                  { hasPartOfType: ['.', 'ass_cheek'] },
-                  { not: { isSocketCovered: ['.', 'left_ass'] } }
-                ]
-              },
-              {
-                and: [
-                  { hasPartOfType: ['.', 'ass_cheek'] },
-                  { not: { isSocketCovered: ['.', 'right_ass'] } }
-                ]
-              }
-            ]
-          }
-        ]
-      };
-      const fullScopeResult = jsonLogicEval.evaluate(fullScopeLogic, scopeContext);
-      console.log('Full scope evaluation result:', fullScopeResult);
-      
-      // Check if action is in the candidate actions
-      const candidateActions = gameDataRepository.getAllActionDefinitions();
-      console.log('Candidate actions:', candidateActions.map(a => a.id));
-      
-      // Check what prerequisite evaluation returns
-      const prereqResult = prerequisiteEvaluationService.evaluate(
-        rubPenisBetweenAssCheeksAction.prerequisites,
-        rubPenisBetweenAssCheeksAction,
-        actorEntity,
-        null
-      );
-      console.log('Prerequisite evaluation result:', prereqResult);
-      
-      // Check if scope is registered
-      const registeredScope = scopeRegistry.getScope('sex:actors_with_exposed_ass_facing_away');
-      console.log('Scope is registered:', !!registeredScope);
-
-      // Assert
-      const rubActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_between_ass_cheeks'
-      );
-      expect(rubActions).toHaveLength(1);
-      expect(rubActions[0].params.targetId).toBe('target1');
-    });
-
-    it('should discover action when only left ass is uncovered', async () => {
-      // Arrange - only left ass uncovered
-      setupEntities({
-        targetFacingAway: true,
-        targetHasAssparts: true,
-        leftAssCovered: false,
-        rightAssCovered: true,
+        targetHasAsshole: true,
+        assholeCovered: false,
         actorHasPenis: true,
       });
 
@@ -651,139 +474,22 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
       });
 
       // Assert
-      const rubActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_between_ass_cheeks'
+      const teaseActions = result.actions.filter(
+        (action) => action.id === 'sex:tease_asshole_with_glans'
       );
-      expect(rubActions).toHaveLength(1);
-      expect(rubActions[0].params.targetId).toBe('target1');
+      expect(teaseActions).toHaveLength(1);
+      expect(teaseActions[0].params.targetId).toBe('target1');
     });
 
-    it('should discover action when only right ass is uncovered', async () => {
-      // Arrange - only right ass uncovered
-      setupEntities({
-        targetFacingAway: true,
-        targetHasAssparts: true,
-        leftAssCovered: true,
-        rightAssCovered: false,
-        actorHasPenis: true,
-      });
-
-      // Act
-      const actorEntity = entityManager.getEntityInstance('actor1');
-      const result = await actionDiscoveryService.getValidActions(actorEntity, {
-        jsonLogicEval,
-      });
-
-      // Assert
-      const rubActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_between_ass_cheeks'
-      );
-      expect(rubActions).toHaveLength(1);
-      expect(rubActions[0].params.targetId).toBe('target1');
-    });
-
-    it('should not discover action when both ass sockets are covered', async () => {
-      // Arrange - both ass sockets covered
-      setupEntities({
-        targetFacingAway: true,
-        targetHasAssparts: true,
-        leftAssCovered: true,
-        rightAssCovered: true,
-        actorHasPenis: true,
-      });
-
-      // Act
-      const actorEntity = entityManager.getEntityInstance('actor1');
-      const result = await actionDiscoveryService.getValidActions(actorEntity, {
-        jsonLogicEval,
-      });
-
-      // Assert
-      const rubActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_between_ass_cheeks'
-      );
-      expect(rubActions).toHaveLength(0);
-    });
-
-    it('should not discover action when target is not facing away', async () => {
-      // Arrange - target not facing away
-      setupEntities({
-        targetFacingAway: false,
-        targetHasAssparts: true,
-        leftAssCovered: false,
-        rightAssCovered: false,
-        actorHasPenis: true,
-      });
-
-      // Act
-      const actorEntity = entityManager.getEntityInstance('actor1');
-      const result = await actionDiscoveryService.getValidActions(actorEntity, {
-        jsonLogicEval,
-      });
-
-      // Assert
-      const rubActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_between_ass_cheeks'
-      );
-      expect(rubActions).toHaveLength(0);
-    });
-
-    it('should not discover action when target lacks ass parts', async () => {
-      // Arrange - target has no ass parts
-      setupEntities({
-        targetFacingAway: true,
-        targetHasAssparts: false,
-        leftAssCovered: false,
-        rightAssCovered: false,
-        actorHasPenis: true,
-      });
-
-      // Act
-      const actorEntity = entityManager.getEntityInstance('actor1');
-      const result = await actionDiscoveryService.getValidActions(actorEntity, {
-        jsonLogicEval,
-      });
-
-      // Assert
-      const rubActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_between_ass_cheeks'
-      );
-      expect(rubActions).toHaveLength(0);
-    });
-
-    it('should not discover action when actor lacks penis', async () => {
-      // Arrange - actor has no penis
-      setupEntities({
-        targetFacingAway: true,
-        targetHasAssparts: true,
-        leftAssCovered: false,
-        rightAssCovered: false,
-        actorHasPenis: false,
-      });
-
-      // Act
-      const actorEntity = entityManager.getEntityInstance('actor1');
-      const result = await actionDiscoveryService.getValidActions(actorEntity, {
-        jsonLogicEval,
-      });
-
-      // Assert
-      const rubActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_between_ass_cheeks'
-      );
-      expect(rubActions).toHaveLength(0);
-    });
-
-    it('should not discover action when target wears torso_lower clothing (base layer)', async () => {
+    it('should not discover action when asshole is covered by torso_lower clothing', async () => {
       // This test validates the fix for the bug where actions were available
       // even when target was wearing clothing in torso_lower slot
       
-      // Arrange - target wearing underwear in torso_lower base layer
+      // Arrange - target wearing clothing in torso_lower
       setupEntities({
         targetFacingAway: true,
-        targetHasAssparts: true,
-        leftAssCovered: true, // This will add torso_lower clothing
-        rightAssCovered: true,
+        targetHasAsshole: true,
+        assholeCovered: true,
         actorHasPenis: true,
       });
 
@@ -794,10 +500,10 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
       });
 
       // Assert - action should NOT be available when target wears clothing
-      const rubActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_between_ass_cheeks'
+      const teaseActions = result.actions.filter(
+        (action) => action.id === 'sex:tease_asshole_with_glans'
       );
-      expect(rubActions).toHaveLength(0);
+      expect(teaseActions).toHaveLength(0);
     });
 
     it('should not discover action when target wears torso_lower clothing (underwear layer)', async () => {
@@ -833,7 +539,7 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
             'clothing:equipment': {
               equipped: {
                 torso_lower: {
-                  underwear: ['panties'], // Underwear layer
+                  underwear: ['boxers'], // Underwear layer
                 },
               },
             },
@@ -884,28 +590,18 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
           components: {
             'anatomy:part': {
               parent: null,
-              children: ['leftAss1', 'rightAss1'],
+              children: ['asshole1'],
               subType: 'torso',
             },
           },
         },
         {
-          id: 'leftAss1',
+          id: 'asshole1',
           components: {
             'anatomy:part': {
               parent: 'torso1',
               children: [],
-              subType: 'ass_cheek',
-            },
-          },
-        },
-        {
-          id: 'rightAss1',
-          components: {
-            'anatomy:part': {
-              parent: 'torso1',
-              children: [],
-              subType: 'ass_cheek',
+              subType: 'asshole',
             },
           },
         },
@@ -919,8 +615,8 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
           if (rootId === 'groin1' && partType === 'penis') {
             return ['penis1'];
           }
-          if (rootId === 'torso1' && partType === 'ass_cheek') {
-            return ['leftAss1', 'rightAss1'];
+          if (rootId === 'torso1' && partType === 'asshole') {
+            return ['asshole1'];
           }
           return [];
         }
@@ -933,10 +629,76 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
       });
 
       // Assert - action should NOT be available when target wears underwear
-      const rubActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_between_ass_cheeks'
+      const teaseActions = result.actions.filter(
+        (action) => action.id === 'sex:tease_asshole_with_glans'
       );
-      expect(rubActions).toHaveLength(0);
+      expect(teaseActions).toHaveLength(0);
+    });
+
+    it('should not discover action when target is not facing away', async () => {
+      // Arrange - target not facing away
+      setupEntities({
+        targetFacingAway: false,
+        targetHasAsshole: true,
+        assholeCovered: false,
+        actorHasPenis: true,
+      });
+
+      // Act
+      const actorEntity = entityManager.getEntityInstance('actor1');
+      const result = await actionDiscoveryService.getValidActions(actorEntity, {
+        jsonLogicEval,
+      });
+
+      // Assert
+      const teaseActions = result.actions.filter(
+        (action) => action.id === 'sex:tease_asshole_with_glans'
+      );
+      expect(teaseActions).toHaveLength(0);
+    });
+
+    it('should not discover action when target lacks asshole', async () => {
+      // Arrange - target has no asshole part
+      setupEntities({
+        targetFacingAway: true,
+        targetHasAsshole: false,
+        assholeCovered: false,
+        actorHasPenis: true,
+      });
+
+      // Act
+      const actorEntity = entityManager.getEntityInstance('actor1');
+      const result = await actionDiscoveryService.getValidActions(actorEntity, {
+        jsonLogicEval,
+      });
+
+      // Assert
+      const teaseActions = result.actions.filter(
+        (action) => action.id === 'sex:tease_asshole_with_glans'
+      );
+      expect(teaseActions).toHaveLength(0);
+    });
+
+    it('should not discover action when actor lacks penis', async () => {
+      // Arrange - actor has no penis
+      setupEntities({
+        targetFacingAway: true,
+        targetHasAsshole: true,
+        assholeCovered: false,
+        actorHasPenis: false,
+      });
+
+      // Act
+      const actorEntity = entityManager.getEntityInstance('actor1');
+      const result = await actionDiscoveryService.getValidActions(actorEntity, {
+        jsonLogicEval,
+      });
+
+      // Assert
+      const teaseActions = result.actions.filter(
+        (action) => action.id === 'sex:tease_asshole_with_glans'
+      );
+      expect(teaseActions).toHaveLength(0);
     });
   });
 });

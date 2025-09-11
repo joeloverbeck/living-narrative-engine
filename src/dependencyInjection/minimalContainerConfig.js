@@ -38,9 +38,10 @@ import { configureBaseContainer } from './baseContainerConfig.js';
  * @param {AppContainer} container
  * @param {object} [options] - Configuration options
  * @param {boolean} [options.includeCharacterBuilder] - Whether to include character builder services
+ * @param {boolean} [options.includeValidationServices] - Whether to include validation services (for CLI tools)
  */
 export async function configureMinimalContainer(container, options = {}) {
-  const { includeCharacterBuilder = false } = options;
+  const { includeCharacterBuilder = false, includeValidationServices = false } = options;
   const registrar = new Registrar(container);
 
   // --- Bootstrap logger with LoggerStrategy ---
@@ -80,6 +81,12 @@ export async function configureMinimalContainer(container, options = {}) {
 
   logger.debug('[MinimalContainerConfig] All core bundles registered.');
 
+  // --- Register validation services if requested (for CLI tools) ---
+  if (includeValidationServices) {
+    logger.debug('[MinimalContainerConfig] Registering validation services for CLI environment...');
+    await registerValidationServices(container, logger);
+  }
+
   // --- Load logger configuration asynchronously ---
   // Skip config loading in test environments to avoid HTTP requests
   if (process.env.NODE_ENV !== 'test') {
@@ -96,4 +103,88 @@ export async function configureMinimalContainer(container, options = {}) {
   }
 
   logger.debug('[MinimalContainerConfig] Minimal configuration complete.');
+}
+
+/**
+ * Registers validation services needed by CLI tools
+ * @param {AppContainer} container
+ * @param {ILogger} logger
+ */
+async function registerValidationServices(container, logger) {
+  const registrar = new Registrar(container);
+
+  try {
+    // Dynamic imports for validation services
+    const validationBasePath = '../validation/';
+    
+    // Import ModReferenceExtractor
+    const modReferenceExtractorModule = await import(validationBasePath + 'modReferenceExtractor.js');
+    const ModReferenceExtractor = modReferenceExtractorModule.default;
+    
+    // Import ModCrossReferenceValidator  
+    const modCrossReferenceValidatorModule = await import(validationBasePath + 'modCrossReferenceValidator.js');
+    const ModCrossReferenceValidator = modCrossReferenceValidatorModule.default;
+    
+    // Import ModValidationOrchestrator
+    const modValidationOrchestratorModule = await import(validationBasePath + 'modValidationOrchestrator.js');
+    const ModValidationOrchestrator = modValidationOrchestratorModule.default;
+    
+    // Import ViolationReporter
+    const violationReporterModule = await import(validationBasePath + 'violationReporter.js');
+    const ViolationReporter = violationReporterModule.default;
+
+    // Import ModDependencyValidator
+    const modDependencyValidatorModule = await import('../modding/modDependencyValidator.js');
+    const ModDependencyValidator = modDependencyValidatorModule.default;
+
+    // Register ModReferenceExtractor
+    registrar.singletonFactory(
+      tokens.IModReferenceExtractor,
+      (c) =>
+        new ModReferenceExtractor({
+          logger: c.resolve(tokens.ILogger),
+          ajvValidator: c.resolve(tokens.ISchemaValidator),
+        })
+    );
+
+    // Register ModCrossReferenceValidator
+    registrar.singletonFactory(
+      tokens.IModCrossReferenceValidator,
+      (c) =>
+        new ModCrossReferenceValidator({
+          logger: c.resolve(tokens.ILogger),
+          modDependencyValidator: ModDependencyValidator,
+          referenceExtractor: c.resolve(tokens.IModReferenceExtractor),
+        })
+    );
+
+    // Register ModValidationOrchestrator
+    registrar.singletonFactory(
+      tokens.IModValidationOrchestrator,
+      (c) =>
+        new ModValidationOrchestrator({
+          logger: c.resolve(tokens.ILogger),
+          modDependencyValidator: ModDependencyValidator,
+          modCrossReferenceValidator: c.resolve(tokens.IModCrossReferenceValidator),
+          modLoadOrderResolver: c.resolve(tokens.ModLoadOrderResolver),
+          modManifestLoader: c.resolve(tokens.ModManifestLoader),
+          pathResolver: c.resolve(tokens.IPathResolver),
+          configuration: c.resolve(tokens.IConfiguration),
+        })
+    );
+
+    // Register ViolationReporter
+    registrar.singletonFactory(
+      tokens.IViolationReporter,
+      (c) =>
+        new ViolationReporter({
+          logger: c.resolve(tokens.ILogger),
+        })
+    );
+
+    logger.debug('[MinimalContainerConfig] Validation services registered successfully');
+  } catch (error) {
+    logger.error('[MinimalContainerConfig] Failed to register validation services:', error);
+    throw error;
+  }
 }
