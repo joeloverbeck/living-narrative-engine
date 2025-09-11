@@ -19,8 +19,13 @@ function runCLI(args = []) {
     // Use process.cwd() to get the project root
     const projectRoot = process.cwd();
     const scriptPath = path.join(projectRoot, 'scripts', 'validateMods.js');
+    
+    // Create env without NODE_ENV=test (which blocks script execution)
+    const env = { ...process.env };
+    delete env.NODE_ENV;  // Remove NODE_ENV entirely so the script will run
+    
     const child = spawn('node', [scriptPath, ...args], {
-      env: { ...process.env, NODE_ENV: 'test' },
+      env,
       cwd: projectRoot
     });
 
