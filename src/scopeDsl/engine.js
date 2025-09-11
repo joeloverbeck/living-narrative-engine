@@ -229,7 +229,7 @@ class ScopeEngine extends IScopeEngine {
         errorHandler: this.errorHandler,
       }),
       createUnionResolver(),
-      createArrayIterationResolver({ errorHandler: this.errorHandler }),
+      createArrayIterationResolver({ entitiesGateway, errorHandler: this.errorHandler }),
     ];
 
     // Add scope reference resolver if scope registry is available

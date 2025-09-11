@@ -4,16 +4,19 @@ import {
 } from '../prioritySystem/priorityCalculator.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ErrorCodes } from '../constants/errorCodes.js';
+import createCoverageAnalyzer from '../../clothing/analysis/coverageAnalyzer.js';
 
 /**
  * Creates an ArrayIterationStep node resolver for flattening array values.
  * Resolves ArrayIterationStep nodes by flattening arrays from parent results.
  *
  * @param {object} deps - Dependencies
+ * @param {object} deps.entitiesGateway - Gateway for entity component access (required for coverage analyzer)
  * @param {object} deps.errorHandler - Optional error handler for centralized error handling
  * @returns {object} NodeResolver with canResolve and resolve methods
  */
 export default function createArrayIterationResolver({
+  entitiesGateway = null,
   errorHandler = null,
 } = {}) {
   // Only validate if provided (for backward compatibility)
@@ -21,6 +24,24 @@ export default function createArrayIterationResolver({
     validateDependency(errorHandler, 'IScopeDslErrorHandler', console, {
       requiredMethods: ['handleError', 'getErrorBuffer'],
     });
+  }
+
+  // Create coverage analyzer if entitiesGateway is provided
+  let coverageAnalyzer = null;
+  if (entitiesGateway) {
+    try {
+      coverageAnalyzer = createCoverageAnalyzer({ entitiesGateway, errorHandler });
+    } catch (error) {
+      // Log error but continue without coverage analyzer
+      if (errorHandler) {
+        errorHandler.handleError(
+          error,
+          { context: 'ArrayIterationResolver initialization' },
+          'ArrayIterationResolver',
+          ErrorCodes.INITIALIZATION_ERROR
+        );
+      }
+    }
   }
 
   const MAX_ARRAY_SIZE = 10000; // Configurable limit
@@ -58,9 +79,38 @@ export default function createArrayIterationResolver({
    * @returns {Array} Array of clothing entity IDs sorted by priority
    */
   function getAllClothingItems(clothingAccess, trace) {
-    const { equipped, mode } = clothingAccess;
+    const { equipped, mode, entityId } = clothingAccess;
     const candidates = [];
     const layers = LAYER_PRIORITY[mode] || LAYER_PRIORITY.topmost;
+
+    // For single-layer queries (base, outer, underwear), don't apply coverage blocking
+    // between items in different slots as they should naturally coexist
+    // Apply coverage blocking only for topmost queries where we need visible/accessible items
+    // Note: 'all' mode semantics are ambiguous in tests - keeping without blocking for now
+    const shouldApplyCoverageBlocking = mode === 'topmost' || mode === 'topmost_no_accessories';
+    
+    // Perform coverage analysis for multi-layer queries  
+    let coverageAnalysis = null;
+    if (coverageAnalyzer && entityId && shouldApplyCoverageBlocking) {
+      try {
+        coverageAnalysis = coverageAnalyzer.analyzeCoverageBlocking(equipped, entityId);
+      } catch (error) {
+        // Log error and fall back to no coverage blocking
+        if (trace && trace.addStep) {
+          trace.addStep(`Coverage analysis failed: ${error.message}, falling back to layer-only logic`);
+        }
+        if (errorHandler) {
+          errorHandler.handleError(
+            error,
+            { context: 'getAllClothingItems coverage analysis', entityId, equipped },
+            'ArrayIterationResolver',
+            ErrorCodes.COVERAGE_ANALYSIS_FAILED
+          );
+        }
+        // Set to null to use fallback behavior
+        coverageAnalysis = null;
+      }
+    }
 
     // Collect all available items with their priority data
     for (const [slotName, slotData] of Object.entries(equipped)) {
@@ -70,8 +120,18 @@ export default function createArrayIterationResolver({
 
       for (const layer of layers) {
         if (slotData[layer]) {
+          const itemId = slotData[layer];
+
+          // Check coverage blocking if analysis is available and should be applied
+          if (coverageAnalysis && !coverageAnalysis.isAccessible(itemId, slotName, layer)) {
+            if (trace && trace.addStep) {
+              trace.addStep(`Coverage blocking: ${itemId} blocked in ${slotName}/${layer}`);
+            }
+            continue; // Skip blocked items
+          }
+
           candidates.push({
-            itemId: slotData[layer],
+            itemId: itemId,
             layer: layer,
             slotName: slotName,
             coveragePriority: getCoveragePriorityFromMode(mode, layer),
@@ -173,7 +233,7 @@ export default function createArrayIterationResolver({
         } else if (parentValue && parentValue.__isClothingAccessObject) {
           // Handle clothing access objects from ClothingStepResolver
           try {
-            const items = getAllClothingItems(parentValue, null);
+            const items = getAllClothingItems(parentValue, ctx.trace);
             for (const item of items) {
               if (item !== null && item !== undefined) {
                 result.add(item);

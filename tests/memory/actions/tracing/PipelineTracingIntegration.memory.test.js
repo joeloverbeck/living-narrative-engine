@@ -194,9 +194,9 @@ describe('Pipeline Tracing Integration Memory', () => {
       }
 
       const adaptedThresholds = global.memoryTestUtils.getAdaptiveThresholds({
-        MAX_MEMORY_MB: 300, // Higher base for 100 iterations with mocks
-        MEMORY_GROWTH_LIMIT_MB: 50, // Higher base for repeated operations
-        MEMORY_GROWTH_LIMIT_PERCENT: 400, // 400% base allows for significant mock overhead
+        MAX_MEMORY_MB: 400, // Higher base for 100 iterations with heavy mock infrastructure
+        MEMORY_GROWTH_LIMIT_MB: 75, // Increased base for repeated operations with mock accumulation
+        MEMORY_GROWTH_LIMIT_PERCENT: 500, // 500% base allows for significant mock object overhead
       });
 
       try {

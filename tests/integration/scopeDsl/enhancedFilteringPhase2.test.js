@@ -185,10 +185,11 @@ describe('Scope DSL Phase 2: Enhanced Filtering Integration', () => {
       const ast = parser.parse('actor.all_clothing[]');
       const result = engine.resolve(ast, mockActorEntity, mockRuntimeContext);
 
-      // Should return all clothing entity instance IDs
+      // Should return all clothing entity instance IDs (all_clothing[] has no coverage blocking)
+      // All equipped items should be returned regardless of blocking relationships
       expect(result.size).toBe(5);
       expect(result).toContain('leather_jacket_001');
-      expect(result).toContain('cotton_shirt_002');
+      expect(result).toContain('cotton_shirt_002'); // All items included, no blocking
       expect(result).toContain('boots_003');
       expect(result).toContain('wool_sweater_004');
       expect(result).toContain('steel_helmet_005');
@@ -343,10 +344,13 @@ describe('Scope DSL Phase 2: Enhanced Filtering Integration', () => {
   describe('Backward Compatibility', () => {
     it('should maintain existing clothing query functionality', () => {
       // Test that existing queries still work without filters
+      // Note: Coverage blocking is only applied to topmost queries, not single-layer or all queries.
+      // Single-layer queries (base_clothing[], outer_clothing[]) return all items from that layer.
+      // all_clothing[] returns all equipped items regardless of blocking relationships.
       const tests = [
-        { query: 'actor.all_clothing[]', expectedSize: 5 },
+        { query: 'actor.all_clothing[]', expectedSize: 5 }, // No coverage blocking - returns all items
         { query: 'actor.outer_clothing[]', expectedSize: 3 },
-        { query: 'actor.base_clothing[]', expectedSize: 2 },
+        { query: 'actor.base_clothing[]', expectedSize: 2 }, // cotton_shirt_002 + wool_sweater_004, no blocking
         {
           query: 'actor.topmost_clothing.torso_upper',
           expected: ['leather_jacket_001'],
