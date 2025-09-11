@@ -216,10 +216,13 @@ export function createMockActionTraceOutputService() {
  * @returns {object} Mock IndexedDBStorageAdapter instance
  */
 export function createMockIndexedDBStorageAdapter(options = {}) {
-  const asyncDelay = options.asyncDelay || 5;
+  const asyncDelay = options.asyncDelay !== undefined ? options.asyncDelay : 0; // Default to 0 for performance tests
   let storage = new Map();
 
   const addAsyncDelay = (result) => {
+    if (asyncDelay === 0) {
+      return Promise.resolve(result); // Immediate resolution for performance tests
+    }
     return new Promise((resolve) =>
       setTimeout(() => resolve(result), asyncDelay)
     );

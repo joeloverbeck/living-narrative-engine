@@ -25,3 +25,9 @@ export * from './anatomyStateError.js';
 
 // Clothing slot resolution error classes
 export * from './clothingSlotErrors.js';
+
+// Mod validation error classes
+export * from './modValidationError.js';
+export * from './modSecurityError.js';
+export * from './modCorruptionError.js';
+export * from './modAccessError.js';
