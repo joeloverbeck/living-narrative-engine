@@ -8,6 +8,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 import {
   calculatePriorityWithValidation,
   sortCandidatesWithTieBreaking,
+  getLayersByMode,
 } from '../prioritySystem/priorityCalculator.js';
 import { ErrorCodes } from '../constants/errorCodes.js';
 
@@ -53,15 +54,6 @@ export default function createSlotAccessResolver({
     'right_arm_clothing',
   ];
 
-  const LAYER_PRIORITY = {
-    topmost: ['outer', 'base', 'underwear', 'accessories'],
-    topmost_no_accessories: ['outer', 'base', 'underwear'],
-    all: ['outer', 'base', 'underwear', 'accessories'],
-    outer: ['outer'],
-    base: ['base'],
-    underwear: ['underwear'],
-  };
-
   /**
    * Check if coverage resolution is enabled
    *
@@ -77,7 +69,7 @@ export default function createSlotAccessResolver({
    * @param {string} slotName - Slot name to check
    * @returns {boolean} True if slot is a clothing slot
    */
-  function isClothingSlot(slotName) {
+  function _isClothingSlot(slotName) {
     return CLOTHING_SLOTS.includes(slotName);
   }
 
@@ -128,10 +120,10 @@ export default function createSlotAccessResolver({
    *
    * @param {Function} resolveFn - The resolution function to wrap
    * @param {string} targetSlot - The target slot being resolved
-   * @param {object} trace - Optional trace logger
+   * @param {object} _trace - Optional trace logger (unused)
    * @returns {Function} Wrapped resolution function with error handling
    */
-  function _safeResolveCoverageAwareSlot(resolveFn, targetSlot, trace) {
+  function _safeResolveCoverageAwareSlot(resolveFn, targetSlot, _trace) {
     return function (...args) {
       const startTime = performance.now();
 
@@ -231,10 +223,10 @@ export default function createSlotAccessResolver({
    * @param {string} entityId - The entity ID being resolved
    * @param {string} targetSlot - The target slot to find coverage for
    * @param {object} equipped - The equipped items data
-   * @param {object} trace - Optional trace logger
+   * @param {object} _trace - Optional trace logger (unused)
    * @returns {Array} Array of coverage candidates with metadata
    */
-  function collectCoverageItems(entityId, targetSlot, equipped, trace) {
+  function collectCoverageItems(entityId, targetSlot, equipped, _trace) {
     const coverageCandidates = [];
 
     // Check all equipped slots for items with coverage mapping
@@ -330,11 +322,12 @@ export default function createSlotAccessResolver({
       return null;
     }
 
-    if (!mode || !LAYER_PRIORITY[mode]) {
+    const validModes = ['topmost', 'topmost_no_accessories', 'all', 'outer', 'base', 'underwear'];
+    if (!mode || !validModes.includes(mode)) {
       if (errorHandler) {
         errorHandler.handleError(
           `Invalid clothing mode: ${mode}`,
-          { mode, entityId, slotName, validModes: Object.keys(LAYER_PRIORITY) },
+          { mode, entityId, slotName, validModes },
           'SlotAccessResolver',
           ErrorCodes.INVALID_DATA_GENERIC
         );
@@ -354,7 +347,7 @@ export default function createSlotAccessResolver({
 
     // First, collect items directly equipped to the slot
     if (slotData) {
-      const layers = LAYER_PRIORITY[mode] || LAYER_PRIORITY.topmost;
+      const layers = getLayersByMode(mode);
 
       for (const layer of layers) {
         if (slotData[layer]) {
@@ -383,7 +376,7 @@ export default function createSlotAccessResolver({
       // Add coverage candidates to the main candidates list
       for (const coverageCandidate of coverageCandidates) {
         // Check if this layer should be included based on mode
-        const layers = LAYER_PRIORITY[mode] || LAYER_PRIORITY.topmost;
+        const layers = getLayersByMode(mode);
         if (layers.includes(coverageCandidate.layer)) {
           coverageCandidate.priority = 0; // Will be calculated
           candidates.push(coverageCandidate);
