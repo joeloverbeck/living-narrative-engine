@@ -18,7 +18,6 @@ import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
 import { ActionTestUtilities } from '../../common/actions/actionTestUtilities.js';
 import { ScopeTestUtilities } from '../../common/scopeDsl/scopeTestUtilities.js';
-import { TraceContext } from '../../../src/actions/tracing/traceContext.js';
 import { createEntityDefinition } from '../../common/entities/entityFactories.js';
 
 /**
@@ -53,6 +52,19 @@ describe('Clothing Resolution Workflows E2E', () => {
     scopeEngine = container.resolve(tokens.IScopeEngine);
     dslParser = container.resolve(tokens.DslParser);
     logger = container.resolve(tokens.ILogger);
+
+    // Verify ClothingAccessibilityService is available for scope resolution
+    const clothingAccessibilityService = container.resolve(
+      tokens.ClothingAccessibilityService
+    );
+    if (!clothingAccessibilityService) {
+      throw new Error(
+        'ClothingAccessibilityService not available in container - required for clothing scope resolution'
+      );
+    }
+    logger.debug(
+      'ClothingResolutionWorkflows E2E: ClothingAccessibilityService verified'
+    );
 
     // Cache scope definitions to avoid re-parsing
     ScopeTestUtilities.setupScopeTestConditions(
@@ -103,14 +115,6 @@ describe('Clothing Resolution Workflows E2E', () => {
     }
   });
 
-  /**
-   * Creates a trace context for scope resolution testing
-   *
-   * @returns {TraceContext} A new trace context instance
-   */
-  function createTraceContext() {
-    return new TraceContext();
-  }
 
   /**
    * Creates game context for scope resolution
@@ -135,6 +139,7 @@ describe('Clothing Resolution Workflows E2E', () => {
       jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
       logger,
       spatialIndexManager: container.resolve(tokens.ISpatialIndexManager),
+      container, // Add container for service resolution in scope engine
     };
   }
 
@@ -154,7 +159,7 @@ describe('Clothing Resolution Workflows E2E', () => {
       if (existingEntity) {
         return actorId; // Return existing entity
       }
-    } catch (error) {
+    } catch {
       // Entity doesn't exist, continue with creation
     }
 
@@ -203,7 +208,7 @@ describe('Clothing Resolution Workflows E2E', () => {
         clothingTestActor = { id: actorId };
         return clothingTestActor;
       }
-    } catch (error) {
+    } catch {
       // Entity doesn't exist, continue with creation
     }
 
@@ -357,7 +362,7 @@ describe('Clothing Resolution Workflows E2E', () => {
         if (existingEntity) {
           return; // Entity already exists
         }
-      } catch (error) {
+      } catch {
         // Entity doesn't exist, create it
       }
 
@@ -455,7 +460,6 @@ describe('Clothing Resolution Workflows E2E', () => {
 
     test('should resolve specific clothing slots', async () => {
       const actor = await getClothingTestActor();
-      const trace = createTraceContext();
       const gameContext = createGameContext();
 
       const results = await ScopeTestUtilities.resolveScopeE2E(

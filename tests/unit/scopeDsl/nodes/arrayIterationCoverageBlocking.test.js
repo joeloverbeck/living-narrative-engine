@@ -14,7 +14,7 @@ describe('ArrayIterationResolver - Coverage Blocking Integration', () => {
   let dispatcher;
   let trace;
   let errorHandler;
-  let entitiesGateway;
+  let mockClothingAccessibilityService;
 
   beforeEach(() => {
     // Mock dispatcher
@@ -33,17 +33,20 @@ describe('ArrayIterationResolver - Coverage Blocking Integration', () => {
       getErrorBuffer: jest.fn(() => []),
     };
 
-    // Mock entities gateway
-    entitiesGateway = {
-      getComponentData: jest.fn(),
+    // Mock clothing accessibility service
+    mockClothingAccessibilityService = {
+      getAccessibleItems: jest.fn(),
     };
+
+    // Create resolver with mocked service
+    resolver = createArrayIterationResolver({
+      clothingAccessibilityService: mockClothingAccessibilityService,
+      errorHandler: errorHandler,
+    });
   });
 
   describe('Coverage blocking in topmost mode', () => {
-    it('should block underwear when covered by base layer (Layla Agirre scenario)', () => {
-      // Create resolver with coverage analyzer support
-      resolver = createArrayIterationResolver({ entitiesGateway, errorHandler });
-
+    it('should delegate coverage blocking to service (Layla Agirre scenario)', () => {
       const node = {
         type: 'ArrayIterationStep',
         parent: { type: 'Step' },
@@ -53,52 +56,75 @@ describe('ArrayIterationResolver - Coverage Blocking Integration', () => {
       });
       const ctx = { dispatcher, trace, actorEntity };
 
-      // Mock coverage mapping data for trousers and boxer brief
-      entitiesGateway.getComponentData.mockImplementation((itemId, componentId) => {
-        if (componentId === 'clothing:coverage_mapping') {
-          if (itemId === 'asudem:trousers') {
-            return {
-              covers: ['legs', 'groin'],
-              coveragePriority: 'base',
-            };
-          } else if (itemId === 'asudem:boxer_brief') {
-            return {
-              covers: ['groin'],
-              coveragePriority: 'underwear',
-            };
-          }
-        }
-        return null;
-      });
-
       const clothingAccess = {
         __isClothingAccessObject: true,
-        equipped: {
-          legs: {
-            base: 'asudem:trousers',
-          },
-          groin: {
-            underwear: 'asudem:boxer_brief',
-          },
-        },
-        mode: 'topmost',
         entityId: 'layla-agirre',
+        mode: 'topmost',
       };
+
+      // Service should apply coverage blocking internally and return only accessible items
+      mockClothingAccessibilityService.getAccessibleItems.mockReturnValue([
+        'asudem:trousers' // Only returns trousers, boxer brief is blocked by service
+      ]);
 
       dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
       const result = resolver.resolve(node, ctx);
 
-      // Should only return trousers, boxer brief should be blocked
+      expect(mockClothingAccessibilityService.getAccessibleItems).toHaveBeenCalledWith(
+        'layla-agirre',
+        expect.objectContaining({
+          mode: 'topmost',
+          context: 'removal',
+          sortByPriority: true
+        })
+      );
+
+      // Should only return trousers, boxer brief was blocked by service
       expect(result).toEqual(new Set(['asudem:trousers']));
-      expect(trace.addStep).toHaveBeenCalledWith(
-        expect.stringContaining('Coverage blocking: asudem:boxer_brief blocked')
+    });
+
+    it('should handle service not available gracefully', () => {
+      // Create resolver without service
+      const resolverWithoutService = createArrayIterationResolver({ errorHandler });
+
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', {
+        'core:actor': {},
+      });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      const clothingAccess = {
+        __isClothingAccessObject: true,
+        entityId: 'test-actor',
+        mode: 'topmost',
+      };
+
+      dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+      const result = resolverWithoutService.resolve(node, ctx);
+
+      // Without service, should return empty result and log error
+      expect(result).toEqual(new Set());
+      expect(errorHandler.handleError).toHaveBeenCalledWith(
+        'Clothing accessibility service not available',
+        expect.objectContaining({
+          context: 'processClothingAccess',
+          entityId: 'test-actor',
+          mode: 'topmost'
+        }),
+        'ArrayIterationResolver',
+        expect.any(String)
       );
     });
 
-    it('should return all items when coverage analyzer is not available', () => {
-      // Create resolver without entitiesGateway (no coverage analyzer)
-      resolver = createArrayIterationResolver({ errorHandler });
+    it('should handle service errors gracefully', () => {
+      mockClothingAccessibilityService.getAccessibleItems.mockImplementation(() => {
+        throw new Error('Coverage analysis failed');
+      });
 
       const node = {
         type: 'ArrayIterationStep',
@@ -111,34 +137,31 @@ describe('ArrayIterationResolver - Coverage Blocking Integration', () => {
 
       const clothingAccess = {
         __isClothingAccessObject: true,
-        equipped: {
-          legs: {
-            base: 'trousers',
-          },
-          groin: {
-            underwear: 'boxer_brief',
-          },
-        },
-        mode: 'topmost',
         entityId: 'test-actor',
+        mode: 'topmost',
       };
 
       dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
       const result = resolver.resolve(node, ctx);
 
-      // Without coverage analyzer, both items should be returned (following layer priority)
-      expect(result).toEqual(new Set(['trousers', 'boxer_brief']));
+      // Should return empty set due to service error
+      expect(result).toEqual(new Set());
+      expect(errorHandler.handleError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Coverage analysis failed'
+        }),
+        expect.objectContaining({
+          context: 'processClothingAccess',
+          entityId: 'test-actor',
+          mode: 'topmost'
+        }),
+        'ArrayIterationResolver',
+        expect.any(String)
+      );
     });
 
-    it('should handle coverage analysis failure gracefully', () => {
-      // Create resolver with entities gateway that throws error
-      entitiesGateway.getComponentData.mockImplementation(() => {
-        throw new Error('Database connection failed');
-      });
-
-      resolver = createArrayIterationResolver({ entitiesGateway, errorHandler });
-
+    it('should handle non-overlapping items correctly through service', () => {
       const node = {
         type: 'ArrayIterationStep',
         parent: { type: 'Step' },
@@ -150,92 +173,26 @@ describe('ArrayIterationResolver - Coverage Blocking Integration', () => {
 
       const clothingAccess = {
         __isClothingAccessObject: true,
-        equipped: {
-          torso: {
-            outer: 'jacket',
-            base: 'shirt',
-          },
-        },
-        mode: 'topmost',
         entityId: 'test-actor',
+        mode: 'topmost',
       };
+
+      // Service returns all items as they don't overlap
+      mockClothingAccessibilityService.getAccessibleItems.mockReturnValue([
+        'jacket', 'pants', 'underwear'
+      ]);
 
       dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
       const result = resolver.resolve(node, ctx);
 
-      // Should fall back to no coverage blocking
-      // In topmost mode, we get only the topmost item from each slot (jacket from torso)
-      expect(result).toEqual(new Set(['jacket']));
-      // Error handling occurs internally, may or may not log to trace
-      // The important thing is it doesn't throw and falls back gracefully
-    });
-
-    it('should not block items that cover different body areas', () => {
-      resolver = createArrayIterationResolver({ entitiesGateway, errorHandler });
-
-      const node = {
-        type: 'ArrayIterationStep',
-        parent: { type: 'Step' },
-      };
-      const actorEntity = createTestEntity('test-actor', {
-        'core:actor': {},
-      });
-      const ctx = { dispatcher, trace, actorEntity };
-
-      // Mock coverage mapping data for non-overlapping items
-      entitiesGateway.getComponentData.mockImplementation((itemId, componentId) => {
-        if (componentId === 'clothing:coverage_mapping') {
-          if (itemId === 'jacket') {
-            return {
-              covers: ['torso', 'arms'],
-              coveragePriority: 'outer',
-            };
-          } else if (itemId === 'pants') {
-            return {
-              covers: ['legs'],
-              coveragePriority: 'base',
-            };
-          } else if (itemId === 'underwear') {
-            return {
-              covers: ['groin'],
-              coveragePriority: 'underwear',
-            };
-          }
-        }
-        return null;
-      });
-
-      const clothingAccess = {
-        __isClothingAccessObject: true,
-        equipped: {
-          torso: {
-            outer: 'jacket',
-          },
-          legs: {
-            base: 'pants',
-          },
-          groin: {
-            underwear: 'underwear',
-          },
-        },
-        mode: 'topmost',
-        entityId: 'test-actor',
-      };
-
-      dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
-
-      const result = resolver.resolve(node, ctx);
-
-      // All items should be accessible as they don't overlap
+      // All items should be accessible as service determined no blocking needed
       expect(result).toEqual(new Set(['jacket', 'pants', 'underwear']));
     });
   });
 
-  describe('All mode behavior (no coverage blocking)', () => {
-    it('should return all items without coverage blocking in all mode', () => {
-      resolver = createArrayIterationResolver({ entitiesGateway, errorHandler });
-
+  describe('All mode behavior (service handles coverage)', () => {
+    it('should delegate all mode behavior to service', () => {
       const node = {
         type: 'ArrayIterationStep',
         parent: { type: 'Step' },
@@ -245,176 +202,31 @@ describe('ArrayIterationResolver - Coverage Blocking Integration', () => {
       });
       const ctx = { dispatcher, trace, actorEntity };
 
-      // Mock coverage mapping data (should not be called in 'all' mode)
-      entitiesGateway.getComponentData.mockImplementation((itemId, componentId) => {
-        if (componentId === 'clothing:coverage_mapping') {
-          if (itemId === 'coat') {
-            return {
-              covers: ['torso', 'arms'],
-              coveragePriority: 'outer',
-            };
-          } else if (itemId === 'shirt') {
-            return {
-              covers: ['torso'],
-              coveragePriority: 'base',
-            };
-          } else if (itemId === 'undershirt') {
-            return {
-              covers: ['torso'],
-              coveragePriority: 'underwear',
-            };
-          }
-        }
-        return null;
-      });
-
       const clothingAccess = {
         __isClothingAccessObject: true,
-        equipped: {
-          torso: {
-            outer: 'coat',
-            base: 'shirt',
-            underwear: 'undershirt',
-          },
-        },
+        entityId: 'test-actor',
         mode: 'all',
-        entityId: 'test-actor',
       };
+
+      // Service returns all items for 'all' mode 
+      mockClothingAccessibilityService.getAccessibleItems.mockReturnValue([
+        'jacket', 'shirt', 'pants', 'underwear'
+      ]);
 
       dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
       const result = resolver.resolve(node, ctx);
 
-      // All items should be returned without coverage blocking in 'all' mode
-      expect(result).toEqual(new Set(['coat', 'shirt', 'undershirt']));
-      // Coverage analysis should not run for 'all' mode
-      expect(entitiesGateway.getComponentData).not.toHaveBeenCalled();
-    });
-  });
+      expect(mockClothingAccessibilityService.getAccessibleItems).toHaveBeenCalledWith(
+        'test-actor',
+        expect.objectContaining({
+          mode: 'all',
+          context: 'removal',
+          sortByPriority: true
+        })
+      );
 
-  describe('Edge cases', () => {
-    it('should work with clothing access objects without entityId', () => {
-      resolver = createArrayIterationResolver({ entitiesGateway, errorHandler });
-
-      const node = {
-        type: 'ArrayIterationStep',
-        parent: { type: 'Step' },
-      };
-      const actorEntity = createTestEntity('test-actor', {
-        'core:actor': {},
-      });
-      const ctx = { dispatcher, trace, actorEntity };
-
-      const clothingAccess = {
-        __isClothingAccessObject: true,
-        equipped: {
-          torso: {
-            outer: 'jacket',
-            base: 'shirt',
-          },
-        },
-        mode: 'topmost',
-        // No entityId provided
-      };
-
-      dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
-
-      const result = resolver.resolve(node, ctx);
-
-      // Without entityId, coverage analysis is skipped
-      // In topmost mode, we get only the topmost item from each slot (jacket from torso)
-      expect(result).toEqual(new Set(['jacket']));
-      expect(entitiesGateway.getComponentData).not.toHaveBeenCalled();
-    });
-
-    it('should handle partial coverage data gracefully', () => {
-      resolver = createArrayIterationResolver({ entitiesGateway, errorHandler });
-
-      const node = {
-        type: 'ArrayIterationStep',
-        parent: { type: 'Step' },
-      };
-      const actorEntity = createTestEntity('test-actor', {
-        'core:actor': {},
-      });
-      const ctx = { dispatcher, trace, actorEntity };
-
-      // Mock partial coverage mapping data (some items have data, some don't)
-      entitiesGateway.getComponentData.mockImplementation((itemId, componentId) => {
-        if (componentId === 'clothing:coverage_mapping') {
-          if (itemId === 'jacket') {
-            return {
-              covers: ['torso'],
-              coveragePriority: 'outer',
-            };
-          }
-          // shirt has no coverage mapping data
-        }
-        return null;
-      });
-
-      const clothingAccess = {
-        __isClothingAccessObject: true,
-        equipped: {
-          torso: {
-            outer: 'jacket',
-            base: 'shirt',
-          },
-        },
-        mode: 'topmost',
-        entityId: 'test-actor',
-      };
-
-      dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
-
-      const result = resolver.resolve(node, ctx);
-
-      // Jacket should be accessible, shirt uses fallback coverage and is blocked
-      expect(result).toEqual(new Set(['jacket']));
-    });
-  });
-
-  describe('Performance considerations', () => {
-    it('should perform coverage analysis efficiently for topmost mode', () => {
-      resolver = createArrayIterationResolver({ entitiesGateway, errorHandler });
-
-      const node = {
-        type: 'ArrayIterationStep',
-        parent: { type: 'Step' },
-      };
-      const actorEntity = createTestEntity('test-actor', {
-        'core:actor': {},
-      });
-      const ctx = { dispatcher, trace, actorEntity };
-
-      entitiesGateway.getComponentData.mockReturnValue({
-        covers: ['torso'],
-        coveragePriority: 'base',
-      });
-
-      const clothingAccess = {
-        __isClothingAccessObject: true,
-        equipped: {
-          torso: { outer: 'jacket1', base: 'shirt1' },
-          arms: { base: 'sleeves1' },
-          legs: { base: 'pants1' },
-          feet: { base: 'shoes1' },
-        },
-        mode: 'topmost',
-        entityId: 'test-actor',
-      };
-
-      dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
-
-      const result = resolver.resolve(node, ctx);
-
-      // Should get only topmost items in topmost mode
-      expect(result.size).toBe(4); // jacket1, sleeves1, pants1, shoes1
-
-      // Count calls to getComponentData to verify coverage analysis runs
-      const componentDataCalls = entitiesGateway.getComponentData.mock.calls.length;
-      // Should be called for coverage mapping analysis in topmost mode
-      expect(componentDataCalls).toBeGreaterThan(0);
+      expect(result).toEqual(new Set(['jacket', 'shirt', 'pants', 'underwear']));
     });
   });
 });

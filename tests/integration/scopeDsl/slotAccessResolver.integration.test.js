@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import createScopeEngine from '../../../src/scopeDsl/engine.js';
-import createDefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
+import ScopeEngine from '../../../src/scopeDsl/engine.js';
+import { DefaultDslParser } from '../../../src/scopeDsl/parser/defaultDslParser.js';
 
 describe('SlotAccessResolver Enhanced Integration Tests', () => {
   let engine;
@@ -10,8 +10,8 @@ describe('SlotAccessResolver Enhanced Integration Tests', () => {
 
   beforeEach(() => {
     // Setup complete test environment
-    engine = new createScopeEngine();
-    parser = new createDefaultDslParser();
+    engine = new ScopeEngine();
+    parser = new DefaultDslParser();
 
     // Create comprehensive mock data for enhanced testing (aligned with existing test)
     const mockEquipmentData = {
@@ -79,6 +79,89 @@ describe('SlotAccessResolver Enhanced Integration Tests', () => {
       jsonLogicEval: {
         evaluate: jest.fn().mockReturnValue(true),
       },
+    };
+
+    // Create mock ClothingAccessibilityService after mockRuntimeContext is defined
+    const mockClothingAccessibilityService = {
+      getAccessibleItems: jest.fn((entityId, options = {}) => {
+        const { mode = 'topmost' } = options;
+        
+        // Get the current equipment data from the mock
+        const currentEquipmentData = mockRuntimeContext.entityManager.getComponentData(entityId, 'clothing:equipment');
+        if (!currentEquipmentData?.equipped) {
+          return [];
+        }
+        
+        const equipment = currentEquipmentData.equipped;
+        const result = [];
+
+        // Helper function to get items from equipment based on mode
+        const LAYER_PRIORITY = {
+          topmost: ['outer', 'base', 'underwear', 'accessories'],
+          topmost_no_accessories: ['outer', 'base', 'underwear'],
+          all: ['outer', 'base', 'underwear', 'accessories'],
+          outer: ['outer'],
+          base: ['base'],
+          underwear: ['underwear'],
+        };
+
+        const layers = LAYER_PRIORITY[mode] || LAYER_PRIORITY.topmost;
+
+        // Iterate through each slot
+        for (const [slotName, slotData] of Object.entries(equipment)) {
+          if (!slotData) continue;
+
+          if (mode === 'all') {
+            // For 'all' mode, include all items from all layers
+            for (const layer of layers) {
+              if (slotData[layer]) {
+                result.push(slotData[layer]);
+              }
+            }
+          } else if (mode === 'topmost') {
+            // For topmost mode, skip slots that only have accessories (like right_arm_clothing)
+            let foundNonAccessory = false;
+            let topMostItem = null;
+            
+            for (const layer of layers) {
+              if (slotData[layer]) {
+                if (layer !== 'accessories') {
+                  foundNonAccessory = true;
+                  topMostItem = slotData[layer];
+                  break;
+                } else if (!topMostItem) {
+                  topMostItem = slotData[layer];
+                }
+              }
+            }
+            
+            // Only include if we found a non-accessory item
+            if (foundNonAccessory && topMostItem) {
+              result.push(topMostItem);
+            }
+          } else {
+            // For other modes, find the highest priority item in this slot
+            for (const layer of layers) {
+              if (slotData[layer]) {
+                result.push(slotData[layer]);
+                break;
+              }
+            }
+          }
+        }
+
+        return result;
+      }),
+    };
+
+    // Add container with ClothingAccessibilityService to mockRuntimeContext
+    mockRuntimeContext.container = {
+      resolve: jest.fn((serviceName) => {
+        if (serviceName === 'ClothingAccessibilityService') {
+          return mockClothingAccessibilityService;
+        }
+        return null;
+      }),
     };
   });
 

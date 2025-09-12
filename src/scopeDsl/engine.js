@@ -20,6 +20,7 @@ import createArrayIterationResolver from './nodes/arrayIterationResolver.js';
 import createClothingStepResolver from './nodes/clothingStepResolver.js';
 import createSlotAccessResolver from './nodes/slotAccessResolver.js';
 import createScopeReferenceResolver from './nodes/scopeReferenceResolver.js';
+import { tokens } from '../dependencyInjection/tokens.js';
 
 /** @typedef {import('../types/runtimeContext.js').RuntimeContext} RuntimeContext */
 
@@ -198,9 +199,15 @@ class ScopeEngine extends IScopeEngine {
    * @param {object} deps.locationProvider - Location provider.
    * @param {object} deps.entitiesGateway - Entities gateway.
    * @param {object} deps.logicEval - Logic evaluator.
+   * @param {object} deps.runtimeCtx - Runtime context for service resolution.
    * @returns {Array<object>} Array of resolver objects including clothing resolvers.
    */
-  _createResolvers({ locationProvider, entitiesGateway, logicEval }) {
+  _createResolvers({ locationProvider, entitiesGateway, logicEval, runtimeCtx }) {
+    // Get ClothingAccessibilityService from runtime context if available
+    const clothingAccessibilityService = runtimeCtx?.container?.resolve?.(
+      tokens.ClothingAccessibilityService
+    ) || null;
+
     // Create clothing resolvers
     const clothingStepResolver = createClothingStepResolver({
       entitiesGateway,
@@ -229,7 +236,11 @@ class ScopeEngine extends IScopeEngine {
         errorHandler: this.errorHandler,
       }),
       createUnionResolver(),
-      createArrayIterationResolver({ entitiesGateway, errorHandler: this.errorHandler }),
+      createArrayIterationResolver({ 
+        entitiesGateway, 
+        errorHandler: this.errorHandler,
+        clothingAccessibilityService // Add service injection
+      }),
     ];
 
     // Add scope reference resolver if scope registry is available
@@ -261,6 +272,7 @@ class ScopeEngine extends IScopeEngine {
       locationProvider,
       entitiesGateway,
       logicEval,
+      runtimeCtx,
     });
     return createDispatcher(resolvers);
   }

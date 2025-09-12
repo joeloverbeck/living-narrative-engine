@@ -7,6 +7,7 @@ describe('ArrayIterationResolver', () => {
   let dispatcher;
   let trace;
   let errorHandler;
+  let mockClothingAccessibilityService;
 
   beforeEach(() => {
     // Mock dispatcher
@@ -17,6 +18,7 @@ describe('ArrayIterationResolver', () => {
     // Mock trace
     trace = {
       addLog: jest.fn(),
+      addStep: jest.fn(),
     };
 
     // Mock error handler
@@ -25,8 +27,16 @@ describe('ArrayIterationResolver', () => {
       getErrorBuffer: jest.fn(() => []),
     };
 
-    // Create resolver - no dependencies needed
-    resolver = createArrayIterationResolver();
+    // Mock clothing accessibility service
+    mockClothingAccessibilityService = {
+      getAccessibleItems: jest.fn(),
+    };
+
+    // Create resolver with mocked service
+    resolver = createArrayIterationResolver({
+      clothingAccessibilityService: mockClothingAccessibilityService,
+      errorHandler: errorHandler,
+    });
   });
 
   describe('canResolve', () => {
@@ -206,7 +216,7 @@ describe('ArrayIterationResolver', () => {
     });
 
     describe('clothing access object handling', () => {
-      it('should handle clothing access objects with topmost mode', () => {
+      it('should delegate clothing access to service', () => {
         const node = {
           type: 'ArrayIterationStep',
           parent: { type: 'Step' },
@@ -218,185 +228,163 @@ describe('ArrayIterationResolver', () => {
 
         const clothingAccess = {
           __isClothingAccessObject: true,
-          equipped: {
-            torso: {
-              outer: 'jacket1',
-              base: 'shirt1',
-              underwear: 'undergarment1',
-            },
-            legs: {
-              outer: 'pants1',
-              base: 'base_pants1',
-            },
-          },
-          mode: 'topmost',
+          entityId: 'test-entity',
+          mode: 'topmost'
         };
+
+        mockClothingAccessibilityService.getAccessibleItems.mockReturnValue([
+          'jacket1', 'pants1'
+        ]);
 
         dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
         const result = resolver.resolve(node, ctx);
 
-        // Should only get topmost items (first available in layer priority)
-        expect(result).toEqual(new Set(['jacket1', 'pants1']));
-      });
-
-      it('should handle clothing access objects with all mode', () => {
-        const node = {
-          type: 'ArrayIterationStep',
-          parent: { type: 'Step' },
-        };
-        const actorEntity = createTestEntity('test-actor', {
-          'core:actor': {},
-        });
-        const ctx = { dispatcher, trace, actorEntity };
-
-        const clothingAccess = {
-          __isClothingAccessObject: true,
-          equipped: {
-            torso: {
-              outer: 'jacket1',
-              base: 'shirt1',
-              underwear: 'undergarment1',
-              accessories: 'necklace1',
-            },
-          },
-          mode: 'all',
-        };
-
-        dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
-
-        const result = resolver.resolve(node, ctx);
-
-        // Should get all layers
-        expect(result).toEqual(
-          new Set(['jacket1', 'shirt1', 'undergarment1', 'necklace1'])
+        expect(mockClothingAccessibilityService.getAccessibleItems).toHaveBeenCalledWith(
+          'test-entity',
+          expect.objectContaining({
+            mode: 'topmost',
+            context: 'removal',
+            sortByPriority: true
+          })
         );
-      });
 
-      it('should handle clothing access objects with specific layer mode', () => {
-        const node = {
-          type: 'ArrayIterationStep',
-          parent: { type: 'Step' },
-        };
-        const actorEntity = createTestEntity('test-actor', {
-          'core:actor': {},
-        });
-        const ctx = { dispatcher, trace, actorEntity };
-
-        const clothingAccess = {
-          __isClothingAccessObject: true,
-          equipped: {
-            torso: {
-              outer: 'jacket1',
-              base: 'shirt1',
-              underwear: 'undergarment1',
-            },
-          },
-          mode: 'base',
-        };
-
-        dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
-
-        const result = resolver.resolve(node, ctx);
-
-        // Should only get base layer items
-        expect(result).toEqual(new Set(['shirt1']));
-      });
-
-      it('should handle clothing access objects with invalid or empty slots', () => {
-        const node = {
-          type: 'ArrayIterationStep',
-          parent: { type: 'Step' },
-        };
-        const actorEntity = createTestEntity('test-actor', {
-          'core:actor': {},
-        });
-        const ctx = { dispatcher, trace, actorEntity };
-
-        const clothingAccess = {
-          __isClothingAccessObject: true,
-          equipped: {
-            torso: null, // Invalid slot data
-            legs: 'not-an-object', // Invalid slot data
-            arms: {
-              outer: 'sleeve1',
-            },
-            head: {
-              // Empty layers
-            },
-          },
-          mode: 'topmost',
-        };
-
-        dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
-
-        const result = resolver.resolve(node, ctx);
-
-        // Should only get valid items, skipping invalid slots
-        expect(result).toEqual(new Set(['sleeve1']));
-      });
-
-      it('should handle clothing access objects with unknown mode (defaults to topmost)', () => {
-        const node = {
-          type: 'ArrayIterationStep',
-          parent: { type: 'Step' },
-        };
-        const actorEntity = createTestEntity('test-actor', {
-          'core:actor': {},
-        });
-        const ctx = { dispatcher, trace, actorEntity };
-
-        const clothingAccess = {
-          __isClothingAccessObject: true,
-          equipped: {
-            torso: {
-              outer: 'jacket1',
-              base: 'shirt1',
-              underwear: 'undergarment1',
-            },
-          },
-          mode: 'unknown_mode',
-        };
-
-        dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
-
-        const result = resolver.resolve(node, ctx);
-
-        // Should default to topmost behavior (all layers since fallback to LAYER_PRIORITY.topmost)
-        expect(result).toEqual(new Set(['jacket1', 'shirt1', 'undergarment1']));
-      });
-
-      it('should filter out null and undefined clothing items', () => {
-        const node = {
-          type: 'ArrayIterationStep',
-          parent: { type: 'Step' },
-        };
-        const actorEntity = createTestEntity('test-actor', {
-          'core:actor': {},
-        });
-        const ctx = { dispatcher, trace, actorEntity };
-
-        const clothingAccess = {
-          __isClothingAccessObject: true,
-          equipped: {
-            torso: {
-              outer: 'jacket1',
-              base: null,
-              underwear: undefined,
-            },
-            legs: {
-              outer: 'pants1',
-            },
-          },
-          mode: 'all',
-        };
-
-        dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
-
-        const result = resolver.resolve(node, ctx);
-
-        // Should filter out null and undefined values
         expect(result).toEqual(new Set(['jacket1', 'pants1']));
+      });
+
+      it('should handle different modes through service', () => {
+        const node = {
+          type: 'ArrayIterationStep',
+          parent: { type: 'Step' },
+        };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        const clothingAccess = {
+          __isClothingAccessObject: true,
+          entityId: 'test-entity',
+          mode: 'all'
+        };
+
+        mockClothingAccessibilityService.getAccessibleItems.mockReturnValue([
+          'jacket1', 'shirt1', 'undergarment1', 'necklace1'
+        ]);
+
+        dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(mockClothingAccessibilityService.getAccessibleItems).toHaveBeenCalledWith(
+          'test-entity',
+          expect.objectContaining({
+            mode: 'all',
+            context: 'removal',
+            sortByPriority: true
+          })
+        );
+
+        expect(result).toEqual(new Set(['jacket1', 'shirt1', 'undergarment1', 'necklace1']));
+      });
+
+      it('should handle service errors gracefully', () => {
+        const node = {
+          type: 'ArrayIterationStep',
+          parent: { type: 'Step' },
+        };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        const clothingAccess = {
+          __isClothingAccessObject: true,
+          entityId: 'test-entity',
+          mode: 'topmost'
+        };
+
+        mockClothingAccessibilityService.getAccessibleItems.mockImplementation(() => {
+          throw new Error('Service error');
+        });
+
+        dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(errorHandler.handleError).toHaveBeenCalledWith(
+          expect.objectContaining({
+            message: 'Service error'
+          }),
+          expect.objectContaining({
+            context: 'processClothingAccess',
+            entityId: 'test-entity',
+            mode: 'topmost'
+          }),
+          'ArrayIterationResolver',
+          ErrorCodes.CLOTHING_ACCESS_FAILED
+        );
+
+        expect(result).toEqual(new Set());
+      });
+
+      it('should handle missing mode (defaults to topmost)', () => {
+        const node = {
+          type: 'ArrayIterationStep',
+          parent: { type: 'Step' },
+        };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        const clothingAccess = {
+          __isClothingAccessObject: true,
+          entityId: 'test-entity'
+          // no mode specified
+        };
+
+        mockClothingAccessibilityService.getAccessibleItems.mockReturnValue(['jacket1']);
+
+        dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(mockClothingAccessibilityService.getAccessibleItems).toHaveBeenCalledWith(
+          'test-entity',
+          expect.objectContaining({
+            mode: 'topmost', // should default to topmost
+            context: 'removal',
+            sortByPriority: true
+          })
+        );
+
+        expect(result).toEqual(new Set(['jacket1']));
+      });
+
+      it('should handle empty results from service', () => {
+        const node = {
+          type: 'ArrayIterationStep',
+          parent: { type: 'Step' },
+        };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        const clothingAccess = {
+          __isClothingAccessObject: true,
+          entityId: 'test-entity',
+          mode: 'base'
+        };
+
+        mockClothingAccessibilityService.getAccessibleItems.mockReturnValue([]);
+
+        dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(result).toEqual(new Set());
       });
     });
   });
@@ -510,7 +498,7 @@ describe('ArrayIterationResolver', () => {
       expect(errorHandler.handleError).not.toHaveBeenCalled();
     });
 
-    it('should handle errors in clothing object processing', () => {
+    it('should handle service unavailable when no service provided', () => {
       const node = {
         type: 'ArrayIterationStep',
         parent: { type: 'Step' },
@@ -518,31 +506,30 @@ describe('ArrayIterationResolver', () => {
       const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
       const ctx = { dispatcher, trace, actorEntity };
 
-      // Create a clothing access object that will cause an error in priority calculation
-      // by making Object.entries() throw
-      const badClothingAccess = {
+      // Create a clothing access object
+      const clothingAccess = {
         __isClothingAccessObject: true,
-        get equipped() {
-          throw new Error('Cannot access equipped property');
-        },
+        entityId: 'test-entity',
         mode: 'topmost',
       };
 
-      dispatcher.resolve.mockReturnValue(new Set([badClothingAccess]));
+      dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
       const result = resolverWithErrorHandler.resolve(node, ctx);
 
-      // Should handle the error and continue
+      // Should handle the lack of service and report error
       expect(errorHandler.handleError).toHaveBeenCalledWith(
-        expect.objectContaining({
-          message: 'Cannot access equipped property',
+        'Clothing accessibility service not available',
+        expect.objectContaining({ 
+          context: 'processClothingAccess',
+          entityId: 'test-entity',
+          mode: 'topmost'
         }),
-        expect.objectContaining({ clothingAccess: badClothingAccess }),
         'ArrayIterationResolver',
-        ErrorCodes.ARRAY_ITERATION_FAILED
+        ErrorCodes.SERVICE_NOT_FOUND
       );
 
-      // Result should be empty since the clothing object failed
+      // Result should be empty since no service available
       expect(result.size).toBe(0);
     });
 

@@ -12,7 +12,7 @@ describe('Layla Agirre Scenario - Coverage Blocking', () => {
   let dispatcher;
   let trace;
   let errorHandler;
-  let entitiesGateway;
+  let clothingAccessibilityService;
 
   beforeEach(() => {
     // Mock dispatcher
@@ -31,15 +31,15 @@ describe('Layla Agirre Scenario - Coverage Blocking', () => {
       getErrorBuffer: jest.fn(() => []),
     };
 
-    // Mock entities gateway
-    entitiesGateway = {
-      getComponentData: jest.fn(),
+    // Mock clothing accessibility service
+    clothingAccessibilityService = {
+      getAccessibleItems: jest.fn(),
     };
   });
 
   it('should only return trousers when boxer brief is covered (Layla Agirre bug fix)', () => {
     // Create resolver with coverage analyzer support
-    resolver = createArrayIterationResolver({ entitiesGateway, errorHandler });
+    resolver = createArrayIterationResolver({ clothingAccessibilityService, errorHandler });
 
     const node = {
       type: 'ArrayIterationStep',
@@ -50,24 +50,14 @@ describe('Layla Agirre Scenario - Coverage Blocking', () => {
     });
     const ctx = { dispatcher, trace, actorEntity };
 
-    // Mock coverage mapping data
-    // Trousers: base layer covering legs and groin
-    // Boxer brief: underwear layer covering groin
-    entitiesGateway.getComponentData.mockImplementation((itemId, componentId) => {
-      if (componentId === 'clothing:coverage_mapping') {
-        if (itemId === 'asudem:trousers') {
-          return {
-            covers: ['legs', 'groin'],
-            coveragePriority: 'base',
-          };
-        } else if (itemId === 'asudem:boxer_brief') {
-          return {
-            covers: ['groin'],
-            coveragePriority: 'underwear',
-          };
-        }
+    // Mock clothing accessibility service to implement coverage blocking logic
+    // In topmost mode, trousers block access to boxer brief underneath
+    clothingAccessibilityService.getAccessibleItems.mockImplementation((entityId, options) => {
+      if (entityId === 'layla-agirre' && options.mode === 'topmost') {
+        // Only trousers are accessible - boxer brief is blocked by coverage
+        return ['asudem:trousers'];
       }
-      return null;
+      return [];
     });
 
     // Simulate the exact clothing configuration from the bug report
@@ -94,15 +84,25 @@ describe('Layla Agirre Scenario - Coverage Blocking', () => {
     expect(result).toEqual(new Set(['asudem:trousers']));
     expect(result).not.toContain('asudem:boxer_brief');
     
-    // Verify the blocking was logged
+    // Verify the service was called correctly
+    expect(clothingAccessibilityService.getAccessibleItems).toHaveBeenCalledWith(
+      'layla-agirre',
+      expect.objectContaining({
+        mode: 'topmost',
+        context: 'removal',
+        sortByPriority: true
+      })
+    );
+    
+    // Verify trace logging from service interaction
     expect(trace.addStep).toHaveBeenCalledWith(
-      expect.stringContaining('Coverage blocking: asudem:boxer_brief blocked')
+      'Retrieved 1 accessible items for mode: topmost'
     );
   });
 
-  it('should return both items when trousers are removed', () => {
+  it('should return boxer brief when trousers are removed', () => {
     // Create resolver with coverage analyzer support
-    resolver = createArrayIterationResolver({ entitiesGateway, errorHandler });
+    resolver = createArrayIterationResolver({ clothingAccessibilityService, errorHandler });
 
     const node = {
       type: 'ArrayIterationStep',
@@ -113,17 +113,13 @@ describe('Layla Agirre Scenario - Coverage Blocking', () => {
     });
     const ctx = { dispatcher, trace, actorEntity };
 
-    // Mock coverage mapping data for boxer brief only
-    entitiesGateway.getComponentData.mockImplementation((itemId, componentId) => {
-      if (componentId === 'clothing:coverage_mapping') {
-        if (itemId === 'asudem:boxer_brief') {
-          return {
-            covers: ['groin'],
-            coveragePriority: 'underwear',
-          };
-        }
+    // Mock clothing accessibility service for scenario without trousers
+    clothingAccessibilityService.getAccessibleItems.mockImplementation((entityId, options) => {
+      if (entityId === 'layla-agirre' && options.mode === 'topmost') {
+        // Only boxer brief is accessible now
+        return ['asudem:boxer_brief'];
       }
-      return null;
+      return [];
     });
 
     // Simulate clothing configuration after trousers are removed
@@ -146,8 +142,8 @@ describe('Layla Agirre Scenario - Coverage Blocking', () => {
     expect(result).toEqual(new Set(['asudem:boxer_brief']));
   });
 
-  it('should work without coverage blocking when entitiesGateway is not provided', () => {
-    // Create resolver WITHOUT coverage analyzer support
+  it('should return empty array when clothingAccessibilityService is not provided', () => {
+    // Create resolver WITHOUT clothing accessibility service
     resolver = createArrayIterationResolver({ errorHandler });
 
     const node = {
@@ -177,8 +173,12 @@ describe('Layla Agirre Scenario - Coverage Blocking', () => {
 
     const result = resolver.resolve(node, ctx);
 
-    // Without coverage analyzer, both items are returned
-    // This demonstrates backward compatibility
-    expect(result).toEqual(new Set(['asudem:trousers', 'asudem:boxer_brief']));
+    // Without clothing accessibility service, empty array is returned
+    expect(result).toEqual(new Set());
+    
+    // Verify appropriate trace message was logged
+    expect(trace.addStep).toHaveBeenCalledWith(
+      'No clothing accessibility service available, returning empty array'
+    );
   });
 });

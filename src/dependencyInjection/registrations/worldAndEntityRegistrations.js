@@ -63,6 +63,7 @@ import { LayerCompatibilityService } from '../../clothing/validation/layerCompat
 import { ClothingSlotValidator } from '../../clothing/validation/clothingSlotValidator.js';
 import { EquipmentOrchestrator } from '../../clothing/orchestration/equipmentOrchestrator.js';
 import { ClothingManagementService } from '../../clothing/services/clothingManagementService.js';
+import { ClothingAccessibilityService } from '../../clothing/services/clothingAccessibilityService.js';
 import AnatomyBlueprintRepository from '../../anatomy/repositories/anatomyBlueprintRepository.js';
 import AnatomySocketIndex from '../../anatomy/services/anatomySocketIndex.js';
 import SlotResolver from '../../anatomy/integration/SlotResolver.js';
@@ -659,6 +660,24 @@ export function registerWorldAndEntity(container) {
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.ClothingManagementService
+    )}.`
+  );
+
+  // Register ClothingAccessibilityService
+  registrar.singletonFactory(tokens.ClothingAccessibilityService, (c) => {
+    const entityManager = c.resolve(tokens.IEntityManager);
+    const logger = c.resolve(tokens.ILogger);
+    
+    return new ClothingAccessibilityService({
+      logger,
+      entityManager,
+      entitiesGateway: entityManager // Use EntityManager directly as gateway
+    });
+  });
+
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.ClothingAccessibilityService
     )}.`
   );
 

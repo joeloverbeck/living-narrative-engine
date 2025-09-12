@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import createScopeEngine from '../../../src/scopeDsl/engine.js';
-import createDefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
+import ScopeEngine from '../../../src/scopeDsl/engine.js';
+import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
 
 describe('Clothing Resolver Chain Integration', () => {
   let engine;
@@ -10,8 +10,8 @@ describe('Clothing Resolver Chain Integration', () => {
 
   beforeEach(() => {
     // Setup complete test environment
-    engine = new createScopeEngine();
-    parser = new createDefaultDslParser();
+    engine = new ScopeEngine();
+    parser = new DefaultDslParser();
 
     // Create comprehensive mock data
     const mockEquipmentData = {
@@ -42,6 +42,63 @@ describe('Clothing Resolver Chain Integration', () => {
     };
 
     mockActorEntity = { id: 'player_character' };
+
+    // Mock ClothingAccessibilityService
+    const mockClothingAccessibilityService = {
+      getAccessibleItems: jest.fn((entityId, options = {}) => {
+        const { mode = 'topmost' } = options;
+        
+        // Get equipment data from current mock state (dynamic)
+        const equipmentData = mockRuntimeContext.entityManager.getComponentData(entityId, 'clothing:equipment');
+        if (!equipmentData?.equipped) {
+          return []; // Return empty array if no equipment data
+        }
+        
+        const equipment = equipmentData.equipped;
+        const items = [];
+        
+        // Simulate service behavior based on mode
+        for (const [slotName, slotData] of Object.entries(equipment)) {
+          if (!slotData || typeof slotData !== 'object') {
+            continue; // Skip malformed slot data
+          }
+          
+          if (mode === 'all') {
+            // Return all items from all layers
+            Object.values(slotData).forEach(item => {
+              if (item && typeof item === 'string') items.push(item);
+            });
+          } else if (mode === 'topmost') {
+            // Return topmost (outer, then base, then underwear)
+            const priorities = ['outer', 'base', 'underwear'];
+            for (const layer of priorities) {
+              if (slotData[layer] && typeof slotData[layer] === 'string') {
+                items.push(slotData[layer]);
+                break; // Only topmost per slot
+              }
+            }
+          } else if (mode === 'outer') {
+            if (slotData.outer && typeof slotData.outer === 'string') items.push(slotData.outer);
+          } else if (mode === 'base') {
+            if (slotData.base && typeof slotData.base === 'string') items.push(slotData.base);
+          } else if (mode === 'underwear') {
+            if (slotData.underwear && typeof slotData.underwear === 'string') items.push(slotData.underwear);
+          }
+        }
+        
+        return items;
+      }),
+    };
+
+    // Mock container for service resolution
+    const mockContainer = {
+      resolve: jest.fn((serviceName) => {
+        if (serviceName === 'ClothingAccessibilityService') {
+          return mockClothingAccessibilityService;
+        }
+        return null;
+      }),
+    };
 
     mockRuntimeContext = {
       entityManager: {
@@ -74,6 +131,7 @@ describe('Clothing Resolver Chain Integration', () => {
       jsonLogicEval: {
         evaluate: jest.fn().mockReturnValue(true),
       },
+      container: mockContainer,
     };
   });
 
