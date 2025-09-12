@@ -11,6 +11,7 @@ import {
   LAYER_PRIORITY_WITHIN_COVERAGE,
   PRIORITY_CONFIG 
 } from '../../scopeDsl/prioritySystem/priorityConstants.js';
+import { getLayersByMode } from '../../scopeDsl/prioritySystem/priorityCalculator.js';
 
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -416,16 +417,7 @@ export class ClothingAccessibilityService {
    * @returns {Array} Filtered items based on mode
    */
   #applyModeLogic(items, mode) {
-    const LAYER_PRIORITY = {
-      topmost: ['outer', 'base', 'underwear'],
-      topmost_no_accessories: ['outer', 'base', 'underwear'],
-      all: ['outer', 'base', 'underwear', 'accessories'],
-      outer: ['outer'],
-      base: ['base'],
-      underwear: ['underwear'],
-    };
-    
-    const layers = LAYER_PRIORITY[mode] || LAYER_PRIORITY.topmost;
+    const layers = getLayersByMode(mode);
     
     if (mode === 'topmost' || mode === 'topmost_no_accessories') {
       // For topmost, only return the highest priority item per slot

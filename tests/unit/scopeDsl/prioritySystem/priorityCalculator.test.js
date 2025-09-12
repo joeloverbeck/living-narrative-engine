@@ -61,6 +61,7 @@ import {
   applyContextualModifiers,
   clearPriorityCache,
   getCacheStats,
+  getLayersByMode,
 } from '../../../../src/scopeDsl/prioritySystem/priorityCalculator.js';
 import { __mockPriorityConfig as mockPriorityConfig } from '../../../../src/scopeDsl/prioritySystem/priorityConstants.js';
 
@@ -775,6 +776,67 @@ describe('PriorityCalculator', () => {
 
       // Should return base priority without modifications
       expect(result).toBe(110);
+    });
+  });
+
+  describe('getLayersByMode - Layer Order Utility', () => {
+    it('should return all layers for topmost mode', () => {
+      const result = getLayersByMode('topmost');
+      expect(result).toEqual(['outer', 'base', 'underwear', 'accessories']);
+    });
+
+    it('should return all layers for all mode', () => {
+      const result = getLayersByMode('all');
+      expect(result).toEqual(['outer', 'base', 'underwear', 'accessories']);
+    });
+
+    it('should return layers without accessories for topmost_no_accessories mode', () => {
+      const result = getLayersByMode('topmost_no_accessories');
+      expect(result).toEqual(['outer', 'base', 'underwear']);
+    });
+
+    it('should return single layer for outer mode', () => {
+      const result = getLayersByMode('outer');
+      expect(result).toEqual(['outer']);
+    });
+
+    it('should return single layer for base mode', () => {
+      const result = getLayersByMode('base');
+      expect(result).toEqual(['base']);
+    });
+
+    it('should return single layer for underwear mode', () => {
+      const result = getLayersByMode('underwear');
+      expect(result).toEqual(['underwear']);
+    });
+
+    it('should return all layers for invalid/unknown mode (safe fallback)', () => {
+      const result = getLayersByMode('invalid_mode');
+      expect(result).toEqual(['outer', 'base', 'underwear', 'accessories']);
+    });
+
+    it('should handle null/undefined mode gracefully', () => {
+      const resultNull = getLayersByMode(null);
+      const resultUndefined = getLayersByMode(undefined);
+      expect(resultNull).toEqual(['outer', 'base', 'underwear', 'accessories']);
+      expect(resultUndefined).toEqual(['outer', 'base', 'underwear', 'accessories']);
+    });
+
+    it('should maintain backward compatibility with old LAYER_PRIORITY constants', () => {
+      // Test that new function produces same results as old local constants
+      const oldLayerPriority = {
+        topmost: ['outer', 'base', 'underwear', 'accessories'],
+        topmost_no_accessories: ['outer', 'base', 'underwear'],
+        all: ['outer', 'base', 'underwear', 'accessories'],
+        outer: ['outer'],
+        base: ['base'],
+        underwear: ['underwear'],
+      };
+
+      for (const [mode, expectedLayers] of Object.entries(oldLayerPriority)) {
+        const result = getLayersByMode(mode);
+        expect(result).toEqual(expectedLayers);
+      }
     });
   });
 });

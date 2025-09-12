@@ -216,3 +216,26 @@ export function getCacheStats() {
     hitRate: 0, // Would need hit/miss tracking for actual implementation
   };
 }
+
+/**
+ * Get layer array for a given clothing access mode
+ * Replaces local LAYER_PRIORITY constants with consolidated system
+ *
+ * @param {string} mode - Clothing access mode
+ * @returns {Array<string>} Array of layer names in priority order
+ */
+export function getLayersByMode(mode) {
+  switch (mode) {
+    case 'topmost':
+    case 'all':
+      return [...VALID_LAYERS]; // Create copy to avoid readonly type issues
+    case 'topmost_no_accessories':
+      return VALID_LAYERS.filter(layer => layer !== 'accessories');
+    case 'outer':
+    case 'base':
+    case 'underwear':
+      return [mode]; // Single layer mode
+    default:
+      return [...VALID_LAYERS]; // Safe fallback to all layers
+  }
+}

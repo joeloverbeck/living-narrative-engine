@@ -49,7 +49,12 @@ export class IntegrationTestBed extends BaseTestBed {
 
     // Create mock UI elements for tests that need UI components
     const outputDiv = document.createElement('div');
-    outputDiv.id = 'gameArea';
+    outputDiv.id = 'outputDiv';  // Changed from 'gameArea' to match UI component expectations
+
+    // Create message list container required by ActionResultRenderer and ChatAlertRenderer
+    const messageList = document.createElement('div');
+    messageList.id = 'message-list';
+    outputDiv.appendChild(messageList);
 
     // Create action buttons container for ActionButtonsRenderer
     const actionButtonsContainer = document.createElement('div');
@@ -1380,6 +1385,137 @@ export class IntegrationTestBed extends BaseTestBed {
             required: ['key'],
             additionalProperties: true,
           },
+        },
+        {
+          id: 'core:entity_created',
+          description: 'Dispatched when a new entity is created.',
+          payloadSchema: {
+            type: 'object',
+            required: ['instanceId', 'definitionId', 'wasReconstructed', 'entity'],
+            properties: {
+              instanceId: { type: 'string' },
+              definitionId: { type: 'string' },
+              wasReconstructed: { type: 'boolean' },
+              entity: { type: 'object' }
+            },
+            additionalProperties: false
+          }
+        },
+        {
+          id: 'core:component_added',
+          description: 'Dispatched when a component is added to an entity.',
+          payloadSchema: {
+            type: 'object',
+            required: ['entityId', 'componentType', 'componentData'],
+            properties: {
+              entityId: { type: 'string' },
+              componentType: { type: 'string' },
+              componentData: { type: 'object' }
+            },
+            additionalProperties: false
+          }
+        },
+        {
+          id: 'core:turn_started',
+          description: 'Dispatched when a new turn begins.',
+          payloadSchema: {
+            type: 'object',
+            required: ['turnNumber', 'actorId', 'timestamp'],
+            properties: {
+              turnNumber: { type: 'number' },
+              actorId: { type: 'string' },
+              timestamp: { type: 'number' }
+            },
+            additionalProperties: false
+          }
+        },
+        {
+          id: 'core:entity_removed',
+          description: 'Dispatched when an entity is removed.',
+          payloadSchema: {
+            type: 'object',
+            required: ['instanceId', 'reason'],
+            properties: {
+              instanceId: { type: 'string' },
+              reason: { type: 'string' }
+            },
+            additionalProperties: false
+          }
+        },
+        {
+          id: 'core:entity_spoke',
+          description: 'Dispatched when an entity speaks.',
+          payloadSchema: {
+            type: 'object',
+            required: ['speakerId', 'message', 'targets'],
+            properties: {
+              speakerId: { type: 'string' },
+              message: { type: 'string' },
+              targets: { 
+                type: 'array',
+                items: { type: 'string' }
+              }
+            },
+            additionalProperties: false
+          }
+        },
+        {
+          id: 'core:attempt_action',
+          description: 'Dispatched when an action is attempted.',
+          payloadSchema: {
+            type: 'object',
+            required: ['actorId', 'actionId'],
+            properties: {
+              actorId: { type: 'string' },
+              actionId: { type: 'string' },
+              parameters: { type: 'object' }
+            },
+            additionalProperties: false
+          }
+        },
+        {
+          id: 'core:action_decided',
+          description: 'Dispatched when an action decision is made.',
+          payloadSchema: {
+            type: 'object',
+            required: ['actorId', 'actionId', 'decision'],
+            properties: {
+              actorId: { type: 'string' },
+              actionId: { type: 'string' },
+              decision: { type: 'string' },
+              reasoning: { type: 'string' }
+            },
+            additionalProperties: false
+          }
+        },
+        {
+          id: 'core:turn_ended',
+          description: 'Dispatched when a turn ends.',
+          payloadSchema: {
+            type: 'object',
+            required: ['turnNumber', 'actorId', 'timestamp'],
+            properties: {
+              turnNumber: { type: 'number' },
+              actorId: { type: 'string' },
+              timestamp: { type: 'number' },
+              summary: { type: 'string' }
+            },
+            additionalProperties: false
+          }
+        },
+        {
+          id: 'core:component_removed',
+          description: 'Dispatched when a component is removed from an entity.',
+          payloadSchema: {
+            type: 'object',
+            required: ['entityId', 'componentType'],
+            properties: {
+              entityId: { type: 'string' },
+              componentType: { type: 'string' },
+              reason: { type: 'string' }
+            },
+            additionalProperties: false
+          }
         },
       ];
 

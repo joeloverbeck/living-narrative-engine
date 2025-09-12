@@ -596,6 +596,15 @@ class EntityManager extends IEntityManager {
     this.#definitionCache.clear();
     this.#logger.info('Entity definition cache cleared.');
   }
+
+  /**
+   * Gets the monitoring coordinator instance.
+   * 
+   * @returns {MonitoringCoordinator|null} The monitoring coordinator if available
+   */
+  getMonitoringCoordinator() {
+    return this.#monitoringCoordinator;
+  }
 }
 
 export default EntityManager;

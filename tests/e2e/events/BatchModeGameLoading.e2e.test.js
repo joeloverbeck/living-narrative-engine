@@ -37,28 +37,13 @@ class EventSystemTestBed extends IntegrationTestBed {
   async initialize() {
     await super.initialize();
     
-    // Create real event system components
+    // Use the DI container's EventBus instead of creating a custom one
     this.logger = this.container.resolve(tokens.ILogger);
-    this._customEventBus = new EventBus({ logger: this.logger });
-    
-    // Create ValidatedEventDispatcher (needed by SafeEventDispatcher)
-    const schemaValidator = this.container.resolve(tokens.ISchemaValidator);
-    const gameDataRepository = this.container.resolve(tokens.IGameDataRepository);
-    
-    this._customValidatedEventDispatcher = new ValidatedEventDispatcher({
-      eventBus: this._customEventBus,
-      schemaValidator: schemaValidator,
-      gameDataRepository: gameDataRepository,
-      logger: this.logger
-    });
-    
-    this._customSafeEventDispatcher = new SafeEventDispatcher({
-      validatedEventDispatcher: this._customValidatedEventDispatcher,
-      logger: this.logger
-    });
+    this._containerEventBus = this.container.resolve(tokens.IEventBus);
+    this._containerSafeEventDispatcher = this.container.resolve(tokens.ISafeEventDispatcher);
 
-    // Set up event capture for verification
-    this._customEventBus.subscribe('*', (event) => {
+    // Set up event capture for verification on the DI container's EventBus
+    this._containerEventBus.subscribe('*', (event) => {
       this.capturedEvents.push({ 
         ...event, 
         timestamp: Date.now(),
@@ -67,13 +52,13 @@ class EventSystemTestBed extends IntegrationTestBed {
     });
   }
 
-  // Override the getter to return our custom event bus
+  // Override the getter to return the DI container's event bus
   get eventBus() {
-    return this._customEventBus || super.eventBus;
+    return this._containerEventBus || super.eventBus;
   }
 
   get safeEventDispatcher() {
-    return this._customSafeEventDispatcher;
+    return this._containerSafeEventDispatcher || super.safeEventDispatcher;
   }
 
   async cleanup() {
@@ -82,8 +67,8 @@ class EventSystemTestBed extends IntegrationTestBed {
     this.entityCount = 0;
     
     // Ensure batch mode is disabled
-    if (this._customEventBus && this._customEventBus.isBatchModeEnabled()) {
-      this._customEventBus.setBatchMode(false);
+    if (this._containerEventBus && this._containerEventBus.isBatchModeEnabled()) {
+      this._containerEventBus.setBatchMode(false);
     }
     
     await super.cleanup();
@@ -106,23 +91,35 @@ class EventSystemTestBed extends IntegrationTestBed {
       const entityId = `test_entity_${i}`;
       const componentCount = Math.floor(Math.random() * 5) + 2; // 2-6 components per entity
       
-      // Create entity
+      // Create entity with required fields
+      const mockEntity = {
+        id: entityId,
+        definitionId: `test:entity_type_${i % 10}`,
+        components: {}
+      };
+      
       await this.eventBus.dispatch(ENTITY_CREATED_ID, {
         instanceId: entityId,
         definitionId: `test:entity_type_${i % 10}`, // 10 different entity types
-        wasReconstructed: false
+        wasReconstructed: false,
+        entity: mockEntity // Required by schema
       });
 
       // Add components to entity
       for (let j = 1; j <= componentCount; j++) {
+        const componentData = {
+          id: `comp_${i}_${j}`,
+          value: Math.random() * 100,
+          metadata: { entityIndex: i, componentIndex: j }
+        };
+        
+        // Update mock entity with component
+        mockEntity.components[`test:component_${j}`] = componentData;
+        
         await this.eventBus.dispatch(COMPONENT_ADDED_ID, {
-          entityId: entityId,
-          componentId: `test:component_${j}`,
-          componentData: {
-            id: `comp_${i}_${j}`,
-            value: Math.random() * 100,
-            metadata: { entityIndex: i, componentIndex: j }
-          }
+          entity: mockEntity, // Required: full entity object
+          componentTypeId: `test:component_${j}`, // Correct field name
+          componentData: componentData
         });
       }
 
@@ -537,10 +534,18 @@ describe('Batch Mode Game Loading E2E Test', () => {
 
       // Use SafeEventDispatcher for sequential bulk operations to avoid recursion issues
       for (let i = 0; i < 50; i++) {
-        await testBed.safeEventDispatcher.dispatch(ENTITY_CREATED_ID, {
-          instanceId: `safe_entity_${i}`,
+        const entityId = `safe_entity_${i}`;
+        const mockEntity = {
+          id: entityId,
           definitionId: 'test:safe_entity',
-          wasReconstructed: false
+          components: {}
+        };
+        
+        await testBed.safeEventDispatcher.dispatch(ENTITY_CREATED_ID, {
+          instanceId: entityId,
+          definitionId: 'test:safe_entity',
+          wasReconstructed: false,
+          entity: mockEntity // Required by schema
         });
       }
       
