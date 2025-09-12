@@ -962,61 +962,92 @@ export default class ComplexBlueprintDataGenerator {
       }
     };
 
-    // Generate sockets and parts
-    const socketCount = Math.min(Math.floor(partCount / 5), 20); // Limit sockets for realism
-    for (let i = 0; i < socketCount; i++) {
-      const socketId = `socket_${i}`;
+    // Generate sockets and parts to achieve the requested part count
+    // We'll create a tree structure: root -> primary parts -> secondary parts
+    const primaryPartCount = Math.min(Math.ceil(partCount / 3), 10); // Reasonable number of primary parts
+    const secondaryPerPrimary = Math.ceil((partCount - primaryPartCount) / primaryPartCount);
+    
+    // Add sockets to root for primary parts
+    for (let i = 0; i < primaryPartCount; i++) {
+      const socketId = `primary_socket_${i}`;
       data.entityDefinitions[rootId].components['anatomy:sockets'].sockets.push({
         id: socketId,
-        max: 5,
-        nameTpl: `Socket ${i}`,
-        allowedTypes: ['part'],
+        max: 1,
+        nameTpl: `Primary Socket ${i}`,
+        allowedTypes: ['primary_part'],
       });
 
-      // Add slots to blueprint
-      const slotId = `slot_${i}`;
+      // Add slot to blueprint for this socket
+      const slotId = `primary_slot_${i}`;
       data.blueprints[blueprintId].slots[slotId] = {
         socket: socketId,
         requirements: {
-          partType: 'part',
+          partType: 'primary_part',
           components: ['anatomy:part']
         }
       };
-    }
-
-    // Generate part definitions
-    const partsPerSocket = Math.ceil(partCount / socketCount);
-    for (let i = 0; i < socketCount; i++) {
-      for (let j = 0; j < partsPerSocket && (i * partsPerSocket + j) < partCount; j++) {
-        const partId = `test:part_${i}_${j}`;
-        data.entityDefinitions[partId] = {
-          id: partId,
-          description: `Part ${i}-${j} for large anatomy`,
+      
+      // Create the primary part entity definition
+      const primaryPartId = `test:primary_part_${i}`;
+      data.entityDefinitions[primaryPartId] = {
+        id: primaryPartId,
+        description: `Primary part ${i} for large anatomy`,
+        components: {
+          'anatomy:part': {
+            subType: 'primary_part',
+          },
+          'anatomy:sockets': {
+            sockets: [] // Will add sockets for secondary parts
+          },
+          'core:name': {
+            text: `Primary Part ${i}`,
+          },
+        },
+      };
+      
+      // Add sockets to primary part for secondary parts
+      for (let j = 0; j < secondaryPerPrimary && (i * secondaryPerPrimary + j + primaryPartCount) < partCount; j++) {
+        const secondarySocketId = `secondary_socket_${i}_${j}`;
+        data.entityDefinitions[primaryPartId].components['anatomy:sockets'].sockets.push({
+          id: secondarySocketId,
+          max: 1,
+          nameTpl: `Secondary Socket ${i}-${j}`,
+          allowedTypes: ['secondary_part'],
+        });
+        
+        // Create secondary part entity definition
+        const secondaryPartId = `test:secondary_part_${i}_${j}`;
+        data.entityDefinitions[secondaryPartId] = {
+          id: secondaryPartId,
+          description: `Secondary part ${i}-${j} for large anatomy`,
           components: {
             'anatomy:part': {
-              subType: 'part',
+              subType: 'secondary_part',
             },
             'anatomy:sockets': {
-              sockets: j === 0 ? [
-                {
-                  id: `sub_socket_${i}_${j}`,
-                  max: 2,
-                  allowedTypes: ['subpart'],
-                }
-              ] : []
+              sockets: [] // Terminal parts, no more sockets
             },
             'core:name': {
-              text: `Part ${i}-${j}`,
+              text: `Secondary Part ${i}-${j}`,
             },
           },
         };
       }
     }
 
-    // Add recipe for the blueprint
+    // Create recipe with parts mapping
+    const recipeParts = [];
+    for (let i = 0; i < primaryPartCount; i++) {
+      recipeParts.push({
+        slotId: `primary_slot_${i}`,
+        definitionId: `test:primary_part_${i}`
+      });
+    }
+    
     data.recipe = {
       id: `test:large_anatomy_${partCount}`,
-      blueprintId: blueprintId
+      blueprintId: blueprintId,
+      parts: recipeParts
     };
 
     this.generatedData.set(`largeAnatomy_${partCount}`, data);
@@ -1043,15 +1074,10 @@ export default class ComplexBlueprintDataGenerator {
       entityDefinitions: {}
     };
 
-    // For deep hierarchies, create a simpler structure that works with the current blueprint system
-    // Create a root entity with multiple sockets, then chain entities through those sockets
-    const rootSocketIds = [];
+    // Create a true linear chain of parts to achieve the target depth
+    // Root -> Level 1 -> Level 2 -> ... -> Level N
     
-    // Root entity with multiple sockets for depth simulation
-    for (let i = 0; i < Math.min(depth, 5); i++) {
-      rootSocketIds.push(`root_socket_${i}`);
-    }
-
+    // Create root entity with one socket for the chain
     data.entityDefinitions[rootId] = {
       id: rootId,
       description: `Deep hierarchy root entity for depth ${depth}`,
@@ -1060,61 +1086,117 @@ export default class ComplexBlueprintDataGenerator {
           subType: 'torso', // Root should be torso for proper hierarchy
         },
         'anatomy:sockets': {
-          sockets: rootSocketIds.map((socketId, index) => ({
-            id: socketId,
+          sockets: depth > 0 ? [{
+            id: 'chain_socket_0',
             max: 1,
-            nameTpl: `Root Socket ${index}`,
-            allowedTypes: ['part'],
-          }))
+            nameTpl: 'Chain Socket 0',
+            allowedTypes: ['chain_part'],
+          }] : []
         },
         'core:name': {
-          text: `Deep Root Entity Level ${depth}`,
+          text: `Deep Root (Depth: ${depth})`,
         },
       },
     };
 
-    // Create blueprint slots that use the root sockets
-    for (let level = 0; level < Math.min(depth, rootSocketIds.length); level++) {
-      const slotId = `slot_level_${level}`;
-      const socketId = rootSocketIds[level];
-      const childEntityId = `test:level_${level + 1}_entity`;
-
-      // Add slot to root blueprint
-      data.blueprints[blueprintId].slots[slotId] = {
-        socket: socketId,
+    // Add slot to blueprint for the first level
+    if (depth > 0) {
+      data.blueprints[blueprintId].slots['chain_slot_0'] = {
+        socket: 'chain_socket_0',
         requirements: {
-          partType: 'part',
+          partType: 'chain_part',
           components: ['anatomy:part']
         }
       };
+    }
 
-      // Create the child entity that will be attached to this slot
-      data.entityDefinitions[childEntityId] = {
-        id: childEntityId,
-        description: `Level ${level + 1} entity in deep hierarchy`,
+    // Create the chain of nested entity definitions
+    // For simplicity and to work with the blueprint system, we'll create
+    // a chain where each level has a blueprint that references the next level
+    const recipeParts = [];
+    
+    // For the first level attached to root
+    if (depth > 0) {
+      const firstLevelEntityId = `test:chain_part_level_1`;
+      
+      // Create first level entity with socket for next level
+      data.entityDefinitions[firstLevelEntityId] = {
+        id: firstLevelEntityId,
+        description: `Level 1 entity in deep hierarchy`,
         components: {
           'anatomy:part': {
-            subType: 'part',
+            subType: 'chain_part',
           },
           'anatomy:sockets': {
-            sockets: level < depth - 2 ? [{
-              id: `child_socket_${level}`,
+            sockets: depth > 1 ? [{
+              id: 'chain_socket_1',
               max: 1,
-              nameTpl: `Child Socket ${level}`,
-              allowedTypes: ['subpart'],
+              nameTpl: 'Chain Socket Level 1',
+              allowedTypes: ['chain_part'],
             }] : []
           },
           'core:name': {
-            text: `Level ${level + 1} Entity`,
+            text: `Chain Part Level 1`,
           },
         },
       };
+      
+      // Add recipe part for first level
+      recipeParts.push({
+        slotId: 'chain_slot_0',
+        definitionId: firstLevelEntityId
+      });
+      
+      // Create remaining levels as nested blueprints
+      for (let level = 2; level <= depth; level++) {
+        const entityId = `test:chain_part_level_${level}`;
+        const hasNext = level < depth;
+        
+        // Create sub-blueprint for this level
+        const subBlueprintId = `test:sub_blueprint_level_${level}`;
+        data.blueprints[subBlueprintId] = {
+          id: subBlueprintId,
+          root: entityId,
+          slots: hasNext ? {
+            [`chain_slot_${level}`]: {
+              socket: `chain_socket_${level}`,
+              requirements: {
+                partType: 'chain_part',
+                components: ['anatomy:part']
+              }
+            }
+          } : {}
+        };
+        
+        // Create entity definition for this level
+        data.entityDefinitions[entityId] = {
+          id: entityId,
+          description: `Level ${level} entity in deep hierarchy`,
+          components: {
+            'anatomy:part': {
+              subType: 'chain_part',
+            },
+            'anatomy:sockets': {
+              sockets: hasNext ? [{
+                id: `chain_socket_${level}`,
+                max: 1,
+                nameTpl: `Chain Socket Level ${level}`,
+                allowedTypes: ['chain_part'],
+              }] : []
+            },
+            'core:name': {
+              text: `Chain Part Level ${level}`,
+            },
+          },
+        };
+      }
     }
 
     // Add recipe for the blueprint
     data.recipe = {
       id: `test:deep_hierarchy_${depth}`,
-      blueprintId: blueprintId
+      blueprintId: blueprintId,
+      parts: recipeParts
     };
 
     this.generatedData.set(`deepHierarchy_${depth}`, data);

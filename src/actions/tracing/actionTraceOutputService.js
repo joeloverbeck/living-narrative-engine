@@ -62,6 +62,7 @@ export class ActionTraceOutputService {
    * @param {string} [dependencies.outputDirectory] - Directory for file output (enables file output mode)
    * @param {boolean} [dependencies.outputToFiles] - Whether to output traces to files instead of IndexedDB
    * @param {object} [dependencies.actionTraceConfig] - Action trace configuration
+   * @param {boolean} [dependencies.testMode] - Enable test mode to disable network calls
    */
   constructor({
     storageAdapter,
@@ -78,6 +79,7 @@ export class ActionTraceOutputService {
     outputDirectory,
     outputToFiles = false,
     actionTraceConfig,
+    testMode = false,
   } = {}) {
     // Validate dependencies if provided
     if (storageAdapter) {
@@ -157,6 +159,7 @@ export class ActionTraceOutputService {
         outputDirectory: outputDirectory || './traces',
         traceDirectoryManager: this.#traceDirectoryManager,
         logger: this.#logger,
+        testMode: testMode,
       });
 
       // Initialize the file output handler immediately
@@ -646,6 +649,38 @@ export class ActionTraceOutputService {
       this.#logger.info('All pending trace writes completed');
     } catch (error) {
       this.#logger.error('Error waiting for pending writes', error);
+    }
+  }
+
+  /**
+   * Wait for file operations to complete (FileTraceOutputHandler queue processing)
+   * Essential for accurate memory testing
+   *
+   * @returns {Promise<void>}
+   */
+  async waitForFileOperations() {
+    if (!this.#fileOutputHandler) {
+      return;
+    }
+
+    // Wait for the file handler's queue to be processed
+    let attempts = 0;
+    const maxAttempts = 50; // 5 seconds total wait time
+    
+    while (attempts < maxAttempts) {
+      if (this.#fileOutputHandler.isQueueEmpty && this.#fileOutputHandler.isQueueEmpty()) {
+        break;
+      }
+      
+      // Wait 100ms between checks
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+
+    if (attempts >= maxAttempts) {
+      this.#logger.warn('File operations may not have completed within timeout');
+    } else {
+      this.#logger.debug('File operations completed successfully');
     }
   }
 

@@ -39,6 +39,22 @@
           "scopeName": {
             "type": "string",
             "description": "Optional. Name of the scope that caused the error, if applicable."
+          },
+          "errorContext": {
+            "type": "object",
+            "description": "Optional. Complete ActionErrorContext object containing detailed information about action failures."
+          },
+          "actionId": {
+            "type": "string",
+            "description": "Optional. The ID of the action that failed (extracted from errorContext for backward compatibility)."
+          },
+          "phase": {
+            "type": "string",
+            "description": "Optional. The phase where the action failed (extracted from errorContext for backward compatibility)."
+          },
+          "targetId": {
+            "type": ["string", "null"],
+            "description": "Optional. The ID of the target entity (extracted from errorContext for backward compatibility)."
           }
         },
         "additionalProperties": false

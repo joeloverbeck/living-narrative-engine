@@ -645,7 +645,7 @@ class TurnManager extends ITurnManager {
       this.#dispatcher,
       message,
       {
-        raw: detailString,
+        error: detailString,
         stack: stackString,
         timestamp: new Date().toISOString(),
       },

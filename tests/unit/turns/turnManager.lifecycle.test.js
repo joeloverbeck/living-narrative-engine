@@ -72,7 +72,7 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           details: {
-            raw: expect.stringContaining(
+            error: expect.stringContaining(
               'Subscription function did not return an unsubscribe callback'
             ),
             timestamp: expect.any(String),
@@ -105,7 +105,7 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           details: {
-            raw: subscribeError.message,
+            error: subscribeError.message,
             timestamp: expect.any(String),
             stack: expect.any(String),
           },

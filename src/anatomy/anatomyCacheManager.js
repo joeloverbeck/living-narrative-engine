@@ -177,9 +177,11 @@ export class AnatomyCacheManager {
       `AnatomyCacheManager: Building cache for anatomy rooted at '${rootEntityId}'`
     );
 
-    // Don't clear if we're checking for existing cache
-    // Clear only when explicitly building a new cache
-    this.clear();
+    // Only invalidate if this root already has cached entries
+    // For new anatomies, we don't need to clear anything
+    if (this.#adjacencyCache.has(rootEntityId)) {
+      this.invalidateCacheForRoot(rootEntityId);
+    }
     const visited = new Set();
 
     // Build parent-to-children map in single pass for O(n) complexity

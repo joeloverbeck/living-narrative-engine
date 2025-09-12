@@ -1,268 +1,744 @@
+ FAIL  tests/unit/logic/operationHandlers/dispatchThoughtHandler.test.js
+  ● DispatchThoughtHandler › execute › should handle dispatch errors gracefully
 
- FAIL   integration  tests/integration/characterBuilder/speechPatternsGeneratorRuntimeErrors.integration.test.js (10.565 s)
-  ● SpeechPatternsGeneratorController - Runtime Errors › Service Registration › should have SpeechPatternsGenerator service available after our fix
+    expect(jest.fn()).toHaveBeenLastCalledWith(...expected)
 
-    Failed to create instance for "ModsLoader" (lifecycle: singletonFactory): Failed to create instance for "ManifestPhase" (lifecycle: singletonFactory): Failed to create instance for "ModManifestProcessor" (lifecycle: singletonFactory): AppContainer: No service registered for key "IModValidationOrchestrator". Known keys: [ILogger, ProxyUrl, IConfiguration, IPathResolver, ISchemaValidator, IDataRegistry, IDataFetcher, ITextDataFetcher, RuleLoader, ComponentLoader, ConditionLoader, ActionLoader, EventLoader, MacroLoader, EntityLoader, EntityInstanceLoader, WorldLoader, GoalLoader, AnatomyRecipeLoader, AnatomyBlueprintLoader, AnatomyBlueprintPartLoader, AnatomySlotLibraryLoader, AnatomyFormattingLoader, ScopeLoader, ModManifestLoader, GameConfigLoader, PromptTextLoader, ModLoadOrderResolver, ModManifestProcessor, ContentLoadManager, WorldLoadSummaryLogger, SchemaPhase, GameConfigPhase, ManifestPhase, ContentPhase, WorldPhase, SummaryPhase, ILoadCache, ModsLoader, SchemaLoader, ServiceSetup, IPathConfiguration, ITraceConfigLoader, ActionIndexingService, EventBus, IEventBus, ISpatialIndexManager, IGameDataRepository, IValidatedEventDispatcher, ISafeEventDispatcher, EventDispatchService, ScopeEngine, DslParser, IScopeEngine, IScopeDslErrorFactory, IScopeDslErrorHandler, ICriticalLogNotifier, CriticalLogNotifier, IActionTraceConfigValidator, IActionTraceConfigLoader, ITraceDirectoryManager, IIndexedDBStorageAdapter, IActionTraceFilter, IJsonTraceFormatter, IHumanReadableFormatter, IActionTraceOutputService, IActionAwareStructuredTrace, IEventDispatchTracer, IErrorMetrics, IRetryManager, IRecoveryManager, ITraceErrorHandler, ITracingConfigurationInitializer, IStorageProvider, ISaveFileRepository, ISaveLoadService, PlaytimeTracker, ComponentCleaningService, SaveMetadataBuilder, ActiveModsManifestBuilder, GameStateCaptureService, ManualSaveCoordinator, GamePersistenceService, IEntityManager, IWorldContext, ClosenessCircleService, EntityDisplayDataProvider, SpatialIndexSynchronizer, LocationQueryService, EntityAccessService, ComponentAccessService, LocationDisplayService, GraphIntegrityValidator, AnatomyQueryCache, RecipeProcessor, PartSelectionService, SocketManager, EntityGraphBuilder, RecipeConstraintEvaluator, BodyBlueprintFactory, BodyGraphService, JsonLogicCustomOperators, JsonLogicEvaluationService, AnatomyFormattingService, DescriptorFormatter, BodyPartDescriptionBuilder, BodyDescriptionComposer, PartDescriptionGenerator, DescriptionPersistenceService, BodyDescriptionOrchestrator, AnatomyDescriptionService, AnatomyGenerationService, LayerCompatibilityService, ClothingSlotValidator, EquipmentOrchestrator, LayerResolutionService, IAnatomySocketIndex, IAnatomyBlueprintRepository, AnatomyClothingCache, SlotResolver, ClothingManagementService, EquipmentDescriptionService, ClothingInstantiationService, ClothingInstantiationServiceV2, AnatomyInitializationService, IPipelineServiceFactory, IPipelineServiceRegistry, ITargetDependencyResolver, ILegacyTargetCompatibilityLayer, IScopeContextBuilder, ITargetDisplayNameResolver, IScopeRegistry, ActionIndex, IScopeCacheStrategy, IUnifiedScopeResolver, ITargetContextBuilder, IMultiTargetResolutionStage, ITargetResolutionService, TraceContextFactory, IFixSuggestionEngine, IActionErrorContextBuilder, ActionCandidateProcessor, ActionPipelineOrchestrator, IActionDiscoveryService, ActionValidationContextBuilder, PrerequisiteEvaluationService, IActionExecutionTraceFactory, ICommandProcessor, UnifiedErrorHandler, DirectiveStrategyResolver, CommandDispatcher, DirectiveExecutor, ResultInterpreter, ICommandOutcomeInterpreter, DispatchEventHandler, DispatchPerceptibleEventHandler, DispatchSpeechHandler, DispatchThoughtHandler, LogHandler, ModifyComponentHandler, AddComponentHandler, RemoveComponentHandler, QueryComponentHandler, QueryComponentsHandler, SetVariableHandler, EndTurnHandler, SystemMoveEntityHandler, IMoveEntityHandler, GetTimestampHandler, GetNameHandler, RebuildLeaderListCacheHandler, CheckFollowCycleHandler, EstablishFollowRelationHandler, BreakFollowRelationHandler, AddPerceptionLogEntryHandler, QueryEntitiesHandler, HasComponentHandler, ModifyArrayFieldHandler, ModifyContextArrayHandler, IfCoLocatedHandler, MathHandler, AutoMoveFollowersHandler, MergeClosenessCircleHandler, RemoveFromClosenessCircleHandler, EstablishSittingClosenessHandler, RemoveSittingClosenessHandler, HasBodyPartWithComponentValueHandler, UnequipClothingHandler, LockMovementHandler, LockMouthEngagementHandler, UnlockMovementHandler, UnlockMouthEngagementHandler, RegenerateDescriptionHandler, AtomicModifyComponentHandler, SequenceHandler, OperationRegistry, OperationInterpreter, ActionSequence, SystemLogicInterpreter, IHttpClient, LlmConfigLoader, ILLMConfigurationManager, ILLMRequestExecutor, ILLMErrorMapper, ITokenEstimator, LLMAdapter, LlmJsonService, CharacterDatabase, CharacterStorageService, ThematicDirectionGenerator, ClicheGenerator, CoreMotivationsGenerator, CoreMotivationsDisplayEnhancer, TraitsGenerator, TraitsDisplayEnhancer, SpeechPatternsResponseProcessor, SpeechPatternsGenerator, SpeechPatternsDisplayEnhancer, TraitsRewriterGenerator, TraitsRewriterResponseProcessor, TraitsRewriterDisplayEnhancer, CharacterBuilderService, ICharacterBuilderService, IPromptOutputPort, ITurnEndPort, IActionCategorizationService, WorldInitializer, SystemInitializer]
+    Expected: "core:system_error_occurred", ObjectContaining {"details": ObjectContaining {"errorMessage": "Dispatch failed"}}
+    Received
+           1: "core:display_thought", {"entityId": "test-entity", "thoughts": "I am thinking"}
+    ->     2: "core:system_error_occurred", {"details": {"raw": "{
+      \"extra\": {
+        \"errorMessage\": \"Dispatch failed\"
+      }
+    }", "stack": "Error: Dispatch failed
+        at Object.<anonymous> (/home/joeloverbeck/projects/living-narrative-engine/tests/unit/logic/operationHandlers/dispatchThoughtHandler.test.js:171:21)
+        at Promise.finally.completed (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:1556:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:1496:10)
+        at _callCircusTest (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:1006:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTest (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:946:3)
+        at _runTestsForDescribeBlock (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:839:13)
+        at _runTestsForDescribeBlock (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:829:11)
+        at _runTestsForDescribeBlock (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:829:11)
+        at run (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:757:3)
+        at runAndTransformResultsToJestFormat (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:1917:21)
+        at jestAdapter (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/runner.js:101:19)
+        at runTestInternal (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-runner/build/testWorker.js:275:16)
+        at runTest (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-runner/build/testWorker.js:343:7)
+        at Object.worker (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-runner/build/testWorker.js:497:12)"}, "message": "DISPATCH_THOUGHT: Error dispatching display_thought."}
 
-      119 |           error
-      120 |         );
-    > 121 |         throw new Error(
-          |               ^
-      122 |           `Failed to create instance for "${registrationKey}" (lifecycle: ${lifecycle}): ${error.message}`,
-      123 |           { cause: error }
-      124 |         );
+    Number of calls: 2
 
-      at AppContainer.resolve (src/dependencyInjection/appContainer.js:121:15)
-      at CharacterBuilderBootstrap.resolve (src/characterBuilder/CharacterBuilderBootstrap.js:761:34)
-      at CharacterBuilderBootstrap.bootstrap (src/characterBuilder/CharacterBuilderBootstrap.js:103:29)
-      at Object.<anonymous> (tests/integration/characterBuilder/speechPatternsGeneratorRuntimeErrors.integration.test.js:95:7)
+      185 |       // Should dispatch error event
+      186 |       expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(2);
+    > 187 |       expect(mockDispatcher.dispatch).toHaveBeenLastCalledWith(
+          |                                       ^
+      188 |         'core:system_error_occurred',
+      189 |         expect.objectContaining({
+      190 |           details: expect.objectContaining({
 
-    Cause:
-    Failed to create instance for "ManifestPhase" (lifecycle: singletonFactory): Failed to create instance for "ModManifestProcessor" (lifecycle: singletonFactory): AppContainer: No service registered for key "IModValidationOrchestrator". Known keys: [ILogger, ProxyUrl, IConfiguration, IPathResolver, ISchemaValidator, IDataRegistry, IDataFetcher, ITextDataFetcher, RuleLoader, ComponentLoader, ConditionLoader, ActionLoader, EventLoader, MacroLoader, EntityLoader, EntityInstanceLoader, WorldLoader, GoalLoader, AnatomyRecipeLoader, AnatomyBlueprintLoader, AnatomyBlueprintPartLoader, AnatomySlotLibraryLoader, AnatomyFormattingLoader, ScopeLoader, ModManifestLoader, GameConfigLoader, PromptTextLoader, ModLoadOrderResolver, ModManifestProcessor, ContentLoadManager, WorldLoadSummaryLogger, SchemaPhase, GameConfigPhase, ManifestPhase, ContentPhase, WorldPhase, SummaryPhase, ILoadCache, ModsLoader, SchemaLoader, ServiceSetup, IPathConfiguration, ITraceConfigLoader, ActionIndexingService, EventBus, IEventBus, ISpatialIndexManager, IGameDataRepository, IValidatedEventDispatcher, ISafeEventDispatcher, EventDispatchService, ScopeEngine, DslParser, IScopeEngine, IScopeDslErrorFactory, IScopeDslErrorHandler, ICriticalLogNotifier, CriticalLogNotifier, IActionTraceConfigValidator, IActionTraceConfigLoader, ITraceDirectoryManager, IIndexedDBStorageAdapter, IActionTraceFilter, IJsonTraceFormatter, IHumanReadableFormatter, IActionTraceOutputService, IActionAwareStructuredTrace, IEventDispatchTracer, IErrorMetrics, IRetryManager, IRecoveryManager, ITraceErrorHandler, ITracingConfigurationInitializer, IStorageProvider, ISaveFileRepository, ISaveLoadService, PlaytimeTracker, ComponentCleaningService, SaveMetadataBuilder, ActiveModsManifestBuilder, GameStateCaptureService, ManualSaveCoordinator, GamePersistenceService, IEntityManager, IWorldContext, ClosenessCircleService, EntityDisplayDataProvider, SpatialIndexSynchronizer, LocationQueryService, EntityAccessService, ComponentAccessService, LocationDisplayService, GraphIntegrityValidator, AnatomyQueryCache, RecipeProcessor, PartSelectionService, SocketManager, EntityGraphBuilder, RecipeConstraintEvaluator, BodyBlueprintFactory, BodyGraphService, JsonLogicCustomOperators, JsonLogicEvaluationService, AnatomyFormattingService, DescriptorFormatter, BodyPartDescriptionBuilder, BodyDescriptionComposer, PartDescriptionGenerator, DescriptionPersistenceService, BodyDescriptionOrchestrator, AnatomyDescriptionService, AnatomyGenerationService, LayerCompatibilityService, ClothingSlotValidator, EquipmentOrchestrator, LayerResolutionService, IAnatomySocketIndex, IAnatomyBlueprintRepository, AnatomyClothingCache, SlotResolver, ClothingManagementService, EquipmentDescriptionService, ClothingInstantiationService, ClothingInstantiationServiceV2, AnatomyInitializationService, IPipelineServiceFactory, IPipelineServiceRegistry, ITargetDependencyResolver, ILegacyTargetCompatibilityLayer, IScopeContextBuilder, ITargetDisplayNameResolver, IScopeRegistry, ActionIndex, IScopeCacheStrategy, IUnifiedScopeResolver, ITargetContextBuilder, IMultiTargetResolutionStage, ITargetResolutionService, TraceContextFactory, IFixSuggestionEngine, IActionErrorContextBuilder, ActionCandidateProcessor, ActionPipelineOrchestrator, IActionDiscoveryService, ActionValidationContextBuilder, PrerequisiteEvaluationService, IActionExecutionTraceFactory, ICommandProcessor, UnifiedErrorHandler, DirectiveStrategyResolver, CommandDispatcher, DirectiveExecutor, ResultInterpreter, ICommandOutcomeInterpreter, DispatchEventHandler, DispatchPerceptibleEventHandler, DispatchSpeechHandler, DispatchThoughtHandler, LogHandler, ModifyComponentHandler, AddComponentHandler, RemoveComponentHandler, QueryComponentHandler, QueryComponentsHandler, SetVariableHandler, EndTurnHandler, SystemMoveEntityHandler, IMoveEntityHandler, GetTimestampHandler, GetNameHandler, RebuildLeaderListCacheHandler, CheckFollowCycleHandler, EstablishFollowRelationHandler, BreakFollowRelationHandler, AddPerceptionLogEntryHandler, QueryEntitiesHandler, HasComponentHandler, ModifyArrayFieldHandler, ModifyContextArrayHandler, IfCoLocatedHandler, MathHandler, AutoMoveFollowersHandler, MergeClosenessCircleHandler, RemoveFromClosenessCircleHandler, EstablishSittingClosenessHandler, RemoveSittingClosenessHandler, HasBodyPartWithComponentValueHandler, UnequipClothingHandler, LockMovementHandler, LockMouthEngagementHandler, UnlockMovementHandler, UnlockMouthEngagementHandler, RegenerateDescriptionHandler, AtomicModifyComponentHandler, SequenceHandler, OperationRegistry, OperationInterpreter, ActionSequence, SystemLogicInterpreter, IHttpClient, LlmConfigLoader, ILLMConfigurationManager, ILLMRequestExecutor, ILLMErrorMapper, ITokenEstimator, LLMAdapter, LlmJsonService, CharacterDatabase, CharacterStorageService, ThematicDirectionGenerator, ClicheGenerator, CoreMotivationsGenerator, CoreMotivationsDisplayEnhancer, TraitsGenerator, TraitsDisplayEnhancer, SpeechPatternsResponseProcessor, SpeechPatternsGenerator, SpeechPatternsDisplayEnhancer, TraitsRewriterGenerator, TraitsRewriterResponseProcessor, TraitsRewriterDisplayEnhancer, CharacterBuilderService, ICharacterBuilderService, IPromptOutputPort, ITurnEndPort, IActionCategorizationService, WorldInitializer, SystemInitializer]
+      at Object.toHaveBeenLastCalledWith (tests/unit/logic/operationHandlers/dispatchThoughtHandler.test.js:187:39)
 
-      119 |           error
-      120 |         );
-    > 121 |         throw new Error(
-          |               ^
-      122 |           `Failed to create instance for "${registrationKey}" (lifecycle: ${lifecycle}): ${error.message}`,
-      123 |           { cause: error }
-      124 |         );
+ FAIL  tests/unit/turns/turnManager.getCurrentActor.test.js
+  ● TurnManager › getCurrentActor() › should handle entity manager errors gracefully
 
-      at AppContainer.resolve (src/dependencyInjection/appContainer.js:121:15)
-      at resolve (src/dependencyInjection/registrations/loadersRegistrations.js:433:25)
-      at AppContainer.factoryFn [as _invokeFactory] (src/dependencyInjection/appContainer.js:249:12)
-      at AppContainer._invokeFactory [as _createInstance] (src/dependencyInjection/appContainer.js:190:19)
-      at AppContainer._createInstance [as resolve] (src/dependencyInjection/appContainer.js:109:31)
-      at CharacterBuilderBootstrap.resolve (src/characterBuilder/CharacterBuilderBootstrap.js:761:34)
-      at CharacterBuilderBootstrap.bootstrap (src/characterBuilder/CharacterBuilderBootstrap.js:103:29)
-      at Object.<anonymous> (tests/integration/characterBuilder/speechPatternsGeneratorRuntimeErrors.integration.test.js:95:7)
+    expect(received).toEqual(expected) // deep equality
 
-    Cause:
-    Failed to create instance for "ModManifestProcessor" (lifecycle: singletonFactory): AppContainer: No service registered for key "IModValidationOrchestrator". Known keys: [ILogger, ProxyUrl, IConfiguration, IPathResolver, ISchemaValidator, IDataRegistry, IDataFetcher, ITextDataFetcher, RuleLoader, ComponentLoader, ConditionLoader, ActionLoader, EventLoader, MacroLoader, EntityLoader, EntityInstanceLoader, WorldLoader, GoalLoader, AnatomyRecipeLoader, AnatomyBlueprintLoader, AnatomyBlueprintPartLoader, AnatomySlotLibraryLoader, AnatomyFormattingLoader, ScopeLoader, ModManifestLoader, GameConfigLoader, PromptTextLoader, ModLoadOrderResolver, ModManifestProcessor, ContentLoadManager, WorldLoadSummaryLogger, SchemaPhase, GameConfigPhase, ManifestPhase, ContentPhase, WorldPhase, SummaryPhase, ILoadCache, ModsLoader, SchemaLoader, ServiceSetup, IPathConfiguration, ITraceConfigLoader, ActionIndexingService, EventBus, IEventBus, ISpatialIndexManager, IGameDataRepository, IValidatedEventDispatcher, ISafeEventDispatcher, EventDispatchService, ScopeEngine, DslParser, IScopeEngine, IScopeDslErrorFactory, IScopeDslErrorHandler, ICriticalLogNotifier, CriticalLogNotifier, IActionTraceConfigValidator, IActionTraceConfigLoader, ITraceDirectoryManager, IIndexedDBStorageAdapter, IActionTraceFilter, IJsonTraceFormatter, IHumanReadableFormatter, IActionTraceOutputService, IActionAwareStructuredTrace, IEventDispatchTracer, IErrorMetrics, IRetryManager, IRecoveryManager, ITraceErrorHandler, ITracingConfigurationInitializer, IStorageProvider, ISaveFileRepository, ISaveLoadService, PlaytimeTracker, ComponentCleaningService, SaveMetadataBuilder, ActiveModsManifestBuilder, GameStateCaptureService, ManualSaveCoordinator, GamePersistenceService, IEntityManager, IWorldContext, ClosenessCircleService, EntityDisplayDataProvider, SpatialIndexSynchronizer, LocationQueryService, EntityAccessService, ComponentAccessService, LocationDisplayService, GraphIntegrityValidator, AnatomyQueryCache, RecipeProcessor, PartSelectionService, SocketManager, EntityGraphBuilder, RecipeConstraintEvaluator, BodyBlueprintFactory, BodyGraphService, JsonLogicCustomOperators, JsonLogicEvaluationService, AnatomyFormattingService, DescriptorFormatter, BodyPartDescriptionBuilder, BodyDescriptionComposer, PartDescriptionGenerator, DescriptionPersistenceService, BodyDescriptionOrchestrator, AnatomyDescriptionService, AnatomyGenerationService, LayerCompatibilityService, ClothingSlotValidator, EquipmentOrchestrator, LayerResolutionService, IAnatomySocketIndex, IAnatomyBlueprintRepository, AnatomyClothingCache, SlotResolver, ClothingManagementService, EquipmentDescriptionService, ClothingInstantiationService, ClothingInstantiationServiceV2, AnatomyInitializationService, IPipelineServiceFactory, IPipelineServiceRegistry, ITargetDependencyResolver, ILegacyTargetCompatibilityLayer, IScopeContextBuilder, ITargetDisplayNameResolver, IScopeRegistry, ActionIndex, IScopeCacheStrategy, IUnifiedScopeResolver, ITargetContextBuilder, IMultiTargetResolutionStage, ITargetResolutionService, TraceContextFactory, IFixSuggestionEngine, IActionErrorContextBuilder, ActionCandidateProcessor, ActionPipelineOrchestrator, IActionDiscoveryService, ActionValidationContextBuilder, PrerequisiteEvaluationService, IActionExecutionTraceFactory, ICommandProcessor, UnifiedErrorHandler, DirectiveStrategyResolver, CommandDispatcher, DirectiveExecutor, ResultInterpreter, ICommandOutcomeInterpreter, DispatchEventHandler, DispatchPerceptibleEventHandler, DispatchSpeechHandler, DispatchThoughtHandler, LogHandler, ModifyComponentHandler, AddComponentHandler, RemoveComponentHandler, QueryComponentHandler, QueryComponentsHandler, SetVariableHandler, EndTurnHandler, SystemMoveEntityHandler, IMoveEntityHandler, GetTimestampHandler, GetNameHandler, RebuildLeaderListCacheHandler, CheckFollowCycleHandler, EstablishFollowRelationHandler, BreakFollowRelationHandler, AddPerceptionLogEntryHandler, QueryEntitiesHandler, HasComponentHandler, ModifyArrayFieldHandler, ModifyContextArrayHandler, IfCoLocatedHandler, MathHandler, AutoMoveFollowersHandler, MergeClosenessCircleHandler, RemoveFromClosenessCircleHandler, EstablishSittingClosenessHandler, RemoveSittingClosenessHandler, HasBodyPartWithComponentValueHandler, UnequipClothingHandler, LockMovementHandler, LockMouthEngagementHandler, UnlockMovementHandler, UnlockMouthEngagementHandler, RegenerateDescriptionHandler, AtomicModifyComponentHandler, SequenceHandler, OperationRegistry, OperationInterpreter, ActionSequence, SystemLogicInterpreter, IHttpClient, LlmConfigLoader, ILLMConfigurationManager, ILLMRequestExecutor, ILLMErrorMapper, ITokenEstimator, LLMAdapter, LlmJsonService, CharacterDatabase, CharacterStorageService, ThematicDirectionGenerator, ClicheGenerator, CoreMotivationsGenerator, CoreMotivationsDisplayEnhancer, TraitsGenerator, TraitsDisplayEnhancer, SpeechPatternsResponseProcessor, SpeechPatternsGenerator, SpeechPatternsDisplayEnhancer, TraitsRewriterGenerator, TraitsRewriterResponseProcessor, TraitsRewriterDisplayEnhancer, CharacterBuilderService, ICharacterBuilderService, IPromptOutputPort, ITurnEndPort, IActionCategorizationService, WorldInitializer, SystemInitializer]
+    Expected: ArrayContaining [["core:system_error_occurred", ObjectContaining {"details": ObjectContaining {"error": StringContaining "Cannot start a new round: No active entities with an Actor component found."}, "message": Any<String>}]]
+    Received: [["core:system_error_occurred", {"details": {"raw": "{
+      \"extra\": {
+        \"error\": \"Cannot start a new round: No active entities with an Actor component found.\"
+      }
+    }"}, "message": "Critical error during turn advancement logic"}], ["core:system_error_occurred", {"details": {"raw": "Cannot start a new round: No active entities with an Actor component found.", "stack": "Error:·
+        at TurnManager.#dispatchSystemError (/home/joeloverbeck/projects/living-narrative-engine/src/turns/turnManager.js:642:11)
+        at TurnManager.advanceTurn (/home/joeloverbeck/projects/living-narrative-engine/src/turns/turnManager.js:347:42)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at TurnManager.start (/home/joeloverbeck/projects/living-narrative-engine/src/turns/turnManager.js:203:5)
+        at Object.<anonymous> (/home/joeloverbeck/projects/living-narrative-engine/tests/unit/turns/turnManager.getCurrentActor.test.js:169:7)", "timestamp": "2025-09-12T06:01:51.565Z"}, "message": "System Error: No active actors found to start a round. Stopping game."}]]
 
-      119 |           error
-      120 |         );
-    > 121 |         throw new Error(
-          |               ^
-      122 |           `Failed to create instance for "${registrationKey}" (lifecycle: ${lifecycle}): ${error.message}`,
-      123 |           { cause: error }
-      124 |         );
+      171 |       // --- Assert ---
+      172 |       expect(testBed.turnManager.getCurrentActor()).toBeNull();
+    > 173 |       expect(testBed.mocks.dispatcher.dispatch.mock.calls).toEqual(
+          |                                                            ^
+      174 |         expect.arrayContaining([
+      175 |           [
+      176 |             SYSTEM_ERROR_OCCURRED_ID,
 
-      at AppContainer.resolve (src/dependencyInjection/appContainer.js:121:15)
-      at resolve (src/dependencyInjection/registrations/loadersRegistrations.js:377:22)
-      at AppContainer.factoryFn [as _invokeFactory] (src/dependencyInjection/appContainer.js:249:12)
-      at AppContainer._invokeFactory [as _createInstance] (src/dependencyInjection/appContainer.js:190:19)
-      at AppContainer._createInstance [as resolve] (src/dependencyInjection/appContainer.js:109:31)
-      at resolve (src/dependencyInjection/registrations/loadersRegistrations.js:433:25)
-      at AppContainer.factoryFn [as _invokeFactory] (src/dependencyInjection/appContainer.js:249:12)
-      at AppContainer._invokeFactory [as _createInstance] (src/dependencyInjection/appContainer.js:190:19)
-      at AppContainer._createInstance [as resolve] (src/dependencyInjection/appContainer.js:109:31)
-      at CharacterBuilderBootstrap.resolve (src/characterBuilder/CharacterBuilderBootstrap.js:761:34)
-      at CharacterBuilderBootstrap.bootstrap (src/characterBuilder/CharacterBuilderBootstrap.js:103:29)
-      at Object.<anonymous> (tests/integration/characterBuilder/speechPatternsGeneratorRuntimeErrors.integration.test.js:95:7)
+      at Object.toEqual (tests/unit/turns/turnManager.getCurrentActor.test.js:173:60)
 
-    Cause:
-    AppContainer: No service registered for key "IModValidationOrchestrator". Known keys: [ILogger, ProxyUrl, IConfiguration, IPathResolver, ISchemaValidator, IDataRegistry, IDataFetcher, ITextDataFetcher, RuleLoader, ComponentLoader, ConditionLoader, ActionLoader, EventLoader, MacroLoader, EntityLoader, EntityInstanceLoader, WorldLoader, GoalLoader, AnatomyRecipeLoader, AnatomyBlueprintLoader, AnatomyBlueprintPartLoader, AnatomySlotLibraryLoader, AnatomyFormattingLoader, ScopeLoader, ModManifestLoader, GameConfigLoader, PromptTextLoader, ModLoadOrderResolver, ModManifestProcessor, ContentLoadManager, WorldLoadSummaryLogger, SchemaPhase, GameConfigPhase, ManifestPhase, ContentPhase, WorldPhase, SummaryPhase, ILoadCache, ModsLoader, SchemaLoader, ServiceSetup, IPathConfiguration, ITraceConfigLoader, ActionIndexingService, EventBus, IEventBus, ISpatialIndexManager, IGameDataRepository, IValidatedEventDispatcher, ISafeEventDispatcher, EventDispatchService, ScopeEngine, DslParser, IScopeEngine, IScopeDslErrorFactory, IScopeDslErrorHandler, ICriticalLogNotifier, CriticalLogNotifier, IActionTraceConfigValidator, IActionTraceConfigLoader, ITraceDirectoryManager, IIndexedDBStorageAdapter, IActionTraceFilter, IJsonTraceFormatter, IHumanReadableFormatter, IActionTraceOutputService, IActionAwareStructuredTrace, IEventDispatchTracer, IErrorMetrics, IRetryManager, IRecoveryManager, ITraceErrorHandler, ITracingConfigurationInitializer, IStorageProvider, ISaveFileRepository, ISaveLoadService, PlaytimeTracker, ComponentCleaningService, SaveMetadataBuilder, ActiveModsManifestBuilder, GameStateCaptureService, ManualSaveCoordinator, GamePersistenceService, IEntityManager, IWorldContext, ClosenessCircleService, EntityDisplayDataProvider, SpatialIndexSynchronizer, LocationQueryService, EntityAccessService, ComponentAccessService, LocationDisplayService, GraphIntegrityValidator, AnatomyQueryCache, RecipeProcessor, PartSelectionService, SocketManager, EntityGraphBuilder, RecipeConstraintEvaluator, BodyBlueprintFactory, BodyGraphService, JsonLogicCustomOperators, JsonLogicEvaluationService, AnatomyFormattingService, DescriptorFormatter, BodyPartDescriptionBuilder, BodyDescriptionComposer, PartDescriptionGenerator, DescriptionPersistenceService, BodyDescriptionOrchestrator, AnatomyDescriptionService, AnatomyGenerationService, LayerCompatibilityService, ClothingSlotValidator, EquipmentOrchestrator, LayerResolutionService, IAnatomySocketIndex, IAnatomyBlueprintRepository, AnatomyClothingCache, SlotResolver, ClothingManagementService, EquipmentDescriptionService, ClothingInstantiationService, ClothingInstantiationServiceV2, AnatomyInitializationService, IPipelineServiceFactory, IPipelineServiceRegistry, ITargetDependencyResolver, ILegacyTargetCompatibilityLayer, IScopeContextBuilder, ITargetDisplayNameResolver, IScopeRegistry, ActionIndex, IScopeCacheStrategy, IUnifiedScopeResolver, ITargetContextBuilder, IMultiTargetResolutionStage, ITargetResolutionService, TraceContextFactory, IFixSuggestionEngine, IActionErrorContextBuilder, ActionCandidateProcessor, ActionPipelineOrchestrator, IActionDiscoveryService, ActionValidationContextBuilder, PrerequisiteEvaluationService, IActionExecutionTraceFactory, ICommandProcessor, UnifiedErrorHandler, DirectiveStrategyResolver, CommandDispatcher, DirectiveExecutor, ResultInterpreter, ICommandOutcomeInterpreter, DispatchEventHandler, DispatchPerceptibleEventHandler, DispatchSpeechHandler, DispatchThoughtHandler, LogHandler, ModifyComponentHandler, AddComponentHandler, RemoveComponentHandler, QueryComponentHandler, QueryComponentsHandler, SetVariableHandler, EndTurnHandler, SystemMoveEntityHandler, IMoveEntityHandler, GetTimestampHandler, GetNameHandler, RebuildLeaderListCacheHandler, CheckFollowCycleHandler, EstablishFollowRelationHandler, BreakFollowRelationHandler, AddPerceptionLogEntryHandler, QueryEntitiesHandler, HasComponentHandler, ModifyArrayFieldHandler, ModifyContextArrayHandler, IfCoLocatedHandler, MathHandler, AutoMoveFollowersHandler, MergeClosenessCircleHandler, RemoveFromClosenessCircleHandler, EstablishSittingClosenessHandler, RemoveSittingClosenessHandler, HasBodyPartWithComponentValueHandler, UnequipClothingHandler, LockMovementHandler, LockMouthEngagementHandler, UnlockMovementHandler, UnlockMouthEngagementHandler, RegenerateDescriptionHandler, AtomicModifyComponentHandler, SequenceHandler, OperationRegistry, OperationInterpreter, ActionSequence, SystemLogicInterpreter, IHttpClient, LlmConfigLoader, ILLMConfigurationManager, ILLMRequestExecutor, ILLMErrorMapper, ITokenEstimator, LLMAdapter, LlmJsonService, CharacterDatabase, CharacterStorageService, ThematicDirectionGenerator, ClicheGenerator, CoreMotivationsGenerator, CoreMotivationsDisplayEnhancer, TraitsGenerator, TraitsDisplayEnhancer, SpeechPatternsResponseProcessor, SpeechPatternsGenerator, SpeechPatternsDisplayEnhancer, TraitsRewriterGenerator, TraitsRewriterResponseProcessor, TraitsRewriterDisplayEnhancer, CharacterBuilderService, ICharacterBuilderService, IPromptOutputPort, ITurnEndPort, IActionCategorizationService, WorldInitializer, SystemInitializer]
+ FAIL  tests/unit/turns/turnManager.advanceTurn.queueNotEmpty.test.js
+  ● TurnManager: advanceTurn() - Turn Advancement (Queue Not Empty) › getNextEntity throws error: logs error, stops manager
 
-      94 |     if (!registration) {
-      95 |       const knownKeys = Array.from(this.#registrations.keys()).join(', ');
-    > 96 |       throw new Error(
-         |             ^
-      97 |         `AppContainer: No service registered for key "${registrationKey}". Known keys: [${knownKeys}]`
-      98 |       );
-      99 |     }
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
 
-      at AppContainer.resolve (src/dependencyInjection/appContainer.js:96:13)
-      at resolve (src/dependencyInjection/registrations/loadersRegistrations.js:314:36)
-      at AppContainer.factoryFn [as _invokeFactory] (src/dependencyInjection/appContainer.js:249:12)
-      at AppContainer._invokeFactory [as _createInstance] (src/dependencyInjection/appContainer.js:190:19)
-      at AppContainer._createInstance [as resolve] (src/dependencyInjection/appContainer.js:109:31)
-      at resolve (src/dependencyInjection/registrations/loadersRegistrations.js:377:22)
-      at AppContainer.factoryFn [as _invokeFactory] (src/dependencyInjection/appContainer.js:249:12)
-      at AppContainer._invokeFactory [as _createInstance] (src/dependencyInjection/appContainer.js:190:19)
-      at AppContainer._createInstance [as resolve] (src/dependencyInjection/appContainer.js:109:31)
-      at resolve (src/dependencyInjection/registrations/loadersRegistrations.js:433:25)
-      at AppContainer.factoryFn [as _invokeFactory] (src/dependencyInjection/appContainer.js:249:12)
-      at AppContainer._invokeFactory [as _createInstance] (src/dependencyInjection/appContainer.js:190:19)
-      at AppContainer._createInstance [as resolve] (src/dependencyInjection/appContainer.js:109:31)
-      at CharacterBuilderBootstrap.resolve (src/characterBuilder/CharacterBuilderBootstrap.js:761:34)
-      at CharacterBuilderBootstrap.bootstrap (src/characterBuilder/CharacterBuilderBootstrap.js:103:29)
-      at Object.<anonymous> (tests/integration/characterBuilder/speechPatternsGeneratorRuntimeErrors.integration.test.js:95:7)
+    Expected: "core:system_error_occurred", ObjectContaining {"details": {"error": "Turn order service failure"}, "message": "System Error during turn advancement"}
+    Received
+           1: "core:system_error_occurred", {"details": {"raw": "{
+      \"extra\": {
+        \"error\": \"Turn order service failure\"
+      }
+    }"}, "message": "System Error during turn advancement"}
+           2: "core:system_error_occurred", {"details": {"raw": "Turn order service failure", "stack": "Error: Turn order service failure
+        at Object.<anonymous> (/home/joeloverbeck/projects/living-narrative-engine/tests/unit/turns/turnManager.advanceTurn.queueNotEmpty.test.js:130:28)
+        at Promise.finally.completed (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:1556:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:1496:10)
+        at _callCircusTest (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:1006:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTest (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:946:3)
+        at _runTestsForDescribeBlock (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:839:13)
+        at _runTestsForDescribeBlock (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:829:11)
+        at run (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:757:3)
+        at runAndTransformResultsToJestFormat (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:1917:21)
+        at jestAdapter (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/runner.js:101:19)
+        at runTestInternal (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-runner/build/testWorker.js:275:16)
+        at runTest (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-runner/build/testWorker.js:343:7)
+        at Object.worker (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-runner/build/testWorker.js:497:12)", "timestamp": "2025-09-12T06:01:51.850Z"}, "message": "System Error during turn advancement. Stopping game."}
 
-  ● SpeechPatternsGeneratorController - Runtime Errors › Service Registration › should work with a properly registered mock service
+    Number of calls: 2
 
-    Failed to create instance for "ModsLoader" (lifecycle: singletonFactory): Failed to create instance for "ManifestPhase" (lifecycle: singletonFactory): Failed to create instance for "ModManifestProcessor" (lifecycle: singletonFactory): AppContainer: No service registered for key "IModValidationOrchestrator". Known keys: [ILogger, ProxyUrl, IConfiguration, IPathResolver, ISchemaValidator, IDataRegistry, IDataFetcher, ITextDataFetcher, RuleLoader, ComponentLoader, ConditionLoader, ActionLoader, EventLoader, MacroLoader, EntityLoader, EntityInstanceLoader, WorldLoader, GoalLoader, AnatomyRecipeLoader, AnatomyBlueprintLoader, AnatomyBlueprintPartLoader, AnatomySlotLibraryLoader, AnatomyFormattingLoader, ScopeLoader, ModManifestLoader, GameConfigLoader, PromptTextLoader, ModLoadOrderResolver, ModManifestProcessor, ContentLoadManager, WorldLoadSummaryLogger, SchemaPhase, GameConfigPhase, ManifestPhase, ContentPhase, WorldPhase, SummaryPhase, ILoadCache, ModsLoader, SchemaLoader, ServiceSetup, IPathConfiguration, ITraceConfigLoader, ActionIndexingService, EventBus, IEventBus, ISpatialIndexManager, IGameDataRepository, IValidatedEventDispatcher, ISafeEventDispatcher, EventDispatchService, ScopeEngine, DslParser, IScopeEngine, IScopeDslErrorFactory, IScopeDslErrorHandler, ICriticalLogNotifier, CriticalLogNotifier, IActionTraceConfigValidator, IActionTraceConfigLoader, ITraceDirectoryManager, IIndexedDBStorageAdapter, IActionTraceFilter, IJsonTraceFormatter, IHumanReadableFormatter, IActionTraceOutputService, IActionAwareStructuredTrace, IEventDispatchTracer, IErrorMetrics, IRetryManager, IRecoveryManager, ITraceErrorHandler, ITracingConfigurationInitializer, IStorageProvider, ISaveFileRepository, ISaveLoadService, PlaytimeTracker, ComponentCleaningService, SaveMetadataBuilder, ActiveModsManifestBuilder, GameStateCaptureService, ManualSaveCoordinator, GamePersistenceService, IEntityManager, IWorldContext, ClosenessCircleService, EntityDisplayDataProvider, SpatialIndexSynchronizer, LocationQueryService, EntityAccessService, ComponentAccessService, LocationDisplayService, GraphIntegrityValidator, AnatomyQueryCache, RecipeProcessor, PartSelectionService, SocketManager, EntityGraphBuilder, RecipeConstraintEvaluator, BodyBlueprintFactory, BodyGraphService, JsonLogicCustomOperators, JsonLogicEvaluationService, AnatomyFormattingService, DescriptorFormatter, BodyPartDescriptionBuilder, BodyDescriptionComposer, PartDescriptionGenerator, DescriptionPersistenceService, BodyDescriptionOrchestrator, AnatomyDescriptionService, AnatomyGenerationService, LayerCompatibilityService, ClothingSlotValidator, EquipmentOrchestrator, LayerResolutionService, IAnatomySocketIndex, IAnatomyBlueprintRepository, AnatomyClothingCache, SlotResolver, ClothingManagementService, EquipmentDescriptionService, ClothingInstantiationService, ClothingInstantiationServiceV2, AnatomyInitializationService, IPipelineServiceFactory, IPipelineServiceRegistry, ITargetDependencyResolver, ILegacyTargetCompatibilityLayer, IScopeContextBuilder, ITargetDisplayNameResolver, IScopeRegistry, ActionIndex, IScopeCacheStrategy, IUnifiedScopeResolver, ITargetContextBuilder, IMultiTargetResolutionStage, ITargetResolutionService, TraceContextFactory, IFixSuggestionEngine, IActionErrorContextBuilder, ActionCandidateProcessor, ActionPipelineOrchestrator, IActionDiscoveryService, ActionValidationContextBuilder, PrerequisiteEvaluationService, IActionExecutionTraceFactory, ICommandProcessor, UnifiedErrorHandler, DirectiveStrategyResolver, CommandDispatcher, DirectiveExecutor, ResultInterpreter, ICommandOutcomeInterpreter, DispatchEventHandler, DispatchPerceptibleEventHandler, DispatchSpeechHandler, DispatchThoughtHandler, LogHandler, ModifyComponentHandler, AddComponentHandler, RemoveComponentHandler, QueryComponentHandler, QueryComponentsHandler, SetVariableHandler, EndTurnHandler, SystemMoveEntityHandler, IMoveEntityHandler, GetTimestampHandler, GetNameHandler, RebuildLeaderListCacheHandler, CheckFollowCycleHandler, EstablishFollowRelationHandler, BreakFollowRelationHandler, AddPerceptionLogEntryHandler, QueryEntitiesHandler, HasComponentHandler, ModifyArrayFieldHandler, ModifyContextArrayHandler, IfCoLocatedHandler, MathHandler, AutoMoveFollowersHandler, MergeClosenessCircleHandler, RemoveFromClosenessCircleHandler, EstablishSittingClosenessHandler, RemoveSittingClosenessHandler, HasBodyPartWithComponentValueHandler, UnequipClothingHandler, LockMovementHandler, LockMouthEngagementHandler, UnlockMovementHandler, UnlockMouthEngagementHandler, RegenerateDescriptionHandler, AtomicModifyComponentHandler, SequenceHandler, OperationRegistry, OperationInterpreter, ActionSequence, SystemLogicInterpreter, IHttpClient, LlmConfigLoader, ILLMConfigurationManager, ILLMRequestExecutor, ILLMErrorMapper, ITokenEstimator, LLMAdapter, LlmJsonService, CharacterDatabase, CharacterStorageService, ThematicDirectionGenerator, ClicheGenerator, CoreMotivationsGenerator, CoreMotivationsDisplayEnhancer, TraitsGenerator, TraitsDisplayEnhancer, SpeechPatternsResponseProcessor, SpeechPatternsGenerator, SpeechPatternsDisplayEnhancer, TraitsRewriterGenerator, TraitsRewriterResponseProcessor, TraitsRewriterDisplayEnhancer, CharacterBuilderService, ICharacterBuilderService, IPromptOutputPort, ITurnEndPort, IActionCategorizationService, WorldInitializer, SystemInitializer]
+      142 |       ).toHaveBeenCalledTimes(1);
+      143 |
+    > 144 |       expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
+          |                                                 ^
+      145 |         SYSTEM_ERROR_OCCURRED_ID,
+      146 |         expect.objectContaining({
+      147 |           message: 'System Error during turn advancement',
 
-      119 |           error
-      120 |         );
-    > 121 |         throw new Error(
-          |               ^
-      122 |           `Failed to create instance for "${registrationKey}" (lifecycle: ${lifecycle}): ${error.message}`,
-      123 |           { cause: error }
-      124 |         );
+      at Object.toHaveBeenCalledWith (tests/unit/turns/turnManager.advanceTurn.queueNotEmpty.test.js:144:49)
 
-      at AppContainer.resolve (src/dependencyInjection/appContainer.js:121:15)
-      at CharacterBuilderBootstrap.resolve (src/characterBuilder/CharacterBuilderBootstrap.js:761:34)
-      at CharacterBuilderBootstrap.bootstrap (src/characterBuilder/CharacterBuilderBootstrap.js:103:29)
-      at Object.<anonymous> (tests/integration/characterBuilder/speechPatternsGeneratorRuntimeErrors.integration.test.js:163:7)
+  ● TurnManager: advanceTurn() - Turn Advancement (Queue Not Empty) › Handler resolver throws: logs error, stops manager
 
-    Cause:
-    Failed to create instance for "ManifestPhase" (lifecycle: singletonFactory): Failed to create instance for "ModManifestProcessor" (lifecycle: singletonFactory): AppContainer: No service registered for key "IModValidationOrchestrator". Known keys: [ILogger, ProxyUrl, IConfiguration, IPathResolver, ISchemaValidator, IDataRegistry, IDataFetcher, ITextDataFetcher, RuleLoader, ComponentLoader, ConditionLoader, ActionLoader, EventLoader, MacroLoader, EntityLoader, EntityInstanceLoader, WorldLoader, GoalLoader, AnatomyRecipeLoader, AnatomyBlueprintLoader, AnatomyBlueprintPartLoader, AnatomySlotLibraryLoader, AnatomyFormattingLoader, ScopeLoader, ModManifestLoader, GameConfigLoader, PromptTextLoader, ModLoadOrderResolver, ModManifestProcessor, ContentLoadManager, WorldLoadSummaryLogger, SchemaPhase, GameConfigPhase, ManifestPhase, ContentPhase, WorldPhase, SummaryPhase, ILoadCache, ModsLoader, SchemaLoader, ServiceSetup, IPathConfiguration, ITraceConfigLoader, ActionIndexingService, EventBus, IEventBus, ISpatialIndexManager, IGameDataRepository, IValidatedEventDispatcher, ISafeEventDispatcher, EventDispatchService, ScopeEngine, DslParser, IScopeEngine, IScopeDslErrorFactory, IScopeDslErrorHandler, ICriticalLogNotifier, CriticalLogNotifier, IActionTraceConfigValidator, IActionTraceConfigLoader, ITraceDirectoryManager, IIndexedDBStorageAdapter, IActionTraceFilter, IJsonTraceFormatter, IHumanReadableFormatter, IActionTraceOutputService, IActionAwareStructuredTrace, IEventDispatchTracer, IErrorMetrics, IRetryManager, IRecoveryManager, ITraceErrorHandler, ITracingConfigurationInitializer, IStorageProvider, ISaveFileRepository, ISaveLoadService, PlaytimeTracker, ComponentCleaningService, SaveMetadataBuilder, ActiveModsManifestBuilder, GameStateCaptureService, ManualSaveCoordinator, GamePersistenceService, IEntityManager, IWorldContext, ClosenessCircleService, EntityDisplayDataProvider, SpatialIndexSynchronizer, LocationQueryService, EntityAccessService, ComponentAccessService, LocationDisplayService, GraphIntegrityValidator, AnatomyQueryCache, RecipeProcessor, PartSelectionService, SocketManager, EntityGraphBuilder, RecipeConstraintEvaluator, BodyBlueprintFactory, BodyGraphService, JsonLogicCustomOperators, JsonLogicEvaluationService, AnatomyFormattingService, DescriptorFormatter, BodyPartDescriptionBuilder, BodyDescriptionComposer, PartDescriptionGenerator, DescriptionPersistenceService, BodyDescriptionOrchestrator, AnatomyDescriptionService, AnatomyGenerationService, LayerCompatibilityService, ClothingSlotValidator, EquipmentOrchestrator, LayerResolutionService, IAnatomySocketIndex, IAnatomyBlueprintRepository, AnatomyClothingCache, SlotResolver, ClothingManagementService, EquipmentDescriptionService, ClothingInstantiationService, ClothingInstantiationServiceV2, AnatomyInitializationService, IPipelineServiceFactory, IPipelineServiceRegistry, ITargetDependencyResolver, ILegacyTargetCompatibilityLayer, IScopeContextBuilder, ITargetDisplayNameResolver, IScopeRegistry, ActionIndex, IScopeCacheStrategy, IUnifiedScopeResolver, ITargetContextBuilder, IMultiTargetResolutionStage, ITargetResolutionService, TraceContextFactory, IFixSuggestionEngine, IActionErrorContextBuilder, ActionCandidateProcessor, ActionPipelineOrchestrator, IActionDiscoveryService, ActionValidationContextBuilder, PrerequisiteEvaluationService, IActionExecutionTraceFactory, ICommandProcessor, UnifiedErrorHandler, DirectiveStrategyResolver, CommandDispatcher, DirectiveExecutor, ResultInterpreter, ICommandOutcomeInterpreter, DispatchEventHandler, DispatchPerceptibleEventHandler, DispatchSpeechHandler, DispatchThoughtHandler, LogHandler, ModifyComponentHandler, AddComponentHandler, RemoveComponentHandler, QueryComponentHandler, QueryComponentsHandler, SetVariableHandler, EndTurnHandler, SystemMoveEntityHandler, IMoveEntityHandler, GetTimestampHandler, GetNameHandler, RebuildLeaderListCacheHandler, CheckFollowCycleHandler, EstablishFollowRelationHandler, BreakFollowRelationHandler, AddPerceptionLogEntryHandler, QueryEntitiesHandler, HasComponentHandler, ModifyArrayFieldHandler, ModifyContextArrayHandler, IfCoLocatedHandler, MathHandler, AutoMoveFollowersHandler, MergeClosenessCircleHandler, RemoveFromClosenessCircleHandler, EstablishSittingClosenessHandler, RemoveSittingClosenessHandler, HasBodyPartWithComponentValueHandler, UnequipClothingHandler, LockMovementHandler, LockMouthEngagementHandler, UnlockMovementHandler, UnlockMouthEngagementHandler, RegenerateDescriptionHandler, AtomicModifyComponentHandler, SequenceHandler, OperationRegistry, OperationInterpreter, ActionSequence, SystemLogicInterpreter, IHttpClient, LlmConfigLoader, ILLMConfigurationManager, ILLMRequestExecutor, ILLMErrorMapper, ITokenEstimator, LLMAdapter, LlmJsonService, CharacterDatabase, CharacterStorageService, ThematicDirectionGenerator, ClicheGenerator, CoreMotivationsGenerator, CoreMotivationsDisplayEnhancer, TraitsGenerator, TraitsDisplayEnhancer, SpeechPatternsResponseProcessor, SpeechPatternsGenerator, SpeechPatternsDisplayEnhancer, TraitsRewriterGenerator, TraitsRewriterResponseProcessor, TraitsRewriterDisplayEnhancer, CharacterBuilderService, ICharacterBuilderService, IPromptOutputPort, ITurnEndPort, IActionCategorizationService, WorldInitializer, SystemInitializer]
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
 
-      119 |           error
-      120 |         );
-    > 121 |         throw new Error(
-          |               ^
-      122 |           `Failed to create instance for "${registrationKey}" (lifecycle: ${lifecycle}): ${error.message}`,
-      123 |           { cause: error }
-      124 |         );
+    Expected: "core:system_error_occurred", ObjectContaining {"details": {"error": "Handler resolution failed"}, "message": "System Error during turn advancement"}
+    Received
+           1: "core:turn_started", {"entity": {"componentTypeIds": ["core:actor"], "components": {"core:actor": {}}, "getComponent": [Function mockConstructor], "getComponentData": [Function mockConstructor], "hasComponent": [Function mockConstructor], "id": "actor1", "name": "actor1"}, "entityId": "actor1", "entityType": "ai"}
+           2: "core:turn_processing_started", {"actorType": "ai", "entityId": "actor1"}
+           3: "core:system_error_occurred", {"details": {"raw": "{
+      \"extra\": {
+        \"error\": \"Handler resolution failed\"
+      }
+    }"}, "message": "System Error during turn advancement"}
 
-      at AppContainer.resolve (src/dependencyInjection/appContainer.js:121:15)
-      at resolve (src/dependencyInjection/registrations/loadersRegistrations.js:433:25)
-      at AppContainer.factoryFn [as _invokeFactory] (src/dependencyInjection/appContainer.js:249:12)
-      at AppContainer._invokeFactory [as _createInstance] (src/dependencyInjection/appContainer.js:190:19)
-      at AppContainer._createInstance [as resolve] (src/dependencyInjection/appContainer.js:109:31)
-      at CharacterBuilderBootstrap.resolve (src/characterBuilder/CharacterBuilderBootstrap.js:761:34)
-      at CharacterBuilderBootstrap.bootstrap (src/characterBuilder/CharacterBuilderBootstrap.js:103:29)
-      at Object.<anonymous> (tests/integration/characterBuilder/speechPatternsGeneratorRuntimeErrors.integration.test.js:163:7)
+    Number of calls: 4
 
-    Cause:
-    Failed to create instance for "ModManifestProcessor" (lifecycle: singletonFactory): AppContainer: No service registered for key "IModValidationOrchestrator". Known keys: [ILogger, ProxyUrl, IConfiguration, IPathResolver, ISchemaValidator, IDataRegistry, IDataFetcher, ITextDataFetcher, RuleLoader, ComponentLoader, ConditionLoader, ActionLoader, EventLoader, MacroLoader, EntityLoader, EntityInstanceLoader, WorldLoader, GoalLoader, AnatomyRecipeLoader, AnatomyBlueprintLoader, AnatomyBlueprintPartLoader, AnatomySlotLibraryLoader, AnatomyFormattingLoader, ScopeLoader, ModManifestLoader, GameConfigLoader, PromptTextLoader, ModLoadOrderResolver, ModManifestProcessor, ContentLoadManager, WorldLoadSummaryLogger, SchemaPhase, GameConfigPhase, ManifestPhase, ContentPhase, WorldPhase, SummaryPhase, ILoadCache, ModsLoader, SchemaLoader, ServiceSetup, IPathConfiguration, ITraceConfigLoader, ActionIndexingService, EventBus, IEventBus, ISpatialIndexManager, IGameDataRepository, IValidatedEventDispatcher, ISafeEventDispatcher, EventDispatchService, ScopeEngine, DslParser, IScopeEngine, IScopeDslErrorFactory, IScopeDslErrorHandler, ICriticalLogNotifier, CriticalLogNotifier, IActionTraceConfigValidator, IActionTraceConfigLoader, ITraceDirectoryManager, IIndexedDBStorageAdapter, IActionTraceFilter, IJsonTraceFormatter, IHumanReadableFormatter, IActionTraceOutputService, IActionAwareStructuredTrace, IEventDispatchTracer, IErrorMetrics, IRetryManager, IRecoveryManager, ITraceErrorHandler, ITracingConfigurationInitializer, IStorageProvider, ISaveFileRepository, ISaveLoadService, PlaytimeTracker, ComponentCleaningService, SaveMetadataBuilder, ActiveModsManifestBuilder, GameStateCaptureService, ManualSaveCoordinator, GamePersistenceService, IEntityManager, IWorldContext, ClosenessCircleService, EntityDisplayDataProvider, SpatialIndexSynchronizer, LocationQueryService, EntityAccessService, ComponentAccessService, LocationDisplayService, GraphIntegrityValidator, AnatomyQueryCache, RecipeProcessor, PartSelectionService, SocketManager, EntityGraphBuilder, RecipeConstraintEvaluator, BodyBlueprintFactory, BodyGraphService, JsonLogicCustomOperators, JsonLogicEvaluationService, AnatomyFormattingService, DescriptorFormatter, BodyPartDescriptionBuilder, BodyDescriptionComposer, PartDescriptionGenerator, DescriptionPersistenceService, BodyDescriptionOrchestrator, AnatomyDescriptionService, AnatomyGenerationService, LayerCompatibilityService, ClothingSlotValidator, EquipmentOrchestrator, LayerResolutionService, IAnatomySocketIndex, IAnatomyBlueprintRepository, AnatomyClothingCache, SlotResolver, ClothingManagementService, EquipmentDescriptionService, ClothingInstantiationService, ClothingInstantiationServiceV2, AnatomyInitializationService, IPipelineServiceFactory, IPipelineServiceRegistry, ITargetDependencyResolver, ILegacyTargetCompatibilityLayer, IScopeContextBuilder, ITargetDisplayNameResolver, IScopeRegistry, ActionIndex, IScopeCacheStrategy, IUnifiedScopeResolver, ITargetContextBuilder, IMultiTargetResolutionStage, ITargetResolutionService, TraceContextFactory, IFixSuggestionEngine, IActionErrorContextBuilder, ActionCandidateProcessor, ActionPipelineOrchestrator, IActionDiscoveryService, ActionValidationContextBuilder, PrerequisiteEvaluationService, IActionExecutionTraceFactory, ICommandProcessor, UnifiedErrorHandler, DirectiveStrategyResolver, CommandDispatcher, DirectiveExecutor, ResultInterpreter, ICommandOutcomeInterpreter, DispatchEventHandler, DispatchPerceptibleEventHandler, DispatchSpeechHandler, DispatchThoughtHandler, LogHandler, ModifyComponentHandler, AddComponentHandler, RemoveComponentHandler, QueryComponentHandler, QueryComponentsHandler, SetVariableHandler, EndTurnHandler, SystemMoveEntityHandler, IMoveEntityHandler, GetTimestampHandler, GetNameHandler, RebuildLeaderListCacheHandler, CheckFollowCycleHandler, EstablishFollowRelationHandler, BreakFollowRelationHandler, AddPerceptionLogEntryHandler, QueryEntitiesHandler, HasComponentHandler, ModifyArrayFieldHandler, ModifyContextArrayHandler, IfCoLocatedHandler, MathHandler, AutoMoveFollowersHandler, MergeClosenessCircleHandler, RemoveFromClosenessCircleHandler, EstablishSittingClosenessHandler, RemoveSittingClosenessHandler, HasBodyPartWithComponentValueHandler, UnequipClothingHandler, LockMovementHandler, LockMouthEngagementHandler, UnlockMovementHandler, UnlockMouthEngagementHandler, RegenerateDescriptionHandler, AtomicModifyComponentHandler, SequenceHandler, OperationRegistry, OperationInterpreter, ActionSequence, SystemLogicInterpreter, IHttpClient, LlmConfigLoader, ILLMConfigurationManager, ILLMRequestExecutor, ILLMErrorMapper, ITokenEstimator, LLMAdapter, LlmJsonService, CharacterDatabase, CharacterStorageService, ThematicDirectionGenerator, ClicheGenerator, CoreMotivationsGenerator, CoreMotivationsDisplayEnhancer, TraitsGenerator, TraitsDisplayEnhancer, SpeechPatternsResponseProcessor, SpeechPatternsGenerator, SpeechPatternsDisplayEnhancer, TraitsRewriterGenerator, TraitsRewriterResponseProcessor, TraitsRewriterDisplayEnhancer, CharacterBuilderService, ICharacterBuilderService, IPromptOutputPort, ITurnEndPort, IActionCategorizationService, WorldInitializer, SystemInitializer]
+      173 |
+      174 |       // Assert
+    > 175 |       expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
+          |                                                 ^
+      176 |         SYSTEM_ERROR_OCCURRED_ID,
+      177 |         expect.objectContaining({
+      178 |           message: 'System Error during turn advancement',
 
-      119 |           error
-      120 |         );
-    > 121 |         throw new Error(
-          |               ^
-      122 |           `Failed to create instance for "${registrationKey}" (lifecycle: ${lifecycle}): ${error.message}`,
-      123 |           { cause: error }
-      124 |         );
+      at Object.toHaveBeenCalledWith (tests/unit/turns/turnManager.advanceTurn.queueNotEmpty.test.js:175:49)
 
-      at AppContainer.resolve (src/dependencyInjection/appContainer.js:121:15)
-      at resolve (src/dependencyInjection/registrations/loadersRegistrations.js:377:22)
-      at AppContainer.factoryFn [as _invokeFactory] (src/dependencyInjection/appContainer.js:249:12)
-      at AppContainer._invokeFactory [as _createInstance] (src/dependencyInjection/appContainer.js:190:19)
-      at AppContainer._createInstance [as resolve] (src/dependencyInjection/appContainer.js:109:31)
-      at resolve (src/dependencyInjection/registrations/loadersRegistrations.js:433:25)
-      at AppContainer.factoryFn [as _invokeFactory] (src/dependencyInjection/appContainer.js:249:12)
-      at AppContainer._invokeFactory [as _createInstance] (src/dependencyInjection/appContainer.js:190:19)
-      at AppContainer._createInstance [as resolve] (src/dependencyInjection/appContainer.js:109:31)
-      at CharacterBuilderBootstrap.resolve (src/characterBuilder/CharacterBuilderBootstrap.js:761:34)
-      at CharacterBuilderBootstrap.bootstrap (src/characterBuilder/CharacterBuilderBootstrap.js:103:29)
-      at Object.<anonymous> (tests/integration/characterBuilder/speechPatternsGeneratorRuntimeErrors.integration.test.js:163:7)
+  ● TurnManager: advanceTurn() - Turn Advancement (Queue Not Empty) › Handler startTurn throws: logs error, stops manager
 
-    Cause:
-    AppContainer: No service registered for key "IModValidationOrchestrator". Known keys: [ILogger, ProxyUrl, IConfiguration, IPathResolver, ISchemaValidator, IDataRegistry, IDataFetcher, ITextDataFetcher, RuleLoader, ComponentLoader, ConditionLoader, ActionLoader, EventLoader, MacroLoader, EntityLoader, EntityInstanceLoader, WorldLoader, GoalLoader, AnatomyRecipeLoader, AnatomyBlueprintLoader, AnatomyBlueprintPartLoader, AnatomySlotLibraryLoader, AnatomyFormattingLoader, ScopeLoader, ModManifestLoader, GameConfigLoader, PromptTextLoader, ModLoadOrderResolver, ModManifestProcessor, ContentLoadManager, WorldLoadSummaryLogger, SchemaPhase, GameConfigPhase, ManifestPhase, ContentPhase, WorldPhase, SummaryPhase, ILoadCache, ModsLoader, SchemaLoader, ServiceSetup, IPathConfiguration, ITraceConfigLoader, ActionIndexingService, EventBus, IEventBus, ISpatialIndexManager, IGameDataRepository, IValidatedEventDispatcher, ISafeEventDispatcher, EventDispatchService, ScopeEngine, DslParser, IScopeEngine, IScopeDslErrorFactory, IScopeDslErrorHandler, ICriticalLogNotifier, CriticalLogNotifier, IActionTraceConfigValidator, IActionTraceConfigLoader, ITraceDirectoryManager, IIndexedDBStorageAdapter, IActionTraceFilter, IJsonTraceFormatter, IHumanReadableFormatter, IActionTraceOutputService, IActionAwareStructuredTrace, IEventDispatchTracer, IErrorMetrics, IRetryManager, IRecoveryManager, ITraceErrorHandler, ITracingConfigurationInitializer, IStorageProvider, ISaveFileRepository, ISaveLoadService, PlaytimeTracker, ComponentCleaningService, SaveMetadataBuilder, ActiveModsManifestBuilder, GameStateCaptureService, ManualSaveCoordinator, GamePersistenceService, IEntityManager, IWorldContext, ClosenessCircleService, EntityDisplayDataProvider, SpatialIndexSynchronizer, LocationQueryService, EntityAccessService, ComponentAccessService, LocationDisplayService, GraphIntegrityValidator, AnatomyQueryCache, RecipeProcessor, PartSelectionService, SocketManager, EntityGraphBuilder, RecipeConstraintEvaluator, BodyBlueprintFactory, BodyGraphService, JsonLogicCustomOperators, JsonLogicEvaluationService, AnatomyFormattingService, DescriptorFormatter, BodyPartDescriptionBuilder, BodyDescriptionComposer, PartDescriptionGenerator, DescriptionPersistenceService, BodyDescriptionOrchestrator, AnatomyDescriptionService, AnatomyGenerationService, LayerCompatibilityService, ClothingSlotValidator, EquipmentOrchestrator, LayerResolutionService, IAnatomySocketIndex, IAnatomyBlueprintRepository, AnatomyClothingCache, SlotResolver, ClothingManagementService, EquipmentDescriptionService, ClothingInstantiationService, ClothingInstantiationServiceV2, AnatomyInitializationService, IPipelineServiceFactory, IPipelineServiceRegistry, ITargetDependencyResolver, ILegacyTargetCompatibilityLayer, IScopeContextBuilder, ITargetDisplayNameResolver, IScopeRegistry, ActionIndex, IScopeCacheStrategy, IUnifiedScopeResolver, ITargetContextBuilder, IMultiTargetResolutionStage, ITargetResolutionService, TraceContextFactory, IFixSuggestionEngine, IActionErrorContextBuilder, ActionCandidateProcessor, ActionPipelineOrchestrator, IActionDiscoveryService, ActionValidationContextBuilder, PrerequisiteEvaluationService, IActionExecutionTraceFactory, ICommandProcessor, UnifiedErrorHandler, DirectiveStrategyResolver, CommandDispatcher, DirectiveExecutor, ResultInterpreter, ICommandOutcomeInterpreter, DispatchEventHandler, DispatchPerceptibleEventHandler, DispatchSpeechHandler, DispatchThoughtHandler, LogHandler, ModifyComponentHandler, AddComponentHandler, RemoveComponentHandler, QueryComponentHandler, QueryComponentsHandler, SetVariableHandler, EndTurnHandler, SystemMoveEntityHandler, IMoveEntityHandler, GetTimestampHandler, GetNameHandler, RebuildLeaderListCacheHandler, CheckFollowCycleHandler, EstablishFollowRelationHandler, BreakFollowRelationHandler, AddPerceptionLogEntryHandler, QueryEntitiesHandler, HasComponentHandler, ModifyArrayFieldHandler, ModifyContextArrayHandler, IfCoLocatedHandler, MathHandler, AutoMoveFollowersHandler, MergeClosenessCircleHandler, RemoveFromClosenessCircleHandler, EstablishSittingClosenessHandler, RemoveSittingClosenessHandler, HasBodyPartWithComponentValueHandler, UnequipClothingHandler, LockMovementHandler, LockMouthEngagementHandler, UnlockMovementHandler, UnlockMouthEngagementHandler, RegenerateDescriptionHandler, AtomicModifyComponentHandler, SequenceHandler, OperationRegistry, OperationInterpreter, ActionSequence, SystemLogicInterpreter, IHttpClient, LlmConfigLoader, ILLMConfigurationManager, ILLMRequestExecutor, ILLMErrorMapper, ITokenEstimator, LLMAdapter, LlmJsonService, CharacterDatabase, CharacterStorageService, ThematicDirectionGenerator, ClicheGenerator, CoreMotivationsGenerator, CoreMotivationsDisplayEnhancer, TraitsGenerator, TraitsDisplayEnhancer, SpeechPatternsResponseProcessor, SpeechPatternsGenerator, SpeechPatternsDisplayEnhancer, TraitsRewriterGenerator, TraitsRewriterResponseProcessor, TraitsRewriterDisplayEnhancer, CharacterBuilderService, ICharacterBuilderService, IPromptOutputPort, ITurnEndPort, IActionCategorizationService, WorldInitializer, SystemInitializer]
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
 
-      94 |     if (!registration) {
-      95 |       const knownKeys = Array.from(this.#registrations.keys()).join(', ');
-    > 96 |       throw new Error(
-         |             ^
-      97 |         `AppContainer: No service registered for key "${registrationKey}". Known keys: [${knownKeys}]`
-      98 |       );
-      99 |     }
+    Expected: "core:system_error_occurred", ObjectContaining {"details": {"error": "Handler start failed", "handlerName": Any<String>}, "message": "Error initiating turn for actor1"}
+    Received
+           1: "core:turn_started", {"entity": {"componentTypeIds": ["core:actor"], "components": {"core:actor": {}}, "getComponent": [Function mockConstructor], "getComponentData": [Function mockConstructor], "hasComponent": [Function mockConstructor], "id": "actor1", "name": "actor1"}, "entityId": "actor1", "entityType": "ai"}
+           2: "core:turn_processing_started", {"actorType": "ai", "entityId": "actor1"}
+           3: "core:system_error_occurred", {"details": {"raw": "{
+      \"extra\": {
+        \"error\": \"Handler start failed\",
+        \"handlerName\": \"MockTurnHandler\"
+      }
+    }"}, "message": "Error initiating turn for actor1"}
 
-      at AppContainer.resolve (src/dependencyInjection/appContainer.js:96:13)
-      at resolve (src/dependencyInjection/registrations/loadersRegistrations.js:314:36)
-      at AppContainer.factoryFn [as _invokeFactory] (src/dependencyInjection/appContainer.js:249:12)
-      at AppContainer._invokeFactory [as _createInstance] (src/dependencyInjection/appContainer.js:190:19)
-      at AppContainer._createInstance [as resolve] (src/dependencyInjection/appContainer.js:109:31)
-      at resolve (src/dependencyInjection/registrations/loadersRegistrations.js:377:22)
-      at AppContainer.factoryFn [as _invokeFactory] (src/dependencyInjection/appContainer.js:249:12)
-      at AppContainer._invokeFactory [as _createInstance] (src/dependencyInjection/appContainer.js:190:19)
-      at AppContainer._createInstance [as resolve] (src/dependencyInjection/appContainer.js:109:31)
-      at resolve (src/dependencyInjection/registrations/loadersRegistrations.js:433:25)
-      at AppContainer.factoryFn [as _invokeFactory] (src/dependencyInjection/appContainer.js:249:12)
-      at AppContainer._invokeFactory [as _createInstance] (src/dependencyInjection/appContainer.js:190:19)
-      at AppContainer._createInstance [as resolve] (src/dependencyInjection/appContainer.js:109:31)
-      at CharacterBuilderBootstrap.resolve (src/characterBuilder/CharacterBuilderBootstrap.js:761:34)
-      at CharacterBuilderBootstrap.bootstrap (src/characterBuilder/CharacterBuilderBootstrap.js:103:29)
-      at Object.<anonymous> (tests/integration/characterBuilder/speechPatternsGeneratorRuntimeErrors.integration.test.js:163:7)
+    Number of calls: 5
 
-  ● SpeechPatternsGeneratorController - Runtime Errors › Event Definition Loading › should not have ui_state_changed warning when mods are loaded (our fix)
+      205 |
+      206 |       // Assert
+    > 207 |       expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
+          |                                                 ^
+      208 |         SYSTEM_ERROR_OCCURRED_ID,
+      209 |         expect.objectContaining({
+      210 |           message: 'Error initiating turn for actor1',
 
-    Failed to create instance for "ModsLoader" (lifecycle: singletonFactory): Failed to create instance for "ManifestPhase" (lifecycle: singletonFactory): Failed to create instance for "ModManifestProcessor" (lifecycle: singletonFactory): AppContainer: No service registered for key "IModValidationOrchestrator". Known keys: [ILogger, ProxyUrl, IConfiguration, IPathResolver, ISchemaValidator, IDataRegistry, IDataFetcher, ITextDataFetcher, RuleLoader, ComponentLoader, ConditionLoader, ActionLoader, EventLoader, MacroLoader, EntityLoader, EntityInstanceLoader, WorldLoader, GoalLoader, AnatomyRecipeLoader, AnatomyBlueprintLoader, AnatomyBlueprintPartLoader, AnatomySlotLibraryLoader, AnatomyFormattingLoader, ScopeLoader, ModManifestLoader, GameConfigLoader, PromptTextLoader, ModLoadOrderResolver, ModManifestProcessor, ContentLoadManager, WorldLoadSummaryLogger, SchemaPhase, GameConfigPhase, ManifestPhase, ContentPhase, WorldPhase, SummaryPhase, ILoadCache, ModsLoader, SchemaLoader, ServiceSetup, IPathConfiguration, ITraceConfigLoader, ActionIndexingService, EventBus, IEventBus, ISpatialIndexManager, IGameDataRepository, IValidatedEventDispatcher, ISafeEventDispatcher, EventDispatchService, ScopeEngine, DslParser, IScopeEngine, IScopeDslErrorFactory, IScopeDslErrorHandler, ICriticalLogNotifier, CriticalLogNotifier, IActionTraceConfigValidator, IActionTraceConfigLoader, ITraceDirectoryManager, IIndexedDBStorageAdapter, IActionTraceFilter, IJsonTraceFormatter, IHumanReadableFormatter, IActionTraceOutputService, IActionAwareStructuredTrace, IEventDispatchTracer, IErrorMetrics, IRetryManager, IRecoveryManager, ITraceErrorHandler, ITracingConfigurationInitializer, IStorageProvider, ISaveFileRepository, ISaveLoadService, PlaytimeTracker, ComponentCleaningService, SaveMetadataBuilder, ActiveModsManifestBuilder, GameStateCaptureService, ManualSaveCoordinator, GamePersistenceService, IEntityManager, IWorldContext, ClosenessCircleService, EntityDisplayDataProvider, SpatialIndexSynchronizer, LocationQueryService, EntityAccessService, ComponentAccessService, LocationDisplayService, GraphIntegrityValidator, AnatomyQueryCache, RecipeProcessor, PartSelectionService, SocketManager, EntityGraphBuilder, RecipeConstraintEvaluator, BodyBlueprintFactory, BodyGraphService, JsonLogicCustomOperators, JsonLogicEvaluationService, AnatomyFormattingService, DescriptorFormatter, BodyPartDescriptionBuilder, BodyDescriptionComposer, PartDescriptionGenerator, DescriptionPersistenceService, BodyDescriptionOrchestrator, AnatomyDescriptionService, AnatomyGenerationService, LayerCompatibilityService, ClothingSlotValidator, EquipmentOrchestrator, LayerResolutionService, IAnatomySocketIndex, IAnatomyBlueprintRepository, AnatomyClothingCache, SlotResolver, ClothingManagementService, EquipmentDescriptionService, ClothingInstantiationService, ClothingInstantiationServiceV2, AnatomyInitializationService, IPipelineServiceFactory, IPipelineServiceRegistry, ITargetDependencyResolver, ILegacyTargetCompatibilityLayer, IScopeContextBuilder, ITargetDisplayNameResolver, IScopeRegistry, ActionIndex, IScopeCacheStrategy, IUnifiedScopeResolver, ITargetContextBuilder, IMultiTargetResolutionStage, ITargetResolutionService, TraceContextFactory, IFixSuggestionEngine, IActionErrorContextBuilder, ActionCandidateProcessor, ActionPipelineOrchestrator, IActionDiscoveryService, ActionValidationContextBuilder, PrerequisiteEvaluationService, IActionExecutionTraceFactory, ICommandProcessor, UnifiedErrorHandler, DirectiveStrategyResolver, CommandDispatcher, DirectiveExecutor, ResultInterpreter, ICommandOutcomeInterpreter, DispatchEventHandler, DispatchPerceptibleEventHandler, DispatchSpeechHandler, DispatchThoughtHandler, LogHandler, ModifyComponentHandler, AddComponentHandler, RemoveComponentHandler, QueryComponentHandler, QueryComponentsHandler, SetVariableHandler, EndTurnHandler, SystemMoveEntityHandler, IMoveEntityHandler, GetTimestampHandler, GetNameHandler, RebuildLeaderListCacheHandler, CheckFollowCycleHandler, EstablishFollowRelationHandler, BreakFollowRelationHandler, AddPerceptionLogEntryHandler, QueryEntitiesHandler, HasComponentHandler, ModifyArrayFieldHandler, ModifyContextArrayHandler, IfCoLocatedHandler, MathHandler, AutoMoveFollowersHandler, MergeClosenessCircleHandler, RemoveFromClosenessCircleHandler, EstablishSittingClosenessHandler, RemoveSittingClosenessHandler, HasBodyPartWithComponentValueHandler, UnequipClothingHandler, LockMovementHandler, LockMouthEngagementHandler, UnlockMovementHandler, UnlockMouthEngagementHandler, RegenerateDescriptionHandler, AtomicModifyComponentHandler, SequenceHandler, OperationRegistry, OperationInterpreter, ActionSequence, SystemLogicInterpreter, IHttpClient, LlmConfigLoader, ILLMConfigurationManager, ILLMRequestExecutor, ILLMErrorMapper, ITokenEstimator, LLMAdapter, LlmJsonService, CharacterDatabase, CharacterStorageService, ThematicDirectionGenerator, ClicheGenerator, CoreMotivationsGenerator, CoreMotivationsDisplayEnhancer, TraitsGenerator, TraitsDisplayEnhancer, SpeechPatternsResponseProcessor, SpeechPatternsGenerator, SpeechPatternsDisplayEnhancer, TraitsRewriterGenerator, TraitsRewriterResponseProcessor, TraitsRewriterDisplayEnhancer, CharacterBuilderService, ICharacterBuilderService, IPromptOutputPort, ITurnEndPort, IActionCategorizationService, WorldInitializer, SystemInitializer]
+      at Object.toHaveBeenCalledWith (tests/unit/turns/turnManager.advanceTurn.queueNotEmpty.test.js:207:49)
 
-      119 |           error
-      120 |         );
-    > 121 |         throw new Error(
-          |               ^
-      122 |           `Failed to create instance for "${registrationKey}" (lifecycle: ${lifecycle}): ${error.message}`,
-      123 |           { cause: error }
-      124 |         );
+ FAIL  tests/unit/logic/operationHandlers/modifyArrayFieldHandler.coverage.test.js
+  ● ModifyArrayFieldHandler - Coverage Tests › Error Handling Scenarios › should dispatch error event when addComponent throws
 
-      at AppContainer.resolve (src/dependencyInjection/appContainer.js:121:15)
-      at CharacterBuilderBootstrap.resolve (src/characterBuilder/CharacterBuilderBootstrap.js:761:34)
-      at CharacterBuilderBootstrap.bootstrap (src/characterBuilder/CharacterBuilderBootstrap.js:103:29)
-      at Object.<anonymous> (tests/integration/characterBuilder/speechPatternsGeneratorRuntimeErrors.integration.test.js:260:7)
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
 
-    Cause:
-    Failed to create instance for "ManifestPhase" (lifecycle: singletonFactory): Failed to create instance for "ModManifestProcessor" (lifecycle: singletonFactory): AppContainer: No service registered for key "IModValidationOrchestrator". Known keys: [ILogger, ProxyUrl, IConfiguration, IPathResolver, ISchemaValidator, IDataRegistry, IDataFetcher, ITextDataFetcher, RuleLoader, ComponentLoader, ConditionLoader, ActionLoader, EventLoader, MacroLoader, EntityLoader, EntityInstanceLoader, WorldLoader, GoalLoader, AnatomyRecipeLoader, AnatomyBlueprintLoader, AnatomyBlueprintPartLoader, AnatomySlotLibraryLoader, AnatomyFormattingLoader, ScopeLoader, ModManifestLoader, GameConfigLoader, PromptTextLoader, ModLoadOrderResolver, ModManifestProcessor, ContentLoadManager, WorldLoadSummaryLogger, SchemaPhase, GameConfigPhase, ManifestPhase, ContentPhase, WorldPhase, SummaryPhase, ILoadCache, ModsLoader, SchemaLoader, ServiceSetup, IPathConfiguration, ITraceConfigLoader, ActionIndexingService, EventBus, IEventBus, ISpatialIndexManager, IGameDataRepository, IValidatedEventDispatcher, ISafeEventDispatcher, EventDispatchService, ScopeEngine, DslParser, IScopeEngine, IScopeDslErrorFactory, IScopeDslErrorHandler, ICriticalLogNotifier, CriticalLogNotifier, IActionTraceConfigValidator, IActionTraceConfigLoader, ITraceDirectoryManager, IIndexedDBStorageAdapter, IActionTraceFilter, IJsonTraceFormatter, IHumanReadableFormatter, IActionTraceOutputService, IActionAwareStructuredTrace, IEventDispatchTracer, IErrorMetrics, IRetryManager, IRecoveryManager, ITraceErrorHandler, ITracingConfigurationInitializer, IStorageProvider, ISaveFileRepository, ISaveLoadService, PlaytimeTracker, ComponentCleaningService, SaveMetadataBuilder, ActiveModsManifestBuilder, GameStateCaptureService, ManualSaveCoordinator, GamePersistenceService, IEntityManager, IWorldContext, ClosenessCircleService, EntityDisplayDataProvider, SpatialIndexSynchronizer, LocationQueryService, EntityAccessService, ComponentAccessService, LocationDisplayService, GraphIntegrityValidator, AnatomyQueryCache, RecipeProcessor, PartSelectionService, SocketManager, EntityGraphBuilder, RecipeConstraintEvaluator, BodyBlueprintFactory, BodyGraphService, JsonLogicCustomOperators, JsonLogicEvaluationService, AnatomyFormattingService, DescriptorFormatter, BodyPartDescriptionBuilder, BodyDescriptionComposer, PartDescriptionGenerator, DescriptionPersistenceService, BodyDescriptionOrchestrator, AnatomyDescriptionService, AnatomyGenerationService, LayerCompatibilityService, ClothingSlotValidator, EquipmentOrchestrator, LayerResolutionService, IAnatomySocketIndex, IAnatomyBlueprintRepository, AnatomyClothingCache, SlotResolver, ClothingManagementService, EquipmentDescriptionService, ClothingInstantiationService, ClothingInstantiationServiceV2, AnatomyInitializationService, IPipelineServiceFactory, IPipelineServiceRegistry, ITargetDependencyResolver, ILegacyTargetCompatibilityLayer, IScopeContextBuilder, ITargetDisplayNameResolver, IScopeRegistry, ActionIndex, IScopeCacheStrategy, IUnifiedScopeResolver, ITargetContextBuilder, IMultiTargetResolutionStage, ITargetResolutionService, TraceContextFactory, IFixSuggestionEngine, IActionErrorContextBuilder, ActionCandidateProcessor, ActionPipelineOrchestrator, IActionDiscoveryService, ActionValidationContextBuilder, PrerequisiteEvaluationService, IActionExecutionTraceFactory, ICommandProcessor, UnifiedErrorHandler, DirectiveStrategyResolver, CommandDispatcher, DirectiveExecutor, ResultInterpreter, ICommandOutcomeInterpreter, DispatchEventHandler, DispatchPerceptibleEventHandler, DispatchSpeechHandler, DispatchThoughtHandler, LogHandler, ModifyComponentHandler, AddComponentHandler, RemoveComponentHandler, QueryComponentHandler, QueryComponentsHandler, SetVariableHandler, EndTurnHandler, SystemMoveEntityHandler, IMoveEntityHandler, GetTimestampHandler, GetNameHandler, RebuildLeaderListCacheHandler, CheckFollowCycleHandler, EstablishFollowRelationHandler, BreakFollowRelationHandler, AddPerceptionLogEntryHandler, QueryEntitiesHandler, HasComponentHandler, ModifyArrayFieldHandler, ModifyContextArrayHandler, IfCoLocatedHandler, MathHandler, AutoMoveFollowersHandler, MergeClosenessCircleHandler, RemoveFromClosenessCircleHandler, EstablishSittingClosenessHandler, RemoveSittingClosenessHandler, HasBodyPartWithComponentValueHandler, UnequipClothingHandler, LockMovementHandler, LockMouthEngagementHandler, UnlockMovementHandler, UnlockMouthEngagementHandler, RegenerateDescriptionHandler, AtomicModifyComponentHandler, SequenceHandler, OperationRegistry, OperationInterpreter, ActionSequence, SystemLogicInterpreter, IHttpClient, LlmConfigLoader, ILLMConfigurationManager, ILLMRequestExecutor, ILLMErrorMapper, ITokenEstimator, LLMAdapter, LlmJsonService, CharacterDatabase, CharacterStorageService, ThematicDirectionGenerator, ClicheGenerator, CoreMotivationsGenerator, CoreMotivationsDisplayEnhancer, TraitsGenerator, TraitsDisplayEnhancer, SpeechPatternsResponseProcessor, SpeechPatternsGenerator, SpeechPatternsDisplayEnhancer, TraitsRewriterGenerator, TraitsRewriterResponseProcessor, TraitsRewriterDisplayEnhancer, CharacterBuilderService, ICharacterBuilderService, IPromptOutputPort, ITurnEndPort, IActionCategorizationService, WorldInitializer, SystemInitializer]
+    - Expected
+    + Received
 
-      119 |           error
-      120 |         );
-    > 121 |         throw new Error(
-          |               ^
-      122 |           `Failed to create instance for "${registrationKey}" (lifecycle: ${lifecycle}): ${error.message}`,
-      123 |           { cause: error }
-      124 |         );
+      "core:system_error_occurred",
+      Object {
+        "details": Object {
+    -     "componentType": "core:inventory",
+    -     "entityId": "ent_player",
+    -     "error": "Database connection failed",
+    +     "raw": "{
+    +   \"extra\": {
+    +     \"error\": \"Database connection failed\",
+    +     \"entityId\": \"ent_player\",
+    +     \"componentType\": \"core:inventory\"
+    +   }
+    + }",
+        },
+        "message": "MODIFY_ARRAY_FIELD: Failed to commit changes via addComponent.",
+      },
 
-      at AppContainer.resolve (src/dependencyInjection/appContainer.js:121:15)
-      at resolve (src/dependencyInjection/registrations/loadersRegistrations.js:433:25)
-      at AppContainer.factoryFn [as _invokeFactory] (src/dependencyInjection/appContainer.js:249:12)
-      at AppContainer._invokeFactory [as _createInstance] (src/dependencyInjection/appContainer.js:190:19)
-      at AppContainer._createInstance [as resolve] (src/dependencyInjection/appContainer.js:109:31)
-      at CharacterBuilderBootstrap.resolve (src/characterBuilder/CharacterBuilderBootstrap.js:761:34)
-      at CharacterBuilderBootstrap.bootstrap (src/characterBuilder/CharacterBuilderBootstrap.js:103:29)
-      at Object.<anonymous> (tests/integration/characterBuilder/speechPatternsGeneratorRuntimeErrors.integration.test.js:260:7)
+    Number of calls: 1
 
-    Cause:
-    Failed to create instance for "ModManifestProcessor" (lifecycle: singletonFactory): AppContainer: No service registered for key "IModValidationOrchestrator". Known keys: [ILogger, ProxyUrl, IConfiguration, IPathResolver, ISchemaValidator, IDataRegistry, IDataFetcher, ITextDataFetcher, RuleLoader, ComponentLoader, ConditionLoader, ActionLoader, EventLoader, MacroLoader, EntityLoader, EntityInstanceLoader, WorldLoader, GoalLoader, AnatomyRecipeLoader, AnatomyBlueprintLoader, AnatomyBlueprintPartLoader, AnatomySlotLibraryLoader, AnatomyFormattingLoader, ScopeLoader, ModManifestLoader, GameConfigLoader, PromptTextLoader, ModLoadOrderResolver, ModManifestProcessor, ContentLoadManager, WorldLoadSummaryLogger, SchemaPhase, GameConfigPhase, ManifestPhase, ContentPhase, WorldPhase, SummaryPhase, ILoadCache, ModsLoader, SchemaLoader, ServiceSetup, IPathConfiguration, ITraceConfigLoader, ActionIndexingService, EventBus, IEventBus, ISpatialIndexManager, IGameDataRepository, IValidatedEventDispatcher, ISafeEventDispatcher, EventDispatchService, ScopeEngine, DslParser, IScopeEngine, IScopeDslErrorFactory, IScopeDslErrorHandler, ICriticalLogNotifier, CriticalLogNotifier, IActionTraceConfigValidator, IActionTraceConfigLoader, ITraceDirectoryManager, IIndexedDBStorageAdapter, IActionTraceFilter, IJsonTraceFormatter, IHumanReadableFormatter, IActionTraceOutputService, IActionAwareStructuredTrace, IEventDispatchTracer, IErrorMetrics, IRetryManager, IRecoveryManager, ITraceErrorHandler, ITracingConfigurationInitializer, IStorageProvider, ISaveFileRepository, ISaveLoadService, PlaytimeTracker, ComponentCleaningService, SaveMetadataBuilder, ActiveModsManifestBuilder, GameStateCaptureService, ManualSaveCoordinator, GamePersistenceService, IEntityManager, IWorldContext, ClosenessCircleService, EntityDisplayDataProvider, SpatialIndexSynchronizer, LocationQueryService, EntityAccessService, ComponentAccessService, LocationDisplayService, GraphIntegrityValidator, AnatomyQueryCache, RecipeProcessor, PartSelectionService, SocketManager, EntityGraphBuilder, RecipeConstraintEvaluator, BodyBlueprintFactory, BodyGraphService, JsonLogicCustomOperators, JsonLogicEvaluationService, AnatomyFormattingService, DescriptorFormatter, BodyPartDescriptionBuilder, BodyDescriptionComposer, PartDescriptionGenerator, DescriptionPersistenceService, BodyDescriptionOrchestrator, AnatomyDescriptionService, AnatomyGenerationService, LayerCompatibilityService, ClothingSlotValidator, EquipmentOrchestrator, LayerResolutionService, IAnatomySocketIndex, IAnatomyBlueprintRepository, AnatomyClothingCache, SlotResolver, ClothingManagementService, EquipmentDescriptionService, ClothingInstantiationService, ClothingInstantiationServiceV2, AnatomyInitializationService, IPipelineServiceFactory, IPipelineServiceRegistry, ITargetDependencyResolver, ILegacyTargetCompatibilityLayer, IScopeContextBuilder, ITargetDisplayNameResolver, IScopeRegistry, ActionIndex, IScopeCacheStrategy, IUnifiedScopeResolver, ITargetContextBuilder, IMultiTargetResolutionStage, ITargetResolutionService, TraceContextFactory, IFixSuggestionEngine, IActionErrorContextBuilder, ActionCandidateProcessor, ActionPipelineOrchestrator, IActionDiscoveryService, ActionValidationContextBuilder, PrerequisiteEvaluationService, IActionExecutionTraceFactory, ICommandProcessor, UnifiedErrorHandler, DirectiveStrategyResolver, CommandDispatcher, DirectiveExecutor, ResultInterpreter, ICommandOutcomeInterpreter, DispatchEventHandler, DispatchPerceptibleEventHandler, DispatchSpeechHandler, DispatchThoughtHandler, LogHandler, ModifyComponentHandler, AddComponentHandler, RemoveComponentHandler, QueryComponentHandler, QueryComponentsHandler, SetVariableHandler, EndTurnHandler, SystemMoveEntityHandler, IMoveEntityHandler, GetTimestampHandler, GetNameHandler, RebuildLeaderListCacheHandler, CheckFollowCycleHandler, EstablishFollowRelationHandler, BreakFollowRelationHandler, AddPerceptionLogEntryHandler, QueryEntitiesHandler, HasComponentHandler, ModifyArrayFieldHandler, ModifyContextArrayHandler, IfCoLocatedHandler, MathHandler, AutoMoveFollowersHandler, MergeClosenessCircleHandler, RemoveFromClosenessCircleHandler, EstablishSittingClosenessHandler, RemoveSittingClosenessHandler, HasBodyPartWithComponentValueHandler, UnequipClothingHandler, LockMovementHandler, LockMouthEngagementHandler, UnlockMovementHandler, UnlockMouthEngagementHandler, RegenerateDescriptionHandler, AtomicModifyComponentHandler, SequenceHandler, OperationRegistry, OperationInterpreter, ActionSequence, SystemLogicInterpreter, IHttpClient, LlmConfigLoader, ILLMConfigurationManager, ILLMRequestExecutor, ILLMErrorMapper, ITokenEstimator, LLMAdapter, LlmJsonService, CharacterDatabase, CharacterStorageService, ThematicDirectionGenerator, ClicheGenerator, CoreMotivationsGenerator, CoreMotivationsDisplayEnhancer, TraitsGenerator, TraitsDisplayEnhancer, SpeechPatternsResponseProcessor, SpeechPatternsGenerator, SpeechPatternsDisplayEnhancer, TraitsRewriterGenerator, TraitsRewriterResponseProcessor, TraitsRewriterDisplayEnhancer, CharacterBuilderService, ICharacterBuilderService, IPromptOutputPort, ITurnEndPort, IActionCategorizationService, WorldInitializer, SystemInitializer]
+      318 |       await handler.execute(params, mockExecutionContext);
+      319 |
+    > 320 |       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+          |                                       ^
+      321 |         'core:system_error_occurred',
+      322 |         {
+      323 |           message:
 
-      119 |           error
-      120 |         );
-    > 121 |         throw new Error(
-          |               ^
-      122 |           `Failed to create instance for "${registrationKey}" (lifecycle: ${lifecycle}): ${error.message}`,
-      123 |           { cause: error }
-      124 |         );
+      at Object.toHaveBeenCalledWith (tests/unit/logic/operationHandlers/modifyArrayFieldHandler.coverage.test.js:320:39)
 
-      at AppContainer.resolve (src/dependencyInjection/appContainer.js:121:15)
-      at resolve (src/dependencyInjection/registrations/loadersRegistrations.js:377:22)
-      at AppContainer.factoryFn [as _invokeFactory] (src/dependencyInjection/appContainer.js:249:12)
-      at AppContainer._invokeFactory [as _createInstance] (src/dependencyInjection/appContainer.js:190:19)
-      at AppContainer._createInstance [as resolve] (src/dependencyInjection/appContainer.js:109:31)
-      at resolve (src/dependencyInjection/registrations/loadersRegistrations.js:433:25)
-      at AppContainer.factoryFn [as _invokeFactory] (src/dependencyInjection/appContainer.js:249:12)
-      at AppContainer._invokeFactory [as _createInstance] (src/dependencyInjection/appContainer.js:190:19)
-      at AppContainer._createInstance [as resolve] (src/dependencyInjection/appContainer.js:109:31)
-      at CharacterBuilderBootstrap.resolve (src/characterBuilder/CharacterBuilderBootstrap.js:761:34)
-      at CharacterBuilderBootstrap.bootstrap (src/characterBuilder/CharacterBuilderBootstrap.js:103:29)
-      at Object.<anonymous> (tests/integration/characterBuilder/speechPatternsGeneratorRuntimeErrors.integration.test.js:260:7)
+ FAIL  tests/unit/turns/turnManager.advanceTurn.roundStart.test.js
+  ● TurnManager: advanceTurn() - Round Start (Queue Empty) › No active actors found › dispatches system error when round cannot start
 
-    Cause:
-    AppContainer: No service registered for key "IModValidationOrchestrator". Known keys: [ILogger, ProxyUrl, IConfiguration, IPathResolver, ISchemaValidator, IDataRegistry, IDataFetcher, ITextDataFetcher, RuleLoader, ComponentLoader, ConditionLoader, ActionLoader, EventLoader, MacroLoader, EntityLoader, EntityInstanceLoader, WorldLoader, GoalLoader, AnatomyRecipeLoader, AnatomyBlueprintLoader, AnatomyBlueprintPartLoader, AnatomySlotLibraryLoader, AnatomyFormattingLoader, ScopeLoader, ModManifestLoader, GameConfigLoader, PromptTextLoader, ModLoadOrderResolver, ModManifestProcessor, ContentLoadManager, WorldLoadSummaryLogger, SchemaPhase, GameConfigPhase, ManifestPhase, ContentPhase, WorldPhase, SummaryPhase, ILoadCache, ModsLoader, SchemaLoader, ServiceSetup, IPathConfiguration, ITraceConfigLoader, ActionIndexingService, EventBus, IEventBus, ISpatialIndexManager, IGameDataRepository, IValidatedEventDispatcher, ISafeEventDispatcher, EventDispatchService, ScopeEngine, DslParser, IScopeEngine, IScopeDslErrorFactory, IScopeDslErrorHandler, ICriticalLogNotifier, CriticalLogNotifier, IActionTraceConfigValidator, IActionTraceConfigLoader, ITraceDirectoryManager, IIndexedDBStorageAdapter, IActionTraceFilter, IJsonTraceFormatter, IHumanReadableFormatter, IActionTraceOutputService, IActionAwareStructuredTrace, IEventDispatchTracer, IErrorMetrics, IRetryManager, IRecoveryManager, ITraceErrorHandler, ITracingConfigurationInitializer, IStorageProvider, ISaveFileRepository, ISaveLoadService, PlaytimeTracker, ComponentCleaningService, SaveMetadataBuilder, ActiveModsManifestBuilder, GameStateCaptureService, ManualSaveCoordinator, GamePersistenceService, IEntityManager, IWorldContext, ClosenessCircleService, EntityDisplayDataProvider, SpatialIndexSynchronizer, LocationQueryService, EntityAccessService, ComponentAccessService, LocationDisplayService, GraphIntegrityValidator, AnatomyQueryCache, RecipeProcessor, PartSelectionService, SocketManager, EntityGraphBuilder, RecipeConstraintEvaluator, BodyBlueprintFactory, BodyGraphService, JsonLogicCustomOperators, JsonLogicEvaluationService, AnatomyFormattingService, DescriptorFormatter, BodyPartDescriptionBuilder, BodyDescriptionComposer, PartDescriptionGenerator, DescriptionPersistenceService, BodyDescriptionOrchestrator, AnatomyDescriptionService, AnatomyGenerationService, LayerCompatibilityService, ClothingSlotValidator, EquipmentOrchestrator, LayerResolutionService, IAnatomySocketIndex, IAnatomyBlueprintRepository, AnatomyClothingCache, SlotResolver, ClothingManagementService, EquipmentDescriptionService, ClothingInstantiationService, ClothingInstantiationServiceV2, AnatomyInitializationService, IPipelineServiceFactory, IPipelineServiceRegistry, ITargetDependencyResolver, ILegacyTargetCompatibilityLayer, IScopeContextBuilder, ITargetDisplayNameResolver, IScopeRegistry, ActionIndex, IScopeCacheStrategy, IUnifiedScopeResolver, ITargetContextBuilder, IMultiTargetResolutionStage, ITargetResolutionService, TraceContextFactory, IFixSuggestionEngine, IActionErrorContextBuilder, ActionCandidateProcessor, ActionPipelineOrchestrator, IActionDiscoveryService, ActionValidationContextBuilder, PrerequisiteEvaluationService, IActionExecutionTraceFactory, ICommandProcessor, UnifiedErrorHandler, DirectiveStrategyResolver, CommandDispatcher, DirectiveExecutor, ResultInterpreter, ICommandOutcomeInterpreter, DispatchEventHandler, DispatchPerceptibleEventHandler, DispatchSpeechHandler, DispatchThoughtHandler, LogHandler, ModifyComponentHandler, AddComponentHandler, RemoveComponentHandler, QueryComponentHandler, QueryComponentsHandler, SetVariableHandler, EndTurnHandler, SystemMoveEntityHandler, IMoveEntityHandler, GetTimestampHandler, GetNameHandler, RebuildLeaderListCacheHandler, CheckFollowCycleHandler, EstablishFollowRelationHandler, BreakFollowRelationHandler, AddPerceptionLogEntryHandler, QueryEntitiesHandler, HasComponentHandler, ModifyArrayFieldHandler, ModifyContextArrayHandler, IfCoLocatedHandler, MathHandler, AutoMoveFollowersHandler, MergeClosenessCircleHandler, RemoveFromClosenessCircleHandler, EstablishSittingClosenessHandler, RemoveSittingClosenessHandler, HasBodyPartWithComponentValueHandler, UnequipClothingHandler, LockMovementHandler, LockMouthEngagementHandler, UnlockMovementHandler, UnlockMouthEngagementHandler, RegenerateDescriptionHandler, AtomicModifyComponentHandler, SequenceHandler, OperationRegistry, OperationInterpreter, ActionSequence, SystemLogicInterpreter, IHttpClient, LlmConfigLoader, ILLMConfigurationManager, ILLMRequestExecutor, ILLMErrorMapper, ITokenEstimator, LLMAdapter, LlmJsonService, CharacterDatabase, CharacterStorageService, ThematicDirectionGenerator, ClicheGenerator, CoreMotivationsGenerator, CoreMotivationsDisplayEnhancer, TraitsGenerator, TraitsDisplayEnhancer, SpeechPatternsResponseProcessor, SpeechPatternsGenerator, SpeechPatternsDisplayEnhancer, TraitsRewriterGenerator, TraitsRewriterResponseProcessor, TraitsRewriterDisplayEnhancer, CharacterBuilderService, ICharacterBuilderService, IPromptOutputPort, ITurnEndPort, IActionCategorizationService, WorldInitializer, SystemInitializer]
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
 
-      94 |     if (!registration) {
-      95 |       const knownKeys = Array.from(this.#registrations.keys()).join(', ');
-    > 96 |       throw new Error(
-         |             ^
-      97 |         `AppContainer: No service registered for key "${registrationKey}". Known keys: [${knownKeys}]`
-      98 |       );
-      99 |     }
+    Expected: "core:system_error_occurred", ObjectContaining {"details": {"error": "Cannot start a new round: No active entities with an Actor component found."}, "message": "Critical error during turn advancement logic"}
+    Received
+           1: "core:system_error_occurred", {"details": {"raw": "{
+      \"extra\": {
+        \"error\": \"Cannot start a new round: No active entities with an Actor component found.\"
+      }
+    }"}, "message": "Critical error during turn advancement logic"}
+           2: "core:system_error_occurred", {"details": {"raw": "Cannot start a new round: No active entities with an Actor component found.", "stack": "Error:·
+        at TurnManager.#dispatchSystemError (/home/joeloverbeck/projects/living-narrative-engine/src/turns/turnManager.js:642:11)
+        at TurnManager.advanceTurn (/home/joeloverbeck/projects/living-narrative-engine/src/turns/turnManager.js:347:42)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at TurnManager.start (/home/joeloverbeck/projects/living-narrative-engine/src/turns/turnManager.js:203:5)
+        at Object.<anonymous> (/home/joeloverbeck/projects/living-narrative-engine/tests/unit/turns/turnManager.advanceTurn.roundStart.test.js:61:9)", "timestamp": "2025-09-12T06:01:59.102Z"}, "message": "System Error: No active actors found to start a round. Stopping game."}
 
-      at AppContainer.resolve (src/dependencyInjection/appContainer.js:96:13)
-      at resolve (src/dependencyInjection/registrations/loadersRegistrations.js:314:36)
-      at AppContainer.factoryFn [as _invokeFactory] (src/dependencyInjection/appContainer.js:249:12)
-      at AppContainer._invokeFactory [as _createInstance] (src/dependencyInjection/appContainer.js:190:19)
-      at AppContainer._createInstance [as resolve] (src/dependencyInjection/appContainer.js:109:31)
-      at resolve (src/dependencyInjection/registrations/loadersRegistrations.js:377:22)
-      at AppContainer.factoryFn [as _invokeFactory] (src/dependencyInjection/appContainer.js:249:12)
-      at AppContainer._invokeFactory [as _createInstance] (src/dependencyInjection/appContainer.js:190:19)
-      at AppContainer._createInstance [as resolve] (src/dependencyInjection/appContainer.js:109:31)
-      at resolve (src/dependencyInjection/registrations/loadersRegistrations.js:433:25)
-      at AppContainer.factoryFn [as _invokeFactory] (src/dependencyInjection/appContainer.js:249:12)
-      at AppContainer._invokeFactory [as _createInstance] (src/dependencyInjection/appContainer.js:190:19)
-      at AppContainer._createInstance [as resolve] (src/dependencyInjection/appContainer.js:109:31)
-      at CharacterBuilderBootstrap.resolve (src/characterBuilder/CharacterBuilderBootstrap.js:761:34)
-      at CharacterBuilderBootstrap.bootstrap (src/characterBuilder/CharacterBuilderBootstrap.js:103:29)
-      at Object.<anonymous> (tests/integration/characterBuilder/speechPatternsGeneratorRuntimeErrors.integration.test.js:260:7)
+    Number of calls: 2
+
+      73 |
+      74 |       test('dispatches system error when round cannot start', () => {
+    > 75 |         expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
+         |                                                   ^
+      76 |           SYSTEM_ERROR_OCCURRED_ID,
+      77 |           expect.objectContaining({
+      78 |             message: 'Critical error during turn advancement logic',
+
+      at Object.toHaveBeenCalledWith (tests/unit/turns/turnManager.advanceTurn.roundStart.test.js:75:51)
+
+  ● TurnManager: advanceTurn() - Round Start (Queue Empty) › No active actors found (empty map): logs error, dispatches message, and stops
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "core:system_error_occurred", ObjectContaining {"details": {"error": "Cannot start a new round: No active entities with an Actor component found."}, "message": "Critical error during turn advancement logic"}
+    Received
+           1: "core:system_error_occurred", {"details": {"raw": "{
+      \"extra\": {
+        \"error\": \"Cannot start a new round: No active entities with an Actor component found.\"
+      }
+    }"}, "message": "Critical error during turn advancement logic"}
+           2: "core:system_error_occurred", {"details": {"raw": "Cannot start a new round: No active entities with an Actor component found.", "stack": "Error:·
+        at TurnManager.#dispatchSystemError (/home/joeloverbeck/projects/living-narrative-engine/src/turns/turnManager.js:642:11)
+        at TurnManager.advanceTurn (/home/joeloverbeck/projects/living-narrative-engine/src/turns/turnManager.js:347:42)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at TurnManager.start (/home/joeloverbeck/projects/living-narrative-engine/src/turns/turnManager.js:203:5)
+        at Object.<anonymous> (/home/joeloverbeck/projects/living-narrative-engine/tests/unit/turns/turnManager.advanceTurn.roundStart.test.js:100:7)", "timestamp": "2025-09-12T06:01:59.120Z"}, "message": "System Error: No active actors found to start a round. Stopping game."}
+
+    Number of calls: 2
+
+      101 |
+      102 |       // Assert
+    > 103 |       expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
+          |                                                 ^
+      104 |         SYSTEM_ERROR_OCCURRED_ID,
+      105 |         expect.objectContaining({
+      106 |           message: 'Critical error during turn advancement logic',
+
+      at Object.toHaveBeenCalledWith (tests/unit/turns/turnManager.advanceTurn.roundStart.test.js:103:49)
+
+  ● TurnManager: advanceTurn() - Round Start (Queue Empty) › handler resolution fails after a new round starts › dispatches a system error
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "core:system_error_occurred", ObjectContaining {"details": {"error": "Handler resolution failed"}, "message": "System Error during turn advancement"}
+    Received
+           1: "core:turn_started", {"entity": {"componentTypeIds": ["core:actor"], "components": {"core:actor": {}}, "getComponent": [Function mockConstructor], "getComponentData": [Function mockConstructor], "hasComponent": [Function mockConstructor], "id": "actor1", "name": "actor1"}, "entityId": "actor1", "entityType": "ai"}
+           2: "core:turn_processing_started", {"actorType": "ai", "entityId": "actor1"}
+           3: "core:system_error_occurred", {"details": {"raw": "{
+      \"extra\": {
+        \"error\": \"Handler resolution failed\"
+      }
+    }"}, "message": "System Error during turn advancement"}
+
+    Number of calls: 4
+
+      242 |
+      243 |       test('dispatches a system error', () => {
+    > 244 |         expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
+          |                                                   ^
+      245 |           SYSTEM_ERROR_OCCURRED_ID,
+      246 |           expect.objectContaining({
+      247 |             message: 'System Error during turn advancement',
+
+      at Object.toHaveBeenCalledWith (tests/unit/turns/turnManager.advanceTurn.roundStart.test.js:244:51)
+
+ FAIL  tests/unit/actions/examples/schemaValidation.test.js
+  ● Multi-Target Action Examples - Schema Validation › Basic Multi-Target Action › should validate throw item at target action
+
+    ENOENT: no such file or directory, open '/home/joeloverbeck/projects/living-narrative-engine/data/mods/examples/actions/basic_multi_target.action.json'
+
+      55 |         'data/mods/examples/actions/basic_multi_target.action.json'
+      56 |       );
+    > 57 |       const actionDef = JSON.parse(readFileSync(actionPath, 'utf8'));
+         |                                                ^
+      58 |
+      59 |       const validate = ajv.compile(actionSchema);
+      60 |       const isValid = validate(actionDef);
+
+      at Object.<anonymous> (tests/unit/actions/examples/schemaValidation.test.js:57:48)
+
+  ● Multi-Target Action Examples - Schema Validation › Basic Multi-Target Action › should have correct target structure
+
+    ENOENT: no such file or directory, open '/home/joeloverbeck/projects/living-narrative-engine/data/mods/examples/actions/basic_multi_target.action.json'
+
+      75 |         'data/mods/examples/actions/basic_multi_target.action.json'
+      76 |       );
+    > 77 |       const actionDef = JSON.parse(readFileSync(actionPath, 'utf8'));
+         |                                                ^
+      78 |
+      79 |       expect(actionDef.targets).toBeDefined();
+      80 |       expect(actionDef.targets.primary).toBeDefined();
+
+      at Object.<anonymous> (tests/unit/actions/examples/schemaValidation.test.js:77:48)
+
+  ● Multi-Target Action Examples - Schema Validation › Basic Multi-Target Action › should have matching template placeholders
+
+    ENOENT: no such file or directory, open '/home/joeloverbeck/projects/living-narrative-engine/data/mods/examples/actions/basic_multi_target.action.json'
+
+      93 |         'data/mods/examples/actions/basic_multi_target.action.json'
+      94 |       );
+    > 95 |       const actionDef = JSON.parse(readFileSync(actionPath, 'utf8'));
+         |                                                ^
+      96 |
+      97 |       const template = actionDef.template;
+      98 |       const primaryPlaceholder = actionDef.targets.primary.placeholder;
+
+      at Object.<anonymous> (tests/unit/actions/examples/schemaValidation.test.js:95:48)
+
+  ● Multi-Target Action Examples - Schema Validation › Context-Dependent Action › should validate unlock container with key action
+
+    ENOENT: no such file or directory, open '/home/joeloverbeck/projects/living-narrative-engine/data/mods/examples/actions/context_dependent.action.json'
+
+      110 |         'data/mods/examples/actions/context_dependent.action.json'
+      111 |       );
+    > 112 |       const actionDef = JSON.parse(readFileSync(actionPath, 'utf8'));
+          |                                                ^
+      113 |
+      114 |       const validate = ajv.compile(actionSchema);
+      115 |       const isValid = validate(actionDef);
+
+      at Object.<anonymous> (tests/unit/actions/examples/schemaValidation.test.js:112:48)
+
+  ● Multi-Target Action Examples - Schema Validation › Context-Dependent Action › should have contextFrom dependency
+
+    ENOENT: no such file or directory, open '/home/joeloverbeck/projects/living-narrative-engine/data/mods/examples/actions/context_dependent.action.json'
+
+      130 |         'data/mods/examples/actions/context_dependent.action.json'
+      131 |       );
+    > 132 |       const actionDef = JSON.parse(readFileSync(actionPath, 'utf8'));
+          |                                                ^
+      133 |
+      134 |       expect(actionDef.targets.secondary.contextFrom).toBe('primary');
+      135 |     });
+
+      at Object.<anonymous> (tests/unit/actions/examples/schemaValidation.test.js:132:48)
+
+  ● Multi-Target Action Examples - Schema Validation › Context-Dependent Action › should not generate combinations
+
+    ENOENT: no such file or directory, open '/home/joeloverbeck/projects/living-narrative-engine/data/mods/examples/actions/context_dependent.action.json'
+
+      140 |         'data/mods/examples/actions/context_dependent.action.json'
+      141 |       );
+    > 142 |       const actionDef = JSON.parse(readFileSync(actionPath, 'utf8'));
+          |                                                ^
+      143 |
+      144 |       expect(actionDef.generateCombinations).toBe(false);
+      145 |     });
+
+      at Object.<anonymous> (tests/unit/actions/examples/schemaValidation.test.js:142:48)
+
+  ● Multi-Target Action Examples - Schema Validation › Give Item Actions › should validate give_item action
+
+    ENOENT: no such file or directory, open '/home/joeloverbeck/projects/living-narrative-engine/data/mods/examples/actions/give_item.action.json'
+
+      152 |         'data/mods/examples/actions/give_item.action.json'
+      153 |       );
+    > 154 |       const actionDef = JSON.parse(readFileSync(actionPath, 'utf8'));
+          |                                                ^
+      155 |
+      156 |       const validate = ajv.compile(actionSchema);
+      157 |       const isValid = validate(actionDef);
+
+      at Object.<anonymous> (tests/unit/actions/examples/schemaValidation.test.js:154:48)
+
+  ● Multi-Target Action Examples - Schema Validation › Give Item Actions › should validate give_item_with_note action
+
+    ENOENT: no such file or directory, open '/home/joeloverbeck/projects/living-narrative-engine/data/mods/examples/actions/give_item_with_note.action.json'
+
+      172 |         'data/mods/examples/actions/give_item_with_note.action.json'
+      173 |       );
+    > 174 |       const actionDef = JSON.parse(readFileSync(actionPath, 'utf8'));
+          |                                                ^
+      175 |
+      176 |       const validate = ajv.compile(actionSchema);
+      177 |       const isValid = validate(actionDef);
+
+      at Object.<anonymous> (tests/unit/actions/examples/schemaValidation.test.js:174:48)
+
+  ● Multi-Target Action Examples - Schema Validation › All Examples › should have required schema properties: basic_multi_target.action.json
+
+    ENOENT: no such file or directory, open '/home/joeloverbeck/projects/living-narrative-engine/data/mods/examples/actions/basic_multi_target.action.json'
+
+      204 |           filename
+      205 |         );
+    > 206 |         const actionDef = JSON.parse(readFileSync(actionPath, 'utf8'));
+          |                                                  ^
+      207 |
+      208 |         expect(actionDef.id).toBeDefined();
+      209 |         expect(actionDef.name).toBeDefined();
+
+      at Object.<anonymous> (tests/unit/actions/examples/schemaValidation.test.js:206:50)
+
+  ● Multi-Target Action Examples - Schema Validation › All Examples › should have valid JSON Logic prerequisites: basic_multi_target.action.json
+
+    ENOENT: no such file or directory, open '/home/joeloverbeck/projects/living-narrative-engine/data/mods/examples/actions/basic_multi_target.action.json'
+
+      219 |           filename
+      220 |         );
+    > 221 |         const actionDef = JSON.parse(readFileSync(actionPath, 'utf8'));
+          |                                                  ^
+      222 |
+      223 |         if (actionDef.prerequisites) {
+      224 |           actionDef.prerequisites.forEach((prereq) => {
+
+      at Object.<anonymous> (tests/unit/actions/examples/schemaValidation.test.js:221:50)
+
+  ● Multi-Target Action Examples - Schema Validation › All Examples › should have required schema properties: context_dependent.action.json
+
+    ENOENT: no such file or directory, open '/home/joeloverbeck/projects/living-narrative-engine/data/mods/examples/actions/context_dependent.action.json'
+
+      204 |           filename
+      205 |         );
+    > 206 |         const actionDef = JSON.parse(readFileSync(actionPath, 'utf8'));
+          |                                                  ^
+      207 |
+      208 |         expect(actionDef.id).toBeDefined();
+      209 |         expect(actionDef.name).toBeDefined();
+
+      at Object.<anonymous> (tests/unit/actions/examples/schemaValidation.test.js:206:50)
+
+  ● Multi-Target Action Examples - Schema Validation › All Examples › should have valid JSON Logic prerequisites: context_dependent.action.json
+
+    ENOENT: no such file or directory, open '/home/joeloverbeck/projects/living-narrative-engine/data/mods/examples/actions/context_dependent.action.json'
+
+      219 |           filename
+      220 |         );
+    > 221 |         const actionDef = JSON.parse(readFileSync(actionPath, 'utf8'));
+          |                                                  ^
+      222 |
+      223 |         if (actionDef.prerequisites) {
+      224 |           actionDef.prerequisites.forEach((prereq) => {
+
+      at Object.<anonymous> (tests/unit/actions/examples/schemaValidation.test.js:221:50)
+
+  ● Multi-Target Action Examples - Schema Validation › All Examples › should have required schema properties: give_item.action.json
+
+    ENOENT: no such file or directory, open '/home/joeloverbeck/projects/living-narrative-engine/data/mods/examples/actions/give_item.action.json'
+
+      204 |           filename
+      205 |         );
+    > 206 |         const actionDef = JSON.parse(readFileSync(actionPath, 'utf8'));
+          |                                                  ^
+      207 |
+      208 |         expect(actionDef.id).toBeDefined();
+      209 |         expect(actionDef.name).toBeDefined();
+
+      at Object.<anonymous> (tests/unit/actions/examples/schemaValidation.test.js:206:50)
+
+  ● Multi-Target Action Examples - Schema Validation › All Examples › should have valid JSON Logic prerequisites: give_item.action.json
+
+    ENOENT: no such file or directory, open '/home/joeloverbeck/projects/living-narrative-engine/data/mods/examples/actions/give_item.action.json'
+
+      219 |           filename
+      220 |         );
+    > 221 |         const actionDef = JSON.parse(readFileSync(actionPath, 'utf8'));
+          |                                                  ^
+      222 |
+      223 |         if (actionDef.prerequisites) {
+      224 |           actionDef.prerequisites.forEach((prereq) => {
+
+      at Object.<anonymous> (tests/unit/actions/examples/schemaValidation.test.js:221:50)
+
+  ● Multi-Target Action Examples - Schema Validation › All Examples › should have required schema properties: give_item_with_note.action.json
+
+    ENOENT: no such file or directory, open '/home/joeloverbeck/projects/living-narrative-engine/data/mods/examples/actions/give_item_with_note.action.json'
+
+      204 |           filename
+      205 |         );
+    > 206 |         const actionDef = JSON.parse(readFileSync(actionPath, 'utf8'));
+          |                                                  ^
+      207 |
+      208 |         expect(actionDef.id).toBeDefined();
+      209 |         expect(actionDef.name).toBeDefined();
+
+      at Object.<anonymous> (tests/unit/actions/examples/schemaValidation.test.js:206:50)
+
+  ● Multi-Target Action Examples - Schema Validation › All Examples › should have valid JSON Logic prerequisites: give_item_with_note.action.json
+
+    ENOENT: no such file or directory, open '/home/joeloverbeck/projects/living-narrative-engine/data/mods/examples/actions/give_item_with_note.action.json'
+
+      219 |           filename
+      220 |         );
+    > 221 |         const actionDef = JSON.parse(readFileSync(actionPath, 'utf8'));
+          |                                                  ^
+      222 |
+      223 |         if (actionDef.prerequisites) {
+      224 |           actionDef.prerequisites.forEach((prereq) => {
+
+      at Object.<anonymous> (tests/unit/actions/examples/schemaValidation.test.js:221:50)
+
+ FAIL  tests/unit/logic/operationHandlers/getNameHandler.test.js
+  ● GetNameHandler › Error Handling › should handle error during getComponentData and use fallback
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "core:system_error_occurred", ObjectContaining {"details": ObjectContaining {"error": "Database connection failed", "stack": Any<String>}, "message": "GET_NAME: Error retrieving 'core:name' from 'actor-123'. Using fallback."}
+    Received: "core:system_error_occurred", {"details": {"raw": "{
+      \"extra\": {
+        \"error\": \"Database connection failed\"
+      }
+    }", "stack": "Error: Database connection failed
+        at Object.<anonymous> (/home/joeloverbeck/projects/living-narrative-engine/tests/unit/logic/operationHandlers/getNameHandler.test.js:670:21)
+        at Promise.finally.completed (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:1556:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:1496:10)
+        at _callCircusTest (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:1006:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTest (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:946:3)
+        at _runTestsForDescribeBlock (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:839:13)
+        at _runTestsForDescribeBlock (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:829:11)
+        at _runTestsForDescribeBlock (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:829:11)
+        at run (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:757:3)
+        at runAndTransformResultsToJestFormat (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:1917:21)
+        at jestAdapter (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/runner.js:101:19)
+        at runTestInternal (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-runner/build/testWorker.js:275:16)
+        at runTest (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-runner/build/testWorker.js:343:7)
+        at Object.worker (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-runner/build/testWorker.js:497:12)"}, "message": "GET_NAME: Error retrieving 'core:name' from 'actor-123'. Using fallback."}
+
+    Number of calls: 1
+
+      675 |       handler.execute(params, executionContext);
+      676 |
+    > 677 |       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+          |                                                ^
+      678 |         SYSTEM_ERROR_OCCURRED_ID,
+      679 |         expect.objectContaining({
+      680 |           message: `GET_NAME: Error retrieving '${NAME_COMPONENT_ID}' from 'actor-123'. Using fallback.`,
+
+      at Object.toHaveBeenCalledWith (tests/unit/logic/operationHandlers/getNameHandler.test.js:677:48)
+
+  ● GetNameHandler › Error Handling › should handle error during getComponentData and use custom fallback
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "core:system_error_occurred", ObjectContaining {"details": ObjectContaining {"error": "Network timeout", "stack": Any<String>}, "message": "GET_NAME: Error retrieving 'core:name' from 'actor-123'. Using fallback."}
+    Received: "core:system_error_occurred", {"details": {"raw": "{
+      \"extra\": {
+        \"error\": \"Network timeout\"
+      }
+    }", "stack": "Error: Network timeout
+        at Object.<anonymous> (/home/joeloverbeck/projects/living-narrative-engine/tests/unit/logic/operationHandlers/getNameHandler.test.js:697:21)
+        at Promise.finally.completed (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:1556:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:1496:10)
+        at _callCircusTest (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:1006:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTest (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:946:3)
+        at _runTestsForDescribeBlock (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:839:13)
+        at _runTestsForDescribeBlock (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:829:11)
+        at _runTestsForDescribeBlock (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:829:11)
+        at run (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:757:3)
+        at runAndTransformResultsToJestFormat (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:1917:21)
+        at jestAdapter (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/runner.js:101:19)
+        at runTestInternal (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-runner/build/testWorker.js:275:16)
+        at runTest (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-runner/build/testWorker.js:343:7)
+        at Object.worker (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-runner/build/testWorker.js:497:12)"}, "message": "GET_NAME: Error retrieving 'core:name' from 'actor-123'. Using fallback."}
+
+    Number of calls: 1
+
+      702 |       handler.execute(params, executionContext);
+      703 |
+    > 704 |       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+          |                                                ^
+      705 |         SYSTEM_ERROR_OCCURRED_ID,
+      706 |         expect.objectContaining({
+      707 |           message: `GET_NAME: Error retrieving '${NAME_COMPONENT_ID}' from 'actor-123'. Using fallback.`,
+
+      at Object.toHaveBeenCalledWith (tests/unit/logic/operationHandlers/getNameHandler.test.js:704:48)
+
+ FAIL  tests/unit/logic/operationHandlers/regenerateDescriptionHandler.test.js
+  ● RegenerateDescriptionHandler › Error Handling › should handle description generation failure
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "core:system_error_occurred", ObjectContaining {"details": ObjectContaining {"error": "Description generation failed", "params": {"entity_ref": "actor"}}, "message": "REGENERATE_DESCRIPTION operation failed"}
+    Received: "core:system_error_occurred", {"details": {"raw": "{
+      \"extra\": {
+        \"params\": {
+          \"entity_ref\": \"actor\"
+        },
+        \"error\": \"Description generation failed\"
+      }
+    }", "stack": "Error: Description generation failed
+        at Object.<anonymous> (/home/joeloverbeck/projects/living-narrative-engine/tests/unit/logic/operationHandlers/regenerateDescriptionHandler.test.js:428:25)
+        at Promise.finally.completed (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:1556:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:1496:10)
+        at _callCircusTest (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:1006:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTest (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:946:3)
+        at _runTestsForDescribeBlock (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:839:13)
+        at _runTestsForDescribeBlock (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:829:11)
+        at _runTestsForDescribeBlock (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:829:11)
+        at run (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:757:3)
+        at runAndTransformResultsToJestFormat (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:1917:21)
+        at jestAdapter (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/runner.js:101:19)
+        at runTestInternal (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-runner/build/testWorker.js:275:16)
+        at runTest (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-runner/build/testWorker.js:343:7)
+        at Object.worker (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-runner/build/testWorker.js:497:12)"}, "message": "REGENERATE_DESCRIPTION operation failed"}
+
+    Number of calls: 1
+
+      448 |
+      449 |       // safeDispatchError calls dispatcher.dispatch with event ID and payload
+    > 450 |       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+          |                                                ^
+      451 |         'core:system_error_occurred',
+      452 |         expect.objectContaining({
+      453 |           message: 'REGENERATE_DESCRIPTION operation failed',
+
+      at Object.toHaveBeenCalledWith (tests/unit/logic/operationHandlers/regenerateDescriptionHandler.test.js:450:48)
+
+  ● RegenerateDescriptionHandler › Error Handling › should handle component update failure
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "core:system_error_occurred", ObjectContaining {"details": ObjectContaining {"error": "Component update failed", "params": {"entity_ref": "actor"}}, "message": "REGENERATE_DESCRIPTION operation failed"}
+    Received: "core:system_error_occurred", {"details": {"raw": "{
+      \"extra\": {
+        \"params\": {
+          \"entity_ref\": \"actor\"
+        },
+        \"error\": \"Component update failed\"
+      }
+    }", "stack": "Error: Component update failed
+        at Object.<anonymous> (/home/joeloverbeck/projects/living-narrative-engine/tests/unit/logic/operationHandlers/regenerateDescriptionHandler.test.js:475:25)
+        at Promise.finally.completed (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:1556:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:1496:10)
+        at _callCircusTest (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:1006:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTest (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:946:3)
+        at _runTestsForDescribeBlock (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:839:13)
+        at _runTestsForDescribeBlock (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:829:11)
+        at _runTestsForDescribeBlock (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:829:11)
+        at run (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:757:3)
+        at runAndTransformResultsToJestFormat (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/jestAdapterInit.js:1917:21)
+        at jestAdapter (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-circus/build/runner.js:101:19)
+        at runTestInternal (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-runner/build/testWorker.js:275:16)
+        at runTest (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-runner/build/testWorker.js:343:7)
+        at Object.worker (/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-runner/build/testWorker.js:497:12)"}, "message": "REGENERATE_DESCRIPTION operation failed"}
+
+    Number of calls: 1
+
+      483 |
+      484 |       // Assert: safeDispatchError called with proper context
+    > 485 |       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+          |                                                ^
+      486 |         'core:system_error_occurred',
+      487 |         expect.objectContaining({
+      488 |           message: 'REGENERATE_DESCRIPTION operation failed',
+
+      at Object.toHaveBeenCalledWith (tests/unit/logic/operationHandlers/regenerateDescriptionHandler.test.js:485:48)
+
+ FAIL  tests/unit/logic/operationHandlers/lockMovementHandler.test.js
+  ● LockMovementHandler › execute - error cases › should dispatch error when actor_id is missing
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    - Expected
+    + Received
+
+      "core:system_error_occurred",
+      Object {
+        "details": Object {
+    -     "params": Object {},
+    +     "raw": "{
+    +   \"extra\": {
+    +     \"params\": {}
+    +   }
+    + }",
+        },
+        "message": "LOCK_MOVEMENT: invalid \"actor_id\"",
+      },
+
+    Number of calls: 1
+
+      123 |       await handler.execute(params, executionContext);
+      124 |
+    > 125 |       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+          |                                                ^
+      126 |         SYSTEM_ERROR_OCCURRED_ID,
+      127 |         {
+      128 |           message: 'LOCK_MOVEMENT: invalid "actor_id"',
+
+      at Object.toHaveBeenCalledWith (tests/unit/logic/operationHandlers/lockMovementHandler.test.js:125:48)
+
+  ● LockMovementHandler › execute - error cases › should dispatch error when actor_id is null
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    - Expected
+    + Received
+
+      "core:system_error_occurred",
+      Object {
+        "details": Object {
+    -     "params": Object {
+    -       "actor_id": null,
+    -     },
+    +     "raw": "{
+    +   \"extra\": {
+    +     \"params\": {
+    +       \"actor_id\": null
+    +     }
+    +   }
+    + }",
+        },
+        "message": "LOCK_MOVEMENT: invalid \"actor_id\"",
+      },
+
+    Number of calls: 1
+
+      138 |       await handler.execute(params, executionContext);
+      139 |
+    > 140 |       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+          |                                                ^
+      141 |         SYSTEM_ERROR_OCCURRED_ID,
+      142 |         {
+      143 |           message: 'LOCK_MOVEMENT: invalid "actor_id"',
+
+      at Object.toHaveBeenCalledWith (tests/unit/logic/operationHandlers/lockMovementHandler.test.js:140:48)

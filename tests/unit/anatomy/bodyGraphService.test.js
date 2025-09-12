@@ -435,10 +435,8 @@ describe('BodyGraphService', () => {
     });
 
     it('should handle missing nodes in cache', async () => {
-      // Clear cache to simulate missing nodes
-      await service.buildAdjacencyCache('invalid-root');
-
-      const result = service.findPartsByType('torso-1', 'arm');
+      // Test with a root that was never cached to simulate missing nodes
+      const result = service.findPartsByType('uncached-root', 'arm');
       expect(result).toEqual([]);
     });
 
@@ -464,7 +462,7 @@ describe('BodyGraphService', () => {
       // Setup cache to return undefined (cache miss)
       mockQueryCache.getCachedFindPartsByType.mockReturnValue(undefined);
 
-      const result = service.findPartsByType('torso-1', 'arm');
+      service.findPartsByType('torso-1', 'arm');
 
       // Should cache the result
       expect(mockQueryCache.cacheFindPartsByType).toHaveBeenCalledWith(
