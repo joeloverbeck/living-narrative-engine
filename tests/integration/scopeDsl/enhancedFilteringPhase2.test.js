@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import createScopeEngine from '../../../src/scopeDsl/engine.js';
 import createDefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
 
 describe('Scope DSL Phase 2: Enhanced Filtering Integration', () => {
   let engine;
@@ -8,11 +9,51 @@ describe('Scope DSL Phase 2: Enhanced Filtering Integration', () => {
   let mockRuntimeContext;
   let mockActorEntity;
   let mockEntities;
+  let mockClothingAccessibilityService;
+  let mockContainer;
 
   beforeEach(() => {
     // Setup engine and parser
     engine = new createScopeEngine();
     parser = new createDefaultDslParser();
+
+    // Create mock ClothingAccessibilityService
+    mockClothingAccessibilityService = {
+      getAccessibleItems: jest.fn((entityId, options = {}) => {
+        if (entityId === 'player_character') {
+          const { mode = 'topmost' } = options;  // Changed default to 'topmost' to match production
+          
+          // Return all clothing items based on mode
+          switch (mode) {
+            case 'all':
+              return ['leather_jacket_001', 'cotton_shirt_002', 'wool_sweater_004', 'boots_003', 'steel_helmet_005'];
+            case 'topmost':
+              return ['leather_jacket_001', 'boots_003', 'steel_helmet_005'];
+            case 'outer':
+              return ['leather_jacket_001', 'boots_003', 'steel_helmet_005'];
+            case 'base':
+              return ['cotton_shirt_002', 'wool_sweater_004'];
+            case 'topmost_no_accessories':
+              return ['leather_jacket_001', 'boots_003', 'steel_helmet_005'];
+            case 'underwear':
+              return [];
+            default:
+              return [];
+          }
+        }
+        return [];
+      }),
+    };
+
+    // Create mock container
+    mockContainer = {
+      resolve: jest.fn((token) => {
+        if (token === tokens.ClothingAccessibilityService) {
+          return mockClothingAccessibilityService;
+        }
+        return null;
+      }),
+    };
 
     // Create mock clothing entities with component data
     mockEntities = {
@@ -119,10 +160,29 @@ describe('Scope DSL Phase 2: Enhanced Filtering Integration', () => {
           const entity = mockEntities[entityId];
           return entity?.getComponentData(componentId) || null;
         }),
-        getEntity: jest.fn((entityId) => mockEntities[entityId] || null),
+        getEntity: jest.fn((entityId) => {
+          const entity = mockEntities[entityId];
+          if (entity) {
+            // Ensure entities have proper structure for evaluation context
+            return {
+              ...entity,
+              getAllComponents: jest.fn(() => {
+                const components = {};
+                if (entity.components instanceof Map) {
+                  for (const [componentId, data] of entity.components) {
+                    components[componentId] = data;
+                  }
+                }
+                return components;
+              })
+            };
+          }
+          return null;
+        }),
         hasComponent: jest.fn().mockReturnValue(true),
         getEntitiesWithComponent: jest.fn().mockReturnValue([]),
       },
+      container: mockContainer,
       jsonLogicEval: {
         evaluate: jest.fn(function (logic, context) {
           // Simple JSON Logic evaluation implementation for tests
@@ -185,9 +245,17 @@ describe('Scope DSL Phase 2: Enhanced Filtering Integration', () => {
       const ast = parser.parse('actor.all_clothing[]');
       const result = engine.resolve(ast, mockActorEntity, mockRuntimeContext);
 
-      // Should return all clothing entity instance IDs (all_clothing[] has no coverage blocking)
-      // All equipped items should be returned regardless of blocking relationships
+      // Should return all clothing entity instance IDs via ClothingAccessibilityService
+      // The service should be called with mode 'all' and return all items
       expect(result.size).toBe(5);
+      expect(mockClothingAccessibilityService.getAccessibleItems).toHaveBeenCalledWith(
+        'player_character',
+        expect.objectContaining({
+          mode: 'all',
+          context: 'removal',
+          sortByPriority: true
+        })
+      );
       expect(result).toContain('leather_jacket_001');
       expect(result).toContain('cotton_shirt_002'); // All items included, no blocking
       expect(result).toContain('boots_003');
@@ -242,8 +310,8 @@ describe('Scope DSL Phase 2: Enhanced Filtering Integration', () => {
       expect(evalCtx).toBeDefined();
       expect(evalCtx.entity).toBeDefined();
       expect(evalCtx.entity.id).toBe('leather_jacket_001');
-      expect(evalCtx.entity.components).toBeDefined();
-      expect(evalCtx.entity.components['core:tags']).toEqual({
+      expect(evalCtx.components).toBeDefined();
+      expect(evalCtx.components['core:tags']).toEqual({
         tags: ['waterproof', 'armor', 'outer'],
       });
     });
@@ -342,33 +410,32 @@ describe('Scope DSL Phase 2: Enhanced Filtering Integration', () => {
   });
 
   describe('Backward Compatibility', () => {
-    it('should maintain existing clothing query functionality', () => {
-      // Test that existing queries still work without filters
-      // Note: Coverage blocking is only applied to topmost queries, not single-layer or all queries.
-      // Single-layer queries (base_clothing[], outer_clothing[]) return all items from that layer.
-      // all_clothing[] returns all equipped items regardless of blocking relationships.
-      const tests = [
-        { query: 'actor.all_clothing[]', expectedSize: 5 }, // No coverage blocking - returns all items
-        { query: 'actor.outer_clothing[]', expectedSize: 3 },
-        { query: 'actor.base_clothing[]', expectedSize: 2 }, // cotton_shirt_002 + wool_sweater_004, no blocking
-        {
-          query: 'actor.topmost_clothing.torso_upper',
-          expected: ['leather_jacket_001'],
-        },
-        { query: 'actor.topmost_clothing.feet', expected: ['boots_003'] },
-      ];
+    it('should maintain existing clothing query functionality for all_clothing', () => {
+      const ast = parser.parse('actor.all_clothing[]');
+      const result = engine.resolve(ast, mockActorEntity, mockRuntimeContext);
+      expect(result.size).toBe(5); // Returns all items via ClothingAccessibilityService
+    });
 
-      for (const test of tests) {
-        const ast = parser.parse(test.query);
-        const result = engine.resolve(ast, mockActorEntity, mockRuntimeContext);
+    it('should maintain existing clothing query functionality for outer_clothing', () => {
+      const ast = parser.parse('actor.outer_clothing[]');
+      const result = engine.resolve(ast, mockActorEntity, mockRuntimeContext);
+      expect(result.size).toBe(3);
+    });
 
-        if (test.expectedSize !== undefined) {
-          expect(result.size).toBe(test.expectedSize);
-        }
-        if (test.expected !== undefined) {
-          expect(Array.from(result)).toEqual(test.expected);
-        }
-      }
+    it('should maintain existing clothing query functionality for base_clothing', () => {
+      const ast = parser.parse('actor.base_clothing[]');
+      const result = engine.resolve(ast, mockActorEntity, mockRuntimeContext);
+      expect(result.size).toBe(2); // Returns base layer items
+    });
+
+    it('should maintain existing clothing query functionality for topmost slot access', () => {
+      const torsoUpperAst = parser.parse('actor.topmost_clothing.torso_upper');
+      const torsoUpperResult = engine.resolve(torsoUpperAst, mockActorEntity, mockRuntimeContext);
+      expect(Array.from(torsoUpperResult)).toEqual(['leather_jacket_001']);
+
+      const feetAst = parser.parse('actor.topmost_clothing.feet');
+      const feetResult = engine.resolve(feetAst, mockActorEntity, mockRuntimeContext);
+      expect(Array.from(feetResult)).toEqual(['boots_003']);
     });
   });
 });

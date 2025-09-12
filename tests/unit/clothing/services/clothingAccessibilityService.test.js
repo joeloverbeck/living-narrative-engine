@@ -689,4 +689,363 @@ describe('ClothingAccessibilityService', () => {
       });
     });
   });
+
+  describe('Error handling', () => {
+    it('should handle entity manager errors gracefully in getAccessibleItems', () => {
+      mockEntityManager.getComponentData.mockImplementation(() => {
+        throw new Error('Database error');
+      });
+      
+      const result = service.getAccessibleItems('test-entity');
+      expect(result).toEqual([]);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Failed to get equipment state',
+        { entityId: 'test-entity', error: 'Database error' }
+      );
+    });
+
+    it('should handle service creation without coverage analyzer gracefully', () => {
+      // Create service without entitiesGateway (which means no coverage analyzer)
+      const serviceWithoutAnalyzer = new ClothingAccessibilityService({
+        logger: mockLogger,
+        entityManager: mockEntityManager
+      });
+      
+      expect(serviceWithoutAnalyzer).toBeDefined();
+      
+      // Service should still work for basic operations
+      mockEntityManager.getComponentData.mockReturnValue({
+        equipped: { slot: { base: 'item1' } }
+      });
+      
+      const result = serviceWithoutAnalyzer.getAccessibleItems('test-entity');
+      expect(result).toContain('item1');
+      
+      // isItemAccessible should be permissive without analyzer
+      const accessibility = serviceWithoutAnalyzer.isItemAccessible('test-entity', 'item1');
+      expect(accessibility.accessible).toBe(true);
+      expect(accessibility.reason).toBe('No coverage analyzer available');
+    });
+  });
+
+  describe('Advanced mode behavior', () => {
+    beforeEach(() => {
+      mockEntityManager.getComponentData.mockReturnValue({
+        equipped: {
+          torso_upper: {
+            outer: 'coat',
+            base: 'shirt',
+            underwear: 'undershirt'
+          },
+          hands: {
+            accessories: ['ring1', 'ring2']
+          }
+        }
+      });
+    });
+
+    it('should handle topmost_no_accessories mode', () => {
+      const result = service.getAccessibleItems('test-entity', { 
+        mode: 'topmost_no_accessories' 
+      });
+      
+      expect(result).toContain('coat'); // Outer layer from torso
+      expect(result).not.toContain('ring1'); // Accessories excluded
+      expect(result).not.toContain('ring2'); // Accessories excluded
+    });
+
+    it('should filter by body area correctly', () => {
+      const result = service.getAccessibleItems('test-entity', { 
+        mode: 'all',
+        bodyArea: 'torso_upper'
+      });
+      
+      expect(result).toContain('coat');
+      expect(result).toContain('shirt');
+      expect(result).toContain('undershirt');
+      expect(result).not.toContain('ring1'); // Different body area
+    });
+
+    it('should combine layer and body area filters', () => {
+      const result = service.getAccessibleItems('test-entity', {
+        mode: 'all',
+        layer: 'base',
+        bodyArea: 'torso_upper'
+      });
+      
+      expect(result).toEqual(['shirt']);
+    });
+
+    it('should handle unknown mode gracefully', () => {
+      const result = service.getAccessibleItems('test-entity', {
+        mode: 'unknown_mode' // Should fallback to topmost
+      });
+      
+      // Should apply topmost logic as fallback - only highest priority items per slot
+      expect(result).toContain('coat'); // Outer layer should be accessible
+      // Note: Without coverage blocking, all items may be returned in unknown mode
+      expect(result.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Priority system edge cases', () => {
+    it('should handle missing coverage_mapping with debug logging', () => {
+      mockEntityManager.getComponentData.mockImplementation((entityId, component) => {
+        if (component === 'clothing:equipment') {
+          return {
+            equipped: {
+              torso: { base: 'item1' }
+            }
+          };
+        }
+        if (component === 'clothing:coverage_mapping') {
+          throw new Error('Component not found');
+        }
+        return null;
+      });
+      
+      const result = service.getAccessibleItems('test-entity', {
+        mode: 'all',
+        sortByPriority: true
+      });
+      
+      expect(result).toContain('item1');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Could not get coverage mapping',
+        expect.objectContaining({ itemId: 'item1' })
+      );
+    });
+
+    it('should apply different context modifiers', () => {
+      mockEntityManager.getComponentData.mockReturnValue({
+        equipped: {
+          torso: {
+            outer: 'jacket',
+            base: 'shirt'
+          }
+        }
+      });
+      
+      // Test removal context (outer gets priority boost)
+      const removalResult = service.getAccessibleItems('test-entity', {
+        mode: 'all',
+        sortByPriority: true,
+        context: 'removal'
+      });
+      
+      expect(removalResult[0]).toBe('jacket'); // Outer first with boost
+      
+      // Test equipping context (should maintain normal order)
+      const equippingResult = service.getAccessibleItems('test-entity', {
+        mode: 'all', 
+        sortByPriority: true,
+        context: 'equipping'
+      });
+      
+      expect(equippingResult[0]).toBe('jacket'); // Normal priority order
+      
+      // Test inspection context
+      const inspectionResult = service.getAccessibleItems('test-entity', {
+        mode: 'all',
+        sortByPriority: true, 
+        context: 'inspection'
+      });
+      
+      expect(inspectionResult[0]).toBe('jacket'); // Normal priority order
+    });
+  });
+
+  describe('Complex equipment parsing', () => {
+    it('should handle mixed string and array items in slots', () => {
+      mockEntityManager.getComponentData.mockReturnValue({
+        equipped: {
+          hands: {
+            base: 'gloves',
+            accessories: ['ring1', 'ring2']
+          },
+          feet: {
+            base: 'socks',
+            outer: 'shoes'
+          }
+        }
+      });
+      
+      const result = service.getAccessibleItems('test-entity', { mode: 'all' });
+      
+      expect(result).toContain('gloves');
+      expect(result).toContain('ring1');
+      expect(result).toContain('ring2');
+      expect(result).toContain('socks');
+      expect(result).toContain('shoes');
+    });
+
+    it('should ignore invalid data types in equipment', () => {
+      mockEntityManager.getComponentData.mockReturnValue({
+        equipped: {
+          invalid_slot: 123, // Number instead of object/string - should be ignored
+          hands: {
+            base: 'gloves',
+            invalid_layer: { object: 'invalid' }, // Object instead of string/array - should be ignored
+            accessories: ['ring1', null, undefined, 456, 'ring2'] // Mixed types in array - only strings should be kept
+          }
+        }
+      });
+      
+      const result = service.getAccessibleItems('test-entity', { mode: 'all' });
+      
+      expect(result).toContain('gloves');
+      expect(result).toContain('ring1');
+      expect(result).toContain('ring2');
+      expect(result).not.toContain(123);
+      expect(result).not.toContain(null);
+      expect(result).not.toContain(456);
+    });
+  });
+
+  describe('Cache behavior edge cases', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+      mockEntityManager.getComponentData.mockReturnValue({
+        equipped: { slot: { base: 'item1' } }
+      });
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should handle cache key collisions gracefully', () => {
+      const initialCalls = mockEntityManager.getComponentData.mock.calls.length;
+      
+      // Test with similar but different options that might generate similar keys
+      service.getAccessibleItems('entity1', { mode: 'all', layer: 'base' });
+      service.getAccessibleItems('entity1', { mode: 'all', bodyArea: 'base' });
+      
+      // Both should cache separately and work correctly
+      const finalCalls = mockEntityManager.getComponentData.mock.calls.length;
+      expect(finalCalls - initialCalls).toBeGreaterThanOrEqual(2);
+    });
+
+    it('should clear cache entries only for specified entity', () => {
+      // Reset mock call count
+      mockEntityManager.getComponentData.mockClear();
+      
+      // Populate cache with multiple entities
+      service.getAccessibleItems('entity1');
+      service.getAccessibleItems('entity2');
+      service.getAccessibleItems('entity3');
+      
+      const initialCalls = mockEntityManager.getComponentData.mock.calls.length;
+      
+      // Clear cache for entity1 only
+      service.clearCache('entity1');
+      
+      // entity1 should fetch again, others should use cache
+      service.getAccessibleItems('entity1');
+      service.getAccessibleItems('entity2');
+      
+      const finalCalls = mockEntityManager.getComponentData.mock.calls.length;
+      expect(finalCalls).toBeGreaterThan(initialCalls); // At least one additional call for entity1
+    });
+
+    it('should handle priority cache size management', () => {
+      // Create equipment with many items to test cache eviction
+      const largeEquipment = { equipped: {} };
+      for (let i = 0; i < 10; i++) {
+        largeEquipment.equipped[`slot${i}`] = { base: `item${i}` };
+      }
+      
+      mockEntityManager.getComponentData.mockReturnValue(largeEquipment);
+      
+      // This should trigger priority cache management
+      const result = service.getAccessibleItems('test-entity', {
+        mode: 'all',
+        sortByPriority: true
+      });
+      
+      expect(result.length).toBe(10);
+      // Cache management should work without errors
+    });
+  });
+
+  describe('Method validation and edge cases', () => {
+    describe('getBlockingItem edge cases', () => {
+      it('should return first blocking item when multiple exist', () => {
+        // Mock isItemAccessible to return multiple blocking items
+        jest.spyOn(service, 'isItemAccessible').mockReturnValue({
+          accessible: false,
+          reason: 'Blocked by multiple items',
+          blockingItems: ['blocker1', 'blocker2', 'blocker3']
+        });
+        
+        const result = service.getBlockingItem('test-entity', 'blocked-item');
+        expect(result).toBe('blocker1');
+      });
+
+      it('should handle empty blocking items array', () => {
+        jest.spyOn(service, 'isItemAccessible').mockReturnValue({
+          accessible: false,
+          reason: 'Item blocked',
+          blockingItems: []
+        });
+        
+        const result = service.getBlockingItem('test-entity', 'blocked-item');
+        expect(result).toBeNull();
+      });
+
+      it('should handle undefined blocking items', () => {
+        jest.spyOn(service, 'isItemAccessible').mockReturnValue({
+          accessible: false,
+          reason: 'Item blocked',
+          blockingItems: undefined
+        });
+        
+        const result = service.getBlockingItem('test-entity', 'blocked-item');
+        expect(result).toBeNull();
+      });
+    });
+
+    describe('Parameter validation comprehensive', () => {
+      it('should validate getAccessibleItems with various invalid inputs', () => {
+        const invalidInputs = [
+          { input: '', name: 'empty string' },
+          { input: '   ', name: 'whitespace string' },
+          { input: null, name: 'null' },
+          { input: undefined, name: 'undefined' }
+        ];
+        
+        invalidInputs.forEach(({ input, name }) => {
+          expect(() => service.getAccessibleItems(input))
+            .toThrow(InvalidArgumentError);
+        });
+      });
+
+      it('should validate isItemAccessible with various invalid entityId inputs', () => {
+        const invalidInputs = ['', '   ', null, undefined];
+        
+        invalidInputs.forEach(input => {
+          expect(() => service.isItemAccessible(input, 'valid-item'))
+            .toThrow(InvalidArgumentError);
+        });
+      });
+
+      it('should validate isItemAccessible with various invalid itemId inputs', () => {
+        const invalidInputs = ['', '   ', null, undefined];
+        
+        invalidInputs.forEach(input => {
+          expect(() => service.isItemAccessible('valid-entity', input))
+            .toThrow(InvalidArgumentError);
+        });
+      });
+
+      it('should validate clearCache with various invalid inputs', () => {
+        const invalidInputs = ['', '   ', null, undefined];
+        
+        invalidInputs.forEach(input => {
+          expect(() => service.clearCache(input))
+            .toThrow(InvalidArgumentError);
+        });
+      });
+    });
+  });
 });

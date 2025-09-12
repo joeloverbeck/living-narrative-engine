@@ -184,6 +184,7 @@ describe('ActionTraceOutputService - Coverage Improvements', () => {
         outputDirectory: './traces',
         traceDirectoryManager: mockTraceDirectoryManager,
         logger: mockLogger,
+        testMode: false,
       });
     });
 
@@ -199,6 +200,7 @@ describe('ActionTraceOutputService - Coverage Improvements', () => {
         outputDirectory: '/custom/path',
         traceDirectoryManager: mockTraceDirectoryManager,
         logger: mockLogger,
+        testMode: false,
       });
     });
 

@@ -1,165 +1,92 @@
-import {
-  calculatePriorityWithValidation,
-  sortCandidatesWithTieBreaking,
-} from '../prioritySystem/priorityCalculator.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ErrorCodes } from '../constants/errorCodes.js';
-import createCoverageAnalyzer from '../../clothing/analysis/coverageAnalyzer.js';
 
 /**
  * Creates an ArrayIterationStep node resolver for flattening array values.
- * Resolves ArrayIterationStep nodes by flattening arrays from parent results.
+ * Now delegates clothing accessibility logic to ClothingAccessibilityService.
  *
  * @param {object} deps - Dependencies
- * @param {object} deps.entitiesGateway - Gateway for entity component access (required for coverage analyzer)
- * @param {object} deps.errorHandler - Optional error handler for centralized error handling
+ * @param {object} [deps.clothingAccessibilityService] - Service for clothing queries
+ * @param {object} [deps.errorHandler] - Optional error handler
  * @returns {object} NodeResolver with canResolve and resolve methods
  */
 export default function createArrayIterationResolver({
-  entitiesGateway = null,
+  clothingAccessibilityService = null,
   errorHandler = null,
 } = {}) {
-  // Only validate if provided (for backward compatibility)
+  // Validate if provided
   if (errorHandler) {
     validateDependency(errorHandler, 'IScopeDslErrorHandler', console, {
       requiredMethods: ['handleError', 'getErrorBuffer'],
     });
   }
+  
+  if (clothingAccessibilityService) {
+    validateDependency(clothingAccessibilityService, 'ClothingAccessibilityService', console, {
+      requiredMethods: ['getAccessibleItems'],
+    });
+  }
 
-  // Create coverage analyzer if entitiesGateway is provided
-  let coverageAnalyzer = null;
-  if (entitiesGateway) {
+  const MAX_ARRAY_SIZE = 10000;
+
+  /**
+   * Process clothing access objects using accessibility service
+   *
+   * @param {object} clothingAccess - Clothing access object with entityId and mode
+   * @param {object} trace - Trace context for logging
+   * @returns {Array<string>} Array of accessible clothing item IDs
+   * @private
+   */
+  function processClothingAccess(clothingAccess, trace) {
+    const { entityId, mode = 'topmost' } = clothingAccess;
+    
+    if (!clothingAccessibilityService) {
+      if (trace && trace.addStep) {
+        trace.addStep('No clothing accessibility service available, returning empty array');
+      }
+      if (errorHandler) {
+        errorHandler.handleError(
+          'Clothing accessibility service not available',
+          { context: 'processClothingAccess', entityId, mode },
+          'ArrayIterationResolver',
+          ErrorCodes.SERVICE_NOT_FOUND
+        );
+      }
+      return [];
+    }
+    
     try {
-      coverageAnalyzer = createCoverageAnalyzer({ entitiesGateway, errorHandler });
+      // Delegate to accessibility service
+      const options = {
+        mode,
+        context: 'removal', // Default context for array iteration
+        sortByPriority: true
+      };
+      
+      const accessibleItems = clothingAccessibilityService.getAccessibleItems(
+        entityId, 
+        options
+      );
+      
+      if (trace && trace.addStep) {
+        trace.addStep(`Retrieved ${accessibleItems.length} accessible items for mode: ${mode}`);
+      }
+      
+      return accessibleItems;
     } catch (error) {
-      // Log error but continue without coverage analyzer
+      if (trace && trace.addStep) {
+        trace.addStep(`Clothing access failed: ${error.message}`);
+      }
       if (errorHandler) {
         errorHandler.handleError(
           error,
-          { context: 'ArrayIterationResolver initialization' },
+          { context: 'processClothingAccess', entityId, mode },
           'ArrayIterationResolver',
-          ErrorCodes.INITIALIZATION_ERROR
+          ErrorCodes.CLOTHING_ACCESS_FAILED
         );
       }
+      return [];
     }
-  }
-
-  const MAX_ARRAY_SIZE = 10000; // Configurable limit
-  const LAYER_PRIORITY = {
-    topmost: ['outer', 'base', 'underwear'],
-    all: ['outer', 'base', 'underwear', 'accessories'],
-    outer: ['outer'],
-    base: ['base'],
-    underwear: ['underwear'],
-  };
-
-  /**
-   * Maps clothing access mode and layer to coverage priority
-   *
-   * @param {string} mode - Clothing access mode
-   * @param {string} layer - Layer type
-   * @returns {string} Coverage priority for priority calculation
-   */
-  function getCoveragePriorityFromMode(mode, layer) {
-    const layerToCoverage = {
-      outer: 'outer',
-      base: 'base',
-      underwear: 'underwear',
-      accessories: 'base', // Accessories treated as base coverage
-    };
-
-    return layerToCoverage[layer] || 'direct';
-  }
-
-  /**
-   * Gets all clothing items from a clothing access object using priority-based selection
-   *
-   * @param {object} clothingAccess - The clothing access object
-   * @param {object} trace - Optional trace logger (unused)
-   * @returns {Array} Array of clothing entity IDs sorted by priority
-   */
-  function getAllClothingItems(clothingAccess, trace) {
-    const { equipped, mode, entityId } = clothingAccess;
-    const candidates = [];
-    const layers = LAYER_PRIORITY[mode] || LAYER_PRIORITY.topmost;
-
-    // For single-layer queries (base, outer, underwear), don't apply coverage blocking
-    // between items in different slots as they should naturally coexist
-    // Apply coverage blocking only for topmost queries where we need visible/accessible items
-    // Note: 'all' mode semantics are ambiguous in tests - keeping without blocking for now
-    const shouldApplyCoverageBlocking = mode === 'topmost' || mode === 'topmost_no_accessories';
-    
-    // Perform coverage analysis for multi-layer queries  
-    let coverageAnalysis = null;
-    if (coverageAnalyzer && entityId && shouldApplyCoverageBlocking) {
-      try {
-        coverageAnalysis = coverageAnalyzer.analyzeCoverageBlocking(equipped, entityId);
-      } catch (error) {
-        // Log error and fall back to no coverage blocking
-        if (trace && trace.addStep) {
-          trace.addStep(`Coverage analysis failed: ${error.message}, falling back to layer-only logic`);
-        }
-        if (errorHandler) {
-          errorHandler.handleError(
-            error,
-            { context: 'getAllClothingItems coverage analysis', entityId, equipped },
-            'ArrayIterationResolver',
-            ErrorCodes.COVERAGE_ANALYSIS_FAILED
-          );
-        }
-        // Set to null to use fallback behavior
-        coverageAnalysis = null;
-      }
-    }
-
-    // Collect all available items with their priority data
-    for (const [slotName, slotData] of Object.entries(equipped)) {
-      if (!slotData || typeof slotData !== 'object') {
-        continue;
-      }
-
-      for (const layer of layers) {
-        if (slotData[layer]) {
-          const itemId = slotData[layer];
-
-          // Check coverage blocking if analysis is available and should be applied
-          if (coverageAnalysis && !coverageAnalysis.isAccessible(itemId, slotName, layer)) {
-            if (trace && trace.addStep) {
-              trace.addStep(`Coverage blocking: ${itemId} blocked in ${slotName}/${layer}`);
-            }
-            continue; // Skip blocked items
-          }
-
-          candidates.push({
-            itemId: itemId,
-            layer: layer,
-            slotName: slotName,
-            coveragePriority: getCoveragePriorityFromMode(mode, layer),
-            source: 'coverage',
-            priority: 0, // Will be calculated
-          });
-
-          if (mode === 'topmost') {
-            break; // Only take the topmost for topmost mode
-          }
-        }
-      }
-    }
-
-    // Calculate priorities for all candidates
-    for (const candidate of candidates) {
-      candidate.priority = calculatePriorityWithValidation(
-        candidate.coveragePriority,
-        candidate.layer,
-        null
-      );
-    }
-
-    // Sort candidates by priority and extract item IDs
-    const sortedCandidates = sortCandidatesWithTieBreaking(candidates);
-    const result = sortedCandidates.map((candidate) => candidate.itemId);
-
-    return result;
   }
 
   return {
@@ -181,7 +108,7 @@ export default function createArrayIterationResolver({
      * @returns {Set} Set of flattened values from arrays
      */
     resolve(node, ctx) {
-      // Validate context has required properties
+      // Validate context
       if (!ctx.actorEntity) {
         const error = new Error(
           'ArrayIterationResolver: actorEntity is missing from context'
@@ -197,15 +124,48 @@ export default function createArrayIterationResolver({
         throw error;
       }
 
-      // Use dispatcher to resolve parent node - pass full context
-      const parentResult = ctx.dispatcher.resolve(node.parent, ctx);
+      // Resolve parent node
+      const parentResults = ctx.dispatcher
+        ? ctx.dispatcher.resolve(node.parent, ctx)
+        : new Set();
 
-      const result = new Set();
+      const flattened = new Set();
+      let totalArrayElements = 0;
 
-      // Flatten arrays from parent result
-      for (const parentValue of parentResult) {
+      // Process each parent result
+      for (const parentValue of parentResults) {
+        if (parentValue === null || parentValue === undefined) {
+          continue;
+        }
+
+        // Handle clothing access objects
+        if (parentValue.__isClothingAccessObject === true) {
+          const clothingItems = processClothingAccess(parentValue, ctx.trace);
+          
+          for (const itemId of clothingItems) {
+            totalArrayElements++;
+            if (totalArrayElements > MAX_ARRAY_SIZE) {
+              if (errorHandler) {
+                errorHandler.handleError(
+                  'Array size limit exceeded',
+                  { 
+                    limit: MAX_ARRAY_SIZE, 
+                    current: totalArrayElements 
+                  },
+                  'ArrayIterationResolver',
+                  ErrorCodes.MEMORY_LIMIT
+                );
+              }
+              break;
+            }
+            flattened.add(itemId);
+          }
+          continue;
+        }
+
+        // Handle regular arrays
         if (Array.isArray(parentValue)) {
-          // Check array size limit
+          // Check array size limit before processing
           if (parentValue.length > MAX_ARRAY_SIZE) {
             if (errorHandler) {
               try {
@@ -227,42 +187,22 @@ export default function createArrayIterationResolver({
 
           for (const item of parentValue) {
             if (item !== null && item !== undefined) {
-              result.add(item);
+              flattened.add(item);
             }
           }
-        } else if (parentValue && parentValue.__isClothingAccessObject) {
-          // Handle clothing access objects from ClothingStepResolver
-          try {
-            const items = getAllClothingItems(parentValue, ctx.trace);
-            for (const item of items) {
-              if (item !== null && item !== undefined) {
-                result.add(item);
-              }
-            }
-          } catch (error) {
-            if (errorHandler) {
-              try {
-                errorHandler.handleError(
-                  error,
-                  { ...ctx, clothingAccess: parentValue },
-                  'ArrayIterationResolver',
-                  ErrorCodes.ARRAY_ITERATION_FAILED
-                );
-              } catch {
-                // Error handler might throw, but we should continue processing
-              }
-            }
-            // Continue processing other items
-          }
-        } else if (node.parent.type === 'Source') {
+          continue;
+        }
+
+        // Handle special node types that can pass through non-arrays
+        if (node.parent.type === 'Source') {
           // Pass through for entities()[] case where Source returns entity IDs
           if (parentValue !== null && parentValue !== undefined) {
-            result.add(parentValue);
+            flattened.add(parentValue);
           }
         } else if (node.parent.type === 'ArrayIterationStep') {
           // Pass through for entities()[][] case where parent ArrayIterationStep returns entity IDs
           if (parentValue !== null && parentValue !== undefined) {
-            result.add(parentValue);
+            flattened.add(parentValue);
           }
         } else if (
           node.parent.type === 'Step' &&
@@ -271,7 +211,7 @@ export default function createArrayIterationResolver({
         ) {
           // Pass through for location.entities(component)[] case
           if (parentValue !== null && parentValue !== undefined) {
-            result.add(parentValue);
+            flattened.add(parentValue);
           }
         } else if (parentValue !== null && parentValue !== undefined) {
           // Log unexpected non-array values in development mode
@@ -292,7 +232,13 @@ export default function createArrayIterationResolver({
         // For other cases (like Step nodes), non-arrays result in empty set
       }
 
-      return result;
+      if (ctx.trace && ctx.trace.addStep) {
+        ctx.trace.addStep(
+          `ArrayIterationResolver flattened ${totalArrayElements} elements`
+        );
+      }
+
+      return flattened;
     },
   };
 }

@@ -168,6 +168,7 @@ export class ScopeTestUtilities {
       jsonLogicEval: gameContext.jsonLogicEval,
       logger: gameContext.logger,
       spatialIndexManager: gameContext.spatialIndexManager,
+      container: gameContext.container, // Include container for service resolution
     };
 
     // Validate required services for filter operations (only when they're needed)

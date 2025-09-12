@@ -92,6 +92,8 @@ export const ErrorCodes = Object.freeze({
   QUEUE_PROCESSING_FAILED: 'SCOPE_3013',
   /** Async operation failed */
   ASYNC_OPERATION_FAILED: 'SCOPE_3014',
+  /** Clothing accessibility service operation failed */
+  CLOTHING_ACCESS_FAILED: 'SCOPE_3015',
 
   // System errors (4xxx) - Existing: SCOPE_4001, SCOPE_4002
   /** Circular dependency detected (existing code) */

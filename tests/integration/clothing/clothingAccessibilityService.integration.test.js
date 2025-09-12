@@ -306,5 +306,192 @@ describe('ClothingAccessibilityService - Coverage Blocking Integration', () => {
       });
 
     });
+
+    it('should handle service creation without coverage analyzer', () => {
+      // Create service without entitiesGateway
+      const serviceWithoutAnalyzer = new ClothingAccessibilityService({
+        logger: mockLogger,
+        entityManager: mockEntityManager
+      });
+
+      mockEntityManager.getComponentData.mockReturnValue({
+        equipped: {
+          torso: {
+            base: 'clothing:shirt',
+            underwear: 'clothing:undershirt'
+          }
+        }
+      });
+
+      // Should work without coverage analyzer
+      const result = serviceWithoutAnalyzer.getAccessibleItems('test-entity', { mode: 'topmost' });
+      expect(result).toContain('clothing:shirt'); // Mode logic still works
+
+      // isItemAccessible should be permissive without analyzer
+      const accessible = serviceWithoutAnalyzer.isItemAccessible('test-entity', 'clothing:undershirt');
+      expect(accessible.accessible).toBe(true);
+      expect(accessible.reason).toBe('No coverage analyzer available');
+    });
+
+    it('should handle complex entity equipment structures', () => {
+      // Setup entity with various slot types and layers
+      mockEntityManager.getComponentData.mockImplementation((entityId, component) => {
+        if (component === 'clothing:equipment') {
+          return {
+            equipped: {
+              head: { base: 'clothing:hat' },
+              face: { accessories: 'clothing:glasses' },
+              torso_upper: {
+                underwear: 'clothing:undershirt',
+                base: 'clothing:shirt',
+                outer: 'clothing:jacket'
+              },
+              torso_lower: {
+                underwear: 'clothing:underwear',
+                base: 'clothing:pants'
+              },
+              feet: {
+                base: 'clothing:socks',
+                outer: 'clothing:shoes'
+              },
+              hands: {
+                accessories: ['clothing:ring1', 'clothing:ring2', 'clothing:watch']
+              }
+            }
+          };
+        }
+        return null;
+      });
+
+      // Setup coverage mappings for all items
+      mockEntitiesGateway.getComponentData.mockImplementation((entityId, component) => {
+        if (component === 'clothing:coverage_mapping') {
+          const coverageMap = {
+            'clothing:hat': { covers: ['head'], coveragePriority: 'base' },
+            'clothing:glasses': { covers: ['face'], coveragePriority: 'direct' },
+            'clothing:undershirt': { covers: ['torso_upper'], coveragePriority: 'underwear' },
+            'clothing:shirt': { covers: ['torso_upper'], coveragePriority: 'base' },
+            'clothing:jacket': { covers: ['torso_upper'], coveragePriority: 'outer' },
+            'clothing:underwear': { covers: ['torso_lower'], coveragePriority: 'underwear' },
+            'clothing:pants': { covers: ['torso_lower'], coveragePriority: 'base' },
+            'clothing:socks': { covers: ['feet'], coveragePriority: 'base' },
+            'clothing:shoes': { covers: ['feet'], coveragePriority: 'outer' },
+            'clothing:ring1': { covers: ['hands'], coveragePriority: 'direct' },
+            'clothing:ring2': { covers: ['hands'], coveragePriority: 'direct' },
+            'clothing:watch': { covers: ['hands'], coveragePriority: 'direct' }
+          };
+          return coverageMap[entityId];
+        }
+        return null;
+      });
+
+      service = new ClothingAccessibilityService({
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        entitiesGateway: mockEntitiesGateway
+      });
+
+      // Test comprehensive topmost mode
+      const topmostResult = service.getAccessibleItems('complex-entity', { mode: 'topmost' });
+      expect(topmostResult).toContain('clothing:hat');
+      expect(topmostResult).toContain('clothing:jacket'); // Topmost torso_upper
+      expect(topmostResult).toContain('clothing:pants'); // Topmost torso_lower
+      expect(topmostResult).toContain('clothing:shoes'); // Topmost feet
+      
+      // Accessories and direct items should be included
+      expect(topmostResult.length).toBeGreaterThanOrEqual(4); // At least the main items
+
+      // Should NOT contain blocked lower layers
+      expect(topmostResult).not.toContain('clothing:undershirt');
+      expect(topmostResult).not.toContain('clothing:shirt');
+      expect(topmostResult).not.toContain('clothing:underwear');
+      expect(topmostResult).not.toContain('clothing:socks');
+
+      // Test all mode returns everything
+      const allResult = service.getAccessibleItems('complex-entity', { mode: 'all' });
+      expect(allResult.length).toBe(12); // All items present
+    });
+  });
+
+  describe('Advanced integration scenarios', () => {
+    it('should demonstrate comprehensive functionality with complex equipment', () => {
+      // This test demonstrates all major features working together
+      // Setup complex equipment with various modes and scenarios
+      mockEntityManager.getComponentData.mockImplementation((entityId, component) => {
+        if (component === 'clothing:equipment') {
+          return {
+            equipped: {
+              head: { outer: 'hat' },
+              torso_upper: {
+                outer: 'coat',
+                base: 'shirt', 
+                underwear: 'undershirt'
+              },
+              torso_lower: {
+                outer: 'skirt',
+                base: 'leggings',
+                underwear: 'underwear'
+              },
+              feet: {
+                outer: 'boots',
+                base: 'socks'
+              }
+            }
+          };
+        }
+        return null;
+      });
+
+      // Setup coverage mappings for items
+      mockEntitiesGateway.getComponentData.mockImplementation((entityId, component) => {
+        if (component === 'clothing:coverage_mapping') {
+          const coverageMap = {
+            'hat': { covers: ['head'], coveragePriority: 'outer' },
+            'coat': { covers: ['torso_upper'], coveragePriority: 'outer' },
+            'shirt': { covers: ['torso_upper'], coveragePriority: 'base' },
+            'undershirt': { covers: ['torso_upper'], coveragePriority: 'underwear' },
+            'skirt': { covers: ['torso_lower'], coveragePriority: 'outer' },
+            'leggings': { covers: ['torso_lower'], coveragePriority: 'base' },
+            'underwear': { covers: ['torso_lower'], coveragePriority: 'underwear' },
+            'boots': { covers: ['feet'], coveragePriority: 'outer' },
+            'socks': { covers: ['feet'], coveragePriority: 'base' }
+          };
+          return coverageMap[entityId];
+        }
+        return null;
+      });
+
+      service = new ClothingAccessibilityService({
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        entitiesGateway: mockEntitiesGateway
+      });
+
+      // Test topmost mode returns only accessible items
+      const topmostResult = service.getAccessibleItems('integration-test', { mode: 'topmost' });
+      expect(topmostResult).toContain('hat');
+      expect(topmostResult).toContain('coat');
+      expect(topmostResult).toContain('skirt');
+      expect(topmostResult).toContain('boots');
+
+      // Should not contain covered items
+      expect(topmostResult).not.toContain('shirt');
+      expect(topmostResult).not.toContain('undershirt');
+
+      // Test all mode returns everything
+      const allResult = service.getAccessibleItems('integration-test', { mode: 'all' });
+      expect(allResult.length).toBe(9);
+
+      // Test specific layer filtering
+      const outerResult = service.getAccessibleItems('integration-test', { mode: 'outer' });
+      expect(outerResult).toEqual(expect.arrayContaining(['hat', 'coat', 'skirt', 'boots']));
+
+      // Test priority sorting
+      const sortedResult = service.getAccessibleItems('integration-test', { 
+        mode: 'all', 
+        sortByPriority: true 
+      });
+      expect(sortedResult.length).toBe(9);
+    });
   });
 });
