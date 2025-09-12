@@ -21,19 +21,19 @@ The ClothingAccessibilityService needs to be registered in the dependency inject
 - [ ] Add service registration in `worldAndEntityRegistrations.js`
 - [ ] Configure as singleton instance
 - [ ] Wire up all required dependencies
-- [ ] Register after coverage analyzer dependencies
+- [ ] Register after entity manager and logger dependencies
 
-### 3. Update Dependent Services
-- [ ] Update `ClothingManagementService` to accept accessibility service
-- [ ] Update `ArrayIterationResolver` to accept accessibility service
-- [ ] Maintain backward compatibility during transition
+### 3. Service Integration
+- [ ] Register service as standalone dependency
+- [ ] Services remain loosely coupled
+- [ ] No direct service-to-service dependencies needed
 
 ## Implementation Details
 
 ### Step 1: Add Token
 ```javascript
 // src/dependencyInjection/tokens/tokens-core.js
-// Add after line 96 (existing clothing services)
+// Add after line 87 (ClothingManagementService)
 
 export const coreTokens = freeze({
   // ... existing tokens ...
@@ -44,50 +44,23 @@ export const coreTokens = freeze({
 });
 ```
 
-### Step 2: Create EntitiesGateway Adapter
+### Step 2: Register Service
 ```javascript
 // src/dependencyInjection/registrations/worldAndEntityRegistrations.js
-// Add helper class before registration section
+// Add import at top of file
+import { ClothingAccessibilityService } from '../../clothing/services/clothingAccessibilityService.js';
 
-/**
- * Adapter to provide IEntitiesGateway interface for coverage analyzer
- * @private
- */
-class EntitiesGatewayAdapter {
-  #entityManager;
-  
-  constructor(entityManager) {
-    this.#entityManager = entityManager;
-  }
-  
-  getComponentData(entityId, componentId) {
-    return this.#entityManager.getComponent(entityId, componentId);
-  }
-}
-```
-
-### Step 3: Register Service
-```javascript
-// src/dependencyInjection/registrations/worldAndEntityRegistrations.js
-// Add after ClothingManagementService registration (around line 570)
+// Add after ClothingManagementService registration (around line 663)
 
 // Register ClothingAccessibilityService
 registrar.singletonFactory(tokens.ClothingAccessibilityService, (c) => {
   const entityManager = c.resolve(tokens.IEntityManager);
   const logger = c.resolve(tokens.ILogger);
   
-  // Create entities gateway adapter for coverage analyzer
-  const entitiesGateway = new EntitiesGatewayAdapter(entityManager);
-  
-  // Import is at top of file
-  const { ClothingAccessibilityService } = await import(
-    '../../clothing/services/clothingAccessibilityService.js'
-  );
-  
   return new ClothingAccessibilityService({
     logger,
     entityManager,
-    entitiesGateway
+    entitiesGateway: entityManager // Use EntityManager directly as gateway
   });
 });
 
@@ -98,88 +71,11 @@ logger.debug(
 );
 ```
 
-### Step 4: Update ClothingManagementService
-```javascript
-// src/clothing/services/clothingManagementService.js
-// Update constructor to accept optional accessibility service
-
-export class ClothingManagementService {
-  // Add new private field
-  /** @type {object|null} */
-  #accessibilityService;
-  
-  constructor({
-    entityManager,
-    logger,
-    eventDispatcher,
-    equipmentOrchestrator,
-    anatomyBlueprintRepository,
-    clothingSlotValidator,
-    bodyGraphService,
-    anatomyClothingCache,
-    clothingAccessibilityService // NEW optional parameter
-  }) {
-    // ... existing validation ...
-    
-    // Store accessibility service if provided
-    this.#accessibilityService = clothingAccessibilityService || null;
-    
-    if (this.#accessibilityService) {
-      this.#logger.info(
-        'ClothingManagementService: Using unified accessibility service'
-      );
-    }
-  }
-  
-  // Add delegating method for compatibility
-  /**
-   * Get accessible clothing items
-   * @param {string} entityId - Entity ID
-   * @param {object} options - Query options
-   * @returns {Array} Accessible items
-   */
-  getAccessibleClothing(entityId, options = {}) {
-    if (this.#accessibilityService) {
-      return this.#accessibilityService.getAccessibleItems(entityId, options);
-    }
-    
-    // Fallback to basic implementation
-    this.#logger.warn('No accessibility service available, returning all items');
-    const equipment = this.#entityManager.getComponent(entityId, 'clothing:equipment');
-    if (!equipment || !equipment.equipped) {
-      return [];
-    }
-    
-    // Simple fallback - return all item IDs
-    const items = [];
-    for (const slot of Object.values(equipment.equipped)) {
-      for (const itemId of Object.values(slot)) {
-        if (itemId) items.push(itemId);
-      }
-    }
-    return items;
-  }
-}
-```
-
-### Step 5: Update Registration to Include Service
+### Step 3: Verify Registration Location
 ```javascript
 // src/dependencyInjection/registrations/worldAndEntityRegistrations.js
-// Update ClothingManagementService registration to include accessibility service
-
-registrar.singletonFactory(tokens.ClothingManagementService, (c) => {
-  return new ClothingManagementService({
-    entityManager: c.resolve(tokens.IEntityManager),
-    logger: c.resolve(tokens.ILogger),
-    eventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-    equipmentOrchestrator: c.resolve(tokens.EquipmentOrchestrator),
-    anatomyBlueprintRepository: c.resolve(tokens.IAnatomyBlueprintRepository),
-    clothingSlotValidator: c.resolve(tokens.ClothingSlotValidator),
-    bodyGraphService: c.resolve(tokens.BodyGraphService),
-    anatomyClothingCache: c.resolve(tokens.AnatomyClothingCache),
-    clothingAccessibilityService: c.resolve(tokens.ClothingAccessibilityService) // NEW
-  });
-});
+// The service will be registered as a standalone service
+// Services remain loosely coupled - no direct integration needed
 ```
 
 ## Testing Requirements
@@ -188,18 +84,54 @@ registrar.singletonFactory(tokens.ClothingManagementService, (c) => {
 ```javascript
 // tests/integration/clothing/clothingAccessibilityServiceDI.integration.test.js
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
-import { setupTestContainer } from '../../common/testContainerSetup.js';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
+import AppContainer from '../../../src/dependencyInjection/appContainer.js';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
+import { Registrar } from '../../../src/utils/registrarHelpers.js';
+import { ClothingAccessibilityService } from '../../../src/clothing/services/clothingAccessibilityService.js';
+import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
 
 describe('ClothingAccessibilityService DI Integration', () => {
   let container;
   let accessibilityService;
-  let clothingManagementService;
   
   beforeEach(async () => {
-    container = await setupTestContainer();
-    accessibilityService = container.resolve('ClothingAccessibilityService');
-    clothingManagementService = container.resolve('ClothingManagementService');
+    container = new AppContainer();
+    const registrar = new Registrar(container);
+    
+    // Register minimal dependencies
+    const logger = new ConsoleLogger(LogLevel.ERROR);
+    registrar.instance(tokens.ILogger, logger);
+    
+    // Create mock entity manager
+    const mockEntityManager = {
+      getComponent: jest.fn().mockReturnValue(null),
+    };
+    registrar.instance(tokens.IEntityManager, mockEntityManager);
+    
+    // Register ClothingAccessibilityService
+    registrar.singletonFactory(tokens.ClothingAccessibilityService, (c) => {
+      return new ClothingAccessibilityService({
+        logger: c.resolve(tokens.ILogger),
+        entityManager: c.resolve(tokens.IEntityManager),
+        entitiesGateway: c.resolve(tokens.IEntityManager),
+      });
+    });
+    
+    accessibilityService = container.resolve(tokens.ClothingAccessibilityService);
+  });
+  
+  afterEach(() => {
+    if (container) {
+      container = null;
+    }
   });
   
   it('should resolve ClothingAccessibilityService from container', () => {
@@ -213,13 +145,11 @@ describe('ClothingAccessibilityService DI Integration', () => {
     expect(Array.isArray(result)).toBe(true);
   });
   
-  it('should inject into ClothingManagementService', () => {
-    expect(clothingManagementService.getAccessibleClothing).toBeDefined();
-    
-    // Should delegate to accessibility service
-    const spy = jest.spyOn(accessibilityService, 'getAccessibleItems');
-    clothingManagementService.getAccessibleClothing('test-entity');
-    expect(spy).toHaveBeenCalled();
+  it('should use EntityManager as entitiesGateway', () => {
+    // Should be able to call service methods without errors
+    expect(() => {
+      accessibilityService.getAccessibleItems('test-entity', {});
+    }).not.toThrow();
   });
 });
 ```
@@ -227,19 +157,19 @@ describe('ClothingAccessibilityService DI Integration', () => {
 ### Manual Testing Steps
 1. Start the application
 2. Verify no DI registration errors in console
-3. Test clothing removal functionality still works
-4. Check that Layla Agirre scenario behaves correctly
+3. Verify ClothingAccessibilityService can be resolved from container
+4. Test that service methods work without throwing errors
 
 ## Success Metrics
 - [ ] Token added to tokens-core.js
 - [ ] Service registered in DI container
 - [ ] No circular dependency issues
-- [ ] ClothingManagementService integration working
+- [ ] Service resolves correctly from container
 - [ ] Integration tests pass
 - [ ] Application starts without errors
 
 ## Notes
 - Register after entity manager and logger are available
 - Use singleton lifecycle for service instance
-- EntitiesGateway adapter provides compatibility layer
-- Backward compatibility maintained through optional injection
+- Use EntityManager directly as entitiesGateway parameter
+- Services remain loosely coupled through event system

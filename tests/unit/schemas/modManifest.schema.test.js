@@ -180,14 +180,14 @@ describe('JSON-Schema – Mod Manifest', () => {
         ...validIsekaiManifest,
         content: {
           ...validIsekaiManifest.content,
-          portraits: ['../another_mod/data.json'], // Contains ".."
+          portraits: ['../another_mod/portrait.png'], // Contains ".."
         },
       };
       expect(validate(invalidManifest)).toBe(false);
       expect(validate.errors).toContainEqual(
         expect.objectContaining({
           instancePath: '/content/portraits/0',
-          message: 'must match pattern "^(?!/)(?!.*\\.\\.)[^\\s]+\\.json$"',
+          message: 'must match pattern "^(?!/)(?!.*\\.\\.)[^\\s]+\\.(png|jpg|jpeg|gif|webp|svg|bmp)$"',
         })
       );
     });

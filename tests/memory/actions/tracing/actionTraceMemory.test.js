@@ -22,13 +22,17 @@ describe('Action Tracing - Memory Tests', () => {
   let testBed;
   let outputService;
   let originalFetch;
+  let originalWindowFetch;
 
   beforeEach(async () => {
     testBed = createTestBed();
 
-    // Mock fetch to simulate successful server writes
+    // Mock both global and window fetch to simulate successful server writes
+    // FileTraceOutputHandler uses window.fetch in browser environment
     originalFetch = global.fetch;
-    global.fetch = jest.fn().mockImplementation(() => {
+    originalWindowFetch = global.window?.fetch;
+    
+    const mockFetchResponse = jest.fn().mockImplementation(() => {
       return Promise.resolve({
         ok: true,
         status: 200,
@@ -41,6 +45,14 @@ describe('Action Tracing - Memory Tests', () => {
           }),
       });
     });
+
+    global.fetch = mockFetchResponse;
+    
+    // Mock window.fetch for FileTraceOutputHandler
+    if (typeof global.window === 'undefined') {
+      global.window = {};
+    }
+    global.window.fetch = mockFetchResponse;
 
     const config = {
       outputFormats: ['json', 'text'],
@@ -57,6 +69,7 @@ describe('Action Tracing - Memory Tests', () => {
       actionTraceConfig: config,
       outputToFiles: true,
       outputDirectory: './traces/memory-test',
+      testMode: true, // Disable network calls for memory testing
     });
 
     // Force garbage collection before each test
@@ -64,11 +77,23 @@ describe('Action Tracing - Memory Tests', () => {
   });
 
   afterEach(async () => {
+    // Wait for any pending file operations before cleanup
+    if (outputService) {
+      await outputService.waitForPendingWrites();
+      // Wait for FileTraceOutputHandler queue processing to complete
+      await outputService.waitForFileOperations();
+    }
+
     testBed.cleanup();
 
-    // Restore original fetch
-    if (originalFetch) {
+    // Restore original fetch implementations
+    if (originalFetch !== undefined) {
       global.fetch = originalFetch;
+    }
+    if (originalWindowFetch !== undefined) {
+      global.window.fetch = originalWindowFetch;
+    } else if (global.window && 'fetch' in global.window) {
+      delete global.window.fetch;
     }
 
     // Force garbage collection after each test
@@ -103,6 +128,10 @@ describe('Action Tracing - Memory Tests', () => {
           await outputService.writeTrace(trace);
           totalProcessed++;
         }
+
+        // Wait for all async file operations to complete before memory measurement
+        await outputService.waitForPendingWrites();
+        await outputService.waitForFileOperations();
 
         // Take memory snapshot every few batches
         if (batch % 4 === 0) {
@@ -194,6 +223,10 @@ describe('Action Tracing - Memory Tests', () => {
           traces.map((trace) => outputService.writeTrace(trace))
         );
 
+        // Wait for all async file operations to complete before memory measurement
+        await outputService.waitForPendingWrites();
+        await outputService.waitForFileOperations();
+
         // Measure memory after each batch
         await global.memoryTestUtils.forceGCAndWait();
         const batchMemory = await global.memoryTestUtils.getStableMemoryUsage();
@@ -245,6 +278,10 @@ describe('Action Tracing - Memory Tests', () => {
 
       // Process all traces
       await Promise.all(traces.map((trace) => outputService.writeTrace(trace)));
+
+      // Wait for all async file operations to complete before memory measurement
+      await outputService.waitForPendingWrites();
+      await outputService.waitForFileOperations();
 
       // Measure peak memory
       const peakMemory = await global.memoryTestUtils.getStableMemoryUsage();

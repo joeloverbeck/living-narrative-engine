@@ -791,24 +791,42 @@ describe('Anatomy Error Recovery E2E Tests', () => {
       expect(anatomy2.body.root).toBeDefined();
       expect(anatomy1.body.root).not.toBe(anatomy2.body.root); // Different roots
 
-      // The BodyGraphService manages its own internal cache
-      // The test bed's cache manager can only hold one cache at a time (buildCache clears first)
-      // So we verify each cache can be built independently
+      // Verify that each anatomy was generated successfully and independently
+      // The core concern is that processing multiple entities works correctly
       
-      // Build and verify first cache
-      await anatomyCacheManager.buildCache(anatomy1.body.root, entityManager);
-      expect(anatomyCacheManager.hasCacheForRoot(anatomy1.body.root)).toBe(true);
-      const cache1Size = anatomyCacheManager.size();
-      expect(cache1Size).toBeGreaterThan(0);
+      // Verify first anatomy has proper structure
+      const bodyGraph1 = await testBed.bodyGraphService.getBodyGraph(successEntity1.id);
+      expect(bodyGraph1).toBeDefined();
+      expect(bodyGraph1.getAllPartIds).toBeDefined();
       
-      // Build and verify second cache (this will clear the first)
-      await anatomyCacheManager.buildCache(anatomy2.body.root, entityManager);
-      expect(anatomyCacheManager.hasCacheForRoot(anatomy2.body.root)).toBe(true);
-      const cache2Size = anatomyCacheManager.size();
-      expect(cache2Size).toBeGreaterThan(0);
+      // Get all parts for first anatomy to verify completeness
+      const parts1 = bodyGraph1.getAllPartIds();
+      expect(parts1.length).toBeGreaterThan(0);
       
-      // Both caches should have been buildable and have similar sizes
-      expect(Math.abs(cache1Size - cache2Size)).toBeLessThanOrEqual(2);
+      // Verify second anatomy has proper structure  
+      const bodyGraph2 = await testBed.bodyGraphService.getBodyGraph(successEntity2.id);
+      expect(bodyGraph2).toBeDefined();
+      expect(bodyGraph2.getAllPartIds).toBeDefined();
+      
+      // Get all parts for second anatomy to verify completeness
+      const parts2 = bodyGraph2.getAllPartIds();
+      expect(parts2.length).toBeGreaterThan(0);
+      
+      // Verify both anatomies are structurally sound and independent
+      expect(parts1).not.toEqual(parts2); // Different structures
+      expect(parts1.every(id => typeof id === 'string')).toBe(true); // Valid IDs
+      expect(parts2.every(id => typeof id === 'string')).toBe(true); // Valid IDs
+      
+      // Verify connectivity by checking we can get connected parts for roots
+      if (parts1.length > 1) {
+        const connectedParts1 = bodyGraph1.getConnectedParts(anatomy1.body.root);
+        expect(Array.isArray(connectedParts1)).toBe(true);
+      }
+      
+      if (parts2.length > 1) {
+        const connectedParts2 = bodyGraph2.getConnectedParts(anatomy2.body.root);
+        expect(Array.isArray(connectedParts2)).toBe(true);
+      }
     });
   });
 });

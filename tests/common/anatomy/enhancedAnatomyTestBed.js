@@ -30,9 +30,16 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
     // Store options for description service configuration
     this.useRealisticDescriptions = options.useRealisticDescriptions !== false; // default true
     this.useLightweightMocks = options.useLightweightMocks === true; // default false
+    this.minimalMode = options.minimalMode === true; // default false - skips heavy service initialization
+    this.options = options; // Store all options for later use
 
-    // Initialize clothing integration services
-    this._initializeClothingIntegration();
+    // Initialize clothing integration services only if not in minimal mode
+    if (!this.minimalMode) {
+      this._initializeClothingIntegration();
+    } else {
+      // Create mock clothing management service for minimal mode
+      this.clothingManagementService = this.createMockClothingManagementService();
+    }
 
     // Override anatomy description service with appropriate mocking strategy
     this._overrideDescriptionService();
@@ -935,31 +942,44 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
    * @returns {Promise<Object>} Generated anatomy with rootId
    */
   async generateSimpleAnatomy() {
-    // Use a unique entity definition ID for each anatomy to prevent accumulation
-    const uniqueId = `test:simple_torso_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const entityDef = {
-      id: uniqueId,
-      components: {
-        'anatomy:part': { subType: 'torso' },
-        'anatomy:sockets': {
-          sockets: [
-            { id: 'left_arm', max: 1, allowedTypes: ['arm'] },
-            { id: 'right_arm', max: 1, allowedTypes: ['arm'] },
-          ],
+    // For memory tests, we should reuse the same entity definition to avoid accumulation
+    // Only create unique definitions when testing definition-specific behavior
+    const reuseDefinition = this.options?.reuseEntityDefinitions !== false;
+    
+    const entityDefId = reuseDefinition 
+      ? 'test:simple_torso_reusable'
+      : `test:simple_torso_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Only load the definition if it doesn't exist or we're creating a unique one
+    if (!reuseDefinition || !this.registry.get('entityDefinitions', entityDefId)) {
+      const entityDef = {
+        id: entityDefId,
+        components: {
+          'anatomy:part': { subType: 'torso' },
+          'anatomy:sockets': {
+            sockets: [
+              { id: 'left_arm', max: 1, allowedTypes: ['arm'] },
+              { id: 'right_arm', max: 1, allowedTypes: ['arm'] },
+            ],
+          },
         },
-      },
-    };
+      };
+      this.loadEntityDefinitions({ [entityDefId]: entityDef });
+    }
 
-    this.loadEntityDefinitions({ [uniqueId]: entityDef });
-
-    const torso = await this.entityManager.createEntityInstance(uniqueId);
+    // Create a unique instance ID for the entity itself
+    const instanceId = `torso_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const torso = await this.entityManager.createEntityInstance(entityDefId, {
+      instanceId: instanceId
+    });
+    
     await this.entityManager.addComponent(torso.id, 'anatomy:body', {
       rootPartId: torso.id,
       recipeId: 'test:simple_recipe',
       body: { root: torso.id },
     });
 
-    return { rootId: torso.id, entityDefId: uniqueId };
+    return { rootId: torso.id, entityDefId: reuseDefinition ? null : entityDefId };
   }
 
   /**
@@ -1042,18 +1062,27 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
       
       // Delete all parts
       for (const part of allParts) {
-        await this.entityManager.deleteEntity(part.id);
+        await this.entityManager.removeEntityInstance(part.id);
       }
 
       // Also delete the root if not in allParts
       if (!allParts.find(p => p.id === rootId)) {
-        await this.entityManager.deleteEntity(rootId);
+        await this.entityManager.removeEntityInstance(rootId);
       }
 
       // Clean up entity definition if provided to prevent accumulation
-      if (entityDefId && this.entityDefinitionRegistry) {
+      if (entityDefId && this.registry) {
         try {
-          this.entityDefinitionRegistry.unregisterDefinition(entityDefId);
+          // Remove from entityDefinitions registry - must access data directly
+          const entityDefsMap = this.registry.data.get('entityDefinitions');
+          if (entityDefsMap) {
+            entityDefsMap.delete(entityDefId);
+          }
+          // Also remove from anatomyParts registry if it was added there
+          const anatomyPartsMap = this.registry.data.get('anatomyParts');
+          if (anatomyPartsMap) {
+            anatomyPartsMap.delete(entityDefId);
+          }
         } catch (defError) {
           // Entity definition cleanup is optional - don't fail the whole cleanup
           this.logger?.debug(`Could not cleanup entity definition ${entityDefId}:`, defError);

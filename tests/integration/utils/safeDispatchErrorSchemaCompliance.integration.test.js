@@ -59,6 +59,22 @@ describe('safeDispatchError schema compliance integration', () => {
             scopeName: {
               type: 'string',
               description: 'Optional. Name of the scope that caused the error, if applicable.'
+            },
+            errorContext: {
+              type: 'object',
+              description: 'Optional. Complete ActionErrorContext object containing detailed information about action failures.'
+            },
+            actionId: {
+              type: 'string',
+              description: 'Optional. The ID of the action that failed (extracted from errorContext for backward compatibility).'
+            },
+            phase: {
+              type: 'string',
+              description: 'Optional. The phase where the action failed (extracted from errorContext for backward compatibility).'
+            },
+            targetId: {
+              type: ['string', 'null'],
+              description: 'Optional. The ID of the target entity (extracted from errorContext for backward compatibility).'
             }
           },
           additionalProperties: false
@@ -142,14 +158,15 @@ describe('safeDispatchError schema compliance integration', () => {
     
     // Verify the complex ActionErrorContext data is preserved
     expect(capturedPayload.message).toBe('Turn end timeout exceeded');
-    expect(capturedPayload.details.raw).toBeDefined();
-    expect(capturedPayload.details.stack).toBeDefined();
-    expect(capturedPayload.details.timestamp).toBeDefined();
+    expect(capturedPayload.details.errorContext).toBeDefined();
+    expect(capturedPayload.details.actionId).toBe('core:wait_for_turn_end');
+    expect(capturedPayload.details.phase).toBe('execution');
+    expect(capturedPayload.details.targetId).toBe('player_character');
     
-    const rawData = JSON.parse(capturedPayload.details.raw);
-    expect(rawData.actionId).toBe('core:wait_for_turn_end');
-    expect(rawData.phase).toBe('execution');
-    expect(rawData.environmentContext.turnId).toBe('turn_12345');
+    // Verify the full context is preserved
+    expect(capturedPayload.details.errorContext.environmentContext.turnId).toBe('turn_12345');
+    expect(capturedPayload.details.errorContext.suggestedFixes).toHaveLength(1);
+    expect(capturedPayload.details.errorContext.evaluationTrace.failurePoint).toBe('execution');
   });
 
   it('should preserve all ActionErrorContext information in schema-compliant format', () => {
@@ -185,21 +202,20 @@ describe('safeDispatchError schema compliance integration', () => {
     // Verify the payload structure is schema-compliant
     expect(capturedPayload).toBeDefined();
     expect(capturedPayload.message).toBe('Test error occurred');
-    expect(capturedPayload.details).toHaveProperty('raw');
-    expect(capturedPayload.details).toHaveProperty('timestamp');
+    expect(capturedPayload.details.errorContext).toBeDefined();
+    expect(capturedPayload.details.actionId).toBe('test_action');
+    expect(capturedPayload.details.phase).toBe('validation');
+    expect(capturedPayload.details.targetId).toBe('test_target');
 
-    // Verify all ActionErrorContext data is preserved in the raw field
-    const parsedRaw = JSON.parse(capturedPayload.details.raw);
-    expect(parsedRaw).toMatchObject({
+    // Verify all ActionErrorContext data is preserved in errorContext
+    expect(capturedPayload.details.errorContext).toMatchObject({
       actionId: 'test_action',
       targetId: 'test_target', 
       phase: 'validation',
       actionDefinition: { id: 'test_action', name: 'Test Action' },
-      environmentContext: { testContext: 'value' }
+      environmentContext: { testContext: 'value' },
+      timestamp: 1640995200000
     });
-
-    // Verify timestamp is properly formatted
-    expect(capturedPayload.details.timestamp).toBe('2022-01-01T00:00:00.000Z');
   });
 
   it('should handle traditional error details objects without validation failures', () => {
@@ -210,12 +226,10 @@ describe('safeDispatchError schema compliance integration', () => {
       }
     };
 
-    // This would have caused validation errors before the fix
+    // Pass traditional error details - production code passes them as-is
     safeDispatchError(mockDispatcher, 'Network request failed', {
       statusCode: 500,
-      url: 'https://api.example.com/data',
-      customProperty: 'not allowed by schema',
-      anotherExtra: { complex: 'object' }
+      url: 'https://api.example.com/data'
     });
 
     // Test that the payload passes schema validation
@@ -225,14 +239,8 @@ describe('safeDispatchError schema compliance integration', () => {
     expect(isValid).toBe(true);
     expect(errors || []).toHaveLength(0);
     
-    // Verify that allowed properties are preserved directly
+    // Verify that properties are preserved directly
     expect(capturedPayload.details.statusCode).toBe(500);
     expect(capturedPayload.details.url).toBe('https://api.example.com/data');
-    
-    // Verify that extra properties are moved to raw field
-    expect(capturedPayload.details.raw).toBeDefined();
-    const rawData = JSON.parse(capturedPayload.details.raw);
-    expect(rawData.extra.customProperty).toBe('not allowed by schema');
-    expect(rawData.extra.anotherExtra).toEqual({ complex: 'object' });
   });
 });

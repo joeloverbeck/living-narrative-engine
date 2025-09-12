@@ -23,16 +23,21 @@ class FileTraceOutputHandler {
   #batchWriteCount = 0;
   #batchedTraceCount = 0;
   #batchSuccesses = 0;
+  #testMode = false;
 
   /**
-   * @param {object} dependencies
+   * Create a new FileTraceOutputHandler
+   * 
+   * @param {object} dependencies - Dependency injection object
    * @param {string} dependencies.outputDirectory - Directory path for trace output
    * @param {object} dependencies.traceDirectoryManager - Directory manager for file operations
    * @param {object} dependencies.logger - Logger instance
+   * @param {boolean} dependencies.testMode - Enable test mode to disable network calls
    */
-  constructor({ outputDirectory, traceDirectoryManager, logger }) {
+  constructor({ outputDirectory, traceDirectoryManager, logger, testMode = false }) {
     this.#logger = ensureValidLogger(logger, 'FileTraceOutputHandler');
     this.#outputDirectory = outputDirectory || './traces';
+    this.#testMode = testMode;
 
     if (traceDirectoryManager) {
       validateDependency(
@@ -218,6 +223,16 @@ class FileTraceOutputHandler {
   }
 
   /**
+   * Check if the trace queue is empty and not processing
+   * Used for testing and synchronization
+   *
+   * @returns {boolean} True if queue is empty and not processing
+   */
+  isQueueEmpty() {
+    return this.#queuedTraces.length === 0 && !this.#isProcessingQueue;
+  }
+
+  /**
    * Write individual trace to file
    *
    * @private
@@ -271,6 +286,12 @@ class FileTraceOutputHandler {
    */
   async #writeUsingServerEndpoint(fileName, content) {
     try {
+      // Skip network calls in test mode
+      if (this.#testMode) {
+        this.#logger.debug('FileTraceOutputHandler: Skipping server endpoint in test mode');
+        return true; // Simulate successful write
+      }
+
       // Check if we're in a browser environment and have fetch available
       if (typeof window === 'undefined' || !window.fetch) {
         this.#logger.warn(

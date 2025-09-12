@@ -1516,7 +1516,15 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
             allowedLayers: ['accessory', 'armor'],
           },
           torso_lower: {
-            anatomySockets: ['left_hip', 'right_hip', 'pubic_hair', 'vagina'],
+            anatomySockets: [
+              'left_hip',
+              'right_hip',
+              'pubic_hair',
+              'vagina',
+              'asshole',
+              'left_ass',
+              'right_ass',
+            ],
             allowedLayers: ['underwear', 'base', 'outer'],
           },
           full_body: {
@@ -1613,6 +1621,9 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
               'penis',
               'left_testicle',
               'right_testicle',
+              'asshole',
+              'left_ass',
+              'right_ass',
             ],
             allowedLayers: ['underwear', 'base', 'outer'],
           },

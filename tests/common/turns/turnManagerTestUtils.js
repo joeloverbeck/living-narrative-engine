@@ -3,7 +3,7 @@
  * @see tests/common/turns/turnManagerTestUtils.js
  */
 
-import { expect } from '@jest/globals';
+import { expect, jest } from '@jest/globals';
 import {
   SYSTEM_ERROR_OCCURRED_ID,
   TURN_ENDED_ID,
@@ -29,7 +29,7 @@ export function expectSystemErrorDispatch(
   expect(mockDispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
     message,
     details: {
-      raw: rawMessage,
+      error: rawMessage,
       stack: expect.any(String),
       timestamp: expect.any(String),
     },

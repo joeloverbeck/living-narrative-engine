@@ -13,56 +13,10 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
 import { ensureValidLogger } from './loggerUtils.js';
 
 /**
- * Maps arbitrary details object to schema-compliant fields.
- * Only includes properties that are allowed by the core:system_error_occurred schema.
- * This function ensures that any extra properties are serialized into the 'raw' field
- * to maintain schema compliance while preserving all debug information.
- * 
- * @param {object} details - Arbitrary details object
- * @returns {object} Schema-compliant details object
- */
-function mapDetailsToSchema(details) {
-  const allowedProperties = ['statusCode', 'url', 'raw', 'stack', 'timestamp', 'scopeName'];
-  const mappedDetails = {};
-  
-  // Copy allowed properties directly
-  for (const prop of allowedProperties) {
-    if (details[prop] !== undefined) {
-      mappedDetails[prop] = details[prop];
-    }
-  }
-  
-  // If there are any non-allowed properties, serialize them to the 'raw' field
-  const extraProperties = {};
-  let hasExtraProperties = false;
-  
-  for (const prop of Object.keys(details)) {
-    if (!allowedProperties.includes(prop)) {
-      extraProperties[prop] = details[prop];
-      hasExtraProperties = true;
-    }
-  }
-  
-  if (hasExtraProperties) {
-    // If raw field already exists, merge with extra properties
-    const existingRaw = mappedDetails.raw;
-    const combinedRaw = {
-      ...(existingRaw ? { existing: existingRaw } : {}),
-      extra: extraProperties
-    };
-    mappedDetails.raw = JSON.stringify(combinedRaw, null, 2);
-  }
-  
-  return mappedDetails;
-}
-
-/**
  * Error thrown when `safeDispatchError` receives an invalid dispatcher.
  */
 export class InvalidDispatcherError extends Error {
   /**
-   * Creates a new InvalidDispatcherError instance.
-   * 
    * @param {string} message - The error message.
    * @param {object} [details] - Optional diagnostic details.
    */
@@ -117,42 +71,21 @@ export function safeDispatchError(
     messageOrContext.actionId &&
     messageOrContext.error
   ) {
-    // It's an ActionErrorContext - map to schema-compliant fields
+    // It's an ActionErrorContext
     const errorContext = messageOrContext;
     message =
       errorContext.error.message || 'An error occurred in the action system';
-    
-    // Create schema-compliant details by mapping ActionErrorContext to allowed fields
     eventDetails = {
-      // Serialize all ActionErrorContext data to the 'raw' field (allowed by schema)
-      raw: JSON.stringify({
-        actionId: errorContext.actionId,
-        targetId: errorContext.targetId,
-        phase: errorContext.phase,
-        actionDefinition: errorContext.actionDefinition,
-        actorSnapshot: errorContext.actorSnapshot,
-        evaluationTrace: errorContext.evaluationTrace,
-        suggestedFixes: errorContext.suggestedFixes,
-        environmentContext: errorContext.environmentContext
-      }, null, 2),
-      // Map error stack if available
-      stack: errorContext.error.stack || undefined,
-      // Map timestamp if available (must be ISO 8601 format)
-      timestamp: errorContext.timestamp 
-        ? new Date(errorContext.timestamp).toISOString()
-        : undefined
+      errorContext,
+      // Include some key fields at top level for backward compatibility
+      actionId: errorContext.actionId,
+      phase: errorContext.phase,
+      targetId: errorContext.targetId,
     };
-    
-    // Remove undefined properties to keep payload clean
-    Object.keys(eventDetails).forEach(key => {
-      if (eventDetails[key] === undefined) {
-        delete eventDetails[key];
-      }
-    });
   } else {
-    // Traditional string message - validate that details conform to schema
+    // Traditional string message
     message = messageOrContext;
-    eventDetails = mapDetailsToSchema(details || {});
+    eventDetails = details;
   }
 
   dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
@@ -162,10 +95,7 @@ export function safeDispatchError(
 }
 
 /**
- * Dispatches a validation error and returns a standardized result object.
- * This function creates a consistent error response format while ensuring
- * the event payload conforms to the schema requirements.
- * 
+ * @description Dispatches a validation error and returns a standardized result object.
  * @param {ISafeEventDispatcher} dispatcher - Dispatcher used to emit the event.
  * @param {string} message - Human readable error message.
  * @param {object} [details] - Additional structured details for debugging.
