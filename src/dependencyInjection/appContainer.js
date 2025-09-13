@@ -38,6 +38,8 @@ class AppContainer {
   #instances = new Map(); // Stores singleton instances
   /** @type {Map<string, any | (() => any)>} */
   #overrides = new Map();
+  /** @type {Array<(container: AppContainer) => void>} */
+  #callbacks = [];
 
   /**
    * Registers a service/system with the container.
@@ -310,6 +312,34 @@ class AppContainer {
     }
 
     return resolvedInstances;
+  }
+
+  /**
+   * Registers a callback to be executed after all services are registered.
+   * Useful for post-registration configuration.
+   *
+   * @param {(container: AppContainer) => void} callback - The callback function to execute.
+   */
+  registerCallback(callback) {
+    if (typeof callback !== 'function') {
+      throw new Error('AppContainer: Callback must be a function');
+    }
+    this.#callbacks.push(callback);
+  }
+
+  /**
+   * Executes all registered callbacks.
+   * Should be called after all services are registered.
+   */
+  executeCallbacks() {
+    for (const callback of this.#callbacks) {
+      try {
+        callback(this);
+      } catch (error) {
+        console.error('AppContainer: Error executing callback:', error);
+        throw error;
+      }
+    }
   }
 
   /** Clears singleton instances */

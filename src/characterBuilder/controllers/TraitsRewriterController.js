@@ -280,11 +280,9 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
       'core:secrets',
       'core:strengths',
       'core:weaknesses',
-      'core:background',
+      'core:internal_tensions',
       'core:motivations',
-      'core:beliefs',
-      'core:hobbies',
-      'core:relationships',
+      'core:dilemmas',
     ];
 
     const hasTraits = traitKeys.some(

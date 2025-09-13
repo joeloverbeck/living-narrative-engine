@@ -26,12 +26,14 @@ jest.mock('../../../src/configuration/utils/traceConfigUtils.js', () => ({
 /**
  * Creates a mock DI container that spies on registrations.
  *
- * @returns A mock container object with `register`, `resolve`, `isRegistered` methods
- * and a `registrations` property to inspect calls.
+ * @returns A mock container object with `register`, `resolve`, `isRegistered`, 
+ * `registerCallback`, and `executeCallbacks` methods, plus a `registrations` 
+ * property to inspect calls.
  */
 const createMockContainer = () => {
   const registrations = {};
   const resolvedInstances = new Map();
+  const callbacks = [];
 
   const container = {
     registrations,
@@ -65,6 +67,23 @@ const createMockContainer = () => {
     }),
     isRegistered: jest.fn((key) => {
       return key in registrations;
+    }),
+    // Add registerCallback method to match the real AppContainer
+    registerCallback: jest.fn((callback) => {
+      if (typeof callback === 'function') {
+        callbacks.push(callback);
+      }
+    }),
+    // Add executeCallbacks method to match the real AppContainer
+    executeCallbacks: jest.fn(() => {
+      callbacks.forEach(callback => {
+        try {
+          callback(container);
+        } catch (error) {
+          // Silently ignore callback errors in test environment
+          // as we're only interested in registration tracking
+        }
+      });
     }),
   };
   return container;

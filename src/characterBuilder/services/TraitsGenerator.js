@@ -130,7 +130,7 @@ export class TraitsGenerator {
     const startTime = Date.now();
 
     // Dispatch generation started event
-    this.#eventBus.dispatch('core:TRAITS_GENERATION_STARTED', {
+    this.#eventBus.dispatch('core:traits_generation_started', {
       conceptId: concept.id,
       directionId: direction.id,
       timestamp: new Date().toISOString(),
@@ -199,7 +199,7 @@ export class TraitsGenerator {
       });
 
       // Dispatch completion event
-      this.#eventBus.dispatch('core:TRAITS_GENERATION_COMPLETED', {
+      this.#eventBus.dispatch('core:traits_generation_completed', {
         conceptId: concept.id,
         directionId: direction.id,
         generationTime: processingTime,
@@ -225,7 +225,7 @@ export class TraitsGenerator {
       });
 
       // Dispatch failure event
-      this.#eventBus.dispatch('core:TRAITS_GENERATION_FAILED', {
+      this.#eventBus.dispatch('core:traits_generation_failed', {
         conceptId: concept.id,
         directionId: direction.id,
         error: error.message,

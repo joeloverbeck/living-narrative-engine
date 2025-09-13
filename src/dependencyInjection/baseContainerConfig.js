@@ -218,6 +218,14 @@ export async function configureBaseContainer(container, options = {}) {
       // automatically initialized by SystemInitializer during the standard initialization process
     }
 
+    // Execute any registered callbacks after all services are registered
+    if (container.executeCallbacks) {
+      if (logger) {
+        logger.debug('[BaseContainerConfig] Executing registered callbacks...');
+      }
+      container.executeCallbacks();
+    }
+
     if (logger) {
       logger.debug(
         '[BaseContainerConfig] Base container configuration complete.'

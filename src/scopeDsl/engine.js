@@ -237,7 +237,6 @@ class ScopeEngine extends IScopeEngine {
       }),
       createUnionResolver(),
       createArrayIterationResolver({ 
-        entitiesGateway, 
         errorHandler: this.errorHandler,
         clothingAccessibilityService // Add service injection
       }),

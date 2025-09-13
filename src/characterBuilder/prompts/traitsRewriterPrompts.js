@@ -52,12 +52,20 @@ export const TRAITS_REWRITER_RESPONSE_SCHEMA = {
           minLength: 1,
         },
         'core:goals': {
-          type: 'string',
-          minLength: 1,
+          type: 'array',
+          items: {
+            type: 'string',
+            minLength: 1,
+          },
+          minItems: 1,
         },
         'core:notes': {
-          type: 'string',
-          minLength: 1,
+          type: 'array',
+          items: {
+            type: 'string',
+            minLength: 1,
+          },
+          minItems: 1,
         },
         'core:personality': {
           type: 'string',
@@ -76,6 +84,18 @@ export const TRAITS_REWRITER_RESPONSE_SCHEMA = {
           minLength: 1,
         },
         'core:weaknesses': {
+          type: 'string',
+          minLength: 1,
+        },
+        'core:internal_tensions': {
+          type: 'string',
+          minLength: 1,
+        },
+        'core:motivations': {
+          type: 'string',
+          minLength: 1,
+        },
+        'core:dilemmas': {
           type: 'string',
           minLength: 1,
         },
@@ -119,13 +139,16 @@ Based on the character definition provided:
    - core:likes
    - core:dislikes
    - core:fears
-   - core:goals
-   - core:notes
+   - core:goals (array of goals)
+   - core:notes (array of notes)
    - core:personality
    - core:profile
    - core:secrets
    - core:strengths
    - core:weaknesses
+   - core:internal_tensions
+   - core:motivations
+   - core:dilemmas
 
 3. For each trait present, rewrite it in the first person:
    - Use "I" statements throughout
@@ -158,18 +181,26 @@ Return a JSON object with this exact structure:
     "core:likes": "First-person version of likes trait",
     "core:dislikes": "First-person version of dislikes trait",
     "core:fears": "First-person version of fears trait",
-    "core:goals": "First-person version of goals trait",
-    "core:notes": "First-person version of notes trait",
+    "core:goals": ["Array of first-person goal strings"],
+    "core:notes": ["Array of first-person note strings"],
     "core:personality": "First-person version of personality trait",
     "core:profile": "First-person version of profile trait",
     "core:secrets": "First-person version of secrets trait",
     "core:strengths": "First-person version of strengths trait",
-    "core:weaknesses": "First-person version of weaknesses trait"
+    "core:weaknesses": "First-person version of weaknesses trait",
+    "core:internal_tensions": "First-person version of internal tensions",
+    "core:motivations": "First-person version of motivations",
+    "core:dilemmas": "First-person version of dilemmas (keep as questions)"
   },
   "generatedAt": "ISO timestamp"
 }
 
 Only include traits that exist in the original character definition. If a trait is not present, omit it from the rewrittenTraits object.
+
+For core:goals and core:notes which are arrays:
+- Convert each item's text content to first-person
+- Return as an array of strings, not objects
+- Preserve all meaningful content from each item
 </output_format>
 
 <examples>
@@ -252,4 +283,7 @@ export const DEFAULT_TRAIT_KEYS = [
   'core:secrets',
   'core:strengths',
   'core:weaknesses',
+  'core:internal_tensions',
+  'core:motivations',
+  'core:dilemmas',
 ];

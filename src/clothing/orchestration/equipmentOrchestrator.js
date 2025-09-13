@@ -399,7 +399,24 @@ export class EquipmentOrchestrator {
 
     for (const conflict of conflicts) {
       try {
+        // Skip layer requirement conflicts - these can't be resolved by removing items
+        if (conflict.type === 'layer_requirement') {
+          errors.push(
+            `Cannot equip item: ${conflict.details || `Missing required ${conflict.requiredLayer} layer`}`
+          );
+          continue;
+        }
+
         const itemId = conflict.conflictingItemId || conflict.itemId;
+        
+        // Check if we have a valid item ID to remove
+        if (!itemId) {
+          errors.push(
+            `Cannot resolve conflict: No item specified for ${conflict.type} conflict`
+          );
+          continue;
+        }
+
         const unequipResult = await this.#performUnequipment(
           entityId,
           itemId,
@@ -411,8 +428,9 @@ export class EquipmentOrchestrator {
           errors.push(`Failed to remove conflicting item '${itemId}'`);
         }
       } catch (error) {
+        const itemId = conflict.conflictingItemId || conflict.itemId;
         errors.push(
-          `Error removing conflicting item '${itemId}': ${error.message}`
+          `Error removing conflicting item '${itemId || 'unknown'}': ${error.message}`
         );
       }
     }

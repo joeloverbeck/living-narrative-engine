@@ -359,7 +359,8 @@ class EventBus extends IEventBus {
         this.#batchModeOptions.context === 'game-initialization'
       ) {
         // Allow much higher recursion for component lifecycle events during game initialization
-        MAX_RECURSION_DEPTH = 100; // Allow deep component loading cascades
+        // Increased to 200 to handle complex anatomy graphs with multiple characters (49 parts per character)
+        MAX_RECURSION_DEPTH = 200; // Allow deep component loading cascades for anatomy building
       } else if (isWorkflowEvent) {
         // Workflow events get higher individual limits
         MAX_RECURSION_DEPTH = 25; // Higher limit for workflow events
@@ -463,7 +464,8 @@ class EventBus extends IEventBus {
     }
 
     // Additional emergency check for component lifecycle events if they exceed an extreme limit
-    if (isComponentLifecycleEvent && componentEventRecursion >= 200) {
+    // Increased to 300 to account for higher normal limit of 200 during game initialization
+    if (isComponentLifecycleEvent && componentEventRecursion >= 300) {
       const batchContext = this.#batchMode
         ? ` (batch mode: ${this.#batchModeOptions.context})`
         : '';

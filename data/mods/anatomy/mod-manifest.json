@@ -41,6 +41,7 @@
         "human_breast_shelf.entity.json",
         "human_eye_amber.entity.json",
         "human_eye_blue.entity.json",
+        "human_eye_blue_hooded.entity.json",
         "human_eye_brown.entity.json",
         "human_eye_brown_almond.entity.json",
         "human_eye_cobalt.entity.json",
@@ -52,6 +53,7 @@
         "human_futa_torso.entity.json",
         "human_hair.entity.json",
         "human_hair_blonde.entity.json",
+        "human_hair_blonde_long_braided.entity.json",
         "human_hair_blonde_long_straight.entity.json",
         "human_hair_blonde_medium_straight.entity.json",
         "human_hair_medium_brown_ponytail.entity.json",
@@ -110,9 +112,15 @@
       "human_futa.recipe.json",
       "human_male.recipe.json"
     ],
-    "anatomyFormatting": ["default.json"],
-    "libraries": ["humanoid.slot-library.json"],
-    "parts": ["humanoid_core.part.json"],
+    "anatomyFormatting": [
+      "default.json"
+    ],
+    "libraries": [
+      "humanoid.slot-library.json"
+    ],
+    "parts": [
+      "humanoid_core.part.json"
+    ],
     "events": [
       "interaction_click.event.json",
       "interaction_pan.event.json",

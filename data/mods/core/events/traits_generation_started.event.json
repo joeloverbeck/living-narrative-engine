@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/event.schema.json",
-  "id": "TRAITS_GENERATION_STARTED",
+  "id": "core:traits_generation_started",
   "description": "Dispatched when character traits generation begins",
   "payloadSchema": {
     "type": "object",

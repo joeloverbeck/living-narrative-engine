@@ -120,6 +120,7 @@ export function registerCommandAndAction(container) {
       logger: c.resolve(tokens.ILogger),
       actionErrorContextBuilder: c.resolve(tokens.IActionErrorContextBuilder),
       cacheStrategy: c.resolve(tokens.IScopeCacheStrategy),
+      container: c, // Add container for runtime context
     });
   });
   logger.debug(

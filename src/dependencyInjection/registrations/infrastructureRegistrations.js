@@ -24,6 +24,13 @@ import { EventDispatchService } from '../../utils/eventDispatchService.js';
 import { ProductionPathConfiguration } from '../../configuration/productionPathConfiguration.js';
 import { TraceConfigLoader } from '../../configuration/traceConfigLoader.js';
 import CriticalLogNotifier from '../../logging/criticalLogNotifier.js';
+import UnifiedCache from '../../cache/UnifiedCache.js';
+import CacheInvalidationManager from '../../cache/CacheInvalidationManager.js';
+import CacheMetrics from '../../cache/CacheMetrics.js';
+import FacadeFactory from '../../shared/facades/FacadeFactory.js';
+import FacadeRegistry from '../../shared/facades/FacadeRegistry.js';
+import IClothingSystemFacade from '../../clothing/facades/IClothingSystemFacade.js';
+import IAnatomySystemFacade from '../../anatomy/facades/IAnatomySystemFacade.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -277,6 +284,224 @@ export function registerInfrastructure(container) {
   safeDebug(
     `Registered ${String(tokens.CriticalLogNotifier)} -> ICriticalLogNotifier.`
   );
+
+  // ─── Unified Cache Infrastructure ─────────────────────────────
+  
+  // Register UnifiedCache as singleton
+  container.register(
+    tokens.IUnifiedCache,
+    (c) =>
+      new UnifiedCache({
+        logger: c.resolve(tokens.ILogger),
+      }, {
+        maxSize: 1000,
+        ttl: 300000, // 5 minutes
+        enableMetrics: true,
+        evictionPolicy: 'lru',
+      }),
+    { lifecycle: 'singleton' }
+  );
+  safeDebug(`Registered ${String(tokens.IUnifiedCache)}.`);
+
+  // Register UnifiedCache as the concrete implementation
+  container.register(
+    tokens.UnifiedCache,
+    (c) => c.resolve(tokens.IUnifiedCache),
+    { lifecycle: 'singleton' }
+  );
+  safeDebug(`Registered ${String(tokens.UnifiedCache)} -> IUnifiedCache.`);
+
+  // Register CacheInvalidationManager
+  container.register(
+    tokens.ICacheInvalidationManager,
+    (c) =>
+      new CacheInvalidationManager({
+        logger: c.resolve(tokens.ILogger),
+        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+      }),
+    { lifecycle: 'singleton' }
+  );
+  safeDebug(`Registered ${String(tokens.ICacheInvalidationManager)}.`);
+
+  // Register CacheInvalidationManager as the concrete implementation
+  container.register(
+    tokens.CacheInvalidationManager,
+    (c) => c.resolve(tokens.ICacheInvalidationManager),
+    { lifecycle: 'singleton' }
+  );
+  safeDebug(
+    `Registered ${String(tokens.CacheInvalidationManager)} -> ICacheInvalidationManager.`
+  );
+
+  // Register CacheMetrics
+  container.register(
+    tokens.ICacheMetrics,
+    (c) =>
+      new CacheMetrics({
+        logger: c.resolve(tokens.ILogger),
+      }),
+    { lifecycle: 'singleton' }
+  );
+  safeDebug(`Registered ${String(tokens.ICacheMetrics)}.`);
+
+  // Register CacheMetrics as the concrete implementation
+  container.register(
+    tokens.CacheMetrics,
+    (c) => c.resolve(tokens.ICacheMetrics),
+    { lifecycle: 'singleton' }
+  );
+  safeDebug(
+    `Registered ${String(tokens.CacheMetrics)} -> ICacheMetrics.`
+  );
+
+  // ─── Facade Infrastructure ─────────────────────────────
+
+  // Register FacadeFactory
+  container.register(
+    tokens.IFacadeFactory,
+    (c) =>
+      new FacadeFactory({
+        logger: c.resolve(tokens.ILogger),
+        container: c,
+      }),
+    { lifecycle: 'singleton' }
+  );
+  safeDebug(`Registered ${String(tokens.IFacadeFactory)}.`);
+
+  // Register FacadeFactory as the concrete implementation
+  container.register(
+    tokens.FacadeFactory,
+    (c) => c.resolve(tokens.IFacadeFactory),
+    { lifecycle: 'singleton' }
+  );
+  safeDebug(`Registered ${String(tokens.FacadeFactory)} -> IFacadeFactory.`);
+
+  // Register FacadeRegistry
+  container.register(
+    tokens.IFacadeRegistry,
+    (c) =>
+      new FacadeRegistry({
+        logger: c.resolve(tokens.ILogger),
+        eventBus: c.resolve(tokens.IEventBus),
+        facadeFactory: c.resolve(tokens.IFacadeFactory),
+      }),
+    { lifecycle: 'singleton' }
+  );
+  safeDebug(`Registered ${String(tokens.IFacadeRegistry)}.`);
+
+  // Register FacadeRegistry as the concrete implementation
+  container.register(
+    tokens.FacadeRegistry,
+    (c) => c.resolve(tokens.IFacadeRegistry),
+    { lifecycle: 'singleton' }
+  );
+  safeDebug(`Registered ${String(tokens.FacadeRegistry)} -> IFacadeRegistry.`);
+
+  // ─── System Facades ─────────────────────────────
+
+  // Register ClothingSystemFacade
+  container.register(
+    tokens.IClothingSystemFacade,
+    (c) =>
+      new IClothingSystemFacade({
+        clothingManagementService: c.resolve(tokens.ClothingManagementService),
+        equipmentOrchestrator: c.resolve(tokens.EquipmentOrchestrator),
+        layerCompatibilityService: c.resolve(tokens.LayerCompatibilityService),
+        clothingSlotValidator: c.resolve(tokens.ClothingSlotValidator),
+        logger: c.resolve(tokens.ILogger),
+        eventBus: c.resolve(tokens.IEventBus),
+        unifiedCache: c.resolve(tokens.IUnifiedCache),
+        circuitBreaker: c.isRegistered(tokens.ICircuitBreaker) 
+          ? c.resolve(tokens.ICircuitBreaker) 
+          : null,
+      }),
+    { lifecycle: 'singleton' }
+  );
+  safeDebug(`Registered ${String(tokens.IClothingSystemFacade)}.`);
+
+  // Register AnatomySystemFacade
+  container.register(
+    tokens.IAnatomySystemFacade,
+    (c) =>
+      new IAnatomySystemFacade({
+        bodyGraphService: c.resolve(tokens.BodyGraphService),
+        anatomyDescriptionService: c.resolve(tokens.AnatomyDescriptionService),
+        graphIntegrityValidator: c.resolve(tokens.GraphIntegrityValidator),
+        anatomyGenerationService: c.resolve(tokens.AnatomyGenerationService),
+        bodyBlueprintFactory: c.resolve(tokens.BodyBlueprintFactory),
+        logger: c.resolve(tokens.ILogger),
+        eventBus: c.resolve(tokens.IEventBus),
+        unifiedCache: c.resolve(tokens.IUnifiedCache),
+        circuitBreaker: c.isRegistered(tokens.ICircuitBreaker) 
+          ? c.resolve(tokens.ICircuitBreaker) 
+          : null,
+      }),
+    { lifecycle: 'singleton' }
+  );
+  safeDebug(`Registered ${String(tokens.IAnatomySystemFacade)}.`);
+
+  // ─── Facade Configuration ─────────────────────────────
+
+  // Configure and register facade metadata in the registry
+  container.registerCallback((c) => {
+    const facadeFactory = c.resolve(tokens.IFacadeFactory);
+    const facadeRegistry = c.resolve(tokens.IFacadeRegistry);
+
+    // Register Clothing System Facade configuration
+    const clothingFacadeConfig = {
+      name: 'ClothingSystemFacade',
+      constructor: IClothingSystemFacade,
+      dependencies: [
+        tokens.ClothingManagementService,
+        tokens.EquipmentOrchestrator,
+        tokens.LayerCompatibilityService,
+        tokens.ClothingSlotValidator,
+      ],
+    };
+
+    facadeFactory.registerFacade(clothingFacadeConfig);
+
+    const clothingMetadata = {
+      name: 'ClothingSystemFacade',
+      category: 'clothing',
+      version: '1.0.0',
+      description: 'Simplified interface for clothing system operations',
+      tags: ['clothing', 'equipment', 'layer-management'],
+      capabilities: ['query', 'modification', 'validation', 'bulk', 'transfer'],
+      singleton: true,
+    };
+
+    facadeRegistry.register(clothingMetadata, clothingFacadeConfig);
+
+    // Register Anatomy System Facade configuration
+    const anatomyFacadeConfig = {
+      name: 'AnatomySystemFacade',
+      constructor: IAnatomySystemFacade,
+      dependencies: [
+        tokens.BodyGraphService,
+        tokens.AnatomyDescriptionService,
+        tokens.GraphIntegrityValidator,
+        tokens.AnatomyGenerationService,
+        tokens.BodyBlueprintFactory,
+      ],
+    };
+
+    facadeFactory.registerFacade(anatomyFacadeConfig);
+
+    const anatomyMetadata = {
+      name: 'AnatomySystemFacade',
+      category: 'anatomy',
+      version: '1.0.0',
+      description: 'Simplified interface for anatomy system operations',
+      tags: ['anatomy', 'body-parts', 'graph-operations', 'descriptions'],
+      capabilities: ['query', 'modification', 'validation', 'bulk', 'graph', 'description'],
+      singleton: true,
+    };
+
+    facadeRegistry.register(anatomyMetadata, anatomyFacadeConfig);
+
+    safeDebug('Facade configurations registered in factory and registry.');
+  });
 
   safeDebug('Infrastructure Registration: complete.');
 }

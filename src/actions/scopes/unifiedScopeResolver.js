@@ -55,6 +55,7 @@ export class UnifiedScopeResolver {
   #logger;
   #actionErrorContextBuilder;
   #cacheStrategy;
+  #container;
 
   /**
    * Creates an instance of UnifiedScopeResolver.
@@ -68,6 +69,7 @@ export class UnifiedScopeResolver {
    * @param {ILogger} deps.logger - Logger instance.
    * @param {ActionErrorContextBuilder} deps.actionErrorContextBuilder - Builds enhanced error contexts.
    * @param {object} [deps.cacheStrategy] - Optional cache strategy implementation.
+   * @param {object} [deps.container] - Optional DI container for service resolution.
    */
   constructor({
     scopeRegistry,
@@ -78,6 +80,7 @@ export class UnifiedScopeResolver {
     logger,
     actionErrorContextBuilder,
     cacheStrategy,
+    container,
   }) {
     validateDependency(scopeRegistry, 'ScopeRegistry', undefined, {
       requiredMethods: ['getScope'],
@@ -115,6 +118,7 @@ export class UnifiedScopeResolver {
     this.#logger = logger;
     this.#actionErrorContextBuilder = actionErrorContextBuilder;
     this.#cacheStrategy = cacheStrategy;
+    this.#container = container;
   }
 
   /**
@@ -338,7 +342,7 @@ export class UnifiedScopeResolver {
       case TARGET_DOMAIN_NONE:
         return ActionResult.success(new Set());
 
-      case TARGET_DOMAIN_SELF:
+      case TARGET_DOMAIN_SELF: {
         // Still need to build actor with components to trigger trace warnings
         const actorResult = this.#buildActorWithComponents(
           context.actor,
@@ -348,6 +352,7 @@ export class UnifiedScopeResolver {
           return actorResult;
         }
         return ActionResult.success(new Set([context.actor.id]));
+      }
 
       default:
         return null; // Not a special scope
@@ -623,6 +628,7 @@ export class UnifiedScopeResolver {
       logger: this.#logger,
       actor: actorEntity,
       location: context.actorLocation,
+      container: this.#container, // Add container for service resolution
     };
 
     // Add target context if available from action context

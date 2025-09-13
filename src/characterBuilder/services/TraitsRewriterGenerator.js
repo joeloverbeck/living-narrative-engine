@@ -232,12 +232,21 @@ export class TraitsRewriterGenerator {
         characterDefinition[traitKey];
 
       if (traitData) {
-        // Handle different trait data formats
-        if (typeof traitData === 'string') {
+        // Special handling for array-based traits (goals and notes)
+        if (traitKey === 'core:goals' && traitData.goals) {
+          // Extract array of goal texts
+          extractedTraits[traitKey] = traitData.goals.map(goal => goal.text || goal);
+        } else if (traitKey === 'core:notes' && traitData.notes) {
+          // Extract array of note texts
+          extractedTraits[traitKey] = traitData.notes.map(note => note.text || note);
+        } else if (typeof traitData === 'string') {
+          // Handle simple string traits
           extractedTraits[traitKey] = traitData;
         } else if (traitData.text) {
+          // Handle object with text property
           extractedTraits[traitKey] = traitData.text;
         } else if (traitData.description) {
+          // Handle object with description property
           extractedTraits[traitKey] = traitData.description;
         }
       }
