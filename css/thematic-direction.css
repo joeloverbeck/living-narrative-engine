@@ -387,6 +387,13 @@
   }
 }
 
+/* Fix results-state to fill available container space */
+#results-state.state-container {
+  align-items: stretch;
+  justify-content: stretch;
+  min-height: unset;
+}
+
 .empty-state,
 .loading-state,
 .error-state {

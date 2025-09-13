@@ -324,11 +324,6 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
         option.dataset.conceptTitle = conceptGroup.conceptTitle;
         option.dataset.directionTitle = direction.title;
 
-        // Add tooltip description if available
-        if (direction.description) {
-          option.title = direction.description;
-        }
-
         optgroup.appendChild(option);
       }
 

@@ -1,0 +1,19 @@
+{
+    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+    "id": "anatomy:human_eye_blue_hooded",
+    "description": "A human eye with blue iris",
+    "components": {
+        "anatomy:part": {
+            "subType": "eye"
+        },
+        "descriptors:color_basic": {
+            "color": "blue"
+        },
+        "descriptors:shape_eye": {
+            "shape": "hooded"
+        },
+        "core:name": {
+            "text": "eye"
+        }
+    }
+}

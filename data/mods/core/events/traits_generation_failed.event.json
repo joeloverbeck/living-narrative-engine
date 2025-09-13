@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/event.schema.json",
-  "id": "TRAITS_GENERATION_FAILED",
+  "id": "core:traits_generation_failed",
   "description": "Dispatched when character traits generation fails",
   "payloadSchema": {
     "type": "object",

@@ -117,9 +117,9 @@ describe('TraitsGenerator - Event Validation Integration', () => {
         // Expected to fail due to mocked parsing error
       }
 
-      // Assert - Verify core:TRAITS_GENERATION_STARTED event was dispatched with correct structure
+      // Assert - Verify core:traits_generation_started event was dispatched with correct structure
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'core:TRAITS_GENERATION_STARTED',
+        'core:traits_generation_started',
         expect.objectContaining({
           conceptId: 'test-concept-id',
           directionId: 'test-direction-id',
@@ -136,7 +136,7 @@ describe('TraitsGenerator - Event Validation Integration', () => {
 
       // Should also dispatch failure event
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'core:TRAITS_GENERATION_FAILED',
+        'core:traits_generation_failed',
         expect.objectContaining({
           conceptId: 'test-concept-id',
           directionId: 'test-direction-id',
@@ -156,8 +156,8 @@ describe('TraitsGenerator - Event Validation Integration', () => {
       // Note: Production code uses 'core:' namespace prefix when dispatching
 
       const expectedEventDefinitions = [
-        'core:TRAITS_GENERATION_STARTED',
-        'core:TRAITS_GENERATION_COMPLETED',
+        'core:traits_generation_started',
+        'core:traits_generation_completed',
         'core:traits_generated',
       ];
 
@@ -170,7 +170,7 @@ describe('TraitsGenerator - Event Validation Integration', () => {
         expect(eventName.length).toBeGreaterThan(0);
       });
 
-      // Verify expected payload structure for core:TRAITS_GENERATION_STARTED
+      // Verify expected payload structure for core:traits_generation_started
       const startedPayloadStructure = {
         conceptId: 'string',
         directionId: 'string',
@@ -183,7 +183,7 @@ describe('TraitsGenerator - Event Validation Integration', () => {
       };
       expect(startedPayloadStructure).toBeDefined();
 
-      // Verify expected payload structure for core:TRAITS_GENERATION_COMPLETED
+      // Verify expected payload structure for core:traits_generation_completed
       const completedPayloadStructure = {
         conceptId: 'string',
         directionId: 'string',

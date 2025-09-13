@@ -257,4 +257,21 @@ export const coreTokens = freeze({
   IModCrossReferenceValidator: 'IModCrossReferenceValidator',
   IModValidationOrchestrator: 'IModValidationOrchestrator',
   IViolationReporter: 'IViolationReporter',
+  // Unified Cache Infrastructure
+  IUnifiedCache: 'IUnifiedCache',
+  UnifiedCache: 'UnifiedCache',
+  ICacheInvalidationManager: 'ICacheInvalidationManager',
+  CacheInvalidationManager: 'CacheInvalidationManager',
+  ICacheMetrics: 'ICacheMetrics',
+  CacheMetrics: 'CacheMetrics',
+  // Facade Infrastructure
+  IFacadeFactory: 'IFacadeFactory',
+  FacadeFactory: 'FacadeFactory',
+  IFacadeRegistry: 'IFacadeRegistry',
+  FacadeRegistry: 'FacadeRegistry',
+  // System Facade Interfaces
+  IClothingSystemFacade: 'IClothingSystemFacade',
+  IAnatomySystemFacade: 'IAnatomySystemFacade',
+  // Circuit Breaker (optional dependency for facades)
+  ICircuitBreaker: 'ICircuitBreaker',
 });

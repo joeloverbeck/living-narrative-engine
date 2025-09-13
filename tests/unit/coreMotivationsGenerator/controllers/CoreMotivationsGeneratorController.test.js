@@ -2248,7 +2248,7 @@ describe('CoreMotivationsGeneratorController', () => {
         expect(option.dataset.directionTitle).toBe('Test Direction');
       });
 
-      it('should add tooltip descriptions when direction has description', () => {
+      it('should not add tooltip descriptions to prevent performance issues', () => {
         // Arrange
         const mockDirections = [
           {
@@ -2278,9 +2278,8 @@ describe('CoreMotivationsGeneratorController', () => {
           'option[value="dir2"]'
         );
 
-        expect(optionWithDescription.title).toBe(
-          'This is a test direction description'
-        );
+        // Verify that tooltips are NOT added (fix for CORMOTSEL-001 performance issue)
+        expect(optionWithDescription.title).toBe('');
         expect(optionWithoutDescription.title).toBe('');
       });
 

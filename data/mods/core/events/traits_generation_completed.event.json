@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/event.schema.json",
-  "id": "TRAITS_GENERATION_COMPLETED",
+  "id": "core:traits_generation_completed",
   "description": "Dispatched when character traits generation completes successfully",
   "payloadSchema": {
     "type": "object",

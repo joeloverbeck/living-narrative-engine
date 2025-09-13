@@ -184,20 +184,25 @@
   display: none;
 }
 
-/* States that need centering should use flex */
+/* States that need centering should use flex when shown */
 .ui-state-container.loading-state,
 .ui-state-container.error-state,
 .ui-state-container.empty-state {
-  display: flex !important;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 400px;
 }
 
+/* When these states are shown (via JavaScript), they should use flex display */
+.ui-state-container.loading-state[style*="display: flex"],
+.ui-state-container.error-state[style*="display: flex"],
+.ui-state-container.empty-state[style*="display: flex"] {
+  display: flex;
+}
+
 /* Results state should use block for proper content flow */
 .ui-state-container.results-state {
-  display: block !important;
 }
 
 /* Speech Patterns Display */

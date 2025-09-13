@@ -1,0 +1,22 @@
+{
+    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+    "id": "anatomy:human_hair_blonde_long_braided",
+    "description": "Luscious blonde hair",
+    "components": {
+        "anatomy:part": {
+            "subType": "hair"
+        },
+        "descriptors:color_extended": {
+            "color": "blonde"
+        },
+        "descriptors:length_hair": {
+            "length": "long"
+        },
+        "descriptors:hair_style": {
+            "style": "braided"
+        },
+        "core:name": {
+            "text": "hair"
+        }
+    }
+}

@@ -61,9 +61,9 @@ describe('TraitsGenerator - Event Namespace Integration', () => {
     // Manually register the events as they would be loaded from mods
     // Events loaded from mods are stored with their qualified ID (modId:eventId)
     const traitsGenerationStartedEvent = {
-      id: 'core:TRAITS_GENERATION_STARTED',
+      id: 'core:traits_generation_started',
       _modId: 'core',
-      _fullId: 'core:TRAITS_GENERATION_STARTED',
+      _fullId: 'core:traits_generation_started',
       description: 'Dispatched when character traits generation begins',
       payloadSchema: {
         type: 'object',
@@ -88,23 +88,23 @@ describe('TraitsGenerator - Event Namespace Integration', () => {
     // Store the event in the registry as the mod loader would
     dataRegistry.store(
       'events',
-      'core:TRAITS_GENERATION_STARTED',
+      'core:traits_generation_started',
       traitsGenerationStartedEvent
     );
 
     // Also register the completed and failed events for completeness
-    dataRegistry.store('events', 'core:TRAITS_GENERATION_COMPLETED', {
-      id: 'core:TRAITS_GENERATION_COMPLETED',
+    dataRegistry.store('events', 'core:traits_generation_completed', {
+      id: 'core:traits_generation_completed',
       _modId: 'core',
-      _fullId: 'core:TRAITS_GENERATION_COMPLETED',
+      _fullId: 'core:traits_generation_completed',
       description: 'Dispatched when traits generation completes',
       payloadSchema: { type: 'object' },
     });
 
-    dataRegistry.store('events', 'core:TRAITS_GENERATION_FAILED', {
-      id: 'core:TRAITS_GENERATION_FAILED',
+    dataRegistry.store('events', 'core:traits_generation_failed', {
+      id: 'core:traits_generation_failed',
       _modId: 'core',
-      _fullId: 'core:TRAITS_GENERATION_FAILED',
+      _fullId: 'core:traits_generation_failed',
       description: 'Dispatched when traits generation fails',
       payloadSchema: { type: 'object' },
     });
@@ -115,13 +115,13 @@ describe('TraitsGenerator - Event Namespace Integration', () => {
     jest.clearAllMocks();
   });
 
-  it('should find TRAITS_GENERATION_STARTED event when using correct namespace', () => {
+  it('should find traits_generation_started event when using correct namespace', () => {
     // Check that the event is stored with namespace
     const eventWithNamespace = gameDataRepository.getEventDefinition(
-      'core:TRAITS_GENERATION_STARTED'
+      'core:traits_generation_started'
     );
     const eventWithoutNamespace = gameDataRepository.getEventDefinition(
-      'TRAITS_GENERATION_STARTED'
+      'traits_generation_started'
     );
 
     expect(eventWithNamespace).toBeDefined();
@@ -129,7 +129,7 @@ describe('TraitsGenerator - Event Namespace Integration', () => {
     expect(eventWithoutNamespace).toBeNull();
   });
 
-  it('should warn when dispatching TRAITS_GENERATION_STARTED without namespace', async () => {
+  it('should warn when dispatching traits_generation_started without namespace', async () => {
     const validatedDispatcher = container.resolve(
       tokens.IValidatedEventDispatcher
     );
@@ -143,7 +143,7 @@ describe('TraitsGenerator - Event Namespace Integration', () => {
 
     // Dispatch without namespace (incorrect)
     await validatedDispatcher.dispatch({
-      type: 'TRAITS_GENERATION_STARTED',
+      type: 'traits_generation_started',
       payload: {
         conceptId: 'test-concept',
         directionId: 'test-direction',
@@ -160,13 +160,13 @@ describe('TraitsGenerator - Event Namespace Integration', () => {
     if (dispatcherLogger?.warn) {
       expect(dispatcherLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
-          "EventDefinition not found for 'TRAITS_GENERATION_STARTED'"
+          "EventDefinition not found for 'traits_generation_started'"
         )
       );
     }
   });
 
-  it('should not warn when dispatching TRAITS_GENERATION_STARTED with namespace', async () => {
+  it('should not warn when dispatching traits_generation_started with namespace', async () => {
     const validatedDispatcher = container.resolve(
       tokens.IValidatedEventDispatcher
     );
@@ -180,7 +180,7 @@ describe('TraitsGenerator - Event Namespace Integration', () => {
 
     // Dispatch with namespace (correct)
     await validatedDispatcher.dispatch({
-      type: 'core:TRAITS_GENERATION_STARTED',
+      type: 'core:traits_generation_started',
       payload: {
         conceptId: 'test-concept',
         directionId: 'test-direction',
@@ -197,7 +197,7 @@ describe('TraitsGenerator - Event Namespace Integration', () => {
     if (dispatcherLogger?.warn) {
       expect(dispatcherLogger.warn).not.toHaveBeenCalledWith(
         expect.stringContaining(
-          "EventDefinition not found for 'core:TRAITS_GENERATION_STARTED'"
+          "EventDefinition not found for 'core:traits_generation_started'"
         )
       );
     }
@@ -240,7 +240,7 @@ describe('TraitsGenerator - Event Namespace Integration', () => {
       { trait: 'Brave', description: 'Shows courage' },
     ]);
 
-    // Generate traits (this will dispatch core:TRAITS_GENERATION_STARTED)
+    // Generate traits (this will dispatch core:traits_generation_started)
     const concept = {
       id: 'test-concept',
       concept: 'A test character concept',
@@ -269,7 +269,7 @@ describe('TraitsGenerator - Event Namespace Integration', () => {
 
     // Try to dispatch without namespace (this should warn)
     // The dispatch method takes event type and payload separately
-    await validatedDispatcher.dispatch('TRAITS_GENERATION_STARTED', {
+    await validatedDispatcher.dispatch('traits_generation_started', {
       conceptId: 'test',
       directionId: 'test',
       timestamp: new Date().toISOString(),
@@ -283,7 +283,7 @@ describe('TraitsGenerator - Event Namespace Integration', () => {
     // Now check if warning was logged for the non-namespaced dispatch
     expect(dispatcherLogger.warn).toHaveBeenCalledWith(
       expect.stringContaining(
-        "EventDefinition not found for 'TRAITS_GENERATION_STARTED'"
+        "EventDefinition not found for 'traits_generation_started'"
       )
     );
   });

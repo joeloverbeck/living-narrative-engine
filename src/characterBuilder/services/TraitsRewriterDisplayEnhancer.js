@@ -32,11 +32,9 @@ const TRAIT_LABELS = {
   'core:secrets': 'Secrets',
   'core:strengths': 'Strengths',
   'core:weaknesses': 'Weaknesses',
-  'core:background': 'Background',
+  'core:internal_tensions': 'Internal Tensions',
   'core:motivations': 'Motivations',
-  'core:beliefs': 'Beliefs',
-  'core:hobbies': 'Hobbies',
-  'core:relationships': 'Relationships',
+  'core:dilemmas': 'Dilemmas',
 };
 
 /**
@@ -122,17 +120,15 @@ export class TraitsRewriterDisplayEnhancer {
       const orderedKeys = [
         'core:personality',
         'core:profile',
-        'core:background',
         'core:motivations',
         'core:goals',
-        'core:beliefs',
+        'core:internal_tensions',
+        'core:dilemmas',
         'core:strengths',
         'core:weaknesses',
         'core:likes',
         'core:dislikes',
         'core:fears',
-        'core:hobbies',
-        'core:relationships',
         'core:secrets',
         'core:notes',
       ];
@@ -435,12 +431,25 @@ export class TraitsRewriterDisplayEnhancer {
    *
    * @private
    * @param {string} traitKey - Trait key
-   * @param {string} traitValue - Trait value
+   * @param {string|Array} traitValue - Trait value (string or array of strings)
    * @param {number} index - Section index
    * @returns {object} Trait section object
    */
   #createTraitSection(traitKey, traitValue, index) {
-    const sanitizedContent = this.#sanitizeForDisplay(traitValue);
+    let sanitizedContent;
+    
+    // Handle array values (for goals and notes)
+    if (Array.isArray(traitValue)) {
+      // Create bulleted list for array items
+      const items = traitValue.map(item => this.#sanitizeForDisplay(item));
+      sanitizedContent = items.join('\n• ');
+      if (items.length > 0) {
+        sanitizedContent = '• ' + sanitizedContent;
+      }
+    } else {
+      sanitizedContent = this.#sanitizeForDisplay(traitValue);
+    }
+    
     const label = this.#formatTraitLabel(traitKey);
 
     return {
@@ -451,6 +460,7 @@ export class TraitsRewriterDisplayEnhancer {
       titleClass: 'trait-section-title',
       contentClass: 'trait-content',
       index,
+      isArray: Array.isArray(traitValue),
     };
   }
 
@@ -501,7 +511,16 @@ export class TraitsRewriterDisplayEnhancer {
     for (const section of sections) {
       text += `${section.label}:\n`;
       // Don't escape HTML for text export, use original value
-      text += `${traits[section.key]}\n\n`;
+      const traitValue = traits[section.key];
+      if (Array.isArray(traitValue)) {
+        // Format array items as bulleted list
+        traitValue.forEach(item => {
+          text += `• ${item}\n`;
+        });
+        text += '\n';
+      } else {
+        text += `${traitValue}\n\n`;
+      }
     }
 
     text += `\n--- End of Rewritten Traits ---\n`;

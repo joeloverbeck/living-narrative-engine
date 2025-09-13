@@ -233,7 +233,7 @@ describe('TraitsGenerator Display Issues Integration Test', () => {
 
       // Verify events were dispatched with correct format (with core: namespace)
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'core:TRAITS_GENERATION_STARTED',
+        'core:traits_generation_started',
         expect.objectContaining({
           conceptId: testParams.concept.id,
           directionId: testParams.direction.id,
@@ -242,7 +242,7 @@ describe('TraitsGenerator Display Issues Integration Test', () => {
       );
 
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'core:TRAITS_GENERATION_COMPLETED',
+        'core:traits_generation_completed',
         expect.objectContaining({
           conceptId: testParams.concept.id,
           directionId: testParams.direction.id,
@@ -304,7 +304,7 @@ describe('TraitsGenerator Display Issues Integration Test', () => {
 
       // Verify failure event was dispatched (checking that it exists rather than exact error message)
       const failureEventCall = mockEventBus.dispatch.mock.calls.find(
-        (call) => call[0] === 'core:TRAITS_GENERATION_FAILED'
+        (call) => call[0] === 'core:traits_generation_failed'
       );
 
       expect(failureEventCall).toBeTruthy();
