@@ -9,11 +9,16 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../interfaces/coreServices.js').IEventBus} IEventBus */
+/** @typedef {import('./MemoryMonitor.js').default} MemoryMonitor */
+/** @typedef {import('./MemoryPressureManager.js').default} MemoryPressureManager */
+/** @typedef {import('./MemoryReporter.js').default} MemoryReporter */
 
 /**
  * @typedef {object} MonitoringStats
  * @property {object} performance - Performance metrics
  * @property {object} circuitBreakers - Circuit breaker statistics
+ * @property {object} memory - Memory monitoring statistics
  * @property {number} totalOperations - Total operations across all monitors
  * @property {number} totalFailures - Total failures across all circuit breakers
  * @property {Array} recentAlerts - Recent monitoring alerts
@@ -21,7 +26,7 @@ import { ensureValidLogger } from '../../utils/loggerUtils.js';
 
 /**
  * @class MonitoringCoordinator
- * @description Coordinates performance monitoring and circuit breaker functionality
+ * @description Coordinates performance, memory monitoring, and circuit breaker functionality
  */
 export default class MonitoringCoordinator {
   /** @type {ILogger} */
@@ -30,6 +35,12 @@ export default class MonitoringCoordinator {
   #performanceMonitor;
   /** @type {Map<string, CircuitBreaker>} */
   #circuitBreakers;
+  /** @type {MemoryMonitor|null} */
+  #memoryMonitor;
+  /** @type {MemoryPressureManager|null} */
+  #memoryPressureManager;
+  /** @type {MemoryReporter|null} */
+  #memoryReporter;
   /** @type {Array<{type: string, message: string, timestamp: number}>} */
   #alerts;
   /** @type {boolean} */
@@ -47,12 +58,20 @@ export default class MonitoringCoordinator {
    * @class
    * @param {object} deps - Dependencies
    * @param {ILogger} deps.logger - Logger instance
+   * @param {IEventBus} [deps.eventBus] - Event bus for memory monitoring
+   * @param {MemoryMonitor} [deps.memoryMonitor] - Memory monitor instance
+   * @param {MemoryPressureManager} [deps.memoryPressureManager] - Memory pressure manager
+   * @param {MemoryReporter} [deps.memoryReporter] - Memory reporter instance
    * @param {boolean} [deps.enabled] - Whether monitoring is enabled
    * @param {number} [deps.checkInterval] - Health check interval in ms
    * @param {object} [deps.circuitBreakerOptions] - Default circuit breaker options
    */
   constructor({
     logger,
+    eventBus,
+    memoryMonitor,
+    memoryPressureManager,
+    memoryReporter,
     enabled = true,
     checkInterval = 30000,
     circuitBreakerOptions = {},
@@ -61,6 +80,13 @@ export default class MonitoringCoordinator {
       requiredMethods: ['info', 'error', 'warn', 'debug'],
     });
     this.#logger = ensureValidLogger(logger, 'MonitoringCoordinator');
+
+    // Validate optional memory monitoring dependencies
+    if (eventBus) {
+      validateDependency(eventBus, 'IEventBus', logger, {
+        requiredMethods: ['dispatch', 'on'],
+      });
+    }
 
     this.#enabled = enabled;
     this.#checkInterval = checkInterval;
@@ -74,6 +100,16 @@ export default class MonitoringCoordinator {
     this.#circuitBreakers = new Map();
     this.#alerts = [];
 
+    // Initialize memory monitoring if dependencies provided
+    this.#memoryMonitor = memoryMonitor || null;
+    this.#memoryPressureManager = memoryPressureManager || null;
+    this.#memoryReporter = memoryReporter || null;
+
+    // Register for memory alerts if available
+    if (this.#memoryMonitor && eventBus) {
+      this.#registerMemoryAlerts(eventBus);
+    }
+
     // Start health checks if enabled
     if (this.#enabled) {
       this.#startHealthChecks();
@@ -82,6 +118,42 @@ export default class MonitoringCoordinator {
     this.#logger.info('MonitoringCoordinator initialized', {
       enabled: this.#enabled,
       checkInterval: this.#checkInterval,
+      memoryMonitoring: this.#memoryMonitor !== null,
+    });
+  }
+
+  /**
+   * Registers for memory monitoring alerts.
+   *
+   * @param {IEventBus} eventBus - Event bus
+   * @private
+   */
+  #registerMemoryAlerts(eventBus) {
+    // Listen for memory pressure alerts
+    eventBus.on('MEMORY_THRESHOLD_EXCEEDED', (event) => {
+      const { level, type, value } = event.payload;
+      this.#addAlert(
+        level === 'critical' ? 'error' : 'warning',
+        `Memory ${type} threshold exceeded: ${level} (${value})`
+      );
+    });
+
+    // Listen for memory leak detection
+    eventBus.on('MEMORY_LEAK_DETECTED', (event) => {
+      const { confidence, metrics } = event.payload;
+      this.#addAlert(
+        'warning',
+        `Potential memory leak detected (confidence: ${confidence})`
+      );
+    });
+
+    // Listen for memory strategy executions
+    eventBus.on('MEMORY_STRATEGY_COMPLETED', (event) => {
+      const { strategy, memoryFreed } = event.payload;
+      this.#addAlert(
+        'info',
+        `Memory ${strategy} strategy executed, freed ${(memoryFreed / 1048576).toFixed(2)}MB`
+      );
     });
   }
 
@@ -92,6 +164,33 @@ export default class MonitoringCoordinator {
    */
   getPerformanceMonitor() {
     return this.#performanceMonitor;
+  }
+
+  /**
+   * Gets the memory monitor instance.
+   *
+   * @returns {MemoryMonitor|null} Memory monitor or null if not available
+   */
+  getMemoryMonitor() {
+    return this.#memoryMonitor;
+  }
+
+  /**
+   * Gets the memory pressure manager instance.
+   *
+   * @returns {MemoryPressureManager|null} Memory pressure manager or null
+   */
+  getMemoryPressureManager() {
+    return this.#memoryPressureManager;
+  }
+
+  /**
+   * Gets the memory reporter instance.
+   *
+   * @returns {MemoryReporter|null} Memory reporter or null
+   */
+  getMemoryReporter() {
+    return this.#memoryReporter;
   }
 
   /**
@@ -229,9 +328,26 @@ export default class MonitoringCoordinator {
       totalFailures += stats.totalFailures;
     }
 
+    // Get memory statistics if available
+    let memoryStats = null;
+    if (this.#memoryMonitor) {
+      const currentUsage = this.#memoryMonitor.getCurrentUsage();
+      const pressureLevel = this.#memoryMonitor.getPressureLevel();
+      memoryStats = {
+        currentUsage,
+        pressureLevel,
+        history: this.#memoryMonitor.getHistory(10), // Last 10 samples
+      };
+
+      if (this.#memoryPressureManager) {
+        memoryStats.managementHistory = this.#memoryPressureManager.getManagementHistory(5);
+      }
+    }
+
     return {
       performance: performanceMetrics,
       circuitBreakers: circuitBreakerStats,
+      memory: memoryStats,
       totalOperations: performanceMetrics.totalOperations,
       totalFailures,
       recentAlerts: this.#alerts.slice(-10),
@@ -273,8 +389,13 @@ export default class MonitoringCoordinator {
    */
   #performHealthCheck() {
     try {
-      // Check memory usage
+      // Check memory usage (both legacy and new)
       this.#performanceMonitor.checkMemoryUsage();
+
+      // Check memory monitoring if available
+      if (this.#memoryMonitor) {
+        this.#checkMemoryHealth();
+      }
 
       // Check circuit breaker states
       this.#checkCircuitBreakerHealth();
@@ -286,6 +407,34 @@ export default class MonitoringCoordinator {
       this.#cleanupOldAlerts();
     } catch (error) {
       this.#logger.error('Health check failed:', error);
+    }
+  }
+
+  /**
+   * Checks memory health using the new memory monitoring system.
+   *
+   * @private
+   */
+  #checkMemoryHealth() {
+    if (!this.#memoryMonitor) return;
+
+    const usage = this.#memoryMonitor.getCurrentUsage();
+    const pressureLevel = this.#memoryMonitor.getPressureLevel();
+
+    // Check pressure level
+    if (pressureLevel === 'critical') {
+      this.#addAlert('error', `Critical memory pressure: ${(usage.usagePercent * 100).toFixed(1)}% heap usage`);
+    } else if (pressureLevel === 'warning') {
+      this.#addAlert('warning', `High memory usage: ${(usage.usagePercent * 100).toFixed(1)}% heap usage`);
+    }
+
+    // Check for memory leaks
+    const leakDetection = this.#memoryMonitor.detectLeaks();
+    if (leakDetection && leakDetection.isLeak) {
+      this.#addAlert(
+        'warning',
+        `Potential memory leak detected (confidence: ${leakDetection.confidence})`
+      );
     }
   }
 
@@ -405,6 +554,22 @@ export default class MonitoringCoordinator {
     report.push(`  Memory Warnings: ${stats.performance.memoryUsageWarnings}`);
     report.push('');
 
+    // Memory monitoring section
+    if (stats.memory) {
+      report.push('Memory Monitoring:');
+      report.push(`  Pressure Level: ${stats.memory.pressureLevel}`);
+      const usage = stats.memory.currentUsage;
+      if (usage) {
+        report.push(`  Heap Usage: ${(usage.usagePercent * 100).toFixed(1)}%`);
+        report.push(`  Heap Used: ${(usage.heapUsed / 1048576).toFixed(2)}MB`);
+        report.push(`  Heap Total: ${(usage.heapTotal / 1048576).toFixed(2)}MB`);
+        if (usage.rss) {
+          report.push(`  RSS: ${(usage.rss / 1048576).toFixed(2)}MB`);
+        }
+      }
+      report.push('');
+    }
+
     // Circuit breaker section
     report.push('Circuit Breakers:');
     if (Object.keys(stats.circuitBreakers).length === 0) {
@@ -463,6 +628,15 @@ export default class MonitoringCoordinator {
     this.#performanceMonitor.reset();
     this.#circuitBreakers.clear();
     this.#alerts = [];
+
+    // Reset memory monitoring if available
+    if (this.#memoryMonitor) {
+      this.#memoryMonitor.reset();
+    }
+    if (this.#memoryPressureManager) {
+      this.#memoryPressureManager.clearHistory();
+    }
+
     this.#logger.info('Monitoring data reset');
   }
 
@@ -471,6 +645,15 @@ export default class MonitoringCoordinator {
    */
   close() {
     this.#stopHealthChecks();
+
+    // Destroy memory monitoring if available
+    if (this.#memoryMonitor) {
+      this.#memoryMonitor.destroy();
+    }
+    if (this.#memoryPressureManager) {
+      this.#memoryPressureManager.destroy();
+    }
+
     this.#logger.info('MonitoringCoordinator closed');
   }
 }

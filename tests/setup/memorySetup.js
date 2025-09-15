@@ -38,51 +38,52 @@ if (global.gc) {
 // Global memory test utilities
 global.memoryTestUtils = {
   /**
-   * Forces garbage collection and waits for stabilization (enhanced for reliability)
+   * Forces garbage collection and waits for stabilization (optimized for speed)
    *
    * @returns {Promise<void>}
    */
   async forceGCAndWait() {
     if (global.gc) {
-      // Enhanced GC cycling for better memory stabilization
-      for (let i = 0; i < 4; i++) {
+      // Optimized GC cycling - reduced from 4 to 2 cycles
+      for (let i = 0; i < 2; i++) {
         global.gc();
-        // Progressive delays: 50ms, 75ms, 100ms, 125ms
-        await new Promise((resolve) => setTimeout(resolve, 50 + i * 25));
+        // Reduced progressive delays: 20ms, 30ms (was 50-125ms)
+        await new Promise((resolve) => setTimeout(resolve, 20 + i * 10));
       }
-      // Final stabilization period
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Reduced stabilization period from 100ms to 30ms
+      await new Promise((resolve) => setTimeout(resolve, 30));
     } else {
-      // Fallback delay when GC not available
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      // Reduced fallback delay from 200ms to 80ms
+      await new Promise((resolve) => setTimeout(resolve, 80));
     }
   },
 
   /**
-   * Gets stable memory measurement with multiple samples (enhanced for reliability)
+   * Gets stable memory measurement with multiple samples (optimized for speed)
    *
    * @param {number} samples - Number of samples to take
    * @returns {Promise<number>} Median memory usage in bytes
    */
-  async getStableMemoryUsage(samples = 5) {
-    // Increased default samples from 2 to 5 for better stability
+  async getStableMemoryUsage(samples = 3) {
+    // Reduced default samples from 5 to 3 for faster measurement
     const measurements = [];
 
-    // Extended initial stabilization for better accuracy
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    // Reduced initial stabilization from 50ms to 20ms
+    await new Promise((resolve) => setTimeout(resolve, 20));
 
     for (let i = 0; i < samples; i++) {
       if (i > 0) {
-        // Progressive delays between samples: 10ms, 15ms, 20ms, 25ms
-        await new Promise((resolve) => setTimeout(resolve, 10 + i * 5));
+        // Reduced delays between samples: 5ms, 10ms (was 10-25ms)
+        await new Promise((resolve) => setTimeout(resolve, 5 + i * 5));
       }
-      
+
       // Force GC before each measurement for consistency
       if (global.gc) {
         global.gc();
-        await new Promise((resolve) => setTimeout(resolve, 25));
+        // Reduced GC stabilization from 25ms to 10ms
+        await new Promise((resolve) => setTimeout(resolve, 10));
       }
-      
+
       measurements.push(process.memoryUsage().heapUsed);
     }
 
@@ -130,8 +131,8 @@ global.memoryTestUtils = {
    * @param {number} retries - Number of retry attempts
    * @returns {Promise<void>}
    */
-  async assertMemoryWithRetry(measurementFn, limitMB, retries = 12) {
-    // Increased default retries from 6 to 12 for better reliability
+  async assertMemoryWithRetry(measurementFn, limitMB, retries = 6) {
+    // Reduced default retries from 12 to 6 for faster test completion
     const adjustedLimit = this.getMemoryThreshold(limitMB);
 
     for (let attempt = 1; attempt <= retries; attempt++) {
@@ -151,9 +152,9 @@ global.memoryTestUtils = {
         console.log(
           `Memory assertion attempt ${attempt} failed: ${(memory / 1024 / 1024).toFixed(2)}MB > ${(adjustedLimit / 1024 / 1024).toFixed(2)}MB. Retrying...`
         );
-        // Exponential backoff with jitter for retry delays
-        const baseDelay = 100 + attempt * 50;
-        const jitter = Math.random() * 50;
+        // Reduced retry delays: 30-50ms base + 0-20ms jitter (was 100-600ms + 0-50ms)
+        const baseDelay = 30 + attempt * 10;
+        const jitter = Math.random() * 20;
         const waitTime = baseDelay + jitter;
         await new Promise((resolve) => setTimeout(resolve, waitTime));
       } else {
@@ -230,19 +231,20 @@ global.memoryTestUtils = {
    * @param {number} minimumDelayMs - Minimum stabilization delay
    * @returns {Promise<void>}
    */
-  async addPreTestStabilization(minimumDelayMs = 200) {
-    // Force multiple GC cycles for pre-test stabilization
+  async addPreTestStabilization(minimumDelayMs = 50) {
+    // Reduced default from 200ms to 50ms
+    // Force one GC cycle for pre-test stabilization
     await this.forceGCAndWait();
-    
-    // Additional stabilization delay
+
+    // Reduced additional stabilization delay
     await new Promise((resolve) => setTimeout(resolve, minimumDelayMs));
-    
-    // Final GC before test execution
+
+    // Final GC before test execution with reduced delay
     if (global.gc) {
       global.gc();
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 30)); // Reduced from 100ms
     }
-    
+
     console.log(`Pre-test stabilization completed (${minimumDelayMs}ms + GC cycles)`);
   },
 };

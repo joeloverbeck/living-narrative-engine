@@ -23,7 +23,7 @@ describe('core:turn_started Event Payload', () => {
   });
 
   describe('Event payload structure', () => {
-    it('should include entity object for human player with player_type component', async () => {
+    it('should include correct entityType for human player with player_type component', async () => {
       // Create a human player actor with the new player_type component
       const humanPlayer = createMockActor('player1', {
         isPlayer: true,
@@ -38,19 +38,14 @@ describe('core:turn_started Event Payload', () => {
       await testBed.advanceAndFlush();
 
       // Verify turn_started event was dispatched with correct payload
+      // Note: entity object is no longer included to prevent recursion issues
       expect(dispatchSpy).toHaveBeenCalledWith(TURN_STARTED_ID, {
         entityId: 'player1',
         entityType: 'player',
-        entity: expect.objectContaining({
-          id: 'player1',
-          components: expect.objectContaining({
-            [PLAYER_TYPE_COMPONENT_ID]: { type: 'human' },
-          }),
-        }),
       });
     });
 
-    it('should include entity object for AI player with llm type', async () => {
+    it('should include correct entityType for AI player with llm type', async () => {
       // Create an AI actor with LLM player type
       const aiActor = createMockActor('ai1', {
         isPlayer: false,
@@ -64,19 +59,14 @@ describe('core:turn_started Event Payload', () => {
       await testBed.turnManager.start();
       await testBed.advanceAndFlush();
 
+      // Note: entity object is no longer included to prevent recursion issues
       expect(dispatchSpy).toHaveBeenCalledWith(TURN_STARTED_ID, {
         entityId: 'ai1',
         entityType: 'ai',
-        entity: expect.objectContaining({
-          id: 'ai1',
-          components: expect.objectContaining({
-            [PLAYER_TYPE_COMPONENT_ID]: { type: 'llm' },
-          }),
-        }),
       });
     });
 
-    it('should include entity object for AI player with goap type', async () => {
+    it('should include correct entityType for AI player with goap type', async () => {
       // Create an AI actor with GOAP player type
       const goapActor = createMockActor('goap1', {
         isPlayer: false,
@@ -90,15 +80,10 @@ describe('core:turn_started Event Payload', () => {
       await testBed.turnManager.start();
       await testBed.advanceAndFlush();
 
+      // Note: entity object is no longer included to prevent recursion issues
       expect(dispatchSpy).toHaveBeenCalledWith(TURN_STARTED_ID, {
         entityId: 'goap1',
         entityType: 'ai',
-        entity: expect.objectContaining({
-          id: 'goap1',
-          components: expect.objectContaining({
-            [PLAYER_TYPE_COMPONENT_ID]: { type: 'goap' },
-          }),
-        }),
       });
     });
 
@@ -125,15 +110,10 @@ describe('core:turn_started Event Payload', () => {
       await testBed.turnManager.start();
       await testBed.advanceAndFlush();
 
+      // Note: entity object is no longer included to prevent recursion issues
       expect(dispatchSpy).toHaveBeenCalledWith(TURN_STARTED_ID, {
         entityId: 'legacy1',
         entityType: 'player',
-        entity: expect.objectContaining({
-          id: 'legacy1',
-          components: expect.not.objectContaining({
-            [PLAYER_TYPE_COMPONENT_ID]: expect.anything(),
-          }),
-        }),
       });
     });
   });
@@ -184,8 +164,8 @@ describe('core:turn_started Event Payload', () => {
     });
   });
 
-  describe('Entity reference integrity', () => {
-    it('should pass the same entity reference received from turnOrderService', async () => {
+  describe('Entity ID handling', () => {
+    it('should pass the correct entity ID from turnOrderService', async () => {
       const actor = createMockActor('actor1', { playerType: 'human' });
 
       testBed.setActiveEntities(actor);
@@ -199,10 +179,13 @@ describe('core:turn_started Event Payload', () => {
       );
 
       expect(turnStartedCall).toBeDefined();
-      expect(turnStartedCall[1].entity).toBe(actor); // Same reference
+      // Entity object is no longer passed to prevent recursion issues
+      // Only entityId is passed
+      expect(turnStartedCall[1].entityId).toBe('actor1');
+      expect(turnStartedCall[1].entity).toBeUndefined();
     });
 
-    it('should maintain entity properties through the event dispatch', async () => {
+    it('should not include entity object to prevent recursion issues', async () => {
       const customComponents = {
         'custom:component': { data: 'test' },
         [PLAYER_TYPE_COMPONENT_ID]: { type: 'llm' },
@@ -228,9 +211,9 @@ describe('core:turn_started Event Payload', () => {
         (call) => call[0] === TURN_STARTED_ID
       );
 
-      expect(turnStartedCall[1].entity.components).toMatchObject(
-        customComponents
-      );
+      // Entity object should not be included to prevent recursion
+      expect(turnStartedCall[1].entity).toBeUndefined();
+      expect(turnStartedCall[1].entityId).toBe('actor1');
     });
   });
 });

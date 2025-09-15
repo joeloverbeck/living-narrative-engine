@@ -389,7 +389,6 @@ class TurnManager extends ITurnManager {
           {
             entityId: actorId,
             entityType: entityType,
-            entity: this.#currentActor, // Include full entity for component access
           },
           this.#logger
         );

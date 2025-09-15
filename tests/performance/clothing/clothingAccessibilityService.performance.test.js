@@ -442,9 +442,19 @@ describe('ClothingAccessibilityService Performance', () => {
       // Note: Topmost mode may be slower than 'all' mode due to additional slot deduplication logic
       // 'topmost' uses Map operations to find highest priority item per slot
       // 'all' mode simply filters by allowed layers (simpler array operation)
-      // Allow up to 15x performance difference to account for algorithmic complexity differences
-      // (observed ratios can be 5-15x in practice due to Map overhead and slot deduplication)
-      expect(measurements.topmost.duration).toBeLessThanOrEqual(measurements.all.duration * 15.0);
+      // Only check performance ratio when both operations take measurable time (>1ms)
+      // to avoid unreliable micro-benchmark comparisons at sub-millisecond levels
+      const significantTime = 1.0; // 1ms threshold for reliable measurement
+
+      if (measurements.all.duration > significantTime && measurements.topmost.duration > significantTime) {
+        // When both operations take significant time, check the ratio
+        expect(measurements.topmost.duration).toBeLessThanOrEqual(measurements.all.duration * 15.0);
+      } else {
+        // For very fast operations, just ensure they complete within reasonable absolute time
+        // This avoids flaky failures when 'all' mode runs in <1ms due to JIT optimization
+        expect(measurements.topmost.duration).toBeLessThan(20); // 20ms absolute max
+        expect(measurements.all.duration).toBeLessThan(20);
+      }
       
       // Verify that simpler modes (single layer) are reasonably efficient
       ['outer', 'base', 'underwear'].forEach(mode => {

@@ -280,6 +280,7 @@ describe('MonitoringCoordinator', () => {
             lastFailureTime: null,
           },
         },
+        memory: null,
         totalOperations: 0,
         totalFailures: 0,
         recentAlerts: [],

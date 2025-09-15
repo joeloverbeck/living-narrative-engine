@@ -10,6 +10,7 @@ import { aiTokens } from './tokens/tokens-ai.js';
 import { testingTokens } from './tokens/tokens-testing.js';
 import { pipelineTokens } from './tokens/tokens-pipeline.js';
 import { actionTracingTokens } from './tokens/actionTracingTokens.js';
+import { monitoringTokens } from './tokens/tokens-monitoring.js';
 
 /**
  * @typedef {string} DiToken
@@ -27,4 +28,5 @@ export const tokens = freeze({
   ...testingTokens,
   ...pipelineTokens,
   ...actionTracingTokens,
+  ...monitoringTokens,
 });

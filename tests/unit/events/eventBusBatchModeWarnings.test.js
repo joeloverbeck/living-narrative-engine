@@ -221,11 +221,12 @@ describe('EventBus Batch Mode and Warnings', () => {
       // Assert
       expect(callCount).toBe(3); // Should be limited to 3 calls
       expect(consoleSpy.error).toHaveBeenCalledWith(
-        expect.stringContaining('Maximum recursion depth (3) exceeded')
+        expect.stringContaining('Maximum recursion depth (3) exceeded'),
+        expect.any(String),
+        expect.any(String)
       );
-      expect(consoleSpy.error).toHaveBeenCalledWith(
-        expect.stringContaining('batch mode: limit-test')
-      );
+      // Check that the error message includes batch mode context
+      expect(consoleSpy.error.mock.calls[0][0]).toContain('batch mode: limit-test');
     });
 
     it('should block recursion when global limit is exceeded in batch mode', async () => {
@@ -254,9 +255,8 @@ describe('EventBus Batch Mode and Warnings', () => {
       expect(consoleSpy.error).toHaveBeenCalledWith(
         expect.stringContaining('Global recursion limit (5) exceeded')
       );
-      expect(consoleSpy.error).toHaveBeenCalledWith(
-        expect.stringContaining('batch mode: global-limit-test')
-      );
+      // Check that the error message includes batch mode context
+      expect(consoleSpy.error.mock.calls[0][0]).toContain('batch mode: global-limit-test');
     });
   });
 
@@ -275,11 +275,12 @@ describe('EventBus Batch Mode and Warnings', () => {
       // Assert - Should be limited to 10 in normal mode for non-workflow events
       expect(callCount).toBe(10);
       expect(consoleSpy.error).toHaveBeenCalledWith(
-        expect.stringContaining('Maximum recursion depth (10) exceeded')
+        expect.stringContaining('Maximum recursion depth (10) exceeded'),
+        expect.any(String),
+        expect.any(String)
       );
-      expect(consoleSpy.error).not.toHaveBeenCalledWith(
-        expect.stringContaining('batch mode:')
-      );
+      // Should not contain batch mode in error message since not in batch mode
+      expect(consoleSpy.error.mock.calls[0][0]).not.toContain('batch mode:');
     });
 
     it('should use higher limits in batch mode', async () => {
@@ -302,11 +303,12 @@ describe('EventBus Batch Mode and Warnings', () => {
       // Assert - Should be limited to 5 in batch mode
       expect(callCount).toBe(5);
       expect(consoleSpy.error).toHaveBeenCalledWith(
-        expect.stringContaining('Maximum recursion depth (5) exceeded')
+        expect.stringContaining('Maximum recursion depth (5) exceeded'),
+        expect.any(String),
+        expect.any(String)
       );
-      expect(consoleSpy.error).toHaveBeenCalledWith(
-        expect.stringContaining('batch mode: batch-limits')
-      );
+      // Check that the error message includes batch mode context
+      expect(consoleSpy.error.mock.calls[0][0]).toContain('batch mode: batch-limits');
     });
   });
 
@@ -331,7 +333,9 @@ describe('EventBus Batch Mode and Warnings', () => {
       // Assert - Error events should use batch mode limits (10), no longer treated as critical
       expect(callCount).toBe(10);
       expect(consoleSpy.error).toHaveBeenCalledWith(
-        expect.stringContaining('Maximum recursion depth (10) exceeded')
+        expect.stringContaining('Maximum recursion depth (10) exceeded'),
+        expect.any(String),
+        expect.any(String)
       );
     });
   });
