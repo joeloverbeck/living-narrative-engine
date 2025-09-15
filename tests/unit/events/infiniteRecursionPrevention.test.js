@@ -149,7 +149,9 @@ describe('EventBus Infinite Recursion Prevention', () => {
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining(
           'Maximum recursion depth (10) exceeded for event "test:recursive"'
-        )
+        ),
+        expect.any(String),
+        expect.any(String)
       );
 
       consoleSpy.mockRestore();
@@ -179,7 +181,9 @@ describe('EventBus Infinite Recursion Prevention', () => {
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining(
           'Maximum recursion depth (10) exceeded for event "core:system_error_occurred"'
-        )
+        ),
+        expect.any(String),
+        expect.any(String)
       );
 
       consoleSpy.mockRestore();
@@ -217,7 +221,9 @@ describe('EventBus Infinite Recursion Prevention', () => {
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining(
           'Maximum recursion depth (8) exceeded for event "test:batch_recursive" (batch mode: test-batch)'
-        )
+        ),
+        expect.any(String),
+        expect.any(String)
       );
 
       consoleSpy.mockRestore();

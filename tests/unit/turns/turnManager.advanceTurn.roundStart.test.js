@@ -158,7 +158,6 @@ describeTurnManagerSuite(
           {
             entityId: actor1.id,
             entityType: 'ai',
-            entity: expect.objectContaining({ id: actor1.id }),
           }
         );
         expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(

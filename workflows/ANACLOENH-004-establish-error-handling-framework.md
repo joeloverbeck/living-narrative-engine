@@ -4,9 +4,11 @@
 Create a comprehensive error handling framework that standardizes error management across the clothing and anatomy systems, including custom error types, centralized handling, and recovery strategies.
 
 ## Current State
-- **Clothing System**: Has circuit breaker in `clothing/monitoring/circuitBreaker.js` but not widely adopted
-- **Anatomy System**: Custom error classes exist but inconsistently used
-- **Issues**: Fragmented error handling, inconsistent error recovery, difficult error diagnosis
+- **Clothing System**: Has circuit breaker in `src/clothing/monitoring/circuitBreaker.js` and `ClothingErrorHandler` with recovery strategies
+- **Anatomy System**: Has `AnatomyErrorHandler` and custom error classes (AnatomyGenerationError, etc.)
+- **Monitoring**: `MonitoringCoordinator` exists at `src/entities/monitoring/` with integrated error tracking
+- **General Errors**: Base error classes exist at `src/errors/` (ValidationError, etc.)
+- **Issues**: Fragmented error handling across systems, no unified BaseError class, inconsistent recovery patterns
 
 ## Objectives
 1. Create standardized error type hierarchy
@@ -19,7 +21,7 @@ Create a comprehensive error handling framework that standardizes error manageme
 
 ### Error Type Hierarchy
 ```javascript
-// Location: src/common/errors/BaseError.js
+// Location: src/errors/BaseError.js
 class BaseError extends Error {
   #code;
   #context;
@@ -84,7 +86,7 @@ class ConstraintViolationError extends BaseError {
 
 ### Central Error Handler
 ```javascript
-// Location: src/common/errors/CentralErrorHandler.js
+// Location: src/errors/CentralErrorHandler.js
 class CentralErrorHandler {
   #logger;
   #eventBus;
@@ -92,12 +94,12 @@ class CentralErrorHandler {
   #recoveryStrategies;
   #metrics;
   
-  constructor({ logger, eventBus, metricsCollector }) {
+  constructor({ logger, eventBus, monitoringCoordinator }) {
     this.#logger = logger;
     this.#eventBus = eventBus;
     this.#errorRegistry = new Map();
     this.#recoveryStrategies = new Map();
-    this.#metrics = metricsCollector;
+    this.#monitoringCoordinator = monitoringCoordinator; // Use existing MonitoringCoordinator
   }
   
   // Error handling
@@ -131,7 +133,7 @@ class CentralErrorHandler {
 
 ### Recovery Strategy Manager
 ```javascript
-// Location: src/common/errors/RecoveryStrategyManager.js
+// Location: src/errors/RecoveryStrategyManager.js
 class RecoveryStrategyManager {
   #strategies;
   #circuitBreakers;
@@ -180,7 +182,7 @@ class RecoveryStrategyManager {
 
 ### Error Reporter
 ```javascript
-// Location: src/common/errors/ErrorReporter.js
+// Location: src/errors/ErrorReporter.js
 class ErrorReporter {
   #buffer;
   #batchSize;
@@ -243,32 +245,40 @@ class ErrorReporter {
 ## File Changes
 
 ### New Files
-- `src/common/errors/BaseError.js`
-- `src/common/errors/CentralErrorHandler.js`
-- `src/common/errors/RecoveryStrategyManager.js`
-- `src/common/errors/ErrorReporter.js`
-- `src/common/errors/ErrorContext.js`
-- `src/clothing/errors/ClothingErrors.js`
-- `src/anatomy/errors/AnatomyErrors.js`
-- `src/common/errors/strategies/RetryStrategy.js`
-- `src/common/errors/strategies/FallbackStrategy.js`
+- `src/errors/BaseError.js` - Base error class for inheritance
+- `src/errors/CentralErrorHandler.js` - Unified error handler
+- `src/errors/RecoveryStrategyManager.js` - Recovery strategy management
+- `src/errors/ErrorReporter.js` - Error reporting service
+- `src/errors/ErrorContext.js` - Error context utilities
+- `src/errors/strategies/RetryStrategy.js` - Retry mechanism
+- `src/errors/strategies/FallbackStrategy.js` - Fallback handling
 
 ### Modified Files
-- `src/clothing/monitoring/circuitBreaker.js` - Enhance existing implementation
-- `src/dependencyInjection/registrations/errorHandlingRegistrations.js` - Register error services
-- All service files - Integrate error handling
+- `src/clothing/errors/clothingErrors.js` - Extend from BaseError
+- `src/clothing/errors/clothingErrorHandler.js` - Integrate with CentralErrorHandler
+- `src/anatomy/orchestration/anatomyErrorHandler.js` - Integrate with CentralErrorHandler
+- `src/entities/monitoring/MonitoringCoordinator.js` - Add error handler integration
+- `src/entities/monitoring/CircuitBreaker.js` - Enhance with error context
+- `src/dependencyInjection/registrations/monitoringRegistrations.js` - Register error services
+- `src/errors/validationError.js` - Extend from BaseError
+- All service files - Integrate centralized error handling
 
 ### Test Files
-- `tests/unit/common/errors/BaseError.test.js`
-- `tests/unit/common/errors/CentralErrorHandler.test.js`
-- `tests/unit/common/errors/RecoveryStrategyManager.test.js`
+- `tests/unit/errors/BaseError.test.js`
+- `tests/unit/errors/CentralErrorHandler.test.js`
+- `tests/unit/errors/RecoveryStrategyManager.test.js`
 - `tests/integration/errors/errorHandling.test.js`
 - `tests/integration/errors/recoveryStrategies.test.js`
 
 ## Dependencies
 - **Prerequisites**: None (foundational)
 - **External**: None
-- **Internal**: Logger, EventBus, Metrics services
+- **Internal**:
+  - Logger (ILogger token)
+  - EventBus (IEventBus token)
+  - MonitoringCoordinator (IMonitoringCoordinator token)
+  - MemoryMonitor (IMemoryMonitor token) - for resource-aware recovery
+  - Existing error handlers (ClothingErrorHandler, AnatomyErrorHandler)
 
 ## Acceptance Criteria
 1. ✅ All errors inherit from BaseError
@@ -324,7 +334,7 @@ class ErrorReporter {
 
 ## Configuration Example
 ```javascript
-// config/errorHandling.config.js
+// src/config/errorHandling.config.js
 export const errorHandlingConfig = {
   retry: {
     maxAttempts: 3,
@@ -360,7 +370,16 @@ export const errorHandlingConfig = {
 ```
 
 ## Notes
+- Build upon existing MonitoringCoordinator and error handlers
+- Leverage existing CircuitBreaker implementations (both clothing and entities)
+- Integrate with existing memory monitoring for resource-aware recovery
 - Consider implementing error budgets for SLO tracking
 - Add correlation IDs for distributed tracing
 - Implement error sampling for high-volume scenarios
 - Consider adding error replay capabilities for debugging
+
+## Key Architecture Decisions
+- Place all base error classes in `src/errors/` to match existing structure
+- Extend existing error handlers rather than replacing them
+- Use MonitoringCoordinator for metrics instead of creating new metrics service
+- Maintain backward compatibility with existing error handling patterns

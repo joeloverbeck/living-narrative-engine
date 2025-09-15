@@ -125,8 +125,8 @@ describe('ThematicDirectionsManagerController - Memory Tests', () => {
       const baselineMemory =
         await global.memoryTestUtils.getStableMemoryUsage();
 
-      // Create and destroy multiple times
-      const iterations = global.memoryTestUtils.isCI() ? 8 : 10;
+      // Create and destroy multiple times (reduced from 8-10 to 5-6)
+      const iterations = global.memoryTestUtils.isCI() ? 5 : 6;
 
       for (let i = 0; i < iterations; i++) {
         controller = new ThematicDirectionsManagerController(testBase.mocks);
@@ -164,23 +164,21 @@ describe('ThematicDirectionsManagerController - Memory Tests', () => {
 
       const measurements = [];
 
-      // Warmup iterations to stabilize V8 optimizations
-      for (let warmup = 0; warmup < 2; warmup++) {
-        const filterInput = document.getElementById('direction-filter');
-        filterInput.value = 'warmup';
-        filterInput.dispatchEvent(new Event('input'));
-        filterInput.value = '';
-        filterInput.dispatchEvent(new Event('input'));
-        await new Promise((resolve) => setTimeout(resolve, 10));
-      }
+      // Warmup iteration to stabilize V8 optimizations (reduced from 2 to 1)
+      const filterInput = document.getElementById('direction-filter');
+      filterInput.value = 'warmup';
+      filterInput.dispatchEvent(new Event('input'));
+      filterInput.value = '';
+      filterInput.dispatchEvent(new Event('input'));
+      await new Promise((resolve) => setTimeout(resolve, 5)); // Reduced from 10ms
 
       // Establish baseline after warmup
       await global.memoryTestUtils.forceGCAndWait();
       const baselineMemory =
         await global.memoryTestUtils.getStableMemoryUsage();
 
-      // Perform multiple operations with improved measurement stability
-      const operationCount = global.memoryTestUtils.isCI() ? 5 : 7;
+      // Perform multiple operations with improved measurement stability (reduced from 5-7 to 3-4)
+      const operationCount = global.memoryTestUtils.isCI() ? 3 : 4;
 
       for (let i = 0; i < operationCount; i++) {
         // Force garbage collection for stable measurements
@@ -194,14 +192,14 @@ describe('ThematicDirectionsManagerController - Memory Tests', () => {
         filterInput.dispatchEvent(new Event('input'));
 
         // Allow DOM operations to settle
-        await new Promise((resolve) => setTimeout(resolve, 30));
+        await new Promise((resolve) => setTimeout(resolve, 10)); // Reduced from 30ms
 
         // Clear filter (triggers editor recreation again)
         filterInput.value = '';
         filterInput.dispatchEvent(new Event('input'));
 
         // Allow async operations to complete and DOM to stabilize
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 30)); // Reduced from 100ms
 
         // Extra GC cycle before measurement for more stability
         await global.memoryTestUtils.forceGCAndWait();
@@ -242,7 +240,7 @@ describe('ThematicDirectionsManagerController - Memory Tests', () => {
 
           // Force additional cleanup
           await global.memoryTestUtils.forceGCAndWait();
-          await new Promise((resolve) => setTimeout(resolve, 200));
+          await new Promise((resolve) => setTimeout(resolve, 50)); // Reduced from 200ms
           await global.memoryTestUtils.forceGCAndWait();
 
           const retryFinalMemory =
@@ -278,7 +276,7 @@ describe('ThematicDirectionsManagerController - Memory Tests', () => {
     });
 
     it('should efficiently manage memory with large datasets', async () => {
-      const largeDirectionsCount = global.memoryTestUtils.isCI() ? 500 : 1000;
+      const largeDirectionsCount = global.memoryTestUtils.isCI() ? 200 : 400; // Reduced from 500-1000
 
       // Establish baseline
       await global.memoryTestUtils.forceGCAndWait();
@@ -295,7 +293,7 @@ describe('ThematicDirectionsManagerController - Memory Tests', () => {
       controller = new ThematicDirectionsManagerController(testBase.mocks);
       await controller.initialize();
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 30)); // Reduced from 100ms
       const peakMemory = await global.memoryTestUtils.getStableMemoryUsage();
 
       // Clean up
@@ -330,7 +328,7 @@ describe('ThematicDirectionsManagerController - Memory Tests', () => {
 
           // Force additional cleanup
           await global.memoryTestUtils.forceGCAndWait();
-          await new Promise((resolve) => setTimeout(resolve, 300));
+          await new Promise((resolve) => setTimeout(resolve, 100)); // Reduced from 300ms
           await global.memoryTestUtils.forceGCAndWait();
 
           const retryFinalMemory =

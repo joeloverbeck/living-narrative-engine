@@ -435,8 +435,21 @@ class EventBus extends IEventBus {
       const batchContext = this.#batchMode
         ? ` (batch mode: ${this.#batchModeOptions.context})`
         : '';
+
+      // Enhanced error logging with event details
+      const eventDetails = {
+        eventName,
+        payload: eventPayload,
+        currentDepth,
+        maxDepth: MAX_RECURSION_DEPTH,
+        batchMode: this.#batchMode,
+        context: this.#batchModeOptions?.context || 'normal',
+      };
+
       console.error(
-        `EventBus: Maximum recursion depth (${MAX_RECURSION_DEPTH}) exceeded for event "${eventName}"${batchContext}. Dispatch blocked to prevent infinite recursion.`
+        `EventBus: Maximum recursion depth (${MAX_RECURSION_DEPTH}) exceeded for event "${eventName}"${batchContext}. Dispatch blocked to prevent infinite recursion.`,
+        '\nLast event details that caused the recursion limit:',
+        JSON.stringify(eventDetails, null, 2)
       );
       return;
     }

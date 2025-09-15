@@ -14,7 +14,7 @@ This specification provides a curated collection of pre-validated color combinat
 
 ## Current Usage Overview
 
-**Status**: 8 of 24 color combinations currently in use by existing mods (16 available)
+**Status**: 9 of 27 color combinations currently in use by existing mods (18 available)
 
 ### Active Mod Assignments
 
@@ -25,13 +25,14 @@ This specification provides a curated collection of pre-validated color combinat
 | Intimacy    | Rose Pink          | 3.2     | `#ad1457`        |
 | Clothing    | Earth Brown        | 4.2     | `#6d4c41`        |
 | Sex         | Mystic Purple      | 5.1     | `#4a148c`        |
-| Positioning | Deep Orange Energy | 9.2     | `#bf360c`        |
+| Positioning | Deep Orange Energy | 10.2    | `#bf360c`        |
 | Exercise    | Orange Flame       | 2.3     | `#e65100`        |
 | Seduction   | Golden Divine      | 5.2     | `#f57f17`        |
+| Movement    | Explorer Cyan      | 9.3     | `#006064`        |
 
 ### Available Color Combinations
 
-The following **16 color combinations** remain available for new mods:
+The following **18 color combinations** remain available for new mods:
 
 - **Neutral/System**: Slate Grey (1.2), Charcoal (1.3)
 - **Action/Combat**: Bold Red (2.1)
@@ -41,7 +42,8 @@ The following **16 color combinations** remain available for new mods:
 - **Warning/Alert**: Amber Warning (6.1), Dark Red Alert (6.2)
 - **Dark Theme**: Deep Blue (7.1), Dark Purple (7.2), Midnight Green (7.3)
 - **High Contrast**: Pure Black & White (8.1), White & Black (8.2), Yellow on Black (8.3)
-- **Additional Versatile**: Indigo Professional (9.1), Cool Grey Modern (9.3)
+- **Additional Versatile**: Journey Cobalt (9.1), Pathfinder Slate (9.2)
+- **Professional/Modern**: Indigo Professional (10.1), Cool Grey Modern (10.3)
 
 **Recommendation**: When creating new mods, select from the available combinations above to maintain visual consistency and avoid conflicts.
 
@@ -439,7 +441,60 @@ The following **16 color combinations** remain available for new mods:
 
 ### 9. Additional Versatile Options
 
-#### 9.1 Indigo Professional
+#### 9.1 Journey Cobalt
+
+```json
+{
+  "backgroundColor": "#1a237e",
+  "textColor": "#e8eaf6",
+  "hoverBackgroundColor": "#283593",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+- **Normal Contrast**: 13.5:1 🌟 AAA
+- **Hover Contrast**: 10.5:1 🌟 AAA
+- **Use Cases**: Travel actions, long-distance movement, exploration
+- **Theme**: Journey, vast distances, adventure
+- 🟢 **AVAILABLE**
+
+#### 9.2 Pathfinder Slate
+
+```json
+{
+  "backgroundColor": "#2e3f47",
+  "textColor": "#ecf0f1",
+  "hoverBackgroundColor": "#4a5f6a",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+- **Normal Contrast**: 11.8:1 🌟 AAA
+- **Hover Contrast**: 6.5:1 ✅ AA
+- **Use Cases**: Navigation, wayfinding, path selection
+- **Theme**: Roads, paths, neutral guidance
+- 🟢 **AVAILABLE**
+
+#### 9.3 Explorer Cyan
+
+```json
+{
+  "backgroundColor": "#006064",
+  "textColor": "#e0f7fa",
+  "hoverBackgroundColor": "#00838f",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+- **Normal Contrast**: 12.3:1 🌟 AAA
+- **Hover Contrast**: 5.8:1 ✅ AA
+- **Use Cases**: Discovery, navigation, movement freedom
+- **Theme**: Exploration, discovery, spatial awareness
+- ✅ **USED BY**: Movement mod (go, enter, exit, navigate, traverse, explore)
+
+### 10. Professional & Modern Options
+
+#### 10.1 Indigo Professional
 
 ```json
 {
@@ -456,7 +511,7 @@ The following **16 color combinations** remain available for new mods:
 - **Theme**: Corporate, trustworthy, stable
 - 🟢 **AVAILABLE**
 
-#### 9.2 Deep Orange Energy
+#### 10.2 Deep Orange Energy
 
 ```json
 {
@@ -473,7 +528,7 @@ The following **16 color combinations** remain available for new mods:
 - **Theme**: Dynamic, energetic, active
 - ✅ **USED BY**: Positioning mod (get_close, step_back, turn_around, kneel_before, etc.)
 
-#### 9.3 Cool Grey Modern
+#### 10.3 Cool Grey Modern
 
 ```json
 {

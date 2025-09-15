@@ -214,3 +214,76 @@ export function createProcessEnvShim() {
 
   return envShim;
 }
+
+/**
+ * Check if garbage collection is available
+ * @returns {boolean} True if GC is available (Node.js with --expose-gc flag)
+ */
+export function isGarbageCollectionAvailable() {
+  // eslint-disable-next-line no-undef
+  return typeof global !== 'undefined' &&
+         typeof global.gc === 'function';
+}
+
+/**
+ * Trigger garbage collection if available
+ * @returns {boolean} True if GC was triggered
+ */
+export function triggerGarbageCollection() {
+  if (isGarbageCollectionAvailable()) {
+    // eslint-disable-next-line no-undef
+    global.gc();
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Get memory usage based on environment
+ * @returns {object|null} Memory usage object or null if not available
+ */
+export function getMemoryUsage() {
+  // Browser environment
+  if (typeof performance !== 'undefined' && performance.memory) {
+    return {
+      heapUsed: performance.memory.usedJSHeapSize || 0,
+      heapTotal: performance.memory.totalJSHeapSize || 0,
+      heapLimit: performance.memory.jsHeapSizeLimit || 0,
+      external: 0, // Not available in browser
+    };
+  }
+
+  // Node.js environment
+  if (isNodeEnvironment() && typeof process !== 'undefined' && process.memoryUsage) {
+    const mem = process.memoryUsage();
+    return {
+      heapUsed: mem.heapUsed || 0,
+      heapTotal: mem.heapTotal || 0,
+      heapLimit: mem.heapTotal || 0, // Use heapTotal as limit in Node.js
+      external: mem.external || 0,
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Get memory usage value in bytes
+ * @returns {number} Current memory usage in bytes or 0 if not available
+ */
+export function getMemoryUsageBytes() {
+  const usage = getMemoryUsage();
+  return usage ? usage.heapUsed : 0;
+}
+
+/**
+ * Get memory usage percentage
+ * @returns {number} Memory usage as percentage (0-1) or 0 if not available
+ */
+export function getMemoryUsagePercent() {
+  const usage = getMemoryUsage();
+  if (!usage || !usage.heapLimit) {
+    return 0;
+  }
+  return usage.heapUsed / usage.heapLimit;
+}
