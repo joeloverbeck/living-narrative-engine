@@ -111,7 +111,14 @@ describe('ErrorClassifier', () => {
           retryable: true,
           anatomyErrorDetails: {
             code: 'MISSING_ANATOMY_PARTS',
-            context: 'Loading anatomy',
+            context: expect.objectContaining({
+              code: 'MISSING_ANATOMY_PARTS',
+              context: 'Loading anatomy',
+              severity: 'HIGH',
+              recoverable: true,
+              userMessage: 'Custom user message',
+              suggestions: ['Try again', 'Select different entity'],
+            }),
             userMessage: 'Custom user message',
             suggestions: ['Try again', 'Select different entity'],
           },

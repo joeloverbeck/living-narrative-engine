@@ -1,0 +1,14 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "movement:exit-is-unblocked",
+  "description": "Checks if an exit object has the 'block' property nullified.",
+  "logic": {
+    "!": { "var": "entity.blocker" }
+  },
+  "metadata": {
+    "migratedFrom": "core:exit-is-unblocked",
+    "migrationDate": "2024-09-16",
+    "migrationTicket": "MOVMODMIG-004",
+    "version": "1.0.0"
+  }
+}

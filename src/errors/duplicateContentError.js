@@ -2,13 +2,15 @@
  * @file Error class for duplicate content identifiers.
  */
 
+import BaseError from './baseError.js';
+
 /**
  * Error thrown when attempting to load content with an identifier that already exists.
  *
  * @class DuplicateContentError
- * @augments {Error}
+ * @augments {BaseError}
  */
-export class DuplicateContentError extends Error {
+export class DuplicateContentError extends BaseError {
   /**
    * Creates an instance of DuplicateContentError.
    *
@@ -25,17 +27,29 @@ export class DuplicateContentError extends Error {
       `Mod '${modId}'${sourceInfo} is attempting to override content originally defined by mod '${existingModId}'. ` +
       `Mod overrides are not allowed.`;
 
-    super(message);
+    const context = { contentType, qualifiedId, modId, existingModId, sourceFile };
+    super(message, 'DUPLICATE_CONTENT_ERROR', context);
     this.name = 'DuplicateContentError';
+    // Backward compatibility
     this.contentType = contentType;
     this.qualifiedId = qualifiedId;
     this.modId = modId;
     this.existingModId = existingModId;
     this.sourceFile = sourceFile;
+  }
 
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, DuplicateContentError);
-    }
+  /**
+   * @returns {string} Severity level for duplicate content errors
+   */
+  getSeverity() {
+    return 'warning';
+  }
+
+  /**
+   * @returns {boolean} Duplicate content errors are recoverable
+   */
+  isRecoverable() {
+    return true;
   }
 }
 

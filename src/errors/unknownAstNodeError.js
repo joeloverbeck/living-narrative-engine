@@ -1,11 +1,25 @@
-export class UnknownAstNodeError extends Error {
-  constructor(nodeType) {
-    super(`Unknown AST node type: ${nodeType}`);
-    this.name = 'UnknownAstNodeError';
-    this.nodeType = nodeType;
+import BaseError from './baseError.js';
 
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, UnknownAstNodeError);
-    }
+export class UnknownAstNodeError extends BaseError {
+  constructor(nodeType) {
+    const context = { nodeType };
+    super(`Unknown AST node type: ${nodeType}`, 'UNKNOWN_AST_NODE_ERROR', context);
+    this.name = 'UnknownAstNodeError';
+    // Backward compatibility
+    this.nodeType = nodeType;
+  }
+
+  /**
+   * @returns {string} Severity level for unknown AST node errors
+   */
+  getSeverity() {
+    return 'error';
+  }
+
+  /**
+   * @returns {boolean} Unknown AST node errors are not recoverable
+   */
+  isRecoverable() {
+    return false;
   }
 }

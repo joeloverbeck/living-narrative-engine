@@ -591,8 +591,8 @@ describe('TargetDependencyResolver', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(ServiceError);
         expect(error.code).toBe(ServiceErrorCodes.CIRCULAR_DEPENDENCY);
-        expect(error.receivedValue).toHaveProperty('dependencyMap');
-        expect(error.receivedValue).toHaveProperty('remaining');
+        expect(error.value).toHaveProperty('dependencyMap');
+        expect(error.value).toHaveProperty('remaining');
         expect(error.message).toContain('Dependency chains:');
       }
     });

@@ -23,13 +23,29 @@ export class ActorMismatchError extends ActorError {
     message,
     { expectedActorId = null, actualActorId = null, operation = 'N/A' } = {}
   ) {
-    super(message);
+    const baseContext = { expectedActorId, actualActorId, operation };
+    super(message, baseContext);
     this.name = 'ActorMismatchError';
+    // Backward compatibility
     /** @type {string|null} */
     this.expectedActorId = expectedActorId;
     /** @type {string|null} */
     this.actualActorId = actualActorId;
     /** @type {string} */
     this.operation = operation;
+  }
+
+  /**
+   * @returns {string} Severity level for actor mismatch errors
+   */
+  getSeverity() {
+    return 'warning';
+  }
+
+  /**
+   * @returns {boolean} Actor mismatch errors are recoverable
+   */
+  isRecoverable() {
+    return true;
   }
 }

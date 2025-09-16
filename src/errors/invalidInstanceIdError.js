@@ -2,24 +2,39 @@
  * @file Error class for invalid or missing instance IDs during reconstruction.
  */
 
+import BaseError from './baseError.js';
+
 /**
  * Error thrown when an entity instanceId is invalid.
  *
  * @class InvalidInstanceIdError
- * @augments {Error}
+ * @augments {BaseError}
  */
-export class InvalidInstanceIdError extends Error {
+export class InvalidInstanceIdError extends BaseError {
   /**
    * @param {string} instanceId - The invalid instance ID.
    * @param {string} [message] - Optional custom message.
    */
   constructor(instanceId, message = null) {
     const defaultMessage = `Invalid instanceId: '${instanceId}'.`;
-    super(message || defaultMessage);
+    const context = { instanceId };
+    super(message || defaultMessage, 'INVALID_INSTANCE_ID_ERROR', context);
     this.name = 'InvalidInstanceIdError';
+    // Backward compatibility
     this.instanceId = instanceId;
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, InvalidInstanceIdError);
-    }
+  }
+
+  /**
+   * @returns {string} Severity level for invalid instance ID errors
+   */
+  getSeverity() {
+    return 'warning';
+  }
+
+  /**
+   * @returns {boolean} Invalid instance ID errors are recoverable
+   */
+  isRecoverable() {
+    return true;
   }
 }

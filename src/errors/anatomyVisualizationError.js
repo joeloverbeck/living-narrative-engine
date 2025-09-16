@@ -3,15 +3,17 @@
  * @see src/domUI/visualizer/ErrorRecovery.js
  */
 
+import BaseError from './baseError.js';
+
 /**
  * Base error class for all anatomy visualization related errors.
  * Provides common functionality for error categorization, severity levels,
  * and recovery guidance.
  *
  * @class
- * @augments {Error}
+ * @augments {BaseError}
  */
-export class AnatomyVisualizationError extends Error {
+export class AnatomyVisualizationError extends BaseError {
   /**
    * Create a new AnatomyVisualizationError instance.
    *
@@ -27,14 +29,21 @@ export class AnatomyVisualizationError extends Error {
    * @param {Array<string>} options.suggestions - Recovery suggestions for the user
    */
   constructor(message, options = {}) {
-    super(message);
+    // Adapt existing options to BaseError format
+    super(message, options.code || 'ANATOMY_VISUALIZATION_ERROR', {
+      context: options.context,
+      cause: options.cause,
+      metadata: options.metadata,
+      severity: options.severity || 'MEDIUM',
+      recoverable: options.recoverable !== false,
+      ...options
+    });
     this.name = 'AnatomyVisualizationError';
 
-    // Error classification
-    this.code = options.code || 'ANATOMY_VISUALIZATION_ERROR';
-    this.severity = options.severity || 'MEDIUM';
-    this.context = options.context || 'Unknown context';
-    this.recoverable = options.recoverable !== false; // Default to recoverable
+    // Store additional properties specific to this error type
+    // Note: code, context, timestamp are already handled by BaseError
+    this._severity = options.severity || 'MEDIUM'; // Store for getSeverity() mapping
+    this._recoverable = options.recoverable !== false; // Store for isRecoverable()
 
     // User-facing information
     this.userMessage = options.userMessage || this._getDefaultUserMessage();
@@ -43,12 +52,25 @@ export class AnatomyVisualizationError extends Error {
     // Debugging information
     this.cause = options.cause || null;
     this.metadata = options.metadata || {};
-    this.timestamp = new Date().toISOString();
 
     // Stack trace handling
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, this.constructor);
     }
+  }
+
+  /**
+   * Getter for severity to maintain backward compatibility
+   */
+  get severity() {
+    return this._severity;
+  }
+
+  /**
+   * Getter for recoverable to maintain backward compatibility
+   */
+  get recoverable() {
+    return this._recoverable;
   }
 
   /**
@@ -92,6 +114,31 @@ export class AnatomyVisualizationError extends Error {
       suggestions: this.suggestions,
       timestamp: this.timestamp,
     };
+  }
+
+  /**
+   * Override BaseError getSeverity to map anatomy severity levels
+   *
+   * @returns {string} Severity level compatible with BaseError
+   */
+  getSeverity() {
+    // Map existing severity levels to BaseError format
+    const severityMap = {
+      'LOW': 'info',
+      'MEDIUM': 'warning',
+      'HIGH': 'error',
+      'CRITICAL': 'critical'
+    };
+    return severityMap[this._severity] || 'warning';
+  }
+
+  /**
+   * Override BaseError isRecoverable
+   *
+   * @returns {boolean} Whether this error is recoverable
+   */
+  isRecoverable() {
+    return this._recoverable;
   }
 
   /**

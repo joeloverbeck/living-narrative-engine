@@ -10,13 +10,15 @@
  * @see ../characterBuilder/services/clicheErrorHandler.js
  */
 
+import BaseError from './baseError.js';
+
 /**
  * Base error class for all cliché-related errors
  *
  * Provides common structure and functionality for all domain-specific
  * cliché errors with proper error chaining and detailed context.
  */
-export class ClicheError extends Error {
+export class ClicheError extends BaseError {
   /**
    * @param {string} message - Human-readable error message
    * @param {object} [details] - Additional error context and metadata
@@ -25,18 +27,26 @@ export class ClicheError extends Error {
    * @param {*} [details.context] - Additional context data
    */
   constructor(message, details = {}) {
-    super(message);
+    const errorCode = details.code || 'CLICHE_ERROR';
+    super(message, errorCode, details.context);
     this.name = 'ClicheError';
-    this.code = details.code || 'CLICHE_ERROR';
+    // Store additional properties for backward compatibility
     this.operation = details.operation;
-    this.context = details.context;
     this.details = details;
-    this.timestamp = new Date().toISOString();
+  }
 
-    // Maintain proper stack trace for debugging
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, ClicheError);
-    }
+  /**
+   * @returns {string} Severity level for cliché errors
+   */
+  getSeverity() {
+    return 'warning';
+  }
+
+  /**
+   * @returns {boolean} Cliché errors are recoverable
+   */
+  isRecoverable() {
+    return true;
   }
 
   /**

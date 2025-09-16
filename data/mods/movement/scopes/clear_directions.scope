@@ -1,0 +1,3 @@
+movement:clear_directions := location.movement:exits[
+    { "condition_ref": "movement:exit-is-unblocked" }
+].target

@@ -6,7 +6,7 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { assertNonBlankString } from '../utils/dependencyUtils.js';
+import { isNonBlankString } from '../utils/textUtils.js';
 
 /**
  * Base error class that standardizes error handling across the application
@@ -35,8 +35,12 @@ class BaseError extends Error {
    */
   constructor(message, code, context = {}, options = {}) {
     // Validate required parameters following project patterns
-    assertNonBlankString(message, 'message', 'BaseError constructor', console);
-    assertNonBlankString(code, 'code', 'BaseError constructor', console);
+    if (!isNonBlankString(message)) {
+      throw new Error(`BaseError constructor: Invalid message '${message}'. Expected non-blank string.`);
+    }
+    if (!isNonBlankString(code)) {
+      throw new Error(`BaseError constructor: Invalid code '${code}'. Expected non-blank string.`);
+    }
 
     // Context can be undefined/null, defaulting to empty object
     if (context === null || context === undefined) {
@@ -161,7 +165,9 @@ class BaseError extends Error {
    * @returns {BaseError} This instance for chaining
    */
   addContext(key, value) {
-    assertNonBlankString(key, 'context key', 'addContext', console);
+    if (!isNonBlankString(key)) {
+      throw new Error(`addContext: Invalid context key '${key}'. Expected non-blank string.`);
+    }
     this.#context[key] = value;
     return this;
   }

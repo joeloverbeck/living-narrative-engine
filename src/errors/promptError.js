@@ -5,13 +5,15 @@
  * @file Defines a custom error class for errors related to player prompting.
  */
 
+import BaseError from './baseError.js';
+
 /**
  * @class PromptError
- * @augments Error
+ * @augments BaseError
  * @description Custom error class for failures specifically related to player prompting logic,
  * such as issues during action discovery, dispatching the prompt event, or awaiting player input.
  */
-export class PromptError extends Error {
+export class PromptError extends BaseError {
   /**
    * The original error that caused this PromptError, if available.
    *
@@ -19,14 +21,6 @@ export class PromptError extends Error {
    * @public
    */
   cause;
-
-  /**
-   * An optional error code for programmatic error handling or categorization.
-   *
-   * @type {string | undefined}
-   * @public
-   */
-  code;
 
   /**
    * Creates an instance of PromptError.
@@ -38,26 +32,29 @@ export class PromptError extends Error {
    * This will be stored in the `code` property.
    */
   constructor(message, originalError, errorCode) {
-    super(message); // Pass message to the base Error class constructor
-    this.name = 'PromptError'; // Set the name property for identification
+    const context = { originalError, errorCode };
+    super(message, errorCode || 'PROMPT_ERROR', context);
+    this.name = 'PromptError';
 
-    // Capture stack trace (specific to V8, common practice)
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, PromptError);
-    }
-
-    // Store the original error if provided
+    // Store for backward compatibility
     if (originalError !== undefined) {
       this.cause = originalError;
     }
+    // Note: code is already handled by BaseError
+  }
 
-    // Store the error code if provided
-    if (errorCode !== undefined) {
-      this.code = errorCode;
-    }
+  /**
+   * @returns {string} Severity level for prompt errors
+   */
+  getSeverity() {
+    return 'warning';
+  }
 
-    // Ensure the prototype chain is correctly set for instanceof checks
-    Object.setPrototypeOf(this, PromptError.prototype);
+  /**
+   * @returns {boolean} Prompt errors are recoverable
+   */
+  isRecoverable() {
+    return true;
   }
 }
 

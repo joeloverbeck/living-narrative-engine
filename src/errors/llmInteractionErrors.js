@@ -2,14 +2,16 @@
  * @file Defines custom error classes for LLM API interaction failures.
  */
 
+import BaseError from './baseError.js';
+
 /**
  * Base error for failures during interaction with a Large Language Model service.
  *
  * @class LLMInteractionError
- * @augments Error
+ * @augments BaseError
  * @description Base error for failures during interaction with a Large Language Model service.
  */
-export class LLMInteractionError extends Error {
+export class LLMInteractionError extends BaseError {
   /**
    * Creates a new LLMInteractionError instance.
    *
@@ -20,14 +22,26 @@ export class LLMInteractionError extends Error {
    * @param {any} [details.responseBody] - Parsed response body from the LLM provider.
    */
   constructor(message, details = {}) {
-    super(message);
+    super(message, 'LLM_INTERACTION_ERROR', details);
     this.name = 'LLMInteractionError';
+    // Backward compatibility
     this.status = details.status;
     this.llmId = details.llmId;
     this.responseBody = details.responseBody;
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, LLMInteractionError);
-    }
+  }
+
+  /**
+   * @returns {string} Severity level for LLM interaction errors
+   */
+  getSeverity() {
+    return 'warning';
+  }
+
+  /**
+   * @returns {boolean} LLM interaction errors are recoverable
+   */
+  isRecoverable() {
+    return true;
   }
 }
 

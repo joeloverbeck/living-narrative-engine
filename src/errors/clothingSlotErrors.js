@@ -3,36 +3,60 @@
  * @see src/anatomy/integration/strategies/ClothingSlotMappingStrategy.js
  */
 
+import BaseError from './baseError.js';
+
 /**
  * Error thrown when a clothing slot is not found in blueprint's clothingSlotMappings
  */
-export class ClothingSlotNotFoundError extends Error {
+export class ClothingSlotNotFoundError extends BaseError {
   constructor(message, slotId, blueprintId) {
-    super(message);
+    const context = { slotId, blueprintId };
+    super(message, 'CLOTHING_SLOT_NOT_FOUND_ERROR', context);
     this.name = 'ClothingSlotNotFoundError';
+    // Backward compatibility
     this.slotId = slotId;
     this.blueprintId = blueprintId;
+  }
 
-    // Maintains proper stack trace for where our error was thrown (only V8)
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, ClothingSlotNotFoundError);
-    }
+  /**
+   * @returns {string} Severity level for clothing slot errors
+   */
+  getSeverity() {
+    return 'warning';
+  }
+
+  /**
+   * @returns {boolean} Clothing slot errors are recoverable
+   */
+  isRecoverable() {
+    return true;
   }
 }
 
 /**
  * Error thrown when a clothing slot mapping has invalid structure
  */
-export class InvalidClothingSlotMappingError extends Error {
+export class InvalidClothingSlotMappingError extends BaseError {
   constructor(message, slotId, mapping) {
-    super(message);
+    const context = { slotId, mapping };
+    super(message, 'INVALID_CLOTHING_SLOT_MAPPING_ERROR', context);
     this.name = 'InvalidClothingSlotMappingError';
+    // Backward compatibility
     this.slotId = slotId;
     this.mapping = mapping;
+  }
 
-    // Maintains proper stack trace for where our error was thrown (only V8)
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, InvalidClothingSlotMappingError);
-    }
+  /**
+   * @returns {string} Severity level for clothing slot mapping errors
+   */
+  getSeverity() {
+    return 'warning';
+  }
+
+  /**
+   * @returns {boolean} Clothing slot mapping errors are recoverable
+   */
+  isRecoverable() {
+    return true;
   }
 }

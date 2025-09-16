@@ -3,12 +3,14 @@
  * @file Defines a custom error class for when a prompt exceeds the allowed token space.
  */
 
+import BaseError from './baseError.js';
+
 /**
  * @class PromptTooLongError
- * @augments Error
+ * @augments BaseError
  * @description Error thrown when the estimated prompt token count surpasses the available token space for an LLM configuration.
  */
-class PromptTooLongError extends Error {
+class PromptTooLongError extends BaseError {
   /**
    * Creates an instance of PromptTooLongError.
    *
@@ -20,16 +22,27 @@ class PromptTooLongError extends Error {
    * @param {number} [details.maxTokensForOutput] - Tokens reserved for the LLM response.
    */
   constructor(message, details = {}) {
-    super(message);
+    super(message, 'PROMPT_TOO_LONG_ERROR', details);
     this.name = 'PromptTooLongError';
+    // Backward compatibility: preserve all existing properties
     this.estimatedTokens = details.estimatedTokens;
     this.promptTokenSpace = details.promptTokenSpace;
     this.contextTokenLimit = details.contextTokenLimit;
     this.maxTokensForOutput = details.maxTokensForOutput;
+  }
 
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, PromptTooLongError);
-    }
+  /**
+   * @returns {string} Severity level for prompt too long errors
+   */
+  getSeverity() {
+    return 'warning';
+  }
+
+  /**
+   * @returns {boolean} Prompt too long errors are recoverable
+   */
+  isRecoverable() {
+    return true;
   }
 }
 
