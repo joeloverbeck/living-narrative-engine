@@ -1,3 +1,6 @@
+// Base error class (foundation for all custom errors)
+export { default as BaseError } from './baseError.js';
+
 export * from './modsLoaderPhaseError.js';
 export * from './serializedEntityError.js';
 export * from './invalidInstanceIdError.js';

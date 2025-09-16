@@ -1,0 +1,37 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "positioning:turn_around",
+  "name": "Turn Around",
+  "description": "Turn the target around or have them face you again.",
+  "targets": {
+    "primary": {
+      "scope": "positioning:close_actors_facing_each_other_or_behind_target",
+      "placeholder": "target",
+      "description": "Actor to turn around"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "template": "turn {target} around",
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "core:actor-can-move"
+      },
+      "failure_message": "You cannot move right now."
+    },
+    {
+      "logic": {
+        "condition_ref": "core:actor-mouth-available"
+      },
+      "failure_message": "You cannot do that while your mouth is engaged."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#bf360c",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#8d2c08",
+    "hoverTextColor": "#ffffff"
+  }
+}

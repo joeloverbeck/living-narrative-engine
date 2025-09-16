@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "core:go",
+  "name": "Go",
+  "description": "Moves your character to the specified location, if the way is clear.",
+  "targets": {
+    "primary": {
+      "scope": "core:clear_directions",
+      "placeholder": "destination",
+      "description": "Location to move to"
+    }
+  },
+  "template": "go to {destination}",
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "core:actor-can-move"
+      },
+      "failure_message": "You cannot move without functioning legs."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#455a64",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#37474f",
+    "hoverTextColor": "#ffffff"
+  }
+}
