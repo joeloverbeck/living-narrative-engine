@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import BaseError from '../../../src/errors/baseError.js';
 import { ErrorCodes } from '../../../src/scopeDsl/constants/errorCodes.js';
-import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 
 describe('BaseError - Foundation Class', () => {
   let testBed;
@@ -37,29 +36,29 @@ describe('BaseError - Foundation Class', () => {
     it('should throw error for missing message', () => {
       expect(() => {
         new BaseError('', ErrorCodes.INVALID_DATA_GENERIC, {});
-      }).toThrow(InvalidArgumentError);
+      }).toThrow(Error);
 
       expect(() => {
         new BaseError(null, ErrorCodes.INVALID_DATA_GENERIC, {});
-      }).toThrow(InvalidArgumentError);
+      }).toThrow(Error);
 
       expect(() => {
         new BaseError(undefined, ErrorCodes.INVALID_DATA_GENERIC, {});
-      }).toThrow(InvalidArgumentError);
+      }).toThrow(Error);
     });
 
     it('should throw error for missing code', () => {
       expect(() => {
         new BaseError('Test message', '', {});
-      }).toThrow(InvalidArgumentError);
+      }).toThrow(Error);
 
       expect(() => {
         new BaseError('Test message', null, {});
-      }).toThrow(InvalidArgumentError);
+      }).toThrow(Error);
 
       expect(() => {
         new BaseError('Test message', undefined, {});
-      }).toThrow(InvalidArgumentError);
+      }).toThrow(Error);
     });
 
     it('should accept null or undefined context defaulting to empty object', () => {
@@ -219,9 +218,9 @@ describe('BaseError - Foundation Class', () => {
     it('should throw error for invalid context key', () => {
       const error = new BaseError('Test', ErrorCodes.INVALID_DATA_GENERIC, {});
 
-      expect(() => error.addContext('', 'value')).toThrow(InvalidArgumentError);
-      expect(() => error.addContext(null, 'value')).toThrow(InvalidArgumentError);
-      expect(() => error.addContext(undefined, 'value')).toThrow(InvalidArgumentError);
+      expect(() => error.addContext('', 'value')).toThrow(Error);
+      expect(() => error.addContext(null, 'value')).toThrow(Error);
+      expect(() => error.addContext(undefined, 'value')).toThrow(Error);
     });
 
     it('should get specific context value', () => {

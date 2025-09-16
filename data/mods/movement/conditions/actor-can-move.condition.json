@@ -1,0 +1,14 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "movement:actor-can-move",
+  "description": "Checks if the actor has functioning legs capable of movement",
+  "logic": {
+    "hasPartWithComponentValue": ["actor", "movement:movement", "locked", false]
+  },
+  "metadata": {
+    "migratedFrom": "core:actor-can-move",
+    "migrationDate": "2024-09-16",
+    "migrationTicket": "MOVMODMIG-004",
+    "version": "1.0.0"
+  }
+}

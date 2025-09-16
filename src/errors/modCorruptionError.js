@@ -24,15 +24,22 @@ export class ModCorruptionError extends ModValidationError {
     this.name = 'ModCorruptionError';
     this.filePath = filePath;
     
-    // Enhanced context for corruption tracking
-    this.context = {
+    // Store enhanced context for corruption tracking
+    this._enhancedContext = {
       ...context,
       filePath,
       corruptionType: this._detectCorruptionType(message, context),
       canPartiallyRecover: this._checkPartialRecovery(context)
     };
   }
-  
+
+  /**
+   * Getter for enhanced context
+   */
+  get context() {
+    return this._enhancedContext || super.context;
+  }
+
   /**
    * Attempts to detect the type of corruption based on error details
    * @private
@@ -127,6 +134,20 @@ export class ModCorruptionError extends ModValidationError {
     }
     
     return actions;
+  }
+
+  /**
+   * @returns {string} Severity level for mod corruption errors
+   */
+  getSeverity() {
+    return 'critical';
+  }
+
+  /**
+   * @returns {boolean} Mod corruption errors are not recoverable
+   */
+  isRecoverable() {
+    return false;
   }
 }
 

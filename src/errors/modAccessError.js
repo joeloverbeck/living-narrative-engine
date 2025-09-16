@@ -25,8 +25,8 @@ export class ModAccessError extends ModValidationError {
     this.name = 'ModAccessError';
     this.filePath = filePath;
     
-    // Enhanced context for access tracking
-    this.context = {
+    // Store enhanced context for access tracking
+    this._enhancedContext = {
       ...context,
       filePath,
       accessType: this._detectAccessType(message, context),
@@ -34,7 +34,14 @@ export class ModAccessError extends ModValidationError {
       alternativeActions: this._getAlternativeActions(context)
     };
   }
-  
+
+  /**
+   * Getter for enhanced context
+   */
+  get context() {
+    return this._enhancedContext || super.context;
+  }
+
   /**
    * Determines if the access error is recoverable
    * @private
@@ -211,6 +218,20 @@ export class ModAccessError extends ModValidationError {
     }
     
     return fixes;
+  }
+
+  /**
+   * @returns {string} Severity level for mod access errors
+   */
+  getSeverity() {
+    return 'error';
+  }
+
+  /**
+   * @returns {boolean} Mod access errors recoverability based on context
+   */
+  isRecoverable() {
+    return this.recoverable;
   }
 }
 

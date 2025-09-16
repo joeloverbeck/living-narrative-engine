@@ -35,15 +35,22 @@ export class ModSecurityError extends ModValidationError {
     this.name = 'ModSecurityError';
     this.securityLevel = securityLevel;
     
-    // Add security-specific context
-    this.context = {
+    // Store security-specific context
+    this._enhancedContext = {
       ...context,
       securityLevel,
       reportedAt: new Date().toISOString(),
       requiresAudit: securityLevel === SecurityLevel.CRITICAL || securityLevel === SecurityLevel.HIGH
     };
   }
-  
+
+  /**
+   * Getter for enhanced context
+   */
+  get context() {
+    return this._enhancedContext || super.context;
+  }
+
   /**
    * Determines if this is a critical security violation requiring immediate action
    * @returns {boolean} True if critical or high severity
@@ -89,6 +96,20 @@ export class ModSecurityError extends ModValidationError {
     }
     
     return actions;
+  }
+
+  /**
+   * @returns {string} Severity level for mod security errors
+   */
+  getSeverity() {
+    return 'critical';
+  }
+
+  /**
+   * @returns {boolean} Mod security errors are not recoverable
+   */
+  isRecoverable() {
+    return false;
   }
 }
 

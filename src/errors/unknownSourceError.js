@@ -1,11 +1,25 @@
-export class UnknownSourceError extends Error {
-  constructor(sourceKind) {
-    super(`Unknown source kind: ${sourceKind}`);
-    this.name = 'UnknownSourceError';
-    this.sourceKind = sourceKind;
+import BaseError from './baseError.js';
 
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, UnknownSourceError);
-    }
+export class UnknownSourceError extends BaseError {
+  constructor(sourceKind) {
+    const context = { sourceKind };
+    super(`Unknown source kind: ${sourceKind}`, 'UNKNOWN_SOURCE_ERROR', context);
+    this.name = 'UnknownSourceError';
+    // Backward compatibility
+    this.sourceKind = sourceKind;
+  }
+
+  /**
+   * @returns {string} Severity level for unknown source errors
+   */
+  getSeverity() {
+    return 'warning';
+  }
+
+  /**
+   * @returns {boolean} Unknown source errors are recoverable
+   */
+  isRecoverable() {
+    return true;
   }
 }

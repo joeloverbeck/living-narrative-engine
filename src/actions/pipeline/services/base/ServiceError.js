@@ -3,7 +3,7 @@
  * @see BaseService.js
  */
 
-import { InvalidArgumentError } from '../../../../errors/invalidArgumentError.js';
+import BaseError from '../../../../errors/baseError.js';
 
 /**
  * Custom error class for pipeline service errors
@@ -11,16 +11,30 @@ import { InvalidArgumentError } from '../../../../errors/invalidArgumentError.js
  * Used for errors that occur within the pipeline service layer,
  * including validation failures, dependency issues, and operational errors.
  */
-export class ServiceError extends InvalidArgumentError {
+export class ServiceError extends BaseError {
   /**
    * @param {string} message - Error message
    * @param {string} code - Error code for categorization
    * @param {*} [value] - Invalid value that caused the error
    */
   constructor(message, code, value) {
-    super(message, code, value);
+    super(message, code, { value });
     this.name = 'ServiceError';
-    this.code = code;
+    this.value = value;
+  }
+
+  /**
+   * @returns {string} Severity level for service errors
+   */
+  getSeverity() {
+    return 'warning';
+  }
+
+  /**
+   * @returns {boolean} Service errors are generally recoverable
+   */
+  isRecoverable() {
+    return true;
   }
 }
 

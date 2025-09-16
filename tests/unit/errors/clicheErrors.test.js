@@ -86,7 +86,7 @@ describe('ClicheError Classes', () => {
 
       expect(error.details).toEqual({});
       expect(error.operation).toBeUndefined();
-      expect(error.context).toBeUndefined();
+      expect(error.context).toEqual({}); // BaseError always initializes context to {} when undefined
     });
   });
 
@@ -379,14 +379,16 @@ describe('ClicheError Classes', () => {
   });
 
   describe('Error message handling', () => {
-    it('should handle empty messages', () => {
-      const error = new ClicheError('');
-      expect(error.message).toBe('');
+    it('should throw error for empty messages', () => {
+      expect(() => new ClicheError('')).toThrow(
+        "BaseError constructor: Invalid message ''. Expected non-blank string."
+      );
     });
 
-    it('should handle undefined messages', () => {
-      const error = new ClicheError(undefined);
-      expect(error.message).toBe('');
+    it('should throw error for undefined messages', () => {
+      expect(() => new ClicheError(undefined)).toThrow(
+        "BaseError constructor: Invalid message 'undefined'. Expected non-blank string."
+      );
     });
 
     it('should preserve original message formatting', () => {

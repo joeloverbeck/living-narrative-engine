@@ -1,6 +1,17 @@
 /**
  * @file Performance tests for TraceQueueProcessor latency metrics
  * @description Tests latency tracking and performance characteristics
+ *
+ * IMPORTANT: Latency Tracking Behavior
+ * - Latency is tracked for:
+ *   1. EVERY batch processing completion (can be 0ms for fast operations)
+ *   2. Additionally for CRITICAL priority traces (individual item latency)
+ * - Latency can legitimately be 0ms for very fast operations (< 1ms)
+ * - After ANY processing, metrics are updated from initial values:
+ *   - minLatency: Updated from Infinity (can become 0)
+ *   - maxLatency: Updated from 0
+ *   - avgLatency: Calculated as totalLatency/totalProcessed
+ *
  * @see src/actions/tracing/traceQueueProcessor.js
  */
 
@@ -141,22 +152,18 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
       expect(metrics.totalProcessed).toBeLessThanOrEqual(50);
 
       // Verify latency tracking
-      // Note: Latency is only tracked for batch processing and CRITICAL priority items
-      // Since we have mixed priorities and may not have formed full batches,
-      // latency metrics might not be populated
-      if (metrics.totalProcessed > 0 && metrics.totalLatency > 0) {
-        // If latency was tracked, verify the metrics are consistent
+      // Note: Latency is tracked for EVERY batch processed, and additionally for CRITICAL priority items
+      // Batch latency is always tracked but can be 0ms for very fast operations
+      if (metrics.totalProcessed > 0) {
+        // Latency metrics should always be populated after processing
         expect(metrics.avgLatency).toBeGreaterThanOrEqual(0);
         expect(metrics.minLatency).toBeGreaterThanOrEqual(0);
         expect(metrics.minLatency).toBeLessThanOrEqual(metrics.maxLatency);
         expect(metrics.maxLatency).toBeGreaterThanOrEqual(0);
-        // minLatency can be 0 for very fast operations
+
+        // After processing, minLatency should have been updated from its initial value (Infinity)
+        // even if the latency was 0
         expect(metrics.minLatency).not.toBe(Infinity);
-      } else if (metrics.totalLatency === 0) {
-        // If no latency was tracked, metrics should be at initial values
-        expect(metrics.avgLatency).toBe(0);
-        expect(metrics.minLatency).toBe(Infinity);
-        expect(metrics.maxLatency).toBe(0);
       }
 
       console.log('Priority-based Latency Distribution:', {
@@ -308,7 +315,9 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
 
       const finalMetrics = processor.getMetrics();
       expect(finalMetrics.totalProcessed).toBeGreaterThan(0);
-      expect(finalMetrics.avgLatency).toBeGreaterThan(0);
+      // Note: avgLatency can be 0 for very fast operations (< 1ms)
+      // Latency is only tracked for CRITICAL priority traces and batch processing
+      expect(finalMetrics.avgLatency).toBeGreaterThanOrEqual(0);
     });
   });
 

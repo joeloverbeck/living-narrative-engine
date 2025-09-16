@@ -13,12 +13,22 @@
     }
   ],
   "content": {
-    "actions": [],
+    "actions": [
+      "go.action.json"
+    ],
     "rules": [],
-    "conditions": [],
-    "scopes": [],
+    "conditions": [
+      "actor-can-move.condition.json",
+      "exit-is-unblocked.condition.json"
+    ],
+    "scopes": [
+      "clear_directions.scope"
+    ],
     "events": [],
-    "components": [],
+    "components": [
+      "movement.component.json",
+      "exits.component.json"
+    ],
     "entities": {
       "definitions": [],
       "instances": []

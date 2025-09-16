@@ -2,13 +2,15 @@
  * @file Defines custom error classes for initialization failures.
  */
 
+import BaseError from './baseError.js';
+
 /**
  * Base class for all initialization related errors.
  *
  * @class InitializationError
- * @augments {Error}
+ * @augments {BaseError}
  */
-export class InitializationError extends Error {
+export class InitializationError extends BaseError {
   /**
    * Create a new InitializationError.
    *
@@ -16,14 +18,29 @@ export class InitializationError extends Error {
    * @param {Error} [cause] - Optional underlying cause.
    */
   constructor(message, cause) {
-    super(message);
+    super(message, 'INITIALIZATION_ERROR', { cause });
     this.name = 'InitializationError';
+    // Backward compatibility: preserve cause property
     if (cause) {
       this.cause = cause;
     }
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, this.constructor);
     }
+  }
+
+  /**
+   * @returns {string} Severity level for initialization errors
+   */
+  getSeverity() {
+    return 'critical';
+  }
+
+  /**
+   * @returns {boolean} Initialization errors are not recoverable
+   */
+  isRecoverable() {
+    return false;
   }
 }
 

@@ -1,9 +1,11 @@
 // src/errors/configurationError.js
 
+import BaseError from './baseError.js';
+
 /**
  * Custom error class for configuration-related issues within the ConfigurableLLMAdapter.
  */
-export class ConfigurationError extends Error {
+export class ConfigurationError extends BaseError {
   /**
    * Creates an instance of ConfigurationError.
    *
@@ -15,12 +17,27 @@ export class ConfigurationError extends Error {
    * @param {object[]} [details.problematicFields] - Array of problematic fields {field, reason}.
    */
   constructor(message, details = {}) {
-    super(message);
+    super(message, 'CONFIG_ERROR', details);
     this.name = 'ConfigurationError';
+    // Backward compatibility: preserve all existing properties
     this.llmId = details.llmId;
     this.problematicField = details.problematicField; // Kept for backward compatibility if some old code uses it
     this.fieldValue = details.fieldValue; // Kept for backward compatibility
     this.problematicFields = details.problematicFields; // New field for multiple validation errors
     // Add any other relevant details if needed
+  }
+
+  /**
+   * @returns {string} Severity level for configuration errors
+   */
+  getSeverity() {
+    return 'critical';
+  }
+
+  /**
+   * @returns {boolean} Configuration errors are not recoverable
+   */
+  isRecoverable() {
+    return false;
   }
 }

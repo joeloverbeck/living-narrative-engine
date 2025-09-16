@@ -1,3 +1,5 @@
+import BaseError from './baseError.js';
+
 /**
  * Enum of error codes for the different phases of the mods loader.
  *
@@ -17,9 +19,9 @@ export const ModsLoaderErrorCode = Object.freeze({
  * Error thrown when a specific phase of the mods loader fails.
  *
  * @class ModsLoaderPhaseError
- * @augments Error
+ * @augments BaseError
  */
-export class ModsLoaderPhaseError extends Error {
+export class ModsLoaderPhaseError extends BaseError {
   /**
    * Creates an error instance for a failed loader phase.
    *
@@ -29,13 +31,25 @@ export class ModsLoaderPhaseError extends Error {
    * @param {Error} [cause] - Optional underlying error cause.
    */
   constructor(code, message, phase, cause) {
-    super(message);
+    const context = { code, phase, cause };
+    super(message, code || 'MODS_LOADER_PHASE_ERROR', context);
     this.name = 'ModsLoaderPhaseError';
-    this.code = code;
+    // Store for backward compatibility
     this.phase = phase;
     if (cause) this.cause = cause;
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, ModsLoaderPhaseError);
-    }
+  }
+
+  /**
+   * @returns {string} Severity level for mods loader phase errors
+   */
+  getSeverity() {
+    return 'error';
+  }
+
+  /**
+   * @returns {boolean} Mods loader phase errors are not recoverable
+   */
+  isRecoverable() {
+    return false;
   }
 }
