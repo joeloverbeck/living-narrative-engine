@@ -1,34 +1,19 @@
-# ANACLOENH-004-05: Create Error Reporter
+/**
+ * @file ErrorReporter.js - Error reporting service with batching, analytics, and alerting
+ * @description Provides comprehensive error reporting with batch processing, trend analysis, and alerting
+ * @see baseError.js - Base error class for enhanced error context
+ * @see CentralErrorHandler.js - Central error handling integration
+ */
 
-## Overview
-Implement an error reporting service that batches errors, provides analytics, and sends alerts for critical issues.
-
-## Parent Ticket
-- ANACLOENH-004: Establish Error Handling Framework
-
-## Depends On
-- ANACLOENH-004-01: Create BaseError Class
-- ANACLOENH-004-03: Create Central Error Handler
-
-## Current State
-- Errors are logged locally
-- No centralized error reporting
-- No error analytics or trends
-
-## Objectives
-1. Create ErrorReporter class
-2. Implement batch reporting
-3. Add error analytics
-4. Create alerting system
-5. Generate error reports
-
-## Technical Requirements
-
-### ErrorReporter Implementation
-```javascript
-// Location: src/errors/ErrorReporter.js
 import { validateDependency } from '../utils/dependencyUtils.js';
+import { getEnvironmentMode } from '../utils/environmentUtils.js';
+import BaseError from './baseError.js';
 
+/**
+ * Error reporting service that batches errors, provides analytics, and sends alerts
+ *
+ * @class
+ */
 class ErrorReporter {
   #logger;
   #eventBus;
@@ -41,6 +26,17 @@ class ErrorReporter {
   #alertThresholds;
   #enabled;
 
+  /**
+   * Creates a new ErrorReporter instance
+   *
+   * @param {object} dependencies - Required dependencies
+   * @param {object} dependencies.logger - Logger instance
+   * @param {object} dependencies.eventBus - Event bus for dispatching events
+   * @param {string|null} dependencies.endpoint - Reporting endpoint URL
+   * @param {number} dependencies.batchSize - Maximum batch size before auto-flush
+   * @param {number} dependencies.flushInterval - Interval in ms between automatic flushes
+   * @param {boolean} dependencies.enabled - Whether reporting is enabled
+   */
   constructor({
     logger,
     eventBus,
@@ -86,7 +82,12 @@ class ErrorReporter {
     }
   }
 
-  // Report an error
+  /**
+   * Report an error
+   *
+   * @param {Error|BaseError} error - Error to report
+   * @param {object} context - Additional context for the error
+   */
   report(error, context = {}) {
     if (!this.#enabled) {
       return;
@@ -109,7 +110,11 @@ class ErrorReporter {
     }
   }
 
-  // Flush buffered errors
+  /**
+   * Flush buffered errors
+   *
+   * @returns {Promise<void>}
+   */
   async flush() {
     if (!this.#enabled || this.#buffer.length === 0) {
       return;
@@ -134,7 +139,13 @@ class ErrorReporter {
     }
   }
 
-  // Generate error report for time range
+  /**
+   * Generate error report for time range
+   *
+   * @param {number|null} startTime - Start timestamp (defaults to 24 hours ago)
+   * @param {number|null} endTime - End timestamp (defaults to now)
+   * @returns {object} Error report with analytics
+   */
   generateErrorReport(startTime = null, endTime = null) {
     const now = Date.now();
     startTime = startTime || now - 24 * 60 * 60 * 1000; // Default: last 24 hours
@@ -159,18 +170,34 @@ class ErrorReporter {
     return report;
   }
 
-  // Get error trends
+  /**
+   * Get error trends
+   *
+   * @param {number} hours - Number of hours to look back
+   * @returns {Array} Error trend data
+   */
   getErrorTrends(hours = 24) {
     const cutoff = Date.now() - hours * 60 * 60 * 1000;
     return this.#analytics.trends.filter(t => t.timestamp > cutoff);
   }
 
-  // Get top errors
+  /**
+   * Get top errors
+   *
+   * @param {number} limit - Maximum number of errors to return
+   * @returns {Array} Top errors with counts and percentages
+   */
   getTopErrors(limit = 10) {
     return this.#getTopErrors(limit);
   }
 
-  // Send alert
+  /**
+   * Send alert
+   *
+   * @param {string} severity - Alert severity level
+   * @param {string} message - Alert message
+   * @param {object} details - Additional alert details
+   */
   sendAlert(severity, message, details = {}) {
     this.#eventBus.dispatch({
       type: 'ERROR_ALERT',
@@ -190,7 +217,7 @@ class ErrorReporter {
 
   // Private methods
   #createErrorReport(error, context) {
-    const isBaseError = error && error.toJSON;
+    const isBaseError = error instanceof BaseError;
 
     return {
       id: error?.correlationId || this.#generateReportId(),
@@ -203,12 +230,12 @@ class ErrorReporter {
       },
       context: {
         ...context,
-        environment: process.env.NODE_ENV || 'development',
+        environment: getEnvironmentMode(),
         userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'server',
         url: typeof window !== 'undefined' ? window.location.href : 'server'
       },
-      severity: error?.severity || 'error',
-      recoverable: error?.recoverable || false
+      severity: isBaseError ? error.severity : (error?.severity || 'error'),
+      recoverable: isBaseError ? error.recoverable : (error?.recoverable || false)
     };
   }
 
@@ -219,24 +246,18 @@ class ErrorReporter {
       return;
     }
 
-    const payload = {
-      batch: errors,
-      metadata: {
-        batchId: this.#generateReportId(),
-        timestamp: Date.now(),
-        environment: process.env.NODE_ENV || 'development'
-      }
-    };
-
     // In real implementation, this would be an HTTP request
     // For now, we'll simulate it
     this.#logger.info('Sending error batch', {
       endpoint: this.#endpoint,
-      batchSize: errors.length
+      batchSize: errors.length,
+      batchId: this.#generateReportId(),
+      timestamp: Date.now(),
+      environment: getEnvironmentMode()
     });
 
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Simulate network delay (use immediate resolution for testing)
+    await Promise.resolve();
 
     // Simulate occasional failure for testing
     if (Math.random() < 0.05) { // 5% failure rate
@@ -309,7 +330,7 @@ class ErrorReporter {
     }));
   }
 
-  #getHourlyDistribution(startTime, endTime) {
+  #getHourlyDistribution(_startTime, _endTime) {
     const distribution = {};
     for (let i = 0; i < 24; i++) {
       distribution[i] = this.#analytics.errorsByHour.get(i) || 0;
@@ -318,7 +339,7 @@ class ErrorReporter {
   }
 
   #analyzeTrends() {
-    if (this.#analytics.trends.length < 10) {
+    if (this.#analytics.trends.length < 20) {
       return { status: 'insufficient_data' };
     }
 
@@ -327,6 +348,11 @@ class ErrorReporter {
 
     const recentRate = recent.length;
     const olderRate = older.length;
+
+    // Only compare if we have full windows
+    if (olderRate === 0) {
+      return { status: 'insufficient_data' };
+    }
 
     if (recentRate > olderRate * 1.5) {
       return { status: 'increasing', change: '+' + Math.round((recentRate / olderRate - 1) * 100) + '%' };
@@ -382,8 +408,14 @@ class ErrorReporter {
   }
 
   #registerEventListeners() {
+    // Listen for generic error events
     this.#eventBus.on('ERROR_OCCURRED', (event) => {
-      this.report(event.payload.error, event.payload.context);
+      this.report(event.payload.error || event.payload, event.payload.context || {});
+    });
+
+    // Also listen for domain-specific error events (following existing pattern)
+    this.#eventBus.on('SYSTEM_ERROR_OCCURRED', (event) => {
+      this.report(event.payload.error || event.payload, event.payload.context || {});
     });
   }
 
@@ -391,7 +423,9 @@ class ErrorReporter {
     return `report_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  // Lifecycle methods
+  /**
+   * Destroy the error reporter and clean up resources
+   */
   destroy() {
     if (this.#intervalHandle) {
       clearInterval(this.#intervalHandle);
@@ -405,83 +439,3 @@ class ErrorReporter {
 }
 
 export default ErrorReporter;
-```
-
-## Implementation Steps
-
-1. **Create ErrorReporter.js**
-   - Implement batch reporting logic
-   - Add analytics tracking
-   - Create alerting system
-
-2. **Add configuration**
-   ```javascript
-   // src/config/errorReporting.config.js
-   export const errorReportingConfig = {
-     enabled: process.env.ERROR_REPORTING_ENABLED === 'true',
-     endpoint: process.env.ERROR_REPORTING_ENDPOINT,
-     batchSize: 50,
-     flushInterval: 30000
-   };
-   ```
-
-3. **Register in DI container**
-   - Add token to tokens-monitoring.js
-   - Create registration
-
-## File Changes
-
-### New Files
-- `src/errors/ErrorReporter.js`
-- `src/config/errorReporting.config.js`
-
-### Modified Files
-- `src/dependencyInjection/tokens/tokens-monitoring.js` - Add IErrorReporter token
-
-## Dependencies
-- **Prerequisites**:
-  - ANACLOENH-004-01 (BaseError class)
-  - ANACLOENH-004-03 (CentralErrorHandler)
-- **External**: EventBus, Logger
-
-## Acceptance Criteria
-1. ✅ Errors are batched correctly
-2. ✅ Analytics track error patterns
-3. ✅ Alerts fire at thresholds
-4. ✅ Reports generate accurately
-5. ✅ Buffer doesn't exceed limits
-6. ✅ Failed sends are retried
-7. ✅ Cleanup works on destroy
-
-## Testing Requirements
-
-### Unit Tests
-Create `tests/unit/errors/ErrorReporter.test.js`:
-- Test batch collection
-- Test flush mechanism
-- Test analytics tracking
-- Test alert thresholds
-- Test report generation
-- Test error trends
-
-## Estimated Effort
-- **Development**: 3 hours
-- **Testing**: 2 hours
-- **Total**: 5 hours
-
-## Risk Assessment
-- **Low Risk**: Reporting is auxiliary functionality
-- **Consideration**: Ensure reporting doesn't impact performance
-- **Mitigation**: Add circuit breaker for reporting endpoint
-
-## Success Metrics
-- 100% of errors captured
-- <1% reporting failures
-- Alerts fire within 1 minute of threshold
-- Reports generate in <100ms
-
-## Notes
-- Keep reporting async and non-blocking
-- Implement sampling for high-volume scenarios
-- Consider privacy implications of error data
-- Add configuration for sensitive data filtering

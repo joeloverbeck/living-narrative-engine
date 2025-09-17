@@ -1,34 +1,18 @@
-# ANACLOENH-004-04: Create Recovery Strategy Manager
+/**
+ * @file RecoveryStrategyManager - Unified recovery strategy manager for error handling
+ * @description Handles retry logic, circuit breaker integration, and fallback mechanisms
+ * @see baseError.js - Foundation error class with recoverable property
+ * @see MonitoringCoordinator.js - Circuit breaker integration
+ */
 
-## Overview
-Implement a recovery strategy manager that handles retry logic, circuit breaker integration, and fallback mechanisms for error recovery.
-
-## Parent Ticket
-- ANACLOENH-004: Establish Error Handling Framework
-
-## Depends On
-- ANACLOENH-004-01: Create BaseError Class
-- ANACLOENH-004-03: Create Central Error Handler
-
-## Current State
-- Circuit breakers exist in clothing and monitoring modules
-- ClothingErrorHandler has basic recovery strategies
-- No unified recovery management system
-
-## Objectives
-1. Create RecoveryStrategyManager class
-2. Implement retry mechanisms with backoff
-3. Integrate existing circuit breakers
-4. Create fallback value system
-5. Add caching for successful fallbacks
-
-## Technical Requirements
-
-### RecoveryStrategyManager Implementation
-```javascript
-// Location: src/errors/RecoveryStrategyManager.js
 import { validateDependency } from '../utils/dependencyUtils.js';
 
+/**
+ * Recovery strategy manager that handles retry logic, circuit breaker integration,
+ * and fallback mechanisms for error recovery
+ *
+ * @class
+ */
 class RecoveryStrategyManager {
   #logger;
   #strategies;
@@ -36,6 +20,9 @@ class RecoveryStrategyManager {
   #fallbacks;
   #cache;
   #monitoringCoordinator;
+  #defaultRetry;
+  #defaultFallback;
+  #defaultCircuitBreaker;
 
   constructor({ logger, monitoringCoordinator }) {
     validateDependency(logger, 'ILogger', logger, {
@@ -58,7 +45,18 @@ class RecoveryStrategyManager {
     this.#initializeDefaultStrategies();
   }
 
-  // Register a recovery strategy for an error type
+  /**
+   * Register a recovery strategy for an error type
+   *
+   * @param {string} errorType - Type of error to register strategy for
+   * @param {object} strategy - Recovery strategy configuration
+   * @param {object} [strategy.retry] - Retry configuration
+   * @param {Function} [strategy.fallback] - Fallback function
+   * @param {object} [strategy.circuitBreaker] - Circuit breaker configuration
+   * @param {number} [strategy.maxRetries] - Maximum retry attempts
+   * @param {string} [strategy.backoff] - Backoff strategy ('exponential', 'linear', 'constant')
+   * @param {number} [strategy.timeout] - Operation timeout in milliseconds
+   */
   registerStrategy(errorType, strategy) {
     this.#strategies.set(errorType, {
       retry: strategy.retry || this.#defaultRetry,
@@ -71,7 +69,21 @@ class RecoveryStrategyManager {
     this.#logger.debug(`Registered recovery strategy for ${errorType}`);
   }
 
-  // Execute operation with full recovery capabilities
+  /**
+   * Execute operation with full recovery capabilities
+   *
+   * @param {Function} operation - Operation to execute
+   * @param {object} [options] - Execution options
+   * @param {string} [options.operationName] - Name of the operation
+   * @param {string} [options.errorType] - Expected error type for strategy lookup
+   * @param {number} [options.maxRetries] - Maximum retry attempts
+   * @param {string} [options.backoff] - Backoff strategy
+   * @param {boolean} [options.useCircuitBreaker] - Whether to use circuit breaker
+   * @param {boolean} [options.useFallback] - Whether to use fallback on failure
+   * @param {boolean} [options.cacheResult] - Whether to cache successful results
+   * @param {number} [options.timeout] - Operation timeout in milliseconds
+   * @returns {Promise<*>} Result of the operation or fallback value
+   */
   async executeWithRecovery(operation, options = {}) {
     const {
       operationName = 'unknown',
@@ -95,7 +107,7 @@ class RecoveryStrategyManager {
 
     // Get circuit breaker if enabled
     const circuitBreaker = useCircuitBreaker && this.#monitoringCoordinator
-      ? this.#monitoringCoordinator.getCircuitBreaker(operationName)
+      ? this.#monitoringCoordinator.getCircuitBreaker(operationName, {})
       : null;
 
     // Execute with circuit breaker if available
@@ -137,14 +149,33 @@ class RecoveryStrategyManager {
     }
   }
 
-  // Private: Execute with circuit breaker
+  /**
+   * Execute with circuit breaker protection
+   *
+   * @param {object} circuitBreaker - Circuit breaker instance
+   * @param {Function} operation - Operation to execute
+   * @param {object} options - Execution options
+   * @returns {Promise<*>} Result of the operation
+   * @private
+   */
   async #executeWithCircuitBreaker(circuitBreaker, operation, options) {
     return await circuitBreaker.execute(async () => {
       return await this.#executeWithRetry(operation, options);
     });
   }
 
-  // Private: Execute with retry logic
+  /**
+   * Execute with retry logic
+   *
+   * @param {Function} operation - Operation to execute
+   * @param {object} options - Retry options
+   * @param {number} options.maxRetries - Maximum retry attempts
+   * @param {string} options.backoff - Backoff strategy
+   * @param {number} options.timeout - Operation timeout
+   * @param {string} options.operationName - Operation name for logging
+   * @returns {Promise<*>} Result of the operation
+   * @private
+   */
   async #executeWithRetry(operation, options) {
     const { maxRetries, backoff, timeout, operationName } = options;
     let lastError;
@@ -182,7 +213,15 @@ class RecoveryStrategyManager {
     throw lastError;
   }
 
-  // Private: Execute fallback
+  /**
+   * Execute fallback mechanism
+   *
+   * @param {string} operationName - Name of the operation
+   * @param {Error} error - Original error that triggered fallback
+   * @param {string} [errorType] - Error type for strategy lookup
+   * @returns {Promise<*>} Fallback value
+   * @private
+   */
   async #executeFallback(operationName, error, errorType) {
     this.#logger.info(`Executing fallback for ${operationName}`);
 
@@ -210,13 +249,24 @@ class RecoveryStrategyManager {
     return this.#getGenericFallback(operationName);
   }
 
-  // Register fallback value for an operation
+  /**
+   * Register fallback value for an operation
+   *
+   * @param {string} operationName - Name of the operation
+   * @param {*} value - Fallback value or function
+   */
   registerFallback(operationName, value) {
     this.#fallbacks.set(operationName, value);
     this.#logger.debug(`Registered fallback for ${operationName}`);
   }
 
-  // Check if error is retriable
+  /**
+   * Check if error is retriable based on BaseError.recoverable property and heuristics
+   *
+   * @param {Error} error - Error to check
+   * @returns {boolean} Whether the error is retriable
+   * @private
+   */
   #isRetriable(error) {
     // Check if error extends BaseError and has recoverable flag
     if (error.recoverable !== undefined) {
@@ -256,21 +306,32 @@ class RecoveryStrategyManager {
       'timeout'
     ];
 
-    return retriableMessages.some(msg =>
-      error.message && error.message.includes(msg)
-    );
+    if (retriableMessages.some(msg => error.message && error.message.includes(msg))) {
+      return true;
+    }
+
+    // Default to retriable for unknown error types (be conservative)
+    return true;
   }
 
-  // Calculate backoff delay
+  /**
+   * Calculate backoff delay based on strategy
+   *
+   * @param {number} attempt - Current attempt number
+   * @param {string} strategy - Backoff strategy
+   * @returns {number} Delay in milliseconds
+   * @private
+   */
   #calculateBackoff(attempt, strategy) {
     const baseDelay = 100; // Base delay in ms
 
     switch (strategy) {
-      case 'exponential':
+      case 'exponential': {
         // Exponential backoff with jitter
         const exponentialDelay = Math.min(baseDelay * Math.pow(2, attempt - 1), 30000);
         const jitter = Math.random() * exponentialDelay * 0.1; // 10% jitter
         return exponentialDelay + jitter;
+      }
 
       case 'linear':
         // Linear backoff
@@ -286,12 +347,25 @@ class RecoveryStrategyManager {
     }
   }
 
-  // Wait for specified milliseconds
+  /**
+   * Wait for specified milliseconds
+   *
+   * @param {number} ms - Milliseconds to wait
+   * @returns {Promise<void>} Promise that resolves after delay
+   * @private
+   */
   #wait(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  // Add timeout to promise
+  /**
+   * Add timeout to promise
+   *
+   * @param {Promise} promise - Promise to add timeout to
+   * @param {number} ms - Timeout in milliseconds
+   * @returns {Promise<*>} Promise with timeout
+   * @private
+   */
   #withTimeout(promise, ms) {
     return Promise.race([
       promise,
@@ -301,7 +375,13 @@ class RecoveryStrategyManager {
     ]);
   }
 
-  // Get generic fallback value
+  /**
+   * Get generic fallback value based on operation name heuristics
+   *
+   * @param {string} operationName - Name of the operation
+   * @returns {*} Generic fallback value
+   * @private
+   */
   #getGenericFallback(operationName) {
     // Infer fallback based on operation name
     if (operationName.includes('fetch') || operationName.includes('get')) {
@@ -323,7 +403,11 @@ class RecoveryStrategyManager {
     return null;
   }
 
-  // Initialize default strategies
+  /**
+   * Initialize default strategies
+   *
+   * @private
+   */
   #initializeDefaultStrategies() {
     // Default retry strategy
     this.#defaultRetry = {
@@ -344,7 +428,11 @@ class RecoveryStrategyManager {
     };
   }
 
-  // Get metrics
+  /**
+   * Get current metrics for monitoring and debugging
+   *
+   * @returns {object} Current metrics
+   */
   getMetrics() {
     return {
       registeredStrategies: this.#strategies.size,
@@ -354,7 +442,9 @@ class RecoveryStrategyManager {
     };
   }
 
-  // Clear cache
+  /**
+   * Clear cached results
+   */
   clearCache() {
     this.#cache.clear();
     this.#logger.debug('Recovery strategy cache cleared');
@@ -362,87 +452,3 @@ class RecoveryStrategyManager {
 }
 
 export default RecoveryStrategyManager;
-```
-
-## Implementation Steps
-
-1. **Create RecoveryStrategyManager.js**
-   - Implement retry logic with backoff strategies
-   - Add circuit breaker integration
-   - Create fallback system
-
-2. **Create retry strategy implementations**
-   ```javascript
-   // src/errors/strategies/RetryStrategy.js
-   export class RetryStrategy {
-     constructor(options) { /* ... */ }
-     async execute(operation) { /* ... */ }
-   }
-   ```
-
-3. **Create fallback strategy implementations**
-   ```javascript
-   // src/errors/strategies/FallbackStrategy.js
-   export class FallbackStrategy {
-     constructor(defaults) { /* ... */ }
-     getFallback(operation, error) { /* ... */ }
-   }
-   ```
-
-## File Changes
-
-### New Files
-- `src/errors/RecoveryStrategyManager.js`
-- `src/errors/strategies/RetryStrategy.js`
-- `src/errors/strategies/FallbackStrategy.js`
-
-### Modified Files
-- `src/dependencyInjection/tokens/tokens-monitoring.js` - Add IRecoveryStrategyManager
-
-## Dependencies
-- **Prerequisites**:
-  - ANACLOENH-004-01 (BaseError class)
-  - ANACLOENH-004-03 (CentralErrorHandler)
-- **External**: MonitoringCoordinator
-
-## Acceptance Criteria
-1. ✅ Retry logic works with configurable backoff
-2. ✅ Circuit breaker integration works
-3. ✅ Fallback values return correctly
-4. ✅ Caching works for successful operations
-5. ✅ Non-retriable errors fail immediately
-6. ✅ Timeout mechanism works
-7. ✅ Strategies can be registered dynamically
-
-## Testing Requirements
-
-### Unit Tests
-Create `tests/unit/errors/RecoveryStrategyManager.test.js`:
-- Test retry with different backoff strategies
-- Test circuit breaker integration
-- Test fallback execution
-- Test caching mechanism
-- Test timeout handling
-- Test retriable vs non-retriable errors
-
-## Estimated Effort
-- **Development**: 3 hours
-- **Testing**: 2 hours
-- **Total**: 5 hours
-
-## Risk Assessment
-- **Medium Risk**: Complex retry and circuit breaker logic
-- **Mitigation**: Extensive unit testing
-- **Mitigation**: Clear documentation of retry policies
-
-## Success Metrics
-- 95% of retriable errors recover successfully
-- Circuit breakers prevent cascading failures
-- Fallback values prevent system crashes
-- No infinite retry loops
-
-## Notes
-- Keep retry logic simple and predictable
-- Ensure backoff doesn't exceed reasonable limits
-- Document which errors are retriable
-- Consider adding retry budget to prevent overload

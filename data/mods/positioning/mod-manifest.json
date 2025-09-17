@@ -10,6 +10,10 @@
     {
       "id": "core",
       "version": "^1.0.0"
+    },
+    {
+      "id": "movement",
+      "version": "^1.0.0"
     }
   ],
   "content": {

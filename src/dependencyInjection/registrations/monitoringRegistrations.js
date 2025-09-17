@@ -13,6 +13,18 @@ import MemoryReporter from '../../entities/monitoring/MemoryReporter.js';
 import LowMemoryStrategy from '../../entities/monitoring/strategies/LowMemoryStrategy.js';
 import CriticalMemoryStrategy from '../../entities/monitoring/strategies/CriticalMemoryStrategy.js';
 import CentralErrorHandler from '../../errors/CentralErrorHandler.js';
+import RecoveryStrategyManager from '../../errors/RecoveryStrategyManager.js';
+import ErrorReporter from '../../errors/ErrorReporter.js';
+
+/**
+ * Default error reporting configuration
+ */
+const defaultErrorReportingConfig = {
+  enabled: getEnvironmentMode() !== 'production',
+  endpoint: null, // Set via environment or configuration
+  batchSize: 50,
+  flushInterval: 30000
+};
 
 /**
  * Default memory monitoring configuration
@@ -192,6 +204,32 @@ export function registerMemoryMonitoring(container) {
     { singleton: true }
   );
   safeDebug(`Registered ${String(tokens.ICentralErrorHandler)}.`);
+
+  // Register RecoveryStrategyManager
+  container.register(
+    tokens.IRecoveryStrategyManager,
+    (c) => new RecoveryStrategyManager({
+      logger: c.resolve(tokens.ILogger),
+      monitoringCoordinator: c.resolve(tokens.IMonitoringCoordinator),
+    }),
+    { singleton: true }
+  );
+  safeDebug(`Registered ${String(tokens.IRecoveryStrategyManager)}.`);
+
+  // Register ErrorReporter
+  container.register(
+    tokens.IErrorReporter,
+    (c) => new ErrorReporter({
+      logger: c.resolve(tokens.ILogger),
+      eventBus: c.resolve(tokens.IEventBus),
+      endpoint: defaultErrorReportingConfig.endpoint,
+      batchSize: defaultErrorReportingConfig.batchSize,
+      flushInterval: defaultErrorReportingConfig.flushInterval,
+      enabled: defaultErrorReportingConfig.enabled
+    }),
+    { singleton: true }
+  );
+  safeDebug(`Registered ${String(tokens.IErrorReporter)}.`);
 
   safeDebug('Memory Monitoring Registration: completed.');
 }

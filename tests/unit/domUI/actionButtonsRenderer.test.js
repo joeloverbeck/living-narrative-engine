@@ -239,6 +239,10 @@ describe('ActionButtonsRenderer', () => {
     formatNamespaceDisplayName: jest.fn().mockImplementation((namespace) => {
       return namespace.toUpperCase();
     }),
+    shouldShowCounts: jest.fn(() => {
+      // Return true when grouping is enabled (which is set in specific tests)
+      return mockActionCategorizationService.shouldUseGrouping();
+    }),
   };
 
   const createRenderer = (config = {}) => {

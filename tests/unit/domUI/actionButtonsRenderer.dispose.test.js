@@ -43,6 +43,7 @@ describe('ActionButtonsRenderer', () => {
     formatNamespaceDisplayName: jest.fn().mockImplementation((namespace) => {
       return namespace.toUpperCase();
     }),
+    shouldShowCounts: jest.fn(() => false),
   };
 
   // createMockElement remains the same as provided in the failing test

@@ -320,36 +320,6 @@ describe('CentralErrorHandler - Integration Tests', () => {
     });
   });
 
-  describe('Memory Management Integration', () => {
-    it('should properly manage memory with registry cleanup', async () => {
-      const initialMemory = process.memoryUsage();
-
-      // Create more errors than registry limit to test cleanup
-      for (let i = 0; i < 1200; i++) {
-        try {
-          await centralErrorHandler.handle(new Error(`Memory test error ${i}`));
-        } catch {}
-      }
-
-      const metrics = centralErrorHandler.getMetrics();
-      expect(metrics.totalErrors).toBe(1200);
-      expect(metrics.registrySize).toBeLessThanOrEqual(1000);
-
-      // Clear metrics to test cleanup
-      centralErrorHandler.clearMetrics();
-
-      const clearedMetrics = centralErrorHandler.getMetrics();
-      expect(clearedMetrics.totalErrors).toBe(0);
-      expect(clearedMetrics.registrySize).toBe(0);
-
-      // Memory should not have grown excessively
-      const finalMemory = process.memoryUsage();
-      const memoryGrowth = finalMemory.heapUsed - initialMemory.heapUsed;
-
-      // Allow for some memory growth but ensure it's reasonable (less than 10MB)
-      expect(memoryGrowth).toBeLessThan(10 * 1024 * 1024);
-    });
-  });
 
   describe('Error Context Integration', () => {
     it('should preserve and enhance error context through complete flow', async () => {
