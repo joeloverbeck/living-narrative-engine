@@ -524,7 +524,7 @@ export class TurnIntegrationValidator {
 export const TurnTestScenarios = {
   SIMPLE_AI_TURN: {
     actors: ['ai-player'],
-    actions: ['core:wait', 'core:go'],
+    actions: ['core:wait', 'movement:go'],
     expectedOutcome: 'success',
   },
   MULTI_ACTOR_ROUND: {

@@ -111,14 +111,14 @@ describe('ActionTraceOutputService - Naming Conventions', () => {
       };
 
       const trace = {
-        actionId: 'core:go',
-        toJSON: () => ({ actionId: 'core:go' }),
+        actionId: 'movement:go',
+        toJSON: () => ({ actionId: 'movement:go' }),
       };
 
       await createServiceAndWriteTrace(namingOptions, trace);
 
       expect(mockStorageAdapter.setItem).toHaveBeenCalled();
-      expect(traceIds[0]).toMatch(/^20240115_105045_core-go_[a-f0-9]{6}$/);
+      expect(traceIds[0]).toMatch(/^20240115_105045_movement-go_[a-f0-9]{6}$/);
     });
 
     it('should generate timestamp-first trace IDs with unix format', async () => {
@@ -199,8 +199,8 @@ describe('ActionTraceOutputService - Naming Conventions', () => {
       });
 
       const trace1 = {
-        actionId: 'core:go',
-        toJSON: () => ({ actionId: 'core:go' }),
+        actionId: 'movement:go',
+        toJSON: () => ({ actionId: 'movement:go' }),
       };
 
       const trace2 = {
@@ -215,7 +215,7 @@ describe('ActionTraceOutputService - Naming Conventions', () => {
       await new Promise((resolve) => setTimeout(resolve, 20));
 
       expect(mockStorageAdapter.setItem).toHaveBeenCalledTimes(2);
-      expect(traceIds[0]).toBe('trace_000001_core-go_20240115_105045');
+      expect(traceIds[0]).toBe('trace_000001_movement-go_20240115_105045');
       expect(traceIds[1]).toBe('trace_000002_core-attack_20240115_105045');
     });
   });
@@ -336,8 +336,8 @@ describe('ActionTraceOutputService - Naming Conventions', () => {
       };
 
       const trace = {
-        actionId: 'core:go',
-        toJSON: () => ({ actionId: 'core:go' }),
+        actionId: 'movement:go',
+        toJSON: () => ({ actionId: 'movement:go' }),
       };
 
       await createServiceAndWriteTrace(namingOptions, trace);
@@ -407,8 +407,8 @@ describe('ActionTraceOutputService - Naming Conventions', () => {
       });
 
       const trace = {
-        actionId: 'core:go',
-        toJSON: () => ({ actionId: 'core:go' }),
+        actionId: 'movement:go',
+        toJSON: () => ({ actionId: 'movement:go' }),
       };
 
       // Write same trace multiple times
@@ -506,8 +506,8 @@ describe('ActionTraceOutputService - Naming Conventions', () => {
       };
 
       const trace = {
-        actionId: 'core:go',
-        toJSON: () => ({ actionId: 'core:go' }),
+        actionId: 'movement:go',
+        toJSON: () => ({ actionId: 'movement:go' }),
       };
 
       await createServiceAndWriteTrace(namingOptions, trace);
@@ -522,7 +522,7 @@ describe('ActionTraceOutputService - Naming Conventions', () => {
 
       // New trace should have proper naming
       expect(storedTraces[2].id).toMatch(
-        /^20240115_105045_core-go_[a-f0-9]{6}$/
+        /^20240115_105045_movement-go_[a-f0-9]{6}$/
       );
     });
   });

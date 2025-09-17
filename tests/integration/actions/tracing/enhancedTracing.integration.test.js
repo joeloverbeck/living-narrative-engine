@@ -32,7 +32,7 @@ describe('Enhanced Tracing Integration Tests', () => {
       // Capture data with enhanced method
       trace.captureEnhancedActionData(
         'component_filtering',
-        'core:go',
+        'movement:go',
         {
           actorComponents: ['core:position', 'core:movement'],
           requiredComponents: ['core:position'],
@@ -46,7 +46,7 @@ describe('Enhanced Tracing Integration Tests', () => {
       );
 
       // Verify data was captured
-      const actionTrace = trace.getActionTrace('core:go');
+      const actionTrace = trace.getActionTrace('movement:go');
       expect(actionTrace).toBeDefined();
       expect(actionTrace.stages.component_filtering).toBeDefined();
       // The data is wrapped in a stage structure

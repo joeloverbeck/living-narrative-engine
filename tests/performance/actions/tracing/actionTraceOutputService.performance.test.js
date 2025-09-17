@@ -117,7 +117,7 @@ describe('ActionTraceOutputService Performance', () => {
         return true;
       });
 
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
 
       const startTime = Date.now();
       await service.writeTrace(trace);

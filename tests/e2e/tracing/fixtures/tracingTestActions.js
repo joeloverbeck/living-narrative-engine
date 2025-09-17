@@ -10,7 +10,7 @@ import { expect } from '@jest/globals';
  */
 export const TEST_ACTIONS = {
   // Simple movement action for basic tracing
-  GO: 'core:go',
+  GO: 'movement:go',
 
   // More complex action for detailed tracing
   ATTACK: 'core:attack',

@@ -74,15 +74,15 @@ describe('EntityInstanceLoader', () => {
   describe('_processFetchedItem (Happy Path - TEST-INST-01)', () => {
     it('should correctly process, validate, and store a valid entity instance', async () => {
       // --- Arrange ---
-      const modId = 'core';
-      const filename = 'core_goblin-sentry.instance.json';
-      const resolvedPath = `data/mods/core/entities/instances/${filename}`;
+      const modId = 'movement';
+      const filename = 'movement_goblin-sentry.instance.json';
+      const resolvedPath = `data/mods/movement/entities/instances/${filename}`;
       const registryKey = 'entityInstances';
 
       const testInstanceData = {
         $schema: 'schema://living-narrative-engine/entity-instance.schema.json',
         instanceId: 'goblin_sentry_01',
-        definitionId: 'core:goblin',
+        definitionId: 'movement:goblin',
         componentOverrides: {
           'core:name': {
             name: 'Goblin Sentry',
@@ -97,9 +97,9 @@ describe('EntityInstanceLoader', () => {
       // _storeItemInRegistry adds these properties before storing.
       const expectedStoredData = {
         ...testInstanceData,
-        id: 'core:goblin_sentry_01',
-        _fullId: 'core:goblin_sentry_01',
-        _modId: 'core',
+        id: 'movement:goblin_sentry_01',
+        _fullId: 'movement:goblin_sentry_01',
+        _modId: 'movement',
         _sourceFile: filename,
       };
 
@@ -130,7 +130,7 @@ describe('EntityInstanceLoader', () => {
 
       // 4. Assert the method returns the correct qualifiedId and didOverride status.
       expect(result).toEqual({
-        qualifiedId: 'core:goblin_sentry_01',
+        qualifiedId: 'movement:goblin_sentry_01',
         didOverride: false,
       });
 
@@ -149,7 +149,7 @@ describe('EntityInstanceLoader', () => {
       expect(mockDataRegistry.store).toHaveBeenCalledTimes(1);
       expect(mockDataRegistry.store).toHaveBeenCalledWith(
         'entityInstances', // The category for instances
-        'core:goblin_sentry_01',
+        'movement:goblin_sentry_01',
         expectedStoredData
       );
 
@@ -157,7 +157,7 @@ describe('EntityInstanceLoader', () => {
       // expect(mockDataRegistry.get).toHaveBeenCalledTimes(1);
       // expect(mockDataRegistry.get).toHaveBeenCalledWith(
       //   'entity_instances',
-      //   'core:goblin_sentry_01'
+      //   'movement:goblin_sentry_01'
       // );
 
       // 2. The test confirms no error is thrown (covered by the first assertion).

@@ -37,7 +37,7 @@ describe('positioning:turn_around action', () => {
 
       expect(turnAroundAction.prerequisites[0]).toEqual({
         logic: {
-          condition_ref: 'core:actor-can-move',
+          condition_ref: 'movement:actor-can-move',
         },
         failure_message: 'You cannot move right now.',
       });

@@ -33,7 +33,7 @@ describe('EnhancedActionTraceFilter', () => {
       expect(filter.getVerbosityLevel).toBeDefined();
       expect(filter.isEnabled).toBeDefined();
       expect(filter.getInclusionConfig).toBeDefined();
-      expect(filter.shouldTrace('core:go')).toBe(true);
+      expect(filter.shouldTrace('movement:go')).toBe(true);
     });
 
     it('should maintain existing constructor signature', () => {
@@ -248,30 +248,30 @@ describe('EnhancedActionTraceFilter', () => {
       // Create filter that will filter out some actions
       const restrictiveFilter = new EnhancedActionTraceFilter({
         ...mockDependencies,
-        tracedActions: ['core:*'],
+        tracedActions: ['core:*', 'movement:*'], // Allow both core:* and movement:* patterns
         verbosityLevel: 'minimal',
       });
 
-      // First call - will be filtered out
+      // First call - will be filtered out (doesn't match tracedActions)
       restrictiveFilter.shouldCaptureEnhanced(
         'other',
         'action_start',
         {},
         { actionId: 'other:action' }
       );
-      // Second call - will pass
+      // Second call - will pass (matches core:*)
       restrictiveFilter.shouldCaptureEnhanced(
         'core',
         'action_start',
         {},
-        { actionId: 'core:go' }
+        { actionId: 'core:test' } // Use core:* to match tracedActions
       );
-      // Third call - cache hit for same key
+      // Third call - cache hit for same category:type key
       restrictiveFilter.shouldCaptureEnhanced(
         'core',
         'action_start',
         {},
-        { actionId: 'core:go' }
+        { actionId: 'core:test' } // Same actionId to ensure parent filter passes
       );
 
       const stats = restrictiveFilter.getEnhancedStats();
@@ -399,7 +399,7 @@ describe('EnhancedActionTraceFilter', () => {
         'core',
         'action_start',
         {},
-        { actionId: 'core:go' }
+        { actionId: 'movement:go' }
       );
 
       expect(shouldCapture).toBe(false);

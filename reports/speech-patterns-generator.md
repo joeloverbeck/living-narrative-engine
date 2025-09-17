@@ -38,7 +38,7 @@ Although other pages allow the user to select among the existing thematic direct
 "core:fears": {
 "text": "That she's created such an impossible standard for her 'worthy' man that he doesn't exist, meaning she'll grow old and worthless while waiting."
 },
-"core:goals": {
+"movement:goals": {
 "goals": [
 {
 "text": "Save enough money to buy a real designer outfit for special occasions."

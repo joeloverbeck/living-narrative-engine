@@ -120,7 +120,7 @@ describe('AI Prompt Output Regression', () => {
           },
           {
             index: 3,
-            actionId: 'core:go',
+            actionId: 'movement:go',
             commandString: 'go',
             description: 'Go.',
           },
@@ -190,7 +190,7 @@ describe('AI Prompt Output Regression', () => {
           },
           {
             index: 2,
-            actionId: 'core:go',
+            actionId: 'movement:go',
             commandString: 'go north',
             description: 'Move to the north.',
           },
@@ -387,7 +387,7 @@ describe('AI Prompt Output Regression', () => {
           },
           {
             index: 5,
-            actionId: 'core:go',
+            actionId: 'movement:go',
             commandString: 'go',
             description: '',
           }, // Empty description
@@ -443,7 +443,7 @@ describe('AI Prompt Output Regression', () => {
           },
           {
             index: 5,
-            actionId: 'core:go',
+            actionId: 'movement:go',
             commandString: 'go to bedroom',
             description: 'Go.',
           },

@@ -1,3 +1,0 @@
-core:clear_directions := location.core:exits[
-    { "condition_ref": "core:exit-is-unblocked" }
-].target

@@ -435,7 +435,7 @@ describe('ComponentFilteringStage', () => {
     it('should detect action-aware trace and capture component data', async () => {
       const candidateActions = [
         {
-          id: 'core:go',
+          id: 'movement:go',
           name: 'Go',
           required_components: { actor: ['core:position'] },
           forbidden_components: { actor: [] },
@@ -476,7 +476,7 @@ describe('ComponentFilteringStage', () => {
       // Check first action capture
       expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledWith(
         'component_filtering',
-        'core:go',
+        'movement:go',
         expect.objectContaining({
           stage: 'component_filtering',
           actorId: mockActor.id,
@@ -512,7 +512,7 @@ describe('ComponentFilteringStage', () => {
       // Check performance data captures (ACTTRA-018)
       expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledWith(
         'stage_performance',
-        'core:go',
+        'movement:go',
         expect.objectContaining({
           stage: 'component_filtering',
           duration: expect.any(Number),
@@ -536,7 +536,7 @@ describe('ComponentFilteringStage', () => {
     });
 
     it('should work normally without action-aware trace', async () => {
-      const candidateActions = [{ id: 'core:go', name: 'Go' }];
+      const candidateActions = [{ id: 'movement:go', name: 'Go' }];
       mockActionIndex.getCandidateActions.mockReturnValue(candidateActions);
 
       const context = {
@@ -627,7 +627,7 @@ describe('ComponentFilteringStage', () => {
     });
 
     it('should handle EntityManager errors gracefully', async () => {
-      const candidateActions = [{ id: 'core:go', name: 'Go' }];
+      const candidateActions = [{ id: 'movement:go', name: 'Go' }];
 
       mockActionIndex.getCandidateActions.mockReturnValue(candidateActions);
       mockEntityManager.getAllComponentTypesForEntity.mockImplementation(() => {
@@ -653,7 +653,7 @@ describe('ComponentFilteringStage', () => {
       // Should still capture action data with empty components
       expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledWith(
         'component_filtering',
-        'core:go',
+        'movement:go',
         expect.objectContaining({
           actorComponents: [], // Empty due to error
         })
@@ -661,7 +661,7 @@ describe('ComponentFilteringStage', () => {
     });
 
     it('should handle captureActionData errors gracefully', async () => {
-      const candidateActions = [{ id: 'core:go', name: 'Go' }];
+      const candidateActions = [{ id: 'movement:go', name: 'Go' }];
 
       mockActionIndex.getCandidateActions.mockReturnValue(candidateActions);
       mockActionAwareTrace.captureActionData.mockImplementation(() => {
@@ -686,7 +686,7 @@ describe('ComponentFilteringStage', () => {
     });
 
     it('should not capture data if trace lacks captureActionData method', async () => {
-      const candidateActions = [{ id: 'core:go', name: 'Go' }];
+      const candidateActions = [{ id: 'movement:go', name: 'Go' }];
 
       mockActionIndex.getCandidateActions.mockReturnValue(candidateActions);
 
@@ -741,7 +741,7 @@ describe('ComponentFilteringStage', () => {
         null // No EntityManager
       );
 
-      const candidateActions = [{ id: 'core:go', name: 'Go' }];
+      const candidateActions = [{ id: 'movement:go', name: 'Go' }];
 
       mockActionIndex.getCandidateActions.mockReturnValue(candidateActions);
 
@@ -758,7 +758,7 @@ describe('ComponentFilteringStage', () => {
       // Should still capture action data with empty components
       expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledWith(
         'component_filtering',
-        'core:go',
+        'movement:go',
         expect.objectContaining({
           actorComponents: [], // Empty because no EntityManager
         })

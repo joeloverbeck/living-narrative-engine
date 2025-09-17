@@ -51,7 +51,7 @@ export const TRAITS_REWRITER_RESPONSE_SCHEMA = {
           type: 'string',
           minLength: 1,
         },
-        'core:goals': {
+        'movement:goals': {
           type: 'array',
           items: {
             type: 'string',
@@ -139,7 +139,7 @@ Based on the character definition provided:
    - core:likes
    - core:dislikes
    - core:fears
-   - core:goals (array of goals)
+   - movement:goals (array of goals)
    - core:notes (array of notes)
    - core:personality
    - core:profile
@@ -181,7 +181,7 @@ Return a JSON object with this exact structure:
     "core:likes": "First-person version of likes trait",
     "core:dislikes": "First-person version of dislikes trait",
     "core:fears": "First-person version of fears trait",
-    "core:goals": ["Array of first-person goal strings"],
+    "movement:goals": ["Array of first-person goal strings"],
     "core:notes": ["Array of first-person note strings"],
     "core:personality": "First-person version of personality trait",
     "core:profile": "First-person version of profile trait",
@@ -197,7 +197,7 @@ Return a JSON object with this exact structure:
 
 Only include traits that exist in the original character definition. If a trait is not present, omit it from the rewrittenTraits object.
 
-For core:goals and core:notes which are arrays:
+For movement:goals and core:notes which are arrays:
 - Convert each item's text content to first-person
 - Return as an array of strings, not objects
 - Preserve all meaningful content from each item
@@ -276,7 +276,7 @@ export const DEFAULT_TRAIT_KEYS = [
   'core:likes',
   'core:dislikes',
   'core:fears',
-  'core:goals',
+  'movement:goals',
   'core:notes',
   'core:personality',
   'core:profile',

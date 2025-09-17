@@ -9,10 +9,10 @@ import { ActionExecutionTrace } from '../../../../src/actions/tracing/actionExec
 
 describe('ActionExecutionTrace - Performance Tests', () => {
   const validParams = {
-    actionId: 'core:go',
+    actionId: 'movement:go',
     actorId: 'player-1',
     turnAction: {
-      actionDefinitionId: 'core:go',
+      actionDefinitionId: 'movement:go',
       commandString: 'go north',
       parameters: { direction: 'north' },
     },
@@ -119,7 +119,7 @@ describe('ActionExecutionTrace - Performance Tests', () => {
       // Add complex nested payload
       const complexPayload = {
         actor: 'player-1',
-        action: 'core:go',
+        action: 'movement:go',
         nested: {
           level1: {
             level2: {

@@ -19,6 +19,8 @@ module.exports = {
     '!<rootDir>/tests/integration/**/*.e2e.test.js',
     '!<rootDir>/tests/integration/EndToEnd*.test.js',
     '!<rootDir>/tests/integration/LLMResponseProcessor.e2e.test.js',
+    // Exclude build tests which need to run sequentially
+    '!<rootDir>/tests/integration/build/**/*.test.js',
   ],
   // Integration tests may take longer
   testTimeout: 30000,

@@ -64,7 +64,7 @@ export class ScopeTestUtilities {
       },
       {
         id: 'test:step_with_filter',
-        expr: 'location.core:exits[{"condition_ref": "core:exit-is-unblocked"}].target',
+        expr: 'location.movement:exits[{"condition_ref": "movement:exit-is-unblocked"}].target',
         description: 'Test scope combining step and filter resolution',
       },
       // Complex filter expressions for comprehensive testing
@@ -411,7 +411,7 @@ export class ScopeTestUtilities {
   static setupScopeTestConditions(registry, additionalConditions = []) {
     const testConditions = [
       {
-        id: 'core:actor-can-move',
+        id: 'movement:actor-can-move',
         description:
           'Checks if the actor has functioning legs capable of movement',
         logic: {
@@ -419,7 +419,7 @@ export class ScopeTestUtilities {
         },
       },
       {
-        id: 'core:exit-is-unblocked',
+        id: 'movement:exit-is-unblocked',
         description: 'Checks if an exit is unblocked',
         logic: {
           '==': [{ var: 'blocked' }, false],

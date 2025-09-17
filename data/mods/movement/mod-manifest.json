@@ -16,9 +16,12 @@
     "actions": [
       "go.action.json"
     ],
-    "rules": [],
+    "rules": [
+      "go.rule.json"
+    ],
     "conditions": [
       "actor-can-move.condition.json",
+      "event-is-action-go.condition.json",
       "exit-is-unblocked.condition.json"
     ],
     "scopes": [
@@ -26,8 +29,8 @@
     ],
     "events": [],
     "components": [
-      "movement.component.json",
-      "exits.component.json"
+      "exits.component.json",
+      "movement.component.json"
     ],
     "entities": {
       "definitions": [],

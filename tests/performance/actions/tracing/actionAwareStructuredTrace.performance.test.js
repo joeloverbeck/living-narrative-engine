@@ -237,7 +237,7 @@ describe('ActionAwareStructuredTrace - Performance Tests', () => {
 
     it('should have zero overhead when action is not being traced', async () => {
       const trace = await testBed.createActionAwareTrace({
-        tracedActions: ['core:go'], // Only trace 'go', not 'untraced'
+        tracedActions: ['movement:go'], // Only trace 'go', not 'untraced'
         verbosity: 'standard',
       });
 

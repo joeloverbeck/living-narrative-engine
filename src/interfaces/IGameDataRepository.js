@@ -82,7 +82,7 @@ export class IGameDataRepository {
   /**
    * Retrieves a specific GoalDefinition by its ID.
    *
-   * @param {string} goalId The fully qualified ID of the goal (e.g., 'core:goal_survive').
+   * @param {string} goalId The fully qualified ID of the goal (e.g., 'movement:goal_survive').
    * @returns {GoalDefinition | null} The goal definition if found, otherwise null.
    */
   getGoalDefinition(goalId) {

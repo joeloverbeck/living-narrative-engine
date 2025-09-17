@@ -827,7 +827,7 @@ describe('CharacterDataFormatter Integration Tests', () => {
           components: {
             'core:short_term_memory': { thoughts: [] },
             'core:notes': { notes: [] },
-            'core:goals': { goals: [] },
+            'movement:goals': { goals: [] },
           },
         },
       };

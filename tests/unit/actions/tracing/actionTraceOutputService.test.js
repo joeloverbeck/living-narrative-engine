@@ -291,7 +291,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
     });
 
     it('should store traces in IndexedDB', async () => {
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
 
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
@@ -300,7 +300,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
       const [key, value] = mockStorageAdapter.setItem.mock.calls[0];
       expect(key).toBe('actionTraces');
       expect(value).toHaveLength(1);
-      expect(value[0].data.actionId).toBe('core:go');
+      expect(value[0].data.actionId).toBe('movement:go');
     });
 
     it('should handle storage adapter errors gracefully', async () => {
@@ -308,7 +308,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
         new Error('Storage error')
       );
 
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
 
@@ -321,7 +321,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
     it('should use configured storage key prefix', async () => {
       mockStorageAdapter.getItem.mockResolvedValue([]);
 
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
 
@@ -337,7 +337,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
       quotaError.name = 'QuotaExceededError';
       mockStorageAdapter.setItem.mockRejectedValueOnce(quotaError);
 
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
 
@@ -348,7 +348,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
     });
 
     it('should validate storage key format', async () => {
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
 
@@ -357,7 +357,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
     });
 
     it('should cache storage status', async () => {
-      const trace1 = createMockTrace('core:go');
+      const trace1 = createMockTrace('movement:go');
       const trace2 = createMockTrace('core:take');
 
       await service.writeTrace(trace1);
@@ -377,13 +377,13 @@ describe('ActionTraceOutputService - Storage Output', () => {
     });
 
     it('should generate unique ID with timestamp', async () => {
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
 
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
 
       const storedData = mockStorageAdapter.setItem.mock.calls[0][1];
-      expect(storedData[0].id).toMatch(/\d{8}_\d{6}_core-go_[a-f0-9]{6}/); // TIMESTAMP_FIRST format: YYYYMMDD_HHMMSS_action-id_hash
+      expect(storedData[0].id).toMatch(/\d{8}_\d{6}_movement-go_[a-f0-9]{6}/); // TIMESTAMP_FIRST format: YYYYMMDD_HHMMSS_action-id_hash
     });
 
     it('should sanitize action ID in identifier', async () => {
@@ -411,7 +411,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
     });
 
     it('should include valid timestamp', async () => {
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
 
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
@@ -427,8 +427,8 @@ describe('ActionTraceOutputService - Storage Output', () => {
       let mockTime = 1000000;
       jest.spyOn(Date, 'now').mockImplementation(() => (mockTime += 1000));
 
-      const trace1 = createMockTrace('core:go');
-      const trace2 = createMockTrace('core:go');
+      const trace1 = createMockTrace('movement:go');
+      const trace2 = createMockTrace('movement:go');
 
       await service.writeTrace(trace1);
 
@@ -493,12 +493,12 @@ describe('ActionTraceOutputService - Storage Output', () => {
         timerService: mockTimerService,
       });
 
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
 
       const storedData = mockStorageAdapter.setItem.mock.calls[0][1];
-      expect(storedData[0].id).toMatch(/trace_\d{6}_core-go_\d{8}_\d{6}/); // Sequential format
+      expect(storedData[0].id).toMatch(/trace_\d{6}_movement-go_\d{8}_\d{6}/); // Sequential format
     });
   });
 
@@ -508,7 +508,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
     });
 
     it('should queue traces for async processing', async () => {
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
 
       // Write should return immediately
       const writePromise = service.writeTrace(trace);
@@ -525,7 +525,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
 
     it('should process queue without blocking', async () => {
       const traces = [
-        createMockTrace('core:go'),
+        createMockTrace('movement:go'),
         createMockTrace('core:take'),
         createMockTrace('core:use'),
       ];
@@ -683,7 +683,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
     });
 
     it('should format ActionExecutionTrace to JSON during storage', async () => {
-      const trace = createMockExecutionTrace('core:go');
+      const trace = createMockExecutionTrace('movement:go');
 
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
@@ -691,7 +691,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
       // Check that trace was stored with proper data structure
       const storedData = mockStorageAdapter.setItem.mock.calls[0][1];
       expect(storedData[0].data).toBeDefined();
-      expect(storedData[0].data.actionId).toBe('core:go');
+      expect(storedData[0].data.actionId).toBe('movement:go');
 
       // JsonFormatter should be called if available and trace format matches
       // The formatter may be called (if JSON parsing succeeds) or may fallback to toJSON
@@ -720,7 +720,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
     });
 
     it('should include all trace metadata', async () => {
-      const trace = createMockExecutionTrace('core:go');
+      const trace = createMockExecutionTrace('movement:go');
 
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
@@ -743,7 +743,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
     });
 
     it('should format JSON with proper structure', async () => {
-      const trace = createMockExecutionTrace('core:go');
+      const trace = createMockExecutionTrace('movement:go');
 
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
@@ -767,7 +767,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
     });
 
     it('should validate JSON structure', async () => {
-      const trace = createMockExecutionTrace('core:go');
+      const trace = createMockExecutionTrace('movement:go');
 
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
@@ -777,7 +777,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
     });
 
     it('should include timestamp in output', async () => {
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
 
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
@@ -833,7 +833,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
     });
 
     it('should format timestamps in readable format', async () => {
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
 
@@ -867,7 +867,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
     });
 
     it('should handle missing data gracefully', async () => {
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
       delete trace.actorId;
 
       await service.writeTrace(trace);
@@ -885,7 +885,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
      *
      */
     async function exportAndGetTraces() {
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
 
@@ -906,7 +906,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
     });
 
     it('should store JSON trace data', async () => {
-      const trace = createMockExecutionTrace('core:go');
+      const trace = createMockExecutionTrace('movement:go');
 
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
@@ -917,7 +917,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
     });
 
     it('should store human-readable trace data', async () => {
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
 
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
@@ -936,7 +936,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
         new Error('Write failed')
       );
 
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
 
@@ -958,13 +958,13 @@ describe('ActionTraceOutputService - Storage Output', () => {
     });
 
     it('should verify storage contents after writing', async () => {
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
 
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
 
       const storedData = mockStorageAdapter.setItem.mock.calls[0][1];
-      expect(storedData[0].data.actionId).toBe('core:go');
+      expect(storedData[0].data.actionId).toBe('movement:go');
     });
 
     it('should handle storage quota issues', async () => {
@@ -975,7 +975,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
         .mockRejectedValueOnce(quotaError)
         .mockResolvedValue(undefined);
 
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
 
@@ -1012,7 +1012,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
 
         mockStorageAdapter.getItem.mockResolvedValue([oldTrace, newTrace]);
 
-        const trace = createMockTrace('core:go');
+        const trace = createMockTrace('movement:go');
         await service.writeTrace(trace);
         await jest.runAllTimersAsync();
 
@@ -1030,7 +1030,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
 
         mockStorageAdapter.getItem.mockResolvedValue([recentTrace]);
 
-        const trace = createMockTrace('core:go');
+        const trace = createMockTrace('movement:go');
         await service.writeTrace(trace);
         await jest.runAllTimersAsync();
 
@@ -1048,7 +1048,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
 
         mockStorageAdapter.getItem.mockResolvedValue([invalidTrace]);
 
-        const trace = createMockTrace('core:go');
+        const trace = createMockTrace('movement:go');
         await service.writeTrace(trace);
         await jest.runAllTimersAsync();
 
@@ -1065,7 +1065,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
 
         mockStorageAdapter.getItem.mockResolvedValue(traces);
 
-        const trace = createMockTrace('core:go');
+        const trace = createMockTrace('movement:go');
         await service.writeTrace(trace);
         await jest.runAllTimersAsync();
 
@@ -1096,7 +1096,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
 
         mockStorageAdapter.getItem.mockResolvedValue(existingTraces);
 
-        const trace = createMockTrace('core:go');
+        const trace = createMockTrace('movement:go');
         await service.writeTrace(trace);
         await jest.runAllTimersAsync();
 
@@ -1114,7 +1114,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
 
         mockStorageAdapter.getItem.mockResolvedValue(traces);
 
-        const trace = createMockTrace('core:go');
+        const trace = createMockTrace('movement:go');
         await service.writeTrace(trace);
         await jest.runAllTimersAsync();
 
@@ -1132,7 +1132,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
 
         mockStorageAdapter.getItem.mockResolvedValue(traces);
 
-        const trace = createMockTrace('core:go');
+        const trace = createMockTrace('movement:go');
         await service.writeTrace(trace);
         await jest.runAllTimersAsync();
 
@@ -1149,14 +1149,14 @@ describe('ActionTraceOutputService - Storage Output', () => {
 
         mockStorageAdapter.getItem.mockResolvedValue(traces);
 
-        const trace = createMockTrace('core:go');
+        const trace = createMockTrace('movement:go');
         await service.writeTrace(trace);
         await jest.runAllTimersAsync();
 
         const storedData = mockStorageAdapter.setItem.mock.calls[0][1];
         // Most recent trace should be preserved
         expect(
-          storedData.find((t) => t.data.actionId === 'core:go')
+          storedData.find((t) => t.data.actionId === 'movement:go')
         ).toBeDefined();
       });
     });
@@ -1170,7 +1170,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
 
       mockStorageAdapter.getItem.mockRejectedValueOnce(new Error('Read error'));
 
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
 
@@ -1192,7 +1192,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
 
       mockStorageAdapter.getItem.mockResolvedValue(traces);
 
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
 
@@ -1220,7 +1220,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
 
       mockStorageAdapter.getItem.mockResolvedValue(traces);
 
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
 
@@ -1239,7 +1239,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
         new Error('Storage failed')
       );
 
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
 
@@ -1254,7 +1254,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
         .mockRejectedValueOnce(new Error('Temporary error'))
         .mockResolvedValue(undefined);
 
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
       await service.writeTrace(trace);
 
       // First attempt fails
@@ -1275,7 +1275,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
       const error = new Error('Test error');
       mockStorageAdapter.setItem.mockRejectedValueOnce(error);
 
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
       await service.writeTrace(trace);
       await jest.runAllTimersAsync();
 
@@ -1333,7 +1333,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
         .mockRejectedValueOnce(new Error('Temporary'))
         .mockResolvedValue(undefined);
 
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
       await service.writeTrace(trace);
 
       // Process the queue - first attempt will fail
@@ -1417,7 +1417,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
         {
           id: 'trace-1',
           timestamp: Date.now(),
-          data: createMockTrace('core:go'),
+          data: createMockTrace('movement:go'),
         },
         {
           id: 'trace-2',
@@ -1448,7 +1448,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
         {
           id: 'trace-1',
           timestamp: Date.now(),
-          data: createMockTrace('core:go'),
+          data: createMockTrace('movement:go'),
         },
       ];
 
@@ -1467,7 +1467,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
     });
 
     it('should generate correct file names for exports', async () => {
-      const trace = createMockTrace('core:go');
+      const trace = createMockTrace('movement:go');
       const traces = [{ id: 'trace-1', timestamp: Date.now(), data: trace }];
 
       mockStorageAdapter.getItem.mockResolvedValue(traces);
@@ -1517,7 +1517,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
         {
           id: 'trace-1',
           timestamp: Date.now(),
-          data: createMockTrace('core:go'),
+          data: createMockTrace('movement:go'),
         },
       ];
 
@@ -1542,7 +1542,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
         {
           id: 'trace-1',
           timestamp: Date.now(),
-          data: createMockTrace('core:go'),
+          data: createMockTrace('movement:go'),
         },
       ];
 
@@ -1577,7 +1577,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
         {
           id: 'trace-1',
           timestamp: Date.now(),
-          data: createMockTrace('core:go'),
+          data: createMockTrace('movement:go'),
         },
         {
           id: 'trace-2',
@@ -1614,7 +1614,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
         {
           id: 'trace-1',
           timestamp: Date.now(),
-          data: createMockTrace('core:go'),
+          data: createMockTrace('movement:go'),
         },
       ];
       mockStorageAdapter.getItem.mockResolvedValue(traces);

@@ -103,7 +103,7 @@ describe('Prompt Assembly with template-based system', () => {
         'core:notes': {
           notes: [],
         },
-        'core:goals': {
+        'movement:goals': {
           goals: [],
         },
       },

@@ -59,13 +59,13 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
     });
   });
 
-  describe('core:clear_directions scope resolution', () => {
-    it('should find the core:clear_directions scope when properly loaded', () => {
+  describe('movement:clear_directions scope resolution', () => {
+    it('should find the movement:clear_directions scope when properly loaded', () => {
       // Mock a properly loaded scope
       const expr =
-        'location.core:exits[{ "condition_ref": "core:exit-is-unblocked" }].target';
+        'location.movement:exits[{ "condition_ref": "movement:exit-is-unblocked" }].target';
       const mockScopeDefinition = {
-        name: 'core:clear_directions',
+        name: 'movement:clear_directions',
         expr: expr,
         ast: generateMockAst(expr),
         modId: 'core',
@@ -81,13 +81,13 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       const mockDiscoveryContext = { currentLocation: { id: 'room1' } };
 
       const result = targetResolutionService.resolveTargets(
-        'core:clear_directions',
+        'movement:clear_directions',
         mockActor,
         mockDiscoveryContext
       );
 
       expect(mockScopeRegistry.getScope).toHaveBeenCalledWith(
-        'core:clear_directions'
+        'movement:clear_directions'
       );
       expect(result.success).toBe(true);
       expect(result.value).toHaveLength(2);
@@ -103,13 +103,13 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       const mockDiscoveryContext = { currentLocation: { id: 'room1' } };
 
       const result = targetResolutionService.resolveTargets(
-        'core:clear_directions',
+        'movement:clear_directions',
         mockActor,
         mockDiscoveryContext
       );
 
       expect(mockScopeRegistry.getScope).toHaveBeenCalledWith(
-        'core:clear_directions'
+        'movement:clear_directions'
       );
       expect(result.success).toBe(false);
       expect(result.value).toBeNull();
@@ -121,7 +121,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
     it('should handle scope with empty expression gracefully', () => {
       // Mock scope with empty expression
       const mockScopeDefinition = {
-        name: 'core:clear_directions',
+        name: 'movement:clear_directions',
         expr: '',
         modId: 'core',
         source: 'file',
@@ -133,7 +133,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       const mockDiscoveryContext = { currentLocation: { id: 'room1' } };
 
       const result = targetResolutionService.resolveTargets(
-        'core:clear_directions',
+        'movement:clear_directions',
         mockActor,
         mockDiscoveryContext
       );
@@ -147,7 +147,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
     it('should handle scope with missing AST gracefully', () => {
       // Mock scope without AST (which is now required)
       const mockScopeDefinition = {
-        name: 'core:clear_directions',
+        name: 'movement:clear_directions',
         expr: 'location.core:exits[].target',
         modId: 'core',
         source: 'file',
@@ -164,7 +164,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       const mockDiscoveryContext = { currentLocation: { id: 'room1' } };
 
       const result = targetResolutionService.resolveTargets(
-        'core:clear_directions',
+        'movement:clear_directions',
         mockActor,
         mockDiscoveryContext
       );
@@ -180,15 +180,15 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
   });
 
   describe('Real ScopeRegistry integration', () => {
-    it('should work with a real scope registry containing core:clear_directions', () => {
+    it('should work with a real scope registry containing movement:clear_directions', () => {
       const realScopeRegistry = new ScopeRegistry();
 
       // Initialize with the expected scope definition
       const expr =
-        'location.core:exits[{ "condition_ref": "core:exit-is-unblocked" }].target';
+        'location.movement:exits[{ "condition_ref": "movement:exit-is-unblocked" }].target';
       realScopeRegistry.initialize({
-        'core:clear_directions': {
-          name: 'core:clear_directions',
+        'movement:clear_directions': {
+          name: 'movement:clear_directions',
           expr: expr,
           ast: generateMockAst(expr),
           modId: 'core',
@@ -196,11 +196,11 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
         },
       });
 
-      const scope = realScopeRegistry.getScope('core:clear_directions');
+      const scope = realScopeRegistry.getScope('movement:clear_directions');
       expect(scope).toBeDefined();
-      expect(scope.name).toBe('core:clear_directions');
+      expect(scope.name).toBe('movement:clear_directions');
       expect(scope.expr).toBe(
-        'location.core:exits[{ "condition_ref": "core:exit-is-unblocked" }].target'
+        'location.movement:exits[{ "condition_ref": "movement:exit-is-unblocked" }].target'
       );
     });
 

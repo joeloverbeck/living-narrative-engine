@@ -93,7 +93,7 @@ class ActionTraceFilter {
   /**
    * Determines if a specific action should be traced
    *
-   * @param {string} actionId - The action ID to check (e.g., 'core:go')
+   * @param {string} actionId - The action ID to check (e.g., 'movement:go')
    * @returns {boolean} True if the action should be traced
    */
   shouldTrace(actionId) {

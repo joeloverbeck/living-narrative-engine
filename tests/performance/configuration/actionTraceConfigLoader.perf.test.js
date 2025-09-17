@@ -353,7 +353,7 @@ describe('ActionTraceConfigLoader Performance', () => {
       const mockConfig = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './traces',
           verbosity: 'standard',
         },
@@ -393,7 +393,7 @@ describe('ActionTraceConfigLoader Performance', () => {
       const mockConfig = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go', 'core:attack'],
+          tracedActions: ['movement:go', 'core:attack'],
           outputDirectory: './traces',
           verbosity: 'standard',
           includeComponentData: true,
@@ -501,7 +501,7 @@ describe('ActionTraceConfigLoader Performance', () => {
       mockTraceConfigLoader.loadConfig.mockResolvedValue({
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go', 'core:attack', 'core:examine'],
+          tracedActions: ['movement:go', 'core:attack', 'core:examine'],
           outputDirectory: './traces',
         },
       });
@@ -518,7 +518,7 @@ describe('ActionTraceConfigLoader Performance', () => {
 
       // Test that exact matches are fast
       const start = performance.now();
-      const result = await loader.shouldTraceAction('core:go');
+      const result = await loader.shouldTraceAction('movement:go');
       const duration = performance.now() - start;
 
       expect(result).toBe(true);

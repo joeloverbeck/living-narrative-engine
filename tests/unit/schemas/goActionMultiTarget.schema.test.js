@@ -5,7 +5,7 @@ import actionSchema from '../../../data/schemas/action.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
 import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
-import goActionMigrated from '../../../data/mods/core/actions/go.action.json';
+import goActionMigrated from '../../../data/mods/movement/actions/go.action.json';
 
 describe('Go Action Multi-Target Schema Validation', () => {
   let ajv;
@@ -30,7 +30,7 @@ describe('Go Action Multi-Target Schema Validation', () => {
     expect(goActionMigrated.targets).toBeDefined();
     expect(goActionMigrated.targets.primary).toBeDefined();
     expect(goActionMigrated.targets.primary.scope).toBe(
-      'core:clear_directions'
+      'movement:clear_directions'
     );
     expect(goActionMigrated.targets.primary.placeholder).toBe('destination');
     expect(goActionMigrated.targets.primary.description).toBe(
@@ -47,7 +47,7 @@ describe('Go Action Multi-Target Schema Validation', () => {
   });
 
   it('maintains all other required properties', () => {
-    expect(goActionMigrated.id).toBe('core:go');
+    expect(goActionMigrated.id).toBe('movement:go');
     expect(goActionMigrated.name).toBe('Go');
     expect(goActionMigrated.description).toBe(
       'Moves your character to the specified location, if the way is clear.'
@@ -55,7 +55,7 @@ describe('Go Action Multi-Target Schema Validation', () => {
     expect(goActionMigrated.prerequisites).toBeDefined();
     expect(goActionMigrated.prerequisites).toHaveLength(1);
     expect(goActionMigrated.prerequisites[0].logic.condition_ref).toBe(
-      'core:actor-can-move'
+      'movement:actor-can-move'
     );
     expect(goActionMigrated.prerequisites[0].failure_message).toBe(
       'You cannot move without functioning legs.'

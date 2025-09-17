@@ -38,14 +38,14 @@ describe('Scope Registry Initialization - Focused Test', () => {
           _fullId: 'core:potential_leaders',
         },
         {
-          id: 'core:clear_directions', // Qualified ID as id property (FIXED)
-          name: 'core:clear_directions',
+          id: 'movement:clear_directions', // Qualified ID as id property (FIXED)
+          name: 'movement:clear_directions',
           expr: 'exits()',
           modId: 'core',
           source: 'file',
           _modId: 'core',
           _sourceFile: 'clear_directions.scope',
-          _fullId: 'core:clear_directions',
+          _fullId: 'movement:clear_directions',
         },
         {
           id: 'core:actors_in_location', // Qualified ID as id property (FIXED)
@@ -82,7 +82,7 @@ describe('Scope Registry Initialization - Focused Test', () => {
               expression: mockScopes[0].expr,
             }),
           }),
-          'core:clear_directions': expect.objectContaining({
+          'movement:clear_directions': expect.objectContaining({
             ...mockScopes[1],
             ast: expect.objectContaining({
               type: 'Source',
@@ -117,11 +117,11 @@ describe('Scope Registry Initialization - Focused Test', () => {
         },
         {
           id: 'clear_directions', // Base ID instead of qualified (BUG)
-          name: 'core:clear_directions',
+          name: 'movement:clear_directions',
           expr: 'exits()',
           modId: 'core',
           source: 'file',
-          _fullId: 'core:clear_directions',
+          _fullId: 'movement:clear_directions',
         },
       ];
 
@@ -288,8 +288,8 @@ describe('Scope Registry Initialization - Focused Test', () => {
           modId: 'core',
         },
         {
-          id: 'core:clear_directions',
-          name: 'core:clear_directions',
+          id: 'movement:clear_directions',
+          name: 'movement:clear_directions',
           expr: 'exits()',
           modId: 'core',
         },
@@ -314,7 +314,7 @@ describe('Scope Registry Initialization - Focused Test', () => {
 
       // All scopes should be accessible by their qualified names
       expect(scopeMap['core:potential_leaders']).toBeDefined();
-      expect(scopeMap['core:clear_directions']).toBeDefined();
+      expect(scopeMap['movement:clear_directions']).toBeDefined();
       expect(scopeMap['core:actors_in_location']).toBeDefined();
 
       // None should be accessible by base names (anti-regression)
@@ -326,7 +326,7 @@ describe('Scope Registry Initialization - Focused Test', () => {
       expect(mockScopeRegistry.initialize).toHaveBeenCalledWith(
         expect.objectContaining({
           'core:potential_leaders': expect.any(Object),
-          'core:clear_directions': expect.any(Object),
+          'movement:clear_directions': expect.any(Object),
           'core:actors_in_location': expect.any(Object),
         })
       );

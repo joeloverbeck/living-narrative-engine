@@ -683,7 +683,7 @@ For users wanting to enable dual-format immediately:
 {
   "actionTracing": {
     "enabled": true,
-    "tracedActions": ["core:go"],
+    "tracedActions": ["movement:go"],
     "outputDirectory": "./traces"
   }
 }
@@ -692,7 +692,7 @@ For users wanting to enable dual-format immediately:
 {
   "actionTracing": {
     "enabled": true,
-    "tracedActions": ["core:go"],
+    "tracedActions": ["movement:go"],
     "outputDirectory": "./traces",
     "outputFormats": ["json", "text"],
     "textFormatOptions": {

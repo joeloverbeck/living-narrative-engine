@@ -606,7 +606,7 @@ class ActionTraceConfigLoader {
   /**
    * Check if a specific action should be traced
    *
-   * @param {string} actionId - Action ID to check (e.g., 'core:go')
+   * @param {string} actionId - Action ID to check (e.g., 'movement:go')
    * @returns {Promise<boolean>}
    */
   async shouldTraceAction(actionId) {

@@ -89,7 +89,7 @@ describe('AIPromptContentProvider.getPromptData → Goals without timestamps bug
         components: {
           'core:short_term_memory': { thoughts: [] },
           'core:notes': { notes: [] },
-          'core:goals': { goals: sugarMommyGoals },
+          'movement:goals': { goals: sugarMommyGoals },
         },
       },
       availableActions: [],
@@ -133,7 +133,7 @@ describe('AIPromptContentProvider.getPromptData → Goals without timestamps bug
         components: {
           'core:short_term_memory': { thoughts: [] },
           'core:notes': { notes: [] },
-          'core:goals': {
+          'movement:goals': {
             goals: [{ text: 'Goal 1' }, { text: 'Goal 2' }],
           },
         },
@@ -180,7 +180,7 @@ describe('AIPromptContentProvider.getPromptData → Goals without timestamps bug
         components: {
           'core:short_term_memory': { thoughts: [] },
           'core:notes': { notes: [] },
-          'core:goals': { goals: malformedGoals },
+          'movement:goals': { goals: malformedGoals },
         },
       },
       availableActions: [],

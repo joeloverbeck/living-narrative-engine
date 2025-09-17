@@ -100,7 +100,7 @@ describe('Complete Action Categorization Workflow Integration', () => {
           },
           {
             index: 2,
-            actionId: 'core:go',
+            actionId: 'movement:go',
             commandString: 'go north',
             description: 'Move to the northern area.',
             params: {},
@@ -143,6 +143,7 @@ describe('Complete Action Categorization Workflow Integration', () => {
       // Verify categorized structure
       expect(llmOutput).toContain('## Available Actions');
       expect(llmOutput).toContain('### CORE Actions');
+      expect(llmOutput).toContain('### MOVEMENT Actions');
       expect(llmOutput).toContain('### INTIMACY Actions');
       expect(llmOutput).toContain('### CLOTHING Actions');
 
@@ -167,8 +168,9 @@ describe('Complete Action Categorization Workflow Integration', () => {
       const grouped = actionCategorizationService.groupActionsByNamespace(
         gameState.availableActions
       );
-      expect(grouped.size).toBe(3); // core, intimacy, clothing
-      expect(grouped.get('core')).toHaveLength(3);
+      expect(grouped.size).toBe(4); // core, intimacy, clothing, movement
+      expect(grouped.get('core')).toHaveLength(2); // wait, examine
+      expect(grouped.get('movement')).toHaveLength(1); // go
       expect(grouped.get('intimacy')).toHaveLength(2);
       expect(grouped.get('clothing')).toHaveLength(1);
     });
@@ -280,7 +282,7 @@ describe('Complete Action Categorization Workflow Integration', () => {
           },
           {
             index: 3,
-            actionId: 'core:go',
+            actionId: 'movement:go',
             commandString: 'go',
             description: 'Move around.',
             params: {},
@@ -320,7 +322,7 @@ describe('Complete Action Categorization Workflow Integration', () => {
           },
           {
             index: 2,
-            actionId: 'core:go',
+            actionId: 'movement:go',
             commandString: 'go',
             description: 'Go.',
             params: {},
@@ -356,18 +358,17 @@ describe('Complete Action Categorization Workflow Integration', () => {
         ],
       };
 
-      // Both should use flat format due to only one namespace
+      // Should use grouped format due to having 2 namespaces (core and movement)
       const llmOutput =
         promptProvider.getAvailableActionsInfoContent(gameState);
-      expect(llmOutput).toContain(
-        'Choose one of the following available actions by its index'
-      );
-      expect(llmOutput).not.toContain('### CORE Actions');
+      expect(llmOutput).toContain('## Available Actions');
+      expect(llmOutput).toContain('### CORE Actions');
+      expect(llmOutput).toContain('### MOVEMENT Actions');
 
       const shouldGroup = actionCategorizationService.shouldUseGrouping(
         gameState.availableActions
       );
-      expect(shouldGroup).toBe(false);
+      expect(shouldGroup).toBe(true); // 2 namespaces meets the threshold
     });
   });
 
@@ -551,7 +552,7 @@ describe('Complete Action Categorization Workflow Integration', () => {
         },
         {
           index: 4,
-          actionId: 'core:go',
+          actionId: 'movement:go',
           commandString: 'go',
           description: 'Go',
           params: {},
@@ -598,7 +599,7 @@ describe('Complete Action Categorization Workflow Integration', () => {
             },
             {
               index: 2,
-              actionId: 'core:go',
+              actionId: 'movement:go',
               commandString: 'go north',
               description: 'Head north.',
               params: {},
@@ -645,7 +646,7 @@ describe('Complete Action Categorization Workflow Integration', () => {
             },
             {
               index: 2,
-              actionId: 'core:go',
+              actionId: 'movement:go',
               commandString: 'go to bedroom',
               description: 'Move to the bedroom.',
               params: {},

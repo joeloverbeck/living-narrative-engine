@@ -27,8 +27,8 @@
   },
   "metadata": {
     "migratedFrom": "core:go",
-    "migrationDate": "2024-09-16",
     "migrationTicket": "MOVMODMIG-004",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "migrationDate": "2024-11-01"
   }
 }

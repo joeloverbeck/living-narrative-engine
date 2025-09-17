@@ -78,7 +78,7 @@ describe('Pipeline Tracing Memory', () => {
     it('should cleanup trace data efficiently', async () => {
       const service = testBed.createDiscoveryServiceWithTracing({
         actionTracingEnabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         verbosity: 'verbose',
       });
 

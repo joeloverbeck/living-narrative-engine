@@ -26,7 +26,7 @@ describe('Action Trace Config Schema', () => {
     const config = {
       actionTracing: {
         enabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         outputDirectory: './traces/actions',
       },
     };

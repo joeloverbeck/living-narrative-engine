@@ -30,8 +30,8 @@ describe('EntityManager Integration Tests', () => {
    */
   test('should create an entity instance by merging definition and instance overrides', async () => {
     // Arrange: Set up test data and registry state
-    const definitionId = 'core:goblin';
-    const instanceId = 'core:goblin_sentry';
+    const definitionId = 'movement:goblin';
+    const instanceId = 'movement:goblin_sentry';
 
     // 1. Create the base EntityDefinition for a goblin
     const goblinDefinition = buildEntityDefinition(
@@ -61,10 +61,10 @@ describe('EntityManager Integration Tests', () => {
     // [x] Assert that the call returns a valid Entity object.
     expect(entity).toBeInstanceOf(Entity);
 
-    // [x] Assert that entity.id is 'core:goblin_sentry'.
+    // [x] Assert that entity.id is 'movement:goblin_sentry'.
     expect(entity.id).toBe(instanceId);
 
-    // [x] Assert that entity.definitionId is 'core:goblin'.
+    // [x] Assert that entity.definitionId is 'movement:goblin'.
     expect(entity.definitionId).toBe(definitionId);
 
     // [x] Assert that overridden component values are correctly applied.

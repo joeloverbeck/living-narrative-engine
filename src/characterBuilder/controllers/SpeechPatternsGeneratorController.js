@@ -468,7 +468,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       'core:likes',
       'core:dislikes',
       'core:fears',
-      'core:goals',
+      'movement:goals',
     ];
 
     let hasRequiredComponents = false;

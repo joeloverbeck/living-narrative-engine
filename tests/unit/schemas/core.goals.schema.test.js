@@ -10,13 +10,13 @@ import coreGoalsComponent from '../../../data/mods/core/components/goals.compone
 import { beforeAll, describe, expect, test } from '@jest/globals';
 
 /**
- * Test suite – JSON‑Schema validation for the `core:goals` component.
+ * Test suite – JSON‑Schema validation for the `movement:goals` component.
  *
  * Mirrors the structure of the existing `core:notes` schema tests to ensure
  * consistent coverage and behaviour across similar components.
  *
  * Valid cases:
- *   • entities without a `core:goals` key
+ *   • entities without a `movement:goals` key
  *   • entities with an empty `goals` array
  *
  * Invalid cases:
@@ -27,7 +27,7 @@ import { beforeAll, describe, expect, test } from '@jest/globals';
  *   • goal object with additional properties
  */
 
-describe('JSON‑Schema – core:goals component', () => {
+describe('JSON‑Schema – movement:goals component', () => {
   /** @type {import('ajv').ValidateFunction} */
   let validateEntity;
 
@@ -41,8 +41,8 @@ describe('JSON‑Schema – core:goals component', () => {
     // Isolate the data schema for the component and give it a canonical $id
     const coreGoalsDataSchema = {
       ...coreGoalsComponent.dataSchema,
-      $id: 'core:goals',
-      title: 'core:goals data',
+      $id: 'movement:goals',
+      title: 'movement:goals data',
     };
 
     ajv.addSchema(coreGoalsDataSchema);
@@ -51,7 +51,7 @@ describe('JSON‑Schema – core:goals component', () => {
     validateEntity = ajv.compile({
       $id: 'test://schemas/entity-with-optional-goals',
       type: 'object',
-      properties: { 'core:goals': { $ref: 'core:goals#' } },
+      properties: { 'movement:goals': { $ref: 'movement:goals#' } },
       additionalProperties: true,
     });
   });
@@ -60,11 +60,11 @@ describe('JSON‑Schema – core:goals component', () => {
   /*  ✓ VALID payloads                                                      */
   /* ---------------------------------------------------------------------- */
   test.each([
-    ['no core:goals key', {}],
-    ['core:goals with empty array', { 'core:goals': { goals: [] } }],
+    ['no movement:goals key', {}],
+    ['movement:goals with empty array', { 'movement:goals': { goals: [] } }],
     [
       'goal without timestamp',
-      { 'core:goals': { goals: [{ text: 'A goal without timestamp' }] } },
+      { 'movement:goals': { goals: [{ text: 'A goal without timestamp' }] } },
     ],
   ])('✓ %s – should validate', (_label, payload) => {
     const ok = validateEntity(payload);
@@ -79,7 +79,7 @@ describe('JSON‑Schema – core:goals component', () => {
     [
       'empty text',
       {
-        'core:goals': {
+        'movement:goals': {
           goals: [{ text: '', timestamp: '2025-06-04T12:00:00Z' }],
         },
       },
@@ -87,7 +87,7 @@ describe('JSON‑Schema – core:goals component', () => {
     [
       'missing text property',
       {
-        'core:goals': {
+        'movement:goals': {
           goals: [{ timestamp: '2025-06-04T12:00:00Z' }],
         },
       },
@@ -95,7 +95,7 @@ describe('JSON‑Schema – core:goals component', () => {
     [
       'malformed timestamp',
       {
-        'core:goals': {
+        'movement:goals': {
           goals: [{ text: 'foo', timestamp: 'not-a-date' }],
         },
       },
@@ -103,7 +103,7 @@ describe('JSON‑Schema – core:goals component', () => {
     [
       'extra property',
       {
-        'core:goals': {
+        'movement:goals': {
           goals: [
             { text: 'foo', timestamp: '2025-06-04T12:00:00Z', extra: 123 },
           ],

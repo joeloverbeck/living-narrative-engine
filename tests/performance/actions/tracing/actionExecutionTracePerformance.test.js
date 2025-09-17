@@ -23,11 +23,11 @@ describe('Action Tracing - Performance Tests', () => {
     it('should capture accurate execution timing', async () => {
       await testBed.configureTracing({
         enabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
       });
 
       const actor = testBed.createActor('player-1');
-      const turnAction = testBed.createTurnAction('core:go', {
+      const turnAction = testBed.createTurnAction('movement:go', {
         commandString: 'go north',
       });
 
@@ -42,7 +42,7 @@ describe('Action Tracing - Performance Tests', () => {
       expect(result.success).toBe(true);
 
       await testBed.waitForTraceOutput();
-      const trace = await testBed.getLatestTrace('core:go');
+      const trace = await testBed.getLatestTrace('movement:go');
 
       // Check timing values are present and reasonable
       expect(trace.execution.startTime).toBeGreaterThan(0);
@@ -57,7 +57,7 @@ describe('Action Tracing - Performance Tests', () => {
 
     it('should measure dispatch overhead', async () => {
       const actor = testBed.createActor('player-1');
-      const turnAction = testBed.createTurnAction('core:go', {
+      const turnAction = testBed.createTurnAction('movement:go', {
         commandString: 'go north',
       });
 
@@ -70,7 +70,7 @@ describe('Action Tracing - Performance Tests', () => {
       // Measure execution with tracing
       await testBed.configureTracing({
         enabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
       });
 
       const startWithTracing = performance.now();

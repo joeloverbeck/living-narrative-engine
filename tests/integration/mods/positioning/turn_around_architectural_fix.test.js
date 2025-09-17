@@ -23,7 +23,7 @@ import turnAroundAction from '../../../../data/mods/positioning/actions/turn_aro
 
 // Import the mouth and movement availability conditions
 import mouthAvailableCondition from '../../../../data/mods/core/conditions/actor-mouth-available.condition.json';
-import actorCanMoveCondition from '../../../../data/mods/core/conditions/actor-can-move.condition.json';
+import actorCanMoveCondition from '../../../../data/mods/movement/conditions/actor-can-move.condition.json';
 
 describe('Turn Around Action - Architectural Fix Validation', () => {
   let prereqService;
@@ -95,7 +95,7 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
         if (conditionId === 'core:actor-mouth-available') {
           return mouthAvailableCondition;
         }
-        if (conditionId === 'core:actor-can-move') {
+        if (conditionId === 'movement:actor-can-move') {
           return actorCanMoveCondition;
         }
         return undefined;
@@ -161,7 +161,7 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
 
       // Find the movement prerequisite
       const movePrereq = turnAroundAction.prerequisites.find(
-        (prereq) => prereq.logic?.condition_ref === 'core:actor-can-move'
+        (prereq) => prereq.logic?.condition_ref === 'movement:actor-can-move'
       );
 
       expect(movePrereq).toBeDefined();
@@ -465,10 +465,10 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
       expect(turnAroundAction).toBeDefined();
       expect(turnAroundAction.id).toBe('positioning:turn_around');
 
-      // Prerequisites should reference only core conditions
+      // Prerequisites should reference only core or movement conditions (no intimacy)
       turnAroundAction.prerequisites.forEach((prereq) => {
         if (prereq.logic?.condition_ref) {
-          expect(prereq.logic.condition_ref).toMatch(/^core:/);
+          expect(prereq.logic.condition_ref).toMatch(/^(core:|movement:)/);
         }
       });
     });
@@ -483,7 +483,7 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
       expect(turnAroundAction.prerequisites).toEqual([
         {
           logic: {
-            condition_ref: 'core:actor-can-move',
+            condition_ref: 'movement:actor-can-move',
           },
           failure_message: 'You cannot move right now.',
         },

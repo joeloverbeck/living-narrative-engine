@@ -107,10 +107,10 @@ describe('Complete Action Discovery Workflow E2E', () => {
         },
       },
       {
-        id: 'core:go',
+        id: 'movement:go',
         name: 'Go',
         description: 'Move to a different location.',
-        scope: 'core:clear_directions',
+        scope: 'movement:clear_directions',
         template: 'go to {target}',
         prerequisites: [],
         required_components: {
@@ -139,15 +139,15 @@ describe('Complete Action Discovery Workflow E2E', () => {
     // Add condition definitions to the registry
     const testConditions = [
       {
-        id: 'core:actor-can-move',
+        id: 'movement:actor-can-move',
         description:
           'Checks if the actor has functioning legs capable of movement',
         logic: {
-          '==': [{ var: 'actor.core:movement.locked' }, false],
+          hasPartWithComponentValue: ['actor', 'core:movement', 'locked', false],
         },
       },
       {
-        id: 'core:exit-is-unblocked',
+        id: 'movement:exit-is-unblocked',
         description: 'Checks if an exit is unblocked',
         logic: {
           '!': { var: 'entity.blocker' },
@@ -165,7 +165,7 @@ describe('Complete Action Discovery Workflow E2E', () => {
 
     // Parse the DSL expressions to get the ASTs
     const clearDirectionsExpr =
-      'location.core:exits[{"condition_ref": "core:exit-is-unblocked"}].target';
+      'location.core:exits[{"condition_ref": "movement:exit-is-unblocked"}].target';
     const otherActorsExpr =
       'entities(core:actor)[{"!=": [{"var": "id"}, {"var": "actor.id"}]}]';
 
@@ -186,8 +186,8 @@ describe('Complete Action Discovery Workflow E2E', () => {
 
     // Add the scope definitions with ASTs
     const scopeDefinitions = {
-      'core:clear_directions': {
-        id: 'core:clear_directions',
+      'movement:clear_directions': {
+        id: 'movement:clear_directions',
         expr: clearDirectionsExpr,
         ast: clearDirectionsAst,
         description:
@@ -322,7 +322,7 @@ describe('Complete Action Discovery Workflow E2E', () => {
 
     // Should include core actions like 'go' and 'wait'
     const actionIds = candidateActions.map((action) => action.id);
-    expect(actionIds).toContain('core:go');
+    expect(actionIds).toContain('movement:go');
     expect(actionIds).toContain('core:wait');
   });
 
@@ -403,13 +403,13 @@ describe('Complete Action Discovery Workflow E2E', () => {
     const minimalActionIds = minimalActions.actions.map((a) => a.id);
 
     // Player should have all actions (has required components)
-    expect(playerActionIds).toContain('core:go');
+    expect(playerActionIds).toContain('movement:go');
     expect(playerActionIds).toContain('core:wait');
 
     // Minimal actor should only have actions that don't require components
     expect(minimalActionIds).toContain('core:wait');
-    // Minimal actor shouldn't have 'core:go' since it lacks 'core:position' component
-    expect(minimalActionIds).not.toContain('core:go');
+    // Minimal actor shouldn't have 'movement:go' since it lacks 'core:position' component
+    expect(minimalActionIds).not.toContain('movement:go');
 
     // Following-related actions should only be available to actors with following component
     const followingActions = playerActionIds.filter(
@@ -493,7 +493,7 @@ describe('Complete Action Discovery Workflow E2E', () => {
 
     // Find actions for movement (like 'go' action)
     const goActions = discoveredActions.actions.filter(
-      (a) => a.id === 'core:go'
+      (a) => a.id === 'movement:go'
     );
     if (goActions.length > 0) {
       goActions.forEach((action) => {
@@ -665,7 +665,7 @@ describe('Complete Action Discovery Workflow E2E', () => {
     // All should have basic actions
     [playerActionIds, npcActionIds, followerActionIds].forEach((actionIds) => {
       expect(actionIds).toContain('core:wait');
-      expect(actionIds).toContain('core:go');
+      expect(actionIds).toContain('movement:go');
     });
 
     // Check for role-specific actions

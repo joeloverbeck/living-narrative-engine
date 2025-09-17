@@ -11,7 +11,7 @@
     },
     "id": {
       "$ref": "./common.schema.json#/definitions/namespacedId",
-      "description": "The unique, namespaced ID for this goal definition (e.g., 'core:goal_survive', 'monsters:goal_attack_intruder')."
+      "description": "The unique, namespaced ID for this goal definition (e.g., 'movement:goal_survive', 'monsters:goal_attack_intruder')."
     },
     "description": {
       "type": "string",

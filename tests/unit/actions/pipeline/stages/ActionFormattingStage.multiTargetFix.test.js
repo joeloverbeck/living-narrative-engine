@@ -195,7 +195,7 @@ describe('ActionFormattingStage - multi-target action fix', () => {
     it('should still format legacy single-target actions correctly', async () => {
       // A legacy action without multi-target definitions
       const actionDef = {
-        id: 'core:go',
+        id: 'movement:go',
         name: 'Go',
         template: 'go {target}',
         targets: 'core:adjacent_locations', // String target = legacy

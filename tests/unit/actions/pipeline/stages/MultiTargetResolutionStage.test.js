@@ -1565,7 +1565,7 @@ describe('MultiTargetResolutionStage', () => {
       };
 
       const multiTargetAction = {
-        id: 'core:go',
+        id: 'movement:go',
         targets: {
           primary: {
             scope: 'location.exits',
@@ -1661,7 +1661,7 @@ describe('MultiTargetResolutionStage', () => {
 
       // Verify multi-target action has per-action metadata
       const multiTargetActionResult = result.data.actionsWithTargets.find(
-        (awt) => awt.actionDef.id === 'core:go'
+        (awt) => awt.actionDef.id === 'movement:go'
       );
       expect(multiTargetActionResult).toBeDefined();
       expect(multiTargetActionResult.isMultiTarget).toBe(true);

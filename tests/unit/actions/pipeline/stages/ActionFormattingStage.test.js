@@ -876,7 +876,7 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
           },
           {
             actionDef: {
-              id: 'core:go',
+              id: 'movement:go',
               name: 'Go',
               template: 'go to {destination}',
               targets: {
@@ -937,7 +937,7 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
       expect(followAction.params.targetId).toBe('npc_001');
 
       // Verify multi-target action was formatted with multi-target formatter
-      const goAction = result.actions.find((a) => a.id === 'core:go');
+      const goAction = result.actions.find((a) => a.id === 'movement:go');
       expect(goAction).toBeDefined();
       expect(goAction.command).toBe('go to The Gilded Bean');
       expect(goAction.params.isMultiTarget).toBe(true);
@@ -945,7 +945,7 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
 
       // Verify the multi-target formatter was called for the multi-target action
       expect(mockMultiTargetFormatter.formatMultiTarget).toHaveBeenCalledWith(
-        expect.objectContaining({ id: 'core:go' }),
+        expect.objectContaining({ id: 'movement:go' }),
         expect.objectContaining({ primary: expect.any(Array) }),
         expect.any(Object),
         expect.any(Object),

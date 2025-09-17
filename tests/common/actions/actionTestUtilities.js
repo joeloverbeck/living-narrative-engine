@@ -207,12 +207,12 @@ export class ActionTestUtilities {
         },
       },
       {
-        id: 'core:go',
+        id: 'movement:go',
         name: 'Go',
         description: 'Move to a different location.',
-        scope: 'core:clear_directions',
+        scope: 'movement:clear_directions',
         template: 'go to {target}',
-        prerequisites: ['core:actor-can-move'],
+        prerequisites: ['movement:actor-can-move'],
         required_components: {
           actor: ['core:position'],
         },
@@ -223,7 +223,7 @@ export class ActionTestUtilities {
         description: 'Follow another actor.',
         scope: 'core:other_actors',
         template: 'follow {target}',
-        prerequisites: ['core:actor-can-move'],
+        prerequisites: ['movement:actor-can-move'],
         required_components: {
           actor: ['core:following', 'core:position'],
         },
@@ -234,7 +234,7 @@ export class ActionTestUtilities {
         description: 'Attack a target.',
         scope: 'core:nearby_actors',
         template: 'attack {target}',
-        prerequisites: ['core:actor-can-move'],
+        prerequisites: ['movement:actor-can-move'],
         required_components: {
           actor: ['core:position', 'core:health'],
         },
@@ -282,12 +282,12 @@ export class ActionTestUtilities {
         },
       },
       {
-        id: 'core:go',
+        id: 'movement:go',
         name: 'Go',
         description: 'Move to a different location.',
-        scope: 'core:clear_directions',
+        scope: 'movement:clear_directions',
         template: 'go to {target}',
-        prerequisites: ['core:actor-can-move'],
+        prerequisites: ['movement:actor-can-move'],
         required_components: {
           actor: ['core:position'],
         },
@@ -298,7 +298,7 @@ export class ActionTestUtilities {
         description: 'Follow another actor.',
         scope: 'core:other_actors',
         template: 'follow {target}',
-        prerequisites: ['core:actor-can-move'],
+        prerequisites: ['movement:actor-can-move'],
         required_components: {
           actor: ['core:following', 'core:position'],
         },
@@ -325,7 +325,7 @@ export class ActionTestUtilities {
   static setupTestConditions(registry, additionalConditions = []) {
     const testConditions = [
       {
-        id: 'core:actor-can-move',
+        id: 'movement:actor-can-move',
         description:
           'Checks if the actor has functioning legs capable of movement',
         logic: {
@@ -333,7 +333,7 @@ export class ActionTestUtilities {
         },
       },
       {
-        id: 'core:exit-is-unblocked',
+        id: 'movement:exit-is-unblocked',
         description: 'Checks if an exit is unblocked',
         logic: {
           '==': [{ var: 'blocked' }, false],
@@ -374,8 +374,8 @@ export class ActionTestUtilities {
     // Base scope expressions
     const baseScopes = [
       {
-        id: 'core:clear_directions',
-        expr: 'location.core:exits[{"condition_ref": "core:exit-is-unblocked"}].target',
+        id: 'movement:clear_directions',
+        expr: 'location.movement:exits[{"condition_ref": "movement:exit-is-unblocked"}].target',
         description:
           'Available exits from current location that are not blocked',
       },

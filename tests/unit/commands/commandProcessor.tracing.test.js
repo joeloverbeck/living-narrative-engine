@@ -64,7 +64,7 @@ describe('CommandProcessor - Execution Tracing', () => {
 
       const actor = { id: 'player-1' };
       const turnAction = {
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
         commandString: 'go north',
       };
 
@@ -81,7 +81,7 @@ describe('CommandProcessor - Execution Tracing', () => {
 
       const actor = { id: 'player-1' };
       const turnAction = {
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
         commandString: 'go north',
       };
 
@@ -98,7 +98,7 @@ describe('CommandProcessor - Execution Tracing', () => {
 
       const actor = { id: 'player-1' };
       const turnAction = {
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
         commandString: 'go north',
         parameters: { direction: 'north' },
       };
@@ -126,7 +126,7 @@ describe('CommandProcessor - Execution Tracing', () => {
 
       const actor = { id: 'player-1' };
       const turnAction = {
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
         commandString: 'go north',
       };
 
@@ -145,7 +145,7 @@ describe('CommandProcessor - Execution Tracing', () => {
     it('should capture all execution phases in correct order', async () => {
       const actor = { id: 'player-1' };
       const turnAction = {
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
         commandString: 'go north',
       };
 
@@ -172,7 +172,7 @@ describe('CommandProcessor - Execution Tracing', () => {
     it('should capture event payload with correct data', async () => {
       const actor = { id: 'player-1' };
       const turnAction = {
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
         commandString: 'go north',
         resolvedParameters: {
           targetId: 'location-1',
@@ -186,7 +186,7 @@ describe('CommandProcessor - Execution Tracing', () => {
         expect.objectContaining({
           eventName: 'core:attempt_action',
           actorId: 'player-1',
-          actionId: 'core:go',
+          actionId: 'movement:go',
           targetId: 'location-1',
           originalInput: 'go north',
           timestamp: expect.any(Number),
@@ -201,7 +201,7 @@ describe('CommandProcessor - Execution Tracing', () => {
 
       const actor = { id: 'player-1' };
       const turnAction = {
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
         commandString: 'go north',
       };
 
@@ -212,7 +212,7 @@ describe('CommandProcessor - Execution Tracing', () => {
           success: true,
           timestamp: expect.any(Number),
           metadata: expect.objectContaining({
-            actionId: 'core:go',
+            actionId: 'movement:go',
             actorId: 'player-1',
             eventType: 'core:attempt_action',
           }),
@@ -227,7 +227,7 @@ describe('CommandProcessor - Execution Tracing', () => {
 
       const actor = { id: 'player-1' };
       const turnAction = {
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
         commandString: 'go north',
       };
 
@@ -259,7 +259,7 @@ describe('CommandProcessor - Execution Tracing', () => {
 
       const actor = { id: 'player-1' };
       const turnAction = {
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
         commandString: 'go north',
       };
 
@@ -282,7 +282,7 @@ describe('CommandProcessor - Execution Tracing', () => {
 
       const actor = { id: 'player-1' };
       const turnAction = {
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
         commandString: 'go north',
       };
 
@@ -303,7 +303,7 @@ describe('CommandProcessor - Execution Tracing', () => {
 
       const actor = { id: 'player-1' };
       const turnAction = {
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
         commandString: 'go north',
       };
 
@@ -323,7 +323,7 @@ describe('CommandProcessor - Execution Tracing', () => {
 
       const actor = { id: 'player-1' };
       const turnAction = {
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
         commandString: 'go north',
       };
 
@@ -347,7 +347,7 @@ describe('CommandProcessor - Execution Tracing', () => {
 
       const actor = { id: 'player-1' };
       const turnAction = {
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
         commandString: 'go north',
       };
 
@@ -375,7 +375,7 @@ describe('CommandProcessor - Execution Tracing', () => {
 
       const actor = { id: 'player-1' };
       const turnAction = {
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
         commandString: 'go north',
       };
 
@@ -402,7 +402,7 @@ describe('CommandProcessor - Execution Tracing', () => {
 
       const actor = { id: 'player-1' };
       const turnAction = {
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
         commandString: 'go north',
       };
 
@@ -425,7 +425,7 @@ describe('CommandProcessor - Execution Tracing', () => {
 
       const actor = { id: 'player-1' };
       const turnAction = {
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
         commandString: 'go north',
       };
 
@@ -451,7 +451,7 @@ describe('CommandProcessor - Execution Tracing', () => {
 
       const actor = { id: 'player-1' };
       const turnAction = {
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
         commandString: 'go north',
       };
 
@@ -536,7 +536,7 @@ describe('CommandProcessor - Execution Tracing', () => {
 
       const actor = { id: 'player-1' };
       const turnAction = {
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
         commandString: 'go north',
       };
 

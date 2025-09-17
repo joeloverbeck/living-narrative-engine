@@ -39,7 +39,7 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
       // Configure default behavior to return sample action definitions
       mock.getCandidateActions = jest.fn().mockReturnValue([
         {
-          id: 'core:go',
+          id: 'movement:go',
           name: 'Go',
           scope: 'actor.location.exits[]',
           prerequisites: [],
@@ -529,7 +529,7 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
         .mockImplementation(async (actor, context, options) => {
           return {
             actions: [
-              { id: 'core:go', name: 'Go' },
+              { id: 'movement:go', name: 'Go' },
               { id: 'core:look', name: 'Look' },
             ],
             errors: [],

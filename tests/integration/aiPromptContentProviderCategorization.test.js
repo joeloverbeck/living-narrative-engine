@@ -99,7 +99,7 @@ describe('AIPromptContentProvider Categorization Integration', () => {
           },
           {
             index: 2,
-            actionId: 'core:go',
+            actionId: 'movement:go',
             commandString: 'go north',
             description: 'Move to the northern area.',
           },
@@ -229,7 +229,7 @@ describe('AIPromptContentProvider Categorization Integration', () => {
           },
           {
             index: 3,
-            actionId: 'core:go',
+            actionId: 'movement:go',
             commandString: 'go',
             description: 'Move around.',
           },
@@ -250,6 +250,8 @@ describe('AIPromptContentProvider Categorization Integration', () => {
     });
 
     it('should fall back to flat formatting when insufficient namespaces', () => {
+      // Use only 1 namespace (all "core" actions) to test insufficient namespaces
+      // The threshold is 2 namespaces, so having only 1 should trigger fallback
       const gameState = {
         availableActions: [
           {
@@ -426,7 +428,7 @@ describe('AIPromptContentProvider Categorization Integration', () => {
           },
           {
             index: 3,
-            actionId: 'core:go',
+            actionId: 'movement:go',
             commandString: 'go',
             description: 'Move around.',
           },
@@ -491,7 +493,7 @@ describe('AIPromptContentProvider Categorization Integration', () => {
           },
           {
             index: 3,
-            actionId: 'core:go',
+            actionId: 'movement:go',
             commandString: 'go',
             description: 'Move around!',
           },

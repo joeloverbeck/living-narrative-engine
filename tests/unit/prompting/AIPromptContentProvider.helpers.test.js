@@ -77,7 +77,7 @@ describe('AIPromptContentProvider helper methods', () => {
           { text: '', subject: '', timestamp: 't2' },
         ],
       },
-      'core:goals': {
+      'movement:goals': {
         goals: [
           { text: 'g1', timestamp: 't3' },
           { text: '', timestamp: '' },

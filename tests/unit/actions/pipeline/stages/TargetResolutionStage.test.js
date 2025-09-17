@@ -216,7 +216,7 @@ describe('TargetResolutionStage', () => {
 
     describe('when action has non-none scope', () => {
       it('should call targetResolutionService and return targets', async () => {
-        const entityAction = { id: 'core:go', scope: 'entity' };
+        const entityAction = { id: 'movement:go', scope: 'entity' };
         const context = {
           actor: mockActor,
           candidateActions: [entityAction],
@@ -238,7 +238,7 @@ describe('TargetResolutionStage', () => {
           mockActor,
           mockActionContext,
           mockTrace,
-          'core:go'
+          'movement:go'
         );
 
         expect(result.data.actionsWithTargets).toHaveLength(1);
@@ -248,7 +248,7 @@ describe('TargetResolutionStage', () => {
       });
 
       it('should handle actions with zero targets', async () => {
-        const entityAction = { id: 'core:go', scope: 'entity' };
+        const entityAction = { id: 'movement:go', scope: 'entity' };
         const context = {
           actor: mockActor,
           candidateActions: [entityAction],
@@ -264,16 +264,16 @@ describe('TargetResolutionStage', () => {
 
         expect(result.data.actionsWithTargets).toHaveLength(0);
         expect(mockLogger.debug).toHaveBeenCalledWith(
-          "Action 'core:go' resolved to 0 targets. Skipping."
+          "Action 'movement:go' resolved to 0 targets. Skipping."
         );
         expect(mockTrace.info).toHaveBeenCalledWith(
-          "Action 'core:go' has no valid targets",
+          "Action 'movement:go' has no valid targets",
           expect.any(String)
         );
       });
 
       it('should handle targetResolutionService errors', async () => {
-        const entityAction = { id: 'core:go', scope: 'entity' };
+        const entityAction = { id: 'movement:go', scope: 'entity' };
         const context = {
           actor: mockActor,
           candidateActions: [entityAction],
@@ -310,13 +310,13 @@ describe('TargetResolutionStage', () => {
         });
 
         expect(mockLogger.error).toHaveBeenCalledWith(
-          "Error resolving scope for action 'core:go'",
+          "Error resolving scope for action 'movement:go'",
           { errors: [resolutionError] }
         );
       });
 
       it('should handle exceptions thrown by targetResolutionService', async () => {
-        const entityAction = { id: 'core:go', scope: 'entity' };
+        const entityAction = { id: 'movement:go', scope: 'entity' };
         const context = {
           actor: mockActor,
           candidateActions: [entityAction],
@@ -341,7 +341,7 @@ describe('TargetResolutionStage', () => {
         expect(result.errors[0]).toBe(expectedErrorContext);
 
         expect(mockLogger.error).toHaveBeenCalledWith(
-          "Exception in targetResolutionService for action 'core:go': Service threw exception",
+          "Exception in targetResolutionService for action 'movement:go': Service threw exception",
           expect.objectContaining({
             actionDef: entityAction,
             error: thrownError,
@@ -353,7 +353,7 @@ describe('TargetResolutionStage', () => {
     describe('mixed scope scenarios', () => {
       it('should handle mix of none and entity scoped actions', async () => {
         const waitAction = { id: 'core:wait', scope: 'none' };
-        const goAction = { id: 'core:go', scope: 'entity' };
+        const goAction = { id: 'movement:go', scope: 'entity' };
         const context = {
           actor: mockActor,
           candidateActions: [waitAction, goAction],
@@ -382,7 +382,7 @@ describe('TargetResolutionStage', () => {
 
         // Check go action (scope: entity)
         const goResult = result.data.actionsWithTargets.find(
-          (a) => a.actionDef.id === 'core:go'
+          (a) => a.actionDef.id === 'movement:go'
         );
         expect(goResult.targetContexts).toBe(entityTargets);
 
@@ -395,7 +395,7 @@ describe('TargetResolutionStage', () => {
           mockActor,
           mockActionContext,
           mockTrace,
-          'core:go'
+          'movement:go'
         );
       });
     });

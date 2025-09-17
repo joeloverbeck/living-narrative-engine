@@ -80,18 +80,18 @@ describe('GameDataRepository', () => {
 
     describe('getGoalDefinition(id)', () => {
       test('should call registry.getGoalDefinition with the correct id', () => {
-        repository.getGoalDefinition('core:goal_survive');
+        repository.getGoalDefinition('movement:goal_survive');
         expect(mockRegistry.getGoalDefinition).toHaveBeenCalledWith(
-          'core:goal_survive'
+          'movement:goal_survive'
         );
         expect(mockRegistry.getGoalDefinition).toHaveBeenCalledTimes(1);
       });
 
       test('should return the goal definition from the registry', () => {
-        const goalDef = { id: 'core:goal_survive', priority: 100 };
+        const goalDef = { id: 'movement:goal_survive', priority: 100 };
         mockRegistry.getGoalDefinition.mockReturnValue(goalDef);
 
-        const result = repository.getGoalDefinition('core:goal_survive');
+        const result = repository.getGoalDefinition('movement:goal_survive');
         expect(result).toBe(goalDef);
       });
 
@@ -127,7 +127,7 @@ describe('GameDataRepository', () => {
 
       test('should return all goal definitions from the registry', () => {
         const allGoals = [
-          { id: 'core:goal_survive', priority: 100 },
+          { id: 'movement:goal_survive', priority: 100 },
           { id: 'quests:goal_find_amulet', priority: 50 },
         ];
         mockRegistry.getAllGoalDefinitions.mockReturnValue(allGoals);

@@ -84,7 +84,7 @@ describe('core_follow_auto_move.rule.json', () => {
           payload: {
             eventName: ATTEMPT_ACTION_ID,
             actorId: fId,
-            actionId: 'core:go',
+            actionId: 'movement:go',
             direction,
             originalInput: originalCmd,
           },

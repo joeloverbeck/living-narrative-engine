@@ -78,9 +78,9 @@ describe('EntityDefinitionLoader', () => {
   describe('_processFetchedItem (Happy Path - TEST-DEF-01)', () => {
     it('should correctly process, validate, and store a valid entity definition', async () => {
       // --- Arrange ---
-      const modId = 'core';
+      const modId = 'movement';
       const filename = 'goblin.definition.json';
-      const resolvedPath = `data/mods/core/entities/definitions/${filename}`;
+      const resolvedPath = `data/mods/movement/entities/definitions/${filename}`;
       const registryKey = 'entityDefinitions';
 
       const testEntityData = {
@@ -96,7 +96,7 @@ describe('EntityDefinitionLoader', () => {
       };
 
       const expectedStoredData = new EntityDefinition(
-        'core:goblin',
+        'movement:goblin',
         testEntityData
       );
 
@@ -122,7 +122,7 @@ describe('EntityDefinitionLoader', () => {
       const result = await promise;
 
       expect(result).toEqual({
-        qualifiedId: 'core:goblin',
+        qualifiedId: 'movement:goblin',
         didOverride: false,
       });
 
@@ -143,16 +143,16 @@ describe('EntityDefinitionLoader', () => {
       expect(mockDataRegistry.store).toHaveBeenCalledTimes(1);
       expect(mockDataRegistry.store).toHaveBeenCalledWith(
         'entityDefinitions',
-        'core:goblin',
+        'movement:goblin',
         expect.objectContaining({
-          id: 'core:goblin',
+          id: 'movement:goblin',
           description: 'A standard goblin warrior, weak but numerous.',
           components: expect.objectContaining({
             'core:name': expect.any(Object),
             'core:health': expect.any(Object),
             'core:actor': expect.any(Object),
           }),
-          _fullId: 'core:goblin',
+          _fullId: 'movement:goblin',
           _sourceFile: filename,
           _modId: modId,
         })

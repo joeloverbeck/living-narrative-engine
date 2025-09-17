@@ -52,7 +52,7 @@ describe('ActionTraceConfigValidator', () => {
       const config = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go', 'core:look'],
+          tracedActions: ['movement:go', 'core:look'],
           outputDirectory: './traces/actions',
           verbosity: 'standard',
           includeComponentData: true,
@@ -87,7 +87,7 @@ describe('ActionTraceConfigValidator', () => {
       const config = {
         actionTracing: {
           enabled: 'not-a-boolean',
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './traces',
         },
       };
@@ -117,7 +117,7 @@ describe('ActionTraceConfigValidator', () => {
       const config = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './traces',
           verbosity: 'invalid',
         },
@@ -149,7 +149,7 @@ describe('ActionTraceConfigValidator', () => {
 
       const config = {
         actionTracing: {
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
         },
       };
 
@@ -306,7 +306,7 @@ describe('ActionTraceConfigValidator', () => {
       const config = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go', 'invalid-pattern', 'mod:*', '*'],
+          tracedActions: ['movement:go', 'invalid-pattern', 'mod:*', '*'],
           outputDirectory: './traces',
         },
       };
@@ -322,7 +322,7 @@ describe('ActionTraceConfigValidator', () => {
       const config = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go', 'core:look', 'core:go'],
+          tracedActions: ['movement:go', 'core:look', 'movement:go'],
           outputDirectory: './traces',
         },
       };
@@ -340,7 +340,7 @@ describe('ActionTraceConfigValidator', () => {
       const config = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './traces',
           verbosity: 'verbose',
           includeComponentData: true,
@@ -362,7 +362,7 @@ describe('ActionTraceConfigValidator', () => {
       const config = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './traces',
           rotationPolicy: 'count',
           // maxTraceFiles is missing
@@ -380,7 +380,7 @@ describe('ActionTraceConfigValidator', () => {
       const config = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './traces',
           rotationPolicy: 'age',
           // maxFileAge is missing
@@ -398,7 +398,7 @@ describe('ActionTraceConfigValidator', () => {
       const config = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './traces',
           rotationPolicy: 'count',
           maxTraceFiles: 1000,
@@ -418,7 +418,7 @@ describe('ActionTraceConfigValidator', () => {
       const config = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './traces',
           rotationPolicy: 'age',
           maxFileAge: 1800, // 30 minutes
@@ -458,7 +458,7 @@ describe('ActionTraceConfigValidator', () => {
       const config = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['*', 'core:go', 'core:look'],
+          tracedActions: ['*', 'movement:go', 'core:look'],
           outputDirectory: './traces',
         },
       };
@@ -476,7 +476,7 @@ describe('ActionTraceConfigValidator', () => {
       const config = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go', 123, null, undefined, {}],
+          tracedActions: ['movement:go', 123, null, undefined, {}],
           outputDirectory: './traces',
         },
       };
@@ -492,7 +492,7 @@ describe('ActionTraceConfigValidator', () => {
       const config = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go', ''],
+          tracedActions: ['movement:go', ''],
           outputDirectory: './traces',
         },
       };
@@ -509,7 +509,7 @@ describe('ActionTraceConfigValidator', () => {
       const config = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go', '**', 'mod:**'],
+          tracedActions: ['movement:go', '**', 'mod:**'],
           outputDirectory: './traces',
         },
       };
@@ -554,7 +554,7 @@ describe('ActionTraceConfigValidator', () => {
         actionTracing: {
           enabled: true,
           tracedActions: [
-            'core:go!',
+            'movement:go!',
             'mod-with-dashes:action',
             'mod@invalid:action',
           ],
@@ -707,7 +707,7 @@ describe('ActionTraceConfigValidator', () => {
       const config = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go', 'core:look', 'core:go', 'core:examine'],
+          tracedActions: ['movement:go', 'core:look', 'movement:go', 'core:examine'],
           outputDirectory: './traces',
         },
       };
@@ -715,7 +715,7 @@ describe('ActionTraceConfigValidator', () => {
       const result = await validator.validateConfiguration(config);
 
       expect(result.normalizedConfig.actionTracing.tracedActions).toEqual([
-        'core:go',
+        'movement:go',
         'core:look',
         'core:examine',
       ]);
@@ -725,7 +725,7 @@ describe('ActionTraceConfigValidator', () => {
       const config = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './traces',
           rotationPolicy: 'count',
         },
@@ -740,7 +740,7 @@ describe('ActionTraceConfigValidator', () => {
       const config = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './traces',
           rotationPolicy: 'age',
         },
@@ -755,7 +755,7 @@ describe('ActionTraceConfigValidator', () => {
   describe('Property Validation', () => {
     it('should validate individual properties', () => {
       const result = validator.validateProperty('tracedActions', [
-        'core:go',
+        'movement:go',
         'invalid',
       ]);
 
@@ -816,7 +816,7 @@ describe('ActionTraceConfigValidator', () => {
       const config = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './traces',
         },
       };
@@ -929,7 +929,7 @@ describe('ActionTraceConfigValidator', () => {
       const config = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './traces',
         },
       };
@@ -962,7 +962,7 @@ describe('ActionTraceConfigValidator', () => {
       const config = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['*', 'core:go'],
+          tracedActions: ['*', 'movement:go'],
           outputDirectory: './traces',
         },
       };

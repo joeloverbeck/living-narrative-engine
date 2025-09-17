@@ -91,13 +91,13 @@ describe('ActionTraceFilter Performance', () => {
     it('should handle 10,000 exact match operations in <25ms', () => {
       const filter = new ActionTraceFilter({
         enabled: true,
-        tracedActions: ['core:go', 'core:take', 'core:use', 'test:action'],
+        tracedActions: ['movement:go', 'core:take', 'core:use', 'test:action'],
         logger: mockLogger,
       });
 
       const testFunction = () => {
         for (let i = 0; i < 10000; i++) {
-          filter.shouldTrace('core:go');
+          filter.shouldTrace('movement:go');
         }
       };
 
@@ -114,7 +114,7 @@ describe('ActionTraceFilter Performance', () => {
     it('should handle 10,000 non-matching exact operations in <35ms', () => {
       const filter = new ActionTraceFilter({
         enabled: true,
-        tracedActions: ['core:go', 'core:take'],
+        tracedActions: ['movement:go', 'core:take'],
         logger: mockLogger,
       });
 
@@ -249,7 +249,7 @@ describe('ActionTraceFilter Performance', () => {
       const testFunction = () => {
         for (let i = 0; i < 10000; i++) {
           const suffix = String(i % 1000).padStart(3, '0');
-          filter.shouldTrace(`core:go_action_${suffix}`);
+          filter.shouldTrace(`movement:go_action_${suffix}`);
         }
       };
 
@@ -283,7 +283,7 @@ describe('ActionTraceFilter Performance', () => {
 
       const testActions = [
         'exact:match',
-        'core:go',
+        'movement:go',
         'any:suffix',
         'regex:123',
         'test:other',
@@ -441,7 +441,7 @@ describe('ActionTraceFilter Performance', () => {
       });
 
       const testActions = [
-        'core:go', // Should trace
+        'movement:go', // Should trace
         'debug:trace', // Excluded
         'core:internal', // Excluded
         'test:specific', // Excluded

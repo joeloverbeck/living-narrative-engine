@@ -271,7 +271,7 @@ export class IntegrationTestBed extends BaseTestBed {
               'I am a test character with complex personality traits.',
             'core:likes': 'I enjoy testing and performance validation.',
             'core:fears': 'I fear system failures and poor performance.',
-            'core:goals':
+            'movement:goals':
               'I strive to maintain excellent performance under all conditions.',
             'core:dislikes':
               'I dislike inefficient processes and slow responses.',
@@ -295,7 +295,7 @@ export class IntegrationTestBed extends BaseTestBed {
                     'I am a test character with complex personality traits.',
                   'core:likes': 'I enjoy testing and performance validation.',
                   'core:fears': 'I fear system failures and poor performance.',
-                  'core:goals':
+                  'movement:goals':
                     'I strive to maintain excellent performance under all conditions.',
                   'core:dislikes':
                     'I dislike inefficient processes and slow responses.',

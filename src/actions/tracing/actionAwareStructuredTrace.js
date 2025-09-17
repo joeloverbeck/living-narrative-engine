@@ -110,11 +110,11 @@ class ActionAwareStructuredTrace extends StructuredTrace {
    * Capture action-specific data during pipeline processing
    *
    * @param {string} stage - Pipeline stage name (e.g., 'component_filtering', 'prerequisite_evaluation')
-   * @param {string} actionId - Action ID being processed (e.g., 'core:go')
+   * @param {string} actionId - Action ID being processed (e.g., 'movement:go')
    * @param {object} data - Stage-specific data to capture
    * @returns {void}
    * @example
-   * trace.captureActionData('component_filtering', 'core:go', {
+   * trace.captureActionData('component_filtering', 'movement:go', {
    *   actorComponents: ['core:position', 'core:movement'],
    *   requiredComponents: ['core:position'],
    *   passed: true
@@ -268,7 +268,7 @@ class ActionAwareStructuredTrace extends StructuredTrace {
    * @param {string} actionId - Action ID to calculate performance for
    * @returns {object|null} Stage performance data with timings, or null if not found
    * @example
-   * const perf = trace.calculateStagePerformance('core:go');
+   * const perf = trace.calculateStagePerformance('movement:go');
    * // Returns: {
    * //   component_filtering: { startTime: 100, endTime: 100, duration: 0 },
    * //   prerequisite_evaluation: { startTime: 100, endTime: 200, duration: 100 }

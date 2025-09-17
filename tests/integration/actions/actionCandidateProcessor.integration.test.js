@@ -111,7 +111,7 @@ describe('ActionCandidateProcessor Integration Tests', () => {
           if (scope === 'none') {
             return ActionResult.success([ActionTargetContext.noTarget()]);
           }
-          if (scope === 'core:clear_directions') {
+          if (scope === 'movement:clear_directions') {
             // Simulate exits from a location
             return ActionResult.success([
               ActionTargetContext.forEntity('test-location-2'),
@@ -198,7 +198,7 @@ describe('ActionCandidateProcessor Integration Tests', () => {
     it('should fail when actor prerequisites are not met', () => {
       // Arrange
       const actor = testData.actors.lockedActor;
-      const actionDef = testData.actions.basic.find((a) => a.id === 'core:go');
+      const actionDef = testData.actions.basic.find((a) => a.id === 'movement:go');
       const context = {
         actorId: actor.id,
         locationId: 'test-location-2',
@@ -353,7 +353,7 @@ describe('ActionCandidateProcessor Integration Tests', () => {
     it('should handle prerequisite evaluation errors', () => {
       // Arrange
       const actor = testData.actors.player;
-      const actionDef = testData.actions.basic.find((a) => a.id === 'core:go');
+      const actionDef = testData.actions.basic.find((a) => a.id === 'movement:go');
       const context = {
         actorId: actor.id,
         locationId: 'test-location-1',
@@ -383,7 +383,7 @@ describe('ActionCandidateProcessor Integration Tests', () => {
     it('should handle target resolution errors', () => {
       // Arrange
       const actor = testData.actors.player;
-      const actionDef = testData.actions.basic.find((a) => a.id === 'core:go');
+      const actionDef = testData.actions.basic.find((a) => a.id === 'movement:go');
       const context = {
         actorId: actor.id,
         locationId: 'test-location-1',
@@ -417,7 +417,7 @@ describe('ActionCandidateProcessor Integration Tests', () => {
     it('should handle target resolution returning ActionErrorContext objects', () => {
       // Arrange
       const actor = testData.actors.player;
-      const actionDef = testData.actions.basic.find((a) => a.id === 'core:go');
+      const actionDef = testData.actions.basic.find((a) => a.id === 'movement:go');
       const context = {
         actorId: actor.id,
         locationId: 'test-location-1',
@@ -462,7 +462,7 @@ describe('ActionCandidateProcessor Integration Tests', () => {
     it('should handle target resolution raw errors requiring context building', () => {
       // Arrange
       const actor = testData.actors.player;
-      const actionDef = testData.actions.basic.find((a) => a.id === 'core:go');
+      const actionDef = testData.actions.basic.find((a) => a.id === 'movement:go');
       const context = {
         actorId: actor.id,
         locationId: 'test-location-1',
@@ -508,7 +508,7 @@ describe('ActionCandidateProcessor Integration Tests', () => {
     it('should handle target resolution service throwing exceptions', () => {
       // Arrange
       const actor = testData.actors.player;
-      const actionDef = testData.actions.basic.find((a) => a.id === 'core:go');
+      const actionDef = testData.actions.basic.find((a) => a.id === 'movement:go');
       const context = {
         actorId: actor.id,
         locationId: 'test-location-1',
@@ -1035,7 +1035,7 @@ describe('ActionCandidateProcessor Integration Tests', () => {
     it('should handle prerequisite errors that are already ActionErrorContext', () => {
       // Arrange
       const actor = testData.actors.player;
-      const actionDef = testData.actions.basic.find((a) => a.id === 'core:go');
+      const actionDef = testData.actions.basic.find((a) => a.id === 'movement:go');
       const context = {
         actorId: actor.id,
         locationId: 'test-location-1',
@@ -1075,7 +1075,7 @@ describe('ActionCandidateProcessor Integration Tests', () => {
     it('should handle prerequisite evaluation returning ActionResult with ActionErrorContext errors', () => {
       // Arrange
       const actor = testData.actors.player;
-      const actionDef = testData.actions.basic.find((a) => a.id === 'core:go');
+      const actionDef = testData.actions.basic.find((a) => a.id === 'movement:go');
       const context = {
         actorId: actor.id,
         locationId: 'test-location-1',
@@ -1117,7 +1117,7 @@ describe('ActionCandidateProcessor Integration Tests', () => {
     it('should handle raw prerequisite evaluation errors requiring context building', () => {
       // Arrange
       const actor = testData.actors.player;
-      const actionDef = testData.actions.basic.find((a) => a.id === 'core:go');
+      const actionDef = testData.actions.basic.find((a) => a.id === 'movement:go');
       const context = {
         actorId: actor.id,
         locationId: 'test-location-1',
@@ -1167,7 +1167,7 @@ describe('ActionCandidateProcessor Integration Tests', () => {
         template: 'test',
         prerequisites: [
           {
-            logic: { condition_ref: 'core:actor-can-move' },
+            logic: { condition_ref: 'movement:actor-can-move' },
             failure_message: 'Cannot move',
           },
         ],
@@ -1197,14 +1197,14 @@ describe('ActionCandidateProcessor Integration Tests', () => {
       expect(result.value.actions).toHaveLength(1);
       expect(
         mockGameDataRepository.getConditionDefinition
-      ).toHaveBeenCalledWith('core:actor-can-move');
+      ).toHaveBeenCalledWith('movement:actor-can-move');
     });
 
     it('should work with real target resolution for scope-based actions', () => {
       // Arrange
       const actor = testData.actors.player;
       const location = testData.world.locations[0];
-      const actionDef = testData.actions.basic.find((a) => a.id === 'core:go');
+      const actionDef = testData.actions.basic.find((a) => a.id === 'movement:go');
       const context = {
         actorId: actor.id,
         locationId: location.id,
