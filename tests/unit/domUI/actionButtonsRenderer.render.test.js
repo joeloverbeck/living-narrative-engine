@@ -141,6 +141,7 @@ describe('ActionButtonsRenderer', () => {
       formatNamespaceDisplayName: jest.fn(
         (namespace) => namespace?.toUpperCase() || 'UNKNOWN'
       ),
+      shouldShowCounts: jest.fn(() => false),
     };
 
     jest

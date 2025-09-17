@@ -89,6 +89,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       formatNamespaceDisplayName: jest
         .fn()
         .mockImplementation((ns) => ns.toUpperCase()),
+      shouldShowCounts: jest.fn(() => false),
     };
 
     // Create renderer instance

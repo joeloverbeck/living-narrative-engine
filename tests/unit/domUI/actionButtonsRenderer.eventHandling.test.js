@@ -299,6 +299,7 @@ beforeEach(() => {
     formatNamespaceDisplayName: jest.fn(
       (namespace) => namespace.charAt(0).toUpperCase() + namespace.slice(1)
     ),
+    shouldShowCounts: jest.fn(() => false),
   };
 
   mockContainer._reset();

@@ -129,6 +129,7 @@ describe('ActionButtonsRenderer', () => {
     formatNamespaceDisplayName: jest.fn().mockImplementation((namespace) => {
       return namespace.toUpperCase();
     }),
+    shouldShowCounts: jest.fn(() => false),
   };
 
   const createRendererUnderTest = (rendererConfig = {}) => {

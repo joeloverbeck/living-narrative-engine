@@ -152,6 +152,7 @@ describe('ActionButtonsRenderer', () => {
       formatNamespaceDisplayName: jest
         .fn()
         .mockImplementation((ns) => ns.charAt(0).toUpperCase() + ns.slice(1)),
+      shouldShowCounts: jest.fn(() => false),
     };
 
     // Spy on container's methods
