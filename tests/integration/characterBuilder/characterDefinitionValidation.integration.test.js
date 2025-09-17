@@ -182,7 +182,7 @@ describe('Character Definition Validation', () => {
             'being misunderstood',
             'abandonment by those she loves',
           ],
-          'core:goals': {
+          'movement:goals': {
             shortTerm: ['finish mural commission', 'save for studio space'],
             longTerm: [
               'establish herself as recognized artist',
@@ -425,7 +425,7 @@ describe('Character Definition Validation', () => {
             'failing patients',
             'losing her objectivity',
           ],
-          'core:goals': {
+          'movement:goals': {
             shortTerm: [
               'complete current vaccine trial',
               'mentor junior researchers',

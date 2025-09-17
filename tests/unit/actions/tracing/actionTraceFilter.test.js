@@ -21,31 +21,31 @@ describe('ActionTraceFilter - Basic Functionality', () => {
 
       expect(filter.isEnabled()).toBe(true);
       expect(filter.getVerbosityLevel()).toBe('standard');
-      expect(filter.shouldTrace('core:go')).toBe(true); // Default traces all
+      expect(filter.shouldTrace('movement:go')).toBe(true); // Default traces all
     });
 
     it('should create instance with custom configuration', () => {
       const filter = new ActionTraceFilter({
         enabled: false,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         verbosityLevel: 'detailed',
         logger: mockLogger,
       });
 
       expect(filter.isEnabled()).toBe(false);
       expect(filter.getVerbosityLevel()).toBe('detailed');
-      expect(filter.shouldTrace('core:go')).toBe(false); // Disabled
+      expect(filter.shouldTrace('movement:go')).toBe(false); // Disabled
     });
   });
 
   describe('Action Filtering', () => {
     it('should trace actions matching patterns', () => {
       const filter = new ActionTraceFilter({
-        tracedActions: ['core:*', 'test:action'],
+        tracedActions: ['core:*', 'movement:*', 'test:action'],
         logger: mockLogger,
       });
 
-      expect(filter.shouldTrace('core:go')).toBe(true);
+      expect(filter.shouldTrace('movement:go')).toBe(true);
       expect(filter.shouldTrace('core:look')).toBe(true);
       expect(filter.shouldTrace('test:action')).toBe(true);
       expect(filter.shouldTrace('other:action')).toBe(false);
@@ -58,7 +58,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
         logger: mockLogger,
       });
 
-      expect(filter.shouldTrace('core:go')).toBe(true);
+      expect(filter.shouldTrace('movement:go')).toBe(true);
       expect(filter.shouldTrace('debug:trace')).toBe(false);
     });
 
@@ -80,7 +80,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
         logger: mockLogger,
       });
 
-      expect(filter.shouldTrace('core:go')).toBe(false); // Doesn't match .+
+      expect(filter.shouldTrace('movement:go')).toBe(false); // Doesn't match .+
       expect(filter.shouldTrace('core:and_go')).toBe(true);
       expect(filter.shouldTrace('core:lets_go')).toBe(true);
       expect(filter.shouldTrace('mod:go')).toBe(false);
@@ -107,7 +107,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
         logger: mockLogger,
       });
 
-      expect(filter.shouldTrace('core:go')).toBe(true);
+      expect(filter.shouldTrace('movement:go')).toBe(true);
       expect(filter.shouldTrace('core:action')).toBe(false);
       expect(filter.shouldTrace('mod:action')).toBe(false);
     });
@@ -120,10 +120,10 @@ describe('ActionTraceFilter - Basic Functionality', () => {
         logger: mockLogger,
       });
 
-      expect(filter.shouldTrace('core:go')).toBe(false);
+      expect(filter.shouldTrace('movement:go')).toBe(false);
 
-      filter.addTracedActions('core:go');
-      expect(filter.shouldTrace('core:go')).toBe(true);
+      filter.addTracedActions('movement:go');
+      expect(filter.shouldTrace('movement:go')).toBe(true);
 
       filter.addTracedActions(['test:action1', 'test:action2']);
       expect(filter.shouldTrace('test:action1')).toBe(true);
@@ -146,15 +146,15 @@ describe('ActionTraceFilter - Basic Functionality', () => {
 
     it('should remove traced actions dynamically', () => {
       const filter = new ActionTraceFilter({
-        tracedActions: ['core:go', 'test:action'],
+        tracedActions: ['movement:go', 'test:action'],
         logger: mockLogger,
       });
 
-      expect(filter.shouldTrace('core:go')).toBe(true);
+      expect(filter.shouldTrace('movement:go')).toBe(true);
       expect(filter.shouldTrace('test:action')).toBe(true);
 
-      filter.removeTracedActions('core:go');
-      expect(filter.shouldTrace('core:go')).toBe(false);
+      filter.removeTracedActions('movement:go');
+      expect(filter.shouldTrace('movement:go')).toBe(false);
       expect(filter.shouldTrace('test:action')).toBe(true);
 
       filter.removeTracedActions(['test:action']);
@@ -384,19 +384,19 @@ describe('ActionTraceFilter - Basic Functionality', () => {
       });
 
       // With empty traced actions, nothing should be traced
-      expect(filter.shouldTrace('core:go')).toBe(false);
+      expect(filter.shouldTrace('movement:go')).toBe(false);
       expect(filter.shouldTrace('test:action')).toBe(false);
     });
 
     it('should handle duplicate patterns in sets', () => {
       const filter = new ActionTraceFilter({
-        tracedActions: ['core:*', 'core:*', 'core:go', 'core:go'],
+        tracedActions: ['core:*', 'core:*', 'movement:go', 'movement:go'],
         excludedActions: ['debug:*', 'debug:*'],
         logger: mockLogger,
       });
 
       // Should work correctly despite duplicates
-      expect(filter.shouldTrace('core:go')).toBe(true);
+      expect(filter.shouldTrace('movement:go')).toBe(true);
       expect(filter.shouldTrace('core:take')).toBe(true);
       expect(filter.shouldTrace('debug:trace')).toBe(false);
 
@@ -408,7 +408,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
 
     it('should handle removing patterns that do not exist', () => {
       const filter = new ActionTraceFilter({
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         logger: mockLogger,
       });
 
@@ -419,7 +419,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
       }).not.toThrow();
 
       // Original pattern should still work
-      expect(filter.shouldTrace('core:go')).toBe(true);
+      expect(filter.shouldTrace('movement:go')).toBe(true);
     });
 
     it('should handle null and undefined in action arrays gracefully', () => {
@@ -441,7 +441,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
     it('should handle complex regex patterns', () => {
       const filter = new ActionTraceFilter({
         tracedActions: [
-          '/^core:(go|take|use)$/', // Alternation
+          '/^(core|movement):(go|take|use)$/', // Alternation
           '/^mod:[a-z]+_[0-9]+$/', // Character classes
           '/^test:.{3,5}$/', // Quantifiers
           '/^special:(?!exclude).*/', // Negative lookahead
@@ -450,7 +450,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
       });
 
       // Test alternation
-      expect(filter.shouldTrace('core:go')).toBe(true);
+      expect(filter.shouldTrace('movement:go')).toBe(true);
       expect(filter.shouldTrace('core:take')).toBe(true);
       expect(filter.shouldTrace('core:walk')).toBe(false);
 
@@ -479,7 +479,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
       });
 
       // All patterns should work together
-      expect(filter.shouldTrace('core:go')).toBe(true); // Matches all three patterns
+      expect(filter.shouldTrace('movement:go')).toBe(true); // Matches all three patterns
       expect(filter.shouldTrace('mod:go')).toBe(true); // Matches *:go and *
       expect(filter.shouldTrace('core:take')).toBe(true); // Matches core:* and *
       expect(filter.shouldTrace('any:thing')).toBe(true); // Matches *
@@ -525,7 +525,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
 
       // All filters should behave identically regardless of pattern order
       const testCases = [
-        'core:go',
+        'movement:go',
         'core:take',
         'test:action',
         'mod:special',
@@ -579,7 +579,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
       });
 
       // Normal actions should be traced
-      expect(filter.shouldTrace('core:go')).toBe(true);
+      expect(filter.shouldTrace('movement:go')).toBe(true);
       expect(filter.shouldTrace('mod:action')).toBe(true);
 
       // Excluded patterns should not be traced
@@ -729,7 +729,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
         filter.updateFromConfig(config);
       }).not.toThrow();
 
-      expect(filter.shouldTrace('core:go')).toBe(true); // Default '*' behavior
+      expect(filter.shouldTrace('movement:go')).toBe(true); // Default '*' behavior
     });
 
     it('should handle config with empty tracedActions array', () => {
@@ -744,13 +744,13 @@ describe('ActionTraceFilter - Basic Functionality', () => {
 
       // Should default to ['*'] when tracedActions is empty
       filter.updateFromConfig(config);
-      expect(filter.shouldTrace('core:go')).toBe(true);
+      expect(filter.shouldTrace('movement:go')).toBe(true);
     });
 
     it('should trim whitespace from action strings in tracedActions', () => {
       const config = {
         enabled: true,
-        tracedActions: ['  core:go  ', ' test:action ', '  debug:*  '],
+        tracedActions: ['  movement:go  ', ' test:action ', '  debug:*  '],
         verbosity: 'standard',
         includeComponentData: false,
         includePrerequisites: false,
@@ -759,7 +759,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
 
       filter.updateFromConfig(config);
 
-      expect(filter.shouldTrace('core:go')).toBe(true);
+      expect(filter.shouldTrace('movement:go')).toBe(true);
       expect(filter.shouldTrace('test:action')).toBe(true);
       expect(filter.shouldTrace('debug:trace')).toBe(true);
     });
@@ -777,7 +777,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
 
       filter.updateFromConfig(config);
 
-      expect(filter.shouldTrace('core:go')).toBe(true);
+      expect(filter.shouldTrace('movement:go')).toBe(true);
       expect(filter.shouldTrace('debug:trace')).toBe(false);
       expect(filter.shouldTrace('test:skip')).toBe(false);
       expect(filter.shouldTrace('temp:file')).toBe(false);
@@ -787,7 +787,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
       const config = {
         enabled: true,
         tracedActions: [
-          'core:go',
+          'movement:go',
           null,
           undefined,
           123,
@@ -803,7 +803,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
 
       filter.updateFromConfig(config);
 
-      expect(filter.shouldTrace('core:go')).toBe(true);
+      expect(filter.shouldTrace('movement:go')).toBe(true);
       expect(filter.shouldTrace('test:action')).toBe(true);
       // Should not crash, invalid actions are skipped
     });
@@ -829,7 +829,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
 
       filter.updateFromConfig(config);
 
-      expect(filter.shouldTrace('core:go')).toBe(true);
+      expect(filter.shouldTrace('movement:go')).toBe(true);
       expect(filter.shouldTrace('debug:trace')).toBe(false);
       expect(filter.shouldTrace('skip:action')).toBe(false);
       // Should not crash, invalid actions are skipped
@@ -988,7 +988,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
       });
 
       // Should convert to array with default '*'
-      expect(filter.shouldTrace('core:go')).toBe(true);
+      expect(filter.shouldTrace('movement:go')).toBe(true);
     });
 
     it('should handle non-array excludedActions parameter', () => {
@@ -999,7 +999,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
       });
 
       // Should convert to empty array (default behavior)
-      expect(filter.shouldTrace('core:go')).toBe(true);
+      expect(filter.shouldTrace('movement:go')).toBe(true);
     });
 
     it('should handle invalid verbosity level in constructor', () => {
@@ -1048,7 +1048,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
       // Clear any constructor debug logs
       mockLogger.debug.mockClear();
 
-      const result = filter.shouldTrace('core:go');
+      const result = filter.shouldTrace('movement:go');
 
       expect(result).toBe(false);
       // Should not have called any debug logging (early return)
@@ -1066,7 +1066,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
       // Clear constructor debug logs
       mockLogger.debug.mockClear();
 
-      const result = filter.shouldTrace('core:go');
+      const result = filter.shouldTrace('movement:go');
 
       expect(result).toBe(true);
       // Should not have performed full validation or logging (optimization path)
@@ -1084,7 +1084,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
       // Clear constructor debug logs
       mockLogger.debug.mockClear();
 
-      const result = filter.shouldTrace('core:go');
+      const result = filter.shouldTrace('movement:go');
 
       expect(result).toBe(true);
       // Should have performed full validation path due to exclusions
@@ -1102,7 +1102,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
       // Clear constructor debug logs
       mockLogger.debug.mockClear();
 
-      const result = filter.shouldTrace('core:go');
+      const result = filter.shouldTrace('core:take');
 
       expect(result).toBe(true);
       // Should have performed full validation due to specific patterns

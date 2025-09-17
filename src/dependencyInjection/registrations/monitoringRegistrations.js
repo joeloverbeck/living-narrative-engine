@@ -12,6 +12,7 @@ import MemoryPressureManager from '../../entities/monitoring/MemoryPressureManag
 import MemoryReporter from '../../entities/monitoring/MemoryReporter.js';
 import LowMemoryStrategy from '../../entities/monitoring/strategies/LowMemoryStrategy.js';
 import CriticalMemoryStrategy from '../../entities/monitoring/strategies/CriticalMemoryStrategy.js';
+import CentralErrorHandler from '../../errors/CentralErrorHandler.js';
 
 /**
  * Default memory monitoring configuration
@@ -179,6 +180,18 @@ export function registerMemoryMonitoring(container) {
     );
     safeDebug(`Registered ${String(tokens.IMemoryReporter)}.`);
   }
+
+  // Register CentralErrorHandler
+  container.register(
+    tokens.ICentralErrorHandler,
+    (c) => new CentralErrorHandler({
+      logger: c.resolve(tokens.ILogger),
+      eventBus: c.resolve(tokens.IEventBus),
+      monitoringCoordinator: c.resolve(tokens.IMonitoringCoordinator),
+    }),
+    { singleton: true }
+  );
+  safeDebug(`Registered ${String(tokens.ICentralErrorHandler)}.`);
 
   safeDebug('Memory Monitoring Registration: completed.');
 }

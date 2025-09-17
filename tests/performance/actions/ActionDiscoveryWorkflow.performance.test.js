@@ -92,10 +92,10 @@ describe('Action Discovery Workflow Performance', () => {
         },
       },
       {
-        id: 'core:go',
+        id: 'movement:go',
         name: 'Go',
         description: 'Move to a different location.',
-        scope: 'core:clear_directions',
+        scope: 'movement:clear_directions',
         template: 'go to {target}',
         prerequisites: [],
         required_components: {
@@ -125,7 +125,7 @@ describe('Action Discovery Workflow Performance', () => {
           i % 3 === 0
             ? 'none'
             : i % 3 === 1
-              ? 'core:clear_directions'
+              ? 'movement:clear_directions'
               : 'core:other_actors',
         template: `perform action ${i}`,
         prerequisites: [],
@@ -144,7 +144,7 @@ describe('Action Discovery Workflow Performance', () => {
     // Add condition definitions to the registry
     const testConditions = [
       {
-        id: 'core:actor-can-move',
+        id: 'movement:actor-can-move',
         description:
           'Checks if the actor has functioning legs capable of movement',
         logic: {
@@ -152,7 +152,7 @@ describe('Action Discovery Workflow Performance', () => {
         },
       },
       {
-        id: 'core:exit-is-unblocked',
+        id: 'movement:exit-is-unblocked',
         description: 'Checks if an exit is unblocked',
         logic: {
           '!': { var: 'entity.blocker' },
@@ -170,7 +170,7 @@ describe('Action Discovery Workflow Performance', () => {
 
     // Parse the DSL expressions to get the ASTs
     const clearDirectionsExpr =
-      'location.core:exits[{"condition_ref": "core:exit-is-unblocked"}].target';
+      'location.movement:exits[{"condition_ref": "movement:exit-is-unblocked"}].target';
     const otherActorsExpr =
       'entities(core:actor)[{"!=": [{"var": "id"}, {"var": "actor.id"}]}]';
 
@@ -191,8 +191,8 @@ describe('Action Discovery Workflow Performance', () => {
 
     // Add the scope definitions with ASTs
     const scopeDefinitions = {
-      'core:clear_directions': {
-        id: 'core:clear_directions',
+      'movement:clear_directions': {
+        id: 'movement:clear_directions',
         expr: clearDirectionsExpr,
         ast: clearDirectionsAst,
         description:

@@ -101,7 +101,7 @@ describe('ActionTraceConfigLoader', () => {
         traceAnalysisEnabled: false,
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './traces/actions',
           verbosity: 'detailed',
           includeComponentData: false,
@@ -256,7 +256,7 @@ describe('ActionTraceConfigLoader', () => {
       const mockConfig = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './traces',
           verbosity: 'standard',
         },
@@ -268,7 +268,7 @@ describe('ActionTraceConfigLoader', () => {
       const normalizedConfig = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'], // Duplicates removed if any
+          tracedActions: ['movement:go'], // Duplicates removed if any
           outputDirectory: './traces',
           verbosity: 'standard',
           // Since no rotationPolicy is specified in mockConfig,
@@ -308,7 +308,7 @@ describe('ActionTraceConfigLoader', () => {
       const mockConfig = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './traces',
         },
       };
@@ -457,7 +457,7 @@ describe('ActionTraceConfigLoader', () => {
       mockTraceConfigLoader.loadConfig.mockResolvedValue({
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go', 'core:attack'],
+          tracedActions: ['movement:go', 'core:attack'],
           outputDirectory: './custom-traces',
           verbosity: 'minimal',
         },
@@ -471,7 +471,7 @@ describe('ActionTraceConfigLoader', () => {
       expect(outputDir).toBe('./custom-traces');
 
       const tracedActions = await loader.getConfigValue('tracedActions');
-      expect(tracedActions).toEqual(['core:go', 'core:attack']);
+      expect(tracedActions).toEqual(['movement:go', 'core:attack']);
     });
   });
 
@@ -480,13 +480,13 @@ describe('ActionTraceConfigLoader', () => {
       mockTraceConfigLoader.loadConfig.mockResolvedValue({
         actionTracing: {
           enabled: false,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './traces',
         },
       });
       mockValidator.validate.mockResolvedValue({ isValid: true });
 
-      const shouldTrace = await loader.shouldTraceAction('core:go');
+      const shouldTrace = await loader.shouldTraceAction('movement:go');
       expect(shouldTrace).toBe(false);
     });
 
@@ -494,13 +494,13 @@ describe('ActionTraceConfigLoader', () => {
       mockTraceConfigLoader.loadConfig.mockResolvedValue({
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go', 'core:attack'],
+          tracedActions: ['movement:go', 'core:attack'],
           outputDirectory: './traces',
         },
       });
       mockValidator.validate.mockResolvedValue({ isValid: true });
 
-      expect(await loader.shouldTraceAction('core:go')).toBe(true);
+      expect(await loader.shouldTraceAction('movement:go')).toBe(true);
       expect(await loader.shouldTraceAction('core:attack')).toBe(true);
       expect(await loader.shouldTraceAction('core:examine')).toBe(false);
       expect(await loader.shouldTraceAction('custom:action')).toBe(false);
@@ -516,7 +516,7 @@ describe('ActionTraceConfigLoader', () => {
       });
       mockValidator.validate.mockResolvedValue({ isValid: true });
 
-      expect(await loader.shouldTraceAction('core:go')).toBe(true);
+      expect(await loader.shouldTraceAction('movement:go')).toBe(true);
       expect(await loader.shouldTraceAction('custom:action')).toBe(true);
       expect(await loader.shouldTraceAction('any:thing')).toBe(true);
     });
@@ -525,13 +525,13 @@ describe('ActionTraceConfigLoader', () => {
       mockTraceConfigLoader.loadConfig.mockResolvedValue({
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:*', 'custom:*'],
+          tracedActions: ['core:*', 'movement:*', 'custom:*'],
           outputDirectory: './traces',
         },
       });
       mockValidator.validate.mockResolvedValue({ isValid: true });
 
-      expect(await loader.shouldTraceAction('core:go')).toBe(true);
+      expect(await loader.shouldTraceAction('movement:go')).toBe(true);
       expect(await loader.shouldTraceAction('core:attack')).toBe(true);
       expect(await loader.shouldTraceAction('custom:action')).toBe(true);
       expect(await loader.shouldTraceAction('custom:other')).toBe(true);
@@ -542,13 +542,13 @@ describe('ActionTraceConfigLoader', () => {
       mockTraceConfigLoader.loadConfig.mockResolvedValue({
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go', 'custom:*', 'specific:action'],
+          tracedActions: ['movement:go', 'custom:*', 'specific:action'],
           outputDirectory: './traces',
         },
       });
       mockValidator.validate.mockResolvedValue({ isValid: true });
 
-      expect(await loader.shouldTraceAction('core:go')).toBe(true);
+      expect(await loader.shouldTraceAction('movement:go')).toBe(true);
       expect(await loader.shouldTraceAction('core:attack')).toBe(false);
       expect(await loader.shouldTraceAction('custom:anything')).toBe(true);
       expect(await loader.shouldTraceAction('specific:action')).toBe(true);
@@ -596,7 +596,7 @@ describe('ActionTraceConfigLoader', () => {
       const mockConfig = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './traces',
           verbosity: 'standard',
         },
@@ -635,7 +635,7 @@ describe('ActionTraceConfigLoader', () => {
       const mockConfig = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './traces',
           verbosity: 'standard',
         },
@@ -666,7 +666,7 @@ describe('ActionTraceConfigLoader', () => {
       const mockConfig = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './traces',
           verbosity: 'standard',
         },
@@ -688,7 +688,7 @@ describe('ActionTraceConfigLoader', () => {
       const mockConfig = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './traces',
           verbosity: 'standard',
         },
@@ -724,7 +724,7 @@ describe('ActionTraceConfigLoader', () => {
       const mockConfig = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './traces',
           verbosity: 'standard',
         },
@@ -756,7 +756,7 @@ describe('ActionTraceConfigLoader', () => {
       const mockConfig = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './traces',
           verbosity: 'standard',
         },
@@ -830,7 +830,7 @@ describe('ActionTraceConfigLoader', () => {
       mockTraceConfigLoader.loadConfig.mockResolvedValue({
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go', 'custom:*'],
+          tracedActions: ['movement:go', 'custom:*'],
           outputDirectory: './traces',
         },
       });
@@ -838,7 +838,7 @@ describe('ActionTraceConfigLoader', () => {
 
       // Load config and perform some lookups
       await loader.loadConfig();
-      await loader.shouldTraceAction('core:go'); // exact match
+      await loader.shouldTraceAction('movement:go'); // exact match
       await loader.shouldTraceAction('custom:action'); // wildcard match
       await loader.shouldTraceAction('nonexistent:action'); // no match
 
@@ -853,7 +853,7 @@ describe('ActionTraceConfigLoader', () => {
       expect(stats.exactMatches).toBe(1);
       expect(stats.wildcardMatches).toBe(1);
       expect(stats.totalLookups).toBe(3);
-      expect(stats.tracedActionsCount).toBe(1); // 'core:go'
+      expect(stats.tracedActionsCount).toBe(1); // 'movement:go'
       expect(stats.wildcardPatternsCount).toBe(1); // 'custom:*'
     });
 
@@ -873,7 +873,7 @@ describe('ActionTraceConfigLoader', () => {
 
       const data = {
         timestamp: Date.now(),
-        actionId: 'core:go',
+        actionId: 'movement:go',
         result: 'success',
         executionTime: 150,
         success: true,
@@ -887,7 +887,7 @@ describe('ActionTraceConfigLoader', () => {
       const filtered = await loader.filterDataByVerbosity(data);
 
       expect(filtered).toHaveProperty('timestamp');
-      expect(filtered).toHaveProperty('actionId', 'core:go');
+      expect(filtered).toHaveProperty('actionId', 'movement:go');
       expect(filtered).toHaveProperty('result', 'success');
       expect(filtered).toHaveProperty('executionTime', 150);
       expect(filtered).toHaveProperty('success', true);
@@ -996,7 +996,7 @@ describe('ActionTraceConfigLoader', () => {
       mockTraceConfigLoader.loadConfig.mockResolvedValue({
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './traces',
         },
       });
@@ -1004,7 +1004,7 @@ describe('ActionTraceConfigLoader', () => {
 
       // Perform a lookup to generate stats
       await loader.loadConfig();
-      await loader.shouldTraceAction('core:go');
+      await loader.shouldTraceAction('movement:go');
 
       let stats = loader.getStatistics();
       expect(stats.totalLookups).toBe(1);
@@ -1025,7 +1025,7 @@ describe('ActionTraceConfigLoader', () => {
         const config = {
           actionTracing: {
             enabled: true,
-            tracedActions: ['core:go*', 'test:move*'],
+            tracedActions: ['movement:go*', 'test:move*'],
             outputDirectory: './traces',
             verbosity: 'standard',
           },
@@ -1034,9 +1034,9 @@ describe('ActionTraceConfigLoader', () => {
         mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
         mockValidator.validate.mockResolvedValue({ isValid: true });
 
-        expect(await loader.shouldTraceAction('core:go')).toBe(true);
-        expect(await loader.shouldTraceAction('core:go_north')).toBe(true);
-        expect(await loader.shouldTraceAction('core:go_south')).toBe(true);
+        expect(await loader.shouldTraceAction('movement:go')).toBe(true);
+        expect(await loader.shouldTraceAction('movement:go_north')).toBe(true);
+        expect(await loader.shouldTraceAction('movement:go_south')).toBe(true);
         expect(await loader.shouldTraceAction('test:move_forward')).toBe(true);
         expect(await loader.shouldTraceAction('core:attack')).toBe(false);
       });
@@ -1054,10 +1054,10 @@ describe('ActionTraceConfigLoader', () => {
         mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
         mockValidator.validate.mockResolvedValue({ isValid: true });
 
-        expect(await loader.shouldTraceAction('core:go_debug')).toBe(true);
+        expect(await loader.shouldTraceAction('movement:go_debug')).toBe(true);
         expect(await loader.shouldTraceAction('test:attack_debug')).toBe(true);
         expect(await loader.shouldTraceAction('custom:action_test')).toBe(true);
-        expect(await loader.shouldTraceAction('core:go')).toBe(false);
+        expect(await loader.shouldTraceAction('movement:go')).toBe(false);
       });
 
       it('should support complex wildcard patterns', async () => {
@@ -1083,7 +1083,7 @@ describe('ActionTraceConfigLoader', () => {
         const config = {
           actionTracing: {
             enabled: true,
-            tracedActions: ['core:go*', 'test:*_debug', '*move*'],
+            tracedActions: ['movement:go*', 'test:*_debug', '*move*'],
             outputDirectory: './traces',
             verbosity: 'standard',
           },
@@ -1093,7 +1093,7 @@ describe('ActionTraceConfigLoader', () => {
         mockValidator.validate.mockResolvedValue({ isValid: true });
 
         // These should match
-        expect(await loader.shouldTraceAction('core:go_north')).toBe(true);
+        expect(await loader.shouldTraceAction('movement:go_north')).toBe(true);
         expect(await loader.shouldTraceAction('test:action_debug')).toBe(true);
         expect(await loader.shouldTraceAction('any:movement_now')).toBe(true);
 
@@ -1131,7 +1131,7 @@ describe('ActionTraceConfigLoader', () => {
         mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
         mockValidator.validate.mockResolvedValue({ isValid: true });
 
-        await loaderWithMockLogger.shouldTraceAction('core:go');
+        await loaderWithMockLogger.shouldTraceAction('movement:go');
 
         // Check that warn was called with any message about invalid patterns
         // The actual implementation may log different messages
@@ -1264,17 +1264,17 @@ describe('ActionTraceConfigLoader', () => {
 
     describe('pattern testing utilities', () => {
       it('should test individual patterns', () => {
-        const result = loader.testPattern('core:go*', 'core:go_north');
+        const result = loader.testPattern('movement:go*', 'movement:go_north');
 
         expect(result).toEqual({
           matches: true,
           patternType: 'general',
-          explanation: "Matches pattern 'core:go*' using regex",
+          explanation: "Matches pattern 'movement:go*' using regex",
         });
       });
 
       it('should test exact patterns', () => {
-        const result = loader.testPattern('core:go', 'core:go');
+        const result = loader.testPattern('movement:go', 'movement:go');
 
         expect(result).toEqual({
           matches: true,
@@ -1294,10 +1294,10 @@ describe('ActionTraceConfigLoader', () => {
       });
 
       it('should test mod wildcard patterns', () => {
-        const result = loader.testPattern('core:*', 'core:go_north');
+        const result = loader.testPattern('core:*', 'movement:go_north');
 
         expect(result).toEqual({
-          matches: true,
+          matches: false,
           patternType: 'mod',
           explanation: "Matches actions starting with 'core:'",
         });
@@ -1307,7 +1307,7 @@ describe('ActionTraceConfigLoader', () => {
         const config = {
           actionTracing: {
             enabled: true,
-            tracedActions: ['*', 'core:*', 'core:go*'],
+            tracedActions: ['*', 'core:*', 'movement:go*'],
             outputDirectory: './traces',
             verbosity: 'standard',
           },
@@ -1316,13 +1316,12 @@ describe('ActionTraceConfigLoader', () => {
         mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
         mockValidator.validate.mockResolvedValue({ isValid: true });
 
-        const result = await loader.getMatchingPatterns('core:go_north');
+        const result = await loader.getMatchingPatterns('movement:go_north');
 
         expect(result.matches).toBe(true);
-        expect(result.matchingPatterns).toHaveLength(3);
+        expect(result.matchingPatterns).toHaveLength(2);
         expect(result.matchingPatterns[0].pattern).toBe('*');
-        expect(result.matchingPatterns[1].pattern).toBe('core:*');
-        expect(result.matchingPatterns[2].pattern).toBe('core:go*');
+        expect(result.matchingPatterns[1].pattern).toBe('movement:go*');
       });
 
       it('should return no matches for non-matching action', async () => {

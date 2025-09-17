@@ -42,7 +42,7 @@ describe('GoalLoader', () => {
   describe('Constructor', () => {
     test('should call BaseManifestItemLoader with the correct contentType "goals"', () => {
       // Arrange: Mock getContentTypeSchemaId to return a value to avoid the warning log.
-      mockConfig.getContentTypeSchemaId.mockReturnValue('core:goal');
+      mockConfig.getContentTypeSchemaId.mockReturnValue('movement:goal');
 
       // Act: Instantiate the loader.
       new GoalLoader(
@@ -63,7 +63,7 @@ describe('GoalLoader', () => {
 
     test('should log a debug message when a primary schema ID is found', () => {
       // Arrange
-      const schemaId = 'core:goal_schema_v1';
+      const schemaId = 'movement:goal_schema_v1';
       mockConfig.getContentTypeSchemaId.mockReturnValue(schemaId);
 
       // Act
@@ -175,7 +175,7 @@ describe('GoalLoader', () => {
       const qualifiedId = `${modId}:${goalData.id}`;
 
       // Setup mock return values for the full process
-      mockConfig.getContentTypeSchemaId.mockReturnValue('core:goal');
+      mockConfig.getContentTypeSchemaId.mockReturnValue('movement:goal');
       mockPathResolver.resolveModContentPath.mockReturnValue(resolvedPath);
       mockDataFetcher.fetch.mockResolvedValue(goalData);
       // Mock the registry's store method to check what it receives

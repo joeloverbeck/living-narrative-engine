@@ -37,7 +37,7 @@ function createValidCharacterDefinition() {
     'core:fears': {
       text: 'Being misunderstood, making critical mistakes, social rejection.',
     },
-    'core:goals': {
+    'movement:goals': {
       text: 'To understand complex systems, to help others through knowledge sharing.',
     },
     'core:strengths': {
@@ -86,7 +86,7 @@ function createValidLLMResponse() {
         "Loud noises make me uncomfortable, and I can't stand superficial small talk. Being rushed is my nightmare - I need time to process and consider all angles.",
       'core:fears':
         "My greatest fear is being misunderstood. I'm terrified of making a critical mistake that could hurt someone, and social rejection... well, that keeps me up at night.",
-      'core:goals':
+      'movement:goals':
         "I want to understand how complex systems work - it's like solving a grand puzzle. More importantly, I hope to help others by sharing what I've learned.",
       'core:strengths':
         "I'm good at solving problems, probably because I notice details others miss. People tell me I'm reliable, which I take as a compliment.",

@@ -47,7 +47,7 @@ import {
 // Import core action definitions
 import dismissAction from '../../../data/mods/core/actions/dismiss.action.json';
 import followAction from '../../../data/mods/core/actions/follow.action.json';
-import goAction from '../../../data/mods/core/actions/go.action.json';
+import goAction from '../../../data/mods/movement/actions/go.action.json';
 import waitAction from '../../../data/mods/core/actions/wait.action.json';
 
 // Import scope definitions
@@ -116,14 +116,14 @@ describe('Core Action Target Resolution Integration', () => {
         ],
       },
     });
-    dataRegistry.store('conditions', 'core:exit-is-unblocked', {
-      id: 'core:exit-is-unblocked',
+    dataRegistry.store('conditions', 'movement:exit-is-unblocked', {
+      id: 'movement:exit-is-unblocked',
       logic: { '!': { var: 'entity.blocker' } },
     });
-    dataRegistry.store('conditions', 'core:actor-can-move', {
-      id: 'core:actor-can-move',
+    dataRegistry.store('conditions', 'movement:actor-can-move', {
+      id: 'movement:actor-can-move',
       logic: {
-        '==': [{ var: 'actor.core:movement.locked' }, false],
+        '==': [{ var: 'actor.movement:movement.locked' }, false],
       },
     });
     dataRegistry.store('conditions', 'core:actor-is-following', {
@@ -138,17 +138,33 @@ describe('Core Action Target Resolution Integration', () => {
     scopeRegistry.clear();
 
     // Load and parse scope definitions from actual files
-    const scopeFiles = [
-      'clear_directions.scope',
+    const coreScopeFiles = [
       'potential_leaders.scope',
       'followers.scope',
       'environment.scope',
     ];
+    const movementScopeFiles = [
+      'clear_directions.scope',
+    ];
 
     const scopeDefinitions = {};
-    for (const filename of scopeFiles) {
+
+    // Load core scopes
+    for (const filename of coreScopeFiles) {
       const scopeContent = fs.readFileSync(
         path.resolve(__dirname, '../../../data/mods/core/scopes', filename),
+        'utf8'
+      );
+      const defs = parseScopeDefinitions(scopeContent, filename);
+      for (const [id, definition] of defs) {
+        scopeDefinitions[id] = definition;
+      }
+    }
+
+    // Load movement scopes
+    for (const filename of movementScopeFiles) {
+      const scopeContent = fs.readFileSync(
+        path.resolve(__dirname, '../../../data/mods/movement/scopes', filename),
         'utf8'
       );
       const defs = parseScopeDefinitions(scopeContent, filename);
@@ -219,7 +235,7 @@ describe('Core Action Target Resolution Integration', () => {
           [POSITION_COMPONENT_ID]: { locationId: 'test-location-x' },
           [FOLLOWING_COMPONENT_ID]: { leaderId: null },
           [LEADING_COMPONENT_ID]: { followers: [] },
-          'core:movement': { locked: false },
+          'movement:movement': { locked: false },
         },
       },
       // Actor 2 (target actor)
@@ -231,7 +247,7 @@ describe('Core Action Target Resolution Integration', () => {
           [POSITION_COMPONENT_ID]: { locationId: 'test-location-x' },
           [FOLLOWING_COMPONENT_ID]: { leaderId: null },
           [LEADING_COMPONENT_ID]: { followers: [] },
-          'core:movement': { locked: false },
+          'movement:movement': { locked: false },
         },
       },
     ];
@@ -364,9 +380,9 @@ describe('Core Action Target Resolution Integration', () => {
     }, {});
 
     // Validate go action
-    expect(actionsByType['core:go']).toBeDefined();
-    expect(actionsByType['core:go'].params?.targetId).toBe('test-location-y');
-    expect(actionsByType['core:go'].command).toContain('Location Y');
+    expect(actionsByType['movement:go']).toBeDefined();
+    expect(actionsByType['movement:go'].params?.targetId).toBe('test-location-y');
+    expect(actionsByType['movement:go'].command).toContain('Location Y');
 
     // Validate follow action
     expect(actionsByType['core:follow']).toBeDefined();
@@ -449,7 +465,7 @@ describe('Core Action Target Resolution Integration', () => {
 
     // Find all go actions
     const goActions = result.actions.filter(
-      (action) => action.id === 'core:go'
+      (action) => action.id === 'movement:go'
     );
 
     // Validate each go action
@@ -531,7 +547,7 @@ describe('Core Action Target Resolution Integration', () => {
           [POSITION_COMPONENT_ID]: { locationId: 'test-location-x' },
           [FOLLOWING_COMPONENT_ID]: { leaderId: null },
           [LEADING_COMPONENT_ID]: { followers: [] },
-          'core:movement': { locked: false },
+          'movement:movement': { locked: false },
         },
       },
     ];
@@ -552,7 +568,7 @@ describe('Core Action Target Resolution Integration', () => {
 
     // Should not have any go actions
     const goActions = result.actions.filter(
-      (action) => action.id === 'core:go'
+      (action) => action.id === 'movement:go'
     );
     expect(goActions.length).toBe(0);
 
@@ -600,7 +616,7 @@ describe('Core Action Target Resolution Integration', () => {
           [POSITION_COMPONENT_ID]: { locationId: 'test-location-x' },
           [FOLLOWING_COMPONENT_ID]: { leaderId: null },
           [LEADING_COMPONENT_ID]: { followers: [] },
-          'core:movement': { locked: false },
+          'movement:movement': { locked: false },
         },
       },
     ];
@@ -627,7 +643,7 @@ describe('Core Action Target Resolution Integration', () => {
 
     // Should have go and wait actions
     const goActions = result.actions.filter(
-      (action) => action.id === 'core:go'
+      (action) => action.id === 'movement:go'
     );
     const waitActions = result.actions.filter(
       (action) => action.id === 'core:wait'
@@ -673,7 +689,7 @@ describe('Core Action Target Resolution Integration', () => {
 
     // Should have go, wait, and potentially dismiss actions
     const goActions = result.actions.filter(
-      (action) => action.id === 'core:go'
+      (action) => action.id === 'movement:go'
     );
     const waitActions = result.actions.filter(
       (action) => action.id === 'core:wait'

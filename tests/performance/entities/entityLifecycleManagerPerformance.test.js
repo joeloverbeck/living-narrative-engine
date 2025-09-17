@@ -37,7 +37,7 @@ describe('EntityLifecycleManager Performance', () => {
       components: {
         'core:short_term_memory': {},
         'core:notes': {},
-        'core:goals': {},
+        'movement:goals': {},
       },
     });
 
@@ -83,7 +83,7 @@ describe('EntityLifecycleManager Performance', () => {
       id: 'core:short_term_memory',
     });
     registry.store('components', 'core:notes', { id: 'core:notes' });
-    registry.store('components', 'core:goals', { id: 'core:goals' });
+    registry.store('components', 'movement:goals', { id: 'movement:goals' });
 
     // Create services using the factory
     const services = await import(

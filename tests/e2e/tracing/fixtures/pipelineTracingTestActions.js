@@ -11,7 +11,7 @@ import { expect } from '@jest/globals';
 export const PIPELINE_TEST_ACTIONS = {
   // Simple movement action for basic pipeline tracing
   SIMPLE_MOVEMENT: {
-    id: 'core:go',
+    id: 'movement:go',
     name: 'Go',
     type: 'movement',
     targets: ['direction'],

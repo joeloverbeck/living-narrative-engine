@@ -364,7 +364,7 @@ describe('Pipeline Tracing Performance', () => {
     it('should maintain throughput with selective tracing', async () => {
       const service = testBed.createDiscoveryServiceWithTracing({
         actionTracingEnabled: true,
-        tracedActions: ['core:go', 'core:take'], // Selective tracing
+        tracedActions: ['movement:go', 'core:take'], // Selective tracing
         verbosity: 'standard',
       });
 
@@ -400,7 +400,7 @@ describe('Pipeline Tracing Performance', () => {
       // Test with 1 traced action
       const service1 = testBed.createDiscoveryServiceWithTracing({
         actionTracingEnabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         verbosity: 'standard',
       });
 

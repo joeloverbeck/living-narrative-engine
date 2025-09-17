@@ -38,7 +38,7 @@ describe('Schema – core:update_available_actions payload', () => {
         },
         {
           index: 2,
-          actionId: 'core:go',
+          actionId: 'movement:go',
           commandString: 'go west',
           params: { direction: 'west' },
           description: 'Move one room west.',

@@ -1,13 +1,13 @@
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "core:event-is-action-go",
-  "description": "Checks if the triggering event is for the 'core:go' action.",
+  "id": "movement:event-is-action-go",
+  "description": "Checks if the triggering event is for the 'movement:go' action.",
   "logic": {
     "==": [
       {
         "var": "event.payload.actionId"
       },
-      "core:go"
+      "movement:go"
     ]
   }
 }

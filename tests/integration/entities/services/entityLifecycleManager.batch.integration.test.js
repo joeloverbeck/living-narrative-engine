@@ -34,7 +34,7 @@ describe('EntityLifecycleManager - Batch Operations Integration', () => {
       components: {
         'core:short_term_memory': {},
         'core:notes': {},
-        'core:goals': {},
+        'movement:goals': {},
       },
     });
 
@@ -80,7 +80,7 @@ describe('EntityLifecycleManager - Batch Operations Integration', () => {
       id: 'core:short_term_memory',
     });
     registry.store('components', 'core:notes', { id: 'core:notes' });
-    registry.store('components', 'core:goals', { id: 'core:goals' });
+    registry.store('components', 'movement:goals', { id: 'movement:goals' });
 
     // Create services using the factory
     const services = await import(

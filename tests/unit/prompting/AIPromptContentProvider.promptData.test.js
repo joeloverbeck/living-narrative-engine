@@ -65,7 +65,7 @@ describe('AIPromptContentProvider.getPromptData basic scenarios', () => {
     };
   }
 
-  test('returns empty arrays when neither core:notes nor core:goals exist', async () => {
+  test('returns empty arrays when neither core:notes nor movement:goals exist', async () => {
     const gameStateDto = makeBaseDto({});
     const result = await provider.getPromptData(gameStateDto, logger);
 
@@ -83,7 +83,7 @@ describe('AIPromptContentProvider.getPromptData basic scenarios', () => {
           { text: 'N2', subject: 'test', timestamp: '2025-06-02T12:30:00Z' },
         ],
       },
-      // no core:goals
+      // no movement:goals
     });
 
     const result = await provider.getPromptData(gameStateDto, logger);
@@ -103,7 +103,7 @@ describe('AIPromptContentProvider.getPromptData basic scenarios', () => {
           { text: 'NoteB', subject: 'test', timestamp: '2025-06-05T10:00:00Z' },
         ],
       },
-      'core:goals': {
+      'movement:goals': {
         goals: [
           { text: 'GoalA', timestamp: '2025-05-01T00:00:00Z' },
           { text: 'GoalB', timestamp: '2025-05-02T14:15:00Z' },
@@ -126,7 +126,7 @@ describe('AIPromptContentProvider.getPromptData basic scenarios', () => {
   test('defaults both arrays to [] when notes or goals property is not an array (no throws)', async () => {
     const gameStateDto = makeBaseDto({
       'core:notes': { notes: null },
-      'core:goals': { goals: 'foo' },
+      'movement:goals': { goals: 'foo' },
     });
 
     const result = await provider.getPromptData(gameStateDto, logger);

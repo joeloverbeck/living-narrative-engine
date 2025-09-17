@@ -64,7 +64,7 @@ The p_erotica mod contains several implemented characters (Jon Ureña, Amaia Cas
 | `core:likes`           | Text  | Character preferences  | Custom likes                |
 | `core:dislikes`        | Text  | Character aversions    | Custom dislikes             |
 | `core:fears`           | Text  | Character fears        | Custom fears                |
-| `core:goals`           | Array | Character objectives   | At least one goal           |
+| `movement:goals`           | Array | Character objectives   | At least one goal           |
 | `core:secrets`         | Text  | Character secrets      | Custom secrets              |
 | `core:speech_patterns` | Array | Speech characteristics | Speech pattern examples     |
 | `core:apparent_age`    | Range | Age appearance         | 18-25 years                 |
@@ -142,7 +142,7 @@ graph TD
     "core:fears": {
       "text": "Being dismissed or ignored because of her appearance, losing her independence, and being trapped in situations where she cannot express her true self."
     },
-    "core:goals": {
+    "movement:goals": {
       "goals": [
         {
           "text": "To be recognized for her intelligence and capabilities rather than just her appearance"

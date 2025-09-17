@@ -65,7 +65,7 @@ describe('TraitsRewriter Performance', () => {
         'core:fears': {
           text: 'Public speaking, being seen as incompetent, system failures, impostor syndrome, critical bugs in production, and letting the team down during important releases',
         },
-        'core:goals': {
+        'movement:goals': {
           text: 'Lead a development team, contribute to open source projects, mentor junior developers, architect scalable systems, write technical books, and speak at conferences',
         },
       };
@@ -105,7 +105,7 @@ describe('TraitsRewriter Performance', () => {
         'core:likes': { text: 'Multiple likes and preferences' },
         'core:dislikes': { text: 'Several dislikes and aversions' },
         'core:fears': { text: 'Various fears and anxieties' },
-        'core:goals': { text: 'Ambitious goals and aspirations' },
+        'movement:goals': { text: 'Ambitious goals and aspirations' },
         'core:values': { text: 'Strong moral values and principles' },
         'core:quirks': { text: 'Unique quirks and mannerisms' },
         'core:background': { text: 'Rich background and history' },
@@ -232,7 +232,7 @@ describe('TraitsRewriter Performance', () => {
         {
           ...baseCharacter,
           'core:name': { text: 'Character C' },
-          'core:goals': { text: 'Variant C goals' },
+          'movement:goals': { text: 'Variant C goals' },
         },
       ];
 

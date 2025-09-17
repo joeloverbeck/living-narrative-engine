@@ -27,7 +27,7 @@ To enable action tracing for your first debugging session:
   "traceAnalysisEnabled": true,
   "actionTracing": {
     "enabled": true,
-    "tracedActions": ["core:go"],
+    "tracedActions": ["movement:go"],
     "outputDirectory": "./traces/actions",
     "verbosity": "standard"
   }
@@ -46,7 +46,7 @@ Let's trace the "go" action to see how a player moves:
 {
   "actionTracing": {
     "enabled": true,
-    "tracedActions": ["core:go"],
+    "tracedActions": ["movement:go"],
     "outputDirectory": "./traces/actions",
     "verbosity": "standard",
     "includeComponentData": true,
@@ -68,7 +68,7 @@ The trace shows the complete journey of an action:
 ```
 ACTION TRACE REPORT
 ==================
-Action: core:go
+Action: movement:go
 Actor: player-1
 Total Time: 119.7ms
 
@@ -114,10 +114,10 @@ You can specify actions to trace using different patterns:
 
 | Pattern       | Description                  | Example                    |
 | ------------- | ---------------------------- | -------------------------- |
-| `"action:id"` | Trace specific action        | `"core:go"`                |
+| `"action:id"` | Trace specific action        | `"movement:go"`                |
 | `"mod:*"`     | Trace all actions from a mod | `"core:*"`                 |
 | `"*"`         | Trace all actions            | `"*"`                      |
-| Array         | Trace multiple actions       | `["core:go", "core:take"]` |
+| Array         | Trace multiple actions       | `["movement:go", "core:take"]` |
 
 ### Verbosity Levels
 
@@ -368,7 +368,7 @@ Each trace file contains a complete record of an action's journey:
 ```json
 {
   "timestamp": "2024-01-15T10:30:00.123Z",  // When traced
-  "actionId": "core:go",                    // Action identifier
+  "actionId": "movement:go",                    // Action identifier
   "actorId": "player-1",                    // Who performed it
 
   "pipeline": {                             // Discovery & processing
@@ -416,7 +416,7 @@ The text format provides an easier-to-read overview:
 ACTION TRACE REPORT
 ==================
 Timestamp: 2024-01-15 10:30:00.123
-Action: core:go
+Action: movement:go
 Actor: player-1
 
 PIPELINE STAGES
@@ -710,7 +710,7 @@ Check the game logs for trace-related messages:
 
 ```
 [DEBUG] ActionTraceFilter: Initialized with 3 traced actions
-[DEBUG] ActionTraceOutputService: Writing trace for core:go
+[DEBUG] ActionTraceOutputService: Writing trace for movement:go
 [ERROR] ActionTraceOutputService: Failed to write trace: ENOENT
 ```
 
@@ -839,7 +839,7 @@ Examples:
 | `*`            | All actions          | Traces everything                      |
 | `mod:*`        | All actions from mod | `core:*` matches all core actions      |
 | `mod:prefix_*` | Actions with prefix  | `core:combat_*` matches combat actions |
-| `["a", "b"]`   | Multiple specific    | `["core:go", "core:take"]`             |
+| `["a", "b"]`   | Multiple specific    | `["movement:go", "core:take"]`             |
 
 ### Output Directory Structure
 

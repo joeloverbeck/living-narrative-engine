@@ -52,12 +52,12 @@ Lifecycle: Uncapped; duplicates filtered out on merge.
 Included in Prompt: Under “<notes>” (only if non-empty).  
 Schema ID: core:notes → `./data/mods/core/notes.component.json`
 
-core:goals
+movement:goals
 
 Purpose: Short- or long-term goals defined by designers (not LLM-generated).  
 Lifecycle: Uncapped; only designer-driven.  
 Included in Prompt: Under "<goals>" (only if non-empty).  
-Schema ID: core:goals → `./data/mods/core/goals.component.json`
+Schema ID: movement:goals → `./data/mods/core/goals.component.json`
 
 ## Character Builder Tools
 

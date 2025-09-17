@@ -8,7 +8,7 @@ describeActionDiscoverySuite(
   (getBed) => {
     const actionDefs = [
       {
-        id: 'core:go',
+        id: 'movement:go',
         name: 'Go',
         commandVerb: 'go',
         scope: 'directions',
@@ -60,7 +60,7 @@ describeActionDiscoverySuite(
 
       const result = await bed.service.getValidActions(actor, context);
 
-      const goActions = result.actions.filter((a) => a.id === 'core:go');
+      const goActions = result.actions.filter((a) => a.id === 'movement:go');
       expect(goActions).toHaveLength(2);
 
       const goAction1 = goActions.find((a) => a.params.targetId === 'loc-2');

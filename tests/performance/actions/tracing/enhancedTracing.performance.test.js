@@ -54,7 +54,7 @@ describe('Enhanced Tracing Performance Tests', () => {
   describe('Cache Performance', () => {
     it('should achieve >70% cache hit rate for typical usage', () => {
       // Simulate typical usage pattern with repeated actions
-      const actions = ['core:go', 'core:look', 'core:take', 'core:use'];
+      const actions = ['movement:go', 'core:look', 'core:take', 'core:use'];
       const stages = [
         'component_filtering',
         'prerequisite_evaluation',

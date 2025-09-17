@@ -40,7 +40,7 @@ describe('ActionDiscoveryService - Action Tracing Enhancement', () => {
     it('should create ActionAwareStructuredTrace when action tracing is enabled', async () => {
       const discoveryService = testBed.createDiscoveryServiceWithTracing({
         actionTracingEnabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
       });
 
       const actor = testBed.createMockActor('test-actor');
@@ -206,7 +206,7 @@ describe('ActionDiscoveryService - Action Tracing Enhancement', () => {
     it('should log action tracing statistics when tracing is enabled', async () => {
       const discoveryService = testBed.createDiscoveryServiceWithTracing({
         actionTracingEnabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
       });
 
       const actor = testBed.createMockActor('test-actor');

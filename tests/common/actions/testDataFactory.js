@@ -29,10 +29,10 @@ export class TestDataFactory {
         .asBasicAction()
         .build(),
 
-      new ActionDefinitionBuilder('core:go')
+      new ActionDefinitionBuilder('movement:go')
         .withName('Go')
         .withDescription('Move to a different location.')
-        .asTargetedAction('core:clear_directions', 'to {target}')
+        .asTargetedAction('movement:clear_directions', 'to {target}')
         .asMovementAction()
         .build(),
 
@@ -70,15 +70,15 @@ export class TestDataFactory {
         required_components: { actor: [] },
       },
       {
-        id: 'core:go',
+        id: 'movement:go',
         name: 'Go',
         description: 'Move to a different location.',
-        scope: 'core:clear_directions',
+        scope: 'movement:clear_directions',
         template: 'go to {target}',
         prerequisites: [
           {
             logic: {
-              condition_ref: 'core:actor-can-move',
+              condition_ref: 'movement:actor-can-move',
             },
             failure_message: 'You cannot move without functioning legs.',
           },
@@ -94,7 +94,7 @@ export class TestDataFactory {
         prerequisites: [
           {
             logic: {
-              condition_ref: 'core:actor-can-move',
+              condition_ref: 'movement:actor-can-move',
             },
             failure_message: 'You cannot move without functioning legs.',
           },
@@ -110,7 +110,7 @@ export class TestDataFactory {
         prerequisites: [
           {
             logic: {
-              condition_ref: 'core:actor-can-move',
+              condition_ref: 'movement:actor-can-move',
             },
             failure_message: 'You cannot move without functioning legs.',
           },
@@ -152,7 +152,7 @@ export class TestDataFactory {
         prerequisites: [
           {
             logic: {
-              condition_ref: 'core:actor-can-move',
+              condition_ref: 'movement:actor-can-move',
             },
             failure_message: 'You cannot move without functioning legs.',
           },
@@ -179,7 +179,7 @@ export class TestDataFactory {
   static createTestConditions() {
     return [
       {
-        id: 'core:actor-can-move',
+        id: 'movement:actor-can-move',
         description:
           'Checks if the actor has functioning legs capable of movement',
         logic: {
@@ -187,7 +187,7 @@ export class TestDataFactory {
         },
       },
       {
-        id: 'core:exit-is-unblocked',
+        id: 'movement:exit-is-unblocked',
         description: 'Checks if an exit is unblocked',
         logic: {
           '==': [{ var: 'blocked' }, false],
@@ -225,8 +225,8 @@ export class TestDataFactory {
   static createScopeDefinitions() {
     return [
       {
-        id: 'core:clear_directions',
-        expr: 'location.core:exits[{"condition_ref": "core:exit-is-unblocked"}].target',
+        id: 'movement:clear_directions',
+        expr: 'location.movement:exits[{"condition_ref": "movement:exit-is-unblocked"}].target',
         description:
           'Available exits from current location that are not blocked',
         fallbackAst: { type: 'Source', kind: 'location' },
@@ -441,7 +441,7 @@ export class TestDataFactory {
           'core:movement',
         ])
         .withPrerequisites([
-          { condition: 'core:actor-can-move', message: 'Cannot move' },
+          { condition: 'movement:actor-can-move', message: 'Cannot move' },
           { condition: 'core:has-health', message: 'No health' },
           { condition: 'core:has-inventory', message: 'No inventory' },
         ])
@@ -506,7 +506,7 @@ export class TestDataFactory {
         prerequisites: [
           {
             logic: {
-              condition_ref: 'core:actor-can-move',
+              condition_ref: 'movement:actor-can-move',
             },
             failure_message: 'Cannot move',
           },

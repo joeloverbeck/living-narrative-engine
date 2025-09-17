@@ -1,6 +1,7 @@
 {
   "mods": [
     "core",
+    "movement",
     "positioning",
     "anatomy",
     "clothing",

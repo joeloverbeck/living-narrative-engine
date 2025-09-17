@@ -44,7 +44,7 @@ import { createMultiTargetResolutionStage } from '../../common/actions/multiTarg
 // Import actions
 import dismissAction from '../../../data/mods/core/actions/dismiss.action.json';
 import followAction from '../../../data/mods/core/actions/follow.action.json';
-import goAction from '../../../data/mods/core/actions/go.action.json';
+import goAction from '../../../data/mods/movement/actions/go.action.json';
 import waitAction from '../../../data/mods/core/actions/wait.action.json';
 
 // Unmock the real singleton to ensure the test and SUT use the same instance
@@ -87,7 +87,7 @@ describe('Scope Integration Tests', () => {
     const directionsScopeContent = fs.readFileSync(
       path.resolve(
         __dirname,
-        '../../../data/mods/core/scopes/clear_directions.scope'
+        '../../../data/mods/movement/scopes/clear_directions.scope'
       ),
       'utf8'
     );
@@ -119,7 +119,7 @@ describe('Scope Integration Tests', () => {
     scopeRegistry.initialize({
       'core:followers': followerDefs.get('core:followers'),
       'core:environment': environmentDefs.get('core:environment'),
-      'core:clear_directions': directionDefs.get('core:clear_directions'),
+      'movement:clear_directions': directionDefs.get('movement:clear_directions'),
       'core:potential_leaders': potentialLeadersDefs.get(
         'core:potential_leaders'
       ),
@@ -168,8 +168,8 @@ describe('Scope Integration Tests', () => {
         ],
       },
     });
-    registry.store('conditions', 'core:exit-is-unblocked', {
-      id: 'core:exit-is-unblocked',
+    registry.store('conditions', 'movement:exit-is-unblocked', {
+      id: 'movement:exit-is-unblocked',
       logic: { '!': { var: 'entity.blocker' } },
     });
 
@@ -666,7 +666,7 @@ describe('Scope Integration Tests', () => {
         context
       );
       const goActions = result.actions.filter(
-        (action) => action.id === 'core:go'
+        (action) => action.id === 'movement:go'
       );
       expect(goActions.length).toBeGreaterThan(0);
       const targetIds = goActions

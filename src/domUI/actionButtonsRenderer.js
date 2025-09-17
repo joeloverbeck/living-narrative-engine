@@ -161,6 +161,7 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
           'groupActionsByNamespace',
           'getSortedNamespaces',
           'formatNamespaceDisplayName',
+          'shouldShowCounts',
         ],
       }
     );
@@ -660,7 +661,10 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
   _addHoverListeners(button) {
     // Event delegation handles the performance in production
     // But we maintain individual listeners for test compatibility
-    if (process.env.NODE_ENV === 'test') {
+    const isTestEnvironment = typeof globalThis !== 'undefined' &&
+      globalThis.process?.env?.NODE_ENV === 'test';
+
+    if (isTestEnvironment) {
       // Use bound handlers to avoid memory leaks
       button.addEventListener('mouseenter', this.boundHoverHandlers.enter);
       button.addEventListener('mouseleave', this.boundHoverHandlers.leave);
@@ -682,7 +686,10 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
    */
   _removeHoverListeners(button) {
     if (button.dataset.hasHoverListeners === 'true') {
-      if (process.env.NODE_ENV === 'test') {
+      const isTestEnvironment = typeof globalThis !== 'undefined' &&
+        globalThis.process?.env?.NODE_ENV === 'test';
+
+      if (isTestEnvironment) {
         button.removeEventListener('mouseenter', this.boundHoverHandlers.enter);
         button.removeEventListener('mouseleave', this.boundHoverHandlers.leave);
         button.removeEventListener('focus', this.boundHoverHandlers.enter);
@@ -980,8 +987,13 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
 
     const displayName =
       this.#actionCategorizationService.formatNamespaceDisplayName(namespace);
-    // Note: UI_CATEGORIZATION_CONFIG has showCounts: true by default
-    header.textContent = `${displayName} (${actionCount})`;
+
+    // Check configuration to determine if counts should be shown
+    if (this.#actionCategorizationService.shouldShowCounts()) {
+      header.textContent = `${displayName} (${actionCount})`;
+    } else {
+      header.textContent = displayName;
+    }
 
     return header;
   }

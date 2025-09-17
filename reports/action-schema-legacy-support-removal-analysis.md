@@ -19,7 +19,7 @@ Actions using the new object format with `{ "primary": {...} }`:
 
 **Core Mod (2/5)**
 
-- `core:go` - Multi-target with direction selection
+- `movement:go` - Multi-target with direction selection
 - `core:dismiss` - Single target with object format
 
 **Violence Mod (2/2)** ✅ **COMPLETE**

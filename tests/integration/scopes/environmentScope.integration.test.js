@@ -129,8 +129,8 @@ describe('Scope Integration Tests', () => {
         ],
       },
     });
-    registry.store('conditions', 'core:actor-can-move', {
-      id: 'core:actor-can-move',
+    registry.store('conditions', 'movement:actor-can-move', {
+      id: 'movement:actor-can-move',
       logic: {
         '!!': { var: 'actor.components.core:movement' },
       },

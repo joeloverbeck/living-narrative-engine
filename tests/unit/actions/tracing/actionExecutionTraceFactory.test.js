@@ -63,40 +63,40 @@ describe('ActionExecutionTraceFactory', () => {
 
   describe('createTrace()', () => {
     const validTurnAction = {
-      actionDefinitionId: 'core:go',
+      actionDefinitionId: 'movement:go',
       commandString: 'go north',
       parameters: { direction: 'north' },
     };
 
     it('should create trace with valid parameters and log debug message', () => {
       const result = factory.createTrace({
-        actionId: 'core:go',
+        actionId: 'movement:go',
         actorId: 'player-1',
         turnAction: validTurnAction,
         enableTiming: true,
       });
 
       expect(ActionExecutionTrace).toHaveBeenCalledWith({
-        actionId: 'core:go',
+        actionId: 'movement:go',
         actorId: 'player-1',
         turnAction: validTurnAction,
         enableTiming: true,
       });
 
       expect(result).toBeDefined();
-      expect(result.actionId).toBe('core:go');
+      expect(result.actionId).toBe('movement:go');
       expect(result.actorId).toBe('player-1');
 
       // Verify debug logging occurs after successful creation
       expect(mockLogger.debug).toHaveBeenCalledTimes(1);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        "Created execution trace for action 'core:go' by actor 'player-1'"
+        "Created execution trace for action 'movement:go' by actor 'player-1'"
       );
     });
 
     it('should create trace with default enableTiming=true', () => {
       factory.createTrace({
-        actionId: 'core:go',
+        actionId: 'movement:go',
         actorId: 'player-1',
         turnAction: validTurnAction,
       });
@@ -108,7 +108,7 @@ describe('ActionExecutionTraceFactory', () => {
 
     it('should create trace with enableTiming=false when specified', () => {
       factory.createTrace({
-        actionId: 'core:go',
+        actionId: 'movement:go',
         actorId: 'player-1',
         turnAction: validTurnAction,
         enableTiming: false,
@@ -152,7 +152,7 @@ describe('ActionExecutionTraceFactory', () => {
     it('should throw error for null actorId', () => {
       expect(() =>
         factory.createTrace({
-          actionId: 'core:go',
+          actionId: 'movement:go',
           actorId: null,
           turnAction: validTurnAction,
         })
@@ -162,7 +162,7 @@ describe('ActionExecutionTraceFactory', () => {
     it('should throw error for empty actorId', () => {
       expect(() =>
         factory.createTrace({
-          actionId: 'core:go',
+          actionId: 'movement:go',
           actorId: '',
           turnAction: validTurnAction,
         })
@@ -172,7 +172,7 @@ describe('ActionExecutionTraceFactory', () => {
     it('should throw error for non-string actorId', () => {
       expect(() =>
         factory.createTrace({
-          actionId: 'core:go',
+          actionId: 'movement:go',
           actorId: 123,
           turnAction: validTurnAction,
         })
@@ -182,7 +182,7 @@ describe('ActionExecutionTraceFactory', () => {
     it('should throw Error wrapping InvalidArgumentError for null turnAction', () => {
       expect(() =>
         factory.createTrace({
-          actionId: 'core:go',
+          actionId: 'movement:go',
           actorId: 'player-1',
           turnAction: null,
         })
@@ -194,7 +194,7 @@ describe('ActionExecutionTraceFactory', () => {
     it('should throw Error wrapping InvalidArgumentError for non-object turnAction', () => {
       expect(() =>
         factory.createTrace({
-          actionId: 'core:go',
+          actionId: 'movement:go',
           actorId: 'player-1',
           turnAction: 'not-an-object',
         })
@@ -206,7 +206,7 @@ describe('ActionExecutionTraceFactory', () => {
     it('should throw error for turnAction missing actionDefinitionId', () => {
       expect(() =>
         factory.createTrace({
-          actionId: 'core:go',
+          actionId: 'movement:go',
           actorId: 'player-1',
           turnAction: { commandString: 'go north' },
         })
@@ -215,14 +215,14 @@ describe('ActionExecutionTraceFactory', () => {
 
     it('should log warning for invalid commandString type', () => {
       const invalidTurnAction = {
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
         commandString: 123, // should be string
         parameters: { direction: 'north' },
       };
 
       // The warning comes from the private #validateTurnAction method
       factory.createTrace({
-        actionId: 'core:go',
+        actionId: 'movement:go',
         actorId: 'player-1',
         turnAction: invalidTurnAction,
       });
@@ -234,13 +234,13 @@ describe('ActionExecutionTraceFactory', () => {
 
     it('should log warning for invalid parameters type', () => {
       const invalidTurnAction = {
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
         commandString: 'go north',
         parameters: 'should-be-object', // should be object
       };
 
       factory.createTrace({
-        actionId: 'core:go',
+        actionId: 'movement:go',
         actorId: 'player-1',
         turnAction: invalidTurnAction,
       });
@@ -252,7 +252,7 @@ describe('ActionExecutionTraceFactory', () => {
 
     it('should not warn for valid commandString and parameters types', () => {
       factory.createTrace({
-        actionId: 'core:go',
+        actionId: 'movement:go',
         actorId: 'player-1',
         turnAction: validTurnAction,
       });
@@ -262,12 +262,12 @@ describe('ActionExecutionTraceFactory', () => {
 
     it('should handle missing optional fields gracefully', () => {
       const minimalTurnAction = {
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
       };
 
       expect(() =>
         factory.createTrace({
-          actionId: 'core:go',
+          actionId: 'movement:go',
           actorId: 'player-1',
           turnAction: minimalTurnAction,
         })
@@ -284,7 +284,7 @@ describe('ActionExecutionTraceFactory', () => {
 
       expect(() =>
         factory.createTrace({
-          actionId: 'core:go',
+          actionId: 'movement:go',
           actorId: 'player-1',
           turnAction: validTurnAction,
         })
@@ -301,7 +301,7 @@ describe('ActionExecutionTraceFactory', () => {
 
   describe('createFromTurnAction()', () => {
     const validTurnAction = {
-      actionDefinitionId: 'core:go',
+      actionDefinitionId: 'movement:go',
       commandString: 'go north',
       parameters: { direction: 'north' },
     };
@@ -310,7 +310,7 @@ describe('ActionExecutionTraceFactory', () => {
       const result = factory.createFromTurnAction(validTurnAction, 'player-1');
 
       expect(ActionExecutionTrace).toHaveBeenCalledWith({
-        actionId: 'core:go',
+        actionId: 'movement:go',
         actorId: 'player-1',
         turnAction: validTurnAction,
         enableTiming: true,
@@ -339,7 +339,7 @@ describe('ActionExecutionTraceFactory', () => {
       factory.createFromTurnAction(validTurnAction, 'player-1');
 
       expect(ActionExecutionTrace).toHaveBeenCalledWith(
-        expect.objectContaining({ actionId: 'core:go' })
+        expect.objectContaining({ actionId: 'movement:go' })
       );
     });
 
@@ -400,7 +400,7 @@ describe('ActionExecutionTraceFactory', () => {
       factory.createFromTurnAction(validTurnAction, 'player-1', false);
 
       expect(createTraceSpy).toHaveBeenCalledWith({
-        actionId: 'core:go',
+        actionId: 'movement:go',
         actorId: 'player-1',
         turnAction: validTurnAction,
         enableTiming: false,
@@ -413,17 +413,17 @@ describe('ActionExecutionTraceFactory', () => {
   describe('Error handling and logging', () => {
     it('should log debug message on successful trace creation', () => {
       const validTurnAction = {
-        actionDefinitionId: 'core:test',
+        actionDefinitionId: 'movement:test',
       };
 
       factory.createTrace({
-        actionId: 'core:test',
+        actionId: 'movement:test',
         actorId: 'test-actor',
         turnAction: validTurnAction,
       });
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        "Created execution trace for action 'core:test' by actor 'test-actor'"
+        "Created execution trace for action 'movement:test' by actor 'test-actor'"
       );
     });
 
@@ -435,12 +435,12 @@ describe('ActionExecutionTraceFactory', () => {
       });
 
       const validTurnAction = {
-        actionDefinitionId: 'core:test',
+        actionDefinitionId: 'movement:test',
       };
 
       expect(() =>
         factory.createTrace({
-          actionId: 'core:test',
+          actionId: 'movement:test',
           actorId: 'test-actor',
           turnAction: validTurnAction,
         })

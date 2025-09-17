@@ -35,7 +35,7 @@ describe('Action Tracing - Pipeline Integration', () => {
       // Setup: Create discovery service with tracing enabled
       const discoveryService = testBed.createDiscoveryServiceWithTracing({
         actionTracingEnabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         verbosity: 'detailed',
       });
 
@@ -70,7 +70,7 @@ describe('Action Tracing - Pipeline Integration', () => {
     it('should handle multiple actions in single pipeline run', async () => {
       const discoveryService = testBed.createDiscoveryServiceWithTracing({
         actionTracingEnabled: true,
-        tracedActions: ['core:go', 'core:take', 'core:use'],
+        tracedActions: ['movement:go', 'core:take', 'core:use'],
         verbosity: 'standard',
       });
 
@@ -119,7 +119,7 @@ describe('Action Tracing - Pipeline Integration', () => {
     it('should capture component filtering data', async () => {
       const discoveryService = testBed.createDiscoveryServiceWithTracing({
         actionTracingEnabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         verbosity: 'verbose',
       });
 
@@ -291,7 +291,7 @@ describe('Action Tracing - Pipeline Integration', () => {
     it('should capture target resolution for legacy actions', async () => {
       const discoveryService = testBed.createDiscoveryServiceWithTracing({
         actionTracingEnabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         verbosity: 'verbose',
       });
 
@@ -373,7 +373,7 @@ describe('Action Tracing - Pipeline Integration', () => {
     it('should capture formatting template and parameters', async () => {
       const discoveryService = testBed.createDiscoveryServiceWithTracing({
         actionTracingEnabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         verbosity: 'verbose',
       });
 
@@ -453,7 +453,7 @@ describe('Action Tracing - Pipeline Integration', () => {
     it('should include minimal data with minimal verbosity', async () => {
       const discoveryService = testBed.createDiscoveryServiceWithTracing({
         actionTracingEnabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         verbosity: 'minimal',
       });
 
@@ -482,7 +482,7 @@ describe('Action Tracing - Pipeline Integration', () => {
     it('should include all data with verbose level', async () => {
       const discoveryService = testBed.createDiscoveryServiceWithTracing({
         actionTracingEnabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         verbosity: 'verbose',
       });
 
@@ -581,7 +581,7 @@ describe('Action Tracing - Pipeline Integration', () => {
     it('should integrate with StructuredTrace system', async () => {
       const discoveryService = testBed.createDiscoveryServiceWithTracing({
         actionTracingEnabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         verbosity: 'standard',
       });
 

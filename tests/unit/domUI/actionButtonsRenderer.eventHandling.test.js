@@ -472,7 +472,7 @@ describe('ActionButtonsRenderer', () => {
     });
 
     it('should filter invalid actions, set valid ones, and call refreshList', async () => {
-      const validComposite = createValidActionComposite(1, 'core:go');
+      const validComposite = createValidActionComposite(1, 'movement:go');
       const invalidComposite = {
         index: 2,
         actionId: null, // Invalid actionId

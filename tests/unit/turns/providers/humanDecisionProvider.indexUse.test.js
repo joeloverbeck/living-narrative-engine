@@ -43,7 +43,7 @@ describe('HumanDecisionProvider', () => {
       { index: 1, id: 'core:wait', command: 'wait' },
       {
         index: 2,
-        id: 'core:go',
+        id: 'movement:go',
         command: 'go north',
         params: { direction: 'north' },
       },

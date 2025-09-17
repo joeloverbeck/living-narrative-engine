@@ -26,7 +26,7 @@ describe('ActionAwareStructuredTrace - Integration Tests', () => {
       // Create ActionTraceFilter
       const actionFilter = new ActionTraceFilter({
         enabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         verbosityLevel: 'standard',
         logger: mockLogger,
       });
@@ -56,7 +56,7 @@ describe('ActionAwareStructuredTrace - Integration Tests', () => {
       actionTrace.step('Starting action processing', 'integration-test');
 
       const span = actionTrace.startSpan('action-evaluation');
-      actionTrace.captureActionData('component_filtering', 'core:go', {
+      actionTrace.captureActionData('component_filtering', 'movement:go', {
         actorComponents: ['core:position'],
         passed: true,
       });
@@ -66,7 +66,7 @@ describe('ActionAwareStructuredTrace - Integration Tests', () => {
 
       // Verify both tracing systems captured data
       expect(actionTrace.logs.length).toBe(2); // step and success
-      expect(actionTrace.getActionTrace('core:go')).toBeTruthy();
+      expect(actionTrace.getActionTrace('movement:go')).toBeTruthy();
       expect(actionTrace.getPerformanceSummary().operationCount).toBe(1);
     });
 
@@ -114,7 +114,7 @@ describe('ActionAwareStructuredTrace - Integration Tests', () => {
 
     it('should maintain backward compatibility with existing trace consumers', async () => {
       const actionTrace = await testBed.createActionAwareTrace({
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         verbosity: 'standard',
       });
 
@@ -148,17 +148,17 @@ describe('ActionAwareStructuredTrace - Integration Tests', () => {
       expect(result.performance.operationCount).toBe(1);
 
       // Verify action tracing still works
-      actionTrace.captureActionData('simulation_stage', 'core:go', {
+      actionTrace.captureActionData('simulation_stage', 'movement:go', {
         test: true,
       });
-      expect(actionTrace.isActionTraced('core:go')).toBe(true);
+      expect(actionTrace.isActionTraced('movement:go')).toBe(true);
     });
   });
 
   describe('End-to-End Action Pipeline Integration', () => {
     it('should work in simulated action discovery pipeline', async () => {
       const actionTrace = await testBed.createActionAwareTrace({
-        tracedActions: ['core:go', 'core:look'],
+        tracedActions: ['movement:go', 'core:look'],
         verbosity: 'detailed',
         includeComponentData: true,
         includePrerequisites: true,
@@ -222,7 +222,7 @@ describe('ActionAwareStructuredTrace - Integration Tests', () => {
       };
 
       // Run pipeline for multiple actions
-      const goResult = await simulateActionPipeline(actionTrace, 'core:go');
+      const goResult = await simulateActionPipeline(actionTrace, 'movement:go');
       const lookResult = await simulateActionPipeline(actionTrace, 'core:look');
 
       // Verify pipeline results
@@ -230,7 +230,7 @@ describe('ActionAwareStructuredTrace - Integration Tests', () => {
       expect(lookResult.success).toBe(true);
 
       // Verify action tracing captured all stages
-      const goTrace = actionTrace.getActionTrace('core:go');
+      const goTrace = actionTrace.getActionTrace('movement:go');
       const lookTrace = actionTrace.getActionTrace('core:look');
 
       expect(goTrace).toBeTruthy();
@@ -271,7 +271,7 @@ describe('ActionAwareStructuredTrace - Integration Tests', () => {
 
     it('should handle mixed traced and untraced actions in pipeline', async () => {
       const actionTrace = await testBed.createActionAwareTrace({
-        tracedActions: ['core:go'], // Only trace 'go', not 'look' or 'wait'
+        tracedActions: ['movement:go'], // Only trace 'go', not 'look' or 'wait'
         verbosity: 'standard',
       });
 
@@ -285,12 +285,12 @@ describe('ActionAwareStructuredTrace - Integration Tests', () => {
       };
 
       // Process multiple actions
-      processAction(actionTrace, 'core:go', true);
+      processAction(actionTrace, 'movement:go', true);
       processAction(actionTrace, 'core:look', false);
       processAction(actionTrace, 'core:wait', false);
 
-      // Only 'core:go' should be traced
-      expect(actionTrace.isActionTraced('core:go')).toBe(true);
+      // Only 'movement:go' should be traced
+      expect(actionTrace.isActionTraced('movement:go')).toBe(true);
       expect(actionTrace.isActionTraced('core:look')).toBe(false);
       expect(actionTrace.isActionTraced('core:wait')).toBe(false);
 
@@ -364,7 +364,7 @@ describe('ActionAwareStructuredTrace - Integration Tests', () => {
   describe('Error Recovery and Resilience', () => {
     it('should continue working after partial system failures', async () => {
       const actionFilter = new ActionTraceFilter({
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         verbosityLevel: 'standard',
         logger: mockLogger,
       });
@@ -376,8 +376,8 @@ describe('ActionAwareStructuredTrace - Integration Tests', () => {
       });
 
       // Normal operation
-      actionTrace.captureActionData('stage1', 'core:go', { normal: 'data' });
-      expect(actionTrace.isActionTraced('core:go')).toBe(true);
+      actionTrace.captureActionData('stage1', 'movement:go', { normal: 'data' });
+      expect(actionTrace.isActionTraced('movement:go')).toBe(true);
 
       // Introduce a problematic filter state
       actionFilter.getVerbosityLevel = jest.fn().mockImplementation(() => {
@@ -385,7 +385,7 @@ describe('ActionAwareStructuredTrace - Integration Tests', () => {
       });
 
       // Should handle the error gracefully
-      actionTrace.captureActionData('stage2', 'core:go', { after: 'error' });
+      actionTrace.captureActionData('stage2', 'movement:go', { after: 'error' });
 
       // Should have logged the error but continued working
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -397,9 +397,9 @@ describe('ActionAwareStructuredTrace - Integration Tests', () => {
       actionFilter.getVerbosityLevel = jest.fn().mockReturnValue('standard');
 
       // Should work normally again
-      actionTrace.captureActionData('stage3', 'core:go', { recovered: 'data' });
+      actionTrace.captureActionData('stage3', 'movement:go', { recovered: 'data' });
 
-      const actionData = actionTrace.getActionTrace('core:go');
+      const actionData = actionTrace.getActionTrace('movement:go');
       expect(actionData.stages.stage1).toBeDefined();
       expect(actionData.stages.stage3).toBeDefined();
     });
@@ -438,7 +438,7 @@ describe('ActionAwareStructuredTrace - Integration Tests', () => {
   describe('Configuration and Filtering Integration', () => {
     it('should support dynamic filter configuration changes', async () => {
       const actionFilter = new ActionTraceFilter({
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         verbosityLevel: 'minimal',
         inclusionConfig: {
           componentData: false,
@@ -455,14 +455,14 @@ describe('ActionAwareStructuredTrace - Integration Tests', () => {
       });
 
       // Capture with minimal verbosity
-      actionTrace.captureActionData('stage1', 'core:go', {
+      actionTrace.captureActionData('stage1', 'movement:go', {
         passed: true,
         actorComponents: ['core:position'],
         prerequisites: [{ test: 'data' }],
       });
 
       let capturedData =
-        actionTrace.getActionTrace('core:go').stages.stage1.data;
+        actionTrace.getActionTrace('movement:go').stages.stage1.data;
       expect(capturedData.passed).toBe(true);
       expect(capturedData.actorComponents).toBeUndefined();
 
@@ -474,13 +474,13 @@ describe('ActionAwareStructuredTrace - Integration Tests', () => {
       });
 
       // Capture with new settings
-      actionTrace.captureActionData('stage2', 'core:go', {
+      actionTrace.captureActionData('stage2', 'movement:go', {
         passed: true,
         actorComponents: ['core:position'],
         prerequisites: [{ test: 'data' }],
       });
 
-      capturedData = actionTrace.getActionTrace('core:go').stages.stage2.data;
+      capturedData = actionTrace.getActionTrace('movement:go').stages.stage2.data;
       expect(capturedData.passed).toBe(true);
       expect(capturedData.actorComponents).toEqual(['core:position']);
       expect(capturedData.prerequisites).toEqual([{ test: 'data' }]);
@@ -501,13 +501,13 @@ describe('ActionAwareStructuredTrace - Integration Tests', () => {
       });
 
       // These should be traced
-      actionTrace.captureActionData('test', 'core:go', { should: 'trace' });
       actionTrace.captureActionData('test', 'core:look', { should: 'trace' });
       actionTrace.captureActionData('test', 'test:specific', {
         should: 'trace',
       });
 
       // These should not be traced
+      actionTrace.captureActionData('test', 'movement:go', { should: 'not trace' });
       actionTrace.captureActionData('test', 'core:debug', {
         should: 'not trace',
       });
@@ -515,14 +515,14 @@ describe('ActionAwareStructuredTrace - Integration Tests', () => {
         should: 'not trace',
       });
 
-      expect(actionTrace.isActionTraced('core:go')).toBe(true);
       expect(actionTrace.isActionTraced('core:look')).toBe(true);
       expect(actionTrace.isActionTraced('test:specific')).toBe(true);
+      expect(actionTrace.isActionTraced('movement:go')).toBe(false);
       expect(actionTrace.isActionTraced('core:debug')).toBe(false);
       expect(actionTrace.isActionTraced('other:action')).toBe(false);
 
       const summary = actionTrace.getTracingSummary();
-      expect(summary.tracedActionCount).toBe(3);
+      expect(summary.tracedActionCount).toBe(2);
     });
   });
 });

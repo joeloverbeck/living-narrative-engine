@@ -13,12 +13,12 @@ describe('CommandProcessor Tracing Integration', () => {
   });
 
   it('should create complete trace for traced action execution', async () => {
-    // Configure to trace 'core:go' actions
-    testBed.configureTracing(['core:go']);
+    // Configure to trace 'movement:go' actions
+    testBed.configureTracing(['movement:go']);
 
     const actor = testBed.createActor('player-1');
     const turnAction = {
-      actionDefinitionId: 'core:go',
+      actionDefinitionId: 'movement:go',
       commandString: 'go north',
       parameters: { direction: 'north' },
     };
@@ -37,7 +37,7 @@ describe('CommandProcessor Tracing Integration', () => {
     expect(traces).toHaveLength(1);
 
     const trace = traces[0];
-    expect(trace.metadata.actionId).toBe('core:go');
+    expect(trace.metadata.actionId).toBe('movement:go');
     expect(trace.metadata.actorId).toBe('player-1');
     expect(trace.execution.phases.length).toBeGreaterThanOrEqual(3);
     expect(trace.eventPayload).toBeDefined();
@@ -45,11 +45,11 @@ describe('CommandProcessor Tracing Integration', () => {
   });
 
   it('should handle multiple concurrent traced actions', async () => {
-    testBed.configureTracing(['core:*']);
+    testBed.configureTracing(['*']);
 
     const actor = testBed.createActor('player-1');
     const actions = [
-      { actionDefinitionId: 'core:go', commandString: 'go north' },
+      { actionDefinitionId: 'movement:go', commandString: 'go north' },
       { actionDefinitionId: 'core:look', commandString: 'look around' },
       { actionDefinitionId: 'core:inventory', commandString: 'inventory' },
     ];
@@ -72,7 +72,7 @@ describe('CommandProcessor Tracing Integration', () => {
 
     // Verify each trace has correct action ID
     const actionIds = traces.map((trace) => trace.metadata.actionId);
-    expect(actionIds).toContain('core:go');
+    expect(actionIds).toContain('movement:go');
     expect(actionIds).toContain('core:look');
     expect(actionIds).toContain('core:inventory');
   });
@@ -135,14 +135,14 @@ describe('CommandProcessor Tracing Integration', () => {
   });
 
   it('should respect trace filtering patterns', async () => {
-    // Only trace 'core:go' actions
-    testBed.configureTracing(['core:go']);
+    // Only trace 'movement:go' actions
+    testBed.configureTracing(['movement:go']);
 
     const actor = testBed.createActor('player-1');
 
     // Execute multiple actions
     await testBed.commandProcessor.dispatchAction(actor, {
-      actionDefinitionId: 'core:go',
+      actionDefinitionId: 'movement:go',
       commandString: 'go north',
     });
 
@@ -156,10 +156,10 @@ describe('CommandProcessor Tracing Integration', () => {
       commandString: 'custom action',
     });
 
-    // Only 'core:go' should be traced
+    // Only 'movement:go' should be traced
     const traces = await testBed.getWrittenTraces();
     expect(traces).toHaveLength(1);
-    expect(traces[0].metadata.actionId).toBe('core:go');
+    expect(traces[0].metadata.actionId).toBe('movement:go');
   });
 
   it('should capture execution timing accurately', async () => {

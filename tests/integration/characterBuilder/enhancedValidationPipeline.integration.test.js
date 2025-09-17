@@ -329,7 +329,7 @@ describe('Enhanced Validation Pipeline Integration', () => {
               'making the wrong recommendation in a critical case',
             ],
           },
-          'core:goals': {
+          'movement:goals': {
             shortTerm: ['complete additional trauma therapy certification'],
             longTerm: [
               'open a community mental health center',

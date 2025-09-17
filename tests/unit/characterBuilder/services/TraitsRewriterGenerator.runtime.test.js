@@ -154,7 +154,7 @@ describe('TraitsRewriterGenerator - Runtime Error Reproduction', () => {
         'core:fears': {
           text: 'That Julen will mature enough to recognize the predatory nature of their relationship and leave him completely alone.',
         },
-        'core:goals': {
+        'movement:goals': {
           goals: [
             {
               text: 'Gradually increase physical contact with Julen through seemingly innocent gestures.',

@@ -13,12 +13,12 @@ Migration of movement-related functionality from core mod to existing movement m
 - **Backup Created**: Yes
 
 ### Files Being Migrated
-1. `core:go` → `movement:go`
+1. `movement:go` → `movement:go`
 2. `core:actor-can-move` → `movement:actor-can-move`
 3. `core:exit-is-unblocked` → `movement:exit-is-unblocked`
 4. `core:clear_directions` → `movement:clear_directions`
 5. `core:event-is-action-go` → `movement:event-is-action-go`
-6. `core:go.rule` → `movement:go.rule`
+6. `movement:go.rule` → `movement:go.rule`
 
 ### Backup Location
 `movement-migration-backup-20250915-182105/`

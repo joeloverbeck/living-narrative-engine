@@ -14,6 +14,7 @@ export const monitoringTokens = freeze({
   IMonitoringCoordinator: 'IMonitoringCoordinator',
   IPerformanceMonitor: 'IPerformanceMonitor',
   ICircuitBreaker: 'ICircuitBreaker',
+  ICentralErrorHandler: 'ICentralErrorHandler',
 
   // Memory monitoring services
   IMemoryMonitor: 'IMemoryMonitor',

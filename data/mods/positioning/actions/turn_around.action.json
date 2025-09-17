@@ -17,7 +17,7 @@
   "prerequisites": [
     {
       "logic": {
-        "condition_ref": "core:actor-can-move"
+        "condition_ref": "movement:actor-can-move"
       },
       "failure_message": "You cannot move right now."
     },

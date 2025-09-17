@@ -142,7 +142,7 @@ const trace = new ActionAwareStructuredTrace({
 });
 
 // Capture pipeline data
-trace.captureActionData('component_filtering', 'core:go', {
+trace.captureActionData('component_filtering', 'movement:go', {
   actorComponents: ['core:position', 'core:movement'],
   requiredComponents: ['core:position'],
   passed: true,
@@ -165,7 +165,7 @@ trace.captureActionData('component_filtering', 'core:go', {
 
 ```javascript
 const trace = new ActionExecutionTrace({
-  actionId: 'core:go',
+  actionId: 'movement:go',
   actorId: 'player_1',
   turnAction: turnActionObject,
   enableTiming: true,
@@ -1221,7 +1221,7 @@ describe('ActionTraceFilter', () => {
 
   describe('shouldTrace', () => {
     it('should trace actions matching patterns', () => {
-      expect(filter.shouldTrace('core:go')).toBe(true);
+      expect(filter.shouldTrace('movement:go')).toBe(true);
       expect(filter.shouldTrace('game:combat')).toBe(true);
       expect(filter.shouldTrace('core:look')).toBe(true);
     });
@@ -1281,13 +1281,13 @@ describe('Action Tracing Integration', () => {
 
   it('should capture and store action pipeline data', async () => {
     // Simulate pipeline execution
-    trace.captureActionData('component_filtering', 'core:go', {
+    trace.captureActionData('component_filtering', 'movement:go', {
       actorComponents: ['position', 'movement'],
       requiredComponents: ['position'],
       passed: true,
     });
 
-    trace.captureActionData('target_resolution', 'core:go', {
+    trace.captureActionData('target_resolution', 'movement:go', {
       targets: [{ type: 'entity', id: 'door_1' }],
       resolved: true,
     });
@@ -1298,11 +1298,11 @@ describe('Action Tracing Integration', () => {
     // Verify storage
     const stored = await storageAdapter.getItem('actionTraces');
     expect(stored).toHaveLength(1);
-    expect(stored[0].data.actions['core:go']).toBeDefined();
-    expect(stored[0].data.actions['core:go'].stages).toHaveProperty(
+    expect(stored[0].data.actions['movement:go']).toBeDefined();
+    expect(stored[0].data.actions['movement:go'].stages).toHaveProperty(
       'component_filtering'
     );
-    expect(stored[0].data.actions['core:go'].stages).toHaveProperty(
+    expect(stored[0].data.actions['movement:go'].stages).toHaveProperty(
       'target_resolution'
     );
   });

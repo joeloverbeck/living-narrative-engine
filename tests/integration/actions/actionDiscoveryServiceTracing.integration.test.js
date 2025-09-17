@@ -85,7 +85,7 @@ describe('ActionDiscoveryService - Action Tracing Integration', () => {
 
   it('should integrate action tracing with full pipeline execution', async () => {
     await testBed.setupActionTracing({
-      tracedActions: ['core:go', 'core:look'],
+      tracedActions: ['movement:go', 'core:look'],
       verbosity: 'detailed',
     });
 
@@ -109,7 +109,7 @@ describe('ActionDiscoveryService - Action Tracing Integration', () => {
 
   it('should capture action data across all pipeline stages', async () => {
     await testBed.setupActionTracing({
-      tracedActions: ['core:go'],
+      tracedActions: ['movement:go'],
       verbosity: 'verbose',
     });
 
@@ -118,9 +118,9 @@ describe('ActionDiscoveryService - Action Tracing Integration', () => {
 
     const traceData = testBed.getActionTraceData();
 
-    // If 'core:go' action was discovered, it should be traced
-    if (traceData.has('core:go')) {
-      const goActionTrace = traceData.get('core:go');
+    // If 'movement:go' action was discovered, it should be traced
+    if (traceData.has('movement:go')) {
+      const goActionTrace = traceData.get('movement:go');
       expect(goActionTrace).toBeDefined();
 
       // Should have data from multiple pipeline stages
@@ -150,7 +150,7 @@ describe('ActionDiscoveryService - Action Tracing Integration', () => {
 
   it('should handle mixed traced and non-traced actions', async () => {
     await testBed.setupActionTracing({
-      tracedActions: ['core:go'], // Only trace 'go' action
+      tracedActions: ['movement:go'], // Only trace 'go' action
       verbosity: 'standard',
     });
 
@@ -162,9 +162,9 @@ describe('ActionDiscoveryService - Action Tracing Integration', () => {
 
     const traceData = testBed.getActionTraceData();
 
-    // Only 'core:go' should be traced if it exists
+    // Only 'movement:go' should be traced if it exists
     for (const [actionId] of traceData) {
-      expect(actionId).toBe('core:go');
+      expect(actionId).toBe('movement:go');
     }
   });
 

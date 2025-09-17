@@ -19,7 +19,7 @@ describe('Action Tracing - Execution Integration', () => {
       // Configure tracing for specific action
       await testBed.configureTracing({
         enabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         outputDirectory: testOutputDir,
         verbosity: 'detailed',
       });
@@ -30,7 +30,7 @@ describe('Action Tracing - Execution Integration', () => {
       });
 
       // Create turn action
-      const turnAction = testBed.createTurnAction('core:go', {
+      const turnAction = testBed.createTurnAction('movement:go', {
         commandString: 'go north',
         parameters: { direction: 'north' },
       });
@@ -42,7 +42,7 @@ describe('Action Tracing - Execution Integration', () => {
 
       // Verify execution succeeded
       expect(result.success).toBe(true);
-      expect(result.actionResult.actionId).toBe('core:go');
+      expect(result.actionResult.actionId).toBe('movement:go');
 
       // Wait for async trace writing
       await testBed.waitForTraceOutput();
@@ -52,13 +52,13 @@ describe('Action Tracing - Execution Integration', () => {
       expect(traces).toHaveLength(1);
 
       // Get the trace data
-      const trace = await testBed.getLatestTrace('core:go');
+      const trace = await testBed.getLatestTrace('movement:go');
       expect(trace).toBeDefined();
-      expect(trace.metadata.actionId).toBe('core:go');
+      expect(trace.metadata.actionId).toBe('movement:go');
       expect(trace.metadata.actorId).toBe('player-1');
       expect(trace.turnAction).toEqual(
         expect.objectContaining({
-          actionDefinitionId: 'core:go',
+          actionDefinitionId: 'movement:go',
           commandString: 'go north',
           parameters: { direction: 'north' },
         })
@@ -75,7 +75,7 @@ describe('Action Tracing - Execution Integration', () => {
     it('should handle multiple concurrent executions', async () => {
       await testBed.configureTracing({
         enabled: true,
-        tracedActions: ['core:go', 'core:take', 'core:use'],
+        tracedActions: ['movement:go', 'core:take', 'core:use'],
         outputDirectory: testOutputDir,
       });
 
@@ -85,7 +85,7 @@ describe('Action Tracing - Execution Integration', () => {
 
       // Create multiple turn actions
       const actions = [
-        testBed.createTurnAction('core:go', { commandString: 'go north' }),
+        testBed.createTurnAction('movement:go', { commandString: 'go north' }),
         testBed.createTurnAction('core:take', { commandString: 'take sword' }),
         testBed.createTurnAction('core:use', { commandString: 'use potion' }),
       ];
@@ -114,7 +114,7 @@ describe('Action Tracing - Execution Integration', () => {
 
       // Verify each action has a trace
       const traceActionIds = traces.map((t) => t.metadata.actionId);
-      expect(traceActionIds).toContain('core:go');
+      expect(traceActionIds).toContain('movement:go');
       expect(traceActionIds).toContain('core:take');
       expect(traceActionIds).toContain('core:use');
     });
@@ -263,11 +263,11 @@ describe('Action Tracing - Execution Integration', () => {
     it('should handle EventDispatchService failures', async () => {
       await testBed.configureTracing({
         enabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
       });
 
       const actor = testBed.createActor('player-1');
-      const turnAction = testBed.createTurnAction('core:go', {
+      const turnAction = testBed.createTurnAction('movement:go', {
         commandString: 'go north',
       });
 
@@ -279,7 +279,7 @@ describe('Action Tracing - Execution Integration', () => {
       expect(result.success).toBe(false);
 
       await testBed.waitForTraceOutput();
-      const trace = await testBed.getLatestTrace('core:go');
+      const trace = await testBed.getLatestTrace('movement:go');
 
       expect(trace.error).toBeDefined();
       expect(trace.error.message).toBe('Event dispatch failed');
@@ -288,12 +288,12 @@ describe('Action Tracing - Execution Integration', () => {
     it('should handle trace output failures gracefully', async () => {
       await testBed.configureTracing({
         enabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         outputDirectory: '/invalid/path', // Cause potential output issues
       });
 
       const actor = testBed.createActor('player-1');
-      const turnAction = testBed.createTurnAction('core:go', {
+      const turnAction = testBed.createTurnAction('movement:go', {
         commandString: 'go north',
       });
 
@@ -353,11 +353,11 @@ describe('Action Tracing - Execution Integration', () => {
     it('should trace event dispatch success', async () => {
       await testBed.configureTracing({
         enabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
       });
 
       const actor = testBed.createActor('player-1');
-      const turnAction = testBed.createTurnAction('core:go', {
+      const turnAction = testBed.createTurnAction('movement:go', {
         commandString: 'go north',
       });
 
@@ -365,7 +365,7 @@ describe('Action Tracing - Execution Integration', () => {
       expect(result.success).toBe(true);
 
       await testBed.waitForTraceOutput();
-      const trace = await testBed.getLatestTrace('core:go');
+      const trace = await testBed.getLatestTrace('movement:go');
 
       expect(trace.result).toBeDefined();
       expect(trace.result.success).toBe(true);
@@ -375,12 +375,12 @@ describe('Action Tracing - Execution Integration', () => {
     it('should capture dispatch timing separately', async () => {
       await testBed.configureTracing({
         enabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         verbosity: 'detailed',
       });
 
       const actor = testBed.createActor('player-1');
-      const turnAction = testBed.createTurnAction('core:go', {
+      const turnAction = testBed.createTurnAction('movement:go', {
         commandString: 'go north',
       });
 
@@ -391,7 +391,7 @@ describe('Action Tracing - Execution Integration', () => {
       expect(result.success).toBe(true);
 
       await testBed.waitForTraceOutput();
-      const trace = await testBed.getLatestTrace('core:go');
+      const trace = await testBed.getLatestTrace('movement:go');
 
       expect(trace.execution.duration).toBeGreaterThan(25); // Should include dispatch delay
 
@@ -477,12 +477,12 @@ describe('Action Tracing - Execution Integration', () => {
     it('should generate traces with correct structure', async () => {
       await testBed.configureTracing({
         enabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         verbosity: 'standard',
       });
 
       const actor = testBed.createActor('player-1');
-      const turnAction = testBed.createTurnAction('core:go', {
+      const turnAction = testBed.createTurnAction('movement:go', {
         commandString: 'go north',
       });
 
@@ -496,7 +496,7 @@ describe('Action Tracing - Execution Integration', () => {
 
       // Validate metadata structure
       expect(trace.metadata).toBeDefined();
-      expect(trace.metadata.actionId).toBe('core:go');
+      expect(trace.metadata.actionId).toBe('movement:go');
       expect(trace.metadata.actorId).toBe('player-1');
       expect(trace.metadata.traceType).toBe('execution');
       expect(trace.metadata.createdAt).toBeDefined();
@@ -514,18 +514,18 @@ describe('Action Tracing - Execution Integration', () => {
 
       // Validate turnAction structure
       expect(trace.turnAction).toBeDefined();
-      expect(trace.turnAction.actionDefinitionId).toBe('core:go');
+      expect(trace.turnAction.actionDefinitionId).toBe('movement:go');
       expect(trace.turnAction.commandString).toBe('go north');
     });
 
     it('should respect verbosity settings in output', async () => {
       const actor = testBed.createActor('player-1');
-      const turnAction = testBed.createTurnAction('core:go');
+      const turnAction = testBed.createTurnAction('movement:go');
 
       // Test minimal verbosity
       await testBed.configureTracing({
         enabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         verbosity: 'minimal',
       });
 
@@ -546,7 +546,7 @@ describe('Action Tracing - Execution Integration', () => {
       // Test detailed verbosity
       await testBed.configureTracing({
         enabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         verbosity: 'detailed',
       });
 

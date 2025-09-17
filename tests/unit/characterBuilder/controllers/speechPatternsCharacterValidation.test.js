@@ -335,7 +335,7 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
             'being misunderstood',
             'abandonment by those she loves',
           ],
-          'core:goals': {
+          'movement:goals': {
             shortTerm: ['finish mural commission', 'save for studio space'],
             longTerm: [
               'establish herself as recognized artist',

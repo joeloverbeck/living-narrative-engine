@@ -39,7 +39,7 @@ describe('Schema – PLAYER_TURN_PROMPT_ID payload', () => {
         },
         {
           index: 2,
-          actionId: 'core:go',
+          actionId: 'movement:go',
           commandString: 'go out to town',
           params: { targetId: '18f98503-a200-4689-947d-3d8a86d7a30c' },
           description: 'Move to another location.',

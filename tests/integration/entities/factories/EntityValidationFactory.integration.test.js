@@ -62,7 +62,7 @@ describe('EntityValidationFactory - Integration Tests', () => {
       components: {
         'core:short_term_memory': {},
         'core:notes': {},
-        'core:goals': {},
+        'movement:goals': {},
       },
     });
 
@@ -251,7 +251,7 @@ describe('EntityValidationFactory - Integration Tests', () => {
           'core:notes': {
             notes: ['restored note'],
           },
-          'core:goals': null, // Test null component handling
+          'movement:goals': null, // Test null component handling
         },
       };
       const repository = new Map();
@@ -284,7 +284,7 @@ describe('EntityValidationFactory - Integration Tests', () => {
       expect(validatedComponents['core:notes']).toEqual({
         notes: ['restored note'],
       });
-      expect(validatedComponents['core:goals']).toBeNull();
+      expect(validatedComponents['movement:goals']).toBeNull();
 
       // Verify validation was called for each non-null component
       const calls = validator.validate.mock.calls;
@@ -469,7 +469,7 @@ describe('EntityValidationFactory - Integration Tests', () => {
             return { isValid: true };
           case 'core:notes':
             return { isValid: true };
-          case 'core:goals':
+          case 'movement:goals':
             return { isValid: true };
           default:
             return { isValid: false, errors: ['Unknown component type'] };
@@ -480,7 +480,7 @@ describe('EntityValidationFactory - Integration Tests', () => {
       const componentOverrides = {
         'core:short_term_memory': { entries: ['memory 1', 'memory 2'] },
         'core:notes': { notes: ['note 1'] },
-        'core:goals': { goals: ['goal 1'] },
+        'movement:goals': { goals: ['goal 1'] },
       };
 
       // Act

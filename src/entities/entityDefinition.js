@@ -12,7 +12,7 @@ import { extractModId } from '../utils/idUtils.js';
  */
 class EntityDefinition {
   /**
-   * The unique identifier for this entity definition (e.g., "core:goblin").
+   * The unique identifier for this entity definition (e.g., "movement:goblin").
    *
    * @type {string}
    * @readonly
@@ -85,7 +85,7 @@ class EntityDefinition {
 
   /**
    * Gets the mod ID (namespace) from the definition ID.
-   * E.g., "core:goblin" -> "core"
+   * E.g., "movement:goblin" -> "core"
    *
    * @returns {string | undefined} The mod ID, or undefined if the ID format is unexpected.
    */

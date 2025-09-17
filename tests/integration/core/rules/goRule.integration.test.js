@@ -10,8 +10,8 @@ import operationSchema from '../../../../data/schemas/operation.schema.json';
 import jsonLogicSchema from '../../../../data/schemas/json-logic.schema.json';
 import loadOperationSchemas from '../../../unit/helpers/loadOperationSchemas.js';
 import loadConditionSchemas from '../../../unit/helpers/loadConditionSchemas.js';
-import eventIsActionGo from '../../../../data/mods/core/conditions/event-is-action-go.condition.json';
-import goRule from '../../../../data/mods/core/rules/go.rule.json';
+import eventIsActionGo from '../../../../data/mods/movement/conditions/event-is-action-go.condition.json';
+import goRule from '../../../../data/mods/movement/rules/go.rule.json';
 import displaySuccessAndEndTurn from '../../../../data/mods/core/macros/displaySuccessAndEndTurn.macro.json';
 import { expandMacros } from '../../../../src/utils/macroUtils.js';
 import QueryComponentHandler from '../../../../src/logic/operationHandlers/queryComponentHandler.js';
@@ -29,7 +29,7 @@ import {
   EXITS_COMPONENT_ID,
 } from '../../../../src/constants/componentIds.js';
 import { ATTEMPT_ACTION_ID } from '../../../../src/constants/eventIds.js';
-import goAction from '../../../../data/mods/core/actions/go.action.json';
+import goAction from '../../../../data/mods/movement/actions/go.action.json';
 import { createJsonLogicContext } from '../../../../src/logic/contextAssembler.js';
 import { SimpleEntityManager } from '../../../common/entities/index.js';
 import { SafeEventDispatcher } from '../../../../src/events/safeEventDispatcher.js';
@@ -127,7 +127,7 @@ describe('core_handle_go rule integration', () => {
     const dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
       getConditionDefinition: jest.fn((id) =>
-        id === 'core:event-is-action-go' ? eventIsActionGo : undefined
+        id === 'movement:event-is-action-go' ? eventIsActionGo : undefined
       ),
       getEventDefinition: jest.fn((eventName) => {
         // Return a basic event definition for common events
@@ -341,7 +341,7 @@ describe('core_handle_go rule integration', () => {
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'actor1',
-      actionId: 'core:go',
+      actionId: 'movement:go',
       targetId: 'locB',
       originalInput: 'go north',
     });
@@ -397,7 +397,7 @@ describe('core_handle_go rule integration', () => {
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'actor1',
-      actionId: 'core:go',
+      actionId: 'movement:go',
       targetId: null,
       originalInput: 'go south',
     });
@@ -453,7 +453,7 @@ describe('core_handle_go rule integration', () => {
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'actor1',
-      actionId: 'core:go',
+      actionId: 'movement:go',
       targetId: 'locB',
       originalInput: 'go north',
     });
@@ -473,7 +473,7 @@ describe('core_handle_go rule integration', () => {
     const ctx = createJsonLogicContext(
       {
         type: ATTEMPT_ACTION_ID,
-        payload: { actorId: 'actor1', actionId: 'core:go' },
+        payload: { actorId: 'actor1', actionId: 'movement:go' },
       },
       'actor1',
       null,
@@ -539,7 +539,7 @@ describe('core_handle_go rule integration', () => {
       // Test with new multi-target event structure
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         actorId: 'actor1',
-        actionId: 'core:go',
+        actionId: 'movement:go',
         targets: { primary: 'locB' },
         targetId: 'locB', // Backward compatibility
         originalInput: 'go north',
@@ -598,7 +598,7 @@ describe('core_handle_go rule integration', () => {
       // Test with legacy event structure (no targets field)
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         actorId: 'actor1',
-        actionId: 'core:go',
+        actionId: 'movement:go',
         targetId: 'locB',
         originalInput: 'go north',
       });

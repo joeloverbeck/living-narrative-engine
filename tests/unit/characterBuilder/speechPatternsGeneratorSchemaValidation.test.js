@@ -308,7 +308,7 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
           'core:fears': {
             items: ['failure', 'abandonment'],
           },
-          'core:goals': {
+          'movement:goals': {
             shortTerm: ['learn new skills'],
             longTerm: ['achieve mastery'],
           },

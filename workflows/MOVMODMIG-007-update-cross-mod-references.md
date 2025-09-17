@@ -54,7 +54,7 @@ Update all references to movement components in other mods, particularly in the 
 {
   "version": "1.0.0",
   "aliases": {
-    "core:go": "movement:go",
+    "movement:go": "movement:go",
     "core:actor-can-move": "movement:actor-can-move",
     "core:exit-is-unblocked": "movement:exit-is-unblocked",
     "core:clear_directions": "movement:clear_directions",

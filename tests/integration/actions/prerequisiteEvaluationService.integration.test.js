@@ -627,9 +627,9 @@ describe('PrerequisiteEvaluationService Integration Tests - Coverage Improvement
 
       // Setup simpler condition definitions that will pass
       mockGameDataRepository.getConditionDefinition.mockImplementation((id) => {
-        if (id === 'core:actor-can-move') {
+        if (id === 'movement:actor-can-move') {
           return {
-            id: 'core:actor-can-move',
+            id: 'movement:actor-can-move',
             logic: {
               '==': [{ var: 'actor.components.core:movement.locked' }, false],
             },
@@ -656,7 +656,7 @@ describe('PrerequisiteEvaluationService Integration Tests - Coverage Improvement
 
       const prerequisites = [
         {
-          logic: { condition_ref: 'core:actor-can-move' },
+          logic: { condition_ref: 'movement:actor-can-move' },
           failure_message: 'Cannot move',
         },
         {
@@ -704,9 +704,9 @@ describe('PrerequisiteEvaluationService Integration Tests - Coverage Improvement
       });
 
       mockGameDataRepository.getConditionDefinition.mockImplementation((id) => {
-        if (id === 'core:actor-can-move') {
+        if (id === 'movement:actor-can-move') {
           return {
-            id: 'core:actor-can-move',
+            id: 'movement:actor-can-move',
             logic: {
               '==': [{ var: 'actor.components.core:movement.locked' }, false],
             },
@@ -723,7 +723,7 @@ describe('PrerequisiteEvaluationService Integration Tests - Coverage Improvement
         },
         {
           // Condition reference
-          logic: { condition_ref: 'core:actor-can-move' },
+          logic: { condition_ref: 'movement:actor-can-move' },
           failure_message: 'Cannot move',
         },
         {

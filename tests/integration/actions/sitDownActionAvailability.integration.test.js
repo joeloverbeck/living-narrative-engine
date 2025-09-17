@@ -49,9 +49,9 @@ describe('Sit Down Action Availability', () => {
           actions.push(sitDownAction);
         }
 
-        // Also add default actions (core:go and core:look)
+        // Also add default actions (movement:go and core:look)
         actions.push({
-          id: 'core:go',
+          id: 'movement:go',
           name: 'Go',
           scope: 'actor.location.exits[]',
           prerequisites: [],
@@ -215,7 +215,7 @@ describe('Sit Down Action Availability', () => {
 
         // Add default actions (always available)
         actions.push({
-          id: 'core:go',
+          id: 'movement:go',
           name: 'Go',
           scope: 'actor.location.exits[]',
           prerequisites: [],
@@ -331,7 +331,7 @@ describe('Sit Down Action Availability', () => {
 
         // Add default actions
         actions.push({
-          id: 'core:go',
+          id: 'movement:go',
           name: 'Go',
           scope: 'actor.location.exits[]',
           prerequisites: [],

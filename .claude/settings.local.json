@@ -183,7 +183,8 @@
       "Bash(NODE_ENV=test npx jest tests/integration/mods/positioning/turnAroundKneelInteraction.integration.test.js --no-coverage --runInBand)",
       "Bash(NODE_ENV=test node debug-if-operation-validation.js)",
       "mcp__morphllm-fast-apply__list_directory",
-      "mcp__morphllm-fast-apply__search_files"
+      "mcp__morphllm-fast-apply__search_files",
+      "Bash(xargs:*)"
     ],
     "deny": [],
     "ask": []

@@ -514,7 +514,7 @@ describe('Turn-Based Action Processing E2E', () => {
     // Set up initial location actions
     testEnv.facades.actionService.setMockActions(actorId, [
       { actionId: 'core:wait', name: 'Wait', available: true },
-      { actionId: 'core:go-north', name: 'Go North', available: true },
+      { actionId: 'movement:go-north', name: 'Go North', available: true },
       { actionId: 'core:look', name: 'Look Around', available: true },
     ]);
 
@@ -524,14 +524,14 @@ describe('Turn-Based Action Processing E2E', () => {
     const initialActionIds = initialActions.map((a) => a.actionId);
 
     expect(initialActionIds).toContain('core:wait');
-    expect(initialActionIds).toContain('core:go-north');
+    expect(initialActionIds).toContain('movement:go-north');
     expect(initialActionIds).toContain('core:look');
 
     // Simulate location change by updating mock actions
     testEnv.facades.actionService.clearMockData();
     testEnv.facades.actionService.setMockActions(actorId, [
       { actionId: 'core:wait', name: 'Wait', available: true },
-      { actionId: 'core:go-south', name: 'Go South', available: true }, // Different direction
+      { actionId: 'movement:go-south', name: 'Go South', available: true }, // Different direction
       { actionId: 'core:examine', name: 'Examine', available: true }, // Different action
     ]);
 
@@ -542,9 +542,9 @@ describe('Turn-Based Action Processing E2E', () => {
 
     // Should have different available actions reflecting new location
     expect(newActionIds).toContain('core:wait'); // Common action remains
-    expect(newActionIds).toContain('core:go-south'); // New direction
+    expect(newActionIds).toContain('movement:go-south'); // New direction
     expect(newActionIds).toContain('core:examine'); // New action
-    expect(newActionIds).not.toContain('core:go-north'); // Old direction no longer available
+    expect(newActionIds).not.toContain('movement:go-north'); // Old direction no longer available
     expect(newActionIds).not.toContain('core:look'); // Old action no longer available
 
     console.log('Initial actions:', initialActionIds);

@@ -80,8 +80,8 @@ describe('ScopeDsl Integration with Action System E2E', () => {
             params: { targetId: null },
           },
           {
-            id: 'core:go',
-            actionId: 'core:go',
+            id: 'movement:go',
+            actionId: 'movement:go',
             command: 'go north',
             params: { targetId: 'test-location-2' },
           },
@@ -108,7 +108,7 @@ describe('ScopeDsl Integration with Action System E2E', () => {
       async get(actor, context, logger) {
         return [
           { id: 'core:wait', actionId: 'core:wait' },
-          { id: 'core:go', actionId: 'core:go' },
+          { id: 'movement:go', actionId: 'movement:go' },
         ];
       },
     };
@@ -172,7 +172,7 @@ describe('ScopeDsl Integration with Action System E2E', () => {
         required_components: { actor: [] },
       },
       {
-        id: 'core:go',
+        id: 'movement:go',
         name: 'Go',
         description: 'Move to a different location.',
         scope: 'test:available_exits',
@@ -190,7 +190,7 @@ describe('ScopeDsl Integration with Action System E2E', () => {
     // Set up minimal test conditions
     ScopeTestUtilities.setupScopeTestConditions(registry, [
       {
-        id: 'core:actor-can-move',
+        id: 'movement:actor-can-move',
         description: 'Checks if the actor can move',
         logic: { '==': [{ var: 'actor.core:movement.locked' }, false] },
       },
@@ -208,7 +208,7 @@ describe('ScopeDsl Integration with Action System E2E', () => {
       [
         {
           id: 'test:available_exits',
-          expr: 'location.core:exits[{"condition_ref": "core:exit-is-unblocked"}].target',
+          expr: 'location.movement:exits[{"condition_ref": "movement:exit-is-unblocked"}].target',
           description: 'Available exits from current location',
         },
         {
@@ -380,7 +380,7 @@ describe('ScopeDsl Integration with Action System E2E', () => {
 
       // Find actions with prerequisites
       const actionsWithPrereqs = discoveredActions.actions.filter(
-        (action) => getActionId(action) === 'core:go'
+        (action) => getActionId(action) === 'movement:go'
       );
 
       if (actionsWithPrereqs.length > 0) {

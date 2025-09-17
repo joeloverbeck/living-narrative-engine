@@ -475,7 +475,7 @@ describe('Developer Experience E2E', () => {
           category: 'filter',
         },
         {
-          expr: 'location.core:exits[{"condition_ref": "core:exit-is-unblocked"}]',
+          expr: 'location.movement:exits[{"condition_ref": "movement:exit-is-unblocked"}]',
           description: 'Condition reference filter',
           category: 'filter',
         },

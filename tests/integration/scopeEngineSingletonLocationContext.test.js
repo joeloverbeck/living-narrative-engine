@@ -46,7 +46,7 @@ core:actors_in_location := entities(core:position)[
   }
 ]
 
-core:clear_directions := location.core:exits[
+movement:clear_directions := location.core:exits[
   { "!": { "var": "entity.blocker" } }
 ].target
 `;
@@ -122,11 +122,11 @@ describe('Singleton Scope Engine Location Context', () => {
       prerequisites: [],
     });
 
-    registry.store('actions', 'core:go', {
-      id: 'core:go',
+    registry.store('actions', 'movement:go', {
+      id: 'movement:go',
       name: 'Go',
       commandVerb: 'go',
-      scope: 'core:clear_directions',
+      scope: 'movement:clear_directions',
       template: 'go to {target}',
       prerequisites: [],
     });
@@ -152,8 +152,8 @@ describe('Singleton Scope Engine Location Context', () => {
       logic: { '!!': { var: 'entity.components.core:actor' } },
     });
 
-    registry.store('conditions', 'core:exit-is-unblocked', {
-      id: 'core:exit-is-unblocked',
+    registry.store('conditions', 'movement:exit-is-unblocked', {
+      id: 'movement:exit-is-unblocked',
       logic: { '!': { var: 'entity.blocker' } },
     });
 
@@ -205,7 +205,7 @@ describe('Singleton Scope Engine Location Context', () => {
     const actionIndex = {
       getCandidateActions: jest.fn(() => [
         registry.get('actions', 'core:follow'),
-        registry.get('actions', 'core:go'),
+        registry.get('actions', 'movement:go'),
       ]),
     };
 
@@ -256,7 +256,7 @@ describe('Singleton Scope Engine Location Context', () => {
       currentLocation: guildLocation,
     });
 
-    let goActions = actions.actions.filter((a) => a.id === 'core:go');
+    let goActions = actions.actions.filter((a) => a.id === 'movement:go');
     expect(goActions).toHaveLength(1);
     expect(goActions[0].command).toBe('go to Town');
     expect(goActions[0].params.targetId).toBe('town');
@@ -271,7 +271,7 @@ describe('Singleton Scope Engine Location Context', () => {
       currentLocation: townLocation,
     });
 
-    goActions = actions.actions.filter((a) => a.id === 'core:go');
+    goActions = actions.actions.filter((a) => a.id === 'movement:go');
     expect(goActions).toHaveLength(1);
     expect(goActions[0].command).toBe('go to Guild');
     expect(goActions[0].params.targetId).toBe('guild');
@@ -339,7 +339,7 @@ describe('Singleton Scope Engine Location Context', () => {
         currentLocation: locations[i],
       });
 
-      const goActions = actions.actions.filter((a) => a.id === 'core:go');
+      const goActions = actions.actions.filter((a) => a.id === 'movement:go');
       expect(goActions).toHaveLength(1);
       expect(goActions[0].params.targetId).toBe(expectedExits[i]);
     }
@@ -359,7 +359,7 @@ describe('Singleton Scope Engine Location Context', () => {
       }
     );
 
-    let ninjaGo = ninjaActions.actions.filter((a) => a.id === 'core:go');
+    let ninjaGo = ninjaActions.actions.filter((a) => a.id === 'movement:go');
     expect(ninjaGo[0].params.targetId).toBe('town');
 
     // Move hero to town
@@ -372,7 +372,7 @@ describe('Singleton Scope Engine Location Context', () => {
       currentLocation: townLocation,
     });
 
-    let heroGo = heroActions.actions.filter((a) => a.id === 'core:go');
+    let heroGo = heroActions.actions.filter((a) => a.id === 'movement:go');
     expect(heroGo[0].params.targetId).toBe('guild');
 
     // Re-check ninja's actions to ensure they haven't changed
@@ -380,7 +380,7 @@ describe('Singleton Scope Engine Location Context', () => {
       currentLocation: guildLocation,
     });
 
-    ninjaGo = ninjaActions.actions.filter((a) => a.id === 'core:go');
+    ninjaGo = ninjaActions.actions.filter((a) => a.id === 'movement:go');
     expect(ninjaGo[0].params.targetId).toBe('town');
   });
 });

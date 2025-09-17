@@ -87,7 +87,7 @@ describe('Action Trace Configuration Validation Integration', () => {
     const mockConfig = {
       actionTracing: {
         enabled: true,
-        tracedActions: ['core:go', 'core:look'],
+        tracedActions: ['movement:go', 'core:look'],
         outputDirectory: './traces/actions',
         verbosity: 'standard',
         includeComponentData: true,
@@ -104,7 +104,7 @@ describe('Action Trace Configuration Validation Integration', () => {
     const config = await configLoader.loadConfig();
 
     expect(config.enabled).toBe(true);
-    expect(config.tracedActions).toEqual(['core:go', 'core:look']);
+    expect(config.tracedActions).toEqual(['movement:go', 'core:look']);
     expect(config.outputDirectory).toBe('./traces/actions');
     expect(config.verbosity).toBe('standard');
   });
@@ -170,7 +170,7 @@ describe('Action Trace Configuration Validation Integration', () => {
     const configWithWarnings = {
       actionTracing: {
         enabled: true,
-        tracedActions: ['core:go', 'core:go', 'core:look'], // Duplicate
+        tracedActions: ['movement:go', 'movement:go', 'core:look'], // Duplicate
         outputDirectory: '/absolute/path/to/traces', // Absolute path warning
         verbosity: 'verbose',
         includeComponentData: true,
@@ -188,7 +188,7 @@ describe('Action Trace Configuration Validation Integration', () => {
     // Configuration should be valid but normalized
     expect(config.enabled).toBe(true);
     // Duplicates should be removed
-    expect(config.tracedActions).toEqual(['core:go', 'core:look']);
+    expect(config.tracedActions).toEqual(['movement:go', 'core:look']);
     // Default maxTraceFiles should be set
     expect(config.maxTraceFiles).toBe(100);
   });
@@ -198,7 +198,7 @@ describe('Action Trace Configuration Validation Integration', () => {
       actionTracing: {
         enabled: true,
         tracedActions: [
-          'core:go',
+          'movement:go',
           'mod:*',
           '*',
           'invalid-pattern', // Should be rejected
@@ -222,7 +222,7 @@ describe('Action Trace Configuration Validation Integration', () => {
     const configWithUnusualPath = {
       actionTracing: {
         enabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         outputDirectory: '../../../etc/passwd',
       },
     };
@@ -255,7 +255,7 @@ describe('Action Trace Configuration Validation Integration', () => {
     const mockConfig = {
       actionTracing: {
         enabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         outputDirectory: './traces',
       },
     };
@@ -278,7 +278,7 @@ describe('Action Trace Configuration Validation Integration', () => {
     const mockConfig1 = {
       actionTracing: {
         enabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         outputDirectory: './traces',
       },
     };
@@ -309,7 +309,7 @@ describe('Action Trace Configuration Validation Integration', () => {
     const mockConfig = {
       actionTracing: {
         enabled: true,
-        tracedActions: ['core:go', 'core:look', 'mod:*'],
+        tracedActions: ['movement:go', 'core:look', 'mod:*'],
         outputDirectory: './traces',
       },
     };
@@ -317,7 +317,7 @@ describe('Action Trace Configuration Validation Integration', () => {
     mockTraceConfigLoader.loadConfig.mockResolvedValue(mockConfig);
 
     // Test exact matches
-    expect(await configLoader.shouldTraceAction('core:go')).toBe(true);
+    expect(await configLoader.shouldTraceAction('movement:go')).toBe(true);
     expect(await configLoader.shouldTraceAction('core:look')).toBe(true);
 
     // Test wildcard matches
@@ -333,7 +333,7 @@ describe('Action Trace Configuration Validation Integration', () => {
     const mockConfig = {
       actionTracing: {
         enabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         outputDirectory: './traces',
         verbosity: 'minimal',
         includeComponentData: true,
@@ -346,7 +346,7 @@ describe('Action Trace Configuration Validation Integration', () => {
 
     const testData = {
       timestamp: Date.now(),
-      actionId: 'core:go',
+      actionId: 'movement:go',
       result: 'success',
       executionTime: 100,
       componentData: { test: 'data' },

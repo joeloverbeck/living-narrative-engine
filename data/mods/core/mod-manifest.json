@@ -10,7 +10,6 @@
     "actions": [
       "dismiss.action.json",
       "follow.action.json",
-      "go.action.json",
       "stop_following.action.json",
       "wait.action.json"
     ],
@@ -21,7 +20,6 @@
       "description.component.json",
       "dilemmas.component.json",
       "dislikes.component.json",
-      "exits.component.json",
       "fears.component.json",
       "following.component.json",
       "goals.component.json",
@@ -49,7 +47,6 @@
       "weaknesses.component.json"
     ],
     "conditions": [
-      "actor-can-move.condition.json",
       "actor-is-following.condition.json",
       "actor-is-not-null.condition.json",
       "actor-mouth-available.condition.json",
@@ -59,10 +56,8 @@
       "entity-is-not-current-actor.condition.json",
       "event-is-action-dismiss.condition.json",
       "event-is-action-follow.condition.json",
-      "event-is-action-go.condition.json",
       "event-is-action-stop-following.condition.json",
-      "event-is-action-wait.condition.json",
-      "exit-is-unblocked.condition.json"
+      "event-is-action-wait.condition.json"
     ],
     "entities": {
       "definitions": [],
@@ -192,7 +187,6 @@
       "entity_thought.rule.json",
       "follow.rule.json",
       "follow_auto_move.rule.json",
-      "go.rule.json",
       "log_perceptible_events.rule.json",
       "player_turn_prompt.rule.json",
       "stop_following.rule.json",
@@ -202,7 +196,6 @@
     ],
     "scopes": [
       "actors_in_location.scope",
-      "clear_directions.scope",
       "environment.scope",
       "followers.scope",
       "potential_leaders.scope"

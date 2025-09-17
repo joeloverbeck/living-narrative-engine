@@ -342,7 +342,7 @@ function generateActionTestEvents(config = {}) {
       type: 'core:attempt_action',
       payload: {
         actorId: config.actorId || 'test_actor',
-        actionId: 'core:go',
+        actionId: 'movement:go',
         targetId: 'north',
         originalInput: 'go north',
         timestamp: Date.now(),

@@ -3,16 +3,8 @@
  * Provides namespace-based categorization for both UI rendering and LLM prompts
  */
 
-import {
-  validateDependency,
-  assertPresent,
-} from '../../utils/dependencyUtils.js';
-import { ensureValidLogger } from '../../utils/loggerUtils.js';
-import {
-  DEFAULT_CATEGORIZATION_CONFIG,
-  UI_CATEGORIZATION_CONFIG,
-  LLM_CATEGORIZATION_CONFIG,
-} from './actionCategorizationConfig.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
+import { DEFAULT_CATEGORIZATION_CONFIG } from './actionCategorizationConfig.js';
 import { validateCategorizationConfig } from './actionCategorizationConfigValidator.js';
 
 /** @typedef {import('./actionCategorizationConfig.js').CategorizationConfig} CategorizationConfig */
@@ -265,41 +257,14 @@ class ActionCategorizationService {
   }
 
   /**
-   * Wrapper method with performance monitoring
+   * Check if counts should be shown in section headers
    *
-   * @param methodName
-   * @param fn
-   * @private
+   * @returns {boolean} Whether to show counts in UI
    */
-  #withPerformanceMonitoring(methodName, fn) {
-    const startTime = performance.now();
-
-    try {
-      const result = fn();
-      const duration = performance.now() - startTime;
-
-      if (duration > this.#config.performance.slowOperationThresholdMs) {
-        this.#logger.warn(
-          'ActionCategorizationService: Slow operation detected',
-          {
-            method: methodName,
-            duration: `${duration.toFixed(2)}ms`,
-            threshold: this.#config.performance.slowOperationThresholdMs,
-          }
-        );
-      }
-
-      return result;
-    } catch (error) {
-      const duration = performance.now() - startTime;
-      this.#logger.error('ActionCategorizationService: Method failed', {
-        method: methodName,
-        duration: `${duration.toFixed(2)}ms`,
-        error: error.message,
-      });
-      throw error;
-    }
+  shouldShowCounts() {
+    return this.#config.showCounts;
   }
+
 }
 
 export default ActionCategorizationService;

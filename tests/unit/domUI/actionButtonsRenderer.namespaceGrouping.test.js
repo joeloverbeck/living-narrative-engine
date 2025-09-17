@@ -144,8 +144,8 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
 
       // Test with action ID that has colon
       const result2 =
-        mockActionCategorizationService.extractNamespace('core:go');
-      expect(result2).toBe('core');
+        mockActionCategorizationService.extractNamespace('movement:go');
+      expect(result2).toBe('movement');
 
       // Verify the service was called with correct parameters
       expect(
@@ -153,7 +153,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       ).toHaveBeenCalledWith('wait');
       expect(
         mockActionCategorizationService.extractNamespace
-      ).toHaveBeenCalledWith('core:go');
+      ).toHaveBeenCalledWith('movement:go');
     });
   });
 
@@ -161,7 +161,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
     it('should group actions by namespace', async () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
-        createTestComposite(2, 'core:go', 'go north'),
+        createTestComposite(2, 'movement:go', 'go north'),
         createTestComposite(3, 'positioning:get_close', 'get close'),
         createTestComposite(4, 'intimacy:kiss_cheek', 'kiss cheek'),
         createTestComposite(5, 'sex:fondle_breasts', 'fondle breasts'),
@@ -242,7 +242,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
     it('should not group when below minimum namespaces threshold', () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
-        createTestComposite(2, 'core:go', 'go'),
+        createTestComposite(2, 'movement:go', 'go'),
         createTestComposite(3, 'core:follow', 'follow'),
         createTestComposite(4, 'core:dismiss', 'dismiss'),
         createTestComposite(5, 'core:look', 'look'),
@@ -268,7 +268,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
     it('should group when thresholds are met', () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
-        createTestComposite(2, 'core:go', 'go north'),
+        createTestComposite(2, 'movement:go', 'go north'),
         createTestComposite(3, 'positioning:get_close', 'get close'),
         createTestComposite(4, 'intimacy:kiss_cheek', 'kiss cheek'),
         createTestComposite(5, 'sex:fondle_breasts', 'fondle breasts'),
@@ -298,7 +298,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
             : 'unknown';
         })
       );
-      expect(namespaces.size).toBe(4); // core, positioning, intimacy, sex
+      expect(namespaces.size).toBe(5); // core, movement, positioning, intimacy, sex
       expect(actions.length).toBe(6); // All actions present
     });
   });
@@ -365,7 +365,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
     it('should render grouped actions with section headers', async () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
-        createTestComposite(2, 'core:go', 'go north'),
+        createTestComposite(2, 'movement:go', 'go north'),
         createTestComposite(3, 'positioning:get_close', 'get close'),
         createTestComposite(4, 'intimacy:kiss_cheek', 'kiss cheek'),
         createTestComposite(5, 'sex:fondle_breasts', 'fondle breasts'),
@@ -407,7 +407,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         createTestComposite(1, 'core:wait', 'wait'),
         createTestComposite(2, 'positioning:get_close', 'get close'),
         createTestComposite(3, 'sex:fondle_breasts', 'fondle breasts'),
-        createTestComposite(4, 'core:go', 'go north'),
+        createTestComposite(4, 'movement:go', 'go north'),
         createTestComposite(5, 'intimacy:kiss_cheek', 'kiss cheek'),
         createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
       ];
@@ -437,7 +437,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
             : 'unknown';
         })
       );
-      expect(namespaces.size).toBe(4); // core, positioning, intimacy, sex
+      expect(namespaces.size).toBe(5); // core, movement, positioning, intimacy, sex
 
       // Verify DOM structure with accessibility attributes was created
       const actionGroups = document.querySelectorAll('.action-group');
@@ -491,7 +491,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         createTestComposite(1, 'core:wait', 'wait'),
         createTestComposite(2, 'positioning:get_close', 'get close'),
         createTestComposite(3, 'sex:fondle_breasts', 'fondle breasts'),
-        createTestComposite(4, 'core:go', 'go north'),
+        createTestComposite(4, 'movement:go', 'go north'),
         createTestComposite(5, 'intimacy:kiss_cheek', 'kiss cheek'),
         createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
       ];
@@ -518,7 +518,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         createTestComposite(1, 'core:wait', 'wait'),
         createTestComposite(2, 'positioning:get_close', 'get close'),
         createTestComposite(3, 'sex:fondle_breasts', 'fondle breasts'),
-        createTestComposite(4, 'core:go', 'go north'),
+        createTestComposite(4, 'movement:go', 'go north'),
         createTestComposite(5, 'intimacy:kiss_cheek', 'kiss cheek'),
         createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
       ];

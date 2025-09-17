@@ -437,7 +437,7 @@ describe('ActionButtonsRenderer', () => {
       const testActorId = 'player-test-actor-valid';
       const validAction = createTestComposite(
         1,
-        'core:go_n',
+        'movement:go_n',
         'Go North',
         'Move northwards.'
       );
@@ -463,7 +463,7 @@ describe('ActionButtonsRenderer', () => {
       const testActorId = 'player-test-actor-filter';
       const validAction1 = createTestComposite(
         1,
-        'core:go_n',
+        'movement:go_n',
         'Go North',
         'Move northwards.'
       );
@@ -618,8 +618,8 @@ describe('ActionButtonsRenderer', () => {
           'core',
           [
             createTestComposite(1, 'core:wait', 'Wait', 'Pass time'),
-            createTestComposite(2, 'core:go_n', 'Go North', 'Move north'),
-            createTestComposite(3, 'core:go_s', 'Go South', 'Move south'),
+            createTestComposite(2, 'movement:go_n', 'Go North', 'Move north'),
+            createTestComposite(3, 'movement:go_s', 'Go South', 'Move south'),
             createTestComposite(4, 'core:examine', 'Examine', 'Look closely'),
             createTestComposite(5, 'core:talk', 'Talk', 'Start conversation'),
           ],
@@ -676,8 +676,8 @@ describe('ActionButtonsRenderer', () => {
       const actions = [
         // Core mod actions (5 actions)
         createTestComposite(1, 'core:wait', 'Wait', 'Pass time'),
-        createTestComposite(2, 'core:go_n', 'Go North', 'Move north'),
-        createTestComposite(3, 'core:go_s', 'Go South', 'Move south'),
+        createTestComposite(2, 'movement:go_n', 'Go North', 'Move north'),
+        createTestComposite(3, 'movement:go_s', 'Go South', 'Move south'),
         createTestComposite(4, 'core:examine', 'Examine', 'Look closely'),
         createTestComposite(5, 'core:talk', 'Talk', 'Start conversation'),
         // Intimacy mod actions (4 actions)
@@ -760,8 +760,8 @@ describe('ActionButtonsRenderer', () => {
       // Create only 5 actions from 1 mod (below grouping thresholds)
       const actions = [
         createTestComposite(1, 'core:wait', 'Wait', 'Pass time'),
-        createTestComposite(2, 'core:go_n', 'Go North', 'Move north'),
-        createTestComposite(3, 'core:go_s', 'Go South', 'Move south'),
+        createTestComposite(2, 'movement:go_n', 'Go North', 'Move north'),
+        createTestComposite(3, 'movement:go_s', 'Go South', 'Move south'),
         createTestComposite(4, 'core:examine', 'Examine', 'Look closely'),
         createTestComposite(5, 'core:talk', 'Talk', 'Start conversation'),
       ];

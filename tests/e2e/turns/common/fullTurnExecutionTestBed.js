@@ -828,10 +828,10 @@ export class FullTurnExecutionTestBed {
         required_components: { actor: [] },
       },
       {
-        id: 'core:go',
+        id: 'movement:go',
         name: 'Go',
         description: 'Move to another location',
-        scope: 'core:clear_directions',
+        scope: 'movement:clear_directions',
         template: 'go to {target}',
         prerequisites: [],
         required_components: { actor: ['core:position'] },
@@ -866,8 +866,8 @@ export class FullTurnExecutionTestBed {
       '../../../../src/scopeDsl/scopeDefinitionParser.js'
     );
 
-    const scopeContent = `core:clear_directions := location.core:exits[
-        { "condition_ref": "core:exit-is-unblocked" }
+    const scopeContent = `movement:clear_directions := location.movement:exits[
+        { "condition_ref": "movement:exit-is-unblocked" }
     ].target`;
 
     const parsedScopes = parseScopeDefinitions(scopeContent, 'test-scope-file');
@@ -880,8 +880,8 @@ export class FullTurnExecutionTestBed {
     this.scopeRegistry.initialize(scopeMap);
 
     // Also register the exit-is-unblocked condition that the scope uses
-    this.registry.store('conditions', 'core:exit-is-unblocked', {
-      id: 'core:exit-is-unblocked',
+    this.registry.store('conditions', 'movement:exit-is-unblocked', {
+      id: 'movement:exit-is-unblocked',
       name: 'Exit is unblocked',
       logic: { '!': { var: 'entity.blocked' } },
     });
@@ -907,22 +907,22 @@ export class FullTurnExecutionTestBed {
         actionDefinition: this.testActions.find((a) => a.id === 'core:wait'),
       },
       {
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
         displayName: 'Go North',
         description: 'Move to Market Square',
         scopedTargets: [
           { id: 'test-market', display: 'Market Square', type: 'location' },
         ],
-        actionDefinition: this.testActions.find((a) => a.id === 'core:go'),
+        actionDefinition: this.testActions.find((a) => a.id === 'movement:go'),
       },
       {
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
         displayName: 'Go East',
         description: 'Move to Dark Alley',
         scopedTargets: [
           { id: 'test-alley', display: 'Dark Alley', type: 'location' },
         ],
-        actionDefinition: this.testActions.find((a) => a.id === 'core:go'),
+        actionDefinition: this.testActions.find((a) => a.id === 'movement:go'),
       },
       {
         actionDefinitionId: 'core:say',

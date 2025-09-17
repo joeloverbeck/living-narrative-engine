@@ -69,9 +69,9 @@ describe('registryStoreUtils - Scope ID Mapping', () => {
           source: 'file',
         },
         {
-          name: 'core:clear_directions',
+          name: 'movement:clear_directions',
           expr: 'exits()',
-          modId: 'core',
+          modId: 'movement',
           source: 'file',
         },
         {
@@ -84,12 +84,13 @@ describe('registryStoreUtils - Scope ID Mapping', () => {
 
       scopes.forEach((scopeData, index) => {
         const baseName = scopeData.name.split(':', 2)[1];
+        const modId = scopeData.name.split(':', 2)[0];
         const result = storeItemInRegistry(
           mockLogger,
           mockRegistry,
           'ScopeLoader',
           'scopes',
-          'core',
+          modId,
           baseName,
           scopeData,
           `${baseName}.scope`
@@ -112,8 +113,8 @@ describe('registryStoreUtils - Scope ID Mapping', () => {
       expect(mockRegistry.store).toHaveBeenNthCalledWith(
         2,
         'scopes',
-        'core:clear_directions',
-        expect.objectContaining({ id: 'core:clear_directions' })
+        'movement:clear_directions',
+        expect.objectContaining({ id: 'movement:clear_directions' })
       );
 
       expect(mockRegistry.store).toHaveBeenNthCalledWith(

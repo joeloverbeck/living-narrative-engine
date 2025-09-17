@@ -91,7 +91,7 @@ describe('Action Trace Config Integration', () => {
         traceAnalysisEnabled: false,
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go', 'core:attack'],
+          tracedActions: ['movement:go', 'core:attack'],
           outputDirectory: './test-traces',
           verbosity: 'detailed',
           includeComponentData: true,
@@ -131,7 +131,7 @@ describe('Action Trace Config Integration', () => {
       const config = await testLoader.loadConfig();
 
       expect(config.enabled).toBe(true);
-      expect(config.tracedActions).toContain('core:go');
+      expect(config.tracedActions).toContain('movement:go');
       expect(config.tracedActions).toContain('core:attack');
       expect(config.verbosity).toBe('detailed');
       expect(config.includePrerequisites).toBe(false);
@@ -143,7 +143,7 @@ describe('Action Trace Config Integration', () => {
         traceAnalysisEnabled: false,
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go', 'core:attack'],
+          tracedActions: ['movement:go', 'core:attack'],
           outputDirectory: './test-traces',
           verbosity: 'detailed',
           includeComponentData: true,
@@ -219,7 +219,7 @@ describe('Action Trace Config Integration', () => {
         traceAnalysisEnabled: false,
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './test-traces',
           verbosity: 'standard',
           // Missing outputFormats and textFormatOptions - should use defaults
@@ -339,7 +339,7 @@ describe('Action Trace Config Integration', () => {
       const validConfig = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './traces',
           verbosity: 'standard',
           rotationPolicy: 'age',
@@ -366,14 +366,14 @@ describe('Action Trace Config Integration', () => {
     it('should merge user config with defaults', () => {
       const userConfig = {
         enabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         verbosity: 'verbose',
       };
 
       const merged = ActionTracingConfigMigration.mergeWithDefaults(userConfig);
 
       expect(merged.enabled).toBe(true);
-      expect(merged.tracedActions).toEqual(['core:go']);
+      expect(merged.tracedActions).toEqual(['movement:go']);
       expect(merged.verbosity).toBe('verbose');
       // Defaults should be filled in
       expect(merged.outputDirectory).toBe('./traces/actions');
@@ -385,7 +385,7 @@ describe('Action Trace Config Integration', () => {
     it('should merge user config with defaults including new dual-format fields', () => {
       const userConfig = {
         enabled: true,
-        tracedActions: ['core:go'],
+        tracedActions: ['movement:go'],
         verbosity: 'verbose',
         outputFormats: ['text', 'html'],
         textFormatOptions: {
@@ -397,7 +397,7 @@ describe('Action Trace Config Integration', () => {
       const merged = ActionTracingConfigMigration.mergeWithDefaults(userConfig);
 
       expect(merged.enabled).toBe(true);
-      expect(merged.tracedActions).toEqual(['core:go']);
+      expect(merged.tracedActions).toEqual(['movement:go']);
       expect(merged.verbosity).toBe('verbose');
 
       // New fields should be merged correctly
@@ -623,7 +623,7 @@ describe('Action Trace Config Integration', () => {
       const mixedConfig = {
         enabled: true,
         tracedActions: [
-          'core:go', // Exact match
+          'movement:go', // Exact match
           'debug:*', // Mod wildcard
           '*', // Universal wildcard
           'action_*', // Prefix pattern
@@ -664,7 +664,7 @@ describe('Action Trace Config Integration', () => {
       });
 
       // Test exact match
-      expect(await testLoader.shouldTraceAction('core:go')).toBe(true);
+      expect(await testLoader.shouldTraceAction('movement:go')).toBe(true);
 
       // Test mod wildcard
       expect(await testLoader.shouldTraceAction('debug:something')).toBe(true);
@@ -744,7 +744,7 @@ describe('Action Trace Config Integration', () => {
         traceAnalysisEnabled: false,
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './test-traces',
           verbosity: 'standard',
           includeComponentData: true,
@@ -787,7 +787,7 @@ describe('Action Trace Config Integration', () => {
       // Load initial config
       const config1 = await testLoader.loadConfig();
       expect(config1.enabled).toBe(true);
-      expect(config1.tracedActions).toContain('core:go');
+      expect(config1.tracedActions).toContain('movement:go');
 
       // Modify the configuration file on disk
       const modifiedConfig = {
@@ -810,7 +810,7 @@ describe('Action Trace Config Integration', () => {
       const config2 = await testLoader.loadConfig();
       expect(config2.enabled).toBe(false);
       expect(config2.tracedActions).toContain('core:attack');
-      expect(config2.tracedActions).not.toContain('core:go');
+      expect(config2.tracedActions).not.toContain('movement:go');
     });
 
     it('should use cache when TTL has not expired with file system operations', async () => {
@@ -818,7 +818,7 @@ describe('Action Trace Config Integration', () => {
         traceAnalysisEnabled: false,
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './test-traces',
           verbosity: 'detailed',
           includeComponentData: false,
@@ -897,7 +897,7 @@ describe('Action Trace Config Integration', () => {
         traceAnalysisEnabled: false,
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['movement:go'],
           outputDirectory: './test-traces',
           verbosity: 'standard',
           includeComponentData: true,

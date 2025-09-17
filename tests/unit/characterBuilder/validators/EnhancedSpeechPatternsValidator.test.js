@@ -402,7 +402,7 @@ describe('EnhancedSpeechPatternsValidator', () => {
               'being forgotten after death',
               'losing his creative vision',
             ],
-            'core:goals': [
+            'movement:goals': [
               'create a masterpiece that will outlive him',
               'establish a lasting art education program',
               'inspire the next generation of artists',

@@ -115,7 +115,7 @@ The following files remain in the core mod as per requirements:
    ```
 
 2. Update the file with the following changes:
-   - Change `"id": "core:go"` to `"id": "movement:go"`
+   - Change `"id": "movement:go"` to `"id": "movement:go"`
    - Update scope reference from `"core:clear_directions"` to `"movement:clear_directions"`
    - Update prerequisite condition from `"core:actor-can-move"` to `"movement:actor-can-move"`
    - Replace entire visual section with Explorer Cyan colors
@@ -140,7 +140,7 @@ The following files remain in the core mod as per requirements:
 
 2. Update each condition file:
    - Change all `"id": "core:*"` to `"id": "movement:*"`
-   - In `event-is-action-go.condition.json`, update the logic to check for `"movement:go"` instead of `"core:go"`
+   - In `event-is-action-go.condition.json`, update the logic to check for `"movement:go"` instead of `"movement:go"`
 
 #### Step 4: Migrate Scope
 1. Copy scope file:
@@ -192,7 +192,7 @@ Remove the migrated content from the core manifest's content section.
 #### Files in Core Mod Requiring Updates
 
 1. **`events/player_turn_prompt.event.json`**
-   - If it references `core:go`, update to `movement:go`
+   - If it references `movement:go`, update to `movement:go`
 
 2. **`actions/follow.action.json`**
    - Update prerequisite from `"core:actor-can-move"` to `"movement:actor-can-move"`
@@ -347,7 +347,7 @@ Remove the migrated content from the core manifest's content section.
 2. Maintain compatibility layer if needed:
    ```json
    {
-     "id": "core:go",
+     "id": "movement:go",
      "redirect": "movement:go"
    }
    ```

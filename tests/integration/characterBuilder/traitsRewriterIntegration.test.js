@@ -35,7 +35,7 @@ describe('TraitsRewriter Integration', () => {
                 'I am a test character with complex personality traits.',
               'core:likes': 'I enjoy testing and performance validation.',
               'core:fears': 'I fear system failures and poor performance.',
-              'core:goals':
+              'movement:goals':
                 'I strive to maintain excellent performance under all conditions.',
               'core:dislikes':
                 'I dislike inefficient processes and slow responses.',
@@ -77,7 +77,7 @@ describe('TraitsRewriter Integration', () => {
         },
         'core:likes': { text: 'Comprehensive testing and quality validation' },
         'core:fears': { text: 'System failures and integration issues' },
-        'core:goals': { text: 'Successful completion of all workflow stages' },
+        'movement:goals': { text: 'Successful completion of all workflow stages' },
       };
 
       // Step 1: Generate rewritten traits
@@ -96,7 +96,7 @@ describe('TraitsRewriter Integration', () => {
             'I enjoy comprehensive testing and quality validation processes.',
           'core:fears':
             'I fear system failures and integration problems that might arise.',
-          'core:goals':
+          'movement:goals':
             'I aim to successfully complete all workflow stages without issues.',
         },
       });

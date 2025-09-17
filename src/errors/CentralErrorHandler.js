@@ -1,39 +1,22 @@
-# ANACLOENH-004-03: Create Central Error Handler
+/**
+ * @file CentralErrorHandler - Centralized error handler for coordinating all service errors
+ * @description Processes all service errors, classifies them, and coordinates with the monitoring system
+ * @see baseError.js - Foundation error class used for classification
+ * @see MonitoringCoordinator.js - Monitoring system integration
+ */
 
-## Overview
-Create a centralized error handler that processes all service errors, classifies them, and coordinates with the monitoring system.
-
-## Parent Ticket
-- ANACLOENH-004: Establish Error Handling Framework
-
-## Depends On
-- ANACLOENH-004-01: Create BaseError Class
-- ANACLOENH-004-02: Update Existing Error Classes
-
-## Current State
-- Multiple domain-specific error handlers exist (ClothingErrorHandler, AnatomyErrorHandler)
-- MonitoringCoordinator exists for system monitoring
-- No central coordination of error handling
-
-## Objectives
-1. Create CentralErrorHandler class
-2. Implement error classification system
-3. Add context enhancement capabilities
-4. Integrate with MonitoringCoordinator
-5. Create error registry for tracking
-
-## Technical Requirements
-
-### CentralErrorHandler Implementation
-```javascript
-// Location: src/errors/CentralErrorHandler.js
 import { validateDependency } from '../utils/dependencyUtils.js';
-import BaseError from './BaseError.js';
+import BaseError from './baseError.js'; // Note: lowercase 'b' in baseError.js
 
+/**
+ * Central error handler that processes all service errors, classifies them,
+ * and coordinates with the monitoring system
+ *
+ * @class
+ */
 class CentralErrorHandler {
   #logger;
   #eventBus;
-  #monitoringCoordinator;
   #errorRegistry;
   #recoveryStrategies;
   #errorTransforms;
@@ -47,12 +30,11 @@ class CentralErrorHandler {
       requiredMethods: ['dispatch', 'on']
     });
     validateDependency(monitoringCoordinator, 'IMonitoringCoordinator', logger, {
-      requiredMethods: ['getCircuitBreaker', 'executeMonitored']
+      requiredMethods: ['executeMonitored', 'getStats', 'getPerformanceMonitor']
     });
 
     this.#logger = logger;
     this.#eventBus = eventBus;
-    this.#monitoringCoordinator = monitoringCoordinator;
     this.#errorRegistry = new Map();
     this.#recoveryStrategies = new Map();
     this.#errorTransforms = new Map();
@@ -105,7 +87,7 @@ class CentralErrorHandler {
     this.#logError(errorInfo);
     this.#notifyError(errorInfo);
 
-    if (errorInfo.recoverable && this.#hasyncRecoveryStrategy(errorInfo.type)) {
+    if (errorInfo.recoverable && this.#hasSyncRecoveryStrategy(errorInfo.type)) {
       const fallback = this.#getSyncFallback(errorInfo);
       if (fallback !== undefined) {
         return fallback;
@@ -128,7 +110,7 @@ class CentralErrorHandler {
   }
 
   // Get fallback value for operation
-  getFallbackValue(operation, errorType) {
+  getFallbackValue(operation, _errorType) {
     const fallbacks = {
       'fetch': null,
       'parse': {},
@@ -179,13 +161,6 @@ class CentralErrorHandler {
     return enhancedError;
   }
 
-  #extractRootCause(error) {
-    let rootCause = error;
-    while (rootCause.cause) {
-      rootCause = rootCause.cause;
-    }
-    return rootCause;
-  }
 
   async #attemptRecovery(errorInfo) {
     const strategy = this.#recoveryStrategies.get(errorInfo.type);
@@ -248,6 +223,19 @@ class CentralErrorHandler {
     });
   }
 
+  #hasSyncRecoveryStrategy(errorType) {
+    return this.#recoveryStrategies.has(errorType) &&
+           this.#recoveryStrategies.get(errorType).sync === true;
+  }
+
+  #getSyncFallback(errorInfo) {
+    const strategy = this.#recoveryStrategies.get(errorInfo.type);
+    if (strategy && strategy.fallback) {
+      return strategy.fallback(errorInfo);
+    }
+    return undefined;
+  }
+
   #updateMetrics(errorInfo) {
     this.#metrics.totalErrors++;
 
@@ -305,92 +293,3 @@ class CentralErrorHandler {
 }
 
 export default CentralErrorHandler;
-```
-
-## Implementation Steps
-
-1. **Create CentralErrorHandler.js**
-   - Implement core error handling logic
-   - Add error classification system
-   - Implement metrics tracking
-
-2. **Create ErrorContext.js utilities**
-   ```javascript
-   // src/errors/ErrorContext.js
-   export class ErrorContext {
-     static extract(error) { /* ... */ }
-     static enhance(error, context) { /* ... */ }
-     static generateCorrelationId() { /* ... */ }
-   }
-   ```
-
-3. **Register in DI container**
-   - Add token to tokens-monitoring.js
-   - Create registration in monitoringRegistrations.js
-
-4. **Integrate with MonitoringCoordinator**
-   - Add CentralErrorHandler as dependency
-   - Wire up error handling pipeline
-
-## File Changes
-
-### New Files
-- `src/errors/CentralErrorHandler.js`
-- `src/errors/ErrorContext.js`
-
-### Modified Files
-- `src/dependencyInjection/tokens/tokens-monitoring.js` - Add ICentralErrorHandler token
-- `src/dependencyInjection/registrations/monitoringRegistrations.js` - Register handler
-
-## Dependencies
-- **Prerequisites**:
-  - ANACLOENH-004-01 (BaseError class)
-  - ANACLOENH-004-02 (Updated error classes)
-- **External**: MonitoringCoordinator, EventBus, Logger
-
-## Acceptance Criteria
-1. ✅ Central handler processes all error types
-2. ✅ Error classification works correctly
-3. ✅ Context is enhanced and preserved
-4. ✅ Metrics are tracked accurately
-5. ✅ Integration with monitoring system works
-6. ✅ Error events are dispatched correctly
-7. ✅ Recovery strategies can be registered
-
-## Testing Requirements
-
-### Unit Tests
-Create `tests/unit/errors/CentralErrorHandler.test.js`:
-- Test error classification
-- Test context enhancement
-- Test metrics tracking
-- Test recovery strategy registration
-- Test error event dispatching
-- Test fallback value generation
-
-### Integration Tests
-- Test with real MonitoringCoordinator
-- Test error flow through system
-- Test recovery execution
-
-## Estimated Effort
-- **Development**: 3 hours
-- **Testing**: 2 hours
-- **Total**: 5 hours
-
-## Risk Assessment
-- **Medium Risk**: Complex integration with existing systems
-- **Mitigation**: Thorough testing of integration points
-- **Mitigation**: Gradual rollout with feature flags
-
-## Success Metrics
-- All errors routed through central handler
-- 100% error classification accuracy
-- Metrics tracking working correctly
-- No performance degradation
-
-## Notes
-- Keep handler focused on coordination, not business logic
-- Ensure handler is performant for high-volume errors
-- Consider adding error sampling for very high volumes
-- Document recovery strategy interface clearly

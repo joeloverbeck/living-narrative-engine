@@ -6,7 +6,7 @@
 
 ### 1.1 Purpose
 
-The Action Tracing System provides targeted debugging capabilities for the Living Narrative Engine's action pipeline. It enables developers to trace specific action IDs (e.g., 'core:go') through the entire discovery, processing, and execution pipeline without impacting performance when disabled. It integrates with and extends the existing StructuredTrace system already in place.
+The Action Tracing System provides targeted debugging capabilities for the Living Narrative Engine's action pipeline. It enables developers to trace specific action IDs (e.g., 'movement:go') through the entire discovery, processing, and execution pipeline without impacting performance when disabled. It integrates with and extends the existing StructuredTrace system already in place.
 
 ### 1.2 Goals
 
@@ -913,7 +913,7 @@ class ActionTraceOutputService {
 ```json
 {
   "timestamp": "2024-01-15T10:30:00.123Z",
-  "actionId": "core:go",
+  "actionId": "movement:go",
   "actorId": "player-1",
   "pipeline": {
     "componentFiltering": {
@@ -970,7 +970,7 @@ class ActionTraceOutputService {
 ACTION TRACE REPORT
 ==================
 Timestamp: 2024-01-15 10:30:00.123
-Action: core:go
+Action: movement:go
 Actor: player-1
 
 PIPELINE STAGES
@@ -1476,7 +1476,7 @@ This version corrects significant discrepancies between the original spec and th
 {
   "actionTracing": {
     "enabled": true,
-    "tracedActions": ["core:go"],
+    "tracedActions": ["movement:go"],
     "outputDirectory": "./traces/actions"
   }
 }
@@ -1521,7 +1521,7 @@ This version corrects significant discrepancies between the original spec and th
 
 ```json
 {
-  "actionId": "core:go",
+  "actionId": "movement:go",
   "actorId": "player-1",
   "timestamp": "2024-01-15T10:30:00.123Z",
   "result": "success",
@@ -1537,7 +1537,7 @@ This version corrects significant discrepancies between the original spec and th
 
 ```json
 {
-  "actionId": "core:go",
+  "actionId": "movement:go",
   "actorId": "player-1",
   "timestamp": "2024-01-15T10:30:00.123Z",
   "error": {

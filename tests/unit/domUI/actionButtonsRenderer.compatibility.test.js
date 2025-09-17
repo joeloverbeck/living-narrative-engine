@@ -130,7 +130,7 @@ describe('ActionButtonsRenderer Backward Compatibility', () => {
       // Test case: sufficient actions and namespaces
       const sufficientActions = [
         { actionId: 'core:wait' },
-        { actionId: 'core:go' },
+        { actionId: 'movement:go' },
         { actionId: 'intimacy:kiss' },
         { actionId: 'intimacy:hug' },
         { actionId: 'clothing:remove' },
@@ -147,14 +147,14 @@ describe('ActionButtonsRenderer Backward Compatibility', () => {
 
       expect(service.shouldUseGrouping(insufficientActions)).toBe(false);
 
-      // Test case: insufficient namespaces
+      // Test case: insufficient namespaces (only 1 namespace)
       const singleNamespaceActions = [
         { actionId: 'core:wait' },
-        { actionId: 'core:go' },
         { actionId: 'core:examine' },
         { actionId: 'core:speak' },
         { actionId: 'core:follow' },
         { actionId: 'core:rest' },
+        { actionId: 'core:sleep' },
       ];
 
       expect(service.shouldUseGrouping(singleNamespaceActions)).toBe(false);
@@ -169,7 +169,7 @@ describe('ActionButtonsRenderer Backward Compatibility', () => {
         { index: 1, actionId: 'clothing:remove' },
         { index: 2, actionId: 'core:wait' },
         { index: 3, actionId: 'intimacy:kiss' },
-        { index: 4, actionId: 'core:go' },
+        { index: 4, actionId: 'movement:go' },
         { index: 5, actionId: 'clothing:wear' },
         { index: 6, actionId: 'intimacy:hug' },
       ];
@@ -177,21 +177,25 @@ describe('ActionButtonsRenderer Backward Compatibility', () => {
       const grouped = service.groupActionsByNamespace(actions);
 
       // Verify grouping structure
-      expect(grouped.size).toBe(3);
+      expect(grouped.size).toBe(4);
       expect(grouped.has('core')).toBe(true);
       expect(grouped.has('intimacy')).toBe(true);
       expect(grouped.has('clothing')).toBe(true);
+      expect(grouped.has('movement')).toBe(true);
 
       // Verify group contents
-      expect(grouped.get('core')).toHaveLength(2);
+      expect(grouped.get('core')).toHaveLength(1);
       expect(grouped.get('intimacy')).toHaveLength(2);
       expect(grouped.get('clothing')).toHaveLength(2);
+      expect(grouped.get('movement')).toHaveLength(1);
 
       // Verify action preservation
-      expect(grouped.get('core')[0].index).toBe(2); // First core action
-      expect(grouped.get('core')[1].index).toBe(4); // Second core action
-      expect(grouped.get('intimacy')[0].index).toBe(3);
-      expect(grouped.get('clothing')[0].index).toBe(1);
+      expect(grouped.get('core')[0].index).toBe(2); // Only core action
+      expect(grouped.get('movement')[0].index).toBe(4); // Only movement action
+      expect(grouped.get('intimacy')[0].index).toBe(3); // First intimacy action
+      expect(grouped.get('intimacy')[1].index).toBe(6); // Second intimacy action
+      expect(grouped.get('clothing')[0].index).toBe(1); // First clothing action
+      expect(grouped.get('clothing')[1].index).toBe(5); // Second clothing action
     });
 
     it('should maintain namespace order identically to original', () => {
@@ -299,7 +303,7 @@ describe('ActionButtonsRenderer Backward Compatibility', () => {
         },
         {
           index: 2,
-          actionId: 'core:go',
+          actionId: 'movement:go',
           commandString: 'go',
           description: 'Go',
         },
@@ -339,13 +343,97 @@ describe('ActionButtonsRenderer Backward Compatibility', () => {
       const container = document.querySelector('#actions-container');
       const headers = container.querySelectorAll('.action-section-header');
 
+      // Should have 4 headers (core, intimacy, clothing, movement)
+      expect(headers.length).toBe(4);
+
+      // Headers should now include counts as per UI_CATEGORIZATION_CONFIG
+      // Order is based on priority: core, intimacy, clothing (in priority order), then movement (alphabetical)
+      expect(headers[0].textContent).toBe('CORE (1)');
+      expect(headers[1].textContent).toBe('INTIMACY (2)');
+      expect(headers[2].textContent).toBe('CLOTHING (2)');
+      expect(headers[3].textContent).toBe('MOVEMENT (1)');
+    });
+
+    it('should not show counts when showCounts is false', async () => {
+      // Create a service with showCounts disabled
+      const noCountsService = new ActionCategorizationService({
+        logger: mockLogger,
+        config: {
+          ...UI_CATEGORIZATION_CONFIG,
+          showCounts: false,
+        },
+      });
+
+      // Create renderer with no-counts service
+      const noCountsRenderer = new ActionButtonsRenderer({
+        logger: mockLogger,
+        documentContext: documentContext,
+        validatedEventDispatcher: mockEventDispatcher,
+        domElementFactory: mockDomElementFactory,
+        actionButtonsContainerSelector: '#actions-container',
+        actionCategorizationService: noCountsService,
+      });
+
+      // Create test actions (need at least 6 actions and 2 namespaces for grouping)
+      const actions = [
+        {
+          index: 1,
+          actionId: 'core:wait',
+          commandString: 'wait',
+          description: 'Wait',
+        },
+        {
+          index: 2,
+          actionId: 'core:examine',
+          commandString: 'examine',
+          description: 'Examine',
+        },
+        {
+          index: 3,
+          actionId: 'intimacy:kiss',
+          commandString: 'kiss',
+          description: 'Kiss',
+        },
+        {
+          index: 4,
+          actionId: 'intimacy:hug',
+          commandString: 'hug',
+          description: 'Hug',
+        },
+        {
+          index: 5,
+          actionId: 'clothing:remove',
+          commandString: 'remove',
+          description: 'Remove',
+        },
+        {
+          index: 6,
+          actionId: 'clothing:wear',
+          commandString: 'wear',
+          description: 'Wear',
+        },
+      ];
+
+      // Update available actions
+      noCountsRenderer.availableActions = actions;
+
+      // Render the list
+      await noCountsRenderer.renderList();
+
+      // Check that section headers do not include counts
+      const container = document.querySelector('#actions-container');
+      const headers = container.querySelectorAll('.action-section-header');
+
       // Should have 3 headers (core, intimacy, clothing)
       expect(headers.length).toBe(3);
 
-      // Headers should now include counts as per UI_CATEGORIZATION_CONFIG
-      expect(headers[0].textContent).toBe('CORE (2)');
-      expect(headers[1].textContent).toBe('INTIMACY (2)');
-      expect(headers[2].textContent).toBe('CLOTHING (2)');
+      // Headers should NOT include counts when showCounts is false
+      expect(headers[0].textContent).toBe('CORE');
+      expect(headers[1].textContent).toBe('INTIMACY');
+      expect(headers[2].textContent).toBe('CLOTHING');
+
+      // Clean up
+      noCountsRenderer.dispose();
     });
   });
 

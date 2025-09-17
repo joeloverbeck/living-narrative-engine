@@ -59,7 +59,7 @@ describe('AIPromptContentProvider.getPromptData → goalsArray behavior', () => 
     });
   });
 
-  test('When core:goals is absent, promptData.goalsArray === []', async () => {
+  test('When movement:goals is absent, promptData.goalsArray === []', async () => {
     const gameStateDto = {
       actorPromptData: { name: 'Hero' },
       currentUserInput: '',
@@ -72,7 +72,7 @@ describe('AIPromptContentProvider.getPromptData → goalsArray behavior', () => 
       },
       actorState: {
         components: {
-          // Intentionally no "core:goals"
+          // Intentionally no "movement:goals"
           'core:short_term_memory': { thoughts: [] },
           'core:notes': { notes: [] },
         },
@@ -85,7 +85,7 @@ describe('AIPromptContentProvider.getPromptData → goalsArray behavior', () => 
     expect(promptData.goalsArray).toEqual([]);
   });
 
-  test('When core:goals contains valid array, promptData.goalsArray has correct shape', async () => {
+  test('When movement:goals contains valid array, promptData.goalsArray has correct shape', async () => {
     const sampleGoals = [
       { text: 'Find the key', timestamp: '2025-06-01T12:00:00Z' },
       { text: 'Open the door', timestamp: '2025-06-01T12:05:00Z' },
@@ -104,7 +104,7 @@ describe('AIPromptContentProvider.getPromptData → goalsArray behavior', () => 
         components: {
           'core:short_term_memory': { thoughts: [] },
           'core:notes': { notes: [] },
-          'core:goals': { goals: sampleGoals },
+          'movement:goals': { goals: sampleGoals },
         },
       },
       availableActions: [],
@@ -124,7 +124,7 @@ describe('AIPromptContentProvider.getPromptData → goalsArray behavior', () => 
     });
   });
 
-  test('When core:goals.goals is not an array, promptData.goalsArray === []', async () => {
+  test('When movement:goals.goals is not an array, promptData.goalsArray === []', async () => {
     const gameStateDto = {
       actorPromptData: { name: 'Mage' },
       currentUserInput: '',
@@ -139,7 +139,7 @@ describe('AIPromptContentProvider.getPromptData → goalsArray behavior', () => 
         components: {
           'core:short_term_memory': { thoughts: [] },
           'core:notes': { notes: [] },
-          'core:goals': { goals: 'not-an-array' }, // Malformed
+          'movement:goals': { goals: 'not-an-array' }, // Malformed
         },
       },
       availableActions: [],
@@ -171,7 +171,7 @@ describe('AIPromptContentProvider.getPromptData → goalsArray behavior', () => 
         components: {
           'core:short_term_memory': { thoughts: [] },
           'core:notes': { notes: [] },
-          'core:goals': { goals: sampleGoals },
+          'movement:goals': { goals: sampleGoals },
         },
       },
       availableActions: [],
@@ -208,7 +208,7 @@ describe('AIPromptContentProvider.getPromptData → goalsArray behavior', () => 
         components: {
           'core:short_term_memory': { thoughts: [] },
           'core:notes': { notes: [] },
-          'core:goals': { goals: sampleGoals },
+          'movement:goals': { goals: sampleGoals },
         },
       },
       availableActions: [],
@@ -245,7 +245,7 @@ describe('AIPromptContentProvider.getPromptData → goalsArray behavior', () => 
         components: {
           'core:short_term_memory': { thoughts: [] },
           'core:notes': { notes: [] },
-          'core:goals': { goals: sampleGoals },
+          'movement:goals': { goals: sampleGoals },
         },
       },
       availableActions: [],

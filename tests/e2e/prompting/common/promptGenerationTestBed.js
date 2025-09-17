@@ -746,10 +746,10 @@ export class PromptGenerationTestBed {
         required_components: { actor: [] },
       },
       {
-        id: 'core:go',
+        id: 'movement:go',
         name: 'Go',
         description: 'Move to another location',
-        scope: 'core:clear_directions',
+        scope: 'movement:clear_directions',
         template: 'go to {target}',
         prerequisites: [],
         required_components: { actor: ['core:position'] },
@@ -811,25 +811,25 @@ export class PromptGenerationTestBed {
       },
       {
         index: 2,
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
         displayName: 'Go North',
         commandString: 'go north',
         description: 'Move to Market Square',
         scopedTargets: [
           { id: 'test-market', display: 'Market Square', type: 'location' },
         ],
-        actionDefinition: this.testActions.find((a) => a.id === 'core:go'),
+        actionDefinition: this.testActions.find((a) => a.id === 'movement:go'),
       },
       {
         index: 3,
-        actionDefinitionId: 'core:go',
+        actionDefinitionId: 'movement:go',
         displayName: 'Go East',
         commandString: 'go east',
         description: 'Move to Dark Alley',
         scopedTargets: [
           { id: 'test-alley', display: 'Dark Alley', type: 'location' },
         ],
-        actionDefinition: this.testActions.find((a) => a.id === 'core:go'),
+        actionDefinition: this.testActions.find((a) => a.id === 'movement:go'),
       },
       {
         index: 4,

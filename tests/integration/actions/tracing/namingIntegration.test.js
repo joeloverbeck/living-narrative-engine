@@ -388,9 +388,9 @@ describe('ActionTraceOutputService - Naming Integration', () => {
       // Pre-populate storage with traces
       const existingTraces = [
         {
-          id: '20240115_103045_core-go',
+          id: '20240115_103045_movement-go',
           timestamp: mockDate.getTime(),
-          data: { actionId: 'core:go', type: 'movement' },
+          data: { actionId: 'movement:go', type: 'movement' },
         },
         {
           id: '20240115_103046_core-attack_ERROR',
@@ -462,9 +462,9 @@ describe('ActionTraceOutputService - Naming Integration', () => {
       // Pre-populate storage with traces
       const existingTraces = [
         {
-          id: 'core-go_2024-01-15_10h30m45s_abc123',
+          id: 'movement-go_2024-01-15_10h30m45s_abc123',
           timestamp: mockDate.getTime(),
-          data: { actionId: 'core:go', type: 'movement' },
+          data: { actionId: 'movement:go', type: 'movement' },
         },
         {
           id: 'core-talk_2024-01-15_10h30m46s_def456',
@@ -531,8 +531,8 @@ describe('ActionTraceOutputService - Naming Integration', () => {
       });
 
       const trace1 = {
-        actionId: 'core:go',
-        toJSON: () => ({ actionId: 'core:go' }),
+        actionId: 'movement:go',
+        toJSON: () => ({ actionId: 'movement:go' }),
       };
 
       await service.writeTrace(trace1);
@@ -542,7 +542,7 @@ describe('ActionTraceOutputService - Naming Integration', () => {
       // Get the stored traces from the persistent storage
       const firstSessionTraces = await storageAdapter.getItem('actionTraces');
       expect(firstSessionTraces[0].id).toMatch(
-        /^\d{8}_\d{6}_core-go_[a-f0-9]{6}$/
+        /^\d{8}_\d{6}_movement-go_[a-f0-9]{6}$/
       );
 
       // Shutdown first service
@@ -679,8 +679,8 @@ describe('ActionTraceOutputService - Naming Integration', () => {
       });
 
       const trace = {
-        actionId: 'core:go',
-        toJSON: () => ({ actionId: 'core:go' }),
+        actionId: 'movement:go',
+        toJSON: () => ({ actionId: 'movement:go' }),
       };
 
       await service.writeTrace(trace);
@@ -690,7 +690,7 @@ describe('ActionTraceOutputService - Naming Integration', () => {
       // Should still store trace with proper naming despite formatter failure
       expect(storageAdapter.setItem).toHaveBeenCalled();
       const storedTraces = storageAdapter.setItem.mock.calls[0][1];
-      expect(storedTraces[0].id).toMatch(/^\d{8}_\d{6}_core-go_[a-f0-9]{6}$/);
+      expect(storedTraces[0].id).toMatch(/^\d{8}_\d{6}_movement-go_[a-f0-9]{6}$/);
     });
 
     it('should handle storage adapter failures', async () => {
@@ -713,8 +713,8 @@ describe('ActionTraceOutputService - Naming Integration', () => {
       });
 
       const trace = {
-        actionId: 'core:go',
-        toJSON: () => ({ actionId: 'core:go' }),
+        actionId: 'movement:go',
+        toJSON: () => ({ actionId: 'movement:go' }),
       };
 
       await service.writeTrace(trace);

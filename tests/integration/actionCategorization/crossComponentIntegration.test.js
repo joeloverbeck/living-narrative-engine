@@ -18,24 +18,13 @@ describe('Cross-Component Integration', () => {
     container = new AppContainer();
     const registrar = new Registrar(container);
 
-    // Register logger first (required by action categorization service)
+    // Register logger first (required by base container configuration)
     const appLogger = new ConsoleLogger(LogLevel.ERROR);
     registrar.instance(tokens.ILogger, appLogger);
 
-    // Register required dependencies for base container
-    container.register(
-      tokens.ISafeEventDispatcher,
-      { dispatch: jest.fn() },
-      { lifecycle: 'singleton' }
-    );
-
-    container.register(
-      tokens.IValidatedEventDispatcher,
-      { dispatch: jest.fn() },
-      { lifecycle: 'singleton' }
-    );
-
     // Configure base container which includes action categorization
+    // Note: ISafeEventDispatcher and IValidatedEventDispatcher are registered
+    // automatically by registerInfrastructure within configureBaseContainer
     await configureBaseContainer(container, {
       includeGameSystems: false,
       includeUI: false,
@@ -45,6 +34,15 @@ describe('Cross-Component Integration', () => {
     categorizationService = container.resolve(
       tokens.IActionCategorizationService
     );
+  });
+
+  afterEach(() => {
+    // Properly dispose of the container to ensure test isolation
+    if (container && typeof container.dispose === 'function') {
+      container.dispose();
+    }
+    container = null;
+    categorizationService = null;
   });
 
   describe('Service and Configuration Integration', () => {
@@ -82,7 +80,7 @@ describe('Cross-Component Integration', () => {
         },
         {
           index: 6,
-          actionId: 'core:go',
+          actionId: 'movement:go',
           commandString: 'go',
           description: 'Go.',
         },
@@ -95,13 +93,14 @@ describe('Cross-Component Integration', () => {
 
       // Should produce consistent grouping structure
       const grouped = categorizationService.groupActionsByNamespace(actions);
-      expect(grouped.size).toBe(5); // 5 different namespaces
+      expect(grouped.size).toBe(6); // 6 different namespaces
       expect([...grouped.keys()]).toEqual([
         'core',
         'intimacy',
         'sex',
         'anatomy',
         'clothing',
+        'movement',
       ]);
     });
 
@@ -121,7 +120,7 @@ describe('Cross-Component Integration', () => {
         },
         {
           index: 3,
-          actionId: 'core:go',
+          actionId: 'movement:go',
           commandString: 'go',
           description: 'Go.',
         },

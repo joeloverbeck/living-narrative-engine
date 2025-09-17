@@ -365,7 +365,7 @@ describe('ActionTracingConfigMigration', () => {
       // Arrange
       const userConfig = {
         enabled: true,
-        tracedActions: ['core:go', 'core:attack'],
+        tracedActions: ['movement:go', 'core:attack'],
         outputDirectory: './my-traces',
         verbosity: 'detailed',
       };
@@ -375,7 +375,7 @@ describe('ActionTracingConfigMigration', () => {
 
       // Assert
       expect(result.enabled).toBe(true);
-      expect(result.tracedActions).toEqual(['core:go', 'core:attack']);
+      expect(result.tracedActions).toEqual(['movement:go', 'core:attack']);
       expect(result.outputDirectory).toBe('./my-traces');
       expect(result.verbosity).toBe('detailed');
       // Check defaults are applied for missing fields
@@ -759,7 +759,7 @@ describe('ActionTracingConfigMigration', () => {
       // Arrange
       const completeConfig = {
         enabled: true,
-        tracedActions: ['core:go', 'core:attack', 'mod:custom'],
+        tracedActions: ['movement:go', 'core:attack', 'mod:custom'],
         outputDirectory: './custom-traces',
         verbosity: 'verbose',
         includeComponentData: false,

@@ -120,7 +120,7 @@ describe('Movement Action Loading Integration', () => {
       );
 
       // Verify all functional core: references have been updated to movement:
-      // Note: metadata.migratedFrom intentionally retains "core:go" for tracking
+      // Note: metadata.migratedFrom intentionally retains "movement:go" for tracking
       expect(movementAction.id).not.toContain('core:');
       expect(movementAction.targets.primary.scope).not.toContain('core:');
       expect(movementAction.prerequisites[0].logic.condition_ref).not.toContain(

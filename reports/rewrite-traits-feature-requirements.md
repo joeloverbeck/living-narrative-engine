@@ -13,7 +13,7 @@ The traits that should be rewritten by the LLM in the first person should be (if
 'core:likes'
 'core:dislikes'
 'core:fears'
-'core:goals'
+'movement:goals'
 'core:notes'
 'core:personality'
 'core:profile'

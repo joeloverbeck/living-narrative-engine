@@ -36,7 +36,7 @@ data/mods/core/scopes/clear_directions.scope
 {
   "content": {
     "actions": [
-      // Remove: "core:go"
+      // Remove: "movement:go"
     ],
     "rules": [
       // Remove: "handle_go_action"
@@ -100,7 +100,7 @@ const updateCoreManifest = () => {
 
   // Remove movement-related content
   manifest.content.actions = manifest.content.actions.filter(
-    id => !['core:go'].includes(id)
+    id => !['movement:go'].includes(id)
   );
 
   manifest.content.rules = manifest.content.rules.filter(

@@ -55,7 +55,7 @@ const environmentScopeContent = fs.readFileSync(
 const directionsScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../data/mods/core/scopes/clear_directions.scope'
+    '../../../data/mods/movement/scopes/clear_directions.scope'
   ),
   'utf8'
 );
@@ -63,7 +63,7 @@ const directionsScopeContent = fs.readFileSync(
 // Import actual action files
 import dismissAction from '../../../data/mods/core/actions/dismiss.action.json';
 import followAction from '../../../data/mods/core/actions/follow.action.json';
-import goAction from '../../../data/mods/core/actions/go.action.json';
+import goAction from '../../../data/mods/movement/actions/go.action.json';
 import waitAction from '../../../data/mods/core/actions/wait.action.json';
 
 describe('Scope Integration Tests', () => {
@@ -106,7 +106,7 @@ describe('Scope Integration Tests', () => {
     scopeRegistry.initialize({
       'core:followers': followerDefs.get('core:followers'),
       'core:environment': environmentDefs.get('core:environment'),
-      'core:clear_directions': directionDefs.get('core:clear_directions'),
+      'movement:clear_directions': directionDefs.get('movement:clear_directions'),
     });
 
     scopeEngine = new ScopeEngine();
@@ -115,16 +115,16 @@ describe('Scope Integration Tests', () => {
     registry.store('actions', followAction.id, followAction);
     registry.store('actions', goAction.id, goAction);
     registry.store('actions', waitAction.id, waitAction);
-    registry.store('conditions', 'core:exit-is-unblocked', {
-      id: 'core:exit-is-unblocked',
+    registry.store('conditions', 'movement:exit-is-unblocked', {
+      id: 'movement:exit-is-unblocked',
       description:
         'Checks if an exit object has the "block" property nullified.',
       logic: {
         '!': { var: 'entity.blocker' },
       },
     });
-    registry.store('conditions', 'core:actor-can-move', {
-      id: 'core:actor-can-move',
+    registry.store('conditions', 'movement:actor-can-move', {
+      id: 'movement:actor-can-move',
       description:
         'Checks if the actor has functioning legs capable of movement',
       logic: {
@@ -366,12 +366,12 @@ describe('Scope Integration Tests', () => {
       registry.store('actions', followAction.id, followAction);
       registry.store('actions', goAction.id, goAction); // Use the original go action
       registry.store('actions', waitAction.id, waitAction);
-      registry.store('conditions', 'core:exit-is-unblocked', {
-        id: 'core:exit-is-unblocked',
+      registry.store('conditions', 'movement:exit-is-unblocked', {
+        id: 'movement:exit-is-unblocked',
         logic: { '!': { var: 'entity.blocker' } },
       });
-      registry.store('conditions', 'core:actor-can-move', {
-        id: 'core:actor-can-move',
+      registry.store('conditions', 'movement:actor-can-move', {
+        id: 'movement:actor-can-move',
         logic: {
           hasPartWithComponentValue: [
             'actor',
@@ -472,7 +472,7 @@ describe('Scope Integration Tests', () => {
       );
 
       const goActions = result.actions.filter(
-        (action) => action.id === 'core:go'
+        (action) => action.id === 'movement:go'
       );
 
       expect(goActions.length).toBeGreaterThan(0);
@@ -497,12 +497,12 @@ describe('Scope Integration Tests', () => {
       registry.store('actions', followAction.id, followAction);
       registry.store('actions', goAction.id, goAction); // Use original go action
       registry.store('actions', waitAction.id, waitAction);
-      registry.store('conditions', 'core:exit-is-unblocked', {
-        id: 'core:exit-is-unblocked',
+      registry.store('conditions', 'movement:exit-is-unblocked', {
+        id: 'movement:exit-is-unblocked',
         logic: { '!': { var: 'entity.blocker' } },
       });
-      registry.store('conditions', 'core:actor-can-move', {
-        id: 'core:actor-can-move',
+      registry.store('conditions', 'movement:actor-can-move', {
+        id: 'movement:actor-can-move',
         logic: {
           hasPartWithComponentValue: [
             'actor',
@@ -580,7 +580,7 @@ describe('Scope Integration Tests', () => {
       );
 
       const goActions = result.actions.filter(
-        (action) => action.id === 'core:go'
+        (action) => action.id === 'movement:go'
       );
       expect(goActions.length).toBe(0);
     });

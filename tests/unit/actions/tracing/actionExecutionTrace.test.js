@@ -6,10 +6,10 @@ describe('ActionExecutionTrace', () => {
   let trace;
 
   const validParams = {
-    actionId: 'core:go',
+    actionId: 'movement:go',
     actorId: 'player-1',
     turnAction: {
-      actionDefinitionId: 'core:go',
+      actionDefinitionId: 'movement:go',
       commandString: 'go north',
       parameters: { direction: 'north' },
     },
@@ -21,7 +21,7 @@ describe('ActionExecutionTrace', () => {
 
   describe('Constructor', () => {
     it('should create trace with valid parameters', () => {
-      expect(trace.actionId).toBe('core:go');
+      expect(trace.actionId).toBe('movement:go');
       expect(trace.actorId).toBe('player-1');
       expect(trace.isComplete).toBe(false);
       expect(trace.hasError).toBe(false);
@@ -97,7 +97,7 @@ describe('ActionExecutionTrace', () => {
         enableTiming: false,
       });
 
-      expect(trace.actionId).toBe('core:go');
+      expect(trace.actionId).toBe('movement:go');
       expect(trace.isComplete).toBe(false);
     });
 
@@ -107,7 +107,7 @@ describe('ActionExecutionTrace', () => {
         enableErrorAnalysis: true,
       });
 
-      expect(trace.actionId).toBe('core:go');
+      expect(trace.actionId).toBe('movement:go');
       expect(trace.hasError).toBe(false);
     });
   });
@@ -136,7 +136,7 @@ describe('ActionExecutionTrace', () => {
 
       const payload = {
         actor: 'player-1',
-        action: 'core:go',
+        action: 'movement:go',
         password: 'secret123', // Will be sanitized
       };
 
@@ -243,7 +243,7 @@ describe('ActionExecutionTrace', () => {
       expect(json).toHaveProperty('metadata');
       expect(json).toHaveProperty('turnAction');
       expect(json).toHaveProperty('execution');
-      expect(json.metadata.actionId).toBe('core:go');
+      expect(json.metadata.actionId).toBe('movement:go');
       expect(json.metadata.traceType).toBe('execution');
       expect(json.execution.status).toBe('success');
     });
@@ -270,7 +270,7 @@ describe('ActionExecutionTrace', () => {
 
       const summary = trace.toSummary();
 
-      expect(summary).toContain('core:go');
+      expect(summary).toContain('movement:go');
       expect(summary).toContain('player-1');
       expect(summary).toContain('success');
       expect(summary).toContain('ms');
@@ -721,7 +721,7 @@ describe('ActionExecutionTrace', () => {
       expect(errorData.context.phase).toBe('custom_phase');
       expect(errorData.context.retryCount).toBe(3);
       // executionState is not saved to error data context - it's only internal to errorContext
-      expect(errorData.context.actionId).toBe('core:go');
+      expect(errorData.context.actionId).toBe('movement:go');
       expect(errorData.context.actorId).toBe('player-1');
     });
   });

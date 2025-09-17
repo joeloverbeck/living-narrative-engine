@@ -24,7 +24,7 @@
             },
             "actionId": {
               "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
-              "description": "The underlying action definition ID (e.g. 'core:go')."
+              "description": "The underlying action definition ID (e.g. 'movement:go')."
             },
             "commandString": {
               "type": "string",

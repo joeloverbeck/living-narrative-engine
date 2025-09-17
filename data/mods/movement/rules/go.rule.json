@@ -1,10 +1,10 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_go_action",
-  "comment": "Handles the 'core:go' action. Uses backward-compatible targetId access to support both legacy and multi-target event formats.",
+  "comment": "Handles the 'movement:go' action. Uses backward-compatible targetId access to support both legacy and multi-target event formats.",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "core:event-is-action-go"
+    "condition_ref": "movement:event-is-action-go"
   },
   "actions": [
     {

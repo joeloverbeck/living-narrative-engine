@@ -129,7 +129,7 @@ describe('Action Categorization Dependency Injection Integration', () => {
         },
         {
           index: 3,
-          actionId: 'core:go',
+          actionId: 'movement:go',
           commandString: 'go',
           description: 'Go',
         },
@@ -157,11 +157,13 @@ describe('Action Categorization Dependency Injection Integration', () => {
       expect(service.shouldUseGrouping(actions)).toBe(true);
 
       const grouped = service.groupActionsByNamespace(actions);
-      expect(grouped.size).toBe(2);
+      expect(grouped.size).toBe(3);
       expect(grouped.has('core')).toBe(true);
       expect(grouped.has('intimacy')).toBe(true);
-      expect(grouped.get('core')).toHaveLength(4);
+      expect(grouped.has('movement')).toBe(true);
+      expect(grouped.get('core')).toHaveLength(3);
       expect(grouped.get('intimacy')).toHaveLength(2);
+      expect(grouped.get('movement')).toHaveLength(1);
     });
 
     it('should handle service method failures gracefully', () => {

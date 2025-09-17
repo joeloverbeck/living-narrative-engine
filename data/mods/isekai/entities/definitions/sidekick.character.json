@@ -70,7 +70,7 @@
         }
       ]
     },
-    "core:goals": {
+    "movement:goals": {
       "goals": [
         {
           "text": "I can't endure the horrors of this world (any quest that could make me face groups of monsters) alone. I need to pair up with someone worthy."

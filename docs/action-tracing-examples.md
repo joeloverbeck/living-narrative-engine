@@ -27,7 +27,7 @@ The simplest configuration to trace a single action and get familiar with the sy
   "traceAnalysisEnabled": false,
   "actionTracing": {
     "enabled": true,
-    "tracedActions": ["core:go"],
+    "tracedActions": ["movement:go"],
     "outputDirectory": "./traces/actions",
     "verbosity": "standard"
   }
@@ -692,7 +692,7 @@ Common mistakes and validation errors to avoid.
 {
   "actionTracing": {
     "enabled": "true",
-    "tracedActions": "core:go",
+    "tracedActions": "movement:go",
     "outputDirectory": 123,
     "verbosity": "invalid_level",
     "maxTraceFiles": -1,
@@ -722,7 +722,7 @@ Example showing how to migrate from older configuration formats.
 {
   "actionTracing": {
     "enabled": true,
-    "enabledActions": ["core:go", "core:take"],
+    "enabledActions": ["movement:go", "core:take"],
     "outputDir": "./traces",
     "detail": "high"
   }
@@ -734,7 +734,7 @@ Example showing how to migrate from older configuration formats.
   "traceAnalysisEnabled": false,
   "actionTracing": {
     "enabled": true,
-    "tracedActions": ["core:go", "core:take"],
+    "tracedActions": ["movement:go", "core:take"],
     "outputDirectory": "./traces",
     "verbosity": "detailed",
     "includeComponentData": true,
