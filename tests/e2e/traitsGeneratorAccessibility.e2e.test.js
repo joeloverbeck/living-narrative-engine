@@ -65,13 +65,13 @@ describe('Traits Generator Accessibility E2E', () => {
         window.HTMLElement.prototype.scrollIntoView = jest.fn();
 
         // Mock clipboard operations
-        window.navigator = {
-          ...window.navigator,
-          clipboard: {
+        Object.defineProperty(window.navigator, 'clipboard', {
+          writable: true,
+          value: {
             writeText: jest.fn().mockResolvedValue(),
             readText: jest.fn().mockResolvedValue(''),
           },
-        };
+        });
       },
     });
 

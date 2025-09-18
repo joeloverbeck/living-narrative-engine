@@ -57,8 +57,17 @@ describe('Traits Generator User Workflow E2E', () => {
           size: content[0]?.length || 0,
         }));
 
-        // Mock performance for timing
-        window.performance = { now: jest.fn(() => Date.now()) };
+        // Mock performance for timing - jsdom v27 has readonly performance
+        if (window.performance && window.performance.now) {
+          jest.spyOn(window.performance, 'now').mockReturnValue(Date.now());
+        } else {
+          Object.defineProperty(window, 'performance', {
+            value: {
+              now: jest.fn(() => Date.now())
+            },
+            configurable: true
+          });
+        }
       },
     });
 
