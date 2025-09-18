@@ -104,7 +104,7 @@ describe('AIPromptContentProvider.getPromptData → goalsArray behavior', () => 
         components: {
           'core:short_term_memory': { thoughts: [] },
           'core:notes': { notes: [] },
-          'movement:goals': { goals: sampleGoals },
+          'core:goals': { goals: sampleGoals },
         },
       },
       availableActions: [],
@@ -139,7 +139,7 @@ describe('AIPromptContentProvider.getPromptData → goalsArray behavior', () => 
         components: {
           'core:short_term_memory': { thoughts: [] },
           'core:notes': { notes: [] },
-          'movement:goals': { goals: 'not-an-array' }, // Malformed
+          'core:goals': { goals: 'not-an-array' }, // Malformed
         },
       },
       availableActions: [],
@@ -171,7 +171,7 @@ describe('AIPromptContentProvider.getPromptData → goalsArray behavior', () => 
         components: {
           'core:short_term_memory': { thoughts: [] },
           'core:notes': { notes: [] },
-          'movement:goals': { goals: sampleGoals },
+          'core:goals': { goals: sampleGoals },
         },
       },
       availableActions: [],
@@ -208,7 +208,7 @@ describe('AIPromptContentProvider.getPromptData → goalsArray behavior', () => 
         components: {
           'core:short_term_memory': { thoughts: [] },
           'core:notes': { notes: [] },
-          'movement:goals': { goals: sampleGoals },
+          'core:goals': { goals: sampleGoals },
         },
       },
       availableActions: [],
@@ -245,7 +245,7 @@ describe('AIPromptContentProvider.getPromptData → goalsArray behavior', () => 
         components: {
           'core:short_term_memory': { thoughts: [] },
           'core:notes': { notes: [] },
-          'movement:goals': { goals: sampleGoals },
+          'core:goals': { goals: sampleGoals },
         },
       },
       availableActions: [],

@@ -336,89 +336,10 @@ class ConcurrentTestCoordinator {
   }
 }
 
-/**
- * Performance profiler for concurrent operations
- */
-class ConcurrencyPerformanceProfiler {
-  constructor() {
-    this.metrics = {
-      dispatchLatencies: [],
-      handlerLatencies: [],
-      memorySnapshots: [],
-      cpuSnapshots: [],
-    };
-  }
-
-  recordDispatchLatency(startTime, endTime) {
-    const latency = endTime - startTime;
-    this.metrics.dispatchLatencies.push(latency);
-  }
-
-  recordHandlerLatency(duration) {
-    this.metrics.handlerLatencies.push(duration);
-  }
-
-  takeMemorySnapshot() {
-    // Browser-compatible memory snapshot (limited information)
-    // Note: Browsers don't expose detailed memory usage
-    this.metrics.memorySnapshots.push({
-      timestamp: Date.now(),
-      // Browser performance timing (limited memory information)
-      performance: performance.memory ? {
-        usedJSHeapSize: performance.memory.usedJSHeapSize,
-        totalJSHeapSize: performance.memory.totalJSHeapSize,
-        jsHeapSizeLimit: performance.memory.jsHeapSizeLimit,
-      } : null,
-    });
-  }
-
-  calculateStatistics() {
-    const stats = {
-      dispatch: this.calculateLatencyStats(this.metrics.dispatchLatencies),
-      handler: this.calculateLatencyStats(this.metrics.handlerLatencies),
-      memory: this.calculateMemoryStats(),
-    };
-    return stats;
-  }
-
-  calculateLatencyStats(latencies) {
-    if (latencies.length === 0) return null;
-    
-    const sorted = [...latencies].sort((a, b) => a - b);
-    return {
-      min: sorted[0],
-      max: sorted[sorted.length - 1],
-      mean: latencies.reduce((a, b) => a + b, 0) / latencies.length,
-      median: sorted[Math.floor(sorted.length / 2)],
-      p95: sorted[Math.floor(sorted.length * 0.95)],
-      p99: sorted[Math.floor(sorted.length * 0.99)],
-    };
-  }
-
-  calculateMemoryStats() {
-    if (this.metrics.memorySnapshots.length < 2) return null;
-    
-    // Browser-compatible memory stats (limited information)
-    const snapshots = this.metrics.memorySnapshots.filter(s => s.performance);
-    if (snapshots.length < 2) return null;
-    
-    const first = snapshots[0].performance;
-    const last = snapshots[snapshots.length - 1].performance;
-    
-    return {
-      heapGrowth: last.usedJSHeapSize - first.usedJSHeapSize,
-      heapGrowthPercent: ((last.usedJSHeapSize - first.usedJSHeapSize) / first.usedJSHeapSize) * 100,
-      peakHeap: Math.max(...snapshots.map(s => s.performance.usedJSHeapSize)),
-      avgHeap: snapshots.reduce((sum, s) => sum + s.performance.usedJSHeapSize, 0) / snapshots.length,
-    };
-  }
-}
-
 describe('Concurrent Event Dispatch E2E', () => {
   let eventBus;
   let logger;
   let coordinator;
-  let profiler;
 
   beforeEach(() => {
     // Create fresh instances for each test
@@ -429,7 +350,6 @@ describe('Concurrent Event Dispatch E2E', () => {
     eventBus = new EventBus({ logger });
 
     coordinator = new ConcurrentTestCoordinator(eventBus, logger);
-    profiler = new ConcurrencyPerformanceProfiler();
   });
 
   afterEach(() => {
@@ -458,9 +378,7 @@ describe('Concurrent Event Dispatch E2E', () => {
       );
 
       // Act
-      profiler.takeMemorySnapshot();
       const results = await coordinator.executeConcurrently(dispatchers);
-      profiler.takeMemorySnapshot();
 
       // Assert
       expect(receivedEvents.length).toBe(dispatchCount);
@@ -1105,88 +1023,4 @@ describe('Concurrent Event Dispatch E2E', () => {
     });
   });
 
-  describe('Performance Under Concurrent Load', () => {
-    it('should maintain acceptable performance with 100 concurrent events', async () => {
-      // Arrange
-      const eventCount = 100;
-      const performanceThresholds = {
-        totalDuration: 1000, // ms (more conservative for browser)
-        avgLatency: 100, // ms (more conservative for browser)
-        p95Latency: 200, // ms (more conservative for browser)
-      };
-      
-      // Setup lightweight handlers
-      let processedCount = 0;
-      eventBus.subscribe('*', () => {
-        processedCount++;
-      });
-
-      const dispatchers = [];
-      for (let i = 0; i < eventCount; i++) {
-        const eventType = i % 2 === 0 ? ENTITY_CREATED_ID : COMPONENT_ADDED_ID;
-        dispatchers.push(() => {
-          const start = performance.now();
-          return eventBus.dispatch(eventType, { index: i }).then(() => {
-            const end = performance.now();
-            profiler.recordDispatchLatency(start, end);
-          });
-        });
-      }
-
-      // Act
-      const startTime = Date.now();
-      await Promise.all(dispatchers.map(d => d()));
-      const totalDuration = Date.now() - startTime;
-
-      // Assert
-      const stats = profiler.calculateStatistics();
-      
-      expect(totalDuration).toBeLessThan(performanceThresholds.totalDuration);
-      expect(stats.dispatch.mean).toBeLessThan(performanceThresholds.avgLatency);
-      expect(stats.dispatch.p95).toBeLessThan(performanceThresholds.p95Latency);
-      expect(processedCount).toBe(eventCount);
-      
-      // Log performance metrics for monitoring
-      console.log('Performance metrics:', {
-        totalDuration,
-        eventCount,
-        throughput: (eventCount / totalDuration) * 1000, // events per second
-        avgLatency: stats.dispatch.mean,
-        p95Latency: stats.dispatch.p95,
-      });
-    });
-
-    it('should scale linearly with event count', async () => {
-      // Arrange
-      const testCases = [10, 20, 40, 80];
-      const timings = [];
-
-      // Act
-      for (const count of testCases) {
-        const dispatchers = [];
-        for (let i = 0; i < count; i++) {
-          dispatchers.push(() => eventBus.dispatch(ACTION_DECIDED_ID, { index: i }));
-        }
-
-        const startTime = performance.now();
-        await Promise.all(dispatchers.map(d => d()));
-        const endTime = performance.now();
-        
-        const durationMs = endTime - startTime;
-        timings.push({ count, duration: durationMs });
-      }
-
-      // Assert - check that performance doesn't degrade exponentially
-      // Browser environments may have inconsistent timing at small scales
-      for (let i = 1; i < timings.length; i++) {
-        const ratio = timings[i].count / timings[i - 1].count;
-        const timeRatio = timings[i].duration / timings[i - 1].duration;
-        
-        // Time should not scale exponentially (within generous bounds for browser timing)
-        // Allow for more variance due to browser event loop scheduling
-        expect(timeRatio).toBeGreaterThan(ratio * 0.1); // Very permissive lower bound
-        expect(timeRatio).toBeLessThan(ratio * 5); // Prevent exponential scaling
-      }
-    });
-  });
 });

@@ -274,7 +274,7 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
       'core:likes',
       'core:dislikes',
       'core:fears',
-      'movement:goals',
+      'core:goals',
       'core:notes',
       'core:profile',
       'core:secrets',

@@ -165,7 +165,7 @@ describe('Complete Action Discovery Workflow E2E', () => {
 
     // Parse the DSL expressions to get the ASTs
     const clearDirectionsExpr =
-      'location.core:exits[{"condition_ref": "movement:exit-is-unblocked"}].target';
+      'location.movement:exits[{"condition_ref": "movement:exit-is-unblocked"}].target';
     const otherActorsExpr =
       'entities(core:actor)[{"!=": [{"var": "id"}, {"var": "actor.id"}]}]';
 
@@ -234,7 +234,7 @@ describe('Complete Action Discovery Workflow E2E', () => {
               description: 'A test room for action discovery',
             },
             'core:position': { x: 0, y: 0, z: 0 },
-            'core:exits': [
+            "movement:exits": [
               { direction: 'north', target: 'test-location-2', blocker: null },
             ],
           },
@@ -247,7 +247,7 @@ describe('Complete Action Discovery Workflow E2E', () => {
             'core:name': { name: 'Test Room 2' },
             'core:description': { description: 'Another test room' },
             'core:position': { x: 1, y: 0, z: 0 },
-            'core:exits': [
+            "movement:exits": [
               { direction: 'south', target: 'test-location-1', blocker: null },
             ],
           },

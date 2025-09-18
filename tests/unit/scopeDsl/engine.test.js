@@ -228,7 +228,7 @@ describe('ScopeEngine', () => {
 
       test('edge can access property on filtered array of objects', () => {
         const ast = parseDslExpression(
-          'actor.core:exits[][{"==": [{"var": "locked"}, false]}].target'
+          'actor.movement:exits[][{"==": [{"var": "locked"}, false]}].target'
         );
 
         const exitsComponentData = [
@@ -252,10 +252,10 @@ describe('ScopeEngine', () => {
         // Mock getEntityInstance for actor entity
         mockEntityManager.getEntityInstance = jest.fn().mockReturnValue({
           id: actorId,
-          componentTypeIds: ['core:exits'],
+          componentTypeIds: ["movement:exits"],
         });
 
-        // The first step 'actor.core:exits' resolves to the array of objects.
+        // The first step 'actor.movement:exits' resolves to the array of objects.
         mockEntityManager.getComponentData.mockReturnValue(exitsComponentData);
 
         // The engine doesn't use JSON Logic for this, it just passes the object to the filter.
@@ -267,8 +267,8 @@ describe('ScopeEngine', () => {
         // To do this, we need to mock the direct data access.
         mockEntityManager.getComponentData.mockImplementation(
           (entityId, componentName) => {
-            if (entityId === actorId && componentName === 'core:exits') {
-              // Step 1: actor.core:exits
+            if (entityId === actorId && componentName === "movement:exits") {
+              // Step 1: actor.movement:exits
               // This step returns an array of objects, not entity IDs.
               return [
                 { target: 'room_unlocked', locked: false },

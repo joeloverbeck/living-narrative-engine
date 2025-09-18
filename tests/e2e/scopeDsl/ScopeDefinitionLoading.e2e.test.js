@@ -803,7 +803,7 @@ testmod:scope3 := entities(core:actor)`;
           content: createScopeContent(
             'testmod',
             'step_filter',
-            'location.core:exits[{"var": "blocked", "==": false}]'
+            'location.movement:exits[{"var": "blocked", "==": false}]'
           ),
         },
       ];

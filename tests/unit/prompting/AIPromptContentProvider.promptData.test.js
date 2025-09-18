@@ -103,7 +103,7 @@ describe('AIPromptContentProvider.getPromptData basic scenarios', () => {
           { text: 'NoteB', subject: 'test', timestamp: '2025-06-05T10:00:00Z' },
         ],
       },
-      'movement:goals': {
+      'core:goals': {
         goals: [
           { text: 'GoalA', timestamp: '2025-05-01T00:00:00Z' },
           { text: 'GoalB', timestamp: '2025-05-02T14:15:00Z' },
@@ -126,7 +126,7 @@ describe('AIPromptContentProvider.getPromptData basic scenarios', () => {
   test('defaults both arrays to [] when notes or goals property is not an array (no throws)', async () => {
     const gameStateDto = makeBaseDto({
       'core:notes': { notes: null },
-      'movement:goals': { goals: 'foo' },
+      'core:goals': { goals: 'foo' },
     });
 
     const result = await provider.getPromptData(gameStateDto, logger);

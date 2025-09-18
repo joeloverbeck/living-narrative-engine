@@ -22,8 +22,8 @@ describe('Movement Scopes', () => {
 
     it('should contain expected scope DSL patterns', () => {
       // Verify scope contains expected patterns
-      // The scope uses location.core:exits pattern
-      expect(scopeContent).toMatch(/location\.core:exits/);
+      // The scope uses location.movement:exits pattern
+      expect(scopeContent).toMatch(/location\.movement:exits/);
     });
 
     it('should use correct component references', () => {

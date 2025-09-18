@@ -319,7 +319,7 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
           },
           {
             id: 'test:scope_2',
-            expr: 'location.core:exits[].target',
+            expr: 'location.movement:exits[].target',
             description: 'Concurrent test scope 2',
           },
           {

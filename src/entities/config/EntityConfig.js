@@ -101,7 +101,7 @@ export default class EntityConfig {
       DEFAULT_COMPONENT_TYPES: [
         'core:short_term_memory',
         'core:notes',
-        'movement:goals',
+        'core:goals',
       ],
       INJECT_DEFAULTS_ON_CREATION: true,
       INJECT_DEFAULTS_ON_RECONSTRUCTION: true,

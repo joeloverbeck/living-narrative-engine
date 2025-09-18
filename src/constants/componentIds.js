@@ -9,7 +9,7 @@ export const PLAYER_TYPE_COMPONENT_ID = 'core:player_type';
 export const ACTOR_COMPONENT_ID = 'core:actor';
 export const CURRENT_ACTOR_COMPONENT_ID = 'core:current_actor';
 export const POSITION_COMPONENT_ID = 'core:position';
-export const EXITS_COMPONENT_ID = 'core:exits';
+export const EXITS_COMPONENT_ID = 'movement:exits';
 export const PERCEPTION_LOG_COMPONENT_ID = 'core:perception_log';
 
 // Detailed character aspects
@@ -34,7 +34,7 @@ export const SHORT_TERM_MEMORY_COMPONENT_ID = 'core:short_term_memory';
 
 export const NOTES_COMPONENT_ID = 'core:notes';
 
-export const GOALS_COMPONENT_ID = 'movement:goals';
+export const GOALS_COMPONENT_ID = 'core:goals';
 
 export const LEADING_COMPONENT_ID = 'core:leading';
 export const FOLLOWING_COMPONENT_ID = 'core:following';

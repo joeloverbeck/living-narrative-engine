@@ -148,7 +148,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       // Mock scope without AST (which is now required)
       const mockScopeDefinition = {
         name: 'movement:clear_directions',
-        expr: 'location.core:exits[].target',
+        expr: 'location.movement:exits[].target',
         modId: 'core',
         source: 'file',
         // Intentionally missing ast property
@@ -174,7 +174,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       expect(result.errors).toEqual([]);
       expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
       expect(mockDslParser.parse).toHaveBeenCalledWith(
-        'location.core:exits[].target'
+        'location.movement:exits[].target'
       );
     });
   });

@@ -26,11 +26,5 @@
       "additionalProperties": false
     },
     "default": []
-  },
-  "metadata": {
-    "migratedFrom": "core:exits",
-    "migrationDate": "2024-09-16",
-    "migrationTicket": "MOVMODMIG-004",
-    "version": "1.0.0"
   }
 }

@@ -60,7 +60,7 @@ describe('Scope Syntax Validation', () => {
 
     it('should correctly parse location.component[filter].field pattern', () => {
       const syntax =
-        'location.core:exits[{"==": [{"var": "locked"}, false]}].target';
+        'location.movement:exits[{"==": [{"var": "locked"}, false]}].target';
       const ast = parseDslExpression(syntax);
 
       expect(ast.type).toBe('Step');

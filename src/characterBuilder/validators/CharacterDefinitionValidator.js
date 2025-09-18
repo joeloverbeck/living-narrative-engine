@@ -462,7 +462,7 @@ export class CharacterDefinitionValidator {
         'core:likes': 'Define what the character enjoys or values',
         'core:dislikes': 'Specify what the character avoids or opposes',
         'core:fears': 'Add fears or anxieties that drive character behavior',
-        'movement:goals':
+        'core:goals':
           'Include short-term and long-term goals that motivate the character',
         'core:strengths': 'Define character strengths and capabilities',
         'core:weaknesses': 'Add character weaknesses and limitations',
@@ -800,7 +800,7 @@ export class CharacterDefinitionValidator {
       'core:likes',
       'core:dislikes',
       'core:fears',
-      'movement:goals',
+      'core:goals',
     ];
 
     // Check core components
@@ -892,7 +892,7 @@ export class CharacterDefinitionValidator {
       'core:likes',
       'core:dislikes',
       'core:fears',
-      'movement:goals',
+      'core:goals',
       'core:strengths',
       'core:weaknesses',
     ];
@@ -1066,7 +1066,7 @@ export class CharacterDefinitionValidator {
    */
   #assessNarrativePotential(data) {
     const components = data.components || data;
-    const goals = components['movement:goals'];
+    const goals = components['core:goals'];
     const fears = components['core:fears'];
     const conflicts = components['core:conflicts'];
     const secrets = components['core:secrets'];
