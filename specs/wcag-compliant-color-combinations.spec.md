@@ -14,29 +14,30 @@ This specification provides a curated collection of pre-validated color combinat
 
 ## Current Usage Overview
 
-**Status**: 9 of 27 color combinations currently in use by existing mods (18 available)
+**Status**: 10 of 27 color combinations currently in use by existing mods (17 available)
 
 ### Active Mod Assignments
 
-| Mod         | Color Scheme       | Section | Background Color |
-| ----------- | ------------------ | ------- | ---------------- |
-| Core        | Classic Blue-Grey  | 1.1     | `#455a64`        |
-| Violence    | Dark Crimson       | 2.2     | `#8b0000`        |
-| Intimacy    | Rose Pink          | 3.2     | `#ad1457`        |
-| Clothing    | Earth Brown        | 4.2     | `#6d4c41`        |
-| Sex         | Mystic Purple      | 5.1     | `#4a148c`        |
-| Positioning | Deep Orange Energy | 10.2    | `#bf360c`        |
-| Exercise    | Orange Flame       | 2.3     | `#e65100`        |
-| Seduction   | Golden Divine      | 5.2     | `#f57f17`        |
-| Movement    | Explorer Cyan      | 9.3     | `#006064`        |
+| Mod          | Color Scheme       | Section | Background Color |
+| ------------ | ------------------ | ------- | ---------------- |
+| Core         | Classic Blue-Grey  | 1.1     | `#455a64`        |
+| Violence     | Dark Crimson       | 2.2     | `#8b0000`        |
+| Intimacy     | Rose Pink          | 3.2     | `#ad1457`        |
+| Clothing     | Earth Brown        | 4.2     | `#6d4c41`        |
+| Sex          | Mystic Purple      | 5.1     | `#4a148c`        |
+| Positioning  | Deep Orange Energy | 10.2    | `#bf360c`        |
+| Exercise     | Orange Flame       | 2.3     | `#e65100`        |
+| Seduction    | Golden Divine      | 5.2     | `#f57f17`        |
+| Movement     | Explorer Cyan      | 9.3     | `#006064`        |
+| Companionship| Deep Teal          | 3.3     | `#00695c`        |
 
 ### Available Color Combinations
 
-The following **18 color combinations** remain available for new mods:
+The following **17 color combinations** remain available for new mods:
 
 - **Neutral/System**: Slate Grey (1.2), Charcoal (1.3)
 - **Action/Combat**: Bold Red (2.1)
-- **Social/Intimacy**: Soft Purple (3.1), Deep Teal (3.3)
+- **Social/Intimacy**: Soft Purple (3.1)
 - **Nature/Environment**: Forest Green (4.1), Ocean Blue (4.3)
 - **Magic/Special**: _(none available)_
 - **Warning/Alert**: Amber Warning (6.1), Dark Red Alert (6.2)
@@ -206,7 +207,7 @@ The following **18 color combinations** remain available for new mods:
 - **Hover Contrast**: 5.42:1 ✅ AA
 - **Use Cases**: Calming interactions, trust-building
 - **Theme**: Trust, stability, depth
-- 🟢 **AVAILABLE**
+- ✅ **USED BY**: Companionship mod (follow, stop_following, dismiss)
 
 ### 4. Nature/Environment Colors
 
