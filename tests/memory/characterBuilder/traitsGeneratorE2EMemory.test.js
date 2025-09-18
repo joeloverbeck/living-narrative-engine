@@ -74,23 +74,53 @@ describe('Traits Generator E2E Memory Tests', () => {
       beforeParse(window) {
         setupBrowserAPIMocks(window);
 
-        // Enhanced memory API for testing
-        window.performance = {
-          now: jest.fn(() => Date.now()),
-          memory: {
-            usedJSHeapSize: memoryTracker.currentMemory,
-            totalJSHeapSize: 2 * 1024 * 1024, // 2MB total
-            jsHeapSizeLimit: 64 * 1024 * 1024, // 64MB limit
-            // Simulate memory growth
-            _simulateGrowth: function (bytes) {
-              memoryTracker.track(bytes, 'simulated');
-              this.usedJSHeapSize = memoryTracker.currentMemory;
-              if (this.usedJSHeapSize > this.totalJSHeapSize) {
-                this.totalJSHeapSize = this.usedJSHeapSize * 1.5;
-              }
+        // Enhanced memory API for testing - jsdom v27 has readonly performance
+        if (window.performance) {
+          // Mock the now method if performance exists
+          if (window.performance.now) {
+            jest.spyOn(window.performance, 'now').mockReturnValue(Date.now());
+          }
+          // Try to add memory property if it doesn't exist
+          if (!window.performance.memory) {
+            Object.defineProperty(window.performance, 'memory', {
+              value: {
+                usedJSHeapSize: memoryTracker.currentMemory,
+                totalJSHeapSize: 2 * 1024 * 1024, // 2MB total
+                jsHeapSizeLimit: 64 * 1024 * 1024, // 64MB limit
+                // Simulate memory growth
+                _simulateGrowth: function (bytes) {
+                  memoryTracker.track(bytes, 'simulated');
+                  this.usedJSHeapSize = memoryTracker.currentMemory;
+                  if (this.usedJSHeapSize > this.totalJSHeapSize) {
+                    this.totalJSHeapSize = this.usedJSHeapSize * 1.5;
+                  }
+                },
+              },
+              configurable: true
+            });
+          }
+        } else {
+          // If performance doesn't exist, create the whole object
+          Object.defineProperty(window, 'performance', {
+            value: {
+              now: jest.fn(() => Date.now()),
+              memory: {
+                usedJSHeapSize: memoryTracker.currentMemory,
+                totalJSHeapSize: 2 * 1024 * 1024, // 2MB total
+                jsHeapSizeLimit: 64 * 1024 * 1024, // 64MB limit
+                // Simulate memory growth
+                _simulateGrowth: function (bytes) {
+                  memoryTracker.track(bytes, 'simulated');
+                  this.usedJSHeapSize = memoryTracker.currentMemory;
+                  if (this.usedJSHeapSize > this.totalJSHeapSize) {
+                    this.totalJSHeapSize = this.usedJSHeapSize * 1.5;
+                  }
+                },
+              },
             },
-          },
-        };
+            configurable: true
+          });
+        }
 
         fetchMock = jest.fn();
         window.fetch = fetchMock;

@@ -57,9 +57,16 @@ describe('Traits Generator E2E Tests', () => {
         // Mock required globals that would be provided by the application
         window.process = { env: { NODE_ENV: 'test' } };
 
-        // Mock performance API if needed
-        if (!window.performance) {
-          window.performance = { now: () => Date.now() };
+        // Mock performance API if needed - jsdom v27 has readonly performance
+        if (window.performance && window.performance.now) {
+          jest.spyOn(window.performance, 'now').mockReturnValue(Date.now());
+        } else if (!window.performance) {
+          Object.defineProperty(window, 'performance', {
+            value: {
+              now: jest.fn(() => Date.now())
+            },
+            configurable: true
+          });
         }
 
         // Mock URL constructor and createObjectURL for export functionality

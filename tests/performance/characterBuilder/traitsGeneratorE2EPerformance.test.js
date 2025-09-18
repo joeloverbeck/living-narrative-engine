@@ -72,9 +72,11 @@ describe('Traits Generator Performance E2E Tests', () => {
       beforeParse(window) {
         setupBrowserAPIMocks(window);
 
-        // Enhanced performance API for testing
+        // Enhanced performance API for testing - jsdom v27 has readonly performance
         let performanceStart = Date.now();
-        window.performance = {
+
+        // Create performance mock object with all needed methods
+        const performanceMock = {
           now: jest.fn(() => Date.now() - performanceStart),
           mark: jest.fn((name) => performanceTracker.mark(name)),
           measure: jest.fn((name, start) =>
@@ -97,6 +99,34 @@ describe('Traits Generator Performance E2E Tests', () => {
             },
           },
         };
+
+        if (window.performance) {
+          // jsdom v27 has performance but it's readonly, so we need to mock individual methods
+          Object.keys(performanceMock).forEach(key => {
+            if (key === 'memory') {
+              // Handle memory property separately
+              if (!window.performance.memory) {
+                Object.defineProperty(window.performance, 'memory', {
+                  value: performanceMock.memory,
+                  configurable: true
+                });
+              }
+            } else if (typeof performanceMock[key] === 'function') {
+              // Mock the method if it exists, or add it if it doesn't
+              if (window.performance[key]) {
+                jest.spyOn(window.performance, key).mockImplementation(performanceMock[key]);
+              } else {
+                window.performance[key] = performanceMock[key];
+              }
+            }
+          });
+        } else {
+          // If performance doesn't exist at all, create it
+          Object.defineProperty(window, 'performance', {
+            value: performanceMock,
+            configurable: true
+          });
+        }
 
         fetchMock = jest.fn();
         window.fetch = fetchMock;
