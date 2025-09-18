@@ -233,7 +233,7 @@ export class TraitsRewriterGenerator {
 
       if (traitData) {
         // Special handling for array-based traits (goals and notes)
-        if (traitKey === 'movement:goals' && traitData.goals) {
+        if (traitKey === 'core:goals' && traitData.goals) {
           // Extract array of goal texts
           extractedTraits[traitKey] = traitData.goals.map(goal => goal.text || goal);
         } else if (traitKey === 'core:notes' && traitData.notes) {

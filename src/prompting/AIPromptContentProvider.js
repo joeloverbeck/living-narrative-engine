@@ -367,7 +367,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     const notesComp = componentsMap['core:notes'];
     const notesArray = this._extractNotes(notesComp);
 
-    const goalsComp = componentsMap['movement:goals'];
+    const goalsComp = componentsMap['core:goals'];
     const goalsArray = this._extractGoals(goalsComp);
 
     this.#logger.debug(

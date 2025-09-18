@@ -267,7 +267,7 @@ describe('Complex Filter Expressions E2E', () => {
       description: 'Test location for complex filtering',
       components: {
         'core:position': { x: 0, y: 0 },
-        'core:exits': [
+        "movement:exits": [
           { direction: 'north', target: 'north-location', blocked: false },
           { direction: 'south', target: 'south-location', blocked: true },
         ],

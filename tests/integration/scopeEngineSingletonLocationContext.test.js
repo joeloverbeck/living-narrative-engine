@@ -46,7 +46,7 @@ core:actors_in_location := entities(core:position)[
   }
 ]
 
-movement:clear_directions := location.core:exits[
+movement:clear_directions := location.movement:exits[
   { "!": { "var": "entity.blocker" } }
 ].target
 `;

@@ -91,7 +91,7 @@ describe('AIPromptContentProvider.getPromptData', () => {
               },
             ],
           },
-          'movement:goals': {
+          'core:goals': {
             goals: [
               { text: 'First goal', timestamp: '2025-06-05T08:30:00Z' },
               { text: 'Second goal', timestamp: '2025-06-05T08:45:00Z' },
@@ -162,7 +162,7 @@ describe('AIPromptContentProvider.getPromptData', () => {
     const gameStateDto = {
       actorState: {
         components: {
-          'movement:goals': {
+          'core:goals': {
             goals: { text: 'bad', timestamp: '2025-06-05T07:00:00Z' },
           },
         },

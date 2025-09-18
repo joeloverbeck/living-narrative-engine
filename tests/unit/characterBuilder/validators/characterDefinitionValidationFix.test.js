@@ -163,7 +163,7 @@ describe('Character Definition Validation Fix', () => {
             'losing her creative spark',
             'selling out her artistic vision',
           ],
-          'movement:goals': {
+          'core:goals': {
             shortTerm: ['finish mural commission', 'save for studio space'],
             longTerm: [
               'establish herself as recognized artist',

@@ -12,7 +12,7 @@
       "imagePath": "portraits/adventurers_guild.png",
       "altText": "Interior of the adventurers' guild."
     },
-    "core:exits": [
+    "movement:exits": [
       {
         "direction": "out to town",
         "target": "isekai:town_instance",
