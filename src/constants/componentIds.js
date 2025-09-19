@@ -36,8 +36,8 @@ export const NOTES_COMPONENT_ID = 'core:notes';
 
 export const GOALS_COMPONENT_ID = 'core:goals';
 
-export const LEADING_COMPONENT_ID = 'core:leading';
-export const FOLLOWING_COMPONENT_ID = 'core:following';
+export const LEADING_COMPONENT_ID = 'companionship:leading';
+export const FOLLOWING_COMPONENT_ID = 'companionship:following';
 
 export const APPARENT_AGE_COMPONENT_ID = 'core:apparent_age';
 

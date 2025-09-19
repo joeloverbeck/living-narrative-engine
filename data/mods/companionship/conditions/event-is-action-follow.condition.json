@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "companionship:event-is-action-follow",
+  "description": "Checks if the triggering event is for the 'companionship:follow' action.",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "companionship:follow"
+    ]
+  }
+}

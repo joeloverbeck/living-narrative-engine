@@ -184,7 +184,8 @@
       "Bash(NODE_ENV=test node debug-if-operation-validation.js)",
       "mcp__morphllm-fast-apply__list_directory",
       "mcp__morphllm-fast-apply__search_files",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(npm run validate:mod:*)"
     ],
     "deny": [],
     "ask": []

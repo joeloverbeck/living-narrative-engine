@@ -1,13 +1,13 @@
 import { describe, test, expect, beforeAll } from '@jest/globals';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
-import actionData from '../../../data/mods/core/actions/dismiss.action.json';
+import actionData from '../../../data/mods/companionship/actions/dismiss.action.json';
 import actionSchema from '../../../data/schemas/action.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
 import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
 
-describe("Action Definition: 'core:dismiss'", () => {
+describe("Action Definition: 'companionship:dismiss'", () => {
   /** @type {import('ajv').ValidateFunction} */
   let validate;
 
@@ -35,7 +35,7 @@ describe("Action Definition: 'core:dismiss'", () => {
 
     test('should have correct primary target structure', () => {
       const primaryTarget = actionData.targets.primary;
-      expect(primaryTarget).toHaveProperty('scope', 'core:followers');
+      expect(primaryTarget).toHaveProperty('scope', 'companionship:followers');
       expect(primaryTarget).toHaveProperty('placeholder', 'follower');
       expect(primaryTarget).toHaveProperty(
         'description',
@@ -53,7 +53,7 @@ describe("Action Definition: 'core:dismiss'", () => {
 
     test('should maintain required_components for actor', () => {
       expect(actionData.required_components).toEqual({
-        actor: ['core:leading'],
+        actor: ['companionship:leading'],
       });
     });
   });

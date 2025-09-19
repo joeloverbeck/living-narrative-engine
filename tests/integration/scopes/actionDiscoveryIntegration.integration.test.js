@@ -42,8 +42,8 @@ import { ActionIndex } from '../../../src/actions/actionIndex.js';
 import { createMultiTargetResolutionStage } from '../../common/actions/multiTargetStageTestUtilities.js';
 
 // Import actions
-import dismissAction from '../../../data/mods/core/actions/dismiss.action.json';
-import followAction from '../../../data/mods/core/actions/follow.action.json';
+import dismissAction from '../../../data/mods/companionship/actions/dismiss.action.json';
+import followAction from '../../../data/mods/companionship/actions/follow.action.json';
 import goAction from '../../../data/mods/movement/actions/go.action.json';
 import waitAction from '../../../data/mods/core/actions/wait.action.json';
 
@@ -74,7 +74,7 @@ describe('Scope Integration Tests', () => {
     scopeRegistry.clear();
 
     const followersScopeContent = fs.readFileSync(
-      path.resolve(__dirname, '../../../data/mods/core/scopes/followers.scope'),
+      path.resolve(__dirname, '../../../data/mods/companionship/scopes/followers.scope'),
       'utf8'
     );
     const environmentScopeContent = fs.readFileSync(
@@ -94,7 +94,7 @@ describe('Scope Integration Tests', () => {
     const potentialLeadersScopeContent = fs.readFileSync(
       path.resolve(
         __dirname,
-        '../../../data/mods/core/scopes/potential_leaders.scope'
+        '../../../data/mods/companionship/scopes/potential_leaders.scope'
       ),
       'utf8'
     );
@@ -117,11 +117,11 @@ describe('Scope Integration Tests', () => {
     );
 
     scopeRegistry.initialize({
-      'core:followers': followerDefs.get('core:followers'),
+      'companionship:followers': followerDefs.get('companionship:followers'),
       'core:environment': environmentDefs.get('core:environment'),
       'movement:clear_directions': directionDefs.get('movement:clear_directions'),
-      'core:potential_leaders': potentialLeadersDefs.get(
-        'core:potential_leaders'
+      'companionship:potential_leaders': potentialLeadersDefs.get(
+        'companionship:potential_leaders'
       ),
     });
 
@@ -148,11 +148,11 @@ describe('Scope Integration Tests', () => {
       id: 'core:entity-has-actor-component',
       logic: { '!!': { var: 'entity.components.core:actor' } },
     });
-    registry.store('conditions', 'core:entity-is-following-actor', {
-      id: 'core:entity-is-following-actor',
+    registry.store('conditions', 'companionship:entity-is-following-actor', {
+      id: 'companionship:entity-is-following-actor',
       logic: {
         '==': [
-          { var: 'entity.components.core:following.leaderId' },
+          { var: 'entity.components.companionship:following.leaderId' },
           { var: 'actor.id' },
         ],
       },
@@ -374,7 +374,7 @@ describe('Scope Integration Tests', () => {
         context
       );
       const dismissActions = result.actions.filter(
-        (action) => action.id === 'core:dismiss'
+        (action) => action.id === 'companionship:dismiss'
       );
       expect(dismissActions.length).toBeGreaterThan(0);
       const targetIds = dismissActions
@@ -531,7 +531,7 @@ describe('Scope Integration Tests', () => {
         context
       );
       const followActions = result.actions.filter(
-        (action) => action.id === 'core:follow'
+        (action) => action.id === 'companionship:follow'
       );
       expect(followActions.length).toBeGreaterThan(0);
       const targetIds = followActions

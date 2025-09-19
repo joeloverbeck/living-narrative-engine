@@ -118,14 +118,14 @@ describe('Complete Action Discovery Workflow E2E', () => {
         },
       },
       {
-        id: 'core:follow',
+        id: 'companionship:follow',
         name: 'Follow',
         description: 'Follow another actor.',
         scope: 'core:other_actors',
         template: 'follow {target}',
         prerequisites: [],
         required_components: {
-          actor: ['core:following'],
+          actor: ['companionship:following'],
         },
       },
     ];
@@ -286,7 +286,7 @@ describe('Complete Action Discovery Workflow E2E', () => {
           'core:position': { locationId: 'test-location-1' },
           'core:actor': { isPlayer: true },
           'core:closeness': { relationships: {} },
-          'core:following': { following: null, followers: [] },
+          'companionship:following': { following: null, followers: [] },
           'core:movement': { locked: false },
         },
       },
@@ -463,13 +463,13 @@ describe('Complete Action Discovery Workflow E2E', () => {
     const followerActionIds = followerActions.actions.map((a) => a.id);
 
     // Stop following should only be available to followers
-    if (followerActionIds.includes('core:stop_following')) {
-      expect(playerActionIds).not.toContain('core:stop_following');
+    if (followerActionIds.includes('companionship:stop_following')) {
+      expect(playerActionIds).not.toContain('companionship:stop_following');
     }
 
     // Dismiss should only be available to entities with followers
-    if (playerActionIds.includes('core:dismiss')) {
-      expect(followerActionIds).not.toContain('core:dismiss');
+    if (playerActionIds.includes('companionship:dismiss')) {
+      expect(followerActionIds).not.toContain('companionship:dismiss');
     }
   });
 

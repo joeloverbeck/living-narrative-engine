@@ -14,8 +14,8 @@ import commonSchema from '../../../data/schemas/common.schema.json';
 // --- Component definition files to validate ---
 // Note: As you create new components, add them to this import list to ensure they are tested.
 import goalsComponent from '../../../data/mods/core/components/goals.component.json';
-import followingComponent from '../../../data/mods/core/components/following.component.json';
-import leadingComponent from '../../../data/mods/core/components/leading.component.json';
+import followingComponent from '../../../data/mods/companionship/components/following.component.json';
+import leadingComponent from '../../../data/mods/companionship/components/leading.component.json';
 
 /**
  * Test suite – Component Definition Schema Validation.

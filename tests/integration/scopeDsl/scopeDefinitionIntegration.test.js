@@ -119,11 +119,11 @@ describe('Scope Definition Integration', () => {
 
     it('should handle namespaced scope resolution', () => {
       const scopeDefinitions = {
-        'core:followers': {
-          id: 'core:followers',
+        'companionship:followers': {
+          id: 'companionship:followers',
           expr: 'actor.followers[]',
           ast: parseScopeFile('actor.followers[]', 'followers').expr,
-          description: 'Core followers scope',
+          description: 'Companionship followers scope',
         },
         'mod:followers': {
           id: 'mod:followers',
@@ -135,7 +135,7 @@ describe('Scope Definition Integration', () => {
 
       scopeRegistry.initialize(scopeDefinitions);
 
-      const coreScope = scopeRegistry.getScope('core:followers');
+      const coreScope = scopeRegistry.getScope('companionship:followers');
       const modScope = scopeRegistry.getScope('mod:followers');
 
       expect(coreScope).toBeDefined();
@@ -155,15 +155,15 @@ describe('Scope Definition Integration', () => {
 
   describe('Action System Integration', () => {
     it('should support action definition referencing scope by name', () => {
-      // Mock action definition structure
+      // Mock action definition structure - reflects actual production format
       const actionDefinition = {
-        id: 'core:dismiss',
+        id: 'companionship:dismiss',
         commandVerb: 'dismiss',
         name: 'Dismiss',
         description: 'Dismisses a follower from your service.',
         targets: {
           primary: {
-            scope: 'followers', // References scope by name
+            scope: 'companionship:followers', // References scope with full namespace
             placeholder: 'follower',
             description: 'The follower to dismiss from service',
           },
@@ -172,21 +172,27 @@ describe('Scope Definition Integration', () => {
         prerequisites: [
           {
             logic: {
-              condition_ref: 'core:target-is-follower-of-actor',
+              condition_ref: 'companionship:target-is-follower-of-actor',
             },
             failure_message: 'You can only dismiss your own followers.',
           },
         ],
       };
 
-      // Test that scope name reference works in multi-target format
-      expect(actionDefinition.targets.primary.scope).toBe('followers');
+      // Test that scope reference is properly namespaced
+      expect(actionDefinition.targets.primary.scope).toBe('companionship:followers');
       expect(actionDefinition.targets.primary.placeholder).toBe('follower');
       expect(actionDefinition.template).toBe('dismiss {follower}');
 
-      // In real integration, this would be resolved to namespaced scope
-      const namespacedScope = `core:${actionDefinition.targets.primary.scope}`;
-      expect(namespacedScope).toBe('core:followers');
+      // Verify that the scope reference follows the required namespaced format
+      expect(actionDefinition.targets.primary.scope).toContain(':');
+
+      // Extract namespace from the action ID and scope reference
+      const actionNamespace = actionDefinition.id.split(':')[0];
+      const scopeNamespace = actionDefinition.targets.primary.scope.split(':')[0];
+
+      // In this case, they should match since both are from the companionship mod
+      expect(scopeNamespace).toBe(actionNamespace);
     });
 
     it('should validate complete scope-to-action workflow', async () => {

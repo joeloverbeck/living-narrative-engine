@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import {
   AnatomyErrorHandler,
   AnatomyGenerationError,
@@ -93,5 +93,157 @@ describe('AnatomyErrorHandler', () => {
         context: { operation: 'generation', entityId: 'e5' },
       })
     );
+  });
+
+  describe('central error handler integration', () => {
+    let centralErrorHandler;
+    let recoveryStrategyManager;
+    let handler;
+
+    beforeEach(() => {
+      centralErrorHandler = {
+        handle: jest.fn().mockResolvedValue({ recovered: true, fallbackData: {} }),
+        handleSync: jest.fn().mockReturnValue({ recovered: true, fallbackData: {} })
+      };
+
+      recoveryStrategyManager = {
+        executeWithRecovery: jest.fn(),
+        registerStrategy: jest.fn()
+      };
+
+      handler = new AnatomyErrorHandler({
+        logger,
+        centralErrorHandler,
+        recoveryStrategyManager
+      });
+    });
+
+    it('delegates to central error handler when available (async)', async () => {
+      const error = new Error('test error');
+      const context = { operation: 'generation', entityId: 'e1' };
+
+      await handler.handleAsync(error, context);
+
+      expect(centralErrorHandler.handle).toHaveBeenCalledWith(
+        expect.any(AnatomyGenerationError),
+        expect.objectContaining({
+          ...context,
+          domain: 'anatomy'
+        })
+      );
+    });
+
+    it('delegates to central error handler when available (sync)', () => {
+      const error = new Error('test error');
+      const context = { operation: 'generation', entityId: 'e1' };
+
+      handler.handle(error, context);
+
+      expect(centralErrorHandler.handleSync).toHaveBeenCalledWith(
+        expect.any(AnatomyGenerationError),
+        expect.objectContaining({
+          ...context,
+          domain: 'anatomy'
+        })
+      );
+    });
+
+    it('registers recovery strategies on initialization', () => {
+      expect(recoveryStrategyManager.registerStrategy).toHaveBeenCalledWith(
+        'AnatomyGenerationError',
+        expect.objectContaining({
+          retry: expect.objectContaining({
+            maxRetries: 2,
+            backoff: 'exponential'
+          }),
+          fallback: expect.any(Function),
+          circuitBreaker: expect.objectContaining({
+            failureThreshold: 3,
+            resetTimeout: 120000
+          })
+        })
+      );
+
+      expect(recoveryStrategyManager.registerStrategy).toHaveBeenCalledWith(
+        'DescriptionGenerationError',
+        expect.objectContaining({
+          retry: expect.objectContaining({
+            maxRetries: 3,
+            backoff: 'linear'
+          }),
+          fallback: expect.any(Function)
+        })
+      );
+
+      expect(recoveryStrategyManager.registerStrategy).toHaveBeenCalledWith(
+        'GraphBuildingError',
+        expect.objectContaining({
+          retry: expect.objectContaining({
+            maxRetries: 1,
+            backoff: 'constant'
+          }),
+          fallback: expect.any(Function)
+        })
+      );
+
+      expect(logger.info).toHaveBeenCalledWith(
+        'Anatomy recovery strategies registered with central system'
+      );
+    });
+
+    it('falls back to local handling if central handler fails (async)', async () => {
+      centralErrorHandler.handle.mockRejectedValueOnce(new Error('Central handler failed'));
+
+      const error = new Error('test error');
+      const context = { operation: 'generation', entityId: 'e1' };
+
+      const result = await handler.handleAsync(error, context);
+
+      expect(result).toBeInstanceOf(AnatomyGenerationError);
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Central error handler failed, using local handling',
+        expect.objectContaining({ error: 'Central handler failed' })
+      );
+    });
+
+    it('falls back to local handling if central handler fails (sync)', () => {
+      centralErrorHandler.handleSync.mockImplementationOnce(() => {
+        throw new Error('Central handler failed');
+      });
+
+      const error = new Error('test error');
+      const context = { operation: 'generation', entityId: 'e1' };
+
+      const result = handler.handle(error, context);
+
+      expect(result).toBeInstanceOf(AnatomyGenerationError);
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Central error handler failed, using local handling',
+        expect.objectContaining({ error: 'Central handler failed' })
+      );
+    });
+  });
+
+  describe('error severity and recoverability', () => {
+    it('AnatomyGenerationError has correct severity and recoverability', () => {
+      const error = new AnatomyGenerationError('test', 'e1', 'r1');
+      expect(error.getSeverity()).toBe('error');
+      expect(error.isRecoverable()).toBe(true);
+      expect(error.code).toBe('ANATOMY_GENERATION_ERROR');
+    });
+
+    it('DescriptionGenerationError has correct severity and recoverability', () => {
+      const error = new DescriptionGenerationError('test', 'e1', ['p1']);
+      expect(error.getSeverity()).toBe('warning');
+      expect(error.isRecoverable()).toBe(true);
+      expect(error.code).toBe('DESCRIPTION_GENERATION_ERROR');
+    });
+
+    it('GraphBuildingError has correct severity and recoverability', () => {
+      const error = new GraphBuildingError('test', 'root1');
+      expect(error.getSeverity()).toBe('error');
+      expect(error.isRecoverable()).toBe(false);
+      expect(error.code).toBe('GRAPH_BUILDING_ERROR');
+    });
   });
 });

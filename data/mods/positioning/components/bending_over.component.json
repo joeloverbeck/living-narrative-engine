@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "positioning:bending_over",
+  "description": "Tracks which surface entity this actor is currently bending over",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["surface_id"],
+    "properties": {
+      "surface_id": {
+        "description": "The surface entity being bent over",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId"
+      }
+    }
+  }
+}

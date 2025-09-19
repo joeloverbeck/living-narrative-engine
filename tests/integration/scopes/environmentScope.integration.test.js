@@ -39,7 +39,7 @@ import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetCon
 import { createMultiTargetResolutionStage } from '../../common/actions/multiTargetStageTestUtilities.js';
 
 // Import actions
-import followAction from '../../../data/mods/core/actions/follow.action.json';
+import followAction from '../../../data/mods/companionship/actions/follow.action.json';
 
 // Unmock the real singleton to ensure the test and SUT use the same instance
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
@@ -79,7 +79,7 @@ describe('Scope Integration Tests', () => {
     const potentialLeadersScopeContent = fs.readFileSync(
       path.resolve(
         __dirname,
-        '../../../data/mods/core/scopes/potential_leaders.scope'
+        '../../../data/mods/companionship/scopes/potential_leaders.scope'
       ),
       'utf8'
     );
@@ -94,8 +94,8 @@ describe('Scope Integration Tests', () => {
 
     scopeRegistry.initialize({
       'core:environment': environmentDefs.get('core:environment'),
-      'core:potential_leaders': potentialLeadersDefs.get(
-        'core:potential_leaders'
+      'companionship:potential_leaders': potentialLeadersDefs.get(
+        'companionship:potential_leaders'
       ),
     });
 
@@ -120,8 +120,8 @@ describe('Scope Integration Tests', () => {
       id: 'core:entity-has-actor-component',
       logic: { '!!': { var: 'entity.components.core:actor' } },
     });
-    registry.store('conditions', 'core:entity-is-following-actor', {
-      id: 'core:entity-is-following-actor',
+    registry.store('conditions', 'companionship:entity-is-following-actor', {
+      id: 'companionship:entity-is-following-actor',
       logic: {
         '==': [
           { var: 'entity.components.core:following.leaderId' },
@@ -264,7 +264,7 @@ describe('Scope Integration Tests', () => {
       );
 
       const followActions = result.actions.filter(
-        (action) => action.id === 'core:follow'
+        (action) => action.id === 'companionship:follow'
       );
       expect(followActions.length).toBeGreaterThan(0);
       const targetIds = followActions
@@ -296,7 +296,7 @@ describe('Scope Integration Tests', () => {
         context
       );
       const followActions = result.actions.filter(
-        (action) => action.id === 'core:follow'
+        (action) => action.id === 'companionship:follow'
       );
       expect(followActions.length).toBe(0);
     });
@@ -334,7 +334,7 @@ describe('Scope Integration Tests', () => {
         context
       );
       const followActions = result.actions.filter(
-        (action) => action.id === 'core:follow'
+        (action) => action.id === 'companionship:follow'
       );
 
       // Debug logging for troubleshooting

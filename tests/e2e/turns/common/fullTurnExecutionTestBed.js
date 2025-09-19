@@ -733,7 +733,7 @@ export class FullTurnExecutionTestBed {
             ],
           },
           'core:closeness': { relationships: {} },
-          'core:following': { following: null, followers: [] },
+          'companionship:following': { following: null, followers: [] },
           'core:movement': { locked: false },
           'core:perception_log': {
             logEntries: [
@@ -783,7 +783,7 @@ export class FullTurnExecutionTestBed {
           'core:position': { locationId: 'test-tavern' },
           'core:actor': { isPlayer: true, isAI: false },
           'core:closeness': { relationships: {} },
-          'core:following': { following: null, followers: [] },
+          'companionship:following': { following: null, followers: [] },
           'core:movement': { locked: false },
         },
       },
@@ -794,7 +794,7 @@ export class FullTurnExecutionTestBed {
           'core:position': { locationId: 'test-tavern' },
           'core:actor': { isPlayer: false, isAI: false },
           'core:closeness': { relationships: {} },
-          'core:following': { following: null, followers: [] },
+          'companionship:following': { following: null, followers: [] },
           'core:movement': { locked: false },
         },
       },

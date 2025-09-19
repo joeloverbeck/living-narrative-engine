@@ -8,9 +8,6 @@
   "gameVersion": ">=0.0.1",
   "content": {
     "actions": [
-      "dismiss.action.json",
-      "follow.action.json",
-      "stop_following.action.json",
       "wait.action.json"
     ],
     "components": [
@@ -21,10 +18,8 @@
       "dilemmas.component.json",
       "dislikes.component.json",
       "fears.component.json",
-      "following.component.json",
       "goals.component.json",
       "internal_tensions.component.json",
-      "leading.component.json",
       "likes.component.json",
       "material.component.json",
       "motivations.component.json",
@@ -47,16 +42,11 @@
       "weaknesses.component.json"
     ],
     "conditions": [
-      "actor-is-following.condition.json",
       "actor-is-not-null.condition.json",
       "actor-mouth-available.condition.json",
       "entity-at-location.condition.json",
       "entity-has-actor-component.condition.json",
-      "entity-is-following-actor.condition.json",
       "entity-is-not-current-actor.condition.json",
-      "event-is-action-dismiss.condition.json",
-      "event-is-action-follow.condition.json",
-      "event-is-action-stop-following.condition.json",
       "event-is-action-wait.condition.json"
     ],
     "entities": {
@@ -118,6 +108,7 @@
       "display_failed_action_result.event.json",
       "display_speech.event.json",
       "display_successful_action_result.event.json",
+      "display_thought.event.json",
       "display_warning.event.json",
       "enable_input.event.json",
       "entity_created.event.json",
@@ -176,29 +167,22 @@
       "update_available_actions.event.json"
     ],
     "macros": [
-      "autoMoveFollower.macro.json",
       "displaySuccessAndEndTurn.macro.json",
       "logFailureAndEndTurn.macro.json",
       "logSuccessAndEndTurn.macro.json"
     ],
     "rules": [
-      "dismiss.rule.json",
       "entity_speech.rule.json",
       "entity_thought.rule.json",
-      "follow.rule.json",
-      "follow_auto_move.rule.json",
       "log_perceptible_events.rule.json",
       "player_turn_prompt.rule.json",
-      "stop_following.rule.json",
       "turn_ended.rule.json",
       "turn_started.rule.json",
       "wait.rule.json"
     ],
     "scopes": [
       "actors_in_location.scope",
-      "environment.scope",
-      "followers.scope",
-      "potential_leaders.scope"
+      "environment.scope"
     ]
   }
 }

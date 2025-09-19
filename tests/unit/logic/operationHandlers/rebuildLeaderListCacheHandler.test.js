@@ -13,11 +13,8 @@ import {
 } from '@jest/globals';
 import RebuildLeaderListCacheHandler from '../../../../src/logic/operationHandlers/rebuildLeaderListCacheHandler.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
+import { FOLLOWING_COMPONENT_ID, LEADING_COMPONENT_ID } from '../../../../src/constants/componentIds.js';
 import { LOGGER_INFO_METHOD_ERROR } from '../../../common/constants.js';
-
-// --- Constants ---
-const FOLLOWING_COMPONENT_ID = 'core:following';
-const LEADING_COMPONENT_ID = 'core:leading';
 
 // --- Mocks ---
 
@@ -488,7 +485,7 @@ describe('RebuildLeaderListCacheHandler', () => {
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          message: `[RebuildLeaderListCacheHandler] Failed updating 'core:leading' for leader 'leader1': EntityManager failed`,
+          message: `[RebuildLeaderListCacheHandler] Failed updating '${LEADING_COMPONENT_ID}' for leader 'leader1': EntityManager failed`,
           details: {
             stack: expect.any(String),
           },
@@ -529,7 +526,7 @@ describe('RebuildLeaderListCacheHandler', () => {
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          message: `[RebuildLeaderListCacheHandler] Failed updating 'core:leading' for leader 'leader1': EntityManager remove failed`,
+          message: `[RebuildLeaderListCacheHandler] Failed updating '${LEADING_COMPONENT_ID}' for leader 'leader1': EntityManager remove failed`,
           details: {
             stack: expect.any(String),
           },

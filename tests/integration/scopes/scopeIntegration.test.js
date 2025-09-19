@@ -45,7 +45,7 @@ jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
 
 // Import actual scope file CONTENTS
 const followersScopeContent = fs.readFileSync(
-  path.resolve(__dirname, '../../../data/mods/core/scopes/followers.scope'),
+  path.resolve(__dirname, '../../../data/mods/companionship/scopes/followers.scope'),
   'utf8'
 );
 const environmentScopeContent = fs.readFileSync(
@@ -61,8 +61,8 @@ const directionsScopeContent = fs.readFileSync(
 );
 
 // Import actual action files
-import dismissAction from '../../../data/mods/core/actions/dismiss.action.json';
-import followAction from '../../../data/mods/core/actions/follow.action.json';
+import dismissAction from '../../../data/mods/companionship/actions/dismiss.action.json';
+import followAction from '../../../data/mods/companionship/actions/follow.action.json';
 import goAction from '../../../data/mods/movement/actions/go.action.json';
 import waitAction from '../../../data/mods/core/actions/wait.action.json';
 
@@ -104,7 +104,7 @@ describe('Scope Integration Tests', () => {
     );
 
     scopeRegistry.initialize({
-      'core:followers': followerDefs.get('core:followers'),
+      'companionship:followers': followerDefs.get('companionship:followers'),
       'core:environment': environmentDefs.get('core:environment'),
       'movement:clear_directions': directionDefs.get('movement:clear_directions'),
     });
@@ -297,7 +297,7 @@ describe('Scope Integration Tests', () => {
       );
 
       const dismissActions = result.actions.filter(
-        (action) => action.id === 'core:dismiss'
+        (action) => action.id === 'companionship:dismiss'
       );
       expect(dismissActions.length).toBeGreaterThan(0);
 
@@ -348,7 +348,7 @@ describe('Scope Integration Tests', () => {
       );
 
       const dismissActions = result.actions.filter(
-        (action) => action.id === 'core:dismiss'
+        (action) => action.id === 'companionship:dismiss'
       );
       expect(dismissActions.length).toBe(0);
     });

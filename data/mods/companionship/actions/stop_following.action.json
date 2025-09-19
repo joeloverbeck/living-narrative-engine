@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "companionship:stop_following",
+  "name": "Stop Following",
+  "description": "Stops following your current target and becomes independent again.",
+  "targets": "none",
+  "required_components": {
+    "actor": ["companionship:following"]
+  },
+  "template": "stop following",
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "companionship:actor-is-following"
+      },
+      "failure_message": "You are not following anyone."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#00695c",
+    "textColor": "#e0f2f1",
+    "hoverBackgroundColor": "#00897b",
+    "hoverTextColor": "#ffffff"
+  }
+}

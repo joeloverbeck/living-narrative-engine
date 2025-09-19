@@ -36,11 +36,11 @@ export class TestDataFactory {
         .asMovementAction()
         .build(),
 
-      new ActionDefinitionBuilder('core:follow')
+      new ActionDefinitionBuilder('companionship:follow')
         .withName('Follow')
         .withDescription('Follow another actor.')
         .asTargetedAction('core:other_actors')
-        .requiresComponent('core:following')
+        .requiresComponent('companionship:following')
         .asMovementAction()
         .build(),
 
@@ -86,7 +86,7 @@ export class TestDataFactory {
         required_components: { actor: ['core:position'] },
       },
       {
-        id: 'core:follow',
+        id: 'companionship:follow',
         name: 'Follow',
         description: 'Follow another actor.',
         scope: 'core:other_actors',
@@ -99,7 +99,7 @@ export class TestDataFactory {
             failure_message: 'You cannot move without functioning legs.',
           },
         ],
-        required_components: { actor: ['core:following', 'core:position'] },
+        required_components: { actor: ['companionship:following', 'core:position'] },
       },
       {
         id: 'core:attack',
