@@ -8,8 +8,8 @@ import { LegacyTargetCompatibilityLayer } from '../../../src/actions/pipeline/se
 import { createMockLogger } from '../../common/mockFactories/index.js';
 
 // Import migrated actions
-import followAction from '../../../data/mods/core/actions/follow.action.json';
-import stopFollowingAction from '../../../data/mods/core/actions/stop_following.action.json';
+import followAction from '../../../data/mods/companionship/actions/follow.action.json';
+import stopFollowingAction from '../../../data/mods/companionship/actions/stop_following.action.json';
 import waitAction from '../../../data/mods/core/actions/wait.action.json';
 
 describe('Multi-Target Migration Unit Tests', () => {
@@ -27,7 +27,7 @@ describe('Multi-Target Migration Unit Tests', () => {
       expect(followAction.scope).toBeUndefined();
       expect(followAction.targets).toEqual({
         primary: {
-          scope: 'core:potential_leaders',
+          scope: 'companionship:potential_leaders',
           placeholder: 'target',
           description: 'The leader to follow',
         },
@@ -61,7 +61,7 @@ describe('Multi-Target Migration Unit Tests', () => {
 
       // Verify the modern format structure
       expect(followAction.targets.primary).toBeDefined();
-      expect(followAction.targets.primary.scope).toBe('core:potential_leaders');
+      expect(followAction.targets.primary.scope).toBe('companionship:potential_leaders');
       expect(followAction.targets.primary.placeholder).toBe('target');
     });
 
@@ -93,14 +93,14 @@ describe('Multi-Target Migration Unit Tests', () => {
         'movement:actor-can-move'
       );
       expect(followAction.prerequisites[1].logic.not.condition_ref).toBe(
-        'core:actor-is-following'
+        'companionship:actor-is-following'
       );
     });
 
     it('should preserve all prerequisites for stop_following action', () => {
       expect(stopFollowingAction.prerequisites).toHaveLength(1);
       expect(stopFollowingAction.prerequisites[0].logic.condition_ref).toBe(
-        'core:actor-is-following'
+        'companionship:actor-is-following'
       );
     });
 
@@ -112,17 +112,17 @@ describe('Multi-Target Migration Unit Tests', () => {
   describe('Action Properties Preservation', () => {
     it('should preserve all action properties after migration', () => {
       // Follow action
-      expect(followAction.id).toBe('core:follow');
+      expect(followAction.id).toBe('companionship:follow');
       expect(followAction.name).toBe('Follow');
       expect(followAction.description).toContain('follow the specified target');
       expect(followAction.required_components).toEqual({});
 
       // Stop following action
-      expect(stopFollowingAction.id).toBe('core:stop_following');
+      expect(stopFollowingAction.id).toBe('companionship:stop_following');
       expect(stopFollowingAction.name).toBe('Stop Following');
       expect(stopFollowingAction.description).toContain('Stops following');
       expect(stopFollowingAction.required_components).toEqual({
-        actor: ['core:following'],
+        actor: ['companionship:following'],
       });
 
       // Wait action

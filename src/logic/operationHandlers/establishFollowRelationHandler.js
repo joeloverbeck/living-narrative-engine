@@ -1,7 +1,7 @@
 /**
  * @file Handler for ESTABLISH_FOLLOW_RELATION.
- * Validates against follow cycles, updates the follower's `core:following`
- * component, and rebuilds the affected leaders' `core:leading` caches.
+ * Validates against follow cycles, updates the follower's `companionship:following`
+ * component, and rebuilds the affected leaders' `companionship:leading` caches.
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

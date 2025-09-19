@@ -5,6 +5,7 @@
 
 import { TraceContext } from '../../../src/actions/tracing/traceContext.js';
 import { createEntityDefinition } from '../entities/entityFactories.js';
+import { FOLLOWING_COMPONENT_ID, LEADING_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 
 /**
  * Shared test utilities for action system E2E tests
@@ -120,7 +121,7 @@ export class ActionTestUtilities {
           'core:position': { locationId: 'test-location-1' },
           'core:actor': { isPlayer: true },
           'core:movement': { locked: false },
-          'core:following': { targetId: null },
+          [FOLLOWING_COMPONENT_ID]: { targetId: null },
           'core:health': { current: 100, max: 100 },
         },
       },
@@ -161,7 +162,7 @@ export class ActionTestUtilities {
           'core:position': { locationId: 'test-location-1' },
           'core:actor': { isPlayer: false },
           'core:movement': { locked: false },
-          'core:following': { targetId: 'test-player' },
+          [FOLLOWING_COMPONENT_ID]: { targetId: 'test-player' },
           'core:health': { current: 90, max: 100 },
         },
       },
@@ -218,14 +219,14 @@ export class ActionTestUtilities {
         },
       },
       {
-        id: 'core:follow',
+        id: 'companionship:follow',
         name: 'Follow',
         description: 'Follow another actor.',
         scope: 'core:other_actors',
         template: 'follow {target}',
         prerequisites: ['movement:actor-can-move'],
         required_components: {
-          actor: ['core:following', 'core:position'],
+          actor: [FOLLOWING_COMPONENT_ID, 'core:position'],
         },
       },
       {
@@ -293,14 +294,14 @@ export class ActionTestUtilities {
         },
       },
       {
-        id: 'core:follow',
+        id: 'companionship:follow',
         name: 'Follow',
         description: 'Follow another actor.',
         scope: 'core:other_actors',
         template: 'follow {target}',
         prerequisites: ['movement:actor-can-move'],
         required_components: {
-          actor: ['core:following', 'core:position'],
+          actor: [FOLLOWING_COMPONENT_ID, 'core:position'],
         },
       },
     ];

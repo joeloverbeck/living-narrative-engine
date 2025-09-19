@@ -35,7 +35,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
-        "value": "{context.actorName} gently fondles {context.primaryName}'s ass over the {context.clothingName}."
+        "value": "{context.actorName} eagerly fondles {context.primaryName}'s ass over the {context.clothingName}."
       }
     },
     {

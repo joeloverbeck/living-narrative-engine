@@ -16,6 +16,8 @@ describe('ClothingErrorHandler', () => {
   let errorHandler;
   let mockLogger;
   let mockEventBus;
+  let mockCentralErrorHandler;
+  let mockRecoveryStrategyManager;
 
   beforeEach(() => {
     mockLogger = {
@@ -29,6 +31,7 @@ describe('ClothingErrorHandler', () => {
       dispatch: jest.fn()
     };
 
+    // Create handler without central integration for backward compatibility tests
     errorHandler = new ClothingErrorHandler({
       logger: mockLogger,
       eventBus: mockEventBus
@@ -36,7 +39,7 @@ describe('ClothingErrorHandler', () => {
   });
 
   describe('Error Recovery', () => {
-    it('should recover from accessibility service failures', () => {
+    it('should recover from accessibility service failures', async () => {
       const serviceError = new ClothingServiceError(
         'Service unavailable',
         'ClothingAccessibilityService',
@@ -44,7 +47,7 @@ describe('ClothingErrorHandler', () => {
         { entityId: 'test_entity' }
       );
 
-      const recovery = errorHandler.handleError(serviceError, {
+      const recovery = await errorHandler.handleError(serviceError, {
         entityId: 'test_entity',
         options: { mode: 'topmost' }
       });
@@ -57,21 +60,21 @@ describe('ClothingErrorHandler', () => {
       );
     });
 
-    it('should handle coverage analysis failures gracefully', () => {
+    it('should handle coverage analysis failures gracefully', async () => {
       const coverageError = new CoverageAnalysisError(
         'Coverage calculation failed',
         { torso_lower: { base: 'item1' } },
         { entityId: 'test_entity' }
       );
 
-      const recovery = errorHandler.handleError(coverageError);
-      
+      const recovery = await errorHandler.handleError(coverageError);
+
       expect(recovery.recovered).toBe(true);
       expect(recovery.fallbackData.mode).toBe('layer_only');
       expect(recovery.fallbackData.blockingDisabled).toBe(true);
     });
 
-    it('should provide default priorities on calculation failure', () => {
+    it('should provide default priorities on calculation failure', async () => {
       const priorityError = new PriorityCalculationError(
         'Priority calculation failed',
         'base',
@@ -79,7 +82,7 @@ describe('ClothingErrorHandler', () => {
         {}
       );
 
-      const recovery = errorHandler.handleError(priorityError);
+      const recovery = await errorHandler.handleError(priorityError);
       
       expect(recovery.recovered).toBe(true);
       expect(recovery.fallbackData.mode).toBe('default_priorities');
@@ -87,7 +90,7 @@ describe('ClothingErrorHandler', () => {
       expect(recovery.fallbackData.priorities.outer).toBe(1);
     });
 
-    it('should handle validation errors with sanitization', () => {
+    it('should handle validation errors with sanitization', async () => {
       const validationError = new ClothingValidationError(
         'Invalid field value',
         'entityId',
@@ -96,14 +99,14 @@ describe('ClothingErrorHandler', () => {
         {}
       );
 
-      const recovery = errorHandler.handleError(validationError);
+      const recovery = await errorHandler.handleError(validationError);
       
       expect(recovery.recovered).toBe(true);
       expect(recovery.fallbackData.mode).toBe('sanitized');
       expect(recovery.fallbackData.retryable).toBe(true);
     });
 
-    it('should fallback to simple accessibility on accessibility errors', () => {
+    it('should fallback to simple accessibility on accessibility errors', async () => {
       const accessibilityError = new ClothingAccessibilityError(
         'Cannot determine accessibility',
         'entity_123',
@@ -111,17 +114,17 @@ describe('ClothingErrorHandler', () => {
         {}
       );
 
-      const recovery = errorHandler.handleError(accessibilityError);
+      const recovery = await errorHandler.handleError(accessibilityError);
       
       expect(recovery.recovered).toBe(true);
       expect(recovery.fallbackData.mode).toBe('simple_accessibility');
       expect(recovery.fallbackData.allAccessible).toBe(true);
     });
 
-    it('should handle unknown error types without recovery', () => {
+    it('should handle unknown error types without recovery', async () => {
       const unknownError = new Error('Unknown error');
 
-      const recovery = errorHandler.handleError(unknownError);
+      const recovery = await errorHandler.handleError(unknownError);
       
       expect(recovery.recovered).toBe(false);
       expect(recovery.fallbackData).toBe(null);
@@ -133,14 +136,14 @@ describe('ClothingErrorHandler', () => {
   });
 
   describe('Error Metrics', () => {
-    it('should track error occurrence metrics', () => {
+    it('should track error occurrence metrics', async () => {
       const error1 = new ClothingServiceError('Test error 1', 'Service1', 'op1');
       const error2 = new ClothingServiceError('Test error 2', 'Service1', 'op2');
       const error3 = new CoverageAnalysisError('Test error 3', {});
 
-      errorHandler.handleError(error1);
-      errorHandler.handleError(error2);
-      errorHandler.handleError(error3);
+      await errorHandler.handleError(error1);
+      await errorHandler.handleError(error2);
+      await errorHandler.handleError(error3);
 
       const metrics = errorHandler.getErrorMetrics();
       
@@ -150,10 +153,10 @@ describe('ClothingErrorHandler', () => {
       expect(metrics.CoverageAnalysisError.count).toBe(1);
     });
 
-    it('should clear metrics when requested', () => {
+    it('should clear metrics when requested', async () => {
       const error = new ClothingServiceError('Test error', 'Service1', 'op1');
-      
-      errorHandler.handleError(error);
+
+      await errorHandler.handleError(error);
       let metrics = errorHandler.getErrorMetrics();
       expect(Object.keys(metrics).length).toBeGreaterThan(0);
 
@@ -164,7 +167,7 @@ describe('ClothingErrorHandler', () => {
   });
 
   describe('Error Logging', () => {
-    it('should log clothing-specific errors with full context', () => {
+    it('should log clothing-specific errors with full context', async () => {
       const error = new ClothingServiceError(
         'Service failed',
         'TestService',
@@ -172,7 +175,7 @@ describe('ClothingErrorHandler', () => {
         { detail: 'test' }
       );
 
-      errorHandler.handleError(error, { additionalContext: 'value' });
+      await errorHandler.handleError(error, { additionalContext: 'value' });
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Clothing system error occurred',
@@ -184,10 +187,10 @@ describe('ClothingErrorHandler', () => {
       );
     });
 
-    it('should log unexpected errors differently', () => {
+    it('should log unexpected errors differently', async () => {
       const error = new Error('Unexpected error');
 
-      errorHandler.handleError(error);
+      await errorHandler.handleError(error);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Unexpected error in clothing system',
@@ -200,14 +203,14 @@ describe('ClothingErrorHandler', () => {
   });
 
   describe('Event Dispatching', () => {
-    it('should dispatch error events to event bus', () => {
+    it('should dispatch error events to event bus', async () => {
       const error = new ClothingServiceError(
         'Test error',
         'Service',
         'operation'
       );
 
-      const result = errorHandler.handleError(error);
+      const result = await errorHandler.handleError(error);
 
       expect(mockEventBus.dispatch).toHaveBeenCalledWith({
         type: 'CLOTHING_ERROR_OCCURRED',
@@ -220,7 +223,7 @@ describe('ClothingErrorHandler', () => {
       });
     });
 
-    it('should include error context in dispatched event', () => {
+    it('should include error context in dispatched event', async () => {
       const error = new ClothingAccessibilityError(
         'Access denied',
         'entity_123',
@@ -228,7 +231,7 @@ describe('ClothingErrorHandler', () => {
         { reason: 'blocked' }
       );
 
-      errorHandler.handleError(error);
+      await errorHandler.handleError(error);
 
       expect(mockEventBus.dispatch).toHaveBeenCalledWith({
         type: 'CLOTHING_ERROR_OCCURRED',
@@ -242,11 +245,11 @@ describe('ClothingErrorHandler', () => {
   });
 
   describe('Error ID Generation', () => {
-    it('should generate unique error IDs', () => {
+    it('should generate unique error IDs', async () => {
       const error = new Error('Test');
       
-      const result1 = errorHandler.handleError(error);
-      const result2 = errorHandler.handleError(error);
+      const result1 = await errorHandler.handleError(error);
+      const result2 = await errorHandler.handleError(error);
 
       expect(result1.errorId).toBeDefined();
       expect(result2.errorId).toBeDefined();
@@ -255,11 +258,127 @@ describe('ClothingErrorHandler', () => {
     });
   });
 
+  describe('Central Error Handler Integration', () => {
+    let errorHandlerWithCentral;
+
+    beforeEach(() => {
+      mockCentralErrorHandler = {
+        handle: jest.fn(),
+        handleSync: jest.fn()
+      };
+
+      mockRecoveryStrategyManager = {
+        executeWithRecovery: jest.fn(),
+        registerStrategy: jest.fn()
+      };
+
+      errorHandlerWithCentral = new ClothingErrorHandler({
+        logger: mockLogger,
+        eventBus: mockEventBus,
+        centralErrorHandler: mockCentralErrorHandler,
+        recoveryStrategyManager: mockRecoveryStrategyManager
+      });
+    });
+
+    it('should delegate to central error handler when available', async () => {
+      const error = new ClothingServiceError('Test error', 'Service', 'op');
+      const expectedResult = { errorId: 'central_123', recovered: true };
+
+      mockCentralErrorHandler.handle.mockResolvedValue(expectedResult);
+
+      const result = await errorHandlerWithCentral.handleError(error, { test: 'context' });
+
+      expect(mockCentralErrorHandler.handle).toHaveBeenCalledWith(error, {
+        test: 'context',
+        domain: 'clothing'
+      });
+      expect(result).toBe(expectedResult);
+    });
+
+    it('should fall back to local handling if central handler fails', async () => {
+      const error = new ClothingServiceError(
+        'Test error',
+        'ClothingAccessibilityService',
+        'op'
+      );
+
+      mockCentralErrorHandler.handle.mockRejectedValue(new Error('Central failed'));
+
+      const result = await errorHandlerWithCentral.handleError(error);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Central error handler failed, using local handling',
+        expect.objectContaining({ error: 'Central failed' })
+      );
+      expect(result).toHaveProperty('errorId');
+      expect(result.recovered).toBe(true);
+    });
+
+    it('should register recovery strategies with central system', () => {
+      expect(mockRecoveryStrategyManager.registerStrategy).toHaveBeenCalledWith(
+        'ClothingServiceError',
+        expect.objectContaining({
+          retry: { maxRetries: 3, backoff: 'exponential' },
+          circuitBreaker: { failureThreshold: 5, resetTimeout: 60000 }
+        })
+      );
+
+      expect(mockRecoveryStrategyManager.registerStrategy).toHaveBeenCalledWith(
+        'CoverageAnalysisError',
+        expect.objectContaining({
+          retry: { maxRetries: 2, backoff: 'linear' }
+        })
+      );
+
+      expect(mockRecoveryStrategyManager.registerStrategy).toHaveBeenCalledWith(
+        'ClothingValidationError',
+        expect.objectContaining({
+          retry: { maxRetries: 2, backoff: 'exponential' }
+        })
+      );
+    });
+
+    it('should handle sync errors through central handler', () => {
+      const error = new ClothingServiceError('Test error', 'Service', 'op');
+      const expectedResult = { errorId: 'sync_123', recovered: true };
+
+      mockCentralErrorHandler.handleSync.mockReturnValue(expectedResult);
+
+      const result = errorHandlerWithCentral.handleErrorSync(error, { test: 'context' });
+
+      expect(mockCentralErrorHandler.handleSync).toHaveBeenCalledWith(error, {
+        test: 'context',
+        domain: 'clothing'
+      });
+      expect(result).toBe(expectedResult);
+    });
+
+    it('should fall back to local sync handling if central fails', () => {
+      const error = new ClothingServiceError(
+        'Test error',
+        'ClothingAccessibilityService',
+        'op'
+      );
+
+      mockCentralErrorHandler.handleSync.mockImplementation(() => {
+        throw new Error('Central sync failed');
+      });
+
+      const result = errorHandlerWithCentral.handleErrorSync(error);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Central error handler failed, using local handling',
+        expect.objectContaining({ error: 'Central sync failed' })
+      );
+      expect(result).toHaveProperty('errorId');
+    });
+  });
+
   describe('Recovery Strategy Execution', () => {
-    it('should handle unknown error types without recovery', () => {
+    it('should handle unknown error types without recovery', async () => {
       // Test with a generic Error that has no recovery strategy
       const error = new Error('Generic error');
-      const recovery = errorHandler.handleError(error);
+      const recovery = await errorHandler.handleError(error);
 
       expect(recovery.recovered).toBe(false);
       expect(recovery.fallbackData).toBe(null);
@@ -269,14 +388,13 @@ describe('ClothingErrorHandler', () => {
       );
     });
 
-    it('should handle recovery for service errors', () => {
+    it('should handle recovery for service errors', async () => {
       const error = new ClothingServiceError(
         'Service failed',
         'ClothingAccessibilityService',
         'operation'
       );
-      
-      const recovery = errorHandler.handleError(error);
+      const recovery = await errorHandler.handleError(error);
       
       expect(recovery.recovered).toBe(true);
       expect(recovery.fallbackData).toBeDefined();

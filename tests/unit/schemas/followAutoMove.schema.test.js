@@ -13,7 +13,7 @@ const conditionContainerSchema = require('../../../data/schemas/condition-contai
 const loadOperationSchemas = require('../helpers/loadOperationSchemas.js');
 
 // and your rule under test
-const rule = require('../../../data/mods/core/rules/follow_auto_move.rule.json');
+const rule = require('../../../data/mods/companionship/rules/follow_auto_move.rule.json');
 const { ATTEMPT_ACTION_ID } = require('../../../src/constants/eventIds.js');
 
 describe('core_follow_auto_move.rule.json', () => {
@@ -24,7 +24,7 @@ describe('core_follow_auto_move.rule.json', () => {
   const followers = ['f1', 'f2', 'f3'];
   const actor = {
     components: {
-      'core:leading': { followers },
+      'companionship:leading': { followers },
     },
   };
   const baseEvent = {
@@ -76,7 +76,7 @@ describe('core_follow_auto_move.rule.json', () => {
 
     // simulate the FOR_EACH → IF → DISPATCH_EVENT logic
     const dispatched = [];
-    actor.components['core:leading'].followers.forEach((fId) => {
+    actor.components['companionship:leading'].followers.forEach((fId) => {
       const loc = positions[fId];
       if (loc === prevLoc) {
         dispatched.push({

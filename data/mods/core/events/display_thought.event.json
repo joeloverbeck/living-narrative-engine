@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "id": "core:display_thought",
+  "description": "Fired when an entity has internal thoughts that should be displayed in the UI.",
+  "payloadSchema": {
+    "title": "Display Thought Payload",
+    "description": "Payload for the core:display_thought event.",
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the entity having thoughts."
+      },
+      "thoughts": {
+        "type": "string",
+        "description": "The internal thought content.",
+        "minLength": 1
+      },
+      "notes": {
+        "type": "array",
+        "description": "Private structured notes associated with the thoughts.",
+        "items": {
+          "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/structuredNote"
+        }
+      }
+    },
+    "required": ["entityId", "thoughts"],
+    "additionalProperties": false
+  }
+}

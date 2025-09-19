@@ -61,12 +61,12 @@ describe('Follow Action Circular Bug - Minimal Reproduction', () => {
     console.log('');
 
     // Test the exact condition from the logs:
-    // { "not": { "in": [{ "var": "entity.id" }, { "var": "actor.components.core:leading.followers" }] } }
+    // { "not": { "in": [{ "var": "entity.id" }, { "var": "actor.components.companionship:leading.followers" }] } }
     const condition = {
       not: {
         in: [
           { var: 'entity.id' },
-          { var: 'actor.components.core:leading.followers' },
+          { var: `actor.components.${LEADING_COMPONENT_ID}.followers` },
         ],
       },
     };
@@ -84,7 +84,7 @@ describe('Follow Action Circular Bug - Minimal Reproduction', () => {
 
     // The condition should evaluate to FALSE because:
     // - entity.id = 'p_erotica:iker_aguirre_instance'
-    // - actor.components.core:leading.followers = ['p_erotica:iker_aguirre_instance']
+    // - actor.components.companionship:leading.followers = ['p_erotica:iker_aguirre_instance']
     // - entity.id IS in the followers array
     // - So "in" should return true
     // - And "not" should return false
@@ -104,7 +104,7 @@ describe('Follow Action Circular Bug - Minimal Reproduction', () => {
 
     // Test 2: Can we resolve the followers array?
     const followersCondition = {
-      var: 'actor.components.core:leading.followers',
+      var: `actor.components.${LEADING_COMPONENT_ID}.followers`,
     };
     const followersResult = jsonLogicService.evaluate(
       followersCondition,

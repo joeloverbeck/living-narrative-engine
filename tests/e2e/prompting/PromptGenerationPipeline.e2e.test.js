@@ -514,7 +514,7 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
         ...baseActions,
         {
           index: baseActions.length + 1, // Next index after existing actions
-          actionDefinitionId: 'core:follow',
+          actionDefinitionId: 'companionship:follow',
           displayName: 'Follow Gareth the Innkeeper',
           commandString: 'follow gareth',
           description: 'Start following Gareth the Innkeeper',
@@ -525,7 +525,7 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
               type: 'actor',
             },
           ],
-          actionDefinition: { id: 'core:follow', name: 'Follow' }, // Simplified action definition
+          actionDefinition: { id: 'companionship:follow', name: 'Follow' }, // Simplified action definition
         },
       ];
 

@@ -1,0 +1,37 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "companionship:follow",
+  "name": "Follow",
+  "description": "Commands your character to follow the specified target, becoming their companion and moving with them.",
+  "targets": {
+    "primary": {
+      "scope": "companionship:potential_leaders",
+      "placeholder": "target",
+      "description": "The leader to follow"
+    }
+  },
+  "required_components": {},
+  "template": "follow {target}",
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "movement:actor-can-move"
+      },
+      "failure_message": "You cannot move without functioning legs."
+    },
+    {
+      "logic": {
+        "not": {
+          "condition_ref": "companionship:actor-is-following"
+        }
+      },
+      "failure_message": "You cannot follow that target right now."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#00695c",
+    "textColor": "#e0f2f1",
+    "hoverBackgroundColor": "#00897b",
+    "hoverTextColor": "#ffffff"
+  }
+}

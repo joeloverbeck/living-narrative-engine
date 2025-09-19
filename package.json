@@ -74,7 +74,7 @@
     "test:unit": "NODE_OPTIONS='--max-old-space-size=4096' jest --config jest.config.unit.js --env=jsdom --silent --coverage --forceExit",
     "test:unit:debug": "jest --config jest.config.unit.js --env=jsdom --silent=false --detectOpenHandles",
     "test:integration": "jest --config jest.config.integration.js --env=jsdom --silent --coverage",
-    "test:integration:build": "jest --config jest.config.build.js --env=jsdom --silent --coverage",
+    "test:integration:build": "jest --config jest.config.build.js --env=jsdom --silent",
     "test:e2e": "jest --config jest.config.e2e.js --env=jsdom --silent --coverage",
     "test:performance": "jest --config jest.config.performance.js --env=jsdom --silent",
     "test:memory": "node --expose-gc ./node_modules/.bin/jest --config jest.config.memory.js --env=jsdom --silent",

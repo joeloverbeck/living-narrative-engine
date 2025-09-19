@@ -332,7 +332,7 @@ function generateActionTestEvents(config = {}) {
       type: 'core:attempt_action',
       payload: {
         actorId: config.actorId || 'test_actor',
-        actionId: 'core:follow',
+        actionId: 'companionship:follow',
         targetId: config.targetId || 'test_target',
         originalInput: 'follow target',
         timestamp: Date.now(),

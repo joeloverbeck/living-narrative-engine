@@ -1,6 +1,6 @@
 // tests/macros/autoMoveFollower.macro.test.js
 // -----------------------------------------------------------------------------
-// Integration test for the 'core:autoMoveFollower' macro.
+// Integration test for the 'companionship:autoMoveFollower' macro.
 // This test validates the macro file against the master macro schema to ensure
 // its structure and content are valid.
 // -----------------------------------------------------------------------------
@@ -10,7 +10,7 @@ import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 
 // Schemas and data
-import macroData from '../../../data/mods/core/macros/autoMoveFollower.macro.json';
+import macroData from '../../../data/mods/companionship/macros/autoMoveFollower.macro.json';
 import macroSchema from '../../../data/schemas/macro.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
 import operationSchema from '../../../data/schemas/operation.schema.json';

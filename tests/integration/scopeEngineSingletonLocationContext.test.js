@@ -46,6 +46,16 @@ core:actors_in_location := entities(core:position)[
   }
 ]
 
+companionship:potential_leaders := entities(core:position)[
+  {
+    "and": [
+      { "==": [{ "var": "entity.components.core:position.locationId" }, { "var": "location.id" }] },
+      { "!=": [{ "var": "entity.id" }, { "var": "actor.id" }] },
+      { "!!": { "var": "entity.components.core:actor" } }
+    ]
+  }
+]
+
 movement:clear_directions := location.movement:exits[
   { "!": { "var": "entity.blocker" } }
 ].target
@@ -113,11 +123,11 @@ describe('Singleton Scope Engine Location Context', () => {
     registry = new InMemoryDataRegistry({ logger });
 
     // Register actions
-    registry.store('actions', 'core:follow', {
-      id: 'core:follow',
+    registry.store('actions', 'companionship:follow', {
+      id: 'companionship:follow',
       name: 'Follow',
       commandVerb: 'follow',
-      scope: 'core:actors_in_location',
+      scope: 'companionship:potential_leaders',
       template: 'follow {target}',
       prerequisites: [],
     });
@@ -204,7 +214,7 @@ describe('Singleton Scope Engine Location Context', () => {
     // Mock action index
     const actionIndex = {
       getCandidateActions: jest.fn(() => [
-        registry.get('actions', 'core:follow'),
+        registry.get('actions', 'companionship:follow'),
         registry.get('actions', 'movement:go'),
       ]),
     };
@@ -287,7 +297,7 @@ describe('Singleton Scope Engine Location Context', () => {
       currentLocation: guildLocation,
     });
 
-    let followActions = actions.actions.filter((a) => a.id === 'core:follow');
+    let followActions = actions.actions.filter((a) => a.id === 'companionship:follow');
     expect(followActions).toHaveLength(1);
     expect(followActions[0].command).toBe('follow Ninja');
 
@@ -300,7 +310,7 @@ describe('Singleton Scope Engine Location Context', () => {
       currentLocation: townLocation,
     });
 
-    followActions = actions.actions.filter((a) => a.id === 'core:follow');
+    followActions = actions.actions.filter((a) => a.id === 'companionship:follow');
     expect(followActions).toHaveLength(0); // No one to follow in town
 
     // Move ninja to town as well
@@ -312,7 +322,7 @@ describe('Singleton Scope Engine Location Context', () => {
       currentLocation: townLocation,
     });
 
-    followActions = actions.actions.filter((a) => a.id === 'core:follow');
+    followActions = actions.actions.filter((a) => a.id === 'companionship:follow');
     expect(followActions).toHaveLength(1);
     expect(followActions[0].command).toBe('follow Ninja');
   });

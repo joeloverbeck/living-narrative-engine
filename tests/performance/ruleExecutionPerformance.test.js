@@ -13,14 +13,14 @@ import {
   measureRulePerformance,
   generatePerformanceReport,
 } from '../common/rules/performanceTestingUtils.js';
-import followRule from '../../data/mods/core/rules/follow.rule.json';
+import followRule from '../../data/mods/companionship/rules/follow.rule.json';
 import logSuccessAndEndTurn from '../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import EndTurnHandler from '../../src/logic/operationHandlers/endTurnHandler.js';
 import SetVariableHandler from '../../src/logic/operationHandlers/setVariableHandler.js';
 
 const ATTEMPT_ACTION_ID = 'core:attempt_action';
-const FOLLOWING_COMPONENT_ID = 'core:following';
-const LEADING_COMPONENT_ID = 'core:leading';
+const FOLLOWING_COMPONENT_ID = 'companionship:following';
+const LEADING_COMPONENT_ID = 'companionship:leading';
 
 describe('Rule Execution Performance Tests', () => {
   let testEnv;

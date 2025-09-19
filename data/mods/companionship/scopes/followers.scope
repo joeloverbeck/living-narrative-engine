@@ -1,0 +1,1 @@
+companionship:followers := actor.companionship:leading.followers[]

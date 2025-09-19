@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, jest } from '@jest/globals';
-import followAction from '../../../data/mods/core/actions/follow.action.json';
+import followAction from '../../../data/mods/companionship/actions/follow.action.json';
 import {
   FOLLOWING_COMPONENT_ID,
   LEADING_COMPONENT_ID,
@@ -65,7 +65,7 @@ describe('Follow Action Circular Following Bug', () => {
         // This mock simulates the fixed behavior - it correctly filters out Iker
         // because he is already following Amaia
         if (
-          scope === 'core:potential_leaders' &&
+          scope === 'companionship:potential_leaders' &&
           actorId === 'p_erotica:amaia_castillo_instance'
         ) {
           console.log(
@@ -80,7 +80,7 @@ describe('Follow Action Circular Following Bug', () => {
     const mockActionCandidateProcessor = {
       process: jest.fn(async ({ action, actorId }) => {
         // Simulate processing the follow action
-        if (action.id === 'core:follow') {
+        if (action.id === 'companionship:follow') {
           const targets = await mockTargetResolutionService.resolveTargets({
             actorId,
             scope:
@@ -138,7 +138,7 @@ describe('Follow Action Circular Following Bug', () => {
     );
 
     // Find the follow action
-    const followActionResult = validActions.find((a) => a.id === 'core:follow');
+    const followActionResult = validActions.find((a) => a.id === 'companionship:follow');
     const hasIkerAsTarget =
       followActionResult?.targets?.some(
         (t) => t.id === 'p_erotica:iker_aguirre_instance'
@@ -153,10 +153,10 @@ describe('Follow Action Circular Following Bug', () => {
       console.log(
         '\n✅ FIX VERIFIED: Iker was correctly filtered out as a potential leader'
       );
-      console.log('The scope "core:potential_leaders" correctly used:');
-      console.log('1. The condition "core:entity-is-following-actor"');
+      console.log('The scope "companionship:potential_leaders" correctly used:');
+      console.log('1. The condition "companionship:entity-is-following-actor"');
       console.log(
-        '2. The check for entity.id in actor.components.core:leading.followers'
+        '2. The check for entity.id in actor.components.companionship:leading.followers'
       );
     } else {
       console.log('\n✅ No follow action available - this is correct behavior');
@@ -174,7 +174,7 @@ describe('Follow Action Circular Following Bug', () => {
     const scopeContent = fs.readFileSync(
       path.resolve(
         __dirname,
-        '../../../data/mods/core/scopes/potential_leaders.scope'
+        '../../../data/mods/companionship/scopes/potential_leaders.scope'
       ),
       'utf8'
     );
@@ -183,8 +183,8 @@ describe('Follow Action Circular Following Bug', () => {
     console.log(scopeContent);
 
     // Verify the scope contains the necessary conditions
-    expect(scopeContent).toContain('core:entity-is-following-actor');
-    expect(scopeContent).toContain('actor.components.core:leading.followers');
+    expect(scopeContent).toContain('companionship:entity-is-following-actor');
+    expect(scopeContent).toContain('actor.components.companionship:leading.followers');
 
     // The scope should have BOTH conditions to prevent circular following:
     // 1. NOT entity-is-following-actor (entity's following.leaderId != actor.id)

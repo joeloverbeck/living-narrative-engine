@@ -1,6 +1,6 @@
 /**
  * @file Handler for BREAK_FOLLOW_RELATION.
- * Removes a follower's `core:following` component and rebuilds the former
+ * Removes a follower's `companionship:following` component and rebuilds the former
  * leader's follower cache.
  */
 

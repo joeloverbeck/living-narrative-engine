@@ -1,0 +1,54 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "companionship",
+  "version": "1.0.0",
+  "name": "Companionship System",
+  "description": "Provides following, leading, and companion management mechanics",
+  "author": "Living Narrative Engine Team",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "movement",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [
+      "dismiss.action.json",
+      "follow.action.json",
+      "stop_following.action.json"
+    ],
+    "components": [
+      "following.component.json",
+      "leading.component.json"
+    ],
+    "conditions": [
+      "actor-is-following.condition.json",
+      "entity-is-following-actor.condition.json",
+      "event-is-action-dismiss.condition.json",
+      "event-is-action-follow.condition.json",
+      "event-is-action-stop-following.condition.json"
+    ],
+    "rules": [
+      "dismiss.rule.json",
+      "follow.rule.json",
+      "follow_auto_move.rule.json",
+      "stop_following.rule.json"
+    ],
+    "scopes": [
+      "followers.scope",
+      "potential_leaders.scope"
+    ],
+    "macros": [
+      "autoMoveFollower.macro.json"
+    ],
+    "entities": {
+      "definitions": [],
+      "instances": []
+    },
+    "events": []
+  }
+}

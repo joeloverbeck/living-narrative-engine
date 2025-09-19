@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "companionship:actor-is-following",
+  "description": "Checks if the actor has the 'following' component, meaning they are following another entity.",
+  "logic": {
+    "!!": {
+      "var": "actor.components.companionship:following"
+    }
+  }
+}

@@ -12,7 +12,7 @@ import {
   measureRulePerformance,
   generatePerformanceReport,
 } from '../../../common/rules/performanceTestingUtils.js';
-import followRule from '../../../../data/mods/core/rules/follow.rule.json';
+import followRule from '../../../../data/mods/companionship/rules/follow.rule.json';
 import logSuccessAndEndTurn from '../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import logFailureAndEndTurn from '../../../../data/mods/core/macros/logFailureAndEndTurn.macro.json';
 import { expandMacros } from '../../../../src/utils/macroUtils.js';
@@ -74,12 +74,12 @@ describe('Example Rule Test with Utilities', () => {
       ],
       rules: [expandedRule],
       conditions: {
-        'core:event-is-action-follow': {
-          id: 'core:event-is-action-follow',
+        'companionship:event-is-action-follow': {
+          id: 'companionship:event-is-action-follow',
           description:
-            'Checks if the triggering event is for the core:follow action.',
+            'Checks if the triggering event is for the companionship:follow action.',
           logic: {
-            '==': [{ var: 'event.payload.actionId' }, 'core:follow'],
+            '==': [{ var: 'event.payload.actionId' }, 'companionship:follow'],
           },
         },
       },
@@ -147,7 +147,7 @@ describe('Example Rule Test with Utilities', () => {
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       eventName: 'core:attempt_action',
       actorId: 'follower1',
-      actionId: 'core:follow',
+      actionId: 'companionship:follow',
       targetId: 'leader1',
       originalInput: 'follow leader1',
     });

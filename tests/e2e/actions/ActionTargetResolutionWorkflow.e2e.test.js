@@ -45,8 +45,8 @@ import {
 } from '../../../src/constants/componentIds.js';
 
 // Import core action definitions
-import dismissAction from '../../../data/mods/core/actions/dismiss.action.json';
-import followAction from '../../../data/mods/core/actions/follow.action.json';
+import dismissAction from '../../../data/mods/companionship/actions/dismiss.action.json';
+import followAction from '../../../data/mods/companionship/actions/follow.action.json';
 import goAction from '../../../data/mods/movement/actions/go.action.json';
 import waitAction from '../../../data/mods/core/actions/wait.action.json';
 
@@ -108,11 +108,11 @@ describe('Action Target Resolution Workflow E2E', () => {
       id: 'core:entity-has-actor-component',
       logic: { '!!': { var: 'entity.components.core:actor' } },
     });
-    dataRegistry.store('conditions', 'core:entity-is-following-actor', {
-      id: 'core:entity-is-following-actor',
+    dataRegistry.store('conditions', 'companionship:entity-is-following-actor', {
+      id: 'companionship:entity-is-following-actor',
       logic: {
         '==': [
-          { var: 'entity.components.core:following.leaderId' },
+          { var: 'entity.components.companionship:following.leaderId' },
           { var: 'actor.id' },
         ],
       },
@@ -127,10 +127,10 @@ describe('Action Target Resolution Workflow E2E', () => {
         '==': [{ var: 'actor.components.movement:movement.locked' }, false],
       },
     });
-    dataRegistry.store('conditions', 'core:actor-is-following', {
-      id: 'core:actor-is-following',
+    dataRegistry.store('conditions', 'companionship:actor-is-following', {
+      id: 'companionship:actor-is-following',
       logic: {
-        '!!': { var: 'actor.components.core:following.leaderId' },
+        '!!': { var: 'actor.components.companionship:following.leaderId' },
       },
     });
 
@@ -140,9 +140,11 @@ describe('Action Target Resolution Workflow E2E', () => {
 
     // Load and parse scope definitions from actual files
     const coreScopeFiles = [
+      'environment.scope',
+    ];
+    const companionshipScopeFiles = [
       'potential_leaders.scope',
       'followers.scope',
-      'environment.scope',
     ];
     const movementScopeFiles = [
       'clear_directions.scope',
@@ -154,6 +156,18 @@ describe('Action Target Resolution Workflow E2E', () => {
     for (const filename of coreScopeFiles) {
       const scopeContent = fs.readFileSync(
         path.resolve(__dirname, '../../../data/mods/core/scopes', filename),
+        'utf8'
+      );
+      const defs = parseScopeDefinitions(scopeContent, filename);
+      for (const [id, definition] of defs) {
+        scopeDefinitions[id] = definition;
+      }
+    }
+
+    // Load companionship scopes
+    for (const filename of companionshipScopeFiles) {
+      const scopeContent = fs.readFileSync(
+        path.resolve(__dirname, '../../../data/mods/companionship/scopes', filename),
         'utf8'
       );
       const defs = parseScopeDefinitions(scopeContent, filename);
@@ -411,15 +425,15 @@ describe('Action Target Resolution Workflow E2E', () => {
     expect(actionsByType['movement:go'].command).toMatch(/go to Location Y/i);
 
     // Validate follow action - should target Actor Two, NOT a location
-    expect(actionsByType['core:follow']).toBeDefined();
-    expect(actionsByType['core:follow'].params?.targetId).toBe('test-actor-2');
-    expect(actionsByType['core:follow'].command).toContain('Actor Two');
-    expect(actionsByType['core:follow'].command).toMatch(/follow Actor Two/i);
+    expect(actionsByType['companionship:follow']).toBeDefined();
+    expect(actionsByType['companionship:follow'].params?.targetId).toBe('test-actor-2');
+    expect(actionsByType['companionship:follow'].command).toContain('Actor Two');
+    expect(actionsByType['companionship:follow'].command).toMatch(/follow Actor Two/i);
 
     // Critical validation: follow action should NEVER contain location names
-    expect(actionsByType['core:follow'].command).not.toContain('Location X');
-    expect(actionsByType['core:follow'].command).not.toContain('Location Y');
-    expect(actionsByType['core:follow'].command).not.toContain(
+    expect(actionsByType['companionship:follow'].command).not.toContain('Location X');
+    expect(actionsByType['companionship:follow'].command).not.toContain('Location Y');
+    expect(actionsByType['companionship:follow'].command).not.toContain(
       '[LOCATION NAME]'
     );
 
@@ -454,7 +468,7 @@ describe('Action Target Resolution Workflow E2E', () => {
 
     // Find all follow actions
     const followActions = discoveredActions.actions.filter(
-      (action) => action.id === 'core:follow'
+      (action) => action.id === 'companionship:follow'
     );
 
     expect(followActions.length).toBeGreaterThan(0);
@@ -571,15 +585,15 @@ describe('Action Target Resolution Workflow E2E', () => {
 
     expect(actor1ActionIds).toEqual(actor2ActionIds);
     expect(actor1ActionIds.has('movement:go')).toBe(true);
-    expect(actor1ActionIds.has('core:follow')).toBe(true);
+    expect(actor1ActionIds.has('companionship:follow')).toBe(true);
     expect(actor1ActionIds.has('core:wait')).toBe(true);
 
     // Follow actions should target the other actor
     const actor1FollowAction = actor1Actions.actions.find(
-      (a) => a.id === 'core:follow'
+      (a) => a.id === 'companionship:follow'
     );
     const actor2FollowAction = actor2Actions.actions.find(
-      (a) => a.id === 'core:follow'
+      (a) => a.id === 'companionship:follow'
     );
 
     expect(actor1FollowAction.params?.targetId).toBe('test-actor-2');
@@ -678,7 +692,7 @@ describe('Action Target Resolution Workflow E2E', () => {
     // Validate first call results
     const firstCallActionIds = new Set(firstCall.actions.map((a) => a.id));
     expect(firstCallActionIds.has('movement:go')).toBe(true);
-    expect(firstCallActionIds.has('core:follow')).toBe(true);
+    expect(firstCallActionIds.has('companionship:follow')).toBe(true);
     expect(firstCallActionIds.has('core:wait')).toBe(true);
 
     // Second call with same context should use cache
@@ -695,7 +709,7 @@ describe('Action Target Resolution Workflow E2E', () => {
 
     // Validate cached results are still correct
     const cachedFollowAction = secondCall.actions.find(
-      (a) => a.id === 'core:follow'
+      (a) => a.id === 'companionship:follow'
     );
     expect(cachedFollowAction.params?.targetId).toBe('test-actor-2');
     expect(cachedFollowAction.command).toContain('Actor Two');
@@ -794,7 +808,7 @@ describe('Action Target Resolution Workflow E2E', () => {
     const coreActionIds = coreActions.map((a) => a.id);
 
     expect(coreActionIds).toContain('movement:go');
-    expect(coreActionIds).toContain('core:follow');
+    expect(coreActionIds).toContain('companionship:follow');
     expect(coreActionIds).toContain('core:wait');
 
     // Verify scope definitions are loaded
@@ -802,7 +816,7 @@ describe('Action Target Resolution Workflow E2E', () => {
       'movement:clear_directions'
     );
     const potentialLeadersScope = scopeRegistry.getScope(
-      'core:potential_leaders'
+      'companionship:potential_leaders'
     );
 
     expect(clearDirectionsScope).toBeDefined();
@@ -828,7 +842,7 @@ describe('Action Target Resolution Workflow E2E', () => {
 
     const actionIds = result.actions.map((a) => a.id);
     expect(actionIds).toContain('movement:go');
-    expect(actionIds).toContain('core:follow');
+    expect(actionIds).toContain('companionship:follow');
     expect(actionIds).toContain('core:wait');
   });
 });

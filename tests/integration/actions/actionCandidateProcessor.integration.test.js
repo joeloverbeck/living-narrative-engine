@@ -257,7 +257,7 @@ describe('ActionCandidateProcessor Integration Tests', () => {
       const npc1 = testData.actors.npc;
       const npc2 = testData.actors.inventoryActor;
       const actionDef = testData.actions.basic.find(
-        (a) => a.id === 'core:follow'
+        (a) => a.id === 'companionship:follow'
       );
       const context = {
         actorId: actor.id,
@@ -314,7 +314,7 @@ describe('ActionCandidateProcessor Integration Tests', () => {
       // Arrange
       const actor = testData.actors.player;
       const actionDef = testData.actions.basic.find(
-        (a) => a.id === 'core:follow'
+        (a) => a.id === 'companionship:follow'
       );
       const context = {
         actorId: actor.id,
@@ -598,7 +598,7 @@ describe('ActionCandidateProcessor Integration Tests', () => {
       const actor = testData.actors.player;
       const npc = testData.actors.npc;
       const actionDef = testData.actions.basic.find(
-        (a) => a.id === 'core:follow'
+        (a) => a.id === 'companionship:follow'
       );
       const context = {
         actorId: actor.id,
@@ -705,7 +705,7 @@ describe('ActionCandidateProcessor Integration Tests', () => {
       const npc1 = testData.actors.npc;
       const npc2 = testData.actors.inventoryActor;
       const actionDef = testData.actions.basic.find(
-        (a) => a.id === 'core:follow'
+        (a) => a.id === 'companionship:follow'
       );
       const context = {
         actorId: actor.id,
@@ -895,7 +895,7 @@ describe('ActionCandidateProcessor Integration Tests', () => {
       const npc1 = testData.actors.npc;
       const npc2 = testData.actors.inventoryActor;
       const actionDef = testData.actions.basic.find(
-        (a) => a.id === 'core:follow'
+        (a) => a.id === 'companionship:follow'
       );
       const context = {
         actorId: actor.id,

@@ -2,6 +2,7 @@
   "mods": [
     "core",
     "movement",
+    "companionship",
     "positioning",
     "anatomy",
     "clothing",
@@ -11,5 +12,5 @@
     "intimacy",
     "p_erotica"
   ],
-  "startWorld": "p_erotica:uncle"
+  "startWorld": "p_erotica:layla"
 }

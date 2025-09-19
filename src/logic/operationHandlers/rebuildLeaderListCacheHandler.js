@@ -1,6 +1,6 @@
 /**
  * @file Handler for REBUILD_LEADER_LIST_CACHE.
- * Rebuilds the 'core:leading' component for one or more leaders.
+ * Rebuilds the 'companionship:leading' component for one or more leaders.
  * @see src/logic/operationHandlers/rebuildLeaderListCacheHandler.js
  */
 import { isNonBlankString } from '../../utils/textUtils.js';
@@ -16,7 +16,7 @@ import BaseOperationHandler from './baseOperationHandler.js';
 /**
  * @class RebuildLeaderListCacheHandler
  * @description Handles the REBUILD_LEADER_LIST_CACHE operation by updating the
- *  'core:leading' component for a list of leader entities.
+ *  'companionship:leading' component for a list of leader entities.
  */
 class RebuildLeaderListCacheHandler extends BaseOperationHandler {
   #logger;

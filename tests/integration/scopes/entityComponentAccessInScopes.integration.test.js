@@ -151,8 +151,8 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
       },
     });
 
-    registry.store('conditions', 'core:entity-is-following-actor', {
-      id: 'core:entity-is-following-actor',
+    registry.store('conditions', 'companionship:entity-is-following-actor', {
+      id: 'companionship:entity-is-following-actor',
       description:
         "Checks if the entity's 'following' component points to the actor's ID.",
       logic: {
@@ -328,7 +328,7 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
     { "condition_ref": "core:entity-at-location" },
     { "condition_ref": "core:entity-is-not-current-actor" },
     { "condition_ref": "core:entity-has-actor-component" },
-    { "not": { "condition_ref": "core:entity-is-following-actor" } }
+    { "not": { "condition_ref": "companionship:entity-is-following-actor" } }
   ]
 }]`;
 
@@ -367,8 +367,8 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
   });
 
   describe('Real World Scope Patterns', () => {
-    it('should replicate core:potential_leaders scope pattern', async () => {
-      // This test replicates the exact pattern from core:potential_leaders scope
+    it('should replicate companionship:potential_leaders scope pattern', async () => {
+      // This test replicates the exact pattern from companionship:potential_leaders scope
       // that was failing in the original bug report
       const locationId = 'isekai:adventurers_guild_instance';
       const actorId = 'isekai:hero_instance';
@@ -397,13 +397,13 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
         },
       });
 
-      // Replicate the exact core:potential_leaders scope logic
+      // Replicate the exact companionship:potential_leaders scope logic
       const scopeContent = `test:potential_leaders := entities(core:position)[{
   "and": [
     { "condition_ref": "core:entity-at-location" },
     { "condition_ref": "core:entity-is-not-current-actor" },
     { "condition_ref": "core:entity-has-actor-component" },
-    { "not": { "condition_ref": "core:entity-is-following-actor" } }
+    { "not": { "condition_ref": "companionship:entity-is-following-actor" } }
   ]
 }]`;
 

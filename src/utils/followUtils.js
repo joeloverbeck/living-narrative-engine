@@ -69,7 +69,7 @@ export function detectCycle(startId, targetId, entityManager) {
  * @description
  * Traverses the "follow graph" to determine if an entity attempting to follow another
  * would create a cycle. It performs a Depth-First Search (DFS) starting from the
- * potential leader, following the `leaderId` references in `core:following` components.
+ * potential leader, following the `leaderId` references in `companionship:following` components.
  * @example
  * // Scenario: A -> B. C wants to follow A. No cycle.
  * wouldCreateCycle('C', 'A', entityManager); // returns false
