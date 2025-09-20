@@ -19,7 +19,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
     jest.useFakeTimers();
 
     mockLogger = testBed.createMockLogger();
-    mockEventBus = testBed.createMock('MockEventBus', ['dispatch', 'on']);
+    mockEventBus = testBed.createMock('MockEventBus', ['dispatch', 'subscribe']);
   });
 
   afterEach(() => {
@@ -67,8 +67,8 @@ describe('ErrorReporter - Error Reporting Service', () => {
         enabled: true
       });
 
-      expect(mockEventBus.on).toHaveBeenCalledWith('ERROR_OCCURRED', expect.any(Function));
-      expect(mockEventBus.on).toHaveBeenCalledWith('SYSTEM_ERROR_OCCURRED', expect.any(Function));
+      expect(mockEventBus.subscribe).toHaveBeenCalledWith('ERROR_OCCURRED', expect.any(Function));
+      expect(mockEventBus.subscribe).toHaveBeenCalledWith('SYSTEM_ERROR_OCCURRED', expect.any(Function));
     });
 
     it('should not register listeners when disabled', () => {
@@ -78,7 +78,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
         enabled: false
       });
 
-      expect(mockEventBus.on).not.toHaveBeenCalled();
+      expect(mockEventBus.subscribe).not.toHaveBeenCalled();
     });
 
     it('should disable reporting when no endpoint provided', () => {
@@ -89,7 +89,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
         enabled: true
       });
 
-      expect(mockEventBus.on).not.toHaveBeenCalled();
+      expect(mockEventBus.subscribe).not.toHaveBeenCalled();
     });
   });
 
@@ -272,7 +272,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
     it('should generate error report', () => {
       // Create a custom error class with overridden severity
       class CriticalError extends BaseError {
-        getSeverity() { return 'critical'; }
+        get severity() { return 'critical'; }
       }
 
       const error1 = new CriticalError('Critical error', ErrorCodes.INVALID_DATA_GENERIC);
@@ -293,7 +293,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
     it('should provide recommendations based on errors', () => {
       // Create a custom error class with overridden severity
       class CriticalError extends BaseError {
-        getSeverity() { return 'critical'; }
+        get severity() { return 'critical'; }
       }
 
       // Report multiple critical errors
@@ -322,7 +322,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
     it('should send alert for critical error threshold', () => {
       // Create a custom error class with overridden severity
       class CriticalError extends BaseError {
-        getSeverity() { return 'critical'; }
+        get severity() { return 'critical'; }
       }
 
       // Report 5 critical errors (threshold)
@@ -412,7 +412,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
     });
 
     it('should handle ERROR_OCCURRED events', () => {
-      const errorHandler = mockEventBus.on.mock.calls.find(
+      const errorHandler = mockEventBus.subscribe.mock.calls.find(
         call => call[0] === 'ERROR_OCCURRED'
       )[1];
 
@@ -430,7 +430,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
     });
 
     it('should handle SYSTEM_ERROR_OCCURRED events', () => {
-      const errorHandler = mockEventBus.on.mock.calls.find(
+      const errorHandler = mockEventBus.subscribe.mock.calls.find(
         call => call[0] === 'SYSTEM_ERROR_OCCURRED'
       )[1];
 
@@ -448,7 +448,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
     });
 
     it('should handle events with error as direct payload', () => {
-      const errorHandler = mockEventBus.on.mock.calls.find(
+      const errorHandler = mockEventBus.subscribe.mock.calls.find(
         call => call[0] === 'ERROR_OCCURRED'
       )[1];
 

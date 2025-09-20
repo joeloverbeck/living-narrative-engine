@@ -285,6 +285,18 @@ describe('MonitoringCoordinator', () => {
         totalFailures: 0,
         recentAlerts: [],
         healthChecksActive: expect.any(Boolean),
+        errors: null,
+        topErrors: null,
+        healthStatus: {
+          score: 100,
+          status: 'healthy',
+          factors: {
+            performance: 0,
+            circuitBreakers: 0,
+            memory: 'normal',
+            errorRate: 0
+          }
+        }
       });
     });
   });

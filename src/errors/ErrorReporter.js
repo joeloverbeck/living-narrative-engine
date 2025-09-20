@@ -49,7 +49,7 @@ class ErrorReporter {
       requiredMethods: ['info', 'error', 'warn', 'debug']
     });
     validateDependency(eventBus, 'IEventBus', logger, {
-      requiredMethods: ['dispatch', 'on']
+      requiredMethods: ['dispatch', 'subscribe']
     });
 
     this.#logger = logger;
@@ -409,12 +409,12 @@ class ErrorReporter {
 
   #registerEventListeners() {
     // Listen for generic error events
-    this.#eventBus.on('ERROR_OCCURRED', (event) => {
+    this.#eventBus.subscribe('ERROR_OCCURRED', (event) => {
       this.report(event.payload.error || event.payload, event.payload.context || {});
     });
 
     // Also listen for domain-specific error events (following existing pattern)
-    this.#eventBus.on('SYSTEM_ERROR_OCCURRED', (event) => {
+    this.#eventBus.subscribe('SYSTEM_ERROR_OCCURRED', (event) => {
       this.report(event.payload.error || event.payload, event.payload.context || {});
     });
   }

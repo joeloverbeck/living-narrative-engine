@@ -27,7 +27,7 @@ class CentralErrorHandler {
       requiredMethods: ['info', 'error', 'warn', 'debug']
     });
     validateDependency(eventBus, 'IEventBus', logger, {
-      requiredMethods: ['dispatch', 'on']
+      requiredMethods: ['dispatch', 'subscribe']
     });
     validateDependency(monitoringCoordinator, 'IMonitoringCoordinator', logger, {
       requiredMethods: ['executeMonitored', 'getStats', 'getPerformanceMonitor']
@@ -257,11 +257,11 @@ class CentralErrorHandler {
 
   #registerEventListeners() {
     // Listen for domain-specific error events
-    this.#eventBus.on('CLOTHING_ERROR_OCCURRED', (event) => {
+    this.#eventBus.subscribe('CLOTHING_ERROR_OCCURRED', (event) => {
       this.handle(event.payload.error, event.payload.context);
     });
 
-    this.#eventBus.on('ANATOMY_ERROR_OCCURRED', (event) => {
+    this.#eventBus.subscribe('ANATOMY_ERROR_OCCURRED', (event) => {
       this.handle(event.payload.error, event.payload.context);
     });
   }

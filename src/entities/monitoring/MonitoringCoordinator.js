@@ -51,6 +51,16 @@ export default class MonitoringCoordinator {
   #intervalHandle;
   /** @type {object} */
   #defaultCircuitBreakerOptions;
+  /** @type {object|null} */
+  #centralErrorHandler;
+  /** @type {object|null} */
+  #recoveryStrategyManager;
+  /** @type {object|null} */
+  #errorReporter;
+  /** @type {IEventBus|null} */
+  #eventBus;
+  /** @type {boolean} */
+  #errorHandlersInjected;
 
   /**
    * Creates a new MonitoringCoordinator instance.
@@ -84,13 +94,18 @@ export default class MonitoringCoordinator {
     // Validate optional memory monitoring dependencies
     if (eventBus) {
       validateDependency(eventBus, 'IEventBus', logger, {
-        requiredMethods: ['dispatch', 'on'],
+        requiredMethods: ['dispatch', 'subscribe'],
       });
     }
 
     this.#enabled = enabled;
     this.#checkInterval = checkInterval;
     this.#defaultCircuitBreakerOptions = circuitBreakerOptions;
+    this.#eventBus = eventBus || null;
+    this.#centralErrorHandler = null;
+    this.#recoveryStrategyManager = null;
+    this.#errorReporter = null;
+    this.#errorHandlersInjected = false;
 
     // Initialize monitoring components
     this.#performanceMonitor = new PerformanceMonitor({
@@ -130,7 +145,7 @@ export default class MonitoringCoordinator {
    */
   #registerMemoryAlerts(eventBus) {
     // Listen for memory pressure alerts
-    eventBus.on('MEMORY_THRESHOLD_EXCEEDED', (event) => {
+    eventBus.subscribe('MEMORY_THRESHOLD_EXCEEDED', (event) => {
       const { level, type, value } = event.payload;
       this.#addAlert(
         level === 'critical' ? 'error' : 'warning',
@@ -139,7 +154,7 @@ export default class MonitoringCoordinator {
     });
 
     // Listen for memory leak detection
-    eventBus.on('MEMORY_LEAK_DETECTED', (event) => {
+    eventBus.subscribe('MEMORY_LEAK_DETECTED', (event) => {
       const { confidence, metrics } = event.payload;
       this.#addAlert(
         'warning',
@@ -148,7 +163,7 @@ export default class MonitoringCoordinator {
     });
 
     // Listen for memory strategy executions
-    eventBus.on('MEMORY_STRATEGY_COMPLETED', (event) => {
+    eventBus.subscribe('MEMORY_STRATEGY_COMPLETED', (event) => {
       const { strategy, memoryFreed } = event.payload;
       this.#addAlert(
         'info',
@@ -194,6 +209,122 @@ export default class MonitoringCoordinator {
   }
 
   /**
+   * Injects error handlers after construction to avoid circular dependency.
+   *
+   * @param {object} centralErrorHandler - Central error handler
+   * @param {object} recoveryStrategyManager - Recovery strategy manager
+   * @param {object} errorReporter - Error reporter
+   */
+  injectErrorHandlers(centralErrorHandler, recoveryStrategyManager, errorReporter) {
+    if (this.#errorHandlersInjected) {
+      this.#logger.warn('Error handlers already injected');
+      return;
+    }
+
+    this.#centralErrorHandler = centralErrorHandler;
+    this.#recoveryStrategyManager = recoveryStrategyManager;
+    this.#errorReporter = errorReporter;
+    this.#errorHandlersInjected = true;
+
+    if (this.#centralErrorHandler && this.#recoveryStrategyManager) {
+      this.#setupErrorIntegration();
+    }
+
+    this.#logger.info('Error handlers injected into MonitoringCoordinator');
+  }
+
+  /**
+   * Sets up bi-directional error integration.
+   * @private
+   */
+  #setupErrorIntegration() {
+    // Register monitoring-specific recovery strategies
+    this.#recoveryStrategyManager.registerStrategy('PerformanceError', {
+      retry: {
+        maxRetries: 2,
+        backoff: 'exponential'
+      },
+      fallback: (error, operation) => {
+        this.#logger.warn('Performance monitoring failed, returning default metrics');
+        return {
+          totalOperations: 0,
+          averageTime: 0,
+          maxTime: 0
+        };
+      }
+    });
+
+    this.#recoveryStrategyManager.registerStrategy('CircuitBreakerError', {
+      retry: {
+        maxRetries: 1,
+        backoff: 'constant'
+      },
+      fallback: (error, operation) => {
+        this.#logger.warn('Circuit breaker operation failed, allowing request');
+        return { allowed: true, fallback: true };
+      }
+    });
+
+    // Listen for error events to track in monitoring
+    if (this.#eventBus) {
+      this.#eventBus.subscribe('ERROR_OCCURRED', (event) => {
+        this.#trackErrorMetric(event.payload);
+      });
+    }
+
+    this.#logger.info('Error handling integration established in MonitoringCoordinator');
+  }
+
+  /**
+   * Tracks error metrics.
+   * @private
+   * @param {object} errorInfo - Error information
+   */
+  #trackErrorMetric(errorInfo) {
+    if (!this.#performanceMonitor) {
+      return;
+    }
+
+    // Add to performance metrics
+    const metricName = `error_${errorInfo.errorType || 'unknown'}`;
+    this.#performanceMonitor.recordMetric(metricName, 1);
+
+    // Track severity
+    if (errorInfo.severity === 'critical') {
+      this.#addAlert('error', `Critical error: ${errorInfo.message}`);
+    } else if (errorInfo.severity === 'error') {
+      this.#addAlert('warning', `Error occurred: ${errorInfo.errorType || 'unknown'}`);
+    }
+  }
+
+  /**
+   * Gets the error handler for external use.
+   *
+   * @returns {object|null} Central error handler or null
+   */
+  getErrorHandler() {
+    return this.#centralErrorHandler;
+  }
+
+  /**
+   * Gets the recovery manager for external use.
+   *
+   * @returns {object|null} Recovery strategy manager or null
+   */
+  getRecoveryManager() {
+    return this.#recoveryStrategyManager;
+  }
+
+  /**
+   * Gets the error reporter for external use.
+   *
+   * @returns {object|null} Error reporter or null
+   */
+  getErrorReporter() {
+    return this.#errorReporter;
+  }
+
+  /**
    * Creates or gets a circuit breaker for a specific operation.
    *
    * @param {string} name - Circuit breaker name
@@ -228,6 +359,7 @@ export default class MonitoringCoordinator {
       context = '',
       useCircuitBreaker = true,
       circuitBreakerOptions = {},
+      useErrorHandler = true,
     } = options;
 
     if (!this.#enabled) {
@@ -238,16 +370,48 @@ export default class MonitoringCoordinator {
       ? this.getCircuitBreaker(operationName, circuitBreakerOptions)
       : null;
 
+    // Wrap with error handling if available
     const wrappedOperation = async () => {
-      return await this.#performanceMonitor.timeOperation(
-        operationName,
-        operation,
-        context
-      );
+      try {
+        const result = await this.#performanceMonitor.timeOperation(
+          operationName,
+          operation,
+          context
+        );
+        return result;
+      } catch (error) {
+        // If we have central error handler and it's enabled, use it
+        if (useErrorHandler && this.#centralErrorHandler) {
+          return await this.#centralErrorHandler.handle(error, {
+            operation: operationName,
+            context,
+            monitoring: true
+          });
+        }
+        throw error;
+      }
     };
 
+    // Execute with circuit breaker if available
     if (circuitBreaker) {
-      return await circuitBreaker.execute(wrappedOperation);
+      try {
+        return await circuitBreaker.execute(wrappedOperation);
+      } catch (error) {
+        // Circuit breaker opened or operation failed
+        if (this.#recoveryStrategyManager) {
+          return await this.#recoveryStrategyManager.executeWithRecovery(
+            wrappedOperation,
+            {
+              operationName,
+              errorType: 'CircuitBreakerError',
+              maxRetries: 1,
+              useCircuitBreaker: false, // Don't use CB in recovery
+              useFallback: true
+            }
+          );
+        }
+        throw error;
+      }
     } else {
       return await wrappedOperation();
     }
@@ -344,7 +508,18 @@ export default class MonitoringCoordinator {
       }
     }
 
-    return {
+    // Add error metrics if available
+    let errorStats = null;
+    if (this.#centralErrorHandler && typeof this.#centralErrorHandler.getMetrics === 'function') {
+      errorStats = this.#centralErrorHandler.getMetrics();
+    }
+
+    let errorReports = null;
+    if (this.#errorReporter && typeof this.#errorReporter.getTopErrors === 'function') {
+      errorReports = this.#errorReporter.getTopErrors(5);
+    }
+
+    const baseStats = {
       performance: performanceMetrics,
       circuitBreakers: circuitBreakerStats,
       memory: memoryStats,
@@ -353,6 +528,13 @@ export default class MonitoringCoordinator {
       recentAlerts: this.#alerts.slice(-10),
       enabled: this.#enabled,
       healthChecksActive: this.#intervalHandle !== null,
+    };
+
+    return {
+      ...baseStats,
+      errors: errorStats,
+      topErrors: errorReports,
+      healthStatus: this.#calculateHealthStatus(baseStats, errorStats)
     };
   }
 
@@ -638,6 +820,56 @@ export default class MonitoringCoordinator {
     }
 
     this.#logger.info('Monitoring data reset');
+  }
+
+  /**
+   * Calculates overall system health.
+   * @private
+   * @param {object} monitoringStats - Base monitoring statistics
+   * @param {object} errorStats - Error statistics
+   * @returns {object} Health status
+   */
+  #calculateHealthStatus(monitoringStats, errorStats) {
+    let score = 100;
+
+    // Deduct for performance issues
+    if (monitoringStats.performance.averageOperationTime > 100) {
+      score -= 10;
+    }
+    if (monitoringStats.performance.slowOperations > monitoringStats.performance.totalOperations * 0.1) {
+      score -= 15;
+    }
+
+    // Deduct for circuit breaker issues
+    const openCircuits = Object.values(monitoringStats.circuitBreakers)
+      .filter(cb => cb.state === 'OPEN').length;
+    score -= openCircuits * 10;
+
+    // Deduct for memory issues
+    if (monitoringStats.memory?.pressureLevel === 'critical') {
+      score -= 20;
+    } else if (monitoringStats.memory?.pressureLevel === 'warning') {
+      score -= 10;
+    }
+
+    // Deduct for error rates
+    if (errorStats) {
+      const errorRate = errorStats.totalErrors > 0
+        ? (errorStats.totalErrors - errorStats.recoveredErrors) / errorStats.totalErrors
+        : 0;
+      score -= Math.round(errorRate * 30);
+    }
+
+    return {
+      score: Math.max(0, score),
+      status: score >= 80 ? 'healthy' : score >= 60 ? 'degraded' : 'unhealthy',
+      factors: {
+        performance: monitoringStats.performance.averageOperationTime,
+        circuitBreakers: openCircuits,
+        memory: monitoringStats.memory?.pressureLevel || 'normal',
+        errorRate: errorStats ? errorStats.totalErrors : 0
+      }
+    };
   }
 
   /**

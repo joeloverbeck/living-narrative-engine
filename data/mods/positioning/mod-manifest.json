@@ -84,9 +84,11 @@
       "actors_in_location_facing.scope",
       "actors_in_location_not_facing_away_from_actor.scope",
       "available_furniture.scope",
+      "available_surfaces.scope",
       "close_actors.scope",
       "close_actors_facing_each_other_or_behind_target.scope",
-      "furniture_im_sitting_on.scope"
+      "furniture_im_sitting_on.scope",
+      "surface_im_bending_over.scope"
     ]
   }
 }
