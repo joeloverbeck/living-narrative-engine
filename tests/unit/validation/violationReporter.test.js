@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import ViolationReporter from '../../../src/validation/violationReporter.js';
 
@@ -163,6 +163,68 @@ describe('ViolationReporter', () => {
       expect(report).not.toContain('💡');
       expect(report).not.toContain('Add missing_mod to dependencies');
     });
+
+    it('should include impact details when verbose mode is enabled', () => {
+      const mockReport = {
+        modId: 'impact_mod',
+        hasViolations: true,
+        violations: [
+          {
+            severity: 'critical',
+            referencedMod: 'missing_mod',
+            referencedComponent: 'component1',
+            impact: { loadingFailure: true, runtimeFailure: false },
+            suggestedFixes: [],
+          },
+        ],
+        declaredDependencies: ['core'],
+        referencedMods: ['missing_mod'],
+        missingDependencies: ['missing_mod'],
+      };
+
+      const report = reporter.generateReport(mockReport, 'console', {
+        verbose: true,
+        colors: false,
+      });
+
+      expect(report).toContain(
+        '📊 Impact: loading=true, runtime=false'
+      );
+    });
+
+    it('should fall back to legacy formatting when severity data is unavailable', () => {
+      const severitySpy = jest
+        .spyOn(reporter, '_groupBySeverity')
+        .mockReturnValue(new Map());
+
+      const mockReport = {
+        modId: 'legacy_mod',
+        hasViolations: true,
+        violations: [
+          {
+            referencedMod: 'missing_mod',
+            referencedComponent: 'component1',
+            file: 'missing.json',
+            line: 42,
+          },
+        ],
+        declaredDependencies: [],
+        referencedMods: [],
+        missingDependencies: ['missing_mod'],
+      };
+
+      const report = reporter.generateReport(mockReport, 'console');
+
+      expect(report).toContain('Violations:');
+      expect(report).toContain('📦 Missing dependency: missing_mod');
+      expect(report).toContain(
+        '💡 Fix: Add "missing_mod" to dependencies in mod-manifest.json'
+      );
+      expect(report).toContain('(none declared)');
+      expect(report).toContain('(no external references found)');
+
+      severitySpy.mockRestore();
+    });
   });
 
   describe('Ecosystem Console Report Generation', () => {
@@ -270,6 +332,51 @@ describe('ViolationReporter', () => {
       expect(highViolationsLine).toBeLessThan(lowViolationsLine);
       expect(highViolationsLine).toBeGreaterThan(summaryStart);
     });
+
+    it('should handle nested cross-reference structures with suggestions', () => {
+      const nestedResults = new Map([
+        [
+          'modNested',
+          {
+            hasViolations: false,
+            crossReferences: {
+              hasViolations: true,
+              violations: [
+                {
+                  severity: 'critical',
+                  referencedMod: 'missing_mod',
+                  referencedComponent: 'component1',
+                  suggestedFixes: [
+                    {
+                      priority: 'primary',
+                      description: 'Declare missing_mod dependency',
+                    },
+                  ],
+                },
+                {
+                  severity: 'high',
+                  referencedMod: 'other_mod',
+                  referencedComponent: 'component2',
+                  suggestedFix: 'Add other_mod dependency',
+                },
+              ],
+              missingDependencies: ['missing_mod', 'other_mod'],
+            },
+          },
+        ],
+      ]);
+
+      const report = reporter.generateReport(nestedResults, 'console', {
+        colors: false,
+        showSuggestions: true,
+      });
+
+      expect(report).toContain('❌ Found 2 violations across 1 mods');
+      expect(report).toContain('missing_mod');
+      expect(report).toContain('other_mod');
+      expect(report).toContain('Declare missing_mod dependency');
+      expect(report).toContain('Add other_mod dependency');
+    });
   });
 
   describe('JSON Report Generation', () => {
@@ -341,6 +448,42 @@ describe('ViolationReporter', () => {
       expect(prettyReport.includes('\n')).toBe(true);
       expect(prettyReport.includes('  ')).toBe(true); // indentation
     });
+
+    it('should summarize nested cross-reference results in JSON output', () => {
+      const nestedResults = new Map([
+        [
+          'modNested',
+          {
+            hasViolations: false,
+            crossReferences: {
+              hasViolations: true,
+              violations: [
+                {
+                  referencedMod: 'missing_mod',
+                  referencedComponent: 'component1',
+                },
+              ],
+            },
+          },
+        ],
+        ['modWithoutViolations', { hasViolations: false }],
+      ]);
+
+      const report = reporter.generateReport(nestedResults, 'json');
+      const parsed = JSON.parse(report);
+
+      expect(parsed.type).toBe('ecosystem');
+      expect(parsed.summary).toEqual(
+        expect.objectContaining({
+          totalMods: 2,
+          modsWithViolations: 1,
+          totalViolations: 1,
+          validationPassed: false,
+        })
+      );
+      expect(parsed.mods).toHaveProperty('modNested');
+      expect(parsed.mods).toHaveProperty('modWithoutViolations');
+    });
   });
 
   describe('HTML Report Generation', () => {
@@ -405,6 +548,48 @@ describe('ViolationReporter', () => {
       expect(report).toContain('<title>Custom Report Title</title>');
       expect(report).toContain('<h1>Custom Report Title</h1>');
     });
+
+    it('should render ecosystem HTML with no violations', () => {
+      const results = new Map([
+        ['modA', { hasViolations: false, violations: [] }],
+        ['modB', { hasViolations: false, violations: [] }],
+      ]);
+
+      const report = reporter.generateReport(results, 'html');
+
+      expect(report).toContain('✅ No violations detected');
+      expect(report).toContain('Successfully validated 2 mods.');
+    });
+
+    it('should render ecosystem HTML with violation details', () => {
+      const results = new Map([
+        ['safe_mod', { hasViolations: false, violations: [] }],
+        [
+          'problem_mod',
+          {
+            hasViolations: true,
+            violations: [
+              {
+                severity: 'high',
+                referencedMod: 'missing_mod',
+                referencedComponent: 'component1',
+                file: 'test.json',
+                line: 7,
+                contextSnippet: 'missing_mod:component1',
+              },
+            ],
+          },
+        ],
+      ]);
+
+      const report = reporter.generateReport(results, 'html');
+
+      expect(report).toContain('❌ 1 violations found across 1 mods');
+      expect(report).toContain('<h3>📦 problem_mod</h3>');
+      expect(report).toContain('missing_mod:component1');
+      expect(report).toContain('💡 Add dependency to manifest');
+      expect(report).toContain('📁 test.json:7');
+    });
   });
 
   describe('Markdown Report Generation', () => {
@@ -464,6 +649,48 @@ describe('ViolationReporter', () => {
       });
 
       expect(report).toContain('# Custom Markdown Title');
+    });
+
+    it('should render ecosystem Markdown with no violations', () => {
+      const results = new Map([
+        ['modA', { hasViolations: false, violations: [] }],
+        ['modB', { hasViolations: false, violations: [] }],
+      ]);
+
+      const report = reporter.generateReport(results, 'markdown');
+
+      expect(report).toContain('## ✅ No violations detected');
+      expect(report).toContain('Successfully validated 2 mods.');
+    });
+
+    it('should render ecosystem Markdown with violation details', () => {
+      const results = new Map([
+        ['safe_mod', { hasViolations: false, violations: [] }],
+        [
+          'problem_mod',
+          {
+            hasViolations: true,
+            violations: [
+              {
+                severity: 'medium',
+                referencedMod: 'missing_mod',
+                referencedComponent: 'component1',
+                file: 'test.json',
+                line: 12,
+                contextSnippet: 'missing_mod:component1',
+              },
+            ],
+          },
+        ],
+      ]);
+
+      const report = reporter.generateReport(results, 'markdown');
+
+      expect(report).toContain('## ❌ 1 violations found across 1 mods');
+      expect(report).toContain('### 📦 problem_mod');
+      expect(report).toContain('- **missing_mod:component1**');
+      expect(report).toContain('💡 Add dependency to manifest');
+      expect(report).toContain('📝 `missing_mod:component1`');
     });
   });
 
