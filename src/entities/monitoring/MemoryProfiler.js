@@ -4,8 +4,7 @@
  */
 
 import { BaseService } from '../../utils/serviceBase.js';
-import { validateDependency } from '../../utils/dependencyUtils.js';
-import { assertNonBlankString, assertPresent } from '../../utils/validationUtils.js';
+import { validateDependency, assertNonBlankString, assertPresent } from '../../utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 import { getMemoryUsage } from '../../utils/environmentUtils.js';
 

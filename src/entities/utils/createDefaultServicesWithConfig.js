@@ -37,6 +37,7 @@ import { getGlobalConfig, isConfigInitialized } from './configUtils.js';
  * @param {import('../../ports/IIdGenerator.js').IIdGenerator} deps.idGenerator
  * @param {import('../../ports/IComponentCloner.js').IComponentCloner} deps.cloner
  * @param {import('../../ports/IDefaultComponentPolicy.js').IDefaultComponentPolicy} deps.defaultPolicy
+ * @param {import('../../dependencyInjection/appContainer.js').default} [deps.container] - Optional DI container
  * @returns {{
  *   entityRepository: EntityRepositoryAdapter,
  *   componentMutationService: ComponentMutationService,
@@ -57,6 +58,7 @@ export function createDefaultServicesWithConfig({
   idGenerator,
   cloner,
   defaultPolicy,
+  container,
 }) {
   // Get configuration settings
   const config = isConfigInitialized() ? getGlobalConfig() : null;
@@ -77,19 +79,38 @@ export function createDefaultServicesWithConfig({
     performanceSettings,
   });
 
-  // Create MonitoringCoordinator with configuration
-  const monitoringCoordinator = new MonitoringCoordinator({
-    logger,
-    enabled: config?.isFeatureEnabled('performance.ENABLE_MONITORING') ?? true,
-    checkInterval:
-      config?.getValue('monitoring.HEALTH_CHECK_INTERVAL') ?? 30000,
-    circuitBreakerOptions: {
-      failureThreshold:
-        config?.getValue('errorHandling.CIRCUIT_BREAKER_THRESHOLD') ?? 5,
-      timeout:
-        config?.getValue('errorHandling.CIRCUIT_BREAKER_TIMEOUT') ?? 60000,
-    },
-  });
+  // Get MonitoringCoordinator from DI container if available, otherwise create it
+  let monitoringCoordinator = null;
+  if (container) {
+    try {
+      // Try to resolve IMonitoringCoordinator from the container
+      // We have to use a hardcoded string to avoid circular import dependencies
+      const monitoringCoordinatorToken = 'IMonitoringCoordinator';
+      if (container.has(monitoringCoordinatorToken)) {
+        monitoringCoordinator = container.resolve(monitoringCoordinatorToken);
+        logger.debug('MonitoringCoordinator resolved from DI container');
+      }
+    } catch (error) {
+      logger.warn('Could not resolve MonitoringCoordinator from DI container:', error.message);
+    }
+  }
+
+  // If not available from DI, create it directly (for backward compatibility)
+  if (!monitoringCoordinator) {
+    monitoringCoordinator = new MonitoringCoordinator({
+      logger,
+      enabled: config?.isFeatureEnabled('performance.ENABLE_MONITORING') ?? true,
+      checkInterval:
+        config?.getValue('monitoring.HEALTH_CHECK_INTERVAL') ?? 30000,
+      circuitBreakerOptions: {
+        failureThreshold:
+          config?.getValue('errorHandling.CIRCUIT_BREAKER_THRESHOLD') ?? 5,
+        timeout:
+          config?.getValue('errorHandling.CIRCUIT_BREAKER_TIMEOUT') ?? 60000,
+      },
+    });
+    logger.debug('MonitoringCoordinator created directly (fallback)');
+  }
 
   // Create EntityRepositoryAdapter with configuration
   const entityRepository = new EntityRepositoryAdapter({

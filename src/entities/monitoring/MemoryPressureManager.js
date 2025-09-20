@@ -4,8 +4,7 @@
  */
 
 import { BaseService } from '../../utils/serviceBase.js';
-import { validateDependency } from '../../utils/dependencyUtils.js';
-import { assertNonBlankString, assertPresent } from '../../utils/validationUtils.js';
+import { validateDependency, assertNonBlankString, assertPresent } from '../../utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 import { triggerGarbageCollection, getMemoryUsageBytes } from '../../utils/environmentUtils.js';
 import LowMemoryStrategy from './strategies/LowMemoryStrategy.js';
@@ -160,7 +159,7 @@ export default class MemoryPressureManager extends BaseService {
     });
 
     // Also listen via event bus
-    this.#eventBus.on('MEMORY_PRESSURE_CHANGED', (event) => {
+    this.#eventBus.subscribe('MEMORY_PRESSURE_CHANGED', (event) => {
       const { newLevel } = event.payload;
       this.#currentPressureLevel = newLevel;
 

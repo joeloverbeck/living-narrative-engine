@@ -31,6 +31,7 @@ export const monitoringTokens = freeze({
 
   // Configuration
   IMemoryMonitoringConfig: 'IMemoryMonitoringConfig',
+  IErrorReportingConfig: 'IErrorReportingConfig',
 });
 
 export default monitoringTokens;

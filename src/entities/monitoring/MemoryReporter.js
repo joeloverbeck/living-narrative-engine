@@ -4,8 +4,7 @@
  */
 
 import { BaseService } from '../../utils/serviceBase.js';
-import { validateDependency } from '../../utils/dependencyUtils.js';
-import { assertNonBlankString } from '../../utils/validationUtils.js';
+import { validateDependency, assertNonBlankString } from '../../utils/dependencyUtils.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./MemoryMonitor.js').default} MemoryMonitor */

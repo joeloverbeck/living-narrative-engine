@@ -16,7 +16,7 @@ describe('CentralErrorHandler - Integration Tests', () => {
     testBed = createTestBed();
 
     mockLogger = testBed.createMockLogger();
-    mockEventBus = testBed.createMock('MockEventBus', ['dispatch', 'on']);
+    mockEventBus = testBed.createMock('MockEventBus', ['dispatch', 'subscribe']);
 
     // Create real MonitoringCoordinator instance
     monitoringCoordinator = new MonitoringCoordinator({
@@ -170,7 +170,7 @@ describe('CentralErrorHandler - Integration Tests', () => {
       });
 
       // Simulate domain error event
-      const clothingCallback = mockEventBus.on.mock.calls.find(call => call[0] === 'CLOTHING_ERROR_OCCURRED')[1];
+      const clothingCallback = mockEventBus.subscribe.mock.calls.find(call => call[0] === 'CLOTHING_ERROR_OCCURRED')[1];
       await clothingCallback({
         payload: {
           error: clothingError,

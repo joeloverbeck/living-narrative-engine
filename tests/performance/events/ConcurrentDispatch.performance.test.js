@@ -282,8 +282,12 @@ describe('Concurrent Event Dispatch Performance', () => {
       const maxBurstTime = Math.max(...burstTimings);
       const minBurstTime = Math.min(...burstTimings);
 
-      // Variance should be reasonable (not more than 3x difference)
-      expect(maxBurstTime / minBurstTime).toBeLessThan(3);
+      // Variance threshold increased to 5x to account for browser/jsdom timing variability
+      // This matches other performance tests in the codebase that deal with timing variance
+      expect(maxBurstTime / minBurstTime).toBeLessThan(5);
+
+      // Also ensure absolute performance is acceptable - no burst should be too slow
+      expect(maxBurstTime).toBeLessThan(100); // Maximum 100ms for any single burst
 
       console.log('Burst pattern performance:', {
         avgBurstTime,

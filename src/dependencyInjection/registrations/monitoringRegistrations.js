@@ -5,6 +5,7 @@
 import { tokens } from '../tokens.js';
 import { Registrar } from '../../utils/registrarHelpers.js';
 import { getEnvironmentMode } from '../../utils/environmentUtils.js';
+import MonitoringCoordinator from '../../entities/monitoring/MonitoringCoordinator.js';
 import MemoryMonitor from '../../entities/monitoring/MemoryMonitor.js';
 import MemoryAnalyzer from '../../entities/monitoring/MemoryAnalyzer.js';
 import MemoryProfiler from '../../entities/monitoring/MemoryProfiler.js';
@@ -88,6 +89,33 @@ export function registerMemoryMonitoring(container) {
     // Silent when logger is not available
   };
 
+  // Register MonitoringCoordinator FIRST to avoid circular dependencies
+  // Note: Error handlers will be injected post-construction
+  container.register(
+    tokens.IMonitoringCoordinator,
+    (c) => {
+      return new MonitoringCoordinator({
+        logger: c.resolve(tokens.ILogger),
+        eventBus: c.resolve(tokens.IEventBus),
+        memoryMonitor: c.isRegistered(tokens.IMemoryMonitor) ? c.resolve(tokens.IMemoryMonitor) : null,
+        memoryPressureManager: c.isRegistered(tokens.IMemoryPressureManager) ? c.resolve(tokens.IMemoryPressureManager) : null,
+        memoryReporter: c.isRegistered(tokens.IMemoryReporter) ? c.resolve(tokens.IMemoryReporter) : null,
+        enabled: true,
+        checkInterval: 30000,
+        circuitBreakerOptions: {
+          failureThreshold: 5,
+          timeout: 60000
+        }
+      });
+    },
+    { singleton: true }
+  );
+  safeDebug(`Registered ${String(tokens.IMonitoringCoordinator)}.`);
+
+  // Register error reporting configuration
+  registrar.instance(tokens.IErrorReportingConfig, defaultErrorReportingConfig);
+  safeDebug(`Registered ${String(tokens.IErrorReportingConfig)}.`);
+
   // Register memory monitoring configuration
   registrar.instance(tokens.IMemoryMonitoringConfig, defaultMemoryMonitoringConfig);
   safeDebug(`Registered ${String(tokens.IMemoryMonitoringConfig)}.`);
@@ -140,7 +168,7 @@ export function registerMemoryMonitoring(container) {
     (c) => new LowMemoryStrategy({
       logger: c.resolve(tokens.ILogger),
       eventBus: c.resolve(tokens.IEventBus),
-      cache: c.has(tokens.IUnifiedCache) ? c.resolve(tokens.IUnifiedCache) : null,
+      cache: c.isRegistered(tokens.IUnifiedCache) ? c.resolve(tokens.IUnifiedCache) : null,
     }),
     { singleton: true }
   );
@@ -152,7 +180,7 @@ export function registerMemoryMonitoring(container) {
     (c) => new CriticalMemoryStrategy({
       logger: c.resolve(tokens.ILogger),
       eventBus: c.resolve(tokens.IEventBus),
-      cache: c.has(tokens.IUnifiedCache) ? c.resolve(tokens.IUnifiedCache) : null,
+      cache: c.isRegistered(tokens.IUnifiedCache) ? c.resolve(tokens.IUnifiedCache) : null,
     }),
     { singleton: true }
   );
@@ -167,7 +195,7 @@ export function registerMemoryMonitoring(container) {
         logger: c.resolve(tokens.ILogger),
         eventBus: c.resolve(tokens.IEventBus),
         monitor: c.resolve(tokens.IMemoryMonitor),
-        cache: c.has(tokens.IUnifiedCache) ? c.resolve(tokens.IUnifiedCache) : null,
+        cache: c.isRegistered(tokens.IUnifiedCache) ? c.resolve(tokens.IUnifiedCache) : null,
       }, {
         automaticManagement: config.automaticResponse.enabled,
         aggressiveGC: config.automaticResponse.gcTrigger.critical,
@@ -230,6 +258,28 @@ export function registerMemoryMonitoring(container) {
     { singleton: true }
   );
   safeDebug(`Registered ${String(tokens.IErrorReporter)}.`);
+
+  // Perform deferred injection to resolve circular dependency
+  // This must happen after all services are registered
+  try {
+    const monitoringCoordinator = container.resolve(tokens.IMonitoringCoordinator);
+    const centralErrorHandler = container.resolve(tokens.ICentralErrorHandler);
+    const recoveryStrategyManager = container.resolve(tokens.IRecoveryStrategyManager);
+    const errorReporter = container.resolve(tokens.IErrorReporter);
+
+    // Check if MonitoringCoordinator has the injection method
+    if (monitoringCoordinator && typeof monitoringCoordinator.injectErrorHandlers === 'function') {
+      monitoringCoordinator.injectErrorHandlers(
+        centralErrorHandler,
+        recoveryStrategyManager,
+        errorReporter
+      );
+      safeDebug('Injected error handlers into MonitoringCoordinator (deferred injection).');
+    }
+  } catch (error) {
+    // If we can't resolve the services, it's okay - they may not be needed
+    safeDebug(`Could not inject error handlers: ${error.message}`);
+  }
 
   safeDebug('Memory Monitoring Registration: completed.');
 }

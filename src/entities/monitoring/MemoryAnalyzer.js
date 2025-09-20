@@ -4,8 +4,7 @@
  */
 
 import { BaseService } from '../../utils/serviceBase.js';
-import { validateDependency } from '../../utils/dependencyUtils.js';
-import { assertPresent } from '../../utils/validationUtils.js';
+import { validateDependency, assertPresent } from '../../utils/dependencyUtils.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 

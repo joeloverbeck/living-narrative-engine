@@ -22,7 +22,7 @@ describe('CentralErrorHandler - Memory Tests', () => {
     testBed = createTestBed();
 
     mockLogger = testBed.createMockLogger();
-    mockEventBus = testBed.createMock('MockEventBus', ['dispatch', 'on']);
+    mockEventBus = testBed.createMock('MockEventBus', ['dispatch', 'subscribe']);
 
     // Create real MonitoringCoordinator instance
     monitoringCoordinator = new MonitoringCoordinator({

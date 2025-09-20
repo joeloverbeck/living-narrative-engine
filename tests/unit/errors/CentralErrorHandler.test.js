@@ -15,7 +15,7 @@ describe('CentralErrorHandler - Core Error Processing', () => {
     testBed = createTestBed();
 
     mockLogger = testBed.createMockLogger();
-    mockEventBus = testBed.createMock('MockEventBus', ['dispatch', 'on']);
+    mockEventBus = testBed.createMock('MockEventBus', ['dispatch', 'subscribe']);
     mockMonitoringCoordinator = testBed.createMock('MockMonitoringCoordinator', [
       'executeMonitored', 'getStats', 'getPerformanceMonitor'
     ]);
@@ -68,8 +68,8 @@ describe('CentralErrorHandler - Core Error Processing', () => {
     });
 
     it('should register event listeners on initialization', () => {
-      expect(mockEventBus.on).toHaveBeenCalledWith('CLOTHING_ERROR_OCCURRED', expect.any(Function));
-      expect(mockEventBus.on).toHaveBeenCalledWith('ANATOMY_ERROR_OCCURRED', expect.any(Function));
+      expect(mockEventBus.subscribe).toHaveBeenCalledWith('CLOTHING_ERROR_OCCURRED', expect.any(Function));
+      expect(mockEventBus.subscribe).toHaveBeenCalledWith('ANATOMY_ERROR_OCCURRED', expect.any(Function));
     });
   });
 
@@ -251,7 +251,7 @@ describe('CentralErrorHandler - Core Error Processing', () => {
       const clothingError = { payload: { error: new Error('Clothing error'), context: { domain: 'clothing' } } };
 
       // Simulate event bus callback
-      const clothingCallback = mockEventBus.on.mock.calls.find(call => call[0] === 'CLOTHING_ERROR_OCCURRED')[1];
+      const clothingCallback = mockEventBus.subscribe.mock.calls.find(call => call[0] === 'CLOTHING_ERROR_OCCURRED')[1];
 
       // Mock the handle method to avoid actual processing during event handling
       const handleSpy = jest.spyOn(centralErrorHandler, 'handle').mockResolvedValue(null);
