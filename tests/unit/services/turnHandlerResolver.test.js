@@ -332,4 +332,105 @@ describe('TurnHandlerResolver', () => {
       );
     });
   });
+
+  describe('Error handling during resolution', () => {
+    test('should log predicate errors and continue evaluating remaining rules', async () => {
+      const actor = createTestEntity('predicate-error', 'dummy-def');
+      const predicateError = new Error('predicate failure');
+      const throwingRule = {
+        name: 'ThrowingRule',
+        predicate: () => {
+          throw predicateError;
+        },
+        factory: jest.fn(),
+      };
+      const fallbackRule = {
+        name: 'FallbackRule',
+        predicate: () => true,
+        factory: mockCreateAIHandler,
+      };
+
+      resolver = new TurnHandlerResolver({
+        logger: mockLogger,
+        handlerRules: [throwingRule, fallbackRule],
+      });
+
+      const handler = await resolver.resolveHandler(actor);
+
+      expect(handler).toBe(mockAIHandlerInstance);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        "Error executing predicate for rule 'ThrowingRule' on actor predicate-error: predicate failure",
+        predicateError
+      );
+      expect(mockCreateAIHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test('should return null and log an error when factory returns an invalid handler', async () => {
+      const actor = createTestEntity('invalid-handler', 'dummy-def', {
+        [PLAYER_COMPONENT_ID]: {},
+      });
+      const invalidFactory = jest.fn(() => ({}));
+      const fallbackFactory = jest.fn(() => mockAIHandlerInstance);
+
+      resolver = new TurnHandlerResolver({
+        logger: mockLogger,
+        handlerRules: [
+          {
+            name: 'InvalidHandlerRule',
+            predicate: () => true,
+            factory: invalidFactory,
+          },
+          {
+            name: 'FallbackRule',
+            predicate: () => true,
+            factory: fallbackFactory,
+          },
+        ],
+      });
+
+      const handler = await resolver.resolveHandler(actor);
+
+      expect(handler).toBeNull();
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'TurnHandlerResolver: InvalidHandlerRule factory did not return a valid handler for actor invalid-handler.'
+      );
+      expect(fallbackFactory).not.toHaveBeenCalled();
+    });
+
+    test('should return null and log an error when handler factory throws', async () => {
+      const actor = createTestEntity('factory-error', 'dummy-def', {
+        [PLAYER_COMPONENT_ID]: {},
+      });
+      const factoryError = new Error('factory failure');
+      const throwingFactory = jest.fn(() => {
+        throw factoryError;
+      });
+      const fallbackFactory = jest.fn(() => mockAIHandlerInstance);
+
+      resolver = new TurnHandlerResolver({
+        logger: mockLogger,
+        handlerRules: [
+          {
+            name: 'ThrowingFactoryRule',
+            predicate: () => true,
+            factory: throwingFactory,
+          },
+          {
+            name: 'FallbackRule',
+            predicate: () => true,
+            factory: fallbackFactory,
+          },
+        ],
+      });
+
+      const handler = await resolver.resolveHandler(actor);
+
+      expect(handler).toBeNull();
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'TurnHandlerResolver: Error creating ThrowingFactoryRuleHandler for actor factory-error: factory failure',
+        factoryError
+      );
+      expect(fallbackFactory).not.toHaveBeenCalled();
+    });
+  });
 });
