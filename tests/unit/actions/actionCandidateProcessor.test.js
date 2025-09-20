@@ -131,6 +131,99 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       );
     });
 
+    it('wraps processing with trace.withSpan when available', () => {
+      const bed = getBed();
+      const actionDef = {
+        id: 'trace-action',
+        name: 'Trace Action',
+        commandVerb: 'trace',
+        scope: 'ally',
+      };
+      const actorEntity = { id: 'actor-1' };
+      const context = {};
+
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue(
+        ActionResult.success([ActionTargetContext.forEntity('ally-1')])
+      );
+      bed.mocks.actionCommandFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'trace ally-1',
+      });
+
+      const trace = {
+        step: jest.fn(),
+        success: jest.fn(),
+        failure: jest.fn(),
+        info: jest.fn(),
+        withSpan: jest.fn((name, callback, attributes) => {
+          expect(name).toBe('candidate.process');
+          expect(attributes).toEqual({
+            actionId: actionDef.id,
+            actorId: actorEntity.id,
+            scope: actionDef.scope,
+          });
+          return callback();
+        }),
+      };
+
+      const result = bed.service.process(actionDef, actorEntity, context, trace);
+
+      expect(trace.withSpan).toHaveBeenCalledTimes(1);
+      expect(trace.withSpan).toHaveBeenCalledWith(
+        'candidate.process',
+        expect.any(Function),
+        {
+          actionId: actionDef.id,
+          actorId: actorEntity.id,
+          scope: actionDef.scope,
+        }
+      );
+      expect(result.success).toBe(true);
+      expect(result.value.actions).toHaveLength(1);
+      expect(result.value.actions[0]).toMatchObject({
+        command: 'trace ally-1',
+        params: { targetId: 'ally-1' },
+      });
+    });
+
+    it('propagates errors thrown by trace.withSpan after executing callback', () => {
+      const bed = getBed();
+      const actionDef = { id: 'trace-error', scope: 'self' };
+      const actorEntity = { id: 'actor-1' };
+      const context = {};
+      const traceError = new Error('trace failure');
+      const resolutionSpy = jest.fn();
+
+      bed.mocks.targetResolutionService.resolveTargets.mockImplementation(() => {
+        resolutionSpy();
+        return ActionResult.success([]);
+      });
+
+      const trace = {
+        step: jest.fn(),
+        success: jest.fn(),
+        failure: jest.fn(),
+        info: jest.fn(),
+        withSpan: jest.fn((name, callback, attributes) => {
+          expect(name).toBe('candidate.process');
+          expect(attributes).toEqual({
+            actionId: actionDef.id,
+            actorId: actorEntity.id,
+            scope: actionDef.scope,
+          });
+          const result = callback();
+          throw traceError;
+        }),
+      };
+
+      expect(() =>
+        bed.service.process(actionDef, actorEntity, context, trace)
+      ).toThrow(traceError);
+
+      expect(trace.withSpan).toHaveBeenCalledTimes(1);
+      expect(resolutionSpy).toHaveBeenCalledTimes(1);
+    });
+
     it('returns errors for failed prerequisites', () => {
       const bed = getBed();
       const actionDef = {
@@ -176,10 +269,16 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       };
       const actorEntity = { id: 'actor' };
       const context = {};
+      const trace = {
+        step: jest.fn(),
+        failure: jest.fn(),
+        success: jest.fn(),
+        info: jest.fn(),
+      };
 
       bed.mocks.prerequisiteEvaluationService.evaluate.mockReturnValue(false);
 
-      const result = bed.service.process(actionDef, actorEntity, context);
+      const result = bed.service.process(actionDef, actorEntity, context, trace);
 
       expect(result.success).toBe(true);
       expect(result.value).toEqual({
@@ -187,6 +286,10 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
         errors: [],
         cause: 'prerequisites-failed',
       });
+      expect(trace.failure).toHaveBeenCalledWith(
+        "Action 'test' discarded due to failed actor prerequisites.",
+        'ActionCandidateProcessor.process'
+      );
     });
 
     it('processes actions without prerequisites successfully', () => {
