@@ -7,6 +7,10 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import { BodyGraphService } from '../../../src/anatomy/bodyGraphService.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
+import { AnatomyCacheManager } from '../../../src/anatomy/anatomyCacheManager.js';
+import { AnatomyQueryCache } from '../../../src/anatomy/cache/AnatomyQueryCache.js';
+import { AnatomyGraphAlgorithms } from '../../../src/anatomy/anatomyGraphAlgorithms.js';
+import { ANATOMY_CONSTANTS } from '../../../src/anatomy/constants/anatomyConstants.js';
 
 describe('BodyGraphService Integration Tests', () => {
   let testBed;
@@ -22,6 +26,7 @@ describe('BodyGraphService Integration Tests', () => {
   });
 
   afterEach(() => {
+    jest.restoreAllMocks();
     testBed.cleanup();
   });
 
@@ -713,6 +718,203 @@ describe('BodyGraphService Integration Tests', () => {
       // Build cache second time - should not rebuild
       await bodyGraphService.buildAdjacencyCache(actor.id);
       expect(bodyGraphService.hasCache(actor.id)).toBe(true);
+    });
+  });
+
+  describe('detachPart Integration', () => {
+    let actor;
+    beforeEach(async () => {
+      actor = await testBed.createActor({
+        recipeId: 'anatomy:human_female',
+      });
+      const anatomyService = testBed.container.get('AnatomyGenerationService');
+      await anatomyService.generateAnatomy(actor.id);
+      await bodyGraphService.buildAdjacencyCache(actor.id);
+    });
+
+    it('should detach a part with cascade, invalidate caches, and emit an event payload', async () => {
+      const bodyComponent = entityManager.getComponentData(
+        actor.id,
+        'anatomy:body'
+      );
+      const allParts = bodyGraphService.getAllParts(
+        bodyComponent.body,
+        actor.id
+      );
+      const partWithChildren = allParts.find((partId) => {
+        const parentId = bodyGraphService.getParent(partId);
+        if (parentId === null) {
+          return false;
+        }
+        const jointData = entityManager.getComponentData(
+          partId,
+          'anatomy:joint'
+        );
+        if (!jointData) {
+          return false;
+        }
+        return bodyGraphService.getChildren(partId).length > 0;
+      });
+
+      expect(partWithChildren).toBeDefined();
+
+      const joint = entityManager.getComponentData(
+        partWithChildren,
+        'anatomy:joint'
+      );
+      expect(joint).toBeTruthy();
+
+      const expectedRoot = bodyGraphService.getAnatomyRoot(joint.parentId);
+      expect(expectedRoot).toBeTruthy();
+
+      const cacheInvalidateSpy = jest.spyOn(
+        AnatomyCacheManager.prototype,
+        'invalidateCacheForRoot'
+      );
+      const queryInvalidateSpy = jest.spyOn(
+        AnatomyQueryCache.prototype,
+        'invalidateRoot'
+      );
+      const subgraphSpy = jest.spyOn(
+        AnatomyGraphAlgorithms,
+        'getSubgraph'
+      );
+
+      const result = await bodyGraphService.detachPart(partWithChildren, {
+        cascade: true,
+        reason: 'integration-test',
+      });
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          parentId: joint.parentId,
+          socketId: joint.socketId,
+        })
+      );
+      expect(result.detached).toContain(partWithChildren);
+      expect(result.detached.length).toBeGreaterThan(0);
+      expect(subgraphSpy).toHaveBeenCalledWith(
+        partWithChildren,
+        expect.any(AnatomyCacheManager)
+      );
+      expect(cacheInvalidateSpy).toHaveBeenCalledWith(expectedRoot);
+      expect(queryInvalidateSpy).toHaveBeenCalledWith(expectedRoot);
+      expect(testBed.eventDispatcher.dispatch).toHaveBeenCalledWith(
+        ANATOMY_CONSTANTS.LIMB_DETACHED_EVENT_ID,
+        expect.objectContaining({
+          detachedEntityId: partWithChildren,
+          parentEntityId: joint.parentId,
+          socketId: joint.socketId,
+          detachedCount: result.detached.length,
+          reason: 'integration-test',
+          timestamp: expect.any(Number),
+        })
+      );
+      expect(
+        entityManager.getComponentData(partWithChildren, 'anatomy:joint')
+      ).toBeFalsy();
+    });
+
+    it('should detach only the requested part when cascade is disabled', async () => {
+      const bodyComponent = entityManager.getComponentData(
+        actor.id,
+        'anatomy:body'
+      );
+      const allParts = bodyGraphService.getAllParts(
+        bodyComponent.body,
+        actor.id
+      );
+      const leafPartId = allParts.find((partId) => {
+        const parentId = bodyGraphService.getParent(partId);
+        if (parentId === null) {
+          return false;
+        }
+        const jointData = entityManager.getComponentData(
+          partId,
+          'anatomy:joint'
+        );
+        if (!jointData) {
+          return false;
+        }
+        return bodyGraphService.getChildren(partId).length === 0;
+      });
+
+      expect(leafPartId).toBeDefined();
+
+      const joint = entityManager.getComponentData(leafPartId, 'anatomy:joint');
+      expect(joint).toBeTruthy();
+
+      const expectedRoot = bodyGraphService.getAnatomyRoot(joint.parentId);
+      expect(expectedRoot).toBeTruthy();
+
+      const cacheInvalidateSpy = jest.spyOn(
+        AnatomyCacheManager.prototype,
+        'invalidateCacheForRoot'
+      );
+      const queryInvalidateSpy = jest.spyOn(
+        AnatomyQueryCache.prototype,
+        'invalidateRoot'
+      );
+      const subgraphSpy = jest.spyOn(
+        AnatomyGraphAlgorithms,
+        'getSubgraph'
+      );
+
+      const result = await bodyGraphService.detachPart(leafPartId, {
+        cascade: false,
+      });
+
+      expect(subgraphSpy).not.toHaveBeenCalled();
+      expect(result).toEqual(
+        expect.objectContaining({
+          detached: [leafPartId],
+          parentId: joint.parentId,
+          socketId: joint.socketId,
+        })
+      );
+      expect(cacheInvalidateSpy).toHaveBeenCalledWith(expectedRoot);
+      expect(queryInvalidateSpy).toHaveBeenCalledWith(expectedRoot);
+      expect(testBed.eventDispatcher.dispatch).toHaveBeenCalledWith(
+        ANATOMY_CONSTANTS.LIMB_DETACHED_EVENT_ID,
+        expect.objectContaining({
+          detachedEntityId: leafPartId,
+          parentEntityId: joint.parentId,
+          socketId: joint.socketId,
+          detachedCount: 1,
+          reason: 'manual',
+          timestamp: expect.any(Number),
+        })
+      );
+      expect(entityManager.getComponentData(leafPartId, 'anatomy:joint')).toBeFalsy();
+    });
+
+    it('should throw an InvalidArgumentError when the joint component is missing', async () => {
+      const bodyComponent = entityManager.getComponentData(
+        actor.id,
+        'anatomy:body'
+      );
+      const allParts = bodyGraphService.getAllParts(
+        bodyComponent.body,
+        actor.id
+      );
+      const partWithoutJoint = allParts.find((partId) => {
+        const jointData = entityManager.getComponentData(
+          partId,
+          'anatomy:joint'
+        );
+        return !jointData;
+      });
+
+      expect(partWithoutJoint).toBeDefined();
+
+      const dispatchCallCount = testBed.eventDispatcher.dispatch.mock.calls.length;
+
+      await expect(bodyGraphService.detachPart(partWithoutJoint)).rejects.toThrow(
+        InvalidArgumentError
+      );
+      expect(testBed.eventDispatcher.dispatch.mock.calls.length).toBe(
+        dispatchCallCount
+      );
     });
   });
 
