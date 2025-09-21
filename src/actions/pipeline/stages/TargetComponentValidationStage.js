@@ -6,6 +6,12 @@
 import { PipelineStage } from '../PipelineStage.js';
 import { PipelineResult } from '../PipelineResult.js';
 import { validateDependency } from '../../../utils/dependencyUtils.js';
+import {
+  isTargetValidationEnabled,
+  shouldSkipValidation,
+  targetValidationConfig,
+  getValidationStrictness
+} from '../../../config/actionPipelineConfig.js';
 
 /** @typedef {import('../../validation/TargetComponentValidator.js').TargetComponentValidator} ITargetComponentValidator */
 /** @typedef {import('../../../logging/consoleLogger.js').default} ILogger */
@@ -67,11 +73,31 @@ export class TargetComponentValidationStage extends PipelineStage {
     const source = `${this.name}Stage.execute`;
     const startPerformanceTime = performance.now();
 
+    // Check if validation is enabled via configuration
+    if (!isTargetValidationEnabled()) {
+      const config = targetValidationConfig() || {};
+      if (config.logDetails) {
+        this.#logger.debug('Target component validation is disabled via configuration');
+      }
+
+      trace?.step(
+        `Target component validation skipped (disabled in config)`,
+        source
+      );
+
+      return PipelineResult.success({
+        data: { candidateActions },
+        continueProcessing: candidateActions.length > 0
+      });
+    }
+
     // Check if we have action-aware tracing
     const isActionAwareTrace = this.#isActionAwareTrace(trace);
+    const config = targetValidationConfig() || {};
+    const strictness = getValidationStrictness();
 
     trace?.step(
-      `Validating target components for ${candidateActions.length} actions`,
+      `Validating target components for ${candidateActions.length} actions (strictness: ${strictness})`,
       source
     );
 
@@ -80,16 +106,19 @@ export class TargetComponentValidationStage extends PipelineStage {
 
       const duration = performance.now() - startPerformanceTime;
 
-      // Log performance metrics if slow
-      if (duration > 5) {
+      // Log performance metrics if slow (based on config threshold)
+      const performanceThreshold = config.performanceThreshold || 5;
+      if (duration > performanceThreshold) {
         this.#logger.debug(
           `Target component validation took ${duration.toFixed(2)}ms for ${candidateActions.length} actions`
         );
       }
 
-      this.#logger.debug(
-        `Validated ${candidateActions.length} actions, ${validatedActions.length} passed validation`
-      );
+      if (config.logDetails) {
+        this.#logger.debug(
+          `Validated ${candidateActions.length} actions, ${validatedActions.length} passed validation (strictness: ${strictness})`
+        );
+      }
 
       // Add trace event for completion
       trace?.success(
@@ -141,18 +170,44 @@ export class TargetComponentValidationStage extends PipelineStage {
    */
   async #validateActions(candidateActions, context, isActionAwareTrace, trace) {
     const validatedActions = [];
+    const config = targetValidationConfig() || {};
+    const strictness = getValidationStrictness();
 
     for (const actionDef of candidateActions) {
+      // Check if validation should be skipped for this specific action
+      if (shouldSkipValidation(actionDef)) {
+        if (config.logDetails) {
+          this.#logger.debug(
+            `Skipping validation for action '${actionDef.id}' based on configuration`
+          );
+        }
+        validatedActions.push(actionDef);
+        continue;
+      }
+
       const startTime = performance.now();
 
       // Get target entities from the action (may already be resolved)
       const targetEntities = this.#extractTargetEntities(actionDef, context);
 
-      // Validate target components
-      const validation = this.#targetComponentValidator.validateTargetComponents(
+      // Validate target components (apply strictness level)
+      let validation = this.#targetComponentValidator.validateTargetComponents(
         actionDef,
         targetEntities
       );
+
+      // Apply lenient mode if configured
+      if (strictness === 'lenient' && !validation.valid) {
+        // In lenient mode, allow actions with certain types of failures
+        if (validation.reason && validation.reason.includes('non-critical')) {
+          validation = { valid: true, reason: 'Allowed in lenient mode' };
+          if (config.logDetails) {
+            this.#logger.debug(
+              `Action '${actionDef.id}' allowed in lenient mode despite: ${validation.reason}`
+            );
+          }
+        }
+      }
 
       const validationTime = performance.now() - startTime;
 
@@ -193,10 +248,10 @@ export class TargetComponentValidationStage extends PipelineStage {
    *
    * @private
    * @param {ActionDefinition} actionDef - Action definition
-   * @param {object} context - Pipeline context
+   * @param {object} _context - Pipeline context (unused)
    * @returns {object} Target entities by role
    */
-  #extractTargetEntities(actionDef, context) {
+  #extractTargetEntities(actionDef, _context) {
     // Check if action has already resolved targets
     if (actionDef.resolvedTargets) {
       return actionDef.resolvedTargets;

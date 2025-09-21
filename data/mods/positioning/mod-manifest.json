@@ -48,6 +48,7 @@
       "entity-in-facing-away.condition.json",
       "entity-not-facing-away-from-actor.condition.json",
       "entity-not-in-facing-away.condition.json",
+      "event-is-action-bend-over.condition.json",
       "event-is-action-get-close.condition.json",
       "event-is-action-get-up-from-furniture.condition.json",
       "event-is-action-kneel-before.condition.json",
@@ -55,11 +56,13 @@
       "event-is-action-sit-down.condition.json",
       "event-is-action-stand-up.condition.json",
       "event-is-action-step-back.condition.json",
+      "event-is-action-straighten-up.condition.json",
       "event-is-action-turn-around-to-face.condition.json",
       "event-is-action-turn-around.condition.json",
       "event-is-action-turn-your-back.condition.json"
     ],
     "rules": [
+      "bend_over.rule.json",
       "get_close.rule.json",
       "handle_get_up_from_furniture.rule.json",
       "handle_sit_down.rule.json",
@@ -67,6 +70,7 @@
       "place_yourself_behind.rule.json",
       "stand_up.rule.json",
       "step_back.rule.json",
+      "straighten_up.rule.json",
       "turn_around.rule.json",
       "turn_around_to_face.rule.json",
       "turn_your_back.rule.json"
