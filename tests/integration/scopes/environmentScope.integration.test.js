@@ -36,7 +36,7 @@ import {
 } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
-import { createMultiTargetResolutionStage } from '../../common/actions/multiTargetStageTestUtilities.js';
+import { createMultiTargetResolutionStage, createActionPipelineOrchestrator } from '../../common/actions/multiTargetStageTestUtilities.js';
 
 // Import actions
 import followAction from '../../../data/mods/companionship/actions/follow.action.json';
@@ -177,7 +177,13 @@ describe('Scope Integration Tests', () => {
     });
 
     // Create the ActionPipelineOrchestrator
-    const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+    
+    // Create mock TargetComponentValidator
+    const mockTargetComponentValidator = {
+      validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
+      validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
+    };
+const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex: {
         getCandidateActions: jest
           .fn()
@@ -199,6 +205,7 @@ describe('Scope Integration Tests', () => {
         logger,
       }),
       targetContextBuilder: createMockTargetContextBuilder(),
+      targetComponentValidator: mockTargetComponentValidator,
       multiTargetResolutionStage: createMultiTargetResolutionStage({
         entityManager,
         logger,

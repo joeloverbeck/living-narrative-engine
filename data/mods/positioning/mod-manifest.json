@@ -27,6 +27,7 @@
       "sitting_on.component.json"
     ],
     "actions": [
+      "bend_over.action.json",
       "get_close.action.json",
       "get_up_from_furniture.action.json",
       "kneel_before.action.json",
@@ -34,6 +35,7 @@
       "sit_down.action.json",
       "stand_up.action.json",
       "step_back.action.json",
+      "straighten_up.action.json",
       "turn_around.action.json",
       "turn_around_to_face.action.json",
       "turn_your_back.action.json"

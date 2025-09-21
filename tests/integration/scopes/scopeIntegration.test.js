@@ -38,7 +38,7 @@ import {
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
-import { createMultiTargetResolutionStage } from '../../common/actions/multiTargetStageTestUtilities.js';
+import { createMultiTargetResolutionStage, createActionPipelineOrchestrator } from '../../common/actions/multiTargetStageTestUtilities.js';
 import { ActionIndex } from '../../../src/actions/actionIndex.js';
 
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
@@ -183,8 +183,14 @@ describe('Scope Integration Tests', () => {
       actionErrorContextBuilder: createMockActionErrorContextBuilder(),
     });
 
-    // Create the ActionPipelineOrchestrator
-    const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+    // Create the ActionPipelineOrchestrator using the utility factory
+    
+    // Create mock TargetComponentValidator
+    const mockTargetComponentValidator = {
+      validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
+      validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
+    };
+const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex: currentActionIndex,
       prerequisiteService: prerequisiteEvaluationService,
       targetService: targetResolutionService,
@@ -221,6 +227,7 @@ describe('Scope Integration Tests', () => {
         }),
         targetResolver: targetResolutionService,
       }),
+      targetComponentValidator: mockTargetComponentValidator,
     });
 
     return new ActionDiscoveryService({

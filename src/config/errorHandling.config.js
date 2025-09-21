@@ -1,32 +1,22 @@
-# ANACLOENH-004-09: Create Error Handling Configuration
+/**
+ * @file Comprehensive error handling configuration for the Living Narrative Engine
+ * @description Centralizes all error handling settings including retry policies, circuit breakers,
+ *              reporting endpoints, and fallback values. Supports environment-specific overrides.
+ * @see ../utils/environmentUtils.js - Environment detection utilities
+ * @see ../errors/CentralErrorHandler.js - Main error handler that uses this configuration
+ * @see ../errors/RecoveryStrategyManager.js - Recovery strategy manager that uses retry config
+ * @see ../errors/ErrorReporter.js - Error reporter that uses reporting config
+ */
 
-## Overview
-Create comprehensive configuration for the error handling framework, including retry policies, circuit breaker settings, reporting endpoints, and fallback values.
+import { getEnvironmentMode } from '../utils/environmentUtils.js';
 
-## Parent Ticket
-- ANACLOENH-004: Establish Error Handling Framework
-
-## Depends On
-- ANACLOENH-004-01 through ANACLOENH-004-08 (All previous implementation tickets)
-
-## Current State
-- No centralized error handling configuration
-- Settings hardcoded in various places
-- No environment-specific configuration
-
-## Objectives
-1. Create centralized configuration file
-2. Support environment-specific settings
-3. Define default retry and circuit breaker policies
-4. Configure error reporting endpoints
-5. Set domain-specific fallback values
-
-## Technical Requirements
-
-### Main Configuration File
-```javascript
-// src/config/errorHandling.config.js
-import { ErrorSeverity } from '../errors/BaseError.js';
+// Define error severity constants
+export const ErrorSeverity = {
+  CRITICAL: 'critical',
+  ERROR: 'error',
+  WARNING: 'warning',
+  INFO: 'info'
+};
 
 /**
  * Comprehensive error handling configuration
@@ -35,9 +25,9 @@ import { ErrorSeverity } from '../errors/BaseError.js';
 export const errorHandlingConfig = {
   // Global settings
   global: {
-    enabled: process.env.ERROR_HANDLING_ENABLED !== 'false',
-    logLevel: process.env.ERROR_LOG_LEVEL || 'error',
-    includeStackTrace: process.env.NODE_ENV !== 'production',
+    enabled: true, // Can be overridden per environment
+    logLevel: 'error', // Default log level
+    includeStackTrace: true, // Will be overridden per environment
     correlationIdHeader: 'X-Correlation-ID',
     maxContextSize: 1000, // Max size of error context object
   },
@@ -57,11 +47,11 @@ export const errorHandlingConfig = {
     },
     // Domain-specific overrides
     overrides: {
-      'ClothingServiceError': {
+      'ClothingError': {
         maxAttempts: 3,
         backoff: { type: 'exponential', initialDelay: 200 },
       },
-      'AnatomyGenerationError': {
+      'AnatomyVisualizationError': {
         maxAttempts: 2,
         backoff: { type: 'exponential', initialDelay: 500 },
       },
@@ -120,16 +110,16 @@ export const errorHandlingConfig = {
 
   // Error reporting configuration
   reporting: {
-    enabled: process.env.ERROR_REPORTING_ENABLED === 'true',
-    endpoint: process.env.ERROR_REPORTING_ENDPOINT,
-    apiKey: process.env.ERROR_REPORTING_API_KEY,
-    batchSize: parseInt(process.env.ERROR_BATCH_SIZE || '50'),
-    flushInterval: parseInt(process.env.ERROR_FLUSH_INTERVAL || '30000'),
-    includeStackTrace: process.env.NODE_ENV !== 'production',
+    enabled: false, // Will be enabled in production environment
+    endpoint: null, // Set via environment configuration
+    apiKey: null, // Set via environment configuration
+    batchSize: 50,
+    flushInterval: 30000, // 30 seconds
+    includeStackTrace: true, // Will be overridden per environment
     // Sampling configuration for high-volume scenarios
     sampling: {
-      enabled: process.env.ERROR_SAMPLING_ENABLED === 'true',
-      rate: parseFloat(process.env.ERROR_SAMPLING_RATE || '1.0'), // 1.0 = 100%
+      enabled: false, // Can be enabled per environment
+      rate: 1.0, // 1.0 = 100%
       // Always report these error types regardless of sampling
       alwaysReport: [
         'critical',
@@ -244,11 +234,18 @@ export const errorHandlingConfig = {
       global: { enabled: true },
       retry: { default: { maxAttempts: 1 } },
       circuitBreaker: { default: { failureThreshold: 2 } },
-      reporting: { enabled: false },
+      reporting: { enabled: true },
     },
     production: {
       global: { includeStackTrace: false },
-      reporting: { enabled: true },
+      reporting: {
+        enabled: true,
+        sampling: {
+          enabled: true,
+          rate: 0.1,
+          alwaysReport: ['critical'],
+        },
+      },
       fallback: { useCache: true },
     },
   },
@@ -259,7 +256,8 @@ export const errorHandlingConfig = {
  * @returns {object} Merged configuration
  */
 export function getErrorConfig() {
-  const env = process.env.NODE_ENV || 'development';
+  // Use getEnvironmentMode from environmentUtils
+  const env = getEnvironmentMode();
   const envConfig = errorHandlingConfig.environments[env] || {};
 
   // Deep merge environment config with base config
@@ -315,8 +313,11 @@ export function isRetriable(errorType) {
 }
 
 /**
- * Deep merge utility
+ * Deep merge utility for configuration objects
  * @private
+ * @param {object} target - Target object
+ * @param {object} source - Source object to merge
+ * @returns {object} Merged object
  */
 function deepMerge(target, source) {
   const result = { ...target };
@@ -333,98 +334,3 @@ function deepMerge(target, source) {
 }
 
 export default errorHandlingConfig;
-```
-
-### Environment Variables Template
-```bash
-# .env.example
-# Error Handling Configuration
-ERROR_HANDLING_ENABLED=true
-ERROR_LOG_LEVEL=error
-ERROR_REPORTING_ENABLED=false
-ERROR_REPORTING_ENDPOINT=https://errors.example.com/api/v1/errors
-ERROR_REPORTING_API_KEY=your-api-key-here
-ERROR_BATCH_SIZE=50
-ERROR_FLUSH_INTERVAL=30000
-ERROR_SAMPLING_ENABLED=false
-ERROR_SAMPLING_RATE=1.0
-```
-
-## Implementation Steps
-
-1. **Create configuration file**
-   - Implement main config structure
-   - Add helper functions
-   - Add environment merging
-
-2. **Create environment template**
-   - Document all environment variables
-   - Provide example values
-
-3. **Update services to use config**
-   - CentralErrorHandler
-   - RecoveryStrategyManager
-   - ErrorReporter
-   - MonitoringCoordinator
-
-4. **Add configuration validation**
-   - Validate on startup
-   - Log configuration in development
-
-## File Changes
-
-### New Files
-- `src/config/errorHandling.config.js` - Main configuration
-- `.env.example` - Environment variables template (update existing)
-
-### Modified Files
-- All error handling services to use configuration
-
-## Dependencies
-- **Prerequisites**: All previous implementation tickets
-- **External**: Environment variables
-
-## Acceptance Criteria
-1. ✅ Configuration file created with all settings
-2. ✅ Environment-specific overrides work
-3. ✅ Helper functions return correct values
-4. ✅ Services use configuration
-5. ✅ Configuration validates on startup
-6. ✅ Documentation complete
-
-## Testing Requirements
-
-### Unit Tests
-Create `tests/unit/config/errorHandling.config.test.js`:
-- Test configuration loading
-- Test environment merging
-- Test helper functions
-- Test validation
-
-### Integration Tests
-- Test services with configuration
-- Test environment overrides
-- Test runtime configuration changes
-
-## Estimated Effort
-- **Development**: 2 hours
-- **Testing**: 1 hour
-- **Total**: 3 hours
-
-## Risk Assessment
-- **Low Risk**: Configuration only
-- **Consideration**: Sensitive data in config
-- **Mitigation**: Use environment variables for secrets
-
-## Success Metrics
-- All services use configuration
-- No hardcoded values remain
-- Configuration changes without code changes
-- Environment-specific behavior works
-
-## Notes
-- Keep configuration well-documented
-- Provide sensible defaults
-- Make configuration testable
-- Consider adding configuration validation schema
-- Plan for configuration hot-reloading in future

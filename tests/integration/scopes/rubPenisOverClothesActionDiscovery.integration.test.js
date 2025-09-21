@@ -258,6 +258,13 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
         unsubscribe: jest.fn(),
       },
     });
+    
+    // Create mock TargetComponentValidator
+    const mockTargetComponentValidator = {
+      validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
+      validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
+    };
+
     const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex: {
         getCandidateActions: jest
@@ -287,6 +294,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
         logger,
         jsonLogicEval,
       }),
+      targetComponentValidator: mockTargetComponentValidator,
     });
 
     actionDiscoveryService = new ActionDiscoveryService({

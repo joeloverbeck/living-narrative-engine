@@ -210,6 +210,12 @@ describe('Services Monitoring Integration', () => {
     let entity;
 
     beforeEach(async () => {
+      // Reset circuit breaker to ensure clean state for each test
+      const circuitBreaker = monitoringCoordinator.getCircuitBreaker('addComponent');
+      if (circuitBreaker) {
+        circuitBreaker.close();
+      }
+
       // Create an entity to work with
       const entityId = `test-entity-component-${Date.now()}-${Math.random()}`;
       entity = await services.entityLifecycleManager.createEntityInstance(
@@ -274,7 +280,7 @@ describe('Services Monitoring Integration', () => {
 
       // Try to add component to non-existent entity multiple times sequentially
       const results = [];
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 3; i++) {
         try {
           await componentMutationService.addComponent(
             'non-existent-entity',
@@ -287,20 +293,23 @@ describe('Services Monitoring Integration', () => {
         }
       }
 
-      // First 3 should be entity errors, 4th should be circuit breaker error
-      expect(results.length).toBe(4);
+      // The circuit breaker should open after 2 failures (test environment threshold)
+      expect(results.length).toBe(3);
+
+      // First 2 errors should be the actual entity errors
       expect(results[0].message).toContain('Entity instance not found');
       expect(results[1].message).toContain('Entity instance not found');
-      expect(results[2].message).toContain('Entity instance not found');
-      expect(results[3].message).toContain(
+
+      // The third error should be from the circuit breaker being open
+      expect(results[2].message).toContain(
         "Circuit breaker 'addComponent' is OPEN"
       );
 
       // Verify circuit breaker state after failures
       const stats = circuitBreaker.getStats();
       expect(stats.state).toBe('OPEN');
-      expect(stats.totalFailures).toBe(3); // Should have 3 failures (threshold)
-      expect(stats.totalRequests).toBe(4); // Should have 4 requests total
+      expect(stats.totalFailures).toBe(2); // Test environment uses threshold of 2 (from errorHandling.config.js)
+      expect(stats.totalRequests).toBe(3); // Should have 3 requests total (2 failures + 1 rejected when open)
     });
   });
 

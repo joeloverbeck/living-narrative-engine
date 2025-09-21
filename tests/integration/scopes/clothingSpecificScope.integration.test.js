@@ -243,7 +243,13 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     );
 
     // Create the ActionPipelineOrchestrator
-    const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+    
+    // Create mock TargetComponentValidator
+    const mockTargetComponentValidator = {
+      validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
+      validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
+    };
+const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex: {
         getCandidateActions: jest.fn().mockImplementation((actor) => {
           console.log('getCandidateActions called with actor:', actor?.id);
@@ -316,6 +322,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
         return unifiedScopeResolver;
       })(),
       targetContextBuilder: createMockTargetContextBuilder(entityManager),
+      targetComponentValidator: mockTargetComponentValidator,
       multiTargetResolutionStage: (() => {
         // Create a custom mock that properly handles multi-target actions
         // This mock simulates the multi-target resolution based on entity state

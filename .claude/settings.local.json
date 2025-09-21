@@ -185,7 +185,9 @@
       "mcp__morphllm-fast-apply__list_directory",
       "mcp__morphllm-fast-apply__search_files",
       "Bash(xargs:*)",
-      "Bash(npm run validate:mod:*)"
+      "Bash(npm run validate:mod:*)",
+      "mcp__morphllm-fast-apply__tiny_edit_file",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/positioning/ --no-coverage --silent)"
     ],
     "deny": [],
     "ask": []

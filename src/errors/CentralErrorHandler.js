@@ -3,10 +3,16 @@
  * @description Processes all service errors, classifies them, and coordinates with the monitoring system
  * @see baseError.js - Foundation error class used for classification
  * @see MonitoringCoordinator.js - Monitoring system integration
+ * @see ../config/errorHandling.config.js - Centralized error handling configuration
  */
 
 import { validateDependency } from '../utils/dependencyUtils.js';
 import BaseError from './baseError.js'; // Note: lowercase 'b' in baseError.js
+import {
+  getErrorConfig,
+  getFallbackValue,
+  ErrorSeverity
+} from '../config/errorHandling.config.js';
 
 /**
  * Central error handler that processes all service errors, classifies them,
@@ -21,6 +27,8 @@ class CentralErrorHandler {
   #recoveryStrategies;
   #errorTransforms;
   #metrics;
+  #maxErrorHistory;
+  #maxContextSize;
 
   constructor({ logger, eventBus, monitoringCoordinator }) {
     validateDependency(logger, 'ILogger', logger, {
@@ -44,6 +52,11 @@ class CentralErrorHandler {
       failedRecoveries: 0,
       errorsByType: new Map()
     };
+
+    // Load configuration
+    const config = getErrorConfig();
+    this.#maxErrorHistory = config.performance.maxErrorHistory;
+    this.#maxContextSize = config.global.maxContextSize;
 
     this.#registerEventListeners();
   }
@@ -110,20 +123,32 @@ class CentralErrorHandler {
   }
 
   // Get fallback value for operation
-  getFallbackValue(operation, _errorType) {
-    const fallbacks = {
-      'fetch': null,
-      'parse': {},
-      'validate': false,
-      'generate': '',
-      'calculate': 0
-    };
-    return fallbacks[operation] ?? null;
+  getFallbackValue(operation, errorType) {
+    // Use configuration-based fallbacks
+    // Try to determine domain from error type if possible
+    let domain = null;
+    if (errorType?.includes('Clothing')) domain = 'clothing';
+    else if (errorType?.includes('Anatomy')) domain = 'anatomy';
+    else if (errorType?.includes('LLM')) domain = 'llm';
+
+    return getFallbackValue(domain, operation);
   }
 
   // Private methods
   #classifyError(error, context) {
     const isBaseError = error instanceof BaseError;
+    const config = getErrorConfig();
+
+    // Truncate context if needed
+    let truncatedContext = { ...context, ...(isBaseError ? error.context : {}) };
+    const contextString = JSON.stringify(truncatedContext);
+    if (contextString.length > this.#maxContextSize) {
+      truncatedContext = {
+        ...truncatedContext,
+        _truncated: true,
+        _originalSize: contextString.length
+      };
+    }
 
     return {
       id: error.correlationId || this.#generateErrorId(),
@@ -133,10 +158,9 @@ class CentralErrorHandler {
       severity: isBaseError ? error.severity : 'error',
       recoverable: isBaseError ? error.recoverable : false,
       context: {
-        ...context,
-        ...(isBaseError ? error.context : {}),
+        ...truncatedContext,
         timestamp: Date.now(),
-        stack: error.stack
+        stack: config.global.includeStackTrace ? error.stack : undefined
       },
       originalError: error
     };
@@ -248,8 +272,8 @@ class CentralErrorHandler {
       registeredAt: Date.now()
     });
 
-    // Clean old entries (keep last 1000)
-    if (this.#errorRegistry.size > 1000) {
+    // Clean old entries based on configuration
+    if (this.#errorRegistry.size > this.#maxErrorHistory) {
       const firstKey = this.#errorRegistry.keys().next().value;
       this.#errorRegistry.delete(firstKey);
     }

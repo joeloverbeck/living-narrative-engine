@@ -132,6 +132,12 @@ describe('Turn Around Action Discovery', () => {
 
     const actionCommandFormatter = new ActionCommandFormatter({ logger });
 
+    // Create mock TargetComponentValidator
+    const mockTargetComponentValidator = {
+      validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
+      validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
+    };
+
     const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex,
       prerequisiteService: prereqService,
@@ -148,6 +154,7 @@ describe('Turn Around Action Discovery', () => {
         logger,
       }),
       targetContextBuilder: createMockTargetContextBuilder(),
+      targetComponentValidator: mockTargetComponentValidator,
       multiTargetResolutionStage: createMultiTargetResolutionStage({
         entityManager,
         logger,
@@ -278,6 +285,11 @@ describe('Turn Around Action Discovery', () => {
         targetResolver: targetResolutionService,
       });
 
+      const mockTargetComponentValidator = {
+        validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
+        validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
+      };
+
       const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         actionIndex,
         prerequisiteService: {
@@ -296,6 +308,7 @@ describe('Turn Around Action Discovery', () => {
         errorBuilder: createMockActionErrorContextBuilder(),
         unifiedScopeResolver,
         targetContextBuilder: createMockTargetContextBuilder(),
+        targetComponentValidator: mockTargetComponentValidator,
         multiTargetResolutionStage: multiTargetStage,
       });
 
@@ -401,6 +414,11 @@ describe('Turn Around Action Discovery', () => {
         targetResolver: targetResolutionService,
       });
 
+      const mockTargetComponentValidator = {
+        validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
+        validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
+      };
+
       const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         actionIndex,
         prerequisiteService: {
@@ -419,6 +437,7 @@ describe('Turn Around Action Discovery', () => {
         errorBuilder: createMockActionErrorContextBuilder(),
         unifiedScopeResolver,
         targetContextBuilder: createMockTargetContextBuilder(),
+        targetComponentValidator: mockTargetComponentValidator,
         multiTargetResolutionStage: multiTargetStage,
       });
 
@@ -488,6 +507,11 @@ describe('Turn Around Action Discovery', () => {
         targetResolver: targetResolutionService,
       });
 
+      const mockTargetComponentValidator = {
+        validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
+        validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
+      };
+
       const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         actionIndex,
         prerequisiteService: {
@@ -506,6 +530,7 @@ describe('Turn Around Action Discovery', () => {
         errorBuilder: createMockActionErrorContextBuilder(),
         unifiedScopeResolver,
         targetContextBuilder: createMockTargetContextBuilder(),
+        targetComponentValidator: mockTargetComponentValidator,
         multiTargetResolutionStage: multiTargetStage,
       });
 

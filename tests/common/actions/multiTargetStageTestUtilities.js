@@ -208,6 +208,7 @@ export function createTestLegacyAction(overrides = {}) {
  * @param {object} [options.unifiedScopeResolver] - Unified scope resolver (defaults to mock)
  * @param {object} [options.targetContextBuilder] - Target context builder (defaults to mock)
  * @param {object} [options.multiTargetResolutionStage] - Multi target stage (defaults to created instance)
+ * @param {object} [options.targetComponentValidator] - Target component validator (defaults to mock)
  * @returns {ActionPipelineOrchestrator} Configured orchestrator instance
  */
 export function createActionPipelineOrchestrator({
@@ -223,6 +224,7 @@ export function createActionPipelineOrchestrator({
   unifiedScopeResolver,
   targetContextBuilder,
   multiTargetResolutionStage,
+  targetComponentValidator,
 }) {
   // Create default mocks if not provided
   const defaultActionIndex = actionIndex || {
@@ -287,6 +289,11 @@ export function createActionPipelineOrchestrator({
       },
     });
 
+  const defaultTargetComponentValidator = targetComponentValidator || {
+    validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
+    validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
+  };
+
   return new ActionPipelineOrchestrator({
     actionIndex: defaultActionIndex,
     prerequisiteService: defaultPrerequisiteService,
@@ -300,5 +307,6 @@ export function createActionPipelineOrchestrator({
     unifiedScopeResolver: defaultUnifiedScopeResolver,
     targetContextBuilder: defaultTargetContextBuilder,
     multiTargetResolutionStage: defaultMultiTargetResolutionStage,
+    targetComponentValidator: defaultTargetComponentValidator,
   });
 }

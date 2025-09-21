@@ -238,6 +238,12 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
       getEntityDisplayName,
     });
 
+    // Create mock TargetComponentValidator
+    const mockTargetComponentValidator = {
+      validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
+      validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
+    };
+
     // Create the action pipeline orchestrator
     actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex,
@@ -251,6 +257,7 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
       logger,
       unifiedScopeResolver,
       targetContextBuilder: targetContextBuilder,
+      targetComponentValidator: mockTargetComponentValidator,
       multiTargetResolutionStage,
     });
 

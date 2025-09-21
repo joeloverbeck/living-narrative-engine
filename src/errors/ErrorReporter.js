@@ -3,11 +3,13 @@
  * @description Provides comprehensive error reporting with batch processing, trend analysis, and alerting
  * @see baseError.js - Base error class for enhanced error context
  * @see CentralErrorHandler.js - Central error handling integration
+ * @see ../config/errorHandling.config.js - Centralized error handling configuration
  */
 
 import { validateDependency } from '../utils/dependencyUtils.js';
 import { getEnvironmentMode } from '../utils/environmentUtils.js';
 import BaseError from './baseError.js';
+import { getErrorConfig } from '../config/errorHandling.config.js';
 
 /**
  * Error reporting service that batches errors, provides analytics, and sends alerts
@@ -41,9 +43,9 @@ class ErrorReporter {
     logger,
     eventBus,
     endpoint = null,
-    batchSize = 50,
-    flushInterval = 30000,
-    enabled = true
+    batchSize = null,
+    flushInterval = null,
+    enabled = null
   }) {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['info', 'error', 'warn', 'debug']
@@ -52,12 +54,15 @@ class ErrorReporter {
       requiredMethods: ['dispatch', 'subscribe']
     });
 
+    // Get configuration
+    const config = getErrorConfig();
+
     this.#logger = logger;
     this.#eventBus = eventBus;
-    this.#endpoint = endpoint;
-    this.#batchSize = batchSize;
-    this.#flushInterval = flushInterval;
-    this.#enabled = enabled && endpoint !== null;
+    this.#endpoint = endpoint ?? config.reporting.endpoint;
+    this.#batchSize = batchSize ?? config.reporting.batchSize;
+    this.#flushInterval = flushInterval ?? config.reporting.flushInterval;
+    this.#enabled = (enabled !== null ? enabled : config.reporting.enabled) && this.#endpoint !== null;
     this.#buffer = [];
     this.#intervalHandle = null;
 
@@ -69,11 +74,12 @@ class ErrorReporter {
       trends: []
     };
 
+    // Use configuration for alert thresholds
     this.#alertThresholds = {
-      criticalErrors: 5,        // Alert after 5 critical errors
-      errorRate: 10,            // Alert if >10 errors per minute
-      specificError: 20,        // Alert if same error occurs 20 times
-      failureRate: 0.1         // Alert if 10% of operations fail
+      criticalErrors: config.reporting.alerts.criticalErrors,
+      errorRate: config.reporting.alerts.errorRate,
+      specificError: config.reporting.alerts.specificError,
+      failureRate: config.reporting.alerts.failureRate
     };
 
     if (this.#enabled) {
@@ -91,6 +97,27 @@ class ErrorReporter {
   report(error, context = {}) {
     if (!this.#enabled) {
       return;
+    }
+
+    const config = getErrorConfig();
+    const sampling = config.reporting.sampling;
+
+    // Check sampling configuration
+    if (sampling.enabled) {
+      const shouldReport =
+        // Always report certain error types/severities
+        sampling.alwaysReport.includes(error?.severity) ||
+        sampling.alwaysReport.includes(error?.constructor?.name) ||
+        // Or apply sampling rate
+        Math.random() < sampling.rate;
+
+      if (!shouldReport) {
+        this.#logger.debug('Error sampled out', {
+          errorType: error?.constructor?.name,
+          severity: error?.severity
+        });
+        return;
+      }
     }
 
     const errorReport = this.#createErrorReport(error, context);
@@ -218,6 +245,7 @@ class ErrorReporter {
   // Private methods
   #createErrorReport(error, context) {
     const isBaseError = error instanceof BaseError;
+    const config = getErrorConfig();
 
     return {
       id: error?.correlationId || this.#generateReportId(),
@@ -225,7 +253,7 @@ class ErrorReporter {
       error: isBaseError ? error.toJSON() : {
         name: error?.constructor?.name || 'UnknownError',
         message: error?.message || 'Unknown error',
-        stack: error?.stack,
+        stack: config.reporting.includeStackTrace ? error?.stack : undefined,
         code: error?.code
       },
       context: {

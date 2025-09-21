@@ -35,7 +35,7 @@ import {
 } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
-import { createMultiTargetResolutionStage } from '../../common/actions/multiTargetStageTestUtilities.js';
+import { createMultiTargetResolutionStage, createActionPipelineOrchestrator } from '../../common/actions/multiTargetStageTestUtilities.js';
 import {
   ACTOR_COMPONENT_ID,
   POSITION_COMPONENT_ID,
@@ -365,8 +365,8 @@ describe('Core Action Target Resolution Integration', () => {
       },
     });
 
-    // Create the ActionPipelineOrchestrator with proper dependencies
-    const orchestrator = new ActionPipelineOrchestrator({
+    // Create the ActionPipelineOrchestrator with proper dependencies using the utility factory
+    const orchestrator = createActionPipelineOrchestrator({
       actionIndex,
       prerequisiteService: prerequisiteEvaluationService,
       targetService: targetResolutionService,

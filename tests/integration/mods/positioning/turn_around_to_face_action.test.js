@@ -166,6 +166,12 @@ describe('Turn Around to Face Action Discovery', () => {
 
     const actionCommandFormatter = new ActionCommandFormatter({ logger });
 
+    // Create mock TargetComponentValidator
+    const mockTargetComponentValidator = {
+      validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
+      validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
+    };
+
     const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex,
       prerequisiteService: prereqService,
@@ -178,6 +184,7 @@ describe('Turn Around to Face Action Discovery', () => {
       errorBuilder: actionErrorContextBuilder,
       unifiedScopeResolver: mockUnifiedScopeResolver,
       targetContextBuilder: createMockTargetContextBuilder(),
+      targetComponentValidator: mockTargetComponentValidator,
       multiTargetResolutionStage: createMultiTargetResolutionStage({
         entityManager,
         logger,
