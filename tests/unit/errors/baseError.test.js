@@ -354,6 +354,46 @@ describe('BaseError - Foundation Class', () => {
       expect(error.context).toEqual({});
     });
 
+    it('should generate unique correlation ID for each instance', () => {
+      const error1 = new BaseError('Error 1', ErrorCodes.INVALID_DATA_GENERIC);
+      const error2 = new BaseError('Error 2', ErrorCodes.INVALID_DATA_GENERIC);
+
+      expect(error1.correlationId).toBeDefined();
+      expect(error2.correlationId).toBeDefined();
+      expect(error1.correlationId).not.toBe(error2.correlationId);
+
+      // Both should be valid UUIDs
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      expect(error1.correlationId).toMatch(uuidRegex);
+      expect(error2.correlationId).toMatch(uuidRegex);
+    });
+
+    it('should capture timestamp at creation time', () => {
+      const beforeTime = new Date().toISOString();
+      const error = new BaseError('Test', ErrorCodes.INVALID_DATA_GENERIC);
+      const afterTime = new Date().toISOString();
+
+      expect(new Date(error.timestamp).getTime()).toBeGreaterThanOrEqual(new Date(beforeTime).getTime());
+      expect(new Date(error.timestamp).getTime()).toBeLessThanOrEqual(new Date(afterTime).getTime());
+    });
+
+    it('should set default severity and recoverability', () => {
+      const error = new BaseError('Test', ErrorCodes.INVALID_DATA_GENERIC);
+
+      expect(error.severity).toBe('error');
+      expect(error.recoverable).toBe(false);
+    });
+
+    it('should capture stack trace in V8 environments with proper filtering', () => {
+      const error = new BaseError('Test message', ErrorCodes.INVALID_DATA_GENERIC);
+
+      if (Error.captureStackTrace) {
+        expect(error.stack).toBeDefined();
+        expect(error.stack).toContain('Test message');
+        expect(error.stack).not.toContain('captureStackTrace');
+      }
+    });
+
     it('should handle complex context objects', () => {
       const complexContext = {
         nested: {
@@ -413,6 +453,60 @@ describe('BaseError - Foundation Class', () => {
       expect(error instanceof Error).toBe(true);
       expect(Object.getPrototypeOf(error)).toBe(BaseError.prototype);
       expect(Object.getPrototypeOf(BaseError.prototype)).toBe(Error.prototype);
+    });
+  });
+
+  describe('Inheritance Patterns', () => {
+    it('should maintain instanceof relationships in subclasses', () => {
+      class CustomError extends BaseError {
+        constructor(message) {
+          super(message, 'CUSTOM_ERROR');
+          this.name = 'CustomError';
+        }
+        getSeverity() { return 'warning'; }
+        isRecoverable() { return true; }
+      }
+
+      const error = new CustomError('Custom message');
+
+      expect(error instanceof CustomError).toBe(true);
+      expect(error instanceof BaseError).toBe(true);
+      expect(error instanceof Error).toBe(true);
+      expect(error.name).toBe('CustomError');
+      expect(error.severity).toBe('warning');
+      expect(error.recoverable).toBe(true);
+    });
+
+    it('should allow severity override in subclass', () => {
+      class CriticalError extends BaseError {
+        getSeverity() { return 'critical'; }
+      }
+
+      class WarningError extends BaseError {
+        getSeverity() { return 'warning'; }
+      }
+
+      const critical = new CriticalError('Critical', ErrorCodes.INVALID_DATA_GENERIC);
+      const warning = new WarningError('Warning', ErrorCodes.INVALID_DATA_GENERIC);
+
+      expect(critical.severity).toBe('critical');
+      expect(warning.severity).toBe('warning');
+    });
+
+    it('should allow recoverability override in subclass', () => {
+      class RecoverableError extends BaseError {
+        isRecoverable() { return true; }
+      }
+
+      class NonRecoverableError extends BaseError {
+        isRecoverable() { return false; }
+      }
+
+      const recoverable = new RecoverableError('Recoverable', ErrorCodes.INVALID_DATA_GENERIC);
+      const nonRecoverable = new NonRecoverableError('NonRecoverable', ErrorCodes.INVALID_DATA_GENERIC);
+
+      expect(recoverable.recoverable).toBe(true);
+      expect(nonRecoverable.recoverable).toBe(false);
     });
   });
 });

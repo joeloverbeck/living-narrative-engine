@@ -187,7 +187,8 @@
       "Bash(xargs:*)",
       "Bash(npm run validate:mod:*)",
       "mcp__morphllm-fast-apply__tiny_edit_file",
-      "Bash(NODE_ENV=test npx jest tests/integration/mods/positioning/ --no-coverage --silent)"
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/positioning/ --no-coverage --silent)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/actions/pipeline/pipelineWithTargetValidation.test.js --silent)"
     ],
     "deny": [],
     "ask": []

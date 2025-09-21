@@ -219,6 +219,22 @@ class ErrorReporter {
   }
 
   /**
+   * Get analytics data
+   *
+   * @returns {object} Analytics data including error counts by type and severity
+   */
+  getAnalytics() {
+    return {
+      totalReported: this.#analytics.totalReported,
+      errorsByType: Object.fromEntries(this.#analytics.errorsByType),
+      errorsBySeverity: Object.fromEntries(this.#analytics.errorsBySeverity),
+      errorsByHour: Object.fromEntries(this.#analytics.errorsByHour),
+      trends: [...this.#analytics.trends],
+      topErrors: this.#getTopErrors(10)
+    };
+  }
+
+  /**
    * Send alert
    *
    * @param {string} severity - Alert severity level

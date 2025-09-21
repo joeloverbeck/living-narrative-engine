@@ -50,7 +50,8 @@ class CentralErrorHandler {
       totalErrors: 0,
       recoveredErrors: 0,
       failedRecoveries: 0,
-      errorsByType: new Map()
+      errorsByType: new Map(),
+      errorsBySeverity: new Map()
     };
 
     // Load configuration
@@ -63,7 +64,13 @@ class CentralErrorHandler {
 
   // Main error handling method
   async handle(error, context = {}) {
-    const errorInfo = this.#classifyError(error, context);
+    // Apply transforms if registered
+    let transformedError = error;
+    if (error instanceof BaseError && this.#errorTransforms.has(error.constructor.name)) {
+      transformedError = this.#applyTransform(error);
+    }
+
+    const errorInfo = this.#classifyError(transformedError, context);
 
     // Track metrics
     this.#updateMetrics(errorInfo);
@@ -90,12 +97,18 @@ class CentralErrorHandler {
     }
 
     // Enhance and throw if recovery failed or not recoverable
-    throw this.#enhanceError(error, errorInfo);
+    throw this.#enhanceError(transformedError, errorInfo);
   }
 
   // Synchronous error handling
   handleSync(error, context = {}) {
-    const errorInfo = this.#classifyError(error, context);
+    // Apply transforms if registered
+    let transformedError = error;
+    if (error instanceof BaseError && this.#errorTransforms.has(error.constructor.name)) {
+      transformedError = this.#applyTransform(error);
+    }
+
+    const errorInfo = this.#classifyError(transformedError, context);
     this.#updateMetrics(errorInfo);
     this.#logError(errorInfo);
     this.#notifyError(errorInfo);
@@ -107,11 +120,14 @@ class CentralErrorHandler {
       }
     }
 
-    throw this.#enhanceError(error, errorInfo);
+    throw this.#enhanceError(transformedError, errorInfo);
   }
 
   // Register recovery strategy
   registerRecoveryStrategy(errorType, strategy) {
+    if (this.#recoveryStrategies.has(errorType)) {
+      this.#logger.warn(`Overwriting existing recovery strategy for ${errorType}`);
+    }
     this.#recoveryStrategies.set(errorType, strategy);
     this.#logger.debug(`Registered recovery strategy for ${errorType}`);
   }
@@ -166,12 +182,28 @@ class CentralErrorHandler {
     };
   }
 
+  #applyTransform(error) {
+    try {
+      const transform = this.#errorTransforms.get(error.constructor.name);
+      if (transform) {
+        return transform(error);
+      }
+    } catch (transformError) {
+      this.#logger.error('Error transform failed', {
+        errorType: error.constructor.name,
+        transformError: transformError.message
+      });
+    }
+    return error;
+  }
+
   #enhanceError(error, errorInfo) {
     if (error instanceof BaseError) {
       // Add additional context
       error.addContext('handledBy', 'CentralErrorHandler');
       error.addContext('handledAt', Date.now());
       error.addContext('recoveryAttempted', errorInfo.recoverable);
+      error.addContext('errorId', errorInfo.id);
       return error;
     }
 
@@ -182,6 +214,7 @@ class CentralErrorHandler {
       errorInfo.context
     );
     enhancedError.cause = error;
+    enhancedError.addContext('errorId', errorInfo.id);
     return enhancedError;
   }
 
@@ -266,6 +299,10 @@ class CentralErrorHandler {
     const typeCount = this.#metrics.errorsByType.get(errorInfo.type) || 0;
     this.#metrics.errorsByType.set(errorInfo.type, typeCount + 1);
 
+    // Track errors by severity
+    const severityCount = this.#metrics.errorsBySeverity.get(errorInfo.severity) || 0;
+    this.#metrics.errorsBySeverity.set(errorInfo.severity, severityCount + 1);
+
     // Register in error registry
     this.#errorRegistry.set(errorInfo.id, {
       ...errorInfo,
@@ -295,6 +332,7 @@ class CentralErrorHandler {
     return {
       ...this.#metrics,
       errorsByType: Object.fromEntries(this.#metrics.errorsByType),
+      errorsBySeverity: Object.fromEntries(this.#metrics.errorsBySeverity),
       registrySize: this.#errorRegistry.size,
       recoveryRate: this.#metrics.totalErrors > 0
         ? this.#metrics.recoveredErrors / this.#metrics.totalErrors
@@ -312,6 +350,7 @@ class CentralErrorHandler {
     this.#metrics.recoveredErrors = 0;
     this.#metrics.failedRecoveries = 0;
     this.#metrics.errorsByType.clear();
+    this.#metrics.errorsBySeverity.clear();
     this.#errorRegistry.clear();
   }
 }

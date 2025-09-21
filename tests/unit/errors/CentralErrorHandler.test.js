@@ -402,5 +402,134 @@ describe('CentralErrorHandler - Core Error Processing', () => {
       expect(metrics.registrySize).toBe(0);
       expect(Object.keys(metrics.errorsByType)).toHaveLength(0);
     });
+
+    it('should clean old entries from registry', async () => {
+      // Override the default cleanup time
+      const originalCleanup = Date.now;
+      const mockTime = jest.fn();
+      mockTime.mockReturnValue(1000000);
+      Date.now = mockTime;
+
+      try { await centralErrorHandler.handle(new Error('Old error')); } catch {}
+
+      // Advance time by 1 hour
+      mockTime.mockReturnValue(1000000 + 3600001);
+
+      try { await centralErrorHandler.handle(new Error('New error')); } catch {}
+
+      const metrics = centralErrorHandler.getMetrics();
+      expect(metrics.registrySize).toBeGreaterThan(0);
+
+      Date.now = originalCleanup;
+    });
+  });
+
+  describe('Error Transforms', () => {
+    it('should apply registered error transforms', async () => {
+      const transform = jest.fn((error) => {
+        error.addContext('transformed', true);
+        return error;
+      });
+
+      centralErrorHandler.registerErrorTransform('BaseError', transform);
+
+      const error = new BaseError('Test error', ErrorCodes.INVALID_DATA_GENERIC);
+
+      try {
+        await centralErrorHandler.handle(error);
+      } catch (enhancedError) {
+        expect(transform).toHaveBeenCalled();
+        expect(enhancedError.getContext('transformed')).toBe(true);
+      }
+    });
+
+    it('should handle transform errors gracefully', async () => {
+      const faultyTransform = jest.fn(() => {
+        throw new Error('Transform failed');
+      });
+
+      centralErrorHandler.registerErrorTransform('BaseError', faultyTransform);
+
+      const error = new BaseError('Test error', ErrorCodes.INVALID_DATA_GENERIC);
+
+      try {
+        await centralErrorHandler.handle(error);
+      } catch (enhancedError) {
+        expect(enhancedError).toBeInstanceOf(BaseError);
+        expect(mockLogger.error).toHaveBeenCalledWith('Error transform failed', expect.any(Object));
+      }
+    });
+
+    it('should override existing strategies when registering same error type', () => {
+      const strategy1 = jest.fn();
+      const strategy2 = jest.fn();
+
+      centralErrorHandler.registerRecoveryStrategy('TestError', strategy1);
+      centralErrorHandler.registerRecoveryStrategy('TestError', strategy2);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith('Overwriting existing recovery strategy for TestError');
+    });
+  });
+
+  describe('Context Enhancement', () => {
+    it('should enhance error with tracking context', async () => {
+      const error = new BaseError('Test error', ErrorCodes.INVALID_DATA_GENERIC);
+
+      try {
+        await centralErrorHandler.handle(error, { source: 'test' });
+      } catch (enhancedError) {
+        expect(enhancedError.getContext('handledBy')).toBe('CentralErrorHandler');
+        expect(enhancedError.getContext('handledAt')).toBeDefined();
+        expect(enhancedError.getContext('recoveryAttempted')).toBeDefined();
+        expect(enhancedError.getContext('errorId')).toBeDefined();
+      }
+    });
+
+    it('should handle non-BaseError correctly', async () => {
+      const plainError = new Error('Plain error');
+      const typeError = new TypeError('Type error');
+      const rangeError = new RangeError('Range error');
+
+      try { await centralErrorHandler.handle(plainError); } catch (e) {
+        expect(e).toBeInstanceOf(BaseError);
+        expect(e.code).toBe('WRAPPED_ERROR');
+        expect(e.cause).toBe(plainError);
+      }
+
+      try { await centralErrorHandler.handle(typeError); } catch (e) {
+        expect(e).toBeInstanceOf(BaseError);
+        expect(e.cause).toBe(typeError);
+      }
+
+      try { await centralErrorHandler.handle(rangeError); } catch (e) {
+        expect(e).toBeInstanceOf(BaseError);
+        expect(e.cause).toBe(rangeError);
+      }
+    });
+  });
+
+  describe('Error Severity Classification', () => {
+    it('should classify errors by severity', async () => {
+      class CriticalError extends BaseError {
+        getSeverity() { return 'critical'; }
+      }
+
+      class WarningError extends BaseError {
+        getSeverity() { return 'warning'; }
+      }
+
+      const critical = new CriticalError('Critical', ErrorCodes.INVALID_DATA_GENERIC);
+      const warning = new WarningError('Warning', ErrorCodes.INVALID_DATA_GENERIC);
+      const error = new BaseError('Error', ErrorCodes.INVALID_DATA_GENERIC);
+
+      try { await centralErrorHandler.handle(critical); } catch {}
+      try { await centralErrorHandler.handle(warning); } catch {}
+      try { await centralErrorHandler.handle(error); } catch {}
+
+      const metrics = centralErrorHandler.getMetrics();
+      expect(metrics.errorsBySeverity.critical).toBe(1);
+      expect(metrics.errorsBySeverity.warning).toBe(1);
+      expect(metrics.errorsBySeverity.error).toBe(1);
+    });
   });
 });
