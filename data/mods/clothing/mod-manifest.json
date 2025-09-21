@@ -25,7 +25,10 @@
     ],
     "entities": {
       "definitions": [
+        "black_athletic_sneakers.entity.json",
         "black_calfskin_belt.entity.json",
+        "black_cotton_boxer_briefs.entity.json",
+        "black_running_shorts_red_trim.entity.json",
         "black_stretch_silk_bodysuit.entity.json",
         "block_heel_slingbacks_leather_taupe.entity.json",
         "bronze_silk_blouse.entity.json",
@@ -57,6 +60,7 @@
         "pink_short_flared_skirt.entity.json",
         "platinum_necklace.entity.json",
         "power_mesh_boxer_brief.entity.json",
+        "red_compression_racerback_tank.entity.json",
         "sand_beige_cotton_chinos.entity.json",
         "sand_suede_chukka_boots.entity.json",
         "satin_cowl_neck_camisole.entity.json",

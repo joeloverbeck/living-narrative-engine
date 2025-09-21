@@ -5,6 +5,7 @@
 
 /**
  * Groups AJV errors by the operation type they were attempting to validate against
+ *
  * @param {import('ajv').ErrorObject[]} errors - AJV validation errors
  * @returns {Map<string, import('ajv').ErrorObject[]>} Map of operation type to errors
  */
@@ -35,8 +36,10 @@ function groupErrorsByOperationType(errors) {
 
 /**
  * Finds the most likely intended operation type based on the actual data
+ *
  * @param {any} data - The data being validated
  * @param {Map<string, import('ajv').ErrorObject[]>} groupedErrors - Grouped errors
+ * @param errors
  * @returns {string|null} The most likely operation type
  */
 function findIntendedOperationType(data, groupedErrors, errors) {
@@ -67,6 +70,7 @@ function findIntendedOperationType(data, groupedErrors, errors) {
 
 /**
  * Formats anyOf/oneOf validation errors intelligently
+ *
  * @param {import('ajv').ErrorObject[]} errors - AJV validation errors
  * @param {any} data - The data being validated
  * @returns {string} Formatted error message
@@ -93,6 +97,35 @@ export function formatAnyOfErrors(errors, data) {
 
   // Find the most likely intended operation
   const intendedType = findIntendedOperationType(data, groupedErrors, errors);
+
+  // Special case: if we have a valid type but many errors, it's likely a parameter issue
+  if (data?.type && errors.length > 100) {
+    const lines = [`Operation type '${data.type}' has invalid parameters:`];
+
+    // Find parameter-specific errors
+    const paramErrors = errors.filter(e =>
+      e.instancePath &&
+      (e.instancePath.includes('/parameters') || e.instancePath.includes('entity_id'))
+    );
+
+    if (paramErrors.length > 0) {
+      // Show the first few parameter errors
+      paramErrors.slice(0, 5).forEach((error) => {
+        const path = error.instancePath || 'root';
+        const message = formatSingleError(error);
+        lines.push(`  - ${path}: ${message}`);
+      });
+
+      // Common fixes for known issues
+      if (errors.some(e => e.params?.additionalProperty === 'entity_id')) {
+        lines.push('');
+        lines.push('Common issue detected: "entity_id" should be "entity_ref"');
+        lines.push('The GET_NAME operation expects "entity_ref", not "entity_id"');
+      }
+
+      return lines.join('\n');
+    }
+  }
 
   if (intendedType) {
     // For a known type, find errors from the matching anyOf branch
@@ -156,6 +189,7 @@ export function formatAnyOfErrors(errors, data) {
 
 /**
  * Formats a single AJV error into a readable message
+ *
  * @param {import('ajv').ErrorObject} error - Single AJV error
  * @returns {string} Formatted error message
  */
@@ -178,6 +212,7 @@ function formatSingleError(error) {
 
 /**
  * Formats standard (non-anyOf) errors
+ *
  * @param {import('ajv').ErrorObject[]} errors - AJV validation errors
  * @returns {string} Formatted error message
  */
@@ -195,6 +230,7 @@ function formatStandardErrors(errors) {
 
 /**
  * Formats a summary when we can't determine the intended operation type
+ *
  * @param {Map<string, import('ajv').ErrorObject[]>} groupedErrors - Grouped errors
  * @param {any} data - The data being validated
  * @returns {string} Formatted summary
@@ -246,6 +282,7 @@ function formatOperationTypeSummary(groupedErrors, data) {
 
 /**
  * Enhances the existing formatAjvErrors function with anyOf intelligence
+ *
  * @param {import('ajv').ErrorObject[]} errors - AJV validation errors
  * @param {any} [data] - The data being validated (optional)
  * @returns {string} Formatted error message
