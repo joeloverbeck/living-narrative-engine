@@ -196,6 +196,9 @@ describe('ResourceMonitor', () => {
     expect(stats.memory.current).toBe(220);
     expect(stats.memory.peak).toBe(200);
     expect(stats.operations.current).toBe(0);
+
+    // Additional cleanup after reset should be a no-op for coverage of guarded paths
+    expect(() => guard.cleanup()).not.toThrow();
   });
 
   it('calculates status from operation pressure levels', () => {
@@ -239,5 +242,88 @@ describe('ResourceMonitor', () => {
     expect(stats.operations.current).toBe(1);
 
     guard.cleanup();
+  });
+
+  it('marks existing guards inactive when monitoring stops', () => {
+    const logger = createMockLogger();
+    const { monitor, memoryUsageMock } = createMonitor(
+      { maxProcessingTime: 500, memoryCheckInterval: 25 },
+      logger
+    );
+
+    memoryUsageMock.mockReturnValue({ heapUsed: 256 });
+
+    const guardA = monitor.createOperationGuard('stop-a');
+    const guardB = monitor.createOperationGuard('stop-b');
+
+    monitor.startMonitoring();
+    jest.advanceTimersByTime(25);
+
+    monitor.stopMonitoring();
+
+    expect(guardA.isActive()).toBe(false);
+    expect(guardB.isActive()).toBe(false);
+    expect(logger.debug).toHaveBeenCalledWith(
+      'Resource monitoring stopped',
+      expect.objectContaining({
+        startMemory: expect.any(Number),
+        peakMemory: expect.any(Number),
+        finalMemory: expect.any(Number)
+      })
+    );
+  });
+
+  it('ignores timeout callbacks for operations that were already cleaned up', () => {
+    const { monitor } = createMonitor({ maxProcessingTime: 100 });
+
+    const setTimeoutSpy = jest.spyOn(global, 'setTimeout');
+    const guard = monitor.createOperationGuard('ephemeral');
+
+    // Capture the timeout callback that would trigger the private timeout handler
+    const timeoutCallback = setTimeoutSpy.mock.calls
+      .map((call) => call[0])
+      .find((fn) => typeof fn === 'function');
+
+    expect(timeoutCallback).toBeDefined();
+
+    guard.cleanup();
+
+    expect(() => timeoutCallback && timeoutCallback()).not.toThrow();
+
+    setTimeoutSpy.mockRestore();
+  });
+
+  it('formats zero memory usage consistently', () => {
+    const { monitor, memoryUsageMock } = createMonitor();
+    memoryUsageMock.mockReturnValue({ heapUsed: 0 });
+
+    const stats = monitor.getResourceStats();
+    expect(stats.memory.current).toBe(0);
+    expect(stats.memory.formatted.current).toBe('0 Bytes');
+  });
+
+  it('prefers performance memory metrics when process usage is unavailable', () => {
+    const logger = createMockLogger();
+    if (globalThis.process) {
+      globalThis.process.memoryUsage = undefined;
+    }
+    globalThis.performance = {
+      memory: {
+        usedJSHeapSize: 987654
+      }
+    };
+
+    const monitor = new ResourceMonitor({
+      config: {
+        maxMemoryUsage: 1024 * 1024,
+        maxProcessingTime: 1000,
+        maxConcurrentOperations: 5
+      },
+      logger
+    });
+
+    const stats = monitor.getResourceStats();
+    expect(stats.memory.current).toBe(987654);
+    expect(stats.memory.formatted.current).toContain('KB');
   });
 });
