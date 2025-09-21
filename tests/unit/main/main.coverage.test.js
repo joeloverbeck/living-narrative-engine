@@ -41,6 +41,30 @@ jest.mock('../../../src/dependencyInjection/containerConfig.js', () => ({
   configureContainer: jest.fn(),
 }));
 
+/**
+ * Helper to execute all DOM helper utilities passed to displayFatalStartupError.
+ * @param {object} helpers
+ * @param {{text?: string, color?: string, alertMessage?: string}} [options]
+ */
+function exerciseDomHelpers(
+  helpers,
+  { text = 'hi', color = 'red', alertMessage = 'msg' } = {}
+) {
+  const anchor = document.createElement('div');
+  document.body.appendChild(anchor);
+  const created = helpers.createElement('p');
+  helpers.insertAfter(anchor, created);
+  helpers.setTextContent(created, text);
+  helpers.setStyle(created, 'color', color);
+  helpers.alert(alertMessage);
+
+  expect(created.textContent).toBe(text);
+  expect(created.style.color).toBe(color);
+  expect(window.alert).toHaveBeenLastCalledWith(alertMessage);
+
+  anchor.remove();
+}
+
 describe('main.js uncovered branches', () => {
   beforeEach(() => {
     jest.useFakeTimers();
@@ -154,15 +178,110 @@ describe('main.js uncovered branches', () => {
 
     expect(mockDisplayFatal).toHaveBeenCalled();
     const [, , , helpers] = mockDisplayFatal.mock.calls[0];
-    const el = document.createElement('div');
-    const p = helpers.createElement('p');
-    helpers.insertAfter(el, p);
-    helpers.setTextContent(p, 'hi');
-    helpers.setStyle(p, 'color', 'red');
-    helpers.alert('msg');
+    exerciseDomHelpers(helpers);
+  });
 
-    expect(p.textContent).toBe('hi');
-    expect(p.style.color).toBe('red');
-    expect(window.alert).toHaveBeenCalledWith('msg');
+  it('falls back to default UI helpers when bootstrap fails early', async () => {
+    const originalAlert = window.alert;
+    const originalConsoleError = console.error;
+    window.alert = jest.fn();
+    console.error = jest.fn();
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 503,
+      statusText: 'Service Unavailable',
+    });
+
+    document.body.innerHTML = `
+      <div id="outputDiv"></div>
+      <div id="error-output"></div>
+      <input id="speech-input" />
+      <h1>Title</h1>
+    `;
+
+    const stageError = new Error('UI bootstrap failure');
+    stageError.phase = 'UI Element Validation';
+    stageError.failures = [
+      { service: 'UIBootstrapper', error: new Error('broken dependency') },
+    ];
+
+    mockEnsure.mockResolvedValue({ success: false, error: stageError });
+
+    try {
+      const main = await import('../../../src/main.js');
+      await main.bootstrapApp();
+      await Promise.resolve();
+      jest.runAllTimers();
+
+      expect(global.fetch).toHaveBeenCalledWith('./data/game.json');
+      expect(console.error).toHaveBeenCalledWith(
+        'Failed to load startWorld from game.json:',
+        expect.any(Error)
+      );
+
+      expect(mockDisplayFatal).toHaveBeenCalledTimes(1);
+      const [elements, errorDetails, passedLogger, helpers] =
+        mockDisplayFatal.mock.calls[0];
+
+      expect(elements.outputDiv).toBe(document.getElementById('outputDiv'));
+      expect(errorDetails.phase).toBe('UI Element Validation');
+      expect(passedLogger).toBeNull();
+
+      exerciseDomHelpers(helpers, {
+        text: 'bootstrap failed',
+        color: 'orange',
+        alertMessage: 'fatal bootstrap',
+      });
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining('Bootstrap error caught'),
+        stageError
+      );
+      expect(console.error).toHaveBeenCalledWith(
+        'main.js: Failed to init UIBootstrapper',
+        stageError.failures[0].error
+      );
+    } finally {
+      window.alert = originalAlert;
+      console.error = originalConsoleError;
+    }
+  });
+
+  it('reports fatal error when beginGame runs without bootstrap', async () => {
+    const originalAlert = window.alert;
+    const originalConsoleError = console.error;
+    window.alert = jest.fn();
+    console.error = jest.fn();
+
+    try {
+      const main = await import('../../../src/main.js');
+
+      await expect(main.beginGame(true)).rejects.toThrow(
+        'Critical: GameEngine not initialized before attempting Start Game stage.'
+      );
+
+      expect(mockDisplayFatal).toHaveBeenCalledTimes(1);
+      const [elements, errorDetails, passedLogger, helpers] =
+        mockDisplayFatal.mock.calls[0];
+
+      expect(elements).toBeUndefined();
+      expect(errorDetails.phase).toBe('Start Game');
+      expect(errorDetails.userMessage).toContain('Critical: GameEngine not initialized');
+      expect(passedLogger).toBeNull();
+
+      exerciseDomHelpers(helpers, {
+        text: 'no engine ready',
+        color: 'purple',
+        alertMessage: 'begin game failure',
+      });
+
+      expect(console.error).toHaveBeenCalledWith(
+        'main.js: Critical: GameEngine not initialized before attempting Start Game stage.'
+      );
+    } finally {
+      window.alert = originalAlert;
+      console.error = originalConsoleError;
+    }
   });
 });
