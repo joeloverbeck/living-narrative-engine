@@ -305,6 +305,15 @@ describe('BodyGraphService integration coverage', () => {
     expect(service.getAllParts(null)).toEqual([]);
   });
 
+  it('returns empty list when body component lacks root identifier', () => {
+    const { service } = createService();
+
+    const result = service.getAllParts({ body: {} });
+
+    expect(result).toEqual([]);
+    expect(mockGetAllParts).not.toHaveBeenCalled();
+  });
+
   it('collects parts using blueprint root when actor cache is missing', () => {
     const { service, cacheManager, entityManager, queryCache } = createService();
     cacheManager.has.mockReturnValue(false);
@@ -326,6 +335,25 @@ describe('BodyGraphService integration coverage', () => {
       ['torso', 'arm']
     );
     expect(result).toEqual(['torso', 'arm']);
+  });
+
+  it('collects parts using direct root structure when provided', () => {
+    const { service, cacheManager, entityManager, queryCache } = createService();
+    cacheManager.has.mockReturnValue(false);
+    mockGetAllParts.mockReturnValueOnce(['direct-arm']);
+
+    const result = service.getAllParts({ root: 'direct-root' });
+
+    expect(mockGetAllParts).toHaveBeenCalledWith(
+      'direct-root',
+      cacheManager,
+      entityManager
+    );
+    expect(queryCache.cacheGetAllParts).toHaveBeenCalledWith(
+      'direct-root',
+      ['direct-arm']
+    );
+    expect(result).toEqual(['direct-arm']);
   });
 
   it('prefers actor entity as cache root when available', () => {
@@ -354,6 +382,21 @@ describe('BodyGraphService integration coverage', () => {
     const cached = service.getAllParts({ body: { root: 'cache-root' } }, 'actor');
     expect(cached).toEqual(['cached-head']);
     expect(mockGetAllParts).not.toHaveBeenCalled();
+  });
+
+  it('logs truncated results when anatomy query returns many parts', () => {
+    const { service, logger, cacheManager } = createService();
+    cacheManager.has.mockReturnValue(false);
+    const largeResult = Array.from({ length: 7 }, (_, idx) => `part-${idx}`);
+    mockGetAllParts.mockReturnValueOnce(largeResult);
+
+    const result = service.getAllParts({ body: { root: 'bp-root' } });
+
+    expect(result).toEqual(largeResult);
+    const debugMessages = logger.debug.mock.calls
+      .flat()
+      .filter((msg) => typeof msg === 'string');
+    expect(debugMessages.some((msg) => msg.includes('...'))).toBe(true);
   });
 
   it('detects components on parts', () => {
@@ -390,6 +433,24 @@ describe('BodyGraphService integration coverage', () => {
     ).toEqual({ found: true, partId: 'p2' });
   });
 
+  it('returns false when component data does not match expected value', () => {
+    const { service, entityManager } = createService();
+    jest.spyOn(service, 'getAllParts').mockReturnValue(['p1', 'p2']);
+
+    entityManager.getComponentData
+      .mockReturnValueOnce(null)
+      .mockReturnValueOnce({ details: {} });
+
+    expect(
+      service.hasPartWithComponentValue(
+        { body: { root: 'r' } },
+        'component:details',
+        'details.id',
+        'target'
+      )
+    ).toEqual({ found: false });
+  });
+
   it('throws and handles error scenarios when building body graph', async () => {
     const base = createService();
 
@@ -417,6 +478,22 @@ describe('BodyGraphService integration coverage', () => {
     expect(graph.getConnectedParts('entity-1')).toEqual(['child-1']);
   });
 
+  it('returns empty child list when cache does not include part node', async () => {
+    const { service, entityManager, cacheManager } = createService();
+    const bodyComponent = { body: { root: 'bp-root' } };
+    entityManager.getComponentData.mockReturnValue(bodyComponent);
+    cacheManager.get.mockImplementation((id) => {
+      if (id === 'entity-1') {
+        return { children: ['child-1'] };
+      }
+      return undefined;
+    });
+
+    const graph = await service.getBodyGraph('entity-1');
+
+    expect(graph.getConnectedParts('missing-node')).toEqual([]);
+  });
+
   it('retrieves anatomy data and validates cache state', async () => {
     const { service, entityManager, cacheManager } = createService();
 
@@ -435,6 +512,16 @@ describe('BodyGraphService integration coverage', () => {
 
     cacheManager.validateCache.mockReturnValue(true);
     expect(service.validateCache()).toBe(true);
+  });
+
+  it('provides null recipe identifier when anatomy data lacks recipeId', async () => {
+    const { service, entityManager } = createService();
+    entityManager.getComponentData.mockReturnValueOnce({});
+
+    await expect(service.getAnatomyData('actor-without-recipe')).resolves.toEqual({
+      recipeId: null,
+      rootEntityId: 'actor-without-recipe',
+    });
   });
 
   it('exposes cache helper methods for parent and ancestry operations', () => {
@@ -460,6 +547,14 @@ describe('BodyGraphService integration coverage', () => {
     expect(service.getChildren('node-1')).toEqual(['child-A']);
     expect(service.getParent('node-2')).toBe('parent-1');
     expect(service.getAncestors('leaf-1')).toEqual(['parent-1', 'root-1']);
+  });
+
+  it('returns cache fallbacks when children or parents are missing', () => {
+    const { service, cacheManager } = createService();
+    cacheManager.get.mockReturnValue(undefined);
+
+    expect(service.getChildren('missing')).toEqual([]);
+    expect(service.getParent('missing')).toBeNull();
   });
 
   it('lists descendants using subgraph traversal', () => {
