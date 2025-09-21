@@ -36,6 +36,14 @@ describe('AbstractDecisionProvider base logic', () => {
   const mockLogger = { error: jest.fn(), debug: jest.fn() };
   const mockDispatcher = { dispatch: jest.fn() };
 
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('throws when logger is missing', () => {
     expect(
       () => new TestProvider({ index: 1, safeEventDispatcher: mockDispatcher })
@@ -46,6 +54,29 @@ describe('AbstractDecisionProvider base logic', () => {
     expect(() => new TestProvider({ index: 1, logger: mockLogger })).toThrow(
       'Missing required dependency: safeEventDispatcher.'
     );
+  });
+
+  it('throws when safeEventDispatcher lacks required dispatch method', () => {
+    expect(
+      () =>
+        new TestProvider({
+          index: 1,
+          logger: mockLogger,
+          safeEventDispatcher: {},
+        })
+    ).toThrow("Invalid or missing method 'dispatch' on dependency 'safeEventDispatcher'.");
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      "Invalid or missing method 'dispatch' on dependency 'safeEventDispatcher'."
+    );
+  });
+
+  it('base choose implementation rejects with abstract error', async () => {
+    const base = new AbstractDecisionProvider({
+      logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
+    });
+
+    await expect(base.choose({}, {}, [])).rejects.toThrow('abstract');
   });
 
   it('invalid index triggers assertValidActionIndex for non-integer', async () => {
@@ -106,5 +137,88 @@ describe('AbstractDecisionProvider base logic', () => {
         },
       }
     );
+  });
+
+  it('decide normalizes optional fields when choose omits them', async () => {
+    const provider = new TestProvider({
+      index: 1,
+      logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
+    });
+
+    const result = await provider.decide(
+      { id: 'actor-1' },
+      { context: true },
+      ['first']
+    );
+
+    expect(result).toEqual({
+      chosenIndex: 1,
+      speech: null,
+      thoughts: null,
+      notes: null,
+    });
+  });
+
+  it('decide forwards values returned by choose and passes abort signal through', async () => {
+    const captured = {
+      actor: null,
+      context: null,
+      actions: null,
+      abortSignal: null,
+    };
+
+    class RichProvider extends AbstractDecisionProvider {
+      #result;
+
+      constructor({ result, logger, safeEventDispatcher }) {
+        super({ logger, safeEventDispatcher });
+        this.#result = result;
+      }
+
+      async choose(actor, context, actions, abortSignal) {
+        captured.actor = actor;
+        captured.context = context;
+        captured.actions = actions;
+        captured.abortSignal = abortSignal;
+        return this.#result;
+      }
+    }
+
+    const abortController = new AbortController();
+    const expectedNotes = [{ text: 'note', subject: 'subject' }];
+    const provider = new RichProvider({
+      result: {
+        index: 1,
+        speech: 'Hello there',
+        thoughts: 'Thinking',
+        notes: expectedNotes,
+      },
+      logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
+    });
+
+    const actor = { id: 'actor-42' };
+    const context = { some: 'context' };
+    const actions = ['do', 'redo'];
+    const result = await provider.decide(
+      actor,
+      context,
+      actions,
+      abortController.signal
+    );
+
+    expect(result).toEqual({
+      chosenIndex: 1,
+      speech: 'Hello there',
+      thoughts: 'Thinking',
+      notes: expectedNotes,
+    });
+    expect(captured).toEqual({
+      actor,
+      context,
+      actions,
+      abortSignal: abortController.signal,
+    });
   });
 });
