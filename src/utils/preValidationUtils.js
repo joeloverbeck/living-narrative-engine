@@ -54,7 +54,8 @@ const KNOWN_OPERATION_TYPES = [
 
 /**
  * Result of pre-validation check
- * @typedef {Object} PreValidationResult
+ *
+ * @typedef {object} PreValidationResult
  * @property {boolean} isValid - Whether pre-validation passed
  * @property {string|null} error - Specific error message if validation failed
  * @property {string|null} path - Path to the problematic element
@@ -62,7 +63,92 @@ const KNOWN_OPERATION_TYPES = [
  */
 
 /**
+ * Common parameter validation rules for specific operation types
+ */
+const OPERATION_PARAMETER_RULES = {
+  GET_NAME: {
+    required: ['entity_ref', 'result_variable'],
+    invalidFields: ['entity_id'], // Common mistake
+    fieldCorrections: {
+      entity_id: 'entity_ref'
+    }
+  },
+  QUERY_COMPONENT: {
+    required: ['entity_ref', 'component_type', 'result_variable'],
+    invalidFields: ['entity_id'],
+    fieldCorrections: {
+      entity_id: 'entity_ref'
+    }
+  },
+  ADD_COMPONENT: {
+    required: ['entity_ref', 'component_type'],
+    invalidFields: ['entity_id'],
+    fieldCorrections: {
+      entity_id: 'entity_ref'
+    }
+  },
+  REMOVE_COMPONENT: {
+    required: ['entity_ref', 'component_type'],
+    invalidFields: ['entity_id'],
+    fieldCorrections: {
+      entity_id: 'entity_ref'
+    }
+  }
+};
+
+/**
+ * Validates operation parameters for known operation types
+ *
+ * @param {string} operationType - The operation type
+ * @param {any} parameters - The parameters object
+ * @param {string} path - Current path for error reporting
+ * @returns {PreValidationResult} Validation result
+ */
+function validateOperationParameters(operationType, parameters, path) {
+  const rules = OPERATION_PARAMETER_RULES[operationType];
+  if (!rules) {
+    // No specific rules for this operation type
+    return { isValid: true, error: null, path: null, suggestions: null };
+  }
+
+  if (!parameters || typeof parameters !== 'object') {
+    return {
+      isValid: false,
+      error: `Operation type "${operationType}" requires a parameters object`,
+      path,
+      suggestions: [
+        `Required parameters: ${rules.required.join(', ')}`
+      ],
+    };
+  }
+
+  // Check for invalid fields (common mistakes)
+  if (rules.invalidFields) {
+    for (const invalidField of rules.invalidFields) {
+      if (invalidField in parameters) {
+        const correction = rules.fieldCorrections?.[invalidField];
+        return {
+          isValid: false,
+          error: `Invalid parameter "${invalidField}" in ${operationType} operation`,
+          path: `${path}.parameters`,
+          suggestions: [
+            correction ? `Use "${correction}" instead of "${invalidField}"` : `Remove "${invalidField}"`,
+            `${operationType} expects: ${rules.required.join(', ')}`,
+            correction && parameters[invalidField]
+              ? `Change to: "${correction}": "${parameters[invalidField]}"`
+              : null
+          ].filter(Boolean),
+        };
+      }
+    }
+  }
+
+  return { isValid: true, error: null, path: null, suggestions: null };
+}
+
+/**
  * Validates the structure of a single operation object
+ *
  * @param {any} operation - The operation object to validate
  * @param {string} path - Current path for error reporting
  * @returns {PreValidationResult} Validation result
@@ -153,11 +239,20 @@ export function validateOperationStructure(operation, path = 'root') {
     };
   }
 
+  // Validate parameters for known operation types
+  if (operation.parameters) {
+    const paramResult = validateOperationParameters(operation.type, operation.parameters, path);
+    if (!paramResult.isValid) {
+      return paramResult;
+    }
+  }
+
   return { isValid: true, error: null, path: null, suggestions: null };
 }
 
 /**
  * Recursively validates all operations in a data structure
+ *
  * @param {any} data - The data structure to scan (could be operation, array, or object)
  * @param {string} basePath - Base path for error reporting
  * @param {boolean} inOperationContext - Whether we're currently in a context where operations are expected
@@ -177,16 +272,36 @@ export function validateAllOperations(
     for (let i = 0; i < data.length; i++) {
       const result = validateOperationStructure(data[i], `${basePath}[${i}]`);
       if (!result.isValid) {
-        return result;
+        // Enhanced error with operation index and snippet
+        const enhancedError = {
+          ...result,
+          error: `Operation at index ${i} failed validation: ${result.error}`,
+          path: `${basePath}[${i}]`,
+          suggestions: [
+            ...(result.suggestions || []),
+            `Problematic operation: ${JSON.stringify(data[i], null, 2).substring(0, 200)}...`
+          ]
+        };
+        return enhancedError;
       }
-      // Also recursively validate the operation's internal structure
-      const recursiveResult = validateAllOperations(
-        data[i],
-        `${basePath}[${i}]`,
-        false
-      );
-      if (!recursiveResult.isValid) {
-        return recursiveResult;
+
+      // Skip recursive validation for macro references
+      // Macro references are already fully validated by validateOperationStructure
+      if (data[i].macro) {
+        continue; // Macro references don't need internal structure validation
+      }
+
+      // Only recursively validate internal structure for operations, not macros
+      // Also only check parameters field if it exists (not all operations have parameters)
+      if (data[i].type && data[i].parameters) {
+        const recursiveResult = validateAllOperations(
+          data[i].parameters,
+          `${basePath}[${i}].parameters`,
+          false
+        );
+        if (!recursiveResult.isValid) {
+          return recursiveResult;
+        }
       }
     }
     return { isValid: true, error: null, path: null, suggestions: null };
@@ -236,6 +351,7 @@ export function validateAllOperations(
 
 /**
  * Validates rule-specific structure
+ *
  * @param {any} ruleData - The rule data to validate
  * @param {string} filePath - File path for error context
  * @returns {PreValidationResult} Validation result
@@ -295,6 +411,7 @@ export function validateRuleStructure(ruleData, filePath = 'unknown') {
 
 /**
  * Performs comprehensive pre-validation based on expected schema type
+ *
  * @param {any} data - Data to validate
  * @param {string} schemaId - Schema ID being validated against
  * @param {string} [filePath] - File path for error context
@@ -312,6 +429,7 @@ export function performPreValidation(data, schemaId, filePath = 'unknown') {
 
 /**
  * Generates a user-friendly error message from pre-validation result
+ *
  * @param {PreValidationResult} result - Pre-validation result
  * @param {string} fileName - File name for context
  * @param {string} schemaId - Schema ID for context
