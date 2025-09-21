@@ -586,42 +586,49 @@ describe('ActionTraceConfigLoader', () => {
     });
 
     it('should expire cache after TTL period', async () => {
-      const shortTtlLoader = new ActionTraceConfigLoader({
-        traceConfigLoader: mockTraceConfigLoader,
-        logger: mockLogger,
-        validator: mockValidator,
-        cacheTtl: 100, // 100ms for testing
-      });
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2024-01-01T00:00:00.000Z'));
 
-      const mockConfig = {
-        actionTracing: {
-          enabled: true,
-          tracedActions: ['movement:go'],
-          outputDirectory: './traces',
-          verbosity: 'standard',
-        },
-      };
+      try {
+        const shortTtlLoader = new ActionTraceConfigLoader({
+          traceConfigLoader: mockTraceConfigLoader,
+          logger: mockLogger,
+          validator: mockValidator,
+          cacheTtl: 100, // 100ms for testing
+        });
 
-      mockTraceConfigLoader.loadConfig.mockResolvedValue(mockConfig);
-      mockValidator.validate.mockResolvedValue({ isValid: true });
+        const mockConfig = {
+          actionTracing: {
+            enabled: true,
+            tracedActions: ['movement:go'],
+            outputDirectory: './traces',
+            verbosity: 'standard',
+          },
+        };
 
-      // First load
-      const config1 = await shortTtlLoader.loadConfig();
-      expect(config1.enabled).toBe(true);
-      expect(mockTraceConfigLoader.loadConfig).toHaveBeenCalledTimes(1);
+        mockTraceConfigLoader.loadConfig.mockResolvedValue(mockConfig);
+        mockValidator.validate.mockResolvedValue({ isValid: true });
 
-      // Immediate second load should use cache
-      const config2 = await shortTtlLoader.loadConfig();
-      expect(config2).toBe(config1); // Same reference
-      expect(mockTraceConfigLoader.loadConfig).toHaveBeenCalledTimes(1);
+        // First load
+        const config1 = await shortTtlLoader.loadConfig();
+        expect(config1.enabled).toBe(true);
+        expect(mockTraceConfigLoader.loadConfig).toHaveBeenCalledTimes(1);
 
-      // Wait for TTL to expire
-      await new Promise((resolve) => setTimeout(resolve, 150));
+        // Immediate second load should use cache
+        const config2 = await shortTtlLoader.loadConfig();
+        expect(config2).toBe(config1); // Same reference
+        expect(mockTraceConfigLoader.loadConfig).toHaveBeenCalledTimes(1);
 
-      // Third load should reload from source
-      const config3 = await shortTtlLoader.loadConfig();
-      expect(config3.enabled).toBe(true);
-      expect(mockTraceConfigLoader.loadConfig).toHaveBeenCalledTimes(2);
+        // Fast-forward past the TTL window
+        await jest.advanceTimersByTimeAsync(150);
+
+        // Third load should reload from source
+        const config3 = await shortTtlLoader.loadConfig();
+        expect(config3.enabled).toBe(true);
+        expect(mockTraceConfigLoader.loadConfig).toHaveBeenCalledTimes(2);
+      } finally {
+        jest.useRealTimers();
+      }
     });
 
     it('should handle TTL of zero (disabled caching)', async () => {

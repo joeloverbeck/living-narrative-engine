@@ -609,46 +609,58 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
     });
 
     it('should use exponential backoff for retries', async () => {
-      const entityId = 'test:entity:123';
-      let anatomyCallCount = 0;
-      const anatomyData = {
-        recipeId: 'test:recipe',
-        body: {
-          root: 'test:root:123',
-          parts: { 'test:part1': 'entity1' },
-        },
-      };
-      const descriptionData = { text: 'Generated description' };
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2024-01-01T00:00:00.000Z'));
 
-      const mockEntity = {
-        getComponentData: jest.fn().mockImplementation((componentType) => {
-          if (componentType === 'anatomy:body') {
-            anatomyCallCount++;
-            // First two calls return null, third call returns data
-            return anatomyCallCount <= 2 ? null : anatomyData;
-          } else if (componentType === 'core:description') {
-            // Return description when anatomy is ready (after third anatomy call)
-            return anatomyCallCount >= 3 ? descriptionData : null;
+      try {
+        const entityId = 'test:entity:123';
+        let anatomyCallCount = 0;
+        const anatomyData = {
+          recipeId: 'test:recipe',
+          body: {
+            root: 'test:root:123',
+            parts: { 'test:part1': 'entity1' },
+          },
+        };
+        const descriptionData = { text: 'Generated description' };
+
+        const mockEntity = {
+          getComponentData: jest.fn().mockImplementation((componentType) => {
+            if (componentType === 'anatomy:body') {
+              anatomyCallCount++;
+              // First two calls return null, third call returns data
+              return anatomyCallCount <= 2 ? null : anatomyData;
+            } else if (componentType === 'core:description') {
+              // Return description when anatomy is ready (after third anatomy call)
+              return anatomyCallCount >= 3 ? descriptionData : null;
+            }
+            return null;
+          }),
+        };
+
+        testBed.mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
+
+        // Use short intervals for testing
+        const waitPromise = anatomyLoadingDetector.waitForAnatomyReady(
+          entityId,
+          {
+            timeout: 200,
+            retryInterval: 10,
+            useExponentialBackoff: true,
           }
-          return null;
-        }),
-      };
+        );
 
-      testBed.mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
+        // Advance timers to progress through retries (10ms + 20ms backoff)
+        await jest.advanceTimersByTimeAsync(10);
+        await jest.advanceTimersByTimeAsync(20);
 
-      // Use short intervals for testing
-      const result = await anatomyLoadingDetector.waitForAnatomyReady(
-        entityId,
-        {
-          timeout: 200,
-          retryInterval: 10,
-          useExponentialBackoff: true,
-        }
-      );
-
-      expect(result).toBe(true);
-      // Three anatomy attempts (1st: null, 2nd: null, 3rd: success) + one description call on success
-      expect(mockEntity.getComponentData).toHaveBeenCalledTimes(4);
+        const result = await waitPromise;
+        expect(result).toBe(true);
+        // Three anatomy attempts (1st: null, 2nd: null, 3rd: success) + one description call on success
+        expect(mockEntity.getComponentData).toHaveBeenCalledTimes(4);
+      } finally {
+        jest.useRealTimers();
+      }
     });
   });
 
