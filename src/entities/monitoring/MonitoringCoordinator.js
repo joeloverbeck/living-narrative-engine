@@ -1,12 +1,14 @@
 /**
  * @file MonitoringCoordinator - Coordinates all monitoring activities
  * @module MonitoringCoordinator
+ * @see ../../config/errorHandling.config.js - Centralized error handling configuration
  */
 
 import PerformanceMonitor from './PerformanceMonitor.js';
 import CircuitBreaker from './CircuitBreaker.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
+import { getCircuitBreakerConfig, getErrorConfig } from '../../config/errorHandling.config.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/coreServices.js').IEventBus} IEventBus */
@@ -98,9 +100,16 @@ export default class MonitoringCoordinator {
       });
     }
 
+    // Get configuration
+    const config = getErrorConfig();
+
     this.#enabled = enabled;
     this.#checkInterval = checkInterval;
-    this.#defaultCircuitBreakerOptions = circuitBreakerOptions;
+    // Use configuration for default circuit breaker options
+    this.#defaultCircuitBreakerOptions = {
+      ...config.circuitBreaker.default,
+      ...circuitBreakerOptions
+    };
     this.#eventBus = eventBus || null;
     this.#centralErrorHandler = null;
     this.#recoveryStrategyManager = null;
@@ -333,9 +342,12 @@ export default class MonitoringCoordinator {
    */
   getCircuitBreaker(name, options = {}) {
     if (!this.#circuitBreakers.has(name)) {
+      // Get service-specific config if available
+      const serviceConfig = getCircuitBreakerConfig(name);
+
       const circuitBreaker = new CircuitBreaker({
         logger: this.#logger,
-        options: { ...this.#defaultCircuitBreakerOptions, ...options, name },
+        options: { ...this.#defaultCircuitBreakerOptions, ...serviceConfig, ...options, name },
       });
       this.#circuitBreakers.set(name, circuitBreaker);
       this.#logger.debug(`Created circuit breaker: ${name}`);

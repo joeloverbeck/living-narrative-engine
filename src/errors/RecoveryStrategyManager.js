@@ -3,9 +3,17 @@
  * @description Handles retry logic, circuit breaker integration, and fallback mechanisms
  * @see baseError.js - Foundation error class with recoverable property
  * @see MonitoringCoordinator.js - Circuit breaker integration
+ * @see ../config/errorHandling.config.js - Centralized error handling configuration
  */
 
 import { validateDependency } from '../utils/dependencyUtils.js';
+import {
+  getErrorConfig,
+  getRetryConfig,
+  getCircuitBreakerConfig,
+  getFallbackValue,
+  isRetriable
+} from '../config/errorHandling.config.js';
 
 /**
  * Recovery strategy manager that handles retry logic, circuit breaker integration,
@@ -58,13 +66,16 @@ class RecoveryStrategyManager {
    * @param {number} [strategy.timeout] - Operation timeout in milliseconds
    */
   registerStrategy(errorType, strategy) {
+    // Get type-specific config from configuration
+    const retryConfig = getRetryConfig(errorType);
+
     this.#strategies.set(errorType, {
-      retry: strategy.retry || this.#defaultRetry,
+      retry: strategy.retry || retryConfig,
       fallback: strategy.fallback || this.#defaultFallback,
       circuitBreaker: strategy.circuitBreaker || this.#defaultCircuitBreaker,
-      maxRetries: strategy.maxRetries || 3,
-      backoff: strategy.backoff || 'exponential',
-      timeout: strategy.timeout || 5000
+      maxRetries: strategy.maxRetries || retryConfig.maxAttempts,
+      backoff: strategy.backoff || (retryConfig.backoff ? retryConfig.backoff.type : 'exponential'),
+      timeout: strategy.timeout || retryConfig.timeout || 5000
     });
     this.#logger.debug(`Registered recovery strategy for ${errorType}`);
   }
@@ -85,21 +96,26 @@ class RecoveryStrategyManager {
    * @returns {Promise<*>} Result of the operation or fallback value
    */
   async executeWithRecovery(operation, options = {}) {
+    // Get configuration for specific error type
+    const errorTypeTemp = options.errorType || null;
+    const retryConfig = errorTypeTemp ? getRetryConfig(errorTypeTemp) : getRetryConfig(null);
+    const config = getErrorConfig();
+
     const {
       operationName = 'unknown',
-      errorType = null,
-      maxRetries = 3,
-      backoff = 'exponential',
+      errorType = errorTypeTemp,
+      maxRetries = retryConfig.maxAttempts,
+      backoff = retryConfig.backoff ? retryConfig.backoff.type : 'exponential',
       useCircuitBreaker = true,
       useFallback = true,
-      cacheResult = false,
-      timeout = 5000
+      cacheResult = config.fallback.useCache,
+      timeout = retryConfig.timeout || 5000
     } = options;
 
     // Check cache first
     if (cacheResult && this.#cache.has(operationName)) {
       const cached = this.#cache.get(operationName);
-      if (Date.now() - cached.timestamp < 60000) { // 1 minute cache
+      if (Date.now() - cached.timestamp < config.fallback.cacheTimeout) {
         this.#logger.debug(`Returning cached result for ${operationName}`);
         return cached.value;
       }
@@ -404,27 +420,30 @@ class RecoveryStrategyManager {
   }
 
   /**
-   * Initialize default strategies
+   * Initialize default strategies from configuration
    *
    * @private
    */
   #initializeDefaultStrategies() {
-    // Default retry strategy
+    const config = getErrorConfig();
+
+    // Default retry strategy from config
     this.#defaultRetry = {
-      maxRetries: 3,
-      backoff: 'exponential'
+      maxRetries: config.retry.default.maxAttempts,
+      backoff: config.retry.default.backoff.type
     };
 
     // Default fallback strategy
     this.#defaultFallback = (error, operation) => {
       this.#logger.warn(`Using default fallback for ${operation}`);
-      return null;
+      // Use configuration-based fallback
+      return getFallbackValue(null, operation);
     };
 
-    // Default circuit breaker config
+    // Default circuit breaker config from configuration
     this.#defaultCircuitBreaker = {
-      failureThreshold: 5,
-      resetTimeout: 60000
+      failureThreshold: config.circuitBreaker.default.failureThreshold,
+      resetTimeout: config.circuitBreaker.default.timeout
     };
   }
 

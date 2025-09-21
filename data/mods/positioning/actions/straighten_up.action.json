@@ -1,16 +1,16 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "positioning:sit_down",
-  "name": "Sit down",
-  "description": "Sit down on available furniture",
-  "targets": "positioning:available_furniture",
+  "id": "positioning:straighten_up",
+  "name": "Straighten up",
+  "description": "Stop bending over the surface",
+  "targets": "positioning:surface_im_bending_over",
   "required_components": {
-    "actor": []
+    "actor": ["positioning:bending_over"]
   },
   "forbidden_components": {
-    "actor": ["positioning:sitting_on", "positioning:kneeling_before", "positioning:bending_over"]
+    "actor": []
   },
-  "template": "sit down on {target}",
+  "template": "straighten up from {target}",
   "prerequisites": [],
   "visual": {
     "backgroundColor": "#bf360c",

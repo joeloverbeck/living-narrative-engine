@@ -1047,9 +1047,9 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
     return {
       patterns: patterns.speechPatterns.map((pattern, index) => ({
         index: index + 1,
-        htmlSafePattern: this.#escapeHtml(pattern),
-        htmlSafeExample: this.#escapeHtml(pattern),
-        circumstances: '',
+        htmlSafePattern: this.#escapeHtml(pattern.pattern || ''),
+        htmlSafeExample: this.#escapeHtml(pattern.example || ''),
+        circumstances: pattern.circumstances ? this.#escapeHtml(pattern.circumstances) : '',
       })),
       characterName: patterns.characterName || 'Character',
       totalCount: patterns.speechPatterns.length,
@@ -1270,14 +1270,20 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
     const lines = [
       `Speech Patterns for ${patterns.characterName}`,
       `Generated: ${new Date(patterns.generatedAt).toLocaleString()}`,
-      `Total Patterns: ${patterns.totalCount}`,
+      `Total Patterns: ${patterns.speechPatterns?.length || 0}`,
       '',
       '='.repeat(50),
       '',
     ];
 
     patterns.speechPatterns.forEach((pattern, index) => {
-      lines.push(`${index + 1}. ${pattern}`);
+      lines.push(`${index + 1}. ${pattern.pattern || 'Speech Pattern'}`);
+      if (pattern.example) {
+        lines.push(`   Example: "${pattern.example}"`);
+      }
+      if (pattern.circumstances) {
+        lines.push(`   Context: ${pattern.circumstances}`);
+      }
       lines.push('');
     });
 

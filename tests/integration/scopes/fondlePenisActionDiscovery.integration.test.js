@@ -177,7 +177,13 @@ describe('Fondle Penis Action Discovery Integration Tests', () => {
       ? createMockMultiTargetResolutionStage()
       : createEmptyMockMultiTargetResolutionStage();
 
-    const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+    
+    // Create mock TargetComponentValidator
+    const mockTargetComponentValidator = {
+      validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
+      validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
+    };
+const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex: {
         getCandidateActions: jest
           .fn()
@@ -200,6 +206,7 @@ describe('Fondle Penis Action Discovery Integration Tests', () => {
       }),
       targetContextBuilder: createMockTargetContextBuilder(),
       multiTargetResolutionStage: stage,
+      targetComponentValidator: mockTargetComponentValidator,
     });
 
     return new ActionDiscoveryService({

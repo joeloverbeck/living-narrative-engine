@@ -128,6 +128,7 @@ export const coreTokens = freeze({
   ActionPipelineOrchestrator: 'ActionPipelineOrchestrator',
   IActionErrorContextBuilder: 'IActionErrorContextBuilder',
   IFixSuggestionEngine: 'IFixSuggestionEngine',
+  ITargetComponentValidator: 'ITargetComponentValidator',
   IInputHandler: 'IInputHandler',
   GlobalKeyHandler: 'GlobalKeyHandler',
   ITurnOrderService: 'ITurnOrderService',

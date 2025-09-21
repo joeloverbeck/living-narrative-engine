@@ -26,7 +26,7 @@ import DefaultDslParser from '../../src/scopeDsl/parser/defaultDslParser.js';
 import { createMockActionErrorContextBuilder } from '../common/mockFactories/actions.js';
 import { createTraceContext } from '../../src/actions/tracing/traceContext.js';
 import { createMockTargetContextBuilder } from '../common/mocks/mockTargetContextBuilder.js';
-import { createMultiTargetResolutionStage } from '../common/actions/multiTargetStageTestUtilities.js';
+import { createMultiTargetResolutionStage, createActionPipelineOrchestrator } from '../common/actions/multiTargetStageTestUtilities.js';
 import {
   POSITION_COMPONENT_ID,
   NAME_COMPONENT_ID,
@@ -219,8 +219,8 @@ describe('Singleton Scope Engine Location Context', () => {
       ]),
     };
 
-    // Create the ActionPipelineOrchestrator
-    const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+    // Create the ActionPipelineOrchestrator using the utility factory
+    const actionPipelineOrchestrator = createActionPipelineOrchestrator({
       actionIndex,
       prerequisiteService: prerequisiteEvaluationService,
       targetService: targetResolutionService,

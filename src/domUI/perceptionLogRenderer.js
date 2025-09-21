@@ -5,6 +5,9 @@ import { PERCEPTION_LOG_COMPONENT_ID } from '../constants/componentIds.js';
 import { TURN_STARTED_ID } from '../constants/eventIds.js';
 import createMessageElement from './helpers/createMessageElement.js';
 
+// Maximum number of log entries to display in the UI
+const MAX_DISPLAY_ENTRIES = 10;
+
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext
@@ -51,6 +54,8 @@ import createMessageElement from './helpers/createMessageElement.js';
  * Renders perception logs for the current actor into the perception log panel.
  * Extends BaseListDisplayComponent to handle list rendering and DOM binding.
  * Subscribes to 'core:turn_started' to update based on the current actor.
+ * Displays only the most recent MAX_DISPLAY_ENTRIES (10) log entries to prevent
+ * excessive vertical growth in the UI.
  *
  * @augments {BaseListDisplayComponent<LogEntryObject>}
  */
@@ -192,7 +197,8 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
       this.logger.debug(
         `${this._logPrefix} Successfully fetched ${perceptionData.logEntries.length} log entries for actor '${this.#currentActorId}'.`
       );
-      return perceptionData.logEntries;
+      // Return only the last MAX_DISPLAY_ENTRIES entries for display
+      return perceptionData.logEntries.slice(-MAX_DISPLAY_ENTRIES);
     } catch (error) {
       this.logger.error(
         `${this._logPrefix} Error fetching perception log data for actor '${this.#currentActorId}':`,

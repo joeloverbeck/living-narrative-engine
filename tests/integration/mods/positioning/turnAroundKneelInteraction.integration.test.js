@@ -238,6 +238,12 @@ describe('Turn around and kneel before interaction', () => {
 
     const actionCommandFormatter = new ActionCommandFormatter({ logger });
 
+    // Create mock TargetComponentValidator
+    const mockTargetComponentValidator = {
+      validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
+      validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
+    };
+
     actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex,
       prerequisiteService: prereqService,
@@ -259,6 +265,7 @@ describe('Turn around and kneel before interaction', () => {
         actionErrorContextBuilder,
       }),
       targetContextBuilder: createMockTargetContextBuilder(),
+      targetComponentValidator: mockTargetComponentValidator,
       multiTargetResolutionStage: (() => {
         const mockTargetContextBuilder =
           createMockTargetContextBuilder(entityManager);

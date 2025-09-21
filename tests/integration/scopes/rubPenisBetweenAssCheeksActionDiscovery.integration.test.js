@@ -274,7 +274,13 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
         }
       : createEmptyMockMultiTargetResolutionStage();
 
-    const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+    
+    // Create mock TargetComponentValidator
+    const mockTargetComponentValidator = {
+      validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
+      validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
+    };
+const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex: {
         getCandidateActions: jest
           .fn()
@@ -317,6 +323,7 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
       }),
       targetContextBuilder: createMockTargetContextBuilder(),
       multiTargetResolutionStage: stage,
+      targetComponentValidator: mockTargetComponentValidator,
     });
 
     return new ActionDiscoveryService({

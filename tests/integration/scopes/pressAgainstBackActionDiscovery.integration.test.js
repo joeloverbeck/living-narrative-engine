@@ -169,7 +169,13 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
         unsubscribe: jest.fn(),
       },
     });
-    const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+    
+    // Create mock TargetComponentValidator
+    const mockTargetComponentValidator = {
+      validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
+      validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
+    };
+const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex: {
         getCandidateActions: jest.fn().mockImplementation((actor, trace) => {
           // Get all actions
@@ -213,6 +219,7 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
       }),
       targetContextBuilder: createMockTargetContextBuilder(),
       multiTargetResolutionStage: mockMultiTargetResolutionStage,
+      targetComponentValidator: mockTargetComponentValidator,
     });
 
     actionDiscoveryService = new ActionDiscoveryService({

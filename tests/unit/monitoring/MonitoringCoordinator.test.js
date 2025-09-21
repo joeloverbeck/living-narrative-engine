@@ -105,7 +105,15 @@ describe('MonitoringCoordinator', () => {
 
       expect(CircuitBreaker).toHaveBeenCalledWith({
         logger,
-        options: { name: 'test-operation' },
+        options: {
+          failureThreshold: 2, // Test environment default
+          successThreshold: 2,
+          timeout: 30000,
+          halfOpenRequests: 3,
+          volumeThreshold: 10,
+          errorThresholdPercentage: 50,
+          name: 'test-operation',
+        },
       });
       expect(breaker).toBe(mockCircuitBreaker);
     });
@@ -126,7 +134,15 @@ describe('MonitoringCoordinator', () => {
 
       expect(CircuitBreaker).toHaveBeenCalledWith({
         logger,
-        options: { name: 'test-operation', ...options },
+        options: {
+          failureThreshold: 10, // Overridden by custom options
+          successThreshold: 2,
+          timeout: 30000,
+          halfOpenRequests: 3,
+          volumeThreshold: 10,
+          errorThresholdPercentage: 50,
+          name: 'test-operation',
+        },
       });
     });
   });
@@ -196,7 +212,15 @@ describe('MonitoringCoordinator', () => {
 
       expect(CircuitBreaker).toHaveBeenCalledWith({
         logger,
-        options: { name: 'test-op', ...circuitBreakerOptions },
+        options: {
+          failureThreshold: 5, // Overridden by custom options
+          successThreshold: 2,
+          timeout: 30000,
+          halfOpenRequests: 3,
+          volumeThreshold: 10,
+          errorThresholdPercentage: 50,
+          name: 'test-op',
+        },
       });
     });
   });
@@ -867,7 +891,13 @@ describe('MonitoringCoordinator', () => {
       expect(CircuitBreaker).toHaveBeenCalledWith({
         logger,
         options: {
-          ...defaultOptions,
+          failureThreshold: 2, // Test environment default overrides constructor
+          successThreshold: 2, // From config default
+          timeout: 30000, // Test environment default overrides constructor
+          halfOpenRequests: 3, // From config default
+          volumeThreshold: 10, // From config default
+          errorThresholdPercentage: 50, // From config default
+          resetTimeout: 30000, // Added by constructor options
           name: 'test-op',
         },
       });
@@ -894,9 +924,13 @@ describe('MonitoringCoordinator', () => {
       expect(CircuitBreaker).toHaveBeenCalledWith({
         logger,
         options: {
-          timeout: 10000, // From default
-          failureThreshold: 10, // Overridden
-          resetTimeout: 60000, // Added
+          failureThreshold: 10, // Overridden by method options
+          successThreshold: 2, // From config default
+          timeout: 30000, // Test environment default overrides constructor
+          halfOpenRequests: 3, // From config default
+          volumeThreshold: 10, // From config default
+          errorThresholdPercentage: 50, // From config default
+          resetTimeout: 60000, // Added by method options
           name: 'test-op',
         },
       });

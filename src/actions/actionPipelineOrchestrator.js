@@ -6,6 +6,7 @@
 import { Pipeline } from './pipeline/Pipeline.js';
 import { ComponentFilteringStage } from './pipeline/stages/ComponentFilteringStage.js';
 import { PrerequisiteEvaluationStage } from './pipeline/stages/PrerequisiteEvaluationStage.js';
+import { TargetComponentValidationStage } from './pipeline/stages/TargetComponentValidationStage.js';
 import { ActionFormattingStage } from './pipeline/stages/ActionFormattingStage.js';
 
 /** @typedef {import('../entities/entity.js').default} Entity */
@@ -22,6 +23,7 @@ import { ActionFormattingStage } from './pipeline/stages/ActionFormattingStage.j
 /** @typedef {import('./errors/actionErrorContextBuilder.js').ActionErrorContextBuilder} ActionErrorContextBuilder */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('./pipeline/stages/MultiTargetResolutionStage.js').MultiTargetResolutionStage} MultiTargetResolutionStage */
+/** @typedef {import('./validation/TargetComponentValidator.js').TargetComponentValidator} TargetComponentValidator */
 
 /**
  * @class ActionPipelineOrchestrator
@@ -40,6 +42,7 @@ export class ActionPipelineOrchestrator {
   #unifiedScopeResolver;
   #targetContextBuilder;
   #multiTargetResolutionStage;
+  #targetComponentValidator;
 
   /**
    * Creates an ActionPipelineOrchestrator instance
@@ -57,6 +60,7 @@ export class ActionPipelineOrchestrator {
    * @param {UnifiedScopeResolver} deps.unifiedScopeResolver - Unified scope resolver
    * @param {TargetContextBuilder} deps.targetContextBuilder - Target context builder
    * @param {MultiTargetResolutionStage} deps.multiTargetResolutionStage - Multi-target resolution stage
+   * @param {TargetComponentValidator} deps.targetComponentValidator - Target component validator
    */
   constructor({
     actionIndex,
@@ -71,6 +75,7 @@ export class ActionPipelineOrchestrator {
     unifiedScopeResolver,
     targetContextBuilder,
     multiTargetResolutionStage,
+    targetComponentValidator,
   }) {
     this.#actionIndex = actionIndex;
     this.#prerequisiteService = prerequisiteService;
@@ -84,6 +89,7 @@ export class ActionPipelineOrchestrator {
     this.#unifiedScopeResolver = unifiedScopeResolver;
     this.#targetContextBuilder = targetContextBuilder;
     this.#multiTargetResolutionStage = multiTargetResolutionStage;
+    this.#targetComponentValidator = targetComponentValidator;
   }
 
   /**
@@ -143,6 +149,11 @@ export class ActionPipelineOrchestrator {
         this.#errorBuilder,
         this.#logger
       ),
+      new TargetComponentValidationStage({
+        targetComponentValidator: this.#targetComponentValidator,
+        logger: this.#logger,
+        actionErrorContextBuilder: this.#errorBuilder,
+      }),
       this.#multiTargetResolutionStage,
       new ActionFormattingStage({
         commandFormatter: this.#formatter,

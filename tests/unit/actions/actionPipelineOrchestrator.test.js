@@ -8,6 +8,7 @@ import { Pipeline } from '../../../src/actions/pipeline/Pipeline.js';
 import { PipelineResult } from '../../../src/actions/pipeline/PipelineResult.js';
 import { ComponentFilteringStage } from '../../../src/actions/pipeline/stages/ComponentFilteringStage.js';
 import { PrerequisiteEvaluationStage } from '../../../src/actions/pipeline/stages/PrerequisiteEvaluationStage.js';
+import { TargetComponentValidationStage } from '../../../src/actions/pipeline/stages/TargetComponentValidationStage.js';
 import { ActionFormattingStage } from '../../../src/actions/pipeline/stages/ActionFormattingStage.js';
 import { TraceContext } from '../../../src/actions/tracing/traceContext.js';
 
@@ -17,6 +18,7 @@ jest.mock('../../../src/actions/pipeline/stages/ComponentFilteringStage.js');
 jest.mock(
   '../../../src/actions/pipeline/stages/PrerequisiteEvaluationStage.js'
 );
+jest.mock('../../../src/actions/pipeline/stages/TargetComponentValidationStage.js');
 jest.mock('../../../src/actions/pipeline/stages/ActionFormattingStage.js');
 
 describe('ActionPipelineOrchestrator', () => {
@@ -71,6 +73,9 @@ describe('ActionPipelineOrchestrator', () => {
         name: 'MultiTargetResolutionStage',
         execute: jest.fn(),
       },
+      targetComponentValidator: {
+        validateTargetComponents: jest.fn(),
+      },
     };
 
     // Setup Pipeline mock
@@ -100,7 +105,7 @@ describe('ActionPipelineOrchestrator', () => {
       const stages = pipelineCall[0];
       const logger = pipelineCall[1];
 
-      expect(stages).toHaveLength(4);
+      expect(stages).toHaveLength(5);
       expect(logger).toBe(mockDependencies.logger);
     });
 
@@ -122,6 +127,12 @@ describe('ActionPipelineOrchestrator', () => {
         mockDependencies.errorBuilder,
         mockDependencies.logger
       );
+
+      expect(TargetComponentValidationStage).toHaveBeenCalledWith({
+        targetComponentValidator: mockDependencies.targetComponentValidator,
+        logger: mockDependencies.logger,
+        actionErrorContextBuilder: mockDependencies.errorBuilder,
+      });
 
       expect(ActionFormattingStage).toHaveBeenCalledWith({
         commandFormatter: mockDependencies.formatter,
@@ -351,7 +362,7 @@ describe('ActionPipelineOrchestrator', () => {
 
       // Find the multiTargetResolutionStage
       expect(stages).toContain(mockDependencies.multiTargetResolutionStage);
-      expect(stages[2]).toBe(mockDependencies.multiTargetResolutionStage);
+      expect(stages[3]).toBe(mockDependencies.multiTargetResolutionStage);
     });
   });
 });

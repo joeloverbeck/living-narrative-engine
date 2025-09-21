@@ -716,13 +716,18 @@ export class ModActionTestFixture extends BaseModTestFixture {
   async executeAction(actorId, targetId, options = {}) {
     const { originalInput, additionalPayload = {} } = options;
 
+    // Ensure actionId is properly namespaced
+    const fullActionId = this.actionId.includes(':')
+      ? this.actionId
+      : `${this.modId}:${this.actionId}`;
+
     const payload = {
       eventName: 'core:attempt_action',
       actorId,
-      actionId: this.actionId,
+      actionId: fullActionId,
       targetId,
       originalInput:
-        originalInput || `${this.actionId.split(':')[1]} ${targetId}`,
+        originalInput || `${this.actionId.split(':')[1] || this.actionId} ${targetId}`,
       ...additionalPayload,
     };
 

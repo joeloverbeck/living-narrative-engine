@@ -366,9 +366,9 @@ describe('CentralErrorHandler - Core Error Processing', () => {
   describe('Fallback Values', () => {
     it('should provide appropriate fallback values for operations', () => {
       expect(centralErrorHandler.getFallbackValue('fetch', 'NetworkError')).toBeNull();
-      expect(centralErrorHandler.getFallbackValue('parse', 'ParseError')).toEqual({});
+      expect(centralErrorHandler.getFallbackValue('parse', 'ParseError')).toBeNull();
       expect(centralErrorHandler.getFallbackValue('validate', 'ValidationError')).toBe(false);
-      expect(centralErrorHandler.getFallbackValue('generate', 'GenerationError')).toBe('');
+      expect(centralErrorHandler.getFallbackValue('generate', 'GenerationError')).toEqual({});
       expect(centralErrorHandler.getFallbackValue('calculate', 'MathError')).toBe(0);
       expect(centralErrorHandler.getFallbackValue('unknown', 'UnknownError')).toBeNull();
     });
