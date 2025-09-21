@@ -172,4 +172,107 @@ describe('AlertRouter', () => {
     // No new console.error (aside from the first malformed one)
     expect(console.error).not.toHaveBeenCalled();
   });
+
+  test('Queued error event flushes to console.error', () => {
+    console.warn = jest.fn();
+    console.error = jest.fn();
+
+    const payload = { message: 'Critical failure detected' };
+    mockDispatcher.listeners[SYSTEM_ERROR_OCCURRED_ID]({
+      name: SYSTEM_ERROR_OCCURRED_ID,
+      payload,
+    });
+
+    jest.advanceTimersByTime(5000);
+
+    expect(console.error).toHaveBeenCalledWith('Critical failure detected');
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
+  test('handleEvent logs errors when forwardToUI throws', () => {
+    console.error = jest.fn();
+    router.uiReady = true;
+    router.forwardToUI = jest.fn(() => {
+      throw new Error('Immediate failure');
+    });
+
+    mockDispatcher.listeners[SYSTEM_WARNING_OCCURRED_ID]({
+      name: SYSTEM_WARNING_OCCURRED_ID,
+      payload: { message: 'should still continue' },
+    });
+
+    expect(console.error).toHaveBeenCalledWith(
+      'AlertRouter error:',
+      expect.any(Error)
+    );
+  });
+
+  test('notifyUIReady logs and recovers from forwardToUI errors', () => {
+    console.error = jest.fn();
+
+    mockDispatcher.listeners[SYSTEM_WARNING_OCCURRED_ID]({
+      name: SYSTEM_WARNING_OCCURRED_ID,
+      payload: { message: 'queued while ui loads' },
+    });
+
+    router.forwardToUI = jest.fn(() => {
+      throw new Error('Forwarding failed');
+    });
+
+    router.notifyUIReady();
+
+    expect(console.error).toHaveBeenCalledWith(
+      'AlertRouter error forwarding queued event:',
+      expect.any(Error)
+    );
+    expect(router.queue).toEqual([]);
+    expect(router.uiReady).toBe(true);
+  });
+
+  test('forwardToUI logs dispatch errors from dispatcher', () => {
+    console.error = jest.fn();
+
+    const failingDispatcher = {
+      subscribe: jest.fn(),
+      dispatch: jest.fn(() => {
+        throw new Error('Dispatch failure');
+      }),
+    };
+
+    const failingRouter = new AlertRouter({
+      safeEventDispatcher: failingDispatcher,
+    });
+
+    failingRouter.forwardToUI(SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'boom',
+    });
+
+    expect(console.error).toHaveBeenCalledWith(
+      'AlertRouter dispatch error:',
+      expect.any(Error)
+    );
+  });
+
+  test('flush timer outer catch logs unexpected iteration failures', () => {
+    console.error = jest.fn();
+
+    mockDispatcher.listeners[SYSTEM_WARNING_OCCURRED_ID]({
+      name: SYSTEM_WARNING_OCCURRED_ID,
+      payload: { message: 'will trigger outer catch' },
+    });
+
+    router.queue = null;
+
+    jest.advanceTimersByTime(5000);
+
+    expect(console.error).toHaveBeenCalledWith(
+      'AlertRouter flush error:',
+      expect.any(Error)
+    );
+    expect(router.queue).toEqual([]);
+    expect(router.flushTimer).toBeNull();
+  });
+
 });
+
+
