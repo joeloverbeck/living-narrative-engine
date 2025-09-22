@@ -20,22 +20,27 @@ Establish comprehensive performance baseline metrics for the clothing and anatom
 
 ### Performance Metrics Collector
 ```javascript
-// Location: src/common/metrics/PerformanceMetricsCollector.js
+// Location: src/entities/monitoring/PerformanceMetricsCollector.js
 class PerformanceMetricsCollector {
   #metrics;
   #benchmarks;
   #thresholds;
   #history;
-  
+  #logger;
+  #eventBus;
+
   constructor({
     historyRetention = 7 * 24 * 60 * 60 * 1000, // 7 days
     aggregationInterval = 60000, // 1 minute
-    eventBus
+    eventBus,
+    logger
   }) {
     this.#metrics = new Map();
     this.#benchmarks = new Map();
     this.#thresholds = new Map();
-    this.#history = new CircularBuffer(10000);
+    this.#history = []; // Use array with maxLength instead of CircularBuffer
+    this.#logger = logger;
+    this.#eventBus = eventBus;
   }
   
   // Measurement methods
@@ -61,7 +66,7 @@ class PerformanceMetricsCollector {
 
 ### Performance Benchmark Suite
 ```javascript
-// Location: src/common/metrics/PerformanceBenchmarkSuite.js
+// Location: src/entities/monitoring/PerformanceBenchmarkSuite.js
 class PerformanceBenchmarkSuite {
   #suites;
   #collector;
@@ -98,7 +103,7 @@ class PerformanceBenchmarkSuite {
 
 ### Key Performance Indicators
 ```javascript
-// Location: src/common/metrics/KPIDefinitions.js
+// Location: src/entities/monitoring/KPIDefinitions.js
 export const ClothingSystemKPIs = {
   // Query operations
   'clothing.query.accessible.all': {
@@ -154,7 +159,7 @@ export const AnatomySystemKPIs = {
 
 ### Performance Monitor
 ```javascript
-// Location: src/common/monitoring/PerformanceMonitor.js
+// Location: src/entities/monitoring/PerformanceMonitor.js
 class PerformanceMonitor {
   #collector;
   #analyzer;
@@ -163,8 +168,8 @@ class PerformanceMonitor {
   
   constructor({ collector, eventBus, logger }) {
     this.#collector = collector;
-    this.#analyzer = new PerformanceAnalyzer();
-    this.#alertManager = new AlertManager({ eventBus });
+    this.#analyzer = new PerformanceAnalyzer({ logger });
+    this.#alertManager = { eventBus, logger }; // Use existing event dispatch patterns
     this.#dashboard = null;
   }
   
@@ -177,14 +182,14 @@ class PerformanceMonitor {
   detectAnomalies()
   predictPerformanceIssues()
   
-  // Alerting
+  // Alerting (using existing EventBus patterns)
   checkThresholds()
-  sendPerformanceAlert(issue)
-  
+  dispatchPerformanceAlert(issue) // Use event dispatch instead of direct sending
+
   // Reporting
   generateDailyReport()
   generateWeeklyTrends()
-  exportToPrometheus()
+  exportMetrics(format = 'json') // Align with existing export patterns
 }
 ```
 
@@ -195,59 +200,58 @@ class PerformanceMonitor {
    - Set performance targets
    - Document KPI definitions
 
-2. **Implement Metrics Collector** (Day 2-3)
-   - Build measurement infrastructure
-   - Add aggregation logic
-   - Create storage mechanism
+2. **Extend Metrics Collector** (Day 2-3)
+   - Build on existing monitoring infrastructure
+   - Add performance-specific aggregation logic
+   - Integrate with existing MonitoringCoordinator
 
 3. **Create Benchmark Suite** (Day 4-5)
-   - Implement benchmark framework
-   - Write benchmarks for all KPIs
-   - Add automated execution
+   - Use existing performance test patterns
+   - Write benchmarks leveraging current test infrastructure
+   - Integrate with existing `npm run test:performance`
 
 4. **Establish Baselines** (Day 6)
-   - Run comprehensive benchmarks
-   - Calculate baseline metrics
-   - Document baseline values
+   - Run benchmarks using existing performance test environment
+   - Calculate baseline metrics following project conventions
+   - Document baseline values using existing documentation patterns
 
 5. **Build Monitoring System** (Day 7-8)
-   - Implement real-time monitoring
-   - Add regression detection
-   - Create alerting system
+   - Extend existing PerformanceMonitor in monitoring registrations
+   - Add regression detection using existing event patterns
+   - Integrate alerting with existing EventBus system
 
-6. **Create Dashboards** (Day 9-10)
-   - Build performance dashboard
-   - Add trend visualization
-   - Implement drill-down capabilities
+6. **Create Performance Dashboard** (Day 9-10)
+   - Build dashboard following existing domUI patterns
+   - Add trend visualization using existing rendering conventions
+   - Implement drill-down capabilities consistent with project UI patterns
 
 ## File Changes
 
 ### New Files
-- `src/common/metrics/PerformanceMetricsCollector.js`
-- `src/common/metrics/PerformanceBenchmarkSuite.js`
-- `src/common/metrics/KPIDefinitions.js`
-- `src/common/metrics/PerformanceAnalyzer.js`
-- `src/common/monitoring/PerformanceMonitor.js`
-- `src/common/monitoring/AlertManager.js`
+- `src/entities/monitoring/PerformanceMetricsCollector.js`
+- `src/entities/monitoring/PerformanceBenchmarkSuite.js`
+- `src/entities/monitoring/KPIDefinitions.js`
+- `src/entities/monitoring/PerformanceAnalyzer.js`
+- `src/entities/monitoring/PerformanceMonitor.js`
 - `benchmarks/clothing/clothingBenchmarks.js`
 - `benchmarks/anatomy/anatomyBenchmarks.js`
-- `src/domUI/dashboards/PerformanceDashboard.js`
+- `src/domUI/PerformanceDashboard.js`
 
 ### Modified Files
-- `package.json` - Add benchmark scripts
-- `src/dependencyInjection/registrations/monitoringRegistrations.js` - Register metrics services
-- All service files - Add performance instrumentation
+- `src/dependencyInjection/registrations/monitoringRegistrations.js` - Extend existing monitoring services
+- Key clothing and anatomy service files - Add performance instrumentation
+- Existing test configuration files - Integrate new performance baselines
 
 ### Test Files
-- `tests/unit/common/metrics/PerformanceMetricsCollector.test.js`
-- `tests/unit/common/metrics/PerformanceBenchmarkSuite.test.js`
-- `tests/integration/metrics/performanceMonitoring.test.js`
-- `tests/performance/baseline/baselineVerification.test.js`
+- `tests/unit/entities/monitoring/PerformanceMetricsCollector.test.js`
+- `tests/unit/entities/monitoring/PerformanceBenchmarkSuite.test.js`
+- `tests/integration/monitoring/performanceMonitoring.test.js`
+- `tests/performance/monitoring/baselineVerification.test.js`
 
 ## Dependencies
-- **Prerequisites**: ANACLOENH-003 (Memory Monitoring)
-- **External**: perf_hooks (Node.js), performance API (Browser)
-- **Internal**: EventBus, Logger
+- **Prerequisites**: Existing memory monitoring system (already implemented)
+- **External**: perf_hooks (Node.js), performance API (Browser) - already used in existing performance tests
+- **Internal**: EventBus, Logger (already registered in DI container)
 
 ## Acceptance Criteria
 1. ✅ All KPIs have defined baselines
@@ -261,21 +265,21 @@ class PerformanceMonitor {
 
 ## Testing Requirements
 
-### Unit Tests
-- Test metrics calculation accuracy
-- Verify percentile calculations
-- Test regression detection logic
-- Validate threshold checking
+### Unit Tests (using existing Jest infrastructure)
+- Test metrics calculation accuracy using established test patterns
+- Verify percentile calculations following project conventions
+- Test regression detection logic with mocked dependencies
+- Validate threshold checking using existing validation patterns
 
-### Integration Tests
-- Test end-to-end metric collection
-- Verify benchmark execution
-- Test alert propagation
+### Integration Tests (extend existing performance test suite)
+- Test end-to-end metric collection using existing test patterns
+- Verify benchmark execution leveraging current performance test infrastructure
+- Test alert propagation using existing EventBus testing patterns
 
-### Performance Tests
-- Measure monitoring overhead (<1% impact)
-- Test metric storage efficiency
-- Benchmark dashboard rendering
+### Performance Tests (use existing `npm run test:performance`)
+- Measure monitoring overhead (<1% impact) using existing performance test patterns
+- Test metric storage efficiency following established performance benchmarks
+- Benchmark dashboard rendering using existing DOM testing patterns
 
 ## Risk Assessment
 
@@ -303,7 +307,7 @@ class PerformanceMonitor {
 
 ## Benchmark Configuration Example
 ```javascript
-// benchmarks/config/benchmark.config.js
+// benchmarks/benchmark.config.js
 export const benchmarkConfig = {
   clothing: {
     iterations: 1000,
@@ -360,8 +364,10 @@ Recent Regressions
 ```
 
 ## Notes
-- Consider integrating with APM tools (New Relic, DataDog)
-- Add support for custom metrics via plugins
-- Implement A/B testing framework for optimizations
-- Create performance budget enforcement in CI/CD
-- Add client-side performance monitoring for browser
+- Build on existing memory monitoring system in MonitoringCoordinator
+- Leverage existing performance test infrastructure (`tests/performance/`)
+- Use existing dependency injection patterns and tokens
+- Integrate with existing EventBus for alerts and notifications
+- Follow established project coding conventions (camelCase, private fields with #)
+- Ensure compatibility with existing Jest test configuration
+- Use existing validation patterns from `src/utils/validationCore.js`

@@ -11,6 +11,9 @@
     }
   },
   "required_components": {},
+  "forbidden_components": {
+    "actor": ["positioning:closeness"]
+  },
   "template": "get close to {target}",
   "prerequisites": [
     {
