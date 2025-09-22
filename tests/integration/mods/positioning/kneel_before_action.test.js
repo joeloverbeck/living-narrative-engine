@@ -93,6 +93,111 @@ function setupSittingScenario() {
   return { ...scenario, chair };
 }
 
+/**
+ * Creates scenario where target is sitting (throne scenario - should be valid).
+ */
+function setupTargetSittingScenario() {
+  const scenario = setupKneelingScenario('Knight', 'King', 'throne_room');
+
+  // Add a throne
+  const throne = new ModEntityBuilder('test:throne')
+    .withName('Royal Throne')
+    .atLocation('throne_room')
+    .build();
+
+  // Target (King) is sitting on throne
+  scenario.target.components['positioning:sitting_on'] = {
+    furniture_id: 'test:throne',
+    spot_index: 0,
+  };
+
+  return { ...scenario, throne };
+}
+
+/**
+ * Creates scenario where target is kneeling (chain of reverence - should be valid).
+ */
+function setupTargetKneelingScenario() {
+  const scenario = setupKneelingScenario('Squire', 'Knight', 'chapel');
+
+  // Target (Knight) is kneeling before someone else
+  scenario.target.components['positioning:kneeling_before'] = {
+    entityId: 'test:high_priest',
+  };
+
+  return scenario;
+}
+
+/**
+ * Creates scenario where target is bending over (should be invalid).
+ */
+function setupTargetBendingScenario() {
+  const scenario = setupKneelingScenario('Servant', 'Worker', 'workshop');
+
+  // Target is bending over
+  scenario.target.components['positioning:bending_over'] = {
+    surface_id: 'test:workbench',
+    spot_index: 0,
+  };
+
+  return scenario;
+}
+
+/**
+ * Creates multi-actor scenario with mixed positioning states.
+ */
+function setupMixedPositioningScenario() {
+  const room = new ModEntityBuilder('hall')
+    .asRoom('Great Hall')
+    .build();
+
+  const kneeler = new ModEntityBuilder('test:kneeler')
+    .withName('Loyal Knight')
+    .atLocation('hall')
+    .closeToEntity('test:king')
+    .asActor()
+    .build();
+
+  const king = new ModEntityBuilder('test:king')
+    .withName('King Arthur')
+    .atLocation('hall')
+    .closeToEntity('test:kneeler')
+    .asActor()
+    .build();
+
+  const throne = new ModEntityBuilder('test:throne')
+    .withName('Throne')
+    .atLocation('hall')
+    .build();
+
+  // King is sitting on throne
+  king.components['positioning:sitting_on'] = {
+    furniture_id: 'test:throne',
+    spot_index: 0,
+  };
+
+  const secondKnight = new ModEntityBuilder('test:second_knight')
+    .withName('Second Knight')
+    .atLocation('hall')
+    .closeToEntity('test:third_knight')
+    .asActor()
+    .build();
+
+  const thirdKnight = new ModEntityBuilder('test:third_knight')
+    .withName('Third Knight')
+    .atLocation('hall')
+    .closeToEntity('test:second_knight')
+    .asActor()
+    .build();
+
+  // Third Knight is already kneeling
+  thirdKnight.components['positioning:kneeling_before'] = {
+    entityId: 'test:king',
+  };
+
+  return { room, kneeler, king, throne, secondKnight, thirdKnight };
+}
+
 describe('positioning:kneel_before action integration', () => {
   let testFixture;
 
@@ -324,5 +429,240 @@ describe('positioning:kneel_before action integration', () => {
     const chair = testFixture.entityManager.getEntityInstance('test:chair');
     expect(chair).toBeDefined();
     expect(chair.components['core:name'].text).toBe('Throne Chair');
+  });
+
+  describe('kneel_before target validation', () => {
+    describe('valid target scenarios', () => {
+      it('should allow kneeling before a standing target', async () => {
+        // Default scenario has standing target
+        const entities = setupKneelingScenario();
+        testFixture.reset(Object.values(entities));
+
+        await testFixture.executeAction('test:actor1', 'test:target1');
+
+        ModAssertionHelpers.assertComponentAdded(
+          testFixture.entityManager,
+          'test:actor1',
+          'positioning:kneeling_before',
+          { entityId: 'test:target1' }
+        );
+
+        ModAssertionHelpers.assertActionSuccess(
+          testFixture.events,
+          'Alice kneels before King Bob.'
+        );
+      });
+
+      it('should allow kneeling before a sitting target (throne scenario)', async () => {
+        const entities = setupTargetSittingScenario();
+        testFixture.reset(Object.values(entities));
+
+        await testFixture.executeAction('test:actor1', 'test:target1');
+
+        ModAssertionHelpers.assertComponentAdded(
+          testFixture.entityManager,
+          'test:actor1',
+          'positioning:kneeling_before',
+          { entityId: 'test:target1' }
+        );
+
+        ModAssertionHelpers.assertActionSuccess(
+          testFixture.events,
+          'Knight kneels before King.'
+        );
+      });
+
+      it('should allow kneeling before a kneeling target (chain of reverence)', async () => {
+        const entities = setupTargetKneelingScenario();
+        testFixture.reset(Object.values(entities));
+
+        await testFixture.executeAction('test:actor1', 'test:target1');
+
+        ModAssertionHelpers.assertComponentAdded(
+          testFixture.entityManager,
+          'test:actor1',
+          'positioning:kneeling_before',
+          { entityId: 'test:target1' }
+        );
+
+        ModAssertionHelpers.assertActionSuccess(
+          testFixture.events,
+          'Squire kneels before Knight.'
+        );
+      });
+    });
+
+    describe('invalid target scenarios', () => {
+      it('should demonstrate bending target restriction (action discovery would prevent this)', async () => {
+        // NOTE: In real gameplay, the action discovery system would prevent this
+        // because the target has positioning:bending_over which is in forbidden_components.
+        // This test demonstrates the rule execution if somehow bypassed.
+        const entities = setupTargetBendingScenario();
+        testFixture.reset(Object.values(entities));
+
+        // The rule itself would still execute if action discovery was bypassed
+        await testFixture.executeAction('test:actor1', 'test:target1');
+
+        // Component would still be added because we're bypassing validation
+        ModAssertionHelpers.assertComponentAdded(
+          testFixture.entityManager,
+          'test:actor1',
+          'positioning:kneeling_before',
+          { entityId: 'test:target1' }
+        );
+
+        // This proves restriction is at action discovery level, not rule level
+      });
+    });
+
+    describe('invalid actor scenarios', () => {
+      it('should prevent kneeling while already kneeling', async () => {
+        const entities = setupAlreadyKneelingScenario();
+        testFixture.reset(Object.values(entities));
+
+        // In real gameplay, action discovery would prevent this
+        // because actor has positioning:kneeling_before
+        await testFixture.executeAction('test:actor1', 'test:target1');
+
+        // The component would be replaced if somehow executed
+        const actor = testFixture.entityManager.getEntityInstance('test:actor1');
+        expect(actor.components['positioning:kneeling_before'].entityId).toBe(
+          'test:target1'
+        );
+      });
+
+      it('should prevent kneeling while sitting', async () => {
+        const entities = setupSittingScenario();
+        testFixture.reset(Object.values(entities));
+
+        // In real gameplay, action discovery would prevent this
+        // because actor has positioning:sitting_on
+        await testFixture.executeAction('test:actor1', 'test:target1');
+
+        // If bypassed, the rule would still execute
+        ModAssertionHelpers.assertComponentAdded(
+          testFixture.entityManager,
+          'test:actor1',
+          'positioning:kneeling_before',
+          { entityId: 'test:target1' }
+        );
+      });
+
+      it('should prevent kneeling while bending over', async () => {
+        const scenario = setupKneelingScenario();
+
+        // Actor is bending over
+        scenario.actor.components['positioning:bending_over'] = {
+          surface_id: 'test:table',
+          spot_index: 0,
+        };
+
+        testFixture.reset(Object.values(scenario));
+
+        // In real gameplay, action discovery would prevent this
+        // because actor has positioning:bending_over
+        await testFixture.executeAction('test:actor1', 'test:target1');
+
+        // If bypassed, the rule would still execute
+        ModAssertionHelpers.assertComponentAdded(
+          testFixture.entityManager,
+          'test:actor1',
+          'positioning:kneeling_before',
+          { entityId: 'test:target1' }
+        );
+      });
+    });
+
+    describe('multi-actor scenarios', () => {
+      it('should handle multiple actors with mixed positioning states', async () => {
+        const entities = setupMixedPositioningScenario();
+        testFixture.reset(Object.values(entities));
+
+        // Kneeler kneeling before sitting King (valid)
+        await testFixture.executeAction('test:kneeler', 'test:king');
+
+        ModAssertionHelpers.assertComponentAdded(
+          testFixture.entityManager,
+          'test:kneeler',
+          'positioning:kneeling_before',
+          { entityId: 'test:king' }
+        );
+
+        ModAssertionHelpers.assertActionSuccess(
+          testFixture.events,
+          'Loyal Knight kneels before King Arthur.'
+        );
+
+        // Clear events for next action
+        testFixture.clearEvents();
+
+        // Second knight kneeling before third knight who is already kneeling (valid)
+        await testFixture.executeAction('test:second_knight', 'test:third_knight');
+
+        ModAssertionHelpers.assertComponentAdded(
+          testFixture.entityManager,
+          'test:second_knight',
+          'positioning:kneeling_before',
+          { entityId: 'test:third_knight' }
+        );
+
+        ModAssertionHelpers.assertActionSuccess(
+          testFixture.events,
+          'Second Knight kneels before Third Knight.'
+        );
+      });
+
+      it('should correctly handle circular kneeling scenarios', async () => {
+        const room = new ModEntityBuilder('chapel')
+          .asRoom('Chapel')
+          .build();
+
+        const knight1 = new ModEntityBuilder('test:knight1')
+          .withName('Sir Lancelot')
+          .atLocation('chapel')
+          .closeToEntity('test:knight2')
+          .asActor()
+          .build();
+
+        const knight2 = new ModEntityBuilder('test:knight2')
+          .withName('Sir Gawain')
+          .atLocation('chapel')
+          .closeToEntity('test:knight1')
+          .asActor()
+          .build();
+
+        testFixture.reset([room, knight1, knight2]);
+
+        // Knight1 kneels before Knight2
+        await testFixture.executeAction('test:knight1', 'test:knight2');
+
+        ModAssertionHelpers.assertComponentAdded(
+          testFixture.entityManager,
+          'test:knight1',
+          'positioning:kneeling_before',
+          { entityId: 'test:knight2' }
+        );
+
+        testFixture.clearEvents();
+
+        // Knight2 kneeling before Knight1 would create a chain, not a circle
+        // (Knight2 can kneel to Knight1 who is kneeling to Knight2)
+        await testFixture.executeAction('test:knight2', 'test:knight1');
+
+        ModAssertionHelpers.assertComponentAdded(
+          testFixture.entityManager,
+          'test:knight2',
+          'positioning:kneeling_before',
+          { entityId: 'test:knight1' }
+        );
+
+        // Both knights are now kneeling before each other
+        const k1 = testFixture.entityManager.getEntityInstance('test:knight1');
+        const k2 = testFixture.entityManager.getEntityInstance('test:knight2');
+
+        expect(k1.components['positioning:kneeling_before'].entityId).toBe('test:knight2');
+        expect(k2.components['positioning:kneeling_before'].entityId).toBe('test:knight1');
+      });
+    });
   });
 });

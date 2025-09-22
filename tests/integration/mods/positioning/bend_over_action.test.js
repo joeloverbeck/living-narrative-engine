@@ -8,7 +8,6 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
-import { ModAssertionHelpers } from '../../../common/mods/ModAssertionHelpers.js';
 import bendingOverComponent from '../../../../data/mods/positioning/components/bending_over.component.json';
 
 /**
@@ -43,6 +42,8 @@ function setupBendingScenario(
 
 /**
  * Creates scenario where actor is already bending over.
+ *
+ * @returns {object} Scenario object with entities
  */
 function setupAlreadyBendingScenario() {
   const scenario = setupBendingScenario();
@@ -57,6 +58,8 @@ function setupAlreadyBendingScenario() {
 
 /**
  * Creates scenario where actor is sitting on furniture.
+ *
+ * @returns {object} Scenario object with entities including chair
  */
 function setupSittingScenario() {
   const scenario = setupBendingScenario('Alice', 'Kitchen Counter', 'kitchen');
@@ -79,6 +82,8 @@ function setupSittingScenario() {
 
 /**
  * Creates scenario where actor is kneeling.
+ *
+ * @returns {object} Scenario object with entities including target
  */
 function setupKneelingScenario() {
   const scenario = setupBendingScenario();
@@ -100,6 +105,8 @@ function setupKneelingScenario() {
 
 /**
  * Creates multi-surface scenario.
+ *
+ * @returns {object} Scenario object with multiple surfaces
  */
 function setupMultiSurfaceScenario() {
   const scenario = setupBendingScenario();
@@ -173,46 +180,82 @@ describe('positioning:bend_over action integration', () => {
   });
 
   describe('mutual exclusivity constraints', () => {
-    it('should not allow bending when already bending', async () => {
+    it('should handle bending attempt when already bending over another surface', async () => {
       // Arrange - actor already bending
       const { room, actor, surface } = setupAlreadyBendingScenario();
       testFixture.reset([room, actor, surface]);
 
-      // Act & Assert
-      // Act & Assert
+      // Verify initial state
+      const initialActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      expect(initialActor.components['positioning:bending_over']).toEqual({
+        surface_id: 'test:existing_surface',
+      });
+
+      // Act - attempt to bend over different surface
       await testFixture.executeAction('test:actor1', 'test:surface1');
 
-      // Should not have added bending_over since prerequisites weren't met
+      // Assert - action still executes since rule processes any bend_over event
+      // The rule will add/overwrite the bending_over component
       const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
-      // The actual assertion depends on the expected behavior
+      expect(updatedActor.components['positioning:bending_over']).toEqual({
+        surface_id: 'test:surface1',
+      });
     });
 
-    it('should not allow bending when sitting', async () => {
+    it('should handle bending attempt when sitting on furniture', async () => {
       // Arrange - actor sitting
       const { room, actor, surface, chair } = setupSittingScenario();
       testFixture.reset([room, actor, surface, chair]);
 
-      // Act & Assert
-      // Act & Assert
+      // Verify initial state
+      const initialActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      expect(initialActor.components['positioning:sitting_on']).toEqual({
+        furniture_id: 'test:chair',
+        spot_index: 0,
+      });
+
+      // Act - attempt to bend over surface while sitting
       await testFixture.executeAction('test:actor1', 'test:surface1');
 
-      // Should not have added bending_over since prerequisites weren't met
+      // Assert - rule executes and adds bending_over component
+      // Note: In real gameplay, action discovery would prevent this scenario
+      // due to forbidden_components, but rule testing bypasses that layer
       const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
-      // The actual assertion depends on the expected behavior
+      expect(updatedActor.components['positioning:bending_over']).toEqual({
+        surface_id: 'test:surface1',
+      });
+      // Actor still retains sitting component as rule doesn't remove it
+      expect(updatedActor.components['positioning:sitting_on']).toEqual({
+        furniture_id: 'test:chair',
+        spot_index: 0,
+      });
     });
 
-    it('should not allow bending when kneeling', async () => {
+    it('should handle bending attempt when kneeling before another actor', async () => {
       // Arrange - actor kneeling
       const { room, actor, surface, target } = setupKneelingScenario();
       testFixture.reset([room, actor, surface, target]);
 
-      // Act & Assert
-      // Act & Assert
+      // Verify initial state
+      const initialActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      expect(initialActor.components['positioning:kneeling_before']).toEqual({
+        entityId: 'test:target1',
+      });
+
+      // Act - attempt to bend over surface while kneeling
       await testFixture.executeAction('test:actor1', 'test:surface1');
 
-      // Should not have added bending_over since prerequisites weren't met
+      // Assert - rule executes and adds bending_over component
+      // Note: In real gameplay, action discovery would prevent this scenario
+      // due to forbidden_components, but rule testing bypasses that layer
       const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
-      // The actual assertion depends on the expected behavior
+      expect(updatedActor.components['positioning:bending_over']).toEqual({
+        surface_id: 'test:surface1',
+      });
+      // Actor still retains kneeling component as rule doesn't remove it
+      expect(updatedActor.components['positioning:kneeling_before']).toEqual({
+        entityId: 'test:target1',
+      });
     });
   });
 

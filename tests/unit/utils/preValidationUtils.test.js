@@ -247,7 +247,7 @@ describe('preValidationUtils', () => {
         ];
         const result = validateAllOperations(operations, 'root', true);
         expect(result.isValid).toBe(false);
-        expect(result.error).toBe('Missing required "type" field in operation');
+        expect(result.error).toBe('Operation at index 1 failed validation: Missing required "type" field in operation');
         expect(result.path).toBe('root[1]');
       });
 
@@ -268,7 +268,7 @@ describe('preValidationUtils', () => {
         };
         const result = validateAllOperations(data);
         expect(result.isValid).toBe(false);
-        expect(result.error).toBe('Operation must be an object');
+        expect(result.error).toBe('Operation at index 0 failed validation: Operation must be an object');
       });
 
       it('should fail for invalid operations in else_actions', () => {
@@ -279,7 +279,7 @@ describe('preValidationUtils', () => {
         };
         const result = validateAllOperations(data);
         expect(result.isValid).toBe(false);
-        expect(result.error).toBe('Operation must be an object');
+        expect(result.error).toBe('Operation at index 0 failed validation: Operation must be an object');
       });
 
       it('should recursively validate nested objects', () => {
@@ -294,7 +294,7 @@ describe('preValidationUtils', () => {
         };
         const result = validateAllOperations(data);
         expect(result.isValid).toBe(false);
-        expect(result.error).toBe('Operation "type" field must be a string');
+        expect(result.error).toBe('Operation at index 0 failed validation: Operation "type" field must be a string');
       });
 
       it('should skip validation for non-operation fields', () => {
@@ -341,9 +341,9 @@ describe('preValidationUtils', () => {
             type: 'IF',
             parameters: {
               condition: {},
+              // then_actions should be inside parameters for IF operations to be validated
+              then_actions: [{ type: 'INVALID_NESTED', parameters: {} }],
             },
-            // Place then_actions at the operation level, not inside parameters
-            then_actions: [{ type: 'INVALID_NESTED', parameters: {} }],
           },
         ];
         const result = validateAllOperations(operations, 'root', true);
