@@ -1,22 +1,33 @@
 import { describe, it, expect } from '@jest/globals';
+
 import {
-  assertParamsObject,
-  initHandlerLogger,
-  validateDeps,
-  resolveExecutionLogger,
+  assertParamsObject as exportedAssertParamsObject,
+  initHandlerLogger as exportedInitHandlerLogger,
+  validateDeps as exportedValidateDeps,
+  resolveExecutionLogger as exportedResolveExecutionLogger,
 } from '../../../src/utils/handlerUtils/indexUtils.js';
-import { assertParamsObject as paramsAssert } from '../../../src/utils/handlerUtils/paramsUtils.js';
+
+import { assertParamsObject as sourceAssertParamsObject } from '../../../src/utils/handlerUtils/paramsUtils.js';
 import {
-  initHandlerLogger as serviceInit,
-  validateServiceDeps as serviceValidate,
-  resolveExecutionLogger as serviceGetExec,
+  initHandlerLogger as sourceInitHandlerLogger,
+  validateServiceDeps,
+  resolveExecutionLogger as sourceResolveExecutionLogger,
 } from '../../../src/utils/serviceInitializerUtils.js';
 
-describe('handlerUtils/indexUtils exports', () => {
-  it('re-exports functions from paramsUtils and serviceInitializerUtils', () => {
-    expect(assertParamsObject).toBe(paramsAssert);
-    expect(initHandlerLogger).toBe(serviceInit);
-    expect(validateDeps).toBe(serviceValidate);
-    expect(resolveExecutionLogger).toBe(serviceGetExec);
+describe('handlerUtils/indexUtils re-exports', () => {
+  it('re-exports assertParamsObject directly from paramsUtils', () => {
+    expect(exportedAssertParamsObject).toBe(sourceAssertParamsObject);
+  });
+
+  it('re-exports initHandlerLogger directly from serviceInitializerUtils', () => {
+    expect(exportedInitHandlerLogger).toBe(sourceInitHandlerLogger);
+  });
+
+  it('re-exports validateServiceDeps as validateDeps alias', () => {
+    expect(exportedValidateDeps).toBe(validateServiceDeps);
+  });
+
+  it('re-exports resolveExecutionLogger directly from serviceInitializerUtils', () => {
+    expect(exportedResolveExecutionLogger).toBe(sourceResolveExecutionLogger);
   });
 });

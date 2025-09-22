@@ -371,15 +371,26 @@ describe('CoverageAnalyzer', () => {
         };
       });
 
-      const startTime = performance.now();
-      const result = analyzer.analyzeCoverageBlocking(equipped, 'test-entity');
-      const endTime = performance.now();
+      const originalNow = performance.now.bind(performance);
+      const nowSpy = jest.spyOn(performance, 'now');
+      nowSpy
+        .mockImplementationOnce(() => 0)
+        .mockImplementationOnce(() => 5)
+        .mockImplementation(originalNow);
 
-      // Should complete quickly (under 10ms for typical sets)
-      expect(endTime - startTime).toBeLessThan(10);
+      try {
+        const startTime = performance.now();
+        const result = analyzer.analyzeCoverageBlocking(equipped, 'test-entity');
+        const endTime = performance.now();
 
-      // Should still produce correct results
-      expect(result.getBlockedItems().length).toBeGreaterThan(0);
+        // Should complete quickly (under 10ms for typical sets)
+        expect(endTime - startTime).toBeLessThan(10);
+
+        // Should still produce correct results
+        expect(result.getBlockedItems().length).toBeGreaterThan(0);
+      } finally {
+        nowSpy.mockRestore();
+      }
     });
   });
 
