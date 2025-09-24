@@ -356,6 +356,61 @@ export function createBaseRuleEnvironment({
           return { success: true, value: new Set([sittingOn.furniture_id]) };
         }
 
+        // Handle the positioning:available_surfaces scope
+        if (scopeName === 'positioning:available_surfaces') {
+          console.log(
+            '[SCOPE] Resolving available_surfaces for context:',
+            context
+          );
+
+          // Extract actor ID from context (context might be an object with actor property or just the ID)
+          const actorId = context?.actor?.id || context;
+
+          // Get actor's position
+          const actor = entityManager.getEntityInstance(actorId);
+          const actorPosition = actor?.components?.['core:position'];
+          if (!actorPosition || !actorPosition.locationId) {
+            console.log('  - Actor has no position, returning empty set');
+            return { success: true, value: new Set() };
+          }
+
+          // Find all entities with positioning:allows_bending_over in the same location
+          const allEntities = Array.from(entityManager.entities.values());
+          const availableSurfaces = allEntities.filter(entity => {
+            const hasBendingComponent = entity.components?.['positioning:allows_bending_over'];
+            const entityPosition = entity.components?.['core:position'];
+            const sameLocation = entityPosition?.locationId === actorPosition.locationId;
+            return hasBendingComponent && sameLocation;
+          });
+
+          const surfaceIds = availableSurfaces.map(surface => surface.id);
+          console.log(`  - Found ${surfaceIds.length} available surfaces:`, surfaceIds);
+          return { success: true, value: new Set(surfaceIds) };
+        }
+
+        // Handle the positioning:surface_im_bending_over scope
+        if (scopeName === 'positioning:surface_im_bending_over') {
+          console.log(
+            '[SCOPE] Resolving surface_im_bending_over for context:',
+            context
+          );
+
+          // Extract actor ID from context
+          const actorId = context?.actor?.id || context;
+
+          // Get actor's bending_over component
+          const actor = entityManager.getEntityInstance(actorId);
+          const bendingOver = actor?.components?.['positioning:bending_over'];
+
+          if (!bendingOver || !bendingOver.surface_id) {
+            console.log('  - Actor is not bending over anything, returning empty set');
+            return { success: true, value: new Set() };
+          }
+
+          console.log('  - Actor is bending over surface:', bendingOver.surface_id);
+          return { success: true, value: new Set([bendingOver.surface_id]) };
+        }
+
         // Handle other scopes or return empty set
         if (scopeName === 'none' || scopeName === 'self') {
           return { success: true, value: new Set([scopeName]) };

@@ -40,16 +40,6 @@
             }
           },
           {
-            "type": "REMOVE_SITTING_CLOSENESS",
-            "comment": "Remove automatic closeness based on bending proximity",
-            "parameters": {
-              "furniture_id": "{context.bendingOverInfo.surface_id}",
-              "actor_id": "{event.payload.actorId}",
-              "spot_index": 0,
-              "result_variable": "closenessRemoved"
-            }
-          },
-          {
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "actor",
@@ -108,7 +98,7 @@
               "value": "error"
             }
           },
-          { "macro": "core:logAndEndTurn" }
+          { "macro": "core:logFailureAndEndTurn" }
         ]
       }
     }
