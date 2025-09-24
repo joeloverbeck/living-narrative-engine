@@ -176,6 +176,25 @@ describe('PromptSession', () => {
       expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
     });
 
+    it('rejects when the index resolves to a null composite', async () => {
+      expect.assertions(3);
+      mockIndexer.resolve.mockImplementation(() => null);
+
+      const session = makeSession();
+      const promise = session.run();
+      const done = promise.catch((e) => e);
+
+      mockEventBus.subscribe.mock.calls[0][1]({
+        type: PLAYER_TURN_SUBMITTED_ID,
+        payload: { submittedByActorId: actorId, chosenIndex: 1 },
+      });
+
+      const err = await done;
+      expect(err).toBeInstanceOf(PromptError);
+      expect(err.code).toBe('INVALID_INDEX');
+      expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
+    });
+
     it('rejects on malformed payload', async () => {
       expect.assertions(3);
       const s = makeSession();
@@ -331,6 +350,39 @@ describe('PromptSession', () => {
         'PromptSession: unsubscribe failed',
         boom
       );
+    });
+  });
+
+  describe('#settle scheduling', () => {
+    it('falls back to setTimeout when setImmediate is unavailable', async () => {
+      const originalSetImmediate = globalThis.setImmediate;
+      // eslint-disable-next-line no-global-assign
+      globalThis.setImmediate = undefined;
+      jest.useFakeTimers();
+
+      try {
+        const session = new PromptSession({
+          actorId,
+          eventBus: mockEventBus,
+          logger: mockLogger,
+          actionIndexingService: mockIndexer,
+        });
+
+        const resultPromise = session.run().catch((err) => err);
+        session.cancel();
+
+        expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
+
+        jest.runOnlyPendingTimers();
+        const error = await resultPromise;
+
+        expect(error).toBeInstanceOf(PromptError);
+        expect(error.code).toBe('PROMPT_CANCELLED');
+      } finally {
+        jest.useRealTimers();
+        // eslint-disable-next-line no-global-assign
+        globalThis.setImmediate = originalSetImmediate;
+      }
     });
   });
 });
