@@ -326,4 +326,89 @@ describe('ResourceMonitor', () => {
     expect(stats.memory.current).toBe(987654);
     expect(stats.memory.formatted.current).toContain('KB');
   });
+
+  it('falls back to default configuration values when options are omitted', () => {
+    const logger = createMockLogger();
+    const monitor = new ResourceMonitor({ config: undefined, logger });
+
+    expect(monitor.maxMemoryUsage).toBe(512 * 1024 * 1024);
+    expect(monitor.maxProcessingTime).toBe(30000);
+    expect(monitor.maxConcurrentOperations).toBe(10);
+    expect(monitor.memoryCheckInterval).toBe(1000);
+    expect(monitor.memoryWarningThreshold).toBe(0.75);
+    expect(monitor.memoryCriticalThreshold).toBe(0.9);
+  });
+
+  it('cleans up gracefully when interval and timeout handles are missing', () => {
+    const logger = createMockLogger();
+    const setIntervalSpy = jest
+      .spyOn(global, 'setInterval')
+      .mockReturnValue(undefined);
+    const setTimeoutSpy = jest
+      .spyOn(global, 'setTimeout')
+      .mockReturnValue(undefined);
+
+    try {
+      const { monitor } = createMonitor(
+        { maxProcessingTime: 100, memoryCheckInterval: 25 },
+        logger
+      );
+
+      monitor.startMonitoring();
+      const guard = monitor.createOperationGuard('timerless');
+
+      expect(guard.isActive()).toBe(true);
+
+      guard.cleanup();
+
+      expect(guard.isActive()).toBe(false);
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Operation completed: timerless',
+        expect.objectContaining({
+          remainingOperations: 0
+        })
+      );
+
+      monitor.stopMonitoring();
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Resource monitoring stopped',
+        expect.objectContaining({
+          finalMemory: expect.any(Number)
+        })
+      );
+    } finally {
+      setIntervalSpy.mockRestore();
+      setTimeoutSpy.mockRestore();
+    }
+  });
+
+  it('logs critical memory without forcing GC when the hook is unavailable', () => {
+    const logger = createMockLogger();
+    const { monitor, memoryUsageMock } = createMonitor(
+      { maxMemoryUsage: 1000, memoryCriticalThreshold: 0.8, memoryCheckInterval: 25 },
+      logger
+    );
+
+    delete globalThis.gc;
+
+    memoryUsageMock
+      .mockReturnValueOnce({ heapUsed: 100 })
+      .mockReturnValue({ heapUsed: 900 });
+
+    monitor.startMonitoring();
+    jest.advanceTimersByTime(25);
+
+    expect(logger.error).toHaveBeenCalledWith(
+      'Critical memory usage detected',
+      expect.objectContaining({
+        current: expect.stringContaining('900'),
+        limit: expect.stringContaining('1000')
+      })
+    );
+    expect(logger.info).not.toHaveBeenCalledWith(
+      'Forced garbage collection due to critical memory usage'
+    );
+
+    monitor.stopMonitoring();
+  });
 });
