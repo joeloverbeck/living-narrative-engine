@@ -121,6 +121,11 @@ describe('ExecutionPhaseTimer', () => {
       for (let i = 0; i < 100000; i++) {
         sum += i;
       }
+      // Add an additional deterministic delay to avoid rare timing inversions on busy CI agents.
+      const minimumEndTime = performance.now() + 20;
+      while (performance.now() < minimumEndTime) {
+        sum += 1;
+      }
       timer.endPhase('slow_phase');
 
       timer.endExecution();
