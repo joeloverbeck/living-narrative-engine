@@ -92,7 +92,7 @@ describe('positioning:bend_over rule', () => {
 
     it('should have actions array with expected structure', () => {
       expect(Array.isArray(rule.actions)).toBe(true);
-      expect(rule.actions.length).toBe(9); // 8 actions + 1 macro
+      expect(rule.actions.length).toBe(10); // 9 actions + 1 macro (includes LOCK_MOVEMENT)
     });
 
     it('should have correct JSON schema reference', () => {
@@ -140,36 +140,42 @@ describe('positioning:bend_over rule', () => {
       expect(componentAction.parameters.value.surface_id).toBe('{event.payload.targetId}');
     });
 
+    it('should lock movement while bending over', () => {
+      const lockAction = rule.actions[4];
+      expect(lockAction.type).toBe('LOCK_MOVEMENT');
+      expect(lockAction.parameters.actor_id).toBe('{event.payload.actorId}');
+    });
+
     it('should set up log message with string template', () => {
-      const logAction = rule.actions[4];
+      const logAction = rule.actions[5];
       expect(logAction.type).toBe('SET_VARIABLE');
       expect(logAction.parameters.variable_name).toBe('logMessage');
       expect(logAction.parameters.value).toBe('{context.actorName} bends over {context.surfaceName}.');
     });
 
     it('should set perception type for action feedback', () => {
-      const perceptionAction = rule.actions[5];
+      const perceptionAction = rule.actions[6];
       expect(perceptionAction.type).toBe('SET_VARIABLE');
       expect(perceptionAction.parameters.variable_name).toBe('perceptionType');
       expect(perceptionAction.parameters.value).toBe('action_self_general');
     });
 
     it('should capture location ID from actor position', () => {
-      const locationAction = rule.actions[6];
+      const locationAction = rule.actions[7];
       expect(locationAction.type).toBe('SET_VARIABLE');
       expect(locationAction.parameters.variable_name).toBe('locationId');
       expect(locationAction.parameters.value).toBe('{context.actorPosition.locationId}');
     });
 
     it('should capture target ID from event payload', () => {
-      const targetAction = rule.actions[7];
+      const targetAction = rule.actions[8];
       expect(targetAction.type).toBe('SET_VARIABLE');
       expect(targetAction.parameters.variable_name).toBe('targetId');
       expect(targetAction.parameters.value).toBe('{event.payload.targetId}');
     });
 
     it('should end with core:logSuccessAndEndTurn macro', () => {
-      const macroAction = rule.actions[8];
+      const macroAction = rule.actions[9];
       expect(macroAction.macro).toBe('core:logSuccessAndEndTurn');
     });
   });
@@ -227,19 +233,23 @@ describe('positioning:bend_over rule', () => {
       const componentAction = rule.actions[3];
       expect(componentAction.parameters.value.surface_id).toBe('{event.payload.targetId}');
 
-      const logAction = rule.actions[4];
+      const logAction = rule.actions[5];
       expect(logAction.parameters.value).toBe('{context.actorName} bends over {context.surfaceName}.');
 
-      const locationAction = rule.actions[6];
+      const lockAction = rule.actions[4];
+      expect(lockAction.parameters.actor_id).toBe('{event.payload.actorId}');
+
+      const locationAction = rule.actions[7];
       expect(locationAction.parameters.value).toBe('{context.actorPosition.locationId}');
 
-      const targetAction = rule.actions[7];
+      const targetAction = rule.actions[8];
       expect(targetAction.parameters.value).toBe('{event.payload.targetId}');
     });
 
     it('should have valid template syntax', () => {
       const templates = [
         '{event.payload.targetId}',
+        '{event.payload.actorId}',
         '{context.actorName}',
         '{context.surfaceName}',
         '{context.actorPosition.locationId}'

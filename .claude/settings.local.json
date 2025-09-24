@@ -188,7 +188,12 @@
       "Bash(npm run validate:mod:*)",
       "mcp__morphllm-fast-apply__tiny_edit_file",
       "Bash(NODE_ENV=test npx jest tests/integration/mods/positioning/ --no-coverage --silent)",
-      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/actions/pipeline/pipelineWithTargetValidation.test.js --silent)"
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/actions/pipeline/pipelineWithTargetValidation.test.js --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/positioning/bendingOverSystem.integration.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/positioning/bendingOverSystem.integration.test.js --no-coverage --testNamePattern=\"should validate bending_over component structure after action\" --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/positioning/bendingOverSystem.integration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/mods/positioning/rules/bend_over.rule.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/positioning/bendingOverEdgeCases.integration.test.js --testNamePattern=\"should handle rapid bend-straighten cycles\" --no-coverage --verbose)"
     ],
     "deny": [],
     "ask": []

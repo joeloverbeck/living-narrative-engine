@@ -35,6 +35,12 @@
       }
     },
     {
+      "type": "LOCK_MOVEMENT",
+      "parameters": {
+        "actor_id": "{event.payload.actorId}"
+      }
+    },
+    {
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
