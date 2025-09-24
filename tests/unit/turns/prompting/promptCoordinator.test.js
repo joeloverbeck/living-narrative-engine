@@ -9,6 +9,18 @@ import { createMockLogger } from '../../../common/mockFactories/loggerMocks.js';
 
 const mockPromptReturn = { result: 'ok' };
 
+const createDeferred = () => {
+  /** @type {(value: unknown) => void} */
+  let resolve = () => {};
+  const promise = new Promise((res) => {
+    resolve = res;
+  });
+  return {
+    promise,
+    resolve,
+  };
+};
+
 // Helper to create a fake PromptSession instance
 let promptSessionInstance;
 class FakePromptSession {
@@ -29,6 +41,7 @@ const composite = {
   commandString: 'do',
   description: 'desc',
   params: {},
+  visual: { icon: 'fire' },
 };
 
 let logger, promptOutputPort, actionIndexer, playerTurnEvents, coordinator;
@@ -49,6 +62,9 @@ beforeEach(() => {
 
 describe('PromptCoordinator.prompt', () => {
   it('throws if indexedComposites is missing or empty', async () => {
+    await expect(coordinator.prompt(actor)).rejects.toThrow(
+      'PromptCoordinator.prompt: indexedComposites array is required and cannot be empty.'
+    );
     await expect(coordinator.prompt(actor, {})).rejects.toThrow(
       'PromptCoordinator.prompt: indexedComposites array is required and cannot be empty.'
     );
@@ -81,6 +97,7 @@ describe('PromptCoordinator.prompt', () => {
         commandString: composite.commandString,
         params: composite.params,
         description: composite.description,
+        visual: composite.visual,
       },
     ]);
     expect(PromptSession).toHaveBeenCalledWith({
@@ -110,5 +127,50 @@ describe('PromptCoordinator.prompt', () => {
     expect(logger.debug).toHaveBeenCalledWith(
       'cancelCurrentPrompt called, but no active prompt to cancel.'
     );
+  });
+
+  it('retains a newer session when an earlier prompt resolves later', async () => {
+    const firstDeferred = createDeferred();
+    let firstSession;
+    PromptSession.mockImplementationOnce((args) => {
+      firstSession = {
+        args,
+        run: jest.fn(() => firstDeferred.promise),
+        cancel: jest.fn(),
+      };
+      return firstSession;
+    });
+
+    const firstPromptPromise = coordinator.prompt(actor, {
+      indexedComposites: [composite],
+    });
+
+    await Promise.resolve();
+
+    const secondDeferred = createDeferred();
+    let secondSession;
+    PromptSession.mockImplementationOnce((args) => {
+      secondSession = {
+        args,
+        run: jest.fn(() => secondDeferred.promise),
+        cancel: jest.fn(),
+      };
+      return secondSession;
+    });
+
+    const secondPromptPromise = coordinator.prompt(actor, {
+      indexedComposites: [composite],
+    });
+    await Promise.resolve();
+
+    firstDeferred.resolve({ value: 'first-complete' });
+    await firstPromptPromise;
+
+    coordinator.cancelCurrentPrompt();
+    expect(firstSession.cancel).not.toHaveBeenCalled();
+    expect(secondSession.cancel).toHaveBeenCalledTimes(1);
+
+    secondDeferred.resolve({ value: 'second-complete' });
+    await secondPromptPromise;
   });
 });
