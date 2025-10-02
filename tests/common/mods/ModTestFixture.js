@@ -587,6 +587,7 @@ class BaseModTestFixture {
   get logger() {
     return this.testEnv?.logger;
   }
+
 }
 
 /**
@@ -708,19 +709,99 @@ export class ModActionTestFixture extends BaseModTestFixture {
   /**
    * Executes the action with standard parameters.
    *
+   * Enhanced to include action discovery pipeline validation by default.
+   * Set options.skipDiscovery = true to use legacy direct execution.
+   *
    * @param {string} actorId - Actor entity ID
    * @param {string} targetId - Target entity ID
    * @param {object} [options] - Additional options
+   * @param {boolean} [options.skipDiscovery] - If true, bypass action discovery (legacy behavior)
+   * @param {string} [options.originalInput] - Original user input
+   * @param {object} [options.additionalPayload] - Additional payload data
    * @returns {Promise} Promise that resolves when action is dispatched
    */
   async executeAction(actorId, targetId, options = {}) {
-    const { originalInput, additionalPayload = {} } = options;
+    const { skipDiscovery = false, originalInput, additionalPayload = {} } = options;
 
     // Ensure actionId is properly namespaced
     const fullActionId = this.actionId.includes(':')
       ? this.actionId
       : `${this.modId}:${this.actionId}`;
 
+    // Legacy behavior: direct rule execution (bypasses discovery/validation)
+    if (skipDiscovery) {
+      const payload = {
+        eventName: 'core:attempt_action',
+        actorId,
+        actionId: fullActionId,
+        targetId,
+        originalInput:
+          originalInput || `${this.actionId.split(':')[1] || this.actionId} ${targetId}`,
+        ...additionalPayload,
+      };
+
+      return this.eventBus.dispatch(ATTEMPT_ACTION_ID, payload);
+    }
+
+    // New behavior: Simple forbidden component validation before execution
+    // Load action definition if not cached
+    if (!this._actionDefinition) {
+      const { promises: fs } = await import('fs');
+      const { resolve } = await import('path');
+
+      const actionFilePath = this.actionId.includes(':')
+        ? `data/mods/${this.modId}/actions/${this.actionId.split(':')[1]}.action.json`
+        : `data/mods/${this.modId}/actions/${this.actionId}.action.json`;
+
+      try {
+        const resolvedPath = resolve(actionFilePath);
+        const content = await fs.readFile(resolvedPath, 'utf8');
+        this._actionDefinition = JSON.parse(content);
+      } catch (error) {
+        this.logger.warn(
+          `Failed to load action definition from ${actionFilePath}: ${error.message}`
+        );
+        this._actionDefinition = { forbidden_components: {} };
+      }
+    }
+
+    // Check for forbidden components on actor and target
+    const forbiddenComponentsConfig =
+      this._actionDefinition.forbidden_components || {};
+    const actorForbiddenComponents = forbiddenComponentsConfig.actor || [];
+    const targetForbiddenComponents = forbiddenComponentsConfig.primary || [];
+
+    // Validate actor doesn't have any forbidden components
+    for (const forbiddenComponent of actorForbiddenComponents) {
+      if (this.entityManager.hasComponent(actorId, forbiddenComponent)) {
+        this.logger.debug(
+          `Action ${fullActionId} blocked: actor ${actorId} has forbidden component ${forbiddenComponent}`
+        );
+        return {
+          blocked: true,
+          reason: `Actor has forbidden component: ${forbiddenComponent}`,
+          attemptedAction: fullActionId,
+          attemptedActor: actorId,
+        };
+      }
+    }
+
+    // Validate target doesn't have any forbidden components
+    for (const forbiddenComponent of targetForbiddenComponents) {
+      if (this.entityManager.hasComponent(targetId, forbiddenComponent)) {
+        this.logger.debug(
+          `Action ${fullActionId} blocked: target ${targetId} has forbidden component ${forbiddenComponent}`
+        );
+        return {
+          blocked: true,
+          reason: `Target has forbidden component: ${forbiddenComponent}`,
+          attemptedAction: fullActionId,
+          attemptedTarget: targetId,
+        };
+      }
+    }
+
+    // If validation passed, execute the action
     const payload = {
       eventName: 'core:attempt_action',
       actorId,

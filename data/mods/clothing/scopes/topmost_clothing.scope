@@ -1,3 +1,18 @@
 // Returns all topmost clothing items worn by the actor
-// Items are prioritized by layer: outer > base > underwear
+//
+// BEHAVIOR: Returns ONE topmost item PER equipped slot
+// - torso_upper: outermost jacket/shirt/robe
+// - torso_lower: outermost pants/skirt
+// - legs: outermost tights/stockings
+// - feet: outermost shoes/boots
+// - etc.
+//
+// Layer priority within each slot: outer > base > underwear
+//
+// Example: If actor wears jacket (outer) + shirt (base) + undershirt (underwear) in torso_upper,
+// only the jacket is returned. If actor also wears pants in torso_lower, both jacket AND pants
+// are returned (one topmost item per slot).
+//
+// This is the CORRECT behavior for action discovery - users should see all accessible
+// clothing items they can remove/interact with across the body.
 clothing:topmost_clothing := actor.topmost_clothing[]

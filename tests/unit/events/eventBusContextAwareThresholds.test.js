@@ -293,5 +293,104 @@ describe('EventBus - Context-Aware Infinite Loop Detection', () => {
         expect(handler).toHaveBeenCalledTimes(6);
       });
     });
+
+    describe('Batch Mode Recursion Depth Reset', () => {
+      it('should reset recursion depth counters when exiting batch mode', async () => {
+        const handler = jest.fn();
+        bus.subscribe('core:component_added', handler);
+
+        // Enable batch mode
+        bus.setBatchMode(true, {
+          context: 'game-initialization',
+          maxRecursionDepth: 200,
+          maxGlobalRecursion: 300,
+          timeoutMs: 30000,
+        });
+
+        // Simulate high recursion during batch mode
+        // Create nested dispatches to build up recursion depth
+        let dispatchCount = 0;
+        const nestedHandler = jest.fn(async () => {
+          dispatchCount++;
+          if (dispatchCount < 50) {
+            // Create nested dispatch to increase recursion depth
+            await bus.dispatch('core:component_added', { componentId: `nested-${dispatchCount}` });
+          }
+        });
+
+        bus.unsubscribe('core:component_added', handler);
+        bus.subscribe('core:component_added', nestedHandler);
+
+        // Trigger initial event to start recursion chain
+        await bus.dispatch('core:component_added', { componentId: 'initial' });
+
+        // Verify we built up some recursion depth
+        expect(dispatchCount).toBeGreaterThan(40);
+        expect(consoleErrorSpy).not.toHaveBeenCalled(); // Should be within batch mode limits
+
+        // Disable batch mode
+        bus.setBatchMode(false);
+
+        // Verify debug log confirms counters were reset
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('Recursion depth counters reset')
+        );
+
+        // Reset handler and console spy for next phase
+        bus.unsubscribe('core:component_added', nestedHandler);
+        const normalHandler = jest.fn();
+        bus.subscribe('core:component_added', normalHandler);
+        consoleErrorSpy.mockClear();
+        dispatchCount = 0;
+
+        // Now in normal mode, a simple component add should NOT hit recursion limits
+        // If counters weren't reset, we'd still be at depth ~50 from batch mode
+        await bus.dispatch('core:component_added', { componentId: 'normal-mode' });
+
+        // Should succeed without recursion errors
+        expect(consoleErrorSpy).not.toHaveBeenCalled();
+        expect(normalHandler).toHaveBeenCalledTimes(1);
+      });
+
+      it('should allow re-entering batch mode after reset', async () => {
+        const handler = jest.fn();
+        bus.subscribe('core:component_added', handler);
+
+        // First batch mode cycle
+        bus.setBatchMode(true, {
+          context: 'first-initialization',
+          maxRecursionDepth: 200,
+          timeoutMs: 30000,
+        });
+
+        // Create some events
+        for (let i = 0; i < 20; i++) {
+          await bus.dispatch('core:component_added', { componentId: `first-${i}` });
+        }
+
+        // Exit batch mode (should reset counters)
+        bus.setBatchMode(false);
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('Recursion depth counters reset')
+        );
+
+        // Clear and re-enter batch mode
+        mockLogger.debug.mockClear();
+        bus.setBatchMode(true, {
+          context: 'second-initialization',
+          maxRecursionDepth: 200,
+          timeoutMs: 30000,
+        });
+
+        // Create more events - should work fine since counters were reset
+        for (let i = 0; i < 20; i++) {
+          await bus.dispatch('core:component_added', { componentId: `second-${i}` });
+        }
+
+        // Should not have any recursion errors
+        expect(consoleErrorSpy).not.toHaveBeenCalled();
+        expect(handler).toHaveBeenCalledTimes(40);
+      });
+    });
   });
 });

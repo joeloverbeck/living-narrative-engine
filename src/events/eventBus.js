@@ -88,11 +88,16 @@ class EventBus extends IEventBus {
         this.#batchModeTimeoutId = null;
       }
 
+      // Reset recursion depth counters when exiting batch mode
+      // This prevents accumulated depth from batch operations affecting normal gameplay
+      this.#recursionDepth.clear();
+      this.#handlerExecutionDepth.clear();
+
       const context = this.#batchModeOptions?.context || 'unknown';
       this.#batchModeOptions = null;
 
       this.#logger.debug(
-        `EventBus: Batch mode disabled for context: ${context}`
+        `EventBus: Batch mode disabled for context: ${context}. Recursion depth counters reset.`
       );
     }
   }
@@ -359,8 +364,9 @@ class EventBus extends IEventBus {
         this.#batchModeOptions.context === 'game-initialization'
       ) {
         // Allow much higher recursion for component lifecycle events during game initialization
-        // Increased to 200 to handle complex anatomy graphs with multiple characters (49 parts per character)
-        MAX_RECURSION_DEPTH = 200; // Allow deep component loading cascades for anatomy building
+        // Increased to 300 to handle complex anatomy graphs with multiple characters (49 parts per character)
+        // For 3 characters: ~50 parts × 3 characters × 1.5 (clothing) = ~225 events, 300 provides 33% buffer
+        MAX_RECURSION_DEPTH = 300; // Allow deep component loading cascades for anatomy building
       } else if (isWorkflowEvent) {
         // Workflow events get higher individual limits
         MAX_RECURSION_DEPTH = 25; // Higher limit for workflow events

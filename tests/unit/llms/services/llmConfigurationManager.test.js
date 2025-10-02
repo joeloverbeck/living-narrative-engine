@@ -383,6 +383,66 @@ describe('LLMConfigurationManager', () => {
         'LLMConfigurationManager: No default configuration set.'
       );
     });
+
+    it('should migrate old Claude Sonnet 4 ID to Claude Sonnet 4.5 from localStorage', async () => {
+      // Set up localStorage with old LLM ID (using correct storage key)
+      localStorage.setItem(
+        'living-narrative-engine:selected-llm-id',
+        'openrouter-claude-sonnet-4-toolcalling'
+      );
+
+      const manager = new LLMConfigurationManager({
+        logger: mockLogger,
+        initialLlmId: null,
+      });
+
+      const configWithNewClaude = {
+        defaultConfigId: 'claude-sonnet-4.5',
+        configs: {
+          'claude-sonnet-4.5': {
+            configId: 'claude-sonnet-4.5',
+            displayName: 'Claude Sonnet 4.5',
+            modelIdentifier: 'anthropic/claude-sonnet-4.5',
+            endpointUrl: 'https://openrouter.ai/api/v1/chat/completions',
+            apiType: 'openrouter',
+            jsonOutputStrategy: { method: 'openrouter_tool_calling' },
+            promptElements: [],
+            promptAssemblyOrder: [],
+            contextTokenLimit: 1000000,
+          },
+          'openrouter-claude-sonnet-4-toolcalling': {
+            configId: 'openrouter-claude-sonnet-4-toolcalling',
+            displayName: 'Claude Sonnet 4 (OpenRouter)',
+            modelIdentifier: 'anthropic/claude-sonnet-4',
+            endpointUrl: 'https://openrouter.ai/api/v1/chat/completions',
+            apiType: 'openrouter',
+            jsonOutputStrategy: { method: 'openrouter_tool_calling' },
+            promptElements: [],
+            promptAssemblyOrder: [],
+            contextTokenLimit: 1000000,
+          },
+        },
+      };
+
+      mockConfigLoader.loadConfigs.mockResolvedValue(configWithNewClaude);
+      await manager.init({ llmConfigLoader: mockConfigLoader });
+
+      // Should have migrated to the new ID
+      const activeId = await manager.getActiveConfigId();
+      expect(activeId).toBe('claude-sonnet-4.5');
+
+      // Should have logged the migration
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "Migrating persisted LLM from 'openrouter-claude-sonnet-4-toolcalling' to 'claude-sonnet-4.5'"
+        )
+      );
+
+      // Should have updated localStorage with correct storage key
+      expect(
+        localStorage.getItem('living-narrative-engine:selected-llm-id')
+      ).toBe('claude-sonnet-4.5');
+    });
   });
 
   describe('getActiveConfiguration', () => {

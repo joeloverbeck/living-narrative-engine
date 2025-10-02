@@ -256,51 +256,20 @@ describe('Multi-target action with contextFrom dependency', () => {
 
       // Assert
       expect(result.success).toBe(true);
+      expect(result.data.actionsWithTargets).toHaveLength(1);
 
-      // The bug causes no actions to be resolved because secondary scope
-      // gets undefined context.target
-      if (result.data.actionsWithTargets.length === 0) {
-        console.log(
-          'BUG CONFIRMED: No actions resolved because secondary scope gets undefined context.target'
-        );
-        console.log(
-          'The secondary scope was called with context.target: undefined'
-        );
-        console.log(
-          'This happens because buildDependentContext only uses the first primary target'
-        );
+      const resolvedTargets = result.data.resolvedTargets;
+      expect(resolvedTargets).toBeDefined();
+      expect(resolvedTargets.primary).toHaveLength(2);
+      expect(resolvedTargets.primary[0].id).toBe('elara');
+      expect(resolvedTargets.primary[1].id).toBe('joel');
 
-        // Check how many times unifiedScopeResolver was called
-        const secondaryScopeCalls =
-          unifiedScopeResolver.resolve.mock.calls.filter(
-            (call) => call[0] === 'clothing:target_topmost_torso_upper_clothing'
-          );
-        console.log(
-          'Secondary scope was called',
-          secondaryScopeCalls.length,
-          'time(s)'
-        );
+      expect(resolvedTargets.secondary).toBeDefined();
 
-        // Even though we have 2 primary targets, secondary is only resolved once
-        expect(secondaryScopeCalls.length).toBe(1);
-      } else {
-        // If the bug is partially fixed, check the results
-        expect(result.data.actionsWithTargets).toHaveLength(1);
-
-        const resolvedTargets = result.data.resolvedTargets;
-        expect(resolvedTargets).toBeDefined();
-        expect(resolvedTargets.primary).toHaveLength(2);
-        expect(resolvedTargets.primary[0].id).toBe('elara');
-        expect(resolvedTargets.primary[1].id).toBe('joel');
-
-        expect(resolvedTargets.secondary).toBeDefined();
-        console.log('Resolved secondary targets:', resolvedTargets.secondary);
-
-        // After fix, we expect different secondary targets for each primary
-        expect(resolvedTargets.secondary).toHaveLength(2);
-        expect(resolvedTargets.secondary[0].id).toBe('blazer123');
-        expect(resolvedTargets.secondary[1].id).toBe('trenchcoat456');
-      }
+      // After fix, we expect different secondary targets for each primary
+      expect(resolvedTargets.secondary).toHaveLength(2);
+      expect(resolvedTargets.secondary[0].id).toBe('blazer123');
+      expect(resolvedTargets.secondary[1].id).toBe('trenchcoat456');
     });
 
     it('should correctly build context for each primary target when resolving secondary', async () => {

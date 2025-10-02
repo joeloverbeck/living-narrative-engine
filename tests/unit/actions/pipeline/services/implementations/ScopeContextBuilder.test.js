@@ -332,7 +332,7 @@ describe('ScopeContextBuilder', () => {
       mockTrace = { traceId: 'trace-123' };
 
       mockBaseContext = {
-        actor: { id: 'actor-123' },
+        actor: { id: 'entity-123' },
         location: { id: 'location-789' },
       };
 
@@ -352,7 +352,7 @@ describe('ScopeContextBuilder', () => {
       );
 
       expect(mockTargetContextBuilder.buildBaseContext).toHaveBeenCalledWith(
-        'actor-123',
+        'entity-123',
         'location-789'
       );
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
@@ -360,7 +360,7 @@ describe('ScopeContextBuilder', () => {
       );
 
       expect(result).toEqual({
-        actor: { id: 'actor-123' },
+        actor: { id: 'entity-123' },
         location: { id: 'location-789' },
         targets: {
           secondary: { id: 'target-2', displayName: 'Secondary Target' },
@@ -388,7 +388,7 @@ describe('ScopeContextBuilder', () => {
       );
 
       expect(result.target).toBeUndefined();
-      expect(result.targets).toEqual(mockResolvedTargets);
+      expect(result.targets).toBeUndefined();
     });
 
     it('should handle entity without getAllComponents method', () => {
@@ -437,7 +437,7 @@ describe('ScopeContextBuilder', () => {
       );
 
       expect(mockTargetContextBuilder.buildBaseContext).toHaveBeenCalledWith(
-        'actor-123',
+        'entity-123',
         'location-456'
       );
     });

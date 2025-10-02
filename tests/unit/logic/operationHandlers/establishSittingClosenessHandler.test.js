@@ -680,15 +680,15 @@ describe('EstablishSittingClosenessHandler', () => {
 
       const result = await handler.execute(parameters, executionContext);
 
-      expect(mockDispatcher.dispatch).toHaveBeenCalledWith({
-        type: 'SITTING_CLOSENESS_ESTABLISHED',
-        payload: {
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        'positioning:sitting_closeness_established',
+        {
           actorId: 'alice',
           furnitureId: 'couch:1',
           adjacentActors: ['bob'],
           operationId: expect.stringMatching(/^establish_\d+_[a-z0-9]+$/),
-        },
-      });
+        }
+      );
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         'EstablishSittingClosenessHandler: Sitting closeness established successfully',
