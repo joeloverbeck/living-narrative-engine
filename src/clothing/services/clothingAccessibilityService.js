@@ -444,7 +444,17 @@ export class ClothingAccessibilityService {
 
   /**
    * Apply mode-specific filtering logic
-   * 
+   *
+   * IMPORTANT: For 'topmost' mode, returns ONE topmost item PER SLOT.
+   *
+   * Example: If entity wears:
+   * - torso_upper: jacket (outer) + shirt (base)
+   * - torso_lower: pants (outer)
+   * - feet: shoes (outer)
+   *
+   * This method returns: [jacket, pants, shoes] - one per slot
+   * NOT just [jacket] - this is the CORRECT behavior for action discovery
+   *
    * @private
    * @param {Array} items - Array of items to filter
    * @param {string} mode - Query mode
@@ -452,21 +462,22 @@ export class ClothingAccessibilityService {
    */
   #applyModeLogic(items, mode) {
     const layers = getLayersByMode(mode);
-    
+
     if (mode === 'topmost' || mode === 'topmost_no_accessories') {
       // For topmost, only return the highest priority item per slot
+      // This creates a map of slot -> topmost item, then returns all map values
       const slotMap = new Map();
-      
+
       for (const item of items) {
         const layerIndex = layers.indexOf(item.layer);
         if (layerIndex === -1) continue;
-        
+
         const existing = slotMap.get(item.slot);
         if (!existing || layers.indexOf(existing.layer) > layerIndex) {
           slotMap.set(item.slot, item);
         }
       }
-      
+
       return Array.from(slotMap.values());
     }
     

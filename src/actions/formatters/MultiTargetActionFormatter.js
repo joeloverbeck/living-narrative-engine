@@ -162,7 +162,7 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
       }
     }
 
-    const combinations = this.#generateCombinations(resolvedTargets);
+    const combinations = this.#generateCombinations(resolvedTargets, actionDef.generateCombinations || false);
     const formattedCommands = [];
 
     for (const combination of combinations) {
@@ -339,10 +339,11 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
    * Generate combinations of targets (full cartesian product with limits)
    *
    * @param {Object<string, ResolvedTarget[]>} resolvedTargets - Resolved targets by definition name
+   * @param {boolean} generateAllCombinations - Whether to generate separate combinations for each dependent target
    * @returns {Array<object>} Array of target combinations
    * @private
    */
-  #generateCombinations(resolvedTargets) {
+  #generateCombinations(resolvedTargets, generateAllCombinations = false) {
     const targetKeys = Object.keys(resolvedTargets);
     const maxCombinations = 50; // Reasonable limit
 
@@ -374,7 +375,8 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
       // Handle context-dependent combinations
       return this.#generateContextDependentCombinations(
         resolvedTargets,
-        maxCombinations
+        maxCombinations,
+        generateAllCombinations
       );
     }
 
@@ -425,10 +427,11 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
    *
    * @param {Object<string, ResolvedTarget[]>} resolvedTargets - Resolved targets by definition name
    * @param {number} maxCombinations - Maximum number of combinations to generate
+   * @param {boolean} generateAllCombinations - Whether to generate separate combinations for each dependent target
    * @returns {Array<object>} Array of target combinations
    * @private
    */
-  #generateContextDependentCombinations(resolvedTargets, maxCombinations) {
+  #generateContextDependentCombinations(resolvedTargets, maxCombinations, generateAllCombinations = false) {
     const combinations = [];
 
     // Find primary targets (those without contextFromId)
@@ -452,14 +455,12 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
       allKeys: Object.keys(resolvedTargets),
     });
 
-    // For each primary target, create a combination with its dependent targets
+    // For each primary target, create combinations with its dependent targets
     for (const primaryTarget of primaryTargets) {
       if (combinations.length >= maxCombinations) break;
 
-      const combination = {
-        [primaryKey]: [primaryTarget],
-      };
-
+      // Collect all dependent targets for this primary, grouped by key
+      const dependentTargetsByKey = new Map();
       let hasAllRequiredTargets = true;
 
       // Find all dependent targets for this primary
@@ -477,45 +478,117 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
           );
 
           if (dependentTargets.length > 0) {
-            combination[key] = dependentTargets;
+            dependentTargetsByKey.set(key, dependentTargets);
           } else {
             // This is a required dependent target but none match this primary
-            // Skip this entire combination
+            // Skip this entire primary target
             hasAllRequiredTargets = false;
             break;
           }
         } else {
           // This is an independent target type, include all targets
-          // This creates cartesian product with independent targets
           if (targets.length > 0) {
-            combination[key] = targets;
+            dependentTargetsByKey.set(key, targets);
           }
         }
       }
 
-      // Only add combination if all required targets are present
-      // For context-dependent actions, we need all target types to have values
-      if (hasAllRequiredTargets) {
-        // Check if we have values for all expected target types
-        const expectedTargetKeys = Object.keys(resolvedTargets);
-        const hasAllTargets = expectedTargetKeys.every(
-          (key) => combination[key] && combination[key].length > 0
-        );
+      if (!hasAllRequiredTargets) continue;
 
-        if (!hasAllTargets) {
-          // Skip this combination if any target type is missing
-          continue;
+      // Create combinations based on target types and generateAllCombinations flag
+      const combination = {
+        [primaryKey]: [primaryTarget],
+      };
+
+      // Separate truly dependent keys from independent keys
+      const trulyDependentKeys = [];
+      const independentKeys = [];
+
+      for (const [key, targets] of dependentTargetsByKey) {
+        const isDependent = resolvedTargets[key].every((t) => t.contextFromId);
+        if (isDependent) {
+          trulyDependentKeys.push(key);
+        } else {
+          independentKeys.push(key);
         }
-        // If we have independent targets that aren't context-dependent,
-        // we need to expand combinations
-        const independentKeys = Object.keys(combination).filter(
-          (key) =>
-            key !== primaryKey &&
-            !resolvedTargets[key].every((t) => t.contextFromId)
-        );
+        combination[key] = targets;
+      }
 
+
+      // Check if we have values for all expected target types
+      const expectedTargetKeys = Object.keys(resolvedTargets);
+      const hasAllTargets = expectedTargetKeys.every(
+        (key) => combination[key] && combination[key].length > 0
+      );
+
+      if (!hasAllTargets) {
+        // Skip this combination if any target type is missing
+        continue;
+      }
+
+      // Handle truly dependent targets (always generate separate combinations for each target)
+      // and independent targets (always expand into separate combinations)
+      if (trulyDependentKeys.length === 1) {
+        // Single dependent key - create separate combinations for each dependent target
+        const dependentKey = trulyDependentKeys[0];
+        const dependentTargets = dependentTargetsByKey.get(dependentKey);
+
+        for (const dependentTarget of dependentTargets) {
+          if (combinations.length >= maxCombinations) break;
+
+          const depCombination = {
+            [primaryKey]: [primaryTarget],
+            [dependentKey]: [dependentTarget]
+          };
+
+          // Add independent targets as-is (they'll be expanded later)
+          for (const indepKey of independentKeys) {
+            depCombination[indepKey] = dependentTargetsByKey.get(indepKey);
+          }
+
+          // Expand independent targets if any exist
+          if (independentKeys.length > 0) {
+            this.#expandCombinationsForIndependentTargets(
+              depCombination,
+              independentKeys,
+              combinations,
+              maxCombinations
+            );
+          } else {
+            combinations.push(depCombination);
+          }
+        }
+      } else if (trulyDependentKeys.length > 1) {
+        // Multiple dependent keys - use generateAllCombinations flag to decide behavior
+        if (generateAllCombinations) {
+          // TODO: Implement proper cartesian product for multiple dependent keys
+          // For now, use standard behavior
+          if (independentKeys.length > 0) {
+            this.#expandCombinationsForIndependentTargets(
+              combination,
+              independentKeys,
+              combinations,
+              maxCombinations
+            );
+          } else {
+            combinations.push(combination);
+          }
+        } else {
+          // Standard behavior for multiple dependent keys
+          if (independentKeys.length > 0) {
+            this.#expandCombinationsForIndependentTargets(
+              combination,
+              independentKeys,
+              combinations,
+              maxCombinations
+            );
+          } else {
+            combinations.push(combination);
+          }
+        }
+      } else {
+        // No truly dependent keys, only independent keys
         if (independentKeys.length > 0) {
-          // Generate cartesian product for independent targets
           this.#expandCombinationsForIndependentTargets(
             combination,
             independentKeys,
@@ -523,7 +596,6 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
             maxCombinations
           );
         } else {
-          // No independent targets, just add the combination
           combinations.push(combination);
         }
       }
@@ -549,10 +621,10 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
   /**
    * Expand combinations for independent targets
    *
-   * @param baseCombination
-   * @param independentKeys
-   * @param combinations
-   * @param maxCombinations
+   * @param {object} baseCombination - Base combination to expand
+   * @param {string[]} independentKeys - Keys for independent targets
+   * @param {object[]} combinations - Array to add expanded combinations to
+   * @param {number} maxCombinations - Maximum number of combinations to generate
    * @private
    */
   #expandCombinationsForIndependentTargets(

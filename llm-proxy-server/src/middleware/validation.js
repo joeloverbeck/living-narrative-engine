@@ -91,9 +91,9 @@ export const validateLlmRequest = () => {
       .withMessage(
         `llmId must be between 1 and ${VALIDATION_LLM_ID_MAX_LENGTH} characters`
       )
-      .matches(/^[a-zA-Z0-9\-_]+$/)
+      .matches(/^[a-zA-Z0-9\-_.]+$/)
       .withMessage(
-        'llmId can only contain alphanumeric characters, hyphens, and underscores'
+        'llmId can only contain alphanumeric characters, hyphens, underscores, and periods'
       ),
 
     // Validate targetPayload

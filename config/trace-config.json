@@ -2,16 +2,21 @@
   "$schema": "../data/schemas/trace-config.schema.json",
   "traceAnalysisEnabled": false,
   "actionTracing": {
-    "enabled": false,
-    "tracedActions": ["positioning:sit_down"],
-    "outputDirectory": "./traces/sit-down",
+    "enabled": true,
+    "tracedActions": [
+      "clothing:remove_others_clothing"
+    ],
+    "outputDirectory": "./traces/remove-others-clothing",
     "verbosity": "verbose",
     "includeComponentData": true,
     "includePrerequisites": true,
     "includeTargets": true,
     "maxTraceFiles": 100,
     "rotationPolicy": "count",
-    "outputFormats": ["json", "text"],
+    "outputFormats": [
+      "json",
+      "text"
+    ],
     "textFormatOptions": {
       "enableColors": false,
       "lineWidth": 120,
@@ -63,7 +68,9 @@
       "includePerformanceMetrics": true,
       "includeCandidateDetails": true,
       "includePhaseBreakdown": true,
-      "outputFormats": ["text"],
+      "outputFormats": [
+        "text"
+      ],
       "textFormatOptions": {
         "enableColors": false,
         "includeTimestamps": true,

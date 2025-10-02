@@ -94,21 +94,16 @@ describe('MultiTargetActionFormatter - contextFrom bug', () => {
 
       // The bug would produce an array with two malformed commands
       // We expect a single properly formatted command with target info
-      if (Array.isArray(result.value)) {
-        expect(result.value).toHaveLength(1);
-        const item = result.value[0];
-        expect(item.command).toBe("adjust Iker Aguirre's denim trucker jacket");
-        expect(item.targets).toBeDefined();
-        expect(item.targets.primary).toBeDefined();
-        expect(item.targets.secondary).toBeDefined();
-      } else {
-        expect(result.value).toBe("adjust Iker Aguirre's denim trucker jacket");
-      }
+      expect(Array.isArray(result.value)).toBe(true);
+      expect(result.value).toHaveLength(1);
+      const item = result.value[0];
+      expect(item.command).toBe("adjust Iker Aguirre's denim trucker jacket");
+      expect(item.targets).toBeDefined();
+      expect(item.targets.primary).toBeDefined();
+      expect(item.targets.secondary).toBeDefined();
 
       // Verify no incomplete placeholders remain
-      const commandStr = Array.isArray(result.value)
-        ? result.value[0].command
-        : result.value;
+      const commandStr = result.value[0].command;
       expect(commandStr).not.toContain('{primary}');
       expect(commandStr).not.toContain('{secondary}');
     });

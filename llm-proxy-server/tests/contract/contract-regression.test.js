@@ -23,7 +23,7 @@ describe('Contract Regression Tests', () => {
       requestSchema: {
         requiredFields: ['llmId', 'targetPayload'],
         optionalFields: ['targetHeaders'],
-        llmIdPattern: '^[a-zA-Z0-9_-]+$',
+        llmIdPattern: '^[a-zA-Z0-9_.-]+$',
         additionalPropertiesAllowed: false,
       },
       errorResponseSchema: {

@@ -229,7 +229,17 @@ export class LLMConfigurationManager extends ILLMConfigurationManager {
 
     // Priority 2: persisted selection from localStorage
     if (!configSelected) {
-      const persistedLlmId = LLMSelectionPersistence.load();
+      let persistedLlmId = LLMSelectionPersistence.load();
+
+      // MIGRATION: Update old Claude Sonnet 4 ID to new 4.5 ID
+      if (persistedLlmId === 'openrouter-claude-sonnet-4-toolcalling') {
+        this.#logger.info(
+          `LLMConfigurationManager: Migrating persisted LLM from 'openrouter-claude-sonnet-4-toolcalling' to 'claude-sonnet-4.5'`
+        );
+        persistedLlmId = 'claude-sonnet-4.5';
+        LLMSelectionPersistence.save(persistedLlmId);
+      }
+
       if (persistedLlmId) {
         const targetConfig = this.#allConfigsMap[persistedLlmId];
         if (targetConfig) {

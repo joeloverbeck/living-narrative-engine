@@ -426,15 +426,12 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
       );
     }
 
-    // Dispatch success event
-    this.#dispatcher.dispatch({
-      type: 'SITTING_CLOSENESS_ESTABLISHED',
-      payload: {
-        actorId: parameters.actor_id,
-        furnitureId: parameters.furniture_id,
-        adjacentActors: adjacentActors,
-        operationId,
-      },
+    // Dispatch success event with correct format
+    this.#dispatcher.dispatch('positioning:sitting_closeness_established', {
+      actorId: parameters.actor_id,
+      furnitureId: parameters.furniture_id,
+      adjacentActors: adjacentActors,
+      operationId,
     });
 
     return { success: true, adjacentActors };

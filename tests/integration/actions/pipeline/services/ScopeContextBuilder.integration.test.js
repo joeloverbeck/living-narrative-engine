@@ -231,10 +231,13 @@ describe('ScopeContextBuilder Integration Tests', () => {
         targetDef
       );
 
-      // Should have base context
+      // Should have base context with actor set to the specific primary target
+      // This is the fix for the contextFrom bug - when resolving secondary targets,
+      // the context.actor should be the primary target entity so that scopes like
+      // "actor.topmost_clothing[]" resolve against the primary target
       expect(result).toHaveProperty('actor');
       expect(result).toHaveProperty('location');
-      expect(result.actor.id).toBe('actor-123');
+      expect(result.actor.id).toBe('target-1'); // Changed: actor is now the primary target
       expect(result.location.id).toBe('location-456');
 
       // Should have all resolved targets
@@ -265,11 +268,12 @@ describe('ScopeContextBuilder Integration Tests', () => {
         targetDef
       );
 
-      // Should still have base context and resolved targets
+      // When primary entity doesn't exist, falls back to original actor
       expect(result.actor.id).toBe('actor-123');
-      expect(result.targets).toEqual(resolvedTargets);
+      // Targets property should not exist when fallback occurs
+      expect(result.targets).toBeUndefined();
 
-      // But no specific target
+      // And no specific target
       expect(result.target).toBeUndefined();
     });
   });

@@ -1,47 +1,369 @@
-Speech Patterns for Diego Tavares
-Generated: 19/12/2024, 11:30:00
-Total Patterns: undefined
-
-==================================================
-
-1. [object Object]
-
-2. [object Object]
-
-3. [object Object]
-
-4. [object Object]
-
-5. [object Object]
-
-6. [object Object]
-
-7. [object Object]
-
-8. [object Object]
-
-9. [object Object]
-
-10. [object Object]
-
-11. [object Object]
-
-12. [object Object]
-
-13. [object Object]
-
-14. [object Object]
-
-15. [object Object]
-
-16. [object Object]
-
-17. [object Object]
-
-18. [object Object]
-
-19. [object Object]
-
-20. [object Object]
-
-==================================================
+ClothingAccessibilityService: After coverage blocking {accessibleItems: Array(4)}
+clothingAccessibilityService.js:547 ClothingAccessibilityService: After mode logic {result: Array(4)}
+clothingAccessibilityService.js:555 ClothingAccessibilityService: Final result {finalResult: Array(4)}
+consoleLogger.js:151 [DEBUG] EntityQueryManager detailed search for 'positioning:allows_sitting': {componentTypeId: 'positioning:allows_sitting', entityIdsFromIndex: Array(1), totalEntityIdsFound: 1, entitiesFound: Array(1), repositoryStats: {…}}
+consoleLogger.js:151 [DEBUG] EntityManager.getEntitiesWithComponent('positioning:allows_sitting'): found 1 entities [{…}]
+consoleLogger.js:151 ActionIndexingService: 30/30 actions have visual properties for p_erotica:ane_artzelai_instance (30) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+consoleLogger.js:151 [ActionButtonsRenderer] Actions with visual properties: {total: 30, withVisualProps: 30, withNullVisual: 0, missingVisual: 0, visualDetails: Array(30)}
+consoleLogger.js:175 OperationInterpreter: ---> HANDLER NOT FOUND for operation type: "REMOVE_SITTING_CLOSENESS".
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:664
+__privateGet.error @ criticalLogNotifier.js:1451
+error @ loggerUtils.js:96
+execute @ operationInterpreter.js:60
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:490
+processRule_fn @ systemLogicInterpreter.js:448
+handleEvent_fn @ systemLogicInterpreter.js:351
+await in handleEvent_fn
+(anonymous) @ eventBus.js:525
+dispatch @ eventBus.js:522
+emitEvent_fn @ validatedEventDispatcher.js:230
+dispatch @ validatedEventDispatcher.js:301
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:197
+executeSafely_fn @ safeEventDispatcher.js:105
+dispatch @ safeEventDispatcher.js:195
+dispatchWithErrorHandling @ eventDispatchService.js:149
+dispatchAction @ commandProcessor.js:213
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:353
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:295
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:443
+await in advanceTurn
+(anonymous) @ turnManager.js:594
+setTimeout
+setTimeout @ RealScheduler.js:13
+handleTurnEndedEvent_fn @ turnManager.js:593
+(anonymous) @ turnManager.js:189
+(anonymous) @ turnEventSubscription.js:57
+setTimeout
+setTimeout @ RealScheduler.js:13
+wrapped @ turnEventSubscription.js:57
+(anonymous) @ eventBus.js:525
+dispatch @ eventBus.js:522
+emitEvent_fn @ validatedEventDispatcher.js:230
+dispatch @ validatedEventDispatcher.js:301
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:197
+executeSafely_fn @ safeEventDispatcher.js:105
+dispatch @ safeEventDispatcher.js:195
+execute @ endTurnHandler.js:88
+(anonymous) @ interpreterRegistrations.js:60
+execute @ operationInterpreter.js:95
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:490
+processRule_fn @ systemLogicInterpreter.js:448
+handleEvent_fn @ systemLogicInterpreter.js:351
+await in handleEvent_fn
+(anonymous) @ eventBus.js:525
+dispatch @ eventBus.js:522
+emitEvent_fn @ validatedEventDispatcher.js:230
+dispatch @ validatedEventDispatcher.js:301
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:197
+executeSafely_fn @ safeEventDispatcher.js:105
+dispatch @ safeEventDispatcher.js:195
+dispatchWithErrorHandling @ eventDispatchService.js:149
+dispatchAction @ commandProcessor.js:213
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:353
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:295
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:443
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+(anonymous) @ turnManager.js:594
+setTimeout
+setTimeout @ RealScheduler.js:13
+handleTurnEndedEvent_fn @ turnManager.js:593
+(anonymous) @ turnManager.js:189
+(anonymous) @ turnEventSubscription.js:57
+setTimeout
+setTimeout @ RealScheduler.js:13
+wrapped @ turnEventSubscription.js:57
+(anonymous) @ eventBus.js:525
+dispatch @ eventBus.js:522
+emitEvent_fn @ validatedEventDispatcher.js:230
+dispatch @ validatedEventDispatcher.js:301
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:197
+executeSafely_fn @ safeEventDispatcher.js:105
+dispatch @ safeEventDispatcher.js:195
+execute @ endTurnHandler.js:88
+(anonymous) @ interpreterRegistrations.js:60
+execute @ operationInterpreter.js:95
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+handleIf @ ifHandler.js:70
+executeActionSequence @ actionSequence.js:96
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:490
+processRule_fn @ systemLogicInterpreter.js:448
+handleEvent_fn @ systemLogicInterpreter.js:351
+await in handleEvent_fn
+(anonymous) @ eventBus.js:525
+dispatch @ eventBus.js:522
+emitEvent_fn @ validatedEventDispatcher.js:230
+dispatch @ validatedEventDispatcher.js:301
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:197
+executeSafely_fn @ safeEventDispatcher.js:105
+dispatch @ safeEventDispatcher.js:195
+dispatchWithErrorHandling @ eventDispatchService.js:149
+dispatchAction @ commandProcessor.js:213
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:353
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:295
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:443Understand this error
+clothingAccessibilityService.js:515 ClothingAccessibilityService: Equipment state {entityId: 'p_erotica:iker_aguirre_instance', equipment: {…}}
+clothingAccessibilityService.js:518 ClothingAccessibilityService: Parsed items {entityId: 'p_erotica:iker_aguirre_instance', equippedItems: Array(6)}
+clothingAccessibilityService.js:529 ClothingAccessibilityService: After layer filter {filteredItems: Array(6)}
+clothingAccessibilityService.js:543 ClothingAccessibilityService: After coverage blocking {accessibleItems: Array(3)}
+clothingAccessibilityService.js:547 ClothingAccessibilityService: After mode logic {result: Array(3)}
+clothingAccessibilityService.js:555 ClothingAccessibilityService: Final result {finalResult: Array(3)}
+consoleLogger.js:151 [DEBUG] EntityQueryManager detailed search for 'positioning:allows_sitting': {componentTypeId: 'positioning:allows_sitting', entityIdsFromIndex: Array(1), totalEntityIdsFound: 1, entitiesFound: Array(1), repositoryStats: {…}}
+consoleLogger.js:151 [DEBUG] EntityManager.getEntitiesWithComponent('positioning:allows_sitting'): found 1 entities [{…}]
+consoleLogger.js:151 ActionIndexingService: 28/28 actions have visual properties for p_erotica:iker_aguirre_instance (28) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+consoleLogger.js:151 [ActionButtonsRenderer] Actions with visual properties: {total: 28, withVisualProps: 28, withNullVisual: 0, missingVisual: 0, visualDetails: Array(28)}
+consoleLogger.js:175 OperationInterpreter: ---> HANDLER NOT FOUND for operation type: "REMOVE_SITTING_CLOSENESS".
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:664
+__privateGet.error @ criticalLogNotifier.js:1451
+error @ loggerUtils.js:96
+execute @ operationInterpreter.js:60
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:490
+processRule_fn @ systemLogicInterpreter.js:448
+handleEvent_fn @ systemLogicInterpreter.js:351
+await in handleEvent_fn
+(anonymous) @ eventBus.js:525
+dispatch @ eventBus.js:522
+emitEvent_fn @ validatedEventDispatcher.js:230
+dispatch @ validatedEventDispatcher.js:301
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:197
+executeSafely_fn @ safeEventDispatcher.js:105
+dispatch @ safeEventDispatcher.js:195
+dispatchWithErrorHandling @ eventDispatchService.js:149
+dispatchAction @ commandProcessor.js:213
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:353
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:295
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:443
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+(anonymous) @ turnManager.js:594
+setTimeout
+setTimeout @ RealScheduler.js:13
+handleTurnEndedEvent_fn @ turnManager.js:593
+(anonymous) @ turnManager.js:189
+(anonymous) @ turnEventSubscription.js:57
+setTimeout
+setTimeout @ RealScheduler.js:13
+wrapped @ turnEventSubscription.js:57
+(anonymous) @ eventBus.js:525
+dispatch @ eventBus.js:522
+emitEvent_fn @ validatedEventDispatcher.js:230
+dispatch @ validatedEventDispatcher.js:301
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:197
+executeSafely_fn @ safeEventDispatcher.js:105
+dispatch @ safeEventDispatcher.js:195
+execute @ endTurnHandler.js:88
+(anonymous) @ interpreterRegistrations.js:60
+execute @ operationInterpreter.js:95
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:490
+processRule_fn @ systemLogicInterpreter.js:448
+handleEvent_fn @ systemLogicInterpreter.js:351
+await in handleEvent_fn
+(anonymous) @ eventBus.js:525
+dispatch @ eventBus.js:522
+emitEvent_fn @ validatedEventDispatcher.js:230
+dispatch @ validatedEventDispatcher.js:301
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:197
+executeSafely_fn @ safeEventDispatcher.js:105
+dispatch @ safeEventDispatcher.js:195
+dispatchWithErrorHandling @ eventDispatchService.js:149
+dispatchAction @ commandProcessor.js:213
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:353
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:295
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:443
+await in advanceTurn
+(anonymous) @ turnManager.js:594
+setTimeout
+setTimeout @ RealScheduler.js:13
+handleTurnEndedEvent_fn @ turnManager.js:593
+(anonymous) @ turnManager.js:189
+(anonymous) @ turnEventSubscription.js:57
+setTimeout
+setTimeout @ RealScheduler.js:13
+wrapped @ turnEventSubscription.js:57
+(anonymous) @ eventBus.js:525
+dispatch @ eventBus.js:522
+emitEvent_fn @ validatedEventDispatcher.js:230
+dispatch @ validatedEventDispatcher.js:301
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:197
+executeSafely_fn @ safeEventDispatcher.js:105
+dispatch @ safeEventDispatcher.js:195
+execute @ endTurnHandler.js:88
+(anonymous) @ interpreterRegistrations.js:60
+execute @ operationInterpreter.js:95
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:490
+processRule_fn @ systemLogicInterpreter.js:448
+handleEvent_fn @ systemLogicInterpreter.js:351
+await in handleEvent_fn
+(anonymous) @ eventBus.js:525
+dispatch @ eventBus.js:522
+emitEvent_fn @ validatedEventDispatcher.js:230
+dispatch @ validatedEventDispatcher.js:301
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:197
+executeSafely_fn @ safeEventDispatcher.js:105
+dispatch @ safeEventDispatcher.js:195
+dispatchWithErrorHandling @ eventDispatchService.js:149
+dispatchAction @ commandProcessor.js:213
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:353
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:295
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:443
+await in advanceTurn
+advanceTurn @ turnManager.js:338Understand this error
+consoleLogger.js:151 TargetResolutionService: [DEBUG] TargetResolutionService resolving scope for sit_down: {scopeName: 'positioning:available_furniture', actionId: 'positioning:sit_down', actorId: 'p_erotica:ane_artzelai_instance', actorLocation: Entity, hasDiscoveryContext: true, …}
+consoleLogger.js:151 TargetResolutionService: [DEBUG] Context built for UnifiedScopeResolver: {hasActor: true, actorId: 'p_erotica:ane_artzelai_instance', actorLocation: Entity, hasActionContext: true, actionContextEntityManager: false}
+consoleLogger.js:151 [DEBUG] UnifiedScopeResolver: Resolving available_furniture scope {scopeName: 'positioning:available_furniture', actorId: 'p_erotica:ane_artzelai_instance', actionId: 'positioning:sit_down', hasActor: true, hasTrace: true}
+consoleLogger.js:151 [DEBUG] UnifiedScopeResolver: Before scope engine resolve {scopeName: 'positioning:available_furniture', actorId: 'p_erotica:ane_artzelai_instance', hasAst: true, runtimeCtxKeys: Array(6)}
+consoleLogger.js:151 [DEBUG] EntityQueryManager detailed search for 'positioning:allows_sitting': {componentTypeId: 'positioning:allows_sitting', entityIdsFromIndex: Array(1), totalEntityIdsFound: 1, entitiesFound: Array(1), repositoryStats: {…}}

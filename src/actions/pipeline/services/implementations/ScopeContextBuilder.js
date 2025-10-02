@@ -174,9 +174,33 @@ export class ScopeContextBuilder extends BaseService {
     ]);
     // Note: specificPrimary can be null, so we don't validate it as required
 
-    // Start with base context
+    // For contextFrom targets, we need to use the specific primary as the actor
+    // in the scope evaluation context, because scope DSL expressions like
+    // "actor.topmost_clothing[]" should resolve against the target entity,
+    // not the actor performing the action
+    const contextActor = specificPrimary
+      ? this.#entityManager.getEntityInstance(specificPrimary.id)
+      : actor;
+
+    if (!contextActor) {
+      this.logger.error(
+        'Failed to get entity for context actor in buildScopeContextForSpecificPrimary',
+        {
+          specificPrimaryId: specificPrimary?.id,
+          actorId: actor.id,
+        }
+      );
+      // Fall back to original actor if target entity not found
+      return this.#contextBuilder.buildBaseContext(
+        actor.id,
+        actionContext.location?.id ||
+          actor.getComponentData('core:position')?.locationId
+      );
+    }
+
+    // Build context using the target entity as the actor
     const baseContext = this.#contextBuilder.buildBaseContext(
-      actor.id,
+      contextActor.id,
       actionContext.location?.id ||
         actor.getComponentData('core:position')?.locationId
     );
@@ -188,8 +212,8 @@ export class ScopeContextBuilder extends BaseService {
     context.targets = { ...resolvedTargets };
 
     // Add the specific primary as the 'target' for scope evaluation
+    // (kept for backward compatibility and explicit target reference)
     if (specificPrimary) {
-      // Build entity context manually since buildEntityContext is private
       const entity = this.#entityManager.getEntityInstance(specificPrimary.id);
       if (entity) {
         context.target = {
@@ -200,10 +224,12 @@ export class ScopeContextBuilder extends BaseService {
     }
 
     this.logOperation('buildScopeContextForSpecificPrimary', {
-      actorId: actor.id,
+      originalActorId: actor.id,
+      contextActorId: contextActor.id,
       specificPrimaryId: specificPrimary?.id,
       resolvedTargetCount: Object.keys(resolvedTargets).length,
       hasEntityTarget: !!context.target,
+      usedTargetAsActor: specificPrimary !== null,
     });
 
     return context;

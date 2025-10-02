@@ -130,6 +130,10 @@ export function registerInterpreters(container) {
       bind(tokens.EstablishSittingClosenessHandler)
     );
     registry.register(
+      'REMOVE_SITTING_CLOSENESS',
+      bind(tokens.RemoveSittingClosenessHandler)
+    );
+    registry.register(
       'HAS_BODY_PART_WITH_COMPONENT_VALUE',
       bind(tokens.HasBodyPartWithComponentValueHandler)
     );
