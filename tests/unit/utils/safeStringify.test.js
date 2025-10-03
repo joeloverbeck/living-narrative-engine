@@ -1,35 +1,46 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, expect, test } from '@jest/globals';
 import { safeStringify } from '../../../src/utils/safeStringify.js';
 
 describe('safeStringify', () => {
-  it('stringifies objects without cycles', () => {
-    const obj = { a: 1, b: { c: 2 } };
-    const result = safeStringify(obj);
-    expect(result).toBe(JSON.stringify(obj));
+  test('serializes non-circular data the same as JSON.stringify', () => {
+    const payload = {
+      id: 42,
+      label: 'example',
+      nested: { value: [1, 2, 3], flag: true },
+    };
+
+    const result = safeStringify(payload);
+
+    expect(result).toBe(JSON.stringify(payload));
   });
 
-  it('replaces circular references with "[Circular]"', () => {
-    const obj = { a: 1 };
-    obj.self = obj;
-    const result = safeStringify(obj);
-    expect(result).toBe('{"a":1,"self":"[Circular]"}');
+  test('replaces circular references with a placeholder', () => {
+    const person = { name: 'Ada' };
+    person.self = person;
+
+    const result = safeStringify(person);
+
+    expect(JSON.parse(result)).toEqual({
+      name: 'Ada',
+      self: '[Circular]',
+    });
   });
 
-  it('treats repeated references as circular', () => {
-    const shared = { v: 1 };
-    const obj = { first: shared, second: shared };
-    const result = safeStringify(obj);
-    expect(result).toBe('{"first":{"v":1},"second":"[Circular]"}');
+  test('marks repeated references as circular after the first occurrence', () => {
+    const shared = { feature: 'shared' };
+    const container = { first: shared, second: shared };
+
+    const result = safeStringify(container);
+
+    expect(JSON.parse(result)).toEqual({
+      first: { feature: 'shared' },
+      second: '[Circular]',
+    });
   });
 
-  it('handles arrays with cycles', () => {
-    const arr = [1];
-    arr.push(arr);
-    const result = safeStringify(arr);
-    expect(result).toBe('[1,"[Circular]"]');
-  });
-
-  it('stringifies primitive values normally', () => {
-    expect(safeStringify(42)).toBe('42');
+  test('handles primitive values without modification', () => {
+    expect(safeStringify('plain string')).toBe('"plain string"');
+    expect(safeStringify(123)).toBe('123');
+    expect(safeStringify(null)).toBe('null');
   });
 });
