@@ -48,6 +48,8 @@ jest.mock('../../../src/dependencyInjection/tokens.js', () => ({
     VisualizerState: 'VisualizerState',
     AnatomyLoadingDetector: 'AnatomyLoadingDetector',
     VisualizerStateController: 'VisualizerStateController',
+    VisualizationComposer: 'VisualizationComposer',
+    ClothingManagementService: 'ClothingManagementService',
     ILogger: 'ILogger',
     IEntityManager: 'IEntityManager',
     IValidatedEventDispatcher: 'IValidatedEventDispatcher',
@@ -62,30 +64,10 @@ const loggerMock = {
 };
 
 const containerMock = {
-  resolve: jest.fn((token) => {
-    if (token === 'AnatomyDescriptionService') {
-      return {};
-    }
-    if (token === 'VisualizerStateController') {
-      return {};
-    }
-    if (token === 'VisualizerState') {
-      return {};
-    }
-    if (token === 'AnatomyLoadingDetector') {
-      return {};
-    }
-    if (token === 'ILogger') {
-      return loggerMock;
-    }
-    if (token === 'IEntityManager') {
-      return {};
-    }
-    if (token === 'IValidatedEventDispatcher') {
-      return {};
-    }
-  }),
+  resolve: jest.fn(),
 };
+
+let AnatomyVisualizerUIMock;
 
 const servicesMock = {
   logger: loggerMock,
@@ -94,15 +76,44 @@ const servicesMock = {
   eventDispatcher: {},
 };
 
+const defaultLocationHref = window.location.href;
+
+let containerDependencies;
+
 beforeEach(() => {
   jest.resetModules();
   jest.clearAllMocks();
+  AnatomyVisualizerUIMock = jest.requireMock(
+    '../../../src/domUI/AnatomyVisualizerUI.js'
+  ).default;
+  AnatomyVisualizerUIMock.mockClear();
   document.body.innerHTML = '<button id="back-button"></button>';
   Object.defineProperty(document, 'readyState', {
     value: 'complete',
     writable: true,
   });
   global.alert = jest.fn();
+
+  containerDependencies = {
+    AnatomyDescriptionService: {},
+    VisualizerStateController: {},
+    VisualizationComposer: {},
+    ClothingManagementService: { register: jest.fn() },
+    ILogger: loggerMock,
+    IEntityManager: {},
+    IValidatedEventDispatcher: {},
+  };
+
+  containerMock.resolve.mockImplementation((token) => {
+    const value = containerDependencies[token];
+    if (value instanceof Error) {
+      throw value;
+    }
+    if (typeof value === 'undefined') {
+      return {};
+    }
+    return value;
+  });
 
   // Setup default mock behavior
   mockBootstrap.mockImplementation(async (options) => {
@@ -116,6 +127,7 @@ beforeEach(() => {
 
 afterEach(() => {
   delete global.alert;
+  window.history.replaceState(null, '', defaultLocationHref);
 });
 
 describe('Anatomy Visualizer Initialization', () => {
@@ -164,6 +176,76 @@ describe('Anatomy Visualizer Initialization', () => {
       expect(containerMock.resolve).toHaveBeenCalledWith(
         'AnatomyDescriptionService'
       );
+    });
+
+    it('should attach back button handler that navigates to the landing page', async () => {
+      const backButton = document.getElementById('back-button');
+      const addListenerSpy = jest.spyOn(backButton, 'addEventListener');
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      await jest.isolateModulesAsync(async () => {
+        await import('../../../src/anatomy-visualizer.js');
+      });
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(addListenerSpy).toHaveBeenCalledWith(
+        'click',
+        expect.any(Function)
+      );
+
+      const handler = addListenerSpy.mock.calls[0][1];
+      handler();
+
+      expect(consoleErrorSpy).toHaveBeenCalled();
+
+      addListenerSpy.mockRestore();
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should warn and proceed when clothing management service is unavailable', async () => {
+      document.body.innerHTML = '';
+      containerDependencies.ClothingManagementService = new Error(
+        'Missing dependency'
+      );
+
+      await jest.isolateModulesAsync(async () => {
+        await import('../../../src/anatomy-visualizer.js');
+      });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(loggerMock.warn).toHaveBeenCalledWith(
+        'ClothingManagementService not available - equipment panel will be disabled'
+      );
+
+      expect(AnatomyVisualizerUIMock).toHaveBeenCalled();
+      const constructorArgs = AnatomyVisualizerUIMock.mock.calls[0][0];
+      expect(constructorArgs.clothingManagementService).toBeNull();
+      expect(mockUIInitialize).toHaveBeenCalled();
+    });
+
+    it('should defer initialization until DOMContentLoaded when document is loading', async () => {
+      const addEventListenerSpy = jest.spyOn(document, 'addEventListener');
+      document.readyState = 'loading';
+
+      await jest.isolateModulesAsync(async () => {
+        await import('../../../src/anatomy-visualizer.js');
+      });
+
+      expect(mockBootstrap).not.toHaveBeenCalled();
+      expect(addEventListenerSpy).toHaveBeenCalledWith(
+        'DOMContentLoaded',
+        expect.any(Function)
+      );
+
+      document.dispatchEvent(new Event('DOMContentLoaded'));
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(mockBootstrap).toHaveBeenCalled();
+      addEventListenerSpy.mockRestore();
     });
 
     it('should handle bootstrap failure', async () => {
