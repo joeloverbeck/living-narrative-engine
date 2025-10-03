@@ -163,4 +163,92 @@ describe('main.js failure branches', () => {
     expect(details.phase).toBe(globalError.phase);
     expect(passedLogger).toBe(logger);
   });
+
+  it('handles global configuration initialization failure with logger context', async () => {
+    window.history.pushState({}, '', '?start=false');
+    document.body.innerHTML = `<div id="outputDiv"></div>`;
+    const uiElements = {
+      outputDiv: document.querySelector('#outputDiv'),
+      errorDiv: null,
+      inputElement: null,
+      titleElement: null,
+      document,
+    };
+    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ startWorld: 'terra' }),
+    });
+
+    mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
+    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
+    const configError = new Error('config fail');
+    mockInitGlobalConfig.mockResolvedValue({ success: false, error: configError });
+
+    let main;
+    await jest.isolateModulesAsync(async () => {
+      main = await import('../../../src/main.js');
+    });
+    await main.bootstrapApp();
+    await Promise.resolve();
+    jest.runAllTimers();
+
+    expect(mockInitEngine).not.toHaveBeenCalled();
+    expect(mockDisplayFatal).toHaveBeenCalledTimes(1);
+    const [elements, details, passedLogger] = mockDisplayFatal.mock.calls[0];
+    expect(elements.outputDiv).toBe(uiElements.outputDiv);
+    expect(details.errorObject).toBe(configError);
+    expect(details.phase).toBe('Bootstrap Orchestration - Global Configuration Initialization');
+    expect(passedLogger).toBe(logger);
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('Bootstrap error caught in main orchestrator'),
+      configError
+    );
+  });
+
+  it('handles game engine initialization failure and reports the bootstrap phase', async () => {
+    window.history.pushState({}, '', '?start=false');
+    document.body.innerHTML = `<div id="outputDiv"></div>`;
+    const uiElements = {
+      outputDiv: document.querySelector('#outputDiv'),
+      errorDiv: null,
+      inputElement: null,
+      titleElement: null,
+      document,
+    };
+    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ startWorld: 'elysium' }),
+    });
+
+    mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
+    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
+    mockInitGlobalConfig.mockResolvedValue({ success: true });
+    const engineError = new Error('engine fail');
+    mockInitEngine.mockResolvedValue({ success: false, error: engineError });
+
+    let main;
+    await jest.isolateModulesAsync(async () => {
+      main = await import('../../../src/main.js');
+    });
+    await main.bootstrapApp();
+    await Promise.resolve();
+    jest.runAllTimers();
+
+    expect(mockInitAux).not.toHaveBeenCalled();
+    expect(mockDisplayFatal).toHaveBeenCalledTimes(1);
+    const [, details, passedLogger] = mockDisplayFatal.mock.calls[0];
+    expect(details.errorObject).toBe(engineError);
+    expect(details.phase).toBe('Bootstrap Orchestration - Game Engine Initialization');
+    expect(passedLogger).toBe(logger);
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('Bootstrap error caught in main orchestrator'),
+      engineError
+    );
+  });
 });
