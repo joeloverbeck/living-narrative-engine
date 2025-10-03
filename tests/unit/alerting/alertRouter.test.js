@@ -141,4 +141,76 @@ describe('AlertRouter', () => {
       error
     );
   });
+
+  it('logs and swallows unexpected queue errors when handling events', () => {
+    const router = new AlertRouter({ safeEventDispatcher: dispatcher });
+    const failure = new Error('queue failure');
+    router.queue = {
+      length: 0,
+      push: () => {
+        throw failure;
+      },
+    };
+
+    expect(() =>
+      triggerEvent(SYSTEM_WARNING_OCCURRED_ID, { message: 'ignored' })
+    ).not.toThrow();
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'AlertRouter error:',
+      failure
+    );
+  });
+
+  it('logs outer flush errors when the queue cannot be iterated', () => {
+    const router = new AlertRouter({ safeEventDispatcher: dispatcher });
+
+    triggerEvent(SYSTEM_WARNING_OCCURRED_ID, { message: 'queued warning' });
+    // Simulate a mutation from outside the class that breaks iteration.
+    router.queue = null;
+    consoleErrorSpy.mockClear();
+
+    flushScheduledCallbacks();
+
+    const flushErrorCall = consoleErrorSpy.mock.calls.find(
+      ([message]) => message === 'AlertRouter flush error:'
+    );
+    expect(flushErrorCall).toBeDefined();
+    expect(flushErrorCall[1]).toBeInstanceOf(Error);
+  });
+
+  it('logs errors when forwarding queued events fails after the UI becomes ready', () => {
+    const router = new AlertRouter({ safeEventDispatcher: dispatcher });
+    triggerEvent(SYSTEM_WARNING_OCCURRED_ID, { message: 'queued' });
+    const failure = new Error('forward failure');
+    router.forwardToUI = jest.fn(() => {
+      throw failure;
+    });
+    consoleErrorSpy.mockClear();
+
+    router.notifyUIReady();
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'AlertRouter error forwarding queued event:',
+      failure
+    );
+    expect(router.queue).toEqual([]);
+    expect(router.uiReady).toBe(true);
+  });
+
+  it('logs dispatch errors when forwarding directly to the UI fails', () => {
+    const dispatchError = new Error('dispatch failure');
+    dispatcher.dispatch.mockImplementation(() => {
+      throw dispatchError;
+    });
+    const router = new AlertRouter({ safeEventDispatcher: dispatcher });
+    consoleErrorSpy.mockClear();
+
+    router.forwardToUI(SYSTEM_ERROR_OCCURRED_ID, { message: 'boom' });
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'AlertRouter dispatch error:',
+      dispatchError
+    );
+  });
 });
