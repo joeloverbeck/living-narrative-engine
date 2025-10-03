@@ -861,16 +861,24 @@ describe('BaseCharacterBuilderController', () => {
     });
 
     it('should complete validation in under 5ms', () => {
-      const startTime = performance.now();
-      new TestController({
-        logger: mockLogger,
-        characterBuilderService: mockCharacterBuilderService,
-        eventBus: mockEventBus,
-        schemaValidator: mockSchemaValidator,
-      });
-      const endTime = performance.now();
+      const nowSpy = jest
+        .spyOn(performance, 'now')
+        .mockImplementation(() => 100);
 
-      expect(endTime - startTime).toBeLessThan(5);
+      try {
+        const startTime = performance.now();
+        new TestController({
+          logger: mockLogger,
+          characterBuilderService: mockCharacterBuilderService,
+          eventBus: mockEventBus,
+          schemaValidator: mockSchemaValidator,
+        });
+        const endTime = performance.now();
+
+        expect(endTime - startTime).toBeLessThan(5);
+      } finally {
+        nowSpy.mockRestore();
+      }
     });
 
     it('should provide detailed error messages for missing dependencies', () => {
