@@ -181,6 +181,47 @@ describe('main.js uncovered branches', () => {
     exerciseDomHelpers(helpers);
   });
 
+  it('shows the load game UI when requested and supported by the engine', async () => {
+    window.history.pushState({}, '', '?start=false');
+    document.body.innerHTML = `
+      <div id="outputDiv"></div>
+    `;
+    const uiElements = {
+      outputDiv: document.querySelector('#outputDiv'),
+      errorDiv: null,
+      inputElement: null,
+      titleElement: null,
+      document,
+    };
+    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
+    const showLoadGameUI = jest.fn().mockResolvedValue(undefined);
+
+    mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
+    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
+    mockInitGlobalConfig.mockResolvedValue({ success: true });
+    mockInitEngine.mockResolvedValue({
+      success: true,
+      payload: { showLoadGameUI },
+    });
+    mockInitAux.mockResolvedValue({ success: true });
+    mockMenu.mockResolvedValue({ success: true });
+    mockGlobal.mockResolvedValue({ success: true });
+    mockStartGame.mockResolvedValue({ success: true });
+
+    const main = await import('../../../src/main.js');
+    await main.bootstrapApp();
+    await Promise.resolve();
+    jest.runAllTimers();
+
+    await main.beginGame(true);
+    await Promise.resolve();
+    jest.runAllTimers();
+
+    expect(mockStartGame).toHaveBeenCalled();
+    expect(showLoadGameUI).toHaveBeenCalledTimes(1);
+  });
+
   it('falls back to default UI helpers when bootstrap fails early', async () => {
     const originalAlert = window.alert;
     const originalConsoleError = console.error;
