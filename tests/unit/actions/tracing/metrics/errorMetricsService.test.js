@@ -176,9 +176,14 @@ describe('ErrorMetricsService', () => {
 
   describe('resetMetrics', () => {
     beforeEach(() => {
+      jest.useFakeTimers();
       metricsService = new ErrorMetricsService({
         logger: mockLogger,
       });
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
     });
 
     it('should clear all metrics', () => {

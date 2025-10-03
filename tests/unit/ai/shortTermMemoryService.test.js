@@ -45,6 +45,28 @@ describe('ShortTermMemoryService', () => {
       expect(mem.thoughts).toHaveLength(3);
     });
 
+    it('skips non-string entries when scanning for duplicates', () => {
+      const service = new ShortTermMemoryService();
+      const mem = {
+        thoughts: [
+          { text: 42, timestamp: '2024-01-01T00:00:00.000Z' },
+          { text: { nested: 'value' }, timestamp: '2024-01-02T00:00:00.000Z' },
+        ],
+        maxEntries: 5,
+      };
+      const now = new Date('2024-03-04T12:34:56.000Z');
+
+      const result = service.addThought(mem, 'Fresh insight', now);
+
+      expect(result).toEqual({
+        mem,
+        wasAdded: true,
+        entry: { text: 'Fresh insight', timestamp: now.toISOString() },
+      });
+      expect(mem.thoughts).toHaveLength(3);
+      expect(mem.thoughts[2]).toEqual(result.entry);
+    });
+
     it('initialises the thoughts array when needed and records ISO timestamps', () => {
       const service = new ShortTermMemoryService();
       const mem = { maxEntries: 3 };
