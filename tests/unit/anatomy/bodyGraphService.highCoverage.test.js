@@ -125,6 +125,32 @@ describe('BodyGraphService high coverage', () => {
     expect(LIMB_DETACHED_EVENT_ID).toBe('event:detached');
   });
 
+  it('throws descriptive errors when required dependencies are missing', async () => {
+    await expect(
+      () =>
+        new BodyGraphService({
+          logger: { debug: jest.fn() },
+          eventDispatcher: { dispatch: jest.fn() },
+        })
+    ).toThrow(new InvalidArgumentError('entityManager is required'));
+
+    await expect(
+      () =>
+        new BodyGraphService({
+          entityManager: { getComponentData: jest.fn() },
+          eventDispatcher: { dispatch: jest.fn() },
+        })
+    ).toThrow(new InvalidArgumentError('logger is required'));
+
+    await expect(
+      () =>
+        new BodyGraphService({
+          entityManager: { getComponentData: jest.fn() },
+          logger: { debug: jest.fn() },
+        })
+    ).toThrow(new InvalidArgumentError('eventDispatcher is required'));
+  });
+
   it('uses provided query cache instance when supplied', () => {
     const customQueryCache = {
       getCachedFindPartsByType: jest.fn(),
@@ -214,6 +240,35 @@ describe('BodyGraphService high coverage', () => {
     expect(result).toEqual({ detached: ['arm'], parentId: 'torso', socketId: 'elbow' });
   });
 
+  it('skips cache invalidation when anatomy root cannot be resolved', async () => {
+    const { service, entityManager, cacheInstance, queryCacheInstance, eventDispatcher } =
+      createService();
+
+    entityManager.getComponentData.mockImplementation((id, component) => {
+      if (component === 'anatomy:joint') {
+        return { parentId: 'torso', socketId: 'wrist' };
+      }
+      return null;
+    });
+    mockAlgorithms.getSubgraph.mockReturnValue(['hand']);
+    mockAlgorithms.getAnatomyRoot.mockReturnValue(null);
+
+    const result = await service.detachPart('hand');
+
+    expect(cacheInstance.invalidateCacheForRoot).not.toHaveBeenCalled();
+    expect(queryCacheInstance.invalidateRoot).not.toHaveBeenCalled();
+    expect(eventDispatcher.dispatch).toHaveBeenCalledWith(
+      'event:detached',
+      expect.objectContaining({
+        detachedEntityId: 'hand',
+        parentEntityId: 'torso',
+        socketId: 'wrist',
+        detachedCount: 1,
+      })
+    );
+    expect(result).toEqual({ detached: ['hand'], parentId: 'torso', socketId: 'wrist' });
+  });
+
   it('findPartsByType leverages caching and updates cache when missing', () => {
     const { service, cacheInstance, queryCacheInstance } = createService();
 
@@ -271,6 +326,29 @@ describe('BodyGraphService high coverage', () => {
     expect(result).toEqual(['torso', 'arm']);
   });
 
+  it('logs truncated output when anatomy graph contains many parts', () => {
+    const { service, cacheInstance, queryCacheInstance, logger } = createService();
+
+    queryCacheInstance.getCachedGetAllParts.mockReturnValue(undefined);
+    cacheInstance.has.mockReturnValue(false);
+    cacheInstance.size.mockReturnValue(2);
+
+    const longResult = ['root', 'arm', 'leg', 'head', 'torso', 'hand', 'foot'];
+    mockAlgorithms.getAllParts.mockReturnValue(longResult);
+
+    const parts = service.getAllParts({ root: 'root' }, 'actor-1');
+
+    expect(parts).toEqual(longResult);
+    const logMessage = logger.debug.mock.calls
+      .map((call) => call[0])
+      .find((message) =>
+        message?.startsWith(
+          'BodyGraphService: AnatomyGraphAlgorithms.getAllParts returned'
+        )
+      );
+    expect(logMessage).toContain('...');
+  });
+
   it('prefers actor cache root when available', () => {
     const { service, cacheInstance, queryCacheInstance, logger } = createService();
 
@@ -323,6 +401,28 @@ describe('BodyGraphService high coverage', () => {
         'offline'
       )
     ).toEqual({ found: false });
+  });
+
+  it('treats missing nested properties as undefined when matching component values', () => {
+    const { service, entityManager, queryCacheInstance } = createService();
+
+    queryCacheInstance.getCachedGetAllParts.mockReturnValue(['elbow']);
+    entityManager.getComponentData.mockImplementation((id, component) => {
+      if (id === 'elbow' && component === 'custom:status') {
+        return {};
+      }
+      return null;
+    });
+
+    const result = service.hasPartWithComponentValue(
+      { root: 'root' },
+      'custom:status',
+      'state.value',
+      'online'
+    );
+
+    expect(result).toEqual({ found: false });
+    expect(entityManager.getComponentData).toHaveBeenCalledWith('elbow', 'custom:status');
   });
 
   it('validates inputs and exposes helpers from getBodyGraph', async () => {
