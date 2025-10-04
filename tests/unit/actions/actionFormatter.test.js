@@ -1,241 +1,414 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import ActionCommandFormatter from '../../../src/actions/actionFormatter.js';
-import { targetFormatterMap } from '../../../src/actions/formatters/targetFormatters.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
-import {
-  ENTITY as TARGET_TYPE_ENTITY,
-  NONE as TARGET_TYPE_NONE,
-} from '../../../src/constants/actionTargetTypes.js';
-import { createMockLogger } from '../../common/mockFactories';
 
-describe('formatActionCommand', () => {
-  let entityManager;
-  let logger;
-  let dispatcher;
-  let displayNameFn;
-  let formatter;
+jest.mock('../../../src/utils/safeDispatchErrorUtils.js', () => ({
+  safeDispatchError: jest.fn(),
+  dispatchValidationError: jest.fn(),
+}));
+
+jest.mock('../../../src/utils/dependencyUtils.js', () => {
+  const actual = jest.requireActual('../../../src/utils/dependencyUtils.js');
+  return {
+    ...actual,
+    validateDependencies: jest.fn(actual.validateDependencies),
+    validateDependency: jest.fn(actual.validateDependency),
+  };
+});
+
+import ActionCommandFormatter from '../../../src/actions/actionFormatter.js';
+import {
+  safeDispatchError,
+  dispatchValidationError,
+} from '../../../src/utils/safeDispatchErrorUtils.js';
+import {
+  validateDependencies,
+  validateDependency,
+} from '../../../src/utils/dependencyUtils.js';
+
+describe('ActionCommandFormatter', () => {
+  /** @returns {import('../../../src/interfaces/coreServices.js').ILogger} */
+  function createLogger() {
+    return {
+      debug: jest.fn(),
+      error: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+    };
+  }
+
+  /** @returns {{ dispatch: jest.Mock }} */
+  function createDispatcher() {
+    return {
+      dispatch: jest.fn(),
+    };
+  }
+
+  /**
+   * Creates a baseline action definition for tests.
+   * @param {Partial<import('../../../src/data/gameDataRepository.js').ActionDefinition>} overrides
+   */
+  function createAction(overrides = {}) {
+    return {
+      id: 'core:test-action',
+      template: 'perform ${target}',
+      ...overrides,
+    };
+  }
+
+  /**
+   * Creates a simple target context for formatting.
+   * @param {Partial<import('../../../src/models/actionTargetContext.js').ActionTargetContext>} overrides
+   */
+  function createTargetContext(overrides = {}) {
+    return {
+      type: 'entity',
+      placeholder: 'target',
+      ...overrides,
+    };
+  }
+
+  /** @returns {{ getEntityInstance: jest.Mock }} */
+  function createEntityManager(returnValue = { id: 'npc-1' }) {
+    return {
+      getEntityInstance: jest.fn(() => returnValue),
+    };
+  }
+
+  /**
+   * Generates the shared options object for the formatter call.
+   */
+  function createOptions(overrides = {}) {
+    return {
+      logger: createLogger(),
+      safeEventDispatcher: createDispatcher(),
+      ...overrides,
+    };
+  }
+
+  /**
+   * Generates dependency overrides passed to the formatter.
+   */
+  function createDeps(overrides = {}) {
+    return {
+      displayNameFn: jest.fn(() => 'NPC'),
+      formatterMap: {
+        entity: jest.fn((command) => command.replace('${target}', 'NPC')),
+      },
+      ...overrides,
+    };
+  }
 
   beforeEach(() => {
-    entityManager = { getEntityInstance: jest.fn() };
-    logger = createMockLogger();
-    dispatcher = { dispatch: jest.fn() };
-    displayNameFn = jest.fn();
-    formatter = new ActionCommandFormatter();
     jest.clearAllMocks();
-  });
-
-  it('formats an entity target using the entity display name', () => {
-    const actionDef = { id: 'core:inspect', template: 'inspect {target}' };
-    const context = { type: TARGET_TYPE_ENTITY, entityId: 'e1' };
-    const mockEntity = { id: 'e1' };
-    entityManager.getEntityInstance.mockReturnValue(mockEntity);
-    displayNameFn.mockReturnValue('The Entity');
-
-    const result = formatter.format(
-      actionDef,
-      context,
-      entityManager,
-      {
-        logger,
-        debug: true,
-        safeEventDispatcher: dispatcher,
-      },
-      { displayNameFn }
-    );
-
-    expect(result).toEqual({ ok: true, value: 'inspect The Entity' });
-    expect(displayNameFn).toHaveBeenCalledWith(mockEntity, 'e1', logger);
-    expect(logger.debug).toHaveBeenCalled();
-  });
-
-  it('falls back to entity id when instance is missing', () => {
-    const actionDef = { id: 'core:inspect', template: 'inspect {target}' };
-    const context = { type: TARGET_TYPE_ENTITY, entityId: 'e1' };
-    entityManager.getEntityInstance.mockReturnValue(null);
-
-    const result = formatter.format(
-      actionDef,
-      context,
-      entityManager,
-      {
-        logger,
-        safeEventDispatcher: dispatcher,
-      },
-      { displayNameFn }
-    );
-
-    expect(result).toEqual({ ok: true, value: 'inspect e1' });
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Could not find entity instance for ID e1')
-    );
-  });
-
-  it("returns template as-is for 'none' target type", () => {
-    const actionDef = { id: 'core:wait', template: 'wait' };
-    const context = { type: TARGET_TYPE_NONE };
-
-    const result = formatter.format(
-      actionDef,
-      context,
-      entityManager,
-      { logger, safeEventDispatcher: dispatcher },
-      { displayNameFn }
-    );
-
-    expect(result).toEqual({ ok: true, value: 'wait' });
-  });
-
-  it('returns error for missing action template', () => {
-    const result = formatter.format(
-      { id: 'bad' },
-      { type: TARGET_TYPE_NONE },
-      entityManager,
-      { logger, safeEventDispatcher: dispatcher },
-      { displayNameFn }
-    );
-    expect(result).toEqual({
+    dispatchValidationError.mockImplementation((dispatcher, message, details) => ({
       ok: false,
-      error:
-        'formatActionCommand: Invalid or missing actionDefinition or template.',
-    });
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
-      expect.objectContaining({
-        message:
-          'formatActionCommand: Invalid or missing actionDefinition or template.',
-      })
-    );
+      error: message,
+      details: { ...details, dispatched: true },
+    }));
   });
 
-  it('returns error when entityManager is invalid', () => {
-    const result = formatter.format(
-      { id: 'core:use', template: 'use {target}' },
-      { type: TARGET_TYPE_ENTITY, entityId: 'e1' },
-      {},
-      { logger, safeEventDispatcher: dispatcher },
-      { displayNameFn }
-    );
-    expect(result).toEqual({
-      ok: false,
-      error: 'formatActionCommand: Invalid or missing entityManager.',
-    });
-  });
-
-  it('warns on unknown target type', () => {
-    const actionDef = { id: 'core:do', template: 'do it' };
-    const context = { type: 'mystery' };
-    const result = formatter.format(
-      actionDef,
-      context,
-      entityManager,
-      {
-        logger,
-        safeEventDispatcher: dispatcher,
-      },
-      { displayNameFn }
-    );
-    expect(result).toEqual({ ok: true, value: 'do it' });
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Unknown targetContext type')
-    );
-  });
-
-  it('warns and returns template when formatter is missing in map', () => {
-    const actionDef = { id: 'core:inspect', template: 'inspect {target}' };
-    const context = { type: TARGET_TYPE_ENTITY, entityId: 'e1' };
-    const customMap = {};
-    const result = formatter.format(
-      actionDef,
-      context,
-      entityManager,
-      { logger, safeEventDispatcher: dispatcher },
-      { displayNameFn, formatterMap: customMap }
-    );
-
-    expect(result).toEqual({ ok: true, value: 'inspect {target}' });
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Unknown targetContext type')
-    );
-  });
-
-  it('throws if logger is missing', () => {
-    const actionDef = { id: 'core:wait', template: 'wait' };
-    const context = { type: TARGET_TYPE_NONE };
+  it('throws when no logger is provided', () => {
+    const formatter = new ActionCommandFormatter();
+    const action = createAction();
+    const targetContext = createTargetContext();
+    const entityManager = createEntityManager();
 
     expect(() =>
-      formatter.format(
-        actionDef,
-        context,
-        entityManager,
-        { safeEventDispatcher: dispatcher },
-        { displayNameFn }
-      )
+      formatter.format(action, targetContext, entityManager)
     ).toThrow('formatActionCommand: logger is required.');
   });
 
-  it('throws when logger and safeEventDispatcher are missing', () => {
-    const actionDef = { id: 'core:wait', template: 'wait' };
-    const context = { type: TARGET_TYPE_NONE };
+  it('returns a validation error when the action definition lacks a template', () => {
+    const formatter = new ActionCommandFormatter();
+    const action = createAction({ template: undefined });
+    const targetContext = createTargetContext();
+    const entityManager = createEntityManager();
+    const options = createOptions();
+    const deps = createDeps();
+
+    const result = formatter.format(action, targetContext, entityManager, options, deps);
+
+    expect(dispatchValidationError).toHaveBeenCalledWith(
+      options.safeEventDispatcher,
+      'formatActionCommand: Invalid or missing actionDefinition or template.',
+      undefined,
+      options.logger
+    );
+    expect(result).toEqual({
+      ok: false,
+      error: 'formatActionCommand: Invalid or missing actionDefinition or template.',
+      details: { dispatched: true },
+    });
+    expect(validateDependency).toHaveBeenCalledWith(
+      options.safeEventDispatcher,
+      'safeEventDispatcher',
+      options.logger,
+      { requiredMethods: ['dispatch'] }
+    );
+  });
+
+  it('returns a validation error when the target context is missing', () => {
+    const formatter = new ActionCommandFormatter();
+    const action = createAction();
+    const entityManager = createEntityManager();
+    const options = createOptions();
+    const deps = createDeps();
+
+    const result = formatter.format(action, null, entityManager, options, deps);
+
+    expect(dispatchValidationError).toHaveBeenCalledWith(
+      options.safeEventDispatcher,
+      'formatActionCommand: Invalid or missing targetContext.',
+      undefined,
+      options.logger
+    );
+    expect(result.error).toBe(
+      'formatActionCommand: Invalid or missing targetContext.'
+    );
+  });
+
+  it('surfaces an entity manager validation error', () => {
+    const formatter = new ActionCommandFormatter();
+    const action = createAction();
+    const targetContext = createTargetContext();
+    const options = createOptions();
+    const deps = createDeps();
+
+    const invalidEntityManager = createEntityManager();
+    delete invalidEntityManager.getEntityInstance;
+
+    const result = formatter.format(
+      action,
+      targetContext,
+      invalidEntityManager,
+      options,
+      deps
+    );
+
+    expect(result.error).toBe(
+      'formatActionCommand: Invalid or missing entityManager.'
+    );
+    expect(validateDependencies).toHaveBeenCalledTimes(1);
+  });
+
+  it('surfaces a display name function validation error', () => {
+    const formatter = new ActionCommandFormatter();
+    const action = createAction();
+    const targetContext = createTargetContext();
+    const options = createOptions();
+    const deps = createDeps({ displayNameFn: 'not-a-function' });
+
+    const result = formatter.format(
+      action,
+      targetContext,
+      createEntityManager(),
+      options,
+      deps
+    );
+
+    expect(result.error).toBe(
+      'formatActionCommand: getEntityDisplayName utility function is not available.'
+    );
+  });
+
+  it('continues formatting when dependency validation throws an unrelated error', () => {
+    const formatter = new ActionCommandFormatter();
+    const action = createAction({ template: 'observe ${target}' });
+    const targetContext = createTargetContext();
+    const options = createOptions();
+    const deps = createDeps({
+      formatterMap: {
+        entity: jest.fn((command) => command.replace('${target}', 'observer')),
+      },
+    });
+
+    validateDependencies.mockImplementationOnce(() => {
+      throw new Error('some transient issue');
+    });
+
+    const result = formatter.format(
+      action,
+      targetContext,
+      createEntityManager(),
+      options,
+      deps
+    );
+
+    expect(result).toEqual({ ok: true, value: 'observe observer' });
+    expect(dispatchValidationError).not.toHaveBeenCalled();
+  });
+
+  it('throws when the safe event dispatcher is invalid', () => {
+    const formatter = new ActionCommandFormatter();
+    const action = createAction();
+    const targetContext = createTargetContext();
+    const options = createOptions({ safeEventDispatcher: {} });
 
     expect(() =>
-      formatter.format(actionDef, context, entityManager, {}, { displayNameFn })
-    ).toThrow('formatActionCommand: logger is required.');
+      formatter.format(action, targetContext, createEntityManager(), options, createDeps())
+    ).toThrow('Invalid or missing method \'dispatch\' on dependency \'safeEventDispatcher\'.');
   });
 
-  it('throws when called with no options object', () => {
-    const actionDef = { id: 'core:wait', template: 'wait' };
-    const context = { type: TARGET_TYPE_NONE };
-
-    expect(() => formatter.format(actionDef, context, entityManager)).toThrow(
-      'formatActionCommand: logger is required.'
-    );
-  });
-
-  it('returns template unchanged and warns for unknown target type', () => {
-    const actionDef = { id: 'core:do', template: 'do it' };
-    const context = { type: 'bogus' };
+  it('warns and returns the original template when no formatter exists for the target type', () => {
+    const formatter = new ActionCommandFormatter();
+    const action = createAction();
+    const targetContext = createTargetContext({ type: 'unknown' });
+    const options = createOptions();
+    const deps = createDeps({ formatterMap: {} });
 
     const result = formatter.format(
-      actionDef,
-      context,
-      entityManager,
-      { logger, safeEventDispatcher: dispatcher },
-      { displayNameFn }
+      action,
+      targetContext,
+      createEntityManager(),
+      options,
+      deps
     );
 
-    expect(result).toEqual({ ok: true, value: 'do it' });
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Unknown targetContext type')
+    expect(options.logger.warn).toHaveBeenCalledWith(
+      'formatActionCommand: Unknown targetContext type: unknown for action core:test-action. Returning template unmodified.'
     );
-    expect(dispatcher.dispatch).not.toHaveBeenCalled();
+    expect(result).toEqual({ ok: true, value: 'perform ${target}' });
+    expect(safeDispatchError).not.toHaveBeenCalled();
   });
 
-  it('formatter throwing error yields error result and dispatches event', () => {
-    const actionDef = { id: 'core:inspect', template: 'inspect {target}' };
-    const context = { type: TARGET_TYPE_ENTITY, entityId: 'e1' };
-    const throwingFormatter = () => {
-      throw new Error('boom');
-    };
-    const formatterMap = { ...targetFormatterMap, entity: throwingFormatter };
+  it('falls back to default dependencies when none are provided', () => {
+    const formatter = new ActionCommandFormatter();
+    const action = createAction();
+    const targetContext = createTargetContext({ type: 'unknown' });
+    const options = createOptions();
 
     const result = formatter.format(
-      actionDef,
-      context,
-      entityManager,
-      { logger, safeEventDispatcher: dispatcher },
-      { displayNameFn, formatterMap }
+      action,
+      targetContext,
+      createEntityManager(),
+      options
     );
 
+    expect(options.logger.warn).toHaveBeenCalledWith(
+      'formatActionCommand: Unknown targetContext type: unknown for action core:test-action. Returning template unmodified.'
+    );
+    expect(result).toEqual({ ok: true, value: 'perform ${target}' });
+  });
+
+  it('applies the formatter and normalizes string results', () => {
+    const formatter = new ActionCommandFormatter();
+    const action = createAction({ template: 'greet ${target}' });
+    const targetContext = createTargetContext();
+    const options = createOptions();
+    const deps = createDeps({
+      formatterMap: {
+        entity: jest.fn((command) => command.replace('${target}', 'NPC')), 
+      },
+    });
+
+    const result = formatter.format(
+      action,
+      targetContext,
+      createEntityManager(),
+      options,
+      deps
+    );
+
+    expect(result).toEqual({ ok: true, value: 'greet NPC' });
+    expect(options.logger.debug).not.toHaveBeenCalled();
+  });
+
+  it('propagates formatter-provided error results without modification', () => {
+    const formatter = new ActionCommandFormatter();
+    const action = createAction({ template: 'do ${target}' });
+    const targetContext = createTargetContext();
+    const options = createOptions();
+    const failure = { ok: false, error: 'formatter failed' };
+    const deps = createDeps({
+      formatterMap: {
+        entity: jest.fn(() => failure),
+      },
+    });
+
+    const result = formatter.format(
+      action,
+      targetContext,
+      createEntityManager(),
+      options,
+      deps
+    );
+
+    expect(result).toBe(failure);
+  });
+
+  it('dispatches errors and wraps them when the formatter throws', () => {
+    const formatter = new ActionCommandFormatter();
+    const action = createAction({ template: 'inspect ${target}' });
+    const targetContext = createTargetContext();
+    const options = createOptions();
+    const deps = createDeps({
+      formatterMap: {
+        entity: jest.fn(() => {
+          throw new Error('formatter boom');
+        }),
+      },
+    });
+
+    safeDispatchError.mockImplementation(() => undefined);
+
+    const result = formatter.format(
+      action,
+      targetContext,
+      createEntityManager(),
+      options,
+      deps
+    );
+
+    expect(safeDispatchError).toHaveBeenCalledWith(
+      options.safeEventDispatcher,
+      'formatActionCommand: Error during placeholder substitution for action core:test-action:',
+      expect.objectContaining({ error: 'formatter boom' }),
+      options.logger
+    );
     expect(result).toEqual({
       ok: false,
       error: 'placeholder substitution failed',
-      details: 'boom',
+      details: 'formatter boom',
     });
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
-      expect.objectContaining({
-        message: expect.stringContaining('placeholder substitution'),
-      })
+  });
+
+  it('logs useful debug information when debug mode is enabled', () => {
+    const formatter = new ActionCommandFormatter();
+    const action = createAction({ template: 'speak ${target}' });
+    const targetContext = createTargetContext();
+    const logger = createLogger();
+    const options = createOptions({ logger, debug: true });
+    const deps = createDeps({
+      formatterMap: {
+        entity: jest.fn((command) => command.replace('${target}', 'NPC')), 
+      },
+    });
+
+    const result = formatter.format(
+      action,
+      targetContext,
+      createEntityManager(),
+      options,
+      deps
     );
+
+    expect(logger.debug).toHaveBeenCalledTimes(2);
+    expect(result).toEqual({ ok: true, value: 'speak NPC' });
+  });
+
+  it('returns a descriptive error for unsupported multi-target formatting', () => {
+    const formatter = new ActionCommandFormatter();
+    const result = formatter.formatMultiTarget(
+      createAction(),
+      {},
+      createEntityManager(),
+      createOptions(),
+      createDeps()
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      error:
+        'Multi-target formatting not supported by base ActionCommandFormatter. Use MultiTargetActionFormatter instead.',
+    });
   });
 });
