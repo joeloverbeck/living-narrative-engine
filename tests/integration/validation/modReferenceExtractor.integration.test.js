@@ -12,7 +12,7 @@ import {
   jest,
 } from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
-import ModReferenceExtractor from '../../../src/validation/modReferenceExtractor.js';
+import ModReferenceExtractor from '../../../cli/validation/modReferenceExtractor.js';
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';

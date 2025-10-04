@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "positioning:lying_down",
+  "description": "Tracks which furniture entity this actor is currently lying on",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["furniture_id"],
+    "properties": {
+      "furniture_id": {
+        "description": "The furniture entity being lain upon",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId"
+      }
+    }
+  }
+}

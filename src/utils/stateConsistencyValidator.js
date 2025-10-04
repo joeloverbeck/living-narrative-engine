@@ -4,7 +4,7 @@
 
 import { validateDependency } from './dependencyUtils.js';
 
-/** @typedef {import('../interfaces/logger.interface.js').ILogger} ILogger */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 
 export class StateConsistencyValidator {

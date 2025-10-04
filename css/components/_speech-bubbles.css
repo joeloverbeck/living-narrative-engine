@@ -360,6 +360,25 @@
   }
 }
 
+@keyframes fadeInOutFeedback {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(5px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  90% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-5px);
+  }
+}
+
 /* --- End Keyframes for animations --- */
 
 /* --- ADDED: Meta Icons & Tooltip --- */
@@ -390,6 +409,30 @@
   box-shadow: none; /* ADDED: Prevents shadow on hover */
 }
 
+/* Copy feedback state */
+.meta-btn--copied {
+  transform: scale(1.2);
+  transition: transform 0.2s ease-out;
+}
+
+/* Copy feedback message */
+.copy-feedback {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #4caf50;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: fadeInOutFeedback 2s ease-out forwards;
+  z-index: 1000;
+}
+
 .meta-tooltip {
   position: absolute;
   bottom: 120%;
@@ -407,12 +450,21 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.15s;
+  transition: opacity 0.15s 0.1s; /* Added delay for smoother transition */
 }
 
 .meta-btn:hover > .meta-tooltip,
 .meta-btn:focus-visible > .meta-tooltip {
   opacity: 1;
+  pointer-events: auto; /* Enable mouse interaction when visible */
+  transition-delay: 0s; /* Remove delay when showing */
+}
+
+/* Keep tooltip visible when hovering the tooltip itself */
+.meta-tooltip:hover {
+  opacity: 1;
+  pointer-events: auto;
+  transition-delay: 0s;
 }
 
 /* Enhanced tooltip for notes */

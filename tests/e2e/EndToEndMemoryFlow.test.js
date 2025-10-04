@@ -32,7 +32,7 @@ const createNewCharacter = (id) => ({
   components: {
     [SHORT_TERM_MEMORY_COMPONENT_ID]: {
       thoughts: [],
-      maxEntries: 10,
+      maxEntries: 4,
       entityId: id,
     },
     'core:name': { name: 'Test' },

@@ -6,7 +6,7 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
-import ModReferenceExtractor from '../../../src/validation/modReferenceExtractor.js';
+import ModReferenceExtractor from '../../../cli/validation/modReferenceExtractor.js';
 import fs from 'fs/promises';
 import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';
 

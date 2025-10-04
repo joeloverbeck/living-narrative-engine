@@ -7,7 +7,7 @@ import {
   jest,
 } from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
-import ModCrossReferenceValidator from '../../../src/validation/modCrossReferenceValidator.js';
+import ModCrossReferenceValidator from '../../../cli/validation/modCrossReferenceValidator.js';
 
 describe('ModCrossReferenceValidator - Enhanced Violation Detection', () => {
   let testBed;

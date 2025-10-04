@@ -120,6 +120,7 @@
     "build:with-validation": "npm run validate:ecosystem && npm run build",
     "validate-cross-refs:html": "node scripts/validateCrossReferences.js --format=html --output=cross-ref-report.html",
     "validate-cross-refs:verbose": "node scripts/validateCrossReferences.js --verbose",
-    "validate-cross-refs:basic": "node scripts/validateCrossReferences.js --no-enhanced"
+    "validate-cross-refs:basic": "node scripts/validateCrossReferences.js --no-enhanced",
+    "analytics:notes": "node scripts/notes-analytics-dashboard.js"
   }
 }

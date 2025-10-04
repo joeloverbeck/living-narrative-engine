@@ -37,7 +37,7 @@ export class ModManifestProcessor {
    * @param {typeof import('../modding/modDependencyValidator.js')} deps.modDependencyValidator - Dependency validator helper.
    * @param {typeof import('../modding/modVersionValidator.js').default} deps.modVersionValidator - Version compatibility validator.
    * @param {import('../modding/modLoadOrderResolver.js')} deps.modLoadOrderResolver - Load order resolver module.
-   * @param {import('../validation/modValidationOrchestrator.js').default} [deps.modValidationOrchestrator] - Optional validation orchestrator for comprehensive validation.
+   * @param {import('../../cli/validation/modValidationOrchestrator.js').default} [deps.modValidationOrchestrator] - Optional validation orchestrator for comprehensive validation.
    */
   constructor({
     modManifestLoader,
@@ -88,22 +88,22 @@ export class ModManifestProcessor {
       loadedManifests.set(modId.toLowerCase(), manifest);
     }
 
-    // Collect all dependencies
-    const allDependencies = [];
+    // Collect all dependencies (using Set to automatically deduplicate)
+    const allDependencies = new Set();
     for (const manifest of newManifests.values()) {
       if (manifest.dependencies && Array.isArray(manifest.dependencies)) {
         for (const dep of manifest.dependencies) {
           if (dep.id && !loadedManifests.has(dep.id.toLowerCase())) {
-            allDependencies.push(dep.id);
+            allDependencies.add(dep.id);
           }
         }
       }
     }
 
     // Recursively load dependencies
-    if (allDependencies.length > 0) {
+    if (allDependencies.size > 0) {
       await this.#loadManifestsWithDependencies(
-        allDependencies,
+        Array.from(allDependencies),
         loadedManifests,
         worldName
       );

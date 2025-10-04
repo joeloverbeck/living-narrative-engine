@@ -3,7 +3,7 @@
 // Smoke Test – Short-Term Memory Initialization
 // -----------------------------------------------------------------------------
 // Verifies that EntityManager injects a default `core:short_term_memory`
-// component (thoughts = [], maxEntries = 10) whenever it instantiates an
+// component (thoughts = [], maxEntries = 4) whenever it instantiates an
 // entity definition that contains `core:actor` but is missing
 // `core:short_term_memory`.
 // -----------------------------------------------------------------------------
@@ -41,7 +41,7 @@ describeEntityManagerSuite(
       expect(character.hasComponent(SHORT_TERM_MEMORY_COMPONENT_ID)).toBe(true);
 
       const stm = character.getComponentData(SHORT_TERM_MEMORY_COMPONENT_ID);
-      expect(stm).toEqual({ thoughts: [], maxEntries: 10 });
+      expect(stm).toEqual({ thoughts: [], maxEntries: 4 });
     });
   }
 );

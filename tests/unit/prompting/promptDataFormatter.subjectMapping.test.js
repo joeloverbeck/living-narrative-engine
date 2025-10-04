@@ -104,11 +104,59 @@ describe('PromptDataFormatter - Subject Type Mapping', () => {
           },
         },
         {
+          subjectType: SUBJECT_TYPES.PLAN,
+          expected: {
+            displayCategory: 'Plans & Intentions',
+            displayName: 'Plans & Intentions',
+            priority: 11,
+          },
+        },
+        {
+          subjectType: SUBJECT_TYPES.TIMELINE,
+          expected: {
+            displayCategory: 'Timelines & Deadlines',
+            displayName: 'Timelines & Deadlines',
+            priority: 12,
+          },
+        },
+        {
+          subjectType: SUBJECT_TYPES.PSYCHOLOGICAL_STATE,
+          expected: {
+            displayCategory: 'Psychological States',
+            displayName: 'Psychological States',
+            priority: 13,
+          },
+        },
+        {
           subjectType: SUBJECT_TYPES.EMOTION,
           expected: {
             displayCategory: 'Emotions & Feelings',
             displayName: 'Emotions & Feelings',
-            priority: 11,
+            priority: 14,
+          },
+        },
+        {
+          subjectType: SUBJECT_TYPES.THEORY,
+          expected: {
+            displayCategory: 'Theories & Hypotheses',
+            displayName: 'Theories & Hypotheses',
+            priority: 15,
+          },
+        },
+        {
+          subjectType: SUBJECT_TYPES.OBSERVATION,
+          expected: {
+            displayCategory: 'Observations & Patterns',
+            displayName: 'Observations & Patterns',
+            priority: 16,
+          },
+        },
+        {
+          subjectType: SUBJECT_TYPES.KNOWLEDGE_STATE,
+          expected: {
+            displayCategory: 'Knowledge & Uncertainties',
+            displayName: 'Knowledge & Uncertainties',
+            priority: 17,
           },
         },
         {

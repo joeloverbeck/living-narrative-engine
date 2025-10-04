@@ -30,9 +30,10 @@ class ViolationReporter {
 
   /**
    * Generates report in specified format
+   *
    * @param {ValidationReport|Map<string, ValidationReport>} data - Validation results
    * @param {string} format - Output format: 'console', 'json', 'html', 'markdown'
-   * @param {Object} options - Formatting options
+   * @param {object} options - Formatting options
    * @returns {string} Formatted report
    */
   generateReport(data, format = 'console', options = {}) {
@@ -54,6 +55,9 @@ class ViolationReporter {
 
   /**
    * Enhanced console report with colors and actionable suggestions
+   *
+   * @param data
+   * @param options
    * @private
    */
   _generateConsoleReport(data, options = {}) {
@@ -65,6 +69,11 @@ class ViolationReporter {
       return this._generateEcosystemConsoleReport(data, options);
     }
 
+    // Handle ecosystem wrapper structure with nested crossReferences Map
+    if (data.crossReferences instanceof Map) {
+      return this._generateEcosystemConsoleReport(data.crossReferences, options);
+    }
+
     // Enhanced single mod report
     lines.push(`Cross-Reference Validation Report for '${data.modId}'`);
     lines.push('='.repeat(50));
@@ -74,9 +83,9 @@ class ViolationReporter {
       lines.push('✅ No cross-reference violations detected');
       lines.push('');
       lines.push(`Summary:`);
-      lines.push(`  - References to ${data.referencedMods.length} mods`);
+      lines.push(`  - References to ${data.referencedMods?.length ?? 0} mods`);
       lines.push(
-        `  - ${data.summary.totalReferences} total component references`
+        `  - ${data.summary?.totalReferences ?? 0} total component references`
       );
       lines.push(`  - All references properly declared as dependencies`);
       return lines.join('\n');
@@ -188,6 +197,9 @@ class ViolationReporter {
 
   /**
    * Enhanced ecosystem console report
+   *
+   * @param results
+   * @param options
    * @private
    */
   _generateEcosystemConsoleReport(results, options = {}) {
@@ -338,6 +350,9 @@ class ViolationReporter {
 
   /**
    * JSON report for tooling integration
+   *
+   * @param data
+   * @param options
    * @private
    */
   _generateJsonReport(data, options = {}) {
@@ -363,6 +378,9 @@ class ViolationReporter {
 
   /**
    * HTML report for web-based viewing
+   *
+   * @param data
+   * @param options
    * @private
    */
   _generateHtmlReport(data, options = {}) {
@@ -398,6 +416,9 @@ class ViolationReporter {
 
   /**
    * Markdown report for documentation integration
+   *
+   * @param data
+   * @param options
    * @private
    */
   _generateMarkdownReport(data, options = {}) {
@@ -422,6 +443,8 @@ class ViolationReporter {
 
   /**
    * Groups violations by severity level
+   *
+   * @param violations
    * @private
    */
   _groupBySeverity(violations) {
@@ -438,6 +461,8 @@ class ViolationReporter {
 
   /**
    * Groups violations by referenced mod
+   *
+   * @param violations
    * @private
    */
   _groupByMod(violations) {
@@ -454,6 +479,8 @@ class ViolationReporter {
 
   /**
    * Gets severity icon for console display
+   *
+   * @param severity
    * @private
    */
   _getSeverityIcon(severity) {
@@ -468,6 +495,8 @@ class ViolationReporter {
 
   /**
    * Gets color function for severity (basic implementation)
+   *
+   * @param severity
    * @private
    */
   _getSeverityColor(severity) {
@@ -477,6 +506,8 @@ class ViolationReporter {
 
   /**
    * Calculates severity totals across ecosystem
+   *
+   * @param modsWithViolations
    * @private
    */
   _calculateEcosystemSeverityTotals(modsWithViolations) {
@@ -497,6 +528,8 @@ class ViolationReporter {
 
   /**
    * Generates ecosystem summary for JSON reports
+   *
+   * @param results
    * @private
    */
   _generateEcosystemSummary(results) {
@@ -538,6 +571,7 @@ class ViolationReporter {
 
   /**
    * Basic HTML styles for report
+   *
    * @private
    */
   _getHtmlStyles() {
@@ -560,6 +594,8 @@ class ViolationReporter {
 
   /**
    * Generates HTML content for ecosystem report
+   *
+   * @param results
    * @private
    */
   _generateEcosystemHtmlContent(results) {
@@ -625,6 +661,8 @@ class ViolationReporter {
 
   /**
    * Generates HTML content for single mod report
+   *
+   * @param data
    * @private
    */
   _generateSingleModHtmlContent(data) {
@@ -673,6 +711,8 @@ class ViolationReporter {
 
   /**
    * Generates Markdown content for ecosystem report
+   *
+   * @param results
    * @private
    */
   _generateEcosystemMarkdownContent(results) {
@@ -735,6 +775,8 @@ class ViolationReporter {
 
   /**
    * Generates Markdown content for single mod report
+   *
+   * @param data
    * @private
    */
   _generateSingleModMarkdownContent(data) {

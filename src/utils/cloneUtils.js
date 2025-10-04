@@ -127,13 +127,14 @@ export function freezeMap(map) {
   Object.freeze(map);
 
   return new Proxy(map, {
-    get(target, prop, receiver) {
+    get(target, prop) {
       if (['set', 'delete', 'clear'].includes(prop)) {
         return () => {
           throw new TypeError('Cannot modify frozen map');
         };
       }
-      const result = Reflect.get(target, prop, receiver);
+      // Use target as receiver to ensure Map getters/methods work correctly
+      const result = Reflect.get(target, prop, target);
       return typeof result === 'function' ? result.bind(target) : result;
     },
   });

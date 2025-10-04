@@ -59,7 +59,7 @@ class ActionAwareStructuredTrace extends StructuredTrace {
    * @param {object} [dependencies.context] - Additional trace context
    * @param {object} [dependencies.logger] - Logger instance
    * @param {import('./traceContext.js').TraceContext} [dependencies.traceContext] - Optional existing TraceContext
-   * @param {import('../configuration/traceConfigLoader.js').TraceConfigurationFile} [dependencies.traceConfig] - Optional trace configuration
+   * @param {import('../../configuration/traceConfigLoader.js').TraceConfigurationFile} [dependencies.traceConfig] - Optional trace configuration
    * @param {import('./performanceMonitor.js').PerformanceMonitor} [dependencies.performanceMonitor] - Optional performance monitor
    */
   constructor({

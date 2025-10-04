@@ -7,7 +7,7 @@ import { EntityNotFoundError } from '../errors/entityNotFoundError.js';
 import { validateDependency } from './dependencyUtils.js';
 import { string } from './validationCore.js';
 
-/** @typedef {import('../interfaces/logger.interface.js').ILogger} ILogger */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 
 export class ComponentStateValidator {
   #logger;

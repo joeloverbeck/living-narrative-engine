@@ -18,7 +18,7 @@ import fs from 'fs';
 import {
   ModValidationOrchestrator,
   ModValidationError,
-} from '../../../src/validation/modValidationOrchestrator.js';
+} from '../../../cli/validation/modValidationOrchestrator.js';
 import ModDependencyError from '../../../src/errors/modDependencyError.js';
 import { createMockLogger } from '../../common/mockFactories/index.js';
 

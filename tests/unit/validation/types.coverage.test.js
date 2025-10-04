@@ -10,7 +10,7 @@ describe('validation type definitions module', () => {
   let typesModule;
 
   beforeAll(async () => {
-    typesModule = await import('../../../src/validation/types.js');
+    typesModule = await import('../../../cli/validation/types.js');
   });
 
   it('loads without exposing runtime exports', () => {
@@ -19,7 +19,7 @@ describe('validation type definitions module', () => {
   });
 
   it('returns the same module namespace on subsequent imports', async () => {
-    const secondImport = await import('../../../src/validation/types.js');
+    const secondImport = await import('../../../cli/validation/types.js');
     expect(secondImport).toBe(typesModule);
   });
 

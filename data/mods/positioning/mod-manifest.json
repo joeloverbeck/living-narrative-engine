@@ -19,18 +19,22 @@
   "content": {
     "components": [
       "allows_bending_over.component.json",
+      "allows_lying_on.component.json",
       "allows_sitting.component.json",
       "bending_over.component.json",
       "closeness.component.json",
       "facing_away.component.json",
       "kneeling_before.component.json",
+      "lying_down.component.json",
       "sitting_on.component.json"
     ],
     "actions": [
       "bend_over.action.json",
       "get_close.action.json",
       "get_up_from_furniture.action.json",
+      "get_up_from_lying.action.json",
       "kneel_before.action.json",
+      "lie_down.action.json",
       "place_yourself_behind.action.json",
       "sit_down.action.json",
       "stand_up.action.json",
@@ -51,7 +55,9 @@
       "event-is-action-bend-over.condition.json",
       "event-is-action-get-close.condition.json",
       "event-is-action-get-up-from-furniture.condition.json",
+      "event-is-action-get-up-from-lying.condition.json",
       "event-is-action-kneel-before.condition.json",
+      "event-is-action-lie-down.condition.json",
       "event-is-action-place-yourself-behind.condition.json",
       "event-is-action-sit-down.condition.json",
       "event-is-action-stand-up.condition.json",
@@ -65,6 +71,8 @@
       "bend_over.rule.json",
       "get_close.rule.json",
       "handle_get_up_from_furniture.rule.json",
+      "handle_get_up_from_lying.rule.json",
+      "handle_lie_down.rule.json",
       "handle_sit_down.rule.json",
       "kneel_before.rule.json",
       "place_yourself_behind.rule.json",
@@ -90,9 +98,11 @@
       "actors_in_location_facing.scope",
       "actors_in_location_not_facing_away_from_actor.scope",
       "available_furniture.scope",
+      "available_lying_furniture.scope",
       "available_surfaces.scope",
       "close_actors.scope",
       "close_actors_facing_each_other_or_behind_target.scope",
+      "furniture_im_lying_on.scope",
       "furniture_im_sitting_on.scope",
       "surface_im_bending_over.scope"
     ]

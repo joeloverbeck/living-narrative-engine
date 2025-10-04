@@ -283,10 +283,9 @@ describe('positioning:kneel_before action integration', () => {
     const entities = setupAlreadyKneelingScenario();
     testFixture.reset(Object.values(entities));
 
-    // This test verifies that the action system would prevent this
-    // based on forbidden_components, but we dispatch directly
-    // The rule should still execute but this demonstrates the logic
-    await testFixture.executeAction('test:actor1', 'test:target1');
+    // This test bypasses action discovery to test rule execution behavior directly
+    // In real gameplay, the forbidden_components check would prevent this scenario
+    await testFixture.executeAction('test:actor1', 'test:target1', { skipDiscovery: true });
 
     // The ADD_COMPONENT operation would replace existing component
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
@@ -392,7 +391,7 @@ describe('positioning:kneel_before action integration', () => {
 
     // NOTE: This test shows what would happen if somehow the action was triggered
     // In real gameplay, the action discovery system prevents this scenario
-    await testFixture.executeAction('test:actor1', 'test:target1');
+    await testFixture.executeAction('test:actor1', 'test:target1', { skipDiscovery: true });
 
     // The rule itself would still execute because we're bypassing action discovery
     ModAssertionHelpers.assertComponentAdded(
@@ -472,23 +471,20 @@ describe('positioning:kneel_before action integration', () => {
         );
       });
 
-      it('should allow kneeling before a kneeling target (chain of reverence)', async () => {
+      it('should prevent kneeling before a kneeling target (forbidden by game rules)', async () => {
         const entities = setupTargetKneelingScenario();
         testFixture.reset(Object.values(entities));
 
-        await testFixture.executeAction('test:actor1', 'test:target1');
+        // Target has positioning:kneeling_before which is in forbidden_components.primary
+        const result = await testFixture.executeAction('test:actor1', 'test:target1');
 
-        ModAssertionHelpers.assertComponentAdded(
-          testFixture.entityManager,
-          'test:actor1',
-          'positioning:kneeling_before',
-          { entityId: 'test:target1' }
-        );
+        // Action should be blocked
+        expect(result.blocked).toBe(true);
+        expect(result.reason).toContain('Target has forbidden component');
 
-        ModAssertionHelpers.assertActionSuccess(
-          testFixture.events,
-          'Squire kneels before Knight.'
-        );
+        // Component should NOT be added
+        const actor = testFixture.entityManager.getEntityInstance('test:actor1');
+        expect(actor.components['positioning:kneeling_before']).toBeUndefined();
       });
     });
 
@@ -501,7 +497,7 @@ describe('positioning:kneel_before action integration', () => {
         testFixture.reset(Object.values(entities));
 
         // The rule itself would still execute if action discovery was bypassed
-        await testFixture.executeAction('test:actor1', 'test:target1');
+        await testFixture.executeAction('test:actor1', 'test:target1', { skipDiscovery: true });
 
         // Component would still be added because we're bypassing validation
         ModAssertionHelpers.assertComponentAdded(
@@ -522,7 +518,8 @@ describe('positioning:kneel_before action integration', () => {
 
         // In real gameplay, action discovery would prevent this
         // because actor has positioning:kneeling_before
-        await testFixture.executeAction('test:actor1', 'test:target1');
+        // Bypass validation to test rule execution behavior
+        await testFixture.executeAction('test:actor1', 'test:target1', { skipDiscovery: true });
 
         // The component would be replaced if somehow executed
         const actor = testFixture.entityManager.getEntityInstance('test:actor1');
@@ -537,7 +534,8 @@ describe('positioning:kneel_before action integration', () => {
 
         // In real gameplay, action discovery would prevent this
         // because actor has positioning:sitting_on
-        await testFixture.executeAction('test:actor1', 'test:target1');
+        // Bypass validation to test rule execution behavior
+        await testFixture.executeAction('test:actor1', 'test:target1', { skipDiscovery: true });
 
         // If bypassed, the rule would still execute
         ModAssertionHelpers.assertComponentAdded(
@@ -561,7 +559,8 @@ describe('positioning:kneel_before action integration', () => {
 
         // In real gameplay, action discovery would prevent this
         // because actor has positioning:bending_over
-        await testFixture.executeAction('test:actor1', 'test:target1');
+        // Bypass validation to test rule execution behavior
+        await testFixture.executeAction('test:actor1', 'test:target1', { skipDiscovery: true });
 
         // If bypassed, the rule would still execute
         ModAssertionHelpers.assertComponentAdded(
@@ -571,6 +570,42 @@ describe('positioning:kneel_before action integration', () => {
           { entityId: 'test:target1' }
         );
       });
+
+      it('should prevent kneeling while lying down', async () => {
+        const scenario = setupKneelingScenario();
+
+        // Add a bed to the room
+        const bed = new ModEntityBuilder('test:bed')
+          .withName('Bed')
+          .atLocation('throne_room')
+          .withComponent('positioning:allows_lying_on', {})
+          .build();
+
+        // Actor is lying down
+        scenario.actor.components['positioning:lying_down'] = {
+          furniture_id: 'test:bed',
+        };
+
+        testFixture.reset([...Object.values(scenario), bed]);
+
+        // In real gameplay, action discovery would prevent this
+        // because actor has positioning:lying_down
+        // Bypass validation to test rule execution behavior
+        await testFixture.executeAction('test:actor1', 'test:target1', { skipDiscovery: true });
+
+        // If bypassed, the rule would still execute
+        ModAssertionHelpers.assertComponentAdded(
+          testFixture.entityManager,
+          'test:actor1',
+          'positioning:kneeling_before',
+          { entityId: 'test:target1' }
+        );
+
+        // Verify the lying component structure
+        const actor = testFixture.entityManager.getEntityInstance('test:actor1');
+        expect(actor.components['positioning:lying_down']).toBeDefined();
+        expect(actor.components['positioning:lying_down'].furniture_id).toBe('test:bed');
+      });
     });
 
     describe('multi-actor scenarios', () => {
@@ -578,7 +613,7 @@ describe('positioning:kneel_before action integration', () => {
         const entities = setupMixedPositioningScenario();
         testFixture.reset(Object.values(entities));
 
-        // Kneeler kneeling before sitting King (valid)
+        // Kneeler kneeling before sitting King (valid - sitting_on not in forbidden_components.primary)
         await testFixture.executeAction('test:kneeler', 'test:king');
 
         ModAssertionHelpers.assertComponentAdded(
@@ -596,8 +631,9 @@ describe('positioning:kneel_before action integration', () => {
         // Clear events for next action
         testFixture.clearEvents();
 
-        // Second knight kneeling before third knight who is already kneeling (valid)
-        await testFixture.executeAction('test:second_knight', 'test:third_knight');
+        // Second knight kneeling before third knight who is already kneeling
+        // Target has kneeling_before (forbidden) - bypass validation to test rule execution
+        await testFixture.executeAction('test:second_knight', 'test:third_knight', { skipDiscovery: true });
 
         ModAssertionHelpers.assertComponentAdded(
           testFixture.entityManager,
@@ -633,7 +669,7 @@ describe('positioning:kneel_before action integration', () => {
 
         testFixture.reset([room, knight1, knight2]);
 
-        // Knight1 kneels before Knight2
+        // Knight1 kneels before Knight2 (valid - neither has forbidden components)
         await testFixture.executeAction('test:knight1', 'test:knight2');
 
         ModAssertionHelpers.assertComponentAdded(
@@ -645,9 +681,9 @@ describe('positioning:kneel_before action integration', () => {
 
         testFixture.clearEvents();
 
-        // Knight2 kneeling before Knight1 would create a chain, not a circle
-        // (Knight2 can kneel to Knight1 who is kneeling to Knight2)
-        await testFixture.executeAction('test:knight2', 'test:knight1');
+        // Knight2 kneeling before Knight1 who is kneeling to Knight2
+        // Knight1 has kneeling_before (forbidden for target) - bypass validation to test rule execution
+        await testFixture.executeAction('test:knight2', 'test:knight1', { skipDiscovery: true });
 
         ModAssertionHelpers.assertComponentAdded(
           testFixture.entityManager,

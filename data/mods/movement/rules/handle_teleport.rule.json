@@ -1,0 +1,189 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_teleport",
+  "comment": "Handles the 'movement:teleport' action. Updates actor position and dispatches vanish/materialize perceptible events.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "movement:event-is-action-teleport"
+  },
+  "actions": [
+    {
+      "type": "QUERY_COMPONENTS",
+      "comment": "Fetch actor name and position components in bulk.",
+      "parameters": {
+        "entity_ref": "actor",
+        "pairs": [
+          {
+            "component_type": "core:name",
+            "result_variable": "actorNameComponent"
+          },
+          {
+            "component_type": "core:position",
+            "result_variable": "actorPositionComponentPreTeleport"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Step 2: Proceed only if the actor has the required components.",
+      "parameters": {
+        "condition": {
+          "and": [
+            { "var": "context.actorNameComponent" },
+            { "var": "context.actorPositionComponentPreTeleport" }
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "QUERY_COMPONENT",
+            "comment": "Fetch the name of the current location (origin).",
+            "parameters": {
+              "entity_ref": {
+                "entityId": "{context.actorPositionComponentPreTeleport.locationId}"
+              },
+              "component_type": "core:name",
+              "result_variable": "originLocationNameComponent"
+            }
+          },
+          {
+            "type": "GET_TIMESTAMP",
+            "comment": "Get the current ISO timestamp for perception logging.",
+            "parameters": {
+              "result_variable": "currentTimestamp"
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "comment": "Use backward-compatible targetId (works with both legacy and multi-target events).",
+            "parameters": {
+              "variable_name": "resolvedTargetLocationId",
+              "value": "{event.payload.targetId}"
+            }
+          },
+          {
+            "type": "IF",
+            "comment": "Step 3: Check if a valid target location was found.",
+            "parameters": {
+              "condition": {
+                "!=": [
+                  {
+                    "var": "context.resolvedTargetLocationId"
+                  },
+                  null
+                ]
+              },
+              "then_actions": [
+                {
+                  "type": "QUERY_COMPONENT",
+                  "comment": "Fetch the name of the destination location for messaging.",
+                  "parameters": {
+                    "entity_ref": {
+                      "entityId": "{context.resolvedTargetLocationId}"
+                    },
+                    "component_type": "core:name",
+                    "result_variable": "destinationLocationNameComponent"
+                  }
+                },
+                {
+                  "type": "DISPATCH_PERCEPTIBLE_EVENT",
+                  "comment": "Dispatch perceptible event for actor vanishing from origin location.",
+                  "parameters": {
+                    "location_id": "{context.actorPositionComponentPreTeleport.locationId}",
+                    "description_text": "{context.actorNameComponent.text} vanishes from {context.originLocationNameComponent.text}, disappearing entirely.",
+                    "perception_type": "character_exit",
+                    "actor_id": "{event.payload.actorId}",
+                    "target_id": null,
+                    "involved_entities": []
+                  }
+                },
+                {
+                  "type": "MODIFY_COMPONENT",
+                  "comment": "Update the actor's locationId to the destination.",
+                  "parameters": {
+                    "entity_ref": "actor",
+                    "component_type": "core:position",
+                    "field": "locationId",
+                    "mode": "set",
+                    "value": "{context.resolvedTargetLocationId}"
+                  }
+                },
+                {
+                  "type": "DISPATCH_EVENT",
+                  "comment": "Dispatch the primary 'entity_moved' event for other systems.",
+                  "parameters": {
+                    "eventType": "core:entity_moved",
+                    "payload": {
+                      "eventName": "core:entity_moved",
+                      "entityId": "{event.payload.actorId}",
+                      "previousLocationId": "{context.actorPositionComponentPreTeleport.locationId}",
+                      "currentLocationId": "{context.resolvedTargetLocationId}",
+                      "originalCommand": "{event.payload.originalInput}"
+                    }
+                  }
+                },
+                {
+                  "type": "DISPATCH_PERCEPTIBLE_EVENT",
+                  "comment": "Dispatch perceptible event for actor materializing at destination.",
+                  "parameters": {
+                    "location_id": "{context.resolvedTargetLocationId}",
+                    "description_text": "{context.actorNameComponent.text} materializes suddenly, as if from nowhere.",
+                    "perception_type": "character_enter",
+                    "actor_id": "{event.payload.actorId}",
+                    "target_id": null,
+                    "involved_entities": []
+                  }
+                },
+                {
+                  "type": "SET_VARIABLE",
+                  "comment": "Prepare success message for the UI.",
+                  "parameters": {
+                    "variable_name": "successMessage",
+                    "value": "{context.actorNameComponent.text} teleports to {context.destinationLocationNameComponent.text}."
+                  }
+                },
+                { "macro": "core:displaySuccessAndEndTurn" }
+              ],
+              "else_actions": [
+                {
+                  "type": "DISPATCH_EVENT",
+                  "comment": "Dispatch a UI event indicating the failed teleport.",
+                  "parameters": {
+                    "eventType": "core:display_failed_action_result",
+                    "payload": {
+                      "message": "{context.actorNameComponent.text} tries to teleport to the specified location, but the teleportation fails."
+                    }
+                  }
+                },
+                {
+                  "type": "END_TURN",
+                  "comment": "End the turn after a failed teleport.",
+                  "parameters": {
+                    "entityId": "{event.payload.actorId}",
+                    "success": false,
+                    "error": {
+                      "message": "Failed to teleport: No valid target location could be determined."
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "else_actions": [
+          {
+            "type": "END_TURN",
+            "comment": "Action failed because actor is missing required components.",
+            "parameters": {
+              "entityId": "{event.payload.actorId}",
+              "success": false,
+              "error": {
+                "message": "Actor is missing required components for teleportation."
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

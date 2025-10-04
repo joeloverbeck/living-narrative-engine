@@ -36,10 +36,16 @@
                 "quest",
                 "skill",
                 "emotion",
+                "plan",
+                "timeline",
+                "theory",
+                "observation",
+                "knowledge_state",
+                "psychological_state",
                 "other"
               ],
               "default": "other",
-              "description": "Explicit categorization of the note's subject type."
+              "description": "Categorization of the note subject for organizational purposes"
             },
             "context": {
               "type": "string",

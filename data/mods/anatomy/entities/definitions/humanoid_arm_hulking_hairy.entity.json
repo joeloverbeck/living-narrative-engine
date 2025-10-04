@@ -1,0 +1,30 @@
+{
+    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+    "id": "anatomy:humanoid_arm_hulking_hairy",
+    "description": "A hulking, hairy humanoid arm",
+    "components": {
+        "anatomy:part": {
+            "subType": "arm"
+        },
+        "anatomy:sockets": {
+            "sockets": [
+                {
+                    "id": "wrist",
+                    "allowedTypes": [
+                        "hand"
+                    ],
+                    "nameTpl": "{{effective_orientation}} {{type}}"
+                }
+            ]
+        },
+        "descriptors:build": {
+            "build": "hulking"
+        },
+        "descriptors:body_hair": {
+            "density": "hairy"
+        },
+        "core:name": {
+            "text": "hulking, hairy arm"
+        }
+    }
+}

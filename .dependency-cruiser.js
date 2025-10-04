@@ -145,6 +145,7 @@ module.exports = {
           'node_modules/semver/index\\.js$',
           'node_modules/json-logic-js/logic\\.js$',
           'node_modules/uuid/dist/esm/index\\.js$',
+          'node_modules/uuid/dist-node/index\\.js$',
           'node_modules/lru-cache/dist/esm/index\\.d\\.ts$',
         ],
       },

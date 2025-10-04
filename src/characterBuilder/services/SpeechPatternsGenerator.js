@@ -27,7 +27,7 @@ import { CHARACTER_BUILDER_EVENTS } from './characterBuilderService.js';
  * @typedef {import('../../llms/interfaces/ILLMConfigurationManager.js').ILLMConfigurationManager} ILLMConfigurationManager
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  * @typedef {import('../../llms/interfaces/ITokenEstimator.js').ITokenEstimator} ITokenEstimator
- * @typedef {import('../../interfaces/ISchemaValidator.js').ISchemaValidator} ISchemaValidator
+ * @typedef {import('../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator
  */
 
 /**

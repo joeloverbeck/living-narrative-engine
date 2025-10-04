@@ -1,5 +1,5 @@
 import path from 'path';
-import InputSanitizer from '../../../src/validation/inputSanitizer.js';
+import InputSanitizer from '../../../cli/validation/inputSanitizer.js';
 import { ModSecurityError } from '../../../src/errors/modSecurityError.js';
 
 describe('InputSanitizer', () => {

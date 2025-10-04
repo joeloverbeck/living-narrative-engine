@@ -16,6 +16,10 @@
       "version": "^1.0.0"
     },
     {
+      "id": "positioning",
+      "version": "^1.0.0"
+    },
+    {
       "id": "intimacy",
       "version": "^1.0.0"
     }
@@ -24,6 +28,7 @@
     "actions": [
       "breathe_teasingly_on_penis.action.json",
       "fondle_breasts.action.json",
+      "fondle_breasts_over_clothes.action.json",
       "fondle_penis.action.json",
       "grind_ass_against_penis.action.json",
       "lick_glans.action.json",
@@ -41,6 +46,7 @@
     ],
     "conditions": [
       "event-is-action-breathe-teasingly-on-penis.condition.json",
+      "event-is-action-fondle-breasts-over-clothes.condition.json",
       "event-is-action-fondle-breasts.condition.json",
       "event-is-action-fondle-penis.condition.json",
       "event-is-action-grind-ass-against-penis.condition.json",
@@ -60,6 +66,7 @@
     "rules": [
       "handle_breathe_teasingly_on_penis.rule.json",
       "handle_fondle_breasts.rule.json",
+      "handle_fondle_breasts_over_clothes.rule.json",
       "handle_fondle_penis.rule.json",
       "handle_grind_ass_against_penis.rule.json",
       "handle_lick_glans.rule.json",
@@ -80,6 +87,7 @@
       "actor_kneeling_before_target_with_penis.scope",
       "actor_kneeling_before_target_with_testicle.scope",
       "actors_with_breasts_facing_each_other.scope",
+      "actors_with_breasts_facing_each_other_covered.scope",
       "actors_with_breasts_in_intimacy.scope",
       "actors_with_covered_penis_im_facing_away_from.scope",
       "actors_with_exposed_ass_facing_away.scope",

@@ -73,7 +73,7 @@ describe('buildSpeechMeta', () => {
 
     const thoughtsButton = container.querySelector('.meta-btn.thoughts');
     expect(thoughtsButton).not.toBeNull();
-    expect(thoughtsButton.getAttribute('aria-label')).toBe('View inner thoughts');
+    expect(thoughtsButton.getAttribute('aria-label')).toBe('Click to copy thoughts to clipboard');
     expect(thoughtsButton.style.getPropertyValue('--clr')).toBe('var(--thoughts-icon-color)');
     expect(thoughtsButton.innerHTML).toContain('data-icon="thoughts"');
 
@@ -98,7 +98,7 @@ describe('buildSpeechMeta', () => {
 
     const notesButton = container.querySelector('.meta-btn.notes');
     expect(notesButton).not.toBeNull();
-    expect(notesButton.getAttribute('aria-label')).toBe('View private notes');
+    expect(notesButton.getAttribute('aria-label')).toBe('Click to copy notes to clipboard');
     expect(notesButton.style.getPropertyValue('--clr')).toBe('var(--notes-icon-color)');
     expect(notesButton.innerHTML).toContain('data-icon="notes"');
 

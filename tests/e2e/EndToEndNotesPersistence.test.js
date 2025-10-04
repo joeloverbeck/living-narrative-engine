@@ -61,7 +61,7 @@ const createActor = (id) => {
     [ACTOR_COMPONENT_ID]: {},
     [SHORT_TERM_MEMORY_COMPONENT_ID]: {
       thoughts: [],
-      maxEntries: 10,
+      maxEntries: 4,
     },
     [NOTES_COMPONENT_ID]: { notes: [] },
   };

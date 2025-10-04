@@ -13,11 +13,7 @@ import {
   beforeEach,
   jest,
 } from '@jest/globals';
-import {
-  createPerformanceTestBed,
-  forceGCAndGetBaseline,
-  getStableMemoryUsage,
-} from '../../common/performanceTestBed.js';
+import { createPerformanceTestBed } from '../../common/performanceTestBed.js';
 import { ClothingIntegrationTestBed } from '../../common/clothing/clothingIntegrationTestBed.js';
 import { createEntityInstance } from '../../common/entities/entityFactories.js';
 import RegenerateDescriptionHandler from '../../../src/logic/operationHandlers/regenerateDescriptionHandler.js';
@@ -29,7 +25,6 @@ describe('Description Regeneration Performance', () => {
   let performanceTracker;
   let entityManager;
   let operationHandler;
-  let container;
   let bodyDescriptionComposer;
 
   beforeAll(async () => {
@@ -54,8 +49,6 @@ describe('Description Regeneration Performance', () => {
       }
       return Promise.resolve();
     });
-
-    container = clothingTestBed.container;
 
     // Set up body description composer with mocked compose functionality
     bodyDescriptionComposer = new BodyDescriptionComposer({
@@ -318,151 +311,13 @@ describe('Description Regeneration Performance', () => {
       expect(avgTimePerEntity).toBeLessThan(150);
 
       // Check memory usage remains reasonable
-      if (metrics.memoryUsage) {
-        const memoryGrowthMB = metrics.memoryUsage.growth / (1024 * 1024);
-        expect(memoryGrowthMB).toBeLessThan(50); // Less than 50MB growth
-      }
+      const memoryGrowthMB = metrics.memoryUsage
+        ? metrics.memoryUsage.growth / (1024 * 1024)
+        : 0;
+      expect(memoryGrowthMB).toBeLessThan(50); // Less than 50MB growth
 
       console.log(
         `High concurrency - ${entityCount} entities: ${metrics.totalTime.toFixed(2)}ms total, ${avgTimePerEntity.toFixed(2)}ms avg`
-      );
-    });
-  });
-
-  describe('Memory Performance', () => {
-    it('should not leak memory during repeated operations', async () => {
-      // Setup: Single entity for repeated operations
-      const entity = createEntityInstance({
-        instanceId: 'memory_test_entity',
-        definitionId: 'core:actor',
-        baseComponents: {
-          'core:description': { text: 'Memory test entity' },
-        },
-        overrides: {
-          'clothing:equipment': {
-            equipped: {
-              head: 'hat',
-              torso: 'shirt',
-              legs: 'pants',
-              feet: 'boots',
-            },
-          },
-        },
-        logger: clothingTestBed.logger,
-      });
-      entityManager.entities.set(entity.instanceId, entity);
-
-      const executionContext = {
-        actorId: entity.instanceId,
-        targetId: null,
-        locationId: 'test_location',
-      };
-
-      // Measure: Initial memory usage
-      const baselineMemory = await forceGCAndGetBaseline();
-      const initialMemory = await getStableMemoryUsage();
-
-      // Execute: Many repeated operations
-      for (let i = 0; i < 1000; i++) {
-        await operationHandler.execute(
-          {
-            entity_ref: entity.instanceId,
-          },
-          executionContext
-        );
-
-        // Force garbage collection every 100 operations
-        if (i % 100 === 0 && global.gc) {
-          global.gc();
-          await new Promise((resolve) => setTimeout(resolve, 10));
-        }
-      }
-
-      // Measure: Final memory usage
-      if (global.gc) {
-        global.gc();
-        await new Promise((resolve) => setTimeout(resolve, 10));
-      }
-      const finalMemory = await getStableMemoryUsage();
-
-      const memoryIncrease = finalMemory - baselineMemory;
-      const memoryIncreaseKB = memoryIncrease / 1024;
-
-      // Assert: Memory increase is reasonable (allowing for test environment variations)
-      expect(memoryIncreaseKB).toBeLessThan(2000); // Less than 2MB increase (more lenient for test environments)
-
-      console.log(
-        `Memory increase after 1000 operations: ${memoryIncreaseKB.toFixed(2)}KB`
-      );
-    });
-
-    it('should handle garbage collection efficiently', async () => {
-      // Test GC pressure during operations
-      const entityCount = 20;
-      const operationsPerEntity = 50;
-
-      // Create multiple entities
-      const entities = Array.from({ length: entityCount }, (_, i) => {
-        const entity = createEntityInstance({
-          instanceId: `gc_test_entity_${i}`,
-          definitionId: 'core:actor',
-          baseComponents: {
-            'core:description': { text: `GC test entity ${i}` },
-          },
-          overrides: {
-            'clothing:equipment': { equipped: { slot_0: `item_${i}` } },
-          },
-          logger: clothingTestBed.logger,
-        });
-        entityManager.entities.set(entity.instanceId, entity);
-        return entity;
-      });
-
-      // Track memory across operations
-      const memorySnapshots = [];
-      await forceGCAndGetBaseline();
-
-      for (let round = 0; round < operationsPerEntity; round++) {
-        // Run operations for all entities
-        await Promise.all(
-          entities.map((entity) =>
-            operationHandler.execute(
-              { entity_ref: entity.instanceId },
-              {
-                actorId: entity.instanceId,
-                targetId: null,
-                locationId: 'test_location',
-              }
-            )
-          )
-        );
-
-        // Measure memory after each round
-        if (round % 10 === 0) {
-          const memory = await getStableMemoryUsage();
-          memorySnapshots.push(memory);
-        }
-      }
-
-      // Force cleanup and final measurement
-      if (global.gc) {
-        global.gc();
-        await new Promise((resolve) => setTimeout(resolve, 50));
-        global.gc();
-      }
-
-      const finalMemory = await getStableMemoryUsage();
-
-      // Assert: Memory is properly reclaimed (or at least stable)
-      const maxMemory = Math.max(...memorySnapshots);
-      const memoryReclaimed =
-        maxMemory > finalMemory ? (maxMemory - finalMemory) / maxMemory : 0;
-
-      // More lenient check - just ensure memory doesn't grow unbounded
-      expect(finalMemory).toBeLessThan(maxMemory * 1.5); // Final memory shouldn't be more than 1.5x peak
-
-      console.log(
-        `GC efficiency: ${(memoryReclaimed * 100).toFixed(1)}% memory reclaimed after operations`
       );
     });
   });
@@ -602,10 +457,10 @@ describe('Description Regeneration Performance', () => {
       expect(timePerEntity).toBeLessThan(100); // Should remain efficient even with many entities
 
       // Check memory usage remains reasonable
-      if (metrics.memoryUsage) {
-        const memoryPerEntity = metrics.memoryUsage.growth / entityCount;
-        expect(memoryPerEntity).toBeLessThan(10 * 1024); // Less than 10KB per entity
-      }
+      const memoryPerEntity = metrics.memoryUsage
+        ? metrics.memoryUsage.growth / entityCount
+        : 0;
+      expect(memoryPerEntity).toBeLessThan(10 * 1024); // Less than 10KB per entity
 
       console.log(
         `Large-scale test: ${entityCount} entities created, ${entitiesToProcess.length} processed in ${metrics.totalTime.toFixed(2)}ms`

@@ -12,7 +12,7 @@ import SpeechPatternsSchemaValidator from '../validators/SpeechPatternsSchemaVal
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../../llms/llmJsonService.js').LlmJsonService} LlmJsonService
- * @typedef {import('../../interfaces/ISchemaValidator.js').ISchemaValidator} ISchemaValidator
+ * @typedef {import('../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator
  * @typedef {import('../validators/SpeechPatternsSchemaValidator.js').default} SpeechPatternsSchemaValidator
  */
 

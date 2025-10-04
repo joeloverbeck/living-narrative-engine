@@ -51,7 +51,7 @@ describe('ShortTermMemoryService.addThought – core logic', () => {
       thoughts: [
         { text: 'hello world', timestamp: '2025-06-03T09:00:00.000Z' },
       ],
-      maxEntries: 10,
+      maxEntries: 4,
     };
 
     const { mem: result, wasAdded } = service.addThought(
@@ -110,13 +110,13 @@ describe('ShortTermMemoryService – ThoughtAdded domain event', () => {
     stubDispatcher = { dispatch: dispatchSpy };
     service = new ShortTermMemoryService({
       eventDispatcher: stubDispatcher,
-      defaultMaxEntries: 10,
+      defaultMaxEntries: 4,
     });
 
     mem = {
       entityId: 'actor:123',
       thoughts: [],
-      maxEntries: 10,
+      maxEntries: 4,
     };
   });
 

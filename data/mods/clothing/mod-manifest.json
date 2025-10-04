@@ -34,6 +34,8 @@
         "bronze_silk_blouse.entity.json",
         "charcoal_wool_tshirt.entity.json",
         "cotton_twill_trousers.entity.json",
+        "cream_cotton_high_rise_briefs.entity.json",
+        "cream_cotton_soft_cup_bralette.entity.json",
         "croc_embossed_ankle_boots.entity.json",
         "dark_brown_leather_belt.entity.json",
         "dark_indigo_denim_jeans.entity.json",
@@ -69,9 +71,11 @@
         "underwired_plunge_bra_nude_silk.entity.json",
         "white_cotton_crew_tshirt.entity.json",
         "white_cotton_panties.entity.json",
+        "white_cotton_shift_dress.entity.json",
         "white_leather_sneakers.entity.json",
         "white_platform_sneakers.entity.json",
         "white_structured_linen_blazer.entity.json",
+        "white_terry_lined_grip_socks.entity.json",
         "white_thigh_high_socks_pink_hearts.entity.json"
       ],
       "instances": []

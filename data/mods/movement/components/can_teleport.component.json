@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "movement:can_teleport",
+  "description": "Marker component indicating this actor has the ability to teleport between locations",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}

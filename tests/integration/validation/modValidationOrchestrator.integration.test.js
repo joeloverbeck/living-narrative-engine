@@ -13,7 +13,7 @@ import {
   jest,
 } from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
-import ModValidationOrchestrator from '../../../src/validation/modValidationOrchestrator.js';
+import ModValidationOrchestrator from '../../../cli/validation/modValidationOrchestrator.js';
 import ModDependencyValidator from '../../../src/modding/modDependencyValidator.js';
 import ModLoadOrderResolver from '../../../src/modding/modLoadOrderResolver.js';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';

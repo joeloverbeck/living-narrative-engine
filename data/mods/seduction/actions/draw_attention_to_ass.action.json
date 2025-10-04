@@ -1,0 +1,29 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "seduction:draw_attention_to_ass",
+  "name": "Draw Attention to Ass",
+  "description": "Angle and position yourself to flatter your buttocks, drawing attention to your ass in an alluring manner.",
+  "targets": "none",
+  "required_components": {},
+  "template": "draw attention to your ass",
+  "prerequisites": [
+    {
+      "logic": {
+        "hasPartOfType": ["actor", "ass_cheek"]
+      },
+      "failure_message": "You need ass cheeks to perform this action."
+    },
+    {
+      "logic": {
+        "hasClothingInSlot": ["actor", "torso_lower"]
+      },
+      "failure_message": "You need to be wearing clothing on your lower torso to draw attention to your ass."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#f57f17",
+    "textColor": "#000000",
+    "hoverBackgroundColor": "#f9a825",
+    "hoverTextColor": "#212121"
+  }
+}

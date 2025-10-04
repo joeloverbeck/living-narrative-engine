@@ -9,7 +9,7 @@ jest.mock('fs', () => ({
 }));
 
 const fetcherModuleFile = fileURLToPath(
-  new URL('../../../src/data/nodeDataFetcher.js', import.meta.url)
+  new URL('../../../scripts/utils/nodeDataFetcher.js', import.meta.url)
 );
 const projectRoot = path.resolve(path.dirname(fetcherModuleFile), '..', '..');
 
@@ -21,7 +21,7 @@ describe('NodeDataFetcher', () => {
 
   beforeAll(async () => {
     ({ default: NodeDataFetcher } = await import(
-      '../../../src/data/nodeDataFetcher.js'
+      '../../../scripts/utils/nodeDataFetcher.js'
     ));
     ({ promises: fsPromises } = await import('fs'));
   });

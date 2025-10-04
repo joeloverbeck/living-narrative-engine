@@ -1,0 +1,22 @@
+{
+    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+    "id": "anatomy:human_breast_c_cup_soft",
+    "description": "A C-cup, soft breast",
+    "components": {
+        "anatomy:part": {
+            "subType": "breast"
+        },
+        "descriptors:size_specific": {
+            "size": "C-cup"
+        },
+        "descriptors:weight_feel": {
+            "weight": "moderate"
+        },
+        "descriptors:firmness": {
+            "firmness": "soft"
+        },
+        "core:name": {
+            "text": "breast"
+        }
+    }
+}
