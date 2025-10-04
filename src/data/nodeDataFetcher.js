@@ -38,9 +38,9 @@ class NodeDataFetcher {
       );
     }
 
+    let filePath = identifier;
     try {
       // Convert relative paths to absolute paths from project root
-      let filePath = identifier;
       if (!path.isAbsolute(filePath)) {
         // Get the current module URL and convert to file path
         const currentModuleFile = fileURLToPath(import.meta.url);
