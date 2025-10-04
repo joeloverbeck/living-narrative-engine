@@ -62,8 +62,8 @@ describe('buildSpeechMeta', () => {
     expect(fragment).not.toBeNull();
     container.appendChild(fragment.cloneNode(true)); // Use cloneNode to append
 
-    const thoughtsButton = getByLabelText(container, 'View inner thoughts');
-    const notesButton = getByLabelText(container, 'View private notes');
+    const thoughtsButton = getByLabelText(container, 'Click to copy thoughts to clipboard');
+    const notesButton = getByLabelText(container, 'Click to copy notes to clipboard');
 
     expect(thoughtsButton).not.toBeNull();
     expect(notesButton).not.toBeNull();
@@ -104,7 +104,7 @@ describe('buildSpeechMeta', () => {
     expect(fragment).not.toBeNull();
     container.appendChild(fragment.cloneNode(true));
 
-    const thoughtsButton = getByLabelText(container, 'View inner thoughts');
+    const thoughtsButton = getByLabelText(container, 'Click to copy thoughts to clipboard');
     expect(thoughtsButton).not.toBeNull();
     expect(getByText(thoughtsButton, 'Just a thought')).not.toBeNull();
     expect(container.querySelector('.notes')).toBeNull();
@@ -121,7 +121,7 @@ describe('buildSpeechMeta', () => {
     expect(fragment).not.toBeNull();
     container.appendChild(fragment.cloneNode(true));
 
-    const notesButton = getByLabelText(container, 'View private notes');
+    const notesButton = getByLabelText(container, 'Click to copy notes to clipboard');
     expect(notesButton).not.toBeNull();
     const tooltip = notesButton.querySelector('.meta-tooltip');
     expect(tooltip.innerHTML).toContain('Just a note');
@@ -141,7 +141,7 @@ describe('buildSpeechMeta', () => {
     expect(fragment).not.toBeNull();
     container.appendChild(fragment.cloneNode(true));
 
-    const notesButton = getByLabelText(container, 'View private notes');
+    const notesButton = getByLabelText(container, 'Click to copy notes to clipboard');
     expect(notesButton).not.toBeNull();
 
     // Should have the enhanced tooltip class
@@ -167,7 +167,7 @@ describe('buildSpeechMeta', () => {
     });
     container.appendChild(fragment.cloneNode(true));
 
-    const thoughtsButton = getByLabelText(container, 'View inner thoughts');
+    const thoughtsButton = getByLabelText(container, 'Click to copy thoughts to clipboard');
     thoughtsButton.focus(); // Simulate focus
 
     // JSDOM adds a :focus pseudo-class, which is sufficient for this test
@@ -190,8 +190,8 @@ describe('buildSpeechMeta', () => {
     });
     container.appendChild(fragment.cloneNode(true));
 
-    const thoughtsButton = getByLabelText(container, 'View inner thoughts');
-    const notesButton = getByLabelText(container, 'View private notes');
+    const thoughtsButton = getByLabelText(container, 'Click to copy thoughts to clipboard');
+    const notesButton = getByLabelText(container, 'Click to copy notes to clipboard');
     expect(thoughtsButton.querySelector('svg').id).toBe('t');
     expect(notesButton.querySelector('svg').id).toBe('n');
 

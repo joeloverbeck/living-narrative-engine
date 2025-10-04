@@ -10,7 +10,7 @@ import {
 const COMPONENTS_TO_INJECT = [
   {
     id: SHORT_TERM_MEMORY_COMPONENT_ID,
-    data: { thoughts: [], maxEntries: 10 },
+    data: { thoughts: [], maxEntries: 4 },
     name: 'STM',
   },
   { id: NOTES_COMPONENT_ID, data: { notes: [] }, name: 'Notes' },

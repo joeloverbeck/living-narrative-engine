@@ -15,7 +15,7 @@ describe('ShortTermMemoryService additional coverage', () => {
 
     it('returns early without mutation when text is blank', () => {
       const service = new ShortTermMemoryService();
-      const mem = { entityId: 'actor:1', thoughts: [{ text: 'existing', timestamp: '2025-01-01T00:00:00.000Z' }], maxEntries: 10 };
+      const mem = { entityId: 'actor:1', thoughts: [{ text: 'existing', timestamp: '2025-01-01T00:00:00.000Z' }], maxEntries: 4 };
 
       const result = service.addThought(mem, '   \n\t  ');
 

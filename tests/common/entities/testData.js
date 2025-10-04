@@ -55,7 +55,7 @@ export const TestData = {
    * @type {Record<string, object>}
    */
   DefaultComponentData: {
-    [SHORT_TERM_MEMORY_COMPONENT_ID]: { thoughts: [], maxEntries: 10 },
+    [SHORT_TERM_MEMORY_COMPONENT_ID]: { thoughts: [], maxEntries: 4 },
     [NOTES_COMPONENT_ID]: { notes: [] },
     [GOALS_COMPONENT_ID]: { goals: [] },
   },

@@ -160,7 +160,7 @@ export class HumanPlayerTurnTestBed extends FullTurnExecutionTestBed {
       'core:following': { following: null, followers: [] },
       'core:movement': { locked: false },
       'core:perception_log': { logEntries: [], maxEntries: 50 },
-      'core:short_term_memory': { thoughts: [], maxEntries: 10 },
+      'core:short_term_memory': { thoughts: [], maxEntries: 4 },
       'core:notes': { notes: [] },
     };
 

@@ -121,18 +121,27 @@ NPM SCRIPTS:
  * Load dependencies dynamically
  */
 async function loadDependencies() {
-  const containerModule = await import(
-    '../src/dependencyInjection/container.js'
-  );
+  const AppContainer = (await import(
+    '../src/dependencyInjection/appContainer.js'
+  )).default;
   const tokensModule = await import(
-    '../src/dependencyInjection/tokens/tokens-core.js'
+    '../src/dependencyInjection/tokens.js'
+  );
+  const { configureMinimalContainer } = await import(
+    '../src/dependencyInjection/minimalContainerConfig.js'
   );
 
-  container = containerModule.container;
-  tokens = tokensModule.tokens;
+  // Create container and configure with validation services
+  container = new AppContainer();
+  await configureMinimalContainer(container, {
+    includeValidationServices: true
+  });
 
-  // Wait for container initialization
-  await container.ready();
+  // Override data fetcher for CLI environment
+  const NodeDataFetcher = (await import('./utils/nodeDataFetcher.js')).default;
+  container.register(tokensModule.tokens.IDataFetcher, () => new NodeDataFetcher());
+
+  tokens = tokensModule.tokens;
 }
 
 /**
@@ -410,6 +419,36 @@ async function main() {
 
     // Load dependencies
     await loadDependencies();
+
+    // Load schemas before validation
+    if (!options.quiet) {
+      console.log('📚 Loading schemas...');
+    }
+
+    try {
+      const schemaPhase = container.resolve(tokens.SchemaPhase);
+      const registry = container.resolve(tokens.IDataRegistry);
+
+      // Create minimal load context for schema loading
+      const { createLoadContext } = await import('../src/loaders/LoadContext.js');
+      const loadContext = createLoadContext({
+        worldName: 'validation-context',
+        requestedMods: [],
+        registry
+      });
+
+      await schemaPhase.execute(loadContext);
+
+      if (!options.quiet) {
+        console.log('✅ Schemas loaded successfully');
+      }
+    } catch (error) {
+      console.error('❌ Schema loading failed:', error.message);
+      if (options.verbose) {
+        console.error(error.stack);
+      }
+      process.exit(2);
+    }
 
     // Get validation orchestrator
     const validationOrchestrator = container.resolve(

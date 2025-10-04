@@ -20,6 +20,12 @@ export const SUBJECT_TYPES = {
   QUEST: 'quest',
   SKILL: 'skill',
   EMOTION: 'emotion',
+  PLAN: 'plan',
+  TIMELINE: 'timeline',
+  THEORY: 'theory',
+  OBSERVATION: 'observation',
+  KNOWLEDGE_STATE: 'knowledge_state',
+  PSYCHOLOGICAL_STATE: 'psychological_state',
   OTHER: 'other',
 };
 
@@ -39,6 +45,12 @@ export const SUBJECT_TYPE_DESCRIPTIONS = {
   [SUBJECT_TYPES.QUEST]: 'Tasks, missions, objectives',
   [SUBJECT_TYPES.SKILL]: 'Abilities, talents, behaviors',
   [SUBJECT_TYPES.EMOTION]: 'Feelings, mood states, reactions',
+  [SUBJECT_TYPES.PLAN]: 'Future intentions, strategies, decisions not yet executed',
+  [SUBJECT_TYPES.TIMELINE]: 'Temporal sequences, deadlines, schedules (e.g., "Must do X by date Y")',
+  [SUBJECT_TYPES.THEORY]: 'Hypotheses, models, explanations about how things work',
+  [SUBJECT_TYPES.OBSERVATION]: 'Behavioral patterns, tendencies, habits noticed in characters or situations',
+  [SUBJECT_TYPES.KNOWLEDGE_STATE]: 'What is known/unknown, areas of uncertainty, epistemic states',
+  [SUBJECT_TYPES.PSYCHOLOGICAL_STATE]: 'Complex mental states beyond simple emotions (existential crises, identity conflicts)',
   [SUBJECT_TYPES.OTHER]: 'Uncategorized subjects',
 };
 

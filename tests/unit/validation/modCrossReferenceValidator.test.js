@@ -9,7 +9,7 @@ import {
 import { createTestBed } from '../../common/testBed.js';
 import ModCrossReferenceValidator, {
   CrossReferenceViolationError,
-} from '../../../src/validation/modCrossReferenceValidator.js';
+} from '../../../cli/validation/modCrossReferenceValidator.js';
 
 describe('ModCrossReferenceValidator - Core Functionality', () => {
   let testBed;

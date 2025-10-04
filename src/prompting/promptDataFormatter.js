@@ -63,10 +63,40 @@ const SUBJECT_TYPE_DISPLAY_MAPPING = {
     displayName: 'Skills & Abilities',
     priority: 10,
   },
+  [SUBJECT_TYPES.PLAN]: {
+    displayCategory: 'Plans & Intentions',
+    displayName: 'Plans & Intentions',
+    priority: 11,
+  },
+  [SUBJECT_TYPES.TIMELINE]: {
+    displayCategory: 'Timelines & Deadlines',
+    displayName: 'Timelines & Deadlines',
+    priority: 12,
+  },
+  [SUBJECT_TYPES.PSYCHOLOGICAL_STATE]: {
+    displayCategory: 'Psychological States',
+    displayName: 'Psychological States',
+    priority: 13,
+  },
   [SUBJECT_TYPES.EMOTION]: {
     displayCategory: 'Emotions & Feelings',
     displayName: 'Emotions & Feelings',
-    priority: 11,
+    priority: 14,
+  },
+  [SUBJECT_TYPES.THEORY]: {
+    displayCategory: 'Theories & Hypotheses',
+    displayName: 'Theories & Hypotheses',
+    priority: 15,
+  },
+  [SUBJECT_TYPES.OBSERVATION]: {
+    displayCategory: 'Observations & Patterns',
+    displayName: 'Observations & Patterns',
+    priority: 16,
+  },
+  [SUBJECT_TYPES.KNOWLEDGE_STATE]: {
+    displayCategory: 'Knowledge & Uncertainties',
+    displayName: 'Knowledge & Uncertainties',
+    priority: 17,
   },
   [SUBJECT_TYPES.OTHER]: {
     displayCategory: 'Other',

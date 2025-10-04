@@ -25,6 +25,12 @@ const VALID_SUBJECT_TYPES = [
   'quest',
   'skill',
   'emotion',
+  'plan',
+  'timeline',
+  'theory',
+  'observation',
+  'knowledge_state',
+  'psychological_state',
   'other',
 ];
 

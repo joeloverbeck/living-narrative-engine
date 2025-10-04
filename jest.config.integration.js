@@ -28,10 +28,10 @@ module.exports = {
   // Integration tests have moderate coverage expectations
   coverageThreshold: {
     global: {
-      branches: 45,
-      functions: 50,
-      lines: 50,
-      statements: 50,
+      branches: 50,
+      functions: 55,
+      lines: 55,
+      statements: 55,
     },
   },
 };

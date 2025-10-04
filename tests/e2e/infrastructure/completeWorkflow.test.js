@@ -88,17 +88,17 @@ describe('Complete Workflow E2E Tests', () => {
       });
 
       it('should handle action workflow with complex entity interactions', async () => {
-        // Setup complex scenario
+        // Setup complex scenario - use intimacy action that works with close entities
         const fixture = await ModTestFixture.forActionAutoLoad(
-          'positioning',
-          'positioning:get_close'
+          'intimacy',
+          'intimacy:kiss_cheek'
         );
 
         expect(fixture).toBeDefined();
-        expect(fixture.modId).toBe('positioning');
-        expect(fixture.actionId).toBe('positioning:get_close');
+        expect(fixture.modId).toBe('intimacy');
+        expect(fixture.actionId).toBe('intimacy:kiss_cheek');
 
-        // Create test scenario with multiple actors
+        // Create test scenario with multiple actors (entities will have closeness by default)
         const scenario1 = fixture.createStandardActorTarget([
           'Actor 1',
           'Actor 2',
@@ -377,14 +377,15 @@ describe('Complete Workflow E2E Tests', () => {
       });
 
       it('should handle rule conditions and variable substitution', async () => {
+        // Use intimacy action that works with close entities (standard setup includes closeness)
         const fixture = await ModTestFixture.forActionAutoLoad(
-          'positioning',
-          'positioning:get_close'
+          'intimacy',
+          'intimacy:kiss_cheek'
         );
 
         expect(fixture).toBeDefined();
-        expect(fixture.modId).toBe('positioning');
-        expect(fixture.actionId).toBe('positioning:get_close');
+        expect(fixture.modId).toBe('intimacy');
+        expect(fixture.actionId).toBe('intimacy:kiss_cheek');
 
         // Create test scenario
         const scenario = fixture.createStandardActorTarget([
@@ -530,10 +531,10 @@ describe('Complete Workflow E2E Tests', () => {
 
     describe('Category Performance and Scaling', () => {
       it('should handle large numbers of category entities', async () => {
-        // Use a simpler performance test with the correct API
+        // Use intimacy action that works with close entities (standard setup includes closeness)
         const fixture = await ModTestFixture.forActionAutoLoad(
-          'positioning',
-          'positioning:get_close'
+          'intimacy',
+          'intimacy:kiss_cheek'
         );
 
         const startTime = Date.now();
@@ -753,7 +754,7 @@ describe('Complete Workflow E2E Tests', () => {
 
     describe('Error Recovery in Integration Workflows', () => {
       it('should recover from mid-workflow failures', async () => {
-        // Test error recovery using available actions
+        // Test error recovery using available actions - all use intimacy to ensure success
         const tests = [
           {
             modId: 'intimacy',
@@ -766,10 +767,10 @@ describe('Complete Workflow E2E Tests', () => {
             shouldSucceed: false,
           }, // This will fail
           {
-            modId: 'positioning',
-            actionId: 'positioning:get_close',
+            modId: 'intimacy',
+            actionId: 'intimacy:kiss_cheek',
             shouldSucceed: true,
-          }, // Recovery
+          }, // Recovery with working action
         ];
 
         const results = [];
@@ -874,10 +875,10 @@ describe('Complete Workflow E2E Tests', () => {
   describe('Performance and Reliability Workflows', () => {
     describe('Load Testing Workflows', () => {
       it('should handle high-load testing scenarios', async () => {
-        // Test high-load scenario with multiple action executions
+        // Test high-load scenario with multiple action executions - use intimacy action that works with close entities
         const fixture = await ModTestFixture.forActionAutoLoad(
-          'positioning',
-          'positioning:get_close'
+          'intimacy',
+          'intimacy:kiss_cheek'
         );
 
         const startTime = Date.now();

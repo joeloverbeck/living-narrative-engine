@@ -19,7 +19,8 @@
           "rugged",
           "scarred",
           "matte",
-          "croc-embossed"
+          "croc-embossed",
+          "terry"
         ],
         "default": "smooth"
       }

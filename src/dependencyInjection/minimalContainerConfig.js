@@ -114,23 +114,23 @@ async function registerValidationServices(container, logger) {
   const registrar = new Registrar(container);
 
   try {
-    // Dynamic imports for validation services
-    const validationBasePath = '../validation/';
-    
+    // Dynamic imports for CLI validation services (Node.js-only)
+    const validationBasePath = '../../cli/validation/';
+
     // Import ModReferenceExtractor
     const modReferenceExtractorModule = await import(validationBasePath + 'modReferenceExtractor.js');
     const ModReferenceExtractor = modReferenceExtractorModule.default;
-    
-    // Import ModCrossReferenceValidator  
+
+    // Import ModCrossReferenceValidator
     const modCrossReferenceValidatorModule = await import(validationBasePath + 'modCrossReferenceValidator.js');
     const ModCrossReferenceValidator = modCrossReferenceValidatorModule.default;
-    
+
     // Import ModValidationOrchestrator
     const modValidationOrchestratorModule = await import(validationBasePath + 'modValidationOrchestrator.js');
     const ModValidationOrchestrator = modValidationOrchestratorModule.default;
-    
-    // Import ViolationReporter
-    const violationReporterModule = await import(validationBasePath + 'violationReporter.js');
+
+    // Import ViolationReporter (still in src/validation as it doesn't use Node.js core modules)
+    const violationReporterModule = await import('../validation/violationReporter.js');
     const ViolationReporter = violationReporterModule.default;
 
     // Import ModDependencyValidator

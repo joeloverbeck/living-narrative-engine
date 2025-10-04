@@ -15,7 +15,11 @@ import { getLayersByMode } from '../../scopeDsl/prioritySystem/priorityCalculato
 
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../interfaces/IEntitiesGateway.js').IEntitiesGateway} IEntitiesGateway */
+
+/**
+ * @typedef {object} IEntitiesGateway
+ * @property {(entityId: string, componentId: string) => any} getComponentData - Get component data for an entity
+ */
 
 /**
  * Service for managing clothing accessibility queries and coverage blocking logic

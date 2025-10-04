@@ -36,6 +36,7 @@
         "human_breast.entity.json",
         "human_breast_a_cup.entity.json",
         "human_breast_c_cup_firm.entity.json",
+        "human_breast_c_cup_soft.entity.json",
         "human_breast_d_cup.entity.json",
         "human_breast_g_cup.entity.json",
         "human_breast_shelf.entity.json",
@@ -64,6 +65,7 @@
         "human_leg.entity.json",
         "human_leg_athletic.entity.json",
         "human_leg_hulking.entity.json",
+        "human_leg_hulking_hairy.entity.json",
         "human_leg_muscular.entity.json",
         "human_leg_muscular_hairy.entity.json",
         "human_leg_shapely.entity.json",
@@ -71,6 +73,7 @@
         "human_leg_soft_lissom.entity.json",
         "human_leg_thick_hairy.entity.json",
         "human_male_torso.entity.json",
+        "human_male_torso_hulking_hairy.entity.json",
         "human_male_torso_muscular.entity.json",
         "human_male_torso_muscular_hairy.entity.json",
         "human_male_torso_thick_hairy.entity.json",
@@ -85,6 +88,7 @@
         "humanoid_arm.entity.json",
         "humanoid_arm_athletic.entity.json",
         "humanoid_arm_hulking.entity.json",
+        "humanoid_arm_hulking_hairy.entity.json",
         "humanoid_arm_muscular.entity.json",
         "humanoid_arm_muscular_hairy.entity.json",
         "humanoid_arm_slim.entity.json",
@@ -129,6 +133,7 @@
       "interaction_panend.event.json",
       "interaction_panstart.event.json",
       "interaction_zoom.event.json",
+      "limb_detached.event.json",
       "visualizer_state_changed.event.json"
     ]
   }

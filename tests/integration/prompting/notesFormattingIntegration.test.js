@@ -400,6 +400,97 @@ describe('Notes Formatting Integration', () => {
     });
   });
 
+  describe('Formatted Notes Display - New Subject Types', () => {
+    test('should display comprehensive note set with new types in correct order', () => {
+      const comprehensiveNotes = [
+        {
+          subject: 'Bobby',
+          subjectType: SUBJECT_TYPES.CHARACTER,
+          text: 'In coma',
+          context: 'brother',
+        },
+        {
+          subject: 'Hospital',
+          subjectType: SUBJECT_TYPES.LOCATION,
+          text: 'Third floor',
+          context: 'place',
+        },
+        {
+          subject: 'Council vote',
+          subjectType: SUBJECT_TYPES.EVENT,
+          text: 'Declared war',
+          context: 'yesterday',
+        },
+        {
+          subject: 'Escape plan',
+          subjectType: SUBJECT_TYPES.PLAN,
+          text: 'Flee at dawn',
+          context: 'tomorrow',
+        },
+        {
+          subject: 'Deadline',
+          subjectType: SUBJECT_TYPES.TIMELINE,
+          text: '3 days left',
+          context: 'urgency',
+        },
+        {
+          subject: 'My crisis',
+          subjectType: SUBJECT_TYPES.PSYCHOLOGICAL_STATE,
+          text: 'Existential dread',
+          context: 'mental state',
+        },
+        {
+          subject: 'Reality theory',
+          subjectType: SUBJECT_TYPES.THEORY,
+          text: 'Time is non-linear',
+          context: 'hypothesis',
+        },
+        {
+          subject: 'Wizard pattern',
+          subjectType: SUBJECT_TYPES.OBSERVATION,
+          text: 'Taps staff 3 times',
+          context: 'noticed behavior',
+        },
+        {
+          subject: "Jon's knowledge",
+          subjectType: SUBJECT_TYPES.KNOWLEDGE_STATE,
+          text: 'Knows my secret',
+          context: 'epistemic',
+        },
+      ];
+
+      const formatted = promptDataFormatter.formatGroupedNotes(
+        comprehensiveNotes,
+        { showContext: true }
+      );
+
+      // Verify category order
+      const categories = [
+        'Characters',
+        'Locations',
+        'Events',
+        'Plans & Intentions',
+        'Timelines & Deadlines',
+        'Psychological States',
+        'Theories & Hypotheses',
+        'Observations & Patterns',
+        'Knowledge & Uncertainties',
+      ];
+
+      // Verify all categories are present
+      categories.forEach((category) => {
+        expect(formatted).toContain(`## ${category}`);
+      });
+
+      // Verify category order
+      for (let i = 0; i < categories.length - 1; i++) {
+        const currentIndex = formatted.indexOf(`## ${categories[i]}`);
+        const nextIndex = formatted.indexOf(`## ${categories[i + 1]}`);
+        expect(currentIndex).toBeLessThan(nextIndex);
+      }
+    });
+  });
+
   describe('Configuration and Options Integration', () => {
     test('should respect formatting options throughout pipeline', async () => {
       const gameStateDto = {

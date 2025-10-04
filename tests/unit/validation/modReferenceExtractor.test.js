@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
-import ModReferenceExtractor from '../../../src/validation/modReferenceExtractor.js';
+import ModReferenceExtractor from '../../../cli/validation/modReferenceExtractor.js';
 import fs from 'fs/promises';
 
 // Mock the fs module for testing

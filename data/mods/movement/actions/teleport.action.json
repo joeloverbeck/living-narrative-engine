@@ -1,0 +1,36 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "movement:teleport",
+  "name": "Teleport",
+  "description": "Instantly teleport to a connected location, vanishing from your current position and materializing at the destination.",
+  "targets": {
+    "primary": {
+      "scope": "movement:clear_directions",
+      "placeholder": "destination",
+      "description": "Location to teleport to"
+    }
+  },
+  "required_components": {
+    "actor": ["movement:can_teleport"]
+  },
+  "template": "teleport to {destination}",
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "movement:actor-can-move"
+      },
+      "failure_message": "You cannot teleport without functioning legs."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#006064",
+    "textColor": "#e0f7fa",
+    "hoverBackgroundColor": "#00838f",
+    "hoverTextColor": "#ffffff"
+  },
+  "metadata": {
+    "category": "movement",
+    "author": "system",
+    "tags": ["movement", "teleportation", "supernatural"]
+  }
+}

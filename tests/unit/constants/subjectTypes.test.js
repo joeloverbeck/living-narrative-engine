@@ -22,10 +22,35 @@ describe('subjectTypes constants', () => {
       QUEST: 'quest',
       SKILL: 'skill',
       EMOTION: 'emotion',
+      PLAN: 'plan',
+      TIMELINE: 'timeline',
+      THEORY: 'theory',
+      OBSERVATION: 'observation',
+      KNOWLEDGE_STATE: 'knowledge_state',
+      PSYCHOLOGICAL_STATE: 'psychological_state',
       OTHER: 'other',
     };
 
     expect(SUBJECT_TYPES).toEqual(expectedEntries);
+  });
+
+  it('should include all 18 subject types', () => {
+    expect(Object.keys(SUBJECT_TYPES)).toHaveLength(18);
+  });
+
+  it('should include new temporal types', () => {
+    expect(SUBJECT_TYPES.PLAN).toBe('plan');
+    expect(SUBJECT_TYPES.TIMELINE).toBe('timeline');
+  });
+
+  it('should include new epistemic types', () => {
+    expect(SUBJECT_TYPES.THEORY).toBe('theory');
+    expect(SUBJECT_TYPES.OBSERVATION).toBe('observation');
+    expect(SUBJECT_TYPES.KNOWLEDGE_STATE).toBe('knowledge_state');
+  });
+
+  it('should include new psychological type', () => {
+    expect(SUBJECT_TYPES.PSYCHOLOGICAL_STATE).toBe('psychological_state');
   });
 
   it('should provide human-readable descriptions for every subject type', () => {
@@ -59,6 +84,12 @@ describe('subjectTypes constants', () => {
 
   it('should define OTHER as the default subject type', () => {
     expect(DEFAULT_SUBJECT_TYPE).toBe(SUBJECT_TYPES.OTHER);
+  });
+
+  it('should clearly distinguish temporal concepts', () => {
+    expect(SUBJECT_TYPE_DESCRIPTIONS[SUBJECT_TYPES.EVENT]).toContain('Incidents');
+    expect(SUBJECT_TYPE_DESCRIPTIONS[SUBJECT_TYPES.PLAN]).toContain('Future');
+    expect(SUBJECT_TYPE_DESCRIPTIONS[SUBJECT_TYPES.TIMELINE]).toContain('Temporal');
   });
 });
 

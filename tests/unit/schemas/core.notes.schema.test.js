@@ -121,6 +121,90 @@ describe('JSON-Schema – core:notes component', () => {
         },
       },
     ],
+    [
+      'note with valid plan subjectType',
+      {
+        'core:notes': {
+          notes: [
+            {
+              text: 'Intend to walk into freezing woods on December 24',
+              subject: 'December 24 plan',
+              subjectType: 'plan',
+            },
+          ],
+        },
+      },
+    ],
+    [
+      'note with valid timeline subjectType',
+      {
+        'core:notes': {
+          notes: [
+            {
+              text: 'Must survive 122 days until April 27, 1973',
+              subject: 'survival timeline',
+              subjectType: 'timeline',
+            },
+          ],
+        },
+      },
+    ],
+    [
+      'note with valid theory subjectType',
+      {
+        'core:notes': {
+          notes: [
+            {
+              text: 'My ontological framework may be fundamentally incomplete',
+              subject: 'reality model uncertainty',
+              subjectType: 'theory',
+            },
+          ],
+        },
+      },
+    ],
+    [
+      'note with valid observation subjectType',
+      {
+        'core:notes': {
+          notes: [
+            {
+              text: 'Uses term "miracle" casually when describing claimed abilities',
+              subject: 'Jon Ureña language patterns',
+              subjectType: 'observation',
+            },
+          ],
+        },
+      },
+    ],
+    [
+      'note with valid knowledge_state subjectType',
+      {
+        'core:notes': {
+          notes: [
+            {
+              text: 'May have knowledge of December 24 plan without being told',
+              subject: 'Jon Ureña knowledge',
+              subjectType: 'knowledge_state',
+            },
+          ],
+        },
+      },
+    ],
+    [
+      'note with valid psychological_state subjectType',
+      {
+        'core:notes': {
+          notes: [
+            {
+              text: 'Wrestling with existential dread about nature of reality',
+              subject: 'my psychological state',
+              subjectType: 'psychological_state',
+            },
+          ],
+        },
+      },
+    ],
   ])('✓ %s – should validate', (_label, payload) => {
     const ok = validateEntity(payload);
     if (!ok) console.error(validateEntity.errors);

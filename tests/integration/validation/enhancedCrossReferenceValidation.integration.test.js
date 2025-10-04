@@ -7,8 +7,8 @@ import {
   jest,
 } from '@jest/globals';
 import path from 'path';
-import ModCrossReferenceValidator from '../../../src/validation/modCrossReferenceValidator.js';
-import ModReferenceExtractor from '../../../src/validation/modReferenceExtractor.js';
+import ModCrossReferenceValidator from '../../../cli/validation/modCrossReferenceValidator.js';
+import ModReferenceExtractor from '../../../cli/validation/modReferenceExtractor.js';
 import ViolationReporter from '../../../src/validation/violationReporter.js';
 import { createTestBed } from '../../common/testBed.js';
 

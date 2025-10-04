@@ -678,7 +678,7 @@ export class PromptGenerationTestBed {
               { text: 'I feel welcomed in this friendly tavern.' },
               { text: 'The innkeeper seems trustworthy.' },
             ],
-            maxEntries: 10,
+            maxEntries: 4,
           },
           'core:notes': {
             notes: [

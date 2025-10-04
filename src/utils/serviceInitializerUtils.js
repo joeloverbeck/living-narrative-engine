@@ -10,6 +10,9 @@
 import { setupPrefixedLogger } from './loggerUtils.js';
 import { validateDependencies } from './dependencyUtils.js';
 
+// Import from dedicated types file - breaks circular dependency!
+/** @typedef {import('../logic/types/executionTypes.js').ExecutionContext} ExecutionContext */
+
 /**
  * @class ServiceSetup
  * @description Helper class for initializing services and handlers. Provides
@@ -73,7 +76,7 @@ export class ServiceSetup {
    * Resolve the logger to use for execution.
    *
    * @param {import('../interfaces/coreServices.js').ILogger} defaultLogger - Default logger.
-   * @param {import('../logic/defs.js').ExecutionContext} [executionContext] - Optional context.
+   * @param {ExecutionContext} [executionContext] - Optional context.
    * @returns {import('../interfaces/coreServices.js').ILogger} Logger for execution.
    */
   resolveExecutionLogger(defaultLogger, executionContext) {
@@ -166,7 +169,7 @@ export function initializeServiceLogger(serviceName, logger, deps) {
  * Resolve the logger to use for an execution context.
  *
  * @param {import('../interfaces/coreServices.js').ILogger} defaultLogger - The default logger.
- * @param {import('../logic/defs.js').ExecutionContext} [executionContext] - Optional execution context.
+ * @param {ExecutionContext} [executionContext] - Optional execution context.
  * @returns {import('../interfaces/coreServices.js').ILogger} Logger for execution.
  */
 export function resolveExecutionLogger(defaultLogger, executionContext) {

@@ -17,7 +17,7 @@ import {
 export default class ValidationPhase extends LoaderPhase {
   /**
    * @param {object} params - Configuration parameters
-   * @param {import('../../validation/modValidationOrchestrator.js').default} params.validationOrchestrator - Validation orchestrator service
+   * @param {import('../../../cli/validation/modValidationOrchestrator.js').default} params.validationOrchestrator - Validation orchestrator service
    * @param {import('../../interfaces/coreServices.js').ILogger} params.logger - Logger service
    * @param {object} [params.options] - Validation options
    * @param {boolean} [params.options.skipCrossReferences] - Skip cross-reference validation

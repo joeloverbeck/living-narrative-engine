@@ -113,7 +113,7 @@ async function main() {
     });
     
     // Override data fetcher for CLI environment
-    const NodeDataFetcher = (await import('../src/data/nodeDataFetcher.js')).default;
+    const NodeDataFetcher = (await import('./utils/nodeDataFetcher.js')).default;
     container.register(tokens.IDataFetcher, () => new NodeDataFetcher());
 
     // Load schemas before validation
@@ -196,7 +196,12 @@ async function main() {
       violationType: config.violationType
     };
 
-    const report = reporter.generateReport(results, config.format, reportOptions);
+    // Extract crossReferences Map for ecosystem validation to match reporter's expected structure
+    const reportData = config.ecosystem && results.crossReferences instanceof Map
+      ? results.crossReferences
+      : results;
+
+    const report = reporter.generateReport(reportData, config.format, reportOptions);
 
     if (config.output) {
       await fs.writeFile(config.output, report);
@@ -227,8 +232,9 @@ async function main() {
 
 /**
  * Parses command line arguments with comprehensive option support
+ *
  * @param {string[]} args - Raw command line arguments
- * @returns {Object} Parsed configuration
+ * @returns {object} Parsed configuration
  */
 function parseArguments(args) {
   const config = { ...DEFAULT_CONFIG };
@@ -408,7 +414,8 @@ function parseArguments(args) {
 
 /**
  * Handles --flag=value format arguments
- * @param {Object} config - Configuration object to modify
+ *
+ * @param {object} config - Configuration object to modify
  * @param {string} flag - Flag name
  * @param {string} value - Flag value
  */
@@ -448,7 +455,8 @@ function parseArgumentPair(config, flag, value) {
 
 /**
  * Validates configuration for consistency and correctness
- * @param {Object} config - Configuration to validate
+ *
+ * @param {object} config - Configuration to validate
  */
 function validateConfiguration(config) {
   const validFormats = ['console', 'json', 'html', 'markdown', 'junit', 'csv'];
@@ -467,9 +475,10 @@ function validateConfiguration(config) {
 
 /**
  * Runs validation based on configuration
- * @param {Object} orchestrator - Validation orchestrator
- * @param {Object} config - CLI configuration
- * @returns {Promise<Object>} Validation results
+ *
+ * @param {object} orchestrator - Validation orchestrator
+ * @param {object} config - CLI configuration
+ * @returns {Promise<object>} Validation results
  */
 async function runValidation(orchestrator, config) {
   if (!config.quiet) {
@@ -533,8 +542,9 @@ async function runValidation(orchestrator, config) {
 
 /**
  * Configures logging based on CLI options
- * @param {Object} logger - Logger instance
- * @param {Object} config - CLI configuration
+ *
+ * @param {object} logger - Logger instance
+ * @param {object} config - CLI configuration
  */
 function configureLogging(logger, config) {
   if (config.quiet) {
@@ -550,7 +560,8 @@ function configureLogging(logger, config) {
 
 /**
  * Shows validation summary
- * @param {Object} results - Validation results
+ *
+ * @param {object} results - Validation results
  * @param {number} executionTime - Execution time in milliseconds
  */
 function showValidationSummary(results, executionTime) {
@@ -577,8 +588,9 @@ function showValidationSummary(results, executionTime) {
 
 /**
  * Calculates appropriate exit code based on results
- * @param {Object} results - Validation results
- * @param {Object} config - CLI configuration
+ *
+ * @param {object} results - Validation results
+ * @param {object} config - CLI configuration
  * @returns {number} Exit code
  */
 function calculateExitCode(results, config) {
@@ -609,7 +621,8 @@ function calculateExitCode(results, config) {
 
 /**
  * Gets list of validation types from configuration
- * @param {Object} config - CLI configuration
+ *
+ * @param {object} config - CLI configuration
  * @returns {string[]} List of enabled validation types
  */
 function getValidationTypes(config) {

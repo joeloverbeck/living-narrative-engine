@@ -48,7 +48,7 @@ export class PortraitModalRenderer extends BaseModalRenderer {
    *
    * @param {object} dependencies - The dependencies for the renderer.
    * @param {import('../interfaces/IDocumentContext.js').IDocumentContext} dependencies.documentContext - The document context abstraction.
-   * @param {import('../interfaces/IDomElementFactory.js').IDomElementFactory} dependencies.domElementFactory - Factory for creating DOM elements.
+   * @param {import('./domElementFactory.js').default} dependencies.domElementFactory - Factory for creating DOM elements.
    * @param {import('../interfaces/coreServices.js').ILogger} dependencies.logger - The logger instance.
    * @param {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} dependencies.validatedEventDispatcher - The event dispatcher.
    */

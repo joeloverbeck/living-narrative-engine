@@ -4,6 +4,12 @@
 
 import { getIcon } from '../icons.js';
 import { formatNotesAsRichHtml } from './noteTooltipFormatter.js';
+import {
+  copyToClipboard,
+  formatNotesForClipboard,
+  formatThoughtsForClipboard,
+  showCopyFeedback,
+} from './clipboardUtils.js';
 
 /**
  * @typedef {import('../domElementFactory.js').default} DomElementFactory
@@ -35,7 +41,10 @@ export function buildSpeechMeta(document, domFactory, { thoughts, notes }) {
   if (thoughts) {
     const btn = domFactory.create('button', {
       cls: 'meta-btn thoughts',
-      attrs: { 'aria-label': 'View inner thoughts' },
+      attrs: {
+        'aria-label': 'Click to copy thoughts to clipboard',
+        title: 'Click to copy thoughts',
+      },
     });
     btn.style.setProperty('--clr', 'var(--thoughts-icon-color)');
     btn.innerHTML = getIcon('thoughts');
@@ -44,26 +53,69 @@ export function buildSpeechMeta(document, domFactory, { thoughts, notes }) {
     tooltip.textContent = thoughts;
     btn.appendChild(tooltip);
 
+    // Add click handler for copying
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const formattedText = formatThoughtsForClipboard(thoughts);
+      const success = await copyToClipboard(formattedText);
+
+      if (success) {
+        showCopyFeedback(btn, 'Copied!');
+      } else {
+        showCopyFeedback(btn, 'Copy failed', 1500);
+      }
+    });
+
     metaContainer.appendChild(btn);
   }
 
   if (notes) {
-    const btn = domFactory.create('button', {
-      cls: 'meta-btn notes',
-      attrs: { 'aria-label': 'View private notes' },
-    });
-    btn.style.setProperty('--clr', 'var(--notes-icon-color)');
-    btn.innerHTML = getIcon('notes');
-
     const richHtml = formatNotesAsRichHtml(notes);
-    const tooltip = domFactory.create('div', {
-      cls: 'meta-tooltip meta-tooltip--notes',
-    });
 
-    tooltip.innerHTML = richHtml;
+    // Only create button if we have valid HTML content
+    if (richHtml && richHtml.trim() !== '') {
+      const btn = domFactory.create('button', {
+        cls: 'meta-btn notes',
+        attrs: {
+          'aria-label': 'Click to copy notes to clipboard',
+          title: 'Click to copy notes',
+        },
+      });
+      btn.style.setProperty('--clr', 'var(--notes-icon-color)');
+      btn.innerHTML = getIcon('notes');
 
-    btn.appendChild(tooltip);
-    metaContainer.appendChild(btn);
+      const tooltip = domFactory.create('div', {
+        cls: 'meta-tooltip meta-tooltip--notes',
+      });
+
+      tooltip.innerHTML = richHtml;
+
+      btn.appendChild(tooltip);
+
+      // Add click handler for copying
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const formattedText = formatNotesForClipboard(notes);
+        const success = await copyToClipboard(formattedText);
+
+        if (success) {
+          showCopyFeedback(btn, 'Copied!');
+        } else {
+          showCopyFeedback(btn, 'Copy failed', 1500);
+        }
+      });
+
+      metaContainer.appendChild(btn);
+    }
+  }
+
+  // If no buttons were added to the container, return null
+  if (metaContainer.children.length === 0) {
+    return null;
   }
 
   fragment.appendChild(metaContainer);

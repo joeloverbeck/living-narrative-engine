@@ -95,7 +95,7 @@ describe('DefaultComponentPolicy integration', () => {
     const shortTermMemory = entity.getComponentData(
       SHORT_TERM_MEMORY_COMPONENT_ID
     );
-    expect(shortTermMemory).toEqual({ thoughts: [], maxEntries: 10 });
+    expect(shortTermMemory).toEqual({ thoughts: [], maxEntries: 4 });
 
     // Mutating the retrieved component must not affect stored data (ensures cloning).
     shortTermMemory.thoughts.push('intrusive thought');

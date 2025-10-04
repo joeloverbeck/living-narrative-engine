@@ -64,7 +64,7 @@
         "examples": [
           {
             "primary": "core:character_instance",
-            "secondary": "clothing:shirt_uuid"
+            "secondary": "core:item_example"
           },
           {
             "person": "alice_789",

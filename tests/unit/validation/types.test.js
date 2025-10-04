@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from '@jest/globals';
-import * as validationTypes from '../../../src/validation/types.js';
+import * as validationTypes from '../../../cli/validation/types.js';
 
 describe('validation/types module', () => {
   it('should expose no runtime exports', () => {
@@ -12,6 +12,6 @@ describe('validation/types module', () => {
   });
 
   it('should load cleanly via dynamic import', async () => {
-    await expect(import('../../../src/validation/types.js')).resolves.toBe(validationTypes);
+    await expect(import('../../../cli/validation/types.js')).resolves.toBe(validationTypes);
   });
 });

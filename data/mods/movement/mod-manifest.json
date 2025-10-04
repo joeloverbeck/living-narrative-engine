@@ -14,14 +14,17 @@
   ],
   "content": {
     "actions": [
-      "go.action.json"
+      "go.action.json",
+      "teleport.action.json"
     ],
     "rules": [
-      "go.rule.json"
+      "go.rule.json",
+      "handle_teleport.rule.json"
     ],
     "conditions": [
       "actor-can-move.condition.json",
       "event-is-action-go.condition.json",
+      "event-is-action-teleport.condition.json",
       "exit-is-unblocked.condition.json"
     ],
     "scopes": [
@@ -29,6 +32,7 @@
     ],
     "events": [],
     "components": [
+      "can_teleport.component.json",
       "exits.component.json",
       "movement.component.json"
     ],

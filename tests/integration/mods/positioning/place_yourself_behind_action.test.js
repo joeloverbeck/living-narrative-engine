@@ -127,13 +127,38 @@ function setupKneelingBehindScenario() {
   return scenario;
 }
 
+/**
+ * Creates scenario where actor is lying down on furniture.
+ */
+function setupLyingBehindScenario() {
+  const scenario = setupBehindPositioningScenario(
+    'Lying Player',
+    'Standing Guard',
+    'test:room'
+  );
+
+  // Add a bed to the room
+  const bed = new ModEntityBuilder('test:bed')
+    .withName('Wooden Bed')
+    .atLocation('test:room')
+    .withComponent('positioning:allows_lying_on', {})
+    .build();
+
+  // Actor is lying down on the bed
+  scenario.actor.components['positioning:lying_down'] = {
+    furniture_id: 'test:bed',
+  };
+
+  return { ...scenario, bed };
+}
+
 describe('Place Yourself Behind Action Integration Tests', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
       'positioning',
-      'positioning:place_yourself_behind'
+      'place_yourself_behind'
     );
   });
 
@@ -250,7 +275,7 @@ describe('Place Yourself Behind Action Integration Tests', () => {
 
     // NOTE: This test shows what would happen if somehow the action was triggered
     // In real gameplay, the action discovery system prevents this scenario
-    await testFixture.executeAction('test:player', 'test:npc');
+    await testFixture.executeAction('test:player', 'test:npc', { skipDiscovery: true });
 
     // The rule itself would still execute because we're bypassing action discovery
     const target = testFixture.entityManager.getEntityInstance('test:npc');
@@ -277,7 +302,7 @@ describe('Place Yourself Behind Action Integration Tests', () => {
 
     // In normal action discovery, this action would not appear in available actions
     // because the actor has the positioning:kneeling_before component.
-    await testFixture.executeAction('test:player', 'test:npc');
+    await testFixture.executeAction('test:player', 'test:npc', { skipDiscovery: true });
 
     // The rule itself would still execute because we're bypassing action discovery
     const target = testFixture.entityManager.getEntityInstance('test:npc');
@@ -325,5 +350,54 @@ describe('Place Yourself Behind Action Integration Tests', () => {
     expect(actor.components['positioning:kneeling_before'].entityId).toBe(
       'test:someone_else'
     );
+  });
+
+  it('should demonstrate lying restriction (action discovery would prevent this)', async () => {
+    // This test demonstrates that the forbidden_components logic would prevent
+    // the action from being discovered when the actor is lying down
+    const entities = setupLyingBehindScenario();
+    testFixture.reset(Object.values(entities));
+
+    // In normal action discovery, this action would not appear in available actions
+    // because the actor has the positioning:lying_down component.
+    // However, we're testing the rule execution directly to verify the logic.
+
+    // NOTE: This test shows what would happen if somehow the action was triggered
+    // In real gameplay, the action discovery system prevents this scenario
+    await testFixture.executeAction('test:player', 'test:npc', { skipDiscovery: true });
+
+    // The rule itself would still execute because we're bypassing action discovery
+    const target = testFixture.entityManager.getEntityInstance('test:npc');
+    expect(target?.components['positioning:facing_away']).toBeDefined();
+    expect(
+      target.components['positioning:facing_away'].facing_away_from
+    ).toContain('test:player');
+
+    // Verify success message would still be generated
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      'Lying Player places themselves behind Standing Guard.'
+    );
+
+    // This test proves the restriction is at the action discovery level,
+    // not at the rule execution level - which is the correct design
+  });
+
+  it('validates lying restriction component structure', async () => {
+    // This test validates that the lying_down component structure matches expectations
+    const entities = setupLyingBehindScenario();
+    testFixture.reset(Object.values(entities));
+
+    // Verify the lying component is properly structured
+    const actor = testFixture.entityManager.getEntityInstance('test:player');
+    expect(actor.components['positioning:lying_down']).toBeDefined();
+    expect(actor.components['positioning:lying_down'].furniture_id).toBe(
+      'test:bed'
+    );
+
+    // Verify the bed entity exists
+    const bed = testFixture.entityManager.getEntityInstance('test:bed');
+    expect(bed).toBeDefined();
+    expect(bed.components['core:name'].text).toBe('Wooden Bed');
   });
 });

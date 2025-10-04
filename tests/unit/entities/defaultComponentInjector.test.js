@@ -34,7 +34,7 @@ function createMockEntity({ hasActor = true, existing = {} } = {}) {
 
 describe('injectDefaultComponents', () => {
   const defaults = {
-    [SHORT_TERM_MEMORY_COMPONENT_ID]: { thoughts: [], maxEntries: 10 },
+    [SHORT_TERM_MEMORY_COMPONENT_ID]: { thoughts: [], maxEntries: 4 },
     [NOTES_COMPONENT_ID]: { notes: [] },
     [GOALS_COMPONENT_ID]: { goals: [] },
   };

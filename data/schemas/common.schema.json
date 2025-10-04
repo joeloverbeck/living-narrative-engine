@@ -91,6 +91,12 @@
             "quest",
             "skill",
             "emotion",
+            "plan",
+            "timeline",
+            "theory",
+            "observation",
+            "knowledge_state",
+            "psychological_state",
             "other"
           ],
           "default": "other",

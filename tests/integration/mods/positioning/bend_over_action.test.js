@@ -192,7 +192,7 @@ describe('positioning:bend_over action integration', () => {
       });
 
       // Act - attempt to bend over different surface
-      await testFixture.executeAction('test:actor1', 'test:surface1');
+      await testFixture.executeAction('test:actor1', 'test:surface1', { skipDiscovery: true });
 
       // Assert - action still executes since rule processes any bend_over event
       // The rule will add/overwrite the bending_over component
@@ -215,7 +215,7 @@ describe('positioning:bend_over action integration', () => {
       });
 
       // Act - attempt to bend over surface while sitting
-      await testFixture.executeAction('test:actor1', 'test:surface1');
+      await testFixture.executeAction('test:actor1', 'test:surface1', { skipDiscovery: true });
 
       // Assert - rule executes and adds bending_over component
       // Note: In real gameplay, action discovery would prevent this scenario
@@ -243,7 +243,7 @@ describe('positioning:bend_over action integration', () => {
       });
 
       // Act - attempt to bend over surface while kneeling
-      await testFixture.executeAction('test:actor1', 'test:surface1');
+      await testFixture.executeAction('test:actor1', 'test:surface1', { skipDiscovery: true });
 
       // Assert - rule executes and adds bending_over component
       // Note: In real gameplay, action discovery would prevent this scenario
