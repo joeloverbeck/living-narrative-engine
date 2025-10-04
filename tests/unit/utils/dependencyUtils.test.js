@@ -38,6 +38,13 @@ describe('dependencyUtils', () => {
       ).toThrow(CustomError);
       expect(logger.error).toHaveBeenCalledWith('missing dependency');
     });
+
+    it('throws without attempting to log when logger lacks an error method', () => {
+      const logger = { error: 'not-a-function' };
+      expect(() =>
+        assertPresent(undefined, 'missing dependency', Error, logger)
+      ).toThrow(Error);
+    });
   });
 
   describe('assertFunction', () => {
@@ -55,6 +62,13 @@ describe('dependencyUtils', () => {
         assertFunction({}, 'init', 'missing fn', CustomError, logger)
       ).toThrow(CustomError);
       expect(logger.error).toHaveBeenCalledWith('missing fn');
+    });
+
+    it('throws without logging when logger.error is not a function', () => {
+      const logger = { error: false };
+      expect(() =>
+        assertFunction(null, 'init', 'missing fn', Error, logger)
+      ).toThrow(Error);
     });
   });
 
@@ -134,6 +148,19 @@ describe('dependencyUtils', () => {
       );
     });
 
+    it('uses console error when provided logger lacks an error function', () => {
+      const logger = {};
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      expect(() =>
+        validateDependency(undefined, 'ConsoleFallback', logger)
+      ).toThrow(InvalidArgumentError);
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        'Missing required dependency: ConsoleFallback.'
+      );
+    });
+
     it('throws when dependency must be a function but is not', () => {
       const logger = { error: jest.fn() };
       expect(() =>
@@ -142,6 +169,16 @@ describe('dependencyUtils', () => {
       expect(logger.error).toHaveBeenCalledWith(
         "Dependency 'Callable' must be a function, but got object."
       );
+    });
+
+    it('accepts a callable dependency when the isFunction flag is set', () => {
+      const logger = { error: jest.fn() };
+      const dependency = () => true;
+
+      expect(() =>
+        validateDependency(dependency, 'Callable', logger, { isFunction: true })
+      ).not.toThrow();
+      expect(logger.error).not.toHaveBeenCalled();
     });
 
     it('throws when a required method is missing', () => {
@@ -162,6 +199,14 @@ describe('dependencyUtils', () => {
           requiredMethods: ['run', 'stop'],
         })
       ).not.toThrow();
+      expect(logger.error).not.toHaveBeenCalled();
+    });
+
+    it('skips method validation when no required methods are provided', () => {
+      const logger = { error: jest.fn() };
+      const dependency = { optional: jest.fn() };
+
+      expect(() => validateDependency(dependency, 'Optional', logger)).not.toThrow();
       expect(logger.error).not.toHaveBeenCalled();
     });
   });
