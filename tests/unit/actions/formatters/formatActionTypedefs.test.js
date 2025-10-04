@@ -1,3 +1,8 @@
+/**
+ * @file Unit tests for the action formatter typedef marker module.
+ * @see src/actions/formatters/formatActionTypedefs.js
+ */
+
 import { describe, it, expect } from '@jest/globals';
 import {
   __formatActionTypedefs,
@@ -24,5 +29,13 @@ describe('formatActionTypedefs module', () => {
       enumerable: true,
       value: true,
     });
+  });
+
+  it('supports dynamic importing without throwing and exposes the sentinel', async () => {
+    await expect(
+      import(
+        '../../../../src/actions/formatters/formatActionTypedefs.js'
+      )
+    ).resolves.toMatchObject({ __formatActionTypedefs: true });
   });
 });
