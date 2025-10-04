@@ -88,6 +88,23 @@ describe('dependencyUtils', () => {
       ).toThrow(CustomError);
       expect(logger.error).toHaveBeenCalledWith('missing method');
     });
+
+    it('stops validation on the first missing method and reports through logger', () => {
+      class CustomError extends Error {}
+      const logger = { error: jest.fn() };
+      const dependency = {
+        start: jest.fn(),
+        // `stop` intentionally missing
+      };
+
+      expect(() =>
+        assertMethods(dependency, ['start', 'stop'], 'missing method', CustomError, logger)
+      ).toThrow(CustomError);
+
+      expect(dependency.start).not.toHaveBeenCalled();
+      expect(logger.error).toHaveBeenCalledTimes(1);
+      expect(logger.error).toHaveBeenCalledWith('missing method');
+    });
   });
 
   describe('assertValidId', () => {
@@ -105,6 +122,21 @@ describe('dependencyUtils', () => {
         expect.objectContaining({
           receivedId: '  ',
           receivedType: 'string',
+          context: 'Ctx',
+        })
+      );
+    });
+
+    it('logs type information when a non-string id is supplied', () => {
+      const logger = { error: jest.fn() };
+
+      expect(() => assertValidId(null, 'Ctx', logger)).toThrow(InvalidArgumentError);
+
+      expect(logger.error).toHaveBeenCalledWith(
+        "Ctx: Invalid ID 'null'. Expected non-blank string.",
+        expect.objectContaining({
+          receivedId: null,
+          receivedType: 'object',
           context: 'Ctx',
         })
       );
@@ -135,6 +167,24 @@ describe('dependencyUtils', () => {
         })
       );
     });
+
+    it('handles non-string inputs by reporting the received type', () => {
+      const logger = { error: jest.fn() };
+
+      expect(() =>
+        assertNonBlankString(42, 'param', 'Context', logger)
+      ).toThrow(InvalidArgumentError);
+
+      expect(logger.error).toHaveBeenCalledWith(
+        "Context: Invalid param '42'. Expected non-blank string.",
+        expect.objectContaining({
+          receivedValue: 42,
+          receivedType: 'number',
+          parameterName: 'param',
+          context: 'Context',
+        })
+      );
+    });
   });
 
   describe('validateDependency', () => {
@@ -158,6 +208,18 @@ describe('dependencyUtils', () => {
 
       expect(errorSpy).toHaveBeenCalledWith(
         'Missing required dependency: ConsoleFallback.'
+      );
+    });
+
+    it('uses the provided logger when dependency is missing', () => {
+      const logger = { error: jest.fn() };
+
+      expect(() => validateDependency(undefined, 'LoggerService', logger)).toThrow(
+        InvalidArgumentError
+      );
+
+      expect(logger.error).toHaveBeenCalledWith(
+        'Missing required dependency: LoggerService.'
       );
     });
 
@@ -209,6 +271,21 @@ describe('dependencyUtils', () => {
       expect(() => validateDependency(dependency, 'Optional', logger)).not.toThrow();
       expect(logger.error).not.toHaveBeenCalled();
     });
+
+    it('rejects dependencies where required methods exist but are not functions', () => {
+      const logger = { error: jest.fn() };
+      const dependency = { run: 'not a function' };
+
+      expect(() =>
+        validateDependency(dependency, 'Service', logger, {
+          requiredMethods: ['run'],
+        })
+      ).toThrow(InvalidArgumentError);
+
+      expect(logger.error).toHaveBeenCalledWith(
+        "Invalid or missing method 'run' on dependency 'Service'."
+      );
+    });
   });
 
   describe('validateDependencies', () => {
@@ -224,6 +301,22 @@ describe('dependencyUtils', () => {
         { dependency: { init: jest.fn() }, name: 'First', methods: ['init'] },
         { dependency: {}, name: 'Second', isFunction: true },
       ];
+
+      expect(() => validateDependencies(specs, logger)).toThrow(
+        InvalidArgumentError
+      );
+      expect(logger.error).toHaveBeenLastCalledWith(
+        "Dependency 'Second' must be a function, but got object."
+      );
+    });
+
+    it('supports iterable dependency specifications and validates each entry', () => {
+      const logger = { error: jest.fn() };
+
+      const specs = new Set([
+        { dependency: { init: jest.fn() }, name: 'First', methods: ['init'] },
+        { dependency: {}, name: 'Second', isFunction: true },
+      ]);
 
       expect(() => validateDependencies(specs, logger)).toThrow(
         InvalidArgumentError
