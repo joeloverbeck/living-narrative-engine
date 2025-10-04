@@ -2,7 +2,7 @@
  * @file Unit tests for LFU cache strategy
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { LFUStrategy } from '../../../../src/cache/strategies/LFUStrategy.js';
 
 describe('LFUStrategy', () => {
@@ -140,25 +140,30 @@ describe('LFUStrategy', () => {
       }, 100);
     });
 
-    it('should update TTL on get when configured', (done) => {
-      const updateOnGetStrategy = new LFUStrategy({
-        maxSize: 10,
-        ttl: 100,
-        updateAgeOnGet: true,
-      });
+    it('should update TTL on get when configured', () => {
+      jest.useFakeTimers();
 
-      updateOnGetStrategy.set('key1', 'value1');
-      
-      setTimeout(() => {
-        // Access the key to update its TTL
+      try {
+        const updateOnGetStrategy = new LFUStrategy({
+          maxSize: 10,
+          ttl: 100,
+          updateAgeOnGet: true,
+        });
+
+        updateOnGetStrategy.set('key1', 'value1');
+
+        jest.advanceTimersByTime(60);
         expect(updateOnGetStrategy.get('key1')).toBe('value1');
-        
-        setTimeout(() => {
-          // Should still be available due to TTL update
-          expect(updateOnGetStrategy.get('key1')).toBe('value1');
-          done();
-        }, 60);
-      }, 60);
+
+        jest.advanceTimersByTime(60);
+        expect(updateOnGetStrategy.get('key1')).toBe('value1');
+
+        jest.advanceTimersByTime(101);
+        expect(updateOnGetStrategy.get('key1')).toBeUndefined();
+      } finally {
+        jest.runOnlyPendingTimers();
+        jest.useRealTimers();
+      }
     });
   });
 
