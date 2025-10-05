@@ -56,6 +56,7 @@ describe('CommandProcessor - Execution Tracing', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   describe('Trace Creation Logic', () => {
@@ -406,6 +407,11 @@ describe('CommandProcessor - Execution Tracing', () => {
         commandString: 'go north',
       };
 
+      const times = [100, 101];
+      const nowSpy = jest
+        .spyOn(performance, 'now')
+        .mockImplementation(() => times.shift() ?? 101);
+
       const start = performance.now();
       await commandProcessor.dispatchAction(actor, turnAction);
       const duration = performance.now() - start;
@@ -417,7 +423,8 @@ describe('CommandProcessor - Execution Tracing', () => {
       expect(mockActionTraceOutputService.writeTrace).not.toHaveBeenCalled();
 
       // Duration should be minimal (just action execution)
-      expect(duration).toBeLessThan(50); // Very liberal threshold for CI
+      expect(duration).toBe(1);
+      nowSpy.mockRestore();
     });
 
     it('should have minimal overhead when action not traced', async () => {
