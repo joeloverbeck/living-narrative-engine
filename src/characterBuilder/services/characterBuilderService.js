@@ -44,60 +44,11 @@ const RETRY_CONFIG = {
  * @typedef {import('../models/cliche.js').Cliche} Cliche
  */
 
-/**
- * Character builder events
- */
-export const CHARACTER_BUILDER_EVENTS = {
-  CONCEPT_CREATED: 'core:character_concept_created',
-  CONCEPT_UPDATED: 'core:character_concept_updated',
-  DIRECTIONS_GENERATED: 'core:thematic_directions_generated',
-  CONCEPT_SAVED: 'core:character_concept_saved',
-  CONCEPT_DELETED: 'core:character_concept_deleted',
-  DIRECTION_UPDATED: 'core:direction_updated',
-  DIRECTION_DELETED: 'core:direction_deleted',
-  ERROR_OCCURRED: 'core:character_builder_error_occurred',
-  // Cliché-related events
-  CLICHES_RETRIEVED: 'core:cliches_retrieved',
-  CLICHES_RETRIEVAL_FAILED: 'core:cliches_retrieval_failed',
-  CLICHES_STORED: 'core:cliches_stored',
-  CLICHES_STORAGE_FAILED: 'core:cliches_storage_failed',
-  CLICHES_GENERATION_STARTED: 'core:cliches_generation_started',
-  CLICHES_GENERATION_COMPLETED: 'core:cliches_generation_completed',
-  CLICHES_GENERATION_FAILED: 'core:cliches_generation_failed',
-  CLICHES_DELETED: 'core:cliches_deleted',
-  CLICHE_ITEM_DELETED: 'core:cliche_item_deleted',
-  CLICHE_TROPE_DELETED: 'core:cliche_trope_deleted',
-  // Core motivations events
-  CORE_MOTIVATIONS_GENERATION_STARTED:
-    'core:core_motivations_generation_started',
-  CORE_MOTIVATIONS_GENERATION_COMPLETED:
-    'core:core_motivations_generation_completed',
-  CORE_MOTIVATIONS_GENERATION_FAILED: 'core:core_motivations_generation_failed',
-  CORE_MOTIVATIONS_RETRIEVED: 'core:core_motivations_retrieved',
-  // Speech patterns events
-  SPEECH_PATTERNS_GENERATION_STARTED: 'core:speech_patterns_generation_started',
-  SPEECH_PATTERNS_GENERATION_COMPLETED:
-    'core:speech_patterns_generation_completed',
-  SPEECH_PATTERNS_GENERATION_FAILED: 'core:speech_patterns_generation_failed',
-  SPEECH_PATTERNS_CACHE_HIT: 'core:speech_patterns_cache_hit',
-  SPEECH_PATTERNS_GENERATION_RETRY: 'core:speech_patterns_generation_retry',
-  // Traits rewriter events
-  TRAITS_REWRITER_GENERATION_STARTED: 'core:traits_rewriter_generation_started',
-  TRAITS_REWRITER_GENERATION_COMPLETED:
-    'core:traits_rewriter_generation_completed',
-  TRAITS_REWRITER_GENERATION_FAILED: 'core:traits_rewriter_generation_failed',
-  TRAITS_REWRITER_CACHE_HIT: 'core:traits_rewriter_cache_hit',
-  // Circuit breaker events
-  CIRCUIT_BREAKER_OPENED: 'core:circuit_breaker_opened',
-  // Cache events
-  CACHE_INITIALIZED: 'core:cache_initialized',
-  CACHE_HIT: 'core:cache_hit',
-  CACHE_MISS: 'core:cache_miss',
-  CACHE_EVICTED: 'core:cache_evicted',
-  // Performance events
-  CHARACTER_BUILDER_PERFORMANCE_WARNING:
-    'core:character_builder_performance_warning',
-};
+// Import from dedicated events file
+import { CHARACTER_BUILDER_EVENTS } from '../events/characterBuilderEvents.js';
+
+// Re-export for backward compatibility
+export { CHARACTER_BUILDER_EVENTS };
 
 /**
  * Custom error for character builder operations

@@ -79,7 +79,7 @@ describe('Real Schema Validation - Schema Loading and Basic Validation', () => {
                 parameters: {
                   location_id: '{context.thinkerPositionComponent.locationId}',
                   description_text:
-                    '{context.thinkerNameComponent.text} is lost in thought',
+                    '{context.thinkerNameComponent.text} is lost in thought.',
                   perception_type: 'thought_internal',
                   actor_id: '{event.payload.entityId}',
                   target_id: null,

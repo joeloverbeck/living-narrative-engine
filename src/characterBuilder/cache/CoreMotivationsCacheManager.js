@@ -9,7 +9,8 @@ import {
   assertNonBlankString,
   assertPresent,
 } from '../../utils/dependencyUtils.js';
-import { CHARACTER_BUILDER_EVENTS } from '../services/characterBuilderService.js';
+// Import from dedicated events file - breaks circular dependency
+import { CHARACTER_BUILDER_EVENTS } from '../events/characterBuilderEvents.js';
 import { CacheError, CacheKeyError } from '../../errors/cacheError.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 
