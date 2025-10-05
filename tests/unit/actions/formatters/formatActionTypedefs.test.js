@@ -38,4 +38,22 @@ describe('formatActionTypedefs module', () => {
       )
     ).resolves.toMatchObject({ __formatActionTypedefs: true });
   });
+
+  it('registers statement coverage for the sentinel export', () => {
+    const coverageMap = globalThis.__coverage__ ?? {};
+    const coverageKey = Object.keys(coverageMap).find((key) =>
+      key.endsWith('src/actions/formatters/formatActionTypedefs.js')
+    );
+
+    expect(coverageKey).toBeDefined();
+
+    const fileCoverage = coverageMap[coverageKey];
+    expect(fileCoverage).toBeDefined();
+    expect(fileCoverage.s['0']).toBeGreaterThan(0);
+    expect(fileCoverage.statementMap['0']).toEqual(
+      expect.objectContaining({
+        start: expect.objectContaining({ line: 43 }),
+      })
+    );
+  });
 });
