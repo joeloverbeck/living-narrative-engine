@@ -45,6 +45,8 @@ import UnlockMouthEngagementHandler from '../../logic/operationHandlers/unlockMo
 import RegenerateDescriptionHandler from '../../logic/operationHandlers/regenerateDescriptionHandler.js';
 import AtomicModifyComponentHandler from '../../logic/operationHandlers/atomicModifyComponentHandler.js';
 import SequenceHandler from '../../logic/operationHandlers/sequenceHandler.js';
+import TransferItemHandler from '../../logic/operationHandlers/transferItemHandler.js';
+import ValidateInventoryCapacityHandler from '../../logic/operationHandlers/validateInventoryCapacityHandler.js';
 import jsonLogic from 'json-logic-js';
 
 /**
@@ -460,6 +462,26 @@ export function registerOperationHandlers(registrar) {
         new Handler({
           logger: c.resolve(tokens.ILogger),
           actionSequence: c.resolve(tokens.ActionSequence),
+        }),
+    ],
+    [
+      tokens.TransferItemHandler,
+      TransferItemHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.ValidateInventoryCapacityHandler,
+      ValidateInventoryCapacityHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         }),
     ],
   ];

@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "affection:event-is-action-massage-back",
+  "description": "Checks if the triggering event is for the 'affection:massage_back' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "affection:massage_back"]
+  }
+}

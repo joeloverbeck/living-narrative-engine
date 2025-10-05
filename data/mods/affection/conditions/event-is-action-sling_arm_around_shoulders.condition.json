@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "affection:event-is-action-sling_arm_around_shoulders",
+  "description": "Checks if the triggering event is for the 'affection:sling_arm_around_shoulders' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "affection:sling_arm_around_shoulders"
+    ]
+  }
+}

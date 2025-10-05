@@ -325,7 +325,22 @@
       "Bash(NODE_ENV=test npx jest tests/unit/mods/items/components/dataComponents.test.js --no-coverage --verbose)",
       "Bash(NODE_ENV=test npx jest tests/unit/validation/realSchemaValidation.test.js --no-coverage --silent)",
       "Bash(NODE_ENV=test npx jest tests/integration/turns/thoughtOnlyLLMInteraction.integration.test.js --no-coverage --silent)",
-      "Bash(NODE_ENV=test npx jest tests/integration/positioning/sittingClosenessEstablishment.integration.test.js --no-coverage --verbose)"
+      "Bash(NODE_ENV=test npx jest tests/integration/positioning/sittingClosenessEstablishment.integration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/logic/operationHandlers/transferItemHandler.test.js tests/unit/logic/operationHandlers/validateInventoryCapacityHandler.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/unit/logic/operationHandlers/transferItemHandler.test.js tests/unit/logic/operationHandlers/validateInventoryCapacityHandler.test.js --no-coverage)",
+      "Bash(npm run update-manifest:*)",
+      "Bash(npm run scope:lint)",
+      "Bash(jq:*)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/scopes/positioning/actors_sitting_close.integration.test.js --silent)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/scopes/positioning/actors_sitting_close.integration.test.js --testNamePattern=\"should filter out non-sitting actors\" --verbose)",
+      "Bash(NODE_ENV=test node test-debug-scope.js)",
+      "mcp__morphllm-fast-apply__write_file",
+      "mcp__morphllm-fast-apply__create_directory",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/scopes/positioning/actors_sitting_close.integration.test.js --silent --no-coverage)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/scopes/positioning/actor_im_straddling.integration.test.js --silent --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/integration/scopes/items/inventoryScopes.integration.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/scopes/items/inventoryScopes.integration.test.js --no-coverage --verbose)",
+      "Bash(for:*)"
     ],
     "deny": [],
     "ask": []

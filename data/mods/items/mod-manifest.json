@@ -23,10 +23,20 @@
       "portable.component.json",
       "weight.component.json"
     ],
-    "actions": [],
-    "rules": [],
-    "conditions": [],
-    "scopes": [],
+    "actions": [
+      "give_item.action.json"
+    ],
+    "rules": [
+      "handle_give_item.rule.json"
+    ],
+    "conditions": [
+      "event-is-action-give-item.condition.json",
+      "secondary-has-portable.condition.json"
+    ],
+    "scopes": [
+      "actor_inventory_items.scope",
+      "close_actors_with_inventory.scope"
+    ],
     "events": [],
     "entities": {
       "definitions": [],

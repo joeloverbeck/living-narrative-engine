@@ -1,0 +1,1 @@
+affection:actors_with_arms_in_intimacy := actor.components.positioning:closeness.partners[][{"hasPartOfType": [".", "arm"]}]

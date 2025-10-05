@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "caressing",
+  "version": "1.0.0",
+  "name": "Caressing - Sensual Touch Actions",
+  "description": "Flirtatious and sensual touching that creates or escalates sexual tension. More intimate than affection, distinct from kissing through touch-based interaction.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    { "id": "anatomy", "version": "^1.0.0" },
+    { "id": "positioning", "version": "^1.0.0" },
+    { "id": "descriptors", "version": "^1.0.0" },
+    { "id": "clothing", "version": "^1.0.0" }
+  ],
+  "content": {
+    "actions": [],
+    "rules": [],
+    "conditions": [],
+    "scopes": []
+  }
+}

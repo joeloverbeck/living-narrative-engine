@@ -1,0 +1,1 @@
+items:actor_inventory_items := actor.components.items:inventory.items[]
