@@ -318,7 +318,14 @@
       "Bash(NODE_ENV=test npx jest tests/performance/tagRemovalPerformance.test.js --no-coverage --verbose)",
       "Bash(NODE_ENV=test npx jest tests/performance/tagRemovalPerformance.test.js --no-coverage)",
       "Bash(NODE_ENV=test node --expose-gc ./node_modules/.bin/jest tests/memory/mouthEngagementMemory.test.js --testNamePattern=\"should clean up component objects properly\" --no-coverage --verbose)",
-      "Bash(NODE_ENV=test npm run test:memory)"
+      "Bash(NODE_ENV=test npm run test:memory)",
+      "Bash(NODE_ENV=test npx jest tests/integration/characterBuilder/circularDependencyResolution.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/intimacy/wrap_arm_around_waist_action_discovery.test.js tests/integration/mods/intimacy/wrap_arm_around_waist_action.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/intimacy/hold_hand --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/mods/items/components/dataComponents.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/validation/realSchemaValidation.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/turns/thoughtOnlyLLMInteraction.integration.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/positioning/sittingClosenessEstablishment.integration.test.js --no-coverage --verbose)"
     ],
     "deny": [],
     "ask": []

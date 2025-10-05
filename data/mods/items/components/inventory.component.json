@@ -1,0 +1,37 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "items:inventory",
+  "description": "Collection of items an entity is carrying",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "uniqueItems": true,
+        "description": "Array of entity IDs for items in inventory"
+      },
+      "capacity": {
+        "type": "object",
+        "properties": {
+          "maxWeight": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Maximum weight in kilograms"
+          },
+          "maxItems": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Maximum number of items"
+          }
+        },
+        "required": ["maxWeight", "maxItems"]
+      }
+    },
+    "required": ["items", "capacity"],
+    "additionalProperties": false
+  }
+}

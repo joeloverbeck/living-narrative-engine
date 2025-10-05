@@ -48,7 +48,7 @@
             "comment": "Dispatch a perceptible event for the thought act, to be logged.",
             "parameters": {
               "location_id": "{context.thinkerPositionComponent.locationId}",
-              "description_text": "{context.thinkerNameComponent.text} is lost in thought",
+              "description_text": "{context.thinkerNameComponent.text} is lost in thought.",
               "perception_type": "thought_internal",
               "actor_id": "{event.payload.entityId}",
               "target_id": null,

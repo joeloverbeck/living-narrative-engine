@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "items:portable",
+  "description": "Marker component indicating an item can be carried in inventory. Items with this component can be picked up, given, dropped, etc.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

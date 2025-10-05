@@ -35,7 +35,7 @@ export const CacheInvalidation = {
   /**
    * Invalidate all caches for a concept
    *
-   * @param {import('./CoreMotivationsCacheManager.js').default} cache - Cache manager instance
+   * @param {object} cache - Cache manager instance
    * @param {string} conceptId - Concept ID
    */
   invalidateConcept(cache, conceptId) {
@@ -47,7 +47,7 @@ export const CacheInvalidation = {
   /**
    * Invalidate all caches for a direction
    *
-   * @param {import('./CoreMotivationsCacheManager.js').default} cache - Cache manager instance
+   * @param {object} cache - Cache manager instance
    * @param {string} directionId - Direction ID
    */
   invalidateDirection(cache, directionId) {
@@ -60,7 +60,7 @@ export const CacheInvalidation = {
   /**
    * Invalidate motivation caches
    *
-   * @param {import('./CoreMotivationsCacheManager.js').default} cache - Cache manager instance
+   * @param {object} cache - Cache manager instance
    * @param {string} directionId - Direction ID
    * @param {string} [conceptId] - Optional concept ID
    */
@@ -80,9 +80,9 @@ export const CacheWarming = {
   /**
    * Pre-warm cache with frequently accessed data
    *
-   * @param {import('./CoreMotivationsCacheManager.js').default} cache - Cache manager instance
-   * @param {import('../services/characterBuilderService.js').default} service - Character builder service
-   * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger instance
+   * @param {object} cache - Cache manager instance
+   * @param {object} service - Character builder service instance
+   * @param {object} logger - Logger instance
    */
   async warmCache(cache, service, logger) {
     try {
