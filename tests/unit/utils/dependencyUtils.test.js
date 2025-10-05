@@ -45,6 +45,21 @@ describe('dependencyUtils', () => {
         assertPresent(undefined, 'missing dependency', Error, logger)
       ).toThrow(Error);
     });
+
+    it('throws with direct invocation so coverage sees the branch', () => {
+      class CustomError extends Error {}
+      const logger = { error: jest.fn() };
+
+      try {
+        assertPresent(undefined, 'direct missing', CustomError, logger);
+        throw new Error('expected assertPresent to throw');
+      } catch (error) {
+        expect(error).toBeInstanceOf(CustomError);
+        expect(error.message).toBe('direct missing');
+      }
+
+      expect(logger.error).toHaveBeenCalledWith('direct missing');
+    });
   });
 
   describe('assertFunction', () => {
@@ -69,6 +84,20 @@ describe('dependencyUtils', () => {
       expect(() =>
         assertFunction(null, 'init', 'missing fn', Error, logger)
       ).toThrow(Error);
+    });
+
+    it('throws with direct invocation for missing functions', () => {
+      const logger = { error: jest.fn() };
+
+      try {
+        assertFunction({}, 'init', 'missing fn', InvalidArgumentError, logger);
+        throw new Error('expected assertFunction to throw');
+      } catch (error) {
+        expect(error).toBeInstanceOf(InvalidArgumentError);
+        expect(error.message).toBe('missing fn');
+      }
+
+      expect(logger.error).toHaveBeenCalledWith('missing fn');
     });
   });
 
@@ -105,6 +134,20 @@ describe('dependencyUtils', () => {
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith('missing method');
     });
+
+    it('directly reports the failing method name', () => {
+      const logger = { error: jest.fn() };
+
+      try {
+        assertMethods({}, ['execute'], 'missing execute', InvalidArgumentError, logger);
+        throw new Error('expected assertMethods to throw');
+      } catch (error) {
+        expect(error).toBeInstanceOf(InvalidArgumentError);
+        expect(error.message).toBe('missing execute');
+      }
+
+      expect(logger.error).toHaveBeenCalledWith('missing execute');
+    });
   });
 
   describe('assertValidId', () => {
@@ -138,6 +181,27 @@ describe('dependencyUtils', () => {
           receivedId: null,
           receivedType: 'object',
           context: 'Ctx',
+        })
+      );
+    });
+
+    it('throws with direct invocation to exercise coverage counters', () => {
+      const logger = { error: jest.fn() };
+
+      try {
+        assertValidId('', 'DirectCtx', logger);
+        throw new Error('expected assertValidId to throw');
+      } catch (error) {
+        expect(error).toBeInstanceOf(InvalidArgumentError);
+        expect(error.message).toBe("DirectCtx: Invalid ID ''. Expected non-blank string.");
+      }
+
+      expect(logger.error).toHaveBeenCalledWith(
+        "DirectCtx: Invalid ID ''. Expected non-blank string.",
+        expect.objectContaining({
+          receivedId: '',
+          receivedType: 'string',
+          context: 'DirectCtx',
         })
       );
     });
@@ -182,6 +246,28 @@ describe('dependencyUtils', () => {
           receivedType: 'number',
           parameterName: 'param',
           context: 'Context',
+        })
+      );
+    });
+
+    it('performs direct invocation coverage for invalid strings', () => {
+      const logger = { error: jest.fn() };
+
+      try {
+        assertNonBlankString('   ', 'param', 'Direct', logger);
+        throw new Error('expected assertNonBlankString to throw');
+      } catch (error) {
+        expect(error).toBeInstanceOf(InvalidArgumentError);
+        expect(error.message).toBe("Direct: Invalid param '   '. Expected non-blank string.");
+      }
+
+      expect(logger.error).toHaveBeenCalledWith(
+        "Direct: Invalid param '   '. Expected non-blank string.",
+        expect.objectContaining({
+          receivedValue: '   ',
+          receivedType: 'string',
+          parameterName: 'param',
+          context: 'Direct',
         })
       );
     });
@@ -281,6 +367,27 @@ describe('dependencyUtils', () => {
           requiredMethods: ['run'],
         })
       ).toThrow(InvalidArgumentError);
+
+      expect(logger.error).toHaveBeenCalledWith(
+        "Invalid or missing method 'run' on dependency 'Service'."
+      );
+    });
+
+    it('directly reports dependency errors for missing methods', () => {
+      const logger = { error: jest.fn() };
+      const dependency = { run: undefined };
+
+      try {
+        validateDependency(dependency, 'Service', logger, {
+          requiredMethods: ['run'],
+        });
+        throw new Error('expected validateDependency to throw');
+      } catch (error) {
+        expect(error).toBeInstanceOf(InvalidArgumentError);
+        expect(error.message).toBe(
+          "Invalid or missing method 'run' on dependency 'Service'."
+        );
+      }
 
       expect(logger.error).toHaveBeenCalledWith(
         "Invalid or missing method 'run' on dependency 'Service'."

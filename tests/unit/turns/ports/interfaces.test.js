@@ -39,6 +39,32 @@ describe('Turn port interface classes', () => {
   it('IActionIndexer.index rejects when not implemented', () => {
     const indexer = new IActionIndexer();
     expect(() => indexer.index([], 'id')).toThrow('Interface method');
+
+    try {
+      indexer.index([], 'id');
+      throw new Error('Expected interface method to throw');
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+      expect(error.message).toBe('Interface method');
+    }
+  });
+
+  it('IActionIndexer.resolve rejects when not implemented', () => {
+    const indexer = new IActionIndexer();
+    expect(() => indexer.resolve('actor', 0)).toThrow('Interface method');
+
+    try {
+      indexer.resolve('actor', 0);
+      throw new Error('Expected interface method to throw');
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+      expect(error.message).toBe('Interface method');
+    }
+  });
+
+  it('IActionIndexer.beginTurn is a no-op hook by default', () => {
+    const indexer = new IActionIndexer();
+    expect(indexer.beginTurn('actor')).toBeUndefined();
   });
 
   it('ILLMChooser.choose rejects when not implemented', () => {
