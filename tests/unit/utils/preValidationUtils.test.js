@@ -252,6 +252,27 @@ describe('preValidationUtils', () => {
         expect(result.path).toBe('root[1]');
       });
 
+      it('should include snippet when parameters object is missing', () => {
+        const operations = [
+          { type: 'GET_NAME', parameters: { entity_ref: 'actor', result_variable: 'name' } },
+          { type: 'GET_NAME', parameters: null }
+        ];
+
+        const result = validateAllOperations(operations, 'root', true);
+
+        expect(result.isValid).toBe(false);
+        expect(result.error).toBe(
+          'Operation at index 1 failed validation: Missing "parameters" field for operation type "GET_NAME"'
+        );
+        expect(result.path).toBe('root[1]');
+        expect(result.suggestions).toEqual(
+          expect.arrayContaining([
+            'Add a "parameters" object with the required fields for this operation type',
+            expect.stringContaining('Problematic operation:')
+          ])
+        );
+      });
+
       it('should fail for invalid operations in actions field', () => {
         const data = {
           actions: [{ type: 'INVALID_TYPE', parameters: {} }],
