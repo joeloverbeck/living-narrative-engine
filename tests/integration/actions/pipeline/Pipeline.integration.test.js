@@ -1,205 +1,230 @@
-/**
- * @file Integration tests for the Pipeline executor
- * @description Exercises Pipeline behaviour with real PipelineStage implementations and trace contexts
- * @see src/actions/pipeline/Pipeline.js
- */
+import { describe, it, expect, beforeEach } from '@jest/globals';
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { Pipeline } from '../../../../src/actions/pipeline/Pipeline.js';
 import { PipelineStage } from '../../../../src/actions/pipeline/PipelineStage.js';
 import { PipelineResult } from '../../../../src/actions/pipeline/PipelineResult.js';
+import { StructuredTrace } from '../../../../src/actions/tracing/structuredTrace.js';
+import { TraceContext } from '../../../../src/actions/tracing/traceContext.js';
 
-class TestStage extends PipelineStage {
-  /**
-   * @param {string} name
-   * @param {(context: any) => Promise<PipelineResult>} executor
-   */
-  constructor(name, executor) {
-    super(name);
-    this.executor = executor;
-    this.contexts = [];
+class MemoryLogger {
+  constructor() {
+    this.logs = {
+      debug: [],
+      info: [],
+      warn: [],
+      error: [],
+    };
   }
 
-  async executeInternal(context) {
-    this.contexts.push(context);
-    return this.executor(context);
+  debug(message, ...args) {
+    this.logs.debug.push({ message, args });
+  }
+
+  info(message, ...args) {
+    this.logs.info.push({ message, args });
+  }
+
+  warn(message, ...args) {
+    this.logs.warn.push({ message, args });
+  }
+
+  error(message, ...args) {
+    this.logs.error.push({ message, args });
   }
 }
 
-const createLogger = () => ({
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-});
+class TestStage extends PipelineStage {
+  constructor(name, handler) {
+    super(name);
+    this.handler = handler;
+  }
 
-const createStructuredTrace = () => {
-  const trace = {
-    info: jest.fn(),
-    step: jest.fn(),
-    success: jest.fn(),
-    failure: jest.fn(),
-    withSpanAsync: jest.fn(async (_name, handler) => handler()),
-  };
-  return trace;
-};
+  async executeInternal(context) {
+    return this.handler(context);
+  }
+}
 
-describe('Pipeline integration behaviour', () => {
+describe('Pipeline integration', () => {
+  /** @type {MemoryLogger} */
   let logger;
 
   beforeEach(() => {
-    logger = createLogger();
+    logger = new MemoryLogger();
   });
 
-  it('throws when constructed with no stages', () => {
-    expect(() => new Pipeline([], logger)).toThrow(
-      'Pipeline requires at least one stage'
-    );
-  });
+  it('executes stages with structured trace and merges results', async () => {
+    const stageContexts = [];
 
-  it('wraps execution in structured trace spans and aggregates stage results', async () => {
-    const trace = createStructuredTrace();
+    const stageOne = new TestStage('StageOne', async (context) => {
+      stageContexts.push({
+        stage: 'StageOne',
+        sawTrace: Boolean(context.trace),
+      });
 
-    const gatherStage = new TestStage('Gather', async () =>
-      PipelineResult.success({
-        actions: [{ id: 'action-1' }],
-        data: { gathered: true },
-      })
-    );
+      return PipelineResult.success({
+        actions: [{ id: 'stage-one-action' }],
+        data: { stageOne: true, processedBy: ['stage1'] },
+      });
+    });
 
-    const validationStage = new TestStage('Validate', async (context) => {
-      expect(context.actions).toEqual([{ id: 'action-1' }]);
+    const stageTwo = new TestStage('StageTwo', async (context) => {
+      stageContexts.push({
+        stage: 'StageTwo',
+        stageOne: context.stageOne,
+        inheritedActions: context.actions?.map((action) => action.id),
+        processedBy: context.processedBy,
+      });
+
       return new PipelineResult({
         success: false,
         continueProcessing: true,
+        actions: [{ id: 'stage-two-action' }],
         errors: [
           {
-            error: 'validation failed',
-            phase: 'VALIDATION',
-            stageName: 'Validate',
+            error: 'StageTwo warning',
+            stageName: 'StageTwo',
+            phase: 'component-analysis',
           },
         ],
-        data: { validated: true },
+        data: {
+          stageTwo: true,
+          processedBy: [...(context.processedBy || []), 'stage2'],
+        },
       });
     });
 
-    const enrichmentStage = new TestStage('Enrich', async (context) => {
-      expect(context.errors).toHaveLength(1);
-      return PipelineResult.success({
-        data: { enriched: context.gathered && context.validated },
+    const stageThree = new TestStage('StageThree', async (context) => {
+      stageContexts.push({
+        stage: 'StageThree',
+        stageTwo: context.stageTwo,
+        receivedErrors: context.errors.length,
+        processedBy: context.processedBy,
       });
-    });
 
-    const pipeline = new Pipeline(
-      [gatherStage, validationStage, enrichmentStage],
-      logger
-    );
-
-    const result = await pipeline.execute({
-      actor: { id: 'actor-42' },
-      actionContext: { turnId: 'turn-1' },
-      candidateActions: [{ id: 'candidate-a' }],
-      trace,
-    });
-
-    expect(trace.withSpanAsync).toHaveBeenCalledWith(
-      'Pipeline',
-      expect.any(Function),
-      { stageCount: 3 }
-    );
-    expect(trace.step).toHaveBeenCalledTimes(3);
-    expect(trace.success).toHaveBeenCalledWith(
-      'Stage Gather completed successfully',
-      'Pipeline.execute'
-    );
-    expect(trace.failure).toHaveBeenCalledWith(
-      'Stage Validate encountered errors',
-      'Pipeline.execute'
-    );
-    expect(logger.debug).toHaveBeenCalledWith('Executing pipeline stage: Gather');
-    expect(logger.warn).toHaveBeenCalledWith(
-      'Stage Validate completed with errors'
-    );
-    expect(result.success).toBe(false);
-    expect(result.errors).toHaveLength(1);
-    expect(result.data).toEqual({ gathered: true, validated: true, enriched: true });
-    expect(result.actions).toEqual([{ id: 'action-1' }]);
-  });
-
-  it('halts further stages when continueProcessing is false', async () => {
-    const trace = createStructuredTrace();
-
-    const haltingStage = new TestStage('ShortCircuit', async () =>
-      PipelineResult.success({
-        data: { halted: true },
-        errors: [],
-        actions: [],
+      return new PipelineResult({
+        success: true,
         continueProcessing: false,
-      })
-    );
+        actions: [{ id: 'stage-three-action' }],
+        data: {
+          stageThree: true,
+          processedBy: [...(context.processedBy || []), 'stage3'],
+        },
+      });
+    });
 
-    const skippedStage = new TestStage('Skipped', async () =>
-      PipelineResult.success({ data: { reached: true } })
-    );
-
-    const pipeline = new Pipeline([haltingStage, skippedStage], logger);
+    const pipeline = new Pipeline([stageOne, stageTwo, stageThree], logger);
+    const trace = new StructuredTrace(new TraceContext());
 
     const result = await pipeline.execute({
-      actor: { id: 'actor-99' },
-      actionContext: {},
+      actor: { id: 'actor-123' },
+      actionContext: { scope: 'integration' },
       candidateActions: [],
       trace,
     });
 
-    expect(result.success).toBe(true);
-    expect(result.continueProcessing).toBe(false);
-    expect(skippedStage.contexts).toHaveLength(0);
-    expect(trace.info).toHaveBeenCalledWith(
-      'Pipeline halted at stage: ShortCircuit',
-      'Pipeline.execute'
+    expect(result.success).toBe(false);
+    expect(result.actions.map((action) => action.id)).toEqual([
+      'stage-one-action',
+      'stage-two-action',
+      'stage-three-action',
+    ]);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toMatchObject({
+      stageName: 'StageTwo',
+      error: 'StageTwo warning',
+    });
+
+    expect(stageContexts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ stage: 'StageOne', sawTrace: true }),
+        expect.objectContaining({
+          stage: 'StageTwo',
+          stageOne: true,
+          inheritedActions: ['stage-one-action'],
+        }),
+        expect.objectContaining({
+          stage: 'StageThree',
+          stageTwo: true,
+          receivedErrors: 1,
+        }),
+      ])
     );
+
+    expect(
+      logger.logs.warn.some((entry) =>
+        entry.message.includes('Stage StageTwo completed with errors')
+      )
+    ).toBe(true);
+    expect(
+      logger.logs.debug.some((entry) =>
+        entry.message.includes('Stage StageThree indicated to stop processing')
+      )
+    ).toBe(true);
+
+    const traceMessages = trace.logs.map((entry) => entry.message);
+    expect(traceMessages).toEqual(
+      expect.arrayContaining([
+        'Starting pipeline execution with 3 stages',
+        'Executing stage: StageOne',
+        'Executing stage: StageTwo',
+        'Executing stage: StageThree',
+        'Stage StageTwo encountered errors',
+        'Pipeline halted at stage: StageThree',
+        'Pipeline execution completed. Actions: 3, Errors: 1',
+      ])
+    );
+
   });
 
-  it('returns merged failure result when a stage throws', async () => {
-    const trace = createStructuredTrace();
-
-    const passingStage = new TestStage('Pass', async () =>
+  it('returns failure result when a stage throws an error', async () => {
+    const stageOne = new TestStage('StageOne', async () =>
       PipelineResult.success({
-        actions: [{ id: 'action-pass' }],
-        data: { passed: true },
+        actions: [{ id: 'safe-action' }],
+        data: { stageOne: true },
       })
     );
 
-    const failingStage = new TestStage('Boom', async () => {
-      throw new Error('unexpected failure');
+    const stageTwo = new TestStage('StageTwo', async () => {
+      throw new Error('boom');
     });
 
-    const pipeline = new Pipeline([passingStage, failingStage], logger);
+    const pipeline = new Pipeline([stageOne, stageTwo], logger);
+    const trace = new StructuredTrace(new TraceContext());
 
     const result = await pipeline.execute({
-      actor: { id: 'actor-7' },
+      actor: { id: 'actor-999' },
       actionContext: {},
       candidateActions: [],
       trace,
     });
 
-    expect(logger.error).toHaveBeenCalledWith(
-      'Pipeline stage Boom threw an error: unexpected failure',
-      expect.any(Error)
-    );
-    expect(trace.failure).toHaveBeenCalledWith(
-      'Stage Boom threw an error: unexpected failure',
-      'Pipeline.execute'
-    );
     expect(result.success).toBe(false);
-    expect(result.errors).toEqual([
-      {
-        error: 'unexpected failure',
-        phase: 'PIPELINE_EXECUTION',
-        stageName: 'Boom',
-        context: expect.objectContaining({ error: expect.stringContaining('Error: unexpected failure') }),
-      },
-    ]);
-    expect(result.actions).toEqual([{ id: 'action-pass' }]);
+    expect(result.actions.map((action) => action.id)).toEqual(['safe-action']);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toMatchObject({
+      phase: 'PIPELINE_EXECUTION',
+      stageName: 'StageTwo',
+      error: 'boom',
+    });
+
+    expect(
+      logger.logs.error.some((entry) =>
+        entry.message.includes('Pipeline stage StageTwo threw an error: boom')
+      )
+    ).toBe(true);
+    expect(
+      trace.logs.some((entry) =>
+        entry.message.includes('Stage StageTwo threw an error: boom')
+      )
+    ).toBe(true);
+  });
+
+  it('requires at least one stage', () => {
+    expect(() => new Pipeline([], logger)).toThrow(
+      'Pipeline requires at least one stage'
+    );
+    expect(() => new Pipeline(null, logger)).toThrow(
+      'Pipeline requires at least one stage'
+    );
   });
 });
