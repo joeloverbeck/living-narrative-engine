@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "kissing",
+  "version": "1.0.0",
+  "name": "Kissing - Romantic Mouth-Based Intimacy",
+  "description": "All actions involving kissing and mouth-based romantic interactions. Explicitly romantic and requires mutual participation through state management.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    { "id": "anatomy", "version": "^1.0.0" },
+    { "id": "positioning", "version": "^1.0.0" },
+    { "id": "descriptors", "version": "^1.0.0" }
+  ],
+  "content": {
+    "actions": [],
+    "rules": [],
+    "conditions": [],
+    "components": [],
+    "scopes": []
+  }
+}

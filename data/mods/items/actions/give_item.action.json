@@ -1,0 +1,29 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "items:give_item",
+  "name": "Give Item",
+  "description": "Give an item from your inventory to another actor",
+  "generateCombinations": true,
+  "targets": {
+    "primary": {
+      "scope": "positioning:close_actors",
+      "placeholder": "recipient",
+      "description": "Actor to give item to"
+    },
+    "secondary": {
+      "scope": "items:actor_inventory_items",
+      "placeholder": "item",
+      "description": "Item to give",
+      "contextFrom": "primary"
+    }
+  },
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "items:secondary-has-portable"
+      },
+      "failure_message": "Item cannot be given away"
+    }
+  ],
+  "template": "give {item} to {recipient}"
+}

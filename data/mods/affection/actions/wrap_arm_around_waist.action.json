@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "affection:wrap_arm_around_waist",
+  "name": "Wrap arm around waist",
+  "description": "Wrap an arm around someone's waist in an affectionate gesture",
+  "targets": "affection:close_actors_facing_each_other",
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": ["intimacy:kissing"]
+  },
+  "template": "wrap an arm around {target}'s waist",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#6a1b9a",
+    "textColor": "#f3e5f5",
+    "hoverBackgroundColor": "#8e24aa",
+    "hoverTextColor": "#ffffff"
+  }
+}

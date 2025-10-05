@@ -196,6 +196,8 @@ export const coreTokens = freeze({
   RegenerateDescriptionHandler: 'RegenerateDescriptionHandler',
   AtomicModifyComponentHandler: 'AtomicModifyComponentHandler',
   SequenceHandler: 'SequenceHandler',
+  TransferItemHandler: 'TransferItemHandler',
+  ValidateInventoryCapacityHandler: 'ValidateInventoryCapacityHandler',
   TurnActionChoicePipeline: 'TurnActionChoicePipeline',
   ITurnDecisionProvider: 'ITurnDecisionProvider',
   IHumanDecisionProvider: 'IHumanDecisionProvider',

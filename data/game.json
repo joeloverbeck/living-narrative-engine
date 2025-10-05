@@ -1,17 +1,5 @@
 {
   "mods": [
-    "core",
-    "movement",
-    "companionship",
-    "positioning",
-    "items",
-    "anatomy",
-    "clothing",
-    "exercise",
-    "violence",
-    "seduction",
-    "intimacy",
-    "p_erotica"
-  ],
-  "startWorld": "p_erotica:irun"
+    "core"
+  ]
 }

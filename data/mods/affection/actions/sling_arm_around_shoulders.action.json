@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "affection:sling_arm_around_shoulders",
+  "name": "Sling an arm around shoulders",
+  "description": "Put an arm around someone's shoulders in a friendly or affectionate gesture",
+  "targets": "affection:close_actors_facing_each_other",
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": ["intimacy:kissing"]
+  },
+  "template": "sling an arm around {target}'s shoulders",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#6a1b9a",
+    "textColor": "#f3e5f5",
+    "hoverBackgroundColor": "#8e24aa",
+    "hoverTextColor": "#ffffff"
+  }
+}

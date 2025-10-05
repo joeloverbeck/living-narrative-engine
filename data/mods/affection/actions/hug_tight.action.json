@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "affection:hug_tight",
+  "name": "Hug Tight",
+  "description": "Give someone a tight, tender hug.",
+  "targets": "affection:close_actors_facing_each_other_or_behind_target",
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": []
+  },
+  "template": "hug {target} tight",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#6a1b9a",
+    "textColor": "#f3e5f5",
+    "hoverBackgroundColor": "#8e24aa",
+    "hoverTextColor": "#ffffff"
+  }
+}

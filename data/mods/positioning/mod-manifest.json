@@ -26,7 +26,8 @@
       "facing_away.component.json",
       "kneeling_before.component.json",
       "lying_down.component.json",
-      "sitting_on.component.json"
+      "sitting_on.component.json",
+      "straddling_waist.component.json"
     ],
     "actions": [
       "bend_over.action.json",
@@ -90,7 +91,8 @@
     "events": [
       "actor_faced_everyone.event.json",
       "actor_faced_forward.event.json",
-      "actor_turned_around.event.json"
+      "actor_turned_around.event.json",
+      "sitting_closeness_established.event.json"
     ],
     "macros": [],
     "scopes": [

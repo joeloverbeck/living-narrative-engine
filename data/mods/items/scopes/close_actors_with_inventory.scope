@@ -1,0 +1,1 @@
+items:close_actors_with_inventory := positioning:close_actors[{"!!": {"var": "entity.components.items:inventory"}}]
