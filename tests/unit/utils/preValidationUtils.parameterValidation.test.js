@@ -116,6 +116,42 @@ describe('preValidationUtils - Parameter Validation', () => {
         ])
       );
     });
+
+    it('should flag missing parameters object for GET_NAME operation', () => {
+      const operation = {
+        type: 'GET_NAME',
+        parameters: null
+      };
+
+      const result = validateOperationStructure(operation, 'root.operations[0]');
+
+      expect(result.isValid).toBe(false);
+      expect(result.path).toBe('root.operations[0]');
+      expect(result.error).toBe(
+        'Missing "parameters" field for operation type "GET_NAME"'
+      );
+      expect(result.suggestions).toEqual([
+        'Add a "parameters" object with the required fields for this operation type'
+      ]);
+    });
+
+    it('should reject non-object parameters for QUERY_COMPONENT operation', () => {
+      const operation = {
+        type: 'QUERY_COMPONENT',
+        parameters: 'not-an-object'
+      };
+
+      const result = validateOperationStructure(operation, 'root.op');
+
+      expect(result.isValid).toBe(false);
+      expect(result.path).toBe('root.op');
+      expect(result.error).toBe(
+        'Operation type "QUERY_COMPONENT" requires a parameters object'
+      );
+      expect(result.suggestions).toEqual([
+        'Required parameters: entity_ref, component_type, result_variable'
+      ]);
+    });
   });
 
   describe('validateRuleStructure - with parameter validation', () => {

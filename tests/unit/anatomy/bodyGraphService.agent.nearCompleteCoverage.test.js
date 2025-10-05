@@ -321,6 +321,30 @@ describe('BodyGraphService near complete coverage', () => {
       ]);
       expect(AnatomyGraphAlgorithms.getAllParts).not.toHaveBeenCalled();
     });
+
+    it('logs truncated previews when more than five parts are returned', () => {
+      const service = createService();
+
+      const manyParts = [
+        'root-entity',
+        'part-1',
+        'part-2',
+        'part-3',
+        'part-4',
+        'part-5',
+        'part-6',
+      ];
+      AnatomyGraphAlgorithms.getAllParts.mockReturnValueOnce(manyParts);
+
+      service.getAllParts({ root: 'blueprint-root' });
+
+      const previewCall = logger.debug.mock.calls.find(([message]) =>
+        message.includes(
+          'BodyGraphService: AnatomyGraphAlgorithms.getAllParts returned 7 parts'
+        )
+      );
+      expect(previewCall?.[0]).toContain('...');
+    });
   });
 
   it('checks for component presence across parts', () => {
@@ -373,6 +397,22 @@ describe('BodyGraphService near complete coverage', () => {
         'custom:flag',
         'nested.value',
         100
+      )
+    ).toEqual({ found: false });
+  });
+
+  it('handles missing nested properties when checking component values', () => {
+    const service = createService();
+
+    jest.spyOn(service, 'getAllParts').mockReturnValue(['part-a']);
+    entityManager.getComponentData.mockReturnValue({ nested: {} });
+
+    expect(
+      service.hasPartWithComponentValue(
+        { root: 'ignored' },
+        'custom:flag',
+        'nested.value.deep',
+        'anything'
       )
     ).toEqual({ found: false });
   });
@@ -440,6 +480,16 @@ describe('BodyGraphService near complete coverage', () => {
       await expect(service.getAnatomyData('actor-2')).resolves.toEqual({
         recipeId: 'recipe-9',
         rootEntityId: 'actor-2',
+      });
+    });
+
+    it('defaults recipeId to null when not provided', async () => {
+      entityManager.getComponentData.mockReturnValueOnce({});
+      const service = createService();
+
+      await expect(service.getAnatomyData('actor-3')).resolves.toEqual({
+        recipeId: null,
+        rootEntityId: 'actor-3',
       });
     });
   });
