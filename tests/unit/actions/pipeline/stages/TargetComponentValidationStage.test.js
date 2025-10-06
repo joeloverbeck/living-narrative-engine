@@ -345,6 +345,37 @@ describe('TargetComponentValidationStage', () => {
       expect(result.data.candidateActions).toHaveLength(0);
       expect(result.continueProcessing).toBe(false);
     });
+
+    it('should include actor entity when validating required components', async () => {
+      const action = {
+        id: 'actor-required-action',
+        required_components: {
+          actor: ['positioning:closeness']
+        }
+      };
+
+      context.actor = {
+        id: 'player-1',
+        components: { 'positioning:closeness': {} }
+      };
+      context.candidateActions = [action];
+
+      mockValidator.validateTargetComponents.mockReturnValue({
+        valid: true
+      });
+      mockRequiredValidator.validateTargetRequirements.mockReturnValue({
+        valid: true
+      });
+
+      await stage.executeInternal(context);
+
+      expect(mockRequiredValidator.validateTargetRequirements).toHaveBeenCalledWith(
+        action,
+        expect.objectContaining({
+          actor: context.actor
+        })
+      );
+    });
   });
 
   describe('action-aware tracing', () => {
@@ -579,7 +610,9 @@ describe('TargetComponentValidationStage', () => {
       expect(result.success).toBe(true);
       expect(mockValidator.validateTargetComponents).toHaveBeenCalledWith(
         legacyAction,
-        { target: { id: 'target-1' } }
+        expect.objectContaining({
+          target: { id: 'target-1' }
+        })
       );
     });
 
@@ -638,7 +671,9 @@ describe('TargetComponentValidationStage', () => {
       expect(result.success).toBe(true);
       expect(mockValidator.validateTargetComponents).toHaveBeenCalledWith(
         actionWithResolvedTargets,
-        { primary: { id: 'resolved-primary' } }
+        expect.objectContaining({
+          primary: { id: 'resolved-primary' }
+        })
       );
     });
 
@@ -660,7 +695,9 @@ describe('TargetComponentValidationStage', () => {
 
       expect(mockValidator.validateTargetComponents).toHaveBeenCalledWith(
         action,
-        { target: { id: 'resolved-target' } }
+        expect.objectContaining({
+          target: { id: 'resolved-target' }
+        })
       );
     });
   });
