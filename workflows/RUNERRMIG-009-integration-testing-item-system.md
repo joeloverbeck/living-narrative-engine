@@ -27,70 +27,128 @@ The item system includes drop, pick-up, give, and inventory validation operation
 
 Create: `tests/integration/mods/items/itemSystemWorkflows.integration.test.js`
 
+Follow the existing mod integration test conventions by using the shared `ModTestFixture`
+utilities instead of the low-level `createTestBed()` helper. The fixtures already know how to
+wire up the item operation handlers (`DROP_ITEM_AT_LOCATION`, `PICK_UP_ITEM_FROM_LOCATION`,
+`TRANSFER_ITEM`, `VALIDATE_INVENTORY_CAPACITY`) with an instrumented entity manager and event
+bus.
+
 Basic structure:
 ```javascript
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { createTestBed } from '../../../common/testBed.js';
+import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 
 describe('Item System - Integration Workflows', () => {
-  let testBed;
-  let entityManager;
-  let actionDiscovery;
-  let ruleEngine;
+  let fixture;
 
-  beforeEach(() => {
-    testBed = createTestBed();
-    entityManager = testBed.get('IEntityManager');
-    actionDiscovery = testBed.get('IActionDiscoveryService');
-    ruleEngine = testBed.get('IRuleEngine');
+  beforeEach(async () => {
+    fixture = await ModTestFixture.forAction('items', 'items:drop_item');
   });
 
   afterEach(() => {
-    testBed.cleanup();
+    fixture.cleanup();
   });
 
-  // Test suites here
+  // Helper functions and test suites go here
 });
 ```
+
+Create helper builders (mirroring the existing rule execution tests in the folder) for actors and
+items using `ModEntityBuilder`. Inventory data should use the production schema shape:
+
+```javascript
+function buildActor(actorId, locationId, itemIds = []) {
+  return new ModEntityBuilder(actorId)
+    .withName('Test Actor')
+    .atLocation(locationId)
+    .asActor()
+    .withComponent('items:inventory', {
+      items: itemIds,
+      capacity: { maxWeight: 50, maxItems: 10 }
+    })
+    .build();
+}
+
+function buildPortableItem(itemId, weight, locationId = null) {
+  const builder = new ModEntityBuilder(itemId)
+    .withName(itemId)
+    .withComponent('items:item', {})
+    .withComponent('items:portable', {})
+    .withComponent('items:weight', { weight });
+
+  return locationId ? builder.atLocation(locationId).build() : builder.build();
+}
+```
+
+Create separate `ModTestFixture.forAction` instances inside each workflow-specific `describe`
+block (drop, pick up, give) so that each suite runs against the correct rule file without mixing
+state between actions.
 
 ### Step 2: Drop Item Workflow Tests (15 minutes)
 
 ```javascript
 describe('Drop Item Workflow', () => {
-  it('should successfully drop item from inventory to location', async () => {
-    // Arrange: Create actor with item in inventory
-    const actorId = testBed.createEntity('actor');
-    const itemId = testBed.createEntity('item');
+  /** @type {import('../../../common/mods/ModTestFixture.js').ModActionTestFixture} */
+  let dropFixture;
+
+  beforeEach(async () => {
+    dropFixture = await ModTestFixture.forAction('items', 'items:drop_item');
+  });
+
+  afterEach(() => {
+    dropFixture.cleanup();
+  });
+
+  it('should successfully drop an inventory item at the actor\'s location', async () => {
     const locationId = 'test-location';
+    const room = new ModEntityBuilder(locationId).asRoom('Test Location').build();
+    const item = buildPortableItem('item-1', 5);
+    const actor = new ModEntityBuilder('actor-1')
+      .withName('Alice')
+      .atLocation(locationId)
+      .asActor()
+      .withComponent('items:inventory', {
+        items: ['item-1'],
+        capacity: { maxWeight: 100, maxItems: 10 }
+      })
+      .build();
 
-    testBed.addComponent(actorId, 'core:inventory', {
-      items: [itemId],
-      capacity: { weight: 100, count: 10 }
-    });
-    testBed.addComponent(itemId, 'items:portable', { weight: 5 });
+    dropFixture.reset([room, actor, item]);
 
-    // Act: Execute drop item action
-    const action = await actionDiscovery.findAction('items:drop_item');
-    const result = await ruleEngine.executeRule(
-      action.ruleId,
-      { actorId, primaryTarget: itemId, locationId }
+    await dropFixture.executeAction('actor-1', 'item-1');
+
+    const updatedActor = dropFixture.entityManager.getEntityInstance('actor-1');
+    expect(updatedActor.components['items:inventory'].items).not.toContain('item-1');
+
+    const droppedItem = dropFixture.entityManager.getEntityInstance('item-1');
+    expect(droppedItem.components['core:position']).toBeDefined();
+    expect(droppedItem.components['core:position'].locationId).toBe(locationId);
+
+    const perceptibleEvent = dropFixture.events.find(
+      (event) => event.eventType === 'core:perceptible_event'
     );
-
-    // Assert: Item removed from inventory and placed at location
-    expect(result.success).toBe(true);
-    const inventory = entityManager.getComponent(actorId, 'core:inventory');
-    expect(inventory.items).not.toContain(itemId);
-
-    const locationItems = testBed.getLocationItems(locationId);
-    expect(locationItems).toContain(itemId);
+    expect(perceptibleEvent?.payload.perceptionType).toBe('item_dropped');
   });
 
   it('should dispatch perception events when dropping item', async () => {
-    // Test perception event dispatching
+    // Verify the descriptionText, actorId, involvedEntities, and locationId fields
+    // on the emitted core:perceptible_event payload match the drop scenario.
   });
 
   it('should handle invalid item gracefully', async () => {
-    // Test error handling
+    const locationId = 'test-location';
+    const room = new ModEntityBuilder(locationId).asRoom('Test Location').build();
+    const actor = buildActor('actor-1', locationId, []);
+    dropFixture.reset([room, actor]);
+
+    await dropFixture.executeAction('actor-1', 'missing-item');
+
+    const turnEnded = dropFixture.events.find(
+      (event) => event.eventType === 'core:turn_ended'
+    );
+    expect(turnEnded).toBeDefined();
+    expect(turnEnded.payload.success).toBe(false);
   });
 });
 ```
@@ -99,39 +157,106 @@ describe('Drop Item Workflow', () => {
 
 ```javascript
 describe('Pick-Up Item Workflow', () => {
-  it('should successfully pick up item from location to inventory', async () => {
-    // Test picking up item
+  let pickupFixture;
+
+  beforeEach(async () => {
+    pickupFixture = await ModTestFixture.forAction('items', 'items:pick_up_item');
   });
 
-  it('should prevent pickup when inventory is full (weight)', async () => {
-    // Arrange: Actor at weight capacity
-    const actorId = testBed.createEntity('actor');
-    const itemId = testBed.createEntity('item');
+  afterEach(() => {
+    pickupFixture.cleanup();
+  });
 
-    testBed.addComponent(actorId, 'core:inventory', {
-      items: [],
-      capacity: { weight: 10, count: 10 },
-      currentWeight: 9
-    });
-    testBed.addComponent(itemId, 'items:portable', { weight: 5 });
+  it('should move an item from the room into the actor inventory', async () => {
+    const locationId = 'test-location';
+    const room = new ModEntityBuilder(locationId).asRoom('Test Location').build();
+    const item = buildPortableItem('item-1', 5, locationId);
+    const actor = buildActor('actor-1', locationId, []);
 
-    // Act: Attempt to pick up item
-    const result = await ruleEngine.executeRule(
-      'items:handle_pick_up_item',
-      { actorId, primaryTarget: itemId }
+    pickupFixture.reset([room, actor, item]);
+
+    await pickupFixture.executeAction('actor-1', 'item-1');
+
+    const updatedActor = pickupFixture.entityManager.getEntityInstance('actor-1');
+    expect(updatedActor.components['items:inventory'].items).toContain('item-1');
+
+    const itemInstance = pickupFixture.entityManager.getEntityInstance('item-1');
+    expect(itemInstance.components['core:position']).toBeUndefined();
+  });
+
+  it('should prevent pickup when inventory is at weight capacity', async () => {
+    const locationId = 'mine';
+    const room = new ModEntityBuilder(locationId).asRoom('Mine').build();
+    const heavyItem = buildPortableItem('heavy-rock', 60, locationId);
+    const actor = new ModEntityBuilder('actor-1')
+      .withName('Miner')
+      .atLocation(locationId)
+      .asActor()
+      .withComponent('items:inventory', {
+        items: [],
+        capacity: { maxWeight: 50, maxItems: 10 }
+      })
+      .build();
+
+    pickupFixture.reset([room, actor, heavyItem]);
+
+    await pickupFixture.executeAction('actor-1', 'heavy-rock');
+
+    const updatedActor = pickupFixture.entityManager.getEntityInstance('actor-1');
+    expect(updatedActor.components['items:inventory'].items).not.toContain('heavy-rock');
+
+    const itemInstance = pickupFixture.entityManager.getEntityInstance('heavy-rock');
+    expect(itemInstance.components['core:position'].locationId).toBe(locationId);
+
+    const failedTurn = pickupFixture.events.find(
+      (event) => event.eventType === 'core:turn_ended'
     );
+    expect(failedTurn?.payload.success).toBe(false);
 
-    // Assert: Pickup fails due to capacity
-    expect(result.success).toBe(false);
-    expect(result.reason).toContain('capacity');
+    const uiFailure = pickupFixture.events.find(
+      (event) => event.eventType === 'core:display_failed_action_result'
+    );
+    expect(uiFailure?.payload.message).toContain('max_weight_exceeded');
   });
 
-  it('should prevent pickup when inventory is full (count)', async () => {
-    // Test count-based capacity limit
+  it('should prevent pickup when inventory item count is maxed out', async () => {
+    const locationId = 'warehouse';
+    const room = new ModEntityBuilder(locationId).asRoom('Warehouse').build();
+    const extraItem = buildPortableItem('extra-item', 1, locationId);
+    const existingItems = Array.from({ length: 10 }, (_, index) => `item-${index}`);
+    const actor = new ModEntityBuilder('actor-1')
+      .withName('Collector')
+      .atLocation(locationId)
+      .asActor()
+      .withComponent('items:inventory', {
+        items: existingItems,
+        capacity: { maxWeight: 50, maxItems: 10 }
+      })
+      .build();
+
+    pickupFixture.reset([room, actor, extraItem]);
+
+    await pickupFixture.executeAction('actor-1', 'extra-item');
+
+    const updatedActor = pickupFixture.entityManager.getEntityInstance('actor-1');
+    expect(updatedActor.components['items:inventory'].items).not.toContain('extra-item');
+    expect(updatedActor.components['items:inventory'].items).toHaveLength(10);
   });
 
   it('should dispatch perception events when picking up item', async () => {
-    // Test perception events
+    const locationId = 'test-location';
+    const room = new ModEntityBuilder(locationId).asRoom('Test Location').build();
+    const item = buildPortableItem('item-1', 5, locationId);
+    const actor = buildActor('actor-1', locationId, []);
+
+    pickupFixture.reset([room, actor, item]);
+
+    await pickupFixture.executeAction('actor-1', 'item-1');
+
+    const perceptibleEvents = pickupFixture.events.filter(
+      (event) => event.eventType === 'core:perceptible_event'
+    );
+    expect(perceptibleEvents.some((event) => event.payload.perceptionType === 'item_picked_up')).toBe(true);
   });
 });
 ```
@@ -140,44 +265,78 @@ describe('Pick-Up Item Workflow', () => {
 
 ```javascript
 describe('Give Item Workflow', () => {
-  it('should successfully transfer item between actors', async () => {
-    // Arrange: Two actors, giver has item
-    const giverId = testBed.createEntity('giver');
-    const receiverId = testBed.createEntity('receiver');
-    const itemId = testBed.createEntity('item');
+  let giveFixture;
 
-    testBed.addComponent(giverId, 'core:inventory', {
-      items: [itemId],
-      capacity: { weight: 100, count: 10 }
-    });
-    testBed.addComponent(receiverId, 'core:inventory', {
-      items: [],
-      capacity: { weight: 100, count: 10 }
-    });
-    testBed.addComponent(itemId, 'items:portable', { weight: 5 });
+  beforeEach(async () => {
+    giveFixture = await ModTestFixture.forAction('items', 'items:give_item');
+  });
 
-    // Act: Execute give item action
-    const result = await ruleEngine.executeRule(
-      'items:handle_give_item',
-      { actorId: giverId, primaryTarget: itemId, secondaryTarget: receiverId }
+  afterEach(() => {
+    giveFixture.cleanup();
+  });
+
+  it('should transfer an item from the giver to the receiver', async () => {
+    const locationId = 'camp';
+    const room = new ModEntityBuilder(locationId).asRoom('Camp').build();
+    const item = buildPortableItem('item-1', 2);
+    const giver = buildActor('giver-1', locationId, ['item-1']);
+    const receiver = buildActor('receiver-1', locationId, []);
+
+    giveFixture.reset([room, giver, receiver, item]);
+
+    await giveFixture.executeAction('giver-1', 'receiver-1', {
+      additionalPayload: { secondaryTargetId: 'item-1' }
+    });
+
+    const giverInventory = giveFixture.entityManager.getEntityInstance('giver-1').components['items:inventory'];
+    expect(giverInventory.items).not.toContain('item-1');
+
+    const receiverInventory = giveFixture.entityManager.getEntityInstance('receiver-1').components['items:inventory'];
+    expect(receiverInventory.items).toContain('item-1');
+  });
+
+  it('should prevent giving when receiver inventory is full', async () => {
+    const locationId = 'camp';
+    const room = new ModEntityBuilder(locationId).asRoom('Camp').build();
+    const item = buildPortableItem('item-1', 2);
+    const giver = buildActor('giver-1', locationId, ['item-1']);
+    const receiver = new ModEntityBuilder('receiver-1')
+      .withName('Receiver')
+      .atLocation(locationId)
+      .asActor()
+      .withComponent('items:inventory', {
+        items: Array.from({ length: 10 }, (_, index) => `item-${index}`),
+        capacity: { maxWeight: 50, maxItems: 10 }
+      })
+      .build();
+
+    giveFixture.reset([room, giver, receiver, item]);
+
+    await giveFixture.executeAction('giver-1', 'receiver-1', {
+      additionalPayload: { secondaryTargetId: 'item-1' }
+    });
+
+    const receiverInventory = giveFixture.entityManager.getEntityInstance('receiver-1').components['items:inventory'];
+    expect(receiverInventory.items).not.toContain('item-1');
+  });
+
+  it('should handle attempts to give items the actor does not own', async () => {
+    const locationId = 'camp';
+    const room = new ModEntityBuilder(locationId).asRoom('Camp').build();
+    const item = buildPortableItem('item-1', 2);
+    const giver = buildActor('giver-1', locationId, []);
+    const receiver = buildActor('receiver-1', locationId, []);
+
+    giveFixture.reset([room, giver, receiver, item]);
+
+    await giveFixture.executeAction('giver-1', 'receiver-1', {
+      additionalPayload: { secondaryTargetId: 'item-1' }
+    });
+
+    const failureEvent = giveFixture.events.find(
+      (event) => event.eventType === 'core:turn_ended'
     );
-
-    // Assert: Item transferred correctly
-    expect(result.success).toBe(true);
-
-    const giverInventory = entityManager.getComponent(giverId, 'core:inventory');
-    expect(giverInventory.items).not.toContain(itemId);
-
-    const receiverInventory = entityManager.getComponent(receiverId, 'core:inventory');
-    expect(receiverInventory.items).toContain(itemId);
-  });
-
-  it('should prevent giving item when receiver inventory is full', async () => {
-    // Test capacity validation for receiver
-  });
-
-  it('should handle giving item actor does not own', async () => {
-    // Test error handling for invalid state
+    expect(failureEvent?.payload.success).toBe(false);
   });
 });
 ```
@@ -186,16 +345,81 @@ describe('Give Item Workflow', () => {
 
 ```javascript
 describe('Inventory Capacity Validation', () => {
-  it('should validate weight capacity correctly', async () => {
-    // Test VALIDATE_INVENTORY_CAPACITY operation
+  let pickupFixture;
+
+  beforeEach(async () => {
+    pickupFixture = await ModTestFixture.forAction('items', 'items:pick_up_item');
   });
 
-  it('should validate count capacity correctly', async () => {
-    // Test count-based limits
+  afterEach(() => {
+    pickupFixture.cleanup();
   });
 
-  it('should account for existing items in capacity check', async () => {
-    // Test capacity calculation with existing items
+  it('should expose max weight failures with the correct reason code', async () => {
+    const locationId = 'mine';
+    const room = new ModEntityBuilder(locationId).asRoom('Mine').build();
+    const heavyItem = buildPortableItem('heavy-rock', 60, locationId);
+    const actor = buildActor('actor-1', locationId, []);
+
+    pickupFixture.reset([room, actor, heavyItem]);
+
+    await pickupFixture.executeAction('actor-1', 'heavy-rock');
+
+    const failureMessage = pickupFixture.events.find(
+      (event) => event.eventType === 'core:display_failed_action_result'
+    )?.payload.message;
+    expect(failureMessage).toContain('max_weight_exceeded');
+  });
+
+  it('should expose max item count failures with the correct reason code', async () => {
+    const locationId = 'warehouse';
+    const room = new ModEntityBuilder(locationId).asRoom('Warehouse').build();
+    const extraItem = buildPortableItem('extra-item', 1, locationId);
+    const actor = new ModEntityBuilder('actor-1')
+      .withName('Collector')
+      .atLocation(locationId)
+      .asActor()
+      .withComponent('items:inventory', {
+        items: Array.from({ length: 10 }, (_, index) => `item-${index}`),
+        capacity: { maxWeight: 50, maxItems: 10 }
+      })
+      .build();
+
+    pickupFixture.reset([room, actor, extraItem]);
+
+    await pickupFixture.executeAction('actor-1', 'extra-item');
+
+    const failureMessage = pickupFixture.events.find(
+      (event) => event.eventType === 'core:display_failed_action_result'
+    )?.payload.message;
+    expect(failureMessage).toContain('max_items_exceeded');
+  });
+
+  it('should sum existing item weights using the items:weight component', async () => {
+    const locationId = 'camp';
+    const room = new ModEntityBuilder(locationId).asRoom('Camp').build();
+    const existingInventory = ['item-a', 'item-b'];
+    const actor = new ModEntityBuilder('actor-1')
+      .withName('Carrier')
+      .atLocation(locationId)
+      .asActor()
+      .withComponent('items:inventory', {
+        items: existingInventory,
+        capacity: { maxWeight: 5, maxItems: 10 }
+      })
+      .build();
+    const existingItemA = buildPortableItem('item-a', 2);
+    const existingItemB = buildPortableItem('item-b', 2);
+    const newItem = buildPortableItem('item-new', 2, locationId);
+
+    pickupFixture.reset([room, actor, existingItemA, existingItemB, newItem]);
+
+    await pickupFixture.executeAction('actor-1', 'item-new');
+
+    const failureMessage = pickupFixture.events.find(
+      (event) => event.eventType === 'core:display_failed_action_result'
+    )?.payload.message;
+    expect(failureMessage).toContain('max_weight_exceeded');
   });
 });
 ```
@@ -204,20 +428,62 @@ describe('Inventory Capacity Validation', () => {
 
 ```javascript
 describe('Edge Cases and Error Handling', () => {
-  it('should handle missing portable component on item', async () => {
-    // Test handling of items without portable component
+  it('should surface no_weight errors when the item lacks items:weight', async () => {
+    const locationId = 'test-location';
+    const room = new ModEntityBuilder(locationId).asRoom('Test Location').build();
+    const actor = buildActor('actor-1', locationId, []);
+    const item = new ModEntityBuilder('item-1')
+      .withName('Item 1')
+      .atLocation(locationId)
+      .withComponent('items:item', {})
+      .withComponent('items:portable', {})
+      .build();
+
+    const pickupFixture = await ModTestFixture.forAction('items', 'items:pick_up_item');
+    pickupFixture.reset([room, actor, item]);
+
+    await pickupFixture.executeAction('actor-1', 'item-1');
+
+    const failureMessage = pickupFixture.events.find(
+      (event) => event.eventType === 'core:display_failed_action_result'
+    )?.payload.message;
+    expect(failureMessage).toContain('no_weight');
+    pickupFixture.cleanup();
   });
 
-  it('should handle missing inventory component on actor', async () => {
-    // Test graceful handling of missing components
+  it('should surface no_inventory errors when the actor lacks items:inventory', async () => {
+    const locationId = 'test-location';
+    const room = new ModEntityBuilder(locationId).asRoom('Test Location').build();
+    const actor = new ModEntityBuilder('actor-1')
+      .withName('Actor 1')
+      .atLocation(locationId)
+      .asActor()
+      .build();
+    const item = buildPortableItem('item-1', 1, locationId);
+
+    const pickupFixture = await ModTestFixture.forAction('items', 'items:pick_up_item');
+    pickupFixture.reset([room, actor, item]);
+
+    await pickupFixture.executeAction('actor-1', 'item-1');
+
+    const failureMessage = pickupFixture.events.find(
+      (event) => event.eventType === 'core:display_failed_action_result'
+    )?.payload.message;
+    expect(failureMessage).toContain('no_inventory');
+    pickupFixture.cleanup();
   });
 
-  it('should handle invalid entity IDs', async () => {
-    // Test error handling for non-existent entities
-  });
+  it('should ignore actions when provided entity IDs do not exist', async () => {
+    const dropFixture = await ModTestFixture.forAction('items', 'items:drop_item');
+    dropFixture.reset([]);
 
-  it('should handle concurrent inventory modifications', async () => {
-    // Test race condition handling (if applicable)
+    await dropFixture.executeAction('missing-actor', 'missing-item');
+
+    const failureEvent = dropFixture.events.find(
+      (event) => event.eventType === 'core:turn_ended'
+    );
+    expect(failureEvent?.payload.success).toBe(false);
+    dropFixture.cleanup();
   });
 });
 ```
@@ -241,7 +507,7 @@ describe('Edge Cases and Error Handling', () => {
 - [ ] Inventory capacity validation tests pass
 - [ ] Edge cases and error handling tests pass
 - [ ] Perception events verified for all operations
-- [ ] State changes verified (inventory, location items)
+- [ ] State changes verified via `items:inventory` updates and `core:position` components
 - [ ] Test coverage for critical paths: 100%
 - [ ] No failing tests or console errors
 
@@ -279,16 +545,16 @@ npm run test:integration -- --watch
 
 ### Drop Item
 - [ ] Successfully drop item from inventory to location
-- [ ] Inventory updated correctly (item removed)
-- [ ] Location items updated correctly (item added)
+- [ ] Inventory updated correctly (`items:inventory` no longer contains item)
+- [ ] Item gains `core:position` at the expected location
 - [ ] Perception event dispatched
 - [ ] Handle invalid item ID
-- [ ] Handle missing portable component
+- [ ] Handle missing weight component on item (emits `no_weight`)
 
 ### Pick-Up Item
 - [ ] Successfully pick up item from location to inventory
-- [ ] Inventory updated correctly (item added)
-- [ ] Location items updated correctly (item removed)
+- [ ] Inventory updated correctly (`items:inventory` includes item)
+- [ ] Item loses `core:position` when added to inventory
 - [ ] Prevent pickup when weight capacity exceeded
 - [ ] Prevent pickup when count capacity exceeded
 - [ ] Perception event dispatched
@@ -296,8 +562,8 @@ npm run test:integration -- --watch
 
 ### Give Item
 - [ ] Successfully transfer item between actors
-- [ ] Giver inventory updated (item removed)
-- [ ] Receiver inventory updated (item added)
+- [ ] Giver inventory updated (`items:inventory` item removed)
+- [ ] Receiver inventory updated (`items:inventory` item added)
 - [ ] Validate receiver capacity before transfer
 - [ ] Prevent giving when receiver capacity exceeded
 - [ ] Perception event dispatched
@@ -305,10 +571,10 @@ npm run test:integration -- --watch
 - [ ] Handle invalid actor IDs
 
 ### Validation
-- [ ] Weight capacity validation works correctly
-- [ ] Count capacity validation works correctly
-- [ ] Capacity accounts for existing items
-- [ ] Validation result stored in correct variable
+- [ ] Weight capacity validation works correctly (emits `max_weight_exceeded`)
+- [ ] Count capacity validation works correctly (emits `max_items_exceeded`)
+- [ ] Capacity accounts for existing item weights via `items:weight`
+- [ ] Failure messages surface validation reason codes in `core:display_failed_action_result`
 
 ## Dependencies
 
@@ -325,10 +591,10 @@ npm run test:integration -- --watch
 ## References
 
 ### Test Patterns
-- **Test Bed Usage**: `tests/common/testBed.js`
-- **Integration Test Examples**: `tests/integration/mods/*/` directories
-- **Action Discovery Testing**: Similar tests in other mod integration tests
-- **Rule Execution Testing**: Existing rule engine integration tests
+- **Mod Fixture Usage**: `tests/common/mods/ModTestFixture.js`
+- **Integration Test Examples**: `tests/integration/mods/items/*.test.js`
+- **Action Discovery Testing**: See other mod fixtures using `executeAction`
+- **Rule Execution Testing**: Existing mod rule execution tests in the same folder
 
 ### Code Under Test
 - **Operation Handlers**: `src/logic/operationHandlers/`
