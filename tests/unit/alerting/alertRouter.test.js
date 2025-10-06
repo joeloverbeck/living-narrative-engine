@@ -213,4 +213,53 @@ describe('AlertRouter', () => {
       dispatchError
     );
   });
+
+  it('flushes timer entries with unrecognized event names without logging', () => {
+    const router = new AlertRouter({ safeEventDispatcher: dispatcher });
+
+    router.queue = [
+      { name: 'custom:event', payload: { message: 'mystery' } },
+    ];
+
+    router.startFlushTimer();
+
+    expect(router.flushTimer).not.toBeNull();
+
+    flushScheduledCallbacks();
+
+    expect(consoleWarnSpy).not.toHaveBeenCalled();
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+    expect(dispatcher.dispatch).not.toHaveBeenCalled();
+    expect(router.queue).toEqual([]);
+    expect(router.flushTimer).toBeNull();
+  });
+
+  it('skips timer cancellation when notifyUIReady is invoked without an active timer', () => {
+    const router = new AlertRouter({ safeEventDispatcher: dispatcher });
+
+    router.flushTimer = null;
+    router.queue = [
+      { name: SYSTEM_WARNING_OCCURRED_ID, payload: { message: 'queued warn' } },
+      { name: SYSTEM_ERROR_OCCURRED_ID, payload: { message: 'queued error' } },
+    ];
+
+    const forwardSpy = jest.spyOn(router, 'forwardToUI');
+    consoleErrorSpy.mockClear();
+    clearTimeoutSpy.mockClear();
+
+    router.notifyUIReady();
+
+    expect(clearTimeoutSpy).not.toHaveBeenCalled();
+    expect(forwardSpy).toHaveBeenNthCalledWith(1, SYSTEM_WARNING_OCCURRED_ID, {
+      message: 'queued warn',
+    });
+    expect(forwardSpy).toHaveBeenNthCalledWith(2, SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'queued error',
+    });
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+    expect(router.queue).toEqual([]);
+    expect(router.uiReady).toBe(true);
+
+    forwardSpy.mockRestore();
+  });
 });
