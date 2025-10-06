@@ -1,3 +1,8 @@
+/**
+ * @file Unit tests for the runtime helpers exported alongside the format action typedefs.
+ * @see src/actions/formatters/formatActionTypedefs.js
+ */
+
 import { describe, expect, it } from '@jest/globals';
 import {
   __formatActionTypedefs,
@@ -51,5 +56,45 @@ describe('formatActionTypedefs module', () => {
       }),
     );
     expect(fileCoverage.s['0']).toBeGreaterThan(0);
+  });
+
+  it('supports the documented FormatActionCommandResult shapes through the TargetFormatterMap type', () => {
+    /** @type {import('../../../../src/actions/formatters/formatActionTypedefs.js').TargetFormatterMap} */
+    const formatters = {
+      success(command, context, deps) {
+        expect(context).toEqual({ entityId: 'npc-1', placeholder: 'friend' });
+        expect(deps).toEqual({ logger: 'mock' });
+
+        return {
+          ok: true,
+          value: command.replace('{target}', context.entityId),
+        };
+      },
+      failure(command, context, deps) {
+        expect(command).toBe('command {target}');
+        expect(context).toEqual({});
+        expect(deps).toEqual({ logger: 'mock' });
+
+        return {
+          ok: false,
+          error: 'Missing entityId in context',
+          details: 'Formatter requires context.entityId to build the command string.',
+        };
+      },
+    };
+
+    const successResult = formatters.success(
+      'greet {target}',
+      { entityId: 'npc-1', placeholder: 'friend' },
+      { logger: 'mock' },
+    );
+    const failureResult = formatters.failure('command {target}', {}, { logger: 'mock' });
+
+    expect(successResult).toEqual({ ok: true, value: 'greet npc-1' });
+    expect(failureResult).toEqual({
+      ok: false,
+      error: 'Missing entityId in context',
+      details: 'Formatter requires context.entityId to build the command string.',
+    });
   });
 });
