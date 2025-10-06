@@ -8,7 +8,7 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["intimacy:kissing"]
+    "actor": ["kissing:kissing"]
   },
   "template": "nuzzle face into {target}'s neck",
   "prerequisites": [],

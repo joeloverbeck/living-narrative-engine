@@ -82,6 +82,25 @@ export function validateAgainstSchema(
     logger.debug(validationDebugMessage);
   }
 
+  // DIAGNOSTIC LOGGING: Log raw data structure for rule validation debugging
+  if (schemaId === 'schema://living-narrative-engine/rule.schema.json' && filePath && filePath.includes('handle_drop_item')) {
+    console.error('🔍 DEBUG: Raw data structure for handle_drop_item.rule.json:');
+    console.error(JSON.stringify({
+      dataKeys: Object.keys(data),
+      schemaRef: data.$schema,
+      ruleId: data.rule_id,
+      eventType: data.event_type,
+      actionsCount: Array.isArray(data.actions) ? data.actions.length : 'NOT_ARRAY',
+      firstAction: data.actions?.[0] ? {
+        type: data.actions[0].type,
+        hasParameters: !!data.actions[0].parameters,
+        parametersKeys: data.actions[0].parameters ? Object.keys(data.actions[0].parameters) : []
+      } : 'NO_ACTIONS'
+    }, null, 2));
+    console.error('🔍 DEBUG: Full data JSON:');
+    console.error(JSON.stringify(data, null, 2));
+  }
+
   // Perform pre-validation checks to catch common issues before running full AJV validation
   if (!skipPreValidation) {
     const preValidationResult = performPreValidation(data, schemaId, filePath);
@@ -121,6 +140,24 @@ export function validateAgainstSchema(
   const validationResult = validator.validate(schemaId, data);
 
   if (!validationResult.isValid) {
+    // DIAGNOSTIC LOGGING: Log detailed AJV errors for handle_drop_item debugging
+    if (schemaId === 'schema://living-narrative-engine/rule.schema.json' && filePath && filePath.includes('handle_drop_item')) {
+      const firstTenErrors = (validationResult.errors || []).slice(0, 10);
+      console.error('🔍 DEBUG: AJV validation errors (first 10):');
+      console.error(JSON.stringify({
+        totalErrors: validationResult.errors?.length || 0,
+        errors: firstTenErrors.map((err, idx) => ({
+          index: idx,
+          instancePath: err.instancePath,
+          schemaPath: err.schemaPath,
+          keyword: err.keyword,
+          message: err.message,
+          params: err.params,
+          data: typeof err.data === 'object' ? JSON.stringify(err.data) : err.data
+        }))
+      }, null, 2));
+    }
+
     const computedFailureMsg =
       typeof failureMessage === 'function'
         ? failureMessage(validationResult.errors ?? [])
