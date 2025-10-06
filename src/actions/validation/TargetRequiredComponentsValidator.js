@@ -69,8 +69,8 @@ class TargetRequiredComponentsValidator {
       }
     }
 
-    // Check multi-target format
-    const multiTargetRoles = ['primary', 'secondary', 'tertiary'];
+    // Check multi-target format (including actor requirements when provided)
+    const multiTargetRoles = ['actor', 'primary', 'secondary', 'tertiary'];
     for (const role of multiTargetRoles) {
       if (requirements[role] && requirements[role].length > 0) {
         const result = this.#validateTargetRole(

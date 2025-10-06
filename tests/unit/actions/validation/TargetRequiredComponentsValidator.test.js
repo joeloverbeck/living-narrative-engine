@@ -57,10 +57,7 @@ describe('TargetRequiredComponentsValidator', () => {
       expect(result).toEqual({ valid: true });
     });
 
-    // NOTE: "actor" role is not currently implemented in the validator
-    // The validator only handles: target (legacy), primary, secondary, tertiary
-    // Skipping this test until "actor" role support is added to the implementation
-    it.skip('should return valid when actor has all required components', () => {
+    it('should return valid when actor has all required components', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
