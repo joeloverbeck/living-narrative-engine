@@ -312,7 +312,8 @@ describe('ajvAnyOfErrorFormatter', () => {
       ];
 
       const result = formatAnyOfErrors(errors, { status: 'invalid' });
-      expect(result).toContain('Must be one of: active, inactive, pending');
+      expect(result).toContain("Invalid enum value 'undefined'");
+      expect(result).toContain('Allowed values: [active, inactive, pending]');
     });
 
     it('should handle complex nested paths', () => {
