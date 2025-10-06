@@ -63,7 +63,7 @@ describe('Multi-Target Action Event Payload Flow Integration', () => {
 
       // This represents the output from ActionFormattingStage with resolved targets
       const turnAction = {
-        actionDefinitionId: 'intimacy:adjust_clothing',
+        actionDefinitionId: 'caressing:adjust_clothing',
         commandString: "adjust Iker Aguirre's denim trucker jacket",
         resolvedParameters: {
           isMultiTarget: true,
@@ -84,7 +84,7 @@ describe('Multi-Target Action Event Payload Flow Integration', () => {
         "adjust Iker Aguirre's denim trucker jacket"
       );
       expect(result.actionResult).toEqual({
-        actionId: 'intimacy:adjust_clothing',
+        actionId: 'caressing:adjust_clothing',
       });
 
       // Verify event was dispatched
@@ -102,7 +102,7 @@ describe('Multi-Target Action Event Payload Flow Integration', () => {
       expect(payload).toMatchObject({
         eventName: ATTEMPT_ACTION_ID,
         actorId: 'amaia_castillo_instance',
-        actionId: 'intimacy:adjust_clothing',
+        actionId: 'caressing:adjust_clothing',
         originalInput: "adjust Iker Aguirre's denim trucker jacket",
 
         // Legacy fields for backward compatibility

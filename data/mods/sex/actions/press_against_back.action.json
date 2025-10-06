@@ -5,7 +5,7 @@
   "description": "Press yourself against the target's back, letting your breasts make contact.",
   "targets": {
     "primary": {
-      "scope": "intimacy:close_actors_facing_away",
+      "scope": "caressing:close_actors_facing_away",
       "placeholder": "target",
       "description": "Person to press against from behind"
     }

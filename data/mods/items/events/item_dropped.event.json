@@ -1,0 +1,23 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "items:item_dropped",
+  "description": "Dispatched when an item is dropped at a location",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "actorEntity": {
+        "type": "string",
+        "description": "Actor who dropped the item"
+      },
+      "itemEntity": {
+        "type": "string",
+        "description": "Item that was dropped"
+      },
+      "locationId": {
+        "type": "string",
+        "description": "Location where item was dropped"
+      }
+    },
+    "required": ["actorEntity", "itemEntity", "locationId"]
+  }
+}

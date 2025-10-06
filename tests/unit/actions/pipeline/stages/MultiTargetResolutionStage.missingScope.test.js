@@ -127,7 +127,7 @@ describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
       const legacyActionWithMissingScope = {
         id: 'test:legacy_action_missing_scope',
         name: 'Legacy Test Action',
-        scope: 'intimacy:close_actors', // This scope doesn't exist
+        scope: 'affection:close_actors', // This scope doesn't exist
       };
 
       mockContext.candidateActions = [legacyActionWithMissingScope];
@@ -141,7 +141,7 @@ describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
           isLegacy: true,
           targetDefinitions: {
             primary: {
-              scope: 'intimacy:close_actors',
+              scope: 'affection:close_actors',
               placeholder: 'target',
             },
           },
@@ -153,7 +153,7 @@ describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
         ActionResult.failure([
           {
             message:
-              "Missing scope definition: Scope 'intimacy:close_actors' not found",
+              "Missing scope definition: Scope 'affection:close_actors' not found",
             name: 'ScopeNotFoundError',
             phase: 'VALIDATION',
           },
@@ -167,7 +167,7 @@ describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
       expect(result.success).toBe(true); // Pipeline continues but returns failure for this action
       expect(result.data.actionsWithTargets).toEqual([]);
       expect(mockDeps.targetResolver.resolveTargets).toHaveBeenCalledWith(
-        'intimacy:close_actors',
+        'affection:close_actors',
         mockContext.actor,
         mockContext.actionContext,
         undefined,
@@ -367,11 +367,11 @@ describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
       // This test verifies that errors are now thrown and logged instead of being silently swallowed
 
       const action = {
-        id: 'intimacy:brush_hand',
+        id: 'affection:brush_hand',
         name: 'Brush hand',
         targets: {
           primary: {
-            scope: 'intimacy:close_actors', // Non-existent scope
+            scope: 'affection:close_actors', // Non-existent scope
             placeholder: 'target',
           },
         },
@@ -390,7 +390,7 @@ describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
       mockDeps.unifiedScopeResolver.resolve.mockReturnValue(
         ActionResult.failure({
           message:
-            "Missing scope definition: Scope 'intimacy:close_actors' not found",
+            "Missing scope definition: Scope 'affection:close_actors' not found",
           name: 'ScopeNotFoundError',
         })
       );
@@ -404,7 +404,7 @@ describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
       // The error is now properly logged (not silent)
       expect(mockDeps.logger.error).toHaveBeenCalledTimes(2); // Once in #resolveScope, once in catch block
       expect(mockDeps.logger.error).toHaveBeenCalledWith(
-        "Failed to resolve scope 'intimacy:close_actors':",
+        "Failed to resolve scope 'affection:close_actors':",
         expect.arrayContaining([
           expect.objectContaining({
             message: expect.stringContaining('Missing scope definition'),

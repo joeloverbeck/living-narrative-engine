@@ -86,12 +86,12 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
       },
       // Multi-target action (like adjust_clothing)
       {
-        id: 'intimacy:adjust_clothing',
+        id: 'caressing:adjust_clothing',
         name: 'Adjust Clothing',
         targets: {
           primary: {
             scope:
-              'intimacy:close_actors_facing_each_other_with_torso_clothing',
+              'caressing:close_actors_facing_each_other_with_torso_clothing',
             placeholder: 'primary',
             description: 'Person whose clothing to adjust',
           },
@@ -244,7 +244,7 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
       ({ actionDef }) => actionDef.id
     );
     expect(actionIds).toContain('legacy:action1');
-    expect(actionIds).toContain('intimacy:adjust_clothing');
+    expect(actionIds).toContain('caressing:adjust_clothing');
   });
 
   it('should work correctly when ALL actions are multi-target (current working case)', async () => {

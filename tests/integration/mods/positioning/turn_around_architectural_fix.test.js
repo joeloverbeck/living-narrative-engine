@@ -114,7 +114,7 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
 
       // Should not contain any reference to intimacy mod
       expect(actionJson).not.toContain('intimacy:');
-      expect(actionJson).not.toContain('intimacy:kissing');
+      expect(actionJson).not.toContain('kissing:kissing');
 
       // Should not have forbidden_components section
       expect(turnAroundAction.forbidden_components).toBeUndefined();

@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "kissing:event-is-action-break-kiss-gently",
+  "description": "Checks if event is break kiss gently action",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "kissing:break_kiss_gently"]
+  }
+}

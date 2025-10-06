@@ -37,39 +37,39 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
   describe('getConventionalPaths', () => {
     it('should generate correct paths for simple action IDs', () => {
       const { rulePaths, conditionPaths } = ModTestFixture.getConventionalPaths(
-        'intimacy',
+        'kissing',
         'kiss_cheek'
       );
 
       expect(rulePaths).toEqual([
-        'data/mods/intimacy/rules/kiss_cheek.rule.json',
-        'data/mods/intimacy/rules/handle_kiss_cheek.rule.json',
-        'data/mods/intimacy/rules/intimacy_kiss_cheek.rule.json', // fullActionId uses modId_actionName pattern for simple IDs
+        'data/mods/kissing/rules/kiss_cheek.rule.json',
+        'data/mods/kissing/rules/handle_kiss_cheek.rule.json',
+        'data/mods/kissing/rules/kissing_kiss_cheek.rule.json', // fullActionId uses modId_actionName pattern for simple IDs
       ]);
 
       expect(conditionPaths).toEqual([
-        'data/mods/intimacy/conditions/event-is-action-kiss-cheek.condition.json',
-        'data/mods/intimacy/conditions/kiss-cheek.condition.json',
-        'data/mods/intimacy/conditions/event-is-action-intimacy-kiss-cheek.condition.json', // fullActionId uses modId-actionName pattern for simple IDs
+        'data/mods/kissing/conditions/event-is-action-kiss-cheek.condition.json',
+        'data/mods/kissing/conditions/kiss-cheek.condition.json',
+        'data/mods/kissing/conditions/event-is-action-kissing-kiss-cheek.condition.json', // fullActionId uses modId-actionName pattern for simple IDs
       ]);
     });
 
     it('should generate correct paths for namespaced action IDs', () => {
       const { rulePaths, conditionPaths } = ModTestFixture.getConventionalPaths(
-        'intimacy',
-        'intimacy:kiss_cheek'
+        'kissing',
+        'kissing:kiss_cheek'
       );
 
       expect(rulePaths).toEqual([
-        'data/mods/intimacy/rules/kiss_cheek.rule.json',
-        'data/mods/intimacy/rules/handle_kiss_cheek.rule.json',
-        'data/mods/intimacy/rules/intimacy_kiss_cheek.rule.json',
+        'data/mods/kissing/rules/kiss_cheek.rule.json',
+        'data/mods/kissing/rules/handle_kiss_cheek.rule.json',
+        'data/mods/kissing/rules/kissing_kiss_cheek.rule.json',
       ]);
 
       expect(conditionPaths).toEqual([
-        'data/mods/intimacy/conditions/event-is-action-kiss-cheek.condition.json',
-        'data/mods/intimacy/conditions/kiss-cheek.condition.json',
-        'data/mods/intimacy/conditions/event-is-action-intimacy-kiss-cheek.condition.json',
+        'data/mods/kissing/conditions/event-is-action-kiss-cheek.condition.json',
+        'data/mods/kissing/conditions/kiss-cheek.condition.json',
+        'data/mods/kissing/conditions/event-is-action-kissing-kiss-cheek.condition.json',
       ]);
     });
 
@@ -110,16 +110,16 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
     const mockRuleFile = {
       rule_id: 'handle_kiss_cheek',
       event_type: 'core:attempt_action',
-      condition: { condition_ref: 'intimacy:event-is-action-kiss-cheek' },
+      condition: { condition_ref: 'kissing:event-is-action-kiss-cheek' },
       actions: [{ type: 'GET_NAME', parameters: {} }],
     };
 
     const mockConditionFile = {
-      id: 'intimacy:event-is-action-kiss-cheek',
+      id: 'kissing:event-is-action-kiss-cheek',
       description:
-        'Checks if the triggering event is for the intimacy:kiss_cheek action.',
+        'Checks if the triggering event is for the kissing:kiss_cheek action.',
       logic: {
-        '==': [{ var: 'event.payload.actionId' }, 'intimacy:kiss_cheek'],
+        '==': [{ var: 'event.payload.actionId' }, 'kissing:kiss_cheek'],
       },
     };
 
@@ -129,8 +129,8 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
         .mockResolvedValueOnce(JSON.stringify(mockConditionFile)); // Second call for condition file
 
       const result = await ModTestFixture.loadModFiles(
-        'intimacy',
-        'intimacy:kiss_cheek'
+        'kissing',
+        'kissing:kiss_cheek'
       );
 
       expect(result).toEqual({
@@ -148,8 +148,8 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
         .mockResolvedValueOnce(JSON.stringify(mockConditionFile)); // Condition file found
 
       const result = await ModTestFixture.loadModFiles(
-        'intimacy',
-        'intimacy:kiss_cheek'
+        'kissing',
+        'kissing:kiss_cheek'
       );
 
       expect(result.ruleFile).toEqual(mockRuleFile);
@@ -164,8 +164,8 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
         .mockResolvedValueOnce(JSON.stringify(mockConditionFile)); // Third condition attempt succeeds
 
       const result = await ModTestFixture.loadModFiles(
-        'intimacy',
-        'intimacy:kiss_cheek'
+        'kissing',
+        'kissing:kiss_cheek'
       );
 
       expect(result.conditionFile).toEqual(mockConditionFile);
@@ -176,9 +176,9 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
       fs.readFile.mockRejectedValue(new Error('ENOENT: no such file'));
 
       await expect(
-        ModTestFixture.loadModFiles('intimacy', 'intimacy:kiss_cheek')
+        ModTestFixture.loadModFiles('kissing', 'kissing:kiss_cheek')
       ).rejects.toThrow(
-        /Could not load rule file for intimacy:intimacy:kiss_cheek/
+        /Could not load rule file for kissing:kissing:kiss_cheek/
       );
     });
 
@@ -188,9 +188,9 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
         .mockRejectedValue(new Error('ENOENT: no such file')); // All condition attempts fail
 
       await expect(
-        ModTestFixture.loadModFiles('intimacy', 'intimacy:kiss_cheek')
+        ModTestFixture.loadModFiles('kissing', 'kissing:kiss_cheek')
       ).rejects.toThrow(
-        /Could not load condition file for intimacy:intimacy:kiss_cheek/
+        /Could not load condition file for kissing:kissing:kiss_cheek/
       );
     });
 
@@ -203,7 +203,7 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
         .mockResolvedValueOnce(JSON.stringify(mockConditionFile)); // Condition file succeeds (won't reach)
 
       await expect(
-        ModTestFixture.loadModFiles('intimacy', 'intimacy:kiss_cheek')
+        ModTestFixture.loadModFiles('kissing', 'kissing:kiss_cheek')
       ).rejects.toThrow(/Could not load rule file/);
     });
 
@@ -213,7 +213,7 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
         .mockResolvedValueOnce(JSON.stringify(mockConditionFile));
 
       // Test with simple action ID (no namespace)
-      await ModTestFixture.loadModFiles('intimacy', 'kiss_cheek');
+      await ModTestFixture.loadModFiles('kissing', 'kiss_cheek');
 
       // Should work fine - the method handles both formats
       expect(fs.readFile).toHaveBeenCalled();
@@ -230,8 +230,8 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
         .mockResolvedValueOnce(JSON.stringify(mockConditionFile));
 
       const result = await ModTestFixture.tryAutoLoadFiles(
-        'intimacy',
-        'intimacy:kiss_cheek'
+        'kissing',
+        'kissing:kiss_cheek'
       );
 
       expect(result).toEqual({
@@ -244,8 +244,8 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
       fs.readFile.mockRejectedValue(new Error('Files not found'));
 
       const result = await ModTestFixture.tryAutoLoadFiles(
-        'intimacy',
-        'intimacy:kiss_cheek'
+        'kissing',
+        'kissing:kiss_cheek'
       );
 
       expect(result).toEqual({
@@ -259,7 +259,7 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
 
       // Should not throw
       await expect(
-        ModTestFixture.tryAutoLoadFiles('intimacy', 'intimacy:kiss_cheek')
+        ModTestFixture.tryAutoLoadFiles('kissing', 'kissing:kiss_cheek')
       ).resolves.toBeDefined();
     });
   });
@@ -268,28 +268,28 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
     const mockRuleFile = {
       rule_id: 'handle_kiss_cheek',
       event_type: 'core:attempt_action',
-      condition: { condition_ref: 'intimacy:event-is-action-kiss-cheek' },
+      condition: { condition_ref: 'kissing:event-is-action-kiss-cheek' },
       actions: [{ type: 'GET_NAME', parameters: {} }],
     };
 
     const mockConditionFile = {
-      id: 'intimacy:event-is-action-kiss-cheek',
+      id: 'kissing:event-is-action-kiss-cheek',
       logic: {
-        '==': [{ var: 'event.payload.actionId' }, 'intimacy:kiss_cheek'],
+        '==': [{ var: 'event.payload.actionId' }, 'kissing:kiss_cheek'],
       },
     };
 
     it('should maintain backward compatibility with existing signature', async () => {
       const fixture = await ModTestFixture.forAction(
-        'intimacy',
-        'intimacy:kiss_cheek',
+        'kissing',
+        'kissing:kiss_cheek',
         mockRuleFile,
         mockConditionFile
       );
 
       expect(fixture).toBeInstanceOf(ModActionTestFixture);
-      expect(fixture.modId).toBe('intimacy');
-      expect(fixture.actionId).toBe('intimacy:kiss_cheek');
+      expect(fixture.modId).toBe('kissing');
+      expect(fixture.actionId).toBe('kissing:kiss_cheek');
       expect(fixture.ruleFile).toEqual(mockRuleFile);
       expect(fixture.conditionFile).toEqual(mockConditionFile);
     });
@@ -300,8 +300,8 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
         .mockResolvedValueOnce(JSON.stringify(mockConditionFile));
 
       const fixture = await ModTestFixture.forAction(
-        'intimacy',
-        'intimacy:kiss_cheek'
+        'kissing',
+        'kissing:kiss_cheek'
       );
 
       expect(fixture).toBeInstanceOf(ModActionTestFixture);
@@ -315,8 +315,8 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
 
       // Auto-loading should not be triggered since files are provided
       const fixture = await ModTestFixture.forAction(
-        'intimacy',
-        'intimacy:kiss_cheek',
+        'kissing',
+        'kissing:kiss_cheek',
         providedRule,
         providedCondition
       );
@@ -336,8 +336,8 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
       const providedRule = { rule_id: 'provided_rule' };
 
       const fixture = await ModTestFixture.forAction(
-        'intimacy',
-        'intimacy:kiss_cheek',
+        'kissing',
+        'kissing:kiss_cheek',
         providedRule,
         null // condition file should be auto-loaded
       );
@@ -350,9 +350,9 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
       fs.readFile.mockRejectedValue(new Error('Files not found'));
 
       await expect(
-        ModTestFixture.forAction('intimacy', 'intimacy:kiss_cheek')
+        ModTestFixture.forAction('kissing', 'kissing:kiss_cheek')
       ).rejects.toThrow(
-        /ModTestFixture.forAction failed for intimacy:intimacy:kiss_cheek/
+        /ModTestFixture.forAction failed for kissing:kissing:kiss_cheek/
       );
     });
   });
@@ -363,14 +363,14 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
 
     it('should maintain backward compatibility with existing signature', async () => {
       const fixture = await ModTestFixture.forRule(
-        'intimacy',
-        'intimacy:kiss_cheek',
+        'kissing',
+        'kissing:kiss_cheek',
         mockRuleFile,
         mockConditionFile
       );
 
       expect(fixture).toBeInstanceOf(ModRuleTestFixture);
-      expect(fixture.modId).toBe('intimacy');
+      expect(fixture.modId).toBe('kissing');
       expect(fixture.ruleFile).toEqual(mockRuleFile);
       expect(fixture.conditionFile).toEqual(mockConditionFile);
     });
@@ -381,8 +381,8 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
         .mockResolvedValueOnce(JSON.stringify(mockConditionFile));
 
       const fixture = await ModTestFixture.forRule(
-        'intimacy',
-        'intimacy:kiss_cheek'
+        'kissing',
+        'kissing:kiss_cheek'
       );
 
       expect(fixture).toBeInstanceOf(ModRuleTestFixture);
@@ -394,9 +394,9 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
       fs.readFile.mockRejectedValue(new Error('Files not found'));
 
       await expect(
-        ModTestFixture.forRule('intimacy', 'intimacy:kiss_cheek')
+        ModTestFixture.forRule('kissing', 'kissing:kiss_cheek')
       ).rejects.toThrow(
-        /ModTestFixture.forRule failed for intimacy:intimacy:kiss_cheek/
+        /ModTestFixture.forRule failed for kissing:kissing:kiss_cheek/
       );
     });
   });
@@ -411,8 +411,8 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
         .mockResolvedValueOnce(JSON.stringify(mockConditionFile));
 
       const fixture = await ModTestFixture.forActionAutoLoad(
-        'intimacy',
-        'intimacy:kiss_cheek'
+        'kissing',
+        'kissing:kiss_cheek'
       );
 
       expect(fixture).toBeInstanceOf(ModActionTestFixture);
@@ -424,7 +424,7 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
       fs.readFile.mockRejectedValue(new Error('ENOENT: no such file'));
 
       await expect(
-        ModTestFixture.forActionAutoLoad('intimacy', 'intimacy:kiss_cheek')
+        ModTestFixture.forActionAutoLoad('kissing', 'kissing:kiss_cheek')
       ).rejects.toThrow(/Could not load rule file/);
     });
 
@@ -433,21 +433,21 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
       fs.readFile
         .mockResolvedValueOnce(JSON.stringify(mockRuleFile))
         .mockResolvedValueOnce(JSON.stringify(mockConditionFile))
-        // Second call for 'intimacy:kiss_cheek' (namespaced format)
+        // Second call for 'kissing:kiss_cheek' (namespaced format)
         .mockResolvedValueOnce(JSON.stringify(mockRuleFile))
         .mockResolvedValueOnce(JSON.stringify(mockConditionFile));
 
       // Should work with simple format
       const fixture1 = await ModTestFixture.forActionAutoLoad(
-        'intimacy',
+        'kissing',
         'kiss_cheek'
       );
       expect(fixture1).toBeInstanceOf(ModActionTestFixture);
 
       // Should work with namespaced format
       const fixture2 = await ModTestFixture.forActionAutoLoad(
-        'intimacy',
-        'intimacy:kiss_cheek'
+        'kissing',
+        'kissing:kiss_cheek'
       );
       expect(fixture2).toBeInstanceOf(ModActionTestFixture);
     });
@@ -463,8 +463,8 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
         .mockResolvedValueOnce(JSON.stringify(mockConditionFile));
 
       const fixture = await ModTestFixture.forRuleAutoLoad(
-        'intimacy',
-        'intimacy:kiss_cheek'
+        'kissing',
+        'kissing:kiss_cheek'
       );
 
       expect(fixture).toBeInstanceOf(ModRuleTestFixture);
@@ -476,7 +476,7 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
       fs.readFile.mockRejectedValue(new Error('ENOENT: no such file'));
 
       await expect(
-        ModTestFixture.forRuleAutoLoad('intimacy', 'intimacy:kiss_cheek')
+        ModTestFixture.forRuleAutoLoad('kissing', 'kissing:kiss_cheek')
       ).rejects.toThrow(/Could not load rule file/);
     });
   });
@@ -484,18 +484,18 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
   describe('file path conventions', () => {
     it('should generate correct paths for intimacy actions', () => {
       const { rulePaths, conditionPaths } = ModTestFixture.getConventionalPaths(
-        'intimacy',
-        'intimacy:kiss_cheek'
+        'kissing',
+        'kissing:kiss_cheek'
       );
 
       expect(rulePaths).toContain(
-        'data/mods/intimacy/rules/kiss_cheek.rule.json'
+        'data/mods/kissing/rules/kiss_cheek.rule.json'
       );
       expect(rulePaths).toContain(
-        'data/mods/intimacy/rules/handle_kiss_cheek.rule.json'
+        'data/mods/kissing/rules/handle_kiss_cheek.rule.json'
       );
       expect(conditionPaths).toContain(
-        'data/mods/intimacy/conditions/event-is-action-kiss-cheek.condition.json'
+        'data/mods/kissing/conditions/event-is-action-kiss-cheek.condition.json'
       );
     });
 
@@ -518,16 +518,16 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
 
     it('should handle action name transformations (underscore/hyphen)', () => {
       const { conditionPaths } = ModTestFixture.getConventionalPaths(
-        'intimacy',
-        'intimacy:kiss_neck_sensually'
+        'kissing',
+        'kissing:kiss_neck_sensually'
       );
 
       // Should convert underscores to hyphens for condition files
       expect(conditionPaths).toContain(
-        'data/mods/intimacy/conditions/event-is-action-kiss-neck-sensually.condition.json'
+        'data/mods/kissing/conditions/event-is-action-kiss-neck-sensually.condition.json'
       );
       expect(conditionPaths).toContain(
-        'data/mods/intimacy/conditions/kiss-neck-sensually.condition.json'
+        'data/mods/kissing/conditions/kiss-neck-sensually.condition.json'
       );
     });
 

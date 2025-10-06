@@ -100,7 +100,7 @@ describe('ActionFormattingStage - adjust_clothing bug', () => {
   describe('Bug reproduction', () => {
     it('should use multi-target formatter when resolvedTargets are provided', async () => {
       const actionDef = {
-        id: 'intimacy:adjust_clothing',
+        id: 'caressing:adjust_clothing',
         name: 'Adjust Clothing',
         template: "adjust {primary}'s {secondary}",
         targets: {
@@ -160,7 +160,7 @@ describe('ActionFormattingStage - adjust_clothing bug', () => {
     it('should fall back to legacy formatting and produce malformed actions (bug reproduction)', async () => {
       // Simulate the bug by having the stage fall back to legacy formatting
       const actionDef = {
-        id: 'intimacy:adjust_clothing',
+        id: 'caressing:adjust_clothing',
         name: 'Adjust Clothing',
         template: "adjust {primary}'s {secondary}",
       };

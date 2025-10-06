@@ -290,7 +290,7 @@ describe('TraitsRewriterGenerator', () => {
         null, // Second param: abortSignal
         expect.objectContaining({
           temperature: 0.8,
-          maxTokens: 3000,
+          maxTokens: 16384,
         }) // Third param: requestOptions
       );
     });

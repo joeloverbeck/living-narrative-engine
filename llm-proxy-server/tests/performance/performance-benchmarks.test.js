@@ -18,6 +18,7 @@ import { LlmRequestService } from '../../src/services/llmRequestService.js';
 import CacheService from '../../src/services/cacheService.js';
 import HttpAgentService from '../../src/services/httpAgentService.js';
 import { RetryManager } from '../../src/utils/proxyApiUtils.js';
+import { createRequestTrackingMiddleware } from '../../src/middleware/requestTracking.js';
 import express from 'express';
 import request from 'supertest';
 
@@ -138,6 +139,10 @@ describe('Performance Benchmarks', () => {
     // Create Express app for end-to-end testing
     app = express();
     app.use(express.json());
+
+    // Add request tracking middleware (required for response commitment guards)
+    app.use(createRequestTrackingMiddleware({ logger }));
+
     app.post('/api/llm-request', (req, res) => {
       controller.handleLlmRequest(req, res);
     });

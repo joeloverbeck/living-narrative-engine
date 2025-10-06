@@ -360,7 +360,7 @@ describe('Dual-Format Action Tracing Integration', () => {
       // Arrange
       const config = {
         enabled: true,
-        tracedActions: ['intimacy:fondle_ass'],
+        tracedActions: ['caressing:fondle_ass'],
         outputDirectory: tempDirectory,
         outputToFile: true,
         outputToConsole: false,
@@ -453,7 +453,7 @@ describe('Dual-Format Action Tracing Integration', () => {
       );
       const parsedJson = JSON.parse(jsonContent);
       // The actionId is in metadata
-      expect(parsedJson.metadata.actionId).toBe('intimacy:fondle_ass');
+      expect(parsedJson.metadata.actionId).toBe('caressing:fondle_ass');
       expect(parsedJson.components).toEqual(
         expect.objectContaining({
           relationship: expect.objectContaining({
@@ -466,7 +466,7 @@ describe('Dual-Format Action Tracing Integration', () => {
         path.join(tempDirectory, textFiles[0]),
         'utf-8'
       );
-      expect(textContent).toContain('intimacy:fondle_ass');
+      expect(textContent).toContain('caressing:fondle_ass');
       expect(textContent).toContain('player_character');
       expect(textContent).toContain('relationship');
     });

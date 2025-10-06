@@ -1,5 +1,5 @@
 /**
- * @file EXAMPLE: Converted integration test for intimacy:kiss_cheek action using new mod test infrastructure
+ * @file EXAMPLE: Converted integration test for kissing:kiss_cheek action using new mod test infrastructure
  * @description Demonstrates how the old test structure converts to the new architecture
  *
  * BEFORE: 180+ lines with significant boilerplate
@@ -9,8 +9,8 @@
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
-import kissCheekRule from '../../../../data/mods/intimacy/rules/kiss_cheek.rule.json';
-import eventIsActionKissCheek from '../../../../data/mods/intimacy/conditions/event-is-action-kiss-cheek.condition.json';
+import kissCheekRule from '../../../../data/mods/kissing/rules/kiss_cheek.rule.json';
+import eventIsActionKissCheek from '../../../../data/mods/kissing/conditions/event-is-action-kiss-cheek.condition.json';
 
 // NEW: Import the mod testing infrastructure
 import {
@@ -19,14 +19,14 @@ import {
   ModAssertionHelpers,
 } from '../index.js';
 
-describe('intimacy:kiss_cheek action integration (CONVERTED)', () => {
+describe('kissing:kiss_cheek action integration (CONVERTED)', () => {
   let testFixture;
 
   beforeEach(() => {
     // NEW: Single line setup instead of 20+ lines
     testFixture = ModTestFixture.forAction(
-      'intimacy',
-      'intimacy:kiss_cheek',
+      'kissing',
+      'kissing:kiss_cheek',
       kissCheekRule,
       eventIsActionKissCheek
     );
@@ -96,7 +96,7 @@ describe('intimacy:kiss_cheek action integration (CONVERTED)', () => {
     const payload = {
       eventName: 'core:attempt_action',
       actorId: actor.id,
-      actionId: 'intimacy:lick_lips',
+      actionId: 'caressing:lick_lips',
       targetId: target.id,
       originalInput: 'lick_lips target1',
     };

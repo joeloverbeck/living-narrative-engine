@@ -21,11 +21,11 @@ const EXPECTED_COLOR_SCHEMES = {
     hoverBackgroundColor: '#795548',
     hoverTextColor: '#efebe9',
   },
-  intimacy: {
-    backgroundColor: '#ad1457',
-    textColor: '#ffffff',
-    hoverBackgroundColor: '#c2185b',
-    hoverTextColor: '#fce4ec',
+  affection: {
+    backgroundColor: '#6a1b9a',
+    textColor: '#f3e5f5',
+    hoverBackgroundColor: '#8e24aa',
+    hoverTextColor: '#ffffff',
   },
   positioning: {
     backgroundColor: '#bf360c', // Updated to match current actions

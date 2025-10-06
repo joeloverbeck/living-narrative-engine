@@ -106,7 +106,7 @@ describe('MultiTargetEventValidator - Integration Tests', () => {
       const complexEvent = {
         eventName: 'core:attempt_action',
         actorId: 'player_001',
-        actionId: 'intimacy:kiss_passionately',
+        actionId: 'kissing:kiss_back_passionately',
         targets: {
           recipient: 'npc_lover_789',
           location: 'bedroom_001',

@@ -61,8 +61,8 @@ describe('ModReferenceExtractor - Enhanced Context Extraction', () => {
       const actionContent = JSON.stringify({
         id: 'kiss',
         required_components: {
-          actor: ['intimacy:kissing'],
-          target: ['intimacy:romantic_interest'],
+          actor: ['kissing:kissing'],
+          target: ['affection:romantic_interest'],
         },
       });
       fs.readFile.mockResolvedValue(actionContent);
@@ -71,13 +71,14 @@ describe('ModReferenceExtractor - Enhanced Context Extraction', () => {
         await extractor.extractReferencesWithFileContext('/test/mod');
 
       expect(result).toBeInstanceOf(Map);
-      expect(result.has('intimacy')).toBe(true);
+      expect(result.has('kissing')).toBe(true);
+      expect(result.has('affection')).toBe(true);
 
-      const intimacyComponents = result.get('intimacy');
-      expect(intimacyComponents).toHaveLength(2);
+      const kissingComponents = result.get('kissing');
+      expect(kissingComponents).toHaveLength(1);
 
       // Check that components have context
-      const kissingComponent = intimacyComponents.find(
+      const kissingComponent = kissingComponents.find(
         (c) => c.componentId === 'kissing'
       );
       expect(kissingComponent).toBeDefined();
@@ -128,7 +129,7 @@ describe('ModReferenceExtractor - Enhanced Context Extraction', () => {
   "condition_ref": "positioning:close_to_target",
   "actions": [
     {
-      "component": "intimacy:kissing"
+      "component": "kissing:kissing"
     }
   ]
 }`;
@@ -138,7 +139,7 @@ describe('ModReferenceExtractor - Enhanced Context Extraction', () => {
         await extractor.extractReferencesWithFileContext('/test/mod');
 
       expect(result.has('positioning')).toBe(true);
-      expect(result.has('intimacy')).toBe(true);
+      expect(result.has('kissing')).toBe(true);
 
       // Check positioning component context
       const positioningComponents = result.get('positioning');
@@ -157,9 +158,9 @@ describe('ModReferenceExtractor - Enhanced Context Extraction', () => {
         isUserFacing: false,
       });
 
-      // Check intimacy component context
-      const intimacyComponents = result.get('intimacy');
-      const kissingComponent = intimacyComponents.find(
+      // Check kissing component context
+      const kissingComponents = result.get('kissing');
+      const kissingComponent = kissingComponents.find(
         (c) => c.componentId === 'kissing'
       );
 
@@ -167,7 +168,7 @@ describe('ModReferenceExtractor - Enhanced Context Extraction', () => {
         file: 'test.rule.json',
         line: 6,
         column: expect.any(Number),
-        snippet: expect.stringContaining('intimacy:kissing'),
+        snippet: expect.stringContaining('kissing:kissing'),
         type: 'rule',
         isBlocking: true,
         isOptional: false,

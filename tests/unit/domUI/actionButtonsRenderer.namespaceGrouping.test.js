@@ -85,7 +85,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       groupActionsByNamespace: jest.fn().mockReturnValue(new Map()),
       getSortedNamespaces: jest
         .fn()
-        .mockReturnValue(['core', 'positioning', 'intimacy', 'sex']),
+        .mockReturnValue(['core', 'positioning', 'affection', 'kissing', 'caressing', 'sex']),
       formatNamespaceDisplayName: jest
         .fn()
         .mockImplementation((ns) => ns.toUpperCase()),
@@ -164,7 +164,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         createTestComposite(1, 'core:wait', 'wait'),
         createTestComposite(2, 'movement:go', 'go north'),
         createTestComposite(3, 'positioning:get_close', 'get close'),
-        createTestComposite(4, 'intimacy:kiss_cheek', 'kiss cheek'),
+        createTestComposite(4, 'kissing:kiss_cheek', 'kiss cheek'),
         createTestComposite(5, 'sex:fondle_breasts', 'fondle breasts'),
         createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
       ];
@@ -176,7 +176,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       const expectedGroupedActions = new Map([
         ['core', [actions[0], actions[1]]],
         ['positioning', [actions[2]]],
-        ['intimacy', [actions[3]]],
+        ['kissing', [actions[3]]],
         ['sex', [actions[4], actions[5]]],
       ]);
       mockActionCategorizationService.groupActionsByNamespace.mockReturnValue(
@@ -204,7 +204,8 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       const sortedNamespaces =
         mockActionCategorizationService.getSortedNamespaces();
       expect(sortedNamespaces).toContain('core');
-      expect(sortedNamespaces).toContain('intimacy');
+      expect(sortedNamespaces).toContain('affection');
+      expect(sortedNamespaces).toContain('kissing');
       expect(sortedNamespaces).toContain('sex');
 
       // Core should be first in the default order
@@ -271,7 +272,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         createTestComposite(1, 'core:wait', 'wait'),
         createTestComposite(2, 'movement:go', 'go north'),
         createTestComposite(3, 'positioning:get_close', 'get close'),
-        createTestComposite(4, 'intimacy:kiss_cheek', 'kiss cheek'),
+        createTestComposite(4, 'kissing:kiss_cheek', 'kiss cheek'),
         createTestComposite(5, 'sex:fondle_breasts', 'fondle breasts'),
         createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
       ];
@@ -299,7 +300,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
             : 'unknown';
         })
       );
-      expect(namespaces.size).toBe(5); // core, movement, positioning, intimacy, sex
+      expect(namespaces.size).toBe(5); // core, movement, positioning, kissing, sex
       expect(actions.length).toBe(6); // All actions present
     });
   });
@@ -368,7 +369,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         createTestComposite(1, 'core:wait', 'wait'),
         createTestComposite(2, 'movement:go', 'go north'),
         createTestComposite(3, 'positioning:get_close', 'get close'),
-        createTestComposite(4, 'intimacy:kiss_cheek', 'kiss cheek'),
+        createTestComposite(4, 'kissing:kiss_cheek', 'kiss cheek'),
         createTestComposite(5, 'sex:fondle_breasts', 'fondle breasts'),
         createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
       ];
@@ -378,7 +379,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       const groupedActions = new Map([
         ['core', [actions[0], actions[1]]],
         ['positioning', [actions[2]]],
-        ['intimacy', [actions[3]]],
+        ['kissing', [actions[3]]],
         ['sex', [actions[4], actions[5]]],
       ]);
       mockActionCategorizationService.groupActionsByNamespace.mockReturnValue(
@@ -409,7 +410,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         createTestComposite(2, 'positioning:get_close', 'get close'),
         createTestComposite(3, 'sex:fondle_breasts', 'fondle breasts'),
         createTestComposite(4, 'movement:go', 'go north'),
-        createTestComposite(5, 'intimacy:kiss_cheek', 'kiss cheek'),
+        createTestComposite(5, 'kissing:kiss_cheek', 'kiss cheek'),
         createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
       ];
 
@@ -418,7 +419,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       const groupedActions = new Map([
         ['core', [actions[0], actions[3]]],
         ['positioning', [actions[1]]],
-        ['intimacy', [actions[4]]],
+        ['kissing', [actions[4]]],
         ['sex', [actions[2], actions[5]]],
       ]);
       mockActionCategorizationService.groupActionsByNamespace.mockReturnValue(
@@ -438,7 +439,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
             : 'unknown';
         })
       );
-      expect(namespaces.size).toBe(5); // core, movement, positioning, intimacy, sex
+      expect(namespaces.size).toBe(5); // core, movement, positioning, kissing, sex
 
       // Verify DOM structure with accessibility attributes was created
       const actionGroups = document.querySelectorAll('.action-group');
@@ -493,7 +494,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         createTestComposite(2, 'positioning:get_close', 'get close'),
         createTestComposite(3, 'sex:fondle_breasts', 'fondle breasts'),
         createTestComposite(4, 'movement:go', 'go north'),
-        createTestComposite(5, 'intimacy:kiss_cheek', 'kiss cheek'),
+        createTestComposite(5, 'kissing:kiss_cheek', 'kiss cheek'),
         createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
       ];
 
@@ -520,7 +521,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         createTestComposite(2, 'positioning:get_close', 'get close'),
         createTestComposite(3, 'sex:fondle_breasts', 'fondle breasts'),
         createTestComposite(4, 'movement:go', 'go north'),
-        createTestComposite(5, 'intimacy:kiss_cheek', 'kiss cheek'),
+        createTestComposite(5, 'kissing:kiss_cheek', 'kiss cheek'),
         createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
       ];
 
@@ -530,7 +531,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         ['core', [actions[0], actions[3]]],
         ['positioning', [actions[1]]],
         ['sex', [actions[2], actions[5]]],
-        ['intimacy', [actions[4]]],
+        ['kissing', [actions[4]]],
       ]);
       mockActionCategorizationService.groupActionsByNamespace.mockReturnValue(
         groupedActions

@@ -218,7 +218,7 @@ describe('Seduction Mod: Draw Attention to Breasts Rule', () => {
       const differentEvent = {
         type: 'core:attempt_action',
         payload: {
-          actionId: 'intimacy:kiss_cheek',
+          actionId: 'kissing:kiss_cheek',
         },
       };
 
@@ -226,7 +226,7 @@ describe('Seduction Mod: Draw Attention to Breasts Rule', () => {
       const actualActionId = differentEvent.payload.actionId;
 
       expect(actualActionId).not.toBe(expectedActionId);
-      expect(actualActionId).toBe('intimacy:kiss_cheek');
+      expect(actualActionId).toBe('kissing:kiss_cheek');
       expect(expectedActionId).toBe('seduction:draw_attention_to_breasts');
     });
   });

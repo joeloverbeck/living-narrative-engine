@@ -48,9 +48,9 @@ describe('ModTestFixture - Comprehensive Unit Tests', () => {
     mockConditionFile = {
       id: 'intimacy:event-is-action-kiss-cheek',
       description:
-        'Checks if the triggering event is for the intimacy:kiss_cheek action.',
+        'Checks if the triggering event is for the kissing:kiss_cheek action.',
       logic: {
-        '==': [{ var: 'event.payload.actionId' }, 'intimacy:kiss_cheek'],
+        '==': [{ var: 'event.payload.actionId' }, 'kissing:kiss_cheek'],
       },
     };
   });
@@ -64,14 +64,14 @@ describe('ModTestFixture - Comprehensive Unit Tests', () => {
       it('should create ModActionTestFixture with provided files', async () => {
         const fixture = await ModTestFixture.forAction(
           'intimacy',
-          'intimacy:kiss_cheek',
+          'kissing:kiss_cheek',
           mockRuleFile,
           mockConditionFile
         );
 
         expect(fixture).toBeInstanceOf(ModActionTestFixture);
         expect(fixture.modId).toBe('intimacy');
-        expect(fixture.actionId).toBe('intimacy:kiss_cheek');
+        expect(fixture.actionId).toBe('kissing:kiss_cheek');
         expect(fixture.ruleFile).toEqual(mockRuleFile);
         expect(fixture.conditionFile).toEqual(mockConditionFile);
       });
@@ -80,7 +80,7 @@ describe('ModTestFixture - Comprehensive Unit Tests', () => {
         const options = { customOption: 'value' };
         const fixture = await ModTestFixture.forAction(
           'intimacy',
-          'intimacy:kiss_cheek',
+          'kissing:kiss_cheek',
           mockRuleFile,
           mockConditionFile,
           options
@@ -96,12 +96,12 @@ describe('ModTestFixture - Comprehensive Unit Tests', () => {
         await expect(
           ModTestFixture.forAction(
             'intimacy',
-            'intimacy:kiss_cheek',
+            'kissing:kiss_cheek',
             invalidRuleFile,
             mockConditionFile
           )
         ).rejects.toThrow(
-          /ModTestFixture.forAction failed for intimacy:intimacy:kiss_cheek/
+          /ModTestFixture.forAction failed for intimacy:kissing:kiss_cheek/
         );
       });
     });
@@ -190,7 +190,7 @@ describe('ModTestFixture - Comprehensive Unit Tests', () => {
     beforeEach(async () => {
       fixture = await ModTestFixture.forAction(
         'intimacy',
-        'intimacy:kiss_cheek',
+        'kissing:kiss_cheek',
         mockRuleFile,
         mockConditionFile
       );
@@ -322,7 +322,7 @@ describe('ModTestFixture - Comprehensive Unit Tests', () => {
     beforeEach(async () => {
       fixture = await ModTestFixture.forAction(
         'intimacy',
-        'intimacy:kiss_cheek',
+        'kissing:kiss_cheek',
         mockRuleFile,
         mockConditionFile
       );
@@ -330,7 +330,7 @@ describe('ModTestFixture - Comprehensive Unit Tests', () => {
 
     describe('constructor', () => {
       it('should set action-specific properties', () => {
-        expect(fixture.actionId).toBe('intimacy:kiss_cheek');
+        expect(fixture.actionId).toBe('kissing:kiss_cheek');
         expect(fixture.ruleFile).toEqual(mockRuleFile);
         expect(fixture.conditionFile).toEqual(mockConditionFile);
       });
@@ -546,7 +546,7 @@ describe('ModTestFixture - Comprehensive Unit Tests', () => {
           expect.objectContaining({
             eventName: 'core:attempt_action',
             actorId: 'alice',
-            actionId: 'intimacy:kiss_cheek',
+            actionId: 'kissing:kiss_cheek',
             targetId: 'bob',
             originalInput: 'kiss_cheek bob',
           })
@@ -710,7 +710,7 @@ describe('ModTestFixture - Comprehensive Unit Tests', () => {
           .spyOn(fixture, 'executeAction')
           .mockResolvedValue();
 
-        await fixture.testRuleTriggers('alice', 'intimacy:kiss_cheek', 'bob');
+        await fixture.testRuleTriggers('alice', 'kissing:kiss_cheek', 'bob');
 
         expect(executeActionSpy).toHaveBeenCalledWith('alice', 'bob', {
           originalInput: 'kiss_cheek bob',

@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "caressing:event-is-action-thumb-wipe-cheek",
+  "description": "Checks if the triggering event is for the 'caressing:thumb_wipe_cheek' action.",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "caressing:thumb_wipe_cheek"
+    ]
+  }
+}

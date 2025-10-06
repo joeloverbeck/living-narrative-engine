@@ -39,13 +39,13 @@ describe('MultiTargetActionFormatter - adjust_clothing bug reproduction', () => 
     it('should produce one properly formatted action (bug is fixed)', () => {
       // This test reproduces the exact bug scenario
       const actionDef = {
-        id: 'intimacy:adjust_clothing',
+        id: 'caressing:adjust_clothing',
         name: 'Adjust Clothing',
         template: "adjust {primary}'s {secondary}",
         targets: {
           primary: {
             scope:
-              'intimacy:close_actors_facing_each_other_with_torso_clothing',
+              'caressing:close_actors_facing_each_other_with_torso_clothing',
             placeholder: 'primary',
             description: 'Person whose clothing to adjust',
           },
@@ -110,7 +110,7 @@ describe('MultiTargetActionFormatter - adjust_clothing bug reproduction', () => 
     it('should handle multiple actors correctly (fix verified)', () => {
       // Test with multiple actors to see the pattern more clearly
       const actionDef = {
-        id: 'intimacy:adjust_clothing',
+        id: 'caressing:adjust_clothing',
         template: "adjust {primary}'s {secondary}",
         targets: {
           primary: {

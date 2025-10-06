@@ -28,7 +28,9 @@ import {
   createMockUnifiedScopeResolver,
 } from '../../common/mocks/mockUnifiedScopeResolver.js';
 // DefaultDslParser import removed - not needed for this test
-import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
+import {createMockActionErrorContextBuilder,
+  createMockTargetRequiredComponentsValidator,
+} from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
 import { createMockMultiTargetResolutionStage } from '../../common/mocks/mockMultiTargetResolutionStage.js';
 import JsonLogicCustomOperators from '../../../src/logic/jsonLogicCustomOperators.js';
@@ -40,7 +42,7 @@ import path from 'path';
 const closeActorsFacingAwayScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../data/mods/intimacy/scopes/close_actors_facing_away.scope'
+    '../../../data/mods/caressing/scopes/close_actors_facing_away.scope'
   ),
   'utf8'
 );
@@ -131,8 +133,8 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
     scopeRegistry.clear();
 
     scopeRegistry.initialize({
-      'intimacy:close_actors_facing_away': scopeDefinitions.get(
-        'intimacy:close_actors_facing_away'
+      'caressing:close_actors_facing_away': scopeDefinitions.get(
+        'caressing:close_actors_facing_away'
       ),
     });
 
@@ -175,6 +177,10 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
       validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
       validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
     };
+
+    // Create mock TargetRequiredComponentsValidator
+    const mockTargetRequiredComponentsValidator =
+      createMockTargetRequiredComponentsValidator();
 const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex: {
         getCandidateActions: jest.fn().mockImplementation((actor, trace) => {
@@ -220,6 +226,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       targetContextBuilder: createMockTargetContextBuilder(),
       multiTargetResolutionStage: mockMultiTargetResolutionStage,
       targetComponentValidator: mockTargetComponentValidator,
+      targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
     });
 
     actionDiscoveryService = new ActionDiscoveryService({

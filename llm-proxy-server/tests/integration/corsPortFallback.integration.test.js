@@ -23,6 +23,7 @@ import {
   validateRequestHeaders,
   handleValidationErrors,
 } from '../../src/middleware/validation.js';
+import { createRequestTrackingMiddleware } from '../../src/middleware/requestTracking.js';
 
 describe('CORS Port Fallback Integration Tests', () => {
   let app;
@@ -104,6 +105,7 @@ describe('CORS Port Fallback Integration Tests', () => {
       app.use(cors(corsOptions));
     }
 
+    app.use(createRequestTrackingMiddleware({ logger: mockLogger }));
     app.use(express.json());
     app.post(
       '/api/llm-request',

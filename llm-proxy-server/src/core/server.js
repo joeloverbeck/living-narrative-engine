@@ -31,6 +31,7 @@ import {
   createMetricsMiddleware,
   createLlmMetricsMiddleware,
 } from '../middleware/metrics.js';
+import { createRequestTrackingMiddleware } from '../middleware/requestTracking.js';
 
 import { NodeFileSystemReader } from '../nodeFileSystemReader.js';
 import { ConsoleLogger } from '../consoleLogger.js';
@@ -42,6 +43,9 @@ import { LlmRequestController } from '../handlers/llmRequestController.js';
 import CacheService from '../services/cacheService.js';
 import HttpAgentService from '../services/httpAgentService.js';
 import { RetryManager } from '../utils/proxyApiUtils.js';
+import ResponseSalvageService from '../services/responseSalvageService.js';
+import SalvageRequestController from '../handlers/salvageRequestController.js';
+import createSalvageRoutes from '../routes/salvageRoutes.js';
 // Import sendProxyError utility
 import { sendProxyError } from '../utils/responseUtils.js';
 import {
@@ -82,6 +86,9 @@ const app = express();
 // Apply security middleware
 app.use(createSecurityMiddleware());
 
+// Apply request tracking middleware (must be early for correlation IDs)
+app.use(createRequestTrackingMiddleware({ logger: proxyLogger }));
+
 // Apply metrics middleware for HTTP request tracking
 app.use(
   createMetricsMiddleware({
@@ -101,11 +108,11 @@ app.use(createApiRateLimiter());
 // Note: LLM requests will have a longer timeout applied directly to their route
 app.use((req, res, next) => {
   // Skip timeout middleware for LLM request route
-  if (req.path === '/api/llm-request') {
+  if (req.path === '/api/llm-request' || req.path.startsWith('/api/llm-request/salvage')) {
     return next();
   }
-  // Apply 30 second timeout for all other routes
-  return createTimeoutMiddleware(30000)(req, res, next);
+  // Apply 30 second timeout for all other routes with logging
+  return createTimeoutMiddleware(30000, { logger: proxyLogger })(req, res, next);
 });
 
 // CORS Configuration
@@ -190,6 +197,12 @@ const llmRequestService = new LlmRequestService(
   RetryManager
 );
 
+// Initialize ResponseSalvageService for recovering failed LLM responses
+const salvageService = new ResponseSalvageService(proxyLogger, {
+  defaultTtl: 30000, // 30 seconds TTL for salvaged responses
+  maxEntries: 1000,
+});
+
 // PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES logging - Removed initial log, will be in summary
 // const PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES = appConfigService.getProxyProjectRootPathForApiKeyFiles();
 // if (PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES) {
@@ -198,13 +211,17 @@ const llmRequestService = new LlmRequestService(
 //     proxyLogger.warn('LLM Proxy Server: PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES is not set. API key retrieval from files will not be possible if configured for any LLM (ApiKeyService will handle errors if attempted).');
 // }
 
-// Instantiate LlmRequestController
+// Instantiate LlmRequestController with salvage service
 const llmRequestController = new LlmRequestController(
   proxyLogger,
   llmConfigService,
   apiKeyService,
-  llmRequestService
+  llmRequestService,
+  salvageService
 );
+
+// Instantiate SalvageRequestController
+const salvageController = new SalvageRequestController(proxyLogger, salvageService);
 
 // Metrics endpoint for Prometheus scraping
 app.get('/metrics', async (req, res) => {
@@ -277,7 +294,7 @@ app.get('/', (req, res) => {
 // Updated route to use LlmRequestController's handleLlmRequest method with validation and rate limiting
 app.post(
   '/api/llm-request',
-  createTimeoutMiddleware(90000), // 90 second timeout for LLM requests (was implicitly 30s)
+  createTimeoutMiddleware(120000, { logger: proxyLogger, gracePeriod: 10000 }), // 120s timeout with 10s grace period (increased to handle slow LLM responses)
   createLlmRateLimiter(), // Stricter rate limiting for LLM requests
   createLlmMetricsMiddleware({ metricsService, logger: proxyLogger }), // LLM-specific metrics
   validateRequestHeaders(), // Validate headers
@@ -285,6 +302,9 @@ app.post(
   handleValidationErrors, // Handle validation errors
   (req, res) => llmRequestController.handleLlmRequest(req, res)
 );
+
+// Salvage recovery routes
+app.use('/api/llm-request', createSalvageRoutes(salvageController));
 
 // Register trace routes for action tracing system
 app.use('/api/traces', traceRoutes);
@@ -306,6 +326,11 @@ const gracefulShutdown = (signal) => {
       proxyLogger.info('LLM Proxy Server: HTTP server closed');
 
       // Clean up services
+
+      if (salvageService && salvageService.cleanup) {
+        salvageService.cleanup();
+        proxyLogger.info('LLM Proxy Server: Response salvage service cleaned up');
+      }
 
       if (httpAgentService && httpAgentService.cleanup) {
         httpAgentService.cleanup();

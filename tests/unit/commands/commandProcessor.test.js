@@ -368,7 +368,7 @@ describe('CommandProcessor enhanced multi-target payload', () => {
   it('creates enhanced payload with multi-target information', async () => {
     const actor = { id: 'amaia_castillo_instance' };
     const turnAction = {
-      actionDefinitionId: 'intimacy:adjust_clothing',
+      actionDefinitionId: 'caressing:adjust_clothing',
       resolvedParameters: {
         isMultiTarget: true,
         targetIds: {
@@ -387,7 +387,7 @@ describe('CommandProcessor enhanced multi-target payload', () => {
     // Check base fields
     expect(calledPayload.eventName).toBe(ATTEMPT_ACTION_ID);
     expect(calledPayload.actorId).toBe('amaia_castillo_instance');
-    expect(calledPayload.actionId).toBe('intimacy:adjust_clothing');
+    expect(calledPayload.actionId).toBe('caressing:adjust_clothing');
     expect(calledPayload.originalInput).toBe(
       "adjust Iker Aguirre's denim trucker jacket"
     );

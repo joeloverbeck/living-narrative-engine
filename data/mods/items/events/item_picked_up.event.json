@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "items:item_picked_up",
+  "description": "Dispatched when an item is picked up from a location",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "actorEntity": {
+        "type": "string",
+        "description": "Actor who picked up the item"
+      },
+      "itemEntity": {
+        "type": "string",
+        "description": "Item that was picked up"
+      }
+    },
+    "required": ["actorEntity", "itemEntity"]
+  }
+}

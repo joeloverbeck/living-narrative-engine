@@ -20,6 +20,7 @@ import {
   validateRequestHeaders,
   handleValidationErrors,
 } from '../../src/middleware/validation.js';
+import { createRequestTrackingMiddleware } from '../../src/middleware/requestTracking.js';
 import rateLimit from 'express-rate-limit';
 
 const createMockLogger = () => ({
@@ -71,6 +72,9 @@ describe('Load Testing', () => {
     // Create Express app with middleware
     app = express();
     app.use(express.json({ limit: '50mb' }));
+
+    // Add request tracking middleware (required for response commitment guards)
+    app.use(createRequestTrackingMiddleware({ logger: mockLogger }));
 
     // Add rate limiting for load testing
     const rateLimiter = rateLimit({

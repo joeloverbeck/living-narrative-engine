@@ -343,7 +343,7 @@ Each category should avoid the listed clichés and work together to create a coh
 - Generate exactly the 12 trait categories specified
 - Ensure all array fields meet the minimum/maximum requirements
 - Physical description must be 100-500 characters
-- Profile must be 200-800 characters
+- Profile must be 200-2400 characters
 - Each secret and fear must be substantial and character-defining
 - Goals must include both short-term array and single long-term goal
 - Names and personality items must include both the main field and explanation/justification
@@ -377,7 +377,7 @@ Each category should avoid the listed clichés and work together to create a coh
     "longTerm": "Major life aspiration driven by core motivations"
   },
   "notes": ["Unique knowledge/skill/experience acquired in non-clichéd ways"],
-  "profile": "3-5 sentence background summary explaining current situation and core origin (200-800 chars)",
+  "profile": "3-5 sentence background summary explaining current situation and core origin (200-2400 chars)",
   "secrets": ["Significant secret tied to core motivations with relationship impact potential"]
 }
 </response_format>
@@ -691,9 +691,9 @@ export function validateTraitsGenerationResponse(response) {
     );
   }
 
-  if (response.profile.length < 200 || response.profile.length > 800) {
+  if (response.profile.length < 200 || response.profile.length > 2400) {
     throw new Error(
-      'TraitsGenerationPrompt: Profile must be 200-800 characters'
+      'TraitsGenerationPrompt: Profile must be 200-2400 characters'
     );
   }
 

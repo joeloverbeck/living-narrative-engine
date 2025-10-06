@@ -16,7 +16,10 @@ import ActionCommandFormatter from '../../../../src/actions/actionFormatter.js';
 import { getEntityDisplayName } from '../../../../src/utils/entityUtils.js';
 import { GameDataRepository } from '../../../../src/data/gameDataRepository.js';
 import { SafeEventDispatcher } from '../../../../src/events/safeEventDispatcher.js';
-import { createMockActionErrorContextBuilder } from '../../../common/mockFactories/actions.js';
+import {
+  createMockActionErrorContextBuilder,
+  createMockTargetRequiredComponentsValidator,
+} from '../../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../../common/mocks/mockTargetContextBuilder.js';
 import { createMultiTargetResolutionStage } from '../../../common/actions/multiTargetStageTestUtilities.js';
 import turnAroundToFaceAction from '../../../../data/mods/positioning/actions/turn_around_to_face.action.json';
@@ -172,6 +175,10 @@ describe('Turn Around to Face Action Discovery', () => {
       validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
     };
 
+    // Create mock TargetRequiredComponentsValidator
+    const mockTargetRequiredComponentsValidator =
+      createMockTargetRequiredComponentsValidator();
+
     const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex,
       prerequisiteService: prereqService,
@@ -185,6 +192,7 @@ describe('Turn Around to Face Action Discovery', () => {
       unifiedScopeResolver: mockUnifiedScopeResolver,
       targetContextBuilder: createMockTargetContextBuilder(),
       targetComponentValidator: mockTargetComponentValidator,
+      targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
       multiTargetResolutionStage: createMultiTargetResolutionStage({
         entityManager,
         logger,

@@ -16,7 +16,10 @@ import ActionCommandFormatter from '../../../../src/actions/actionFormatter.js';
 import { getEntityDisplayName } from '../../../../src/utils/entityUtils.js';
 import { GameDataRepository } from '../../../../src/data/gameDataRepository.js';
 import { SafeEventDispatcher } from '../../../../src/events/safeEventDispatcher.js';
-import { createMockActionErrorContextBuilder } from '../../../common/mockFactories/actions.js';
+import {
+  createMockActionErrorContextBuilder,
+  createMockTargetRequiredComponentsValidator,
+} from '../../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../../common/mocks/mockTargetContextBuilder.js';
 import { createMultiTargetResolutionStage } from '../../../common/actions/multiTargetStageTestUtilities.js';
 import turnAroundAction from '../../../../data/mods/positioning/actions/turn_around.action.json';
@@ -138,6 +141,10 @@ describe('Turn Around Action Discovery', () => {
       validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
     };
 
+    // Create mock TargetRequiredComponentsValidator
+    const mockTargetRequiredComponentsValidator =
+      createMockTargetRequiredComponentsValidator();
+
     const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex,
       prerequisiteService: prereqService,
@@ -155,6 +162,7 @@ describe('Turn Around Action Discovery', () => {
       }),
       targetContextBuilder: createMockTargetContextBuilder(),
       targetComponentValidator: mockTargetComponentValidator,
+      targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
       multiTargetResolutionStage: createMultiTargetResolutionStage({
         entityManager,
         logger,
@@ -290,6 +298,10 @@ describe('Turn Around Action Discovery', () => {
         validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
       };
 
+    // Create mock TargetRequiredComponentsValidator
+    const mockTargetRequiredComponentsValidator =
+      createMockTargetRequiredComponentsValidator();
+
       const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         actionIndex,
         prerequisiteService: {
@@ -309,6 +321,7 @@ describe('Turn Around Action Discovery', () => {
         unifiedScopeResolver,
         targetContextBuilder: createMockTargetContextBuilder(),
         targetComponentValidator: mockTargetComponentValidator,
+        targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
         multiTargetResolutionStage: multiTargetStage,
       });
 
@@ -347,7 +360,7 @@ describe('Turn Around Action Discovery', () => {
       });
 
       // Add forbidden kissing component
-      entityManager.addComponent(alice, 'intimacy:kissing', {
+      entityManager.addComponent(alice, 'kissing:kissing', {
         partner: bob,
       });
 
@@ -419,6 +432,10 @@ describe('Turn Around Action Discovery', () => {
         validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
       };
 
+    // Create mock TargetRequiredComponentsValidator
+    const mockTargetRequiredComponentsValidator =
+      createMockTargetRequiredComponentsValidator();
+
       const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         actionIndex,
         prerequisiteService: {
@@ -438,6 +455,7 @@ describe('Turn Around Action Discovery', () => {
         unifiedScopeResolver,
         targetContextBuilder: createMockTargetContextBuilder(),
         targetComponentValidator: mockTargetComponentValidator,
+        targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
         multiTargetResolutionStage: multiTargetStage,
       });
 
@@ -512,6 +530,10 @@ describe('Turn Around Action Discovery', () => {
         validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
       };
 
+    // Create mock TargetRequiredComponentsValidator
+    const mockTargetRequiredComponentsValidator =
+      createMockTargetRequiredComponentsValidator();
+
       const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         actionIndex,
         prerequisiteService: {
@@ -531,6 +553,7 @@ describe('Turn Around Action Discovery', () => {
         unifiedScopeResolver,
         targetContextBuilder: createMockTargetContextBuilder(),
         targetComponentValidator: mockTargetComponentValidator,
+        targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
         multiTargetResolutionStage: multiTargetStage,
       });
 

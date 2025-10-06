@@ -9,6 +9,7 @@ import { ActionPipelineOrchestrator } from '../../../../src/actions/actionPipeli
 import { PipelineStage } from '../../../../src/actions/pipeline/PipelineStage.js';
 import { PipelineResult } from '../../../../src/actions/pipeline/PipelineResult.js';
 import { TargetComponentValidator } from '../../../../src/actions/validation/TargetComponentValidator.js';
+import { createMockTargetRequiredComponentsValidator } from '../../../common/mockFactories/actions.js';
 
 /**
  * Simple multi-target stage that mirrors the essential behaviour of the real implementation
@@ -170,6 +171,9 @@ describe('ActionPipelineOrchestrator real pipeline flow', () => {
       entityManager,
     });
 
+    const targetRequiredComponentsValidator =
+      createMockTargetRequiredComponentsValidator();
+
     orchestrator = new ActionPipelineOrchestrator({
       actionIndex,
       prerequisiteService: { evaluate: jest.fn() },
@@ -184,6 +188,7 @@ describe('ActionPipelineOrchestrator real pipeline flow', () => {
       targetContextBuilder: { build: jest.fn() },
       multiTargetResolutionStage: new SimpleMultiTargetStage(entityManager),
       targetComponentValidator,
+      targetRequiredComponentsValidator,
     });
   });
 

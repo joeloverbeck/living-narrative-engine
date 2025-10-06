@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "positioning:actor_turned_back",
+  "description": "Dispatched when an actor turns their back to a target entity",
+  "payloadSchema": {
+    "type": "object",
+    "required": ["actor", "target"],
+    "properties": {
+      "actor": {
+        "type": "string",
+        "description": "ID of the actor turning their back"
+      },
+      "target": {
+        "type": "string",
+        "description": "ID of the target entity being turned away from"
+      }
+    }
+  }
+}

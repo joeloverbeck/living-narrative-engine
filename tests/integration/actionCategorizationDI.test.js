@@ -123,7 +123,7 @@ describe('Action Categorization Dependency Injection Integration', () => {
         },
         {
           index: 2,
-          actionId: 'intimacy:kiss',
+          actionId: 'kissing:kiss',
           commandString: 'kiss',
           description: 'Kiss',
         },
@@ -141,7 +141,7 @@ describe('Action Categorization Dependency Injection Integration', () => {
         },
         {
           index: 5,
-          actionId: 'intimacy:hug',
+          actionId: 'affection:hug',
           commandString: 'hug',
           description: 'Hug',
         },
@@ -157,12 +157,14 @@ describe('Action Categorization Dependency Injection Integration', () => {
       expect(service.shouldUseGrouping(actions)).toBe(true);
 
       const grouped = service.groupActionsByNamespace(actions);
-      expect(grouped.size).toBe(3);
+      expect(grouped.size).toBe(4);
       expect(grouped.has('core')).toBe(true);
-      expect(grouped.has('intimacy')).toBe(true);
+      expect(grouped.has('kissing')).toBe(true);
+      expect(grouped.has('affection')).toBe(true);
       expect(grouped.has('movement')).toBe(true);
       expect(grouped.get('core')).toHaveLength(3);
-      expect(grouped.get('intimacy')).toHaveLength(2);
+      expect(grouped.get('kissing')).toHaveLength(1);
+      expect(grouped.get('affection')).toHaveLength(1);
       expect(grouped.get('movement')).toHaveLength(1);
     });
 
@@ -179,7 +181,7 @@ describe('Action Categorization Dependency Injection Integration', () => {
       const service = container.resolve(tokens.IActionCategorizationService);
 
       expect(service.extractNamespace('core:wait')).toBe('core');
-      expect(service.extractNamespace('intimacy:kiss')).toBe('intimacy');
+      expect(service.extractNamespace('kissing:kiss')).toBe('kissing');
       expect(service.extractNamespace('invalid')).toBe('unknown');
       expect(service.extractNamespace('none')).toBe('none');
       expect(service.extractNamespace('self')).toBe('self');
@@ -189,7 +191,7 @@ describe('Action Categorization Dependency Injection Integration', () => {
       const service = container.resolve(tokens.IActionCategorizationService);
 
       expect(service.formatNamespaceDisplayName('core')).toBe('CORE');
-      expect(service.formatNamespaceDisplayName('intimacy')).toBe('INTIMACY');
+      expect(service.formatNamespaceDisplayName('kissing')).toBe('KISSING');
       expect(service.formatNamespaceDisplayName('unknown')).toBe('OTHER');
       expect(service.formatNamespaceDisplayName('')).toBe('UNKNOWN');
       expect(service.formatNamespaceDisplayName(null)).toBe('UNKNOWN');
@@ -198,13 +200,13 @@ describe('Action Categorization Dependency Injection Integration', () => {
     it('should sort namespaces correctly', () => {
       const service = container.resolve(tokens.IActionCategorizationService);
 
-      const namespaces = ['unknown', 'core', 'intimacy', 'custom'];
+      const namespaces = ['unknown', 'core', 'kissing', 'custom'];
       const sorted = service.getSortedNamespaces(namespaces);
 
       // 'core' should come first (priority order), then alphabetical
       expect(sorted[0]).toBe('core');
       expect(sorted.includes('unknown')).toBe(true);
-      expect(sorted.includes('intimacy')).toBe(true);
+      expect(sorted.includes('kissing')).toBe(true);
       expect(sorted.includes('custom')).toBe(true);
     });
   });

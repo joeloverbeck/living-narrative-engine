@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "kissing:event-is-action-suck-on-neck-to-leave-hickey",
+  "description": "Checks if the triggering event is for the 'kissing:suck_on_neck_to_leave_hickey' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "kissing:suck_on_neck_to_leave_hickey"
+    ]
+  }
+}

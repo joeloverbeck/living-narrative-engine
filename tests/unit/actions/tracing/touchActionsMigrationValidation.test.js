@@ -8,24 +8,26 @@ import { promises as fs } from 'fs';
 import path from 'path';
 
 describe('INTMIG-003 Touch Actions Migration Validation', () => {
-  const ACTIONS_DIR = 'data/mods/intimacy/actions';
-  const MIGRATED_ACTIONS = [
-    'brush_hand',
-    'feel_arm_muscles',
-    'fondle_ass',
-    'massage_back',
-    'massage_shoulders',
-    'place_hand_on_waist',
-  ];
+  // Actions now split between affection and caressing mods after intimacy mod migration
+  const ACTION_LOCATIONS = {
+    brush_hand: 'data/mods/affection/actions',
+    feel_arm_muscles: 'data/mods/caressing/actions',
+    fondle_ass: 'data/mods/caressing/actions',
+    massage_back: 'data/mods/affection/actions',
+    massage_shoulders: 'data/mods/affection/actions',
+    place_hand_on_waist: 'data/mods/affection/actions',
+  };
+
+  const MIGRATED_ACTIONS = Object.keys(ACTION_LOCATIONS);
 
   const EXPECTED_TARGETS = {
     brush_hand: 'positioning:close_actors',
     feel_arm_muscles:
-      'intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target',
+      'caressing:actors_with_muscular_arms_facing_each_other_or_behind_target',
     fondle_ass: {
       primary: {
         scope:
-          'intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target',
+          'caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target',
         placeholder: 'primary',
         description: 'Person whose ass to fondle',
       },
@@ -36,9 +38,9 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
         contextFrom: 'primary',
       },
     },
-    massage_back: 'intimacy:close_actors_facing_away',
+    massage_back: 'affection:close_actors_facing_away',
     massage_shoulders:
-      'intimacy:actors_with_arms_facing_each_other_or_behind_target',
+      'affection:actors_with_arms_facing_each_other_or_behind_target',
     place_hand_on_waist: 'positioning:close_actors',
   };
 
@@ -46,7 +48,10 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
     it.each(MIGRATED_ACTIONS)(
       'should have migrated %s from scope to targets',
       async (actionName) => {
-        const filePath = path.join(ACTIONS_DIR, `${actionName}.action.json`);
+        const filePath = path.join(
+          ACTION_LOCATIONS[actionName],
+          `${actionName}.action.json`
+        );
         const content = JSON.parse(await fs.readFile(filePath, 'utf8'));
 
         // Should not have scope property
@@ -82,7 +87,10 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
     it.each(crossModActions)(
       'should preserve cross-mod positioning reference in %s',
       async (actionName) => {
-        const filePath = path.join(ACTIONS_DIR, `${actionName}.action.json`);
+        const filePath = path.join(
+          ACTION_LOCATIONS[actionName],
+          `${actionName}.action.json`
+        );
         const content = JSON.parse(await fs.readFile(filePath, 'utf8'));
 
         expect(content.targets).toBe('positioning:close_actors');
@@ -101,7 +109,10 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
     it.each(complexScopeActions)(
       'should preserve long scope name for $name',
       async ({ name, minLength }) => {
-        const filePath = path.join(ACTIONS_DIR, `${name}.action.json`);
+        const filePath = path.join(
+          ACTION_LOCATIONS[name],
+          `${name}.action.json`
+        );
         const content = JSON.parse(await fs.readFile(filePath, 'utf8'));
 
         expect(content.targets).toBeDefined();
@@ -114,13 +125,15 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
             minLength
           );
           expect(content.targets.primary.scope).toMatch(
-            /^intimacy:actors_with_.*_facing_each_other_or_behind_target$/
+            /^caressing:actors_with_.*_facing_each_other_or_behind_target$/
           );
         } else {
           // Other actions use string format
           expect(content.targets.length).toBeGreaterThan(minLength);
+          // massage_shoulders is in affection mod, feel_arm_muscles is in caressing mod
+          const expectedMod = name === 'massage_shoulders' ? 'affection' : 'caressing';
           expect(content.targets).toMatch(
-            /^intimacy:actors_with_.*_facing_each_other_or_behind_target$/
+            new RegExp(`^${expectedMod}:actors_with_.*_facing_each_other_or_behind_target$`)
           );
         }
       }
@@ -131,12 +144,19 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
     it.each(MIGRATED_ACTIONS)(
       'should preserve all required properties in %s',
       async (actionName) => {
-        const filePath = path.join(ACTIONS_DIR, `${actionName}.action.json`);
+        const filePath = path.join(
+          ACTION_LOCATIONS[actionName],
+          `${actionName}.action.json`
+        );
         const content = JSON.parse(await fs.readFile(filePath, 'utf8'));
 
         // Required schema properties
         expect(content.id).toBeDefined();
-        expect(content.id).toBe(`intimacy:${actionName}`);
+        // Action IDs now use the new mod names (affection or caressing)
+        const expectedMod = ACTION_LOCATIONS[actionName].includes('affection')
+          ? 'affection'
+          : 'caressing';
+        expect(content.id).toBe(`${expectedMod}:${actionName}`);
         expect(content.name).toBeDefined();
         expect(content.description).toBeDefined();
         expect(content.template).toBeDefined();
@@ -152,7 +172,10 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
     it.each(MIGRATED_ACTIONS)(
       'should preserve required_components in %s',
       async (actionName) => {
-        const filePath = path.join(ACTIONS_DIR, `${actionName}.action.json`);
+        const filePath = path.join(
+          ACTION_LOCATIONS[actionName],
+          `${actionName}.action.json`
+        );
         const content = JSON.parse(await fs.readFile(filePath, 'utf8'));
 
         expect(content.required_components).toBeDefined();
@@ -171,7 +194,10 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
     it.each(actionsWithForbiddenComponents)(
       'should preserve forbidden_components in %s',
       async (actionName) => {
-        const filePath = path.join(ACTIONS_DIR, `${actionName}.action.json`);
+        const filePath = path.join(
+          ACTION_LOCATIONS[actionName],
+          `${actionName}.action.json`
+        );
         const content = JSON.parse(await fs.readFile(filePath, 'utf8'));
 
         expect(content.forbidden_components).toBeDefined();
@@ -194,7 +220,10 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
     it.each(MIGRATED_ACTIONS)(
       'should preserve correct template in %s',
       async (actionName) => {
-        const filePath = path.join(ACTIONS_DIR, `${actionName}.action.json`);
+        const filePath = path.join(
+          ACTION_LOCATIONS[actionName],
+          `${actionName}.action.json`
+        );
         const content = JSON.parse(await fs.readFile(filePath, 'utf8'));
 
         expect(content.template).toBe(expectedTemplates[actionName]);
@@ -212,7 +241,10 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
 
   describe('Multi-Target Validation', () => {
     it('should have proper multi-target structure for fondle_ass', async () => {
-      const filePath = path.join(ACTIONS_DIR, 'fondle_ass.action.json');
+      const filePath = path.join(
+        ACTION_LOCATIONS.fondle_ass,
+        'fondle_ass.action.json'
+      );
       const content = JSON.parse(await fs.readFile(filePath, 'utf8'));
 
       // Validate multi-target structure
@@ -222,7 +254,7 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
 
       // Validate primary target
       expect(content.targets.primary.scope).toBe(
-        'intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target'
+        'caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target'
       );
       expect(content.targets.primary.placeholder).toBe('primary');
       expect(content.targets.primary.description).toBe(
@@ -246,7 +278,10 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
       );
 
       for (const actionName of singleTargetActions) {
-        const filePath = path.join(ACTIONS_DIR, `${actionName}.action.json`);
+        const filePath = path.join(
+          ACTION_LOCATIONS[actionName],
+          `${actionName}.action.json`
+        );
         const content = JSON.parse(await fs.readFile(filePath, 'utf8'));
 
         expect(typeof content.targets).toBe('string');
@@ -259,7 +294,10 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
     it.each(MIGRATED_ACTIONS)(
       'should be valid JSON for %s',
       async (actionName) => {
-        const filePath = path.join(ACTIONS_DIR, `${actionName}.action.json`);
+        const filePath = path.join(
+          ACTION_LOCATIONS[actionName],
+          `${actionName}.action.json`
+        );
         const rawContent = await fs.readFile(filePath, 'utf8');
 
         // Should parse without error
@@ -270,7 +308,10 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
     it.each(MIGRATED_ACTIONS)(
       'should not have both scope and targets in %s',
       async (actionName) => {
-        const filePath = path.join(ACTIONS_DIR, `${actionName}.action.json`);
+        const filePath = path.join(
+          ACTION_LOCATIONS[actionName],
+          `${actionName}.action.json`
+        );
         const content = JSON.parse(await fs.readFile(filePath, 'utf8'));
 
         const hasScope = content.scope !== undefined;

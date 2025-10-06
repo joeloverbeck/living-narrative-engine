@@ -25,7 +25,7 @@ describe('Namespaced Scope Requirements', () => {
               expr: 'actor.core:leading.followers[]',
               modId: 'core',
             },
-            'intimacy:close_actors': {
+            'affection:close_actors': {
               expr: 'actor.components.positioning:closeness.partners[]',
               modId: 'intimacy',
             },
@@ -140,14 +140,14 @@ describe('Namespaced Scope Requirements', () => {
       const content = `
         core:followers := actor.core:leading.followers[]
         core:environment := entities(core:position)
-        intimacy:close_actors := actor.components.positioning:closeness.partners[]
+        affection:close_actors := actor.components.positioning:closeness.partners[]
       `;
 
       const result = parseScopeDefinitions(content, 'test.scope');
       expect(result.size).toBe(3);
       expect(result.has('core:followers')).toBe(true);
       expect(result.has('core:environment')).toBe(true);
-      expect(result.has('intimacy:close_actors')).toBe(true);
+      expect(result.has('affection:close_actors')).toBe(true);
     });
 
     it('should reject mixed valid and invalid scope definitions', () => {
@@ -221,13 +221,13 @@ describe('Namespaced Scope Requirements', () => {
 
       it('should reject scope definitions with wrong namespace', () => {
         const parsedContent = new Map([
-          ['intimacy:followers', 'actor.core:leading.followers[]'],
+          ['affection:followers', 'actor.core:leading.followers[]'],
         ]);
 
         expect(() =>
           scopeLoader.transformContent(parsedContent, 'core')
         ).toThrow(
-          "Scope 'intimacy:followers' is declared in mod 'core' but claims to belong to mod 'intimacy'. Scope names must match the mod they're defined in."
+          "Scope 'affection:followers' is declared in mod 'core' but claims to belong to mod 'affection'. Scope names must match the mod they're defined in."
         );
       });
 

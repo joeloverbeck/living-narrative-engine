@@ -18,6 +18,7 @@ import HttpAgentService from '../../../src/services/httpAgentService.js';
 import { LlmConfigService } from '../../../src/config/llmConfigService.js';
 import { LlmRequestController } from '../../../src/handlers/llmRequestController.js';
 import { RetryManager } from '../../../src/utils/proxyApiUtils.js';
+import { createMockResponse } from '../../common/mocks.js';
 
 const createMockLogger = () => ({
   debug: jest.fn(),
@@ -50,13 +51,6 @@ const createMockAppConfigService = () => ({
     maxTotalSockets: 500,
   })),
   getProxyProjectRootPathForApiKeyFiles: jest.fn(() => '/test/path'),
-});
-
-const createMockResponse = () => ({
-  status: jest.fn().mockReturnThis(),
-  set: jest.fn().mockReturnThis(),
-  json: jest.fn(),
-  headersSent: false,
 });
 
 // Mock fetch globally for HTTP requests

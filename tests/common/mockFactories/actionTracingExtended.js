@@ -327,7 +327,7 @@ export function createMockFileTraceOutputHandler(options = {}) {
  */
 export function createRealisticTraceData(options = {}) {
   const {
-    actionId = 'intimacy:fondle_ass',
+    actionId = 'caressing:fondle_ass',
     actorId = 'player_character',
     targetId = 'npc_romantic_partner',
     timestamp = new Date().toISOString(),
@@ -350,7 +350,7 @@ export function createRealisticTraceData(options = {}) {
     targets: [
       {
         entityId: targetId,
-        components: ['core:position', 'intimacy:relationship'],
+        components: ['core:position', 'caressing:relationship'],
       },
     ],
     execution: {

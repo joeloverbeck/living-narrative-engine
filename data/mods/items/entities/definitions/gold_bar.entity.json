@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "items:gold_bar",
+  "description": "A heavy gold bar",
+  "components": {
+    "core:name": {
+      "text": "Gold Bar"
+    },
+    "core:description": {
+      "text": "A solid gold bar stamped with the mint's seal. Its weight makes it difficult to carry for long."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 12.4
+    }
+  }
+}

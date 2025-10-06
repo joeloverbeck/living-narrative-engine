@@ -92,3 +92,39 @@ export const createMockAppConfigService = () => ({
   isProxyPortDefaulted: jest.fn().mockReturnValue(false),
   getLlmConfigsPath: jest.fn().mockReturnValue('./llm-configs.json'),
 });
+
+/**
+ * Creates a mock Express response object with request tracking middleware methods
+ * This simulates the behavior of the requestTracking middleware which adds
+ * commitResponse, isResponseCommitted, and getCommitmentSource methods
+ * @returns {object} Mock Express response with middleware methods
+ */
+export const createMockResponse = () => {
+  let responseCommitted = false;
+  let commitmentSource = null;
+
+  return {
+    status: jest.fn().mockReturnThis(),
+    set: jest.fn().mockReturnThis(),
+    json: jest.fn(),
+    send: jest.fn(),
+    end: jest.fn(),
+    headersSent: false,
+
+    // Request tracking middleware methods
+    commitResponse: jest.fn((source) => {
+      if (responseCommitted) return false;
+      responseCommitted = true;
+      commitmentSource = source;
+      return true;
+    }),
+    isResponseCommitted: jest.fn(() => responseCommitted),
+    getCommitmentSource: jest.fn(() => commitmentSource),
+
+    // Helper to reset commitment state for testing
+    _resetCommitment: () => {
+      responseCommitted = false;
+      commitmentSource = null;
+    },
+  };
+};

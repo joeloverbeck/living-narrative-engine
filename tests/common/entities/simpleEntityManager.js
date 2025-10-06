@@ -160,6 +160,17 @@ export default class SimpleEntityManager {
   }
 
   /**
+   * Creates an entity instance from a complete entity object.
+   * Alias for addEntity for compatibility with production code.
+   *
+   * @param {object} entityObject - Entity object with id and components
+   * @returns {void}
+   */
+  createEntityInstance(entityObject) {
+    this.addEntity(entityObject);
+  }
+
+  /**
    * Adds or replaces a component on an entity.
    * Returns true on success for compatibility with atomic operations.
    *
@@ -329,6 +340,47 @@ export default class SimpleEntityManager {
     const entity = this.entities.get(entityId);
     if (!entity) return [];
     return Object.keys(entity.components);
+  }
+
+  /**
+   * Optimized batch add components that reduces event emissions.
+   * Simplified test implementation that updates multiple components with minimal overhead.
+   *
+   * @param {Array<{instanceId: string, componentTypeId: string, componentData: object}>} componentSpecs - Array of component specifications
+   * @param {boolean} _emitBatchEvent - Whether to emit a single batch event (ignored in test implementation)
+   * @returns {Promise<{results: Array, errors: Array, updateCount: number}>} Results with successes, errors, and update count
+   */
+  async batchAddComponentsOptimized(componentSpecs, _emitBatchEvent = true) {
+    const results = [];
+    const errors = [];
+    let updateCount = 0;
+
+    for (const spec of componentSpecs) {
+      try {
+        const { instanceId, componentTypeId, componentData } = spec;
+
+        // Clear cache first to ensure fresh data is returned
+        this.entityInstanceCache.delete(instanceId);
+
+        let ent = this.entities.get(instanceId);
+        if (!ent) {
+          ent = { id: instanceId, components: {} };
+          this.entities.set(instanceId, ent);
+        }
+
+        ent.components[componentTypeId] = deepClone(componentData);
+        results.push({ instanceId, componentTypeId, success: true });
+        updateCount++;
+      } catch (error) {
+        errors.push({
+          instanceId: spec.instanceId,
+          componentTypeId: spec.componentTypeId,
+          error: error.message,
+        });
+      }
+    }
+
+    return { results, errors, updateCount };
   }
 
   /**

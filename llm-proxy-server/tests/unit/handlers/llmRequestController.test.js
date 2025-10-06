@@ -12,6 +12,20 @@ jest.mock('../../../src/utils/responseUtils.js', () => ({
 }));
 import { sendProxyError } from '../../../src/utils/responseUtils.js';
 
+jest.mock('../../../src/middleware/requestTracking.js', () => ({
+  createResponseGuard: jest.fn((req, res, logger) => ({
+    sendSuccess: jest.fn((statusCode, data, contentType) => {
+      if (!res.headersSent && res.commitResponse('success')) {
+        res.status(statusCode).set('Content-Type', contentType).json(data);
+        return true;
+      }
+      return false;
+    }),
+    sendError: jest.fn(),
+    canSendResponse: jest.fn(() => ({ canSend: true })),
+  })),
+}));
+
 // Test utilities
 const createLogger = () => ({
   debug: jest.fn(),
@@ -100,12 +114,17 @@ describe('LlmRequestController', () => {
     );
     req = {
       ip: '1.1.1.1',
+      requestId: 'test-request-id-123',
       body: { llmId: 'llm1', targetPayload: {}, targetHeaders: {} },
     };
     res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
       set: jest.fn().mockReturnThis(),
+      headersSent: false,
+      commitResponse: jest.fn(() => true),
+      isResponseCommitted: jest.fn(() => false),
+      getCommitmentSource: jest.fn(() => null),
     };
     jest.clearAllMocks();
   });
@@ -506,11 +525,19 @@ describe('LlmRequestController', () => {
         })),
       };
       const controller = makeController({ llmRequestService });
-      const req = { ip: '1.1.1.1', body: { llmId: 'id', targetPayload: {} } };
+      const req = {
+        ip: '1.1.1.1',
+        requestId: 'test-request-id',
+        body: { llmId: 'id', targetPayload: {} },
+      };
       const res = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn(),
         set: jest.fn().mockReturnThis(),
+        headersSent: false,
+        commitResponse: jest.fn(() => true),
+        isResponseCommitted: jest.fn(() => false),
+        getCommitmentSource: jest.fn(() => null),
       };
 
       await controller.handleLlmRequest(req, res);

@@ -1,6 +1,6 @@
 // tests/actions/adjust_clothing.action.test.js
 // -----------------------------------------------------------------------------
-// Integration test for the 'intimacy:adjust_clothing' action definition.
+// Integration test for the 'caressing:adjust_clothing' action definition.
 // This test validates the action file against the master action definition
 // schema to ensure its structure and content are valid.
 // -----------------------------------------------------------------------------
@@ -11,14 +11,14 @@ import addFormats from 'ajv-formats';
 import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
 
 // Import the data to be tested
-import actionData from '../../../data/mods/intimacy/actions/adjust_clothing.action.json';
+import actionData from '../../../data/mods/caressing/actions/adjust_clothing.action.json';
 
 // Import the schemas required for validation
 import actionSchema from '../../../data/schemas/action.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
 
-describe("Action Definition: 'intimacy:adjust_clothing'", () => {
+describe("Action Definition: 'caressing:adjust_clothing'", () => {
   /** @type {import('ajv').ValidateFunction} */
   let validate;
 
@@ -47,7 +47,7 @@ describe("Action Definition: 'intimacy:adjust_clothing'", () => {
     expect(actionData.targets.secondary).toBeDefined();
 
     expect(actionData.targets.primary.scope).toBe(
-      'intimacy:close_actors_facing_each_other_with_torso_clothing'
+      'caressing:close_actors_facing_each_other_with_torso_clothing'
     );
     expect(actionData.targets.primary.placeholder).toBe('primary');
 

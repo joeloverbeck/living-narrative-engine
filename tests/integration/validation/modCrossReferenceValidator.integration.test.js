@@ -93,7 +93,7 @@ describe('ModCrossReferenceValidator - Integration', () => {
       const actionData = {
         id: 'test-action',
         required_components: {
-          actor: ['positioning:closeness'], // This is a REAL reference used by intimacy mod
+          actor: ['positioning:closeness'], // This is a REAL reference used by affection/kissing mods
         },
         targets: 'positioning:close_actors', // This is a REAL scope from positioning mod
       };
@@ -136,31 +136,31 @@ describe('ModCrossReferenceValidator - Integration', () => {
   });
 
   describe('Real-world Scenarios', () => {
-    it('should handle real intimacy mod referencing positioning components', async () => {
-      // Test the ACTUAL scenario - intimacy mod DOES reference positioning components
-      const intimacyPath = path.join(tempDir, 'intimacy');
-      await fs.mkdir(intimacyPath, { recursive: true });
-      await fs.mkdir(path.join(intimacyPath, 'actions'), { recursive: true });
+    it('should handle real kissing mod referencing positioning components', async () => {
+      // Test the ACTUAL scenario - kissing mod DOES reference positioning components
+      const kissingPath = path.join(tempDir, 'kissing');
+      await fs.mkdir(kissingPath, { recursive: true });
+      await fs.mkdir(path.join(kissingPath, 'actions'), { recursive: true });
 
-      // Create a real intimacy action that references positioning components
+      // Create a real kissing action that references positioning components
       const kissAction = {
         id: 'kiss_cheek',
         description: 'Kiss someone on the cheek',
-        targets: 'positioning:close_actors', // Real reference from intimacy mod
+        targets: 'positioning:close_actors', // Real reference from kissing mod
         required_components: {
-          actor: ['positioning:closeness'], // Real reference from intimacy mod
+          actor: ['positioning:closeness'], // Real reference from kissing mod
         },
       };
 
       await fs.writeFile(
-        path.join(intimacyPath, 'actions', 'kiss_cheek.action.json'),
+        path.join(kissingPath, 'actions', 'kiss_cheek.action.json'),
         JSON.stringify(kissAction, null, 2)
       );
 
       // Set up manifestsMap simulating a missing dependency scenario
       const manifestsMap = new Map();
-      manifestsMap.set('intimacy', {
-        id: 'intimacy',
+      manifestsMap.set('kissing', {
+        id: 'kissing',
         version: '1.0.0',
         dependencies: [
           { id: 'anatomy', version: '^1.0.0' },
@@ -185,12 +185,12 @@ describe('ModCrossReferenceValidator - Integration', () => {
 
       // Should detect positioning violations
       const report = await validator.validateModReferences(
-        intimacyPath,
+        kissingPath,
         manifestsMap
       );
 
       expect(report.hasViolations).toBe(true);
-      expect(report.modId).toBe('intimacy');
+      expect(report.modId).toBe('kissing');
       expect(report.missingDependencies).toContain('positioning');
 
       // Verify specific violations
@@ -208,7 +208,7 @@ describe('ModCrossReferenceValidator - Integration', () => {
 
       // Verify violation messages are helpful
       positioningViolations.forEach((violation) => {
-        expect(violation.message).toContain('intimacy');
+        expect(violation.message).toContain('kissing');
         expect(violation.message).toContain('positioning');
         expect(violation.suggestedFix).toContain(
           'Add "positioning" to dependencies'
@@ -228,9 +228,9 @@ describe('ModCrossReferenceValidator - Integration', () => {
           files: [],
           dependencies: [{ id: 'core', version: '^1.0.0' }],
         },
-        intimacy: {
+        affection: {
           files: [
-            // Intimacy ACTUALLY references positioning components
+            // Affection ACTUALLY references positioning components
             {
               name: 'kiss.action.json',
               content: {
@@ -277,9 +277,9 @@ describe('ModCrossReferenceValidator - Integration', () => {
       // Core should have no violations (no files)
       expect(results.get('core').hasViolations).toBe(false);
 
-      // Intimacy should have violations (missing positioning dependency)
-      expect(results.get('intimacy').hasViolations).toBe(true);
-      expect(results.get('intimacy').missingDependencies).toContain(
+      // Affection should have violations (missing positioning dependency)
+      expect(results.get('affection').hasViolations).toBe(true);
+      expect(results.get('affection').missingDependencies).toContain(
         'positioning'
       );
 
@@ -507,14 +507,14 @@ describe('ModCrossReferenceValidator - Integration', () => {
         path.join(modPath, 'subdir', 'nested.action.json'),
         JSON.stringify({
           id: 'nested',
-          required_components: { actor: ['intimacy:kissing'] },
+          required_components: { actor: ['kissing:kissing'] },
         })
       );
 
       const manifestsMap = new Map();
       manifestsMap.set('mixed-mod', { id: 'mixed-mod', dependencies: [] });
       manifestsMap.set('positioning', { id: 'positioning' });
-      manifestsMap.set('intimacy', { id: 'intimacy' });
+      manifestsMap.set('kissing', { id: 'kissing' });
 
       const report = await validator.validateModReferences(
         modPath,
@@ -523,14 +523,14 @@ describe('ModCrossReferenceValidator - Integration', () => {
 
       expect(report.hasViolations).toBe(true);
       expect(report.referencedMods).toEqual(
-        expect.arrayContaining(['positioning', 'intimacy'])
+        expect.arrayContaining(['positioning', 'kissing'])
       );
       expect(report.violations.length).toBeGreaterThan(0);
 
       // Should find references from different file types
       const referencedMods = report.violations.map((v) => v.referencedMod);
       expect(referencedMods).toContain('positioning');
-      expect(referencedMods).toContain('intimacy');
+      expect(referencedMods).toContain('kissing');
     });
   });
 });

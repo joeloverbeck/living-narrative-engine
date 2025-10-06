@@ -213,6 +213,25 @@ describe('Server - Comprehensive Tests', () => {
       LlmRequestController,
     }));
 
+    // Mock salvage services
+    const SalvageRequestController = jest.fn(() => ({
+      handleSalvageByRequestId: jest.fn(),
+      handleSalvageStats: jest.fn(),
+    }));
+    jest.doMock('../../../src/handlers/salvageRequestController.js', () => ({
+      __esModule: true,
+      default: SalvageRequestController,
+    }));
+
+    const ResponseSalvageService = jest.fn(() => ({
+      salvageResponse: jest.fn(),
+      getStats: jest.fn(),
+    }));
+    jest.doMock('../../../src/services/responseSalvageService.js', () => ({
+      __esModule: true,
+      default: ResponseSalvageService,
+    }));
+
     const ConsoleLogger = jest.fn(() => consoleLoggerInstance);
     jest.doMock('../../../src/consoleLogger.js', () => ({
       __esModule: true,
@@ -308,6 +327,21 @@ describe('Server - Comprehensive Tests', () => {
     jest.doMock('../../../src/routes/healthRoutes.js', () => ({
       __esModule: true,
       default: mockHealthRouter,
+    }));
+
+    // Mock salvage routes
+    const mockSalvageRoutes = jest.fn(() => mockRouter);
+    jest.doMock('../../../src/routes/salvageRoutes.js', () => ({
+      __esModule: true,
+      default: mockSalvageRoutes,
+      createSalvageRoutes: mockSalvageRoutes,
+    }));
+
+    // Mock request tracking middleware
+    jest.doMock('../../../src/middleware/requestTracking.js', () => ({
+      __esModule: true,
+      createRequestTrackingMiddleware: jest.fn(() => 'request-tracking-mw'),
+      createResponseGuard: jest.fn(),
     }));
 
     // Mock setTimeout for graceful shutdown to prevent actual 10s timeout

@@ -12,10 +12,74 @@
     { "id": "descriptors", "version": "^1.0.0" }
   ],
   "content": {
-    "actions": [],
-    "rules": [],
-    "conditions": [],
-    "components": [],
-    "scopes": []
+    "actions": [
+      "accept_kiss_passively.action.json",
+      "break_kiss_gently.action.json",
+      "cup_face_while_kissing.action.json",
+      "explore_mouth_with_tongue.action.json",
+      "kiss_back_passionately.action.json",
+      "kiss_cheek.action.json",
+      "kiss_neck_sensually.action.json",
+      "lean_in_for_deep_kiss.action.json",
+      "nibble_earlobe_playfully.action.json",
+      "nibble_lower_lip.action.json",
+      "peck_on_lips.action.json",
+      "pull_back_breathlessly.action.json",
+      "pull_back_in_revulsion.action.json",
+      "suck_on_neck_to_leave_hickey.action.json",
+      "suck_on_tongue.action.json"
+    ],
+    "components": [
+      "kissing.component.json"
+    ],
+    "conditions": [
+      "actor-is-kiss-receiver.condition.json",
+      "event-is-action-accept-kiss-passively.condition.json",
+      "event-is-action-break-kiss-gently.condition.json",
+      "event-is-action-cup-face-while-kissing.condition.json",
+      "event-is-action-explore-mouth-with-tongue.condition.json",
+      "event-is-action-kiss-back-passionately.condition.json",
+      "event-is-action-kiss-cheek.condition.json",
+      "event-is-action-kiss-neck-sensually.condition.json",
+      "event-is-action-lean-in-for-deep-kiss.condition.json",
+      "event-is-action-nibble-earlobe-playfully.condition.json",
+      "event-is-action-nibble-lower-lip.condition.json",
+      "event-is-action-peck_on_lips.condition.json",
+      "event-is-action-pull-back-breathlessly.condition.json",
+      "event-is-action-pull-back-in-revulsion.condition.json",
+      "event-is-action-suck-on-neck-to-leave-hickey.condition.json",
+      "event-is-action-suck-on-tongue.condition.json",
+      "target-is-kissing-partner.condition.json"
+    ],
+    "entities": {
+      "definitions": [],
+      "instances": []
+    },
+    "events": [],
+    "macros": [],
+    "rules": [
+      "accept_kiss_passively.rule.json",
+      "break_kiss_gently.rule.json",
+      "cup_face_while_kissing.rule.json",
+      "explore_mouth_with_tongue.rule.json",
+      "handle_kiss_neck_sensually.rule.json",
+      "handle_nibble_earlobe_playfully.rule.json",
+      "handle_suck_on_neck_to_leave_hickey.rule.json",
+      "kiss_back_passionately.rule.json",
+      "kiss_cheek.rule.json",
+      "lean_in_for_deep_kiss.rule.json",
+      "nibble_lower_lip.rule.json",
+      "peck_on_lips.rule.json",
+      "pull_back_breathlessly.rule.json",
+      "pull_back_in_revulsion.rule.json",
+      "suck_on_tongue.rule.json"
+    ],
+    "scopes": [
+      "actors_with_arms_facing_each_other_or_behind_target.scope",
+      "actors_with_mouth_facing_each_other.scope",
+      "close_actors_facing_each_other.scope",
+      "close_actors_facing_each_other_or_behind_target.scope",
+      "current_kissing_partner.scope"
+    ]
   }
 }

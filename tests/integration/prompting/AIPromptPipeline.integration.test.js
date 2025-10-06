@@ -123,7 +123,7 @@ function createAvailableActions() {
     },
     {
       index: 2,
-      actionId: 'intimacy:calm',
+      actionId: 'affection:calm',
       commandString: 'steady-crew',
       description: 'Calm the crew with a reassuring address',
     },

@@ -23,6 +23,7 @@ describe('timeout middleware', () => {
     req = {
       path: '/test',
       method: 'POST',
+      requestId: 'test-request-id',
     };
 
     originalSend = jest.fn().mockReturnThis();
@@ -87,6 +88,7 @@ describe('timeout middleware', () => {
           timeoutMs: 1000,
           path: '/test',
           method: 'POST',
+          requestId: 'test-request-id',
         },
         originalStatusCode: 503,
       });

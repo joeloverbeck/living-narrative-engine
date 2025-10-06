@@ -24,22 +24,36 @@
       "weight.component.json"
     ],
     "actions": [
-      "give_item.action.json"
+      "drop_item.action.json",
+      "give_item.action.json",
+      "pick_up_item.action.json"
     ],
     "rules": [
-      "handle_give_item.rule.json"
+      "handle_drop_item.rule.json",
+      "handle_give_item.rule.json",
+      "handle_pick_up_item.rule.json"
     ],
     "conditions": [
+      "event-is-action-drop-item.condition.json",
       "event-is-action-give-item.condition.json",
+      "event-is-action-pick-up-item.condition.json",
       "secondary-has-portable.condition.json"
     ],
     "scopes": [
       "actor_inventory_items.scope",
-      "close_actors_with_inventory.scope"
+      "close_actors_with_inventory.scope",
+      "items_at_location.scope"
     ],
-    "events": [],
+    "events": [
+      "item_dropped.event.json",
+      "item_picked_up.event.json"
+    ],
     "entities": {
-      "definitions": [],
+      "definitions": [
+        "gold_bar.entity.json",
+        "letter_to_sheriff.entity.json",
+        "revolver.entity.json"
+      ],
       "instances": []
     }
   }

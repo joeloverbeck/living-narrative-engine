@@ -19,6 +19,7 @@ import {
   validateRequestHeaders,
   handleValidationErrors,
 } from '../../src/middleware/validation.js';
+import { createRequestTrackingMiddleware } from '../../src/middleware/requestTracking.js';
 
 describe('LLM Provider Mocks Integration Tests', () => {
   let app;
@@ -63,6 +64,7 @@ describe('LLM Provider Mocks Integration Tests', () => {
 
     // Create Express app
     app = express();
+    app.use(createRequestTrackingMiddleware({ logger: mockLogger }));
     app.use(express.json({ limit: '10mb' }));
 
     app.post(

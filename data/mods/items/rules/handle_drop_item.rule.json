@@ -1,0 +1,71 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "items:handle_drop_item",
+  "comment": "Handles drop_item action with perception logging",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "items:event-is-action-drop-item"
+  },
+  "actions": [
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get actor's current position",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "DROP_ITEM_AT_LOCATION",
+      "comment": "Remove from inventory and place at location",
+      "parameters": {
+        "actorEntity": "{event.payload.actorId}",
+        "itemEntity": "{event.payload.targetId}",
+        "locationId": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "comment": "Get actor name",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "comment": "Get item name",
+      "parameters": {
+        "entity_ref": "target",
+        "result_variable": "itemName"
+      }
+    },
+    {
+      "type": "GET_TIMESTAMP",
+      "comment": "Get current timestamp",
+      "parameters": {
+        "result_variable": "currentTimestamp"
+      }
+    },
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Log the drop for observers",
+      "parameters": {
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": "{context.actorName} dropped {context.itemName}.",
+        "perception_type": "item_dropped",
+        "actor_id": "{event.payload.actorId}",
+        "involved_entities": ["{event.payload.targetId}"]
+      }
+    },
+    {
+      "type": "END_TURN",
+      "comment": "End actor's turn after dropping item",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
+      }
+    }
+  ]
+}

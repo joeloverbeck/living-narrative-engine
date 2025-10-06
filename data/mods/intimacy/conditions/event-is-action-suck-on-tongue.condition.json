@@ -1,8 +1,0 @@
-{
-  "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "intimacy:event-is-action-suck-on-tongue",
-  "description": "Checks if the event is the suck_on_tongue action",
-  "logic": {
-    "==": [{ "var": "event.payload.actionId" }, "intimacy:suck_on_tongue"]
-  }
-}

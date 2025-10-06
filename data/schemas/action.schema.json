@@ -108,10 +108,28 @@
       "properties": {
         "actor": {
           "type": "array",
-          "description": "A list of component IDs that the actor must possess for this action to be a candidate.",
-          "items": {
-            "type": "string"
-          }
+          "items": { "type": "string" },
+          "description": "Components required on actor"
+        },
+        "target": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Legacy single-target format - components required on target"
+        },
+        "primary": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Components required on primary target"
+        },
+        "secondary": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Components required on secondary target"
+        },
+        "tertiary": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Components required on tertiary target"
         }
       },
       "additionalProperties": false

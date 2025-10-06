@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "kissing:suck_on_tongue",
+  "name": "Suck on tongue",
+  "description": "Intensify the kiss by sucking on your partner's tongue",
+  "targets": "kissing:current_kissing_partner",
+  "required_components": {
+    "actor": ["kissing:kissing"]
+  },
+  "prerequisites": [],
+  "template": "suck on {target}'s tongue",
+  "visual": {
+    "backgroundColor": "#ad1457",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#c2185b",
+    "hoverTextColor": "#fce4ec"
+  }
+}

@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for scope resolution for the intimacy:suck_on_neck_to_leave_hickey action.
+ * @file Integration tests for scope resolution for the kissing:suck_on_neck_to_leave_hickey action.
  * @description Tests that the action is properly discovered via scope resolution and
  * validates component requirements and positioning constraints.
  */
@@ -32,13 +32,15 @@ import {
   createMockUnifiedScopeResolver,
 } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
-import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
+import {createMockActionErrorContextBuilder,
+  createMockTargetRequiredComponentsValidator,
+} from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
 import { createMultiTargetResolutionStage, createActionPipelineOrchestrator } from '../../common/actions/multiTargetStageTestUtilities.js';
 import { ActionIndex } from '../../../src/actions/actionIndex.js';
 
 // Import the new action
-import suckOnNeckToLeaveHickeyAction from '../../../data/mods/intimacy/actions/suck_on_neck_to_leave_hickey.action.json';
+import suckOnNeckToLeaveHickeyAction from '../../../data/mods/kissing/actions/suck_on_neck_to_leave_hickey.action.json';
 
 // Import required conditions
 import bothActorsFacingEachOther from '../../../data/mods/positioning/conditions/both-actors-facing-each-other.condition.json';
@@ -74,7 +76,7 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
       fs.readFileSync(
         path.resolve(
           __dirname,
-          '../../../data/mods/intimacy/scopes/close_actors_facing_each_other_or_behind_target.scope'
+          '../../../data/mods/kissing/scopes/close_actors_facing_each_other_or_behind_target.scope'
         ),
         'utf8'
       );
@@ -85,8 +87,8 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
     );
 
     scopeRegistry.initialize({
-      'intimacy:close_actors_facing_each_other_or_behind_target': scopeDefs.get(
-        'intimacy:close_actors_facing_each_other_or_behind_target'
+      'kissing:close_actors_facing_each_other_or_behind_target': scopeDefs.get(
+        'kissing:close_actors_facing_each_other_or_behind_target'
       ),
     });
 
@@ -148,6 +150,10 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
       validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
       validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
     };
+
+    // Create mock TargetRequiredComponentsValidator
+    const mockTargetRequiredComponentsValidator =
+      createMockTargetRequiredComponentsValidator();
 const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex,
       prerequisiteService: prerequisiteEvaluationService,
@@ -175,6 +181,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         targetResolver: targetResolutionService,
       }),
       targetComponentValidator: mockTargetComponentValidator,
+      targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
     });
 
     actionDiscoveryService = new ActionDiscoveryService({
@@ -221,7 +228,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       );
 
       const suckOnNeckActions = result.actions.filter(
-        (action) => action.id === 'intimacy:suck_on_neck_to_leave_hickey'
+        (action) => action.id === 'kissing:suck_on_neck_to_leave_hickey'
       );
       expect(suckOnNeckActions.length).toBeGreaterThan(0);
 
@@ -263,7 +270,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       );
 
       const suckOnNeckActions = result.actions.filter(
-        (action) => action.id === 'intimacy:suck_on_neck_to_leave_hickey'
+        (action) => action.id === 'kissing:suck_on_neck_to_leave_hickey'
       );
       expect(suckOnNeckActions.length).toBeGreaterThan(0);
 
@@ -304,7 +311,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       );
 
       const suckOnNeckActions = result.actions.filter(
-        (action) => action.id === 'intimacy:suck_on_neck_to_leave_hickey'
+        (action) => action.id === 'kissing:suck_on_neck_to_leave_hickey'
       );
       expect(suckOnNeckActions).toHaveLength(0);
     });
@@ -318,7 +325,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
             'positioning:closeness': { partners: [targetId] },
-            'intimacy:kissing': { partner: targetId, initiator: true },
+            'kissing:kissing': { partner: targetId, initiator: true },
           },
         },
         {
@@ -326,7 +333,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
             'positioning:closeness': { partners: [actorId] },
-            'intimacy:kissing': { partner: actorId, initiator: false },
+            'kissing:kissing': { partner: actorId, initiator: false },
           },
         },
         { id: 'room1', components: {} },
@@ -342,7 +349,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       );
 
       const suckOnNeckActions = result.actions.filter(
-        (action) => action.id === 'intimacy:suck_on_neck_to_leave_hickey'
+        (action) => action.id === 'kissing:suck_on_neck_to_leave_hickey'
       );
       expect(suckOnNeckActions).toHaveLength(0);
     });
@@ -386,7 +393,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       );
 
       const suckOnNeckActions = result.actions.filter(
-        (action) => action.id === 'intimacy:suck_on_neck_to_leave_hickey'
+        (action) => action.id === 'kissing:suck_on_neck_to_leave_hickey'
       );
       expect(suckOnNeckActions.length).toBeGreaterThan(0);
 
@@ -440,7 +447,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       );
 
       const suckOnNeckActions = result.actions.filter(
-        (action) => action.id === 'intimacy:suck_on_neck_to_leave_hickey'
+        (action) => action.id === 'kissing:suck_on_neck_to_leave_hickey'
       );
       expect(suckOnNeckActions.length).toBeGreaterThan(0);
 
@@ -485,7 +492,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       );
 
       const suckOnNeckActions = result.actions.filter(
-        (action) => action.id === 'intimacy:suck_on_neck_to_leave_hickey'
+        (action) => action.id === 'kissing:suck_on_neck_to_leave_hickey'
       );
       expect(suckOnNeckActions).toHaveLength(0);
     });

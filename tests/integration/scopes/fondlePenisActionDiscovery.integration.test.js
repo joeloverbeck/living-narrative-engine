@@ -28,7 +28,9 @@ import {
   createMockUnifiedScopeResolver,
 } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
-import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
+import {createMockActionErrorContextBuilder,
+  createMockTargetRequiredComponentsValidator,
+} from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
 import {
   createMockMultiTargetResolutionStage,
@@ -91,8 +93,8 @@ describe('Fondle Penis Action Discovery Integration Tests', () => {
     dataRegistry.store('actions', fondlePenisAction.id, fondlePenisAction);
 
     // Store the condition
-    dataRegistry.store('conditions', 'intimacy:entity-not-in-facing-away', {
-      id: 'intimacy:entity-not-in-facing-away',
+    dataRegistry.store('conditions', 'positioning:entity-not-in-facing-away', {
+      id: 'positioning:entity-not-in-facing-away',
       logic: {
         not: {
           in: [
@@ -183,6 +185,10 @@ describe('Fondle Penis Action Discovery Integration Tests', () => {
       validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
       validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
     };
+
+    // Create mock TargetRequiredComponentsValidator
+    const mockTargetRequiredComponentsValidator =
+      createMockTargetRequiredComponentsValidator();
 const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex: {
         getCandidateActions: jest
@@ -207,6 +213,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       targetContextBuilder: createMockTargetContextBuilder(),
       multiTargetResolutionStage: stage,
       targetComponentValidator: mockTargetComponentValidator,
+      targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
     });
 
     return new ActionDiscoveryService({

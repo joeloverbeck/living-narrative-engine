@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "items:revolver",
+  "description": "A well-worn six-shooter revolver",
+  "components": {
+    "core:name": {
+      "text": "Six-Shooter Revolver"
+    },
+    "core:description": {
+      "text": "A reliable revolver with a weathered wooden grip and six chambers. The metal shows signs of frequent use."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 1.2
+    }
+  }
+}

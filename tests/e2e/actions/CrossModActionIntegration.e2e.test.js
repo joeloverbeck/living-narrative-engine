@@ -102,7 +102,7 @@ describe('Cross-Mod Action Integration E2E', () => {
         available: true,
       },
       {
-        actionId: 'intimacy:kiss_cheek',
+        actionId: 'kissing:kiss_cheek',
         name: 'Kiss Cheek',
         available: true,
       },
@@ -206,10 +206,10 @@ describe('Cross-Mod Action Integration E2E', () => {
         },
       };
 
-      mockValidationResults[`${actorId}:intimacy:kiss_cheek`] = {
+      mockValidationResults[`${actorId}:kissing:kiss_cheek`] = {
         success: true,
         validatedAction: {
-          actionId: 'intimacy:kiss_cheek',
+          actionId: 'kissing:kiss_cheek',
           actorId: actorId,
           targets: { target: 'test-npc-intimate' },
         },
@@ -277,7 +277,7 @@ describe('Cross-Mod Action Integration E2E', () => {
 
     // Should succeed for player with intimacy components
     expect(intimacyResult.success).toBe(true);
-    // The parser maps to core:kiss, not intimacy:kiss_cheek
+    // The parser maps to core:kiss, not kissing:kiss_cheek
     expect(intimacyResult.parsedCommand.actionId).toBe('core:kiss');
 
     // Test basic NPC without intimacy components
@@ -290,7 +290,7 @@ describe('Cross-Mod Action Integration E2E', () => {
 
     turnExecutionFacade.setupMocks({
       validationResults: {
-        'test-npc-basic:intimacy:kiss_cheek': mockBasicNpcValidation,
+        'test-npc-basic:kissing:kiss_cheek': mockBasicNpcValidation,
       },
     });
 
@@ -496,7 +496,7 @@ describe('Cross-Mod Action Integration E2E', () => {
 
     turnExecutionFacade.setupMocks({
       validationResults: {
-        'test-npc-basic:intimacy:kiss_cheek': mockValidationFailure,
+        'test-npc-basic:kissing:kiss_cheek': mockValidationFailure,
       },
     });
 

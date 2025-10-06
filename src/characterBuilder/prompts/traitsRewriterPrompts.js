@@ -21,7 +21,7 @@ export const PROMPT_VERSION_INFO = {
  */
 export const TRAITS_REWRITER_LLM_PARAMS = {
   temperature: 0.8,
-  max_tokens: 3000,
+  max_tokens: 16384, // Sufficient for complete trait rewriting (Claude Sonnet 4.5 supports up to 16K output)
 };
 
 /**

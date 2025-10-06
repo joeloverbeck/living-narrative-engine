@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "kissing:actor-is-kiss-receiver",
+  "description": "Checks if the actor is receiving a kiss (not the initiator)",
+  "logic": {
+    "==": [{ "var": "actor.components.kissing:kissing.initiator" }, false]
+  }
+}

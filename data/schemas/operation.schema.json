@@ -157,6 +157,18 @@
         },
         {
           "$ref": "./operations/unlockMouthEngagement.schema.json"
+        },
+        {
+          "$ref": "./operations/dropItemAtLocation.schema.json"
+        },
+        {
+          "$ref": "./operations/pickUpItemFromLocation.schema.json"
+        },
+        {
+          "$ref": "./operations/validateInventoryCapacity.schema.json"
+        },
+        {
+          "$ref": "./operations/transferItem.schema.json"
         }
       ]
     }

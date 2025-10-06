@@ -739,7 +739,7 @@ describe('Infrastructure Error Handling - Corrected', () => {
 
         const paths2 = ModTestFixture.getConventionalPaths(
           'intimacy',
-          'intimacy:kiss_cheek'
+          'kissing:kiss_cheek'
         );
         expect(
           paths2.rulePaths.some((path) => path.includes('kiss_cheek.rule.json'))
@@ -760,12 +760,12 @@ describe('Infrastructure Error Handling - Corrected', () => {
 
       it('should handle colon and underscore normalization', () => {
         const paths = ModTestFixture.getConventionalPaths(
-          'intimacy',
-          'intimacy:kiss_cheek'
+          'kissing',
+          'kissing:kiss_cheek'
         );
         expect(
           paths.conditionPaths.some((path) =>
-            path.includes('intimacy-kiss-cheek.condition.json')
+            path.includes('kissing-kiss-cheek.condition.json')
           )
         ).toBe(true);
       });

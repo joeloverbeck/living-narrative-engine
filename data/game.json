@@ -1,5 +1,19 @@
 {
   "mods": [
-    "core"
-  ]
+    "core",
+    "movement",
+    "companionship",
+    "positioning",
+    "items",
+    "anatomy",
+    "clothing",
+    "exercise",
+    "violence",
+    "seduction",
+    "affection",
+    "caressing",
+    "kissing",
+    "p_erotica"
+  ],
+  "startWorld": "p_erotica:irun"
 }

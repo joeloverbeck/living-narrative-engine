@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "kissing:cup_face_while_kissing",
+  "name": "Cup face while kissing",
+  "description": "Possessively cup your partner's face in your hands while continuing to kiss",
+  "targets": "kissing:current_kissing_partner",
+  "required_components": {
+    "actor": ["kissing:kissing"]
+  },
+  "prerequisites": [],
+  "template": "cup {target}'s face while kissing",
+  "visual": {
+    "backgroundColor": "#ad1457",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#c2185b",
+    "hoverTextColor": "#fce4ec"
+  }
+}

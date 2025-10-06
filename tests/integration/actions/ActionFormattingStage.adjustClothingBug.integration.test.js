@@ -71,7 +71,7 @@ describe('ActionFormattingStage - adjust_clothing bug integration', () => {
       // Mixed actions (legacy + multi-target) being processed together
 
       const adjustClothingActionDef = {
-        id: 'intimacy:adjust_clothing',
+        id: 'caressing:adjust_clothing',
         name: 'Adjust Clothing',
         description:
           'Smooth their collar or adjust a displaced garment with possessive care.',
@@ -79,7 +79,7 @@ describe('ActionFormattingStage - adjust_clothing bug integration', () => {
         targets: {
           primary: {
             scope:
-              'intimacy:close_actors_facing_each_other_with_torso_clothing',
+              'caressing:close_actors_facing_each_other_with_torso_clothing',
             placeholder: 'primary',
             description: 'Person whose clothing to adjust',
           },
@@ -152,7 +152,7 @@ describe('ActionFormattingStage - adjust_clothing bug integration', () => {
 
       // Find the adjust_clothing action in the results
       const adjustClothingActions = result.actions.filter(
-        (action) => action.id === 'intimacy:adjust_clothing'
+        (action) => action.id === 'caressing:adjust_clothing'
       );
 
       expect(adjustClothingActions.length).toBe(1);
@@ -173,7 +173,7 @@ describe('ActionFormattingStage - adjust_clothing bug integration', () => {
       // In this case, the action should not be available
 
       const adjustClothingActionDef = {
-        id: 'intimacy:adjust_clothing',
+        id: 'caressing:adjust_clothing',
         template: "adjust {primary}'s {secondary}",
         targets: {
           primary: { placeholder: 'primary' },
@@ -213,7 +213,7 @@ describe('ActionFormattingStage - adjust_clothing bug integration', () => {
 
       // The action should not be available since we're missing required targets
       const adjustClothingActions = result.actions.filter(
-        (action) => action.id === 'intimacy:adjust_clothing'
+        (action) => action.id === 'caressing:adjust_clothing'
       );
 
       expect(adjustClothingActions.length).toBe(0);
@@ -221,7 +221,7 @@ describe('ActionFormattingStage - adjust_clothing bug integration', () => {
 
     it('should handle malformed target contexts gracefully', async () => {
       const adjustClothingActionDef = {
-        id: 'intimacy:adjust_clothing',
+        id: 'caressing:adjust_clothing',
         template: "adjust {primary}'s {secondary}",
         targets: {
           primary: { placeholder: 'primary' },

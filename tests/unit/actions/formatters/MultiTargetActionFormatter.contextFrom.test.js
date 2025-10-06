@@ -38,13 +38,13 @@ describe('MultiTargetActionFormatter - contextFrom bug', () => {
     it('should format a single action with both placeholders replaced', () => {
       // Setup action definition matching adjust_clothing
       const actionDef = {
-        id: 'intimacy:adjust_clothing',
+        id: 'caressing:adjust_clothing',
         name: 'Adjust Clothing',
         template: "adjust {primary}'s {secondary}",
         targets: {
           primary: {
             scope:
-              'intimacy:close_actors_facing_each_other_with_torso_clothing',
+              'caressing:close_actors_facing_each_other_with_torso_clothing',
             placeholder: 'primary',
             description: 'Person whose clothing to adjust',
           },
@@ -110,7 +110,7 @@ describe('MultiTargetActionFormatter - contextFrom bug', () => {
 
     it('should handle multiple primary targets with their respective secondary targets', () => {
       const actionDef = {
-        id: 'intimacy:adjust_clothing',
+        id: 'caressing:adjust_clothing',
         template: "adjust {primary}'s {secondary}",
         targets: {
           primary: {

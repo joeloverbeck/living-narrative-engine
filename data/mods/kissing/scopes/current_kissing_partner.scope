@@ -1,0 +1,6 @@
+kissing:current_kissing_partner := entities(kissing:kissing)[][{
+  "and": [
+    {"==": [{"var": "entity.id"}, {"var": "actor.components.kissing:kissing.partner"}]},
+    {"condition_ref": "core:entity-has-actor-component"}
+  ]
+}]

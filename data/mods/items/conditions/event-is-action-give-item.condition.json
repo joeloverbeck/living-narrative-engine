@@ -2,7 +2,7 @@
   "$schema": "schema://living-narrative-engine/condition.schema.json",
   "id": "items:event-is-action-give-item",
   "description": "Checks if event is the give_item action",
-  "jsonLogic": {
+  "logic": {
     "==": [
       { "var": "event.payload.actionId" },
       "items:give_item"

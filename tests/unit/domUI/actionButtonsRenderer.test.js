@@ -635,7 +635,7 @@ describe('ActionButtonsRenderer', () => {
             createTestComposite(7, 'intimacy:kiss', 'Kiss', 'Give a kiss'),
             createTestComposite(
               8,
-              'intimacy:hold_hand',
+              'affection:hold_hand',
               'Hold hand',
               'Hold hands'
             ),
@@ -687,7 +687,7 @@ describe('ActionButtonsRenderer', () => {
         // Intimacy mod actions (4 actions)
         createTestComposite(6, 'intimacy:hug', 'Hug', 'Give a hug'),
         createTestComposite(7, 'intimacy:kiss', 'Kiss', 'Give a kiss'),
-        createTestComposite(8, 'intimacy:hold_hand', 'Hold hand', 'Hold hands'),
+        createTestComposite(8, 'affection:hold_hand', 'Hold hand', 'Hold hands'),
         createTestComposite(9, 'intimacy:cuddle', 'Cuddle', 'Cuddle together'),
         // Sex mod actions (3 actions)
         createTestComposite(10, 'sex:flirt', 'Flirt', 'Flirt playfully'),

@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "kissing:pull_back_in_revulsion",
+  "name": "Pull back in revulsion",
+  "description": "End the kiss by pulling back in revulsion of being kissed deeply by the initiator",
+  "targets": "kissing:current_kissing_partner",
+  "required_components": {
+    "actor": ["kissing:kissing"]
+  },
+  "prerequisites": [],
+  "template": "pull back from {target}'s kiss in revulsion",
+  "visual": {
+    "backgroundColor": "#ad1457",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#c2185b",
+    "hoverTextColor": "#fce4ec"
+  }
+}

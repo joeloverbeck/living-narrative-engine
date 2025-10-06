@@ -129,7 +129,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       const testPath = '/test/mod/path';
       const jsonContent = {
         forbidden_components: {
-          actor: ['intimacy:kissing', 'positioning:sitting'],
+          actor: ['kissing:kissing', 'positioning:sitting'],
         },
         targets: {
           primary: {
@@ -150,9 +150,9 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       const result = await extractor.extractReferences(testPath);
 
       expect(result).toBeInstanceOf(Map);
-      expect(result.has('intimacy')).toBe(true);
+      expect(result.has('kissing')).toBe(true);
       expect(result.has('positioning')).toBe(true);
-      expect(result.get('intimacy')).toEqual(new Set(['kissing']));
+      expect(result.get('kissing')).toEqual(new Set(['kissing']));
       expect(result.get('positioning')).toEqual(new Set(['sitting']));
       // core references should be skipped
       expect(result.has('core')).toBe(false);
@@ -201,7 +201,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       const scopeContent = `
         // Comment should be ignored
         positioning:close_actors := actor.components.positioning:closeness.partners
-        intimacy:attracted_actors := actor.components.intimacy:attraction.targets
+        affection:attracted_actors := actor.components.affection:attraction.targets
       `;
 
       fs.readdir.mockResolvedValue([
@@ -213,9 +213,9 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
       expect(result).toBeInstanceOf(Map);
       expect(result.has('positioning')).toBe(true);
-      expect(result.has('intimacy')).toBe(true);
+      expect(result.has('affection')).toBe(true);
       expect(result.get('positioning')).toContain('closeness');
-      expect(result.get('intimacy')).toContain('attraction');
+      expect(result.get('affection')).toContain('attraction');
     });
   });
 
@@ -223,14 +223,14 @@ describe('ModReferenceExtractor - Core Functionality', () => {
     it('should extract mod references from various JSON structures', async () => {
       const testPath = '/test/mod/path';
       const jsonContent = {
-        stringValue: 'intimacy:kissing',
+        stringValue: 'kissing:kissing',
         arrayValue: ['positioning:sitting', 'movement:walking'],
         nestedObject: {
           deepValue: 'romance:dating',
           arrayInObject: ['combat:fighting'],
         },
         multipleInString:
-          'Check intimacy:hugging and romance:flirting together',
+          'Check affection:hugging and romance:flirting together',
       };
 
       fs.readdir.mockResolvedValue([
@@ -240,13 +240,15 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
       const result = await extractor.extractReferences(testPath);
 
-      expect(result.has('intimacy')).toBe(true);
+      expect(result.has('kissing')).toBe(true);
+      expect(result.has('affection')).toBe(true);
       expect(result.has('positioning')).toBe(true);
       expect(result.has('movement')).toBe(true);
       expect(result.has('romance')).toBe(true);
       expect(result.has('combat')).toBe(true);
 
-      expect(result.get('intimacy')).toEqual(new Set(['kissing', 'hugging']));
+      expect(result.get('kissing')).toEqual(new Set(['kissing']));
+      expect(result.get('affection')).toEqual(new Set(['hugging']));
       expect(result.get('romance')).toEqual(new Set(['dating', 'flirting']));
     });
 
@@ -256,7 +258,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         coreRef: 'core:actor',
         noneRef: 'none',
         selfRef: 'self',
-        validRef: 'intimacy:kissing',
+        validRef: 'kissing:kissing',
       };
 
       fs.readdir.mockResolvedValue([
@@ -269,8 +271,8 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       expect(result.has('core')).toBe(false);
       expect(result.has('none')).toBe(false);
       expect(result.has('self')).toBe(false);
-      expect(result.has('intimacy')).toBe(true);
-      expect(result.get('intimacy')).toEqual(new Set(['kissing']));
+      expect(result.has('kissing')).toBe(true);
+      expect(result.get('kissing')).toEqual(new Set(['kissing']));
     });
 
     it('should handle edge cases in reference patterns', async () => {
@@ -393,7 +395,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
   });
 
   describe('Real-world Scenarios', () => {
-    it('should detect the positioning mod intimacy dependency violation', async () => {
+    it('should detect the positioning mod kissing dependency violation', async () => {
       const testPath = '/test/mods/positioning';
       const turnAroundContent = {
         $schema: 'schema://living-narrative-engine/action.schema.json',
@@ -409,7 +411,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
           actor: ['positioning:closeness'],
         },
         forbidden_components: {
-          actor: ['intimacy:kissing'], // This is the violation!
+          actor: ['kissing:kissing'], // This is the violation!
         },
       };
 
@@ -427,8 +429,8 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
       const result = await extractor.extractReferences(testPath);
 
-      expect(result.has('intimacy')).toBe(true);
-      expect(result.get('intimacy')).toEqual(new Set(['kissing']));
+      expect(result.has('kissing')).toBe(true);
+      expect(result.get('kissing')).toEqual(new Set(['kissing']));
       // positioning references to self should be excluded
       expect(result.has('positioning')).toBe(false);
     });
@@ -482,7 +484,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         const testPath = '/test/mod/path';
         const mockActionData = {
           required_components: {
-            actor: ['positioning:closeness', 'intimacy:arousal'],
+            actor: ['positioning:closeness', 'caressing:arousal'],
             target: ['core:actor'],
           },
         };
@@ -499,17 +501,17 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         const result = await extractor.extractReferences(testPath);
 
         expect(result.has('positioning')).toBe(true);
-        expect(result.has('intimacy')).toBe(true);
+        expect(result.has('caressing')).toBe(true);
         expect(result.has('core')).toBe(false); // Core should be filtered out
         expect(result.get('positioning')).toContain('closeness');
-        expect(result.get('intimacy')).toContain('arousal');
+        expect(result.get('caressing')).toContain('arousal');
       });
 
       it('should extract forbidden components', async () => {
         const testPath = '/test/mod/path';
         const mockActionData = {
           forbidden_components: {
-            actor: ['intimacy:kissing', 'violence:attacking'],
+            actor: ['kissing:kissing', 'violence:attacking'],
           },
         };
 
@@ -524,7 +526,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
         const result = await extractor.extractReferences(testPath);
 
-        expect(result.get('intimacy')).toContain('kissing');
+        expect(result.get('kissing')).toContain('kissing');
         expect(result.get('violence')).toContain('attacking');
       });
 
@@ -555,7 +557,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       it('should extract targets as string', async () => {
         const testPath = '/test/mod/path';
         const mockActionData = {
-          targets: 'intimacy:close_actors_facing_each_other',
+          targets: 'positioning:close_actors_facing_each_other',
         };
 
         fs.readdir.mockResolvedValue([
@@ -569,7 +571,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
         const result = await extractor.extractReferences(testPath);
 
-        expect(result.get('intimacy')).toContain(
+        expect(result.get('positioning')).toContain(
           'close_actors_facing_each_other'
         );
       });
@@ -602,7 +604,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         const testPath = '/test/mod/path';
         const mockRuleData = {
           condition: {
-            condition_ref: 'intimacy:has-arousal-level',
+            condition_ref: 'caressing:has-arousal-level',
           },
         };
 
@@ -617,7 +619,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
         const result = await extractor.extractReferences(testPath);
 
-        expect(result.get('intimacy')).toContain('has-arousal-level');
+        expect(result.get('caressing')).toContain('has-arousal-level');
       });
 
       it('should handle actions array with operations', async () => {
@@ -654,7 +656,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
           dataSchema: {
             properties: {
               partner: {
-                description: 'Reference to intimacy:kissing partner',
+                description: 'Reference to kissing:kissing partner',
               },
             },
           },
@@ -671,7 +673,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
         const result = await extractor.extractReferences(testPath);
 
-        expect(result.get('intimacy')).toContain('kissing');
+        expect(result.get('kissing')).toContain('kissing');
       });
 
       it('should extract default data references', async () => {
@@ -705,7 +707,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       const mockData = {
         condition: {
           and: [
-            { has_component: ['actor', 'intimacy:arousal'] },
+            { has_component: ['actor', 'caressing:arousal'] },
             { has_component: ['target', 'positioning:closeness'] },
           ],
         },
@@ -718,7 +720,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
       const result = await extractor.extractReferences(testPath);
 
-      expect(result.get('intimacy')).toContain('arousal');
+      expect(result.get('caressing')).toContain('arousal');
       expect(result.get('positioning')).toContain('closeness');
     });
 
@@ -729,13 +731,13 @@ describe('ModReferenceExtractor - Core Functionality', () => {
           or: [
             {
               and: [
-                { has_component: ['actor', 'intimacy:kissing'] },
+                { has_component: ['actor', 'kissing:kissing'] },
                 {
                   '>=': [
                     {
                       get_component_value: [
                         'actor',
-                        'intimacy:arousal',
+                        'caressing:arousal',
                         'level',
                       ],
                     },
@@ -756,8 +758,8 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
       const result = await extractor.extractReferences(testPath);
 
-      expect(result.get('intimacy')).toContain('kissing');
-      expect(result.get('intimacy')).toContain('arousal');
+      expect(result.get('kissing')).toContain('kissing');
+      expect(result.get('caressing')).toContain('arousal');
       expect(result.get('violence')).toContain('attacking');
     });
 
@@ -769,7 +771,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
             {
               set_component_value: ['actor', 'positioning:facing', 'direction'],
             },
-            { remove_component: ['actor', 'intimacy:kissing'] },
+            { remove_component: ['actor', 'kissing:kissing'] },
             { add_component: ['actor', 'violence:fighting', { level: 1 }] },
           ],
         },
@@ -783,7 +785,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       const result = await extractor.extractReferences(testPath);
 
       expect(result.get('positioning')).toContain('facing');
-      expect(result.get('intimacy')).toContain('kissing');
+      expect(result.get('kissing')).toContain('kissing');
       expect(result.get('violence')).toContain('fighting');
     });
   });
@@ -796,7 +798,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
           {
             type: 'add_component',
             target: 'actor',
-            component: 'intimacy:arousal',
+            component: 'caressing:arousal',
             data: { level: 25 },
           },
           {
@@ -820,7 +822,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
       const result = await extractor.extractReferences(testPath);
 
-      expect(result.get('intimacy')).toContain('arousal');
+      expect(result.get('caressing')).toContain('arousal');
       expect(result.get('positioning')).toContain('closeness');
     });
 
@@ -859,7 +861,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       const testPath = '/test/mod/path';
       const mockData = {
         value:
-          'Check intimacy:arousal.level and positioning:closeness.distance',
+          'Check caressing:arousal.level and positioning:closeness.distance',
       };
 
       fs.readdir.mockResolvedValue([
@@ -869,7 +871,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
       const result = await extractor.extractReferences(testPath);
 
-      expect(result.get('intimacy')).toContain('arousal');
+      expect(result.get('caressing')).toContain('arousal');
       expect(result.get('positioning')).toContain('closeness');
     });
 
@@ -1020,7 +1022,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
   });
 
   describe('Real-world Integration Scenarios', () => {
-    it('should detect the positioning mod intimacy dependency violation', async () => {
+    it('should detect the positioning mod kissing dependency violation', async () => {
       const testPath = '/test/mods/positioning';
       const turnAroundContent = {
         $schema: 'schema://living-narrative-engine/action.schema.json',
@@ -1036,7 +1038,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
           actor: ['positioning:closeness'],
         },
         forbidden_components: {
-          actor: ['intimacy:kissing'], // This is the violation!
+          actor: ['kissing:kissing'], // This is the violation!
         },
       };
 
@@ -1054,8 +1056,8 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
       const result = await extractor.extractReferences(testPath);
 
-      expect(result.has('intimacy')).toBe(true);
-      expect(result.get('intimacy')).toEqual(new Set(['kissing']));
+      expect(result.has('kissing')).toBe(true);
+      expect(result.get('kissing')).toEqual(new Set(['kissing']));
       // positioning references to self should be excluded
       expect(result.has('positioning')).toBe(false);
     });
@@ -1118,7 +1120,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         const testPath = '/test/mod/path';
         const scopeContent = `
           positioning:close_actors := actor.components.positioning:closeness.partners
-          intimacy:attracted_actors := actor.components.intimacy:attraction.targets
+          affection:attracted_actors := actor.components.affection:attraction.targets
         `;
 
         fs.readdir.mockResolvedValue([
@@ -1129,9 +1131,9 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         const result = await extractor.extractReferences(testPath);
 
         expect(result.has('positioning')).toBe(true);
-        expect(result.has('intimacy')).toBe(true);
+        expect(result.has('affection')).toBe(true);
         expect(result.get('positioning')).toContain('closeness');
-        expect(result.get('intimacy')).toContain('attraction');
+        expect(result.get('affection')).toContain('attraction');
       });
 
       it('should extract component references from expressions', async () => {
@@ -1155,11 +1157,11 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       it('should handle filtered access with JSON Logic', async () => {
         const testPath = '/test/mod/path';
         const scopeContent = `
-          intimacy:available_partners := actor.components.positioning:closeness.partners[
+          affection:available_partners := actor.components.positioning:closeness.partners[
             {
               "and": [
-                {"has_component": ["item", "intimacy:attraction"]},
-                {">=": [{"get_component_value": ["item", "intimacy:attraction", "level"]}, 30]}
+                {"has_component": ["item", "affection:attraction"]},
+                {">=": [{"get_component_value": ["item", "affection:attraction", "level"]}, 30]}
               ]
             }
           ]
@@ -1173,7 +1175,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         const result = await extractor.extractReferences(testPath);
 
         expect(result.get('positioning')).toContain('closeness');
-        expect(result.get('intimacy')).toContain('attraction');
+        expect(result.get('affection')).toContain('attraction');
       });
 
       it('should handle union expressions with pipe operator', async () => {
@@ -1195,7 +1197,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       it('should handle union expressions with plus operator', async () => {
         const testPath = '/test/mod/path';
         const scopeContent = `
-          intimacy:all_connections := actor.partners + actor.components.intimacy:bond.targets
+          affection:all_connections := actor.partners + actor.components.affection:bond.targets
         `;
 
         fs.readdir.mockResolvedValue([
@@ -1205,7 +1207,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
         const result = await extractor.extractReferences(testPath);
 
-        expect(result.get('intimacy')).toContain('bond');
+        expect(result.get('affection')).toContain('bond');
       });
 
       it('should handle array iterations', async () => {
@@ -1227,7 +1229,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       it('should handle condition_ref in filters', async () => {
         const testPath = '/test/mod/path';
         const scopeContent = `
-          intimacy:close_actors_facing := actor.components.positioning:closeness.partners[][{
+          positioning:close_actors_facing := actor.components.positioning:closeness.partners[][{
             "condition_ref": "positioning:both-actors-facing-each-other"
           }]
         `;
@@ -1250,7 +1252,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       it('should use regex fallback when parser fails', async () => {
         const testPath = '/test/mod/path';
         const malformedContent = `
-          invalid syntax without assignment but has intimacy:kissing reference
+          invalid syntax without assignment but has kissing:kissing reference
           and positioning:sitting references
         `;
 
@@ -1262,7 +1264,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         const result = await extractor.extractReferences(testPath);
 
         // Should still extract references via regex fallback
-        expect(result.get('intimacy')).toContain('kissing');
+        expect(result.get('kissing')).toContain('kissing');
         expect(result.get('positioning')).toContain('sitting');
         expect(mockLogger.warn).toHaveBeenCalledWith(
           expect.stringContaining('Failed to parse scope file test.scope')
@@ -1273,8 +1275,8 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         const testPath = '/test/mod/path';
         const partialContent = `
           positioning:valid_scope := actor.components.positioning:closeness
-          invalid_scope_without_assignment := 
-          another:valid := actor.components.intimacy:attraction
+          invalid_scope_without_assignment :=
+          another:valid := actor.components.affection:attraction
         `;
 
         fs.readdir.mockResolvedValue([
@@ -1286,17 +1288,17 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
         // Should extract what it can
         expect(result.has('positioning')).toBe(true);
-        expect(result.has('intimacy')).toBe(true);
+        expect(result.has('affection')).toBe(true);
       });
     });
 
     describe('Real-world Scope Files', () => {
-      it('should process intimacy mod scope file correctly', async () => {
-        const testPath = '/test/mod/path';
+      it('should process positioning mod scope file correctly', async () => {
+        const testPath = '/test/mod/positioning';
         const realWorldContent = `
           // Scope for actors in closeness who are facing each other
           // Used by actions that require face-to-face interaction
-          intimacy:close_actors_facing_each_other := actor.components.positioning:closeness.partners[][{
+          positioning:close_actors_facing_each_other := actor.components.positioning:closeness.partners[][{
             "condition_ref": "positioning:both-actors-facing-each-other"
           }]
         `;
@@ -1312,21 +1314,16 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
         const result = await extractor.extractReferences(testPath);
 
-        expect(result.get('intimacy')).toContain(
-          'close_actors_facing_each_other'
-        );
-        expect(result.get('positioning')).toContain('closeness');
-        expect(result.get('positioning')).toContain(
-          'both-actors-facing-each-other'
-        );
+        // positioning references to self should be excluded
+        expect(result.has('positioning')).toBe(false);
       });
 
       it('should handle complex union examples', async () => {
         const testPath = '/test/mod/path';
         const unionExamples = `
           # Union Operator Examples
-          all_connections := actor.followers | actor.partners | actor.components.intimacy:friends
-          close_connections := actor.partners + actor.components.intimacy:family
+          all_connections := actor.followers | actor.partners | actor.components.affection:friends
+          close_connections := actor.partners + actor.components.affection:family
           mixed_example := actor.followers + actor.friends | actor.partners
         `;
 
@@ -1341,8 +1338,8 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
         const result = await extractor.extractReferences(testPath);
 
-        expect(result.get('intimacy')).toContain('friends');
-        expect(result.get('intimacy')).toContain('family');
+        expect(result.get('affection')).toContain('friends');
+        expect(result.get('affection')).toContain('family');
       });
     });
 
@@ -1376,7 +1373,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
           core:test := actor.components.core:actor
           none:test := none
           self:test := self
-          intimacy:valid := actor.components.intimacy:attraction
+          affection:valid := actor.components.affection:attraction
         `;
 
         fs.readdir.mockResolvedValue([
@@ -1389,13 +1386,13 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         expect(result.has('core')).toBe(false);
         expect(result.has('none')).toBe(false);
         expect(result.has('self')).toBe(false);
-        expect(result.has('intimacy')).toBe(true);
+        expect(result.has('affection')).toBe(true);
       });
 
       it('should handle entity source references', async () => {
         const testPath = '/test/mod/path';
         const scopeContent = `
-          test:all_items := entities(intimacy:special_item)
+          test:all_items := entities(affection:special_item)
         `;
 
         fs.readdir.mockResolvedValue([
@@ -1405,7 +1402,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
         const result = await extractor.extractReferences(testPath);
 
-        expect(result.get('intimacy')).toContain('special_item');
+        expect(result.get('affection')).toContain('special_item');
       });
     });
   });

@@ -72,7 +72,7 @@ describe('ActionFormattingStage - multi-target action fix', () => {
     it('should skip multi-target actions in legacy formatting path', async () => {
       // This is the adjust_clothing action definition
       const actionDef = {
-        id: 'intimacy:adjust_clothing',
+        id: 'caressing:adjust_clothing',
         name: 'Adjust Clothing',
         template: "adjust {primary}'s {secondary}",
         targets: {
@@ -125,7 +125,7 @@ describe('ActionFormattingStage - multi-target action fix', () => {
       );
       expect(logger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
-          "Skipping multi-target action 'intimacy:adjust_clothing' in legacy formatting path - no resolved targets available for proper formatting"
+          "Skipping multi-target action 'caressing:adjust_clothing' in legacy formatting path - no resolved targets available for proper formatting"
         )
       );
 
@@ -140,7 +140,7 @@ describe('ActionFormattingStage - multi-target action fix', () => {
 
     it('should properly format multi-target actions when correct data is provided', async () => {
       const actionDef = {
-        id: 'intimacy:adjust_clothing',
+        id: 'caressing:adjust_clothing',
         name: 'Adjust Clothing',
         template: "adjust {primary}'s {secondary}",
         targets: {

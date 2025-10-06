@@ -19,6 +19,7 @@ import {
   validateRequestHeaders,
   handleValidationErrors,
 } from '../../../src/middleware/validation.js';
+import { createRequestTrackingMiddleware } from '../../../src/middleware/requestTracking.js';
 import {
   contractValidator,
   contractMatchers,
@@ -71,6 +72,8 @@ describe('Contract E2E Compliance Tests', () => {
     // Create Express app with full middleware stack
     app = express();
     app.use(express.json({ limit: '10mb' }));
+    // Add request tracking middleware to provide commitResponse methods
+    app.use(createRequestTrackingMiddleware({ logger: mockLogger }));
 
     app.post(
       '/api/llm-request',

@@ -1,0 +1,40 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "caressing:caress_abdomen",
+  "name": "Caress Abdomen",
+  "description": "Sensually caress the target's abdomen over their clothing.",
+  "targets": {
+    "primary": {
+      "scope": "caressing:close_actors_facing_away",
+      "placeholder": "primary",
+      "description": "Person whose abdomen to caress"
+    },
+    "secondary": {
+      "scope": "clothing:target_topmost_torso_upper_clothing",
+      "placeholder": "secondary",
+      "description": "Clothing item over which to caress",
+      "contextFrom": "primary"
+    }
+  },
+  "template": "caress {primary}'s abdomen over the {secondary}",
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:facing_away"]
+  },
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "intimacy:actor-is-in-closeness"
+      },
+      "failure_message": "You can only do that with the person you are currently close to."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#311b92",
+    "textColor": "#d1c4e9",
+    "hoverBackgroundColor": "#4527a0",
+    "hoverTextColor": "#ede7f6"
+  }
+}
