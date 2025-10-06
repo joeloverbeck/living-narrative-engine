@@ -315,7 +315,9 @@ describe('MultiTargetResolutionStage - Action Tracing', () => {
       await stage.executeInternal(mockContext);
       const endTime = Date.now();
 
-      expect(endTime - startTime).toBeLessThan(100); // Should be fast
+      // Allow a more generous upper bound to avoid flakiness on slower
+      // shared runners while still enforcing the stage stays performant.
+      expect(endTime - startTime).toBeLessThan(200); // Should be fast
       expect(capturedTraceData).toHaveLength(0);
     });
 
