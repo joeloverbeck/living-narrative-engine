@@ -1,4 +1,4 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, jest } from '@jest/globals';
 import {
   TraceContext,
   TRACE_INFO,
@@ -65,5 +65,98 @@ describe('TraceContext', () => {
       TRACE_ERROR,
       TRACE_DATA,
     ]);
+  });
+
+  it('records payloads supplied to helper methods', () => {
+    const trace = new TraceContext();
+    const payload = { answer: 42 };
+
+    trace.data('with payload', 'helper', payload);
+
+    expect(trace.logs).toHaveLength(1);
+    expect(trace.logs[0]).toMatchObject({
+      type: TRACE_DATA,
+      message: 'with payload',
+      source: 'helper',
+      data: payload,
+    });
+  });
+
+  describe('operator evaluation capture', () => {
+    it('captures operator evaluation metadata with timestamps', () => {
+      const trace = new TraceContext();
+      const nowSpy = jest
+        .spyOn(Date, 'now')
+        .mockReturnValueOnce(2020) // capturedAt
+        .mockReturnValueOnce(3030); // log timestamp
+
+      trace.captureOperatorEvaluation({
+        operator: 'isSocketCovered',
+        entityId: 'entity-1',
+        result: true,
+        reason: 'All sockets occupied',
+        details: { sockets: 3 },
+      });
+
+      expect(trace.logs).toHaveLength(1);
+      expect(trace.logs[0]).toMatchObject({
+        type: TRACE_DATA,
+        message: 'Operator evaluation: isSocketCovered',
+        source: 'OperatorEvaluation',
+        timestamp: 3030,
+        data: {
+          type: 'operator_evaluation',
+          operator: 'isSocketCovered',
+          entityId: 'entity-1',
+          result: true,
+          reason: 'All sockets occupied',
+          details: { sockets: 3 },
+          capturedAt: 2020,
+        },
+      });
+      expect(trace.getOperatorEvaluations()).toEqual([
+        {
+          type: 'operator_evaluation',
+          operator: 'isSocketCovered',
+          entityId: 'entity-1',
+          result: true,
+          reason: 'All sockets occupied',
+          details: { sockets: 3 },
+          capturedAt: 2020,
+        },
+      ]);
+
+      nowSpy.mockRestore();
+    });
+
+    it('filters operator evaluation entries from other log types', () => {
+      const trace = new TraceContext();
+      const sequence = [0, 1, 100, 101, 200, 201];
+      const nowSpy = jest
+        .spyOn(Date, 'now')
+        .mockImplementation(() => sequence.shift());
+
+      trace.info('ignored info', 'source');
+      trace.data('other data', 'source', { type: 'other' });
+
+      trace.captureOperatorEvaluation({
+        operator: 'first',
+        entityId: 'a',
+        result: false,
+      });
+      trace.captureOperatorEvaluation({
+        operator: 'second',
+        entityId: 'b',
+        result: true,
+      });
+
+      const evaluations = trace.getOperatorEvaluations();
+
+      expect(evaluations).toHaveLength(2);
+      expect(evaluations.map((entry) => entry.operator)).toEqual(['first', 'second']);
+      expect(evaluations.map((entry) => entry.capturedAt)).toEqual([100, 200]);
+
+      nowSpy.mockRestore();
+    });
   });
 });
