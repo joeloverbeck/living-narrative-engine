@@ -271,18 +271,28 @@ export class TargetComponentValidationStage extends PipelineStage {
    *
    * @private
    * @param {ActionDefinition} actionDef - Action definition
-   * @param {object} _context - Pipeline context (unused)
-   * @returns {object} Target entities by role
+   * @param {object} context - Pipeline context
+   * @returns {object} Target entities by role including the actor when available
    */
-  #extractTargetEntities(actionDef, _context) {
+  #extractTargetEntities(actionDef, context) {
+    const { actor } = context || {};
+
     // Check if action has already resolved targets
     if (actionDef.resolvedTargets) {
-      return actionDef.resolvedTargets;
+      const targets = { ...actionDef.resolvedTargets };
+      if (actor) {
+        targets.actor = actor;
+      }
+      return targets;
     }
 
     // Check for legacy single-target format
     if (actionDef.target_entity) {
-      return { target: actionDef.target_entity };
+      const targets = { target: actionDef.target_entity };
+      if (actor) {
+        targets.actor = actor;
+      }
+      return targets;
     }
 
     // Check for multi-target format
@@ -297,6 +307,10 @@ export class TargetComponentValidationStage extends PipelineStage {
       if (actionDef.target_entities.tertiary) {
         targets.tertiary = actionDef.target_entities.tertiary;
       }
+    }
+
+    if (actor) {
+      targets.actor = actor;
     }
 
     return Object.keys(targets).length > 0 ? targets : null;
@@ -371,7 +385,7 @@ export class TargetComponentValidationStage extends PipelineStage {
     }
 
     // Handle multi-target format
-    for (const role of ['primary', 'secondary', 'tertiary']) {
+    for (const role of ['actor', 'primary', 'secondary', 'tertiary']) {
       if (targetEntities[role]) {
         ids[role] = targetEntities[role].id || 'unknown';
       }
