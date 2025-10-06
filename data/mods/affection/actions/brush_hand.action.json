@@ -8,7 +8,7 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["intimacy:kissing"]
+    "actor": ["kissing:kissing"]
   },
   "template": "brush {target}'s hand with your own",
   "prerequisites": [],

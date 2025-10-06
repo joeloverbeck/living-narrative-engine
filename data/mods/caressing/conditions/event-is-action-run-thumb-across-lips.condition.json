@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "caressing:event-is-action-run_thumb_across_lips",
+  "id": "caressing:event-is-action-run-thumb-across-lips",
   "description": "Checks if the triggering event is for the 'caressing:run_thumb_across_lips' action.",
   "logic": {
     "==": [

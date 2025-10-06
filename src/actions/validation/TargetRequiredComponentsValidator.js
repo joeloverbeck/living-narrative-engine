@@ -69,8 +69,8 @@ class TargetRequiredComponentsValidator {
       }
     }
 
-    // Check multi-target format (including actor requirements when provided)
-    const multiTargetRoles = ['actor', 'primary', 'secondary', 'tertiary'];
+    // Check multi-target format
+    const multiTargetRoles = ['primary', 'secondary', 'tertiary'];
     for (const role of multiTargetRoles) {
       if (requirements[role] && requirements[role].length > 0) {
         const result = this.#validateTargetRole(
@@ -97,6 +97,17 @@ class TargetRequiredComponentsValidator {
    * @returns {{valid: boolean, reason?: string}} Validation result with optional failure reason
    */
   #validateTargetRole(role, requiredComponents, targetEntities) {
+    // Guard: Check if targetEntities itself is null/undefined first
+    if (targetEntities === null || targetEntities === undefined) {
+      this.#logger.debug(
+        `No target entities provided for ${role} validation`
+      );
+      return {
+        valid: false,
+        reason: `No target entities available for ${role} validation`,
+      };
+    }
+
     // No target entity for this role
     if (!targetEntities[role]) {
       this.#logger.debug(

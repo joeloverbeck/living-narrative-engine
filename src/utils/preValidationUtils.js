@@ -51,6 +51,11 @@ const KNOWN_OPERATION_TYPES = [
   'LOCK_MOUTH_ENGAGEMENT',
   'UNLOCK_MOUTH_ENGAGEMENT',
   'DROP_ITEM_AT_LOCATION',
+  'VALIDATE_INVENTORY_CAPACITY',
+  'TRANSFER_ITEM',
+  'PICK_UP_ITEM_FROM_LOCATION',
+  'HAS_BODY_PART_WITH_COMPONENT_VALUE',
+  'SEQUENCE',
 ];
 
 /**
@@ -270,6 +275,21 @@ export function validateAllOperations(
 
   // If we're in an operation context and this is an array, validate each element as an operation
   if (Array.isArray(data) && inOperationContext) {
+    // DIAGNOSTIC LOGGING: Log operation array details for debugging
+    if (basePath.includes('actions') && data.length > 0) {
+      console.debug('🔍 DEBUG: Validating operations array:', {
+        basePath,
+        operationCount: data.length,
+        operations: data.map((op, idx) => ({
+          index: idx,
+          type: op?.type,
+          hasParameters: !!op?.parameters,
+          hasMacro: !!op?.macro,
+          keys: Object.keys(op || {})
+        }))
+      });
+    }
+
     for (let i = 0; i < data.length; i++) {
       const result = validateOperationStructure(data[i], `${basePath}[${i}]`);
       if (!result.isValid) {

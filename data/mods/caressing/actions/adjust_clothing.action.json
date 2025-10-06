@@ -21,12 +21,12 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["intimacy:kissing"]
+    "actor": ["kissing:kissing"]
   },
   "prerequisites": [
     {
       "logic": {
-        "condition_ref": "intimacy:actor-is-in-closeness"
+        "condition_ref": "positioning:actor-is-in-closeness"
       },
       "failure_message": "You can only do that with the person you are currently close to."
     }

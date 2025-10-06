@@ -203,8 +203,26 @@ function formatSingleError(error) {
       return `Expected type '${error.params?.type}' but got '${typeof error.data}'`;
     case 'const':
       return `Must be equal to '${error.params?.allowedValue}'`;
-    case 'enum':
-      return `Must be one of: ${error.params?.allowedValues?.join(', ')}`;
+    case 'enum': {
+      const allowedValues = error.params?.allowedValues || [];
+      const providedValue = error.data;
+      const fieldPath = error.instancePath || '';
+
+      // Enhanced enum error message with clear fix instructions
+      let message = `Invalid enum value '${providedValue}'. Allowed values: [${allowedValues.join(', ')}]`;
+
+      // Special handling for perception_type enum errors
+      if (fieldPath.includes('perception_type')) {
+        message += `\n\n⚠️  ENUM VALIDATION ERROR for 'perception_type' field`;
+        message += `\n  Provided value: "${providedValue}"`;
+        message += `\n  Allowed values: ${allowedValues.join(', ')}`;
+        message += `\n\n💡 FIX: Add "${providedValue}" to the enum in:`;
+        message += `\n  data/schemas/operations/dispatchPerceptibleEvent.schema.json`;
+        message += `\n  Look for the "perception_type" enum array and add your value.`;
+      }
+
+      return message;
+    }
     default:
       return error.message || 'Validation failed';
   }

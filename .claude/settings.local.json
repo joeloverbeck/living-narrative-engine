@@ -420,7 +420,11 @@
       "Bash(NODE_ENV=test npx jest tests/integration/actions/targetRequiredComponentsValidation.test.js --testNamePattern=\"should handle tertiary target requirements\" --no-coverage --silent=false)",
       "Bash(NODE_ENV=test npx jest tests/integration/actions/targetRequiredComponentsValidation.test.js --testNamePattern=\"should handle tertiary target requirements\" --no-coverage)",
       "Bash(NODE_ENV=test npx jest tests/integration/actions/targetRequiredComponentsValidation.test.js --no-coverage)",
-      "Bash(NODE_ENV=test npx jest tests/integration/actions/targetRequiredComponentsValidation.test.js --coverage --collectCoverageFrom='src/actions/validation/TargetRequiredComponentsValidator.js')"
+      "Bash(NODE_ENV=test npx jest tests/integration/actions/targetRequiredComponentsValidation.test.js --coverage --collectCoverageFrom='src/actions/validation/TargetRequiredComponentsValidator.js')",
+      "Bash(NODE_ENV=test npm run test:unit -- tests/unit/utils/preValidationUtils.test.js --silent)",
+      "Bash(npx ajv validate:*)",
+      "Bash(NODE_ENV=test npx jest tests/unit/actions/validation/TargetRequiredComponentsValidator.test.js --no-coverage --silent)",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": []
