@@ -19,6 +19,18 @@ describe('GameEngineLoadAdapter additional coverage', () => {
     expect(engine.loadGame).toHaveBeenCalledWith('alpha');
   });
 
+  it('awaits when the engine returns a promise', async () => {
+    const payload = { slot: 'delta', restored: true };
+    const engine = {
+      loadGame: jest.fn().mockResolvedValue(payload),
+    };
+    const adapter = new GameEngineLoadAdapter(engine);
+
+    await expect(adapter.load('delta')).resolves.toBe(payload);
+    expect(engine.loadGame).toHaveBeenCalledTimes(1);
+    expect(engine.loadGame).toHaveBeenCalledWith('delta');
+  });
+
   it('rejects when the engine throws synchronously', async () => {
     const error = new Error('synchronous failure');
     const engine = {
@@ -31,5 +43,23 @@ describe('GameEngineLoadAdapter additional coverage', () => {
     await expect(adapter.load('beta')).rejects.toBe(error);
     expect(engine.loadGame).toHaveBeenCalledTimes(1);
     expect(engine.loadGame).toHaveBeenCalledWith('beta');
+  });
+
+  it('propagates rejection when the engine returns a rejected promise', async () => {
+    const error = new Error('async failure');
+    const engine = {
+      loadGame: jest.fn().mockRejectedValue(error),
+    };
+    const adapter = new GameEngineLoadAdapter(engine);
+
+    await expect(adapter.load('gamma')).rejects.toBe(error);
+    expect(engine.loadGame).toHaveBeenCalledTimes(1);
+    expect(engine.loadGame).toHaveBeenCalledWith('gamma');
+  });
+
+  it('rejects with a TypeError when the engine does not expose loadGame', async () => {
+    const adapter = new GameEngineLoadAdapter({});
+
+    await expect(adapter.load('missing')).rejects.toBeInstanceOf(TypeError);
   });
 });
