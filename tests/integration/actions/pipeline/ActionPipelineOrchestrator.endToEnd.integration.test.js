@@ -10,6 +10,7 @@ import { ActionIndex } from '../../../../src/actions/actionIndex.js';
 import { FixSuggestionEngine } from '../../../../src/actions/errors/fixSuggestionEngine.js';
 import { ActionErrorContextBuilder } from '../../../../src/actions/errors/actionErrorContextBuilder.js';
 import { TargetComponentValidator } from '../../../../src/actions/validation/TargetComponentValidator.js';
+import TargetRequiredComponentsValidator from '../../../../src/actions/validation/TargetRequiredComponentsValidator.js';
 import { PipelineStage } from '../../../../src/actions/pipeline/PipelineStage.js';
 import { PipelineResult } from '../../../../src/actions/pipeline/PipelineResult.js';
 import SimpleEntityManager from '../../../common/entities/simpleEntityManager.js';
@@ -211,6 +212,7 @@ function createOrchestratorHarness({
   multiTargetStage,
   commandFormatter,
   prerequisiteService,
+  actionsFactory,
 } = {}) {
   const logger = new RecordingLogger();
   const entityManager = new SimpleEntityManager([
@@ -239,43 +241,52 @@ function createOrchestratorHarness({
   const trace = new RecordingTrace();
   const actionIndex = new ActionIndex({ logger, entityManager });
 
-  const actions = [
-    {
-      id: 'social:wave',
-      name: 'Wave',
-      command: 'wave',
-      description: 'Offer a greeting',
-      required_components: { actor: ['core:talker'] },
-      target_entity: { id: 'friend-1' },
-    },
-    {
-      id: 'social:hug',
-      name: 'Hug',
-      command: 'hug',
-      description: 'Give a warm hug',
-      required_components: { actor: ['core:talker'] },
-      target_entity: { id: 'friend-1' },
-      forbidden_components: { target: ['core:blocked'] },
-    },
-    {
-      id: 'social:taunt',
-      name: 'Taunt',
-      command: 'taunt',
-      description: 'Taunt the rival',
-      required_components: { actor: ['core:talker'] },
-      target_entity: { id: 'rival-1' },
-      forbidden_components: { target: ['core:blocked'] },
-    },
-    {
-      id: 'social:secret',
-      name: 'Share Secret',
-      command: 'whisper',
-      description: 'Share a secret',
-      required_components: { actor: ['core:talker'] },
-      target_entity: { id: 'friend-1' },
-      prerequisites: [{ shouldFail: true }],
-    },
-  ];
+  const defaultActions = () => {
+    const friendlyTarget = entityManager.getEntityInstance('friend-1');
+    const rivalTarget = entityManager.getEntityInstance('rival-1');
+
+    return [
+      {
+        id: 'social:wave',
+        name: 'Wave',
+        command: 'wave',
+        description: 'Offer a greeting',
+        required_components: { actor: ['core:talker'] },
+        target_entity: friendlyTarget,
+      },
+      {
+        id: 'social:hug',
+        name: 'Hug',
+        command: 'hug',
+        description: 'Give a warm hug',
+        required_components: { actor: ['core:talker'] },
+        target_entity: friendlyTarget,
+        forbidden_components: { target: ['core:blocked'] },
+      },
+      {
+        id: 'social:taunt',
+        name: 'Taunt',
+        command: 'taunt',
+        description: 'Taunt the rival',
+        required_components: { actor: ['core:talker'] },
+        target_entity: rivalTarget,
+        forbidden_components: { target: ['core:blocked'] },
+      },
+      {
+        id: 'social:secret',
+        name: 'Share Secret',
+        command: 'whisper',
+        description: 'Share a secret',
+        required_components: { actor: ['core:talker'] },
+        target_entity: friendlyTarget,
+        prerequisites: [{ shouldFail: true }],
+      },
+    ];
+  };
+
+  const actions = actionsFactory
+    ? actionsFactory({ entityManager })
+    : defaultActions();
 
   actionIndex.buildIndex(actions);
 
@@ -294,6 +305,9 @@ function createOrchestratorHarness({
   const targetComponentValidator = new TargetComponentValidator({
     logger,
     entityManager,
+  });
+  const targetRequiredComponentsValidator = new TargetRequiredComponentsValidator({
+    logger,
   });
 
   const safeEventDispatcher = new SimpleSafeEventDispatcher();
@@ -315,6 +329,7 @@ function createOrchestratorHarness({
     targetContextBuilder: new SimpleTargetContextBuilder(entityManager),
     multiTargetResolutionStage: resolutionStage,
     targetComponentValidator,
+    targetRequiredComponentsValidator,
   });
 
   return {
@@ -378,6 +393,97 @@ describe('ActionPipelineOrchestrator end-to-end integration', () => {
     expect(
       harness.logger.errorMessages.some((entry) =>
         entry.message.includes('Pipeline stage MultiTargetResolution threw an error')
+      )
+    ).toBe(true);
+  });
+});
+
+describe('ActionPipelineOrchestrator target requirements integration', () => {
+  it('filters actions missing required target components while keeping valid candidates', async () => {
+    const harness = createOrchestratorHarness({
+      actionsFactory: ({ entityManager }) => {
+        const friend = entityManager.getEntityInstance('friend-1');
+        const rival = entityManager.getEntityInstance('rival-1');
+
+        return [
+          {
+            id: 'friendly:embrace',
+            name: 'Friendly Embrace',
+            command: 'embrace',
+            description: 'Give a warm embrace',
+            required_components: {
+              actor: ['core:talker'],
+              target: ['core:friend'],
+            },
+            target_entity: friend,
+          },
+          {
+            id: 'friendly:blocked',
+            name: 'Blocked Greeting',
+            command: 'blocked-greet',
+            description: 'Attempt to greet without required traits',
+            required_components: {
+              actor: ['core:talker'],
+              target: ['core:blocked'],
+            },
+            target_entity: friend,
+          },
+          {
+            id: 'friendly:multi-target',
+            name: 'Coordinated Cheer',
+            command: 'cheer',
+            description: 'Cheer with a friendly companion',
+            required_components: {
+              actor: ['core:talker'],
+              primary: ['core:friend'],
+            },
+            target_entities: {
+              secondary: rival,
+            },
+          },
+        ];
+      },
+    });
+
+    const result = await harness.orchestrator.discoverActions(
+      harness.actor,
+      { mood: 'curious' },
+      { trace: harness.trace }
+    );
+
+    const discoveredIds = result.actions.map((action) => action.id);
+
+    expect(discoveredIds).toContain('friendly:embrace');
+    expect(discoveredIds).not.toContain('friendly:blocked');
+    expect(discoveredIds).not.toContain('friendly:multi-target');
+    expect(result.errors).toHaveLength(0);
+
+    const debugMessages = harness.logger.debugMessages.map(({ message }) => message);
+    expect(
+      debugMessages.some((message) =>
+        message.includes("Action 'friendly:blocked' filtered out: Target (target) must have component: core:blocked")
+      )
+    ).toBe(true);
+    expect(
+      debugMessages.some((message) =>
+        message.includes('No primary target entity found for required components validation')
+      )
+    ).toBe(true);
+  });
+
+  it('discovers actions without a trace context using the default pipeline flow', async () => {
+    const harness = createOrchestratorHarness();
+
+    const result = await harness.orchestrator.discoverActions(
+      harness.actor,
+      { mood: 'calm' }
+    );
+
+    expect(result.trace).toBeUndefined();
+    expect(result.actions.length).toBeGreaterThan(0);
+    expect(
+      harness.logger.debugMessages.some(({ message }) =>
+        message.includes('Action discovery pipeline completed')
       )
     ).toBe(true);
   });
