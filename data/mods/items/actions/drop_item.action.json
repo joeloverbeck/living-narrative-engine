@@ -1,0 +1,15 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "items:drop_item",
+  "name": "Drop Item",
+  "description": "Drop an item from your inventory at your current location",
+  "targets": {
+    "primary": {
+      "scope": "items:actor_inventory_items",
+      "placeholder": "item",
+      "description": "Item to drop"
+    }
+  },
+  "prerequisites": [],
+  "template": "drop {item}"
+}

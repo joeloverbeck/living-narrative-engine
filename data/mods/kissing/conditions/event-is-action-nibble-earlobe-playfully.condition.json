@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "kissing:event-is-action-nibble-earlobe-playfully",
+  "description": "Checks if the triggering event is for the 'kissing:nibble_earlobe_playfully' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "kissing:nibble_earlobe_playfully"
+    ]
+  }
+}

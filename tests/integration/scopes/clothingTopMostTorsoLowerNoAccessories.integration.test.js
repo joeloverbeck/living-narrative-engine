@@ -30,7 +30,9 @@ import {
   createMockUnifiedScopeResolver,
 } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
-import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
+import {createMockActionErrorContextBuilder,
+  createMockTargetRequiredComponentsValidator,
+} from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
 import JsonLogicCustomOperators from '../../../src/logic/jsonLogicCustomOperators.js';
 import createClothingStepResolver from '../../../src/scopeDsl/nodes/clothingStepResolver.js';
@@ -51,13 +53,13 @@ const targetTopMostTorsoLowerNoAccessoriesScopeContent = fs.readFileSync(
 const intimacyActorsScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../data/mods/intimacy/scopes/actors_with_ass_cheeks_facing_each_other_or_behind_target.scope'
+    '../../../data/mods/caressing/scopes/actors_with_ass_cheeks_facing_each_other_or_behind_target.scope'
   ),
   'utf8'
 );
 
 // Import actual action files
-import fondleAssAction from '../../../data/mods/intimacy/actions/fondle_ass.action.json';
+import fondleAssAction from '../../../data/mods/caressing/actions/fondle_ass.action.json';
 
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
 
@@ -141,8 +143,8 @@ describe('Clothing TopMost Torso Lower No Accessories Scope Integration Tests', 
     );
 
     // Register the prerequisite condition for the action
-    dataRegistry.store('conditions', 'intimacy:actor-is-in-closeness', {
-      id: 'intimacy:actor-is-in-closeness',
+    dataRegistry.store('conditions', 'affection:actor-is-in-closeness', {
+      id: 'affection:actor-is-in-closeness',
       description:
         'Checks if the actor is currently in closeness with someone.',
       logic: {
@@ -196,9 +198,9 @@ describe('Clothing TopMost Torso Lower No Accessories Scope Integration Tests', 
         targetScopeDefinitions.get(
           'clothing:target_topmost_torso_lower_clothing_no_accessories'
         ),
-      'intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target':
+      'caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target':
         primaryScopeDefinitions.get(
-          'intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target'
+          'caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target'
         ),
     });
 
@@ -252,6 +254,10 @@ describe('Clothing TopMost Torso Lower No Accessories Scope Integration Tests', 
       validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
       validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
     };
+
+    // Create mock TargetRequiredComponentsValidator
+    const mockTargetRequiredComponentsValidator =
+      createMockTargetRequiredComponentsValidator();
 const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex: {
         getCandidateActions: jest.fn().mockImplementation((actor) => {
@@ -289,6 +295,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       })(),
       targetContextBuilder: createMockTargetContextBuilder(entityManager),
       targetComponentValidator: mockTargetComponentValidator,
+      targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
       multiTargetResolutionStage: (() => {
         // Create a custom mock that properly handles multi-target actions
         const {
@@ -313,7 +320,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
               const isMultiTarget =
                 actionDef.targets && typeof actionDef.targets === 'object';
 
-              if (isMultiTarget && actionDef.id === 'intimacy:fondle_ass') {
+              if (isMultiTarget && actionDef.id === 'caressing:fondle_ass') {
                 // For fondle_ass, check closeness relationships
                 const actorCloseness =
                   actor.components?.['positioning:closeness'];
@@ -729,7 +736,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const fondleAssActions = result.actions.filter(
-        (action) => action.id === 'intimacy:fondle_ass'
+        (action) => action.id === 'caressing:fondle_ass'
       );
 
       expect(fondleAssActions).toHaveLength(1);
@@ -759,7 +766,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const fondleAssActions = result.actions.filter(
-        (action) => action.id === 'intimacy:fondle_ass'
+        (action) => action.id === 'caressing:fondle_ass'
       );
 
       expect(fondleAssActions).toHaveLength(1);
@@ -787,7 +794,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const fondleAssActions = result.actions.filter(
-        (action) => action.id === 'intimacy:fondle_ass'
+        (action) => action.id === 'caressing:fondle_ass'
       );
 
       expect(fondleAssActions).toHaveLength(1);
@@ -815,7 +822,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const fondleAssActions = result.actions.filter(
-        (action) => action.id === 'intimacy:fondle_ass'
+        (action) => action.id === 'caressing:fondle_ass'
       );
 
       expect(fondleAssActions).toHaveLength(0);
@@ -838,7 +845,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const fondleAssActions = result.actions.filter(
-        (action) => action.id === 'intimacy:fondle_ass'
+        (action) => action.id === 'caressing:fondle_ass'
       );
 
       expect(fondleAssActions).toHaveLength(0);
@@ -866,7 +873,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const fondleAssActions = result.actions.filter(
-        (action) => action.id === 'intimacy:fondle_ass'
+        (action) => action.id === 'caressing:fondle_ass'
       );
 
       expect(fondleAssActions).toHaveLength(1);
@@ -894,7 +901,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const fondleAssActions = result.actions.filter(
-        (action) => action.id === 'intimacy:fondle_ass'
+        (action) => action.id === 'caressing:fondle_ass'
       );
 
       expect(fondleAssActions).toHaveLength(1);

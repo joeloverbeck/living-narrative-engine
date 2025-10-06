@@ -77,7 +77,7 @@ describe('AI Prompt Output Regression', () => {
           },
           {
             index: 2,
-            actionId: 'intimacy:kiss',
+            actionId: 'kissing:kiss',
             commandString: 'kiss',
             description: 'Kiss gently.',
           },
@@ -114,7 +114,7 @@ describe('AI Prompt Output Regression', () => {
           },
           {
             index: 1,
-            actionId: 'intimacy:kiss',
+            actionId: 'kissing:kiss',
             commandString: 'kiss',
             description: 'Kiss.',
           },
@@ -132,7 +132,7 @@ describe('AI Prompt Output Regression', () => {
           },
           {
             index: 2,
-            actionId: 'intimacy:hug',
+            actionId: 'affection:hug',
             commandString: 'hug',
             description: 'Hug.',
           },
@@ -196,13 +196,13 @@ describe('AI Prompt Output Regression', () => {
           },
           {
             index: 3,
-            actionId: 'intimacy:kiss',
+            actionId: 'kissing:kiss',
             commandString: 'kiss Sarah',
             description: 'Kiss Sarah tenderly.',
           },
           {
             index: 4,
-            actionId: 'intimacy:hug',
+            actionId: 'affection:hug',
             commandString: 'hug Sarah',
             description: 'Give Sarah a warm hug.',
           },
@@ -227,7 +227,7 @@ describe('AI Prompt Output Regression', () => {
       // Should use categorized format
       expect(result).toContain('## Available Actions');
       expect(result).toContain('### CORE Actions');
-      expect(result).toContain('### INTIMACY Actions');
+      expect(result).toContain('### KISSING Actions');
       expect(result).toContain('### CLOTHING Actions');
       expect(result).toContain('### ANATOMY Actions');
 
@@ -263,7 +263,7 @@ describe('AI Prompt Output Regression', () => {
           },
           {
             index: 4,
-            actionId: 'intimacy:kiss',
+            actionId: 'kissing:kiss',
             commandString: 'kiss',
             description: 'Kiss gently.',
           },
@@ -285,16 +285,16 @@ describe('AI Prompt Output Regression', () => {
       const result =
         promptContentProvider.getAvailableActionsInfoContent(gameState);
 
-      // Verify namespace order: core, intimacy, sex, anatomy, clothing, then alphabetical
+      // Verify namespace order: core, affection, kissing, caressing, sex, anatomy, clothing, then alphabetical
       const coreIndex = result.indexOf('### CORE Actions');
-      const intimacyIndex = result.indexOf('### INTIMACY Actions');
+      const kissingIndex = result.indexOf('### KISSING Actions');
       const sexIndex = result.indexOf('### SEX Actions');
       const anatomyIndex = result.indexOf('### ANATOMY Actions');
       const clothingIndex = result.indexOf('### CLOTHING Actions');
       const unknownIndex = result.indexOf('### OTHER Actions');
 
-      expect(coreIndex).toBeLessThan(intimacyIndex);
-      expect(intimacyIndex).toBeLessThan(sexIndex);
+      expect(coreIndex).toBeLessThan(kissingIndex);
+      expect(kissingIndex).toBeLessThan(sexIndex);
       expect(sexIndex).toBeLessThan(anatomyIndex);
       expect(anatomyIndex).toBeLessThan(clothingIndex);
       expect(clothingIndex).toBeLessThan(unknownIndex);
@@ -325,7 +325,7 @@ describe('AI Prompt Output Regression', () => {
           },
           {
             index: 4,
-            actionId: 'intimacy:kiss',
+            actionId: 'kissing:kiss',
             commandString: '',
             description: 'Kiss with no command.',
           },
@@ -369,7 +369,7 @@ describe('AI Prompt Output Regression', () => {
           },
           {
             index: 2,
-            actionId: 'intimacy:kiss',
+            actionId: 'kissing:kiss',
             commandString: 'kiss',
             description: 'Kiss with punctuation.',
           },
@@ -393,7 +393,7 @@ describe('AI Prompt Output Regression', () => {
           }, // Empty description
           {
             index: 6,
-            actionId: 'intimacy:hug',
+            actionId: 'affection:hug',
             commandString: 'hug',
             description: 'Warm hug',
           },
@@ -425,7 +425,7 @@ describe('AI Prompt Output Regression', () => {
           },
           {
             index: 2,
-            actionId: 'intimacy:kiss',
+            actionId: 'kissing:kiss',
             commandString: 'kiss passionately',
             description: 'Kiss.',
           },
@@ -449,7 +449,7 @@ describe('AI Prompt Output Regression', () => {
           },
           {
             index: 6,
-            actionId: 'intimacy:hug',
+            actionId: 'affection:hug',
             commandString: 'hug tightly',
             description: 'Hug.',
           },

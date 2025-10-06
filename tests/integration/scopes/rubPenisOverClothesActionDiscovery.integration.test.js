@@ -28,7 +28,9 @@ import {
   createMockUnifiedScopeResolver,
 } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
-import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
+import {createMockActionErrorContextBuilder,
+  createMockTargetRequiredComponentsValidator,
+} from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
 import { createMockMultiTargetResolutionStage } from '../../common/mocks/mockMultiTargetResolutionStage.js';
 import { PipelineStage } from '../../../src/actions/pipeline/PipelineStage.js';
@@ -265,6 +267,10 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
       validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
     };
 
+    // Create mock TargetRequiredComponentsValidator
+    const mockTargetRequiredComponentsValidator =
+      createMockTargetRequiredComponentsValidator();
+
     const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex: {
         getCandidateActions: jest
@@ -295,6 +301,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
         jsonLogicEval,
       }),
       targetComponentValidator: mockTargetComponentValidator,
+      targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
     });
 
     actionDiscoveryService = new ActionDiscoveryService({

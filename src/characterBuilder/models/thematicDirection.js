@@ -76,7 +76,7 @@ export function createThematicDirection(conceptId, data, options = {}) {
     description: { min: 20, max: 2000 },
     coreTension: { min: 10, max: 500 },
     uniqueTwist: { min: 10, max: 1000 },
-    narrativePotential: { min: 10, max: 1000 },
+    narrativePotential: { min: 10, max: 3000 },
   };
 
   for (const [field, constraints] of Object.entries(fieldConstraints)) {

@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "items:letter_to_sheriff",
+  "description": "A sealed letter addressed to the sheriff",
+  "components": {
+    "core:name": {
+      "text": "Letter to the Sheriff"
+    },
+    "core:description": {
+      "text": "A crisp white envelope sealed with red wax, bearing the sheriff's name in elegant script."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.05
+    }
+  }
+}

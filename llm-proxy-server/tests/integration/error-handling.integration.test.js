@@ -20,6 +20,7 @@ import {
   handleValidationErrors,
 } from '../../src/middleware/validation.js';
 import { createTimeoutMiddleware } from '../../src/middleware/timeout.js';
+import { createRequestTrackingMiddleware } from '../../src/middleware/requestTracking.js';
 import { sendProxyError } from '../../src/utils/responseUtils.js';
 
 describe('Error Handling Integration Tests', () => {
@@ -65,6 +66,7 @@ describe('Error Handling Integration Tests', () => {
 
     // Create Express app with error handling
     app = express();
+    app.use(createRequestTrackingMiddleware({ logger: mockLogger }));
     app.use(express.json({ limit: '10mb' }));
     app.use(createTimeoutMiddleware());
 

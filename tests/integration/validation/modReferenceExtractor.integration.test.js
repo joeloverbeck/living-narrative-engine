@@ -71,15 +71,15 @@ describe('ModReferenceExtractor - Integration Tests', () => {
             id: 'integration_test_mod:kiss',
             name: 'Kiss',
             required_components: {
-              actor: ['positioning:closeness', 'intimacy:attraction'],
+              actor: ['positioning:closeness', 'affection:attraction'],
               target: ['core:actor'],
             },
             forbidden_components: {
               actor: ['violence:attacking'],
-              target: ['intimacy:kissing'],
+              target: ['kissing:kissing'],
             },
             targets: {
-              scope: 'intimacy:close_actors_facing_each_other',
+              scope: 'kissing:close_actors_facing_each_other',
             },
           },
           null,
@@ -98,7 +98,7 @@ describe('ModReferenceExtractor - Integration Tests', () => {
               properties: {
                 level: {
                   type: 'number',
-                  description: 'Arousal level from intimacy:attraction',
+                  description: 'Arousal level from affection:attraction',
                 },
                 target: {
                   type: 'string',
@@ -123,7 +123,7 @@ describe('ModReferenceExtractor - Integration Tests', () => {
             condition: {
               and: [
                 { has_component: ['actor', 'positioning:closeness'] },
-                { has_component: ['target', 'intimacy:attraction'] },
+                { has_component: ['target', 'affection:attraction'] },
                 {
                   '>=': [
                     {
@@ -142,7 +142,7 @@ describe('ModReferenceExtractor - Integration Tests', () => {
               {
                 type: 'modify_component_value',
                 target: 'target',
-                componentId: 'intimacy:attraction',
+                componentId: 'affection:attraction',
                 field: 'level',
                 operation: 'add',
                 value: 5,
@@ -159,7 +159,8 @@ describe('ModReferenceExtractor - Integration Tests', () => {
       // Verify all expected references are found (based on what extractor actually finds)
       const expectedRefs = [
         'positioning',
-        'intimacy',
+        'affection',
+        'kissing',
         'violence',
         'stats_mod',
         'emotion_mod',
@@ -172,8 +173,8 @@ describe('ModReferenceExtractor - Integration Tests', () => {
       // Verify specific component references
       expect(references.get('positioning')).toContain('closeness');
       expect(references.get('positioning')).toContain('close_partner');
-      expect(references.get('intimacy')).toContain('attraction');
-      expect(references.get('intimacy')).toContain(
+      expect(references.get('affection')).toContain('attraction');
+      expect(references.get('kissing')).toContain(
         'close_actors_facing_each_other'
       );
       expect(references.get('violence')).toContain('attacking');
@@ -196,7 +197,7 @@ describe('ModReferenceExtractor - Integration Tests', () => {
         JSON.stringify({
           id: 'integration_test_mod:valid',
           required_components: {
-            actor: ['positioning:standing', 'intimacy:arousal'],
+            actor: ['positioning:standing', 'affection:arousal'],
           },
         })
       );
@@ -222,11 +223,11 @@ describe('ModReferenceExtractor - Integration Tests', () => {
 
       // Should extract from valid files
       expect(references.has('positioning')).toBe(true);
-      expect(references.has('intimacy')).toBe(true);
+      expect(references.has('affection')).toBe(true);
       expect(references.has('violence')).toBe(true);
 
       expect(references.get('positioning')).toContain('standing');
-      expect(references.get('intimacy')).toContain('arousal');
+      expect(references.get('affection')).toContain('arousal');
       expect(references.get('violence')).toContain('fighting');
 
       // Should log warning for invalid file
@@ -260,7 +261,7 @@ describe('ModReferenceExtractor - Integration Tests', () => {
         path.join(nestedPath, 'flirt.action.json'),
         JSON.stringify({
           id: 'integration_test_mod:flirt',
-          targets: 'intimacy:attracted_partners',
+          targets: 'affection:attracted_partners',
           required_components: {
             actor: ['social_mod:charisma', 'emotion_mod:confidence'],
           },
@@ -274,7 +275,7 @@ describe('ModReferenceExtractor - Integration Tests', () => {
           condition: {
             '>=': [
               {
-                get_component_value: ['target', 'intimacy:attraction', 'level'],
+                get_component_value: ['target', 'affection:attraction', 'level'],
               },
               { get_component_value: ['actor', 'stats_mod:charisma', 'value'] },
             ],
@@ -284,13 +285,13 @@ describe('ModReferenceExtractor - Integration Tests', () => {
 
       const references = await extractor.extractReferences(testModPath);
 
-      expect(references.has('intimacy')).toBe(true);
+      expect(references.has('affection')).toBe(true);
       expect(references.has('social_mod')).toBe(true);
       expect(references.has('emotion_mod')).toBe(true);
       expect(references.has('stats_mod')).toBe(true);
 
-      expect(references.get('intimacy')).toContain('attracted_partners');
-      expect(references.get('intimacy')).toContain('attraction');
+      expect(references.get('affection')).toContain('attracted_partners');
+      expect(references.get('affection')).toContain('attraction');
       expect(references.get('social_mod')).toContain('charisma');
       expect(references.get('emotion_mod')).toContain('confidence');
       expect(references.get('stats_mod')).toContain('charisma');
@@ -303,10 +304,10 @@ describe('ModReferenceExtractor - Integration Tests', () => {
       await fs.writeFile(
         path.join(scopesDir, 'close_partners.scope'),
         `// Scope definitions for close partners
-intimacy:close_partners := actor.components.positioning:closeness.partners[][{
+affection:close_partners := actor.components.positioning:closeness.partners[][{
   "and": [
-    {"has_component": ["item", "intimacy:attraction"]},
-    {">=": [{"get_component_value": ["item", "intimacy:attraction", "level"]}, 30]}
+    {"has_component": ["item", "affection:attraction"]},
+    {">=": [{"get_component_value": ["item", "affection:attraction", "level"]}, 30]}
   ]
 }]
 
@@ -318,14 +319,14 @@ social_mod:conversation_partners := actor.partners | actor.components.social_mod
 
       const references = await extractor.extractReferences(testModPath);
 
-      expect(references.has('intimacy')).toBe(true);
+      expect(references.has('affection')).toBe(true);
       expect(references.has('positioning')).toBe(true);
       expect(references.has('furniture_mod')).toBe(true);
       expect(references.has('social_mod')).toBe(true);
 
       expect(references.get('positioning')).toContain('closeness');
       expect(references.get('positioning')).toContain('location');
-      expect(references.get('intimacy')).toContain('attraction');
+      expect(references.get('affection')).toContain('attraction');
       expect(references.get('furniture_mod')).toContain('chair');
       expect(references.get('social_mod')).toContain('friends');
     });
@@ -349,14 +350,14 @@ social_mod:conversation_partners := actor.partners | actor.components.social_mod
           required_components: {
             actor: [
               'positioning:closeness',
-              'intimacy:attraction',
+              'affection:attraction',
               'social_mod:charisma',
             ],
             target: ['core:actor', 'positioning:facing'],
           },
           forbidden_components: {
             actor: ['violence:hostile', 'relationship_mod:married'],
-            target: ['intimacy:unavailable'],
+            target: ['affection:unavailable'],
           },
           condition: {
             and: [
@@ -377,7 +378,7 @@ social_mod:conversation_partners := actor.partners | actor.components.social_mod
             ],
           },
           targets: {
-            scope: 'intimacy:available_partners',
+            scope: 'affection:available_partners',
           },
         })
       );
@@ -396,7 +397,7 @@ social_mod:conversation_partners := actor.partners | actor.components.social_mod
               technique: {
                 enum: [
                   'social_mod:compliment',
-                  'intimacy:touch',
+                  'affection:touch',
                   'conversation_mod:flirt',
                 ],
               },
@@ -416,12 +417,12 @@ social_mod:conversation_partners := actor.partners | actor.components.social_mod
         path.join(testModPath, 'rules', 'seduction_success.rule.json'),
         JSON.stringify({
           id: 'integration_test_mod:seduction_success',
-          condition_ref: 'intimacy:seduction_successful',
+          condition_ref: 'affection:seduction_successful',
           operations: [
             {
               type: 'add_component',
               target: 'target',
-              component: 'intimacy:attracted',
+              component: 'affection:attracted',
               data: { source: '{actor.id}', level: 25 },
             },
             {
@@ -455,7 +456,7 @@ social_mod:conversation_partners := actor.partners | actor.components.social_mod
             technique: {
               enum: [
                 'social_mod:verbal',
-                'intimacy:physical',
+                'affection:physical',
                 'psychological_mod:manipulation',
               ],
             },
@@ -483,14 +484,14 @@ social_mod:conversation_partners := actor.partners | actor.components.social_mod
           id: 'integration_test_mod:mutual_attraction',
           condition: {
             and: [
-              { has_component: ['actor', 'intimacy:attracted_to'] },
-              { has_component: ['target', 'intimacy:attracted_to'] },
+              { has_component: ['actor', 'affection:attracted_to'] },
+              { has_component: ['target', 'affection:attracted_to'] },
               {
                 '==': [
                   {
                     get_component_value: [
                       'actor',
-                      'intimacy:attracted_to',
+                      'affection:attracted_to',
                       'target',
                     ],
                   },
@@ -502,7 +503,7 @@ social_mod:conversation_partners := actor.partners | actor.components.social_mod
                   {
                     get_component_value: [
                       'target',
-                      'intimacy:attracted_to',
+                      'affection:attracted_to',
                       'target',
                     ],
                   },
@@ -519,7 +520,7 @@ social_mod:conversation_partners := actor.partners | actor.components.social_mod
       // Verify comprehensive cross-mod references (base_framework in 'extends' field not extracted)
       const expectedMods = [
         'positioning',
-        'intimacy',
+        'affection',
         'social_mod',
         'violence',
         'relationship_mod',
@@ -537,9 +538,9 @@ social_mod:conversation_partners := actor.partners | actor.components.social_mod
       // Verify specific component references from different contexts
       expect(references.get('positioning')).toContain('closeness');
       expect(references.get('positioning')).toContain('facing');
-      expect(references.get('intimacy')).toContain('attraction');
-      expect(references.get('intimacy')).toContain('available_partners');
-      expect(references.get('intimacy')).toContain('seduction_successful');
+      expect(references.get('affection')).toContain('attraction');
+      expect(references.get('affection')).toContain('available_partners');
+      expect(references.get('affection')).toContain('seduction_successful');
       expect(references.get('social_mod')).toContain('charisma');
       expect(references.get('social_mod')).toContain('compliment');
       expect(references.get('relationship_mod')).toContain('married');
@@ -688,7 +689,7 @@ social_mod:conversation_partners := actor.partners | actor.components.social_mod
               version: '1.0',
               dependencies: [
                 'positioning:core_system',
-                'intimacy:advanced_features',
+                'affection:advanced_features',
               ],
               nested: {
                 deep: {
@@ -710,7 +711,7 @@ social_mod:conversation_partners := actor.partners | actor.components.social_mod
                         {
                           get_component_value: [
                             'actor',
-                            'intimacy:comfort',
+                            'affection:comfort',
                             'level',
                           ],
                         },
@@ -737,11 +738,11 @@ social_mod:conversation_partners := actor.partners | actor.components.social_mod
       // Current implementation finds references from JSON Logic conditions and action-specific fields
       // but not from nested metadata objects
       expect(references.has('positioning')).toBe(true);
-      expect(references.has('intimacy')).toBe(true);
+      expect(references.has('affection')).toBe(true);
       expect(references.has('violence')).toBe(true);
 
       expect(references.get('positioning')).toContain('sitting');
-      expect(references.get('intimacy')).toContain('comfort');
+      expect(references.get('affection')).toContain('comfort');
       expect(references.get('violence')).toContain('threatening');
 
       // Note: social_mod, stats_mod, emotion_mod references in nested metadata are not extracted

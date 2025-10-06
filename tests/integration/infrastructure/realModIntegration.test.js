@@ -26,7 +26,7 @@ describe('Real Mod Integration Testing', () => {
       try {
         test = await ModTestFixture.forActionAutoLoad(
           'intimacy',
-          'intimacy:kiss_cheek'
+          'kissing:kiss_cheek'
         );
       } catch (error) {
         // If auto-loading fails, skip these tests as the files might not exist
@@ -50,14 +50,14 @@ describe('Real Mod Integration Testing', () => {
       await test.executeAction(actor.id, target.id);
 
       // Validate that the action executed successfully with real files
-      // The exact assertion depends on what the real intimacy:kiss_cheek action does
+      // The exact assertion depends on what the real kissing:kiss_cheek action does
       expect(test.events.length).toBeGreaterThan(0);
 
       // Should have generated some kind of action event
       const hasActionEvent = test.events.some(
         (event) =>
           event.eventType === 'core:attempt_action' ||
-          event.payload?.actionId === 'intimacy:kiss_cheek'
+          event.payload?.actionId === 'kissing:kiss_cheek'
       );
       expect(hasActionEvent).toBeTruthy();
     });
@@ -501,7 +501,7 @@ describe('Real Mod Integration Testing', () => {
       try {
         intimacyTest = await ModTestFixture.forActionAutoLoad(
           'intimacy',
-          'intimacy:kiss_cheek'
+          'kissing:kiss_cheek'
         );
       } catch (error) {
         // Skip if not available
@@ -611,7 +611,7 @@ describe('Real Mod Integration Testing', () => {
     it('should validate that infrastructure handles real file variations', async () => {
       // Test that infrastructure can handle different real file structures
       const testCases = [
-        { category: 'intimacy', action: 'intimacy:kiss_cheek' },
+        { category: 'intimacy', action: 'kissing:kiss_cheek' },
         { category: 'positioning', action: 'positioning:kneel_before' },
       ];
 

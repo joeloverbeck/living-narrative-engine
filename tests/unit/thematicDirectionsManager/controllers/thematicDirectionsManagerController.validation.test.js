@@ -52,7 +52,7 @@ describe('ThematicDirectionsManagerController - Validation Tests', () => {
         description: { min: 20, max: 2000 },
         coreTension: { min: 10, max: 500 },
         uniqueTwist: { min: 10, max: 1000 },
-        narrativePotential: { min: 10, max: 1000 },
+        narrativePotential: { min: 10, max: 3000 },
       };
 
       // Verify constraint structure

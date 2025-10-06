@@ -59,6 +59,7 @@ export class RetryHttpClient extends IHttpClient {
   /** @type {number} */ #defaultMaxRetries;
   /** @type {number} */ #defaultBaseDelayMs;
   /** @type {number} */ #defaultMaxDelayMs;
+  /** @type {string|null} */ #lastRequestId; // Store X-Request-ID for salvage recovery
 
   /**
    * @param {object} params
@@ -223,6 +224,10 @@ export class RetryHttpClient extends IHttpClient {
           silentDispatcher,
           this.#logger
         );
+
+        // Store X-Request-ID from response headers for potential salvage recovery
+        this.#lastRequestId = result?.headers?.get?.('X-Request-ID') || null;
+
         return result;
       } catch (err) {
         lastError = err;
@@ -230,6 +235,38 @@ export class RetryHttpClient extends IHttpClient {
         const raw = err.body ?? err.message;
         const isRetryable =
           status === undefined || RETRYABLE_STATUS_CODES.includes(status);
+
+        // Attempt salvage recovery for 503 errors before retrying
+        if (status === 503 && this.#lastRequestId) {
+          this.#logger.info(
+            `RetryHttpClient: Attempting salvage recovery for request ${this.#lastRequestId} before retry`
+          );
+
+          try {
+            // Attempt to fetch salvaged response from server
+            const salvageUrl = url.replace(
+              '/api/llm-request',
+              `/api/llm-request/salvage/${this.#lastRequestId}`
+            );
+            const salvageResponse = await fetch(salvageUrl);
+
+            if (salvageResponse.ok) {
+              this.#logger.info(
+                `RetryHttpClient: Successfully recovered salvaged response for request ${this.#lastRequestId}`
+              );
+              return salvageResponse;
+            } else {
+              this.#logger.debug(
+                `RetryHttpClient: No salvaged response available for request ${this.#lastRequestId}`
+              );
+            }
+          } catch (salvageErr) {
+            this.#logger.debug(
+              `RetryHttpClient: Salvage recovery failed for request ${this.#lastRequestId}`,
+              { error: salvageErr.message }
+            );
+          }
+        }
 
         if (isRetryable && attempt <= this.#defaultMaxRetries) {
           const delay = this.#calculateDelay(attempt);

@@ -123,3 +123,23 @@ export const createMockActionCommandFormatter = () => ({
 export const createMockFixSuggestionEngine = () => ({
   suggestFixes: jest.fn(() => []),
 });
+
+/**
+ * Creates a mock TargetRequiredComponentsValidator with a `validateTargetRequirements` method.
+ *
+ * @description Returns a mock validator that checks if target entities have required components.
+ * By default, returns valid:true to not break existing tests. Can be configured for specific test needs.
+ * @param {object} [options] - Optional configuration
+ * @param {boolean} [options.valid=true] - Default validation result
+ * @param {string[]} [options.missingComponents=[]] - Default missing components
+ * @returns {{ validateTargetRequirements: jest.Mock }} Mock validator instance
+ */
+export const createMockTargetRequiredComponentsValidator = (options = {}) => {
+  const { valid = true, missingComponents = [] } = options;
+
+  return {
+    validateTargetRequirements: jest
+      .fn()
+      .mockReturnValue({ valid, missingComponents }),
+  };
+};

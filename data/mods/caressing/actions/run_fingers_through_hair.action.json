@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "caressing:run_fingers_through_hair",
+  "name": "Run Fingers Through Hair",
+  "description": "Gently run your fingers through the target's hair in an intimate, caring gesture.",
+  "targets": "caressing:close_actors_facing_each_other_or_behind_target",
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "template": "run your fingers through {target}'s hair",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#311b92",
+    "textColor": "#d1c4e9",
+    "hoverBackgroundColor": "#4527a0",
+    "hoverTextColor": "#ede7f6"
+  }
+}

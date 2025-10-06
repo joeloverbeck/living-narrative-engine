@@ -26,15 +26,15 @@ The new architecture reduces test code by 70-80% while improving maintainability
 
 ```javascript
 import { ModTestFixture } from '../common/mods/index.js';
-import ruleFile from '../../../data/mods/intimacy/rules/kiss_cheek.rule.json';
-import conditionFile from '../../../data/mods/intimacy/conditions/event-is-action-kiss-cheek.condition.json';
+import ruleFile from '../../../data/mods/kissing/rules/kiss_cheek.rule.json';
+import conditionFile from '../../../data/mods/kissing/conditions/event-is-action-kiss-cheek.condition.json';
 
 describe('intimacy:kiss_cheek action integration', () => {
   let testFixture;
 
   beforeEach(() => {
     testFixture = ModTestFixture.forAction(
-      'intimacy',
+      'kissing',
       'intimacy:kiss_cheek',
       ruleFile,
       conditionFile
@@ -65,7 +65,7 @@ import { ModActionTestBase } from '../common/mods/index.js';
 class KissCheekActionTest extends ModActionTestBase {
   constructor() {
     super(
-      'intimacy',
+      'kissing',
       'intimacy:kiss_cheek',
       kissCheekRule,
       eventIsActionKissCheek

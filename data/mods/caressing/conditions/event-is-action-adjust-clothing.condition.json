@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "caressing:event-is-action-adjust-clothing",
+  "description": "Checks if the triggering event is for the 'caressing:adjust_clothing' action.",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "caressing:adjust_clothing"
+    ]
+  }
+}

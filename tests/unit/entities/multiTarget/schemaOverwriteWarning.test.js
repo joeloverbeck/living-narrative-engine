@@ -45,7 +45,7 @@ describe('AttemptActionSchemaFixVerification', () => {
       const payload = {
         eventName: 'core:attempt_action',
         actorId: 'core:player_instance',
-        actionId: 'intimacy:adjust_clothing',
+        actionId: 'caressing:adjust_clothing',
         originalInput: 'adjust clothing',
         targets: {
           primary: 'p_erotica:iker_aguirre_instance',
@@ -88,7 +88,7 @@ describe('AttemptActionSchemaFixVerification', () => {
       const payload = {
         eventName: 'core:attempt_action',
         actorId: 'p_erotica:amaia_castillo_instance',
-        actionId: 'intimacy:adjust_clothing',
+        actionId: 'caressing:adjust_clothing',
         originalInput: "adjust Iker Aguirre's denim trucker jacket",
         targets: {
           primary: 'p_erotica:iker_aguirre_instance',
@@ -328,7 +328,7 @@ describe('AttemptActionSchemaFixVerification', () => {
         eventName: 'core:attempt_action',
         timestamp: 1754061900301,
         actorId: 'p_erotica:amaia_castillo_instance',
-        actionId: 'intimacy:adjust_clothing',
+        actionId: 'caressing:adjust_clothing',
         originalInput: "adjust Iker Aguirre's denim trucker jacket",
         targets: {
           primary: {

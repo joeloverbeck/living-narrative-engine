@@ -11,6 +11,7 @@ import { PipelineResult } from '../../../../src/actions/pipeline/PipelineResult.
 import { ComponentFilteringStage } from '../../../../src/actions/pipeline/stages/ComponentFilteringStage.js';
 import { PrerequisiteEvaluationStage } from '../../../../src/actions/pipeline/stages/PrerequisiteEvaluationStage.js';
 import ActionAwareStructuredTrace from '../../../../src/actions/tracing/actionAwareStructuredTrace.js';
+import { createMockTargetRequiredComponentsValidator } from '../../../common/mockFactories/actions.js';
 
 // Helper function to create mocks
 const createMock = (name, methods) => {
@@ -51,9 +52,14 @@ describe('TargetComponentValidationStage Integration', () => {
       entityManager: mockEntityManager
     });
 
+    // Create mock TargetRequiredComponentsValidator
+    const targetRequiredComponentsValidator =
+      createMockTargetRequiredComponentsValidator();
+
     // Create validation stage with real validator
     validationStage = new TargetComponentValidationStage({
       targetComponentValidator,
+      targetRequiredComponentsValidator,
       logger: mockLogger,
       actionErrorContextBuilder: mockErrorContextBuilder
     });
@@ -262,6 +268,7 @@ describe('TargetComponentValidationStage Integration', () => {
         targetComponentValidator: {
           validateTargetComponents: () => { throw new Error('Validation error'); }
         },
+        targetRequiredComponentsValidator: createMockTargetRequiredComponentsValidator(),
         logger: mockLogger,
         actionErrorContextBuilder: mockErrorContextBuilder
       });

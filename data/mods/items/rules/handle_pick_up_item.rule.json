@@ -1,0 +1,160 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "items:handle_pick_up_item",
+  "comment": "Handles pick_up_item action with capacity validation and perception logging",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "items:event-is-action-pick-up-item"
+  },
+  "actions": [
+    {
+      "type": "VALIDATE_INVENTORY_CAPACITY",
+      "comment": "Check if actor can carry the item",
+      "parameters": {
+        "targetEntity": "{event.payload.actorId}",
+        "itemEntity": "{event.payload.targetId}",
+        "result_variable": "capacityCheck"
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Branch based on capacity validation",
+      "parameters": {
+        "condition": {
+          "==": [
+            { "var": "context.capacityCheck.valid" },
+            false
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "QUERY_COMPONENT",
+            "comment": "Get actor position for logging",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "core:position",
+              "result_variable": "actorPosition"
+            }
+          },
+          {
+            "type": "GET_NAME",
+            "comment": "Get actor name",
+            "parameters": {
+              "entity_ref": "actor",
+              "result_variable": "actorName"
+            }
+          },
+          {
+            "type": "GET_NAME",
+            "comment": "Get item name",
+            "parameters": {
+              "entity_ref": "target",
+              "result_variable": "itemName"
+            }
+          },
+          {
+            "type": "GET_TIMESTAMP",
+            "comment": "Get current timestamp",
+            "parameters": {
+              "result_variable": "currentTimestamp"
+            }
+          },
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "comment": "Log failed pickup for observers",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} tried to pick up {context.itemName}, but can't carry it.",
+              "perception_type": "item_pickup_failed",
+              "actor_id": "{event.payload.actorId}",
+              "involved_entities": ["{event.payload.targetId}"]
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Notify UI of failure",
+            "parameters": {
+              "eventType": "core:display_failed_action_result",
+              "payload": {
+                "message": "Cannot carry {context.itemName}. Reason: {context.capacityCheck.reason}"
+              }
+            }
+          },
+          {
+            "type": "END_TURN",
+            "comment": "End turn after failed pickup",
+            "parameters": {
+              "entityId": "{event.payload.actorId}",
+              "success": false,
+              "error": {
+                "message": "Pickup failed: {context.capacityCheck.reason}"
+              }
+            }
+          }
+        ],
+        "else_actions": [
+          {
+            "type": "PICK_UP_ITEM_FROM_LOCATION",
+            "comment": "Add to inventory and remove from world",
+            "parameters": {
+              "actorEntity": "{event.payload.actorId}",
+              "itemEntity": "{event.payload.targetId}",
+              "result_variable": "pickupResult"
+            }
+          },
+          {
+            "type": "QUERY_COMPONENT",
+            "comment": "Get actor position for logging",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "core:position",
+              "result_variable": "actorPosition"
+            }
+          },
+          {
+            "type": "GET_NAME",
+            "comment": "Get actor name",
+            "parameters": {
+              "entity_ref": "actor",
+              "result_variable": "actorName"
+            }
+          },
+          {
+            "type": "GET_NAME",
+            "comment": "Get item name",
+            "parameters": {
+              "entity_ref": "target",
+              "result_variable": "itemName"
+            }
+          },
+          {
+            "type": "GET_TIMESTAMP",
+            "comment": "Get current timestamp",
+            "parameters": {
+              "result_variable": "currentTimestamp"
+            }
+          },
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "comment": "Log successful pickup for observers",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} picked up {context.itemName}.",
+              "perception_type": "item_picked_up",
+              "actor_id": "{event.payload.actorId}",
+              "involved_entities": ["{event.payload.targetId}"]
+            }
+          },
+          {
+            "type": "END_TURN",
+            "comment": "End turn after successful pickup",
+            "parameters": {
+              "entityId": "{event.payload.actorId}",
+              "success": true
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

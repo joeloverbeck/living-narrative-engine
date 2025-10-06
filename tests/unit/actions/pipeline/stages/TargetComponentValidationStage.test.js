@@ -11,6 +11,7 @@ import { createTestBed } from '../../../../common/testBed.js';
 describe('TargetComponentValidationStage', () => {
   let stage;
   let mockValidator;
+  let mockRequiredValidator;
   let mockLogger;
   let mockErrorContextBuilder;
   let context;
@@ -22,12 +23,14 @@ describe('TargetComponentValidationStage', () => {
 
     // Create mocks with proper method signatures
     mockValidator = testBed.createMock('ITargetComponentValidator', ['validateTargetComponents']);
+    mockRequiredValidator = testBed.createMock('ITargetRequiredComponentsValidator', ['validateTargetRequirements']);
     mockLogger = testBed.createMockLogger();
     mockErrorContextBuilder = testBed.createMock('IActionErrorContextBuilder', ['buildErrorContext']);
 
     // Create stage instance
     stage = new TargetComponentValidationStage({
       targetComponentValidator: mockValidator,
+      targetRequiredComponentsValidator: mockRequiredValidator,
       logger: mockLogger,
       actionErrorContextBuilder: mockErrorContextBuilder
     });
@@ -54,6 +57,16 @@ describe('TargetComponentValidationStage', () => {
       expect(() => {
         new TargetComponentValidationStage({
           targetComponentValidator: null,
+          targetRequiredComponentsValidator: mockRequiredValidator,
+          logger: mockLogger,
+          actionErrorContextBuilder: mockErrorContextBuilder
+        });
+      }).toThrow();
+
+      expect(() => {
+        new TargetComponentValidationStage({
+          targetComponentValidator: mockValidator,
+          targetRequiredComponentsValidator: null,
           logger: mockLogger,
           actionErrorContextBuilder: mockErrorContextBuilder
         });
@@ -96,6 +109,11 @@ describe('TargetComponentValidationStage', () => {
           valid: true
         });
 
+      // Required validator passes for both
+      mockRequiredValidator.validateTargetRequirements.mockReturnValue({
+        valid: true
+      });
+
       const result = await stage.executeInternal(context);
 
       expect(result.success).toBe(true);
@@ -116,6 +134,9 @@ describe('TargetComponentValidationStage', () => {
       mockValidator.validateTargetComponents.mockReturnValue({
         valid: true
       });
+      mockRequiredValidator.validateTargetRequirements.mockReturnValue({
+        valid: true
+      });
 
       const result = await stage.executeInternal(context);
 
@@ -134,6 +155,9 @@ describe('TargetComponentValidationStage', () => {
       context.candidateActions = [actionWithoutTarget];
 
       mockValidator.validateTargetComponents.mockReturnValue({
+        valid: true
+      });
+      mockRequiredValidator.validateTargetRequirements.mockReturnValue({
         valid: true
       });
 
@@ -161,6 +185,9 @@ describe('TargetComponentValidationStage', () => {
       mockValidator.validateTargetComponents.mockReturnValue({
         valid: true
       });
+      mockRequiredValidator.validateTargetRequirements.mockReturnValue({
+        valid: true
+      });
 
       const result = await stage.executeInternal(context);
 
@@ -180,6 +207,9 @@ describe('TargetComponentValidationStage', () => {
       mockValidator.validateTargetComponents.mockReturnValue({
         valid: true
       });
+      mockRequiredValidator.validateTargetRequirements.mockReturnValue({
+        valid: true
+      });
 
       const result = await stage.executeInternal(context);
 
@@ -187,6 +217,133 @@ describe('TargetComponentValidationStage', () => {
       expect(result.success).toBeDefined();
       expect(result.data).toBeDefined();
       expect(result.continueProcessing).toBeDefined();
+    });
+
+    it('should filter actions when targets missing required components', async () => {
+      const actionWithRequiredComponents = {
+        id: 'action-1',
+        required_components: {
+          primary: ['positioning:sitting_on', 'positioning:closeness']
+        },
+        target_entities: {
+          primary: { id: 'target-1', components: { 'positioning:closeness': {} } }
+        }
+      };
+
+      const actionWithAllRequired = {
+        id: 'action-2',
+        required_components: {
+          primary: ['positioning:closeness']
+        },
+        target_entities: {
+          primary: { id: 'target-2', components: { 'positioning:closeness': {} } }
+        }
+      };
+
+      context.candidateActions = [actionWithRequiredComponents, actionWithAllRequired];
+
+      // Forbidden validator passes both
+      mockValidator.validateTargetComponents.mockReturnValue({
+        valid: true
+      });
+
+      // Required validator - first fails, second passes
+      mockRequiredValidator.validateTargetRequirements
+        .mockReturnValueOnce({
+          valid: false,
+          reason: 'Target (primary) must have component: positioning:sitting_on'
+        })
+        .mockReturnValueOnce({
+          valid: true
+        });
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.data.candidateActions).toHaveLength(1);
+      expect(result.data.candidateActions[0].id).toBe('action-2');
+      expect(mockRequiredValidator.validateTargetRequirements).toHaveBeenCalledTimes(2);
+    });
+
+    it('should pass actions when targets have all required components', async () => {
+      const action = {
+        id: 'action-1',
+        required_components: {
+          primary: ['positioning:sitting_on', 'positioning:closeness']
+        },
+        target_entities: {
+          primary: {
+            id: 'target-1',
+            components: {
+              'positioning:sitting_on': {},
+              'positioning:closeness': {}
+            }
+          }
+        }
+      };
+
+      context.candidateActions = [action];
+
+      mockValidator.validateTargetComponents.mockReturnValue({
+        valid: true
+      });
+      mockRequiredValidator.validateTargetRequirements.mockReturnValue({
+        valid: true
+      });
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.data.candidateActions).toHaveLength(1);
+      expect(result.data.candidateActions[0]).toBe(action);
+      expect(mockRequiredValidator.validateTargetRequirements).toHaveBeenCalledWith(
+        action,
+        expect.objectContaining({
+          primary: expect.objectContaining({
+            id: 'target-1'
+          })
+        })
+      );
+    });
+
+    it('should filter actions when forbidden validation passes but required validation fails', async () => {
+      const action = {
+        id: 'action-1',
+        forbidden_components: {
+          primary: ['some-forbidden-component']
+        },
+        required_components: {
+          primary: ['required-component']
+        },
+        target_entities: {
+          primary: {
+            id: 'target-1',
+            components: {
+              'other-component': {}
+              // Missing required-component
+            }
+          }
+        }
+      };
+
+      context.candidateActions = [action];
+
+      // Forbidden passes (target doesn't have forbidden component)
+      mockValidator.validateTargetComponents.mockReturnValue({
+        valid: true
+      });
+
+      // Required fails (target missing required component)
+      mockRequiredValidator.validateTargetRequirements.mockReturnValue({
+        valid: false,
+        reason: 'Target (primary) must have component: required-component'
+      });
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.data.candidateActions).toHaveLength(0);
+      expect(result.continueProcessing).toBe(false);
     });
   });
 
@@ -200,6 +357,11 @@ describe('TargetComponentValidationStage', () => {
         captureActionData: jest.fn().mockResolvedValue(undefined)
       };
       context.trace = mockTrace;
+
+      // Default mock for required validator
+      mockRequiredValidator.validateTargetRequirements.mockReturnValue({
+        valid: true
+      });
     });
 
     it('should capture action data when trace supports it', async () => {
@@ -330,6 +492,13 @@ describe('TargetComponentValidationStage', () => {
   });
 
   describe('performance', () => {
+    beforeEach(() => {
+      // Default mock for required validator
+      mockRequiredValidator.validateTargetRequirements.mockReturnValue({
+        valid: true
+      });
+    });
+
     it('should log slow validations', async () => {
       // Create many actions to simulate slow validation
       const actions = Array(100).fill(null).map((_, i) => ({
@@ -383,6 +552,13 @@ describe('TargetComponentValidationStage', () => {
   });
 
   describe('legacy format support', () => {
+    beforeEach(() => {
+      // Default mock for required validator
+      mockRequiredValidator.validateTargetRequirements.mockReturnValue({
+        valid: true
+      });
+    });
+
     it('should handle legacy single-target format', async () => {
       const legacyAction = {
         id: 'legacy-action',
@@ -435,6 +611,13 @@ describe('TargetComponentValidationStage', () => {
   });
 
   describe('resolved targets', () => {
+    beforeEach(() => {
+      // Default mock for required validator
+      mockRequiredValidator.validateTargetRequirements.mockReturnValue({
+        valid: true
+      });
+    });
+
     it('should use resolved targets if available', async () => {
       const actionWithResolvedTargets = {
         id: 'resolved-action',

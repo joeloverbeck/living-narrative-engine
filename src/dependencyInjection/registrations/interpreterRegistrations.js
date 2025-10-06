@@ -157,6 +157,19 @@ export function registerInterpreters(container) {
       bind(tokens.RegenerateDescriptionHandler)
     );
     registry.register('SEQUENCE', bind(tokens.SequenceHandler));
+    registry.register('TRANSFER_ITEM', bind(tokens.TransferItemHandler));
+    registry.register(
+      'VALIDATE_INVENTORY_CAPACITY',
+      bind(tokens.ValidateInventoryCapacityHandler)
+    );
+    registry.register(
+      'DROP_ITEM_AT_LOCATION',
+      bind(tokens.DropItemAtLocationHandler)
+    );
+    registry.register(
+      'PICK_UP_ITEM_FROM_LOCATION',
+      bind(tokens.PickUpItemFromLocationHandler)
+    );
 
     return registry;
   });

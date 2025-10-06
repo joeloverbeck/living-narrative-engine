@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "kissing:kiss_neck_sensually",
+  "name": "Kiss Neck Sensually",
+  "description": "Kiss the target's neck in a sensual, intimate manner.",
+  "targets": "kissing:actors_with_arms_facing_each_other_or_behind_target",
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": ["kissing:kissing"]
+  },
+  "template": "kiss {target}'s neck sensually",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#ad1457",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#c2185b",
+    "hoverTextColor": "#fce4ec"
+  }
+}

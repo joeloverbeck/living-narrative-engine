@@ -45,13 +45,13 @@ describe('MultiTargetActionFormatter - mixed actions bug reproduction', () => {
       // pass resolvedTargets/targetDefinitions to ActionFormattingStage
 
       const adjustClothingActionDef = {
-        id: 'intimacy:adjust_clothing',
+        id: 'caressing:adjust_clothing',
         name: 'Adjust Clothing',
         template: "adjust {primary}'s {secondary}",
         targets: {
           primary: {
             scope:
-              'intimacy:close_actors_facing_each_other_with_torso_clothing',
+              'caressing:close_actors_facing_each_other_with_torso_clothing',
             placeholder: 'primary',
             description: 'Person whose clothing to adjust',
           },
@@ -117,7 +117,7 @@ describe('MultiTargetActionFormatter - mixed actions bug reproduction', () => {
       // but ActionFormattingStage processes it in legacy mode due to mixed actions
 
       const actionDef = {
-        id: 'intimacy:adjust_clothing',
+        id: 'caressing:adjust_clothing',
         template: "adjust {primary}'s {secondary}",
         targets: {
           primary: { placeholder: 'primary' },
@@ -184,7 +184,7 @@ describe('MultiTargetActionFormatter - mixed actions bug reproduction', () => {
       // resolvedTargets/targetDefinitions when allActionsAreMultiTarget = true
 
       const actionDef = {
-        id: 'intimacy:adjust_clothing',
+        id: 'caressing:adjust_clothing',
         template: "adjust {primary}'s {secondary}",
         targets: {
           primary: { placeholder: 'primary' },

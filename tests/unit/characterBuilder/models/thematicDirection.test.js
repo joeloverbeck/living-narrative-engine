@@ -339,20 +339,20 @@ describe('ThematicDirection Model', () => {
         expect(() => {
           createThematicDirection(conceptId, invalidData);
         }).toThrow(
-          'ThematicDirection: narrativePotential must be between 10 and 1000 characters'
+          'ThematicDirection: narrativePotential must be between 10 and 3000 characters'
         );
       });
 
       it('should throw error for narrativePotential too long', () => {
         const invalidData = {
           ...validData,
-          narrativePotential: 'A'.repeat(1001),
-        }; // 1001 chars, max is 1000
+          narrativePotential: 'A'.repeat(3001),
+        }; // 3001 chars, max is 3000
 
         expect(() => {
           createThematicDirection(conceptId, invalidData);
         }).toThrow(
-          'ThematicDirection: narrativePotential must be between 10 and 1000 characters'
+          'ThematicDirection: narrativePotential must be between 10 and 3000 characters'
         );
       });
     });

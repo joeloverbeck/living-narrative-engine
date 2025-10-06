@@ -45,7 +45,7 @@ describe('MultiTargetValidation - Integration Tests', () => {
       // Build the event payload using MultiTargetEventBuilder
       const payload = builder
         .setActor('p_erotica:amaia_castillo_instance')
-        .setAction('intimacy:adjust_clothing')
+        .setAction('caressing:adjust_clothing')
         .setOriginalInput("adjust Iker Aguirre's denim trucker jacket")
         .setTargets(targets)
         .setMetadata({
@@ -59,7 +59,7 @@ describe('MultiTargetValidation - Integration Tests', () => {
       expect(payload).toBeDefined();
       expect(payload.eventName).toBe('core:attempt_action');
       expect(payload.actorId).toBe('p_erotica:amaia_castillo_instance');
-      expect(payload.actionId).toBe('intimacy:adjust_clothing');
+      expect(payload.actionId).toBe('caressing:adjust_clothing');
       expect(payload.targets).toEqual(targets);
       expect(payload.primaryId).toBe('p_erotica:iker_aguirre_instance');
       expect(payload.secondaryId).toBe('c103dff8-bfec-49f5-adb0-2c889ec5893e');

@@ -5,14 +5,70 @@ import {
 } from '../config/constants.js';
 
 /**
- * Creates a timeout middleware for Express requests
+ * Creates a timeout middleware for Express requests with response tracking integration
  * @param {number} ms - Timeout duration in milliseconds
+ * @param {object} options - Configuration options
+ * @param {object} [options.logger] - Logger instance for debugging
+ * @param {number} [options.gracePeriod] - Grace period after timeout before forcing response
  * @returns {Function} Express middleware function
  */
-export const createTimeoutMiddleware = (ms = 30000) => {
+export const createTimeoutMiddleware = (ms = 30000, options = {}) => {
+  const { logger, gracePeriod = 0 } = options;
+
   return (req, res, next) => {
+    const requestId = req.requestId || 'unknown';
+    let timeoutFired = false;
+    let gracePeriodTimer = null;
+
     const timeout = setTimeout(() => {
+      timeoutFired = true;
+
+      if (logger) {
+        logger.warn(`Request ${requestId}: Timeout fired after ${ms}ms`, {
+          requestId,
+          path: req.path,
+          method: req.method,
+          responseCommitted: res.isResponseCommitted ? res.isResponseCommitted() : false,
+          headersSent: res.headersSent,
+        });
+      }
+
+      // Check if response is already committed via tracking middleware
+      if (res.commitResponse && !res.commitResponse('timeout')) {
+        if (logger) {
+          logger.warn(
+            `Request ${requestId}: Timeout cannot commit response - already committed to '${res.getCommitmentSource()}'`,
+            {
+              requestId,
+              existingCommitment: res.getCommitmentSource ? res.getCommitmentSource() : 'unknown',
+            }
+          );
+        }
+        return;
+      }
+
+      // If grace period is configured, delay the actual timeout response
+      if (gracePeriod > 0) {
+        if (logger) {
+          logger.debug(`Request ${requestId}: Entering grace period of ${gracePeriod}ms`, {
+            requestId,
+          });
+        }
+
+        gracePeriodTimer = setTimeout(() => {
+          sendTimeoutResponse();
+        }, gracePeriod);
+      } else {
+        sendTimeoutResponse();
+      }
+    }, ms);
+
+    const sendTimeoutResponse = () => {
       if (!res.headersSent) {
+        if (req.transitionState) {
+          req.transitionState('timeout', { timeoutMs: ms });
+        }
+
         res.status(503).json({
           error: true,
           message: 'Request timeout - the server took too long to respond.',
@@ -21,31 +77,73 @@ export const createTimeoutMiddleware = (ms = 30000) => {
             timeoutMs: ms,
             path: req.path,
             method: req.method,
+            requestId,
           },
           originalStatusCode: 503,
         });
+
+        if (logger) {
+          logger.warn(`Request ${requestId}: Timeout response sent`, { requestId });
+        }
+      } else {
+        if (logger) {
+          logger.warn(
+            `Request ${requestId}: Cannot send timeout response - headers already sent`,
+            { requestId }
+          );
+        }
       }
-    }, ms);
+    };
 
     // Clear timeout when response is sent
     const originalSend = res.send;
     const originalJson = res.json;
     const originalEnd = res.end;
 
-    const clearTimeoutWrapper = (fn) => {
+    const clearTimeoutWrapper = (fn, methodName) => {
       return function (...args) {
+        if (timeoutFired && logger) {
+          logger.debug(
+            `Request ${requestId}: Response method '${methodName}' called after timeout`,
+            {
+              requestId,
+              method: methodName,
+              timeElapsed: ms,
+            }
+          );
+        }
+
         clearTimeout(timeout);
+        if (gracePeriodTimer) {
+          clearTimeout(gracePeriodTimer);
+        }
+
         return fn.apply(this, args);
       };
     };
 
-    res.send = clearTimeoutWrapper(originalSend);
-    res.json = clearTimeoutWrapper(originalJson);
-    res.end = clearTimeoutWrapper(originalEnd);
+    res.send = clearTimeoutWrapper(originalSend, 'send');
+    res.json = clearTimeoutWrapper(originalJson, 'json');
+    res.end = clearTimeoutWrapper(originalEnd, 'end');
 
     // Also clear on response finish
-    res.on('finish', () => clearTimeout(timeout));
-    res.on('close', () => clearTimeout(timeout));
+    res.on('finish', () => {
+      clearTimeout(timeout);
+      if (gracePeriodTimer) {
+        clearTimeout(gracePeriodTimer);
+      }
+    });
+
+    res.on('close', () => {
+      clearTimeout(timeout);
+      if (gracePeriodTimer) {
+        clearTimeout(gracePeriodTimer);
+      }
+
+      if (timeoutFired && logger) {
+        logger.debug(`Request ${requestId}: Connection closed after timeout`, { requestId });
+      }
+    });
 
     next();
   };

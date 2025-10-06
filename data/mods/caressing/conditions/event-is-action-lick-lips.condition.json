@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "caressing:event-is-action-lick-lips",
+  "description": "Checks if the triggering event is for the 'caressing:lick_lips' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "caressing:lick_lips"]
+  }
+}

@@ -104,7 +104,7 @@ describe('ActionButtonsRenderer Backward Compatibility', () => {
     it('should extract namespaces identically to original implementation', () => {
       const testCases = [
         { input: 'core:wait', expected: 'core' },
-        { input: 'intimacy:kiss', expected: 'intimacy' },
+        { input: 'kissing:kiss', expected: 'kissing' },
         { input: 'clothing:remove_shirt', expected: 'clothing' },
         { input: 'no_colon_action', expected: 'unknown' },
         { input: 'none', expected: 'none' },
@@ -131,8 +131,8 @@ describe('ActionButtonsRenderer Backward Compatibility', () => {
       const sufficientActions = [
         { actionId: 'core:wait' },
         { actionId: 'movement:go' },
-        { actionId: 'intimacy:kiss' },
-        { actionId: 'intimacy:hug' },
+        { actionId: 'kissing:kiss' },
+        { actionId: 'affection:hug' },
         { actionId: 'clothing:remove' },
         { actionId: 'clothing:wear' },
       ];
@@ -142,7 +142,7 @@ describe('ActionButtonsRenderer Backward Compatibility', () => {
       // Test case: insufficient actions
       const insufficientActions = [
         { actionId: 'core:wait' },
-        { actionId: 'intimacy:kiss' },
+        { actionId: 'kissing:kiss' },
       ];
 
       expect(service.shouldUseGrouping(insufficientActions)).toBe(false);
@@ -168,32 +168,34 @@ describe('ActionButtonsRenderer Backward Compatibility', () => {
       const actions = [
         { index: 1, actionId: 'clothing:remove' },
         { index: 2, actionId: 'core:wait' },
-        { index: 3, actionId: 'intimacy:kiss' },
+        { index: 3, actionId: 'kissing:kiss' },
         { index: 4, actionId: 'movement:go' },
         { index: 5, actionId: 'clothing:wear' },
-        { index: 6, actionId: 'intimacy:hug' },
+        { index: 6, actionId: 'affection:hug' },
       ];
 
       const grouped = service.groupActionsByNamespace(actions);
 
       // Verify grouping structure
-      expect(grouped.size).toBe(4);
+      expect(grouped.size).toBe(5);
       expect(grouped.has('core')).toBe(true);
-      expect(grouped.has('intimacy')).toBe(true);
+      expect(grouped.has('kissing')).toBe(true);
+      expect(grouped.has('affection')).toBe(true);
       expect(grouped.has('clothing')).toBe(true);
       expect(grouped.has('movement')).toBe(true);
 
       // Verify group contents
       expect(grouped.get('core')).toHaveLength(1);
-      expect(grouped.get('intimacy')).toHaveLength(2);
+      expect(grouped.get('kissing')).toHaveLength(1);
+      expect(grouped.get('affection')).toHaveLength(1);
       expect(grouped.get('clothing')).toHaveLength(2);
       expect(grouped.get('movement')).toHaveLength(1);
 
       // Verify action preservation
       expect(grouped.get('core')[0].index).toBe(2); // Only core action
       expect(grouped.get('movement')[0].index).toBe(4); // Only movement action
-      expect(grouped.get('intimacy')[0].index).toBe(3); // First intimacy action
-      expect(grouped.get('intimacy')[1].index).toBe(6); // Second intimacy action
+      expect(grouped.get('kissing')[0].index).toBe(3); // Kissing action
+      expect(grouped.get('affection')[0].index).toBe(6); // Affection action
       expect(grouped.get('clothing')[0].index).toBe(1); // First clothing action
       expect(grouped.get('clothing')[1].index).toBe(5); // Second clothing action
     });
@@ -206,18 +208,20 @@ describe('ActionButtonsRenderer Backward Compatibility', () => {
         'unknown',
         'core',
         'zebra',
-        'intimacy',
+        'affection',
+        'kissing',
         'clothing',
         'alpha',
       ];
       const sorted = service.getSortedNamespaces(namespaces);
 
-      // Priority order first: core, intimacy, clothing, anatomy
+      // Priority order first: core, affection, kissing, clothing, anatomy
       // Then alphabetical: alpha, unknown, zebra
-      // Note: 'sex' is in the config but not in our test data
+      // Note: 'caressing' and 'sex' are in the config but not in our test data
       expect(sorted).toEqual([
         'core',
-        'intimacy',
+        'affection',
+        'kissing',
         'anatomy',
         'clothing',
         'alpha',
@@ -233,7 +237,7 @@ describe('ActionButtonsRenderer Backward Compatibility', () => {
 
       const testCases = [
         { input: 'core', expected: 'CORE' },
-        { input: 'intimacy', expected: 'INTIMACY' },
+        { input: 'kissing', expected: 'KISSING' },
         { input: 'unknown', expected: 'OTHER' },
         { input: 'custom_namespace', expected: 'CUSTOM_NAMESPACE' },
       ];
@@ -309,13 +313,13 @@ describe('ActionButtonsRenderer Backward Compatibility', () => {
         },
         {
           index: 3,
-          actionId: 'intimacy:kiss',
+          actionId: 'kissing:kiss',
           commandString: 'kiss',
           description: 'Kiss',
         },
         {
           index: 4,
-          actionId: 'intimacy:hug',
+          actionId: 'affection:hug',
           commandString: 'hug',
           description: 'Hug',
         },
@@ -343,15 +347,16 @@ describe('ActionButtonsRenderer Backward Compatibility', () => {
       const container = document.querySelector('#actions-container');
       const headers = container.querySelectorAll('.action-section-header');
 
-      // Should have 4 headers (core, intimacy, clothing, movement)
-      expect(headers.length).toBe(4);
+      // Should have 5 headers (core, affection, kissing, clothing, movement)
+      expect(headers.length).toBe(5);
 
       // Headers should now include counts as per UI_CATEGORIZATION_CONFIG
-      // Order is based on priority: core, intimacy, clothing (in priority order), then movement (alphabetical)
+      // Order is based on priority: core, affection, kissing (in priority order), then clothing (priority), then movement (alphabetical)
       expect(headers[0].textContent).toBe('CORE (1)');
-      expect(headers[1].textContent).toBe('INTIMACY (2)');
-      expect(headers[2].textContent).toBe('CLOTHING (2)');
-      expect(headers[3].textContent).toBe('MOVEMENT (1)');
+      expect(headers[1].textContent).toBe('AFFECTION (1)');
+      expect(headers[2].textContent).toBe('KISSING (1)');
+      expect(headers[3].textContent).toBe('CLOTHING (2)');
+      expect(headers[4].textContent).toBe('MOVEMENT (1)');
     });
 
     it('should not show counts when showCounts is false', async () => {
@@ -390,13 +395,13 @@ describe('ActionButtonsRenderer Backward Compatibility', () => {
         },
         {
           index: 3,
-          actionId: 'intimacy:kiss',
+          actionId: 'kissing:kiss',
           commandString: 'kiss',
           description: 'Kiss',
         },
         {
           index: 4,
-          actionId: 'intimacy:hug',
+          actionId: 'affection:hug',
           commandString: 'hug',
           description: 'Hug',
         },
@@ -424,13 +429,14 @@ describe('ActionButtonsRenderer Backward Compatibility', () => {
       const container = document.querySelector('#actions-container');
       const headers = container.querySelectorAll('.action-section-header');
 
-      // Should have 3 headers (core, intimacy, clothing)
-      expect(headers.length).toBe(3);
+      // Should have 4 headers (core, affection, kissing, clothing)
+      expect(headers.length).toBe(4);
 
       // Headers should NOT include counts when showCounts is false
       expect(headers[0].textContent).toBe('CORE');
-      expect(headers[1].textContent).toBe('INTIMACY');
-      expect(headers[2].textContent).toBe('CLOTHING');
+      expect(headers[1].textContent).toBe('AFFECTION');
+      expect(headers[2].textContent).toBe('KISSING');
+      expect(headers[3].textContent).toBe('CLOTHING');
 
       // Clean up
       noCountsRenderer.dispose();
@@ -449,7 +455,7 @@ describe('ActionButtonsRenderer Backward Compatibility', () => {
         },
         {
           index: 2,
-          actionId: 'intimacy:kiss',
+          actionId: 'kissing:kiss',
           commandString: 'kiss',
           description: 'Kiss',
           params: {},

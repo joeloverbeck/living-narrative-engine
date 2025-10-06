@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "caressing:event-is-action-feel-arm-muscles",
+  "description": "Checks if the triggering event is for the 'caressing:feel_arm_muscles' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "caressing:feel_arm_muscles"]
+  }
+}

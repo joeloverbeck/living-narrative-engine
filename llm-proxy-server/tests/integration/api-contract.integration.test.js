@@ -14,6 +14,7 @@ import {
 import request from 'supertest';
 import express from 'express';
 import { LlmRequestController } from '../../src/handlers/llmRequestController.js';
+import { createRequestTrackingMiddleware } from '../../src/middleware/requestTracking.js';
 
 describe('API Contract Integration Tests', () => {
   let app;
@@ -58,6 +59,7 @@ describe('API Contract Integration Tests', () => {
 
     // Create simple Express app
     app = express();
+    app.use(createRequestTrackingMiddleware({ logger: mockLogger }));
     app.use(express.json());
 
     // Add the main endpoint

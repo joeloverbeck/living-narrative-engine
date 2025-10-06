@@ -1028,7 +1028,7 @@ describe('Action Trace Config Integration', () => {
         traceAnalysisEnabled: false,
         actionTracing: {
           enabled: true,
-          tracedActions: ['intimacy:fondle_ass', 'core:move'],
+          tracedActions: ['caressing:fondle_ass', 'core:move'],
           outputDirectory: './traces/integration',
           verbosity: 'verbose',
           includeComponentData: true,

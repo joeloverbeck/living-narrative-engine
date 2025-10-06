@@ -372,5 +372,19 @@ export function createTestBed() {
       const createTestAjv = require('../validation/createTestAjv.js').default;
       return createTestAjv();
     },
+
+    /**
+     * Creates a TargetRequiredComponentsValidator instance for testing
+     * @returns {object} TargetRequiredComponentsValidator instance
+     */
+    createTargetRequiredComponentsValidator() {
+      // Dynamic import to avoid circular dependencies
+      const TargetRequiredComponentsValidator =
+        require('../../src/actions/validation/TargetRequiredComponentsValidator.js').default;
+
+      return new TargetRequiredComponentsValidator({
+        logger: mockObjects.mockLogger,
+      });
+    },
   };
 }

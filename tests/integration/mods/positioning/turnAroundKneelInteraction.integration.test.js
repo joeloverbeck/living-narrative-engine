@@ -15,7 +15,10 @@ import ActionCommandFormatter from '../../../../src/actions/actionFormatter.js';
 import { getEntityDisplayName } from '../../../../src/utils/entityUtils.js';
 import { GameDataRepository } from '../../../../src/data/gameDataRepository.js';
 import { SafeEventDispatcher } from '../../../../src/events/safeEventDispatcher.js';
-import { createMockActionErrorContextBuilder } from '../../../common/mockFactories/actions.js';
+import {
+  createMockActionErrorContextBuilder,
+  createMockTargetRequiredComponentsValidator,
+} from '../../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../../common/mocks/mockTargetContextBuilder.js';
 import { createMultiTargetResolutionStage } from '../../../common/actions/multiTargetStageTestUtilities.js';
 import { ScopeContextBuilder } from '../../../../src/actions/pipeline/services/implementations/ScopeContextBuilder.js';
@@ -244,6 +247,10 @@ describe('Turn around and kneel before interaction', () => {
       validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
     };
 
+    // Create mock TargetRequiredComponentsValidator
+    const mockTargetRequiredComponentsValidator =
+      createMockTargetRequiredComponentsValidator();
+
     actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex,
       prerequisiteService: prereqService,
@@ -266,6 +273,7 @@ describe('Turn around and kneel before interaction', () => {
       }),
       targetContextBuilder: createMockTargetContextBuilder(),
       targetComponentValidator: mockTargetComponentValidator,
+      targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
       multiTargetResolutionStage: (() => {
         const mockTargetContextBuilder =
           createMockTargetContextBuilder(entityManager);

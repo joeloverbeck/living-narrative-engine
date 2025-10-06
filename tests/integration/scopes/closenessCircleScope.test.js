@@ -62,10 +62,10 @@ describe('Closeness Circle Scope Resolution', () => {
     scopeRegistry = new ScopeRegistry();
     scopeRegistry.initialize(
       addMockAstsToScopes({
-        'intimacy:close_actors': {
+        'affection:close_actors': {
           expr: 'actor.components.positioning:closeness.partners[]',
           definition:
-            'intimacy:close_actors := actor.components.positioning:closeness.partners[]',
+            'affection:close_actors := actor.components.positioning:closeness.partners[]',
           modId: 'intimacy',
         },
       })
@@ -86,7 +86,7 @@ describe('Closeness Circle Scope Resolution', () => {
     };
 
     // Parse the scope expression
-    const scopeDef = scopeRegistry.getScope('intimacy:close_actors');
+    const scopeDef = scopeRegistry.getScope('affection:close_actors');
     const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
 
     const result = scopeEngine.resolve(ast, actor1, runtimeCtx);
@@ -105,7 +105,7 @@ describe('Closeness Circle Scope Resolution', () => {
     };
 
     // Parse the scope expression
-    const scopeDef = scopeRegistry.getScope('intimacy:close_actors');
+    const scopeDef = scopeRegistry.getScope('affection:close_actors');
     const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
 
     const result = scopeEngine.resolve(ast, actor4, runtimeCtx);
@@ -135,7 +135,7 @@ describe('Closeness Circle Scope Resolution', () => {
     };
 
     // Parse the scope expression
-    const scopeDef = scopeRegistry.getScope('intimacy:close_actors');
+    const scopeDef = scopeRegistry.getScope('affection:close_actors');
     const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
 
     const result = scopeEngine.resolve(ast, actor5, runtimeCtx);
@@ -173,7 +173,7 @@ describe('Closeness Circle Scope Resolution', () => {
     };
 
     // Parse the scope expression
-    const scopeDef = scopeRegistry.getScope('intimacy:close_actors');
+    const scopeDef = scopeRegistry.getScope('affection:close_actors');
     const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
 
     const result = scopeEngine.resolve(ast, actor6, runtimeCtx);

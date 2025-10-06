@@ -34,6 +34,7 @@ import { PrerequisiteEvaluationService } from '../../actions/validation/prerequi
 import { ActionErrorContextBuilder } from '../../actions/errors/actionErrorContextBuilder.js';
 import { FixSuggestionEngine } from '../../actions/errors/fixSuggestionEngine.js';
 import { TargetComponentValidator } from '../../actions/validation/TargetComponentValidator.js';
+import TargetRequiredComponentsValidator from '../../actions/validation/TargetRequiredComponentsValidator.js';
 import CommandProcessor from '../../commands/commandProcessor.js';
 import { StructuredTrace } from '../../actions/tracing/structuredTrace.js';
 import { ActionExecutionTraceFactory } from '../../actions/tracing/actionExecutionTraceFactory.js';
@@ -216,6 +217,17 @@ export function registerCommandAndAction(container) {
     'Command and Action Registration: Registered TargetComponentValidator.'
   );
 
+  // --- Target Required Components Validator ---
+  // Must be registered before ActionPipelineOrchestrator
+  registrar.singletonFactory(tokens.ITargetRequiredComponentsValidator, (c) => {
+    return new TargetRequiredComponentsValidator({
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    'Command and Action Registration: Registered TargetRequiredComponentsValidator.'
+  );
+
   // --- Action Error Context Builder ---
   // Must be registered before ActionCandidateProcessor
   registrar.singletonFactory(tokens.IActionErrorContextBuilder, (c) => {
@@ -268,6 +280,7 @@ export function registerCommandAndAction(container) {
       targetContextBuilder: c.resolve(tokens.ITargetContextBuilder),
       multiTargetResolutionStage: c.resolve(tokens.IMultiTargetResolutionStage),
       targetComponentValidator: c.resolve(tokens.ITargetComponentValidator),
+      targetRequiredComponentsValidator: c.resolve(tokens.ITargetRequiredComponentsValidator),
     });
   });
   logger.debug(

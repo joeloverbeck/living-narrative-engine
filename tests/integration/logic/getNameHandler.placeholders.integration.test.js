@@ -62,7 +62,7 @@ describe('GetNameHandler placeholder resolution integration', () => {
             type: 'core:attempt_action',
             payload: {
               actorId: 'actor_123',
-              actionId: 'intimacy:adjust_clothing',
+              actionId: 'caressing:adjust_clothing',
               targetId: 'target_456',
               primaryId: 'iker_aguirre',
               secondaryId: 'jacket_789',

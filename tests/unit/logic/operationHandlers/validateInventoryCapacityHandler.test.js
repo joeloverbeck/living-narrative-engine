@@ -117,12 +117,14 @@ describe('ValidateInventoryCapacityHandler', () => {
         .mockReturnValueOnce(existingWeight1) // item1 weight
         .mockReturnValueOnce(existingWeight2); // item2 weight
 
-      const result = await handler.execute({
+      const executionContext = { evaluationContext: { context: {} } };
+      await handler.execute({
         targetEntity: 'actor1',
         itemEntity: 'item3',
-      });
+        result_variable: 'testResult',
+      }, executionContext);
 
-      expect(result).toEqual({ valid: true });
+      expect(executionContext.evaluationContext.context.testResult).toEqual({ valid: true });
       expect(em.getComponentData).toHaveBeenCalledWith(
         'actor1',
         INVENTORY_COMPONENT_ID
@@ -144,12 +146,14 @@ describe('ValidateInventoryCapacityHandler', () => {
         .mockReturnValueOnce(inventory)
         .mockReturnValueOnce(itemWeight);
 
-      const result = await handler.execute({
+      const executionContext = { evaluationContext: { context: {} } };
+      await handler.execute({
         targetEntity: 'actor1',
         itemEntity: 'item1',
-      });
+        result_variable: 'testResult',
+      }, executionContext);
 
-      expect(result).toEqual({ valid: true });
+      expect(executionContext.evaluationContext.context.testResult).toEqual({ valid: true });
     });
 
     test('validates successfully at boundary (max items - 1)', async () => {
@@ -167,12 +171,14 @@ describe('ValidateInventoryCapacityHandler', () => {
         .mockReturnValueOnce(existingWeight1)
         .mockReturnValueOnce(existingWeight2);
 
-      const result = await handler.execute({
+      const executionContext = { evaluationContext: { context: {} } };
+      await handler.execute({
         targetEntity: 'actor1',
         itemEntity: 'item3',
-      });
+        result_variable: 'testResult',
+      }, executionContext);
 
-      expect(result).toEqual({ valid: true });
+      expect(executionContext.evaluationContext.context.testResult).toEqual({ valid: true });
     });
 
     test('handles items with null/undefined weight gracefully', async () => {
@@ -188,12 +194,14 @@ describe('ValidateInventoryCapacityHandler', () => {
         .mockReturnValueOnce(null) // item1 has no weight component
         .mockReturnValueOnce({ weight: 10 }); // item2 has weight
 
-      const result = await handler.execute({
+      const executionContext = { evaluationContext: { context: {} } };
+      await handler.execute({
         targetEntity: 'actor1',
         itemEntity: 'item3',
-      });
+        result_variable: 'testResult',
+      }, executionContext);
 
-      expect(result).toEqual({ valid: true });
+      expect(executionContext.evaluationContext.context.testResult).toEqual({ valid: true });
     });
   });
 
@@ -220,12 +228,14 @@ describe('ValidateInventoryCapacityHandler', () => {
         .mockReturnValueOnce(inventory)
         .mockReturnValueOnce(itemWeight);
 
-      const result = await handler.execute({
+      const executionContext = { evaluationContext: { context: {} } };
+      await handler.execute({
         targetEntity: 'actor1',
         itemEntity: 'item4',
-      });
+        result_variable: 'testResult',
+      }, executionContext);
 
-      expect(result).toEqual({ valid: false, reason: 'max_items_exceeded' });
+      expect(executionContext.evaluationContext.context.testResult).toEqual({ valid: false, reason: 'max_items_exceeded' });
       expect(log.debug).toHaveBeenCalledWith(
         'ValidateInventoryCapacityHandler: Inventory full (item count)',
         expect.any(Object)
@@ -247,12 +257,14 @@ describe('ValidateInventoryCapacityHandler', () => {
         .mockReturnValueOnce(existingWeight1)
         .mockReturnValueOnce(existingWeight2);
 
-      const result = await handler.execute({
+      const executionContext = { evaluationContext: { context: {} } };
+      await handler.execute({
         targetEntity: 'actor1',
         itemEntity: 'item3',
-      });
+        result_variable: 'testResult',
+      }, executionContext);
 
-      expect(result).toEqual({ valid: false, reason: 'max_weight_exceeded' });
+      expect(executionContext.evaluationContext.context.testResult).toEqual({ valid: false, reason: 'max_weight_exceeded' });
       expect(log.debug).toHaveBeenCalledWith(
         'ValidateInventoryCapacityHandler: Inventory full (weight)',
         expect.objectContaining({
@@ -276,13 +288,15 @@ describe('ValidateInventoryCapacityHandler', () => {
         .mockReturnValueOnce(itemWeight)
         .mockReturnValueOnce(existingWeight1);
 
-      const result = await handler.execute({
+      const executionContext = { evaluationContext: { context: {} } };
+      await handler.execute({
         targetEntity: 'actor1',
         itemEntity: 'item2',
-      });
+        result_variable: 'testResult',
+      }, executionContext);
 
       // Weight: 20 + 10 = 30, which should still be valid (not exceeding)
-      expect(result).toEqual({ valid: true });
+      expect(executionContext.evaluationContext.context.testResult).toEqual({ valid: true });
     });
 
     test('fails when weight exceeds max by 1 (boundary)', async () => {
@@ -298,12 +312,14 @@ describe('ValidateInventoryCapacityHandler', () => {
         .mockReturnValueOnce(itemWeight)
         .mockReturnValueOnce(existingWeight1);
 
-      const result = await handler.execute({
+      const executionContext = { evaluationContext: { context: {} } };
+      await handler.execute({
         targetEntity: 'actor1',
         itemEntity: 'item2',
-      });
+        result_variable: 'testResult',
+      }, executionContext);
 
-      expect(result).toEqual({ valid: false, reason: 'max_weight_exceeded' });
+      expect(executionContext.evaluationContext.context.testResult).toEqual({ valid: false, reason: 'max_weight_exceeded' });
     });
   });
 
@@ -320,11 +336,13 @@ describe('ValidateInventoryCapacityHandler', () => {
     });
 
     test('fails when targetEntity parameter is missing', async () => {
-      const result = await handler.execute({
+      const executionContext = { evaluationContext: { context: {} } };
+      await handler.execute({
         itemEntity: 'item1',
-      });
+        result_variable: 'testResult',
+      }, executionContext);
 
-      expect(result).toEqual({
+      expect(executionContext.evaluationContext.context.testResult).toEqual({
         valid: false,
         reason: 'validation_failed',
       });
@@ -335,11 +353,13 @@ describe('ValidateInventoryCapacityHandler', () => {
     });
 
     test('fails when itemEntity parameter is missing', async () => {
-      const result = await handler.execute({
+      const executionContext = { evaluationContext: { context: {} } };
+      await handler.execute({
         targetEntity: 'actor1',
-      });
+        result_variable: 'testResult',
+      }, executionContext);
 
-      expect(result).toEqual({
+      expect(executionContext.evaluationContext.context.testResult).toEqual({
         valid: false,
         reason: 'validation_failed',
       });
@@ -350,12 +370,11 @@ describe('ValidateInventoryCapacityHandler', () => {
     });
 
     test('fails when params is null', async () => {
-      const result = await handler.execute(null);
+      const executionContext = { evaluationContext: { context: {} } };
+      await handler.execute(null, executionContext);
 
-      expect(result).toEqual({
-        valid: false,
-        reason: 'validation_failed',
-      });
+      // When params is null, handler cannot write to result_variable
+      // It should still dispatch an error event
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.any(Object)
@@ -365,12 +384,14 @@ describe('ValidateInventoryCapacityHandler', () => {
     test('fails when targetEntity has no inventory component', async () => {
       em.getComponentData.mockReturnValueOnce(null); // no inventory
 
-      const result = await handler.execute({
+      const executionContext = { evaluationContext: { context: {} } };
+      await handler.execute({
         targetEntity: 'actor1',
         itemEntity: 'item1',
-      });
+        result_variable: 'testResult',
+      }, executionContext);
 
-      expect(result).toEqual({
+      expect(executionContext.evaluationContext.context.testResult).toEqual({
         valid: false,
         reason: 'no_inventory',
       });
@@ -390,12 +411,14 @@ describe('ValidateInventoryCapacityHandler', () => {
         .mockReturnValueOnce(inventory)
         .mockReturnValueOnce(null); // no weight component
 
-      const result = await handler.execute({
+      const executionContext = { evaluationContext: { context: {} } };
+      await handler.execute({
         targetEntity: 'actor1',
         itemEntity: 'item1',
-      });
+        result_variable: 'testResult',
+      }, executionContext);
 
-      expect(result).toEqual({
+      expect(executionContext.evaluationContext.context.testResult).toEqual({
         valid: false,
         reason: 'no_weight',
       });
@@ -411,12 +434,14 @@ describe('ValidateInventoryCapacityHandler', () => {
         throw getDataError;
       });
 
-      const result = await handler.execute({
+      const executionContext = { evaluationContext: { context: {} } };
+      await handler.execute({
         targetEntity: 'actor1',
         itemEntity: 'item1',
-      });
+        result_variable: 'testResult',
+      }, executionContext);
 
-      expect(result).toEqual({
+      expect(executionContext.evaluationContext.context.testResult).toEqual({
         valid: false,
         reason: 'Component data retrieval failed',
       });
@@ -448,10 +473,12 @@ describe('ValidateInventoryCapacityHandler', () => {
         .mockReturnValueOnce(inventory)
         .mockReturnValueOnce(itemWeight);
 
+      const executionContext = { evaluationContext: { context: {} } };
       await handler.execute({
         targetEntity: '  actor1  ',
         itemEntity: '  item1  ',
-      });
+        result_variable: 'testResult',
+      }, executionContext);
 
       expect(em.getComponentData).toHaveBeenCalledWith(
         'actor1',

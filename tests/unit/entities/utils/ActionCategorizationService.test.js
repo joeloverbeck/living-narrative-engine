@@ -44,7 +44,7 @@ describe('ActionCategorizationService', () => {
           enabled: true,
           minActionsForGrouping: 6,
           minNamespacesForGrouping: 2,
-          namespaceOrder: ['core', 'intimacy', 'sex', 'anatomy', 'clothing'],
+          namespaceOrder: ['core', 'affection', 'kissing', 'caressing', 'sex', 'anatomy', 'clothing', 'movement'],
           showCounts: false,
           performance: {
             enableCaching: true,
@@ -76,7 +76,7 @@ describe('ActionCategorizationService', () => {
   describe('extractNamespace', () => {
     it('should extract namespace from valid actionId with namespace', () => {
       expect(service.extractNamespace('core:wait')).toBe('core');
-      expect(service.extractNamespace('intimacy:touch')).toBe('intimacy');
+      expect(service.extractNamespace('affection:touch')).toBe('affection');
       expect(service.extractNamespace('custom_mod:action')).toBe('custom_mod');
     });
 
@@ -138,12 +138,12 @@ describe('ActionCategorizationService', () => {
     };
 
     it('should return true with sufficient actions and namespaces', () => {
-      const actions = createActions(10, ['core', 'intimacy', 'anatomy']);
+      const actions = createActions(10, ['core', 'affection', 'anatomy']);
       expect(service.shouldUseGrouping(actions)).toBe(true);
     });
 
     it('should return false with insufficient actions', () => {
-      const actions = createActions(5, ['core', 'intimacy']);
+      const actions = createActions(5, ['core', 'affection']);
       expect(service.shouldUseGrouping(actions)).toBe(false);
     });
 
@@ -153,7 +153,7 @@ describe('ActionCategorizationService', () => {
     });
 
     it('should return false when configuration is disabled', () => {
-      const actions = createActions(10, ['core', 'intimacy']);
+      const actions = createActions(10, ['core', 'affection']);
       const disabledService = new ActionCategorizationService({
         logger: mockLogger,
         config: { enabled: false },
@@ -177,7 +177,7 @@ describe('ActionCategorizationService', () => {
       const actions = [
         { actionId: 'core:wait' },
         { actionId: null },
-        { actionId: 'intimacy:touch' },
+        { actionId: 'affection:touch' },
         {},
         { actionId: undefined },
         { actionId: 'core:move' },
@@ -187,7 +187,7 @@ describe('ActionCategorizationService', () => {
     });
 
     it('should respect custom configuration thresholds', () => {
-      const actions = createActions(3, ['core', 'intimacy']);
+      const actions = createActions(3, ['core', 'affection']);
       const customService = new ActionCategorizationService({
         logger: mockLogger,
         config: {
@@ -200,7 +200,7 @@ describe('ActionCategorizationService', () => {
 
     it('should handle error conditions gracefully', () => {
       // Test with valid actions - should use default config settings
-      const actions = createActions(10, ['core', 'intimacy']);
+      const actions = createActions(10, ['core', 'affection']);
       expect(service.shouldUseGrouping(actions)).toBe(true);
     });
   });
@@ -209,23 +209,25 @@ describe('ActionCategorizationService', () => {
     it('should group actions by multiple namespaces', () => {
       const actions = [
         { actionId: 'core:wait' },
-        { actionId: 'intimacy:touch' },
+        { actionId: 'affection:touch' },
         { actionId: 'core:move' },
         { actionId: 'anatomy:examine' },
-        { actionId: 'intimacy:kiss' },
+        { actionId: 'kissing:kiss' },
       ];
 
       const grouped = service.groupActionsByNamespace(actions);
 
-      expect(grouped.size).toBe(3);
+      expect(grouped.size).toBe(4);
       expect(Array.from(grouped.keys())).toEqual([
         'core',
-        'intimacy',
+        'affection',
+        'kissing',
         'anatomy',
       ]);
       expect(grouped.get('core')).toHaveLength(2);
-      expect(grouped.get('intimacy')).toHaveLength(2);
+      expect(grouped.get('affection')).toHaveLength(1);
       expect(grouped.get('anatomy')).toHaveLength(1);
+      expect(grouped.get('kissing')).toHaveLength(1);
     });
 
     it('should handle actions with missing actionId', () => {
@@ -265,13 +267,13 @@ describe('ActionCategorizationService', () => {
         { actionId: 'clothing:wear' },
         { actionId: 'core:wait' },
         { actionId: 'unknown:action' },
-        { actionId: 'intimacy:touch' },
+        { actionId: 'affection:touch' },
       ];
 
       const grouped = service.groupActionsByNamespace(actions);
       const keys = Array.from(grouped.keys());
 
-      expect(keys).toEqual(['core', 'intimacy', 'clothing', 'unknown']);
+      expect(keys).toEqual(['core', 'affection', 'clothing', 'unknown']);
     });
 
     it('should handle error recovery', () => {
@@ -299,10 +301,10 @@ describe('ActionCategorizationService', () => {
 
   describe('getSortedNamespaces', () => {
     it('should sort namespaces by priority order', () => {
-      const namespaces = ['sex', 'core', 'intimacy'];
+      const namespaces = ['sex', 'core', 'affection'];
       const sorted = service.getSortedNamespaces(namespaces);
 
-      expect(sorted).toEqual(['core', 'intimacy', 'sex']);
+      expect(sorted).toEqual(['core', 'affection', 'sex']);
     });
 
     it('should handle alphabetical fallback', () => {
@@ -313,10 +315,10 @@ describe('ActionCategorizationService', () => {
     });
 
     it('should handle mixed priority and non-priority namespaces', () => {
-      const namespaces = ['zebra', 'core', 'alpha', 'intimacy', 'beta'];
+      const namespaces = ['zebra', 'core', 'alpha', 'affection', 'beta'];
       const sorted = service.getSortedNamespaces(namespaces);
 
-      expect(sorted).toEqual(['core', 'intimacy', 'alpha', 'beta', 'zebra']);
+      expect(sorted).toEqual(['core', 'affection', 'alpha', 'beta', 'zebra']);
     });
 
     it('should handle invalid inputs', () => {
@@ -359,7 +361,7 @@ describe('ActionCategorizationService', () => {
         throw new Error('Sort error');
       });
 
-      const namespaces = ['core', 'intimacy'];
+      const namespaces = ['core', 'affection'];
       const result = errorService.getSortedNamespaces(namespaces);
 
       // Restore original sort
@@ -380,7 +382,7 @@ describe('ActionCategorizationService', () => {
   describe('formatNamespaceDisplayName', () => {
     it('should convert valid namespace strings to uppercase', () => {
       expect(service.formatNamespaceDisplayName('core')).toBe('CORE');
-      expect(service.formatNamespaceDisplayName('intimacy')).toBe('INTIMACY');
+      expect(service.formatNamespaceDisplayName('affection')).toBe('AFFECTION');
       expect(service.formatNamespaceDisplayName('custom_mod')).toBe(
         'CUSTOM_MOD'
       );

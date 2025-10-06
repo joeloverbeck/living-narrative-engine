@@ -17,6 +17,10 @@ import UnlockMovementHandler from '../../../src/logic/operationHandlers/unlockMo
 import LockMovementHandler from '../../../src/logic/operationHandlers/lockMovementHandler.js';
 import LogHandler from '../../../src/logic/operationHandlers/logHandler.js';
 import ModifyArrayFieldHandler from '../../../src/logic/operationHandlers/modifyArrayFieldHandler.js';
+import TransferItemHandler from '../../../src/logic/operationHandlers/transferItemHandler.js';
+import ValidateInventoryCapacityHandler from '../../../src/logic/operationHandlers/validateInventoryCapacityHandler.js';
+import DropItemAtLocationHandler from '../../../src/logic/operationHandlers/dropItemAtLocationHandler.js';
+import PickUpItemFromLocationHandler from '../../../src/logic/operationHandlers/pickUpItemFromLocationHandler.js';
 import { validateDependency } from '../../../src/utils/dependencyUtils.js';
 
 /* global jest */
@@ -289,6 +293,61 @@ export class ModTestHandlerFactory {
   }
 
   /**
+   * Creates handlers with items system support for item-related actions.
+   *
+   * @param {object} entityManager - Entity manager instance
+   * @param {object} eventBus - Event bus instance
+   * @param {object} logger - Logger instance
+   * @returns {object} Handlers with item operation handlers included
+   * @throws {Error} If any required parameter is missing or invalid
+   */
+  static createHandlersWithItemsSupport(entityManager, eventBus, logger) {
+    this.#validateDependencies(
+      entityManager,
+      eventBus,
+      logger,
+      'createHandlersWithItemsSupport'
+    );
+
+    const baseHandlers = this.createStandardHandlers(
+      entityManager,
+      eventBus,
+      logger
+    );
+
+    const safeDispatcher = {
+      dispatch: jest.fn((eventType, payload) => {
+        eventBus.dispatch(eventType, payload);
+        return Promise.resolve(true);
+      }),
+    };
+
+    return {
+      ...baseHandlers,
+      TRANSFER_ITEM: new TransferItemHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      VALIDATE_INVENTORY_CAPACITY: new ValidateInventoryCapacityHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      DROP_ITEM_AT_LOCATION: new DropItemAtLocationHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      PICK_UP_ITEM_FROM_LOCATION: new PickUpItemFromLocationHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+    };
+  }
+
+  /**
    * Determines the appropriate handler factory method based on mod category.
    *
    * @param {string} modCategory - The mod category (e.g., 'positioning', 'intimacy')
@@ -297,6 +356,7 @@ export class ModTestHandlerFactory {
   static getHandlerFactoryForCategory(modCategory) {
     const categoryMappings = {
       positioning: this.createHandlersWithPerceptionLogging.bind(this),
+      items: this.createHandlersWithItemsSupport.bind(this),
       exercise: this.createStandardHandlers.bind(this),
       violence: this.createStandardHandlers.bind(this),
       sex: this.createStandardHandlers.bind(this),

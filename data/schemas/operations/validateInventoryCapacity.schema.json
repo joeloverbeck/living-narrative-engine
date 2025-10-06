@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/operations/validateInventoryCapacity.schema.json",
+  "title": "VALIDATE_INVENTORY_CAPACITY Operation",
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "VALIDATE_INVENTORY_CAPACITY"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the VALIDATE_INVENTORY_CAPACITY operation. Validates whether an actor has sufficient inventory capacity to hold an item.",
+      "properties": {
+        "targetEntity": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S(.*\\S)?$",
+          "description": "Entity ID of the actor whose inventory capacity is being validated"
+        },
+        "itemEntity": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S(.*\\S)?$",
+          "description": "Entity ID of the item to be added to inventory"
+        },
+        "result_variable": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Variable name to store validation result object with 'valid' boolean and optional 'reason' string"
+        }
+      },
+      "required": ["targetEntity", "itemEntity", "result_variable"],
+      "additionalProperties": false
+    }
+  }
+}

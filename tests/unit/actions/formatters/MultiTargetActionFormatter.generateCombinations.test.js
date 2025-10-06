@@ -146,7 +146,7 @@ describe('MultiTargetActionFormatter - generateCombinations behavior', () => {
       // already generate separate combinations even without the flag.
       // The generateCombinations: true flag is mainly for clarity and future consistency.
       const actionDef = {
-        id: 'intimacy:adjust_clothing',
+        id: 'caressing:adjust_clothing',
         name: 'Adjust Clothing',
         template: "adjust {person}'s {item}",
         targets: {

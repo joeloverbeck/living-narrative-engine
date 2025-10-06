@@ -30,6 +30,7 @@ import {
   createApiRateLimiter,
   createLlmRateLimiter,
 } from '../../../src/middleware/rateLimiting.js';
+import { createRequestTrackingMiddleware } from '../../../src/middleware/requestTracking.js';
 
 describe('API Endpoints Integration Tests', () => {
   let app;
@@ -81,6 +82,9 @@ describe('API Endpoints Integration Tests', () => {
 
     // Security middleware
     app.use(createSecurityMiddleware());
+
+    // Request tracking middleware (must be early for correlation IDs)
+    app.use(createRequestTrackingMiddleware({ logger: mockLogger }));
 
     // CORS
     app.use(

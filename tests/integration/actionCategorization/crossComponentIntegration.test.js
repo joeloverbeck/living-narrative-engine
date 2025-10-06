@@ -56,7 +56,7 @@ describe('Cross-Component Integration', () => {
         },
         {
           index: 2,
-          actionId: 'intimacy:kiss',
+          actionId: 'kissing:kiss',
           commandString: 'kiss',
           description: 'Kiss.',
         },
@@ -96,7 +96,7 @@ describe('Cross-Component Integration', () => {
       expect(grouped.size).toBe(6); // 6 different namespaces
       expect([...grouped.keys()]).toEqual([
         'core',
-        'intimacy',
+        'kissing',
         'sex',
         'anatomy',
         'clothing',
@@ -114,7 +114,7 @@ describe('Cross-Component Integration', () => {
         },
         {
           index: 2,
-          actionId: 'intimacy:kiss',
+          actionId: 'kissing:kiss',
           commandString: 'kiss',
           description: 'Kiss.',
         },
@@ -126,7 +126,7 @@ describe('Cross-Component Integration', () => {
         },
         {
           index: 4,
-          actionId: 'intimacy:hug',
+          actionId: 'affection:hug',
           commandString: 'hug',
           description: 'Hug.',
         },
@@ -148,7 +148,7 @@ describe('Cross-Component Integration', () => {
           enabled: true,
           minActionsForGrouping: 3,
           minNamespacesForGrouping: 2,
-          namespaceOrder: ['core', 'intimacy'],
+          namespaceOrder: ['core', 'kissing'],
           showCounts: false,
         },
       });

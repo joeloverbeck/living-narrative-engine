@@ -123,7 +123,7 @@ describe('Multi-Target Discovery Pipeline E2E', () => {
         // Set up mock actions for adjust_clothing
         actionService.setMockActions(testEnvironment.actors.playerActorId, [
           {
-            actionId: 'intimacy:adjust_clothing',
+            actionId: 'caressing:adjust_clothing',
             targets: {
               primary: { id: 'npc_amaia', displayName: 'Amaia' },
               secondary: {
@@ -135,7 +135,7 @@ describe('Multi-Target Discovery Pipeline E2E', () => {
             available: true,
           },
           {
-            actionId: 'intimacy:adjust_clothing',
+            actionId: 'caressing:adjust_clothing',
             targets: {
               primary: { id: 'npc_carlos', displayName: 'Carlos' },
               secondary: { id: 'tshirt_001', displayName: 'T-shirt' },
@@ -152,7 +152,7 @@ describe('Multi-Target Discovery Pipeline E2E', () => {
 
         // Filter for adjust_clothing actions
         const adjustClothingActions = availableActions.filter(
-          (action) => action.actionId === 'intimacy:adjust_clothing'
+          (action) => action.actionId === 'caressing:adjust_clothing'
         );
 
         // Should generate 2 actions - one for each NPC in closeness
@@ -234,7 +234,7 @@ describe('Multi-Target Discovery Pipeline E2E', () => {
         // Set up mock actions - only one action should be generated
         actionService.setMockActions(testEnvironment.actors.playerActorId, [
           {
-            actionId: 'intimacy:adjust_clothing',
+            actionId: 'caressing:adjust_clothing',
             targets: {
               primary: { id: 'npc_with_clothing', displayName: 'Dressed NPC' },
               secondary: { id: 'shirt_001', displayName: 'shirt' },
@@ -251,7 +251,7 @@ describe('Multi-Target Discovery Pipeline E2E', () => {
 
         // Filter for adjust_clothing actions
         const adjustClothingActions = availableActions.filter(
-          (action) => action.actionId === 'intimacy:adjust_clothing'
+          (action) => action.actionId === 'caressing:adjust_clothing'
         );
 
         // Should only generate 1 action - for the NPC with clothing
@@ -297,7 +297,7 @@ describe('Multi-Target Discovery Pipeline E2E', () => {
 
         // Set up mock actions for nibble_earlobe_playfully
         const nibbleActions = partners.map((partner, index) => ({
-          actionId: 'intimacy:nibble_earlobe_playfully',
+          actionId: 'kissing:nibble_earlobe_playfully',
           targets: {
             primary: {
               id: `partner${index + 1}`,
@@ -320,7 +320,7 @@ describe('Multi-Target Discovery Pipeline E2E', () => {
 
         // Check for nibble_earlobe_playfully actions
         const discoveredNibbleActions = availableActions.filter(
-          (action) => action.actionId === 'intimacy:nibble_earlobe_playfully'
+          (action) => action.actionId === 'kissing:nibble_earlobe_playfully'
         );
 
         // Should generate 3 actions - one for each partner
@@ -911,7 +911,7 @@ describe('Multi-Target Discovery Pipeline E2E', () => {
         },
         // Adjust clothing for partner in closeness
         {
-          actionId: 'intimacy:adjust_clothing',
+          actionId: 'caressing:adjust_clothing',
           targets: {
             primary: { id: 'bard_001', displayName: 'Traveling Bard' },
             secondary: {
@@ -946,7 +946,7 @@ describe('Multi-Target Discovery Pipeline E2E', () => {
 
       // Adjust clothing for partner in closeness
       const adjustClothingActions = availableActions.filter(
-        (action) => action.actionId === 'intimacy:adjust_clothing'
+        (action) => action.actionId === 'caressing:adjust_clothing'
       );
       expect(adjustClothingActions).toHaveLength(1);
       expect(adjustClothingActions[0].command).toBe(

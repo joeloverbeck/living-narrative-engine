@@ -147,7 +147,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
       const mockRuleFile = {
         rule_id: 'handle_kiss_cheek',
         event_type: 'core:attempt_action',
-        condition: { condition_ref: 'intimacy:event-is-action-kiss-cheek' },
+        condition: { condition_ref: 'kissing:event-is-action-kiss-cheek' },
         actions: [
           {
             type: 'GET_NAME',
@@ -157,15 +157,15 @@ describe('Mod Test Infrastructure - Component Integration', () => {
       };
 
       const mockConditionFile = {
-        id: 'intimacy:event-is-action-kiss-cheek',
+        id: 'kissing:event-is-action-kiss-cheek',
         logic: {
-          '==': [{ var: 'event.payload.actionId' }, 'intimacy:kiss_cheek'],
+          '==': [{ var: 'event.payload.actionId' }, 'kissing:kiss_cheek'],
         },
       };
 
       const fixture = await ModTestFixture.forAction(
-        'intimacy',
-        'intimacy:kiss_cheek',
+        'kissing',
+        'kissing:kiss_cheek',
         mockRuleFile,
         mockConditionFile
       );
@@ -698,7 +698,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
       const mockRuleFile = {
         rule_id: 'handle_seamless_test',
         event_type: 'core:attempt_action',
-        condition: { condition_ref: 'intimacy:seamless-condition' },
+        condition: { condition_ref: 'affection:seamless-condition' },
         actions: [
           {
             type: 'GET_NAME',
@@ -715,15 +715,15 @@ describe('Mod Test Infrastructure - Component Integration', () => {
       };
 
       const mockConditionFile = {
-        id: 'intimacy:seamless-condition',
+        id: 'affection:seamless-condition',
         logic: {
-          '==': [{ var: 'event.payload.actionId' }, 'intimacy:seamless'],
+          '==': [{ var: 'event.payload.actionId' }, 'affection:seamless'],
         },
       };
 
       const fixture = await ModTestFixture.forAction(
-        'intimacy',
-        'intimacy:seamless',
+        'affection',
+        'affection:seamless',
         mockRuleFile,
         mockConditionFile
       );
@@ -736,7 +736,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
       expect(fixture.testEnv.dataRegistry.getAllSystemRules()).toHaveLength(1);
       expect(
         fixture.testEnv.dataRegistry.getConditionDefinition(
-          'intimacy:seamless-condition'
+          'affection:seamless-condition'
         )
       ).toEqual(mockConditionFile);
 

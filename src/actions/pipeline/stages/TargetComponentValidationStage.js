@@ -14,6 +14,7 @@ import {
 } from '../../../config/actionPipelineConfig.js';
 
 /** @typedef {import('../../validation/TargetComponentValidator.js').TargetComponentValidator} ITargetComponentValidator */
+/** @typedef {import('../../validation/TargetRequiredComponentsValidator.js').default} ITargetRequiredComponentsValidator */
 /** @typedef {import('../../../logging/consoleLogger.js').default} ILogger */
 /** @typedef {import('../../errors/actionErrorContextBuilder.js').ActionErrorContextBuilder} ActionErrorContextBuilder */
 /** @typedef {import('../../../entities/entityManager.js').default} EntityManager */
@@ -29,6 +30,7 @@ import {
  */
 export class TargetComponentValidationStage extends PipelineStage {
   #targetComponentValidator;
+  #targetRequiredComponentsValidator;
   #logger;
   #actionErrorContextBuilder;
 
@@ -37,14 +39,18 @@ export class TargetComponentValidationStage extends PipelineStage {
    *
    * @param {object} dependencies - Constructor dependencies
    * @param {ITargetComponentValidator} dependencies.targetComponentValidator - Validator service
+   * @param {ITargetRequiredComponentsValidator} dependencies.targetRequiredComponentsValidator - Required components validator
    * @param {ILogger} dependencies.logger - Logger service
    * @param {ActionErrorContextBuilder} dependencies.actionErrorContextBuilder - Error context builder
    */
-  constructor({ targetComponentValidator, logger, actionErrorContextBuilder }) {
+  constructor({ targetComponentValidator, targetRequiredComponentsValidator, logger, actionErrorContextBuilder }) {
     super('TargetComponentValidation');
 
     validateDependency(targetComponentValidator, 'ITargetComponentValidator', console, {
       requiredMethods: ['validateTargetComponents']
+    });
+    validateDependency(targetRequiredComponentsValidator, 'ITargetRequiredComponentsValidator', console, {
+      requiredMethods: ['validateTargetRequirements']
     });
     validateDependency(logger, 'ILogger', console, {
       requiredMethods: ['info', 'warn', 'error', 'debug']
@@ -54,6 +60,7 @@ export class TargetComponentValidationStage extends PipelineStage {
     });
 
     this.#targetComponentValidator = targetComponentValidator;
+    this.#targetRequiredComponentsValidator = targetRequiredComponentsValidator;
     this.#logger = logger;
     this.#actionErrorContextBuilder = actionErrorContextBuilder;
   }
@@ -190,24 +197,40 @@ export class TargetComponentValidationStage extends PipelineStage {
       // Get target entities from the action (may already be resolved)
       const targetEntities = this.#extractTargetEntities(actionDef, context);
 
-      // Validate target components (apply strictness level)
-      let validation = this.#targetComponentValidator.validateTargetComponents(
+      // Validate forbidden target components (apply strictness level)
+      let forbiddenValidation = this.#targetComponentValidator.validateTargetComponents(
         actionDef,
         targetEntities
       );
 
       // Apply lenient mode if configured
-      if (strictness === 'lenient' && !validation.valid) {
+      if (strictness === 'lenient' && !forbiddenValidation.valid) {
         // In lenient mode, allow actions with certain types of failures
-        if (validation.reason && validation.reason.includes('non-critical')) {
-          validation = { valid: true, reason: 'Allowed in lenient mode' };
+        if (forbiddenValidation.reason && forbiddenValidation.reason.includes('non-critical')) {
+          forbiddenValidation = { valid: true, reason: 'Allowed in lenient mode' };
           if (config.logDetails) {
             this.#logger.debug(
-              `Action '${actionDef.id}' allowed in lenient mode despite: ${validation.reason}`
+              `Action '${actionDef.id}' allowed in lenient mode despite: ${forbiddenValidation.reason}`
             );
           }
         }
       }
+
+      // Validate required components on targets
+      const requiredValidation = this.#targetRequiredComponentsValidator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
+
+      // Combine validation results
+      const validation = forbiddenValidation.valid && requiredValidation.valid
+        ? { valid: true }
+        : {
+            valid: false,
+            reason: !forbiddenValidation.valid
+              ? forbiddenValidation.reason
+              : requiredValidation.reason
+          };
 
       const validationTime = performance.now() - startTime;
 
@@ -304,6 +327,7 @@ export class TargetComponentValidationStage extends PipelineStage {
   async #captureValidationAnalysis(trace, actionDef, targetEntities, validation, validationTime) {
     try {
       const forbiddenComponents = actionDef.forbidden_components || {};
+      const requiredComponents = actionDef.required_components || {};
 
       // Build trace data
       const traceData = {
@@ -311,6 +335,7 @@ export class TargetComponentValidationStage extends PipelineStage {
         validationPassed: validation.valid,
         validationReason: validation.reason,
         forbiddenComponents,
+        requiredComponents,
         targetEntityIds: this.#getTargetEntityIds(targetEntities),
         validationTime,
         timestamp: Date.now()

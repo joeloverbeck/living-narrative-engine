@@ -282,13 +282,13 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
     });
   });
 
-  describe('Intimacy Category Pattern Validation', () => {
-    it('should validate intimacy category uses standard handlers', () => {
+  describe('Affection Category Pattern Validation', () => {
+    it('should validate affection category uses standard handlers', () => {
       const factoryMethod =
-        ModTestHandlerFactory.getHandlerFactoryForCategory('intimacy');
+        ModTestHandlerFactory.getHandlerFactoryForCategory('affection');
       const handlers = factoryMethod(entityManager, eventBus, logger);
 
-      // Intimacy category should use standard handlers
+      // Affection category should use standard handlers
       expect(handlers).toHaveProperty('DISPATCH_PERCEPTIBLE_EVENT');
       expect(handlers).toHaveProperty('GET_NAME');
       expect(handlers).toHaveProperty('END_TURN');
@@ -297,18 +297,18 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       expect(Object.keys(handlers)).toHaveLength(8);
     });
 
-    it('should validate intimacy category entity patterns', () => {
-      // Intimacy entities have relationship, consent, and emotional state tracking
+    it('should validate affection category entity patterns', () => {
+      // Affection entities have relationship, consent, and emotional state tracking
       const romanticActor = new ModEntityBuilder('romantic-actor')
         .withName('Romantic Lead')
         .atLocation('intimate-setting')
         .withComponent('core:actor', {})
-        .withComponent('intimacy:romantic_interest', {
+        .withComponent('affection:romantic_interest', {
           target: 'romantic-partner',
           level: 'high',
           relationship: 'dating',
         })
-        .withComponent('intimacy:emotional_state', {
+        .withComponent('affection:emotional_state', {
           mood: 'affectionate',
           arousal: 'moderate',
         })
@@ -319,7 +319,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         .atLocation('intimate-setting')
         .closeToEntity('romantic-actor')
         .withComponent('core:actor', {})
-        .withComponent('intimacy:consent', {
+        .withComponent('affection:consent', {
           level: 'enthusiastic',
           boundaries: ['kissing', 'cuddling'],
         })
@@ -328,32 +328,32 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       entityManager.addEntity(romanticActor);
       entityManager.addEntity(partnerActor);
 
-      // Validate intimacy-specific components
+      // Validate affection-specific components
       assertionHelpers.assertComponentAdded(
         'romantic-actor',
-        'intimacy:romantic_interest'
+        'affection:romantic_interest'
       );
       assertionHelpers.assertComponentAdded(
         'romantic-partner',
-        'intimacy:consent'
+        'affection:consent'
       );
 
       const romantic = entityManager.getEntityInstance('romantic-actor');
-      expect(romantic.components['intimacy:romantic_interest']).toEqual({
+      expect(romantic.components['affection:romantic_interest']).toEqual({
         target: 'romantic-partner',
         level: 'high',
         relationship: 'dating',
       });
     });
 
-    it('should validate intimacy category event patterns', async () => {
+    it('should validate affection category event patterns', async () => {
       const handlers = ModTestHandlerFactory.createStandardHandlers(
         entityManager,
         eventBus,
         logger
       );
 
-      // Intimacy events are typically perceptible but private
+      // Affection events are typically perceptible but private
       await handlers.DISPATCH_PERCEPTIBLE_EVENT.execute([
         'INTIMACY_INITIATED',
         JSON.stringify({
@@ -630,7 +630,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       const categories = [
         'exercise',
         'violence',
-        'intimacy',
+        'affection',
         'sex',
         'positioning',
       ];
@@ -653,7 +653,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       });
 
       // Standard categories should have 8 handlers
-      ['exercise', 'violence', 'intimacy', 'sex'].forEach((category) => {
+      ['exercise', 'violence', 'affection', 'sex'].forEach((category) => {
         expect(factoryResults[category].handlerCount).toBe(8);
         expect(factoryResults[category].hasAddComponent).toBe(false);
         expect(factoryResults[category].commonHandlers).toBe(true);
@@ -679,10 +679,10 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
           .withComponent('violence:health', { current: 100 })
           .build(),
 
-        intimacy: new ModEntityBuilder('intimacy-entity')
-          .withName('Intimacy Entity')
+        affection: new ModEntityBuilder('affection-entity')
+          .withName('Affection Entity')
           .withComponent('core:actor', {})
-          .withComponent('intimacy:consent', { level: 'enthusiastic' })
+          .withComponent('affection:consent', { level: 'enthusiastic' })
           .build(),
 
         sex: new ModEntityBuilder('sex-entity')
@@ -713,8 +713,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       expect(categoryEntities.violence.components).toHaveProperty(
         'violence:health'
       );
-      expect(categoryEntities.intimacy.components).toHaveProperty(
-        'intimacy:consent'
+      expect(categoryEntities.affection.components).toHaveProperty(
+        'affection:consent'
       );
       expect(categoryEntities.sex.components).toHaveProperty('sex:consent');
       expect(categoryEntities.positioning.components).toHaveProperty(
@@ -726,7 +726,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       const testCategories = [
         'exercise',
         'violence',
-        'intimacy',
+        'affection',
         'sex',
         'positioning',
       ];
@@ -762,7 +762,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       const testCategories = [
         'exercise',
         'violence',
-        'intimacy',
+        'affection',
         'sex',
         'positioning',
       ];

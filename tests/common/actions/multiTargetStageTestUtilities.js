@@ -209,6 +209,7 @@ export function createTestLegacyAction(overrides = {}) {
  * @param {object} [options.targetContextBuilder] - Target context builder (defaults to mock)
  * @param {object} [options.multiTargetResolutionStage] - Multi target stage (defaults to created instance)
  * @param {object} [options.targetComponentValidator] - Target component validator (defaults to mock)
+ * @param {object} [options.targetRequiredComponentsValidator] - Target required components validator (defaults to mock)
  * @returns {ActionPipelineOrchestrator} Configured orchestrator instance
  */
 export function createActionPipelineOrchestrator({
@@ -225,6 +226,7 @@ export function createActionPipelineOrchestrator({
   targetContextBuilder,
   multiTargetResolutionStage,
   targetComponentValidator,
+  targetRequiredComponentsValidator,
 }) {
   // Create default mocks if not provided
   const defaultActionIndex = actionIndex || {
@@ -294,6 +296,14 @@ export function createActionPipelineOrchestrator({
     validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
   };
 
+  const defaultTargetRequiredComponentsValidator =
+    targetRequiredComponentsValidator || {
+      validateTargetRequirements: jest.fn().mockReturnValue({
+        valid: true,
+        missingComponents: [],
+      }),
+    };
+
   return new ActionPipelineOrchestrator({
     actionIndex: defaultActionIndex,
     prerequisiteService: defaultPrerequisiteService,
@@ -308,5 +318,6 @@ export function createActionPipelineOrchestrator({
     targetContextBuilder: defaultTargetContextBuilder,
     multiTargetResolutionStage: defaultMultiTargetResolutionStage,
     targetComponentValidator: defaultTargetComponentValidator,
+    targetRequiredComponentsValidator: defaultTargetRequiredComponentsValidator,
   });
 }

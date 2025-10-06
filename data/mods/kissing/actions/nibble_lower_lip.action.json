@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "kissing:nibble_lower_lip",
+  "name": "Nibble lower lip",
+  "description": "Gently nibble on their lower lip during the kiss",
+  "targets": "kissing:current_kissing_partner",
+  "required_components": {
+    "actor": ["kissing:kissing"]
+  },
+  "prerequisites": [],
+  "template": "nibble on {target}'s lower lip",
+  "visual": {
+    "backgroundColor": "#ad1457",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#c2185b",
+    "hoverTextColor": "#fce4ec"
+  }
+}

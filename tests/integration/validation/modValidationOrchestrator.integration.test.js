@@ -189,8 +189,8 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
           version: '1.0.0',
           dependencies: [{ id: 'core', version: '^1.0.0', required: true }],
         },
-        intimacy: {
-          id: 'intimacy',
+        affection: {
+          id: 'affection',
           version: '1.0.0',
           dependencies: [
             { id: 'core', version: '^1.0.0', required: true },
@@ -226,7 +226,7 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
           {
             id: 'positioning:turn_around',
             forbidden_components: {
-              actor: ['intimacy:kissing'], // Violation: intimacy not declared as dependency
+              actor: ['kissing:kissing'], // Violation: intimacy not declared as dependency
             },
           },
           null,
@@ -235,7 +235,7 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
       );
 
       const results = await orchestrator.validateEcosystem({
-        modsToValidate: ['core', 'positioning', 'intimacy'],
+        modsToValidate: ['core', 'positioning', 'affection'],
       });
 
       // Should pass dependency validation
@@ -276,8 +276,8 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
             { id: 'anatomy', version: '^1.0.0', required: true },
           ],
         },
-        intimacy: {
-          id: 'intimacy',
+        affection: {
+          id: 'affection',
           version: '1.0.0',
           dependencies: [
             { id: 'anatomy', version: '^1.0.0', required: true },

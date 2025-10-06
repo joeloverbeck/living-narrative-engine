@@ -105,13 +105,13 @@ describe('AIPromptContentProvider Categorization Integration', () => {
           },
           {
             index: 3,
-            actionId: 'intimacy:kiss',
+            actionId: 'kissing:kiss',
             commandString: 'kiss Sarah',
             description: 'Kiss Sarah gently.',
           },
           {
             index: 4,
-            actionId: 'intimacy:hug',
+            actionId: 'affection:hug',
             commandString: 'hug Sarah',
             description: 'Give Sarah a warm hug.',
           },
@@ -135,7 +135,7 @@ describe('AIPromptContentProvider Categorization Integration', () => {
 
       expect(result).toContain('## Available Actions');
       expect(result).toContain('### CORE Actions');
-      expect(result).toContain('### INTIMACY Actions');
+      expect(result).toContain('### KISSING Actions');
       expect(result).toContain('### CLOTHING Actions');
 
       // Verify action indexes are preserved
@@ -175,7 +175,7 @@ describe('AIPromptContentProvider Categorization Integration', () => {
           },
           {
             index: 4,
-            actionId: 'intimacy:kiss',
+            actionId: 'kissing:kiss',
             commandString: 'kiss',
             description: 'Kiss passionately.',
           },
@@ -197,15 +197,15 @@ describe('AIPromptContentProvider Categorization Integration', () => {
       const result =
         promptContentProvider.getAvailableActionsInfoContent(gameState);
 
-      // Check that order follows priority: core, intimacy, sex, anatomy, clothing, then alphabetical
+      // Check that order follows priority: core, affection, kissing, caressing, sex, anatomy, clothing, then alphabetical
       const coreIndex = result.indexOf('### CORE Actions');
-      const intimacyIndex = result.indexOf('### INTIMACY Actions');
+      const kissingIndex = result.indexOf('### KISSING Actions');
       const sexIndex = result.indexOf('### SEX Actions');
       const anatomyIndex = result.indexOf('### ANATOMY Actions');
       const clothingIndex = result.indexOf('### CLOTHING Actions');
 
-      expect(coreIndex).toBeLessThan(intimacyIndex);
-      expect(intimacyIndex).toBeLessThan(sexIndex);
+      expect(coreIndex).toBeLessThan(kissingIndex);
+      expect(kissingIndex).toBeLessThan(sexIndex);
       expect(sexIndex).toBeLessThan(anatomyIndex);
       expect(anatomyIndex).toBeLessThan(clothingIndex);
     });
@@ -223,7 +223,7 @@ describe('AIPromptContentProvider Categorization Integration', () => {
           },
           {
             index: 2,
-            actionId: 'intimacy:kiss',
+            actionId: 'kissing:kiss',
             commandString: 'kiss',
             description: 'Kiss gently.',
           },
@@ -381,7 +381,7 @@ describe('AIPromptContentProvider Categorization Integration', () => {
           },
           { index: 2 }, // Missing actionId
           null, // Null action
-          { index: 3, actionId: 'intimacy:kiss' }, // Missing other fields
+          { index: 3, actionId: 'kissing:kiss' }, // Missing other fields
           {
             index: 4,
             actionId: 'clothing:remove',
@@ -422,7 +422,7 @@ describe('AIPromptContentProvider Categorization Integration', () => {
           },
           {
             index: 2,
-            actionId: 'intimacy:kiss',
+            actionId: 'kissing:kiss',
             commandString: 'kiss',
             description: 'Kiss tenderly.',
           },
@@ -440,7 +440,7 @@ describe('AIPromptContentProvider Categorization Integration', () => {
           },
           {
             index: 5,
-            actionId: 'intimacy:hug',
+            actionId: 'affection:hug',
             commandString: 'hug',
             description: 'Give a warm hug.',
           },
@@ -487,7 +487,7 @@ describe('AIPromptContentProvider Categorization Integration', () => {
           },
           {
             index: 2,
-            actionId: 'intimacy:kiss',
+            actionId: 'kissing:kiss',
             commandString: 'kiss',
             description: 'Kiss with punctuation.',
           },
@@ -505,7 +505,7 @@ describe('AIPromptContentProvider Categorization Integration', () => {
           },
           {
             index: 5,
-            actionId: 'intimacy:hug',
+            actionId: 'affection:hug',
             commandString: 'hug',
             description: '',
           },

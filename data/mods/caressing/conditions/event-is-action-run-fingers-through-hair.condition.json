@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "caressing:event-is-action-run-fingers-through-hair",
+  "description": "Checks if the triggering event is for the 'caressing:run_fingers_through_hair' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "caressing:run_fingers_through_hair"
+    ]
+  }
+}

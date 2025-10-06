@@ -1,6 +1,6 @@
 /**
  * @file Integration test for arm muscles scope with hulking build support
- * @description Tests that the intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target
+ * @description Tests that the caressing:actors_with_muscular_arms_facing_each_other_or_behind_target
  * scope correctly identifies actors with both muscular and hulking arm builds
  */
 
@@ -20,7 +20,7 @@ import path from 'path';
 const armMuscleScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../data/mods/intimacy/scopes/actors_with_muscular_arms_facing_each_other_or_behind_target.scope'
+    '../../../data/mods/caressing/scopes/actors_with_muscular_arms_facing_each_other_or_behind_target.scope'
   ),
   'utf8'
 );
@@ -123,9 +123,9 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
     scopeRegistry = new ScopeRegistry({ logger });
     scopeRegistry.clear();
     scopeRegistry.initialize({
-      'intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target':
+      'caressing:actors_with_muscular_arms_facing_each_other_or_behind_target':
         scopeDefinitions.get(
-          'intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target'
+          'caressing:actors_with_muscular_arms_facing_each_other_or_behind_target'
         ),
     });
 
@@ -224,7 +224,7 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
       // Parse and resolve the scope
       const actorEntity = entityManager.getEntityInstance(actorId);
       const scopeDef = scopeRegistry.getScope(
-        'intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target'
+        'caressing:actors_with_muscular_arms_facing_each_other_or_behind_target'
       );
 
       const parser = new DefaultDslParser({ logger });
@@ -251,7 +251,7 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
       // Parse and resolve the scope
       const actorEntity = entityManager.getEntityInstance(actorId);
       const scopeDef = scopeRegistry.getScope(
-        'intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target'
+        'caressing:actors_with_muscular_arms_facing_each_other_or_behind_target'
       );
 
       const parser = new DefaultDslParser({ logger });
@@ -278,7 +278,7 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
       // Parse and resolve the scope
       const actorEntity = entityManager.getEntityInstance(actorId);
       const scopeDef = scopeRegistry.getScope(
-        'intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target'
+        'caressing:actors_with_muscular_arms_facing_each_other_or_behind_target'
       );
 
       const parser = new DefaultDslParser({ logger });
@@ -306,7 +306,7 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
       // Parse and resolve the scope
       const actorEntity = entityManager.getEntityInstance(actorId);
       const scopeDef = scopeRegistry.getScope(
-        'intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target'
+        'caressing:actors_with_muscular_arms_facing_each_other_or_behind_target'
       );
 
       const parser = new DefaultDslParser({ logger });
@@ -336,7 +336,7 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
       // Parse and resolve the scope
       const actorEntity = entityManager.getEntityInstance(actorId);
       const scopeDef = scopeRegistry.getScope(
-        'intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target'
+        'caressing:actors_with_muscular_arms_facing_each_other_or_behind_target'
       );
 
       const parser = new DefaultDslParser({ logger });
@@ -366,7 +366,7 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
       // Parse and resolve the scope
       const actorEntity = entityManager.getEntityInstance(actorId);
       const scopeDef = scopeRegistry.getScope(
-        'intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target'
+        'caressing:actors_with_muscular_arms_facing_each_other_or_behind_target'
       );
 
       const parser = new DefaultDslParser({ logger });

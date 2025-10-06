@@ -51,13 +51,13 @@ describe('MultiTargetActionFormatter - Unresolved Placeholder Bug', () => {
       });
 
       const actionDef = {
-        id: 'intimacy:adjust_clothing',
+        id: 'caressing:adjust_clothing',
         name: 'Adjust Clothing',
         template: "adjust {primary}'s {secondary}",
         targets: {
           primary: {
             scope:
-              'intimacy:close_actors_facing_each_other_with_torso_clothing',
+              'caressing:close_actors_facing_each_other_with_torso_clothing',
             placeholder: 'primary',
           },
           secondary: {
@@ -115,13 +115,13 @@ describe('MultiTargetActionFormatter - Unresolved Placeholder Bug', () => {
     it('should reproduce the bug - action shows {secondary} instead of resolved value', () => {
       // Reproduce the exact scenario from the bug report
       const actionDef = {
-        id: 'intimacy:adjust_clothing',
+        id: 'caressing:adjust_clothing',
         name: 'Adjust Clothing',
         template: "adjust {primary}'s {secondary}",
         targets: {
           primary: {
             scope:
-              'intimacy:close_actors_facing_each_other_with_torso_clothing',
+              'caressing:close_actors_facing_each_other_with_torso_clothing',
             placeholder: 'primary',
             description: 'Person whose clothing to adjust',
           },

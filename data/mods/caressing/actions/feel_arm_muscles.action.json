@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "caressing:feel_arm_muscles",
+  "name": "Feel Arm Muscles",
+  "description": "Feel the hard swell of the target's muscular arms.",
+  "targets": "caressing:actors_with_muscular_arms_facing_each_other_or_behind_target",
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "template": "feel the hard swell of {target}'s muscles",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#311b92",
+    "textColor": "#d1c4e9",
+    "hoverBackgroundColor": "#4527a0",
+    "hoverTextColor": "#ede7f6"
+  }
+}

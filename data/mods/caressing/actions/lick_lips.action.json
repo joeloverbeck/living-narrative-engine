@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "caressing:lick_lips",
+  "name": "Lick Lips Seductively",
+  "description": "Lean in and seductively lick the target's lips.",
+  "targets": "caressing:close_actors_facing_each_other",
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "template": "lick {target}'s lips",
+  "visual": {
+    "backgroundColor": "#311b92",
+    "textColor": "#d1c4e9",
+    "hoverBackgroundColor": "#4527a0",
+    "hoverTextColor": "#ede7f6"
+  }
+}

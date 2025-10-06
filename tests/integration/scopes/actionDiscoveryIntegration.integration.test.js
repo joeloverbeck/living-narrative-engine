@@ -36,7 +36,10 @@ import {
   createMockUnifiedScopeResolver,
 } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
-import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
+import {
+  createMockActionErrorContextBuilder,
+  createMockTargetRequiredComponentsValidator,
+} from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
 import { ActionIndex } from '../../../src/actions/actionIndex.js';
 import { createMultiTargetResolutionStage, createActionPipelineOrchestrator } from '../../common/actions/multiTargetStageTestUtilities.js';
@@ -217,7 +220,12 @@ describe('Scope Integration Tests', () => {
       validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
       validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
     };
-const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+
+    // Create mock TargetRequiredComponentsValidator
+    const mockTargetRequiredComponentsValidator =
+      createMockTargetRequiredComponentsValidator();
+
+    const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex,
       prerequisiteService: prerequisiteEvaluationService,
       targetService: targetResolutionService,
@@ -244,6 +252,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         targetResolver: targetResolutionService,
       }),
       targetComponentValidator: mockTargetComponentValidator,
+      targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
     });
 
     // FIX: Add the new prerequisiteEvaluationService dependency to the constructor
@@ -310,6 +319,10 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
       };
 
+      // Create mock TargetRequiredComponentsValidator
+      const mockTargetRequiredComponentsValidator =
+        createMockTargetRequiredComponentsValidator();
+
       const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         actionIndex,
         prerequisiteService: { evaluate: jest.fn(() => true) },
@@ -365,6 +378,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
           }),
         }),
         targetComponentValidator: mockTargetComponentValidator,
+        targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
       });
 
       actionDiscoveryService = new ActionDiscoveryService({
@@ -474,6 +488,10 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
       };
 
+      // Create mock TargetRequiredComponentsValidator
+      const mockTargetRequiredComponentsValidator =
+        createMockTargetRequiredComponentsValidator();
+
       const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         actionIndex,
         prerequisiteService: { evaluate: jest.fn(() => true) },
@@ -529,6 +547,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
           }),
         }),
         targetComponentValidator: mockTargetComponentValidator,
+        targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
       });
 
       actionDiscoveryService = new ActionDiscoveryService({
@@ -616,6 +635,10 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
       };
 
+      // Create mock TargetRequiredComponentsValidator
+      const mockTargetRequiredComponentsValidator =
+        createMockTargetRequiredComponentsValidator();
+
       const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         actionIndex,
         prerequisiteService: { evaluate: jest.fn(() => true) },
@@ -671,6 +694,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
           }),
         }),
         targetComponentValidator: mockTargetComponentValidator,
+        targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
       });
 
       actionDiscoveryService = new ActionDiscoveryService({
@@ -746,6 +770,10 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
       };
 
+      // Create mock TargetRequiredComponentsValidator
+      const mockTargetRequiredComponentsValidator =
+        createMockTargetRequiredComponentsValidator();
+
       const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         actionIndex,
         prerequisiteService: { evaluate: jest.fn(() => true) },
@@ -801,6 +829,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
           }),
         }),
         targetComponentValidator: mockTargetComponentValidator,
+        targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
       });
 
       actionDiscoveryService = new ActionDiscoveryService({

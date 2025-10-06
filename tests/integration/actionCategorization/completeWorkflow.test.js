@@ -107,14 +107,14 @@ describe('Complete Action Categorization Workflow Integration', () => {
           },
           {
             index: 3,
-            actionId: 'intimacy:kiss_back_passionately',
+            actionId: 'kissing:kiss_back_passionately',
             commandString: 'kiss Sarah passionately',
             description: 'Return the kiss with equal passion.',
             params: {},
           },
           {
             index: 4,
-            actionId: 'intimacy:massage_shoulders',
+            actionId: 'affection:massage_shoulders',
             commandString: "massage Sarah's shoulders",
             description: 'Provide comfort through gentle touch.',
             params: {},
@@ -144,7 +144,8 @@ describe('Complete Action Categorization Workflow Integration', () => {
       expect(llmOutput).toContain('## Available Actions');
       expect(llmOutput).toContain('### CORE Actions');
       expect(llmOutput).toContain('### MOVEMENT Actions');
-      expect(llmOutput).toContain('### INTIMACY Actions');
+      expect(llmOutput).toContain('### AFFECTION Actions');
+      expect(llmOutput).toContain('### KISSING Actions');
       expect(llmOutput).toContain('### CLOTHING Actions');
 
       // Verify action preservation
@@ -168,10 +169,11 @@ describe('Complete Action Categorization Workflow Integration', () => {
       const grouped = actionCategorizationService.groupActionsByNamespace(
         gameState.availableActions
       );
-      expect(grouped.size).toBe(4); // core, intimacy, clothing, movement
+      expect(grouped.size).toBe(5); // core, affection, kissing, clothing, movement
       expect(grouped.get('core')).toHaveLength(2); // wait, examine
       expect(grouped.get('movement')).toHaveLength(1); // go
-      expect(grouped.get('intimacy')).toHaveLength(2);
+      expect(grouped.get('affection')).toHaveLength(1); // massage
+      expect(grouped.get('kissing')).toHaveLength(1); // kiss
       expect(grouped.get('clothing')).toHaveLength(1);
     });
 
@@ -201,7 +203,7 @@ describe('Complete Action Categorization Workflow Integration', () => {
           },
           {
             index: 4,
-            actionId: 'intimacy:hold_hands',
+            actionId: 'affection:hold_hands',
             commandString: 'hold hands',
             description: 'Take their hand gently.',
             params: {},
@@ -228,15 +230,15 @@ describe('Complete Action Categorization Workflow Integration', () => {
         promptProvider.getAvailableActionsInfoContent(gameState);
 
       const coreIndex = llmOutput.indexOf('### CORE Actions');
-      const intimacyIndex = llmOutput.indexOf('### INTIMACY Actions');
+      const affectionIndex = llmOutput.indexOf('### AFFECTION Actions');
       const sexIndex = llmOutput.indexOf('### SEX Actions');
       const anatomyIndex = llmOutput.indexOf('### ANATOMY Actions');
       const clothingIndex = llmOutput.indexOf('### CLOTHING Actions');
       const unknownIndex = llmOutput.indexOf('### UNKNOWN_NAMESPACE Actions');
 
-      // Verify priority order: core, intimacy, sex, anatomy, clothing, then alphabetical
-      expect(coreIndex).toBeLessThan(intimacyIndex);
-      expect(intimacyIndex).toBeLessThan(sexIndex);
+      // Verify priority order: core, affection, sex, anatomy, clothing, then alphabetical
+      expect(coreIndex).toBeLessThan(affectionIndex);
+      expect(affectionIndex).toBeLessThan(sexIndex);
       expect(sexIndex).toBeLessThan(anatomyIndex);
       expect(anatomyIndex).toBeLessThan(clothingIndex);
       expect(clothingIndex).toBeLessThan(unknownIndex);
@@ -244,7 +246,7 @@ describe('Complete Action Categorization Workflow Integration', () => {
       // Verify service sorts namespaces correctly
       const sortedNamespaces = actionCategorizationService.getSortedNamespaces([
         'core',
-        'intimacy',
+        'affection',
         'sex',
         'anatomy',
         'clothing',
@@ -253,7 +255,7 @@ describe('Complete Action Categorization Workflow Integration', () => {
 
       expect(sortedNamespaces).toEqual([
         'core',
-        'intimacy',
+        'affection',
         'sex',
         'anatomy',
         'clothing',
@@ -275,7 +277,7 @@ describe('Complete Action Categorization Workflow Integration', () => {
           },
           {
             index: 2,
-            actionId: 'intimacy:kiss',
+            actionId: 'kissing:kiss',
             commandString: 'kiss',
             description: 'Kiss gently.',
             params: {},
@@ -423,7 +425,7 @@ describe('Complete Action Categorization Workflow Integration', () => {
           },
           {
             index: 2,
-            actionId: 'intimacy:kiss',
+            actionId: 'kissing:kiss',
             commandString: 'kiss',
             description: 'Kiss.',
             params: {},
@@ -461,7 +463,7 @@ describe('Complete Action Categorization Workflow Integration', () => {
           }, // Empty fields
           {
             index: 4,
-            actionId: 'intimacy:kiss',
+            actionId: 'kissing:kiss',
             commandString: 'kiss',
             description: 'Kiss.',
             params: {},
@@ -606,14 +608,14 @@ describe('Complete Action Categorization Workflow Integration', () => {
             },
             {
               index: 3,
-              actionId: 'intimacy:talk',
+              actionId: 'affection:talk',
               commandString: 'talk to Sarah',
               description: 'Have a conversation.',
               params: {},
             },
             {
               index: 4,
-              actionId: 'intimacy:compliment',
+              actionId: 'affection:compliment',
               commandString: 'compliment Sarah',
               description: 'Say something nice.',
               params: {},
@@ -653,14 +655,14 @@ describe('Complete Action Categorization Workflow Integration', () => {
             },
             {
               index: 3,
-              actionId: 'intimacy:kiss',
+              actionId: 'kissing:kiss',
               commandString: 'kiss passionately',
               description: 'Kiss with deep feeling.',
               params: {},
             },
             {
               index: 4,
-              actionId: 'intimacy:embrace',
+              actionId: 'affection:hug_tight',
               commandString: 'hold close',
               description: 'Pull them close.',
               params: {},
@@ -744,9 +746,9 @@ describe('Complete Action Categorization Workflow Integration', () => {
             },
             {
               index: 4,
-              actionId: 'intimacy:valid',
-              commandString: 'valid intimacy',
-              description: 'Valid intimacy action.',
+              actionId: 'affection:valid',
+              commandString: 'valid affection',
+              description: 'Valid affection action.',
               params: {},
             },
             {
@@ -777,7 +779,7 @@ describe('Complete Action Categorization Workflow Integration', () => {
             },
             {
               index: 2,
-              actionId: 'intimacy:kiss',
+              actionId: 'kissing:kiss',
               commandString: 'kiss 💋',
               description: 'Kiss with love 💕.',
               params: {},
@@ -805,7 +807,7 @@ describe('Complete Action Categorization Workflow Integration', () => {
             },
             {
               index: 6,
-              actionId: 'intimacy:whisper',
+              actionId: 'affection:whisper',
               commandString: 'whisper sweetly',
               description: 'Whisper "I love you".',
               params: {},

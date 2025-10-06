@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "kissing:event-is-action-explore-mouth-with-tongue",
+  "description": "Checks if the event is the explore_mouth_with_tongue action",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "kissing:explore_mouth_with_tongue"
+    ]
+  }
+}

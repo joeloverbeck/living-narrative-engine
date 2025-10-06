@@ -62,20 +62,27 @@ describe('Enhanced Cross-Reference Validation Integration', () => {
   });
 
   it('should perform end-to-end enhanced validation with detailed reporting', async () => {
-    // Setup test scenario: mod that references missing dependency
+    // Setup test scenario: mod that references missing dependencies
     const manifestsMap = new Map([
       [
         'positioning',
         {
           id: 'positioning',
           version: '1.0.0',
-          dependencies: [{ id: 'core' }], // Missing 'intimacy' dependency
+          dependencies: [{ id: 'core' }], // Missing 'kissing' and 'affection' dependencies
         },
       ],
       [
-        'intimacy',
+        'kissing',
         {
-          id: 'intimacy',
+          id: 'kissing',
+          version: '1.0.0',
+        },
+      ],
+      [
+        'affection',
+        {
+          id: 'affection',
           version: '1.2.0',
         },
       ],
@@ -84,7 +91,7 @@ describe('Enhanced Cross-Reference Validation Integration', () => {
     // Mock enhanced extraction to return contextual references
     const mockContextualReferences = new Map([
       [
-        'intimacy',
+        'kissing',
         [
           {
             componentId: 'kissing',
@@ -93,7 +100,7 @@ describe('Enhanced Cross-Reference Validation Integration', () => {
                 file: '/test/mods/positioning/actions/kiss.action.json',
                 line: 5,
                 column: 15,
-                snippet: '"intimacy:kissing"',
+                snippet: '"kissing:kissing"',
                 type: 'action',
                 isBlocking: false,
                 isOptional: false,
@@ -101,6 +108,11 @@ describe('Enhanced Cross-Reference Validation Integration', () => {
               },
             ],
           },
+        ],
+      ],
+      [
+        'affection',
+        [
           {
             componentId: 'romantic_interest',
             contexts: [
@@ -108,7 +120,7 @@ describe('Enhanced Cross-Reference Validation Integration', () => {
                 file: '/test/mods/positioning/actions/kiss.action.json',
                 line: 5,
                 column: 32,
-                snippet: '"intimacy:romantic_interest"',
+                snippet: '"affection:romantic_interest"',
                 type: 'action',
                 isBlocking: false,
                 isOptional: false,
@@ -136,7 +148,7 @@ describe('Enhanced Cross-Reference Validation Integration', () => {
       modId: 'positioning',
       hasViolations: true,
       violations: expect.any(Array),
-      missingDependencies: ['intimacy'],
+      missingDependencies: expect.arrayContaining(['kissing', 'affection']),
     });
 
     // Verify enhanced violation data
@@ -145,11 +157,11 @@ describe('Enhanced Cross-Reference Validation Integration', () => {
     const firstViolation = validationResult.violations[0];
     expect(firstViolation).toMatchObject({
       violatingMod: 'positioning',
-      referencedMod: 'intimacy',
+      referencedMod: expect.stringMatching(/affection|kissing|caressing/),
       file: expect.stringMatching(/actions\/(kiss|hug)\.action\.json/),
       line: expect.any(Number),
       column: expect.any(Number),
-      contextSnippet: expect.stringContaining('intimacy:'),
+      contextSnippet: expect.stringMatching(/affection:|kissing:|caressing:/),
       contextType: 'action',
       severity: 'high', // Actions are high severity
       impact: expect.objectContaining({
@@ -160,14 +172,13 @@ describe('Enhanced Cross-Reference Validation Integration', () => {
         expect.objectContaining({
           type: 'add_dependency',
           priority: 'primary',
-          description: 'Add "intimacy" to dependencies in mod-manifest.json',
+          description: expect.stringMatching(/Add "(affection|kissing|caressing)" to dependencies/),
           implementation: expect.objectContaining({
             file: 'mod-manifest.json',
             action: 'add_to_dependencies_array',
-            value: {
-              id: 'intimacy',
-              version: '1.2.0',
-            },
+            value: expect.objectContaining({
+              id: expect.stringMatching(/affection|kissing|caressing/),
+            }),
           }),
         }),
       ]),
@@ -186,8 +197,8 @@ describe('Enhanced Cross-Reference Validation Integration', () => {
 
     expect(consoleReport).toContain('HIGH (');
     expect(consoleReport).toContain('📁 actions/');
-    expect(consoleReport).toContain('📝 "intimacy:');
-    expect(consoleReport).toContain('💡 Add "intimacy" to dependencies');
+    expect(consoleReport).toMatch(/📝 "(affection|kissing|caressing):/);
+    expect(consoleReport).toMatch(/💡 Add "(affection|kissing|caressing)" to dependencies/);
     expect(consoleReport).toContain('📊 Impact: loading=');
 
     // Test JSON reporting
@@ -218,7 +229,7 @@ describe('Enhanced Cross-Reference Validation Integration', () => {
     expect(htmlReport).toContain('<!DOCTYPE html>');
     expect(htmlReport).toContain('class="violation severity-high"');
     expect(htmlReport).toContain('positioning');
-    expect(htmlReport).toContain('intimacy:');
+    expect(htmlReport).toMatch(/affection:|kissing:|caressing:/);
   });
 
   it('should handle ecosystem validation with mixed results', async () => {

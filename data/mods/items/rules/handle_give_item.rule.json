@@ -56,7 +56,7 @@
             "type": "GET_NAME",
             "comment": "Get item name",
             "parameters": {
-              "entity_ref": "secondaryTarget",
+              "entity_ref": "{event.payload.secondaryTargetId}",
               "result_variable": "itemName"
             }
           },
@@ -72,7 +72,7 @@
             "comment": "Log failed transfer for observers",
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
-              "description_text": "{context.actorName.text} tried to give {context.itemName.text} to {context.targetName.text}, but they can't carry it.",
+              "description_text": "{context.actorName} tried to give {context.itemName} to {context.targetName}, but they can't carry it.",
               "perception_type": "item_transfer_failed",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.targetId}",
@@ -85,7 +85,7 @@
             "parameters": {
               "eventType": "core:display_failed_action_result",
               "payload": {
-                "message": "{context.targetName.text} cannot carry {context.itemName.text}. Reason: {context.capacityCheck.reason}"
+                "message": "{context.targetName} cannot carry {context.itemName}. Reason: {context.capacityCheck.reason}"
               }
             }
           },
@@ -140,7 +140,7 @@
             "type": "GET_NAME",
             "comment": "Get item name",
             "parameters": {
-              "entity_ref": "secondaryTarget",
+              "entity_ref": "{event.payload.secondaryTargetId}",
               "result_variable": "itemName"
             }
           },
@@ -156,7 +156,7 @@
             "comment": "Log successful transfer for observers",
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
-              "description_text": "{context.actorName.text} gave {context.itemName.text} to {context.targetName.text}.",
+              "description_text": "{context.actorName} gave {context.itemName} to {context.targetName}.",
               "perception_type": "item_transfer",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.targetId}",

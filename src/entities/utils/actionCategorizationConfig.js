@@ -63,7 +63,7 @@ export const DEFAULT_CATEGORIZATION_CONFIG = {
   enabled: true,
   minActionsForGrouping: 6,
   minNamespacesForGrouping: 2,
-  namespaceOrder: ['core', 'intimacy', 'sex', 'anatomy', 'clothing'],
+  namespaceOrder: ['core', 'affection', 'kissing', 'caressing', 'sex', 'anatomy', 'clothing', 'movement'],
   showCounts: false,
   performance: DEFAULT_PERFORMANCE_CONFIG,
   errorHandling: DEFAULT_ERROR_HANDLING_CONFIG,
@@ -119,14 +119,17 @@ export const TEST_CATEGORIZATION_CONFIG = {
  * Valid namespace order presets for common configurations
  */
 export const NAMESPACE_ORDER_PRESETS = {
-  default: ['core', 'intimacy', 'sex', 'anatomy', 'clothing'],
+  default: ['core', 'affection', 'kissing', 'caressing', 'sex', 'anatomy', 'clothing', 'movement'],
   minimal: ['core'],
   extended: [
     'core',
-    'intimacy',
+    'affection',
+    'kissing',
+    'caressing',
     'sex',
     'anatomy',
     'clothing',
+    'movement',
     'equipment',
     'magic',
     'social',

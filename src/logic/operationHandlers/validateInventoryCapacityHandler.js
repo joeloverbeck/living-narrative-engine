@@ -5,6 +5,7 @@
 
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
 const INVENTORY_COMPONENT_ID = 'items:inventory';
@@ -14,6 +15,7 @@ const WEIGHT_COMPONENT_ID = 'items:weight';
  * @typedef {object} ValidateInventoryCapacityParams
  * @property {string} targetEntity – Entity whose inventory capacity to check
  * @property {string} itemEntity – Item entity to validate for addition
+ * @property {string} result_variable – Variable name to store validation result
  */
 
 /**
@@ -54,7 +56,7 @@ class ValidateInventoryCapacityHandler extends BaseOperationHandler {
       return null;
     }
 
-    const { targetEntity, itemEntity } = params;
+    const { targetEntity, itemEntity, result_variable } = params;
 
     if (typeof targetEntity !== 'string' || !targetEntity.trim()) {
       safeDispatchError(
@@ -76,9 +78,20 @@ class ValidateInventoryCapacityHandler extends BaseOperationHandler {
       return null;
     }
 
+    if (typeof result_variable !== 'string' || !result_variable.trim()) {
+      safeDispatchError(
+        this.#dispatcher,
+        'VALIDATE_INVENTORY_CAPACITY: result_variable is required',
+        { result_variable },
+        logger
+      );
+      return null;
+    }
+
     return {
       targetEntity: targetEntity.trim(),
       itemEntity: itemEntity.trim(),
+      resultVariable: result_variable.trim(),
     };
   }
 
@@ -95,10 +108,20 @@ class ValidateInventoryCapacityHandler extends BaseOperationHandler {
     // Validation
     const validated = this.#validateParams(params, log);
     if (!validated) {
-      return { valid: false, reason: 'validation_failed' };
+      const failureResult = { valid: false, reason: 'validation_failed' };
+      if (params?.result_variable) {
+        tryWriteContextVariable(
+          params.result_variable,
+          failureResult,
+          executionContext,
+          this.#dispatcher,
+          log
+        );
+      }
+      return;
     }
 
-    const { targetEntity, itemEntity } = validated;
+    const { targetEntity, itemEntity, resultVariable } = validated;
 
     try {
       // Get inventory and item weight using getComponentData
@@ -113,18 +136,42 @@ class ValidateInventoryCapacityHandler extends BaseOperationHandler {
 
       if (!inventory) {
         log.warn(`No inventory component on target`, { targetEntity });
-        return { valid: false, reason: 'no_inventory' };
+        const result = { valid: false, reason: 'no_inventory' };
+        tryWriteContextVariable(
+          resultVariable,
+          result,
+          executionContext,
+          this.#dispatcher,
+          log
+        );
+        return;
       }
 
       if (!itemWeight) {
         log.warn(`No weight component on item`, { itemEntity });
-        return { valid: false, reason: 'no_weight' };
+        const result = { valid: false, reason: 'no_weight' };
+        tryWriteContextVariable(
+          resultVariable,
+          result,
+          executionContext,
+          this.#dispatcher,
+          log
+        );
+        return;
       }
 
       // Check item count constraint
       if (inventory.items.length >= inventory.capacity.maxItems) {
         log.debug(`Inventory full (item count)`, { targetEntity });
-        return { valid: false, reason: 'max_items_exceeded' };
+        const result = { valid: false, reason: 'max_items_exceeded' };
+        tryWriteContextVariable(
+          resultVariable,
+          result,
+          executionContext,
+          this.#dispatcher,
+          log
+        );
+        return;
       }
 
       // Calculate total weight
@@ -148,16 +195,38 @@ class ValidateInventoryCapacityHandler extends BaseOperationHandler {
           newWeight,
           maxWeight: inventory.capacity.maxWeight,
         });
-        return { valid: false, reason: 'max_weight_exceeded' };
+        const result = { valid: false, reason: 'max_weight_exceeded' };
+        tryWriteContextVariable(
+          resultVariable,
+          result,
+          executionContext,
+          this.#dispatcher,
+          log
+        );
+        return;
       }
 
-      return { valid: true };
+      const result = { valid: true };
+      tryWriteContextVariable(
+        resultVariable,
+        result,
+        executionContext,
+        this.#dispatcher,
+        log
+      );
     } catch (error) {
       log.error(`Capacity validation failed`, error, {
         targetEntity,
         itemEntity,
       });
-      return { valid: false, reason: error.message };
+      const result = { valid: false, reason: error.message };
+      tryWriteContextVariable(
+        resultVariable,
+        result,
+        executionContext,
+        this.#dispatcher,
+        log
+      );
     }
   }
 }

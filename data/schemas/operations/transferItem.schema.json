@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/operations/transferItem.schema.json",
+  "title": "TRANSFER_ITEM Operation",
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "TRANSFER_ITEM"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the TRANSFER_ITEM operation. Transfers an item from one entity's inventory to another entity's inventory.",
+      "properties": {
+        "fromEntity": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S(.*\\S)?$",
+          "description": "Entity ID of the current item owner (giving the item)"
+        },
+        "toEntity": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S(.*\\S)?$",
+          "description": "Entity ID of the new item owner (receiving the item)"
+        },
+        "itemEntity": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S(.*\\S)?$",
+          "description": "Entity ID of the item being transferred"
+        }
+      },
+      "required": ["fromEntity", "toEntity", "itemEntity"],
+      "additionalProperties": false
+    }
+  }
+}

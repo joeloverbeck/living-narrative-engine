@@ -200,33 +200,33 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
     describe('Rule file naming conventions', () => {
       it('should try multiple rule file patterns', () => {
         const paths = ModTestFixture.getConventionalPaths(
-          'intimacy',
+          'kissing',
           'kiss_cheek'
         );
 
         expect(paths.rulePaths).toContain(
-          'data/mods/intimacy/rules/kiss_cheek.rule.json'
+          'data/mods/kissing/rules/kiss_cheek.rule.json'
         );
         expect(paths.rulePaths).toContain(
-          'data/mods/intimacy/rules/handle_kiss_cheek.rule.json'
+          'data/mods/kissing/rules/handle_kiss_cheek.rule.json'
         );
         expect(paths.rulePaths).toContain(
-          'data/mods/intimacy/rules/intimacy_kiss_cheek.rule.json'
+          'data/mods/kissing/rules/kissing_kiss_cheek.rule.json'
         );
       });
 
       it('should handle namespaced action IDs correctly', () => {
         const paths = ModTestFixture.getConventionalPaths(
-          'intimacy',
-          'intimacy:kiss_cheek'
+          'kissing',
+          'kissing:kiss_cheek'
         );
 
         // Should extract action name from full ID
         expect(paths.rulePaths).toContain(
-          'data/mods/intimacy/rules/kiss_cheek.rule.json'
+          'data/mods/kissing/rules/kiss_cheek.rule.json'
         );
         expect(paths.rulePaths).toContain(
-          'data/mods/intimacy/rules/handle_kiss_cheek.rule.json'
+          'data/mods/kissing/rules/handle_kiss_cheek.rule.json'
         );
       });
     });
@@ -234,18 +234,18 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
     describe('Condition file naming conventions', () => {
       it('should try multiple condition file patterns with hyphen conversion', () => {
         const paths = ModTestFixture.getConventionalPaths(
-          'intimacy',
+          'kissing',
           'kiss_cheek'
         );
 
         expect(paths.conditionPaths).toContain(
-          'data/mods/intimacy/conditions/event-is-action-kiss-cheek.condition.json'
+          'data/mods/kissing/conditions/event-is-action-kiss-cheek.condition.json'
         );
         expect(paths.conditionPaths).toContain(
-          'data/mods/intimacy/conditions/kiss-cheek.condition.json'
+          'data/mods/kissing/conditions/kiss-cheek.condition.json'
         );
         expect(paths.conditionPaths).toContain(
-          'data/mods/intimacy/conditions/event-is-action-intimacy-kiss-cheek.condition.json'
+          'data/mods/kissing/conditions/event-is-action-kissing-kiss-cheek.condition.json'
         );
       });
 

@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "kissing:event-is-action-pull-back-in-revulsion",
+  "description": "Checks if event is pull back in revulsion action",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "kissing:pull_back_in_revulsion"
+    ]
+  }
+}

@@ -18,6 +18,7 @@ const OPERATION_SCHEMA_FILES = [
   'dispatchPerceptibleEvent.schema.json',
   'dispatchSpeech.schema.json',
   'dispatchThought.schema.json',
+  'dropItemAtLocation.schema.json',
   'endTurn.schema.json',
   'establishFollowRelation.schema.json',
   'establishSittingCloseness.schema.json',
@@ -35,6 +36,7 @@ const OPERATION_SCHEMA_FILES = [
   'modifyArrayField.schema.json',
   'modifyComponent.schema.json',
   'modifyContextArray.schema.json',
+  'pickUpItemFromLocation.schema.json',
   'queryComponent.schema.json',
   'queryComponents.schema.json',
   'queryEntities.schema.json',
@@ -46,9 +48,11 @@ const OPERATION_SCHEMA_FILES = [
   'resolveDirection.schema.json',
   'setVariable.schema.json',
   'systemMoveEntity.schema.json',
+  'transferItem.schema.json',
   'unequipClothing.schema.json',
   'unlockMouthEngagement.schema.json',
   'unlockMovement.schema.json',
+  'validateInventoryCapacity.schema.json',
 ];
 
 class StaticConfiguration {

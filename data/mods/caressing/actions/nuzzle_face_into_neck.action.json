@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "caressing:nuzzle_face_into_neck",
+  "name": "Nuzzle Face Into Neck",
+  "description": "Gently nuzzle your face into the target's neck in an intimate gesture.",
+  "targets": "caressing:close_actors_facing_each_other",
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": ["intimacy:kissing"]
+  },
+  "template": "nuzzle face into {target}'s neck",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#311b92",
+    "textColor": "#d1c4e9",
+    "hoverBackgroundColor": "#4527a0",
+    "hoverTextColor": "#ede7f6"
+  }
+}

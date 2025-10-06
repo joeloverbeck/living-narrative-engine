@@ -32,7 +32,9 @@ import {
   createMockUnifiedScopeResolver,
 } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
-import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
+import {createMockActionErrorContextBuilder,
+  createMockTargetRequiredComponentsValidator,
+} from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
 import { createMockMultiTargetResolutionStage } from '../../common/mocks/mockMultiTargetResolutionStage.js';
 import JsonLogicCustomOperators from '../../../src/logic/jsonLogicCustomOperators.js';
@@ -100,7 +102,7 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
     );
     dataRegistry.store(
       'conditions',
-      'intimacy:entity-not-in-facing-away',
+      'positioning:entity-not-in-facing-away',
       actualCondition
     );
 
@@ -202,6 +204,10 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
       validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
       validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
     };
+
+    // Create mock TargetRequiredComponentsValidator
+    const mockTargetRequiredComponentsValidator =
+      createMockTargetRequiredComponentsValidator();
 const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex: {
         getCandidateActions: jest
@@ -226,6 +232,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       targetContextBuilder: createMockTargetContextBuilder(),
       multiTargetResolutionStage: mockMultiTargetResolutionStage,
       targetComponentValidator: mockTargetComponentValidator,
+      targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
     });
 
     actionDiscoveryService = new ActionDiscoveryService({

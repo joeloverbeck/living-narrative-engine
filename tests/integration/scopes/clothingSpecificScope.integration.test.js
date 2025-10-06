@@ -29,7 +29,9 @@ import {
   createMockUnifiedScopeResolver,
 } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
-import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
+import {createMockActionErrorContextBuilder,
+  createMockTargetRequiredComponentsValidator,
+} from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
 // import { createMockMultiTargetResolutionStage } from '../../common/mocks/mockMultiTargetResolutionStage.js';
 import JsonLogicCustomOperators from '../../../src/logic/jsonLogicCustomOperators.js';
@@ -40,7 +42,7 @@ import path from 'path';
 const clothingScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../data/mods/intimacy/scopes/close_actors_facing_each_other_with_torso_clothing.scope'
+    '../../../data/mods/caressing/scopes/close_actors_facing_each_other_with_torso_clothing.scope'
   ),
   'utf8'
 );
@@ -55,7 +57,7 @@ const secondaryScopeContent = fs.readFileSync(
 );
 
 // Import actual action files
-import adjustClothingAction from '../../../data/mods/intimacy/actions/adjust_clothing.action.json';
+import adjustClothingAction from '../../../data/mods/caressing/actions/adjust_clothing.action.json';
 
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
 
@@ -125,8 +127,8 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     );
 
     // Register the prerequisite condition for the action
-    dataRegistry.store('conditions', 'intimacy:actor-is-in-closeness', {
-      id: 'intimacy:actor-is-in-closeness',
+    dataRegistry.store('conditions', 'affection:actor-is-in-closeness', {
+      id: 'affection:actor-is-in-closeness',
       description:
         'Checks if the actor is currently in closeness with someone.',
       logic: {
@@ -177,9 +179,9 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     scopeRegistry.clear();
 
     scopeRegistry.initialize({
-      'intimacy:close_actors_facing_each_other_with_torso_clothing':
+      'caressing:close_actors_facing_each_other_with_torso_clothing':
         primaryScopeDefinitions.get(
-          'intimacy:close_actors_facing_each_other_with_torso_clothing'
+          'caressing:close_actors_facing_each_other_with_torso_clothing'
         ),
       'clothing:target_topmost_torso_upper_clothing':
         secondaryScopeDefinitions.get(
@@ -249,6 +251,10 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
       validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
     };
+
+    // Create mock TargetRequiredComponentsValidator
+    const mockTargetRequiredComponentsValidator =
+      createMockTargetRequiredComponentsValidator();
 const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex: {
         getCandidateActions: jest.fn().mockImplementation((actor) => {
@@ -323,6 +329,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       })(),
       targetContextBuilder: createMockTargetContextBuilder(entityManager),
       targetComponentValidator: mockTargetComponentValidator,
+      targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
       multiTargetResolutionStage: (() => {
         // Create a custom mock that properly handles multi-target actions
         // This mock simulates the multi-target resolution based on entity state
@@ -350,7 +357,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
               if (
                 isMultiTarget &&
-                actionDef.id === 'intimacy:adjust_clothing'
+                actionDef.id === 'caressing:adjust_clothing'
               ) {
                 // For adjust_clothing, check closeness relationships and clothing
                 const actorCloseness =
@@ -721,7 +728,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Get the primary scope definition
       const scopeDefinition = scopeRegistry.getScope(
-        'intimacy:close_actors_facing_each_other_with_torso_clothing'
+        'caressing:close_actors_facing_each_other_with_torso_clothing'
       );
       console.log('Scope definition:', scopeDefinition);
 
@@ -837,7 +844,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Get the primary scope definition
       const scopeDefinition = scopeRegistry.getScope(
-        'intimacy:close_actors_facing_each_other_with_torso_clothing'
+        'caressing:close_actors_facing_each_other_with_torso_clothing'
       );
       expect(scopeDefinition).toBeDefined();
 
@@ -899,7 +906,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const adjustClothingActions = result.actions.filter(
-        (action) => action.id === 'intimacy:adjust_clothing'
+        (action) => action.id === 'caressing:adjust_clothing'
       );
 
       expect(adjustClothingActions).toHaveLength(1);
@@ -929,7 +936,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const adjustClothingActions = result.actions.filter(
-        (action) => action.id === 'intimacy:adjust_clothing'
+        (action) => action.id === 'caressing:adjust_clothing'
       );
 
       expect(adjustClothingActions).toHaveLength(0);
@@ -952,7 +959,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const adjustClothingActions = result.actions.filter(
-        (action) => action.id === 'intimacy:adjust_clothing'
+        (action) => action.id === 'caressing:adjust_clothing'
       );
 
       expect(adjustClothingActions).toHaveLength(0);
@@ -975,7 +982,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const adjustClothingActions = result.actions.filter(
-        (action) => action.id === 'intimacy:adjust_clothing'
+        (action) => action.id === 'caressing:adjust_clothing'
       );
 
       expect(adjustClothingActions).toHaveLength(0);
@@ -998,7 +1005,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const adjustClothingActions = result.actions.filter(
-        (action) => action.id === 'intimacy:adjust_clothing'
+        (action) => action.id === 'caressing:adjust_clothing'
       );
 
       expect(adjustClothingActions).toHaveLength(0);
@@ -1047,7 +1054,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const adjustClothingActions = result.actions.filter(
-        (action) => action.id === 'intimacy:adjust_clothing'
+        (action) => action.id === 'caressing:adjust_clothing'
       );
 
       // The multi-target formatter now generates separate combinations for context-dependent targets
@@ -1102,7 +1109,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const adjustClothingActions = result.actions.filter(
-        (action) => action.id === 'intimacy:adjust_clothing'
+        (action) => action.id === 'caressing:adjust_clothing'
       );
 
       expect(adjustClothingActions).toHaveLength(1);
@@ -1132,7 +1139,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert - Action should not be available when no torso_upper clothing
       const adjustClothingActions = result.actions.filter(
-        (action) => action.id === 'intimacy:adjust_clothing'
+        (action) => action.id === 'caressing:adjust_clothing'
       );
 
       expect(adjustClothingActions).toHaveLength(0);
@@ -1155,7 +1162,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const adjustClothingActions = result.actions.filter(
-        (action) => action.id === 'intimacy:adjust_clothing'
+        (action) => action.id === 'caressing:adjust_clothing'
       );
 
       expect(adjustClothingActions).toHaveLength(1);
@@ -1191,7 +1198,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       expect(result.actions).toBeDefined();
 
       const adjustClothingActions = result.actions.filter(
-        (action) => action.id === 'intimacy:adjust_clothing'
+        (action) => action.id === 'caressing:adjust_clothing'
       );
 
       // Action should not be available when context resolution fails

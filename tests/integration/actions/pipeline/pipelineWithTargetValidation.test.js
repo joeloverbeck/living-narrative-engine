@@ -7,6 +7,7 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { TargetComponentValidationStage } from '../../../../src/actions/pipeline/stages/TargetComponentValidationStage.js';
 import { TargetComponentValidator } from '../../../../src/actions/validation/TargetComponentValidator.js';
+import TargetRequiredComponentsValidator from '../../../../src/actions/validation/TargetRequiredComponentsValidator.js';
 import { Pipeline } from '../../../../src/actions/pipeline/Pipeline.js';
 import { PipelineResult } from '../../../../src/actions/pipeline/PipelineResult.js';
 import { ComponentFilteringStage } from '../../../../src/actions/pipeline/stages/ComponentFilteringStage.js';
@@ -46,6 +47,7 @@ const createMock = (name, methods) => {
 describe('Pipeline with Target Validation - Comprehensive Tests', () => {
   let pipeline;
   let targetComponentValidator;
+  let targetRequiredComponentsValidator;
   let validationStage;
   let mockLogger;
   let mockErrorContextBuilder;
@@ -71,15 +73,20 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
       'getAllComponentTypesForEntity'
     ]);
 
-    // Create real validator instance
+    // Create real validator instances
     targetComponentValidator = new TargetComponentValidator({
       logger: mockLogger,
       entityManager: mockEntityManager
     });
 
+    targetRequiredComponentsValidator = new TargetRequiredComponentsValidator({
+      logger: mockLogger
+    });
+
     // Create validation stage
     validationStage = new TargetComponentValidationStage({
       targetComponentValidator,
+      targetRequiredComponentsValidator,
       logger: mockLogger,
       actionErrorContextBuilder: mockErrorContextBuilder
     });
@@ -689,6 +696,7 @@ describe('Pipeline Configuration Tests', () => {
   let mockLogger;
   let mockErrorContextBuilder;
   let targetComponentValidator;
+  let targetRequiredComponentsValidator;
   let mockEntityManager;
   let context;
 
@@ -715,8 +723,13 @@ describe('Pipeline Configuration Tests', () => {
       entityManager: mockEntityManager
     });
 
+    targetRequiredComponentsValidator = new TargetRequiredComponentsValidator({
+      logger: mockLogger
+    });
+
     validationStage = new TargetComponentValidationStage({
       targetComponentValidator,
+      targetRequiredComponentsValidator,
       logger: mockLogger,
       actionErrorContextBuilder: mockErrorContextBuilder
     });

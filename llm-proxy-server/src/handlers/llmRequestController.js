@@ -8,8 +8,8 @@ import {
   LOG_LLM_ID_PROXY_NOT_OPERATIONAL,
   LOG_LLM_ID_REQUEST_VALIDATION_FAILED,
   LOG_LLM_ID_NOT_APPLICABLE,
-  HTTP_HEADER_CONTENT_TYPE,
 } from '../config/constants.js'; // MODIFIED: Import constants
+import { createResponseGuard } from '../middleware/requestTracking.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -39,6 +39,9 @@ import {
  * @typedef {import('../services/llmRequestService.js').LlmServiceResponse} LlmServiceResponse
  */
 /**
+ * @typedef {import('../services/responseSalvageService.js').ResponseSalvageService} ResponseSalvageService
+ */
+/**
  * @typedef {import('express').Request} ExpressRequest
  */
 /**
@@ -57,6 +60,8 @@ export class LlmRequestController {
   #apiKeyService;
   /** @type {LlmRequestService} */
   #llmRequestService;
+  /** @type {ResponseSalvageService} */
+  #salvageService;
 
   /**
    * Constructs an LlmRequestController instance.
@@ -64,8 +69,9 @@ export class LlmRequestController {
    * @param {LlmConfigService} llmConfigService - Service for LLM configurations.
    * @param {ApiKeyService} apiKeyService - Service for API key management.
    * @param {LlmRequestService} llmRequestService - Service for forwarding requests to LLMs.
+   * @param {ResponseSalvageService} [salvageService] - Optional service for salvaging failed responses.
    */
-  constructor(logger, llmConfigService, apiKeyService, llmRequestService) {
+  constructor(logger, llmConfigService, apiKeyService, llmRequestService, salvageService = null) {
     if (!logger) throw new Error('LlmRequestController: logger is required.');
     if (!llmConfigService)
       throw new Error('LlmRequestController: llmConfigService is required.');
@@ -78,15 +84,18 @@ export class LlmRequestController {
     this.#llmConfigService = llmConfigService;
     this.#apiKeyService = apiKeyService;
     this.#llmRequestService = llmRequestService;
+    this.#salvageService = salvageService;
 
-    this.#logger.debug('LlmRequestController: Instance created.');
+    this.#logger.debug('LlmRequestController: Instance created.', {
+      hasSalvageService: !!salvageService,
+    });
   }
 
   /**
    * Validates the incoming request parameters.
    * @private
    * @param {string} llmId - The LLM ID from the request.
-   * @param {any} targetPayload - The target payload from the request.
+   * @param {object} targetPayload - The target payload from the request.
    * @returns {{ message: string, stage: string, details: object} | null} Error object or null if valid.
    */
   _validateRequest(llmId, targetPayload) {
@@ -124,6 +133,7 @@ export class LlmRequestController {
    * @returns {Promise<void>}
    */
   async handleLlmRequest(req, res) {
+    const requestId = req.requestId || 'unknown';
     const clientPayloadSummary = {
       llmId: req.body?.llmId,
       hasTargetPayload: !!req.body?.targetPayload,
@@ -131,8 +141,11 @@ export class LlmRequestController {
     };
     this.#logger.debug(
       `LlmRequestController: Received POST request on /api/llm-request from ${req.ip}.`,
-      { payloadSummary: clientPayloadSummary }
+      { requestId, payloadSummary: clientPayloadSummary }
     );
+
+    // Create response guard for safe response handling
+    const responseGuard = createResponseGuard(req, res, this.#logger);
 
     // 1. Proxy Operational Check
     if (!this.#llmConfigService.isOperational()) {
@@ -316,25 +329,45 @@ export class LlmRequestController {
       if (result.success) {
         this.#logger.debug(
           `LlmRequestController: LlmRequestService returned success for llmId '${llmId}'. Relaying to client with status ${result.statusCode}.`,
-          { llmId }
+          { requestId, llmId }
         );
-        // Check if headers have already been sent before attempting to send response
-        if (res.headersSent) {
+
+        // Attempt to send response using response guard
+        const sent = responseGuard.sendSuccess(
+          result.statusCode,
+          result.data,
+          result.contentTypeIfSuccess || CONTENT_TYPE_JSON
+        );
+
+        // If response couldn't be sent due to commitment/headers, salvage it
+        if (!sent && this.#salvageService) {
           this.#logger.warn(
-            `LlmRequestController: Headers already sent for llmId '${llmId}'. Cannot send success response.`,
-            { llmId }
+            `LlmRequestController: Successful LLM response could not be sent for request ${requestId}. Salvaging response for potential recovery.`,
+            {
+              requestId,
+              llmId,
+              statusCode: result.statusCode,
+              responseCommitted: res.isResponseCommitted ? res.isResponseCommitted() : false,
+              headersSent: res.headersSent,
+            }
           );
-          return;
+
+          // Salvage the successful response
+          this.#salvageService.salvageResponse(
+            requestId,
+            llmId,
+            targetPayload,
+            result.data,
+            result.statusCode
+          );
+
+          this.#logger.info(
+            `LlmRequestController: Response salvaged successfully for request ${requestId}. Client can retry with X-Request-ID header.`,
+            { requestId, llmId }
+          );
         }
-        res
-          .status(result.statusCode)
-          // MODIFIED: Use imported constant for fallback Content-Type
-          .set(
-            HTTP_HEADER_CONTENT_TYPE,
-            result.contentTypeIfSuccess || CONTENT_TYPE_JSON
-          )
-          .json(result.data);
-        return; // Explicitly return after sending successful response
+
+        return; // Explicitly return after handling successful response
       } else {
         this.#logger.warn(
           `LlmRequestController: LlmRequestService returned failure for llmId '${llmId}'. Status: ${result.statusCode}, Stage: ${result.errorStage}, Message: ${result.errorMessage}`,

@@ -45,7 +45,7 @@ describe('Mod Validation Workflow - Simple Integration Tests', () => {
 
       // Assert: Files are created correctly
       expect(ecosystem.modCount).toBe(3);
-      expect(ecosystem.modIds).toEqual(['core', 'positioning', 'intimacy']);
+      expect(ecosystem.modIds).toEqual(['core', 'positioning', 'affection']);
 
       // Verify core mod files
       const coreManifest = await fs.readFile(
@@ -129,7 +129,7 @@ describe('Mod Validation Workflow - Simple Integration Tests', () => {
 
       // Assert: Scenario is created correctly
       expect(scenario.modCount).toBe(3);
-      expect(scenario.modIds).toEqual(['core', 'positioning', 'intimacy']);
+      expect(scenario.modIds).toEqual(['core', 'positioning', 'affection']);
 
       // Verify the actual violation
       const turnAroundAction = await fs.readFile(
@@ -137,7 +137,7 @@ describe('Mod Validation Workflow - Simple Integration Tests', () => {
         'utf-8'
       );
       const turnAround = JSON.parse(turnAroundAction);
-      expect(turnAround.forbidden_components.actor).toContain('intimacy:kissing');
+      expect(turnAround.forbidden_components.actor).toContain('kissing:kissing');
 
       // Verify positioning manifest doesn't declare intimacy dependency
       const positioningManifest = await fs.readFile(
@@ -388,9 +388,9 @@ async function createBasicModEcosystem(baseDir) {
         },
       },
     },
-    intimacy: {
+    affection: {
       manifest: {
-        id: 'intimacy',
+        id: 'affection',
         version: '1.0.0',
         name: 'Intimacy Mod',
         dependencies: [
@@ -400,7 +400,7 @@ async function createBasicModEcosystem(baseDir) {
       },
       files: {
         'components/kissing.component.json': {
-          id: 'intimacy:kissing',
+          id: 'kissing:kissing',
           dataSchema: {
             type: 'object',
             properties: { intensity: { type: 'number' } },
@@ -564,7 +564,7 @@ async function createRealPositioningIntimacyViolation(baseDir) {
         'actions/turn_around.action.json': {
           id: 'positioning:turn_around',
           required_components: { actor: ['positioning:closeness'] },
-          forbidden_components: { actor: ['intimacy:kissing'] }, // ← The actual violation
+          forbidden_components: { actor: ['kissing:kissing'] }, // ← The actual violation
           operations: [
             {
               type: 'set_component_value',
@@ -577,9 +577,9 @@ async function createRealPositioningIntimacyViolation(baseDir) {
         },
       },
     },
-    intimacy: {
+    affection: {
       manifest: {
-        id: 'intimacy',
+        id: 'affection',
         version: '1.0.0',
         name: 'Intimacy',
         dependencies: [
@@ -589,7 +589,7 @@ async function createRealPositioningIntimacyViolation(baseDir) {
       },
       files: {
         'components/kissing.component.json': {
-          id: 'intimacy:kissing',
+          id: 'kissing:kissing',
           dataSchema: {
             type: 'object',
             properties: {
@@ -688,7 +688,7 @@ async function createProductionLikeEcosystem(baseDir, options = {}) {
     if (includeRealViolations) {
       productionSpec.positioning.files['actions/turn_around.action.json'] = {
         id: 'positioning:turn_around',
-        forbidden_components: { actor: ['intimacy:kissing'] }, // ← Violation
+        forbidden_components: { actor: ['kissing:kissing'] }, // ← Violation
       };
     }
   }
@@ -696,7 +696,7 @@ async function createProductionLikeEcosystem(baseDir, options = {}) {
   if (gameplayMods.includes('intimacy')) {
     productionSpec.intimacy = {
       manifest: {
-        id: 'intimacy',
+        id: 'affection',
         version: '1.0.0',
         name: 'Intimacy',
         dependencies: [
@@ -711,7 +711,7 @@ async function createProductionLikeEcosystem(baseDir, options = {}) {
       },
       files: {
         'components/kissing.component.json': {
-          id: 'intimacy:kissing',
+          id: 'kissing:kissing',
           dataSchema: { type: 'object' },
         },
       },

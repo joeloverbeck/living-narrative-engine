@@ -24,6 +24,7 @@ import { ActionFormattingStage } from './pipeline/stages/ActionFormattingStage.j
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('./pipeline/stages/MultiTargetResolutionStage.js').MultiTargetResolutionStage} MultiTargetResolutionStage */
 /** @typedef {import('./validation/TargetComponentValidator.js').TargetComponentValidator} TargetComponentValidator */
+/** @typedef {import('./validation/TargetRequiredComponentsValidator.js').default} TargetRequiredComponentsValidator */
 
 /**
  * @class ActionPipelineOrchestrator
@@ -43,6 +44,7 @@ export class ActionPipelineOrchestrator {
   #targetContextBuilder;
   #multiTargetResolutionStage;
   #targetComponentValidator;
+  #targetRequiredComponentsValidator;
 
   /**
    * Creates an ActionPipelineOrchestrator instance
@@ -61,6 +63,7 @@ export class ActionPipelineOrchestrator {
    * @param {TargetContextBuilder} deps.targetContextBuilder - Target context builder
    * @param {MultiTargetResolutionStage} deps.multiTargetResolutionStage - Multi-target resolution stage
    * @param {TargetComponentValidator} deps.targetComponentValidator - Target component validator
+   * @param {TargetRequiredComponentsValidator} deps.targetRequiredComponentsValidator - Target required components validator
    */
   constructor({
     actionIndex,
@@ -76,6 +79,7 @@ export class ActionPipelineOrchestrator {
     targetContextBuilder,
     multiTargetResolutionStage,
     targetComponentValidator,
+    targetRequiredComponentsValidator,
   }) {
     this.#actionIndex = actionIndex;
     this.#prerequisiteService = prerequisiteService;
@@ -90,6 +94,7 @@ export class ActionPipelineOrchestrator {
     this.#targetContextBuilder = targetContextBuilder;
     this.#multiTargetResolutionStage = multiTargetResolutionStage;
     this.#targetComponentValidator = targetComponentValidator;
+    this.#targetRequiredComponentsValidator = targetRequiredComponentsValidator;
   }
 
   /**
@@ -151,6 +156,7 @@ export class ActionPipelineOrchestrator {
       ),
       new TargetComponentValidationStage({
         targetComponentValidator: this.#targetComponentValidator,
+        targetRequiredComponentsValidator: this.#targetRequiredComponentsValidator,
         logger: this.#logger,
         actionErrorContextBuilder: this.#errorBuilder,
       }),
