@@ -381,4 +381,83 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
       Object.defineProperty(document, 'readyState', readyStateDescriptor);
     }
   });
+
+  it('propagates post-init errors to the fatal startup handler', async () => {
+    const tokens = {
+      AnatomyDescriptionService: Symbol('AnatomyDescriptionService'),
+      VisualizerStateController: Symbol('VisualizerStateController'),
+      VisualizationComposer: Symbol('VisualizationComposer'),
+      ClothingManagementService: Symbol('ClothingManagementService'),
+    };
+
+    const registerVisualizerComponents = jest.fn();
+    const postInitError = new Error('UI initialization failed');
+    const uiInitialize = jest.fn().mockRejectedValue(postInitError);
+    const AnatomyVisualizerUI = jest.fn(() => ({ initialize: uiInitialize }));
+
+    const logger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() };
+    const services = {
+      logger,
+      registry: {},
+      entityManager: {},
+      eventDispatcher: {},
+    };
+
+    const container = {
+      resolve: jest.fn(() => ({})),
+    };
+
+    const bootstrapperInstance = {
+      bootstrap: jest.fn(async ({ postInitHook }) => {
+        await postInitHook(services, container);
+        return { container, services };
+      }),
+      displayFatalStartupError: jest.fn(),
+    };
+
+    const CommonBootstrapper = jest.fn(() => bootstrapperInstance);
+
+    const readyStateDescriptor = Object.getOwnPropertyDescriptor(
+      document,
+      'readyState',
+    );
+    Object.defineProperty(document, 'readyState', {
+      configurable: true,
+      enumerable: true,
+      value: 'complete',
+    });
+
+    await jest.isolateModulesAsync(async () => {
+      jest.doMock('../../src/bootstrapper/CommonBootstrapper.js', () => ({
+        CommonBootstrapper,
+      }));
+      jest.doMock('../../src/dependencyInjection/tokens.js', () => ({
+        tokens,
+      }));
+      jest.doMock(
+        '../../src/dependencyInjection/registrations/visualizerRegistrations.js',
+        () => ({ registerVisualizerComponents }),
+      );
+      jest.doMock('../../src/domUI/AnatomyVisualizerUI.js', () => ({
+        __esModule: true,
+        default: AnatomyVisualizerUI,
+      }));
+
+      await import('../../src/anatomy-visualizer.js');
+    });
+
+    await flushMicrotasks();
+    await flushMicrotasks();
+
+    expect(registerVisualizerComponents).toHaveBeenCalledWith(container);
+    expect(uiInitialize).toHaveBeenCalledTimes(1);
+    expect(bootstrapperInstance.displayFatalStartupError).toHaveBeenCalledWith(
+      'Failed to initialize anatomy visualizer: UI initialization failed',
+      postInitError,
+    );
+
+    if (readyStateDescriptor) {
+      Object.defineProperty(document, 'readyState', readyStateDescriptor);
+    }
+  });
 });
