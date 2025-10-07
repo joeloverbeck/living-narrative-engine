@@ -38,6 +38,18 @@ describe('validationUtils additional branches', () => {
     ).toThrow(/does not provide getStrategy/);
   });
 
+  test('retrieveStrategyFromContext throws when actor is invalid', () => {
+    const ctx = {
+      getStrategy: () => ({
+        decideAction: () => {},
+      }),
+    };
+
+    expect(() =>
+      retrieveStrategyFromContext(ctx, null, 'State')
+    ).toThrow('State: invalid actorEntity.');
+  });
+
   test('validateCommandString reports non-string input', () => {
     const onError = jest.fn();
     validateCommandString(5, onError);
