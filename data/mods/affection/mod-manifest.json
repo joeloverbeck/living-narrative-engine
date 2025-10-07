@@ -29,6 +29,7 @@
       "massage_shoulders.action.json",
       "place_hand_on_waist.action.json",
       "ruffle_hair_playfully.action.json",
+      "tickle_target_playfully.action.json",
       "sling_arm_around_shoulders.action.json",
       "wrap_arm_around_waist.action.json"
     ],
@@ -40,6 +41,7 @@
       "massage_back.rule.json",
       "place_hand_on_waist.rule.json",
       "handle_ruffle_hair_playfully.rule.json",
+      "handle_tickle_target_playfully.rule.json",
       "sling_arm_around_shoulders.rule.json",
       "wrap_arm_around_waist.rule.json"
     ],
@@ -51,6 +53,7 @@
       "event-is-action-massage-shoulders.condition.json",
       "event-is-action-place-hand-on-waist.condition.json",
       "event-is-action-ruffle-hair-playfully.condition.json",
+      "event-is-action-tickle-target-playfully.condition.json",
       "event-is-action-sling_arm_around_shoulders.condition.json",
       "event-is-action-wrap-arm-around-waist.condition.json"
     ],
