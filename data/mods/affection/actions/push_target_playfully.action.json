@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "affection:push_target_playfully",
+  "name": "Push target playfully",
+  "description": "Give the target a playful, light shove that keeps things fun and friendly.",
+  "targets": "affection:close_actors_facing_each_other_or_behind_target",
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "template": "push {target} playfully",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#6a1b9a",
+    "textColor": "#f3e5f5",
+    "hoverBackgroundColor": "#8e24aa",
+    "hoverTextColor": "#ffffff"
+  }
+}
