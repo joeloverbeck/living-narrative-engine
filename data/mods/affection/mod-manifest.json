@@ -24,6 +24,7 @@
     "actions": [
       "brush_hand.action.json",
       "hold_hand.action.json",
+      "link_arms.action.json",
       "rest_head_on_shoulder.action.json",
       "hug_tight.action.json",
       "massage_back.action.json",
@@ -38,6 +39,7 @@
     "rules": [
       "brush_hand.rule.json",
       "handle_hold_hand.rule.json",
+      "handle_link_arms.rule.json",
       "handle_rest_head_on_shoulder.rule.json",
       "handle_hug_tight.rule.json",
       "handle_massage_shoulders.rule.json",
@@ -52,6 +54,7 @@
     "conditions": [
       "event-is-action-brush-hand.condition.json",
       "event-is-action-hold-hand.condition.json",
+      "event-is-action-link-arms.condition.json",
       "event-is-action-rest-head-on-shoulder.condition.json",
       "event-is-action-hug-tight.condition.json",
       "event-is-action-massage-back.condition.json",
