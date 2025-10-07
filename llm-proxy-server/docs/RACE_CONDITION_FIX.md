@@ -193,7 +193,7 @@ if (result.success) {
 
 ```bash
 # Salvage service configuration
-SALVAGE_DEFAULT_TTL=30000        # 30 seconds TTL for salvaged responses
+SALVAGE_DEFAULT_TTL=120000       # 2 minute TTL for salvaged responses
 SALVAGE_MAX_ENTRIES=1000         # Maximum cached responses
 
 # Timeout configuration
@@ -206,7 +206,7 @@ TIMEOUT_GRACE_PERIOD_MS=5000     # 5 second grace period after timeout
 ```javascript
 // Initialize salvage service
 const salvageService = new ResponseSalvageService(logger, {
-  defaultTtl: 30000,
+  defaultTtl: 120000,
   maxEntries: 1000,
 });
 

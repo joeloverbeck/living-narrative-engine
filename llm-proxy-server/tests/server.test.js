@@ -85,6 +85,10 @@ beforeEach(() => {
       maxSize: 1000,
       apiKeyCacheTtl: 300000,
     })),
+    getSalvageConfig: jest.fn(() => ({
+      defaultTtl: 120000,
+      maxEntries: 1000,
+    })),
     isHttpAgentEnabled: jest.fn(() => false),
     getHttpAgentConfig: jest.fn(() => ({
       enabled: false,

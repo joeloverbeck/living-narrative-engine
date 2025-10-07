@@ -198,10 +198,8 @@ const llmRequestService = new LlmRequestService(
 );
 
 // Initialize ResponseSalvageService for recovering failed LLM responses
-const salvageService = new ResponseSalvageService(proxyLogger, {
-  defaultTtl: 30000, // 30 seconds TTL for salvaged responses
-  maxEntries: 1000,
-});
+const salvageConfig = appConfigService.getSalvageConfig();
+const salvageService = new ResponseSalvageService(proxyLogger, salvageConfig);
 
 // PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES logging - Removed initial log, will be in summary
 // const PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES = appConfigService.getProxyProjectRootPathForApiKeyFiles();
@@ -480,6 +478,11 @@ process.on('beforeExit', async (_code) => {
         `LLM Proxy Server: Cache DISABLED - API keys will be read from source on every request`
       );
     }
+
+    const salvageSummary = appConfigService.getSalvageConfig();
+    proxyLogger.info(
+      `LLM Proxy Server: Response Salvage ENABLED - TTL: ${salvageSummary.defaultTtl}ms, Max Entries: ${salvageSummary.maxEntries}`
+    );
 
     // HTTP Agent Configuration Status
     if (appConfigService.isHttpAgentEnabled()) {

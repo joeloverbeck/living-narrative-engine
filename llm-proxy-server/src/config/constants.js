@@ -237,6 +237,19 @@ export const HTTP_AGENT_MEMORY_THRESHOLD_MB = 100;
 export const HTTP_AGENT_HIGH_LOAD_REQUESTS_PER_MIN = 60;
 
 /**
+ * Default TTL for salvaged responses in milliseconds - 2 minutes.
+ * Provides a wider recovery window for long-running completions.
+ * @type {number}
+ */
+export const SALVAGE_DEFAULT_TTL = 2 * 60 * 1000;
+
+/**
+ * Default maximum number of salvaged responses to retain in memory.
+ * @type {number}
+ */
+export const SALVAGE_MAX_ENTRIES = 1000;
+
+/**
  * Rate limiting configuration constants
  * Environment-aware settings: Development has much higher limits than production
  */

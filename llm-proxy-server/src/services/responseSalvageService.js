@@ -4,6 +4,7 @@
  */
 
 import crypto from 'crypto';
+import { SALVAGE_DEFAULT_TTL, SALVAGE_MAX_ENTRIES } from '../config/constants.js';
 
 /**
  * Service for caching and salvaging successful LLM responses that couldn't be delivered
@@ -32,13 +33,13 @@ export class ResponseSalvageService {
     if (!logger) throw new Error('ResponseSalvageService: logger is required');
 
     this.#logger = logger;
-    this.#defaultTtl = options.defaultTtl || 30000; // 30 seconds default
+    this.#defaultTtl = options.defaultTtl || SALVAGE_DEFAULT_TTL;
     this.#salvageCache = new Map();
     this.#expirationTimers = new Map();
 
     this.#logger.debug('ResponseSalvageService: Instance created', {
       defaultTtl: this.#defaultTtl,
-      maxEntries: options.maxEntries || 1000,
+      maxEntries: options.maxEntries || SALVAGE_MAX_ENTRIES,
     });
   }
 

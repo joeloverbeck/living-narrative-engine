@@ -12,6 +12,8 @@ import {
   HTTP_AGENT_FREE_SOCKET_TIMEOUT,
   HTTP_AGENT_MAX_TOTAL_SOCKETS,
   HTTP_AGENT_MAX_IDLE_TIME,
+  SALVAGE_DEFAULT_TTL,
+  SALVAGE_MAX_ENTRIES,
   DEBUG_LOGGING_ENABLED,
   DEBUG_LOGGING_DEFAULT_PATH,
   DEBUG_LOGGING_DEFAULT_RETENTION_DAYS,
@@ -89,6 +91,12 @@ class AppConfigService {
   _httpAgentMaxTotalSockets = 0;
   /** @type {number} @private */
   _httpAgentMaxIdleTime = 60000;
+
+  // Salvage configuration
+  /** @type {number} @private */
+  _salvageDefaultTtl = SALVAGE_DEFAULT_TTL;
+  /** @type {number} @private */
+  _salvageMaxEntries = SALVAGE_MAX_ENTRIES;
 
   // Debug Logging configuration
   /** @type {boolean} @private */
@@ -485,6 +493,49 @@ class AppConfigService {
     } else {
       this._logger.debug(
         `${servicePrefix}HTTP_AGENT_MAX_IDLE_TIME not set in environment. Using default: ${this._httpAgentMaxIdleTime}ms.`
+      );
+    }
+
+    // Salvage Configuration
+    const salvageTtlEnv = process.env.SALVAGE_DEFAULT_TTL;
+    const parsedSalvageTtl = salvageTtlEnv ? parseInt(salvageTtlEnv, 10) : NaN;
+    if (salvageTtlEnv !== undefined) {
+      if (!isNaN(parsedSalvageTtl) && parsedSalvageTtl > 0) {
+        this._salvageDefaultTtl = parsedSalvageTtl;
+        this._logger.debug(
+          `${servicePrefix}SALVAGE_DEFAULT_TTL found in environment: '${salvageTtlEnv}'. Effective value: ${this._salvageDefaultTtl}ms.`
+        );
+      } else {
+        this._salvageDefaultTtl = SALVAGE_DEFAULT_TTL;
+        this._logger.warn(
+          `${servicePrefix}SALVAGE_DEFAULT_TTL invalid: '${salvageTtlEnv}'. Using default: ${this._salvageDefaultTtl}ms.`
+        );
+      }
+    } else {
+      this._logger.debug(
+        `${servicePrefix}SALVAGE_DEFAULT_TTL not set in environment. Using default: ${this._salvageDefaultTtl}ms.`
+      );
+    }
+
+    const salvageMaxEntriesEnv = process.env.SALVAGE_MAX_ENTRIES;
+    const parsedSalvageMaxEntries = salvageMaxEntriesEnv
+      ? parseInt(salvageMaxEntriesEnv, 10)
+      : NaN;
+    if (salvageMaxEntriesEnv !== undefined) {
+      if (!isNaN(parsedSalvageMaxEntries) && parsedSalvageMaxEntries > 0) {
+        this._salvageMaxEntries = parsedSalvageMaxEntries;
+        this._logger.debug(
+          `${servicePrefix}SALVAGE_MAX_ENTRIES found in environment: '${salvageMaxEntriesEnv}'. Effective value: ${this._salvageMaxEntries}.`
+        );
+      } else {
+        this._salvageMaxEntries = SALVAGE_MAX_ENTRIES;
+        this._logger.warn(
+          `${servicePrefix}SALVAGE_MAX_ENTRIES invalid: '${salvageMaxEntriesEnv}'. Using default: ${this._salvageMaxEntries}.`
+        );
+      }
+    } else {
+      this._logger.debug(
+        `${servicePrefix}SALVAGE_MAX_ENTRIES not set in environment. Using default: ${this._salvageMaxEntries}.`
       );
     }
 
@@ -897,6 +948,35 @@ class AppConfigService {
       freeSocketTimeout: this._httpAgentFreeSocketTimeout,
       maxTotalSockets: this._httpAgentMaxTotalSockets,
       maxIdleTime: this._httpAgentMaxIdleTime,
+    };
+  }
+
+  // Salvage Configuration Getters
+
+  /**
+   * Gets the default salvage TTL in milliseconds.
+   * @returns {number} The salvage TTL.
+   */
+  getSalvageDefaultTtl() {
+    return this._salvageDefaultTtl;
+  }
+
+  /**
+   * Gets the maximum number of salvaged entries to retain.
+   * @returns {number} The maximum number of entries.
+   */
+  getSalvageMaxEntries() {
+    return this._salvageMaxEntries;
+  }
+
+  /**
+   * Gets the salvage configuration object.
+   * @returns {{defaultTtl: number, maxEntries: number}} Salvage configuration object.
+   */
+  getSalvageConfig() {
+    return {
+      defaultTtl: this._salvageDefaultTtl,
+      maxEntries: this._salvageMaxEntries,
     };
   }
 

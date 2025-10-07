@@ -56,6 +56,10 @@ describe('Performance Optimizations Integration Tests', () => {
           maxSize: 1000,
           apiKeyCacheTtl: 300000,
         }),
+        getSalvageConfig: jest.fn().mockReturnValue({
+          defaultTtl: 120000,
+          maxEntries: 1000,
+        }),
         getApiKeyCacheTtl: jest.fn().mockReturnValue(300000),
         isHttpAgentEnabled: jest.fn().mockReturnValue(true),
         getHttpAgentConfig: jest.fn().mockReturnValue({

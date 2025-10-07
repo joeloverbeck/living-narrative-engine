@@ -10,6 +10,10 @@ import {
   getAppConfigService,
   resetAppConfigServiceInstance,
 } from '../../../src/config/appConfig.js';
+import {
+  SALVAGE_DEFAULT_TTL,
+  SALVAGE_MAX_ENTRIES,
+} from '../../../src/config/constants.js';
 import { TestEnvironmentManager } from '../../common/testServerUtils.js';
 
 const createLogger = () => ({
@@ -303,6 +307,40 @@ describe('AppConfigService - Comprehensive Tests', () => {
         maxTotalSockets: 1000,
         maxIdleTime: 180000,
       });
+    });
+  });
+
+  describe('Salvage Configuration Getters', () => {
+    test('getSalvageDefaultTtl returns default value when not set', () => {
+      const service = getAppConfigService(logger);
+
+      expect(service.getSalvageDefaultTtl()).toBe(SALVAGE_DEFAULT_TTL);
+    });
+
+    test('getSalvageMaxEntries returns default value when not set', () => {
+      const service = getAppConfigService(logger);
+
+      expect(service.getSalvageMaxEntries()).toBe(SALVAGE_MAX_ENTRIES);
+    });
+
+    test('salvage configuration uses custom environment values when provided', () => {
+      process.env.SALVAGE_DEFAULT_TTL = '450000';
+      process.env.SALVAGE_MAX_ENTRIES = '2048';
+
+      const service = getAppConfigService(logger);
+
+      expect(service.getSalvageDefaultTtl()).toBe(450000);
+      expect(service.getSalvageMaxEntries()).toBe(2048);
+    });
+
+    test('getSalvageConfig returns complete salvage configuration object', () => {
+      process.env.SALVAGE_DEFAULT_TTL = '900000';
+      process.env.SALVAGE_MAX_ENTRIES = '4096';
+
+      const service = getAppConfigService(logger);
+      const config = service.getSalvageConfig();
+
+      expect(config).toEqual({ defaultTtl: 900000, maxEntries: 4096 });
     });
   });
 
