@@ -182,7 +182,7 @@ export class StorageRotationManager {
       results.duration = Date.now() - startTime;
       this.#lastRotation = Date.now();
 
-      this.#logger.info('StorageRotationManager: Rotation complete', results);
+      this.#logger.debug('StorageRotationManager: Rotation complete', results);
     } catch (error) {
       this.#logger.error('StorageRotationManager: Rotation error', error);
       results.errors++;
