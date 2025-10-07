@@ -37,9 +37,9 @@
       "handle_hold_hand.rule.json",
       "handle_hug_tight.rule.json",
       "handle_massage_shoulders.rule.json",
+      "handle_ruffle_hair_playfully.rule.json",
       "massage_back.rule.json",
       "place_hand_on_waist.rule.json",
-      "handle_ruffle_hair_playfully.rule.json",
       "sling_arm_around_shoulders.rule.json",
       "wrap_arm_around_waist.rule.json"
     ],
