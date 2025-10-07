@@ -36,6 +36,7 @@
       "place_hand_on_waist.action.json",
       "push_target_playfully.action.json",
       "ruffle_hair_playfully.action.json",
+      "squeeze_hand_reassuringly.action.json",
       "sling_arm_around_shoulders.action.json",
       "tickle_target_playfully.action.json",
       "wrap_arm_around_waist.action.json"
@@ -48,6 +49,7 @@
       "handle_hug_tight.rule.json",
       "handle_massage_shoulders.rule.json",
       "handle_push_target_playfully.rule.json",
+      "handle_squeeze_hand_reassuringly.rule.json",
       "handle_tickle_target_playfully.rule.json",
       "massage_back.rule.json",
       "place_hand_on_waist.rule.json",
@@ -65,6 +67,7 @@
       "event-is-action-place-hand-on-waist.condition.json",
       "event-is-action-push-target-playfully.condition.json",
       "event-is-action-ruffle-hair-playfully.condition.json",
+      "event-is-action-squeeze-hand-reassuringly.condition.json",
       "event-is-action-sling_arm_around_shoulders.condition.json",
       "event-is-action-tickle-target-playfully.condition.json",
       "event-is-action-wrap-arm-around-waist.condition.json"
