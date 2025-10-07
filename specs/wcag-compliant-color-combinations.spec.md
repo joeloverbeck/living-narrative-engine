@@ -14,37 +14,39 @@ This specification provides a curated collection of pre-validated color combinat
 
 ## Current Usage Overview
 
-**Status**: 10 of 27 color combinations currently in use by existing mods (17 available)
+**Status**: 12 color schemes are actively implemented across mods (plus 1 reserved assignment) out of 35 defined combinations, leaving 22 available for future work.
 
 ### Active Mod Assignments
 
-| Mod          | Color Scheme       | Section | Background Color |
-| ------------ | ------------------ | ------- | ---------------- |
-| Core         | Classic Blue-Grey  | 1.1     | `#455a64`        |
-| Violence     | Dark Crimson       | 2.2     | `#8b0000`        |
-| Intimacy     | Rose Pink          | 3.2     | `#ad1457`        |
-| Clothing     | Earth Brown        | 4.2     | `#6d4c41`        |
-| Sex          | Mystic Purple      | 5.1     | `#4a148c`        |
-| Positioning  | Deep Orange Energy | 10.2    | `#bf360c`        |
-| Exercise     | Orange Flame       | 2.3     | `#e65100`        |
-| Seduction    | Golden Divine      | 5.2     | `#f57f17`        |
-| Movement     | Explorer Cyan      | 9.3     | `#006064`        |
-| Companionship| Deep Teal          | 3.3     | `#00695c`        |
+| Mod           | Color Scheme       | Section | Background Color | State    |
+| ------------- | ------------------ | ------- | ---------------- | -------- |
+| Affection     | Soft Purple        | 3.1     | `#6a1b9a`        | Active   |
+| Caressing     | Dark Purple        | 7.2     | `#311b92`        | Active   |
+| Clothing      | Earth Brown        | 4.2     | `#6d4c41`        | Active   |
+| Companionship | Deep Teal          | 3.3     | `#00695c`        | Active   |
+| Core          | Classic Blue-Grey  | 1.1     | `#455a64`        | Active   |
+| Exercise      | Orange Flame       | 2.3     | `#e65100`        | Active   |
+| Items         | Aurora Depths      | 11.1    | `#004d61`        | Reserved |
+| Kissing       | Rose Pink          | 3.2     | `#ad1457`        | Active   |
+| Movement      | Explorer Cyan      | 9.3     | `#006064`        | Active   |
+| Positioning   | Deep Orange Energy | 10.2    | `#bf360c`        | Active   |
+| Seduction     | Golden Divine      | 5.2     | `#f57f17`        | Active   |
+| Sex           | Mystic Purple      | 5.1     | `#4a148c`        | Active   |
+| Violence      | Dark Crimson       | 2.2     | `#8b0000`        | Active   |
 
 ### Available Color Combinations
 
-The following **17 color combinations** remain available for new mods:
-
 - **Neutral/System**: Slate Grey (1.2), Charcoal (1.3)
 - **Action/Combat**: Bold Red (2.1)
-- **Social/Intimacy**: Soft Purple (3.1)
+- **Social/Intimacy**: _(all assigned — consider new additions below)_
 - **Nature/Environment**: Forest Green (4.1), Ocean Blue (4.3)
 - **Magic/Special**: _(none available)_
 - **Warning/Alert**: Amber Warning (6.1), Dark Red Alert (6.2)
-- **Dark Theme**: Deep Blue (7.1), Dark Purple (7.2), Midnight Green (7.3)
+- **Dark Theme**: Deep Blue (7.1), Midnight Green (7.3)
 - **High Contrast**: Pure Black & White (8.1), White & Black (8.2), Yellow on Black (8.3)
 - **Additional Versatile**: Journey Cobalt (9.1), Pathfinder Slate (9.2)
 - **Professional/Modern**: Indigo Professional (10.1), Cool Grey Modern (10.3)
+- **Expansion Set (Section 11)**: Ironclad Slate (11.2), Velvet Twilight (11.3), Starlight Navy (11.4), Evergreen Shadow (11.5), Molten Copper (11.6), Obsidian Frost (11.7), Arctic Steel (11.8)
 
 **Recommendation**: When creating new mods, select from the available combinations above to maintain visual consistency and avoid conflicts.
 
@@ -58,16 +60,16 @@ The following **17 color combinations** remain available for new mods:
 {
   "backgroundColor": "#455a64",
   "textColor": "#ffffff",
-  "hoverBackgroundColor": "#607d8b",
+  "hoverBackgroundColor": "#37474f",
   "hoverTextColor": "#ffffff"
 }
 ```
 
-- **Normal Contrast**: 7.36:1 🌟 AAA
-- **Hover Contrast**: 4.54:1 ✅ AA
+- **Normal Contrast**: 7.24:1 🌟 AAA
+- **Hover Contrast**: 9.65:1 🌟 AAA
 - **Use Cases**: System actions, navigation, utilities
 - **Theme**: Professional, neutral, non-intrusive
-- ✅ **USED BY**: Core mod (follow, wait, go, dismiss, stop_following)
+- ✅ **USED BY**: Core mod (core utility actions)
 
 #### 1.2 Slate Grey
 
@@ -170,27 +172,27 @@ The following **17 color combinations** remain available for new mods:
 ```
 
 - **Normal Contrast**: 10.89:1 🌟 AAA
-- **Hover Contrast**: 6.54:1 ✅ AA
+- **Hover Contrast**: 7.04:1 🌟 AAA
 - **Use Cases**: Intimacy actions, romantic interactions
 - **Theme**: Romance, mystery, elegance
-- 🟢 **AVAILABLE**
+- ✅ **USED BY**: Affection mod (gentle touch actions)
 
 #### 3.2 Rose Pink
 
 ```json
 {
   "backgroundColor": "#ad1457",
-  "textColor": "#fce4ec",
+  "textColor": "#ffffff",
   "hoverBackgroundColor": "#c2185b",
-  "hoverTextColor": "#ffffff"
+  "hoverTextColor": "#fce4ec"
 }
 ```
 
-- **Normal Contrast**: 9.73:1 🌟 AAA
-- **Hover Contrast**: 6.54:1 ✅ AA
-- **Use Cases**: Affection, gentle touches, emotional actions
+- **Normal Contrast**: 6.97:1 ✅ AA
+- **Hover Contrast**: 4.88:1 ✅ AA
+- **Use Cases**: Romantic escalation, kissing, emotional intensity
 - **Theme**: Warmth, tenderness, passion
-- ✅ **USED BY**: Intimacy mod (kissing, touching, affectionate interactions)
+- ✅ **USED BY**: Kissing mod (all kissing progression actions)
 
 #### 3.3 Deep Teal
 
@@ -232,18 +234,18 @@ The following **17 color combinations** remain available for new mods:
 
 ```json
 {
-  "backgroundColor": "#4e342e",
-  "textColor": "#efebe9",
-  "hoverBackgroundColor": "#6d4c41",
-  "hoverTextColor": "#ffffff"
+  "backgroundColor": "#6d4c41",
+  "textColor": "#ffffff",
+  "hoverBackgroundColor": "#795548",
+  "hoverTextColor": "#efebe9"
 }
 ```
 
-- **Normal Contrast**: 10.95:1 🌟 AAA
-- **Hover Contrast**: 6.17:1 ✅ AA
-- **Use Cases**: Ground abilities, crafting, physical items
+- **Normal Contrast**: 7.61:1 🌟 AAA
+- **Hover Contrast**: 5.53:1 ✅ AA
+- **Use Cases**: Clothing interactions, crafting, physical items
 - **Theme**: Stability, reliability, groundedness
-- ✅ **USED BY**: Clothing mod (remove_clothing)
+- ✅ **USED BY**: Clothing mod (remove and adjust clothing)
 
 #### 4.3 Ocean Blue
 
@@ -366,9 +368,9 @@ The following **17 color combinations** remain available for new mods:
 
 - **Normal Contrast**: 11.62:1 🌟 AAA
 - **Hover Contrast**: 11.45:1 🌟 AAA
-- **Use Cases**: Special abilities in dark themes
+- **Use Cases**: Sensual touch actions, premium special abilities in dark themes
 - **Theme**: Premium, special, unique
-- 🟢 **AVAILABLE**
+- ✅ **USED BY**: Caressing mod (sensual touch actions)
 
 #### 7.3 Midnight Green
 
@@ -518,13 +520,13 @@ The following **17 color combinations** remain available for new mods:
 {
   "backgroundColor": "#bf360c",
   "textColor": "#ffffff",
-  "hoverBackgroundColor": "#d84315",
+  "hoverBackgroundColor": "#8d2c08",
   "hoverTextColor": "#ffffff"
 }
 ```
 
-- **Normal Contrast**: 8.07:1 🌟 AAA
-- **Hover Contrast**: 6.28:1 ✅ AA
+- **Normal Contrast**: 5.60:1 ✅ AA
+- **Hover Contrast**: 8.41:1 🌟 AAA
 - **Use Cases**: Energy actions, positioning, movement
 - **Theme**: Dynamic, energetic, active
 - ✅ **USED BY**: Positioning mod (get_close, step_back, turn_around, kneel_before, etc.)
@@ -546,6 +548,144 @@ The following **17 color combinations** remain available for new mods:
 - **Theme**: Contemporary, balanced, versatile
 - 🟢 **AVAILABLE**
 
+### 11. Expansion Set – High Contrast Additions
+
+#### 11.1 Aurora Depths
+
+```json
+{
+  "backgroundColor": "#004d61",
+  "textColor": "#e0f7fa",
+  "hoverBackgroundColor": "#006978",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+- **Normal Contrast**: 8.44:1 🌟 AAA
+- **Hover Contrast**: 6.38:1 ✅ AA
+- **Use Cases**: Inventory and item management, calm focus states
+- **Theme**: Aquatic depth, precise utility, trustworthy teal
+- 🔒 **RESERVED FOR**: Items mod (inventory interactions – implementation pending)
+
+#### 11.2 Ironclad Slate
+
+```json
+{
+  "backgroundColor": "#2f2f2f",
+  "textColor": "#f8f9fa",
+  "hoverBackgroundColor": "#3f3d56",
+  "hoverTextColor": "#f8f9ff"
+}
+```
+
+- **Normal Contrast**: 12.70:1 🌟 AAA
+- **Hover Contrast**: 9.93:1 🌟 AAA
+- **Use Cases**: Crafting menus, defensive stances, engineering tools
+- **Theme**: Industrial precision, fortified neutrality
+- 🟢 **AVAILABLE**
+
+#### 11.3 Velvet Twilight
+
+```json
+{
+  "backgroundColor": "#2c0e37",
+  "textColor": "#ffebf0",
+  "hoverBackgroundColor": "#451952",
+  "hoverTextColor": "#f3e5f5"
+}
+```
+
+- **Normal Contrast**: 15.01:1 🌟 AAA
+- **Hover Contrast**: 11.45:1 🌟 AAA
+- **Use Cases**: Elegant social actions, mysterious story beats
+- **Theme**: Luxurious nightfall, refined intrigue
+- 🟢 **AVAILABLE**
+
+#### 11.4 Starlight Navy
+
+```json
+{
+  "backgroundColor": "#0f172a",
+  "textColor": "#e2e8f0",
+  "hoverBackgroundColor": "#1e293b",
+  "hoverTextColor": "#f8fafc"
+}
+```
+
+- **Normal Contrast**: 14.48:1 🌟 AAA
+- **Hover Contrast**: 13.98:1 🌟 AAA
+- **Use Cases**: Strategic planning, late-night operations, investigative mods
+- **Theme**: Cosmic clarity, disciplined calm
+- 🟢 **AVAILABLE**
+
+#### 11.5 Evergreen Shadow
+
+```json
+{
+  "backgroundColor": "#123524",
+  "textColor": "#e8f5e9",
+  "hoverBackgroundColor": "#1b5e20",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+- **Normal Contrast**: 11.96:1 🌟 AAA
+- **Hover Contrast**: 7.87:1 🌟 AAA
+- **Use Cases**: Stealth exploration, nature attunement, healing rituals
+- **Theme**: Quiet resilience, verdant focus
+- 🟢 **AVAILABLE**
+
+#### 11.6 Molten Copper
+
+```json
+{
+  "backgroundColor": "#7c2d12",
+  "textColor": "#fef3c7",
+  "hoverBackgroundColor": "#9a3412",
+  "hoverTextColor": "#fffbeb"
+}
+```
+
+- **Normal Contrast**: 8.42:1 🌟 AAA
+- **Hover Contrast**: 7.05:1 🌟 AAA
+- **Use Cases**: Forging, high-heat abilities, charismatic performances
+- **Theme**: Liquid metal, artisan warmth
+- 🟢 **AVAILABLE**
+
+#### 11.7 Obsidian Frost
+
+```json
+{
+  "backgroundColor": "#0b132b",
+  "textColor": "#f2f4f8",
+  "hoverBackgroundColor": "#1c2541",
+  "hoverTextColor": "#e0e7ff"
+}
+```
+
+- **Normal Contrast**: 16.70:1 🌟 AAA
+- **Hover Contrast**: 12.26:1 🌟 AAA
+- **Use Cases**: High-clarity command centers, tactical overviews
+- **Theme**: Frozen night sky, crystalline focus
+- 🟢 **AVAILABLE**
+
+#### 11.8 Arctic Steel
+
+```json
+{
+  "backgroundColor": "#112a46",
+  "textColor": "#e6f1ff",
+  "hoverBackgroundColor": "#0b3954",
+  "hoverTextColor": "#f0f4f8"
+}
+```
+
+- **Normal Contrast**: 12.74:1 🌟 AAA
+- **Hover Contrast**: 11.00:1 🌟 AAA
+- **Use Cases**: High-tech interfaces, precision ranged actions, frost magic
+- **Theme**: Tempered steel, arctic clarity
+- 🟢 **AVAILABLE**
+
 ## Implementation Guidelines
 
 ### Usage in Action Files
@@ -560,7 +700,7 @@ To apply these color combinations to your action files:
   "visual": {
     "backgroundColor": "#455a64",
     "textColor": "#ffffff",
-    "hoverBackgroundColor": "#607d8b",
+    "hoverBackgroundColor": "#37474f",
     "hoverTextColor": "#ffffff"
   }
 }
