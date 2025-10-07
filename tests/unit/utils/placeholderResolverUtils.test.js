@@ -329,6 +329,38 @@ describe('PlaceholderResolver', () => {
       expect(result).toBeUndefined();
       expect(mockLogger.warn).not.toHaveBeenCalled();
     });
+
+    it('should honor skipKeys when provided as an array', () => {
+      const input = {
+        visible: '{name}',
+        protected: '{secret}',
+      };
+      const result = resolver.resolveStructure(
+        input,
+        { name: 'Visible', secret: 'Hidden' },
+        {},
+        ['protected']
+      );
+
+      expect(result).toEqual({ visible: 'Visible', protected: '{secret}' });
+    });
+
+    it('should accept iterable skipKeys instances', () => {
+      const input = {
+        keep: '{name}',
+        omit: '{code}',
+      };
+      const skip = new Set(['omit']);
+
+      const result = resolver.resolveStructure(
+        input,
+        { name: 'Hero', code: 'XYZ' },
+        {},
+        skip
+      );
+
+      expect(result).toEqual({ keep: 'Hero', omit: '{code}' });
+    });
   });
 
   describe('buildResolutionSources', () => {
