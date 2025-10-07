@@ -1,0 +1,71 @@
+/**
+ * @file Integration tests for seduction:stretch_sexily action discovery.
+ * @description Ensures the stretch sexily action is available without prerequisites and advertises expected styling.
+ */
+
+import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
+import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import stretchSexilyAction from '../../../../data/mods/seduction/actions/stretch_sexily.action.json';
+
+const ACTION_ID = 'seduction:stretch_sexily';
+
+describe('seduction:stretch_sexily action discovery', () => {
+  let testFixture;
+
+  beforeEach(async () => {
+    testFixture = await ModTestFixture.forAction('seduction', ACTION_ID);
+  });
+
+  afterEach(() => {
+    if (testFixture) {
+      testFixture.cleanup();
+    }
+  });
+
+  describe('Action metadata validation', () => {
+    it('should define the correct core metadata', () => {
+      expect(stretchSexilyAction).toBeDefined();
+      expect(stretchSexilyAction.id).toBe(ACTION_ID);
+      expect(stretchSexilyAction.name).toBe('Stretch Sexily');
+      expect(stretchSexilyAction.description).toBe(
+        'Roll your shoulders back and lengthen into a languid stretch, drawing attention to your body as you claim the space around you.'
+      );
+      expect(stretchSexilyAction.template).toBe('stretch sexily');
+    });
+
+    it('should be a self-targeting action', () => {
+      expect(stretchSexilyAction.targets).toBe('none');
+      expect(stretchSexilyAction.required_components).toEqual({});
+    });
+  });
+
+  describe('Visual styling validation', () => {
+    it('should reuse the seduction orange palette', () => {
+      expect(stretchSexilyAction.visual).toBeDefined();
+      expect(stretchSexilyAction.visual.backgroundColor).toBe('#f57f17');
+      expect(stretchSexilyAction.visual.textColor).toBe('#000000');
+      expect(stretchSexilyAction.visual.hoverBackgroundColor).toBe('#f9a825');
+      expect(stretchSexilyAction.visual.hoverTextColor).toBe('#212121');
+    });
+  });
+
+  describe('Prerequisite handling', () => {
+    it('should expose an empty prerequisites array', () => {
+      expect(stretchSexilyAction.prerequisites).toBeDefined();
+      expect(Array.isArray(stretchSexilyAction.prerequisites)).toBe(true);
+      expect(stretchSexilyAction.prerequisites).toHaveLength(0);
+    });
+  });
+
+  describe('Action discoverability scenarios', () => {
+    it('should be executable without any special setup', async () => {
+      const scenario = testFixture.createStandardActorTarget(['Ava', 'Marcus']);
+
+      await testFixture.executeAction(scenario.actor.id, null);
+
+      testFixture.assertActionSuccess(
+        'Ava tilts head and spine, claiming space with a languid stretch, drawing attention to their body.'
+      );
+    });
+  });
+});

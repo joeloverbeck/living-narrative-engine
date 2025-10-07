@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "seduction:stretch_sexily",
+  "name": "Stretch Sexily",
+  "description": "Roll your shoulders back and lengthen into a languid stretch, drawing attention to your body as you claim the space around you.",
+  "targets": "none",
+  "required_components": {},
+  "template": "stretch sexily",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#f57f17",
+    "textColor": "#000000",
+    "hoverBackgroundColor": "#f9a825",
+    "hoverTextColor": "#212121"
+  }
+}
