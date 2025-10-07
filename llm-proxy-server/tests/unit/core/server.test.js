@@ -144,6 +144,10 @@ describe('Server - Comprehensive Tests', () => {
         maxSize: 1000,
         apiKeyCacheTtl: 300000,
       })),
+      getSalvageConfig: jest.fn(() => ({
+        defaultTtl: 120000,
+        maxEntries: 1000,
+      })),
       isHttpAgentEnabled: jest.fn(() => false),
       getHttpAgentConfig: jest.fn(() => ({
         enabled: false,
@@ -498,6 +502,20 @@ describe('Server - Comprehensive Tests', () => {
       // Verify cache disabled log message
       expect(consoleLoggerInstance.info).toHaveBeenCalledWith(
         'LLM Proxy Server: Cache DISABLED - API keys will be read from source on every request'
+      );
+    });
+
+    test('logs salvage configuration using AppConfigService values', async () => {
+      appConfigServiceMock.getSalvageConfig.mockReturnValue({
+        defaultTtl: 240000,
+        maxEntries: 2048,
+      });
+
+      await loadServer();
+
+      expect(appConfigServiceMock.getSalvageConfig).toHaveBeenCalled();
+      expect(consoleLoggerInstance.info).toHaveBeenCalledWith(
+        'LLM Proxy Server: Response Salvage ENABLED - TTL: 240000ms, Max Entries: 2048'
       );
     });
 

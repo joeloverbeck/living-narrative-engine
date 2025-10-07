@@ -37,6 +37,10 @@ const createMockAppConfigService = () => ({
     maxSize: 1000,
     apiKeyCacheTtl: 300000,
   })),
+  getSalvageConfig: jest.fn(() => ({
+    defaultTtl: 120000,
+    maxEntries: 1000,
+  })),
   getApiKeyCacheTtl: jest.fn(() => 300000),
   isHttpAgentEnabled: jest.fn(() => true),
   getHttpAgentConfig: jest.fn(() => ({
