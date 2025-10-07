@@ -67,7 +67,7 @@ export default class EntityConstructionFactory {
 
     this.#applyDefaultComponents(entity);
 
-    this.#logger.info(
+    this.#logger.debug(
       `[EntityConstructionFactory] Entity instance '${instanceId}' (def: '${definitionId}') ${action}`
     );
 
