@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "affection:event-is-action-link-arms",
+  "description": "Checks if the triggering event is for the 'affection:link_arms' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "affection:link_arms"]
+  }
+}
