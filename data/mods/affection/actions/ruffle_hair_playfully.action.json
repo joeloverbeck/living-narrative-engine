@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "affection:ruffle_hair_playfully",
+  "name": "Ruffle hair playfully",
+  "description": "Playfully tousle the target's hair to show affection.",
+  "targets": "affection:close_actors_facing_each_other_or_behind_target",
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "template": "ruffle {target}'s hair playfully",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#6a1b9a",
+    "textColor": "#f3e5f5",
+    "hoverBackgroundColor": "#8e24aa",
+    "hoverTextColor": "#ffffff"
+  }
+}
