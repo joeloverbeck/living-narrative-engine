@@ -667,7 +667,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 12.26:1 🌟 AAA
 - **Use Cases**: High-clarity command centers, tactical overviews
 - **Theme**: Frozen night sky, crystalline focus
-- 🟢 **AVAILABLE**
+- ✅ **USED BY**: Distress mod (distress gestures)
 
 #### 11.8 Arctic Steel
 

@@ -65,6 +65,22 @@ describe('ArrayIterationResolver', () => {
       );
     });
 
+    it('should throw missing actor error without invoking an error handler when none is provided', () => {
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const ctx = { dispatcher, trace };
+
+      const resolverWithoutHandler = createArrayIterationResolver({
+        clothingAccessibilityService: mockClothingAccessibilityService,
+      });
+
+      expect(() => resolverWithoutHandler.resolve(node, ctx)).toThrow(
+        'ArrayIterationResolver: actorEntity is missing from context'
+      );
+    });
+
     it('should return empty set when parent result is empty', () => {
       const node = {
         type: 'ArrayIterationStep',
@@ -79,6 +95,19 @@ describe('ArrayIterationResolver', () => {
 
       expect(result).toEqual(new Set());
       expect(dispatcher.resolve).toHaveBeenCalledWith(node.parent, ctx);
+    });
+
+    it('should return empty set when dispatcher is not provided', () => {
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { trace, actorEntity };
+
+      const result = resolver.resolve(node, ctx);
+
+      expect(result).toEqual(new Set());
     });
 
     it('should flatten arrays from parent result', () => {
@@ -180,6 +209,21 @@ describe('ArrayIterationResolver', () => {
       const result = resolver.resolve(node, ctx);
 
       expect(result).toEqual(new Set(['entity1', 'entity2', 'entity3']));
+    });
+
+    it('should ignore nullish values from Source parents', () => {
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Source' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      dispatcher.resolve.mockReturnValue(new Set([null, undefined, 'entity3']));
+
+      const result = resolver.resolve(node, ctx);
+
+      expect(result).toEqual(new Set(['entity3']));
     });
 
     it('should handle non-array values from non-Source parents', () => {
@@ -386,6 +430,156 @@ describe('ArrayIterationResolver', () => {
 
         expect(result).toEqual(new Set());
       });
+
+      it('should enforce the array size limit when service returns excessive items', () => {
+        const node = {
+          type: 'ArrayIterationStep',
+          parent: { type: 'Step' },
+        };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        const clothingAccess = {
+          __isClothingAccessObject: true,
+          entityId: 'oversized-entity',
+          mode: 'topmost',
+        };
+
+        const largeResult = Array.from({ length: 10005 }, (_, index) => `item-${index}`);
+        mockClothingAccessibilityService.getAccessibleItems.mockReturnValue(largeResult);
+
+        dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(result.size).toBe(10000);
+        expect(result.has('item-0')).toBe(true);
+        expect(result.has('item-10004')).toBe(false);
+        expect(errorHandler.handleError).toHaveBeenCalledWith(
+          'Array size limit exceeded',
+          expect.objectContaining({
+            limit: 10000,
+            current: 10001,
+          }),
+          'ArrayIterationResolver',
+          ErrorCodes.MEMORY_LIMIT
+        );
+      });
+
+      it('should handle clothing access gracefully when trace and error handler are absent', () => {
+        const node = {
+          type: 'ArrayIterationStep',
+          parent: { type: 'Step' },
+        };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace: null, actorEntity };
+
+        const clothingAccess = {
+          __isClothingAccessObject: true,
+          entityId: 'trace-less-entity',
+          mode: 'topmost',
+        };
+
+        const bareResolver = createArrayIterationResolver();
+        dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+        const result = bareResolver.resolve(node, ctx);
+
+        expect(result).toEqual(new Set());
+      });
+
+      it('should skip trace logging when service runs without trace context', () => {
+        const node = {
+          type: 'ArrayIterationStep',
+          parent: { type: 'Step' },
+        };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace: null, actorEntity };
+
+        const clothingAccess = {
+          __isClothingAccessObject: true,
+          entityId: 'trace-skipped',
+          mode: 'base',
+        };
+
+        mockClothingAccessibilityService.getAccessibleItems.mockReturnValue(['cap']);
+        dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(result).toEqual(new Set(['cap']));
+        expect(mockClothingAccessibilityService.getAccessibleItems).toHaveBeenCalled();
+      });
+
+      it('should suppress trace and error reporting when service throws without handlers', () => {
+        const node = {
+          type: 'ArrayIterationStep',
+          parent: { type: 'Step' },
+        };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace: null, actorEntity };
+
+        const clothingAccess = {
+          __isClothingAccessObject: true,
+          entityId: 'error-no-handlers',
+          mode: 'topmost',
+        };
+
+        const service = {
+          getAccessibleItems: jest.fn(() => {
+            throw new Error('service exploded');
+          }),
+        };
+        const resolverWithoutHandlers = createArrayIterationResolver({
+          clothingAccessibilityService: service,
+        });
+
+        dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+        const result = resolverWithoutHandlers.resolve(node, ctx);
+
+        expect(result).toEqual(new Set());
+      });
+
+      it('should enforce the clothing size limit even without an error handler', () => {
+        const node = {
+          type: 'ArrayIterationStep',
+          parent: { type: 'Step' },
+        };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        const clothingAccess = {
+          __isClothingAccessObject: true,
+          entityId: 'no-handler-entity',
+          mode: 'topmost',
+        };
+
+        const largeResult = Array.from({ length: 10005 }, (_, index) => `item-${index}`);
+        const service = {
+          getAccessibleItems: jest.fn(() => largeResult),
+        };
+        const resolverWithoutErrorHandler = createArrayIterationResolver({
+          clothingAccessibilityService: service,
+        });
+
+        dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+        const result = resolverWithoutErrorHandler.resolve(node, ctx);
+
+        expect(result.size).toBe(10000);
+        expect(result.has('item-10004')).toBe(false);
+      });
     });
   });
 
@@ -445,6 +639,23 @@ describe('ArrayIterationResolver', () => {
       );
     });
 
+    it('should still flatten large arrays when no error handler is provided', () => {
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      const largeArray = Array.from({ length: 10001 }, (_, i) => `item${i}`);
+      const resolverWithoutHandler = createArrayIterationResolver();
+      dispatcher.resolve.mockReturnValue(new Set([largeArray]));
+
+      const result = resolverWithoutHandler.resolve(node, ctx);
+
+      expect(result.size).toBe(10001);
+    });
+
     it('should report error for non-array values', () => {
       const node = {
         type: 'ArrayIterationStep',
@@ -476,6 +687,22 @@ describe('ArrayIterationResolver', () => {
         'ArrayIterationResolver',
         ErrorCodes.DATA_TYPE_MISMATCH
       );
+    });
+
+    it('should silently skip non-array values when no error handler is provided', () => {
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step', field: 'someField' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      const resolverWithoutHandler = createArrayIterationResolver();
+      dispatcher.resolve.mockReturnValue(new Set(['not-an-array']));
+
+      const result = resolverWithoutHandler.resolve(node, ctx);
+
+      expect(result.size).toBe(0);
     });
 
     it('should not report error for special Source node cases', () => {
@@ -604,6 +831,42 @@ describe('ArrayIterationResolver', () => {
         'ArrayIterationResolver',
         ErrorCodes.DATA_TYPE_MISMATCH
       );
+    });
+
+    it('should pass through values when parent is another ArrayIterationStep', () => {
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'ArrayIterationStep' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      dispatcher.resolve.mockReturnValue(new Set(['entity-a', null, 'entity-b']));
+
+      const result = resolverWithErrorHandler.resolve(node, ctx);
+
+      expect(result).toEqual(new Set(['entity-a', 'entity-b']));
+      expect(errorHandler.handleError).not.toHaveBeenCalled();
+    });
+
+    it('should pass through entity values when parent step targets entities()', () => {
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: {
+          type: 'Step',
+          field: 'entities',
+          param: { component: 'core:actor' },
+        },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      dispatcher.resolve.mockReturnValue(new Set(['npc-1', null, 'npc-2']));
+
+      const result = resolverWithErrorHandler.resolve(node, ctx);
+
+      expect(result).toEqual(new Set(['npc-1', 'npc-2']));
+      expect(errorHandler.handleError).not.toHaveBeenCalled();
     });
   });
 });

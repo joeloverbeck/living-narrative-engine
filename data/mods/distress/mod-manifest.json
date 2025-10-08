@@ -1,0 +1,33 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "distress",
+  "version": "0.1.0",
+  "name": "Distress – Vulnerable Gestures",
+  "description": "Emotionally charged gestures that express desperation, pleading, or internalized overwhelm.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "anatomy",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "descriptors",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "clothing",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [],
+    "conditions": [],
+    "rules": [],
+    "scopes": []
+  }
+}
