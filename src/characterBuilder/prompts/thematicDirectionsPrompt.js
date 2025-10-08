@@ -33,7 +33,7 @@ export const THEMATIC_DIRECTIONS_RESPONSE_SCHEMA = {
           description: {
             type: 'string',
             minLength: 50,
-            maxLength: 500,
+            maxLength: 1500,
           },
           coreTension: {
             type: 'string',
@@ -217,7 +217,7 @@ export function validateThematicDirectionsResponse(response) {
     // Validate field lengths
     const fieldLengths = {
       title: { min: 5, max: 100 },
-      description: { min: 50, max: 500 },
+      description: { min: 50, max: 1500 },
       coreTension: { min: 20, max: 200 },
       uniqueTwist: { min: 20, max: 1000 },
       narrativePotential: { min: 30 },
