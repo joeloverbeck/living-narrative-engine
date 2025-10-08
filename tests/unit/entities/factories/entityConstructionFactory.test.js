@@ -84,7 +84,12 @@ describe('constructEntity', () => {
       validateAndClone
     );
     expect(result).toBe(entityObj);
-    expect(logger.info).toHaveBeenCalled();
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining("Constructing entity 'e1' with definition 'def'")
+    );
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining("Entity instance 'e1' (def: 'def') created.")
+    );
   });
 
   it('rethrows when EntityInstanceData creation fails', () => {
