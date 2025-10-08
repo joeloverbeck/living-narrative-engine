@@ -81,7 +81,7 @@ describe('ThematicDirectionsPrompt', () => {
         expect(properties.title.minLength).toBe(5);
         expect(properties.title.maxLength).toBe(100);
         expect(properties.description.minLength).toBe(50);
-        expect(properties.description.maxLength).toBe(500);
+        expect(properties.description.maxLength).toBe(1500);
         expect(properties.coreTension.minLength).toBe(20);
         expect(properties.coreTension.maxLength).toBe(200);
         expect(properties.uniqueTwist.minLength).toBe(20);
@@ -449,7 +449,7 @@ describe('ThematicDirectionsPrompt', () => {
     describe('Field length validation', () => {
       const fieldConstraints = {
         title: { min: 5, max: 100 },
-        description: { min: 50, max: 500 },
+        description: { min: 50, max: 1500 },
         coreTension: { min: 20, max: 200 },
         uniqueTwist: { min: 20, max: 1000 },
         narrativePotential: { min: 30 }, // No max constraint
