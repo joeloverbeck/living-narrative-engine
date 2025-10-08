@@ -1,0 +1,8 @@
+// Scope for distressed actors in closeness facing each other with upper torso clothing available
+// Mirrors caressing scope but namespaced for distress mod targeting torso_upper garments
+distress:close_actors_facing_each_other_with_torso_clothing := actor.components.positioning:closeness.partners[][{
+  "and": [
+    {"condition_ref": "positioning:both-actors-facing-each-other"},
+    {"hasClothingInSlot": [".", "torso_upper"]}
+  ]
+}]

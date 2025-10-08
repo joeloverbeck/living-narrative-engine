@@ -1,0 +1,35 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "distress:clutch_onto_upper_clothing",
+  "name": "Clutch Pleadingly Onto Clothing",
+  "description": "Desperately grab onto your companion's upper garment in a plea not to be left behind.",
+  "targets": {
+    "primary": {
+      "scope": "distress:close_actors_facing_each_other_with_torso_clothing",
+      "placeholder": "primary",
+      "description": "Person whose clothing you're clinging to"
+    },
+    "secondary": {
+      "scope": "clothing:target_topmost_torso_upper_clothing",
+      "placeholder": "secondary",
+      "description": "Upper garment being clutched",
+      "contextFrom": "primary"
+    }
+  },
+  "template": "clutch pleadingly onto {primary}'s {secondary}",
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": [],
+    "primary": [],
+    "secondary": []
+  },
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#0b132b",
+    "textColor": "#f2f4f8",
+    "hoverBackgroundColor": "#1c2541",
+    "hoverTextColor": "#e0e7ff"
+  }
+}
