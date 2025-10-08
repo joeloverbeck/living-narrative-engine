@@ -67,9 +67,11 @@ export default class EntityConstructionFactory {
 
     this.#applyDefaultComponents(entity);
 
-    this.#logger.debug(
-      `[EntityConstructionFactory] Entity instance '${instanceId}' (def: '${definitionId}') ${action}`
-    );
+    const completionMessage =
+      `[EntityConstructionFactory] Entity instance '${instanceId}' (def: '${definitionId}') ${action}`;
+
+    this.#logger.info(completionMessage);
+    this.#logger.debug(completionMessage);
 
     return entity;
   }
