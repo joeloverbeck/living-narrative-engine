@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "distress:bury_face_in_hands",
+  "name": "Bury Face in Hands",
+  "description": "Collapse inward and hide your face behind your hands, shutting out the world as the weight of it all presses down.",
+  "targets": "none",
+  "required_components": {},
+  "template": "bury your face in your hands",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#0b132b",
+    "textColor": "#f2f4f8",
+    "hoverBackgroundColor": "#1c2541",
+    "hoverTextColor": "#e0e7ff"
+  }
+}
