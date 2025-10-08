@@ -1,0 +1,19 @@
+{
+    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+    "id": "anatomy:human_eye_hazel_almond",
+    "description": "A human eye with hazel iris and almond shape",
+    "components": {
+        "anatomy:part": {
+            "subType": "eye"
+        },
+        "descriptors:color_extended": {
+            "color": "hazel"
+        },
+        "descriptors:shape_eye": {
+            "shape": "almond"
+        },
+        "core:name": {
+            "text": "eye"
+        }
+    }
+}
