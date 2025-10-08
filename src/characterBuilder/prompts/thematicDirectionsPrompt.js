@@ -28,7 +28,7 @@ export const THEMATIC_DIRECTIONS_RESPONSE_SCHEMA = {
           title: {
             type: 'string',
             minLength: 5,
-            maxLength: 100,
+            maxLength: 300,
           },
           description: {
             type: 'string',
@@ -38,12 +38,12 @@ export const THEMATIC_DIRECTIONS_RESPONSE_SCHEMA = {
           coreTension: {
             type: 'string',
             minLength: 20,
-            maxLength: 200,
+            maxLength: 600,
           },
           uniqueTwist: {
             type: 'string',
             minLength: 20,
-            maxLength: 1000,
+            maxLength: 3000,
           },
           narrativePotential: {
             type: 'string',
@@ -216,10 +216,10 @@ export function validateThematicDirectionsResponse(response) {
 
     // Validate field lengths
     const fieldLengths = {
-      title: { min: 5, max: 100 },
+      title: { min: 5, max: 300 },
       description: { min: 50, max: 1500 },
-      coreTension: { min: 20, max: 200 },
-      uniqueTwist: { min: 20, max: 1000 },
+      coreTension: { min: 20, max: 600 },
+      uniqueTwist: { min: 20, max: 3000 },
       narrativePotential: { min: 30 },
     };
 

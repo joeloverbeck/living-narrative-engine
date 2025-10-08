@@ -273,37 +273,37 @@ export class FormValidationHelper {
  */
 export const ValidationPatterns = {
   /**
-   * Title validation (5-200 characters)
+   * Title validation (5-300 characters)
    *
    * @param {string} value - Value to validate
    * @returns {{isValid: boolean, error?: string}} Validation result
    */
-  title: (value) => FormValidationHelper.validateTextInput(value, 5, 200),
+  title: (value) => FormValidationHelper.validateTextInput(value, 5, 300),
 
   /**
-   * Description validation (20-2000 characters)
+   * Description validation (20-1500 characters)
    *
    * @param {string} value - Value to validate
    * @returns {{isValid: boolean, error?: string}} Validation result
    */
   description: (value) =>
-    FormValidationHelper.validateTextInput(value, 20, 2000),
+    FormValidationHelper.validateTextInput(value, 20, 1500),
 
   /**
-   * Short text validation (10-500 characters)
+   * Short text validation (10-600 characters)
    *
    * @param {string} value - Value to validate
    * @returns {{isValid: boolean, error?: string}} Validation result
    */
-  shortText: (value) => FormValidationHelper.validateTextInput(value, 10, 500),
+  shortText: (value) => FormValidationHelper.validateTextInput(value, 10, 600),
 
   /**
-   * Long text validation (10-1000 characters)
+   * Long text validation (10-3000 characters)
    *
    * @param {string} value - Value to validate
    * @returns {{isValid: boolean, error?: string}} Validation result
    */
-  longText: (value) => FormValidationHelper.validateTextInput(value, 10, 1000),
+  longText: (value) => FormValidationHelper.validateTextInput(value, 10, 3000),
 
   /**
    * Concept validation (50-3000 characters)

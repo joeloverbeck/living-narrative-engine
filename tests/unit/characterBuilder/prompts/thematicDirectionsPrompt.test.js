@@ -79,13 +79,13 @@ describe('ThematicDirectionsPrompt', () => {
         const properties = itemSchema.properties;
 
         expect(properties.title.minLength).toBe(5);
-        expect(properties.title.maxLength).toBe(100);
+        expect(properties.title.maxLength).toBe(300);
         expect(properties.description.minLength).toBe(50);
         expect(properties.description.maxLength).toBe(1500);
         expect(properties.coreTension.minLength).toBe(20);
-        expect(properties.coreTension.maxLength).toBe(200);
+        expect(properties.coreTension.maxLength).toBe(600);
         expect(properties.uniqueTwist.minLength).toBe(20);
-        expect(properties.uniqueTwist.maxLength).toBe(1000);
+        expect(properties.uniqueTwist.maxLength).toBe(3000);
         expect(properties.narrativePotential.minLength).toBe(30);
         expect(properties.narrativePotential.maxLength).toBeUndefined();
       });
@@ -448,10 +448,10 @@ describe('ThematicDirectionsPrompt', () => {
 
     describe('Field length validation', () => {
       const fieldConstraints = {
-        title: { min: 5, max: 100 },
+        title: { min: 5, max: 300 },
         description: { min: 50, max: 1500 },
-        coreTension: { min: 20, max: 200 },
-        uniqueTwist: { min: 20, max: 1000 },
+        coreTension: { min: 20, max: 600 },
+        uniqueTwist: { min: 20, max: 3000 },
         narrativePotential: { min: 30 }, // No max constraint
       };
 
@@ -549,7 +549,7 @@ describe('ThematicDirectionsPrompt', () => {
         ],
       };
       expect(() => validateThematicDirectionsResponse(invalidResponse)).toThrow(
-        "ThematicDirectionsPrompt: Direction at index 1 field 'title' must be between 5 and 100 characters"
+        "ThematicDirectionsPrompt: Direction at index 1 field 'title' must be between 5 and 300 characters"
       );
     });
   });

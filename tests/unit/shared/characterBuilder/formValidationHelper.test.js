@@ -963,7 +963,7 @@ describe('FormValidationHelper', () => {
 
   describe('ValidationPatterns', () => {
     describe('title validation', () => {
-      it('should validate title with correct length (5-200 chars)', () => {
+      it('should validate title with correct length (5-300 chars)', () => {
         const result = ValidationPatterns.title('Valid Title');
         expect(result.isValid).toBe(true);
       });
@@ -975,15 +975,15 @@ describe('FormValidationHelper', () => {
       });
 
       it('should reject title too long', () => {
-        const longTitle = 'A'.repeat(201);
+        const longTitle = 'A'.repeat(301);
         const result = ValidationPatterns.title(longTitle);
         expect(result.isValid).toBe(false);
-        expect(result.error).toBe('Input must be no more than 200 characters');
+        expect(result.error).toBe('Input must be no more than 300 characters');
       });
     });
 
     describe('description validation', () => {
-      it('should validate description with correct length (20-2000 chars)', () => {
+      it('should validate description with correct length (20-1500 chars)', () => {
         const validDescription =
           'This is a valid description that meets the minimum length requirements for testing purposes.';
         const result = ValidationPatterns.description(validDescription);
@@ -997,15 +997,15 @@ describe('FormValidationHelper', () => {
       });
 
       it('should reject description too long', () => {
-        const longDescription = 'A'.repeat(2001);
+        const longDescription = 'A'.repeat(1501);
         const result = ValidationPatterns.description(longDescription);
         expect(result.isValid).toBe(false);
-        expect(result.error).toBe('Input must be no more than 2000 characters');
+        expect(result.error).toBe('Input must be no more than 1500 characters');
       });
     });
 
     describe('shortText validation', () => {
-      it('should validate short text with correct length (10-500 chars)', () => {
+      it('should validate short text with correct length (10-600 chars)', () => {
         const result = ValidationPatterns.shortText('Valid short text input');
         expect(result.isValid).toBe(true);
       });
@@ -1017,15 +1017,15 @@ describe('FormValidationHelper', () => {
       });
 
       it('should reject short text too long', () => {
-        const longText = 'A'.repeat(501);
+        const longText = 'A'.repeat(601);
         const result = ValidationPatterns.shortText(longText);
         expect(result.isValid).toBe(false);
-        expect(result.error).toBe('Input must be no more than 500 characters');
+        expect(result.error).toBe('Input must be no more than 600 characters');
       });
     });
 
     describe('longText validation', () => {
-      it('should validate long text with correct length (10-1000 chars)', () => {
+      it('should validate long text with correct length (10-3000 chars)', () => {
         const result = ValidationPatterns.longText(
           'Valid long text input for testing'
         );
@@ -1039,10 +1039,10 @@ describe('FormValidationHelper', () => {
       });
 
       it('should reject long text too long', () => {
-        const longText = 'A'.repeat(1001);
+        const longText = 'A'.repeat(3001);
         const result = ValidationPatterns.longText(longText);
         expect(result.isValid).toBe(false);
-        expect(result.error).toBe('Input must be no more than 1000 characters');
+        expect(result.error).toBe('Input must be no more than 3000 characters');
       });
     });
 

@@ -471,20 +471,20 @@ describe('ThematicDirectionsManagerController - Coverage Tests', () => {
 
         // Test that validation constraints exist and can be verified
         const testConstraints = {
-          title: { min: 5, max: 200 },
-          description: { min: 20, max: 2000 },
-          coreTension: { min: 10, max: 500 },
-          uniqueTwist: { min: 10, max: 1000 },
-          narrativePotential: { min: 10, max: 1000 }
+          title: { min: 5, max: 300 },
+          description: { min: 20, max: 1500 },
+          coreTension: { min: 10, max: 600 },
+          uniqueTwist: { min: 10, max: 3000 },
+          narrativePotential: { min: 10, max: 3000 }
         };
 
         // Verify constraint structure
         expect(testConstraints.title.min).toBe(5);
-        expect(testConstraints.title.max).toBe(200);
+        expect(testConstraints.title.max).toBe(300);
         expect(testConstraints.description.min).toBe(20);
-        expect(testConstraints.description.max).toBe(2000);
+        expect(testConstraints.description.max).toBe(1500);
         expect(testConstraints.coreTension.min).toBe(10);
-        expect(testConstraints.coreTension.max).toBe(500);
+        expect(testConstraints.coreTension.max).toBe(600);
       });
 
       it('should test validation through field length requirements', () => {
