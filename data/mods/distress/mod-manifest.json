@@ -25,9 +25,15 @@
     }
   ],
   "content": {
-    "actions": [],
-    "conditions": [],
-    "rules": [],
+    "actions": [
+      "bury_face_in_hands.action.json"
+    ],
+    "conditions": [
+      "event-is-action-bury-face-in-hands.condition.json"
+    ],
+    "rules": [
+      "bury_face_in_hands.rule.json"
+    ],
     "scopes": []
   }
 }
