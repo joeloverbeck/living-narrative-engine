@@ -7,6 +7,7 @@ import { jest } from '@jest/globals';
 import { createRuleTestEnvironment } from '../engine/systemLogicTestEnv.js';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
+import displaySuccessMacro from '../../../data/mods/core/macros/displaySuccessAndEndTurn.macro.json';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
 import { promises as fs } from 'fs';
 import { resolve } from 'path';
@@ -502,7 +503,10 @@ class BaseModTestFixture {
    * @param {string} conditionId - Condition identifier
    */
   setupEnvironment(ruleFile, conditionFile, conditionId) {
-    const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
+    const macros = {
+      'core:logSuccessAndEndTurn': logSuccessMacro,
+      'core:displaySuccessAndEndTurn': displaySuccessMacro,
+    };
     const expanded = expandMacros(ruleFile.actions, {
       get: (type, id) => (type === 'macros' ? macros[id] : undefined),
     });
@@ -587,7 +591,6 @@ class BaseModTestFixture {
   get logger() {
     return this.testEnv?.logger;
   }
-
 }
 
 /**
@@ -721,7 +724,11 @@ export class ModActionTestFixture extends BaseModTestFixture {
    * @returns {Promise} Promise that resolves when action is dispatched
    */
   async executeAction(actorId, targetId, options = {}) {
-    const { skipDiscovery = false, originalInput, additionalPayload = {} } = options;
+    const {
+      skipDiscovery = false,
+      originalInput,
+      additionalPayload = {},
+    } = options;
 
     // Ensure actionId is properly namespaced
     const fullActionId = this.actionId.includes(':')
@@ -736,7 +743,8 @@ export class ModActionTestFixture extends BaseModTestFixture {
         actionId: fullActionId,
         targetId,
         originalInput:
-          originalInput || `${this.actionId.split(':')[1] || this.actionId} ${targetId}`,
+          originalInput ||
+          `${this.actionId.split(':')[1] || this.actionId} ${targetId}`,
         ...additionalPayload,
       };
 
@@ -808,7 +816,8 @@ export class ModActionTestFixture extends BaseModTestFixture {
       actionId: fullActionId,
       targetId,
       originalInput:
-        originalInput || `${this.actionId.split(':')[1] || this.actionId} ${targetId}`,
+        originalInput ||
+        `${this.actionId.split(':')[1] || this.actionId} ${targetId}`,
       ...additionalPayload,
     };
 

@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "distress:event-is-action-clutch-onto-upper-clothing",
+  "description": "Checks if the triggering event is for the 'distress:clutch_onto_upper_clothing' action.",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "distress:clutch_onto_upper_clothing"
+    ]
+  }
+}

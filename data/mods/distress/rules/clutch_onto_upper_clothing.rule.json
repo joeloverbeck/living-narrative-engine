@@ -1,0 +1,69 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_clutch_onto_upper_clothing",
+  "comment": "Handles the 'distress:clutch_onto_upper_clothing' action by generating matching log and success text before ending the turn.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "distress:event-is-action-clutch-onto-upper-clothing"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "comment": "Resolve the actor name for messaging.",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "primary",
+        "result_variable": "primaryName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "secondary",
+        "result_variable": "garmentName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Capture the actor's position for perceptible event routing.",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Construct the shared log and success messaging.",
+      "parameters": {
+        "variable_name": "perceptibleLogMessage",
+        "value": "{context.actorName} clutches pleadingly onto {context.primaryName}'s {context.garmentName}."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "successMessage",
+        "value": "{context.actorName} clutches pleadingly onto {context.primaryName}'s {context.garmentName}."
+      }
+    },
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Broadcast the action outcome to nearby observers.",
+      "parameters": {
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": "{context.perceptibleLogMessage}",
+        "perception_type": "action_target_general",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.primaryId}"
+      }
+    },
+    { "macro": "core:displaySuccessAndEndTurn" }
+  ]
+}
