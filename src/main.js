@@ -34,6 +34,15 @@ let gameEngine = null; // Will be populated by initializeGameEngineStage
 let currentPhaseForError = 'Initial Setup';
 
 /**
+ * @description Test-only helper to override the tracked bootstrap phase.
+ * @param {string | null | undefined} phase - Phase label to assign for coverage scenarios.
+ * @returns {void}
+ */
+export function __TEST_ONLY__setCurrentPhaseForError(phase) {
+  currentPhaseForError = phase;
+}
+
+/**
  * @description Loads the game configuration and extracts the startWorld value.
  * @returns {Promise<string>} The startWorld value from game.json, or 'default' if not specified.
  */
