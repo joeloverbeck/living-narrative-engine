@@ -8,6 +8,15 @@ const createLogger = () => ({
   debug: jest.fn()
 });
 
+class BareStrategiesGracefulDegradation extends GracefulDegradationClass {
+  registerStrategy(errorType, strategy) {
+    if (errorType === 'CORRUPTION' || errorType === 'TIMEOUT' || errorType === 'ACCESS') {
+      return;
+    }
+    return super.registerStrategy(errorType, strategy);
+  }
+}
+
 describe('GracefulDegradation', () => {
   let logger;
   let cache;
@@ -315,5 +324,108 @@ describe('GracefulDegradation', () => {
     });
     expect(stats.successRate).toBe(100);
     expect(stats.recentDegradations).toHaveLength(10);
+  });
+
+  it('executes built-in fallback strategies when custom handlers are absent', () => {
+    const bareLogger = createLogger();
+    const bareCache = new Map();
+    const bareInstance = new BareStrategiesGracefulDegradation({
+      logger: bareLogger,
+      cache: bareCache,
+      defaults: {},
+    });
+
+    const accessSkipResult = bareInstance.applyDegradation(new Error('ENOENT: file missing'), {
+      filePath: 'mods/inaccessible.json',
+      modId: 'mod-bare',
+    });
+    expect(accessSkipResult).toEqual({
+      strategy: DegradationStrategy.SKIP_FILE,
+      data: null,
+      success: true,
+      skipped: true,
+      message: 'Skipped file: mods/inaccessible.json',
+    });
+
+    bareCache.set('mods/bare-cache.json', { cached: true });
+    const accessCacheResult = bareInstance.applyDegradation(new Error('ENOENT: cached file missing'), {
+      filePath: 'mods/bare-cache.json',
+      modId: 'mod-bare',
+      hasCache: true,
+    });
+    expect(accessCacheResult).toEqual({
+      strategy: DegradationStrategy.USE_CACHED,
+      data: { cached: true },
+      success: true,
+      fromCache: true,
+    });
+    expect(bareLogger.debug).toHaveBeenCalledWith('Cache hit for mods/bare-cache.json');
+
+    const partialResult = bareInstance.applyDegradation(new Error('corruption detected'), {
+      filePath: 'mods/bare-partial.json',
+      modId: 'mod-bare',
+      partialData: { partial: true },
+    });
+    expect(partialResult).toEqual({
+      strategy: DegradationStrategy.PARTIAL_EXTRACTION,
+      data: { partial: true },
+      success: true,
+      partial: true,
+    });
+
+    const basicResult = bareInstance.applyDegradation(new Error('corruption again'), {
+      filePath: 'mods/raw.json',
+      modId: 'mod-bare',
+      rawData: '{"id": "bare-id"}',
+    });
+    expect(basicResult).toEqual({
+      strategy: DegradationStrategy.PARTIAL_EXTRACTION,
+      data: {},
+      success: true,
+      partial: true,
+    });
+
+    const reducedResult = bareInstance.applyDegradation(new Error('operation timeout'), {
+      filePath: 'mods/slow.json',
+      modId: 'mod-bare',
+    });
+    expect(reducedResult).toEqual({
+      strategy: DegradationStrategy.REDUCED_VALIDATION,
+      data: {
+        valid: 'unknown',
+        reduced: true,
+        checks: {
+          syntax: 'skipped',
+          references: 'skipped',
+          schema: 'skipped',
+        },
+        message: 'Reduced validation due to resource constraints',
+      },
+      success: true,
+      reduced: true,
+    });
+  });
+
+  it('falls back to default degradation when no hints or handlers are available', () => {
+    const bareLogger = createLogger();
+    const bareInstance = new BareStrategiesGracefulDegradation({
+      logger: bareLogger,
+      cache: new Map(),
+      defaults: { 'validation.default': { safe: true } },
+    });
+
+    const result = bareInstance.applyDegradation(new Error('mysterious failure'), {
+      filePath: 'mods/unknown.json',
+      modId: 'mod-bare',
+      type: 'validation',
+      id: 'default',
+    });
+
+    expect(result).toEqual({
+      strategy: DegradationStrategy.USE_DEFAULT,
+      data: { safe: true },
+      success: true,
+      isDefault: true,
+    });
   });
 });
