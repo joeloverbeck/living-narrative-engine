@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "items:brass_key",
+  "description": "A small brass key",
+  "components": {
+    "core:name": {
+      "text": "Brass Key"
+    },
+    "core:description": {
+      "text": "A small brass key with an ornate handle. It looks like it might fit a chest lock."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.1
+    }
+  }
+}

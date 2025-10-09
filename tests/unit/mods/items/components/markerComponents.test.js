@@ -5,6 +5,7 @@
 import { describe, it, expect } from '@jest/globals';
 import itemComponent from '../../../../../data/mods/items/components/item.component.json';
 import portableComponent from '../../../../../data/mods/items/components/portable.component.json';
+import openableComponent from '../../../../../data/mods/items/components/openable.component.json';
 
 describe('Items - Marker Components', () => {
   describe('items:item component', () => {
@@ -56,6 +57,32 @@ describe('Items - Marker Components', () => {
 
     it('should reject additional properties', () => {
       expect(portableComponent.dataSchema.additionalProperties).toBe(false);
+    });
+  });
+
+  describe('items:openable component', () => {
+    it('has correct id', () => {
+      expect(openableComponent.id).toBe('items:openable');
+    });
+
+    it('has appropriate description', () => {
+      expect(openableComponent.description).toContain('Marker component');
+      expect(openableComponent.description).toContain('opened');
+    });
+
+    it('has correct schema reference', () => {
+      expect(openableComponent.$schema).toBe(
+        'schema://living-narrative-engine/component.schema.json'
+      );
+    });
+
+    it('should be a valid marker component with no data properties', () => {
+      expect(openableComponent.dataSchema.type).toBe('object');
+      expect(openableComponent.dataSchema.properties).toEqual({});
+    });
+
+    it('should reject additional properties', () => {
+      expect(openableComponent.dataSchema.additionalProperties).toBe(false);
     });
   });
 });

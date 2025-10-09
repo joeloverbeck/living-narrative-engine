@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "items:treasure_chest",
+  "description": "A sturdy wooden chest with brass fittings",
+  "components": {
+    "core:name": {
+      "text": "Treasure Chest"
+    },
+    "core:description": {
+      "text": "A heavy oak chest bound with brass corners and a large lock. It looks like it could hold valuable items."
+    },
+    "items:item": {},
+    "items:openable": {},
+    "items:container": {
+      "contents": [],
+      "capacity": {
+        "maxWeight": 50,
+        "maxItems": 10
+      },
+      "isOpen": false,
+      "requiresKey": true,
+      "keyItemId": "items:brass_key"
+    }
+  }
+}
