@@ -511,7 +511,7 @@ describe('ComponentLoader (Happy Path - Core Mod)', () => {
 
     // --- Verify: ILogger Calls ---
     // Check standard logging flow
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(`Loading components definitions for mod 'core'.`)
     ); // Start log from loadItemsForMod
     const expectedSuccessCount = 2; // Use the count from the result object for consistency

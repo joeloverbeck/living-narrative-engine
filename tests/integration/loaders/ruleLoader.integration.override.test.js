@@ -361,11 +361,11 @@ describe('RuleLoader Integration (Rule Override via loadItemsForMod)', () => {
     // --- END CORRECTED VALIDATOR ASSERTIONS ---
 
     // 7. Verify logging (keep existing logging checks)
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       // Adjusted constructor name based on actual class name being tested
       `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${baseModId}'.`
     );
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       // Adjusted constructor name
       `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${overrideModId}'.`
     );

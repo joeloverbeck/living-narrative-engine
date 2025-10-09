@@ -647,7 +647,7 @@ export class BaseManifestItemLoader extends AbstractLoader {
       registryKey
     );
 
-    this._logger.info(
+    this._logger.debug(
       `${this.constructor.name}: Loading ${trimmedRegistryKey} definitions for mod '${trimmedModId}'.`
     );
 

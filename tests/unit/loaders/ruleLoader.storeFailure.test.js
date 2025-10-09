@@ -361,7 +361,7 @@ describe('RuleLoader - Storage Failure Handling (via loadItemsForMod)', () => {
       });
 
       // Verify summary and debug logging
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.`
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(

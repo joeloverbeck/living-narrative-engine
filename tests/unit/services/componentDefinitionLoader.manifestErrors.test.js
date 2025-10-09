@@ -276,9 +276,9 @@ describe('ComponentLoader (Sub-Ticket 6.6: Manifest Handling Errors)', () => {
     expect(mockLogger.debug).toHaveBeenCalledWith(
       `Mod '${modId}': Content key 'components' not found or is null/undefined in manifest. Skipping.`
     );
-    // Base class loadItemsForMod logs info at start
-    expect(mockLogger.info).toHaveBeenCalledTimes(1);
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    // Base class loadItemsForMod logs debug at start
+    expect(mockLogger.info).not.toHaveBeenCalled();
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `ComponentLoader: Loading components definitions for mod '${modId}'.`
     );
     expect(mockLogger.warn).not.toHaveBeenCalled();
@@ -323,9 +323,9 @@ describe('ComponentLoader (Sub-Ticket 6.6: Manifest Handling Errors)', () => {
     expect(mockLogger.debug).toHaveBeenCalledWith(
       `Mod '${modId}': Content key 'components' not found or is null/undefined in manifest. Skipping.`
     );
-    // Base class loadItemsForMod logs info at start
-    expect(mockLogger.info).toHaveBeenCalledTimes(1);
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    // Base class loadItemsForMod logs debug at start
+    expect(mockLogger.info).not.toHaveBeenCalled();
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `ComponentLoader: Loading components definitions for mod '${modId}'.`
     );
     expect(mockLogger.warn).not.toHaveBeenCalled();
@@ -371,9 +371,9 @@ describe('ComponentLoader (Sub-Ticket 6.6: Manifest Handling Errors)', () => {
     expect(mockLogger.warn).toHaveBeenCalledWith(
       `Mod '${modId}': Expected an array for content key 'components' but found type 'object'. Skipping.`
     );
-    // Base class loadItemsForMod logs info at start
-    expect(mockLogger.info).toHaveBeenCalledTimes(1);
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    // Base class loadItemsForMod logs debug at start
+    expect(mockLogger.info).not.toHaveBeenCalled();
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `ComponentLoader: Loading components definitions for mod '${modId}'.`
     );
     expect(mockLogger.error).not.toHaveBeenCalled();
@@ -418,9 +418,9 @@ describe('ComponentLoader (Sub-Ticket 6.6: Manifest Handling Errors)', () => {
     expect(mockLogger.warn).toHaveBeenCalledWith(
       `Mod '${modId}': Expected an array for content key 'components' but found type 'string'. Skipping.`
     );
-    // Base class loadItemsForMod logs info at start
-    expect(mockLogger.info).toHaveBeenCalledTimes(1);
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    // Base class loadItemsForMod logs debug at start
+    expect(mockLogger.info).not.toHaveBeenCalled();
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `ComponentLoader: Loading components definitions for mod '${modId}'.`
     );
     expect(mockLogger.error).not.toHaveBeenCalled();

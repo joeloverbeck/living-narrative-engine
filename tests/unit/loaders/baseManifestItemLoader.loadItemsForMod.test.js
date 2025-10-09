@@ -315,8 +315,8 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
       TEST_REGISTRY_KEY
     );
 
-    expect(mockLogger.info).toHaveBeenCalledTimes(1);
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.info).not.toHaveBeenCalled();
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `TestableLoader: Loading ${TEST_REGISTRY_KEY} definitions for mod '${TEST_MOD_ID}'.`
     );
     expect(mockLogger.warn).not.toHaveBeenCalled();
@@ -373,7 +373,7 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
       )
     ).rejects.toThrow(internalError);
 
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `TestableLoader: Loading ${TEST_REGISTRY_KEY} definitions for mod '${TEST_MOD_ID}'.`
     );
     // No error expected to be logged *by loadItemsForMod* itself when propagating
@@ -395,6 +395,8 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
     // --- CORRECTED ASSERTION: Expect the zero object ---
     expect(result).toEqual(zeroResult);
     expect(loadItemsInternalSpy).toHaveBeenCalledTimes(1);
-    expect(mockLogger.info).toHaveBeenCalledTimes(1);
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      `TestableLoader: Loading ${TEST_REGISTRY_KEY} definitions for mod '${TEST_MOD_ID}'.`
+    );
   });
 });

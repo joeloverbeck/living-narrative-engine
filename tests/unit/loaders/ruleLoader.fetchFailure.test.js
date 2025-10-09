@@ -293,8 +293,8 @@ describe('RuleLoader - Fetch Failure Handling (via loadItemsForMod)', () => {
       // *** REMOVED old assertion: expect(count).toBe(1); ***
 
       // Verify summary logs
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.` // Initial log
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.`
       );
       // *** UPDATED: Ensure the summary log reflects the numbers from loadResult ***
       expect(mockLogger.debug).toHaveBeenCalledWith(

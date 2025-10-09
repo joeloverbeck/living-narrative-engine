@@ -339,9 +339,9 @@ describe('ComponentLoader (Sub-Ticket 6.7: Path/Fetch Errors)', () => {
     );
 
     // --- Verify: Final Summary Log ---
-    expect(mockLogger.info).toHaveBeenCalledTimes(1); // Start only (summary is now debug)
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      `ComponentLoader: Loading components definitions for mod '${modId}'.` // Initial log
+    expect(mockLogger.info).not.toHaveBeenCalled();
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      `ComponentLoader: Loading components definitions for mod '${modId}'.`
     );
     // <<< CORRECTION: Match the actual received log format >>>
     expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -423,9 +423,9 @@ describe('ComponentLoader (Sub-Ticket 6.7: Path/Fetch Errors)', () => {
     );
 
     // --- Verify: Final Summary Log ---
-    expect(mockLogger.info).toHaveBeenCalledTimes(1); // Start only (summary is now debug)
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      `ComponentLoader: Loading components definitions for mod '${modId}'.` // Initial log
+    expect(mockLogger.info).not.toHaveBeenCalled();
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      `ComponentLoader: Loading components definitions for mod '${modId}'.`
     );
     // <<< CORRECTION: Match the actual received log format >>>
     expect(mockLogger.debug).toHaveBeenCalledWith(

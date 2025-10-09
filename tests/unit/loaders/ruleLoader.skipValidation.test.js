@@ -296,8 +296,8 @@ describe('RuleLoader - Skip Validation Scenario (via loadItemsForMod)', () => {
       expect(count.count).toBe(1); // Check the count property of the returned object
 
       // Verify summary info log
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.` // Initial log from loadItemsForMod
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.`
       );
       // The summary log is likely called from the base class's _loadItemsInternal helper, check its message
       // Assuming the message includes count/total and content key:

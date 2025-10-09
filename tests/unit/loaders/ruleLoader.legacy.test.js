@@ -428,8 +428,8 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
     expect(result.errors).toBe(0);
     expect(result.overrides).toBe(0);
 
-    // Verify initial INFO log from base class
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    // Verify initial debug log from base class
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.`
     );
 
@@ -449,7 +449,7 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
     expect(mockLogger.warn).not.toHaveBeenCalled();
     expect(mockLogger.error).not.toHaveBeenCalled();
     // Ensure final summary log NOT called (because count is 0)
-    expect(mockLogger.info).not.toHaveBeenCalledWith(
+    expect(mockLogger.debug).not.toHaveBeenCalledWith(
       expect.stringContaining(`Mod [${modId}] - Processed`)
     );
   });
@@ -482,8 +482,8 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
     expect(result.errors).toBe(0);
     expect(result.overrides).toBe(0);
 
-    // Verify initial INFO log
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    // Verify initial debug log
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.`
     );
     // Verify debug log about missing content key
@@ -501,7 +501,7 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
     expect(mockLogger.warn).not.toHaveBeenCalled();
     expect(mockLogger.error).not.toHaveBeenCalled();
     // Ensure final summary log NOT called (because count is 0)
-    expect(mockLogger.info).not.toHaveBeenCalledWith(
+    expect(mockLogger.debug).not.toHaveBeenCalledWith(
       expect.stringContaining(`Mod [${modId}] - Processed`)
     );
   });
@@ -535,8 +535,8 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
     expect(result.errors).toBe(0);
     expect(result.overrides).toBe(0);
 
-    // Verify initial INFO log
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    // Verify initial debug log
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.`
     );
     // Verify the debug log indicating no valid filenames found (from base class)
@@ -551,7 +551,7 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
     expect(mockLogger.warn).not.toHaveBeenCalled();
     expect(mockLogger.error).not.toHaveBeenCalled();
     // Ensure final summary log NOT called (because count is 0)
-    expect(mockLogger.info).not.toHaveBeenCalledWith(
+    expect(mockLogger.debug).not.toHaveBeenCalledWith(
       expect.stringContaining(`Mod [${modId}] - Processed`)
     );
   });
@@ -646,7 +646,7 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
     );
 
     // Verify relevant logging occurred
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.`
     );
     // Verify final summary log IS called (because count > 0)

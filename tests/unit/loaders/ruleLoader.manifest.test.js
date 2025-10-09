@@ -365,7 +365,7 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
       expect(result.count).toBe(2);
 
       // 6. Verify logging
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.`
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -714,7 +714,7 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `Found 1 potential ${RULE_CONTENT_KEY} files to process for mod ${modId}.` // Base class logs this
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.`
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
