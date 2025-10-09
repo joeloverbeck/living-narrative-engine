@@ -245,7 +245,7 @@ class FileTraceOutputHandler {
       const fileName = this.#generateFileName(originalTrace, timestamp);
       const fileContent = this.#formatTraceContent(traceData, originalTrace);
 
-      this.#logger.info('FileTraceOutputHandler: Writing trace to file', {
+      this.#logger.debug('FileTraceOutputHandler: Writing trace to file', {
         fileName,
         actionId: originalTrace?.actionId,
         actorId: originalTrace?.actorId,
@@ -305,7 +305,7 @@ class FileTraceOutputHandler {
         return false;
       }
 
-      this.#logger.info(
+      this.#logger.debug(
         'FileTraceOutputHandler: Attempting to write trace via server endpoint',
         {
           fileName,
@@ -321,7 +321,7 @@ class FileTraceOutputHandler {
         outputDirectory: this.#outputDirectory,
       };
 
-      this.#logger.info('FileTraceOutputHandler: Sending POST to server', {
+      this.#logger.debug('FileTraceOutputHandler: Sending POST to server', {
         url: getEndpointConfig().getTracesWriteEndpoint(),
         bodySize: JSON.stringify(requestBody).length,
       });
@@ -352,7 +352,7 @@ class FileTraceOutputHandler {
       }
 
       const result = await response.json();
-      this.#logger.info(
+      this.#logger.debug(
         'FileTraceOutputHandler: Trace written to server successfully',
         {
           path: result.path,
