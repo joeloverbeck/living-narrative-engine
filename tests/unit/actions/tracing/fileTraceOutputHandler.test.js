@@ -340,7 +340,7 @@ describe('FileTraceOutputHandler', () => {
           })
         );
 
-        expect(mockLogger.info).toHaveBeenCalledWith(
+        expect(mockLogger.debug).toHaveBeenCalledWith(
           'FileTraceOutputHandler: Trace written to server successfully',
           expect.objectContaining({
             path: './traces/test.json',
