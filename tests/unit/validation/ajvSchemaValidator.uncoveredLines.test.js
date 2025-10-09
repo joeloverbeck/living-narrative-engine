@@ -122,7 +122,7 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
       expect(validator.isSchemaLoaded(childSchema.$id)).toBe(true);
     });
 
-    it('should throw error when schema has unresolved reference', async () => {
+    it('should warn when schema has unresolved reference instead of throwing', async () => {
       jest.resetModules();
 
       const AjvSchemaValidator = (
@@ -141,17 +141,24 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
         },
       };
 
-      // Adding the schema with bad reference should throw during addSchema
-      // because it calls getSchema to verify, which triggers compilation
+      // The validator now logs warnings for unresolved refs instead of throwing
       await expect(
         validator.addSchema(schemaWithBadRef, schemaWithBadRef.$id)
-      ).rejects.toThrow(
-        "can't resolve reference ./does-not-exist.json from id schema://living-narrative-engine/bad-ref.json"
+      ).resolves.toBeUndefined();
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "Schema 'schema://living-narrative-engine/bad-ref.json' was added but cannot be compiled"
+        )
       );
 
-      // Verify error was logged
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Error adding schema'),
+      expect(validator.isSchemaLoaded(schemaWithBadRef.$id)).toBe(false);
+
+      const validatorFn = validator.getValidator(schemaWithBadRef.$id);
+      expect(validatorFn).toBeUndefined();
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Error accessing schema'),
         expect.objectContaining({
           schemaId: schemaWithBadRef.$id,
           error: expect.any(Error),

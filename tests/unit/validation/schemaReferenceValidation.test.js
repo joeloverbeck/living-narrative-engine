@@ -207,21 +207,26 @@ describe('Schema Reference Validation', () => {
         },
       };
 
-      // Adding a schema with bad references will fail during addSchema
-      let addError = null;
-      try {
-        await validator.addSchema(schemaWithBadRef, schemaWithBadRef.$id);
-      } catch (error) {
-        addError = error;
-      }
+      await expect(
+        validator.addSchema(schemaWithBadRef, schemaWithBadRef.$id)
+      ).resolves.toBeUndefined();
 
-      // The schema with bad references should fail to add
-      expect(addError).toBeTruthy();
-      expect(addError.message).toContain("can't resolve reference");
+      expect(validator.isSchemaLoaded(schemaWithBadRef.$id)).toBe(false);
 
-      // Since the schema failed to add, getValidator should return undefined
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('was added but cannot be compiled')
+      );
+
       const validateFn = validator.getValidator(schemaWithBadRef.$id);
       expect(validateFn).toBeUndefined();
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Error accessing schema'),
+        expect.objectContaining({
+          schemaId: schemaWithBadRef.$id,
+          error: expect.any(Error),
+        })
+      );
     });
   });
 });

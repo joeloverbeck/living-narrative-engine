@@ -155,7 +155,7 @@ describe('AjvSchemaValidator - Schema Loader Coverage', () => {
       expect(ids).toContain(referencingSchema.$id);
     });
 
-    it('should handle when schema reference cannot be resolved', async () => {
+    it('should handle unresolved schema references without throwing', async () => {
       const validator = new AjvSchemaValidator({
         logger: mockLogger,
       });
@@ -168,22 +168,26 @@ describe('AjvSchemaValidator - Schema Loader Coverage', () => {
         },
       };
 
-      try {
-        await validator.addSchema(schemaWithBadRef, schemaWithBadRef.$id);
-        // The schema gets added but with unresolved ref
-        expect(validator.isSchemaLoaded(schemaWithBadRef.$id)).toBe(true);
+      await expect(
+        validator.addSchema(schemaWithBadRef, schemaWithBadRef.$id)
+      ).resolves.toBeUndefined();
 
-        // Try to use it - this should fail
-        const validatorFn = validator.getValidator(schemaWithBadRef.$id);
-        if (validatorFn) {
-          const result = validatorFn({ broken: 'test' });
-          // Should fail validation due to unresolved ref
-          expect(result.isValid).toBe(false);
-        }
-      } catch (error) {
-        // If it throws during add, that's also acceptable
-        expect(error.message).toContain('resolve');
-      }
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('was added but cannot be compiled')
+      );
+
+      expect(validator.isSchemaLoaded(schemaWithBadRef.$id)).toBe(false);
+
+      const validatorFn = validator.getValidator(schemaWithBadRef.$id);
+      expect(validatorFn).toBeUndefined();
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Error accessing schema'),
+        expect.objectContaining({
+          schemaId: schemaWithBadRef.$id,
+          error: expect.any(Error),
+        })
+      );
     });
 
     it('should handle absolute URIs in schema loader', async () => {

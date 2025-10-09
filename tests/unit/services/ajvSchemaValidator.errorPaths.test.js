@@ -100,11 +100,13 @@ describe('AjvSchemaValidator error paths', () => {
     const getSchema = jest.fn(() => {
       throw new Error('boom');
     });
+    const schemasMap = { 'my-schema': {} };
     jest.doMock('ajv', () =>
       jest.fn(() => ({
         addSchema: jest.fn(),
         getSchema,
         removeSchema: jest.fn(),
+        schemas: schemasMap,
       }))
     );
     jest.doMock('ajv-formats', () => jest.fn());
@@ -116,7 +118,7 @@ describe('AjvSchemaValidator error paths', () => {
     const result = validator.isSchemaLoaded('my-schema');
     expect(result).toBe(false);
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Error accessing schema'),
+      expect.stringContaining('cannot be compiled'),
       expect.objectContaining({
         schemaId: 'my-schema',
         error: expect.any(Error),
