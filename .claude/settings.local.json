@@ -424,7 +424,14 @@
       "Bash(NODE_ENV=test npm run test:unit -- tests/unit/utils/preValidationUtils.test.js --silent)",
       "Bash(npx ajv validate:*)",
       "Bash(NODE_ENV=test npx jest tests/unit/actions/validation/TargetRequiredComponentsValidator.test.js --no-coverage --silent)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(NODE_ENV=test npx jest tests/unit/utils/preValidationUtils.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/unit/utils/preValidationUtils.macroReference.test.js tests/unit/utils/preValidationUtils.parameterValidation.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/dropItemTimeout.integration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/dropItemTimeout.integration.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/dropItemHandlerInstantiation.integration.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/dropItemRuleExecution.test.js tests/integration/mods/items/dropItemActionDiscovery.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/dropItemTimeout.integration.test.js tests/integration/mods/items/dropItemHandlerInstantiation.integration.test.js --no-coverage --silent)"
     ],
     "deny": [],
     "ask": []

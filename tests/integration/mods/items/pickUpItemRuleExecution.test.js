@@ -316,4 +316,107 @@ describe('items:pick_up_item action integration', () => {
       expect(item.components['core:position']).toBeUndefined();
     });
   });
+
+  describe('Pick Up Item - Additional Edge Cases', () => {
+    it('should remove position component after pickup', async () => {
+      // Setup item at location
+      const room = new ModEntityBuilder('saloon1').asRoom('Saloon').build();
+      const actor = new ModEntityBuilder('test:actor1')
+        .withName('Alice')
+        .atLocation('saloon1')
+        .asActor()
+        .withComponent('items:inventory', {
+          items: [],
+          capacity: { maxWeight: 50, maxItems: 10 },
+        })
+        .build();
+      const item = new ModEntityBuilder('letter-1')
+        .withName('Letter')
+        .atLocation('saloon1') // This adds core:position component
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withComponent('items:weight', { weight: 0.05 })
+        .build();
+
+      testFixture.reset([room, actor, item]);
+
+      // Pick up the item
+      await testFixture.executeAction('test:actor1', 'letter-1');
+
+      // Verify position component removed
+      const itemAfter = testFixture.entityManager.getEntityInstance('letter-1');
+      expect(itemAfter.components['core:position']).toBeUndefined();
+    });
+
+    it('should respect weight capacity limits', async () => {
+      const room = new ModEntityBuilder('saloon1').asRoom('Saloon').build();
+      const actor = new ModEntityBuilder('test:actor1')
+        .withName('Bob')
+        .atLocation('saloon1')
+        .asActor()
+        .withComponent('items:inventory', {
+          items: [],
+          capacity: { maxWeight: 1, maxItems: 10 }, // Very low weight capacity
+        })
+        .build();
+      const heavyItem = new ModEntityBuilder('gold-bar-1')
+        .withName('Gold Bar')
+        .atLocation('saloon1')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withComponent('items:weight', { weight: 12.0 }) // Too heavy
+        .build();
+
+      testFixture.reset([room, actor, heavyItem]);
+
+      await testFixture.executeAction('test:actor1', 'gold-bar-1');
+
+      // Verify failure event dispatched
+      const failureEvent = testFixture.events.find(
+        (e) => e.eventType === 'core:display_failed_action_result'
+      );
+      expect(failureEvent).toBeDefined();
+      expect(failureEvent.payload.message).toContain('max_weight_exceeded');
+
+      // Verify item still at location
+      const itemAfter = testFixture.entityManager.getEntityInstance('gold-bar-1');
+      expect(itemAfter.components['core:position']).toBeDefined();
+      expect(itemAfter.components['core:position'].locationId).toBe('saloon1');
+    });
+
+    it('should respect item count capacity limits', async () => {
+      const room = new ModEntityBuilder('tavern').asRoom('Tavern').build();
+      const actor = new ModEntityBuilder('test:actor1')
+        .withName('Charlie')
+        .atLocation('tavern')
+        .asActor()
+        .withComponent('items:inventory', {
+          items: ['item-1', 'item-2'],
+          capacity: { maxWeight: 50, maxItems: 2 }, // At max items
+        })
+        .build();
+      const newItem = new ModEntityBuilder('item-3')
+        .withName('Item 3')
+        .atLocation('tavern')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withComponent('items:weight', { weight: 0.1 })
+        .build();
+
+      testFixture.reset([room, actor, newItem]);
+
+      await testFixture.executeAction('test:actor1', 'item-3');
+
+      // Verify failure event
+      const failureEvent = testFixture.events.find(
+        (e) => e.eventType === 'core:display_failed_action_result'
+      );
+      expect(failureEvent).toBeDefined();
+      expect(failureEvent.payload.message).toContain('max_items_exceeded');
+
+      // Verify item not added to inventory
+      const actorAfter = testFixture.entityManager.getEntityInstance('test:actor1');
+      expect(actorAfter.components['items:inventory'].items).not.toContain('item-3');
+    });
+  });
 });
