@@ -1,0 +1,34 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:components_batch_added",
+  "description": "Dispatched when multiple components are added to entities in a batch operation",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "updates": {
+        "type": "array",
+        "description": "Array of component updates that were applied",
+        "items": {
+          "type": "object",
+          "properties": {
+            "instanceId": {
+              "type": "string",
+              "description": "Entity instance that was updated"
+            },
+            "componentTypeId": {
+              "type": "string",
+              "description": "Component type that was added/updated"
+            }
+          },
+          "required": ["instanceId", "componentTypeId"]
+        }
+      },
+      "updateCount": {
+        "type": "integer",
+        "description": "Number of successful updates",
+        "minimum": 0
+      }
+    },
+    "required": ["updates", "updateCount"]
+  }
+}

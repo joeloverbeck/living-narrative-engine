@@ -49,6 +49,7 @@ import TransferItemHandler from '../../logic/operationHandlers/transferItemHandl
 import ValidateInventoryCapacityHandler from '../../logic/operationHandlers/validateInventoryCapacityHandler.js';
 import DropItemAtLocationHandler from '../../logic/operationHandlers/dropItemAtLocationHandler.js';
 import PickUpItemFromLocationHandler from '../../logic/operationHandlers/pickUpItemFromLocationHandler.js';
+import OpenContainerHandler from '../../logic/operationHandlers/openContainerHandler.js';
 import jsonLogic from 'json-logic-js';
 
 /**
@@ -499,6 +500,16 @@ export function registerOperationHandlers(registrar) {
     [
       tokens.PickUpItemFromLocationHandler,
       PickUpItemFromLocationHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.OpenContainerHandler,
+      OpenContainerHandler,
       (c, Handler) =>
         new Handler({
           logger: c.resolve(tokens.ILogger),

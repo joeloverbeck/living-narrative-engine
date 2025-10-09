@@ -170,6 +170,7 @@ export function registerInterpreters(container) {
       'PICK_UP_ITEM_FROM_LOCATION',
       bind(tokens.PickUpItemFromLocationHandler)
     );
+    registry.register('OPEN_CONTAINER', bind(tokens.OpenContainerHandler));
 
     return registry;
   });
