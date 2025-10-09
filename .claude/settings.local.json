@@ -437,7 +437,13 @@
       "Bash(NODE_ENV=test npx jest tests/unit/logic/operationHandlers/dropItemAtLocationHandler.test.js tests/integration/mods/items/dropItemHandlerInstantiation.integration.test.js tests/integration/mods/items/dropItemRuleExecution.test.js --no-coverage --silent)",
       "Bash(NODE_ENV=test npx jest tests/integration/mods/items/dropItemBugFixes.integration.test.js --no-coverage --verbose)",
       "Bash(NODE_ENV=test npx jest tests/integration/mods/items/dropItemBugFixes.integration.test.js --no-coverage --silent)",
-      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/dropItem*.test.js --no-coverage --silent)"
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/dropItem*.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/dropItemEventDispatching.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/unit/entities/services/componentMutationServiceBatchOperations.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/unit/entities/services/componentMutationServiceBatchOperations.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/dropItemEventDispatching.test.js tests/unit/entities/services/componentMutationServiceBatchOperations.test.js tests/integration/mods/items/dropItemRuleExecution.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/unit/entities/ tests/integration/mods/items/ --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/ tests/unit/entities/services/componentMutationServiceBatchOperations.test.js --no-coverage --silent)"
     ],
     "deny": [],
     "ask": []

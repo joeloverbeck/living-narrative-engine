@@ -84,6 +84,15 @@ describe('items:drop_item action integration', () => {
       expect(item.components['core:position']).toBeDefined();
       expect(item.components['core:position'].locationId).toBe('saloon1');
 
+      // Assert: Verify items:item_dropped event was dispatched with correct payload
+      const itemDroppedEvent = testFixture.events.find(
+        (e) => e.eventType === 'items:item_dropped'
+      );
+      expect(itemDroppedEvent).toBeDefined();
+      expect(itemDroppedEvent.payload.actorEntity).toBe('test:actor1');
+      expect(itemDroppedEvent.payload.itemEntity).toBe('letter-1');
+      expect(itemDroppedEvent.payload.locationId).toBe('saloon1');
+
       // Assert: Verify turn ended successfully
       const turnEndedEvent = testFixture.events.find(
         (e) => e.eventType === 'core:turn_ended'
