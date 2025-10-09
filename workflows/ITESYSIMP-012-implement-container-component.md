@@ -4,6 +4,8 @@
 **Priority:** High
 **Estimated Effort:** 1.5 hours
 
+**Status:** ✅ CORRECTED - Workflow validated and updated against current codebase
+
 ## Goal
 
 Create the `items:container` component to enable entities to store items internally (chests, bags, etc.).
@@ -11,6 +13,20 @@ Create the `items:container` component to enable entities to store items interna
 ## Context
 
 Containers are distinct from inventories - they're objects that can hold items. A chest can contain items but isn't carried. This enables storage gameplay.
+
+## Corrections Applied
+
+This workflow has been validated against the actual codebase. Key corrections:
+
+1. **Component naming**: Changed `physical_properties` → `weight`
+2. **Manifest structure**: Updated from flat arrays to nested `content` object
+3. **Entity schema**: Changed to `entity-definition.schema.json`
+4. **Entity IDs**: Updated to namespaced format (`items:treasure_chest`)
+5. **Component properties**: Updated `core:name` and `core:description` to use `text` property
+6. **Weight component**: Removed `dimensions` (only has `weight` property)
+7. **Test utilities**: Updated to use `TestBedClass` and `validateAgainstSchema`
+8. **Test organization**: Split into `dataComponents.test.js` and `markerComponents.test.js`
+9. **Entity definitions**: Removed instance-only properties like `positioning:position`
 
 ## Tasks
 
@@ -89,103 +105,114 @@ Create `data/mods/items/components/openable.component.json`:
 
 ### 3. Update Mod Manifest
 
-Add to `data/mods/items/mod-manifest.json`:
+Add to the `content.components` array in `data/mods/items/mod-manifest.json`:
 
 ```json
 {
-  "components": [
-    "item.component.json",
-    "portable.component.json",
-    "physical_properties.component.json",
-    "inventory.component.json",
-    "container.component.json",
-    "openable.component.json"
-  ]
+  "content": {
+    "components": [
+      "inventory.component.json",
+      "item.component.json",
+      "portable.component.json",
+      "weight.component.json",
+      "container.component.json",
+      "openable.component.json"
+    ]
+  }
 }
 ```
 
+**Note**: The manifest uses nested structure with `content` object, not flat arrays. Component `weight.component.json` exists (not `physical_properties.component.json`).
+
 ### 4. Create Unit Tests
 
-Create `tests/unit/mods/items/components/containerComponent.test.js`:
+Add to existing `tests/unit/mods/items/components/dataComponents.test.js`:
 
 ```javascript
-import { describe, it, expect, beforeEach } from '@jest/globals';
-import { createTestBed } from '../../../../common/testBed.js';
-
-describe('Items - Container Component', () => {
-  let testBed;
-
-  beforeEach(() => {
-    testBed = createTestBed();
+describe('items:container', () => {
+  it('should validate valid container data', () => {
+    const data = {
+      contents: ['item-1', 'item-2'],
+      capacity: { maxWeight: 100, maxItems: 20 },
+      isOpen: false,
+      requiresKey: true,
+      keyItemId: 'brass-key-1'
+    };
+    const result = testBed.validateAgainstSchema(data, 'items:container');
+    expect(result.isValid).toBe(true);
   });
 
-  describe('items:container', () => {
-    it('should validate valid container data', () => {
-      const data = {
-        contents: ['item-1', 'item-2'],
-        capacity: { maxWeight: 100, maxItems: 20 },
-        isOpen: false,
-        requiresKey: true,
-        keyItemId: 'brass-key-1'
-      };
-
-      const result = testBed.validateComponent('items:container', data);
-      expect(result.valid).toBe(true);
-    });
-
-    it('should require isOpen field', () => {
-      const data = {
-        contents: [],
-        capacity: { maxWeight: 100, maxItems: 20 }
-      };
-
-      const result = testBed.validateComponent('items:container', data);
-      expect(result.valid).toBe(false);
-    });
-
-    it('should enforce unique contents', () => {
-      const data = {
-        contents: ['item-1', 'item-1'],
-        capacity: { maxWeight: 100, maxItems: 20 },
-        isOpen: true
-      };
-
-      const result = testBed.validateComponent('items:container', data);
-      expect(result.valid).toBe(false);
-    });
-
-    it('should allow empty container', () => {
-      const data = {
-        contents: [],
-        capacity: { maxWeight: 100, maxItems: 20 },
-        isOpen: false
-      };
-
-      const result = testBed.validateComponent('items:container', data);
-      expect(result.valid).toBe(true);
-    });
-
-    it('should validate capacity constraints', () => {
-      const data = {
-        contents: [],
-        capacity: { maxWeight: -1, maxItems: 0 },
-        isOpen: true
-      };
-
-      const result = testBed.validateComponent('items:container', data);
-      expect(result.valid).toBe(false);
-    });
+  it('should require isOpen field', () => {
+    const data = {
+      contents: [],
+      capacity: { maxWeight: 100, maxItems: 20 }
+    };
+    const result = testBed.validateAgainstSchema(data, 'items:container');
+    expect(result.isValid).toBe(false);
   });
 
-  describe('items:openable', () => {
-    it('should be a valid marker component', () => {
-      const component = testBed.loadComponent('items:openable');
-      expect(component.dataSchema.type).toBe('object');
-      expect(component.dataSchema.properties).toEqual({});
-    });
+  it('should enforce unique contents', () => {
+    const data = {
+      contents: ['item-1', 'item-1'],
+      capacity: { maxWeight: 100, maxItems: 20 },
+      isOpen: true
+    };
+    const result = testBed.validateAgainstSchema(data, 'items:container');
+    expect(result.isValid).toBe(false);
+  });
+
+  it('should allow empty container', () => {
+    const data = {
+      contents: [],
+      capacity: { maxWeight: 100, maxItems: 20 },
+      isOpen: false
+    };
+    const result = testBed.validateAgainstSchema(data, 'items:container');
+    expect(result.isValid).toBe(true);
+  });
+
+  it('should validate capacity constraints', () => {
+    const data = {
+      contents: [],
+      capacity: { maxWeight: -1, maxItems: 0 },
+      isOpen: true
+    };
+    const result = testBed.validateAgainstSchema(data, 'items:container');
+    expect(result.isValid).toBe(false);
+  });
+
+  it('should reject additional properties', () => {
+    const data = {
+      contents: [],
+      capacity: { maxWeight: 100, maxItems: 20 },
+      isOpen: true,
+      extraProperty: 'not allowed'
+    };
+    const result = testBed.validateAgainstSchema(data, 'items:container');
+    expect(result.isValid).toBe(false);
   });
 });
 ```
+
+Add to existing `tests/unit/mods/items/components/markerComponents.test.js`:
+
+```javascript
+describe('items:openable', () => {
+  it('should be a valid marker component', () => {
+    const data = {};
+    const result = testBed.validateAgainstSchema(data, 'items:openable');
+    expect(result.isValid).toBe(true);
+  });
+
+  it('should reject additional properties', () => {
+    const data = { extraProperty: 'not allowed' };
+    const result = testBed.validateAgainstSchema(data, 'items:openable');
+    expect(result.isValid).toBe(false);
+  });
+});
+```
+
+**Note**: Tests are organized into separate files - `dataComponents.test.js` for data components and `markerComponents.test.js` for marker components. Use `TestBedClass` from `tests/common/entities/testBed.js` and `validateAgainstSchema(data, schemaId)` method (returns `{isValid, errors}`).
 
 ### 5. Create Container Entity Examples
 
@@ -193,15 +220,15 @@ Create `data/mods/items/entities/definitions/treasure_chest.entity.json`:
 
 ```json
 {
-  "$schema": "schema://living-narrative-engine/entity.schema.json",
-  "id": "treasure-chest-1",
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "items:treasure_chest",
+  "description": "A sturdy wooden chest with brass fittings",
   "components": {
     "core:name": {
-      "name": "Treasure Chest"
+      "text": "Treasure Chest"
     },
     "core:description": {
-      "shortDescription": "A sturdy wooden chest with brass fittings",
-      "fullDescription": "A heavy oak chest bound with brass corners and a large lock. It looks like it could hold valuable items."
+      "text": "A heavy oak chest bound with brass corners and a large lock. It looks like it could hold valuable items."
     },
     "items:item": {},
     "items:openable": {},
@@ -214,9 +241,6 @@ Create `data/mods/items/entities/definitions/treasure_chest.entity.json`:
       "isOpen": false,
       "requiresKey": true,
       "keyItemId": "brass-key-1"
-    },
-    "positioning:position": {
-      "locationId": "tavern-cellar"
     }
   }
 }
@@ -226,45 +250,55 @@ Create `data/mods/items/entities/definitions/brass_key.entity.json`:
 
 ```json
 {
-  "$schema": "schema://living-narrative-engine/entity.schema.json",
-  "id": "brass-key-1",
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "items:brass_key",
+  "description": "A small brass key",
   "components": {
     "core:name": {
-      "name": "Brass Key"
+      "text": "Brass Key"
     },
     "core:description": {
-      "shortDescription": "A small brass key",
-      "fullDescription": "A small brass key with an ornate handle. It looks like it might fit a chest lock."
+      "text": "A small brass key with an ornate handle. It looks like it might fit a chest lock."
     },
     "items:item": {},
     "items:portable": {},
-    "items:physical_properties": {
-      "weight": 0.1,
-      "dimensions": {
-        "length": 0.08,
-        "width": 0.02,
-        "height": 0.01
-      }
+    "items:weight": {
+      "weight": 0.1
     }
   }
 }
 ```
 
+**Note**:
+- Entity definition schema is `entity-definition.schema.json` (not `entity.schema.json`)
+- Entity IDs use namespaced format: `items:treasure_chest` (not `treasure-chest-1`)
+- Component data uses `text` property (not `name`, `shortDescription`, `fullDescription`)
+- Use `items:weight` component (not `items:physical_properties`)
+- `items:weight` only has `weight` property (no `dimensions`)
+- Do not include `positioning:position` in entity definitions (instances only)
+
 ### 6. Update Mod Manifest with Entities
 
-Add to `data/mods/items/mod-manifest.json`:
+Update the `content.entities.definitions` array in `data/mods/items/mod-manifest.json`:
 
 ```json
 {
-  "entities": [
-    "letter_to_sheriff.entity.json",
-    "revolver.entity.json",
-    "gold_bar.entity.json",
-    "treasure_chest.entity.json",
-    "brass_key.entity.json"
-  ]
+  "content": {
+    "entities": {
+      "definitions": [
+        "gold_bar.entity.json",
+        "letter_to_sheriff.entity.json",
+        "revolver.entity.json",
+        "treasure_chest.entity.json",
+        "brass_key.entity.json"
+      ],
+      "instances": []
+    }
+  }
 }
 ```
+
+**Note**: Entity manifest structure is nested: `content.entities.definitions` (array), not flat `entities` array. Existing entities: `gold_bar.entity.json`, `letter_to_sheriff.entity.json`, `revolver.entity.json`.
 
 ## Validation
 
@@ -282,8 +316,8 @@ Add to `data/mods/items/mod-manifest.json`:
 ## Dependencies
 
 - ITESYSIMP-001: Mod structure must exist
-- ITESYSIMP-002: Marker components must exist
-- ITESYSIMP-003: Physical properties component must exist
+- ITESYSIMP-002: Marker components (items:item, items:portable) must exist
+- items:weight component must exist (not physical_properties)
 
 ## Next Steps
 

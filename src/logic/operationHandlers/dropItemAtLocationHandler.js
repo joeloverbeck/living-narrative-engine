@@ -8,7 +8,7 @@ import BaseOperationHandler from './baseOperationHandler.js';
 
 const INVENTORY_COMPONENT_ID = 'items:inventory';
 const POSITION_COMPONENT_ID = 'core:position';
-const ITEM_DROPPED_EVENT = 'ITEM_DROPPED';
+const ITEM_DROPPED_EVENT = 'items:item_dropped';
 
 /**
  * @typedef {object} DropItemParams

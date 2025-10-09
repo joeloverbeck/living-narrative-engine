@@ -454,7 +454,6 @@ export class ComponentMutationService {
 
         // Validate and clone the component data
         const validatedData = this.#validateComponentData(
-          spec.instanceId,
           spec.componentTypeId,
           spec.componentData,
           spec.instanceId
