@@ -344,8 +344,8 @@ describe('ComponentLoader (Sub-Ticket 6.8: Data Schema Registration Failure)', (
     );
 
     // --- Verify: Final Info Log ---
-    expect(mockLogger.info).toHaveBeenCalledTimes(1);
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.info).not.toHaveBeenCalled();
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `ComponentLoader: Loading components definitions for mod '${modId}'.`
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -433,8 +433,8 @@ describe('ComponentLoader (Sub-Ticket 6.8: Data Schema Registration Failure)', (
       removeSchemaError
     );
 
-    // --- Verify: Final Info Log ---
-    expect(mockLogger.info).toHaveBeenCalledTimes(1);
+    // --- Verify: Final Logs ---
+    expect(mockLogger.info).not.toHaveBeenCalled();
     expect(mockLogger.debug).toHaveBeenCalledWith(
       `Mod [${modId}] - Processed 0/1 components items. (1 failed)`
     );

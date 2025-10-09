@@ -346,7 +346,7 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
 
       expect(mockLogger.error).not.toHaveBeenCalled();
       // Check initial summary log from loadItemsForMod
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.`
       );
       // Check final summary log from _loadItemsInternal

@@ -379,7 +379,7 @@ describe('RuleLoader (Rule Processing Logic via loadItemsForMod)', () => {
       // --- !!! END OF CORRECTION !!! ---
 
       // Verify logging
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.`
       );
       // --- !!! CORRECTED LOG ASSERTION !!! ---
