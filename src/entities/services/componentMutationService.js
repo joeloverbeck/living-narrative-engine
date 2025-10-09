@@ -504,7 +504,7 @@ export class ComponentMutationService {
     if (emitBatchEvent && updates.length > 0) {
       this.#eventDispatcher.dispatch('core:components_batch_added', {
         updates,
-        timestamp: new Date().toISOString(),
+        updateCount: updates.length,
       });
       this.#logger.debug(
         `Emitted batch event for ${updates.length} component updates`

@@ -21,6 +21,7 @@ import TransferItemHandler from '../../../src/logic/operationHandlers/transferIt
 import ValidateInventoryCapacityHandler from '../../../src/logic/operationHandlers/validateInventoryCapacityHandler.js';
 import DropItemAtLocationHandler from '../../../src/logic/operationHandlers/dropItemAtLocationHandler.js';
 import PickUpItemFromLocationHandler from '../../../src/logic/operationHandlers/pickUpItemFromLocationHandler.js';
+import OpenContainerHandler from '../../../src/logic/operationHandlers/openContainerHandler.js';
 import { validateDependency } from '../../../src/utils/dependencyUtils.js';
 
 /* global jest */
@@ -340,6 +341,11 @@ export class ModTestHandlerFactory {
         safeEventDispatcher: safeDispatcher,
       }),
       PICK_UP_ITEM_FROM_LOCATION: new PickUpItemFromLocationHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      OPEN_CONTAINER: new OpenContainerHandler({
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,

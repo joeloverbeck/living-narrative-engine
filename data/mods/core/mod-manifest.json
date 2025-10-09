@@ -81,6 +81,7 @@
       "cliches_stored.event.json",
       "component_added.event.json",
       "component_removed.event.json",
+      "components_batch_added.event.json",
       "controller_initialized.event.json",
       "core_motivations_deleted.event.json",
       "core_motivations_direction_selected.event.json",
