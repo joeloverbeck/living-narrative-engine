@@ -2,7 +2,50 @@
 // src/logging/bootstrapLogger.js
 
 import { LogLevel } from './consoleLogger.js';
-import { getEnvironmentVariable } from '../utils/environmentUtils.js';
+import * as environmentUtils from '../utils/environmentUtils.js';
+
+const { getEnvironmentVariable: importedGetEnvironmentVariable } = environmentUtils;
+
+/**
+ * @description Safely reads an environment variable even when the environment utilities module is partially mocked.
+ * @param {string} key - Environment variable name.
+ * @param {string} [defaultValue=''] - Fallback value when the variable is unavailable.
+ * @returns {string} Environment variable value or the provided fallback.
+ */
+function safeGetEnvironmentVariable(key, defaultValue = '') {
+  if (typeof importedGetEnvironmentVariable === 'function') {
+    return importedGetEnvironmentVariable(key, defaultValue);
+  }
+
+  const hasProcessEnv =
+    typeof process !== 'undefined' &&
+    typeof process?.env === 'object' &&
+    process.env !== null &&
+    typeof process.env[key] === 'string';
+  if (hasProcessEnv) {
+    return process.env[key];
+  }
+
+  const globalKey = `__${key}__`;
+  if (typeof globalThis !== 'undefined' && globalKey in globalThis) {
+    const value = globalThis[globalKey];
+    return value === undefined || value === null ? defaultValue : String(value);
+  }
+
+  if (
+    typeof globalThis !== 'undefined' &&
+    typeof globalThis.env === 'object' &&
+    globalThis.env !== null &&
+    key in globalThis.env
+  ) {
+    const envValue = globalThis.env[key];
+    return envValue === undefined || envValue === null
+      ? defaultValue
+      : String(envValue);
+  }
+
+  return defaultValue;
+}
 
 /** @type {Record<string, number>} */
 const LOG_LEVEL_MAP = {
@@ -71,8 +114,8 @@ function normalizeLogLevel(candidate) {
 export function resolveBootstrapLogLevel({ level, defaultLevel = LogLevel.INFO } = {}) {
   const levelCandidates = [
     level,
-    getEnvironmentVariable('DEBUG_LOG_LEVEL', ''),
-    getEnvironmentVariable('DEBUG_LOG_MODE', ''),
+    safeGetEnvironmentVariable('DEBUG_LOG_LEVEL', ''),
+    safeGetEnvironmentVariable('DEBUG_LOG_MODE', ''),
   ];
 
   for (const candidate of levelCandidates) {

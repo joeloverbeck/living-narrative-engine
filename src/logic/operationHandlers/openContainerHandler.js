@@ -86,6 +86,39 @@ class OpenContainerHandler extends BaseOperationHandler {
   }
 
   /**
+   * @description Writes a value into the provided result variable when the execution context exposes a valid evaluation context.
+   * @param {string|null|undefined} resultVariable - Optional result variable identifier supplied by the operation.
+   * @param {*} value - Value to persist into the evaluation context.
+   * @param {import('../defs.js').ExecutionContext} executionContext - Execution context supplied to the handler.
+   * @param {import('../../interfaces/coreServices.js').ILogger} log - Logger for debug diagnostics.
+   * @returns {void}
+   * @private
+   */
+  #writeResultVariable(resultVariable, value, executionContext, log) {
+    if (!resultVariable) {
+      return;
+    }
+
+    const context = executionContext?.evaluationContext?.context;
+    if (!context || typeof context !== 'object') {
+      if (log?.debug) {
+        log.debug('OpenContainerHandler: Skipping result variable write due to missing evaluation context', {
+          resultVariable,
+        });
+      }
+      return;
+    }
+
+    tryWriteContextVariable(
+      resultVariable,
+      value,
+      executionContext,
+      this.#dispatcher,
+      log
+    );
+  }
+
+  /**
    * Execute the open container operation
    *
    * @param {OpenContainerParams} params - Open parameters
@@ -98,15 +131,12 @@ class OpenContainerHandler extends BaseOperationHandler {
     const validated = this.#validateParams(params, log);
     if (!validated) {
       const failureResult = { success: false, error: 'invalid_parameters' };
-      if (params?.result_variable) {
-        tryWriteContextVariable(
-          params.result_variable,
-          failureResult,
-          executionContext,
-          this.#dispatcher,
-          log
-        );
-      }
+      this.#writeResultVariable(
+        params?.result_variable,
+        failureResult,
+        executionContext,
+        log
+      );
       return failureResult;
     }
 
@@ -122,30 +152,24 @@ class OpenContainerHandler extends BaseOperationHandler {
       if (!openable) {
         log.warn('Container is not openable', { containerEntity });
         const result = { success: false, error: 'container_not_openable' };
-        if (params?.result_variable) {
-          tryWriteContextVariable(
-            params.result_variable,
-            result,
-            executionContext,
-            this.#dispatcher,
-            log
-          );
-        }
+        this.#writeResultVariable(
+          params?.result_variable,
+          result,
+          executionContext,
+          log
+        );
         return result;
       }
 
       if (openable.isOpen) {
         log.warn('Container is already open', { containerEntity });
         const result = { success: false, error: 'already_open' };
-        if (params?.result_variable) {
-          tryWriteContextVariable(
-            params.result_variable,
-            result,
-            executionContext,
-            this.#dispatcher,
-            log
-          );
-        }
+        this.#writeResultVariable(
+          params?.result_variable,
+          result,
+          executionContext,
+          log
+        );
         return result;
       }
 
@@ -165,15 +189,12 @@ class OpenContainerHandler extends BaseOperationHandler {
             success: false,
             error: 'missing_key',
           };
-          if (params?.result_variable) {
-            tryWriteContextVariable(
-              params.result_variable,
-              result,
-              executionContext,
-              this.#dispatcher,
-              log
-            );
-          }
+          this.#writeResultVariable(
+            params?.result_variable,
+            result,
+            executionContext,
+            log
+          );
           return result;
         }
       }
@@ -214,15 +235,12 @@ class OpenContainerHandler extends BaseOperationHandler {
       });
 
       const result = { success: true, contents };
-      if (params?.result_variable) {
-        tryWriteContextVariable(
-          params.result_variable,
-          result,
-          executionContext,
-          this.#dispatcher,
-          log
-        );
-      }
+      this.#writeResultVariable(
+        params?.result_variable,
+        result,
+        executionContext,
+        log
+      );
       return result;
     } catch (error) {
       log.error('Failed to open container', error, {
@@ -230,15 +248,12 @@ class OpenContainerHandler extends BaseOperationHandler {
         containerEntity,
       });
       const result = { success: false, error: error.message };
-      if (params?.result_variable) {
-        tryWriteContextVariable(
-          params.result_variable,
-          result,
-          executionContext,
-          this.#dispatcher,
-          log
-        );
-      }
+      this.#writeResultVariable(
+        params?.result_variable,
+        result,
+        executionContext,
+        log
+      );
       return result;
     }
   }
