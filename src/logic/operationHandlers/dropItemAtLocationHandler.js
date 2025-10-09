@@ -29,11 +29,7 @@ class DropItemAtLocationHandler extends BaseOperationHandler {
       logger: { value: logger },
       entityManager: {
         value: entityManager,
-        // Note: Removed 'batchAddComponentsOptimized' from requiredMethods to avoid
-        // premature validation during DI container bootstrap. The method exists on
-        // EntityManager but may not be visible on the proxy during handler instantiation.
-        // TypeScript/JSDoc provides compile-time type safety for this method.
-        requiredMethods: ['getComponentData'],
+        requiredMethods: ['getComponentData', 'batchAddComponentsOptimized'],
       },
       safeEventDispatcher: {
         value: safeEventDispatcher,
