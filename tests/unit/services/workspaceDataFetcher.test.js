@@ -13,6 +13,7 @@ import WorkspaceDataFetcher from '../../../src/data/workspaceDataFetcher.js'; //
 describe('WorkspaceDataFetcher', () => {
   let fetcher;
   let fetchSpy; // To hold the spy for the global fetch
+  let consoleErrorSpy;
 
   // Task 1: Setup Mocking (Setup)
   beforeEach(() => {
@@ -20,12 +21,16 @@ describe('WorkspaceDataFetcher', () => {
     fetcher = new WorkspaceDataFetcher();
     // Spy on window.fetch because we are in the jsdom environment
     fetchSpy = jest.spyOn(window, 'fetch');
+    consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
   });
 
   // Task 1: Setup Mocking (Teardown)
   afterEach(() => {
     // Restore the original fetch implementation after each test
     fetchSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
   });
 
   // Task 2: Test `Workspace` Success
@@ -165,5 +170,126 @@ describe('WorkspaceDataFetcher', () => {
     expect(fetchSpy).toHaveBeenCalledTimes(1);
     expect(fetchSpy).toHaveBeenCalledWith(identifier);
     expect(mockResponse.json).toHaveBeenCalledTimes(1);
+  });
+
+  it('should reject identifiers that are purely whitespace', async () => {
+    await expect(fetcher.fetch('   ')).rejects.toThrow(
+      'WorkspaceDataFetcher: fetch requires a valid non-empty string identifier (URL or path).'
+    );
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+  });
+
+  it('includes the response body when an HTTP error provides textual content', async () => {
+    const identifier = '/api/data/bad-request';
+    const responseBody = '{"error":"bad request"}';
+
+    const mockResponse = {
+      ok: false,
+      status: 400,
+      statusText: 'Bad Request',
+      json: jest.fn(),
+      text: jest.fn().mockResolvedValue(responseBody),
+    };
+
+    fetchSpy.mockResolvedValue(mockResponse);
+
+    await expect(fetcher.fetch(identifier)).rejects.toThrow(
+      `HTTP error! status: 400 (Bad Request) fetching ${identifier}. Response body: ${responseBody}`
+    );
+
+    expect(mockResponse.text).toHaveBeenCalledTimes(1);
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      `WorkspaceDataFetcher: Error fetching or parsing ${identifier}:`,
+      expect.any(Error)
+    );
+  });
+
+  it('truncates long response bodies when reporting HTTP errors', async () => {
+    const identifier = '/api/data/large-error';
+    const longBody = 'x'.repeat(520);
+    const mockResponse = {
+      ok: false,
+      status: 503,
+      statusText: 'Service Unavailable',
+      json: jest.fn(),
+      text: jest.fn().mockResolvedValue(longBody),
+    };
+
+    fetchSpy.mockResolvedValue(mockResponse);
+
+    const expectedSnippet = longBody.substring(0, 500);
+
+    await expect(fetcher.fetch(identifier)).rejects.toThrow(
+      `HTTP error! status: 503 (Service Unavailable) fetching ${identifier}. Response body: ${expectedSnippet}...`
+    );
+
+    expect(mockResponse.text).toHaveBeenCalledTimes(1);
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      `WorkspaceDataFetcher: Error fetching or parsing ${identifier}:`,
+      expect.any(Error)
+    );
+  });
+
+  it('adds identifier context when JSON parsing errors mention invalid json', async () => {
+    const identifier = '/api/data/invalid-json';
+    const parseError = new Error('invalid json payload from upstream');
+
+    const mockResponse = {
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      json: jest.fn().mockRejectedValue(parseError),
+    };
+
+    fetchSpy.mockResolvedValue(mockResponse);
+
+    await expect(fetcher.fetch(identifier)).rejects.toThrow(
+      `WorkspaceDataFetcher failed for ${identifier}: ${parseError.message}`
+    );
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      `WorkspaceDataFetcher: Error fetching or parsing ${identifier}:`,
+      parseError
+    );
+  });
+
+  it('wraps non-Error rejections with a descriptive Error instance', async () => {
+    const identifier = '/api/data/non-error';
+
+    fetchSpy.mockRejectedValue('catastrophic failure');
+
+    await expect(fetcher.fetch(identifier)).rejects.toThrow(
+      `WorkspaceDataFetcher encountered an unknown error fetching ${identifier}: catastrophic failure`
+    );
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      `WorkspaceDataFetcher: Error fetching or parsing ${identifier}:`,
+      'catastrophic failure'
+    );
+  });
+
+  it('registers comprehensive coverage for workspaceDataFetcher.js', () => {
+    const coverageEntries = Object.entries(globalThis.__coverage__ ?? {});
+    const coverageEntry = coverageEntries.find(([key]) =>
+      key.endsWith('src/data/workspaceDataFetcher.js')
+    );
+
+    expect(coverageEntry).toBeDefined();
+
+    const [, fileCoverage] = coverageEntry;
+
+    const statementHits = Object.values(fileCoverage.s ?? {});
+    const functionHits = Object.values(fileCoverage.f ?? {});
+    const branchHits = Object.values(fileCoverage.b ?? {}).flat();
+
+    expect(statementHits.length).toBeGreaterThan(0);
+    expect(functionHits.length).toBeGreaterThan(0);
+    expect(branchHits.length).toBeGreaterThan(0);
+
+    expect(statementHits.every((count) => count > 0)).toBe(true);
+    expect(functionHits.every((count) => count > 0)).toBe(true);
+    expect(branchHits.every((count) => count > 0)).toBe(true);
   });
 });
