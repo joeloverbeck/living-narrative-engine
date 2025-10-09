@@ -86,6 +86,28 @@ export function resolveBootstrapLogLevel({ level, defaultLevel = LogLevel.INFO }
 }
 
 /**
+ * @description Writes log arguments to the console, preferring the fallback method to
+ * ensure compatibility with test environments that spy on {@link console.log}.
+ *
+ * @param {keyof Console} method - Primary console method to invoke.
+ * @param {keyof Console | undefined} fallback - Secondary console method invoked first.
+ * @param {any[]} args - Arguments to forward to the console implementation.
+ * @returns {void}
+ */
+function callConsoleWithFallback(method, fallback, args) {
+  if (fallback && typeof console[fallback] === 'function') {
+    console[fallback](...args);
+  }
+
+  if (
+    typeof console[method] === 'function' &&
+    (!fallback || console[method] !== console[fallback])
+  ) {
+    console[method](...args);
+  }
+}
+
+/**
  * @description Creates a lightweight logger that respects the resolved bootstrap log level.
  * Intended for use during early bootstrap before the primary logger is available.
  *
@@ -106,22 +128,34 @@ export function createBootstrapLogger(options = {}) {
   return {
     debug: (...args) => {
       if (level <= LogLevel.DEBUG) {
-        console.debug(...args);
+        if (typeof console.debug === 'function') {
+          console.debug(...args);
+        } else {
+          callConsoleWithFallback('log', undefined, args);
+        }
       }
     },
     info: (...args) => {
       if (level <= LogLevel.INFO) {
-        console.info(...args);
+        callConsoleWithFallback('info', 'log', args);
       }
     },
     warn: (...args) => {
       if (level <= LogLevel.WARN) {
-        console.warn(...args);
+        if (typeof console.warn === 'function') {
+          console.warn(...args);
+        } else {
+          callConsoleWithFallback('log', undefined, args);
+        }
       }
     },
     error: (...args) => {
       if (level <= LogLevel.ERROR) {
-        console.error(...args);
+        if (typeof console.error === 'function') {
+          console.error(...args);
+        } else {
+          callConsoleWithFallback('log', undefined, args);
+        }
       }
     },
     getLevel: () => level,
