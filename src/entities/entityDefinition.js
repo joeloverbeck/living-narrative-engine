@@ -74,7 +74,7 @@ class EntityDefinition {
 
     // Debug logging for park bench issue
     if (id === 'p_erotica:park_bench') {
-      console.log(`[DEBUG] EntityDefinition created for park bench:`, {
+      console.debug(`[DEBUG] EntityDefinition created for park bench:`, {
         id: this.id,
         componentKeys: Object.keys(this.components),
         hasAllowsSitting: 'positioning:allows_sitting' in this.components,

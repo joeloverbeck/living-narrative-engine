@@ -150,7 +150,7 @@ class Entity {
 
     // Debug logging for park bench issue
     if (this.id === 'p_erotica:park_bench_instance') {
-      console.log(`[DEBUG] Entity.componentTypeIds for park bench:`, {
+      console.debug(`[DEBUG] Entity.componentTypeIds for park bench:`, {
         entityId: this.id,
         componentTypeIds: result,
         hasAllowsSitting: result?.includes('positioning:allows_sitting'),
