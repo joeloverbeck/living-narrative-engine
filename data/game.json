@@ -8,6 +8,7 @@
     "anatomy",
     "clothing",
     "exercise",
+    "distress",
     "violence",
     "seduction",
     "affection",
@@ -15,5 +16,5 @@
     "kissing",
     "p_erotica"
   ],
-  "startWorld": "p_erotica:volleyball"
+  "startWorld": "p_erotica:alicia"
 }

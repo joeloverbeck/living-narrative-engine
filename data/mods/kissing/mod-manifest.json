@@ -7,9 +7,18 @@
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
   "dependencies": [
-    { "id": "anatomy", "version": "^1.0.0" },
-    { "id": "positioning", "version": "^1.0.0" },
-    { "id": "descriptors", "version": "^1.0.0" }
+    {
+      "id": "anatomy",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "descriptors",
+      "version": "^1.0.0"
+    }
   ],
   "content": {
     "actions": [
@@ -65,11 +74,11 @@
       "cup_face_while_kissing.rule.json",
       "explore_mouth_with_tongue.rule.json",
       "handle_kiss_neck_sensually.rule.json",
-      "kiss_forehead_gently.rule.json",
       "handle_nibble_earlobe_playfully.rule.json",
       "handle_suck_on_neck_to_leave_hickey.rule.json",
       "kiss_back_passionately.rule.json",
       "kiss_cheek.rule.json",
+      "kiss_forehead_gently.rule.json",
       "lean_in_for_deep_kiss.rule.json",
       "nibble_lower_lip.rule.json",
       "peck_on_lips.rule.json",

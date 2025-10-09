@@ -222,4 +222,63 @@ describe('items:drop_item action integration', () => {
       // The turn should still end, but the operation should fail internally
     });
   });
+
+  describe('Drop Item - Additional Edge Cases', () => {
+    it('should handle dropping last item from inventory', async () => {
+      // Setup actor with single item
+      const room = new ModEntityBuilder('saloon1').asRoom('Saloon').build();
+      const actor = new ModEntityBuilder('test:actor1')
+        .withName('Alice')
+        .atLocation('saloon1')
+        .asActor()
+        .withComponent('items:inventory', {
+          items: ['item-1'],
+          capacity: { maxWeight: 50, maxItems: 10 },
+        })
+        .build();
+      const item = new ModEntityBuilder('item-1')
+        .withName('item-1')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withComponent('items:weight', { weight: 0.5 })
+        .build();
+
+      testFixture.reset([room, actor, item]);
+
+      // Drop the item
+      await testFixture.executeAction('test:actor1', 'item-1');
+
+      // Verify inventory is now empty
+      const actorAfter = testFixture.entityManager.getEntityInstance('test:actor1');
+      expect(actorAfter.components['items:inventory'].items).toEqual([]);
+    });
+
+    it('should create position component with correct locationId', async () => {
+      const room = new ModEntityBuilder('tavern').asRoom('Tavern').build();
+      const actor = new ModEntityBuilder('test:actor1')
+        .withName('Bob')
+        .atLocation('tavern')
+        .asActor()
+        .withComponent('items:inventory', {
+          items: ['letter-1'],
+          capacity: { maxWeight: 50, maxItems: 10 },
+        })
+        .build();
+      const item = new ModEntityBuilder('letter-1')
+        .withName('Letter')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withComponent('items:weight', { weight: 0.05 })
+        .build();
+
+      testFixture.reset([room, actor, item]);
+
+      await testFixture.executeAction('test:actor1', 'letter-1');
+
+      // Verify item has position component with correct location
+      const itemAfter = testFixture.entityManager.getEntityInstance('letter-1');
+      expect(itemAfter.components['core:position']).toBeDefined();
+      expect(itemAfter.components['core:position'].locationId).toBe('tavern');
+    });
+  });
 });
