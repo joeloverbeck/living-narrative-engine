@@ -133,6 +133,14 @@ export class EntityManagerAdapter extends IEntityManager {
   async batchCreateEntities(entitySpecs, options = {}) {
     return await this.#entityManager.batchCreateEntities(entitySpecs, options);
   }
+
+  /** @inheritdoc */
+  async batchAddComponentsOptimized(componentSpecs, emitBatchEvent = true) {
+    return await this.#entityManager.batchAddComponentsOptimized(
+      componentSpecs,
+      emitBatchEvent
+    );
+  }
 }
 
 export default EntityManagerAdapter;
