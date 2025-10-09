@@ -3,6 +3,16 @@ import { AnatomyInitializationService } from '../../../src/anatomy/anatomyInitia
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 import { ENTITY_CREATED_ID } from '../../../src/constants/eventIds.js';
 
+const flushMicrotasks = async () => {
+  await Promise.resolve();
+  await Promise.resolve();
+};
+
+const advanceTimers = async (ms) => {
+  jest.advanceTimersByTime(ms);
+  await flushMicrotasks();
+};
+
 describe('AnatomyInitializationService uncovered guard and queue paths', () => {
   /** @type {ReturnType<typeof setupService>} */
   let setup;
@@ -71,6 +81,17 @@ describe('AnatomyInitializationService uncovered guard and queue paths', () => {
       ).toThrow(new InvalidArgumentError('eventDispatcher is required'));
     });
 
+    it('throws when logger dependency is missing', () => {
+      expect(
+        () =>
+          new AnatomyInitializationService({
+            eventDispatcher: setup.eventDispatcher,
+            logger: undefined,
+            anatomyGenerationService: setup.anatomyGenerationService,
+          }),
+      ).toThrow(new InvalidArgumentError('logger is required'));
+    });
+
     it('throws when anatomyGenerationService dependency is missing', () => {
       expect(
         () =>
@@ -129,11 +150,103 @@ describe('AnatomyInitializationService uncovered guard and queue paths', () => {
       );
       expect(setup.service.getPendingGenerationCount()).toBe(0);
     });
+
+    it('processes event objects without payload by treating them as the payload', async () => {
+      const handler = setup.getBoundHandler();
+
+      await handler({
+        type: ENTITY_CREATED_ID,
+        instanceId: 'entity-direct',
+        definitionId: 'definition-direct',
+        wasReconstructed: false,
+      });
+
+      await flushMicrotasks();
+      await setup.service.waitForAllGenerationsToComplete();
+
+      expect(
+        setup.anatomyGenerationService.generateAnatomyIfNeeded,
+      ).toHaveBeenCalledWith('entity-direct');
+    });
   });
 
   describe('queue management fallbacks', () => {
     beforeEach(() => {
       setup.initialize();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('continues processing without restarting when new events arrive mid-queue', async () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(0);
+
+      const processedEntities = [];
+      let resolveFirst;
+      setup.anatomyGenerationService.generateAnatomyIfNeeded.mockImplementation(
+        (entityId) => {
+          processedEntities.push(entityId);
+          if (processedEntities.length === 1) {
+            return new Promise((resolve) => {
+              resolveFirst = resolve;
+            });
+          }
+          return Promise.resolve(false);
+        },
+      );
+
+      const handler = setup.getBoundHandler();
+      handler({
+        payload: { instanceId: 'entity-a', wasReconstructed: false },
+      });
+      await flushMicrotasks();
+
+      handler({
+        payload: { instanceId: 'entity-b', wasReconstructed: false },
+      });
+      await flushMicrotasks();
+
+      expect(processedEntities).toEqual(['entity-a']);
+
+      resolveFirst(true);
+      await flushMicrotasks();
+      await advanceTimers(60);
+
+      await setup.service.waitForAllGenerationsToComplete();
+
+      expect(processedEntities).toEqual(['entity-a', 'entity-b']);
+    });
+
+    it('performs repeated wait checks before completing successfully', async () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(0);
+
+      let resolveGeneration;
+      setup.anatomyGenerationService.generateAnatomyIfNeeded.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveGeneration = resolve;
+          }),
+      );
+
+      const handler = setup.getBoundHandler();
+      handler({
+        payload: { instanceId: 'entity-loop', wasReconstructed: false },
+      });
+      await flushMicrotasks();
+
+      const waitPromise = setup.service.waitForAllGenerationsToComplete(200);
+
+      await advanceTimers(40);
+      await advanceTimers(40);
+
+      resolveGeneration(true);
+      await flushMicrotasks();
+      await advanceTimers(60);
+
+      await expect(waitPromise).resolves.toBeUndefined();
     });
 
     it('surfaces a timeout when generations never finish', async () => {
@@ -158,6 +271,65 @@ describe('AnatomyInitializationService uncovered guard and queue paths', () => {
 
       resolveGeneration(true);
       await setup.service.waitForAllGenerationsToComplete();
+    });
+
+    it('supports multiple waiters per entity using the default timeout', async () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(0);
+
+      let resolveGeneration;
+      setup.anatomyGenerationService.generateAnatomyIfNeeded.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveGeneration = resolve;
+          }),
+      );
+
+      const handler = setup.getBoundHandler();
+      handler({
+        payload: { instanceId: 'entity-shared', wasReconstructed: false },
+      });
+      await flushMicrotasks();
+
+      const waitDefault = setup.service.waitForEntityGeneration('entity-shared');
+      const waitCustom = setup.service.waitForEntityGeneration(
+        'entity-shared',
+        400,
+      );
+
+      resolveGeneration(true);
+      await flushMicrotasks();
+      await advanceTimers(60);
+
+      await expect(waitDefault).resolves.toBe(true);
+      await expect(waitCustom).resolves.toBe(true);
+    });
+
+    it('gracefully handles generation failures when no listeners are waiting', async () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(0);
+
+      const failure = new Error('generation-failure');
+      setup.anatomyGenerationService.generateAnatomyIfNeeded.mockRejectedValueOnce(
+        failure,
+      );
+
+      const handler = setup.getBoundHandler();
+      await handler({
+        payload: { instanceId: 'entity-fail', wasReconstructed: false },
+      });
+
+      await flushMicrotasks();
+      await advanceTimers(60);
+
+      expect(setup.logger.error).toHaveBeenCalledWith(
+        "AnatomyInitializationService: Failed to generate anatomy for entity 'entity-fail'",
+        { error: failure },
+      );
+
+      await expect(
+        setup.service.waitForAllGenerationsToComplete(),
+      ).resolves.toBeUndefined();
     });
 
     it('cleans up subscriptions and pending work when destroyed', async () => {
