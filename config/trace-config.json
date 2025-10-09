@@ -4,9 +4,10 @@
   "actionTracing": {
     "enabled": true,
     "tracedActions": [
-      "clothing:remove_others_clothing"
+      "items:drop_item",
+      "items:pick_up_item"
     ],
-    "outputDirectory": "./traces/remove-others-clothing",
+    "outputDirectory": "./traces/items",
     "verbosity": "verbose",
     "includeComponentData": true,
     "includePrerequisites": true,

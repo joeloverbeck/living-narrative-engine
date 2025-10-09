@@ -613,10 +613,10 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
 
     const constraints = {
       title: { min: 5, max: 300 },
-      description: { min: 20, max: 1500 },
-      coreTension: { min: 10, max: 600 },
-      uniqueTwist: { min: 10, max: 3000 },
-      narrativePotential: { min: 10, max: 3000 },
+      description: { min: 20, max: 4500 },
+      coreTension: { min: 10, max: 1800 },
+      uniqueTwist: { min: 10, max: 9000 },
+      narrativePotential: { min: 10, max: 9000 },
     };
 
     const constraint = constraints[fieldName];

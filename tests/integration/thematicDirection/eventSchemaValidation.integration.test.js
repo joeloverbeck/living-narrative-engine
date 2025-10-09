@@ -14,7 +14,6 @@ import {
 import { CharacterBuilderService } from '../../../src/characterBuilder/services/characterBuilderService.js';
 import { CharacterStorageService } from '../../../src/characterBuilder/services/characterStorageService.js';
 import { ThematicDirectionGenerator } from '../../../src/characterBuilder/services/thematicDirectionGenerator.js';
-import { CharacterDatabase } from '../../../src/characterBuilder/storage/characterDatabase.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
@@ -122,10 +121,10 @@ describe('Thematic Direction - Event Schema Validation Integration', () => {
       );
 
       // Check if schema is already loaded to avoid duplicate errors
-      if (!schemaValidator.isSchemaLoaded('thematic-direction')) {
+      if (!schemaValidator.isSchemaLoaded(thematicDirectionSchema.$id)) {
         await schemaValidator.addSchema(
           thematicDirectionSchema,
-          'thematic-direction'
+          thematicDirectionSchema.$id
         );
       }
     } catch (error) {

@@ -20,7 +20,7 @@
   "$defs": {
     "Parameters": {
       "type": "object",
-      "description": "Parameters for the OPEN_CONTAINER operation. Opens a container and optionally stores the result in a context variable.",
+      "description": "Parameters for the OPEN_CONTAINER operation. Opens a container entity with key validation, checking if the actor has the required key if the container is locked.",
       "properties": {
         "actorEntity": {
           "type": "string",
@@ -32,13 +32,13 @@
           "type": "string",
           "minLength": 1,
           "pattern": "^\\S(.*\\S)?$",
-          "description": "Entity ID of the container being opened"
+          "description": "Entity ID of the container to open"
         },
         "result_variable": {
           "type": "string",
           "minLength": 1,
-          "pattern": "^\\S(.*\\S)?$",
-          "description": "Optional context variable to receive the operation result"
+          "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+          "description": "Optional variable name to store the operation result. Result includes {success: boolean, error?: string, contents?: string[], keyItemId?: string}"
         }
       },
       "required": ["actorEntity", "containerEntity"],

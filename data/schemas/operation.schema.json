@@ -169,6 +169,9 @@
         },
         {
           "$ref": "./operations/transferItem.schema.json"
+        },
+        {
+          "$ref": "./operations/openContainer.schema.json"
         }
       ]
     }

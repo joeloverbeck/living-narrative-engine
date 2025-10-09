@@ -24,25 +24,25 @@
     "description": {
       "type": "string",
       "minLength": 20,
-      "maxLength": 1500,
+      "maxLength": 4500,
       "description": "Detailed description of the thematic direction"
     },
     "coreTension": {
       "type": "string",
       "minLength": 10,
-      "maxLength": 600,
+      "maxLength": 1800,
       "description": "Core tension or conflict this direction embodies"
     },
     "uniqueTwist": {
       "type": "string",
       "minLength": 10,
-      "maxLength": 3000,
+      "maxLength": 9000,
       "description": "Suggested unique twist or deeper archetype"
     },
     "narrativePotential": {
       "type": "string",
       "minLength": 10,
-      "maxLength": 3000,
+      "maxLength": 9000,
       "description": "Description of narrative possibilities"
     },
     "createdAt": {
