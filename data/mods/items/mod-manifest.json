@@ -21,7 +21,9 @@
       "inventory.component.json",
       "item.component.json",
       "portable.component.json",
-      "weight.component.json"
+      "weight.component.json",
+      "container.component.json",
+      "openable.component.json"
     ],
     "actions": [
       "drop_item.action.json",
@@ -52,7 +54,9 @@
       "definitions": [
         "gold_bar.entity.json",
         "letter_to_sheriff.entity.json",
-        "revolver.entity.json"
+        "revolver.entity.json",
+        "treasure_chest.entity.json",
+        "brass_key.entity.json"
       ],
       "instances": []
     }

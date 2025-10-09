@@ -165,4 +165,68 @@ describe('Items - Data Components', () => {
       expect(result.isValid).toBe(false);
     });
   });
+
+  describe('items:container', () => {
+    it('should validate valid container data', () => {
+      const data = {
+        contents: ['items:gold_bar', 'items:revolver'],
+        capacity: { maxWeight: 100, maxItems: 20 },
+        isOpen: false,
+        requiresKey: true,
+        keyItemId: 'items:brass_key',
+      };
+      const result = testBed.validateAgainstSchema(data, 'items:container');
+      expect(result.isValid).toBe(true);
+    });
+
+    it('should require isOpen field', () => {
+      const data = {
+        contents: [],
+        capacity: { maxWeight: 100, maxItems: 20 },
+      };
+      const result = testBed.validateAgainstSchema(data, 'items:container');
+      expect(result.isValid).toBe(false);
+    });
+
+    it('should enforce unique contents', () => {
+      const data = {
+        contents: ['items:gold_bar', 'items:gold_bar'],
+        capacity: { maxWeight: 100, maxItems: 20 },
+        isOpen: true,
+      };
+      const result = testBed.validateAgainstSchema(data, 'items:container');
+      expect(result.isValid).toBe(false);
+    });
+
+    it('should allow empty container', () => {
+      const data = {
+        contents: [],
+        capacity: { maxWeight: 100, maxItems: 20 },
+        isOpen: false,
+      };
+      const result = testBed.validateAgainstSchema(data, 'items:container');
+      expect(result.isValid).toBe(true);
+    });
+
+    it('should validate capacity constraints', () => {
+      const data = {
+        contents: [],
+        capacity: { maxWeight: -1, maxItems: 0 },
+        isOpen: true,
+      };
+      const result = testBed.validateAgainstSchema(data, 'items:container');
+      expect(result.isValid).toBe(false);
+    });
+
+    it('should reject additional properties', () => {
+      const data = {
+        contents: [],
+        capacity: { maxWeight: 100, maxItems: 20 },
+        isOpen: true,
+        extraProperty: 'not allowed',
+      };
+      const result = testBed.validateAgainstSchema(data, 'items:container');
+      expect(result.isValid).toBe(false);
+    });
+  });
 });
