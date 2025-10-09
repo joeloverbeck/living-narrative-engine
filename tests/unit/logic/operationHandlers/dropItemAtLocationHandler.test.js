@@ -141,7 +141,7 @@ describe('DropItemAtLocationHandler', () => {
       true
     );
     expect(dispatcher.dispatch).toHaveBeenCalledWith({
-      type: 'ITEM_DROPPED',
+      type: 'items:item_dropped',
       payload: {
         actorEntity: 'actor-123',
         itemEntity: 'item-999',

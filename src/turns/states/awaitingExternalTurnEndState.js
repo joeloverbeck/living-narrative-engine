@@ -199,7 +199,8 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
         message,
         {
           actionId: this.#awaitingActionId,
-          // Note: 'code' and 'actorId' are not in the schema, so we don't include them
+          actorId: ctx.getActor().id,
+          code: error.code,
         },
         getLogger(ctx, this._handler)
       );
