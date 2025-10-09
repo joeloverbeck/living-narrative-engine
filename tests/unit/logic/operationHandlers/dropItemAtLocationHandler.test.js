@@ -140,13 +140,10 @@ describe('DropItemAtLocationHandler', () => {
       ],
       true
     );
-    expect(dispatcher.dispatch).toHaveBeenCalledWith({
-      type: 'items:item_dropped',
-      payload: {
-        actorEntity: 'actor-123',
-        itemEntity: 'item-999',
-        locationId: 'loc-42',
-      },
+    expect(dispatcher.dispatch).toHaveBeenCalledWith('items:item_dropped', {
+      actorEntity: 'actor-123',
+      itemEntity: 'item-999',
+      locationId: 'loc-42',
     });
     expect(logger.debug).toHaveBeenCalledWith(
       'DropItemAtLocationHandler: Item dropped at location',
