@@ -45,4 +45,10 @@ describe('applyArrayModification', () => {
     expect(result).toBe(arr);
     expect(logger.error).toHaveBeenCalledWith('Unknown mode: invalid');
   });
+
+  it('unknown mode without logger returns original array', () => {
+    const arr = [1, 2];
+    const result = applyArrayModification('invalid', arr, 3);
+    expect(result).toBe(arr);
+  });
 });
