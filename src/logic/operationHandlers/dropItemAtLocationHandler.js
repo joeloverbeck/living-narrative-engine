@@ -126,9 +126,16 @@ class DropItemAtLocationHandler extends BaseOperationHandler {
       await this.#entityManager.batchAddComponentsOptimized(updates, true);
 
       // Dispatch success event
-      this.#dispatcher.dispatch(ITEM_DROPPED_EVENT, { actorEntity, itemEntity, locationId });
+      this.#dispatcher.dispatch({
+        type: ITEM_DROPPED_EVENT,
+        payload: { actorEntity, itemEntity, locationId },
+      });
 
-      log.debug(`Item dropped at location`, { actorEntity, itemEntity, locationId });
+      log.debug(`Item dropped at location`, {
+        actorEntity,
+        itemEntity,
+        locationId,
+      });
       return { success: true };
 
     } catch (error) {
