@@ -45,16 +45,28 @@ describe('Schema Loading Integrity', () => {
   it('should load all schemas without reference errors', () => {
     const schemaFiles = config.getSchemaFiles();
 
-    // Check that all schemas are loaded
+    // Check that all schemas are loaded AND can be compiled (no unresolved refs)
     schemaFiles.forEach((schemaFile) => {
       const schemaId = `schema://living-narrative-engine/${schemaFile}`;
       const isLoaded = validator.isSchemaLoaded(schemaId);
 
       if (!isLoaded) {
-        console.error(`Schema not loaded: ${schemaId}`);
+        console.error(`Schema not loaded or has unresolved refs: ${schemaId}`);
+        // Also check if it can validate refs to help with debugging
+        const canValidateRefs = validator.validateSchemaRefs(schemaId);
+        if (!canValidateRefs) {
+          console.error(`Schema ${schemaId} has unresolved $refs`);
+        }
       }
 
       expect(isLoaded).toBe(true);
+
+      // Additionally verify the schema can actually be used for validation
+      const canGetValidator = !!validator.getValidator(schemaId);
+      if (!canGetValidator) {
+        console.error(`Cannot get validator for schema: ${schemaId}`);
+      }
+      expect(canGetValidator).toBe(true);
     });
   });
 

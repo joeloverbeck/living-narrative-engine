@@ -49,17 +49,17 @@ describe('ThematicDirectionsManagerController - Validation Tests', () => {
     it('should validate field constraints exist', () => {
       const testConstraints = {
         title: { min: 5, max: 300 },
-        description: { min: 20, max: 1500 },
-        coreTension: { min: 10, max: 600 },
-        uniqueTwist: { min: 10, max: 3000 },
-        narrativePotential: { min: 10, max: 3000 },
+        description: { min: 20, max: 4500 },
+        coreTension: { min: 10, max: 1800 },
+        uniqueTwist: { min: 10, max: 9000 },
+        narrativePotential: { min: 10, max: 9000 },
       };
 
       // Verify constraint structure
       expect(testConstraints.title.min).toBe(5);
       expect(testConstraints.title.max).toBe(300);
       expect(testConstraints.description.min).toBe(20);
-      expect(testConstraints.description.max).toBe(1500);
+      expect(testConstraints.description.max).toBe(4500);
     });
 
     it('should validate field length requirements', () => {

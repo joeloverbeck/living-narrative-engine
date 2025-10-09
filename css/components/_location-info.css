@@ -99,9 +99,9 @@
   visibility: hidden;
   opacity: 0;
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: calc(100% + var(--spacing-xs));
+  right: calc(100% + var(--spacing-md));
+  top: 50%;
+  transform: translateY(-50%);
   min-width: 350px;
   max-width: 420px;
   max-height: 55vh;
@@ -135,6 +135,19 @@
 
 #location-portrait-visuals:focus {
   outline: 2px solid var(--focus-color);
+}
+
+/* Responsive fallback for narrow screens */
+@media (max-width: 768px) {
+  .location-tooltip {
+    /* Position below image on mobile/tablet to avoid off-screen issues */
+    right: auto;
+    left: 0;
+    top: calc(100% + var(--spacing-sm));
+    transform: none;
+    min-width: 100%;
+    max-width: 100%;
+  }
 }
 
 /* ─────────────────────────────────────────────

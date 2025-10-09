@@ -3,14 +3,7 @@
  * @description Unit tests for preValidationUtils
  */
 
-import {
-  jest,
-  describe,
-  beforeEach,
-  afterEach,
-  it,
-  expect,
-} from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 
 import {
   validateOperationStructure,
@@ -69,6 +62,52 @@ describe('preValidationUtils', () => {
         ];
 
         knownTypes.forEach((type) => {
+          const operation = {
+            type,
+            parameters: {},
+          };
+          const result = validateOperationStructure(operation);
+          expect(result.isValid).toBe(true);
+          expect(result.error).toBeNull();
+        });
+      });
+
+      it('should validate OPEN_CONTAINER operation type', () => {
+        const operation = {
+          type: 'OPEN_CONTAINER',
+          parameters: {
+            actorEntity: '{event.payload.actorId}',
+            containerEntity: '{event.payload.targetId}',
+            result_variable: 'openResult',
+          },
+        };
+        const result = validateOperationStructure(operation);
+        expect(result.isValid).toBe(true);
+        expect(result.error).toBeNull();
+      });
+
+      it('should validate OPEN_CONTAINER without result_variable parameter', () => {
+        const operation = {
+          type: 'OPEN_CONTAINER',
+          parameters: {
+            actorEntity: 'actor',
+            containerEntity: 'container',
+          },
+        };
+        const result = validateOperationStructure(operation);
+        expect(result.isValid).toBe(true);
+      });
+
+      it('should validate item-related operation types', () => {
+        const itemOperationTypes = [
+          'TRANSFER_ITEM',
+          'DROP_ITEM_AT_LOCATION',
+          'PICK_UP_ITEM_FROM_LOCATION',
+          'VALIDATE_INVENTORY_CAPACITY',
+          'OPEN_CONTAINER',
+        ];
+
+        itemOperationTypes.forEach((type) => {
           const operation = {
             type,
             parameters: {},

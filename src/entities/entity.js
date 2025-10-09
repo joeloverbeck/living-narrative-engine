@@ -208,6 +208,17 @@ class Entity {
   }
 
   /**
+   * Gets all component data as a property for backward compatibility.
+   * This getter provides the same data as getAllComponents() but allows
+   * property-style access: entity.components['componentId']
+   *
+   * @returns {Object<string, object>} Object mapping component type IDs to their data
+   */
+  get components() {
+    return this.getAllComponents();
+  }
+
+  /**
    * Modifies an existing component by merging the provided data with the current component data.
    * This is a convenience method for tests that expect to modify rather than replace components.
    *

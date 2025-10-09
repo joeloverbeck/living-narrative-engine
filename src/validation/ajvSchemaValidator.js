@@ -275,15 +275,22 @@ class AjvSchemaValidator {
         `AjvSchemaValidator: Successfully added schema '${keyToRegister}'.`
       );
 
-      // Verify that the schema was added correctly and can be retrieved
-      const addedSchema = this.#ajv.getSchema(keyToRegister);
-      if (!addedSchema) {
+      // Try to verify that the schema was added correctly and can be retrieved
+      // This may fail if schema has unresolved $refs, but that's okay - just log a warning
+      try {
+        const addedSchema = this.#ajv.getSchema(keyToRegister);
+        if (!addedSchema) {
+          this.#logger.warn(
+            `AjvSchemaValidator: Schema '${keyToRegister}' was added but cannot be retrieved. This may indicate a $ref resolution issue.`
+          );
+        } else {
+          this.#logger.debug(
+            `AjvSchemaValidator: Schema '${keyToRegister}' verified as retrievable.`
+          );
+        }
+      } catch (verifyError) {
         this.#logger.warn(
-          `AjvSchemaValidator: Schema '${keyToRegister}' was added but cannot be retrieved. This may indicate a $ref resolution issue.`
-        );
-      } else {
-        this.#logger.debug(
-          `AjvSchemaValidator: Schema '${keyToRegister}' verified as retrievable.`
+          `AjvSchemaValidator: Schema '${keyToRegister}' was added but cannot be compiled: ${verifyError instanceof Error ? verifyError.message : String(verifyError)}. This may indicate unresolved $refs that will be resolved later.`
         );
       }
     } catch (error) {
@@ -519,11 +526,20 @@ class AjvSchemaValidator {
     }
 
     try {
+      // Check if schema is registered in the schema map
+      const schemaMap = this.#ajv.schemas || {};
+      if (!(schemaId in schemaMap)) {
+        return false;
+      }
+
+      // Verify the schema can be retrieved and compiled
+      // This ensures $refs are resolvable and the schema is actually usable
       const validator = this.#ajv.getSchema(schemaId);
       return !!validator;
     } catch (error) {
+      // Schema is registered but has unresolved $refs or compilation issues
       this.#logger.warn(
-        `AjvSchemaValidator: Error accessing schema '${schemaId}' during isSchemaLoaded: ${error instanceof Error ? error.message : String(error)}`,
+        `AjvSchemaValidator: Schema '${schemaId}' is registered but cannot be compiled: ${error instanceof Error ? error.message : String(error)}`,
         {
           schemaId: schemaId,
           error: error,

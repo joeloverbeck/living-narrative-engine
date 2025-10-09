@@ -71,7 +71,7 @@ describe('ThematicDirection Model', () => {
           createdAt: '2024-01-15T12:00:00.000Z',
           llmMetadata: {},
         });
-        expect(result.id).toMatch(/^[a-f0-9\-]{36}$/); // UUID format
+        expect(result.id).toMatch(/^[a-f0-9-]{36}$/); // UUID format
       });
 
       it('should create thematic direction with custom ID', () => {
@@ -132,8 +132,8 @@ describe('ThematicDirection Model', () => {
         const result2 = createThematicDirection(conceptId, validData);
 
         expect(result1.id).not.toBe(result2.id);
-        expect(result1.id).toMatch(/^[a-f0-9\-]{36}$/);
-        expect(result2.id).toMatch(/^[a-f0-9\-]{36}$/);
+        expect(result1.id).toMatch(/^[a-f0-9-]{36}$/);
+        expect(result2.id).toMatch(/^[a-f0-9-]{36}$/);
       });
     });
 
@@ -267,17 +267,17 @@ describe('ThematicDirection Model', () => {
         expect(() => {
           createThematicDirection(conceptId, invalidData);
         }).toThrow(
-          'ThematicDirection: description must be between 20 and 1500 characters'
+          'ThematicDirection: description must be between 20 and 4500 characters'
         );
       });
 
       it('should throw error for description too long', () => {
-        const invalidData = { ...validData, description: 'A'.repeat(1501) }; // 1501 chars, max is 1500
+        const invalidData = { ...validData, description: 'A'.repeat(4501) }; // 4501 chars, max is 4500
 
         expect(() => {
           createThematicDirection(conceptId, invalidData);
         }).toThrow(
-          'ThematicDirection: description must be between 20 and 1500 characters'
+          'ThematicDirection: description must be between 20 and 4500 characters'
         );
       });
 
@@ -288,9 +288,9 @@ describe('ThematicDirection Model', () => {
       });
 
       it('should accept description at maximum length', () => {
-        const data = { ...validData, description: 'A'.repeat(1500) }; // Exactly 1500 chars
+        const data = { ...validData, description: 'A'.repeat(4500) }; // Exactly 4500 chars
         const result = createThematicDirection(conceptId, data);
-        expect(result.description).toBe('A'.repeat(1500));
+        expect(result.description).toBe('A'.repeat(4500));
       });
 
       it('should throw error for coreTension too short', () => {
@@ -299,17 +299,17 @@ describe('ThematicDirection Model', () => {
         expect(() => {
           createThematicDirection(conceptId, invalidData);
         }).toThrow(
-          'ThematicDirection: coreTension must be between 10 and 600 characters'
+          'ThematicDirection: coreTension must be between 10 and 1800 characters'
         );
       });
 
       it('should throw error for coreTension too long', () => {
-        const invalidData = { ...validData, coreTension: 'A'.repeat(601) }; // 601 chars, max is 600
+        const invalidData = { ...validData, coreTension: 'A'.repeat(1801) }; // 1801 chars, max is 1800
 
         expect(() => {
           createThematicDirection(conceptId, invalidData);
         }).toThrow(
-          'ThematicDirection: coreTension must be between 10 and 600 characters'
+          'ThematicDirection: coreTension must be between 10 and 1800 characters'
         );
       });
 
@@ -319,17 +319,17 @@ describe('ThematicDirection Model', () => {
         expect(() => {
           createThematicDirection(conceptId, invalidData);
         }).toThrow(
-          'ThematicDirection: uniqueTwist must be between 10 and 3000 characters'
+          'ThematicDirection: uniqueTwist must be between 10 and 9000 characters'
         );
       });
 
       it('should throw error for uniqueTwist too long', () => {
-        const invalidData = { ...validData, uniqueTwist: 'A'.repeat(3001) }; // 3001 chars, max is 3000
+        const invalidData = { ...validData, uniqueTwist: 'A'.repeat(9001) }; // 9001 chars, max is 9000
 
         expect(() => {
           createThematicDirection(conceptId, invalidData);
         }).toThrow(
-          'ThematicDirection: uniqueTwist must be between 10 and 3000 characters'
+          'ThematicDirection: uniqueTwist must be between 10 and 9000 characters'
         );
       });
 
@@ -339,20 +339,20 @@ describe('ThematicDirection Model', () => {
         expect(() => {
           createThematicDirection(conceptId, invalidData);
         }).toThrow(
-          'ThematicDirection: narrativePotential must be between 10 and 3000 characters'
+          'ThematicDirection: narrativePotential must be between 10 and 9000 characters'
         );
       });
 
       it('should throw error for narrativePotential too long', () => {
         const invalidData = {
           ...validData,
-          narrativePotential: 'A'.repeat(3001),
-        }; // 3001 chars, max is 3000
+          narrativePotential: 'A'.repeat(9001),
+        }; // 9001 chars, max is 9000
 
         expect(() => {
           createThematicDirection(conceptId, invalidData);
         }).toThrow(
-          'ThematicDirection: narrativePotential must be between 10 and 3000 characters'
+          'ThematicDirection: narrativePotential must be between 10 and 9000 characters'
         );
       });
     });

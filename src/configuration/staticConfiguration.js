@@ -36,6 +36,7 @@ const OPERATION_SCHEMA_FILES = [
   'modifyArrayField.schema.json',
   'modifyComponent.schema.json',
   'modifyContextArray.schema.json',
+  'openContainer.schema.json',
   'pickUpItemFromLocation.schema.json',
   'queryComponent.schema.json',
   'queryComponents.schema.json',
