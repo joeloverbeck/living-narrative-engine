@@ -3,6 +3,7 @@
 
 // eslint-disable-next-line no-unused-vars
 import { tokens } from '../../dependencyInjection/tokens.js';
+import { createBootstrapLogger } from '../../logging/bootstrapLogger.js';
 import { stageSuccess, stageFailure } from '../../utils/bootstrapperHelpers.js';
 
 /**
@@ -33,7 +34,7 @@ export async function setupDIContainerStage(
   uiReferences,
   containerConfigFunc,
   { createAppContainer },
-  log = console
+  log = createBootstrapLogger()
 ) {
   const container = createAppContainer();
   log.debug('Bootstrap Stage: setupDIContainerStage starting...');
@@ -66,7 +67,8 @@ export async function setupDIContainerStage(
  * @returns {Promise<StageResult>} Result object with the resolved logger on success.
  */
 export async function resolveLoggerStage(container, diTokens) {
-  console.log('Bootstrap Stage: Resolving logger service...');
+  const bootstrapLog = createBootstrapLogger();
+  bootstrapLog.info('Bootstrap Stage: Resolving logger service...');
   /** @type {ILogger} */
   let logger;
 
@@ -77,7 +79,7 @@ export async function resolveLoggerStage(container, diTokens) {
     }
   } catch (resolveError) {
     const errorMsg = `Fatal Error: Could not resolve essential ILogger service: ${resolveError.message}.`;
-    console.error(
+    bootstrapLog.error(
       `Bootstrap Stage: resolveLoggerStage failed. ${errorMsg}`,
       resolveError
     );

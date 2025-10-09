@@ -6,6 +6,7 @@ import { Registrar } from '../utils/registrarHelpers.js';
 
 // --- Import Logger ---
 import ConsoleLogger, { LogLevel } from '../logging/consoleLogger.js';
+import { createBootstrapLogger } from '../logging/bootstrapLogger.js';
 import LoggerStrategy from '../logging/loggerStrategy.js';
 import {
   getEnvironmentMode,
@@ -44,16 +45,15 @@ import { configureBaseContainer } from './baseContainerConfig.js';
  * @param {EssentialUIElements} uiElements – external DOM references.
  */
 export async function configureContainer(container, uiElements) {
+  const bootstrapLog = createBootstrapLogger();
   try {
-    // eslint-disable-next-line no-console
-    console.debug('[ContainerConfig] Starting container configuration...');
+    bootstrapLog.debug('[ContainerConfig] Starting container configuration...');
 
     const registrar = new Registrar(container);
     const { outputDiv, inputElement, titleElement, document: doc } = uiElements;
 
     // Log initial state - container should be empty at this point
-    // eslint-disable-next-line no-console
-    console.debug(
+    bootstrapLog.debug(
       '[ContainerConfig] Container is empty:',
       !container.isRegistered || typeof container.isRegistered !== 'function'
     );
@@ -72,8 +72,7 @@ export async function configureContainer(container, uiElements) {
     registrar.instance(tokens.ILogger, appLogger);
 
     // Verify logger registration
-    // eslint-disable-next-line no-console
-    console.debug(
+    bootstrapLog.debug(
       '[ContainerConfig] Logger registered:',
       container.isRegistered(tokens.ILogger)
     );
@@ -91,8 +90,7 @@ export async function configureContainer(container, uiElements) {
 
     // --- Configure container with base configuration ---
     // The base configuration handles registration order and dependencies
-    // eslint-disable-next-line no-console
-    console.debug('[ContainerConfig] Starting base container configuration...');
+    bootstrapLog.debug('[ContainerConfig] Starting base container configuration...');
 
     try {
       await configureBaseContainer(container, {
@@ -108,16 +106,9 @@ export async function configureContainer(container, uiElements) {
         logger: logger,
       });
 
-      // eslint-disable-next-line no-console
-      console.debug(
-        '[ContainerConfig] Base container configuration completed.'
-      );
+      bootstrapLog.debug('[ContainerConfig] Base container configuration completed.');
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error(
-        '[ContainerConfig] Base container configuration failed:',
-        error
-      );
+      bootstrapLog.error('[ContainerConfig] Base container configuration failed:', error);
       throw error;
     }
 
@@ -129,8 +120,7 @@ export async function configureContainer(container, uiElements) {
     ];
     keyServices.forEach((service) => {
       const isRegistered = container.isRegistered(service);
-      // eslint-disable-next-line no-console
-      console.debug(
+      bootstrapLog.debug(
         `[ContainerConfig] Service ${String(service)} registered:`,
         isRegistered
       );
@@ -159,13 +149,9 @@ export async function configureContainer(container, uiElements) {
     );
 
     // Final validation
-    // eslint-disable-next-line no-console
-    console.debug(
-      '[ContainerConfig] Container configuration completed successfully.'
-    );
+    bootstrapLog.debug('[ContainerConfig] Container configuration completed successfully.');
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('[ContainerConfig] Container configuration failed:', error);
+    bootstrapLog.error('[ContainerConfig] Container configuration failed:', error);
     throw error;
   }
 }
