@@ -70,7 +70,6 @@ export default class EntityConstructionFactory {
     const completionMessage =
       `[EntityConstructionFactory] Entity instance '${instanceId}' (def: '${definitionId}') ${action}`;
 
-    this.#logger.info(completionMessage);
     this.#logger.debug(completionMessage);
 
     return entity;
