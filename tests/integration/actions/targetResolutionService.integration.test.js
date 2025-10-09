@@ -109,25 +109,25 @@ describe('TargetResolutionService integration', () => {
       })
     );
 
-    expect(logger.info).toHaveBeenCalledTimes(3);
-    expect(logger.info).toHaveBeenCalledWith(
-      expect.stringContaining('[DEBUG] TargetResolutionService resolving scope for sit_down:'),
+    expect(logger.debug).toHaveBeenCalledTimes(3);
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('Resolving scope for sit_down'),
       expect.objectContaining({
         scopeName: 'positioning:available_furniture',
         actionId: 'positioning:sit_down',
         actorId: 'actor-123',
       })
     );
-    expect(logger.info).toHaveBeenCalledWith(
-      expect.stringContaining('[DEBUG] Context built for UnifiedScopeResolver:'),
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('Context built for UnifiedScopeResolver'),
       expect.objectContaining({
         hasActor: true,
         actorId: 'actor-123',
         actorLocation: 'observation-deck',
       })
     );
-    expect(logger.info).toHaveBeenCalledWith(
-      expect.stringContaining('[DEBUG] UnifiedScopeResolver result for sit_down:'),
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('UnifiedScopeResolver result for sit_down'),
       expect.objectContaining({
         success: true,
         hasValue: true,
@@ -178,8 +178,8 @@ describe('TargetResolutionService integration', () => {
         actionId: 'positioning:sit_down',
       })
     );
-    expect(logger.info).toHaveBeenCalledWith(
-      expect.stringContaining('[DEBUG] UnifiedScopeResolver result for sit_down:'),
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('UnifiedScopeResolver result for sit_down'),
       expect.objectContaining({
         success: false,
         hasValue: false,

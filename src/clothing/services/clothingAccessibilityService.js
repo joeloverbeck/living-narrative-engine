@@ -527,21 +527,29 @@ export class ClothingAccessibilityService {
     
     // Get equipment state
     const equipment = this.#getEquipmentState(entityId);
-    console.log('ClothingAccessibilityService: Equipment state', { entityId, equipment });
-    
+    this.#logger.debug('ClothingAccessibilityService: Equipment state', {
+      entityId,
+      equipment,
+    });
+
     const equippedItems = this.#parseEquipmentSlots(equipment);
-    console.log('ClothingAccessibilityService: Parsed items', { entityId, equippedItems });
-    
+    this.#logger.debug('ClothingAccessibilityService: Parsed items', {
+      entityId,
+      equippedItems,
+    });
+
     if (equippedItems.length === 0) {
-      console.log('ClothingAccessibilityService: No equipped items found');
+      this.#logger.debug('ClothingAccessibilityService: No equipped items found');
       return this.#cacheAndReturn(cacheKey, []);
     }
     
     // Filter by layer if specified
-    let filteredItems = layer 
-      ? equippedItems.filter(item => item.layer === layer)
+    let filteredItems = layer
+      ? equippedItems.filter((item) => item.layer === layer)
       : equippedItems;
-    console.log('ClothingAccessibilityService: After layer filter', { filteredItems });
+    this.#logger.debug('ClothingAccessibilityService: After layer filter', {
+      filteredItems,
+    });
     
     // Filter by body area if specified
     if (bodyArea) {
@@ -550,24 +558,30 @@ export class ClothingAccessibilityService {
     
     // Apply coverage blocking
     const accessibleItems = this.#applyCoverageBlocking(
-      filteredItems, 
-      entityId, 
-      equipment, 
+      filteredItems,
+      entityId,
+      equipment,
       mode
     );
-    console.log('ClothingAccessibilityService: After coverage blocking', { accessibleItems });
-    
+    this.#logger.debug('ClothingAccessibilityService: After coverage blocking', {
+      accessibleItems,
+    });
+
     // Apply mode-specific logic
     let result = this.#applyModeLogic(accessibleItems, mode);
-    console.log('ClothingAccessibilityService: After mode logic', { result });
+    this.#logger.debug('ClothingAccessibilityService: After mode logic', {
+      result,
+    });
     
     // Sort by priority if requested
     if (sortByPriority) {
       result = this.#sortByPriority(result, context);
     }
     
-    const finalResult = result.map(item => item.itemId);
-    console.log('ClothingAccessibilityService: Final result', { finalResult });
+    const finalResult = result.map((item) => item.itemId);
+    this.#logger.debug('ClothingAccessibilityService: Final result', {
+      finalResult,
+    });
     
     return this.#cacheAndReturn(cacheKey, finalResult);
   }

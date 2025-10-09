@@ -186,7 +186,7 @@ export class ActionIndexingService {
     // Debug logging for visual properties
     const visualActions = composites.filter((c) => c.visual);
     if (visualActions.length > 0) {
-      this.#log.info(
+      this.#log.debug(
         `ActionIndexingService: ${visualActions.length}/${composites.length} actions have visual properties for ${actorId}`,
         visualActions.map((a) => ({
           actionId: a.actionId,

@@ -373,8 +373,8 @@ export class UnifiedScopeResolver {
 
     // Debug logging for sit_down action issue
     if (scopeName === 'positioning:available_furniture') {
-      this.#logger.info(
-        '[DEBUG] UnifiedScopeResolver: Resolving available_furniture scope',
+      this.#logger.debug(
+        'UnifiedScopeResolver: Resolving available_furniture scope',
         {
           scopeName,
           actorId: context.actor?.id,
@@ -420,8 +420,8 @@ export class UnifiedScopeResolver {
     try {
       // Debug logging for sit_down action issue
       if (scopeName === 'positioning:available_furniture') {
-        this.#logger.info(
-          '[DEBUG] UnifiedScopeResolver: Before scope engine resolve',
+        this.#logger.debug(
+          'UnifiedScopeResolver: Before scope engine resolve',
           {
             scopeName,
             actorId: actorResult.value?.id,
@@ -440,8 +440,8 @@ export class UnifiedScopeResolver {
 
       // Debug logging for sit_down action issue
       if (scopeName === 'positioning:available_furniture') {
-        this.#logger.info(
-          '[DEBUG] UnifiedScopeResolver: After scope engine resolve',
+        this.#logger.debug(
+          'UnifiedScopeResolver: After scope engine resolve',
           {
             scopeName,
             resolvedIds: resolvedIds ? Array.from(resolvedIds) : null,

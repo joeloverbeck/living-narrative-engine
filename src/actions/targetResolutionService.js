@@ -128,8 +128,8 @@ export class TargetResolutionService extends ITargetResolutionService {
       actionId === 'positioning:sit_down' ||
       scopeName === 'positioning:available_furniture'
     ) {
-      this.#logger.info(
-        `[DEBUG] TargetResolutionService resolving scope for sit_down:`,
+      this.#logger.debug(
+        'Resolving scope for sit_down',
         {
           scopeName,
           actionId,
@@ -162,7 +162,7 @@ export class TargetResolutionService extends ITargetResolutionService {
       actionId === 'positioning:sit_down' ||
       scopeName === 'positioning:available_furniture'
     ) {
-      this.#logger.info(`[DEBUG] Context built for UnifiedScopeResolver:`, {
+      this.#logger.debug('Context built for UnifiedScopeResolver', {
         hasActor: !!context.actor,
         actorId: context.actor?.id,
         actorLocation: context.actorLocation,
@@ -179,7 +179,7 @@ export class TargetResolutionService extends ITargetResolutionService {
       actionId === 'positioning:sit_down' ||
       scopeName === 'positioning:available_furniture'
     ) {
-      this.#logger.info(`[DEBUG] UnifiedScopeResolver result for sit_down:`, {
+      this.#logger.debug('UnifiedScopeResolver result for sit_down', {
         success: result.success,
         hasValue: !!result.value,
         valueSize: result.value ? result.value.size : 0,

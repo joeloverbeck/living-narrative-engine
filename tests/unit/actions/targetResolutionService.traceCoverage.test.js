@@ -96,8 +96,8 @@ describe('TargetResolutionService trace and logging coverage', () => {
       ActionTargetContext.forEntity('chair-2'),
     ]);
 
-    expect(logger.info).toHaveBeenCalledWith(
-      'TargetResolutionService: [DEBUG] TargetResolutionService resolving scope for sit_down:',
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('Resolving scope for sit_down'),
       expect.objectContaining({
         scopeName: 'positioning:available_furniture',
         actionId: 'positioning:sit_down',
@@ -112,8 +112,8 @@ describe('TargetResolutionService trace and logging coverage', () => {
       })
     );
 
-    expect(logger.info).toHaveBeenCalledWith(
-      'TargetResolutionService: [DEBUG] Context built for UnifiedScopeResolver:',
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('Context built for UnifiedScopeResolver'),
       expect.objectContaining({
         hasActor: true,
         actorId: 'actor-9',
@@ -123,8 +123,8 @@ describe('TargetResolutionService trace and logging coverage', () => {
       })
     );
 
-    expect(logger.info).toHaveBeenCalledWith(
-      'TargetResolutionService: [DEBUG] UnifiedScopeResolver result for sit_down:',
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('UnifiedScopeResolver result for sit_down'),
       expect.objectContaining({
         success: true,
         hasValue: true,
@@ -168,8 +168,8 @@ describe('TargetResolutionService trace and logging coverage', () => {
 
     expect(result).toBe(failure);
 
-    expect(logger.info).toHaveBeenCalledWith(
-      'TargetResolutionService: [DEBUG] UnifiedScopeResolver result for sit_down:',
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('UnifiedScopeResolver result for sit_down'),
       expect.objectContaining({
         success: false,
         hasValue: false,

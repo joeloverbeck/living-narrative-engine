@@ -268,8 +268,8 @@ describe('TargetResolutionService with UnifiedScopeResolver (real integration)',
     expect(resolvedIds).toEqual(['friend-1', 'friend-2']);
     result.value.forEach((ctx) => expect(ctx).toBeInstanceOf(ActionTargetContext));
 
-    expect(harness.logger.info).toHaveBeenCalledWith(
-      expect.stringContaining('[DEBUG] TargetResolutionService resolving scope for sit_down:'),
+    expect(harness.logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('Resolving scope for sit_down'),
       expect.objectContaining({
         scopeName: 'social:friends_in_same_room',
         actorId: 'actor-1',
@@ -357,8 +357,8 @@ describe('TargetResolutionService with UnifiedScopeResolver (real integration)',
     expect(result.success).toBe(true);
     expect(result.value.map((ctx) => ctx.entityId)).toEqual(['friend-1']);
 
-    expect(harness.logger.info).toHaveBeenCalledWith(
-      expect.stringContaining('[DEBUG] UnifiedScopeResolver result for sit_down:'),
+    expect(harness.logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('UnifiedScopeResolver result for sit_down'),
       expect.objectContaining({
         valueSize: 1,
         entities: ['friend-1'],

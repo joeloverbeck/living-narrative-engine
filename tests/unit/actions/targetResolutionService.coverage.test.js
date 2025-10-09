@@ -165,10 +165,8 @@ describe('TargetResolutionService - Coverage for Missing Lines', () => {
       );
 
       // Verify debug logging was called for sit_down
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          '[DEBUG] TargetResolutionService resolving scope for sit_down:'
-        ),
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Resolving scope for sit_down'),
         expect.objectContaining({
           scopeName: 'positioning:available_furniture',
           actionId: 'positioning:sit_down',
@@ -177,9 +175,9 @@ describe('TargetResolutionService - Coverage for Missing Lines', () => {
         })
       );
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          '[DEBUG] Context built for UnifiedScopeResolver:'
+          'Context built for UnifiedScopeResolver'
         ),
         expect.objectContaining({
           hasActor: true,
@@ -188,9 +186,9 @@ describe('TargetResolutionService - Coverage for Missing Lines', () => {
         })
       );
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          '[DEBUG] UnifiedScopeResolver result for sit_down:'
+          'UnifiedScopeResolver result for sit_down'
         ),
         expect.objectContaining({
           success: true,
@@ -221,25 +219,23 @@ describe('TargetResolutionService - Coverage for Missing Lines', () => {
       );
 
       // Verify debug logging was called for available_furniture scope
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          '[DEBUG] TargetResolutionService resolving scope for sit_down:'
-        ),
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Resolving scope for sit_down'),
         expect.objectContaining({
           scopeName: 'positioning:available_furniture',
         })
       );
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          '[DEBUG] Context built for UnifiedScopeResolver:'
+          'Context built for UnifiedScopeResolver'
         ),
         expect.anything()
       );
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          '[DEBUG] UnifiedScopeResolver result for sit_down:'
+          'UnifiedScopeResolver result for sit_down'
         ),
         expect.objectContaining({
           success: true,
@@ -256,7 +252,7 @@ describe('TargetResolutionService - Coverage for Missing Lines', () => {
 
     it('should not log debug info for non-sit_down actions with different scopes', () => {
       // Reset mock to track calls
-      mockLogger.info.mockClear();
+      mockLogger.debug.mockClear();
 
       // Setup resolver to return a successful ActionResult
       mockUnifiedScopeResolver.resolve.mockReturnValue(
@@ -273,10 +269,7 @@ describe('TargetResolutionService - Coverage for Missing Lines', () => {
       );
 
       // Verify debug logging was NOT called
-      const debugCalls = mockLogger.info.mock.calls.filter((call) =>
-        call[0].includes('[DEBUG]')
-      );
-      expect(debugCalls).toHaveLength(0);
+      expect(mockLogger.debug).not.toHaveBeenCalled();
 
       // Verify result is still correct
       expect(result.success).toBe(true);
@@ -412,16 +405,14 @@ describe('TargetResolutionService - Coverage for Missing Lines', () => {
       );
 
       // Verify debug logging for sit_down
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          '[DEBUG] TargetResolutionService resolving scope for sit_down:'
-        ),
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Resolving scope for sit_down'),
         expect.any(Object)
       );
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          '[DEBUG] UnifiedScopeResolver result for sit_down:'
+          'UnifiedScopeResolver result for sit_down'
         ),
         expect.objectContaining({
           success: true,
