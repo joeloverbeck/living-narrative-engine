@@ -26,7 +26,7 @@
           "type": "string",
           "minLength": 1,
           "pattern": "^\\S(.*\\S)?$",
-          "description": "Entity ID of the actor opening the container"
+          "description": "Entity ID of the actor attempting to open the container"
         },
         "containerEntity": {
           "type": "string",
