@@ -15,6 +15,7 @@ jest.mock('../../../src/scopeDsl/parser/parser.js', () => ({
 describe('ScopeLoader', () => {
   let loader;
   let mockParseScopeDefinitions;
+  let mockDependencies;
 
   // Get the REAL implementation of the parser utility once using requireActual.
   const { parseScopeDefinitions: realParseScopeDefinitions } =
@@ -36,7 +37,7 @@ describe('ScopeLoader', () => {
     mockParseScopeDefinitions =
       require('../../../src/scopeDsl/scopeDefinitionParser.js').parseScopeDefinitions;
 
-    const mockDependencies = {
+    mockDependencies = {
       config: {
         getModsBasePath: jest.fn(),
         getContentTypeSchemaId: jest.fn().mockReturnValue(null),
@@ -172,6 +173,135 @@ describe('ScopeLoader', () => {
 
       expect(() => loader.transformContent(parsedContent, 'core')).toThrow(
         "Scope 'wrong:inventory_items' is declared in mod 'core' but claims to belong to mod 'wrong'. Scope names must match the mod they're defined in."
+      );
+    });
+  });
+
+  describe('_processFetchedItem (Unit)', () => {
+    const modId = 'core';
+    const filename = 'test.scope';
+    const registryKey = 'scopes';
+    const resolvedPath = '/mods/core/scopes/test.scope';
+
+    test('should process, transform, and store each scope returning the last result', async () => {
+      const parsedMap = new Map([
+        ['core:first_scope', { expr: 'expr1', ast: { type: 'ast1' } }],
+        ['core:second_scope', { expr: 'expr2', ast: { type: 'ast2' } }],
+      ]);
+      const transformedScopes = {
+        'core:first_scope': {
+          name: 'core:first_scope',
+          expr: 'expr1',
+          ast: { type: 'ast1' },
+        },
+        'core:second_scope': {
+          name: 'core:second_scope',
+          expr: 'expr2',
+          ast: { type: 'ast2' },
+        },
+      };
+      jest
+        .spyOn(loader, 'parseScopeFile')
+        .mockReturnValue(parsedMap);
+      jest
+        .spyOn(loader, 'transformContent')
+        .mockReturnValue(transformedScopes);
+
+      const storeSpy = jest
+        .spyOn(loader, '_storeItemInRegistry')
+        .mockImplementation((category, mod, baseId) => {
+          if (baseId === 'first_scope') {
+            return { qualifiedId: `${mod}:first_scope`, didOverride: false };
+          }
+          if (baseId === 'second_scope') {
+            return { qualifiedId: `${mod}:second_scope`, didOverride: true };
+          }
+          throw new Error(`Unexpected baseId ${baseId}`);
+        });
+
+      const result = await loader._processFetchedItem(
+        modId,
+        filename,
+        resolvedPath,
+        'raw scope content',
+        registryKey
+      );
+
+      expect(loader.parseScopeFile).toHaveBeenCalledWith(
+        'raw scope content',
+        filename
+      );
+      expect(loader.transformContent).toHaveBeenCalledWith(parsedMap, modId);
+      expect(storeSpy).toHaveBeenNthCalledWith(
+        1,
+        registryKey,
+        modId,
+        'first_scope',
+        transformedScopes['core:first_scope'],
+        filename
+      );
+      expect(storeSpy).toHaveBeenNthCalledWith(
+        2,
+        registryKey,
+        modId,
+        'second_scope',
+        transformedScopes['core:second_scope'],
+        filename
+      );
+      expect(result).toEqual({
+        qualifiedId: `${modId}:second_scope`,
+        didOverride: true,
+      });
+    });
+
+    test('should return default result when no scopes are produced', async () => {
+      jest.spyOn(loader, 'parseScopeFile').mockReturnValue(
+        new Map([
+          ['core:orphan_scope', { expr: 'noop', ast: {} }],
+        ])
+      );
+      jest.spyOn(loader, 'transformContent').mockReturnValue({});
+      const storeSpy = jest.spyOn(loader, '_storeItemInRegistry');
+
+      const result = await loader._processFetchedItem(
+        modId,
+        filename,
+        resolvedPath,
+        'noop content',
+        registryKey
+      );
+
+      expect(storeSpy).not.toHaveBeenCalled();
+      expect(result).toEqual({ qualifiedId: null, didOverride: false });
+    });
+
+    test('should log and rethrow errors encountered during processing', async () => {
+      const failure = new Error('Parsing failure');
+      jest
+        .spyOn(loader, 'parseScopeFile')
+        .mockImplementation(() => {
+          throw failure;
+        });
+
+      await expect(
+        loader._processFetchedItem(
+          modId,
+          filename,
+          resolvedPath,
+          'failing content',
+          registryKey
+        )
+      ).rejects.toThrow(failure);
+
+      expect(mockDependencies.logger.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'ScopeLoader: Failed to process scope file test.scope for mod core: Parsing failure'
+        ),
+        {
+          modId,
+          filename,
+          error: failure,
+        }
       );
     });
   });
