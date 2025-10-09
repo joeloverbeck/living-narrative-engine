@@ -210,22 +210,40 @@ export class AnatomyInitializationService {
   async waitForAllGenerationsToComplete(timeoutMs = 10000) {
     // Wait for queue to be empty and no pending generations
     const startTime = Date.now();
+    const deadline = startTime + timeoutMs;
+    let lastObservedQueueSize = this.#generationQueue.length;
+    let lastObservedPendingSize = this.#pendingGenerations.size;
 
     while (
       this.#generationQueue.length > 0 ||
       this.#pendingGenerations.size > 0 ||
       this.#isProcessingQueue
     ) {
-      if (Date.now() - startTime > timeoutMs) {
-        const queueSize = this.#generationQueue.length;
-        const pendingSize = this.#pendingGenerations.size;
+      const now = Date.now();
+      if (now > deadline) {
         throw new Error(
-          `AnatomyInitializationService: Timeout waiting for anatomy generation to complete. Queue: ${queueSize}, Pending: ${pendingSize}`
+          `AnatomyInitializationService: Timeout waiting for anatomy generation to complete. Queue: ${lastObservedQueueSize}, Pending: ${lastObservedPendingSize}`
         );
       }
 
-      // Wait a bit before checking again
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      lastObservedQueueSize = this.#generationQueue.length;
+      lastObservedPendingSize = this.#pendingGenerations.size;
+
+      const remaining = deadline - now;
+      if (remaining <= 0) {
+        throw new Error(
+          `AnatomyInitializationService: Timeout waiting for anatomy generation to complete. Queue: ${lastObservedQueueSize}, Pending: ${lastObservedPendingSize}`
+        );
+      }
+
+      const delay = Math.min(50, remaining);
+      await new Promise((resolve) => setTimeout(resolve, Math.max(1, delay)));
+
+      if (Date.now() > deadline) {
+        throw new Error(
+          `AnatomyInitializationService: Timeout waiting for anatomy generation to complete. Queue: ${lastObservedQueueSize}, Pending: ${lastObservedPendingSize}`
+        );
+      }
     }
 
     this.#logger.debug(

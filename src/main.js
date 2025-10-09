@@ -89,7 +89,8 @@ export async function bootstrapApp() {
       configureContainer,
       {
         createAppContainer: () => new AppContainer(),
-      }
+      },
+      console
     );
     if (!diResult.success) throw diResult.error;
     container = diResult.payload;
