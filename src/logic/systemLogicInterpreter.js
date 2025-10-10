@@ -303,13 +303,21 @@ class SystemLogicInterpreter extends BaseService {
         `🔧 [SystemLogicInterpreter] Assembling execution context via createNestedExecutionContext... (ActorID: ${actorId}, TargetID: ${targetId})`
       );
 
+      // Extract trace from event payload if present
+      const trace = event.payload?.trace ?? undefined;
+      if (trace) {
+        this.#logger.debug(
+          `🔍 [SystemLogicInterpreter] Trace object found in event payload, passing to execution context`
+        );
+      }
+
       nestedCtx = createNestedExecutionContext(
         event,
         actorId,
         targetId,
         this.#entityManager,
         this.#logger,
-        undefined
+        trace
       );
 
       // Keep original format for tests

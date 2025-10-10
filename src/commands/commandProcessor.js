@@ -196,6 +196,11 @@ class CommandProcessor extends ICommandProcessor {
       // --- Phase 1: Payload Construction ---
       const payload = this.#createAttemptActionPayload(actor, turnAction);
 
+      // Add trace to payload for rule execution
+      if (actionTrace) {
+        payload.trace = actionTrace;
+      }
+
       // Capture payload in trace
       if (actionTrace) {
         try {

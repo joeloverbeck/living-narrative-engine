@@ -80,39 +80,79 @@ class DropItemAtLocationHandler extends BaseOperationHandler {
   async execute(params, executionContext) {
     const log = this.getLogger(executionContext);
 
+    // Log entry with raw parameters
+    log.debug('[DROP_ITEM] Handler invoked', {
+      rawParams: params,
+      executionContext: executionContext ? 'present' : 'missing',
+    });
+
     // Validation
     const validated = this.#validateParams(params, log);
     if (!validated) {
+      log.warn('[DROP_ITEM] Parameter validation failed', {
+        rawParams: params,
+        validationResult: null,
+      });
       return { success: false, error: 'validation_failed' };
     }
 
     const { actorEntity, itemEntity, locationId } = validated;
+    log.debug('[DROP_ITEM] Parameters validated successfully', {
+      actorEntity,
+      itemEntity,
+      locationId,
+    });
 
     try {
       // Get inventory using getComponentData
+      log.debug('[DROP_ITEM] Retrieving actor inventory', {
+        actorEntity,
+        componentType: INVENTORY_COMPONENT_ID,
+      });
+
       const inventory = this.#entityManager.getComponentData(
         actorEntity,
         INVENTORY_COMPONENT_ID
       );
 
       if (!inventory) {
-        log.warn(`No inventory on actor`, { actorEntity });
+        log.warn('[DROP_ITEM] No inventory component on actor', {
+          actorEntity,
+          componentType: INVENTORY_COMPONENT_ID,
+        });
         return { success: false, error: 'no_inventory' };
       }
 
+      log.debug('[DROP_ITEM] Inventory retrieved', {
+        actorEntity,
+        inventoryItems: inventory.items,
+        itemCount: inventory.items.length,
+        capacity: inventory.capacity,
+      });
+
       if (!inventory.items.includes(itemEntity)) {
-        log.warn(`Item not in inventory`, { actorEntity, itemEntity });
+        log.warn('[DROP_ITEM] Item not in actor inventory', {
+          actorEntity,
+          itemEntity,
+          currentInventory: inventory.items,
+        });
         return { success: false, error: 'item_not_in_inventory' };
       }
 
+      log.debug('[DROP_ITEM] Item confirmed in inventory', {
+        itemEntity,
+        inventoryItems: inventory.items,
+      });
+
       // Prepare batch updates: remove from inventory and set position
+      const newInventoryItems = inventory.items.filter((id) => id !== itemEntity);
       const updates = [
         {
           instanceId: actorEntity,
           componentTypeId: INVENTORY_COMPONENT_ID,
           componentData: {
             ...inventory,
-            items: inventory.items.filter((id) => id !== itemEntity),
+            items: newInventoryItems,
           },
         },
         {
@@ -122,17 +162,56 @@ class DropItemAtLocationHandler extends BaseOperationHandler {
         },
       ];
 
+      log.debug('[DROP_ITEM] Prepared batch updates', {
+        updateCount: updates.length,
+        inventoryUpdate: {
+          instanceId: actorEntity,
+          componentType: INVENTORY_COMPONENT_ID,
+          oldItems: inventory.items,
+          newItems: newInventoryItems,
+          removedItem: itemEntity,
+        },
+        positionUpdate: {
+          instanceId: itemEntity,
+          componentType: POSITION_COMPONENT_ID,
+          locationId,
+        },
+      });
+
       // Apply atomically with batch update
-      await this.#entityManager.batchAddComponentsOptimized(updates, true);
+      log.debug('[DROP_ITEM] Executing batch update', { updateCount: updates.length });
+      const batchResult = await this.#entityManager.batchAddComponentsOptimized(updates, true);
+      log.debug('[DROP_ITEM] Batch update completed', {
+        batchResult,
+        updateCount: updates.length,
+      });
+
+      // DIAGNOSTIC: Verify item components after drop (INFO level to avoid browser crash from excessive logs)
+      const itemPosition = this.#entityManager.getComponentData(itemEntity, POSITION_COMPONENT_ID);
+      const itemItemMarker = this.#entityManager.getComponentData(itemEntity, 'items:item');
+      const itemPortableMarker = this.#entityManager.getComponentData(itemEntity, 'items:portable');
+
+      log.info('[DROP_ITEM] POST-DROP VERIFICATION', {
+        itemEntity,
+        locationId,
+        itemPosition,
+        hasItemMarker: !!itemItemMarker,
+        hasPortableMarker: !!itemPortableMarker,
+        allComponents: this.#entityManager.getEntityInstance(itemEntity)?.getComponentTypeIds?.() || 'N/A'
+      });
 
       // Dispatch success event using the event bus signature of (eventId, payload)
+      log.debug('[DROP_ITEM] Dispatching item_dropped event', {
+        eventType: ITEM_DROPPED_EVENT,
+        payload: { actorEntity, itemEntity, locationId },
+      });
       this.#dispatcher.dispatch(ITEM_DROPPED_EVENT, {
         actorEntity,
         itemEntity,
         locationId,
       });
 
-      log.debug(`Item dropped at location`, {
+      log.debug('[DROP_ITEM] Operation completed successfully', {
         actorEntity,
         itemEntity,
         locationId,
@@ -140,7 +219,13 @@ class DropItemAtLocationHandler extends BaseOperationHandler {
       return { success: true };
 
     } catch (error) {
-      log.error(`Drop item failed`, error, { actorEntity, itemEntity, locationId });
+      log.error('[DROP_ITEM] Operation failed with exception', error, {
+        actorEntity,
+        itemEntity,
+        locationId,
+        errorMessage: error.message,
+        errorStack: error.stack,
+      });
       return { success: false, error: error.message };
     }
   }

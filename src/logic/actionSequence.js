@@ -111,12 +111,43 @@ export async function executeActionSequence(
         );
       } else {
         logger.debug(`🔧 ${tag} Using operation interpreter for ${opType}`);
-        await operationInterpreter.execute(op, baseCtx);
+
+        // Capture operation start if trace available
+        if (baseCtx.trace?.captureOperationStart) {
+          baseCtx.trace.captureOperationStart(op, opIndex);
+        }
+
+        const operationResult = await operationInterpreter.execute(op, baseCtx);
+
+        // Capture operation result if trace available
+        if (baseCtx.trace?.captureOperationResult) {
+          baseCtx.trace.captureOperationResult(operationResult);
+        }
+
         const actionEndTime = Date.now();
         const actionDuration = actionEndTime - actionStartTime;
-        logger.debug(
-          `✅ ${tag} Finished executing operation of type: ${opType} (${actionDuration}ms)`
-        );
+
+        // Track operation result and warn on failures
+        const resultSuccess = operationResult?.success;
+        if (resultSuccess === true) {
+          logger.debug(
+            `✅ ${tag} Operation ${opType} completed successfully (${actionDuration}ms)`
+          );
+        } else if (resultSuccess === false) {
+          logger.warn(
+            `⚠️ ${tag} Operation ${opType} reported failure but rule continues (${actionDuration}ms)`,
+            {
+              operationType: opType,
+              operationIndex: opIndex,
+              error: operationResult.error,
+              operationParameters: op.parameters,
+            }
+          );
+        } else {
+          logger.debug(
+            `✅ ${tag} Finished executing operation of type: ${opType} (${actionDuration}ms)`
+          );
+        }
       }
     } catch (err) {
       logger.error(

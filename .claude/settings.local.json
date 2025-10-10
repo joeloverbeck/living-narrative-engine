@@ -474,7 +474,11 @@
       "Bash(NODE_ENV=test npx jest tests/integration/visualizer/anatomyVisualizer.entrypoint.realModules.integration.test.js --no-coverage --silent)",
       "Bash(NODE_ENV=test npx jest tests/integration/scripts/validateMods.integration.test.js --no-coverage --silent)",
       "Bash(NODE_ENV=test npx jest tests/integration/thematicDirection/eventSchemaValidation.integration.test.js --no-coverage --silent)",
-      "Bash(NODE_ENV=test npx jest tests/unit/validation/ajvSchemaValidator.unresolvedRefs.test.js --no-coverage --silent)"
+      "Bash(NODE_ENV=test npx jest tests/unit/validation/ajvSchemaValidator.unresolvedRefs.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/dropThenPickupCacheStaleness.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/runtime/mainBootstrapFlow.integration.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npm run test:integration --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/dropPickupWorkflow.test.js --no-coverage --silent)"
     ],
     "deny": [],
     "ask": []

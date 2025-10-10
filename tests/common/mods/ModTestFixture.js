@@ -847,6 +847,34 @@ export class ModActionTestFixture extends BaseModTestFixture {
   }
 
   /**
+   * Discovers available actions for an actor using the action discovery pipeline.
+   *
+   * This method wraps the test environment's getAvailableActions functionality,
+   * providing the same action discovery capabilities available in the test environment.
+   *
+   * @param {string} actorId - Actor entity ID
+   * @returns {Array<object>} Array of available actions for the actor
+   * @throws {Error} If test environment doesn't support action discovery
+   */
+  discoverActions(actorId) {
+    if (!this.testEnv || !this.testEnv.getAvailableActions) {
+      throw new Error(
+        'Test environment does not support action discovery. Ensure the test environment was created with createRuleTestEnvironment.'
+      );
+    }
+
+    try {
+      return this.testEnv.getAvailableActions(actorId);
+    } catch (error) {
+      this.logger.error(
+        `Failed to discover actions for actor ${actorId}: ${error.message}`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Asserts that the action executed successfully.
    *
    * @param {string} expectedMessage - Expected success message
