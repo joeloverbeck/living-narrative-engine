@@ -169,6 +169,7 @@ export default function createFilterResolver({
       if (initialSize === 0) return new Set();
 
       const result = new Set();
+      const filterEvaluations = []; // Collect detailed evaluation data for tracing
 
       for (const item of parentResult) {
         // Skip null or undefined items
@@ -211,7 +212,49 @@ export default function createFilterResolver({
               continue;
             }
 
+            // DIAGNOSTIC: Log evaluation details for debugging
+            if (typeof item === 'string' && item.includes('yellowed_goodbye_letter')) {
+              console.info('[FILTER-EVAL] Evaluating yellowed_goodbye_letter:', {
+                entityId: item,
+                filterLogic: JSON.stringify(node.logic),
+                hasEvalCtx: !!evalCtx,
+                evalCtxKeys: evalCtx ? Object.keys(evalCtx) : [],
+                entityComponents: evalCtx?.entity?.components,
+                entityComponentKeys: evalCtx?.entity?.components ? Object.keys(evalCtx.entity.components) : [],
+                hasItemsItem: evalCtx?.entity?.components ? 'items:item' in evalCtx.entity.components : false,
+                hasItemsPortable: evalCtx?.entity?.components ? 'items:portable' in evalCtx.entity.components : false,
+                hasCorePosition: evalCtx?.entity?.components ? 'core:position' in evalCtx.entity.components : false,
+              });
+            }
+
             const evalResult = logicEval.evaluate(node.logic, evalCtx);
+
+            // DIAGNOSTIC: Log evaluation result for yellowed_goodbye_letter
+            if (typeof item === 'string' && item.includes('yellowed_goodbye_letter')) {
+              console.info('[FILTER-EVAL] Yellowed goodbye letter evaluation result:', {
+                entityId: item,
+                evalResult: evalResult,
+                evalResultType: typeof evalResult,
+                willPassFilter: !!evalResult,
+              });
+            }
+
+            // Capture detailed evaluation data for tracing
+            if (trace) {
+              const itemEntity =
+                typeof item === 'string' ? entitiesGateway.getEntityInstance(item) : item;
+              filterEvaluations.push({
+                entityId: typeof item === 'string' ? item : item?.id,
+                passedFilter: evalResult,
+                evaluationContext: {
+                  hasItemMarker: itemEntity?.componentTypeIds?.includes('items:item') || false,
+                  hasPortableMarker: itemEntity?.componentTypeIds?.includes('items:portable') || false,
+                  entityLocationId: evalCtx.entity?.components?.['core:position']?.locationId,
+                  actorLocationId: evalCtx.actor?.components?.['core:position']?.locationId,
+                  locationMatch: evalCtx.entity?.components?.['core:position']?.locationId === evalCtx.actor?.components?.['core:position']?.locationId,
+                },
+              });
+            }
 
             if (evalResult) {
               result.add(item);
@@ -244,6 +287,21 @@ export default function createFilterResolver({
           'info',
           `Filter application complete. ${result.size} of ${initialSize} items passed.`,
           source
+        );
+
+        // Add detailed filter evaluation trace for diagnostics
+        trace.addLog(
+          'data',
+          'Filter evaluation details',
+          'ScopeEngine.filterEvaluation',
+          {
+            entitiesFromQuery: Array.from(parentResult),
+            filterEvaluations: filterEvaluations,
+            filteredResults: Array.from(result),
+            totalEvaluated: initialSize,
+            totalPassed: result.size,
+            filterLogic: node.logic,
+          }
         );
       }
 

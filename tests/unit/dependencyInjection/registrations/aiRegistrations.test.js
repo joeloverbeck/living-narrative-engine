@@ -91,6 +91,10 @@ describe('AI registration helpers', () => {
     container.register(tokens.IValidatedEventDispatcher, {
       dispatch: jest.fn(),
     });
+    container.register(tokens.IEventBus, {
+      subscribe: jest.fn(),
+      unsubscribe: jest.fn(),
+    });
 
     // FIX: The mocks for these services must now include the methods that
     // AvailableActionsProvider validates in its constructor.

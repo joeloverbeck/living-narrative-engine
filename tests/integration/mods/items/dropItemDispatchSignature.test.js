@@ -35,6 +35,9 @@ describe('DropItemAtLocationHandler - Dispatch Signature', () => {
         errors: [],
         updateCount: 2,
       })),
+      getEntityInstance: jest.fn((entityId) => ({
+        getComponentTypeIds: () => ['items:item', 'items:portable', 'core:position'],
+      })),
     };
 
     // Create mock dispatcher that captures calls

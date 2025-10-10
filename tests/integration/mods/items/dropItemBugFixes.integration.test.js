@@ -180,9 +180,10 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
       expect(perceptibleEvent.payload.perceptionType).toBe('item_dropped');
       expect(perceptibleEvent.payload.locationId).toBe('p_erotica:patient_room_instance');
       expect(perceptibleEvent.payload.actorId).toBe('p_erotica:jon_urena_daydream_instance');
-      expect(perceptibleEvent.payload.involvedEntities).toContain(
+      expect(perceptibleEvent.payload.targetId).toBe(
         'p_erotica:yellowed_goodbye_letter_instance'
       );
+      expect(perceptibleEvent.payload.involvedEntities).toEqual([]);
       expect(perceptibleEvent.payload.descriptionText).toContain('Jon Ureña');
       expect(perceptibleEvent.payload.descriptionText).toContain('dropped');
       expect(perceptibleEvent.payload.descriptionText).toContain('yellowed goodbye letter');

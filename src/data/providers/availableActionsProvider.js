@@ -7,6 +7,10 @@ import { IAvailableActionsProvider } from '../../interfaces/IAvailableActionsPro
 import { POSITION_COMPONENT_ID } from '../../constants/componentIds.js';
 import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../constants/core.js';
 import { ServiceSetup } from '../../utils/serviceInitializerUtils.js';
+import {
+  COMPONENT_ADDED_ID,
+  COMPONENTS_BATCH_ADDED_ID,
+} from '../../constants/eventIds.js';
 
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */
@@ -15,8 +19,20 @@ import { ServiceSetup } from '../../utils/serviceInitializerUtils.js';
 /** @typedef {import('../../turns/ports/IActionIndexer.js').IActionIndexer} IActionIndexer */
 /** @typedef {import('../../interfaces/IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
+/** @typedef {import('../../interfaces/IEventBus.js').IEventBus} IEventBus */
 
 /** @typedef {import('../../turns/dtos/AIGameStateDTO.js').AIAvailableActionDTO} AIAvailableActionDTO */
+
+/**
+ * Component types that affect action availability.
+ * When these components are added/modified, the action cache should be invalidated.
+ *
+ * @constant {string[]}
+ */
+const ACTION_AFFECTING_COMPONENTS = [
+  'core:position', // Items moving to/from locations
+  'items:', // Any items component (portable, container, inventory, etc.)
+];
 
 /**
  * Provider that discovers actions via ActionDiscoveryService, indexes them via
@@ -29,17 +45,22 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
   #actionDiscoveryService;
   #actionIndexer;
   #entityManager;
+  #eventBus;
   #logger;
 
   // --- Turn-scoped Cache ---
   #lastTurnContext = null;
   #cachedActions = new Map();
 
+  // --- Event Subscriptions ---
+  #eventSubscriptions = [];
+
   /**
    * @param {object} dependencies
    * @param {IActionDiscoveryService} dependencies.actionDiscoveryService
    * @param {IActionIndexer} dependencies.actionIndexingService
    * @param {IEntityManager} dependencies.entityManager
+   * @param {IEventBus} dependencies.eventBus
    * @param {ILogger} dependencies.logger
    * @param dependencies.serviceSetup
    */
@@ -47,6 +68,7 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
     actionDiscoveryService,
     actionIndexingService: actionIndexer,
     entityManager,
+    eventBus,
     logger,
     serviceSetup,
   }) {
@@ -63,11 +85,19 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
         value: entityManager,
         requiredMethods: ['getEntityInstance'],
       },
+      eventBus: {
+        value: eventBus,
+        requiredMethods: ['subscribe', 'unsubscribe'],
+      },
     });
 
     this.#actionDiscoveryService = actionDiscoveryService;
     this.#actionIndexer = actionIndexer;
     this.#entityManager = entityManager;
+    this.#eventBus = eventBus;
+
+    // Subscribe to component change events for cache invalidation
+    this.#setupEventSubscriptions();
 
     this.#logger.debug(
       'AvailableActionsProvider initialized and dependencies validated.'
@@ -210,5 +240,105 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
       );
       return [];
     }
+  }
+
+  /**
+   * Set up event subscriptions for cache invalidation.
+   *
+   * @private
+   */
+  #setupEventSubscriptions() {
+    // Subscribe to single component added events
+    const componentAddedSubscription = this.#eventBus.subscribe(
+      COMPONENT_ADDED_ID,
+      this.#handleComponentChange.bind(this)
+    );
+    this.#eventSubscriptions.push(componentAddedSubscription);
+
+    // Subscribe to batch component added events
+    const batchAddedSubscription = this.#eventBus.subscribe(
+      COMPONENTS_BATCH_ADDED_ID,
+      this.#handleComponentsBatchChange.bind(this)
+    );
+    this.#eventSubscriptions.push(batchAddedSubscription);
+
+    this.#logger.debug(
+      'AvailableActionsProvider: Subscribed to component change events for cache invalidation'
+    );
+  }
+
+  /**
+   * Handle component added event and invalidate cache if needed.
+   *
+   * @private
+   * @param {object} event - Component added event
+   */
+  #handleComponentChange(event) {
+    const { componentTypeId } = event.payload || {};
+    if (!componentTypeId) {
+      return;
+    }
+
+    if (this.#shouldInvalidateCache(componentTypeId)) {
+      this.#logger.debug(
+        `AvailableActionsProvider: Cache invalidated due to ${componentTypeId} component change`
+      );
+      this.#cachedActions.clear();
+    }
+  }
+
+  /**
+   * Handle batch component added event and invalidate cache if needed.
+   *
+   * @private
+   * @param {object} event - Batch components added event
+   */
+  #handleComponentsBatchChange(event) {
+    const { componentTypeIds } = event.payload || {};
+    if (!componentTypeIds || !Array.isArray(componentTypeIds)) {
+      return;
+    }
+
+    // Check if any of the changed components affect action availability
+    const shouldInvalidate = componentTypeIds.some((componentTypeId) =>
+      this.#shouldInvalidateCache(componentTypeId)
+    );
+
+    if (shouldInvalidate) {
+      this.#logger.debug(
+        `AvailableActionsProvider: Cache invalidated due to batch component changes: ${componentTypeIds.join(', ')}`
+      );
+      this.#cachedActions.clear();
+    }
+  }
+
+  /**
+   * Determine if cache should be invalidated based on component type.
+   *
+   * @private
+   * @param {string} componentTypeId - Component type ID
+   * @returns {boolean} True if cache should be invalidated
+   */
+  #shouldInvalidateCache(componentTypeId) {
+    return ACTION_AFFECTING_COMPONENTS.some((prefix) =>
+      componentTypeId.startsWith(prefix)
+    );
+  }
+
+  /**
+   * Clean up event subscriptions and resources.
+   * Should be called when the provider is no longer needed.
+   */
+  destroy() {
+    // Unsubscribe from all events
+    for (const subscription of this.#eventSubscriptions) {
+      this.#eventBus.unsubscribe(subscription);
+    }
+    this.#eventSubscriptions = [];
+
+    // Clear cache
+    this.#cachedActions.clear();
+
+    this.#logger.debug('AvailableActionsProvider: Destroyed and cleaned up');
   }
 }

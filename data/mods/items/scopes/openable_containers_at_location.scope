@@ -1,6 +1,6 @@
 items:openable_containers_at_location := entities(core:position)[][{"and": [
-  {"has": [{"var": "entity"}, "items:openable"]},
-  {"has": [{"var": "entity"}, "items:container"]},
+  {"!!": {"var": "entity.components.items:openable"}},
+  {"!!": {"var": "entity.components.items:container"}},
   {"==": [
     {"var": "entity.components.core:position.locationId"},
     {"var": "actor.components.core:position.locationId"}

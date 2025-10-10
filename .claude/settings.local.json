@@ -478,7 +478,22 @@
       "Bash(NODE_ENV=test npx jest tests/integration/mods/items/dropThenPickupCacheStaleness.test.js --no-coverage --silent)",
       "Bash(NODE_ENV=test npx jest tests/integration/runtime/mainBootstrapFlow.integration.test.js --no-coverage --silent)",
       "Bash(NODE_ENV=test npm run test:integration --silent)",
-      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/dropPickupWorkflow.test.js --no-coverage --silent)"
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/dropPickupWorkflow.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/cacheInvalidationOnDrop.integration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/cacheInvalidationOnDrop.integration.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npm run test:unit -- tests/unit/data/providers/availableActionsProvider.test.js --silent)",
+      "Bash(NODE_ENV=test npx jest tests/unit/data/providers/availableActionsProvider.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/unit/entities/services/componentMutationService*.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/cacheInvalidationOnDrop.integration.test.js tests/integration/mods/items/dropPickupWorkflow.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npm run test:unit -- tests/unit/dependencyInjection/registrations/aiRegistrations.test.js tests/unit/scopeDsl/engine.test.js tests/unit/logic/operationHandlers/dropItemAtLocationHandler.test.js tests/unit/data/providers/availableActionsProvider.branches.test.js tests/unit/constants/eventIds.test.js --silent)",
+      "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/engine.test.js --testNamePattern=\"resolveFilter.*should log before and after counts\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/engine.test.js --testNamePattern=\"resolveFilter.*should log before and after counts\" --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/engine.test.js --testNamePattern=\"should log before and after counts\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/dependencyInjection/registrations/aiRegistrations.test.js tests/unit/scopeDsl/engine.test.js tests/unit/logic/operationHandlers/dropItemAtLocationHandler.test.js tests/unit/data/providers/availableActionsProvider.branches.test.js tests/unit/constants/eventIds.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/engine.test.js --testNamePattern=\"should log before and after counts\" --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/engine.test.js --testNamePattern=\"should log before and after counts\" --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/engine.test.js tests/unit/logic/operationHandlers/dropItemAtLocationHandler.test.js tests/unit/constants/eventIds.test.js tests/unit/data/providers/availableActionsProvider.branches.test.js tests/unit/dependencyInjection/registrations/aiRegistrations.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/dropItemRuleExecution.test.js tests/integration/mods/items/dropItemBugFixes.integration.test.js tests/integration/guardrailIndexOverflow.integration.test.js tests/integration/availableActionsProvider.integration.test.js tests/integration/mods/items/dropItemDispatchSignature.test.js --no-coverage --silent)"
     ],
     "deny": [],
     "ask": []

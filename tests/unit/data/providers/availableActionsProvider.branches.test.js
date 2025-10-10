@@ -49,6 +49,10 @@ describe('AvailableActionsProvider additional branches', () => {
       actionDiscoveryService,
       actionIndexingService: actionIndexer,
       entityManager,
+      eventBus: {
+        subscribe: jest.fn().mockReturnValue({}),
+        unsubscribe: jest.fn(),
+      },
       logger,
       serviceSetup,
     });

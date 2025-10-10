@@ -283,6 +283,7 @@ export function registerAIGameStateProviders(registrar, logger) {
         actionDiscoveryService: c.resolve(tokens.IActionDiscoveryService),
         actionIndexingService: c.resolve(tokens.IActionIndexer),
         entityManager: c.resolve(tokens.IEntityManager),
+        eventBus: c.resolve(tokens.IEventBus),
         logger: c.resolve(tokens.ILogger),
         serviceSetup: c.resolve(tokens.ServiceSetup),
       })

@@ -746,12 +746,43 @@ describe('ScopeEngine', () => {
       const logic = { '==': [{ var: 'entity.id' }, 'item1'] };
       const entities = [{ id: 'item1' }, { id: 'item2' }];
       mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-      mockJsonLogicEval.evaluate.mockImplementation(
-        (l, context) => context.entity.id === 'item1'
-      );
-      mockEntityManager.getEntityInstance.mockImplementation((id) => ({ id }));
+
+      // Mock JSON Logic evaluator to pass only item1
+      mockJsonLogicEval.evaluate.mockImplementation((l, context) => {
+        const result = context.entity.id === 'item1';
+        console.log('evaluate called:', {
+          entityId: context.entity?.id,
+          willPass: result,
+          resultType: typeof result,
+          resultBoolean: Boolean(result),
+          contextKeys: Object.keys(context),
+          hasEntity: !!context.entity,
+          entityId: context.entity?.id,
+        });
+        return result;
+      });
+
+      // Mock getEntityInstance to return proper entity structures with components
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        console.log('[TEST] getEntityInstance called for:', id);
+        return {
+          id,
+          components: {}, // Add components property for proper entity structure
+        };
+      });
+
+      // Mock getEntity - used by trace code in filterResolver
+      mockEntityManager.getEntity = jest.fn().mockImplementation((id) => {
+        return {
+          id,
+          componentTypeIds: [],
+        };
+      });
 
       engine.resolve(ast, actorEntity, mockRuntimeCtx, mockTraceContext);
+
+      // Debug: Log all calls to understand what's happening
+      console.log('All addLog calls:', mockTraceContext.addLog.mock.calls);
 
       // Check for "before" log
       expect(mockTraceContext.addLog).toHaveBeenCalledWith(

@@ -157,6 +157,19 @@ export function createEvaluationContext(
     return null;
   }
 
+  // DIAGNOSTIC 1: Log entity state immediately after retrieval
+  console.info('[SCOPE-DIAG-1] Entity retrieved:', {
+    entityId: entity?.id || item,
+    hasComponents: !!entity?.components,
+    componentsType: entity?.components ? typeof entity.components : 'none',
+    componentsIsMap: entity?.components instanceof Map,
+    componentKeysString: entity?.components && !(entity.components instanceof Map)
+      ? Object.keys(entity.components).join(', ')
+      : 'NONE',
+    hasComponentTypeIds: !!entity?.componentTypeIds,
+    componentTypeIdsCount: entity?.componentTypeIds?.length || 0,
+  });
+
   // Helper function to add components while preserving prototype chain
   /**
    *
@@ -201,9 +214,24 @@ export function createEvaluationContext(
       // If entity has getAllComponents method (Entity class), use it
       if (typeof entity.getAllComponents === 'function') {
         components = entity.getAllComponents();
+        console.info('[SCOPE-DIAG] Built components via getAllComponents:', {
+          entityId: entityId || entity.id,
+          componentsKeys: components ? Object.keys(components) : [],
+        });
       } else {
         // Otherwise build from componentTypeIds
+        console.info('[SCOPE-DIAG] Building components from componentTypeIds:', {
+          entityId: entityId || entity.id,
+          componentTypeIds: entity.componentTypeIds,
+        });
         components = buildComponents(entityId || entity.id, entity, gateway);
+        console.info('[SCOPE-DIAG] buildComponents returned:', {
+          entityId: entityId || entity.id,
+          componentsType: typeof components,
+          componentsIsNull: components === null,
+          componentsIsUndefined: components === undefined,
+          componentsKeys: components ? Object.keys(components) : [],
+        });
       }
 
       // Check if it's a plain object or has a custom prototype
@@ -254,8 +282,33 @@ export function createEvaluationContext(
     (!entity.components && entity.componentTypeIds) ||
     entity.components instanceof Map
   ) {
+    console.info('[SCOPE-DIAG] Entity needs components built:', {
+      entityId: entity.id || item,
+      hasComponentTypeIds: !!entity.componentTypeIds,
+      componentTypeIds: entity.componentTypeIds,
+      hasMapComponents: entity.components instanceof Map,
+      hasComponents: !!entity.components,
+    });
     entity = addComponentsToEntity(entity, entity.id || item);
+    console.info('[SCOPE-DIAG] After addComponentsToEntity:', {
+      entityId: entity.id || item,
+      hasComponents: !!entity.components,
+      componentsType: typeof entity.components,
+      componentsKeys: entity.components ? Object.keys(entity.components) : [],
+      componentsIsMap: entity.components instanceof Map,
+    });
   }
+
+  // DIAGNOSTIC 3: Log final entity state regardless of path taken
+  console.info('[SCOPE-DIAG-3] Final entity state before context creation:', {
+    entityId: entity?.id || item,
+    hasComponents: !!entity?.components,
+    componentsType: entity?.components ? typeof entity.components : 'none',
+    componentKeysString: entity?.components && !(entity.components instanceof Map)
+      ? Object.keys(entity.components).join(', ')
+      : 'NONE',
+    willBeUsedInFilter: true,
+  });
 
   // Use pre-processed actor if available (critical optimization)
   // Avoids reprocessing actor for each of potentially 10,000+ entities

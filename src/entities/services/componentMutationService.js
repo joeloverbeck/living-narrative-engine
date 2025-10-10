@@ -17,6 +17,7 @@ import {
 import {
   COMPONENT_ADDED_ID,
   COMPONENT_REMOVED_ID,
+  COMPONENTS_BATCH_ADDED_ID,
 } from '../../constants/eventIds.js';
 import MonitoringCoordinator from '../monitoring/MonitoringCoordinator.js';
 
@@ -502,7 +503,7 @@ export class ComponentMutationService {
 
     // Emit a single batch event if requested
     if (emitBatchEvent && updates.length > 0) {
-      this.#eventDispatcher.dispatch('core:components_batch_added', {
+      this.#eventDispatcher.dispatch(COMPONENTS_BATCH_ADDED_ID, {
         updates,
         updateCount: updates.length,
       });

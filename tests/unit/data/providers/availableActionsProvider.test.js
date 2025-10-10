@@ -49,6 +49,11 @@ const mockJsonLogicService = () => ({
   evaluate: jest.fn(),
 });
 
+const mockEventBus = () => ({
+  subscribe: jest.fn().mockReturnValue({ eventType: 'test', handler: jest.fn() }),
+  unsubscribe: jest.fn(),
+});
+
 // --- Test Suite ---
 
 describe('AvailableActionsProvider', () => {
@@ -61,6 +66,7 @@ describe('AvailableActionsProvider', () => {
   let entityManager;
   let actionDiscoveryService;
   let actionIndexer;
+  let eventBus;
   let serviceSetup;
 
   beforeEach(() => {
@@ -77,6 +83,7 @@ describe('AvailableActionsProvider', () => {
     entityManager = mockEntityManager();
     actionDiscoveryService = mockActionDiscoveryService();
     actionIndexer = mockActionIndexer();
+    eventBus = mockEventBus();
 
     mockActor = new MockEntity('actor-1', {
       [POSITION_COMPONENT_ID]: { locationId: 'location-1' },
@@ -88,6 +95,7 @@ describe('AvailableActionsProvider', () => {
       actionDiscoveryService,
       actionIndexingService: actionIndexer,
       entityManager,
+      eventBus,
       logger,
       serviceSetup,
     });

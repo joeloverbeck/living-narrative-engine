@@ -246,6 +246,20 @@ export const ENTITY_REMOVED_ID = 'core:entity_removed';
 export const COMPONENT_ADDED_ID = 'core:component_added';
 
 /**
+ * @typedef {object} ComponentsBatchAddedPayload
+ * @property {string} entityId - The ID of the entity that received the batch components.
+ * @property {string[]} componentTypeIds - Array of component type IDs that were added/updated in batch.
+ * @property {object} componentsData - Map of component type IDs to their validated data.
+ */
+
+/**
+ * Fired when multiple components are successfully added to or updated on an entity instance in a batch operation.
+ *
+ * @type {string}
+ */
+export const COMPONENTS_BATCH_ADDED_ID = 'core:components_batch_added';
+
+/**
  * @typedef {object} ComponentRemovedPayload
  * @property {Entity} entity - The entity instance from which the component was removed.
  * @property {string} componentTypeId - The ID of the component that was removed.

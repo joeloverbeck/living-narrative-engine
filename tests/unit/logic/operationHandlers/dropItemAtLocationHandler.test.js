@@ -16,6 +16,7 @@ const createDispatcher = () => ({
 const createEntityManager = () => ({
   getComponentData: jest.fn(),
   batchAddComponentsOptimized: jest.fn().mockResolvedValue(undefined),
+  getEntityInstance: jest.fn(),
 });
 
 describe('DropItemAtLocationHandler', () => {
@@ -83,8 +84,8 @@ describe('DropItemAtLocationHandler', () => {
       'items:inventory'
     );
     expect(logger.warn).toHaveBeenCalledWith(
-      'DropItemAtLocationHandler: No inventory on actor',
-      { actorEntity: 'actor-123' }
+      'DropItemAtLocationHandler: [DROP_ITEM] No inventory component on actor',
+      expect.objectContaining({ actorEntity: 'actor-123' })
     );
     expect(dispatcher.dispatch).not.toHaveBeenCalled();
     expect(entityManager.batchAddComponentsOptimized).not.toHaveBeenCalled();
@@ -97,8 +98,11 @@ describe('DropItemAtLocationHandler', () => {
 
     expect(result).toEqual({ success: false, error: 'item_not_in_inventory' });
     expect(logger.warn).toHaveBeenCalledWith(
-      'DropItemAtLocationHandler: Item not in inventory',
-      { actorEntity: 'actor-123', itemEntity: 'item-999' }
+      'DropItemAtLocationHandler: [DROP_ITEM] Item not in actor inventory',
+      expect.objectContaining({
+        actorEntity: 'actor-123',
+        itemEntity: 'item-999',
+      })
     );
     expect(dispatcher.dispatch).not.toHaveBeenCalled();
     expect(entityManager.batchAddComponentsOptimized).not.toHaveBeenCalled();
@@ -146,7 +150,7 @@ describe('DropItemAtLocationHandler', () => {
       locationId: 'loc-42',
     });
     expect(logger.debug).toHaveBeenCalledWith(
-      'DropItemAtLocationHandler: Item dropped at location',
+      'DropItemAtLocationHandler: [DROP_ITEM] Operation completed successfully',
       {
         actorEntity: 'actor-123',
         itemEntity: 'item-999',
@@ -165,13 +169,13 @@ describe('DropItemAtLocationHandler', () => {
 
     expect(result).toEqual({ success: false, error: 'batch failed' });
     expect(logger.error).toHaveBeenCalledWith(
-      'DropItemAtLocationHandler: Drop item failed',
+      'DropItemAtLocationHandler: [DROP_ITEM] Operation failed with exception',
       failure,
-      {
+      expect.objectContaining({
         actorEntity: 'actor-123',
         itemEntity: 'item-999',
         locationId: 'loc-42',
-      }
+      })
     );
     expect(dispatcher.dispatch).not.toHaveBeenCalled();
   });
