@@ -260,6 +260,39 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       });
     });
 
+    it('handles prerequisite failures that omit error payloads', () => {
+      const bed = getBed();
+      const actionDef = {
+        id: 'test',
+        prerequisites: [{ op: 'test' }],
+        scope: 'none',
+      };
+      const actorEntity = { id: 'actor' };
+      const context = {};
+      const failureSpy = jest.spyOn(ActionResult, 'failure');
+
+      failureSpy.mockImplementationOnce(() => ({ success: false }));
+
+      try {
+        bed.mocks.prerequisiteEvaluationService.evaluate.mockImplementation(
+          () => {
+            throw new Error('Prerequisites failed hard');
+          }
+        );
+
+        const result = bed.service.process(actionDef, actorEntity, context);
+
+        expect(result.success).toBe(true);
+        expect(result.value).toEqual({
+          actions: [],
+          errors: [],
+          cause: 'prerequisite-error',
+        });
+      } finally {
+        failureSpy.mockRestore();
+      }
+    });
+
     it('returns result with prerequisites-failed cause when prerequisites fail without error', () => {
       const bed = getBed();
       const actionDef = {
@@ -481,6 +514,29 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
         }),
       });
       // Logger.error is not called anymore since the service returns ActionResult
+    });
+
+    it('handles target resolution failures without an error array', () => {
+      const bed = getBed();
+      const actionDef = {
+        id: 'test',
+        scope: 'target',
+      };
+      const actorEntity = { id: 'actor' };
+      const context = {};
+
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
+        success: false,
+      });
+
+      const result = bed.service.process(actionDef, actorEntity, context);
+
+      expect(result.success).toBe(true);
+      expect(result.value).toEqual({
+        actions: [],
+        errors: [],
+        cause: 'resolution-error',
+      });
     });
 
     it('returns errors when prerequisite evaluation throws ActionErrorContext', () => {
