@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "items:sandstone_lounge_sofa",
+  "description": "A low-profile three-seat sofa upholstered in sand-colored fabric",
+  "components": {
+    "core:name": {
+      "text": "Sandstone Lounge Sofa"
+    },
+    "core:description": {
+      "text": "A tailored, sand-colored sofa stretches along the left wall with three deep seat cushions, slim arms, and two matching throw pillows. Its plush upholstery mirrors the room's warm plaster tones, and its low silhouette keeps sightlines clear to the sunlit terrace beyond."
+    },
+    "items:item": {},
+    "positioning:allows_sitting": {
+      "spots": [
+        null,
+        null,
+        null
+      ]
+    },
+    "positioning:allows_bending_over": {}
+  }
+}
