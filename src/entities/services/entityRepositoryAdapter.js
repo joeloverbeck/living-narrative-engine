@@ -100,7 +100,7 @@ export class EntityRepositoryAdapter {
 
     // Enhanced debug logging for park bench
     if (entity.id === 'p_erotica:park_bench_instance') {
-      this.#logger.info(`[DEBUG] Adding park bench to repository:`, {
+      this.#logger.debug(`[DEBUG] Adding park bench to repository:`, {
         entityId: entity.id,
         componentTypeIds: entity.componentTypeIds,
         componentCount: entity.componentTypeIds?.length || 0,
@@ -118,7 +118,7 @@ export class EntityRepositoryAdapter {
       const allowsSittingIndex = this.#componentIndex.get(
         'positioning:allows_sitting'
       );
-      this.#logger.info(`[DEBUG] After indexing park bench:`, {
+      this.#logger.debug(`[DEBUG] After indexing park bench:`, {
         entityId: entity.id,
         allowsSittingIndexSize: allowsSittingIndex?.size || 0,
         allowsSittingIndexEntities: allowsSittingIndex
@@ -313,7 +313,7 @@ export class EntityRepositoryAdapter {
 
     // Debug logging for positioning:allows_sitting component
     if (componentType === 'positioning:allows_sitting') {
-      this.#logger.info(
+      this.#logger.debug(
         `[DEBUG] Indexed positioning:allows_sitting for entity '${entityId}'`,
         {
           entityId,
@@ -359,7 +359,7 @@ export class EntityRepositoryAdapter {
   #indexEntityComponents(entity) {
     // Enhanced debug logging for park bench issue
     if (entity.id === 'p_erotica:park_bench_instance') {
-      this.#logger.info(
+      this.#logger.debug(
         `[DEBUG] Indexing components for park bench instance:`,
         {
           entityId: entity.id,
@@ -374,7 +374,7 @@ export class EntityRepositoryAdapter {
       for (const componentType of entity.componentTypeIds) {
         // Extra logging for park bench
         if (entity.id === 'p_erotica:park_bench_instance') {
-          this.#logger.info(
+          this.#logger.debug(
             `[DEBUG] Indexing component '${componentType}' for park bench`
           );
         }

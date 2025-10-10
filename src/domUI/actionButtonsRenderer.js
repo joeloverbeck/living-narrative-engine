@@ -1113,7 +1113,7 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
       );
 
       if (actionsWithVisual.length > 0) {
-        this.logger.info(
+        this.logger.debug(
           '[ActionButtonsRenderer] Actions with visual properties:',
           {
             total: eventObject.payload.actions.length,
@@ -1127,7 +1127,7 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
           }
         );
       } else {
-        this.logger.info(
+        this.logger.debug(
           '[ActionButtonsRenderer] No actions have defined visual properties in this update',
           {
             total: eventObject.payload.actions.length,

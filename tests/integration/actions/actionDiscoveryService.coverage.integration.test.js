@@ -208,7 +208,7 @@ describe('ActionDiscoveryService integration coverage', () => {
     );
     expect(actionTraceOutputService.writeTrace).toHaveBeenCalledWith(trace);
     expect(result.actions).toEqual([{ id: 'trace:success' }]);
-    expect(dependencies.logger.info).toHaveBeenCalledWith(
+    expect(dependencies.logger.debug).toHaveBeenCalledWith(
       expect.stringContaining('Action discovery completed for actor actor-trace with action tracing'),
       expect.objectContaining({
         tracedActionCount: 1,
@@ -255,7 +255,7 @@ describe('ActionDiscoveryService integration coverage', () => {
 
     await service.getValidActions({ id: 'actor-summary-fallback' }, {}, { trace: true });
 
-    expect(dependencies.logger.info).toHaveBeenCalledWith(
+    expect(dependencies.logger.debug).toHaveBeenCalledWith(
       expect.stringContaining('Action discovery completed for actor actor-summary-fallback with action tracing'),
       expect.objectContaining({
         totalStagesTracked: 0,
