@@ -45,7 +45,7 @@ describe('Loaders Registration Configuration', () => {
     await registerLoaders(container);
 
     // Check that the loaders were registered with correct diskFolder values
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       'Loaders Registration: All core services, loaders, and phases registered.'
     );
 

@@ -41,7 +41,7 @@ class SpatialIndexManager extends MapManager {
      * @type {Map<string, Set<string>>}
      */
     this.locationIndex = this.items; // Inherits `items` from MapManager
-    this.logger.info('SpatialIndexManager initialized.', {
+    this.logger.debug('SpatialIndexManager initialized.', {
       batchOperationsEnabled: this.#enableBatchOperations,
     });
   }

@@ -584,7 +584,7 @@ export async function registerLoaders(container) {
     );
   }
 
-  logger.info(
+  logger.debug(
     'Loaders Registration: All core services, loaders, and phases registered.'
   );
 }

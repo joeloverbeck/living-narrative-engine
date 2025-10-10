@@ -70,7 +70,7 @@ describe('FacadeRegistry', () => {
 
       registry.register(metadata, config);
 
-      expect(mockLogger.info).toHaveBeenCalledWith('Registered facade: TestFacade v1.0.0');
+      expect(mockLogger.debug).toHaveBeenCalledWith('Registered facade: TestFacade v1.0.0');
     });
 
     it('should throw error for duplicate registration', () => {
@@ -110,7 +110,7 @@ describe('FacadeRegistry', () => {
 
       registry.register(metadata, {});
 
-      expect(mockLogger.info).toHaveBeenCalledWith('Registered facade: TestFacade v1.0.0');
+      expect(mockLogger.debug).toHaveBeenCalledWith('Registered facade: TestFacade v1.0.0');
     });
 
     it('should normalize capabilities and tags to arrays', () => {

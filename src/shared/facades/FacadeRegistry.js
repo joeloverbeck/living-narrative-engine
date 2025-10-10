@@ -58,7 +58,7 @@ class FacadeRegistry {
     this.#eventBus = eventBus;
     this.#facadeFactory = facadeFactory;
 
-    this.#logger.info('FacadeRegistry initialized');
+    this.#logger.debug('FacadeRegistry initialized');
   }
 
   /**
@@ -103,7 +103,7 @@ class FacadeRegistry {
         timestamp: Date.now(),
       });
 
-      this.#logger.info(`Registered facade: ${metadata.name} v${metadata.version}`);
+      this.#logger.debug(`Registered facade: ${metadata.name} v${metadata.version}`);
 
     } catch (error) {
       this.#logger.error(`Failed to register facade: ${metadata?.name || 'unknown'}`, error);

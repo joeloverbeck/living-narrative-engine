@@ -126,7 +126,7 @@ describe('Facade Integration Tests', () => {
       if (!config?.name) {
         throw new InvalidArgumentError('Facade name is required');
       }
-      mockLogger.info(`Registered facade: ${config.name}`);
+      mockLogger.debug(`Registered facade: ${config.name}`);
     });
 
     // Complete circular dependency
