@@ -162,6 +162,42 @@ describe('DropItemAtLocationHandler', () => {
     );
   });
 
+  it('uses the execution context logger and falls back to component list "N/A" when metadata is unavailable', async () => {
+    const params = validParams();
+    const contextLogger = createLogger();
+
+    entityManager.getComponentData.mockImplementation((entityId, componentId) => {
+      if (entityId === 'actor-123' && componentId === 'items:inventory') {
+        return { items: ['item-999'], capacity: 3 };
+      }
+      return null;
+    });
+    entityManager.getEntityInstance.mockReturnValueOnce(null);
+
+    const result = await handler.execute(params, { logger: contextLogger });
+
+    expect(result).toEqual({ success: true });
+    expect(contextLogger.debug).toHaveBeenCalledWith(
+      '[DROP_ITEM] Handler invoked',
+      expect.objectContaining({
+        rawParams: params,
+        executionContext: 'present',
+      })
+    );
+
+    const infoCall = contextLogger.info.mock.calls.find(([message]) =>
+      message.includes('POST-DROP VERIFICATION')
+    );
+    expect(infoCall?.[1]).toMatchObject({ allComponents: 'N/A' });
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      'items:item_dropped',
+      expect.objectContaining({
+        actorEntity: 'actor-123',
+        itemEntity: 'item-999',
+      })
+    );
+  });
+
   it('logs and returns failure when batch update throws', async () => {
     const params = validParams();
     entityManager.getComponentData.mockReturnValue({ items: ['item-999'] });
@@ -180,7 +216,7 @@ describe('DropItemAtLocationHandler', () => {
         locationId: 'loc-42',
         errorMessage: 'batch failed',
         errorStack: expect.stringContaining('batch failed'),
-      }
+      })
     );
     expect(dispatcher.dispatch).not.toHaveBeenCalled();
   });
