@@ -72,14 +72,8 @@ describe('main.js failure branches', () => {
       document,
     };
 
-    const mockContainer = {
-      resolve: jest.fn(() => ({
-        dispatch: jest.fn(),
-        subscribe: jest.fn(() => () => {}),
-      })),
-    };
     mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-    mockSetupDI.mockResolvedValue({ success: true, payload: mockContainer });
+    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
     const stageError = new Error('logger fail');
     stageError.phase = 'Core Services Resolution';
     mockResolveCore.mockResolvedValue({ success: false, error: stageError });
@@ -112,14 +106,8 @@ describe('main.js failure branches', () => {
     };
     const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
 
-    const mockContainer = {
-      resolve: jest.fn(() => ({
-        dispatch: jest.fn(),
-        subscribe: jest.fn(() => () => {}),
-      })),
-    };
     mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-    mockSetupDI.mockResolvedValue({ success: true, payload: mockContainer });
+    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     mockInitGlobalConfig.mockResolvedValue({ success: true });
     mockInitEngine.mockResolvedValue({ success: true, payload: {} });
@@ -153,14 +141,8 @@ describe('main.js failure branches', () => {
     };
     const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
 
-    const mockContainer = {
-      resolve: jest.fn(() => ({
-        dispatch: jest.fn(),
-        subscribe: jest.fn(() => () => {}),
-      })),
-    };
     mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-    mockSetupDI.mockResolvedValue({ success: true, payload: mockContainer });
+    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     mockInitGlobalConfig.mockResolvedValue({ success: true });
     mockInitEngine.mockResolvedValue({ success: true, payload: {} });
@@ -199,14 +181,8 @@ describe('main.js failure branches', () => {
       json: () => Promise.resolve({ startWorld: 'terra' }),
     });
 
-    const mockContainer = {
-      resolve: jest.fn(() => ({
-        dispatch: jest.fn(),
-        subscribe: jest.fn(() => () => {}),
-      })),
-    };
     mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-    mockSetupDI.mockResolvedValue({ success: true, payload: mockContainer });
+    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     const configError = new Error('config fail');
     mockInitGlobalConfig.mockResolvedValue({ success: false, error: configError });
@@ -249,14 +225,8 @@ describe('main.js failure branches', () => {
       json: () => Promise.resolve({ startWorld: 'elysium' }),
     });
 
-    const mockContainer = {
-      resolve: jest.fn(() => ({
-        dispatch: jest.fn(),
-        subscribe: jest.fn(() => () => {}),
-      })),
-    };
     mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-    mockSetupDI.mockResolvedValue({ success: true, payload: mockContainer });
+    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     mockInitGlobalConfig.mockResolvedValue({ success: true });
     const engineError = new Error('engine fail');

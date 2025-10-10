@@ -201,8 +201,16 @@ describe('TraitsRewriterController - EventBus Integration', () => {
 
       handler(mockEvent);
 
-      // Assert - Verify dispatch was NOT called (UI state is handled by UIStateManager)
-      expect(mockEventBus.dispatch).not.toHaveBeenCalled();
+      // Assert - Verify UI_STATE_CHANGED event was dispatched
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
+        type: CHARACTER_BUILDER_EVENTS.UI_STATE_CHANGED,
+        payload: expect.objectContaining({
+          controller: 'TraitsRewriterController',
+          fromState: 'generating',
+          toState: 'results',
+          timestamp: expect.any(String),
+        }),
+      });
     });
 
     it('should use eventBus getter instead of non-existent _getEventBus method', () => {
@@ -227,8 +235,8 @@ describe('TraitsRewriterController - EventBus Integration', () => {
 
       expect(() => handler(mockEvent)).not.toThrow();
 
-      // Assert - Verify dispatch was NOT called (UI state is handled by UIStateManager)
-      expect(mockEventBus.dispatch).not.toHaveBeenCalled();
+      // Assert - Verify the dispatch was called successfully
+      expect(mockEventBus.dispatch).toHaveBeenCalled();
     });
 
     it('should include correct metadata in UI_STATE_CHANGED event', () => {
@@ -253,8 +261,20 @@ describe('TraitsRewriterController - EventBus Integration', () => {
 
       handler(mockEvent);
 
-      // Assert - Verify dispatch was NOT called (UI state is handled by UIStateManager)
-      expect(mockEventBus.dispatch).not.toHaveBeenCalled();
+      // Assert - Verify the dispatch payload structure
+      const dispatchCall = mockEventBus.dispatch.mock.calls[0];
+      expect(dispatchCall).toBeDefined();
+
+      const [dispatchedEvent] = dispatchCall;
+      expect(dispatchedEvent).toEqual({
+        type: CHARACTER_BUILDER_EVENTS.UI_STATE_CHANGED,
+        payload: {
+          controller: 'TraitsRewriterController',
+          fromState: 'generating',
+          toState: 'results',
+          timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/), // ISO format
+        },
+      });
     });
   });
 });
