@@ -285,7 +285,7 @@ export class EntityLifecycleManager {
 
       // Debug logging for park bench
       if (entity.id === 'p_erotica:park_bench_instance') {
-        this.#logger.info(
+        this.#logger.debug(
           `[DEBUG] EntityLifecycleManager adding park bench to repository (construct):`,
           {
             entityId: entity.id,
@@ -326,7 +326,7 @@ export class EntityLifecycleManager {
 
       // Debug logging for park bench
       if (entity.id === 'p_erotica:park_bench_instance') {
-        this.#logger.info(
+        this.#logger.debug(
           `[DEBUG] EntityLifecycleManager adding park bench to repository (reconstruct):`,
           {
             entityId: entity.id,

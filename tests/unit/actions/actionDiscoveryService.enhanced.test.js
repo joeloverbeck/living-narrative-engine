@@ -212,9 +212,9 @@ describe('ActionDiscoveryService - Action Tracing Enhancement', () => {
       const actor = testBed.createMockActor('test-actor');
       await discoveryService.getValidActions(actor, {}, { trace: true });
 
-      const infoLogs = testBed.getInfoLogs();
+      const debugLogs = testBed.getDebugLogs();
       expect(
-        infoLogs.some(
+        debugLogs.some(
           (log) =>
             log.includes('Action discovery completed') &&
             log.includes('with action tracing')

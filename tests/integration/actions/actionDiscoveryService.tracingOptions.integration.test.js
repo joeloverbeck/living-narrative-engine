@@ -208,7 +208,7 @@ describe('ActionDiscoveryService optional tracing integration', () => {
 
     await flushAsyncTasks();
 
-    expect(logger.info).toHaveBeenCalledWith(
+    expect(logger.debug).toHaveBeenCalledWith(
       'ActionDiscoveryService: Action discovery completed for actor actor-1 with action tracing',
       expect.objectContaining({ tracedActionCount: tracedActions.size })
     );

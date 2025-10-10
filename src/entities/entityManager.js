@@ -543,7 +543,7 @@ class EntityManager extends IEntityManager {
 
     // Enhanced logging for debugging park bench scope resolution issue
     if (componentTypeId === 'positioning:allows_sitting') {
-      this.#logger.info(
+      this.#logger.debug(
         `[DEBUG] EntityManager.getEntitiesWithComponent('positioning:allows_sitting'): found ${result?.length || 0} entities`,
         result?.map((entity) => ({
           id: entity.id,

@@ -278,7 +278,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       const tracedActions = trace.getTracedActions();
       const tracingSummary = trace.getTracingSummary?.() || {};
 
-      this.#logger.info(
+      this.#logger.debug(
         `Action discovery completed for actor ${actorEntity.id} with action tracing`,
         {
           actorId: actorEntity.id,
