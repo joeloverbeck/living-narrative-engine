@@ -23,7 +23,7 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js'
 
 const INVENTORY_COMPONENT_ID = 'items:inventory';
 const POSITION_COMPONENT_ID = 'core:position';
-const ITEM_PICKED_UP_EVENT = 'ITEM_PICKED_UP';
+const ITEM_PICKED_UP_EVENT = 'items:item_picked_up';
 
 // Test Doubles
 /** @type {jest.Mocked<ILogger>} */ let log;
@@ -161,10 +161,10 @@ describe('PickUpItemFromLocationHandler', () => {
 
       await handler.execute({ actorEntity, itemEntity }, ctx);
 
-      expect(dispatcher.dispatch).toHaveBeenCalledWith({
-        type: ITEM_PICKED_UP_EVENT,
-        payload: { actorEntity, itemEntity },
-      });
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        ITEM_PICKED_UP_EVENT,
+        { actorEntity, itemEntity }
+      );
     });
 
     test('logs debug message on successful pickup', async () => {
@@ -308,9 +308,11 @@ describe('PickUpItemFromLocationHandler', () => {
         ctx
       );
 
-      expect(dispatcher.dispatch).not.toHaveBeenCalledWith(
-        expect.objectContaining({ type: ITEM_PICKED_UP_EVENT })
+      // Should only dispatch system error, not item_picked_up event
+      const pickupEventCalls = dispatcher.dispatch.mock.calls.filter(
+        (call) => call[0] === ITEM_PICKED_UP_EVENT
       );
+      expect(pickupEventCalls).toHaveLength(0);
     });
 
     test('does not remove position when pickup fails', async () => {

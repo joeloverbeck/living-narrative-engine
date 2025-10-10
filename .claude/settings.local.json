@@ -493,7 +493,15 @@
       "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/engine.test.js --testNamePattern=\"should log before and after counts\" --no-coverage)",
       "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/engine.test.js --testNamePattern=\"should log before and after counts\" --no-coverage --silent)",
       "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/engine.test.js tests/unit/logic/operationHandlers/dropItemAtLocationHandler.test.js tests/unit/constants/eventIds.test.js tests/unit/data/providers/availableActionsProvider.branches.test.js tests/unit/dependencyInjection/registrations/aiRegistrations.test.js --no-coverage --silent)",
-      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/dropItemRuleExecution.test.js tests/integration/mods/items/dropItemBugFixes.integration.test.js tests/integration/guardrailIndexOverflow.integration.test.js tests/integration/availableActionsProvider.integration.test.js tests/integration/mods/items/dropItemDispatchSignature.test.js --no-coverage --silent)"
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/dropItemRuleExecution.test.js tests/integration/mods/items/dropItemBugFixes.integration.test.js tests/integration/guardrailIndexOverflow.integration.test.js tests/integration/availableActionsProvider.integration.test.js tests/integration/mods/items/dropItemDispatchSignature.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/items/pick_up_item*.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/items/pickUpItemActionDiscovery.test.js tests/integration/mods/items/pickUpItemRuleExecution.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/items/ --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/pickUpItemActionDiscovery.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/dropItemRuleExecution.test.js tests/integration/mods/items/pickUpItemRuleExecution.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/items/giveItemActionDiscovery.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/giveItemActionDiscovery.test.js --testNamePattern=\"should discover give_item action when actor has items and recipients are nearby\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/giveItemActionDiscovery.test.js --testNamePattern=\"should NOT appear when inventory is empty\" --no-coverage --verbose)"
     ],
     "deny": [],
     "ask": []

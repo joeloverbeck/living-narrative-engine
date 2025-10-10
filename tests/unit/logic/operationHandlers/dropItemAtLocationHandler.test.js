@@ -180,7 +180,7 @@ describe('DropItemAtLocationHandler', () => {
         locationId: 'loc-42',
         errorMessage: 'batch failed',
         errorStack: expect.stringContaining('batch failed'),
-      }
+      })
     );
     expect(dispatcher.dispatch).not.toHaveBeenCalled();
   });

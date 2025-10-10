@@ -199,7 +199,7 @@ describe('items:drop_item action integration', () => {
 
       expect(perceptibleEvent).toBeDefined();
       expect(perceptibleEvent.payload.descriptionText).toContain('Charlie');
-      expect(perceptibleEvent.payload.descriptionText).toContain('dropped');
+      expect(perceptibleEvent.payload.descriptionText).toContain('drops');
       expect(perceptibleEvent.payload.descriptionText).toContain('golden-watch');
     });
   });

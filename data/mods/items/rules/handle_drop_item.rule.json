@@ -53,7 +53,7 @@
       "comment": "Prepare success message for macro",
       "parameters": {
         "variable_name": "logMessage",
-        "value": "{context.actorName} dropped {context.itemName}."
+        "value": "{context.actorName} drops {context.itemName}."
       }
     },
     {
