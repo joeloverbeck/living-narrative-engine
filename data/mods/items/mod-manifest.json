@@ -61,6 +61,7 @@
         "gold_bar.entity.json",
         "letter_to_sheriff.entity.json",
         "revolver.entity.json",
+        "sandstone_lounge_sofa.entity.json",
         "treasure_chest.entity.json"
       ],
       "instances": []
