@@ -135,23 +135,40 @@
             }
           },
           {
-            "type": "DISPATCH_PERCEPTIBLE_EVENT",
-            "comment": "Log successful pickup for observers",
+            "type": "SET_VARIABLE",
+            "comment": "Prepare success message for macro",
             "parameters": {
-              "location_id": "{context.actorPosition.locationId}",
-              "description_text": "{context.actorName} picked up {context.itemName}.",
-              "perception_type": "item_picked_up",
-              "actor_id": "{event.payload.actorId}",
-              "involved_entities": ["{event.payload.targetId}"]
+              "variable_name": "logMessage",
+              "value": "{context.actorName} picks up {context.itemName}."
             }
           },
           {
-            "type": "END_TURN",
-            "comment": "End turn after successful pickup",
+            "type": "SET_VARIABLE",
+            "comment": "Set perception type for macro",
             "parameters": {
-              "entityId": "{event.payload.actorId}",
-              "success": true
+              "variable_name": "perceptionType",
+              "value": "item_picked_up"
             }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "comment": "Set location for macro",
+            "parameters": {
+              "variable_name": "locationId",
+              "value": "{context.actorPosition.locationId}"
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "comment": "Set target for macro",
+            "parameters": {
+              "variable_name": "targetId",
+              "value": "{event.payload.targetId}"
+            }
+          },
+          {
+            "comment": "Display success message and end turn",
+            "macro": "core:logSuccessAndEndTurn"
           }
         ]
       }

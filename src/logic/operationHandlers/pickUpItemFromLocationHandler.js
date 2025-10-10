@@ -7,7 +7,7 @@ import BaseOperationHandler from './baseOperationHandler.js';
 
 const INVENTORY_COMPONENT_ID = 'items:inventory';
 const POSITION_COMPONENT_ID = 'core:position';
-const ITEM_PICKED_UP_EVENT = 'ITEM_PICKED_UP';
+const ITEM_PICKED_UP_EVENT = 'items:item_picked_up';
 
 /**
  * @typedef {object} PickUpItemParams
@@ -114,10 +114,10 @@ class PickUpItemFromLocationHandler extends BaseOperationHandler {
       // Remove position component (item no longer in world)
       this.#entityManager.removeComponent(itemEntity, POSITION_COMPONENT_ID);
 
-      // Dispatch success event
-      this.#dispatcher.dispatch({
-        type: ITEM_PICKED_UP_EVENT,
-        payload: { actorEntity, itemEntity }
+      // Dispatch success event using the event bus signature of (eventId, payload)
+      this.#dispatcher.dispatch(ITEM_PICKED_UP_EVENT, {
+        actorEntity,
+        itemEntity,
       });
 
       log.debug(`Item picked up`, { actorEntity, itemEntity });

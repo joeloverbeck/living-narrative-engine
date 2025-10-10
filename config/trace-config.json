@@ -4,8 +4,7 @@
   "actionTracing": {
     "enabled": true,
     "tracedActions": [
-      "items:drop_item",
-      "items:pick_up_item"
+      "items:give_item"
     ],
     "outputDirectory": "./traces/items",
     "verbosity": "verbose",

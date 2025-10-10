@@ -13,8 +13,7 @@
     "secondary": {
       "scope": "items:actor_inventory_items",
       "placeholder": "item",
-      "description": "Item to give",
-      "contextFrom": "primary"
+      "description": "Item to give"
     }
   },
   "prerequisites": [

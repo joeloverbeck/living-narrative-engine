@@ -185,7 +185,7 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
       );
       expect(perceptibleEvent.payload.involvedEntities).toEqual([]);
       expect(perceptibleEvent.payload.descriptionText).toContain('Jon Ureña');
-      expect(perceptibleEvent.payload.descriptionText).toContain('dropped');
+      expect(perceptibleEvent.payload.descriptionText).toContain('drops');
       expect(perceptibleEvent.payload.descriptionText).toContain('yellowed goodbye letter');
     });
 
