@@ -259,6 +259,28 @@ export const COMPONENT_ADDED_ID = 'core:component_added';
  */
 export const COMPONENT_REMOVED_ID = 'core:component_removed';
 
+/**
+ * @typedef {object} ComponentsBatchAddedUpdate
+ * @property {string} instanceId - Entity instance ID
+ * @property {string} componentTypeId - Component type ID
+ * @property {object} componentData - Validated component data
+ * @property {object | null | undefined} oldComponentData - Previous component data
+ * @property {boolean} isNewComponent - Whether this is a new component addition
+ */
+
+/**
+ * @typedef {object} ComponentsBatchAddedPayload
+ * @property {Array<ComponentsBatchAddedUpdate>} updates - Array of component updates
+ * @property {number} updateCount - Number of updates in this batch
+ */
+
+/**
+ * Fired when multiple components are added/updated in a batch operation.
+ *
+ * @type {string}
+ */
+export const COMPONENTS_BATCH_ADDED_ID = 'core:components_batch_added';
+
 // --- WorldInitializer Event IDs ---
 
 /**

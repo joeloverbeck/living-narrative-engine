@@ -6,6 +6,7 @@ import { displayFatalStartupError } from './utils/errorUtils.js';
 import { UIBootstrapper } from './bootstrapper/UIBootstrapper.js';
 import AppContainer from './dependencyInjection/appContainer.js';
 import GameEngine from './engine/gameEngine.js';
+import { setupEntityCacheInvalidation } from './scopeDsl/core/entityHelpers.js';
 // Import all necessary stages
 import {
   ensureCriticalDOMElementsStage,
@@ -131,6 +132,13 @@ export async function bootstrapApp() {
       tokens
     );
     if (!auxResult.success) throw auxResult.error;
+    logger.debug(`main.js: ${currentPhaseForError} stage completed.`);
+
+    // STAGE 5.5: Setup Entity Cache Invalidation
+    currentPhaseForError = 'Entity Cache Invalidation Setup';
+    logger.debug(`main.js: Executing ${currentPhaseForError} stage...`);
+    const eventBus = container.resolve(tokens.IEventBus);
+    setupEntityCacheInvalidation(eventBus);
     logger.debug(`main.js: ${currentPhaseForError} stage completed.`);
 
     // STAGE 6: Setup Menu Button Event Listeners
