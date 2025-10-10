@@ -300,6 +300,60 @@ describe('ActionErrorContextBuilder', () => {
       });
     });
 
+    it('should flag components that cannot be serialized', () => {
+      const circularComponent = {};
+      circularComponent.self = circularComponent;
+
+      const testComponents = {
+        'core:location': { value: 'room1' },
+        'core:circular': circularComponent,
+      };
+
+      mockEntityManager.getAllComponents.mockReturnValue(testComponents);
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(
+        Object.keys(testComponents)
+      );
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentType) => testComponents[componentType]
+      );
+
+      const context = builder.buildErrorContext({
+        error: mockError,
+        actionDef: mockActionDef,
+        actorId,
+        phase: ERROR_PHASES.VALIDATION,
+      });
+
+      expect(context.actorSnapshot.components['core:circular']).toEqual({
+        _error: true,
+        _reason: 'Failed to serialize component',
+      });
+    });
+
+    it('should preserve null component values', () => {
+      const testComponents = {
+        'core:location': { value: 'room1' },
+        'core:optional': null,
+      };
+
+      mockEntityManager.getAllComponents.mockReturnValue(testComponents);
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(
+        Object.keys(testComponents)
+      );
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentType) => testComponents[componentType]
+      );
+
+      const context = builder.buildErrorContext({
+        error: mockError,
+        actionDef: mockActionDef,
+        actorId,
+        phase: ERROR_PHASES.VALIDATION,
+      });
+
+      expect(context.actorSnapshot.components['core:optional']).toBeNull();
+    });
+
     it('should include error stack in environment context', () => {
       const errorWithStack = new Error('Test error with stack');
       errorWithStack.stack = 'Error: Test error with stack\n    at test.js:123';
@@ -312,6 +366,68 @@ describe('ActionErrorContextBuilder', () => {
       });
 
       expect(context.environmentContext.errorStack).toBe(errorWithStack.stack);
+    });
+
+    it('should handle missing action definition and entity type defaults', () => {
+      mockEntityManager.getEntityInstance.mockReturnValue({ id: actorId });
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:location',
+      ]);
+      mockEntityManager.getComponentData.mockImplementation(() => ({
+        value: 'fallback-location',
+      }));
+
+      const nowSpy = jest.spyOn(Date, 'now');
+      nowSpy.mockImplementationOnce(() => 4000);
+      nowSpy.mockImplementationOnce(() => 5000);
+      nowSpy.mockImplementation(() => 5000);
+
+      const context = builder.buildErrorContext({
+        error: mockError,
+        actionDef: null,
+        actorId,
+        phase: ERROR_PHASES.VALIDATION,
+      });
+
+      expect(context.actionId).toBeNull();
+      expect(context.actionDefinition).toBeNull();
+      expect(context.actorSnapshot.metadata.entityType).toBe('unknown');
+      expect(context.actorSnapshot.location).toBe('fallback-location');
+
+      nowSpy.mockRestore();
+    });
+
+    it('should handle empty trace logs by falling back to current time', () => {
+      const trace = { logs: [] };
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:location',
+      ]);
+      mockEntityManager.getComponentData.mockImplementation(() => ({
+        value: 'room1',
+      }));
+
+      const nowSpy = jest.spyOn(Date, 'now');
+      nowSpy.mockImplementationOnce(() => 6000);
+      nowSpy.mockImplementationOnce(() => 7000);
+      nowSpy.mockImplementationOnce(() => 8000);
+      nowSpy.mockImplementation(() => 8000);
+
+      const context = builder.buildErrorContext({
+        error: mockError,
+        actionDef: mockActionDef,
+        actorId,
+        phase: ERROR_PHASES.VALIDATION,
+        trace,
+      });
+
+      expect(context.evaluationTrace).toEqual({
+        steps: [],
+        finalContext: {},
+        failurePoint: 'Unknown',
+      });
+      expect(nowSpy).toHaveBeenCalledTimes(3);
+
+      nowSpy.mockRestore();
     });
 
     it('should properly categorize trace log types into evaluation steps', () => {
