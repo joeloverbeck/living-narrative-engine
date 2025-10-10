@@ -38,6 +38,7 @@ const EXPECTED_EVENT_IDS = Object.freeze({
   ENTITY_REMOVED_ID: 'core:entity_removed',
   COMPONENT_ADDED_ID: 'core:component_added',
   COMPONENT_REMOVED_ID: 'core:component_removed',
+  COMPONENTS_BATCH_ADDED_ID: 'core:components_batch_added',
   WORLDINIT_ENTITY_INSTANTIATED_ID: 'core:entity_instantiated',
   WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID: 'worldinit:entity_instantiation_failed',
   AI_DECISION_REQUESTED: 'core:ai_decision_requested',

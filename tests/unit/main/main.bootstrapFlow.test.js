@@ -58,8 +58,14 @@ describe('main.js bootstrap extended coverage', () => {
     };
     const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
 
+    const mockContainer = {
+      resolve: jest.fn(() => ({
+        dispatch: jest.fn(),
+        subscribe: jest.fn(() => () => {}),
+      })),
+    };
     mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockSetupDI.mockResolvedValue({ success: true, payload: mockContainer });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     mockInitGlobalConfig.mockResolvedValue({ success: true });
     mockInitEngine.mockResolvedValue({ success: true, payload: {} });
@@ -110,8 +116,14 @@ describe('main.js bootstrap extended coverage', () => {
     };
     const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
 
+    const mockContainer = {
+      resolve: jest.fn(() => ({
+        dispatch: jest.fn(),
+        subscribe: jest.fn(() => () => {}),
+      })),
+    };
     mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockSetupDI.mockResolvedValue({ success: true, payload: mockContainer });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     mockInitGlobalConfig.mockResolvedValue({ success: true });
     mockInitEngine.mockResolvedValue({ success: true, payload: null });
@@ -128,5 +140,79 @@ describe('main.js bootstrap extended coverage', () => {
     expect(elements.outputDiv).toBe(uiElements.outputDiv);
     expect(details.phase).toContain('Start Game');
     expect(passedLogger).toBe(logger);
+  });
+
+  it('successfully completes Stage 5.5 (Entity Cache Invalidation Setup)', async () => {
+    window.history.pushState({}, '', '?start=false');
+    document.body.innerHTML = `
+      <div id="outputDiv"></div>
+      <div id="error-output"></div>
+      <input id="speech-input" />
+      <h1>Title</h1>
+    `;
+    const uiElements = {
+      outputDiv: document.querySelector('#outputDiv'),
+      errorDiv: document.querySelector('#error-output'),
+      inputElement: document.querySelector('#speech-input'),
+      titleElement: document.querySelector('h1'),
+      document,
+    };
+    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
+
+    // Create a mock EventBus with subscribe method (production interface)
+    const mockEventBus = {
+      subscribe: jest.fn((eventName, listener) => {
+        // Return unsubscribe function
+        return () => {};
+      }),
+      dispatch: jest.fn(),
+    };
+
+    const mockContainer = {
+      resolve: jest.fn((token) => {
+        if (token === 'IEventBus') {
+          return mockEventBus;
+        }
+        return { dispatch: jest.fn() };
+      }),
+    };
+
+    mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
+    mockSetupDI.mockResolvedValue({ success: true, payload: mockContainer });
+    mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
+    mockInitGlobalConfig.mockResolvedValue({ success: true });
+    mockInitEngine.mockResolvedValue({ success: true, payload: {} });
+    mockInitAux.mockResolvedValue({ success: true });
+    mockMenu.mockResolvedValue({ success: true });
+    mockGlobal.mockResolvedValue({ success: true });
+
+    const main = await import('../../../src/main.js');
+    await main.bootstrapApp();
+    await new Promise((r) => setTimeout(r, 0));
+
+    // Verify Stage 5.5 executed successfully
+    // The stage should resolve IEventBus from container
+    expect(mockContainer.resolve).toHaveBeenCalledWith('IEventBus');
+
+    // Verify setupEntityCacheInvalidation was called with the event bus
+    // This is verified by checking that subscribe was called for the three event types
+    expect(mockEventBus.subscribe).toHaveBeenCalledWith(
+      'core:components_batch_added',
+      expect.any(Function)
+    );
+    expect(mockEventBus.subscribe).toHaveBeenCalledWith(
+      'core:component_added',
+      expect.any(Function)
+    );
+    expect(mockEventBus.subscribe).toHaveBeenCalledWith(
+      'core:component_removed',
+      expect.any(Function)
+    );
+
+    // Verify the logger debug was called for Stage 5.5
+    const stage5_5Logs = logger.debug.mock.calls.filter((call) =>
+      call[0].includes('Entity Cache Invalidation Setup')
+    );
+    expect(stage5_5Logs.length).toBeGreaterThanOrEqual(2); // Start and completion logs
   });
 });
