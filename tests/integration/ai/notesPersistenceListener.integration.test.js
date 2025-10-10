@@ -1,194 +1,270 @@
+import { describe, it, beforeEach, expect } from '@jest/globals';
 import { NotesPersistenceListener } from '../../../src/ai/notesPersistenceListener.js';
-import { NOTES_COMPONENT_ID } from '../../../src/constants/componentIds.js';
+import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/systemEventIds.js';
-import { DEFAULT_SUBJECT_TYPE } from '../../../src/constants/subjectTypes.js';
+import { NOTES_COMPONENT_ID } from '../../../src/constants/componentIds.js';
+import ComponentAccessService from '../../../src/entities/componentAccessService.js';
+import { DEFAULT_SUBJECT_TYPE, SUBJECT_TYPES } from '../../../src/constants/subjectTypes.js';
 
-class RecordingLogger {
+class TestLogger {
   constructor() {
-    this.debugLogs = [];
-    this.infoLogs = [];
-    this.warnLogs = [];
-    this.errorLogs = [];
+    this.debugMessages = [];
+    this.infoMessages = [];
+    this.warnMessages = [];
+    this.errorMessages = [];
   }
 
   debug(message, context) {
-    this.debugLogs.push({ message, context });
+    this.debugMessages.push({ message, context });
   }
 
   info(message, context) {
-    this.infoLogs.push({ message, context });
+    this.infoMessages.push({ message, context });
   }
 
   warn(message, context) {
-    this.warnLogs.push({ message, context });
+    this.warnMessages.push({ message, context });
   }
 
   error(message, context) {
-    this.errorLogs.push({ message, context });
+    this.errorMessages.push({ message, context });
   }
 }
 
-class RecordingDispatcher {
+class TestValidatedEventDispatcher {
   constructor() {
-    this.dispatchedEvents = [];
+    this.events = [];
+    this.listeners = new Map();
   }
 
-  async dispatch(eventName, payload) {
-    this.dispatchedEvents.push({ eventName, payload });
+  dispatch(eventName, payload) {
+    this.events.push({ eventName, payload });
+    const listeners = this.listeners.get(eventName);
+    if (listeners) {
+      for (const listener of listeners) {
+        listener(payload);
+      }
+    }
     return true;
   }
+
+  subscribe(eventName, listener) {
+    if (!this.listeners.has(eventName)) {
+      this.listeners.set(eventName, new Set());
+    }
+    this.listeners.get(eventName).add(listener);
+    return () => this.unsubscribe(eventName, listener);
+  }
+
+  unsubscribe(eventName, listener) {
+    const listeners = this.listeners.get(eventName);
+    if (!listeners) {
+      return;
+    }
+    listeners.delete(listener);
+    if (listeners.size === 0) {
+      this.listeners.delete(eventName);
+    }
+  }
 }
 
-class InMemoryEntityManager {
-  constructor() {
-    this.entities = new Map();
-  }
-
-  add(entity) {
-    this.entities.set(entity.id, entity);
-  }
-
-  getEntityInstance(id) {
-    return this.entities.get(id) ?? null;
-  }
+function createEntity(existingNotes = []) {
+  return {
+    id: 'actor-1',
+    components: {
+      [NOTES_COMPONENT_ID]: { notes: existingNotes },
+    },
+    addComponent(componentId, data) {
+      this.components[componentId] = data;
+    },
+    getComponentData(componentId) {
+      return this.components[componentId];
+    },
+  };
 }
-
-const createEntity = (id, components = {}) => ({
-  id,
-  components: { ...components },
-});
 
 describe('NotesPersistenceListener integration', () => {
   let logger;
+  let validatedDispatcher;
   let dispatcher;
+  let componentAccessService;
+  let fixedNow;
   let entityManager;
-  let now;
-  let listener;
+  let actorEntity;
 
   beforeEach(() => {
-    logger = new RecordingLogger();
-    dispatcher = new RecordingDispatcher();
-    entityManager = new InMemoryEntityManager();
-    now = new Date('2025-04-01T12:00:00.000Z');
+    logger = new TestLogger();
+    validatedDispatcher = new TestValidatedEventDispatcher();
+    dispatcher = new SafeEventDispatcher({
+      validatedEventDispatcher: validatedDispatcher,
+      logger,
+    });
+    componentAccessService = new ComponentAccessService();
+    fixedNow = new Date('2024-01-01T10:00:00.000Z');
+    actorEntity = createEntity([
+      {
+        text: 'Remember me',
+        subject: 'Alice',
+        subjectType: SUBJECT_TYPES.CHARACTER,
+        context: 'initial memory',
+        timestamp: '2023-12-24T20:15:00.000Z',
+      },
+    ]);
+    entityManager = {
+      getEntityInstance: () => actorEntity,
+    };
+  });
 
-    listener = new NotesPersistenceListener({
+  function createListener(overrides = {}) {
+    return new NotesPersistenceListener({
       logger,
       entityManager,
       dispatcher,
-      now: () => now,
+      now: () => fixedNow,
+      componentAccessService,
+      ...overrides,
     });
-  });
+  }
 
-  it('ignores events without payload data', () => {
-    listener.handleEvent(undefined);
+  it('ignores events without payload or notes data', () => {
+    const listener = createListener();
+
+    listener.handleEvent(null);
     listener.handleEvent({});
-
-    expect(dispatcher.dispatchedEvents).toHaveLength(0);
-    expect(logger.warnLogs).toHaveLength(0);
-  });
-
-  it('returns early when notes are missing or empty', () => {
-    const actor = createEntity('actor-empty');
-    entityManager.add(actor);
-
-    listener.handleEvent({ payload: { actorId: actor.id, extractedData: {} } });
-    listener.handleEvent({
-      payload: { actorId: actor.id, extractedData: { notes: [] } },
-    });
-
-    expect(actor.components[NOTES_COMPONENT_ID]).toBeUndefined();
-    expect(dispatcher.dispatchedEvents).toHaveLength(0);
-  });
-
-  it('logs a warning when the actor entity cannot be found', () => {
     listener.handleEvent({
       payload: {
-        actorId: 'missing-actor',
-        extractedData: { notes: [{ text: 'Hello', subject: 'Greeting' }] },
+        actorId: actorEntity.id,
+        extractedData: {},
       },
     });
 
-    expect(logger.warnLogs).toContainEqual({
-      message: 'NotesPersistenceListener: entity not found for actor missing-actor',
-      context: undefined,
-    });
-    expect(dispatcher.dispatchedEvents).toHaveLength(0);
-  });
-
-  it('persists structured notes into the actor component using real services', () => {
-    const actor = createEntity('actor-with-notes');
-    entityManager.add(actor);
-
-    const note = { text: 'Locate the ancient key', subject: 'Quest' };
-
-    listener.handleEvent({
-      payload: {
-        actorId: actor.id,
-        extractedData: { notes: [note] },
-      },
-    });
-
-    const notesComponent = actor.components[NOTES_COMPONENT_ID];
-    expect(Array.isArray(notesComponent.notes)).toBe(true);
+    const notesComponent = actorEntity.components[NOTES_COMPONENT_ID];
     expect(notesComponent.notes).toHaveLength(1);
-    expect(notesComponent.notes[0]).toEqual({
-      text: 'Locate the ancient key',
-      subject: 'Quest',
-      subjectType: DEFAULT_SUBJECT_TYPE,
-      context: undefined,
-      timestamp: now.toISOString(),
-    });
-    expect(dispatcher.dispatchedEvents).toHaveLength(0);
+    expect(validatedDispatcher.events).toHaveLength(0);
+    expect(logger.warnMessages).toHaveLength(0);
   });
 
-  it('dispatches structured errors for invalid notes while keeping valid ones', () => {
-    const actor = createEntity('actor-mixed', {
-      [NOTES_COMPONENT_ID]: { notes: [] },
-    });
-    entityManager.add(actor);
+  it('merges structured notes and dispatches errors for invalid entries', () => {
+    const listener = createListener();
 
-    const validNote = {
-      text: 'Review the alliance treaty',
-      subject: 'Diplomacy',
+    const event = {
+      payload: {
+        actorId: actorEntity.id,
+        extractedData: {
+          notes: [
+            {
+              text: '  Remember me!  ',
+              subject: 'Alice',
+              subjectType: SUBJECT_TYPES.CHARACTER,
+            },
+            {
+              text: 'Sworn to protect the village',
+              subject: 'Guard Captain',
+              subjectType: SUBJECT_TYPES.RELATIONSHIP,
+              context: 'oath',
+            },
+            {
+              text: 'Secret weakness revealed',
+              subject: 'Rival',
+            },
+            {
+              text: 'Mystery contact located',
+              subject: 'The Broker',
+              subjectType: 'mystery-type',
+            },
+            {
+              text: '   ',
+              subject: 'Blank entry',
+            },
+          ],
+        },
+      },
     };
-    const invalidSubjectTypeNote = {
-      text: 'Inspect the ritual circle',
-      subject: 'Arcana',
-      subjectType: 'mystery',
+
+    listener.handleEvent(event);
+
+    const updatedComponent = actorEntity.components[NOTES_COMPONENT_ID];
+    expect(updatedComponent.notes).toHaveLength(4);
+
+    const [, oathNote, defaultedNote, correctedNote] = updatedComponent.notes;
+
+    expect(oathNote).toMatchObject({
+      text: 'Sworn to protect the village',
+      subject: 'Guard Captain',
+      subjectType: SUBJECT_TYPES.RELATIONSHIP,
+      context: 'oath',
+      timestamp: fixedNow.toISOString(),
+    });
+
+    expect(defaultedNote).toMatchObject({
+      text: 'Secret weakness revealed',
+      subject: 'Rival',
+      subjectType: DEFAULT_SUBJECT_TYPE,
+      timestamp: fixedNow.toISOString(),
+    });
+
+    expect(correctedNote).toMatchObject({
+      text: 'Mystery contact located',
+      subject: 'The Broker',
+      subjectType: DEFAULT_SUBJECT_TYPE,
+      timestamp: fixedNow.toISOString(),
+    });
+
+    const errorEvents = validatedDispatcher.events.filter(
+      (evt) => evt.eventName === SYSTEM_ERROR_OCCURRED_ID
+    );
+
+    expect(errorEvents).toHaveLength(2);
+    const errorMessages = errorEvents.map((evt) => evt.payload.message);
+    expect(errorMessages).toEqual(
+      expect.arrayContaining([
+        'NotesPersistenceHook: Invalid note skipped',
+        'NotesPersistenceHook: Invalid subjectType, using default',
+      ])
+    );
+
+    const debugMessages = logger.debugMessages.map((entry) => entry.message);
+    expect(debugMessages.some((msg) => msg.includes('event received'))).toBe(
+      true
+    );
+    expect(
+      debugMessages.some((msg) =>
+        msg.includes('Auto-assigned default subjectType "other"')
+      )
+    ).toBe(true);
+    const addedNoteLogs = debugMessages.filter((msg) =>
+      msg.startsWith('Added note:')
+    );
+    expect(addedNoteLogs).toHaveLength(3);
+  });
+
+  it('warns when the actor entity is missing', () => {
+    entityManager = {
+      getEntityInstance: () => null,
     };
-    const missingTextNote = { subject: 'Incomplete' };
+    const listener = createListener({ entityManager });
 
     listener.handleEvent({
       payload: {
-        actorId: actor.id,
+        actorId: 'ghost-actor',
         extractedData: {
-          notes: [validNote, invalidSubjectTypeNote, missingTextNote],
+          notes: [
+            {
+              text: 'Echoes in the hall',
+              subject: 'Haunted Wing',
+            },
+          ],
         },
       },
     });
 
-    const notesComponent = actor.components[NOTES_COMPONENT_ID];
-    expect(notesComponent.notes).toHaveLength(2);
-
-    const storedSubjects = notesComponent.notes.map((n) => n.subject);
-    expect(storedSubjects).toEqual(['Diplomacy', 'Arcana']);
-
-    const storedSubjectTypes = notesComponent.notes.map((n) => n.subjectType);
-    expect(storedSubjectTypes).toEqual([
-      DEFAULT_SUBJECT_TYPE,
-      DEFAULT_SUBJECT_TYPE,
+    expect(logger.warnMessages).toEqual([
+      {
+        message:
+          'NotesPersistenceListener: entity not found for actor ghost-actor',
+        context: undefined,
+      },
     ]);
-
-    const dispatchedMessages = dispatcher.dispatchedEvents.map(
-      (event) => event.payload.message
-    );
-    expect(dispatchedMessages).toEqual([
-      'NotesPersistenceHook: Invalid subjectType, using default',
-      'NotesPersistenceHook: Invalid note skipped',
-    ]);
-
-    dispatcher.dispatchedEvents.forEach((event) => {
-      expect(event.eventName).toBe(SYSTEM_ERROR_OCCURRED_ID);
-    });
+    expect(validatedDispatcher.events).toHaveLength(0);
   });
 });
