@@ -146,10 +146,6 @@ describe('main.js factory-driven bootstrap coverage', () => {
     mockSetupDI.mockImplementation(async (elements, _configure, { createAppContainer }) => {
       expect(elements.outputDiv).toBe(document.getElementById('outputDiv'));
       const container = createAppContainer();
-      container.resolve = jest.fn(() => ({
-        dispatch: jest.fn(),
-        subscribe: jest.fn(() => () => {}),
-      }));
       expect(container.marker).toBe('app-container');
       return { success: true, payload: container };
     });
@@ -219,14 +215,10 @@ describe('main.js factory-driven bootstrap coverage', () => {
       return { success: true, payload: buildUiElements(doc) };
     });
 
-    mockSetupDI.mockImplementation(async (_elements, _configure, { createAppContainer }) => {
-      const container = createAppContainer();
-      container.resolve = jest.fn(() => ({
-        dispatch: jest.fn(),
-        subscribe: jest.fn(() => () => {}),
-      }));
-      return { success: true, payload: container };
-    });
+    mockSetupDI.mockImplementation(async (_elements, _configure, { createAppContainer }) => ({
+      success: true,
+      payload: createAppContainer(),
+    }));
 
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     mockInitGlobalConfig.mockResolvedValue({ success: true });
