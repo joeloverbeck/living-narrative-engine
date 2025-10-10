@@ -34,8 +34,7 @@ describe('ConsoleLogger Integration', () => {
       1,
       '[ConsoleLogger] Log level changing from INFO to DEBUG.'
     );
-    expect(consoleSpies.info).toHaveBeenNthCalledWith(
-      2,
+    expect(consoleSpies.debug).toHaveBeenCalledWith(
       '[ConsoleLogger] Initialized. Log level set to DEBUG (0).'
     );
 
@@ -49,10 +48,8 @@ describe('ConsoleLogger Integration', () => {
   it('defaults to INFO when no log level is provided', () => {
     new ConsoleLogger();
 
-    expect(consoleSpies.info).toHaveBeenCalledTimes(1);
-    expect(consoleSpies.info).toHaveBeenCalledWith(
-      '[ConsoleLogger] Initialized. Log level set to INFO (1).'
-    );
+    expect(consoleSpies.info).not.toHaveBeenCalled();
+    expect(consoleSpies.debug).not.toHaveBeenCalled();
   });
 
   it('suppresses all logging when configured for NONE', () => {

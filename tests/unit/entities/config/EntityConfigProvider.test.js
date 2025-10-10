@@ -36,7 +36,7 @@ describe('EntityConfigProvider', () => {
     it('should initialize with valid logger', () => {
       const provider = new EntityConfigProvider({ logger: mockLogger });
       expect(provider).toBeInstanceOf(EntityConfigProvider);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'EntityConfigProvider initialized successfully'
       );
     });

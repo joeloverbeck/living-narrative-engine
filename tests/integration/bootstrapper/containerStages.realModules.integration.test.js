@@ -70,7 +70,7 @@ describe('containerStages integration with real container wiring', () => {
     expect(resolveResult.success).toBe(true);
     expect(resolveResult.payload.logger).toBe(resolvedLogger);
 
-    expect(consoleLogSpy).toHaveBeenCalledWith(
+    expect(consoleLogSpy).not.toHaveBeenCalledWith(
       'Bootstrap Stage: Resolving logger service...'
     );
     expect(consoleDebugSpy).toHaveBeenCalledWith(

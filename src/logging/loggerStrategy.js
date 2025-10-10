@@ -141,9 +141,9 @@ class LoggerStrategy {
     if (
       this.#mode !== LoggerMode.NONE &&
       this.#logger &&
-      typeof this.#logger.info === 'function'
+      typeof this.#logger.debug === 'function'
     ) {
-      this.#logger.info(
+      this.#logger.debug(
         `[LoggerStrategy] Initialized with mode: ${this.#mode}`
       );
     }

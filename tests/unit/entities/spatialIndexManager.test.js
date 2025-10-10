@@ -33,11 +33,11 @@ describe('SpatialIndexManager', () => {
       expect(spatialIndexManager.locationIndex).toBeDefined();
       expect(spatialIndexManager.locationIndex).toBeInstanceOf(Map);
       expect(spatialIndexManager.locationIndex.size).toBe(0);
-      expect(mockLogger.info).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'SpatialIndexManager initialized.',
         { batchOperationsEnabled: false }
       );
+      expect(mockLogger.info).not.toHaveBeenCalled();
     });
   });
 

@@ -64,15 +64,9 @@ class ConsoleLogger {
     this.setLogLevel(logLevelInput);
     // Initial log message to confirm logger setup and its level.
     // This message itself will be subject to the just-set log level.
-    if (this.#currentLogLevel <= LogLevel.INFO) {
-      // Using console.info directly here to ensure this initial message appears
-      // regardless of complex interactions during the very first setup moments if needed,
-      // but normal operation should use the instance's methods.
-      // For robustness in showing this initial setup:
-      console.info(
-        `[ConsoleLogger] Initialized. Log level set to ${this.getLogLevelName(this.#currentLogLevel)} (${this.#currentLogLevel}).`
-      );
-    }
+    this.debug(
+      `[ConsoleLogger] Initialized. Log level set to ${this.getLogLevelName(this.#currentLogLevel)} (${this.#currentLogLevel}).`
+    );
   }
 
   /**

@@ -49,7 +49,7 @@ class FacadeFactory {
     this.#container = container;
     this.registry = registry; // Public for registry delegation
 
-    this.#logger.info('FacadeFactory initialized');
+    this.#logger.debug('FacadeFactory initialized');
   }
 
   /**
@@ -67,7 +67,7 @@ class FacadeFactory {
         this.registry.register(config, config);
       }
 
-      this.#logger.info(`Registered facade: ${config.name}`);
+      this.#logger.debug(`Registered facade: ${config.name}`);
 
     } catch (error) {
       this.#logger.error(`Failed to register facade: ${config?.name || 'unknown'}`, error);

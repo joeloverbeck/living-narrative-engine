@@ -70,7 +70,7 @@ export default class EntityConfigProvider {
 
       this.#initialized = true;
 
-      this.#logger.info('EntityConfigProvider initialized successfully');
+      this.#logger.debug('EntityConfigProvider initialized successfully');
       this.#logger.debug('Configuration loaded:', {
         environment: this.#config.environment.NODE_ENV,
         features: this.#getEnabledFeatures(),

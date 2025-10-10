@@ -68,7 +68,7 @@ export async function setupDIContainerStage(
  */
 export async function resolveLoggerStage(container, diTokens) {
   const bootstrapLog = createBootstrapLogger();
-  bootstrapLog.info('Bootstrap Stage: Resolving logger service...');
+  bootstrapLog.debug('Bootstrap Stage: Resolving logger service...');
   /** @type {ILogger} */
   let logger;
 

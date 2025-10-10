@@ -139,7 +139,7 @@ export default class MonitoringCoordinator {
       this.#startHealthChecks();
     }
 
-    this.#logger.info('MonitoringCoordinator initialized', {
+    this.#logger.debug('MonitoringCoordinator initialized', {
       enabled: this.#enabled,
       checkInterval: this.#checkInterval,
       memoryMonitoring: this.#memoryMonitor !== null,

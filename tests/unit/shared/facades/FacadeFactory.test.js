@@ -250,7 +250,7 @@ describe('FacadeFactory', () => {
         },
         config
       );
-      expect(mockLogger.info).toHaveBeenCalledWith('Registered facade: TestFacade');
+      expect(mockLogger.debug).toHaveBeenCalledWith('Registered facade: TestFacade');
     });
 
     it('should handle registration failure', () => {
