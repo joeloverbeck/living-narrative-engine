@@ -24,6 +24,10 @@ describe('Guardrail – index overflow', () => {
     };
     discoverySvc = { getValidActions: jest.fn() };
     entityManager = { getEntityInstance: jest.fn().mockResolvedValue(null) };
+    const eventBus = {
+      subscribe: jest.fn(() => ({ unsubscribe: jest.fn() })),
+      unsubscribe: jest.fn(),
+    };
 
     const indexingService = new ActionIndexerAdapter(
       new ActionIndexingService({ logger })
@@ -32,6 +36,7 @@ describe('Guardrail – index overflow', () => {
       actionDiscoveryService: discoverySvc,
       actionIndexingService: indexingService,
       entityManager,
+      eventBus,
       logger,
     });
     actor = {

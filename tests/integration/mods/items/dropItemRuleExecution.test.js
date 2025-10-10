@@ -181,7 +181,8 @@ describe('items:drop_item action integration', () => {
       expect(perceptibleEvent.payload.locationId).toBe('saloon1');
       expect(perceptibleEvent.payload.perceptionType).toBe('item_dropped');
       expect(perceptibleEvent.payload.actorId).toBe('test:actor1');
-      expect(perceptibleEvent.payload.involvedEntities).toContain('letter-1');
+      expect(perceptibleEvent.payload.targetId).toBe('letter-1');
+      expect(perceptibleEvent.payload.involvedEntities).toEqual([]);
     });
 
     it('includes correct description in perception log', async () => {

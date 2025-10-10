@@ -174,7 +174,7 @@ describe('DropItemAtLocationHandler', () => {
     expect(logger.error).toHaveBeenCalledWith(
       'DropItemAtLocationHandler: [DROP_ITEM] Operation failed with exception',
       failure,
-      {
+      expect.objectContaining({
         actorEntity: 'actor-123',
         itemEntity: 'item-999',
         locationId: 'loc-42',

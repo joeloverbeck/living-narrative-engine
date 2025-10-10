@@ -47,11 +47,16 @@ describe('Integration – AvailableActionsProvider caching', () => {
       new ActionIndexingService({ logger })
     );
     entityManager = { getEntityInstance: jest.fn().mockResolvedValue(null) };
+    const eventBus = {
+      subscribe: jest.fn(() => ({ unsubscribe: jest.fn() })),
+      unsubscribe: jest.fn(),
+    };
 
     provider = new AvailableActionsProvider({
       actionDiscoveryService: discoverySvc,
       actionIndexingService: indexingService,
       entityManager,
+      eventBus,
       logger,
     });
 
