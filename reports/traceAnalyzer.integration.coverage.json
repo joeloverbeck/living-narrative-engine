@@ -1,0 +1,14 @@
+{
+  "file": "src/actions/tracing/traceAnalyzer.js",
+  "coverage": {
+    "statementsPct": 99.46808510638297,
+    "functionsPct": 96.96969696969697,
+    "branchesPct": 94.6236559139785,
+    "coveredStatements": 187,
+    "totalStatements": 188,
+    "coveredFunctions": 32,
+    "totalFunctions": 33,
+    "coveredBranches": 88,
+    "totalBranches": 93
+  }
+}
