@@ -164,6 +164,25 @@ describe('ViolationReporter', () => {
       expect(report).not.toContain('Add missing_mod to dependencies');
     });
 
+    it('delegates cross-reference Map wrappers to the ecosystem console generator', () => {
+      const crossReferenceMap = new Map([
+        ['modA', { hasViolations: false, violations: [] }],
+      ]);
+      const options = { colors: false };
+      const ecosystemSpy = jest
+        .spyOn(reporter, '_generateEcosystemConsoleReport')
+        .mockReturnValue('ecosystem-output');
+
+      const wrapper = { crossReferences: crossReferenceMap };
+      const result = reporter.generateReport(wrapper, 'console', options);
+
+      expect(ecosystemSpy).toHaveBeenCalledTimes(1);
+      expect(ecosystemSpy).toHaveBeenCalledWith(crossReferenceMap, options);
+      expect(result).toBe('ecosystem-output');
+
+      ecosystemSpy.mockRestore();
+    });
+
     it('should include impact details when verbose mode is enabled', () => {
       const mockReport = {
         modId: 'impact_mod',
@@ -377,6 +396,34 @@ describe('ViolationReporter', () => {
       expect(report).toContain('Declare missing_mod dependency');
       expect(report).toContain('Add other_mod dependency');
     });
+
+    it('includes file locations and severity icons for ecosystem violations', () => {
+      const ecosystemResults = new Map([
+        [
+          'detailed_mod',
+          {
+            hasViolations: true,
+            violations: [
+              {
+                referencedMod: 'missing_mod',
+                referencedComponent: 'componentX',
+                file: 'path/to/rule.json',
+                line: 42,
+                severity: 'medium',
+              },
+            ],
+            missingDependencies: ['missing_mod'],
+          },
+        ],
+      ]);
+
+      const output = reporter.generateReport(ecosystemResults, 'console', {
+        colors: false,
+      });
+
+      expect(output).toContain('path/to/rule.json:42');
+      expect(output).toContain('componentX (path/to/rule.json:42) ⚡');
+    });
   });
 
   describe('JSON Report Generation', () => {
@@ -424,6 +471,23 @@ describe('ViolationReporter', () => {
           totalViolations: 1,
           validationPassed: false,
         }),
+      });
+    });
+
+    it('skips null entries when summarizing ecosystem reports', () => {
+      const mockResults = new Map([
+        ['mod1', { hasViolations: false, violations: [] }],
+        ['mod2', null],
+      ]);
+
+      const report = reporter.generateReport(mockResults, 'json');
+      const parsed = JSON.parse(report);
+
+      expect(parsed.summary).toEqual({
+        totalMods: 2,
+        modsWithViolations: 0,
+        totalViolations: 0,
+        validationPassed: true,
       });
     });
 
