@@ -113,7 +113,10 @@ export function createJsonLogicContext(
       "createJsonLogicContext: Missing or invalid 'event' object."
     );
   }
-  const setup = serviceSetup ?? new ServiceSetup();
+  // Check if serviceSetup is a trace object (has trace-specific methods)
+  // If so, don't use it as ServiceSetup - create a new one instead
+  const isTrace = serviceSetup && typeof serviceSetup === 'object' && 'captureOperationStart' in serviceSetup;
+  const setup = isTrace ? new ServiceSetup() : (serviceSetup ?? new ServiceSetup());
   const effectiveLogger = setup.setupService('createJsonLogicContext', logger, {
     entityManager: {
       value: entityManager,
@@ -194,13 +197,21 @@ export function createNestedExecutionContext(
     serviceSetup
   );
 
-  return {
+  const executionContext = {
     event,
     actor: ctx.actor,
     target: ctx.target,
     logger,
     evaluationContext: ctx,
   };
+
+  // Add trace if it was passed (trace is passed as serviceSetup parameter)
+  // Check if serviceSetup is a trace object (has trace-specific methods)
+  if (serviceSetup && typeof serviceSetup === 'object' && 'captureOperationStart' in serviceSetup) {
+    executionContext.trace = serviceSetup;
+  }
+
+  return executionContext;
 }
 
 /**

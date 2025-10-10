@@ -617,6 +617,17 @@ export class MultiTargetResolutionStage extends PipelineStage {
         detailedResolutionResults[targetKey].evaluationTimeMs =
           Date.now() - scopeStartTime;
 
+        // Capture scope evaluation BEFORE early return (for 0-result debugging)
+        if (isActionAwareTrace && trace.captureScopeEvaluation) {
+          trace.captureScopeEvaluation(actionDef.id, targetKey, {
+            scope: targetDef.scope,
+            context: targetDef.contextFrom,
+            resultCount: resolvedSecondaryTargets.length,
+            evaluationTimeMs: Date.now() - scopeStartTime,
+            cacheHit: false, // We don't have cache info for contextFrom targets yet
+          });
+        }
+
         // Check if we found no candidates for any primary
         if (resolvedSecondaryTargets.length === 0) {
           detailedResolutionResults[targetKey].failureReason =
@@ -638,17 +649,6 @@ export class MultiTargetResolutionStage extends PipelineStage {
 
         resolvedTargets[targetKey] = resolvedSecondaryTargets;
         resolvedCounts[targetKey] = resolvedSecondaryTargets.length;
-
-        // Capture scope evaluation if trace supports it
-        if (isActionAwareTrace && trace.captureScopeEvaluation) {
-          trace.captureScopeEvaluation(actionDef.id, targetKey, {
-            scope: targetDef.scope,
-            context: targetDef.contextFrom,
-            resultCount: resolvedCounts[targetKey],
-            evaluationTimeMs: Date.now() - scopeStartTime,
-            cacheHit: false, // We don't have cache info for contextFrom targets yet
-          });
-        }
 
         // Add to flat list for backward compatibility
         resolvedSecondaryTargets.forEach((target) => {
@@ -695,13 +695,24 @@ export class MultiTargetResolutionStage extends PipelineStage {
 
         detailedResolutionResults[targetKey].candidatesFound =
           candidates.length;
+        detailedResolutionResults[targetKey].evaluationTimeMs =
+          Date.now() - scopeStartTime;
+
+        // Capture scope evaluation BEFORE early return (for 0-result debugging)
+        if (isActionAwareTrace && trace.captureScopeEvaluation) {
+          trace.captureScopeEvaluation(actionDef.id, targetKey, {
+            scope: targetDef.scope,
+            context: 'actor', // Default context when no contextFrom
+            resultCount: candidates.length,
+            evaluationTimeMs: Date.now() - scopeStartTime,
+            cacheHit: false, // We'll need to get this from UnifiedScopeResolver
+          });
+        }
 
         // Check if we found no candidates
         if (candidates.length === 0) {
           detailedResolutionResults[targetKey].failureReason =
             `No candidates found for scope '${targetDef.scope}' with actor context`;
-          detailedResolutionResults[targetKey].evaluationTimeMs =
-            Date.now() - scopeStartTime;
 
           trace?.failure(
             `No candidates found for target '${targetKey}'`,
@@ -739,19 +750,6 @@ export class MultiTargetResolutionStage extends PipelineStage {
         resolvedCounts[targetKey] = resolvedTargets[targetKey].length;
         detailedResolutionResults[targetKey].candidatesResolved =
           resolvedTargets[targetKey].length;
-        detailedResolutionResults[targetKey].evaluationTimeMs =
-          Date.now() - scopeStartTime;
-
-        // Capture scope evaluation if trace supports it
-        if (isActionAwareTrace && trace.captureScopeEvaluation) {
-          trace.captureScopeEvaluation(actionDef.id, targetKey, {
-            scope: targetDef.scope,
-            context: 'actor', // Default context when no contextFrom
-            resultCount: resolvedCounts[targetKey],
-            evaluationTimeMs: Date.now() - scopeStartTime,
-            cacheHit: false, // We'll need to get this from UnifiedScopeResolver
-          });
-        }
 
         // Add to flat list for backward compatibility
         resolvedTargets[targetKey].forEach((target) => {

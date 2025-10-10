@@ -82,6 +82,8 @@ export class ActionExecutionTrace {
       dispatchResult: null,
       error: null,
       phases: [], // Track execution phases
+      operations: [], // Track individual operation executions
+      currentOperation: null, // Currently executing operation
     };
 
     this.#startTime = null;
@@ -441,6 +443,82 @@ export class ActionExecutionTrace {
   }
 
   /**
+   * Capture operation execution start
+   *
+   * @param {object} operation - Operation being executed
+   * @param {number} operationIndex - Index in rule action sequence
+   */
+  captureOperationStart(operation, operationIndex) {
+    const startTime = this.#getHighPrecisionTime();
+
+    this.#executionData.currentOperation = {
+      type: operation.type,
+      index: operationIndex,
+      parameters: operation.parameters || {},
+      startTime,
+      endTime: null,
+      duration: null,
+      result: null,
+    };
+
+    this.#executionData.phases.push({
+      phase: 'operation_start',
+      timestamp: startTime,
+      description: `Operation ${operationIndex}: ${operation.type} started`,
+      operationType: operation.type,
+      operationIndex,
+    });
+  }
+
+  /**
+   * Capture operation execution result
+   *
+   * @param {object} result - Operation result {success: boolean, error?: string}
+   */
+  captureOperationResult(result) {
+    if (!this.#executionData.currentOperation) {
+      return; // No current operation to capture result for
+    }
+
+    const endTime = this.#getHighPrecisionTime();
+    const duration = endTime - this.#executionData.currentOperation.startTime;
+
+    // Complete current operation
+    this.#executionData.currentOperation.endTime = endTime;
+    this.#executionData.currentOperation.duration = duration;
+    this.#executionData.currentOperation.result = result;
+
+    // Move to operations history
+    this.#executionData.operations.push({
+      ...this.#executionData.currentOperation,
+    });
+
+    // Add phase entry
+    this.#executionData.phases.push({
+      phase: 'operation_completed',
+      timestamp: endTime,
+      description: `Operation ${this.#executionData.currentOperation.index}: ${this.#executionData.currentOperation.type} ${result?.success ? 'succeeded' : 'failed'}`,
+      operationType: this.#executionData.currentOperation.type,
+      operationIndex: this.#executionData.currentOperation.index,
+      success: result?.success,
+      error: result?.error || null,
+      duration,
+    });
+
+    // Clear current operation
+    this.#executionData.currentOperation = null;
+  }
+
+  /**
+   * Get operation execution history
+   *
+   * @returns {Array} Array of operation executions
+   */
+  getOperations() {
+    return [...this.#executionData.operations]; // Return copy
+  }
+
+  /**
    * Get the action ID being traced
    *
    * @returns {string} Action definition ID
@@ -517,6 +595,8 @@ export class ActionExecutionTrace {
         duration: this.#executionData.duration,
         status: this.#getExecutionStatus(),
         phases: this.#executionData.phases,
+        operations: this.#executionData.operations,
+        currentOperation: this.#executionData.currentOperation,
       },
       eventPayload: this.#executionData.eventPayload,
       result: this.#executionData.dispatchResult,
@@ -850,6 +930,10 @@ export class ActionExecutionTrace {
     }
 
     const sanitized = { ...payload };
+
+    // Remove trace object to prevent circular reference
+    // The trace captures the payload, which would include itself if not removed
+    delete sanitized.trace;
 
     // Remove or redact sensitive fields
     const sensitiveFields = [

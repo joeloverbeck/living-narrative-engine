@@ -71,16 +71,12 @@ export function createBaseRuleEnvironment({
   eventBus = null,
   createEventBus = null,
 }) {
-  // Create a debug logger that shows SystemLogicInterpreter messages
+  // Create a debug logger that silences debug output for performance tests
   const debugLogger = {
-    debug: jest.fn((msg, ...args) => {
-      if (msg.includes('[SystemLogicInterpreter]') || msg.includes('Rule')) {
-        console.log('[DEBUG]', msg, ...args);
-      }
-    }),
+    debug: jest.fn(),
     info: jest.fn(),
-    warn: jest.fn((msg) => console.log('[WARN]', msg)),
-    error: jest.fn((msg, ...args) => console.log('[ERROR]', msg, ...args)),
+    warn: jest.fn(),
+    error: jest.fn(),
   };
 
   const testLogger =
@@ -224,29 +220,15 @@ export function createBaseRuleEnvironment({
       resolveSync: (scopeName, context) => {
         // Handle the positioning:available_furniture scope
         if (scopeName === 'positioning:available_furniture') {
-          console.log(
-            '[SCOPE RESOLVER] Resolving positioning:available_furniture'
-          );
-          console.log('  - Actor ID:', context.actor?.id);
-          console.log(
-            '  - Actor components:',
-            context.actor?.components
-              ? Object.keys(context.actor.components)
-              : 'none'
-          );
           const actorLocation =
             context.actor?.components?.['core:position']?.locationId;
-          console.log('  - Actor location:', actorLocation);
           if (!actorLocation) {
-            console.log('  - No actor location found, returning empty set');
             return { success: true, value: new Set() };
           }
 
           // Find all entities with positioning:allows_sitting
           // Note: SimpleEntityManager doesn't have getAllEntities, we need to iterate differently
           const allEntityIds = entityManager.getEntityIds();
-          console.log('  - Total entities in manager:', allEntityIds.length);
-          console.log('  - All entity IDs:', allEntityIds);
 
           // Build entities array from IDs
           const allEntities = allEntityIds.map((id) => {
@@ -254,53 +236,31 @@ export function createBaseRuleEnvironment({
             return instance || { id, components: {} };
           });
           const furnitureEntities = allEntities.filter((entity) => {
-            console.log('  - Checking entity:', entity.id);
             const hasSittingComponent =
               entity.components?.['positioning:allows_sitting'];
             const furnitureLocation =
               entity.components?.['core:position']?.locationId;
 
-            if (entity.id === 'p_erotica:park_bench_instance') {
-              console.log('  - Park bench entity found:');
-              console.log(
-                '    - Components:',
-                entity.components ? Object.keys(entity.components) : 'none'
-              );
-              console.log(
-                '    - Has sitting component:',
-                !!hasSittingComponent
-              );
-              console.log('    - Furniture location:', furnitureLocation);
-              console.log('    - Actor location:', actorLocation);
-            }
-
             if (!hasSittingComponent || !furnitureLocation) {
-              console.log(
-                '    - Filtered out: no sitting component or location'
-              );
               return false;
             }
 
             // Check if in same location
             if (furnitureLocation !== actorLocation) {
-              console.log('    - Filtered out: different location');
               return false;
             }
 
             // Check if has available spots
             const spots = hasSittingComponent.spots;
             if (!Array.isArray(spots)) {
-              console.log('    - Filtered out: spots not an array');
               return false;
             }
 
             const hasAvailableSpots = spots.some((spot) => spot === null);
-            console.log('    - Has available spots:', hasAvailableSpots);
             return hasAvailableSpots;
           });
 
           const result = new Set(furnitureEntities.map((e) => e.id));
-          console.log('  - Found furniture entities:', Array.from(result));
           return {
             success: true,
             value: result,
@@ -309,10 +269,6 @@ export function createBaseRuleEnvironment({
 
         // Handle the positioning:furniture_im_sitting_on scope
         if (scopeName === 'positioning:furniture_im_sitting_on') {
-          console.log(
-            '[SCOPE RESOLVER] Resolving positioning:furniture_im_sitting_on'
-          );
-
           // This scope should find furniture that the actor is currently sitting on
           // The scope definition is: entities(positioning:allows_sitting)[][{"==": [{"var": "entity.id"}, {"var": "actor.components.positioning:sitting_on.furniture_id"}]}]
 
@@ -320,23 +276,14 @@ export function createBaseRuleEnvironment({
           const actor =
             context?.actor || entityManager.getEntityInstance(context);
           if (!actor) {
-            console.log('  - No actor found in context, returning empty set');
             return { success: true, value: new Set() };
           }
 
           // Get actor's sitting_on component
           const sittingOn = actor.components?.['positioning:sitting_on'];
           if (!sittingOn || !sittingOn.furniture_id) {
-            console.log(
-              '  - Actor is not sitting on anything, returning empty set'
-            );
             return { success: true, value: new Set() };
           }
-
-          console.log(
-            '  - Actor is sitting on furniture:',
-            sittingOn.furniture_id
-          );
 
           // Check if this furniture exists and has positioning:allows_sitting component
           const targetFurniture = entityManager.getEntityInstance(
@@ -346,23 +293,14 @@ export function createBaseRuleEnvironment({
             !targetFurniture ||
             !targetFurniture.components?.['positioning:allows_sitting']
           ) {
-            console.log(
-              '  - Target furniture does not exist or does not allow sitting, returning empty set'
-            );
             return { success: true, value: new Set() };
           }
 
-          console.log('  - Found target furniture, returning it');
           return { success: true, value: new Set([sittingOn.furniture_id]) };
         }
 
         // Handle the positioning:available_surfaces scope
         if (scopeName === 'positioning:available_surfaces') {
-          console.log(
-            '[SCOPE] Resolving available_surfaces for context:',
-            context
-          );
-
           // Extract actor ID from context (context might be an object with actor property or just the ID)
           const actorId = context?.actor?.id || context;
 
@@ -370,7 +308,6 @@ export function createBaseRuleEnvironment({
           const actor = entityManager.getEntityInstance(actorId);
           const actorPosition = actor?.components?.['core:position'];
           if (!actorPosition || !actorPosition.locationId) {
-            console.log('  - Actor has no position, returning empty set');
             return { success: true, value: new Set() };
           }
 
@@ -384,17 +321,11 @@ export function createBaseRuleEnvironment({
           });
 
           const surfaceIds = availableSurfaces.map(surface => surface.id);
-          console.log(`  - Found ${surfaceIds.length} available surfaces:`, surfaceIds);
           return { success: true, value: new Set(surfaceIds) };
         }
 
         // Handle the positioning:surface_im_bending_over scope
         if (scopeName === 'positioning:surface_im_bending_over') {
-          console.log(
-            '[SCOPE] Resolving surface_im_bending_over for context:',
-            context
-          );
-
           // Extract actor ID from context
           const actorId = context?.actor?.id || context;
 
@@ -403,11 +334,9 @@ export function createBaseRuleEnvironment({
           const bendingOver = actor?.components?.['positioning:bending_over'];
 
           if (!bendingOver || !bendingOver.surface_id) {
-            console.log('  - Actor is not bending over anything, returning empty set');
             return { success: true, value: new Set() };
           }
 
-          console.log('  - Actor is bending over surface:', bendingOver.surface_id);
           return { success: true, value: new Set([bendingOver.surface_id]) };
         }
 
@@ -431,24 +360,8 @@ export function createBaseRuleEnvironment({
       bodyGraphService: mockBodyGraphService,
     });
 
-    // Log rules being passed to SystemLogicInterpreter
-    const rulesForInterpreter = testDataRegistry.getAllSystemRules();
-    console.log(
-      '[TEST ENV] Rules passed to SystemLogicInterpreter:',
-      rulesForInterpreter?.length || 0
-    );
-    if (rulesForInterpreter && rulesForInterpreter.length > 0) {
-      console.log(
-        '[TEST ENV] Rule IDs:',
-        rulesForInterpreter.map((r) => r.rule_id)
-      );
-    }
-
     interpreter.initialize();
 
-    // Verify the interpreter is subscribed
-    const listenerCount = bus.listenerCount('*');
-    console.log('[TEST ENV] Event bus listener count for "*":', listenerCount);
     return {
       entityManager,
       operationRegistry,
@@ -590,118 +503,31 @@ export function createRuleTestEnvironment(options) {
   // Add the helper function to the environment for easy access
   env.createAttemptActionPayload = createAttemptActionPayload;
 
-  // Track dispatch count for debugging
-  let dispatchCount = 0;
-
   // Add a convenience method for dispatching attempt_action events with validation
   env.dispatchAction = async (params) => {
-    dispatchCount++;
-    console.log(`[DISPATCH #${dispatchCount}] Starting dispatch:`, params);
     const payload = createAttemptActionPayload(params);
 
     // Validate action using ActionIndex before dispatch
     if (payload.actionId) {
-      const actor = { id: payload.actorId };
       const isValid = env.validateAction(payload.actorId, payload.actionId);
 
-      console.log(
-        `[DISPATCH] Action validation for ${payload.actionId}: ${isValid}`
-      );
-
-      // Debug actor state for get_up_from_furniture validation
-      if (payload.actionId === 'positioning:get_up_from_furniture') {
-        const actorEntity = env.entityManager.getEntityInstance(
-          payload.actorId
-        );
-        console.log(
-          `[DISPATCH] Actor state for get_up validation:`,
-          JSON.stringify(actorEntity, null, 2)
-        );
-
-        // Try to resolve the target scope
-        try {
-          const scopeResult = env.unifiedScopeResolver.resolveSync(
-            'positioning:furniture_im_sitting_on',
-            payload.actorId
-          );
-          console.log(
-            `[DISPATCH] furniture_im_sitting_on scope resolved to:`,
-            scopeResult
-          );
-
-          // Let's also manually check what entities have positioning:allows_sitting
-          const allEntities = Array.from(env.entityManager.entities.values());
-          const furnitureEntities = allEntities.filter(
-            (e) => e.components['positioning:allows_sitting']
-          );
-          console.log(
-            `[DISPATCH] All furniture entities:`,
-            furnitureEntities.map((e) => ({
-              id: e.id,
-              component: e.components['positioning:allows_sitting'],
-            }))
-          );
-
-          // Check the specific furniture_id from actor's sitting_on component
-          const actorSittingOn =
-            actorEntity.components['positioning:sitting_on'];
-          console.log(`[DISPATCH] Actor sitting_on component:`, actorSittingOn);
-
-          if (actorSittingOn) {
-            const targetFurniture = env.entityManager.getEntityInstance(
-              actorSittingOn.furniture_id
-            );
-            console.log(
-              `[DISPATCH] Target furniture (${actorSittingOn.furniture_id}):`,
-              targetFurniture
-            );
-          }
-        } catch (err) {
-          console.log(
-            `[DISPATCH] Error resolving furniture_im_sitting_on scope:`,
-            err.message
-          );
-        }
-      }
       if (!isValid) {
-        console.log(
-          `[DISPATCH] Action ${payload.actionId} FILTERED OUT by ActionIndex for actor ${payload.actorId}`
-        );
         env.logger.debug(
           `Action ${payload.actionId} filtered out by ActionIndex for actor ${payload.actorId}`
         );
         // Return early - don't dispatch the event
         return true;
       }
-      console.log(
-        `[DISPATCH] Action ${payload.actionId} PASSED validation, proceeding with dispatch`
-      );
     }
 
     // Dispatch the event
-    console.log(
-      '[DISPATCH ACTION] Dispatching event:',
-      'core:attempt_action',
-      'Full payload:',
-      JSON.stringify(payload, null, 2)
-    );
-
-    // Log actor's current state before dispatch
-    const actor = env.entityManager.getEntityInstance(payload.actorId);
-    if (actor) {
-      console.log(
-        '[DISPATCH ACTION] Actor state before dispatch:',
-        JSON.stringify(actor, null, 2)
-      );
-    }
     const result = await env.eventBus.dispatch('core:attempt_action', payload);
 
     // IMPORTANT: Give the SystemLogicInterpreter time to process the event
     // The interpreter listens to events asynchronously, so we need a small delay
     // to ensure rules are processed before the test continues
-    await new Promise((resolve) => setTimeout(resolve, 100)); // Increased delay to ensure processing
+    await new Promise((resolve) => setTimeout(resolve, 10)); // Reduced from 100ms to 10ms for performance
 
-    console.log('[DISPATCH ACTION] Event dispatched, result:', result);
     return result;
   };
 

@@ -60,12 +60,40 @@
       }
     },
     {
-      "type": "END_TURN",
-      "comment": "End actor's turn after dropping item",
+      "type": "SET_VARIABLE",
+      "comment": "Prepare success message for macro",
       "parameters": {
-        "entityId": "{event.payload.actorId}",
-        "success": true
+        "variable_name": "logMessage",
+        "value": "You dropped {context.itemName}."
       }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Set perception type for macro",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "item_dropped"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Set location for macro",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Set target for macro",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.targetId}"
+      }
+    },
+    {
+      "comment": "Display success message and end turn",
+      "macro": "core:logSuccessAndEndTurn"
     }
   ]
 }

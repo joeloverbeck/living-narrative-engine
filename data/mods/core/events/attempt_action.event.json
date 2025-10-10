@@ -116,6 +116,10 @@
       "hasContextDependencies": {
         "type": "boolean",
         "description": "Whether the action targets have context dependencies"
+      },
+      "trace": {
+        "type": "object",
+        "description": "Optional trace object for execution debugging and performance monitoring"
       }
     },
     "additionalProperties": false,
