@@ -16,7 +16,9 @@ const createDispatcher = () => ({
 const createEntityManager = () => ({
   getComponentData: jest.fn(),
   batchAddComponentsOptimized: jest.fn().mockResolvedValue(undefined),
-  getEntityInstance: jest.fn(),
+  getEntityInstance: jest.fn(() => ({
+    getComponentTypeIds: jest.fn(() => ['core:position', 'items:item', 'items:portable']),
+  })),
 });
 
 describe('DropItemAtLocationHandler', () => {
@@ -85,7 +87,7 @@ describe('DropItemAtLocationHandler', () => {
     );
     expect(logger.warn).toHaveBeenCalledWith(
       'DropItemAtLocationHandler: [DROP_ITEM] No inventory component on actor',
-      expect.objectContaining({ actorEntity: 'actor-123' })
+      { actorEntity: 'actor-123', componentType: 'items:inventory' }
     );
     expect(dispatcher.dispatch).not.toHaveBeenCalled();
     expect(entityManager.batchAddComponentsOptimized).not.toHaveBeenCalled();
@@ -99,10 +101,11 @@ describe('DropItemAtLocationHandler', () => {
     expect(result).toEqual({ success: false, error: 'item_not_in_inventory' });
     expect(logger.warn).toHaveBeenCalledWith(
       'DropItemAtLocationHandler: [DROP_ITEM] Item not in actor inventory',
-      expect.objectContaining({
+      {
         actorEntity: 'actor-123',
         itemEntity: 'item-999',
-      })
+        currentInventory: ['other-item'],
+      }
     );
     expect(dispatcher.dispatch).not.toHaveBeenCalled();
     expect(entityManager.batchAddComponentsOptimized).not.toHaveBeenCalled();
@@ -175,7 +178,9 @@ describe('DropItemAtLocationHandler', () => {
         actorEntity: 'actor-123',
         itemEntity: 'item-999',
         locationId: 'loc-42',
-      })
+        errorMessage: 'batch failed',
+        errorStack: expect.stringContaining('batch failed'),
+      }
     );
     expect(dispatcher.dispatch).not.toHaveBeenCalled();
   });

@@ -319,6 +319,23 @@ describe('dependencyUtils', () => {
       );
     });
 
+    it('falls back to console when a function dependency fails validation but logger is unusable', () => {
+      const logger = { error: 'nope' };
+      const consoleSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
+      expect(() =>
+        validateDependency({}, 'Callable', logger, { isFunction: true })
+      ).toThrow(InvalidArgumentError);
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "Dependency 'Callable' must be a function, but got object."
+      );
+
+      consoleSpy.mockRestore();
+    });
+
     it('accepts a callable dependency when the isFunction flag is set', () => {
       const logger = { error: jest.fn() };
       const dependency = () => true;
@@ -337,6 +354,23 @@ describe('dependencyUtils', () => {
       expect(logger.error).toHaveBeenCalledWith(
         "Invalid or missing method 'run' on dependency 'Service'."
       );
+    });
+
+    it('falls back to console when required method validation cannot log through the provided logger', () => {
+      const logger = {};
+      const consoleSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
+      expect(() =>
+        validateDependency({}, 'Service', logger, { requiredMethods: ['run'] })
+      ).toThrow(InvalidArgumentError);
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "Invalid or missing method 'run' on dependency 'Service'."
+      );
+
+      consoleSpy.mockRestore();
     });
 
     it('passes when dependency satisfies all requirements', () => {
@@ -431,6 +465,26 @@ describe('dependencyUtils', () => {
       expect(logger.error).toHaveBeenLastCalledWith(
         "Dependency 'Second' must be a function, but got object."
       );
+    });
+
+    it('passes when every dependency specification is satisfied', () => {
+      const logger = { error: jest.fn() };
+      const dependencyA = { init: jest.fn() };
+      const dependencyB = jest.fn();
+
+      expect(() =>
+        validateDependencies(
+          [
+            { dependency: dependencyA, name: 'Alpha', methods: ['init'] },
+            { dependency: dependencyB, name: 'Beta', isFunction: true },
+          ],
+          logger
+        )
+      ).not.toThrow();
+
+      expect(logger.error).not.toHaveBeenCalled();
+      expect(dependencyA.init).not.toHaveBeenCalled();
+      expect(typeof dependencyB).toBe('function');
     });
   });
 });
