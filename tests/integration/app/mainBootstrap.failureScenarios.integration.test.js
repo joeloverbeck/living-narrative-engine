@@ -118,7 +118,16 @@ const createUIElements = () => ({
 
 const configureSuccessfulStages = () => {
   const uiElements = createUIElements();
-  const container = { resolve: jest.fn() };
+  const eventBus = { subscribe: jest.fn() }; // Mock EventBus for cache invalidation
+  const container = {
+    resolve: jest.fn((token) => {
+      // Return eventBus when IEventBus token is requested
+      if (token === 'IEventBus' || token?.includes?.('EventBus')) {
+        return eventBus;
+      }
+      return undefined;
+    }),
+  };
   const logger = { debug: jest.fn(), error: jest.fn() };
 
   mockStages.ensureCriticalDOMElementsStage.mockResolvedValue({

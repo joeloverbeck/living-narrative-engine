@@ -11,6 +11,7 @@ import {
   initProcessingIndicatorController,
   initCriticalLogNotifier,
 } from './auxiliary/index.js';
+import { setupEntityCacheInvalidation } from '../../scopeDsl/core/entityHelpers.js';
 
 /**
  * @typedef {import('../../dependencyInjection/appContainer.js').default} AppContainer
@@ -125,6 +126,31 @@ export async function initializeAuxiliaryServicesStage(
       result.error
     );
     return result;
+  }
+
+  // Setup entity cache invalidation after all auxiliary services are initialized
+  // This ensures EventBus is registered in the container before setup
+  try {
+    logger.debug('Setting up entity cache invalidation...');
+    const eventBus = container.resolve(tokens.IEventBus);
+
+    if (!eventBus) {
+      const errorMsg = 'EventBus resolution returned undefined. Cannot setup cache invalidation.';
+      logger.error(`Bootstrap Stage: ${stageName} - ${errorMsg}`);
+      return stageFailure(stageName, errorMsg);
+    }
+
+    setupEntityCacheInvalidation(eventBus);
+    logger.debug('Entity cache invalidation setup completed successfully.');
+  } catch (error) {
+    logger.error(
+      `Bootstrap Stage: ${stageName} - Failed to setup entity cache invalidation:`,
+      error
+    );
+    return stageFailure(
+      stageName,
+      `Failed to setup entity cache invalidation: ${error.message}`
+    );
   }
 
   logger.debug(`Bootstrap Stage: ${stageName} completed.`);

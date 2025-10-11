@@ -5,12 +5,20 @@
  */
 
 import { buildComponents } from '../../utils/entityComponentUtils.js';
+import {
+  COMPONENT_ADDED_ID,
+  COMPONENT_REMOVED_ID,
+  COMPONENTS_BATCH_ADDED_ID,
+} from '../../constants/eventIds.js';
 
 // Entity lookup cache for performance optimization
 const entityCache = new Map();
 const CACHE_SIZE_LIMIT = 10000; // Prevent unbounded cache growth
 let cacheHits = 0;
 let cacheMisses = 0;
+
+// Event bus instance for automatic cache invalidation
+let eventBusInstance = null;
 
 /**
  * Clears the entity cache. Should be called when entity data changes significantly.
@@ -21,6 +29,60 @@ export function clearEntityCache() {
   entityCache.clear();
   cacheHits = 0;
   cacheMisses = 0;
+}
+
+/**
+ * Invalidates a specific entity's cache entry.
+ * Called automatically when components are added/removed via event listeners.
+ *
+ * @param {string} entityId - Entity instance ID to invalidate
+ * @returns {void}
+ */
+export function invalidateEntityCache(entityId) {
+  const cacheKey = `entity_${entityId}`;
+  if (entityCache.has(cacheKey)) {
+    entityCache.delete(cacheKey);
+  }
+}
+
+/**
+ * Sets up automatic cache invalidation via event bus.
+ * Should be called once during application bootstrap.
+ *
+ * @param {object} eventBus - Event bus instance with 'subscribe' method for event subscription
+ * @returns {void}
+ */
+export function setupEntityCacheInvalidation(eventBus) {
+  if (eventBusInstance) {
+    return; // Already set up
+  }
+
+  eventBusInstance = eventBus;
+
+  // Listen for batch component additions (most common during operations like dropItemAtLocation)
+  eventBus.subscribe(COMPONENTS_BATCH_ADDED_ID, (event) => {
+    if (event?.payload?.updates) {
+      event.payload.updates.forEach((update) => {
+        if (update.instanceId) {
+          invalidateEntityCache(update.instanceId);
+        }
+      });
+    }
+  });
+
+  // Listen for individual component additions
+  eventBus.subscribe(COMPONENT_ADDED_ID, (event) => {
+    if (event?.payload?.entity?.id) {
+      invalidateEntityCache(event.payload.entity.id);
+    }
+  });
+
+  // Listen for component removals
+  eventBus.subscribe(COMPONENT_REMOVED_ID, (event) => {
+    if (event?.payload?.entity?.id) {
+      invalidateEntityCache(event.payload.entity.id);
+    }
+  });
 }
 
 /**

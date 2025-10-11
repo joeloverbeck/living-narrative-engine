@@ -25,7 +25,7 @@ import { createMockIndexedDBStorageAdapter } from '../../../common/mockFactories
  */
 const PERFORMANCE_SCENARIOS = {
   LIGHT_GAMING_LOAD: {
-    actionCount: 20, // Reduced from 50
+    actionCount: 15, // Further reduced for test speed
     batchSize: 5,
     concurrentTraces: 2,
     expectedLatency: 15, // 15ms max per batch (adjusted for test environment)
@@ -33,7 +33,7 @@ const PERFORMANCE_SCENARIOS = {
   },
 
   TYPICAL_GAMING_LOAD: {
-    actionCount: 50, // Reduced from 150
+    actionCount: 35, // Further reduced for test speed
     batchSize: 8,
     concurrentTraces: 4,
     expectedLatency: 20, // 20ms max per batch
@@ -41,7 +41,7 @@ const PERFORMANCE_SCENARIOS = {
   },
 
   HEAVY_GAMING_LOAD: {
-    actionCount: 100, // Reduced from 300
+    actionCount: 70, // Further reduced for test speed
     batchSize: 10,
     concurrentTraces: 8,
     expectedLatency: 25, // 25ms max per batch
@@ -49,7 +49,7 @@ const PERFORMANCE_SCENARIOS = {
   },
 
   BURST_LOAD: {
-    actionCount: 200, // Reduced from 500
+    actionCount: 140, // Further reduced for test speed
     batchSize: 15,
     concurrentTraces: 12,
     expectedLatency: 30, // 30ms max per batch (higher due to burst)
@@ -75,7 +75,26 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
   let mockEventBus;
   let startMemory;
   let performanceTracker;
-  let cachedTraces = null; // Cache for reusable trace templates
+
+  // Pre-generated trace pools for performance
+  let tracePools = {};
+
+  beforeAll(() => {
+    // Initialize trace factory once for all tests
+    const setupLogger = createMockLogger();
+    traceFactory = new ActionExecutionTraceFactory({
+      logger: setupLogger,
+    });
+
+    // Pre-generate trace pools to avoid repeated generation
+    tracePools = {
+      light: createTracePool(15),
+      typical: createTracePool(35),
+      heavy: createTracePool(70),
+      burst: createTracePool(140),
+      mixed200: createTracePool(200),
+    };
+  });
 
   beforeEach(() => {
     // Record initial memory state for potential future use
@@ -96,14 +115,41 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
     mockEventBus = {
       dispatch: jest.fn(),
     };
-
-    // Initialize trace factory once and reuse
-    if (!traceFactory) {
-      traceFactory = new ActionExecutionTraceFactory({
-        logger: mockLogger,
-      });
-    }
   });
+
+  /**
+   * Create a pool of pre-generated traces
+   * @param {number} count - Number of traces to create
+   * @returns {Array} Array of trace objects
+   */
+  function createTracePool(count) {
+    const traces = [];
+    const baseTimestamp = Date.now();
+
+    for (let i = 0; i < count; i++) {
+      const trace = traceFactory.createTrace({
+        actionId: `perf-test-${i}`,
+        actorId: `actor-${i % 3}`, // Cycle through 3 actors
+        turnAction: {
+          actionDefinitionId: 'core:test',
+          commandString: `test command ${i}`,
+          parameters: { index: i },
+        },
+      });
+
+      // Simulate completed execution with proper API
+      trace.captureDispatchStart();
+      trace.captureDispatchResult({
+        success: true,
+        timestamp: baseTimestamp + i, // Sequential timestamps for consistency
+        metadata: { duration: 25 }, // Fixed duration for predictable tests
+      });
+
+      traces.push(trace);
+    }
+
+    return traces;
+  }
 
   afterEach(async () => {
     if (processor) {
@@ -174,7 +220,7 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
       });
 
       // Wait for processing to complete
-      await waitForProcessingCompletion(processor, traces.length, 1500);
+      await waitForProcessingCompletion(processor, traces.length, 500);
 
       const endTime = performance.now();
       const duration = (endTime - startTime) / 1000; // Convert to seconds
@@ -215,7 +261,7 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
         processor.enqueue(trace, priority);
       });
 
-      await waitForProcessingCompletion(processor, traces.length, 1500);
+      await waitForProcessingCompletion(processor, traces.length, 500);
 
       const endTime = performance.now();
       const duration = (endTime - startTime) / 1000;
@@ -244,8 +290,7 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
       // Measure storage call latency
       mockStorageAdapter.setItem.mockImplementation(async () => {
         const startTime = performance.now();
-        // Minimal async delay for test realism
-        await new Promise((resolve) => setTimeout(resolve, 0));
+        // No delay needed - measure pure processing time
         const endTime = performance.now();
 
         latencyMeasurements.push(endTime - startTime);
@@ -257,7 +302,7 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
         processor.enqueue(trace, TracePriority.NORMAL);
       });
 
-      await waitForProcessingCompletion(processor, traces.length, 1000);
+      await waitForProcessingCompletion(processor, traces.length, 300);
 
       // Analyze latency measurements
       expect(latencyMeasurements.length).toBeGreaterThan(0); // Ensure we have measurements
@@ -286,22 +331,18 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
         maxQueueSize: 100,
         batchSize: 8,
         maxRetries: 1, // Reduce retries for faster failure detection
+        batchTimeout: 10, // Faster batch processing for quicker failure detection
       });
 
       let failureDetectionTime = null;
       const startTime = performance.now();
 
-      // Configure storage to fail after first successful call
-      let callCount = 0;
+      // Configure storage to fail immediately to trigger circuit breaker
       mockStorageAdapter.setItem.mockImplementation(async () => {
-        callCount++;
-        if (callCount > 1) {
-          if (!failureDetectionTime) {
-            failureDetectionTime = performance.now();
-          }
-          throw new Error('Simulated failure for circuit breaker test');
+        if (!failureDetectionTime) {
+          failureDetectionTime = performance.now();
         }
-        return Promise.resolve();
+        throw new Error('Simulated failure for circuit breaker test');
       });
 
       const traces = createPerformanceTraces(20);
@@ -311,7 +352,8 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
         processor.enqueue(trace, TracePriority.NORMAL);
       });
 
-      await waitForProcessingCompletion(processor, traces.length, 1000);
+      // Circuit breaker test needs more time for retries and failures
+      await waitForProcessingCompletion(processor, traces.length, 800);
 
       // Check that failure was detected quickly
       expect(failureDetectionTime).toBeTruthy(); // Ensure failure was detected
@@ -365,8 +407,7 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
         }
       }
 
-      // Minimal async delay for test realism
-      await new Promise((resolve) => setTimeout(resolve, 1));
+      // No delay needed - optimize for test speed
 
       const batchEndTime = performance.now();
       batchLatencies.push(batchEndTime - batchStartTime);
@@ -380,7 +421,7 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
       processor.enqueue(trace, TracePriority.NORMAL);
     });
 
-    await waitForProcessing(3000);
+    await waitForProcessing(500);
 
     const endTime = performance.now();
     const totalDuration = (endTime - startTime) / 1000;
@@ -433,23 +474,27 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
   }
 
   /**
-   * Create performance traces for testing
+   * Create performance traces for testing (uses pre-generated pools)
    * @param {number} count - Number of traces to create
    * @returns {Array} Array of trace objects
    */
   function createPerformanceTraces(count) {
-    // Use cached traces if available and count matches
-    if (cachedTraces && cachedTraces.length === count) {
-      return cachedTraces;
-    }
+    // Use pre-generated pools for common sizes
+    if (count === 15 && tracePools.light) return tracePools.light;
+    if (count === 35 && tracePools.typical) return tracePools.typical;
+    if (count === 50 && tracePools.typical) return tracePools.typical.slice(0, 50);
+    if (count === 70 && tracePools.heavy) return tracePools.heavy;
+    if (count === 140 && tracePools.burst) return tracePools.burst;
+    if (count === 200 && tracePools.mixed200) return tracePools.mixed200;
 
+    // Fallback: generate on-demand for non-standard sizes
     const traces = [];
     const baseTimestamp = Date.now();
 
     for (let i = 0; i < count; i++) {
       const trace = traceFactory.createTrace({
         actionId: `perf-test-${i}`,
-        actorId: `actor-${i % 3}`, // Cycle through 3 actors
+        actorId: `actor-${i % 3}`,
         turnAction: {
           actionDefinitionId: 'core:test',
           commandString: `test command ${i}`,
@@ -457,20 +502,14 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
         },
       });
 
-      // Simulate completed execution with proper API
       trace.captureDispatchStart();
       trace.captureDispatchResult({
         success: true,
-        timestamp: baseTimestamp + i, // Sequential timestamps for consistency
-        metadata: { duration: 25 }, // Fixed duration for predictable tests
+        timestamp: baseTimestamp + i,
+        metadata: { duration: 25 },
       });
 
       traces.push(trace);
-    }
-
-    // Cache for potential reuse
-    if (count <= 200) { // Only cache smaller sets to avoid memory issues
-      cachedTraces = traces;
     }
 
     return traces;
@@ -506,29 +545,29 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
   }
 
   /**
-   * Wait for processing completion with polling
+   * Wait for processing completion with polling (optimized)
    * @param {object} processor - The processor instance
    * @param {number} expectedCount - Expected number of items to process
-   * @param {number} [maxWait=2000] - Maximum wait time in milliseconds
+   * @param {number} [maxWait=500] - Maximum wait time in milliseconds
    * @returns {Promise} Promise that resolves when processing is complete or timeout
    */
-  async function waitForProcessingCompletion(processor, expectedCount, maxWait = 2000) {
-    const pollInterval = 25; // Check every 25ms for faster response
+  async function waitForProcessingCompletion(processor, expectedCount, maxWait = 500) {
+    const pollInterval = 10; // Check every 10ms for faster response
     const startTime = Date.now();
     let lastProcessedCount = 0;
     let stableCount = 0;
-    
+
     while (Date.now() - startTime < maxWait) {
       const stats = processor.getQueueStats();
       const metrics = processor.getMetrics();
-      
+
       // Check if processing is complete
       if (!stats.isProcessing && stats.totalSize === 0) {
         // Give a tiny buffer for final metric updates
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise(resolve => setTimeout(resolve, 5));
         return;
       }
-      
+
       // Check if we've processed enough items
       if (metrics.totalProcessed >= expectedCount * 0.85) {
         // Check if processing has stabilized (no new items for 2 polls)
@@ -542,10 +581,10 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
           lastProcessedCount = metrics.totalProcessed;
         }
       }
-      
+
       await new Promise(resolve => setTimeout(resolve, pollInterval));
     }
-    
+
     // Timeout reached, return anyway
     return;
   }

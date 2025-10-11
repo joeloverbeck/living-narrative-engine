@@ -121,7 +121,7 @@ export async function bootstrapApp() {
     gameEngine = engineResult.payload;
     logger.debug(`main.js: ${currentPhaseForError} stage completed.`);
 
-    // STAGE 5: Initialize Auxiliary Services
+    // STAGE 5: Initialize Auxiliary Services (includes entity cache invalidation setup)
     currentPhaseForError = 'Auxiliary Services Initialization';
     logger.debug(`main.js: Executing ${currentPhaseForError} stage...`);
     const auxResult = await initializeAuxiliaryServicesStage(
@@ -158,7 +158,7 @@ export async function bootstrapApp() {
     // The stage itself logs its completion.
     logger.debug(`main.js: ${currentPhaseForError} stage call completed.`);
 
-    logger.debug('main.js: Bootstrap stages 1-7 completed successfully.');
+    logger.debug('main.js: Bootstrap stages completed successfully.');
   } catch (bootstrapError) {
     // Centralized error handling for all bootstrap stages
     const detectedPhase =

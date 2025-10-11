@@ -72,8 +72,17 @@ describe('main.js failure branches', () => {
       document,
     };
 
+    // Create mock container with resolve method
+    const mockEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
+    const mockContainer = {
+      resolve: jest.fn((token) => {
+        if (token === 'IEventBus') return mockEventBus;
+        return null;
+      }),
+    };
+
     mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockSetupDI.mockResolvedValue({ success: true, payload: mockContainer });
     const stageError = new Error('logger fail');
     stageError.phase = 'Core Services Resolution';
     mockResolveCore.mockResolvedValue({ success: false, error: stageError });
@@ -106,8 +115,17 @@ describe('main.js failure branches', () => {
     };
     const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
 
+    // Create mock container with resolve method
+    const mockEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
+    const mockContainer = {
+      resolve: jest.fn((token) => {
+        if (token === 'IEventBus') return mockEventBus;
+        return null;
+      }),
+    };
+
     mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockSetupDI.mockResolvedValue({ success: true, payload: mockContainer });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     mockInitGlobalConfig.mockResolvedValue({ success: true });
     mockInitEngine.mockResolvedValue({ success: true, payload: {} });
@@ -141,8 +159,17 @@ describe('main.js failure branches', () => {
     };
     const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
 
+    // Create mock container with resolve method
+    const mockEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
+    const mockContainer = {
+      resolve: jest.fn((token) => {
+        if (token === 'IEventBus') return mockEventBus;
+        return null;
+      }),
+    };
+
     mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockSetupDI.mockResolvedValue({ success: true, payload: mockContainer });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     mockInitGlobalConfig.mockResolvedValue({ success: true });
     mockInitEngine.mockResolvedValue({ success: true, payload: {} });
@@ -181,8 +208,17 @@ describe('main.js failure branches', () => {
       json: () => Promise.resolve({ startWorld: 'terra' }),
     });
 
+    // Create mock container with resolve method
+    const mockEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
+    const mockContainer = {
+      resolve: jest.fn((token) => {
+        if (token === 'IEventBus') return mockEventBus;
+        return null;
+      }),
+    };
+
     mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockSetupDI.mockResolvedValue({ success: true, payload: mockContainer });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     const configError = new Error('config fail');
     mockInitGlobalConfig.mockResolvedValue({ success: false, error: configError });
@@ -225,8 +261,17 @@ describe('main.js failure branches', () => {
       json: () => Promise.resolve({ startWorld: 'elysium' }),
     });
 
+    // Create mock container with resolve method
+    const mockEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
+    const mockContainer = {
+      resolve: jest.fn((token) => {
+        if (token === 'IEventBus') return mockEventBus;
+        return null;
+      }),
+    };
+
     mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockSetupDI.mockResolvedValue({ success: true, payload: mockContainer });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     mockInitGlobalConfig.mockResolvedValue({ success: true });
     const engineError = new Error('engine fail');

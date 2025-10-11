@@ -101,8 +101,17 @@ describe('main.js additional branch coverage', () => {
     const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
     const showLoad = jest.fn();
 
+    // Create mock container with resolve method
+    const mockEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
+    const mockContainer = {
+      resolve: jest.fn((token) => {
+        if (token === 'IEventBus') return mockEventBus;
+        return null;
+      }),
+    };
+
     mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockSetupDI.mockResolvedValue({ success: true, payload: mockContainer });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     mockInitGlobalConfig.mockResolvedValue({ success: true });
     mockInitEngine.mockResolvedValue({
@@ -138,8 +147,17 @@ describe('main.js additional branch coverage', () => {
     };
     const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
 
+    // Create mock container with resolve method
+    const mockEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
+    const mockContainer = {
+      resolve: jest.fn((token) => {
+        if (token === 'IEventBus') return mockEventBus;
+        return null;
+      }),
+    };
+
     mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockSetupDI.mockResolvedValue({ success: true, payload: mockContainer });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     mockInitGlobalConfig.mockResolvedValue({ success: true });
     mockInitEngine.mockResolvedValue({ success: true, payload: {} });

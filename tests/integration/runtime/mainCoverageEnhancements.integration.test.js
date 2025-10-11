@@ -89,7 +89,16 @@ const createUiElementsPayload = () => ({
 
 const arrangeSuccessfulStages = () => {
   const uiElements = createUiElementsPayload();
-  const container = { resolve: jest.fn() };
+  const eventBus = { subscribe: jest.fn() }; // Mock EventBus for cache invalidation
+  const container = {
+    resolve: jest.fn((token) => {
+      // Return eventBus when IEventBus token is requested
+      if (token === 'IEventBus' || token?.includes?.('EventBus')) {
+        return eventBus;
+      }
+      return undefined;
+    })
+  };
   const logger = { debug: jest.fn(), error: jest.fn() };
   const gameEngine = { showLoadGameUI: jest.fn().mockResolvedValue(undefined) };
 
@@ -125,7 +134,7 @@ const arrangeSuccessfulStages = () => {
     success: true,
   });
 
-  return { uiElements, container, logger, gameEngine };
+  return { uiElements, container, logger, gameEngine, eventBus };
 };
 
 describe('main.js integration coverage enhancements', () => {

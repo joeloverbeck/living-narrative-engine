@@ -98,6 +98,7 @@ const createUIElements = () => ({
 
 const configureSuccessfulStages = (logger) => {
   const uiElements = createUIElements();
+  const eventBus = { subscribe: jest.fn() }; // Mock EventBus for cache invalidation
 
   mockStages.ensureCriticalDOMElementsStage.mockImplementation(async () => ({
     success: true,
@@ -108,6 +109,13 @@ const configureSuccessfulStages = (logger) => {
     async (_ui, configureContainer, { createAppContainer }) => {
       expect(configureContainer).toBe(mockConfigureContainer);
       const container = createAppContainer();
+      // Add EventBus mock to container.resolve()
+      container.resolve.mockImplementation((token) => {
+        if (token === 'IEventBus' || token?.includes?.('EventBus')) {
+          return eventBus;
+        }
+        return undefined;
+      });
       return { success: true, payload: container };
     }
   );
@@ -178,7 +186,7 @@ describe('main bootstrap integration', () => {
     );
 
     expect(logger.debug).toHaveBeenCalledWith(
-      'main.js: Bootstrap stages 1-7 completed successfully.'
+      'main.js: Bootstrap stages completed successfully.'
     );
 
     const engineInstance = gameEngineInstances.at(-1);

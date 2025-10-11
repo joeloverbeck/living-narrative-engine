@@ -695,16 +695,8 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
   #handleGenerationComplete(event) {
     this.logger.debug('TraitsRewriterController: Generation complete', event);
 
-    // Dispatch UI state change event
-    this.eventBus.dispatch({
-      type: CHARACTER_BUILDER_EVENTS.UI_STATE_CHANGED,
-      payload: {
-        controller: 'TraitsRewriterController',
-        fromState: 'generating',
-        toState: 'results',
-        timestamp: new Date().toISOString(),
-      },
-    });
+    // Note: UI state management is handled by the UIStateManager
+    // No additional event dispatching needed here
   }
 
   /**
