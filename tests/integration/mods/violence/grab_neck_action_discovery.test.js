@@ -164,7 +164,7 @@ describe('violence:grab_neck action discovery', () => {
       expect(ids).not.toContain(ACTION_ID);
     });
 
-    it.skip('is not available when the actor faces away from the target', () => {
+    it('is not available when the actor faces away from the target', () => {
       const scenario = testFixture.createCloseActors(['Chloe', 'Evan']);
 
       scenario.actor.components['positioning:facing_away'] = {
@@ -173,8 +173,6 @@ describe('violence:grab_neck action discovery', () => {
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
-      clearEntityCache(); // Clear cache after reset to ensure fresh entity data
-
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(

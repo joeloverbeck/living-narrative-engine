@@ -372,7 +372,7 @@ describe('items:take_from_container action integration', () => {
       );
       expect(failedEvent).toBeDefined();
       expect(failedEvent.payload.locationId).toBe('cellar');
-      expect(failedEvent.payload.contextualData.reason).toBe('capacity_exceeded');
+      expect(failedEvent.payload.contextualData.reason).toBe('max_items_exceeded');
     });
   });
 
@@ -462,7 +462,21 @@ describe('items:take_from_container action integration', () => {
         .withComponent('items:openable', {})
         .build();
 
-      testFixture.reset([room, actor1, actor2, sharedContainer]);
+      const apple = new ModEntityBuilder('apple-1')
+        .withName('Apple')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withComponent('items:weight', { weight: 0.5 })
+        .build();
+
+      const bread = new ModEntityBuilder('bread-1')
+        .withName('Bread')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withComponent('items:weight', { weight: 0.5 })
+        .build();
+
+      testFixture.reset([room, actor1, actor2, sharedContainer, apple, bread]);
 
       // Actor 1 takes apple
       await testFixture.executeAction('actor-1', 'supply-crate', {

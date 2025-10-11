@@ -4,6 +4,9 @@
   "name": "Give Item",
   "description": "Give an item from your inventory to another actor",
   "generateCombinations": true,
+  "required_components": {
+    "actor": ["items:inventory"]
+  },
   "targets": {
     "primary": {
       "scope": "positioning:close_actors",

@@ -106,7 +106,7 @@ describe('TakeFromContainerHandler', () => {
     test('successfully takes item from open container', async () => {
       const container = {
         isOpen: true,
-        items: ['item1', 'item2', 'item3'],
+        contents: ['item1', 'item2', 'item3'],
       };
       const inventory = {
         capacity: { maxItems: 10, maxWeight: 100 },
@@ -144,7 +144,7 @@ describe('TakeFromContainerHandler', () => {
             componentTypeId: CONTAINER_COMPONENT_ID,
             componentData: {
               ...container,
-              items: ['item1', 'item3'],
+              contents: ['item1', 'item3'],
             },
           },
           {
@@ -172,7 +172,7 @@ describe('TakeFromContainerHandler', () => {
     test('handles taking last item from container', async () => {
       const container = {
         isOpen: true,
-        items: ['item1'],
+        contents: ['item1'],
       };
       const inventory = {
         capacity: { maxItems: 5, maxWeight: 50 },
@@ -197,7 +197,7 @@ describe('TakeFromContainerHandler', () => {
       expect(em.batchAddComponentsOptimized).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
-            componentData: expect.objectContaining({ items: [] }),
+            componentData: expect.objectContaining({ contents: [] }),
           }),
           expect.objectContaining({
             componentData: expect.objectContaining({ items: ['item1'] }),
@@ -303,7 +303,7 @@ describe('TakeFromContainerHandler', () => {
     test('fails when container is closed', async () => {
       const container = {
         isOpen: false,
-        items: ['item1', 'item2'],
+        contents: ['item1', 'item2'],
       };
 
       em.getComponentData.mockReturnValueOnce(container);
@@ -327,7 +327,7 @@ describe('TakeFromContainerHandler', () => {
     test('fails when item is not in container', async () => {
       const container = {
         isOpen: true,
-        items: ['item1', 'item2'],
+        contents: ['item1', 'item2'],
       };
 
       em.getComponentData.mockReturnValueOnce(container);
@@ -351,7 +351,7 @@ describe('TakeFromContainerHandler', () => {
     test('fails when actor has no inventory component', async () => {
       const container = {
         isOpen: true,
-        items: ['item1'],
+        contents: ['item1'],
       };
 
       em.getComponentData
@@ -377,7 +377,7 @@ describe('TakeFromContainerHandler', () => {
     test('handles batch update errors gracefully', async () => {
       const container = {
         isOpen: true,
-        items: ['item1'],
+        contents: ['item1'],
       };
       const inventory = {
         capacity: { maxItems: 10, maxWeight: 100 },
@@ -422,7 +422,7 @@ describe('TakeFromContainerHandler', () => {
     });
 
     test('trims whitespace from entity IDs', async () => {
-      const container = { isOpen: true, items: ['item1'] };
+      const container = { isOpen: true, contents: ['item1'] };
       const inventory = { capacity: {}, items: [] };
 
       em.getComponentData

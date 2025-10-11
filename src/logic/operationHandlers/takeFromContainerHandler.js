@@ -135,8 +135,8 @@ class TakeFromContainerHandler extends BaseOperationHandler {
         return { success: false, error: 'container_closed' };
       }
 
-      const containerItems = Array.isArray(container.items)
-        ? container.items
+      const containerItems = Array.isArray(container.contents)
+        ? container.contents
         : [];
 
       if (!containerItems.includes(itemEntity)) {
@@ -165,7 +165,7 @@ class TakeFromContainerHandler extends BaseOperationHandler {
           componentTypeId: CONTAINER_COMPONENT_ID,
           componentData: {
             ...container,
-            items: containerItems.filter((id) => id !== itemEntity),
+            contents: containerItems.filter((id) => id !== itemEntity),
           },
         },
         {

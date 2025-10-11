@@ -26,9 +26,8 @@
             { "var": "context.capacityCheck.valid" },
             false
           ]
-        }
-      },
-      "then_actions": [
+        },
+        "then_actions": [
         {
           "type": "QUERY_COMPONENT",
           "comment": "Get actor position for logging",
@@ -80,14 +79,18 @@
             "actor_id": "{event.payload.actorId}",
             "target_id": "{event.payload.targetId}",
             "involved_entities": ["{event.payload.secondaryId}"],
-            "metadata": {
+            "contextual_data": {
               "reason": "{context.capacityCheck.reason}"
             }
           }
         },
         {
           "type": "END_TURN",
-          "comment": "End turn after failed take"
+          "comment": "End turn after failed take",
+          "parameters": {
+            "entityId": "{event.payload.actorId}",
+            "success": false
+          }
         }
       ],
       "else_actions": [
@@ -156,9 +159,14 @@
         },
         {
           "type": "END_TURN",
-          "comment": "End actor's turn after taking item"
+          "comment": "End actor's turn after taking item",
+          "parameters": {
+            "entityId": "{event.payload.actorId}",
+            "success": true
+          }
         }
       ]
+      }
     }
   ]
 }
