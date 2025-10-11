@@ -19,6 +19,15 @@ import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
 
 // Real implementation needed for creating elements within the test
 import DomElementFactory from '../../../src/domUI/domElementFactory.js';
+import DocumentContext from '../../../src/domUI/documentContext.js';
+import AlertRouter from '../../../src/alerting/alertRouter.js';
+import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
+import EventBus from '../../../src/events/eventBus.js';
+import {
+  SYSTEM_ERROR_OCCURRED_ID,
+  SYSTEM_WARNING_OCCURRED_ID,
+  DISPLAY_WARNING_ID,
+} from '../../../src/constants/eventIds.js';
 
 // Mock all dependencies to isolate the ChatAlertRenderer component
 const mockLogger = {
@@ -221,5 +230,244 @@ describe('ChatAlertRenderer Throttling Integration', () => {
       // Therefore, the number of DOM elements must remain 1.
       expect(chatPanel.children.length).toBe(1);
     });
+  });
+});
+
+class RecordingLogger {
+  constructor() {
+    this.debugLogs = [];
+    this.infoLogs = [];
+    this.warnLogs = [];
+    this.errorLogs = [];
+  }
+
+  debug(...args) {
+    this.debugLogs.push(args);
+  }
+
+  info(...args) {
+    this.infoLogs.push(args);
+  }
+
+  warn(...args) {
+    this.warnLogs.push(args);
+  }
+
+  error(...args) {
+    this.errorLogs.push(args);
+  }
+}
+
+class SimpleValidatedDispatcher {
+  constructor(eventBus, logger) {
+    this.eventBus = eventBus;
+    this.logger = logger;
+  }
+
+  async dispatch(eventName, payload) {
+    try {
+      await this.eventBus.dispatch(eventName, payload);
+      return true;
+    } catch (error) {
+      this.logger.error('simple dispatcher dispatch error', {
+        eventName,
+        error,
+      });
+      return false;
+    }
+  }
+
+  subscribe(eventName, listener) {
+    return this.eventBus.subscribe(eventName, listener);
+  }
+
+  unsubscribe(eventName, listener) {
+    return this.eventBus.unsubscribe(eventName, listener);
+  }
+}
+
+describe('ChatAlertRenderer end-to-end integration', () => {
+  /** @type {RecordingLogger} */
+  let logger;
+  /** @type {SafeEventDispatcher} */
+  let safeEventDispatcher;
+  /** @type {AlertRouter} */
+  let alertRouter;
+  /** @type {DocumentContext} */
+  let documentContext;
+  /** @type {DomElementFactory} */
+  let domElementFactory;
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    document.body.innerHTML = `
+      <div id="outputDiv">
+        <ul id="message-list"></ul>
+      </div>
+    `;
+
+    logger = new RecordingLogger();
+    const busLogger = new RecordingLogger();
+    const eventBus = new EventBus({ logger: busLogger });
+    const validatedDispatcher = new SimpleValidatedDispatcher(eventBus, logger);
+
+    safeEventDispatcher = new SafeEventDispatcher({
+      validatedEventDispatcher: validatedDispatcher,
+      logger,
+    });
+    alertRouter = new AlertRouter({ safeEventDispatcher });
+    documentContext = new DocumentContext(document, logger);
+    domElementFactory = new DomElementFactory(documentContext);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  const createRenderer = () =>
+    new ChatAlertRenderer({
+      logger,
+      documentContext,
+      safeEventDispatcher,
+      domElementFactory,
+      alertRouter,
+    });
+
+  it('renders warning alerts with truncation, toggles, and developer details using real services', async () => {
+    createRenderer();
+
+    expect(alertRouter.uiReady).toBe(true);
+
+    const longMessage = 'A'.repeat(250);
+    const warningDetails = {
+      statusCode: 503,
+      url: '/api/status',
+      raw: { message: 'Service unavailable' },
+    };
+
+    await safeEventDispatcher.dispatch(SYSTEM_WARNING_OCCURRED_ID, {
+      message: longMessage,
+      details: warningDetails,
+    });
+
+    const panel = document.getElementById('message-list');
+    expect(panel.children.length).toBe(1);
+    const bubble = panel.firstElementChild;
+    expect(bubble.classList.contains('chat-warningBubble')).toBe(true);
+
+    const messageElement = bubble.querySelector('.chat-alert-message');
+    expect(messageElement.textContent.endsWith('…')).toBe(true);
+
+    const messageToggle = bubble.querySelector('[data-toggle-type="message"]');
+    messageToggle.click();
+    expect(messageElement.textContent).toBe(longMessage);
+    expect(messageToggle.getAttribute('aria-expanded')).toBe('true');
+
+    const detailsToggle = bubble.querySelector('[data-toggle-type="details"]');
+    detailsToggle.click();
+    const detailsContent = bubble.querySelector('.chat-alert-details-content');
+    expect(detailsContent.hidden).toBe(false);
+    const detailsText = detailsContent.textContent;
+    expect(detailsText).toContain('Status Code: 503');
+    expect(detailsText).toContain('URL: /api/status');
+    expect(detailsText).toContain('Service unavailable');
+
+    messageToggle.click();
+    expect(messageElement.textContent.endsWith('…')).toBe(true);
+  });
+
+  it('falls back to status-code friendly messaging when the payload omits message text', async () => {
+    createRenderer();
+
+    await safeEventDispatcher.dispatch(SYSTEM_WARNING_OCCURRED_ID, {
+      message: '',
+      details: { statusCode: 404, url: '/missing/resource' },
+    });
+
+    const panel = document.getElementById('message-list');
+    expect(panel.children.length).toBe(1);
+    const bubble = panel.firstElementChild;
+    const messageElement = bubble.querySelector('.chat-alert-message');
+    expect(messageElement.textContent).toBe('Resource not found.');
+  });
+
+  it('coalesces repeated warnings into a summary bubble after the throttle window', async () => {
+    createRenderer();
+
+    const payload = {
+      message: 'Cache failure detected.',
+      details: { statusCode: 500 },
+    };
+
+    await safeEventDispatcher.dispatch(SYSTEM_WARNING_OCCURRED_ID, payload);
+    await safeEventDispatcher.dispatch(SYSTEM_WARNING_OCCURRED_ID, payload);
+    await safeEventDispatcher.dispatch(SYSTEM_WARNING_OCCURRED_ID, payload);
+
+    const panel = document.getElementById('message-list');
+    expect(panel.children.length).toBe(1);
+
+    jest.advanceTimersByTime(10000);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(panel.children.length).toBe(2);
+    const summaryBubble = panel.lastElementChild;
+    expect(summaryBubble.textContent).toContain(
+      "Warning: 'Cache failure detected.' occurred 2 more times in the last 10 seconds."
+    );
+  });
+
+  it('formats developer details for error objects and renders error styling', async () => {
+    createRenderer();
+
+    const catastrophicError = new Error('Catastrophic failure');
+
+    await safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'System meltdown imminent.',
+      details: catastrophicError,
+    });
+
+    const panel = document.getElementById('message-list');
+    expect(panel.children.length).toBe(1);
+    const bubble = panel.firstElementChild;
+    expect(bubble.classList.contains('chat-errorBubble')).toBe(true);
+
+    const detailsToggle = bubble.querySelector('[data-toggle-type="details"]');
+    detailsToggle.click();
+    const detailsContent = bubble.querySelector('.chat-alert-details-content');
+    expect(detailsContent.hidden).toBe(false);
+    const codeElement = detailsContent.querySelector('code');
+    expect(codeElement.textContent).toContain('Error: Catastrophic failure');
+  });
+
+  it('logs alerts when the chat panel is absent instead of rendering DOM nodes', async () => {
+    document.body.innerHTML = '<div id="outputDiv"></div>';
+
+    logger = new RecordingLogger();
+    const busLogger = new RecordingLogger();
+    const eventBus = new EventBus({ logger: busLogger });
+    const validatedDispatcher = new SimpleValidatedDispatcher(eventBus, logger);
+    safeEventDispatcher = new SafeEventDispatcher({
+      validatedEventDispatcher: validatedDispatcher,
+      logger,
+    });
+    alertRouter = new AlertRouter({ safeEventDispatcher });
+    documentContext = new DocumentContext(document, logger);
+    domElementFactory = new DomElementFactory(documentContext);
+
+    createRenderer();
+
+    expect(alertRouter.uiReady).toBe(false);
+
+    await safeEventDispatcher.dispatch(DISPLAY_WARNING_ID, {
+      message: 'Heads up!',
+      details: { raw: 'trace info' },
+    });
+
+    expect(document.querySelector('.chat-alert')).toBeNull();
+    const warningLog = logger.warnLogs.find((entry) =>
+      entry[0]?.includes('[UI WARNING] Heads up!')
+    );
+    expect(warningLog).toBeDefined();
   });
 });
