@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "violence:event-is-action-grab-neck",
+  "description": "Checks if the triggering event is for the 'violence:grab_neck' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "violence:grab_neck"]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "id": "items:item_transferred",
+  "description": "Fired when an item is successfully transferred from one entity's inventory to another's.",
+  "payloadSchema": {
+    "title": "Items: Item Transferred Payload",
+    "description": "Payload for the items:item_transferred event.",
+    "type": "object",
+    "properties": {
+      "fromEntity": {
+        "type": "string",
+        "description": "The ID of the entity from which the item was transferred.",
+        "minLength": 1
+      },
+      "toEntity": {
+        "type": "string",
+        "description": "The ID of the entity to which the item was transferred.",
+        "minLength": 1
+      },
+      "itemEntity": {
+        "type": "string",
+        "description": "The ID of the item entity that was transferred.",
+        "minLength": 1
+      }
+    },
+    "required": ["fromEntity", "toEntity", "itemEntity"],
+    "additionalProperties": false
+  }
+}

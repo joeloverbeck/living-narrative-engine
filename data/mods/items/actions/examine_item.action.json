@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "items:examine_item",
+  "name": "Examine Item",
+  "description": "Inspect an item to learn its details",
+  "targets": {
+    "primary": {
+      "scope": "items:examinable_items",
+      "placeholder": "item",
+      "description": "Item to examine"
+    }
+  },
+  "required_components": {
+    "primary": ["items:item", "core:description"]
+  },
+  "prerequisites": [],
+  "template": "examine {item}"
+}

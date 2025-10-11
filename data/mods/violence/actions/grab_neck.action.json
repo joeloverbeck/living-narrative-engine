@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "violence:grab_neck",
+  "name": "Grab Neck",
+  "description": "Grab someone's neck",
+  "targets": "positioning:close_actors_facing_each_other_or_behind_target",
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "template": "grab {target}'s neck",
+  "visual": {
+    "backgroundColor": "#8b0000",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#b71c1c",
+    "hoverTextColor": "#ffebee"
+  }
+}

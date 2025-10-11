@@ -511,7 +511,19 @@
       "Bash(NODE_ENV=test npx jest:*)",
       "Bash(NODE_ENV=test npm run test:performance -- tests/performance/actions/tracing/traceQueueProcessorRealisticLoad.performance.test.js --listTests)",
       "Bash(NODE_ENV=test npm run test:performance -- tests/performance/actions/tracing/traceQueueProcessorRealisticLoad.performance.test.js --silent)",
-      "Bash(NODE_ENV=test npm run test:performance -- tests/performance/actions/tracing/traceQueueProcessorRealisticLoad.performance.test.js)"
+      "Bash(NODE_ENV=test npm run test:performance -- tests/performance/actions/tracing/traceQueueProcessorRealisticLoad.performance.test.js)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/giveItemSecondaryTargetIdBug.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/giveItemSecondaryTargetIdBug.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/logic/operationHandlers/validateInventoryCapacityHandlerErrorDispatch.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/affection/tickle_target_playfully_action_discovery.test.js --testNamePattern=\"is not available when the actor faces away from the target\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/affection/tickle_target_playfully_action_discovery.test.js --testNamePattern=\"is not available when the actor faces away from the target\" --no-coverage --verbose --silent=false)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/affection/tickle_target_playfully_action_discovery.test.js --testNamePattern=\"is not available when the actor faces away from the target\" --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/affection/tickle_target_playfully_action_discovery.test.js --testNamePattern=\"is available for close actors facing each other\" --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/affection/tickle_target_playfully_action_discovery.test.js --testNamePattern=\"is available when the actor stands behind the target\" --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/affection/tickle_target_playfully_action_discovery.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/affection/tickle_target_playfully_action_discovery.test.js --no-coverage --testNamePattern=\"is not available when the actor faces away from the target\")",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/items/takeFromContainerRuleExecution.test.js --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/takeFromContainerRuleExecution.test.js --testNamePattern=\"successfully executes take from container action\" --no-coverage --verbose)"
     ],
     "deny": [],
     "ask": []

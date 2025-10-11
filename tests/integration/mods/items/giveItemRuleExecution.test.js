@@ -89,7 +89,7 @@ describe('items:give_item action integration', () => {
       // Act: Give letter to Bob
       await testFixture.executeAction('test:actor1', 'test:actor2', {
         additionalPayload: {
-          secondaryTargetId: 'letter-1',
+          secondaryId: 'letter-1',
         },
       });
 
@@ -122,7 +122,7 @@ describe('items:give_item action integration', () => {
 
       await testFixture.executeAction('test:actor1', 'test:actor2', {
         additionalPayload: {
-          secondaryTargetId: 'revolver-1',
+          secondaryId: 'revolver-1',
         },
       });
 
@@ -190,7 +190,7 @@ describe('items:give_item action integration', () => {
 
       await testFixture.executeAction('test:actor1', 'test:actor2', {
         additionalPayload: {
-          secondaryTargetId: 'letter-1',
+          secondaryId: 'letter-1',
         },
       });
 
@@ -241,7 +241,7 @@ describe('items:give_item action integration', () => {
 
       await testFixture.executeAction('test:actor1', 'test:actor2', {
         additionalPayload: {
-          secondaryTargetId: 'gold-bar-1',
+          secondaryId: 'gold-bar-1',
         },
       });
 
@@ -266,7 +266,7 @@ describe('items:give_item action integration', () => {
 
       await testFixture.executeAction('test:actor1', 'test:actor2', {
         additionalPayload: {
-          secondaryTargetId: 'letter-1',
+          secondaryId: 'letter-1',
         },
       });
 
@@ -278,7 +278,7 @@ describe('items:give_item action integration', () => {
       expect(perceptibleEvent).toBeDefined();
       expect(perceptibleEvent.payload.perceptionType).toBe('item_transfer');
       expect(perceptibleEvent.payload.locationId).toBe('bedroom');
-      expect(perceptibleEvent.payload.descriptionText).toContain('gave');
+      expect(perceptibleEvent.payload.descriptionText).toContain('gives');
       expect(perceptibleEvent.payload.descriptionText).toContain('letter-1');
     });
 
@@ -293,7 +293,7 @@ describe('items:give_item action integration', () => {
 
       await testFixture.executeAction('test:actor1', 'test:actor2', {
         additionalPayload: {
-          secondaryTargetId: 'book-1',
+          secondaryId: 'book-1',
         },
       });
 
@@ -315,7 +315,7 @@ describe('items:give_item action integration', () => {
 
       await testFixture.executeAction('test:actor1', 'test:actor2', {
         additionalPayload: {
-          secondaryTargetId: 'letter-1',
+          secondaryId: 'letter-1',
         },
       });
 

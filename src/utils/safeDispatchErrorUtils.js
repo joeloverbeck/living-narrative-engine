@@ -17,6 +17,8 @@ import { ensureValidLogger } from './loggerUtils.js';
  */
 export class InvalidDispatcherError extends Error {
   /**
+   * Creates an instance of InvalidDispatcherError.
+   *
    * @param {string} message - The error message.
    * @param {object} [details] - Optional diagnostic details.
    */
@@ -85,7 +87,8 @@ export function safeDispatchError(
   } else {
     // Traditional string message
     message = messageOrContext;
-    eventDetails = details;
+    // Preserve null explicitly, only default undefined to {}
+    eventDetails = details === undefined ? {} : details;
   }
 
   dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
@@ -95,7 +98,8 @@ export function safeDispatchError(
 }
 
 /**
- * @description Dispatches a validation error and returns a standardized result object.
+ * Dispatches a validation error and returns a standardized result object.
+ *
  * @param {ISafeEventDispatcher} dispatcher - Dispatcher used to emit the event.
  * @param {string} message - Human readable error message.
  * @param {object} [details] - Additional structured details for debugging.

@@ -143,7 +143,7 @@ class OpenContainerHandler extends BaseOperationHandler {
     const { actorEntity, containerEntity } = validated;
 
     try {
-      // Check if container has openable component
+      // Check if container has openable component (marker)
       const openable = this.#entityManager.getComponentData(
         containerEntity,
         OPENABLE_COMPONENT_ID
@@ -161,7 +161,25 @@ class OpenContainerHandler extends BaseOperationHandler {
         return result;
       }
 
-      if (openable.isOpen) {
+      // Get container data (contains isOpen, requiresKey, and contents)
+      const container = this.#entityManager.getComponentData(
+        containerEntity,
+        CONTAINER_COMPONENT_ID
+      );
+
+      if (!container) {
+        log.warn('Container has no container component', { containerEntity });
+        const result = { success: false, error: 'not_a_container' };
+        this.#writeResultVariable(
+          params?.result_variable,
+          result,
+          executionContext,
+          log
+        );
+        return result;
+      }
+
+      if (container.isOpen) {
         log.warn('Container is already open', { containerEntity });
         const result = { success: false, error: 'already_open' };
         this.#writeResultVariable(
@@ -174,16 +192,16 @@ class OpenContainerHandler extends BaseOperationHandler {
       }
 
       // Check key requirement
-      if (openable.requiresKey) {
+      if (container.requiresKey) {
         const inventory = this.#entityManager.getComponentData(
           actorEntity,
           INVENTORY_COMPONENT_ID
         );
 
-        if (!inventory || !inventory.items.includes(openable.requiresKey)) {
+        if (!inventory || !inventory.items.includes(container.keyItemId)) {
           log.warn('Actor does not have required key', {
             actorEntity,
-            requiredKey: openable.requiresKey,
+            requiredKey: container.keyItemId,
           });
           const result = {
             success: false,
@@ -199,26 +217,16 @@ class OpenContainerHandler extends BaseOperationHandler {
         }
       }
 
-      // Get container contents
-      const container = this.#entityManager.getComponentData(
-        containerEntity,
-        CONTAINER_COMPONENT_ID
-      );
+      const contents = container?.contents || [];
 
-      const contents = container?.items || [];
-
-      if (!container) {
-        log.warn('Container has no items component', { containerEntity });
-      }
-
-      // Open container by updating openable component
+      // Open container by updating container component
       await this.#entityManager.batchAddComponentsOptimized(
         [
           {
             instanceId: containerEntity,
-            componentTypeId: OPENABLE_COMPONENT_ID,
+            componentTypeId: CONTAINER_COMPONENT_ID,
             componentData: {
-              ...openable,
+              ...container,
               isOpen: true,
             },
           },

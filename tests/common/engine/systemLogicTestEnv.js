@@ -649,14 +649,22 @@ export function createRuleTestEnvironment(options) {
     // If action has target scopes, validate that there are valid targets for all of them
     // Check primary, secondary, and tertiary target scopes
     const targetScopes = [];
-    if (action.targets?.primary?.scope) {
-      targetScopes.push({ name: 'primary', scope: action.targets.primary.scope });
-    }
-    if (action.targets?.secondary?.scope) {
-      targetScopes.push({ name: 'secondary', scope: action.targets.secondary.scope });
-    }
-    if (action.targets?.tertiary?.scope) {
-      targetScopes.push({ name: 'tertiary', scope: action.targets.tertiary.scope });
+
+    // Handle both string and structured target formats
+    if (typeof action.targets === 'string') {
+      // String format: "scope:name"
+      targetScopes.push({ name: 'primary', scope: action.targets });
+    } else if (typeof action.targets === 'object' && action.targets !== null) {
+      // Structured format: { primary: { scope: "..." }, ... }
+      if (action.targets.primary?.scope) {
+        targetScopes.push({ name: 'primary', scope: action.targets.primary.scope });
+      }
+      if (action.targets.secondary?.scope) {
+        targetScopes.push({ name: 'secondary', scope: action.targets.secondary.scope });
+      }
+      if (action.targets.tertiary?.scope) {
+        targetScopes.push({ name: 'tertiary', scope: action.targets.tertiary.scope });
+      }
     }
 
     if (targetScopes.length > 0) {
@@ -712,9 +720,8 @@ export function createRuleTestEnvironment(options) {
     return true;
   };
 
-  // Add a method to get available actions (for debugging)
-  // Note: Action discovery is based on component presence, not scope resolution
-  // Scope validation happens during action execution, not discovery
+  // Add a method to get available actions with scope validation
+  // Changed to validate scopes during discovery to match expected behavior
   env.getAvailableActions = (actorId) => {
     const actor = env.entityManager.getEntityInstance(actorId);
     if (!actor) {
@@ -724,9 +731,8 @@ export function createRuleTestEnvironment(options) {
     const actorEntity = { id: actorId };
     const candidates = env.actionIndex.getCandidateActions(actorEntity);
 
-    // Return candidates without scope validation - action indexing is based on component presence
-    // Target validation will happen during action execution via scope resolution
-    return candidates;
+    // Filter candidates by scope validation
+    return candidates.filter((action) => env.validateAction(actorId, action.id));
   };
 
   return env;

@@ -1,0 +1,1 @@
+items:examinable_items := items:actor_inventory_items | items:items_at_location
