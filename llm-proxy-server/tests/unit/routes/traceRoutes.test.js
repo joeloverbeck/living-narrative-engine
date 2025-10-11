@@ -1,0 +1,290 @@
+/**
+ * @file Unit tests for trace management routes
+ * @description Covers single write, batch write, and listing endpoints for trace files
+ */
+
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
+import express from 'express';
+import request from 'supertest';
+import path from 'path';
+
+jest.mock('fs', () => {
+  const actual = jest.requireActual('fs');
+  return {
+    ...actual,
+    promises: {
+      mkdir: jest.fn(),
+      writeFile: jest.fn(),
+      stat: jest.fn(),
+      access: jest.fn(),
+      readdir: jest.fn(),
+    },
+  };
+});
+
+import traceRoutes from '../../../src/routes/traceRoutes.js';
+import { promises as fs } from 'fs';
+
+describe('Trace Routes', () => {
+  let app;
+
+  beforeEach(() => {
+    app = express();
+    app.use(express.json());
+    app.use('/api/traces', traceRoutes);
+
+    fs.mkdir.mockReset();
+    fs.writeFile.mockReset();
+    fs.stat.mockReset();
+    fs.access.mockReset();
+    fs.readdir.mockReset();
+
+    fs.mkdir.mockResolvedValue();
+    fs.writeFile.mockResolvedValue();
+    fs.stat.mockResolvedValue({ size: 128, mtime: new Date(), birthtime: new Date() });
+    fs.access.mockResolvedValue();
+    fs.readdir.mockResolvedValue([]);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should write a single trace file successfully', async () => {
+    const projectRoot = path.resolve(process.cwd(), '../');
+
+    const response = await request(app).post('/api/traces/write').send({
+      traceData: { id: 42, events: [] },
+      fileName: 'session.json',
+      outputDirectory: './traces/run',
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      success: true,
+      fileName: 'session.json',
+      message: 'Trace file written successfully',
+    });
+    expect(fs.mkdir).toHaveBeenCalledWith(
+      expect.stringContaining(path.join(projectRoot, 'traces/run')),
+      { recursive: true }
+    );
+    expect(fs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining(path.join('traces', 'run', 'session.json')),
+      expect.stringContaining('"id": 42'),
+      'utf8'
+    );
+  });
+
+  it('should reject requests missing required fields', async () => {
+    const response = await request(app).post('/api/traces/write').send({
+      traceData: null,
+      fileName: '',
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toMatchObject({
+      success: false,
+      error: 'Missing required fields: traceData and fileName',
+    });
+    expect(fs.writeFile).not.toHaveBeenCalled();
+  });
+
+  it('should block writes that escape the project directory', async () => {
+    const response = await request(app).post('/api/traces/write').send({
+      traceData: '{}',
+      fileName: 'escape.json',
+      outputDirectory: '../../outside',
+    });
+
+    expect(response.status).toBe(403);
+    expect(response.body).toMatchObject({ success: false, error: 'Invalid output path' });
+    expect(fs.writeFile).not.toHaveBeenCalled();
+  });
+
+  it('should return 500 when file writing fails', async () => {
+    fs.writeFile.mockRejectedValueOnce(new Error('disk failure'));
+
+    const response = await request(app).post('/api/traces/write').send({
+      traceData: { hello: 'world' },
+      fileName: 'error.json',
+    });
+
+    expect(response.status).toBe(500);
+    expect(response.body).toMatchObject({
+      success: false,
+      error: 'Failed to write trace file',
+      details: 'disk failure',
+    });
+  });
+
+  it('should validate batch payload shape', async () => {
+    const response = await request(app).post('/api/traces/write-batch').send({
+      traces: [],
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toMatchObject({
+      success: false,
+      error: 'Missing or empty traces array',
+    });
+  });
+
+  it('should reject batch requests with missing trace details', async () => {
+    const response = await request(app).post('/api/traces/write-batch').send({
+      traces: [{ fileName: 'only-name.json' }],
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toMatchObject({
+      success: false,
+      error: 'Validation failed',
+    });
+    expect(response.body.details[0]).toContain('missing required fields');
+  });
+
+  it('should handle unexpected failures during batch processing', async () => {
+    const allSettledSpy = jest
+      .spyOn(Promise, 'allSettled')
+      .mockRejectedValueOnce(new Error('batch explosion'));
+
+    const response = await request(app).post('/api/traces/write-batch').send({
+      traces: [{ traceData: { ok: true }, fileName: 'good.json' }],
+    });
+
+    expect(response.status).toBe(500);
+    expect(response.body).toMatchObject({
+      success: false,
+      error: 'Batch write operation failed',
+      details: 'batch explosion',
+    });
+
+    allSettledSpy.mockRestore();
+  });
+
+  it('should process batch writes with mixed outcomes', async () => {
+    const projectRoot = path.resolve(process.cwd(), '../');
+
+    fs.writeFile.mockImplementation((filePath) => {
+      if (filePath.includes('fail')) {
+        return Promise.reject(new Error('permission denied'));
+      }
+      return Promise.resolve();
+    });
+
+    fs.stat
+      .mockResolvedValueOnce({ size: 50, mtime: new Date('2024-01-01'), birthtime: new Date('2024-01-01') })
+      .mockResolvedValueOnce({ size: 80, mtime: new Date('2024-01-02'), birthtime: new Date('2024-01-02') });
+
+    const response = await request(app).post('/api/traces/write-batch').send({
+      outputDirectory: './batch',
+      traces: [
+        { traceData: { ok: true }, fileName: 'good.json' },
+        { traceData: { ok: false }, fileName: 'fail.json' },
+      ],
+    });
+
+    expect(response.status).toBe(200);
+    expect(fs.mkdir).toHaveBeenCalledWith(
+      expect.stringContaining(path.join(projectRoot, 'batch')),
+      { recursive: true }
+    );
+    expect(response.body).toMatchObject({
+      success: true,
+      successCount: 1,
+      failureCount: 1,
+    });
+    expect(response.body.results).toHaveLength(2);
+    const [firstResult, secondResult] = response.body.results;
+    expect(firstResult).toMatchObject({ success: true, fileName: 'good.json' });
+    expect(secondResult).toMatchObject({ success: false, fileName: 'fail.json' });
+  });
+
+  it('should report failure when all batch writes fail', async () => {
+    fs.writeFile.mockRejectedValue(new Error('unavailable'));
+
+    const response = await request(app).post('/api/traces/write-batch').send({
+      traces: [{ traceData: {}, fileName: 'a.json' }],
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      success: false,
+      successCount: 0,
+      failureCount: 1,
+    });
+    expect(response.body.results[0]).toMatchObject({
+      success: false,
+      fileName: 'a.json',
+      error: 'unavailable',
+    });
+  });
+
+  it('should block directory traversal during listing', async () => {
+    const response = await request(app).get('/api/traces/list').query({ directory: '../../etc' });
+
+    expect(response.status).toBe(403);
+    expect(response.body).toMatchObject({ success: false, error: 'Invalid directory path' });
+    expect(fs.readdir).not.toHaveBeenCalled();
+  });
+
+  it('should return empty list when directory does not exist', async () => {
+    fs.access.mockRejectedValueOnce(new Error('missing'));
+
+    const response = await request(app).get('/api/traces/list').query({ directory: './missing' });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      success: true,
+      files: [],
+      message: 'Directory does not exist',
+    });
+  });
+
+  it('should list available trace files with metadata', async () => {
+    const projectRoot = path.resolve(process.cwd(), '../');
+    const directory = './available';
+
+    fs.readdir.mockResolvedValueOnce(['one.json', 'two.txt', 'ignore.log']);
+    fs.stat
+      .mockResolvedValueOnce({
+        size: 10,
+        mtime: new Date('2024-01-03T10:00:00Z'),
+        birthtime: new Date('2024-01-03T09:00:00Z'),
+      })
+      .mockResolvedValueOnce({
+        size: 20,
+        mtime: new Date('2024-01-04T10:00:00Z'),
+        birthtime: new Date('2024-01-04T09:00:00Z'),
+      });
+
+    const response = await request(app).get('/api/traces/list').query({ directory });
+
+    expect(response.status).toBe(200);
+    expect(fs.access).toHaveBeenCalledWith(path.join(projectRoot, directory));
+    expect(fs.readdir).toHaveBeenCalledWith(path.join(projectRoot, directory));
+    expect(response.body).toMatchObject({ success: true, count: 2 });
+    expect(response.body.files[0].name).toBe('two.txt');
+    expect(response.body.files[1].name).toBe('one.json');
+  });
+
+  it('should handle errors when listing files', async () => {
+    fs.readdir.mockRejectedValueOnce(new Error('io failure'));
+
+    const response = await request(app).get('/api/traces/list');
+
+    expect(response.status).toBe(500);
+    expect(response.body).toMatchObject({
+      success: false,
+      error: 'Failed to list trace files',
+      details: 'io failure',
+    });
+  });
+});
