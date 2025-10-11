@@ -87,6 +87,25 @@ describe('Health Check Middleware', () => {
       );
     });
 
+    it('should default version information when package version is unavailable', () => {
+      const originalVersion = process.env.npm_package_version;
+      delete process.env.npm_package_version;
+
+      const livenessCheck = createLivenessCheck({ logger: mockLogger });
+
+      livenessCheck(mockRequest, mockResponse);
+
+      expect(mockJson).toHaveBeenCalledWith(
+        expect.objectContaining({
+          version: '1.0.0',
+        })
+      );
+
+      if (originalVersion !== undefined) {
+        process.env.npm_package_version = originalVersion;
+      }
+    });
+
     it('should handle errors gracefully', () => {
       // Mock process.uptime to throw an error
       jest.spyOn(process, 'uptime').mockImplementation(() => {
@@ -196,6 +215,34 @@ describe('Health Check Middleware', () => {
                 }),
               }),
             ]),
+          }),
+        })
+      );
+    });
+
+    it('should provide default initialization error details when unavailable', async () => {
+      mockLlmConfigService.isOperational.mockReturnValue(false);
+      mockLlmConfigService.getInitializationErrorDetails.mockReturnValue(undefined);
+
+      const readinessCheck = createReadinessCheck({
+        logger: mockLogger,
+        llmConfigService: mockLlmConfigService,
+      });
+
+      await readinessCheck(mockRequest, mockResponse);
+
+      const payload = mockJson.mock.calls.at(-1)[0];
+      const configDependency = payload.details.dependencies.find(
+        (dep) => dep.name === 'llmConfigService'
+      );
+
+      expect(configDependency).toEqual(
+        expect.objectContaining({
+          status: 'DOWN',
+          details: expect.objectContaining({
+            operational: false,
+            error: 'Service not operational',
+            stage: 'unknown',
           }),
         })
       );
@@ -335,6 +382,85 @@ describe('Health Check Middleware', () => {
       expect(agentDependency.details.error).toBe('Missing required methods');
     });
 
+    it('should report HTTP agent service statistics when available', async () => {
+      mockLlmConfigService.isOperational.mockReturnValue(true);
+      mockLlmConfigService.getLlmConfigs.mockReturnValue({
+        configs: { 'test-llm': {} },
+        defaultConfigId: 'test-llm',
+      });
+
+      const stats = {
+        activeAgents: 4,
+        totalRequests: 128,
+        memoryUsage: { rss: 42 },
+      };
+
+      mockHttpAgentService.getAgent.mockReturnValue({});
+      mockHttpAgentService.cleanup.mockReturnValue(undefined);
+      mockHttpAgentService.getStats.mockReturnValue(stats);
+
+      const readinessCheck = createReadinessCheck({
+        logger: mockLogger,
+        llmConfigService: mockLlmConfigService,
+        httpAgentService: mockHttpAgentService,
+      });
+
+      await readinessCheck(mockRequest, mockResponse);
+
+      expect(mockStatus).toHaveBeenCalledWith(200);
+      const payload = mockJson.mock.calls.at(-1)[0];
+      const agentDependency = payload.details.dependencies.find(
+        (dep) => dep.name === 'httpAgentService'
+      );
+
+      expect(agentDependency).toEqual(
+        expect.objectContaining({
+          status: 'UP',
+          details: expect.objectContaining({
+            working: true,
+            agentCount: stats.activeAgents,
+            totalRequests: stats.totalRequests,
+            memoryUsage: stats.memoryUsage,
+          }),
+        })
+      );
+    });
+
+    it('should treat HTTP agent service as healthy when stats are unavailable', async () => {
+      mockLlmConfigService.isOperational.mockReturnValue(true);
+      mockLlmConfigService.getLlmConfigs.mockReturnValue({ configs: {} });
+
+      mockHttpAgentService.getAgent.mockReturnValue({});
+      mockHttpAgentService.cleanup.mockReturnValue(undefined);
+      delete mockHttpAgentService.getStats;
+
+      const readinessCheck = createReadinessCheck({
+        logger: mockLogger,
+        llmConfigService: mockLlmConfigService,
+        httpAgentService: mockHttpAgentService,
+      });
+
+      await readinessCheck(mockRequest, mockResponse);
+
+      expect(mockStatus).toHaveBeenCalledWith(200);
+      const payload = mockJson.mock.calls.at(-1)[0];
+      const agentDependency = payload.details.dependencies.find(
+        (dep) => dep.name === 'httpAgentService'
+      );
+
+      expect(agentDependency).toEqual(
+        expect.objectContaining({
+          status: 'UP',
+          details: expect.objectContaining({
+            working: true,
+            agentCount: null,
+            totalRequests: null,
+            memoryUsage: null,
+          }),
+        })
+      );
+    });
+
     it('should handle errors during readiness check gracefully', async () => {
       mockLlmConfigService.isOperational.mockImplementation(() => {
         throw new Error('Unexpected error');
@@ -382,6 +508,42 @@ describe('Health Check Middleware', () => {
           dependenciesChecked: expect.any(Number),
           upDependencies: expect.any(Number),
           downDependencies: expect.any(Number),
+        })
+      );
+    });
+
+    it('should downgrade when HTTP agent stats retrieval throws an error', async () => {
+      mockLlmConfigService.isOperational.mockReturnValue(true);
+      mockLlmConfigService.getLlmConfigs.mockReturnValue({ configs: {} });
+
+      mockHttpAgentService.getAgent.mockReturnValue({});
+      mockHttpAgentService.cleanup.mockReturnValue(undefined);
+      mockHttpAgentService.getStats.mockImplementation(() => {
+        throw new Error('Stats unavailable');
+      });
+
+      const readinessCheck = createReadinessCheck({
+        logger: mockLogger,
+        llmConfigService: mockLlmConfigService,
+        httpAgentService: mockHttpAgentService,
+      });
+
+      await readinessCheck(mockRequest, mockResponse);
+
+      expect(mockStatus).toHaveBeenCalledWith(503);
+      const payload = mockJson.mock.calls.at(-1)[0];
+      const agentDependency = payload.details.dependencies.find(
+        (dep) => dep.name === 'httpAgentService'
+      );
+
+      expect(payload.status).toBe('OUT_OF_SERVICE');
+      expect(agentDependency).toEqual(
+        expect.objectContaining({
+          status: 'DOWN',
+          details: expect.objectContaining({
+            error: 'Stats unavailable',
+            working: false,
+          }),
         })
       );
     });
@@ -477,6 +639,128 @@ describe('Health Check Middleware', () => {
                 }),
               }),
             ]),
+          }),
+        })
+      );
+    });
+
+    it('should report cache memory usage as null when unavailable', async () => {
+      mockLlmConfigService.isOperational.mockReturnValue(true);
+      mockLlmConfigService.getLlmConfigs.mockReturnValue({ llms: {} });
+
+      mockCacheService.set.mockImplementation(() => {});
+      mockCacheService.get.mockReturnValue({ timestamp: Date.now() });
+      mockCacheService.invalidate.mockImplementation(() => {});
+      mockCacheService.getSize.mockReturnValue(5);
+      delete mockCacheService.getMemoryInfo;
+
+      const readinessCheck = createReadinessCheck({
+        logger: mockLogger,
+        llmConfigService: mockLlmConfigService,
+        cacheService: mockCacheService,
+      });
+
+      await readinessCheck(mockRequest, mockResponse);
+
+      const payload = mockJson.mock.calls.at(-1)[0];
+      const cacheDependency = payload.details.dependencies.find(
+        (dep) => dep.name === 'cacheService'
+      );
+
+      expect(cacheDependency).toEqual(
+        expect.objectContaining({
+          status: 'UP',
+          details: expect.objectContaining({
+            working: true,
+            memoryUsage: null,
+          }),
+        })
+      );
+    });
+
+    it('should handle process inspection failures gracefully', async () => {
+      mockLlmConfigService.isOperational.mockReturnValue(true);
+      mockLlmConfigService.getLlmConfigs.mockReturnValue({ configs: {} });
+
+      process.memoryUsage.mockImplementation(() => {
+        throw new Error('Memory metrics unavailable');
+      });
+
+      const readinessCheck = createReadinessCheck({
+        logger: mockLogger,
+        llmConfigService: mockLlmConfigService,
+      });
+
+      await readinessCheck(mockRequest, mockResponse);
+
+      expect(mockStatus).toHaveBeenCalledWith(503);
+      const payload = mockJson.mock.calls.at(-1)[0];
+      const processDependency = payload.details.dependencies.find(
+        (dep) => dep.name === 'nodeProcess'
+      );
+
+      expect(payload.status).toBe('DOWN');
+      expect(processDependency).toEqual(
+        expect.objectContaining({
+          status: 'DOWN',
+          details: expect.objectContaining({
+            error: 'Memory metrics unavailable',
+          }),
+        })
+      );
+    });
+
+    it('should use default version when package version is missing in readiness response', async () => {
+      const originalVersion = process.env.npm_package_version;
+      delete process.env.npm_package_version;
+
+      mockLlmConfigService.isOperational.mockReturnValue(true);
+      mockLlmConfigService.getLlmConfigs.mockReturnValue({ configs: {} });
+
+      const readinessCheck = createReadinessCheck({
+        logger: mockLogger,
+        llmConfigService: mockLlmConfigService,
+      });
+
+      await readinessCheck(mockRequest, mockResponse);
+
+      const payload = mockJson.mock.calls.at(-1)[0];
+      expect(payload.version).toBe('1.0.0');
+
+      if (originalVersion !== undefined) {
+        process.env.npm_package_version = originalVersion;
+      }
+    });
+
+    it('should fall back to failure response when readiness logging throws', async () => {
+      mockLlmConfigService.isOperational.mockReturnValue(true);
+      mockLlmConfigService.getLlmConfigs.mockReturnValue({ configs: {} });
+
+      mockLogger.info.mockImplementation(() => {
+        throw new Error('Logging failure');
+      });
+
+      const readinessCheck = createReadinessCheck({
+        logger: mockLogger,
+        llmConfigService: mockLlmConfigService,
+      });
+
+      await readinessCheck(mockRequest, mockResponse);
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Health check (readiness) failed with exception',
+        expect.any(Error)
+      );
+      expect(mockStatus).toHaveBeenLastCalledWith(503);
+      expect(mockJson).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          status: 'DOWN',
+          error: expect.objectContaining({
+            message: 'Readiness check failed',
+            details: 'Logging failure',
+          }),
+          details: expect.objectContaining({
+            responseTime: expect.any(Number),
           }),
         })
       );
