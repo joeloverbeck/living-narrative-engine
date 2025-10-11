@@ -1,4 +1,7 @@
-import { ConsoleLogger } from '../src/consoleLogger.js';
+import consoleLoggerDefault, {
+  ConsoleLogger,
+  createConsoleLogger,
+} from '../src/consoleLogger.js';
 
 describe('ConsoleLogger', () => {
   let originalInfo;
@@ -218,6 +221,32 @@ describe('ConsoleLogger', () => {
 
       const logOutput = console.debug.mock.calls[0][0];
       expect(logOutput).toContain('LlmRequestController:');
+    });
+  });
+
+  describe('Factory helpers', () => {
+    test('createConsoleLogger returns a new ConsoleLogger instance', () => {
+      const loggerA = createConsoleLogger();
+      const loggerB = createConsoleLogger();
+
+      expect(loggerA).toBeInstanceOf(ConsoleLogger);
+      expect(loggerB).toBeInstanceOf(ConsoleLogger);
+      expect(loggerA).not.toBe(loggerB);
+    });
+
+    test('default export is a singleton ConsoleLogger', () => {
+      expect(consoleLoggerDefault).toBeInstanceOf(ConsoleLogger);
+
+      // Default export should be distinct from freshly created instances
+      const freshLogger = createConsoleLogger();
+      expect(freshLogger).not.toBe(consoleLoggerDefault);
+
+      // But they should expose the same public logging API surface
+      const publicMethods = ['info', 'warn', 'error', 'debug', 'createSecure', 'testEnhancedOutput'];
+      for (const method of publicMethods) {
+        expect(typeof consoleLoggerDefault[method]).toBe('function');
+        expect(typeof freshLogger[method]).toBe('function');
+      }
     });
   });
 });
