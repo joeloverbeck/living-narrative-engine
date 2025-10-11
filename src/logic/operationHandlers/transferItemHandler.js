@@ -8,7 +8,7 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
 const INVENTORY_COMPONENT_ID = 'items:inventory';
-const ITEM_TRANSFERRED_EVENT = 'ITEM_TRANSFERRED';
+const ITEM_TRANSFERRED_EVENT = 'items:item_transferred';
 
 /**
  * @typedef {object} TransferItemParams
@@ -159,9 +159,10 @@ class TransferItemHandler extends BaseOperationHandler {
       await this.#entityManager.batchAddComponentsOptimized(updates, true);
 
       // Dispatch success event
-      this.#dispatcher.dispatch({
-        type: ITEM_TRANSFERRED_EVENT,
-        payload: { fromEntity, toEntity, itemEntity },
+      this.#dispatcher.dispatch(ITEM_TRANSFERRED_EVENT, {
+        fromEntity,
+        toEntity,
+        itemEntity,
       });
 
       log.debug(`Item transferred successfully`, {

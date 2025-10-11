@@ -12,7 +12,7 @@
       "comment": "Check if recipient can carry the item",
       "parameters": {
         "targetEntity": "{event.payload.targetId}",
-        "itemEntity": "{event.payload.secondaryTargetId}",
+        "itemEntity": "{event.payload.secondaryId}",
         "result_variable": "capacityCheck"
       }
     },
@@ -56,7 +56,7 @@
             "type": "GET_NAME",
             "comment": "Get item name",
             "parameters": {
-              "entity_ref": "{event.payload.secondaryTargetId}",
+              "entity_ref": "{event.payload.secondaryId}",
               "result_variable": "itemName"
             }
           },
@@ -76,7 +76,7 @@
               "perception_type": "item_transfer_failed",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.targetId}",
-              "involved_entities": ["{event.payload.secondaryTargetId}"]
+              "involved_entities": ["{event.payload.secondaryId}"]
             }
           },
           {
@@ -108,7 +108,7 @@
             "parameters": {
               "fromEntity": "{event.payload.actorId}",
               "toEntity": "{event.payload.targetId}",
-              "itemEntity": "{event.payload.secondaryTargetId}"
+              "itemEntity": "{event.payload.secondaryId}"
             }
           },
           {
@@ -140,36 +140,45 @@
             "type": "GET_NAME",
             "comment": "Get item name",
             "parameters": {
-              "entity_ref": "{event.payload.secondaryTargetId}",
+              "entity_ref": "{event.payload.secondaryId}",
               "result_variable": "itemName"
             }
           },
           {
-            "type": "GET_TIMESTAMP",
-            "comment": "Get current timestamp",
+            "type": "SET_VARIABLE",
+            "comment": "Prepare success message for macro",
             "parameters": {
-              "result_variable": "currentTimestamp"
+              "variable_name": "logMessage",
+              "value": "{context.actorName} gives {context.itemName} to {context.targetName}."
             }
           },
           {
-            "type": "DISPATCH_PERCEPTIBLE_EVENT",
-            "comment": "Log successful transfer for observers",
+            "type": "SET_VARIABLE",
+            "comment": "Set perception type for macro",
             "parameters": {
-              "location_id": "{context.actorPosition.locationId}",
-              "description_text": "{context.actorName} gave {context.itemName} to {context.targetName}.",
-              "perception_type": "item_transfer",
-              "actor_id": "{event.payload.actorId}",
-              "target_id": "{event.payload.targetId}",
-              "involved_entities": ["{event.payload.secondaryTargetId}"]
+              "variable_name": "perceptionType",
+              "value": "item_transfer"
             }
           },
           {
-            "type": "END_TURN",
-            "comment": "End turn after successful transfer",
+            "type": "SET_VARIABLE",
+            "comment": "Set location for macro",
             "parameters": {
-              "entityId": "{event.payload.actorId}",
-              "success": true
+              "variable_name": "locationId",
+              "value": "{context.actorPosition.locationId}"
             }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "comment": "Set target for macro",
+            "parameters": {
+              "variable_name": "targetId",
+              "value": "{event.payload.secondaryId}"
+            }
+          },
+          {
+            "comment": "Display success message and end turn",
+            "macro": "core:logSuccessAndEndTurn"
           }
         ]
       }

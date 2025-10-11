@@ -55,9 +55,21 @@
           "targetId": {
             "type": ["string", "null"],
             "description": "Optional. The ID of the target entity (extracted from errorContext for backward compatibility)."
+          },
+          "params": {
+            "type": "object",
+            "description": "Optional. Operation parameters that caused the error for debugging."
+          },
+          "error": {
+            "type": "string",
+            "description": "Optional. Error message from caught exceptions."
+          },
+          "actor_id": {
+            "type": "string",
+            "description": "Optional. ID of the actor entity involved in the error."
           }
         },
-        "additionalProperties": false
+        "additionalProperties": true
       }
     },
     "required": ["message"],

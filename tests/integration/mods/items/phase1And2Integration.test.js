@@ -84,7 +84,7 @@ describe('Items - Phase 1 and 2 Integration', () => {
 
     // Step 1: Give item from actor1 to actor2
     await giveFixture.executeAction('test:actor1', 'test:actor2', {
-      additionalPayload: { secondaryTargetId: 'letter-1' },
+      additionalPayload: { secondaryId: 'letter-1' },
     });
 
     let actor2AfterGive = giveFixture.entityManager.getEntityInstance('test:actor2');
@@ -176,7 +176,7 @@ describe('Items - Phase 1 and 2 Integration', () => {
     giveFixture.reset([room, currentActor1, currentActor2, currentActor3, currentGold, currentSilver]);
 
     await giveFixture.executeAction('test:actor2', 'test:actor3', {
-      additionalPayload: { secondaryTargetId: 'silver-1' },
+      additionalPayload: { secondaryId: 'silver-1' },
     });
 
     currentActor1 = giveFixture.entityManager.getEntityInstance('test:actor1');

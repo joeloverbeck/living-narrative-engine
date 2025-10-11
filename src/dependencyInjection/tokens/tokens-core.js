@@ -202,6 +202,7 @@ export const coreTokens = freeze({
   DropItemAtLocationHandler: 'DropItemAtLocationHandler',
   PickUpItemFromLocationHandler: 'PickUpItemFromLocationHandler',
   OpenContainerHandler: 'OpenContainerHandler',
+  TakeFromContainerHandler: 'TakeFromContainerHandler',
   TurnActionChoicePipeline: 'TurnActionChoicePipeline',
   ITurnDecisionProvider: 'ITurnDecisionProvider',
   IHumanDecisionProvider: 'IHumanDecisionProvider',

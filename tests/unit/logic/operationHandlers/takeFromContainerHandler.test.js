@@ -2,8 +2,8 @@
  * @jest-environment node
  */
 /**
- * @file Tests the behavior of TransferItemHandler
- * @see src/logic/operationHandlers/transferItemHandler.js
+ * @file Tests the behavior of TakeFromContainerHandler
+ * @see src/logic/operationHandlers/takeFromContainerHandler.js
  */
 
 import {
@@ -15,14 +15,15 @@ import {
   afterEach,
 } from '@jest/globals';
 
-import TransferItemHandler from '../../../../src/logic/operationHandlers/transferItemHandler.js';
+import TakeFromContainerHandler from '../../../../src/logic/operationHandlers/takeFromContainerHandler.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
 
 /** @typedef {import('../../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../src/entities/entityManager.js').default} IEntityManager */
 
 const INVENTORY_COMPONENT_ID = 'items:inventory';
-const ITEM_TRANSFERRED_EVENT = 'items:item_transferred';
+const CONTAINER_COMPONENT_ID = 'items:container';
+const ITEM_TAKEN_EVENT = 'items:item_taken_from_container';
 
 // Test Doubles
 /** @type {jest.Mocked<ILogger>} */ let log;
@@ -51,22 +52,22 @@ beforeEach(() => {
 
 afterEach(() => jest.clearAllMocks());
 
-describe('TransferItemHandler', () => {
+describe('TakeFromContainerHandler', () => {
   // Constructor Tests
   describe('constructor', () => {
     test('creates an instance when dependencies are valid', () => {
-      const handler = new TransferItemHandler({
+      const handler = new TakeFromContainerHandler({
         logger: log,
         entityManager: em,
         safeEventDispatcher: dispatcher,
       });
-      expect(handler).toBeInstanceOf(TransferItemHandler);
+      expect(handler).toBeInstanceOf(TakeFromContainerHandler);
     });
 
     test('throws if logger is missing', () => {
       expect(
         () =>
-          new TransferItemHandler({
+          new TakeFromContainerHandler({
             entityManager: em,
             safeEventDispatcher: dispatcher,
           })
@@ -76,7 +77,7 @@ describe('TransferItemHandler', () => {
     test('throws if entityManager is missing', () => {
       expect(
         () =>
-          new TransferItemHandler({
+          new TakeFromContainerHandler({
             logger: log,
             safeEventDispatcher: dispatcher,
           })
@@ -85,7 +86,7 @@ describe('TransferItemHandler', () => {
 
     test('throws if safeEventDispatcher is missing', () => {
       expect(
-        () => new TransferItemHandler({ logger: log, entityManager: em })
+        () => new TakeFromContainerHandler({ logger: log, entityManager: em })
       ).toThrow(/safeEventDispatcher/);
     });
   });
@@ -95,26 +96,26 @@ describe('TransferItemHandler', () => {
     let handler;
 
     beforeEach(() => {
-      handler = new TransferItemHandler({
+      handler = new TakeFromContainerHandler({
         logger: log,
         entityManager: em,
         safeEventDispatcher: dispatcher,
       });
     });
 
-    test('successfully transfers item between inventories', async () => {
-      const fromInventory = {
-        capacity: { maxItems: 10, maxWeight: 100 },
+    test('successfully takes item from open container', async () => {
+      const container = {
+        isOpen: true,
         items: ['item1', 'item2', 'item3'],
       };
-      const toInventory = {
+      const inventory = {
         capacity: { maxItems: 10, maxWeight: 100 },
         items: ['item4'],
       };
 
       em.getComponentData
-        .mockReturnValueOnce(fromInventory) // fromEntity inventory
-        .mockReturnValueOnce(toInventory); // toEntity inventory
+        .mockReturnValueOnce(container) // container component
+        .mockReturnValueOnce(inventory); // actor inventory
 
       em.batchAddComponentsOptimized.mockResolvedValue({
         updateCount: 2,
@@ -122,76 +123,73 @@ describe('TransferItemHandler', () => {
       });
 
       const result = await handler.execute({
-        fromEntity: 'actor1',
-        toEntity: 'actor2',
+        actorEntity: 'actor1',
+        containerEntity: 'chest1',
         itemEntity: 'item2',
       });
 
       expect(result).toEqual({ success: true });
       expect(em.getComponentData).toHaveBeenCalledWith(
-        'actor1',
-        INVENTORY_COMPONENT_ID
+        'chest1',
+        CONTAINER_COMPONENT_ID
       );
       expect(em.getComponentData).toHaveBeenCalledWith(
-        'actor2',
+        'actor1',
         INVENTORY_COMPONENT_ID
       );
       expect(em.batchAddComponentsOptimized).toHaveBeenCalledWith(
         [
           {
-            instanceId: 'actor1',
-            componentTypeId: INVENTORY_COMPONENT_ID,
+            instanceId: 'chest1',
+            componentTypeId: CONTAINER_COMPONENT_ID,
             componentData: {
-              ...fromInventory,
+              ...container,
               items: ['item1', 'item3'],
             },
           },
           {
-            instanceId: 'actor2',
+            instanceId: 'actor1',
             componentTypeId: INVENTORY_COMPONENT_ID,
             componentData: {
-              ...toInventory,
+              ...inventory,
               items: ['item4', 'item2'],
             },
           },
         ],
         true
       );
-      expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        ITEM_TRANSFERRED_EVENT,
-        {
-          fromEntity: 'actor1',
-          toEntity: 'actor2',
-          itemEntity: 'item2',
-        }
-      );
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(ITEM_TAKEN_EVENT, {
+        actorEntity: 'actor1',
+        containerEntity: 'chest1',
+        itemEntity: 'item2',
+      });
       expect(log.debug).toHaveBeenCalledWith(
-        'TransferItemHandler: Item transferred successfully',
+        'TakeFromContainerHandler: Item taken from container',
         expect.any(Object)
       );
     });
 
-    test('handles transfer of last item from inventory', async () => {
-      const fromInventory = {
-        capacity: { maxItems: 5, maxWeight: 50 },
+    test('handles taking last item from container', async () => {
+      const container = {
+        isOpen: true,
         items: ['item1'],
       };
-      const toInventory = {
+      const inventory = {
         capacity: { maxItems: 5, maxWeight: 50 },
         items: [],
       };
 
       em.getComponentData
-        .mockReturnValueOnce(fromInventory)
-        .mockReturnValueOnce(toInventory);
+        .mockReturnValueOnce(container)
+        .mockReturnValueOnce(inventory);
       em.batchAddComponentsOptimized.mockResolvedValue({
         updateCount: 2,
         errors: [],
       });
 
       const result = await handler.execute({
-        fromEntity: 'actor1',
-        toEntity: 'actor2',
+        actorEntity: 'actor1',
+        containerEntity: 'chest1',
         itemEntity: 'item1',
       });
 
@@ -215,16 +213,16 @@ describe('TransferItemHandler', () => {
     let handler;
 
     beforeEach(() => {
-      handler = new TransferItemHandler({
+      handler = new TakeFromContainerHandler({
         logger: log,
         entityManager: em,
         safeEventDispatcher: dispatcher,
       });
     });
 
-    test('fails when fromEntity parameter is missing', async () => {
+    test('fails when actorEntity parameter is missing', async () => {
       const result = await handler.execute({
-        toEntity: 'actor2',
+        containerEntity: 'chest1',
         itemEntity: 'item1',
       });
 
@@ -238,9 +236,9 @@ describe('TransferItemHandler', () => {
       );
     });
 
-    test('fails when toEntity parameter is missing', async () => {
+    test('fails when containerEntity parameter is missing', async () => {
       const result = await handler.execute({
-        fromEntity: 'actor1',
+        actorEntity: 'actor1',
         itemEntity: 'item1',
       });
 
@@ -256,8 +254,8 @@ describe('TransferItemHandler', () => {
 
     test('fails when itemEntity parameter is missing', async () => {
       const result = await handler.execute({
-        fromEntity: 'actor1',
-        toEntity: 'actor2',
+        actorEntity: 'actor1',
+        containerEntity: 'chest1',
       });
 
       expect(result).toEqual({
@@ -283,98 +281,119 @@ describe('TransferItemHandler', () => {
       );
     });
 
-    test('fails when fromEntity has no inventory component', async () => {
-      em.getComponentData
-        .mockReturnValueOnce(null) // fromEntity inventory missing
-        .mockReturnValueOnce({ capacity: {}, items: [] }); // toEntity inventory
+    test('fails when target has no container component', async () => {
+      em.getComponentData.mockReturnValueOnce(null); // container missing
 
       const result = await handler.execute({
-        fromEntity: 'actor1',
-        toEntity: 'actor2',
+        actorEntity: 'actor1',
+        containerEntity: 'chest1',
         itemEntity: 'item1',
       });
 
       expect(result).toEqual({
         success: false,
-        error: 'missing_inventory',
+        error: 'not_a_container',
       });
       expect(log.warn).toHaveBeenCalledWith(
-        'TransferItemHandler: Missing inventory component for transfer',
+        'TakeFromContainerHandler: No container component',
         expect.any(Object)
       );
     });
 
-    test('fails when toEntity has no inventory component', async () => {
-      em.getComponentData
-        .mockReturnValueOnce({ capacity: {}, items: ['item1'] }) // fromEntity inventory
-        .mockReturnValueOnce(null); // toEntity inventory missing
-
-      const result = await handler.execute({
-        fromEntity: 'actor1',
-        toEntity: 'actor2',
-        itemEntity: 'item1',
-      });
-
-      expect(result).toEqual({
-        success: false,
-        error: 'missing_inventory',
-      });
-      expect(log.warn).toHaveBeenCalledWith(
-        'TransferItemHandler: Missing inventory component for transfer',
-        expect.any(Object)
-      );
-    });
-
-    test('fails when item is not in source inventory', async () => {
-      const fromInventory = {
-        capacity: { maxItems: 10, maxWeight: 100 },
+    test('fails when container is closed', async () => {
+      const container = {
+        isOpen: false,
         items: ['item1', 'item2'],
       };
-      const toInventory = {
-        capacity: { maxItems: 10, maxWeight: 100 },
-        items: [],
-      };
 
-      em.getComponentData
-        .mockReturnValueOnce(fromInventory)
-        .mockReturnValueOnce(toInventory);
+      em.getComponentData.mockReturnValueOnce(container);
 
       const result = await handler.execute({
-        fromEntity: 'actor1',
-        toEntity: 'actor2',
-        itemEntity: 'item3', // not in fromInventory
+        actorEntity: 'actor1',
+        containerEntity: 'chest1',
+        itemEntity: 'item1',
       });
 
       expect(result).toEqual({
         success: false,
-        error: 'item_not_found',
+        error: 'container_closed',
+      });
+      expect(log.debug).toHaveBeenCalledWith(
+        'TakeFromContainerHandler: Container is closed',
+        expect.any(Object)
+      );
+    });
+
+    test('fails when item is not in container', async () => {
+      const container = {
+        isOpen: true,
+        items: ['item1', 'item2'],
+      };
+
+      em.getComponentData.mockReturnValueOnce(container);
+
+      const result = await handler.execute({
+        actorEntity: 'actor1',
+        containerEntity: 'chest1',
+        itemEntity: 'item3', // not in container
+      });
+
+      expect(result).toEqual({
+        success: false,
+        error: 'item_not_in_container',
       });
       expect(log.warn).toHaveBeenCalledWith(
-        'TransferItemHandler: Item not in source inventory',
+        'TakeFromContainerHandler: Item not in container',
+        expect.any(Object)
+      );
+    });
+
+    test('fails when actor has no inventory component', async () => {
+      const container = {
+        isOpen: true,
+        items: ['item1'],
+      };
+
+      em.getComponentData
+        .mockReturnValueOnce(container) // container exists
+        .mockReturnValueOnce(null); // inventory missing
+
+      const result = await handler.execute({
+        actorEntity: 'actor1',
+        containerEntity: 'chest1',
+        itemEntity: 'item1',
+      });
+
+      expect(result).toEqual({
+        success: false,
+        error: 'no_inventory',
+      });
+      expect(log.warn).toHaveBeenCalledWith(
+        'TakeFromContainerHandler: No inventory on actor',
         expect.any(Object)
       );
     });
 
     test('handles batch update errors gracefully', async () => {
-      const fromInventory = {
-        capacity: { maxItems: 10, maxWeight: 100 },
+      const container = {
+        isOpen: true,
         items: ['item1'],
       };
-      const toInventory = {
+      const inventory = {
         capacity: { maxItems: 10, maxWeight: 100 },
         items: [],
       };
 
       em.getComponentData
-        .mockReturnValueOnce(fromInventory)
-        .mockReturnValueOnce(toInventory);
+        .mockReturnValueOnce(container)
+        .mockReturnValueOnce(inventory);
 
       const batchError = new Error('Batch update failed');
       em.batchAddComponentsOptimized.mockRejectedValue(batchError);
 
       const result = await handler.execute({
-        fromEntity: 'actor1',
-        toEntity: 'actor2',
+        actorEntity: 'actor1',
+        containerEntity: 'chest1',
         itemEntity: 'item1',
       });
 
@@ -383,7 +402,7 @@ describe('TransferItemHandler', () => {
         error: 'Batch update failed',
       });
       expect(log.error).toHaveBeenCalledWith(
-        'TransferItemHandler: Transfer failed',
+        'TakeFromContainerHandler: Take from container failed',
         batchError,
         expect.any(Object)
       );
@@ -395,7 +414,7 @@ describe('TransferItemHandler', () => {
     let handler;
 
     beforeEach(() => {
-      handler = new TransferItemHandler({
+      handler = new TakeFromContainerHandler({
         logger: log,
         entityManager: em,
         safeEventDispatcher: dispatcher,
@@ -403,36 +422,36 @@ describe('TransferItemHandler', () => {
     });
 
     test('trims whitespace from entity IDs', async () => {
-      const fromInventory = { capacity: {}, items: ['item1'] };
-      const toInventory = { capacity: {}, items: [] };
+      const container = { isOpen: true, items: ['item1'] };
+      const inventory = { capacity: {}, items: [] };
 
       em.getComponentData
-        .mockReturnValueOnce(fromInventory)
-        .mockReturnValueOnce(toInventory);
+        .mockReturnValueOnce(container)
+        .mockReturnValueOnce(inventory);
       em.batchAddComponentsOptimized.mockResolvedValue({
         updateCount: 2,
         errors: [],
       });
 
       await handler.execute({
-        fromEntity: '  actor1  ',
-        toEntity: '  actor2  ',
+        actorEntity: '  actor1  ',
+        containerEntity: '  chest1  ',
         itemEntity: '  item1  ',
       });
 
       expect(em.getComponentData).toHaveBeenCalledWith(
+        'chest1',
+        CONTAINER_COMPONENT_ID
+      );
+      expect(em.getComponentData).toHaveBeenCalledWith(
         'actor1',
         INVENTORY_COMPONENT_ID
       );
-      expect(em.getComponentData).toHaveBeenCalledWith(
-        'actor2',
-        INVENTORY_COMPONENT_ID
-      );
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        ITEM_TRANSFERRED_EVENT,
+        ITEM_TAKEN_EVENT,
         expect.objectContaining({
-          fromEntity: 'actor1',
-          toEntity: 'actor2',
+          actorEntity: 'actor1',
+          containerEntity: 'chest1',
           itemEntity: 'item1',
         })
       );

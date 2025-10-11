@@ -11,12 +11,25 @@
     {
       "id": "clothing",
       "version": "^1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
     }
   ],
   "content": {
-    "actions": ["slap.action.json", "sucker_punch.action.json"],
-    "rules": ["handle_slap.rule.json", "handle_sucker_punch.rule.json"],
+    "actions": [
+      "grab_neck.action.json",
+      "slap.action.json",
+      "sucker_punch.action.json"
+    ],
+    "rules": [
+      "handle_grab_neck.rule.json",
+      "handle_slap.rule.json",
+      "handle_sucker_punch.rule.json"
+    ],
     "conditions": [
+      "event-is-action-grab-neck.condition.json",
       "event-is-action-slap.condition.json",
       "event-is-action-sucker-punch.condition.json"
     ]

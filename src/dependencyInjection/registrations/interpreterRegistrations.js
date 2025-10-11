@@ -171,6 +171,10 @@ export function registerInterpreters(container) {
       bind(tokens.PickUpItemFromLocationHandler)
     );
     registry.register('OPEN_CONTAINER', bind(tokens.OpenContainerHandler));
+    registry.register(
+      'TAKE_FROM_CONTAINER',
+      bind(tokens.TakeFromContainerHandler)
+    );
 
     return registry;
   });
