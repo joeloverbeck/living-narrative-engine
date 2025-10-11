@@ -236,6 +236,8 @@ describe('timeout middleware', () => {
       jest.advanceTimersByTime(1000);
 
       expect(res.status).not.toHaveBeenCalled();
+      expect(res.isResponseCommitted).toHaveBeenCalled();
+      expect(res.getCommitmentSource).toHaveBeenCalled();
       expect(logger.warn).toHaveBeenCalledWith(
         "Request test-request-id: Timeout cannot commit response - already committed to 'success'",
         expect.objectContaining({ existingCommitment: 'success' })
@@ -278,6 +280,68 @@ describe('timeout middleware', () => {
       });
     });
 
+    test('logs timeout metadata with default commitment state when tracker missing', () => {
+      const logger = {
+        warn: jest.fn(),
+        debug: jest.fn(),
+      };
+
+      res.commitResponse = jest.fn().mockReturnValue(true);
+      delete res.isResponseCommitted;
+      delete res.getCommitmentSource;
+
+      const middleware = createTimeoutMiddleware(1000, { logger });
+      middleware(req, res, next);
+
+      jest.advanceTimersByTime(1000);
+
+      const timeoutWarn = logger.warn.mock.calls.find((call) =>
+        call[0].includes('Timeout fired after')
+      );
+
+      expect(timeoutWarn).toBeDefined();
+      expect(timeoutWarn[1]).toMatchObject({
+        responseCommitted: false,
+        headersSent: false,
+      });
+    });
+
+    test('clears grace period timer on finish events when configured', () => {
+      const logger = {
+        warn: jest.fn(),
+        debug: jest.fn(),
+      };
+
+      res.commitResponse = jest.fn().mockReturnValue(true);
+      res.getCommitmentSource = jest.fn();
+      res.isResponseCommitted = jest.fn().mockReturnValue(false);
+
+      const middleware = createTimeoutMiddleware(1000, {
+        logger,
+        gracePeriod: 250,
+      });
+
+      middleware(req, res, next);
+
+      // Trigger the main timeout so the grace period timer is created
+      jest.advanceTimersByTime(1000);
+
+      // Capture the grace period timer id from the setTimeout spy
+      const graceTimerId = setTimeout.mock.results
+        .slice(1)
+        .find((call, index) => setTimeout.mock.calls[index + 1]?.[1] === 250)?.value;
+
+      expect(graceTimerId).toBeDefined();
+
+      // Reset clearTimeout calls to focus on the finish handler behaviour
+      clearTimeout.mockClear();
+
+      const finishHandler = res.on.mock.calls.find((call) => call[0] === 'finish')[1];
+      finishHandler();
+
+      expect(clearTimeout).toHaveBeenCalledWith(graceTimerId);
+    });
+
     test('warns when headers already sent during timeout response', () => {
       const logger = {
         warn: jest.fn(),
@@ -299,6 +363,43 @@ describe('timeout middleware', () => {
         { requestId: 'test-request-id' }
       );
       expect(res.status).not.toHaveBeenCalled();
+    });
+
+    test('logs connection closure after timeout and clears grace period timer', () => {
+      const logger = {
+        warn: jest.fn(),
+        debug: jest.fn(),
+      };
+
+      res.commitResponse = jest.fn().mockReturnValue(true);
+      res.getCommitmentSource = jest.fn();
+      res.isResponseCommitted = jest.fn().mockReturnValue(false);
+
+      const middleware = createTimeoutMiddleware(1000, {
+        logger,
+        gracePeriod: 200,
+      });
+
+      middleware(req, res, next);
+
+      jest.advanceTimersByTime(1000);
+
+      const graceTimerId = setTimeout.mock.results
+        .slice(1)
+        .find((call, index) => setTimeout.mock.calls[index + 1]?.[1] === 200)?.value;
+
+      expect(graceTimerId).toBeDefined();
+
+      clearTimeout.mockClear();
+
+      const closeHandler = res.on.mock.calls.find((call) => call[0] === 'close')[1];
+      closeHandler();
+
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Request test-request-id: Connection closed after timeout',
+        { requestId: 'test-request-id' }
+      );
+      expect(clearTimeout).toHaveBeenCalledWith(graceTimerId);
     });
 
     test('logs debug details when response methods run post-timeout', () => {
@@ -474,6 +575,35 @@ describe('timeout middleware', () => {
         const config = createSizeLimitConfig({ jsonLimit: input });
         expect(config.json.limit).toBe(expected);
       });
+    });
+
+    test('supports numeric jsonLimit values', () => {
+      const config = createSizeLimitConfig({ jsonLimit: 5120 });
+
+      expect(config.json.limit).toBe(5120);
+
+      const verifyFunction = config.json.verify;
+      expect(() => verifyFunction({}, {}, Buffer.alloc(5120))).not.toThrow();
+    });
+
+    test('gracefully handles malformed size strings', () => {
+      const config = createSizeLimitConfig({ jsonLimit: 'five megabytes' });
+
+      expect(config.json.limit).toBe('five megabytes');
+    });
+
+    test('grace period flow works without logger instrumentation', () => {
+      res.commitResponse = jest.fn().mockReturnValue(true);
+      req.transitionState = jest.fn();
+
+      const middleware = createTimeoutMiddleware(1000, { gracePeriod: 100 });
+      middleware(req, res, next);
+
+      jest.advanceTimersByTime(1000);
+      jest.advanceTimersByTime(100);
+
+      expect(res.status).toHaveBeenCalledWith(503);
+      expect(req.transitionState).toHaveBeenCalledWith('timeout', { timeoutMs: 1000 });
     });
   });
 
