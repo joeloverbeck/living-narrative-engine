@@ -135,6 +135,24 @@ describe('Health Routes', () => {
     });
   });
 
+  it('should report configuration errors when accessors throw', async () => {
+    const configService = {
+      getProxyPort: jest.fn(() => {
+        throw new Error('port failure');
+      }),
+      getProxyAllowedOrigin: jest.fn(),
+      isDebugLoggingEnabled: jest.fn().mockReturnValue(true),
+    };
+    getAppConfigService.mockReturnValue(configService);
+
+    const response = await request(app).get('/health/ready');
+
+    expect(configService.getProxyPort).toHaveBeenCalled();
+    expect(response.status).toBe(503);
+    expect(response.body.checks.config).toBe('error');
+    expect(response.body.checks.debug_logging).toBe('ok');
+  });
+
   it('should handle unexpected errors during readiness checks', async () => {
     getAppConfigService.mockImplementation(() => {
       throw new Error('boot failure');

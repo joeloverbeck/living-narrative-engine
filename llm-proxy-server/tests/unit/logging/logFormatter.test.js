@@ -85,6 +85,31 @@ describe('LogFormatter', () => {
       );
     });
 
+    it('should infer emoji support from WT_SESSION without overrides', async () => {
+      jest.resetModules();
+      delete process.env.LOG_FORCE_EMOJI;
+      delete process.env.LOG_DISABLE_EMOJI;
+      delete process.env.TERM_PROGRAM;
+      delete process.env.TERMINAL_EMULATOR;
+      delete process.env.WSL_DISTRO_NAME;
+      process.env.WT_SESSION = 'active-session';
+
+      Object.defineProperty(process, 'platform', {
+        value: 'win32',
+        configurable: true,
+      });
+
+      const { getLogFormatter } = await import(
+        '../../../src/logging/logFormatter.js'
+      );
+      formatter = getLogFormatter();
+
+      const result = formatter.formatMessage('info', 'WT session emoji check');
+      expect(result.icon).toMatch(
+        /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u
+      );
+    });
+
     it('should fall back to ASCII for WSL without modern terminal', async () => {
       process.env.WSL_DISTRO_NAME = 'Ubuntu';
       process.env.TERM = 'xterm';
@@ -396,6 +421,29 @@ describe('LogFormatter', () => {
       expect(result.contextLines.join('\n')).toContain('config');
       expect(result.contextLines.join('\n')).toContain('settings');
       expect(result.contextLines.join('\n')).toContain('requestId');
+    });
+
+    it('should truncate oversized detail objects for readability', () => {
+      const longDetail = {
+        payload: 'x'.repeat(120),
+      };
+
+      const result = formatter.formatMessage(
+        'info',
+        'Detail truncation test',
+        { context: 'value' },
+        longDetail
+      );
+
+      const detailLine = result.contextLines.find((line) =>
+        line.includes('Details[0]:')
+      );
+
+      expect(detailLine).toBeDefined();
+      expect(detailLine).toContain('...');
+      expect(detailLine.length).toBeLessThan(
+        JSON.stringify(longDetail, null, 2).length
+      );
     });
 
     it('should truncate long messages', async () => {
