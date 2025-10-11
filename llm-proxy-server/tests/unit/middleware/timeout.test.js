@@ -219,6 +219,109 @@ describe('timeout middleware', () => {
       expect(originalJson).toHaveBeenCalledTimes(2);
       expect(originalSend).toHaveBeenCalledTimes(1);
     });
+
+    test('logs warning when timeout cannot commit due to existing response', () => {
+      const logger = {
+        warn: jest.fn(),
+        debug: jest.fn(),
+      };
+
+      res.commitResponse = jest.fn().mockReturnValue(false);
+      res.getCommitmentSource = jest.fn().mockReturnValue('success');
+      res.isResponseCommitted = jest.fn().mockReturnValue(true);
+
+      const middleware = createTimeoutMiddleware(1000, { logger });
+      middleware(req, res, next);
+
+      jest.advanceTimersByTime(1000);
+
+      expect(res.status).not.toHaveBeenCalled();
+      expect(logger.warn).toHaveBeenCalledWith(
+        "Request test-request-id: Timeout cannot commit response - already committed to 'success'",
+        expect.objectContaining({ existingCommitment: 'success' })
+      );
+    });
+
+    test('respects grace period before dispatching timeout response', () => {
+      const logger = {
+        warn: jest.fn(),
+        debug: jest.fn(),
+      };
+
+      res.commitResponse = jest.fn().mockReturnValue(true);
+      res.getCommitmentSource = jest.fn();
+      res.isResponseCommitted = jest.fn().mockReturnValue(false);
+      req.transitionState = jest.fn();
+
+      const middleware = createTimeoutMiddleware(1000, {
+        logger,
+        gracePeriod: 200,
+      });
+
+      middleware(req, res, next);
+
+      jest.advanceTimersByTime(1000);
+      expect(res.status).not.toHaveBeenCalled();
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Request test-request-id: Entering grace period of 200ms',
+        expect.objectContaining({ requestId: 'test-request-id' })
+      );
+
+      jest.advanceTimersByTime(200);
+      expect(res.status).toHaveBeenCalledWith(503);
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Request test-request-id: Timeout response sent',
+        { requestId: 'test-request-id' }
+      );
+      expect(req.transitionState).toHaveBeenCalledWith('timeout', {
+        timeoutMs: 1000,
+      });
+    });
+
+    test('warns when headers already sent during timeout response', () => {
+      const logger = {
+        warn: jest.fn(),
+        debug: jest.fn(),
+      };
+
+      res.headersSent = true;
+      res.commitResponse = jest.fn().mockReturnValue(true);
+      res.isResponseCommitted = jest.fn().mockReturnValue(false);
+      res.getCommitmentSource = jest.fn();
+
+      const middleware = createTimeoutMiddleware(1000, { logger });
+      middleware(req, res, next);
+
+      jest.advanceTimersByTime(1000);
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Request test-request-id: Cannot send timeout response - headers already sent',
+        { requestId: 'test-request-id' }
+      );
+      expect(res.status).not.toHaveBeenCalled();
+    });
+
+    test('logs debug details when response methods run post-timeout', () => {
+      const logger = {
+        warn: jest.fn(),
+        debug: jest.fn(),
+      };
+
+      res.commitResponse = jest.fn().mockReturnValue(true);
+      res.isResponseCommitted = jest.fn().mockReturnValue(false);
+      res.getCommitmentSource = jest.fn();
+
+      const middleware = createTimeoutMiddleware(1000, { logger });
+      middleware(req, res, next);
+
+      jest.advanceTimersByTime(1000);
+      res.send('payload');
+
+      expect(logger.debug).toHaveBeenCalledWith(
+        "Request test-request-id: Response method 'send' called after timeout",
+        expect.objectContaining({ method: 'send', timeElapsed: 1000 })
+      );
+    });
   });
 
   describe('createSizeLimitConfig', () => {

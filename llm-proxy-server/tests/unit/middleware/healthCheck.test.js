@@ -240,6 +240,33 @@ describe('Health Check Middleware', () => {
       );
     });
 
+    it('should downgrade status when cache service round-trip fails', async () => {
+      mockLlmConfigService.isOperational.mockReturnValue(true);
+      mockLlmConfigService.getLlmConfigs.mockReturnValue({ llms: {} });
+
+      mockCacheService.set.mockImplementation(() => {});
+      mockCacheService.get.mockReturnValue(null);
+      mockCacheService.invalidate.mockImplementation(() => {});
+      mockCacheService.getSize.mockReturnValue(3);
+
+      const readinessCheck = createReadinessCheck({
+        logger: mockLogger,
+        llmConfigService: mockLlmConfigService,
+        cacheService: mockCacheService,
+      });
+
+      await readinessCheck(mockRequest, mockResponse);
+
+      expect(mockStatus).toHaveBeenCalledWith(503);
+      const payload = mockJson.mock.calls.at(-1)[0];
+      const cacheDependency = payload.details.dependencies.find(
+        (dep) => dep.name === 'cacheService'
+      );
+      expect(payload.status).toBe('OUT_OF_SERVICE');
+      expect(cacheDependency.status).toBe('DOWN');
+      expect(cacheDependency.details.working).toBeFalsy();
+    });
+
     it('should handle process memory pressure correctly', async () => {
       // Mock high memory usage (95%)
       jest.spyOn(process, 'memoryUsage').mockReturnValue({
@@ -280,6 +307,32 @@ describe('Health Check Middleware', () => {
           }),
         })
       );
+    });
+
+    it('should mark HTTP agent service as degraded when missing methods', async () => {
+      mockLlmConfigService.isOperational.mockReturnValue(true);
+      mockLlmConfigService.getLlmConfigs.mockReturnValue({ llms: {} });
+
+      const incompleteAgentService = {
+        getAgent: jest.fn(),
+      };
+
+      const readinessCheck = createReadinessCheck({
+        logger: mockLogger,
+        llmConfigService: mockLlmConfigService,
+        httpAgentService: incompleteAgentService,
+      });
+
+      await readinessCheck(mockRequest, mockResponse);
+
+      expect(mockStatus).toHaveBeenCalledWith(503);
+      const payload = mockJson.mock.calls.at(-1)[0];
+      const agentDependency = payload.details.dependencies.find(
+        (dep) => dep.name === 'httpAgentService'
+      );
+      expect(payload.status).toBe('OUT_OF_SERVICE');
+      expect(agentDependency.status).toBe('DOWN');
+      expect(agentDependency.details.error).toBe('Missing required methods');
     });
 
     it('should handle errors during readiness check gracefully', async () => {
