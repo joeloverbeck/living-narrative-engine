@@ -207,6 +207,50 @@ describe('Trace Routes', () => {
     expect(secondResult).toMatchObject({ success: false, fileName: 'fail.json' });
   });
 
+  it('should convert rejected batch promises into standardized failure results', async () => {
+    const allSettledSpy = jest
+      .spyOn(Promise, 'allSettled')
+      .mockResolvedValueOnce([
+        {
+          status: 'fulfilled',
+          value: {
+            index: 0,
+            fileName: 'good.json',
+            success: true,
+            filePath: 'traces/good.json',
+            size: 42,
+            bytesWritten: 42,
+          },
+        },
+        { status: 'rejected', reason: new Error('filesystem exploded') },
+      ]);
+
+    const response = await request(app).post('/api/traces/write-batch').send({
+      outputDirectory: './batch',
+      traces: [
+        { traceData: { ok: true }, fileName: 'good.json' },
+        { traceData: { ok: false }, fileName: 'fail.json' },
+      ],
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body.successCount).toBe(1);
+    expect(response.body.failureCount).toBe(1);
+    expect(response.body.results[0]).toMatchObject({
+      index: 0,
+      fileName: 'good.json',
+      success: true,
+    });
+    expect(response.body.results[1]).toMatchObject({
+      index: 1,
+      fileName: 'fail.json',
+      success: false,
+      error: 'filesystem exploded',
+    });
+
+    allSettledSpy.mockRestore();
+  });
+
   it('should report failure when all batch writes fail', async () => {
     fs.writeFile.mockRejectedValue(new Error('unavailable'));
 
