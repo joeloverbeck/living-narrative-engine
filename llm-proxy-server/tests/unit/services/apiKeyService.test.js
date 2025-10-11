@@ -24,6 +24,7 @@ const createCacheService = () => ({
   set: jest.fn(),
   invalidatePattern: jest.fn(),
   getStats: jest.fn(),
+  resetStats: jest.fn(),
 });
 
 const createAppConfig = () => ({
@@ -53,6 +54,7 @@ describe('ApiKeyService', () => {
 
   afterEach(() => {
     process.env = ORIGINAL_ENV;
+    jest.restoreAllMocks();
   });
 
   describe('Constructor and Initialization', () => {
@@ -137,6 +139,111 @@ describe('ApiKeyService', () => {
         errorDetails: null,
         source: "file 'api.txt'",
       });
+    });
+  });
+
+  describe('Cache management utilities', () => {
+    test('invalidateCache returns 0 when cache is disabled', () => {
+      appConfig.isCacheEnabled.mockReturnValue(false);
+
+      const result = service.invalidateCache('llm-cache-disabled');
+
+      expect(result).toBe(0);
+      expect(cacheService.invalidatePattern).not.toHaveBeenCalled();
+      expect(logger.debug).toHaveBeenCalledWith(
+        "ApiKeyService.invalidateCache: Cache is disabled, nothing to invalidate for llmId 'llm-cache-disabled'."
+      );
+    });
+
+    test('invalidateCache removes cached entries when cache is enabled', () => {
+      appConfig.isCacheEnabled.mockReturnValue(true);
+      cacheService.invalidatePattern.mockReturnValue(3);
+
+      const result = service.invalidateCache('llm-cache-enabled');
+
+      expect(cacheService.invalidatePattern).toHaveBeenCalledWith(
+        expect.any(RegExp)
+      );
+      const pattern = cacheService.invalidatePattern.mock.calls[0][0];
+      expect(pattern).toBeInstanceOf(RegExp);
+      expect(pattern.test('api_key:file:/tmp/example.txt')).toBe(true);
+
+      expect(logger.info).toHaveBeenCalledWith(
+        'ApiKeyService.invalidateCache: Invalidated 3 cache entries for pattern matching API keys.'
+      );
+      expect(result).toBe(3);
+    });
+
+    test('invalidateAllCache returns 0 when cache is disabled', () => {
+      appConfig.isCacheEnabled.mockReturnValue(false);
+
+      const result = service.invalidateAllCache();
+
+      expect(result).toBe(0);
+      expect(cacheService.invalidatePattern).not.toHaveBeenCalled();
+      expect(logger.debug).toHaveBeenCalledWith(
+        'ApiKeyService.invalidateAllCache: Cache is disabled, nothing to invalidate.'
+      );
+    });
+
+    test('invalidateAllCache clears all entries when cache is enabled', () => {
+      appConfig.isCacheEnabled.mockReturnValue(true);
+      cacheService.invalidatePattern.mockReturnValue(5);
+
+      const result = service.invalidateAllCache();
+
+      expect(cacheService.invalidatePattern).toHaveBeenCalledWith(
+        expect.any(RegExp)
+      );
+      const pattern = cacheService.invalidatePattern.mock.calls[0][0];
+      expect(pattern.test('api_key:file:/tmp/another.txt')).toBe(true);
+
+      expect(logger.info).toHaveBeenCalledWith(
+        'ApiKeyService.invalidateAllCache: Invalidated 5 cache entries for all API keys.'
+      );
+      expect(result).toBe(5);
+    });
+
+    test('getCacheStats returns null when cache is disabled', () => {
+      appConfig.isCacheEnabled.mockReturnValue(false);
+
+      const result = service.getCacheStats();
+
+      expect(result).toBeNull();
+      expect(cacheService.getStats).not.toHaveBeenCalled();
+    });
+
+    test('getCacheStats returns statistics when cache is enabled', () => {
+      appConfig.isCacheEnabled.mockReturnValue(true);
+      const stats = { hits: 10, misses: 2 };
+      cacheService.getStats.mockReturnValue(stats);
+
+      const result = service.getCacheStats();
+
+      expect(result).toBe(stats);
+      expect(cacheService.getStats).toHaveBeenCalledTimes(1);
+    });
+
+    test('resetCacheStats does nothing when cache is disabled', () => {
+      appConfig.isCacheEnabled.mockReturnValue(false);
+
+      service.resetCacheStats();
+
+      expect(cacheService.resetStats).not.toHaveBeenCalled();
+      expect(logger.debug).toHaveBeenCalledWith(
+        'ApiKeyService.resetCacheStats: Cache is disabled, nothing to reset.'
+      );
+    });
+
+    test('resetCacheStats clears statistics when cache is enabled', () => {
+      appConfig.isCacheEnabled.mockReturnValue(true);
+
+      service.resetCacheStats();
+
+      expect(cacheService.resetStats).toHaveBeenCalledTimes(1);
+      expect(logger.info).toHaveBeenCalledWith(
+        'ApiKeyService.resetCacheStats: Cache statistics reset.'
+      );
     });
   });
 
