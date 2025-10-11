@@ -58,7 +58,14 @@ jest.mock('../../../src/dependencyInjection/containerConfig.js', () => {
       error: jest.fn(),
     };
 
+    // Mock EventBus for cache invalidation setup
+    const eventBus = {
+      subscribe: jest.fn(),
+      dispatch: jest.fn(),
+    };
+
     container.registerInstance(tokens.ILogger, logger);
+    container.registerInstance(tokens.IEventBus, eventBus);
     mockContainerConfigControl.lastLogger = logger;
     return Promise.resolve();
   });

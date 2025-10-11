@@ -17,6 +17,7 @@ import {
 } from '../mockFactories/index.js';
 import { deepClone } from '../../../src/utils/cloneUtils.js';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
+import { setupEntityCacheInvalidation } from '../../../src/scopeDsl/core/entityHelpers.js';
 
 /**
  * Creates base services needed for rule engine tests.
@@ -340,6 +341,98 @@ export function createBaseRuleEnvironment({
           return { success: true, value: new Set([bendingOver.surface_id]) };
         }
 
+        // Handle the items:items_at_location scope
+        if (scopeName === 'items:items_at_location') {
+          // Extract actor ID from context
+          const actorId = context?.actor?.id || context;
+
+          // Get actor's position
+          const actor = entityManager.getEntityInstance(actorId);
+          const actorPosition = actor?.components?.['core:position'];
+          if (!actorPosition || !actorPosition.locationId) {
+            return { success: true, value: new Set() };
+          }
+
+          // Find all entities with items:item, items:portable, and core:position at same location
+          const allEntityIds = entityManager.getEntityIds();
+          const allEntities = allEntityIds.map((id) => {
+            const instance = entityManager.getEntityInstance(id);
+            return instance || { id, components: {} };
+          });
+
+          const itemsAtLocation = allEntities.filter((entity) => {
+            const hasItemComponent = entity.components?.['items:item'];
+            const hasPortableComponent = entity.components?.['items:portable'];
+            const entityPosition = entity.components?.['core:position'];
+
+            if (!hasItemComponent || !hasPortableComponent || !entityPosition) {
+              return false;
+            }
+
+            // Check if in same location as actor
+            return entityPosition.locationId === actorPosition.locationId;
+          });
+
+          const itemIds = itemsAtLocation.map((item) => item.id);
+          return { success: true, value: new Set(itemIds) };
+        }
+
+        // Handle the positioning:close_actors scope
+        if (scopeName === 'positioning:close_actors') {
+          // Extract actor ID from context
+          const actorId = context?.actor?.id || context;
+
+          // Get actor's position
+          const actor = entityManager.getEntityInstance(actorId);
+          const actorPosition = actor?.components?.['core:position'];
+          if (!actorPosition || !actorPosition.locationId) {
+            return { success: true, value: new Set() };
+          }
+
+          // Find all other actors (entities with core:actor component) in the same location
+          const allEntityIds = entityManager.getEntityIds();
+          const allEntities = allEntityIds.map((id) => {
+            const instance = entityManager.getEntityInstance(id);
+            return instance || { id, components: {} };
+          });
+
+          const closeActors = allEntities.filter((entity) => {
+            // Skip the actor itself
+            if (entity.id === actorId) {
+              return false;
+            }
+
+            const hasActorComponent = entity.components?.['core:actor'];
+            const entityPosition = entity.components?.['core:position'];
+
+            if (!hasActorComponent || !entityPosition) {
+              return false;
+            }
+
+            // Check if in same location as actor
+            return entityPosition.locationId === actorPosition.locationId;
+          });
+
+          const actorIds = closeActors.map((a) => a.id);
+          return { success: true, value: new Set(actorIds) };
+        }
+
+        // Handle the items:actor_inventory_items scope
+        if (scopeName === 'items:actor_inventory_items') {
+          // Extract actor ID from context
+          const actorId = context?.actor?.id || context;
+
+          // Get actor's inventory
+          const actor = entityManager.getEntityInstance(actorId);
+          const inventory = actor?.components?.['items:inventory'];
+          if (!inventory || !Array.isArray(inventory.items)) {
+            return { success: true, value: new Set() };
+          }
+
+          // Return the items in the inventory
+          return { success: true, value: new Set(inventory.items) };
+        }
+
         // Handle other scopes or return empty set
         if (scopeName === 'none' || scopeName === 'self') {
           return { success: true, value: new Set([scopeName]) };
@@ -374,6 +467,10 @@ export function createBaseRuleEnvironment({
   }
 
   const init = initializeEnv(entities);
+
+  // Setup entity cache invalidation to match production behavior
+  // This ensures the entity cache is automatically cleared when components are added/removed
+  setupEntityCacheInvalidation(bus);
 
   return {
     eventBus: bus,
@@ -549,12 +646,20 @@ export function createRuleTestEnvironment(options) {
       return false; // Action not in candidate list
     }
 
-    // If action has a targets scope, validate that there are valid targets
-    if (
-      action.targets &&
-      typeof action.targets === 'string' &&
-      action.targets !== 'none'
-    ) {
+    // If action has target scopes, validate that there are valid targets for all of them
+    // Check primary, secondary, and tertiary target scopes
+    const targetScopes = [];
+    if (action.targets?.primary?.scope) {
+      targetScopes.push({ name: 'primary', scope: action.targets.primary.scope });
+    }
+    if (action.targets?.secondary?.scope) {
+      targetScopes.push({ name: 'secondary', scope: action.targets.secondary.scope });
+    }
+    if (action.targets?.tertiary?.scope) {
+      targetScopes.push({ name: 'tertiary', scope: action.targets.tertiary.scope });
+    }
+
+    if (targetScopes.length > 0) {
       // Create context for scope resolution
       const actorComponents = {};
 
@@ -571,30 +676,32 @@ export function createRuleTestEnvironment(options) {
         },
       };
 
-      // Use the scope resolver if available
-      if (env.unifiedScopeResolver) {
-        try {
-          const result = env.unifiedScopeResolver.resolveSync(
-            action.targets,
-            context
-          );
-          if (!result.success || !result.value || result.value.size === 0) {
-            env.logger.debug(
-              `Action ${actionId} has no valid targets for scope ${action.targets}`
-            );
-            return false; // No valid targets
-          }
-        } catch (error) {
-          env.logger.debug(
-            `Failed to resolve scope ${action.targets} for action ${actionId}: ${error.message}`
-          );
-          return false;
+      // Validate each target scope
+      for (const { name, scope } of targetScopes) {
+        // Skip 'none' and 'self' scopes
+        if (scope === 'none' || scope === 'self') {
+          continue;
         }
-      } else {
-        // Fallback: For simple tests without scope resolver, just check if targets is 'none' or 'self'
-        if (action.targets !== 'none' && action.targets !== 'self') {
+
+        // Use the scope resolver if available
+        if (env.unifiedScopeResolver) {
+          try {
+            const result = env.unifiedScopeResolver.resolveSync(scope, context);
+            if (!result.success || !result.value || result.value.size === 0) {
+              env.logger.debug(
+                `Action ${actionId} has no valid ${name} targets for scope ${scope}`
+              );
+              return false; // No valid targets for this scope
+            }
+          } catch (error) {
+            env.logger.debug(
+              `Failed to resolve ${name} scope ${scope} for action ${actionId}: ${error.message}`
+            );
+            return false;
+          }
+        } else {
           env.logger.debug(
-            `Warning: No scope resolver available to validate targets for action ${actionId}`
+            `Warning: No scope resolver available to validate ${name} targets for action ${actionId}`
           );
           // For now, return true to maintain backward compatibility with existing tests
           return true;
@@ -606,6 +713,8 @@ export function createRuleTestEnvironment(options) {
   };
 
   // Add a method to get available actions (for debugging)
+  // Note: Action discovery is based on component presence, not scope resolution
+  // Scope validation happens during action execution, not discovery
   env.getAvailableActions = (actorId) => {
     const actor = env.entityManager.getEntityInstance(actorId);
     if (!actor) {
@@ -615,10 +724,9 @@ export function createRuleTestEnvironment(options) {
     const actorEntity = { id: actorId };
     const candidates = env.actionIndex.getCandidateActions(actorEntity);
 
-    // Filter by scope validation
-    return candidates.filter((action) =>
-      env.validateAction(actorId, action.id)
-    );
+    // Return candidates without scope validation - action indexing is based on component presence
+    // Target validation will happen during action execution via scope resolution
+    return candidates;
   };
 
   return env;

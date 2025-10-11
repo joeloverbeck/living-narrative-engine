@@ -116,13 +116,18 @@ export class ModTestFixture {
       }
 
       // Use existing ModActionTestFixture constructor
-      return new ModActionTestFixture(
+      const fixture = new ModActionTestFixture(
         modId,
         actionId,
         finalRuleFile,
         finalConditionFile,
         options
       );
+
+      // Setup environment must be called after construction since it's async
+      await fixture.initialize();
+
+      return fixture;
     } catch (error) {
       throw new Error(
         `ModTestFixture.forAction failed for ${modId}:${actionId}: ${error.message}`
@@ -188,13 +193,18 @@ export class ModTestFixture {
       }
 
       // Use existing ModRuleTestFixture constructor
-      return new ModRuleTestFixture(
+      const fixture = new ModRuleTestFixture(
         modId,
         ruleId,
         finalRuleFile,
         finalConditionFile,
         options
       );
+
+      // Setup environment must be called after construction since it's async
+      await fixture.initialize();
+
+      return fixture;
     } catch (error) {
       throw new Error(
         `ModTestFixture.forRule failed for ${modId}:${ruleId}: ${error.message}`
@@ -230,13 +240,15 @@ export class ModTestFixture {
       modId,
       actionId
     );
-    return new ModActionTestFixture(
+    const fixture = new ModActionTestFixture(
       modId,
       actionId,
       ruleFile,
       conditionFile,
       options
     );
+    await fixture.initialize();
+    return fixture;
   }
 
   /**
@@ -253,13 +265,15 @@ export class ModTestFixture {
    */
   static async forRuleAutoLoad(modId, ruleId, options = {}) {
     const { ruleFile, conditionFile } = await this.loadModFiles(modId, ruleId);
-    return new ModRuleTestFixture(
+    const fixture = new ModRuleTestFixture(
       modId,
       ruleId,
       ruleFile,
       conditionFile,
       options
     );
+    await fixture.initialize();
+    return fixture;
   }
 
   /**
@@ -502,7 +516,7 @@ class BaseModTestFixture {
    * @param {object} conditionFile - Condition definition
    * @param {string} conditionId - Condition identifier
    */
-  setupEnvironment(ruleFile, conditionFile, conditionId) {
+  async setupEnvironment(ruleFile, conditionFile, conditionId) {
     const macros = {
       'core:logSuccessAndEndTurn': logSuccessMacro,
       'core:displaySuccessAndEndTurn': displaySuccessMacro,
@@ -510,6 +524,9 @@ class BaseModTestFixture {
     const expanded = expandMacros(ruleFile.actions, {
       get: (type, id) => (type === 'macros' ? macros[id] : undefined),
     });
+
+    // Load action definitions for the mod to enable action discovery
+    const actionDefinitions = await this.loadActionDefinitions();
 
     const dataRegistry = {
       getAllSystemRules: jest
@@ -532,8 +549,42 @@ class BaseModTestFixture {
       createHandlers: handlerFactory,
       entities: [],
       rules: [{ ...ruleFile, actions: expanded }],
+      actions: actionDefinitions,
       dataRegistry,
     });
+  }
+
+  /**
+   * Loads all action definitions from the mod's actions directory.
+   *
+   * @returns {Promise<Array<object>>} Array of action definitions
+   */
+  async loadActionDefinitions() {
+    const actionsDir = resolve(`data/mods/${this.modId}/actions`);
+
+    try {
+      const files = await fs.readdir(actionsDir);
+      const actionFiles = files.filter(f => f.endsWith('.action.json'));
+
+      const actions = await Promise.all(
+        actionFiles.map(async (file) => {
+          try {
+            const filePath = resolve(actionsDir, file);
+            const content = await fs.readFile(filePath, 'utf8');
+            return JSON.parse(content);
+          } catch (error) {
+            // Silently skip files that can't be loaded
+            return null;
+          }
+        })
+      );
+
+      // Filter out nulls from failed loads
+      return actions.filter(a => a !== null);
+    } catch (error) {
+      // If the actions directory doesn't exist or can't be read, return empty array
+      return [];
+    }
   }
 
   /**
@@ -607,8 +658,18 @@ export class ModActionTestFixture extends BaseModTestFixture {
     // This contains the string representation of the action file content
     this.actionFile = ruleFile ? JSON.stringify(ruleFile) : null;
 
-    const conditionId = `${modId}:event-is-action-${actionId.replace(`${modId}:`, '').replace(/_/g, '-')}`;
-    this.setupEnvironment(ruleFile, conditionFile, conditionId);
+    // Store conditionId for deferred initialization
+    this.conditionId = `${modId}:event-is-action-${actionId.replace(`${modId}:`, '').replace(/_/g, '-')}`;
+  }
+
+  /**
+   * Initialize the test environment asynchronously.
+   * Must be called after construction since setupEnvironment is now async.
+   *
+   * @returns {Promise<void>}
+   */
+  async initialize() {
+    await this.setupEnvironment(this.ruleFile, this.conditionFile, this.conditionId);
   }
 
   /**

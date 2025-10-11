@@ -501,7 +501,17 @@
       "Bash(NODE_ENV=test npx jest tests/integration/mods/items/dropItemRuleExecution.test.js tests/integration/mods/items/pickUpItemRuleExecution.test.js --no-coverage --silent)",
       "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/items/giveItemActionDiscovery.test.js --no-coverage --silent)",
       "Bash(NODE_ENV=test npx jest tests/integration/mods/items/giveItemActionDiscovery.test.js --testNamePattern=\"should discover give_item action when actor has items and recipients are nearby\" --no-coverage --verbose)",
-      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/giveItemActionDiscovery.test.js --testNamePattern=\"should NOT appear when inventory is empty\" --no-coverage --verbose)"
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/giveItemActionDiscovery.test.js --testNamePattern=\"should NOT appear when inventory is empty\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/core/entityHelpers.setupEntityCacheInvalidation.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/dropItemPreservesComponents.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/controllers/TraitsRewriterController.eventBus.test.js tests/unit/main/main.bootstrapFlow.test.js tests/unit/main/main.additionalCoverage.test.js tests/unit/main/main.failureBranches.test.js tests/unit/main/main.factoryCoverage.test.js tests/unit/main/main.startWorldCoverage.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/runtime/ tests/integration/app/ tests/integration/mods/items/dropThenPickupCacheStaleness.test.js tests/integration/mods/items/cacheInvalidationOnDrop.integration.test.js --silent)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/runtime/ tests/integration/app/ --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/dropThenPickupCacheStaleness.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest:*)",
+      "Bash(NODE_ENV=test npm run test:performance -- tests/performance/actions/tracing/traceQueueProcessorRealisticLoad.performance.test.js --listTests)",
+      "Bash(NODE_ENV=test npm run test:performance -- tests/performance/actions/tracing/traceQueueProcessorRealisticLoad.performance.test.js --silent)",
+      "Bash(NODE_ENV=test npm run test:performance -- tests/performance/actions/tracing/traceQueueProcessorRealisticLoad.performance.test.js)"
     ],
     "deny": [],
     "ask": []

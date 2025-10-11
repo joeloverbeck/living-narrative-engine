@@ -79,8 +79,17 @@ describe('main.js start world selection', () => {
       showLoadGameUI: jest.fn().mockResolvedValue(undefined),
     };
 
+    // Create mock container with resolve method
+    const mockEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
+    const mockContainer = {
+      resolve: jest.fn((token) => {
+        if (token === 'IEventBus') return mockEventBus;
+        return null;
+      }),
+    };
+
     mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockSetupDI.mockResolvedValue({ success: true, payload: mockContainer });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     mockInitGlobalConfig.mockResolvedValue({ success: true });
     mockInitEngine.mockResolvedValue({ success: true, payload: gameEngine });

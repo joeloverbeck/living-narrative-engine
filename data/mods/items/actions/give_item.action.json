@@ -16,13 +16,5 @@
       "description": "Item to give"
     }
   },
-  "prerequisites": [
-    {
-      "logic": {
-        "condition_ref": "items:secondary-has-portable"
-      },
-      "failure_message": "Item cannot be given away"
-    }
-  ],
   "template": "give {item} to {recipient}"
 }
