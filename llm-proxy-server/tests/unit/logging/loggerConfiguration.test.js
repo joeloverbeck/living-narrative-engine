@@ -11,12 +11,22 @@ describe('LoggerConfiguration', () => {
   let originalEnv;
   let originalStdout;
   let originalStderr;
+  let stdoutDescriptor;
+  let stderrDescriptor;
 
   beforeEach(() => {
     // Store original environment and streams
     originalEnv = { ...process.env };
     originalStdout = process.stdout.isTTY;
     originalStderr = process.stderr.isTTY;
+    stdoutDescriptor = Object.getOwnPropertyDescriptor(
+      process.stdout,
+      'isTTY'
+    );
+    stderrDescriptor = Object.getOwnPropertyDescriptor(
+      process.stderr,
+      'isTTY'
+    );
 
     // Clear require cache to get fresh instances
     jest.resetModules();
@@ -25,8 +35,17 @@ describe('LoggerConfiguration', () => {
   afterEach(() => {
     // Restore original environment and streams
     process.env = originalEnv;
-    process.stdout.isTTY = originalStdout;
-    process.stderr.isTTY = originalStderr;
+    if (stdoutDescriptor) {
+      Object.defineProperty(process.stdout, 'isTTY', stdoutDescriptor);
+    } else {
+      process.stdout.isTTY = originalStdout;
+    }
+
+    if (stderrDescriptor) {
+      Object.defineProperty(process.stderr, 'isTTY', stderrDescriptor);
+    } else {
+      process.stderr.isTTY = originalStderr;
+    }
   });
 
   describe('Configuration Loading', () => {
@@ -158,6 +177,71 @@ describe('LoggerConfiguration', () => {
       const config = getLoggerConfiguration();
 
       expect(config.isColorsEnabled()).toBe(false);
+    });
+  });
+
+  describe('TTY detection fallbacks', () => {
+    it('should treat missing TTY flags as TTY in development environments', async () => {
+      process.env.NODE_ENV = 'development';
+      Object.defineProperty(process.stdout, 'isTTY', {
+        value: undefined,
+        writable: true,
+        configurable: true,
+      });
+      Object.defineProperty(process.stderr, 'isTTY', {
+        value: undefined,
+        writable: true,
+        configurable: true,
+      });
+
+      const { getLoggerConfiguration } = await import(
+        '../../../src/logging/loggerConfiguration.js'
+      );
+      const config = getLoggerConfiguration();
+
+      expect(config.isColorsEnabled()).toBe(true);
+    });
+
+    it('should treat missing TTY flags as non-TTY in production environments', async () => {
+      process.env.NODE_ENV = 'production';
+      Object.defineProperty(process.stdout, 'isTTY', {
+        value: undefined,
+        writable: true,
+        configurable: true,
+      });
+      Object.defineProperty(process.stderr, 'isTTY', {
+        value: undefined,
+        writable: true,
+        configurable: true,
+      });
+
+      const { getLoggerConfiguration } = await import(
+        '../../../src/logging/loggerConfiguration.js'
+      );
+      const config = getLoggerConfiguration();
+
+      expect(config.isColorsEnabled()).toBe(false);
+    });
+
+    it('should handle missing stderr TTY when stdout is present', async () => {
+      process.env.NODE_ENV = 'development';
+      Object.defineProperty(process.stdout, 'isTTY', {
+        value: true,
+        writable: true,
+        configurable: true,
+      });
+      Object.defineProperty(process.stderr, 'isTTY', {
+        value: undefined,
+        writable: true,
+        configurable: true,
+      });
+
+      const { getLoggerConfiguration } = await import(
+        '../../../src/logging/loggerConfiguration.js'
+      );
+      const config = getLoggerConfiguration();
+
+      expect(config.isColorsEnabled()).toBe(true);
     });
   });
 
