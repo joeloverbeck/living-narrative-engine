@@ -593,6 +593,80 @@ describe('LlmRequestController', () => {
     });
   });
 
+  describe('Response salvage and failure fallbacks', () => {
+    test('salvages response when guard cannot send success but salvage service is configured', async () => {
+      const salvageService = { salvageResponse: jest.fn() };
+      const controllerWithSalvage = new LlmRequestController(
+        logger,
+        llmConfigService,
+        apiKeyService,
+        {
+          forwardRequest: jest.fn(() => ({
+            success: true,
+            data: { payload: true },
+            statusCode: 207,
+          })),
+        },
+        salvageService
+      );
+
+      res.commitResponse.mockReturnValue(false);
+
+      await controllerWithSalvage.handleLlmRequest(req, res);
+
+      expect(salvageService.salvageResponse).toHaveBeenCalledWith(
+        req.requestId,
+        req.body.llmId,
+        req.body.targetPayload,
+        { payload: true },
+        207
+      );
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Successful LLM response could not be sent'),
+        expect.objectContaining({ requestId: req.requestId, llmId: req.body.llmId })
+      );
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Response salvaged successfully'),
+        expect.objectContaining({ requestId: req.requestId, llmId: req.body.llmId })
+      );
+      expect(sendProxyError).not.toHaveBeenCalled();
+    });
+
+    test('logs inability to send error response when headers already sent during exception', async () => {
+      const error = new Error('boom');
+      const controllerWithThrowingService = new LlmRequestController(
+        logger,
+        llmConfigService,
+        apiKeyService,
+        {
+          forwardRequest: jest.fn(() => {
+            throw error;
+          }),
+        }
+      );
+
+      res.headersSent = true;
+
+      await controllerWithThrowingService.handleLlmRequest(req, res);
+
+      expect(sendProxyError).not.toHaveBeenCalled();
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('CRITICAL - LlmRequestService threw an unexpected exception'),
+        expect.objectContaining({
+          details: expect.objectContaining({
+            llmId: req.body.llmId,
+            originalErrorMessage: error.message,
+          }),
+          llmId: req.body.llmId,
+        })
+      );
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Cannot send error response - headers already sent'),
+        expect.objectContaining({ llmId: req.body.llmId, errorMessage: error.message })
+      );
+    });
+  });
+
   describe('Error Handling and Edge Cases', () => {
     test('handles missing error stage in service response', async () => {
       // Mock apiKeyService to not require a key for this test
