@@ -25,14 +25,13 @@ describe('OpenContainerHandler - Parameter Structure Validation', () => {
     mockEntityManager = {
       getComponentData: jest.fn((entityId, componentType) => {
         if (entityId === 'container1' && componentType === 'items:openable') {
-          return {
-            isOpen: false,
-            requiresKey: false,
-          };
+          return {};
         }
         if (entityId === 'container1' && componentType === 'items:container') {
           return {
-            items: ['item1', 'item2'],
+            contents: ['item1', 'item2'],
+            isOpen: false,
+            requiresKey: false,
           };
         }
         return null;
@@ -104,8 +103,9 @@ describe('OpenContainerHandler - Parameter Structure Validation', () => {
 
       // Verify values are correct
       expect(spec.instanceId).toBe('container1');
-      expect(spec.componentTypeId).toBe('items:openable');
+      expect(spec.componentTypeId).toBe('items:container');
       expect(spec.componentData).toEqual({
+        contents: ['item1', 'item2'],
         isOpen: true,
         requiresKey: false,
       });

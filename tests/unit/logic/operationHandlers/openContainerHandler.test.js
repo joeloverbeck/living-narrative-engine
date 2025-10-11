@@ -141,7 +141,13 @@ describe('OpenContainerHandler', () => {
     });
 
     it('returns error when container is already open', async () => {
-      entityManager.getComponentData.mockReturnValueOnce({ isOpen: true });
+      entityManager.getComponentData
+        .mockReturnValueOnce({})
+        .mockReturnValueOnce({
+          isOpen: true,
+          contents: ['gold_bar'],
+          requiresKey: false,
+        });
 
       const result = await handler.execute(validParams());
 
@@ -158,7 +164,13 @@ describe('OpenContainerHandler', () => {
   describe('Key Validation', () => {
     it('returns error when locked container requires key that actor does not have', async () => {
       entityManager.getComponentData
-        .mockReturnValueOnce({ isOpen: false, requiresKey: 'brass_key' })
+        .mockReturnValueOnce({})
+        .mockReturnValueOnce({
+          isOpen: false,
+          requiresKey: true,
+          keyItemId: 'brass_key',
+          contents: ['gold_bar', 'revolver'],
+        })
         .mockReturnValueOnce({ items: ['gold_bar', 'revolver'] });
 
       const result = await handler.execute(validParams());
@@ -171,6 +183,11 @@ describe('OpenContainerHandler', () => {
       );
       expect(entityManager.getComponentData).toHaveBeenNthCalledWith(
         2,
+        'container-456',
+        'items:container'
+      );
+      expect(entityManager.getComponentData).toHaveBeenNthCalledWith(
+        3,
         'actor-123',
         'items:inventory'
       );
@@ -184,14 +201,20 @@ describe('OpenContainerHandler', () => {
 
     it('returns error when locked container requires key but actor has no inventory', async () => {
       entityManager.getComponentData
-        .mockReturnValueOnce({ isOpen: false, requiresKey: 'brass_key' })
+        .mockReturnValueOnce({})
+        .mockReturnValueOnce({
+          isOpen: false,
+          requiresKey: true,
+          keyItemId: 'brass_key',
+          contents: ['gold_bar', 'revolver'],
+        })
         .mockReturnValueOnce(null);
 
       const result = await handler.execute(validParams());
 
       expect(result).toEqual({ success: false, error: 'missing_key' });
       expect(entityManager.getComponentData).toHaveBeenNthCalledWith(
-        2,
+        3,
         'actor-123',
         'items:inventory'
       );
@@ -203,9 +226,14 @@ describe('OpenContainerHandler', () => {
 
     it('successfully opens locked container when actor has the required key', async () => {
       entityManager.getComponentData
-        .mockReturnValueOnce({ isOpen: false, requiresKey: 'brass_key' })
-        .mockReturnValueOnce({ items: ['gold_bar', 'brass_key'] })
-        .mockReturnValueOnce({ items: ['revolver', 'letter'] });
+        .mockReturnValueOnce({})
+        .mockReturnValueOnce({
+          isOpen: false,
+          requiresKey: true,
+          keyItemId: 'brass_key',
+          contents: ['revolver', 'letter'],
+        })
+        .mockReturnValueOnce({ items: ['gold_bar', 'brass_key'] });
 
       const result = await handler.execute(validParams());
 
@@ -217,8 +245,13 @@ describe('OpenContainerHandler', () => {
         [
           {
             instanceId: 'container-456',
-            componentTypeId: 'items:openable',
-            componentData: { isOpen: true, requiresKey: 'brass_key' },
+            componentTypeId: 'items:container',
+            componentData: {
+              isOpen: true,
+              requiresKey: true,
+              keyItemId: 'brass_key',
+              contents: ['revolver', 'letter'],
+            },
           },
         ],
         true
@@ -234,8 +267,12 @@ describe('OpenContainerHandler', () => {
   describe('Successful Opening', () => {
     it('successfully opens unlocked container and returns contents', async () => {
       entityManager.getComponentData
-        .mockReturnValueOnce({ isOpen: false })
-        .mockReturnValueOnce({ items: ['gold_bar', 'revolver'] });
+        .mockReturnValueOnce({})
+        .mockReturnValueOnce({
+          isOpen: false,
+          contents: ['gold_bar', 'revolver'],
+          requiresKey: false,
+        });
 
       const result = await handler.execute(validParams());
 
@@ -257,8 +294,12 @@ describe('OpenContainerHandler', () => {
         [
           {
             instanceId: 'container-456',
-            componentTypeId: 'items:openable',
-            componentData: { isOpen: true },
+            componentTypeId: 'items:container',
+            componentData: {
+              isOpen: true,
+              contents: ['gold_bar', 'revolver'],
+              requiresKey: false,
+            },
           },
         ],
         true
@@ -280,8 +321,8 @@ describe('OpenContainerHandler', () => {
 
     it('successfully opens empty container with empty contents array', async () => {
       entityManager.getComponentData
-        .mockReturnValueOnce({ isOpen: false })
-        .mockReturnValueOnce({ items: [] });
+        .mockReturnValueOnce({})
+        .mockReturnValueOnce({ isOpen: false, contents: [] });
 
       const result = await handler.execute(validParams());
 
@@ -300,8 +341,8 @@ describe('OpenContainerHandler', () => {
         result_variable: 'openResult',
       };
       entityManager.getComponentData
-        .mockReturnValueOnce({ isOpen: false })
-        .mockReturnValueOnce({ items: ['item-1'] });
+        .mockReturnValueOnce({})
+        .mockReturnValueOnce({ isOpen: false, contents: ['item-1'] });
 
       await handler.execute(params);
 
@@ -313,8 +354,8 @@ describe('OpenContainerHandler', () => {
         [
           {
             instanceId: 'container-456',
-            componentTypeId: 'items:openable',
-            componentData: { isOpen: true },
+            componentTypeId: 'items:container',
+            componentData: { isOpen: true, contents: ['item-1'] },
           },
         ],
         true
@@ -325,8 +366,8 @@ describe('OpenContainerHandler', () => {
   describe('Error Handling', () => {
     it('logs and returns failure when batch update throws', async () => {
       entityManager.getComponentData
-        .mockReturnValueOnce({ isOpen: false })
-        .mockReturnValueOnce({ items: [] });
+        .mockReturnValueOnce({})
+        .mockReturnValueOnce({ isOpen: false, contents: [] });
       const failure = new Error('batch failed');
       entityManager.batchAddComponentsOptimized.mockRejectedValue(failure);
 
@@ -362,24 +403,24 @@ describe('OpenContainerHandler', () => {
   });
 
   describe('Container Component Retrieval', () => {
-    it('returns empty array when container component is missing', async () => {
+    it('returns failure when container component is missing', async () => {
       entityManager.getComponentData
-        .mockReturnValueOnce({ isOpen: false })
+        .mockReturnValueOnce({})
         .mockReturnValueOnce(null);
 
       const result = await handler.execute(validParams());
 
-      expect(result).toEqual({ success: true, contents: [] });
+      expect(result).toEqual({ success: false, error: 'container_missing_component' });
       expect(logger.warn).toHaveBeenCalledWith(
-        'OpenContainerHandler: Container has no items component',
+        'OpenContainerHandler: Container has no container component',
         { containerEntity: 'container-456' }
       );
     });
 
-    it('returns empty array when container has no items field', async () => {
+    it('returns empty array when container has no contents field', async () => {
       entityManager.getComponentData
-        .mockReturnValueOnce({ isOpen: false })
-        .mockReturnValueOnce({ capacity: 10 });
+        .mockReturnValueOnce({})
+        .mockReturnValueOnce({ isOpen: false });
 
       const result = await handler.execute(validParams());
 
