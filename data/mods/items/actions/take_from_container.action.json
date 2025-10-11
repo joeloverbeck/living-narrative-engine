@@ -8,8 +8,7 @@
     "primary": {
       "scope": "items:openable_containers_at_location",
       "placeholder": "container",
-      "description": "Container to take from",
-      "contextFrom": "actor"
+      "description": "Container to take from"
     },
     "secondary": {
       "scope": "items:container_contents",
@@ -18,14 +17,5 @@
       "contextFrom": "primary"
     }
   },
-  "conditions": [
-    {
-      "type": "COMPONENT_PROPERTY_EQUALS",
-      "entityRef": "primary",
-      "componentId": "items:container",
-      "property": "isOpen",
-      "value": true
-    }
-  ],
   "template": "Take {secondary.name} from {primary.name}"
 }

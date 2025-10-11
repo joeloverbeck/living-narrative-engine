@@ -117,7 +117,7 @@ describe('items:give_item action definition', () => {
       expect(actionIds).toContain('items:give_item');
     });
 
-    it('appears when actor has inventory component, but scope returns empty results when no portable items', () => {
+    it('should NOT appear when actor has inventory component but no portable items', () => {
       // Setup: Two actors in same location, both with empty inventory
       const room = new ModEntityBuilder('saloon1').asRoom('Saloon').build();
 
@@ -152,18 +152,13 @@ describe('items:give_item action definition', () => {
         'test:actor1'
       );
 
-      // Assert: give_item action WILL appear because actor has inventory component
-      // (Action indexing is based on component presence, not scope resolution)
-      // However, when target resolution happens, the scope will return empty results
-      // because there are no portable items in the inventory
+      // Assert: give_item action should NOT appear because there are no items to give
+      // Actions only appear when they have valid targets
+      // The scope (items:actor_inventory_items) returns empty because inventory is empty
       const giveItemActions = availableActions.filter(
         (action) => action.id === 'items:give_item'
       );
-      expect(giveItemActions.length).toBe(1);
-
-      // Note: During actual execution, target combination generation will produce
-      // zero combinations because the items:actor_inventory_items scope returns
-      // an empty array (no portable items exist in inventory)
+      expect(giveItemActions.length).toBe(0);
     });
 
     it('should NOT appear when no recipients nearby', () => {

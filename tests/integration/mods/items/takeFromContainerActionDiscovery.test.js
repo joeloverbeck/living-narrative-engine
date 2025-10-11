@@ -44,7 +44,8 @@ describe('items:take_from_container action definition', () => {
     expect(takeFromContainerAction.targets.primary.placeholder).toBe(
       'container'
     );
-    expect(takeFromContainerAction.targets.primary.contextFrom).toBe('actor');
+    // Note: Primary targets do not have contextFrom - only secondary/tertiary can reference primary
+    expect(takeFromContainerAction.targets.primary.contextFrom).toBeUndefined();
   });
 
   it('should use correct scope for secondary targets (container contents)', () => {
@@ -59,22 +60,9 @@ describe('items:take_from_container action definition', () => {
     );
   });
 
-  it('should require container to be open via conditions', () => {
-    expect(takeFromContainerAction.conditions).toBeDefined();
-    expect(Array.isArray(takeFromContainerAction.conditions)).toBe(true);
-    expect(takeFromContainerAction.conditions.length).toBeGreaterThan(0);
-
-    const openCondition = takeFromContainerAction.conditions.find(
-      (c) =>
-        c.type === 'COMPONENT_PROPERTY_EQUALS' &&
-        c.entityRef === 'primary' &&
-        c.componentId === 'items:container' &&
-        c.property === 'isOpen'
-    );
-
-    expect(openCondition).toBeDefined();
-    expect(openCondition.value).toBe(true);
-  });
+  // Note: The action schema uses 'prerequisites', not 'conditions'
+  // Container open state is handled by the scope (items:openable_containers_at_location)
+  // which filters for open containers, so no prerequisites are needed in the action definition
 
   it('should enable combination generation for multi-target action', () => {
     expect(takeFromContainerAction.generateCombinations).toBe(true);

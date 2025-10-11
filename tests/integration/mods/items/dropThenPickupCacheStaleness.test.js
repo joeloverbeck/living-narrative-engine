@@ -102,16 +102,15 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
     // Force scope evaluation that caches the item WITHOUT position
     const actionsBeforeDrop = await testFixture.discoverActions('test:actor1');
 
-    // Verify pickup action appears in list even before drop
-    // Note: Action discovery is based on component presence (actor has inventory component)
-    // The item is in inventory (not at location), so scope resolution will return empty
+    // Verify pickup action does NOT appear before drop
+    // Note: The item is in inventory (not at location), so scope resolution returns empty
+    // Actions only appear when they have valid targets, so pick_up_item won't be in the list
     const pickupBeforeDrop = actionsBeforeDrop.find(
       (a) =>
         (a.actionId || a.id) === 'items:pick_up_item'
     );
-    // The action definition will appear because actor has inventory component
-    // However, target resolution will return empty (no items at location)
-    expect(pickupBeforeDrop).toBeDefined();
+    // The action should NOT be defined because there are no items at the location yet
+    expect(pickupBeforeDrop).toBeUndefined();
 
     // Execute drop action
     // This updates entity manager storage but does NOT invalidate cache

@@ -523,7 +523,12 @@
       "Bash(NODE_ENV=test npx jest tests/integration/mods/affection/tickle_target_playfully_action_discovery.test.js --no-coverage --silent)",
       "Bash(NODE_ENV=test npx jest tests/integration/mods/affection/tickle_target_playfully_action_discovery.test.js --no-coverage --testNamePattern=\"is not available when the actor faces away from the target\")",
       "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/items/takeFromContainerRuleExecution.test.js --silent)",
-      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/takeFromContainerRuleExecution.test.js --testNamePattern=\"successfully executes take from container action\" --no-coverage --verbose)"
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/items/takeFromContainerRuleExecution.test.js --testNamePattern=\"successfully executes take from container action\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npm run test:*)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/schemas/actionSchemaBackwardCompatibility.integration.test.js --testNamePattern=\"should validate all existing action files\" --no-coverage)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/items/takeFromContainerRuleExecution.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npm run test:unit -- tests/unit/logic/operationHandlers/takeFromContainerHandler.test.js --silent)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/items/giveItemActionDiscovery.test.js tests/integration/mods/items/dropThenPickupCacheStaleness.test.js tests/integration/mods/items/takeFromContainerActionDiscovery.test.js --no-coverage --silent)"
     ],
     "deny": [],
     "ask": []
