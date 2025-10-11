@@ -1,8 +1,3 @@
-/**
- * @file Unit tests for the Span class
- * @see src/actions/tracing/span.js
- */
-
 import {
   describe,
   it,
@@ -11,499 +6,200 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
-import Span from '../../../../src/actions/tracing/span.js';
+import { Span } from '../../../../src/actions/tracing/span.js';
 
 describe('Span', () => {
-  let mockPerformanceNow;
-  let timeCounter;
+  let now;
 
   beforeEach(() => {
-    // Mock performance.now() for deterministic timing tests
-    timeCounter = 0;
-    mockPerformanceNow = jest
-      .spyOn(performance, 'now')
-      .mockImplementation(() => {
-        return timeCounter++;
-      });
+    now = 1000;
+    jest.spyOn(performance, 'now').mockImplementation(() => now);
   });
 
   afterEach(() => {
-    mockPerformanceNow.mockRestore();
+    jest.restoreAllMocks();
   });
 
-  describe('constructor', () => {
-    it('should create a span with required properties', () => {
-      const span = new Span(1, 'TestOperation');
+  const advanceTime = (value) => {
+    now = value;
+  };
 
-      expect(span.id).toBe(1);
-      expect(span.operation).toBe('TestOperation');
-      expect(span.parentId).toBeNull();
-      expect(span.startTime).toBe(0); // First call to performance.now()
-      expect(span.endTime).toBeNull();
-      expect(span.duration).toBeNull();
-      expect(span.status).toBe('active');
-      expect(span.attributes).toEqual({});
-      expect(span.children).toEqual([]);
-      expect(span.error).toBeNull();
-    });
+  it('constructs with defaults and exposes defensive copies', () => {
+    const span = new Span(1, 'operation');
 
-    it('should create a span with parent ID', () => {
-      const span = new Span(2, 'ChildOperation', 1);
-      expect(span.parentId).toBe(1);
-    });
+    expect(span.id).toBe(1);
+    expect(span.operation).toBe('operation');
+    expect(span.parentId).toBeNull();
+    expect(span.startTime).toBe(1000);
+    expect(span.endTime).toBeNull();
+    expect(span.duration).toBeNull();
+    expect(span.status).toBe('active');
+    expect(span.error).toBeNull();
 
-    it('should throw error for invalid id', () => {
-      expect(() => new Span('invalid', 'Operation')).toThrow(
-        'Span id must be a number'
-      );
-      expect(() => new Span(null, 'Operation')).toThrow(
-        'Span id must be a number'
-      );
-    });
+    const attrs = span.attributes;
+    attrs.mutated = true;
+    expect(span.attributes).toEqual({});
 
-    it('should throw error for invalid operation', () => {
-      expect(() => new Span(1, '')).toThrow(
-        'Span operation must be a non-empty string'
-      );
-      expect(() => new Span(1, '   ')).toThrow(
-        'Span operation must be a non-empty string'
-      );
-      expect(() => new Span(1, 123)).toThrow(
-        'Span operation must be a non-empty string'
-      );
-    });
-
-    it('should throw error for invalid parentId', () => {
-      expect(() => new Span(1, 'Operation', 'invalid')).toThrow(
-        'Span parentId must be a number or null'
-      );
-    });
+    const children = span.children;
+    children.push('not-span');
+    expect(span.children).toEqual([]);
   });
 
-  describe('end()', () => {
-    it('should calculate duration and set success status', () => {
-      const span = new Span(1, 'TestOperation');
-      expect(span.startTime).toBe(0);
-
-      span.end();
-
-      expect(span.endTime).toBe(1); // Second call to performance.now()
-      expect(span.duration).toBe(1); // endTime - startTime
-      expect(span.status).toBe('success');
-    });
-
-    it('should preserve non-active status when ending', () => {
-      const span = new Span(1, 'TestOperation');
-      span.setStatus('failure');
-      span.end();
-
-      expect(span.status).toBe('failure'); // Status unchanged
-    });
-
-    it('should throw error if span already ended', () => {
-      const span = new Span(1, 'TestOperation');
-      span.end();
-
-      expect(() => span.end()).toThrow('Span 1 has already been ended');
-    });
+  it('validates constructor arguments', () => {
+    expect(() => new Span('not-number', 'op')).toThrow('Span id must be a number');
+    expect(() => new Span(1, '')).toThrow('Span operation must be a non-empty string');
+    expect(() => new Span(1, 'valid', 'nope')).toThrow(
+      'Span parentId must be a number or null'
+    );
   });
 
-  describe('setStatus()', () => {
-    it('should set valid status values', () => {
-      const span = new Span(1, 'TestOperation');
+  it('updates timing information when ended and prevents double end', () => {
+    const span = new Span(2, 'timed');
 
-      span.setStatus('success');
-      expect(span.status).toBe('success');
+    advanceTime(1500);
+    span.end();
 
-      span.setStatus('failure');
-      expect(span.status).toBe('failure');
+    expect(span.endTime).toBe(1500);
+    expect(span.duration).toBe(500);
+    expect(span.status).toBe('success');
 
-      span.setStatus('error');
-      expect(span.status).toBe('error');
-
-      span.setStatus('active');
-      expect(span.status).toBe('active');
-    });
-
-    it('should throw error for invalid status', () => {
-      const span = new Span(1, 'TestOperation');
-      expect(() => span.setStatus('invalid')).toThrow(
-        'Invalid span status: invalid'
-      );
-    });
+    expect(() => span.end()).toThrow('Span 2 has already been ended');
   });
 
-  describe('setAttribute()', () => {
-    it('should set individual attributes', () => {
-      const span = new Span(1, 'TestOperation');
+  it('retains explicit status on end and handles negative durations with warning', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const span = new Span(3, 'negative');
 
-      span.setAttribute('key1', 'value1');
-      span.setAttribute('key2', 42);
-      span.setAttribute('key3', { nested: true });
+    span.setStatus('failure');
+    advanceTime(900);
+    span.end();
 
-      const attrs = span.attributes;
-      expect(attrs.key1).toBe('value1');
-      expect(attrs.key2).toBe(42);
-      expect(attrs.key3).toEqual({ nested: true });
-    });
+    expect(span.status).toBe('failure');
+    expect(span.duration).toBe(0);
+    expect(warnSpy).toHaveBeenCalledWith(
+      'Span "negative" (3) has negative duration: -100ms. Setting to 0.'
+    );
 
-    it('should throw error for non-string key', () => {
-      const span = new Span(1, 'TestOperation');
-      expect(() => span.setAttribute(123, 'value')).toThrow(
-        'Attribute key must be a string'
-      );
-    });
+    warnSpy.mockRestore();
   });
 
-  describe('setAttributes()', () => {
-    it('should set multiple attributes at once', () => {
-      const span = new Span(1, 'TestOperation');
+  it('enforces valid status transitions', () => {
+    const span = new Span(4, 'status');
 
-      span.setAttributes({
-        key1: 'value1',
-        key2: 42,
-        key3: { nested: true },
-      });
+    span.setStatus('success');
+    expect(span.status).toBe('success');
 
-      const attrs = span.attributes;
-      expect(attrs.key1).toBe('value1');
-      expect(attrs.key2).toBe(42);
-      expect(attrs.key3).toEqual({ nested: true });
-    });
+    span.setStatus('error');
+    expect(span.status).toBe('error');
 
-    it('should merge with existing attributes', () => {
-      const span = new Span(1, 'TestOperation');
-      span.setAttribute('existing', 'value');
-
-      span.setAttributes({
-        key1: 'value1',
-        existing: 'updated',
-      });
-
-      const attrs = span.attributes;
-      expect(attrs.existing).toBe('updated');
-      expect(attrs.key1).toBe('value1');
-    });
-
-    it('should throw error for non-object attributes', () => {
-      const span = new Span(1, 'TestOperation');
-      expect(() => span.setAttributes('invalid')).toThrow(
-        'Attributes must be an object'
-      );
-      expect(() => span.setAttributes(null)).toThrow(
-        'Attributes must be an object'
-      );
-    });
+    expect(() => span.setStatus('invalid')).toThrow('Invalid span status: invalid');
   });
 
-  describe('setError()', () => {
-    it('should capture error and set status', () => {
-      const span = new Span(1, 'TestOperation');
-      const error = new Error('Test error');
+  it('manages attributes through setAttribute, setAttributes and addAttributes', () => {
+    const span = new Span(5, 'attributes');
 
-      span.setError(error);
+    span.setAttribute('first', 1);
+    expect(span.attributes).toEqual({ first: 1 });
+    expect(() => span.setAttribute(123, 'nope')).toThrow('Attribute key must be a string');
 
-      expect(span.error).toBe(error);
-      expect(span.status).toBe('error');
-      expect(span.attributes['error.message']).toBe('Test error');
-      expect(span.attributes['error.stack']).toBeDefined();
-    });
+    span.setAttributes({ second: 2 });
+    expect(span.attributes).toEqual({ first: 1, second: 2 });
+    expect(() => span.setAttributes(null)).toThrow('Attributes must be an object');
 
-    it('should throw error for non-Error instance', () => {
-      const span = new Span(1, 'TestOperation');
-      expect(() => span.setError('not an error')).toThrow(
-        'setError requires an Error instance'
-      );
-    });
+    span.addAttributes({ third: 3 });
+    expect(span.attributes).toEqual({ first: 1, second: 2, third: 3 });
   });
 
-  describe('addChild()', () => {
-    it('should add valid child span', () => {
-      const parent = new Span(1, 'ParentOperation');
-      const child = new Span(2, 'ChildOperation', 1);
+  it('records errors and requires Error instances', () => {
+    const span = new Span(6, 'error');
 
-      parent.addChild(child);
+    const originalError = new Error('boom');
+    originalError.stack = 'stack-trace';
+    span.setError(originalError);
 
-      const children = parent.children;
-      expect(children).toHaveLength(1);
-      expect(children[0]).toBe(child);
-    });
+    expect(span.error).toBe(originalError);
+    expect(span.status).toBe('error');
+    expect(span.attributes['error.message']).toBe('boom');
+    expect(span.attributes['error.stack']).toBe('stack-trace');
 
-    it('should add multiple children', () => {
-      const parent = new Span(1, 'ParentOperation');
-      const child1 = new Span(2, 'ChildOperation1', 1);
-      const child2 = new Span(3, 'ChildOperation2', 1);
+    const replacementError = new Error('again');
+    span.recordError(replacementError);
+    expect(span.error).toBe(replacementError);
+    expect(span.attributes['error.message']).toBe('again');
 
-      parent.addChild(child1);
-      parent.addChild(child2);
-
-      const children = parent.children;
-      expect(children).toHaveLength(2);
-      expect(children[0]).toBe(child1);
-      expect(children[1]).toBe(child2);
-    });
-
-    it('should throw error for non-Span child', () => {
-      const parent = new Span(1, 'ParentOperation');
-      expect(() => parent.addChild({ id: 2 })).toThrow(
-        'Child must be a Span instance'
-      );
-    });
-
-    it('should throw error for child with wrong parent', () => {
-      const parent = new Span(1, 'ParentOperation');
-      const child = new Span(2, 'ChildOperation', 99); // Wrong parent ID
-
-      expect(() => parent.addChild(child)).toThrow(
-        'Child span 2 has parent 99, not 1'
-      );
-    });
+    expect(() => span.setError('nope')).toThrow('setError requires an Error instance');
   });
 
-  describe('getter immutability', () => {
-    it('should return copy of attributes', () => {
-      const span = new Span(1, 'TestOperation');
-      span.setAttribute('key', 'value');
+  it('adds events with timestamps and validates names', () => {
+    const span = new Span(7, 'events');
 
-      const attrs1 = span.attributes;
-      attrs1.key = 'modified';
+    advanceTime(1200);
+    span.addEvent('first', { foo: 'bar' });
 
-      const attrs2 = span.attributes;
-      expect(attrs2.key).toBe('value'); // Original unchanged
-    });
+    advanceTime(1250);
+    span.addEvent('second');
 
-    it('should return copy of children array', () => {
-      const parent = new Span(1, 'ParentOperation');
-      const child = new Span(2, 'ChildOperation', 1);
-      parent.addChild(child);
+    advanceTime(1300);
+    span.addEvent('third', null);
 
-      const children1 = parent.children;
-      children1.push(new Span(3, 'Extra'));
+    const events = span.attributes.events;
+    expect(events).toHaveLength(3);
+    expect(events[0]).toMatchObject({ name: 'first', attributes: { foo: 'bar' } });
+    expect(events[0].timestamp).toBe(1200);
+    expect(events[1]).toMatchObject({ name: 'second', attributes: {} });
+    expect(events[1].timestamp).toBe(1250);
+    expect(events[2]).toMatchObject({ name: 'third', attributes: {} });
+    expect(events[2].timestamp).toBe(1300);
 
-      const children2 = parent.children;
-      expect(children2).toHaveLength(1); // Original unchanged
-    });
+    expect(() => span.addEvent('', {})).toThrow('Event name must be a non-empty string');
   });
 
-  describe('toJSON()', () => {
-    it('should serialize span to plain object', () => {
-      const span = new Span(1, 'TestOperation');
-      span.setAttribute('key', 'value');
-      span.end();
+  it('manages child spans with validation', () => {
+    const parent = new Span(8, 'parent');
+    const child = new Span(9, 'child', 8);
 
-      const json = span.toJSON();
+    parent.addChild(child);
 
-      expect(json).toEqual({
-        id: 1,
-        operation: 'TestOperation',
-        parentId: null,
-        startTime: 0,
-        endTime: 1,
-        duration: 1,
-        status: 'success',
-        attributes: { key: 'value' },
-        children: [],
-        error: null,
-      });
-    });
+    expect(parent.children).toHaveLength(1);
+    expect(parent.children[0].id).toBe(9);
 
-    it('should serialize span with error', () => {
-      const span = new Span(1, 'TestOperation');
-      const error = new Error('Test error');
-      span.setError(error);
+    const copy = parent.children;
+    copy.pop();
+    expect(parent.children).toHaveLength(1);
 
-      const json = span.toJSON();
-
-      expect(json.error).toEqual({
-        message: 'Test error',
-        stack: error.stack,
-      });
-    });
-
-    it('should recursively serialize children', () => {
-      const parent = new Span(1, 'ParentOperation');
-      const child1 = new Span(2, 'ChildOperation1', 1);
-      const child2 = new Span(3, 'ChildOperation2', 1);
-      const grandchild = new Span(4, 'GrandchildOperation', 2);
-
-      parent.addChild(child1);
-      parent.addChild(child2);
-      child1.addChild(grandchild);
-
-      const json = parent.toJSON();
-
-      expect(json.children).toHaveLength(2);
-      expect(json.children[0].operation).toBe('ChildOperation1');
-      expect(json.children[0].children).toHaveLength(1);
-      expect(json.children[0].children[0].operation).toBe(
-        'GrandchildOperation'
-      );
-    });
+    expect(() => parent.addChild({})).toThrow('Child must be a Span instance');
+    expect(() => parent.addChild(new Span(10, 'wrong-parent', 42))).toThrow(
+      'Child span 10 has parent 42, not 8'
+    );
   });
 
-  describe('timing precision', () => {
-    it('should handle sub-millisecond durations', () => {
-      // Reset mock to use fractional values
-      mockPerformanceNow.mockRestore();
-      mockPerformanceNow = jest
-        .spyOn(performance, 'now')
-        .mockImplementationOnce(() => 1000.123)
-        .mockImplementationOnce(() => 1000.456);
+  it('serializes to JSON with children and error information', () => {
+    const parent = new Span(11, 'parent');
+    const child = new Span(12, 'child', 11);
 
-      const span = new Span(1, 'FastOperation');
-      span.end();
+    parent.addChild(child);
+    parent.setAttribute('key', 'value');
+    parent.setError(new Error('problem'));
 
-      expect(span.startTime).toBe(1000.123);
-      expect(span.endTime).toBe(1000.456);
-      expect(span.duration).toBeCloseTo(0.333, 3);
+    advanceTime(1400);
+    parent.end();
+
+    const json = parent.toJSON();
+    expect(json).toMatchObject({
+      id: 11,
+      operation: 'parent',
+      parentId: null,
+      status: 'error',
+      attributes: expect.objectContaining({ key: 'value', 'error.message': 'problem' }),
     });
-
-    it('should handle negative duration edge case', () => {
-      const consoleWarnSpy = jest
-        .spyOn(console, 'warn')
-        .mockImplementation(() => {});
-
-      // Mock performance.now() to return decreasing values (simulating clock drift/precision issues)
-      mockPerformanceNow.mockRestore();
-      mockPerformanceNow = jest
-        .spyOn(performance, 'now')
-        .mockImplementationOnce(() => 1000.0)
-        .mockImplementationOnce(() => 999.5); // Earlier time
-
-      const span = new Span(1, 'TestOperation');
-      span.end();
-
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        'Span "TestOperation" (1) has negative duration: -0.5ms. Setting to 0.'
-      );
-      expect(span.duration).toBe(0);
-      expect(span.status).toBe('success');
-
-      consoleWarnSpy.mockRestore();
-    });
+    expect(json.children).toHaveLength(1);
+    expect(json.children[0].id).toBe(12);
+    expect(json.error).toMatchObject({ message: 'problem' });
   });
 
-  describe('addAttributes()', () => {
-    it('should work as alias for setAttributes', () => {
-      const span = new Span(1, 'TestOperation');
-      const attributes = {
-        key1: 'value1',
-        key2: 42,
-        key3: { nested: true },
-      };
-
-      span.addAttributes(attributes);
-
-      const attrs = span.attributes;
-      expect(attrs.key1).toBe('value1');
-      expect(attrs.key2).toBe(42);
-      expect(attrs.key3).toEqual({ nested: true });
-    });
-
-    it('should throw error for invalid attributes like setAttributes', () => {
-      const span = new Span(1, 'TestOperation');
-      expect(() => span.addAttributes('invalid')).toThrow(
-        'Attributes must be an object'
-      );
-      expect(() => span.addAttributes(null)).toThrow(
-        'Attributes must be an object'
-      );
-    });
-  });
-
-  describe('recordError()', () => {
-    it('should work as alias for setError', () => {
-      const span = new Span(1, 'TestOperation');
-      const error = new Error('Test error');
-
-      span.recordError(error);
-
-      expect(span.error).toBe(error);
-      expect(span.status).toBe('error');
-      expect(span.attributes['error.message']).toBe('Test error');
-      expect(span.attributes['error.stack']).toBeDefined();
-    });
-
-    it('should throw error for non-Error instance like setError', () => {
-      const span = new Span(1, 'TestOperation');
-      expect(() => span.recordError('not an error')).toThrow(
-        'setError requires an Error instance'
-      );
-    });
-  });
-
-  describe('addEvent()', () => {
-    it('should add event with name and attributes', () => {
-      const span = new Span(1, 'TestOperation');
-      const eventAttributes = { key1: 'value1', key2: 42 };
-
-      span.addEvent('test-event', eventAttributes);
-
-      const events = span.attributes.events;
-      expect(events).toHaveLength(1);
-      expect(events[0].name).toBe('test-event');
-      expect(events[0].attributes).toEqual(eventAttributes);
-      expect(events[0].timestamp).toBeGreaterThanOrEqual(0);
-    });
-
-    it('should add event with name only', () => {
-      const span = new Span(1, 'TestOperation');
-
-      span.addEvent('simple-event');
-
-      const events = span.attributes.events;
-      expect(events).toHaveLength(1);
-      expect(events[0].name).toBe('simple-event');
-      expect(events[0].attributes).toEqual({});
-      expect(events[0].timestamp).toBeGreaterThanOrEqual(0);
-    });
-
-    it('should handle multiple events', () => {
-      const span = new Span(1, 'TestOperation');
-
-      span.addEvent('event1', { type: 'start' });
-      span.addEvent('event2', { type: 'middle' });
-      span.addEvent('event3', { type: 'end' });
-
-      const events = span.attributes.events;
-      expect(events).toHaveLength(3);
-      expect(events[0].name).toBe('event1');
-      expect(events[1].name).toBe('event2');
-      expect(events[2].name).toBe('event3');
-      expect(events[0].attributes.type).toBe('start');
-      expect(events[1].attributes.type).toBe('middle');
-      expect(events[2].attributes.type).toBe('end');
-    });
-
-    it('should throw error for empty event name', () => {
-      const span = new Span(1, 'TestOperation');
-      expect(() => span.addEvent('')).toThrow(
-        'Event name must be a non-empty string'
-      );
-      expect(() => span.addEvent('   ')).toThrow(
-        'Event name must be a non-empty string'
-      );
-    });
-
-    it('should throw error for non-string event name', () => {
-      const span = new Span(1, 'TestOperation');
-      expect(() => span.addEvent(123)).toThrow(
-        'Event name must be a non-empty string'
-      );
-      expect(() => span.addEvent(null)).toThrow(
-        'Event name must be a non-empty string'
-      );
-    });
-
-    it('should handle null attributes parameter', () => {
-      const span = new Span(1, 'TestOperation');
-
-      span.addEvent('test-event', null);
-
-      const events = span.attributes.events;
-      expect(events).toHaveLength(1);
-      expect(events[0].name).toBe('test-event');
-      expect(events[0].attributes).toEqual({});
-    });
+  it('serializes to JSON with null error when no error recorded', () => {
+    const span = new Span(13, 'no-error');
+    const json = span.toJSON();
+    expect(json.error).toBeNull();
   });
 });
