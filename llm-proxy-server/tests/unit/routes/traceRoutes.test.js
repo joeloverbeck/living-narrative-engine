@@ -83,6 +83,27 @@ describe('Trace Routes', () => {
     );
   });
 
+  it('should accept serialized trace payloads without re-stringifying them', async () => {
+    const serializedTrace = '{"session":"abc","events":[]}';
+
+    const response = await request(app).post('/api/traces/write').send({
+      traceData: serializedTrace,
+      fileName: 'raw.json',
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      success: true,
+      fileName: 'raw.json',
+      size: serializedTrace.length,
+    });
+    expect(fs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining(path.join('traces', 'raw.json')),
+      serializedTrace,
+      'utf8'
+    );
+  });
+
   it('should reject requests missing required fields', async () => {
     const response = await request(app).post('/api/traces/write').send({
       traceData: null,
@@ -207,6 +228,38 @@ describe('Trace Routes', () => {
     expect(secondResult).toMatchObject({ success: false, fileName: 'fail.json' });
   });
 
+  it('should persist pre-serialized traces correctly during batch writes', async () => {
+    const serializedTrace = '{"batch":true}';
+
+    fs.stat
+      .mockResolvedValueOnce({ size: serializedTrace.length, mtime: new Date('2024-02-01'), birthtime: new Date('2024-02-01') })
+      .mockResolvedValueOnce({ size: 20, mtime: new Date('2024-02-02'), birthtime: new Date('2024-02-02') });
+
+    const response = await request(app).post('/api/traces/write-batch').send({
+      traces: [
+        { traceData: serializedTrace, fileName: 'raw.json' },
+        { traceData: { ok: true }, fileName: 'object.json' },
+      ],
+    });
+
+    expect(response.status).toBe(200);
+    expect(fs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining(path.join('traces', 'raw.json')),
+      serializedTrace,
+      'utf8'
+    );
+    expect(fs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining(path.join('traces', 'object.json')),
+      expect.stringContaining('"ok": true'),
+      'utf8'
+    );
+    expect(response.body.results[0]).toMatchObject({
+      index: 0,
+      fileName: 'raw.json',
+      bytesWritten: serializedTrace.length,
+    });
+  });
+
   it('should convert rejected batch promises into standardized failure results', async () => {
     const allSettledSpy = jest
       .spyOn(Promise, 'allSettled')
@@ -246,6 +299,33 @@ describe('Trace Routes', () => {
       fileName: 'fail.json',
       success: false,
       error: 'filesystem exploded',
+    });
+
+    allSettledSpy.mockRestore();
+  });
+
+  it('should fall back to a generic error message when rejection reason is unavailable', async () => {
+    const allSettledSpy = jest
+      .spyOn(Promise, 'allSettled')
+      .mockResolvedValueOnce([
+        { status: 'fulfilled', value: { index: 0, fileName: 'good.json', success: true } },
+        { status: 'rejected', reason: undefined },
+      ]);
+
+    const response = await request(app).post('/api/traces/write-batch').send({
+      traces: [
+        { traceData: { ok: true }, fileName: 'good.json' },
+        { traceData: { ok: false }, fileName: 'fail.json' },
+      ],
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body.failureCount).toBe(1);
+    expect(response.body.results[1]).toMatchObject({
+      index: 1,
+      fileName: 'fail.json',
+      success: false,
+      error: 'Unknown error',
     });
 
     allSettledSpy.mockRestore();
