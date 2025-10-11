@@ -648,76 +648,204 @@ export function createRuleTestEnvironment(options) {
 
     // If action has target scopes, validate that there are valid targets for all of them
     // Check primary, secondary, and tertiary target scopes
-    const targetScopes = [];
+    const targetDefinitions = (() => {
+      if (!action.targets) {
+        return [];
+      }
 
-    // Handle both string and structured target formats
-    if (typeof action.targets === 'string') {
-      // String format: "scope:name"
-      targetScopes.push({ name: 'primary', scope: action.targets });
-    } else if (typeof action.targets === 'object' && action.targets !== null) {
-      // Structured format: { primary: { scope: "..." }, ... }
-      if (action.targets.primary?.scope) {
-        targetScopes.push({ name: 'primary', scope: action.targets.primary.scope });
+      if (typeof action.targets === 'string') {
+        return [{ key: 'primary', definition: { scope: action.targets } }];
       }
-      if (action.targets.secondary?.scope) {
-        targetScopes.push({ name: 'secondary', scope: action.targets.secondary.scope });
+
+      if (typeof action.targets !== 'object') {
+        return [];
       }
-      if (action.targets.tertiary?.scope) {
-        targetScopes.push({ name: 'tertiary', scope: action.targets.tertiary.scope });
+
+      const targetEntries = Object.entries(action.targets).reduce(
+        (acc, [key, value]) => {
+          if (value && typeof value === 'object') {
+            acc[key] = value;
+          }
+          return acc;
+        },
+        {}
+      );
+
+      const orderedKeys = [];
+      const remainingKeys = new Set(Object.keys(targetEntries));
+
+      while (remainingKeys.size > 0) {
+        let progress = false;
+
+        for (const key of Array.from(remainingKeys)) {
+          const def = targetEntries[key] || {};
+          const dependency = def.contextFrom;
+
+          if (!dependency || orderedKeys.includes(dependency) || !remainingKeys.has(dependency)) {
+            orderedKeys.push(key);
+            remainingKeys.delete(key);
+            progress = true;
+          }
+        }
+
+        if (!progress) {
+          // Fallback: break potential cycles by appending the rest in insertion order
+          for (const key of remainingKeys) {
+            orderedKeys.push(key);
+          }
+          break;
+        }
       }
+
+      return orderedKeys.map((key) => ({
+        key,
+        definition: targetEntries[key] || {},
+      }));
+    })();
+
+    if (targetDefinitions.length === 0) {
+      return true;
     }
 
-    if (targetScopes.length > 0) {
-      // Create context for scope resolution
-      const actorComponents = {};
+    if (!env.unifiedScopeResolver) {
+      env.logger.debug(
+        `Warning: No scope resolver available to validate targets for action ${actionId}`
+      );
+      return true;
+    }
 
-      // Use getEntityInstance which returns the entity with all components
-      const actorEntity = env.entityManager.getEntityInstance(actorId);
-      if (actorEntity && actorEntity.components) {
-        Object.assign(actorComponents, actorEntity.components);
-      }
+    const actorInstance = env.entityManager.getEntityInstance(actorId);
+    const actorComponents = actorInstance?.getAllComponents
+      ? actorInstance.getAllComponents()
+      : actorInstance?.components || {};
+    const actorContext = {
+      id: actorId,
+      components: actorComponents,
+    };
 
+    const buildContextForTarget = (resolvedTargets, targetKey, targetDef) => {
       const context = {
-        actor: {
-          id: actorId,
-          components: actorComponents,
-        },
+        actor: actorContext,
+        targets: {},
       };
 
-      // Validate each target scope
-      for (const { name, scope } of targetScopes) {
-        // Skip 'none' and 'self' scopes
-        if (scope === 'none' || scope === 'self') {
+      for (const [resolvedKey, resolvedValue] of Object.entries(resolvedTargets)) {
+        if (!resolvedValue) {
           continue;
         }
 
-        // Use the scope resolver if available
-        if (env.unifiedScopeResolver) {
-          try {
-            const result = env.unifiedScopeResolver.resolveSync(scope, context);
-            if (!result.success || !result.value || result.value.size === 0) {
-              env.logger.debug(
-                `Action ${actionId} has no valid ${name} targets for scope ${scope}`
-              );
-              return false; // No valid targets for this scope
-            }
-          } catch (error) {
-            env.logger.debug(
-              `Failed to resolve ${name} scope ${scope} for action ${actionId}: ${error.message}`
-            );
-            return false;
-          }
-        } else {
+        context[resolvedKey] = resolvedValue;
+        context.targets[resolvedKey] = [resolvedValue];
+      }
+
+      if (resolvedTargets.primary) {
+        context.primary = resolvedTargets.primary;
+      }
+      if (resolvedTargets.secondary) {
+        context.secondary = resolvedTargets.secondary;
+      }
+      if (resolvedTargets.tertiary) {
+        context.tertiary = resolvedTargets.tertiary;
+      }
+
+      if (targetDef?.contextFrom) {
+        const referencedTarget = resolvedTargets[targetDef.contextFrom];
+        if (referencedTarget) {
+          context[targetDef.contextFrom] = referencedTarget;
+          context.target = referencedTarget;
+        }
+      } else if (!context.target && resolvedTargets.primary) {
+        context.target = resolvedTargets.primary;
+      }
+
+      return context;
+    };
+
+    const createResolvedTarget = (entityId) => {
+      if (!entityId) {
+        return null;
+      }
+
+      const entityInstance = env.entityManager.getEntityInstance(entityId);
+      const components = entityInstance?.getAllComponents
+        ? entityInstance.getAllComponents()
+        : entityInstance?.components || {};
+
+      return {
+        id: entityId,
+        components,
+      };
+    };
+
+    let pendingAssignments = [
+      {
+        resolvedTargets: {},
+      },
+    ];
+
+    for (const { key, definition } of targetDefinitions) {
+      const scopeName = definition?.scope;
+
+      if (!scopeName || scopeName === 'none') {
+        continue;
+      }
+
+      if (scopeName === 'self') {
+        const selfTarget = createResolvedTarget(actorId);
+        pendingAssignments = pendingAssignments.map(({ resolvedTargets }) => ({
+          resolvedTargets: {
+            ...resolvedTargets,
+            [key]: selfTarget,
+          },
+        }));
+        continue;
+      }
+
+      const nextAssignments = [];
+
+      for (const { resolvedTargets } of pendingAssignments) {
+        const resolutionContext = buildContextForTarget(resolvedTargets, key, definition);
+
+        let result;
+        try {
+          result = env.unifiedScopeResolver.resolveSync(scopeName, resolutionContext);
+        } catch (error) {
           env.logger.debug(
-            `Warning: No scope resolver available to validate ${name} targets for action ${actionId}`
+            `Failed to resolve ${key} scope ${scopeName} for action ${actionId}: ${error.message}`
           );
-          // For now, return true to maintain backward compatibility with existing tests
-          return true;
+          continue;
+        }
+
+        if (!result?.success || !result.value || result.value.size === 0) {
+          env.logger.debug(
+            `Action ${actionId} has no valid ${key} targets for scope ${scopeName}`
+          );
+          continue;
+        }
+
+        for (const entityId of result.value) {
+          const resolvedTarget = createResolvedTarget(entityId);
+          if (!resolvedTarget) {
+            continue;
+          }
+
+          nextAssignments.push({
+            resolvedTargets: {
+              ...resolvedTargets,
+              [key]: resolvedTarget,
+            },
+          });
         }
       }
+
+      if (nextAssignments.length === 0) {
+        return false;
+      }
+
+      pendingAssignments = nextAssignments;
     }
 
-    return true;
+    return pendingAssignments.length > 0;
   };
 
   // Add a method to get available actions with scope validation
