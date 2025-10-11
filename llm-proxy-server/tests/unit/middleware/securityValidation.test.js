@@ -142,6 +142,27 @@ describe('Security Validation Middleware', () => {
         );
       });
 
+      it('should accept valid CSP headers without logging errors', () => {
+        mockRequest.headers = {
+          'content-security-policy': "default-src 'self'",
+        };
+
+        const middleware = createSecurityValidationMiddleware({
+          logger: mockLogger,
+        });
+        middleware(mockRequest, mockResponse, mockNext);
+
+        expect(mockRequest.securityValidation.errors).toEqual(
+          expect.not.arrayContaining([
+            expect.objectContaining({ type: 'INVALID_CSP' }),
+          ])
+        );
+        expect(mockLogger.warn).not.toHaveBeenCalledWith(
+          'Security validation errors detected',
+          expect.anything()
+        );
+      });
+
       it('should detect suspicious patterns in headers', () => {
         mockRequest.headers = {
           'x-custom-header': '<script>alert("xss")</script>',
@@ -162,6 +183,29 @@ describe('Security Validation Middleware', () => {
           expect.objectContaining({
             suspiciousPatterns: expect.any(Array),
           })
+        );
+      });
+
+      it('should flag headers with names that exceed the maximum length', () => {
+        const longHeaderName = `x-${'h'.repeat(
+          SecurityValidationUtils.SECURITY_CONFIG.MAX_HEADER_NAME_LENGTH + 1
+        )}`;
+        mockRequest.headers = {
+          [longHeaderName]: 'value',
+        };
+
+        const middleware = createSecurityValidationMiddleware({
+          logger: mockLogger,
+        });
+        middleware(mockRequest, mockResponse, mockNext);
+
+        expect(mockRequest.securityValidation.errors).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              type: 'HEADER_NAME_TOO_LONG',
+              header: longHeaderName,
+            }),
+          ])
         );
       });
 
@@ -226,6 +270,48 @@ describe('Security Validation Middleware', () => {
             }),
           ])
         );
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'Security validation errors detected',
+          expect.objectContaining({
+            errors: expect.arrayContaining([
+              expect.objectContaining({ type: 'HOST_HEADER_INJECTION' }),
+            ]),
+          })
+        );
+      });
+
+      it('should treat standard host headers as safe', () => {
+        mockRequest.headers = {
+          host: 'api.example.com',
+        };
+
+        const middleware = createSecurityValidationMiddleware({
+          logger: mockLogger,
+        });
+        middleware(mockRequest, mockResponse, mockNext);
+
+        expect(mockRequest.securityValidation.errors).toEqual(
+          expect.not.arrayContaining([
+            expect.objectContaining({ type: 'HOST_HEADER_INJECTION' }),
+          ])
+        );
+      });
+
+      it('should check x-forwarded-host header for injection attempts', () => {
+        mockRequest.headers = {
+          'x-forwarded-host': "legit-site.com'><script>1</script>",
+        };
+
+        const middleware = createSecurityValidationMiddleware({
+          logger: mockLogger,
+        });
+        middleware(mockRequest, mockResponse, mockNext);
+
+        expect(mockRequest.securityValidation.errors).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ type: 'HOST_HEADER_INJECTION' }),
+          ])
+        );
       });
 
       it('should validate IP headers', () => {
@@ -243,6 +329,23 @@ describe('Security Validation Middleware', () => {
             expect.objectContaining({
               type: 'SUSPICIOUS_IP_HEADER',
             }),
+          ])
+        );
+      });
+
+      it('should accept valid forwarded IP headers', () => {
+        mockRequest.headers = {
+          'x-forwarded-for': '203.0.113.1, 2001:db8::1',
+        };
+
+        const middleware = createSecurityValidationMiddleware({
+          logger: mockLogger,
+        });
+        middleware(mockRequest, mockResponse, mockNext);
+
+        expect(mockRequest.securityValidation.warnings).toEqual(
+          expect.not.arrayContaining([
+            expect.objectContaining({ type: 'SUSPICIOUS_IP_HEADER' }),
           ])
         );
       });
@@ -266,6 +369,111 @@ describe('Security Validation Middleware', () => {
             expect.objectContaining({
               type: 'MISSING_SECURITY_HEADER',
             }),
+          ])
+        );
+      });
+
+      it('should not warn when required security headers are present', () => {
+        mockRequest.headers = {
+          'strict-transport-security': 'max-age=63072000; includeSubDomains',
+          'x-content-type-options': 'nosniff',
+          'x-frame-options': 'DENY',
+          'x-xss-protection': '1; mode=block',
+        };
+
+        const middleware = createSecurityValidationMiddleware({
+          logger: mockLogger,
+        });
+        middleware(mockRequest, mockResponse, mockNext);
+
+        expect(mockRequest.securityValidation.warnings).toEqual(
+          expect.not.arrayContaining([
+            expect.objectContaining({ type: 'MISSING_SECURITY_HEADER' }),
+          ])
+        );
+      });
+
+      it('should warn when the user agent header is empty', () => {
+        mockRequest.headers = {
+          'user-agent': '',
+        };
+
+        const middleware = createSecurityValidationMiddleware({
+          logger: mockLogger,
+        });
+        middleware(mockRequest, mockResponse, mockNext);
+
+        expect(mockRequest.securityValidation.warnings).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ type: 'EMPTY_USER_AGENT' }),
+          ])
+        );
+      });
+
+      it('should warn when the user agent header exceeds the safe length', () => {
+        mockRequest.headers = {
+          'user-agent': 'a'.repeat(513),
+        };
+
+        const middleware = createSecurityValidationMiddleware({
+          logger: mockLogger,
+        });
+        middleware(mockRequest, mockResponse, mockNext);
+
+        expect(mockRequest.securityValidation.warnings).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ type: 'EXCESSIVE_USER_AGENT_LENGTH' }),
+          ])
+        );
+      });
+
+      it('should warn when referer header contains an invalid URL', () => {
+        mockRequest.headers = {
+          referer: 'not a valid url',
+        };
+
+        const middleware = createSecurityValidationMiddleware({
+          logger: mockLogger,
+        });
+        middleware(mockRequest, mockResponse, mockNext);
+
+        expect(mockRequest.securityValidation.warnings).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ type: 'INVALID_URL_HEADER', header: 'referer' }),
+          ])
+        );
+      });
+
+      it('should allow referer headers with valid URLs', () => {
+        mockRequest.headers = {
+          referer: 'https://example.org/path',
+        };
+
+        const middleware = createSecurityValidationMiddleware({
+          logger: mockLogger,
+        });
+        middleware(mockRequest, mockResponse, mockNext);
+
+        expect(mockRequest.securityValidation.warnings).toEqual(
+          expect.not.arrayContaining([
+            expect.objectContaining({ type: 'INVALID_URL_HEADER' }),
+          ])
+        );
+      });
+
+      it('should ignore referer headers explicitly set to null string', () => {
+        mockRequest.headers = {
+          referer: 'null',
+        };
+
+        const middleware = createSecurityValidationMiddleware({
+          logger: mockLogger,
+        });
+        middleware(mockRequest, mockResponse, mockNext);
+
+        expect(mockRequest.securityValidation.warnings).toEqual(
+          expect.not.arrayContaining([
+            expect.objectContaining({ type: 'INVALID_URL_HEADER' }),
           ])
         );
       });
@@ -353,6 +561,36 @@ describe('Security Validation Middleware', () => {
 
         expect(mockResponse.status).toHaveBeenCalledWith(400);
       });
+
+      it('should fall back to console logger when options are omitted', () => {
+        const debugSpy = jest
+          .spyOn(console, 'debug')
+          .mockImplementation(() => {});
+        const warnSpy = jest
+          .spyOn(console, 'warn')
+          .mockImplementation(() => {});
+        const errorSpy = jest
+          .spyOn(console, 'error')
+          .mockImplementation(() => {});
+
+        mockRequest.headers = {
+          'content-security-policy': "default-src 'self'; script-src 'unsafe-eval'",
+          'x-test-header': '<script>alert(1)</script>',
+        };
+
+        const middleware = createSecurityValidationMiddleware();
+        middleware(mockRequest, mockResponse, mockNext);
+
+        expect(debugSpy).not.toHaveBeenCalled();
+        expect(
+          warnSpy.mock.calls.length + errorSpy.mock.calls.length
+        ).toBeGreaterThan(0);
+        expect(errorSpy).toHaveBeenCalled();
+
+        debugSpy.mockRestore();
+        warnSpy.mockRestore();
+        errorSpy.mockRestore();
+      });
     });
   });
 
@@ -410,6 +648,14 @@ describe('Security Validation Middleware', () => {
         expect(result.isValid).toBe(false);
         expect(result.reason).toContain('Unsafe CSP directive detected');
         expect(result.unsafeValue).toBe('unsafe-eval');
+      });
+
+      it('should identify unsafe inline scripts in CSP headers', () => {
+        const unsafeInlineCSP = "default-src 'self'; script-src 'unsafe-inline'";
+        const result = SecurityValidationUtils.validateCSPHeader(unsafeInlineCSP);
+
+        expect(result.isValid).toBe(false);
+        expect(result.unsafeValue).toBe('unsafe-inline');
       });
 
       it('should reject CSP with unknown directives', () => {
@@ -525,6 +771,50 @@ describe('Security Validation Middleware', () => {
         expect(analysis.score).toBeLessThan(analysis.maxScore);
         expect(analysis.securityLevel).toMatch(/^(poor|fair|good)$/);
       });
+
+      it('should classify responses with moderate coverage as "good" security level', () => {
+        const headers = {
+          'strict-transport-security': 'max-age=63072000',
+          'content-security-policy': "default-src 'self'",
+          'x-content-type-options': 'nosniff',
+          'x-frame-options': 'DENY',
+        };
+
+        const analysis =
+          SecurityValidationUtils.analyzeSecurityHeaders(headers);
+
+        expect(analysis.score).toBeGreaterThanOrEqual(60);
+        expect(analysis.score).toBeLessThan(80);
+        expect(analysis.securityLevel).toBe('good');
+      });
+
+      it('should classify responses with partial coverage as "fair" security level', () => {
+        const headers = {
+          'strict-transport-security': 'max-age=31536000',
+          'x-content-type-options': 'nosniff',
+          'x-frame-options': 'DENY',
+        };
+
+        const analysis =
+          SecurityValidationUtils.analyzeSecurityHeaders(headers);
+
+        expect(analysis.score).toBeGreaterThanOrEqual(40);
+        expect(analysis.score).toBeLessThan(60);
+        expect(analysis.securityLevel).toBe('fair');
+      });
+
+      it('should report invalid CSP directives in header analysis', () => {
+        const headers = {
+          'content-security-policy': "default-src 'self'; script-src 'unsafe-inline'",
+        };
+
+        const analysis =
+          SecurityValidationUtils.analyzeSecurityHeaders(headers);
+
+        expect(analysis.details.csp.present).toBe(true);
+        expect(analysis.details.csp.valid).toBe(false);
+        expect(analysis.details.csp.directives).toBe(0);
+      });
     });
   });
 
@@ -583,6 +873,43 @@ describe('Security Validation Middleware', () => {
       expect(() => {
         middleware(mockRequest, mockResponse, mockNext);
       }).not.toThrow();
+    });
+
+    it('should skip warning logs when warn method is missing and errors occur', () => {
+      const loggerWithoutWarn = {
+        error: jest.fn(),
+      };
+
+      mockRequest.headers = {
+        'content-security-policy': "default-src 'self'; script-src 'unsafe-eval'",
+      };
+
+      const middleware = createSecurityValidationMiddleware({
+        logger: loggerWithoutWarn,
+      });
+
+      middleware(mockRequest, mockResponse, mockNext);
+
+      expect(loggerWithoutWarn.error).not.toHaveBeenCalledWith(
+        'Security validation errors detected',
+        expect.anything()
+      );
+    });
+
+    it('should skip debug logging when logger does not expose debug method', () => {
+      const noDebugLogger = {
+        warn: jest.fn(),
+        error: jest.fn(),
+      };
+
+      const middleware = createSecurityValidationMiddleware({
+        logger: noDebugLogger,
+      });
+
+      middleware(mockRequest, mockResponse, mockNext);
+
+      expect(noDebugLogger.warn).not.toHaveBeenCalled();
+      expect(noDebugLogger.error).not.toHaveBeenCalled();
     });
 
     it('should handle very large header values', () => {
