@@ -406,6 +406,33 @@ describe('FixSuggestionEngine', () => {
     ]);
   });
 
+  it('uses the fallback identifier for prerequisite-derived missing component fixes', () => {
+    const actionDef = createActionDefinition({
+      id: undefined,
+      prerequisites: [{ hasComponent: 'core:inventory' }],
+    });
+
+    const actorSnapshot = createActorSnapshot();
+    const error = new Error("Missing component 'core:inventory'");
+
+    const suggestions = engine.suggestFixes(
+      error,
+      actionDef,
+      actorSnapshot,
+      'execution'
+    );
+
+    const prerequisiteSuggestion = suggestions.find(
+      (fix) =>
+        fix.type === FIX_TYPES.MISSING_COMPONENT &&
+        fix.details?.source === 'prerequisite_analysis' &&
+        fix.details?.componentId === 'core:inventory'
+    );
+
+    expect(prerequisiteSuggestion).toBeDefined();
+    expect(prerequisiteSuggestion.description).toContain("action 'unknown'");
+  });
+
   it('returns scope resolution guidance without location warnings when location is valid', () => {
     const actionDef = createActionDefinition();
     const actorSnapshot = createActorSnapshot({ location: 'market' });
