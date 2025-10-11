@@ -122,24 +122,41 @@ class TakeFromContainerHandler extends BaseOperationHandler {
       );
 
       if (!container) {
-        log.warn(`No container component`, { containerEntity });
+        log.warn('No container component', {
+          containerEntity,
+        });
         return { success: false, error: 'not_a_container' };
       }
 
       if (!container.isOpen) {
-        log.debug(`Container is closed`, { containerEntity });
+        log.debug('Container is closed', {
+          containerEntity,
+        });
         return { success: false, error: 'container_closed' };
       }
 
-      if (!container.contents.includes(itemEntity)) {
-        log.warn(`Item not in container`, { containerEntity, itemEntity });
+      const containerItems = Array.isArray(container.items)
+        ? container.items
+        : [];
+
+      if (!containerItems.includes(itemEntity)) {
+        log.warn('Item not in container', {
+          containerEntity,
+          itemEntity,
+        });
         return { success: false, error: 'item_not_in_container' };
       }
 
       if (!inventory) {
-        log.warn(`No inventory on actor`, { actorEntity });
+        log.warn('No inventory on actor', {
+          actorEntity,
+        });
         return { success: false, error: 'no_inventory' };
       }
+
+      const inventoryItems = Array.isArray(inventory.items)
+        ? inventory.items
+        : [];
 
       // Remove from container, add to inventory
       const updates = [
@@ -148,7 +165,7 @@ class TakeFromContainerHandler extends BaseOperationHandler {
           componentTypeId: CONTAINER_COMPONENT_ID,
           componentData: {
             ...container,
-            contents: container.contents.filter((id) => id !== itemEntity),
+            items: containerItems.filter((id) => id !== itemEntity),
           },
         },
         {
@@ -156,7 +173,7 @@ class TakeFromContainerHandler extends BaseOperationHandler {
           componentTypeId: INVENTORY_COMPONENT_ID,
           componentData: {
             ...inventory,
-            items: [...inventory.items, itemEntity],
+            items: [...inventoryItems, itemEntity],
           },
         },
       ];
@@ -169,14 +186,14 @@ class TakeFromContainerHandler extends BaseOperationHandler {
         itemEntity,
       });
 
-      log.debug(`Item taken from container`, {
+      log.debug('Item taken from container', {
         actorEntity,
         containerEntity,
         itemEntity,
       });
       return { success: true };
     } catch (error) {
-      log.error(`Take from container failed`, error, {
+      log.error('Take from container failed', error, {
         actorEntity,
         containerEntity,
         itemEntity,

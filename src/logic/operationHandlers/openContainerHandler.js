@@ -150,7 +150,9 @@ class OpenContainerHandler extends BaseOperationHandler {
       );
 
       if (!openable) {
-        log.warn('Container is not openable', { containerEntity });
+        log.warn('Container is not openable', {
+          containerEntity,
+        });
         const result = { success: false, error: 'container_not_openable' };
         this.#writeResultVariable(
           params?.result_variable,
@@ -161,26 +163,10 @@ class OpenContainerHandler extends BaseOperationHandler {
         return result;
       }
 
-      // Get container data (contains isOpen, requiresKey, and contents)
-      const container = this.#entityManager.getComponentData(
-        containerEntity,
-        CONTAINER_COMPONENT_ID
-      );
-
-      if (!container) {
-        log.warn('Container has no container component', { containerEntity });
-        const result = { success: false, error: 'not_a_container' };
-        this.#writeResultVariable(
-          params?.result_variable,
-          result,
-          executionContext,
-          log
-        );
-        return result;
-      }
-
-      if (container.isOpen) {
-        log.warn('Container is already open', { containerEntity });
+      if (openable.isOpen) {
+        log.warn('Container is already open', {
+          containerEntity,
+        });
         const result = { success: false, error: 'already_open' };
         this.#writeResultVariable(
           params?.result_variable,
@@ -192,16 +178,34 @@ class OpenContainerHandler extends BaseOperationHandler {
       }
 
       // Check key requirement
-      if (container.requiresKey) {
+      const resolvedKeyValue =
+        typeof openable.requiresKey === 'string'
+          ? openable.requiresKey.trim()
+          : typeof openable.keyItemId === 'string'
+            ? openable.keyItemId.trim()
+            : openable.keyItemId;
+
+      const requiresKey =
+        Boolean(openable.requiresKey) || Boolean(resolvedKeyValue);
+
+      if (requiresKey) {
         const inventory = this.#entityManager.getComponentData(
           actorEntity,
           INVENTORY_COMPONENT_ID
         );
 
-        if (!inventory || !inventory.items.includes(container.keyItemId)) {
+        const inventoryItems = Array.isArray(inventory?.items)
+          ? inventory.items
+          : [];
+
+        if (
+          !inventory ||
+          !resolvedKeyValue ||
+          !inventoryItems.includes(resolvedKeyValue)
+        ) {
           log.warn('Actor does not have required key', {
             actorEntity,
-            requiredKey: container.keyItemId,
+            requiredKey: resolvedKeyValue,
           });
           const result = {
             success: false,
@@ -217,16 +221,27 @@ class OpenContainerHandler extends BaseOperationHandler {
         }
       }
 
-      const contents = container?.contents || [];
+      const container = this.#entityManager.getComponentData(
+        containerEntity,
+        CONTAINER_COMPONENT_ID
+      );
 
-      // Open container by updating container component
+      let contents = [];
+      if (!container) {
+        log.warn('Container has no items component', {
+          containerEntity,
+        });
+      } else if (Array.isArray(container.items)) {
+        contents = container.items;
+      }
+
       await this.#entityManager.batchAddComponentsOptimized(
         [
           {
             instanceId: containerEntity,
-            componentTypeId: CONTAINER_COMPONENT_ID,
+            componentTypeId: OPENABLE_COMPONENT_ID,
             componentData: {
-              ...container,
+              ...openable,
               isOpen: true,
             },
           },
@@ -234,7 +249,11 @@ class OpenContainerHandler extends BaseOperationHandler {
         true
       );
 
-      this.#dispatcher.dispatch(CONTAINER_OPENED_EVENT, { actorEntity, containerEntity, contents });
+      this.#dispatcher.dispatch(CONTAINER_OPENED_EVENT, {
+        actorEntity,
+        containerEntity,
+        contents,
+      });
 
       log.debug('Container opened successfully', {
         actorEntity,
