@@ -315,6 +315,26 @@ describe('SuspiciousPatternsManager', () => {
       }).not.toThrow();
     });
 
+    it('should ignore non-string keys safely', () => {
+      const manager = createSuspiciousPatternsManager();
+
+      manager.set(123, { requests: [] });
+      manager.set('', { requests: [] });
+
+      expect(manager.size()).toBe(0);
+      expect(manager.get(123)).toBeUndefined();
+
+      manager.delete(123);
+      expect(manager.size()).toBe(0);
+    });
+
+    it('should return undefined for non-string keys during get', () => {
+      const manager = createSuspiciousPatternsManager();
+
+      expect(manager.get(undefined)).toBeUndefined();
+      expect(manager.get(42)).toBeUndefined();
+    });
+
     it('should handle empty patterns correctly', () => {
       const manager = createSuspiciousPatternsManager();
 
@@ -384,6 +404,124 @@ describe('SuspiciousPatternsManager', () => {
       expect(manager.size()).toBeGreaterThan(0);
       manager.set('key3', { requests: [] });
       expect(manager.get('key3')).toBeDefined();
+    });
+
+    it('should report expired entries in statistics', () => {
+      const manager = createSuspiciousPatternsManager();
+      const now = Date.now();
+
+      manager.patterns.set('expired', {
+        requests: [now - manager.maxAge - 10],
+        suspiciousScore: 0,
+        updatedAt: now - manager.maxAge - 10,
+        createdAt: now - manager.maxAge - 20,
+      });
+
+      manager.patterns.set('active', {
+        requests: [now],
+        suspiciousScore: 0,
+        updatedAt: now,
+        createdAt: now,
+      });
+
+      const stats = manager.getStats();
+
+      expect(stats.totalEntries).toBe(2);
+      expect(stats.expiredEntries).toBe(1);
+      expect(stats.totalRequestsTracked).toBe(2);
+    });
+
+    it('should respect batch size limits during cleanup', () => {
+      const manager = createSuspiciousPatternsManager();
+      const expiredTime = Date.now() - manager.maxAge - 1;
+
+      manager.patterns.set('first', {
+        requests: [],
+        suspiciousScore: 0,
+        updatedAt: expiredTime,
+        createdAt: expiredTime,
+      });
+
+      manager.patterns.set('second', {
+        requests: [],
+        suspiciousScore: 0,
+        updatedAt: expiredTime,
+        createdAt: expiredTime,
+      });
+
+      const cleaned = manager.cleanupExpired(1);
+
+      expect(cleaned).toBe(1);
+      expect(manager.get('first')).toBeUndefined();
+      expect(manager.get('second')).toBeDefined();
+    });
+  });
+
+  describe('Cleanup Scheduling', () => {
+    it('should avoid scheduling duplicate cleanup timers', () => {
+      const manager = createSuspiciousPatternsManager({ minCleanupInterval: 0 });
+      const timeoutSpy = jest.spyOn(global, 'setTimeout');
+
+      manager.scheduleCleanup();
+      manager.scheduleCleanup();
+
+      expect(timeoutSpy).toHaveBeenCalledTimes(1);
+
+      jest.runOnlyPendingTimers();
+      expect(manager.cleanupTimer).toBeNull();
+
+      timeoutSpy.mockRestore();
+      manager.destroy();
+    });
+
+    it('should reset cleanup timer even when cleanup throws', () => {
+      const manager = createSuspiciousPatternsManager({ minCleanupInterval: 0 });
+      manager.cleanupExpired = jest.fn(() => {
+        throw new Error('cleanup failed');
+      });
+
+      manager.scheduleCleanup();
+
+      expect(manager.cleanupTimer).not.toBeNull();
+
+      jest.runOnlyPendingTimers();
+
+      expect(manager.cleanupExpired).toHaveBeenCalled();
+      expect(manager.cleanupTimer).toBeNull();
+
+      manager.destroy();
+    });
+
+    it('should continue periodic cleanup after errors', () => {
+      const manager = createSuspiciousPatternsManager({ cleanupInterval: 100 });
+      manager.cleanupExpired = jest.fn(() => {
+        throw new Error('interval cleanup failed');
+      });
+
+      jest.advanceTimersByTime(100);
+
+      expect(manager.cleanupExpired).toHaveBeenCalledTimes(1);
+
+      manager.destroy();
+    });
+
+    it('should remove expired entries during full cleanup', () => {
+      const manager = createSuspiciousPatternsManager();
+      const expiredTime = Date.now() - manager.maxAge - 5;
+
+      manager.patterns.set('stale', {
+        requests: [],
+        suspiciousScore: 0,
+        updatedAt: expiredTime,
+        createdAt: expiredTime,
+      });
+
+      const cleaned = manager.fullCleanup();
+
+      expect(cleaned).toBe(1);
+      expect(manager.get('stale')).toBeUndefined();
+
+      manager.destroy();
     });
   });
 });

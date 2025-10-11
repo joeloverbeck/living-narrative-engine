@@ -519,6 +519,35 @@ describe('Rate Limiting Middleware - Comprehensive Tests', () => {
 
       expect(rateLimiter.generatedKey).toBe('global:unknown');
     });
+
+    test('handles invalid request objects gracefully', () => {
+      const rateLimiter = createApiRateLimiter();
+
+      rateLimiter(null, res, next);
+
+      expect(rateLimiter.generatedKey).toBe('global:unknown');
+    });
+
+    test('accepts valid public IPv6 addresses', () => {
+      req.headers['x-forwarded-for'] = '[2606:4700:4700::1111]';
+      req.ip = '198.51.100.1';
+
+      const rateLimiter = createApiRateLimiter();
+      rateLimiter(req, res, next);
+
+      expect(rateLimiter.generatedKey).toBe('ip:[2606:4700:4700::1111]');
+    });
+
+    test('rejects malformed IP addresses', () => {
+      req.headers['x-forwarded-for'] = 'not-an-ip';
+      req.ip = '198.51.100.50';
+      req.connection.remoteAddress = '198.51.100.50';
+
+      const rateLimiter = createApiRateLimiter();
+      rateLimiter(req, res, next);
+
+      expect(rateLimiter.generatedKey).toBe('ip:198.51.100.50');
+    });
   });
 
   describe('hashString - User-Agent Hashing', () => {
