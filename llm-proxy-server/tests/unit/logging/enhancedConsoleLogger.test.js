@@ -67,6 +67,77 @@ describe('EnhancedConsoleLogger', () => {
   });
 
   describe('Chalk Integration and Fallback', () => {
+    it('should use chalk from globalThis when available', async () => {
+      jest.resetModules();
+
+      const originalChalk = globalThis.chalk;
+
+      const createColorFn = (label) => {
+        const fn = jest.fn((str) => `${label}:${str}`);
+        return fn;
+      };
+
+      const grayFn = createColorFn('gray');
+      grayFn.italic = jest.fn((str) => `grayItalic:${str}`);
+
+      const chalkMock = {
+        blue: createColorFn('blue'),
+        cyan: createColorFn('cyan'),
+        green: createColorFn('green'),
+        yellow: createColorFn('yellow'),
+        red: { bold: createColorFn('redBold') },
+        gray: grayFn,
+      };
+
+      globalThis.chalk = chalkMock;
+
+      jest.doMock('../../../src/logging/loggerConfiguration.js', () => ({
+        getLoggerConfiguration: () => ({
+          isColorsEnabled: () => true,
+          isIconsEnabled: () => true,
+          isPrettyFormatEnabled: () => true,
+          getMaxMessageLength: () => 200,
+          shouldShowContext: () => true,
+          isDevelopment: () => false,
+        }),
+      }));
+
+      jest.doMock('../../../src/logging/logFormatter.js', () => ({
+        getLogFormatter: () => ({
+          formatMessage: (level, message, ...args) => ({
+            timestamp: '2024-01-01T00:00:00.000Z',
+            icon: '',
+            level: level.toUpperCase(),
+            service: 'ServiceName',
+            message,
+            contextLines: args.map((arg, index) => `context-${index}:${JSON.stringify(arg)}`),
+          }),
+          formatSimple: jest.fn(),
+        }),
+      }));
+
+      const { getEnhancedConsoleLogger } = await import(
+        '../../../src/logging/enhancedConsoleLogger.js'
+      );
+      logger = getEnhancedConsoleLogger();
+
+      logger.info('Colored message', { key: 'value' });
+
+      expect(mockConsole.info).toHaveBeenCalledTimes(1);
+      expect(chalkMock.green).toHaveBeenCalledWith('INFO');
+      expect(chalkMock.blue).toHaveBeenCalledWith('ServiceName');
+      expect(chalkMock.gray.italic).toHaveBeenCalled();
+
+      if (originalChalk === undefined) {
+        delete globalThis.chalk;
+      } else {
+        globalThis.chalk = originalChalk;
+      }
+
+      jest.dontMock('../../../src/logging/loggerConfiguration.js');
+      jest.dontMock('../../../src/logging/logFormatter.js');
+    });
+
     it('should handle chalk initialization successfully', async () => {
       // Import with working chalk
       const { getEnhancedConsoleLogger } = await import(
@@ -138,6 +209,239 @@ describe('EnhancedConsoleLogger', () => {
 
       warnSpy.mockRestore();
       jest.dontMock('chalk');
+    });
+
+    it('should fall back when chalk module lacks a blue function', async () => {
+      jest.resetModules();
+
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+      jest.doMock(
+        'chalk',
+        () => ({
+          cyan: (str) => str,
+          green: (str) => str,
+          yellow: (str) => str,
+          red: { bold: (str) => str },
+          gray: Object.assign((str) => str, { italic: (str) => str }),
+        }),
+        { virtual: true }
+      );
+
+      const { getEnhancedConsoleLogger } = await import(
+        '../../../src/logging/enhancedConsoleLogger.js'
+      );
+      logger = getEnhancedConsoleLogger();
+
+      logger.warn('Fallback to plain text');
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        'EnhancedConsoleLogger: Chalk not available, falling back to plain text'
+      );
+
+      warnSpy.mockRestore();
+      jest.dontMock('chalk');
+    });
+
+    it('should support chalk default export returned from require', async () => {
+      jest.resetModules();
+
+      const chalkDefault = {
+        blue: jest.fn((str) => str),
+        cyan: jest.fn((str) => str),
+        green: jest.fn((str) => str),
+        yellow: jest.fn((str) => str),
+        red: { bold: jest.fn((str) => str) },
+        gray: Object.assign(jest.fn((str) => str), {
+          italic: jest.fn((str) => str),
+        }),
+      };
+
+      jest.doMock('chalk', () => ({ default: chalkDefault }), {
+        virtual: true,
+      });
+
+      jest.doMock('../../../src/logging/loggerConfiguration.js', () => ({
+        getLoggerConfiguration: () => ({
+          isColorsEnabled: () => true,
+          isIconsEnabled: () => true,
+          isPrettyFormatEnabled: () => true,
+          getMaxMessageLength: () => 200,
+          shouldShowContext: () => true,
+          isDevelopment: () => false,
+        }),
+      }));
+
+      jest.doMock('../../../src/logging/logFormatter.js', () => ({
+        getLogFormatter: () => ({
+          formatMessage: (level, message, ...args) => ({
+            timestamp: '2024-01-01T00:00:00.000Z',
+            icon: '',
+            level: level.toUpperCase(),
+            service: 'ServiceName',
+            message,
+            contextLines: args.map((arg, index) => `context-${index}:${JSON.stringify(arg)}`),
+          }),
+          formatSimple: jest.fn(),
+        }),
+      }));
+
+      const { getEnhancedConsoleLogger } = await import(
+        '../../../src/logging/enhancedConsoleLogger.js'
+      );
+      logger = getEnhancedConsoleLogger();
+
+      logger.debug('Default export message', { foo: 'bar' });
+
+      expect(chalkDefault.blue).toHaveBeenCalledWith('test');
+      expect(chalkDefault.cyan).toHaveBeenCalledWith('DEBUG');
+      expect(chalkDefault.gray.italic).toHaveBeenCalled();
+
+      jest.dontMock('chalk');
+      jest.dontMock('../../../src/logging/loggerConfiguration.js');
+      jest.dontMock('../../../src/logging/logFormatter.js');
+    });
+
+    it('should warn when chalk test invocation throws', async () => {
+      jest.resetModules();
+
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+      jest.doMock('chalk', () => ({
+        default: {
+          blue: () => {
+            throw new Error('blue failed');
+          },
+          cyan: (str) => str,
+          green: (str) => str,
+          yellow: (str) => str,
+          red: { bold: (str) => str },
+          gray: Object.assign((str) => str, { italic: (str) => str }),
+        },
+      }));
+
+      const { getEnhancedConsoleLogger } = await import(
+        '../../../src/logging/enhancedConsoleLogger.js'
+      );
+      logger = getEnhancedConsoleLogger();
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        'EnhancedConsoleLogger: Chalk not available, falling back to plain text'
+      );
+
+      warnSpy.mockRestore();
+      jest.dontMock('chalk');
+    });
+
+    it('should handle console.warn throwing during chalk failure', async () => {
+      jest.resetModules();
+
+      const warnSpy = jest
+        .spyOn(console, 'warn')
+        .mockImplementationOnce(() => {
+          throw new Error('warn failed');
+        })
+        .mockImplementation(() => {});
+
+      jest.doMock(
+        'chalk',
+        () => ({
+          cyan: (str) => str,
+          green: (str) => str,
+          yellow: (str) => str,
+          red: { bold: (str) => str },
+          gray: Object.assign((str) => str, { italic: (str) => str }),
+        }),
+        { virtual: true }
+      );
+
+      const { getEnhancedConsoleLogger } = await import(
+        '../../../src/logging/enhancedConsoleLogger.js'
+      );
+      logger = getEnhancedConsoleLogger();
+
+      expect(warnSpy).toHaveBeenCalled();
+      expect(warnSpy.mock.calls[warnSpy.mock.calls.length - 1][0]).toBe(
+        'EnhancedConsoleLogger: Chalk not available, falling back to plain text'
+      );
+
+      warnSpy.mockRestore();
+      jest.dontMock('chalk');
+    });
+
+    it('should cache chalk availability across instances', async () => {
+      jest.resetModules();
+
+      const originalChalk = globalThis.chalk;
+
+      const createColorFn = (label) => {
+        const fn = jest.fn((str) => `${label}:${str}`);
+        return fn;
+      };
+
+      const grayFn = createColorFn('gray');
+      grayFn.italic = jest.fn((str) => `grayItalic:${str}`);
+
+      const chalkMock = {
+        blue: createColorFn('blue'),
+        cyan: createColorFn('cyan'),
+        green: createColorFn('green'),
+        yellow: createColorFn('yellow'),
+        red: { bold: createColorFn('redBold') },
+        gray: grayFn,
+      };
+
+      globalThis.chalk = chalkMock;
+
+      jest.doMock('../../../src/logging/loggerConfiguration.js', () => ({
+        getLoggerConfiguration: () => ({
+          isColorsEnabled: () => true,
+          isIconsEnabled: () => true,
+          isPrettyFormatEnabled: () => true,
+          getMaxMessageLength: () => 200,
+          shouldShowContext: () => true,
+          isDevelopment: () => false,
+        }),
+      }));
+
+      jest.doMock('../../../src/logging/logFormatter.js', () => ({
+        getLogFormatter: () => ({
+          formatMessage: (level, message) => ({
+            timestamp: '2024-01-01T00:00:00.000Z',
+            icon: '',
+            level: level.toUpperCase(),
+            service: 'ServiceName',
+            message,
+            contextLines: [],
+          }),
+          formatSimple: jest.fn(),
+        }),
+      }));
+
+      const { default: EnhancedConsoleLogger } = await import(
+        '../../../src/logging/enhancedConsoleLogger.js'
+      );
+
+      // First instance triggers full initialization
+      const firstLogger = new EnhancedConsoleLogger();
+      firstLogger.info('First logger message');
+
+      const blueCallCountAfterFirst = chalkMock.blue.mock.calls.length;
+
+      // Second instance should reuse cached chalk availability
+      const secondLogger = new EnhancedConsoleLogger();
+      secondLogger.info('Second logger message');
+
+      expect(chalkMock.blue).toHaveBeenCalledTimes(blueCallCountAfterFirst);
+
+      if (originalChalk === undefined) {
+        delete globalThis.chalk;
+      } else {
+        globalThis.chalk = originalChalk;
+      }
+
+      jest.dontMock('../../../src/logging/loggerConfiguration.js');
+      jest.dontMock('../../../src/logging/logFormatter.js');
     });
   });
 
@@ -273,6 +577,15 @@ describe('EnhancedConsoleLogger', () => {
       expect(output).not.toContain('secret1');
       expect(output).not.toContain('secret2');
       expect(output).toContain('normal-data');
+    });
+
+    it('should preserve primitive values when sanitizing arrays', () => {
+      logger.info('Array with primitives', ['visible', { token: 'hidden' }]);
+
+      const output = mockConsole.info.mock.calls[0][0];
+      expect(output).toContain('visible');
+      expect(output).toContain('[MASKED]');
+      expect(output).not.toContain('hidden');
     });
 
     it('should handle sanitization of non-object types', () => {
