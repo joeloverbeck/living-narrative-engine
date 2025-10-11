@@ -86,9 +86,11 @@ class OpenContainerHandler extends BaseOperationHandler {
   }
 
   /**
+   * Writes a value into the provided result variable when the execution context exposes a valid evaluation context.
+   *
    * @description Writes a value into the provided result variable when the execution context exposes a valid evaluation context.
    * @param {string|null|undefined} resultVariable - Optional result variable identifier supplied by the operation.
-   * @param {*} value - Value to persist into the evaluation context.
+   * @param {unknown} value - Value to persist into the evaluation context.
    * @param {import('../defs.js').ExecutionContext} executionContext - Execution context supplied to the handler.
    * @param {import('../../interfaces/coreServices.js').ILogger} log - Logger for debug diagnostics.
    * @returns {void}
@@ -163,7 +165,26 @@ class OpenContainerHandler extends BaseOperationHandler {
         return result;
       }
 
-      if (openable.isOpen) {
+      const container = this.#entityManager.getComponentData(
+        containerEntity,
+        CONTAINER_COMPONENT_ID
+      );
+
+      if (!container) {
+        log.warn('Container has no container component', {
+          containerEntity,
+        });
+        const result = { success: false, error: 'container_missing_component' };
+        this.#writeResultVariable(
+          params?.result_variable,
+          result,
+          executionContext,
+          log
+        );
+        return result;
+      }
+
+      if (container.isOpen) {
         log.warn('Container is already open', {
           containerEntity,
         });
@@ -179,14 +200,11 @@ class OpenContainerHandler extends BaseOperationHandler {
 
       // Check key requirement
       const resolvedKeyValue =
-        typeof openable.requiresKey === 'string'
-          ? openable.requiresKey.trim()
-          : typeof openable.keyItemId === 'string'
-            ? openable.keyItemId.trim()
-            : openable.keyItemId;
+        typeof container.keyItemId === 'string'
+          ? container.keyItemId.trim()
+          : container.keyItemId;
 
-      const requiresKey =
-        Boolean(openable.requiresKey) || Boolean(resolvedKeyValue);
+      const requiresKey = Boolean(container.requiresKey) || Boolean(resolvedKeyValue);
 
       if (requiresKey) {
         const inventory = this.#entityManager.getComponentData(
@@ -221,27 +239,18 @@ class OpenContainerHandler extends BaseOperationHandler {
         }
       }
 
-      const container = this.#entityManager.getComponentData(
-        containerEntity,
-        CONTAINER_COMPONENT_ID
-      );
-
       let contents = [];
-      if (!container) {
-        log.warn('Container has no items component', {
-          containerEntity,
-        });
-      } else if (Array.isArray(container.items)) {
-        contents = container.items;
+      if (Array.isArray(container.contents)) {
+        contents = container.contents;
       }
 
       await this.#entityManager.batchAddComponentsOptimized(
         [
           {
             instanceId: containerEntity,
-            componentTypeId: OPENABLE_COMPONENT_ID,
+            componentTypeId: CONTAINER_COMPONENT_ID,
             componentData: {
-              ...openable,
+              ...container,
               isOpen: true,
             },
           },
