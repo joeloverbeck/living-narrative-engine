@@ -7,6 +7,9 @@ import {
   jest,
 } from '@jest/globals';
 import {
+  HTTP_HEADER_CONTENT_TYPE,
+  HTTP_METHOD_OPTIONS,
+  HTTP_METHOD_POST,
   LOG_LLM_ID_PROXY_NOT_OPERATIONAL,
   LOG_LLM_ID_UNHANDLED_ERROR,
 } from '../../../src/config/constants.js';
@@ -31,6 +34,12 @@ describe('Server - Comprehensive Tests', () => {
   let appConfigServiceMock;
   let serverManager;
   let timerManager;
+  let createTimeoutMiddlewareMock;
+  let metricsServiceInstance;
+  let corsMock;
+  let llmConfigServiceInstance;
+  let salvageServiceInstance;
+  let originalNodeEnv;
 
   beforeEach(() => {
     jest.resetModules();
@@ -42,6 +51,7 @@ describe('Server - Comprehensive Tests', () => {
       on: process.on,
       exit: process.exit,
     };
+    originalNodeEnv = process.env.NODE_ENV;
 
     // Initialize test utilities for better resource management
     serverManager = new TestServerManager();
@@ -112,9 +122,10 @@ describe('Server - Comprehensive Tests', () => {
       Router: expressMock.Router,
     }));
 
+    corsMock = jest.fn(() => 'cors-mw');
     jest.doMock('cors', () => ({
       __esModule: true,
-      default: jest.fn(() => 'cors-mw'),
+      default: corsMock,
     }));
 
     jest.doMock('compression', () => ({
@@ -167,7 +178,7 @@ describe('Server - Comprehensive Tests', () => {
       getAppConfigService,
     }));
 
-    const llmConfigServiceInstance = {
+    llmConfigServiceInstance = {
       initialize: jest.fn(),
       isOperational: jest.fn(() => operational),
       getInitializationErrorDetails: jest.fn(() => initializationErrorDetails),
@@ -227,10 +238,12 @@ describe('Server - Comprehensive Tests', () => {
       default: SalvageRequestController,
     }));
 
-    const ResponseSalvageService = jest.fn(() => ({
+    salvageServiceInstance = {
       salvageResponse: jest.fn(),
       getStats: jest.fn(),
-    }));
+      cleanup: jest.fn(),
+    };
+    const ResponseSalvageService = jest.fn(() => salvageServiceInstance);
     jest.doMock('../../../src/services/responseSalvageService.js', () => ({
       __esModule: true,
       default: ResponseSalvageService,
@@ -267,9 +280,19 @@ describe('Server - Comprehensive Tests', () => {
       handleValidationErrors: jest.fn(),
     }));
 
+    createTimeoutMiddlewareMock = jest.fn((timeoutMs, options) => {
+      const middleware = jest.fn((req, res, next) => {
+        if (typeof next === 'function') {
+          next();
+        }
+      });
+      middleware.timeoutMs = timeoutMs;
+      middleware.options = options;
+      return middleware;
+    });
     jest.doMock('../../../src/middleware/timeout.js', () => ({
       __esModule: true,
-      createTimeoutMiddleware: jest.fn(() => 'timeout-mw'),
+      createTimeoutMiddleware: createTimeoutMiddlewareMock,
       createSizeLimitConfig: jest.fn(() => ({
         json: { limit: '10mb' },
       })),
@@ -290,7 +313,7 @@ describe('Server - Comprehensive Tests', () => {
     }));
 
     // Mock MetricsService
-    const metricsServiceInstance = {
+    metricsServiceInstance = {
       isEnabled: jest.fn(() => false),
       getMetrics: jest.fn(() => Promise.resolve('metrics-data')),
       getStats: jest.fn(() => ({
@@ -372,6 +395,7 @@ describe('Server - Comprehensive Tests', () => {
     global.setTimeout = originalSetTimeout;
     process.on = originalProcess.on;
     process.exit = originalProcess.exit;
+    process.env.NODE_ENV = originalNodeEnv;
 
     // Clear module cache to prevent leaks between tests
     const serverModulePath = require.resolve('../../../src/core/server.js');
@@ -856,6 +880,285 @@ describe('Server - Comprehensive Tests', () => {
       );
       // In test environment, process.exit is not called
       expect(process.exit).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Additional coverage scenarios', () => {
+    test('general timeout middleware respects LLM route exemptions', async () => {
+      await loadServer();
+
+      const generalTimeoutIndex = app.use.mock.calls.findIndex(
+        (args) => args[0] === 'api-rate-limiter'
+      );
+      const generalTimeoutMiddleware =
+        app.use.mock.calls[generalTimeoutIndex + 1][0];
+
+      const nextForLlm = jest.fn();
+      createTimeoutMiddlewareMock.mockClear();
+      generalTimeoutMiddleware(
+        { path: '/api/llm-request' },
+        {},
+        nextForLlm
+      );
+
+      expect(nextForLlm).toHaveBeenCalledTimes(1);
+      expect(createTimeoutMiddlewareMock).not.toHaveBeenCalled();
+
+      const passthrough = jest.fn((req, res, next) => next());
+      createTimeoutMiddlewareMock.mockClear();
+      createTimeoutMiddlewareMock.mockReturnValueOnce(passthrough);
+
+      const otherReq = { path: '/something-else' };
+      const otherRes = {};
+      const otherNext = jest.fn();
+      generalTimeoutMiddleware(otherReq, otherRes, otherNext);
+
+      expect(createTimeoutMiddlewareMock).toHaveBeenCalledWith(30000, {
+        logger: consoleLoggerInstance,
+      });
+      expect(passthrough).toHaveBeenCalledWith(otherReq, otherRes, otherNext);
+    });
+
+    test('logs explicit CORS configuration when allowed origins are provided', async () => {
+      appConfigServiceMock.getAllowedOriginsArray.mockReturnValue([
+        'https://example.com',
+      ]);
+
+      await loadServer();
+
+      expect(consoleLoggerInstance.info).toHaveBeenCalledWith(
+        'LLM Proxy Server: Configuring CORS for 1 origin(s)'
+      );
+      expect(consoleLoggerInstance.debug).toHaveBeenCalledWith(
+        'CORS allowed origins:',
+        { origins: ['https://example.com'] }
+      );
+      expect(corsMock).toHaveBeenCalledWith({
+        origin: ['https://example.com'],
+        methods: [HTTP_METHOD_POST, HTTP_METHOD_OPTIONS],
+        allowedHeaders: [
+          HTTP_HEADER_CONTENT_TYPE,
+          'X-Title',
+          'HTTP-Referer',
+        ],
+      });
+    });
+
+    test('warns when CORS origins missing in development mode', async () => {
+      appConfigServiceMock.getNodeEnv = jest.fn(() => 'development');
+
+      await loadServer();
+
+      expect(consoleLoggerInstance.warn).toHaveBeenCalledWith(
+        'LLM Proxy Server: CORS not configured in development mode. To enable browser access, set PROXY_ALLOWED_ORIGIN environment variable. Example: PROXY_ALLOWED_ORIGIN="http://localhost:8080,http://127.0.0.1:8080"'
+      );
+    });
+
+    test('metrics endpoint reports errors gracefully', async () => {
+      await loadServer();
+      metricsServiceInstance.getMetrics.mockRejectedValueOnce(
+        new Error('metrics failure')
+      );
+
+      const metricsHandler = app.get.mock.calls.find(
+        (call) => call[0] === '/metrics'
+      )[1];
+
+      const res = {
+        set: jest.fn(),
+        status: jest.fn(function (code) {
+          this.statusCode = code;
+          return this;
+        }),
+        send: jest.fn(),
+      };
+
+      await metricsHandler({}, res);
+
+      expect(consoleLoggerInstance.error).toHaveBeenCalledWith(
+        'Error serving metrics endpoint',
+        expect.any(Error)
+      );
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.send).toHaveBeenCalledWith('Error retrieving metrics');
+    });
+
+    test('root route handles unknown initialization failures', async () => {
+      operational = false;
+      initializationErrorDetails = null;
+
+      await loadServer();
+
+      const res = { status: jest.fn(() => res), send: jest.fn() };
+      rootHandler({}, res);
+
+      expect(sendProxyError).toHaveBeenCalledWith(
+        res,
+        503,
+        'initialization_failure_unknown',
+        'LLM Proxy Server is NOT OPERATIONAL due to unknown configuration issues.',
+        {},
+        LOG_LLM_ID_PROXY_NOT_OPERATIONAL,
+        expect.anything()
+      );
+    });
+
+    test('startup summary logs defaulted port and missing config path details', async () => {
+      appConfigServiceMock.isProxyPortDefaulted.mockReturnValue(true);
+      llmConfigServiceInstance.getResolvedConfigPath.mockReturnValue(null);
+      llmConfigServiceInstance.getLlmConfigs.mockReturnValue({
+        configs: { primary: {}, backup: {} },
+      });
+
+      await loadServer();
+
+      expect(consoleLoggerInstance.info).toHaveBeenCalledWith(
+        '(Note: PROXY_PORT environment variable was not set or invalid, using default.)'
+      );
+      expect(consoleLoggerInstance.warn).toHaveBeenCalledWith(
+        'LLM configurations path could not be determined.'
+      );
+      expect(consoleLoggerInstance.info).toHaveBeenCalledWith(
+        'LLM Proxy Server: Successfully loaded 2 LLM configurations. Proxy is OPERATIONAL.'
+      );
+    });
+
+    test('startup summary logs unknown initialization reason when details missing', async () => {
+      operational = false;
+      initializationErrorDetails = {};
+
+      await loadServer();
+
+      expect(consoleLoggerInstance.error).toHaveBeenCalledWith(
+        'LLM Proxy Server: CRITICAL - Failed to initialize LLM configurations. Proxy is NOT OPERATIONAL.'
+      );
+      expect(consoleLoggerInstance.error).toHaveBeenCalledWith(
+        '   Reason: Unknown initialization error.'
+      );
+    });
+
+    test('startup summary reports API key configuration and metrics when enabled', async () => {
+      appConfigServiceMock.getProxyAllowedOrigin.mockReturnValue(
+        'http://localhost:4321'
+      );
+      appConfigServiceMock.getProxyProjectRootPathForApiKeyFiles.mockReturnValue(
+        '/keys'
+      );
+      metricsServiceInstance.isEnabled.mockReturnValue(true);
+      metricsServiceInstance.getStats.mockReturnValue({
+        totalMetrics: 5,
+        customMetrics: 2,
+        defaultMetrics: 3,
+      });
+
+      await loadServer();
+
+      expect(consoleLoggerInstance.info).toHaveBeenCalledWith(
+        'LLM Proxy Server: CORS enabled for origin(s): http://localhost:4321'
+      );
+      expect(consoleLoggerInstance.info).toHaveBeenCalledWith(
+        "LLM Proxy Server: API Key file root path set to: '/keys'."
+      );
+      expect(consoleLoggerInstance.info).toHaveBeenCalledWith(
+        'LLM Proxy Server: Metrics Collection ENABLED - Total metrics: 5, Custom metrics: 2, Default metrics: 3. Prometheus endpoint available at /metrics'
+      );
+    });
+
+    test('startup summary warns when API key root missing but file-based keys configured', async () => {
+      llmConfigServiceInstance.hasFileBasedApiKeys.mockReturnValue(true);
+      appConfigServiceMock.getProxyProjectRootPathForApiKeyFiles.mockReturnValue(
+        ''
+      );
+
+      await loadServer();
+
+      expect(consoleLoggerInstance.warn).toHaveBeenCalledWith(
+        'LLM Proxy Server: WARNING - PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES is NOT SET. File-based API key retrieval WILL FAIL for configured LLMs that use apiKeyFileName.'
+      );
+    });
+
+    test('beforeExit handler logs completion message', async () => {
+      await loadServer();
+
+      const beforeExitHandler = process.on.mock.calls.find(
+        (call) => call[0] === 'beforeExit'
+      )[1];
+
+      await beforeExitHandler();
+
+      expect(consoleLoggerInstance.debug).toHaveBeenCalledWith(
+        'LLM Proxy Server: Graceful beforeExit handler completed'
+      );
+    });
+
+    test('graceful shutdown exits process in production environments', async () => {
+      process.env.NODE_ENV = 'production';
+
+      await loadServer();
+
+      process.exit.mockClear();
+      const scheduledTimeouts = [];
+      global.setTimeout.mockImplementation((fn, delay) => {
+        scheduledTimeouts.push({ fn, delay });
+        return { delay };
+      });
+
+      const sigtermHandler = process.on.mock.calls.find(
+        (call) => call[0] === 'SIGTERM'
+      )[1];
+
+      sigtermHandler();
+
+      await new Promise((resolve) => originalSetTimeout(resolve, 0));
+
+      expect(process.exit).toHaveBeenCalledWith(0);
+      expect(global.setTimeout).toHaveBeenCalledWith(expect.any(Function), 10000);
+
+      scheduledTimeouts[0].fn();
+
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
+    test('graceful shutdown exits immediately when server is undefined in production', async () => {
+      process.env.NODE_ENV = 'production';
+
+      const appUndefined = {
+        use: jest.fn(),
+        get: jest.fn(),
+        post: jest.fn(),
+        listen: jest.fn((port, callback) => {
+          if (callback) {
+            callback();
+          }
+          return undefined;
+        }),
+      };
+
+      const expressMockUndefined = jest.fn(() => appUndefined);
+      expressMockUndefined.json = jest.fn(() => 'json-mw');
+      expressMockUndefined.Router = jest.fn(() => ({
+        get: jest.fn(),
+        post: jest.fn(),
+        use: jest.fn(),
+      }));
+
+      jest.doMock('express', () => ({
+        __esModule: true,
+        default: expressMockUndefined,
+        Router: expressMockUndefined.Router,
+      }));
+
+      delete require.cache[require.resolve('../../../src/core/server.js')];
+      await import('../../../src/core/server.js');
+
+      const sigtermHandler = process.on.mock.calls.find(
+        (call) => call[0] === 'SIGTERM'
+      )[1];
+
+      process.exit.mockClear();
+      sigtermHandler();
+
+      expect(process.exit).toHaveBeenCalledWith(0);
     });
   });
 });
