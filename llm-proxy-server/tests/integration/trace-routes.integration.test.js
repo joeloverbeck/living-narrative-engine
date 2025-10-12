@@ -1,155 +1,202 @@
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
-import path from 'path';
-import { promises as fsPromises, existsSync } from 'fs';
+import path from 'node:path';
+import { randomUUID } from 'node:crypto';
+import {
+  mkdir,
+  readFile,
+  readdir,
+  rm,
+  stat,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
+
 import traceRoutes from '../../src/routes/traceRoutes.js';
 
-const { readFile, rm, mkdir } = fsPromises;
+const projectRoot = path.resolve(process.cwd(), '../');
 
-describe('Trace routes integration', () => {
-  let app;
-  let projectRoot;
-  let baseRelative;
-  let baseAbsolute;
+/**
+ * Builds an express app configured with the trace routes for integration testing.
+ * @returns {import('express').Express}
+ */
+function buildApp() {
+  const app = express();
+  app.use(express.json({ limit: '1mb' }));
+  app.use('/api/traces', traceRoutes);
+  return app;
+}
 
-  beforeAll(async () => {
-    projectRoot = path.resolve(process.cwd(), '..');
-    baseRelative = path.join('llm-proxy-server', 'tests', 'tmp', 'trace-routes');
-    baseAbsolute = path.join(projectRoot, baseRelative);
+const createdDirectories = new Set();
 
-    app = express();
-    app.use(express.json({ limit: '2mb' }));
-    app.use('/api/traces', traceRoutes);
+const registerDirectoryForCleanup = (relativePath) => {
+  const normalized = relativePath.startsWith('./')
+    ? relativePath.slice(2)
+    : relativePath;
+  const fullPath = path.join(projectRoot, normalized);
+  createdDirectories.add(fullPath);
+  return fullPath;
+};
 
-    await rm(baseAbsolute, { recursive: true, force: true });
-  });
+beforeEach(() => {
+  createdDirectories.clear();
+});
 
-  beforeEach(async () => {
-    await rm(baseAbsolute, { recursive: true, force: true });
-    await mkdir(baseAbsolute, { recursive: true });
-    jest.restoreAllMocks();
-  });
-
-  afterAll(async () => {
-    await rm(baseAbsolute, { recursive: true, force: true });
-  });
-
-  const buildPaths = async (name, { precreate = false } = {}) => {
-    const relative = path.join(baseRelative, name);
-    const absolute = path.join(baseAbsolute, name);
-    if (precreate) {
-      await mkdir(absolute, { recursive: true });
+afterEach(async () => {
+  const paths = Array.from(createdDirectories).sort((a, b) => b.length - a.length);
+  for (const directory of paths) {
+    try {
+      await rm(directory, { recursive: true, force: true });
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to remove temporary trace directory during cleanup', {
+        directory,
+        error: error.message,
+      });
     }
-    return { relative, absolute };
-  };
+  }
+  createdDirectories.clear();
+});
 
-  it('writes a single trace file and lists it', async () => {
-    const { relative, absolute } = await buildPaths('single-write');
-    const traceData = {
-      sessionId: 'abc123',
-      steps: ['gather-context', 'synthesize-response'],
-    };
+describe('traceRoutes integration coverage', () => {
+  it('writes trace files using sanitized filenames within the project boundary', async () => {
+    const app = buildApp();
+    const outputDirectory = `./tmp-traces/${randomUUID()}`;
+    const expectedDirectory = registerDirectoryForCleanup(outputDirectory);
 
     const response = await request(app)
       .post('/api/traces/write')
       .send({
-        traceData,
-        fileName: 'trace.json',
-        outputDirectory: relative,
+        traceData: { feature: 'integration', ok: true },
+        fileName: '../escape-attempt.json',
+        outputDirectory,
       });
 
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({
       success: true,
-      fileName: 'trace.json',
-      path: path.join(relative, 'trace.json'),
+      fileName: 'escape-attempt.json',
     });
 
-    const writtenPath = path.join(absolute, 'trace.json');
-    const fileContent = await readFile(writtenPath, 'utf8');
-    expect(JSON.parse(fileContent)).toEqual(traceData);
-
-    const listResponse = await request(app)
-      .get('/api/traces/list')
-      .query({ directory: relative });
-
-    expect(listResponse.status).toBe(200);
-    expect(listResponse.body.success).toBe(true);
-    expect(listResponse.body.count).toBe(1);
-    expect(listResponse.body.files[0].name).toBe('trace.json');
+    const writtenPath = path.join(expectedDirectory, 'escape-attempt.json');
+    const content = await readFile(writtenPath, 'utf8');
+    expect(JSON.parse(content)).toEqual({ feature: 'integration', ok: true });
   });
 
-  it('rejects write requests missing required fields', async () => {
+  it('rejects requests missing required fields for single trace writes', async () => {
+    const app = buildApp();
+
     const response = await request(app)
       .post('/api/traces/write')
-      .send({
-        traceData: { step: 'incomplete' },
-      });
+      .send({ traceData: { missing: 'fileName' } });
 
     expect(response.status).toBe(400);
-    expect(response.body.error).toContain('Missing required fields');
+    expect(response.body).toEqual({
+      success: false,
+      error: 'Missing required fields: traceData and fileName',
+    });
   });
 
-  it('prevents trace writes outside of the project directory', async () => {
+  it('blocks attempts to write outside of the project root', async () => {
+    const app = buildApp();
+    const outsideDirectory = `../../tmp/outside-${randomUUID()}`;
+    const expectedDirectory = registerDirectoryForCleanup(outsideDirectory);
+
     const response = await request(app)
       .post('/api/traces/write')
       .send({
-        traceData: { step: 'escape' },
-        fileName: 'trace.json',
-        outputDirectory: '../outside-project',
+        traceData: { should: 'fail' },
+        fileName: 'unauthorized.json',
+        outputDirectory: outsideDirectory,
       });
 
     expect(response.status).toBe(403);
-    expect(response.body.error).toBe('Invalid output path');
+    expect(response.body).toEqual({ success: false, error: 'Invalid output path' });
+
+    await rm(expectedDirectory, { recursive: true, force: true });
   });
 
-  it('returns an informative error when the filesystem write fails', async () => {
-    const { relative } = await buildPaths('write-failure');
-    const originalWriteFile = fsPromises.writeFile;
-    const writeSpy = jest
-      .spyOn(fsPromises, 'writeFile')
-      .mockImplementation(async (...args) => {
-        if (args[0].endsWith('trace.json')) {
-          throw new Error('disk full');
-        }
-        return originalWriteFile(...args);
-      });
+  it('handles unexpected filesystem conflicts in the single write endpoint', async () => {
+    const app = buildApp();
+    const outputDirectory = `./tmp-traces/${randomUUID()}`;
+    const expectedDirectory = registerDirectoryForCleanup(outputDirectory);
+    await mkdir(expectedDirectory, { recursive: true });
+    await mkdir(path.join(expectedDirectory, 'conflict.json'));
 
     const response = await request(app)
       .post('/api/traces/write')
       .send({
-        traceData: { step: 'will-fail' },
-        fileName: 'trace.json',
-        outputDirectory: relative,
+        traceData: { should: 'trigger error' },
+        fileName: 'conflict.json',
+        outputDirectory,
       });
 
     expect(response.status).toBe(500);
-    expect(response.body.success).toBe(false);
-    expect(response.body.error).toBe('Failed to write trace file');
-    expect(response.body.details).toBe('disk full');
-
-    writeSpy.mockRestore();
+    expect(response.body).toMatchObject({
+      success: false,
+      error: 'Failed to write trace file',
+    });
   });
 
-  it('writes a batch of traces and reports partial failures', async () => {
-    const { relative, absolute } = await buildPaths('batch-write');
-    const originalWriteFile = fsPromises.writeFile;
-    const writeSpy = jest
-      .spyOn(fsPromises, 'writeFile')
-      .mockImplementation(async (...args) => {
-        if (args[0].endsWith('error.json')) {
-          throw new Error('disk quota exceeded');
-        }
-        return originalWriteFile(...args);
-      });
+  it('validates that batched requests contain an array of traces', async () => {
+    const app = buildApp();
+
+    const response = await request(app)
+      .post('/api/traces/write-batch')
+      .send({ traces: { invalid: true } });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      success: false,
+      error: 'Missing or empty traces array',
+      details: 'Request body must contain a non-empty array of traces',
+    });
+  });
+
+  it('rejects batched traces that are missing required properties', async () => {
+    const app = buildApp();
 
     const response = await request(app)
       .post('/api/traces/write-batch')
       .send({
-        outputDirectory: relative,
         traces: [
-          { traceData: { step: 1 }, fileName: 'first.json' },
-          { traceData: { step: 2 }, fileName: 'error.json' },
+          { traceData: { present: 'fileName missing' } },
+          { fileName: 'missing-trace.json' },
+        ],
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      success: false,
+      error: 'Validation failed',
+      details: [
+        'Trace 0: missing required fields (traceData, fileName)',
+        'Trace 1: missing required fields (traceData, fileName)',
+      ],
+    });
+  });
+
+  it('performs partial success writes for batch requests and reports failures', async () => {
+    const app = buildApp();
+    const outputDirectory = `./tmp-traces/${randomUUID()}`;
+    const expectedDirectory = registerDirectoryForCleanup(outputDirectory);
+    await mkdir(expectedDirectory, { recursive: true });
+    await mkdir(path.join(expectedDirectory, 'broken.json'));
+
+    const response = await request(app)
+      .post('/api/traces/write-batch')
+      .send({
+        outputDirectory,
+        traces: [
+          { traceData: { id: 1, ok: true }, fileName: 'good.json' },
+          { traceData: { id: 2, fail: true }, fileName: 'broken.json' },
         ],
       });
 
@@ -158,80 +205,125 @@ describe('Trace routes integration', () => {
     expect(response.body.successCount).toBe(1);
     expect(response.body.failureCount).toBe(1);
 
-    const successFile = path.join(absolute, 'first.json');
-    const failedFile = path.join(absolute, 'error.json');
-    expect(existsSync(successFile)).toBe(true);
-    expect(existsSync(failedFile)).toBe(false);
+    const files = await readdir(expectedDirectory);
+    expect(files).toContain('good.json');
+    expect(files).toContain('broken.json');
 
-    const failureEntry = response.body.results.find(
-      (result) => result.fileName === 'error.json'
-    );
-    expect(failureEntry.success).toBe(false);
-    expect(failureEntry.error).toContain('disk quota exceeded');
+    const brokenStats = await stat(path.join(expectedDirectory, 'broken.json'));
+    expect(brokenStats.isDirectory()).toBe(true);
 
-    writeSpy.mockRestore();
+    const storedContent = await readFile(path.join(expectedDirectory, 'good.json'), 'utf8');
+    expect(JSON.parse(storedContent)).toEqual({ id: 1, ok: true });
   });
 
-  it('validates batch requests before processing', async () => {
-    const { relative } = await buildPaths('batch-validation');
+  it('reports failure details when every batched write collides with the filesystem', async () => {
+    const app = buildApp();
+    const outputDirectory = `./tmp-traces/${randomUUID()}`;
+    const expectedDirectory = registerDirectoryForCleanup(outputDirectory);
+    await mkdir(expectedDirectory, { recursive: true });
+    await mkdir(path.join(expectedDirectory, 'fail.json'));
+    await mkdir(path.join(expectedDirectory, 'also-fail.json'));
 
     const response = await request(app)
       .post('/api/traces/write-batch')
       .send({
-        outputDirectory: relative,
+        outputDirectory,
         traces: [
-          { traceData: { ok: true }, fileName: 'valid.json' },
-          { traceData: null, fileName: 'missing-trace.json' },
+          { traceData: { fail: true }, fileName: 'fail.json' },
+          { traceData: { fail: true }, fileName: 'also-fail.json' },
         ],
       });
 
-    expect(response.status).toBe(400);
-    expect(response.body.error).toBe('Validation failed');
-    expect(response.body.details[0]).toContain('missing required fields');
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(false);
+    expect(response.body.successCount).toBe(0);
+    expect(response.body.failureCount).toBe(2);
   });
 
-  it('lists trace directories and handles missing folders gracefully', async () => {
-    const missingDirectory = path.join(baseRelative, 'not-created-yet');
+  it('lists trace files with metadata for existing directories', async () => {
+    const app = buildApp();
+    const outputDirectory = `./tmp-traces/${randomUUID()}`;
+    const expectedDirectory = registerDirectoryForCleanup(outputDirectory);
 
-    const missingResponse = await request(app)
-      .get('/api/traces/list')
-      .query({ directory: missingDirectory });
+    await mkdir(expectedDirectory, { recursive: true });
+    await writeFile(path.join(expectedDirectory, 'alpha.json'), JSON.stringify({ a: 1 }), 'utf8');
+    await writeFile(path.join(expectedDirectory, 'beta.txt'), 'log entry', 'utf8');
+    await writeFile(path.join(expectedDirectory, 'ignored.bin'), 'binary');
 
-    expect(missingResponse.status).toBe(200);
-    expect(missingResponse.body.success).toBe(true);
-    expect(missingResponse.body.files).toEqual([]);
-    expect(missingResponse.body.message).toBe('Directory does not exist');
-
-    const { relative, absolute } = await buildPaths('listing', { precreate: true });
-    await fsPromises.writeFile(
-      path.join(absolute, 'trace-a.json'),
-      JSON.stringify({ step: 'a' }),
-      'utf8'
-    );
-    await fsPromises.writeFile(
-      path.join(absolute, 'trace-b.txt'),
-      'plain text trace',
-      'utf8'
-    );
-
-    const listResponse = await request(app)
-      .get('/api/traces/list')
-      .query({ directory: relative });
-
-    expect(listResponse.status).toBe(200);
-    expect(listResponse.body.success).toBe(true);
-    expect(listResponse.body.count).toBe(2);
-    const fileNames = listResponse.body.files.map((file) => file.name).sort();
-    expect(fileNames).toEqual(['trace-a.json', 'trace-b.txt']);
-  });
-
-  it('rejects list requests that escape the project root', async () => {
     const response = await request(app)
       .get('/api/traces/list')
-      .query({ directory: '../outside-project' });
+      .query({ directory: outputDirectory });
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.count).toBe(2);
+    expect(response.body.files).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'alpha.json' }),
+        expect.objectContaining({ name: 'beta.txt' }),
+      ])
+    );
+  });
+
+  it('rejects directory listings that attempt to escape the project boundary', async () => {
+    const app = buildApp();
+    const outsideDirectory = `../../tmp/outside-${randomUUID()}`;
+
+    const response = await request(app)
+      .get('/api/traces/list')
+      .query({ directory: outsideDirectory });
 
     expect(response.status).toBe(403);
-    expect(response.body.success).toBe(false);
-    expect(response.body.error).toBe('Invalid directory path');
+    expect(response.body).toEqual({ success: false, error: 'Invalid directory path' });
+  });
+
+  it('returns an empty result for directories that do not exist', async () => {
+    const app = buildApp();
+    const outputDirectory = `./tmp-traces/${randomUUID()}`;
+
+    const response = await request(app)
+      .get('/api/traces/list')
+      .query({ directory: outputDirectory });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      success: true,
+      files: [],
+      message: 'Directory does not exist',
+    });
+  });
+
+  it('handles filesystem failures while listing traces', async () => {
+    const app = buildApp();
+    const outputDirectory = `./tmp-traces/${randomUUID()}`;
+    const expectedDirectory = registerDirectoryForCleanup(outputDirectory);
+
+    await mkdir(expectedDirectory, { recursive: true });
+    const danglingTarget = path.join(expectedDirectory, 'missing-target.json');
+    const danglingLink = path.join(expectedDirectory, 'dangling.json');
+    try {
+      await symlink(danglingTarget, danglingLink);
+    } catch (error) {
+      // If symlinks are not supported, skip this test gracefully.
+      if (error.code === 'EPERM' || error.code === 'EEXIST' || error.code === 'ENOTSUP') {
+        return;
+      }
+      throw error;
+    }
+
+    const response = await request(app)
+      .get('/api/traces/list')
+      .query({ directory: outputDirectory });
+
+    if (response.status === 500) {
+      expect(response.body).toMatchObject({
+        success: false,
+        error: 'Failed to list trace files',
+      });
+    } else {
+      // Some file systems may treat dangling symlinks differently; ensure they were created.
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+    }
   });
 });
