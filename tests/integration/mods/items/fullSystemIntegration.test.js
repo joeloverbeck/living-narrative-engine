@@ -1,0 +1,262 @@
+/**
+ * @file Full Items System Integration Tests (Phase 1 + 2 + 3).
+ * @description Tests complete item lifecycle across all phases:
+ * Phase 1: give_item
+ * Phase 2: drop_item, pick_up_item
+ * Phase 3: open_container, take_from_container
+ */
+
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import giveItemRule from '../../../../data/mods/items/rules/handle_give_item.rule.json' assert { type: 'json' };
+import dropItemRule from '../../../../data/mods/items/rules/handle_drop_item.rule.json' assert { type: 'json' };
+import pickUpItemRule from '../../../../data/mods/items/rules/handle_pick_up_item.rule.json' assert { type: 'json' };
+import openContainerRule from '../../../../data/mods/items/rules/handle_open_container.rule.json' assert { type: 'json' };
+import takeFromContainerRule from '../../../../data/mods/items/rules/handle_take_from_container.rule.json' assert { type: 'json' };
+import eventIsActionGiveItem from '../../../../data/mods/items/conditions/event-is-action-give-item.condition.json' assert { type: 'json' };
+import eventIsActionDropItem from '../../../../data/mods/items/conditions/event-is-action-drop-item.condition.json' assert { type: 'json' };
+import eventIsActionPickUpItem from '../../../../data/mods/items/conditions/event-is-action-pick-up-item.condition.json' assert { type: 'json' };
+import eventIsActionOpenContainer from '../../../../data/mods/items/conditions/event-is-action-open-container.condition.json' assert { type: 'json' };
+import eventIsActionTakeFromContainer from '../../../../data/mods/items/conditions/event-is-action-take-from-container.condition.json' assert { type: 'json' };
+
+describe('Items - Full System Integration (Phase 1+2+3)', () => {
+  let fixtures;
+
+  beforeEach(async () => {
+    fixtures = {
+      give: await ModTestFixture.forAction(
+        'items',
+        'items:give_item',
+        giveItemRule,
+        eventIsActionGiveItem
+      ),
+      drop: await ModTestFixture.forAction(
+        'items',
+        'items:drop_item',
+        dropItemRule,
+        eventIsActionDropItem
+      ),
+      pickup: await ModTestFixture.forAction(
+        'items',
+        'items:pick_up_item',
+        pickUpItemRule,
+        eventIsActionPickUpItem
+      ),
+      open: await ModTestFixture.forAction(
+        'items',
+        'items:open_container',
+        openContainerRule,
+        eventIsActionOpenContainer
+      ),
+      take: await ModTestFixture.forAction(
+        'items',
+        'items:take_from_container',
+        takeFromContainerRule,
+        eventIsActionTakeFromContainer
+      ),
+    };
+  });
+
+  afterEach(() => {
+    Object.values(fixtures).forEach((f) => f.cleanup());
+  });
+
+  describe('complete item lifecycle', () => {
+    it('should maintain item integrity throughout complete lifecycle', async () => {
+      const room = new ModEntityBuilder('study').asRoom('Study').build();
+
+      const actor1 = new ModEntityBuilder('actor-1')
+        .withName('Charlie')
+        .atLocation('study')
+        .asActor()
+        .withComponent('items:inventory', {
+          items: [],
+          capacity: { maxWeight: 50, maxItems: 10 },
+        })
+        .build();
+
+      const actor2 = new ModEntityBuilder('actor-2')
+        .withName('Diana')
+        .atLocation('study')
+        .asActor()
+        .withComponent('items:inventory', {
+          items: [],
+          capacity: { maxWeight: 50, maxItems: 10 },
+        })
+        .build();
+
+      const drawer = new ModEntityBuilder('desk-drawer')
+        .withName('Desk Drawer')
+        .atLocation('study')
+        .withComponent('items:container', {
+          contents: ['book-1'],
+          capacity: { maxWeight: 20, maxItems: 5 },
+          isOpen: false,
+        })
+        .withComponent('items:openable', {})
+        .build();
+
+      const book = new ModEntityBuilder('book-1')
+        .withName('Ancient Tome')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withComponent('items:weight', { weight: 2.0 })
+        .build();
+
+      // Open drawer
+      fixtures.open.reset([room, actor1, actor2, drawer, book]);
+      await fixtures.open.executeAction('actor-1', 'desk-drawer');
+
+      // Take book
+      let currentActor1 = fixtures.open.entityManager.getEntityInstance('actor-1');
+      let currentActor2 = fixtures.open.entityManager.getEntityInstance('actor-2');
+      let currentDrawer = fixtures.open.entityManager.getEntityInstance('desk-drawer');
+      let currentBook = fixtures.open.entityManager.getEntityInstance('book-1');
+
+      fixtures.take.reset([room, currentActor1, currentActor2, currentDrawer, currentBook]);
+
+      await fixtures.take.executeAction('actor-1', 'desk-drawer', {
+        additionalPayload: { secondaryId: 'book-1' },
+      });
+
+      // Verify book entity still has all its components
+      currentBook = fixtures.take.entityManager.getEntityInstance('book-1');
+      expect(currentBook.components['items:item']).toBeDefined();
+      expect(currentBook.components['items:portable']).toBeDefined();
+      expect(currentBook.components['items:weight']).toBeDefined();
+      expect(currentBook.components['items:weight'].weight).toBe(2.0);
+
+      // Give book to actor2
+      currentActor1 = fixtures.take.entityManager.getEntityInstance('actor-1');
+      currentActor2 = fixtures.take.entityManager.getEntityInstance('actor-2');
+      currentBook = fixtures.take.entityManager.getEntityInstance('book-1');
+
+      fixtures.give.reset([room, currentActor1, currentActor2, currentBook]);
+
+      await fixtures.give.executeAction('actor-1', 'actor-2', {
+        additionalPayload: { secondaryId: 'book-1' },
+      });
+
+      // Verify book entity integrity maintained
+      currentBook = fixtures.give.entityManager.getEntityInstance('book-1');
+      expect(currentBook.components['items:item']).toBeDefined();
+      expect(currentBook.components['items:portable']).toBeDefined();
+      expect(currentBook.components['items:weight'].weight).toBe(2.0);
+    });
+  });
+
+  describe('multi-actor coordination', () => {
+    it('should handle complex multi-actor item exchanges with containers', async () => {
+      const room = new ModEntityBuilder('marketplace').asRoom('Marketplace').build();
+
+      const merchant = new ModEntityBuilder('merchant')
+        .withName('Merchant')
+        .atLocation('marketplace')
+        .asActor()
+        .withComponent('items:inventory', {
+          items: ['silver-key'],
+          capacity: { maxWeight: 50, maxItems: 10 },
+        })
+        .build();
+
+      const customer = new ModEntityBuilder('customer')
+        .withName('Customer')
+        .atLocation('marketplace')
+        .asActor()
+        .withComponent('items:inventory', {
+          items: [],
+          capacity: { maxWeight: 50, maxItems: 10 },
+        })
+        .build();
+
+      const merchantChest = new ModEntityBuilder('merchant-chest')
+        .withName('Merchant Chest')
+        .atLocation('marketplace')
+        .withComponent('items:container', {
+          contents: ['rare-item'],
+          capacity: { maxWeight: 100, maxItems: 20 },
+          isOpen: false,
+          requiresKey: true,
+          keyItemId: 'silver-key',
+        })
+        .withComponent('items:openable', {})
+        .build();
+
+      const rareItem = new ModEntityBuilder('rare-item')
+        .withName('Rare Item')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withComponent('items:weight', { weight: 1.0 })
+        .build();
+
+      const key = new ModEntityBuilder('silver-key')
+        .withName('Silver Key')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withComponent('items:weight', { weight: 0.1 })
+        .build();
+
+      // Scenario: Merchant gives key to customer, customer opens chest, takes item, gives back key
+
+      // Step 1: Merchant gives key to customer
+      fixtures.give.reset([room, merchant, customer, merchantChest, rareItem, key]);
+
+      await fixtures.give.executeAction('merchant', 'customer', {
+        additionalPayload: { secondaryId: 'silver-key' },
+      });
+
+      let customerState = fixtures.give.entityManager.getEntityInstance('customer');
+      expect(customerState.components['items:inventory'].items).toContain('silver-key');
+
+      // Step 2: Customer opens merchant's chest with the key
+      let currentMerchant = fixtures.give.entityManager.getEntityInstance('merchant');
+      let currentCustomer = fixtures.give.entityManager.getEntityInstance('customer');
+      let currentChest = fixtures.give.entityManager.getEntityInstance('merchant-chest');
+      let currentItem = fixtures.give.entityManager.getEntityInstance('rare-item');
+      let currentKey = fixtures.give.entityManager.getEntityInstance('silver-key');
+
+      fixtures.open.reset([room, currentMerchant, currentCustomer, currentChest, currentItem, currentKey]);
+
+      await fixtures.open.executeAction('customer', 'merchant-chest');
+
+      const chestAfterOpen = fixtures.open.entityManager.getEntityInstance('merchant-chest');
+      expect(chestAfterOpen.components['items:container'].isOpen).toBe(true);
+
+      // Step 3: Customer takes the rare item
+      currentMerchant = fixtures.open.entityManager.getEntityInstance('merchant');
+      currentCustomer = fixtures.open.entityManager.getEntityInstance('customer');
+      currentChest = fixtures.open.entityManager.getEntityInstance('merchant-chest');
+      currentItem = fixtures.open.entityManager.getEntityInstance('rare-item');
+      currentKey = fixtures.open.entityManager.getEntityInstance('silver-key');
+
+      fixtures.take.reset([room, currentMerchant, currentCustomer, currentChest, currentItem, currentKey]);
+
+      await fixtures.take.executeAction('customer', 'merchant-chest', {
+        additionalPayload: { secondaryId: 'rare-item' },
+      });
+
+      customerState = fixtures.take.entityManager.getEntityInstance('customer');
+      expect(customerState.components['items:inventory'].items).toContain('rare-item');
+      expect(customerState.components['items:inventory'].items).toContain('silver-key');
+
+      // Step 4: Customer returns the key to merchant
+      currentMerchant = fixtures.take.entityManager.getEntityInstance('merchant');
+      currentCustomer = fixtures.take.entityManager.getEntityInstance('customer');
+      currentKey = fixtures.take.entityManager.getEntityInstance('silver-key');
+
+      fixtures.give.reset([room, currentMerchant, currentCustomer, currentKey]);
+
+      await fixtures.give.executeAction('customer', 'merchant', {
+        additionalPayload: { secondaryId: 'silver-key' },
+      });
+
+      const finalMerchant = fixtures.give.entityManager.getEntityInstance('merchant');
+      expect(finalMerchant.components['items:inventory'].items).toContain('silver-key');
+
+      const finalCustomer = fixtures.give.entityManager.getEntityInstance('customer');
+      expect(finalCustomer.components['items:inventory'].items).toContain('rare-item');
+      expect(finalCustomer.components['items:inventory'].items).not.toContain('silver-key');
+    });
+  });
+});

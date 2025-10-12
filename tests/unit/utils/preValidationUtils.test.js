@@ -105,6 +105,7 @@ describe('preValidationUtils', () => {
           'PICK_UP_ITEM_FROM_LOCATION',
           'VALIDATE_INVENTORY_CAPACITY',
           'OPEN_CONTAINER',
+          'TAKE_FROM_CONTAINER',
         ];
 
         itemOperationTypes.forEach((type) => {

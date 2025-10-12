@@ -50,12 +50,16 @@ export function populateParticipant(
   entityManager,
   logger
 ) {
+  logger.debug(`🔧 [populateParticipant] Populating ${fieldName} with entityId: ${entityId}`);
+
   if (
     entityId &&
     (typeof entityId === 'string' || typeof entityId === 'number')
   ) {
     try {
       const entity = entityManager.getEntityInstance(entityId);
+      logger.debug(`🔧 [populateParticipant] getEntityInstance(${entityId}) returned: ${entity ? 'entity object' : 'null/undefined'}`);
+
       if (entity) {
         logger.debug(
           `Found ${fieldName} entity [${entityId}]. Creating context entry.`
@@ -65,6 +69,7 @@ export function populateParticipant(
           entityManager,
           logger
         );
+        logger.debug(`🔧 [populateParticipant] Context entry created. evaluationContext.${fieldName}.id = ${evaluationContext[fieldName].id}`);
       } else {
         logger.warn(
           `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} entity not found for ID [${entityId}]. Setting ${fieldName} context to null.`
@@ -188,6 +193,8 @@ export function createNestedExecutionContext(
   logger,
   serviceSetup
 ) {
+  logger.debug(`🔧 [createNestedExecutionContext] Starting with actorId: ${actorId}, targetId: ${targetId}`);
+
   const ctx = createJsonLogicContext(
     event,
     actorId,
@@ -197,6 +204,8 @@ export function createNestedExecutionContext(
     serviceSetup
   );
 
+  logger.debug(`🔧 [createNestedExecutionContext] JsonLogicContext created. ctx.actor: ${ctx.actor ? ctx.actor.id : 'null'}, ctx.target: ${ctx.target ? ctx.target.id : 'null'}`);
+
   const executionContext = {
     event,
     actor: ctx.actor,
@@ -204,6 +213,10 @@ export function createNestedExecutionContext(
     logger,
     evaluationContext: ctx,
   };
+
+  logger.debug(`🔧 [createNestedExecutionContext] ExecutionContext assembled:`);
+  logger.debug(`  - executionContext.actor: ${executionContext.actor ? executionContext.actor.id : 'null'}`);
+  logger.debug(`  - executionContext.evaluationContext.actor: ${executionContext.evaluationContext.actor ? executionContext.evaluationContext.actor.id : 'null'}`);
 
   // Add trace if it was passed (trace is passed as serviceSetup parameter)
   // Check if serviceSetup is a trace object (has trace-specific methods)

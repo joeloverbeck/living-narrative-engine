@@ -2,7 +2,6 @@
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_take_from_container",
   "comment": "Handles take_from_container action with capacity validation",
-  "priority": 100,
   "event_type": "core:attempt_action",
   "condition": {
     "condition_ref": "items:event-is-action-take-from-container"
