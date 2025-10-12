@@ -229,6 +229,34 @@ describe('TargetRequiredComponentsValidator', () => {
       });
     });
 
+    it('should return invalid when any candidate in target array lacks required component', () => {
+      const actionDef = {
+        id: 'test:action',
+        required_components: {
+          primary: ['positioning:closeness'],
+        },
+      };
+      const targetEntities = {
+        primary: [
+          {
+            id: 'npc1',
+            components: { 'positioning:closeness': {} },
+          },
+          {
+            id: 'npc2',
+            components: {},
+          },
+        ],
+      };
+
+      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+
+      expect(result).toEqual({
+        valid: false,
+        reason: 'Target (primary) must have component: positioning:closeness',
+      });
+    });
+
     it('should return invalid when target entity has no components field', () => {
       const actionDef = {
         id: 'test:action',

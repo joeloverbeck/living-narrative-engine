@@ -119,38 +119,47 @@ class TargetRequiredComponentsValidator {
       };
     }
 
-    let targetData = targetEntities[role];
+    const targetCandidates = Array.isArray(targetEntities[role])
+      ? targetEntities[role]
+      : [targetEntities[role]];
 
-    // Handle array of targets - validate first target only
-    // (Pipeline creates separate action instances for each target)
-    if (Array.isArray(targetData)) {
-      if (targetData.length === 0) {
+    if (targetCandidates.length === 0) {
+      this.#logger.debug(
+        `Empty ${role} target array for required components validation`
+      );
+      return {
+        valid: false,
+        reason: `No ${role} target available for validation`,
+      };
+    }
+
+    for (const candidate of targetCandidates) {
+      if (!candidate) {
         this.#logger.debug(
-          `Empty ${role} target array for required components validation`
+          `Invalid ${role} target candidate encountered during required components validation`
         );
         return {
           valid: false,
           reason: `No ${role} target available for validation`,
         };
       }
-      targetData = targetData[0];
-    }
 
-    // Extract the actual entity - it may be nested under 'entity' property
-    // or it may be the entity object directly
-    const targetEntity = targetData.entity || targetData;
+      // Extract the actual entity - it may be nested under 'entity' property
+      // or it may be the entity object directly
+      const targetEntity = candidate.entity || candidate;
 
-    // Check each required component
-    for (const componentId of requiredComponents) {
-      if (!targetEntity.components || !targetEntity.components[componentId]) {
-        const entityId = targetEntity.id || 'unknown';
-        this.#logger.debug(
-          `Target entity ${entityId} missing required component: ${componentId}`
-        );
-        return {
-          valid: false,
-          reason: `Target (${role}) must have component: ${componentId}`,
-        };
+      // Check each required component for this candidate
+      for (const componentId of requiredComponents) {
+        if (!targetEntity.components || !targetEntity.components[componentId]) {
+          const entityId = targetEntity.id || 'unknown';
+          this.#logger.debug(
+            `Target entity ${entityId} missing required component: ${componentId}`
+          );
+          return {
+            valid: false,
+            reason: `Target (${role}) must have component: ${componentId}`,
+          };
+        }
       }
     }
 

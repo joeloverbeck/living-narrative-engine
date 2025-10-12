@@ -261,6 +261,32 @@ describe('TargetComponentValidator', () => {
         expect(result.reason).toContain("tertiary target 'tertiary-entity' has forbidden component");
       });
 
+      it('should reject arrays when any candidate has forbidden component', () => {
+        const actionDef = {
+          id: 'test-action',
+          forbidden_components: {
+            primary: ['core:forbidden']
+          }
+        };
+
+        const targetEntities = {
+          primary: [
+            { id: 'safe-entity' },
+            { id: 'forbidden-entity' }
+          ]
+        };
+
+        mockEntityManager.getAllComponentTypesForEntity
+          .mockReturnValueOnce(['core:allowed'])
+          .mockReturnValueOnce(['core:forbidden']);
+
+        const result = validator.validateTargetComponents(actionDef, targetEntities);
+
+        expect(result.valid).toBe(false);
+        expect(result.reason).toContain("primary target 'forbidden-entity' has forbidden component 'core:forbidden'");
+        expect(mockEntityManager.getAllComponentTypesForEntity).toHaveBeenCalledTimes(2);
+      });
+
       it('should short-circuit on first validation failure', () => {
         const actionDef = {
           id: 'test-action',
