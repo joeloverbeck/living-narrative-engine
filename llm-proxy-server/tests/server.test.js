@@ -19,6 +19,7 @@ let operational;
 let initializationErrorDetails;
 let handleLlmRequest;
 let testManager;
+let metricsServiceInstance;
 
 beforeEach(() => {
   jest.resetModules();
@@ -142,6 +143,26 @@ beforeEach(() => {
   jest.doMock('../src/services/httpAgentService.js', () => ({
     __esModule: true,
     default: HttpAgentService,
+  }));
+
+  metricsServiceInstance = {
+    isEnabled: jest.fn(() => true),
+    getMetrics: jest.fn().mockResolvedValue('test-metrics'),
+    recordHttpRequest: jest.fn(),
+    recordLlmRequest: jest.fn(),
+    recordCacheOperation: jest.fn(),
+    recordError: jest.fn(),
+    getStats: jest.fn(() => ({
+      totalMetrics: 0,
+      customMetrics: 0,
+      defaultMetrics: 0,
+    })),
+    clear: jest.fn(),
+  };
+  const MetricsService = jest.fn(() => metricsServiceInstance);
+  jest.doMock('../src/services/metricsService.js', () => ({
+    __esModule: true,
+    default: MetricsService,
   }));
 
   const ApiKeyService = jest.fn();
@@ -282,5 +303,28 @@ describe('server initialization', () => {
       '0.0.0.0',
       expect.any(Function)
     );
+  });
+
+  test('metrics endpoint responds with Prometheus formatted payload', async () => {
+    await loadServer();
+    const metricsCall = app.get.mock.calls.find((c) => c[0] === '/metrics');
+    expect(metricsCall).toBeDefined();
+    const handler = metricsCall[1];
+
+    const res = {
+      set: jest.fn().mockReturnThis(),
+      status: jest.fn().mockReturnThis(),
+      send: jest.fn(),
+    };
+
+    await handler({}, res);
+
+    expect(metricsServiceInstance.getMetrics).toHaveBeenCalledTimes(1);
+    expect(res.set).toHaveBeenCalledWith(
+      'Content-Type',
+      'text/plain; version=0.0.4; charset=utf-8'
+    );
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.send).toHaveBeenCalledWith('test-metrics');
   });
 });
