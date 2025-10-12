@@ -162,52 +162,57 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
       );
     });
 
-    test('1.10 should return undefined if `context.` path is not found and log warning', () => {
+    test('1.10 should return undefined if `context.` path is not found and log debug message', () => {
       const context = createMockExecutionContext();
       const input = '{context.nonExistentVar}';
       expect(resolvePlaceholders(input, context, mockLogger)).toBeUndefined();
-      expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'PlaceholderResolver: Placeholder "{context.nonExistentVar}" not found in provided data sources. Replacing with empty string.'
       );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
-    test('1.11 should return undefined if `event.` path is not found and log warning', () => {
+    test('1.11 should return undefined if `event.` path is not found and log debug message', () => {
       const context = createMockExecutionContext();
       const input = '{event.nonExistentKey}';
       expect(resolvePlaceholders(input, context, mockLogger)).toBeUndefined();
-      expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'PlaceholderResolver: Placeholder "{event.nonExistentKey}" not found in provided data sources. Replacing with empty string.'
       );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
-    test('1.12 should return undefined if `context.` path used but `evaluationContext.context` is missing, and log warning', () => {
+    test('1.12 should return undefined if `context.` path used but `evaluationContext.context` is missing, and log debug message', () => {
       const context = createMockExecutionContext();
       delete context.evaluationContext.context;
       const input = '{context.varA}';
 
       expect(resolvePlaceholders(input, context, mockLogger)).toBeUndefined();
-      expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+      expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
-    test('1.13 should return undefined if `context.` path used but `evaluationContext` is missing, and log warning', () => {
+    test('1.13 should return undefined if `context.` path used but `evaluationContext` is missing, and log debug message', () => {
       const context = createMockExecutionContext();
       delete context.evaluationContext;
       const input = '{context.varA}';
 
       expect(resolvePlaceholders(input, context, mockLogger)).toBeUndefined();
-      expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+      expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
-    test('1.14 should return undefined if executionContext itself is not an object, and log warning', () => {
+    test('1.14 should return undefined if executionContext itself is not an object, and log debug message', () => {
       const input = '{context.varA}';
       expect(resolvePlaceholders(input, null, mockLogger)).toBeUndefined();
-      expect(mockLogger.warn.mock.calls).toEqual(
+      expect(mockLogger.debug.mock.calls).toEqual(
         expect.arrayContaining([
           [
             'PlaceholderResolver: Placeholder "{context.varA}" not found in provided data sources. Replacing with empty string.',
           ],
         ])
       );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     test('1.15 should handle placeholder paths with leading/trailing spaces inside braces', () => {
@@ -281,24 +286,23 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
       expect(resolvePlaceholders(input, context, mockLogger)).toBe(
         'Found: valueA, Missing: , Event: mockEvent.'
       );
-      expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'PlaceholderResolver: Placeholder "{context.nonExistent}" not found in provided data sources. Replacing with empty string.'
       );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
-    test('2.7 should handle embedded `context.` path when `evaluationContext.context` is missing, and log warning', () => {
+    test('2.7 should handle embedded `context.` path when `evaluationContext.context` is missing, and log debug message', () => {
       const context = createMockExecutionContext();
       delete context.evaluationContext.context;
       const input = 'Value: {context.varA}.';
-      const placeholderSyntaxInLog = '{context.varA}'; // The syntax part of the log
-      const fullLogPathForEmbedded = `${placeholderSyntaxInLog} (within string)`;
-
       expect(resolvePlaceholders(input, context, mockLogger)).toBe('Value: .');
 
-      expect(mockLogger.warn).toHaveBeenCalledTimes(1);
-      expect(mockLogger.warn.mock.calls[0][0]).toBe(
+      expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+      expect(mockLogger.debug.mock.calls[0][0]).toBe(
         'PlaceholderResolver: Placeholder "{context.varA}" not found in provided data sources. Replacing with empty string.'
       );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     test('2.8 should not replace anything if no placeholders are present', () => {

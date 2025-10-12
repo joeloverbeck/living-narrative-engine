@@ -253,7 +253,7 @@ describe('OperationInterpreter', () => {
   /* ────────────────────────────────────────────────────────────────────────
      🔧  Updated – behaviour for unresolved full-string placeholders
      ─────────────────────────────────────────────────────────────────────── */
-  test('execute should warn and call handler with parameters where an unresolved full-string placeholder becomes undefined', () => {
+  test('execute should log debug and call handler with parameters where an unresolved full-string placeholder becomes undefined', () => {
     mockRegistry.getHandler.mockReturnValue(mockLogHandler);
 
     expect(() =>
@@ -266,7 +266,7 @@ describe('OperationInterpreter', () => {
     const [actualParams] = mockLogHandler.mock.calls[0];
     expect(actualParams).toEqual({ message: undefined });
 
-    expect(mockLogger.warn).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       'OperationInterpreter: PlaceholderResolver: Placeholder "{invalid.path.that.does.not.exist}" not found in provided data sources. Replacing with empty string.'
     );
     expect(mockLogger.error).not.toHaveBeenCalledWith(
