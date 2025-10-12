@@ -185,6 +185,25 @@ describe('errorFormatter', () => {
       );
       expect(result.details.context).toBe('important');
     });
+
+    test('should default details to empty object when not provided', () => {
+      process.env.NODE_ENV = 'development';
+
+      const result = createSecureErrorDetails(
+        'Simple failure',
+        'simple_stage',
+        undefined,
+        new Error('Root cause failure')
+      );
+
+      expect(result).toEqual({
+        message: 'Simple failure',
+        stage: 'simple_stage',
+        details: {
+          originalErrorMessage: 'Root cause failure',
+        },
+      });
+    });
   });
 
   describe('sanitizeErrorForClient - additional coverage', () => {
