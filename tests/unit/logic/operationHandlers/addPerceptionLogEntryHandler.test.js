@@ -289,6 +289,75 @@ describe('AddPerceptionLogEntryHandler', () => {
         )
       );
     });
+
+    test('restricts updates to explicit recipient list when array provided', async () => {
+      const entry = makeEntry('targeted-array');
+      const targeted = [NPC2];
+
+      em.hasComponent.mockImplementation(
+        (id, comp) => comp === PERCEPTION_LOG_COMPONENT_ID && id === NPC2
+      );
+      em.getComponentData.mockReturnValue({ maxEntries: 5, logEntries: [] });
+      em.addComponent.mockResolvedValue(true);
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        recipient_ids: targeted,
+      });
+
+      expect(em.getEntitiesInLocation).not.toHaveBeenCalled();
+      expect(em.hasComponent).toHaveBeenCalledTimes(1);
+      expect(em.hasComponent).toHaveBeenCalledWith(
+        NPC2,
+        PERCEPTION_LOG_COMPONENT_ID
+      );
+      expect(em.addComponent).toHaveBeenCalledTimes(1);
+      expect(em.addComponent).toHaveBeenCalledWith(
+        NPC2,
+        PERCEPTION_LOG_COMPONENT_ID,
+        { maxEntries: 5, logEntries: [entry] }
+      );
+      expect(log.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'ADD_PERCEPTION_LOG_ENTRY: wrote entry to 1/1 perceivers (targeted)'
+        )
+      );
+    });
+
+    test('accepts single recipient strings by normalising to targeted list', async () => {
+      const entry = makeEntry('targeted-string');
+
+      em.hasComponent.mockImplementation(
+        (id, comp) => comp === PERCEPTION_LOG_COMPONENT_ID && id === NPC1
+      );
+      em.getComponentData.mockReturnValue({ maxEntries: 3, logEntries: [] });
+      em.addComponent.mockResolvedValue(true);
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        recipient_ids: `  ${NPC1}  `,
+      });
+
+      expect(em.getEntitiesInLocation).not.toHaveBeenCalled();
+      expect(em.hasComponent).toHaveBeenCalledTimes(1);
+      expect(em.hasComponent).toHaveBeenCalledWith(
+        NPC1,
+        PERCEPTION_LOG_COMPONENT_ID
+      );
+      expect(em.addComponent).toHaveBeenCalledTimes(1);
+      expect(em.addComponent).toHaveBeenCalledWith(
+        NPC1,
+        PERCEPTION_LOG_COMPONENT_ID,
+        { maxEntries: 3, logEntries: [entry] }
+      );
+      expect(log.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'ADD_PERCEPTION_LOG_ENTRY: wrote entry to 1/1 perceivers (targeted)'
+        )
+      );
+    });
   });
 
   // ── Log size & trimming edge-cases ─────────────────────────────────────────
