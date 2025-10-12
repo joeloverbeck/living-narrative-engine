@@ -1,5 +1,6 @@
 /**
  * @file Integration tests for LoggerConfigLoader with real fetchWithRetry behavior.
+ * @jest-environment node
  */
 import {
   describe,

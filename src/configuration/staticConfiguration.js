@@ -49,6 +49,7 @@ const OPERATION_SCHEMA_FILES = [
   'resolveDirection.schema.json',
   'setVariable.schema.json',
   'systemMoveEntity.schema.json',
+  'takeFromContainer.schema.json',
   'transferItem.schema.json',
   'unequipClothing.schema.json',
   'unlockMouthEngagement.schema.json',
