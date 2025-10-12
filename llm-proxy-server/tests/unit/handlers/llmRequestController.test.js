@@ -632,6 +632,81 @@ describe('LlmRequestController', () => {
       expect(sendProxyError).not.toHaveBeenCalled();
     });
 
+    test('includes response commitment metadata when salvage is required', async () => {
+      const salvageService = { salvageResponse: jest.fn() };
+      const controllerWithSalvage = new LlmRequestController(
+        logger,
+        llmConfigService,
+        apiKeyService,
+        {
+          forwardRequest: jest.fn(() => ({
+            success: true,
+            data: { payload: true },
+            statusCode: 206,
+            contentTypeIfSuccess: 'application/json',
+          })),
+        },
+        salvageService
+      );
+
+      res.commitResponse.mockReturnValue(false);
+      res.isResponseCommitted.mockReturnValue(true);
+
+      await controllerWithSalvage.handleLlmRequest(req, res);
+
+      expect(res.isResponseCommitted).toHaveBeenCalled();
+      const salvageWarnCall = logger.warn.mock.calls.find((call) =>
+        call[0].includes('Successful LLM response could not be sent')
+      );
+      expect(salvageWarnCall).toBeDefined();
+      expect(salvageWarnCall[1]).toMatchObject({
+        responseCommitted: true,
+        headersSent: false,
+      });
+      expect(salvageService.salvageResponse).toHaveBeenCalledWith(
+        req.requestId,
+        req.body.llmId,
+        req.body.targetPayload,
+        { payload: true },
+        206
+      );
+    });
+
+    test('falls back to false when response commitment helper is unavailable', async () => {
+      const salvageService = { salvageResponse: jest.fn() };
+      const controllerWithSalvage = new LlmRequestController(
+        logger,
+        llmConfigService,
+        apiKeyService,
+        {
+          forwardRequest: jest.fn(() => ({
+            success: true,
+            data: { answer: 42 },
+            statusCode: 208,
+          })),
+        },
+        salvageService
+      );
+
+      res.commitResponse.mockReturnValue(false);
+      delete res.isResponseCommitted;
+
+      await controllerWithSalvage.handleLlmRequest(req, res);
+
+      const salvageWarnCall = logger.warn.mock.calls.find((call) =>
+        call[0].includes('Successful LLM response could not be sent')
+      );
+      expect(salvageWarnCall).toBeDefined();
+      expect(salvageWarnCall[1]).toMatchObject({ responseCommitted: false });
+      expect(salvageService.salvageResponse).toHaveBeenCalledWith(
+        req.requestId,
+        req.body.llmId,
+        req.body.targetPayload,
+        { answer: 42 },
+        208
+      );
+    });
+
     test('logs inability to send error response when headers already sent during exception', async () => {
       const error = new Error('boom');
       const controllerWithThrowingService = new LlmRequestController(
