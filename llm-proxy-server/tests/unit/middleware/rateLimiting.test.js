@@ -275,6 +275,17 @@ describe('Rate Limiting Middleware - Comprehensive Tests', () => {
       expect(rateLimiter.generatedKey).toBe('ip:203.0.113.75');
     });
 
+    test('ignores blank entries in proxy headers before falling back', () => {
+      req.headers['x-forwarded-for'] = '   , 203.0.113.90';
+      req.headers['x-real-ip'] = '203.0.113.90';
+      req.ip = '203.0.113.1';
+
+      const rateLimiter = createApiRateLimiter();
+      rateLimiter(req, res, next);
+
+      expect(rateLimiter.generatedKey).toBe('ip:203.0.113.90');
+    });
+
     test('tests all proxy header fallbacks in order', () => {
       req.headers['x-forwarded-for'] = '192.168.1.1'; // Private, should be rejected
       req.headers['x-real-ip'] = '10.0.0.1'; // Private, should be rejected
@@ -337,6 +348,13 @@ describe('Rate Limiting Middleware - Comprehensive Tests', () => {
       rateLimiter(req, res, next);
 
       expect(rateLimiter.generatedKey).toBe('global:unknown');
+    });
+
+    test('returns global key when request object is not provided', () => {
+      const rateLimiter = createApiRateLimiter();
+      const generatedKey = rateLimiter.config.keyGenerator(undefined);
+
+      expect(generatedKey).toBe('global:unknown');
     });
   });
 
