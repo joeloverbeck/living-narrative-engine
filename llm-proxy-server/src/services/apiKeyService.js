@@ -454,7 +454,9 @@ export class ApiKeyService {
             finalErrorDetails?.details?.originalErrorMessage,
         }
       );
-    } else if (!finalErrorDetails) {
+    }
+
+    if (!finalErrorDetails) {
       // Fallback for any unhandled case where key is still null but no specific error was set.
       // This case indicates a logic flaw if reached.
       this.#logger.error(
