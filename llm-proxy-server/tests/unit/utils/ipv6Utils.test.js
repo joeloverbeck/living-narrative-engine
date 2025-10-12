@@ -3,7 +3,8 @@
  * @description Comprehensive test coverage for IPv6 validation edge cases
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import ipaddr from 'ipaddr.js';
 import {
   validateIPv6Address,
   isIPv6AddressSafeForSSRF,
@@ -620,6 +621,58 @@ describe('IPv6 Validation Utilities', () => {
         // Should complete within reasonable time (< 100ms)
         expect(endTime - startTime).toBeLessThan(100);
       });
+    });
+  });
+
+  describe('Additional edge coverage scenarios', () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should reject addresses that become empty after cleaning', () => {
+      const result = validateIPv6Address(' [  ] ');
+
+      expect(result.isValid).toBe(false);
+      expect(result.details.reason).toContain('empty after cleaning');
+    });
+
+    it('should treat IPv4-mapped addresses with unparsable IPv4 segments as reserved', () => {
+      jest.spyOn(ipaddr, 'isValid').mockReturnValue(true);
+      jest.spyOn(ipaddr.IPv6, 'parse').mockImplementation(() => ({
+        range: () => 'ipv4Mapped',
+        parts: [0x2001, 0, 0, 0, 0, 0, 0, 1],
+        toString: () => '::ffff:0:1',
+        toNormalizedString: () => '::ffff:0:1',
+        isIPv4MappedAddress: () => true,
+        toIPv4Address: () => {
+          throw new Error('boom');
+        },
+      }));
+
+      const result = validateIPv6Address('::ffff:0:1');
+
+      expect(result.isValid).toBe(true);
+      expect(result.isReserved).toBe(true);
+      expect(result.type).toBe('reserved');
+      expect(result.range).toBe('::ffff:0:0/96 (IPv4-mapped)');
+    });
+
+    it('should fallback to reserved classification for unknown ranges', () => {
+      jest.spyOn(ipaddr, 'isValid').mockReturnValue(true);
+      jest.spyOn(ipaddr.IPv6, 'parse').mockImplementation(() => ({
+        range: () => 'mysteryRange',
+        parts: [0x1234, 0, 0, 0, 0, 0, 0, 1],
+        toString: () => '1234::1',
+        toNormalizedString: () => '1234::1',
+        isIPv4MappedAddress: () => false,
+      }));
+
+      const result = validateIPv6Address('1234::1');
+
+      expect(result.isValid).toBe(true);
+      expect(result.isReserved).toBe(true);
+      expect(result.type).toBe('reserved');
+      expect(result.range).toBe('mysteryRange');
     });
   });
 });
