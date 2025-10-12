@@ -31,6 +31,7 @@ describe('CacheService', () => {
     if (cacheService && cacheService.cleanup) {
       cacheService.cleanup();
     }
+    jest.useRealTimers();
   });
 
   describe('constructor', () => {
@@ -281,6 +282,62 @@ describe('CacheService', () => {
       cacheService.set('post:1', 'value1');
       const count = cacheService.invalidatePattern(/^user:/);
       expect(count).toBe(0);
+    });
+  });
+
+  describe('auto cleanup operations', () => {
+    it('should remove expired entries during auto cleanup and update statistics', () => {
+      jest.useFakeTimers();
+
+      // Replace the default service with one that has auto cleanup enabled
+      cacheService.cleanup();
+      cacheService = new CacheService(mockLogger, {
+        maxSize: 5,
+        defaultTtl: 50,
+        enableAutoCleanup: true,
+        cleanupIntervalMs: 10,
+      });
+
+      cacheService.set('short-lived', 'value', 30);
+      cacheService.set('long-lived', 'value', 1000);
+
+      // Focus on auto cleanup log output and skip initialization chatter
+      mockLogger.debug.mockClear();
+
+      // Advance timers so the cleanup interval runs multiple times
+      jest.advanceTimersByTime(25); // two passes, entry not yet expired
+      jest.advanceTimersByTime(20); // pushes beyond TTL, triggers cleanup
+
+      const stats = cacheService.getStats();
+      expect(stats.expirations).toBeGreaterThanOrEqual(1);
+      expect(stats.autoCleanups).toBeGreaterThanOrEqual(1);
+
+      const cleanupLog = mockLogger.debug.mock.calls.find(
+        ([message]) =>
+          typeof message === 'string' &&
+          message.includes('CacheService: Auto cleanup removed')
+      );
+      expect(cleanupLog).toBeDefined();
+      expect(cleanupLog[0]).toMatch(/Auto cleanup removed \d+ expired entries/);
+      expect(cacheService.has('short-lived')).toBe(false);
+      expect(cacheService.has('long-lived')).toBe(true);
+
+      cacheService.cleanup();
+      jest.useRealTimers();
+    });
+  });
+
+  describe('memory estimation fallbacks', () => {
+    it('should use default size when cache entry cannot be serialized', () => {
+      const circularValue = {};
+      circularValue.self = circularValue;
+
+      cacheService.set('circular', circularValue);
+
+      const memoryInfo = cacheService.getMemoryInfo();
+      expect(memoryInfo.currentBytes).toBe(512);
+      expect(memoryInfo.averageEntrySize).toBe(512);
+      expect(cacheService.get('circular')).toBe(circularValue);
     });
   });
 
