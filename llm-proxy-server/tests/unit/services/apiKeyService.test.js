@@ -140,6 +140,47 @@ describe('ApiKeyService', () => {
         source: "file 'api.txt'",
       });
     });
+
+    test('continues gracefully when error details helpers return null', async () => {
+      const originalCreateErrorDetails =
+        service._createErrorDetails.bind(service);
+
+      const createErrorDetailsSpy = jest
+        .spyOn(service, '_createErrorDetails')
+        .mockImplementation((...args) => {
+          originalCreateErrorDetails(...args);
+          return null;
+        });
+
+      const fileReadSpy = jest
+        .spyOn(service, '_readApiKeyFromFile')
+        .mockResolvedValue({ key: null, error: null });
+
+      const result = await service.getApiKey(
+        {
+          apiType: 'openai',
+          apiKeyEnvVar: 'MISSING_KEY',
+          apiKeyFileName: 'proxy.key',
+        },
+        'llm-unexpected'
+      );
+
+      expect(fileReadSpy).toHaveBeenCalledWith(
+        'proxy.key',
+        '/root',
+        'llm-unexpected'
+      );
+      expect(logger.error).not.toHaveBeenCalled();
+      expect(createErrorDetailsSpy).toHaveBeenCalledTimes(2);
+      expect(createErrorDetailsSpy.mock.calls[1][1]).toBe(
+        'api_key_all_sources_failed'
+      );
+      expect(result).toEqual({
+        apiKey: null,
+        errorDetails: null,
+        source: 'N/A',
+      });
+    });
   });
 
   describe('Cache management utilities', () => {
