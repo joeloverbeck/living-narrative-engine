@@ -170,14 +170,71 @@ describe('ApiKeyService', () => {
         '/root',
         'llm-unexpected'
       );
-      expect(logger.error).not.toHaveBeenCalled();
-      expect(createErrorDetailsSpy).toHaveBeenCalledTimes(2);
+      expect(logger.error).toHaveBeenCalledWith(
+        "ApiKeyService.getApiKey: Reached unexpected state for llmId 'llm-unexpected'. API key is null, but no specific error was set. This should not happen."
+      );
+      expect(createErrorDetailsSpy).toHaveBeenCalledTimes(3);
       expect(createErrorDetailsSpy.mock.calls[1][1]).toBe(
         'api_key_all_sources_failed'
+      );
+      expect(createErrorDetailsSpy.mock.calls[2][1]).toBe(
+        'api_key_retrieval_unknown_error'
       );
       expect(result).toEqual({
         apiKey: null,
         errorDetails: null,
+        source: 'N/A',
+      });
+    });
+
+    test('creates fallback error when earlier attempts fail to set details', async () => {
+      const originalCreateErrorDetails =
+        service._createErrorDetails.bind(service);
+
+      const createErrorDetailsSpy = jest
+        .spyOn(service, '_createErrorDetails')
+        .mockImplementationOnce((...args) => {
+          originalCreateErrorDetails(...args);
+          return null;
+        })
+        .mockImplementationOnce((...args) => {
+          originalCreateErrorDetails(...args);
+          return null;
+        })
+        .mockImplementation((...args) => originalCreateErrorDetails(...args));
+
+      jest
+        .spyOn(service, '_readApiKeyFromFile')
+        .mockResolvedValue({ key: null, error: null });
+
+      const result = await service.getApiKey(
+        {
+          apiType: 'openai',
+          apiKeyEnvVar: 'MISSING_KEY',
+          apiKeyFileName: 'missing.key',
+        },
+        'llm-fallback'
+      );
+
+      expect(createErrorDetailsSpy).toHaveBeenCalledTimes(3);
+      expect(createErrorDetailsSpy.mock.calls[2][1]).toBe(
+        'api_key_retrieval_unknown_error'
+      );
+      expect(logger.error).toHaveBeenCalledWith(
+        "ApiKeyService.getApiKey: Reached unexpected state for llmId 'llm-fallback'. API key is null, but no specific error was set. This should not happen."
+      );
+      expect(result).toEqual({
+        apiKey: null,
+        errorDetails: expect.objectContaining({
+          stage: 'api_key_retrieval_unknown_error',
+          message:
+            'API key for LLM could not be retrieved due to an unknown internal error.',
+          details: expect.objectContaining({
+            llmId: 'llm-fallback',
+            attemptedEnvVar: 'MISSING_KEY',
+            attemptedFile: 'missing.key',
+          }),
+        }),
         source: 'N/A',
       });
     });
