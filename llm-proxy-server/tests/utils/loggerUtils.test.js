@@ -222,6 +222,29 @@ describe('createSecureLogger', () => {
     expect(mockLogger.warn).toHaveBeenCalledWith('Test message', undefined);
   });
 
+  test('should pass through falsy contexts for debug and error levels', () => {
+    const mockLogger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
+    const secureLogger = createSecureLogger(mockLogger);
+
+    secureLogger.debug('Debug message without context', null);
+    secureLogger.error('Error message without context', undefined);
+
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      'Debug message without context',
+      null
+    );
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Error message without context',
+      undefined
+    );
+  });
+
   test('should sanitize nested objects with sensitive data', () => {
     const mockLogger = {
       debug: jest.fn(),
