@@ -789,4 +789,309 @@ describe('Metrics Middleware', () => {
       expect(duration).toBeLessThan(1000); // Less than 1 second
     });
   });
+
+  describe('Additional branch coverage scenarios', () => {
+    it('should throw when metrics middleware is called without options', () => {
+      expect(() => createMetricsMiddleware()).toThrow(
+        'metricsService is required for metrics middleware'
+      );
+    });
+
+    it('should default to console logger when no logger is provided', () => {
+      const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      let timeCounter = 0;
+      global.process.hrtime.bigint = jest.fn(() =>
+        BigInt(timeCounter++ * 1000000000)
+      );
+
+      const middleware = createMetricsMiddleware({
+        metricsService: mockMetricsService,
+      });
+
+      middleware(mockRequest, mockResponse, mockNext);
+      mockResponse.end('response');
+
+      expect(debugSpy).toHaveBeenCalledWith(
+        'HTTP request metrics recorded',
+        expect.objectContaining({
+          method: mockRequest.method,
+          route: mockRequest.originalUrl,
+          statusCode: mockResponse.statusCode,
+          correlationId: mockRequest.correlationId,
+        })
+      );
+
+      debugSpy.mockRestore();
+      errorSpy.mockRestore();
+    });
+
+    it('should fallback to default request size when JSON serialization fails', () => {
+      delete mockRequest.headers['content-length'];
+      mockRequest.get = jest.fn(() => undefined);
+      const circular = {};
+      circular.self = circular;
+      mockRequest.body = circular;
+
+      let timeCounter = 0;
+      global.process.hrtime.bigint = jest.fn(() =>
+        BigInt(timeCounter++ * 1000000000)
+      );
+
+      const middleware = createMetricsMiddleware({
+        metricsService: mockMetricsService,
+        logger: mockLogger,
+      });
+
+      middleware(mockRequest, mockResponse, mockNext);
+      mockResponse.end('response');
+
+      expect(mockMetricsService.recordHttpRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ requestSize: 1000 })
+      );
+    });
+
+    it('should return zero request size when header access throws an error', () => {
+      delete mockRequest.headers['content-length'];
+      delete mockRequest.body;
+      mockRequest.get = jest.fn(() => {
+        throw new Error('header failure');
+      });
+
+      let timeCounter = 0;
+      global.process.hrtime.bigint = jest.fn(() =>
+        BigInt(timeCounter++ * 1000000000)
+      );
+
+      const middleware = createMetricsMiddleware({
+        metricsService: mockMetricsService,
+        logger: mockLogger,
+      });
+
+      middleware(mockRequest, mockResponse, mockNext);
+      mockResponse.end('response');
+
+      expect(mockMetricsService.recordHttpRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ requestSize: 0 })
+      );
+    });
+
+    it('should calculate response size for buffer payloads without headers', () => {
+      delete mockResponse.headers['content-length'];
+      mockResponse.get = jest.fn(() => undefined);
+
+      let timeCounter = 0;
+      global.process.hrtime.bigint = jest.fn(() =>
+        BigInt(timeCounter++ * 1000000000)
+      );
+
+      const middleware = createMetricsMiddleware({
+        metricsService: mockMetricsService,
+        logger: mockLogger,
+      });
+
+      middleware(mockRequest, mockResponse, mockNext);
+      const buffer = Buffer.from('buffer-response-data');
+      mockResponse.end(buffer);
+
+      expect(mockMetricsService.recordHttpRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ responseSize: buffer.length })
+      );
+    });
+
+    it('should fallback to default response size when JSON serialization fails', () => {
+      delete mockResponse.headers['content-length'];
+      mockResponse.get = jest.fn(() => undefined);
+
+      let timeCounter = 0;
+      global.process.hrtime.bigint = jest.fn(() =>
+        BigInt(timeCounter++ * 1000000000)
+      );
+
+      const middleware = createMetricsMiddleware({
+        metricsService: mockMetricsService,
+        logger: mockLogger,
+      });
+
+      middleware(mockRequest, mockResponse, mockNext);
+      const circularResponse = {};
+      circularResponse.self = circularResponse;
+      mockResponse.end(circularResponse);
+
+      expect(mockMetricsService.recordHttpRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ responseSize: 1000 })
+      );
+    });
+
+    it('should return zero response size when header lookup throws', () => {
+      delete mockResponse.headers['content-length'];
+      mockResponse.get = jest.fn(() => {
+        throw new Error('header failure');
+      });
+
+      let timeCounter = 0;
+      global.process.hrtime.bigint = jest.fn(() =>
+        BigInt(timeCounter++ * 1000000000)
+      );
+
+      const middleware = createMetricsMiddleware({
+        metricsService: mockMetricsService,
+        logger: mockLogger,
+      });
+
+      middleware(mockRequest, mockResponse, mockNext);
+      mockResponse.end('response');
+
+      expect(mockMetricsService.recordHttpRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ responseSize: 0 })
+      );
+    });
+
+    it('should classify unspecified client errors as generic client_error', () => {
+      mockResponse.statusCode = 418;
+
+      let timeCounter = 0;
+      global.process.hrtime.bigint = jest.fn(() =>
+        BigInt(timeCounter++ * 1000000000)
+      );
+
+      const middleware = createMetricsMiddleware({
+        metricsService: mockMetricsService,
+        logger: mockLogger,
+      });
+
+      middleware(mockRequest, mockResponse, mockNext);
+      mockResponse.end('error response');
+
+      expect(mockMetricsService.recordError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          errorType: 'client_error',
+          severity: 'low',
+        })
+      );
+    });
+
+    it('should classify unspecified server errors as server_error', () => {
+      mockResponse.statusCode = 510;
+
+      let timeCounter = 0;
+      global.process.hrtime.bigint = jest.fn(() =>
+        BigInt(timeCounter++ * 1000000000)
+      );
+
+      const middleware = createMetricsMiddleware({
+        metricsService: mockMetricsService,
+        logger: mockLogger,
+      });
+
+      middleware(mockRequest, mockResponse, mockNext);
+      mockResponse.end('error response');
+
+      expect(mockMetricsService.recordError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          errorType: 'server_error',
+          severity: 'high',
+        })
+      );
+    });
+
+    it('should throw when LLM metrics middleware is called without options', () => {
+      expect(() => createLlmMetricsMiddleware()).toThrow(
+        'metricsService is required for LLM metrics middleware'
+      );
+    });
+
+    it('should default to console logger for LLM middleware when not provided', () => {
+      const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      let timeCounter = 0;
+      global.process.hrtime.bigint = jest.fn(() =>
+        BigInt(timeCounter++ * 1000000000)
+      );
+
+      const middleware = createLlmMetricsMiddleware({
+        metricsService: mockMetricsService,
+      });
+
+      middleware(mockRequest, mockResponse, mockNext);
+      mockResponse.json({ usage: {} });
+
+      expect(debugSpy).toHaveBeenCalledWith(
+        'LLM request metrics recorded',
+        expect.objectContaining({
+          status: 'success',
+          tokens: { input: 0, output: 0 },
+          correlationId: mockRequest.correlationId,
+        })
+      );
+
+      debugSpy.mockRestore();
+      errorSpy.mockRestore();
+    });
+
+    it('should default token counts when usage fields are missing', () => {
+      const middleware = createLlmMetricsMiddleware({
+        metricsService: mockMetricsService,
+        logger: mockLogger,
+      });
+
+      let timeCounter = 0;
+      global.process.hrtime.bigint = jest.fn(() =>
+        BigInt(timeCounter++ * 1000000000)
+      );
+
+      middleware(mockRequest, mockResponse, mockNext);
+      mockResponse.json({ usage: {} });
+
+      expect(mockMetricsService.recordLlmRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ tokens: { input: 0, output: 0 } })
+      );
+    });
+
+    it('should default token counts for token_usage structures when values are missing', () => {
+      const middleware = createLlmMetricsMiddleware({
+        metricsService: mockMetricsService,
+        logger: mockLogger,
+      });
+
+      let timeCounter = 0;
+      global.process.hrtime.bigint = jest.fn(() =>
+        BigInt(timeCounter++ * 1000000000)
+      );
+
+      middleware(mockRequest, mockResponse, mockNext);
+      mockResponse.json({ token_usage: {} });
+
+      expect(mockMetricsService.recordLlmRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ tokens: { input: 0, output: 0 } })
+      );
+    });
+
+    it('should default nested usage token counts when values are missing', () => {
+      const middleware = createLlmMetricsMiddleware({
+        metricsService: mockMetricsService,
+        logger: mockLogger,
+      });
+
+      let timeCounter = 0;
+      global.process.hrtime.bigint = jest.fn(() =>
+        BigInt(timeCounter++ * 1000000000)
+      );
+
+      middleware(mockRequest, mockResponse, mockNext);
+      mockResponse.json({ data: { usage: {} } });
+
+      expect(mockMetricsService.recordLlmRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ tokens: { input: 0, output: 0 } })
+      );
+    });
+
+    it('should throw when cache metrics recorder is called without options', () => {
+      expect(() => createCacheMetricsRecorder()).toThrow(
+        'metricsService is required for cache metrics recorder'
+      );
+    });
+  });
 });
