@@ -47,6 +47,7 @@ describe('EnhancedConsoleLogger additional coverage', () => {
     jest.dontMock('chalk');
     jest.dontMock('../../../src/logging/loggerConfiguration.js');
     jest.dontMock('../../../src/logging/logFormatter.js');
+    jest.dontMock('../../../src/utils/loggerUtils.js');
   });
 
   it('uses chalk from the global scope when available', async () => {
@@ -325,5 +326,104 @@ describe('EnhancedConsoleLogger additional coverage', () => {
     );
 
     infoSpy.mockRestore();
+  });
+
+  it('preserves the original message when sanitization yields a falsy result', async () => {
+    jest.doMock('../../../src/logging/loggerConfiguration.js', () => ({
+      getLoggerConfiguration: () => ({
+        isColorsEnabled: () => false,
+        isIconsEnabled: () => false,
+        isPrettyFormatEnabled: () => false,
+        getMaxMessageLength: () => 200,
+        shouldShowContext: () => false,
+        isDevelopment: () => false,
+      }),
+    }));
+
+    const formatSimple = jest.fn((level, message) => `${level.toUpperCase()}:${message}`);
+
+    jest.doMock('../../../src/logging/logFormatter.js', () => ({
+      getLogFormatter: () => ({
+        formatMessage: jest.fn(),
+        formatSimple,
+      }),
+    }));
+
+    const originalMessage = 'Bearer sk-test-12345678901234567890';
+
+    jest.doMock('../../../src/utils/loggerUtils.js', () => ({
+      maskApiKey: () => undefined,
+      createSecureLogger: (logger) => logger,
+    }));
+
+    const infoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
+
+    const { getEnhancedConsoleLogger } = await import(
+      '../../../src/logging/enhancedConsoleLogger.js'
+    );
+    const logger = getEnhancedConsoleLogger();
+
+    logger.info(originalMessage);
+
+    expect(formatSimple).toHaveBeenCalledTimes(1);
+    expect(formatSimple).toHaveBeenCalledWith('info', originalMessage);
+    expect(infoSpy).toHaveBeenCalledTimes(1);
+    expect(infoSpy.mock.calls[0][0]).toContain(originalMessage);
+  });
+
+  it('returns uncolored output when a color function is unavailable', async () => {
+    const originalMapGet = Map.prototype.get;
+    const originalMapHas = Map.prototype.has;
+
+    let colorFunctionMap;
+    let fallbackTriggered = false;
+    let infoSpy;
+
+    try {
+      Map.prototype.get = function patchedGet(key) {
+        const value = originalMapGet.call(this, key);
+        if (
+          !colorFunctionMap &&
+          this instanceof Map &&
+          originalMapHas.call(this, 'debug') &&
+          originalMapHas.call(this, 'info') &&
+          originalMapHas.call(this, 'warn') &&
+          originalMapHas.call(this, 'error')
+        ) {
+          colorFunctionMap = this;
+        }
+        return value;
+      };
+
+      const { getEnhancedConsoleLogger } = await import(
+        '../../../src/logging/enhancedConsoleLogger.js'
+      );
+      const logger = getEnhancedConsoleLogger();
+
+      infoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
+
+      logger.info('warmup message');
+      expect(colorFunctionMap).toBeDefined();
+
+      Map.prototype.get = function overrideGet(key) {
+        if (this === colorFunctionMap && key === 'info') {
+          fallbackTriggered = true;
+          return undefined;
+        }
+        return originalMapGet.call(this, key);
+      };
+
+      logger.info('colorless output expected');
+
+      expect(fallbackTriggered).toBe(true);
+      const loggedOutput = infoSpy.mock.calls.at(-1)[0];
+      expect(loggedOutput).toContain('colorless output expected');
+      expect(loggedOutput).toContain('INFO');
+    } finally {
+      Map.prototype.get = originalMapGet;
+      if (infoSpy) {
+        infoSpy.mockRestore();
+      }
+    }
   });
 });
