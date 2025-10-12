@@ -785,5 +785,34 @@ describe('Validation Middleware - Comprehensive Tests', () => {
 
       expect(extraFieldsCall).toBeDefined();
     });
+
+    test('targetHeaders sanitizer removes dangerous patterns after cleaning', () => {
+      validateLlmRequest();
+
+      const bodyMock = jest.mocked(body);
+      const targetHeadersIndex = bodyMock.mock.calls.findIndex(
+        (call) => call[0] === 'targetHeaders'
+      );
+
+      expect(targetHeadersIndex).toBeGreaterThanOrEqual(0);
+
+      const targetHeadersChain = bodyMock.mock.results[targetHeadersIndex].value;
+      const sanitizer = targetHeadersChain.customSanitizer.mock.calls[0][0];
+
+      const sanitized = sanitizer({
+        'X-Custom!Header': 'Value',
+        '__proto__/../': 'should-be-dropped',
+        'Safe-Header': 'Allowed',
+      });
+
+      expect(Object.getPrototypeOf(sanitized)).toBeNull();
+      expect(sanitized).toEqual({
+        'X-CustomHeader': 'Value',
+        'Safe-Header': 'Allowed',
+      });
+      expect(Object.prototype.hasOwnProperty.call(sanitized, '__proto__')).toBe(
+        false
+      );
+    });
   });
 });
