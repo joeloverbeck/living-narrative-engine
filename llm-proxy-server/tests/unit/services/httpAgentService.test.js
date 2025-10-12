@@ -489,6 +489,91 @@ describe('HttpAgentService', () => {
     });
   });
 
+  describe('adaptive cleanup interval calculations', () => {
+    const baseInterval = 300000;
+
+    it('should extend the cleanup interval during sustained low load', () => {
+      const setTimeoutSpy = jest.spyOn(global, 'setTimeout');
+
+      try {
+        httpAgentService.cleanup();
+        setTimeoutSpy.mockClear();
+        jest.setSystemTime(new Date('2024-01-01T00:00:00.000Z'));
+
+        httpAgentService = new HttpAgentService(mockLogger, {
+          keepAlive: true,
+          maxSockets: 25,
+          maxFreeSockets: 5,
+          timeout: 30000,
+          freeSocketTimeout: 15000,
+        });
+
+        mockLogger.debug.mockClear();
+
+        expect(setTimeoutSpy).toHaveBeenCalledWith(
+          expect.any(Function),
+          baseInterval
+        );
+
+        jest.advanceTimersByTime(baseInterval);
+
+        expect(setTimeoutSpy.mock.calls.length).toBeGreaterThan(1);
+        const [, nextInterval] = setTimeoutSpy.mock.calls[1];
+
+        expect(nextInterval).toBeGreaterThan(baseInterval);
+        const adjustmentLog = mockLogger.debug.mock.calls.find(([message]) =>
+          typeof message === 'string' &&
+          message.includes('Adaptive cleanup interval adjusted')
+        );
+        expect(adjustmentLog).toBeDefined();
+      } finally {
+        setTimeoutSpy.mockRestore();
+      }
+    });
+
+    it('should keep the base interval when load stays within normal range', () => {
+      const setTimeoutSpy = jest.spyOn(global, 'setTimeout');
+
+      try {
+        httpAgentService.cleanup();
+        setTimeoutSpy.mockClear();
+        const baseTime = new Date('2024-01-01T00:00:00.000Z');
+        jest.setSystemTime(baseTime);
+
+        httpAgentService = new HttpAgentService(mockLogger, {
+          keepAlive: true,
+          maxSockets: 25,
+          maxFreeSockets: 5,
+          timeout: 30000,
+          freeSocketTimeout: 15000,
+        });
+
+        mockLogger.debug.mockClear();
+
+        jest.advanceTimersByTime(baseInterval - 45000);
+
+        for (let index = 0; index < 12; index += 1) {
+          httpAgentService.getAgent(`https://balanced-${index}.example.com`);
+          jest.advanceTimersByTime(3000);
+        }
+
+        jest.advanceTimersByTime(9000);
+
+        expect(setTimeoutSpy.mock.calls.length).toBeGreaterThan(1);
+        const [, nextInterval] = setTimeoutSpy.mock.calls[1];
+
+        expect(nextInterval).toBe(baseInterval);
+        const adjustmentLog = mockLogger.debug.mock.calls.find(([message]) =>
+          typeof message === 'string' &&
+          message.includes('Adaptive cleanup interval adjusted')
+        );
+        expect(adjustmentLog).toBeUndefined();
+      } finally {
+        setTimeoutSpy.mockRestore();
+      }
+    });
+  });
+
   describe('cleanup', () => {
     it('should clear timeout and destroy all agents', () => {
       const mockClearTimeout = jest.spyOn(global, 'clearTimeout');
