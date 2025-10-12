@@ -161,6 +161,11 @@ describe('Request Tracking Middleware', () => {
     mockRes.send('payload');
     expect(mockReq.stateTransitions).toHaveLength(timeoutTransitions);
     expect(originalSend).toHaveBeenCalledWith('payload');
+
+    const beforeEndTransitions = mockReq.stateTransitions.length;
+    mockRes.end('final');
+    expect(mockReq.stateTransitions).toHaveLength(beforeEndTransitions);
+    expect(originalEnd).toHaveBeenCalledWith('final');
   });
 
   it('should operate without a logger while maintaining tracking metadata', () => {
@@ -364,5 +369,24 @@ describe('createResponseGuard', () => {
       headersSent: true,
       requestId: 'test-request-id',
     });
+  });
+
+  it('should report response as sendable when not yet committed', () => {
+    mockRes.isResponseCommitted
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false);
+    mockRes.headersSent = false;
+
+    const guard = createGuard();
+    const status = guard.canSendResponse();
+
+    expect(status).toEqual({
+      canSend: true,
+      committed: false,
+      source: null,
+      headersSent: false,
+      requestId: 'test-request-id',
+    });
+    expect(mockRes.getCommitmentSource).toHaveBeenCalled();
   });
 });
