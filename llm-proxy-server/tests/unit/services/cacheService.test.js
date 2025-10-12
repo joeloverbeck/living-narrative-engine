@@ -142,6 +142,35 @@ describe('CacheService', () => {
       );
     });
 
+    it('should gracefully handle memory eviction when tail nodes lack keys', () => {
+      const logger = createMockLogger();
+      const smallCacheService = new CacheService(logger, {
+        maxSize: 5,
+        defaultTtl: 1000,
+        maxMemoryBytes: 50,
+        enableAutoCleanup: false,
+      });
+
+      // Ignore the initialization log so we can focus on eviction behavior
+      logger.info.mockClear();
+
+      smallCacheService.set(undefined, 'seed-value');
+
+      expect(() => {
+        smallCacheService.set('next', 'x'.repeat(200));
+      }).not.toThrow();
+
+      expect(
+        logger.info.mock.calls.some(([message]) =>
+          typeof message === 'string' && message.includes('Evicted')
+        )
+      ).toBe(false);
+
+      expect(smallCacheService.get('next')).toBe('x'.repeat(200));
+
+      smallCacheService.cleanup();
+    });
+
     it('should evict oldest entry when cache is full', () => {
       cacheService.set('key1', 'value1');
       cacheService.set('key2', 'value2');
