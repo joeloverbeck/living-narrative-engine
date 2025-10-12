@@ -141,6 +141,39 @@ describe('ApiKeyService', () => {
       });
     });
 
+    test('provides combined error details when both env var and file retrieval fail', async () => {
+      delete process.env.MISSING_ENV;
+      const fileError = new Error('file not found');
+      fileError.code = 'ENOENT';
+      fsReader.readFile.mockRejectedValue(fileError);
+
+      const result = await service.getApiKey(
+        {
+          apiType: 'openai',
+          apiKeyEnvVar: 'MISSING_ENV',
+          apiKeyFileName: 'missing.key',
+        },
+        'llm-both-fail'
+      );
+
+      expect(result.apiKey).toBeNull();
+      expect(result.source).toBe('N/A');
+      expect(result.errorDetails).toMatchObject({
+        stage: 'api_key_all_sources_failed',
+        message:
+          'Failed to retrieve API key. All configured sources (environment variable and file) failed.',
+        details: expect.objectContaining({
+          llmId: 'llm-both-fail',
+          attemptedEnvVar: 'MISSING_ENV',
+          attemptedFile: 'missing.key',
+        }),
+      });
+      expect(result.errorDetails.details.reason).toContain(
+        "Environment variable 'MISSING_ENV' was not set or empty."
+      );
+      expect(result.errorDetails.details.reason).toContain("File 'missing.key'");
+    });
+
     test('continues gracefully when error details helpers return null', async () => {
       const originalCreateErrorDetails =
         service._createErrorDetails.bind(service);
@@ -183,6 +216,153 @@ describe('ApiKeyService', () => {
       expect(result).toEqual({
         apiKey: null,
         errorDetails: null,
+        source: 'N/A',
+      });
+    });
+
+    test('falls back to unknown error details when earlier consolidation fails', async () => {
+      const originalCreateErrorDetails =
+        service._createErrorDetails.bind(service);
+
+      const createErrorDetailsSpy = jest
+        .spyOn(service, '_createErrorDetails')
+        .mockImplementationOnce((...args) => {
+          originalCreateErrorDetails(...args);
+          return null;
+        })
+        .mockImplementationOnce((...args) => {
+          originalCreateErrorDetails(...args);
+          return null;
+        })
+        .mockImplementation((...args) => originalCreateErrorDetails(...args));
+
+      jest
+        .spyOn(service, '_readApiKeyFromFile')
+        .mockResolvedValue({ key: null, error: null });
+
+      const result = await service.getApiKey(
+        {
+          apiType: 'openai',
+          apiKeyEnvVar: 'MISSING_KEY',
+          apiKeyFileName: 'missing.key',
+        },
+        'llm-fallback-final'
+      );
+
+      expect(createErrorDetailsSpy).toHaveBeenCalledTimes(3);
+      expect(createErrorDetailsSpy.mock.calls[1][1]).toBe(
+        'api_key_all_sources_failed'
+      );
+      expect(createErrorDetailsSpy.mock.calls[2][1]).toBe(
+        'api_key_retrieval_unknown_error'
+      );
+
+      expect(result).toEqual({
+        apiKey: null,
+        errorDetails: expect.objectContaining({
+          stage: 'api_key_retrieval_unknown_error',
+          details: expect.objectContaining({
+            llmId: 'llm-fallback-final',
+            attemptedEnvVar: 'MISSING_KEY',
+            attemptedFile: 'missing.key',
+          }),
+        }),
+        source: 'N/A',
+      });
+    });
+
+    test('fallback populates attemptedEnvVar with N/A when no env var is configured', async () => {
+      const originalCreateErrorDetails =
+        service._createErrorDetails.bind(service);
+
+      const createErrorDetailsSpy = jest
+        .spyOn(service, '_createErrorDetails')
+        .mockImplementationOnce((...args) => {
+          originalCreateErrorDetails(...args);
+          return null;
+        })
+        .mockImplementation((...args) => originalCreateErrorDetails(...args));
+
+      jest
+        .spyOn(service, '_readApiKeyFromFile')
+        .mockResolvedValue({ key: null, error: null });
+
+      const result = await service.getApiKey(
+        {
+          apiType: 'openai',
+          apiKeyFileName: 'missing.key',
+        },
+        'llm-no-env'
+      );
+
+      expect(createErrorDetailsSpy).toHaveBeenCalledTimes(2);
+      expect(createErrorDetailsSpy.mock.calls[0][1]).toBe(
+        'api_key_file_fail_no_env_fallback'
+      );
+      expect(createErrorDetailsSpy.mock.calls[1][1]).toBe(
+        'api_key_retrieval_unknown_error'
+      );
+
+      expect(result).toEqual({
+        apiKey: null,
+        errorDetails: expect.objectContaining({
+          stage: 'api_key_retrieval_unknown_error',
+          details: expect.objectContaining({
+            llmId: 'llm-no-env',
+            attemptedEnvVar: 'N/A',
+            attemptedFile: 'missing.key',
+          }),
+        }),
+        source: 'N/A',
+      });
+    });
+
+    test('fallback populates attemptedFile with N/A when no file is configured', async () => {
+      delete process.env.ONLY_ENV;
+      const originalCreateErrorDetails =
+        service._createErrorDetails.bind(service);
+
+      const createErrorDetailsSpy = jest
+        .spyOn(service, '_createErrorDetails')
+        .mockImplementationOnce((...args) => {
+          originalCreateErrorDetails(...args);
+          return null;
+        })
+        .mockImplementationOnce((...args) => {
+          originalCreateErrorDetails(...args);
+          return null;
+        })
+        .mockImplementation((...args) => originalCreateErrorDetails(...args));
+
+      const result = await service.getApiKey(
+        {
+          apiType: 'openai',
+          apiKeyEnvVar: 'ONLY_ENV',
+        },
+        'llm-no-file'
+      );
+
+      expect(createErrorDetailsSpy).toHaveBeenCalledTimes(3);
+      expect(createErrorDetailsSpy.mock.calls[0][1]).toBe(
+        'api_key_env_var_not_set_or_empty'
+      );
+      expect(createErrorDetailsSpy.mock.calls[1][1]).toBe(
+        'api_key_env_var_fail_no_fallback'
+      );
+      expect(createErrorDetailsSpy.mock.calls[2][1]).toBe(
+        'api_key_retrieval_unknown_error'
+      );
+
+      expect(result).toEqual({
+        apiKey: null,
+        errorDetails: expect.objectContaining({
+          stage: 'api_key_retrieval_unknown_error',
+          details: expect.objectContaining({
+            llmId: 'llm-no-file',
+            attemptedEnvVar: 'ONLY_ENV',
+            attemptedFile: 'N/A',
+          }),
+        }),
         source: 'N/A',
       });
     });
