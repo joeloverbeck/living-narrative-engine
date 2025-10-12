@@ -954,5 +954,77 @@ describe('Metrics Middleware - Additional Coverage Tests', () => {
         })
       );
     });
+
+    it('handles unexpected capture group counts from regex matches gracefully', async () => {
+      const originalMatch = String.prototype.match;
+      const originalHrtime = process.hrtime.bigint;
+
+      mockRequest.body = {
+        llmId: 'openrouter/anthropic/claude-3-haiku',
+      };
+      mockResponse.statusCode = 200;
+
+      const localMetricsService = {
+        recordLlmRequest: jest.fn(),
+      };
+
+      const localLogger = {
+        debug: jest.fn(),
+        error: jest.fn(),
+      };
+
+      process.hrtime.bigint = jest.fn(() => BigInt(0));
+
+      jest.resetModules();
+
+      try {
+        String.prototype.match = function (regex) {
+          if (
+            typeof this === 'string' &&
+            this === 'openrouter/anthropic/claude-3-haiku' &&
+            regex instanceof RegExp &&
+            regex.source === '^(openrouter)\\/([^/]+)\\/(.+)$'
+          ) {
+            return [
+              'openrouter/anthropic/claude-3-haiku',
+              'openrouter',
+              'anthropic',
+              'claude-3-haiku',
+              'unexpected-extra',
+            ];
+          }
+
+          return originalMatch.call(this, regex);
+        };
+
+        const { createLlmMetricsMiddleware } = await import(
+          '../../../src/middleware/metrics.js'
+        );
+
+        const middleware = createLlmMetricsMiddleware({
+          metricsService: localMetricsService,
+          logger: localLogger,
+        });
+
+        middleware(mockRequest, mockResponse, mockNext);
+
+        const responsePayload = {
+          usage: { prompt_tokens: 5, completion_tokens: 2 },
+        };
+
+        mockResponse.json(responsePayload);
+
+        expect(localMetricsService.recordLlmRequest).toHaveBeenCalledWith(
+          expect.objectContaining({
+            provider: 'unknown',
+            model: 'openrouter/anthropic/claude-3-haiku',
+          })
+        );
+      } finally {
+        String.prototype.match = originalMatch;
+        process.hrtime.bigint = originalHrtime;
+        jest.resetModules();
+      }
+    });
   });
 });
