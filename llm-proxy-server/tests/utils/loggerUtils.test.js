@@ -402,6 +402,40 @@ describe('sanitizeLogContext - additional coverage', () => {
     );
   });
 
+  test('should preserve nullish nested values while masking siblings', () => {
+    const mockLogger = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+    };
+
+    const secureLogger = createSecureLogger(mockLogger);
+
+    const context = {
+      service: 'api-gateway',
+      nested: {
+        token: 'tok-test-4567',
+        optional: null,
+        maybeLater: undefined,
+      },
+    };
+
+    secureLogger.warn('Handles nested nullish values', context);
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'Handles nested nullish values',
+      {
+        service: 'api-gateway',
+        nested: {
+          token: expect.stringMatching(/^tok-/),
+          optional: null,
+          maybeLater: undefined,
+        },
+      }
+    );
+  });
+
   test('should handle deeply nested objects and arrays', () => {
     const mockLogger = {
       info: jest.fn(),
