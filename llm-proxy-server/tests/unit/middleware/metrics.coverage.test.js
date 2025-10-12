@@ -283,6 +283,51 @@ describe('Metrics Middleware - Additional Coverage Tests', () => {
     });
   });
 
+  describe('Error classification coverage', () => {
+    /**
+     * Helper to execute middleware with a specific status code and capture metrics
+     * @param {number} statusCode - HTTP status code to simulate
+     */
+    const runMiddlewareWithStatus = (statusCode) => {
+      const middleware = createMetricsMiddleware({
+        metricsService: mockMetricsService,
+        logger: mockLogger,
+      });
+
+      let timeCounter = 0;
+      global.process.hrtime.bigint = jest.fn(() =>
+        BigInt(timeCounter++ * 1000000000)
+      );
+
+      mockResponse.statusCode = statusCode;
+
+      middleware(mockRequest, mockResponse, mockNext);
+      mockResponse.end('response');
+    };
+
+    it('classifies unknown client errors with default mapping', () => {
+      runMiddlewareWithStatus(499);
+
+      expect(mockMetricsService.recordError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          errorType: 'client_error',
+          severity: 'low',
+        })
+      );
+    });
+
+    it('classifies unknown server errors with default mapping', () => {
+      runMiddlewareWithStatus(599);
+
+      expect(mockMetricsService.recordError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          errorType: 'server_error',
+          severity: 'high',
+        })
+      );
+    });
+  });
+
   describe('Additional HTTP Status Code Coverage', () => {
     const statusCodeTests = [
       {
