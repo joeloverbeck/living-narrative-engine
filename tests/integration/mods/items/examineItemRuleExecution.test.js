@@ -8,6 +8,7 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import AddPerceptionLogEntryHandler from '../../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import examineItemRule from '../../../../data/mods/items/rules/handle_examine_item.rule.json' assert { type: 'json' };
 import eventIsActionExamineItem from '../../../../data/mods/items/conditions/event-is-action-examine-item.condition.json' assert { type: 'json' };
 
@@ -340,6 +341,78 @@ describe('items:examine_item action integration', () => {
           e.payload.targetId === 'shears-1'
       );
       expect(inventoryExamineEvent).toBeDefined();
+    });
+  });
+
+  describe('perception log visibility', () => {
+    it('does not broadcast detailed description to other actors in the location', async () => {
+      const scenario = setupExamineItemScenario('Jamie', 'archive', [
+        {
+          id: 'letter-1',
+          description: 'A faded letter written in looping calligraphy.',
+          inInventory: true,
+        },
+      ]);
+
+      const observer = new ModEntityBuilder('observer-1')
+        .withName('Onlooker')
+        .atLocation('archive')
+        .asActor()
+        .withComponent('core:perception_log', { maxEntries: 10, logEntries: [] })
+        .build();
+
+      // Ensure the examining actor can also receive perception log updates for assertions.
+      const actorWithLog = new ModEntityBuilder('test:actor1')
+        .withName('Jamie')
+        .atLocation('archive')
+        .asActor()
+        .withComponent('items:inventory', {
+          items: ['letter-1'],
+          capacity: { maxWeight: 50, maxItems: 10 },
+        })
+        .withComponent('core:perception_log', { maxEntries: 10, logEntries: [] })
+        .build();
+
+      testFixture.reset([scenario.room, actorWithLog, observer, ...scenario.items]);
+
+      await testFixture.executeAction('test:actor1', 'letter-1');
+
+      const perceptibleEvent = testFixture.events.find(
+        (event) =>
+          event.eventType === 'core:perceptible_event' &&
+          event.payload.actorId === 'test:actor1'
+      );
+      expect(perceptibleEvent).toBeDefined();
+      expect(perceptibleEvent.payload.descriptionText).toBe(
+        'Jamie examines letter-1: A faded letter written in looping calligraphy.'
+      );
+
+      const perceptionLogHandler = new AddPerceptionLogEntryHandler({
+        entityManager: testFixture.entityManager,
+        logger: testFixture.logger,
+        safeEventDispatcher: { dispatch: () => {} },
+      });
+
+      await perceptionLogHandler.execute({
+        location_id: perceptibleEvent.payload.locationId,
+        entry: {
+          descriptionText: perceptibleEvent.payload.descriptionText,
+          timestamp: perceptibleEvent.payload.timestamp,
+          perceptionType: perceptibleEvent.payload.perceptionType,
+          actorId: perceptibleEvent.payload.actorId,
+          targetId: perceptibleEvent.payload.targetId,
+          involvedEntities: perceptibleEvent.payload.involvedEntities,
+        },
+        originating_actor_id: perceptibleEvent.payload.actorId,
+        recipient_ids: perceptibleEvent.payload.contextualData?.recipientIds,
+      });
+
+      const observerEntity = testFixture.entityManager.getEntityInstance(
+        'observer-1'
+      );
+      const observerLog =
+        observerEntity.components['core:perception_log'].logEntries;
+      expect(observerLog).toHaveLength(0);
     });
   });
 });

@@ -30,7 +30,8 @@
           "targetId": "{event.payload.targetId}",
           "involvedEntities": "{event.payload.involvedEntities}"
         },
-        "originating_actor_id": "{event.payload.actorId}"
+        "originating_actor_id": "{event.payload.actorId}",
+        "recipient_ids": "{event.payload.contextualData.recipientIds}"
       }
     }
   ]
