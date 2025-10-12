@@ -244,6 +244,51 @@ describe('timeout middleware', () => {
       );
     });
 
+    test('uses fallback metadata when commitment source is unavailable', () => {
+      const logger = {
+        warn: jest.fn(),
+        debug: jest.fn(),
+      };
+
+      res.commitResponse = jest.fn().mockReturnValue(false);
+      res.getCommitmentSource = jest.fn().mockImplementation(() => {
+        // Simulate the tracker becoming unavailable between invocations so the
+        // branch that falls back to "unknown" is exercised.
+        res.getCommitmentSource = null;
+        return 'preexisting-response';
+      });
+      res.isResponseCommitted = jest.fn().mockReturnValue(true);
+
+      const middleware = createTimeoutMiddleware(750, { logger });
+      middleware(req, res, next);
+
+      jest.advanceTimersByTime(750);
+
+      expect(res.status).not.toHaveBeenCalled();
+      expect(logger.warn).toHaveBeenCalledWith(
+        "Request test-request-id: Timeout cannot commit response - already committed to 'preexisting-response'",
+        expect.objectContaining({
+          requestId: 'test-request-id',
+          existingCommitment: 'unknown',
+        })
+      );
+    });
+
+    test('handles commit conflicts gracefully when logger is not provided', () => {
+      res.commitResponse = jest.fn().mockReturnValue(false);
+      res.getCommitmentSource = jest.fn().mockReturnValue('another-handler');
+
+      const middleware = createTimeoutMiddleware(400);
+      middleware(req, res, next);
+
+      expect(() => {
+        jest.advanceTimersByTime(400);
+      }).not.toThrow();
+
+      expect(res.commitResponse).toHaveBeenCalledWith('timeout');
+      expect(res.status).not.toHaveBeenCalled();
+    });
+
     test('respects grace period before dispatching timeout response', () => {
       const logger = {
         warn: jest.fn(),
@@ -575,6 +620,46 @@ describe('timeout middleware', () => {
         const config = createSizeLimitConfig({ jsonLimit: input });
         expect(config.json.limit).toBe(expected);
       });
+    });
+
+    test('supports size strings without explicit units using bytes fallback', () => {
+      const config = createSizeLimitConfig({ jsonLimit: '2048' });
+
+      expect(config.json.limit).toBe('2048');
+
+      const verifyFunction = config.json.verify;
+      expect(() => verifyFunction({}, {}, Buffer.alloc(1024))).not.toThrow();
+    });
+
+    test('handles gigabyte inputs by enforcing maximum security limit', () => {
+      const config = createSizeLimitConfig({ jsonLimit: '0.5gb' });
+
+      expect(config.json.limit).toBe('10mb');
+    });
+
+    test('falls back to byte multiplier when unit parsing yields unsupported value', () => {
+      const originalMatch = String.prototype.match;
+
+      String.prototype.match = function (pattern) {
+        if (
+          typeof this === 'string' &&
+          this === '11000000tb' &&
+          pattern instanceof RegExp &&
+          pattern.source === '^(\\d+(?:\\.\\d+)?)\\s*(b|kb|mb|gb)?$'
+        ) {
+          return ['11000000tb', '11000000', 'tb'];
+        }
+
+        return originalMatch.call(this, pattern);
+      };
+
+      try {
+        const config = createSizeLimitConfig({ jsonLimit: '11000000tb' });
+
+        expect(config.json.limit).toBe('10mb');
+      } finally {
+        String.prototype.match = originalMatch;
+      }
     });
 
     test('supports numeric jsonLimit values', () => {
