@@ -188,7 +188,7 @@ describe('ActionPipelineOrchestrator integration', () => {
       logger,
     });
 
-    expect(stages[3]).toBe(dependencies.multiTargetResolutionStage);
+    expect(stages[2]).toBe(dependencies.multiTargetResolutionStage);
 
     expect(mockPipelineExecute).toHaveBeenCalledTimes(1);
     expect(mockPipelineExecute).toHaveBeenCalledWith({

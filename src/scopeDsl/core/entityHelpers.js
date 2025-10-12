@@ -214,23 +214,52 @@ export function createEvaluationContext(
       // Log how the entity was resolved
     }
   } else if (item && typeof item === 'object') {
-    entity = item;
+    // FIX: Check if object has an ID property and resolve it as an entity
+    if (item.id && typeof item.id === 'string') {
+      // Object has an ID - resolve it properly through gateway
+      const cacheKey = `entity_${item.id}`;
+      if (entityCache.has(cacheKey)) {
+        entity = entityCache.get(cacheKey);
+        cacheHits++;
+      } else {
+        cacheMisses++;
+        entity = gateway.getEntityInstance(item.id);
+        let resolvedHow = null;
+
+        if (entity) {
+          resolvedHow = 'resolved object with ID via gateway';
+        } else {
+          // Fallback: use the object itself with component resolution
+          const components = gateway.getItemComponents?.(item.id);
+          if (components) {
+            entity = { id: item.id, components };
+            resolvedHow = 'resolved object with ID via component lookup';
+          } else {
+            entity = item;
+            resolvedHow = 'kept object with ID as-is';
+          }
+        }
+
+        // Cache the result (with simple LRU eviction)
+        if (entityCache.size >= CACHE_SIZE_LIMIT) {
+          // Clear oldest 20% when limit reached
+          const entriesToDelete = Math.floor(CACHE_SIZE_LIMIT * 0.2);
+          let deleted = 0;
+          for (const key of entityCache.keys()) {
+            if (deleted >= entriesToDelete) break;
+            entityCache.delete(key);
+            deleted++;
+          }
+        }
+        entityCache.set(cacheKey, entity);
+      }
+    } else {
+      // No ID property - keep as-is (backwards compatibility)
+      entity = item;
+    }
   } else {
     return null;
   }
-
-  // DIAGNOSTIC 1: Log entity state immediately after retrieval
-  console.info('[SCOPE-DIAG-1] Entity retrieved:', {
-    entityId: entity?.id || item,
-    hasComponents: !!entity?.components,
-    componentsType: entity?.components ? typeof entity.components : 'none',
-    componentsIsMap: entity?.components instanceof Map,
-    componentKeysString: entity?.components && !(entity.components instanceof Map)
-      ? Object.keys(entity.components).join(', ')
-      : 'NONE',
-    hasComponentTypeIds: !!entity?.componentTypeIds,
-    componentTypeIdsCount: entity?.componentTypeIds?.length || 0,
-  });
 
   // Helper function to add components while preserving prototype chain
   /**
@@ -276,24 +305,9 @@ export function createEvaluationContext(
       // If entity has getAllComponents method (Entity class), use it
       if (typeof entity.getAllComponents === 'function') {
         components = entity.getAllComponents();
-        console.info('[SCOPE-DIAG] Built components via getAllComponents:', {
-          entityId: entityId || entity.id,
-          componentsKeys: components ? Object.keys(components) : [],
-        });
       } else {
         // Otherwise build from componentTypeIds
-        console.info('[SCOPE-DIAG] Building components from componentTypeIds:', {
-          entityId: entityId || entity.id,
-          componentTypeIds: entity.componentTypeIds,
-        });
         components = buildComponents(entityId || entity.id, entity, gateway);
-        console.info('[SCOPE-DIAG] buildComponents returned:', {
-          entityId: entityId || entity.id,
-          componentsType: typeof components,
-          componentsIsNull: components === null,
-          componentsIsUndefined: components === undefined,
-          componentsKeys: components ? Object.keys(components) : [],
-        });
       }
 
       // Check if it's a plain object or has a custom prototype
@@ -344,33 +358,8 @@ export function createEvaluationContext(
     (!entity.components && entity.componentTypeIds) ||
     entity.components instanceof Map
   ) {
-    console.info('[SCOPE-DIAG] Entity needs components built:', {
-      entityId: entity.id || item,
-      hasComponentTypeIds: !!entity.componentTypeIds,
-      componentTypeIds: entity.componentTypeIds,
-      hasMapComponents: entity.components instanceof Map,
-      hasComponents: !!entity.components,
-    });
     entity = addComponentsToEntity(entity, entity.id || item);
-    console.info('[SCOPE-DIAG] After addComponentsToEntity:', {
-      entityId: entity.id || item,
-      hasComponents: !!entity.components,
-      componentsType: typeof entity.components,
-      componentsKeys: entity.components ? Object.keys(entity.components) : [],
-      componentsIsMap: entity.components instanceof Map,
-    });
   }
-
-  // DIAGNOSTIC 3: Log final entity state regardless of path taken
-  console.info('[SCOPE-DIAG-3] Final entity state before context creation:', {
-    entityId: entity?.id || item,
-    hasComponents: !!entity?.components,
-    componentsType: entity?.components ? typeof entity.components : 'none',
-    componentKeysString: entity?.components && !(entity.components instanceof Map)
-      ? Object.keys(entity.components).join(', ')
-      : 'NONE',
-    willBeUsedInFilter: true,
-  });
 
   // Use pre-processed actor if available (critical optimization)
   // Avoids reprocessing actor for each of potentially 10,000+ entities

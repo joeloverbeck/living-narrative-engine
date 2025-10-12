@@ -141,6 +141,7 @@ export class ActionIndex {
 
     const actorComponentTypes =
       this.#entityManager.getAllComponentTypesForEntity(actorEntity.id) || [];
+
     trace?.data(`Actor '${actorEntity.id}' has components.`, source, {
       components: actorComponentTypes.length > 0 ? actorComponentTypes : [],
     });

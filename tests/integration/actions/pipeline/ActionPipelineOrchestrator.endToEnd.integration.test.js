@@ -173,7 +173,41 @@ class SimpleMultiTargetStage extends PipelineStage {
           ]
         : [];
 
-      return { actionDef, targetContexts };
+      // Build resolvedTargets to match real MultiTargetResolutionStage output
+      // Use legacy format (resolvedTargets.primary with single-element array)
+      // since test actions use forbidden_components: { target: [...] }
+      const resolvedTargets = targetEntity
+        ? {
+            primary: [
+              {
+                id: targetEntity.id,
+                displayName: `Display:${targetEntity.id}`,
+                entity: targetEntity,
+              },
+            ],
+          }
+        : {};
+
+      // For legacy single-target actions, also set target property for validation
+      // Real MultiTargetResolutionStage does this in #resolveLegacyTarget (line 446-455)
+      const targetForValidation = targetEntity
+        ? {
+            id: targetEntity.id,
+            displayName: `Display:${targetEntity.id}`,
+            entity: targetEntity,
+          }
+        : undefined;
+
+      // Return action with attached metadata (matching real stage behavior)
+      return {
+        actionDef: {
+          ...actionDef,
+          resolvedTargets: targetForValidation
+            ? { ...resolvedTargets, target: targetForValidation } // Add legacy 'target' property
+            : resolvedTargets,
+        },
+        targetContexts,
+      };
     });
 
     return PipelineResult.success({
@@ -302,6 +336,7 @@ function createOrchestratorHarness({
     fixSuggestionEngine,
   });
 
+  // Use real validators instead of mocks to properly test forbidden/required component validation
   const targetComponentValidator = new TargetComponentValidator({
     logger,
     entityManager,

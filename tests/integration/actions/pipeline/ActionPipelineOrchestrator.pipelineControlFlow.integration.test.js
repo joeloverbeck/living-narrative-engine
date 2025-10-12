@@ -28,15 +28,17 @@ const createDependencies = (overrides = {}) => {
   const logger = createLogger();
   const multiTargetResolutionStage = {
     name: 'MultiTargetResolution',
-    execute: jest.fn(async (context) =>
-      PipelineResult.success({
+    execute: jest.fn(async (context) => {
+      // Track stage execution order
+      stageOrder.push('MultiTargetResolution');
+      return PipelineResult.success({
         data: {
           resolvedTargets: context.candidateActions.map((action) => ({
             id: `${action.id}:target`,
           })),
         },
-      })
-    ),
+      });
+    }),
   };
 
   return {
@@ -71,9 +73,11 @@ const createDependencies = (overrides = {}) => {
   };
 };
 
+// Module-level variable accessible by createDependencies
+let stageOrder = [];
+
 describe('ActionPipelineOrchestrator real pipeline flow', () => {
   let orchestrator;
-  let stageOrder;
   let trace;
 
   beforeEach(() => {
@@ -171,9 +175,10 @@ describe('ActionPipelineOrchestrator real pipeline flow', () => {
     expect(stageOrder).toEqual([
       'ComponentFiltering',
       'PrerequisiteEvaluation',
+      'MultiTargetResolution',
       'TargetComponentValidation',
     ]);
-    expect(multiTargetResolutionStage.execute).not.toHaveBeenCalled();
+    expect(multiTargetResolutionStage.execute).toHaveBeenCalled();
     expect(formattingSpy).not.toHaveBeenCalled();
 
     expect(result.actions).toEqual([]);

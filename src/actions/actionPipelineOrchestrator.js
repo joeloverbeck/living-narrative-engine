@@ -154,13 +154,13 @@ export class ActionPipelineOrchestrator {
         this.#errorBuilder,
         this.#logger
       ),
+      this.#multiTargetResolutionStage,
       new TargetComponentValidationStage({
         targetComponentValidator: this.#targetComponentValidator,
         targetRequiredComponentsValidator: this.#targetRequiredComponentsValidator,
         logger: this.#logger,
         actionErrorContextBuilder: this.#errorBuilder,
       }),
-      this.#multiTargetResolutionStage,
       new ActionFormattingStage({
         commandFormatter: this.#formatter,
         entityManager: this.#entityManager,

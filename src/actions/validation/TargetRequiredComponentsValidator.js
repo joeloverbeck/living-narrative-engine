@@ -119,7 +119,26 @@ class TargetRequiredComponentsValidator {
       };
     }
 
-    const targetEntity = targetEntities[role];
+    let targetData = targetEntities[role];
+
+    // Handle array of targets - validate first target only
+    // (Pipeline creates separate action instances for each target)
+    if (Array.isArray(targetData)) {
+      if (targetData.length === 0) {
+        this.#logger.debug(
+          `Empty ${role} target array for required components validation`
+        );
+        return {
+          valid: false,
+          reason: `No ${role} target available for validation`,
+        };
+      }
+      targetData = targetData[0];
+    }
+
+    // Extract the actual entity - it may be nested under 'entity' property
+    // or it may be the entity object directly
+    const targetEntity = targetData.entity || targetData;
 
     // Check each required component
     for (const componentId of requiredComponents) {

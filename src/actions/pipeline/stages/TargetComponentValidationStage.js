@@ -70,13 +70,31 @@ export class TargetComponentValidationStage extends PipelineStage {
    *
    * @param {object} context - The pipeline context
    * @param {import('../../../entities/entity.js').default} context.actor - The actor entity
-   * @param {ActionDefinition[]} context.candidateActions - Candidate action definitions
+   * @param {Array<{actionDef: ActionDefinition, targetContexts: object[]}>} context.actionsWithTargets - Actions with resolved targets
    * @param {EntityManager} [context.entityManager] - Entity manager for lookups
    * @param {ActionAwareStructuredTrace} [context.trace] - Optional trace context
-   * @returns {Promise<PipelineResult>} The filtered candidate actions
+   * @returns {Promise<PipelineResult>} The filtered actions with targets
    */
   async executeInternal(context) {
-    const { candidateActions, actor, trace } = context;
+    const { actionsWithTargets, candidateActions: rawCandidateActions, actor, trace } = context;
+
+    // Support both input formats:
+    // 1. actionsWithTargets (from MultiTargetResolutionStage) - NEW format
+    // 2. candidateActions (legacy/test format) - OLD format
+    let candidateActions;
+    let inputFormat;
+
+    if (actionsWithTargets && actionsWithTargets.length > 0) {
+      candidateActions = actionsWithTargets.map(awt => awt.actionDef);
+      inputFormat = 'actionsWithTargets';
+    } else if (rawCandidateActions && rawCandidateActions.length > 0) {
+      candidateActions = rawCandidateActions;
+      inputFormat = 'candidateActions';
+    } else {
+      candidateActions = [];
+      inputFormat = 'empty';
+    }
+
     const source = `${this.name}Stage.execute`;
     const startPerformanceTime = performance.now();
 
@@ -92,8 +110,13 @@ export class TargetComponentValidationStage extends PipelineStage {
         source
       );
 
+      // Return data in the same format as input
+      const outputData = inputFormat === 'actionsWithTargets'
+        ? { actionsWithTargets }
+        : { candidateActions };
+
       return PipelineResult.success({
-        data: { candidateActions },
+        data: outputData,
         continueProcessing: candidateActions.length > 0
       });
     }
@@ -109,7 +132,13 @@ export class TargetComponentValidationStage extends PipelineStage {
     );
 
     try {
-      const validatedActions = await this.#validateActions(candidateActions, context, isActionAwareTrace, trace);
+      const validatedActionDefs = await this.#validateActions(candidateActions, context, isActionAwareTrace, trace);
+
+      // Filter actionsWithTargets to only include actions that passed validation (only if using actionsWithTargets format)
+      const validatedActionDefIds = new Set(validatedActionDefs.map(a => a.id));
+      const validatedActionsWithTargets = inputFormat === 'actionsWithTargets' && actionsWithTargets
+        ? actionsWithTargets.filter(awt => validatedActionDefIds.has(awt.actionDef.id))
+        : [];
 
       const duration = performance.now() - startPerformanceTime;
 
@@ -123,31 +152,40 @@ export class TargetComponentValidationStage extends PipelineStage {
 
       if (config.logDetails) {
         this.#logger.debug(
-          `Validated ${candidateActions.length} actions, ${validatedActions.length} passed validation (strictness: ${strictness})`
+          `Validated ${candidateActions.length} actions, ${validatedActionDefs.length} passed validation (strictness: ${strictness})`
         );
       }
 
       // Add trace event for completion
       trace?.success(
-        `Target component validation completed: ${validatedActions.length} of ${candidateActions.length} actions passed`,
+        `Target component validation completed: ${validatedActionDefs.length} of ${candidateActions.length} actions passed`,
         source,
         {
           inputCount: candidateActions.length,
-          outputCount: validatedActions.length,
+          outputCount: validatedActionDefs.length,
           duration
         }
       );
 
+      // Return data in the same format as input
+      const outputData = inputFormat === 'actionsWithTargets'
+        ? { actionsWithTargets: validatedActionsWithTargets }
+        : { candidateActions: validatedActionDefs };
+
+      const outputCount = inputFormat === 'actionsWithTargets'
+        ? validatedActionsWithTargets.length
+        : validatedActionDefs.length;
+
       return PipelineResult.success({
-        data: { candidateActions: validatedActions },
-        continueProcessing: validatedActions.length > 0
+        data: outputData,
+        continueProcessing: outputCount > 0
       });
     } catch (error) {
       // Build error context
       const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
         error,
         actionDef: { id: 'targetValidation', name: 'Target Component Validation' },
-        actorId: actor.id,
+        actorId: actor?.id,
         phase: 'discovery',
         trace,
         additionalContext: {
@@ -381,13 +419,23 @@ export class TargetComponentValidationStage extends PipelineStage {
 
     // Handle legacy format
     if (targetEntities.target) {
-      ids.target = targetEntities.target.id || 'unknown';
+      let targetData = targetEntities.target;
+      // Handle arrays
+      if (Array.isArray(targetData)) {
+        targetData = targetData.length > 0 ? targetData[0] : null;
+      }
+      ids.target = targetData?.id || 'unknown';
     }
 
     // Handle multi-target format
     for (const role of ['actor', 'primary', 'secondary', 'tertiary']) {
       if (targetEntities[role]) {
-        ids[role] = targetEntities[role].id || 'unknown';
+        let targetData = targetEntities[role];
+        // Handle arrays - extract first element
+        if (Array.isArray(targetData)) {
+          targetData = targetData.length > 0 ? targetData[0] : null;
+        }
+        ids[role] = targetData?.id || 'unknown';
       }
     }
 

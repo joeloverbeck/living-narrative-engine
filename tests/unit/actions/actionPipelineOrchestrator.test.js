@@ -5,7 +5,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { ActionPipelineOrchestrator } from '../../../src/actions/actionPipelineOrchestrator.js';
 import { Pipeline } from '../../../src/actions/pipeline/Pipeline.js';
-import { PipelineResult } from '../../../src/actions/pipeline/PipelineResult.js';
 import { ComponentFilteringStage } from '../../../src/actions/pipeline/stages/ComponentFilteringStage.js';
 import { PrerequisiteEvaluationStage } from '../../../src/actions/pipeline/stages/PrerequisiteEvaluationStage.js';
 import { TargetComponentValidationStage } from '../../../src/actions/pipeline/stages/TargetComponentValidationStage.js';
@@ -76,6 +75,9 @@ describe('ActionPipelineOrchestrator', () => {
       targetComponentValidator: {
         validateTargetComponents: jest.fn(),
       },
+      targetRequiredComponentsValidator: {
+        validateTargetRequirements: jest.fn(),
+      },
     };
 
     // Setup Pipeline mock
@@ -130,6 +132,7 @@ describe('ActionPipelineOrchestrator', () => {
 
       expect(TargetComponentValidationStage).toHaveBeenCalledWith({
         targetComponentValidator: mockDependencies.targetComponentValidator,
+        targetRequiredComponentsValidator: mockDependencies.targetRequiredComponentsValidator,
         logger: mockDependencies.logger,
         actionErrorContextBuilder: mockDependencies.errorBuilder,
       });
@@ -362,7 +365,7 @@ describe('ActionPipelineOrchestrator', () => {
 
       // Find the multiTargetResolutionStage
       expect(stages).toContain(mockDependencies.multiTargetResolutionStage);
-      expect(stages[3]).toBe(mockDependencies.multiTargetResolutionStage);
+      expect(stages[2]).toBe(mockDependencies.multiTargetResolutionStage);
     });
   });
 });

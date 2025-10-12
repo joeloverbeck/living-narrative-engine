@@ -115,6 +115,12 @@ export class MultiTargetResolutionStage extends PipelineStage {
     const stageStartTime = Date.now();
     const startPerformanceTime = performance.now(); // ACTTRA-018: Performance timing
 
+    console.log('\n=== MULTITARGETRESOLUTIONSTAGE ENTRY ===');
+    console.log('Candidate actions count:', candidateActions.length);
+    console.log('Candidate action IDs:', candidateActions.map(a => a.id));
+    console.log('Actor ID:', actor.id);
+    console.log('=== END ENTRY ===\n');
+
     trace?.step(
       `Resolving targets for ${candidateActions.length} candidate actions`,
       'MultiTargetResolutionStage'
@@ -141,6 +147,10 @@ export class MultiTargetResolutionStage extends PipelineStage {
 
     // Process each candidate action
     for (const actionDef of candidateActions) {
+      console.log(`\n--- Processing action: ${actionDef.id} ---`);
+      console.log('Action has targets?', !!actionDef.targets);
+      console.log('Targets:', JSON.stringify(actionDef.targets, null, 2));
+
       try {
         trace?.step(
           `Resolving targets for action '${actionDef.id}'`,
@@ -254,7 +264,8 @@ export class MultiTargetResolutionStage extends PipelineStage {
                 resolutionTimeMs: Date.now() - resolutionStartTime,
                 targetKeys,
                 resolvedTargetCounts,
-                totalTargetCount: Object.values(resolvedTargetCounts).reduce(
+                resolvedTargets: result.data?.resolvedTargets || {},
+                targetCount: Object.values(resolvedTargetCounts).reduce(
                   (sum, count) => sum + count,
                   0
                 ),
@@ -328,6 +339,11 @@ export class MultiTargetResolutionStage extends PipelineStage {
         Date.now() - stageStartTime
       );
     }
+
+    console.log('\n=== MULTITARGETRESOLUTIONSTAGE EXIT ===');
+    console.log('Actions with resolved targets:', allActionsWithTargets.length);
+    console.log('Action IDs with targets:', allActionsWithTargets.map(awt => awt.actionDef.id));
+    console.log('=== END EXIT ===\n');
 
     trace?.info(
       `Target resolution completed: ${allActionsWithTargets.length} actions with targets`,
@@ -491,6 +507,9 @@ export class MultiTargetResolutionStage extends PipelineStage {
     const targetDefs = actionDef.targets;
     const resolutionStartTime = Date.now();
 
+    console.log(`\n### #resolveMultiTargets for action: ${actionDef.id} ###`);
+    console.log('targetDefs:', JSON.stringify(targetDefs, null, 2));
+
     // Validate targets object
     if (!targetDefs || typeof targetDefs !== 'object') {
       return PipelineResult.failure(
@@ -543,6 +562,9 @@ export class MultiTargetResolutionStage extends PipelineStage {
     for (const targetKey of resolutionOrder) {
       const targetDef = targetDefs[targetKey];
       const scopeStartTime = Date.now();
+
+      console.log(`\n  >> Resolving target key: ${targetKey}`);
+      console.log('  >> Target def:', JSON.stringify(targetDef, null, 2));
 
       trace?.step(
         `Resolving ${targetKey} target`,
@@ -693,6 +715,9 @@ export class MultiTargetResolutionStage extends PipelineStage {
           trace
         );
 
+        console.log(`  >> Scope '${targetDef.scope}' resolved to ${candidates.length} candidates`);
+        console.log('  >> Candidate IDs:', candidates);
+
         detailedResolutionResults[targetKey].candidatesFound =
           candidates.length;
         detailedResolutionResults[targetKey].evaluationTimeMs =
@@ -711,6 +736,10 @@ export class MultiTargetResolutionStage extends PipelineStage {
 
         // Check if we found no candidates
         if (candidates.length === 0) {
+          console.log(`  ❌ NO CANDIDATES FOUND for target '${targetKey}'`);
+          console.log(`  ❌ Scope: ${targetDef.scope}`);
+          console.log(`  ❌ Action will be filtered out: ${actionDef.id}`);
+
           detailedResolutionResults[targetKey].failureReason =
             `No candidates found for scope '${targetDef.scope}' with actor context`;
 
@@ -748,6 +777,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
           .filter(Boolean); // Remove null entries
 
         resolvedCounts[targetKey] = resolvedTargets[targetKey].length;
+
         detailedResolutionResults[targetKey].candidatesResolved =
           resolvedTargets[targetKey].length;
 
@@ -801,6 +831,22 @@ export class MultiTargetResolutionStage extends PipelineStage {
       });
     }
 
+    // Attach resolved targets directly to actionDef for downstream stages
+    // This is critical for TargetComponentValidationStage which expects actionDef.resolvedTargets
+    actionDef.resolvedTargets = resolvedTargets;
+    actionDef.targetDefinitions = targetDefs;
+    actionDef.isMultiTarget = true;
+
+    const actionsWithTargets = [
+      {
+        actionDef,
+        targetContexts: allTargetContexts,
+        resolvedTargets,
+        targetDefinitions: targetDefs,
+        isMultiTarget: true,
+      },
+    ];
+
     return PipelineResult.success({
       data: {
         ...context.data,
@@ -808,12 +854,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
         targetContexts: allTargetContexts, // Backward compatibility
         targetDefinitions: targetDefs, // Pass definitions for formatting
         detailedResolutionResults, // Include detailed resolution results
-        actionsWithTargets: [
-          {
-            actionDef,
-            targetContexts: allTargetContexts,
-          },
-        ],
+        actionsWithTargets,
       },
     });
   }

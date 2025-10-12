@@ -100,6 +100,13 @@ describe('ScopeEngine', () => {
     actorId = 'actor123';
     actorEntity = { id: actorId, components: {} };
     jest.clearAllMocks();
+
+    // Reset mock implementations to prevent cross-test pollution
+    mockEntityManager.getEntityInstance.mockReset();
+    mockEntityManager.getComponentData.mockReset();
+    mockJsonLogicEval.evaluate.mockReset();
+    mockEntityManager.hasComponent.mockReset();
+
     // Reset entities array
     mockEntityManager.entities = [];
   });
@@ -700,6 +707,19 @@ describe('ScopeEngine', () => {
     beforeEach(() => {
       // Reset mocks before each test in this suite
       mockTraceContext.addLog.mockClear();
+
+      // Add unique identifier for this test run
+      mockTraceContext._testInstanceId = `test-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+
+      // Reset mock implementations that may have been set by previous tests
+      mockEntityManager.getEntityInstance.mockReset();
+      mockEntityManager.getComponentData.mockReset();
+      mockJsonLogicEval.evaluate.mockReset();
+
+      // CRITICAL: Reset getEntity mock that was set in previous test
+      if (mockEntityManager.getEntity && mockEntityManager.getEntity.mockReset) {
+        mockEntityManager.getEntity.mockReset();
+      }
     });
 
     test('resolve() should log start and end of resolution', () => {
@@ -750,21 +770,11 @@ describe('ScopeEngine', () => {
       // Mock JSON Logic evaluator to pass only item1
       mockJsonLogicEval.evaluate.mockImplementation((l, context) => {
         const result = context.entity.id === 'item1';
-        console.log('evaluate called:', {
-          entityId: context.entity?.id,
-          willPass: result,
-          resultType: typeof result,
-          resultBoolean: Boolean(result),
-          contextKeys: Object.keys(context),
-          hasEntity: !!context.entity,
-          entityId: context.entity?.id,
-        });
         return result;
       });
 
       // Mock getEntityInstance to return proper entity structures with components
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
-        console.log('[TEST] getEntityInstance called for:', id);
         return {
           id,
           components: {}, // Add components property for proper entity structure
@@ -780,9 +790,6 @@ describe('ScopeEngine', () => {
       });
 
       engine.resolve(ast, actorEntity, mockRuntimeCtx, mockTraceContext);
-
-      // Debug: Log all calls to understand what's happening
-      console.log('All addLog calls:', mockTraceContext.addLog.mock.calls);
 
       // Check for "before" log
       expect(mockTraceContext.addLog).toHaveBeenCalledWith(
