@@ -49,7 +49,10 @@
         "description_text": "{context.actorName} examines {context.itemName}: {context.itemDescription.text}",
         "perception_type": "item_examined",
         "actor_id": "{event.payload.actorId}",
-        "target_id": "{event.payload.targetId}"
+        "target_id": "{event.payload.targetId}",
+        "contextual_data": {
+          "recipientIds": ["{event.payload.actorId}"]
+        }
       }
     },
     {

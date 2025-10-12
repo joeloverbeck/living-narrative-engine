@@ -15,6 +15,7 @@ const DEFAULT_MAX_LOG_ENTRIES = 50;
  * @property {string} location_id           – Required. Location where the event happened.
  * @property {object} entry                 – Required. Log entry (descriptionText, timestamp, perceptionType, actorId…).
  * @property {string=} originating_actor_id – Optional. Actor who raised the event (auditing only).
+ * @property {string[]=} recipient_ids       – Optional. Explicit list of recipients for the log entry.
  */
 class AddPerceptionLogEntryHandler extends BaseOperationHandler {
   /** @type {import('../../entities/entityManager.js').default}       */ #entityManager;
@@ -54,7 +55,7 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
     ) {
       return null;
     }
-    const { location_id, entry } = params;
+    const { location_id, entry, recipient_ids } = params;
     if (typeof location_id !== 'string' || !location_id.trim()) {
       safeDispatchError(
         this.#dispatcher,
@@ -73,7 +74,11 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
       );
       return null;
     }
-    return { locationId: location_id.trim(), entry };
+    return {
+      locationId: location_id.trim(),
+      entry,
+      recipients: Array.isArray(recipient_ids) ? recipient_ids : undefined,
+    };
   }
 
   /**
@@ -86,14 +91,26 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
     /* ── validation ─────────────────────────────────────────────── */
     const validated = this.#validateParams(params, log);
     if (!validated) return;
-    const { locationId, entry } = validated;
+    const { locationId, entry, recipients } = validated;
 
     /* ── perceive who? ──────────────────────────────────────────── */
+    const normalizedRecipients = Array.isArray(recipients)
+      ? recipients
+          .filter((id) => typeof id === 'string' && id.trim())
+          .map((id) => id.trim())
+      : [];
+
+    const usingExplicitRecipients = normalizedRecipients.length > 0;
+
     const entityIds =
-      this.#entityManager.getEntitiesInLocation(locationId) ?? new Set();
+      usingExplicitRecipients
+        ? new Set(normalizedRecipients)
+        : this.#entityManager.getEntitiesInLocation(locationId) ?? new Set();
     if (entityIds.size === 0) {
       log.debug(
-        `ADD_PERCEPTION_LOG_ENTRY: No entities in location ${locationId}`
+        usingExplicitRecipients
+          ? `ADD_PERCEPTION_LOG_ENTRY: No matching recipients for ${locationId}`
+          : `ADD_PERCEPTION_LOG_ENTRY: No entities in location ${locationId}`
       );
       return;
     }
@@ -162,7 +179,9 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
           }
 
           log.debug(
-            `ADD_PERCEPTION_LOG_ENTRY: wrote entry to ${updateCount}/${entityIds.size} perceivers in ${locationId} (batch mode)`
+            `ADD_PERCEPTION_LOG_ENTRY: wrote entry to ${updateCount}/${entityIds.size} perceivers ${
+              usingExplicitRecipients ? '(targeted)' : `in ${locationId}`
+            } (batch mode)`
           );
         } else {
           // Fallback to regular batch method if optimized version doesn't exist
@@ -185,7 +204,9 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
           }
 
           log.debug(
-            `ADD_PERCEPTION_LOG_ENTRY: wrote entry to ${updated}/${entityIds.size} perceivers in ${locationId}`
+            `ADD_PERCEPTION_LOG_ENTRY: wrote entry to ${updated}/${entityIds.size} perceivers ${
+              usingExplicitRecipients ? '(targeted)' : `in ${locationId}`
+            }`
           );
         }
       } catch (e) {
@@ -209,9 +230,11 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
           }
         }
 
-        log.debug(
-          `ADD_PERCEPTION_LOG_ENTRY: wrote entry to ${updated}/${entityIds.size} perceivers in ${locationId} (fallback mode)`
-        );
+          log.debug(
+            `ADD_PERCEPTION_LOG_ENTRY: wrote entry to ${updated}/${entityIds.size} perceivers ${
+              usingExplicitRecipients ? '(targeted)' : `in ${locationId}`
+            } (fallback mode)`
+          );
       }
     } else {
       log.debug(
