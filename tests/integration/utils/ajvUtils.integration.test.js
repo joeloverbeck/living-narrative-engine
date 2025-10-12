@@ -5,6 +5,7 @@ import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import { EntityInstanceLoader } from '../../../src/loaders/entityInstanceLoader.js';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
 import { ValidationError } from '../../../src/errors/validationError.js';
+import { formatAjvErrors } from '../../../src/utils/ajvUtils.js';
 
 const ENTITY_INSTANCE_SCHEMA_PATH = path.resolve(
   'data/schemas/entity-instance.schema.json'
@@ -42,6 +43,53 @@ const SIMPLE_COMPONENT_SCHEMA = {
   },
   required: ['mandatory'],
   additionalProperties: false,
+};
+
+const CASCADE_REQUIRED_FIELDS = Array.from({ length: 60 }, (_, index) =>
+  `global${index}`
+);
+const CASCADE_GLOBAL_PROPERTIES = Object.fromEntries(
+  CASCADE_REQUIRED_FIELDS.map((field) => [field, { type: 'string' }])
+);
+const CASCADE_DIAGNOSTIC_SCHEMA_ID =
+  'integration-tests:cascadeDiagnosticComponent';
+const CASCADE_DIAGNOSTIC_SCHEMA = {
+  $id: CASCADE_DIAGNOSTIC_SCHEMA_ID,
+  type: 'object',
+  properties: {
+    type: { type: 'string' },
+    parameters: {
+      type: 'object',
+      properties: {
+        requiredField: { type: 'string' },
+        numericField: { type: 'number', minimum: 0 },
+        operationType: { type: 'string' },
+      },
+      required: ['requiredField', 'numericField', 'operationType'],
+      additionalProperties: false,
+    },
+    ...CASCADE_GLOBAL_PROPERTIES,
+  },
+  required: ['type', 'parameters', ...CASCADE_REQUIRED_FIELDS],
+  additionalProperties: false,
+  anyOf: Array.from({ length: 60 }, (_, index) => ({
+    type: 'object',
+    properties: {
+      type: { const: `op${index}` },
+      parameters: {
+        type: 'object',
+        properties: {
+          requiredField: { type: 'string' },
+          numericField: { type: 'number', minimum: 0 },
+          operationType: { const: `op${index}` },
+        },
+        required: ['requiredField', 'numericField', 'operationType'],
+        additionalProperties: false,
+      },
+    },
+    required: ['type', 'parameters'],
+    additionalProperties: false,
+  })),
 };
 
 class TestLogger {
@@ -104,6 +152,10 @@ describe('formatAjvErrors integration via EntityInstanceLoader', () => {
     await schemaValidator.addSchema(
       SIMPLE_COMPONENT_SCHEMA,
       SIMPLE_COMPONENT_SCHEMA_ID
+    );
+    await schemaValidator.addSchema(
+      CASCADE_DIAGNOSTIC_SCHEMA,
+      CASCADE_DIAGNOSTIC_SCHEMA_ID
     );
 
     configuration = {
@@ -225,5 +277,63 @@ describe('formatAjvErrors integration via EntityInstanceLoader', () => {
         message.includes('must be string') && message.includes('"keyword": "type"')
       )
     ).toBe(true);
+  });
+
+  it('highlights invalid operation types when cascades overwhelm the raw output', async () => {
+    const componentData = {
+      type: 'op999',
+      parameters: {
+        requiredField: 'value',
+        numericField: 1,
+        operationType: 'op999',
+      },
+    };
+
+    const validationResult = await schemaValidator.validate(
+      CASCADE_DIAGNOSTIC_SCHEMA_ID,
+      componentData
+    );
+
+    expect(validationResult.isValid ?? validationResult.valid).toBe(false);
+    const cascadeErrors = validationResult.errors.filter((error) =>
+      error.schemaPath.includes('/anyOf/')
+    );
+    const formatted = formatAjvErrors(cascadeErrors, componentData);
+
+    expect(formatted).toContain("Invalid operation type 'op999'");
+    expect(formatted).toContain('Valid types are: op0, op1');
+  });
+
+  it('extracts the matching operation slice even for overwhelming cascades', async () => {
+    const componentData = {
+      type: 'op5',
+      parameters: {
+        requiredField: 'value',
+        numericField: 1,
+        operationType: 'wrong',
+      },
+    };
+
+    const validationResult = await schemaValidator.validate(
+      CASCADE_DIAGNOSTIC_SCHEMA_ID,
+      componentData
+    );
+
+    expect(validationResult.isValid ?? validationResult.valid).toBe(false);
+    const cascadeErrors = validationResult.errors.filter((error) =>
+      error.schemaPath.includes('/anyOf/')
+    );
+    const simulatedTypeError = {
+      instancePath: '',
+      schemaPath: '#/anyOf/5/properties/type/const',
+      keyword: 'const',
+      params: { allowedValue: 'op5' },
+      message: 'must be equal to constant',
+    };
+    const augmentedErrors = [simulatedTypeError, ...cascadeErrors];
+    const formatted = formatAjvErrors(augmentedErrors, componentData);
+
+    expect(formatted).toContain("Validation failed for 'op5' operation:");
+    expect(formatted).toContain('"schemaPath": "#/anyOf/5/properties/type/const"');
   });
 });
