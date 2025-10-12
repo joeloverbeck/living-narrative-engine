@@ -531,7 +531,13 @@
       "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/items/giveItemActionDiscovery.test.js tests/integration/mods/items/dropThenPickupCacheStaleness.test.js tests/integration/mods/items/takeFromContainerActionDiscovery.test.js --no-coverage --silent)",
       "Bash(NODE_ENV=test npm run test:integration -- tests/integration/validation/operationSchemaRegistration.test.js --no-coverage --verbose)",
       "Bash(NODE_ENV=test npm run test:integration -- tests/integration/configuration/loggerConfigLoader.integration.test.js --silent)",
-      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/validation/operationSchemaRegistration.test.js --no-coverage --silent)"
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/validation/operationSchemaRegistration.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/items/openContainerRuleExecution.test.js tests/integration/mods/items/takeFromContainerRuleExecution.test.js --coverage --silent)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/items/containerWorkflow.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/items/containerWorkflow.test.js tests/integration/mods/items/fullSystemIntegration.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npm run test:ci)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/items/ruleSchemaAdditionalPropertiesValidation.test.js --silent)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/items/fullSystemIntegration.test.js --silent)"
     ],
     "deny": [],
     "ask": []

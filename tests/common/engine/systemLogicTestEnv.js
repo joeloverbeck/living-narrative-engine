@@ -433,6 +433,21 @@ export function createBaseRuleEnvironment({
           return { success: true, value: new Set(inventory.items) };
         }
 
+        // Handle the items:examinable_items scope (union of inventory + location items)
+        if (scopeName === 'items:examinable_items') {
+          // Get items from inventory
+          const inventoryResult = simpleScopeResolver.resolveSync('items:actor_inventory_items', context);
+          const inventoryItems = inventoryResult.success ? inventoryResult.value : new Set();
+
+          // Get items at location
+          const locationResult = simpleScopeResolver.resolveSync('items:items_at_location', context);
+          const locationItems = locationResult.success ? locationResult.value : new Set();
+
+          // Union both sets
+          const allItems = new Set([...inventoryItems, ...locationItems]);
+          return { success: true, value: allItems };
+        }
+
         // Handle other scopes or return empty set
         if (scopeName === 'none' || scopeName === 'self') {
           return { success: true, value: new Set([scopeName]) };
@@ -843,6 +858,30 @@ export function createRuleTestEnvironment(options) {
       }
 
       pendingAssignments = nextAssignments;
+    }
+
+    // Validate required_components for all resolved targets
+    if (action.required_components) {
+      for (const { resolvedTargets } of pendingAssignments) {
+        // Check each target key (primary, secondary, tertiary)
+        for (const [targetKey, target] of Object.entries(resolvedTargets)) {
+          const requiredComponents = action.required_components[targetKey];
+
+          if (!requiredComponents || !Array.isArray(requiredComponents)) {
+            continue; // No requirements for this target
+          }
+
+          // Check if target has all required components
+          for (const componentId of requiredComponents) {
+            if (!target.components || !target.components[componentId]) {
+              env.logger.debug(
+                `Action ${actionId} filtered out: ${targetKey} target ${target.id} missing required component ${componentId}`
+              );
+              return false; // Target missing required component
+            }
+          }
+        }
+      }
     }
 
     return pendingAssignments.length > 0;

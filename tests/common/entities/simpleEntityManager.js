@@ -37,6 +37,10 @@ export default class SimpleEntityManager {
     this.entities.clear();
     this.entityInstanceCache.clear(); // Clear cache when entities change
     for (const e of entities) {
+      if (!e) {
+        console.warn('SimpleEntityManager.setEntities: Skipping null/undefined entity');
+        continue;
+      }
       const cloned = deepClone(e);
       this.entities.set(cloned.id, cloned);
     }
