@@ -10,6 +10,7 @@ import fs from 'fs';
 import path from 'path';
 import { Glob } from 'glob';
 import perceptibleEventSchema from '../../../data/mods/core/events/perceptible_event.event.json';
+import dispatchPerceptibleEventOperationSchema from '../../../data/schemas/operations/dispatchPerceptibleEvent.schema.json';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 
 describe('Perceptible Event Validation Regression Tests', () => {
@@ -83,6 +84,27 @@ describe('Perceptible Event Validation Regression Tests', () => {
     }
 
     expect(invalidTypes).toHaveLength(0);
+  });
+
+  it('allows all perception types defined by the operation schema', () => {
+    const eventPerceptionTypes = new Set(
+      perceptibleEventSchema.payloadSchema.properties.perceptionType.enum
+    );
+    const operationPerceptionTypes =
+      dispatchPerceptibleEventOperationSchema.$defs.Parameters.properties.perception_type.enum;
+
+    const missingInEventSchema = operationPerceptionTypes.filter(
+      (type) => !eventPerceptionTypes.has(type)
+    );
+
+    if (missingInEventSchema.length > 0) {
+      console.log(
+        'Perception types missing from perceptible_event event schema:',
+        missingInEventSchema
+      );
+    }
+
+    expect(missingInEventSchema).toHaveLength(0);
   });
 
   it('validates targetId values follow correct patterns', () => {
