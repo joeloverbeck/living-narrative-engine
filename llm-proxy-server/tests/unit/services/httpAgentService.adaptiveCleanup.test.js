@@ -126,6 +126,48 @@ describe('HttpAgentService - Adaptive Cleanup', () => {
         expect.stringMatching(/Scheduled next cleanup in \d+ms/)
       );
     });
+
+    it('should shrink cleanup interval under high load and memory pressure', () => {
+      const mockSetTimeout = jest.spyOn(global, 'setTimeout');
+
+      httpAgentService = new HttpAgentService(mockLogger, {
+        baseCleanupIntervalMs: 1000,
+        minCleanupIntervalMs: 100,
+        maxCleanupIntervalMs: 10000,
+        highLoadRequestsPerMin: 1,
+        memoryThresholdMB: 0.000001,
+      });
+
+      // Generate enough recent requests to trigger the high load branch
+      httpAgentService.getAgent('https://api-high-load.example.com');
+      httpAgentService.getAgent('https://api-high-load.example.com');
+      httpAgentService.getAgent('https://api-high-load.example.com');
+
+      // Ignore the initial scheduling call from the constructor
+      mockSetTimeout.mockClear();
+
+      // Trigger the scheduled cleanup so the next interval is recalculated
+      jest.advanceTimersByTime(1000);
+
+      expect(mockSetTimeout).toHaveBeenCalled();
+      const [, scheduledDelay] = mockSetTimeout.mock.calls.at(-1);
+      expect(scheduledDelay).toBeLessThan(1000);
+
+      const adjustmentCall = mockLogger.debug.mock.calls.find(([message]) =>
+        message.includes('Adaptive cleanup interval adjusted')
+      );
+
+      expect(adjustmentCall).toBeDefined();
+      expect(adjustmentCall[0]).toContain('high-load+high-memory+few-agents');
+      expect(adjustmentCall[1]).toMatchObject({
+        requestRate: expect.any(Number),
+        memoryUsageMB: expect.any(Number),
+        agentCount: expect.any(Number),
+        intervalMultiplier: expect.any(Number),
+      });
+
+      mockSetTimeout.mockRestore();
+    });
   });
 
   describe('Request frequency tracking', () => {
