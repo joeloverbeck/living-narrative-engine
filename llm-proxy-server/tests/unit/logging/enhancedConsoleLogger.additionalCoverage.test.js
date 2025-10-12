@@ -16,16 +16,27 @@ const ORIGINAL_CONSOLE = {
   log: console.log,
 };
 
+let originalGlobalReference;
+let originalGlobalThisChalk;
+
 describe('EnhancedConsoleLogger additional coverage', () => {
   beforeEach(() => {
     jest.resetModules();
     jest.clearAllMocks();
     process.env = { ...ORIGINAL_ENV };
+    originalGlobalReference = global;
+    originalGlobalThisChalk = globalThis.chalk;
     delete globalThis.chalk;
   });
 
   afterEach(() => {
     process.env = { ...ORIGINAL_ENV };
+    global = originalGlobalReference;
+    if (originalGlobalThisChalk === undefined) {
+      delete globalThis.chalk;
+    } else {
+      globalThis.chalk = originalGlobalThisChalk;
+    }
     console.debug = ORIGINAL_CONSOLE.debug;
     console.info = ORIGINAL_CONSOLE.info;
     console.warn = ORIGINAL_CONSOLE.warn;
@@ -91,6 +102,66 @@ describe('EnhancedConsoleLogger additional coverage', () => {
       expect.stringContaining('ServiceName: global chalk works')
     );
     expect(infoSpy.mock.calls[0][0]).toContain('[2024-01-01T00:00:00.000Z]');
+
+    infoSpy.mockRestore();
+  });
+
+  it('prefers chalk from the Node global when globalThis has none', async () => {
+    const nodeGlobalChalk = {
+      blue: jest.fn((value) => value),
+      cyan: jest.fn((value) => value),
+      green: jest.fn((value) => value),
+      yellow: jest.fn((value) => value),
+      red: { bold: jest.fn((value) => value) },
+      gray: Object.assign(jest.fn((value) => value), {
+        italic: jest.fn((value) => value),
+      }),
+    };
+
+    // Remove any chalk reference from globalThis and replace the Node global object
+    delete globalThis.chalk;
+    global = { chalk: nodeGlobalChalk, console };
+
+    jest.doMock('../../../src/logging/loggerConfiguration.js', () => ({
+      getLoggerConfiguration: () => ({
+        isColorsEnabled: () => true,
+        isIconsEnabled: () => true,
+        isPrettyFormatEnabled: () => true,
+        getMaxMessageLength: () => 200,
+        shouldShowContext: () => true,
+        isDevelopment: () => false,
+      }),
+    }));
+
+    jest.doMock('../../../src/logging/logFormatter.js', () => ({
+      getLogFormatter: () => ({
+        formatMessage: (level, message, ...args) => ({
+          timestamp: '2024-01-01T00:00:00.000Z',
+          icon: '',
+          level: level.toUpperCase(),
+          service: 'NodeGlobalService',
+          message,
+          contextLines: args.map((arg, index) => `ctx-${index}:${JSON.stringify(arg)}`),
+        }),
+        formatSimple: jest.fn(),
+      }),
+    }));
+
+    const infoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
+
+    const { getEnhancedConsoleLogger } = await import(
+      '../../../src/logging/enhancedConsoleLogger.js'
+    );
+    const logger = getEnhancedConsoleLogger();
+
+    logger.info('node global chalk works', { id: 123 });
+
+    expect(nodeGlobalChalk.blue).toHaveBeenCalledWith('test');
+    expect(nodeGlobalChalk.green).toHaveBeenCalledWith('INFO');
+    expect(nodeGlobalChalk.gray.italic).toHaveBeenCalled();
+    expect(infoSpy).toHaveBeenCalledWith(
+      expect.stringContaining('NodeGlobalService: node global chalk works')
+    );
 
     infoSpy.mockRestore();
   });
@@ -192,5 +263,67 @@ describe('EnhancedConsoleLogger additional coverage', () => {
     infoSpy.mockRestore();
     warnSpy.mockRestore();
     errorSpy.mockRestore();
+  });
+
+  it('sanitizes sensitive strings and nested objects while preserving service prefixes', async () => {
+    process.env.NODE_ENV = 'production';
+
+    jest.doMock('../../../src/logging/loggerConfiguration.js', () => ({
+      getLoggerConfiguration: () => ({
+        isColorsEnabled: () => false,
+        isIconsEnabled: () => false,
+        isPrettyFormatEnabled: () => false,
+        getMaxMessageLength: () => 200,
+        shouldShowContext: () => true,
+        isDevelopment: () => false,
+      }),
+    }));
+
+    const formatSimple = jest.fn(
+      (level, message, ...args) =>
+        `${level.toUpperCase()}|${message}|${JSON.stringify(args)}`
+    );
+
+    jest.doMock('../../../src/logging/logFormatter.js', () => ({
+      getLogFormatter: () => ({
+        formatMessage: jest.fn(),
+        formatSimple,
+      }),
+    }));
+
+    const infoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
+
+    const { getEnhancedConsoleLogger } = await import(
+      '../../../src/logging/enhancedConsoleLogger.js'
+    );
+    const logger = getEnhancedConsoleLogger();
+
+    logger.info('ApiKeyService: safe prefix', 'Bearer sk-secret-token', {
+      nested: { token: 'super-secret', keep: 'data' },
+      credentials: [
+        { password: 'hunter2' },
+        { nested: { apiKey: 'abcd1234' } },
+      ],
+      normal: 'value',
+    });
+
+    expect(formatSimple).toHaveBeenCalledTimes(1);
+    const [, sanitizedMessage, ...sanitizedArgs] = formatSimple.mock.calls[0];
+    expect(sanitizedMessage).toBe('ApiKeyService: safe prefix');
+    expect(sanitizedArgs[0]).toBe('[MASKED]');
+    expect(sanitizedArgs[1]).toEqual({
+      nested: { token: '[MASKED]', keep: 'data' },
+      credentials: [
+        { password: '[MASKED]' },
+        { nested: { apiKey: '[MASKED]' } },
+      ],
+      normal: 'value',
+    });
+
+    expect(infoSpy).toHaveBeenCalledWith(
+      expect.stringContaining('INFO|ApiKeyService: safe prefix|')
+    );
+
+    infoSpy.mockRestore();
   });
 });
