@@ -741,6 +741,76 @@ describe('Server - Comprehensive Tests', () => {
       );
     });
 
+    test('graceful shutdown cleans up salvage service when cleanup method exists', async () => {
+      await import('../../../src/core/server.js');
+
+      const sigtermHandler = process.on.mock.calls.find(
+        (call) => call[0] === 'SIGTERM'
+      )[1];
+
+      sigtermHandler();
+
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(salvageServiceInstance.cleanup).toHaveBeenCalled();
+      expect(consoleLoggerInstance.info).toHaveBeenCalledWith(
+        'LLM Proxy Server: Response salvage service cleaned up'
+      );
+    });
+
+    test('graceful shutdown clears metrics service when clear method exists', async () => {
+      await import('../../../src/core/server.js');
+
+      const sigtermHandler = process.on.mock.calls.find(
+        (call) => call[0] === 'SIGTERM'
+      )[1];
+
+      sigtermHandler();
+
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(metricsServiceInstance.clear).toHaveBeenCalled();
+      expect(consoleLoggerInstance.info).toHaveBeenCalledWith(
+        'LLM Proxy Server: Metrics service cleaned up'
+      );
+    });
+
+    test('graceful shutdown handles salvage service without cleanup method', async () => {
+      delete salvageServiceInstance.cleanup;
+
+      await import('../../../src/core/server.js');
+
+      const sigtermHandler = process.on.mock.calls.find(
+        (call) => call[0] === 'SIGTERM'
+      )[1];
+
+      sigtermHandler();
+
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(consoleLoggerInstance.info).not.toHaveBeenCalledWith(
+        'LLM Proxy Server: Response salvage service cleaned up'
+      );
+    });
+
+    test('graceful shutdown handles metrics service without clear method', async () => {
+      delete metricsServiceInstance.clear;
+
+      await import('../../../src/core/server.js');
+
+      const sigtermHandler = process.on.mock.calls.find(
+        (call) => call[0] === 'SIGTERM'
+      )[1];
+
+      sigtermHandler();
+
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(consoleLoggerInstance.info).not.toHaveBeenCalledWith(
+        'LLM Proxy Server: Metrics service cleaned up'
+      );
+    });
+
     test('graceful shutdown handles missing httpAgentService cleanup method', async () => {
       // Create httpAgentService without cleanup method
       const httpAgentServiceWithoutCleanup = {
