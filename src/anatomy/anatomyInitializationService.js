@@ -351,4 +351,41 @@ export class AnatomyInitializationService {
 
     this.#logger.info('AnatomyInitializationService: Destroyed');
   }
+
+  /**
+   * @description Test-only helper that directly manipulates the internal queue and pending state.
+   * @param {object} [state] - Desired state overrides.
+   * @param {string[]} [state.queue] - Entity IDs that should be present in the generation queue.
+   * @param {string[]} [state.pending] - Entity IDs that should be marked as pending generations.
+   * @param {boolean} [state.processing] - Whether the service should consider the queue as currently processing.
+   * @returns {void}
+   */
+  __TEST_ONLY__setInternalState({ queue, pending, processing } = {}) {
+    if (Array.isArray(queue)) {
+      this.#generationQueue.length = 0;
+      queue.forEach((id) => this.#generationQueue.push(id));
+    }
+
+    if (Array.isArray(pending)) {
+      this.#pendingGenerations.clear();
+      pending.forEach((id) => this.#pendingGenerations.add(id));
+    }
+
+    if (typeof processing === 'boolean') {
+      this.#isProcessingQueue = processing;
+    }
+  }
+
+  /**
+   * @description Test-only helper that executes the internal queue processor.
+   * @param {{ ensureProcessingFlag?: boolean }} [options] - Behaviour customization options.
+   * @returns {Promise<void>} Resolves once queue processing has completed.
+   */
+  async __TEST_ONLY__processQueue({ ensureProcessingFlag = false } = {}) {
+    if (ensureProcessingFlag) {
+      this.#isProcessingQueue = false;
+    }
+
+    await this.#processQueue();
+  }
 }
