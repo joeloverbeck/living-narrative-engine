@@ -13,6 +13,9 @@ import {
 import {
   SALVAGE_DEFAULT_TTL,
   SALVAGE_MAX_ENTRIES,
+  DEBUG_LOGGING_DEFAULT_WRITE_BUFFER_SIZE,
+  DEBUG_LOGGING_DEFAULT_FLUSH_INTERVAL,
+  DEBUG_LOGGING_DEFAULT_MAX_CONCURRENT_WRITES,
 } from '../../../src/config/constants.js';
 import { TestEnvironmentManager } from '../../common/testServerUtils.js';
 
@@ -341,6 +344,28 @@ describe('AppConfigService - Comprehensive Tests', () => {
       const config = service.getSalvageConfig();
 
       expect(config).toEqual({ defaultTtl: 900000, maxEntries: 4096 });
+    });
+
+    test('salvage TTL invalid values fall back to default and warn', () => {
+      process.env.SALVAGE_DEFAULT_TTL = 'not-a-number';
+
+      const service = getAppConfigService(logger);
+
+      expect(service.getSalvageDefaultTtl()).toBe(SALVAGE_DEFAULT_TTL);
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('SALVAGE_DEFAULT_TTL invalid')
+      );
+    });
+
+    test('salvage max entries invalid values fall back to default and warn', () => {
+      process.env.SALVAGE_MAX_ENTRIES = '0';
+
+      const service = getAppConfigService(logger);
+
+      expect(service.getSalvageMaxEntries()).toBe(SALVAGE_MAX_ENTRIES);
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('SALVAGE_MAX_ENTRIES invalid')
+      );
     });
   });
 
@@ -742,6 +767,19 @@ describe('AppConfigService - Comprehensive Tests', () => {
       expect(service.getDebugLoggingWriteBufferSize()).toBe(200);
     });
 
+    test('getDebugLoggingWriteBufferSize resets invalid values to default and warns', () => {
+      process.env.DEBUG_LOGGING_WRITE_BUFFER_SIZE = '0';
+
+      const service = getAppConfigService(logger);
+
+      expect(service.getDebugLoggingWriteBufferSize()).toBe(
+        DEBUG_LOGGING_DEFAULT_WRITE_BUFFER_SIZE
+      );
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('DEBUG_LOGGING_WRITE_BUFFER_SIZE invalid')
+      );
+    });
+
     test('getDebugLoggingFlushInterval returns default value when not set', () => {
       const service = getAppConfigService(logger);
 
@@ -755,6 +793,19 @@ describe('AppConfigService - Comprehensive Tests', () => {
       expect(service.getDebugLoggingFlushInterval()).toBe(5000);
     });
 
+    test('getDebugLoggingFlushInterval resets invalid values to default and warns', () => {
+      process.env.DEBUG_LOGGING_FLUSH_INTERVAL = '50';
+
+      const service = getAppConfigService(logger);
+
+      expect(service.getDebugLoggingFlushInterval()).toBe(
+        DEBUG_LOGGING_DEFAULT_FLUSH_INTERVAL
+      );
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('DEBUG_LOGGING_FLUSH_INTERVAL invalid')
+      );
+    });
+
     test('getDebugLoggingMaxConcurrentWrites returns default value when not set', () => {
       const service = getAppConfigService(logger);
 
@@ -766,6 +817,19 @@ describe('AppConfigService - Comprehensive Tests', () => {
       const service = getAppConfigService(logger);
 
       expect(service.getDebugLoggingMaxConcurrentWrites()).toBe(10);
+    });
+
+    test('getDebugLoggingMaxConcurrentWrites resets invalid values to default and warns', () => {
+      process.env.DEBUG_LOGGING_MAX_CONCURRENT_WRITES = '0';
+
+      const service = getAppConfigService(logger);
+
+      expect(service.getDebugLoggingMaxConcurrentWrites()).toBe(
+        DEBUG_LOGGING_DEFAULT_MAX_CONCURRENT_WRITES
+      );
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('DEBUG_LOGGING_MAX_CONCURRENT_WRITES invalid')
+      );
     });
 
     test('getDebugLoggingCleanupSchedule returns default value when not set', () => {
