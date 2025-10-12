@@ -189,7 +189,7 @@ export class TargetComponentValidator {
     // Check each target role
     for (const role of targetRoles) {
       const forbiddenComponents = forbiddenConfig[role];
-      let targetEntity = targetEntities[role];
+      const targetEntity = targetEntities[role];
 
       // Skip if no forbidden components for this role
       if (!forbiddenComponents || forbiddenComponents.length === 0) {
@@ -201,28 +201,33 @@ export class TargetComponentValidator {
         continue;
       }
 
-      // Handle array of targets - validate first target only
-      // (Pipeline creates separate action instances for each target)
-      if (Array.isArray(targetEntity)) {
-        if (targetEntity.length === 0) {
+      const normalizedTargets = Array.isArray(targetEntity)
+        ? targetEntity
+        : [targetEntity];
+
+      for (const candidate of normalizedTargets) {
+        if (!candidate) {
           continue;
         }
-        targetEntity = targetEntity[0];
-      }
 
-      const validation = this.validateEntityComponents(targetEntity, forbiddenComponents);
+        const validation = this.validateEntityComponents(
+          candidate,
+          forbiddenComponents
+        );
 
-      if (!validation.valid) {
-        const reason = `Action '${actionDef.id}' cannot be performed: ` +
-          `${role} target '${targetEntity.id || 'unknown'}' has forbidden component '${validation.component}'`;
+        if (!validation.valid) {
+          const reason =
+            `Action '${actionDef.id}' cannot be performed: ` +
+            `${role} target '${candidate.id || 'unknown'}' has forbidden component '${validation.component}'`;
 
-        this.#logger.debug(reason);
+          this.#logger.debug(reason);
 
-        // Short-circuit on first failure
-        return {
-          valid: false,
-          reason
-        };
+          // Short-circuit on first failure
+          return {
+            valid: false,
+            reason
+          };
+        }
       }
     }
 
