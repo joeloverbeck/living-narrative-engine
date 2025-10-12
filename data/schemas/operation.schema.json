@@ -172,6 +172,9 @@
         },
         {
           "$ref": "./operations/openContainer.schema.json"
+        },
+        {
+          "$ref": "./operations/takeFromContainer.schema.json"
         }
       ]
     }

@@ -528,7 +528,10 @@
       "Bash(NODE_ENV=test npm run test:integration -- tests/integration/schemas/actionSchemaBackwardCompatibility.integration.test.js --testNamePattern=\"should validate all existing action files\" --no-coverage)",
       "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/items/takeFromContainerRuleExecution.test.js --no-coverage --silent)",
       "Bash(NODE_ENV=test npm run test:unit -- tests/unit/logic/operationHandlers/takeFromContainerHandler.test.js --silent)",
-      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/items/giveItemActionDiscovery.test.js tests/integration/mods/items/dropThenPickupCacheStaleness.test.js tests/integration/mods/items/takeFromContainerActionDiscovery.test.js --no-coverage --silent)"
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/items/giveItemActionDiscovery.test.js tests/integration/mods/items/dropThenPickupCacheStaleness.test.js tests/integration/mods/items/takeFromContainerActionDiscovery.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/validation/operationSchemaRegistration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/configuration/loggerConfigLoader.integration.test.js --silent)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/validation/operationSchemaRegistration.test.js --no-coverage --silent)"
     ],
     "deny": [],
     "ask": []
