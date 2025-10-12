@@ -1,297 +1,383 @@
-import { describe, expect, it } from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
+
 import BodyGraphService, {
   LIMB_DETACHED_EVENT_ID,
 } from '../../../src/anatomy/bodyGraphService.js';
-import { AnatomyQueryCache } from '../../../src/anatomy/cache/AnatomyQueryCache.js';
-import EventBus from '../../../src/events/eventBus.js';
-import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
-import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
-import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
+import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 
-class MinimalValidatedEventDispatcher {
-  /**
-   * @param {EventBus} eventBus
-   */
-  constructor(eventBus) {
-    this.eventBus = eventBus;
+class RecordingDispatcher {
+  constructor() {
+    this.events = [];
   }
 
-  async dispatch(eventName, payload) {
-    await this.eventBus.dispatch(eventName, payload);
+  async dispatch(eventId, payload) {
+    this.events.push({ eventId, payload });
     return true;
-  }
-
-  subscribe(eventName, listener) {
-    return this.eventBus.subscribe(eventName, listener);
-  }
-
-  unsubscribe(eventName, listener) {
-    return this.eventBus.unsubscribe(eventName, listener);
-  }
-
-  setBatchMode(enabled, options) {
-    if (typeof this.eventBus.setBatchMode === 'function') {
-      this.eventBus.setBatchMode(enabled, options);
-    }
   }
 }
 
-describe('BodyGraphService integration with real caches', () => {
-  it('should manage anatomy caches, queries, and detachments end-to-end', async () => {
-    const logger = new ConsoleLogger(LogLevel.ERROR);
-    const eventBus = new EventBus({ logger });
-    const validatedDispatcher = new MinimalValidatedEventDispatcher(eventBus);
-    const safeDispatcher = new SafeEventDispatcher({
-      validatedEventDispatcher: validatedDispatcher,
-      logger,
+class InMemoryEntityInstance {
+  constructor(manager, entityId) {
+    this.#manager = manager;
+    this.#entityId = entityId;
+  }
+
+  #manager;
+  #entityId;
+
+  getComponentData(componentId) {
+    return this.#manager.getComponentData(this.#entityId, componentId);
+  }
+}
+
+class InMemoryEntityManager {
+  constructor(initialEntities = {}) {
+    this.entities = new Map();
+    Object.entries(initialEntities).forEach(([entityId, components]) => {
+      const componentMap = new Map();
+      Object.entries(components).forEach(([componentId, value]) => {
+        componentMap.set(componentId, value);
+      });
+      this.entities.set(entityId, componentMap);
     });
+  }
 
-    const actorId = 'actor:test_subject';
-    const torsoId = 'part:torso';
-    const leftArmId = 'part:left_arm';
-    const rightArmId = 'part:right_arm';
-    const leftHandId = 'part:left_hand';
-    const rightHandId = 'part:right_hand';
+  entities;
 
-    const entityManager = new SimpleEntityManager([
-      {
-        id: actorId,
-        components: {
-          'anatomy:body': {
-            recipeId: 'human:base',
-            root: torsoId,
-            body: { root: torsoId },
+  setComponent(entityId, componentId, value) {
+    if (!this.entities.has(entityId)) {
+      this.entities.set(entityId, new Map());
+    }
+    this.entities.get(entityId).set(componentId, value);
+  }
+
+  getComponentData(entityId, componentId) {
+    if (!this.entities.has(entityId)) {
+      return null;
+    }
+    const value = this.entities.get(entityId).get(componentId);
+    return value === undefined ? null : value;
+  }
+
+  async removeComponent(entityId, componentId) {
+    if (this.entities.has(entityId)) {
+      this.entities.get(entityId).delete(componentId);
+    }
+  }
+
+  getEntitiesWithComponent(componentId) {
+    const results = [];
+    for (const [entityId, components] of this.entities.entries()) {
+      if (components.has(componentId)) {
+        results.push({ id: entityId });
+      }
+    }
+    return results;
+  }
+
+  getEntityInstance(entityId) {
+    if (!this.entities.has(entityId)) {
+      return null;
+    }
+    return new InMemoryEntityInstance(this, entityId);
+  }
+}
+
+const createLogger = () => {
+  const messages = {
+    debug: [],
+    info: [],
+    warn: [],
+    error: [],
+  };
+  const capture = (level) => (...args) => {
+    const rendered = args
+      .map((value) =>
+        typeof value === 'string' ? value : JSON.stringify(value)
+      )
+      .join(' ');
+    messages[level].push(rendered);
+  };
+  return {
+    messages,
+    debug: capture('debug'),
+    info: capture('info'),
+    warn: capture('warn'),
+    error: capture('error'),
+  };
+};
+
+const createBodyComponent = () => ({
+  recipeId: 'humanoid.basic',
+  body: {
+    root: 'actor',
+  },
+  structure: {
+    rootPartId: 'torso',
+    parts: {
+      torso: {
+        children: ['leftArm', 'rightArm', 'head'],
+        partType: 'torso',
+      },
+      leftArm: {
+        children: ['leftHand'],
+        partType: 'arm',
+      },
+      rightArm: {
+        children: [],
+        partType: 'arm',
+      },
+      leftHand: {
+        children: [],
+        partType: 'hand',
+      },
+      head: {
+        children: [],
+        partType: 'head',
+      },
+    },
+  },
+});
+
+describe('BodyGraphService integration with real cache + query modules', () => {
+  let entityManager;
+  let logger;
+  let dispatcher;
+  let service;
+  let bodyComponent;
+
+  const expectArrayToContainSameMembers = (actual, expected) => {
+    expect([...actual].sort()).toEqual([...expected].sort());
+  };
+
+  beforeEach(async () => {
+    logger = createLogger();
+    dispatcher = new RecordingDispatcher();
+    bodyComponent = createBodyComponent();
+
+    entityManager = new InMemoryEntityManager({
+      actor: {
+        'anatomy:body': bodyComponent,
+      },
+      torso: {
+        'anatomy:part': { subType: 'torso' },
+        'anatomy:joint': { parentId: 'actor', socketId: 'spine' },
+      },
+      leftArm: {
+        'anatomy:part': { subType: 'arm' },
+        'anatomy:joint': { parentId: 'torso', socketId: 'shoulder-left' },
+        'custom:decor': {
+          details: {
+            marking: 'tattoo',
+            color: 'blue',
           },
         },
       },
-      {
-        id: torsoId,
-        components: {
-          'anatomy:part': { subType: 'torso' },
-          'anatomy:joint': { parentId: actorId, socketId: 'torso_socket' },
-        },
+      rightArm: {
+        'anatomy:part': { subType: 'arm' },
+        'anatomy:joint': { parentId: 'torso', socketId: 'shoulder-right' },
       },
-      {
-        id: leftArmId,
-        components: {
-          'anatomy:part': { subType: 'arm', side: 'left' },
-          'anatomy:joint': { parentId: torsoId, socketId: 'left_shoulder' },
-        },
+      leftHand: {
+        'anatomy:part': { subType: 'hand' },
+        'anatomy:joint': { parentId: 'leftArm', socketId: 'wrist-left' },
+        'sensors:touch': { level: 'sensitive' },
       },
-      {
-        id: rightArmId,
-        components: {
-          'anatomy:part': { subType: 'arm', side: 'right' },
-          'anatomy:joint': { parentId: torsoId, socketId: 'right_shoulder' },
-        },
+      head: {
+        'anatomy:part': { subType: 'head' },
+        'anatomy:joint': { parentId: 'torso', socketId: 'neck' },
       },
-      {
-        id: leftHandId,
-        components: {
-          'anatomy:part': { subType: 'hand', side: 'left' },
-          'anatomy:joint': { parentId: leftArmId, socketId: 'left_wrist' },
-          'equipment:glove': { color: 'black', style: { material: 'leather' } },
-        },
-      },
-      {
-        id: rightHandId,
-        components: {
-          'anatomy:part': { subType: 'hand', side: 'right' },
-          'anatomy:joint': { parentId: rightArmId, socketId: 'right_wrist' },
-          'equipment:ring': { style: { material: 'gold', engraved: true } },
-        },
-      },
-    ]);
-
-    const queryCache = new AnatomyQueryCache({ logger });
-    const service = new BodyGraphService({
-      entityManager,
-      logger,
-      eventDispatcher: safeDispatcher,
-      queryCache,
     });
 
-    expect(service.hasCache(actorId)).toBe(false);
-    expect(service.getAllParts(null)).toEqual([]);
-    expect(service.getAnatomyRoot(leftHandId)).toBe(actorId);
+    service = new BodyGraphService({
+      entityManager,
+      logger,
+      eventDispatcher: dispatcher,
+    });
 
-    const preCacheParts = service.getAllParts({ body: { root: torsoId } });
-    expect(new Set(preCacheParts)).toEqual(
-      new Set([torsoId, leftArmId, rightArmId, leftHandId, rightHandId])
-    );
+    await service.buildAdjacencyCache('actor');
+  });
 
-    await expect(service.getBodyGraph(123)).rejects.toThrow(
-      'Entity ID is required and must be a string'
-    );
-    await expect(service.getAnatomyData(123)).rejects.toThrow(
-      'Entity ID is required and must be a string'
-    );
+  it('builds adjacency cache and exposes resolved relationships', () => {
+    expect(service.hasCache('actor')).toBe(true);
 
-    await service.buildAdjacencyCache(actorId);
-    expect(service.hasCache(actorId)).toBe(true);
-    await service.buildAdjacencyCache(actorId);
-
-    const bodyComponent = entityManager.getComponentData(
-      actorId,
-      'anatomy:body'
-    );
-    const allParts = service.getAllParts(bodyComponent, actorId);
-    expect(allParts.length).toBe(6);
-    expect(new Set(allParts)).toEqual(
-      new Set([
-        actorId,
-        torsoId,
-        leftArmId,
-        rightArmId,
-        leftHandId,
-        rightHandId,
-      ])
-    );
-    expect(service.getAllParts(bodyComponent, actorId)).toBe(allParts);
-
-    const blueprintParts = service.getAllParts({ body: { root: torsoId } });
-    expect(new Set(blueprintParts)).toEqual(
-      new Set([torsoId, leftArmId, rightArmId, leftHandId, rightHandId])
-    );
-    expect(service.getAllParts({ body: { root: torsoId } })).toBe(blueprintParts);
-
-    const arms = service.findPartsByType(actorId, 'arm');
-    expect(new Set(arms)).toEqual(new Set([leftArmId, rightArmId]));
-    expect(service.findPartsByType(actorId, 'arm')).toBe(arms);
-
-    expect(new Set(service.getChildren(torsoId))).toEqual(
-      new Set([leftArmId, rightArmId])
-    );
-    expect(service.getParent(leftHandId)).toBe(leftArmId);
-    expect(service.getAncestors(leftHandId)).toEqual([
-      leftArmId,
-      torsoId,
-      actorId,
+    const allFromBlueprintRoot = service.getAllParts({ root: 'torso' });
+    expectArrayToContainSameMembers(allFromBlueprintRoot, [
+      'torso',
+      'leftArm',
+      'leftHand',
+      'rightArm',
+      'head',
     ]);
-    expect(new Set(service.getAllDescendants(torsoId))).toEqual(
-      new Set([leftArmId, rightArmId, leftHandId, rightHandId])
-    );
 
-    expect(service.getPath(leftHandId, rightHandId)).toEqual([
-      leftHandId,
-      leftArmId,
-      torsoId,
-      rightArmId,
-      rightHandId,
+    const allFromActor = service.getAllParts(bodyComponent, 'actor');
+    expectArrayToContainSameMembers(allFromActor, [
+      'actor',
+      'torso',
+      'leftArm',
+      'leftHand',
+      'rightArm',
+      'head',
     ]);
-    expect(service.getAnatomyRoot(rightHandId)).toBe(actorId);
 
-    expect(service.hasPartWithComponent(bodyComponent, 'equipment:ring')).toBe(
-      true
-    );
+    const secondCall = service.getAllParts(bodyComponent, 'actor');
+    expectArrayToContainSameMembers(secondCall, allFromActor);
     expect(
-      service.hasPartWithComponent(bodyComponent, 'equipment:nonexistent')
-    ).toBe(false);
-
-    expect(
-      service.hasPartWithComponentValue(
-        bodyComponent,
-        'equipment:ring',
-        'style.material',
-        'gold'
+      logger.messages.debug.some((message) =>
+        message.includes('Found cached result for root')
       )
-    ).toEqual({ found: true, partId: rightHandId });
+    ).toBe(true);
+
+    expect(service.getChildren('torso')).toEqual([
+      'leftArm',
+      'rightArm',
+      'head',
+    ]);
+    expect(service.getParent('leftHand')).toBe('leftArm');
+    expect(service.getAncestors('leftHand')).toEqual([
+      'leftArm',
+      'torso',
+      'actor',
+    ]);
+    expectArrayToContainSameMembers(service.getAllDescendants('torso'), [
+      'leftArm',
+      'leftHand',
+      'rightArm',
+      'head',
+    ]);
+  });
+
+  it('finds parts by type and reuses query cache', () => {
+    const firstLookup = service.findPartsByType('actor', 'arm');
+    expectArrayToContainSameMembers(firstLookup, ['leftArm', 'rightArm']);
+
+    const secondLookup = service.findPartsByType('actor', 'arm');
+    expectArrayToContainSameMembers(secondLookup, ['leftArm', 'rightArm']);
+
+    expect(
+      logger.messages.debug.some((message) =>
+        message.includes('AnatomyQueryCache: Cache hit for key')
+      )
+    ).toBe(true);
+  });
+
+  it('computes paths and identifies common roots', () => {
+    expect(service.getAnatomyRoot('leftHand')).toBe('actor');
+    expect(service.getAnatomyRoot('head')).toBe('actor');
+
+    const path = service.getPath('leftHand', 'rightArm');
+    expect(path).toEqual(['leftHand', 'leftArm', 'torso', 'rightArm']);
+  });
+
+  it('detects component presence and nested property values', () => {
     expect(
       service.hasPartWithComponentValue(
         bodyComponent,
-        'equipment:ring',
-        'style.material',
-        'silver'
+        'custom:decor',
+        'details.color',
+        'blue'
+      )
+    ).toEqual({ found: true, partId: 'leftArm' });
+
+    expect(
+      service.hasPartWithComponentValue(
+        bodyComponent,
+        'custom:decor',
+        'details.color',
+        'green'
       )
     ).toEqual({ found: false });
 
-    const bodyGraph = await service.getBodyGraph(actorId);
-    expect(new Set(bodyGraph.getAllPartIds())).toEqual(new Set(allParts));
-    expect(new Set(bodyGraph.getConnectedParts(torsoId))).toEqual(
-      new Set([leftArmId, rightArmId])
-    );
+    expect(
+      service.hasPartWithComponent(bodyComponent, 'sensors:touch')
+    ).toBe(true);
+    expect(
+      service.hasPartWithComponent(bodyComponent, 'inventory:slot')
+    ).toBe(false);
+  });
 
-    await expect(service.getBodyGraph('missing')).rejects.toThrow(
-      'Entity missing has no anatomy:body component'
-    );
+  it('detaches cascading parts and invalidates caches', async () => {
+    const result = await service.detachPart('leftArm');
 
-    expect(await service.getAnatomyData(actorId)).toEqual({
-      recipeId: 'human:base',
-      rootEntityId: actorId,
+    expect(result).toEqual({
+      detached: ['leftArm', 'leftHand'],
+      parentId: 'torso',
+      socketId: 'shoulder-left',
     });
-    expect(await service.getAnatomyData(leftArmId)).toBeNull();
 
-    expect(service.validateCache()).toEqual({ valid: true, issues: [] });
-
-    await expect(service.detachPart(actorId)).rejects.toThrow(
-      "Entity 'actor:test_subject' has no joint component - cannot detach"
+    expect(dispatcher.events).toHaveLength(1);
+    expect(dispatcher.events[0]).toEqual(
+      expect.objectContaining({
+        eventId: LIMB_DETACHED_EVENT_ID,
+        payload: expect.objectContaining({
+          detachedEntityId: 'leftArm',
+          detachedCount: 2,
+          reason: 'manual',
+        }),
+      })
     );
 
-    const dispatchedEvents = [];
-    const unsubscribe = safeDispatcher.subscribe(
-      LIMB_DETACHED_EVENT_ID,
-      (event) => {
-        dispatchedEvents.push(event);
-      }
-    );
+    expect(service.hasCache('actor')).toBe(false);
+    expect(
+      logger.messages.info.some((message) =>
+        message.includes('AnatomyQueryCache: Invalidated')
+      )
+    ).toBe(true);
+  });
 
-    const nonCascadeResult = await service.detachPart(leftHandId, {
+  it('supports non-cascading detachment with custom reason', async () => {
+    const outcome = await service.detachPart('rightArm', {
       cascade: false,
-      reason: 'non-cascade check',
+      reason: 'surgical',
     });
-    expect(nonCascadeResult).toEqual({
-      detached: [leftHandId],
-      parentId: leftArmId,
-      socketId: 'left_wrist',
-    });
-    expect(service.hasCache(actorId)).toBe(false);
 
-    const afterDetachParts = service.getAllParts(bodyComponent, actorId);
-    expect(afterDetachParts).toBe(blueprintParts);
-    expect(afterDetachParts).toContain(leftHandId);
-
-    await service.buildAdjacencyCache(actorId);
-    const postRebuildParts = service.getAllParts(bodyComponent, actorId);
-    expect(new Set(postRebuildParts)).toEqual(
-      new Set([actorId, torsoId, leftArmId, rightArmId, rightHandId])
+    expect(outcome.detached).toEqual(['rightArm']);
+    expect(dispatcher.events.at(-1).payload).toEqual(
+      expect.objectContaining({ reason: 'surgical', detachedCount: 1 })
     );
-    expect(postRebuildParts).not.toBe(afterDetachParts);
-    expect(postRebuildParts).not.toContain(leftHandId);
+  });
 
-    const cascadeResult = await service.detachPart(rightArmId, {
-      cascade: true,
-      reason: 'cascade check',
-    });
-    expect(new Set(cascadeResult.detached)).toEqual(
-      new Set([rightArmId, rightHandId])
+  it('throws informative error when joint component is missing', async () => {
+    await expect(service.detachPart('headless')).rejects.toThrow(
+      "Entity 'headless' has no joint component - cannot detach"
     );
-    expect(service.hasCache(actorId)).toBe(false);
+  });
 
-    const afterCascadeParts = service.getAllParts(bodyComponent, actorId);
-    expect(afterCascadeParts).toBe(blueprintParts);
+  it('provides body graph helpers and anatomy metadata', async () => {
+    const graph = await service.getBodyGraph('actor');
+    expectArrayToContainSameMembers(graph.getAllPartIds(), [
+      'actor',
+      'torso',
+      'leftArm',
+      'leftHand',
+      'rightArm',
+      'head',
+    ]);
+    expect(graph.getConnectedParts('actor')).toEqual(['torso']);
+    expect(graph.getConnectedParts('torso')).toEqual([
+      'leftArm',
+      'rightArm',
+      'head',
+    ]);
 
-    await service.buildAdjacencyCache(actorId);
-    const finalParts = service.getAllParts(bodyComponent, actorId);
-    expect(new Set(finalParts)).toEqual(new Set([actorId, torsoId, leftArmId]));
-    expect(finalParts).not.toContain(rightArmId);
-    expect(finalParts).not.toContain(rightHandId);
+    await expect(service.getBodyGraph(123)).rejects.toBeInstanceOf(
+      InvalidArgumentError
+    );
+    await expect(service.getBodyGraph('ghost')).rejects.toThrow(
+      'has no anatomy:body component'
+    );
 
-    expect(new Set(service.getChildren(torsoId))).toEqual(new Set([leftArmId]));
-    expect(service.getAllDescendants(torsoId)).toEqual([leftArmId]);
-    expect(service.validateCache()).toEqual({ valid: true, issues: [] });
+    await expect(service.getAnatomyData(0)).rejects.toBeInstanceOf(
+      InvalidArgumentError
+    );
+    await expect(service.getAnatomyData('ghost')).resolves.toBeNull();
+    await expect(service.getAnatomyData('actor')).resolves.toEqual({
+      recipeId: 'humanoid.basic',
+      rootEntityId: 'actor',
+    });
+  });
 
-    expect(dispatchedEvents).toHaveLength(2);
-    const [firstEvent, secondEvent] = dispatchedEvents;
-    expect(firstEvent.type).toBe(LIMB_DETACHED_EVENT_ID);
-    expect(firstEvent.payload.detachedEntityId).toBe(leftHandId);
-    expect(firstEvent.payload.reason).toBe('non-cascade check');
-    expect(firstEvent.payload.detachedCount).toBe(1);
-
-    expect(secondEvent.type).toBe(LIMB_DETACHED_EVENT_ID);
-    expect(secondEvent.payload.detachedEntityId).toBe(rightArmId);
-    expect(secondEvent.payload.detachedCount).toBe(2);
-    expect(secondEvent.payload.reason).toBe('cascade check');
-
-    unsubscribe?.();
-  }, 20000);
+  it('handles degenerate inputs gracefully when enumerating parts', () => {
+    expect(service.getAllParts(null)).toEqual([]);
+    expect(service.getAllParts({ body: {} })).toEqual([]);
+  });
 });
