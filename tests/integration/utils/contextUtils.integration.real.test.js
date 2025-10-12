@@ -39,9 +39,9 @@ describe('resolvePlaceholders integration', () => {
     expect(result).toEqual({ keep: '{actor.name}', use: 'Hero' });
   });
 
-  it('logs a warning when placeholder is missing', () => {
+  it('logs a debug message when placeholder is missing', () => {
     resolvePlaceholders('Missing {unknown}', {}, logger);
-    expect(logger.warn).toHaveBeenCalledWith(
+    expect(logger.debug).toHaveBeenCalledWith(
       'PlaceholderResolver: Placeholder "{unknown}" not found in provided data sources. Replacing with empty string.'
     );
   });
@@ -50,5 +50,6 @@ describe('resolvePlaceholders integration', () => {
     const out = resolvePlaceholders('Maybe {unknown?}', {}, logger);
     expect(out).toBe('Maybe ');
     expect(logger.warn).not.toHaveBeenCalled();
+    expect(logger.debug).not.toHaveBeenCalled();
   });
 });

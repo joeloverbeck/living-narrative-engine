@@ -43,9 +43,9 @@ describe('PlaceholderResolver', () => {
 
   describe('Constructor', () => {
     it('should use the provided logger', () => {
-      // Test indirectly: if a warning occurs, the provided logger should be called.
+      // Test indirectly: if a debug message occurs, the provided logger should be called.
       resolver.resolve('test {missing}', {});
-      expect(mockLogger.warn).toHaveBeenCalled();
+      expect(mockLogger.debug).toHaveBeenCalled();
     });
 
     it('should default to console if no logger is provided', () => {
@@ -70,6 +70,7 @@ describe('PlaceholderResolver', () => {
       const invalidLogger = { log: 123 };
       const ensureSpy = jest.spyOn(loggerUtils, 'ensureValidLogger');
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
       const resolverWithInvalid = new PlaceholderResolver(invalidLogger);
       expect(resolverWithInvalid).toBeInstanceOf(PlaceholderResolver);
       expect(ensureSpy).toHaveBeenCalledWith(
@@ -78,8 +79,12 @@ describe('PlaceholderResolver', () => {
       );
       expect(warnSpy).toHaveBeenCalledTimes(1);
       resolverWithInvalid.resolve('test {missing}', {});
-      expect(warnSpy).toHaveBeenCalledTimes(2);
+      expect(debugSpy).toHaveBeenCalledWith(
+        expect.stringContaining('PlaceholderResolver:'),
+        expect.stringContaining('{missing}')
+      );
       warnSpy.mockRestore();
+      debugSpy.mockRestore();
       ensureSpy.mockRestore();
     });
   });
@@ -147,27 +152,29 @@ describe('PlaceholderResolver', () => {
       expect(mockLogger.warn).not.toHaveBeenCalled(); // No warnings for invalid sources, just for missing keys
     });
 
-    it('should replace placeholder with an empty string and log a warning if key is not found in any data source', () => {
+    it('should replace placeholder with an empty string and log a debug message if key is not found in any data source', () => {
       const str = 'Hello {name}, from {city}.';
       const data = { name: 'Alice' };
       expect(resolver.resolve(str, data)).toBe('Hello Alice, from .');
-      expect(mockLogger.warn).toHaveBeenCalledTimes(1);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'PlaceholderResolver: Placeholder "{city}" not found in provided data sources. Replacing with empty string.'
       );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
-    it('should replace with empty string for multiple missing keys and log warnings for each', () => {
+    it('should replace with empty string for multiple missing keys and log debug messages for each', () => {
       const str = 'Data: {val1} {val2} {val3}';
       const data = { val2: 'Found' };
       expect(resolver.resolve(str, data)).toBe('Data:  Found ');
-      expect(mockLogger.warn).toHaveBeenCalledTimes(2);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledTimes(2);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'PlaceholderResolver: Placeholder "{val1}" not found in provided data sources. Replacing with empty string.'
       );
-      expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'PlaceholderResolver: Placeholder "{val3}" not found in provided data sources. Replacing with empty string.'
       );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     it('should replace placeholder with an empty string if its value is null in data source', () => {
@@ -212,19 +219,21 @@ describe('PlaceholderResolver', () => {
       expect(resolver.resolve(str, data1, data2)).toBe(
         'User: johndoe, ID: 123, Status: true, Role: , Zip: '
       );
-      expect(mockLogger.warn).toHaveBeenCalledTimes(1);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'PlaceholderResolver: Placeholder "{zip}" not found in provided data sources. Replacing with empty string.'
       );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     it('should not confuse object prototype properties with data source keys', () => {
       const str = 'Value: {toString}';
       const data = { myKey: 'myValue' }; // does not have 'toString' as own property
       expect(resolver.resolve(str, data)).toBe('Value: ');
-      expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'PlaceholderResolver: Placeholder "{toString}" not found in provided data sources. Replacing with empty string.'
       );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     it('should correctly resolve a key that exists as an own property, even if it matches a prototype property name', () => {
@@ -390,12 +399,13 @@ describe('PlaceholderResolver', () => {
       );
     });
 
-    it('returns undefined and logs warning when full placeholder missing', () => {
+    it('returns undefined and logs debug when full placeholder missing', () => {
       const res = resolver._handleFullString('{missing}', [{}]);
       expect(res).toEqual({ changed: true, value: undefined });
-      expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'PlaceholderResolver: Placeholder "{missing}" not found in provided data sources. Replacing with empty string.'
       );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     it('resolves optional full-string placeholders with spaces', () => {

@@ -91,15 +91,19 @@ describe('StructureResolver integration', () => {
     expect(resolved.location).toBe('Location: Ancient Ruins');
     expect(resolved.nullValue).toBe('Null test ');
 
-    const warningMessages = logger.warn.mock.calls.map(([message]) => message);
-    expect(warningMessages).toHaveLength(1);
-    expect(warningMessages[0]).toContain('{inventory.missingSlot}');
-    expect(warningMessages[0]).toContain('PlaceholderResolver');
-    expect(
-      warningMessages.some((message) => message.includes('{actor.nickname?}'))
-    ).toBe(false);
+    expect(logger.warn).not.toHaveBeenCalled();
 
     const debugMessages = logger.debug.mock.calls.map(([message]) => message);
+    expect(
+      debugMessages.some((message) =>
+        message.includes(
+          'PlaceholderResolver: Placeholder "{inventory.missingSlot}" not found in provided data sources. Replacing with empty string.'
+        )
+      )
+    ).toBe(true);
+    expect(
+      debugMessages.some((message) => message.includes('{actor.nickname?}'))
+    ).toBe(false);
     expect(
       debugMessages.some((message) =>
         message.includes('Resolved full string placeholder {actor.stats}')

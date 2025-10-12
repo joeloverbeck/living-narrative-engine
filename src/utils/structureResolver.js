@@ -67,7 +67,7 @@ export class StructureResolver {
         }
       }
       if (!isOptional) {
-        this.logger.warn(
+        this.logger.debug(
           `PlaceholderResolver: Placeholder "{${trimmedKey}}" not found in provided data sources. Replacing with empty string.`
         );
       }
