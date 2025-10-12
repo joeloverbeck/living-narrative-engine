@@ -15,7 +15,8 @@ const DEFAULT_MAX_LOG_ENTRIES = 50;
  * @property {string} location_id           – Required. Location where the event happened.
  * @property {object} entry                 – Required. Log entry (descriptionText, timestamp, perceptionType, actorId…).
  * @property {string=} originating_actor_id – Optional. Actor who raised the event (auditing only).
- * @property {string[]=} recipient_ids       – Optional. Explicit list of recipients for the log entry.
+ * @property {string[]|string=} recipient_ids – Optional. Explicit list of recipients or a placeholder resolving
+ *                                              to one or more recipients.
  */
 class AddPerceptionLogEntryHandler extends BaseOperationHandler {
   /** @type {import('../../entities/entityManager.js').default}       */ #entityManager;
@@ -74,10 +75,20 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
       );
       return null;
     }
+    let recipients;
+    if (Array.isArray(recipient_ids)) {
+      recipients = recipient_ids;
+    } else if (typeof recipient_ids === 'string') {
+      const trimmed = recipient_ids.trim();
+      if (trimmed) {
+        recipients = [trimmed];
+      }
+    }
+
     return {
       locationId: location_id.trim(),
       entry,
-      recipients: Array.isArray(recipient_ids) ? recipient_ids : undefined,
+      recipients,
     };
   }
 

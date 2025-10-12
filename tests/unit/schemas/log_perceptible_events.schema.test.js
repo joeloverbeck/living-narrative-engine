@@ -50,4 +50,23 @@ describe('core/rules/log_perceptible_events.rule.json', () => {
     }
     expect(valid).toBe(true);
   });
+
+  test('allows ADD_PERCEPTION_LOG_ENTRY to use placeholder recipient strings', () => {
+    const operation = {
+      type: 'ADD_PERCEPTION_LOG_ENTRY',
+      parameters: {
+        location_id: 'loc:test_area',
+        entry: {
+          descriptionText: 'A thing happens',
+        },
+        recipient_ids: '{event.payload.contextualData.recipientIds}',
+      },
+    };
+
+    const valid = ajv.validate(operationSchema, operation);
+    if (!valid) {
+      console.error('AJV operation validation errors:', ajv.errors);
+    }
+    expect(valid).toBe(true);
+  });
 });
