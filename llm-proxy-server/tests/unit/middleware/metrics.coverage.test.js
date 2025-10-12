@@ -889,4 +889,70 @@ describe('Metrics Middleware - Additional Coverage Tests', () => {
       );
     });
   });
+
+  describe('LLM identifier and token extraction coverage', () => {
+    it('parses nested OpenRouter provider identifiers', () => {
+      mockRequest.body = {
+        llmId: 'openrouter/anthropic/claude-3-haiku',
+      };
+      mockResponse.statusCode = 200;
+
+      const middleware = createLlmMetricsMiddleware({
+        metricsService: mockMetricsService,
+        logger: mockLogger,
+      });
+
+      middleware(mockRequest, mockResponse, mockNext);
+
+      const responsePayload = {
+        usage: {
+          prompt_tokens: 12,
+          completion_tokens: 4,
+        },
+      };
+
+      mockResponse.json(responsePayload);
+
+      expect(mockMetricsService.recordLlmRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          provider: 'openrouter_anthropic',
+          model: 'claude-3-haiku',
+          status: 'success',
+          tokens: { input: 12, output: 4 },
+        })
+      );
+    });
+
+    it('falls back to unknown provider and handles alternative token usage shapes', () => {
+      mockRequest.body = {
+        llmId: 12345,
+      };
+      mockResponse.statusCode = 502;
+
+      const middleware = createLlmMetricsMiddleware({
+        metricsService: mockMetricsService,
+        logger: mockLogger,
+      });
+
+      middleware(mockRequest, mockResponse, mockNext);
+
+      const responsePayload = {
+        token_usage: {
+          input: 8,
+          output: 3,
+        },
+      };
+
+      mockResponse.json(responsePayload);
+
+      expect(mockMetricsService.recordLlmRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          provider: 'unknown',
+          model: 'unknown',
+          status: 'error',
+          tokens: { input: 8, output: 3 },
+        })
+      );
+    });
+  });
 });
