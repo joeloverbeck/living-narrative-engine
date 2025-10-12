@@ -73,6 +73,105 @@ describe('Metrics Middleware - Additional Coverage Tests', () => {
   });
 
   describe('Request Size Estimation Edge Cases', () => {
+    it('should prioritize Content-Length header when valid', () => {
+      mockRequest.headers['content-length'] = '512';
+      mockRequest.body = { willBeIgnored: true };
+
+      const middleware = createMetricsMiddleware({
+        metricsService: mockMetricsService,
+        logger: mockLogger,
+      });
+
+      let timeCounter = 0;
+      global.process.hrtime.bigint = jest.fn(() =>
+        BigInt(timeCounter++ * 1000000000)
+      );
+
+      middleware(mockRequest, mockResponse, mockNext);
+      mockResponse.end('response');
+
+      expect(mockMetricsService.recordHttpRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          requestSize: 512,
+        })
+      );
+    });
+
+    it('should ignore invalid Content-Length header values', () => {
+      mockRequest.headers['content-length'] = 'invalid-length';
+      mockRequest.body = undefined;
+
+      const middleware = createMetricsMiddleware({
+        metricsService: mockMetricsService,
+        logger: mockLogger,
+      });
+
+      let timeCounter = 0;
+      global.process.hrtime.bigint = jest.fn(() =>
+        BigInt(timeCounter++ * 1000000000)
+      );
+
+      middleware(mockRequest, mockResponse, mockNext);
+      mockResponse.end('response');
+
+      expect(mockMetricsService.recordHttpRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          requestSize: 0,
+        })
+      );
+    });
+
+    it('should return zero for non-string, non-object body values', () => {
+      mockRequest.body = 42;
+
+      const middleware = createMetricsMiddleware({
+        metricsService: mockMetricsService,
+        logger: mockLogger,
+      });
+
+      let timeCounter = 0;
+      global.process.hrtime.bigint = jest.fn(() =>
+        BigInt(timeCounter++ * 1000000000)
+      );
+
+      middleware(mockRequest, mockResponse, mockNext);
+      mockResponse.end('response');
+
+      expect(mockMetricsService.recordHttpRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          requestSize: 0,
+        })
+      );
+    });
+
+    it('should calculate JSON object body size when Content-Length missing', () => {
+      mockRequest.body = { foo: 'bar', value: 42 };
+
+      const middleware = createMetricsMiddleware({
+        metricsService: mockMetricsService,
+        logger: mockLogger,
+      });
+
+      let timeCounter = 0;
+      global.process.hrtime.bigint = jest.fn(() =>
+        BigInt(timeCounter++ * 1000000000)
+      );
+
+      middleware(mockRequest, mockResponse, mockNext);
+      mockResponse.end('response');
+
+      const expectedSize = Buffer.byteLength(
+        JSON.stringify({ foo: 'bar', value: 42 }),
+        'utf8'
+      );
+
+      expect(mockMetricsService.recordHttpRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          requestSize: expectedSize,
+        })
+      );
+    });
+
     it('should handle string body type', () => {
       mockRequest.body = 'This is a string body';
 
@@ -156,6 +255,98 @@ describe('Metrics Middleware - Additional Coverage Tests', () => {
   });
 
   describe('Response Size Estimation Edge Cases', () => {
+    it('should prioritize Content-Length header when provided', () => {
+      mockResponse.headers['content-length'] = '2048';
+
+      const middleware = createMetricsMiddleware({
+        metricsService: mockMetricsService,
+        logger: mockLogger,
+      });
+
+      let timeCounter = 0;
+      global.process.hrtime.bigint = jest.fn(() =>
+        BigInt(timeCounter++ * 1000000000)
+      );
+
+      middleware(mockRequest, mockResponse, mockNext);
+      mockResponse.end('response');
+
+      expect(mockMetricsService.recordHttpRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          responseSize: 2048,
+        })
+      );
+    });
+
+    it('should ignore invalid Content-Length header for response size', () => {
+      mockResponse.headers['content-length'] = 'NaN';
+
+      const middleware = createMetricsMiddleware({
+        metricsService: mockMetricsService,
+        logger: mockLogger,
+      });
+
+      let timeCounter = 0;
+      global.process.hrtime.bigint = jest.fn(() =>
+        BigInt(timeCounter++ * 1000000000)
+      );
+
+      middleware(mockRequest, mockResponse, mockNext);
+      mockResponse.end();
+
+      expect(mockMetricsService.recordHttpRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          responseSize: 0,
+        })
+      );
+    });
+
+    it('should calculate JSON response size when header missing', () => {
+      const middleware = createMetricsMiddleware({
+        metricsService: mockMetricsService,
+        logger: mockLogger,
+      });
+
+      let timeCounter = 0;
+      global.process.hrtime.bigint = jest.fn(() =>
+        BigInt(timeCounter++ * 1000000000)
+      );
+
+      middleware(mockRequest, mockResponse, mockNext);
+
+      const payload = { success: true, message: 'ok' };
+      mockResponse.end(payload);
+
+      const expectedSize = Buffer.byteLength(JSON.stringify(payload), 'utf8');
+
+      expect(mockMetricsService.recordHttpRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          responseSize: expectedSize,
+        })
+      );
+    });
+
+    it('should return zero for unsupported response data types', () => {
+      const middleware = createMetricsMiddleware({
+        metricsService: mockMetricsService,
+        logger: mockLogger,
+      });
+
+      let timeCounter = 0;
+      global.process.hrtime.bigint = jest.fn(() =>
+        BigInt(timeCounter++ * 1000000000)
+      );
+
+      middleware(mockRequest, mockResponse, mockNext);
+      mockResponse.end(12345);
+
+      expect(mockMetricsService.recordHttpRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          responseSize: 0,
+        })
+      );
+    });
+
     it('should handle string response data', () => {
       const middleware = createMetricsMiddleware({
         metricsService: mockMetricsService,
@@ -487,6 +678,76 @@ describe('Metrics Middleware - Additional Coverage Tests', () => {
           })
         );
       });
+    });
+  });
+
+  describe('LLM ID Parsing Known Patterns', () => {
+    const cases = [
+      {
+        llmId: 'openai-gpt-4o-mini',
+        provider: 'openai',
+        model: 'gpt-4o-mini',
+      },
+      {
+        llmId: 'anthropic-claude-3-haiku',
+        provider: 'anthropic',
+        model: 'claude-3-haiku',
+      },
+      {
+        llmId: 'openrouter/anthropic/claude-3-haiku',
+        provider: 'openrouter_anthropic',
+        model: 'claude-3-haiku',
+      },
+    ];
+
+    cases.forEach(({ llmId, provider, model }) => {
+      it(`should parse known pattern ${llmId}`, () => {
+        mockRequest.body = { llmId };
+
+        const middleware = createLlmMetricsMiddleware({
+          metricsService: mockMetricsService,
+          logger: mockLogger,
+        });
+
+        let timeCounter = 0;
+        global.process.hrtime.bigint = jest.fn(() =>
+          BigInt(timeCounter++ * 1000000000)
+        );
+
+        middleware(mockRequest, mockResponse, mockNext);
+        mockResponse.json({ usage: { prompt_tokens: 10, completion_tokens: 5 } });
+
+        expect(mockMetricsService.recordLlmRequest).toHaveBeenCalledWith(
+          expect.objectContaining({
+            provider,
+            model,
+          })
+        );
+      });
+    });
+
+    it('should fall back to unknown provider for unmatched string patterns', () => {
+      mockRequest.body = { llmId: 'custom-llm' };
+
+      const middleware = createLlmMetricsMiddleware({
+        metricsService: mockMetricsService,
+        logger: mockLogger,
+      });
+
+      let timeCounter = 0;
+      global.process.hrtime.bigint = jest.fn(() =>
+        BigInt(timeCounter++ * 1000000000)
+      );
+
+      middleware(mockRequest, mockResponse, mockNext);
+      mockResponse.json({ usage: { prompt_tokens: 1, completion_tokens: 2 } });
+
+      expect(mockMetricsService.recordLlmRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          provider: 'unknown',
+          model: 'custom-llm',
+        })
+      );
     });
   });
 
