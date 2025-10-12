@@ -506,6 +506,7 @@ describe('ApiKeyService', () => {
       expect(result.errorDetails.stage).toBe('api_key_all_sources_failed');
       expect(result.errorDetails.details.reason).toContain('see previous logs');
     });
+
   });
 
   describe('Security: API Key Logging Verification', () => {

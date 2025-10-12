@@ -66,6 +66,16 @@ describe('LlmConfigService', () => {
     expect(service.getLlmConfigs()).toEqual(sampleConfig);
   });
 
+  test('initialize falls back to default path when custom path is blank', async () => {
+    const defaultPath = path.resolve(process.cwd(), 'config/llm-configs.json');
+    appConfig.getLlmConfigPath.mockReturnValue('   ');
+
+    await service.initialize();
+
+    expect(mockLoader).toHaveBeenCalledWith(defaultPath, logger, fsReader);
+    expect(service.isOperational()).toBe(true);
+  });
+
   test('getLlmById returns configuration when loaded', async () => {
     await service.initialize();
     const cfg = service.getLlmById('gpt4');
