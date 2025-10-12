@@ -189,7 +189,7 @@ export class TargetComponentValidator {
     // Check each target role
     for (const role of targetRoles) {
       const forbiddenComponents = forbiddenConfig[role];
-      let targetEntity = targetEntities[role];
+      const rawTarget = targetEntities[role];
 
       // Skip if no forbidden components for this role
       if (!forbiddenComponents || forbiddenComponents.length === 0) {
@@ -197,32 +197,39 @@ export class TargetComponentValidator {
       }
 
       // Skip if no entity for this role
-      if (!targetEntity) {
+      if (!rawTarget) {
         continue;
       }
 
-      // Handle array of targets - validate first target only
-      // (Pipeline creates separate action instances for each target)
-      if (Array.isArray(targetEntity)) {
-        if (targetEntity.length === 0) {
-          continue;
-        }
-        targetEntity = targetEntity[0];
+      const targetCandidates = Array.isArray(rawTarget)
+        ? rawTarget
+        : [rawTarget];
+
+      if (targetCandidates.length === 0) {
+        continue;
       }
 
-      const validation = this.validateEntityComponents(targetEntity, forbiddenComponents);
+      for (const candidate of targetCandidates) {
+        const entity = candidate && (candidate.entity || candidate);
 
-      if (!validation.valid) {
-        const reason = `Action '${actionDef.id}' cannot be performed: ` +
-          `${role} target '${targetEntity.id || 'unknown'}' has forbidden component '${validation.component}'`;
+        if (!entity) {
+          continue;
+        }
 
-        this.#logger.debug(reason);
+        const validation = this.validateEntityComponents(entity, forbiddenComponents);
 
-        // Short-circuit on first failure
-        return {
-          valid: false,
-          reason
-        };
+        if (!validation.valid) {
+          const reason = `Action '${actionDef.id}' cannot be performed: ` +
+            `${role} target '${entity.id || 'unknown'}' has forbidden component '${validation.component}'`;
+
+          this.#logger.debug(reason);
+
+          // Short-circuit on first failure
+          return {
+            valid: false,
+            reason
+          };
+        }
       }
     }
 
