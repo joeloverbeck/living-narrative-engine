@@ -326,6 +326,46 @@ describe('Metrics Middleware - Additional Coverage Tests', () => {
         })
       );
     });
+
+    it('falls back to unknown error type and low severity for unconventional status handling', () => {
+      const dynamicStatusCode = {
+        conversions: [],
+        // Sequence of numeric representations returned on each coercion.
+        // Ensures middleware enters the error path, then helper functions
+        // observe non-error values to exercise their fallback logic.
+        sequence: [450, 399, 399, 399, 399, 399],
+        [Symbol.toPrimitive](hint) {
+          const value =
+            this.sequence.length > 0 ? this.sequence.shift() : 399;
+          this.conversions.push({ hint, value });
+          return value;
+        },
+        toString() {
+          return 'dynamic-status-code';
+        },
+      };
+
+      mockResponse.statusCode = dynamicStatusCode;
+
+      const middleware = createMetricsMiddleware({
+        metricsService: mockMetricsService,
+        logger: mockLogger,
+      });
+
+      let timeCounter = 0;
+      global.process.hrtime.bigint = jest.fn(() =>
+        BigInt(timeCounter++ * 1000000000)
+      );
+
+      middleware(mockRequest, mockResponse, mockNext);
+      mockResponse.end('response');
+
+      expect(mockMetricsService.recordError).toHaveBeenCalledWith({
+        errorType: 'unknown_error',
+        component: 'http_server',
+        severity: 'low',
+      });
+    });
   });
 
   describe('Additional HTTP Status Code Coverage', () => {
