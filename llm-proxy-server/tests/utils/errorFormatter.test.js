@@ -165,6 +165,26 @@ describe('errorFormatter', () => {
       expect(result.details.internalPath).toBeUndefined();
       expect(result.details.stackTrace).toBeUndefined();
     });
+
+    test('should preserve existing originalErrorMessage details', () => {
+      process.env.NODE_ENV = 'production';
+
+      const detailsWithOriginalMessage = {
+        originalErrorMessage: 'Pre-sanitized message',
+        context: 'important',
+      };
+
+      const result = createSecureErrorDetails(
+        'Operation failed',
+        'operation_error',
+        detailsWithOriginalMessage
+      );
+
+      expect(result.details.originalErrorMessage).toBe(
+        'Pre-sanitized message'
+      );
+      expect(result.details.context).toBe('important');
+    });
   });
 
   describe('sanitizeErrorForClient - additional coverage', () => {
@@ -365,6 +385,15 @@ describe('errorFormatter', () => {
         // stack should not be present
       });
       expect(result.stack).toBeUndefined();
+    });
+
+    test('should handle non-object context values gracefully', () => {
+      process.env.NODE_ENV = 'production';
+
+      const error = new Error('Test error');
+      const result = formatErrorForLogging(error, 123);
+
+      expect(result).toEqual({ message: 'Test error', name: 'Error' });
     });
   });
 
