@@ -562,27 +562,44 @@ class BaseModTestFixture {
   async loadActionDefinitions() {
     const actionsDir = resolve(`data/mods/${this.modId}/actions`);
 
+    console.log('\n=== LOADING ACTION DEFINITIONS ===');
+    console.log('Actions directory:', actionsDir);
+    console.log('Mod ID:', this.modId);
+
     try {
       const files = await fs.readdir(actionsDir);
+      console.log('All files in directory:', files);
+
       const actionFiles = files.filter(f => f.endsWith('.action.json'));
+      console.log('Action files (filtered):', actionFiles);
 
       const actions = await Promise.all(
         actionFiles.map(async (file) => {
           try {
             const filePath = resolve(actionsDir, file);
             const content = await fs.readFile(filePath, 'utf8');
-            return JSON.parse(content);
+            const parsed = JSON.parse(content);
+            console.log(`✅ Successfully loaded ${file}: ${parsed.id}`);
+            return parsed;
           } catch (error) {
             // Silently skip files that can't be loaded
+            console.log(`❌ Failed to load ${file}: ${error.message}`);
             return null;
           }
         })
       );
 
       // Filter out nulls from failed loads
-      return actions.filter(a => a !== null);
+      const validActions = actions.filter(a => a !== null);
+      console.log('Total actions loaded:', validActions.length);
+      console.log('Action IDs:', validActions.map(a => a.id));
+      console.log('=== END LOADING ACTION DEFINITIONS ===\n');
+
+      return validActions;
     } catch (error) {
       // If the actions directory doesn't exist or can't be read, return empty array
+      console.log(`❌ Failed to read directory: ${error.message}`);
+      console.log('=== END LOADING ACTION DEFINITIONS ===\n');
       return [];
     }
   }

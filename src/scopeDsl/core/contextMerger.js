@@ -64,8 +64,11 @@ class ContextMerger {
       // Handle depth specially
       depth: this._mergeDepth(baseCtx, overlayCtx),
 
-      // Preserve trace if available
-      trace: overlayCtx.trace || baseCtx.trace,
+      // Preserve trace if available - use nullish coalescing to handle null/undefined
+      // If overlay has explicit non-null trace, use it; otherwise use base trace
+      trace: overlayCtx.trace !== null && overlayCtx.trace !== undefined
+        ? overlayCtx.trace
+        : baseCtx.trace,
     };
 
     // Validate final merged context
@@ -85,6 +88,10 @@ class ContextMerger {
     return Object.keys(overlayCtx).reduce((acc, key) => {
       // Skip critical properties that we'll handle explicitly
       if (this.criticalProperties.includes(key)) {
+        return acc;
+      }
+      // Skip 'trace' - it has special handling to preserve from base when null/undefined
+      if (key === 'trace') {
         return acc;
       }
       acc[key] = overlayCtx[key];

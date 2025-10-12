@@ -1,1 +1,1 @@
-items:actor_inventory_items := actor.components.items:inventory.items[]
+items:actor_inventory_items := entities(items:item)[][{"in": [{"var": "entity.id"}, {"var": "actor.components.items:inventory.items"}]}]

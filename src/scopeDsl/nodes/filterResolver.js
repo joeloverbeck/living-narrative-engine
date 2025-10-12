@@ -212,32 +212,7 @@ export default function createFilterResolver({
               continue;
             }
 
-            // DIAGNOSTIC: Log evaluation details for debugging
-            if (typeof item === 'string' && item.includes('yellowed_goodbye_letter')) {
-              console.info('[FILTER-EVAL] Evaluating yellowed_goodbye_letter:', {
-                entityId: item,
-                filterLogic: JSON.stringify(node.logic),
-                hasEvalCtx: !!evalCtx,
-                evalCtxKeys: evalCtx ? Object.keys(evalCtx) : [],
-                entityComponents: evalCtx?.entity?.components,
-                entityComponentKeys: evalCtx?.entity?.components ? Object.keys(evalCtx.entity.components) : [],
-                hasItemsItem: evalCtx?.entity?.components ? 'items:item' in evalCtx.entity.components : false,
-                hasItemsPortable: evalCtx?.entity?.components ? 'items:portable' in evalCtx.entity.components : false,
-                hasCorePosition: evalCtx?.entity?.components ? 'core:position' in evalCtx.entity.components : false,
-              });
-            }
-
             const evalResult = logicEval.evaluate(node.logic, evalCtx);
-
-            // DIAGNOSTIC: Log evaluation result for yellowed_goodbye_letter
-            if (typeof item === 'string' && item.includes('yellowed_goodbye_letter')) {
-              console.info('[FILTER-EVAL] Yellowed goodbye letter evaluation result:', {
-                entityId: item,
-                evalResult: evalResult,
-                evalResultType: typeof evalResult,
-                willPassFilter: !!evalResult,
-              });
-            }
 
             // Capture detailed evaluation data for tracing
             if (trace) {

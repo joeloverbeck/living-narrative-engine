@@ -214,6 +214,17 @@ export default class SimpleEntityManager {
   }
 
   /**
+   * Deletes an entity from the manager.
+   *
+   * @param {string} id - Entity id.
+   * @returns {void}
+   */
+  deleteEntity(id) {
+    this.entities.delete(id);
+    this.entityInstanceCache.delete(id);
+  }
+
+  /**
    * Returns all entities in the manager.
    *
    * @returns {Array<object>} Array of all entity objects.

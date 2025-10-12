@@ -189,7 +189,7 @@ export class TargetComponentValidator {
     // Check each target role
     for (const role of targetRoles) {
       const forbiddenComponents = forbiddenConfig[role];
-      const targetEntity = targetEntities[role];
+      let targetEntity = targetEntities[role];
 
       // Skip if no forbidden components for this role
       if (!forbiddenComponents || forbiddenComponents.length === 0) {
@@ -199,6 +199,15 @@ export class TargetComponentValidator {
       // Skip if no entity for this role
       if (!targetEntity) {
         continue;
+      }
+
+      // Handle array of targets - validate first target only
+      // (Pipeline creates separate action instances for each target)
+      if (Array.isArray(targetEntity)) {
+        if (targetEntity.length === 0) {
+          continue;
+        }
+        targetEntity = targetEntity[0];
       }
 
       const validation = this.validateEntityComponents(targetEntity, forbiddenComponents);

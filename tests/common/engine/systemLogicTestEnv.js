@@ -448,6 +448,67 @@ export function createBaseRuleEnvironment({
           return { success: true, value: allItems };
         }
 
+        // Handle the items:openable_containers_at_location scope
+        if (scopeName === 'items:openable_containers_at_location') {
+          // Extract actor ID from context
+          const actorId = context?.actor?.id || context;
+
+          // Get actor's position
+          const actor = entityManager.getEntityInstance(actorId);
+          const actorPosition = actor?.components?.['core:position'];
+          if (!actorPosition || !actorPosition.locationId) {
+            return { success: true, value: new Set() };
+          }
+
+          // Find all entities with items:container at same location that are open
+          const allEntityIds = entityManager.getEntityIds();
+          const allEntities = allEntityIds.map((id) => {
+            const instance = entityManager.getEntityInstance(id);
+            return instance || { id, components: {} };
+          });
+
+          const containersAtLocation = allEntities.filter((entity) => {
+            const hasContainerComponent = entity.components?.['items:container'];
+            const entityPosition = entity.components?.['core:position'];
+
+            if (!hasContainerComponent || !entityPosition) {
+              return false;
+            }
+
+            // Check if in same location as actor
+            if (entityPosition.locationId !== actorPosition.locationId) {
+              return false;
+            }
+
+            // Check if container is open
+            return hasContainerComponent.isOpen === true;
+          });
+
+          const containerIds = containersAtLocation.map((container) => container.id);
+          return { success: true, value: new Set(containerIds) };
+        }
+
+        // Handle the items:container_contents scope
+        if (scopeName === 'items:container_contents') {
+          // This scope uses contextFrom: primary, so the container should be in context
+          const containerId = context?.primary?.id || context?.target?.id;
+
+          if (!containerId) {
+            return { success: true, value: new Set() };
+          }
+
+          // Get container entity and its contents
+          const container = entityManager.getEntityInstance(containerId);
+          const containerComponent = container?.components?.['items:container'];
+
+          if (!containerComponent || !Array.isArray(containerComponent.contents)) {
+            return { success: true, value: new Set() };
+          }
+
+          // Return the items in the container's contents array
+          return { success: true, value: new Set(containerComponent.contents) };
+        }
+
         // Handle other scopes or return empty set
         if (scopeName === 'none' || scopeName === 'self') {
           return { success: true, value: new Set([scopeName]) };
@@ -861,9 +922,10 @@ export function createRuleTestEnvironment(options) {
     }
 
     // Validate required_components for all resolved targets
+    // Filter out assignments where targets don't have required components
     if (action.required_components) {
-      for (const { resolvedTargets } of pendingAssignments) {
-        // Check each target key (primary, secondary, tertiary)
+      const validAssignments = pendingAssignments.filter(({ resolvedTargets }) => {
+        // Check if this assignment has all required components on all targets
         for (const [targetKey, target] of Object.entries(resolvedTargets)) {
           const requiredComponents = action.required_components[targetKey];
 
@@ -875,13 +937,23 @@ export function createRuleTestEnvironment(options) {
           for (const componentId of requiredComponents) {
             if (!target.components || !target.components[componentId]) {
               env.logger.debug(
-                `Action ${actionId} filtered out: ${targetKey} target ${target.id} missing required component ${componentId}`
+                `Action ${actionId}: ${targetKey} target ${target.id} missing required component ${componentId}`
               );
-              return false; // Target missing required component
+              return false; // This assignment is invalid
             }
           }
         }
+
+        // All targets in this assignment have required components
+        return true;
+      });
+
+      if (validAssignments.length === 0) {
+        return false;
       }
+
+      // Update pendingAssignments to only include valid ones
+      pendingAssignments = validAssignments;
     }
 
     return pendingAssignments.length > 0;

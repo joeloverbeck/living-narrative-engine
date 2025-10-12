@@ -230,7 +230,7 @@ describe('MultiTargetResolutionStage - Action Tracing', () => {
         primary: 2,
         secondary: 2,
       });
-      expect(traceData.data.totalTargetCount).toBe(4);
+      expect(traceData.data.targetCount).toBe(4);
     });
   });
 
