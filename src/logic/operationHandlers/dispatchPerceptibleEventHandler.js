@@ -95,6 +95,15 @@ class DispatchPerceptibleEventHandler {
       log_entry = false,
     } = params;
 
+    const normalizedContextualData =
+      typeof contextual_data === 'object' && contextual_data !== null
+        ? { ...contextual_data }
+        : {};
+
+    if (!Object.prototype.hasOwnProperty.call(normalizedContextualData, 'recipientIds')) {
+      normalizedContextualData.recipientIds = [];
+    }
+
     if (typeof location_id !== 'string' || !location_id.trim()) {
       safeDispatchError(
         this.#dispatcher,
@@ -143,10 +152,7 @@ class DispatchPerceptibleEventHandler {
       involvedEntities: Array.isArray(involved_entities)
         ? involved_entities
         : [],
-      contextualData:
-        typeof contextual_data === 'object' && contextual_data !== null
-          ? contextual_data
-          : {},
+      contextualData: normalizedContextualData,
     };
 
     this.#logger.debug('DISPATCH_PERCEPTIBLE_EVENT: dispatching event', {

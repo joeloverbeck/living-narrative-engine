@@ -100,6 +100,45 @@ describe('DispatchPerceptibleEventHandler', () => {
     expect(logHandler.execute).not.toHaveBeenCalled();
   });
 
+  test('includes contextualData.recipientIds as an empty array when omitted', () => {
+    handler.execute(
+      {
+        location_id: 'loc:2',
+        description_text: 'Observations occur.',
+        perception_type: 'ambient',
+        actor_id: 'npc:b',
+      },
+      {}
+    );
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      'core:perceptible_event',
+      expect.objectContaining({
+        contextualData: { recipientIds: [] },
+      })
+    );
+  });
+
+  test('preserves provided contextualData.recipientIds', () => {
+    handler.execute(
+      {
+        location_id: 'loc:3',
+        description_text: 'Only observers should hear.',
+        perception_type: 'speech',
+        actor_id: 'npc:c',
+        contextual_data: { recipientIds: ['observer-1'] },
+      },
+      {}
+    );
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      'core:perceptible_event',
+      expect.objectContaining({
+        contextualData: { recipientIds: ['observer-1'] },
+      })
+    );
+  });
+
   test('errors when location_id is missing', () => {
     handler.execute(
       {
