@@ -523,4 +523,235 @@ describe('CacheService - Coverage Tests', () => {
       cacheService.cleanup();
     });
   });
+
+  describe('Pattern invalidation and manual cleanup', () => {
+    it('invalidates cache entries that match a pattern and reports freed memory', () => {
+      const cacheService = new CacheService(mockLogger, {
+        maxSize: 10,
+        defaultTtl: 60000,
+        enableAutoCleanup: false,
+        maxMemoryBytes: 10 * 1024,
+      });
+
+      cacheService.set('user:1', 'alpha');
+      cacheService.set('user:2', 'beta');
+      cacheService.set('session:active', 'gamma');
+
+      const removedCount = cacheService.invalidatePattern(/^user:/);
+
+      expect(removedCount).toBe(2);
+      expect(cacheService.getSize()).toBe(1);
+      expect(cacheService.has('session:active')).toBe(true);
+      expect(
+        mockLogger.info.mock.calls.some(([message]) =>
+          message.includes('Invalidated 2 cache entries matching pattern')
+        )
+      ).toBe(true);
+
+      cacheService.cleanup();
+    });
+
+    it('skips missing nodes when pattern invalidation sees concurrent deletions', () => {
+      const cacheService = new CacheService(mockLogger, {
+        maxSize: 10,
+        defaultTtl: 60000,
+        enableAutoCleanup: false,
+        maxMemoryBytes: 10 * 1024,
+      });
+
+      cacheService.set('user:1', 'alpha');
+      cacheService.set('user:2', 'beta');
+
+      const dynamicPattern = {
+        test: jest.fn((key) => {
+          if (key === 'user:1') {
+            cacheService.invalidate(key);
+            return true;
+          }
+          return key.startsWith('user:');
+        }),
+        toString: () => '/dynamic-user/',
+      };
+
+      const removedCount = cacheService.invalidatePattern(dynamicPattern);
+
+      expect(dynamicPattern.test).toHaveBeenCalledTimes(2);
+      expect(removedCount).toBe(1);
+      expect(cacheService.has('user:2')).toBe(false);
+      expect(
+        mockLogger.info.mock.calls.some(([message]) =>
+          message.includes('Invalidated 1 cache entries matching pattern /dynamic-user/')
+        )
+      ).toBe(true);
+
+      cacheService.cleanup();
+    });
+
+    it('evicts the least recently used entry when size limit is exceeded', () => {
+      const cacheService = new CacheService(mockLogger, {
+        maxSize: 2,
+        defaultTtl: 60000,
+        enableAutoCleanup: false,
+        maxMemoryBytes: 10 * 1024,
+      });
+
+      cacheService.set('alpha', 'value-a');
+      cacheService.set('beta', 'value-b');
+
+      // Adding a third entry should evict the least recently used ("alpha")
+      cacheService.set('gamma', 'value-c');
+
+      expect(cacheService.getSize()).toBe(2);
+      expect(cacheService.has('gamma')).toBe(true);
+      expect(cacheService.has('alpha')).toBe(false);
+
+      const evictionLog = mockLogger.debug.mock.calls.find(([message]) =>
+        message.includes("Evicted LRU entry with key 'alpha'")
+      );
+      expect(evictionLog).toBeDefined();
+
+      const stats = cacheService.getStats();
+      expect(stats.evictions).toBeGreaterThan(0);
+
+      cacheService.cleanup();
+    });
+
+    it('handles eviction guard when the tail node is missing a key', () => {
+      const originalMapSet = Map.prototype.set;
+      const insertedNodes = Object.create(null);
+
+      Map.prototype.set = function patchedSet(key, value) {
+        if (value && typeof value === 'object' && 'entry' in value) {
+          insertedNodes[key] = value;
+        }
+        return originalMapSet.call(this, key, value);
+      };
+
+      const cacheService = new CacheService(mockLogger, {
+        maxSize: 2,
+        defaultTtl: 60000,
+        enableAutoCleanup: false,
+        maxMemoryBytes: 10 * 1024,
+      });
+
+      try {
+        cacheService.set('stale-key', 'old');
+        cacheService.set('fresh-key', 'fresh');
+
+        const staleNode = insertedNodes['stale-key'];
+        staleNode.key = null;
+
+        cacheService.set('new-key', 'brand-new');
+
+        expect(cacheService.has('new-key')).toBe(true);
+
+        const evictionLogs = mockLogger.debug.mock.calls.filter(([message]) =>
+          message.includes('Evicted LRU entry with key')
+        );
+        expect(evictionLogs.length).toBeGreaterThanOrEqual(1);
+
+        cacheService.invalidate('stale-key');
+      } finally {
+        Map.prototype.set = originalMapSet;
+        cacheService.cleanup();
+      }
+    });
+
+    it('performs manual cleanup of expired entries and updates statistics', () => {
+      jest.useFakeTimers();
+      const start = new Date('2024-01-01T00:00:00.000Z');
+      jest.setSystemTime(start);
+
+      const cacheService = new CacheService(mockLogger, {
+        maxSize: 5,
+        defaultTtl: 1000,
+        enableAutoCleanup: false,
+        maxMemoryBytes: 10 * 1024,
+      });
+
+      cacheService.set('expired', 'stale', 10);
+      cacheService.set('active', 'fresh', 10_000);
+
+      jest.setSystemTime(new Date(start.getTime() + 50));
+
+      const result = cacheService.performManualCleanup();
+
+      expect(result.entriesRemoved).toBe(1);
+      expect(result.memoryFreed).toBeGreaterThan(0);
+      expect(result.currentSize).toBe(1);
+      expect(cacheService.has('expired')).toBe(false);
+      expect(cacheService.has('active')).toBe(true);
+
+      const stats = cacheService.getStats();
+      expect(stats.expirations).toBeGreaterThanOrEqual(1);
+      expect(stats.autoCleanups).toBeGreaterThanOrEqual(1);
+
+      const cleanupLog = mockLogger.debug.mock.calls.find(([message]) =>
+        message.includes('Auto cleanup removed 1 expired entries, freed')
+      );
+      expect(cleanupLog).toBeDefined();
+
+      cacheService.cleanup();
+      jest.useRealTimers();
+    });
+
+    it('ignores missing nodes during manual cleanup when entries were removed externally', () => {
+      jest.useFakeTimers();
+      const start = new Date('2024-01-01T00:00:00.000Z');
+      jest.setSystemTime(start);
+
+      const originalMapSet = Map.prototype.set;
+      const originalMapGet = Map.prototype.get;
+      let capturedMap = null;
+
+      Map.prototype.set = function patchedSet(key, value) {
+        if (!capturedMap && value && typeof value === 'object' && 'entry' in value) {
+          capturedMap = this;
+        }
+        return originalMapSet.call(this, key, value);
+      };
+
+      const cacheService = new CacheService(mockLogger, {
+        maxSize: 5,
+        defaultTtl: 1000,
+        enableAutoCleanup: false,
+        maxMemoryBytes: 10 * 1024,
+      });
+
+      try {
+        cacheService.set('stale-during-cleanup', 'stale', 10);
+        cacheService.set('active', 'fresh', 10_000);
+
+        jest.setSystemTime(new Date(start.getTime() + 50));
+
+        let forceMissingNode = true;
+        Map.prototype.get = function patchedGet(key) {
+          if (
+            forceMissingNode &&
+            this === capturedMap &&
+            key === 'stale-during-cleanup'
+          ) {
+            forceMissingNode = false;
+            return undefined;
+          }
+          return originalMapGet.call(this, key);
+        };
+
+        const result = cacheService.performManualCleanup();
+
+        expect(result.entriesRemoved).toBe(0);
+        expect(result.currentSize).toBe(2);
+        expect(mockLogger.debug).not.toHaveBeenCalledWith(
+          expect.stringContaining('Auto cleanup removed')
+        );
+
+        cacheService.invalidate('stale-during-cleanup');
+      } finally {
+        Map.prototype.set = originalMapSet;
+        Map.prototype.get = originalMapGet;
+        cacheService.cleanup();
+        jest.useRealTimers();
+      }
+    });
+  });
 });
