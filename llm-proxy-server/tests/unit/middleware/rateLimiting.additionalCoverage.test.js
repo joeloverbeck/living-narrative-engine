@@ -77,4 +77,21 @@ describe('SuspiciousPatternsManager additional branches', () => {
     expect(manager.patterns.size).toBe(0);
     expect(manager.accessOrder.size).toBe(0);
   });
+
+  it('destroys active timers and clears tracked state exactly once', () => {
+    const clearSpy = jest.spyOn(manager, 'clear');
+
+    manager.cleanupTimer = setTimeout(() => {}, 10_000);
+    jest.advanceTimersByTime(1); // ensure timers are registered
+
+    expect(manager.periodicCleanupInterval).toBeTruthy();
+
+    manager.destroy();
+
+    expect(clearSpy).toHaveBeenCalledTimes(1);
+    expect(manager.periodicCleanupInterval).toBeNull();
+    expect(manager.cleanupTimer).toBeNull();
+    expect(manager.patterns.size).toBe(0);
+    expect(manager.accessOrder.size).toBe(0);
+  });
 });

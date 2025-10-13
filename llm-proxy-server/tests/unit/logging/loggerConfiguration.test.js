@@ -243,6 +243,45 @@ describe('LoggerConfiguration', () => {
 
       expect(config.isColorsEnabled()).toBe(true);
     });
+
+    it('evaluates fallback branch when stderr TTY is undefined but stdout reports TTY', async () => {
+      process.env.NODE_ENV = 'production';
+
+      const stdoutSpy = jest.fn(() => true);
+      const stderrSpy = jest.fn(() => undefined);
+
+      Object.defineProperty(process.stdout, 'isTTY', {
+        get: stdoutSpy,
+        configurable: true,
+      });
+
+      Object.defineProperty(process.stderr, 'isTTY', {
+        get: stderrSpy,
+        configurable: true,
+      });
+
+      const { getLoggerConfiguration } = await import(
+        '../../../src/logging/loggerConfiguration.js'
+      );
+      const config = getLoggerConfiguration();
+
+      expect(config.isColorsEnabled()).toBe(false);
+      expect(stdoutSpy).toHaveBeenCalledTimes(1);
+      expect(stderrSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('treats production environment with defined stdout and undefined stderr as non-TTY', async () => {
+      process.env.NODE_ENV = 'production';
+      process.stdout.isTTY = true;
+      process.stderr.isTTY = undefined;
+
+      const { getLoggerConfiguration } = await import(
+        '../../../src/logging/loggerConfiguration.js'
+      );
+      const config = getLoggerConfiguration();
+
+      expect(config.isColorsEnabled()).toBe(false);
+    });
   });
 
   describe('Boolean Environment Variable Parsing', () => {
