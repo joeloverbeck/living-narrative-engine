@@ -30,31 +30,11 @@
           "minLength": 1
         },
         "perception_type": {
-          "type": "string",
-          "enum": [
-            "character_enter",
-            "character_exit",
-            "item_pickup",
-            "item_drop",
-            "item_use",
-            "item_dropped",
-            "item_examined",
-            "item_read",
-            "item_picked_up",
-            "item_transfer",
-            "item_transfer_failed",
-            "item_pickup_failed",
-            "take_from_container_failed",
-            "item_taken_from_container",
-            "put_in_container_failed",
-            "item_put_in_container",
-            "speech_local",
-            "thought_internal",
-            "action_self_general",
-            "action_target_general",
-            "combat_attack",
-            "combat_effect",
-            "state_change_observable"
+          "description": "Category of perceptible event to emit.",
+          "allOf": [
+            {
+              "$ref": "../common.schema.json#/definitions/perceptionType"
+            }
           ]
         },
         "actor_id": {
