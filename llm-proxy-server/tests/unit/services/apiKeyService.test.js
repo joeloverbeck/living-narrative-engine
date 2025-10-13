@@ -367,6 +367,53 @@ describe('ApiKeyService', () => {
       });
     });
 
+    test('constructs combined failure reason when both sources fail without detailed errors', async () => {
+      delete process.env.NULL_DETAIL_ENV;
+
+      const createErrorDetailsSpy = jest.spyOn(
+        service,
+        '_createErrorDetails'
+      );
+
+      jest
+        .spyOn(service, '_readApiKeyFromFile')
+        .mockResolvedValue({ key: null, error: null });
+
+      const result = await service.getApiKey(
+        {
+          apiType: 'openai',
+          apiKeyEnvVar: 'NULL_DETAIL_ENV',
+          apiKeyFileName: 'missing.key',
+        },
+        'llm-both-null-details'
+      );
+
+      expect(createErrorDetailsSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to retrieve API key.'),
+        'api_key_all_sources_failed',
+        expect.objectContaining({
+          llmId: 'llm-both-null-details',
+          attemptedEnvVar: 'NULL_DETAIL_ENV',
+          attemptedFile: 'missing.key',
+          reason: expect.stringContaining('see previous logs'),
+        })
+      );
+
+      expect(result).toEqual({
+        apiKey: null,
+        errorDetails: expect.objectContaining({
+          stage: 'api_key_all_sources_failed',
+          details: expect.objectContaining({
+            llmId: 'llm-both-null-details',
+            attemptedEnvVar: 'NULL_DETAIL_ENV',
+            attemptedFile: 'missing.key',
+            reason: expect.stringContaining('see previous logs'),
+          }),
+        }),
+        source: 'N/A',
+      });
+    });
+
     test('creates fallback error when earlier attempts fail to set details', async () => {
       const originalCreateErrorDetails =
         service._createErrorDetails.bind(service);
