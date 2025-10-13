@@ -8,6 +8,10 @@ import request from 'supertest';
 import { loadProxyLlmConfigs } from '../../src/proxyLlmConfigLoader.js';
 import { NodeFileSystemReader } from '../../src/nodeFileSystemReader.js';
 import { getEnhancedConsoleLogger } from '../../src/logging/enhancedConsoleLogger.js';
+import {
+  createSecureLogger,
+  ensureValidLogger,
+} from '../../src/utils/loggerUtils.js';
 import { sendProxyError } from '../../src/utils/responseUtils.js';
 
 const createSensitiveDetails = () => ({
@@ -310,6 +314,84 @@ describe('logger utils integration coverage', () => {
       warnSpy.mockRestore();
       infoSpy.mockRestore();
       debugSpy.mockRestore();
+    });
+  });
+
+  describe('additional logger utility fallbacks', () => {
+    let originalNodeEnv;
+
+    beforeEach(() => {
+      originalNodeEnv = process.env.NODE_ENV;
+    });
+
+    afterEach(() => {
+      process.env.NODE_ENV = originalNodeEnv;
+    });
+
+    test('provides console logger with blank prefix when no logger is supplied', () => {
+      const infoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+
+      const fallback = ensureValidLogger(undefined, '');
+      fallback.info('info-event');
+      fallback.warn('warn-event', { code: 42 });
+      fallback.error('error-event');
+      fallback.debug('debug-event');
+
+      expect(infoSpy).toHaveBeenCalledWith('', 'info-event');
+      expect(warnSpy).toHaveBeenCalledWith('', 'warn-event', { code: 42 });
+      expect(errorSpy).toHaveBeenCalledWith('', 'error-event');
+      expect(debugSpy).toHaveBeenCalledWith('', 'debug-event');
+
+      infoSpy.mockRestore();
+      warnSpy.mockRestore();
+      errorSpy.mockRestore();
+      debugSpy.mockRestore();
+    });
+
+    test('createSecureLogger sanitizes nested structures without express helpers', () => {
+      process.env.NODE_ENV = 'production';
+
+      const captured = { debug: [], info: [], warn: [], error: [] };
+      const baseLogger = {
+        debug: (message, context) => captured.debug.push({ message, context }),
+        info: (message, context) => captured.info.push({ message, context }),
+        warn: (message, context) => captured.warn.push({ message, context }),
+        error: (message, context) => captured.error.push({ message, context }),
+      };
+
+      const secureLogger = createSecureLogger(baseLogger);
+      const complexContext = {
+        apiKey: 'sk-integration',
+        nested: {
+          token: 'tok-secret',
+          list: [
+            { password: 'pass-1' },
+            { values: ['safe', { secret: 'deep' }] },
+          ],
+        },
+        mixedArray: ['text', 123, { authorization: 'Bearer token' }],
+      };
+
+      secureLogger.debug('dbg', complexContext);
+      secureLogger.info('inf', { safe: true, api_key: 'key-42' });
+      secureLogger.warn('warn', ['array-entry', { secret: '' }]);
+      secureLogger.error('err');
+
+      expect(captured.debug[0].context.apiKey).toBe('[MASKED]');
+      expect(captured.debug[0].context.nested.token).toBe('[MASKED]');
+      expect(captured.debug[0].context.nested.list[0].password).toBe('[MASKED]');
+      expect(captured.debug[0].context.nested.list[1].values[1].secret).toBe(
+        '[MASKED]'
+      );
+      expect(
+        captured.debug[0].context.mixedArray[2].authorization
+      ).toBe('[MASKED]');
+      expect(captured.info[0].context.api_key).toBe('[MASKED]');
+      expect(captured.warn[0].context[1].secret).toBe('[EMPTY]');
+      expect(captured.error[0].context).toBeUndefined();
     });
   });
 });
