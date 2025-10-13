@@ -35,11 +35,11 @@ describe('items:take_from_container action definition', () => {
     );
   });
 
-  it('should use correct scope for primary targets (openable containers at location)', () => {
+  it('should use correct scope for primary targets (open containers at location)', () => {
     expect(takeFromContainerAction.targets).toBeDefined();
     expect(takeFromContainerAction.targets.primary).toBeDefined();
     expect(takeFromContainerAction.targets.primary.scope).toBe(
-      'items:openable_containers_at_location'
+      'items:open_containers_at_location'
     );
     expect(takeFromContainerAction.targets.primary.placeholder).toBe(
       'container'
@@ -61,7 +61,7 @@ describe('items:take_from_container action definition', () => {
   });
 
   // Note: The action schema uses 'prerequisites', not 'conditions'
-  // Container open state is handled by the scope (items:openable_containers_at_location)
+  // Container open state is handled by the scope (items:open_containers_at_location)
   // which filters for open containers, so no prerequisites are needed in the action definition
 
   it('should enable combination generation for multi-target action', () => {

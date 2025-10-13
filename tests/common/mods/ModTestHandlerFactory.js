@@ -19,9 +19,11 @@ import LogHandler from '../../../src/logic/operationHandlers/logHandler.js';
 import ModifyArrayFieldHandler from '../../../src/logic/operationHandlers/modifyArrayFieldHandler.js';
 import TransferItemHandler from '../../../src/logic/operationHandlers/transferItemHandler.js';
 import ValidateInventoryCapacityHandler from '../../../src/logic/operationHandlers/validateInventoryCapacityHandler.js';
+import ValidateContainerCapacityHandler from '../../../src/logic/operationHandlers/validateContainerCapacityHandler.js';
 import DropItemAtLocationHandler from '../../../src/logic/operationHandlers/dropItemAtLocationHandler.js';
 import PickUpItemFromLocationHandler from '../../../src/logic/operationHandlers/pickUpItemFromLocationHandler.js';
 import OpenContainerHandler from '../../../src/logic/operationHandlers/openContainerHandler.js';
+import PutInContainerHandler from '../../../src/logic/operationHandlers/putInContainerHandler.js';
 import TakeFromContainerHandler from '../../../src/logic/operationHandlers/takeFromContainerHandler.js';
 import { validateDependency } from '../../../src/utils/dependencyUtils.js';
 
@@ -336,6 +338,11 @@ export class ModTestHandlerFactory {
         logger,
         safeEventDispatcher: safeDispatcher,
       }),
+      VALIDATE_CONTAINER_CAPACITY: new ValidateContainerCapacityHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
       DROP_ITEM_AT_LOCATION: new DropItemAtLocationHandler({
         entityManager,
         logger,
@@ -347,6 +354,11 @@ export class ModTestHandlerFactory {
         safeEventDispatcher: safeDispatcher,
       }),
       OPEN_CONTAINER: new OpenContainerHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      PUT_IN_CONTAINER: new PutInContainerHandler({
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,

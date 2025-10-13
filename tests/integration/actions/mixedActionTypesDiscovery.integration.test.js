@@ -115,6 +115,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       .withName('wooden chest')
       .atLocation('room1')
       .withComponent('items:item', {})
+      .withComponent('items:openable', {})
       .withComponent('items:container', {
         contents: [gemId, scrollId],
         capacity: { maxWeight: 100, maxItems: 20 },
@@ -394,7 +395,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       expect(scopeResolver).toBeDefined();
 
       const containerResult = scopeResolver.resolveSync(
-        'items:openable_containers_at_location',
+        'items:open_containers_at_location',
         { actor: { id: actorId } }
       );
       expect(containerResult?.success).toBe(true);

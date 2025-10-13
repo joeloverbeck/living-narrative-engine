@@ -291,19 +291,21 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
       // Always allow using the target key directly in templates (e.g. {primary})
       placeholderValueMap.set(targetKey, baseDisplayValue);
 
-      // Derive fallback placeholder names when none are specified in the definition
-      const fallbackPlaceholders = this.#deriveFallbackPlaceholders(
-        targetKey,
-        placeholdersInTemplate,
-        assignedFallbackPlaceholders
-      );
+      if (!targetDef?.placeholder) {
+        // Derive fallback placeholder names only when no explicit placeholder is defined
+        const fallbackPlaceholders = this.#deriveFallbackPlaceholders(
+          targetKey,
+          placeholdersInTemplate,
+          assignedFallbackPlaceholders
+        );
 
-      for (const fallbackPlaceholder of fallbackPlaceholders) {
-        if (!placeholderValueMap.has(fallbackPlaceholder)) {
-          placeholderValueMap.set(fallbackPlaceholder, baseDisplayValue);
+        for (const fallbackPlaceholder of fallbackPlaceholders) {
+          if (!placeholderValueMap.has(fallbackPlaceholder)) {
+            placeholderValueMap.set(fallbackPlaceholder, baseDisplayValue);
+          }
+
+          assignedFallbackPlaceholders.add(fallbackPlaceholder);
         }
-
-        assignedFallbackPlaceholders.add(fallbackPlaceholder);
       }
 
       // Support dot-notation placeholders such as {primary.name} or {secondary.id}

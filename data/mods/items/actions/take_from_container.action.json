@@ -6,7 +6,7 @@
   "generateCombinations": true,
   "targets": {
     "primary": {
-      "scope": "items:openable_containers_at_location",
+      "scope": "items:open_containers_at_location",
       "placeholder": "container",
       "description": "Container to take from"
     },

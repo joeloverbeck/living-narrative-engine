@@ -448,7 +448,7 @@ export function createBaseRuleEnvironment({
           return { success: true, value: allItems };
         }
 
-        // Handle the items:openable_containers_at_location scope
+        // Handle the items:openable_containers_at_location scope (closed containers)
         if (scopeName === 'items:openable_containers_at_location') {
           // Extract actor ID from context
           const actorId = context?.actor?.id || context;
@@ -460,7 +460,7 @@ export function createBaseRuleEnvironment({
             return { success: true, value: new Set() };
           }
 
-          // Find all entities with items:container at same location that are open
+          // Find all entities with items:container at same location that are closed
           const allEntityIds = entityManager.getEntityIds();
           const allEntities = allEntityIds.map((id) => {
             const instance = entityManager.getEntityInstance(id);
@@ -485,6 +485,46 @@ export function createBaseRuleEnvironment({
           });
 
           const containerIds = containersAtLocation.map((container) => container.id);
+          return { success: true, value: new Set(containerIds) };
+        }
+
+        // Handle the items:open_containers_at_location scope (open containers)
+        if (scopeName === 'items:open_containers_at_location') {
+          // Extract actor ID from context
+          const actorId = context?.actor?.id || context;
+
+          // Get actor's position
+          const actor = entityManager.getEntityInstance(actorId);
+          const actorPosition = actor?.components?.['core:position'];
+          if (!actorPosition || !actorPosition.locationId) {
+            return { success: true, value: new Set() };
+          }
+
+          // Find all entities with items:container at same location that are open
+          const allEntityIds = entityManager.getEntityIds();
+          const allEntities = allEntityIds.map((id) => {
+            const instance = entityManager.getEntityInstance(id);
+            return instance || { id, components: {} };
+          });
+
+          const openContainersAtLocation = allEntities.filter((entity) => {
+            const hasContainerComponent = entity.components?.['items:container'];
+            const entityPosition = entity.components?.['core:position'];
+
+            if (!hasContainerComponent || !entityPosition) {
+              return false;
+            }
+
+            // Check if in same location as actor
+            if (entityPosition.locationId !== actorPosition.locationId) {
+              return false;
+            }
+
+            // Check if container is open
+            return hasContainerComponent.isOpen === true;
+          });
+
+          const containerIds = openContainersAtLocation.map((container) => container.id);
           return { success: true, value: new Set(containerIds) };
         }
 
