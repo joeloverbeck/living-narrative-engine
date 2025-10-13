@@ -38,6 +38,7 @@ const OPERATION_SCHEMA_FILES = [
   'modifyContextArray.schema.json',
   'openContainer.schema.json',
   'pickUpItemFromLocation.schema.json',
+  'putInContainer.schema.json',
   'queryComponent.schema.json',
   'queryComponents.schema.json',
   'queryEntities.schema.json',
@@ -54,6 +55,7 @@ const OPERATION_SCHEMA_FILES = [
   'unequipClothing.schema.json',
   'unlockMouthEngagement.schema.json',
   'unlockMovement.schema.json',
+  'validateContainerCapacity.schema.json',
   'validateInventoryCapacity.schema.json',
 ];
 
