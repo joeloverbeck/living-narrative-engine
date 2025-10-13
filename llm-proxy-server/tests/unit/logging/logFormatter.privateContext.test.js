@@ -42,6 +42,7 @@ async function loadFormatterModuleWithInternals() {
     __filename: filePath,
     __dirname: path.dirname(filePath),
     console,
+    process,
   });
 
   const script = new vm.Script(code, { filename: filePath });
