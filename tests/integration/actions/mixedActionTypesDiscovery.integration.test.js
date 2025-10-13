@@ -394,7 +394,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       expect(scopeResolver).toBeDefined();
 
       const containerResult = scopeResolver.resolveSync(
-        'items:openable_containers_at_location',
+        'items:open_containers_at_location',
         { actor: { id: actorId } }
       );
       expect(containerResult?.success).toBe(true);
