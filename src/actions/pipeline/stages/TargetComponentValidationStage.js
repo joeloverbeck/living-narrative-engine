@@ -85,7 +85,7 @@ export class TargetComponentValidationStage extends PipelineStage {
     let inputFormat;
 
     if (actionsWithTargets && actionsWithTargets.length > 0) {
-      candidateActions = actionsWithTargets.map(awt => awt.actionDef);
+      candidateActions = actionsWithTargets.map((awt) => awt.actionDef);
       inputFormat = 'actionsWithTargets';
     } else if (rawCandidateActions && rawCandidateActions.length > 0) {
       candidateActions = rawCandidateActions;
@@ -111,9 +111,10 @@ export class TargetComponentValidationStage extends PipelineStage {
       );
 
       // Return data in the same format as input
-      const outputData = inputFormat === 'actionsWithTargets'
-        ? { actionsWithTargets }
-        : { candidateActions };
+      const outputData =
+        inputFormat === 'actionsWithTargets'
+          ? { actionsWithTargets }
+          : { candidateActions };
 
       return PipelineResult.success({
         data: outputData,
@@ -135,10 +136,13 @@ export class TargetComponentValidationStage extends PipelineStage {
       const validatedActionDefs = await this.#validateActions(candidateActions, context, isActionAwareTrace, trace);
 
       // Filter actionsWithTargets to only include actions that passed validation (only if using actionsWithTargets format)
-      const validatedActionDefIds = new Set(validatedActionDefs.map(a => a.id));
-      const validatedActionsWithTargets = inputFormat === 'actionsWithTargets' && actionsWithTargets
-        ? actionsWithTargets.filter(awt => validatedActionDefIds.has(awt.actionDef.id))
-        : [];
+      const validatedActionDefIds = new Set(validatedActionDefs.map((a) => a.id));
+      const validatedActionsWithTargets =
+        inputFormat === 'actionsWithTargets' && actionsWithTargets
+          ? actionsWithTargets.filter((awt) =>
+              validatedActionDefIds.has(awt.actionDef.id)
+            )
+          : [];
 
       const duration = performance.now() - startPerformanceTime;
 
@@ -168,13 +172,25 @@ export class TargetComponentValidationStage extends PipelineStage {
       );
 
       // Return data in the same format as input
-      const outputData = inputFormat === 'actionsWithTargets'
-        ? { actionsWithTargets: validatedActionsWithTargets }
-        : { candidateActions: validatedActionDefs };
+      const {
+        actionsWithTargets: filteredActionsWithTargets,
+        candidateActions: filteredCandidateActions,
+      } = this.#filterActionsMissingRequiredTargets({
+        inputFormat,
+        validatedActionsWithTargets,
+        validatedActionDefs,
+        context,
+      });
 
-      const outputCount = inputFormat === 'actionsWithTargets'
-        ? validatedActionsWithTargets.length
-        : validatedActionDefs.length;
+      const outputData =
+        inputFormat === 'actionsWithTargets'
+          ? { actionsWithTargets: filteredActionsWithTargets }
+          : { candidateActions: filteredCandidateActions };
+
+      const outputCount =
+        inputFormat === 'actionsWithTargets'
+          ? filteredActionsWithTargets.length
+          : filteredCandidateActions.length;
 
       return PipelineResult.success({
         data: outputData,
@@ -409,6 +425,102 @@ export class TargetComponentValidationStage extends PipelineStage {
     }
 
     return targetEntities;
+  }
+
+  /**
+   * Remove actions that no longer have resolved candidates for required targets.
+   *
+   * @private
+   * @param {object} params - Filtering parameters
+   * @param {'actionsWithTargets'|'candidateActions'|'empty'} params.inputFormat - Input format identifier
+   * @param {Array<object>} params.validatedActionsWithTargets - Actions with per-action metadata
+   * @param {Array<ActionDefinition>} params.validatedActionDefs - Validated action definitions
+   * @param {object} params.context - Pipeline context
+   * @returns {{actionsWithTargets: Array<object>, candidateActions: Array<ActionDefinition>}} Filtered results
+   */
+  #filterActionsMissingRequiredTargets({
+    inputFormat,
+    validatedActionsWithTargets,
+    validatedActionDefs,
+    context,
+  }) {
+    const result = {
+      actionsWithTargets: validatedActionsWithTargets,
+      candidateActions: validatedActionDefs,
+    };
+
+    if (inputFormat === 'empty') {
+      return result;
+    }
+
+    const hasRequiredTargets = (actionDef, resolvedTargets, targetDefinitions) => {
+      if (!targetDefinitions || typeof targetDefinitions !== 'object') {
+        return true;
+      }
+
+      if (!resolvedTargets || typeof resolvedTargets !== 'object') {
+        return true;
+      }
+
+      const entries = Object.entries(targetDefinitions);
+      if (entries.length === 0) {
+        return true;
+      }
+
+      for (const [targetKey, definition] of entries) {
+        if (definition?.optional) {
+          continue;
+        }
+
+        const targetValue = resolvedTargets[targetKey];
+        const candidateCount = Array.isArray(targetValue)
+          ? targetValue.length
+          : targetValue
+            ? 1
+            : 0;
+
+        if (candidateCount === 0) {
+          this.#logger.debug(
+            `Filtering action '${actionDef.id}' - missing resolved candidates for required target '${targetKey}'`
+          );
+          return false;
+        }
+      }
+
+      return true;
+    };
+
+    if (inputFormat === 'actionsWithTargets') {
+      const filtered = [];
+      for (const awt of validatedActionsWithTargets) {
+        const targetDefs =
+          awt.targetDefinitions || awt.actionDef?.targetDefinitions || awt.actionDef?.targets;
+        const resolved =
+          awt.resolvedTargets || awt.actionDef?.resolvedTargets || context?.resolvedTargets;
+
+        if (hasRequiredTargets(awt.actionDef, resolved, targetDefs)) {
+          filtered.push(awt);
+        }
+      }
+
+      result.actionsWithTargets = filtered;
+      result.candidateActions = filtered.map((awt) => awt.actionDef);
+      return result;
+    }
+
+    // Legacy/candidateActions path - filter only when we have resolved target data available
+    const filteredCandidateActions = [];
+    for (const actionDef of validatedActionDefs) {
+      const targetDefs = actionDef.targetDefinitions || actionDef.targets;
+      const resolved = actionDef.resolvedTargets || context?.resolvedTargets;
+
+      if (hasRequiredTargets(actionDef, resolved, targetDefs)) {
+        filteredCandidateActions.push(actionDef);
+      }
+    }
+
+    result.candidateActions = filteredCandidateActions;
+    return result;
   }
 
   /**
