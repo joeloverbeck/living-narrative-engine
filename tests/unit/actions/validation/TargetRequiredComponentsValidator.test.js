@@ -178,6 +178,31 @@ describe('TargetRequiredComponentsValidator', () => {
 
       expect(result).toEqual({ valid: true });
     });
+
+    it('should return valid when at least one candidate in target array has required components', () => {
+      const actionDef = {
+        id: 'test:action',
+        required_components: {
+          primary: ['positioning:closeness'],
+        },
+      };
+      const targetEntities = {
+        primary: [
+          {
+            id: 'npc1',
+            components: { 'positioning:closeness': {} },
+          },
+          {
+            id: 'npc2',
+            components: {},
+          },
+        ],
+      };
+
+      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+
+      expect(result).toEqual({ valid: true });
+    });
   });
 
   describe('validateTargetRequirements - invalid cases', () => {
@@ -229,7 +254,7 @@ describe('TargetRequiredComponentsValidator', () => {
       });
     });
 
-    it('should return invalid when any candidate in target array lacks required component', () => {
+    it('should return invalid when target entity has no components field', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
@@ -237,16 +262,7 @@ describe('TargetRequiredComponentsValidator', () => {
         },
       };
       const targetEntities = {
-        primary: [
-          {
-            id: 'npc1',
-            components: { 'positioning:closeness': {} },
-          },
-          {
-            id: 'npc2',
-            components: {},
-          },
-        ],
+        primary: { id: 'npc1' }, // No components field
       };
 
       const result = validator.validateTargetRequirements(actionDef, targetEntities);
@@ -257,7 +273,7 @@ describe('TargetRequiredComponentsValidator', () => {
       });
     });
 
-    it('should return invalid when target entity has no components field', () => {
+    it('should return invalid when no candidates in target array satisfy required components', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
@@ -265,7 +281,16 @@ describe('TargetRequiredComponentsValidator', () => {
         },
       };
       const targetEntities = {
-        primary: { id: 'npc1' }, // No components field
+        primary: [
+          {
+            id: 'npc1',
+            components: {},
+          },
+          {
+            id: 'npc2',
+            components: {},
+          },
+        ],
       };
 
       const result = validator.validateTargetRequirements(actionDef, targetEntities);
