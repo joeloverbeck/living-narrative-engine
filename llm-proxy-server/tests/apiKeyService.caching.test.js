@@ -314,5 +314,40 @@ describe('ApiKeyService - Caching functionality', () => {
 
       delete process.env.TEST_API_KEY;
     });
+
+    test('should combine error details when both environment and file sources fail', async () => {
+      delete process.env.MISSING_VAR;
+      cacheService.get.mockReturnValue(undefined);
+
+      const fileError = new Error('File not found');
+      fileError.code = 'ENOENT';
+      fsReader.readFile.mockRejectedValue(fileError);
+
+      const result = await service.getApiKey(
+        {
+          apiType: 'openai',
+          apiKeyEnvVar: 'MISSING_VAR',
+          apiKeyFileName: 'openai.txt',
+        },
+        'llm-openai'
+      );
+
+      expect(result.apiKey).toBeNull();
+      expect(result.source).toBe('N/A');
+      expect(result.errorDetails).not.toBeNull();
+      expect(result.errorDetails.stage).toBe('api_key_all_sources_failed');
+      expect(result.errorDetails.details).toMatchObject({
+        llmId: 'llm-openai',
+        attemptedEnvVar: 'MISSING_VAR',
+        attemptedFile: 'openai.txt',
+      });
+      expect(result.errorDetails.details.reason).toContain(
+        "Environment variable 'MISSING_VAR' was not set or empty."
+      );
+      expect(result.errorDetails.details.reason).toContain(
+        "File 'openai.txt' retrieval also failed"
+      );
+      expect(result.errorDetails.details.reason).toContain('ENOENT');
+    });
   });
 });
