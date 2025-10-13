@@ -93,6 +93,75 @@ describe('HttpAgentService - Adaptive Cleanup', () => {
     });
   });
 
+  describe('Adaptive cleanup disabled behaviour', () => {
+    it('forces cleanup of idle agents using the fallback interval loop', () => {
+      const mockSetInterval = jest.spyOn(global, 'setInterval');
+
+      jest.setSystemTime(new Date('2025-01-01T00:00:00Z'));
+      httpAgentService = new HttpAgentService(mockLogger, {
+        adaptiveCleanupEnabled: false,
+        baseCleanupIntervalMs: 60000,
+        idleThresholdMs: 300000,
+      });
+
+      expect(mockSetInterval).toHaveBeenCalledWith(expect.any(Function), 60000);
+
+      httpAgentService.getAgent('https://api.example.com');
+
+      // Advance virtual time beyond idle threshold so the agent becomes eligible for cleanup
+      jest.setSystemTime(new Date('2025-01-01T00:10:00Z'));
+
+      const cleanupResult = httpAgentService.forceAdaptiveCleanup();
+
+      expect(cleanupResult.agentsRemoved).toBe(1);
+      expect(cleanupResult.currentAgentCount).toBe(0);
+      expect(httpAgentService.getActiveAgentCount()).toBe(0);
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('HttpAgentService: Adaptive cleanup completed'),
+        expect.objectContaining({
+          idleThreshold: expect.any(Number),
+          duration: expect.any(Number),
+        })
+      );
+
+      mockSetInterval.mockRestore();
+    });
+
+    it('cleans up timers and agents on shutdown when fallback scheduling is active', () => {
+      const mockSetInterval = jest.spyOn(global, 'setInterval');
+      const mockClearTimeout = jest.spyOn(global, 'clearTimeout');
+
+      httpAgentService = new HttpAgentService(mockLogger, {
+        adaptiveCleanupEnabled: false,
+        baseCleanupIntervalMs: 45000,
+      });
+
+      expect(mockSetInterval).toHaveBeenCalledWith(expect.any(Function), 45000);
+
+      httpAgentService.getAgent('https://api.shutdown-test.example');
+
+      httpAgentService.cleanup();
+
+      expect(mockClearTimeout).toHaveBeenCalled();
+      const [clearTimeoutArg] = mockClearTimeout.mock.calls.at(-1);
+      expect(clearTimeoutArg).toEqual(
+        expect.objectContaining({
+          ref: expect.any(Function),
+          unref: expect.any(Function),
+        })
+      );
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'HttpAgentService: Cleared adaptive cleanup timer'
+      );
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('HttpAgentService: Destroyed all 1 agents')
+      );
+
+      mockSetInterval.mockRestore();
+      mockClearTimeout.mockRestore();
+    });
+  });
+
   describe('Timer management in scheduleNextCleanup', () => {
     it('should clear existing timeout when scheduling new cleanup', () => {
       const mockClearTimeout = jest.spyOn(global, 'clearTimeout');
