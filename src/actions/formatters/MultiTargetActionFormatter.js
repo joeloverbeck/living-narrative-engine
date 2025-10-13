@@ -221,6 +221,7 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
     _options
   ) {
     let formattedTemplate = template;
+    const unresolvedExplicitPlaceholders = new Set();
 
     this.#logger.debug('formatSingleMultiTarget:', {
       template,
@@ -252,6 +253,21 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
         this.#logger.warn(
           `No target found in non-empty array for key: ${targetKey}`
         );
+        const targetDef = targetDefinitions?.[targetKey];
+        if (targetDef?.placeholder) {
+          placeholdersSet.delete(targetDef.placeholder);
+          unresolvedExplicitPlaceholders.add(targetDef.placeholder);
+          assignedFallbackPlaceholders.add(targetDef.placeholder);
+        }
+        placeholdersSet.delete(targetKey);
+        unresolvedExplicitPlaceholders.add(targetKey);
+        for (const placeholderName of placeholdersInTemplate) {
+          if (!placeholderName.startsWith(`${targetKey}.`)) {
+            continue;
+          }
+          placeholdersSet.delete(placeholderName);
+          unresolvedExplicitPlaceholders.add(placeholderName);
+        }
         continue;
       }
 
@@ -342,13 +358,20 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
     }
 
     // Check for any remaining placeholders
-    const remainingPlaceholders = this.#extractPlaceholders(formattedTemplate);
-    if (remainingPlaceholders.length > 0) {
+    const remainingPlaceholders = this.#extractPlaceholders(
+      formattedTemplate
+    );
+    const unresolvedPlaceholders = new Set([
+      ...remainingPlaceholders,
+      ...unresolvedExplicitPlaceholders,
+    ]);
+
+    if (unresolvedPlaceholders.size > 0) {
       this.#logger.warn(
         'Template still contains placeholders after formatting:',
         {
           template: formattedTemplate,
-          remainingPlaceholders,
+          remainingPlaceholders: Array.from(unresolvedPlaceholders),
           resolvedTargets: Object.keys(resolvedTargets),
           targetDefinitions,
         }
@@ -358,7 +381,9 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
       // Do not allow partially resolved actions as per user requirements
       return {
         ok: false,
-        error: `Multi-target action template contains unresolved placeholders: ${remainingPlaceholders.join(', ')}. Action is not available.`,
+        error: `Multi-target action template contains unresolved placeholders: ${Array.from(
+          unresolvedPlaceholders
+        ).join(', ')}. Action is not available.`,
       };
     }
 
