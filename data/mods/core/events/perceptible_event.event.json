@@ -48,6 +48,8 @@
           "item_pickup_failed",
           "take_from_container_failed",
           "item_taken_from_container",
+          "put_in_container_failed",
+          "item_put_in_container",
           "speech_local",
           "thought_internal",
           "action_self_general",

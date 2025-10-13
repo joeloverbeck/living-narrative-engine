@@ -175,6 +175,14 @@ export function registerInterpreters(container) {
       'TAKE_FROM_CONTAINER',
       bind(tokens.TakeFromContainerHandler)
     );
+    registry.register(
+      'PUT_IN_CONTAINER',
+      bind(tokens.PutInContainerHandler)
+    );
+    registry.register(
+      'VALIDATE_CONTAINER_CAPACITY',
+      bind(tokens.ValidateContainerCapacityHandler)
+    );
 
     return registry;
   });
