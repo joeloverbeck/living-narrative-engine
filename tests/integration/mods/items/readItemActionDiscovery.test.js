@@ -9,6 +9,8 @@ import {
   ModEntityBuilder,
   ModEntityScenarios,
 } from '../../../common/mods/ModEntityBuilder.js';
+import SimpleEntityManager from '../../../common/entities/simpleEntityManager.js';
+import { ActionDiscoveryService } from '../../../../src/actions/actionDiscoveryService.js';
 import readItemAction from '../../../../data/mods/items/actions/read_item.action.json' assert { type: 'json' };
 
 describe('items:read_item action definition', () => {
@@ -297,6 +299,145 @@ describe('items:read_item action definition', () => {
       );
 
       expect(readActions.length).toBe(0);
+    });
+
+    it('should only generate read commands for items with the readable component', async () => {
+      const room = ModEntityScenarios.createRoom('mixed_room', 'Mixed Study');
+
+      const actor = new ModEntityBuilder('reader_actor')
+        .withName('Focused Reader')
+        .atLocation('mixed_room')
+        .asActor()
+        .withComponent('items:inventory', {
+          items: [
+            'readable_item_one',
+            'readable_item_two',
+            'non_readable_item_one',
+          ],
+          capacity: { maxWeight: 50, maxItems: 10 },
+        })
+        .build();
+
+      const readableItemOne = new ModEntityBuilder('readable_item_one')
+        .withName('Annotated Diary Page')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withComponent('items:readable', {
+          text: 'Entry #17: The code is hidden beneath the lantern.',
+        })
+        .build();
+
+      const readableItemTwo = new ModEntityBuilder('readable_item_two')
+        .withName('Encoded Telegram')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withComponent('items:readable', {
+          text: 'Signal received. Proceed at dawn.',
+        })
+        .build();
+
+      const nonReadableItem = new ModEntityBuilder('non_readable_item_one')
+        .withName('Polished River Stone')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withDescription('Smoothed by time and water, cool to the touch.')
+        .build();
+
+      const entities = [
+        room,
+        actor,
+        readableItemOne,
+        readableItemTwo,
+        nonReadableItem,
+      ];
+
+      // Build a minimal discovery service that mirrors how the real pipeline
+      // would enumerate candidate targets and format read commands.
+      const logger = {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      };
+
+      const entityManager = new SimpleEntityManager(entities);
+      const actorEntity = entityManager.getEntityInstance('reader_actor');
+
+      const orchestrator = {
+        async discoverActions(currentActor) {
+          const inventory = entityManager.getComponentData(
+            currentActor.id,
+            'items:inventory'
+          );
+
+          const candidateIds = Array.isArray(inventory?.items)
+            ? inventory.items
+            : [];
+
+          const actions = [];
+
+          for (const candidateId of candidateIds) {
+            const itemEntity = entityManager.getEntityInstance(candidateId);
+            if (!itemEntity) {
+              continue;
+            }
+
+            const hasRequiredComponents = readItemAction.required_components.primary.every(
+              (componentId) => itemEntity.hasComponent(componentId)
+            );
+
+            if (!hasRequiredComponents) {
+              continue;
+            }
+
+            const nameComponent = itemEntity.getComponentData('core:name');
+            const itemName =
+              nameComponent?.name || nameComponent?.text || candidateId;
+            const command = readItemAction.template.replace(
+              '{item}',
+              itemName
+            );
+
+            actions.push({
+              id: readItemAction.id,
+              name: readItemAction.name,
+              command,
+              params: { targetId: candidateId },
+            });
+          }
+
+          return { actions, errors: [], trace: null };
+        },
+      };
+
+      const discoveryService = new ActionDiscoveryService({
+        entityManager,
+        logger,
+        actionPipelineOrchestrator: orchestrator,
+        traceContextFactory: () => ({
+          info: jest.fn(),
+          step: jest.fn(),
+          success: jest.fn(),
+          error: jest.fn(),
+          withSpanAsync: async (_name, fn) => fn(),
+        }),
+      });
+
+      const result = await discoveryService.getValidActions(actorEntity, {});
+
+      const readCommands = result.actions
+        .filter((action) => action.id === 'items:read_item')
+        .map((action) => action.command)
+        .sort();
+
+      expect(readCommands).toEqual([
+        'read Annotated Diary Page',
+        'read Encoded Telegram',
+      ]);
+      expect(
+        readCommands.includes('read Polished River Stone') ||
+          readCommands.includes('read non_readable_item_one')
+      ).toBe(false);
     });
   });
 });
