@@ -18,7 +18,7 @@ describe('PutInContainerHandler', () => {
 
     mockEntityManager = {
       getComponentData: jest.fn(),
-      batchAddComponentsOptimized: jest.fn(),
+      batchAddComponentsOptimized: jest.fn().mockResolvedValue(undefined),
     };
 
     mockSafeEventDispatcher = {
@@ -26,8 +26,10 @@ describe('PutInContainerHandler', () => {
     };
 
     executionContext = {
-      context: {},
-      executionContext: 'test-context',
+      logger: mockLogger,
+      evaluationContext: {
+        context: {},
+      },
     };
 
     handler = new PutInContainerHandler({
@@ -49,41 +51,51 @@ describe('PutInContainerHandler', () => {
       // Mock actor inventory
       mockEntityManager.getComponentData
         .mockReturnValueOnce({ items: ['item1', 'item2'] }) // actor inventory
-        .mockReturnValueOnce({ isOpen: true }) // container openable
-        .mockReturnValueOnce({ contents: ['existingItem'] }); // container contents
+        .mockReturnValueOnce({
+          isOpen: true,
+          contents: ['existingItem'],
+        }); // container component
 
       await handler.execute(params, executionContext);
 
       // Verify batch update was called
-      expect(mockEntityManager.batchAddComponentsOptimized).toHaveBeenCalledWith(
-        expect.objectContaining({
-          'actor1': expect.objectContaining({
-            'items:inventory': { items: ['item2'] },
+      expect(
+        mockEntityManager.batchAddComponentsOptimized
+      ).toHaveBeenCalledWith(
+        [
+          expect.objectContaining({
+            instanceId: 'actor1',
+            componentTypeId: 'items:inventory',
+            componentData: expect.objectContaining({
+              items: ['item2'],
+            }),
           }),
-          'container1': expect.objectContaining({
-            'items:container': { contents: ['existingItem', 'item1'] },
+          expect.objectContaining({
+            instanceId: 'container1',
+            componentTypeId: 'items:container',
+            componentData: expect.objectContaining({
+              isOpen: true,
+              contents: ['existingItem', 'item1'],
+            }),
           }),
-        }),
-        expect.any(Object),
-        'PUT_IN_CONTAINER',
-        expect.any(Object)
+        ],
+        true
       );
 
       // Verify event was dispatched
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        'items:item_put_in_container',
         expect.objectContaining({
-          type: 'items:item_put_in_container',
-          payload: expect.objectContaining({
-            actorEntity: 'actor1',
-            containerEntity: 'container1',
-            itemEntity: 'item1',
-          }),
-        }),
-        expect.any(Object)
+          actorEntity: 'actor1',
+          containerEntity: 'container1',
+          itemEntity: 'item1',
+        })
       );
 
       // Verify result variable was set
-      expect(executionContext.context.putResult).toEqual({ success: true });
+      expect(executionContext.evaluationContext.context.putResult).toEqual({
+        success: true,
+      });
     });
 
     it('should fail if actor does not have the item', async () => {
@@ -101,16 +113,8 @@ describe('PutInContainerHandler', () => {
       // Verify no batch update
       expect(mockEntityManager.batchAddComponentsOptimized).not.toHaveBeenCalled();
 
-      // Verify error event was dispatched
-      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'SYSTEM_ERROR_OCCURRED',
-          payload: expect.objectContaining({
-            error: expect.stringContaining('does not have item'),
-          }),
-        }),
-        expect.any(Object)
-      );
+      // Verify no event was dispatched
+      expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
     it('should fail if container is not open', async () => {
@@ -129,16 +133,8 @@ describe('PutInContainerHandler', () => {
       // Verify no batch update
       expect(mockEntityManager.batchAddComponentsOptimized).not.toHaveBeenCalled();
 
-      // Verify error event was dispatched
-      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'SYSTEM_ERROR_OCCURRED',
-          payload: expect.objectContaining({
-            error: expect.stringContaining('not open'),
-          }),
-        }),
-        expect.any(Object)
-      );
+      // Verify no event was dispatched
+      expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
     it('should fail if container does not have container component', async () => {
@@ -150,24 +146,15 @@ describe('PutInContainerHandler', () => {
 
       mockEntityManager.getComponentData
         .mockReturnValueOnce({ items: ['item1'] }) // actor has item
-        .mockReturnValueOnce({ isOpen: true }) // container is open
-        .mockReturnValueOnce(null); // no container component
+        .mockReturnValueOnce(null); // missing container component
 
-      await handler.execute(params, executionContext);
+      const result = await handler.execute(params, executionContext);
 
       // Verify no batch update
       expect(mockEntityManager.batchAddComponentsOptimized).not.toHaveBeenCalled();
 
-      // Verify error event was dispatched
-      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'SYSTEM_ERROR_OCCURRED',
-          payload: expect.objectContaining({
-            error: expect.stringContaining('does not have items:container component'),
-          }),
-        }),
-        expect.any(Object)
-      );
+      expect(result).toEqual({ success: false, error: 'not_a_container' });
+      expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
     it('should handle missing result_variable parameter', async () => {
@@ -180,18 +167,19 @@ describe('PutInContainerHandler', () => {
 
       mockEntityManager.getComponentData
         .mockReturnValueOnce({ items: ['item1'] })
-        .mockReturnValueOnce({ isOpen: true })
-        .mockReturnValueOnce({ contents: [] });
+        .mockReturnValueOnce({ isOpen: true, contents: [] });
 
       await handler.execute(params, executionContext);
 
       // Should still execute successfully
       expect(mockEntityManager.batchAddComponentsOptimized).toHaveBeenCalled();
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        'items:item_put_in_container',
         expect.objectContaining({
-          type: 'items:item_put_in_container',
-        }),
-        expect.any(Object)
+          actorEntity: 'actor1',
+          containerEntity: 'container1',
+          itemEntity: 'item1',
+        })
       );
     });
   });
