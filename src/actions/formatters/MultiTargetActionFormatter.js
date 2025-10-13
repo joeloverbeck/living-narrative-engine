@@ -162,7 +162,10 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
       }
     }
 
-    const combinations = this.#generateCombinations(resolvedTargets, actionDef.generateCombinations || false);
+    const combinations = this.#generateCombinations(
+      resolvedTargets,
+      actionDef.generateCombinations || false
+    );
     const formattedCommands = [];
 
     for (const combination of combinations) {
@@ -227,6 +230,8 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
 
     // Extract placeholders from template
     const placeholdersInTemplate = this.#extractPlaceholders(template);
+    const placeholdersSet = new Set(placeholdersInTemplate);
+    const assignedFallbackPlaceholders = new Set();
 
     // Replace each placeholder
     for (const [targetKey, targets] of Object.entries(resolvedTargets)) {
@@ -240,30 +245,6 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
         };
       }
 
-      const targetDef = targetDefinitions?.[targetKey];
-      let placeholder = targetDef?.placeholder;
-
-      // If no placeholder defined, try to match against available placeholders in template
-      if (!placeholder) {
-        // For primary targets, try common item placeholders first
-        if (targetKey === 'primary') {
-          placeholder =
-            placeholdersInTemplate.find((p) =>
-              ['item', 'object', 'thing'].includes(p)
-            ) ||
-            placeholdersInTemplate[0] ||
-            'target';
-        } else {
-          // For secondary/other targets, use remaining placeholders or default to 'target'
-          placeholder =
-            placeholdersInTemplate.find((p) =>
-              ['target', 'destination', 'recipient'].includes(p)
-            ) ||
-            placeholdersInTemplate[1] ||
-            'target';
-        }
-      }
-
       const target = targets[0]; // Use first target
 
       if (!target) {
@@ -274,22 +255,90 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
         continue;
       }
 
-      this.#logger.debug(
-        `Replacing placeholder {${placeholder}} for ${targetKey}:`,
-        {
-          targetKey,
-          placeholder,
-          targetId: target.id,
-          targetDisplayName: target.displayName,
-          currentTemplate: formattedTemplate,
-        }
+      const baseDisplayValue =
+        target.displayName ?? target.name ?? target.id ?? '';
+      const placeholderValueMap = new Map();
+
+      const targetDef = targetDefinitions?.[targetKey];
+      if (targetDef?.placeholder) {
+        placeholderValueMap.set(targetDef.placeholder, baseDisplayValue);
+      }
+
+      // Always allow using the target key directly in templates (e.g. {primary})
+      placeholderValueMap.set(targetKey, baseDisplayValue);
+
+      // Derive fallback placeholder names when none are specified in the definition
+      const fallbackPlaceholders = this.#deriveFallbackPlaceholders(
+        targetKey,
+        placeholdersInTemplate,
+        assignedFallbackPlaceholders
       );
 
-      const placeholderRegex = new RegExp(`\\{${placeholder}\\}`, 'g');
-      formattedTemplate = formattedTemplate.replace(
-        placeholderRegex,
-        target.displayName || target.id
-      );
+      for (const fallbackPlaceholder of fallbackPlaceholders) {
+        if (!placeholderValueMap.has(fallbackPlaceholder)) {
+          placeholderValueMap.set(fallbackPlaceholder, baseDisplayValue);
+        }
+
+        assignedFallbackPlaceholders.add(fallbackPlaceholder);
+      }
+
+      // Support dot-notation placeholders such as {primary.name} or {secondary.id}
+      for (const placeholderName of placeholdersInTemplate) {
+        if (!placeholderName.startsWith(`${targetKey}.`)) {
+          continue;
+        }
+
+        const propertyPath = placeholderName.slice(targetKey.length + 1);
+        let resolvedValue = this.#resolveTargetProperty(
+          target,
+          propertyPath,
+          baseDisplayValue
+        );
+
+        placeholderValueMap.set(placeholderName, resolvedValue);
+      }
+
+      // Also map well-known property aliases even if the template omits the dot notation
+      if (placeholdersSet.has(`${targetKey}.name`)) {
+        placeholderValueMap.set(`${targetKey}.name`, baseDisplayValue);
+      }
+      if (placeholdersSet.has(`${targetKey}.displayName`)) {
+        placeholderValueMap.set(`${targetKey}.displayName`, baseDisplayValue);
+      }
+      if (placeholdersSet.has(`${targetKey}.id`)) {
+        placeholderValueMap.set(
+          `${targetKey}.id`,
+          target.id ?? baseDisplayValue
+        );
+      }
+
+      this.#logger.debug('Resolved placeholder values for target:', {
+        targetKey,
+        placeholderValueMap: Object.fromEntries(placeholderValueMap),
+        currentTemplate: formattedTemplate,
+      });
+
+      for (const [placeholderName, value] of placeholderValueMap) {
+        if (!placeholdersSet.has(placeholderName)) {
+          continue;
+        }
+
+        const safeValue = this.#normalizePlaceholderValue(
+          value,
+          baseDisplayValue
+        );
+        const placeholderRegex = new RegExp(
+          `\\{${this.#escapeRegExp(placeholderName)}\\}`,
+          'g'
+        );
+
+        formattedTemplate = formattedTemplate.replace(
+          placeholderRegex,
+          safeValue
+        );
+
+        placeholdersSet.delete(placeholderName);
+      }
     }
 
     // Check for any remaining placeholders
@@ -333,6 +382,129 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
     }
 
     return placeholders;
+  }
+
+  /**
+   * @description Resolve a property path from a target, supporting nested properties.
+   *
+   * @param {ResolvedTarget} target - Resolved target metadata.
+   * @param {string} propertyPath - Property path extracted from the placeholder.
+   * @param {string} defaultValue - Fallback value if the property cannot be resolved.
+   * @returns {string} Resolved property value or the provided default.
+   * @private
+   */
+  #resolveTargetProperty(target, propertyPath, defaultValue) {
+    if (!propertyPath) {
+      return defaultValue;
+    }
+
+    const segments = propertyPath.split('.');
+    let current = target;
+
+    for (const segment of segments) {
+      if (current == null || typeof current !== 'object') {
+        return defaultValue;
+      }
+
+      current = current[segment];
+    }
+
+    if (current === undefined || current === null) {
+      return defaultValue;
+    }
+
+    if (typeof current === 'object') {
+      return defaultValue;
+    }
+
+    return `${current}`;
+  }
+
+  /**
+   * @description Normalize the resolved placeholder value into a safe string.
+   *
+   * @param {unknown} value - Raw value resolved for the placeholder.
+   * @param {string} fallback - Fallback value if the raw value is unusable.
+   * @returns {string} Sanitized string suitable for replacement.
+   * @private
+   */
+  #normalizePlaceholderValue(value, fallback) {
+    if (value === undefined || value === null || value === '') {
+      return `${fallback}`;
+    }
+
+    if (typeof value === 'object') {
+      return `${fallback}`;
+    }
+
+    return `${value}`;
+  }
+
+  /**
+   * @description Determine fallback placeholders when target definitions omit explicit placeholders.
+   *
+   * @param {string} targetKey - Target key being processed (e.g. primary, secondary).
+   * @param {string[]} placeholdersInTemplate - Placeholder names extracted from the template.
+   * @param {Set<string>} assignedFallbackPlaceholders - Placeholders already assigned to previous targets.
+   * @returns {string[]} Ordered list of placeholder names to try for the current target.
+   * @private
+   */
+  #deriveFallbackPlaceholders(
+    targetKey,
+    placeholdersInTemplate,
+    assignedFallbackPlaceholders
+  ) {
+    const normalizedPlaceholders = placeholdersInTemplate.filter(
+      (placeholder) => !placeholder.includes('.')
+    );
+
+    if (normalizedPlaceholders.length === 0) {
+      return [];
+    }
+
+    const priorityList =
+      targetKey === 'primary'
+        ? ['item', 'object', 'thing', 'primary']
+        : ['target', 'destination', 'recipient', 'secondary'];
+
+    // Try priority candidates first
+    for (const candidate of priorityList) {
+      if (
+        normalizedPlaceholders.includes(candidate) &&
+        !assignedFallbackPlaceholders.has(candidate)
+      ) {
+        return [candidate];
+      }
+    }
+
+    // Fallback to positional placeholder order
+    const desiredIndex = targetKey === 'primary' ? 0 : 1;
+    const positionalCandidate = normalizedPlaceholders.find(
+      (placeholder, index) =>
+        index === desiredIndex && !assignedFallbackPlaceholders.has(placeholder)
+    );
+
+    if (positionalCandidate) {
+      return [positionalCandidate];
+    }
+
+    // Last resort: first unassigned placeholder
+    const firstAvailable = normalizedPlaceholders.find(
+      (placeholder) => !assignedFallbackPlaceholders.has(placeholder)
+    );
+
+    return firstAvailable ? [firstAvailable] : [];
+  }
+
+  /**
+   * @description Escape special regex characters in a placeholder name.
+   *
+   * @param {string} placeholderName - Placeholder to escape for regex usage.
+   * @returns {string} Escaped placeholder string.
+   * @private
+   */
+  #escapeRegExp(placeholderName) {
+    return placeholderName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
   /**
@@ -431,7 +603,11 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
    * @returns {Array<object>} Array of target combinations
    * @private
    */
-  #generateContextDependentCombinations(resolvedTargets, maxCombinations, generateAllCombinations = false) {
+  #generateContextDependentCombinations(
+    resolvedTargets,
+    maxCombinations,
+    generateAllCombinations = false
+  ) {
     const combinations = [];
 
     // Find primary targets (those without contextFromId)
@@ -514,7 +690,6 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
         combination[key] = targets;
       }
 
-
       // Check if we have values for all expected target types
       const expectedTargetKeys = Object.keys(resolvedTargets);
       const hasAllTargets = expectedTargetKeys.every(
@@ -538,7 +713,7 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
 
           const depCombination = {
             [primaryKey]: [primaryTarget],
-            [dependentKey]: [dependentTarget]
+            [dependentKey]: [dependentTarget],
           };
 
           // Add independent targets as-is (they'll be expanded later)
