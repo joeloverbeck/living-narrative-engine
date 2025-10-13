@@ -464,8 +464,16 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
 
     const priorityList =
       targetKey === 'primary'
-        ? ['item', 'object', 'thing', 'primary']
-        : ['target', 'destination', 'recipient', 'secondary'];
+        ? ['person', 'actor', 'character', 'primary']
+        : [
+            'item',
+            'object',
+            'thing',
+            'target',
+            'destination',
+            'recipient',
+            targetKey,
+          ];
 
     // Try priority candidates first
     for (const candidate of priorityList) {
