@@ -72,4 +72,14 @@ describe('validateIPv6Address additional branch coverage', () => {
     expect(classification.type).toBe('reserved');
     expect(classification.range).toBe('::ffff:0:0/96 (IPv4-mapped)');
   });
+
+  it('treats IPv4-mapped addresses embedding the unspecified IPv4 address as reserved', () => {
+    const classification = validateIPv6Address('::ffff:0.0.0.0');
+
+    expect(classification.isValid).toBe(true);
+    expect(classification.isReserved).toBe(true);
+    expect(classification.type).toBe('ipv4-mapped-private');
+    expect(classification.range).toContain('0.0.0.0');
+  });
+
 });
