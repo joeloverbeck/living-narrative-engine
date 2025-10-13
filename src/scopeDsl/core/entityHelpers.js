@@ -141,6 +141,23 @@ export function createEvaluationContext(
   // Fast path: null/undefined items
   if (item == null) return null;
 
+  // Normalize inventory reference objects ({ itemId, ... }) into entity-like objects
+  if (
+    item &&
+    typeof item === 'object' &&
+    !item.id &&
+    typeof item.itemId === 'string'
+  ) {
+    const trimmedItemId = item.itemId.trim();
+
+    if (trimmedItemId.length > 0) {
+      item = {
+        ...item,
+        id: trimmedItemId,
+      };
+    }
+  }
+
   // Critical validation - always check for undefined actor (programming error)
   if (!actorEntity) {
     const error = new Error(

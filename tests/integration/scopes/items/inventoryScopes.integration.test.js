@@ -4,6 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
+import { readFileSync } from 'fs';
 import { SimpleEntityManager } from '../../../common/entities/index.js';
 import ScopeEngine from '../../../../src/scopeDsl/engine.js';
 import ScopeRegistry from '../../../../src/scopeDsl/scopeRegistry.js';
@@ -35,13 +36,27 @@ describe('Items - Inventory Scopes Integration', () => {
     scopeRegistry = new ScopeRegistry();
 
     // Register scopes with proper AST parsing
+    const actorInventoryScope = readFileSync(
+      new URL(
+        '../../../../data/mods/items/scopes/actor_inventory_items.scope',
+        import.meta.url
+      ),
+      'utf8'
+    ).trim();
+
+    const closeActorsWithInventoryScope = readFileSync(
+      new URL(
+        '../../../../data/mods/items/scopes/close_actors_with_inventory.scope',
+        import.meta.url
+      ),
+      'utf8'
+    ).trim();
+
     const scopeDefinitions = {
-      'items:actor_inventory_items':
-        'items:actor_inventory_items := actor.components.items:inventory.items[]',
+      'items:actor_inventory_items': actorInventoryScope,
       'positioning:close_actors':
         'positioning:close_actors := actor.components.positioning:closeness.partners[]',
-      'items:close_actors_with_inventory':
-        'items:close_actors_with_inventory := positioning:close_actors[{"!!": {"var": "entity.components.items:inventory"}}]',
+      'items:close_actors_with_inventory': closeActorsWithInventoryScope,
     };
 
     const parsedScopes = {};
@@ -65,6 +80,30 @@ describe('Items - Inventory Scopes Integration', () => {
   });
 
   describe('actor_inventory_items scope', () => {
+    const normalizeScopeResults = (resultSet) => {
+      const normalizedValues = Array.from(resultSet)
+        .map((entry) => {
+          if (typeof entry === 'string') {
+            return entry;
+          }
+
+          if (entry && typeof entry === 'object') {
+            if (typeof entry.id === 'string' && entry.id.trim()) {
+              return entry.id.trim();
+            }
+
+            if (typeof entry.itemId === 'string' && entry.itemId.trim()) {
+              return entry.itemId.trim();
+            }
+          }
+
+          return null;
+        })
+        .filter((id) => typeof id === 'string' && id.length > 0);
+
+      return Array.from(new Set(normalizedValues));
+    };
+
     it('should return all items from actor inventory', () => {
       entityManager = new SimpleEntityManager([
         {
@@ -75,6 +114,24 @@ describe('Items - Inventory Scopes Integration', () => {
               items: ['item-1', 'item-2', 'item-3'],
               capacity: { maxWeight: 50, maxItems: 10 },
             },
+          },
+        },
+        {
+          id: 'item-1',
+          components: {
+            'items:item': {},
+          },
+        },
+        {
+          id: 'item-2',
+          components: {
+            'items:item': {},
+          },
+        },
+        {
+          id: 'item-3',
+          components: {
+            'items:item': {},
           },
         },
       ]);
@@ -92,10 +149,60 @@ describe('Items - Inventory Scopes Integration', () => {
       const result = scopeEngine.resolve(ast, actor, runtimeCtx);
 
       expect(result).toBeInstanceOf(Set);
-      expect(result.size).toBe(3);
-      expect(result.has('item-1')).toBe(true);
-      expect(result.has('item-2')).toBe(true);
-      expect(result.has('item-3')).toBe(true);
+      const normalized = normalizeScopeResults(result);
+
+      expect(normalized).toHaveLength(3);
+      expect(normalized).toEqual(
+        expect.arrayContaining(['item-1', 'item-2', 'item-3'])
+      );
+    });
+
+    it('should resolve item references stored as objects with itemId', () => {
+      entityManager = new SimpleEntityManager([
+        {
+          id: 'test:actor1',
+          components: {
+            'core:actor': { name: 'Test Actor' },
+            'items:inventory': {
+              items: [
+                { itemId: 'item-1' },
+                { itemId: 'item-2' },
+              ],
+              capacity: { maxWeight: 50, maxItems: 10 },
+            },
+          },
+        },
+        {
+          id: 'item-1',
+          components: {
+            'items:item': {},
+          },
+        },
+        {
+          id: 'item-2',
+          components: {
+            'items:item': {},
+          },
+        },
+      ]);
+
+      const actor = entityManager.getEntityInstance('test:actor1');
+      const runtimeCtx = {
+        entityManager,
+        logger,
+        actor,
+        jsonLogicEval,
+      };
+
+      const scopeDef = scopeRegistry.getScope('items:actor_inventory_items');
+      const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
+      const result = scopeEngine.resolve(ast, actor, runtimeCtx);
+
+      expect(result).toBeInstanceOf(Set);
+      const normalized = normalizeScopeResults(result);
+
+      expect(normalized).toHaveLength(2);
+      expect(normalized).toEqual(expect.arrayContaining(['item-1', 'item-2']));
     });
 
     it('should return empty array when inventory is empty', () => {
