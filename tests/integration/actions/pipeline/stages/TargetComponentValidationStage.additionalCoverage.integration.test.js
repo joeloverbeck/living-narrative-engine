@@ -361,6 +361,105 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
     expect(noTargetEvent?.payload.targetEntityIds).toEqual({});
   });
 
+
+  it('filters resolved targets lacking required components within actionsWithTargets', async () => {
+    applyTargetValidationOverrides({ enabled: true, logDetails: false });
+
+    const logger = new RecordingLogger();
+    const componentValidator = new DeterministicComponentValidator(() => ({
+      valid: true,
+    }));
+    const requiredValidator = new DeterministicRequiredValidator({ valid: true });
+
+    const stage = new TargetComponentValidationStage({
+      targetComponentValidator: componentValidator,
+      targetRequiredComponentsValidator: requiredValidator,
+      logger,
+      actionErrorContextBuilder: new NoOpErrorContextBuilder(),
+    });
+
+    const readableTarget = {
+      id: 'items:readable-letter',
+      displayName: 'Readable Letter',
+      entity: {
+        id: 'items:readable-letter',
+        components: {
+          'items:readable': { text: 'A farewell written in hurried script.' },
+        },
+        hasComponent: (componentId) => componentId === 'items:readable',
+      },
+    };
+
+    const nonReadableTarget = {
+      id: 'items:plain-stone',
+      displayName: 'Plain Stone',
+      entity: {
+        id: 'items:plain-stone',
+        components: {},
+        hasComponent: () => false,
+      },
+    };
+
+    const actionDef = {
+      id: 'items:read_item',
+      required_components: {
+        primary: ['items:readable'],
+      },
+      resolvedTargets: {
+        primary: [readableTarget, nonReadableTarget],
+      },
+      targetDefinitions: {
+        primary: {
+          scope: 'items:examinable_items',
+          placeholder: 'item',
+        },
+      },
+    };
+
+    const actionsWithTargets = [
+      {
+        actionDef,
+        resolvedTargets: {
+          primary: [readableTarget, nonReadableTarget],
+        },
+        targetDefinitions: actionDef.targetDefinitions,
+        targetContexts: [
+          { type: 'entity', entityId: 'items:readable-letter', placeholder: 'item' },
+          { type: 'entity', entityId: 'items:plain-stone', placeholder: 'item' },
+        ],
+        isMultiTarget: true,
+      },
+    ];
+
+    const trace = new RecordingTrace();
+
+    const result = await stage.executeInternal({
+      actor: { id: 'actor:reader' },
+      actionsWithTargets,
+      trace,
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.data.actionsWithTargets).toHaveLength(1);
+
+    const [filteredAction] = result.data.actionsWithTargets;
+    expect(filteredAction.resolvedTargets.primary).toEqual([readableTarget]);
+    expect(filteredAction.targetContexts).toEqual([
+      { type: 'entity', entityId: 'items:readable-letter', placeholder: 'item' },
+    ]);
+
+    expect(actionDef.resolvedTargets.primary).toEqual([readableTarget]);
+
+    expect(componentValidator.calls).toHaveLength(1);
+    expect(componentValidator.calls[0].targetEntities.primary).toEqual([
+      readableTarget,
+    ]);
+    expect(requiredValidator.calls).toHaveLength(1);
+    expect(requiredValidator.calls[0].targetEntities.primary).toEqual([
+      readableTarget,
+    ]);
+  });
+
   it('logs trace capture failures without interrupting validation flow', async () => {
     applyTargetValidationOverrides({ logDetails: true });
 
