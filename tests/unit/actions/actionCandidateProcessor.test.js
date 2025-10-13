@@ -3,6 +3,8 @@ import { describeActionCandidateProcessorSuite } from '../../common/actions/acti
 import { ActionResult } from '../../../src/actions/core/actionResult.js';
 import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
 import { ActionCandidateProcessor } from '../../../src/actions/actionCandidateProcessor.js';
+import { ERROR_PHASES } from '../../../src/actions/errors/actionErrorTypes.js';
+import * as discoveryErrorUtils from '../../../src/actions/utils/discoveryErrorUtils.js';
 
 describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
   beforeEach(() => {
@@ -846,6 +848,168 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
         error: expect.any(Error),
         phase: 'validation',
         timestamp: expect.any(Number),
+      });
+    });
+
+    it('normalizes mixed target resolution errors using builder only for raw entries', () => {
+      const bed = getBed();
+      const actionDef = {
+        id: 'mixed-errors',
+        scope: 'target',
+      };
+      const actorEntity = { id: 'actor-1' };
+      const context = {};
+
+      const existingContext = {
+        actionId: actionDef.id,
+        targetId: 'existing-target',
+        error: new Error('prebuilt context'),
+        actorSnapshot: { id: actorEntity.id },
+        evaluationTrace: { steps: [] },
+        suggestedFixes: [],
+        environmentContext: { scope: actionDef.scope },
+        timestamp: Date.now(),
+        phase: ERROR_PHASES.VALIDATION,
+      };
+      const rawError = new Error('raw resolution failure');
+      const normalizedRawError = {
+        actionId: actionDef.id,
+        targetId: null,
+        error: rawError,
+        actorSnapshot: { id: actorEntity.id },
+        evaluationTrace: { steps: [] },
+        suggestedFixes: [],
+        environmentContext: { scope: actionDef.scope },
+        timestamp: 42,
+        phase: ERROR_PHASES.VALIDATION,
+      };
+
+      const createContextSpy = jest.spyOn(
+        discoveryErrorUtils,
+        'createActionErrorContext'
+      );
+
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
+        success: false,
+        errors: [existingContext, rawError],
+      });
+      bed.mocks.actionErrorContextBuilder.buildErrorContext.mockImplementation(
+        ({ error, actionDef: def, actorId, phase, trace, additionalContext }) => {
+          expect(error).toBe(rawError);
+          expect(def).toBe(actionDef);
+          expect(actorId).toBe(actorEntity.id);
+          expect(phase).toBe(ERROR_PHASES.VALIDATION);
+          expect(trace).toBeNull();
+          expect(additionalContext).toEqual({ scope: actionDef.scope });
+          return normalizedRawError;
+        }
+      );
+
+      try {
+        const result = bed.service.process(actionDef, actorEntity, context);
+
+        expect(result.success).toBe(true);
+        expect(result.value.cause).toBe('resolution-error');
+        expect(result.value.actions).toHaveLength(0);
+        expect(result.value.errors).toEqual([
+          existingContext,
+          normalizedRawError,
+        ]);
+        expect(createContextSpy).toHaveBeenCalledTimes(2);
+        expect(
+          bed.mocks.actionErrorContextBuilder.buildErrorContext
+        ).toHaveBeenCalledTimes(1);
+      } finally {
+        createContextSpy.mockRestore();
+      }
+    });
+
+    it('passes shared formatter options to the action command formatter', () => {
+      const bed = getBed();
+      const actionDef = {
+        id: 'formatter-options',
+        name: 'Formatter Options',
+        commandVerb: 'format',
+        scope: 'target',
+      };
+      const actorEntity = { id: 'actor-options' };
+      const context = {};
+
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue(
+        ActionResult.success([ActionTargetContext.forEntity('target-1')])
+      );
+
+      bed.mocks.actionCommandFormatter.format.mockImplementation(
+        (def, targetContext, entityManager, formatterOptions) => {
+          expect(def).toBe(actionDef);
+          expect(targetContext.entityId).toBe('target-1');
+          expect(entityManager).toBe(bed.mocks.entityManager);
+          expect(formatterOptions).toEqual({
+            logger: bed.mocks.logger,
+            debug: true,
+            safeEventDispatcher: bed.mocks.safeEventDispatcher,
+          });
+          return { ok: true, value: `format ${targetContext.entityId}` };
+        }
+      );
+
+      const result = bed.service.process(actionDef, actorEntity, context);
+
+      expect(result.success).toBe(true);
+      expect(result.value.actions).toHaveLength(1);
+      expect(result.value.actions[0]).toMatchObject({
+        id: 'formatter-options',
+        command: 'format target-1',
+      });
+    });
+
+    it('captures formatter failures that omit detail payloads', () => {
+      const bed = getBed();
+      const actionDef = {
+        id: 'formatter-failure',
+        scope: 'target',
+      };
+      const actorEntity = { id: 'actor-failure' };
+      const context = {};
+      const formatError = new Error('format without details');
+
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue(
+        ActionResult.success([ActionTargetContext.forEntity('target-2')])
+      );
+
+      bed.mocks.actionCommandFormatter.format.mockReturnValue({
+        ok: false,
+        error: formatError,
+      });
+
+      bed.mocks.actionErrorContextBuilder.buildErrorContext.mockImplementation(
+        (payload) => {
+          expect(payload.targetId).toBe('target-2');
+          expect(payload.additionalContext).toEqual({ formatDetails: undefined });
+          return {
+            actionId: actionDef.id,
+            targetId: payload.targetId,
+            error: formatError,
+            actorSnapshot: { id: actorEntity.id },
+            evaluationTrace: { steps: [] },
+            suggestedFixes: [],
+            environmentContext: payload.additionalContext,
+            timestamp: 100,
+            phase: ERROR_PHASES.VALIDATION,
+          };
+        }
+      );
+
+      const result = bed.service.process(actionDef, actorEntity, context);
+
+      expect(result.success).toBe(true);
+      expect(result.value.actions).toHaveLength(0);
+      expect(result.value.errors).toHaveLength(1);
+      expect(result.value.errors[0]).toMatchObject({
+        actionId: actionDef.id,
+        targetId: 'target-2',
+        error: formatError,
+        environmentContext: { formatDetails: undefined },
       });
     });
   });
