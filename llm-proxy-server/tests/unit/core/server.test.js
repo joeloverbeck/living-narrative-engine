@@ -720,6 +720,34 @@ describe('Server - Comprehensive Tests', () => {
       expect(serverInstance.close).toHaveBeenCalled();
     });
 
+    test('graceful shutdown handles SIGHUP signal correctly', async () => {
+      // Import the server module to trigger the signal handler registration
+      await import('../../../src/core/server.js');
+
+      // Get the SIGHUP handler that was registered
+      const sighupHandler = process.on.mock.calls.find(
+        (call) => call[0] === 'SIGHUP'
+      )[1];
+
+      expect(sighupHandler).toBeDefined();
+
+      // Execute the SIGHUP handler
+      sighupHandler();
+
+      expect(consoleLoggerInstance.info).toHaveBeenCalledWith(
+        'LLM Proxy Server: Received SIGHUP, starting graceful shutdown...'
+      );
+
+      // Wait for async operations to complete
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(serverInstance.close).toHaveBeenCalled();
+      expect(consoleLoggerInstance.info).toHaveBeenCalledWith(
+        'LLM Proxy Server: HTTP server closed'
+      );
+      expect(process.exit).not.toHaveBeenCalled();
+    });
+
     test('graceful shutdown cleans up httpAgentService when cleanup method exists', async () => {
       // Import the server module
       await import('../../../src/core/server.js');
