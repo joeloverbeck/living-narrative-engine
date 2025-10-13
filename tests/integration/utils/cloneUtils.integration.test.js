@@ -72,16 +72,32 @@ describe('cloneUtils integration', () => {
       debug: jest.fn(),
     };
 
-    const result = safeDeepClone(structured, logger);
-
-    expect(result.success).toBe(false);
-    expect(result.error).toBeInstanceOf(PersistenceError);
-    expect(result.error.code).toBe(PersistenceErrorCodes.DEEP_CLONE_FAILED);
-    expect(result.error.message).toBe('Failed to deep clone object.');
-    expect(logger.error).toHaveBeenCalledWith(
-      'DeepClone failed:',
-      expect.any(Error)
+    const hadStructuredClone = Object.prototype.hasOwnProperty.call(
+      globalThis,
+      'structuredClone'
     );
+    const originalStructuredClone = globalThis.structuredClone;
+
+    globalThis.structuredClone = undefined;
+
+    try {
+      const result = safeDeepClone(structured, logger);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBeInstanceOf(PersistenceError);
+      expect(result.error.code).toBe(PersistenceErrorCodes.DEEP_CLONE_FAILED);
+      expect(result.error.message).toBe('Failed to deep clone object.');
+      expect(logger.error).toHaveBeenCalledWith(
+        'DeepClone failed:',
+        expect.any(Error)
+      );
+    } finally {
+      if (hadStructuredClone) {
+        globalThis.structuredClone = originalStructuredClone;
+      } else {
+        delete globalThis.structuredClone;
+      }
+    }
   });
 
   it('freezes maps deeply while preserving map semantics', () => {
