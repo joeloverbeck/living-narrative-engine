@@ -149,6 +149,31 @@ describe('Validation Middleware - Comprehensive Tests', () => {
         ).toBe(true);
       });
     });
+
+    test('header sanitizer preserves non-strings and strips control characters', () => {
+      validateRequestHeaders();
+
+      const { mock } = jest.mocked(header);
+      const sanitizerCallIndex = mock.calls.findIndex(
+        ([field]) => field === '*'
+      );
+
+      expect(sanitizerCallIndex).toBeGreaterThan(-1);
+
+      const sanitizerChain = mock.results[sanitizerCallIndex].value;
+      const sanitizerMock = sanitizerChain.customSanitizer;
+
+      expect(sanitizerMock).toHaveBeenCalledWith(expect.any(Function));
+
+      const sanitizerFn = sanitizerMock.mock.calls[0][0];
+
+      const nonStringValue = { keep: 'original' };
+      expect(sanitizerFn(nonStringValue)).toBe(nonStringValue);
+
+      expect(sanitizerFn('Line with\r\ncontrol\x00chars')).toBe(
+        'Line withcontrolchars'
+      );
+    });
   });
 
   describe('handleValidationErrors', () => {

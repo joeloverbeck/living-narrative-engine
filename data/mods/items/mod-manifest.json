@@ -23,6 +23,7 @@
       "item.component.json",
       "openable.component.json",
       "portable.component.json",
+      "readable.component.json",
       "weight.component.json"
     ],
     "actions": [
@@ -32,6 +33,7 @@
       "open_container.action.json",
       "pick_up_item.action.json",
       "put_in_container.action.json",
+      "read_item.action.json",
       "take_from_container.action.json"
     ],
     "rules": [
@@ -41,6 +43,7 @@
       "handle_open_container.rule.json",
       "handle_pick_up_item.rule.json",
       "handle_put_in_container.rule.json",
+      "handle_read_item.rule.json",
       "handle_take_from_container.rule.json"
     ],
     "conditions": [
@@ -50,6 +53,7 @@
       "event-is-action-open-container.condition.json",
       "event-is-action-pick-up-item.condition.json",
       "event-is-action-put-in-container.condition.json",
+      "event-is-action-read-item.condition.json",
       "event-is-action-take-from-container.condition.json",
       "secondary-has-portable.condition.json"
     ],

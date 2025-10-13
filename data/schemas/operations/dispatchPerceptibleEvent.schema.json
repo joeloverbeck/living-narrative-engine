@@ -39,6 +39,7 @@
             "item_use",
             "item_dropped",
             "item_examined",
+            "item_read",
             "item_picked_up",
             "item_transfer",
             "item_transfer_failed",
