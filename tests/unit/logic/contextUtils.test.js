@@ -189,13 +189,7 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
 
       expect(resolvePlaceholders(input, context, mockLogger)).toBeUndefined();
       expect(mockLogger.debug).toHaveBeenCalledTimes(1);
-      expect(mockLogger.warn).toHaveBeenCalledTimes(2);
-      expect(mockLogger.warn.mock.calls[0][0]).toContain(
-        'Placeholder "{context.varA}" not found'
-      );
-      expect(mockLogger.warn.mock.calls[1][0]).toContain(
-        'uses "context." prefix'
-      );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     test('1.13 should return undefined if `context.` path used but `evaluationContext` is missing, and log debug message', () => {
@@ -205,13 +199,7 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
 
       expect(resolvePlaceholders(input, context, mockLogger)).toBeUndefined();
       expect(mockLogger.debug).toHaveBeenCalledTimes(1);
-      expect(mockLogger.warn).toHaveBeenCalledTimes(2);
-      expect(mockLogger.warn.mock.calls[0][0]).toContain(
-        'Placeholder "{context.varA}" not found'
-      );
-      expect(mockLogger.warn.mock.calls[1][0]).toContain(
-        'uses "context." prefix'
-      );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     test('1.14 should return undefined if executionContext itself is not an object, and log debug message', () => {
@@ -224,13 +212,7 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
           ],
         ])
       );
-      expect(mockLogger.warn).toHaveBeenCalledTimes(2);
-      expect(mockLogger.warn.mock.calls[0][0]).toContain(
-        'Placeholder "{context.varA}" not found'
-      );
-      expect(mockLogger.warn.mock.calls[1][0]).toContain(
-        'executionContext is not a valid object'
-      );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     test('1.15 should handle placeholder paths with leading/trailing spaces inside braces', () => {
@@ -320,13 +302,7 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
       expect(mockLogger.debug.mock.calls[0][0]).toBe(
         'PlaceholderResolver: Placeholder "{context.varA}" not found in provided data sources. Replacing with empty string.'
       );
-      expect(mockLogger.warn).toHaveBeenCalledTimes(2);
-      expect(mockLogger.warn.mock.calls[0][0]).toContain(
-        'Placeholder "{context.varA}" not found'
-      );
-      expect(mockLogger.warn.mock.calls[1][0]).toContain(
-        'uses "context." prefix'
-      );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     test('2.8 should not replace anything if no placeholders are present', () => {
