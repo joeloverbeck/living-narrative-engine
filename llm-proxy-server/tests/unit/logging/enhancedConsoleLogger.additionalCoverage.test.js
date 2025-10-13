@@ -371,6 +371,52 @@ describe('EnhancedConsoleLogger additional coverage', () => {
     expect(infoSpy.mock.calls[0][0]).toContain(originalMessage);
   });
 
+  it('masks standalone long tokens that match the strict pattern', async () => {
+    process.env.NODE_ENV = 'production';
+
+    jest.doMock('../../../src/logging/loggerConfiguration.js', () => ({
+      getLoggerConfiguration: () => ({
+        isColorsEnabled: () => false,
+        isIconsEnabled: () => false,
+        isPrettyFormatEnabled: () => false,
+        getMaxMessageLength: () => 200,
+        shouldShowContext: () => false,
+        isDevelopment: () => false,
+      }),
+    }));
+
+    const formatSimple = jest.fn((level, message) => `${level.toUpperCase()}:${message}`);
+    const maskApiKey = jest.fn(() => '[MASKED]');
+
+    jest.doMock('../../../src/logging/logFormatter.js', () => ({
+      getLogFormatter: () => ({
+        formatMessage: jest.fn(),
+        formatSimple,
+      }),
+    }));
+
+    jest.doMock('../../../src/utils/loggerUtils.js', () => ({
+      maskApiKey,
+      createSecureLogger: (logger) => logger,
+    }));
+
+    const infoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
+
+    const { getEnhancedConsoleLogger } = await import(
+      '../../../src/logging/enhancedConsoleLogger.js'
+    );
+    const logger = getEnhancedConsoleLogger();
+
+    const longToken = 'A'.repeat(64);
+    logger.info(longToken);
+
+    expect(maskApiKey).toHaveBeenCalledWith(longToken);
+    expect(formatSimple).toHaveBeenCalledWith('info', '[MASKED]');
+    expect(infoSpy).toHaveBeenCalledWith(expect.stringContaining('[MASKED]'));
+
+    infoSpy.mockRestore();
+  });
+
   it('returns uncolored output when a color function is unavailable', async () => {
     const originalMapGet = Map.prototype.get;
     const originalMapHas = Map.prototype.has;
