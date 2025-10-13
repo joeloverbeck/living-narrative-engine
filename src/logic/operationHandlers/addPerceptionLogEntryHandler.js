@@ -16,7 +16,9 @@ const DEFAULT_MAX_LOG_ENTRIES = 50;
  * @property {object} entry                 – Required. Log entry (descriptionText, timestamp, perceptionType, actorId…).
  * @property {string=} originating_actor_id – Optional. Actor who raised the event (auditing only).
  * @property {string[]|string=} recipient_ids – Optional. Explicit list of recipients or a placeholder resolving
- *                                              to one or more recipients.
+ *                                              to one or more recipients. Mutually exclusive with excluded_actor_ids.
+ * @property {string[]|string=} excluded_actor_ids – Optional. Actor IDs to exclude from location broadcast.
+ *                                                   Mutually exclusive with recipient_ids.
  */
 class AddPerceptionLogEntryHandler extends BaseOperationHandler {
   /** @type {import('../../entities/entityManager.js').default}       */ #entityManager;
@@ -47,7 +49,7 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
    * @description Validate parameters for {@link execute}.
    * @param {AddPerceptionLogEntryParams|null|undefined} params - Raw params object.
    * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger for diagnostics.
-   * @returns {{locationId:string, entry:object}|null} Normalized values or `null` when invalid.
+   * @returns {{locationId:string, entry:object, recipients:string[], excludedActors:string[]}|null} Normalized values or `null` when invalid.
    * @private
    */
   #validateParams(params, logger) {
@@ -56,7 +58,7 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
     ) {
       return null;
     }
-    const { location_id, entry, recipient_ids } = params;
+    const { location_id, entry, recipient_ids, excluded_actor_ids } = params;
     if (typeof location_id !== 'string' || !location_id.trim()) {
       safeDispatchError(
         this.#dispatcher,
@@ -85,10 +87,21 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
       }
     }
 
+    let excludedActors;
+    if (Array.isArray(excluded_actor_ids)) {
+      excludedActors = excluded_actor_ids;
+    } else if (typeof excluded_actor_ids === 'string') {
+      const trimmed = excluded_actor_ids.trim();
+      if (trimmed) {
+        excludedActors = [trimmed];
+      }
+    }
+
     return {
       locationId: location_id.trim(),
       entry,
       recipients,
+      excludedActors,
     };
   }
 
@@ -102,7 +115,7 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
     /* ── validation ─────────────────────────────────────────────── */
     const validated = this.#validateParams(params, log);
     if (!validated) return;
-    const { locationId, entry, recipients } = validated;
+    const { locationId, entry, recipients, excludedActors } = validated;
 
     /* ── perceive who? ──────────────────────────────────────────── */
     const normalizedRecipients = Array.isArray(recipients)
@@ -111,16 +124,47 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
           .map((id) => id.trim())
       : [];
 
-    const usingExplicitRecipients = normalizedRecipients.length > 0;
+    const normalizedExclusions = Array.isArray(excludedActors)
+      ? excludedActors
+          .filter((id) => typeof id === 'string' && id.trim())
+          .map((id) => id.trim())
+      : [];
 
-    const entityIds =
-      usingExplicitRecipients
-        ? new Set(normalizedRecipients)
-        : this.#entityManager.getEntitiesInLocation(locationId) ?? new Set();
+    const usingExplicitRecipients = normalizedRecipients.length > 0;
+    const usingExclusions = normalizedExclusions.length > 0;
+
+    // Validate mutual exclusivity
+    if (usingExplicitRecipients && usingExclusions) {
+      log.warn(
+        'ADD_PERCEPTION_LOG_ENTRY: recipientIds and excludedActorIds both provided; using recipientIds only'
+      );
+    }
+
+    // Determine final recipient set
+    let entityIds;
+    if (usingExplicitRecipients) {
+      // Explicit recipients (existing behavior)
+      entityIds = new Set(normalizedRecipients);
+    } else {
+      // All actors in location (existing or new exclusion behavior)
+      const allInLocation = this.#entityManager.getEntitiesInLocation(locationId) ?? new Set();
+
+      if (usingExclusions) {
+        // NEW: Remove excluded actors
+        const exclusionSet = new Set(normalizedExclusions);
+        entityIds = new Set([...allInLocation].filter(id => !exclusionSet.has(id)));
+      } else {
+        // Default: all actors in location
+        entityIds = allInLocation;
+      }
+    }
+
     if (entityIds.size === 0) {
       log.debug(
         usingExplicitRecipients
           ? `ADD_PERCEPTION_LOG_ENTRY: No matching recipients for ${locationId}`
+          : usingExclusions
+          ? `ADD_PERCEPTION_LOG_ENTRY: All actors excluded for ${locationId}`
           : `ADD_PERCEPTION_LOG_ENTRY: No entities in location ${locationId}`
       );
       return;
