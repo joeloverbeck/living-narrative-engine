@@ -32,32 +32,11 @@
         "description": "ISO 8601 timestamp indicating when the event occurred. Essential for ordering and summarizing recent events."
       },
       "perceptionType": {
-        "type": "string",
         "description": "A category for the type of perceptible event, aiding in filtering or specific processing by observers (including LLMs).",
-        "enum": [
-          "character_enter",
-          "character_exit",
-          "item_pickup",
-          "item_drop",
-          "item_use",
-          "item_dropped",
-          "item_examined",
-          "item_read",
-          "item_picked_up",
-          "item_transfer",
-          "item_transfer_failed",
-          "item_pickup_failed",
-          "take_from_container_failed",
-          "item_taken_from_container",
-          "put_in_container_failed",
-          "item_put_in_container",
-          "speech_local",
-          "thought_internal",
-          "action_self_general",
-          "action_target_general",
-          "combat_attack",
-          "combat_effect",
-          "state_change_observable"
+        "allOf": [
+          {
+            "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/perceptionType"
+          }
         ]
       },
       "actorId": {

@@ -38,6 +38,38 @@
         }
       ]
     },
+    "perceptionType": {
+      "description": "Standardized category identifiers for perceptible events used across rules, operations, and analytics.",
+      "type": "string",
+      "enum": [
+        "action_self_general",
+        "action_target_general",
+        "character_enter",
+        "character_exit",
+        "combat_attack",
+        "combat_effect",
+        "container_open_failed",
+        "container_opened",
+        "error",
+        "item_drop",
+        "item_dropped",
+        "item_examined",
+        "item_pickup",
+        "item_pickup_failed",
+        "item_picked_up",
+        "item_put_in_container",
+        "item_read",
+        "item_taken_from_container",
+        "item_transfer",
+        "item_transfer_failed",
+        "item_use",
+        "put_in_container_failed",
+        "speech_local",
+        "state_change_observable",
+        "take_from_container_failed",
+        "thought_internal"
+      ]
+    },
     "entityReference": {
       "description": "Specifies an entity. Can be a keyword ('actor', 'target'), a direct non-empty entity ID string, or an object containing the entity ID.",
       "oneOf": [

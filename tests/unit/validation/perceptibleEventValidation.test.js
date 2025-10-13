@@ -13,6 +13,38 @@ import perceptibleEventSchema from '../../../data/mods/core/events/perceptible_e
 import dispatchPerceptibleEventOperationSchema from '../../../data/schemas/operations/dispatchPerceptibleEvent.schema.json';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 
+const traverseActions = (actions, callback) => {
+  if (!Array.isArray(actions)) {
+    return;
+  }
+
+  const stack = [...actions];
+  while (stack.length > 0) {
+    const node = stack.pop();
+    if (!node || typeof node !== 'object') {
+      continue;
+    }
+
+    if (node.type) {
+      callback(node);
+    }
+
+    Object.values(node).forEach((value) => {
+      if (Array.isArray(value)) {
+        value.forEach((item) => {
+          if (item && typeof item === 'object') {
+            stack.push(item);
+          }
+        });
+      } else if (value && typeof value === 'object') {
+        stack.push(value);
+      }
+    });
+  }
+};
+
+let perceptionTypeEnum = [];
+
 describe('Perceptible Event Validation Regression Tests', () => {
   let ajv;
   let validatePerceptibleEvent;
@@ -30,6 +62,8 @@ describe('Perceptible Event Validation Regression Tests', () => {
     );
     const commonSchema = JSON.parse(fs.readFileSync(commonSchemaPath, 'utf-8'));
     ajv.addSchema(commonSchema, commonSchema.$id);
+    perceptionTypeEnum =
+      commonSchema.definitions?.perceptionType?.enum ?? [];
 
     validatePerceptibleEvent = ajv.compile(
       perceptibleEventSchema.payloadSchema
@@ -56,19 +90,24 @@ describe('Perceptible Event Validation Regression Tests', () => {
   });
 
   it('validates all perception types used in rules are valid', () => {
-    const validPerceptionTypes =
-      perceptibleEventSchema.payloadSchema.properties.perceptionType.enum;
+    const validPerceptionTypes = perceptionTypeEnum;
     const usedPerceptionTypes = new Set();
 
     // Extract perception types from rules
     allRules.forEach(({ rule }) => {
-      const actions = rule.actions || [];
-      actions.forEach((action) => {
+      traverseActions(rule.actions, (action) => {
         if (
           action.type === 'SET_VARIABLE' &&
           action.parameters?.variable_name === 'perceptionType'
         ) {
           usedPerceptionTypes.add(action.parameters.value);
+        }
+
+        if (action.type === 'DISPATCH_PERCEPTIBLE_EVENT') {
+          const operationType = action.parameters?.perception_type;
+          if (operationType) {
+            usedPerceptionTypes.add(operationType);
+          }
         }
       });
     });
@@ -87,24 +126,31 @@ describe('Perceptible Event Validation Regression Tests', () => {
   });
 
   it('allows all perception types defined by the operation schema', () => {
-    const eventPerceptionTypes = new Set(
-      perceptibleEventSchema.payloadSchema.properties.perceptionType.enum
-    );
-    const operationPerceptionTypes =
-      dispatchPerceptibleEventOperationSchema.$defs.Parameters.properties.perception_type.enum;
+    expect(perceptionTypeEnum.length).toBeGreaterThan(0);
+
+    const eventPerceptionTypes = new Set(perceptionTypeEnum);
+    const operationPerceptionTypes = perceptionTypeEnum;
 
     const missingInEventSchema = operationPerceptionTypes.filter(
       (type) => !eventPerceptionTypes.has(type)
     );
-
-    if (missingInEventSchema.length > 0) {
-      console.log(
-        'Perception types missing from perceptible_event event schema:',
-        missingInEventSchema
-      );
-    }
-
     expect(missingInEventSchema).toHaveLength(0);
+
+    const eventSchemaRef =
+      perceptibleEventSchema.payloadSchema.properties.perceptionType.allOf?.find(
+        (schema) => schema.$ref
+      )?.$ref;
+    const operationSchemaRef =
+      dispatchPerceptibleEventOperationSchema.$defs.Parameters.properties.perception_type.allOf?.find(
+        (schema) => schema.$ref
+      )?.$ref;
+
+    expect(eventSchemaRef).toBe(
+      'schema://living-narrative-engine/common.schema.json#/definitions/perceptionType'
+    );
+    expect(operationSchemaRef).toBe(
+      '../common.schema.json#/definitions/perceptionType'
+    );
   });
 
   it('validates targetId values follow correct patterns', () => {
