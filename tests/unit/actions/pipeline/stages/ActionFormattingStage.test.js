@@ -659,7 +659,7 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
       const formatCall = mockMultiTargetFormatter.format.mock.calls[0];
       expect(formatCall[0]).toMatchObject({
         id: 'test:multi_action',
-        template: 'use {target} on', // {item} -> {target}, {enemy} removed
+        template: 'use {target} on Goblin',
       });
       expect(formatCall[1]).toMatchObject({
         type: 'entity',
@@ -824,10 +824,9 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
       await stage.executeInternal(complexTemplateContext);
 
       // Verify the template was transformed correctly
-      // {item} -> {target}, then ALL {target} and {tool} are removed as secondary/tertiary
       expect(mockMultiTargetFormatter.format).toHaveBeenCalledWith(
         expect.objectContaining({
-          template: 'use on with',
+          template: 'use Goblin on Goblin with',
         }),
         expect.any(Object),
         expect.any(Object),
@@ -1542,7 +1541,7 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
       // Verify template transformation was applied
       expect(mockCommandFormatter.format).toHaveBeenCalledWith(
         expect.objectContaining({
-          template: 'use on', // {item} -> {target}, {target} removed as secondary
+          template: 'use Enemy on Enemy',
         }),
         expect.any(Object),
         expect.any(Object),
@@ -2889,7 +2888,7 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
       // Verify template transformation was called with empty target definitions
       expect(mockCommandFormatter.format).toHaveBeenCalledWith(
         expect.objectContaining({
-          template: 'action with {placeholder}', // Should remain unchanged
+          template: 'action with',
         }),
         expect.any(Object),
         expect.any(Object),
