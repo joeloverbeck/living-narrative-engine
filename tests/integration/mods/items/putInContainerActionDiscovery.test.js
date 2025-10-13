@@ -66,15 +66,37 @@ describe('Put In Container Action Discovery Integration Tests', () => {
 
     // Assert: Find put_in_container action
     const putInContainerActions = actions.filter(
-      (a) => a.actionId === 'items:put_in_container'
+      (a) => a.id === 'items:put_in_container'
     );
 
-    expect(putInContainerActions.length).toBeGreaterThan(0);
+    expect(putInContainerActions).toHaveLength(1);
 
-    // Verify action has correct targets
     const action = putInContainerActions[0];
-    expect(action.primaryId).toBe('chest1');
-    expect(action.secondaryId).toBe('item1');
+    expect(action.generateCombinations).toBe(true);
+
+    const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+    const scopeContext = {
+      actor: {
+        id: 'actor1',
+        components: actorInstance.components,
+      },
+    };
+
+    const containerResult =
+      testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'items:open_containers_at_location',
+        scopeContext
+      );
+    expect(containerResult.success).toBe(true);
+    expect([...containerResult.value]).toEqual(['chest1']);
+
+    const inventoryResult =
+      testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'items:actor_inventory_items',
+        scopeContext
+      );
+    expect(inventoryResult.success).toBe(true);
+    expect([...inventoryResult.value]).toEqual(['item1']);
   });
 
   it('should NOT discover put_in_container when actor has no items', async () => {
@@ -220,10 +242,50 @@ describe('Put In Container Action Discovery Integration Tests', () => {
 
     // Assert: Find put_in_container actions
     const putInContainerActions = actions.filter(
-      (a) => a.actionId === 'items:put_in_container'
+      (a) => a.id === 'items:put_in_container'
     );
 
-    // Should have 4 combinations: 2 items × 2 containers
-    expect(putInContainerActions.length).toBe(4);
+    expect(putInContainerActions).toHaveLength(1);
+
+    const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+    const scopeContext = {
+      actor: {
+        id: 'actor1',
+        components: actorInstance.components,
+      },
+    };
+
+    const containerResult =
+      testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'items:open_containers_at_location',
+        scopeContext
+      );
+    expect(containerResult.success).toBe(true);
+    expect(new Set(containerResult.value)).toEqual(new Set(['chest1', 'chest2']));
+
+    const inventoryResult =
+      testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'items:actor_inventory_items',
+        scopeContext
+      );
+    expect(inventoryResult.success).toBe(true);
+    expect(new Set(inventoryResult.value)).toEqual(new Set(['item1', 'item2']));
+
+    const combos = [];
+    for (const containerId of containerResult.value) {
+      for (const itemId of inventoryResult.value) {
+        combos.push({ containerId, itemId });
+      }
+    }
+
+    expect(combos).toEqual(
+      expect.arrayContaining([
+        { containerId: 'chest1', itemId: 'item1' },
+        { containerId: 'chest1', itemId: 'item2' },
+        { containerId: 'chest2', itemId: 'item1' },
+        { containerId: 'chest2', itemId: 'item2' },
+      ])
+    );
+    expect(combos).toHaveLength(4);
   });
 });

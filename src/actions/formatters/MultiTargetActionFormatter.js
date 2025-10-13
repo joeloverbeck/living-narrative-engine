@@ -291,11 +291,16 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
       // Always allow using the target key directly in templates (e.g. {primary})
       placeholderValueMap.set(targetKey, baseDisplayValue);
 
+      const availablePlaceholders = new Set(assignedFallbackPlaceholders);
+      if (targetDef?.placeholder) {
+        availablePlaceholders.delete(targetDef.placeholder);
+      }
+
       // Derive fallback placeholder names when none are specified in the definition
       const fallbackPlaceholders = this.#deriveFallbackPlaceholders(
         targetKey,
         placeholdersInTemplate,
-        assignedFallbackPlaceholders
+        availablePlaceholders
       );
 
       for (const fallbackPlaceholder of fallbackPlaceholders) {

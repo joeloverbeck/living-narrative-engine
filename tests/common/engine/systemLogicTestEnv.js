@@ -448,6 +448,41 @@ export function createBaseRuleEnvironment({
           return { success: true, value: allItems };
         }
 
+        // Handle the items:open_containers_at_location scope
+        if (scopeName === 'items:open_containers_at_location') {
+          const actorId = context?.actor?.id || context;
+
+          const actor = entityManager.getEntityInstance(actorId);
+          const actorPosition = actor?.components?.['core:position'];
+          if (!actorPosition || !actorPosition.locationId) {
+            return { success: true, value: new Set() };
+          }
+
+          const allEntityIds = entityManager.getEntityIds();
+          const allEntities = allEntityIds.map((id) => {
+            const instance = entityManager.getEntityInstance(id);
+            return instance || { id, components: {} };
+          });
+
+          const openContainers = allEntities.filter((entity) => {
+            const containerComponent = entity.components?.['items:container'];
+            const entityPosition = entity.components?.['core:position'];
+
+            if (!containerComponent || !entityPosition) {
+              return false;
+            }
+
+            if (entityPosition.locationId !== actorPosition.locationId) {
+              return false;
+            }
+
+            return containerComponent.isOpen === true;
+          });
+
+          const containerIds = openContainers.map((container) => container.id);
+          return { success: true, value: new Set(containerIds) };
+        }
+
         // Handle the items:openable_containers_at_location scope
         if (scopeName === 'items:openable_containers_at_location') {
           // Extract actor ID from context

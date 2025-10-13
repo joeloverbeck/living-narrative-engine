@@ -61,13 +61,14 @@ describe('contextUtils.js', () => {
       expect(result).toEqual({ text: 'The value is 123' });
     });
 
-    test('should warn if "context." is used but evaluationContext.context is missing', () => {
+    test('should log debug when "context." is used but evaluationContext.context is missing', () => {
       const input = { text: 'Value: {context.myVar}' };
       const executionContext = { evaluationContext: {} };
       resolvePlaceholders(input, executionContext, mockLogger);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Placeholder "{context.myVar}" not found')
       );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     test('should use entity name fallback for {actor.name}', () => {
