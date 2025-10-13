@@ -242,8 +242,23 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
       }
     }
 
+    const targetEntries = Object.entries(resolvedTargets).sort(
+      ([keyA], [keyB]) => {
+        const defA = targetDefinitions?.[keyA];
+        const defB = targetDefinitions?.[keyB];
+        const aHasExplicit = Boolean(defA?.placeholder);
+        const bHasExplicit = Boolean(defB?.placeholder);
+
+        if (aHasExplicit === bHasExplicit) {
+          return 0;
+        }
+
+        return aHasExplicit ? 1 : -1;
+      }
+    );
+
     // Replace each placeholder
-    for (const [targetKey, targets] of Object.entries(resolvedTargets)) {
+    for (const [targetKey, targets] of targetEntries) {
       if (!targets || targets.length === 0) {
         this.#logger.debug(
           `Target '${targetKey}' has no resolved entities - action not available`
