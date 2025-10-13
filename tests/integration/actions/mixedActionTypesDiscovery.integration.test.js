@@ -13,7 +13,7 @@
  * Expected behavior after fix:
  * - Single-target: "examine {item}" → correct action definition
  * - Multi-target: "give {item} to {recipient}" → correct action definition
- * - Multi-target: "Take {secondary.name} from {primary.name}" → correct action definition
+ * - Multi-target: "take {secondary.name} from {primary.name}" → correct action definition
  * - All action types should have properly structured targets when discovered together
  */
 
@@ -302,7 +302,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       for (const action of takeActions) {
         expect(action.id).toBe('items:take_from_container');
         expect(action.template).toBeDefined();
-        expect(action.template).toBe('Take {secondary.name} from {primary.name}');
+        expect(action.template).toBe('take {secondary.name} from {primary.name}');
         expect(action.targets).toBeDefined();
         expect(action.targets.primary).toBeDefined(); // container
         expect(action.targets.secondary).toBeDefined(); // item
@@ -416,7 +416,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       // All actions should have proper structure
       for (const action of takeActions) {
         expect(action.id).toBe('items:take_from_container');
-        expect(action.template).toBe('Take {secondary.name} from {primary.name}');
+        expect(action.template).toBe('take {secondary.name} from {primary.name}');
         expect(action.targets).toBeDefined();
         expect(action.targets.primary).toBeDefined();
         expect(action.targets.secondary).toBeDefined();
@@ -534,7 +534,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       for (const action of takeActions) {
         expect(action.id).toBe('items:take_from_container');
         expect(action.template).toBeDefined();
-        expect(action.template).toBe('Take {secondary.name} from {primary.name}');
+        expect(action.template).toBe('take {secondary.name} from {primary.name}');
         expect(action.targets).toBeDefined();
         expect(action.targets.primary).toBeDefined(); // container
         expect(action.targets.secondary).toBeDefined(); // item
@@ -586,7 +586,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
 
       // Multi-target take_from_container has {primary.name} and {secondary.name}
       for (const action of takeActions) {
-        expect(action.template).toBe('Take {secondary.name} from {primary.name}');
+        expect(action.template).toBe('take {secondary.name} from {primary.name}');
         expect(action.targets.primary).toBeDefined();
         expect(action.targets.secondary).toBeDefined();
 
@@ -658,7 +658,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
         } else if (action.id === 'items:give_item') {
           expect(action.template).toBe('give {item} to {recipient}');
         } else if (action.id === 'items:take_from_container') {
-          expect(action.template).toBe('Take {secondary.name} from {primary.name}');
+          expect(action.template).toBe('take {secondary.name} from {primary.name}');
         }
 
         console.log(`  ✅ Valid template for ${action.id}: "${action.template}"`);

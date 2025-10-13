@@ -56,7 +56,7 @@ describe('MultiTargetActionFormatter - dot notation placeholders', () => {
   it('resolves multi-target combinations with dot notation placeholders', () => {
     const actionDef = {
       id: 'items:take_from_container',
-      template: 'Take {secondary.name} from {primary.name}',
+      template: 'take {secondary.name} from {primary.name}',
       generateCombinations: true,
     };
 
@@ -90,8 +90,8 @@ describe('MultiTargetActionFormatter - dot notation placeholders', () => {
     expect(result.value).toHaveLength(2);
     const commands = result.value.map((entry) => entry.command);
     expect(commands).toEqual([
-      'Take Silver Key from Ancient Chest',
-      'Take Gold Ring from Ancient Chest',
+      'take Silver Key from Ancient Chest',
+      'take Gold Ring from Ancient Chest',
     ]);
   });
 

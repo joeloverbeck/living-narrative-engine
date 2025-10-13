@@ -111,6 +111,14 @@ describe('items:take_from_container action integration', () => {
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
       expect(actor.components['items:inventory'].items).toContain('gold-bar-1');
 
+      const successEvent = testFixture.events.find(
+        (e) => e.eventType === 'core:display_successful_action_result'
+      );
+      expect(successEvent).toBeDefined();
+      expect(successEvent.payload.message).toBe(
+        'Alice takes gold-bar-1 from Treasure Chest.'
+      );
+
       // Assert: Verify turn ended successfully
       const turnEndedEvent = testFixture.events.find(
         (e) => e.eventType === 'core:turn_ended'

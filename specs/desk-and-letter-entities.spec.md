@@ -65,7 +65,7 @@ This implementation tests the items mod's container system, which consists of:
       "placeholder": "item"
     }
   },
-  "template": "Put {secondary.name} in {primary.name}"
+  "template": "put {secondary.name} in {primary.name}"
 }
 ```
 
@@ -91,7 +91,7 @@ This implementation tests the items mod's container system, which consists of:
       "contextFrom": "primary"
     }
   },
-  "template": "Take {secondary.name} from {primary.name}"
+  "template": "take {secondary.name} from {primary.name}"
 }
 ```
 
