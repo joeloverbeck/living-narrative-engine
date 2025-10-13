@@ -22,6 +22,7 @@ describe('StructureResolver', () => {
     });
     expect(result1).toBe('hello Bob');
     expect(logger.warn).not.toHaveBeenCalled();
+    expect(logger.debug).not.toHaveBeenCalled();
 
     logger.warn.mockClear();
     logger.debug.mockClear();
