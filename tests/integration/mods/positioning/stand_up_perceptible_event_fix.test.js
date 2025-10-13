@@ -5,6 +5,8 @@
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
+import fs from 'fs';
+import path from 'path';
 import { createRuleTestEnvironment } from '../../../common/engine/systemLogicTestEnv.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import { ModAssertionHelpers } from '../../../common/mods/ModAssertionHelpers.js';
@@ -54,6 +56,7 @@ describe('positioning:stand_up perceptible event fix', () => {
   let testEnv;
   let ajv;
   let validatePerceptibleEvent;
+  let perceptionTypeEnum = [];
 
   beforeEach(async () => {
     // Set up AJV validator for perceptible events
@@ -61,19 +64,14 @@ describe('positioning:stand_up perceptible event fix', () => {
     addFormats(ajv);
 
     // Add common schema for reference resolution
-    const commonSchema = {
-      $id: 'schema://living-narrative-engine/common.schema.json',
-      definitions: {
-        namespacedId: {
-          type: 'string',
-          pattern: '^[a-zA-Z0-9_:-]+$',
-        },
-        nullableNamespacedId: {
-          oneOf: [{ $ref: '#/definitions/namespacedId' }, { type: 'null' }],
-        },
-      },
-    };
+    const commonSchemaPath = path.join(
+      process.cwd(),
+      'data/schemas/common.schema.json'
+    );
+    const commonSchema = JSON.parse(fs.readFileSync(commonSchemaPath, 'utf-8'));
     ajv.addSchema(commonSchema, commonSchema.$id);
+    perceptionTypeEnum =
+      commonSchema.definitions?.perceptionType?.enum ?? [];
 
     validatePerceptibleEvent = ajv.compile(
       perceptibleEventSchema.payloadSchema
@@ -172,12 +170,9 @@ describe('positioning:stand_up perceptible event fix', () => {
   });
 
   it('validates perceptionType enum values from schema', () => {
-    const validTypes =
-      perceptibleEventSchema.payloadSchema.properties.perceptionType.enum;
-
-    expect(validTypes).not.toContain('action_general'); // Invalid
-    expect(validTypes).toContain('action_self_general'); // Valid for self-actions
-    expect(validTypes).toContain('action_target_general'); // Valid for target-actions
+    expect(perceptionTypeEnum).not.toContain('action_general'); // Invalid
+    expect(perceptionTypeEnum).toContain('action_self_general'); // Valid for self-actions
+    expect(perceptionTypeEnum).toContain('action_target_general'); // Valid for target-actions
   });
 
   it('demonstrates valid payload structure with corrected perceptionType', () => {
