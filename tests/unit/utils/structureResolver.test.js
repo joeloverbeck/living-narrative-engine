@@ -14,7 +14,7 @@ function createLogger() {
 }
 
 describe('StructureResolver', () => {
-  it('replaces placeholders within strings and logs warnings when missing', () => {
+  it('replaces placeholders within strings and logs debug output when missing', () => {
     const logger = createLogger();
     const resolver = new StructureResolver(resolvePath, logger);
     const result1 = resolver.resolve('hello {user.name}', {
@@ -22,10 +22,12 @@ describe('StructureResolver', () => {
     });
     expect(result1).toBe('hello Bob');
     expect(logger.warn).not.toHaveBeenCalled();
+    expect(logger.debug).not.toHaveBeenCalled();
 
     resolver.resolve('hello {user.age}', { user: { name: 'Bob' } });
-    expect(logger.warn).toHaveBeenCalledTimes(1);
-    expect(logger.warn.mock.calls[0][0]).toContain('user.age');
+    expect(logger.warn).not.toHaveBeenCalled();
+    expect(logger.debug).toHaveBeenCalledTimes(1);
+    expect(logger.debug.mock.calls[0][0]).toContain('user.age');
   });
 
   it('supports optional placeholders without warnings', () => {
