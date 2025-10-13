@@ -562,6 +562,26 @@ describe('Validation Middleware - Comprehensive Tests', () => {
         expect(isUrlSafe('https://300.200.100.50')).toBe(false);
       });
 
+      test('rejects IPv4 addresses when octets exceed allowed range after parsing', () => {
+        const OriginalURL = global.URL;
+
+        class MockURL {
+          constructor(input) {
+            this.href = input;
+            this.protocol = 'https:';
+            this.hostname = '256.1.1.1';
+          }
+        }
+
+        global.URL = MockURL;
+
+        try {
+          expect(isUrlSafe('https://256.1.1.1')).toBe(false);
+        } finally {
+          global.URL = OriginalURL;
+        }
+      });
+
       test('validates boundary IPv4 addresses', () => {
         // Test boundary conditions for IPv4 validation
         const boundaryURLs = [
