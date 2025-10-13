@@ -31,7 +31,7 @@ describe('items:take_from_container action definition', () => {
       'Take an item from an open container'
     );
     expect(takeFromContainerAction.template).toBe(
-      'Take {secondary.name} from {primary.name}'
+      'take {secondary.name} from {primary.name}'
     );
   });
 

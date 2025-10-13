@@ -73,6 +73,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
 
     const action = putInContainerActions[0];
     expect(action.generateCombinations).toBe(true);
+    expect(action.template).toBe('put {secondary.name} in {primary.name}');
 
     const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
     const scopeContext = {

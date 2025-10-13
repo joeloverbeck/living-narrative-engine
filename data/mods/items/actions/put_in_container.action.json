@@ -19,5 +19,5 @@
       "description": "Inventory item to store"
     }
   },
-  "template": "Put {secondary.name} in {primary.name}"
+  "template": "put {secondary.name} in {primary.name}"
 }

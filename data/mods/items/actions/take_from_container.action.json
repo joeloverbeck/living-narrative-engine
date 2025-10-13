@@ -17,5 +17,5 @@
       "contextFrom": "primary"
     }
   },
-  "template": "Take {secondary.name} from {primary.name}"
+  "template": "take {secondary.name} from {primary.name}"
 }

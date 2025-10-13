@@ -121,6 +121,14 @@ describe('items:put_in_container action integration', () => {
     expect(putEvent.payload.containerEntity).toBe('chest-1');
     expect(putEvent.payload.itemEntity).toBe('item1');
 
+    const successEvent = testFixture.events.find(
+      (e) => e.eventType === 'core:display_successful_action_result'
+    );
+    expect(successEvent).toBeDefined();
+    expect(successEvent.payload.message).toBe(
+      'Alice puts item1 in Treasure Chest.'
+    );
+
     // Assert: Verify turn ended successfully
     const turnEndedEvent = testFixture.events.find(
       (e) => e.eventType === 'core:turn_ended'
@@ -332,11 +340,11 @@ describe('items:put_in_container action integration', () => {
       );
 
       expect(perceptibleEvents.length).toBeGreaterThan(0);
-      const putEvent = perceptibleEvents.find(
-        (e) => e.payload.perceptionType === 'item_put_in_container'
-      );
-      expect(putEvent).toBeDefined();
-      expect(putEvent.payload.locationId).toBe('warehouse');
+    const putEvent = perceptibleEvents.find(
+      (e) => e.payload.perceptionType === 'item_put_in_container'
+    );
+    expect(putEvent).toBeDefined();
+    expect(putEvent.payload.locationId).toBe('warehouse');
       expect(putEvent.payload.actorId).toBe('test:actor1');
       expect(putEvent.payload.targetId).toBe('crate-1');
     });
