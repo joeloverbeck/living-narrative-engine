@@ -233,7 +233,14 @@ export class TargetComponentValidationStage extends PipelineStage {
       const startTime = performance.now();
 
       // Get target entities from the action (may already be resolved)
-      const targetEntities = this.#extractTargetEntities(actionDef, context);
+      let targetEntities = this.#extractTargetEntities(actionDef, context);
+
+      // Remove any resolved targets that don't satisfy required component constraints
+      targetEntities = this.#filterTargetsByRequiredComponents(
+        actionDef,
+        context,
+        targetEntities
+      );
 
       // Validate forbidden target components (apply strictness level)
       let forbiddenValidation = this.#targetComponentValidator.validateTargetComponents(
@@ -254,7 +261,7 @@ export class TargetComponentValidationStage extends PipelineStage {
         }
       }
 
-      // Validate required components on targets
+      // Validate required components on targets after filtering
       const requiredValidation = this.#targetRequiredComponentsValidator.validateTargetRequirements(
         actionDef,
         targetEntities
@@ -302,6 +309,238 @@ export class TargetComponentValidationStage extends PipelineStage {
     }
 
     return validatedActions;
+  }
+
+  /**
+   * Filters resolved targets so that only candidates with required components remain.
+   *
+   * @private
+   * @param {ActionDefinition} actionDef - The action definition being validated.
+   * @param {object} context - Pipeline context containing resolved target metadata.
+   * @param {object|null} targetEntities - The resolved target entities map.
+   * @returns {object|null} Updated target entities map reflecting filtered candidates.
+   */
+  #filterTargetsByRequiredComponents(actionDef, context, targetEntities) {
+    if (!targetEntities || !actionDef?.required_components) {
+      return targetEntities;
+    }
+
+    const requirements = actionDef.required_components;
+    const rolesToCheck = [];
+
+    if (Array.isArray(requirements.target) && requirements.target.length > 0) {
+      rolesToCheck.push('target');
+    }
+
+    for (const role of ['primary', 'secondary', 'tertiary']) {
+      if (Array.isArray(requirements[role]) && requirements[role].length > 0) {
+        rolesToCheck.push(role);
+      }
+    }
+
+    if (rolesToCheck.length === 0) {
+      return targetEntities;
+    }
+
+    const placeholderSource = actionDef.targetDefinitions || actionDef.targets || {};
+    const placeholderEntityMap = new Map();
+    let targetsFiltered = false;
+
+    for (const role of rolesToCheck) {
+      const existing = targetEntities[role];
+      if (!existing) {
+        continue;
+      }
+
+      const candidates = Array.isArray(existing) ? existing : [existing];
+      const requiredComponents = requirements[role] || [];
+      const validCandidates = candidates.filter((candidate) =>
+        this.#candidateHasRequiredComponents(candidate, requiredComponents)
+      );
+
+      if (validCandidates.length !== candidates.length) {
+        targetsFiltered = true;
+      }
+
+      const normalizedValue = Array.isArray(existing)
+        ? validCandidates
+        : validCandidates.length > 0
+          ? validCandidates[0]
+          : null;
+
+      targetEntities[role] = normalizedValue;
+
+      if (actionDef.resolvedTargets) {
+        if (role === 'target') {
+          const normalizedArray = Array.isArray(normalizedValue)
+            ? normalizedValue
+            : normalizedValue
+              ? [normalizedValue]
+              : [];
+          actionDef.resolvedTargets.target = normalizedArray;
+        } else if (Array.isArray(actionDef.resolvedTargets[role])) {
+          actionDef.resolvedTargets[role] = Array.isArray(normalizedValue)
+            ? normalizedValue
+            : normalizedValue
+              ? [normalizedValue]
+              : [];
+        }
+      }
+
+      const placeholder = placeholderSource?.[role]?.placeholder;
+      if (placeholder) {
+        const allowedIds = new Set(
+          validCandidates
+            .map((candidate) => this.#extractCandidateId(candidate))
+            .filter((id) => typeof id === 'string' && id.length > 0)
+        );
+        placeholderEntityMap.set(placeholder, allowedIds);
+      }
+    }
+
+    if (targetsFiltered) {
+      this.#updateActionTargetsInContext(
+        actionDef,
+        context,
+        rolesToCheck,
+        targetEntities,
+        placeholderEntityMap
+      );
+    }
+
+    return targetEntities;
+  }
+
+  /**
+   * Determines if a resolved target candidate satisfies required component constraints.
+   *
+   * @private
+   * @param {object} candidate - Candidate target instance.
+   * @param {string[]} requiredComponents - Required component identifiers.
+   * @returns {boolean} True if candidate has all required components.
+   */
+  #candidateHasRequiredComponents(candidate, requiredComponents) {
+    if (!candidate || !Array.isArray(requiredComponents) || requiredComponents.length === 0) {
+      return true;
+    }
+
+    const targetEntity = candidate.entity || candidate;
+    if (!targetEntity) {
+      return false;
+    }
+
+    return requiredComponents.every((componentId) => {
+      if (!componentId) {
+        return true;
+      }
+
+      if (targetEntity.components && targetEntity.components[componentId]) {
+        return true;
+      }
+
+      if (typeof targetEntity.hasComponent === 'function') {
+        try {
+          return targetEntity.hasComponent(componentId);
+        } catch (error) {
+          this.#logger.debug(
+            `Error checking hasComponent('${componentId}') on ${targetEntity.id || 'unknown'}: ${error.message}`
+          );
+        }
+      }
+
+      return false;
+    });
+  }
+
+  /**
+   * Synchronizes filtered targets with the broader pipeline context and trace metadata.
+   *
+   * @private
+   * @param {ActionDefinition} actionDef - The action definition being updated.
+   * @param {object} context - Pipeline context containing resolved target data.
+   * @param {string[]} roles - Target roles that were evaluated.
+   * @param {object} targetEntities - Updated target entities map.
+   * @param {Map<string, Set<string>>} placeholderEntityMap - Allowed entity IDs grouped by placeholder.
+   * @returns {void}
+   */
+  #updateActionTargetsInContext(
+    actionDef,
+    context,
+    roles,
+    targetEntities,
+    placeholderEntityMap
+  ) {
+    if (!context) {
+      return;
+    }
+
+    if (context.resolvedTargets) {
+      for (const role of roles) {
+        if (Object.prototype.hasOwnProperty.call(targetEntities, role)) {
+          context.resolvedTargets[role] = targetEntities[role];
+        }
+      }
+    }
+
+    if (Array.isArray(context.actionsWithTargets)) {
+      for (const actionWithTargets of context.actionsWithTargets) {
+        if (actionWithTargets.actionDef !== actionDef) {
+          continue;
+        }
+
+        if (actionWithTargets.resolvedTargets) {
+          for (const role of roles) {
+            if (Object.prototype.hasOwnProperty.call(targetEntities, role)) {
+              actionWithTargets.resolvedTargets[role] = targetEntities[role];
+            }
+          }
+        }
+
+        if (
+          placeholderEntityMap &&
+          placeholderEntityMap.size > 0 &&
+          Array.isArray(actionWithTargets.targetContexts)
+        ) {
+          actionWithTargets.targetContexts = actionWithTargets.targetContexts.filter(
+            (ctx) => {
+              if (ctx.type !== 'entity' || !ctx.placeholder) {
+                return true;
+              }
+
+              const allowedSet = placeholderEntityMap.get(ctx.placeholder);
+              if (!allowedSet) {
+                return true;
+              }
+
+              return allowedSet.has(ctx.entityId);
+            }
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Extracts the identifier for a resolved target candidate.
+   *
+   * @private
+   * @param {object} candidate - Target candidate to inspect.
+   * @returns {string|null} Candidate entity identifier when available.
+   */
+  #extractCandidateId(candidate) {
+    if (!candidate) {
+      return null;
+    }
+
+    if (typeof candidate.id === 'string' && candidate.id.length > 0) {
+      return candidate.id;
+    }
+
+    if (candidate.entity && typeof candidate.entity.id === 'string') {
+      return candidate.entity.id;
+    }
+
+    return null;
   }
 
   /**
