@@ -1,6 +1,13 @@
 // tests/entities/entity.test.js
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import Entity from '../../../src/entities/entity.js';
 import EntityInstanceData from '../../../src/entities/entityInstanceData.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
@@ -37,6 +44,10 @@ describe('Entity Class', () => {
     );
 
     entity = new Entity(mockInstanceData);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   // --- 1. Constructor Tests ---
@@ -199,6 +210,32 @@ describe('Entity Class', () => {
     });
   });
 
+  describe('hasComponentOverride', () => {
+    it('should reflect override presence accurately', () => {
+      expect(entity.hasComponentOverride('core:health')).toBe(false);
+
+      mockInstanceData.setComponentOverride('core:health', { current: 90 });
+      expect(entity.hasComponentOverride('core:health')).toBe(true);
+
+      mockInstanceData.removeComponentOverride('core:health');
+      expect(entity.hasComponentOverride('core:health')).toBe(false);
+    });
+  });
+
+  describe('getComponent alias', () => {
+    it('should forward to getComponentData and return the same result', () => {
+      const sentinel = { current: 77 };
+      jest
+        .spyOn(entity, 'getComponentData')
+        .mockReturnValueOnce(sentinel);
+
+      const result = entity.getComponent('core:health');
+
+      expect(entity.getComponentData).toHaveBeenCalledWith('core:health');
+      expect(result).toBe(sentinel);
+    });
+  });
+
   // --- 3. Iterators and Getters ---
   describe('componentTypeIds getter', () => {
     it('should return an array for allComponentTypeIds from _instanceData', () => {
@@ -304,6 +341,130 @@ describe('Entity Class', () => {
       expect(() =>
         mockInstanceData.setComponentOverride('core:name', null)
       ).toThrow(TypeError);
+    });
+  });
+
+  describe('getAllComponents and components getters', () => {
+    it('should return mapped component data including null overrides but skipping undefined entries', () => {
+      const definition = new EntityDefinition('test:all-components', {
+        components: {
+          'core:name': { name: 'DefaultName' },
+          'core:ghost': undefined,
+        },
+      });
+      const instanceData = new EntityInstanceData(
+        'entity-all-components',
+        definition,
+        {
+          'custom:visible': { flag: true },
+          'custom:nullish': null,
+        },
+        console
+      );
+      const entityWithGaps = new Entity(instanceData);
+
+      const allComponents = entityWithGaps.getAllComponents();
+
+      expect(allComponents).toEqual({
+        'core:name': { name: 'DefaultName' },
+        'custom:visible': { flag: true },
+        'custom:nullish': null,
+      });
+      expect(allComponents).not.toHaveProperty('core:ghost');
+      const componentsFromGetter = entityWithGaps.components;
+      expect(componentsFromGetter).toEqual(allComponents);
+      expect(componentsFromGetter).not.toBe(allComponents); // ensure getter clones
+    });
+  });
+
+  describe('modifyComponent', () => {
+    it('should merge updates with existing component data', () => {
+      const result = entity.modifyComponent('core:health', { regen: 5 });
+
+      expect(result).toBe(true);
+      expect(entity.getComponentData('core:health')).toEqual({
+        current: 100,
+        max: 100,
+        regen: 5,
+      });
+      expect(
+        mockDefinition.components['core:health']
+      ).toEqual({ current: 100, max: 100 });
+    });
+
+    it('should add a component when one does not already exist', () => {
+      const result = entity.modifyComponent('custom:mana', { current: 40 });
+
+      expect(result).toBe(true);
+      expect(entity.getComponentData('custom:mana')).toEqual({ current: 40 });
+    });
+  });
+
+  describe('componentEntries filtering', () => {
+    it('should exclude entries whose data resolves to null or undefined', () => {
+      const definition = new EntityDefinition('test:filter', {
+        components: {
+          'core:name': { name: 'Base' },
+          'core:ghost': undefined,
+        },
+      });
+      const instanceData = new EntityInstanceData(
+        'entity-filter',
+        definition,
+        {
+          'custom:nullish': null,
+          'custom:present': { foo: 'bar' },
+        },
+        console
+      );
+      const entityWithFilteredEntries = new Entity(instanceData);
+
+      const entries = entityWithFilteredEntries.componentEntries;
+
+      expect(entries).toEqual(
+        expect.arrayContaining([
+          ['core:name', { name: 'Base' }],
+          ['custom:present', { foo: 'bar' }],
+        ])
+      );
+      expect(entries).toHaveLength(2);
+      expect(entries.find(([key]) => key === 'core:ghost')).toBeUndefined();
+      expect(entries.find(([key]) => key === 'custom:nullish')).toBeUndefined();
+    });
+  });
+
+  describe('componentTypeIds debug logging', () => {
+    it('should emit debug information for the park bench instance', () => {
+      const debugSpy = jest
+        .spyOn(console, 'debug')
+        .mockImplementation(() => {});
+
+      const definition = new EntityDefinition('p_erotica:park_bench', {
+        components: {
+          'positioning:allows_sitting': { enabled: true },
+        },
+      });
+      const parkBenchInstance = new EntityInstanceData(
+        'p_erotica:park_bench_instance',
+        definition,
+        {},
+        console
+      );
+      const parkBenchEntity = new Entity(parkBenchInstance);
+
+      const ids = parkBenchEntity.componentTypeIds;
+
+      expect(ids).toEqual(['positioning:allows_sitting']);
+      expect(debugSpy).toHaveBeenCalledWith(
+        '[DEBUG] Entity.componentTypeIds for park bench:',
+        expect.objectContaining({
+          entityId: 'p_erotica:park_bench_instance',
+          componentTypeIds: expect.arrayContaining([
+            'positioning:allows_sitting',
+          ]),
+          hasAllowsSitting: true,
+        })
+      );
     });
   });
 
