@@ -100,4 +100,39 @@ describe('LogFormatter additional coverage', () => {
     expect(detailLine).toMatch(/\.\.\.$/);
     expect(detailLine.length).toBeLessThan(150);
   });
+
+  it('falls back to ASCII icons for WSL terminals without TERM_PROGRAM', async () => {
+    delete process.env.LOG_FORCE_EMOJI;
+    delete process.env.LOG_DISABLE_EMOJI;
+    delete process.env.TERM_PROGRAM;
+    delete process.env.TERMINAL_EMULATOR;
+    delete process.env.WT_SESSION;
+    process.env.WSL_DISTRO_NAME = 'Ubuntu';
+    process.env.TERM = 'vt100';
+
+    const formatter = await setupFormatter({ isIconsEnabled: () => true });
+
+    const result = formatter.formatMessage('info', 'WSL fallback message');
+
+    expect(result.icon).toMatch(/^\[[A-Z]+\]$/);
+  });
+
+  it('formats single-line context objects without multiline braces', async () => {
+    const formatter = await setupFormatter({ isIconsEnabled: () => true });
+
+    const context = {
+      toJSON: () => 'single-line-context',
+    };
+
+    const result = formatter.formatMessage(
+      'info',
+      'single line context formatting',
+      context
+    );
+
+    expect(result.contextLines).toHaveLength(1);
+    expect(result.contextLines[0]).toBe(
+      '                    ↳ Context: "single-line-context"'
+    );
+  });
 });
