@@ -52,6 +52,31 @@ describe('validateIPv6Address additional branch coverage', () => {
     expect(classification.range).toContain('240.0.0.1');
   });
 
+  it('flags IPv4-mapped addresses with manual private range detection when ipaddr range is unrecognized', () => {
+    jest.spyOn(ipaddr, 'isValid').mockReturnValue(true);
+    jest.spyOn(ipaddr.IPv6, 'parse').mockReturnValue({
+      range: () => 'ipv4Mapped',
+      parts: [0, 0, 0, 0, 0, 0xffff, 0, 1],
+      isIPv4MappedAddress: () => true,
+      toString: () => '::ffff:10.0.0.1',
+      toNormalizedString: () => '0000:0000:0000:0000:0000:ffff:0000:0001',
+      toIPv4Address: () => ({
+        range: () => 'unicast',
+        octets: [10, 0, 0, 1],
+        toString: () => '10.0.0.1',
+      }),
+    });
+
+    const classification = validateIPv6Address('::ffff:10.0.0.1');
+
+    expect(classification.isValid).toBe(true);
+    expect(classification.isReserved).toBe(true);
+    expect(classification.type).toBe('ipv4-mapped-private');
+    expect(classification.range).toBe(
+      '::ffff:0:0/96 (IPv4-mapped, embedded private: 10.0.0.1)'
+    );
+  });
+
   it('falls back to reserved classification when IPv4 extraction fails', () => {
     jest.spyOn(ipaddr, 'isValid').mockReturnValue(true);
     jest.spyOn(ipaddr.IPv6, 'parse').mockReturnValue({
