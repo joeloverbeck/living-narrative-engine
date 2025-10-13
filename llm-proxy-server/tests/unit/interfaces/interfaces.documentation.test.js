@@ -8,15 +8,17 @@ const interfaceModules = [
   {
     name: 'IFileSystemReader',
     file: 'IFileSystemReader.js',
+    exportName: 'IFileSystemReaderMetadata',
     expectedDocSnippets: [
       '@interface IFileSystemReader',
-      'readFile',
-      'A Promise that resolves with the file content as a string.',
+      'IFileSystemReaderMetadata',
+      "returns: 'Promise<string>'",
     ],
   },
   {
     name: 'ILlmConfigService',
     file: 'ILlmConfigService.js',
+    exportName: 'ILlmConfigServiceMetadata',
     expectedDocSnippets: [
       '@interface ILlmConfigService',
       'initialization completes',
@@ -26,22 +28,24 @@ const interfaceModules = [
   {
     name: 'coreServices',
     file: 'coreServices.js',
+    exportName: 'ILoggerMetadata',
     expectedDocSnippets: [
       '@interface ILogger',
-      'ILogger#info',
-      'ILogger#debug',
+      'ILoggerMetadata',
+      "name: 'debug'",
     ],
   },
 ];
 
 describe('interface documentation modules', () => {
-  interfaceModules.forEach(({ name, file, expectedDocSnippets }) => {
+interfaceModules.forEach(({ name, file, exportName, expectedDocSnippets }) => {
     const moduleImportPath = `../../../src/interfaces/${file}`;
     const absoluteFilePath = path.join(interfacesDir, file);
 
-    test(`${name} exports no runtime members but loads cleanly`, async () => {
+    test(`${name} exports frozen runtime metadata while remaining documentation-focused`, async () => {
       const module = await import(moduleImportPath);
-      expect(module).toEqual({});
+      expect(module).toHaveProperty(exportName);
+      expect(Object.isFrozen(module[exportName])).toBe(true);
     });
 
     test(`${name} documentation retains key interface details`, async () => {

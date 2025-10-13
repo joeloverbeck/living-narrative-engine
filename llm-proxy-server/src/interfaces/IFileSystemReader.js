@@ -5,12 +5,36 @@
  */
 
 /**
- * Asynchronously reads the entire contents of a file.
- * @function
- * @name IFileSystemReader#readFile
- * @param {string} filePath - The path to the file to be read.
- * @param {string} encoding - The character encoding to use (e.g., 'utf-8').
- * @returns {Promise<string>} A Promise that resolves with the file content as a string.
- * @throws {Error} If the file cannot be read (e.g., for reasons like file not found or permissions issues).
+ * @typedef {object} InterfaceMethodMetadata
+ * @property {string} name - Name of the method in the interface contract.
+ * @property {string} description - Summary of what the method must accomplish.
+ * @property {Array<{name: string, type: string}>} params - Expected parameters.
+ * @property {string} returns - Description of the return value.
  */
-export {}; // Ensures it's treated as an ES module for tooling compatibility
+
+/**
+ * @typedef {object} InterfaceMetadata
+ * @property {string} name - Interface identifier.
+ * @property {string} description - High-level purpose of the interface.
+ * @property {InterfaceMethodMetadata[]} methods - Contracted methods.
+ */
+
+/**
+ * Runtime metadata describing the IFileSystemReader contract.
+ * @type {Readonly<InterfaceMetadata>}
+ */
+export const IFileSystemReaderMetadata = Object.freeze({
+  name: 'IFileSystemReader',
+  description: 'Defines the minimal contract required for asynchronous file reads.',
+  methods: [
+    {
+      name: 'readFile',
+      description: 'Asynchronously reads the entire contents of a file.',
+      params: [
+        { name: 'filePath', type: 'string' },
+        { name: 'encoding', type: 'string' },
+      ],
+      returns: 'Promise<string>',
+    },
+  ],
+});

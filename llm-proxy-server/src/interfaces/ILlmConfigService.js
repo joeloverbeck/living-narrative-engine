@@ -53,10 +53,64 @@
  */
 
 /**
- * Indicates whether any LLM configuration relies on a file-based API key.
- * @function
- * @name ILlmConfigService#hasFileBasedApiKeys
- * @returns {boolean} True if any configuration specifies an API key file.
+ * @typedef {object} InterfaceMethodMetadata
+ * @property {string} name - Method identifier within the interface contract.
+ * @property {string} description - Summary of the method responsibility.
+ * @property {Array<{name: string, type: string}>} [params] - Expected parameters.
+ * @property {string} returns - Description of the return value.
  */
 
-export {}; // Ensures this file is treated as an ES module
+/**
+ * @typedef {object} InterfaceMetadata
+ * @property {string} name - Interface identifier.
+ * @property {string} description - High-level purpose of the interface.
+ * @property {InterfaceMethodMetadata[]} methods - Contracted methods.
+ */
+
+/**
+ * Runtime metadata describing the ILlmConfigService contract.
+ * @type {Readonly<InterfaceMetadata>}
+ */
+export const ILlmConfigServiceMetadata = Object.freeze({
+  name: 'ILlmConfigService',
+  description:
+    'Defines initialization, lookup, and diagnostic capabilities for LLM configuration management.',
+  methods: [
+    {
+      name: 'initialize',
+      description: 'Loads and validates configuration data before the service is used.',
+      returns: 'Promise<void>',
+    },
+    {
+      name: 'isOperational',
+      description: 'Indicates whether configurations were successfully loaded.',
+      returns: 'boolean',
+    },
+    {
+      name: 'getLlmConfigs',
+      description: 'Retrieves the fully parsed configuration document.',
+      returns: 'LLMConfigurationFileForProxy | null',
+    },
+    {
+      name: 'getLlmById',
+      description: 'Looks up a single LLM model configuration by its identifier.',
+      params: [{ name: 'id', type: 'string' }],
+      returns: 'LLMModelConfig | null',
+    },
+    {
+      name: 'getResolvedConfigPath',
+      description: 'Returns the resolved path used for the configuration file.',
+      returns: 'string | null',
+    },
+    {
+      name: 'getInitializationErrorDetails',
+      description: 'Provides information about initialization failures when present.',
+      returns: 'StandardizedErrorObject | null',
+    },
+    {
+      name: 'hasFileBasedApiKeys',
+      description: 'Checks whether any model relies on API keys from files.',
+      returns: 'boolean',
+    },
+  ],
+});
