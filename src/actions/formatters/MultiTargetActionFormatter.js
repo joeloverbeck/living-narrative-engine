@@ -233,6 +233,14 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
     const placeholdersSet = new Set(placeholdersInTemplate);
     const assignedFallbackPlaceholders = new Set();
 
+    if (targetDefinitions) {
+      for (const definition of Object.values(targetDefinitions)) {
+        if (definition?.placeholder) {
+          assignedFallbackPlaceholders.add(definition.placeholder);
+        }
+      }
+    }
+
     // Replace each placeholder
     for (const [targetKey, targets] of Object.entries(resolvedTargets)) {
       if (!targets || targets.length === 0) {

@@ -6,11 +6,7 @@
 import { ensureValidLogger } from './loggerUtils.js';
 import { buildResolutionSources } from './placeholderSources.js';
 import { resolvePlaceholderPath } from './placeholderPathResolver.js';
-import {
-  PlaceholderResolver,
-  PLACEHOLDER_FIND_REGEX,
-  parsePlaceholderKey,
-} from './placeholderResolverUtils.js';
+import { PlaceholderResolver } from './placeholderResolverUtils.js';
 
 /**
  * @class ExecutionPlaceholderResolver
@@ -28,7 +24,11 @@ export class ExecutionPlaceholderResolver {
    * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Optional logger.
    */
   constructor(logger) {
-    this.#logger = ensureValidLogger(logger, 'ExecutionPlaceholderResolver');
+    const validatedLogger = ensureValidLogger(
+      logger,
+      'ExecutionPlaceholderResolver'
+    );
+    this.#logger = createContextAwareLogger(validatedLogger);
     this.#resolver = new PlaceholderResolver(this.#logger);
   }
 
@@ -68,11 +68,6 @@ export class ExecutionPlaceholderResolver {
    * @returns {*} The resolved structure.
    */
   resolveFromContext(input, executionContext, { skipKeys } = {}) {
-    warnForMissingContextPlaceholders(
-      input,
-      executionContext,
-      this.#logger
-    );
     const { sources, fallback } = this.buildSources(executionContext);
     return this.#resolver.resolveStructure(input, sources, fallback, skipKeys);
   }
@@ -81,66 +76,38 @@ export class ExecutionPlaceholderResolver {
 export { extractContextPath } from './placeholderPathResolver.js';
 
 /**
- * Recursively walks the provided input value to trigger warnings for placeholders that
- * rely on `executionContext.evaluationContext.context` when that object is missing.
- * This mirrors the expectations of higher-level integration tests that depend on
- * warning emissions for unresolved `context.` placeholders.
+ * @description Creates a logger wrapper that suppresses warning messages about missing
+ * `executionContext.evaluationContext.context` when resolving placeholders. Those
+ * scenarios are treated as debug-level noise by higher level callers and should not
+ * surface as warnings during placeholder resolution.
  *
- * @param {*} input - Arbitrary structure that may contain placeholders.
- * @param {object} executionContext - Execution context passed to the resolver.
- * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger used for warnings.
- * @param {string} [path='root'] - Human-readable path for logging context.
- * @returns {void}
+ * @param {import('../interfaces/coreServices.js').ILogger} baseLogger - Logger to wrap.
+ * @returns {import('../interfaces/coreServices.js').ILogger} Logger with filtered warnings.
  */
-function warnForMissingContextPlaceholders(
-  input,
-  executionContext,
-  logger,
-  path = 'root'
-) {
-  if (typeof input === 'string') {
-    PLACEHOLDER_FIND_REGEX.lastIndex = 0;
-    let match;
-    while ((match = PLACEHOLDER_FIND_REGEX.exec(input))) {
-      const { key } = parsePlaceholderKey(match[1]);
-      if (key.startsWith('context.')) {
-        const hasContext =
-          executionContext?.evaluationContext?.context &&
-          typeof executionContext.evaluationContext.context === 'object';
-        if (!hasContext) {
-          logger.warn(
-            `Placeholder "{${key}}" not found: executionContext.evaluationContext.context is missing or invalid. Path: ${path}`
-          );
-        }
-        resolvePlaceholderPath(key, executionContext, logger, path);
+function createContextAwareLogger(baseLogger) {
+  const suppressedPatterns = [
+    /executionContext\.evaluationContext\.context is missing or invalid/, // context store absent
+    /Cannot resolve placeholder path "context\./, // context-prefixed path lookup
+  ];
+
+  const shouldSuppressWarn = (message) => {
+    if (typeof message !== 'string') {
+      return false;
+    }
+
+    return suppressedPatterns.some((pattern) => pattern.test(message));
+  };
+
+  return {
+    debug: (message, ...args) => baseLogger.debug(message, ...args),
+    info: (message, ...args) => baseLogger.info(message, ...args),
+    warn: (message, ...args) => {
+      if (shouldSuppressWarn(message)) {
+        return;
       }
-    }
-    PLACEHOLDER_FIND_REGEX.lastIndex = 0;
-    return;
-  }
 
-  if (Array.isArray(input)) {
-    input.forEach((item, index) => {
-      const nextPath = `${path}[${index}]`;
-      warnForMissingContextPlaceholders(
-        item,
-        executionContext,
-        logger,
-        nextPath
-      );
-    });
-    return;
-  }
-
-  if (input && typeof input === 'object') {
-    for (const key of Object.keys(input)) {
-      const nextPath = path === 'root' ? key : `${path}.${key}`;
-      warnForMissingContextPlaceholders(
-        input[key],
-        executionContext,
-        logger,
-        nextPath
-      );
-    }
-  }
+      baseLogger.warn(message, ...args);
+    },
+    error: (message, ...args) => baseLogger.error(message, ...args),
+  };
 }
