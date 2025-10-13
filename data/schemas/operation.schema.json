@@ -175,6 +175,12 @@
         },
         {
           "$ref": "./operations/takeFromContainer.schema.json"
+        },
+        {
+          "$ref": "./operations/putInContainer.schema.json"
+        },
+        {
+          "$ref": "./operations/validateContainerCapacity.schema.json"
         }
       ]
     }
