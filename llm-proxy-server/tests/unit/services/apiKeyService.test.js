@@ -174,6 +174,77 @@ describe('ApiKeyService', () => {
       expect(result.errorDetails.details.reason).toContain("File 'missing.key'");
     });
 
+    test('merges error sources even when file reader does not provide details', async () => {
+      delete process.env.MISSING_ENV_WITHOUT_DETAILS;
+
+      const readSpy = jest
+        .spyOn(service, '_readApiKeyFromFile')
+        .mockResolvedValue({ key: null, error: null });
+
+      const result = await service.getApiKey(
+        {
+          apiType: 'openai',
+          apiKeyEnvVar: 'MISSING_ENV_WITHOUT_DETAILS',
+          apiKeyFileName: 'missing.key',
+        },
+        'llm-missing-details'
+      );
+
+      expect(readSpy).toHaveBeenCalled();
+      expect(result.apiKey).toBeNull();
+      expect(result.errorDetails).toMatchObject({
+        stage: 'api_key_all_sources_failed',
+        details: expect.objectContaining({
+          llmId: 'llm-missing-details',
+          attemptedEnvVar: 'MISSING_ENV_WITHOUT_DETAILS',
+          attemptedFile: 'missing.key',
+          reason: expect.stringContaining('see previous logs'),
+        }),
+      });
+      expect(result.errorDetails.details.originalErrorMessage).toBeUndefined();
+    });
+
+    test('retains original file error details when available', async () => {
+      delete process.env.MISSING_ENV_WITH_FILE_REASON;
+
+      const fileErrorDetails = service._createErrorDetails(
+        'File could not be read',
+        'api_key_file_not_found_or_unreadable',
+        {
+          llmId: 'llm-detailed-error',
+          attemptedFile: 'detailed.key',
+          reason: 'Simulated file system failure',
+          originalErrorMessage: 'ENOENT: missing file',
+        }
+      );
+
+      const readSpy = jest
+        .spyOn(service, '_readApiKeyFromFile')
+        .mockResolvedValue({ key: null, error: fileErrorDetails });
+
+      const result = await service.getApiKey(
+        {
+          apiType: 'openai',
+          apiKeyEnvVar: 'MISSING_ENV_WITH_FILE_REASON',
+          apiKeyFileName: 'detailed.key',
+        },
+        'llm-detailed-error'
+      );
+
+      expect(readSpy).toHaveBeenCalled();
+      expect(result.errorDetails).toMatchObject({
+        stage: 'api_key_all_sources_failed',
+        details: expect.objectContaining({
+          attemptedEnvVar: 'MISSING_ENV_WITH_FILE_REASON',
+          attemptedFile: 'detailed.key',
+          originalErrorMessage: 'ENOENT: missing file',
+        }),
+      });
+      expect(result.errorDetails.details.reason).toContain(
+        'Simulated file system failure'
+      );
+    });
+
     test('continues gracefully when error details helpers return null', async () => {
       const originalCreateErrorDetails =
         service._createErrorDetails.bind(service);
