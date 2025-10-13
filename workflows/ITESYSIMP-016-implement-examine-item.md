@@ -1,280 +1,53 @@
 # ITESYSIMP-016: Implement Examine Item Action
 
-**Phase:** 4 - Advanced Features
-**Priority:** Medium
+**Phase:** 4 - Advanced Features  
+**Priority:** Medium  
 **Estimated Effort:** 1.5 hours
 
 ## Goal
 
-Implement the `examine_item` action to allow actors to get detailed descriptions of items in their inventory or at their location.
+Ensure the `items:examine_item` action provides a compelling narrative description when a player inspects an object in their inventory or at their current location.
 
-## Context
+## Current Implementation Snapshot (2025-02)
 
-Examine provides narrative richness by revealing item descriptions. This is a read-only action that doesn't modify state but creates perception logs for the actor.
+The core implementation already exists and differs from the original assumptions of this ticket:
 
-## Tasks
+- `data/mods/items/actions/examine_item.action.json` is present and defines the action, including its scope (`items:examinable_items`) and required components (`items:item`, `core:description`). It uses a simple `template` string instead of the older `formatTemplate`/`generateCombinations` pattern.
+- `data/mods/items/scopes/examinable_items.scope` is already defined as the union of `items:actor_inventory_items` and `items:items_at_location`, relying on the action's `required_components` gate to ensure targets have `core:description` data.
+- `data/mods/items/conditions/event-is-action-examine-item.condition.json` exists and matches the action id.
+- `data/mods/items/rules/handle_examine_item.rule.json` handles the action entirely with existing generic operations (`GET_NAME`, `QUERY_COMPONENT`, `DISPATCH_PERCEPTIBLE_EVENT`, `SET_VARIABLE`, `DISPATCH_EVENT`, `END_TURN`). There is no bespoke `ExamineItemHandler` class.
+- No dedicated `items:item_examined` event file is needed because the rule already dispatches a perceptible event for observers and pushes a UI success message.
+- The DI container does **not** register a specific handler for `EXAMINE_ITEM`; the flow stays inside the rule/operation system.
+- Integration tests cover both the action definition and rule execution (`tests/integration/mods/items/examineItemActionDiscovery.test.js`, `tests/integration/mods/items/examineItemRuleExecution.test.js`). Additional discovery tests exercise the action catalogue.
 
-### 1. Create EXAMINE_ITEM Handler
+## Differences from the Original Plan
 
-Create `src/logic/operationHandlers/items/examineItemHandler.js`:
+| Original assumption | Actual state | Notes |
+| --- | --- | --- |
+| A bespoke `ExamineItemHandler` class would be created and wired into the DI container. | No handler exists; the rule pipeline composes existing operations to fetch descriptions and broadcast results. | The current architecture favors declarative rule composition over bespoke handlers for simple read-only flows. |
+| The scope would filter on `core:description` inside JSON logic. | Scope is a union; filtering happens through action `required_components`. | This keeps the scope reusable elsewhere while still guaranteeing descriptions at execution time. |
+| A new `items:item_examined` event definition was required. | No standalone event file; `DISPATCH_PERCEPTIBLE_EVENT` suffices. | Observability is achieved through perception logs and UI event dispatches. |
+| Examine should be a "free" action that does not end the actor's turn. | Current rule explicitly invokes `END_TURN` with `success: true`. | Needs a product decision: keep as turn-ending (current behavior) or adjust rule if free actions are desired. |
 
-```javascript
-import { assertNonBlankString, assertPresent } from '../../../utils/dependencyUtils.js';
+## Outstanding Questions / Follow-up Work
 
-/**
- * Examines an item to reveal its full description
- */
-class ExamineItemHandler {
-  #entityManager;
-  #eventBus;
-  #logger;
+- [ ] Confirm with design whether examining an item should consume the actor's turn. If not, remove or gate the `END_TURN` action in `handle_examine_item.rule.json`.
+- [ ] Decide whether the perceptible event should include richer contextual data (e.g., send full description only to the actor vs. everyone present) and update the rule if requirements change.
+- [ ] Keep integration tests aligned with any future rule changes (tests currently expect the action catalogue entry and perception log behavior already in place).
 
-  constructor({ entityManager, eventBus, logger }) {
-    assertPresent(entityManager, 'entityManager is required');
-    assertPresent(eventBus, 'eventBus is required');
-    assertPresent(logger, 'logger is required');
+## Validation Checklist (Updated)
 
-    this.#entityManager = entityManager;
-    this.#eventBus = eventBus;
-    this.#logger = logger;
-  }
-
-  async execute(params, executionContext) {
-    const { actorEntity, itemEntity } = params;
-
-    assertNonBlankString(actorEntity, 'actorEntity', 'EXAMINE_ITEM', this.#logger);
-    assertNonBlankString(itemEntity, 'itemEntity', 'EXAMINE_ITEM', this.#logger);
-
-    try {
-      const description = this.#entityManager.getComponent(itemEntity, 'core:description');
-
-      if (!description) {
-        this.#logger.warn(`No description component on item`, { itemEntity });
-        return { success: false, error: 'no_description' };
-      }
-
-      this.#eventBus.dispatch({
-        type: 'ITEM_EXAMINED',
-        payload: { actorEntity, itemEntity, description: description.fullDescription }
-      });
-
-      this.#logger.debug(`Item examined`, { actorEntity, itemEntity });
-      return {
-        success: true,
-        fullDescription: description.fullDescription,
-        shortDescription: description.shortDescription
-      };
-
-    } catch (error) {
-      this.#logger.error(`Examine item failed`, error, { actorEntity, itemEntity });
-      return { success: false, error: error.message };
-    }
-  }
-}
-
-export default ExamineItemHandler;
-```
-
-### 2. Create examinable_items Scope
-
-Create `data/mods/items/scopes/examinable_items.scope`:
-
-```
-(actor.items:inventory.items[] | items:items_at_location)[{"has": [{"var": "entity"}, "core:description"]}]
-```
-
-**Description:** Returns items from actor's inventory OR at their location that have descriptions. Uses union operator `|` and filters for description component.
-
-### 3. Create examine_item Action
-
-Create `data/mods/items/actions/examine_item.action.json`:
-
-```json
-{
-  "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "items:examine_item",
-  "name": "Examine Item",
-  "description": "Examine an item to see its full description",
-  "generateCombinations": true,
-  "targets": {
-    "primary": {
-      "scope": "items:examinable_items",
-      "placeholder": "item",
-      "description": "Item to examine",
-      "contextFrom": "actor"
-    }
-  },
-  "conditions": [
-    {
-      "type": "HAS_COMPONENT",
-      "entityRef": "primary",
-      "componentId": "core:description"
-    }
-  ],
-  "formatTemplate": "Examine {primary.name}"
-}
-```
-
-### 4. Create Condition
-
-Create `data/mods/items/conditions/event-is-action-examine-item.condition.json`:
-
-```json
-{
-  "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "items:event-is-action-examine-item",
-  "description": "Checks if event is the examine_item action",
-  "jsonLogic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "items:examine_item"
-    ]
-  }
-}
-```
-
-### 5. Create Rule
-
-Create `data/mods/items/rules/handle_examine_item.rule.json`:
-
-```json
-{
-  "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "id": "items:handle_examine_item",
-  "description": "Handles examine_item action with description reveal",
-  "priority": 100,
-  "eventType": "ATTEMPT_ACTION",
-  "conditions": [
-    "items:event-is-action-examine-item"
-  ],
-  "operations": [
-    {
-      "type": "EXAMINE_ITEM",
-      "comment": "Get item description",
-      "parameters": {
-        "actorEntity": "{event.payload.actorId}",
-        "itemEntity": "{event.payload.targetId}",
-        "result_variable": "examineResult"
-      }
-    },
-    {
-      "type": "GET_COMPONENT",
-      "parameters": {
-        "entity_id": "{event.payload.actorId}",
-        "component_id": "positioning:position",
-        "result_variable": "actorPosition"
-      }
-    },
-    {
-      "type": "GET_NAME",
-      "parameters": {
-        "entity_ref": "actor",
-        "result_variable": "actorName"
-      }
-    },
-    {
-      "type": "GET_NAME",
-      "parameters": {
-        "entity_ref": "target",
-        "result_variable": "itemName"
-      }
-    },
-    {
-      "type": "ADD_PERCEPTION_LOG_ENTRY",
-      "comment": "Log examination with full description",
-      "parameters": {
-        "location_id": "{context.actorPosition.locationId}",
-        "entry": {
-          "descriptionText": "{actorName} examines {itemName}: {context.examineResult.fullDescription}",
-          "timestamp": "{timestamp}",
-          "perceptionType": "item_examined",
-          "actorId": "{event.payload.actorId}",
-          "itemId": "{event.payload.targetId}",
-          "fullDescription": "{context.examineResult.fullDescription}"
-        }
-      }
-    }
-  ]
-}
-```
-
-**Note:** Examine does not end turn - it's a free observation action.
-
-### 6. Create Event
-
-Create `data/mods/items/events/item_examined.event.json`:
-
-```json
-{
-  "$schema": "schema://living-narrative-engine/event.schema.json",
-  "id": "items:item_examined",
-  "description": "Dispatched when an item is examined",
-  "payloadSchema": {
-    "type": "object",
-    "properties": {
-      "actorEntity": {
-        "type": "string",
-        "description": "Actor who examined the item"
-      },
-      "itemEntity": {
-        "type": "string",
-        "description": "Item that was examined"
-      },
-      "description": {
-        "type": "string",
-        "description": "Full description revealed"
-      }
-    },
-    "required": ["actorEntity", "itemEntity", "description"]
-  }
-}
-```
-
-### 7. Update Mod Manifest
-
-Add to `data/mods/items/mod-manifest.json` as appropriate.
-
-### 8. Register Handler in DI Container
-
-Update `src/dependencyInjection/containerConfig.js`:
-
-```javascript
-import ExamineItemHandler from '../logic/operationHandlers/items/examineItemHandler.js';
-
-container.register('EXAMINE_ITEM', ExamineItemHandler);
-```
-
-### 9. Create Tests
-
-Create integration tests covering:
-- Examine items in inventory
-- Examine items at location
-- Scope union of inventory + location items
-- Full description revealed
-- Perception log created
-- Turn NOT ended (free action)
-- Missing description handled gracefully
-
-## Validation
-
-- [ ] Handler follows standalone class pattern with DI
-- [ ] Scope uses union operator to combine inventory + location items
-- [ ] Full description retrieved and returned
-- [ ] Perception log includes full description
-- [ ] Turn does NOT end (examine is free action)
-- [ ] Items without descriptions handled gracefully
-- [ ] Tests cover inventory and location examination
-- [ ] All tests pass
-- [ ] Mod manifest updated
-- [ ] Handler registered in DI container
+- [x] Action, scope, and condition assets exist and reference each other correctly.
+- [x] Rule retrieves the description text and surfaces it via a perceptible event/UI message.
+- [ ] Turn handling confirmed with design (pending decision above).
+- [x] Integration tests cover action discovery and rule execution.
 
 ## Dependencies
 
-- ITESYSIMP-001: Mod structure must exist
-- ITESYSIMP-006: Scope definitions for inventory/location items
-- Core mod for description component
+- ITESYSIMP-001: Mod structure must exist. *(fulfilled)*
+- ITESYSIMP-006: Scope definitions for inventory/location items. *(fulfilled through shared scopes)*
+- Core mod for `core:description` component. *(fulfilled)*
 
 ## Next Steps
 
-After completion, proceed to:
-- ITESYSIMP-017: Implement put_in_container action
+If the remaining open question about turn consumption is resolved, update the rule accordingly and adjust integration tests if needed. Afterwards continue with ITESYSIMP-017 (put in container action).
