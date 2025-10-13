@@ -284,6 +284,20 @@ describe('HttpAgentService', () => {
       );
     });
 
+    it('should destroy http agents using the default port', () => {
+      httpAgentService.getAgent('http://public.example.com/path');
+
+      const result = httpAgentService.destroyAgent(
+        'http://public.example.com/path'
+      );
+
+      expect(result).toBe(true);
+      expect(mockHttpAgent.destroy).toHaveBeenCalled();
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'HttpAgentService: Destroyed agent for http://public.example.com:80'
+      );
+    });
+
     it('should return false for non-existent agent', () => {
       const result = httpAgentService.destroyAgent('https://nonexistent.com');
 
@@ -397,6 +411,24 @@ describe('HttpAgentService', () => {
       const cleaned = httpAgentService.cleanupIdleAgents(300000);
       expect(cleaned).toBe(0);
     });
+
+    it('should use the default idle threshold when not provided', () => {
+      const now = Date.now();
+      jest.setSystemTime(now);
+
+      httpAgentService.getAgent('https://default-threshold.example.com');
+
+      // Advance just beyond the default 5 minute window
+      jest.setSystemTime(now + 301000);
+
+      const cleaned = httpAgentService.cleanupIdleAgents();
+
+      expect(cleaned).toBe(1);
+      expect(mockHttpsAgent.destroy).toHaveBeenCalled();
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'HttpAgentService: Cleaned up idle agent https://default-threshold.example.com:443'
+      );
+    });
   });
 
   describe('hasAgent', () => {
@@ -404,6 +436,14 @@ describe('HttpAgentService', () => {
       httpAgentService.getAgent('https://api.example.com');
 
       expect(httpAgentService.hasAgent('https://api.example.com')).toBe(true);
+    });
+
+    it('should detect http agents with implicit default ports', () => {
+      httpAgentService.getAgent('http://api.example.com/resource');
+
+      expect(httpAgentService.hasAgent('http://api.example.com/resource')).toBe(
+        true
+      );
     });
 
     it('should return false for non-existent agent', () => {
