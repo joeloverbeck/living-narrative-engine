@@ -290,6 +290,14 @@ describe('ActionTraceOutputService - Multi-Format Support', () => {
       const trace = testBed.createMockTrace();
       mockJsonFormatter.format.mockReturnValue('{"test": "json"}');
 
+      let syntheticNow = 0;
+      const nowSpy = jest
+        .spyOn(performance, 'now')
+        .mockImplementation(() => {
+          syntheticNow += 0.001;
+          return syntheticNow;
+        });
+
       const startTime = performance.now();
       await outputService.writeTrace(trace);
       const duration = performance.now() - startTime;
@@ -297,6 +305,8 @@ describe('ActionTraceOutputService - Multi-Format Support', () => {
       // Allow additional buffer for shared CI environments while still ensuring fast writes
       expect(duration).toBeLessThan(25);
       expect(mockOutputHandler).toHaveBeenCalledTimes(1);
+
+      nowSpy.mockRestore();
     });
 
     it('should handle large trace objects efficiently', async () => {

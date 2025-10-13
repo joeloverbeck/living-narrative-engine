@@ -276,6 +276,25 @@ describe('BodyGraphService instrumentation coverage', () => {
     expect(result.detached).toEqual(['leg-1']);
   });
 
+  it('does not invalidate caches when no anatomy root is discovered during detachment', async () => {
+    const { service, cacheInstance, queryCacheInstance } = createService();
+
+    entityManager.getComponentData.mockImplementation((_, componentId) => {
+      if (componentId === 'anatomy:joint') {
+        return { parentId: 'torso-3', socketId: 'wrist' };
+      }
+      return null;
+    });
+
+    mockAlgorithms.getSubgraph.mockReturnValue(['hand-1']);
+    mockAlgorithms.getAnatomyRoot.mockReturnValue(null);
+
+    await service.detachPart('hand-1');
+
+    expect(cacheInstance.invalidateCacheForRoot).not.toHaveBeenCalled();
+    expect(queryCacheInstance.invalidateRoot).not.toHaveBeenCalled();
+  });
+
   it('returns cached results when available for findPartsByType', () => {
     const { service, queryCacheInstance } = createService();
     queryCacheInstance.getCachedFindPartsByType.mockReturnValue(['cached-arm']);
@@ -335,6 +354,42 @@ describe('BodyGraphService instrumentation coverage', () => {
       );
     });
 
+    it('supports body components that expose the root directly', () => {
+      const { service, cacheInstance, queryCacheInstance } = createService();
+      const bodyComponent = { root: 'direct-root' };
+
+      cacheInstance.has.mockReturnValue(false);
+      mockAlgorithms.getAllParts.mockReturnValue(['direct-part']);
+
+      const result = service.getAllParts(bodyComponent);
+
+      expect(logger.debug).toHaveBeenCalledWith(
+        "BodyGraphService.getAllParts: Found root ID in bodyComponent.root: direct-root"
+      );
+      expect(mockAlgorithms.getAllParts).toHaveBeenCalledWith(
+        'direct-root',
+        cacheInstance,
+        entityManager
+      );
+      expect(queryCacheInstance.cacheGetAllParts).toHaveBeenCalledWith(
+        'direct-root',
+        ['direct-part']
+      );
+      expect(result).toEqual(['direct-part']);
+    });
+
+    it('gracefully handles body components that lack root identifiers', () => {
+      const { service } = createService();
+      const bodyComponent = { metadata: { version: 1 } };
+
+      const result = service.getAllParts(bodyComponent);
+
+      expect(result).toEqual([]);
+      expect(logger.debug).toHaveBeenCalledWith(
+        'BodyGraphService.getAllParts: No root ID found in bodyComponent'
+      );
+    });
+
     it('uses the blueprint root when the actor is not cached', () => {
       const { service, cacheInstance, queryCacheInstance } = createService();
       const bodyComponent = { body: { root: 'blueprint-root' } };
@@ -381,6 +436,24 @@ describe('BodyGraphService instrumentation coverage', () => {
       expect(result).toEqual(['actor-part']);
       expect(logger.debug).toHaveBeenCalledWith(
         "BodyGraphService: Using actor entity 'actor-1' as cache root instead of blueprint root 'blueprint-root' (cache size: 3)"
+      );
+    });
+
+    it('truncates debug output when the anatomy contains many parts', () => {
+      const { service, cacheInstance } = createService();
+      const bodyComponent = { body: { root: 'crowded-root' } };
+      const manyParts = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'];
+
+      cacheInstance.has.mockReturnValue(false);
+      mockAlgorithms.getAllParts.mockReturnValue(manyParts);
+
+      logger.debug.mockClear();
+
+      service.getAllParts(bodyComponent);
+
+      const messages = logger.debug.mock.calls.map((call) => call[0]);
+      expect(messages).toContain(
+        "BodyGraphService: AnatomyGraphAlgorithms.getAllParts returned 6 parts for root 'crowded-root': [p1, p2, p3, p4, p5...]"
       );
     });
 
@@ -452,6 +525,36 @@ describe('BodyGraphService instrumentation coverage', () => {
           'component:stats',
           'stats.health',
           10
+        )
+      ).toEqual({ found: false });
+    });
+
+    it('treats null component data as an absence when inspecting nested values', () => {
+      const { service } = createService();
+      mockAlgorithms.getAllParts.mockReturnValue(['part-1', 'part-2']);
+      entityManager.getComponentData.mockReturnValue(null);
+
+      expect(
+        service.hasPartWithComponentValue(
+          bodyComponent,
+          'component:stats',
+          'stats.health',
+          10
+        )
+      ).toEqual({ found: false });
+    });
+
+    it('returns undefined for deeply missing nested component paths', () => {
+      const { service } = createService();
+      mockAlgorithms.getAllParts.mockReturnValue(['part-1']);
+      entityManager.getComponentData.mockReturnValue({ stats: {} });
+
+      expect(
+        service.hasPartWithComponentValue(
+          bodyComponent,
+          'component:stats',
+          'stats.missing.value',
+          'anything'
         )
       ).toEqual({ found: false });
     });
@@ -547,6 +650,21 @@ describe('BodyGraphService instrumentation coverage', () => {
       await expect(service.getAnatomyData('actor-3')).resolves.toEqual({
         recipeId: 'recipe-123',
         rootEntityId: 'actor-3',
+      });
+    });
+
+    it('normalizes missing recipe identifiers to null', async () => {
+      const asyncEntityManager = {
+        getComponentData: jest.fn().mockResolvedValue({}),
+        removeComponent: jest.fn(),
+        getEntityInstance: jest.fn(),
+      };
+
+      const { service } = createService({ entityManager: asyncEntityManager });
+
+      await expect(service.getAnatomyData('actor-4')).resolves.toEqual({
+        recipeId: null,
+        rootEntityId: 'actor-4',
       });
     });
   });
