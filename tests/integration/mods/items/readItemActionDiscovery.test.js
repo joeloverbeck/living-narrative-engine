@@ -103,6 +103,43 @@ describe('items:read_item action definition', () => {
       expect(readActions.length).toBeGreaterThan(0);
     });
 
+    it('should appear when inventory stores readable items as item references', () => {
+      const room = ModEntityScenarios.createRoom('room2', 'Reference Library');
+
+      const actor = new ModEntityBuilder('actor2')
+        .withName('Archivist')
+        .atLocation('room2')
+        .asActor()
+        .withComponent('items:inventory', {
+          items: [
+            {
+              itemId: 'readable_item_reference',
+            },
+          ],
+          capacity: { maxWeight: 50, maxItems: 10 },
+        })
+        .build();
+
+      const readableItem = new ModEntityBuilder('readable_item_reference')
+        .withName('Encoded Tablet')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withComponent('items:readable', {
+          text: 'Tablet Entry: Rotate the sigil thrice to unlock the vault.',
+        })
+        .build();
+
+      testFixture.reset([room, actor, readableItem]);
+      configureActionDiscovery();
+
+      const availableActions = testFixture.testEnv.getAvailableActions('actor2');
+      const readActions = availableActions.filter(
+        (action) => action.id === 'items:read_item'
+      );
+
+      expect(readActions.length).toBeGreaterThan(0);
+    });
+
     it('should appear when a readable item is at the actor location', () => {
       const room = ModEntityScenarios.createRoom('library', 'Library');
 

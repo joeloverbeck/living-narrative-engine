@@ -429,8 +429,28 @@ export function createBaseRuleEnvironment({
             return { success: true, value: new Set() };
           }
 
-          // Return the items in the inventory
-          return { success: true, value: new Set(inventory.items) };
+          // Normalize mixed inventory formats (string IDs, {id}, or {itemId})
+          const normalizedItemIds = inventory.items
+            .map((entry) => {
+              if (typeof entry === 'string') {
+                return entry;
+              }
+
+              if (entry && typeof entry === 'object') {
+                if (typeof entry.itemId === 'string' && entry.itemId.trim()) {
+                  return entry.itemId;
+                }
+
+                if (typeof entry.id === 'string' && entry.id.trim()) {
+                  return entry.id;
+                }
+              }
+
+              return null;
+            })
+            .filter((value) => typeof value === 'string' && value.length > 0);
+
+          return { success: true, value: new Set(normalizedItemIds) };
         }
 
         // Handle the items:examinable_items scope (union of inventory + location items)

@@ -917,15 +917,35 @@ export class MultiTargetResolutionStage extends PipelineStage {
         throw error;
       }
 
-      // Convert Set to array of entity IDs
+      // Convert Set to array of entity IDs, normalizing inventory references
       const entityIds = Array.from(result.value);
 
+      const normalizedIds = entityIds
+        .map((entry) => {
+          if (typeof entry === 'string') {
+            return entry;
+          }
+
+          if (entry && typeof entry === 'object') {
+            if (typeof entry.id === 'string' && entry.id.trim()) {
+              return entry.id.trim();
+            }
+
+            if (typeof entry.itemId === 'string' && entry.itemId.trim()) {
+              return entry.itemId.trim();
+            }
+          }
+
+          return null;
+        })
+        .filter((id) => typeof id === 'string' && id.length > 0);
+
       trace?.info(
-        `Scope resolved to ${entityIds.length} entities`,
+        `Scope resolved to ${normalizedIds.length} entities`,
         'MultiTargetResolutionStage'
       );
 
-      return entityIds;
+      return normalizedIds;
     } catch (error) {
       this.#logger.error(`Error evaluating scope '${scope}':`, error);
       trace?.failure(
