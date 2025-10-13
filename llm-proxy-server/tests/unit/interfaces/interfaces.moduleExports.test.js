@@ -14,26 +14,60 @@ const interfaceModuleUrls = {
   ).href,
 };
 
+const metadataExpectations = {
+  IFileSystemReader: {
+    exportName: 'IFileSystemReaderMetadata',
+    name: 'IFileSystemReader',
+    methodNames: ['readFile'],
+  },
+  ILlmConfigService: {
+    exportName: 'ILlmConfigServiceMetadata',
+    name: 'ILlmConfigService',
+    methodNames: [
+      'initialize',
+      'isOperational',
+      'getLlmConfigs',
+      'getLlmById',
+      'getResolvedConfigPath',
+      'getInitializationErrorDetails',
+      'hasFileBasedApiKeys',
+    ],
+  },
+  coreServices: {
+    exportName: 'ILoggerMetadata',
+    name: 'ILogger',
+    methodNames: ['info', 'warn', 'error', 'debug'],
+  },
+};
+
+const moduleTestCases = Object.entries(metadataExpectations).map(
+  ([key, expectation]) => ({
+    label: key,
+    url: interfaceModuleUrls[key],
+    expectation,
+  })
+);
+
 async function loadModule(url) {
   return import(url);
 }
 
 describe('interface module exports', () => {
-  it('treats IFileSystemReader as a pure documentation module', async () => {
-    const module = await loadModule(interfaceModuleUrls.IFileSystemReader);
-    expect(module).toEqual({});
-    expect(Object.keys(module)).toHaveLength(0);
-  });
+  it.each(moduleTestCases)(
+    '%s exposes frozen metadata to describe its contract',
+    async ({ label, url, expectation }) => {
+      expect(url).toBeDefined();
+      const module = await loadModule(url);
 
-  it('treats ILlmConfigService as a pure documentation module', async () => {
-    const module = await loadModule(interfaceModuleUrls.ILlmConfigService);
-    expect(module).toEqual({});
-    expect(Object.keys(module)).toHaveLength(0);
-  });
+      expect(module).toHaveProperty(expectation.exportName);
+      const metadata = module[expectation.exportName];
 
-  it('treats coreServices as a pure documentation module', async () => {
-    const module = await loadModule(interfaceModuleUrls.coreServices);
-    expect(module).toEqual({});
-    expect(Object.keys(module)).toHaveLength(0);
-  });
+      expect(Object.isFrozen(metadata)).toBe(true);
+      expect(metadata.name).toBe(expectation.name);
+      expect(metadata.methods.map((method) => method.name)).toEqual(
+        expectation.methodNames
+      );
+      expect(metadata.description).toEqual(expect.any(String));
+    }
+  );
 });
