@@ -1,0 +1,1 @@
+items:open_containers_at_location := items:openable_containers_at_location[{"==": [{"var": "entity.components.items:container.isOpen"}, true]}]
