@@ -140,6 +140,49 @@ describe('items:read_item action definition', () => {
       expect(readActions.length).toBeGreaterThan(0);
     });
 
+    it('should appear when inventory mixes readable and non-readable items', () => {
+      const room = ModEntityScenarios.createRoom('room_mixed', 'Mixed Inventory Study');
+
+      const actor = new ModEntityBuilder('actor_mixed')
+        .withName('Collector')
+        .atLocation('room_mixed')
+        .asActor()
+        .withComponent('items:inventory', {
+          items: [
+            'readable_item_mixed',
+            'non_readable_item_mixed',
+          ],
+          capacity: { maxWeight: 50, maxItems: 10 },
+        })
+        .build();
+
+      const readableItem = new ModEntityBuilder('readable_item_mixed')
+        .withName('Annotated Blueprint')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withComponent('items:readable', {
+          text: 'Margin notes detail secret maintenance tunnels beneath the manor.',
+        })
+        .build();
+
+      const nonReadableItem = new ModEntityBuilder('non_readable_item_mixed')
+        .withName('Solid Brass Gear')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withDescription('A heavy gear with grease-stained teeth.')
+        .build();
+
+      testFixture.reset([room, actor, readableItem, nonReadableItem]);
+      configureActionDiscovery();
+
+      const availableActions = testFixture.testEnv.getAvailableActions('actor_mixed');
+      const readActions = availableActions.filter(
+        (action) => action.id === 'items:read_item'
+      );
+
+      expect(readActions.length).toBeGreaterThan(0);
+    });
+
     it('should appear when a readable item is at the actor location', () => {
       const room = ModEntityScenarios.createRoom('library', 'Library');
 

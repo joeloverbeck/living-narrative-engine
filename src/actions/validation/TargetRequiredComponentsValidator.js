@@ -133,37 +133,71 @@ class TargetRequiredComponentsValidator {
       };
     }
 
+    let hasValidCandidate = false;
+    let lastFailureReason = `No ${role} target available for validation`;
+
     for (const candidate of targetCandidates) {
       if (!candidate) {
         this.#logger.debug(
           `Invalid ${role} target candidate encountered during required components validation`
         );
-        return {
-          valid: false,
-          reason: `No ${role} target available for validation`,
-        };
+        lastFailureReason = `No ${role} target available for validation`;
+        continue;
       }
 
       // Extract the actual entity - it may be nested under 'entity' property
       // or it may be the entity object directly
       const targetEntity = candidate.entity || candidate;
 
-      // Check each required component for this candidate
-      for (const componentId of requiredComponents) {
-        if (!targetEntity.components || !targetEntity.components[componentId]) {
-          const entityId = targetEntity.id || 'unknown';
-          this.#logger.debug(
-            `Target entity ${entityId} missing required component: ${componentId}`
-          );
-          return {
-            valid: false,
-            reason: `Target (${role}) must have component: ${componentId}`,
-          };
-        }
+      if (!targetEntity) {
+        this.#logger.debug(
+          `Resolved ${role} target candidate lacks entity reference`
+        );
+        lastFailureReason = `No ${role} target available for validation`;
+        continue;
       }
+
+      const hasComponent = (componentId) => {
+        if (targetEntity.components && targetEntity.components[componentId]) {
+          return true;
+        }
+        if (typeof targetEntity.hasComponent === 'function') {
+          try {
+            return targetEntity.hasComponent(componentId);
+          } catch (error) {
+            this.#logger.debug(
+              `Error checking hasComponent('${componentId}') on ${role} target ${targetEntity.id || 'unknown'}: ${error.message}`
+            );
+          }
+        }
+        return false;
+      };
+
+      const missingComponentId = requiredComponents.find(
+        (componentId) => !hasComponent(componentId)
+      );
+
+      if (missingComponentId) {
+        const entityId = targetEntity.id || 'unknown';
+        this.#logger.debug(
+          `Target entity ${entityId} missing required component: ${missingComponentId}`
+        );
+        lastFailureReason = `Target (${role}) must have component: ${missingComponentId}`;
+        continue;
+      }
+
+      hasValidCandidate = true;
+      break;
     }
 
-    return { valid: true };
+    if (hasValidCandidate) {
+      return { valid: true };
+    }
+
+    return {
+      valid: false,
+      reason: lastFailureReason,
+    };
   }
 }
 
