@@ -11,5 +11,5 @@
     }
   },
   "prerequisites": [],
-  "template": "Open {primary.name}"
+  "template": "open {container}"
 }

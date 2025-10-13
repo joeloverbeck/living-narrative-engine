@@ -1,52 +1,70 @@
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { createFullTestEnvironment } from '../../../common/fullTestEnvironment.js';
+/**
+ * @file Integration tests for items:put_in_container action discovery.
+ * @description Tests that the put_in_container action is discovered correctly
+ * based on game state (actor has items, open container available, etc.).
+ */
+
+import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
+import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import putInContainerRule from '../../../../data/mods/items/rules/handle_put_in_container.rule.json' assert { type: 'json' };
+import eventIsActionPutInContainer from '../../../../data/mods/items/conditions/event-is-action-put-in-container.condition.json' assert { type: 'json' };
 
 describe('Put In Container Action Discovery Integration Tests', () => {
-  let env;
+  let testFixture;
 
   beforeEach(async () => {
-    env = await createFullTestEnvironment({
-      mods: ['core', 'positioning', 'items'],
-    });
+    testFixture = await ModTestFixture.forAction(
+      'items',
+      'items:put_in_container',
+      putInContainerRule,
+      eventIsActionPutInContainer
+    );
   });
 
   afterEach(() => {
-    env?.cleanup();
+    testFixture.cleanup();
   });
 
   it('should discover put_in_container action when actor has items and open container is available', async () => {
-    const { entityManager, container } = env;
-
-    // Create location
-    const location = entityManager.createEntity('location1');
-    entityManager.addComponent(location, 'core:location', {
-      name: 'Test Location',
-    });
+    // Arrange: Create location
+    const location = new ModEntityBuilder('location1')
+      .asRoom('Test Location')
+      .build();
 
     // Create actor with inventory
-    const actor = entityManager.createEntity('actor1');
-    entityManager.addComponent(actor, 'core:position', { locationId: location });
-    entityManager.addComponent(actor, 'items:inventory', { items: ['item1'] });
+    const actor = new ModEntityBuilder('actor1')
+      .withName('Test Actor')
+      .atLocation('location1')
+      .asActor()
+      .withComponent('items:inventory', { items: ['item1'] })
+      .build();
 
     // Create item
-    const item = entityManager.createEntity('item1');
-    entityManager.addComponent(item, 'items:item', { name: 'Test Item' });
-    entityManager.addComponent(item, 'items:portable', {});
+    const item = new ModEntityBuilder('item1')
+      .withName('Test Item')
+      .withComponent('items:item', {})
+      .withComponent('items:portable', {})
+      .build();
 
     // Create open container at location
-    const chest = entityManager.createEntity('chest1');
-    entityManager.addComponent(chest, 'core:position', { locationId: location });
-    entityManager.addComponent(chest, 'items:container', {
-      contents: [],
-      capacity: { maxItems: 5, maxWeight: 100 },
-    });
-    entityManager.addComponent(chest, 'items:openable', { isOpen: true });
+    const chest = new ModEntityBuilder('chest1')
+      .withName('Chest')
+      .atLocation('location1')
+      .withComponent('items:container', {
+        contents: [],
+        capacity: { maxItems: 5, maxWeight: 100 },
+        isOpen: true,
+      })
+      .withComponent('items:openable', {})
+      .build();
 
-    // Get action discovery service
-    const actionDiscoveryService = container.resolve('IActionDiscoveryService');
-    const actions = await actionDiscoveryService.discoverActions(actor);
+    testFixture.reset([location, actor, item, chest]);
 
-    // Find put_in_container action
+    // Act: Get available actions
+    const actions = testFixture.discoverActions('actor1');
+
+    // Assert: Find put_in_container action
     const putInContainerActions = actions.filter(
       (a) => a.actionId === 'items:put_in_container'
     );
@@ -55,38 +73,42 @@ describe('Put In Container Action Discovery Integration Tests', () => {
 
     // Verify action has correct targets
     const action = putInContainerActions[0];
-    expect(action.primaryId).toBe(chest);
+    expect(action.primaryId).toBe('chest1');
     expect(action.secondaryId).toBe('item1');
   });
 
   it('should NOT discover put_in_container when actor has no items', async () => {
-    const { entityManager, container } = env;
-
-    // Create location
-    const location = entityManager.createEntity('location1');
-    entityManager.addComponent(location, 'core:location', {
-      name: 'Test Location',
-    });
+    // Arrange: Create location
+    const location = new ModEntityBuilder('location1')
+      .asRoom('Test Location')
+      .build();
 
     // Create actor with empty inventory
-    const actor = entityManager.createEntity('actor1');
-    entityManager.addComponent(actor, 'core:position', { locationId: location });
-    entityManager.addComponent(actor, 'items:inventory', { items: [] });
+    const actor = new ModEntityBuilder('actor1')
+      .withName('Test Actor')
+      .atLocation('location1')
+      .asActor()
+      .withComponent('items:inventory', { items: [] })
+      .build();
 
     // Create open container at location
-    const chest = entityManager.createEntity('chest1');
-    entityManager.addComponent(chest, 'core:position', { locationId: location });
-    entityManager.addComponent(chest, 'items:container', {
-      contents: [],
-      capacity: { maxItems: 5, maxWeight: 100 },
-    });
-    entityManager.addComponent(chest, 'items:openable', { isOpen: true });
+    const chest = new ModEntityBuilder('chest1')
+      .withName('Chest')
+      .atLocation('location1')
+      .withComponent('items:container', {
+        contents: [],
+        capacity: { maxItems: 5, maxWeight: 100 },
+        isOpen: true,
+      })
+      .withComponent('items:openable', {})
+      .build();
 
-    // Get action discovery service
-    const actionDiscoveryService = container.resolve('IActionDiscoveryService');
-    const actions = await actionDiscoveryService.discoverActions(actor);
+    testFixture.reset([location, actor, chest]);
 
-    // Verify no put_in_container actions
+    // Act: Get available actions
+    const actions = testFixture.discoverActions('actor1');
+
+    // Assert: Verify no put_in_container actions
     const putInContainerActions = actions.filter(
       (a) => a.actionId === 'items:put_in_container'
     );
@@ -95,37 +117,43 @@ describe('Put In Container Action Discovery Integration Tests', () => {
   });
 
   it('should NOT discover put_in_container when no open containers available', async () => {
-    const { entityManager, container } = env;
-
-    // Create location
-    const location = entityManager.createEntity('location1');
-    entityManager.addComponent(location, 'core:location', {
-      name: 'Test Location',
-    });
+    // Arrange: Create location
+    const location = new ModEntityBuilder('location1')
+      .asRoom('Test Location')
+      .build();
 
     // Create actor with inventory
-    const actor = entityManager.createEntity('actor1');
-    entityManager.addComponent(actor, 'core:position', { locationId: location });
-    entityManager.addComponent(actor, 'items:inventory', { items: ['item1'] });
+    const actor = new ModEntityBuilder('actor1')
+      .withName('Test Actor')
+      .atLocation('location1')
+      .asActor()
+      .withComponent('items:inventory', { items: ['item1'] })
+      .build();
 
     // Create item
-    const item = entityManager.createEntity('item1');
-    entityManager.addComponent(item, 'items:item', { name: 'Test Item' });
+    const item = new ModEntityBuilder('item1')
+      .withName('Test Item')
+      .withComponent('items:item', {})
+      .build();
 
     // Create closed container at location
-    const chest = entityManager.createEntity('chest1');
-    entityManager.addComponent(chest, 'core:position', { locationId: location });
-    entityManager.addComponent(chest, 'items:container', {
-      contents: [],
-      capacity: { maxItems: 5, maxWeight: 100 },
-    });
-    entityManager.addComponent(chest, 'items:openable', { isOpen: false });
+    const chest = new ModEntityBuilder('chest1')
+      .withName('Chest')
+      .atLocation('location1')
+      .withComponent('items:container', {
+        contents: [],
+        capacity: { maxItems: 5, maxWeight: 100 },
+        isOpen: false,
+      })
+      .withComponent('items:openable', {})
+      .build();
 
-    // Get action discovery service
-    const actionDiscoveryService = container.resolve('IActionDiscoveryService');
-    const actions = await actionDiscoveryService.discoverActions(actor);
+    testFixture.reset([location, actor, item, chest]);
 
-    // Verify no put_in_container actions
+    // Act: Get available actions
+    const actions = testFixture.discoverActions('actor1');
+
+    // Assert: Verify no put_in_container actions
     const putInContainerActions = actions.filter(
       (a) => a.actionId === 'items:put_in_container'
     );
@@ -134,52 +162,63 @@ describe('Put In Container Action Discovery Integration Tests', () => {
   });
 
   it('should discover multiple put_in_container actions with multiple items and containers', async () => {
-    const { entityManager, container } = env;
-
-    // Create location
-    const location = entityManager.createEntity('location1');
-    entityManager.addComponent(location, 'core:location', {
-      name: 'Test Location',
-    });
+    // Arrange: Create location
+    const location = new ModEntityBuilder('location1')
+      .asRoom('Test Location')
+      .build();
 
     // Create actor with multiple items
-    const actor = entityManager.createEntity('actor1');
-    entityManager.addComponent(actor, 'core:position', { locationId: location });
-    entityManager.addComponent(actor, 'items:inventory', {
-      items: ['item1', 'item2'],
-    });
+    const actor = new ModEntityBuilder('actor1')
+      .withName('Test Actor')
+      .atLocation('location1')
+      .asActor()
+      .withComponent('items:inventory', {
+        items: ['item1', 'item2'],
+      })
+      .build();
 
     // Create items
-    const item1 = entityManager.createEntity('item1');
-    entityManager.addComponent(item1, 'items:item', { name: 'Item One' });
-    entityManager.addComponent(item1, 'items:portable', {});
+    const item1 = new ModEntityBuilder('item1')
+      .withName('Item One')
+      .withComponent('items:item', {})
+      .withComponent('items:portable', {})
+      .build();
 
-    const item2 = entityManager.createEntity('item2');
-    entityManager.addComponent(item2, 'items:item', { name: 'Item Two' });
-    entityManager.addComponent(item2, 'items:portable', {});
+    const item2 = new ModEntityBuilder('item2')
+      .withName('Item Two')
+      .withComponent('items:item', {})
+      .withComponent('items:portable', {})
+      .build();
 
     // Create multiple open containers
-    const chest1 = entityManager.createEntity('chest1');
-    entityManager.addComponent(chest1, 'core:position', { locationId: location });
-    entityManager.addComponent(chest1, 'items:container', {
-      contents: [],
-      capacity: { maxItems: 5, maxWeight: 100 },
-    });
-    entityManager.addComponent(chest1, 'items:openable', { isOpen: true });
+    const chest1 = new ModEntityBuilder('chest1')
+      .withName('Chest 1')
+      .atLocation('location1')
+      .withComponent('items:container', {
+        contents: [],
+        capacity: { maxItems: 5, maxWeight: 100 },
+        isOpen: true,
+      })
+      .withComponent('items:openable', {})
+      .build();
 
-    const chest2 = entityManager.createEntity('chest2');
-    entityManager.addComponent(chest2, 'core:position', { locationId: location });
-    entityManager.addComponent(chest2, 'items:container', {
-      contents: [],
-      capacity: { maxItems: 5, maxWeight: 100 },
-    });
-    entityManager.addComponent(chest2, 'items:openable', { isOpen: true });
+    const chest2 = new ModEntityBuilder('chest2')
+      .withName('Chest 2')
+      .atLocation('location1')
+      .withComponent('items:container', {
+        contents: [],
+        capacity: { maxItems: 5, maxWeight: 100 },
+        isOpen: true,
+      })
+      .withComponent('items:openable', {})
+      .build();
 
-    // Get action discovery service
-    const actionDiscoveryService = container.resolve('IActionDiscoveryService');
-    const actions = await actionDiscoveryService.discoverActions(actor);
+    testFixture.reset([location, actor, item1, item2, chest1, chest2]);
 
-    // Find put_in_container actions
+    // Act: Get available actions
+    const actions = testFixture.discoverActions('actor1');
+
+    // Assert: Find put_in_container actions
     const putInContainerActions = actions.filter(
       (a) => a.actionId === 'items:put_in_container'
     );

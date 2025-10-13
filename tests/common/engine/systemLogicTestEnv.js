@@ -480,8 +480,8 @@ export function createBaseRuleEnvironment({
               return false;
             }
 
-            // Check if container is open
-            return hasContainerComponent.isOpen === true;
+            // Check if container is closed (not open)
+            return hasContainerComponent.isOpen === false;
           });
 
           const containerIds = containersAtLocation.map((container) => container.id);

@@ -25,6 +25,8 @@ const EVENT_ID = 'core:perceptible_event';
  * @property {string=} target_id            - Optional target entity.
  * @property {string[]=} involved_entities  - Optional array of other entity IDs.
  * @property {object=} contextual_data      - Optional contextual data object.
+ * @property {string[]=} contextual_data.recipientIds - Explicit recipients (mutually exclusive with excludedActorIds).
+ * @property {string[]=} contextual_data.excludedActorIds - Actors to exclude from broadcast (mutually exclusive with recipientIds).
  * @property {boolean=} log_entry           - If true, also log via AddPerceptionLogEntryHandler.
  */
 
@@ -104,6 +106,29 @@ class DispatchPerceptibleEventHandler {
       normalizedContextualData.recipientIds = [];
     }
 
+    if (!Object.prototype.hasOwnProperty.call(normalizedContextualData, 'excludedActorIds')) {
+      normalizedContextualData.excludedActorIds = [];
+    }
+
+    // Validate mutual exclusivity
+    const hasRecipients = Array.isArray(normalizedContextualData.recipientIds)
+      && normalizedContextualData.recipientIds.length > 0;
+    const hasExclusions = Array.isArray(normalizedContextualData.excludedActorIds)
+      && normalizedContextualData.excludedActorIds.length > 0;
+
+    if (hasRecipients && hasExclusions) {
+      safeDispatchError(
+        this.#dispatcher,
+        'DISPATCH_PERCEPTIBLE_EVENT: recipientIds and excludedActorIds are mutually exclusive',
+        {
+          recipientIds: normalizedContextualData.recipientIds,
+          excludedActorIds: normalizedContextualData.excludedActorIds
+        },
+        this.#logger
+      );
+      return;
+    }
+
     if (typeof location_id !== 'string' || !location_id.trim()) {
       safeDispatchError(
         this.#dispatcher,
@@ -174,6 +199,8 @@ class DispatchPerceptibleEventHandler {
             : [],
         },
         originating_actor_id: actor_id,
+        recipient_ids: normalizedContextualData.recipientIds,
+        excluded_actor_ids: normalizedContextualData.excludedActorIds,
       });
     }
   }

@@ -4,7 +4,7 @@
   "actionTracing": {
     "enabled": true,
     "tracedActions": [
-      "items:examine_item"
+      "items:open_container"
     ],
     "outputDirectory": "./traces/items",
     "verbosity": "verbose",

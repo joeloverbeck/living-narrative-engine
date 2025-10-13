@@ -743,4 +743,213 @@ describe('AddPerceptionLogEntryHandler', () => {
       );
     });
   });
+
+  // ── Actor Exclusion ────────────────────────────────────────────────────────
+  describe('execute – actor exclusion', () => {
+    const LOC = 'loc:exclusion_test';
+    const ACTOR_A = 'actor:alpha';
+    const ACTOR_B = 'actor:beta';
+    const ACTOR_C = 'actor:charlie';
+
+    /** @type {AddPerceptionLogEntryHandler} */ let h;
+
+    beforeEach(() => {
+      h = new AddPerceptionLogEntryHandler({
+        logger: log,
+        entityManager: em,
+        safeEventDispatcher: dispatcher,
+      });
+    });
+
+    test('should exclude specified actors from location broadcast', async () => {
+      const entry = makeEntry('exclude_alpha');
+      em.getEntitiesInLocation.mockReturnValue(new Set([ACTOR_A, ACTOR_B, ACTOR_C]));
+      em.hasComponent.mockReturnValue(true);
+      em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
+      em.addComponent.mockResolvedValue(true);
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        excluded_actor_ids: [ACTOR_A],
+      });
+
+      // Should query location entities
+      expect(em.getEntitiesInLocation).toHaveBeenCalledWith(LOC);
+
+      // Should only update ACTOR_B and ACTOR_C (not ACTOR_A)
+      expect(em.addComponent).toHaveBeenCalledTimes(2);
+      const updatedActors = em.addComponent.mock.calls.map(call => call[0]);
+      expect(updatedActors).toContain(ACTOR_B);
+      expect(updatedActors).toContain(ACTOR_C);
+      expect(updatedActors).not.toContain(ACTOR_A);
+    });
+
+    test('should handle empty excludedActorIds as no exclusion', async () => {
+      const entry = makeEntry('no_exclusion');
+      em.getEntitiesInLocation.mockReturnValue(new Set([ACTOR_A, ACTOR_B]));
+      em.hasComponent.mockReturnValue(true);
+      em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
+      em.addComponent.mockResolvedValue(true);
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        excluded_actor_ids: [],
+      });
+
+      // Should update all actors
+      expect(em.addComponent).toHaveBeenCalledTimes(2);
+      const updatedActors = em.addComponent.mock.calls.map(call => call[0]);
+      expect(updatedActors).toContain(ACTOR_A);
+      expect(updatedActors).toContain(ACTOR_B);
+    });
+
+    test('should handle all actors excluded gracefully', async () => {
+      const entry = makeEntry('all_excluded');
+      em.getEntitiesInLocation.mockReturnValue(new Set([ACTOR_A, ACTOR_B]));
+      em.hasComponent.mockReturnValue(true);
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        excluded_actor_ids: [ACTOR_A, ACTOR_B],
+      });
+
+      // No actors should be updated
+      expect(em.addComponent).not.toHaveBeenCalled();
+
+      // Should log appropriate debug message
+      expect(log.debug).toHaveBeenCalledWith(
+        expect.stringContaining('All actors excluded for')
+      );
+    });
+
+    test('should prioritize recipientIds over excludedActorIds', async () => {
+      const entry = makeEntry('priority_test');
+      em.hasComponent.mockReturnValue(true);
+      em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
+      em.addComponent.mockResolvedValue(true);
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        recipient_ids: [ACTOR_B],
+        excluded_actor_ids: [ACTOR_A],
+      });
+
+      // Should log warning about both parameters
+      expect(log.warn).toHaveBeenCalledWith(
+        expect.stringContaining('recipientIds and excludedActorIds both provided')
+      );
+
+      // Should NOT query location (using explicit recipients)
+      expect(em.getEntitiesInLocation).not.toHaveBeenCalled();
+
+      // Should only update ACTOR_B (from recipientIds, not exclusion)
+      expect(em.addComponent).toHaveBeenCalledTimes(1);
+      expect(em.addComponent).toHaveBeenCalledWith(
+        ACTOR_B,
+        PERCEPTION_LOG_COMPONENT_ID,
+        expect.anything()
+      );
+    });
+
+    test('should handle non-existent excluded actor IDs gracefully', async () => {
+      const entry = makeEntry('nonexistent_exclusion');
+      em.getEntitiesInLocation.mockReturnValue(new Set([ACTOR_A, ACTOR_B]));
+      em.hasComponent.mockReturnValue(true);
+      em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
+      em.addComponent.mockResolvedValue(true);
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        excluded_actor_ids: ['actor:nonexistent', 'actor:also_missing'],
+      });
+
+      // Should update all actual actors (exclusions ignored if not present)
+      expect(em.addComponent).toHaveBeenCalledTimes(2);
+      const updatedActors = em.addComponent.mock.calls.map(call => call[0]);
+      expect(updatedActors).toContain(ACTOR_A);
+      expect(updatedActors).toContain(ACTOR_B);
+    });
+
+    test('should filter excluded actors from location entities correctly', async () => {
+      const entry = makeEntry('filter_test');
+      const allActors = new Set([ACTOR_A, ACTOR_B, ACTOR_C, 'actor:delta', 'actor:echo']);
+      em.getEntitiesInLocation.mockReturnValue(allActors);
+      em.hasComponent.mockReturnValue(true);
+      em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
+      em.addComponent.mockResolvedValue(true);
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        excluded_actor_ids: [ACTOR_A, ACTOR_C],
+      });
+
+      // Should update exactly 3 actors (5 total - 2 excluded)
+      expect(em.addComponent).toHaveBeenCalledTimes(3);
+      const updatedActors = em.addComponent.mock.calls.map(call => call[0]);
+      expect(updatedActors).toContain(ACTOR_B);
+      expect(updatedActors).toContain('actor:delta');
+      expect(updatedActors).toContain('actor:echo');
+      expect(updatedActors).not.toContain(ACTOR_A);
+      expect(updatedActors).not.toContain(ACTOR_C);
+    });
+
+    test('should work with batch optimization when excluding actors', async () => {
+      const entry = makeEntry('batch_with_exclusion');
+      em.getEntitiesInLocation.mockReturnValue(new Set([ACTOR_A, ACTOR_B, ACTOR_C]));
+      em.hasComponent.mockReturnValue(true);
+      em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
+
+      em.batchAddComponentsOptimized = jest.fn().mockResolvedValue({
+        updateCount: 2,
+        errors: [],
+      });
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        excluded_actor_ids: [ACTOR_A],
+      });
+
+      // Should call batch method with only 2 specs (B and C, not A)
+      expect(em.batchAddComponentsOptimized).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ instanceId: ACTOR_B }),
+          expect.objectContaining({ instanceId: ACTOR_C }),
+        ]),
+        true
+      );
+
+      const specs = em.batchAddComponentsOptimized.mock.calls[0][0];
+      expect(specs).toHaveLength(2);
+      expect(specs.find(s => s.instanceId === ACTOR_A)).toBeUndefined();
+    });
+
+    test('should handle string excluded_actor_ids parameter', async () => {
+      const entry = makeEntry('string_exclusion');
+      em.getEntitiesInLocation.mockReturnValue(new Set([ACTOR_A, ACTOR_B]));
+      em.hasComponent.mockReturnValue(true);
+      em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
+      em.addComponent.mockResolvedValue(true);
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        excluded_actor_ids: `  ${ACTOR_A}  `,
+      });
+
+      // Should update only ACTOR_B
+      expect(em.addComponent).toHaveBeenCalledTimes(1);
+      expect(em.addComponent).toHaveBeenCalledWith(
+        ACTOR_B,
+        PERCEPTION_LOG_COMPONENT_ID,
+        expect.anything()
+      );
+    });
+  });
 });

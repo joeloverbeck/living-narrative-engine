@@ -544,7 +544,12 @@
       "Bash(NODE_ENV=test npm run test:unit -- --testPathPattern=\"MultiTargetResolutionStage|actionPipelineOrchestrator\" --no-coverage --silent)",
       "Bash(NODE_ENV=test npm run test:unit -- tests/unit/scopeDsl/engine.test.js --no-coverage --silent)",
       "Bash(NODE_ENV=test npm run test:unit -- tests/unit/scopeDsl/engine.test.js --silent)",
-      "Bash(NODE_ENV=test npm run test:unit -- tests/unit/scopeDsl/engine.test.js --no-coverage)"
+      "Bash(NODE_ENV=test npm run test:unit -- tests/unit/scopeDsl/engine.test.js --no-coverage)",
+      "Bash(git add:*)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/items/putInContainerRuleExecution.test.js tests/integration/mods/items/putInContainerActionDiscovery.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/items/putInContainerActionDiscovery.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/items/putInContainerRuleExecution.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npm run test:integration:*)"
     ],
     "deny": [],
     "ask": []

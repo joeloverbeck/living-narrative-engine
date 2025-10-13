@@ -114,7 +114,7 @@ describe('DispatchPerceptibleEventHandler', () => {
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'core:perceptible_event',
       expect.objectContaining({
-        contextualData: { recipientIds: [] },
+        contextualData: { recipientIds: [], excludedActorIds: [] },
       })
     );
   });
@@ -134,7 +134,7 @@ describe('DispatchPerceptibleEventHandler', () => {
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'core:perceptible_event',
       expect.objectContaining({
-        contextualData: { recipientIds: ['observer-1'] },
+        contextualData: { recipientIds: ['observer-1'], excludedActorIds: [] },
       })
     );
   });
@@ -239,5 +239,129 @@ describe('DispatchPerceptibleEventHandler', () => {
           addPerceptionLogEntryHandler: {},
         })
     ).toThrow('AddPerceptionLogEntryHandler');
+  });
+
+  describe('Actor Exclusion', () => {
+    test('should accept excludedActorIds in contextual_data', () => {
+      handler.execute(
+        {
+          location_id: 'loc:test',
+          description_text: 'Brief observation.',
+          perception_type: 'item_examined_brief',
+          actor_id: 'npc:a',
+          contextual_data: { excludedActorIds: ['npc:a'] },
+        },
+        {}
+      );
+
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:perceptible_event',
+        expect.objectContaining({
+          contextualData: { recipientIds: [], excludedActorIds: ['npc:a'] },
+        })
+      );
+    });
+
+    test('should normalize empty/missing excludedActorIds to empty array', () => {
+      handler.execute(
+        {
+          location_id: 'loc:test',
+          description_text: 'Test event.',
+          perception_type: 'test',
+          actor_id: 'npc:b',
+          contextual_data: {},
+        },
+        {}
+      );
+
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:perceptible_event',
+        expect.objectContaining({
+          contextualData: { recipientIds: [], excludedActorIds: [] },
+        })
+      );
+    });
+
+    test('should dispatch error when both recipientIds and excludedActorIds provided', () => {
+      handler.execute(
+        {
+          location_id: 'loc:test',
+          description_text: 'Test event.',
+          perception_type: 'test',
+          actor_id: 'npc:c',
+          contextual_data: {
+            recipientIds: ['npc:observer'],
+            excludedActorIds: ['npc:c'],
+          },
+        },
+        {}
+      );
+
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            'recipientIds and excludedActorIds are mutually exclusive'
+          ),
+          details: expect.objectContaining({
+            recipientIds: ['npc:observer'],
+            excludedActorIds: ['npc:c'],
+          }),
+        })
+      );
+
+      // Should not dispatch the event
+      expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);
+    });
+
+    test('should pass excludedActorIds to AddPerceptionLogEntryHandler when log_entry is true', () => {
+      handler.execute(
+        {
+          location_id: 'loc:test',
+          description_text: 'Brief observation.',
+          perception_type: 'item_examined_brief',
+          actor_id: 'npc:a',
+          contextual_data: { excludedActorIds: ['npc:a'] },
+          log_entry: true,
+        },
+        {}
+      );
+
+      expect(logHandler.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          location_id: 'loc:test',
+          recipient_ids: [],
+          excluded_actor_ids: ['npc:a'],
+        })
+      );
+    });
+
+    test('should prioritize recipientIds over excludedActorIds when both provided but error dispatched', () => {
+      handler.execute(
+        {
+          location_id: 'loc:test',
+          description_text: 'Test.',
+          perception_type: 'test',
+          actor_id: 'npc:a',
+          contextual_data: {
+            recipientIds: ['npc:b'],
+            excludedActorIds: ['npc:c'],
+          },
+          log_entry: true,
+        },
+        {}
+      );
+
+      // Error should be dispatched
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message: expect.stringContaining('mutually exclusive'),
+        })
+      );
+
+      // LogHandler should not be called
+      expect(logHandler.execute).not.toHaveBeenCalled();
+    });
   });
 });
