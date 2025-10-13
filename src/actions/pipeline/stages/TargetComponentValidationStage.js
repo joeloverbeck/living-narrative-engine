@@ -638,13 +638,7 @@ export class TargetComponentValidationStage extends PipelineStage {
       return;
     }
 
-    if (context.resolvedTargets) {
-      for (const role of roles) {
-        if (Object.prototype.hasOwnProperty.call(targetEntities, role)) {
-          context.resolvedTargets[role] = targetEntities[role];
-        }
-      }
-    }
+    let updatedPerActionMetadata = false;
 
     if (Array.isArray(context.actionsWithTargets)) {
       for (const actionWithTargets of context.actionsWithTargets) {
@@ -679,6 +673,21 @@ export class TargetComponentValidationStage extends PipelineStage {
               return allowedSet.has(ctx.entityId);
             }
           );
+        }
+
+        updatedPerActionMetadata = true;
+        break;
+      }
+    }
+
+    if (updatedPerActionMetadata) {
+      return;
+    }
+
+    if (context.resolvedTargets) {
+      for (const role of roles) {
+        if (Object.prototype.hasOwnProperty.call(targetEntities, role)) {
+          context.resolvedTargets[role] = targetEntities[role];
         }
       }
     }
