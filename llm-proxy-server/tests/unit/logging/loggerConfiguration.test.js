@@ -282,6 +282,59 @@ describe('LoggerConfiguration', () => {
 
       expect(config.isColorsEnabled()).toBe(false);
     });
+
+    it('treats missing TTY descriptors in production as non-TTY for coverage fallback', async () => {
+      process.env.NODE_ENV = 'production';
+
+      // Override the descriptors entirely to exercise the fallback branch that
+      // defaults to development behaviour unless explicitly in production.
+      // The afterEach hook restores the original descriptors from the saved
+      // metadata captured during setup.
+      Object.defineProperty(process.stdout, 'isTTY', {
+        value: undefined,
+        writable: true,
+        configurable: true,
+      });
+      Object.defineProperty(process.stderr, 'isTTY', {
+        value: undefined,
+        writable: true,
+        configurable: true,
+      });
+
+      const { getLoggerConfiguration } = await import(
+        '../../../src/logging/loggerConfiguration.js'
+      );
+      const config = getLoggerConfiguration();
+
+      expect(config.isColorsEnabled()).toBe(false);
+      expect(config.isDevelopment()).toBe(false);
+      expect(config.isProduction()).toBe(true);
+    });
+
+    it('defaults to development mode when NODE_ENV is missing alongside absent TTY descriptors', async () => {
+      process.env.NODE_ENV = '';
+      Object.defineProperty(process.stdout, 'isTTY', {
+        value: undefined,
+        writable: true,
+        configurable: true,
+      });
+      Object.defineProperty(process.stderr, 'isTTY', {
+        value: undefined,
+        writable: true,
+        configurable: true,
+      });
+
+      expect(process.env.NODE_ENV).toBe('');
+
+      const { getLoggerConfiguration } = await import(
+        '../../../src/logging/loggerConfiguration.js'
+      );
+      const config = getLoggerConfiguration();
+
+      expect(config.isColorsEnabled()).toBe(true);
+      expect(config.isDevelopment()).toBe(true);
+      expect(config.isProduction()).toBe(false);
+    });
   });
 
   describe('Boolean Environment Variable Parsing', () => {
