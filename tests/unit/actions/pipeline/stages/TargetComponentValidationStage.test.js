@@ -470,6 +470,110 @@ describe('TargetComponentValidationStage', () => {
         })
       );
     });
+
+    it('should not overwrite resolved targets for other actions when filtering required components', async () => {
+      const makeCandidate = (id, components = {}) => ({
+        id,
+        entity: {
+          id,
+          components,
+          hasComponent: (componentId) => Boolean(components[componentId])
+        }
+      });
+
+      const readableItemCandidates = [
+        makeCandidate('letter', {
+          'items:item': {},
+          'items:readable': {}
+        }),
+        makeCandidate('photo-1', {
+          'items:item': {}
+        }),
+        makeCandidate('photo-2', {
+          'items:item': {}
+        }),
+        makeCandidate('desk', {
+          'items:item': {}
+        })
+      ];
+
+      const clothingCandidates = [
+        makeCandidate('tshirt'),
+        makeCandidate('jeans'),
+        makeCandidate('boots'),
+        makeCandidate('belt')
+      ];
+
+      const readItemAction = {
+        id: 'items:read_item',
+        required_components: { primary: ['items:item', 'items:readable'] },
+        resolvedTargets: {
+          primary: readableItemCandidates
+        },
+        targetDefinitions: {
+          primary: { placeholder: 'item' }
+        }
+      };
+
+      const sharedClothingTargets = {
+        primary: clothingCandidates
+      };
+
+      const removeClothingAction = {
+        id: 'clothing:remove_clothing',
+        required_components: { actor: ['clothing:equipment'] },
+        resolvedTargets: sharedClothingTargets,
+        targetDefinitions: {
+          primary: { placeholder: 'target' }
+        }
+      };
+
+      const actor = {
+        id: 'actor-1',
+        components: {
+          'clothing:equipment': {}
+        },
+        hasComponent: (componentId) => componentId === 'clothing:equipment'
+      };
+
+      const actionsWithTargets = [
+        {
+          actionDef: readItemAction,
+          resolvedTargets: readItemAction.resolvedTargets,
+          targetDefinitions: readItemAction.targetDefinitions
+        },
+        {
+          actionDef: removeClothingAction,
+          resolvedTargets: sharedClothingTargets,
+          targetDefinitions: removeClothingAction.targetDefinitions
+        }
+      ];
+
+      mockValidator.validateTargetComponents.mockReturnValue({ valid: true });
+      mockRequiredValidator.validateTargetRequirements.mockReturnValue({ valid: true });
+
+      const result = await stage.executeInternal({
+        actor,
+        actionsWithTargets,
+        resolvedTargets: sharedClothingTargets,
+        trace: null
+      });
+
+      expect(result.success).toBe(true);
+
+      expect(readItemAction.resolvedTargets.primary.map((target) => target.id)).toEqual([
+        'letter'
+      ]);
+
+      const expectedClothingIds = ['tshirt', 'jeans', 'boots', 'belt'];
+
+      expect(removeClothingAction.resolvedTargets.primary.map((target) => target.id)).toEqual(
+        expectedClothingIds
+      );
+      expect(
+        actionsWithTargets[1].resolvedTargets.primary.map((target) => target.id)
+      ).toEqual(expectedClothingIds);
+    });
   });
 
   describe('action-aware tracing', () => {
