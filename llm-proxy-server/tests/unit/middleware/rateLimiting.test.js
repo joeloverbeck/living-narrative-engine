@@ -356,6 +356,15 @@ describe('Rate Limiting Middleware - Comprehensive Tests', () => {
 
       expect(generatedKey).toBe('global:unknown');
     });
+
+    test('handles completely invalid request objects defensively', () => {
+      const rateLimiter = createApiRateLimiter();
+
+      rateLimiter(undefined, res, next);
+
+      expect(rateLimiter.generatedKey).toBe('global:unknown');
+      expect(next).toHaveBeenCalled();
+    });
   });
 
   describe('isValidPublicIP - IP Validation', () => {
