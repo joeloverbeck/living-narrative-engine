@@ -6,276 +6,141 @@
 
 ## Goal
 
-Implement the `put_in_container` action to allow actors to store items from their inventory into open containers.
+Implement the `put_in_container` action so actors can move items from their inventory into open containers while respecting container capacity limits.
 
 ## Context
 
-Put in container completes the container interaction loop - actors can now store items for later retrieval. This enables storage gameplay and item organization.
+`take_from_container` already lets actors retrieve stored items. This ticket completes the loop by letting them stash belongings for later. The implementation needs to follow the current handler architecture (single directory, `BaseOperationHandler` subclasses, safe dispatching) and extend the Phase 4 data model that already exists in `data/mods/items`.
 
 ## Tasks
 
-### 1. Create PUT_IN_CONTAINER Handler
+### 1. Implement `PUT_IN_CONTAINER` operation handler
 
-Create `src/logic/operationHandlers/items/putInContainerHandler.js`:
+Create `src/logic/operationHandlers/putInContainerHandler.js` (note: handlers live directly under `operationHandlers/`, not an `items/` sub-folder) using the same structure as `takeFromContainerHandler`:
 
-```javascript
-import { assertNonBlankString, assertPresent } from '../../../utils/dependencyUtils.js';
+- Extend `BaseOperationHandler` and accept `{ logger, entityManager, safeEventDispatcher }` in the constructor. Validate dependencies the same way as other handlers (see `openContainerHandler`).
+- Validate parameters with `assertParamsObject`/`safeDispatchError`. Required fields: `actorEntity`, `containerEntity`, `itemEntity`, optional `result_variable` to expose the outcome to the rule context via `tryWriteContextVariable`.
+- Use `entityManager.getComponentData` to read:
+  - Actor inventory (`items:inventory`).
+  - Container state (`items:container`).
+- Ensure:
+  - Inventory exists and contains the item.
+  - Container exists, is open, and has a `contents` array.
+- Prepare updates using the optimized batch format already used by `takeFromContainerHandler` (i.e. `instanceId`, `componentTypeId`, `componentData`) and call `batchAddComponentsOptimized(updates, true)` to keep caches coherent.
+- Dispatch `items:item_put_in_container` via `safeEventDispatcher` and log success/failure using the logger obtained through `this.getLogger(executionContext)`.
+- Return `{ success: boolean, error?: string }`. When `result_variable` is provided write the result into the execution context with `tryWriteContextVariable`.
 
-/**
- * Puts an item from actor's inventory into a container
- */
-class PutInContainerHandler {
-  #entityManager;
-  #eventBus;
-  #logger;
+### 2. Implement `VALIDATE_CONTAINER_CAPACITY` handler
 
-  constructor({ entityManager, eventBus, logger }) {
-    assertPresent(entityManager, 'entityManager is required');
-    assertPresent(eventBus, 'eventBus is required');
-    assertPresent(logger, 'logger is required');
+Create `src/logic/operationHandlers/validateContainerCapacityHandler.js` mirroring the patterns from `validateInventoryCapacityHandler`:
 
-    this.#entityManager = entityManager;
-    this.#eventBus = eventBus;
-    this.#logger = logger;
-  }
+- Extend `BaseOperationHandler`, inject `{ logger, entityManager, safeEventDispatcher }`.
+- Parameters: `containerEntity`, `itemEntity`, `result_variable` (mandatory, the handler should always write a `{ valid: boolean, reason?: string }` object to the supplied variable).
+- Use `entityManager.getComponentData` for the container (`items:container`) and item weight (`items:weight`).
+- Fail fast if required components are missing, the container is closed, or `capacity` is undefined.
+- Validate both max item count (`contents.length`) and total weight (sum weight components for existing contents + new item). Reuse `tryWriteContextVariable` so the caller can branch on the result.
 
-  async execute(params, executionContext) {
-    const { actorEntity, containerEntity, itemEntity } = params;
+### 3. Provide JSON schemas for the new operations
 
-    assertNonBlankString(actorEntity, 'actorEntity', 'PUT_IN_CONTAINER', this.#logger);
-    assertNonBlankString(containerEntity, 'containerEntity', 'PUT_IN_CONTAINER', this.#logger);
-    assertNonBlankString(itemEntity, 'itemEntity', 'PUT_IN_CONTAINER', this.#logger);
+Add:
 
-    try {
-      const inventory = this.#entityManager.getComponent(actorEntity, 'items:inventory');
-      const container = this.#entityManager.getComponent(containerEntity, 'items:container');
+- `data/schemas/operations/putInContainer.schema.json`
+- `data/schemas/operations/validateContainerCapacity.schema.json`
 
-      if (!inventory) {
-        this.#logger.warn(`No inventory on actor`, { actorEntity });
-        return { success: false, error: 'no_inventory' };
-      }
+Both should extend `../base-operation.schema.json`, fix the `type` constant, and describe the required parameters noted above. Follow the conventions in `takeFromContainer.schema.json` and `validateInventoryCapacity.schema.json`.
 
-      if (!container) {
-        this.#logger.warn(`No container component`, { containerEntity });
-        return { success: false, error: 'not_a_container' };
-      }
+### 4. Wire handlers into DI and validation infrastructure
 
-      if (!container.isOpen) {
-        this.#logger.debug(`Container is closed`, { containerEntity });
-        return { success: false, error: 'container_closed' };
-      }
+Update the following to register the new operations alongside the existing items handlers:
 
-      if (!inventory.items.includes(itemEntity)) {
-        this.#logger.warn(`Item not in inventory`, { actorEntity, itemEntity });
-        return { success: false, error: 'item_not_in_inventory' };
-      }
+- `src/dependencyInjection/tokens/tokens-core.js`
+- `src/dependencyInjection/registrations/operationHandlerRegistrations.js`
+- `src/dependencyInjection/registrations/interpreterRegistrations.js`
+- `tests/common/mods/ModTestHandlerFactory.js`
+- `src/utils/preValidationUtils.js` (+ its accompanying unit tests) so the operations are recognised during rule pre-validation.
 
-      // Remove from inventory, add to container
-      const updates = [
-        {
-          entityId: actorEntity,
-          componentId: 'items:inventory',
-          data: {
-            ...inventory,
-            items: inventory.items.filter(id => id !== itemEntity)
-          }
-        },
-        {
-          entityId: containerEntity,
-          componentId: 'items:container',
-          data: {
-            ...container,
-            contents: [...container.contents, itemEntity]
-          }
-        }
-      ];
+### 5. Add `open_containers_at_location` scope
 
-      await this.#entityManager.batchAddComponentsOptimized(updates);
-
-      this.#eventBus.dispatch({
-        type: 'ITEM_PUT_IN_CONTAINER',
-        payload: { actorEntity, containerEntity, itemEntity }
-      });
-
-      this.#logger.debug(`Item put in container`, { actorEntity, containerEntity, itemEntity });
-      return { success: true };
-
-    } catch (error) {
-      this.#logger.error(`Put in container failed`, error, { actorEntity, containerEntity, itemEntity });
-      return { success: false, error: error.message };
-    }
-  }
-}
-
-export default PutInContainerHandler;
-```
-
-### 2. Create VALIDATE_CONTAINER_CAPACITY Handler
-
-Create `src/logic/operationHandlers/items/validateContainerCapacityHandler.js`:
-
-```javascript
-import { assertNonBlankString, assertPresent } from '../../../utils/dependencyUtils.js';
-
-/**
- * Validates if adding an item would exceed container capacity
- */
-class ValidateContainerCapacityHandler {
-  #entityManager;
-  #logger;
-
-  constructor({ entityManager, logger }) {
-    assertPresent(entityManager, 'entityManager is required');
-    assertPresent(logger, 'logger is required');
-
-    this.#entityManager = entityManager;
-    this.#logger = logger;
-  }
-
-  async execute(params, executionContext) {
-    const { containerEntity, itemEntity } = params;
-
-    assertNonBlankString(containerEntity, 'containerEntity', 'VALIDATE_CONTAINER_CAPACITY', this.#logger);
-    assertNonBlankString(itemEntity, 'itemEntity', 'VALIDATE_CONTAINER_CAPACITY', this.#logger);
-
-    try {
-      const container = this.#entityManager.getComponent(containerEntity, 'items:container');
-      const itemProps = this.#entityManager.getComponent(itemEntity, 'items:physical_properties');
-
-      if (!container) {
-        return { valid: false, reason: 'not_a_container' };
-      }
-
-      if (!itemProps) {
-        return { valid: false, reason: 'no_properties' };
-      }
-
-      // Check item count
-      if (container.contents.length >= container.capacity.maxItems) {
-        return { valid: false, reason: 'max_items_exceeded' };
-      }
-
-      // Calculate total weight
-      let currentWeight = 0;
-      for (const itemId of container.contents) {
-        const props = this.#entityManager.getComponent(itemId, 'items:physical_properties');
-        if (props) currentWeight += props.weight;
-      }
-
-      const newWeight = currentWeight + itemProps.weight;
-      if (newWeight > container.capacity.maxWeight) {
-        return { valid: false, reason: 'max_weight_exceeded' };
-      }
-
-      return { valid: true };
-
-    } catch (error) {
-      this.#logger.error(`Container capacity validation failed`, error, { containerEntity, itemEntity });
-      return { valid: false, reason: error.message };
-    }
-  }
-}
-
-export default ValidateContainerCapacityHandler;
-```
-
-### 3. Create open_containers_at_location Scope
-
-Create `data/mods/items/scopes/open_containers_at_location.scope`:
+Create `data/mods/items/scopes/open_containers_at_location.scope` that filters the existing `items:openable_containers_at_location` scope for containers where `items:container.isOpen === true`:
 
 ```
-items:openable_containers_at_location[{"==": [{"var": "entity.items:container.isOpen"}, true]}]
+items:open_containers_at_location := items:openable_containers_at_location[{"==": [{"var": "entity.components.items:container.isOpen"}, true]}]
 ```
 
-**Description:** Returns only open containers at the actor's location by filtering openable containers for isOpen = true.
+### 6. Define the `put_in_container` action
 
-### 4. Create put_in_container Action
-
-Create `data/mods/items/actions/put_in_container.action.json`:
+Create `data/mods/items/actions/put_in_container.action.json` using the current action schema conventions:
 
 ```json
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
   "id": "items:put_in_container",
   "name": "Put In Container",
-  "description": "Put an item from your inventory into an open container",
+  "description": "Store an item from your inventory inside an open container",
   "generateCombinations": true,
+  "required_components": {
+    "actor": ["items:inventory"]
+  },
   "targets": {
     "primary": {
       "scope": "items:open_containers_at_location",
       "placeholder": "container",
-      "description": "Container to put item in",
-      "contextFrom": "actor"
+      "description": "Container to store the item in"
     },
     "secondary": {
       "scope": "items:actor_inventory_items",
       "placeholder": "item",
-      "description": "Item to put in container",
-      "contextFrom": "primary"
+      "description": "Inventory item to store"
     }
   },
-  "conditions": [
-    {
-      "type": "COMPONENT_PROPERTY_EQUALS",
-      "entityRef": "primary",
-      "componentId": "items:container",
-      "property": "isOpen",
-      "value": true
-    }
-  ],
-  "formatTemplate": "Put {secondary.name} in {primary.name}"
+  "template": "Put {secondary.name} in {primary.name}"
 }
 ```
 
-### 5. Create Condition and Rule
+### 7. Add condition and rule
 
-Create condition and rule files following existing patterns, with capacity validation similar to give_item.
+- Condition: `data/mods/items/conditions/event-is-action-put-in-container.condition.json` copying the structure of the other `event-is-action-*` conditions.
+- Rule: `data/mods/items/rules/handle_put_in_container.rule.json` that:
+  1. Calls `VALIDATE_CONTAINER_CAPACITY` with `result_variable: "capacityCheck"`.
+  2. Uses an `IF` block on `context.capacityCheck.valid === false` to log failure (`DISPATCH_PERCEPTIBLE_EVENT` with `perception_type: "put_in_container_failed"`) and end the turn.
+  3. In the success branch:
+     - Executes `PUT_IN_CONTAINER` (store the result if you need to check it later).
+     - Queries actor position and resolves actor/container/item names for narrative text (reuse `QUERY_COMPONENT`, `GET_NAME`, and `SET_VARIABLE`).
+     - Dispatches a perceptible event with `perception_type: "item_put_in_container"` and ends the turn successfully.
+  4. Include contextual data such as failure reasons in the logged event, matching the style used in `handle_take_from_container.rule.json`.
 
-### 6. Create Event
+### 8. Define events and perception types
 
-Create `data/mods/items/events/item_put_in_container.event.json` following the pattern of other item events.
+- Create `data/mods/items/events/item_put_in_container.event.json` mirroring `item_taken_from_container.event.json`.
+- Update `data/mods/core/events/perceptible_event.event.json` to add the new `perceptionType` enum values `"put_in_container_failed"` and `"item_put_in_container"`.
 
-### 7. Update Mod Manifest
+### 9. Update mod manifest
 
-Add all new components to manifest.
+Append the new files to the appropriate arrays in `data/mods/items/mod-manifest.json` (actions, rules, conditions, scopes, events).
 
-### 8. Register Handlers in DI Container
+### 10. Tests
 
-Update `src/dependencyInjection/containerConfig.js`:
+Add or extend integration tests under `tests/integration/mods/items/` to cover:
 
-```javascript
-import PutInContainerHandler from '../logic/operationHandlers/items/putInContainerHandler.js';
-import ValidateContainerCapacityHandler from '../logic/operationHandlers/items/validateContainerCapacityHandler.js';
+- Successful storage of an item in an open container (item removed from inventory, added to contents, perception logged, turn ends).
+- Attempting to store an item when the container is closed.
+- Capacity validation failures (weight and item count).
+- Event dispatch checks (`item_put_in_container`, `put_in_container_failed`).
 
-container.register('PUT_IN_CONTAINER', PutInContainerHandler);
-container.register('VALIDATE_CONTAINER_CAPACITY', ValidateContainerCapacityHandler);
-```
-
-### 9. Create Tests
-
-Create comprehensive tests covering:
-- Put item in open container
-- Closed container prevents putting
-- Container capacity validation (weight and count)
-- Item removed from inventory
-- Item added to container contents
-- Perception logging
-- Turn ending
+Reuse the existing test bed utilities introduced for `take_from_container` where possible.
 
 ## Validation
 
-- [ ] Both handlers follow standalone class pattern with DI
-- [ ] Scope correctly filters for open containers
-- [ ] Item removed from inventory
-- [ ] Item added to container contents
-- [ ] Closed containers prevent putting
-- [ ] Container capacity validated (weight and count)
-- [ ] Perception logs created
-- [ ] Turn ends after successful put
-- [ ] Tests cover all scenarios
-- [ ] All tests pass
-- [ ] Mod manifest updated
-- [ ] Handlers registered in DI container
+- [ ] Handlers extend `BaseOperationHandler` and use `safeEventDispatcher`
+- [ ] `PUT_IN_CONTAINER` returns success/failure and writes to the result variable when provided
+- [ ] `VALIDATE_CONTAINER_CAPACITY` checks both weight and max item limits
+- [ ] Scope only surfaces open containers in the actor's location
+- [ ] Action definition follows current schema (`template`, `required_components`, `generateCombinations`)
+- [ ] Rule covers success and failure paths, dispatching the correct perceptible events
+- [ ] New perception types added to `core:perceptible_event`
+- [ ] Mod manifest lists all new resources
+- [ ] Operation schemas, DI registrations, and pre-validation utilities recognise the new operations
+- [ ] Integration tests cover the scenarios above and pass locally
 
 ## Dependencies
 
