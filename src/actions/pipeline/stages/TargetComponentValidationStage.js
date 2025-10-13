@@ -252,11 +252,15 @@ export class TargetComponentValidationStage extends PipelineStage {
       let targetEntities = this.#extractTargetEntities(actionDef, context);
 
       // Remove any resolved targets that don't satisfy required component constraints
-      targetEntities = this.#filterTargetsByRequiredComponents(
+      const {
+        targetEntities: filteredTargetEntities,
+        removalReasons,
+      } = this.#filterTargetsByRequiredComponents(
         actionDef,
         context,
         targetEntities
       );
+      targetEntities = filteredTargetEntities;
 
       // Validate forbidden target components (apply strictness level)
       let forbiddenValidation = this.#targetComponentValidator.validateTargetComponents(
@@ -278,10 +282,17 @@ export class TargetComponentValidationStage extends PipelineStage {
       }
 
       // Validate required components on targets after filtering
-      const requiredValidation = this.#targetRequiredComponentsValidator.validateTargetRequirements(
+      let requiredValidation = this.#targetRequiredComponentsValidator.validateTargetRequirements(
         actionDef,
         targetEntities
       );
+
+      if (!requiredValidation.valid && removalReasons.length > 0) {
+        requiredValidation = {
+          ...requiredValidation,
+          reason: removalReasons[0],
+        };
+      }
 
       // Combine validation results
       const validation = forbiddenValidation.valid && requiredValidation.valid
@@ -338,7 +349,7 @@ export class TargetComponentValidationStage extends PipelineStage {
    */
   #filterTargetsByRequiredComponents(actionDef, context, targetEntities) {
     if (!targetEntities || !actionDef?.required_components) {
-      return targetEntities;
+      return { targetEntities, removalReasons: [] };
     }
 
     const requirements = actionDef.required_components;
@@ -355,12 +366,14 @@ export class TargetComponentValidationStage extends PipelineStage {
     }
 
     if (rolesToCheck.length === 0) {
-      return targetEntities;
+      return { targetEntities, removalReasons: [] };
     }
 
     const placeholderSource = actionDef.targetDefinitions || actionDef.targets || {};
     const placeholderEntityMap = new Map();
     let targetsFiltered = false;
+    const removalReasons = [];
+    const roleRemovalReasons = new Map();
 
     for (const role of rolesToCheck) {
       const existing = targetEntities[role];
@@ -370,21 +383,45 @@ export class TargetComponentValidationStage extends PipelineStage {
 
       const candidates = Array.isArray(existing) ? existing : [existing];
       const requiredComponents = requirements[role] || [];
-      const validCandidates = candidates.filter((candidate) =>
-        this.#candidateHasRequiredComponents(candidate, requiredComponents)
-      );
+      const validCandidates = [];
+
+      for (const candidate of candidates) {
+        const { valid, reason } = this.#candidateHasRequiredComponents(
+          candidate,
+          requiredComponents,
+          role
+        );
+
+        if (valid) {
+          validCandidates.push(candidate);
+        } else {
+          if (reason) {
+            roleRemovalReasons.set(role, reason);
+            this.#logger.debug(reason);
+          }
+        }
+      }
 
       if (validCandidates.length !== candidates.length) {
         targetsFiltered = true;
       }
 
+      const hasValidCandidates = validCandidates.length > 0;
+
       const normalizedValue = Array.isArray(existing)
         ? validCandidates
-        : validCandidates.length > 0
+        : hasValidCandidates
           ? validCandidates[0]
           : null;
 
       targetEntities[role] = normalizedValue;
+
+      if (!hasValidCandidates) {
+        const recordedReason =
+          roleRemovalReasons.get(role) ||
+          `No ${role} target available for validation`;
+        removalReasons.push(recordedReason);
+      }
 
       if (actionDef.resolvedTargets) {
         if (role === 'target') {
@@ -424,7 +461,7 @@ export class TargetComponentValidationStage extends PipelineStage {
       );
     }
 
-    return targetEntities;
+    return { targetEntities, removalReasons };
   }
 
   /**
@@ -531,28 +568,34 @@ export class TargetComponentValidationStage extends PipelineStage {
    * @param {string[]} requiredComponents - Required component identifiers.
    * @returns {boolean} True if candidate has all required components.
    */
-  #candidateHasRequiredComponents(candidate, requiredComponents) {
-    if (!candidate || !Array.isArray(requiredComponents) || requiredComponents.length === 0) {
-      return true;
+  #candidateHasRequiredComponents(candidate, requiredComponents, role) {
+    if (!Array.isArray(requiredComponents) || requiredComponents.length === 0) {
+      return { valid: true };
+    }
+
+    if (!candidate) {
+      return { valid: false, reason: `No ${role} target available for validation` };
     }
 
     const targetEntity = candidate.entity || candidate;
     if (!targetEntity) {
-      return false;
+      return { valid: false, reason: `No ${role} target available for validation` };
     }
 
-    return requiredComponents.every((componentId) => {
+    for (const componentId of requiredComponents) {
       if (!componentId) {
-        return true;
+        continue;
       }
 
       if (targetEntity.components && targetEntity.components[componentId]) {
-        return true;
+        continue;
       }
 
       if (typeof targetEntity.hasComponent === 'function') {
         try {
-          return targetEntity.hasComponent(componentId);
+          if (targetEntity.hasComponent(componentId)) {
+            continue;
+          }
         } catch (error) {
           this.#logger.debug(
             `Error checking hasComponent('${componentId}') on ${targetEntity.id || 'unknown'}: ${error.message}`
@@ -560,8 +603,17 @@ export class TargetComponentValidationStage extends PipelineStage {
         }
       }
 
-      return false;
-    });
+      const entityId = targetEntity.id || 'unknown';
+      this.#logger.debug(
+        `Target entity ${entityId} missing required component: ${componentId}`
+      );
+      return {
+        valid: false,
+        reason: `Target (${role}) must have component: ${componentId}`,
+      };
+    }
+
+    return { valid: true };
   }
 
   /**
