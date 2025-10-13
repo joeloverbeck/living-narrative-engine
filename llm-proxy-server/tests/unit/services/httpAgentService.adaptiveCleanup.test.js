@@ -787,6 +787,38 @@ describe('HttpAgentService - Adaptive Cleanup', () => {
       // some might have fallen outside the window
       expect(enhancedStats.requestRate).toBeGreaterThanOrEqual(0);
     });
+
+    it('filters out expired request timestamps when calculating request rates', () => {
+      const baseTime = new Date('2025-02-01T00:00:00Z');
+      jest.setSystemTime(baseTime);
+
+      httpAgentService = new HttpAgentService(mockLogger);
+
+      // Record requests that will fall outside of the one minute tracking window
+      httpAgentService.getAgent('https://api.example.com');
+      jest.setSystemTime(new Date(baseTime.getTime() + 30_000));
+      httpAgentService.getAgent('https://api.example.com');
+
+      // Advance beyond the window to ensure the existing timestamps are stale
+      jest.setSystemTime(new Date(baseTime.getTime() + 120_000));
+
+      const staleStats = httpAgentService.getEnhancedStats();
+      expect(staleStats.requestRate).toBe(0);
+
+      // Add a fresh request that should now be counted and trigger the tracker pruning
+      httpAgentService.getAgent('https://api.example.com');
+
+      const statsBeforeCleanup = httpAgentService.getEnhancedStats();
+      expect(statsBeforeCleanup.requestRate).toBe(1);
+
+      httpAgentService.forceAdaptiveCleanup();
+
+      const statsAfterCleanup = httpAgentService.getEnhancedStats();
+      expect(statsAfterCleanup.requestRate).toBe(1);
+      expect(statsAfterCleanup.adaptiveCleanup.cleanupOperations).toBeGreaterThan(
+        0
+      );
+    });
   });
 
   describe('Edge cases and error handling', () => {
