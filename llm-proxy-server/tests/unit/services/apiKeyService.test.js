@@ -119,6 +119,26 @@ describe('ApiKeyService', () => {
       expect(fsReader.readFile).not.toHaveBeenCalled();
     });
 
+    test('normalizes whitespace around env var configuration and value', async () => {
+      process.env.TRIMMED_ENV_KEY = '   env-secret-value   ';
+
+      const result = await service.getApiKey(
+        {
+          apiType: 'openai',
+          apiKeyEnvVar: '  TRIMMED_ENV_KEY  ',
+          apiKeyFileName: 'not-used.txt',
+        },
+        'llm-trim-env'
+      );
+
+      expect(result).toEqual({
+        apiKey: 'env-secret-value',
+        errorDetails: null,
+        source: "environment variable 'TRIMMED_ENV_KEY'",
+      });
+      expect(fsReader.readFile).not.toHaveBeenCalled();
+    });
+
     test('falls back to file when env var missing', async () => {
       fsReader.readFile.mockResolvedValue('filekey\n');
       const result = await service.getApiKey(
@@ -138,6 +158,30 @@ describe('ApiKeyService', () => {
         apiKey: 'filekey',
         errorDetails: null,
         source: "file 'api.txt'",
+      });
+    });
+
+    test('trims file configuration when env var contains only whitespace', async () => {
+      process.env.WHITESPACE_ENV = '    ';
+      fsReader.readFile.mockResolvedValue('  file-secret   ');
+
+      const result = await service.getApiKey(
+        {
+          apiType: 'openai',
+          apiKeyEnvVar: '  WHITESPACE_ENV  ',
+          apiKeyFileName: '  spaced.key  ',
+        },
+        'llm-trim-file'
+      );
+
+      expect(fsReader.readFile).toHaveBeenCalledWith(
+        path.join('/root', 'spaced.key'),
+        'utf-8'
+      );
+      expect(result).toEqual({
+        apiKey: 'file-secret',
+        errorDetails: null,
+        source: "file 'spaced.key'",
       });
     });
 
