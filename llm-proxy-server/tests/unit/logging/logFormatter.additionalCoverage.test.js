@@ -135,4 +135,19 @@ describe('LogFormatter additional coverage', () => {
       '                    ↳ Context: "single-line-context"'
     );
   });
+
+  it('treats primitive context values as additional detail entries', async () => {
+    const formatter = await setupFormatter({ isIconsEnabled: () => true });
+
+    const result = formatter.formatMessage(
+      'debug',
+      'primitive context formatting',
+      'raw-context-value'
+    );
+
+    expect(result.contextLines).toHaveLength(1);
+    expect(result.contextLines[0]).toBe(
+      '                    ↳ Details[0]: raw-context-value'
+    );
+  });
 });
