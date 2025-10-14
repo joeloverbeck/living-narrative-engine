@@ -757,6 +757,55 @@ describe('ApiKeyService', () => {
         expect.stringContaining('normalized')
       );
     });
+
+    test('_readApiKeyFromFile normalizes directory traversal attempts before reading and caching', async () => {
+      appConfig.isCacheEnabled.mockReturnValue(true);
+      appConfig.getApiKeyCacheTtl.mockReturnValue(5000);
+      cacheService.get.mockReturnValue(undefined);
+      fsReader.readFile.mockResolvedValue('trailing-space-key   ');
+
+      const result = await service._readApiKeyFromFile(
+        '../../secrets/api.key',
+        '/var/keys',
+        'llm-sanitized'
+      );
+
+      const sanitizedPath = path.join('/var/keys', 'api.key');
+      expect(fsReader.readFile).toHaveBeenCalledWith(
+        sanitizedPath,
+        'utf-8'
+      );
+      expect(cacheService.set).toHaveBeenCalledWith(
+        `api_key:file:${sanitizedPath}`,
+        'trailing-space-key',
+        5000
+      );
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining("was normalized to 'api.key'")
+      );
+      expect(result).toEqual({ key: 'trailing-space-key', error: null });
+    });
+
+    test('_readApiKeyFromFile reports sanitized attemptedFile paths on read errors', async () => {
+      const accessError = new Error('permission denied');
+      accessError.code = 'EACCES';
+      fsReader.readFile.mockRejectedValue(accessError);
+
+      const result = await service._readApiKeyFromFile(
+        '../nested/secret.key',
+        '/secure/configs',
+        'llm-error'
+      );
+
+      expect(result.error.stage).toBe('api_key_file_not_found_or_unreadable');
+      expect(result.error).toEqual(
+        expect.objectContaining({
+          details: expect.objectContaining({
+            attemptedFile: path.join('/secure/configs', 'secret.key'),
+          }),
+        })
+      );
+    });
   });
 
   describe('Error Handling', () => {
