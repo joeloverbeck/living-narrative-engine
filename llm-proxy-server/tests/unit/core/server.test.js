@@ -1048,7 +1048,7 @@ describe('Server - Comprehensive Tests', () => {
       await loadServer();
 
       expect(consoleLoggerInstance.warn).toHaveBeenCalledWith(
-        'LLM Proxy Server: CORS not configured in development mode. To enable browser access, set PROXY_ALLOWED_ORIGIN environment variable. Example: PROXY_ALLOWED_ORIGIN="http://localhost:8080,http://127.0.0.1:8080"'
+        'LLM Proxy Server: CORS not configured in development mode (current environment: development). To enable browser access, set PROXY_ALLOWED_ORIGIN environment variable. Example: PROXY_ALLOWED_ORIGIN="http://localhost:8080,http://127.0.0.1:8080"'
       );
     });
 
