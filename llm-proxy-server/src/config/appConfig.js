@@ -240,7 +240,11 @@ class AppConfigService {
 
     // NODE_ENV
     const nodeEnvValue = process.env.NODE_ENV;
-    this._nodeEnv = nodeEnvValue || 'development';
+    const normalizedNodeEnv =
+      typeof nodeEnvValue === 'string' && nodeEnvValue.trim() !== ''
+        ? nodeEnvValue.trim().toLowerCase()
+        : 'development';
+    this._nodeEnv = normalizedNodeEnv;
     if (nodeEnvValue !== undefined) {
       this._logger.debug(
         `AppConfigService: NODE_ENV found in environment: '${nodeEnvValue}'. Effective value: '${this._nodeEnv}'.`
