@@ -14,13 +14,17 @@ import dropItemRule from '../../../../data/mods/items/rules/handle_drop_item.rul
 import pickUpItemRule from '../../../../data/mods/items/rules/handle_pick_up_item.rule.json' assert { type: 'json' };
 import openContainerRule from '../../../../data/mods/items/rules/handle_open_container.rule.json' assert { type: 'json' };
 import takeFromContainerRule from '../../../../data/mods/items/rules/handle_take_from_container.rule.json' assert { type: 'json' };
+import examineItemRule from '../../../../data/mods/items/rules/handle_examine_item.rule.json' assert { type: 'json' };
+import putInContainerRule from '../../../../data/mods/items/rules/handle_put_in_container.rule.json' assert { type: 'json' };
 import eventIsActionGiveItem from '../../../../data/mods/items/conditions/event-is-action-give-item.condition.json' assert { type: 'json' };
 import eventIsActionDropItem from '../../../../data/mods/items/conditions/event-is-action-drop-item.condition.json' assert { type: 'json' };
 import eventIsActionPickUpItem from '../../../../data/mods/items/conditions/event-is-action-pick-up-item.condition.json' assert { type: 'json' };
 import eventIsActionOpenContainer from '../../../../data/mods/items/conditions/event-is-action-open-container.condition.json' assert { type: 'json' };
 import eventIsActionTakeFromContainer from '../../../../data/mods/items/conditions/event-is-action-take-from-container.condition.json' assert { type: 'json' };
+import eventIsActionExamineItem from '../../../../data/mods/items/conditions/event-is-action-examine-item.condition.json' assert { type: 'json' };
+import eventIsActionPutInContainer from '../../../../data/mods/items/conditions/event-is-action-put-in-container.condition.json' assert { type: 'json' };
 
-describe('Items - Full System Integration (Phase 1+2+3)', () => {
+describe('Items - Full System Integration (Phase 1-4)', () => {
   let fixtures;
 
   beforeEach(async () => {
@@ -54,6 +58,18 @@ describe('Items - Full System Integration (Phase 1+2+3)', () => {
         'items:take_from_container',
         takeFromContainerRule,
         eventIsActionTakeFromContainer
+      ),
+      examine: await ModTestFixture.forAction(
+        'items',
+        'items:examine_item',
+        examineItemRule,
+        eventIsActionExamineItem
+      ),
+      put: await ModTestFixture.forAction(
+        'items',
+        'items:put_in_container',
+        putInContainerRule,
+        eventIsActionPutInContainer
       ),
     };
   });
@@ -127,6 +143,8 @@ describe('Items - Full System Integration (Phase 1+2+3)', () => {
       expect(currentBook.components['items:weight']).toBeDefined();
       expect(currentBook.components['items:weight'].weight).toBe(2.0);
 
+      currentDrawer = fixtures.take.entityManager.getEntityInstance('desk-drawer');
+
       // Give book to actor2
       currentActor1 = fixtures.take.entityManager.getEntityInstance('actor-1');
       currentActor2 = fixtures.take.entityManager.getEntityInstance('actor-2');
@@ -140,6 +158,79 @@ describe('Items - Full System Integration (Phase 1+2+3)', () => {
 
       // Verify book entity integrity maintained
       currentBook = fixtures.give.entityManager.getEntityInstance('book-1');
+      expect(currentBook.components['items:item']).toBeDefined();
+      expect(currentBook.components['items:portable']).toBeDefined();
+      expect(currentBook.components['items:weight'].weight).toBe(2.0);
+
+      // Phase 4: Actor 2 examines the book before returning it
+      currentActor1 = fixtures.give.entityManager.getEntityInstance('actor-1');
+      currentActor2 = fixtures.give.entityManager.getEntityInstance('actor-2');
+      currentBook = fixtures.give.entityManager.getEntityInstance('book-1');
+
+      fixtures.examine.reset([
+        room,
+        currentActor1,
+        currentActor2,
+        currentDrawer,
+        currentBook,
+      ]);
+
+      await fixtures.examine.executeAction('actor-2', 'book-1');
+
+      const examinePerceptible = fixtures.examine.events.find(
+        (event) =>
+          event.eventType === 'core:perceptible_event' &&
+          event.payload.perceptionType === 'item_examined'
+      );
+      expect(examinePerceptible).toBeDefined();
+      expect(examinePerceptible.payload.actorId).toBe('actor-2');
+      expect(examinePerceptible.payload.targetId).toBe('book-1');
+
+      const examineTurnEnded = fixtures.examine.events.find(
+        (event) => event.eventType === 'core:turn_ended'
+      );
+      expect(examineTurnEnded).toBeDefined();
+      expect(examineTurnEnded.payload.success).toBe(true);
+
+      // Actor 2 returns the book to the drawer
+      currentActor1 = fixtures.examine.entityManager.getEntityInstance('actor-1');
+      currentActor2 = fixtures.examine.entityManager.getEntityInstance('actor-2');
+      currentBook = fixtures.examine.entityManager.getEntityInstance('book-1');
+      currentDrawer = fixtures.examine.entityManager.getEntityInstance('desk-drawer');
+
+      fixtures.put.reset([
+        room,
+        currentActor1,
+        currentActor2,
+        currentDrawer,
+        currentBook,
+      ]);
+
+      await fixtures.put.executeAction('actor-2', 'desk-drawer', {
+        additionalPayload: { secondaryId: 'book-1' },
+      });
+
+      const putRuleEvent = fixtures.put.events.find(
+        (event) => event.eventType === 'items:item_put_in_container'
+      );
+      expect(putRuleEvent).toBeDefined();
+      expect(putRuleEvent.payload.itemEntity).toBe('book-1');
+      expect(putRuleEvent.payload.containerEntity).toBe('desk-drawer');
+
+      const putTurnEnded = fixtures.put.events.find(
+        (event) => event.eventType === 'core:turn_ended'
+      );
+      expect(putTurnEnded).toBeDefined();
+      expect(putTurnEnded.payload.success).toBe(true);
+
+      const drawerAfterPut = fixtures.put.entityManager.getEntityInstance('desk-drawer');
+      expect(drawerAfterPut.components['items:container'].contents).toContain('book-1');
+      expect(drawerAfterPut.components['items:container'].isOpen).toBe(true);
+
+      const actor2AfterPut = fixtures.put.entityManager.getEntityInstance('actor-2');
+      expect(actor2AfterPut.components['items:inventory'].items).not.toContain('book-1');
+
+      currentBook = fixtures.put.entityManager.getEntityInstance('book-1');
       expect(currentBook.components['items:item']).toBeDefined();
       expect(currentBook.components['items:portable']).toBeDefined();
       expect(currentBook.components['items:weight'].weight).toBe(2.0);

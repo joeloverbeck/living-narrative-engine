@@ -8,6 +8,7 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import AddPerceptionLogEntryHandler from '../../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import putInContainerRule from '../../../../data/mods/items/rules/handle_put_in_container.rule.json' assert { type: 'json' };
 import eventIsActionPutInContainer from '../../../../data/mods/items/conditions/event-is-action-put-in-container.condition.json' assert { type: 'json' };
 
@@ -44,6 +45,7 @@ function setupPutInContainerScenario(
       items: actorInventory,
       capacity: { maxWeight: 50, maxItems: 10 },
     })
+    .withComponent('core:perception_log', { maxEntries: 10, logEntries: [] })
     .build();
 
   const container = new ModEntityBuilder(containerId)
@@ -261,6 +263,12 @@ describe('items:put_in_container action integration', () => {
       (e) => e.payload.perceptionType === 'put_in_container_failed'
     );
     expect(failedEvent).toBeDefined();
+
+    const turnEndedEvent = testFixture.events.find(
+      (e) => e.eventType === 'core:turn_ended'
+    );
+    expect(turnEndedEvent).toBeDefined();
+    expect(turnEndedEvent.payload.success).toBe(false);
   });
 
   it('should handle multiple sequential put_in_container actions', async () => {
@@ -283,23 +291,59 @@ describe('items:put_in_container action integration', () => {
     ]);
 
     // Act: Put all items in container sequentially
+    const firstActionStart = testFixture.events.length;
     await testFixture.executeAction('test:actor1', 'toolbox-1', {
       additionalPayload: {
         secondaryId: 'item1',
       },
     });
 
+    const firstActionEvents = testFixture.events.slice(firstActionStart);
+    const firstTurnEnded = firstActionEvents.find(
+      (event) => event.eventType === 'core:turn_ended'
+    );
+    expect(firstTurnEnded).toBeDefined();
+    expect(firstTurnEnded.payload.success).toBe(true);
+    const firstPutEvent = firstActionEvents.find(
+      (event) => event.eventType === 'items:item_put_in_container'
+    );
+    expect(firstPutEvent?.payload.itemEntity).toBe('item1');
+
+    const secondActionStart = testFixture.events.length;
     await testFixture.executeAction('test:actor1', 'toolbox-1', {
       additionalPayload: {
         secondaryId: 'item2',
       },
     });
 
+    const secondActionEvents = testFixture.events.slice(secondActionStart);
+    const secondTurnEnded = secondActionEvents.find(
+      (event) => event.eventType === 'core:turn_ended'
+    );
+    expect(secondTurnEnded).toBeDefined();
+    expect(secondTurnEnded.payload.success).toBe(true);
+    const secondPutEvent = secondActionEvents.find(
+      (event) => event.eventType === 'items:item_put_in_container'
+    );
+    expect(secondPutEvent?.payload.itemEntity).toBe('item2');
+
+    const thirdActionStart = testFixture.events.length;
     await testFixture.executeAction('test:actor1', 'toolbox-1', {
       additionalPayload: {
         secondaryId: 'item3',
       },
     });
+
+    const thirdActionEvents = testFixture.events.slice(thirdActionStart);
+    const thirdTurnEnded = thirdActionEvents.find(
+      (event) => event.eventType === 'core:turn_ended'
+    );
+    expect(thirdTurnEnded).toBeDefined();
+    expect(thirdTurnEnded.payload.success).toBe(true);
+    const thirdPutEvent = thirdActionEvents.find(
+      (event) => event.eventType === 'items:item_put_in_container'
+    );
+    expect(thirdPutEvent?.payload.itemEntity).toBe('item3');
 
     // Assert: Verify all items were moved
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
@@ -310,6 +354,14 @@ describe('items:put_in_container action integration', () => {
     expect(container.components['items:container'].contents).toEqual(
       expect.arrayContaining(['item1', 'item2', 'item3'])
     );
+
+    const perceptibleEvents = testFixture.events.filter(
+      (event) => event.eventType === 'core:perceptible_event'
+    );
+    const successEvents = perceptibleEvents.filter(
+      (event) => event.payload.perceptionType === 'item_put_in_container'
+    );
+    expect(successEvents).toHaveLength(3);
   });
 
   describe('perception logging', () => {
@@ -340,13 +392,46 @@ describe('items:put_in_container action integration', () => {
       );
 
       expect(perceptibleEvents.length).toBeGreaterThan(0);
-    const putEvent = perceptibleEvents.find(
-      (e) => e.payload.perceptionType === 'item_put_in_container'
-    );
-    expect(putEvent).toBeDefined();
-    expect(putEvent.payload.locationId).toBe('warehouse');
+      const putEvent = perceptibleEvents.find(
+        (e) => e.payload.perceptionType === 'item_put_in_container'
+      );
+      expect(putEvent).toBeDefined();
+      expect(putEvent.payload.locationId).toBe('warehouse');
       expect(putEvent.payload.actorId).toBe('test:actor1');
       expect(putEvent.payload.targetId).toBe('crate-1');
+
+      const turnEndedEvent = testFixture.events.find(
+        (event) => event.eventType === 'core:turn_ended'
+      );
+      expect(turnEndedEvent).toBeDefined();
+      expect(turnEndedEvent.payload.success).toBe(true);
+
+      const perceptionLogHandler = new AddPerceptionLogEntryHandler({
+        entityManager: testFixture.entityManager,
+        logger: testFixture.logger,
+        safeEventDispatcher: { dispatch: () => {} },
+      });
+
+      await perceptionLogHandler.execute({
+        location_id: putEvent.payload.locationId,
+        entry: {
+          descriptionText: putEvent.payload.descriptionText,
+          timestamp: putEvent.payload.timestamp,
+          perceptionType: putEvent.payload.perceptionType,
+          actorId: putEvent.payload.actorId,
+          targetId: putEvent.payload.targetId,
+          involvedEntities: putEvent.payload.involvedEntities,
+        },
+        originating_actor_id: putEvent.payload.actorId,
+        recipient_ids:
+          putEvent.payload.contextualData?.recipientIds ?? [putEvent.payload.actorId],
+      });
+
+      const actorEntity =
+        testFixture.entityManager.getEntityInstance('test:actor1');
+      const logEntries = actorEntity.components['core:perception_log'].logEntries;
+      expect(logEntries).toHaveLength(1);
+      expect(logEntries[0].descriptionText).toContain('puts package-1');
     });
 
     it('creates perception log for failed put due to capacity', async () => {
@@ -383,6 +468,39 @@ describe('items:put_in_container action integration', () => {
       );
       expect(failedEvent).toBeDefined();
       expect(failedEvent.payload.locationId).toBe('cellar');
+
+      const turnEndedEvent = testFixture.events.find(
+        (event) => event.eventType === 'core:turn_ended'
+      );
+      expect(turnEndedEvent).toBeDefined();
+      expect(turnEndedEvent.payload.success).toBe(false);
+
+      const perceptionLogHandler = new AddPerceptionLogEntryHandler({
+        entityManager: testFixture.entityManager,
+        logger: testFixture.logger,
+        safeEventDispatcher: { dispatch: () => {} },
+      });
+
+      await perceptionLogHandler.execute({
+        location_id: failedEvent.payload.locationId,
+        entry: {
+          descriptionText: failedEvent.payload.descriptionText,
+          timestamp: failedEvent.payload.timestamp,
+          perceptionType: failedEvent.payload.perceptionType,
+          actorId: failedEvent.payload.actorId,
+          targetId: failedEvent.payload.targetId,
+          involvedEntities: failedEvent.payload.involvedEntities,
+        },
+        originating_actor_id: failedEvent.payload.actorId,
+        recipient_ids:
+          failedEvent.payload.contextualData?.recipientIds ?? [failedEvent.payload.actorId],
+      });
+
+      const actorEntity =
+        testFixture.entityManager.getEntityInstance('test:actor1');
+      const logEntries = actorEntity.components['core:perception_log'].logEntries;
+      expect(logEntries).toHaveLength(1);
+      expect(logEntries[0].perceptionType).toBe('put_in_container_failed');
     });
   });
 
