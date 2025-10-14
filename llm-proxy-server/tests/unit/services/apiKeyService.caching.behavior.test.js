@@ -124,4 +124,33 @@ describe('ApiKeyService file caching behavior', () => {
     expect(cacheService.get).not.toHaveBeenCalled();
     expect(cacheService.set).not.toHaveBeenCalled();
   });
+
+  it('treats cached null API keys as valid cache hits without touching disk', async () => {
+    const llmId = 'llm-null-cache';
+    const fileName = 'provider.key';
+    const projectRoot = '/secure/root';
+    const expectedFullPath = path.join(projectRoot, fileName);
+    const expectedCacheKey = `api_key:file:${expectedFullPath}`;
+
+    cacheService.get.mockImplementationOnce((key) => {
+      expect(key).toBe(expectedCacheKey);
+      return null;
+    });
+
+    const result = await apiKeyService._readApiKeyFromFile(
+      fileName,
+      projectRoot,
+      llmId
+    );
+
+    expect(result).toEqual({ key: null, error: null });
+    expect(fsReader.readFile).not.toHaveBeenCalled();
+    expect(cacheService.set).not.toHaveBeenCalled();
+
+    const cacheHitLog = logger.debug.mock.calls.find(([message]) =>
+      message.includes('Retrieved API key from cache')
+    );
+    expect(cacheHitLog).toBeDefined();
+    expect(cacheHitLog[0]).toContain(`llmId '${llmId}'`);
+  });
 });
