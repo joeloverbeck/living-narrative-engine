@@ -161,6 +161,69 @@ describe('ApiKeyService error consolidation coverage', () => {
     expect(result.errorDetails?.stage).toBe('api_key_all_sources_failed');
   });
 
+  it('handles file error payloads with a null details object', async () => {
+    const nullDetailsError = {
+      message: '',
+      stage: 'api_key_file_read_exception',
+      details: null,
+    };
+
+    jest
+      .spyOn(apiKeyService, '_readApiKeyFromFile')
+      .mockResolvedValue({ key: null, error: nullDetailsError });
+
+    const result = await apiKeyService.getApiKey(
+      {
+        apiType: 'openai',
+        apiKeyEnvVar: 'BROKEN_ENV_KEY',
+        apiKeyFileName: 'null-metadata.key',
+      },
+      'llm-cloud-null-details'
+    );
+
+    expect(result.apiKey).toBeNull();
+    expect(result.errorDetails?.stage).toBe('api_key_all_sources_failed');
+    expect(result.errorDetails?.details).toEqual(
+      expect.objectContaining({
+        llmId: 'llm-cloud-null-details',
+        attemptedEnvVar: 'BROKEN_ENV_KEY',
+        attemptedFile: 'null-metadata.key',
+      })
+    );
+    expect(result.errorDetails?.details?.reason).toContain(
+      "File 'null-metadata.key' retrieval also failed (Reason: see previous logs)."
+    );
+    expect(result.errorDetails?.details?.originalErrorMessage).toBeUndefined();
+  });
+
+  it('falls back to error message when file error details are provided as a primitive', async () => {
+    const primitiveDetailsError = {
+      message: 'storage backend refused the connection',
+      stage: 'api_key_file_read_exception',
+      details: 'permission denied',
+    };
+
+    jest
+      .spyOn(apiKeyService, '_readApiKeyFromFile')
+      .mockResolvedValue({ key: null, error: primitiveDetailsError });
+
+    const result = await apiKeyService.getApiKey(
+      {
+        apiType: 'openai',
+        apiKeyEnvVar: 'PRIMITIVE_ENV_KEY',
+        apiKeyFileName: 'primitive.key',
+      },
+      'llm-cloud-primitive-details'
+    );
+
+    expect(result.apiKey).toBeNull();
+    expect(result.errorDetails?.stage).toBe('api_key_all_sources_failed');
+    expect(result.errorDetails?.details?.reason).toContain(
+      "File 'primitive.key' retrieval also failed (Reason: storage backend refused the connection)."
+    );
+    expect(result.errorDetails?.details?.reason).not.toContain('permission denied');
+  });
+
   it("uses 'see previous logs' fallback when no file error context is provided", async () => {
     const minimalFileError = {
       message: '',
