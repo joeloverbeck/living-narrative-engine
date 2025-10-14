@@ -31,7 +31,7 @@ const createTempConfig = (config) => {
   return { directory, filePath };
 };
 
-const startReadinessApp = async () => {
+const startReadinessApp = async ({ envOverrides = {} } = {}) => {
   const logger = createConsoleLogger();
   const tempConfig = createTempConfig({
     defaultConfigId: 'resilience-llm',
@@ -55,6 +55,7 @@ const startReadinessApp = async () => {
     LLM_CONFIG_PATH: tempConfig.filePath,
     CACHE_ENABLED: 'true',
     HTTP_AGENT_ENABLED: 'true',
+    ...envOverrides,
   };
 
   resetAppConfigServiceInstance();
@@ -149,7 +150,12 @@ describe('health check readiness resilience integration', () => {
   });
 
   it('marks optional dependencies as OUT_OF_SERVICE when runtime checks fail', async () => {
-    const { requestAgent, cleanup, services } = await startReadinessApp();
+    const { requestAgent, cleanup, services } = await startReadinessApp({
+      envOverrides: {
+        READINESS_CRITICAL_HEAP_TOTAL_MB: '128',
+        READINESS_CRITICAL_HEAP_USED_MB: '128',
+      },
+    });
 
     const originalGet = services.cacheService.get;
     const originalCleanup = services.httpAgentService.cleanup;
@@ -180,7 +186,12 @@ describe('health check readiness resilience integration', () => {
   });
 
   it('surfaces a DOWN status when process health indicators cross critical thresholds', async () => {
-    const { requestAgent, cleanup } = await startReadinessApp();
+    const { requestAgent, cleanup } = await startReadinessApp({
+      envOverrides: {
+        READINESS_CRITICAL_HEAP_TOTAL_MB: '128',
+        READINESS_CRITICAL_HEAP_USED_MB: '128',
+      },
+    });
 
     const originalMemoryUsage = process.memoryUsage;
     const originalCpuUsage = process.cpuUsage;

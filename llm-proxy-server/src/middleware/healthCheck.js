@@ -4,6 +4,7 @@
  */
 
 import { performance } from 'perf_hooks';
+import v8 from 'v8';
 
 /**
  * Health check response structure
@@ -324,23 +325,77 @@ function checkProcessHealth() {
   try {
     const memoryUsage = process.memoryUsage();
     const memoryUsedMB = Math.round(memoryUsage.heapUsed / 1024 / 1024);
-    const memoryTotalMB = Math.round(memoryUsage.heapTotal / 1024 / 1024);
-    const memoryUsagePercent = Math.round((memoryUsedMB / memoryTotalMB) * 100);
+    const rawMemoryTotalMB = Math.round(memoryUsage.heapTotal / 1024 / 1024);
+    const safeMemoryTotalMB = Math.max(rawMemoryTotalMB, 1);
+    const memoryUsagePercent = Math.min(
+      100,
+      Math.round((memoryUsedMB / safeMemoryTotalMB) * 100)
+    );
 
-    // Consider process unhealthy if memory usage is > 90%
-    const isHealthy = memoryUsagePercent < 90;
+    const parseThreshold = (value, fallback) => {
+      const parsed = Number.parseInt(value ?? '', 10);
+      return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+    };
+
+    const CRITICAL_MEMORY_PERCENTAGE = parseThreshold(
+      process.env.READINESS_CRITICAL_HEAP_PERCENT,
+      90
+    );
+    const MIN_HEAP_TOTAL_MB_FOR_CRITICAL = parseThreshold(
+      process.env.READINESS_CRITICAL_HEAP_TOTAL_MB,
+      512
+    );
+    const MIN_HEAP_USED_MB_FOR_CRITICAL = parseThreshold(
+      process.env.READINESS_CRITICAL_HEAP_USED_MB,
+      512
+    );
+    const CRITICAL_LIMIT_PERCENTAGE = parseThreshold(
+      process.env.READINESS_CRITICAL_HEAP_LIMIT_PERCENT,
+      90
+    );
+
+    const heapStats =
+      typeof v8.getHeapStatistics === 'function' ? v8.getHeapStatistics() : null;
+    const heapSizeLimitMB = heapStats
+      ? Math.round(heapStats.heap_size_limit / 1024 / 1024)
+      : null;
+    const limitUsagePercent = heapSizeLimitMB
+      ? Math.min(
+          100,
+          Math.round((memoryUsedMB / Math.max(heapSizeLimitMB, 1)) * 100)
+        )
+      : null;
+
+    const isCriticalMemoryUsage =
+      (limitUsagePercent !== null &&
+        limitUsagePercent >= CRITICAL_LIMIT_PERCENTAGE) ||
+      (rawMemoryTotalMB >= MIN_HEAP_TOTAL_MB_FOR_CRITICAL &&
+        memoryUsedMB >= MIN_HEAP_USED_MB_FOR_CRITICAL &&
+        memoryUsagePercent >= CRITICAL_MEMORY_PERCENTAGE);
 
     return {
       name: 'nodeProcess',
-      status: isHealthy ? 'UP' : 'DOWN',
+      status: isCriticalMemoryUsage ? 'DOWN' : 'UP',
       details: {
         uptime: Math.floor(process.uptime()),
         memoryUsage: {
           used: memoryUsedMB,
-          total: memoryTotalMB,
+          total: rawMemoryTotalMB,
           percentage: memoryUsagePercent,
           external: Math.round(memoryUsage.external / 1024 / 1024),
           rss: Math.round(memoryUsage.rss / 1024 / 1024),
+          limits: heapSizeLimitMB
+            ? {
+                heapSizeLimitMB,
+                usagePercentOfLimit: limitUsagePercent,
+              }
+            : null,
+          thresholds: {
+            criticalPercentage: CRITICAL_MEMORY_PERCENTAGE,
+            criticalLimitPercentage: CRITICAL_LIMIT_PERCENTAGE,
+            minimumHeapMB: MIN_HEAP_TOTAL_MB_FOR_CRITICAL,
+            minimumHeapUsedMB: MIN_HEAP_USED_MB_FOR_CRITICAL,
+          },
         },
         nodeVersion: process.version,
         platform: process.platform,
