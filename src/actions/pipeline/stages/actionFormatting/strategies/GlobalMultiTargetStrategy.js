@@ -153,13 +153,14 @@ export class GlobalMultiTargetStrategy {
     }
 
     const formatterOptions = this.#buildFormatterOptions(task);
-    const multiTargetFormatter = this.#commandFormatter.formatMultiTarget;
+    const multiTargetFormatter = this.#commandFormatter?.formatMultiTarget;
 
     let formatterResult = null;
     let fallbackUsed = false;
 
     if (typeof multiTargetFormatter === 'function') {
-      formatterResult = multiTargetFormatter(
+      formatterResult = multiTargetFormatter.call(
+        this.#commandFormatter,
         actionDef,
         task.resolvedTargets,
         this.#entityManager,
