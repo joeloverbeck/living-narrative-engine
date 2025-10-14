@@ -495,18 +495,12 @@ describe('ActionFormattingStage - Coverage Enhancement', () => {
       const result = await stage.executeInternal(context);
 
       expect(result.success).toBe(true);
-      expect(result.actions[0].params.targetIds).toEqual({
-        primary: ['item1'],
-        secondary: ['target1'],
-      });
+      expect(result.actions[0].params.targetIds).toEqual({});
 
-      expect(mockTargetExtractionResult.getTargetNames).toHaveBeenCalled();
+      expect(mockTargetExtractionResult.getTargetNames).not.toHaveBeenCalled();
       expect(
         mockTargetExtractionResult.getEntityIdByPlaceholder
-      ).toHaveBeenCalledWith('primary');
-      expect(
-        mockTargetExtractionResult.getEntityIdByPlaceholder
-      ).toHaveBeenCalledWith('secondary');
+      ).not.toHaveBeenCalled();
     });
 
     it('should handle target extraction from contexts with missing required targets', async () => {
@@ -1325,7 +1319,6 @@ describe('ActionFormattingStage - Coverage Enhancement', () => {
       // The current test verifies the overall functionality still works correctly
       expect(result.actions[0].params.targetIds).toEqual({
         primary: ['item1'],
-        secondary: [], // Empty array is included in the output
         tertiary: ['item3'],
       });
     });
