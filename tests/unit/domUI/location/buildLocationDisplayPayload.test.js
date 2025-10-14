@@ -29,4 +29,26 @@ describe('buildLocationDisplayPayload', () => {
       characters: [],
     });
   });
+
+  it('uses location-based default alt text when portrait alt text is missing', () => {
+    const details = {
+      name: 'Cliffside',
+      description: 'A high vantage point',
+      exits: [{ description: 'Path down' }],
+    };
+    const portrait = { imagePath: '/img/cliff.png' };
+    const characters = [{ id: 'npc:2', name: 'Scout' }];
+
+    const result = buildLocationDisplayPayload(details, portrait, characters);
+
+    expect(result).toEqual({
+      name: 'Cliffside',
+      description: 'A high vantage point',
+      portraitPath: '/img/cliff.png',
+      portraitAltText: 'Image of Cliffside',
+      exits: [{ description: 'Path down' }],
+      characters,
+    });
+    expect(portrait).not.toHaveProperty('altText');
+  });
 });
