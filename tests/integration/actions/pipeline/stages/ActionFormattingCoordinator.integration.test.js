@@ -14,6 +14,7 @@ import { ActionFormattingDecider } from '../../../../../src/actions/pipeline/sta
 import { FormattingAccumulator } from '../../../../../src/actions/pipeline/stages/actionFormatting/FormattingAccumulator.js';
 import { ActionFormattingErrorFactory } from '../../../../../src/actions/pipeline/stages/actionFormatting/ActionFormattingErrorFactory.js';
 import { PerActionMetadataStrategy } from '../../../../../src/actions/pipeline/stages/actionFormatting/strategies/PerActionMetadataStrategy.js';
+import { GlobalMultiTargetStrategy } from '../../../../../src/actions/pipeline/stages/actionFormatting/strategies/GlobalMultiTargetStrategy.js';
 import { TargetNormalizationService } from '../../../../../src/actions/pipeline/stages/actionFormatting/TargetNormalizationService.js';
 import { LegacyFallbackFormatter } from '../../../../../src/actions/pipeline/stages/actionFormatting/legacy/LegacyFallbackFormatter.js';
 import { createActionFormattingTask } from '../../../../../src/actions/pipeline/stages/actionFormatting/ActionFormattingTaskFactory.js';
@@ -421,6 +422,165 @@ describe('ActionFormattingCoordinator integration', () => {
     expect(
       env.instrumentation.stageCompletedEvents[0].statistics.failed
     ).toBeGreaterThanOrEqual(1);
+  });
+
+  it('routes mixed batches through coordinator instrumentation and statistics', async () => {
+    const actor = env.entityManager.getEntityInstance('actor-1');
+
+    const perActionStrategy = new PerActionMetadataStrategy({
+      commandFormatter: env.multiTargetFormatter,
+      entityManager: env.entityManager,
+      safeEventDispatcher: env.dispatcher,
+      getEntityDisplayNameFn: (entity, fallback) =>
+        getEntityDisplayName(entity, fallback, env.logger),
+      logger: env.logger,
+      fallbackFormatter: env.fallbackFormatter,
+      targetNormalizationService: env.targetNormalizationService,
+    });
+
+    const globalFormatter = {
+      formatMultiTarget: (...args) =>
+        env.multiTargetFormatter.formatMultiTarget(...args),
+      format: (...args) => env.multiTargetFormatter.format(...args),
+    };
+
+    const globalStrategy = new GlobalMultiTargetStrategy({
+      commandFormatter: globalFormatter,
+      entityManager: env.entityManager,
+      safeEventDispatcher: env.dispatcher,
+      getEntityDisplayNameFn: (entity, fallback) =>
+        getEntityDisplayName(entity, fallback, env.logger),
+      logger: env.logger,
+      fallbackFormatter: env.fallbackFormatter,
+      targetNormalizationService: env.targetNormalizationService,
+    });
+
+    const decider = new ActionFormattingDecider({
+      strategies: [perActionStrategy, globalStrategy],
+      errorFactory: env.errorFactory,
+    });
+
+    const actionsWithTargets = [
+      {
+        actionDef: createActionDefinition({
+          id: 'per-action-success',
+          name: 'Per Action Success',
+          template: 'Signal {primary}',
+        }),
+        targetContexts: [
+          createTargetContext({
+            entityId: 'target-1',
+            placeholder: 'primary',
+            displayName: 'Target One',
+          }),
+        ],
+        resolvedTargets: {
+          primary: [
+            { id: 'target-1', displayName: 'Target One' },
+          ],
+        },
+        targetDefinitions: {
+          primary: { placeholder: 'primary' },
+        },
+        isMultiTarget: true,
+      },
+      {
+        actionDef: createActionDefinition({
+          id: 'batch-shared',
+          name: 'Batch Shared',
+          template: 'Coordinate with {primary}',
+        }),
+        targetContexts: [],
+        isMultiTarget: true,
+      },
+      {
+        actionDef: createActionDefinition({
+          id: 'per-action-fallback',
+          name: 'Per Action Fallback',
+          template: 'Fallback {target}',
+        }),
+        targetContexts: [
+          createTargetContext({
+            entityId: 'target-2',
+            placeholder: 'target',
+            displayName: 'Target Two',
+          }),
+        ],
+        resolvedTargets: null,
+        targetDefinitions: null,
+        isMultiTarget: true,
+      },
+    ];
+
+    const coordinator = new ActionFormattingCoordinator({
+      context: {
+        actor,
+        actionsWithTargets,
+        resolvedTargets: {
+          primary: [
+            { id: 'target-1', displayName: 'Target One' },
+            { id: 'target-2', displayName: 'Target Two' },
+          ],
+        },
+        targetDefinitions: {
+          primary: { placeholder: 'primary' },
+        },
+      },
+      instrumentation: env.instrumentation,
+      decider,
+      accumulatorFactory: () => new FormattingAccumulator(),
+      errorFactory: env.errorFactory,
+      fallbackFormatter: env.fallbackFormatter,
+      targetNormalizationService: env.targetNormalizationService,
+      commandFormatter: env.multiTargetFormatter,
+      entityManager: env.entityManager,
+      safeEventDispatcher: env.dispatcher,
+      getEntityDisplayNameFn: (entity, fallback) =>
+        getEntityDisplayName(entity, fallback, env.logger),
+      logger: env.logger,
+      validateVisualProperties: env.validateVisualProperties,
+      createTask: (options) => {
+        const task = createActionFormattingTask(options);
+
+        if (task.actionDef.id === 'per-action-fallback') {
+          return {
+            ...task,
+            metadata: { source: 'per-action', hasPerActionMetadata: true },
+            resolvedTargets: null,
+            targetDefinitions: null,
+          };
+        }
+
+        return task;
+      },
+    });
+
+    const result = await coordinator.run();
+
+    expect(result.success).toBe(true);
+    expect(result.actions.length).toBeGreaterThanOrEqual(3);
+    expect(result.errors).toHaveLength(1);
+
+    expect(env.instrumentation.stageStartedEvents).toHaveLength(1);
+    expect(env.instrumentation.stageStartedEvents[0].actions).toHaveLength(3);
+    expect(env.instrumentation.stageCompletedEvents[0].statistics).toEqual(
+      expect.objectContaining({
+        total: 3,
+        perActionMetadata: expect.any(Number),
+        multiTarget: expect.any(Number),
+        legacy: expect.any(Number),
+      })
+    );
+
+    const validationFailure = env.instrumentation.actionFailedEvents.find(
+      (event) => event.payload.reason === 'validation-failed'
+    );
+    expect(validationFailure).toBeDefined();
+
+    const fallbackCompletion = env.instrumentation.actionCompletedEvents.find(
+      (event) => event.actionDef.id === 'per-action-fallback'
+    );
+    expect(fallbackCompletion?.payload?.status).toBe('completed');
   });
 
   it('gracefully reports when no target contexts are available', async () => {

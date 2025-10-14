@@ -14,16 +14,17 @@ import ConsoleLogger, {
   LogLevel,
 } from '../../../../src/logging/consoleLogger.js';
 import { ActionTargetContext } from '../../../../src/models/actionTargetContext.js';
-import { createActionFormattingTask } from '../../../../src/actions/pipeline/stages/actionFormatting/ActionFormattingTaskFactory.js';
 import { FormattingAccumulator } from '../../../../src/actions/pipeline/stages/actionFormatting/FormattingAccumulator.js';
 import { TargetNormalizationService } from '../../../../src/actions/pipeline/stages/actionFormatting/TargetNormalizationService.js';
 import { LegacyFallbackFormatter } from '../../../../src/actions/pipeline/stages/actionFormatting/legacy/LegacyFallbackFormatter.js';
 import { PerActionMetadataStrategy } from '../../../../src/actions/pipeline/stages/actionFormatting/strategies/PerActionMetadataStrategy.js';
 import { TraceAwareInstrumentation } from '../../../../src/actions/pipeline/stages/actionFormatting/TraceAwareInstrumentation.js';
+import { ActionFormattingCoordinator } from '../../../../src/actions/pipeline/stages/actionFormatting/ActionFormattingCoordinator.js';
+import { ActionFormattingDecider } from '../../../../src/actions/pipeline/stages/actionFormatting/ActionFormattingDecider.js';
+import { ActionFormattingErrorFactory } from '../../../../src/actions/pipeline/stages/actionFormatting/ActionFormattingErrorFactory.js';
 import ActionFormatter from '../../../../src/actions/actionFormatter.js';
 import { MultiTargetActionFormatter } from '../../../../src/actions/formatters/MultiTargetActionFormatter.js';
 import { ActionErrorContextBuilder } from '../../../../src/actions/errors/actionErrorContextBuilder.js';
-import { ERROR_PHASES } from '../../../../src/actions/errors/actionErrorTypes.js';
 import EntityDefinition from '../../../../src/entities/entityDefinition.js';
 
 function createTraceRecorder() {
@@ -37,24 +38,6 @@ function createTraceRecorder() {
   return recorder;
 }
 
-function createErrorFactory(builder) {
-  return ({ errorOrResult, actionDef, actorId, trace, targetId }) => {
-    const error =
-      errorOrResult instanceof Error
-        ? errorOrResult
-        : new Error(errorOrResult?.message || 'Formatting failure');
-
-    return builder.buildErrorContext({
-      error,
-      actionDef,
-      actorId,
-      phase: ERROR_PHASES.EXECUTION,
-      trace,
-      targetId,
-    });
-  };
-}
-
 describe('TraceAwareInstrumentation integration', () => {
   let testBed;
   let entityManager;
@@ -64,6 +47,7 @@ describe('TraceAwareInstrumentation integration', () => {
   let targetNormalizationService;
   let fallbackFormatter;
   let strategy;
+  let multiFormatter;
   let traceRecorder;
   let instrumentation;
   let errorContextBuilder;
@@ -99,7 +83,7 @@ describe('TraceAwareInstrumentation integration', () => {
       getEntityDisplayNameFn: getEntityDisplayName,
     });
 
-    const multiFormatter = new MultiTargetActionFormatter(baseFormatter, logger);
+    multiFormatter = new MultiTargetActionFormatter(baseFormatter, logger);
 
     strategy = new PerActionMetadataStrategy({
       commandFormatter: multiFormatter,
@@ -176,63 +160,74 @@ describe('TraceAwareInstrumentation integration', () => {
       visual: null,
     };
 
-    const task = createActionFormattingTask({
-      actor,
-      actionWithTargets: {
-        actionDef,
-        targetContexts: [
-          ActionTargetContext.forEntity(firstTarget.id),
-          ActionTargetContext.forEntity(secondTarget.id),
+    const errorFactory = new ActionFormattingErrorFactory({
+      errorContextBuilder,
+    });
+
+    const coordinator = new ActionFormattingCoordinator({
+      context: {
+        actor,
+        actionsWithTargets: [
+          {
+            actionDef,
+            targetContexts: [
+              ActionTargetContext.forEntity(firstTarget.id),
+              ActionTargetContext.forEntity(secondTarget.id),
+            ],
+            resolvedTargets: {
+              primary: [
+                {
+                  id: firstTarget.id,
+                  displayName: getEntityDisplayName(firstTarget),
+                },
+              ],
+              secondary: [
+                {
+                  id: secondTarget.id,
+                  displayName: getEntityDisplayName(secondTarget),
+                },
+              ],
+            },
+            targetDefinitions: {
+              primary: { placeholder: 'primary', optional: false },
+              secondary: { placeholder: 'secondary', optional: true },
+            },
+            isMultiTarget: true,
+          },
         ],
-        resolvedTargets: {
-          primary: [
-            {
-              id: firstTarget.id,
-              displayName: getEntityDisplayName(firstTarget),
-            },
-          ],
-          secondary: [
-            {
-              id: secondTarget.id,
-              displayName: getEntityDisplayName(secondTarget),
-            },
-          ],
-        },
-        targetDefinitions: {
-          primary: { placeholder: 'primary', optional: false },
-          secondary: { placeholder: 'secondary', optional: true },
-        },
-        isMultiTarget: true,
       },
-      formatterOptions: { logger, safeEventDispatcher },
-    });
-
-    const accumulator = new FormattingAccumulator();
-    const createError = createErrorFactory(errorContextBuilder);
-
-    instrumentation.stageStarted({
-      formattingPath: 'per-action',
-      actor,
-      actions: [{ actionDef, metadata: { source: 'per-action' } }],
-    });
-
-    await strategy.format({
-      task,
       instrumentation,
-      accumulator,
-      createError,
-      trace: null,
+      decider: new ActionFormattingDecider({
+        strategies: [strategy],
+        errorFactory,
+      }),
+      accumulatorFactory: () => new FormattingAccumulator(),
+      errorFactory,
+      fallbackFormatter,
+      targetNormalizationService,
+      commandFormatter: multiFormatter,
+      entityManager,
+      safeEventDispatcher,
+      getEntityDisplayNameFn: getEntityDisplayName,
+      logger,
+      validateVisualProperties: () => true,
     });
 
-    instrumentation.stageCompleted({
-      formattingPath: 'per-action',
-      statistics: accumulator.getStatistics(),
-      errorCount: accumulator.getErrors().length,
-    });
+    const result = await coordinator.run();
+
+    expect(result.success).toBe(true);
+    expect(result.actions).toHaveLength(1);
+    expect(result.errors).toHaveLength(0);
 
     const events = traceRecorder.events;
 
-    expect(events.find((event) => event.payload.status === 'started')).toBeDefined();
+    expect(
+      events.find(
+        (event) =>
+          event.payload.status === 'started' &&
+          event.payload.formattingPath === 'per-action'
+      )
+    ).toBeDefined();
     expect(events.find((event) => event.payload.status === 'formatting')).toBeDefined();
     const completionEvent = events.find(
       (event) => event.payload.status === 'completed' && event.actionId === actionDef.id
@@ -242,15 +237,14 @@ describe('TraceAwareInstrumentation integration', () => {
 
     const summaryEvent = events.find((event) => event.actionId === '__stage_summary');
     expect(summaryEvent).toBeDefined();
+    expect(summaryEvent.payload.formattingPath).toBe('per-action');
     expect(summaryEvent.payload.statistics.total).toBe(1);
     expect(summaryEvent.payload.errors).toBe(0);
 
-    const formattedActions = accumulator.getFormattedActions();
-    expect(formattedActions).toHaveLength(1);
-    expect(formattedActions[0].command).toEqual(
+    expect(result.actions[0].command).toEqual(
       expect.stringContaining(getEntityDisplayName(firstTarget))
     );
-    expect(formattedActions[0].command).toEqual(
+    expect(result.actions[0].command).toEqual(
       expect.stringContaining(getEntityDisplayName(secondTarget))
     );
   });
@@ -265,46 +259,50 @@ describe('TraceAwareInstrumentation integration', () => {
       template: 'Coordinate with {primary}',
     };
 
-    const task = createActionFormattingTask({
-      actor,
-      actionWithTargets: {
-        actionDef,
-        targetContexts: [ActionTargetContext.forEntity(firstTarget.id)],
-        resolvedTargets: {
-          primary: [], // Force normalization failure
-        },
-        targetDefinitions: {
-          primary: { placeholder: 'primary', optional: false },
-        },
-        isMultiTarget: true,
+    const errorFactory = new ActionFormattingErrorFactory({
+      errorContextBuilder,
+    });
+
+    const coordinator = new ActionFormattingCoordinator({
+      context: {
+        actor,
+        actionsWithTargets: [
+          {
+            actionDef,
+            targetContexts: [ActionTargetContext.forEntity(firstTarget.id)],
+            resolvedTargets: {
+              primary: [],
+            },
+            targetDefinitions: {
+              primary: { placeholder: 'primary', optional: false },
+            },
+            isMultiTarget: true,
+          },
+        ],
       },
-      formatterOptions: { logger, safeEventDispatcher },
-    });
-
-    const accumulator = new FormattingAccumulator();
-    const createError = createErrorFactory(errorContextBuilder);
-
-    instrumentation.stageStarted({
-      formattingPath: 'per-action',
-      actor,
-      actions: [{ actionDef, metadata: { source: 'per-action' } }],
-    });
-
-    await strategy.format({
-      task,
       instrumentation,
-      accumulator,
-      createError,
-      trace: null,
+      decider: new ActionFormattingDecider({
+        strategies: [strategy],
+        errorFactory,
+      }),
+      accumulatorFactory: () => new FormattingAccumulator(),
+      errorFactory,
+      fallbackFormatter,
+      targetNormalizationService,
+      commandFormatter: multiFormatter,
+      entityManager,
+      safeEventDispatcher,
+      getEntityDisplayNameFn: getEntityDisplayName,
+      logger,
+      validateVisualProperties: () => true,
     });
 
-    instrumentation.stageCompleted({
-      formattingPath: 'per-action',
-      statistics: accumulator.getStatistics(),
-      errorCount: accumulator.getErrors().length,
-    });
+    const result = await coordinator.run();
 
-    expect(accumulator.getErrors()).toHaveLength(1);
+    expect(result.success).toBe(true);
+    expect(result.actions).toHaveLength(0);
+    expect(result.errors).toHaveLength(1);
+
     expect(traceRecorder.events.find((event) => event.payload.status === 'failed')).toBeDefined();
 
     const summaryEvent = traceRecorder.events.find(
