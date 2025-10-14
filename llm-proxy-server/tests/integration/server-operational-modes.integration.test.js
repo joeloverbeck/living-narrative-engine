@@ -258,6 +258,7 @@ describe('core server operational mode coverage', () => {
       envOverrides: {
         NODE_ENV: 'development',
         PROXY_ALLOWED_ORIGIN: '',
+        PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES: '',
         METRICS_ENABLED: 'false',
         CACHE_ENABLED: 'false',
         HTTP_AGENT_ENABLED: 'false',
