@@ -65,6 +65,19 @@ export class ActionFormattingStage extends PipelineStage {
     logger,
   }) {
     super('ActionFormatting');
+    /*
+     * Constructor wiring overview (keep in sync with ActionFormattingCoordinator expectations):
+     * - Injected services forwarded to the coordinator:
+     *   commandFormatter, entityManager, safeEventDispatcher, getEntityDisplayNameFn,
+     *   errorContextBuilder (via errorFactory), and logger.
+     * - Stage-managed collaborators instantiated here:
+     *   targetNormalizationService, legacyFallbackFormatter, perActionMetadataStrategy,
+     *   globalMultiTargetStrategy, errorFactory, and decider.
+     *
+     * These collaborators either feed directly into ActionFormattingCoordinator or into the
+     * strategies supplied to ActionFormattingDecider. Avoid introducing helper-flow state or
+     * unrelated responsibilities here so the stage remains a thin wiring layer.
+     */
     this.#commandFormatter = commandFormatter;
     this.#entityManager = entityManager;
     this.#safeEventDispatcher = safeEventDispatcher;
