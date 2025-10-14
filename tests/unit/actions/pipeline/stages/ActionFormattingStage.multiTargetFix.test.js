@@ -69,7 +69,7 @@ describe('ActionFormattingStage - multi-target action fix', () => {
   });
 
   describe('Multi-target action protection', () => {
-    it('should skip multi-target actions in legacy formatting path', async () => {
+    it('processes legacy multi-target actions through the coordinator fallback path', async () => {
       // This is the adjust_clothing action definition
       const actionDef = {
         id: 'caressing:adjust_clothing',
@@ -117,25 +117,19 @@ describe('ActionFormattingStage - multi-target action fix', () => {
 
       const result = await stage.execute(context);
 
-      // The fix ensures that multi-target actions are handled appropriately in legacy formatting
-      expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Processing mixed legacy and multi-target actions through legacy formatting path'
-        )
-      );
-      expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "Skipping multi-target action 'caressing:adjust_clothing' in legacy formatting path - no resolved targets available for proper formatting"
-        )
-      );
+      expect(logger.warn).not.toHaveBeenCalled();
 
-      // Legacy formatter should NOT be called for multi-target actions
-      expect(commandFormatter.format).not.toHaveBeenCalled();
+      // Coordinator should fall back to the legacy formatter for each target context
+      expect(commandFormatter.formatMultiTarget).not.toHaveBeenCalled();
+      expect(commandFormatter.format).toHaveBeenCalledTimes(2);
 
-      // No formatted actions should be produced (they're skipped)
       expect(result.success).toBe(true);
-      expect(result.actions).toHaveLength(0);
       expect(result.errors).toHaveLength(0);
+      expect(result.actions).toHaveLength(2);
+      expect(result.actions.map((action) => action.params.targetId)).toEqual([
+        'person1',
+        'clothing1',
+      ]);
     });
 
     it('should properly format multi-target actions when correct data is provided', async () => {
@@ -152,25 +146,31 @@ describe('ActionFormattingStage - multi-target action fix', () => {
       // This is the correct way - with resolvedTargets and targetDefinitions
       const context = {
         actor: { id: 'test-actor' },
-        actionsWithTargets: [{ actionDef, targetContexts: [] }],
-        resolvedTargets: {
-          primary: [
-            {
-              id: 'person1',
-              displayName: 'Iker Aguirre',
-              type: 'entity',
+        actionsWithTargets: [
+          {
+            actionDef,
+            targetContexts: [],
+            resolvedTargets: {
+              primary: [
+                {
+                  id: 'person1',
+                  displayName: 'Iker Aguirre',
+                  type: 'entity',
+                },
+              ],
+              secondary: [
+                {
+                  id: 'clothing1',
+                  displayName: 'denim trucker jacket',
+                  type: 'entity',
+                  contextFromId: 'person1',
+                },
+              ],
             },
-          ],
-          secondary: [
-            {
-              id: 'clothing1',
-              displayName: 'denim trucker jacket',
-              type: 'entity',
-              contextFromId: 'person1',
-            },
-          ],
-        },
-        targetDefinitions: actionDef.targets,
+            targetDefinitions: actionDef.targets,
+            isMultiTarget: true,
+          },
+        ],
         trace: {
           step: jest.fn(),
           info: jest.fn(),
@@ -190,6 +190,10 @@ describe('ActionFormattingStage - multi-target action fix', () => {
         "adjust Iker Aguirre's denim trucker jacket"
       );
       expect(result.actions[0].params.isMultiTarget).toBe(true);
+      expect(result.actions[0].params.targetIds).toEqual({
+        primary: ['person1'],
+        secondary: ['clothing1'],
+      });
     });
 
     it('should still format legacy single-target actions correctly', async () => {

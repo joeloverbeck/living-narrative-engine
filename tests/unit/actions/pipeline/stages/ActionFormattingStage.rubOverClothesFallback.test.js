@@ -5,7 +5,9 @@ import ActionCommandFormatter from '../../../../../src/actions/actionFormatter.j
 function createStageWithFallback(baseCommandFormatterOverrides = {}) {
   const baseFormatter = new ActionCommandFormatter();
   const commandFormatter = {
-    formatMultiTarget: jest.fn().mockReturnValue({ ok: false, error: 'force fallback' }),
+    formatMultiTarget: jest
+      .fn()
+      .mockReturnValue({ ok: false, error: 'force fallback' }),
     format: baseFormatter.format.bind(baseFormatter),
     ...baseCommandFormatterOverrides,
   };
@@ -21,7 +23,12 @@ function createStageWithFallback(baseCommandFormatterOverrides = {}) {
   };
 
   const safeEventDispatcher = { dispatch: jest.fn() };
-  const logger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
+  const logger = {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
   const errorContextBuilder = { buildErrorContext: jest.fn() };
 
   return new ActionFormattingStage({
@@ -73,12 +80,34 @@ describe('ActionFormattingStage legacy fallback for rub over clothes actions', (
               contextFromId: 'bob',
             },
           ],
+          resolvedTargets: {
+            primary: [
+              {
+                id: 'bob',
+                displayName: 'Bob',
+                type: 'entity',
+              },
+            ],
+            secondary: [
+              {
+                id: template.includes('penis') ? 'pants1' : 'skirt1',
+                displayName: template.includes('penis') ? 'pants' : 'skirt',
+                type: 'entity',
+                contextFromId: 'bob',
+              },
+            ],
+          },
+          targetDefinitions: {
+            primary: { placeholder: 'primary' },
+            secondary: { placeholder: 'secondary', contextFrom: 'primary' },
+          },
+          isMultiTarget: true,
         },
       ],
     };
   }
 
-  it("replaces placeholders when formatting rub_penis_over_clothes via legacy fallback", async () => {
+  it('replaces placeholders when formatting rub_penis_over_clothes via legacy fallback', async () => {
     const context = buildContext("rub {primary}'s penis over the {secondary}");
 
     const result = await stage.execute(context);
@@ -89,7 +118,7 @@ describe('ActionFormattingStage legacy fallback for rub over clothes actions', (
     expect(result.actions[0].command).not.toMatch(/\{[^}]+\}/);
   });
 
-  it("replaces placeholders when formatting rub_vagina_over_clothes via legacy fallback", async () => {
+  it('replaces placeholders when formatting rub_vagina_over_clothes via legacy fallback', async () => {
     const context = buildContext("rub {primary}'s vagina over the {secondary}");
 
     const result = await stage.execute(context);
