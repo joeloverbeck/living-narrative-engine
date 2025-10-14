@@ -472,4 +472,76 @@ describe('ApiKeyService error consolidation coverage', () => {
     );
   });
 
+  it('falls back to the generic combined summary when file error metadata is blank', async () => {
+    delete process.env.BLANK_ENV_KEY;
+
+    const blankFileError = {
+      message: '',
+      stage: 'api_key_file_read_exception',
+      details: {
+        llmId: 'llm-blank-meta',
+        attemptedFile: 'blank.key',
+        reason: '',
+        originalErrorMessage: '',
+      },
+    };
+
+    const createErrorDetailsSpy = jest.spyOn(
+      apiKeyService,
+      '_createErrorDetails'
+    );
+
+    jest
+      .spyOn(apiKeyService, '_readApiKeyFromFile')
+      .mockResolvedValue({ key: null, error: blankFileError });
+
+    const result = await apiKeyService.getApiKey(
+      {
+        apiType: 'openai',
+        apiKeyEnvVar: 'BLANK_ENV_KEY',
+        apiKeyFileName: 'blank.key',
+      },
+      'llm-blank-meta'
+    );
+
+    expect(createErrorDetailsSpy).toHaveBeenCalled();
+    const lastCreateCall = createErrorDetailsSpy.mock.calls.at(-1);
+    expect(lastCreateCall?.[1]).toBe('api_key_all_sources_failed');
+    expect(lastCreateCall?.[2]).toEqual(
+      expect.objectContaining({
+        llmId: 'llm-blank-meta',
+        attemptedEnvVar: 'BLANK_ENV_KEY',
+        attemptedFile: 'blank.key',
+        reason: expect.stringContaining('see previous logs'),
+      })
+    );
+
+    expect(result.apiKey).toBeNull();
+    expect(result.source).toBe('N/A');
+    expect(result.errorDetails).toEqual(
+      expect.objectContaining({
+        stage: 'api_key_all_sources_failed',
+        details: expect.objectContaining({
+          llmId: 'llm-blank-meta',
+          attemptedEnvVar: 'BLANK_ENV_KEY',
+          attemptedFile: 'blank.key',
+          reason: expect.stringContaining('see previous logs'),
+          originalErrorMessage: '',
+        }),
+      })
+    );
+
+    const warnCall = logger.warn.mock.calls.at(-1);
+    expect(warnCall?.[0]).toContain('Stage: api_key_all_sources_failed');
+    expect(warnCall?.[1]).toEqual(
+      expect.objectContaining({
+        details: expect.objectContaining({
+          llmId: 'llm-blank-meta',
+          attemptedEnvVar: 'BLANK_ENV_KEY',
+          attemptedFile: 'blank.key',
+        }),
+      })
+    );
+  });
+
 });
