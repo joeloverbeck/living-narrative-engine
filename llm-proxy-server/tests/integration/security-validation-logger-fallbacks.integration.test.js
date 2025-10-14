@@ -1,4 +1,11 @@
-import { describe, beforeEach, afterEach, expect, test, jest } from '@jest/globals';
+/**
+ * @file security-validation-logger-fallbacks.integration.test.js
+ * @description Integration tests that cover logger fallback paths and
+ *              additional security validation branches that were previously
+ *              missed by the main suite.
+ */
+
+import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
@@ -7,86 +14,207 @@ import {
   createSecurityValidationMiddleware,
 } from '../../src/middleware/securityValidation.js';
 
-/**
- * Integration suite extending coverage for the security validation middleware
- * by exercising logger fallbacks and default configuration paths that are not
- * covered in the primary security validation integration tests.
- */
-describe('security validation middleware logger fallbacks - integration', () => {
+describe('Security validation middleware logging fallbacks - integration', () => {
   let app;
 
   beforeEach(() => {
     app = express();
   });
 
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
-
-  test('blocks malicious requests even when logger methods are missing', async () => {
-    const degradedLogger = {
-      debug: jest.fn(),
-      // Intentionally provide non-function values to exercise safety guards
-      warn: 'not-a-function',
-      error: null,
-    };
+  test('blocks unsafe requests even when logger methods are missing', async () => {
+    const partialLogger = { info: jest.fn() };
 
     app.use(
       createSecurityValidationMiddleware({
-        logger: degradedLogger,
-        minSecurityScore: 85,
+        logger: partialLogger,
+        minSecurityScore: 95,
       })
     );
 
-    app.get('/degraded', (_req, res) => {
-      res.json({ ok: true });
+    app.get('/danger', (req, res) => {
+      res.json({ reached: true });
     });
 
     const response = await request(app)
-      .get('/degraded')
-      .set('Host', 'proxy.example.test<attack>')
+      .get('/danger')
+      .set('Host', 'proxy.example.test')
       .set("Content-Security-Policy", "default-src 'self'; script-src 'unsafe-eval'")
       .set('X-Content-Type-Options', 'nosniff')
       .set('X-Frame-Options', 'DENY')
       .set('X-XSS-Protection', '1; mode=block')
-      .set('X-Template', 'eval(alert(1))')
-      .set('X-Forwarded-For', '203.0.113.5')
-      .set('Referer', 'null')
+      .set('Strict-Transport-Security', 'max-age=10800; includeSubDomains')
+      .set('X-Forwarded-Host', 'evil.com<script>')
+      .set('X-Forwarded-For', '198.51.100.2')
+      .set('X-Real-IP', 'bad$ip')
+      .set('Origin', 'null')
+      .set('User-Agent', 'danger-tester')
+      .set('X-Injection', '<script>alert(1)</script>')
       .expect(400);
 
+    expect(response.headers['x-correlation-id']).toBeDefined();
     expect(response.body.error).toEqual(
       expect.objectContaining({
         code: 'SECURITY_VALIDATION_FAILED',
+        correlationId: expect.any(String),
         details: expect.objectContaining({
           securityScore: expect.any(Number),
-          minRequired: 85,
+          minRequired: 95,
         }),
       })
     );
+    expect(response.body.error.details.securityScore).toBeLessThan(95);
+  });
 
-    // Even without warn/error functions, the middleware should still attach
-    // validation metadata describing the unsafe CSP directive.
-    expect(response.body.error.details.issueCount).toBeGreaterThan(0);
-    expect(response.body.error.details.securityScore).toBeLessThan(85);
-    expect(degradedLogger.debug).not.toHaveBeenCalledWith(
-      'Security validation passed',
-      expect.any(Object)
+  test('allows secure traffic while gracefully skipping debug logging', async () => {
+    const loggerWithoutDebug = {
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
+    app.use(
+      createSecurityValidationMiddleware({
+        logger: loggerWithoutDebug,
+        minSecurityScore: 80,
+      })
+    );
+
+    app.get('/status', (req, res) => {
+      res.json({
+        correlationId: req.correlationId,
+        headerCorrelationId: res.get('X-Correlation-ID'),
+        validation: req.securityValidation,
+      });
+    });
+
+    const response = await request(app)
+      .get('/status')
+      .set('Host', 'proxy.example.test')
+      .set("Content-Security-Policy", "default-src 'self'; script-src 'self'")
+      .set('X-Content-Type-Options', 'nosniff')
+      .set('X-Frame-Options', 'DENY')
+      .set('X-XSS-Protection', '1; mode=block')
+      .set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
+      .set('X-Forwarded-For', '198.51.100.2')
+      .set('Origin', 'https://client.example.test')
+      .set('Referer', '')
+      .set('User-Agent', 'branch-coverage-agent')
+      .expect(200);
+
+    expect(response.body.correlationId).toMatch(/^[0-9a-f\-]{36}$/);
+    expect(response.body.correlationId).toBe(response.body.headerCorrelationId);
+    expect(response.body.validation.isValid).toBe(true);
+    expect(response.body.validation.securityScore).toBeGreaterThanOrEqual(80);
+    expect(loggerWithoutDebug.warn).not.toHaveBeenCalled();
+    expect(loggerWithoutDebug.error).not.toHaveBeenCalled();
+  });
+
+  test('emits validation error logs when warn function is available', async () => {
+    const capturingLogger = {
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+    };
+
+    app.use(
+      createSecurityValidationMiddleware({
+        logger: capturingLogger,
+        blockSuspicious: false,
+        minSecurityScore: 90,
+      })
+    );
+
+    app.get('/warn', (req, res) => {
+      res.json({ validation: req.securityValidation });
+    });
+
+    const response = await request(app)
+      .get('/warn')
+      .set('Host', 'proxy.example.test')
+      .set("Content-Security-Policy", "default-src 'self'; script-src 'unsafe-inline'")
+      .set('X-Content-Type-Options', 'nosniff')
+      .set('X-Frame-Options', 'DENY')
+      .set('X-XSS-Protection', '1; mode=block')
+      .set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
+      .set('X-Forwarded-For', '198.51.100.2')
+      .set('Origin', 'https://client.example.test')
+      .set('User-Agent', 'warn-branch-coverage')
+      .expect(200);
+
+    expect(response.body.validation.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: 'INVALID_CSP' }),
+      ])
+    );
+    expect(capturingLogger.warn).toHaveBeenCalledWith(
+      'Security validation errors detected',
+      expect.objectContaining({
+        errors: expect.arrayContaining([
+          expect.objectContaining({ type: 'INVALID_CSP' }),
+        ]),
+      })
     );
   });
 
-  test('uses default console logger and nonce length when no options are provided', async () => {
-    const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  test('records suspicious patterns without emitting error logs', async () => {
+    const logger = {
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
 
+    app.use(
+      createSecurityValidationMiddleware({
+        logger,
+        blockSuspicious: false,
+        minSecurityScore: 80,
+      })
+    );
+
+    app.get('/suspicious-only', (req, res) => {
+      res.json({ validation: req.securityValidation });
+    });
+
+    const response = await request(app)
+      .get('/suspicious-only')
+      .set('Host', 'proxy.example.test')
+      .set("Content-Security-Policy", "default-src 'self'; script-src 'self'")
+      .set('X-Content-Type-Options', 'nosniff')
+      .set('X-Frame-Options', 'DENY')
+      .set('X-XSS-Protection', '1; mode=block')
+      .set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
+      .set('X-Forwarded-For', '198.51.100.2')
+      .set('Origin', 'https://client.example.test')
+      .set('X-Injection', '<script>alert(1)</script>')
+      .set('User-Agent', 'suspicious-only-branch')
+      .expect(200);
+
+    expect(response.body.validation.errors).toHaveLength(0);
+    expect(response.body.validation.suspiciousPatterns).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ header: 'x-injection' }),
+      ])
+    );
+    expect(logger.warn).not.toHaveBeenCalled();
+    expect(logger.error).toHaveBeenCalledWith(
+      'Suspicious security patterns detected',
+      expect.objectContaining({
+        suspiciousPatterns: expect.arrayContaining([
+          expect.objectContaining({ header: 'x-injection' }),
+        ]),
+        errors: [],
+      })
+    );
+  });
+
+  test('uses default configuration when options are omitted', async () => {
     app.use(createCSPNonceMiddleware());
     app.use(createSecurityValidationMiddleware());
 
     app.get('/defaults', (req, res) => {
       res.json({
-        nonce: res.get('X-CSP-Nonce'),
         correlationId: req.correlationId,
         validation: req.securityValidation,
+        nonce: req.cspNonce,
+        nonceHeader: res.get('X-CSP-Nonce'),
       });
     });
 
@@ -99,73 +227,14 @@ describe('security validation middleware logger fallbacks - integration', () => 
       .set('X-XSS-Protection', '1; mode=block')
       .set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
       .set('X-Forwarded-For', '203.0.113.5')
-      .set('Referer', 'null')
-      .set('User-Agent', 'integration-default')
+      .set('Origin', 'https://client.example.test')
+      .set('User-Agent', 'defaults-branch-cover')
       .expect(200);
 
-    expect(response.body.nonce).toHaveLength(16);
-    expect(response.body.correlationId).toMatch(/^[0-9a-f\-]{36}$/);
+    expect(response.headers['x-correlation-id']).toBeDefined();
     expect(response.body.validation.isValid).toBe(true);
     expect(response.body.validation.securityScore).toBeGreaterThanOrEqual(70);
-
-    expect(debugSpy).toHaveBeenCalledWith(
-      'Security validation passed',
-      expect.objectContaining({
-        correlationId: response.body.correlationId,
-        securityScore: expect.any(Number),
-      })
-    );
-    expect(warnSpy).not.toHaveBeenCalled();
-    expect(errorSpy).not.toHaveBeenCalled();
-  });
-
-  test('skips debug logging when logger.debug is unavailable but still allows valid traffic', async () => {
-    const partialLogger = {
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
-
-    app.use(
-      createSecurityValidationMiddleware({
-        logger: partialLogger,
-        blockSuspicious: false,
-        minSecurityScore: 60,
-      })
-    );
-
-    app.get('/partial', (req, res) => {
-      res.json({
-        correlationId: req.correlationId,
-        validation: req.securityValidation,
-      });
-    });
-
-    const response = await request(app)
-      .get('/partial')
-      .set('Host', 'proxy.example.test')
-      .set("Content-Security-Policy", "default-src 'self'; script-src 'self'")
-      .set('X-Content-Type-Options', 'nosniff')
-      .set('X-Frame-Options', 'DENY')
-      .set('X-XSS-Protection', '1; mode=block')
-      .set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
-      .set('Origin', 'https://example.com')
-      .set('Referer', 'https://example.com/page')
-      .set('X-Template', 'eval(window.alert(1))')
-      .set('X-Forwarded-For', '203.0.113.5')
-      .set('User-Agent', 'integration-partial')
-      .expect(200);
-
-    expect(response.body.validation.isValid).toBe(true);
-    expect(response.body.validation.securityScore).toBeGreaterThanOrEqual(60);
-    expect(partialLogger.warn).not.toHaveBeenCalled();
-    expect(partialLogger.error).toHaveBeenCalledWith(
-      'Suspicious security patterns detected',
-      expect.objectContaining({
-        suspiciousPatterns: expect.arrayContaining([
-          expect.objectContaining({ header: 'x-template' }),
-        ]),
-        errors: [],
-      })
-    );
+    expect(response.body.nonce).toMatch(/^[0-9a-f]{16}$/);
+    expect(response.body.nonceHeader).toBe(response.body.nonce);
   });
 });
