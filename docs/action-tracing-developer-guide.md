@@ -719,45 +719,42 @@ class TracedActionStage {
   }
 
   async execute(context) {
-    const { actionId } = context;
+    const instrumentation = this.#resolveInstrumentation(context);
 
-    // Check if this action should be traced
-    if (!this.filter.shouldTrace(actionId)) {
-      return this.executeWithoutTracing(context);
-    }
-
-    return this.executeWithTracing(context);
-  }
-
-  async executeWithTracing(context) {
-    const stageName = this.constructor.name.toLowerCase();
-    const startTime = performance.now();
-
-    this.trace.captureActionData(`${stageName}_start`, context.actionId, {
-      stage: stageName,
-      timestamp: Date.now(),
-      context: this.sanitizeContext(context),
+    instrumentation.stageStarted({
+      stage: this.constructor.name,
+      actor: context.actor,
+      actions: context.actionsWithTargets,
+      formattingPath: 'modern',
     });
 
     try {
-      const result = await this.processAction(context);
+      const result = await this.processAction(context, instrumentation);
 
-      this.trace.captureActionData(`${stageName}_complete`, context.actionId, {
-        success: true,
-        duration: performance.now() - startTime,
-        resultSummary: this.summarizeResult(result),
+      instrumentation.stageCompleted({
+        formattingPath: 'modern',
+        statistics: result.statistics,
+        errorCount: 0,
       });
 
       return result;
     } catch (error) {
-      this.trace.captureActionData(`${stageName}_error`, context.actionId, {
-        success: false,
-        error: error.message,
-        errorType: error.constructor.name,
-        duration: performance.now() - startTime,
+      instrumentation.stageCompleted({
+        formattingPath: 'modern',
+        statistics: { total: 0 },
+        errorCount: 1,
       });
+
       throw error;
     }
+  }
+
+  #resolveInstrumentation(context) {
+    if (!this.filter.shouldTrace(context.actionId)) {
+      return new NoopInstrumentation();
+    }
+
+    return new TraceAwareInstrumentation(this.trace);
   }
 }
 ```
