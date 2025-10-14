@@ -891,6 +891,40 @@ describe('ApiKeyService', () => {
       });
       expect(logger.warn.mock.calls[0][0]).toContain('N/A');
     });
+
+    test('_createErrorDetails preserves pre-existing originalErrorMessage metadata', () => {
+      const err = new Error('should not override');
+      const details = {
+        llmId: 'llm-preexisting',
+        originalErrorMessage: 'prior context',
+      };
+
+      const result = service._createErrorDetails('msg', 'stage', details, err);
+
+      expect(result).toEqual({
+        message: 'msg',
+        stage: 'stage',
+        details: {
+          llmId: 'llm-preexisting',
+          originalErrorMessage: 'prior context',
+        },
+      });
+
+      const warnCall = logger.warn.mock.calls.at(-1);
+      expect(warnCall[0]).toContain('stage');
+      expect(warnCall[1]).toEqual(
+        expect.objectContaining({
+          details: expect.objectContaining({
+            llmId: 'llm-preexisting',
+            originalErrorMessage: 'prior context',
+          }),
+          originalError: expect.objectContaining({
+            message: 'should not override',
+            name: err.name,
+          }),
+        })
+      );
+    });
   });
 
   describe('Edge Cases and Branch Coverage', () => {
