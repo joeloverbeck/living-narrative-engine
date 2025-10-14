@@ -6,341 +6,99 @@
 
 ## Goal
 
-Create comprehensive test coverage for Phase 4 advanced features (examine and put in container).
+Create comprehensive Phase 4 coverage for the items mod using the existing `ModTestFixture`
+infrastructure. Phase 4 combines the `items:examine_item` and `items:put_in_container`
+features with the previously delivered container workflow, so the focus is on
+strengthening the integration suites that already live in `tests/integration/mods/items/`.
 
 ## Context
 
-Validate advanced item interactions including examination and bidirectional container operations.
+- `tests/integration/mods/items/examineItemActionDiscovery.test.js` and
+  `examineItemRuleExecution.test.js` already exercise the examine action using
+  `ModTestFixture.forAction('items', 'items:examine_item')` and `ModEntityBuilder`.
+- `tests/integration/mods/items/putInContainerActionDiscovery.test.js` and
+  `putInContainerRuleExecution.test.js` cover the container placement rule. They rely on
+  `additionalPayload.secondaryId` rather than a bespoke `secondaryTargetId` argument.
+- `tests/integration/mods/items/containerWorkflow.test.js` (Phase 3) and
+  `fullSystemIntegration.test.js` (Phases 1-3) need to be extended so that the Phase 4
+  workflow (take ↔ put with examination) is exercised end-to-end.
+
+Use the existing helpers instead of inventing new `createActorWithInventory` or
+`testBed.performAction` APIs—those do not exist in this repository.
 
 ## Tasks
 
-### 1. Examine Item Tests
-
-Create `tests/integration/mods/items/examine_item.test.js`:
-
-```javascript
-import { describe, it, expect, beforeEach } from '@jest/globals';
-import { createTestBed } from '../../../common/testBed.js';
-
-describe('Items - Examine Item Integration', () => {
-  let testBed;
-
-  beforeEach(() => {
-    testBed = createTestBed();
-  });
-
-  it('should examine item in inventory', () => {
-    const actor = testBed.createActorWithInventory(['letter-to-sheriff-1']);
-
-    const result = testBed.executeAction('items:examine_item', {
-      actorId: actor,
-      targetId: 'letter-to-sheriff-1'
-    });
-
-    expect(result.success).toBe(true);
-    expect(result.fullDescription).toBeDefined();
-    expect(result.fullDescription.length).toBeGreaterThan(0);
-  });
-
-  it('should examine item at location', () => {
-    const actor = testBed.createActor('tavern');
-    const item = testBed.createItemAtLocation('letter-1', 'tavern');
-
-    const result = testBed.executeAction('items:examine_item', {
-      actorId: actor,
-      targetId: 'letter-1'
-    });
-
-    expect(result.success).toBe(true);
-    expect(result.fullDescription).toBeDefined();
-  });
-
-  it('should discover items from both inventory and location', () => {
-    const actor = testBed.createActorWithInventory(['item-1']);
-    testBed.setActorPosition(actor, 'tavern');
-    testBed.createItemAtLocation('item-2', 'tavern');
-
-    const actions = testBed.discoverActions(actor);
-    const examineActions = actions.filter(a => a.actionId === 'items:examine_item');
-
-    const targetIds = examineActions.map(a => a.targetId);
-    expect(targetIds).toContain('item-1'); // From inventory
-    expect(targetIds).toContain('item-2'); // From location
-  });
-
-  it('should create perception log with full description', () => {
-    const actor = testBed.createActorWithInventory(['letter-to-sheriff-1']);
-    testBed.setActorPosition(actor, 'tavern');
-
-    testBed.executeAction('items:examine_item', {
-      actorId: actor,
-      targetId: 'letter-to-sheriff-1'
-    });
-
-    const logs = testBed.getPerceptionLogs('tavern');
-    const examineLog = logs.find(l => l.perceptionType === 'item_examined');
-
-    expect(examineLog).toBeDefined();
-    expect(examineLog.fullDescription).toBeDefined();
-    expect(examineLog.descriptionText).toContain('examines');
-  });
-
-  it('should NOT end turn (examine is free action)', () => {
-    const actor = testBed.createActorWithInventory(['letter-1']);
-
-    testBed.executeAction('items:examine_item', {
-      actorId: actor,
-      targetId: 'letter-1'
-    });
-
-    const turnEnded = testBed.hasEventBeenDispatched('END_TURN');
-    expect(turnEnded).toBe(false);
-  });
-
-  it('should handle missing description gracefully', () => {
-    const actor = testBed.createActorWithInventory(['no-desc-item']);
-
-    const result = testBed.executeAction('items:examine_item', {
-      actorId: actor,
-      targetId: 'no-desc-item'
-    });
-
-    expect(result.success).toBe(false);
-    expect(result.error).toBe('no_description');
-  });
-});
-```
-
-### 2. Put In Container Tests
-
-Create `tests/integration/mods/items/put_in_container.test.js`:
-
-```javascript
-describe('Items - Put In Container Integration', () => {
-  it('should put item from inventory into open container', () => {
-    const actor = testBed.createActorWithInventory(['coin-1']);
-    const chest = testBed.createOpenChest('tavern', []);
-
-    testBed.setActorPosition(actor, 'tavern');
-
-    testBed.executeAction('items:put_in_container', {
-      actorId: actor,
-      targetId: chest,
-      secondaryTargetId: 'coin-1'
-    });
-
-    const inventory = testBed.getComponent(actor, 'items:inventory');
-    const container = testBed.getComponent(chest, 'items:container');
-
-    expect(inventory.items).not.toContain('coin-1');
-    expect(container.contents).toContain('coin-1');
-  });
-
-  it('should fail to put in closed container', () => {
-    const actor = testBed.createActorWithInventory(['coin-1']);
-    const chest = testBed.createClosedChest('tavern', []);
-
-    testBed.setActorPosition(actor, 'tavern');
-
-    const result = testBed.executeAction('items:put_in_container', {
-      actorId: actor,
-      targetId: chest,
-      secondaryTargetId: 'coin-1'
-    });
-
-    expect(result.success).toBe(false);
-    expect(result.error).toBe('container_closed');
-  });
-
-  it('should respect container capacity limits', () => {
-    const actor = testBed.createActorWithInventory(['gold-bar-1']);
-    const chest = testBed.createEntity('chest-1', {
-      'items:container': {
-        contents: [],
-        capacity: { maxWeight: 1, maxItems: 10 },
-        isOpen: true
-      },
-      'positioning:position': { locationId: 'tavern' }
-    });
-
-    testBed.setActorPosition(actor, 'tavern');
-
-    const result = testBed.executeAction('items:put_in_container', {
-      actorId: actor,
-      targetId: chest,
-      secondaryTargetId: 'gold-bar-1'
-    });
-
-    expect(result.success).toBe(false);
-    expect(result.reason).toBe('max_weight_exceeded');
-  });
-
-  it('should discover only open containers for put action', () => {
-    const actor = testBed.createActorWithInventory(['coin-1']);
-    const openChest = testBed.createOpenChest('tavern', []);
-    const closedChest = testBed.createClosedChest('tavern', []);
-
-    testBed.setActorPosition(actor, 'tavern');
-
-    const actions = testBed.discoverActions(actor);
-    const putActions = actions.filter(a => a.actionId === 'items:put_in_container');
-
-    const targets = putActions.map(a => a.targetId);
-    expect(targets).toContain(openChest);
-    expect(targets).not.toContain(closedChest);
-  });
-});
-```
-
-### 3. Bidirectional Container Operations
-
-Create `tests/integration/mods/items/containerBidirectional.test.js`:
-
-```javascript
-describe('Items - Bidirectional Container Operations', () => {
-  it('should support take and put cycle', () => {
-    const actor = testBed.createActorWithInventory([]);
-    const chest = testBed.createOpenChest('tavern', ['coin-1']);
-
-    testBed.setActorPosition(actor, 'tavern');
-
-    // Take from container
-    testBed.executeAction('items:take_from_container', {
-      actorId: actor,
-      targetId: chest,
-      secondaryTargetId: 'coin-1'
-    });
-
-    expect(testBed.actorHasItem(actor, 'coin-1')).toBe(true);
-
-    // Put back in container
-    testBed.executeAction('items:put_in_container', {
-      actorId: actor,
-      targetId: chest,
-      secondaryTargetId: 'coin-1'
-    });
-
-    const container = testBed.getComponent(chest, 'items:container');
-    expect(container.contents).toContain('coin-1');
-    expect(testBed.actorHasItem(actor, 'coin-1')).toBe(false);
-  });
-
-  it('should handle multiple items in container operations', () => {
-    const actor = testBed.createActorWithInventory(['coin-1', 'coin-2', 'coin-3']);
-    const chest = testBed.createOpenChest('tavern', []);
-
-    testBed.setActorPosition(actor, 'tavern');
-
-    // Put multiple items
-    testBed.executeAction('items:put_in_container', {
-      actorId: actor,
-      targetId: chest,
-      secondaryTargetId: 'coin-1'
-    });
-    testBed.executeAction('items:put_in_container', {
-      actorId: actor,
-      targetId: chest,
-      secondaryTargetId: 'coin-2'
-    });
-
-    const container = testBed.getComponent(chest, 'items:container');
-    expect(container.contents).toHaveLength(2);
-    expect(container.contents).toContain('coin-1');
-    expect(container.contents).toContain('coin-2');
-  });
-});
-```
-
-### 4. Full System Integration
-
-Create `tests/e2e/items/completeItemsWorkflow.e2e.test.js`:
-
-```javascript
-describe('Items - Complete System E2E', () => {
-  it('should support all item operations in realistic scenario', async () => {
-    // Setup: Player has key, chest is locked with treasure
-    const player = testBed.createPlayer({
-      inventory: ['brass-key-1'],
-      location: 'tavern-cellar'
-    });
-
-    const chest = testBed.createLockedChest('tavern-cellar', ['treasure-1'], 'brass-key-1');
-
-    // 1. Open chest with key
-    await testBed.performAction('items:open_container', {
-      actorId: player,
-      targetId: chest
-    });
-
-    // 2. Examine treasure
-    const examineResult = await testBed.performAction('items:examine_item', {
-      actorId: player,
-      targetId: 'treasure-1'
-    });
-    expect(examineResult.fullDescription).toBeDefined();
-
-    // 3. Take treasure
-    await testBed.performAction('items:take_from_container', {
-      actorId: player,
-      targetId: chest,
-      secondaryTargetId: 'treasure-1'
-    });
-
-    // 4. Drop key (no longer needed)
-    await testBed.performAction('items:drop_item', {
-      actorId: player,
-      targetId: 'brass-key-1'
-    });
-
-    // 5. Put treasure back (changed mind)
-    await testBed.performAction('items:put_in_container', {
-      actorId: player,
-      targetId: chest,
-      secondaryTargetId: 'treasure-1'
-    });
-
-    // 6. Pick up key again
-    await testBed.performAction('items:pick_up_item', {
-      actorId: player,
-      targetId: 'brass-key-1'
-    });
-
-    // Verify final state
-    expect(testBed.actorHasItem(player, 'brass-key-1')).toBe(true);
-    expect(testBed.getComponent(chest, 'items:container').contents).toContain('treasure-1');
-
-    // Verify narrative log
-    const narrative = testBed.getNarrativeLog();
-    expect(narrative).toContain('opened');
-    expect(narrative).toContain('examines');
-    expect(narrative).toContain('took');
-    expect(narrative).toContain('dropped');
-    expect(narrative).toContain('Put');
-    expect(narrative).toContain('picked up');
-  });
-});
-```
+### 1. Extend examine item coverage
+
+- Update `tests/integration/mods/items/examineItemRuleExecution.test.js` to ensure the Phase 4
+  edge cases are covered. The rule currently ends the actor's turn after logging the
+  perception event—assert `core:turn_ended` with `success: true` instead of treating examine
+  as a free action.
+- Add or confirm coverage for:
+  - Inventory vs. location targets (the test fixture already provides helpers through
+    `ModEntityBuilder`—keep using them).
+  - Multi-item scenarios to ensure sequential examinations keep dispatching
+    `core:perceptible_event` with `perceptionType: 'item_examined'`.
+  - Perception logging visibility via `AddPerceptionLogEntryHandler` so only the acting player
+    receives the detailed description.
+- In `tests/integration/mods/items/examineItemActionDiscovery.test.js`, verify the discovery
+  scopes block items that lack `core:description` rather than expecting runtime failures.
+
+> Template snippet (for reference only):
+>
+> ```javascript
+> const fixture = await ModTestFixture.forAction('items', 'items:examine_item');
+> fixture.reset([room, actor, ...items]);
+> await fixture.executeAction('test:actor1', 'letter-1');
+> const turnEnded = fixture.events.find((e) => e.eventType === 'core:turn_ended');
+> expect(turnEnded?.payload.success).toBe(true);
+> ```
+
+### 2. Harden put-in-container scenarios
+
+- Work within `tests/integration/mods/items/putInContainerRuleExecution.test.js` using the
+  existing `ModTestFixture` pattern. Ensure the tests cover:
+  - Successful transfers that populate `items:container.contents` while removing the item from
+    the actor inventory.
+  - Capacity failures (both max items and max weight) validating the
+    `put_in_container_failed` perceptible event and a `core:turn_ended` with `success: false`.
+  - Sequential placements and perception log generation (the file already contains helper
+    builders—extend those rather than rebuilding new factories).
+- In `tests/integration/mods/items/putInContainerActionDiscovery.test.js`, confirm that discovery
+  still filters closed containers and actors without inventory. Adjust expectations to use the
+  `action.id` property returned by the fixture (`ModTestFixture.discoverActions`).
+
+### 3. Bidirectional container workflow
+
+- Extend `tests/integration/mods/items/containerWorkflow.test.js` (or add a new describe block in
+  the same file) to cover the full take → put cycle now that Phase 4 is active. Reuse the open
+  fixture from Phase 3 to open a container, then use the put fixture to return the item and
+  verify contents.
+- Ensure the workflow asserts:
+  - Item state after both operations.
+  - Emitted events (`items:item_put_in_container` as well as the existing
+    `items:item_taken_from_container`).
+  - Turn management (each action ends the turn and reports success).
+
+### 4. Full system integration (Phase 1-4)
+
+- Update `tests/integration/mods/items/fullSystemIntegration.test.js` to add a Phase 4 scenario.
+  The existing suite stops at `take_from_container`; extend it to:
+  1. Examine the retrieved item (using the examine fixture) before or after transferring it.
+  2. Place the item back into the container with `items:put_in_container`.
+  3. Assert that the same entity instance maintains its components throughout the lifecycle.
+- The additional scenario should share entity state between fixtures just like the current test
+  shares actors between open/take/give. Remember to call `cleanup()` on any new fixtures.
 
 ## Validation
 
-- [ ] Examine tests cover inventory and location items
-- [ ] Examine scope union works correctly
-- [ ] Examine does not end turn
-- [ ] Put in container tests cover all scenarios
-- [ ] Container capacity validation works for put operations
-- [ ] Closed containers prevent putting
-- [ ] Bidirectional operations validated
-- [ ] Full E2E workflow demonstrates all features
-- [ ] Perception logging verified for all actions
-- [ ] Test coverage >80% for Phase 4 code
-- [ ] All tests pass
-
-## Dependencies
-
-- ITESYSIMP-016: Examine item implementation
-- ITESYSIMP-017: Put in container implementation
-
-## Next Steps
-
-After completion, proceed to:
-- ITESYSIMP-019: Final integration and documentation
+- [ ] `examineItemActionDiscovery.test.js` verifies scope union (inventory + location) and rejects
+      items missing `core:description`.
+- [ ] `examineItemRuleExecution.test.js` asserts perception logging and turn completion behaviour.
+- [ ] `putInContainerActionDiscovery.test.js` only exposes open containers with available inventory
+      items.
+- [ ] `putInContainerRuleExecution.test.js` covers success, capacity, and perception logging paths.
+- [ ] `containerWorkflow.test.js` exercises the take → put cycle with Phase 4 expectations.
+- [ ] `fullSystemIntegration.test.js` now walks through Phases 1-4 in a single scenario.
+- [ ] Perception logging verified for all involved actions.
+- [ ] All relevant tests pass (unit + integration suites touched by the change).
