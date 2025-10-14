@@ -190,4 +190,42 @@ describe('ApiKeyService error consolidation coverage', () => {
     );
     expect(result.errorDetails?.stage).toBe('api_key_all_sources_failed');
   });
+
+  it('escalates missing project root path errors into the combined failure summary', async () => {
+    appConfigService.getProxyProjectRootPathForApiKeyFiles.mockReturnValue('   ');
+
+    const fileReadSpy = jest.spyOn(apiKeyService, '_readApiKeyFromFile');
+
+    const result = await apiKeyService.getApiKey(
+      {
+        apiType: 'openai',
+        apiKeyEnvVar: 'ROOTLESS_ENV_KEY',
+        apiKeyFileName: 'ghost.key',
+      },
+      'llm-cloud-4'
+    );
+
+    expect(fileReadSpy).not.toHaveBeenCalled();
+
+    expect(result.apiKey).toBeNull();
+    expect(result.source).toBe('N/A');
+    expect(result.errorDetails?.stage).toBe('api_key_all_sources_failed');
+    expect(result.errorDetails?.details).toEqual(
+      expect.objectContaining({
+        llmId: 'llm-cloud-4',
+        attemptedEnvVar: 'ROOTLESS_ENV_KEY',
+        attemptedFile: 'ghost.key',
+      })
+    );
+    expect(result.errorDetails?.details?.reason).toContain(
+      'PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES environment variable not set.'
+    );
+    expect(result.errorDetails?.details?.originalErrorMessage).toBeUndefined();
+
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES is not set. Cannot access API key file.'
+      )
+    );
+  });
 });
