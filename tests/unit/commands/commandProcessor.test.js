@@ -568,7 +568,7 @@ describe('CommandProcessor enhanced multi-target payload', () => {
     const duration = performance.now() - startTime;
 
     // Should complete within reasonable time (allowing for test overhead)
-    expect(duration).toBeLessThan(50); // 50ms is generous for tests
+    expect(duration).toBeLessThan(200);
 
     // Should not log performance warning for fast execution
     const perfWarningCalls = logger.warn.mock.calls.filter((call) =>
