@@ -1052,6 +1052,31 @@ describe('Server - Comprehensive Tests', () => {
       );
     });
 
+    test('defaults to production warning when node env is non-string', async () => {
+      appConfigServiceMock.getNodeEnv = jest.fn(() => ({ value: 'invalid' }));
+
+      await loadServer();
+
+      expect(consoleLoggerInstance.warn).toHaveBeenCalledWith(
+        'LLM Proxy Server: PROXY_ALLOWED_ORIGIN environment variable not set or empty. CORS will not be configured. This may cause issues with browser-based clients.'
+      );
+      expect(
+        consoleLoggerInstance.warn.mock.calls.some(([message]) =>
+          message.includes('development mode')
+        )
+      ).toBe(false);
+    });
+
+    test('trims whitespace node env values before determining CORS warning', async () => {
+      appConfigServiceMock.getNodeEnv = jest.fn(() => '   ');
+
+      await loadServer();
+
+      expect(consoleLoggerInstance.warn).toHaveBeenCalledWith(
+        'LLM Proxy Server: PROXY_ALLOWED_ORIGIN environment variable not set or empty. CORS will not be configured. This may cause issues with browser-based clients.'
+      );
+    });
+
     test('metrics endpoint reports errors gracefully', async () => {
       await loadServer();
       metricsServiceInstance.getMetrics.mockRejectedValueOnce(
