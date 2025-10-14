@@ -20,6 +20,7 @@
         "HTTP-Referer": "https://my-text-adventure-game.com",
         "X-Title": "Living Narrative Engine"
       },
+      "comment": "Excellent narrative roleplayer with balanced creativity and control.",
       "contextTokenLimit": 1000000
     },
     "deepseek-chat-v3.1-toolcalling": {
@@ -41,6 +42,7 @@
         "HTTP-Referer": "https://my-text-adventure-game.com",
         "X-Title": "Living Narrative Engine"
       },
+      "comment": "Great at energetic banter; needs a bit more guidance for somber scenes.",
       "contextTokenLimit": 256000
     },
     "qwen3-max-toolcalling": {
@@ -62,6 +64,7 @@
         "HTTP-Referer": "https://my-text-adventure-game.com",
         "X-Title": "Living Narrative Engine"
       },
+      "comment": "Strong improviser with playful tone—ideal for lighthearted adventures.",
       "contextTokenLimit": 256000
     },
     "openrouter-claude-sonnet-4-toolcalling": {
@@ -83,6 +86,7 @@
         "HTTP-Referer": "https://my-text-adventure-game.com",
         "X-Title": "Living Narrative Engine"
       },
+      "comment": "Reliable classic—steady voice but slightly less dynamic than Sonnet 4.5.",
       "contextTokenLimit": 1000000
     }
   }

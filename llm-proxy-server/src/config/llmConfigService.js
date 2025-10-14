@@ -34,6 +34,7 @@ import { loadProxyLlmConfigs } from '../proxyLlmConfigLoader.js';
  * @property {object} [jsonOutputStrategy.jsonSchema] - JSON schema if method is "openrouter_json_schema".
  * @property {object} [defaultParameters] - Default parameters for requests to this LLM (e.g., maxRetries, temperature).
  * @property {object} [providerSpecificHeaders] - Headers specific to the LLM provider.
+ * @property {string} [comment] - Optional notes about the configuration (e.g., roleplaying quality observations).
  * @property {Array<object>} promptElements - Defines named prompt parts and their wrappers.
  * @property {Array<string>} promptAssemblyOrder - Ordered list of 'promptElements' keys.
  * @property {number} [contextTokenLimit] - Maximum context tokens for the model.

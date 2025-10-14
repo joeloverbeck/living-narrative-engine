@@ -71,6 +71,7 @@ import { isNonBlankString } from '../../utils/textUtils.js';
  * @property {LLMJsonOutputStrategy} jsonOutputStrategy - Strategy for JSON output.
  * @property {object} [defaultParameters] - Optional: Default parameters for LLM requests.
  * @property {Record<string, string>} [providerSpecificHeaders] - Optional: HTTP headers specific to the provider.
+ * @property {string} [comment] - Optional: Human-readable notes about the configuration (e.g., roleplaying quality).
  * @property {LLMConfigPromptElement[]} promptElements - Defines named prompt parts.
  * @property {string[]} promptAssemblyOrder - Ordered list of 'promptElements' keys.
  * @property {number} [contextTokenLimit] - Optional: Maximum context tokens.

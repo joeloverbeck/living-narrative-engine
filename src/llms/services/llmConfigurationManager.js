@@ -27,6 +27,7 @@ import { LLMSelectionPersistence } from './llmSelectionPersistence.js';
  * @property {object} [jsonOutputStrategy.jsonSchema] - Required if method uses JSON schema.
  * @property {object} [defaultParameters] - Optional: Default parameters for LLM requests.
  * @property {object} [providerSpecificHeaders] - Optional: HTTP headers specific to the LLM provider.
+ * @property {string} [comment] - Optional: Human-readable notes about this configuration (e.g., roleplaying strengths).
  * @property {Array<{key: string, prefix: string, suffix: string}>} promptElements - Defines named prompt parts.
  * @property {string[]} promptAssemblyOrder - Ordered list of 'promptElements' keys.
  * @property {number} [contextTokenLimit] - Optional: Maximum context tokens for the model.

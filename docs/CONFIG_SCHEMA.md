@@ -222,5 +222,12 @@ setup. The following fields are based on Table 3[cite: 468]:
     ```
     (Adapted from [cite: 468] and user's JSON)
 
+- `comment` (string, optional):
+  - **Purpose**: Stores free-form notes about how the LLM behaves in playtesting (for example, roleplaying quality,
+    tone, or reliability). This field is ignored by runtime systems but helps humans choose between models.
+  - **Data Type**: `string`
+  - **Required**: No. Include it only when there is something noteworthy to document for teammates.
+  - **Example**: `"comment": "Great for dramatic monologues; occasionally verbose with combat narration."`
+
 This schema provides the necessary flexibility to configure a wide range of LLMs and control their interaction behavior
 through the ILLMAdapter.
