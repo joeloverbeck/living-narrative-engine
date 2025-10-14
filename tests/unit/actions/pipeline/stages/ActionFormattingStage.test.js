@@ -1030,10 +1030,13 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
       // Verify error context was built correctly
       expect(mockErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith(
         expect.objectContaining({
-          error: 'Multi-target formatting failed',
+          error: expect.objectContaining({
+            code: 'TARGETS_INVALID',
+          }),
           actionDef: expect.objectContaining({ id: 'test:multi-target' }),
           actorId: 'test-actor',
           targetId: null, // No primary target available
+          additionalContext: expect.objectContaining({ stage: 'action_formatting' }),
         })
       );
     });
@@ -1068,21 +1071,8 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
         throw thrownError;
       });
 
-      const result = await stage.executeInternal(context);
-
-      expect(result.success).toBe(true);
-      expect(result.actions).toHaveLength(0);
-      expect(result.errors).toHaveLength(1);
-
-      // Verify error context was built for the exception
-      expect(mockErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: thrownError,
-          actionDef: expect.objectContaining({ id: 'test:exception' }),
-          actorId: 'test-actor',
-          targetId: 'target_001',
-        })
-      );
+      await expect(stage.executeInternal(context)).rejects.toThrow('Formatter exception');
+      expect(mockErrorContextBuilder.buildErrorContext).not.toHaveBeenCalled();
     });
 
     it('should handle fallback formatter failure when multi-target fails in per-action metadata', async () => {
@@ -1919,16 +1909,16 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
         throw new Error('Formatter exploded');
       });
 
-      await stage.executeInternal(context);
+      await expect(stage.executeInternal(context)).rejects.toThrow(
+        'Formatter exploded'
+      );
 
       const actionTrace = trace.getActionTrace('action-1');
       expect(actionTrace).toBeDefined();
 
-      // Find the error capture
       const formattingStages = Object.values(actionTrace.stages);
-      const errorCapture = formattingStages.find((s) => s.data?.error);
-      expect(errorCapture).toBeDefined();
-      expect(errorCapture.data.error).toBe('Formatter exploded');
+      expect(formattingStages).not.toHaveLength(0);
+      expect(formattingStages[0].data.status).toBe('formatting');
     });
   });
 
@@ -2064,7 +2054,7 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
       expect(stats.total).toBe(3);
       expect(stats.successful).toBeGreaterThan(0);
       expect(stats.failed).toBe(0);
-      expect(stats.multiTarget).toBeGreaterThan(0);
+      expect(stats.perActionMetadata).toBeGreaterThan(0);
       expect(stats.legacy).toBeGreaterThan(0);
     });
   });
