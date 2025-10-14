@@ -307,6 +307,60 @@ describe('ApiKeyService error consolidation coverage', () => {
     );
   });
 
+  it('synthesizes a combined failure when the file reader returns an undefined error payload', async () => {
+    delete process.env.UNDEFINED_ENV_KEY;
+
+    const createErrorDetailsSpy = jest.spyOn(
+      apiKeyService,
+      '_createErrorDetails'
+    );
+
+    jest
+      .spyOn(apiKeyService, '_readApiKeyFromFile')
+      .mockResolvedValue({ key: null, error: undefined });
+
+    const result = await apiKeyService.getApiKey(
+      {
+        apiType: 'openai',
+        apiKeyEnvVar: 'UNDEFINED_ENV_KEY',
+        apiKeyFileName: 'undefined.key',
+      },
+      'llm-cloud-undefined'
+    );
+
+    expect(createErrorDetailsSpy).toHaveBeenCalled();
+    const lastCall = createErrorDetailsSpy.mock.calls.at(-1);
+    expect(lastCall?.[1]).toBe('api_key_all_sources_failed');
+    expect(lastCall?.[2]).toEqual(
+      expect.objectContaining({
+        llmId: 'llm-cloud-undefined',
+        attemptedEnvVar: 'UNDEFINED_ENV_KEY',
+        attemptedFile: 'undefined.key',
+      })
+    );
+
+    expect(result.apiKey).toBeNull();
+    expect(result.source).toBe('N/A');
+    expect(result.errorDetails).toEqual(
+      expect.objectContaining({
+        stage: 'api_key_all_sources_failed',
+        details: expect.objectContaining({
+          llmId: 'llm-cloud-undefined',
+          attemptedEnvVar: 'UNDEFINED_ENV_KEY',
+          attemptedFile: 'undefined.key',
+          reason: expect.stringContaining('see previous logs'),
+        }),
+      })
+    );
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Stage: api_key_all_sources_failed'),
+      expect.objectContaining({
+        details: expect.objectContaining({ attemptedEnvVar: 'UNDEFINED_ENV_KEY' }),
+      })
+    );
+  });
+
   it('escalates missing project root path errors into the combined failure summary', async () => {
     appConfigService.getProxyProjectRootPathForApiKeyFiles.mockReturnValue('   ');
 
