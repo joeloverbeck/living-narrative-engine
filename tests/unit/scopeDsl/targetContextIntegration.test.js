@@ -585,7 +585,8 @@ describe('Target Context Integration', () => {
       const end = performance.now();
 
       expect(result.targets.primary).toHaveLength(1000);
-      expect(end - start).toBeLessThan(10); // Should handle large arrays efficiently
+      const performanceBudget = globalThis.__coverage__ ? 35 : 10;
+      expect(end - start).toBeLessThan(performanceBudget); // Allow extra time when instrumentation is active
     });
   });
 });
