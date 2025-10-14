@@ -387,6 +387,48 @@ describe('ApiKeyService error consolidation coverage', () => {
     );
   });
 
+  it('treats primitive string file errors as missing context and preserves combined diagnostics', async () => {
+    delete process.env.PRIMITIVE_STRING_ENV_KEY;
+
+    jest
+      .spyOn(apiKeyService, '_readApiKeyFromFile')
+      .mockResolvedValue({ key: null, error: 'catastrophic failure' });
+
+    const result = await apiKeyService.getApiKey(
+      {
+        apiType: 'openai',
+        apiKeyEnvVar: 'PRIMITIVE_STRING_ENV_KEY',
+        apiKeyFileName: 'primitive-string.key',
+      },
+      'llm-cloud-primitive-string'
+    );
+
+    expect(result.apiKey).toBeNull();
+    expect(result.source).toBe('N/A');
+    expect(result.errorDetails).toEqual(
+      expect.objectContaining({
+        stage: 'api_key_all_sources_failed',
+        details: expect.objectContaining({
+          llmId: 'llm-cloud-primitive-string',
+          attemptedEnvVar: 'PRIMITIVE_STRING_ENV_KEY',
+          attemptedFile: 'primitive-string.key',
+          reason: expect.stringContaining('see previous logs'),
+        }),
+      })
+    );
+
+    const warnCall = logger.warn.mock.calls.at(-1);
+    expect(warnCall?.[0]).toContain('Stage: api_key_all_sources_failed');
+    expect(warnCall?.[1]).toEqual(
+      expect.objectContaining({
+        details: expect.objectContaining({
+          attemptedEnvVar: 'PRIMITIVE_STRING_ENV_KEY',
+          attemptedFile: 'primitive-string.key',
+        }),
+      })
+    );
+  });
+
   it('synthesizes a combined failure when the file reader returns an undefined error payload', async () => {
     delete process.env.UNDEFINED_ENV_KEY;
 
