@@ -8,7 +8,7 @@
 ## Executive Summary
 
 `ActionFormattingStage` (`src/actions/pipeline/stages/ActionFormattingStage.js`) has grown into a 2,100+ line monolith that mixes
-formatting heuristics, fallback translation, instrumentation, validation, and error construction. Stage-level heuristics decide a
+formatting heuristics, fallback template transformation, instrumentation, validation, and error construction. Stage-level heuristics decide a
 single execution path for every action in a batch, so touching one path routinely impacts unrelated actions (e.g., the
 `adjust_clothing` regressions captured in the existing bug suites). This specification proposes a refactor that isolates decision
 making and formatting logic per action, introduces strategy objects for the different formatting modes, and extracts telemetry and
