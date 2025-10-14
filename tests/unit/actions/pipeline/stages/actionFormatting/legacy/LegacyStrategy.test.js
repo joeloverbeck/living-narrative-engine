@@ -4,7 +4,7 @@ describe('LegacyStrategy', () => {
   let commandFormatter;
   let fallbackFormatter;
   let logger;
-  let extractTargetIds;
+  let targetNormalizationService;
   let createError;
   let validateVisualProperties;
   let safeEventDispatcher;
@@ -25,7 +25,22 @@ describe('LegacyStrategy', () => {
       warn: jest.fn(),
     };
 
-    extractTargetIds = jest.fn(() => ({ primary: ['target-1'] }));
+    targetNormalizationService = {
+      normalize: jest.fn(() => ({
+        targetIds: { primary: ['target-1'] },
+        params: {
+          targetIds: { primary: ['target-1'] },
+          targetId: 'target-1',
+        },
+        primaryTargetContext: {
+          type: 'entity',
+          entityId: 'target-1',
+          displayName: 'Enemy',
+        },
+        targetExtractionResult: null,
+        error: null,
+      })),
+    };
     createError = jest.fn((payload) => ({ error: payload }));
     validateVisualProperties = jest.fn();
     safeEventDispatcher = {};
@@ -38,7 +53,7 @@ describe('LegacyStrategy', () => {
       logger,
       fallbackFormatter,
       createError,
-      extractTargetIds,
+      targetNormalizationService,
       validateVisualProperties,
     });
   });

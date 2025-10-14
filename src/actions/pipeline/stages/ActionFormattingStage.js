@@ -6,9 +6,10 @@
 import { PipelineStage } from '../PipelineStage.js';
 import { PipelineResult } from '../PipelineResult.js';
 import { ERROR_PHASES } from '../../errors/actionErrorTypes.js';
-import { TargetExtractionResult } from '../../../entities/multiTarget/targetExtractionResult.js';
 import { LegacyFallbackFormatter } from './actionFormatting/legacy/LegacyFallbackFormatter.js';
 import { LegacyStrategy } from './actionFormatting/legacy/LegacyStrategy.js';
+import { TargetNormalizationService } from './actionFormatting/TargetNormalizationService.js';
+import { createActionFormattingTask } from './actionFormatting/ActionFormattingTaskFactory.js';
 
 /** @typedef {import('../../../interfaces/IActionCommandFormatter.js').IActionCommandFormatter} IActionCommandFormatter */
 /** @typedef {import('../../../entities/entityManager.js').default} EntityManager */
@@ -30,6 +31,7 @@ export class ActionFormattingStage extends PipelineStage {
   #logger;
   #legacyFallbackFormatter;
   #legacyStrategy;
+  #targetNormalizationService;
 
   /**
    * Creates an ActionFormattingStage instance
@@ -58,6 +60,10 @@ export class ActionFormattingStage extends PipelineStage {
     this.#errorContextBuilder = errorContextBuilder;
     this.#logger = logger;
 
+    this.#targetNormalizationService = new TargetNormalizationService({
+      logger: this.#logger,
+    });
+
     this.#legacyFallbackFormatter = new LegacyFallbackFormatter({
       commandFormatter: this.#commandFormatter,
       entityManager: this.#entityManager,
@@ -85,12 +91,11 @@ export class ActionFormattingStage extends PipelineStage {
           actorId,
           trace,
           targetId,
-          fallbackTargetId
-        ),
-      extractTargetIds: (resolvedTargets) =>
-        this.#extractTargetIds(resolvedTargets),
+        fallbackTargetId
+      ),
       validateVisualProperties: (visual, actionId) =>
         this.#validateVisualProperties(visual, actionId),
+      targetNormalizationService: this.#targetNormalizationService,
     });
   }
 
@@ -363,14 +368,23 @@ export class ActionFormattingStage extends PipelineStage {
       safeEventDispatcher: this.#safeEventDispatcher,
     };
 
-    for (const actionWithTargets of actionsWithTargets) {
+    const tasks = actionsWithTargets.map((actionWithTargets) =>
+      createActionFormattingTask({
+        actor,
+        actionWithTargets,
+        formatterOptions,
+      })
+    );
+
+    for (const task of tasks) {
       const {
         actionDef,
         targetContexts,
         resolvedTargets,
         targetDefinitions,
         isMultiTarget,
-      } = actionWithTargets;
+        metadata,
+      } = task;
 
       const actionStartTime = Date.now();
 
@@ -383,6 +397,7 @@ export class ActionFormattingStage extends PipelineStage {
           hasResolvedTargets: !!resolvedTargets,
           hasTargetDefinitions: !!targetDefinitions,
           targetContextCount: targetContexts?.length || 0,
+          metadataSource: metadata?.source,
         });
 
         // Check if this action has multi-target metadata
@@ -665,14 +680,22 @@ export class ActionFormattingStage extends PipelineStage {
       safeEventDispatcher: this.#safeEventDispatcher,
     };
 
-    for (const actionWithTargets of actionsWithTargets) {
+    const tasks = actionsWithTargets.map((actionWithTargets) =>
+      createActionFormattingTask({
+        actor,
+        actionWithTargets,
+        formatterOptions,
+      })
+    );
+
+    for (const task of tasks) {
       const {
         actionDef,
         targetContexts,
         resolvedTargets,
         targetDefinitions,
         isMultiTarget,
-      } = actionWithTargets;
+      } = task;
 
       try {
         // Check if this action has multi-target metadata
@@ -1282,29 +1305,12 @@ export class ActionFormattingStage extends PipelineStage {
    * @private
    */
   #extractTargetIds(resolvedTargets) {
-    const targetIds = {};
+    const normalization = this.#targetNormalizationService.normalize({
+      resolvedTargets,
+      isMultiTarget: true,
+    });
 
-    // Use optimized approach: if we have a TargetExtractionResult, use O(1) lookups
-    if (
-      resolvedTargets &&
-      typeof resolvedTargets.getEntityIdByPlaceholder === 'function'
-    ) {
-      // resolvedTargets is already a TargetExtractionResult
-      for (const placeholderName of resolvedTargets.getTargetNames()) {
-        const entityId =
-          resolvedTargets.getEntityIdByPlaceholder(placeholderName);
-        if (entityId) {
-          targetIds[placeholderName] = [entityId]; // Keep array format for backward compatibility
-        }
-      }
-    } else {
-      // Legacy format: preserve all targets in each category
-      for (const [key, targets] of Object.entries(resolvedTargets)) {
-        targetIds[key] = targets.map((t) => t.id);
-      }
-    }
-
-    return targetIds;
+    return normalization.targetIds || {};
   }
 
   /**
@@ -1317,21 +1323,12 @@ export class ActionFormattingStage extends PipelineStage {
    */
   #createTargetExtractionResult(resolvedTargets) {
     // Convert to simple targets object format for TargetManager
-    const targets = {};
-    for (const [key, targetList] of Object.entries(resolvedTargets)) {
-      if (Array.isArray(targetList) && targetList.length > 0) {
-        targets[key] = targetList[0].id; // Take first target from each category
-      }
-    }
+    const normalization = this.#targetNormalizationService.normalize({
+      resolvedTargets,
+      isMultiTarget: true,
+    });
 
-    // Use existing factory method to create TargetExtractionResult
-    return TargetExtractionResult.fromResolvedParameters(
-      {
-        isMultiTarget: Object.keys(targets).length > 1,
-        targetIds: Object.keys(targets).length > 0 ? targets : undefined,
-      },
-      this.#logger
-    );
+    return normalization.targetExtractionResult;
   }
 
   /**
@@ -1343,17 +1340,12 @@ export class ActionFormattingStage extends PipelineStage {
    */
   #getPrimaryTargetContext(resolvedTargets) {
     // Find first target from primary or first available target type
-    const primaryTargets =
-      resolvedTargets.primary || Object.values(resolvedTargets)[0];
-    if (!primaryTargets || primaryTargets.length === 0) return null;
+    const normalization = this.#targetNormalizationService.normalize({
+      resolvedTargets,
+      isMultiTarget: true,
+    });
 
-    const target = primaryTargets[0];
-    // Create a proper ActionTargetContext for the base formatter
-    return {
-      type: 'entity',
-      entityId: target.id,
-      displayName: target.displayName,
-    };
+    return normalization.primaryTargetContext;
   }
 
   /**

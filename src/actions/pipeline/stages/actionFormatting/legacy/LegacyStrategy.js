@@ -31,7 +31,7 @@ export class LegacyStrategy {
   #logger;
   #fallbackFormatter;
   #createError;
-  #extractTargetIds;
+  #targetNormalizationService;
   #validateVisualProperties;
 
   /**
@@ -43,7 +43,7 @@ export class LegacyStrategy {
    * @param {import('../../../../../logging/consoleLogger.js').default} deps.logger - Logger instance
    * @param {import('./LegacyFallbackFormatter.js').LegacyFallbackFormatter} deps.fallbackFormatter - Legacy fallback formatter
    * @param {Function} deps.createError - Factory to build structured errors
-   * @param {Function} deps.extractTargetIds - Helper for converting resolved targets to id lists
+   * @param {import('../TargetNormalizationService.js').TargetNormalizationService} deps.targetNormalizationService - Target normalisation service
    * @param {Function} deps.validateVisualProperties - Visual validation helper
    * @description Creates a new legacy formatting strategy.
    */
@@ -55,7 +55,7 @@ export class LegacyStrategy {
     logger,
     fallbackFormatter,
     createError,
-    extractTargetIds,
+    targetNormalizationService,
     validateVisualProperties,
   }) {
     this.#commandFormatter = commandFormatter;
@@ -65,7 +65,7 @@ export class LegacyStrategy {
     this.#logger = logger;
     this.#fallbackFormatter = fallbackFormatter;
     this.#createError = createError;
-    this.#extractTargetIds = extractTargetIds;
+    this.#targetNormalizationService = targetNormalizationService;
     this.#validateVisualProperties = validateVisualProperties;
   }
 
@@ -198,15 +198,28 @@ export class LegacyStrategy {
                     ? commandData.targets
                     : actionSpecificTargets;
 
-                const targetIds = this.#extractTargetIds(specificTargets);
+                const normalizationResult =
+                  this.#targetNormalizationService.normalize({
+                    resolvedTargets: specificTargets,
+                    isMultiTarget: true,
+                  });
+
+                if (normalizationResult.error) {
+                  errors.push(
+                    this.#createError(
+                      normalizationResult.error,
+                      actionDef,
+                      actor.id,
+                      trace
+                    )
+                  );
+                  continue;
+                }
+
                 const params = {
-                  targetIds,
+                  ...normalizationResult.params,
                   isMultiTarget: true,
                 };
-
-                if (targetIds.primary && targetIds.primary.length === 1) {
-                  params.targetId = targetIds.primary[0];
-                }
 
                 formattedActions.push({
                   id: actionDef.id,
@@ -476,15 +489,28 @@ export class LegacyStrategy {
                     ? commandData.targets
                     : actionSpecificTargets;
 
-                const targetIds = this.#extractTargetIds(specificTargets);
+                const normalizationResult =
+                  this.#targetNormalizationService.normalize({
+                    resolvedTargets: specificTargets,
+                    isMultiTarget: true,
+                  });
+
+                if (normalizationResult.error) {
+                  errors.push(
+                    this.#createError(
+                      normalizationResult.error,
+                      actionDef,
+                      actor.id,
+                      trace
+                    )
+                  );
+                  continue;
+                }
+
                 const params = {
-                  targetIds,
+                  ...normalizationResult.params,
                   isMultiTarget: true,
                 };
-
-                if (targetIds.primary && targetIds.primary.length === 1) {
-                  params.targetId = targetIds.primary[0];
-                }
 
                 formattedActions.push({
                   id: actionDef.id,
