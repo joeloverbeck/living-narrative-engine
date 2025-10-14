@@ -7,6 +7,8 @@ import { PipelineStage } from '../PipelineStage.js';
 import { PipelineResult } from '../PipelineResult.js';
 import { ERROR_PHASES } from '../../errors/actionErrorTypes.js';
 import { TargetExtractionResult } from '../../../entities/multiTarget/targetExtractionResult.js';
+import { LegacyFallbackFormatter } from './actionFormatting/legacy/LegacyFallbackFormatter.js';
+import { LegacyStrategy } from './actionFormatting/legacy/LegacyStrategy.js';
 
 /** @typedef {import('../../../interfaces/IActionCommandFormatter.js').IActionCommandFormatter} IActionCommandFormatter */
 /** @typedef {import('../../../entities/entityManager.js').default} EntityManager */
@@ -26,6 +28,8 @@ export class ActionFormattingStage extends PipelineStage {
   #getEntityDisplayNameFn;
   #errorContextBuilder;
   #logger;
+  #legacyFallbackFormatter;
+  #legacyStrategy;
 
   /**
    * Creates an ActionFormattingStage instance
@@ -53,6 +57,41 @@ export class ActionFormattingStage extends PipelineStage {
     this.#getEntityDisplayNameFn = getEntityDisplayNameFn;
     this.#errorContextBuilder = errorContextBuilder;
     this.#logger = logger;
+
+    this.#legacyFallbackFormatter = new LegacyFallbackFormatter({
+      commandFormatter: this.#commandFormatter,
+      entityManager: this.#entityManager,
+      getEntityDisplayNameFn: this.#getEntityDisplayNameFn,
+    });
+
+    this.#legacyStrategy = new LegacyStrategy({
+      commandFormatter: this.#commandFormatter,
+      entityManager: this.#entityManager,
+      safeEventDispatcher: this.#safeEventDispatcher,
+      getEntityDisplayNameFn: this.#getEntityDisplayNameFn,
+      logger: this.#logger,
+      fallbackFormatter: this.#legacyFallbackFormatter,
+      createError: (
+        errorOrResult,
+        actionDef,
+        actorId,
+        trace,
+        targetId = null,
+        fallbackTargetId = null
+      ) =>
+        this.#createError(
+          errorOrResult,
+          actionDef,
+          actorId,
+          trace,
+          targetId,
+          fallbackTargetId
+        ),
+      extractTargetIds: (resolvedTargets) =>
+        this.#extractTargetIds(resolvedTargets),
+      validateVisualProperties: (visual, actionId) =>
+        this.#validateVisualProperties(visual, actionId),
+    });
   }
 
   /**
@@ -204,11 +243,14 @@ export class ActionFormattingStage extends PipelineStage {
         });
       }
 
-      result = await this.#formatLegacyActionsTraced(
-        context,
+      const legacyOutcome = await this.#legacyStrategy.format({
+        actor,
+        actionsWithTargets,
         trace,
-        processingStats
-      );
+        processingStats,
+        traceSource: source,
+      });
+      result = legacyOutcome.pipelineResult;
     }
 
     // Capture stage completion
@@ -289,7 +331,14 @@ export class ActionFormattingStage extends PipelineStage {
     }
 
     // Process legacy format actions
-    return this.#formatLegacyActions(context, trace);
+    const legacyOutcome = await this.#legacyStrategy.format({
+      actor,
+      actionsWithTargets,
+      trace,
+      traceSource: source,
+    });
+
+    return legacyOutcome.pipelineResult;
   }
 
   /**
@@ -903,33 +952,35 @@ export class ActionFormattingStage extends PipelineStage {
             fallbackUsed = true;
             const primaryTarget =
               this.#getPrimaryTargetContext(resolvedTargets);
-            formattingResult = this.#formatWithLegacyFallback(
-              actionDef,
-              primaryTarget,
+            formattingResult = this.#legacyFallbackFormatter.formatWithFallback(
               {
-                logger: this.#logger,
-                debug: true,
-                safeEventDispatcher: this.#safeEventDispatcher,
-              },
-              targetDefinitions,
-              resolvedTargets
+                actionDefinition: actionDef,
+                targetContext: primaryTarget,
+                formatterOptions: {
+                  logger: this.#logger,
+                  debug: true,
+                  safeEventDispatcher: this.#safeEventDispatcher,
+                },
+                targetDefinitions,
+                resolvedTargets,
+              }
             );
           }
         } else {
           // Direct fallback to legacy
           fallbackUsed = true;
           const primaryTarget = this.#getPrimaryTargetContext(resolvedTargets);
-          formattingResult = this.#formatWithLegacyFallback(
-            actionDef,
-            primaryTarget,
-            {
+          formattingResult = this.#legacyFallbackFormatter.formatWithFallback({
+            actionDefinition: actionDef,
+            targetContext: primaryTarget,
+            formatterOptions: {
               logger: this.#logger,
               debug: true,
               safeEventDispatcher: this.#safeEventDispatcher,
             },
             targetDefinitions,
-            resolvedTargets
-          );
+            resolvedTargets,
+          });
         }
 
         // Process results
@@ -1106,96 +1157,98 @@ export class ActionFormattingStage extends PipelineStage {
               };
               formattedActions.push(actionInfo);
             }
-        } else {
-          // Multi-target formatting failed, try fallback to legacy formatting
-          const primaryTarget =
-            this.#getPrimaryTargetContext(resolvedTargets);
-          const fallbackResult = this.#formatWithLegacyFallback(
-            actionDef,
-            primaryTarget,
-            {
-              logger: this.#logger,
-              debug: true,
-              safeEventDispatcher: this.#safeEventDispatcher,
-            },
-            targetDefinitions,
-            resolvedTargets
-          );
-
-          if (fallbackResult.ok) {
-            const actionInfo = {
-              id: actionDef.id,
-              name: actionDef.name,
-              command: fallbackResult.value,
-              description: actionDef.description || '',
-              params: primaryTarget?.entityId
-                ? { targetId: primaryTarget.entityId }
-                : {},
-              visual: actionDef.visual || null,
-            };
-            formattedActions.push(actionInfo);
           } else {
-            const errorSource = primaryTarget ? fallbackResult : formatResult;
+            // Multi-target formatting failed, try fallback to legacy formatting
+            const primaryTarget =
+              this.#getPrimaryTargetContext(resolvedTargets);
+            const fallbackResult =
+              this.#legacyFallbackFormatter.formatWithFallback({
+                actionDefinition: actionDef,
+                targetContext: primaryTarget,
+                formatterOptions: {
+                  logger: this.#logger,
+                  debug: true,
+                  safeEventDispatcher: this.#safeEventDispatcher,
+                },
+                targetDefinitions,
+                resolvedTargets,
+              });
+
+            if (fallbackResult.ok) {
+              const actionInfo = {
+                id: actionDef.id,
+                name: actionDef.name,
+                command: fallbackResult.value,
+                description: actionDef.description || '',
+                params: primaryTarget?.entityId
+                  ? { targetId: primaryTarget.entityId }
+                  : {},
+                visual: actionDef.visual || null,
+              };
+              formattedActions.push(actionInfo);
+            } else {
+              const errorSource = primaryTarget ? fallbackResult : formatResult;
+              errors.push(
+                this.#createError(
+                  errorSource,
+                  actionDef,
+                  actor.id,
+                  trace,
+                  primaryTarget?.entityId
+                )
+              );
+            }
+          }
+        } else {
+          // Fallback to legacy formatting for first target of each type
+          const primaryTarget = this.#getPrimaryTargetContext(resolvedTargets);
+          if (primaryTarget) {
+            const formatResult =
+              this.#legacyFallbackFormatter.formatWithFallback({
+                actionDefinition: actionDef,
+                targetContext: primaryTarget,
+                formatterOptions: {
+                  logger: this.#logger,
+                  debug: true,
+                  safeEventDispatcher: this.#safeEventDispatcher,
+                },
+                targetDefinitions,
+                resolvedTargets,
+              });
+
+            if (formatResult.ok) {
+              const actionInfo = {
+                id: actionDef.id,
+                name: actionDef.name,
+                command: formatResult.value,
+                description: actionDef.description || '',
+                params: { targetId: primaryTarget.entityId },
+                visual: actionDef.visual || null,
+              };
+              formattedActions.push(actionInfo);
+            } else {
+              errors.push(
+                this.#createError(
+                  formatResult,
+                  actionDef,
+                  actor.id,
+                  trace,
+                  primaryTarget.entityId
+                )
+              );
+            }
+          } else {
+            // No targets available for formatting
             errors.push(
               this.#createError(
-                errorSource,
+                'No targets available for action',
                 actionDef,
                 actor.id,
-                trace,
-                primaryTarget?.entityId
+                trace
               )
             );
           }
         }
-      } else {
-        // Fallback to legacy formatting for first target of each type
-        const primaryTarget = this.#getPrimaryTargetContext(resolvedTargets);
-        if (primaryTarget) {
-          const formatResult = this.#formatWithLegacyFallback(
-            actionDef,
-            primaryTarget,
-            {
-              logger: this.#logger,
-              debug: true,
-              safeEventDispatcher: this.#safeEventDispatcher,
-            },
-            targetDefinitions,
-            resolvedTargets
-          );
-
-          if (formatResult.ok) {
-            const actionInfo = {
-              id: actionDef.id,
-              name: actionDef.name,
-              command: formatResult.value,
-              description: actionDef.description || '',
-              params: { targetId: primaryTarget.entityId },
-              visual: actionDef.visual || null,
-            };
-            formattedActions.push(actionInfo);
-          } else {
-            errors.push(
-              this.#createError(
-                formatResult,
-                actionDef,
-                actor.id,
-                trace,
-                primaryTarget.entityId
-              )
-            );
-          }
-        } else {
-          // No targets available for formatting
-          errors.push(
-            this.#createError(
-              'No targets available for action',
-              actionDef,
-              actor.id,
-              trace
-            )
-          );
-        }
-      }
       } catch (error) {
         errors.push(this.#createError(error, actionDef, actor.id, trace));
       }
@@ -1221,528 +1274,6 @@ export class ActionFormattingStage extends PipelineStage {
    * @returns {Promise<PipelineResult>} Formatted actions
    * @private
    */
-  async #formatLegacyActionsTraced(context, trace, stats) {
-    const { actor, actionsWithTargets = [] } = context;
-    const source = `${this.name}Stage.execute`;
-    const formattedActions = [];
-    const errors = [];
-
-    // Options are identical for all targets; compute once for reuse
-    const formatterOptions = {
-      logger: this.#logger,
-      debug: true,
-      safeEventDispatcher: this.#safeEventDispatcher,
-    };
-
-    for (const { actionDef, targetContexts } of actionsWithTargets) {
-      const actionStartTime = Date.now();
-
-      // Validate visual properties early in processing
-      this.#validateVisualProperties(actionDef.visual, actionDef.id);
-
-      // Check if this is actually a multi-target action in legacy path
-      const isMultiTargetAction =
-        actionDef.targets && typeof actionDef.targets === 'object';
-
-      // Legacy actions are already captured in executeWithTracing, but capture additional details here
-      trace.captureActionData('formatting', actionDef.id, {
-        timestamp: actionStartTime,
-        status: 'formatting',
-        formattingPath: 'legacy',
-        isMultiTargetInLegacy: isMultiTargetAction,
-        targetContextCount: targetContexts.length,
-      });
-
-      if (isMultiTargetAction) {
-        // Handle multi-target action in legacy path
-        const actionSpecificTargets = this.#extractTargetsFromContexts(
-          targetContexts,
-          actionDef
-        );
-
-        if (
-          actionSpecificTargets &&
-          Object.keys(actionSpecificTargets).length > 0
-        ) {
-          // Try multi-target formatting if available
-          if (this.#commandFormatter.formatMultiTarget) {
-            const formatResult = this.#commandFormatter.formatMultiTarget(
-              actionDef,
-              actionSpecificTargets,
-              this.#entityManager,
-              formatterOptions,
-              {
-                displayNameFn: this.#getEntityDisplayNameFn,
-                targetDefinitions: actionDef.targets,
-              }
-            );
-
-            if (formatResult.ok) {
-              const commands = Array.isArray(formatResult.value)
-                ? formatResult.value
-                : [formatResult.value];
-
-              for (const commandData of commands) {
-                // Check if this is an object with command and targets, or just a string
-                const command =
-                  typeof commandData === 'string'
-                    ? commandData
-                    : commandData.command;
-                const specificTargets =
-                  typeof commandData === 'object' && commandData.targets
-                    ? commandData.targets
-                    : actionSpecificTargets;
-
-                const targetIds = this.#extractTargetIds(specificTargets);
-                const params = {
-                  targetIds,
-                  isMultiTarget: true,
-                };
-
-                if (targetIds.primary && targetIds.primary.length === 1) {
-                  params.targetId = targetIds.primary[0];
-                }
-
-                const actionInfo = {
-                  id: actionDef.id,
-                  name: actionDef.name,
-                  command: command,
-                  description: actionDef.description || '',
-                  params,
-                  visual: actionDef.visual || null,
-                };
-                formattedActions.push(actionInfo);
-              }
-              stats.successful++;
-              stats.multiTarget++;
-            } else if (targetContexts.length > 0) {
-              // Fallback to first target
-              const fallbackResult = this.#formatWithLegacyFallback(
-                actionDef,
-                targetContexts[0],
-                formatterOptions,
-                actionDef.targets,
-                actionSpecificTargets
-              );
-
-              if (fallbackResult.ok) {
-                const actionInfo = {
-                  id: actionDef.id,
-                  name: actionDef.name,
-                  command: fallbackResult.value,
-                  description: actionDef.description || '',
-                  params: targetContexts[0]?.entityId
-                    ? { targetId: targetContexts[0].entityId }
-                    : {},
-                  visual: actionDef.visual || null,
-                };
-                formattedActions.push(actionInfo);
-                stats.successful++;
-                stats.legacy++;
-              } else {
-                stats.failed++;
-                errors.push(
-                  this.#createError(
-                    fallbackResult,
-                    actionDef,
-                    actor.id,
-                    trace,
-                    targetContexts[0]?.entityId || null
-                  )
-                );
-              }
-            }
-          } else {
-            // Fallback to legacy formatting with first target
-            if (targetContexts.length > 0) {
-              const fallbackResult = this.#formatWithLegacyFallback(
-                actionDef,
-                targetContexts[0],
-                formatterOptions,
-                actionDef.targets,
-                actionSpecificTargets
-              );
-
-              if (fallbackResult.ok) {
-                const actionInfo = {
-                  id: actionDef.id,
-                  name: actionDef.name,
-                  command: fallbackResult.value,
-                  description: actionDef.description || '',
-                  params: { targetId: targetContexts[0].entityId },
-                  visual: actionDef.visual || null,
-                };
-                formattedActions.push(actionInfo);
-                stats.successful++;
-                stats.legacy++;
-              } else {
-                stats.failed++;
-                errors.push(
-                  this.#createError(
-                    fallbackResult,
-                    actionDef,
-                    actor.id,
-                    trace,
-                    targetContexts[0].entityId
-                  )
-                );
-              }
-            }
-          }
-        } else {
-          // Multi-target action without proper resolved targets - skip and warn
-          this.#logger.warn(
-            `Skipping multi-target action '${actionDef.id}' in legacy formatting ` +
-              `path - no resolved targets available for proper formatting`
-          );
-        }
-      } else {
-        // Process regular legacy actions
-        let successCount = 0;
-        let failureCount = 0;
-
-        for (const targetContext of targetContexts) {
-          try {
-            const formatResult = this.#commandFormatter.format(
-              actionDef,
-              targetContext,
-              this.#entityManager,
-              formatterOptions,
-              { displayNameFn: this.#getEntityDisplayNameFn }
-            );
-
-            if (formatResult.ok) {
-              const actionInfo = {
-                id: actionDef.id,
-                name: actionDef.name,
-                command: formatResult.value,
-                description: actionDef.description || '',
-                params: { targetId: targetContext.entityId },
-                visual: actionDef.visual || null,
-              };
-              formattedActions.push(actionInfo);
-              successCount++;
-            } else {
-              failureCount++;
-              this.#logger.warn(
-                `Failed to format command for action '${actionDef.id}' with target '${targetContext.entityId}'`,
-                { formatResult, actionDef, targetContext }
-              );
-              errors.push(
-                this.#createError(
-                  formatResult,
-                  actionDef,
-                  actor.id,
-                  trace,
-                  targetContext.entityId
-                )
-              );
-            }
-          } catch (error) {
-            failureCount++;
-            const targetId =
-              error?.target?.entityId ||
-              error?.entityId ||
-              targetContext.entityId;
-            this.#logger.warn(
-              `Failed to format command for action '${actionDef.id}' with target '${targetId}'`,
-              { error, actionDef, targetContext }
-            );
-            errors.push(
-              this.#createError(
-                error,
-                actionDef,
-                actor.id,
-                trace,
-                null,
-                targetContext.entityId
-              )
-            );
-          }
-        }
-
-        if (successCount > 0) {
-          stats.successful++;
-          stats.legacy++;
-        }
-        if (failureCount > 0) stats.failed++;
-
-        const actionEndTime = Date.now();
-
-        // Capture completion
-        trace.captureActionData('formatting', actionDef.id, {
-          timestamp: actionEndTime,
-          status: failureCount > 0 ? 'partial' : 'completed',
-          formatterMethod: 'format',
-          successCount,
-          failureCount,
-          performance: {
-            duration: actionEndTime - actionStartTime,
-          },
-        });
-      }
-    }
-
-    this.#logger.debug(
-      `Action formatting complete: ${formattedActions.length} actions formatted successfully`
-    );
-
-    trace?.info(
-      `Action formatting completed: ${formattedActions.length} formatted actions, ${errors.length} errors`,
-      source
-    );
-
-    return PipelineResult.success({
-      actions: formattedActions,
-      errors,
-    });
-  }
-
-  /**
-   * Format actions using legacy approach (existing implementation)
-   *
-   * @param context
-   * @param trace
-   * @private
-   */
-  async #formatLegacyActions(context, trace) {
-    const { actor, actionsWithTargets = [] } = context;
-    const source = `${this.name}Stage.execute`;
-
-    const formattedActions = [];
-    const errors = [];
-
-    // Options are identical for all targets; compute once for reuse
-    const formatterOptions = {
-      logger: this.#logger,
-      debug: true,
-      safeEventDispatcher: this.#safeEventDispatcher,
-    };
-
-    // Process each action with its targets
-    for (const { actionDef, targetContexts } of actionsWithTargets) {
-      // Validate visual properties early in processing
-      this.#validateVisualProperties(actionDef.visual, actionDef.id);
-
-      // Check if this is a multi-target action being processed through legacy path
-      const isMultiTargetAction =
-        actionDef.targets && typeof actionDef.targets === 'object';
-
-      if (isMultiTargetAction) {
-        // Handle multi-target action individually when in mixed mode
-        // Extract resolved targets from targetContexts for this specific action
-        const actionSpecificTargets = this.#extractTargetsFromContexts(
-          targetContexts,
-          actionDef
-        );
-
-        if (
-          actionSpecificTargets &&
-          Object.keys(actionSpecificTargets).length > 0
-        ) {
-          // Try to format using multi-target formatter if available
-          if (this.#commandFormatter.formatMultiTarget) {
-            const formatResult = this.#commandFormatter.formatMultiTarget(
-              actionDef,
-              actionSpecificTargets,
-              this.#entityManager,
-              formatterOptions,
-              {
-                displayNameFn: this.#getEntityDisplayNameFn,
-                targetDefinitions: actionDef.targets, // Pass the target definitions
-              }
-            );
-
-            if (formatResult.ok) {
-              const commands = Array.isArray(formatResult.value)
-                ? formatResult.value
-                : [formatResult.value];
-
-              for (const commandData of commands) {
-                // Check if this is an object with command and targets, or just a string
-                const command =
-                  typeof commandData === 'string'
-                    ? commandData
-                    : commandData.command;
-                const specificTargets =
-                  typeof commandData === 'object' && commandData.targets
-                    ? commandData.targets
-                    : actionSpecificTargets;
-
-                const targetIds = this.#extractTargetIds(specificTargets);
-                const params = {
-                  targetIds,
-                  isMultiTarget: true,
-                };
-
-                // Backward compatibility: if there's a single primary target, also set targetId
-                if (targetIds.primary && targetIds.primary.length === 1) {
-                  params.targetId = targetIds.primary[0];
-                }
-
-                const actionInfo = {
-                  id: actionDef.id,
-                  name: actionDef.name,
-                  command: command,
-                  description: actionDef.description || '',
-                  params,
-                  visual: actionDef.visual || null,
-                };
-                formattedActions.push(actionInfo);
-              }
-            } else {
-              // Fallback to legacy formatting with first target
-              if (targetContexts.length > 0) {
-                const fallbackResult = this.#formatWithLegacyFallback(
-                  actionDef,
-                  targetContexts[0],
-                  formatterOptions,
-                  actionDef.targets,
-                  actionSpecificTargets
-                );
-
-                if (fallbackResult.ok) {
-                  const actionInfo = {
-                    id: actionDef.id,
-                    name: actionDef.name,
-                    command: fallbackResult.value,
-                    description: actionDef.description || '',
-                    params: { targetId: targetContexts[0].entityId },
-                    visual: actionDef.visual || null,
-                  };
-                  formattedActions.push(actionInfo);
-                } else {
-                  errors.push(
-                    this.#createError(
-                      fallbackResult,
-                      actionDef,
-                      actor.id,
-                      trace,
-                      targetContexts[0].entityId
-                    )
-                  );
-                }
-              }
-            }
-          } else {
-            // Fallback to legacy formatting with first target
-            if (targetContexts.length > 0) {
-              const fallbackResult = this.#formatWithLegacyFallback(
-                actionDef,
-                targetContexts[0],
-                formatterOptions,
-                actionDef.targets,
-                actionSpecificTargets
-              );
-
-              if (fallbackResult.ok) {
-                const actionInfo = {
-                  id: actionDef.id,
-                  name: actionDef.name,
-                  command: fallbackResult.value,
-                  description: actionDef.description || '',
-                  params: { targetId: targetContexts[0].entityId },
-                  visual: actionDef.visual || null,
-                };
-                formattedActions.push(actionInfo);
-              } else {
-                errors.push(
-                  this.#createError(
-                    fallbackResult,
-                    actionDef,
-                    actor.id,
-                    trace,
-                    targetContexts[0].entityId
-                  )
-                );
-              }
-            }
-          }
-        } else {
-          // Multi-target action without proper resolved targets - skip and warn
-          this.#logger.warn(
-            `Skipping multi-target action '${actionDef.id}' in legacy formatting ` +
-              `path - no resolved targets available for proper formatting`
-          );
-        }
-        continue;
-      }
-
-      for (const targetContext of targetContexts) {
-        try {
-          const formatResult = this.#commandFormatter.format(
-            actionDef,
-            targetContext,
-            this.#entityManager,
-            formatterOptions,
-            {
-              displayNameFn: this.#getEntityDisplayNameFn,
-            }
-          );
-
-          if (formatResult.ok) {
-            const actionInfo = {
-              id: actionDef.id,
-              name: actionDef.name,
-              command: formatResult.value,
-              description: actionDef.description || '',
-              params: { targetId: targetContext.entityId },
-              visual: actionDef.visual || null,
-            };
-            formattedActions.push(actionInfo);
-          } else {
-            this.#logger.warn(
-              `Failed to format command for action '${actionDef.id}' with target '${targetContext.entityId}'`,
-              { formatResult, actionDef, targetContext }
-            );
-            errors.push(
-              this.#createError(
-                formatResult,
-                actionDef,
-                actor.id,
-                trace,
-                targetContext.entityId
-              )
-            );
-          }
-        } catch (error) {
-          const targetId =
-            error?.target?.entityId ||
-            error?.entityId ||
-            targetContext.entityId;
-          this.#logger.warn(
-            `Failed to format command for action '${actionDef.id}' with target '${targetId}'`,
-            { error, actionDef, targetContext }
-          );
-          errors.push(
-            this.#createError(
-              error,
-              actionDef,
-              actor.id,
-              trace,
-              null,
-              targetContext.entityId
-            )
-          );
-        }
-      }
-    }
-
-    this.#logger.debug(
-      `Action formatting complete: ${formattedActions.length} actions formatted successfully`
-    );
-
-    trace?.info(
-      `Action formatting completed: ${formattedActions.length} formatted actions, ${errors.length} errors`,
-      source
-    );
-
-    return PipelineResult.success({
-      actions: formattedActions,
-      errors,
-    });
-  }
-
   /**
    * Extract target IDs from resolved targets for params
    * Enhanced to use TargetManager for optimized placeholder resolution
@@ -1823,278 +1354,6 @@ export class ActionFormattingStage extends PipelineStage {
       entityId: target.id,
       displayName: target.displayName,
     };
-  }
-
-  /**
-   * @description Remove multi-target metadata from a target context so the legacy formatter can consume it.
-   *
-   * @param {import('../../../models/actionTargetContext.js').ActionTargetContext|null} targetContext - Target context including placeholder metadata
-   * @returns {import('../../../models/actionTargetContext.js').ActionTargetContext|null} Cleaned target context for the legacy formatter
-   * @private
-   */
-  #createLegacyFallbackTargetContext(targetContext) {
-    if (!targetContext) {
-      return null;
-    }
-
-    const { placeholder, ...rest } = targetContext;
-    return { ...rest };
-  }
-
-  /**
-   * @description Build an action definition suitable for legacy formatting fallback.
-   *
-   * @param {import('../../../interfaces/IGameDataRepository.js').ActionDefinition} actionDef - Original action definition
-   * @param {object|undefined} targetDefinitions - Multi-target definitions for the action
-   * @param {Object<string, import('../../../interfaces/IActionCommandFormatter.js').ResolvedTarget[]>|undefined} resolvedTargets - Resolved target mapping to substitute placeholders
-   * @returns {import('../../../interfaces/IGameDataRepository.js').ActionDefinition} Updated action definition ready for legacy formatting
-   * @private
-   */
-  #buildLegacyFallbackAction(actionDef, targetDefinitions, resolvedTargets) {
-    if (!actionDef) {
-      return actionDef;
-    }
-
-    const transformedTemplate = this.#transformTemplateForLegacyFallback(
-      actionDef.template,
-      targetDefinitions,
-      resolvedTargets
-    );
-
-    if (transformedTemplate === actionDef.template) {
-      return actionDef;
-    }
-
-    return {
-      ...actionDef,
-      template: transformedTemplate,
-    };
-  }
-
-  /**
-   * @description Prepare the inputs for legacy formatting fallback by transforming the template and context.
-   *
-   * @param {import('../../../interfaces/IGameDataRepository.js').ActionDefinition} actionDef - Original action definition
-   * @param {import('../../../models/actionTargetContext.js').ActionTargetContext|null} targetContext - Primary target context with placeholder metadata
-   * @param {object|undefined} targetDefinitions - Multi-target definitions for the action
-   * @param {Object<string, import('../../../interfaces/IActionCommandFormatter.js').ResolvedTarget[]>|undefined} resolvedTargets - Resolved targets used to populate placeholders
-   * @returns {{actionDef: import('../../../interfaces/IGameDataRepository.js').ActionDefinition, targetContext: import('../../../models/actionTargetContext.js').ActionTargetContext|null}} Prepared action definition and context for legacy formatting
-   * @private
-   */
-  #prepareLegacyFallback(
-    actionDef,
-    targetContext,
-    targetDefinitions,
-    resolvedTargets
-  ) {
-    return {
-      actionDef: this.#buildLegacyFallbackAction(
-        actionDef,
-        targetDefinitions,
-        resolvedTargets
-      ),
-      targetContext: this.#createLegacyFallbackTargetContext(targetContext),
-    };
-  }
-
-  /**
-   * @description Format an action using the legacy formatter fallback.
-   *
-   * @param {import('../../../interfaces/IGameDataRepository.js').ActionDefinition} actionDef - Action definition to format
-   * @param {import('../../../models/actionTargetContext.js').ActionTargetContext|null} targetContext - Primary target context for the action
-   * @param {object} formatterOptions - Options forwarded to the command formatter
-   * @param {object|undefined} targetDefinitions - Multi-target definitions associated with the action
-   * @param {Object<string, import('../../../interfaces/IActionCommandFormatter.js').ResolvedTarget[]>|undefined} resolvedTargets - Resolved targets collected for the action
-   * @returns {import('../../formatters/formatActionTypedefs.js').FormatActionCommandResult} Result from the legacy formatter
-   * @private
-   */
-  #formatWithLegacyFallback(
-    actionDef,
-    targetContext,
-    formatterOptions,
-    targetDefinitions,
-    resolvedTargets
-  ) {
-    const { actionDef: fallbackActionDef, targetContext: fallbackContext } =
-      this.#prepareLegacyFallback(
-        actionDef,
-        targetContext,
-        targetDefinitions,
-        resolvedTargets
-      );
-
-    if (!fallbackContext) {
-      return {
-        ok: false,
-        error: 'Legacy fallback target context not available',
-      };
-    }
-
-    return this.#commandFormatter.format(
-      fallbackActionDef,
-      fallbackContext,
-      this.#entityManager,
-      formatterOptions,
-      { displayNameFn: this.#getEntityDisplayNameFn }
-    );
-  }
-
-  /**
-   * @description Transform a multi-target template into a legacy-friendly template using resolved target values.
-   *
-   * @param {string} template - Template to transform for the legacy formatter
-   * @param {object|undefined} targetDefinitions - Multi-target definitions describing placeholders
-   * @param {Object<string, import('../../../interfaces/IActionCommandFormatter.js').ResolvedTarget[]>|undefined} resolvedTargets - Resolved targets used to substitute secondary placeholders
-   * @returns {string} Legacy-compatible template string
-   * @private
-   */
-  #transformTemplateForLegacyFallback(
-    template,
-    targetDefinitions,
-    resolvedTargets
-  ) {
-    if (typeof template !== 'string' || template.length === 0) {
-      return template;
-    }
-
-    const placeholderMap = new Map();
-
-    if (targetDefinitions && typeof targetDefinitions === 'object') {
-      for (const [key, def] of Object.entries(targetDefinitions)) {
-        if (def?.placeholder) {
-          placeholderMap.set(key, def.placeholder);
-        }
-      }
-    }
-
-    if (placeholderMap.size === 0 && resolvedTargets) {
-      for (const key of Object.keys(resolvedTargets)) {
-        placeholderMap.set(key, key);
-      }
-    }
-
-    if (placeholderMap.size === 0) {
-      placeholderMap.set('primary', 'primary');
-    }
-
-    const escapeRegex = (value) =>
-      value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-    const primaryPlaceholder =
-      placeholderMap.get('primary') ??
-      (placeholderMap.values().next().value || null);
-
-    let transformedTemplate = template;
-
-    if (primaryPlaceholder) {
-      const primaryRegex = new RegExp(
-        `\\{${escapeRegex(primaryPlaceholder)}\\}`,
-        'g'
-      );
-      transformedTemplate = transformedTemplate.replace(
-        primaryRegex,
-        '{target}'
-      );
-    }
-
-    const fallbackValues = new Map();
-    if (resolvedTargets && typeof resolvedTargets === 'object') {
-      for (const [key, targets] of Object.entries(resolvedTargets)) {
-        if (!Array.isArray(targets) || targets.length === 0) {
-          continue;
-        }
-
-        const target = targets[0];
-        const value =
-          target?.displayName ?? target?.name ?? target?.id ?? '';
-        const placeholderName = placeholderMap.get(key) ?? key;
-
-        if (value) {
-          fallbackValues.set(placeholderName, value);
-        }
-      }
-    }
-
-    for (const [key, placeholder] of placeholderMap.entries()) {
-      if (!placeholder || placeholder === primaryPlaceholder) {
-        continue;
-      }
-      const placeholderRegex = new RegExp(
-        `\\{${escapeRegex(placeholder)}\\}`,
-        'g'
-      );
-      const replacement = fallbackValues.get(placeholder) ?? '';
-      transformedTemplate = transformedTemplate.replace(
-        placeholderRegex,
-        replacement
-      );
-    }
-
-    transformedTemplate = transformedTemplate.replace(
-      /\{(?!target\})[^}]+\}/g,
-      ''
-    );
-
-    return transformedTemplate.replace(/\s+/g, ' ').trim();
-  }
-
-  /**
-   * Extract targets from target contexts for a specific action
-   *
-   * @param {Array} targetContexts - Array of target contexts
-   * @param {object} actionDef - Action definition
-   * @returns {object} Targets object in multi-target format
-   * @private
-   */
-  #extractTargetsFromContexts(targetContexts, actionDef) {
-    if (!targetContexts || targetContexts.length === 0) {
-      return {};
-    }
-
-    // Group target contexts by their placeholder (if available)
-    const targetsByPlaceholder = {};
-
-    // First pass: group by placeholder if available
-    for (const tc of targetContexts) {
-      const placeholder = tc.placeholder || 'primary'; // Default to primary if no placeholder
-
-      if (!targetsByPlaceholder[placeholder]) {
-        targetsByPlaceholder[placeholder] = [];
-      }
-
-      targetsByPlaceholder[placeholder].push({
-        id: tc.entityId,
-        displayName: tc.displayName || tc.entityId,
-        entity: tc.entityId
-          ? this.#entityManager.getEntityInstance(tc.entityId)
-          : null,
-        contextFromId: tc.contextFromId, // Preserve context relationship
-      });
-    }
-
-    // If we have target definitions, validate against them
-    if (actionDef.targets && typeof actionDef.targets === 'object') {
-      const expectedTargets = Object.keys(actionDef.targets);
-
-      // Check if we have all required targets
-      for (const targetKey of expectedTargets) {
-        const targetDef = actionDef.targets[targetKey];
-        const placeholder = targetDef.placeholder || targetKey;
-
-        if (
-          !targetsByPlaceholder[placeholder] ||
-          targetsByPlaceholder[placeholder].length === 0
-        ) {
-          // If we don't have this target type, this action is not available
-          this.#logger.debug(
-            `Missing required target '${targetKey}' for action '${actionDef.id}'`
-          );
-          return {};
-        }
-      }
-    }
-
-    return targetsByPlaceholder;
   }
 
   /**
