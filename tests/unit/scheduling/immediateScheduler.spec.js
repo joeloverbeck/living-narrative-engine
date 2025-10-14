@@ -16,4 +16,13 @@ describe('ImmediateScheduler', () => {
     const id = scheduler.setTimeout(() => {}, 5);
     expect(id).toBe(0);
   });
+
+  it('treats clearTimeout as a no-op for any identifier', () => {
+    const scheduler = new ImmediateScheduler();
+
+    expect(() => scheduler.clearTimeout(123)).not.toThrow();
+    const result = scheduler.clearTimeout('any-handle');
+
+    expect(result).toBeUndefined();
+  });
 });
