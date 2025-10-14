@@ -254,6 +254,44 @@ describe('ApiKeyService error consolidation coverage', () => {
     expect(result.errorDetails?.stage).toBe('api_key_all_sources_failed');
   });
 
+  it('includes file error message in the combined reason when the file details omit a reason', async () => {
+    delete process.env.MESSAGE_ONLY_ENV_KEY;
+
+    const messageOnlyFileError = {
+      message: 'File system returned EPIPE with no extra context',
+      stage: 'api_key_file_read_exception',
+      details: {
+        llmId: 'llm-cloud-message',
+        attemptedFile: 'message-only.key',
+      },
+    };
+
+    jest
+      .spyOn(apiKeyService, '_readApiKeyFromFile')
+      .mockResolvedValue({ key: null, error: messageOnlyFileError });
+
+    const result = await apiKeyService.getApiKey(
+      {
+        apiType: 'openai',
+        apiKeyEnvVar: 'MESSAGE_ONLY_ENV_KEY',
+        apiKeyFileName: 'message-only.key',
+      },
+      'llm-cloud-message'
+    );
+
+    expect(result.apiKey).toBeNull();
+    expect(result.errorDetails?.stage).toBe('api_key_all_sources_failed');
+
+    const combinedReason = result.errorDetails?.details?.reason;
+    expect(combinedReason).toContain(
+      "Environment variable 'MESSAGE_ONLY_ENV_KEY' was not set or empty."
+    );
+    expect(combinedReason).toContain(
+      "File 'message-only.key' retrieval also failed (Reason: File system returned EPIPE with no extra context)."
+    );
+    expect(combinedReason).not.toContain('see previous logs');
+  });
+
   it('falls back to combined error when file source returns a null error payload', async () => {
     const originalCreateErrorDetails =
       apiKeyService._createErrorDetails.bind(apiKeyService);
