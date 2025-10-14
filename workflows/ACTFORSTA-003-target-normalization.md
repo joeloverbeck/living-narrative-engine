@@ -5,7 +5,7 @@ Create shared data structures that allow each action to be evaluated independent
 
 ## Tasks
 - Define an `ActionFormattingTask` factory that assembles actor, action definition, target contexts, per-action metadata, batch-level targets, and formatter options for each action item processed by the stage.
-- Implement `TargetNormalizationService` that converts existing target context arrays and resolved target maps into a consistent `TargetExtractionResult` object (including `targetIds`, `params`, and metadata), replacing the disparate helper methods currently inside `ActionFormattingStage`.
+- Implement `TargetNormalizationService` that accepts both the per-action `resolvedTargets` metadata and legacy batch-level maps, producing a `TargetExtractionResult` via the existing `TargetExtractionResult.fromResolvedParameters` helper **and** the normalized `targetIds`/`params` payloads consumed by `ActionFormattingStage`. The service should detect when it receives an existing `TargetExtractionResult` instance and subsume the current `#extractTargetIds`, `#createTargetExtractionResult`, and `#getPrimaryTargetContext` utilities so the stage can drop those private helpers.
 - Ensure the service handles both per-action metadata and batch-scoped target structures, returning clear error objects when required inputs are missing.
 - Add unit tests covering legacy, multi-target, and malformed target scenarios to guarantee deterministic outputs and error handling.
 - Update existing code paths (temporarily within `ActionFormattingStage` if needed) to use the new normalization service without changing observable behaviour.
