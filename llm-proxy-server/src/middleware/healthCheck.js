@@ -4,6 +4,7 @@
  */
 
 import { performance } from 'perf_hooks';
+import v8 from 'v8';
 
 /**
  * Health check response structure
@@ -323,32 +324,78 @@ async function checkHttpAgentService(httpAgentService) {
 function checkProcessHealth() {
   try {
     const memoryUsage = process.memoryUsage();
-    const heapUsedMB = memoryUsage.heapUsed / 1024 / 1024;
-    const heapTotalMB = memoryUsage.heapTotal / 1024 / 1024;
-    const externalMB = memoryUsage.external / 1024 / 1024;
-    const rssMB = memoryUsage.rss / 1024 / 1024;
+    const memoryUsedMB = Math.round(memoryUsage.heapUsed / 1024 / 1024);
+    const rawMemoryTotalMB = Math.round(memoryUsage.heapTotal / 1024 / 1024);
+    const safeMemoryTotalMB = Math.max(rawMemoryTotalMB, 1);
+    const memoryUsagePercent = Math.min(
+      100,
+      Math.round((memoryUsedMB / safeMemoryTotalMB) * 100)
+    );
 
-    // Guard against unexpected zero values which can occur in constrained test environments
-    const heapUsageRatio =
-      heapTotalMB > 0 ? memoryUsage.heapUsed / memoryUsage.heapTotal : 0;
-    const memoryUsagePercent = Math.round(heapUsageRatio * 10000) / 100; // two decimal precision
+    const parseThreshold = (value, fallback) => {
+      const parsed = Number.parseInt(value ?? '', 10);
+      return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+    };
 
-    // Consider the process unhealthy only when we're critically close to exhausting the heap.
-    // Using a high threshold avoids false positives from rounding artefacts when the heap is small.
-    const CRITICAL_HEAP_UTILIZATION = 0.98;
-    const isHealthy = heapTotalMB === 0 || heapUsageRatio < CRITICAL_HEAP_UTILIZATION;
+    const CRITICAL_MEMORY_PERCENTAGE = parseThreshold(
+      process.env.READINESS_CRITICAL_HEAP_PERCENT,
+      90
+    );
+    const MIN_HEAP_TOTAL_MB_FOR_CRITICAL = parseThreshold(
+      process.env.READINESS_CRITICAL_HEAP_TOTAL_MB,
+      512
+    );
+    const MIN_HEAP_USED_MB_FOR_CRITICAL = parseThreshold(
+      process.env.READINESS_CRITICAL_HEAP_USED_MB,
+      512
+    );
+    const CRITICAL_LIMIT_PERCENTAGE = parseThreshold(
+      process.env.READINESS_CRITICAL_HEAP_LIMIT_PERCENT,
+      90
+    );
+
+    const heapStats =
+      typeof v8.getHeapStatistics === 'function' ? v8.getHeapStatistics() : null;
+    const heapSizeLimitMB = heapStats
+      ? Math.round(heapStats.heap_size_limit / 1024 / 1024)
+      : null;
+    const limitUsagePercent = heapSizeLimitMB
+      ? Math.min(
+          100,
+          Math.round((memoryUsedMB / Math.max(heapSizeLimitMB, 1)) * 100)
+        )
+      : null;
+
+    const isCriticalMemoryUsage =
+      (limitUsagePercent !== null &&
+        limitUsagePercent >= CRITICAL_LIMIT_PERCENTAGE) ||
+      (rawMemoryTotalMB >= MIN_HEAP_TOTAL_MB_FOR_CRITICAL &&
+        memoryUsedMB >= MIN_HEAP_USED_MB_FOR_CRITICAL &&
+        memoryUsagePercent >= CRITICAL_MEMORY_PERCENTAGE);
 
     return {
       name: 'nodeProcess',
-      status: isHealthy ? 'UP' : 'DOWN',
+      status: isCriticalMemoryUsage ? 'DOWN' : 'UP',
       details: {
         uptime: Math.floor(process.uptime()),
         memoryUsage: {
-          used: Math.round(heapUsedMB * 100) / 100,
-          total: Math.round(heapTotalMB * 100) / 100,
+          used: memoryUsedMB,
+          total: rawMemoryTotalMB,
           percentage: memoryUsagePercent,
-          external: Math.round(externalMB * 100) / 100,
-          rss: Math.round(rssMB * 100) / 100,
+          external: Math.round(memoryUsage.external / 1024 / 1024),
+          rss: Math.round(memoryUsage.rss / 1024 / 1024),
+          limits: heapSizeLimitMB
+            ? {
+                heapSizeLimitMB,
+                usagePercentOfLimit: limitUsagePercent,
+              }
+            : null,
+          thresholds: {
+            criticalPercentage: CRITICAL_MEMORY_PERCENTAGE,
+            criticalLimitPercentage: CRITICAL_LIMIT_PERCENTAGE,
+            minimumHeapMB: MIN_HEAP_TOTAL_MB_FOR_CRITICAL,
+            minimumHeapUsedMB: MIN_HEAP_USED_MB_FOR_CRITICAL,
+          },
         },
         nodeVersion: process.version,
         platform: process.platform,
