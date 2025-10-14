@@ -1,6 +1,48 @@
 {
   "defaultConfigId": "claude-sonnet-4.5",
   "configs": {
+    "deepseek-v3.2-exp": {
+      "configId": "deepseek-v3.2-exp",
+      "displayName": "DeepSeek V3.2 Exp (OpenRouter - Tool Calling)",
+      "apiKeyEnvVar": "OPENROUTER_API_KEY_ENV_VAR",
+      "apiKeyFileName": "openrouter_api_key.txt",
+      "endpointUrl": "https://openrouter.ai/api/v1/chat/completions",
+      "modelIdentifier": "deepseek/deepseek-v3.2-exp",
+      "apiType": "openrouter",
+      "jsonOutputStrategy": {
+        "method": "openrouter_tool_calling",
+        "toolName": "function_call"
+      },
+      "defaultParameters": {
+        "temperature": 1.0
+      },
+      "providerSpecificHeaders": {
+        "HTTP-Referer": "https://my-text-adventure-game.com",
+        "X-Title": "Living Narrative Engine"
+      },
+      "contextTokenLimit": 163840
+    },
+    "ling-1T": {
+      "configId": "ling-1T",
+      "displayName": "Ling-1T (OpenRouter - Tool Calling)",
+      "apiKeyEnvVar": "OPENROUTER_API_KEY_ENV_VAR",
+      "apiKeyFileName": "openrouter_api_key.txt",
+      "endpointUrl": "https://openrouter.ai/api/v1/chat/completions",
+      "modelIdentifier": "inclusionai/ling-1t",
+      "apiType": "openrouter",
+      "jsonOutputStrategy": {
+        "method": "openrouter_tool_calling",
+        "toolName": "function_call"
+      },
+      "defaultParameters": {
+        "temperature": 1.0
+      },
+      "providerSpecificHeaders": {
+        "HTTP-Referer": "https://my-text-adventure-game.com",
+        "X-Title": "Living Narrative Engine"
+      },
+      "contextTokenLimit": 131072
+    },
     "claude-sonnet-4.5": {
       "configId": "claude-sonnet-4.5",
       "displayName": "Claude Sonnet 4.5 (OpenRouter - Tool Calling)",
