@@ -265,19 +265,18 @@ describe('core server operational mode coverage', () => {
     });
 
     try {
-      const warningMessages = warnSpy.mock.calls.map((args) => String(args[0]));
-      expect(
-        warningMessages.some((message) =>
-          message.includes('CORS not configured in development mode')
+      const warningLog = warnSpy.mock.calls
+        .map((args) => args.map((value) => String(value)).join(' '))
+        .join('\n');
+
+      expect(warningLog).toEqual(
+        expect.stringContaining('CORS not configured in development mode')
+      );
+      expect(warningLog).toEqual(
+        expect.stringContaining(
+          'PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES is NOT SET. File-based API key retrieval WILL FAIL'
         )
-      ).toBe(true);
-      expect(
-        warningMessages.some((message) =>
-          message.includes(
-            'PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES is NOT SET. File-based API key retrieval WILL FAIL'
-          )
-        )
-      ).toBe(true);
+      );
     } finally {
       process.emit('beforeExit', 0);
       await proxy.shutdown('SIGTERM');
