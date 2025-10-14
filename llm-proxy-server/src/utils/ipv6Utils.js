@@ -376,6 +376,8 @@ function determineReservedRangeFromType(rangeType) {
   return rangeDescriptions[rangeType] || `${rangeType} (Reserved)`;
 }
 
+export const __determineReservedRangeFromType = determineReservedRangeFromType;
+
 /**
  * Validates multiple IPv6 addresses in batch
  * @param {string[]} addresses - Array of IPv6 addresses to validate
