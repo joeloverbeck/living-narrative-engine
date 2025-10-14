@@ -59,6 +59,10 @@ describe('health check readiness degradation integration', () => {
       CACHE_ENABLED: 'true',
       HTTP_AGENT_ENABLED: 'true',
       npm_package_version: versionLabel,
+      READINESS_CRITICAL_HEAP_PERCENT: '95',
+      READINESS_CRITICAL_HEAP_TOTAL_MB: '64',
+      READINESS_CRITICAL_HEAP_USED_MB: '64',
+      READINESS_CRITICAL_HEAP_LIMIT_PERCENT: '1',
     };
 
     resetAppConfigServiceInstance();
