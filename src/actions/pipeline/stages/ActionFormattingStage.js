@@ -461,11 +461,31 @@ export class ActionFormattingStage extends PipelineStage {
         trace,
       });
 
-      for (const failure of decision.validationFailures) {
-        accumulator.addError(failure.error);
+      const validationFailures = Array.isArray(decision?.validationFailures)
+        ? decision.validationFailures
+        : [];
+
+      if (validationFailures.length > 0) {
+        const failureCodes = validationFailures
+          .map((failure) => failure?.code)
+          .filter((code) => typeof code === 'string');
+
+        instrumentation?.actionFailed?.({
+          actionDef: task.actionDef,
+          timestamp: Date.now(),
+          payload: {
+            reason: 'validation-failed',
+            failureCodes,
+            metadataSource: task.metadata?.source,
+          },
+        });
       }
 
-      if (decision.strategy) {
+      for (const failure of validationFailures) {
+        accumulator.addError(failure?.error);
+      }
+
+      if (decision.strategy && validationFailures.length === 0) {
         await decision.strategy.format({
           task,
           instrumentation,
