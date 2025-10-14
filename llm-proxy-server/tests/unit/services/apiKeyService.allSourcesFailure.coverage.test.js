@@ -191,6 +191,59 @@ describe('ApiKeyService error consolidation coverage', () => {
     expect(result.errorDetails?.stage).toBe('api_key_all_sources_failed');
   });
 
+  it('falls back to combined error when file source returns a null error payload', async () => {
+    const originalCreateErrorDetails =
+      apiKeyService._createErrorDetails.bind(apiKeyService);
+
+    const createErrorDetailsSpy = jest
+      .spyOn(apiKeyService, '_createErrorDetails')
+      .mockImplementationOnce(() => null)
+      .mockImplementation((...args) =>
+        originalCreateErrorDetails(...args)
+      );
+
+    jest
+      .spyOn(apiKeyService, '_readApiKeyFromFile')
+      .mockResolvedValue({ key: null, error: null });
+
+    const result = await apiKeyService.getApiKey(
+      {
+        apiType: 'openai',
+        apiKeyEnvVar: 'MISSING_ENV_KEY',
+        apiKeyFileName: 'missing.key',
+      },
+      'llm-cloud-5'
+    );
+
+    expect(createErrorDetailsSpy).toHaveBeenCalledTimes(2);
+    expect(createErrorDetailsSpy.mock.calls[1][1]).toBe(
+      'api_key_all_sources_failed'
+    );
+
+    const combinedDetails = createErrorDetailsSpy.mock.calls[1][2];
+    expect(combinedDetails).toEqual(
+      expect.objectContaining({
+        llmId: 'llm-cloud-5',
+        attemptedEnvVar: 'MISSING_ENV_KEY',
+        attemptedFile: 'missing.key',
+      })
+    );
+    expect(combinedDetails.reason).toContain('see previous logs');
+
+    expect(result.apiKey).toBeNull();
+    expect(result.errorDetails).toEqual(
+      expect.objectContaining({
+        stage: 'api_key_all_sources_failed',
+        details: expect.objectContaining({
+          llmId: 'llm-cloud-5',
+          attemptedEnvVar: 'MISSING_ENV_KEY',
+          attemptedFile: 'missing.key',
+          reason: expect.stringContaining('see previous logs'),
+        }),
+      })
+    );
+  });
+
   it('escalates missing project root path errors into the combined failure summary', async () => {
     appConfigService.getProxyProjectRootPathForApiKeyFiles.mockReturnValue('   ');
 
