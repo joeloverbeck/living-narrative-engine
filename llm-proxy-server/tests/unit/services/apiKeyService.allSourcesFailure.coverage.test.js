@@ -292,6 +292,48 @@ describe('ApiKeyService error consolidation coverage', () => {
     expect(combinedReason).not.toContain('see previous logs');
   });
 
+  it('falls back to see previous logs when the file details reason is an empty string while preserving original error metadata', async () => {
+    delete process.env.EMPTY_REASON_ENV_KEY;
+
+    const emptyReasonError = {
+      message: '',
+      stage: 'api_key_file_read_exception',
+      details: {
+        llmId: 'llm-cloud-empty-reason',
+        attemptedFile: 'empty-reason.key',
+        reason: '',
+        originalErrorMessage: 'storage backend timeout',
+      },
+    };
+
+    jest
+      .spyOn(apiKeyService, '_readApiKeyFromFile')
+      .mockResolvedValue({ key: null, error: emptyReasonError });
+
+    const result = await apiKeyService.getApiKey(
+      {
+        apiType: 'openai',
+        apiKeyEnvVar: 'EMPTY_REASON_ENV_KEY',
+        apiKeyFileName: 'empty-reason.key',
+      },
+      'llm-cloud-empty-reason'
+    );
+
+    expect(result.apiKey).toBeNull();
+    expect(result.errorDetails?.stage).toBe('api_key_all_sources_failed');
+
+    const combinedDetails = result.errorDetails?.details;
+    expect(combinedDetails).toEqual(
+      expect.objectContaining({
+        llmId: 'llm-cloud-empty-reason',
+        attemptedEnvVar: 'EMPTY_REASON_ENV_KEY',
+        attemptedFile: 'empty-reason.key',
+        originalErrorMessage: 'storage backend timeout',
+      })
+    );
+    expect(combinedDetails?.reason).toContain('see previous logs');
+  });
+
   it('falls back to combined error when file source returns a null error payload', async () => {
     const originalCreateErrorDetails =
       apiKeyService._createErrorDetails.bind(apiKeyService);
