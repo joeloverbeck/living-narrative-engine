@@ -544,4 +544,58 @@ describe('ApiKeyService error consolidation coverage', () => {
     );
   });
 
+  it('falls back to see previous logs when file reason is an empty string', async () => {
+    const fileErrorWithEmptyReason = {
+      message: '',
+      stage: 'api_key_file_read_exception',
+      details: {
+        llmId: 'llm-cloud-empty-reason',
+        attemptedFile: 'empty-reason.key',
+        reason: '',
+      },
+    };
+
+    jest
+      .spyOn(apiKeyService, '_readApiKeyFromFile')
+      .mockResolvedValue({ key: null, error: fileErrorWithEmptyReason });
+
+    const result = await apiKeyService.getApiKey(
+      {
+        apiType: 'openai',
+        apiKeyEnvVar: 'EMPTY_REASON_ENV_KEY',
+        apiKeyFileName: 'empty-reason.key',
+      },
+      'llm-cloud-empty-reason'
+    );
+
+    expect(result.apiKey).toBeNull();
+    expect(result.source).toBe('N/A');
+    expect(result.errorDetails?.stage).toBe('api_key_all_sources_failed');
+
+    const { reason, attemptedEnvVar, attemptedFile } =
+      result.errorDetails?.details ?? {};
+
+    expect(attemptedEnvVar).toBe('EMPTY_REASON_ENV_KEY');
+    expect(attemptedFile).toBe('empty-reason.key');
+    expect(reason).toContain(
+      "Environment variable 'EMPTY_REASON_ENV_KEY' was not set or empty."
+    );
+    expect(reason).toContain(
+      "File 'empty-reason.key' retrieval also failed (Reason: see previous logs)."
+    );
+    expect(reason).not.toMatch(/\(Reason:\s*\)/);
+
+    const lastWarning = logger.warn.mock.calls.at(-1);
+    expect(lastWarning?.[0]).toContain('Stage: api_key_all_sources_failed');
+    expect(lastWarning?.[1]).toEqual(
+      expect.objectContaining({
+        details: expect.objectContaining({
+          llmId: 'llm-cloud-empty-reason',
+          attemptedEnvVar: 'EMPTY_REASON_ENV_KEY',
+          attemptedFile: 'empty-reason.key',
+        }),
+      })
+    );
+  });
+
 });
