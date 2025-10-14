@@ -9,12 +9,15 @@ import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import openContainerRule from '../../../../data/mods/items/rules/handle_open_container.rule.json' assert { type: 'json' };
 import takeFromContainerRule from '../../../../data/mods/items/rules/handle_take_from_container.rule.json' assert { type: 'json' };
+import putInContainerRule from '../../../../data/mods/items/rules/handle_put_in_container.rule.json' assert { type: 'json' };
 import eventIsActionOpenContainer from '../../../../data/mods/items/conditions/event-is-action-open-container.condition.json' assert { type: 'json' };
 import eventIsActionTakeFromContainer from '../../../../data/mods/items/conditions/event-is-action-take-from-container.condition.json' assert { type: 'json' };
+import eventIsActionPutInContainer from '../../../../data/mods/items/conditions/event-is-action-put-in-container.condition.json' assert { type: 'json' };
 
 describe('Items - Complete Container Workflow (Phase 3)', () => {
   let openFixture;
   let takeFixture;
+  let putFixture;
 
   beforeEach(async () => {
     openFixture = await ModTestFixture.forAction(
@@ -29,6 +32,12 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
       takeFromContainerRule,
       eventIsActionTakeFromContainer
     );
+    putFixture = await ModTestFixture.forAction(
+      'items',
+      'items:put_in_container',
+      putInContainerRule,
+      eventIsActionPutInContainer
+    );
   });
 
   afterEach(() => {
@@ -37,6 +46,9 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
     }
     if (takeFixture) {
       takeFixture.cleanup();
+    }
+    if (putFixture) {
+      putFixture.cleanup();
     }
   });
 
@@ -120,6 +132,62 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
       const containerAfterTake = takeFixture.entityManager.getEntityInstance('locked-chest-1');
       expect(containerAfterTake.components['items:container'].contents).toEqual(['gold-bar-1']);
       expect(containerAfterTake.components['items:container'].isOpen).toBe(true);
+
+      const takeEvent = takeFixture.events.find(
+        (event) => event.eventType === 'items:item_taken_from_container'
+      );
+      expect(takeEvent).toBeDefined();
+      expect(takeEvent.payload.itemEntity).toBe('diamond-1');
+
+      const takeTurnEnded = takeFixture.events.find(
+        (event) => event.eventType === 'core:turn_ended'
+      );
+      expect(takeTurnEnded).toBeDefined();
+      expect(takeTurnEnded.payload.success).toBe(true);
+
+      // Phase 4: Return the item to the container using put_in_container
+      const putRoom = takeFixture.entityManager.getEntityInstance('treasure-vault');
+      const putActor = takeFixture.entityManager.getEntityInstance('test:actor1');
+      const putChest = takeFixture.entityManager.getEntityInstance('locked-chest-1');
+      const putDiamond = takeFixture.entityManager.getEntityInstance('diamond-1');
+      const putGold = takeFixture.entityManager.getEntityInstance('gold-bar-1');
+
+      putFixture.reset([putRoom, putActor, putChest, putDiamond, putGold]);
+
+      await putFixture.executeAction('test:actor1', 'locked-chest-1', {
+        additionalPayload: { secondaryId: 'diamond-1' },
+      });
+
+      const actorAfterPut = putFixture.entityManager.getEntityInstance('test:actor1');
+      expect(actorAfterPut.components['items:inventory'].items).not.toContain('diamond-1');
+      expect(actorAfterPut.components['items:inventory'].items).toContain('brass-key-1');
+
+      const containerAfterPut = putFixture.entityManager.getEntityInstance('locked-chest-1');
+      expect(new Set(containerAfterPut.components['items:container'].contents)).toEqual(
+        new Set(['gold-bar-1', 'diamond-1'])
+      );
+      expect(containerAfterPut.components['items:container'].isOpen).toBe(true);
+
+      const putRuleEvent = putFixture.events.find(
+        (event) => event.eventType === 'items:item_put_in_container'
+      );
+      expect(putRuleEvent).toBeDefined();
+      expect(putRuleEvent.payload.itemEntity).toBe('diamond-1');
+      expect(putRuleEvent.payload.containerEntity).toBe('locked-chest-1');
+
+      const putPerceptible = putFixture.events.find(
+        (event) =>
+          event.eventType === 'core:perceptible_event' &&
+          event.payload.perceptionType === 'item_put_in_container'
+      );
+      expect(putPerceptible).toBeDefined();
+      expect(putPerceptible.payload.targetId).toBe('locked-chest-1');
+
+      const putTurnEnded = putFixture.events.find(
+        (event) => event.eventType === 'core:turn_ended'
+      );
+      expect(putTurnEnded).toBeDefined();
+      expect(putTurnEnded.payload.success).toBe(true);
     });
 
     it('should fail to take from closed container (must open first)', async () => {

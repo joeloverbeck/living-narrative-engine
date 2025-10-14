@@ -95,18 +95,29 @@ describe('items:examine_item action definition', () => {
       testFixture.reset([room, actor, item]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions(
-        'actor1'
-      );
-
-      const examineActions = availableActions.filter(
-        (a) => a.id === 'items:examine_item'
+      const discoveredActions = testFixture.discoverActions('actor1');
+      const examineActions = discoveredActions.filter(
+        (action) => action.id === 'items:examine_item'
       );
 
       expect(examineActions.length).toBeGreaterThan(0);
-      // Note: getAvailableActions returns raw action definitions with validation,
-      // not fully resolved actions with target IDs. We can only verify that
-      // the action was discovered for this actor.
+
+      const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+      const scopeContext = {
+        actor: {
+          id: 'actor1',
+          components: actorInstance.components,
+        },
+      };
+
+      const scopeResult =
+        testFixture.testEnv.unifiedScopeResolver.resolveSync(
+          'items:examinable_items',
+          scopeContext
+        );
+
+      expect(scopeResult.success).toBe(true);
+      expect(Array.from(scopeResult.value)).toEqual(['test_item_1']);
     });
 
     it('should appear when items with description exist at actor location', () => {
@@ -129,15 +140,29 @@ describe('items:examine_item action definition', () => {
       testFixture.reset([room, actor, item]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions(
-        'actor1'
-      );
-      const examineActions = availableActions.filter(
-        (a) => a.id === 'items:examine_item'
+      const discoveredActions = testFixture.discoverActions('actor1');
+      const examineActions = discoveredActions.filter(
+        (action) => action.id === 'items:examine_item'
       );
 
       expect(examineActions.length).toBeGreaterThan(0);
-      // Note: Raw action definitions don't contain resolved target IDs
+
+      const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+      const scopeContext = {
+        actor: {
+          id: 'actor1',
+          components: actorInstance.components,
+        },
+      };
+
+      const scopeResult =
+        testFixture.testEnv.unifiedScopeResolver.resolveSync(
+          'items:examinable_items',
+          scopeContext
+        );
+
+      expect(scopeResult.success).toBe(true);
+      expect(Array.from(scopeResult.value)).toEqual(['test_item_2']);
     });
 
     it('should NOT appear when no items present', () => {
@@ -156,14 +181,30 @@ describe('items:examine_item action definition', () => {
       testFixture.reset([room, actor]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions(
-        'lonely_actor'
-      );
-      const examineActions = availableActions.filter(
-        (a) => a.id === 'items:examine_item'
+      const discoveredActions = testFixture.discoverActions('lonely_actor');
+      const examineActions = discoveredActions.filter(
+        (action) => action.id === 'items:examine_item'
       );
 
       expect(examineActions.length).toBe(0);
+
+      const actorInstance =
+        testFixture.entityManager.getEntityInstance('lonely_actor');
+      const scopeContext = {
+        actor: {
+          id: 'lonely_actor',
+          components: actorInstance.components,
+        },
+      };
+
+      const scopeResult =
+        testFixture.testEnv.unifiedScopeResolver.resolveSync(
+          'items:examinable_items',
+          scopeContext
+        );
+
+      expect(scopeResult.success).toBe(true);
+      expect(Array.from(scopeResult.value)).toHaveLength(0);
     });
 
     it('should NOT appear for items lacking core:description component', () => {
@@ -183,20 +224,19 @@ describe('items:examine_item action definition', () => {
         .withName('nameless object')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
-        // Missing core:description
         .build();
 
       testFixture.reset([room, actor, item]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions(
-        'actor1'
-      );
-      const examineActions = availableActions.filter(
-        (a) => a.id === 'items:examine_item'
+      const discoveredActions = testFixture.discoverActions('actor1');
+      const examineActions = discoveredActions.filter(
+        (action) => action.id === 'items:examine_item'
       );
 
       expect(examineActions.length).toBe(0);
+
+      // The combined discovery pipeline should exclude items missing descriptions.
     });
 
     it('should NOT appear for items at different locations', () => {
@@ -220,14 +260,29 @@ describe('items:examine_item action definition', () => {
       testFixture.reset([roomA, roomB, actor, item]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions(
-        'actor1'
-      );
-      const examineActions = availableActions.filter(
-        (a) => a.id === 'items:examine_item'
+      const discoveredActions = testFixture.discoverActions('actor1');
+      const examineActions = discoveredActions.filter(
+        (action) => action.id === 'items:examine_item'
       );
 
       expect(examineActions.length).toBe(0);
+
+      const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+      const scopeContext = {
+        actor: {
+          id: 'actor1',
+          components: actorInstance.components,
+        },
+      };
+
+      const scopeResult =
+        testFixture.testEnv.unifiedScopeResolver.resolveSync(
+          'items:examinable_items',
+          scopeContext
+        );
+
+      expect(scopeResult.success).toBe(true);
+      expect(Array.from(scopeResult.value)).not.toContain('distant_item');
     });
 
     it('should appear for both inventory and location items with description', () => {
@@ -261,16 +316,31 @@ describe('items:examine_item action definition', () => {
       testFixture.reset([room, actor, inventoryItem, locationItem]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions(
-        'actor1'
-      );
-      const examineActions = availableActions.filter(
-        (a) => a.id === 'items:examine_item'
+      const discoveredActions = testFixture.discoverActions('actor1');
+      const examineActions = discoveredActions.filter(
+        (action) => action.id === 'items:examine_item'
       );
 
       expect(examineActions.length).toBeGreaterThan(0);
-      // Note: The action index validates that targets exist, but doesn't
-      // attach target IDs to action definitions. We can only verify discovery.
+
+      const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+      const scopeContext = {
+        actor: {
+          id: 'actor1',
+          components: actorInstance.components,
+        },
+      };
+
+      const scopeResult =
+        testFixture.testEnv.unifiedScopeResolver.resolveSync(
+          'items:examinable_items',
+          scopeContext
+        );
+
+      expect(scopeResult.success).toBe(true);
+      expect(new Set(scopeResult.value)).toEqual(
+        new Set(['inventory_item', 'location_item'])
+      );
     });
 
     it('should NOT appear for non-portable items even with description', () => {
@@ -287,20 +357,35 @@ describe('items:examine_item action definition', () => {
         .withDescription('A massive oak wardrobe')
         .atLocation('room1')
         .withComponent('items:item', {})
-        // Missing items:portable
         .build();
 
       testFixture.reset([room, actor, item]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions(
-        'actor1'
-      );
-      const examineActions = availableActions.filter(
-        (a) => a.id === 'items:examine_item'
+      const discoveredActions = testFixture.discoverActions('actor1');
+      const examineActions = discoveredActions.filter(
+        (action) => action.id === 'items:examine_item'
       );
 
       expect(examineActions.length).toBe(0);
+
+      const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+      const scopeContext = {
+        actor: {
+          id: 'actor1',
+          components: actorInstance.components,
+        },
+      };
+
+      const scopeResult =
+        testFixture.testEnv.unifiedScopeResolver.resolveSync(
+          'items:examinable_items',
+          scopeContext
+        );
+
+      expect(scopeResult.success).toBe(true);
+      expect(Array.from(scopeResult.value)).not.toContain('heavy_furniture');
     });
   });
+
 });

@@ -133,7 +133,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
 
     // Assert: Verify no put_in_container actions
     const putInContainerActions = actions.filter(
-      (a) => a.actionId === 'items:put_in_container'
+      (a) => a.id === 'items:put_in_container'
     );
 
     expect(putInContainerActions.length).toBe(0);
@@ -178,7 +178,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
 
     // Assert: Verify no put_in_container actions
     const putInContainerActions = actions.filter(
-      (a) => a.actionId === 'items:put_in_container'
+      (a) => a.id === 'items:put_in_container'
     );
 
     expect(putInContainerActions.length).toBe(0);
