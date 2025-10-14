@@ -118,6 +118,21 @@ app.use((req, res, next) => {
 // CORS Configuration
 const allowedOriginsArray = appConfigService.getAllowedOriginsArray();
 
+const resolvedNodeEnv = (() => {
+  const envFromService =
+    typeof appConfigService.getNodeEnv === 'function'
+      ? appConfigService.getNodeEnv()
+      : process.env.NODE_ENV;
+  if (typeof envFromService !== 'string') {
+    return 'production';
+  }
+  const trimmed = envFromService.trim().toLowerCase();
+  return trimmed === '' ? 'production' : trimmed;
+})();
+
+const isDevelopmentLikeEnv =
+  resolvedNodeEnv === 'development' || resolvedNodeEnv === 'test';
+
 if (allowedOriginsArray.length > 0) {
   // Log CORS configuration immediately for debugging
   proxyLogger.info(
@@ -136,12 +151,9 @@ if (allowedOriginsArray.length > 0) {
   proxyLogger.debug('CORS middleware applied successfully');
 } else {
   // Check if in development mode and provide helpful warning
-  const nodeEnv = appConfigService.getNodeEnv
-    ? appConfigService.getNodeEnv()
-    : 'production';
-  if (nodeEnv === 'development') {
+  if (isDevelopmentLikeEnv) {
     proxyLogger.warn(
-      'LLM Proxy Server: CORS not configured in development mode. ' +
+      `LLM Proxy Server: CORS not configured in development mode (current environment: ${resolvedNodeEnv}). ` +
         'To enable browser access, set PROXY_ALLOWED_ORIGIN environment variable. ' +
         'Example: PROXY_ALLOWED_ORIGIN="http://localhost:8080,http://127.0.0.1:8080"'
     );
