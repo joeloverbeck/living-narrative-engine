@@ -359,10 +359,11 @@ describe('ActionFormattingStage - Coverage Enhancement', () => {
 
       expect(mockErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith(
         expect.objectContaining({
-          error: 'No targets available for action',
+          error: expect.objectContaining({ code: 'TARGETS_INVALID' }),
           actionDef: expect.objectContaining({ id: 'test:action' }),
           actorId: 'player',
           targetId: null,
+          additionalContext: expect.objectContaining({ stage: 'action_formatting' }),
         })
       );
     });
@@ -395,20 +396,10 @@ describe('ActionFormattingStage - Coverage Enhancement', () => {
         throw thrownError;
       });
 
-      const result = await stage.executeInternal(contextWithPerActionMetadata);
-
-      expect(result.success).toBe(true);
-      expect(result.actions).toHaveLength(0);
-      expect(result.errors).toHaveLength(1);
-
-      expect(mockErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: thrownError,
-          actionDef: expect.objectContaining({ id: 'test:action' }),
-          actorId: 'player',
-          targetId: 'target1',
-        })
-      );
+      await expect(
+        stage.executeInternal(contextWithPerActionMetadata)
+      ).rejects.toThrow('Formatter threw an exception');
+      expect(mockErrorContextBuilder.buildErrorContext).not.toHaveBeenCalled();
     });
 
     it('should handle formatter errors with additional context details', async () => {
@@ -794,14 +785,11 @@ describe('ActionFormattingStage - Coverage Enhancement', () => {
 
       expect(mockErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith(
         expect.objectContaining({
-          error: expect.any(Error),
+          error: 'Multi-target formatter returned no result',
           actionDef: expect.objectContaining({ id: 'test:action' }),
           actorId: 'player',
-          targetId: null,
-          additionalContext: expect.objectContaining({
-            stage: 'action_formatting',
-            thrown: true,
-          }),
+          targetId: 'item1',
+          additionalContext: expect.objectContaining({ stage: 'action_formatting' }),
         })
       );
     });
@@ -942,7 +930,11 @@ describe('ActionFormattingStage - Coverage Enhancement', () => {
         name: 'Test Action',
         command: 'test Item 1',
         description: '',
-        params: { targetId: 'item1' },
+        params: {
+          targetId: 'item1',
+          isMultiTarget: true,
+          targetIds: { primary: ['item1'] },
+        },
         visual: null,
       });
       expect(result.errors).toHaveLength(0);
@@ -981,10 +973,11 @@ describe('ActionFormattingStage - Coverage Enhancement', () => {
 
       expect(mockErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith(
         expect.objectContaining({
-          error: 'Multi-target formatting failed',
+          error: expect.objectContaining({ code: 'TARGETS_INVALID' }),
           actionDef: expect.objectContaining({ id: 'test:action' }),
           actorId: 'player',
           targetId: null,
+          additionalContext: expect.objectContaining({ stage: 'action_formatting' }),
         })
       );
     });
@@ -1028,7 +1021,11 @@ describe('ActionFormattingStage - Coverage Enhancement', () => {
         name: 'Test Action',
         command: 'test Item 1',
         description: '',
-        params: { targetId: 'item1' },
+        params: {
+          targetId: 'item1',
+          isMultiTarget: true,
+          targetIds: { primary: ['item1'] },
+        },
         visual: null,
       });
       expect(result.errors).toHaveLength(0);
