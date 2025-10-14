@@ -163,8 +163,8 @@ describe('AppConfigService - Environment Variable Logging Issues', () => {
 
       const service = getAppConfigService(logger);
 
-      // Whitespace-only behavior: NODE_ENV uses raw value, boolean configs evaluate as false
-      expect(service.getNodeEnv()).toBe('  '); // Current behavior - uses raw value
+      // Whitespace-only behavior: NODE_ENV trims to default, boolean configs evaluate as false
+      expect(service.getNodeEnv()).toBe('development');
       expect(service.isCacheEnabled()).toBe(false); // Whitespace evaluates to false for boolean
     });
   });

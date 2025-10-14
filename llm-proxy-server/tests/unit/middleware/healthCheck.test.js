@@ -14,6 +14,7 @@ import {
   createLivenessCheck,
   createReadinessCheck,
 } from '../../../src/middleware/healthCheck.js';
+import v8 from 'v8';
 
 describe('Health Check Middleware', () => {
   let mockLogger;
@@ -323,6 +324,82 @@ describe('Health Check Middleware', () => {
         rss: 120 * 1024 * 1024,
       });
 
+      const previousCriticalHeapPercent =
+        process.env.READINESS_CRITICAL_HEAP_PERCENT;
+      const previousCriticalHeapTotal =
+        process.env.READINESS_CRITICAL_HEAP_TOTAL_MB;
+      const previousCriticalHeapUsed =
+        process.env.READINESS_CRITICAL_HEAP_USED_MB;
+      try {
+        // Lower thresholds so the simulated memory usage trips the breaker
+        process.env.READINESS_CRITICAL_HEAP_PERCENT = '80';
+        process.env.READINESS_CRITICAL_HEAP_TOTAL_MB = '64';
+        process.env.READINESS_CRITICAL_HEAP_USED_MB = '64';
+
+        mockLlmConfigService.isOperational.mockReturnValue(true);
+        mockLlmConfigService.getLlmConfigs.mockReturnValue({
+          llms: { 'test-llm': {} },
+        });
+
+        const readinessCheck = createReadinessCheck({
+          logger: mockLogger,
+          llmConfigService: mockLlmConfigService,
+        });
+
+        await readinessCheck(mockRequest, mockResponse);
+
+        expect(mockStatus).toHaveBeenCalledWith(503);
+        expect(mockJson).toHaveBeenCalledWith(
+          expect.objectContaining({
+            status: 'DOWN',
+            details: expect.objectContaining({
+              dependencies: expect.arrayContaining([
+                expect.objectContaining({
+                  name: 'nodeProcess',
+                  status: 'DOWN',
+                  details: expect.objectContaining({
+                    memoryUsage: expect.objectContaining({
+                      percentage: 95,
+                    }),
+                  }),
+                }),
+              ]),
+            }),
+          })
+        );
+      } finally {
+        if (previousCriticalHeapPercent === undefined) {
+          delete process.env.READINESS_CRITICAL_HEAP_PERCENT;
+        } else {
+          process.env.READINESS_CRITICAL_HEAP_PERCENT =
+            previousCriticalHeapPercent;
+        }
+        if (previousCriticalHeapTotal === undefined) {
+          delete process.env.READINESS_CRITICAL_HEAP_TOTAL_MB;
+        } else {
+          process.env.READINESS_CRITICAL_HEAP_TOTAL_MB =
+            previousCriticalHeapTotal;
+        }
+        if (previousCriticalHeapUsed === undefined) {
+          delete process.env.READINESS_CRITICAL_HEAP_USED_MB;
+        } else {
+          process.env.READINESS_CRITICAL_HEAP_USED_MB =
+            previousCriticalHeapUsed;
+        }
+      }
+    });
+
+    it('should include V8 heap limit statistics when available', async () => {
+      process.memoryUsage.mockReturnValue({
+        heapUsed: 60 * 1024 * 1024,
+        heapTotal: 120 * 1024 * 1024,
+        external: 5 * 1024 * 1024,
+        rss: 140 * 1024 * 1024,
+      });
+      jest
+        .spyOn(v8, 'getHeapStatistics')
+        .mockReturnValue({ heap_size_limit: 160 * 1024 * 1024 });
+
       mockLlmConfigService.isOperational.mockReturnValue(true);
       mockLlmConfigService.getLlmConfigs.mockReturnValue({
         llms: { 'test-llm': {} },
@@ -335,25 +412,109 @@ describe('Health Check Middleware', () => {
 
       await readinessCheck(mockRequest, mockResponse);
 
-      expect(mockStatus).toHaveBeenCalledWith(503);
-      expect(mockJson).toHaveBeenCalledWith(
+      const payload = mockJson.mock.calls.at(-1)[0];
+      const processDependency = payload.details.dependencies.find(
+        (dep) => dep.name === 'nodeProcess'
+      );
+
+      expect(payload.status).toBe('UP');
+      expect(processDependency).toEqual(
         expect.objectContaining({
-          status: 'DOWN',
+          status: 'UP',
           details: expect.objectContaining({
-            dependencies: expect.arrayContaining([
-              expect.objectContaining({
-                name: 'nodeProcess',
-                status: 'DOWN',
-                details: expect.objectContaining({
-                  memoryUsage: expect.objectContaining({
-                    percentage: 95,
-                  }),
-                }),
-              }),
-            ]),
+            memoryUsage: expect.objectContaining({
+              limits: {
+                heapSizeLimitMB: 160,
+                usagePercentOfLimit: 38,
+              },
+            }),
           }),
         })
       );
+    });
+
+    it('should handle missing V8 heap statistics gracefully', async () => {
+      process.memoryUsage.mockReturnValue({
+        heapUsed: 45 * 1024 * 1024,
+        heapTotal: 120 * 1024 * 1024,
+        external: 5 * 1024 * 1024,
+        rss: 140 * 1024 * 1024,
+      });
+      jest.spyOn(v8, 'getHeapStatistics').mockReturnValue(null);
+
+      mockLlmConfigService.isOperational.mockReturnValue(true);
+      mockLlmConfigService.getLlmConfigs.mockReturnValue({
+        llms: { 'test-llm': {} },
+      });
+
+      const readinessCheck = createReadinessCheck({
+        logger: mockLogger,
+        llmConfigService: mockLlmConfigService,
+      });
+
+      await readinessCheck(mockRequest, mockResponse);
+
+      const payload = mockJson.mock.calls.at(-1)[0];
+      const processDependency = payload.details.dependencies.find(
+        (dep) => dep.name === 'nodeProcess'
+      );
+
+      expect(processDependency).toEqual(
+        expect.objectContaining({
+          status: 'UP',
+          details: expect.objectContaining({
+            memoryUsage: expect.objectContaining({
+              limits: null,
+            }),
+          }),
+        })
+      );
+    });
+
+    it('should continue when V8 getHeapStatistics is not a function', async () => {
+      const originalGetHeapStatistics = v8.getHeapStatistics;
+      process.memoryUsage.mockReturnValue({
+        heapUsed: 40 * 1024 * 1024,
+        heapTotal: 80 * 1024 * 1024,
+        external: 5 * 1024 * 1024,
+        rss: 100 * 1024 * 1024,
+      });
+
+      try {
+        // Simulate environments where getHeapStatistics is unavailable
+        // eslint-disable-next-line no-global-assign
+        v8.getHeapStatistics = undefined;
+
+        mockLlmConfigService.isOperational.mockReturnValue(true);
+        mockLlmConfigService.getLlmConfigs.mockReturnValue({
+          llms: { 'test-llm': {} },
+        });
+
+        const readinessCheck = createReadinessCheck({
+          logger: mockLogger,
+          llmConfigService: mockLlmConfigService,
+        });
+
+        await readinessCheck(mockRequest, mockResponse);
+
+        const payload = mockJson.mock.calls.at(-1)[0];
+        const processDependency = payload.details.dependencies.find(
+          (dep) => dep.name === 'nodeProcess'
+        );
+
+        expect(processDependency).toEqual(
+          expect.objectContaining({
+            status: 'UP',
+            details: expect.objectContaining({
+              memoryUsage: expect.objectContaining({
+                limits: null,
+              }),
+            }),
+          })
+        );
+      } finally {
+        v8.getHeapStatistics = originalGetHeapStatistics;
+      }
     });
 
     it('should mark HTTP agent service as degraded when missing methods', async () => {
