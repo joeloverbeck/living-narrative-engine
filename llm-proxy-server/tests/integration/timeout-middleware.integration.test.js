@@ -18,6 +18,10 @@ import {
   createTimeoutMiddleware,
   createSizeLimitConfig,
 } from '../../src/middleware/timeout.js';
+import {
+  SECURITY_MAX_REQUEST_SIZE,
+  SECURITY_MAX_REQUEST_SIZE_BYTES,
+} from '../../src/config/constants.js';
 import { createRequestTrackingMiddleware } from '../../src/middleware/requestTracking.js';
 
 jest.setTimeout(15000);
@@ -69,6 +73,45 @@ describe('Timeout middleware end-to-end behaviour', () => {
       expect.stringContaining('Timeout cannot commit response'),
       expect.objectContaining({ existingCommitment: 'success' })
     );
+  });
+
+  test('records timeout state transitions and emits connection close diagnostics', async () => {
+    const transitionsLog = [];
+    const app = buildAppWithMiddlewares((instance) => {
+      instance.use((req, res, next) => {
+        res.on('finish', () => {
+          transitionsLog.push(req.stateTransitions.map((entry) => entry.to));
+        });
+        next();
+      });
+
+      instance.post(
+        '/timeout-state-transitions',
+        createTimeoutMiddleware(25, { logger, gracePeriod: 15 }),
+        (_req, _res) => {}
+      );
+    });
+
+    const response = await request(app)
+      .post('/timeout-state-transitions')
+      .send({});
+
+    expect(response.status).toBe(503);
+    expect(transitionsLog).toHaveLength(1);
+    const recordedStates = transitionsLog[0];
+    expect(recordedStates).toEqual(
+      expect.arrayContaining(['responding', 'timeout'])
+    );
+    expect(
+      logger.warn.mock.calls.some((call) =>
+        call[0].includes('Timeout response sent')
+      )
+    ).toBe(true);
+    expect(
+      logger.debug.mock.calls.some((call) =>
+        call[0].includes('Connection closed after timeout')
+      )
+    ).toBe(true);
   });
 
   test('waits for grace period before emitting timeout response', async () => {
@@ -245,5 +288,33 @@ describe('createSizeLimitConfig integration with Express', () => {
       .send({ data: excessivePayload });
 
     expect(response.status).toBe(413);
+  });
+
+  test('clamps fractional gigabyte inputs to the security maximum boundary', () => {
+    const config = createSizeLimitConfig({ jsonLimit: '0.75gb' });
+
+    expect(config.json.limit).toBe(SECURITY_MAX_REQUEST_SIZE);
+
+    const smallBuffer = Buffer.alloc(1024);
+    expect(() =>
+      config.json.verify(
+        { path: '/fractional', method: 'POST' },
+        { headersSent: false },
+        smallBuffer
+      )
+    ).not.toThrow();
+  });
+
+  test('guards oversized payloads even when jsonLimit string is malformed', () => {
+    const config = createSizeLimitConfig({ jsonLimit: 'definitely-not-a-size' });
+
+    const oversizeBuffer = Buffer.alloc(SECURITY_MAX_REQUEST_SIZE_BYTES + 1);
+    expect(() =>
+      config.json.verify(
+        { path: '/malformed', method: 'POST' },
+        { headersSent: false },
+        oversizeBuffer
+      )
+    ).toThrow(expect.objectContaining({ status: 413, code: 'LIMIT_FILE_SIZE' }));
   });
 });
