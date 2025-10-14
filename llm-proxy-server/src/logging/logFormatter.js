@@ -307,11 +307,20 @@ class LogFormatter {
   /**
    * Truncate message if it exceeds maximum length
    * @param {string} message - Original message
+   * @param {string} [level='info'] - Log level associated with the message
    * @returns {string} Truncated message with indicator
    * @private
    */
-  #truncateMessage(message) {
+  #truncateMessage(message, level = 'info') {
     const maxLength = this.#config.getMaxMessageLength();
+
+    if (typeof maxLength !== 'number' || maxLength <= 0) {
+      return message;
+    }
+
+    if (level === 'warn' || level === 'error') {
+      return message;
+    }
 
     if (message.length <= maxLength) {
       return message;
@@ -407,7 +416,7 @@ class LogFormatter {
   formatMessage(level, message, ...args) {
     const context = this.#detectContext(message, level);
     const timestamp = this.#formatTimestamp();
-    const truncatedMessage = this.#truncateMessage(message);
+    const truncatedMessage = this.#truncateMessage(message, level);
 
     // Separate context object from other arguments if present
     let contextObject = null;
