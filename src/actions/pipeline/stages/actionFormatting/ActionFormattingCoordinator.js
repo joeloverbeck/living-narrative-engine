@@ -175,9 +175,11 @@ export class ActionFormattingCoordinator {
         trace,
       });
 
-      for (const failure of decision.validationFailures) {
-        accumulator.addError(failure.error);
-      }
+      this.#recordValidationFailures({
+        decision,
+        task,
+        accumulator,
+      });
 
       if (decision.strategy && decision.validationFailures.length === 0) {
         await decision.strategy.format({
@@ -205,6 +207,42 @@ export class ActionFormattingCoordinator {
     return PipelineResult.success({
       actions: accumulator.getFormattedActions(),
       errors,
+    });
+  }
+
+  /**
+   * @param {object} params - Validation handling parameters.
+   * @param {{ validationFailures?: Array<{ code?: string, error?: unknown }> }} params.decision - Decider outcome.
+   * @param {ActionFormattingTask} params.task - Task currently being processed.
+   * @param {FormattingAccumulator} params.accumulator - Accumulator collecting errors.
+   * @returns {void}
+   */
+  #recordValidationFailures({ decision, task, accumulator }) {
+    const failures = Array.isArray(decision?.validationFailures)
+      ? decision.validationFailures
+      : [];
+
+    if (failures.length === 0 || !task?.actionDef) {
+      return;
+    }
+
+    const failureCodes = [];
+
+    for (const failure of failures) {
+      if (failure?.code) {
+        failureCodes.push(failure.code);
+      }
+      accumulator.addError(failure?.error);
+    }
+
+    this.#instrumentation?.actionFailed?.({
+      actionDef: task.actionDef,
+      timestamp: Date.now(),
+      payload: {
+        reason: 'validation-failed',
+        failureCodes,
+        metadataSource: task.metadata?.source,
+      },
     });
   }
 
