@@ -344,4 +344,40 @@ describe('ApiKeyService error consolidation coverage', () => {
       )
     );
   });
+  it('routes dual-source failures through the combined branch with full context', async () => {
+    delete process.env.DUAL_SOURCE_ENV_KEY;
+
+    const missingFileError = new Error('missing key file');
+    missingFileError.code = 'ENOENT';
+    fsReader.readFile.mockRejectedValue(missingFileError);
+
+    const result = await apiKeyService.getApiKey(
+      {
+        apiType: 'openai',
+        apiKeyEnvVar: 'DUAL_SOURCE_ENV_KEY',
+        apiKeyFileName: 'missing.key',
+      },
+      'llm-dual-source'
+    );
+
+    expect(fsReader.readFile).toHaveBeenCalledWith('/configs/missing.key', 'utf-8');
+    expect(result.apiKey).toBeNull();
+    expect(result.errorDetails?.stage).toBe('api_key_all_sources_failed');
+    expect(result.errorDetails?.details).toEqual(
+      expect.objectContaining({
+        llmId: 'llm-dual-source',
+        attemptedEnvVar: 'DUAL_SOURCE_ENV_KEY',
+        attemptedFile: 'missing.key',
+      })
+    );
+    expect(result.errorDetails?.details?.reason).toContain('Environment variable');
+    expect(result.errorDetails?.details?.reason).toContain("File 'missing.key' retrieval also failed");
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Stage: api_key_all_sources_failed'),
+      expect.objectContaining({
+        details: expect.objectContaining({ attemptedEnvVar: 'DUAL_SOURCE_ENV_KEY' }),
+      })
+    );
+  });
+
 });
