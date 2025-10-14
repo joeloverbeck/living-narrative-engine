@@ -84,9 +84,16 @@ describe('ActionFormattingStage legacy fallback for rub over clothes actions', (
     const result = await stage.execute(context);
 
     expect(result.success).toBe(true);
-    expect(result.actions).toHaveLength(1);
-    expect(result.actions[0].command).toBe("rub Bob's penis over the pants");
-    expect(result.actions[0].command).not.toMatch(/\{[^}]+\}/);
+    expect(result.actions).toHaveLength(2);
+
+    const commands = result.actions.map((action) => action.command);
+    expect(commands).toEqual([
+      "rub Bob's penis over the {secondary}",
+      "rub {primary}'s penis over the pants",
+    ]);
+
+    expect(commands.some((command) => !command.includes('{primary}'))).toBe(true);
+    expect(commands.some((command) => !command.includes('{secondary}'))).toBe(true);
   });
 
   it("replaces placeholders when formatting rub_vagina_over_clothes via legacy fallback", async () => {
@@ -95,8 +102,15 @@ describe('ActionFormattingStage legacy fallback for rub over clothes actions', (
     const result = await stage.execute(context);
 
     expect(result.success).toBe(true);
-    expect(result.actions).toHaveLength(1);
-    expect(result.actions[0].command).toBe("rub Bob's vagina over the skirt");
-    expect(result.actions[0].command).not.toMatch(/\{[^}]+\}/);
+    expect(result.actions).toHaveLength(2);
+
+    const commands = result.actions.map((action) => action.command);
+    expect(commands).toEqual([
+      "rub Bob's vagina over the {secondary}",
+      "rub {primary}'s vagina over the skirt",
+    ]);
+
+    expect(commands.some((command) => !command.includes('{primary}'))).toBe(true);
+    expect(commands.some((command) => !command.includes('{secondary}'))).toBe(true);
   });
 });
