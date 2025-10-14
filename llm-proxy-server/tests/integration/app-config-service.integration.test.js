@@ -263,6 +263,9 @@ describe('AppConfigService integration coverage', () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), 'app-config-int-invalid-'));
     process.env.PROXY_PORT = 'not-a-number';
     process.env.PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES = tempDir;
+    // Explicitly clear any previously configured allowed origins to simulate
+    // an invalid configuration rather than inheriting values from other tests.
+    process.env.PROXY_ALLOWED_ORIGIN = '   ';
 
     process.env.CACHE_ENABLED = 'false';
     process.env.CACHE_DEFAULT_TTL = 'NaN';
