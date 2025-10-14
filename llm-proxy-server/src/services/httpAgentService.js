@@ -400,6 +400,33 @@ class HttpAgentService {
   }
 
   /**
+   * @description Provides a diagnostic preview of the next cleanup interval without scheduling timers
+   * @param {object} [options={}] - Optional overrides for the preview calculation
+   * @param {boolean} [options.overrideAdaptiveCleanupEnabled] - Temporarily override adaptive cleanup mode for the preview
+   * @returns {number} Next cleanup interval in milliseconds
+   */
+  getNextCleanupIntervalPreview(options = {}) {
+    const { overrideAdaptiveCleanupEnabled } = options;
+
+    if (typeof overrideAdaptiveCleanupEnabled === 'boolean') {
+      const originalAdaptiveMode =
+        this.#adaptiveCleanupConfig.adaptiveCleanupEnabled;
+
+      this.#adaptiveCleanupConfig.adaptiveCleanupEnabled =
+        overrideAdaptiveCleanupEnabled;
+
+      try {
+        return this.#calculateNextCleanupInterval();
+      } finally {
+        this.#adaptiveCleanupConfig.adaptiveCleanupEnabled =
+          originalAdaptiveMode;
+      }
+    }
+
+    return this.#calculateNextCleanupInterval();
+  }
+
+  /**
    * Cleans up all resources including timers and agents
    * Call this method when shutting down the service
    */

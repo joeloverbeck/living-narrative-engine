@@ -162,6 +162,48 @@ describe('HttpAgentService - Adaptive Cleanup', () => {
     });
   });
 
+  describe('getNextCleanupIntervalPreview', () => {
+    it('returns the base interval when adaptive cleanup is disabled', () => {
+      httpAgentService = new HttpAgentService(mockLogger, {
+        adaptiveCleanupEnabled: false,
+        baseCleanupIntervalMs: 45000,
+        minCleanupIntervalMs: 10000,
+        maxCleanupIntervalMs: 900000,
+      });
+
+      const interval = httpAgentService.getNextCleanupIntervalPreview();
+
+      expect(interval).toBe(45000);
+      expect(
+        httpAgentService.getEnhancedStats().adaptiveCleanup.enabled
+      ).toBe(false);
+    });
+
+    it('supports temporarily overriding adaptive cleanup behaviour for diagnostics', () => {
+      httpAgentService = new HttpAgentService(mockLogger, {
+        baseCleanupIntervalMs: 120000,
+        minCleanupIntervalMs: 60000,
+        maxCleanupIntervalMs: 900000,
+      });
+
+      const adaptiveInterval =
+        httpAgentService.getNextCleanupIntervalPreview();
+      expect(adaptiveInterval).toBe(234000);
+
+      const forcedFixedInterval =
+        httpAgentService.getNextCleanupIntervalPreview({
+          overrideAdaptiveCleanupEnabled: false,
+        });
+      expect(forcedFixedInterval).toBe(120000);
+
+      const statsAfterPreview = httpAgentService.getEnhancedStats();
+      expect(statsAfterPreview.adaptiveCleanup.enabled).toBe(true);
+      expect(statsAfterPreview.adaptiveCleanup.adjustments).toBeGreaterThanOrEqual(
+        1
+      );
+    });
+  });
+
   describe('Timer management in scheduleNextCleanup', () => {
     it('should clear existing timeout when scheduling new cleanup', () => {
       const mockClearTimeout = jest.spyOn(global, 'clearTimeout');
