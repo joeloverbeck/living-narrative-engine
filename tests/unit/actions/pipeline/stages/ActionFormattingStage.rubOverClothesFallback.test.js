@@ -113,16 +113,18 @@ describe('ActionFormattingStage legacy fallback for rub over clothes actions', (
     const result = await stage.execute(context);
 
     expect(result.success).toBe(true);
-    expect(result.actions).toHaveLength(2);
+    expect(result.actions).toHaveLength(1);
 
-    const commands = result.actions.map((action) => action.command);
-    expect(commands).toEqual([
-      "rub Bob's penis over the {secondary}",
-      "rub {primary}'s penis over the pants",
-    ]);
-
-    expect(commands.some((command) => !command.includes('{primary}'))).toBe(true);
-    expect(commands.some((command) => !command.includes('{secondary}'))).toBe(true);
+    // The coordinator consolidates multi-target metadata into a single action
+    // payload while populating targetIds to preserve context fan-out.
+    const [formatted] = result.actions;
+    expect(formatted.command).toBe("rub Bob's penis over the pants");
+    expect(formatted.params.targetIds).toEqual(
+      expect.objectContaining({
+        primary: ['bob'],
+        secondary: ['pants1'],
+      })
+    );
   });
 
   it('replaces placeholders when formatting rub_vagina_over_clothes via legacy fallback', async () => {
@@ -131,15 +133,17 @@ describe('ActionFormattingStage legacy fallback for rub over clothes actions', (
     const result = await stage.execute(context);
 
     expect(result.success).toBe(true);
-    expect(result.actions).toHaveLength(2);
+    expect(result.actions).toHaveLength(1);
 
-    const commands = result.actions.map((action) => action.command);
-    expect(commands).toEqual([
-      "rub Bob's vagina over the {secondary}",
-      "rub {primary}'s vagina over the skirt",
-    ]);
-
-    expect(commands.some((command) => !command.includes('{primary}'))).toBe(true);
-    expect(commands.some((command) => !command.includes('{secondary}'))).toBe(true);
+    // Coordinator fallback mirrors the penis scenario: a single action carries
+    // the resolved multi-target metadata via targetIds.
+    const [formatted] = result.actions;
+    expect(formatted.command).toBe("rub Bob's vagina over the skirt");
+    expect(formatted.params.targetIds).toEqual(
+      expect.objectContaining({
+        primary: ['bob'],
+        secondary: ['skirt1'],
+      })
+    );
   });
 });
