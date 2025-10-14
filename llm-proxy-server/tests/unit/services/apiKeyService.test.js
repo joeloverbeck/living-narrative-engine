@@ -947,6 +947,32 @@ describe('ApiKeyService', () => {
       expect(result.errorDetails.details.reason).toContain('see previous logs');
     });
 
+    test('falls back to unknown error when prior builders return null', async () => {
+      delete process.env.MISSING_ONLY_ENV_KEY;
+
+      const realCreate = service._createErrorDetails.bind(service);
+      const createSpy = jest
+        .spyOn(service, '_createErrorDetails')
+        .mockImplementationOnce(() => null)
+        .mockImplementationOnce(() => null)
+        .mockImplementation((...args) => realCreate(...args));
+
+      const result = await service.getApiKey(
+        { apiType: 'openai', apiKeyEnvVar: 'MISSING_ONLY_ENV_KEY' },
+        'llm-unknown'
+      );
+
+      expect(createSpy).toHaveBeenCalledTimes(3);
+      expect(createSpy.mock.calls[2][1]).toBe('api_key_retrieval_unknown_error');
+      expect(result.apiKey).toBeNull();
+      expect(result.errorDetails).toEqual(
+        expect.objectContaining({ stage: 'api_key_retrieval_unknown_error' })
+      );
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('unexpected state for llmId')
+      );
+    });
+
   });
 
   describe('Security: API Key Logging Verification', () => {
