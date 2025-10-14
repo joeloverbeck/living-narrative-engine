@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import BodyGraphService, {
+import {
+  BodyGraphService,
   LIMB_DETACHED_EVENT_ID,
 } from '../../../src/anatomy/bodyGraphService.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
