@@ -510,74 +510,38 @@ async executeInternal(context) {
 // src/actions/pipeline/stages/ActionFormattingStage.js
 
 async executeInternal(context) {
-  const {
-    actor,
-    actionsWithTargets = [],
-    resolvedTargets,
-    targetDefinitions,
-    trace,
-  } = context;
+  const { trace } = context;
   const source = `${this.name}Stage.execute`;
 
-  const formattedActions = [];
-
-  // Check if we have per-action metadata (new approach)
-  const hasPerActionMetadata = actionsWithTargets.some(
-    (awt) => awt.resolvedTargets && awt.targetDefinitions
+  trace?.step(
+    `Formatting ${context.actionsWithTargets?.length ?? 0} actions with their targets`,
+    source
   );
 
-  for (const actionWithTargets of actionsWithTargets) {
-    const { actionDef, targetContexts } = actionWithTargets;
+  const hasActionAwareTrace =
+    trace && typeof trace.captureActionData === 'function';
+  const instrumentation = hasActionAwareTrace
+    ? new TraceAwareInstrumentation(trace)
+    : new NoopInstrumentation();
 
-    try {
-      // Format the action (existing logic)
-      let formattedAction;
-      if (hasPerActionMetadata || (resolvedTargets && targetDefinitions)) {
-        // Multi-target formatting
-        formattedAction = await this.#formatMultiTargetAction(
-          actionDef,
-          actionWithTargets.resolvedTargets || resolvedTargets,
-          actionWithTargets.targetDefinitions || targetDefinitions,
-          actor,
-          trace
-        );
-      } else {
-        // Legacy formatting
-        formattedAction = await this.#formatLegacyAction(
-          actionDef,
-          targetContexts,
-          actor,
-          trace
-        );
-      }
-
-      // Enhanced tracing
-      if (trace?.captureActionData && formattedAction) {
-        trace.captureActionData('formatting', actionDef.id, {
-          template: actionDef.commandTemplate || actionDef.command,
-          hasTargets: targetContexts && targetContexts.length > 0,
-          targetCount: targetContexts ? targetContexts.length : 0,
-          formattedCommand: formattedAction.command,
-          displayName: formattedAction.displayName || formattedAction.label,
-          timestamp: Date.now()
-        });
-      }
-
-      if (formattedAction) {
-        formattedActions.push(formattedAction);
-      }
-    } catch (error) {
-      // Error handling (existing logic)
-      this.#logger.error(
-        `Error formatting action '${actionDef.id}':`,
-        error
-      );
-    }
-  }
-
-  return PipelineResult.success({
-    data: { ...context.data, formattedActions }
+  const coordinator = new ActionFormattingCoordinator({
+    context,
+    instrumentation,
+    decider: this.#decider,
+    accumulatorFactory: () => new FormattingAccumulator(),
+    errorFactory: this.#errorFactory,
+    fallbackFormatter: this.#legacyFallbackFormatter,
+    targetNormalizationService: this.#targetNormalizationService,
+    commandFormatter: this.#commandFormatter,
+    entityManager: this.#entityManager,
+    safeEventDispatcher: this.#safeEventDispatcher,
+    getEntityDisplayNameFn: this.#getEntityDisplayNameFn,
+    logger: this.#logger,
+    validateVisualProperties: (visual, actionId) =>
+      this.#validateVisualProperties(visual, actionId),
   });
+
+  return coordinator.run();
 }
 ```
 

@@ -149,7 +149,7 @@ describe('Action Discovery with Target Forbidden Components', () => {
       // 4. Filtered targets proceed through normal action formatting
       //
       // WORKFLOW:
-      // discoverActions() → resolveTargets() → validateTargets() → formatActions()
+      // discoverActions() → resolveTargets() → validateTargets() → ActionFormattingStage
       //
       // BACKWARDS COMPATIBILITY:
       // - Actions without forbidden_components work unchanged
