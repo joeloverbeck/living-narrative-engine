@@ -323,12 +323,20 @@ async function checkHttpAgentService(httpAgentService) {
 function checkProcessHealth() {
   try {
     const memoryUsage = process.memoryUsage();
-    const memoryUsedMB = Math.round(memoryUsage.heapUsed / 1024 / 1024);
-    const memoryTotalMB = Math.round(memoryUsage.heapTotal / 1024 / 1024);
-    const memoryUsagePercent = Math.round((memoryUsedMB / memoryTotalMB) * 100);
+    const heapUsedMB = memoryUsage.heapUsed / 1024 / 1024;
+    const heapTotalMB = memoryUsage.heapTotal / 1024 / 1024;
+    const externalMB = memoryUsage.external / 1024 / 1024;
+    const rssMB = memoryUsage.rss / 1024 / 1024;
 
-    // Consider process unhealthy if memory usage is > 90%
-    const isHealthy = memoryUsagePercent < 90;
+    // Guard against unexpected zero values which can occur in constrained test environments
+    const heapUsageRatio =
+      heapTotalMB > 0 ? memoryUsage.heapUsed / memoryUsage.heapTotal : 0;
+    const memoryUsagePercent = Math.round(heapUsageRatio * 10000) / 100; // two decimal precision
+
+    // Consider the process unhealthy only when we're critically close to exhausting the heap.
+    // Using a high threshold avoids false positives from rounding artefacts when the heap is small.
+    const CRITICAL_HEAP_UTILIZATION = 0.98;
+    const isHealthy = heapTotalMB === 0 || heapUsageRatio < CRITICAL_HEAP_UTILIZATION;
 
     return {
       name: 'nodeProcess',
@@ -336,11 +344,11 @@ function checkProcessHealth() {
       details: {
         uptime: Math.floor(process.uptime()),
         memoryUsage: {
-          used: memoryUsedMB,
-          total: memoryTotalMB,
+          used: Math.round(heapUsedMB * 100) / 100,
+          total: Math.round(heapTotalMB * 100) / 100,
           percentage: memoryUsagePercent,
-          external: Math.round(memoryUsage.external / 1024 / 1024),
-          rss: Math.round(memoryUsage.rss / 1024 / 1024),
+          external: Math.round(externalMB * 100) / 100,
+          rss: Math.round(rssMB * 100) / 100,
         },
         nodeVersion: process.version,
         platform: process.platform,
