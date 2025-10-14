@@ -130,9 +130,6 @@ describe('ActionFormattingStage standard execution (no action-aware trace)', () 
     dispatcher = new RecordingDispatcher();
     errorBuilder = new RecordingErrorContextBuilder();
     commandFormatter = new DeterministicCommandFormatter();
-    commandFormatter.format = commandFormatter.format.bind(commandFormatter);
-    commandFormatter.formatMultiTarget =
-      commandFormatter.formatMultiTarget.bind(commandFormatter);
 
     entityManager = new SimpleEntityManager([
       {
