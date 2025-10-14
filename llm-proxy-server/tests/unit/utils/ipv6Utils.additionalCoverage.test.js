@@ -76,4 +76,14 @@ describe('ipv6Utils additional coverage', () => {
     expect(classification.type).toBe('reserved');
     expect(classification.range).toBe('Reserved ranges');
   });
+
+  it('falls back to generic reserved label for unknown reserved range types', async () => {
+    const { __determineReservedRangeFromType } = await import(
+      IPV6_UTILS_PATH
+    );
+
+    const result = __determineReservedRangeFromType('hypotheticalRange');
+
+    expect(result).toBe('hypotheticalRange (Reserved)');
+  });
 });
