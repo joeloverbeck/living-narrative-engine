@@ -52,7 +52,7 @@
  * @property {ActionFormattingTask} task - Formatting task created by {@link ActionFormattingTaskFactory}.
  * @property {ActionFormattingInstrumentation|null|undefined} [instrumentation] - Optional instrumentation hooks.
  * @property {FormattingAccumulator} accumulator - Shared accumulator for formatted results.
- * @property {Function} createError - Error factory mirroring {@link ActionFormattingStage.#createError}.
+ * @property {Function} createError - Error factory provided by the ActionFormattingCoordinator.
  * @property {import('../../../../tracing/traceContext.js').TraceContext|import('../../../../tracing/structuredTrace.js').StructuredTrace|import('../../../../tracing/actionAwareStructuredTrace.js').default|undefined} [trace] - Optional trace context.
  */
 
