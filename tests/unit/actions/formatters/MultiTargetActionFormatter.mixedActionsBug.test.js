@@ -147,8 +147,8 @@ describe('MultiTargetActionFormatter - mixed actions bug reproduction', () => {
       // But ActionFormattingStage doesn't receive this due to mixed actions
       // So it calls the legacy formatter path which can't handle multi-target templates
 
-      // Simulate what happens in ActionFormattingStage.#formatLegacyActions
-      // when it encounters a multi-target action
+      // Simulate what happens when the coordinator's legacy fallback path
+      // encounters a multi-target action
 
       const targetContexts = [
         {
