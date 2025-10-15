@@ -130,16 +130,51 @@ function createScopeEvaluatingMock(dependencies) {
 
         // Add actions with valid targets
         if (resolvedTargets && resolvedTargets.length > 0) {
+          const normalizedTargets = resolvedTargets.map((target) => {
+            if (typeof target === 'string') {
+              const entity = entityManager.getEntityInstance(target) || null;
+              return {
+                id: target,
+                displayName:
+                  entity?.components?.['meta:display_name']?.value ||
+                  `Target ${target}`,
+                entity,
+              };
+            }
+
+            if (target && typeof target === 'object') {
+              const targetId = target.id || target.entityId || null;
+              if (targetId) {
+                const entity =
+                  target.entity || entityManager.getEntityInstance(targetId) || null;
+                return {
+                  id: targetId,
+                  displayName:
+                    target.displayName ||
+                    entity?.components?.['meta:display_name']?.value ||
+                    `Target ${targetId}`,
+                  entity,
+                };
+              }
+            }
+
+            return {
+              id: String(target),
+              displayName: `Target ${String(target)}`,
+              entity: null,
+            };
+          });
+
           actionsWithTargets.push({
             actionDef,
-            targetContexts: resolvedTargets.map((target) => ({
+            targetContexts: normalizedTargets.map((target) => ({
               type: 'entity',
-              entityId: target.id || target,
-              displayName: target.displayName || target,
+              entityId: target.id,
+              displayName: target.displayName,
               placeholder: 'target',
             })),
             resolvedTargets: {
-              primary: resolvedTargets,
+              primary: normalizedTargets,
             },
             targetDefinitions: {
               primary: {
