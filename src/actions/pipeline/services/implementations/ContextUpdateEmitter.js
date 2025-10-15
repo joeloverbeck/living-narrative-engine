@@ -57,12 +57,9 @@ export class ContextUpdateEmitter {
     metadata,
     validatedItems,
   }) {
-    if (!Array.isArray(items) || items.length === 0) {
-      return [];
-    }
-
+    const normalisedItems = Array.isArray(items) ? items : [];
     const validatedSet = new Set(validatedItems);
-    const results = items.map((item) =>
+    const results = normalisedItems.map((item) =>
       this.#buildResult({
         item,
         kept: validatedSet.has(item),
@@ -71,9 +68,14 @@ export class ContextUpdateEmitter {
     );
 
     if (format === 'actionsWithTargets') {
-      this.#applyActionsWithTargets({ context, items, validatedSet });
+      this.#applyActionsWithTargets({ context, items: normalisedItems, validatedSet });
     } else if (format === 'candidateActions') {
-      this.#applyCandidateActions({ context, items, metadata, validatedSet });
+      this.#applyCandidateActions({
+        context,
+        items: normalisedItems,
+        metadata,
+        validatedSet,
+      });
     }
 
     return results;

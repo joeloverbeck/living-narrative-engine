@@ -258,4 +258,30 @@ describe('ContextUpdateEmitter', () => {
     expect(results).toHaveLength(2);
     expect(results.every((result) => result.kept === false)).toBe(true);
   });
+
+  it('clears shared resolved targets when no items are processed', () => {
+    const context = {
+      candidateActions: [],
+      resolvedTargets: {
+        primary: [{ id: 'stale-target' }],
+        support: { id: 'stale-support' },
+      },
+    };
+
+    const metadata = {
+      sharedResolvedTargetsRef: context.resolvedTargets,
+    };
+
+    const results = emitter.applyTargetValidationResults({
+      context,
+      format: 'candidateActions',
+      items: [],
+      metadata,
+      validatedItems: [],
+    });
+
+    expect(results).toEqual([]);
+    expect(context.candidateActions).toEqual([]);
+    expect(context.resolvedTargets).toEqual({});
+  });
 });
