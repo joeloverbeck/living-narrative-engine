@@ -275,7 +275,7 @@ describe('TargetNormalizationService - Integration', () => {
 
     expect(result.error).toBeNull();
     expect(result.primaryTargetContext).toBeNull();
-    expect(result.params).toEqual({});
+    expect(result.params).toEqual({ targetId: null });
     expect(result.targetExtractionResult).toBeNull();
   });
 
