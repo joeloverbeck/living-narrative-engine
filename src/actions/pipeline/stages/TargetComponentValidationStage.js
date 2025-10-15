@@ -6,19 +6,10 @@
 import { PipelineStage } from '../PipelineStage.js';
 import { PipelineResult } from '../PipelineResult.js';
 import TargetValidationIOAdapter from '../adapters/TargetValidationIOAdapter.js';
-import {
-  ACTOR_ROLE,
-  ALL_MULTI_TARGET_ROLES,
-  LEGACY_TARGET_ROLE,
-  getPlaceholderForRole,
-} from '../TargetRoleRegistry.js';
+import { getPlaceholderForRole } from '../TargetRoleRegistry.js';
 import { validateDependency } from '../../../utils/dependencyUtils.js';
-import {
-  isTargetValidationEnabled,
-  shouldSkipValidation,
-  targetValidationConfig,
-  getValidationStrictness
-} from '../../../config/actionPipelineConfig.js';
+import TargetValidationConfigProvider from './TargetValidationConfigProvider.js';
+import TargetValidationReporter from './TargetValidationReporter.js';
 import TargetCandidatePruner from '../services/implementations/TargetCandidatePruner.js';
 import { extractCandidateId } from '../utils/targetCandidateUtils.js';
 
@@ -43,6 +34,8 @@ export class TargetComponentValidationStage extends PipelineStage {
   #logger;
   #actionErrorContextBuilder;
   #targetCandidatePruner;
+  #configProvider;
+  #validationReporter;
 
   /**
    * Creates a TargetComponentValidationStage instance
@@ -53,6 +46,8 @@ export class TargetComponentValidationStage extends PipelineStage {
    * @param {ILogger} dependencies.logger - Logger service
    * @param {ActionErrorContextBuilder} dependencies.actionErrorContextBuilder - Error context builder
    * @param {TargetCandidatePruner} [dependencies.targetCandidatePruner] - Optional candidate pruning service
+   * @param {TargetValidationConfigProvider} [dependencies.configProvider] - Optional configuration snapshot provider.
+   * @param {TargetValidationReporter} [dependencies.validationReporter] - Optional reporter for trace events.
    */
   constructor({
     targetComponentValidator,
@@ -60,33 +55,89 @@ export class TargetComponentValidationStage extends PipelineStage {
     logger,
     actionErrorContextBuilder,
     targetCandidatePruner = null,
+    configProvider = null,
+    validationReporter = null,
   }) {
     super('TargetComponentValidation');
 
-    validateDependency(targetComponentValidator, 'ITargetComponentValidator', console, {
-      requiredMethods: ['validateTargetComponents']
-    });
-    validateDependency(targetRequiredComponentsValidator, 'ITargetRequiredComponentsValidator', console, {
-      requiredMethods: ['validateTargetRequirements']
-    });
+    validateDependency(
+      targetComponentValidator,
+      'ITargetComponentValidator',
+      console,
+      {
+        requiredMethods: ['validateTargetComponents'],
+      }
+    );
+    validateDependency(
+      targetRequiredComponentsValidator,
+      'ITargetRequiredComponentsValidator',
+      console,
+      {
+        requiredMethods: ['validateTargetRequirements'],
+      }
+    );
     validateDependency(logger, 'ILogger', console, {
-      requiredMethods: ['info', 'warn', 'error', 'debug']
+      requiredMethods: ['info', 'warn', 'error', 'debug'],
     });
-    validateDependency(actionErrorContextBuilder, 'IActionErrorContextBuilder', console, {
-      requiredMethods: ['buildErrorContext']
-    });
+    validateDependency(
+      actionErrorContextBuilder,
+      'IActionErrorContextBuilder',
+      console,
+      {
+        requiredMethods: ['buildErrorContext'],
+      }
+    );
 
     this.#targetComponentValidator = targetComponentValidator;
     this.#targetRequiredComponentsValidator = targetRequiredComponentsValidator;
     this.#logger = logger;
     this.#actionErrorContextBuilder = actionErrorContextBuilder;
     if (targetCandidatePruner) {
-      validateDependency(targetCandidatePruner, 'ITargetCandidatePruner', console, {
-        requiredMethods: ['prune']
-      });
+      validateDependency(
+        targetCandidatePruner,
+        'ITargetCandidatePruner',
+        console,
+        {
+          requiredMethods: ['prune'],
+        }
+      );
       this.#targetCandidatePruner = targetCandidatePruner;
     } else {
       this.#targetCandidatePruner = new TargetCandidatePruner({ logger });
+    }
+
+    if (configProvider) {
+      validateDependency(
+        configProvider,
+        'ITargetValidationConfigProvider',
+        console,
+        {
+          requiredMethods: ['getSnapshot'],
+        }
+      );
+      this.#configProvider = configProvider;
+    } else {
+      this.#configProvider = new TargetValidationConfigProvider();
+    }
+
+    if (validationReporter) {
+      validateDependency(
+        validationReporter,
+        'ITargetValidationReporter',
+        console,
+        {
+          requiredMethods: [
+            'reportStageSkipped',
+            'reportStageStart',
+            'reportStageCompletion',
+            'reportValidationAnalysis',
+            'reportPerformanceData',
+          ],
+        }
+      );
+      this.#validationReporter = validationReporter;
+    } else {
+      this.#validationReporter = new TargetValidationReporter({ logger });
     }
   }
 
@@ -108,18 +159,21 @@ export class TargetComponentValidationStage extends PipelineStage {
 
     const source = `${this.name}Stage.execute`;
     const startPerformanceTime = performance.now();
+    const configSnapshot = this.#configProvider.getSnapshot();
 
     // Check if validation is enabled via configuration
-    if (!isTargetValidationEnabled()) {
-      const config = targetValidationConfig() || {};
-      if (config.logDetails) {
-        this.#logger.debug('Target component validation is disabled via configuration');
+    if (configSnapshot.skipValidation) {
+      if (configSnapshot.logDetails) {
+        this.#logger.debug(
+          'Target component validation is disabled via configuration'
+        );
       }
 
-      trace?.step(
-        `Target component validation skipped (disabled in config)`,
-        source
-      );
+      this.#validationReporter.reportStageSkipped({
+        trace,
+        source,
+        reason: 'Target component validation skipped (disabled in config)',
+      });
 
       const rebuilt = adapter.rebuild({
         format,
@@ -134,18 +188,22 @@ export class TargetComponentValidationStage extends PipelineStage {
       });
     }
 
-    // Check if we have action-aware tracing
-    const isActionAwareTrace = this.#isActionAwareTrace(trace);
-    const config = targetValidationConfig() || {};
-    const strictness = getValidationStrictness();
+    const strictness = configSnapshot.strictness;
 
-    trace?.step(
-      `Validating target components for ${candidateCount} actions (strictness: ${strictness})`,
-      source
-    );
+    this.#validationReporter.reportStageStart({
+      trace,
+      source,
+      candidateCount,
+      strictness,
+    });
 
     try {
-      const validatedItems = await this.#validateActions(items, metadata, isActionAwareTrace, trace);
+      const validatedItems = await this.#validateActions(
+        items,
+        metadata,
+        configSnapshot,
+        trace
+      );
 
       const filteredItems = this.#filterItemsMissingRequiredTargets({
         format,
@@ -155,29 +213,26 @@ export class TargetComponentValidationStage extends PipelineStage {
       const duration = performance.now() - startPerformanceTime;
 
       // Log performance metrics if slow (based on config threshold)
-      const performanceThreshold = config.performanceThreshold || 5;
+      const performanceThreshold = configSnapshot.performanceThreshold || 5;
       if (duration > performanceThreshold) {
         this.#logger.debug(
           `Target component validation took ${duration.toFixed(2)}ms for ${candidateCount} actions`
         );
       }
 
-      if (config.logDetails) {
+      if (configSnapshot.logDetails) {
         this.#logger.debug(
           `Validated ${candidateCount} actions, ${filteredItems.length} passed validation (strictness: ${strictness})`
         );
       }
 
-      // Add trace event for completion
-      trace?.success(
-        `Target component validation completed: ${filteredItems.length} of ${candidateCount} actions passed`,
+      this.#validationReporter.reportStageCompletion({
+        trace,
         source,
-        {
-          inputCount: candidateCount,
-          outputCount: filteredItems.length,
-          duration
-        }
-      );
+        candidateCount,
+        filteredCount: filteredItems.length,
+        duration,
+      });
 
       const rebuilt = adapter.rebuild({
         format,
@@ -194,20 +249,23 @@ export class TargetComponentValidationStage extends PipelineStage {
 
       return PipelineResult.success({
         data: outputData,
-        continueProcessing: rebuilt.continueProcessing && outputCount > 0
+        continueProcessing: rebuilt.continueProcessing && outputCount > 0,
       });
     } catch (error) {
       // Build error context
       const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
         error,
-        actionDef: { id: 'targetValidation', name: 'Target Component Validation' },
+        actionDef: {
+          id: 'targetValidation',
+          name: 'Target Component Validation',
+        },
         actorId: actor?.id,
         phase: 'discovery',
         trace,
         additionalContext: {
           stage: 'target_component_validation',
           candidateCount,
-        }
+        },
       });
 
       this.#logger.error(
@@ -220,24 +278,24 @@ export class TargetComponentValidationStage extends PipelineStage {
   }
 
   /**
-   * Validate actions through target component constraints
+   * @description Validate actions through target component constraints.
    *
    * @private
-   * @param {ActionDefinition[]} candidateActions - Actions to validate
-   * @param {object} context - Pipeline context
-   * @param {boolean} isActionAwareTrace - Whether trace is action-aware
+   * @param {Array<object>} items - Normalized pipeline items being validated.
+   * @param {object} metadata - Stage metadata container.
+   * @param {object} configSnapshot - Cached configuration snapshot.
    * @param {any} trace - Trace object
    * @returns {Promise<ActionDefinition[]>} Filtered actions
    */
-  async #validateActions(items, metadata, isActionAwareTrace, trace) {
+  async #validateActions(items, metadata, configSnapshot, trace) {
     const validatedItems = [];
-    const config = targetValidationConfig() || {};
-    const strictness = getValidationStrictness();
+    const config = configSnapshot;
+    const strictness = configSnapshot.strictness;
 
     for (const item of items) {
       const { actionDef } = item;
       // Check if validation should be skipped for this specific action
-      if (shouldSkipValidation(actionDef)) {
+      if (config.shouldSkipAction(actionDef)) {
         if (config.logDetails) {
           this.#logger.debug(
             `Skipping validation for action '${actionDef.id}' based on configuration`
@@ -257,16 +315,23 @@ export class TargetComponentValidationStage extends PipelineStage {
       item.resolvedTargets = targetEntities;
 
       // Validate forbidden target components (apply strictness level)
-      let forbiddenValidation = this.#targetComponentValidator.validateTargetComponents(
-        actionDef,
-        targetEntities
-      );
+      let forbiddenValidation =
+        this.#targetComponentValidator.validateTargetComponents(
+          actionDef,
+          targetEntities
+        );
 
       // Apply lenient mode if configured
       if (strictness === 'lenient' && !forbiddenValidation.valid) {
         // In lenient mode, allow actions with certain types of failures
-        if (forbiddenValidation.reason && forbiddenValidation.reason.includes('non-critical')) {
-          forbiddenValidation = { valid: true, reason: 'Allowed in lenient mode' };
+        if (
+          forbiddenValidation.reason &&
+          forbiddenValidation.reason.includes('non-critical')
+        ) {
+          forbiddenValidation = {
+            valid: true,
+            reason: 'Allowed in lenient mode',
+          };
           if (config.logDetails) {
             this.#logger.debug(
               `Action '${actionDef.id}' allowed in lenient mode despite: ${forbiddenValidation.reason}`
@@ -276,10 +341,11 @@ export class TargetComponentValidationStage extends PipelineStage {
       }
 
       // Validate required components on targets after filtering
-      let requiredValidation = this.#targetRequiredComponentsValidator.validateTargetRequirements(
-        actionDef,
-        targetEntities
-      );
+      let requiredValidation =
+        this.#targetRequiredComponentsValidator.validateTargetRequirements(
+          actionDef,
+          targetEntities
+        );
 
       if (!requiredValidation.valid && removalReasons.length > 0) {
         requiredValidation = {
@@ -289,36 +355,34 @@ export class TargetComponentValidationStage extends PipelineStage {
       }
 
       // Combine validation results
-      const validation = forbiddenValidation.valid && requiredValidation.valid
-        ? { valid: true }
-        : {
-            valid: false,
-            reason: !forbiddenValidation.valid
-              ? forbiddenValidation.reason
-              : requiredValidation.reason
-          };
+      const validation =
+        forbiddenValidation.valid && requiredValidation.valid
+          ? { valid: true }
+          : {
+              valid: false,
+              reason: !forbiddenValidation.valid
+                ? forbiddenValidation.reason
+                : requiredValidation.reason,
+            };
 
-      const validationTime = performance.now() - startTime;
+      const endTime = performance.now();
+      const validationTime = endTime - startTime;
 
-      // Capture action data for tracing if available
-      if (isActionAwareTrace && trace?.captureActionData) {
-        await this.#captureValidationAnalysis(
-          trace,
-          actionDef,
-          targetEntities,
-          validation,
-          validationTime
-        );
+      await this.#validationReporter.reportValidationAnalysis({
+        trace,
+        actionDef,
+        targetEntities,
+        validation,
+        validationTime,
+      });
 
-        // Capture performance data
-        await this.#capturePerformanceData(
-          trace,
-          actionDef,
-          startTime,
-          performance.now(),
-          items.length
-        );
-      }
+      await this.#validationReporter.reportPerformanceData({
+        trace,
+        actionDef,
+        startTime,
+        endTime,
+        totalCandidates: items.length,
+      });
 
       if (validation.valid) {
         validatedItems.push(item);
@@ -343,7 +407,10 @@ export class TargetComponentValidationStage extends PipelineStage {
   #filterTargetsByRequiredComponents(item, metadata) {
     const { actionDef } = item;
     const placeholderSource =
-      item.placeholderSource || actionDef?.targetDefinitions || actionDef?.targets || null;
+      item.placeholderSource ||
+      actionDef?.targetDefinitions ||
+      actionDef?.targets ||
+      null;
 
     const pruningResult = this.#targetCandidatePruner.prune({
       actionDef,
@@ -385,7 +452,11 @@ export class TargetComponentValidationStage extends PipelineStage {
       return [];
     }
 
-    const hasRequiredTargets = (actionDef, resolvedTargets, targetDefinitions) => {
+    const hasRequiredTargets = (
+      actionDef,
+      resolvedTargets,
+      targetDefinitions
+    ) => {
       if (!targetDefinitions || typeof targetDefinitions !== 'object') {
         return true;
       }
@@ -425,7 +496,9 @@ export class TargetComponentValidationStage extends PipelineStage {
     const filtered = [];
     for (const item of items) {
       const targetDefs =
-        item.targetDefinitions || item.actionDef?.targetDefinitions || item.actionDef?.targets;
+        item.targetDefinitions ||
+        item.actionDef?.targetDefinitions ||
+        item.actionDef?.targets;
       const resolved = item.resolvedTargets || item.actionDef?.resolvedTargets;
 
       if (hasRequiredTargets(item.actionDef, resolved, targetDefs)) {
@@ -468,7 +541,8 @@ export class TargetComponentValidationStage extends PipelineStage {
         continue;
       }
 
-      const allowedIds = allowedEntityIdsByPlaceholder.get(placeholder) ?? new Set();
+      const allowedIds =
+        allowedEntityIdsByPlaceholder.get(placeholder) ?? new Set();
       for (const candidate of candidates) {
         const candidateId = extractCandidateId(candidate);
         if (candidateId) {
@@ -517,126 +591,11 @@ export class TargetComponentValidationStage extends PipelineStage {
       stage: this.name,
       type: 'targetCandidatePruner',
       actionId: actionDef?.id ?? null,
-      removedTargets: pruningResult.removedTargets.map((entry) => ({ ...entry })),
+      removedTargets: pruningResult.removedTargets.map((entry) => ({
+        ...entry,
+      })),
       removalReasons: [...pruningResult.removalReasons],
     });
-  }
-
-  /**
-   * Check if the trace is an ActionAwareStructuredTrace
-   *
-   * @private
-   * @param {any} trace - The trace object to check
-   * @returns {boolean} True if trace is action-aware
-   */
-  #isActionAwareTrace(trace) {
-    return trace && typeof trace.captureActionData === 'function';
-  }
-
-  /**
-   * Capture validation analysis data for action tracing
-   *
-   * @private
-   * @param {ActionAwareStructuredTrace} trace - The action-aware trace
-   * @param {ActionDefinition} actionDef - The action definition
-   * @param {object} targetEntities - The target entities
-   * @param {object} validation - Validation result
-   * @param {number} validationTime - Time taken for validation
-   * @returns {Promise<void>}
-   */
-  async #captureValidationAnalysis(trace, actionDef, targetEntities, validation, validationTime) {
-    try {
-      const forbiddenComponents = actionDef.forbidden_components || {};
-      const requiredComponents = actionDef.required_components || {};
-
-      // Build trace data
-      const traceData = {
-        stage: 'target_component_validation',
-        validationPassed: validation.valid,
-        validationReason: validation.reason,
-        forbiddenComponents,
-        requiredComponents,
-        targetEntityIds: this.#getTargetEntityIds(targetEntities),
-        validationTime,
-        timestamp: Date.now()
-      };
-
-      await trace.captureActionData(
-        'target_component_validation',
-        actionDef.id,
-        traceData
-      );
-    } catch (error) {
-      this.#logger.warn(
-        `Failed to capture validation analysis for action '${actionDef.id}': ${error.message}`
-      );
-    }
-  }
-
-  /**
-   * Get target entity IDs for tracing
-   *
-   * @private
-   * @param {object} targetEntities - Target entities
-   * @returns {object} Target entity IDs
-   */
-  #getTargetEntityIds(targetEntities) {
-    if (!targetEntities) return {};
-
-    const ids = {};
-
-    // Handle legacy format
-    if (targetEntities[LEGACY_TARGET_ROLE]) {
-      let targetData = targetEntities[LEGACY_TARGET_ROLE];
-      // Handle arrays
-      if (Array.isArray(targetData)) {
-        targetData = targetData.length > 0 ? targetData[0] : null;
-      }
-      ids[LEGACY_TARGET_ROLE] = targetData?.id || 'unknown';
-    }
-
-    // Handle multi-target format
-    for (const role of [ACTOR_ROLE, ...ALL_MULTI_TARGET_ROLES]) {
-      if (targetEntities[role]) {
-        let targetData = targetEntities[role];
-        // Handle arrays - extract first element
-        if (Array.isArray(targetData)) {
-          targetData = targetData.length > 0 ? targetData[0] : null;
-        }
-        ids[role] = targetData?.id || 'unknown';
-      }
-    }
-
-    return ids;
-  }
-
-  /**
-   * Capture performance data for action tracing
-   *
-   * @private
-   * @param {ActionAwareStructuredTrace} trace - The action-aware trace
-   * @param {ActionDefinition} actionDef - The action definition
-   * @param {number} startTime - Start performance time
-   * @param {number} endTime - End performance time
-   * @param {number} totalCandidates - Total number of candidates processed
-   * @returns {Promise<void>}
-   */
-  async #capturePerformanceData(trace, actionDef, startTime, endTime, totalCandidates) {
-    try {
-      if (trace && trace.captureActionData) {
-        await trace.captureActionData('stage_performance', actionDef.id, {
-          stage: 'target_component_validation',
-          duration: endTime - startTime,
-          timestamp: Date.now(),
-          itemsProcessed: totalCandidates,
-          stageName: this.name
-        });
-      }
-    } catch (error) {
-      this.#logger.debug(
-        `Failed to capture performance data for action '${actionDef.id}': ${error.message}`
-      );
-    }
   }
 }
 
