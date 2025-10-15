@@ -34,17 +34,18 @@ describe('LRUStrategy memory sizing edge cases', () => {
   });
 
   it('does not refresh TTL when updateAgeOnGet is explicitly disabled', async () => {
-    const strategy = new LRUStrategy({ ttl: 40, updateAgeOnGet: false });
+    const strategy = new LRUStrategy({ ttl: 200, updateAgeOnGet: false });
 
     strategy.set('session', 'value');
 
-    // Initial read should succeed because the entry is still within its TTL.
-    await new Promise((resolve) => setTimeout(resolve, 15));
+    // Allow some time to pass, but stay well within the TTL window to ensure the
+    // value is still available.
+    await new Promise((resolve) => setTimeout(resolve, 50));
     expect(strategy.get('session')).toBe('value');
 
-    // After the original TTL window passes, the entry should expire because the
+    // After exceeding the original TTL window, the entry should be gone because the
     // previous read did not refresh its age.
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    await new Promise((resolve) => setTimeout(resolve, 170));
     expect(strategy.get('session')).toBeUndefined();
   });
 });
