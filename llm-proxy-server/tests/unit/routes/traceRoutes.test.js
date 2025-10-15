@@ -104,6 +104,35 @@ describe('Trace Routes', () => {
     );
   });
 
+  it('should sanitize file names with directory segments during single writes', async () => {
+    const response = await request(app).post('/api/traces/write').send({
+      traceData: { session: true },
+      fileName: '../dangerous/escape.json',
+      outputDirectory: './traces/sessions',
+    });
+
+    expect(response.status).toBe(200);
+
+    const expectedRelativePath = path.join('traces', 'sessions', 'escape.json');
+
+    expect(fs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining(expectedRelativePath),
+      expect.any(String),
+      'utf8'
+    );
+
+    const [writtenPath] = fs.writeFile.mock.calls[0];
+    expect(writtenPath).not.toContain('..');
+
+    expect(response.body).toMatchObject({
+      success: true,
+      fileName: 'escape.json',
+    });
+    expect(response.body.path.replace(/\\/g, '/')).toBe(
+      expectedRelativePath.replace(/\\/g, '/')
+    );
+  });
+
   it('should reject requests missing required fields', async () => {
     const response = await request(app).post('/api/traces/write').send({
       traceData: null,
