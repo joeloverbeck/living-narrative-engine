@@ -10,7 +10,7 @@ Introduce a dedicated IO adapter and centralized role registry so `TargetCompone
 
 ## Context
 
-The current stage normalizes `actionsWithTargets` vs `candidateActions` inline and mirrors the original shape after validation, creating brittle coupling to upstream shape changes.【F:src/actions/pipeline/stages/TargetComponentValidationStage.js†L78-L198】 Additionally, hard-coded role lists make it risky to add or rename target roles.【F:src/actions/pipeline/stages/TargetComponentValidationStage.js†L362-L365】【F:src/actions/pipeline/stages/TargetComponentValidationStage.js†L842-L850】 This ticket lays the foundation for later refactors by extracting explicit collaborators and locking in behavior with tests.
+The current stage normalizes `actionsWithTargets` vs `candidateActions` inline and mirrors the original shape after validation, creating brittle coupling to upstream shape changes.【F:src/actions/pipeline/stages/TargetComponentValidationStage.js†L78-L198】 It also mutates `actionDef.resolvedTargets`, rewrites `context.actionsWithTargets[*].resolvedTargets`, prunes `targetContexts` based on placeholder metadata sourced from `targetDefinitions`/`targets`, and falls back to `context.resolvedTargets` when per-action metadata is missing.【F:src/actions/pipeline/stages/TargetComponentValidationStage.js†L350-L559】【F:src/actions/pipeline/stages/TargetComponentValidationStage.js†L630-L694】 Role handling is currently hard-coded (`target`, `primary`, `secondary`, `tertiary`) even though the stage also injects the actor when reconstructing target maps, so adding or renaming roles requires broad edits.【F:src/actions/pipeline/stages/TargetComponentValidationStage.js†L362-L365】【F:src/actions/pipeline/stages/TargetComponentValidationStage.js†L727-L767】【F:src/actions/pipeline/stages/TargetComponentValidationStage.js†L842-L850】 This ticket lays the foundation for later refactors by extracting explicit collaborators and locking in behavior with tests.
 
 ## Deliverables
 
@@ -23,15 +23,15 @@ The current stage normalizes `actionsWithTargets` vs `candidateActions` inline a
 ## Tasks
 
 1. **Extract IO Adapter**
-   - Move branching logic from `executeInternal` that determines incoming data shape into `TargetValidationIOAdapter.normalize`.
-   - Ensure adapter returns `{ format, items, metadata }` where each item captures the action definition, resolved targets, and any per-action context currently relied on by the stage.
-   - Implement `rebuild(results)` to accept immutable validation results and restore the original structure (including action ordering and legacy mirroring requirements).
+   - Move branching logic from `executeInternal` that determines incoming data shape (including the `'empty'` sentinel) into `TargetValidationIOAdapter.normalize` so the stage no longer inspects both collections directly.【F:src/actions/pipeline/stages/TargetComponentValidationStage.js†L78-L198】
+   - Ensure adapter returns `{ format, items, metadata }` where each item captures the action definition, `resolvedTargets`, `targetDefinitions`, `targetContexts`, and placeholder sources needed for downstream filtering and context synchronization today.【F:src/actions/pipeline/stages/TargetComponentValidationStage.js†L350-L559】【F:src/actions/pipeline/stages/TargetComponentValidationStage.js†L630-L694】 Metadata should also expose shared structures (e.g. `context.resolvedTargets`, actor reference) so the stage can avoid re-running `#extractTargetEntities`.
+   - Implement `rebuild(results)` to accept immutable validation results and restore the original structure (including action ordering, `continueProcessing` counts, and legacy mirroring requirements for `candidateActions` vs `actionsWithTargets`).【F:src/actions/pipeline/stages/TargetComponentValidationStage.js†L174-L198】【F:src/actions/pipeline/stages/TargetComponentValidationStage.js†L478-L559】
 2. **Create Role Registry**
-   - Introduce `TargetRoleRegistry` with exported constants for primary/secondary/tertiary/etc. roles and helper functions for placeholder lookups.
-   - Replace hard-coded arrays in the stage with registry imports while keeping behavior intact.
+   - Introduce `TargetRoleRegistry` with exported constants for the legacy `target` role, multi-target roles (`primary`, `secondary`, `tertiary`), and the implicit `actor` inclusion used when constructing resolved maps. Provide helper functions for placeholder lookups sourced from `targetDefinitions`/`targets`.
+   - Replace hard-coded arrays in the stage and helpers like `#extractTargetEntities` with registry imports while keeping behavior intact.【F:src/actions/pipeline/stages/TargetComponentValidationStage.js†L350-L372】【F:src/actions/pipeline/stages/TargetComponentValidationStage.js†L727-L767】
 3. **Testing**
-   - Add golden tests that feed representative legacy and multi-target payloads into the adapter, asserting round-trip equality after `rebuild`.
-   - Verify registry exposes existing roles and guards against unsupported ones.
+   - Add golden tests that feed representative legacy and multi-target payloads (including placeholder-laden `targetContexts`) into the adapter, asserting round-trip equality after `rebuild` and that context metadata remains aligned for downstream mutation hooks.【F:src/actions/pipeline/stages/TargetComponentValidationStage.js†L350-L559】【F:src/actions/pipeline/stages/TargetComponentValidationStage.js†L630-L694】
+   - Verify registry exposes existing roles, guards against unsupported ones, and mirrors the legacy-vs-multi-target detection that `#extractTargetEntities` performs.【F:src/actions/pipeline/stages/TargetComponentValidationStage.js†L727-L767】
 4. **Documentation**
    - Add JSDoc to new modules describing contracts and expected data shapes.
    - Update relevant spec or architecture notes summarizing the adapter/registry responsibilities.
