@@ -77,6 +77,16 @@ describe('test-log-flushing utility functions', () => {
     randomSpy.mockRestore();
   });
 
+  test('generateTestLogs uses a default batch size when count is not provided', async () => {
+    const module = await loadModule();
+    const { generateTestLogs } = module;
+
+    const logs = generateTestLogs();
+
+    expect(Array.isArray(logs)).toBe(true);
+    expect(logs).toHaveLength(10);
+  });
+
   test('sendLogs posts payloads to the API endpoint and returns JSON', async () => {
     const module = await loadModule();
     const { sendLogs } = module;
@@ -276,5 +286,57 @@ describe('test-log-flushing utility functions', () => {
     timeoutSpy.mockRestore();
     consoleLogSpy.mockRestore();
     consoleErrorSpy.mockRestore();
+  });
+
+  test('direct execution bootstrap triggers when script is invoked directly', async () => {
+    jest.resetModules();
+
+    const originalEnv = process.env.NODE_ENV;
+    const originalArgv = [...process.argv];
+    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const fetchSpy = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: jest.fn().mockResolvedValue({ status: 'ok' }),
+    });
+    const timeoutSpy = jest
+      .spyOn(global, 'setTimeout')
+      .mockImplementation((callback) => {
+        callback();
+        return 0;
+      });
+
+    const today = new Date().toISOString().split('T')[0];
+    const todayDir = path.join('./logs', today);
+    await fs.mkdir(path.resolve(todayDir), { recursive: true });
+
+    globalThis.fetch = fetchSpy;
+    process.env.NODE_ENV = 'development';
+    process.argv = ['/usr/bin/node', path.join(process.cwd(), 'test-log-flushing.js')];
+
+    try {
+      await import('../../../test-log-flushing.js');
+
+      await Promise.resolve();
+      for (let i = 0; i < 3; i++) {
+        await new Promise((resolve) => setImmediate(resolve));
+      }
+
+      expect(timeoutSpy).toHaveBeenCalled();
+      expect(
+        consoleLogSpy.mock.calls.some(
+          ([message]) => message === '🧪 Starting Windows Terminal Log Flush Test'
+        )
+      ).toBe(true);
+    } finally {
+      process.env.NODE_ENV = originalEnv;
+      process.argv = originalArgv;
+      globalThis.fetch = originalFetch;
+      timeoutSpy.mockRestore();
+      consoleLogSpy.mockRestore();
+      consoleErrorSpy.mockRestore();
+      jest.resetModules();
+    }
   });
 });
