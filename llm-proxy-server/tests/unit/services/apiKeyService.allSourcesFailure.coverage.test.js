@@ -429,6 +429,57 @@ describe('ApiKeyService error consolidation coverage', () => {
     );
   });
 
+  it('surfaces native Error instances from the file reader within the combined failure summary', async () => {
+    delete process.env.ERROR_INSTANCE_ENV_KEY;
+
+    const fileError = new Error('filesystem returned EIO');
+
+    jest
+      .spyOn(apiKeyService, '_readApiKeyFromFile')
+      .mockResolvedValue({ key: null, error: fileError });
+
+    const result = await apiKeyService.getApiKey(
+      {
+        apiType: 'openai',
+        apiKeyEnvVar: 'ERROR_INSTANCE_ENV_KEY',
+        apiKeyFileName: 'error-instance.key',
+      },
+      'llm-cloud-error-instance'
+    );
+
+    expect(result.apiKey).toBeNull();
+    expect(result.source).toBe('N/A');
+    expect(result.errorDetails).toEqual(
+      expect.objectContaining({
+        stage: 'api_key_all_sources_failed',
+        details: expect.objectContaining({
+          llmId: 'llm-cloud-error-instance',
+          attemptedEnvVar: 'ERROR_INSTANCE_ENV_KEY',
+          attemptedFile: 'error-instance.key',
+          reason: expect.stringContaining('filesystem returned EIO'),
+        }),
+      })
+    );
+
+    const combinedReason = result.errorDetails?.details?.reason;
+    expect(combinedReason).toContain(
+      "Environment variable 'ERROR_INSTANCE_ENV_KEY' was not set or empty."
+    );
+    expect(combinedReason).toContain(
+      "File 'error-instance.key' retrieval also failed (Reason: filesystem returned EIO)."
+    );
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Stage: api_key_all_sources_failed'),
+      expect.objectContaining({
+        details: expect.objectContaining({
+          attemptedEnvVar: 'ERROR_INSTANCE_ENV_KEY',
+          attemptedFile: 'error-instance.key',
+        }),
+      })
+    );
+  });
+
   it('synthesizes a combined failure when the file reader returns an undefined error payload', async () => {
     delete process.env.UNDEFINED_ENV_KEY;
 
