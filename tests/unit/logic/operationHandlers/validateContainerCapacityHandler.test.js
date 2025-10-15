@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import ValidateContainerCapacityHandler from '../../../../src/logic/operationHandlers/validateContainerCapacityHandler.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/systemEventIds.js';
 
 describe('ValidateContainerCapacityHandler', () => {
   let handler;
@@ -39,6 +40,65 @@ describe('ValidateContainerCapacityHandler', () => {
   });
 
   describe('execute', () => {
+    it('dispatches a system error when params is missing', async () => {
+      await handler.execute(null, executionContext);
+
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message: 'VALIDATE_CONTAINER_CAPACITY: params missing or invalid.',
+          details: expect.objectContaining({ params: null }),
+        })
+      );
+      expect(executionContext.evaluationContext.context).toEqual({});
+    });
+
+    it('reports validation failure when containerEntity is blank', async () => {
+      const params = {
+        containerEntity: '   ',
+        itemEntity: 'item-1',
+        result_variable: 'capacityResult',
+      };
+
+      await handler.execute(params, executionContext);
+
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message: expect.stringContaining('containerEntity is required'),
+          details: expect.objectContaining({ containerEntity: '   ' }),
+        })
+      );
+      expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
+      expect(executionContext.evaluationContext.context.capacityResult).toEqual({
+        valid: false,
+        reason: 'validation_failed',
+      });
+    });
+
+    it('reports validation failure when itemEntity is blank', async () => {
+      const params = {
+        containerEntity: 'container-id',
+        itemEntity: '  ',
+        result_variable: 'capacityResult',
+      };
+
+      await handler.execute(params, executionContext);
+
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message: expect.stringContaining('itemEntity is required'),
+          details: expect.objectContaining({ itemEntity: '  ' }),
+        })
+      );
+      expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
+      expect(executionContext.evaluationContext.context.capacityResult).toEqual({
+        valid: false,
+        reason: 'validation_failed',
+      });
+    });
+
     it('should validate successfully when capacity is available', async () => {
       const params = {
         containerEntity: 'container1',
@@ -144,6 +204,131 @@ describe('ValidateContainerCapacityHandler', () => {
         executionContext.evaluationContext.context.capacityCheck
       ).toEqual({
         valid: true,
+      });
+    });
+
+    it('should fail when the container is closed', async () => {
+      const params = {
+        containerEntity: 'container1',
+        itemEntity: 'item1',
+        result_variable: 'capacityCheck',
+      };
+
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({
+          contents: ['existingItem'],
+          capacity: { maxItems: 10, maxWeight: 100 },
+          isOpen: false,
+        })
+        .mockReturnValueOnce({ weight: 5 });
+
+      await handler.execute(params, executionContext);
+
+      expect(
+        executionContext.evaluationContext.context.capacityCheck
+      ).toEqual({
+        valid: false,
+        reason: 'container_closed',
+      });
+    });
+
+    it('should fail when capacity information is missing', async () => {
+      const params = {
+        containerEntity: 'container1',
+        itemEntity: 'item1',
+        result_variable: 'capacityCheck',
+      };
+
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({
+          contents: ['existingItem'],
+          isOpen: true,
+        })
+        .mockReturnValueOnce({ weight: 5 });
+
+      await handler.execute(params, executionContext);
+
+      expect(
+        executionContext.evaluationContext.context.capacityCheck
+      ).toEqual({
+        valid: false,
+        reason: 'no_capacity_defined',
+      });
+    });
+
+    it('should fail when the new item has no weight data', async () => {
+      const params = {
+        containerEntity: 'container1',
+        itemEntity: 'item1',
+        result_variable: 'capacityCheck',
+      };
+
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({
+          contents: ['existingItem'],
+          capacity: { maxItems: 10, maxWeight: 100 },
+          isOpen: true,
+        })
+        .mockReturnValueOnce(null);
+
+      await handler.execute(params, executionContext);
+
+      expect(
+        executionContext.evaluationContext.context.capacityCheck
+      ).toEqual({
+        valid: false,
+        reason: 'no_weight',
+      });
+    });
+
+    it('treats non-array contents as empty and succeeds', async () => {
+      const params = {
+        containerEntity: 'container1',
+        itemEntity: 'item1',
+        result_variable: 'capacityCheck',
+      };
+
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({
+          contents: 'not-an-array',
+          capacity: { maxItems: 5, maxWeight: 100 },
+          isOpen: true,
+        })
+        .mockReturnValueOnce({ weight: 20 });
+
+      await handler.execute(params, executionContext);
+
+      expect(
+        executionContext.evaluationContext.context.capacityCheck
+      ).toEqual({ valid: true });
+    });
+
+    it('logs and reports errors from the entity manager', async () => {
+      const params = {
+        containerEntity: 'container1',
+        itemEntity: 'item1',
+        result_variable: 'capacityCheck',
+      };
+
+      mockEntityManager.getComponentData.mockImplementation(() => {
+        throw new Error('entity manager failure');
+      });
+
+      await handler.execute(params, executionContext);
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'ValidateContainerCapacityHandler: Capacity validation failed',
+        expect.any(Error),
+        expect.objectContaining({
+          containerEntity: 'container1',
+          itemEntity: 'item1',
+        })
+      );
+      expect(
+        executionContext.evaluationContext.context.capacityCheck
+      ).toEqual({
+        valid: false,
+        reason: 'entity manager failure',
       });
     });
 
