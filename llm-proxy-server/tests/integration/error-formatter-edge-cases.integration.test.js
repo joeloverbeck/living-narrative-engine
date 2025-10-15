@@ -229,22 +229,20 @@ describe('error formatter edge-case integration', () => {
     const response = await request(app).get('/null-details');
 
     expect(response.status).toBe(500);
-    expect(response.body.secureDetails).toEqual(
-      expect.objectContaining({
-        formattingFailed: true,
-      })
-    );
-    expect(response.body.secureDetails.reason).toMatch(
-      /Cannot (read|set) properties of null/i
-    );
-    expect(response.body.httpError.error).toEqual(
-      expect.objectContaining({
-        code: 'formatting_failure',
-      })
-    );
-    expect(response.body.httpError.error.details).toMatch(
-      /Cannot (read|set) properties of null/i
-    );
+    expect(response.body.secureDetails).toEqual({
+      message: 'Internal server error occurred',
+      stage: 'edge_case_stage',
+      details: {
+        originalErrorMessage: 'Internal error occurred',
+      },
+    });
+    expect(response.body.httpError.error).toEqual({
+      message: 'Internal server error occurred',
+      code: 'edge_case_stage',
+      details: {
+        originalErrorMessage: 'Internal error occurred',
+      },
+    });
     expect(response.body.logPayload).not.toHaveProperty('apiKey');
   });
 
