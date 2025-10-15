@@ -14,11 +14,11 @@ The stage currently pulls configuration via helpers such as `targetValidationCon
 
 ## Deliverables
 
-1. Config provider interface (factory or dependency injection parameter) that exposes a cached snapshot containing `strictness`, `skipValidation`, logging toggles, and other required fields.
-2. Stage updates to rely exclusively on the injected snapshot within execution, removing redundant config recomputations.
-3. `TargetValidationReporter` module with methods for validation outcomes, performance metrics, and optional no-op behavior when tracing is disabled.
-4. Unit tests verifying config snapshot consumption (strict vs lenient paths) and reporter invocations.
-5. Updated stage tests that mock reporter interactions instead of asserting on inline trace side effects.
+1. ✅ Config provider interface (factory or dependency injection parameter) that exposes a cached snapshot containing `strictness`, `skipValidation`, logging toggles, and other required fields.
+2. ✅ Stage updates to rely exclusively on the injected snapshot within execution, removing redundant config recomputations.
+3. ✅ `TargetValidationReporter` module with methods for validation outcomes, performance metrics, and optional no-op behavior when tracing is disabled.
+4. ✅ Unit tests verifying config snapshot consumption (strict vs lenient paths) and reporter invocations.
+5. ✅ Updated stage tests that mock reporter interactions instead of asserting on inline trace side effects.
 
 ## Tasks
 
@@ -40,9 +40,9 @@ The stage currently pulls configuration via helpers such as `targetValidationCon
 
 ## Validation
 
-- [ ] Stage no longer re-fetches configuration inside per-action loops.
-- [ ] Reporter encapsulates all trace/perf logic, with stage tests mocking reporter interactions.
-- [ ] Snapshot provider tests confirm strictness toggles and skip lists match previous semantics.
+- [x] Stage no longer re-fetches configuration inside per-action loops.
+- [x] Reporter encapsulates all trace/perf logic, with stage tests mocking reporter interactions.
+- [x] Snapshot provider tests confirm strictness toggles and skip lists match previous semantics.
 - [ ] Performance benchmark (micro or existing harness) shows no regression compared to baseline.
 
 ## Dependencies
