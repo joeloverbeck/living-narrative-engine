@@ -16,13 +16,16 @@
  * 4. Memory efficiency validation under sustained load
  */
 
-import { describe, beforeEach, afterEach, test, expect } from '@jest/globals';
+import { describe, beforeEach, afterEach, test, expect, jest } from '@jest/globals';
 
 import { TraceQueueProcessor } from '../../../src/actions/tracing/traceQueueProcessor.js';
 import { TracePriority } from '../../../src/actions/tracing/tracePriority.js';
 import { ActionExecutionTraceFactory } from '../../../src/actions/tracing/actionExecutionTraceFactory.js';
 import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
-import { createMockIndexedDBStorageAdapter } from '../../common/mockFactories/actionTracing.js';
+import {
+  createMockIndexedDBStorageAdapter,
+  createMockTimerService,
+} from '../../common/mockFactories/actionTracing.js';
 import {
   TEST_ACTIONS,
   TEST_ACTORS,
@@ -118,8 +121,11 @@ describe('Queue Processing Under Realistic Load E2E', () => {
   let startMemory;
   let testTraces;
   let seededRandom;
+  let timerService;
 
   beforeEach(async () => {
+    jest.useFakeTimers();
+
     // Mock performance.memory if not available (for jsdom environment)
     if (typeof performance === 'undefined' || !performance.memory) {
       global.performance = global.performance || {};
@@ -148,6 +154,7 @@ describe('Queue Processing Under Realistic Load E2E', () => {
     });
 
     // Initialize queue processor with realistic configuration
+    timerService = createMockTimerService();
     queueProcessor = new TraceQueueProcessor({
       storageAdapter: mockStorageAdapter,
       logger: mockLogger,
@@ -162,6 +169,7 @@ describe('Queue Processing Under Realistic Load E2E', () => {
         storageKey: 'e2e-queue-test-traces',
         maxStoredTraces: 200,
       },
+      timerService,
     });
 
     // Initialize test traces array
@@ -197,6 +205,9 @@ describe('Queue Processing Under Realistic Load E2E', () => {
 
     // Clear test data
     testTraces.length = 0;
+
+    jest.clearAllTimers();
+    jest.useRealTimers();
   });
 
   /**
@@ -498,6 +509,7 @@ describe('Queue Processing Under Realistic Load E2E', () => {
           storageKey: 'e2e-recovery-test-traces',
           maxStoredTraces: 200,
         },
+        timerService,
       });
 
       // Try new traces with the recovered processor
@@ -510,7 +522,7 @@ describe('Queue Processing Under Realistic Load E2E', () => {
         recoveredProcessor.enqueue(trace, TracePriority.NORMAL);
       });
 
-      await waitForProcessing(1500);
+      await waitForProcessing(1500, recoveredProcessor);
 
       // Assert: Should process new traces after recovery
       const recoveryMetrics = recoveredProcessor.getMetrics();
@@ -757,7 +769,32 @@ describe('Queue Processing Under Realistic Load E2E', () => {
    * @param {number} timeout - Timeout in milliseconds (default: 1000)
    * @returns {Promise} Promise that resolves after timeout
    */
-  function waitForProcessing(timeout = 1000) {
-    return new Promise((resolve) => setTimeout(resolve, timeout));
+  async function waitForProcessing(timeout = 1000, processor = queueProcessor) {
+    const totalTime = Math.max(timeout, 0);
+    const step = Math.max(10, Math.floor(totalTime / 10));
+    let elapsed = 0;
+
+    while (elapsed < totalTime) {
+      const advanceBy = Math.min(step, totalTime - elapsed);
+
+      if (advanceBy > 0) {
+        await jest.advanceTimersByTimeAsync(advanceBy);
+        elapsed += advanceBy;
+      }
+
+      const stats = processor?.getQueueStats?.();
+      const hasQueuedItems = Boolean(stats && stats.totalSize > 0);
+      const pendingTimers = jest.getTimerCount();
+
+      if (!hasQueuedItems && pendingTimers === 0) {
+        break;
+      }
+    }
+
+    if (jest.getTimerCount() > 0) {
+      await jest.runOnlyPendingTimersAsync();
+    }
+
+    await Promise.resolve();
   }
 });
