@@ -1,177 +1,211 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { GraphIntegrityValidator } from '../../../src/anatomy/graphIntegrityValidator.js';
-import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
-import { ValidationRuleChain } from '../../../src/anatomy/validation/validationRuleChain.js';
-import { ValidationContext } from '../../../src/anatomy/validation/validationContext.js';
 
-/**
- * Creates a minimal logger spy object for the validator.
- *
- * @returns {{ debug: jest.Mock, info: jest.Mock, warn: jest.Mock, error: jest.Mock }}
- */
-function createLogger() {
-  return {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  };
+class TestLogger {
+  constructor() {
+    this.debugMessages = [];
+    this.warnMessages = [];
+    this.errorMessages = [];
+  }
+
+  debug(message, context) {
+    this.debugMessages.push({ message, context });
+  }
+
+  warn(message, context) {
+    this.warnMessages.push({ message, context });
+  }
+
+  error(message, context) {
+    this.errorMessages.push({ message, context });
+  }
 }
 
-describe('GraphIntegrityValidator integration coverage', () => {
-  /** @type {{ debug: jest.Mock, info: jest.Mock, warn: jest.Mock, error: jest.Mock }} */
-  let logger;
-  /** @type {Record<string, unknown>} */
-  let entityManager;
+class IntegrationEntityManager {
+  constructor(entities) {
+    this.entities = entities;
+  }
 
-  beforeEach(() => {
-    logger = createLogger();
-    entityManager = {};
-  });
+  getComponentData(entityId, componentId) {
+    const entity = this.entities.get(entityId);
+    return entity ? entity[componentId] : undefined;
+  }
 
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
+  getAllComponentTypesForEntity(entityId) {
+    const entity = this.entities.get(entityId);
+    return entity ? Object.keys(entity) : [];
+  }
+}
 
-  it('requires both entityManager and logger dependencies', () => {
-    expect(() => new GraphIntegrityValidator({ logger })).toThrow(
-      new InvalidArgumentError('entityManager is required')
-    );
+describe('GraphIntegrityValidator integration', () => {
+  const buildEntityMap = (entries) => new Map(entries.map(([id, components]) => [id, components]));
 
-    expect(() => new GraphIntegrityValidator({ entityManager })).toThrow(
-      new InvalidArgumentError('logger is required')
-    );
-  });
+  it('validates a well-formed anatomy graph without issues', async () => {
+    const entities = buildEntityMap([
+      [
+        'body',
+        {
+          'anatomy:sockets': {
+            sockets: [
+              { id: 'left-arm', allowedTypes: ['limb'] },
+              { id: 'right-arm', allowedTypes: ['limb'] },
+            ],
+          },
+          'anatomy:part': { subType: 'torso' },
+          'core:name': { text: 'Body' },
+          'core:description': { text: 'Well formed body' },
+        },
+      ],
+      [
+        'leftArm',
+        {
+          'anatomy:joint': { parentId: 'body', socketId: 'left-arm' },
+          'anatomy:part': { subType: 'limb' },
+          'anatomy:sockets': { sockets: [] },
+          'core:name': { text: 'Left Arm' },
+          'core:description': { text: 'Arm ready' },
+        },
+      ],
+    ]);
 
-  it('initializes the validation rule chain and logs the configured rule count', () => {
-    const getRuleCountSpy = jest.spyOn(
-      ValidationRuleChain.prototype,
-      'getRuleCount'
-    );
+    const entityIds = ['body', 'leftArm'];
+    const socketOccupancy = new Set(['body:left-arm']);
+    const recipe = {
+      constraints: {
+        requires: [
+          {
+            partTypes: ['limb'],
+            components: ['core:description'],
+          },
+        ],
+        excludes: [
+          {
+            components: ['core:cybernetic', 'core:organic'],
+          },
+        ],
+      },
+      slots: {
+        limb: { type: 'limb', count: 1 },
+      },
+    };
 
-    // Instantiation triggers rule chain construction and logging.
-    new GraphIntegrityValidator({ entityManager, logger });
+    const logger = new TestLogger();
+    const validator = new GraphIntegrityValidator({
+      entityManager: new IntegrationEntityManager(entities),
+      logger,
+    });
 
-    expect(getRuleCountSpy).toHaveBeenCalled();
-    expect(
-      logger.debug.mock.calls.some(
-        ([message]) =>
-          typeof message === 'string' &&
-          message.includes(
-            'GraphIntegrityValidator: Initialized with 6 validation rules'
-          )
-      )
-    ).toBe(true);
-  });
-
-  it('creates a validation context and returns success when no issues are found', async () => {
-    const contexts = [];
-    const executeSpy = jest
-      .spyOn(ValidationRuleChain.prototype, 'execute')
-      .mockImplementation(async (context) => {
-        contexts.push(context);
-      });
-
-    const validator = new GraphIntegrityValidator({ entityManager, logger });
-    const entityIds = ['torso', 'arm'];
-    const recipe = { name: 'basic' };
-    const socketOccupancy = new Set(['socket:shoulder']);
-
-    const result = await validator.validateGraph(
-      entityIds,
-      recipe,
-      socketOccupancy
-    );
-
-    expect(executeSpy).toHaveBeenCalledTimes(1);
-    expect(contexts).toHaveLength(1);
-    const [context] = contexts;
-    expect(context).toBeInstanceOf(ValidationContext);
-    expect(context.entityIds).toBe(entityIds);
-    expect(context.recipe).toBe(recipe);
-    expect(context.socketOccupancy).toBe(socketOccupancy);
+    const result = await validator.validateGraph(entityIds, recipe, socketOccupancy);
 
     expect(result).toEqual({ valid: true, errors: [], warnings: [] });
-    expect(
-      logger.debug.mock.calls.some(([message]) =>
-        typeof message === 'string' &&
-        message.includes('GraphIntegrityValidator: Validating graph with 2 entities')
-      )
-    ).toBe(true);
-    expect(
-      logger.debug.mock.calls.some(([message]) =>
-        typeof message === 'string' &&
-        message.includes('GraphIntegrityValidator: Validation passed without issues')
-      )
-    ).toBe(true);
+    expect(logger.errorMessages).toHaveLength(0);
+    expect(logger.warnMessages).toHaveLength(0);
+    expect(logger.debugMessages.some(({ message }) => message.includes('Validation passed without issues'))).toBe(true);
   });
 
-  it('logs warnings when validation rules emit warning issues', async () => {
-    jest
-      .spyOn(ValidationRuleChain.prototype, 'execute')
-      .mockImplementation(async (context) => {
-        context.addIssues([
-          { severity: 'warning', message: 'loose socket' },
-        ]);
-      });
+  it('detects structural and constraint violations across validation rules', async () => {
+    const entities = buildEntityMap([
+      [
+        'body',
+        {
+          'anatomy:sockets': {
+            sockets: [
+              { id: 'left-arm', allowedTypes: ['limb'] },
+            ],
+          },
+          'anatomy:part': { subType: 'torso' },
+          'core:name': { text: 'Problematic Body' },
+          'core:poison': {},
+          'core:antidote': {},
+        },
+      ],
+      [
+        'wing',
+        {
+          'anatomy:joint': { parentId: 'body', socketId: 'left-arm' },
+          'anatomy:part': { subType: 'wing' },
+          'core:name': { text: 'Wing Attachment' },
+        },
+      ],
+      [
+        'orphan',
+        {
+          'anatomy:joint': { parentId: 'ghost-parent', socketId: 'missing-socket' },
+          'anatomy:part': { subType: 'limb' },
+        },
+      ],
+      [
+        'cycleA',
+        {
+          'anatomy:joint': { parentId: 'cycleB', socketId: 'loop' },
+          'anatomy:sockets': { sockets: [{ id: 'loop', allowedTypes: ['limb'] }] },
+          'anatomy:part': { subType: 'limb' },
+        },
+      ],
+      [
+        'cycleB',
+        {
+          'anatomy:joint': { parentId: 'cycleA', socketId: 'loop' },
+          'anatomy:sockets': { sockets: [{ id: 'loop', allowedTypes: ['limb'] }] },
+          'anatomy:part': { subType: 'limb' },
+        },
+      ],
+      [
+        'extraRoot',
+        {
+          'anatomy:sockets': { sockets: [] },
+          'anatomy:part': { subType: 'limb' },
+        },
+      ],
+    ]);
 
-    const validator = new GraphIntegrityValidator({ entityManager, logger });
-    const result = await validator.validateGraph(['entity-1'], { recipe: true }, new Set());
+    const entityIds = ['body', 'wing', 'orphan', 'cycleA', 'cycleB', 'extraRoot'];
+    const socketOccupancy = new Set(['body:left-arm', 'body:ghost-socket']);
+    const recipe = {
+      constraints: {
+        requires: [
+          {
+            partTypes: ['limb'],
+            components: ['core:stabilizer'],
+          },
+        ],
+        excludes: [
+          {
+            components: ['core:poison', 'core:antidote'],
+          },
+        ],
+      },
+      slots: {
+        limbs: { type: 'limb', count: 1 },
+      },
+    };
 
-    expect(result).toEqual({ valid: true, errors: [], warnings: ['loose socket'] });
-    expect(
-      logger.warn.mock.calls.some(([message]) =>
-        typeof message === 'string' &&
-        message.includes('GraphIntegrityValidator: Validation passed with 1 warnings')
-      )
-    ).toBe(true);
-  });
-
-  it('logs errors when validation rules report failures', async () => {
-    jest
-      .spyOn(ValidationRuleChain.prototype, 'execute')
-      .mockImplementation(async (context) => {
-        context.addIssues([{ severity: 'error', message: 'disconnected limb' }]);
-      });
-
-    const validator = new GraphIntegrityValidator({ entityManager, logger });
-    const result = await validator.validateGraph(['entity-2'], {}, new Set());
-
-    expect(result).toEqual({ valid: false, errors: ['disconnected limb'], warnings: [] });
-    expect(
-      logger.error.mock.calls.some(([message]) =>
-        typeof message === 'string' &&
-        message.includes('GraphIntegrityValidator: Validation failed with 1 errors')
-      )
-    ).toBe(true);
-  });
-
-  it('captures unexpected execution failures and adds a system validation issue', async () => {
-    const failure = new Error('rule blew up');
-    jest
-      .spyOn(ValidationRuleChain.prototype, 'execute')
-      .mockRejectedValue(failure);
-
-    const validator = new GraphIntegrityValidator({ entityManager, logger });
-    const result = await validator.validateGraph(['entity-3'], {}, new Set());
-
-    expect(
-      logger.error.mock.calls.some(
-        ([message, details]) =>
-          message === 'GraphIntegrityValidator: Unexpected error during validation' &&
-          details && details.error === failure
-      )
-    ).toBe(true);
-    expect(result).toEqual({
-      valid: false,
-      errors: ['Validation error: rule blew up'],
-      warnings: [],
+    const logger = new TestLogger();
+    const validator = new GraphIntegrityValidator({
+      entityManager: new IntegrationEntityManager(entities),
+      logger,
     });
-    expect(
-      logger.error.mock.calls.some(([message]) =>
-        typeof message === 'string' &&
-        message.includes('GraphIntegrityValidator: Validation failed with 1 errors')
-      )
-    ).toBe(true);
+
+    const result = await validator.validateGraph(entityIds, recipe, socketOccupancy);
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("Socket 'ghost-socket' not found on entity 'body'"),
+        expect.stringContaining('Required constraint not satisfied'),
+        expect.stringContaining('Exclusion constraint violated'),
+        expect.stringContaining("Slot 'limbs': expected exactly 1 parts of type 'limb'"),
+        expect.stringContaining('Cycle detected in anatomy graph'),
+        expect.stringContaining("Entity 'orphan' has joint referencing non-existent parent 'ghost-parent'"),
+        expect.stringContaining("Orphaned part 'orphan' has parent 'ghost-parent' not in graph"),
+        expect.stringContaining("Part type 'wing' not allowed in socket 'left-arm'"),
+      ])
+    );
+    expect(result.warnings).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('Multiple root entities found'),
+      ])
+    );
+    expect(logger.errorMessages.some(({ message }) => message.includes('Validation failed'))).toBe(true);
+    expect(logger.warnMessages).toHaveLength(0);
   });
 });
