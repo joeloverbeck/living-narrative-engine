@@ -119,6 +119,14 @@ export class TargetValidationConfigProvider {
 
     return this.#snapshot;
   }
+
+  /**
+   * @description Invalidate the cached configuration snapshot so the next request reloads it.
+   * @returns {void}
+   */
+  invalidateCache() {
+    this.#snapshot = null;
+  }
 }
 
 export default TargetValidationConfigProvider;

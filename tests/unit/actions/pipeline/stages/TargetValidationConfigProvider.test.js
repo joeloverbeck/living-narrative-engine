@@ -41,6 +41,41 @@ describe('TargetValidationConfigProvider', () => {
     ).toBe(false);
   });
 
+  it('invalidates the cached snapshot when requested', () => {
+    const loader = jest
+      .fn()
+      .mockImplementationOnce(() => ({
+        targetValidation: {
+          enabled: true,
+          strictness: 'strict',
+        },
+        performance: {},
+      }))
+      .mockImplementationOnce(() => ({
+        targetValidation: {
+          enabled: true,
+          strictness: 'lenient',
+          logDetails: true,
+        },
+        performance: {},
+      }));
+
+    const provider = new TargetValidationConfigProvider({
+      configLoader: loader,
+    });
+
+    const first = provider.getSnapshot();
+    expect(first.strictness).toBe('strict');
+    expect(loader).toHaveBeenCalledTimes(1);
+
+    provider.invalidateCache();
+
+    const second = provider.getSnapshot();
+    expect(second.strictness).toBe('lenient');
+    expect(loader).toHaveBeenCalledTimes(2);
+    expect(second).not.toBe(first);
+  });
+
   it('disables validation when strictness is off and respects performance mode skipping', () => {
     const loader = jest.fn(() => ({
       targetValidation: {
