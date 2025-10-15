@@ -242,8 +242,14 @@ describe('Projection Descriptor Integration', () => {
       expect(standaloneFormatter._defaultDescriptorOrder).toContain(
         'descriptors:projection'
       );
+      expect(standaloneFormatter._defaultDescriptorOrder).toContain(
+        'descriptors:embellishment'
+      );
       expect(standaloneFormatter._defaultDescriptorValueKeys).toContain(
         'projection'
+      );
+      expect(standaloneFormatter._defaultDescriptorValueKeys).toContain(
+        'embellishment'
       );
 
       // Verify position in order (should be after firmness, before build)

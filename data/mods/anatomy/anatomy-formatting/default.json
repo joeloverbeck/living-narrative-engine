@@ -61,6 +61,7 @@
     "descriptors:shape_eye",
     "descriptors:hair_style",
     "descriptors:texture",
+    "descriptors:embellishment",
     "descriptors:firmness",
     "descriptors:projection",
     "descriptors:build"
@@ -73,6 +74,7 @@
     "length",
     "style",
     "texture",
+    "embellishment",
     "firmness",
     "build",
     "weight",

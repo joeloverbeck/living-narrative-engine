@@ -202,6 +202,42 @@ describe('Equipment Description Pipeline Integration', () => {
       // Should list outer layer first
       expect(result.indexOf('jacket')).toBeLessThan(result.indexOf('shirt'));
     });
+
+    it('should include embellishment descriptors when present', async () => {
+      const entityId = await testBed.createTestEntity({
+        name: 'Embellished Character',
+        components: {
+          'anatomy:body': {
+            recipeId: 'test:basic_humanoid',
+            root: 'test-root-id',
+          },
+        },
+      });
+
+      const embellishedItemId = await testBed.createClothingItem({
+        name: 'Crystal Flats',
+        components: {
+          'core:description': { text: 'flats' },
+          'core:material': { material: 'satin' },
+          'descriptors:color_basic': { color: 'blush' },
+          'descriptors:embellishment': { embellishment: 'crystal' },
+          'clothing:wearable': {
+            slotId: 'feet_clothing',
+            layer: 'base',
+          },
+        },
+      });
+
+      await testBed.equipClothingItem(entityId, embellishedItemId);
+
+      const result =
+        await equipmentDescriptionService.generateEquipmentDescription(
+          entityId
+        );
+
+      expect(result).toContain('crystal');
+      expect(result).toContain('flats');
+    });
   });
 
   describe('Error scenarios', () => {
