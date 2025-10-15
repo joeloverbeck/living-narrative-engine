@@ -93,10 +93,10 @@ describe('entityRefUtils', () => {
           "Failed to resolve placeholder 'primary' - no matching target in event payload",
           {
             placeholder: 'primary',
-            availableTargets: ['secondary', 'tertiary'],
+            availableTargets: ['secondary', 'tertiary', 'target'],
             eventType: 'core:attempt_action',
             actionId: 'test:action',
-            suggestion: 'Available targets: secondary, tertiary',
+            suggestion: 'Available targets: secondary, tertiary, target',
           }
         );
       });

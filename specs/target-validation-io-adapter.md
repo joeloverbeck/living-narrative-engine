@@ -32,6 +32,17 @@ lookups, requirement role extraction, and payload-shape detection. The
 validation stage now consumes this registry instead of hard-coded arrays,
 keeping role semantics consistent across future refactors.
 
+## Collaborator Flow
+
+The adapter is the first touchpoint in the validation stage's collaborator
+chain. After `normalize` produces canonical items, the orchestrator-provided
+`TargetCandidatePruner`, `TargetComponentValidator`, and
+`TargetRequiredComponentsValidator` evaluate each entry. The
+`TargetValidationReporter` captures trace/performance data, and the
+`ContextUpdateEmitter` applies immutable results back to the pipeline context
+using the adapter's rebuild metadata. This separation ensures each dependency
+can be swapped or extended without editing the stage internals.
+
 ## Testing Strategy
 
 Unit tests snapshot the normalization output for the new adapter and verify

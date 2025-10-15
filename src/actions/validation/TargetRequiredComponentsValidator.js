@@ -5,6 +5,10 @@
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
+import {
+  ALL_MULTI_TARGET_ROLES,
+  LEGACY_TARGET_ROLE,
+} from '../pipeline/TargetRoleRegistry.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
@@ -58,10 +62,13 @@ class TargetRequiredComponentsValidator {
     const requirements = actionDef.required_components;
 
     // Check legacy single-target format
-    if (requirements.target && requirements.target.length > 0) {
+    if (
+      requirements[LEGACY_TARGET_ROLE] &&
+      requirements[LEGACY_TARGET_ROLE].length > 0
+    ) {
       const result = this.#validateTargetRole(
-        'target',
-        requirements.target,
+        LEGACY_TARGET_ROLE,
+        requirements[LEGACY_TARGET_ROLE],
         targetEntities
       );
       if (!result.valid) {
@@ -70,8 +77,7 @@ class TargetRequiredComponentsValidator {
     }
 
     // Check multi-target format
-    const multiTargetRoles = ['primary', 'secondary', 'tertiary'];
-    for (const role of multiTargetRoles) {
+    for (const role of ALL_MULTI_TARGET_ROLES) {
       if (requirements[role] && requirements[role].length > 0) {
         const result = this.#validateTargetRole(
           role,
@@ -99,9 +105,7 @@ class TargetRequiredComponentsValidator {
   #validateTargetRole(role, requiredComponents, targetEntities) {
     // Guard: Check if targetEntities itself is null/undefined first
     if (targetEntities === null || targetEntities === undefined) {
-      this.#logger.debug(
-        `No target entities provided for ${role} validation`
-      );
+      this.#logger.debug(`No target entities provided for ${role} validation`);
       return {
         valid: false,
         reason: `No target entities available for ${role} validation`,
