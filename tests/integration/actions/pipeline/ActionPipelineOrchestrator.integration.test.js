@@ -5,6 +5,10 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import TargetCandidatePruner from '../../../../src/actions/pipeline/services/implementations/TargetCandidatePruner.js';
+import TargetValidationConfigProvider from '../../../../src/actions/pipeline/stages/TargetValidationConfigProvider.js';
+import TargetValidationReporter from '../../../../src/actions/pipeline/stages/TargetValidationReporter.js';
+import ContextUpdateEmitter from '../../../../src/actions/pipeline/services/implementations/ContextUpdateEmitter.js';
 
 const mockPipelineExecute = jest.fn();
 const mockPipelineConstructor = jest.fn();
@@ -174,11 +178,18 @@ describe('ActionPipelineOrchestrator integration', () => {
       dependencies.errorBuilder,
       logger
     );
-    expect(mockTargetComponentValidationCtor).toHaveBeenCalledWith({
-      targetComponentValidator: dependencies.targetComponentValidator,
-      logger,
-      actionErrorContextBuilder: dependencies.errorBuilder,
-    });
+    expect(mockTargetComponentValidationCtor).toHaveBeenCalledWith(
+      expect.objectContaining({
+        targetComponentValidator: dependencies.targetComponentValidator,
+        targetRequiredComponentsValidator: undefined,
+        logger,
+        actionErrorContextBuilder: dependencies.errorBuilder,
+        targetCandidatePruner: expect.any(TargetCandidatePruner),
+        configProvider: expect.any(TargetValidationConfigProvider),
+        validationReporter: expect.any(TargetValidationReporter),
+        contextUpdateEmitter: expect.any(ContextUpdateEmitter),
+      })
+    );
     expect(mockActionFormattingCtor).toHaveBeenCalledWith({
       commandFormatter: dependencies.formatter,
       entityManager: dependencies.entityManager,
