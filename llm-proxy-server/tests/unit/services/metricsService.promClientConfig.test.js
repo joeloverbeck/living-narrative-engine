@@ -1,143 +1,83 @@
 /**
- * @file Focused unit tests for MetricsService Prometheus instrumentation setup
- * @description Ensures MetricsService interacts with prom-client as expected when toggling default metrics
+ * @file metricsService.promClientConfig.test.js
+ * @description Verifies MetricsService behaviour around prom-client configuration toggles.
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
-
-/**
- * Creates prom-client mocks and loads MetricsService with those mocks applied.
- * @returns {Promise<{MetricsService: any, registerMock: any, collectDefaultMetricsMock: jest.Mock, counterCtor: jest.Mock, histogramCtor: jest.Mock, gaugeCtor: jest.Mock}>}
- */
-async function loadMetricsServiceWithMocks() {
-  const registerMock = {
-    clear: jest.fn(),
-    resetMetrics: jest.fn(),
-    metrics: jest.fn(),
-    getMetricsAsJSON: jest.fn().mockReturnValue([]),
-  };
-
-  const metricFactory = () => ({
-    inc: jest.fn(),
-    observe: jest.fn(),
-    set: jest.fn(),
-  });
-
-  const counterCtor = jest.fn(metricFactory);
-  const histogramCtor = jest.fn(metricFactory);
-  const gaugeCtor = jest.fn(metricFactory);
-  const collectDefaultMetricsMock = jest.fn();
-
-  jest.unstable_mockModule('prom-client', () => ({
-    register: registerMock,
-    collectDefaultMetrics: collectDefaultMetricsMock,
-    Counter: counterCtor,
-    Histogram: histogramCtor,
-    Gauge: gaugeCtor,
-  }));
-
-  const module = await import('../../../src/services/metricsService.js');
-  return {
-    MetricsService: module.default,
-    registerMock,
-    collectDefaultMetricsMock,
-    counterCtor,
-    histogramCtor,
-    gaugeCtor,
-  };
-}
+import { describe, it, expect, jest, afterEach, beforeEach } from '@jest/globals';
+import * as promClient from 'prom-client';
+import MetricsService from '../../../src/services/metricsService.js';
 
 describe('MetricsService Prometheus configuration', () => {
-  let logger;
+  const createLogger = () => ({ info: jest.fn(), debug: jest.fn(), error: jest.fn() });
 
   beforeEach(() => {
-    jest.resetModules();
-    logger = {
-      info: jest.fn(),
-      debug: jest.fn(),
-      error: jest.fn(),
-    };
+    promClient.register.clear();
   });
 
   afterEach(() => {
-    jest.resetModules();
-    jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
-  it('registers default prom-client metrics when enabled', async () => {
-    const {
-      MetricsService,
-      registerMock,
-      collectDefaultMetricsMock,
-      counterCtor,
-      histogramCtor,
-      gaugeCtor,
-    } = await loadMetricsServiceWithMocks();
+  it('enables default metrics and custom metrics when configured', () => {
+    const logger = createLogger();
+    const getMetricsSpy = jest
+      .spyOn(promClient.register, 'getMetricsAsJSON')
+      .mockReturnValue([
+        { name: 'llm_proxy_http_requests_total' },
+        { name: 'process_cpu_user_seconds_total' },
+      ]);
+    jest.spyOn(promClient, 'collectDefaultMetrics').mockImplementation(() => {});
 
-    new MetricsService({
+    const service = new MetricsService({
       logger,
       enabled: true,
       collectDefaultMetrics: true,
       defaultMetricsInterval: 15000,
     });
 
-    expect(registerMock.clear).toHaveBeenCalledTimes(1);
-    expect(collectDefaultMetricsMock).toHaveBeenCalledTimes(1);
-    expect(collectDefaultMetricsMock).toHaveBeenCalledWith({
-      register: registerMock,
-      prefix: 'llm_proxy_',
-      timeout: 15000,
-    });
+    const stats = service.getStats();
+    expect(stats.enabled).toBe(true);
+    expect(stats.totalMetrics).toBe(2);
+    expect(stats.defaultMetrics).toBe(1);
+    expect(stats.customMetrics).toBe(1);
+    expect(getMetricsSpy).toHaveBeenCalledTimes(1);
 
-    expect(counterCtor).toHaveBeenCalled();
-    expect(histogramCtor).toHaveBeenCalled();
-    expect(gaugeCtor).toHaveBeenCalled();
+    service.clear();
   });
 
-  it('skips default metrics when disabled but still initialises custom metrics', async () => {
-    const {
-      MetricsService,
-      registerMock,
-      collectDefaultMetricsMock,
-      counterCtor,
-      histogramCtor,
-      gaugeCtor,
-    } = await loadMetricsServiceWithMocks();
+  it('can disable default metrics while keeping custom metrics active', () => {
+    const logger = createLogger();
+    const getMetricsSpy = jest
+      .spyOn(promClient.register, 'getMetricsAsJSON')
+      .mockReturnValue([
+        { name: 'llm_proxy_http_requests_total' },
+        { name: 'llm_proxy_llm_requests_total' },
+      ]);
+    jest.spyOn(promClient, 'collectDefaultMetrics').mockImplementation(() => {});
 
-    new MetricsService({
+    const service = new MetricsService({
       logger,
       enabled: true,
       collectDefaultMetrics: false,
     });
 
-    expect(registerMock.clear).toHaveBeenCalledTimes(1);
-    expect(collectDefaultMetricsMock).not.toHaveBeenCalled();
+    const stats = service.getStats();
+    expect(stats.enabled).toBe(true);
+    expect(stats.defaultMetrics).toBe(0);
+    expect(stats.totalMetrics).toBe(2);
+    expect(stats.customMetrics).toBe(2);
+    expect(getMetricsSpy).toHaveBeenCalledTimes(1);
 
-    expect(counterCtor).toHaveBeenCalled();
-    expect(histogramCtor).toHaveBeenCalled();
-    expect(gaugeCtor).toHaveBeenCalled();
+    service.clear();
   });
 
-  it('does not touch prom-client when metrics are disabled', async () => {
-    const {
-      MetricsService,
-      registerMock,
-      collectDefaultMetricsMock,
-      counterCtor,
-      histogramCtor,
-      gaugeCtor,
-    } = await loadMetricsServiceWithMocks();
+  it('reports metrics as disabled when turned off', async () => {
+    const logger = createLogger();
+    const service = new MetricsService({ logger, enabled: false });
 
-    new MetricsService({
-      logger,
-      enabled: false,
-    });
-
-    expect(logger.info).toHaveBeenCalledWith('Metrics collection is disabled');
-    expect(registerMock.clear).not.toHaveBeenCalled();
-    expect(collectDefaultMetricsMock).not.toHaveBeenCalled();
-    expect(counterCtor).not.toHaveBeenCalled();
-    expect(histogramCtor).not.toHaveBeenCalled();
-    expect(gaugeCtor).not.toHaveBeenCalled();
+    expect(service.isEnabled()).toBe(false);
+    await expect(service.getMetrics()).resolves.toBe('# Metrics collection is disabled\n');
+    expect(service.getStats()).toEqual({ enabled: false });
   });
 });
+
