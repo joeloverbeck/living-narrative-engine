@@ -228,6 +228,40 @@ describe('Trace Routes', () => {
     expect(secondResult).toMatchObject({ success: false, fileName: 'fail.json' });
   });
 
+  it('should sanitize file names during batch writes to prevent traversal', async () => {
+    fs.stat
+      .mockResolvedValueOnce({
+        size: 30,
+        mtime: new Date('2024-03-01T00:00:00Z'),
+        birthtime: new Date('2024-03-01T00:00:00Z'),
+      })
+      .mockResolvedValueOnce({
+        size: 15,
+        mtime: new Date('2024-03-02T00:00:00Z'),
+        birthtime: new Date('2024-03-02T00:00:00Z'),
+      });
+
+    const response = await request(app).post('/api/traces/write-batch').send({
+      traces: [
+        { traceData: { secure: true }, fileName: '../escape.json' },
+        { traceData: { secure: true }, fileName: 'legit.json' },
+      ],
+    });
+
+    expect(response.status).toBe(200);
+
+    const sanitizedCall = fs.writeFile.mock.calls.find(([filePath]) =>
+      filePath.endsWith(path.join('traces', 'escape.json'))
+    );
+
+    expect(sanitizedCall).toBeDefined();
+    expect(sanitizedCall[0]).not.toContain('..');
+    expect(response.body.results[0]).toMatchObject({
+      fileName: 'escape.json',
+      success: true,
+    });
+  });
+
   it('should persist pre-serialized traces correctly during batch writes', async () => {
     const serializedTrace = '{"batch":true}';
 
@@ -409,6 +443,22 @@ describe('Trace Routes', () => {
       success: false,
       error: 'Failed to list trace files',
       details: 'io failure',
+    });
+  });
+
+  it('should report metadata failures when stat calls reject', async () => {
+    fs.readdir.mockResolvedValueOnce(['corrupt.json']);
+    fs.stat.mockRejectedValueOnce(new Error('stat failure'));
+
+    const response = await request(app)
+      .get('/api/traces/list')
+      .query({ directory: './traces' });
+
+    expect(response.status).toBe(500);
+    expect(response.body).toMatchObject({
+      success: false,
+      error: 'Failed to list trace files',
+      details: 'stat failure',
     });
   });
 });
