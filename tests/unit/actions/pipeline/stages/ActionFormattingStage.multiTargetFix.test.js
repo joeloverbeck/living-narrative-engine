@@ -25,11 +25,17 @@ describe('ActionFormattingStage - multi-target action fix', () => {
 
     // Mock formatter that tracks calls
     commandFormatter = {
-      format: jest.fn().mockImplementation((actionDef) => {
-        // Legacy formatter - should NOT be called for multi-target actions
+      format: jest.fn().mockImplementation((actionDef, targetContext) => {
+        const placeholder = targetContext?.placeholder ?? 'target';
+        const targetName =
+          targetContext?.displayName ?? targetContext?.entityId ?? '<unknown>';
+
         return {
           ok: true,
-          value: actionDef.template, // Return template unchanged to show the bug
+          value: actionDef.template.replace(
+            `{${placeholder}}`,
+            targetName
+          ),
         };
       }),
       formatMultiTarget: jest
@@ -69,7 +75,7 @@ describe('ActionFormattingStage - multi-target action fix', () => {
   });
 
   describe('Multi-target action protection', () => {
-    it.skip('should skip multi-target actions in legacy formatting path', async () => {
+    it('should skip multi-target actions in legacy formatting path', async () => {
       // This is the adjust_clothing action definition
       const actionDef = {
         id: 'caressing:adjust_clothing',
@@ -199,7 +205,7 @@ describe('ActionFormattingStage - multi-target action fix', () => {
       });
     });
 
-    it.skip('should still format legacy single-target actions correctly', async () => {
+    it('should still format legacy single-target actions correctly', async () => {
       // A legacy action without multi-target definitions
       const actionDef = {
         id: 'movement:go',
