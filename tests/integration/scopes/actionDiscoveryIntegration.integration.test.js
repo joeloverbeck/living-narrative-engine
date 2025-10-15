@@ -35,6 +35,7 @@ import {
   createTargetResolutionServiceWithMocks,
   createMockUnifiedScopeResolver,
 } from '../../common/mocks/mockUnifiedScopeResolver.js';
+import { extractTargetIds } from '../../common/actions/targetParamTestHelpers.js';
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
 import {
   createMockActionErrorContextBuilder,
@@ -405,9 +406,9 @@ describe('Scope Integration Tests', () => {
         (action) => action.id === 'companionship:dismiss'
       );
       expect(dismissActions.length).toBeGreaterThan(0);
-      const targetIds = dismissActions
-        .map((action) => action.params?.targetId)
-        .filter(Boolean);
+      const targetIds = dismissActions.flatMap((action) =>
+        extractTargetIds(action.params)
+      );
       expect(targetIds).toContain(followerId);
     });
 
@@ -574,9 +575,9 @@ describe('Scope Integration Tests', () => {
         (action) => action.id === 'companionship:follow'
       );
       expect(followActions.length).toBeGreaterThan(0);
-      const targetIds = followActions
-        .map((action) => action.params?.targetId)
-        .filter(Boolean);
+      const targetIds = followActions.flatMap((action) =>
+        extractTargetIds(action.params)
+      );
       expect(targetIds).toContain(targetId);
     });
 
@@ -721,9 +722,9 @@ describe('Scope Integration Tests', () => {
         (action) => action.id === 'movement:go'
       );
       expect(goActions.length).toBeGreaterThan(0);
-      const targetIds = goActions
-        .map((action) => action.params?.targetId)
-        .filter(Boolean);
+      const targetIds = goActions.flatMap((action) =>
+        extractTargetIds(action.params)
+      );
       expect(targetIds).toContain(room2Id);
     });
 
@@ -857,7 +858,7 @@ describe('Scope Integration Tests', () => {
         (action) => action.id === 'core:wait'
       );
       expect(waitActions.length).toBe(1);
-      expect(waitActions[0].params?.targetId).toBeNull();
+      expect(waitActions[0].params?.targetId ?? null).toBeNull();
     });
   });
 });

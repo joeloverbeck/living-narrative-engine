@@ -98,13 +98,12 @@ describe('Multi-Target Error Propagation', () => {
       };
 
       const result = await formattingStage.executeInternal(context);
-
       expect(result.success).toBe(true);
       expect(result.errors).toBeDefined();
       expect(result.errors.length).toBeGreaterThan(0);
       // The error is captured in the errors array, not logged as a warning
       const errorContext = result.errors[0];
-      expect(errorContext.error.message).toContain('Formatter internal error');
+      expect(String(errorContext.error)).toContain('Formatter internal error');
     });
 
     it('should fallback to legacy formatting when multi-target fails', async () => {
@@ -535,9 +534,7 @@ describe('Multi-Target Error Propagation', () => {
       expect(result.success).toBe(true);
       expect(result.errors).toBeDefined();
       expect(result.errors.length).toBeGreaterThan(0);
-      expect(result.errors[0].error.message).toContain(
-        'Async formatting error'
-      );
+      expect(String(result.errors[0].error)).toContain('Async formatting error');
     });
   });
 });

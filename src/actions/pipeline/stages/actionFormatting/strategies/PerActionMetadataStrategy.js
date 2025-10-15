@@ -205,18 +205,33 @@ export class PerActionMetadataStrategy {
 
     let formatterResult = null;
     let fallbackUsed = false;
+    let formatException = null;
 
     if (hasMultiTargetFormatter) {
-      formatterResult = this.#commandFormatter.formatMultiTarget(
-        actionDef,
-        resolvedTargets,
-        this.#entityManager,
-        formatterOptions,
-        {
-          displayNameFn: this.#getEntityDisplayNameFn,
-          targetDefinitions,
-        }
-      );
+      try {
+        formatterResult = this.#commandFormatter.formatMultiTarget(
+          actionDef,
+          resolvedTargets,
+          this.#entityManager,
+          formatterOptions,
+          {
+            displayNameFn: this.#getEntityDisplayNameFn,
+            targetDefinitions,
+          }
+        );
+      } catch (error) {
+        const normalizedError =
+          error instanceof Error ? error : new Error(String(error));
+        this.#logger?.error?.(
+          `PerActionMetadataStrategy: formatMultiTarget threw for action '${actionDef.id}'`,
+          normalizedError
+        );
+        formatException = normalizedError;
+        formatterResult = {
+          ok: false,
+          error: normalizedError,
+        };
+      }
     }
 
     if (!formatterResult || !formatterResult.ok) {
@@ -229,10 +244,29 @@ export class PerActionMetadataStrategy {
     }
 
     if (!formatterResult || !formatterResult.ok) {
+      let errorOrResult = formatterResult ?? formatException ?? {
+        error: 'Multi-target formatter returned no result',
+      };
+
+      if (formatException) {
+        const fallbackError = formatterResult?.error;
+        if (fallbackError && fallbackError !== formatException) {
+          const fallbackMessage =
+            fallbackError instanceof Error
+              ? fallbackError.message
+              : String(fallbackError);
+          const combinedError = new Error(
+            `${formatException.message} (fallback: ${fallbackMessage})`
+          );
+          combinedError.cause = formatException;
+          errorOrResult = combinedError;
+        } else {
+          errorOrResult = formatException;
+        }
+      }
+
       const structured = createError({
-        errorOrResult: formatterResult ?? {
-          error: 'Multi-target formatter returned no result',
-        },
+        errorOrResult,
         actionDef,
         actorId: actor.id,
         trace,

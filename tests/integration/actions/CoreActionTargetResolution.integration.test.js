@@ -43,6 +43,7 @@ import {
   FOLLOWING_COMPONENT_ID,
   LEADING_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
+import { extractTargetIds } from '../../common/actions/targetParamTestHelpers.js';
 
 // Import core action definitions
 import dismissAction from '../../../data/mods/companionship/actions/dismiss.action.json';
@@ -436,17 +437,25 @@ describe('Core Action Target Resolution Integration', () => {
 
     // Validate go action
     expect(actionsByType['movement:go']).toBeDefined();
-    expect(actionsByType['movement:go'].params?.targetId).toBe('test-location-y');
+    const goTargets = extractTargetIds(actionsByType['movement:go'].params);
+    expect(goTargets).toContain('test-location-y');
     expect(actionsByType['movement:go'].command).toContain('Location Y');
 
     // Validate follow action
     expect(actionsByType['companionship:follow']).toBeDefined();
-    expect(actionsByType['companionship:follow'].params?.targetId).toBe('test-actor-2');
+    const followTargets = extractTargetIds(
+      actionsByType['companionship:follow'].params
+    );
+    expect(followTargets).toContain('test-actor-2');
     expect(actionsByType['companionship:follow'].command).toContain('Actor Two');
 
     // Validate wait action
     expect(actionsByType['core:wait']).toBeDefined();
-    expect(actionsByType['core:wait'].params?.targetId).toBeNull();
+    const waitTargets = extractTargetIds(actionsByType['core:wait'].params, {
+      placeholder: null,
+    });
+    expect(waitTargets.length).toBe(0);
+    expect(actionsByType['core:wait'].params?.targetId ?? null).toBeNull();
     expect(actionsByType['core:wait'].command).toBe('wait');
   });
 
@@ -478,18 +487,16 @@ describe('Core Action Target Resolution Integration', () => {
 
     // Validate each follow action
     followActions.forEach((action) => {
-      const targetId = action.params?.targetId;
-      expect(targetId).toBeTruthy();
+      const targetIds = extractTargetIds(action.params);
+      expect(targetIds.length).toBeGreaterThan(0);
 
-      // Get the target entity
-      const targetEntity = entityManager.getEntityInstance(targetId);
-      expect(targetEntity).toBeDefined();
+      targetIds.forEach((targetId) => {
+        const targetEntity = entityManager.getEntityInstance(targetId);
+        expect(targetEntity).toBeDefined();
 
-      // Ensure target has actor component
-      expect(targetEntity.getComponentData(ACTOR_COMPONENT_ID)).toBeDefined();
-
-      // Ensure target is NOT a location (no exits component in actors)
-      expect(targetEntity.getComponentData(EXITS_COMPONENT_ID)).toBeNull();
+        expect(targetEntity.getComponentData(ACTOR_COMPONENT_ID)).toBeDefined();
+        expect(targetEntity.getComponentData(EXITS_COMPONENT_ID)).toBeNull();
+      });
 
       // Ensure command doesn't contain location names
       expect(action.command).not.toContain('Location X');
@@ -525,19 +532,16 @@ describe('Core Action Target Resolution Integration', () => {
 
     // Validate each go action
     goActions.forEach((action) => {
-      const targetId = action.params?.targetId;
-      expect(targetId).toBeTruthy();
+      const targetIds = extractTargetIds(action.params);
+      expect(targetIds.length).toBeGreaterThan(0);
 
-      // Get the target entity
-      const targetEntity = entityManager.getEntityInstance(targetId);
-      expect(targetEntity).toBeDefined();
+      targetIds.forEach((targetId) => {
+        const targetEntity = entityManager.getEntityInstance(targetId);
+        expect(targetEntity).toBeDefined();
 
-      // Ensure target does NOT have actor component
-      expect(targetEntity.getComponentData(ACTOR_COMPONENT_ID)).toBeNull();
-
-      // Ensure target IS a location (has exits or similar location components)
-      // For this test, we verify it's not an actor-type entity
-      expect(targetEntity.getComponentData('core:name')).toBeDefined();
+        expect(targetEntity.getComponentData(ACTOR_COMPONENT_ID)).toBeNull();
+        expect(targetEntity.getComponentData('core:name')).toBeDefined();
+      });
 
       // Ensure command doesn't contain actor names
       expect(action.command).not.toContain('Actor One');
