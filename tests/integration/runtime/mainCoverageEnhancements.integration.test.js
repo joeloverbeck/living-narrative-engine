@@ -63,10 +63,12 @@ jest.mock('../../../src/utils/errorUtils.js', () => ({
   displayFatalStartupError: mockDisplayFatalStartupError,
 }));
 
+const MAIN_MODULE_URL = new URL('../../../src/main.js', import.meta.url);
+
 const importMainModule = async () => {
   let mainModule;
   await jest.isolateModulesAsync(async () => {
-    mainModule = await import('../../../src/main.js');
+    mainModule = await import(MAIN_MODULE_URL);
   });
   return mainModule;
 };
@@ -97,7 +99,7 @@ const arrangeSuccessfulStages = () => {
         return eventBus;
       }
       return undefined;
-    })
+    }),
   };
   const logger = { debug: jest.fn(), error: jest.fn() };
   const gameEngine = { showLoadGameUI: jest.fn().mockResolvedValue(undefined) };
@@ -163,9 +165,7 @@ describe('main.js integration coverage enhancements', () => {
     global.fetch = jest.fn();
 
     jest.spyOn(console, 'error').mockImplementation(() => {});
-    jest
-      .spyOn(console, 'debug')
-      .mockImplementation(() => {});
+    jest.spyOn(console, 'debug').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -258,7 +258,8 @@ describe('main.js integration coverage enhancements', () => {
 
     await mainModule.bootstrapApp();
 
-    const [ensureArgs] = mockStageModule.ensureCriticalDOMElementsStage.mock.calls;
+    const [ensureArgs] =
+      mockStageModule.ensureCriticalDOMElementsStage.mock.calls;
     const bootstrapperFactory = ensureArgs[1].createUIBootstrapper;
     const bootstrapper = bootstrapperFactory();
 
