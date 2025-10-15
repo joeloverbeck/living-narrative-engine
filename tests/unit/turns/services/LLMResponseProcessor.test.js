@@ -6,6 +6,7 @@
 import { LLMResponseProcessor } from '../../../../src/turns/services/LLMResponseProcessor.js';
 import { LLM_TURN_ACTION_RESPONSE_SCHEMA_ID } from '../../../../src/turns/schemas/llmOutputSchemas.js';
 import { LlmJsonService } from '../../../../src/llms/llmJsonService.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 import { LLMProcessingError } from '../../../../src/turns/services/LLMResponseProcessor.js';
 
@@ -49,6 +50,25 @@ describe('LLMResponseProcessor', () => {
       expect(schemaValidatorMock.isSchemaLoaded).toHaveBeenCalledWith(
         LLM_TURN_ACTION_RESPONSE_SCHEMA_ID
       );
+    });
+
+    test('throws when the required schema has not been loaded', () => {
+      const logger = mockLogger();
+      const safeEventDispatcher = { dispatch: jest.fn() };
+      const schemaValidator = {
+        validate: jest.fn(),
+        isSchemaLoaded: jest.fn(() => false),
+      };
+
+      expect(
+        () =>
+          new LLMResponseProcessor({
+            schemaValidator,
+            logger,
+            safeEventDispatcher,
+            llmJsonService: new LlmJsonService(),
+          })
+      ).toThrow(`Schema ${LLM_TURN_ACTION_RESPONSE_SCHEMA_ID} not loaded`);
     });
 
     test('throws if invalid dependencies are provided', () => {
@@ -108,6 +128,48 @@ describe('LLMResponseProcessor', () => {
   });
 
   describe('processResponse', () => {
+    test('dispatches a system error and rethrows when JSON parsing fails', async () => {
+      const parseError = new Error('parse exploded');
+      // Ensure a stable stack string so assertions are predictable
+      parseError.stack = 'stack-trace';
+      const llmJsonService = {
+        parseAndRepair: jest.fn().mockRejectedValue(parseError),
+      };
+      const rawResponse = '{"oops":}';
+
+      const schemaValidator = mockSchemaValidator();
+      const logger = mockLogger();
+      const dispatcher = { dispatch: jest.fn() };
+
+      const failingProcessor = new LLMResponseProcessor({
+        schemaValidator,
+        logger,
+        safeEventDispatcher: dispatcher,
+        llmJsonService,
+      });
+
+      await expect(
+        failingProcessor.processResponse(rawResponse, actorId)
+      ).rejects.toThrow(LLMProcessingError);
+
+      expect(llmJsonService.parseAndRepair).toHaveBeenCalledWith(rawResponse, {
+        logger,
+      });
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            'LLMResponseProcessor: JSON could not be parsed for actor'
+          ),
+          details: expect.objectContaining({
+            actorId,
+            rawResponse,
+            error: parseError.message,
+          }),
+        })
+      );
+    });
+
     describe('Valid Inputs', () => {
       test('processes valid JSON with chosenIndex, speech, thoughts, and notes', async () => {
         const payload = {
