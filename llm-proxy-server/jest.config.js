@@ -38,10 +38,10 @@ export default {
   // Adjust them as necessary for the llm-proxy-server.
   coverageThreshold: {
     global: {
-      branches: 95,
-      functions: 95,
-      lines: 95,
-      statements: 95,
+      branches: 97,
+      functions: 97,
+      lines: 97,
+      statements: 97,
     },
   },
   // --- END COVERAGE CONFIGURATION ---
