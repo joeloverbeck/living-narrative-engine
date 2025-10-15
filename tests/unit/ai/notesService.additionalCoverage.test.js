@@ -1,64 +1,61 @@
-import { describe, test, expect, jest } from '@jest/globals';
-import NotesService from '../../../src/ai/notesService.js';
+import { describe, expect, it } from '@jest/globals';
+import NotesService, { normalizeNoteText } from '../../../src/ai/notesService.js';
 
-/** Additional tests for NotesService to increase branch coverage. */
+const createNotesComponent = () => ({
+  notes: [
+    {
+      text: 'Anchor fact',
+      subject: 'History',
+      subjectType: 'chronicle',
+      timestamp: '2024-01-02T03:04:05.000Z',
+    },
+  ],
+});
 
 describe('NotesService additional coverage', () => {
-  test('throws when notes property is not an array', () => {
-    const service = new NotesService({ autoMigrate: false });
-    const badComp = { notes: 'not-an-array' };
-    const validNote = { text: 'x', subject: 'test' };
-    expect(() => service.addNotes(badComp, [validNote])).toThrow(TypeError);
+  describe('normalizeNoteText', () => {
+    it('handles entries without subjects by normalizing raw text only', () => {
+      const normalized = normalizeNoteText({
+        text: '  Loose memory about allies.  ',
+      });
+
+      expect(normalized).toBe('loose memory about allies');
+    });
+
+    it('falls back to an empty string when no text value is present', () => {
+      expect(normalizeNoteText({ text: '', subject: undefined })).toBe('');
+      expect(normalizeNoteText({})).toBe('');
+    });
   });
 
-  test('returns early when newNotesText is undefined', () => {
-    const service = new NotesService({ autoMigrate: false });
-    const comp = { notes: [] };
-    const result = service.addNotes(comp, undefined);
-    expect(result).toEqual({
-      wasModified: false,
-      component: comp,
-      addedNotes: [],
+  describe('addNotes', () => {
+    it('throws a descriptive error when the component lacks a notes array', () => {
+      const service = new NotesService();
+
+      expect(() => service.addNotes({}, [])).toThrow(
+        'notesComp must be an object conforming to the core:notes schema with a `notes` array.'
+      );
+      expect(() => service.addNotes({ notes: 'not-an-array' }, [])).toThrow(TypeError);
+      expect(() => service.addNotes(null, [])).toThrow(TypeError);
     });
-    expect(comp.notes).toHaveLength(0);
-  });
 
-  test('handles mixture of duplicates and punctuation differences', () => {
-    const service = new NotesService({ autoMigrate: false });
-    const comp = {
-      notes: [{ text: 'hello there', subject: 'test', timestamp: 'T1' }],
-    };
-    jest
-      .spyOn(Date.prototype, 'toISOString')
-      .mockReturnValueOnce('T2')
-      .mockReturnValueOnce('T3')
-      .mockReturnValueOnce('T4');
+    it('skips structured notes that trim to an empty string and ignores unsupported entries', () => {
+      const service = new NotesService();
+      const component = createNotesComponent();
+      const now = new Date('2025-06-07T08:09:10.000Z');
 
-    const result = service.addNotes(comp, [
-      { text: 'Hello there!', subject: 'test' },
-      { text: 'Bye.', subject: 'other' },
-      { text: 'hello   there', subject: 'test' },
-    ]);
+      const payload = [
+        { text: '   ', subject: 'Placeholder' },
+        { text: 'Has text but no subject' },
+        'totally invalid',
+        null,
+      ];
 
-    expect(result.wasModified).toBe(true);
-    // Both 'Hello there!' and 'hello   there' are considered duplicates of the existing entry after
-    // normalization (because they have the same subject:text combo), so only 'Bye.' is added.
-    expect(comp.notes).toHaveLength(2);
-    expect(comp.notes[1]).toEqual({
-      text: 'Bye.',
-      subject: 'other',
-      subjectType: 'other',
-      context: undefined,
-      timestamp: 'T3',
+      const result = service.addNotes(component, payload, now);
+
+      expect(result.wasModified).toBe(false);
+      expect(result.addedNotes).toEqual([]);
+      expect(component.notes).toHaveLength(1);
     });
-    expect(result.addedNotes).toEqual([
-      {
-        text: 'Bye.',
-        subject: 'other',
-        subjectType: 'other',
-        context: undefined,
-        timestamp: 'T3',
-      },
-    ]);
   });
 });
