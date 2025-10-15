@@ -3,12 +3,24 @@
  * Run this after implementing the fixes to ensure logs are being written without terminal focus issues
  */
 
-import fetch from 'node-fetch';
 import fs from 'fs/promises';
 import path from 'path';
 
 const API_ENDPOINT = 'http://localhost:3001/api/debug-log';
 const LOG_DIR = './logs';
+
+/**
+ * @description Resolve the fetch implementation from the global scope.
+ * @returns {typeof fetch}
+ * @throws {Error} When the runtime does not provide a global fetch.
+ */
+function getFetchImplementation() {
+  if (typeof globalThis.fetch !== 'function') {
+    throw new Error('Global fetch API is not available in this runtime.');
+  }
+
+  return globalThis.fetch.bind(globalThis);
+}
 
 // Generate test logs
 /**
@@ -46,7 +58,8 @@ function generateTestLogs(count = 10) {
  */
 async function sendLogs(logs) {
   try {
-    const response = await fetch(API_ENDPOINT, {
+    const fetchImpl = getFetchImplementation();
+    const response = await fetchImpl(API_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

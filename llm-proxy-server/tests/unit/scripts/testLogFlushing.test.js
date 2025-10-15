@@ -1,3 +1,5 @@
+import fs from 'fs/promises';
+import path from 'path';
 import {
   afterEach,
   beforeEach,
@@ -8,42 +10,30 @@ import {
 } from '@jest/globals';
 
 const fetchMock = jest.fn();
-const readdirMock = jest.fn();
-const statMock = jest.fn();
-const readFileMock = jest.fn();
+const originalFetch = globalThis.fetch;
+const LOG_ROOT = path.resolve('./logs');
 
-async function loadModule() {
+async function removeLogsDirectory() {
+  await fs.rm(LOG_ROOT, { recursive: true, force: true });
+}
+
+async function loadModule({ fetchImplementation = fetchMock } = {}) {
   jest.resetModules();
-
   fetchMock.mockReset();
-  readdirMock.mockReset();
-  statMock.mockReset();
-  readFileMock.mockReset();
-
-  jest.unstable_mockModule(
-    'node-fetch',
-    () => ({
-      default: fetchMock,
-      __esModule: true,
-    }),
-    { virtual: true }
-  );
-
-  jest.unstable_mockModule('fs/promises', () => ({
-    __esModule: true,
-    readdir: readdirMock,
-    stat: statMock,
-    readFile: readFileMock,
-  }));
-
+  globalThis.fetch = fetchImplementation;
   return import('../../../test-log-flushing.js');
 }
 
 describe('test-log-flushing utility functions', () => {
-  afterEach(() => {
+  beforeEach(async () => {
+    await removeLogsDirectory();
+  });
+
+  afterEach(async () => {
     jest.clearAllMocks();
     jest.restoreAllMocks();
-    jest.useRealTimers();
+    globalThis.fetch = originalFetch;
+    await removeLogsDirectory();
   });
 
   test('generateTestLogs creates deterministic log entries when Math.random is controlled', async () => {
@@ -117,11 +107,10 @@ describe('test-log-flushing utility functions', () => {
     const { sendLogs } = module;
     const payload = [{ level: 'warn', message: 'uh oh' }];
 
-    const errorResponse = { error: 'nope' };
     fetchMock.mockResolvedValue({
       ok: false,
       status: 500,
-      json: jest.fn().mockResolvedValue(errorResponse),
+      json: jest.fn().mockResolvedValue({ error: 'nope' }),
     });
 
     const consoleErrorSpy = jest
@@ -138,19 +127,28 @@ describe('test-log-flushing utility functions', () => {
     consoleErrorSpy.mockRestore();
   });
 
-  test('checkLogFiles reports existing files and returns true', async () => {
-    jest.useFakeTimers({ now: new Date('2025-01-02T03:04:05Z') });
+  test('sendLogs throws a descriptive error when global fetch is unavailable', async () => {
+    const module = await loadModule({ fetchImplementation: null });
+    const { sendLogs } = module;
 
+    await expect(sendLogs([{ level: 'info', message: 'test' }])).rejects.toThrow(
+      'Global fetch API is not available in this runtime.'
+    );
+  });
+
+  test('checkLogFiles reports existing files and returns true', async () => {
     const module = await loadModule();
     const { checkLogFiles } = module;
 
-    readdirMock.mockResolvedValue(['proxy.log', 'debug.log']);
-    statMock
-      .mockResolvedValueOnce({ size: 128 })
-      .mockResolvedValueOnce({ size: 256 });
-    readFileMock
-      .mockResolvedValueOnce('entry-one\nentry-two\n')
-      .mockResolvedValueOnce('alpha\n\n beta ');
+    const today = new Date().toISOString().split('T')[0];
+    const todayDir = path.join('./logs', today);
+    const todayAbsolute = path.resolve(todayDir);
+    const proxyContent = 'entry-one\nentry-two\n';
+    const debugContent = 'alpha\n\n beta ';
+
+    await fs.mkdir(todayAbsolute, { recursive: true });
+    await fs.writeFile(path.join(todayAbsolute, 'proxy.log'), proxyContent);
+    await fs.writeFile(path.join(todayAbsolute, 'debug.log'), debugContent);
 
     const consoleLogSpy = jest
       .spyOn(console, 'log')
@@ -160,13 +158,17 @@ describe('test-log-flushing utility functions', () => {
 
     expect(result).toBe(true);
     expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Log files in logs/2025-01-02:')
+      expect.stringContaining(`Log files in ${todayDir}:`)
     );
     expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining('proxy.log: 128 bytes, 2 log entries')
+      expect.stringContaining(
+        `proxy.log: ${Buffer.byteLength(proxyContent, 'utf8')} bytes, 2 log entries`
+      )
     );
     expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining('debug.log: 256 bytes, 2 log entries')
+      expect.stringContaining(
+        `debug.log: ${Buffer.byteLength(debugContent, 'utf8')} bytes, 2 log entries`
+      )
     );
 
     consoleLogSpy.mockRestore();
@@ -175,9 +177,6 @@ describe('test-log-flushing utility functions', () => {
   test('checkLogFiles logs failures and returns false', async () => {
     const module = await loadModule();
     const { checkLogFiles } = module;
-
-    const failure = new Error('cannot read directory');
-    readdirMock.mockRejectedValue(failure);
 
     const consoleErrorSpy = jest
       .spyOn(console, 'error')
@@ -188,7 +187,7 @@ describe('test-log-flushing utility functions', () => {
     expect(result).toBe(false);
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       'Failed to check log files:',
-      failure.message
+      expect.stringContaining('ENOENT')
     );
 
     consoleErrorSpy.mockRestore();
@@ -198,43 +197,42 @@ describe('test-log-flushing utility functions', () => {
     const module = await loadModule();
     const { testLogFlushing } = module;
 
-    const generateSpy = jest
-      .spyOn(module, 'generateTestLogs')
-      .mockReturnValue([{ level: 'info', message: 'ok' }]);
-    const sendSpy = jest
-      .spyOn(module, 'sendLogs')
-      .mockResolvedValue({ status: 'ok' });
-    const checkSpy = jest
-      .spyOn(module, 'checkLogFiles')
-      .mockResolvedValueOnce(false)
-      .mockResolvedValueOnce(true)
-      .mockResolvedValueOnce(true)
-      .mockResolvedValueOnce(true)
-      .mockResolvedValueOnce(true);
+    const today = new Date().toISOString().split('T')[0];
+    const todayDir = path.join('./logs', today);
+    const todayAbsolute = path.resolve(todayDir);
+    await fs.mkdir(todayAbsolute, { recursive: true });
+    await fs.writeFile(path.join(todayAbsolute, 'proxy.log'), 'ready');
+
+    fetchMock.mockImplementation(() =>
+      Promise.resolve({ ok: true, status: 200, json: jest.fn().mockResolvedValue({ status: 'ok' }) })
+    );
 
     const consoleLogSpy = jest
       .spyOn(console, 'log')
       .mockImplementation(() => {});
 
-    jest.useFakeTimers();
+    const timeoutSpy = jest
+      .spyOn(global, 'setTimeout')
+      .mockImplementation((callback) => {
+        callback();
+        return 0;
+      });
 
-    const promise = testLogFlushing();
+    await testLogFlushing();
 
-    await jest.runOnlyPendingTimersAsync();
-    await jest.runOnlyPendingTimersAsync();
-    await jest.runOnlyPendingTimersAsync();
-    await jest.runOnlyPendingTimersAsync();
+    const messages = consoleLogSpy.mock.calls.map(([message]) => message);
 
-    await promise;
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(messages.some((message) => message.includes('Batch 1:'))).toBe(true);
+    expect(messages.some((message) => message.includes('Batch 2:'))).toBe(true);
+    expect(messages.some((message) => message.includes('Batch 3:'))).toBe(true);
+    expect(
+      messages.some((message) =>
+        message.includes('✅ TEST PASSED: Logs are being flushed to files properly!')
+      )
+    ).toBe(true);
 
-    expect(generateSpy).toHaveBeenCalledTimes(3);
-    expect(generateSpy).toHaveBeenCalledWith(15);
-    expect(sendSpy).toHaveBeenCalledTimes(3);
-    expect(checkSpy).toHaveBeenCalledTimes(5);
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining('✅ TEST PASSED: Logs are being flushed to files properly!')
-    );
-
+    timeoutSpy.mockRestore();
     consoleLogSpy.mockRestore();
   });
 
@@ -242,49 +240,41 @@ describe('test-log-flushing utility functions', () => {
     const module = await loadModule();
     const { testLogFlushing } = module;
 
-    jest
-      .spyOn(module, 'generateTestLogs')
-      .mockReturnValue([{ level: 'warn', message: 'retry' }]);
-
-    jest
-      .spyOn(module, 'sendLogs')
-      .mockResolvedValueOnce({ status: 'ok' })
-      .mockRejectedValueOnce(new Error('network down'))
-      .mockResolvedValueOnce({ status: 'ok' });
-
-    jest
-      .spyOn(module, 'checkLogFiles')
-      .mockResolvedValueOnce(false)
-      .mockResolvedValueOnce(false)
-      .mockResolvedValueOnce(false)
-      .mockResolvedValueOnce(false)
-      .mockResolvedValueOnce(false);
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, status: 200, json: jest.fn().mockResolvedValue({ status: 'ok' }) })
+      .mockResolvedValueOnce({ ok: false, status: 500, json: jest.fn().mockResolvedValue({ error: 'nope' }) })
+      .mockResolvedValueOnce({ ok: true, status: 200, json: jest.fn().mockResolvedValue({ status: 'ok' }) });
 
     const consoleLogSpy = jest
       .spyOn(console, 'log')
       .mockImplementation(() => {});
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
-    jest.useFakeTimers();
+    const timeoutSpy = jest
+      .spyOn(global, 'setTimeout')
+      .mockImplementation((callback) => {
+        callback();
+        return 0;
+      });
 
-    const promise = testLogFlushing();
+    await testLogFlushing();
 
-    await jest.runOnlyPendingTimersAsync();
-    await jest.runOnlyPendingTimersAsync();
-    await jest.runOnlyPendingTimersAsync();
-    await jest.runOnlyPendingTimersAsync();
+    const messages = consoleLogSpy.mock.calls.map(([message]) => message);
 
-    await promise;
-
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining('❌ Failed to send batch 2')
+    expect(messages.some((message) => message.includes('❌ Failed to send batch 2'))).toBe(true);
+    expect(messages.some((message) => message.includes('⚠️ No log files found yet...'))).toBe(true);
+    expect(messages.some((message) => message.includes('❌ TEST FAILED: No log files found.'))).toBe(
+      true
     );
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining('⚠️ No log files found yet...')
-    );
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining('❌ TEST FAILED: No log files found.')
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Failed to send logs:',
+      'HTTP error! status: 500'
     );
 
+    timeoutSpy.mockRestore();
     consoleLogSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
   });
 });
