@@ -14,7 +14,10 @@ import {
 import { RetryManager } from '../../src/utils/proxyApiUtils.js';
 
 // Actual constants used by the SUT
-import { RETRYABLE_HTTP_STATUS_CODES } from '../../src/config/constants.js';
+import {
+  ERROR_BODY_PREVIEW_LENGTH,
+  RETRYABLE_HTTP_STATUS_CODES,
+} from '../../src/config/constants.js';
 
 // Mock the loggerUtils module
 import { ensureValidLogger } from '../../src/utils/loggerUtils.js';
@@ -388,9 +391,48 @@ describe('proxyApiUtils', () => {
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          `Attempt 1 for ${mockUrl} - Error response body (JSON): ${JSON.stringify(mockErrorJsonResponseData).substring(0, 500)}`
+          `Attempt 1 for ${mockUrl} - Error response body (JSON): ${JSON.stringify(mockErrorJsonResponseData).substring(0, ERROR_BODY_PREVIEW_LENGTH)}`
         )
       );
+    });
+
+    test('should truncate long JSON error previews to configured limit', async () => {
+      const oversizedErrorBody = {
+        message: 'x'.repeat(ERROR_BODY_PREVIEW_LENGTH + 200),
+      };
+
+      const fullJsonString = JSON.stringify(oversizedErrorBody);
+      expect(fullJsonString.length).toBeGreaterThan(
+        ERROR_BODY_PREVIEW_LENGTH
+      );
+
+      fetch.mockResolvedValueOnce(
+        mockFetchResponse(500, oversizedErrorBody, true, false)
+      );
+      mathRandomSpy.mockReturnValue(0.5);
+
+      const retryManager = new RetryManager(
+        mockUrl,
+        mockDefaultOptions,
+        1,
+        mockBaseDelayMs,
+        mockMaxDelayMs,
+        mockLogger
+      );
+
+      await expect(retryManager.executeWithRetry()).rejects.toThrow(
+        `API request to ${mockUrl} failed after 1 attempt(s) with status 500: ${fullJsonString}`
+      );
+
+      const preview = fullJsonString.substring(0, ERROR_BODY_PREVIEW_LENGTH);
+      const debugCall = mockLogger.debug.mock.calls.find(([message]) =>
+        message.includes('Error response body (JSON)')
+      );
+
+      expect(debugCall).toBeDefined();
+      const [debugMessage] = debugCall;
+      expect(preview.length).toBe(ERROR_BODY_PREVIEW_LENGTH);
+      expect(debugMessage.endsWith(preview)).toBe(true);
     });
 
     test('should correctly parse text error response body if JSON parsing fails', async () => {
@@ -618,6 +660,44 @@ describe('proxyApiUtils', () => {
       expect(fetch).toHaveBeenCalledWith(mockUrl, optionsWithoutMethod);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `Attempt 1/1 - Fetching GET ${mockUrl}`
+      );
+    });
+
+    test('should surface JSON parse failures from successful responses without retrying', async () => {
+      const parseError = new SyntaxError(
+        'Unexpected token < in JSON at position 0'
+      );
+      const successfulButInvalidResponse = {
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        json: jest.fn().mockRejectedValueOnce(parseError),
+      };
+
+      fetch.mockResolvedValueOnce(successfulButInvalidResponse);
+
+      const retryManager = new RetryManager(
+        mockUrl,
+        mockDefaultOptions,
+        mockMaxRetries,
+        mockBaseDelayMs,
+        mockMaxDelayMs,
+        mockLogger
+      );
+
+      await expect(retryManager.executeWithRetry()).rejects.toThrow(
+        `RetryManager: Failed for ${mockUrl} after 1 attempt(s). Unexpected error: ${parseError.message}`
+      );
+
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(setTimeout).not.toHaveBeenCalled();
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        `RetryManager: Failed for ${mockUrl} after 1 attempt(s). Unexpected error: ${parseError.message}`,
+        expect.objectContaining({
+          originalErrorName: parseError.name,
+          originalErrorMessage: parseError.message,
+          stack: parseError.stack,
+        })
       );
     });
 
