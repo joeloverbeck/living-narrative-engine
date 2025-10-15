@@ -164,5 +164,13 @@ async function testLogFlushing() {
   console.log('   - Check that logs appear without needing to change focus');
 }
 
-// Run the test
-testLogFlushing().catch(console.error);
+export { generateTestLogs, sendLogs, checkLogFiles, testLogFlushing };
+
+const isDirectExecution =
+  process.env.NODE_ENV !== 'test' &&
+  typeof process.argv[1] === 'string' &&
+  path.basename(process.argv[1]) === 'test-log-flushing.js';
+
+if (isDirectExecution) {
+  testLogFlushing().catch(console.error);
+}
