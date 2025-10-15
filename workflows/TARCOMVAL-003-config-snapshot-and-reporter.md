@@ -10,7 +10,7 @@ Refactor `TargetComponentValidationStage` to consume a pre-resolved configuratio
 
 ## Context
 
-The stage currently re-fetches configuration through `getActionPipelineConfig()` for each call and even inside per-action loops, incurring heavy overhead and making strictness testing brittle.【F:src/actions/pipeline/stages/TargetComponentValidationStage.js†L125-L305】【F:src/config/actionPipelineConfig.js†L165-L233】 Trace capture logic is embedded in the stage, duplicating per-role analysis and complicating no-trace scenarios.【F:src/actions/pipeline/stages/TargetComponentValidationStage.js†L309-L883】 Centralizing these concerns will improve performance and observability isolation.
+The stage currently pulls configuration via helpers such as `targetValidationConfig()`, `getValidationStrictness()`, and `shouldSkipValidation()`. Each helper re-runs `getActionPipelineConfig()` (which performs a deep merge) so every execution resolves the config multiple times, including within the per-action loop, creating overhead and brittle strictness toggles.【F:src/actions/pipeline/stages/TargetComponentValidationStage.js†L138-L244】【F:src/config/actionPipelineConfig.js†L152-L259】 Trace capture logic is embedded across `#captureValidationAnalysis`, `#getTargetEntityIds`, and `#capturePerformanceData`, forcing the stage to own trace/performance formatting and optional no-op handling.【F:src/actions/pipeline/stages/TargetComponentValidationStage.js†L537-L640】 Centralizing these concerns will improve performance and observability isolation.
 
 ## Deliverables
 
