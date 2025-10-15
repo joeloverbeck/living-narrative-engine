@@ -515,6 +515,32 @@ describe('Enhanced Security Middleware', () => {
 
       expect(mockNext).toHaveBeenCalled();
     });
+
+    it('should log descriptive metadata when header inspection throws', () => {
+      const middleware = createSecurityConfigValidator({ logger: mockLogger });
+
+      const failure = new Error('Header retrieval failure');
+      mockResponse.getHeader = jest.fn(() => {
+        throw failure;
+      });
+
+      middleware(mockRequest, mockResponse, mockNext);
+
+      const finishHandler = mockResponse.on.mock.calls.find(
+        (call) => call[0] === 'finish'
+      )[1];
+      finishHandler();
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error checking security headers',
+        expect.objectContaining({
+          error: failure.message,
+          url: mockRequest.originalUrl,
+          method: mockRequest.method,
+        })
+      );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
+    });
   });
 
   describe('Integration tests', () => {
