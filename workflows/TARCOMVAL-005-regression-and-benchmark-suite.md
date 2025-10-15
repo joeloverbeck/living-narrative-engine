@@ -6,46 +6,46 @@
 
 ## Goal
 
-Strengthen automated coverage by adding integration, reporter, and performance tests that validate the refactored target validation pipeline under both legacy and multi-target scenarios.
+Strengthen automated coverage by consolidating regression scenarios for the refactored target validation pipeline, ensuring the new collaborators stay aligned across legacy and multi-target flows.
 
 ## Context
 
-The spec calls for integration tests combining `MultiTargetResolutionStage` with the hardened validation stage, reporter-focused tests that assert trace payloads without full pipeline coupling, and performance benchmarks to ensure caching improvements pay off.【F:specs/target-component-validation-stage-hardening.spec.md†L120-L170】 Existing tests do not exercise the new collaborators end-to-end, leaving regression risk after the refactor.
+`TargetComponentValidationStage` already composes the IO adapter, candidate pruner, config snapshot provider, telemetry reporter, and context emitter that Phase 5 introduced.【F:src/actions/pipeline/stages/TargetComponentValidationStage.js†L8-L200】 The action discovery integration suite routes real pipelines through `MultiTargetResolutionStage` and the validation stage, so we have broad end-to-end smoke coverage.【F:tests/integration/actions/CoreActionTargetResolution.integration.test.js†L320-L414】【F:src/actions/actionPipelineOrchestrator.js†L64-L175】 We also landed configuration strictness/skip tests and reporter contract specs, exercising lenient overrides, disabled validation, and trace fallbacks.【F:tests/integration/actions/pipeline/targetValidationStage.additionalCoverage.integration.test.js†L129-L280】【F:tests/unit/actions/pipeline/stages/TargetValidationReporter.test.js†L45-L169】 Snapshot caching itself is unit-tested via `TargetValidationConfigProvider` so repeated lookups do not thrash configuration merges.【F:tests/unit/actions/pipeline/stages/TargetValidationConfigProvider.test.js†L10-L67】 What we still lack is a focused regression harness that checks the new shape-handling utilities together, validates emitter metadata in both input formats, and records a baseline performance profile for the hardened stage.
 
 ## Deliverables
 
-1. Integration tests that run `MultiTargetResolutionStage` + `TargetComponentValidationStage` using both `actionsWithTargets` and `candidateActions` inputs, asserting identical outcomes pre/post refactor.
-2. Reporter contract tests verifying payload shapes for success, partial failure, and skipped-validation cases without requiring live trace infrastructure.
-3. Configuration snapshot tests covering strict, lenient, and skip-validation scenarios using injected snapshots.
-4. Performance benchmark updates (or new harness cases) comparing throughput before vs after caching changes.
-5. Documentation of test coverage and how to execute the new suites.
+1. Regression scenarios that execute `MultiTargetResolutionStage` followed by `TargetComponentValidationStage` for both `candidateActions` and `actionsWithTargets`, asserting that context mutations from `ContextUpdateEmitter` line up with adapter rebuild output (resolved targets, target contexts, stage updates).
+2. Telemetry integration tests that wire `ActionAwareStructuredTrace` through the stage to confirm reporter payloads, skip notifications, and performance records surface end-to-end using the real reporter hooks.
+3. Validation that a single `TargetComponentValidationStage` instance reuses the cached snapshot from `TargetValidationConfigProvider` across consecutive runs, preventing redundant config loads while still honoring toggles.
+4. Performance benchmarks (or extended harness cases) establishing a baseline for the refactored stage under representative action volumes so future caching regressions can be detected.
+5. Documentation of the new regression and benchmark coverage plus npm script updates so CI can exercise them.
 
 ## Tasks
 
-1. **Integration Harness**
-   - Build fixture scenarios for legacy single-target and multi-target actions.
-   - Execute `MultiTargetResolutionStage` followed by the refactored validation stage using the IO adapter, pruner, reporter, and emitter.
-   - Assert on resulting action availability, target removals, and stage result metadata.
-2. **Reporter Contract Tests**
-   - Mock reporter dependencies to capture emitted payloads.
-   - Validate payload structure for: full success, required-component failure, forbidden-component detection, and skip-validation paths.
-   - Ensure reporter gracefully handles no-op mode when tracing disabled.
-3. **Config Snapshot Tests**
-   - Add tests that feed synthetic snapshots into the stage to ensure strict/lenient toggles and skip lists behave like legacy `shouldSkipValidation` semantics.
+1. **Cross-Format Regression Harness**
+   - Build shared fixtures that flow through `MultiTargetResolutionStage` so both legacy (`candidateActions`) and modern (`actionsWithTargets`) payloads reach the validation stage.
+   - Capture the context before/after `TargetComponentValidationStage.executeInternal` and assert that the emitter’s mutations (pruned targets, target contexts, shared resolved targets) mirror the adapter’s rebuilt payload.
+   - Include expectations around `metadata.stageUpdates` so pruning reasons remain observable for downstream consumers.
+2. **Trace Contract Verification**
+   - Drive the stage with a real `ActionAwareStructuredTrace` instance (or high-fidelity test double) to ensure reporter hooks emit skip, start, completion, validation analysis, and performance data without bypassing reporter internals.
+   - Cover failure/disabled scenarios to confirm logger fallbacks continue to trigger when trace capture rejects.
+3. **Config Snapshot Reuse**
+   - Instrument a stage instance with a spyable `TargetValidationConfigProvider` to prove repeated executions only fetch configuration once while still responding to updated toggles when the cache is cleared.
+   - Add assertions that strict, lenient, and off modes drive validation as expected after successive runs.
 4. **Performance Benchmarking**
-   - Update existing performance harness or create new measurement focusing on configuration caching and pruner throughput.
-   - Record baseline metrics before refactor (if possible) and compare after implementation, flagging regressions over agreed thresholds.
+   - Extend the performance harness (or create a new benchmark) that feeds large action sets through the resolution + validation combo, recording latency/throughput metrics for the current architecture.
+   - Store baseline numbers and wire alerts or thresholds so future refactors surface regressions in caching or pruning throughput.
 5. **Documentation & CI Integration**
-   - Update `specs/` or testing README with instructions for running the new suites.
-   - Ensure relevant npm scripts (integration/performance) include the new test files.
+   - Update `specs/` or the testing README with guidance for running the regression harness and benchmarks.
+   - Ensure npm scripts and CI config execute the new suites and highlight where the baseline metrics live.
 
 ## Validation
 
-- [ ] Integration tests pass for both legacy and multi-target flows with deterministic outcomes.
-- [ ] Reporter tests cover success/failure/skip scenarios and enforce payload contracts.
-- [ ] Config snapshot tests confirm parity with legacy behavior.
-- [ ] Performance benchmarks show no regression; improvements documented.
-- [ ] Documentation updated and shared with QA/engineering.
+- [ ] Regression harness verifies context mutations and adapter rebuild parity across both input formats.
+- [ ] Trace integration tests exercise reporter hooks with real trace capture paths.
+- [ ] Config snapshot reuse is demonstrated with targeted unit/integration coverage.
+- [ ] Performance benchmarks capture and publish baseline metrics for the hardened stage.
+- [ ] Documentation and CI updates describe how to run and monitor the suites.
 
 ## Dependencies
 
