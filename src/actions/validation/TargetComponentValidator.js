@@ -4,6 +4,7 @@
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
+import { ALL_MULTI_TARGET_ROLES } from '../pipeline/TargetRoleRegistry.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../entities/entityManager.js').default} IEntityManager */
@@ -28,10 +29,14 @@ export class TargetComponentValidator {
    */
   constructor({ logger, entityManager }) {
     validateDependency(logger, 'ILogger', console, {
-      requiredMethods: ['info', 'warn', 'error', 'debug']
+      requiredMethods: ['info', 'warn', 'error', 'debug'],
     });
     validateDependency(entityManager, 'IEntityManager', logger, {
-      requiredMethods: ['getEntityInstance', 'hasComponent', 'getAllComponentTypesForEntity']
+      requiredMethods: [
+        'getEntityInstance',
+        'hasComponent',
+        'getAllComponentTypesForEntity',
+      ],
     });
     this.#logger = logger;
     this.#entityManager = entityManager;
@@ -63,10 +68,12 @@ export class TargetComponentValidator {
     let result;
 
     // Check if this is legacy single-target format
-    if (actionDef.forbidden_components.target &&
-        !actionDef.forbidden_components.primary &&
-        !actionDef.forbidden_components.secondary &&
-        !actionDef.forbidden_components.tertiary) {
+    if (
+      actionDef.forbidden_components.target &&
+      !actionDef.forbidden_components.primary &&
+      !actionDef.forbidden_components.secondary &&
+      !actionDef.forbidden_components.tertiary
+    ) {
       result = this.#validateLegacyFormat(actionDef, targetEntities);
     } else {
       // Multi-target format
@@ -110,7 +117,8 @@ export class TargetComponentValidator {
     try {
       if (entity.id) {
         // Try to get components from entity manager for most accurate data
-        entityComponents = this.#entityManager.getAllComponentTypesForEntity(entity.id) || [];
+        entityComponents =
+          this.#entityManager.getAllComponentTypesForEntity(entity.id) || [];
       }
     } catch (err) {
       this.#logger.warn(
@@ -132,7 +140,7 @@ export class TargetComponentValidator {
       if (forbiddenSet.has(component)) {
         return {
           valid: false,
-          component
+          component,
         };
       }
     }
@@ -157,17 +165,21 @@ export class TargetComponentValidator {
       return { valid: true };
     }
 
-    const validation = this.validateEntityComponents(targetEntity, forbiddenComponents);
+    const validation = this.validateEntityComponents(
+      targetEntity,
+      forbiddenComponents
+    );
 
     if (!validation.valid) {
-      const reason = `Action '${actionDef.id}' cannot be performed: ` +
+      const reason =
+        `Action '${actionDef.id}' cannot be performed: ` +
         `target entity '${targetEntity.id || 'unknown'}' has forbidden component '${validation.component}'`;
 
       this.#logger.debug(reason);
 
       return {
         valid: false,
-        reason
+        reason,
       };
     }
 
@@ -184,7 +196,7 @@ export class TargetComponentValidator {
    */
   #validateMultiTargetFormat(actionDef, targetEntities) {
     const forbiddenConfig = actionDef.forbidden_components;
-    const targetRoles = ['primary', 'secondary', 'tertiary'];
+    const targetRoles = ALL_MULTI_TARGET_ROLES;
 
     // Check each target role
     for (const role of targetRoles) {
@@ -216,10 +228,14 @@ export class TargetComponentValidator {
           continue;
         }
 
-        const validation = this.validateEntityComponents(entity, forbiddenComponents);
+        const validation = this.validateEntityComponents(
+          entity,
+          forbiddenComponents
+        );
 
         if (!validation.valid) {
-          const reason = `Action '${actionDef.id}' cannot be performed: ` +
+          const reason =
+            `Action '${actionDef.id}' cannot be performed: ` +
             `${role} target '${entity.id || 'unknown'}' has forbidden component '${validation.component}'`;
 
           this.#logger.debug(reason);
@@ -227,7 +243,7 @@ export class TargetComponentValidator {
           // Short-circuit on first failure
           return {
             valid: false,
-            reason
+            reason,
           };
         }
       }

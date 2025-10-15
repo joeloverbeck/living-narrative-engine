@@ -6,6 +6,12 @@
  * @description Utilities for resolving entity references to concrete entity IDs.
  */
 
+import {
+  ACTOR_ROLE,
+  ALL_MULTI_TARGET_ROLES,
+  LEGACY_TARGET_ROLE,
+} from '../actions/pipeline/TargetRoleRegistry.js';
+
 /** @typedef {import('../logic/defs.js').ExecutionContext} ExecutionContext */
 /**
  * @typedef {object} EntityRefObject
@@ -51,8 +57,7 @@ const placeholderMetrics = {
  * @returns {boolean} - True if it's a placeholder name
  */
 function isPlaceholderName(name) {
-  const PLACEHOLDER_NAMES = ['primary', 'secondary', 'tertiary'];
-  return PLACEHOLDER_NAMES.includes(name);
+  return ALL_MULTI_TARGET_ROLES.includes(name);
 }
 
 /**
@@ -104,9 +109,15 @@ function getAvailableTargets(eventPayload) {
   const available = [];
 
   // Check legacy format
-  if (eventPayload?.primaryId) available.push('primary');
-  if (eventPayload?.secondaryId) available.push('secondary');
-  if (eventPayload?.tertiaryId) available.push('tertiary');
+  for (const role of ALL_MULTI_TARGET_ROLES) {
+    if (eventPayload?.[`${role}Id`]) {
+      available.push(role);
+    }
+  }
+
+  if (eventPayload?.targetId) {
+    available.push(LEGACY_TARGET_ROLE);
+  }
 
   // Check comprehensive format
   if (eventPayload?.targets) {
@@ -153,7 +164,7 @@ export function validatePlaceholders(placeholders, eventPayload) {
         placeholder,
         errorType: 'INVALID_PLACEHOLDER',
         message: `'${placeholder}' is not a valid placeholder name`,
-        validNames: ['primary', 'secondary', 'tertiary'],
+        validNames: [...ALL_MULTI_TARGET_ROLES],
       });
       return;
     }
@@ -208,7 +219,7 @@ export function resolvePlaceholdersBatch(placeholders, eventPayload) {
  * @description Resolves an entity reference into a concrete entity ID string.
  * Supports the special keywords 'actor' and 'target', placeholder names,
  * plain ID strings, or objects of the form `{ entityId: string }`.
- * @param {'actor'|'target'|'primary'|'secondary'|'tertiary'|string|EntityRefObject} ref - Reference to resolve.
+ * @param {'actor'|'target'|string|EntityRefObject} ref - Reference to resolve.
  * @param {ExecutionContext} executionContext - The current execution context providing actor/target.
  * @returns {string|null} The resolved entity ID, or `null` if it cannot be resolved.
  */
@@ -221,8 +232,8 @@ export function resolveEntityId(ref, executionContext) {
     if (!trimmed) return null;
 
     // Existing keyword support
-    if (trimmed === 'actor') return ec.actor?.id ?? null;
-    if (trimmed === 'target') return ec.target?.id ?? null;
+    if (trimmed === ACTOR_ROLE) return ec.actor?.id ?? null;
+    if (trimmed === LEGACY_TARGET_ROLE) return ec.target?.id ?? null;
 
     // Enhanced placeholder support with detailed logging
     if (isPlaceholderName(trimmed)) {

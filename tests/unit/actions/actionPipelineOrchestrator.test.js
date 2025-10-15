@@ -17,7 +17,9 @@ jest.mock('../../../src/actions/pipeline/stages/ComponentFilteringStage.js');
 jest.mock(
   '../../../src/actions/pipeline/stages/PrerequisiteEvaluationStage.js'
 );
-jest.mock('../../../src/actions/pipeline/stages/TargetComponentValidationStage.js');
+jest.mock(
+  '../../../src/actions/pipeline/stages/TargetComponentValidationStage.js'
+);
 jest.mock('../../../src/actions/pipeline/stages/ActionFormattingStage.js');
 
 describe('ActionPipelineOrchestrator', () => {
@@ -130,12 +132,19 @@ describe('ActionPipelineOrchestrator', () => {
         mockDependencies.logger
       );
 
-      expect(TargetComponentValidationStage).toHaveBeenCalledWith({
-        targetComponentValidator: mockDependencies.targetComponentValidator,
-        targetRequiredComponentsValidator: mockDependencies.targetRequiredComponentsValidator,
-        logger: mockDependencies.logger,
-        actionErrorContextBuilder: mockDependencies.errorBuilder,
-      });
+      expect(TargetComponentValidationStage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          targetComponentValidator: mockDependencies.targetComponentValidator,
+          targetRequiredComponentsValidator:
+            mockDependencies.targetRequiredComponentsValidator,
+          logger: mockDependencies.logger,
+          actionErrorContextBuilder: mockDependencies.errorBuilder,
+          targetCandidatePruner: expect.any(Object),
+          configProvider: expect.any(Object),
+          validationReporter: expect.any(Object),
+          contextUpdateEmitter: expect.any(Object),
+        })
+      );
 
       expect(ActionFormattingStage).toHaveBeenCalledWith({
         commandFormatter: mockDependencies.formatter,
