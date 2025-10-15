@@ -1,5 +1,6 @@
 import { TargetNormalizationService } from '../../../../../../src/actions/pipeline/stages/actionFormatting/TargetNormalizationService.js';
 import { TargetExtractionResult } from '../../../../../../src/entities/multiTarget/targetExtractionResult.js';
+import { ActionTargetContext } from '../../../../../../src/models/actionTargetContext.js';
 
 describe('TargetNormalizationService', () => {
   let logger;
@@ -100,6 +101,18 @@ describe('TargetNormalizationService', () => {
       entityId: 'legacy-1',
       displayName: 'Legacy Target',
     });
+  });
+
+  it('marks targetId as null when target contexts explicitly indicate no target', () => {
+    const result = service.normalize({
+      resolvedTargets: null,
+      targetContexts: [ActionTargetContext.noTarget()],
+    });
+
+    expect(result.error).toBeNull();
+    expect(result.targetIds).toEqual({});
+    expect(result.params).toEqual({ targetId: null });
+    expect(result.primaryTargetContext).toBeNull();
   });
 
   it('returns error when no target information is supplied', () => {
