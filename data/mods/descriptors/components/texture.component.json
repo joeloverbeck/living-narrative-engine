@@ -9,18 +9,19 @@
         "type": "string",
         "description": "The surface texture",
         "enum": [
-          "smooth",
-          "rough",
-          "silky",
-          "coarse",
           "bumpy",
-          "velvety",
+          "coarse",
+          "croc-embossed",
+          "glossy",
+          "matte",
           "rib-knit",
+          "rough",
           "rugged",
           "scarred",
-          "matte",
-          "croc-embossed",
-          "terry"
+          "silky",
+          "smooth",
+          "terry",
+          "velvety"
         ],
         "default": "smooth"
       }

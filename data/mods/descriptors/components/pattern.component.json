@@ -9,14 +9,15 @@
         "type": "string",
         "description": "The pattern or decorative element",
         "enum": [
-          "solid",
-          "striped",
-          "polka-dot",
-          "heart",
+          "baroque-scroll",
+          "checked",
           "floral",
           "geometric",
+          "heart",
           "plaid",
-          "checked"
+          "polka-dot",
+          "solid",
+          "striped"
         ],
         "default": "solid"
       }
