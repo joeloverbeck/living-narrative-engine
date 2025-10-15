@@ -131,7 +131,9 @@ export function createSecureErrorDetails(
   const isProduction = process.env.NODE_ENV === 'production';
 
   // Filter sensitive fields from details
-  const filteredDetails = filterSensitiveFields(details);
+  const rawDetails = filterSensitiveFields(details);
+  const filteredDetails =
+    rawDetails && typeof rawDetails === 'object' ? rawDetails : {};
 
   // Add original error message if provided
   if (originalError) {
