@@ -475,15 +475,19 @@ describe('TargetComponentValidationStage configuration edge cases', () => {
   it('allows lenient overrides silently when diagnostics are disabled', async () => {
     const logger = new RecordingLogger();
 
-    jest
-      .spyOn(actionPipelineConfigModule, 'isTargetValidationEnabled')
-      .mockReturnValue(true);
-    jest
-      .spyOn(actionPipelineConfigModule, 'getValidationStrictness')
-      .mockReturnValue('lenient');
-    jest
-      .spyOn(actionPipelineConfigModule, 'targetValidationConfig')
-      .mockReturnValue({ logDetails: false });
+    const configProvider = {
+      getSnapshot: () => ({
+        skipValidation: false,
+        logDetails: false,
+        strictness: 'lenient',
+        performanceThreshold: 5,
+        skipForActionTypes: [],
+        skipForMods: [],
+        performanceModeEnabled: false,
+        skipNonCriticalStages: false,
+        shouldSkipAction: () => false,
+      }),
+    };
 
     class LenientNonCriticalValidator {
       validateTargetComponents() {
@@ -496,6 +500,7 @@ describe('TargetComponentValidationStage configuration edge cases', () => {
       targetRequiredComponentsValidator: new TargetRequiredComponentsValidator({ logger }),
       logger,
       actionErrorContextBuilder: dummyErrorContextBuilder,
+      configProvider,
     });
 
     const lenientAction = {
