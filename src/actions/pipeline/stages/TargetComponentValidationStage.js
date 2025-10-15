@@ -12,6 +12,7 @@ import TargetValidationConfigProvider from './TargetValidationConfigProvider.js'
 import TargetValidationReporter from './TargetValidationReporter.js';
 import TargetCandidatePruner from '../services/implementations/TargetCandidatePruner.js';
 import { extractCandidateId } from '../utils/targetCandidateUtils.js';
+import ContextUpdateEmitter from '../services/implementations/ContextUpdateEmitter.js';
 
 /** @typedef {import('../../validation/TargetComponentValidator.js').TargetComponentValidator} ITargetComponentValidator */
 /** @typedef {import('../../validation/TargetRequiredComponentsValidator.js').default} ITargetRequiredComponentsValidator */
@@ -36,6 +37,7 @@ export class TargetComponentValidationStage extends PipelineStage {
   #targetCandidatePruner;
   #configProvider;
   #validationReporter;
+  #contextUpdateEmitter;
 
   /**
    * Creates a TargetComponentValidationStage instance
@@ -44,11 +46,12 @@ export class TargetComponentValidationStage extends PipelineStage {
    * @param {ITargetComponentValidator} dependencies.targetComponentValidator - Validator service
    * @param {ITargetRequiredComponentsValidator} dependencies.targetRequiredComponentsValidator - Required components validator
    * @param {ILogger} dependencies.logger - Logger service
-   * @param {ActionErrorContextBuilder} dependencies.actionErrorContextBuilder - Error context builder
-   * @param {TargetCandidatePruner} [dependencies.targetCandidatePruner] - Optional candidate pruning service
-   * @param {TargetValidationConfigProvider} [dependencies.configProvider] - Optional configuration snapshot provider.
-   * @param {TargetValidationReporter} [dependencies.validationReporter] - Optional reporter for trace events.
-   */
+  * @param {ActionErrorContextBuilder} dependencies.actionErrorContextBuilder - Error context builder
+  * @param {TargetCandidatePruner} [dependencies.targetCandidatePruner] - Optional candidate pruning service
+  * @param {TargetValidationConfigProvider} [dependencies.configProvider] - Optional configuration snapshot provider.
+  * @param {TargetValidationReporter} [dependencies.validationReporter] - Optional reporter for trace events.
+  * @param {ContextUpdateEmitter} [dependencies.contextUpdateEmitter] - Optional context update emitter override.
+  */
   constructor({
     targetComponentValidator,
     targetRequiredComponentsValidator,
@@ -57,6 +60,7 @@ export class TargetComponentValidationStage extends PipelineStage {
     targetCandidatePruner = null,
     configProvider = null,
     validationReporter = null,
+    contextUpdateEmitter = null,
   }) {
     super('TargetComponentValidation');
 
@@ -139,6 +143,20 @@ export class TargetComponentValidationStage extends PipelineStage {
     } else {
       this.#validationReporter = new TargetValidationReporter({ logger });
     }
+
+    if (contextUpdateEmitter) {
+      validateDependency(
+        contextUpdateEmitter,
+        'IContextUpdateEmitter',
+        console,
+        {
+          requiredMethods: ['applyTargetValidationResults'],
+        }
+      );
+      this.#contextUpdateEmitter = contextUpdateEmitter;
+    } else {
+      this.#contextUpdateEmitter = new ContextUpdateEmitter();
+    }
   }
 
   /**
@@ -173,6 +191,14 @@ export class TargetComponentValidationStage extends PipelineStage {
         trace,
         source,
         reason: 'Target component validation skipped (disabled in config)',
+      });
+
+      this.#contextUpdateEmitter.applyTargetValidationResults({
+        context,
+        format,
+        items,
+        metadata,
+        validatedItems: items,
       });
 
       const rebuilt = adapter.rebuild({
@@ -232,6 +258,14 @@ export class TargetComponentValidationStage extends PipelineStage {
         candidateCount,
         filteredCount: filteredItems.length,
         duration,
+      });
+
+      this.#contextUpdateEmitter.applyTargetValidationResults({
+        context,
+        format,
+        items,
+        metadata,
+        validatedItems: filteredItems,
       });
 
       const rebuilt = adapter.rebuild({
