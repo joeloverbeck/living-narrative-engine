@@ -561,8 +561,16 @@ describe('TargetComponentValidationStage', () => {
 
       expect(result.success).toBe(true);
 
-      expect(readItemAction.resolvedTargets.primary.map((target) => target.id)).toEqual([
+      const prunedAction = result.data.actionsWithTargets[0];
+      expect(prunedAction.resolvedTargets.primary.map((target) => target.id)).toEqual([
         'letter'
+      ]);
+
+      expect(readItemAction.resolvedTargets.primary.map((target) => target.id)).toEqual([
+        'letter',
+        'photo-1',
+        'photo-2',
+        'desk'
       ]);
 
       const expectedClothingIds = ['tshirt', 'jeans', 'boots', 'belt'];

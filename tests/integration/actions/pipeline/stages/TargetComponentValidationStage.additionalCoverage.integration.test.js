@@ -146,7 +146,7 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
     });
 
     expect(result.success).toBe(true);
-    expect(result.data.candidateActions).toBe(candidateActions);
+    expect(result.data.candidateActions).toEqual(candidateActions);
     expect(result.continueProcessing).toBe(true);
 
     expect(logger.debugLogs.map((entry) => entry.message)).toContain(
@@ -443,21 +443,27 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
     expect(result.data.actionsWithTargets).toHaveLength(1);
 
     const [filteredAction] = result.data.actionsWithTargets;
-    expect(filteredAction.resolvedTargets.primary).toEqual([readableTarget]);
+    expect(filteredAction.resolvedTargets.primary).toHaveLength(1);
+    expect(filteredAction.resolvedTargets.primary[0].id).toBe('items:readable-letter');
     expect(filteredAction.targetContexts).toEqual([
       { type: 'entity', entityId: 'items:readable-letter', placeholder: 'item' },
     ]);
 
-    expect(actionDef.resolvedTargets.primary).toEqual([readableTarget]);
+    expect(actionDef.resolvedTargets.primary).toEqual([
+      readableTarget,
+      nonReadableTarget,
+    ]);
 
     expect(componentValidator.calls).toHaveLength(1);
-    expect(componentValidator.calls[0].targetEntities.primary).toEqual([
-      readableTarget,
-    ]);
+    expect(componentValidator.calls[0].targetEntities.primary).toHaveLength(1);
+    expect(componentValidator.calls[0].targetEntities.primary[0].id).toBe(
+      'items:readable-letter'
+    );
     expect(requiredValidator.calls).toHaveLength(1);
-    expect(requiredValidator.calls[0].targetEntities.primary).toEqual([
-      readableTarget,
-    ]);
+    expect(requiredValidator.calls[0].targetEntities.primary).toHaveLength(1);
+    expect(requiredValidator.calls[0].targetEntities.primary[0].id).toBe(
+      'items:readable-letter'
+    );
   });
 
   it('logs trace capture failures without interrupting validation flow', async () => {
