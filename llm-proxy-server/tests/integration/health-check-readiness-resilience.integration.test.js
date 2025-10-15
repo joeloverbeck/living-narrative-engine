@@ -152,8 +152,10 @@ describe('health check readiness resilience integration', () => {
   it('marks optional dependencies as OUT_OF_SERVICE when runtime checks fail', async () => {
     const { requestAgent, cleanup, services } = await startReadinessApp({
       envOverrides: {
-        READINESS_CRITICAL_HEAP_TOTAL_MB: '128',
-        READINESS_CRITICAL_HEAP_USED_MB: '128',
+        READINESS_CRITICAL_HEAP_TOTAL_MB: '2048',
+        READINESS_CRITICAL_HEAP_USED_MB: '2048',
+        READINESS_CRITICAL_HEAP_PERCENT: '99',
+        READINESS_CRITICAL_HEAP_LIMIT_PERCENT: '99',
       },
     });
 
