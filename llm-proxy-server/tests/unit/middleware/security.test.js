@@ -17,20 +17,28 @@ import {
   createSecurityConfigValidator,
 } from '../../../src/middleware/security.js';
 
+const helmetConfigHistory = [];
+var mockDefaultHelmetImplementation;
+
 // Mock helmet module
 jest.mock('helmet', () => {
-  return jest.fn(() => (req, res, next) => {
-    // Mock helmet middleware behavior
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'DENY');
-    res.setHeader(
-      'Strict-Transport-Security',
-      'max-age=31536000; includeSubDomains; preload'
-    );
-    res.setHeader('Content-Security-Policy', "default-src 'self'");
-    res.setHeader('X-XSS-Protection', '1; mode=block');
-    next();
-  });
+  mockDefaultHelmetImplementation = (config) => {
+    helmetConfigHistory.push(config);
+    return (req, res, next) => {
+      // Mock helmet middleware behavior
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('X-Frame-Options', 'DENY');
+      res.setHeader(
+        'Strict-Transport-Security',
+        'max-age=31536000; includeSubDomains; preload'
+      );
+      res.setHeader('Content-Security-Policy', "default-src 'self'");
+      res.setHeader('X-XSS-Protection', '1; mode=block');
+      next();
+    };
+  };
+
+  return jest.fn(mockDefaultHelmetImplementation);
 });
 
 describe('Enhanced Security Middleware', () => {
@@ -54,6 +62,11 @@ describe('Enhanced Security Middleware', () => {
     };
 
     mockNext = jest.fn();
+
+    helmetConfigHistory.length = 0;
+    const helmetMock = require('helmet');
+    helmetMock.mockClear();
+    helmetMock.mockImplementation(mockDefaultHelmetImplementation);
   });
 
   afterEach(() => {
@@ -159,6 +172,53 @@ describe('Enhanced Security Middleware', () => {
       middleware(mockRequest, mockResponse, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(mockError);
+    });
+
+    it('should append nonce directives to CSP sources when enabled', () => {
+      const middleware = createSecurityMiddleware();
+
+      middleware(mockRequest, mockResponse, mockNext);
+
+      const config = helmetConfigHistory.at(-1);
+      expect(config).toBeDefined();
+      const { scriptSrc, styleSrc } = config.contentSecurityPolicy.directives;
+
+      expect(scriptSrc.some((value) => value.startsWith("'nonce-"))).toBe(true);
+      expect(styleSrc.some((value) => value.startsWith("'nonce-"))).toBe(true);
+      expect(scriptSrc).not.toContain("'unsafe-inline'");
+      expect(styleSrc).not.toContain("'unsafe-inline'");
+    });
+
+    it('should add unsafe-inline style fallback only when nonce disabled and CSP relaxed', () => {
+      const middleware = createSecurityMiddleware({
+        enableNonce: false,
+        strictCSP: false,
+      });
+
+      middleware(mockRequest, mockResponse, mockNext);
+
+      const config = helmetConfigHistory.at(-1);
+      expect(config).toBeDefined();
+      const { scriptSrc, styleSrc } = config.contentSecurityPolicy.directives;
+
+      expect(styleSrc).toContain("'unsafe-inline'");
+      expect(scriptSrc).not.toContain("'unsafe-inline'");
+    });
+
+    it('should not add unsafe-inline when strict CSP is enforced without nonce', () => {
+      const middleware = createSecurityMiddleware({
+        enableNonce: false,
+        strictCSP: true,
+      });
+
+      middleware(mockRequest, mockResponse, mockNext);
+
+      const config = helmetConfigHistory.at(-1);
+      expect(config).toBeDefined();
+      const { scriptSrc, styleSrc } = config.contentSecurityPolicy.directives;
+
+      expect(scriptSrc).not.toContain("'unsafe-inline'");
+      expect(styleSrc).not.toContain("'unsafe-inline'");
     });
 
     it('should generate unique nonces for each request', () => {
