@@ -214,6 +214,14 @@ export class TargetNormalizationService {
       isMultiTarget: false,
     });
 
+    const hasExplicitNoTargetContext = targetContexts.some(
+      (context) => context?.type === 'none'
+    );
+
+    if (hasExplicitNoTargetContext && !('targetId' in params)) {
+      params.targetId = null;
+    }
+
     return {
       targetIds: {},
       targetExtractionResult,
