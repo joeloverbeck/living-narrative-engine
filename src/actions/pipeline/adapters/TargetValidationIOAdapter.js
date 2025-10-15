@@ -172,40 +172,7 @@ export class TargetValidationIOAdapter {
     }
 
     // Legacy format rebuild
-    const rebuiltCandidateActions = orderedValidatedItems.map((item) => {
-      const sanitizedTargets = this.#sanitizeResolvedTargets(item.resolvedTargets);
-
-      if (sanitizedTargets) {
-        item.actionDef.resolvedTargets = deepClone(sanitizedTargets);
-      } else if (item.actionDef.resolvedTargets) {
-        delete item.actionDef.resolvedTargets;
-      }
-
-      return item.actionDef;
-    });
-
-    if (metadata?.sharedResolvedTargetsRef) {
-      const sharedTargets = metadata.sharedResolvedTargetsRef;
-      if (sharedTargets && typeof sharedTargets === 'object') {
-        Object.keys(sharedTargets).forEach((key) => {
-          if (!orderedValidatedItems.some((item) => item.resolvedTargets?.[key])) {
-            delete sharedTargets[key];
-          }
-        });
-
-        for (const item of orderedValidatedItems) {
-          if (!item.resolvedTargets) {
-            continue;
-          }
-          for (const [role, value] of Object.entries(item.resolvedTargets)) {
-            if (role === ACTOR_ROLE) {
-              continue;
-            }
-            sharedTargets[role] = deepClone(value);
-          }
-        }
-      }
-    }
+    const rebuiltCandidateActions = orderedValidatedItems.map((item) => item.actionDef);
 
     return {
       data: { candidateActions: rebuiltCandidateActions },
