@@ -146,6 +146,23 @@ describe('Trace Routes', () => {
     });
   });
 
+  it('should return 500 when directory creation fails for single write', async () => {
+    fs.mkdir.mockRejectedValueOnce(new Error('mkdir failure'));
+
+    const response = await request(app).post('/api/traces/write').send({
+      traceData: { hello: 'world' },
+      fileName: 'mkdir-error.json',
+    });
+
+    expect(response.status).toBe(500);
+    expect(response.body).toMatchObject({
+      success: false,
+      error: 'Failed to write trace file',
+      details: 'mkdir failure',
+    });
+    expect(fs.writeFile).not.toHaveBeenCalled();
+  });
+
   it('should validate batch payload shape', async () => {
     const response = await request(app).post('/api/traces/write-batch').send({
       traces: [],
@@ -382,6 +399,46 @@ describe('Trace Routes', () => {
       success: false,
       fileName: 'a.json',
       error: 'unavailable',
+    });
+  });
+
+  it('should mark traces as failed when directory creation rejects during batch write', async () => {
+    const projectRoot = path.resolve(process.cwd(), '../');
+
+    fs.mkdir.mockRejectedValueOnce(new Error('mkdir failure'));
+    fs.mkdir.mockResolvedValue();
+
+    fs.stat.mockResolvedValueOnce({
+      size: 42,
+      mtime: new Date('2024-05-01T00:00:00Z'),
+      birthtime: new Date('2024-05-01T00:00:00Z'),
+    });
+
+    const response = await request(app).post('/api/traces/write-batch').send({
+      outputDirectory: './batch',
+      traces: [
+        { traceData: { ok: true }, fileName: 'first.json' },
+        { traceData: { ok: true }, fileName: 'second.json' },
+      ],
+    });
+
+    expect(response.status).toBe(200);
+    expect(fs.mkdir).toHaveBeenCalledWith(
+      expect.stringContaining(path.join(projectRoot, 'batch')),
+      { recursive: true }
+    );
+    expect(fs.writeFile).toHaveBeenCalledTimes(1);
+    expect(response.body).toMatchObject({ success: true, successCount: 1, failureCount: 1 });
+    expect(response.body.results[0]).toMatchObject({
+      index: 0,
+      fileName: 'first.json',
+      success: false,
+      error: 'mkdir failure',
+    });
+    expect(response.body.results[1]).toMatchObject({
+      index: 1,
+      fileName: 'second.json',
+      success: true,
     });
   });
 
