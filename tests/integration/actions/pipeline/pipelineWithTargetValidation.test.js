@@ -17,21 +17,127 @@ import * as actionPipelineConfig from '../../../../src/config/actionPipelineConf
 
 // Mock the configuration module
 jest.mock('../../../../src/config/actionPipelineConfig.js', () => {
-  const originalModule = jest.requireActual('../../../../src/config/actionPipelineConfig.js');
+  const originalModule = jest.requireActual(
+    '../../../../src/config/actionPipelineConfig.js'
+  );
+
+  const deepMerge = (target = {}, source = {}) => {
+    const output = { ...target };
+
+    for (const [key, value] of Object.entries(source)) {
+      if (
+        value &&
+        typeof value === 'object' &&
+        !Array.isArray(value) &&
+        typeof output[key] === 'object' &&
+        output[key] !== null &&
+        !Array.isArray(output[key])
+      ) {
+        output[key] = deepMerge(output[key], value);
+      } else {
+        output[key] = value;
+      }
+    }
+
+    return output;
+  };
+
+  const clone = (value) => JSON.parse(JSON.stringify(value));
+
+  let overrideConfig = {};
+
+  const computeConfig = () => {
+    const baseConfig = clone(originalModule.getActionPipelineConfig());
+    return deepMerge(baseConfig, overrideConfig);
+  };
+
+  const getActionPipelineConfig = jest.fn(() => computeConfig());
+
+  const isTargetValidationEnabled = jest.fn(() => {
+    const config = getActionPipelineConfig();
+    return (
+      Boolean(config.targetValidation?.enabled) &&
+      config.targetValidation?.strictness !== 'off'
+    );
+  });
+
+  const getValidationStrictness = jest.fn(() => {
+    const config = getActionPipelineConfig();
+    return config.targetValidation?.strictness ?? 'strict';
+  });
+
+  const isPerformanceModeEnabled = jest.fn(() => {
+    const config = getActionPipelineConfig();
+    return Boolean(config.performance?.enabled);
+  });
+
+  const shouldSkipValidation = jest.fn((action) => {
+    if (!isTargetValidationEnabled()) {
+      return true;
+    }
+
+    const config = getActionPipelineConfig();
+
+    if (action?.type && config.targetValidation?.skipForActionTypes?.includes(action.type)) {
+      return true;
+    }
+
+    const modId = typeof action?.id === 'string' ? action.id.split(':')[0] : null;
+    if (modId && config.targetValidation?.skipForMods?.includes(modId)) {
+      return true;
+    }
+
+    if (
+      isPerformanceModeEnabled() &&
+      config.performance?.skipNonCriticalStages
+    ) {
+      return true;
+    }
+
+    return false;
+  });
+
+  const targetValidationConfig = jest.fn(() => {
+    const config = getActionPipelineConfig();
+    return config.targetValidation;
+  });
+
+  const performanceConfig = jest.fn(() => {
+    const config = getActionPipelineConfig();
+    return config.performance;
+  });
+
+  const diagnosticsConfig = jest.fn(() => {
+    const config = getActionPipelineConfig();
+    return config.diagnostics;
+  });
+
+  const stagesConfig = jest.fn(() => {
+    const config = getActionPipelineConfig();
+    return config.stages;
+  });
+
+  const setMockConfig = (overrides = {}) => {
+    overrideConfig = clone(overrides);
+  };
+
+  const resetMockConfig = () => {
+    overrideConfig = {};
+  };
+
   return {
     ...originalModule,
-    isTargetValidationEnabled: jest.fn(() => true),
-    shouldSkipValidation: jest.fn(() => false),
-    targetValidationConfig: jest.fn(() => ({
-      enabled: true,
-      strictness: 'strict',
-      logDetails: false,
-      performanceThreshold: 5,
-      skipForActionTypes: [],
-      skipForMods: []
-    })),
-    getValidationStrictness: jest.fn(() => 'strict'),
-    isPerformanceModeEnabled: jest.fn(() => false)
+    getActionPipelineConfig,
+    isTargetValidationEnabled,
+    getValidationStrictness,
+    isPerformanceModeEnabled,
+    shouldSkipValidation,
+    targetValidationConfig,
+    performanceConfig,
+    diagnosticsConfig,
+    stagesConfig,
+    __setMockConfig: setMockConfig,
+    __resetMockConfig: resetMockConfig,
   };
 });
 
@@ -58,6 +164,10 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
   beforeEach(() => {
     // Reset all mocks
     jest.clearAllMocks();
+
+    if (typeof actionPipelineConfig.__resetMockConfig === 'function') {
+      actionPipelineConfig.__resetMockConfig();
+    }
 
     mockLogger = {
       debug: jest.fn(),
@@ -134,9 +244,6 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
     });
 
     it('should pass context correctly between stages', async () => {
-      // Enable validation to ensure stage runs
-      actionPipelineConfig.isTargetValidationEnabled.mockReturnValue(true);
-
       const testActions = [
         { id: 'action-1', name: 'Test Action 1', forbidden_components: null },
         { id: 'action-2', name: 'Test Action 2', forbidden_components: null }
@@ -285,7 +392,9 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
   describe('Configuration Support', () => {
     it('should handle stage disabled configuration', async () => {
       // Mock configuration to disable validation
-      actionPipelineConfig.isTargetValidationEnabled.mockReturnValue(false);
+      actionPipelineConfig.__setMockConfig({
+        targetValidation: { enabled: false },
+      });
 
       const testActions = [
         {
@@ -310,14 +419,9 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
     });
 
     it('should skip validation for specific action types when configured', async () => {
-      // Enable validation so the stage runs
-      actionPipelineConfig.isTargetValidationEnabled.mockReturnValue(true);
-
-      // Mock shouldSkipValidation to return true for specific action
-      // When skipping validation, the action is INCLUDED, not filtered out
-      actionPipelineConfig.shouldSkipValidation
-        .mockReturnValueOnce(true) // Skip validation for first action (will be included)
-        .mockReturnValueOnce(false); // Don't skip validation for second (will be validated and filtered)
+      actionPipelineConfig.__setMockConfig({
+        targetValidation: { skipForActionTypes: ['debug'] },
+      });
 
       const testActions = [
         {
@@ -347,8 +451,9 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
     });
 
     it('should respect strictness level configuration', async () => {
-      // Set strictness to lenient
-      actionPipelineConfig.getValidationStrictness.mockReturnValue('lenient');
+      actionPipelineConfig.__setMockConfig({
+        targetValidation: { strictness: 'lenient', enabled: true },
+      });
 
       const testAction = {
         id: 'action-1',
@@ -368,15 +473,11 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
     });
 
     it('should log details when configured', async () => {
-      // Enable validation AND detailed logging
-      actionPipelineConfig.isTargetValidationEnabled.mockReturnValue(true); // Ensure validation is enabled
-      actionPipelineConfig.targetValidationConfig.mockReturnValue({
-        enabled: true,
-        strictness: 'strict',
-        logDetails: true,
-        performanceThreshold: 5,
-        skipForActionTypes: [],
-        skipForMods: []
+      actionPipelineConfig.__setMockConfig({
+        targetValidation: {
+          enabled: true,
+          logDetails: true,
+        },
       });
 
       const testAction = {
@@ -419,16 +520,11 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
     });
 
     it('should log slow validations based on configuration threshold', async () => {
-      // Enable validation first
-      actionPipelineConfig.isTargetValidationEnabled.mockReturnValue(true);
-      // Set a very low threshold to trigger logging
-      actionPipelineConfig.targetValidationConfig.mockReturnValue({
-        enabled: true,
-        strictness: 'strict',
-        logDetails: false,
-        performanceThreshold: 0.001, // Very low threshold
-        skipForActionTypes: [],
-        skipForMods: []
+      actionPipelineConfig.__setMockConfig({
+        targetValidation: {
+          enabled: true,
+          performanceThreshold: 0.001,
+        },
       });
 
       const testAction = {
@@ -450,9 +546,12 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
     });
 
     it('should skip validation in performance mode when configured', async () => {
-      // Enable performance mode
-      actionPipelineConfig.isPerformanceModeEnabled.mockReturnValue(true);
-      actionPipelineConfig.shouldSkipValidation.mockReturnValue(true);
+      actionPipelineConfig.__setMockConfig({
+        performance: {
+          enabled: true,
+          skipNonCriticalStages: true,
+        },
+      });
 
       const testActions = Array.from({ length: 50 }, (_, i) => ({
         id: `action-${i}`,
@@ -478,10 +577,9 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
     it('should handle validation errors gracefully', async () => {
       const errorMessage = 'Validation service error';
 
-      // Enable validation first so the validator is actually called
-      actionPipelineConfig.isTargetValidationEnabled.mockReturnValue(true);
-      // Also ensure we're not skipping validation for this action
-      actionPipelineConfig.shouldSkipValidation.mockReturnValue(false);
+      actionPipelineConfig.__setMockConfig({
+        targetValidation: { enabled: true },
+      });
 
       // Mock validator to throw error
       const validateSpy = jest.spyOn(targetComponentValidator, 'validateTargetComponents')
@@ -535,9 +633,7 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
     });
 
     it('should handle missing configuration gracefully', async () => {
-      // Mock configuration to return undefined
-      actionPipelineConfig.targetValidationConfig.mockReturnValue(undefined);
-      actionPipelineConfig.isTargetValidationEnabled.mockReturnValue(true);
+      actionPipelineConfig.__setMockConfig({ targetValidation: undefined });
 
       const testAction = {
         id: 'action-1',
@@ -558,11 +654,6 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
 
   describe('Tracing Support', () => {
     it('should capture action-aware trace data', async () => {
-      // Enable validation
-      actionPipelineConfig.isTargetValidationEnabled.mockReturnValue(true);
-      // Ensure we're not skipping validation for this action
-      actionPipelineConfig.shouldSkipValidation.mockReturnValue(false);
-
       const mockTrace = {
         step: jest.fn(),
         success: jest.fn(),
@@ -596,11 +687,6 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
     });
 
     it('should handle trace failures gracefully', async () => {
-      // Enable validation so trace capture is attempted
-      actionPipelineConfig.isTargetValidationEnabled.mockReturnValue(true);
-      // Ensure we're not skipping validation for this action
-      actionPipelineConfig.shouldSkipValidation.mockReturnValue(false);
-
       const mockTrace = {
         step: jest.fn(),
         success: jest.fn(),
@@ -704,6 +790,10 @@ describe('Pipeline Configuration Tests', () => {
     jest.clearAllMocks();
     jest.restoreAllMocks();
 
+    if (typeof actionPipelineConfig.__resetMockConfig === 'function') {
+      actionPipelineConfig.__resetMockConfig();
+    }
+
     mockLogger = {
       debug: jest.fn(),
       info: jest.fn(),
@@ -747,7 +837,9 @@ describe('Pipeline Configuration Tests', () => {
   });
 
   it('should allow disabling target validation', async () => {
-    actionPipelineConfig.isTargetValidationEnabled.mockReturnValue(false);
+    actionPipelineConfig.__setMockConfig({
+      targetValidation: { enabled: false },
+    });
 
     const forbiddenAction = {
       id: 'action-1',
@@ -773,12 +865,9 @@ describe('Pipeline Configuration Tests', () => {
   });
 
   it('should support different strictness levels', async () => {
-    // Enable validation for strict mode test
-    actionPipelineConfig.isTargetValidationEnabled.mockReturnValue(true);
-    // Ensure we're not skipping validation for this action
-    actionPipelineConfig.shouldSkipValidation.mockReturnValue(false);
-    // Test strict mode
-    actionPipelineConfig.getValidationStrictness.mockReturnValue('strict');
+    actionPipelineConfig.__setMockConfig({
+      targetValidation: { strictness: 'strict', enabled: true },
+    });
 
     const testAction = {
       id: 'action-1',
@@ -794,10 +883,17 @@ describe('Pipeline Configuration Tests', () => {
     expect(result.data.candidateActions).toHaveLength(0); // Filtered in strict mode
 
     // Test off mode (same as disabled)
-    actionPipelineConfig.getValidationStrictness.mockReturnValue('off');
-    actionPipelineConfig.isTargetValidationEnabled.mockReturnValue(false);
+    actionPipelineConfig.__setMockConfig({
+      targetValidation: { strictness: 'off', enabled: false },
+    });
 
-    // Reset candidateActions since they were filtered in previous execution
+    validationStage = new TargetComponentValidationStage({
+      targetComponentValidator,
+      targetRequiredComponentsValidator,
+      logger: mockLogger,
+      actionErrorContextBuilder: mockErrorContextBuilder,
+    });
+
     context.candidateActions = [testAction];
 
     result = await validationStage.execute(context);
@@ -805,8 +901,9 @@ describe('Pipeline Configuration Tests', () => {
   });
 
   it('should skip validation in performance mode', async () => {
-    actionPipelineConfig.isPerformanceModeEnabled.mockReturnValue(true);
-    actionPipelineConfig.shouldSkipValidation.mockReturnValue(true);
+    actionPipelineConfig.__setMockConfig({
+      performance: { enabled: true, skipNonCriticalStages: true },
+    });
 
     const testAction = {
       id: 'action-1',
@@ -825,10 +922,7 @@ describe('Pipeline Configuration Tests', () => {
   });
 
   it('should handle missing configuration gracefully', async () => {
-    // Reset mocks to default behavior
-    actionPipelineConfig.targetValidationConfig.mockReturnValue({});
-    actionPipelineConfig.isTargetValidationEnabled.mockReturnValue(true);
-    actionPipelineConfig.getValidationStrictness.mockReturnValue('strict');
+    actionPipelineConfig.__setMockConfig({ targetValidation: {} });
 
     const testAction = {
       id: 'action-1',
