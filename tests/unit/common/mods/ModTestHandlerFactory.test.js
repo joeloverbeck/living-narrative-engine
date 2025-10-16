@@ -52,7 +52,7 @@ describe('ModTestHandlerFactory', () => {
   });
 
   describe('createStandardHandlers', () => {
-    it('should create all 7 standard handlers with correct configuration', () => {
+    it('should create all 9 standard handlers with correct configuration', () => {
       const handlers = ModTestHandlerFactory.createStandardHandlers(
         mockEntityManager,
         mockEventBus,
@@ -77,7 +77,7 @@ describe('ModTestHandlerFactory', () => {
         expect(handlers[handlerKey]).toBeDefined();
       });
 
-      // Verify correct number of handlers
+      // Verify correct number of handlers (9 standard operations)
       expect(Object.keys(handlers)).toHaveLength(9);
     });
 
@@ -232,7 +232,7 @@ describe('ModTestHandlerFactory', () => {
         expect(handlers[handlerKey]).toBeDefined();
       });
 
-      // Verify correct number of handlers (8 standard + 1 ADD_COMPONENT)
+      // Verify correct number of handlers (9 standard + 1 ADD_COMPONENT)
       expect(Object.keys(handlers)).toHaveLength(10);
     });
 
@@ -381,6 +381,7 @@ describe('ModTestHandlerFactory', () => {
       // Should have all standard handlers
       const standardHandlers = [
         'QUERY_COMPONENT',
+        'QUERY_COMPONENTS',
         'GET_NAME',
         'GET_TIMESTAMP',
         'DISPATCH_PERCEPTIBLE_EVENT',
