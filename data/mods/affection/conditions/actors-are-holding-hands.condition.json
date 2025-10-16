@@ -1,0 +1,33 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "affection:actors-are-holding-hands",
+  "description": "Checks if the actor and target are currently linked by the hand-holding components.",
+  "logic": {
+    "or": [
+      {
+        "==": [
+          { "var": "target.id" },
+          { "var": "actor.components.affection:holding_hand.held_entity_id" }
+        ]
+      },
+      {
+        "==": [
+          { "var": "target.id" },
+          { "var": "actor.components.affection:hand_held.holding_entity_id" }
+        ]
+      },
+      {
+        "==": [
+          { "var": "actor.id" },
+          { "var": "target.components.affection:holding_hand.held_entity_id" }
+        ]
+      },
+      {
+        "==": [
+          { "var": "actor.id" },
+          { "var": "target.components.affection:hand_held.holding_entity_id" }
+        ]
+      }
+    ]
+  }
+}

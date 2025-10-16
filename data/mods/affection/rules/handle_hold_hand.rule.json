@@ -22,6 +22,56 @@
       }
     },
     {
+      "type": "REMOVE_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "affection:holding_hand"
+      }
+    },
+    {
+      "type": "REMOVE_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "affection:hand_held"
+      }
+    },
+    {
+      "type": "REMOVE_COMPONENT",
+      "parameters": {
+        "entity_ref": "target",
+        "component_type": "affection:holding_hand"
+      }
+    },
+    {
+      "type": "REMOVE_COMPONENT",
+      "parameters": {
+        "entity_ref": "target",
+        "component_type": "affection:hand_held"
+      }
+    },
+    {
+      "type": "ADD_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "affection:holding_hand",
+        "value": {
+          "held_entity_id": "{event.payload.targetId}",
+          "initiated": true
+        }
+      }
+    },
+    {
+      "type": "ADD_COMPONENT",
+      "parameters": {
+        "entity_ref": "target",
+        "component_type": "affection:hand_held",
+        "value": {
+          "holding_entity_id": "{event.payload.actorId}",
+          "consented": true
+        }
+      }
+    },
+    {
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",

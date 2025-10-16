@@ -25,6 +25,10 @@
     }
   ],
   "content": {
+    "components": [
+      "hand_held.component.json",
+      "holding_hand.component.json"
+    ],
     "actions": [
       "brush_hand.action.json",
       "hold_hand.action.json",
@@ -62,6 +66,7 @@
       "wrap_arm_around_waist.rule.json"
     ],
     "conditions": [
+      "actors-are-holding-hands.condition.json",
       "event-is-action-brush-hand.condition.json",
       "event-is-action-hold-hand.condition.json",
       "event-is-action-hug-tight.condition.json",
