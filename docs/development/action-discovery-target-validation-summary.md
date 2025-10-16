@@ -43,7 +43,7 @@ QA partners validating multi-target behaviours.
 ## Next Steps
 
 - Monitor performance metrics using the existing benchmark harness (`npm run
-test:performance:target-validation`).
+test:performance`).
 - Schedule a knowledge-share session to walk through the collaborator guide and
   capture feedback for future automation.
 
