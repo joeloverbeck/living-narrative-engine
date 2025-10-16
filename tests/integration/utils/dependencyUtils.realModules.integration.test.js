@@ -1,385 +1,248 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import TargetContextBuilder from '../../../src/scopeDsl/utils/targetContextBuilder.js';
-import WorldInitializer from '../../../src/initializers/worldInitializer.js';
-import SystemInitializer from '../../../src/initializers/systemInitializer.js';
-import InitializationService from '../../../src/initializers/services/initializationService.js';
-import { TargetManager } from '../../../src/entities/multiTarget/targetManager.js';
+import { describe, it, expect } from '@jest/globals';
 import { ServiceSetup } from '../../../src/utils/serviceInitializerUtils.js';
-import {
-  isValidId,
-  validateInstanceAndComponent,
-} from '../../../src/utils/idValidation.js';
+import { CoreMotivationsCacheManager } from '../../../src/characterBuilder/cache/CoreMotivationsCacheManager.js';
+import { validateInstanceAndComponent } from '../../../src/utils/idValidation.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
-import { SystemInitializationError } from '../../../src/errors/InitializationError.js';
-import createSlotAccessResolver from '../../../src/scopeDsl/nodes/slotAccessResolver.js';
+import { WorldInitializationError } from '../../../src/errors/InitializationError.js';
+import WorldInitializer from '../../../src/initializers/worldInitializer.js';
 
-class MemoryLogger {
-  constructor(prefix = '') {
-    this.prefix = prefix;
-    this.messages = { debug: [], info: [], warn: [], error: [] };
+class RecordingLogger {
+  constructor() {
+    this.debugEntries = [];
+    this.infoEntries = [];
+    this.warnEntries = [];
+    this.errorEntries = [];
   }
 
   debug(message, metadata) {
-    this.messages.debug.push({ message, metadata });
+    this.debugEntries.push({ message, metadata });
   }
 
   info(message, metadata) {
-    this.messages.info.push({ message, metadata });
+    this.infoEntries.push({ message, metadata });
   }
 
   warn(message, metadata) {
-    this.messages.warn.push({ message, metadata });
+    this.warnEntries.push({ message, metadata });
   }
 
   error(message, metadata) {
-    this.messages.error.push({ message, metadata });
+    this.errorEntries.push({ message, metadata });
   }
 }
 
-class SimpleEntity {
-  constructor(id, components = {}) {
-    this.id = id;
-    this._components = components;
+class RecordingEventBus {
+  constructor() {
+    this.events = [];
   }
 
-  getAllComponents() {
-    return this._components;
-  }
-}
-
-class SimpleEntityManager {
-  constructor(entities = new Map()) {
-    this.entities = entities;
-  }
-
-  getEntityInstance(id) {
-    return this.entities.get(id) ?? null;
-  }
-
-  createEntityInstance(def) {
-    const entity = new SimpleEntity(def.id, def.components ?? {});
-    this.entities.set(def.id, entity);
-    return entity;
-  }
-
-  hasBatchSupport() {
-    return false;
-  }
-
-  getAllComponentTypesForEntity(id) {
-    const entity = this.entities.get(id);
-    if (!entity) return [];
-    return Object.keys(entity.getAllComponents());
+  dispatch(eventId, payload) {
+    this.events.push({ eventId, payload });
   }
 }
 
-class FakeRepository {
-  constructor(world = { entities: [] }) {
-    this._world = world;
-  }
-
-  getWorld() {
-    return this._world;
-  }
-
-  getEntityInstanceDefinition(id) {
-    return this._world.entities.find((entry) => entry.id === id) ?? null;
-  }
-
-  get(id) {
-    return this.getEntityInstanceDefinition(id);
-  }
-}
-
-describe('dependencyUtils integration with core modules', () => {
-  let logger;
-  let entityManager;
-  let gameStateManager;
-
-  beforeEach(() => {
-    logger = new MemoryLogger();
-    entityManager = new SimpleEntityManager(
-      new Map([
-        [
-          'actor:1',
-          new SimpleEntity('actor:1', {
-            identity: { name: 'Hero' },
-          }),
-        ],
-        [
-          'location:town',
-          new SimpleEntity('location:town', { description: 'Town Square' }),
-        ],
-      ])
-    );
-    gameStateManager = {
-      getCurrentTurn: () => 3,
-      getTimeOfDay: () => 'dawn',
-      getWeather: () => 'clear',
-    };
-  });
-
-  it('builds target contexts and surfaces validation errors via TargetContextBuilder', () => {
-    const builder = new TargetContextBuilder({
-      entityManager,
-      gameStateManager,
-      logger,
-    });
-
-    const base = builder.buildBaseContext('actor:1', 'location:town');
-    expect(base.actor.id).toBe('actor:1');
-    expect(base.location.id).toBe('location:town');
-    expect(base.game.turnNumber).toBe(3);
-
-    const dependent = builder.buildDependentContext(
-      base,
-      {
-        primary: [
-          {
-            id: 'actor:1',
-          },
-        ],
-      },
-      { contextFrom: 'primary' }
-    );
-
-    expect(dependent.target.id).toBe('actor:1');
-    expect(logger.messages.error).toHaveLength(0);
-
-    expect(() => builder.buildBaseContext('   ', 'location:town')).toThrow(
-      InvalidArgumentError
-    );
-    const [invalidIdLog] = logger.messages.error;
-    expect(invalidIdLog.message).toContain('Invalid actorId');
-    expect(() =>
-      builder.buildDependentContext(null, {}, { contextFrom: null })
-    ).toThrow('Base context is required');
-  });
-
-  it('rejects missing dependencies when constructing TargetContextBuilder', () => {
-    expect(
-      () => new TargetContextBuilder({ entityManager: null, gameStateManager, logger })
-    ).toThrow(InvalidArgumentError);
-    expect(
-      () =>
-        new TargetContextBuilder({
-          entityManager,
-          gameStateManager: null,
-          logger,
-        })
-    ).toThrow(InvalidArgumentError);
-  });
-
-  it('validates repositories and event infrastructure in WorldInitializer', async () => {
-    const worldContext = { initialized: true };
-    const repository = new FakeRepository({
-      entities: [
-        {
-          id: 'npc:1',
-          components: { identity: { name: 'Villager' } },
-        },
-      ],
-    });
-    const validatedEventDispatcher = { dispatch: jest.fn() };
-    const eventDispatchService = { dispatchWithLogging: jest.fn() };
-    const scopeRegistry = { initialize: jest.fn() };
-
-    const initializer = new WorldInitializer({
-      entityManager,
-      worldContext,
-      gameDataRepository: repository,
-      validatedEventDispatcher,
-      eventDispatchService,
-      logger,
-      scopeRegistry,
-    });
-
-    expect(initializer.getWorldContext()).toBe(worldContext);
-
-    expect(
-      () =>
-        new WorldInitializer({
-          entityManager,
-          worldContext,
-          gameDataRepository: {},
-          validatedEventDispatcher,
-          eventDispatchService,
-          logger,
-          scopeRegistry,
-        })
-    ).toThrow('WorldInitializer requires an IGameDataRepository');
-  });
-
-  it('requires callable dependencies in SystemInitializer', async () => {
-    const logger = new MemoryLogger();
-    const validatedEventDispatcher = { dispatch: jest.fn() };
-    const eventDispatchService = { dispatchWithLogging: jest.fn() };
-
-    expect(
-      () =>
-        new SystemInitializer({
-          resolver: {},
-          logger,
-          validatedEventDispatcher,
-          eventDispatchService,
-          initializationTag: 'systems',
-        })
-    ).toThrow("SystemInitializer requires a valid IServiceResolver");
-
-    const resolver = {
-      async resolveByTag(tag) {
-        expect(tag).toBe('systems');
-        return [
-          {
-            async initialize() {
-              /* no-op */
-            },
-          },
-        ];
-      },
-    };
-
-    const initializer = new SystemInitializer({
-      resolver,
-      logger,
-      validatedEventDispatcher,
-      eventDispatchService,
-      initializationTag: 'systems',
-    });
-
-    await expect(initializer.initializeAll()).resolves.toBeUndefined();
-  });
-
-  it('coordinates ID validation helpers with structured logging', () => {
-    const logger = new MemoryLogger();
-
-    expect(isValidId('entity-42', 'test', logger)).toBe(true);
-    expect(isValidId('', 'test', logger)).toBe(false);
-
-    expect(() =>
-      validateInstanceAndComponent('entity-1', '', logger, 'entity-component:test')
-    ).toThrow(InvalidArgumentError);
-
-    const lastError = logger.messages.error.at(-1);
-    expect(lastError.message).toBeInstanceOf(InvalidArgumentError);
-  });
-
-  describe('slot access resolver dependency validation', () => {
-    let entitiesGateway;
-    let consoleSpy;
-
-    beforeEach(() => {
-      entitiesGateway = {
-        getComponentData: jest.fn(() => null),
+describe('dependency utilities working through real service flows', () => {
+  describe('ServiceSetup orchestration', () => {
+    it('creates prefixed loggers when dependencies satisfy validation', () => {
+      const baseLogger = new RecordingLogger();
+      const setup = new ServiceSetup();
+      const dependencies = {
+        queue: { value: { enqueue(item) { this.last = item; } }, requiredMethods: ['enqueue'] },
+        factory: { value: (input) => ({ built: input }), isFunction: true },
       };
-      consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      const prefixed = setup.setupService('PromptScheduler', baseLogger, dependencies);
+      prefixed.debug('initialized');
+
+      expect(baseLogger.debugEntries).toEqual([
+        { message: 'PromptScheduler: initialized', metadata: undefined },
+      ]);
+      expect(baseLogger.errorEntries).toHaveLength(0);
     });
 
-    afterEach(() => {
-      consoleSpy.mockRestore();
-    });
+    it('reports missing dependencies with InvalidArgumentError and logger output', () => {
+      const baseLogger = new RecordingLogger();
+      const setup = new ServiceSetup();
 
-    it('falls back to console logging when error handler is misconfigured', () => {
       expect(() =>
-        createSlotAccessResolver({
-          entitiesGateway,
-          errorHandler: {},
+        setup.setupService('PromptScheduler', baseLogger, {
+          cache: { value: null },
         })
       ).toThrow(InvalidArgumentError);
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Invalid or missing method \'handleError\' on dependency \'IScopeDslErrorHandler\'.'
+
+      expect(baseLogger.errorEntries[0]?.message).toBe(
+        'Missing required dependency: PromptScheduler: cache.'
       );
     });
 
-    it('accepts fully configured dependencies and exposes resolver contract', () => {
-      const errorHandler = {
-        handleError: jest.fn(),
-        getErrorBuffer: jest.fn(() => []),
-      };
-      const resolver = createSlotAccessResolver({
-        entitiesGateway,
-        errorHandler,
-      });
-      expect(typeof resolver.canResolve).toBe('function');
-      expect(typeof resolver.resolve).toBe('function');
+    it('validates function dependencies and required methods together', () => {
+      const baseLogger = new RecordingLogger();
+      const setup = new ServiceSetup();
+
+      expect(() =>
+        setup.setupService('PromptScheduler', baseLogger, {
+          builder: { value: {}, isFunction: true },
+        })
+      ).toThrow(InvalidArgumentError);
+
+      expect(baseLogger.errorEntries.at(-1)?.message).toBe(
+        "Dependency 'PromptScheduler: builder' must be a function, but got object."
+      );
+
+      expect(() =>
+        setup.setupService('PromptScheduler', baseLogger, {
+          repository: { value: {}, requiredMethods: ['save'] },
+        })
+      ).toThrow(InvalidArgumentError);
+
+      expect(baseLogger.errorEntries.at(-1)?.message).toBe(
+        "Invalid or missing method 'save' on dependency 'PromptScheduler: repository'."
+      );
+    });
+
+    it('gracefully handles empty dependency specifications', () => {
+      const baseLogger = new RecordingLogger();
+      const setup = new ServiceSetup();
+
+      const prefixed = setup.setupService('PromptScheduler', baseLogger, undefined);
+      prefixed.info('ready');
+
+      expect(baseLogger.infoEntries[0]?.message).toBe('PromptScheduler: ready');
     });
   });
 
-  it('logs missing target maps when TargetManager receives null data', () => {
-    const managerLogger = new MemoryLogger();
-    const manager = new TargetManager({ logger: managerLogger });
+  describe('CoreMotivationsCacheManager validation hooks', () => {
+    const createManager = () => {
+      const logger = new RecordingLogger();
+      const eventBus = new RecordingEventBus();
+      const manager = new CoreMotivationsCacheManager({
+        logger,
+        eventBus,
+        schemaValidator: {
+          validateAgainstSchema() {
+            // accept all payloads during the test
+            return true;
+          },
+        },
+      });
+      return { logger, eventBus, manager };
+    };
 
-    expect(() => manager.setTargets(null)).toThrow('Targets object is required');
-    const [logEntry] = managerLogger.messages.error;
-    expect(logEntry.message).toBe('Targets object is required');
+    it('accepts well formed cache writes and dispatches lifecycle events', () => {
+      const { logger, eventBus, manager } = createManager();
+
+      manager.set('motivation-1', { id: 'motivation-1', label: 'Driven' }, 'motivations');
+
+      expect(logger.errorEntries).toHaveLength(0);
+      expect(eventBus.events[0]?.eventId).toBe('characterBuilder:cache:initialized');
+      expect(manager.get('motivation-1')).toEqual({
+        id: 'motivation-1',
+        label: 'Driven',
+      });
+    });
+
+    it('surfaces invalid cache keys and payloads through InvalidArgumentError', () => {
+      const { logger, manager } = createManager();
+
+      expect(() => manager.set('  ', { id: 'motivation-2' }, 'motivations')).toThrow(
+        InvalidArgumentError
+      );
+      expect(logger.errorEntries[0]?.message).toBe(
+        "CoreMotivationsCacheManager.set: Invalid key '  '. Expected non-blank string."
+      );
+
+      expect(() => manager.set('motivation-2', null, 'motivations')).toThrow(
+        InvalidArgumentError
+      );
+      expect(logger.errorEntries.at(-1)?.message).toBe('data');
+    });
   });
 
-  it('records initialization dependency failures with detailed logging', () => {
-    const logger = new MemoryLogger();
-    const validatedEventDispatcher = {}; // missing dispatch
-    const safeEventDispatcher = { subscribe: () => {} };
+  describe('ID validation flows', () => {
+    it('integrates assertValidId and assertNonBlankString through idValidation helpers', () => {
+      const logger = new RecordingLogger();
 
-    const modsLoader = { loadMods: () => Promise.resolve([]) };
-    const scopeRegistry = { initialize: () => {} };
-    const dataRegistry = { getAll: () => [] };
-    const systemInitializer = { initializeAll: () => Promise.resolve() };
-    const worldInitializer = { initializeWorldEntities: () => Promise.resolve() };
-    const entityManager = { getAllEntities: () => [] };
-    const actionIndex = { buildIndex: () => {} };
-    const gameDataRepository = { getAllActionDefinitions: () => [] };
-    const thoughtListener = { handleEvent: () => {} };
-    const notesListener = { handleEvent: () => {} };
-    const spatialIndexManager = { rebuildIndex: () => {} };
-    const llmAdapter = { init: () => {}, isInitialized: () => true, isOperational: () => true };
-    const llmConfigLoader = { load: () => Promise.resolve() };
-    const contentDependencyValidator = { validate: () => ({ success: true }) };
-    const anatomyFormattingService = { initialize: () => {} };
+      expect(() =>
+        validateInstanceAndComponent('actor-1', 'core:notes', logger, 'idValidation')
+      ).not.toThrow();
 
-    expect(() =>
-      new InitializationService({
-        log: { logger },
-        events: { validatedEventDispatcher, safeEventDispatcher },
-        llm: { llmAdapter, llmConfigLoader },
-        persistence: {
-          entityManager,
-          domUiFacade: {},
-          actionIndex,
-          gameDataRepository,
-          thoughtListener,
-          notesListener,
-          spatialIndexManager,
-        },
-        coreSystems: {
-          modsLoader,
-          scopeRegistry,
-          dataRegistry,
-          systemInitializer,
-          worldInitializer,
-          contentDependencyValidator,
-          anatomyFormattingService,
-        },
-      })
-    ).toThrow(SystemInitializationError);
+      expect(() =>
+        validateInstanceAndComponent('', 'core:notes', logger, 'idValidation')
+      ).toThrow(InvalidArgumentError);
 
-    expect(logger.messages.error.map((entry) => entry.message)).toContain(
-      "InitializationService: Missing or invalid required dependency 'validatedEventDispatcher'."
-    );
+      const lastError = logger.errorEntries.at(-1);
+      expect(lastError?.message).toBeInstanceOf(Error);
+      expect(lastError?.message.message).toContain("idValidation: Invalid ID ''");
+    });
   });
 
-  it('validates function dependencies through ServiceSetup', () => {
-    const baseLogger = new MemoryLogger();
-    const setup = new ServiceSetup();
+  describe('WorldInitializer dependency enforcement', () => {
+    class MinimalResolver {
+      async resolveByTag() {
+        return [];
+      }
+    }
 
-    expect(() =>
-      setup.validateDeps('ExecutionService', baseLogger, {
-        runner: { value: 42, isFunction: true },
-      })
-    ).toThrow(InvalidArgumentError);
+    class MinimalEntityManager {
+      createEntityInstance() {
+        return { id: 'entity-1' };
+      }
+    }
 
-    expect(baseLogger.messages.error[0].message).toBe(
-      "Dependency 'ExecutionService: runner' must be a function, but got number."
-    );
+    class MinimalDispatcher {
+      dispatch() {}
+    }
 
-    expect(() => setup.validateDeps('OptionalService', baseLogger)).not.toThrow();
+    class MinimalEventDispatchService {
+      dispatchWithLogging() {}
+    }
+
+    class MinimalScopeRegistry {
+      initialize() {}
+    }
+
+    it('constructs successfully when all collaborators satisfy assertions', () => {
+      const initializer = new WorldInitializer({
+        entityManager: new MinimalEntityManager(),
+        worldContext: {},
+        gameDataRepository: {
+          getWorld() {
+            return {};
+          },
+          getEntityInstanceDefinition() {
+            return {};
+          },
+          get() {
+            return {};
+          },
+        },
+        validatedEventDispatcher: new MinimalDispatcher(),
+        eventDispatchService: new MinimalEventDispatchService(),
+        logger: new RecordingLogger(),
+        scopeRegistry: new MinimalScopeRegistry(),
+        config: {},
+      });
+
+      expect(initializer.getWorldContext()).toEqual({});
+    });
+
+    it('raises WorldInitializationError when repository is missing required methods', () => {
+      expect(() =>
+        new WorldInitializer({
+          entityManager: new MinimalEntityManager(),
+          worldContext: {},
+          gameDataRepository: {
+            getWorld() {
+              return {};
+            },
+          },
+          validatedEventDispatcher: new MinimalDispatcher(),
+          eventDispatchService: new MinimalEventDispatchService(),
+          logger: new RecordingLogger(),
+          scopeRegistry: new MinimalScopeRegistry(),
+          config: {},
+        })
+      ).toThrow(WorldInitializationError);
+    });
   });
 });
