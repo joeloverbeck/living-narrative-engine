@@ -159,6 +159,30 @@ describe('Trace Routes', () => {
     expect(fs.writeFile).not.toHaveBeenCalled();
   });
 
+  it('should block batch writes that resolve outside the project directory', async () => {
+    const response = await request(app).post('/api/traces/write-batch').send({
+      outputDirectory: '../../outside',
+      traces: [{ traceData: { foo: 'bar' }, fileName: 'escape.json' }],
+    });
+
+    expect(response.status).toBe(403);
+    expect(response.body).toMatchObject({ success: false, error: 'Invalid output path' });
+    expect(fs.mkdir).not.toHaveBeenCalled();
+    expect(fs.writeFile).not.toHaveBeenCalled();
+  });
+
+  it('should block batch writes targeting absolute directories', async () => {
+    const response = await request(app).post('/api/traces/write-batch').send({
+      outputDirectory: '/tmp/malicious',
+      traces: [{ traceData: { foo: 'bar' }, fileName: 'escape.json' }],
+    });
+
+    expect(response.status).toBe(403);
+    expect(response.body).toMatchObject({ success: false, error: 'Invalid output path' });
+    expect(fs.mkdir).not.toHaveBeenCalled();
+    expect(fs.writeFile).not.toHaveBeenCalled();
+  });
+
   it('should return 500 when file writing fails', async () => {
     fs.writeFile.mockRejectedValueOnce(new Error('disk failure'));
 
