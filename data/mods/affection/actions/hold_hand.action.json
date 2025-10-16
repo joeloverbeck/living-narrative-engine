@@ -8,7 +8,9 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": []
+    "actor": ["affection:holding_hand"],
+    "target": ["affection:hand_held"],
+    "primary": ["affection:hand_held"]
   },
   "template": "hold {target}'s hand",
   "prerequisites": [],

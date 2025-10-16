@@ -8,7 +8,13 @@
     "actor": ["positioning:closeness"]
   },
   "template": "warm {target}'s hands between yours",
-  "prerequisites": [],
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "affection:actors-are-holding-hands"
+      }
+    }
+  ],
   "visual": {
     "backgroundColor": "#6a1b9a",
     "textColor": "#f3e5f5",

@@ -5,6 +5,7 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
 import handleSqueezeHandReassuringlyRule from '../../../../data/mods/affection/rules/handle_squeeze_hand_reassuringly.rule.json';
 import eventIsActionSqueezeHandReassuringly from '../../../../data/mods/affection/conditions/event-is-action-squeeze-hand-reassuringly.condition.json';
 
@@ -33,6 +34,18 @@ describe('affection:squeeze_hand_reassuringly action integration', () => {
       location: 'garden',
     });
 
+    scenario.actor.components['affection:holding_hand'] = {
+      held_entity_id: scenario.target.id,
+      initiated: true,
+    };
+    scenario.target.components['affection:hand_held'] = {
+      holding_entity_id: scenario.actor.id,
+      consented: true,
+    };
+
+    const room = ModEntityScenarios.createRoom('garden', 'Garden');
+    testFixture.reset([room, scenario.actor, scenario.target]);
+
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
     const successEvent = testFixture.events.find(
@@ -53,5 +66,21 @@ describe('affection:squeeze_hand_reassuringly action integration', () => {
     );
     expect(perceptibleEvent.payload.locationId).toBe('garden');
     expect(perceptibleEvent.payload.targetId).toBe(scenario.target.id);
+
+    const actorInstance = testFixture.entityManager.getEntityInstance(
+      scenario.actor.id
+    );
+    const targetInstance = testFixture.entityManager.getEntityInstance(
+      scenario.target.id
+    );
+
+    expect(actorInstance.components['affection:holding_hand']).toEqual({
+      held_entity_id: scenario.target.id,
+      initiated: true,
+    });
+    expect(targetInstance.components['affection:hand_held']).toEqual({
+      holding_entity_id: scenario.actor.id,
+      consented: true,
+    });
   });
 });

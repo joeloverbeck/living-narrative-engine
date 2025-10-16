@@ -5,6 +5,7 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
 import holdHandRule from '../../../../data/mods/affection/rules/handle_hold_hand.rule.json';
 import eventIsActionHoldHand from '../../../../data/mods/affection/conditions/event-is-action-hold-hand.condition.json';
 
@@ -53,6 +54,22 @@ describe('affection:hold_hand action integration', () => {
     expect(turnEndedEvent).toBeDefined();
     expect(turnEndedEvent.payload.entityId).toBe(scenario.actor.id);
     expect(turnEndedEvent.payload.success).toBe(true);
+
+    const actorInstance = testFixture.entityManager.getEntityInstance(
+      scenario.actor.id
+    );
+    const targetInstance = testFixture.entityManager.getEntityInstance(
+      scenario.target.id
+    );
+
+    expect(actorInstance.components['affection:holding_hand']).toEqual({
+      held_entity_id: scenario.target.id,
+      initiated: true,
+    });
+    expect(targetInstance.components['affection:hand_held']).toEqual({
+      holding_entity_id: scenario.actor.id,
+      consented: true,
+    });
   });
 
   it('formats message correctly with different names', async () => {
@@ -91,40 +108,75 @@ describe('affection:hold_hand action integration', () => {
     expect(perceptibleEvent.payload.locationId).toBe('garden');
   });
 
-  it('handles multiple close partners correctly', async () => {
-    const scenario = testFixture.createMultiActorScenario(
-      ['Alice', 'Bob', 'Charlie'],
-      {
-        location: 'room1',
-      }
-    );
+  it('cleans up stale hand-holding components before setting new state', async () => {
+    const scenario = testFixture.createCloseActors(['Iris', 'Julian'], {
+      location: 'sunroom',
+    });
 
-    // First hold Bob's hand
+    scenario.actor.components['affection:hand_held'] = {
+      holding_entity_id: 'old_partner',
+      consented: false,
+    };
+    scenario.target.components['affection:holding_hand'] = {
+      held_entity_id: 'old_partner',
+      initiated: false,
+    };
+
+    const room = ModEntityScenarios.createRoom('sunroom', 'Sun Room');
+    testFixture.reset([room, scenario.actor, scenario.target]);
+
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
-    let perceptibleEvent = testFixture.events.find(
-      (e) => e.eventType === 'core:perceptible_event'
+    const actorInstance = testFixture.entityManager.getEntityInstance(
+      scenario.actor.id
     );
-    expect(perceptibleEvent.payload.descriptionText).toBe(
-      "Alice reaches and holds Bob's hand."
+    const targetInstance = testFixture.entityManager.getEntityInstance(
+      scenario.target.id
     );
 
-    // Clear events for the next test
-    testFixture.events.length = 0;
+    expect(actorInstance.components['affection:holding_hand']).toEqual({
+      held_entity_id: scenario.target.id,
+      initiated: true,
+    });
+    expect(actorInstance.components['affection:hand_held']).toBeUndefined();
+    expect(targetInstance.components['affection:holding_hand']).toBeUndefined();
+    expect(targetInstance.components['affection:hand_held']).toEqual({
+      holding_entity_id: scenario.actor.id,
+      consented: true,
+    });
+  });
 
-    // Then hold Charlie's hand
-    await testFixture.executeAction(
+  it('prevents repeated attempts to hold hands while already connected', async () => {
+    const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
+      location: 'room1',
+    });
+
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
+
+    const initialEventCount = testFixture.events.length;
+    const result = await testFixture.executeAction(
       scenario.actor.id,
-      scenario.observers[0].id
+      scenario.target.id
     );
 
-    perceptibleEvent = testFixture.events.find(
-      (e) => e.eventType === 'core:perceptible_event'
+    expect(result).toMatchObject({ blocked: true });
+    expect(testFixture.events.length).toBe(initialEventCount);
+
+    const actorInstance = testFixture.entityManager.getEntityInstance(
+      scenario.actor.id
     );
-    expect(perceptibleEvent).toBeDefined();
-    expect(perceptibleEvent.payload.descriptionText).toBe(
-      "Alice reaches and holds Charlie's hand."
+    const targetInstance = testFixture.entityManager.getEntityInstance(
+      scenario.target.id
     );
+
+    expect(actorInstance.components['affection:holding_hand']).toEqual({
+      held_entity_id: scenario.target.id,
+      initiated: true,
+    });
+    expect(targetInstance.components['affection:hand_held']).toEqual({
+      holding_entity_id: scenario.actor.id,
+      consented: true,
+    });
   });
 
   it('action only fires for correct action ID', async () => {
