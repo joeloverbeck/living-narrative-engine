@@ -1,0 +1,20 @@
+{
+    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+    "id": "anatomy:human_eye_gray_hooded",
+    "description": "A human eye with gray irises and hooded shape",
+    "components": {
+      "anatomy:part": {
+        "subType": "eye"
+      },
+      "descriptors:color_basic": {
+        "color": "gray"
+      },
+      "descriptors:shape_eye": {
+        "shape": "hooded"
+      },
+      "core:name": {
+        "text": "eye"
+      }
+    }
+  }
+  
