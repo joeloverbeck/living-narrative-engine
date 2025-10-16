@@ -16,6 +16,7 @@ import { SimpleEntityManager } from '../../../common/entities/index.js';
 
 // Import handlers for manual creation comparison
 import QueryComponentHandler from '../../../../src/logic/operationHandlers/queryComponentHandler.js';
+import QueryComponentsHandler from '../../../../src/logic/operationHandlers/queryComponentsHandler.js';
 import GetNameHandler from '../../../../src/logic/operationHandlers/getNameHandler.js';
 import GetTimestampHandler from '../../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchEventHandler from '../../../../src/logic/operationHandlers/dispatchEventHandler.js';
@@ -83,6 +84,11 @@ describe('ModTestHandlerFactory Migration Validation', () => {
 
     return {
       QUERY_COMPONENT: new QueryComponentHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      QUERY_COMPONENTS: new QueryComponentsHandler({
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,
