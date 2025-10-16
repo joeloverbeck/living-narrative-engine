@@ -549,7 +549,11 @@
       "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/items/putInContainerRuleExecution.test.js tests/integration/mods/items/putInContainerActionDiscovery.test.js --no-coverage --silent)",
       "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/items/putInContainerActionDiscovery.test.js --no-coverage --silent)",
       "Bash(NODE_ENV=test npm run test:integration -- tests/integration/mods/items/putInContainerRuleExecution.test.js --no-coverage --silent)",
-      "Bash(NODE_ENV=test npm run test:integration:*)"
+      "Bash(NODE_ENV=test npm run test:integration:*)",
+      "Bash(npm run validate:mod:positioning:*)",
+      "Bash(npm run:*)",
+      "Bash(NODE_ENV=test npm run test:performance:*)",
+      "Read(///**)"
     ],
     "deny": [],
     "ask": []
