@@ -4,6 +4,7 @@
  */
 
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
+import QueryComponentsHandler from '../../../src/logic/operationHandlers/queryComponentsHandler.js';
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
@@ -109,6 +110,11 @@ export class ModTestHandlerFactory {
         logger,
         safeEventDispatcher: safeDispatcher,
       }),
+      QUERY_COMPONENTS: new QueryComponentsHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
       GET_NAME: new GetNameHandler({
         entityManager,
         logger,
@@ -165,6 +171,57 @@ export class ModTestHandlerFactory {
     return {
       ...baseHandlers,
       ADD_COMPONENT: new AddComponentHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+    };
+  }
+
+  /**
+   * Creates handlers that support adding and removing components.
+   *
+   * @description Extends the standard handler set with ADD_COMPONENT and
+   * REMOVE_COMPONENT operations for rules that mutate state.
+   * @param {object} entityManager - Entity manager instance
+   * @param {object} eventBus - Event bus instance
+   * @param {object} logger - Logger instance
+   * @returns {object} Handlers object with component mutation support
+   * @throws {Error} If any required parameter is missing or invalid
+   */
+  static createHandlersWithComponentMutations(
+    entityManager,
+    eventBus,
+    logger
+  ) {
+    this.#validateDependencies(
+      entityManager,
+      eventBus,
+      logger,
+      'createHandlersWithComponentMutations'
+    );
+
+    const baseHandlers = this.createStandardHandlers(
+      entityManager,
+      eventBus,
+      logger
+    );
+
+    const safeDispatcher = {
+      dispatch: jest.fn((eventType, payload) => {
+        eventBus.dispatch(eventType, payload);
+        return Promise.resolve(true);
+      }),
+    };
+
+    return {
+      ...baseHandlers,
+      ADD_COMPONENT: new AddComponentHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      REMOVE_COMPONENT: new RemoveComponentHandler({
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,
@@ -385,7 +442,7 @@ export class ModTestHandlerFactory {
       violence: this.createStandardHandlers.bind(this),
       sex: this.createStandardHandlers.bind(this),
       intimacy: this.createStandardHandlers.bind(this),
-      affection: this.createStandardHandlers.bind(this),
+      affection: this.createHandlersWithComponentMutations.bind(this),
     };
 
     return (

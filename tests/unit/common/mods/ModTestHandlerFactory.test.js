@@ -62,6 +62,7 @@ describe('ModTestHandlerFactory', () => {
       // Verify all expected handlers are present
       const expectedHandlers = [
         'QUERY_COMPONENT',
+        'QUERY_COMPONENTS',
         'GET_NAME',
         'GET_TIMESTAMP',
         'DISPATCH_PERCEPTIBLE_EVENT',
@@ -77,7 +78,7 @@ describe('ModTestHandlerFactory', () => {
       });
 
       // Verify correct number of handlers
-      expect(Object.keys(handlers)).toHaveLength(8);
+      expect(Object.keys(handlers)).toHaveLength(9);
     });
 
     it('should throw error when entityManager is missing', () => {
@@ -215,6 +216,7 @@ describe('ModTestHandlerFactory', () => {
       // Should have all standard handlers plus ADD_COMPONENT
       const expectedHandlers = [
         'QUERY_COMPONENT',
+        'QUERY_COMPONENTS',
         'GET_NAME',
         'GET_TIMESTAMP',
         'DISPATCH_PERCEPTIBLE_EVENT',
@@ -231,7 +233,7 @@ describe('ModTestHandlerFactory', () => {
       });
 
       // Verify correct number of handlers (8 standard + 1 ADD_COMPONENT)
-      expect(Object.keys(handlers)).toHaveLength(9);
+      expect(Object.keys(handlers)).toHaveLength(10);
     });
 
     it('should configure ADD_COMPONENT handler correctly', () => {
@@ -254,6 +256,60 @@ describe('ModTestHandlerFactory', () => {
         );
       }).toThrow(
         'ModTestHandlerFactory.createHandlersWithAddComponent: entityManager is required'
+      );
+    });
+  });
+
+  describe('createHandlersWithComponentMutations', () => {
+    it('should include standard handlers plus add/remove component support', () => {
+      const handlers = ModTestHandlerFactory.createHandlersWithComponentMutations(
+        mockEntityManager,
+        mockEventBus,
+        mockLogger
+      );
+
+      const expectedHandlers = [
+        'QUERY_COMPONENT',
+        'QUERY_COMPONENTS',
+        'GET_NAME',
+        'GET_TIMESTAMP',
+        'DISPATCH_PERCEPTIBLE_EVENT',
+        'DISPATCH_EVENT',
+        'END_TURN',
+        'SET_VARIABLE',
+        'LOG_MESSAGE',
+        'ADD_COMPONENT',
+        'REMOVE_COMPONENT',
+      ];
+
+      expectedHandlers.forEach((handlerKey) => {
+        expect(handlers).toHaveProperty(handlerKey);
+        expect(handlers[handlerKey]).toBeDefined();
+      });
+
+      expect(Object.keys(handlers)).toHaveLength(11);
+    });
+
+    it('should configure mutation handlers with executable methods', () => {
+      const handlers = ModTestHandlerFactory.createHandlersWithComponentMutations(
+        mockEntityManager,
+        mockEventBus,
+        mockLogger
+      );
+
+      expect(typeof handlers.ADD_COMPONENT.execute).toBe('function');
+      expect(typeof handlers.REMOVE_COMPONENT.execute).toBe('function');
+    });
+
+    it('should throw error when dependencies are missing', () => {
+      expect(() => {
+        ModTestHandlerFactory.createHandlersWithComponentMutations(
+          null,
+          mockEventBus,
+          mockLogger
+        );
+      }).toThrow(
+        'ModTestHandlerFactory.createHandlersWithComponentMutations: entityManager is required'
       );
     });
   });
@@ -354,8 +410,8 @@ describe('ModTestHandlerFactory', () => {
         expect(handlers[handlerKey]).toBeDefined();
       });
 
-      // Verify correct total number of handlers (8 standard + 6 positioning)
-      expect(Object.keys(handlers)).toHaveLength(14);
+      // Verify correct total number of handlers (9 standard + 6 positioning)
+      expect(Object.keys(handlers)).toHaveLength(15);
     });
 
     it('should configure all handlers with execute functions', () => {
@@ -552,8 +608,18 @@ describe('ModTestHandlerFactory', () => {
       expect(handlers.UNLOCK_MOVEMENT).toBeDefined();
       expect(handlers.MODIFY_ARRAY_FIELD).toBeDefined();
 
-      // Should have 8 standard + 6 positioning-specific handlers
-      expect(Object.keys(handlers)).toHaveLength(14);
+      // Should have 9 standard + 6 positioning-specific handlers
+      expect(Object.keys(handlers)).toHaveLength(15);
+    });
+
+    it('should return createHandlersWithComponentMutations for affection', () => {
+      const factory =
+        ModTestHandlerFactory.getHandlerFactoryForCategory('affection');
+      const handlers = factory(mockEntityManager, mockEventBus, mockLogger);
+
+      expect(handlers.ADD_COMPONENT).toBeDefined();
+      expect(handlers.REMOVE_COMPONENT).toBeDefined();
+      expect(Object.keys(handlers)).toHaveLength(11);
     });
 
     it('should return createStandardHandlers for other categories', () => {
@@ -572,7 +638,7 @@ describe('ModTestHandlerFactory', () => {
         expect(handlers.UNLOCK_MOVEMENT).toBeUndefined();
         expect(handlers.MODIFY_ARRAY_FIELD).toBeUndefined();
 
-        expect(Object.keys(handlers)).toHaveLength(8); // 8 standard handlers only
+        expect(Object.keys(handlers)).toHaveLength(9); // 9 standard handlers only
       });
     });
 
@@ -587,7 +653,7 @@ describe('ModTestHandlerFactory', () => {
         // Unknown categories get standard handlers without positioning-specific ones
         expect(handlers.ADD_COMPONENT).toBeUndefined();
         expect(handlers.ADD_PERCEPTION_LOG_ENTRY).toBeUndefined();
-        expect(Object.keys(handlers)).toHaveLength(8); // 8 standard handlers
+        expect(Object.keys(handlers)).toHaveLength(9); // 9 standard handlers
       });
     });
 

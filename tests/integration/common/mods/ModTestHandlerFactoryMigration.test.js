@@ -566,8 +566,8 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         logger
       );
 
-      // Factory should create exactly 8 standard handlers
-      expect(Object.keys(factoryHandlers)).toHaveLength(8);
+      // Factory should create exactly 9 standard handlers
+      expect(Object.keys(factoryHandlers)).toHaveLength(9);
 
       // Each handler should be properly configured
       Object.values(factoryHandlers).forEach((handler) => {

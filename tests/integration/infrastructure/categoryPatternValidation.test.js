@@ -68,10 +68,12 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
 
       // Exercise category should use standard handlers
       expect(handlers).toHaveProperty('QUERY_COMPONENT');
+      expect(handlers).toHaveProperty('QUERY_COMPONENTS');
       expect(handlers).toHaveProperty('GET_NAME');
       expect(handlers).toHaveProperty('GET_TIMESTAMP');
       expect(handlers).toHaveProperty('DISPATCH_PERCEPTIBLE_EVENT');
       expect(handlers).toHaveProperty('DISPATCH_EVENT');
+      expect(handlers).toHaveProperty('QUERY_COMPONENTS');
       expect(handlers).toHaveProperty('END_TURN');
       expect(handlers).toHaveProperty('SET_VARIABLE');
       expect(handlers).toHaveProperty('LOG_MESSAGE');
@@ -80,7 +82,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       expect(handlers).not.toHaveProperty('ADD_COMPONENT');
 
       // Verify handler count matches standard pattern
-      expect(Object.keys(handlers)).toHaveLength(8);
+      expect(Object.keys(handlers)).toHaveLength(9);
     });
 
     it('should validate exercise category entity patterns', () => {
@@ -207,11 +209,12 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       // Violence category should use standard handlers
       expect(handlers).toHaveProperty('DISPATCH_EVENT');
       expect(handlers).toHaveProperty('DISPATCH_PERCEPTIBLE_EVENT');
+      expect(handlers).toHaveProperty('QUERY_COMPONENTS');
       expect(handlers).toHaveProperty('GET_NAME');
       expect(handlers).toHaveProperty('SET_VARIABLE');
       expect(handlers).not.toHaveProperty('ADD_COMPONENT');
 
-      expect(Object.keys(handlers)).toHaveLength(8);
+      expect(Object.keys(handlers)).toHaveLength(9);
     });
 
     it('should validate violence category entity patterns', () => {
@@ -283,18 +286,19 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
   });
 
   describe('Affection Category Pattern Validation', () => {
-    it('should validate affection category uses standard handlers', () => {
+    it('should validate affection category uses component mutation handlers', () => {
       const factoryMethod =
         ModTestHandlerFactory.getHandlerFactoryForCategory('affection');
       const handlers = factoryMethod(entityManager, eventBus, logger);
 
-      // Affection category should use standard handlers
+      // Affection category now supports component mutation operations
       expect(handlers).toHaveProperty('DISPATCH_PERCEPTIBLE_EVENT');
       expect(handlers).toHaveProperty('GET_NAME');
       expect(handlers).toHaveProperty('END_TURN');
-      expect(handlers).not.toHaveProperty('ADD_COMPONENT');
+      expect(handlers).toHaveProperty('ADD_COMPONENT');
+      expect(handlers).toHaveProperty('REMOVE_COMPONENT');
 
-      expect(Object.keys(handlers)).toHaveLength(8);
+      expect(Object.keys(handlers)).toHaveLength(11);
     });
 
     it('should validate affection category entity patterns', () => {
@@ -384,7 +388,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       expect(handlers).toHaveProperty('SET_VARIABLE');
       expect(handlers).not.toHaveProperty('ADD_COMPONENT');
 
-      expect(Object.keys(handlers)).toHaveLength(8);
+      expect(Object.keys(handlers)).toHaveLength(9);
     });
 
     it('should validate sex category entity patterns', () => {
@@ -473,10 +477,10 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       expect(handlers).toHaveProperty('DISPATCH_PERCEPTIBLE_EVENT');
       expect(handlers).toHaveProperty('END_TURN');
 
-      // Positioning uses extended handler set with perception logging (14 handlers instead of 8)
-      // Includes: 8 standard + ADD_COMPONENT, ADD_PERCEPTION_LOG_ENTRY, REMOVE_COMPONENT,
+      // Positioning uses extended handler set with perception logging (15 handlers instead of 9)
+      // Includes: 9 standard + ADD_COMPONENT, ADD_PERCEPTION_LOG_ENTRY, REMOVE_COMPONENT,
       // LOCK_MOVEMENT, UNLOCK_MOVEMENT, MODIFY_ARRAY_FIELD
-      expect(Object.keys(handlers)).toHaveLength(14);
+      expect(Object.keys(handlers)).toHaveLength(15);
 
       // Verify ADD_COMPONENT is functional
       expect(typeof handlers.ADD_COMPONENT.execute).toBe('function');
@@ -652,15 +656,25 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         };
       });
 
-      // Standard categories should have 8 handlers
-      ['exercise', 'violence', 'affection', 'sex'].forEach((category) => {
-        expect(factoryResults[category].handlerCount).toBe(8);
-        expect(factoryResults[category].hasAddComponent).toBe(false);
-        expect(factoryResults[category].commonHandlers).toBe(true);
-      });
+      const expectedHandlerConfig = {
+        exercise: { handlerCount: 9, hasAddComponent: false },
+        violence: { handlerCount: 9, hasAddComponent: false },
+        sex: { handlerCount: 9, hasAddComponent: false },
+        affection: { handlerCount: 11, hasAddComponent: true },
+      };
 
-      // Positioning should have 14 handlers (includes ADD_COMPONENT and perception logging handlers)
-      expect(factoryResults.positioning.handlerCount).toBe(14);
+      Object.entries(expectedHandlerConfig).forEach(
+        ([category, { handlerCount, hasAddComponent }]) => {
+          expect(factoryResults[category].handlerCount).toBe(handlerCount);
+          expect(factoryResults[category].hasAddComponent).toBe(
+            hasAddComponent
+          );
+          expect(factoryResults[category].commonHandlers).toBe(true);
+        }
+      );
+
+      // Positioning should have 15 handlers (includes ADD_COMPONENT and perception logging handlers)
+      expect(factoryResults.positioning.handlerCount).toBe(15);
       expect(factoryResults.positioning.hasAddComponent).toBe(true);
       expect(factoryResults.positioning.commonHandlers).toBe(true);
     });
@@ -844,12 +858,13 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
           ModTestHandlerFactory.getHandlerFactoryForCategory(category);
         const handlers = factoryMethod(entityManager, eventBus, logger);
 
-        // Unknown categories should default to standard handlers (8 handlers)
-        expect(Object.keys(handlers)).toHaveLength(8);
+        // Unknown categories should default to standard handlers (9 handlers)
+        expect(Object.keys(handlers)).toHaveLength(9);
         expect(handlers).not.toHaveProperty('ADD_COMPONENT');
 
         // Should have all standard handlers
         expect(handlers).toHaveProperty('QUERY_COMPONENT');
+        expect(handlers).toHaveProperty('QUERY_COMPONENTS');
         expect(handlers).toHaveProperty('GET_NAME');
         expect(handlers).toHaveProperty('GET_TIMESTAMP');
         expect(handlers).toHaveProperty('DISPATCH_PERCEPTIBLE_EVENT');
@@ -871,7 +886,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
 
         const handlers = factoryMethod(entityManager, eventBus, logger);
         expect(handlers).toBeDefined();
-        expect(Object.keys(handlers)).toHaveLength(8); // Default to standard handlers
+        expect(Object.keys(handlers)).toHaveLength(9); // Default to standard handlers
       });
     });
   });
