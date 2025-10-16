@@ -521,6 +521,48 @@ describe('thematic-direction-main', () => {
 
       consoleErrorSpy.mockRestore();
     });
+
+    it('should log unexpected errors from the application bootstrap sequence', async () => {
+      // Force deferred initialization so we can patch the app before it runs
+      Object.defineProperty(document, 'readyState', {
+        configurable: true,
+        get: jest.fn(() => 'loading'),
+      });
+
+      const addEventListenerSpy = jest.spyOn(document, 'addEventListener');
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+
+      let module;
+
+      await jest.isolateModulesAsync(async () => {
+        module = await import('../../src/thematic-direction-main.js');
+      });
+
+      const unexpectedError = new Error('Unexpected bootstrap failure');
+      const initializeSpy = jest
+        .spyOn(module.ThematicDirectionApp.prototype, 'initialize')
+        .mockImplementation(() => {
+          throw unexpectedError;
+        });
+
+      const domContentLoadedHandler = addEventListenerSpy.mock.calls.find(
+        ([event]) => event === 'DOMContentLoaded'
+      )[1];
+
+      // Trigger the deferred initialization
+      domContentLoadedHandler();
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Failed to initialize thematic direction generator:',
+        unexpectedError
+      );
+
+      initializeSpy.mockRestore();
+      consoleErrorSpy.mockRestore();
+      addEventListenerSpy.mockRestore();
+    });
   });
 
   describe('Export verification', () => {
