@@ -18,6 +18,7 @@ import UnlockMovementHandler from '../../../src/logic/operationHandlers/unlockMo
 import LockMovementHandler from '../../../src/logic/operationHandlers/lockMovementHandler.js';
 import LogHandler from '../../../src/logic/operationHandlers/logHandler.js';
 import ModifyArrayFieldHandler from '../../../src/logic/operationHandlers/modifyArrayFieldHandler.js';
+import ModifyComponentHandler from '../../../src/logic/operationHandlers/modifyComponentHandler.js';
 import TransferItemHandler from '../../../src/logic/operationHandlers/transferItemHandler.js';
 import ValidateInventoryCapacityHandler from '../../../src/logic/operationHandlers/validateInventoryCapacityHandler.js';
 import DropItemAtLocationHandler from '../../../src/logic/operationHandlers/dropItemAtLocationHandler.js';
@@ -169,7 +170,7 @@ export class ModTestHandlerFactory {
       }),
     };
 
-    return {
+    const handlers = {
       ...baseHandlers,
       ADD_COMPONENT: new AddComponentHandler({
         entityManager,
@@ -177,6 +178,8 @@ export class ModTestHandlerFactory {
         safeEventDispatcher: safeDispatcher,
       }),
     };
+
+    return handlers;
   }
 
   /**
@@ -560,6 +563,11 @@ export class ModTestHandlerFactory {
         safeEventDispatcher: safeDispatcher,
       }),
       MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      MODIFY_COMPONENT: new ModifyComponentHandler({
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,

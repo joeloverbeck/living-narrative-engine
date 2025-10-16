@@ -30,6 +30,8 @@ import RemoveComponentHandler from '../../../../src/logic/operationHandlers/remo
 import UnlockMovementHandler from '../../../../src/logic/operationHandlers/unlockMovementHandler.js';
 import LockMovementHandler from '../../../../src/logic/operationHandlers/lockMovementHandler.js';
 import ModifyArrayFieldHandler from '../../../../src/logic/operationHandlers/modifyArrayFieldHandler.js';
+import ModifyComponentHandler from '../../../../src/logic/operationHandlers/modifyComponentHandler.js';
+import AtomicModifyComponentHandler from '../../../../src/logic/operationHandlers/atomicModifyComponentHandler.js';
 
 describe('ModTestHandlerFactory Migration Validation', () => {
   let entityManager;
@@ -222,6 +224,16 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         safeEventDispatcher: safeDispatcher,
       }),
       MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      MODIFY_COMPONENT: new ModifyComponentHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      ATOMIC_MODIFY_COMPONENT: new AtomicModifyComponentHandler({
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,
