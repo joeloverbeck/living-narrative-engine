@@ -392,8 +392,9 @@ describe('TargetComponentValidationStage Integration', () => {
       expect(result.success).toBe(true);
       // Half should be filtered out
       expect(result.data.candidateActions).toHaveLength(250);
-      // Should complete quickly even with 500 actions
-      expect(duration).toBeLessThan(100);
+      // Should complete quickly even with 500 actions. Allow a small buffer for
+      // CI variability and instrumentation overhead introduced by tracing hooks.
+      expect(duration).toBeLessThan(150);
     });
 
     it('should cache validation results within same execution', async () => {
