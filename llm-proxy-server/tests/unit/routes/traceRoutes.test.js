@@ -159,6 +159,39 @@ describe('Trace Routes', () => {
     expect(fs.writeFile).not.toHaveBeenCalled();
   });
 
+  it('should treat Windows-style absolute paths as invalid during single writes', async () => {
+    const originalIsAbsolute = path.isAbsolute;
+    const isAbsoluteSpy = jest
+      .spyOn(path, 'isAbsolute')
+      .mockImplementation((inputPath, ...rest) => {
+        if (
+          typeof inputPath === 'string' &&
+          inputPath.includes('C:/windows-breach')
+        ) {
+          return true;
+        }
+        return originalIsAbsolute(inputPath, ...rest);
+      });
+
+    try {
+      const response = await request(app).post('/api/traces/write').send({
+        traceData: { session: 'windows' },
+        fileName: 'trace.json',
+        outputDirectory: 'C:/windows-breach',
+      });
+
+      expect(response.status).toBe(403);
+      expect(response.body).toMatchObject({
+        success: false,
+        error: 'Invalid output path',
+      });
+      expect(fs.mkdir).not.toHaveBeenCalled();
+      expect(fs.writeFile).not.toHaveBeenCalled();
+    } finally {
+      isAbsoluteSpy.mockRestore();
+    }
+  });
+
   it('should block batch writes that resolve outside the project directory', async () => {
     const response = await request(app).post('/api/traces/write-batch').send({
       outputDirectory: '../../outside',
@@ -181,6 +214,40 @@ describe('Trace Routes', () => {
     expect(response.body).toMatchObject({ success: false, error: 'Invalid output path' });
     expect(fs.mkdir).not.toHaveBeenCalled();
     expect(fs.writeFile).not.toHaveBeenCalled();
+  });
+
+  it('should reject Windows-style absolute directories during batch writes', async () => {
+    const originalIsAbsolute = path.isAbsolute;
+    const isAbsoluteSpy = jest
+      .spyOn(path, 'isAbsolute')
+      .mockImplementation((inputPath, ...rest) => {
+        if (typeof inputPath === 'string' && inputPath.includes('C:/batch-windows')) {
+          return true;
+        }
+        return originalIsAbsolute(inputPath, ...rest);
+      });
+
+    try {
+      const response = await request(app).post('/api/traces/write-batch').send({
+        outputDirectory: 'C:/batch-windows',
+        traces: [
+          {
+            traceData: { foo: 'bar' },
+            fileName: 'nested.json',
+          },
+        ],
+      });
+
+      expect(response.status).toBe(403);
+      expect(response.body).toMatchObject({
+        success: false,
+        error: 'Invalid output path',
+      });
+      expect(fs.mkdir).not.toHaveBeenCalled();
+      expect(fs.writeFile).not.toHaveBeenCalled();
+    } finally {
+      isAbsoluteSpy.mockRestore();
+    }
   });
 
   it('should return 500 when file writing fails', async () => {
