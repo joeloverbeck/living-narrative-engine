@@ -25,6 +25,240 @@ describe('CacheService - Coverage Tests', () => {
     jest.useRealTimers();
   });
 
+  describe('constructor validation and base behaviors', () => {
+    it('throws when logger dependency is missing', () => {
+      try {
+        new CacheService();
+        throw new Error('Expected constructor to throw');
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+        expect(error.message).toBe('CacheService: logger is required.');
+      }
+    });
+
+    it('uses default configuration when options are not provided', () => {
+      jest.useFakeTimers();
+      const cacheService = new CacheService(mockLogger);
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'CacheService: Initialized with optimized configuration',
+        expect.objectContaining({
+          maxSize: 1000,
+          defaultTtl: 300000,
+          maxMemoryBytes: expect.any(Number),
+          enableAutoCleanup: true,
+        })
+      );
+
+      const initialStats = cacheService.getStats();
+      expect(initialStats.hitRate).toBe('0%');
+      expect(initialStats.efficiency.memoryEvictionRate).toBe('0%');
+      expect(initialStats.efficiency.expirationRate).toBe('0%');
+
+      cacheService.cleanup();
+      jest.useRealTimers();
+    });
+
+    it('covers cache miss, hit, and expiration paths of get()', () => {
+      jest.useFakeTimers({ now: 0 });
+      const cacheService = new CacheService(mockLogger, {
+        maxSize: 5,
+        defaultTtl: 100,
+        enableAutoCleanup: false,
+      });
+
+      mockLogger.debug.mockClear();
+
+      expect(cacheService.get('missing')).toBeUndefined();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "CacheService: Cache miss for key 'missing'"
+      );
+
+      cacheService.set('key1', 'value1', 50);
+      expect(cacheService.get('key1')).toBe('value1');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "CacheService: Cache hit for key 'key1'"
+      );
+
+      jest.setSystemTime(1000);
+      expect(cacheService.get('key1')).toBeUndefined();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "CacheService: Cache entry expired for key 'key1'"
+      );
+
+      jest.useRealTimers();
+      cacheService.cleanup();
+    });
+  });
+
+  describe('getOrLoad coverage', () => {
+    it('returns cached value without invoking loader when entry exists', async () => {
+      const cacheService = new CacheService(mockLogger, {
+        maxSize: 5,
+        defaultTtl: 1000,
+        enableAutoCleanup: false,
+      });
+
+      cacheService.set('preloaded', 'cached-value');
+      const loader = jest.fn().mockResolvedValue('should-not-be-used');
+
+      const result = await cacheService.getOrLoad('preloaded', loader, 5000);
+
+      expect(result).toBe('cached-value');
+      expect(loader).not.toHaveBeenCalled();
+
+      cacheService.cleanup();
+    });
+
+    it('loads missing values and persists them with provided ttl', async () => {
+      const cacheService = new CacheService(mockLogger, {
+        maxSize: 5,
+        defaultTtl: 1000,
+        enableAutoCleanup: false,
+      });
+
+      const loader = jest.fn().mockResolvedValue('fresh-value');
+      const setSpy = jest.spyOn(cacheService, 'set');
+
+      const result = await cacheService.getOrLoad('needs-load', loader, 777);
+
+      expect(result).toBe('fresh-value');
+      expect(loader).toHaveBeenCalledTimes(1);
+      expect(setSpy).toHaveBeenCalledWith('needs-load', 'fresh-value', 777);
+      expect(cacheService.get('needs-load')).toBe('fresh-value');
+
+      cacheService.cleanup();
+    });
+
+    it('logs and rethrows loader errors', async () => {
+      const cacheService = new CacheService(mockLogger, {
+        maxSize: 5,
+        defaultTtl: 1000,
+        enableAutoCleanup: false,
+      });
+
+      const error = new Error('load failure');
+      const loader = jest.fn().mockRejectedValue(error);
+
+      await expect(cacheService.getOrLoad('fail', loader)).rejects.toThrow(
+        'load failure'
+      );
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        "CacheService: Error loading value for key 'fail'",
+        error
+      );
+
+      cacheService.cleanup();
+    });
+  });
+
+  describe('invalidate, stats, and presence utilities', () => {
+    it('returns false when invalidating a missing key', () => {
+      const cacheService = new CacheService(mockLogger, {
+        maxSize: 3,
+        defaultTtl: 1000,
+        enableAutoCleanup: false,
+      });
+
+      mockLogger.info.mockClear();
+      expect(cacheService.invalidate('absent')).toBe(false);
+      expect(mockLogger.info).not.toHaveBeenCalledWith(
+        expect.stringContaining('Invalidated cache entry')
+      );
+
+      cacheService.cleanup();
+    });
+
+    it('returns zero when pattern invalidation finds no matches', () => {
+      const cacheService = new CacheService(mockLogger, {
+        maxSize: 3,
+        defaultTtl: 1000,
+        enableAutoCleanup: false,
+      });
+
+      cacheService.set('alpha:1', 'value1');
+      mockLogger.info.mockClear();
+
+      expect(cacheService.invalidatePattern(/^beta:/)).toBe(0);
+      expect(mockLogger.info).not.toHaveBeenCalled();
+
+      cacheService.cleanup();
+    });
+
+    it('resets statistics and logs the reset operation', () => {
+      const cacheService = new CacheService(mockLogger, {
+        maxSize: 3,
+        defaultTtl: 1000,
+        enableAutoCleanup: false,
+      });
+
+      cacheService.set('hit', 'value');
+      cacheService.get('hit');
+      cacheService.get('miss');
+
+      const preResetStats = cacheService.getStats();
+      expect(preResetStats.hits).toBeGreaterThan(0);
+      expect(preResetStats.misses).toBeGreaterThan(0);
+
+      mockLogger.info.mockClear();
+      cacheService.resetStats();
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'CacheService: Reset enhanced cache statistics'
+      );
+
+      const postResetStats = cacheService.getStats();
+      expect(postResetStats.hits).toBe(0);
+      expect(postResetStats.misses).toBe(0);
+      expect(postResetStats.expirations).toBe(0);
+
+      cacheService.cleanup();
+    });
+
+    it('handles expired entries in has() by removing and counting them', () => {
+      jest.useFakeTimers({ now: 0 });
+      const cacheService = new CacheService(mockLogger, {
+        maxSize: 3,
+        defaultTtl: 100,
+        enableAutoCleanup: false,
+      });
+
+      cacheService.set('soon-expire', 'value', 50);
+      jest.setSystemTime(5000);
+
+      expect(cacheService.has('soon-expire')).toBe(false);
+      const stats = cacheService.getStats();
+      expect(stats.expirations).toBeGreaterThanOrEqual(1);
+
+      jest.useRealTimers();
+      cacheService.cleanup();
+    });
+  });
+
+  describe('eviction guard coverage', () => {
+    it('breaks out of memory eviction when tail node lacks a key', () => {
+      const cacheService = new CacheService(mockLogger, {
+        maxSize: 5,
+        defaultTtl: 1000,
+        maxMemoryBytes: 5,
+        enableAutoCleanup: false,
+      });
+
+      mockLogger.info.mockClear();
+      cacheService.set(undefined, 'seed-value');
+
+      cacheService.set('oversized', 'x'.repeat(50));
+
+      expect(cacheService.getSize()).toBeGreaterThanOrEqual(1);
+      expect(cacheService.get('oversized')).toBe('x'.repeat(50));
+      expect(mockLogger.info).not.toHaveBeenCalledWith(
+        expect.stringMatching(/Evicted \d+ entries/)
+      );
+
+      cacheService.cleanup();
+    });
+  });
+
   describe('Memory Eviction', () => {
     it('should evict entries when memory limit is exceeded', () => {
       const cacheService = new CacheService(mockLogger, {

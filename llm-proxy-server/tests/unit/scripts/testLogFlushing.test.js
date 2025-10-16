@@ -316,12 +316,9 @@ describe('test-log-flushing utility functions', () => {
     process.argv = ['/usr/bin/node', path.join(process.cwd(), 'test-log-flushing.js')];
 
     try {
-      await import('../../../test-log-flushing.js');
+      const module = await import('../../../test-log-flushing.js');
 
-      await Promise.resolve();
-      for (let i = 0; i < 3; i++) {
-        await new Promise((resolve) => setImmediate(resolve));
-      }
+      await module.directExecutionPromise;
 
       expect(timeoutSpy).toHaveBeenCalled();
       expect(
@@ -336,6 +333,36 @@ describe('test-log-flushing utility functions', () => {
       timeoutSpy.mockRestore();
       consoleLogSpy.mockRestore();
       consoleErrorSpy.mockRestore();
+      jest.resetModules();
+    }
+  });
+
+  test('direct execution bootstrap remains disabled when running in test environment', async () => {
+    jest.resetModules();
+
+    const originalEnv = process.env.NODE_ENV;
+    const originalArgv = [...process.argv];
+    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const timeoutSpy = jest.spyOn(global, 'setTimeout');
+
+    process.env.NODE_ENV = 'test';
+    process.argv = ['/usr/bin/node', path.join(process.cwd(), 'test-log-flushing.js')];
+
+    try {
+      const module = await import('../../../test-log-flushing.js');
+
+      expect(module.directExecutionPromise).toBeNull();
+      expect(timeoutSpy).not.toHaveBeenCalled();
+      expect(
+        consoleLogSpy.mock.calls.some(([message]) =>
+          message === '🧪 Starting Windows Terminal Log Flush Test'
+        )
+      ).toBe(false);
+    } finally {
+      process.env.NODE_ENV = originalEnv;
+      process.argv = originalArgv;
+      timeoutSpy.mockRestore();
+      consoleLogSpy.mockRestore();
       jest.resetModules();
     }
   });
