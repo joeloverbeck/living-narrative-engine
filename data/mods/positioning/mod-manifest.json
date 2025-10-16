@@ -39,6 +39,7 @@
       "lie_down.action.json",
       "place_yourself_behind.action.json",
       "sit_down.action.json",
+      "sit_down_at_distance.action.json",
       "stand_up.action.json",
       "step_back.action.json",
       "straddle_waist_facing.action.json",
