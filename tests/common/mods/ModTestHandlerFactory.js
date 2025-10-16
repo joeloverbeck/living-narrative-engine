@@ -170,7 +170,7 @@ export class ModTestHandlerFactory {
       }),
     };
 
-    return {
+    const handlers = {
       ...baseHandlers,
       ADD_COMPONENT: new AddComponentHandler({
         entityManager,
@@ -178,6 +178,8 @@ export class ModTestHandlerFactory {
         safeEventDispatcher: safeDispatcher,
       }),
     };
+
+    return handlers;
   }
 
   /**
