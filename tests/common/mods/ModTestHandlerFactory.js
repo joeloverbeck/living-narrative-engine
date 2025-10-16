@@ -18,6 +18,7 @@ import UnlockMovementHandler from '../../../src/logic/operationHandlers/unlockMo
 import LockMovementHandler from '../../../src/logic/operationHandlers/lockMovementHandler.js';
 import LogHandler from '../../../src/logic/operationHandlers/logHandler.js';
 import ModifyArrayFieldHandler from '../../../src/logic/operationHandlers/modifyArrayFieldHandler.js';
+import ModifyComponentHandler from '../../../src/logic/operationHandlers/modifyComponentHandler.js';
 import TransferItemHandler from '../../../src/logic/operationHandlers/transferItemHandler.js';
 import ValidateInventoryCapacityHandler from '../../../src/logic/operationHandlers/validateInventoryCapacityHandler.js';
 import DropItemAtLocationHandler from '../../../src/logic/operationHandlers/dropItemAtLocationHandler.js';
@@ -26,6 +27,7 @@ import OpenContainerHandler from '../../../src/logic/operationHandlers/openConta
 import TakeFromContainerHandler from '../../../src/logic/operationHandlers/takeFromContainerHandler.js';
 import PutInContainerHandler from '../../../src/logic/operationHandlers/putInContainerHandler.js';
 import ValidateContainerCapacityHandler from '../../../src/logic/operationHandlers/validateContainerCapacityHandler.js';
+import AtomicModifyComponentHandler from '../../../src/logic/operationHandlers/atomicModifyComponentHandler.js';
 import { validateDependency } from '../../../src/utils/dependencyUtils.js';
 
 /* global jest */
@@ -559,6 +561,16 @@ export class ModTestHandlerFactory {
         safeEventDispatcher: safeDispatcher,
       }),
       MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      MODIFY_COMPONENT: new ModifyComponentHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      ATOMIC_MODIFY_COMPONENT: new AtomicModifyComponentHandler({
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,
