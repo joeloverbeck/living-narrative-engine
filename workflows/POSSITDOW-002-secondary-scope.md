@@ -10,12 +10,12 @@ Create a scope under `data/mods/positioning/scopes` that identifies the rightmos
 
 ## Context
 
-The specification requires a bespoke scope (tentatively `actors_sitting_with_space_to_right.scope.json`) that runs with `contextFrom: "primary"`. The scope must enforce both rightmost-occupant and spacing constraints using available ScopeDSL operators.
+The specification requires a bespoke scope (tentatively `actors_sitting_with_space_to_right.scope`) that runs with `contextFrom: "primary"`. The scope must enforce both rightmost-occupant and spacing constraints using available ScopeDSL operators. The new scope ID must match the existing reference in `data/mods/positioning/actions/sit_down_at_distance.action.json` (`positioning:actors_sitting_with_space_to_right`).
 
 ## Tasks
 
 ### 1. Author Scope File
-- Create the new scope file in `data/mods/positioning/scopes/` following existing naming conventions.
+- Create the new `.scope` file in `data/mods/positioning/scopes/` following existing naming conventions.
 - Initialize the scope with `entities(core:actor)` (or another approved source) filtered to actors currently sitting (`positioning:sitting_on`).
 - Add comments explaining non-obvious JSON logic, especially index calculations.
 
@@ -23,12 +23,12 @@ The specification requires a bespoke scope (tentatively `actors_sitting_with_spa
 - Ensure the scope compares each actor's `positioning:sitting_on.furniture_id` against `target.id` (the furniture selected as the primary target) to narrow candidates to the same piece of furniture.
 
 ### 3. Enforce Rightmost Occupant Rule
-- Use `let` bindings to capture the actor's `spot_index` and the furniture `spots` array from `positioning:allows_sitting`.
-- Require that all higher indices above the actor are null (`none` check) so only the rightmost sitter qualifies.
+- Use JSON-logic variable lookups (for example, `{"var": "entity.components.positioning:sitting_on.spot_index"}` and `{"var": "target.components.positioning:allows_sitting.spots"}`) to reuse the actor's `spot_index` and the furniture `spots` array.
+- Require that no seats with an index greater than the actor's current `spot_index` are occupied, using supported ScopeDSL array helpers (such as `some`/`filter` patterns) to ensure all higher positions are `null`.
 
 ### 4. Verify Gap Availability
-- Add JSON-logic ensuring `spot_index + 1` and `spot_index + 2` are both null inside the `spots` array.
-- Guard against out-of-bounds access by asserting the array length is greater than `spot_index + 2`.
+- Add JSON-logic ensuring `spot_index + 1` and `spot_index + 2` both resolve to `null` within `target.components.positioning:allows_sitting.spots`.
+- Include a guard so these lookups only pass when the furniture actually has indices at `spot_index + 1` and `spot_index + 2` (for example, by comparing the `spots` array length to `spot_index + 2` before asserting nullity).
 
 ### 5. Return Actor Identifiers
 - Configure the scope to emit actor IDs for the targeting UI and action resolver.
