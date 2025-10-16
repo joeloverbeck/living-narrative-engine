@@ -38,16 +38,17 @@ router.post('/write', async (req, res) => {
 
     // Resolve the full path (relative to project root, not llm-proxy-server)
     const projectRoot = path.resolve(process.cwd(), '../');
-    const fullDirectoryPath = path.join(projectRoot, targetDirectory);
+    const fullDirectoryPath = path.resolve(projectRoot, targetDirectory);
 
-    // Ensure the directory exists
-    await fs.mkdir(fullDirectoryPath, { recursive: true });
-
-    // Construct the full file path
-    const fullFilePath = path.join(fullDirectoryPath, sanitizedFileName);
+    // Construct the full file path using normalized paths
+    const fullFilePath = path.resolve(fullDirectoryPath, sanitizedFileName);
+    const relativeFilePath = path.relative(projectRoot, fullFilePath);
 
     // Ensure we're not writing outside the project directory (security check)
-    if (!fullFilePath.startsWith(projectRoot)) {
+    if (
+      relativeFilePath.startsWith('..') ||
+      path.isAbsolute(relativeFilePath)
+    ) {
       logger.error('Attempted to write trace file outside project directory', {
         attemptedPath: fullFilePath,
         projectRoot,
@@ -57,6 +58,9 @@ router.post('/write', async (req, res) => {
         error: 'Invalid output path',
       });
     }
+
+    // Ensure the directory exists
+    await fs.mkdir(fullDirectoryPath, { recursive: true });
 
     // Write the trace file
     const jsonContent =
@@ -136,7 +140,24 @@ router.post('/write-batch', async (req, res) => {
 
     // Resolve the full path (same as single write endpoint)
     const projectRoot = path.resolve(__dirname, '../../../');
-    const fullDirectoryPath = path.join(projectRoot, targetDirectory);
+    const fullDirectoryPath = path.resolve(projectRoot, targetDirectory);
+    const relativeDirectory = path.relative(projectRoot, fullDirectoryPath);
+
+    if (
+      relativeDirectory.startsWith('..') ||
+      path.isAbsolute(relativeDirectory)
+    ) {
+      logger.error('Attempted to write trace batch outside project directory', {
+        outputDirectory,
+        resolvedDirectory: fullDirectoryPath,
+        projectRoot,
+      });
+
+      return res.status(403).json({
+        success: false,
+        error: 'Invalid output path',
+      });
+    }
 
     // Process all traces in parallel
     const writePromises = traces.map(async (trace, index) => {
