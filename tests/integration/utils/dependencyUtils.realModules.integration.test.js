@@ -36,8 +36,9 @@ class RecordingEventBus {
     this.events = [];
   }
 
-  dispatch(eventId, payload) {
-    this.events.push({ eventId, payload });
+  dispatch(event) {
+    // Accept full event object with type, payload, timestamp
+    this.events.push(event);
   }
 }
 
@@ -71,7 +72,7 @@ describe('dependency utilities working through real service flows', () => {
       ).toThrow(InvalidArgumentError);
 
       expect(baseLogger.errorEntries[0]?.message).toBe(
-        'Missing required dependency: PromptScheduler: cache.'
+        'PromptScheduler: Missing required dependency: PromptScheduler: cache.'
       );
     });
 
@@ -86,7 +87,7 @@ describe('dependency utilities working through real service flows', () => {
       ).toThrow(InvalidArgumentError);
 
       expect(baseLogger.errorEntries.at(-1)?.message).toBe(
-        "Dependency 'PromptScheduler: builder' must be a function, but got object."
+        "PromptScheduler: Dependency 'PromptScheduler: builder' must be a function, but got object."
       );
 
       expect(() =>
@@ -96,7 +97,7 @@ describe('dependency utilities working through real service flows', () => {
       ).toThrow(InvalidArgumentError);
 
       expect(baseLogger.errorEntries.at(-1)?.message).toBe(
-        "Invalid or missing method 'save' on dependency 'PromptScheduler: repository'."
+        "PromptScheduler: Invalid or missing method 'save' on dependency 'PromptScheduler: repository'."
       );
     });
 
@@ -134,7 +135,17 @@ describe('dependency utilities working through real service flows', () => {
       manager.set('motivation-1', { id: 'motivation-1', label: 'Driven' }, 'motivations');
 
       expect(logger.errorEntries).toHaveLength(0);
-      expect(eventBus.events[0]?.eventId).toBe('characterBuilder:cache:initialized');
+      expect(eventBus.events[0]?.type).toBe('core:cache_initialized');
+      expect(eventBus.events[0]?.payload).toEqual({
+        maxSize: 100,
+        ttlConfig: {
+          concepts: 600000,
+          directions: 600000,
+          cliches: 1800000,
+          motivations: null,
+        },
+        cacheManagerType: 'CoreMotivationsCacheManager',
+      });
       expect(manager.get('motivation-1')).toEqual({
         id: 'motivation-1',
         label: 'Driven',

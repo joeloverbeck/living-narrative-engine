@@ -26,6 +26,7 @@ import OpenContainerHandler from '../../../src/logic/operationHandlers/openConta
 import TakeFromContainerHandler from '../../../src/logic/operationHandlers/takeFromContainerHandler.js';
 import PutInContainerHandler from '../../../src/logic/operationHandlers/putInContainerHandler.js';
 import ValidateContainerCapacityHandler from '../../../src/logic/operationHandlers/validateContainerCapacityHandler.js';
+import AtomicModifyComponentHandler from '../../../src/logic/operationHandlers/atomicModifyComponentHandler.js';
 import { validateDependency } from '../../../src/utils/dependencyUtils.js';
 
 /* global jest */
@@ -559,6 +560,11 @@ export class ModTestHandlerFactory {
         safeEventDispatcher: safeDispatcher,
       }),
       MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      ATOMIC_MODIFY_COMPONENT: new AtomicModifyComponentHandler({
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,

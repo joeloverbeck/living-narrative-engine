@@ -335,7 +335,8 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 5: Multiple Rule
 
     // Implementation Task: (Optional) Assert _executeActions called with Rule B's actions
     const executeCalls = getExecuteActionsCalls();
-    expect(executeCalls[0].actions).toEqual(MOCK_RULE_B_HIT_SFX.actions);
+    // Note: Use deep equality for actions since rules may be transformed during processing
+    expect(JSON.stringify(executeCalls[0].actions)).toBe(JSON.stringify(MOCK_RULE_B_HIT_SFX.actions));
     expect(executeCalls[0].scopeDescription).toContain(
       MOCK_RULE_B_HIT_SFX.rule_id
     );
@@ -408,18 +409,20 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 5: Multiple Rule
 
     // Implementation Task: (Optional) Assert _executeActions called once with Rule A's actions and once with Rule B's actions
     const executeCalls = getExecuteActionsCalls();
+
     // Check that one call was for Rule A and the other for Rule B (order might vary)
+    // Note: Use deep equality for actions since rules may be transformed during processing
     const calledWithRuleA = executeCalls.some(
       (call) =>
         call.scopeDescription.includes(MOCK_RULE_A_ENEMY_DEATH.rule_id) &&
-        call.actions === MOCK_RULE_A_ENEMY_DEATH.actions &&
-        call.context.target.id === MOCK_TARGET_ENEMY_HP_0.id
+        JSON.stringify(call.actions) === JSON.stringify(MOCK_RULE_A_ENEMY_DEATH.actions) &&
+        call.context.target?.id === MOCK_TARGET_ENEMY_HP_0.id
     );
     const calledWithRuleB = executeCalls.some(
       (call) =>
         call.scopeDescription.includes(MOCK_RULE_B_HIT_SFX.rule_id) &&
-        call.actions === MOCK_RULE_B_HIT_SFX.actions &&
-        call.context.target.id === MOCK_TARGET_ENEMY_HP_0.id
+        JSON.stringify(call.actions) === JSON.stringify(MOCK_RULE_B_HIT_SFX.actions) &&
+        call.context.target?.id === MOCK_TARGET_ENEMY_HP_0.id
     );
     expect(calledWithRuleA).toBe(true);
     expect(calledWithRuleB).toBe(true);

@@ -19,6 +19,12 @@ The Positioning System mod provides foundational mechanics for managing physical
 - **turn_around**: Turn another actor around or have them face you
 - **turn_around_to_face**: Turn to face someone you're currently facing away from
 - **kneel_before**: Kneel before another actor in a respectful or submissive gesture
+- **sit_down**: Sit on available furniture in any open seat
+- **sit_down_at_distance**: Sit on available furniture while maintaining a one-seat buffer from a selected occupant
+  - Requires: Furniture with at least 2 empty seats to the right of an occupant
+  - Effect: Actor sits at position (occupant + 2), leaving one empty buffer seat between
+  - Differs from `sit_down`: Explicitly maintains social distance from specific person
+  - Availability: Only appears when valid occupants with space exist on selected furniture
 
 ### Mechanics
 
@@ -72,17 +78,22 @@ Positioning mechanics become a foundational system that can be extended by multi
 
 ## Current Implementation
 
-The mod currently includes basic positioning functionality:
+The mod includes comprehensive positioning functionality:
 
 - Kneeling behaviors and respectful gestures
-- Foundation for spatial relationship tracking
-- Event-driven positioning state management
+- Sitting mechanics with furniture occupancy tracking
+- Distance-based positioning (sit at distance with buffer seats)
+- Closeness and proximity tracking
+- Facing direction mechanics
+- Spatial relationship tracking with event-driven state management
+- Multi-target actions with contextual scope filtering
 
 ## Future Expansion
 
-As part of the POSMIG migration series, this mod will be expanded with:
+Potential future enhancements include:
 
-- Closeness and proximity tracking components
-- Facing direction mechanics
-- Movement and spatial relationship actions
-- Enhanced positioning conditions and rules
+- Advanced straddling mechanics and positioning variations
+- Lying down and prone positioning states
+- Group positioning actions (everyone kneel, form a line)
+- Environmental constraints (walls, obstacles affecting positioning)
+- Distance-based validation for near/far positioning gradients

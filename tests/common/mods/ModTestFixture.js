@@ -826,7 +826,14 @@ export class ModActionTestFixture extends BaseModTestFixture {
         ...additionalPayload,
       };
 
-      return this.eventBus.dispatch(ATTEMPT_ACTION_ID, payload);
+      const result = await this.eventBus.dispatch(ATTEMPT_ACTION_ID, payload);
+
+      // IMPORTANT: Give the SystemLogicInterpreter time to process the event
+      // The interpreter listens to events asynchronously, so we need a small delay
+      // to ensure rules are processed before the test continues
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      return result;
     }
 
     // New behavior: Simple forbidden component validation before execution
@@ -899,7 +906,14 @@ export class ModActionTestFixture extends BaseModTestFixture {
       ...additionalPayload,
     };
 
-    return this.eventBus.dispatch(ATTEMPT_ACTION_ID, payload);
+    const result = await this.eventBus.dispatch(ATTEMPT_ACTION_ID, payload);
+
+    // IMPORTANT: Give the SystemLogicInterpreter time to process the event
+    // The interpreter listens to events asynchronously, so we need a small delay
+    // to ensure rules are processed before the test continues
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    return result;
   }
 
   /**
