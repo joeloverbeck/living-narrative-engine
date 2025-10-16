@@ -298,6 +298,95 @@ describe('Trace Routes', () => {
     expect(secondResult).toMatchObject({ success: false, fileName: 'fail.json' });
   });
 
+  it('should surface metadata failures when stat rejects after a successful write', async () => {
+    const metadataError = new Error('stat failure during batch');
+
+    fs.stat
+      .mockImplementationOnce(() => Promise.reject(metadataError))
+      .mockImplementationOnce(() =>
+        Promise.resolve({
+          size: 64,
+          mtime: new Date('2024-04-02T00:00:00Z'),
+          birthtime: new Date('2024-04-02T00:00:00Z'),
+        })
+      );
+
+    const response = await request(app).post('/api/traces/write-batch').send({
+      traces: [
+        { traceData: { id: 1 }, fileName: 'first.json' },
+        { traceData: { id: 2 }, fileName: 'second.json' },
+      ],
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body.successCount).toBe(1);
+    expect(response.body.failureCount).toBe(1);
+    expect(response.body.results[0]).toMatchObject({
+      index: 0,
+      fileName: 'first.json',
+      success: false,
+      error: metadataError.message,
+    });
+    expect(response.body.results[1]).toMatchObject({
+      index: 1,
+      fileName: 'second.json',
+      success: true,
+    });
+  });
+
+  it('should report serialization failures for circular trace payloads', async () => {
+    const circularTrace = {};
+    circularTrace.self = circularTrace;
+
+    const writeBatchLayer = traceRoutes.stack.find(
+      (layer) =>
+        layer.route &&
+        layer.route.path === '/write-batch' &&
+        layer.route.methods.post
+    );
+    const writeBatchHandler = writeBatchLayer.route.stack[0].handle;
+
+    fs.stat.mockResolvedValue({
+      size: 48,
+      mtime: new Date('2024-05-01T00:00:00Z'),
+      birthtime: new Date('2024-05-01T00:00:00Z'),
+    });
+
+    const res = {
+      json: jest.fn().mockReturnThis(),
+    };
+
+    await writeBatchHandler(
+      {
+        body: {
+          traces: [
+            { traceData: circularTrace, fileName: 'circular.json' },
+            { traceData: { stable: true }, fileName: 'normal.json' },
+          ],
+        },
+      },
+      res
+    );
+
+    expect(fs.writeFile).toHaveBeenCalledTimes(1);
+    expect(fs.writeFile.mock.calls[0][0]).toContain('normal.json');
+
+    const payload = res.json.mock.calls[0][0];
+    expect(payload.successCount).toBe(1);
+    expect(payload.failureCount).toBe(1);
+    expect(payload.results[0]).toMatchObject({
+      index: 0,
+      fileName: 'circular.json',
+      success: false,
+      error: expect.stringContaining('circular'),
+    });
+    expect(payload.results[1]).toMatchObject({
+      index: 1,
+      fileName: 'normal.json',
+      success: true,
+    });
+  });
+
   it('should sanitize file names during batch writes to prevent traversal', async () => {
     fs.stat
       .mockResolvedValueOnce({
