@@ -24,7 +24,9 @@ jest.mock('../../../src/utils/dependencyUtils.js', () => {
   };
 });
 
-import ActionCommandFormatter from '../../../src/actions/actionFormatter.js';
+import ActionCommandFormatter, {
+  formatActionCommand,
+} from '../../../src/actions/actionFormatter.js';
 import { targetFormatterMap } from '../../../src/actions/formatters/targetFormatters.js';
 import { validateDependency } from '../../../src/utils/dependencyUtils.js';
 import { dispatchValidationError } from '../../../src/utils/safeDispatchErrorUtils.js';
@@ -143,5 +145,40 @@ describe('ActionCommandFormatter default dependency fallbacks', () => {
     expect(mockGetEntityDisplayName).not.toHaveBeenCalled();
     expect(entityManager.getEntityInstance).toHaveBeenCalledWith('npc-7');
     expect(dispatchValidationError).not.toHaveBeenCalled();
+  });
+
+  it('falls back to the default dependency bundle when omitted entirely', () => {
+    const action = createAction({ template: 'inspect {target}' });
+    const targetContext = createTargetContext({ entityId: 'npc-21' });
+    const entityManager = {
+      getEntityInstance: jest.fn(() => ({ id: 'npc-21', name: 'Watcher' })),
+    };
+    const options = createOptions();
+
+    const result = formatActionCommand(
+      action,
+      targetContext,
+      entityManager,
+      options
+    );
+
+    expect(result).toEqual({ ok: true, value: 'inspect Default Entity Name' });
+    expect(mockGetEntityDisplayName).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'npc-21', name: 'Watcher' }),
+      'npc-21',
+      options.logger
+    );
+    expect(entityManager.getEntityInstance).toHaveBeenCalledWith('npc-21');
+    expect(dispatchValidationError).not.toHaveBeenCalled();
+  });
+
+  it('throws a descriptive error when required logger is missing', () => {
+    const action = createAction();
+    const targetContext = createTargetContext();
+    const entityManager = createEntityManager();
+
+    expect(() =>
+      formatActionCommand(action, targetContext, entityManager)
+    ).toThrow('formatActionCommand: logger is required.');
   });
 });
