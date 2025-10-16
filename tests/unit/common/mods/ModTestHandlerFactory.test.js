@@ -370,7 +370,7 @@ describe('ModTestHandlerFactory', () => {
   });
 
   describe('createHandlersWithPerceptionLogging', () => {
-    it('should create standard handlers plus 6 positioning-specific handlers', () => {
+    it('should create standard handlers plus 8 positioning-specific handlers', () => {
       const handlers =
         ModTestHandlerFactory.createHandlersWithPerceptionLogging(
           mockEntityManager,
@@ -403,6 +403,8 @@ describe('ModTestHandlerFactory', () => {
         'LOCK_MOVEMENT',
         'UNLOCK_MOVEMENT',
         'MODIFY_ARRAY_FIELD',
+        'MODIFY_COMPONENT',
+        'ATOMIC_MODIFY_COMPONENT',
       ];
 
       positioningHandlers.forEach((handlerKey) => {
@@ -410,8 +412,8 @@ describe('ModTestHandlerFactory', () => {
         expect(handlers[handlerKey]).toBeDefined();
       });
 
-      // Verify correct total number of handlers (9 standard + 6 positioning)
-      expect(Object.keys(handlers)).toHaveLength(15);
+      // Verify correct total number of handlers (9 standard + 8 positioning)
+      expect(Object.keys(handlers)).toHaveLength(17);
     });
 
     it('should configure all handlers with execute functions', () => {
@@ -607,9 +609,11 @@ describe('ModTestHandlerFactory', () => {
       expect(handlers.LOCK_MOVEMENT).toBeDefined();
       expect(handlers.UNLOCK_MOVEMENT).toBeDefined();
       expect(handlers.MODIFY_ARRAY_FIELD).toBeDefined();
+      expect(handlers.MODIFY_COMPONENT).toBeDefined();
+      expect(handlers.ATOMIC_MODIFY_COMPONENT).toBeDefined();
 
-      // Should have 9 standard + 6 positioning-specific handlers
-      expect(Object.keys(handlers)).toHaveLength(15);
+      // Should have 9 standard + 8 positioning-specific handlers
+      expect(Object.keys(handlers)).toHaveLength(17);
     });
 
     it('should return createHandlersWithComponentMutations for affection', () => {
@@ -637,6 +641,8 @@ describe('ModTestHandlerFactory', () => {
         expect(handlers.LOCK_MOVEMENT).toBeUndefined();
         expect(handlers.UNLOCK_MOVEMENT).toBeUndefined();
         expect(handlers.MODIFY_ARRAY_FIELD).toBeUndefined();
+        expect(handlers.MODIFY_COMPONENT).toBeUndefined();
+        expect(handlers.ATOMIC_MODIFY_COMPONENT).toBeUndefined();
 
         expect(Object.keys(handlers)).toHaveLength(9); // 9 standard handlers only
       });
