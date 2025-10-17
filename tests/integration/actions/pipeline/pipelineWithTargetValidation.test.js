@@ -563,13 +563,20 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
 
       context.candidateActions = testActions;
 
-      const startTime = performance.now();
+      const validateComponentsSpy = jest.spyOn(
+        targetComponentValidator,
+        'validateTargetComponents'
+      );
+      const validateRequirementsSpy = jest.spyOn(
+        targetRequiredComponentsValidator,
+        'validateTargetRequirements'
+      );
       const result = await validationStage.execute(context);
-      const duration = performance.now() - startTime;
 
       expect(result.success).toBe(true);
       expect(result.data.candidateActions).toHaveLength(50); // All pass through
-      expect(duration).toBeLessThan(10); // Very fast due to skipping
+      expect(validateComponentsSpy).not.toHaveBeenCalled();
+      expect(validateRequirementsSpy).not.toHaveBeenCalled();
     });
   });
 

@@ -69,8 +69,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
 
     // Verify pickup action is available
     const pickupAction = actions.find(
-      (a) =>
-        a.id === 'items:pick_up_item'
+      (a) => a.id === 'items:pick_up_item'
     );
 
     expect(pickupAction).toBeDefined();
@@ -106,8 +105,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
     // Note: The item is in inventory (not at location), so scope resolution returns empty
     // Actions only appear when they have valid targets, so pick_up_item won't be in the list
     const pickupBeforeDrop = actionsBeforeDrop.find(
-      (a) =>
-        a.id === 'items:pick_up_item'
+      (a) => a.id === 'items:pick_up_item'
     );
     // The action should NOT be defined because there are no items at the location yet
     expect(pickupBeforeDrop).toBeUndefined();
@@ -130,8 +128,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
 
     // Verify pickup action IS available (bug is fixed with cache invalidation)
     const pickupAfterDrop = actionsAfterDrop.find(
-      (a) =>
-        a.id === 'items:pick_up_item'
+      (a) => a.id === 'items:pick_up_item'
     );
 
     // THIS ASSERTION DOCUMENTS THE FIX
@@ -178,8 +175,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
     // Action discovery succeeds because cache was automatically invalidated
     const actions = await testFixture.discoverActions('test:actor1');
     const pickupAction = actions.find(
-      (a) =>
-        a.id === 'items:pick_up_item'
+      (a) => a.id === 'items:pick_up_item'
     );
 
     // Bug is fixed: entity data is correct and cache invalidation allows discovery
@@ -221,8 +217,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
 
     // With cleared cache, pickup action should be available
     const pickupAction = actions.find(
-      (a) =>
-        a.id === 'items:pick_up_item'
+      (a) => a.id === 'items:pick_up_item'
     );
 
     expect(pickupAction).toBeDefined();
@@ -263,8 +258,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
     // Verify letter can be picked up
     let actions = await testFixture.discoverActions('test:actor1');
     let letterPickup = actions.find(
-      (a) =>
-        a.id === 'items:pick_up_item'
+      (a) => a.id === 'items:pick_up_item'
     );
     expect(letterPickup).toBeDefined();
 
@@ -275,12 +269,10 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
     // Verify both items can be picked up
     actions = await testFixture.discoverActions('test:actor1');
     letterPickup = actions.find(
-      (a) =>
-        a.id === 'items:pick_up_item'
+      (a) => a.id === 'items:pick_up_item'
     );
     const gunPickup = actions.find(
-      (a) =>
-        a.id === 'items:pick_up_item'
+      (a) => a.id === 'items:pick_up_item'
     );
 
     expect(letterPickup).toBeDefined();
