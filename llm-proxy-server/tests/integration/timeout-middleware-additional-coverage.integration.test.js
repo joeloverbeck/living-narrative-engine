@@ -49,6 +49,33 @@ describe('timeout middleware extended integration coverage', () => {
     expect(warnCall).toBeDefined();
     expect(warnCall?.[1]).toMatchObject({ existingCommitment: 'external-handler' });
   });
+
+  it('still releases blocked requests without logging when no logger is configured', async () => {
+    jest.useRealTimers();
+
+    const app = express();
+    const commitResponseMock = jest.fn(() => false);
+
+    app.post(
+      '/guarded-timeout-no-logger',
+      (req, res, next) => {
+        res.commitResponse = commitResponseMock;
+        next();
+      },
+      createTimeoutMiddleware(25),
+      (_req, res) => {
+        setTimeout(() => {
+          res.status(200).json({ outcome: 'handler completed without logger' });
+        }, 60);
+      }
+    );
+
+    const response = await request(app).post('/guarded-timeout-no-logger').send({});
+
+    expect(response.status).toBe(200);
+    expect(response.body.outcome).toBe('handler completed without logger');
+    expect(commitResponseMock).toHaveBeenCalledWith('timeout');
+  });
 });
 
 describe('size limit configuration extended integration coverage', () => {
