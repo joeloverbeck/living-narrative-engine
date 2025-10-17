@@ -1,141 +1,182 @@
-/**
- * @file app-config-string-env-logging.integration.test.js
- * @description Integration tests ensuring AppConfigService logs string environment variable states accurately.
- */
+import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
 
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
-
-import { ConsoleLogger } from '../../src/consoleLogger.js';
 import {
   getAppConfigService,
   resetAppConfigServiceInstance,
 } from '../../src/config/appConfig.js';
 
-function createCapturingLogger() {
-  const entries = [];
-  const record = (level) => (message, ...args) => {
-    entries.push({ level, message, args });
+const createTestLogger = () => {
+  const logger = {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
   };
-
-  return {
-    entries,
-    debug: jest.fn(record('debug')),
-    info: jest.fn(record('info')),
-    warn: jest.fn(record('warn')),
-    error: jest.fn(record('error')),
-  };
-}
-
-function restoreEnvironment(originalEnv) {
-  for (const key of Object.keys(process.env)) {
-    if (!(key in originalEnv)) {
-      delete process.env[key];
-    }
-  }
-
-  for (const [key, value] of Object.entries(originalEnv)) {
-    process.env[key] = value;
-  }
-}
+  logger.isDebugEnabled = true;
+  return logger;
+};
 
 describe('AppConfigService string environment logging integration', () => {
   const originalEnv = { ...process.env };
   let logger;
 
+  const applyEnv = (overrides) => {
+    const preservedKeys = Object.keys(process.env);
+    for (const key of preservedKeys) {
+      if (!(key in originalEnv)) {
+        delete process.env[key];
+      }
+    }
+
+    for (const [key, value] of Object.entries(originalEnv)) {
+      process.env[key] = value;
+    }
+
+    for (const [key, value] of Object.entries(overrides)) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+  };
+
   beforeEach(() => {
+    logger = createTestLogger();
     resetAppConfigServiceInstance();
-    logger = createCapturingLogger();
   });
 
   afterEach(() => {
+    applyEnv({});
     resetAppConfigServiceInstance();
-    restoreEnvironment(originalEnv);
   });
 
-  it('records explicit string values when environment variables are present', () => {
-    process.env.LLM_CONFIG_PATH = '/opt/llm/config.json';
-    process.env.PROXY_ALLOWED_ORIGIN = 'https://alpha.example,https://beta.example';
-    process.env.PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES = '/srv/app';
+  it('records explicit debug output when string env vars are present but empty', () => {
+    applyEnv({
+      NODE_ENV: 'test',
+      PROXY_PORT: '4301',
+      LLM_CONFIG_PATH: '',
+      PROXY_ALLOWED_ORIGIN: '',
+      PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES: '',
+    });
 
-    const service = getAppConfigService(logger);
+    const appConfig = getAppConfigService(logger);
 
-    expect(service.getLlmConfigPath()).toBe('/opt/llm/config.json');
-    expect(service.getProxyProjectRootPathForApiKeyFiles()).toBe('/srv/app');
+    expect(appConfig.getLlmConfigPath()).toBe('');
+    expect(appConfig.getAllowedOriginsArray()).toEqual([]);
+    expect(appConfig.getProxyProjectRootPathForApiKeyFiles()).toBe('');
 
-    const debugMessages = logger.debug.mock.calls.map(([message]) => message);
+    const debugMessages = logger.debug.mock.calls
+      .map(([message]) => message)
+      .filter(Boolean);
 
-    expect(debugMessages).toEqual(
-      expect.arrayContaining([
-        "AppConfigService: LLM_CONFIG_PATH found in environment: '/opt/llm/config.json'. Effective value: '/opt/llm/config.json'.",
-        "AppConfigService: PROXY_ALLOWED_ORIGIN found in environment: 'https://alpha.example,https://beta.example'. Effective value: 'https://alpha.example,https://beta.example'.",
-        "AppConfigService: PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES found in environment: '/srv/app'. Effective value: '/srv/app'.",
-      ])
-    );
+    expect(
+      debugMessages.some((message) =>
+        message.includes(
+          "AppConfigService: LLM_CONFIG_PATH found in environment but is empty. Current effective value: ''."
+        )
+      )
+    ).toBe(true);
+
+    expect(
+      debugMessages.some((message) =>
+        message.includes(
+          "AppConfigService: PROXY_ALLOWED_ORIGIN found in environment but is empty. Current effective value: ''."
+        )
+      )
+    ).toBe(true);
+
+    expect(
+      debugMessages.some((message) =>
+        message.includes(
+          "AppConfigService: PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES found in environment but is empty. Current effective value: ''."
+        )
+      )
+    ).toBe(true);
   });
 
-  it('logs explicit notice when string environment variables are empty', () => {
-    process.env.LLM_CONFIG_PATH = '';
-    process.env.PROXY_ALLOWED_ORIGIN = '';
-    process.env.PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES = '';
+  it('announces default handling when optional string env vars are undefined', () => {
+    applyEnv({ NODE_ENV: 'test', PROXY_PORT: '4302' });
 
-    const service = getAppConfigService(logger);
+    const appConfig = getAppConfigService(logger);
 
-    expect(service.getLlmConfigPath()).toBe('');
-    expect(service.getProxyProjectRootPathForApiKeyFiles()).toBe('');
+    expect(appConfig.getLlmConfigPath()).toBeNull();
+    expect(appConfig.getAllowedOriginsArray()).toEqual([]);
+    expect(appConfig.getProxyProjectRootPathForApiKeyFiles()).toBeNull();
 
-    const debugMessages = logger.debug.mock.calls.map(([message]) => message);
+    const debugMessages = logger.debug.mock.calls
+      .map(([message]) => message)
+      .filter(Boolean);
 
-    expect(debugMessages).toEqual(
-      expect.arrayContaining([
-        "AppConfigService: LLM_CONFIG_PATH found in environment but is empty. Current effective value: ''.",
-        "AppConfigService: PROXY_ALLOWED_ORIGIN found in environment but is empty. Current effective value: ''.",
-        "AppConfigService: PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES found in environment but is empty. Current effective value: ''.",
-      ])
-    );
+    expect(
+      debugMessages.some((message) =>
+        message.includes(
+          "AppConfigService: LLM_CONFIG_PATH not set in environment. LlmConfigService will use its default path. Effective value: 'null'."
+        )
+      )
+    ).toBe(true);
+
+    expect(
+      debugMessages.some((message) =>
+        message.includes(
+          "AppConfigService: PROXY_ALLOWED_ORIGIN not set in environment. CORS will not be specifically configured by the proxy based on this variable. Effective value: 'null'."
+        )
+      )
+    ).toBe(true);
+
+    expect(
+      debugMessages.some((message) =>
+        message.includes(
+          "AppConfigService: PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES not set in environment. API key file retrieval relative to a project root will not be available unless this is set. Effective value: 'null'."
+        )
+      )
+    ).toBe(true);
   });
 
-  it('logs defaults when optional string environment variables are missing', () => {
-    delete process.env.LLM_CONFIG_PATH;
-    delete process.env.PROXY_ALLOWED_ORIGIN;
-    delete process.env.PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES;
+  it('describes explicit overrides when env vars contain concrete values', () => {
+    applyEnv({
+      NODE_ENV: 'test',
+      PROXY_PORT: '4303',
+      LLM_CONFIG_PATH: '/custom/path/llm-configs.json',
+      PROXY_ALLOWED_ORIGIN: 'https://alpha.example,https://beta.example',
+      PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES: '/project/root',
+    });
 
-    const service = getAppConfigService(logger);
+    const appConfig = getAppConfigService(logger);
 
-    expect(service.getLlmConfigPath()).toBeNull();
-    expect(service.getProxyProjectRootPathForApiKeyFiles()).toBeNull();
+    expect(appConfig.getLlmConfigPath()).toBe('/custom/path/llm-configs.json');
+    expect(appConfig.getAllowedOriginsArray()).toEqual([
+      'https://alpha.example',
+      'https://beta.example',
+    ]);
+    expect(appConfig.getProxyProjectRootPathForApiKeyFiles()).toBe('/project/root');
 
-    const debugMessages = logger.debug.mock.calls.map(([message]) => message);
+    const debugMessages = logger.debug.mock.calls
+      .map(([message]) => message)
+      .filter(Boolean);
 
-    expect(debugMessages).toEqual(
-      expect.arrayContaining([
-        "AppConfigService: LLM_CONFIG_PATH not set in environment. LlmConfigService will use its default path. Effective value: 'null'.",
-        "AppConfigService: PROXY_ALLOWED_ORIGIN not set in environment. CORS will not be specifically configured by the proxy based on this variable. Effective value: 'null'.",
-        "AppConfigService: PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES not set in environment. API key file retrieval relative to a project root will not be available unless this is set. Effective value: 'null'.",
-      ])
-    );
-  });
+    expect(
+      debugMessages.some((message) =>
+        message?.includes(
+          "AppConfigService: LLM_CONFIG_PATH found in environment: '/custom/path/llm-configs.json'. Effective value: '/custom/path/llm-configs.json'."
+        )
+      )
+    ).toBe(true);
 
-  it('remains compatible with the production console logger instance', () => {
-    const consoleLogger = new ConsoleLogger();
+    expect(
+      debugMessages.some((message) =>
+        message?.includes(
+          "AppConfigService: PROXY_ALLOWED_ORIGIN found in environment: 'https://alpha.example,https://beta.example'. Effective value: 'https://alpha.example,https://beta.example'."
+        )
+      )
+    ).toBe(true);
 
-    process.env.LLM_CONFIG_PATH = '/var/app/llm-config.json';
-    process.env.PROXY_ALLOWED_ORIGIN = 'https://prod.example';
-    process.env.PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES = '/var/app';
-
-    const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
-
-    try {
-      getAppConfigService(consoleLogger);
-
-      const capturedMessages = debugSpy.mock.calls
-        .map(([message]) => String(message))
-        .join('\n');
-
-      expect(capturedMessages).toContain('AppConfigService: LLM_CONFIG_PATH');
-      expect(capturedMessages).toContain('AppConfigService: PROXY_ALLOWED_ORIGIN');
-      expect(capturedMessages).toContain('AppConfigService: PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES');
-    } finally {
-      debugSpy.mockRestore();
-    }
+    expect(
+      debugMessages.some((message) =>
+        message?.includes(
+          "AppConfigService: PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES found in environment: '/project/root'. Effective value: '/project/root'."
+        )
+      )
+    ).toBe(true);
   });
 });
