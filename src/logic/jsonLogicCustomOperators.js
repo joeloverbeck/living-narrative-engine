@@ -7,6 +7,9 @@ import { HasPartOfTypeWithComponentValueOperator } from './operators/hasPartOfTy
 import { HasClothingInSlotOperator } from './operators/hasClothingInSlotOperator.js';
 import { HasClothingInSlotLayerOperator } from './operators/hasClothingInSlotLayerOperator.js';
 import { IsSocketCoveredOperator } from './operators/isSocketCoveredOperator.js';
+import { HasSittingSpaceToRightOperator } from './operators/hasSittingSpaceToRightOperator.js';
+import { CanScootCloserOperator } from './operators/canScootCloserOperator.js';
+import { IsClosestLeftOccupantOperator } from './operators/isClosestLeftOccupantOperator.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
@@ -104,6 +107,21 @@ export class JsonLogicCustomOperators extends BaseService {
       logger: this.#logger,
     });
 
+    const hasSittingSpaceToRightOp = new HasSittingSpaceToRightOperator({
+      entityManager: this.#entityManager,
+      logger: this.#logger,
+    });
+
+    const canScootCloserOp = new CanScootCloserOperator({
+      entityManager: this.#entityManager,
+      logger: this.#logger,
+    });
+
+    const isClosestLeftOccupantOp = new IsClosestLeftOccupantOperator({
+      entityManager: this.#entityManager,
+      logger: this.#logger,
+    });
+
     // Register hasPartWithComponentValue operator
     jsonLogicEvaluationService.addOperation(
       'hasPartWithComponentValue',
@@ -171,6 +189,39 @@ export class JsonLogicCustomOperators extends BaseService {
       function (entityPath, socketId) {
         // 'this' is the evaluation context
         return self.isSocketCoveredOp.evaluate([entityPath, socketId], this);
+      }
+    );
+
+    // Register hasSittingSpaceToRight operator
+    jsonLogicEvaluationService.addOperation(
+      'hasSittingSpaceToRight',
+      function (entityPath, targetPath, minSpaces) {
+        // 'this' is the evaluation context
+        return hasSittingSpaceToRightOp.evaluate(
+          [entityPath, targetPath, minSpaces],
+          this
+        );
+      }
+    );
+
+    // Register canScootCloser operator
+    jsonLogicEvaluationService.addOperation(
+      'canScootCloser',
+      function (entityPath, targetPath) {
+        // 'this' is the evaluation context
+        return canScootCloserOp.evaluate([entityPath, targetPath], this);
+      }
+    );
+
+    // Register isClosestLeftOccupant operator
+    jsonLogicEvaluationService.addOperation(
+      'isClosestLeftOccupant',
+      function (entityPath, targetPath, actorPath) {
+        // 'this' is the evaluation context
+        return isClosestLeftOccupantOp.evaluate(
+          [entityPath, targetPath, actorPath],
+          this
+        );
       }
     );
 

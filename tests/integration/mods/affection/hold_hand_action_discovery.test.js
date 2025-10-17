@@ -34,7 +34,7 @@ describe('affection:hold_hand action discovery', () => {
       scopeResolver.resolveSync = (scopeName, context) => {
         if (
           scopeName ===
-          'affection:close_actors_facing_each_other_or_behind_target'
+          'positioning:close_actors_facing_each_other_or_behind_target'
         ) {
           const actorId = context?.actor?.id;
           if (!actorId) {
@@ -102,10 +102,11 @@ describe('affection:hold_hand action discovery', () => {
       expect(holdHandAction.id).toBe(ACTION_ID);
       expect(holdHandAction.template).toBe("hold {target}'s hand");
       expect(holdHandAction.targets).toBe(
-        'affection:close_actors_facing_each_other_or_behind_target'
+        'positioning:close_actors_facing_each_other_or_behind_target'
       );
       expect(holdHandAction.forbidden_components.actor).toEqual([
         'affection:holding_hand',
+        'affection:hand_held',
       ]);
       expect(holdHandAction.forbidden_components.target).toEqual([
         'affection:hand_held',
@@ -162,6 +163,25 @@ describe('affection:hold_hand action discovery', () => {
     it('is blocked when the target already has their hand held', () => {
       const scenario = testFixture.createCloseActors(['Ivy', 'Liam']);
       scenario.target.components['affection:hand_held'] = {
+        holding_entity_id: 'someone_else',
+        consented: true,
+      };
+
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+      configureActionDiscovery();
+
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
+      const ids = availableActions.map((action) => action.id);
+
+      expect(ids).not.toContain(ACTION_ID);
+    });
+
+    it('is blocked when the actor has their hand held by someone else', () => {
+      const scenario = testFixture.createCloseActors(['Marla', 'Iker']);
+      scenario.actor.components['affection:hand_held'] = {
         holding_entity_id: 'someone_else',
         consented: true,
       };

@@ -3,12 +3,12 @@
   "id": "affection:hold_hand",
   "name": "Hold Hand",
   "description": "Reach out and hold someone's hand in an affectionate gesture.",
-  "targets": "affection:close_actors_facing_each_other_or_behind_target",
+  "targets": "positioning:close_actors_facing_each_other_or_behind_target",
   "required_components": {
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["affection:holding_hand"],
+    "actor": ["affection:holding_hand", "affection:hand_held"],
     "target": ["affection:hand_held"],
     "primary": ["affection:hand_held"]
   },

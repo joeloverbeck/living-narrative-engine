@@ -944,6 +944,9 @@ export class ModActionTestFixture extends BaseModTestFixture {
    * This method wraps the test environment's getAvailableActions functionality,
    * providing the same action discovery capabilities available in the test environment.
    *
+   * In test environments, discovered actions are automatically wrapped with strict
+   * property access validation to catch typos and incorrect property names early.
+   *
    * @param {string} actorId - Actor entity ID
    * @returns {Array<object>} Array of available actions for the actor
    * @throws {Error} If test environment doesn't support action discovery
@@ -956,7 +959,16 @@ export class ModActionTestFixture extends BaseModTestFixture {
     }
 
     try {
-      return this.testEnv.getAvailableActions(actorId);
+      const actions = this.testEnv.getAvailableActions(actorId);
+
+      // In test environment, wrap actions with strict validation
+      if (process.env.NODE_ENV === 'test') {
+        // Lazy-load the helper to avoid circular dependencies
+        const { wrapActionsWithStrictValidation } = require('../strictTestHelpers.js');
+        return wrapActionsWithStrictValidation(actions);
+      }
+
+      return actions;
     } catch (error) {
       this.logger.error(
         `Failed to discover actions for actor ${actorId}: ${error.message}`,

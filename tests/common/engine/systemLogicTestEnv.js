@@ -889,7 +889,8 @@ export function createRuleTestEnvironment(options) {
 
         for (const key of Array.from(remainingKeys)) {
           const def = targetEntries[key] || {};
-          const dependency = def.contextFrom;
+          // Check if contextFrom exists before accessing - only secondary/tertiary targets have it
+          const dependency = 'contextFrom' in def ? def.contextFrom : undefined;
 
           if (!dependency || orderedKeys.includes(dependency) || !remainingKeys.has(dependency)) {
             orderedKeys.push(key);
@@ -958,7 +959,8 @@ export function createRuleTestEnvironment(options) {
         context.tertiary = resolvedTargets.tertiary;
       }
 
-      if (targetDef?.contextFrom) {
+      // Check if contextFrom exists before accessing - only secondary/tertiary targets have it
+      if (targetDef && 'contextFrom' in targetDef && targetDef.contextFrom) {
         const referencedTarget = resolvedTargets[targetDef.contextFrom];
         if (referencedTarget) {
           context[targetDef.contextFrom] = referencedTarget;

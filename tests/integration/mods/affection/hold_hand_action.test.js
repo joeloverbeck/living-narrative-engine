@@ -108,25 +108,29 @@ describe('affection:hold_hand action integration', () => {
     expect(perceptibleEvent.payload.locationId).toBe('garden');
   });
 
-  it('cleans up stale hand-holding components before setting new state', async () => {
+  it('prevents action when actor has stale hand_held component', async () => {
     const scenario = testFixture.createCloseActors(['Iris', 'Julian'], {
       location: 'sunroom',
     });
 
+    // Actor has stale hand_held component from previous interaction
     scenario.actor.components['affection:hand_held'] = {
       holding_entity_id: 'old_partner',
       consented: false,
-    };
-    scenario.target.components['affection:holding_hand'] = {
-      held_entity_id: 'old_partner',
-      initiated: false,
     };
 
     const room = ModEntityScenarios.createRoom('sunroom', 'Sun Room');
     testFixture.reset([room, scenario.actor, scenario.target]);
 
-    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
+    // Action should be blocked - actor must first release their held hand
+    const result = await testFixture.executeAction(
+      scenario.actor.id,
+      scenario.target.id
+    );
 
+    expect(result).toMatchObject({ blocked: true });
+
+    // Verify no components were changed
     const actorInstance = testFixture.entityManager.getEntityInstance(
       scenario.actor.id
     );
@@ -134,16 +138,13 @@ describe('affection:hold_hand action integration', () => {
       scenario.target.id
     );
 
-    expect(actorInstance.components['affection:holding_hand']).toEqual({
-      held_entity_id: scenario.target.id,
-      initiated: true,
+    expect(actorInstance.components['affection:hand_held']).toEqual({
+      holding_entity_id: 'old_partner',
+      consented: false,
     });
-    expect(actorInstance.components['affection:hand_held']).toBeUndefined();
+    expect(actorInstance.components['affection:holding_hand']).toBeUndefined();
     expect(targetInstance.components['affection:holding_hand']).toBeUndefined();
-    expect(targetInstance.components['affection:hand_held']).toEqual({
-      holding_entity_id: scenario.actor.id,
-      consented: true,
-    });
+    expect(targetInstance.components['affection:hand_held']).toBeUndefined();
   });
 
   it('prevents repeated attempts to hold hands while already connected', async () => {

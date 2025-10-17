@@ -86,7 +86,7 @@ describe('positioning:sit_down_at_distance action integration', () => {
       // Act: Execute action with secondary target
       await testFixture.executeAction('actor1', 'bench1', {
         additionalPayload: {
-          secondaryTargetId: 'bob1',
+          secondaryId: 'bob1',
         },
       });
 
@@ -127,7 +127,7 @@ describe('positioning:sit_down_at_distance action integration', () => {
 
       await testFixture.executeAction('actor1', 'bench1', {
         additionalPayload: {
-          secondaryTargetId: 'bob1',
+          secondaryId: 'bob1',
         },
       });
 
@@ -172,7 +172,7 @@ describe('positioning:sit_down_at_distance action integration', () => {
 
       await testFixture.executeAction('actor1', 'bench1', {
         additionalPayload: {
-          secondaryTargetId: 'bob1',
+          secondaryId: 'bob1',
         },
       });
 
@@ -199,7 +199,7 @@ describe('positioning:sit_down_at_distance action integration', () => {
 
       await testFixture.executeAction('actor1', 'bench1', {
         additionalPayload: {
-          secondaryTargetId: 'bob1',
+          secondaryId: 'bob1',
         },
       });
 
@@ -223,7 +223,7 @@ describe('positioning:sit_down_at_distance action integration', () => {
 
       await testFixture.executeAction('actor1', 'bench1', {
         additionalPayload: {
-          secondaryTargetId: 'bob1',
+          secondaryId: 'bob1',
         },
       });
 
@@ -255,7 +255,7 @@ describe('positioning:sit_down_at_distance action integration', () => {
 
       await testFixture.executeAction('actor1', 'bench1', {
         additionalPayload: {
-          secondaryTargetId: 'bob1',
+          secondaryId: 'bob1',
         },
       });
 
@@ -285,7 +285,7 @@ describe('positioning:sit_down_at_distance action integration', () => {
       // Try to execute action
       await testFixture.executeAction('actor1', 'bench1', {
         additionalPayload: {
-          secondaryTargetId: 'bob1',
+          secondaryId: 'bob1',
         },
       });
 
@@ -325,7 +325,7 @@ describe('positioning:sit_down_at_distance action integration', () => {
 
       await testFixture.executeAction('actor1', 'bench1', {
         additionalPayload: {
-          secondaryTargetId: 'bob1',
+          secondaryId: 'bob1',
         },
       });
 
@@ -493,7 +493,7 @@ describe('positioning:sit_down_at_distance action integration', () => {
 
       await testFixture.executeAction('actor1', 'bench1', {
         additionalPayload: {
-          secondaryTargetId: 'bob1',
+          secondaryId: 'bob1',
         },
       });
 
@@ -554,7 +554,7 @@ describe('positioning:sit_down_at_distance action integration', () => {
 
       await testFixture.executeAction('actor1', 'bench1', {
         additionalPayload: {
-          secondaryTargetId: 'bob1',
+          secondaryId: 'bob1',
         },
       });
 
@@ -585,7 +585,7 @@ describe('positioning:sit_down_at_distance action integration', () => {
 
       await testFixture.executeAction('actor1', 'bench1', {
         additionalPayload: {
-          secondaryTargetId: 'bob1',
+          secondaryId: 'bob1',
         },
       });
 
