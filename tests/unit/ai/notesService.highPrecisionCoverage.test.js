@@ -32,6 +32,20 @@ describe('NotesService normalization and mutation edge cases', () => {
 
       expect(normalized).toBe(`${DEFAULT_SUBJECT_TYPE}:battle plan: strategic overview`);
     });
+
+    it('returns an empty string when subject metadata is missing and text is blank', () => {
+      expect(
+        normalizeNoteText({
+          text: '',
+        })
+      ).toBe('');
+
+      expect(
+        normalizeNoteText({
+          text: null,
+        })
+      ).toBe('');
+    });
   });
 
   describe('NotesService.addNotes', () => {
