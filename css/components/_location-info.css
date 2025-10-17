@@ -70,7 +70,7 @@
   text-align: left;
   box-shadow: var(--shadow-sm);
   transition: opacity 0.15s ease-in-out;
-  z-index: 30;
+  z-index: 100;
 }
 
 #location-characters-display li:hover > .character-tooltip,
@@ -116,7 +116,7 @@
   text-align: left;
   box-shadow: var(--shadow-sm);
   transition: opacity 0.15s ease-in-out;
-  z-index: 30;
+  z-index: 100;
 }
 
 /* Enable hover/focus/click interactions for location portrait tooltips */

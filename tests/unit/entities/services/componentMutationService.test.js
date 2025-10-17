@@ -6,7 +6,6 @@ import {
 } from '../../../../src/constants/eventIds.js';
 import { EntityNotFoundError } from '../../../../src/errors/entityNotFoundError.js';
 import { ValidationError } from '../../../../src/errors/validationError.js';
-import { ComponentOverrideNotFoundError } from '../../../../src/errors/componentOverrideNotFoundError.js';
 
 const createService = ({ entity, monitoringCoordinator } = {}) => {
   const entityRepository = {
@@ -173,12 +172,17 @@ describe('ComponentMutationService.removeComponent', () => {
     ).rejects.toThrow(EntityNotFoundError);
   });
 
-  it('throws ComponentOverrideNotFoundError when no override exists', async () => {
+  it('succeeds idempotently when no override exists', async () => {
     entity.hasComponentOverride.mockReturnValue(false);
-    const { service } = createService({ entity });
+    const { service, eventDispatcher, logger } = createService({ entity });
 
-    await expect(service.removeComponent('e1', 'core:health')).rejects.toThrow(
-      ComponentOverrideNotFoundError
+    const result = await service.removeComponent('e1', 'core:health');
+
+    expect(result).toBe(true);
+    expect(entity.removeComponent).not.toHaveBeenCalled();
+    expect(eventDispatcher.dispatch).not.toHaveBeenCalled();
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('Treating as successful (idempotent operation)')
     );
   });
 

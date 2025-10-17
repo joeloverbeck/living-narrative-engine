@@ -15,6 +15,10 @@ import { resolve } from 'path';
 import { ModTestHandlerFactory } from './ModTestHandlerFactory.js';
 import { ModEntityScenarios } from './ModEntityBuilder.js';
 import { ModAssertionHelpers } from './ModAssertionHelpers.js';
+import {
+  createActionValidationProxy,
+  createRuleValidationProxy,
+} from './actionValidationProxy.js';
 
 /**
  * File naming conventions for auto-loading mod files
@@ -579,6 +583,17 @@ class BaseModTestFixture {
             const filePath = resolve(actionsDir, file);
             const content = await fs.readFile(filePath, 'utf8');
             const parsed = JSON.parse(content);
+
+            // Validate action definition
+            try {
+              createActionValidationProxy(parsed, `${this.modId}:${file} action`);
+            } catch (validationError) {
+              console.log(
+                `❌ Validation failed for ${file}: ${validationError.message}`
+              );
+              return null;
+            }
+
             console.log(`✅ Successfully loaded ${file}: ${parsed.id}`);
             return parsed;
           } catch (error) {
@@ -668,8 +683,34 @@ export class ModActionTestFixture extends BaseModTestFixture {
   constructor(modId, actionId, ruleFile, conditionFile, options = {}) {
     super(modId, options);
     this.actionId = actionId;
+
+    // Validate rule definition before storing
+    if (ruleFile) {
+      try {
+        createRuleValidationProxy(ruleFile, `${modId}:${actionId} rule`);
+      } catch (err) {
+        console.error('\n⚠️  Rule validation failed:');
+        console.error(err.message);
+        throw err;
+      }
+    }
+
     this.ruleFile = ruleFile;
     this.conditionFile = conditionFile;
+
+    // Validate action definition if provided in options
+    if (options.actionDefinition) {
+      try {
+        createActionValidationProxy(
+          options.actionDefinition,
+          `${modId}:${actionId} action`
+        );
+      } catch (err) {
+        console.error('\n⚠️  Action validation failed:');
+        console.error(err.message);
+        throw err;
+      }
+    }
 
     // Add actionFile property for compatibility with categoryPatternValidation.test.js
     // This contains the string representation of the action file content
