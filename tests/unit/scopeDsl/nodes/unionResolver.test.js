@@ -426,6 +426,68 @@ describe('unionResolver', () => {
           );
         });
 
+        it('should treat plain objects without iterators as invalid operands', () => {
+          const resolverWithHandler = createUnionResolver({
+            errorHandler: mockErrorHandler,
+          });
+          const leftResult = { id: 'non-iterable-object' };
+          const rightResult = new Set(['entity1']);
+
+          dispatcher.resolve
+            .mockReturnValueOnce(leftResult)
+            .mockReturnValueOnce(rightResult);
+
+          const node = {
+            type: 'Union',
+            left: { type: 'Source' },
+            right: { type: 'Source' },
+          };
+          const ctx = {
+            actorEntity: { id: 'actor123' },
+            dispatcher,
+          };
+
+          resolverWithHandler.resolve(node, ctx);
+
+          expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+            expect.any(Error),
+            ctx,
+            'UnionResolver',
+            ErrorCodes.DATA_TYPE_MISMATCH
+          );
+        });
+
+        it('should reject string wrapper objects to exercise constructor branch', () => {
+          const resolverWithHandler = createUnionResolver({
+            errorHandler: mockErrorHandler,
+          });
+          const leftResult = new Set(['entity1']);
+          const rightResult = new String('wrapped-entity');
+
+          dispatcher.resolve
+            .mockReturnValueOnce(leftResult)
+            .mockReturnValueOnce(rightResult);
+
+          const node = {
+            type: 'Union',
+            left: { type: 'Source' },
+            right: { type: 'Source' },
+          };
+          const ctx = {
+            actorEntity: { id: 'actor123' },
+            dispatcher,
+          };
+
+          resolverWithHandler.resolve(node, ctx);
+
+          expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+            expect.any(Error),
+            ctx,
+            'UnionResolver',
+            ErrorCodes.DATA_TYPE_MISMATCH
+          );
+        });
+
         it('should throw error when right operand is not iterable and no errorHandler', () => {
           const leftResult = new Set(['entity1']);
           const rightResult = 42;
@@ -493,6 +555,30 @@ describe('unionResolver', () => {
             'UnionResolver',
             ErrorCodes.MEMORY_LIMIT
           );
+        });
+
+        it('should continue union when memory threshold is exceeded without an error handler', () => {
+          const leftItems = Array.from({ length: 6000 }, (_, i) => `left-${i}`);
+          const rightItems = Array.from({ length: 5000 }, (_, i) => `right-${i}`);
+
+          dispatcher.resolve
+            .mockReturnValueOnce(new Set(leftItems))
+            .mockReturnValueOnce(new Set(rightItems));
+
+          const node = {
+            type: 'Union',
+            left: { type: 'Source' },
+            right: { type: 'Source' },
+          };
+          const ctx = {
+            actorEntity: { id: 'actor123' },
+            dispatcher,
+          };
+
+          const result = resolver.resolve(node, ctx);
+
+          expect(result).toBeInstanceOf(Set);
+          expect(result.size).toBe(11000);
         });
 
         it('should not trigger memory warning for small unions', () => {
@@ -594,6 +680,54 @@ describe('unionResolver', () => {
           expect(() => {
             createUnionResolver({ errorHandler: mockErrorHandler });
           }).not.toThrow();
+        });
+      });
+
+      describe('array flattening branches', () => {
+        it('should skip nullish values while flattening nested arrays', () => {
+          const node = {
+            type: 'Union',
+            left: { type: 'Source' },
+            right: { type: 'Source' },
+          };
+          const ctx = {
+            actorEntity: { id: 'actor123' },
+            dispatcher,
+          };
+
+          const leftResult = new Set([['entity1', null, undefined, 'entity2']]);
+          const rightResult = new Set([['entity3', null]]);
+
+          dispatcher.resolve
+            .mockReturnValueOnce(leftResult)
+            .mockReturnValueOnce(rightResult);
+
+          const result = resolver.resolve(node, ctx);
+
+          expect(result).toEqual(new Set(['entity1', 'entity2', 'entity3']));
+        });
+
+        it('should ignore nullish direct items that are not arrays', () => {
+          const node = {
+            type: 'Union',
+            left: { type: 'Source' },
+            right: { type: 'Source' },
+          };
+          const ctx = {
+            actorEntity: { id: 'actor123' },
+            dispatcher,
+          };
+
+          const leftResult = new Set([null, 'entityA']);
+          const rightResult = new Set([undefined, 'entityB']);
+
+          dispatcher.resolve
+            .mockReturnValueOnce(leftResult)
+            .mockReturnValueOnce(rightResult);
+
+          const result = resolver.resolve(node, ctx);
+
+          expect(result).toEqual(new Set(['entityA', 'entityB']));
         });
       });
     });
