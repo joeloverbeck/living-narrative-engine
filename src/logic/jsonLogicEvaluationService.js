@@ -136,6 +136,8 @@ class JsonLogicEvaluationService extends BaseService {
       'isSocketCovered',
       // Furniture/positioning operators
       'hasSittingSpaceToRight',
+      'canScootCloser',
+      'isClosestLeftOccupant',
       // Test operators
       'throw_error_operator', // Used in tests for short-circuit behavior
     ]);
