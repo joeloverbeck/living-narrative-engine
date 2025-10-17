@@ -43,6 +43,15 @@ export function __TEST_ONLY__setCurrentPhaseForError(phase) {
 }
 
 /**
+ * @description Test-only helper to override the cached start world identifier.
+ * @param {string | null | undefined} value - Start world value to assign; falsy values trigger the default fallback.
+ * @returns {void}
+ */
+export function __TEST_ONLY__setStartWorld(value) {
+  startWorld = value;
+}
+
+/**
  * @description Loads the game configuration and extracts the startWorld value.
  * @returns {Promise<string>} The startWorld value from game.json, or 'default' if not specified.
  */
