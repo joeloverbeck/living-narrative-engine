@@ -553,7 +553,8 @@
       "Bash(npm run validate:mod:positioning:*)",
       "Bash(npm run:*)",
       "Bash(NODE_ENV=test npm run test:performance:*)",
-      "Read(///**)"
+      "Read(///**)",
+      "Read(//tmp/**)"
     ],
     "deny": [],
     "ask": []

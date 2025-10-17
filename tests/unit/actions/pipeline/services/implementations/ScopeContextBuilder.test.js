@@ -352,7 +352,7 @@ describe('ScopeContextBuilder', () => {
       );
 
       expect(mockTargetContextBuilder.buildBaseContext).toHaveBeenCalledWith(
-        'entity-123',
+        'actor-123',
         'location-789'
       );
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
@@ -388,7 +388,9 @@ describe('ScopeContextBuilder', () => {
       );
 
       expect(result.target).toBeUndefined();
-      expect(result.targets).toBeUndefined();
+      expect(result.targets).toEqual({
+        secondary: { id: 'target-2', displayName: 'Secondary Target' },
+      });
     });
 
     it('should handle entity without getAllComponents method', () => {
@@ -437,7 +439,7 @@ describe('ScopeContextBuilder', () => {
       );
 
       expect(mockTargetContextBuilder.buildBaseContext).toHaveBeenCalledWith(
-        'entity-123',
+        'actor-123',
         'location-456'
       );
     });

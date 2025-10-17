@@ -174,33 +174,11 @@ export class ScopeContextBuilder extends BaseService {
     ]);
     // Note: specificPrimary can be null, so we don't validate it as required
 
-    // For contextFrom targets, we need to use the specific primary as the actor
-    // in the scope evaluation context, because scope DSL expressions like
-    // "actor.topmost_clothing[]" should resolve against the target entity,
-    // not the actor performing the action
-    const contextActor = specificPrimary
-      ? this.#entityManager.getEntityInstance(specificPrimary.id)
-      : actor;
-
-    if (!contextActor) {
-      this.logger.error(
-        'Failed to get entity for context actor in buildScopeContextForSpecificPrimary',
-        {
-          specificPrimaryId: specificPrimary?.id,
-          actorId: actor.id,
-        }
-      );
-      // Fall back to original actor if target entity not found
-      return this.#contextBuilder.buildBaseContext(
-        actor.id,
-        actionContext.location?.id ||
-          actor.getComponentData('core:position')?.locationId
-      );
-    }
-
-    // Build context using the target entity as the actor
+    // Build base context using the ORIGINAL actor
+    // This is critical because operators like isClosestLeftOccupant need
+    // context.actor to refer to the entity performing the action, not the target
     const baseContext = this.#contextBuilder.buildBaseContext(
-      contextActor.id,
+      actor.id,
       actionContext.location?.id ||
         actor.getComponentData('core:position')?.locationId
     );
@@ -212,7 +190,8 @@ export class ScopeContextBuilder extends BaseService {
     context.targets = { ...resolvedTargets };
 
     // Add the specific primary as the 'target' for scope evaluation
-    // (kept for backward compatibility and explicit target reference)
+    // This allows operators to access the primary target (e.g., furniture)
+    // while keeping the original actor in context.actor
     if (specificPrimary) {
       const entity = this.#entityManager.getEntityInstance(specificPrimary.id);
       if (entity) {
@@ -220,16 +199,22 @@ export class ScopeContextBuilder extends BaseService {
           id: entity.id,
           components: entity.getAllComponents ? entity.getAllComponents() : {},
         };
+      } else {
+        this.logger.warn(
+          'Failed to get entity for specific primary target in buildScopeContextForSpecificPrimary',
+          {
+            specificPrimaryId: specificPrimary.id,
+            actorId: actor.id,
+          }
+        );
       }
     }
 
     this.logOperation('buildScopeContextForSpecificPrimary', {
-      originalActorId: actor.id,
-      contextActorId: contextActor.id,
+      actorId: actor.id,
       specificPrimaryId: specificPrimary?.id,
       resolvedTargetCount: Object.keys(resolvedTargets).length,
       hasEntityTarget: !!context.target,
-      usedTargetAsActor: specificPrimary !== null,
     });
 
     return context;

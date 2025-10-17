@@ -244,16 +244,17 @@ describe('IsClosestLeftOccupantOperator', () => {
 
   describe('Edge Cases', () => {
     it('should handle two-spot furniture with immediate neighbor', () => {
-      // Furniture: [occupant1, actor]
+      // Furniture: [occupant1, null, actor]
+      // The spot immediately to the left must be empty for scoot_closer action
       mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
         if (entityId === 'actor1' && componentId === 'positioning:sitting_on') {
-          return { furniture_id: 'furniture1', spot_index: 1 };
+          return { furniture_id: 'furniture1', spot_index: 2 };
         }
         if (entityId === 'occupant1' && componentId === 'positioning:sitting_on') {
           return { furniture_id: 'furniture1', spot_index: 0 };
         }
         if (entityId === 'furniture1' && componentId === 'positioning:allows_sitting') {
-          return { spots: ['occupant1', 'actor1'] };
+          return { spots: ['occupant1', null, 'actor1'] };
         }
         return null;
       });

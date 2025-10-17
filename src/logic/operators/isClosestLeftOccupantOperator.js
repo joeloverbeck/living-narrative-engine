@@ -44,6 +44,16 @@ export class IsClosestLeftOccupantOperator extends BaseFurnitureOperator {
    * @returns {boolean} True if candidate is closest left occupant
    */
   evaluateInternal(candidateId, targetId, params, context) {
+    // TEMP DEBUG: Log context structure
+    console.log(`\n🔍 ${this.operatorName} CALLED:`, {
+      candidateId,
+      targetId,
+      params,
+      contextKeys: Object.keys(context || {}),
+      'context.actor': context?.actor,
+      'context.target': context?.target,
+    });
+
     // Extract actor ID from params
     if (!params || params.length < 1) {
       this.logger.warn(
@@ -65,6 +75,7 @@ export class IsClosestLeftOccupantOperator extends BaseFurnitureOperator {
       this.logger.warn(
         `${this.operatorName}: Could not resolve actor from path: ${actorPath}`
       );
+      console.log(`❌ FAILED TO RESOLVE ACTOR from path: ${actorPath}`);
       return false;
     }
 
@@ -156,6 +167,17 @@ export class IsClosestLeftOccupantOperator extends BaseFurnitureOperator {
     if (spots[candidateIndex] !== candidateId) {
       this.logger.warn(
         `${this.operatorName}: Candidate ${candidateId} claims spot ${candidateIndex} but furniture shows ${spots[candidateIndex]}`
+      );
+      return false;
+    }
+
+    // Step 7.5: Check if the spot immediately to the left of actor is empty
+    // This is required for the scoot_closer action - you can only scoot if there's
+    // an empty spot to move into
+    const spotToLeft = spots[actorIndex - 1];
+    if (spotToLeft !== null) {
+      this.logger.debug(
+        `${this.operatorName}: Spot immediately to left of actor (index ${actorIndex - 1}) is occupied by ${spotToLeft} - cannot scoot`
       );
       return false;
     }
