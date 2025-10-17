@@ -14,7 +14,9 @@ jest.mock('../../../src/utils/dependencyUtils.js', () => {
   };
 });
 
-import ActionCommandFormatter from '../../../src/actions/actionFormatter.js';
+import ActionCommandFormatter, {
+  formatActionCommand,
+} from '../../../src/actions/actionFormatter.js';
 import {
   safeDispatchError,
   dispatchValidationError,
@@ -409,6 +411,42 @@ describe('ActionCommandFormatter', () => {
       ok: false,
       error:
         'Multi-target formatting not supported by base ActionCommandFormatter. Use MultiTargetActionFormatter instead.',
+    });
+  });
+
+  describe('formatActionCommand direct usage', () => {
+    it('falls back to default options and still validates the logger', () => {
+      expect(() =>
+        formatActionCommand(
+          createAction(),
+          createTargetContext({ entityId: 'npc-1' }),
+          createEntityManager()
+        )
+      ).toThrow('formatActionCommand: logger is required.');
+    });
+
+    it('uses default formatter dependencies when none are supplied', () => {
+      const action = createAction({ template: 'salute {target}' });
+      const entity = {
+        id: 'npc-1',
+        getComponentData: jest.fn(() => ({ text: 'Captain' })),
+      };
+      const entityManager = createEntityManager(entity);
+      const targetContext = createTargetContext({
+        entityId: 'npc-1',
+        placeholder: 'target',
+      });
+      const options = createOptions();
+
+      const result = formatActionCommand(
+        action,
+        targetContext,
+        entityManager,
+        options
+      );
+
+      expect(entityManager.getEntityInstance).toHaveBeenCalledWith('npc-1');
+      expect(result).toEqual({ ok: true, value: 'salute Captain' });
     });
   });
 });
