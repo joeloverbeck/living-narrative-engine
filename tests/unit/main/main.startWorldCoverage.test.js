@@ -43,6 +43,8 @@ jest.mock('../../../src/dependencyInjection/containerConfig.js', () => ({
 
 describe('main.js start world selection', () => {
   const originalFetch = global.fetch;
+  /** @type {{ debug: jest.Mock; info: jest.Mock; warn: jest.Mock; error: jest.Mock }} */
+  let logger;
 
   beforeEach(() => {
     jest.resetModules();
@@ -68,7 +70,7 @@ describe('main.js start world selection', () => {
       document,
     };
 
-    const logger = {
+    logger = {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
@@ -137,6 +139,26 @@ describe('main.js start world selection', () => {
       'custom-world',
       expect.objectContaining({ debug: expect.any(Function) })
     );
+    expect(mockDisplayFatal).not.toHaveBeenCalled();
+  });
+
+  it('falls back to the default world when the cached start world is cleared', async () => {
+    let mainModule;
+    await jest.isolateModulesAsync(async () => {
+      mainModule = await import('../../../src/main.js');
+    });
+
+    await mainModule.bootstrapApp();
+    mainModule.__TEST_ONLY__setStartWorld('');
+
+    await mainModule.beginGame();
+
+    expect(mockStartGame).toHaveBeenCalledWith(
+      expect.any(Object),
+      'default',
+      logger
+    );
+    expect(logger.debug).toHaveBeenCalledWith('Starting game with world: default');
     expect(mockDisplayFatal).not.toHaveBeenCalled();
   });
 });
