@@ -22,6 +22,10 @@ import TargetValidationConfigProvider from '../../../../../src/actions/pipeline/
 import { createMultiTargetResolutionStage } from '../../../../common/actions/multiTargetStageTestUtilities.js';
 import { EntityManagerTestBed } from '../../../../common/entities/entityManagerTestBed.js';
 import EntityDefinition from '../../../../../src/entities/entityDefinition.js';
+import TargetCandidatePruner from '../../../../../src/actions/pipeline/services/implementations/TargetCandidatePruner.js';
+import { TargetComponentValidator } from '../../../../../src/actions/validation/TargetComponentValidator.js';
+import TargetRequiredComponentsValidator from '../../../../../src/actions/validation/TargetRequiredComponentsValidator.js';
+import { ActionErrorContextBuilder } from '../../../../../src/actions/errors/actionErrorContextBuilder.js';
 
 const createLogger = () => ({
   debug: jest.fn(),
@@ -630,5 +634,210 @@ describe('TargetComponentValidationStage configuration snapshot reuse', () => {
     result = await stage.executeInternal(createContext());
     expect(result.data.candidateActions).toHaveLength(1);
     expect(configLoader).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('TargetComponentValidationStage items action regression', () => {
+  let entityTestBed;
+  let entityManager;
+  let logger;
+  let multiStage;
+  let validationStage;
+  let actor;
+  let unifiedScopeResolver;
+  let fixSuggestionEngine;
+
+  beforeEach(async () => {
+    logger = createLogger();
+    entityTestBed = new EntityManagerTestBed();
+    ({ entityManager } = entityTestBed);
+
+    const roomDefinition = new EntityDefinition('test:room', {
+      description: 'Test room',
+      components: {
+        'core:name': { text: 'Test Room' },
+        'core:location': { id: 'test:room' },
+      },
+    });
+
+    const actorDefinition = new EntityDefinition('test:actor', {
+      description: 'Pipeline actor',
+      components: {
+        'core:name': { text: 'Pipeline Actor' },
+        'core:actor': { type: 'test' },
+        'core:position': { locationId: 'test:room' },
+        'items:inventory': {
+          items: ['test:letter_instance', 'test:photo_instance'],
+          capacity: { maxWeight: 10, maxItems: 5 },
+        },
+      },
+    });
+
+    const readableLetterDefinition = new EntityDefinition('test:letter', {
+      description: 'Readable letter',
+      components: {
+        'core:name': { text: 'Faded Letter' },
+        'items:item': {},
+        'core:description': { text: 'A faded farewell letter.' },
+        'items:readable': { content: 'The final goodbye.' },
+      },
+    });
+
+    const photoDefinition = new EntityDefinition('test:photo', {
+      description: 'Photo missing item component',
+      components: {
+        'core:name': { text: 'Old Photo' },
+        'core:description': { text: 'A worn photograph.' },
+      },
+    });
+
+    entityTestBed.setupDefinitions(
+      roomDefinition,
+      actorDefinition,
+      readableLetterDefinition,
+      photoDefinition
+    );
+
+    await entityManager.createEntityInstance('test:room', {
+      instanceId: 'test:room',
+    });
+    actor = await entityManager.createEntityInstance('test:actor', {
+      instanceId: 'test:actor:1',
+    });
+    await entityManager.createEntityInstance('test:letter', {
+      instanceId: 'test:letter_instance',
+    });
+    await entityManager.createEntityInstance('test:photo', {
+      instanceId: 'test:photo_instance',
+    });
+
+    unifiedScopeResolver = {
+      resolve: jest.fn((scopeName) => {
+        if (scopeName === 'items:examinable_items') {
+          return ActionResult.success(
+            new Set(['test:letter_instance', 'test:photo_instance'])
+          );
+        }
+        return ActionResult.success(new Set());
+      }),
+    };
+
+    const targetResolver = { resolveTargets: jest.fn() };
+
+    multiStage = createMultiTargetResolutionStage({
+      entityManager,
+      logger,
+      unifiedScopeResolver,
+      targetResolver,
+    });
+
+    fixSuggestionEngine = { suggestFixes: jest.fn().mockReturnValue([]) };
+
+    validationStage = new TargetComponentValidationStage({
+      targetComponentValidator: new TargetComponentValidator({
+        logger,
+        entityManager,
+      }),
+      targetRequiredComponentsValidator: new TargetRequiredComponentsValidator({
+        logger,
+      }),
+      logger,
+      actionErrorContextBuilder: new ActionErrorContextBuilder({
+        entityManager,
+        logger,
+        fixSuggestionEngine,
+      }),
+      targetCandidatePruner: new TargetCandidatePruner({ logger }),
+      configProvider: new TargetValidationConfigProvider(),
+      validationReporter: new TargetValidationReporter({ logger }),
+      contextUpdateEmitter: new ContextUpdateEmitter(),
+    });
+  });
+
+  afterEach(async () => {
+    await entityTestBed.cleanup();
+  });
+
+  async function runValidationForAction(actionDef) {
+    const actionContext = {
+      currentLocation: 'test:room',
+      location: { id: 'test:room' },
+    };
+
+    const resolutionResult = await multiStage.executeInternal({
+      actor,
+      candidateActions: [actionDef],
+      actionContext,
+      trace: null,
+    });
+
+    expect(resolutionResult.success).toBe(true);
+    expect(resolutionResult.data.actionsWithTargets).toBeDefined();
+
+    const validationResult = await validationStage.executeInternal({
+      actor,
+      actionsWithTargets: resolutionResult.data.actionsWithTargets,
+    });
+
+    expect(validationResult.success).toBe(true);
+    return validationResult.data.actionsWithTargets;
+  }
+
+  it('retains items:examine_item when a valid examinable target is present', async () => {
+    const examineAction = {
+      id: 'items:examine_item',
+      name: 'Examine Item',
+      template: 'examine {item}',
+      targets: {
+        primary: {
+          scope: 'items:examinable_items',
+          placeholder: 'item',
+          description: 'Item to examine',
+        },
+      },
+      required_components: {
+        primary: ['items:item', 'core:description'],
+      },
+    };
+
+    const actions = await runValidationForAction(examineAction);
+
+    expect(actions).toHaveLength(1);
+    const [actionEntry] = actions;
+    expect(actionEntry.actionDef.id).toBe('items:examine_item');
+    const candidates = actionEntry.resolvedTargets.primary;
+    expect(Array.isArray(candidates)).toBe(true);
+    expect(candidates).toHaveLength(1);
+    expect(candidates[0].id).toBe('test:letter_instance');
+    expect(candidates[0].entity?.components?.['items:item']).toBeDefined();
+  });
+
+  it('retains items:read_item when a readable target meets all requirements', async () => {
+    const readAction = {
+      id: 'items:read_item',
+      name: 'Read Item',
+      template: 'read {item}',
+      targets: {
+        primary: {
+          scope: 'items:examinable_items',
+          placeholder: 'item',
+          description: 'Readable item to read',
+        },
+      },
+      required_components: {
+        primary: ['items:item', 'items:readable'],
+      },
+    };
+
+    const actions = await runValidationForAction(readAction);
+
+    expect(actions).toHaveLength(1);
+    const [actionEntry] = actions;
+    expect(actionEntry.actionDef.id).toBe('items:read_item');
+    const candidates = actionEntry.resolvedTargets.primary;
+    expect(Array.isArray(candidates)).toBe(true);
+    expect(candidates).toHaveLength(1);
+    expect(candidates[0].id).toBe('test:letter_instance');
+    expect(candidates[0].entity?.components?.['items:readable']).toBeDefined();
   });
 });
