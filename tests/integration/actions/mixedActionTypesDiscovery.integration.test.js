@@ -219,9 +219,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
         console.log('targets type:', typeof examineAction.targets);
         console.log('Has targets.primary:', !!examineAction.targets?.primary);
         console.log('targets.primary.scope:', examineAction.targets?.primary?.scope);
-        console.log('Has resolvedTargets:', !!examineAction.resolvedTargets);
-        console.log('Has targetDefinitions:', !!examineAction.targetDefinitions);
-        console.log('Is multi-target:', examineAction.isMultiTarget);
+        console.log('Template:', examineAction.template);
       } else {
         console.log('examine_item NOT FOUND in discovered actions');
       }

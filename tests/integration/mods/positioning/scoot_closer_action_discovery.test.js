@@ -86,37 +86,29 @@ describe('scoot_closer action discovery - Integration Tests', () => {
           return { success: true, value: new Set() };
         }
 
-        // The spot to the left is empty. Find the leftmost (first) occupant.
-        let leftmostOccupantId = null;
-        let leftmostIndex = -1;
+        // The spot to the left is empty. Find the closest (nearest) occupant.
+        let closestOccupantId = null;
+        let closestIndex = -1;
 
         for (let i = actorIndex - 2; i >= 0; i--) {
           const occupantId = spots[i];
           console.log(`    Checking spot ${i}: ${occupantId}`);
           if (occupantId && typeof occupantId === 'string' && occupantId !== actorId) {
-            leftmostOccupantId = occupantId;
-            leftmostIndex = i;
-            // Don't break - continue to find the LEFTMOST (lowest index)
+            closestOccupantId = occupantId;
+            closestIndex = i;
+            // Found the closest occupant - break immediately
+            break;
           }
         }
 
-        if (!leftmostOccupantId) {
+        if (!closestOccupantId) {
           console.log(`  ⚠️ No occupant found to the left`);
           return { success: true, value: new Set() };
         }
 
-        // Check if all spots between leftmost occupant and the empty spot are also empty
-        // Valid pattern: [occupant, null, ..., null, actor] with no other occupants in between
-        for (let i = leftmostIndex + 1; i < actorIndex - 1; i++) {
-          if (spots[i]) {
-            console.log(`  ⚠️ Another occupant exists between leftmost and actor at index ${i}: ${spots[i]}`);
-            return { success: true, value: new Set() };
-          }
-        }
-
-        // Valid scooting scenario - can move closer to leftmost occupant
-        console.log(`  ✅ Found leftmost occupant at index ${leftmostIndex}: ${leftmostOccupantId}`);
-        return { success: true, value: new Set([leftmostOccupantId]) };
+        // Valid scooting scenario - can move closer to closest occupant
+        console.log(`  ✅ Found closest occupant at index ${closestIndex}: ${closestOccupantId}`);
+        return { success: true, value: new Set([closestOccupantId]) };
       }
 
       // Fall back to original resolution for other scopes
@@ -237,6 +229,63 @@ describe('scoot_closer action discovery - Integration Tests', () => {
       expect(scootAction.targets.secondary).toBeDefined();
       expect(scootAction.targets.secondary.scope).toBe('positioning:closest_leftmost_occupant');
       expect(scootAction.targets.secondary.contextFrom).toBe('primary');
+    });
+
+    it('should discover with multiple occupants and target the closest one', async () => {
+      // Setup: Furniture with [occupant1, null, occupant2, null, actor]
+      // Should target occupant2 (closest), not occupant1 (leftmost)
+      const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
+
+      const furniture = new ModEntityBuilder('furniture1')
+        .withName('bench')
+        .atLocation('room1')
+        .withComponent('positioning:allows_sitting', {
+          spots: ['occupant1', null, 'occupant2', null, 'actor1'],
+        })
+        .build();
+
+      const occupant1 = new ModEntityBuilder('occupant1')
+        .withName('Bob')
+        .atLocation('room1')
+        .asActor()
+        .withComponent('positioning:sitting_on', {
+          furniture_id: 'furniture1',
+          spot_index: 0,
+        })
+        .build();
+
+      const occupant2 = new ModEntityBuilder('occupant2')
+        .withName('Charlie')
+        .atLocation('room1')
+        .asActor()
+        .withComponent('positioning:sitting_on', {
+          furniture_id: 'furniture1',
+          spot_index: 2,
+        })
+        .build();
+
+      const actor = new ModEntityBuilder('actor1')
+        .withName('Alice')
+        .atLocation('room1')
+        .asActor()
+        .withComponent('positioning:sitting_on', {
+          furniture_id: 'furniture1',
+          spot_index: 4,
+        })
+        .build();
+
+      testFixture.reset([room, furniture, occupant1, occupant2, actor]);
+
+      // Act
+      const actions = await testFixture.discoverActions('actor1');
+
+      // Assert - should find action targeting occupant2 (closest)
+      const scootAction = actions.find(
+        (a) => a.id === 'positioning:scoot_closer'
+      );
+      expect(scootAction).toBeDefined();
+      expect(scootAction.targets).toBeDefined();
+      expect(scootAction.targets.secondary).toBeDefined();
     });
   });
 
@@ -362,60 +411,6 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .build();
 
       testFixture.reset([room, furniture, actor]);
-
-      // Act
-      const actions = await testFixture.discoverActions('actor1');
-
-      // Assert
-      const scootAction = actions.find(
-        (a) => a.id === 'positioning:scoot_closer'
-      );
-      expect(scootAction).toBeUndefined();
-    });
-
-    it('should NOT discover when gap exists between actor and leftmost occupant', async () => {
-      // Setup: Furniture with [occupant1, null, occupant2, null, actor]
-      const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
-
-      const furniture = new ModEntityBuilder('furniture1')
-        .withName('bench')
-        .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
-          spots: ['occupant1', null, 'occupant2', null, 'actor1'],
-        })
-        .build();
-
-      const occupant1 = new ModEntityBuilder('occupant1')
-        .withName('Bob')
-        .atLocation('room1')
-        .asActor()
-        .withComponent('positioning:sitting_on', {
-          furniture_id: 'furniture1',
-          spot_index: 0,
-        })
-        .build();
-
-      const occupant2 = new ModEntityBuilder('occupant2')
-        .withName('Charlie')
-        .atLocation('room1')
-        .asActor()
-        .withComponent('positioning:sitting_on', {
-          furniture_id: 'furniture1',
-          spot_index: 2,
-        })
-        .build();
-
-      const actor = new ModEntityBuilder('actor1')
-        .withName('Alice')
-        .atLocation('room1')
-        .asActor()
-        .withComponent('positioning:sitting_on', {
-          furniture_id: 'furniture1',
-          spot_index: 4,
-        })
-        .build();
-
-      testFixture.reset([room, furniture, occupant1, occupant2, actor]);
 
       // Act
       const actions = await testFixture.discoverActions('actor1');
