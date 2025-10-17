@@ -12,6 +12,14 @@ module.exports = {
   setupFiles: ['./tests/setup/cleanupTestDirectories.js'],
   setupFilesAfterEnv: ['./jest.setup.js'],
 
+  // ES Module support configuration for dynamic imports
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+  },
+  transform: {
+    '^.+\\.js$': ['babel-jest', { configFile: './babel.config.js' }],
+  },
+
   transformIgnorePatterns: [
     // Ignore node_modules except for 'tinyqueue' and 'uuid'
     '/node_modules/(?!tinyqueue/|uuid/)',

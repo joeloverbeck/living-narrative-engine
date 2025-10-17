@@ -268,8 +268,9 @@ export function createBaseRuleEnvironment({
           };
         }
 
-        // Handle the positioning:furniture_im_sitting_on scope
-        if (scopeName === 'positioning:furniture_im_sitting_on') {
+        // Handle the positioning:furniture_im_sitting_on and positioning:furniture_actor_sitting_on scopes
+        // These are equivalent - both find the furniture the actor is sitting on
+        if (scopeName === 'positioning:furniture_im_sitting_on' || scopeName === 'positioning:furniture_actor_sitting_on') {
           // This scope should find furniture that the actor is currently sitting on
           // The scope definition is: entities(positioning:allows_sitting)[][{"==": [{"var": "entity.id"}, {"var": "actor.components.positioning:sitting_on.furniture_id"}]}]
 
@@ -562,6 +563,57 @@ export function createBaseRuleEnvironment({
 
           // Return the items in the container's contents array
           return { success: true, value: new Set(containerComponent.contents) };
+        }
+
+        // Handle the positioning:closest_leftmost_occupant scope
+        if (scopeName === 'positioning:closest_leftmost_occupant') {
+          // This scope finds the closest occupant to the left of the actor on furniture
+          // It requires the furniture entity in context.target (from contextFrom: primary)
+          const furnitureId = context?.target?.id;
+          const actorId = context?.actor?.id;
+
+          if (!furnitureId || !actorId) {
+            return { success: true, value: new Set() };
+          }
+
+          // Get furniture entity and its sitting component
+          const furniture = entityManager.getEntityInstance(furnitureId);
+          const allowsSitting = furniture?.components?.['positioning:allows_sitting'];
+          if (!allowsSitting || !Array.isArray(allowsSitting.spots)) {
+            return { success: true, value: new Set() };
+          }
+
+          const spots = allowsSitting.spots;
+
+          // Get actor's sitting position
+          const actor = entityManager.getEntityInstance(actorId);
+          const actorSitting = actor?.components?.['positioning:sitting_on'];
+          if (!actorSitting || actorSitting.furniture_id !== furnitureId) {
+            return { success: true, value: new Set() };
+          }
+
+          const actorIndex = actorSitting.spot_index;
+
+          // Check if spot immediately to the left of actor is empty (required for scooting)
+          if (actorIndex <= 0 || spots[actorIndex - 1] !== null) {
+            return { success: true, value: new Set() };
+          }
+
+          // Find closest occupant to the left of actor
+          for (let i = actorIndex - 1; i >= 0; i--) {
+            if (spots[i] !== null) {
+              const occupantId = spots[i];
+              // Verify the occupant exists and has correct component data
+              const occupant = entityManager.getEntityInstance(occupantId);
+              const occupantSitting = occupant?.components?.['positioning:sitting_on'];
+              if (occupantSitting && occupantSitting.furniture_id === furnitureId && occupantSitting.spot_index === i) {
+                return { success: true, value: new Set([occupantId]) };
+              }
+            }
+          }
+
+          // No occupant found to the left
+          return { success: true, value: new Set() };
         }
 
         // Handle the positioning:actors_sitting_with_space_to_right scope

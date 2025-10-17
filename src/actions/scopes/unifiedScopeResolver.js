@@ -631,12 +631,17 @@ export class UnifiedScopeResolver {
       container: this.#container, // Add container for service resolution
     };
 
-    // Add target context if available from action context
-    if (context.actionContext?.target) {
+    // Add target context if available
+    // Check both top-level (from ScopeContextBuilder) and nested in actionContext (legacy)
+    if (context.target) {
+      runtimeCtx.target = context.target;
+    } else if (context.actionContext?.target) {
       runtimeCtx.target = context.actionContext.target;
     }
 
-    if (context.actionContext?.targets) {
+    if (context.targets) {
+      runtimeCtx.targets = context.targets;
+    } else if (context.actionContext?.targets) {
       runtimeCtx.targets = context.actionContext.targets;
     }
 

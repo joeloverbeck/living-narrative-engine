@@ -97,8 +97,9 @@ describe('Debug canScootCloser in scope', () => {
     }
     console.log('=== END DISCOVERED ACTIONS ===\n');
 
-    // Document the current behaviour: scoot closer is not discovered but get up is available
-    expect(scootAction).toBeUndefined();
+    // Scoot closer should be discovered - actor has empty spot to left with occupant beyond
+    expect(scootAction).toBeDefined();
+    expect(scootAction.id).toBe('positioning:scoot_closer');
     expect(actionIds).toContain('positioning:get_up_from_furniture');
   });
 });
