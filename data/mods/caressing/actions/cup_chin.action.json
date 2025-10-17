@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "caressing:cup_chin",
+  "name": "Cup Chin",
+  "description": "Cup the target's chin in a tender gesture.",
+  "targets": "caressing:close_actors_facing_each_other",
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": ["kissing:kissing"]
+  },
+  "template": "cup {target}'s chin",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#311b92",
+    "textColor": "#d1c4e9",
+    "hoverBackgroundColor": "#4527a0",
+    "hoverTextColor": "#ede7f6"
+  }
+}

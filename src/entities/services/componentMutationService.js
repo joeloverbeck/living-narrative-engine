@@ -353,11 +353,12 @@ export class ComponentMutationService {
     }
 
     // Check if the component to be removed exists as an override.
+    // If not, treat as successful (idempotent operation - removing non-existent component succeeds).
     if (!entity.hasComponentOverride(componentTypeId)) {
       this.#logger.debug(
-        `ComponentMutationService.removeComponent: Component '${componentTypeId}' not found as an override on entity '${instanceId}'.`
+        `ComponentMutationService.removeComponent: Component '${componentTypeId}' not found as an override on entity '${instanceId}'. Treating as successful (idempotent operation).`
       );
-      throw new ComponentOverrideNotFoundError(instanceId, componentTypeId);
+      return true; // Idempotent: removing non-existent component succeeds
     }
 
     // Capture the state of the component *before* it is removed.

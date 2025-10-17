@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "caressing:event-is-action-cup-chin",
+  "description": "Checks if the event is a 'caressing:cup_chin' action attempt",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "caressing:cup_chin"
+    ]
+  }
+}

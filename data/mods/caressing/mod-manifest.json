@@ -32,6 +32,7 @@
     "actions": [
       "adjust_clothing.action.json",
       "caress_abdomen.action.json",
+      "cup_chin.action.json",
       "feel_arm_muscles.action.json",
       "fondle_ass.action.json",
       "lick_lips.action.json",
@@ -43,6 +44,7 @@
     "rules": [
       "adjust_clothing.rule.json",
       "caress_abdomen.rule.json",
+      "cup_chin.rule.json",
       "handle_feel_arm_muscles.rule.json",
       "handle_fondle_ass.rule.json",
       "handle_run_fingers_through_hair.rule.json",
@@ -54,6 +56,7 @@
     "conditions": [
       "event-is-action-adjust-clothing.condition.json",
       "event-is-action-caress-abdomen.condition.json",
+      "event-is-action-cup-chin.condition.json",
       "event-is-action-feel-arm-muscles.condition.json",
       "event-is-action-fondle-ass.condition.json",
       "event-is-action-lick-lips.condition.json",
