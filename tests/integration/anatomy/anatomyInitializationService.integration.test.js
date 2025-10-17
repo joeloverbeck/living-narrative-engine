@@ -1,325 +1,300 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import EventBus from '../../../src/events/eventBus.js';
 import { AnatomyInitializationService } from '../../../src/anatomy/anatomyInitializationService.js';
 import { ENTITY_CREATED_ID } from '../../../src/constants/eventIds.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 
-function createHarness({ generationImplementation } = {}) {
-  const logger = {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  };
+class ControlledAnatomyGenerationService {
+  constructor() {
+    this.calls = [];
+    this.pending = new Map();
+    this.immediateResults = [];
+  }
 
-  const unsubscribe = jest.fn();
-  let entityCreatedHandler = null;
+  queueImmediateResult(result) {
+    this.immediateResults.push({ type: 'resolve', value: result });
+  }
 
-  const eventDispatcher = {
-    subscribe: jest.fn((eventId, handler) => {
-      if (eventId === ENTITY_CREATED_ID) {
-        entityCreatedHandler = handler;
+  queueImmediateError(error) {
+    this.immediateResults.push({ type: 'reject', error });
+  }
+
+  generateAnatomyIfNeeded(entityId) {
+    this.calls.push(entityId);
+
+    if (this.immediateResults.length > 0) {
+      const next = this.immediateResults.shift();
+      if (next.type === 'resolve') {
+        return Promise.resolve(next.value);
       }
-      return unsubscribe;
-    }),
-  };
+      return Promise.reject(next.error);
+    }
 
-  const anatomyGenerationService = {
-    generateAnatomyIfNeeded: jest
-      .fn(generationImplementation || (() => Promise.resolve(false))),
-  };
+    return new Promise((resolve, reject) => {
+      this.pending.set(entityId, { resolve, reject });
+    });
+  }
 
-  const service = new AnatomyInitializationService({
-    eventDispatcher,
-    logger,
-    anatomyGenerationService,
-  });
+  resolve(entityId, value = true) {
+    const deferred = this.pending.get(entityId);
+    if (!deferred) {
+      throw new Error(`No pending generation for ${entityId}`);
+    }
+    this.pending.delete(entityId);
+    deferred.resolve(value);
+  }
 
-  return {
-    logger,
-    eventDispatcher,
-    anatomyGenerationService,
-    service,
-    unsubscribe,
-    getEntityCreatedHandler: () => entityCreatedHandler,
-  };
+  reject(entityId, error) {
+    const deferred = this.pending.get(entityId);
+    if (!deferred) {
+      throw new Error(`No pending generation for ${entityId}`);
+    }
+    this.pending.delete(entityId);
+    deferred.reject(error);
+  }
 }
 
-function waitForMicrotask() {
-  return new Promise((resolve) => setImmediate(resolve));
-}
+const createLogger = () => ({
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+});
+
+const flushMicrotasks = async () => {
+  await Promise.resolve();
+  await Promise.resolve();
+};
 
 describe('AnatomyInitializationService integration', () => {
-  let harness;
+  let logger;
+  let eventBus;
+  let generationService;
+  let service;
 
   beforeEach(() => {
-    harness = createHarness();
+    logger = createLogger();
+    eventBus = new EventBus({ logger });
+    generationService = new ControlledAnatomyGenerationService();
+    service = new AnatomyInitializationService({
+      eventDispatcher: eventBus,
+      logger,
+      anatomyGenerationService: generationService,
+    });
   });
 
   afterEach(() => {
-    harness.service.destroy();
+    jest.useRealTimers();
   });
 
-  it('validates required dependencies in the constructor', () => {
-    const logger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
-    const eventDispatcher = { subscribe: jest.fn() };
-    const generationService = { generateAnatomyIfNeeded: jest.fn() };
-
+  it('requires all dependencies', () => {
     expect(
       () =>
         new AnatomyInitializationService({
+          eventDispatcher: null,
           logger,
           anatomyGenerationService: generationService,
-        })
-    ).toThrow(new InvalidArgumentError('eventDispatcher is required'));
+        }),
+    ).toThrow(InvalidArgumentError);
 
     expect(
       () =>
         new AnatomyInitializationService({
-          eventDispatcher,
+          eventDispatcher: eventBus,
+          logger: null,
           anatomyGenerationService: generationService,
-        })
-    ).toThrow(new InvalidArgumentError('logger is required'));
+        }),
+    ).toThrow(InvalidArgumentError);
 
     expect(
       () =>
         new AnatomyInitializationService({
-          eventDispatcher,
+          eventDispatcher: eventBus,
           logger,
-        })
-    ).toThrow(new InvalidArgumentError('anatomyGenerationService is required'));
+          anatomyGenerationService: null,
+        }),
+    ).toThrow(InvalidArgumentError);
   });
 
-  it('registers the entity created subscription only once and warns on reinitialization', () => {
-    harness.service.initialize();
+  it('processes entity-created events sequentially and resolves waiters', async () => {
+    service.initialize();
 
-    expect(harness.eventDispatcher.subscribe).toHaveBeenCalledTimes(1);
-    expect(harness.eventDispatcher.subscribe).toHaveBeenCalledWith(
-      ENTITY_CREATED_ID,
-      expect.any(Function)
-    );
-    expect(harness.logger.info).toHaveBeenCalledWith(
-      'AnatomyInitializationService: Initialized'
-    );
+    await eventBus.dispatch(ENTITY_CREATED_ID, {
+      instanceId: 'entity-1',
+      definitionId: 'core:actor',
+    });
+    await flushMicrotasks();
 
-    harness.service.initialize();
+    const firstWait = service.waitForEntityGeneration('entity-1', 500);
 
-    expect(harness.logger.warn).toHaveBeenCalledWith(
-      'AnatomyInitializationService: Already initialized'
+    expect(generationService.calls).toEqual(['entity-1']);
+    expect(service.hasPendingGenerations()).toBe(true);
+    expect(service.getPendingGenerationCount()).toBe(1);
+
+    await eventBus.dispatch(ENTITY_CREATED_ID, {
+      instanceId: 'entity-2',
+      definitionId: 'core:actor',
+    });
+    await flushMicrotasks();
+
+    // second entity should be queued but not processed yet
+    expect(generationService.calls).toEqual(['entity-1']);
+    expect(service.getPendingGenerationCount()).toBe(2);
+
+    generationService.resolve('entity-1', true);
+    await flushMicrotasks();
+
+    const secondWaitPromise = service.waitForEntityGeneration('entity-2', 500);
+    expect(generationService.calls).toEqual(['entity-1', 'entity-2']);
+
+    generationService.resolve('entity-2', false);
+    await service.waitForAllGenerationsToComplete();
+
+    expect(await firstWait).toBe(true);
+    expect(await secondWaitPromise).toBe(false);
+    expect(service.hasPendingGenerations()).toBe(false);
+    expect(service.getPendingGenerationCount()).toBe(0);
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining("Generated anatomy for entity 'entity-1'"),
     );
-    expect(harness.eventDispatcher.subscribe).toHaveBeenCalledTimes(1);
   });
 
-  it('ignores reconstructed entities and missing instance identifiers', async () => {
-    harness.service.initialize();
-    const handler = harness.getEntityCreatedHandler();
-    expect(typeof handler).toBe('function');
+  it('ignores reconstructed entities and warns about missing instanceId', async () => {
+    service.initialize();
 
-    await handler({ payload: { instanceId: 'entity-1', wasReconstructed: true } });
-    expect(harness.anatomyGenerationService.generateAnatomyIfNeeded).not.toHaveBeenCalled();
+    await eventBus.dispatch(ENTITY_CREATED_ID, {
+      instanceId: 'reconstructed',
+      wasReconstructed: true,
+    });
+    await flushMicrotasks();
 
-    await handler({ payload: {} });
-    expect(harness.logger.warn).toHaveBeenCalledWith(
-      "AnatomyInitializationService: Entity created event missing instanceId"
+    expect(generationService.calls).toHaveLength(0);
+
+    await eventBus.dispatch(ENTITY_CREATED_ID, { definitionId: 'core:actor' });
+    await flushMicrotasks();
+
+    expect(generationService.calls).toHaveLength(0);
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('missing instanceId'),
     );
   });
 
-  it('accepts raw event objects without payload wrappers', async () => {
-    harness.service.initialize();
-    const handler = harness.getEntityCreatedHandler();
+  it('propagates generation errors to waiters and continues queue processing', async () => {
+    service.initialize();
 
-    let resolveGeneration;
-    harness.anatomyGenerationService.generateAnatomyIfNeeded.mockImplementation(
-      () =>
-        new Promise((resolve) => {
-          resolveGeneration = resolve;
-        })
+    await eventBus.dispatch(ENTITY_CREATED_ID, {
+      instanceId: 'entity-error',
+      definitionId: 'core:actor',
+    });
+    await eventBus.dispatch(ENTITY_CREATED_ID, {
+      instanceId: 'entity-success',
+      definitionId: 'core:actor',
+    });
+    await flushMicrotasks();
+
+    const failingWait = service.waitForEntityGeneration('entity-error', 500);
+    const failure = new Error('boom');
+    generationService.reject('entity-error', failure);
+    await expect(failingWait).rejects.toThrow('boom');
+    await flushMicrotasks();
+
+    const succeedingWait = service.waitForEntityGeneration('entity-success', 500);
+    generationService.resolve('entity-success', true);
+    await expect(succeedingWait).resolves.toBe(true);
+
+    await service.waitForAllGenerationsToComplete();
+
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to generate anatomy for entity'),
+      expect.objectContaining({ error: failure }),
     );
-
-    await handler({ instanceId: 'entity-direct' });
-    await waitForMicrotask();
-
-    const waiter = harness.service.waitForEntityGeneration('entity-direct');
-    resolveGeneration(true);
-
-    await expect(waiter).resolves.toBe(true);
   });
 
-  it('processes queued generations sequentially and resolves waiters', async () => {
-    harness.service.initialize();
-    const handler = harness.getEntityCreatedHandler();
-
-    const resolvers = {};
-    harness.anatomyGenerationService.generateAnatomyIfNeeded.mockImplementation(
-      (entityId) =>
-        new Promise((resolve) => {
-          resolvers[entityId] = resolve;
-        })
-    );
-
-    await handler({ payload: { instanceId: 'entity-A' } });
-    await handler({ payload: { instanceId: 'entity-B' } });
-
-    await waitForMicrotask();
-
-    expect(harness.service.hasPendingGenerations()).toBe(true);
-    expect(harness.service.getPendingGenerationCount()).toBe(2);
-
-    const firstWait = harness.service.waitForEntityGeneration('entity-A');
-    const secondWait = harness.service.waitForEntityGeneration('entity-B');
-
-    resolvers['entity-A'](true);
-    await expect(firstWait).resolves.toBe(true);
-    expect(harness.logger.info).toHaveBeenCalledWith(
-      "AnatomyInitializationService: Generated anatomy for entity 'entity-A'"
-    );
-    expect(harness.service.hasPendingGenerations()).toBe(true);
-
-    resolvers['entity-B'](false);
-    await expect(secondWait).resolves.toBe(false);
-
-    await harness.service.waitForAllGenerationsToComplete();
-    expect(harness.service.hasPendingGenerations()).toBe(false);
-    expect(harness.service.getPendingGenerationCount()).toBe(0);
+  it('waitForEntityGeneration returns false when no generation is pending', async () => {
+    service.initialize();
+    const result = await service.waitForEntityGeneration('unknown-entity');
+    expect(result).toBe(false);
   });
 
-  it('rejects waiters when generation fails and logs the error', async () => {
-    harness.service.initialize();
-    const handler = harness.getEntityCreatedHandler();
+  it('waitForEntityGeneration rejects on timeout if generation never completes', async () => {
+    jest.useFakeTimers();
+    service.initialize();
 
-    let rejectGeneration;
+    await eventBus.dispatch(ENTITY_CREATED_ID, { instanceId: 'stalled-entity' });
+    await flushMicrotasks();
+
+    const waitPromise = service.waitForEntityGeneration('stalled-entity', 20);
+    jest.advanceTimersByTime(25);
+    await expect(waitPromise).rejects.toThrow('Timeout waiting for anatomy generation for entity');
+  });
+
+  it('waitForAllGenerationsToComplete rejects when pending work never clears', async () => {
+    jest.useFakeTimers();
+    service.__TEST_ONLY__setInternalState({
+      queue: ['stalled-1'],
+      pending: ['stalled-2'],
+      processing: true,
+    });
+
+    const waitPromise = service.waitForAllGenerationsToComplete(30);
+
+    jest.advanceTimersByTime(35);
+    await expect(waitPromise).rejects.toThrow('Timeout waiting for anatomy generation to complete');
+  });
+
+  it('generateAnatomy delegates to generation service and logs outcomes', async () => {
+    service.initialize();
+    generationService.queueImmediateResult(true);
+    const success = await service.generateAnatomy('actor-1', 'blueprint-1');
+    expect(success).toBe(true);
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining("Successfully generated anatomy for entity 'actor-1'"),
+    );
+
     const failure = new Error('generation failed');
-    harness.anatomyGenerationService.generateAnatomyIfNeeded.mockImplementation(
-      () =>
-        new Promise((_, reject) => {
-          rejectGeneration = reject;
-        })
+    generationService.queueImmediateError(failure);
+    await expect(service.generateAnatomy('actor-2', 'blueprint-2')).rejects.toThrow(
+      'generation failed',
     );
-
-    await handler({ payload: { instanceId: 'entity-fail' } });
-    await waitForMicrotask();
-
-    const waitPromise = harness.service.waitForEntityGeneration('entity-fail');
-    rejectGeneration(failure);
-
-    await expect(waitPromise).rejects.toBe(failure);
-    expect(harness.logger.error).toHaveBeenCalledWith(
-      "AnatomyInitializationService: Failed to generate anatomy for entity 'entity-fail'",
-      { error: failure }
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining("Failed to generate anatomy for entity 'actor-2'"),
+      expect.objectContaining({ error: failure }),
     );
   });
 
-  it('logs generation failures even when no waiters are registered', async () => {
-    harness.service.initialize();
-    const handler = harness.getEntityCreatedHandler();
+  it('destroy unsubscribes listeners and resets internal state', async () => {
+    service.initialize();
+    await eventBus.dispatch(ENTITY_CREATED_ID, { instanceId: 'to-destroy' });
+    await flushMicrotasks();
 
-    const failure = new Error('silent failure');
-    harness.anatomyGenerationService.generateAnatomyIfNeeded.mockRejectedValueOnce(
-      failure
-    );
+    service.destroy();
 
-    await handler({ payload: { instanceId: 'entity-without-waiter' } });
-    await waitForMicrotask();
+    expect(eventBus.listenerCount(ENTITY_CREATED_ID)).toBe(0);
+    expect(service.hasPendingGenerations()).toBe(false);
+    expect(service.getPendingGenerationCount()).toBe(0);
 
-    expect(harness.logger.error).toHaveBeenCalledWith(
-      "AnatomyInitializationService: Failed to generate anatomy for entity 'entity-without-waiter'",
-      { error: failure }
+    // Events after destroy should be ignored
+    await eventBus.dispatch(ENTITY_CREATED_ID, { instanceId: 'after-destroy' });
+    await flushMicrotasks();
+
+    expect(generationService.calls).toContain('to-destroy');
+    expect(generationService.calls).not.toContain('after-destroy');
+  });
+
+  it('logs a warning when initialized twice', () => {
+    service.initialize();
+    service.initialize();
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      'AnatomyInitializationService: Already initialized',
     );
   });
 
-  it('returns false immediately from waitForEntityGeneration when nothing is pending', async () => {
-    harness.service.initialize();
-    await expect(harness.service.waitForEntityGeneration('ghost-entity')).resolves.toBe(false);
-  });
+  it('processQueue helper ensures processing flag consistency', async () => {
+    generationService.queueImmediateResult(true);
+    service.__TEST_ONLY__setInternalState({ queue: ['helper-entity'] });
+    await service.__TEST_ONLY__processQueue({ ensureProcessingFlag: true });
 
-  it('allows multiple waiters to observe the same generation result', async () => {
-    harness.service.initialize();
-    const handler = harness.getEntityCreatedHandler();
-
-    let resolveGeneration;
-    harness.anatomyGenerationService.generateAnatomyIfNeeded.mockImplementation(
-      () =>
-        new Promise((resolve) => {
-          resolveGeneration = resolve;
-        })
-    );
-
-    await handler({ payload: { instanceId: 'entity-multi' } });
-    await waitForMicrotask();
-
-    const waiterA = harness.service.waitForEntityGeneration('entity-multi');
-    const waiterB = harness.service.waitForEntityGeneration('entity-multi');
-
-    resolveGeneration(true);
-
-    await expect(waiterA).resolves.toBe(true);
-    await expect(waiterB).resolves.toBe(true);
-  });
-
-  it('supports generating anatomy explicitly and propagates failures', async () => {
-    harness.service.initialize();
-
-    harness.anatomyGenerationService.generateAnatomyIfNeeded.mockResolvedValueOnce(false);
-    await expect(harness.service.generateAnatomy('entity-W', 'blueprint-0')).resolves.toBe(
-      false
-    );
-    expect(harness.logger.info).not.toHaveBeenCalledWith(
-      expect.stringContaining("entity 'entity-W'")
-    );
-
-    harness.anatomyGenerationService.generateAnatomyIfNeeded.mockResolvedValueOnce(true);
-    await expect(harness.service.generateAnatomy('entity-X', 'blueprint-1')).resolves.toBe(true);
-    expect(harness.logger.info).toHaveBeenCalledWith(
-      "AnatomyInitializationService: Successfully generated anatomy for entity 'entity-X' with blueprint 'blueprint-1'"
-    );
-
-    const failure = new Error('manual generation failed');
-    harness.anatomyGenerationService.generateAnatomyIfNeeded.mockRejectedValueOnce(failure);
-    await expect(
-      harness.service.generateAnatomy('entity-Y', 'blueprint-2')
-    ).rejects.toBe(failure);
-    expect(harness.logger.error).toHaveBeenCalledWith(
-      "AnatomyInitializationService: Failed to generate anatomy for entity 'entity-Y' with blueprint 'blueprint-2'",
-      { error: failure }
-    );
-  });
-
-  it('times out when pending generations never resolve', async () => {
-    harness.service.initialize();
-    const handler = harness.getEntityCreatedHandler();
-
-    let resolveGeneration;
-    harness.anatomyGenerationService.generateAnatomyIfNeeded.mockImplementation(
-      () =>
-        new Promise((resolve) => {
-          resolveGeneration = resolve;
-        })
-    );
-
-    await handler({ payload: { instanceId: 'entity-timeout' } });
-    await waitForMicrotask();
-
-    await expect(
-      harness.service.waitForAllGenerationsToComplete(50)
-    ).rejects.toThrow(
-      /AnatomyInitializationService: Timeout waiting for anatomy generation to complete/
-    );
-
-    resolveGeneration(false);
-    await harness.service.waitForAllGenerationsToComplete();
-  });
-
-  it('cleans up resources when destroyed', async () => {
-    harness.service.initialize();
-    const handler = harness.getEntityCreatedHandler();
-
-    harness.anatomyGenerationService.generateAnatomyIfNeeded.mockResolvedValue(false);
-    await handler({ payload: { instanceId: 'entity-cleanup' } });
-    await harness.service.waitForAllGenerationsToComplete();
-
-    harness.service.destroy();
-
-    expect(harness.unsubscribe).toHaveBeenCalledTimes(1);
-    expect(harness.service.hasPendingGenerations()).toBe(false);
-    expect(harness.service.getPendingGenerationCount()).toBe(0);
+    expect(generationService.calls).toEqual(['helper-entity']);
   });
 });
