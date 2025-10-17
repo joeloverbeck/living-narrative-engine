@@ -88,6 +88,45 @@ Target restrictions should be minimal and only applied when physically impossibl
 }
 ```
 
+### sit_down_at_distance Action (Distance-Based Positioning)
+
+**Multi-Target Action with Secondary Scope:**
+```json
+{
+  "id": "positioning:sit_down_at_distance",
+  "targets": {
+    "primary": {
+      "scope": "positioning:available_furniture",
+      "description": "Furniture with open seats"
+    },
+    "secondary": {
+      "scope": "positioning:actors_sitting_with_space_to_right",
+      "contextFrom": "primary",
+      "description": "Occupant to maintain distance from"
+    }
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:sitting_on",
+      "positioning:kneeling_before",
+      "positioning:bending_over"
+    ]
+  }
+}
+```
+
+**Key Validation Points:**
+- Secondary scope must filter based on primary target (furniture) using `contextFrom`
+- Rule must validate both buffer seat (occupant + 1) and target seat (occupant + 2) are empty
+- Atomic operations ensure race condition safety with batch component additions
+- Scope DSL syntax: `furniture.occupants[].actor` to traverse from furniture to occupants
+
+**Testing Considerations:**
+- Test with furniture at various capacity levels
+- Verify behavior when no valid occupants exist (action should not appear)
+- Confirm one-seat buffer is maintained, not direct adjacency
+- Validate multiple actors can sit at distance from same occupant simultaneously
+
 ## Best Practices
 
 ### 1. Prioritize Actor Validation

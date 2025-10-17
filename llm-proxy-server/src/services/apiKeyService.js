@@ -437,7 +437,7 @@ export class ApiKeyService {
           }
         );
       }
-    } else if (envVarName && fileName && !actualApiKey) {
+    } else {
       // Both env var and file were configured, and both failed.
       // finalErrorDetails would be from the file attempt (the last attempt).
       // We'll make the message more comprehensive.

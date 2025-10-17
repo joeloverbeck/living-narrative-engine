@@ -198,11 +198,14 @@ function formatActionCommand(
   targetContext,
   entityManager,
   options = {},
-  {
-    displayNameFn = getEntityDisplayName,
-    formatterMap = targetFormatterMap,
-  } = {}
+  deps = {}
 ) {
+  const { displayNameFn, formatterMap } = deps;
+  const effectiveDisplayNameFn =
+    displayNameFn === undefined ? getEntityDisplayName : displayNameFn;
+  const effectiveFormatterMap =
+    formatterMap === undefined ? targetFormatterMap : formatterMap;
+
   const { debug = false, logger, safeEventDispatcher } = options;
   if (!logger) {
     throw new Error('formatActionCommand: logger is required.');
@@ -213,7 +216,7 @@ function formatActionCommand(
     actionDefinition,
     targetContext,
     entityManager,
-    displayNameFn,
+    effectiveDisplayNameFn,
     logger
   );
 
@@ -243,9 +246,9 @@ function formatActionCommand(
   // --- 2. Placeholder Substitution based on Target Type ---
   const formatResult = applyTargetFormatter(command, targetContext, {
     actionDefinition,
-    formatterMap,
+    formatterMap: effectiveFormatterMap,
     entityManager,
-    displayNameFn,
+    displayNameFn: effectiveDisplayNameFn,
     logger,
     debug,
     dispatcher,
@@ -259,6 +262,8 @@ function formatActionCommand(
   // --- 3. Return Formatted String ---
   return finalizeCommand(command, logger, debug);
 }
+
+export { formatActionCommand };
 
 /**
  * Default implementation of {@link IActionCommandFormatter}.

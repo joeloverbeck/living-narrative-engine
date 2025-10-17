@@ -757,6 +757,55 @@ describe('ApiKeyService', () => {
         expect.stringContaining('normalized')
       );
     });
+
+    test('_readApiKeyFromFile normalizes directory traversal attempts before reading and caching', async () => {
+      appConfig.isCacheEnabled.mockReturnValue(true);
+      appConfig.getApiKeyCacheTtl.mockReturnValue(5000);
+      cacheService.get.mockReturnValue(undefined);
+      fsReader.readFile.mockResolvedValue('trailing-space-key   ');
+
+      const result = await service._readApiKeyFromFile(
+        '../../secrets/api.key',
+        '/var/keys',
+        'llm-sanitized'
+      );
+
+      const sanitizedPath = path.join('/var/keys', 'api.key');
+      expect(fsReader.readFile).toHaveBeenCalledWith(
+        sanitizedPath,
+        'utf-8'
+      );
+      expect(cacheService.set).toHaveBeenCalledWith(
+        `api_key:file:${sanitizedPath}`,
+        'trailing-space-key',
+        5000
+      );
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining("was normalized to 'api.key'")
+      );
+      expect(result).toEqual({ key: 'trailing-space-key', error: null });
+    });
+
+    test('_readApiKeyFromFile reports sanitized attemptedFile paths on read errors', async () => {
+      const accessError = new Error('permission denied');
+      accessError.code = 'EACCES';
+      fsReader.readFile.mockRejectedValue(accessError);
+
+      const result = await service._readApiKeyFromFile(
+        '../nested/secret.key',
+        '/secure/configs',
+        'llm-error'
+      );
+
+      expect(result.error.stage).toBe('api_key_file_not_found_or_unreadable');
+      expect(result.error).toEqual(
+        expect.objectContaining({
+          details: expect.objectContaining({
+            attemptedFile: path.join('/secure/configs', 'secret.key'),
+          }),
+        })
+      );
+    });
   });
 
   describe('Error Handling', () => {
@@ -891,6 +940,40 @@ describe('ApiKeyService', () => {
       });
       expect(logger.warn.mock.calls[0][0]).toContain('N/A');
     });
+
+    test('_createErrorDetails preserves pre-existing originalErrorMessage metadata', () => {
+      const err = new Error('should not override');
+      const details = {
+        llmId: 'llm-preexisting',
+        originalErrorMessage: 'prior context',
+      };
+
+      const result = service._createErrorDetails('msg', 'stage', details, err);
+
+      expect(result).toEqual({
+        message: 'msg',
+        stage: 'stage',
+        details: {
+          llmId: 'llm-preexisting',
+          originalErrorMessage: 'prior context',
+        },
+      });
+
+      const warnCall = logger.warn.mock.calls.at(-1);
+      expect(warnCall[0]).toContain('stage');
+      expect(warnCall[1]).toEqual(
+        expect.objectContaining({
+          details: expect.objectContaining({
+            llmId: 'llm-preexisting',
+            originalErrorMessage: 'prior context',
+          }),
+          originalError: expect.objectContaining({
+            message: 'should not override',
+            name: err.name,
+          }),
+        })
+      );
+    });
   });
 
   describe('Edge Cases and Branch Coverage', () => {
@@ -945,6 +1028,32 @@ describe('ApiKeyService', () => {
 
       expect(result.errorDetails.stage).toBe('api_key_all_sources_failed');
       expect(result.errorDetails.details.reason).toContain('see previous logs');
+    });
+
+    test('falls back to unknown error when prior builders return null', async () => {
+      delete process.env.MISSING_ONLY_ENV_KEY;
+
+      const realCreate = service._createErrorDetails.bind(service);
+      const createSpy = jest
+        .spyOn(service, '_createErrorDetails')
+        .mockImplementationOnce(() => null)
+        .mockImplementationOnce(() => null)
+        .mockImplementation((...args) => realCreate(...args));
+
+      const result = await service.getApiKey(
+        { apiType: 'openai', apiKeyEnvVar: 'MISSING_ONLY_ENV_KEY' },
+        'llm-unknown'
+      );
+
+      expect(createSpy).toHaveBeenCalledTimes(3);
+      expect(createSpy.mock.calls[2][1]).toBe('api_key_retrieval_unknown_error');
+      expect(result.apiKey).toBeNull();
+      expect(result.errorDetails).toEqual(
+        expect.objectContaining({ stage: 'api_key_retrieval_unknown_error' })
+      );
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('unexpected state for llmId')
+      );
     });
 
   });

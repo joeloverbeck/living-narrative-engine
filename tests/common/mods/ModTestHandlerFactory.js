@@ -4,6 +4,7 @@
  */
 
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
+import QueryComponentsHandler from '../../../src/logic/operationHandlers/queryComponentsHandler.js';
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
@@ -17,6 +18,7 @@ import UnlockMovementHandler from '../../../src/logic/operationHandlers/unlockMo
 import LockMovementHandler from '../../../src/logic/operationHandlers/lockMovementHandler.js';
 import LogHandler from '../../../src/logic/operationHandlers/logHandler.js';
 import ModifyArrayFieldHandler from '../../../src/logic/operationHandlers/modifyArrayFieldHandler.js';
+import ModifyComponentHandler from '../../../src/logic/operationHandlers/modifyComponentHandler.js';
 import TransferItemHandler from '../../../src/logic/operationHandlers/transferItemHandler.js';
 import ValidateInventoryCapacityHandler from '../../../src/logic/operationHandlers/validateInventoryCapacityHandler.js';
 import DropItemAtLocationHandler from '../../../src/logic/operationHandlers/dropItemAtLocationHandler.js';
@@ -25,6 +27,7 @@ import OpenContainerHandler from '../../../src/logic/operationHandlers/openConta
 import TakeFromContainerHandler from '../../../src/logic/operationHandlers/takeFromContainerHandler.js';
 import PutInContainerHandler from '../../../src/logic/operationHandlers/putInContainerHandler.js';
 import ValidateContainerCapacityHandler from '../../../src/logic/operationHandlers/validateContainerCapacityHandler.js';
+import AtomicModifyComponentHandler from '../../../src/logic/operationHandlers/atomicModifyComponentHandler.js';
 import { validateDependency } from '../../../src/utils/dependencyUtils.js';
 
 /* global jest */
@@ -109,6 +112,11 @@ export class ModTestHandlerFactory {
         logger,
         safeEventDispatcher: safeDispatcher,
       }),
+      QUERY_COMPONENTS: new QueryComponentsHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
       GET_NAME: new GetNameHandler({
         entityManager,
         logger,
@@ -162,9 +170,62 @@ export class ModTestHandlerFactory {
       }),
     };
 
+    const handlers = {
+      ...baseHandlers,
+      ADD_COMPONENT: new AddComponentHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+    };
+
+    return handlers;
+  }
+
+  /**
+   * Creates handlers that support adding and removing components.
+   *
+   * @description Extends the standard handler set with ADD_COMPONENT and
+   * REMOVE_COMPONENT operations for rules that mutate state.
+   * @param {object} entityManager - Entity manager instance
+   * @param {object} eventBus - Event bus instance
+   * @param {object} logger - Logger instance
+   * @returns {object} Handlers object with component mutation support
+   * @throws {Error} If any required parameter is missing or invalid
+   */
+  static createHandlersWithComponentMutations(
+    entityManager,
+    eventBus,
+    logger
+  ) {
+    this.#validateDependencies(
+      entityManager,
+      eventBus,
+      logger,
+      'createHandlersWithComponentMutations'
+    );
+
+    const baseHandlers = this.createStandardHandlers(
+      entityManager,
+      eventBus,
+      logger
+    );
+
+    const safeDispatcher = {
+      dispatch: jest.fn((eventType, payload) => {
+        eventBus.dispatch(eventType, payload);
+        return Promise.resolve(true);
+      }),
+    };
+
     return {
       ...baseHandlers,
       ADD_COMPONENT: new AddComponentHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      REMOVE_COMPONENT: new RemoveComponentHandler({
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,
@@ -385,6 +446,7 @@ export class ModTestHandlerFactory {
       violence: this.createStandardHandlers.bind(this),
       sex: this.createStandardHandlers.bind(this),
       intimacy: this.createStandardHandlers.bind(this),
+      affection: this.createHandlersWithComponentMutations.bind(this),
     };
 
     return (
@@ -501,6 +563,16 @@ export class ModTestHandlerFactory {
         safeEventDispatcher: safeDispatcher,
       }),
       MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      MODIFY_COMPONENT: new ModifyComponentHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      ATOMIC_MODIFY_COMPONENT: new AtomicModifyComponentHandler({
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,

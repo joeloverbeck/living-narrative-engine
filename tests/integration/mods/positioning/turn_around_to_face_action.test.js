@@ -37,6 +37,7 @@ import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluatio
 import { PrerequisiteEvaluationService } from '../../../../src/actions/validation/prerequisiteEvaluationService.js';
 import { ActionIndex } from '../../../../src/actions/actionIndex.js';
 import DefaultDslParser from '../../../../src/scopeDsl/parser/defaultDslParser.js';
+import { extractTargetIds } from '../../../common/actions/targetParamTestHelpers.js';
 
 describe('Turn Around to Face Action Discovery', () => {
   let entityManager;
@@ -330,7 +331,7 @@ describe('Turn Around to Face Action Discovery', () => {
       expect(turnAroundToFaceAction.command).toBe(
         'turn around to face bob-entity'
       );
-      expect(turnAroundToFaceAction.params.targetId).toBe(bob);
+      expect(extractTargetIds(turnAroundToFaceAction.params)).toContain(bob);
     });
   });
 
@@ -379,14 +380,12 @@ describe('Turn Around to Face Action Discovery', () => {
 
       expect(turnAroundActions).toHaveLength(1);
 
-      // The action should allow targeting Bob (first resolved target)
-      // Note: Current implementation only shows first target in command
       const action = turnAroundActions[0];
-      expect(action.params.targetId).toBe(bob);
+      const primaryTargets = action.params?.targetIds?.primary ?? [];
 
-      // If the system supported multiple target IDs, we would check:
-      // expect(action.params.targetIds.primary).toContain(bob);
-      // expect(action.params.targetIds.primary).toContain(charlie);
+      expect(primaryTargets.length).toBeGreaterThan(0);
+      expect(primaryTargets).toContain(bob);
+      expect(primaryTargets).toContain(charlie);
     });
 
     it('should handle empty facing_away_from array', async () => {
@@ -442,7 +441,7 @@ describe('Turn Around to Face Action Discovery', () => {
       );
 
       expect(turnAroundActions).toHaveLength(1);
-      expect(turnAroundActions[0].params.targetId).toBe(bob);
+      expect(extractTargetIds(turnAroundActions[0].params)).toContain(bob);
     });
 
     it('should handle single target in facing_away_from', async () => {
@@ -470,7 +469,7 @@ describe('Turn Around to Face Action Discovery', () => {
       );
 
       expect(turnAroundActions).toHaveLength(1);
-      expect(turnAroundActions[0].params.targetId).toBe(bob);
+      expect(extractTargetIds(turnAroundActions[0].params)).toContain(bob);
     });
   });
 
@@ -516,7 +515,7 @@ describe('Turn Around to Face Action Discovery', () => {
         (a) => a.id === 'positioning:turn_around_to_face'
       );
       expect(aliceTurnActions).toHaveLength(1);
-      expect(aliceTurnActions[0].params.targetId).toBe(bob);
+      expect(extractTargetIds(aliceTurnActions[0].params)).toContain(bob);
 
       // Check Bob's actions
       const bobEntity = entityManager.getEntityInstance(bob);
@@ -526,7 +525,7 @@ describe('Turn Around to Face Action Discovery', () => {
         (a) => a.id === 'positioning:turn_around_to_face'
       );
       expect(bobTurnActions).toHaveLength(1);
-      expect(bobTurnActions[0].params.targetId).toBe(alice);
+      expect(extractTargetIds(bobTurnActions[0].params)).toContain(alice);
     });
 
     it('should handle partial facing away in group', async () => {
@@ -566,7 +565,7 @@ describe('Turn Around to Face Action Discovery', () => {
 
       // Only Bob should be a valid target
       expect(turnAroundActions).toHaveLength(1);
-      expect(turnAroundActions[0].params.targetId).toBe(bob);
+      expect(extractTargetIds(turnAroundActions[0].params)).toContain(bob);
     });
   });
 });

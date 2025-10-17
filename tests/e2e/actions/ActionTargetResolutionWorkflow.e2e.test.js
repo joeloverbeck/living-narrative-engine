@@ -43,6 +43,7 @@ import {
   FOLLOWING_COMPONENT_ID,
   LEADING_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
+import { extractTargetIds } from '../../common/actions/targetParamTestHelpers.js';
 
 // Import core action definitions
 import dismissAction from '../../../data/mods/companionship/actions/dismiss.action.json';
@@ -420,13 +421,17 @@ describe('Action Target Resolution Workflow E2E', () => {
 
     // Validate go action - should target Location Y
     expect(actionsByType['movement:go']).toBeDefined();
-    expect(actionsByType['movement:go'].params?.targetId).toBe('test-location-y');
+    const goTargets = extractTargetIds(actionsByType['movement:go'].params);
+    expect(goTargets).toContain('test-location-y');
     expect(actionsByType['movement:go'].command).toContain('Location Y');
     expect(actionsByType['movement:go'].command).toMatch(/go to Location Y/i);
 
     // Validate follow action - should target Actor Two, NOT a location
     expect(actionsByType['companionship:follow']).toBeDefined();
-    expect(actionsByType['companionship:follow'].params?.targetId).toBe('test-actor-2');
+    const followTargets = extractTargetIds(
+      actionsByType['companionship:follow'].params
+    );
+    expect(followTargets).toContain('test-actor-2');
     expect(actionsByType['companionship:follow'].command).toContain('Actor Two');
     expect(actionsByType['companionship:follow'].command).toMatch(/follow Actor Two/i);
 
@@ -439,7 +444,12 @@ describe('Action Target Resolution Workflow E2E', () => {
 
     // Validate wait action - should have no target
     expect(actionsByType['core:wait']).toBeDefined();
-    expect(actionsByType['core:wait'].params?.targetId).toBeNull();
+    const waitTargets = extractTargetIds(
+      actionsByType['core:wait'].params,
+      { placeholder: null }
+    );
+    expect(waitTargets.length).toBe(0);
+    expect(actionsByType['core:wait'].params?.targetId ?? null).toBeNull();
     expect(actionsByType['core:wait'].command).toBe('wait');
 
     // Should have tracing information for debugging
@@ -475,20 +485,19 @@ describe('Action Target Resolution Workflow E2E', () => {
 
     // Validate each follow action
     for (const followAction of followActions) {
-      const targetId = followAction.params?.targetId;
-      expect(targetId).toBeTruthy();
+      const targetIds = extractTargetIds(followAction.params);
+      expect(targetIds.length).toBeGreaterThan(0);
 
-      // Get the target entity
-      const targetEntity = await entityManager.getEntityInstance(targetId);
-      expect(targetEntity).toBeDefined();
+      for (const targetId of targetIds) {
+        const targetEntity = await entityManager.getEntityInstance(targetId);
+        expect(targetEntity).toBeDefined();
 
-      // Critical validation: target must have actor component
-      const actorComponent = targetEntity.getComponentData(ACTOR_COMPONENT_ID);
-      expect(actorComponent).toBeDefined();
+        const actorComponent = targetEntity.getComponentData(ACTOR_COMPONENT_ID);
+        expect(actorComponent).toBeDefined();
 
-      // Critical validation: target must NOT be a location
-      const exitsComponent = targetEntity.getComponentData(EXITS_COMPONENT_ID);
-      expect(exitsComponent).toBeNull();
+        const exitsComponent = targetEntity.getComponentData(EXITS_COMPONENT_ID);
+        expect(exitsComponent).toBeNull();
+      }
 
       // Validate command formatting
       expect(followAction.command).not.toContain('[LOCATION NAME]');
@@ -526,20 +535,19 @@ describe('Action Target Resolution Workflow E2E', () => {
 
     // Validate each go action
     for (const goAction of goActions) {
-      const targetId = goAction.params?.targetId;
-      expect(targetId).toBeTruthy();
+      const targetIds = extractTargetIds(goAction.params);
+      expect(targetIds.length).toBeGreaterThan(0);
 
-      // Get the target entity
-      const targetEntity = await entityManager.getEntityInstance(targetId);
-      expect(targetEntity).toBeDefined();
+      for (const targetId of targetIds) {
+        const targetEntity = await entityManager.getEntityInstance(targetId);
+        expect(targetEntity).toBeDefined();
 
-      // Target should NOT have actor component (not an actor)
-      const actorComponent = targetEntity.getComponentData(ACTOR_COMPONENT_ID);
-      expect(actorComponent).toBeNull();
+        const actorComponent = targetEntity.getComponentData(ACTOR_COMPONENT_ID);
+        expect(actorComponent).toBeNull();
 
-      // Target should be a location (we can infer this from having name/description)
-      const nameComponent = targetEntity.getComponentData('core:name');
-      expect(nameComponent).toBeDefined();
+        const nameComponent = targetEntity.getComponentData('core:name');
+        expect(nameComponent).toBeDefined();
+      }
 
       // Validate command formatting
       expect(goAction.command).toMatch(/go\s+to\s+\w+/i);
@@ -596,8 +604,8 @@ describe('Action Target Resolution Workflow E2E', () => {
       (a) => a.id === 'companionship:follow'
     );
 
-    expect(actor1FollowAction.params?.targetId).toBe('test-actor-2');
-    expect(actor2FollowAction.params?.targetId).toBe('test-actor-1');
+    expect(extractTargetIds(actor1FollowAction.params)).toContain('test-actor-2');
+    expect(extractTargetIds(actor2FollowAction.params)).toContain('test-actor-1');
 
     // Go actions should target the same location for both
     const actor1GoAction = actor1Actions.actions.find(
@@ -607,8 +615,8 @@ describe('Action Target Resolution Workflow E2E', () => {
       (a) => a.id === 'movement:go'
     );
 
-    expect(actor1GoAction.params?.targetId).toBe('test-location-y');
-    expect(actor2GoAction.params?.targetId).toBe('test-location-y');
+    expect(extractTargetIds(actor1GoAction.params)).toContain('test-location-y');
+    expect(extractTargetIds(actor2GoAction.params)).toContain('test-location-y');
   });
 
   /**
@@ -658,10 +666,21 @@ describe('Action Target Resolution Workflow E2E', () => {
 
       // Params should contain appropriate targetId
       if (action.id === 'core:wait') {
-        expect(action.params.targetId).toBeNull();
+        expect(extractTargetIds(action.params, { placeholder: null })).toHaveLength(0);
+        expect(action.params?.targetId ?? null).toBeNull();
       } else {
-        expect(action.params.targetId).toBeTruthy();
-        expect(typeof action.params.targetId).toBe('string');
+        const allTargetIds = extractTargetIds(action.params, { placeholder: null });
+        expect(allTargetIds.length).toBeGreaterThan(0);
+        for (const id of allTargetIds) {
+          expect(typeof id).toBe('string');
+        }
+
+        if (
+          action.params?.targetId !== undefined &&
+          action.params?.targetId !== null
+        ) {
+          expect(typeof action.params.targetId).toBe('string');
+        }
       }
     });
   });
@@ -711,7 +730,7 @@ describe('Action Target Resolution Workflow E2E', () => {
     const cachedFollowAction = secondCall.actions.find(
       (a) => a.id === 'companionship:follow'
     );
-    expect(cachedFollowAction.params?.targetId).toBe('test-actor-2');
+    expect(extractTargetIds(cachedFollowAction.params)).toContain('test-actor-2');
     expect(cachedFollowAction.command).toContain('Actor Two');
     expect(cachedFollowAction.command).not.toContain('Location');
   });

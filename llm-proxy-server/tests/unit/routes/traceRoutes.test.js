@@ -104,6 +104,35 @@ describe('Trace Routes', () => {
     );
   });
 
+  it('should sanitize file names with directory segments during single writes', async () => {
+    const response = await request(app).post('/api/traces/write').send({
+      traceData: { session: true },
+      fileName: '../dangerous/escape.json',
+      outputDirectory: './traces/sessions',
+    });
+
+    expect(response.status).toBe(200);
+
+    const expectedRelativePath = path.join('traces', 'sessions', 'escape.json');
+
+    expect(fs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining(expectedRelativePath),
+      expect.any(String),
+      'utf8'
+    );
+
+    const [writtenPath] = fs.writeFile.mock.calls[0];
+    expect(writtenPath).not.toContain('..');
+
+    expect(response.body).toMatchObject({
+      success: true,
+      fileName: 'escape.json',
+    });
+    expect(response.body.path.replace(/\\/g, '/')).toBe(
+      expectedRelativePath.replace(/\\/g, '/')
+    );
+  });
+
   it('should reject requests missing required fields', async () => {
     const response = await request(app).post('/api/traces/write').send({
       traceData: null,
@@ -130,6 +159,97 @@ describe('Trace Routes', () => {
     expect(fs.writeFile).not.toHaveBeenCalled();
   });
 
+  it('should treat Windows-style absolute paths as invalid during single writes', async () => {
+    const originalIsAbsolute = path.isAbsolute;
+    const isAbsoluteSpy = jest
+      .spyOn(path, 'isAbsolute')
+      .mockImplementation((inputPath, ...rest) => {
+        if (
+          typeof inputPath === 'string' &&
+          inputPath.includes('C:/windows-breach')
+        ) {
+          return true;
+        }
+        return originalIsAbsolute(inputPath, ...rest);
+      });
+
+    try {
+      const response = await request(app).post('/api/traces/write').send({
+        traceData: { session: 'windows' },
+        fileName: 'trace.json',
+        outputDirectory: 'C:/windows-breach',
+      });
+
+      expect(response.status).toBe(403);
+      expect(response.body).toMatchObject({
+        success: false,
+        error: 'Invalid output path',
+      });
+      expect(fs.mkdir).not.toHaveBeenCalled();
+      expect(fs.writeFile).not.toHaveBeenCalled();
+    } finally {
+      isAbsoluteSpy.mockRestore();
+    }
+  });
+
+  it('should block batch writes that resolve outside the project directory', async () => {
+    const response = await request(app).post('/api/traces/write-batch').send({
+      outputDirectory: '../../outside',
+      traces: [{ traceData: { foo: 'bar' }, fileName: 'escape.json' }],
+    });
+
+    expect(response.status).toBe(403);
+    expect(response.body).toMatchObject({ success: false, error: 'Invalid output path' });
+    expect(fs.mkdir).not.toHaveBeenCalled();
+    expect(fs.writeFile).not.toHaveBeenCalled();
+  });
+
+  it('should block batch writes targeting absolute directories', async () => {
+    const response = await request(app).post('/api/traces/write-batch').send({
+      outputDirectory: '/tmp/malicious',
+      traces: [{ traceData: { foo: 'bar' }, fileName: 'escape.json' }],
+    });
+
+    expect(response.status).toBe(403);
+    expect(response.body).toMatchObject({ success: false, error: 'Invalid output path' });
+    expect(fs.mkdir).not.toHaveBeenCalled();
+    expect(fs.writeFile).not.toHaveBeenCalled();
+  });
+
+  it('should reject Windows-style absolute directories during batch writes', async () => {
+    const originalIsAbsolute = path.isAbsolute;
+    const isAbsoluteSpy = jest
+      .spyOn(path, 'isAbsolute')
+      .mockImplementation((inputPath, ...rest) => {
+        if (typeof inputPath === 'string' && inputPath.includes('C:/batch-windows')) {
+          return true;
+        }
+        return originalIsAbsolute(inputPath, ...rest);
+      });
+
+    try {
+      const response = await request(app).post('/api/traces/write-batch').send({
+        outputDirectory: 'C:/batch-windows',
+        traces: [
+          {
+            traceData: { foo: 'bar' },
+            fileName: 'nested.json',
+          },
+        ],
+      });
+
+      expect(response.status).toBe(403);
+      expect(response.body).toMatchObject({
+        success: false,
+        error: 'Invalid output path',
+      });
+      expect(fs.mkdir).not.toHaveBeenCalled();
+      expect(fs.writeFile).not.toHaveBeenCalled();
+    } finally {
+      isAbsoluteSpy.mockRestore();
+    }
+  });
+
   it('should return 500 when file writing fails', async () => {
     fs.writeFile.mockRejectedValueOnce(new Error('disk failure'));
 
@@ -144,6 +264,23 @@ describe('Trace Routes', () => {
       error: 'Failed to write trace file',
       details: 'disk failure',
     });
+  });
+
+  it('should return 500 when directory creation fails for single write', async () => {
+    fs.mkdir.mockRejectedValueOnce(new Error('mkdir failure'));
+
+    const response = await request(app).post('/api/traces/write').send({
+      traceData: { hello: 'world' },
+      fileName: 'mkdir-error.json',
+    });
+
+    expect(response.status).toBe(500);
+    expect(response.body).toMatchObject({
+      success: false,
+      error: 'Failed to write trace file',
+      details: 'mkdir failure',
+    });
+    expect(fs.writeFile).not.toHaveBeenCalled();
   });
 
   it('should validate batch payload shape', async () => {
@@ -226,6 +363,129 @@ describe('Trace Routes', () => {
     const [firstResult, secondResult] = response.body.results;
     expect(firstResult).toMatchObject({ success: true, fileName: 'good.json' });
     expect(secondResult).toMatchObject({ success: false, fileName: 'fail.json' });
+  });
+
+  it('should surface metadata failures when stat rejects after a successful write', async () => {
+    const metadataError = new Error('stat failure during batch');
+
+    fs.stat
+      .mockImplementationOnce(() => Promise.reject(metadataError))
+      .mockImplementationOnce(() =>
+        Promise.resolve({
+          size: 64,
+          mtime: new Date('2024-04-02T00:00:00Z'),
+          birthtime: new Date('2024-04-02T00:00:00Z'),
+        })
+      );
+
+    const response = await request(app).post('/api/traces/write-batch').send({
+      traces: [
+        { traceData: { id: 1 }, fileName: 'first.json' },
+        { traceData: { id: 2 }, fileName: 'second.json' },
+      ],
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body.successCount).toBe(1);
+    expect(response.body.failureCount).toBe(1);
+    expect(response.body.results[0]).toMatchObject({
+      index: 0,
+      fileName: 'first.json',
+      success: false,
+      error: metadataError.message,
+    });
+    expect(response.body.results[1]).toMatchObject({
+      index: 1,
+      fileName: 'second.json',
+      success: true,
+    });
+  });
+
+  it('should report serialization failures for circular trace payloads', async () => {
+    const circularTrace = {};
+    circularTrace.self = circularTrace;
+
+    const writeBatchLayer = traceRoutes.stack.find(
+      (layer) =>
+        layer.route &&
+        layer.route.path === '/write-batch' &&
+        layer.route.methods.post
+    );
+    const writeBatchHandler = writeBatchLayer.route.stack[0].handle;
+
+    fs.stat.mockResolvedValue({
+      size: 48,
+      mtime: new Date('2024-05-01T00:00:00Z'),
+      birthtime: new Date('2024-05-01T00:00:00Z'),
+    });
+
+    const res = {
+      json: jest.fn().mockReturnThis(),
+    };
+
+    await writeBatchHandler(
+      {
+        body: {
+          traces: [
+            { traceData: circularTrace, fileName: 'circular.json' },
+            { traceData: { stable: true }, fileName: 'normal.json' },
+          ],
+        },
+      },
+      res
+    );
+
+    expect(fs.writeFile).toHaveBeenCalledTimes(1);
+    expect(fs.writeFile.mock.calls[0][0]).toContain('normal.json');
+
+    const payload = res.json.mock.calls[0][0];
+    expect(payload.successCount).toBe(1);
+    expect(payload.failureCount).toBe(1);
+    expect(payload.results[0]).toMatchObject({
+      index: 0,
+      fileName: 'circular.json',
+      success: false,
+      error: expect.stringContaining('circular'),
+    });
+    expect(payload.results[1]).toMatchObject({
+      index: 1,
+      fileName: 'normal.json',
+      success: true,
+    });
+  });
+
+  it('should sanitize file names during batch writes to prevent traversal', async () => {
+    fs.stat
+      .mockResolvedValueOnce({
+        size: 30,
+        mtime: new Date('2024-03-01T00:00:00Z'),
+        birthtime: new Date('2024-03-01T00:00:00Z'),
+      })
+      .mockResolvedValueOnce({
+        size: 15,
+        mtime: new Date('2024-03-02T00:00:00Z'),
+        birthtime: new Date('2024-03-02T00:00:00Z'),
+      });
+
+    const response = await request(app).post('/api/traces/write-batch').send({
+      traces: [
+        { traceData: { secure: true }, fileName: '../escape.json' },
+        { traceData: { secure: true }, fileName: 'legit.json' },
+      ],
+    });
+
+    expect(response.status).toBe(200);
+
+    const sanitizedCall = fs.writeFile.mock.calls.find(([filePath]) =>
+      filePath.endsWith(path.join('traces', 'escape.json'))
+    );
+
+    expect(sanitizedCall).toBeDefined();
+    expect(sanitizedCall[0]).not.toContain('..');
+    expect(response.body.results[0]).toMatchObject({
+      fileName: 'escape.json',
+      success: true,
+    });
   });
 
   it('should persist pre-serialized traces correctly during batch writes', async () => {
@@ -351,6 +611,46 @@ describe('Trace Routes', () => {
     });
   });
 
+  it('should mark traces as failed when directory creation rejects during batch write', async () => {
+    const projectRoot = path.resolve(process.cwd(), '../');
+
+    fs.mkdir.mockRejectedValueOnce(new Error('mkdir failure'));
+    fs.mkdir.mockResolvedValue();
+
+    fs.stat.mockResolvedValueOnce({
+      size: 42,
+      mtime: new Date('2024-05-01T00:00:00Z'),
+      birthtime: new Date('2024-05-01T00:00:00Z'),
+    });
+
+    const response = await request(app).post('/api/traces/write-batch').send({
+      outputDirectory: './batch',
+      traces: [
+        { traceData: { ok: true }, fileName: 'first.json' },
+        { traceData: { ok: true }, fileName: 'second.json' },
+      ],
+    });
+
+    expect(response.status).toBe(200);
+    expect(fs.mkdir).toHaveBeenCalledWith(
+      expect.stringContaining(path.join(projectRoot, 'batch')),
+      { recursive: true }
+    );
+    expect(fs.writeFile).toHaveBeenCalledTimes(1);
+    expect(response.body).toMatchObject({ success: true, successCount: 1, failureCount: 1 });
+    expect(response.body.results[0]).toMatchObject({
+      index: 0,
+      fileName: 'first.json',
+      success: false,
+      error: 'mkdir failure',
+    });
+    expect(response.body.results[1]).toMatchObject({
+      index: 1,
+      fileName: 'second.json',
+      success: true,
+    });
+  });
+
   it('should block directory traversal during listing', async () => {
     const response = await request(app).get('/api/traces/list').query({ directory: '../../etc' });
 
@@ -409,6 +709,22 @@ describe('Trace Routes', () => {
       success: false,
       error: 'Failed to list trace files',
       details: 'io failure',
+    });
+  });
+
+  it('should report metadata failures when stat calls reject', async () => {
+    fs.readdir.mockResolvedValueOnce(['corrupt.json']);
+    fs.stat.mockRejectedValueOnce(new Error('stat failure'));
+
+    const response = await request(app)
+      .get('/api/traces/list')
+      .query({ directory: './traces' });
+
+    expect(response.status).toBe(500);
+    expect(response.body).toMatchObject({
+      success: false,
+      error: 'Failed to list trace files',
+      details: 'stat failure',
     });
   });
 });

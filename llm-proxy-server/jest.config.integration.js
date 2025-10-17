@@ -44,10 +44,10 @@ export default {
   // Lower coverage thresholds for integration tests (focus on happy path)
   coverageThreshold: {
     global: {
-      branches: 70,
-      functions: 80,
-      lines: 80,
-      statements: 80,
+      branches: 97,
+      functions: 97,
+      lines: 97,
+      statements: 97,
     },
   },
 

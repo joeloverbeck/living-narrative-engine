@@ -140,6 +140,10 @@
             "type": "string"
           }
         },
+        "comment": {
+          "type": "string",
+          "description": "(Optional) Free-form notes about this configuration, such as roleplaying quality or usage tips."
+        },
         "contextTokenLimit": {
           "type": "integer",
           "minimum": 0,

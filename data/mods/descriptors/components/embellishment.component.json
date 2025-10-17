@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:embellishment",
+  "description": "Structured descriptors for decorative embellishments applied to garments and accessories",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "embellishment": {
+        "type": "string",
+        "description": "The primary embellishment featured on the item",
+        "enum": ["crystal", "gemstone", "metal-chain", "pearl"]
+      }
+    },
+    "required": ["embellishment"],
+    "additionalProperties": false
+  }
+}

@@ -186,6 +186,24 @@ describe('errorFormatter', () => {
       expect(result.details.context).toBe('important');
     });
 
+    test('should handle null details gracefully in production', () => {
+      process.env.NODE_ENV = 'production';
+
+      const result = createSecureErrorDetails(
+        'Operation failed',
+        'operation_error',
+        null
+      );
+
+      expect(result).toEqual({
+        message: 'Operation failed',
+        stage: 'operation_error',
+        details: {
+          originalErrorMessage: 'Internal error occurred',
+        },
+      });
+    });
+
     test('should default details to empty object when not provided', () => {
       process.env.NODE_ENV = 'development';
 
@@ -376,6 +394,27 @@ describe('errorFormatter', () => {
       expect(result.password).toBeUndefined();
     });
 
+    test('should filter sensitive field names regardless of case', () => {
+      process.env.NODE_ENV = 'production';
+
+      const error = new Error('Test error');
+      const context = {
+        Authorization: 'Bearer token',
+        Token: 'sensitive',
+        requestId: 'abc-123',
+      };
+
+      const result = formatErrorForLogging(error, context);
+
+      expect(result).toEqual({
+        message: 'Test error',
+        name: 'Error',
+        requestId: 'abc-123',
+      });
+      expect(result.Authorization).toBeUndefined();
+      expect(result.Token).toBeUndefined();
+    });
+
     test('should handle empty context', () => {
       process.env.NODE_ENV = 'development';
 
@@ -537,6 +576,27 @@ describe('errorFormatter', () => {
           code: 'server_error',
           details: {
             originalErrorMessage: 'Internal server error',
+          },
+        },
+      });
+    });
+
+    test('should handle null details without throwing in production', () => {
+      process.env.NODE_ENV = 'production';
+
+      const result = createSecureHttpErrorResponse(
+        500,
+        'server_error',
+        'Internal server error',
+        null
+      );
+
+      expect(result).toEqual({
+        error: {
+          message: 'Internal server error',
+          code: 'server_error',
+          details: {
+            originalErrorMessage: 'Internal error occurred',
           },
         },
       });

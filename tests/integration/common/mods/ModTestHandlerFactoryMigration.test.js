@@ -16,6 +16,7 @@ import { SimpleEntityManager } from '../../../common/entities/index.js';
 
 // Import handlers for manual creation comparison
 import QueryComponentHandler from '../../../../src/logic/operationHandlers/queryComponentHandler.js';
+import QueryComponentsHandler from '../../../../src/logic/operationHandlers/queryComponentsHandler.js';
 import GetNameHandler from '../../../../src/logic/operationHandlers/getNameHandler.js';
 import GetTimestampHandler from '../../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchEventHandler from '../../../../src/logic/operationHandlers/dispatchEventHandler.js';
@@ -29,6 +30,8 @@ import RemoveComponentHandler from '../../../../src/logic/operationHandlers/remo
 import UnlockMovementHandler from '../../../../src/logic/operationHandlers/unlockMovementHandler.js';
 import LockMovementHandler from '../../../../src/logic/operationHandlers/lockMovementHandler.js';
 import ModifyArrayFieldHandler from '../../../../src/logic/operationHandlers/modifyArrayFieldHandler.js';
+import ModifyComponentHandler from '../../../../src/logic/operationHandlers/modifyComponentHandler.js';
+import AtomicModifyComponentHandler from '../../../../src/logic/operationHandlers/atomicModifyComponentHandler.js';
 
 describe('ModTestHandlerFactory Migration Validation', () => {
   let entityManager;
@@ -83,6 +86,11 @@ describe('ModTestHandlerFactory Migration Validation', () => {
 
     return {
       QUERY_COMPONENT: new QueryComponentHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      QUERY_COMPONENTS: new QueryComponentsHandler({
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,
@@ -216,6 +224,16 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         safeEventDispatcher: safeDispatcher,
       }),
       MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      MODIFY_COMPONENT: new ModifyComponentHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      ATOMIC_MODIFY_COMPONENT: new AtomicModifyComponentHandler({
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,
@@ -566,8 +584,8 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         logger
       );
 
-      // Factory should create exactly 8 standard handlers
-      expect(Object.keys(factoryHandlers)).toHaveLength(8);
+      // Factory should create exactly 9 standard handlers
+      expect(Object.keys(factoryHandlers)).toHaveLength(9);
 
       // Each handler should be properly configured
       Object.values(factoryHandlers).forEach((handler) => {

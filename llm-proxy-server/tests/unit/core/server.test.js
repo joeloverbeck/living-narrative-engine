@@ -1048,7 +1048,32 @@ describe('Server - Comprehensive Tests', () => {
       await loadServer();
 
       expect(consoleLoggerInstance.warn).toHaveBeenCalledWith(
-        'LLM Proxy Server: CORS not configured in development mode. To enable browser access, set PROXY_ALLOWED_ORIGIN environment variable. Example: PROXY_ALLOWED_ORIGIN="http://localhost:8080,http://127.0.0.1:8080"'
+        'LLM Proxy Server: CORS not configured in development mode (current environment: development). To enable browser access, set PROXY_ALLOWED_ORIGIN environment variable. Example: PROXY_ALLOWED_ORIGIN="http://localhost:8080,http://127.0.0.1:8080"'
+      );
+    });
+
+    test('defaults to production warning when node env is non-string', async () => {
+      appConfigServiceMock.getNodeEnv = jest.fn(() => ({ value: 'invalid' }));
+
+      await loadServer();
+
+      expect(consoleLoggerInstance.warn).toHaveBeenCalledWith(
+        'LLM Proxy Server: PROXY_ALLOWED_ORIGIN environment variable not set or empty. CORS will not be configured. This may cause issues with browser-based clients.'
+      );
+      expect(
+        consoleLoggerInstance.warn.mock.calls.some(([message]) =>
+          message.includes('development mode')
+        )
+      ).toBe(false);
+    });
+
+    test('trims whitespace node env values before determining CORS warning', async () => {
+      appConfigServiceMock.getNodeEnv = jest.fn(() => '   ');
+
+      await loadServer();
+
+      expect(consoleLoggerInstance.warn).toHaveBeenCalledWith(
+        'LLM Proxy Server: PROXY_ALLOWED_ORIGIN environment variable not set or empty. CORS will not be configured. This may cause issues with browser-based clients.'
       );
     });
 

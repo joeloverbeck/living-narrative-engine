@@ -26,10 +26,26 @@ describe('formatActionTypedefs module', () => {
       enumerable: true,
       value: true,
     });
+
+    // Module namespace objects have exotic descriptors that report writable
+    // and configurable as `true`, yet still throw on assignments. We capture
+    // that behaviour to document why reassignment tests live below.
+    expect(descriptor?.writable).toBe(true);
+    expect(descriptor?.configurable).toBe(true);
   });
 
   it('only exposes the sentinel export on the module namespace object', () => {
     expect(Object.keys(formatActionTypedefsModule)).toEqual([
+      '__formatActionTypedefs',
+    ]);
+  });
+
+  it('exposes stable metadata when enumerating entries and property names', () => {
+    expect(Object.entries(formatActionTypedefsModule)).toEqual([
+      ['__formatActionTypedefs', true],
+    ]);
+    expect(Object.getOwnPropertyNames(formatActionTypedefsModule)).toEqual([
+      '__esModule',
       '__formatActionTypedefs',
     ]);
   });

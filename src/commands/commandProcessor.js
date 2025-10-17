@@ -12,6 +12,7 @@ import {
 } from './helpers/commandResultUtils.js';
 import MultiTargetEventBuilder from '../entities/multiTarget/multiTargetEventBuilder.js';
 import TargetExtractionResult from '../entities/multiTarget/targetExtractionResult.js';
+import { ALL_MULTI_TARGET_ROLES } from '../actions/pipeline/TargetRoleRegistry.js';
 
 // --- Type Imports ---
 /** @typedef {import('../entities/entity.js').default} Entity */
@@ -534,8 +535,8 @@ class CommandProcessor extends ICommandProcessor {
       result.hasMultipleTargets = true;
 
       // Handle both standard and custom placeholders
-      const standardPlaceholders = ['primary', 'secondary', 'tertiary'];
-      const legacyFieldNames = ['primaryId', 'secondaryId', 'tertiaryId'];
+      const standardPlaceholders = ALL_MULTI_TARGET_ROLES;
+      const legacyFieldNames = standardPlaceholders.map((role) => `${role}Id`);
 
       // Safely handle targetIds that might not be a proper object
       if (

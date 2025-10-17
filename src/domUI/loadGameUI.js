@@ -43,7 +43,20 @@ import { DATASET_SLOT_IDENTIFIER } from '../constants/datasetKeys.js';
 class LoadGameUI extends SlotModalBase {
   saveLoadService;
   loadService = null;
-
+  /**
+   * Indicates when the slots list is actively being populated.
+   *
+   * @type {boolean}
+   * @private
+   */
+  _isPopulatingSlots = false;
+  /**
+   * Stores the most recent non-loading status message.
+   *
+   * @type {{ message: string, type: string } | null}
+   * @private
+   */
+  _lastStatusMessage = null;
   // isOperationInProgress is managed by BaseModalRenderer's _setOperationInProgress
 
   /**
@@ -168,6 +181,7 @@ class LoadGameUI extends SlotModalBase {
   async _onShow() {
     this.logger.debug(`${this._logPrefix} _onShow hook called.`);
     this.selectedSlotData = null;
+    this._lastStatusMessage = null;
 
     if (this.elements.confirmLoadButtonEl) {
       this.elements.confirmLoadButtonEl.disabled = true;
@@ -192,6 +206,7 @@ class LoadGameUI extends SlotModalBase {
     }
     this.clearSlotData();
     this.selectedSlotData = null;
+    this._lastStatusMessage = null;
     // Status message is cleared by BaseModalRenderer.show() -> _clearStatusMessage() on next show.
   }
 
@@ -299,15 +314,59 @@ class LoadGameUI extends SlotModalBase {
    */
   async _populateLoadSlotsList() {
     this.logger.debug(`${this._logPrefix} Populating load slots list...`);
-    await this.populateSlotsList(
-      () => this._getLoadSlotsData(),
-      (slotData, index) => this._renderLoadSlotItem(slotData, index),
-      () => this._getEmptyLoadSlotsMessage(),
-      'Loading saved games...'
-    );
+    this._isPopulatingSlots = true;
+    try {
+      await this.populateSlotsList(
+        () => this._getLoadSlotsData(),
+        (slotData, index) => this._renderLoadSlotItem(slotData, index),
+        () => this._getEmptyLoadSlotsMessage(),
+        'Loading saved games...'
+      );
+    } finally {
+      this._isPopulatingSlots = false;
+    }
 
-    this._onItemSelected(null, null); // Update button states
+    const statusToRestore = this._lastStatusMessage;
+    if (this.selectedSlotData) {
+      this._updateButtonStates(this.selectedSlotData);
+    } else {
+      this._onItemSelected(null, null);
+    }
+
+    if (statusToRestore && statusToRestore.message) {
+      this._displayStatusMessage(
+        statusToRestore.message,
+        statusToRestore.type
+      );
+    }
+
     this.logger.debug(`${this._logPrefix} Load slots list populated.`);
+  }
+
+  /**
+   * @override
+   */
+  _displayStatusMessage(message, type = 'info') {
+    if (message === 'Loading saved games...' && this._lastStatusMessage) {
+      return;
+    }
+    if (message !== 'Loading saved games...') {
+      this._lastStatusMessage = { message, type };
+    }
+    super._displayStatusMessage(message, type);
+  }
+
+  /**
+   * @override
+   */
+  _clearStatusMessage() {
+    if (this._isPopulatingSlots && this._lastStatusMessage) {
+      return;
+    }
+    super._clearStatusMessage();
+    if (!this._isPopulatingSlots) {
+      this._lastStatusMessage = null;
+    }
   }
 
   /**
@@ -521,7 +580,9 @@ class LoadGameUI extends SlotModalBase {
         return { success: true, message: '' };
       }
       const errorMsg =
-        result?.error || 'An unknown error occurred while deleting the save.';
+        result?.message ||
+        result?.error ||
+        'An unknown error occurred while deleting the save.';
       this.logger.error(
         `${this._logPrefix} Failed to delete save ${slotToDelete.identifier}: ${errorMsg}`
       );
@@ -591,6 +652,7 @@ class LoadGameUI extends SlotModalBase {
     this.loadService = null;
     this.selectedSlotData = null;
     this.clearSlotData();
+    this._lastStatusMessage = null;
     this.logger.debug(`${this._logPrefix} LoadGameUI disposed.`);
   }
 }

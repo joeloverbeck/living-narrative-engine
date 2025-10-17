@@ -83,6 +83,8 @@ describe('ActionFormattingStage - Integration with Action Tracing', () => {
         logger: mockLogger,
       });
 
+      const captureSpy = jest.spyOn(trace, 'captureActionData');
+
       const context = {
         trace,
         actor: { id: 'integration-test-actor' },
@@ -143,6 +145,26 @@ describe('ActionFormattingStage - Integration with Action Tracing', () => {
       expect(result.success).toBe(true);
       expect(result.actions.length).toBeGreaterThan(0);
 
+      // Coordinator should emit a single stage summary event that captures
+      // the per-batch instrumentation payload instead of per-action stage
+      // instances. This verifies `ActionFormattingCoordinator#run` remained the
+      // aggregation boundary after delegating formatting responsibilities.
+      const summaryEvent = captureSpy.mock.calls.find(
+        ([stage, actionId, payload]) =>
+          stage === 'formatting' &&
+          actionId === '__stage_summary' &&
+          payload.status === 'completed'
+      );
+      expect(summaryEvent?.[2]?.formattingPath).toBe('per-action');
+
+      const startedEvents = captureSpy.mock.calls.filter(
+        ([stage, , payload]) =>
+          stage === 'formatting' && payload.status === 'started'
+      );
+      expect(new Set(startedEvents.map(([, actionId]) => actionId))).toEqual(
+        new Set(['dialogue-action', 'multi-target-action'])
+      );
+
       // Verify trace data was captured
       const tracedActions = trace.getTracedActions();
       expect(tracedActions.size).toBeGreaterThan(0);
@@ -179,6 +201,8 @@ describe('ActionFormattingStage - Integration with Action Tracing', () => {
         context: {},
         logger: mockLogger,
       });
+
+      const captureSpy = jest.spyOn(trace, 'captureActionData');
 
       const context = {
         trace,
@@ -241,6 +265,32 @@ describe('ActionFormattingStage - Integration with Action Tracing', () => {
       expect(result.success).toBe(true);
       expect(result.actions).toHaveLength(3);
 
+      // The coordinator owns instrumentation events for the entire batch.
+      // Validate that the stage summary still reports the per-action path and
+      // aggregates statistics drawn from FormattingAccumulator.
+      const summaryEvent = captureSpy.mock.calls.find(
+        ([stage, actionId, payload]) =>
+          stage === 'formatting' &&
+          actionId === '__stage_summary' &&
+          payload.status === 'completed'
+      );
+      expect(summaryEvent?.[2]?.formattingPath).toBe('per-action');
+      expect(summaryEvent?.[2]?.statistics).toEqual(
+        expect.objectContaining({
+          total: 3,
+          legacy: expect.any(Number),
+          perActionMetadata: expect.any(Number),
+        })
+      );
+
+      const startedEvents = captureSpy.mock.calls.filter(
+        ([stage, , payload]) =>
+          stage === 'formatting' && payload.status === 'started'
+      );
+      expect(new Set(startedEvents.map(([, actionId]) => actionId))).toEqual(
+        new Set(['action-multi', 'action-legacy', 'action-simple'])
+      );
+
       // Verify all actions were traced
       const tracedActions = trace.getTracedActions();
       expect(tracedActions.has('action-multi')).toBe(true);
@@ -255,7 +305,7 @@ describe('ActionFormattingStage - Integration with Action Tracing', () => {
       const stats = summaryTrace.stages.formatting.data.statistics;
       expect(stats.total).toBe(3);
       expect(stats.successful).toBeGreaterThan(0);
-      expect(stats.multiTarget).toBeGreaterThan(0);
+      expect(stats.perActionMetadata).toBeGreaterThan(0);
       expect(stats.legacy).toBeGreaterThan(0);
     });
 
@@ -347,6 +397,8 @@ describe('ActionFormattingStage - Integration with Action Tracing', () => {
         logger: mockLogger,
       });
 
+      const captureSpy = jest.spyOn(trace, 'captureActionData');
+
       // Create 10 actions for performance testing
       const actionsWithTargets = Array(10)
         .fill()
@@ -390,21 +442,19 @@ describe('ActionFormattingStage - Integration with Action Tracing', () => {
       expect(result.success).toBe(true);
       expect(result.actions).toHaveLength(10);
 
-      // Verify performance metrics
-      const summaryTrace = trace.getActionTrace('__stage_summary');
-      expect(summaryTrace).toBeDefined();
-      expect(summaryTrace.stages).toBeDefined();
-      expect(summaryTrace.stages.formatting).toBeDefined();
-      const performance = summaryTrace.stages.formatting.data.performance;
-
-      expect(performance.totalDuration).toBeDefined();
-      expect(performance.totalDuration).toBeGreaterThan(0);
-      expect(performance.totalDuration).toBeLessThanOrEqual(
+      const summaryEvent = captureSpy.mock.calls.find(
+        ([stage, actionId, payload]) =>
+          stage === 'formatting' &&
+          actionId === '__stage_summary' &&
+          payload.status === 'completed'
+      );
+      expect(summaryEvent?.[2]?.performance?.totalDuration).toBeGreaterThan(0);
+      expect(summaryEvent?.[2]?.performance?.totalDuration).toBeLessThanOrEqual(
         endTime - startTime
       );
-
-      expect(performance.averagePerAction).toBeDefined();
-      expect(performance.averagePerAction).toBe(performance.totalDuration / 10);
+      expect(summaryEvent?.[2]?.performance?.averagePerAction).toBe(
+        summaryEvent?.[2]?.performance?.totalDuration / 10
+      );
 
       // Verify each action has individual performance metrics
       for (let i = 0; i < 10; i++) {
@@ -415,10 +465,10 @@ describe('ActionFormattingStage - Integration with Action Tracing', () => {
         const formattingStageData = actionTrace.stages.formatting;
         expect(formattingStageData).toBeDefined();
         expect(formattingStageData.data).toBeDefined();
-        expect(formattingStageData.data.performance).toBeDefined();
-        expect(
-          formattingStageData.data.performance.duration
-        ).toBeGreaterThanOrEqual(0);
+        expect(formattingStageData.data._performance).toBeDefined();
+        expect(formattingStageData.data._performance.actionId).toBe(
+          `action-${i}`
+        );
       }
     });
 

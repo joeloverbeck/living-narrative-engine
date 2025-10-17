@@ -564,6 +564,85 @@ export function createBaseRuleEnvironment({
           return { success: true, value: new Set(containerComponent.contents) };
         }
 
+        // Handle the positioning:actors_sitting_with_space_to_right scope
+        if (scopeName === 'positioning:actors_sitting_with_space_to_right') {
+          // Get target furniture from context
+          const targetId = context?.target?.id;
+          if (!targetId) {
+            return { success: true, value: new Set() };
+          }
+
+          // Get furniture entity and its sitting component
+          const furniture = entityManager.getEntityInstance(targetId);
+          const allowsSitting = furniture?.components?.['positioning:allows_sitting'];
+          if (!allowsSitting || !Array.isArray(allowsSitting.spots)) {
+            return { success: true, value: new Set() };
+          }
+
+          const spots = allowsSitting.spots;
+
+          // Find all actors sitting on this furniture with at least 2 empty spots to their right
+          const allEntityIds = entityManager.getEntityIds();
+          const allEntities = allEntityIds.map((id) => {
+            const instance = entityManager.getEntityInstance(id);
+            return instance || { id, components: {} };
+          });
+
+          // Find all occupied spots and their indices
+          const occupiedIndices = [];
+          for (let i = 0; i < spots.length; i++) {
+            if (spots[i] !== null) {
+              occupiedIndices.push(i);
+            }
+          }
+
+          // Find the rightmost occupied index
+          const rightmostOccupiedIndex = occupiedIndices.length > 0
+            ? Math.max(...occupiedIndices)
+            : -1;
+
+          // Filter for actors sitting on this furniture who meet all criteria
+          const validActors = allEntities.filter((entity) => {
+            // Must have core:actor component
+            if (!entity.components?.['core:actor']) {
+              return false;
+            }
+
+            // Must be sitting on this furniture
+            const sittingOn = entity.components?.['positioning:sitting_on'];
+            if (!sittingOn || sittingOn.furniture_id !== targetId) {
+              return false;
+            }
+
+            const spotIndex = sittingOn.spot_index;
+
+            // Must actually be in the spot they claim (data integrity check)
+            if (spots[spotIndex] !== entity.id) {
+              return false;
+            }
+
+            // Must have at least 2 spots to the right
+            if (spotIndex + 2 >= spots.length) {
+              return false;
+            }
+
+            // Both spots to the right must be empty
+            if (spots[spotIndex + 1] !== null || spots[spotIndex + 2] !== null) {
+              return false;
+            }
+
+            // Must be the rightmost occupied spot (highest index with occupant)
+            if (spotIndex !== rightmostOccupiedIndex) {
+              return false;
+            }
+
+            return true;
+          });
+
+          const actorIds = validActors.map((actor) => actor.id);
+          return { success: true, value: new Set(actorIds) };
+        }
+
         // Handle other scopes or return empty set
         if (scopeName === 'none' || scopeName === 'self') {
           return { success: true, value: new Set([scopeName]) };

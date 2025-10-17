@@ -31,6 +31,7 @@
  * @property {LLMJsonOutputStrategy}      jsonOutputStrategy
  * @property {object=}                    defaultParameters
  * @property {Record<string,string>=}     providerSpecificHeaders
+ * @property {string=}                    comment
  * @property {number=}                    contextTokenLimit
  * @property {LLMPromptFrame=}            promptFrame
  */

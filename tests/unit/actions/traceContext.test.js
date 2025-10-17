@@ -82,6 +82,34 @@ describe('TraceContext', () => {
     });
   });
 
+  it('includes payloads across helper wrappers when provided', () => {
+    const cases = [
+      ['info', TRACE_INFO],
+      ['success', TRACE_SUCCESS],
+      ['failure', TRACE_FAILURE],
+      ['step', TRACE_STEP],
+      ['error', TRACE_ERROR],
+      ['data', TRACE_DATA],
+    ];
+
+    for (const [method, expectedType] of cases) {
+      const trace = new TraceContext();
+      const payload = { marker: method };
+      const message = `message-${method}`;
+      const source = `source-${method}`;
+
+      trace[method](message, source, payload);
+
+      expect(trace.logs).toHaveLength(1);
+      expect(trace.logs[0]).toMatchObject({
+        type: expectedType,
+        message,
+        source,
+        data: payload,
+      });
+    }
+  });
+
   describe('operator evaluation capture', () => {
     it('captures operator evaluation metadata with timestamps', () => {
       const trace = new TraceContext();

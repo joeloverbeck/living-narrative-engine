@@ -63,6 +63,28 @@ describe('affection:squeeze_hand_reassuringly action discovery', () => {
               return acc;
             }
 
+            const actorHoldingPartner =
+              actorEntity.components?.['affection:holding_hand']?.held_entity_id ===
+              partnerId;
+            const actorHandHeldByPartner =
+              actorEntity.components?.['affection:hand_held']?.holding_entity_id ===
+              partnerId;
+            const partnerHoldingActor =
+              partner.components?.['affection:holding_hand']?.held_entity_id ===
+              actorId;
+            const partnerHandHeldByActor =
+              partner.components?.['affection:hand_held']?.holding_entity_id ===
+              actorId;
+
+            if (
+              !actorHoldingPartner &&
+              !actorHandHeldByPartner &&
+              !partnerHoldingActor &&
+              !partnerHandHeldByActor
+            ) {
+              return acc;
+            }
+
             const partnerFacingAway =
               partner.components?.['positioning:facing_away']
                 ?.facing_away_from || [];
@@ -102,6 +124,13 @@ describe('affection:squeeze_hand_reassuringly action discovery', () => {
       expect(squeezeHandAction.targets).toBe(
         'affection:close_actors_facing_each_other_or_behind_target'
       );
+      expect(squeezeHandAction.prerequisites).toEqual([
+        {
+          logic: {
+            condition_ref: 'affection:actors-are-holding-hands',
+          },
+        },
+      ]);
     });
 
     it('requires actor closeness and uses the affection color palette', () => {
@@ -118,7 +147,7 @@ describe('affection:squeeze_hand_reassuringly action discovery', () => {
   });
 
   describe('Action discovery scenarios', () => {
-    it('is available for close actors facing each other', () => {
+    it('is not available when actors are only close but not holding hands', () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
       configureActionDiscovery();
 
@@ -127,13 +156,18 @@ describe('affection:squeeze_hand_reassuringly action discovery', () => {
       );
       const ids = availableActions.map((action) => action.id);
 
-      expect(ids).toContain(ACTION_ID);
+      expect(ids).not.toContain(ACTION_ID);
     });
 
-    it('is available when the actor stands behind the target', () => {
+    it('is available when the actor initiated the hand hold', () => {
       const scenario = testFixture.createCloseActors(['Maya', 'Noah']);
-      scenario.target.components['positioning:facing_away'] = {
-        facing_away_from: [scenario.actor.id],
+      scenario.actor.components['affection:holding_hand'] = {
+        held_entity_id: scenario.target.id,
+        initiated: true,
+      };
+      scenario.target.components['affection:hand_held'] = {
+        holding_entity_id: scenario.actor.id,
+        consented: true,
       };
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
@@ -148,8 +182,39 @@ describe('affection:squeeze_hand_reassuringly action discovery', () => {
       expect(ids).toContain(ACTION_ID);
     });
 
-    it('is not available when actors are not in closeness', () => {
+    it('is available to the partner whose hand is being held', () => {
       const scenario = testFixture.createCloseActors(['Ivy', 'Liam']);
+      scenario.actor.components['affection:holding_hand'] = {
+        held_entity_id: scenario.target.id,
+        initiated: true,
+      };
+      scenario.target.components['affection:hand_held'] = {
+        holding_entity_id: scenario.actor.id,
+        consented: true,
+      };
+
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+      configureActionDiscovery();
+
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.target.id
+      );
+      const ids = availableActions.map((action) => action.id);
+
+      expect(ids).toContain(ACTION_ID);
+    });
+
+    it('is not available when actors are not in closeness even with hand holding', () => {
+      const scenario = testFixture.createCloseActors(['Chloe', 'Evan']);
+      scenario.actor.components['affection:holding_hand'] = {
+        held_entity_id: scenario.target.id,
+        initiated: true,
+      };
+      scenario.target.components['affection:hand_held'] = {
+        holding_entity_id: scenario.actor.id,
+        consented: true,
+      };
       delete scenario.actor.components['positioning:closeness'];
       delete scenario.target.components['positioning:closeness'];
 
@@ -167,6 +232,14 @@ describe('affection:squeeze_hand_reassuringly action discovery', () => {
 
     it('is not available when the actor faces away from the target', () => {
       const scenario = testFixture.createCloseActors(['Chloe', 'Evan']);
+      scenario.actor.components['affection:holding_hand'] = {
+        held_entity_id: scenario.target.id,
+        initiated: true,
+      };
+      scenario.target.components['affection:hand_held'] = {
+        holding_entity_id: scenario.actor.id,
+        consented: true,
+      };
       scenario.actor.components['positioning:facing_away'] = {
         facing_away_from: [scenario.target.id],
       };

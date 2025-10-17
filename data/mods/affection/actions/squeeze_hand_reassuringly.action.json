@@ -8,7 +8,13 @@
     "actor": ["positioning:closeness"]
   },
   "template": "squeeze {target}'s hand reassuringly",
-  "prerequisites": [],
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "affection:actors-are-holding-hands"
+      }
+    }
+  ],
   "visual": {
     "backgroundColor": "#6a1b9a",
     "textColor": "#f3e5f5",

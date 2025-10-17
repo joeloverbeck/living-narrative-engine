@@ -510,6 +510,183 @@ describe('PerformanceMonitor', () => {
     });
   });
 
+  describe('monitoring guard coverage', () => {
+    it('should skip monitoring checks when monitoring has been stopped', () => {
+      const intervalCallbacks = [];
+      const setIntervalSpy = jest
+        .spyOn(global, 'setInterval')
+        .mockImplementation((callback) => {
+          intervalCallbacks.push(callback);
+          return 1;
+        });
+      const clearIntervalSpy = jest
+        .spyOn(global, 'clearInterval')
+        .mockImplementation(() => {});
+      const metricsSpy = jest.spyOn(monitor, 'getRealtimeMetrics');
+
+      let stopMonitoring;
+
+      try {
+        stopMonitoring = monitor.startMonitoring({ intervalMs: 25 });
+        expect(intervalCallbacks).toHaveLength(1);
+        const intervalCallback = intervalCallbacks[0];
+        expect(typeof intervalCallback).toBe('function');
+
+        stopMonitoring();
+        stopMonitoring = null;
+
+        intervalCallback();
+
+        expect(metricsSpy).not.toHaveBeenCalled();
+      } finally {
+        if (stopMonitoring) {
+          stopMonitoring();
+        }
+        setIntervalSpy.mockRestore();
+        clearIntervalSpy.mockRestore();
+        metricsSpy.mockRestore();
+      }
+    });
+
+    it('should emit long trace alert when duration exceeds threshold', () => {
+      const intervalCallbacks = [];
+      const setIntervalSpy = jest
+        .spyOn(global, 'setInterval')
+        .mockImplementation((callback) => {
+          intervalCallbacks.push(callback);
+          return 2;
+        });
+      const clearIntervalSpy = jest
+        .spyOn(global, 'clearInterval')
+        .mockImplementation(() => {});
+
+      const metricsSpy = jest.spyOn(monitor, 'getRealtimeMetrics').mockReturnValue({
+        activeSpans: 0,
+        completedSpans: 0,
+        totalOperations: 0,
+        errorCount: 0,
+        currentConcurrency: 0,
+        currentDuration: 120,
+        recentAlerts: [],
+        memoryUsageMB: 0,
+      });
+      const memorySpy = jest
+        .spyOn(monitor, 'getMemoryUsage')
+        .mockReturnValue({ estimatedSizeMB: 0 });
+
+      monitor.setThresholds({ maxTotalDurationMs: 50 });
+
+      let stopMonitoring;
+
+      try {
+        stopMonitoring = monitor.startMonitoring({ intervalMs: 25 });
+        expect(intervalCallbacks).toHaveLength(1);
+        const intervalCallback = intervalCallbacks[0];
+        expect(typeof intervalCallback).toBe('function');
+
+        intervalCallback();
+
+        const alerts = monitor.getAlerts({ type: 'long_trace' });
+        expect(alerts).toHaveLength(1);
+        expect(alerts[0].value).toBe(120);
+        expect(alerts[0].threshold).toBe(50);
+      } finally {
+        if (stopMonitoring) {
+          stopMonitoring();
+        }
+        setIntervalSpy.mockRestore();
+        clearIntervalSpy.mockRestore();
+        metricsSpy.mockRestore();
+        memorySpy.mockRestore();
+      }
+    });
+
+    it('should emit slow operation alerts for spans below critical threshold', () => {
+      const intervalCallbacks = [];
+      const setIntervalSpy = jest
+        .spyOn(global, 'setInterval')
+        .mockImplementation((callback) => {
+          intervalCallbacks.push(callback);
+          return 3;
+        });
+      const clearIntervalSpy = jest
+        .spyOn(global, 'clearInterval')
+        .mockImplementation(() => {});
+
+      monitor.setThresholds({
+        slowOperationMs: 100,
+        criticalOperationMs: 300,
+      });
+
+      const slowSpan = structuredTrace.startSpan('PipelineStage');
+      timeCounter += 150; // Between slow and critical thresholds
+      structuredTrace.endSpan(slowSpan);
+
+      let stopMonitoring;
+
+      try {
+        stopMonitoring = monitor.startMonitoring({ intervalMs: 25 });
+        expect(intervalCallbacks).toHaveLength(1);
+        const intervalCallback = intervalCallbacks[0];
+        expect(typeof intervalCallback).toBe('function');
+
+        intervalCallback();
+
+        const alerts = monitor.getAlerts({ type: 'slow_operation' });
+        expect(alerts).toHaveLength(1);
+        expect(alerts[0].operation).toBe('PipelineStage');
+      } finally {
+        if (stopMonitoring) {
+          stopMonitoring();
+        }
+        setIntervalSpy.mockRestore();
+        clearIntervalSpy.mockRestore();
+      }
+    });
+
+    it('should ignore spans shorter than the slow threshold during monitoring', () => {
+      const intervalCallbacks = [];
+      const setIntervalSpy = jest
+        .spyOn(global, 'setInterval')
+        .mockImplementation((callback) => {
+          intervalCallbacks.push(callback);
+          return 4;
+        });
+      const clearIntervalSpy = jest
+        .spyOn(global, 'clearInterval')
+        .mockImplementation(() => {});
+
+      monitor.setThresholds({
+        slowOperationMs: 100,
+        criticalOperationMs: 300,
+      });
+
+      const fastSpan = structuredTrace.startSpan('QuickStage');
+      timeCounter += 50; // Below slow threshold
+      structuredTrace.endSpan(fastSpan);
+
+      let stopMonitoring;
+
+      try {
+        stopMonitoring = monitor.startMonitoring({ intervalMs: 25 });
+        expect(intervalCallbacks).toHaveLength(1);
+        const intervalCallback = intervalCallbacks[0];
+        expect(typeof intervalCallback).toBe('function');
+
+        intervalCallback();
+
+        expect(monitor.getAlerts({ type: 'slow_operation' })).toHaveLength(0);
+        expect(monitor.getAlerts({ type: 'critical_operation' })).toHaveLength(0);
+      } finally {
+        if (stopMonitoring) {
+          stopMonitoring();
+        }
+        setIntervalSpy.mockRestore();
+        clearIntervalSpy.mockRestore();
+      }
+    });
+  });
+
   describe('performance alert generation', () => {
     let stopMonitoring;
 
@@ -794,6 +971,8 @@ describe('PerformanceMonitor', () => {
       monitor.enableSampling({
         rate: 0.3,
         strategy: 'adaptive',
+        alwaysSampleErrors: false,
+        alwaysSampleSlow: false,
       });
 
       // Create error to trigger adaptive behavior
@@ -831,32 +1010,26 @@ describe('PerformanceMonitor', () => {
     });
 
     it('should handle default strategy case', () => {
-      // Use reflection to modify the private samplingConfig to test default case
       const newMonitor = new PerformanceMonitor(structuredTrace);
 
-      // Enable sampling with a valid config first
       newMonitor.enableSampling({
         rate: 0.5,
-        strategy: 'random',
+        strategy: undefined,
+        alwaysSampleErrors: false,
+        alwaysSampleSlow: false,
       });
 
-      // Access the private field through reflection (for testing purposes)
-      // This will trigger the default case in the switch statement
-      const privateFields = Object.getOwnPropertySymbols(newMonitor).filter(
-        (sym) => sym.toString().includes('samplingConfig')
-      );
-      if (privateFields.length > 0) {
-        newMonitor[privateFields[0]].strategy = 'unknown';
-      }
-
       const mockRandom = jest.spyOn(Math, 'random');
-      mockRandom.mockReturnValueOnce(0.3); // Should sample
-      mockRandom.mockReturnValueOnce(0.7); // Should not sample
 
-      expect(newMonitor.shouldSampleTrace()).toBe(true);
-      expect(newMonitor.shouldSampleTrace()).toBe(false);
+      try {
+        mockRandom.mockReturnValueOnce(0.3); // Should sample
+        mockRandom.mockReturnValueOnce(0.7); // Should not sample
 
-      mockRandom.mockRestore();
+        expect(newMonitor.shouldSampleTrace()).toBe(true);
+        expect(newMonitor.shouldSampleTrace()).toBe(false);
+      } finally {
+        mockRandom.mockRestore();
+      }
     });
 
     it('should not always sample slow traces when alwaysSampleSlow is false', () => {

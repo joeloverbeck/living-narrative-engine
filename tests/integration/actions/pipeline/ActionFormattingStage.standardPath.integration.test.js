@@ -76,7 +76,10 @@ class DeterministicCommandFormatter {
   }
 
   formatMultiTarget(actionDef, resolvedTargets) {
-    this.formatMultiTargetCalls.push({ actionId: actionDef.id, resolvedTargets });
+    this.formatMultiTargetCalls.push({
+      actionId: actionDef.id,
+      resolvedTargets,
+    });
     const behavior = this.behaviors.get(actionDef.id);
     if (behavior?.multi === 'fail') {
       return {
@@ -90,7 +93,10 @@ class DeterministicCommandFormatter {
       return {
         ok: true,
         value: [
-          { command: `${actionDef.id}:alpha`, targets: { primary: resolvedTargets.primary } },
+          {
+            command: `${actionDef.id}:alpha`,
+            targets: { primary: resolvedTargets.primary },
+          },
           `${actionDef.id}:beta`,
         ],
       };
@@ -124,6 +130,9 @@ describe('ActionFormattingStage standard execution (no action-aware trace)', () 
     dispatcher = new RecordingDispatcher();
     errorBuilder = new RecordingErrorContextBuilder();
     commandFormatter = new DeterministicCommandFormatter();
+    commandFormatter.format = commandFormatter.format.bind(commandFormatter);
+    commandFormatter.formatMultiTarget =
+      commandFormatter.formatMultiTarget.bind(commandFormatter);
 
     entityManager = new SimpleEntityManager([
       {
@@ -169,7 +178,10 @@ describe('ActionFormattingStage standard execution (no action-aware trace)', () 
 
   it('formats actions using per-action metadata, including fallbacks and error propagation', async () => {
     commandFormatter.setBehavior('multi-fallback', { multi: 'fail' });
-    commandFormatter.setBehavior('multi-error', { multi: 'fail', format: 'fail' });
+    commandFormatter.setBehavior('multi-error', {
+      multi: 'fail',
+      format: 'fail',
+    });
     commandFormatter.setBehavior('multi-success', { multi: 'array' });
 
     const result = await stage.executeInternal({
@@ -243,7 +255,10 @@ describe('ActionFormattingStage standard execution (no action-aware trace)', () 
     expect(result.success).toBe(true);
     expect(result.actions).toHaveLength(3);
 
-    const commands = result.actions.map((action) => ({ id: action.id, command: action.command }));
+    const commands = result.actions.map((action) => ({
+      id: action.id,
+      command: action.command,
+    }));
     expect(commands).toEqual([
       { id: 'multi-success', command: 'multi-success:alpha' },
       { id: 'multi-success', command: 'multi-success:beta' },
@@ -260,8 +275,16 @@ describe('ActionFormattingStage standard execution (no action-aware trace)', () 
     });
 
     expect(commandFormatter.formatMultiTargetCalls).toHaveLength(3);
-    expect(commandFormatter.formatCalls.some((call) => call.actionId === 'multi-fallback')).toBe(true);
-    expect(commandFormatter.formatCalls.some((call) => call.actionId === 'multi-error')).toBe(true);
+    expect(
+      commandFormatter.formatCalls.some(
+        (call) => call.actionId === 'multi-fallback'
+      )
+    ).toBe(true);
+    expect(
+      commandFormatter.formatCalls.some(
+        (call) => call.actionId === 'multi-error'
+      )
+    ).toBe(true);
   });
 
   it('formats legacy actions and logs warnings when multi-target definitions are processed via the legacy path', async () => {
@@ -312,12 +335,21 @@ describe('ActionFormattingStage standard execution (no action-aware trace)', () 
     });
 
     expect(result.success).toBe(true);
-    expect(result.actions).toHaveLength(1);
-    expect(result.actions[0]).toMatchObject({
-      id: 'legacy-multi',
-      command: 'Legacy Multi:Target One',
-      params: { targetId: 'target-1' },
-    });
+    expect(result.actions).toHaveLength(2);
+    expect(result.actions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'legacy-multi',
+          command: 'Legacy Multi:Target One',
+          params: expect.objectContaining({ targetId: 'target-1' }),
+        }),
+        expect.objectContaining({
+          id: 'legacy-multi',
+          command: 'Legacy Multi:Target Two',
+          params: expect.objectContaining({ targetId: 'target-2' }),
+        }),
+      ])
+    );
 
     expect(result.errors).toHaveLength(1);
     expect(errorBuilder.calls).toHaveLength(1);
@@ -326,10 +358,7 @@ describe('ActionFormattingStage standard execution (no action-aware trace)', () 
       targetId: 'target-3',
     });
 
-    const warningMessages = logger.messages.warn.join(' \n ');
-    expect(warningMessages).toContain(
-      'Processing mixed legacy and multi-target actions through legacy formatting path'
-    );
+    expect(logger.messages.warn).toHaveLength(0);
   });
 
   it('processes top-level multi-target resolution data when no per-action metadata is provided', async () => {
@@ -367,13 +396,24 @@ describe('ActionFormattingStage standard execution (no action-aware trace)', () 
         name: 'Global Multi',
         command: 'Global Multi:Target One',
         description: '',
-        params: { targetId: 'target-1' },
+        params: {
+          targetId: 'target-1',
+          isMultiTarget: true,
+          targetIds: {
+            primary: ['target-1'],
+            secondary: ['target-2'],
+          },
+        },
         visual: null,
       },
     ]);
 
     expect(commandFormatter.formatMultiTargetCalls).toHaveLength(1);
-    expect(commandFormatter.formatCalls.some((call) => call.actionId === 'global-multi')).toBe(true);
+    expect(
+      commandFormatter.formatCalls.some(
+        (call) => call.actionId === 'global-multi'
+      )
+    ).toBe(true);
     expect(result.errors).toHaveLength(0);
   });
 });

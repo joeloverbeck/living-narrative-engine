@@ -3,6 +3,11 @@
  */
 
 import { isNonBlankString } from './textUtils.js';
+import {
+  ACTOR_ROLE,
+  ALL_MULTI_TARGET_ROLES,
+  LEGACY_TARGET_ROLE,
+} from '../actions/pipeline/TargetRoleRegistry.js';
 
 /**
  * Validates if a target name follows naming conventions
@@ -54,7 +59,12 @@ export function determinePrimaryTarget(targets) {
   }
 
   // Priority order for primary target determination
-  const priorityOrder = ['primary', 'target', 'self', 'actor'];
+  const priorityOrder = [
+    ...ALL_MULTI_TARGET_ROLES,
+    LEGACY_TARGET_ROLE,
+    'self',
+    ACTOR_ROLE,
+  ];
 
   for (const priority of priorityOrder) {
     if (targets[priority]) {

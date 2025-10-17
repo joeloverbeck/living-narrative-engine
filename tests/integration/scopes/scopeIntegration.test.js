@@ -315,14 +315,13 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       );
       expect(dismissActions.length).toBeGreaterThan(0);
 
-      // Due to current implementation, only the first follower is returned
-      // when using base ActionCommandFormatter
-      const targetIds = dismissActions
-        .map((action) => action.params?.targetId)
-        .filter(Boolean);
-      expect(targetIds).toContain(follower1Id);
-      // TODO: When MultiTargetActionFormatter is used, this should also pass:
-      // expect(targetIds).toContain(follower2Id);
+      const primaryTargetIds = dismissActions.flatMap((action) => {
+        return action.params?.targetIds?.primary ?? [];
+      });
+
+      expect(primaryTargetIds.length).toBeGreaterThan(0);
+      expect(primaryTargetIds).toContain(follower1Id);
+      expect(primaryTargetIds).toContain(follower2Id);
     });
 
     it('should return empty set when actor has no followers', async () => {
@@ -491,13 +490,12 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       expect(goActions.length).toBeGreaterThan(0);
 
-      // Due to current implementation with base ActionCommandFormatter,
-      // only the first target is returned
-      const targetIds = goActions
-        .map((action) => action.params?.targetId)
-        .filter(Boolean);
-      expect(targetIds.length).toBeGreaterThan(0);
-      expect(targetIds).toContain(room2Id);
+      const primaryTargetIds = goActions.flatMap((action) => {
+        return action.params?.targetIds?.primary ?? [];
+      });
+
+      expect(primaryTargetIds.length).toBeGreaterThan(0);
+      expect(primaryTargetIds).toContain(room2Id);
       // Could also contain 'room3' since there are two exits
     });
 
@@ -632,7 +630,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         (action) => action.id === 'core:wait'
       );
       expect(waitActions.length).toBe(1);
-      expect(waitActions[0].params?.targetId).toBeNull();
+      expect(waitActions[0].params?.targetId ?? null).toBeNull();
     });
   });
 

@@ -59,6 +59,21 @@ function setupExamineItemScenario(
   return { room, actor, items: itemEntities };
 }
 
+/**
+ * Asserts that the provided events include a successful turn end.
+ *
+ * @param {Array<object>} events - Events emitted during the action execution
+ * @returns {object} The matching turn ended event
+ */
+function expectSuccessfulTurnEnd(events) {
+  const turnEndedEvent = events.find(
+    (event) => event.eventType === 'core:turn_ended'
+  );
+  expect(turnEndedEvent).toBeDefined();
+  expect(turnEndedEvent.payload.success).toBe(true);
+  return turnEndedEvent;
+}
+
 describe('items:examine_item action integration', () => {
   let testFixture;
 
@@ -111,11 +126,7 @@ describe('items:examine_item action integration', () => {
       expect(successEvent.payload.message).toBe('Alice examines letter-1.');
 
       // Assert: Verify turn ended successfully
-      const turnEndedEvent = testFixture.events.find(
-        (e) => e.eventType === 'core:turn_ended'
-      );
-      expect(turnEndedEvent).toBeDefined();
-      expect(turnEndedEvent.payload.success).toBe(true);
+      const turnEndedEvent = expectSuccessfulTurnEnd(testFixture.events);
 
       // Assert: Verify item state unchanged (still in inventory)
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
@@ -149,6 +160,8 @@ describe('items:examine_item action integration', () => {
         'Bob examines horseshoe-1: A rusty iron horseshoe.'
       );
 
+      expectSuccessfulTurnEnd(testFixture.events);
+
       // Assert: Verify item still at location (no state change)
       const item = testFixture.entityManager.getEntityInstance('horseshoe-1');
       expect(item.components['core:position']).toBeDefined();
@@ -179,6 +192,8 @@ describe('items:examine_item action integration', () => {
       expect(examineEvent.payload.descriptionText).toBe(
         'Charlie examines old-book: An ancient leather-bound tome. The pages are yellowed and brittle. Strange symbols cover the binding.'
       );
+
+      expectSuccessfulTurnEnd(testFixture.events);
     });
   });
 
@@ -209,6 +224,8 @@ describe('items:examine_item action integration', () => {
       expect(examineEvent.payload.descriptionText).toContain(
         'A well-worn hammer.'
       );
+
+      expectSuccessfulTurnEnd(testFixture.events);
     });
 
     it('only dispatches expected events (no unexpected side effects)', async () => {
@@ -231,6 +248,9 @@ describe('items:examine_item action integration', () => {
       expect(eventTypes).not.toContain('items:item_picked_up');
       expect(eventTypes).not.toContain('items:item_dropped');
       expect(eventTypes).not.toContain('items:item_transferred');
+
+      const newEvents = testFixture.events;
+      expectSuccessfulTurnEnd(newEvents);
     });
   });
 
@@ -254,6 +274,8 @@ describe('items:examine_item action integration', () => {
       // Position should be unchanged
       expect(itemAfter.components['core:position']).toEqual(positionBefore);
       expect(itemAfter.components['core:position'].locationId).toBe('barn');
+
+      expectSuccessfulTurnEnd(testFixture.events);
     });
 
     it('does not modify inventory for inventory items', async () => {
@@ -279,6 +301,8 @@ describe('items:examine_item action integration', () => {
       expect(actorAfter.components['items:inventory'].items).toEqual(
         inventoryBefore
       );
+
+      expectSuccessfulTurnEnd(testFixture.events);
     });
   });
 
@@ -291,7 +315,11 @@ describe('items:examine_item action integration', () => {
       testFixture.reset([scenario.room, scenario.actor, ...scenario.items]);
 
       // Examine first item
+      const firstActionStart = testFixture.events.length;
       await testFixture.executeAction('test:actor1', 'map-1');
+
+      const firstActionEvents = testFixture.events.slice(firstActionStart);
+      expectSuccessfulTurnEnd(firstActionEvents);
 
       const firstExamineEvent = testFixture.events.find(
         (e) =>
@@ -304,7 +332,11 @@ describe('items:examine_item action integration', () => {
       );
 
       // Examine second item
+      const secondActionStart = testFixture.events.length;
       await testFixture.executeAction('test:actor1', 'compass-1');
+
+      const secondActionEvents = testFixture.events.slice(secondActionStart);
+      expectSuccessfulTurnEnd(secondActionEvents);
 
       const secondExamineEvent = testFixture.events.find(
         (e) =>
@@ -315,6 +347,13 @@ describe('items:examine_item action integration', () => {
       expect(secondExamineEvent.payload.descriptionText).toContain(
         'A brass compass.'
       );
+
+      const examineEvents = testFixture.events.filter(
+        (event) =>
+          event.eventType === 'core:perceptible_event' &&
+          event.payload.perceptionType === 'item_examined'
+      );
+      expect(examineEvents).toHaveLength(2);
     });
 
     it('handles examination of both inventory and location items', async () => {
@@ -325,7 +364,10 @@ describe('items:examine_item action integration', () => {
       testFixture.reset([scenario.room, scenario.actor, ...scenario.items]);
 
       // Examine location item
+      const firstActionStart = testFixture.events.length;
       await testFixture.executeAction('test:actor1', 'flower-1');
+      const firstActionEvents = testFixture.events.slice(firstActionStart);
+      expectSuccessfulTurnEnd(firstActionEvents);
       const locationExamineEvent = testFixture.events.find(
         (e) =>
           e.eventType === 'core:perceptible_event' &&
@@ -334,13 +376,23 @@ describe('items:examine_item action integration', () => {
       expect(locationExamineEvent).toBeDefined();
 
       // Examine inventory item
+      const secondActionStart = testFixture.events.length;
       await testFixture.executeAction('test:actor1', 'shears-1');
+      const secondActionEvents = testFixture.events.slice(secondActionStart);
+      expectSuccessfulTurnEnd(secondActionEvents);
       const inventoryExamineEvent = testFixture.events.find(
         (e) =>
           e.eventType === 'core:perceptible_event' &&
           e.payload.targetId === 'shears-1'
       );
       expect(inventoryExamineEvent).toBeDefined();
+
+      const examineEvents = testFixture.events.filter(
+        (event) =>
+          event.eventType === 'core:perceptible_event' &&
+          event.payload.perceptionType === 'item_examined'
+      );
+      expect(examineEvents).toHaveLength(2);
     });
   });
 
@@ -386,6 +438,9 @@ describe('items:examine_item action integration', () => {
       expect(perceptibleEvent.payload.descriptionText).toBe(
         'Jamie examines letter-1: A faded letter written in looping calligraphy.'
       );
+      expect(perceptibleEvent.payload.contextualData?.recipientIds).toEqual([
+        'test:actor1',
+      ]);
 
       const perceptionLogHandler = new AddPerceptionLogEntryHandler({
         entityManager: testFixture.entityManager,
@@ -413,6 +468,17 @@ describe('items:examine_item action integration', () => {
       const observerLog =
         observerEntity.components['core:perception_log'].logEntries;
       expect(observerLog).toHaveLength(0);
+
+      const actorEntity = testFixture.entityManager.getEntityInstance(
+        'test:actor1'
+      );
+      const actorLog = actorEntity.components['core:perception_log'].logEntries;
+      expect(actorLog).toHaveLength(1);
+      expect(actorLog[0].descriptionText).toBe(
+        'Jamie examines letter-1: A faded letter written in looping calligraphy.'
+      );
+
+      expectSuccessfulTurnEnd(testFixture.events);
     });
   });
 });

@@ -8,6 +8,10 @@ import { ComponentFilteringStage } from './pipeline/stages/ComponentFilteringSta
 import { PrerequisiteEvaluationStage } from './pipeline/stages/PrerequisiteEvaluationStage.js';
 import { TargetComponentValidationStage } from './pipeline/stages/TargetComponentValidationStage.js';
 import { ActionFormattingStage } from './pipeline/stages/ActionFormattingStage.js';
+import TargetCandidatePruner from './pipeline/services/implementations/TargetCandidatePruner.js';
+import TargetValidationConfigProvider from './pipeline/stages/TargetValidationConfigProvider.js';
+import TargetValidationReporter from './pipeline/stages/TargetValidationReporter.js';
+import ContextUpdateEmitter from './pipeline/services/implementations/ContextUpdateEmitter.js';
 
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
@@ -45,6 +49,10 @@ export class ActionPipelineOrchestrator {
   #multiTargetResolutionStage;
   #targetComponentValidator;
   #targetRequiredComponentsValidator;
+  #targetCandidatePruner;
+  #targetValidationConfigProvider;
+  #targetValidationReporter;
+  #contextUpdateEmitter;
 
   /**
    * Creates an ActionPipelineOrchestrator instance
@@ -64,6 +72,10 @@ export class ActionPipelineOrchestrator {
    * @param {MultiTargetResolutionStage} deps.multiTargetResolutionStage - Multi-target resolution stage
    * @param {TargetComponentValidator} deps.targetComponentValidator - Target component validator
    * @param {TargetRequiredComponentsValidator} deps.targetRequiredComponentsValidator - Target required components validator
+   * @param {TargetCandidatePruner} [deps.targetCandidatePruner] - Optional pruner for multi-target candidate resolution
+   * @param {TargetValidationConfigProvider} [deps.targetValidationConfigProvider] - Optional configuration snapshot provider
+   * @param {TargetValidationReporter} [deps.targetValidationReporter] - Optional reporter for trace and telemetry output
+   * @param {ContextUpdateEmitter} [deps.contextUpdateEmitter] - Optional emitter for applying validation results to context
    */
   constructor({
     actionIndex,
@@ -80,6 +92,10 @@ export class ActionPipelineOrchestrator {
     multiTargetResolutionStage,
     targetComponentValidator,
     targetRequiredComponentsValidator,
+    targetCandidatePruner = null,
+    targetValidationConfigProvider = null,
+    targetValidationReporter = null,
+    contextUpdateEmitter = null,
   }) {
     this.#actionIndex = actionIndex;
     this.#prerequisiteService = prerequisiteService;
@@ -95,6 +111,14 @@ export class ActionPipelineOrchestrator {
     this.#multiTargetResolutionStage = multiTargetResolutionStage;
     this.#targetComponentValidator = targetComponentValidator;
     this.#targetRequiredComponentsValidator = targetRequiredComponentsValidator;
+    this.#targetCandidatePruner =
+      targetCandidatePruner ?? new TargetCandidatePruner({ logger });
+    this.#targetValidationConfigProvider =
+      targetValidationConfigProvider ?? new TargetValidationConfigProvider();
+    this.#targetValidationReporter =
+      targetValidationReporter ?? new TargetValidationReporter({ logger });
+    this.#contextUpdateEmitter =
+      contextUpdateEmitter ?? new ContextUpdateEmitter();
   }
 
   /**
@@ -157,9 +181,14 @@ export class ActionPipelineOrchestrator {
       this.#multiTargetResolutionStage,
       new TargetComponentValidationStage({
         targetComponentValidator: this.#targetComponentValidator,
-        targetRequiredComponentsValidator: this.#targetRequiredComponentsValidator,
+        targetRequiredComponentsValidator:
+          this.#targetRequiredComponentsValidator,
         logger: this.#logger,
         actionErrorContextBuilder: this.#errorBuilder,
+        targetCandidatePruner: this.#targetCandidatePruner,
+        configProvider: this.#targetValidationConfigProvider,
+        validationReporter: this.#targetValidationReporter,
+        contextUpdateEmitter: this.#contextUpdateEmitter,
       }),
       new ActionFormattingStage({
         commandFormatter: this.#formatter,

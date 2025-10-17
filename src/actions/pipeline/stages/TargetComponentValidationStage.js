@@ -5,13 +5,14 @@
 
 import { PipelineStage } from '../PipelineStage.js';
 import { PipelineResult } from '../PipelineResult.js';
+import TargetValidationIOAdapter from '../adapters/TargetValidationIOAdapter.js';
+import { getPlaceholderForRole } from '../TargetRoleRegistry.js';
 import { validateDependency } from '../../../utils/dependencyUtils.js';
-import {
-  isTargetValidationEnabled,
-  shouldSkipValidation,
-  targetValidationConfig,
-  getValidationStrictness
-} from '../../../config/actionPipelineConfig.js';
+import TargetValidationConfigProvider from './TargetValidationConfigProvider.js';
+import TargetValidationReporter from './TargetValidationReporter.js';
+import TargetCandidatePruner from '../services/implementations/TargetCandidatePruner.js';
+import { extractCandidateId } from '../utils/targetCandidateUtils.js';
+import ContextUpdateEmitter from '../services/implementations/ContextUpdateEmitter.js';
 
 /** @typedef {import('../../validation/TargetComponentValidator.js').TargetComponentValidator} ITargetComponentValidator */
 /** @typedef {import('../../validation/TargetRequiredComponentsValidator.js').default} ITargetRequiredComponentsValidator */
@@ -33,6 +34,10 @@ export class TargetComponentValidationStage extends PipelineStage {
   #targetRequiredComponentsValidator;
   #logger;
   #actionErrorContextBuilder;
+  #targetCandidatePruner;
+  #configProvider;
+  #validationReporter;
+  #contextUpdateEmitter;
 
   /**
    * Creates a TargetComponentValidationStage instance
@@ -41,28 +46,117 @@ export class TargetComponentValidationStage extends PipelineStage {
    * @param {ITargetComponentValidator} dependencies.targetComponentValidator - Validator service
    * @param {ITargetRequiredComponentsValidator} dependencies.targetRequiredComponentsValidator - Required components validator
    * @param {ILogger} dependencies.logger - Logger service
-   * @param {ActionErrorContextBuilder} dependencies.actionErrorContextBuilder - Error context builder
-   */
-  constructor({ targetComponentValidator, targetRequiredComponentsValidator, logger, actionErrorContextBuilder }) {
+  * @param {ActionErrorContextBuilder} dependencies.actionErrorContextBuilder - Error context builder
+  * @param {TargetCandidatePruner} [dependencies.targetCandidatePruner] - Optional candidate pruning service
+  * @param {TargetValidationConfigProvider} [dependencies.configProvider] - Optional configuration snapshot provider.
+  * @param {TargetValidationReporter} [dependencies.validationReporter] - Optional reporter for trace events.
+  * @param {ContextUpdateEmitter} [dependencies.contextUpdateEmitter] - Optional context update emitter override.
+  */
+  constructor({
+    targetComponentValidator,
+    targetRequiredComponentsValidator,
+    logger,
+    actionErrorContextBuilder,
+    targetCandidatePruner = null,
+    configProvider = null,
+    validationReporter = null,
+    contextUpdateEmitter = null,
+  }) {
     super('TargetComponentValidation');
 
-    validateDependency(targetComponentValidator, 'ITargetComponentValidator', console, {
-      requiredMethods: ['validateTargetComponents']
-    });
-    validateDependency(targetRequiredComponentsValidator, 'ITargetRequiredComponentsValidator', console, {
-      requiredMethods: ['validateTargetRequirements']
-    });
+    validateDependency(
+      targetComponentValidator,
+      'ITargetComponentValidator',
+      console,
+      {
+        requiredMethods: ['validateTargetComponents'],
+      }
+    );
+    validateDependency(
+      targetRequiredComponentsValidator,
+      'ITargetRequiredComponentsValidator',
+      console,
+      {
+        requiredMethods: ['validateTargetRequirements'],
+      }
+    );
     validateDependency(logger, 'ILogger', console, {
-      requiredMethods: ['info', 'warn', 'error', 'debug']
+      requiredMethods: ['info', 'warn', 'error', 'debug'],
     });
-    validateDependency(actionErrorContextBuilder, 'IActionErrorContextBuilder', console, {
-      requiredMethods: ['buildErrorContext']
-    });
+    validateDependency(
+      actionErrorContextBuilder,
+      'IActionErrorContextBuilder',
+      console,
+      {
+        requiredMethods: ['buildErrorContext'],
+      }
+    );
 
     this.#targetComponentValidator = targetComponentValidator;
     this.#targetRequiredComponentsValidator = targetRequiredComponentsValidator;
     this.#logger = logger;
     this.#actionErrorContextBuilder = actionErrorContextBuilder;
+    if (targetCandidatePruner) {
+      validateDependency(
+        targetCandidatePruner,
+        'ITargetCandidatePruner',
+        console,
+        {
+          requiredMethods: ['prune'],
+        }
+      );
+      this.#targetCandidatePruner = targetCandidatePruner;
+    } else {
+      this.#targetCandidatePruner = new TargetCandidatePruner({ logger });
+    }
+
+    if (configProvider) {
+      validateDependency(
+        configProvider,
+        'ITargetValidationConfigProvider',
+        console,
+        {
+          requiredMethods: ['getSnapshot'],
+        }
+      );
+      this.#configProvider = configProvider;
+    } else {
+      this.#configProvider = new TargetValidationConfigProvider();
+    }
+
+    if (validationReporter) {
+      validateDependency(
+        validationReporter,
+        'ITargetValidationReporter',
+        console,
+        {
+          requiredMethods: [
+            'reportStageSkipped',
+            'reportStageStart',
+            'reportStageCompletion',
+            'reportValidationAnalysis',
+            'reportPerformanceData',
+          ],
+        }
+      );
+      this.#validationReporter = validationReporter;
+    } else {
+      this.#validationReporter = new TargetValidationReporter({ logger });
+    }
+
+    if (contextUpdateEmitter) {
+      validateDependency(
+        contextUpdateEmitter,
+        'IContextUpdateEmitter',
+        console,
+        {
+          requiredMethods: ['applyTargetValidationResults'],
+        }
+      );
+      this.#contextUpdateEmitter = contextUpdateEmitter;
+    } else {
+      this.#contextUpdateEmitter = new ContextUpdateEmitter();
+    }
   }
 
   /**
@@ -76,138 +170,136 @@ export class TargetComponentValidationStage extends PipelineStage {
    * @returns {Promise<PipelineResult>} The filtered actions with targets
    */
   async executeInternal(context) {
-    const { actionsWithTargets, candidateActions: rawCandidateActions, actor, trace } = context;
-
-    // Support both input formats:
-    // 1. actionsWithTargets (from MultiTargetResolutionStage) - NEW format
-    // 2. candidateActions (legacy/test format) - OLD format
-    let candidateActions;
-    let inputFormat;
-
-    if (actionsWithTargets && actionsWithTargets.length > 0) {
-      candidateActions = actionsWithTargets.map((awt) => awt.actionDef);
-      inputFormat = 'actionsWithTargets';
-    } else if (rawCandidateActions && rawCandidateActions.length > 0) {
-      candidateActions = rawCandidateActions;
-      inputFormat = 'candidateActions';
-    } else {
-      candidateActions = [];
-      inputFormat = 'empty';
-    }
+    const { actor, trace } = context;
+    const adapter = new TargetValidationIOAdapter();
+    const { format, items, metadata } = adapter.normalize(context);
+    const candidateCount = items.length;
 
     const source = `${this.name}Stage.execute`;
     const startPerformanceTime = performance.now();
+    const configSnapshot = this.#configProvider.getSnapshot();
 
     // Check if validation is enabled via configuration
-    if (!isTargetValidationEnabled()) {
-      const config = targetValidationConfig() || {};
-      if (config.logDetails) {
-        this.#logger.debug('Target component validation is disabled via configuration');
+    if (configSnapshot.skipValidation) {
+      if (configSnapshot.logDetails) {
+        this.#logger.debug(
+          'Target component validation is disabled via configuration'
+        );
       }
 
-      trace?.step(
-        `Target component validation skipped (disabled in config)`,
-        source
-      );
+      this.#validationReporter.reportStageSkipped({
+        trace,
+        source,
+        reason: 'Target component validation skipped (disabled in config)',
+      });
 
-      // Return data in the same format as input
-      const outputData =
-        inputFormat === 'actionsWithTargets'
-          ? { actionsWithTargets }
-          : { candidateActions };
+      this.#contextUpdateEmitter.applyTargetValidationResults({
+        context,
+        format,
+        items,
+        metadata,
+        validatedItems: items,
+      });
+
+      const rebuilt = adapter.rebuild({
+        format,
+        items,
+        metadata,
+        validatedItems: items,
+      });
 
       return PipelineResult.success({
-        data: outputData,
-        continueProcessing: candidateActions.length > 0
+        data: rebuilt.data,
+        continueProcessing: rebuilt.continueProcessing,
       });
     }
 
-    // Check if we have action-aware tracing
-    const isActionAwareTrace = this.#isActionAwareTrace(trace);
-    const config = targetValidationConfig() || {};
-    const strictness = getValidationStrictness();
+    const strictness = configSnapshot.strictness;
 
-    trace?.step(
-      `Validating target components for ${candidateActions.length} actions (strictness: ${strictness})`,
-      source
-    );
+    this.#validationReporter.reportStageStart({
+      trace,
+      source,
+      candidateCount,
+      strictness,
+    });
 
     try {
-      const validatedActionDefs = await this.#validateActions(candidateActions, context, isActionAwareTrace, trace);
+      const validatedItems = await this.#validateActions(
+        items,
+        metadata,
+        configSnapshot,
+        trace
+      );
 
-      // Filter actionsWithTargets to only include actions that passed validation (only if using actionsWithTargets format)
-      const validatedActionDefIds = new Set(validatedActionDefs.map((a) => a.id));
-      const validatedActionsWithTargets =
-        inputFormat === 'actionsWithTargets' && actionsWithTargets
-          ? actionsWithTargets.filter((awt) =>
-              validatedActionDefIds.has(awt.actionDef.id)
-            )
-          : [];
+      const filteredItems = this.#filterItemsMissingRequiredTargets({
+        format,
+        items: validatedItems,
+      });
 
       const duration = performance.now() - startPerformanceTime;
 
       // Log performance metrics if slow (based on config threshold)
-      const performanceThreshold = config.performanceThreshold || 5;
+      const performanceThreshold = configSnapshot.performanceThreshold || 5;
       if (duration > performanceThreshold) {
         this.#logger.debug(
-          `Target component validation took ${duration.toFixed(2)}ms for ${candidateActions.length} actions`
+          `Target component validation took ${duration.toFixed(2)}ms for ${candidateCount} actions`
         );
       }
 
-      if (config.logDetails) {
+      if (configSnapshot.logDetails) {
         this.#logger.debug(
-          `Validated ${candidateActions.length} actions, ${validatedActionDefs.length} passed validation (strictness: ${strictness})`
+          `Validated ${candidateCount} actions, ${filteredItems.length} passed validation (strictness: ${strictness})`
         );
       }
 
-      // Add trace event for completion
-      trace?.success(
-        `Target component validation completed: ${validatedActionDefs.length} of ${candidateActions.length} actions passed`,
+      this.#validationReporter.reportStageCompletion({
+        trace,
         source,
-        {
-          inputCount: candidateActions.length,
-          outputCount: validatedActionDefs.length,
-          duration
-        }
-      );
-
-      // Return data in the same format as input
-      const {
-        actionsWithTargets: filteredActionsWithTargets,
-        candidateActions: filteredCandidateActions,
-      } = this.#filterActionsMissingRequiredTargets({
-        inputFormat,
-        validatedActionsWithTargets,
-        validatedActionDefs,
-        context,
+        candidateCount,
+        filteredCount: filteredItems.length,
+        duration,
       });
 
-      const outputData =
-        inputFormat === 'actionsWithTargets'
-          ? { actionsWithTargets: filteredActionsWithTargets }
-          : { candidateActions: filteredCandidateActions };
+      this.#contextUpdateEmitter.applyTargetValidationResults({
+        context,
+        format,
+        items,
+        metadata,
+        validatedItems: filteredItems,
+      });
 
+      const rebuilt = adapter.rebuild({
+        format,
+        items,
+        metadata,
+        validatedItems: filteredItems,
+      });
+
+      const outputData = rebuilt.data;
       const outputCount =
-        inputFormat === 'actionsWithTargets'
-          ? filteredActionsWithTargets.length
-          : filteredCandidateActions.length;
+        format === 'actionsWithTargets'
+          ? outputData.actionsWithTargets?.length || 0
+          : outputData.candidateActions?.length || 0;
 
       return PipelineResult.success({
         data: outputData,
-        continueProcessing: outputCount > 0
+        continueProcessing: rebuilt.continueProcessing && outputCount > 0,
       });
     } catch (error) {
       // Build error context
       const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
         error,
-        actionDef: { id: 'targetValidation', name: 'Target Component Validation' },
+        actionDef: {
+          id: 'targetValidation',
+          name: 'Target Component Validation',
+        },
         actorId: actor?.id,
         phase: 'discovery',
         trace,
         additionalContext: {
           stage: 'target_component_validation',
-          candidateCount: candidateActions.length
-        }
+          candidateCount,
+        },
       });
 
       this.#logger.error(
@@ -220,59 +312,60 @@ export class TargetComponentValidationStage extends PipelineStage {
   }
 
   /**
-   * Validate actions through target component constraints
+   * @description Validate actions through target component constraints.
    *
    * @private
-   * @param {ActionDefinition[]} candidateActions - Actions to validate
-   * @param {object} context - Pipeline context
-   * @param {boolean} isActionAwareTrace - Whether trace is action-aware
+   * @param {Array<object>} items - Normalized pipeline items being validated.
+   * @param {object} metadata - Stage metadata container.
+   * @param {object} configSnapshot - Cached configuration snapshot.
    * @param {any} trace - Trace object
    * @returns {Promise<ActionDefinition[]>} Filtered actions
    */
-  async #validateActions(candidateActions, context, isActionAwareTrace, trace) {
-    const validatedActions = [];
-    const config = targetValidationConfig() || {};
-    const strictness = getValidationStrictness();
+  async #validateActions(items, metadata, configSnapshot, trace) {
+    const validatedItems = [];
+    const config = configSnapshot;
+    const strictness = configSnapshot.strictness;
 
-    for (const actionDef of candidateActions) {
+    for (const item of items) {
+      const { actionDef } = item;
       // Check if validation should be skipped for this specific action
-      if (shouldSkipValidation(actionDef)) {
+      if (config.shouldSkipAction(actionDef)) {
         if (config.logDetails) {
           this.#logger.debug(
             `Skipping validation for action '${actionDef.id}' based on configuration`
           );
         }
-        validatedActions.push(actionDef);
+        validatedItems.push(item);
         continue;
       }
 
       const startTime = performance.now();
 
-      // Get target entities from the action (may already be resolved)
-      let targetEntities = this.#extractTargetEntities(actionDef, context);
+      let targetEntities = item.resolvedTargets;
 
-      // Remove any resolved targets that don't satisfy required component constraints
-      const {
-        targetEntities: filteredTargetEntities,
-        removalReasons,
-      } = this.#filterTargetsByRequiredComponents(
-        actionDef,
-        context,
-        targetEntities
-      );
+      const { targetEntities: filteredTargetEntities, removalReasons } =
+        this.#filterTargetsByRequiredComponents(item, metadata);
       targetEntities = filteredTargetEntities;
+      item.resolvedTargets = targetEntities;
 
       // Validate forbidden target components (apply strictness level)
-      let forbiddenValidation = this.#targetComponentValidator.validateTargetComponents(
-        actionDef,
-        targetEntities
-      );
+      let forbiddenValidation =
+        this.#targetComponentValidator.validateTargetComponents(
+          actionDef,
+          targetEntities
+        );
 
       // Apply lenient mode if configured
       if (strictness === 'lenient' && !forbiddenValidation.valid) {
         // In lenient mode, allow actions with certain types of failures
-        if (forbiddenValidation.reason && forbiddenValidation.reason.includes('non-critical')) {
-          forbiddenValidation = { valid: true, reason: 'Allowed in lenient mode' };
+        if (
+          forbiddenValidation.reason &&
+          forbiddenValidation.reason.includes('non-critical')
+        ) {
+          forbiddenValidation = {
+            valid: true,
+            reason: 'Allowed in lenient mode',
+          };
           if (config.logDetails) {
             this.#logger.debug(
               `Action '${actionDef.id}' allowed in lenient mode despite: ${forbiddenValidation.reason}`
@@ -282,10 +375,11 @@ export class TargetComponentValidationStage extends PipelineStage {
       }
 
       // Validate required components on targets after filtering
-      let requiredValidation = this.#targetRequiredComponentsValidator.validateTargetRequirements(
-        actionDef,
-        targetEntities
-      );
+      let requiredValidation =
+        this.#targetRequiredComponentsValidator.validateTargetRequirements(
+          actionDef,
+          targetEntities
+        );
 
       if (!requiredValidation.valid && removalReasons.length > 0) {
         requiredValidation = {
@@ -295,39 +389,37 @@ export class TargetComponentValidationStage extends PipelineStage {
       }
 
       // Combine validation results
-      const validation = forbiddenValidation.valid && requiredValidation.valid
-        ? { valid: true }
-        : {
-            valid: false,
-            reason: !forbiddenValidation.valid
-              ? forbiddenValidation.reason
-              : requiredValidation.reason
-          };
+      const validation =
+        forbiddenValidation.valid && requiredValidation.valid
+          ? { valid: true }
+          : {
+              valid: false,
+              reason: !forbiddenValidation.valid
+                ? forbiddenValidation.reason
+                : requiredValidation.reason,
+            };
 
-      const validationTime = performance.now() - startTime;
+      const endTime = performance.now();
+      const validationTime = endTime - startTime;
 
-      // Capture action data for tracing if available
-      if (isActionAwareTrace && trace?.captureActionData) {
-        await this.#captureValidationAnalysis(
-          trace,
-          actionDef,
-          targetEntities,
-          validation,
-          validationTime
-        );
+      await this.#validationReporter.reportValidationAnalysis({
+        trace,
+        actionDef,
+        targetEntities,
+        validation,
+        validationTime,
+      });
 
-        // Capture performance data
-        await this.#capturePerformanceData(
-          trace,
-          actionDef,
-          startTime,
-          performance.now(),
-          candidateActions.length
-        );
-      }
+      await this.#validationReporter.reportPerformanceData({
+        trace,
+        actionDef,
+        startTime,
+        endTime,
+        totalCandidates: items.length,
+      });
 
       if (validation.valid) {
-        validatedActions.push(actionDef);
+        validatedItems.push(item);
       } else {
         this.#logger.debug(
           `Action '${actionDef.id}' filtered out: ${validation.reason}`
@@ -335,133 +427,47 @@ export class TargetComponentValidationStage extends PipelineStage {
       }
     }
 
-    return validatedActions;
+    return validatedItems;
   }
 
   /**
    * Filters resolved targets so that only candidates with required components remain.
    *
    * @private
-   * @param {ActionDefinition} actionDef - The action definition being validated.
-   * @param {object} context - Pipeline context containing resolved target metadata.
-   * @param {object|null} targetEntities - The resolved target entities map.
-   * @returns {object|null} Updated target entities map reflecting filtered candidates.
+   * @param {object} item - Normalized pipeline item being processed.
+   * @param {object} metadata - Stage metadata container.
+   * @returns {{targetEntities: object|null, removalReasons: string[]}} Updated targets and removal reasons.
    */
-  #filterTargetsByRequiredComponents(actionDef, context, targetEntities) {
-    if (!targetEntities || !actionDef?.required_components) {
-      return { targetEntities, removalReasons: [] };
-    }
+  #filterTargetsByRequiredComponents(item, metadata) {
+    const { actionDef } = item;
+    const placeholderSource =
+      item.placeholderSource ||
+      actionDef?.targetDefinitions ||
+      actionDef?.targets ||
+      null;
 
-    const requirements = actionDef.required_components;
-    const rolesToCheck = [];
+    const pruningResult = this.#targetCandidatePruner.prune({
+      actionDef,
+      resolvedTargets: item.resolvedTargets,
+      targetContexts: item.targetContexts,
+      config: { placeholderSource },
+    });
 
-    if (Array.isArray(requirements.target) && requirements.target.length > 0) {
-      rolesToCheck.push('target');
-    }
+    const filteredContexts = this.#filterTargetContexts({
+      targetContexts: item.targetContexts,
+      keptTargets: pruningResult.keptTargets,
+      placeholderSource,
+    });
 
-    for (const role of ['primary', 'secondary', 'tertiary']) {
-      if (Array.isArray(requirements[role]) && requirements[role].length > 0) {
-        rolesToCheck.push(role);
-      }
-    }
+    item.targetContexts = filteredContexts;
+    item.resolvedTargets = pruningResult.keptTargets;
 
-    if (rolesToCheck.length === 0) {
-      return { targetEntities, removalReasons: [] };
-    }
+    this.#recordPruningUpdate(metadata, actionDef, pruningResult);
 
-    const placeholderSource = actionDef.targetDefinitions || actionDef.targets || {};
-    const placeholderEntityMap = new Map();
-    let targetsFiltered = false;
-    const removalReasons = [];
-    const roleRemovalReasons = new Map();
-
-    for (const role of rolesToCheck) {
-      const existing = targetEntities[role];
-      if (!existing) {
-        continue;
-      }
-
-      const candidates = Array.isArray(existing) ? existing : [existing];
-      const requiredComponents = requirements[role] || [];
-      const validCandidates = [];
-
-      for (const candidate of candidates) {
-        const { valid, reason } = this.#candidateHasRequiredComponents(
-          candidate,
-          requiredComponents,
-          role
-        );
-
-        if (valid) {
-          validCandidates.push(candidate);
-        } else {
-          if (reason) {
-            roleRemovalReasons.set(role, reason);
-            this.#logger.debug(reason);
-          }
-        }
-      }
-
-      if (validCandidates.length !== candidates.length) {
-        targetsFiltered = true;
-      }
-
-      const hasValidCandidates = validCandidates.length > 0;
-
-      const normalizedValue = Array.isArray(existing)
-        ? validCandidates
-        : hasValidCandidates
-          ? validCandidates[0]
-          : null;
-
-      targetEntities[role] = normalizedValue;
-
-      if (!hasValidCandidates) {
-        const recordedReason =
-          roleRemovalReasons.get(role) ||
-          `No ${role} target available for validation`;
-        removalReasons.push(recordedReason);
-      }
-
-      if (actionDef.resolvedTargets) {
-        if (role === 'target') {
-          const normalizedArray = Array.isArray(normalizedValue)
-            ? normalizedValue
-            : normalizedValue
-              ? [normalizedValue]
-              : [];
-          actionDef.resolvedTargets.target = normalizedArray;
-        } else if (Array.isArray(actionDef.resolvedTargets[role])) {
-          actionDef.resolvedTargets[role] = Array.isArray(normalizedValue)
-            ? normalizedValue
-            : normalizedValue
-              ? [normalizedValue]
-              : [];
-        }
-      }
-
-      const placeholder = placeholderSource?.[role]?.placeholder;
-      if (placeholder) {
-        const allowedIds = new Set(
-          validCandidates
-            .map((candidate) => this.#extractCandidateId(candidate))
-            .filter((id) => typeof id === 'string' && id.length > 0)
-        );
-        placeholderEntityMap.set(placeholder, allowedIds);
-      }
-    }
-
-    if (targetsFiltered) {
-      this.#updateActionTargetsInContext(
-        actionDef,
-        context,
-        rolesToCheck,
-        targetEntities,
-        placeholderEntityMap
-      );
-    }
-
-    return { targetEntities, removalReasons };
+    return {
+      targetEntities: pruningResult.keptTargets,
+      removalReasons: pruningResult.removalReasons,
+    };
   }
 
   /**
@@ -475,22 +481,16 @@ export class TargetComponentValidationStage extends PipelineStage {
    * @param {object} params.context - Pipeline context
    * @returns {{actionsWithTargets: Array<object>, candidateActions: Array<ActionDefinition>}} Filtered results
    */
-  #filterActionsMissingRequiredTargets({
-    inputFormat,
-    validatedActionsWithTargets,
-    validatedActionDefs,
-    context,
-  }) {
-    const result = {
-      actionsWithTargets: validatedActionsWithTargets,
-      candidateActions: validatedActionDefs,
-    };
-
-    if (inputFormat === 'empty') {
-      return result;
+  #filterItemsMissingRequiredTargets({ format, items }) {
+    if (format === 'empty') {
+      return [];
     }
 
-    const hasRequiredTargets = (actionDef, resolvedTargets, targetDefinitions) => {
+    const hasRequiredTargets = (
+      actionDef,
+      resolvedTargets,
+      targetDefinitions
+    ) => {
       if (!targetDefinitions || typeof targetDefinitions !== 'object') {
         return true;
       }
@@ -527,360 +527,109 @@ export class TargetComponentValidationStage extends PipelineStage {
       return true;
     };
 
-    if (inputFormat === 'actionsWithTargets') {
-      const filtered = [];
-      for (const awt of validatedActionsWithTargets) {
-        const targetDefs =
-          awt.targetDefinitions || awt.actionDef?.targetDefinitions || awt.actionDef?.targets;
-        const resolved =
-          awt.resolvedTargets || awt.actionDef?.resolvedTargets || context?.resolvedTargets;
+    const filtered = [];
+    for (const item of items) {
+      const targetDefs =
+        item.targetDefinitions ||
+        item.actionDef?.targetDefinitions ||
+        item.actionDef?.targets;
+      const resolved = item.resolvedTargets || item.actionDef?.resolvedTargets;
 
-        if (hasRequiredTargets(awt.actionDef, resolved, targetDefs)) {
-          filtered.push(awt);
-        }
-      }
-
-      result.actionsWithTargets = filtered;
-      result.candidateActions = filtered.map((awt) => awt.actionDef);
-      return result;
-    }
-
-    // Legacy/candidateActions path - filter only when we have resolved target data available
-    const filteredCandidateActions = [];
-    for (const actionDef of validatedActionDefs) {
-      const targetDefs = actionDef.targetDefinitions || actionDef.targets;
-      const resolved = actionDef.resolvedTargets || context?.resolvedTargets;
-
-      if (hasRequiredTargets(actionDef, resolved, targetDefs)) {
-        filteredCandidateActions.push(actionDef);
+      if (hasRequiredTargets(item.actionDef, resolved, targetDefs)) {
+        filtered.push(item);
       }
     }
 
-    result.candidateActions = filteredCandidateActions;
-    return result;
+    return filtered;
   }
 
   /**
-   * Determines if a resolved target candidate satisfies required component constraints.
+   * Filter target contexts to ensure they align with pruned targets.
    *
    * @private
-   * @param {object} candidate - Candidate target instance.
-   * @param {string[]} requiredComponents - Required component identifiers.
-   * @returns {boolean} True if candidate has all required components.
+   * @param {object} params - Filtering parameters.
+   * @param {Array<object>|undefined} params.targetContexts - Target context entries.
+   * @param {object|null} params.keptTargets - Pruned target map.
+   * @param {object|null} params.placeholderSource - Placeholder metadata.
+   * @returns {Array<object>} Filtered context collection.
    */
-  #candidateHasRequiredComponents(candidate, requiredComponents, role) {
-    if (!Array.isArray(requiredComponents) || requiredComponents.length === 0) {
-      return { valid: true };
+  #filterTargetContexts({ targetContexts, keptTargets, placeholderSource }) {
+    if (!Array.isArray(targetContexts) || targetContexts.length === 0) {
+      return Array.isArray(targetContexts) ? [...targetContexts] : [];
     }
 
-    if (!candidate) {
-      return { valid: false, reason: `No ${role} target available for validation` };
+    if (!keptTargets || typeof keptTargets !== 'object') {
+      return [...targetContexts];
     }
 
-    const targetEntity = candidate.entity || candidate;
-    if (!targetEntity) {
-      return { valid: false, reason: `No ${role} target available for validation` };
-    }
-
-    for (const componentId of requiredComponents) {
-      if (!componentId) {
+    const allowedEntityIdsByPlaceholder = new Map();
+    for (const [role, value] of Object.entries(keptTargets)) {
+      const placeholder = getPlaceholderForRole(role, placeholderSource);
+      if (!placeholder) {
         continue;
       }
 
-      if (targetEntity.components && targetEntity.components[componentId]) {
+      const candidates = Array.isArray(value) ? value : value ? [value] : [];
+      if (candidates.length === 0) {
+        allowedEntityIdsByPlaceholder.set(placeholder, new Set());
         continue;
       }
 
-      if (typeof targetEntity.hasComponent === 'function') {
-        try {
-          if (targetEntity.hasComponent(componentId)) {
-            continue;
-          }
-        } catch (error) {
-          this.#logger.debug(
-            `Error checking hasComponent('${componentId}') on ${targetEntity.id || 'unknown'}: ${error.message}`
-          );
+      const allowedIds =
+        allowedEntityIdsByPlaceholder.get(placeholder) ?? new Set();
+      for (const candidate of candidates) {
+        const candidateId = extractCandidateId(candidate);
+        if (candidateId) {
+          allowedIds.add(candidateId);
         }
       }
-
-      const entityId = targetEntity.id || 'unknown';
-      this.#logger.debug(
-        `Target entity ${entityId} missing required component: ${componentId}`
-      );
-      return {
-        valid: false,
-        reason: `Target (${role}) must have component: ${componentId}`,
-      };
+      allowedEntityIdsByPlaceholder.set(placeholder, allowedIds);
     }
 
-    return { valid: true };
+    if (allowedEntityIdsByPlaceholder.size === 0) {
+      return [...targetContexts];
+    }
+
+    return targetContexts.filter((ctx) => {
+      if (!ctx || ctx.type !== 'entity' || !ctx.placeholder) {
+        return true;
+      }
+
+      const allowedSet = allowedEntityIdsByPlaceholder.get(ctx.placeholder);
+      if (!allowedSet) {
+        return true;
+      }
+
+      return allowedSet.has(ctx.entityId);
+    });
   }
 
   /**
-   * Synchronizes filtered targets with the broader pipeline context and trace metadata.
+   * Record pruning metadata for downstream consumers.
    *
    * @private
-   * @param {ActionDefinition} actionDef - The action definition being updated.
-   * @param {object} context - Pipeline context containing resolved target data.
-   * @param {string[]} roles - Target roles that were evaluated.
-   * @param {object} targetEntities - Updated target entities map.
-   * @param {Map<string, Set<string>>} placeholderEntityMap - Allowed entity IDs grouped by placeholder.
-   * @returns {void}
+   * @param {object} metadata - Stage metadata container.
+   * @param {ActionDefinition} actionDef - Current action definition.
+   * @param {{keptTargets: object|null, removedTargets: Array<object>, removalReasons: string[]}} pruningResult - Pruner output summary.
    */
-  #updateActionTargetsInContext(
-    actionDef,
-    context,
-    roles,
-    targetEntities,
-    placeholderEntityMap
-  ) {
-    if (!context) {
+  #recordPruningUpdate(metadata, actionDef, pruningResult) {
+    if (!metadata) {
       return;
     }
 
-    let updatedPerActionMetadata = false;
-
-    if (Array.isArray(context.actionsWithTargets)) {
-      for (const actionWithTargets of context.actionsWithTargets) {
-        if (actionWithTargets.actionDef !== actionDef) {
-          continue;
-        }
-
-        if (actionWithTargets.resolvedTargets) {
-          for (const role of roles) {
-            if (Object.prototype.hasOwnProperty.call(targetEntities, role)) {
-              actionWithTargets.resolvedTargets[role] = targetEntities[role];
-            }
-          }
-        }
-
-        if (
-          placeholderEntityMap &&
-          placeholderEntityMap.size > 0 &&
-          Array.isArray(actionWithTargets.targetContexts)
-        ) {
-          actionWithTargets.targetContexts = actionWithTargets.targetContexts.filter(
-            (ctx) => {
-              if (ctx.type !== 'entity' || !ctx.placeholder) {
-                return true;
-              }
-
-              const allowedSet = placeholderEntityMap.get(ctx.placeholder);
-              if (!allowedSet) {
-                return true;
-              }
-
-              return allowedSet.has(ctx.entityId);
-            }
-          );
-        }
-
-        updatedPerActionMetadata = true;
-        break;
-      }
+    if (!metadata.stageUpdates) {
+      metadata.stageUpdates = [];
     }
 
-    if (updatedPerActionMetadata) {
-      return;
-    }
-
-    if (context.resolvedTargets) {
-      for (const role of roles) {
-        if (Object.prototype.hasOwnProperty.call(targetEntities, role)) {
-          context.resolvedTargets[role] = targetEntities[role];
-        }
-      }
-    }
-  }
-
-  /**
-   * Extracts the identifier for a resolved target candidate.
-   *
-   * @private
-   * @param {object} candidate - Target candidate to inspect.
-   * @returns {string|null} Candidate entity identifier when available.
-   */
-  #extractCandidateId(candidate) {
-    if (!candidate) {
-      return null;
-    }
-
-    if (typeof candidate.id === 'string' && candidate.id.length > 0) {
-      return candidate.id;
-    }
-
-    if (candidate.entity && typeof candidate.entity.id === 'string') {
-      return candidate.entity.id;
-    }
-
-    return null;
-  }
-
-  /**
-   * Extract target entities from action definition
-   *
-   * @private
-   * @param {ActionDefinition} actionDef - Action definition
-   * @param {object} context - Pipeline context
-   * @returns {object} Target entities by role including the actor when available
-   */
-  #extractTargetEntities(actionDef, context) {
-    const { actor } = context || {};
-
-    // Check if action has already resolved targets
-    if (actionDef.resolvedTargets) {
-      const targets = { ...actionDef.resolvedTargets };
-      if (actor) {
-        targets.actor = actor;
-      }
-      return targets;
-    }
-
-    // Check for legacy single-target format
-    if (actionDef.target_entity) {
-      const targets = { target: actionDef.target_entity };
-      if (actor) {
-        targets.actor = actor;
-      }
-      return targets;
-    }
-
-    // Check for multi-target format
-    const targets = {};
-    if (actionDef.target_entities) {
-      if (actionDef.target_entities.primary) {
-        targets.primary = actionDef.target_entities.primary;
-      }
-      if (actionDef.target_entities.secondary) {
-        targets.secondary = actionDef.target_entities.secondary;
-      }
-      if (actionDef.target_entities.tertiary) {
-        targets.tertiary = actionDef.target_entities.tertiary;
-      }
-    }
-
-    if (actor) {
-      targets.actor = actor;
-    }
-
-    return Object.keys(targets).length > 0 ? targets : null;
-  }
-
-  /**
-   * Check if the trace is an ActionAwareStructuredTrace
-   *
-   * @private
-   * @param {any} trace - The trace object to check
-   * @returns {boolean} True if trace is action-aware
-   */
-  #isActionAwareTrace(trace) {
-    return trace && typeof trace.captureActionData === 'function';
-  }
-
-  /**
-   * Capture validation analysis data for action tracing
-   *
-   * @private
-   * @param {ActionAwareStructuredTrace} trace - The action-aware trace
-   * @param {ActionDefinition} actionDef - The action definition
-   * @param {object} targetEntities - The target entities
-   * @param {object} validation - Validation result
-   * @param {number} validationTime - Time taken for validation
-   * @returns {Promise<void>}
-   */
-  async #captureValidationAnalysis(trace, actionDef, targetEntities, validation, validationTime) {
-    try {
-      const forbiddenComponents = actionDef.forbidden_components || {};
-      const requiredComponents = actionDef.required_components || {};
-
-      // Build trace data
-      const traceData = {
-        stage: 'target_component_validation',
-        validationPassed: validation.valid,
-        validationReason: validation.reason,
-        forbiddenComponents,
-        requiredComponents,
-        targetEntityIds: this.#getTargetEntityIds(targetEntities),
-        validationTime,
-        timestamp: Date.now()
-      };
-
-      await trace.captureActionData(
-        'target_component_validation',
-        actionDef.id,
-        traceData
-      );
-    } catch (error) {
-      this.#logger.warn(
-        `Failed to capture validation analysis for action '${actionDef.id}': ${error.message}`
-      );
-    }
-  }
-
-  /**
-   * Get target entity IDs for tracing
-   *
-   * @private
-   * @param {object} targetEntities - Target entities
-   * @returns {object} Target entity IDs
-   */
-  #getTargetEntityIds(targetEntities) {
-    if (!targetEntities) return {};
-
-    const ids = {};
-
-    // Handle legacy format
-    if (targetEntities.target) {
-      let targetData = targetEntities.target;
-      // Handle arrays
-      if (Array.isArray(targetData)) {
-        targetData = targetData.length > 0 ? targetData[0] : null;
-      }
-      ids.target = targetData?.id || 'unknown';
-    }
-
-    // Handle multi-target format
-    for (const role of ['actor', 'primary', 'secondary', 'tertiary']) {
-      if (targetEntities[role]) {
-        let targetData = targetEntities[role];
-        // Handle arrays - extract first element
-        if (Array.isArray(targetData)) {
-          targetData = targetData.length > 0 ? targetData[0] : null;
-        }
-        ids[role] = targetData?.id || 'unknown';
-      }
-    }
-
-    return ids;
-  }
-
-  /**
-   * Capture performance data for action tracing
-   *
-   * @private
-   * @param {ActionAwareStructuredTrace} trace - The action-aware trace
-   * @param {ActionDefinition} actionDef - The action definition
-   * @param {number} startTime - Start performance time
-   * @param {number} endTime - End performance time
-   * @param {number} totalCandidates - Total number of candidates processed
-   * @returns {Promise<void>}
-   */
-  async #capturePerformanceData(trace, actionDef, startTime, endTime, totalCandidates) {
-    try {
-      if (trace && trace.captureActionData) {
-        await trace.captureActionData('stage_performance', actionDef.id, {
-          stage: 'target_component_validation',
-          duration: endTime - startTime,
-          timestamp: Date.now(),
-          itemsProcessed: totalCandidates,
-          stageName: this.name
-        });
-      }
-    } catch (error) {
-      this.#logger.debug(
-        `Failed to capture performance data for action '${actionDef.id}': ${error.message}`
-      );
-    }
+    metadata.stageUpdates.push({
+      stage: this.name,
+      type: 'targetCandidatePruner',
+      actionId: actionDef?.id ?? null,
+      removedTargets: pruningResult.removedTargets.map((entry) => ({
+        ...entry,
+      })),
+      removalReasons: [...pruningResult.removalReasons],
+    });
   }
 }
 
