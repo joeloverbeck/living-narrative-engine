@@ -228,4 +228,74 @@ describe('ActionErrorContextBuilder real services integration', () => {
       })
     );
   });
+
+  it('sanitizes complex component payloads and classifies evaluation phases', () => {
+    const actorEntity = testBed.entityManager.getEntityInstance(actorId);
+    const circularComponent = { status: 'loop' };
+    circularComponent.self = circularComponent;
+    actorEntity.addComponent('core:circular', circularComponent);
+    actorEntity.addComponent('core:metadata', {
+      optional: null,
+      notes: 'short memo',
+    });
+
+    const trace = new TraceContext();
+    trace.step('Pipeline bootstrapped', 'PipelineBootstrapper');
+    trace.info('Resolving scope for actor', 'ScopeResolver', {
+      input: { region: 'northern-district' },
+    });
+    trace.failure('No entities matched target', 'ScopeResolver', {
+      input: { condition_ref: 'scope:adjacent', attempted: 3 },
+    });
+    trace.data('Collecting final evaluation context', 'TraceDataCollector', {
+      summary: 'captured',
+      contextSnapshot: { stamina: 2 },
+    });
+    trace.info('Validating condition_ref requirement', 'ConditionEngine', {
+      input: { condition_ref: 'affinity:trusted' },
+    });
+    trace.info('Evaluating action safeguards', 'JsonLogicEvaluator', {
+      input: { rule: 'json-logic' },
+    });
+
+    const error = new Error('Scope resolution error: no valid targets');
+    const actionDef = actions.find((action) => action.id === 'movement:go');
+
+    const context = builder.buildErrorContext({
+      error,
+      actionDef,
+      actorId,
+      phase: ERROR_PHASES.DISCOVERY,
+      trace,
+    });
+
+    expect(context.actorSnapshot.components['core:circular']).toEqual(
+      expect.objectContaining({
+        _error: true,
+        _reason: 'Failed to serialize component',
+      })
+    );
+    expect(
+      context.actorSnapshot.components['core:metadata'].optional
+    ).toBeNull();
+
+    expect(context.evaluationTrace.finalContext).toEqual(
+      expect.objectContaining({
+        summary: 'captured',
+        contextSnapshot: { stamina: 2 },
+      })
+    );
+
+    const stepTypes = context.evaluationTrace.steps.map((step) => step.type);
+    expect(stepTypes).toEqual(
+      expect.arrayContaining([
+        EVALUATION_STEP_TYPES.SCOPE,
+        EVALUATION_STEP_TYPES.CONDITION_REF,
+        EVALUATION_STEP_TYPES.JSON_LOGIC,
+      ])
+    );
+    expect(context.evaluationTrace.failurePoint).toBe(
+      'No entities matched target'
+    );
+  });
 });
