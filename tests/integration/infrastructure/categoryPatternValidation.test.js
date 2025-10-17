@@ -479,7 +479,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
 
       // Positioning uses extended handler set with perception logging (17 handlers instead of 9)
       // Includes: 9 standard + ADD_COMPONENT, ADD_PERCEPTION_LOG_ENTRY, REMOVE_COMPONENT,
-      // LOCK_MOVEMENT, UNLOCK_MOVEMENT, MODIFY_ARRAY_FIELD, MODIFY_COMPONENT, ATOMIC_MODIFY_COMPONENT
+      // LOCK_MOVEMENT, UNLOCK_MOVEMENT, MODIFY_ARRAY_FIELD, MODIFY_COMPONENT,
+      // ATOMIC_MODIFY_COMPONENT
       expect(Object.keys(handlers)).toHaveLength(17);
 
       // Verify ADD_COMPONENT is functional
