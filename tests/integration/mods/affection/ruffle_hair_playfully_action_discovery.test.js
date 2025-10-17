@@ -38,7 +38,7 @@ describe('affection:ruffle_hair_playfully action discovery', () => {
       scopeResolver.resolveSync = (scopeName, context) => {
         if (
           scopeName ===
-          'affection:close_actors_facing_each_other_or_behind_target'
+          'positioning:close_actors_facing_each_other_or_behind_target'
         ) {
           const actorId = context?.actor?.id;
           if (!actorId) {
@@ -102,7 +102,7 @@ describe('affection:ruffle_hair_playfully action discovery', () => {
       expect(ruffleHairAction.id).toBe(ACTION_ID);
       expect(ruffleHairAction.template).toBe("ruffle {target}'s hair playfully");
       expect(ruffleHairAction.targets).toBe(
-        'affection:close_actors_facing_each_other_or_behind_target'
+        'positioning:close_actors_facing_each_other_or_behind_target'
       );
     });
 

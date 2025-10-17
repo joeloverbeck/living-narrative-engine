@@ -89,8 +89,7 @@
       "actors_with_arms_facing_each_other_or_behind_target.scope",
       "actors_with_arms_in_intimacy.scope",
       "close_actors_facing_away.scope",
-      "close_actors_facing_each_other.scope",
-      "close_actors_facing_each_other_or_behind_target.scope"
+      "close_actors_facing_each_other.scope"
     ]
   }
 }

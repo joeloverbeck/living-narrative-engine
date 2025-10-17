@@ -37,7 +37,7 @@ describe('affection:push_target_playfully action discovery', () => {
       scopeResolver.resolveSync = (scopeName, context) => {
         if (
           scopeName ===
-          'affection:close_actors_facing_each_other_or_behind_target'
+          'positioning:close_actors_facing_each_other_or_behind_target'
         ) {
           const actorId = context?.actor?.id;
           if (!actorId) {
@@ -101,7 +101,7 @@ describe('affection:push_target_playfully action discovery', () => {
       expect(pushTargetPlayfullyAction.id).toBe(ACTION_ID);
       expect(pushTargetPlayfullyAction.template).toBe('push {target} playfully');
       expect(pushTargetPlayfullyAction.targets).toBe(
-        'affection:close_actors_facing_each_other_or_behind_target'
+        'positioning:close_actors_facing_each_other_or_behind_target'
       );
     });
 

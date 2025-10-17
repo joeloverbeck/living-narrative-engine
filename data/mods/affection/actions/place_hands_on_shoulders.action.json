@@ -3,7 +3,7 @@
   "id": "affection:place_hands_on_shoulders",
   "name": "Place Hands on Shoulders",
   "description": "Rest both hands on someone's shoulders in an affectionate gesture",
-  "targets": "affection:close_actors_facing_each_other_or_behind_target",
+  "targets": "positioning:close_actors_facing_each_other_or_behind_target",
   "required_components": {
     "actor": ["positioning:closeness"]
   },

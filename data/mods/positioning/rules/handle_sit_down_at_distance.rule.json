@@ -20,7 +20,7 @@
       "type": "QUERY_COMPONENT",
       "comment": "Get secondary occupant's sitting position",
       "parameters": {
-        "entity_ref": "{event.payload.secondaryTargetId}",
+        "entity_ref": "{event.payload.secondaryId}",
         "component_type": "positioning:sitting_on",
         "result_variable": "secondarySittingData"
       }
@@ -171,7 +171,7 @@
                       {
                         "type": "GET_NAME",
                         "parameters": {
-                          "entity_ref": "{event.payload.secondaryTargetId}",
+                          "entity_ref": "{event.payload.secondaryId}",
                           "result_variable": "secondaryName"
                         }
                       },

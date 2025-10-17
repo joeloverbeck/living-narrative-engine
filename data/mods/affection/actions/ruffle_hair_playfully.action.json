@@ -3,7 +3,7 @@
   "id": "affection:ruffle_hair_playfully",
   "name": "Ruffle hair playfully",
   "description": "Playfully tousle the target's hair to show affection.",
-  "targets": "affection:close_actors_facing_each_other_or_behind_target",
+  "targets": "positioning:close_actors_facing_each_other_or_behind_target",
   "required_components": {
     "actor": ["positioning:closeness"]
   },

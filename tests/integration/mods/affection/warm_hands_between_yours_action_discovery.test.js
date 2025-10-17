@@ -37,7 +37,7 @@ describe('affection:warm_hands_between_yours action discovery', () => {
       scopeResolver.resolveSync = (scopeName, context) => {
         if (
           scopeName ===
-          'affection:close_actors_facing_each_other_or_behind_target'
+          'positioning:close_actors_facing_each_other_or_behind_target'
         ) {
           const actorId = context?.actor?.id;
           if (!actorId) {
@@ -123,7 +123,7 @@ describe('affection:warm_hands_between_yours action discovery', () => {
       expect(warmHandsAction.id).toBe(ACTION_ID);
       expect(warmHandsAction.template).toBe("warm {target}'s hands between yours");
       expect(warmHandsAction.targets).toBe(
-        'affection:close_actors_facing_each_other_or_behind_target'
+        'positioning:close_actors_facing_each_other_or_behind_target'
       );
       expect(warmHandsAction.prerequisites).toEqual([
         {

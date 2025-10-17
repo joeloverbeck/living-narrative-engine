@@ -306,9 +306,10 @@ export class ComponentMutationService {
    *
    * @param {string} instanceId - The ID of the entity instance.
    * @param {string} componentTypeId - The unique ID of the component type to remove.
+   * @returns {Promise<boolean>} True if component was removed successfully.
    * @throws {EntityNotFoundError} If entity not found.
-   * @throws {InvalidArgumentError} If parameters are invalid.
    * @throws {ComponentOverrideNotFoundError} If component override does not exist.
+   * @throws {InvalidArgumentError} If parameters are invalid.
    * @throws {Error} If removal fails or circuit breaker is open.
    */
   async removeComponent(instanceId, componentTypeId) {
@@ -354,7 +355,7 @@ export class ComponentMutationService {
     // Check if the component to be removed exists as an override.
     if (!entity.hasComponentOverride(componentTypeId)) {
       this.#logger.debug(
-        `ComponentMutationService.removeComponent: Component '${componentTypeId}' not found as an override on entity '${instanceId}'. Nothing to remove at instance level.`
+        `ComponentMutationService.removeComponent: Component '${componentTypeId}' not found as an override on entity '${instanceId}'.`
       );
       throw new ComponentOverrideNotFoundError(instanceId, componentTypeId);
     }
@@ -383,6 +384,7 @@ export class ComponentMutationService {
       this.#logger.debug(
         `ComponentMutationService.removeComponent: Component override '${componentTypeId}' removed from entity '${instanceId}'.`
       );
+      return true;
     } else {
       this.#logger.warn(
         `ComponentMutationService.removeComponent: entity.removeComponent('${componentTypeId}') returned false for entity '${instanceId}' when an override was expected and should have been removable. This may indicate an issue in Entity class logic.`
