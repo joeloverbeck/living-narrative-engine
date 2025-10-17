@@ -9,7 +9,6 @@ import {
   ALL_MULTI_TARGET_ROLES,
   LEGACY_TARGET_ROLE,
 } from '../TargetRoleRegistry.js';
-import { deepClone } from '../../../utils/cloneUtils.js';
 
 /**
  * @typedef {import('../../../entities/entity.js').default} Entity
@@ -157,7 +156,7 @@ export class TargetValidationIOAdapter {
         return {
           ...base,
           actionDef: item.actionDef,
-          resolvedTargets: sanitizedTargets ? deepClone(sanitizedTargets) : sanitizedTargets,
+          resolvedTargets: sanitizedTargets,
           targetDefinitions: item.targetDefinitions ?? base.targetDefinitions ?? null,
           targetContexts: Array.isArray(item.targetContexts)
             ? [...item.targetContexts]
@@ -242,7 +241,9 @@ export class TargetValidationIOAdapter {
       sharedResolvedTargetsRef ??
       null;
 
-    const cloned = resolvedFromSource ? deepClone(resolvedFromSource) : null;
+    const cloned = resolvedFromSource
+      ? this.#cloneResolvedTargetsPreservingEntities(resolvedFromSource)
+      : null;
 
     if (cloned) {
       if (actor) {
@@ -252,7 +253,11 @@ export class TargetValidationIOAdapter {
     }
 
     if (actionDef?.target_entity) {
-      const targets = { [LEGACY_TARGET_ROLE]: deepClone(actionDef.target_entity) };
+      const targets = {
+        [LEGACY_TARGET_ROLE]: this.#cloneResolvedTargetsPreservingEntities(
+          actionDef.target_entity
+        ),
+      };
       if (actor) {
         targets[ACTOR_ROLE] = actor;
       }
@@ -263,7 +268,9 @@ export class TargetValidationIOAdapter {
       const targets = {};
       for (const role of ALL_MULTI_TARGET_ROLES) {
         if (actionDef.target_entities[role]) {
-          targets[role] = deepClone(actionDef.target_entities[role]);
+          targets[role] = this.#cloneResolvedTargetsPreservingEntities(
+            actionDef.target_entities[role]
+          );
         }
       }
       if (actor) {
@@ -287,7 +294,9 @@ export class TargetValidationIOAdapter {
    */
   #extractTargetContexts(source) {
     if (Array.isArray(source?.targetContexts)) {
-      return source.targetContexts.map((contextEntry) => deepClone(contextEntry));
+      return source.targetContexts.map((contextEntry) =>
+        this.#cloneResolvedTargetsPreservingEntities(contextEntry)
+      );
     }
 
     return [];
@@ -309,10 +318,66 @@ export class TargetValidationIOAdapter {
       if (role === ACTOR_ROLE) {
         continue;
       }
-      sanitized[role] = value;
+      sanitized[role] = this.#cloneResolvedTargetsPreservingEntities(value);
     }
 
     return Object.keys(sanitized).length > 0 ? sanitized : null;
+  }
+
+  /**
+   * @description Clone resolved target structures while preserving entity references.
+   * @param {object|Array|*} value - Resolved target value to clone.
+   * @returns {object|Array|*} Shallow clone with entity references intact.
+   */
+  #cloneResolvedTargetsPreservingEntities(value) {
+    if (Array.isArray(value)) {
+      return value.map((candidate) =>
+        this.#cloneCandidatePreservingEntity(candidate)
+      );
+    }
+
+    if (value && typeof value === 'object') {
+      if (
+        typeof value.hasComponent === 'function' &&
+        typeof value.getComponentData === 'function'
+      ) {
+        return value;
+      }
+
+      const cloned = { ...value };
+      if (Object.prototype.hasOwnProperty.call(cloned, 'entity')) {
+        cloned.entity = value.entity;
+      }
+
+      for (const [key, nested] of Object.entries(cloned)) {
+        if (key === 'entity') {
+          continue;
+        }
+        cloned[key] = this.#cloneResolvedTargetsPreservingEntities(nested);
+      }
+
+      return cloned;
+    }
+
+    return value;
+  }
+
+  /**
+   * @description Clone a single candidate while keeping the entity reference stable.
+   * @param {object|*} candidate - Candidate entry to clone.
+   * @returns {object|*} Cloned candidate with entity reference preserved.
+   */
+  #cloneCandidatePreservingEntity(candidate) {
+    if (!candidate || typeof candidate !== 'object') {
+      return candidate;
+    }
+
+    const cloned = { ...candidate };
+    if (Object.prototype.hasOwnProperty.call(candidate, 'entity')) {
+      cloned.entity = candidate.entity;
+    }
+
+    return cloned;
   }
 }
 

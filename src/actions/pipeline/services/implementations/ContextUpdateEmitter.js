@@ -4,8 +4,6 @@
  */
 
 import { ACTOR_ROLE } from '../../TargetRoleRegistry.js';
-import { deepClone } from '../../../../utils/cloneUtils.js';
-
 /**
  * @typedef {import('../../adapters/TargetValidationIOAdapter.js').TargetValidationItem} TargetValidationItem
  */
@@ -95,10 +93,8 @@ export class ContextUpdateEmitter {
     return {
       actionId: item.actionDef?.id ?? null,
       kept,
-      keptTargets: sanitizedTargets ? deepClone(sanitizedTargets) : null,
-      targetContexts: Array.isArray(item.targetContexts)
-        ? item.targetContexts.map((contextEntry) => deepClone(contextEntry))
-        : [],
+      keptTargets: sanitizedTargets,
+      targetContexts: this.#cloneTargetContexts(item.targetContexts),
       stageUpdates: this.#extractStageUpdates(metadata, item.actionDef?.id ?? null),
       originalIndex: item.originalIndex,
       sourceFormat: item.sourceFormat,
@@ -129,11 +125,9 @@ export class ContextUpdateEmitter {
       return {
         ...base,
         actionDef: item.actionDef,
-        resolvedTargets: sanitizedTargets ? deepClone(sanitizedTargets) : sanitizedTargets,
+        resolvedTargets: sanitizedTargets,
         targetDefinitions: item.targetDefinitions ?? base.targetDefinitions ?? null,
-        targetContexts: Array.isArray(item.targetContexts)
-          ? item.targetContexts.map((entry) => deepClone(entry))
-          : base.targetContexts,
+        targetContexts: this.#cloneTargetContexts(item.targetContexts ?? base.targetContexts),
       };
     });
   }
@@ -156,7 +150,7 @@ export class ContextUpdateEmitter {
       const sanitizedTargets = this.#sanitizeResolvedTargets(item.resolvedTargets);
 
       if (validatedSet.has(item) && sanitizedTargets) {
-        item.actionDef.resolvedTargets = deepClone(sanitizedTargets);
+        item.actionDef.resolvedTargets = sanitizedTargets;
       } else if (item.actionDef.resolvedTargets) {
         delete item.actionDef.resolvedTargets;
       }
@@ -219,7 +213,7 @@ export class ContextUpdateEmitter {
         if (role === ACTOR_ROLE) {
           continue;
         }
-        sharedTargets[role] = deepClone(value);
+        sharedTargets[role] = this.#cloneResolvedTargetsPreservingEntities(value);
         survivingRoles.add(role);
       }
     }
@@ -248,10 +242,80 @@ export class ContextUpdateEmitter {
       if (role === ACTOR_ROLE) {
         continue;
       }
-      sanitized[role] = value;
+      sanitized[role] = this.#cloneResolvedTargetsPreservingEntities(value);
     }
 
     return Object.keys(sanitized).length > 0 ? sanitized : null;
+  }
+  /**
+   * @description Clone resolved target structures while preserving entity references.
+   * @param {object|Array|*} value - Value to clone.
+   * @returns {object|Array|*} Cloned value with entity references kept intact.
+   */
+  #cloneResolvedTargetsPreservingEntities(value) {
+    if (Array.isArray(value)) {
+      return value.map((candidate) =>
+        this.#cloneCandidatePreservingEntity(candidate)
+      );
+    }
+
+    if (value && typeof value === 'object') {
+      if (
+        typeof value.hasComponent === 'function' &&
+        typeof value.getComponentData === 'function'
+      ) {
+        return value;
+      }
+
+      const cloned = { ...value };
+      if (Object.prototype.hasOwnProperty.call(cloned, 'entity')) {
+        cloned.entity = value.entity;
+      }
+
+      for (const [key, nested] of Object.entries(cloned)) {
+        if (key === 'entity') {
+          continue;
+        }
+        cloned[key] = this.#cloneResolvedTargetsPreservingEntities(nested);
+      }
+
+      return cloned;
+    }
+
+    return value;
+  }
+
+  /**
+   * @description Clone a candidate entry while keeping entity reference stable.
+   * @param {object|*} candidate - Candidate entry to clone.
+   * @returns {object|*} Cloned candidate with original entity reference.
+   */
+  #cloneCandidatePreservingEntity(candidate) {
+    if (!candidate || typeof candidate !== 'object') {
+      return candidate;
+    }
+
+    const cloned = { ...candidate };
+    if (Object.prototype.hasOwnProperty.call(candidate, 'entity')) {
+      cloned.entity = candidate.entity;
+    }
+
+    return cloned;
+  }
+
+  /**
+   * @description Clone target contexts while preserving entity references.
+   * @param {Array<object>|undefined|null} targetContexts - Target context entries.
+   * @returns {Array<object>} Cloned target contexts array.
+   */
+  #cloneTargetContexts(targetContexts) {
+    if (!Array.isArray(targetContexts)) {
+      return [];
+    }
+
+    return targetContexts.map((contextEntry) =>
+      this.#cloneResolvedTargetsPreservingEntities(contextEntry)
+    );
   }
 }
 
