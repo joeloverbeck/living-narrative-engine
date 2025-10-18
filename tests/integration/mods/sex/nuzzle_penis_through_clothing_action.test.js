@@ -25,6 +25,7 @@ function setupPenisClothingScenario() {
     .withName('Alice')
     .atLocation('room1')
     .closeToEntity('bob')
+    .kneelingBefore('bob')
     .asActor()
     .build();
 

@@ -60,8 +60,11 @@ describe('Violence Mod: Slap Action Integration', () => {
 
       // This test verifies the rule handles missing entities gracefully
       // The action prerequisites would normally prevent this, but we test rule robustness
+      // Skip validation to test the rule's error handling directly
       await expect(async () => {
-        await testFixture.executeAction(scenario.actor.id, 'nonexistent');
+        await testFixture.executeAction(scenario.actor.id, 'nonexistent', {
+          skipValidation: true,
+        });
       }).not.toThrow();
 
       // Should not generate successful action events with missing target

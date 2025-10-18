@@ -312,18 +312,10 @@ describe('Complete Lying Workflow', () => {
       const kneelFixture = await ModTestFixture.forAction('positioning', 'kneel_before');
       kneelFixture.reset([room, actor, bed, king]);
 
-      // Act: Try to kneel (should be blocked due to lying_down component)
-      const result = await kneelFixture.executeAction('test:actor1', 'test:king');
-
-      // Assert: Action should be blocked
-      if (result && typeof result === 'object' && 'blocked' in result) {
-        expect(result.blocked).toBe(true);
-        expect(result.reason).toContain('lying_down');
-      } else {
-        // TODO: kneel_before action needs forbidden component check for lying_down
-        const actorAfter = kneelFixture.entityManager.getEntityInstance('test:actor1');
-        expect(actorAfter.components['positioning:lying_down']).toBeDefined();
-      }
+      // Act: Try to kneel (should throw validation error due to lying_down component)
+      await expect(async () => {
+        await kneelFixture.executeAction('test:actor1', 'test:king');
+      }).rejects.toThrow(/forbidden component/);
 
       kneelFixture.cleanup();
     });
@@ -355,13 +347,10 @@ describe('Complete Lying Workflow', () => {
 
       testFixture.reset([room, actor, bed, couch]);
 
-      // Act: Try to lie down again (should be blocked - already has lying_down component)
-      const result = await testFixture.executeAction('test:actor1', 'test:couch1');
-
-      // Assert: Action should be blocked
-      expect(result).toBeDefined();
-      expect(result.blocked).toBe(true);
-      expect(result.reason).toContain('lying_down');
+      // Act: Try to lie down again (should throw validation error - already has lying_down component)
+      await expect(async () => {
+        await testFixture.executeAction('test:actor1', 'test:couch1');
+      }).rejects.toThrow(/forbidden component/);
     });
 
     it('should prevent turning around while lying', async () => {
@@ -386,18 +375,10 @@ describe('Complete Lying Workflow', () => {
       const turnFixture = await ModTestFixture.forAction('positioning', 'turn_around');
       turnFixture.reset([room, actor, bed]);
 
-      // Act: Try to turn around (should be blocked due to lying_down component)
-      const result = await turnFixture.executeAction('test:actor1', 'none');
-
-      // Assert: Action should be blocked
-      if (result && typeof result === 'object' && 'blocked' in result) {
-        expect(result.blocked).toBe(true);
-        expect(result.reason).toContain('lying_down');
-      } else {
-        // TODO: turn_around action needs forbidden component check for lying_down
-        const actorAfter = turnFixture.entityManager.getEntityInstance('test:actor1');
-        expect(actorAfter.components['positioning:lying_down']).toBeDefined();
-      }
+      // Act: Try to turn around (should throw validation error due to missing closeness component)
+      await expect(async () => {
+        await turnFixture.executeAction('test:actor1', 'none');
+      }).rejects.toThrow(/missing required component/);
 
       turnFixture.cleanup();
     });

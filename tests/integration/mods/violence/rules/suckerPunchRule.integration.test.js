@@ -5,6 +5,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../../../common/mods/ModTestFixture.js';
+import { ActionValidationError } from '../../../../common/mods/actionExecutionValidator.js';
 import suckerPunchRule from '../../../../../data/mods/violence/rules/handle_sucker_punch.rule.json';
 import eventIsActionSuckerPunch from '../../../../../data/mods/violence/conditions/event-is-action-sucker-punch.condition.json';
 
@@ -94,25 +95,21 @@ describe('Violence Mod: Sucker Punch Rule', () => {
     it('handles missing actor gracefully', async () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Beth']);
 
-      // This should not throw, but may fail during GET_NAME operation
+      // Pre-flight validation now catches missing entities before rule execution
+      // This validates that the validation system properly detects missing actors
       await expect(async () => {
         await testFixture.executeAction('nonexistent', scenario.target.id);
-      }).not.toThrow();
-
-      // Should not generate successful action events with missing actor
-      testFixture.assertOnlyExpectedEvents(['core:attempt_action']);
+      }).rejects.toThrow(ActionValidationError);
     });
 
     it('handles missing target gracefully', async () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Beth']);
 
-      // This should not throw, but may fail during GET_NAME operation
+      // Pre-flight validation now catches missing entities before rule execution
+      // This validates that the validation system properly detects missing targets
       await expect(async () => {
         await testFixture.executeAction(scenario.actor.id, 'nonexistent');
-      }).not.toThrow();
-
-      // Should not generate successful action events with missing target
-      testFixture.assertOnlyExpectedEvents(['core:attempt_action']);
+      }).rejects.toThrow(ActionValidationError);
     });
   });
 

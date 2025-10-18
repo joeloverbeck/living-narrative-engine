@@ -191,24 +191,14 @@ describe('positioning:get_up_from_lying action rule execution', () => {
 
       testFixture.reset([room, actor, bed]);
 
-      // Act: Try to get up (should fail gracefully)
-      await testFixture.executeAction('test:actor1', 'test:bed1');
+      // Act: Try to get up (should throw validation error)
+      await expect(async () => {
+        await testFixture.executeAction('test:actor1', 'test:bed1');
+      }).rejects.toThrow(/missing required component/);
 
       // Assert: Verify the system handled it without crashing
       const actor2 = testFixture.entityManager.getEntityInstance('test:actor1');
       expect(actor2).toBeDefined();
-
-      // Check that error event was dispatched
-      const perceptibleEvents = testFixture.events.filter(
-        (e) => e.eventType === 'core:perceptible_event'
-      );
-
-      // The rule should have handled the missing component case
-      // Either no event or an error message event
-      if (perceptibleEvents.length > 0) {
-        const event = perceptibleEvents[0];
-        expect(event.payload.descriptionText).toBeDefined();
-      }
     });
 
     it('should not crash when furniture has been deleted', async () => {
@@ -227,8 +217,10 @@ describe('positioning:get_up_from_lying action rule execution', () => {
       testFixture.reset([room, actor]);
       // Note: No bed entity registered
 
-      // Act: Try to get up
-      await testFixture.executeAction('test:actor1', 'test:nonexistent_bed');
+      // Act: Try to get up - should throw validation error
+      await expect(async () => {
+        await testFixture.executeAction('test:actor1', 'test:nonexistent_bed');
+      }).rejects.toThrow(/does not exist/);
 
       // Assert: Should handle gracefully (implementation-dependent)
       // At minimum, should not crash the game

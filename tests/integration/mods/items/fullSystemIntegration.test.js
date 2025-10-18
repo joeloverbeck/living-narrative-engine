@@ -102,6 +102,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
         .withComponent('items:portable', {})
         .withComponent('items:weight', { weight: 1.0 })
         .withComponent('items:readable', { content: 'Test content' })
+        .withComponent('core:description', { text: 'A test item for verification.' })
         .build();
 
       const locationItem = new ModEntityBuilder('floor-item')
@@ -241,6 +242,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
         .withComponent('items:weight', { weight: 2.0 })
+        .withComponent('core:description', { text: 'An ancient tome filled with mysterious knowledge.' })
         .build();
 
       // Open drawer

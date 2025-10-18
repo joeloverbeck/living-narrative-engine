@@ -25,6 +25,7 @@ function setupAnatomyComponents() {
     .withName('Alice')
     .atLocation('room1')
     .closeToEntity('bob')
+    .withComponent('positioning:kneeling_before', { target: 'bob' })
     .asActor()
     .build();
 

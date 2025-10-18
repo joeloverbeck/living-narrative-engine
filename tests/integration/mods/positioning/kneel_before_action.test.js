@@ -476,13 +476,12 @@ describe('positioning:kneel_before action integration', () => {
         testFixture.reset(Object.values(entities));
 
         // Target has positioning:kneeling_before which is in forbidden_components.primary
-        const result = await testFixture.executeAction('test:actor1', 'test:target1');
+        // New validation behavior: throws ActionValidationError instead of returning {blocked: true}
+        await expect(async () => {
+          await testFixture.executeAction('test:actor1', 'test:target1');
+        }).rejects.toThrow(/forbidden component/);
 
-        // Action should be blocked
-        expect(result.blocked).toBe(true);
-        expect(result.reason).toContain('Target has forbidden component');
-
-        // Component should NOT be added
+        // Component should NOT be added (action was blocked before execution)
         const actor = testFixture.entityManager.getEntityInstance('test:actor1');
         expect(actor.components['positioning:kneeling_before']).toBeUndefined();
       });
