@@ -5,7 +5,6 @@ import {
 } from '../../common/entities/index.js';
 import { runInvalidIdPairTests } from '../../common/entities/index.js';
 import { EntityNotFoundError } from '../../../src/errors/entityNotFoundError.js';
-import { ComponentOverrideNotFoundError } from '../../../src/errors/componentOverrideNotFoundError.js';
 import {
   expectComponentRemovedDispatch,
   expectNoDispatch,
@@ -61,7 +60,7 @@ describeEntityManagerSuite('EntityManager - removeComponent', (getBed) => {
       );
     });
 
-    it('should throw an error if component is not an override on the instance', async () => {
+    it('should be idempotent when removing a non-override component', async () => {
       // Arrange
       const { entityManager, mocks } = getBed();
       const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
@@ -75,7 +74,7 @@ describeEntityManagerSuite('EntityManager - removeComponent', (getBed) => {
       // Act & Assert
       await expect(
         entityManager.removeComponent(PRIMARY, NAME_COMPONENT_ID)
-      ).rejects.toThrow(ComponentOverrideNotFoundError);
+      ).resolves.toBeUndefined();
       expectNoDispatch(mocks.eventDispatcher.dispatch);
     });
 
