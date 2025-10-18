@@ -5,7 +5,6 @@ import {
 } from '../../common/entities/index.js';
 import { runInvalidIdPairTests } from '../../common/entities/index.js';
 import { EntityNotFoundError } from '../../../src/errors/entityNotFoundError.js';
-import { ComponentOverrideNotFoundError } from '../../../src/errors/componentOverrideNotFoundError.js';
 import {
   expectComponentRemovedDispatch,
   expectNoDispatch,

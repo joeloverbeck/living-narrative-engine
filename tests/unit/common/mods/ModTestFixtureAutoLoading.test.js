@@ -22,6 +22,7 @@ import {
 jest.mock('fs', () => ({
   promises: {
     readFile: jest.fn(),
+    readdir: jest.fn().mockResolvedValue([]),
   },
 }));
 
@@ -221,7 +222,10 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
   });
 
   describe('tryAutoLoadFiles', () => {
-    const mockRuleFile = { rule_id: 'test_rule' };
+    const mockRuleFile = {
+      rule_id: 'test_rule',
+      actions: [{ type: 'GET_NAME', parameters: {} }],
+    };
     const mockConditionFile = { id: 'test:condition' };
 
     it('should return loaded files when successful', async () => {
@@ -310,7 +314,10 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
     });
 
     it('should prefer provided files over auto-loaded ones', async () => {
-      const providedRule = { rule_id: 'provided_rule' };
+      const providedRule = {
+        rule_id: 'provided_rule',
+        actions: [{ type: 'SET_VARIABLE', parameters: {} }],
+      };
       const providedCondition = { id: 'provided:condition' };
 
       // Auto-loading should not be triggered since files are provided
@@ -333,7 +340,10 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
         .mockRejectedValueOnce(new Error('ENOENT: no such file')) // First condition attempt fails
         .mockResolvedValueOnce(JSON.stringify(mockConditionFile)); // Second condition attempt succeeds
 
-      const providedRule = { rule_id: 'provided_rule' };
+      const providedRule = {
+        rule_id: 'provided_rule',
+        actions: [{ type: 'GET_NAME', parameters: {} }],
+      };
 
       const fixture = await ModTestFixture.forAction(
         'kissing',
@@ -358,7 +368,10 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
   });
 
   describe('enhanced forRule', () => {
-    const mockRuleFile = { rule_id: 'test_rule' };
+    const mockRuleFile = {
+      rule_id: 'test_rule',
+      actions: [{ type: 'GET_NAME', parameters: {} }],
+    };
     const mockConditionFile = { id: 'test:condition' };
 
     it('should maintain backward compatibility with existing signature', async () => {
@@ -402,7 +415,10 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
   });
 
   describe('forActionAutoLoad', () => {
-    const mockRuleFile = { rule_id: 'test_rule' };
+    const mockRuleFile = {
+      rule_id: 'test_rule',
+      actions: [{ type: 'GET_NAME', parameters: {} }],
+    };
     const mockConditionFile = { id: 'test:condition' };
 
     it('should create fixture with auto-loaded files', async () => {
@@ -454,7 +470,10 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
   });
 
   describe('forRuleAutoLoad', () => {
-    const mockRuleFile = { rule_id: 'test_rule' };
+    const mockRuleFile = {
+      rule_id: 'test_rule',
+      actions: [{ type: 'GET_NAME', parameters: {} }],
+    };
     const mockConditionFile = { id: 'test:condition' };
 
     it('should create fixture with auto-loaded files', async () => {

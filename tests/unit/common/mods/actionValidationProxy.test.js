@@ -186,6 +186,6 @@ describe('ruleValidationProxy - Basic Validation', () => {
 
     expect(() => {
       createRuleValidationProxy(invalidRule, 'Test Rule');
-    }).toThrow(/missing required 'operations' array/);
+    }).toThrow(/missing required 'operations' or 'actions' array/);
   });
 });

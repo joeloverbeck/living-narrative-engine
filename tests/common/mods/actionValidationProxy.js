@@ -274,7 +274,16 @@ function formatValidationErrors(errors, context) {
  */
 export function createRuleValidationProxy(ruleDef, context = 'Rule') {
   const validator = {
-    validProperties: ['id', 'description', 'operations', 'priority'],
+    validProperties: [
+      'id',
+      'rule_id',
+      'description',
+      'event_type',
+      'condition',
+      'actions',
+      'operations',
+      'priority',
+    ],
 
     validate(obj) {
       const errors = [];
@@ -292,7 +301,7 @@ export function createRuleValidationProxy(ruleDef, context = 'Rule') {
       });
 
       // Validate required properties
-      if (!obj.id) {
+      if (!obj.id && !obj.rule_id) {
         errors.push({
           type: 'missing_required',
           property: 'id',
@@ -300,11 +309,13 @@ export function createRuleValidationProxy(ruleDef, context = 'Rule') {
         });
       }
 
-      if (!obj.operations || !Array.isArray(obj.operations)) {
+      const hasOperations = Array.isArray(obj.operations);
+      const hasActions = Array.isArray(obj.actions);
+      if (!hasOperations && !hasActions) {
         errors.push({
           type: 'missing_required',
           property: 'operations',
-          message: `${context} missing required 'operations' array`,
+          message: `${context} missing required 'operations' or 'actions' array`,
         });
       }
 
