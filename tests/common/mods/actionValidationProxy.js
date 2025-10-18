@@ -29,6 +29,7 @@ export function createActionValidationProxy(actionDef, context = 'Action') {
   const validator = {
     // Known correct property names from action schema
     validProperties: [
+      '$schema', // JSON Schema reference
       'id',
       'name',
       'description',
@@ -38,6 +39,7 @@ export function createActionValidationProxy(actionDef, context = 'Action') {
       'template',
       'prerequisites',
       'visual',
+      'generateCombinations', // For multi-target actions
     ],
 
     // Common typos mapped to correct properties

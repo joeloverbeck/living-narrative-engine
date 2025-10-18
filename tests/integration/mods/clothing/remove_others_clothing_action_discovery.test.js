@@ -30,7 +30,7 @@ describe('clothing:remove_others_clothing action discovery', () => {
     );
     expect(removeOthersClothingAction.name).toBe("Remove Other's Clothing");
     expect(removeOthersClothingAction.description).toBe(
-      "Remove a piece of someone else's topmost clothing"
+      "Remove a piece of someone else's topmost clothing. MULTI-TARGET ACTION: Shows ALL topmost clothing items across all equipped slots. For a person wearing jacket (torso_upper), pants (torso_lower), and shoes (feet), this action will generate separate action instances for each: 'remove person's jacket', 'remove person's pants', 'remove person's shoes'. This is the correct behavior - users should see all accessible clothing items they can interact with."
     );
     expect(removeOthersClothingAction.template).toBe(
       "remove {person}'s {item}"
@@ -44,8 +44,10 @@ describe('clothing:remove_others_clothing action discovery', () => {
       'positioning:close_actors'
     );
     expect(removeOthersClothingAction.targets.secondary).toBeDefined();
+    // IMPORTANT: Should use target_topmost_clothing (not topmost_clothing)
+    // to correctly resolve clothing items from the primary target, not the actor
     expect(removeOthersClothingAction.targets.secondary.scope).toBe(
-      'clothing:topmost_clothing'
+      'clothing:target_topmost_clothing'
     );
   });
 

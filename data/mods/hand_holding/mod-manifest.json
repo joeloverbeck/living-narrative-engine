@@ -23,8 +23,8 @@
       "warm_hands_between_yours.action.json"
     ],
     "components": [
-      "holding_hand.component.json",
-      "hand_held.component.json"
+      "hand_held.component.json",
+      "holding_hand.component.json"
     ],
     "conditions": [
       "actors-are-holding-hands.condition.json",

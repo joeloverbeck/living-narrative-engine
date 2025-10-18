@@ -12,9 +12,10 @@
     "violence",
     "seduction",
     "affection",
+    "hand_holding",
     "caressing",
     "kissing",
     "p_erotica"
   ],
-  "startWorld": "p_erotica:kern"
+  "startWorld": "p_erotica:bogdana"
 }

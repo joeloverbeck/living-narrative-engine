@@ -162,19 +162,19 @@ describe('Traits Generator Schema Validation E2E', () => {
       expect(properties.names.maxItems).toBe(5);
 
       expect(properties.personality.minItems).toBe(3);
-      expect(properties.personality.maxItems).toBe(5);
+      expect(properties.personality.maxItems).toBe(8);
 
       expect(properties.physicalDescription.minLength).toBe(100);
-      expect(properties.physicalDescription.maxLength).toBe(500);
+      expect(properties.physicalDescription.maxLength).toBe(700);
 
       expect(properties.profile.minLength).toBe(200);
-      expect(properties.profile.maxLength).toBe(800);
+      expect(properties.profile.maxLength).toBe(1200);
 
       expect(properties.strengths.minItems).toBe(2);
-      expect(properties.strengths.maxItems).toBe(4);
+      expect(properties.strengths.maxItems).toBe(6);
 
       expect(properties.likes.minItems).toBe(3);
-      expect(properties.likes.maxItems).toBe(5);
+      expect(properties.likes.maxItems).toBe(8);
     });
 
     it('should include metadata schema for generation tracking', () => {

@@ -11,6 +11,7 @@
         "enum": [
           "straight",
           "wavy",
+          "tousled",
           "curly",
           "kinky",
           "braided",
@@ -23,7 +24,9 @@
         "default": "straight"
       }
     },
-    "required": ["style"],
+    "required": [
+      "style"
+    ],
     "additionalProperties": false
   }
 }

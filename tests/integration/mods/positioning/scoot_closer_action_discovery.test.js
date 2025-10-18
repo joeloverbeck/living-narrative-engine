@@ -3,9 +3,11 @@ import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import handleScootCloserRule from '../../../../data/mods/positioning/rules/handle_scoot_closer.rule.json' assert { type: 'json' };
 import eventIsActionScootCloser from '../../../../data/mods/positioning/conditions/event-is-action-scoot-closer.condition.json' assert { type: 'json' };
+import scootCloserAction from '../../../../data/mods/positioning/actions/scoot_closer.action.json' assert { type: 'json' };
 
 describe('scoot_closer action discovery - Integration Tests', () => {
   let testFixture;
+  let configureActionDiscovery;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
@@ -14,6 +16,16 @@ describe('scoot_closer action discovery - Integration Tests', () => {
       handleScootCloserRule,
       eventIsActionScootCloser
     );
+
+    configureActionDiscovery = () => {
+      const { testEnv } = testFixture;
+      if (!testEnv) {
+        return;
+      }
+
+      // Build the action index with the scoot_closer action
+      testEnv.actionIndex.buildIndex([scootCloserAction]);
+    };
 
     // Add custom scope resolvers
     const { testEnv } = testFixture;
@@ -154,6 +166,12 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .build();
 
       testFixture.reset([room, furniture, occupant1, actor]);
+      configureActionDiscovery();
+      configureActionDiscovery();
+
+      // OPTIONAL: Enable diagnostics for debugging
+      // Uncomment to see detailed discovery trace:
+      // const actions = testFixture.discoverWithDiagnostics('actor1', 'positioning:scoot_closer');
 
       // Act
       const actions = await testFixture.discoverActions('actor1');
@@ -214,6 +232,8 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .build();
 
       testFixture.reset([room, furniture, occupant1, actor]);
+      configureActionDiscovery();
+      configureActionDiscovery();
 
       // Act
       const actions = await testFixture.discoverActions('actor1');
@@ -275,6 +295,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .build();
 
       testFixture.reset([room, furniture, occupant1, occupant2, actor]);
+      configureActionDiscovery();
 
       // Act
       const actions = await testFixture.discoverActions('actor1');
@@ -323,6 +344,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .build();
 
       testFixture.reset([room, furniture, actor, occupant2]);
+      configureActionDiscovery();
 
       // Act
       const actions = await testFixture.discoverActions('actor1');
@@ -377,6 +399,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .build();
 
       testFixture.reset([room, furniture, occupant1, occupant2, actor]);
+      configureActionDiscovery();
 
       // Act
       const actions = await testFixture.discoverActions('actor1');
@@ -411,6 +434,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .build();
 
       testFixture.reset([room, furniture, actor]);
+      configureActionDiscovery();
 
       // Act
       const actions = await testFixture.discoverActions('actor1');
@@ -433,6 +457,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .build();
 
       testFixture.reset([room, actor]);
+      configureActionDiscovery();
 
       // Act
       const actions = await testFixture.discoverActions('actor1');
@@ -479,6 +504,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .build();
 
       testFixture.reset([room, furniture, occupant1, actor]);
+      configureActionDiscovery();
 
       // Act
       const actions = await testFixture.discoverActions('actor1');
@@ -511,6 +537,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .build();
 
       testFixture.reset([room, furniture, actor]);
+      configureActionDiscovery();
 
       // Act
       const actions = await testFixture.discoverActions('actor1');

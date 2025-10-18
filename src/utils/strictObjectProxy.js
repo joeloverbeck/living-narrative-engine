@@ -59,7 +59,7 @@ export function createStrictProxy(target, objectName = 'Object', allowedUndefine
  * @param {Array<string>} available - Available property names
  * @returns {string} Most similar property name
  */
-function findSimilarProperty(target, available) {
+export function findSimilarProperty(target, available) {
   if (available.length === 0) return 'N/A';
 
   let minDistance = Infinity;
