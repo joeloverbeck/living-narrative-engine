@@ -122,18 +122,10 @@ describe('hand_holding:hold_hand action integration', () => {
     const room = ModEntityScenarios.createRoom('sunroom', 'Sun Room');
     testFixture.reset([room, scenario.actor, scenario.target]);
 
-    // Action should be blocked - actor must first release their held hand
-    const result = await testFixture.executeAction(
-      scenario.actor.id,
-      scenario.target.id
-    );
-
-    expect(result).toEqual({
-      blocked: true,
-      reason: expect.stringContaining('forbidden component'),
-      attemptedAction: 'hand_holding:hold_hand',
-      attemptedActor: scenario.actor.id,
-    });
+    // Action should be blocked by validation - actor must first release their held hand
+    await expect(
+      testFixture.executeAction(scenario.actor.id, scenario.target.id)
+    ).rejects.toThrow('forbidden component');
 
     // Verify no components were changed
     const actorInstance = testFixture.entityManager.getEntityInstance(
@@ -160,17 +152,12 @@ describe('hand_holding:hold_hand action integration', () => {
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
     const initialEventCount = testFixture.events.length;
-    const result = await testFixture.executeAction(
-      scenario.actor.id,
-      scenario.target.id
-    );
 
-    expect(result).toEqual({
-      blocked: true,
-      reason: expect.stringContaining('forbidden component'),
-      attemptedAction: 'hand_holding:hold_hand',
-      attemptedActor: scenario.actor.id,
-    });
+    // Second attempt should be blocked by validation
+    await expect(
+      testFixture.executeAction(scenario.actor.id, scenario.target.id)
+    ).rejects.toThrow('forbidden component');
+
     expect(testFixture.events.length).toBe(initialEventCount);
 
     const actorInstance = testFixture.entityManager.getEntityInstance(

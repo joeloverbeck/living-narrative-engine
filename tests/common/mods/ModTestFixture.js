@@ -20,6 +20,10 @@ import {
   createRuleValidationProxy,
 } from './actionValidationProxy.js';
 import { DiscoveryDiagnostics } from './discoveryDiagnostics.js';
+import {
+  validateActionExecution,
+  ActionValidationError,
+} from './actionExecutionValidator.js';
 
 /**
  * File naming conventions for auto-loading mod files
@@ -527,36 +531,32 @@ class BaseModTestFixture {
       'core:logSuccessAndEndTurn': logSuccessMacro,
       'core:displaySuccessAndEndTurn': displaySuccessMacro,
     };
-    const expanded = expandMacros(ruleFile.actions, {
-      get: (type, id) => (type === 'macros' ? macros[id] : undefined),
-    });
 
     // Load action definitions for the mod to enable action discovery
     const actionDefinitions = await this.loadActionDefinitions();
 
-    const dataRegistry = {
-      getAllSystemRules: jest
-        .fn()
-        .mockReturnValue([{ ...ruleFile, actions: expanded }]),
-      getConditionDefinition: jest.fn((id) => {
-        // Return condition file if the id matches either the generated conditionId or the actual condition file id
-        if (id === conditionId || (conditionFile && id === conditionFile.id)) {
-          return conditionFile;
-        }
-        return undefined;
-      }),
-    };
+    // Create conditions map for the test environment
+    const conditions = {};
+    if (conditionFile) {
+      // Add both the conditionId and the actual condition file id
+      conditions[conditionId] = conditionFile;
+      if (conditionFile.id && conditionFile.id !== conditionId) {
+        conditions[conditionFile.id] = conditionFile;
+      }
+    }
 
     const handlerFactory = ModTestHandlerFactory.getHandlerFactoryForCategory(
       this.modId
     );
 
+    // Don't pass dataRegistry - let createRuleTestEnvironment create one that uses the expanded rules
     this.testEnv = createRuleTestEnvironment({
       createHandlers: handlerFactory,
       entities: [],
-      rules: [{ ...ruleFile, actions: expanded }],
+      rules: [ruleFile],  // Pass unexpanded rule - createBaseRuleEnvironment will expand it
       actions: actionDefinitions,
-      dataRegistry,
+      conditions,  // Pass conditions map instead of dataRegistry
+      macros,  // Pass macros for expansion
     });
   }
 
@@ -917,6 +917,7 @@ export class ModActionTestFixture extends BaseModTestFixture {
   async executeAction(actorId, targetId, options = {}) {
     const {
       skipDiscovery = false,
+      skipValidation = false,
       originalInput,
       additionalPayload = {},
     } = options;
@@ -950,9 +951,57 @@ export class ModActionTestFixture extends BaseModTestFixture {
     }
 
     console.log(`[EXECUTE ACTION START] Called with actorId=${actorId}, targetId=${targetId}, skipDiscovery=${skipDiscovery}`);
+
+    // Load action definition if not cached (needed for validation)
+    if (!this._actionDefinition) {
+      const { promises: fs } = await import('fs');
+      const { resolve } = await import('path');
+
+      const actionFilePath = this.actionId.includes(':')
+        ? `data/mods/${this.modId}/actions/${this.actionId.split(':')[1]}.action.json`
+        : `data/mods/${this.modId}/actions/${this.actionId}.action.json`;
+
+      try {
+        const resolvedPath = resolve(actionFilePath);
+        const content = await fs.readFile(resolvedPath, 'utf8');
+        this._actionDefinition = JSON.parse(content);
+        console.log(`[ACTION DEF] Loaded action definition from ${actionFilePath}`);
+      } catch (error) {
+        this.logger.warn(
+          `Failed to load action definition from ${actionFilePath}: ${error.message}`
+        );
+        this._actionDefinition = {};
+      }
+    }
+
+    // Pre-flight validation (unless explicitly skipped)
+    if (!skipValidation) {
+      const validationErrors = validateActionExecution({
+        actorId,
+        targetId,
+        secondaryTargetId: options.secondaryTargetId || null,
+        tertiaryTargetId: options.tertiaryTargetId || null,
+        actionDefinition: this._actionDefinition,
+        entityManager: this.entityManager,
+        actionId: fullActionId,
+      });
+
+      if (validationErrors.length > 0) {
+        throw new ActionValidationError(validationErrors, {
+          actorId,
+          targetId,
+          secondaryTargetId: options.secondaryTargetId,
+          tertiaryTargetId: options.tertiaryTargetId,
+          actionId: fullActionId,
+          context: 'test execution',
+        });
+      }
+    }
+
     const actorBefore = this.entityManager.getEntityInstance(actorId);
 
     // Defensive check: ensure entity exists before accessing components
+    // Note: This should be caught by validation above, but kept for backward compatibility
     if (!actorBefore) {
       const errorMsg = `Entity ${actorId} does not exist. Ensure entities are created before calling executeAction (use createStandardActorTarget() or reset(entities)).`;
       console.error(`[EXECUTE ACTION ERROR] ${errorMsg}`);
@@ -977,75 +1026,9 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
     console.log(`[EXECUTE ACTION START] Actor ${actorId} components BEFORE: ${JSON.stringify(Object.keys(actorBefore.components))}`);
 
-    // New behavior: Simple forbidden component validation before execution
-    // Load action definition if not cached
-    if (!this._actionDefinition) {
-      const { promises: fs } = await import('fs');
-      const { resolve } = await import('path');
-
-      const actionFilePath = this.actionId.includes(':')
-        ? `data/mods/${this.modId}/actions/${this.actionId.split(':')[1]}.action.json`
-        : `data/mods/${this.modId}/actions/${this.actionId}.action.json`;
-
-      try {
-        const resolvedPath = resolve(actionFilePath);
-        const content = await fs.readFile(resolvedPath, 'utf8');
-        this._actionDefinition = JSON.parse(content);
-        console.log(`[ACTION DEF] Loaded action definition from ${actionFilePath}`);
-        console.log(`[ACTION DEF] Forbidden components config: ${JSON.stringify(this._actionDefinition.forbidden_components)}`);
-      } catch (error) {
-        this.logger.warn(
-          `Failed to load action definition from ${actionFilePath}: ${error.message}`
-        );
-        this._actionDefinition = { forbidden_components: {} };
-      }
-    } else {
-      console.log(`[ACTION DEF] Using cached action definition`);
-      console.log(`[ACTION DEF] Cached forbidden components: ${JSON.stringify(this._actionDefinition.forbidden_components)}`);
-    }
-
-    // Check for forbidden components on actor and target
-    const forbiddenComponentsConfig =
-      this._actionDefinition.forbidden_components || {};
-    const actorForbiddenComponents = forbiddenComponentsConfig.actor || [];
-    const targetForbiddenComponents = forbiddenComponentsConfig.primary || [];
-
-    console.log(`[FORBIDDEN CONFIG] Actor forbidden: ${JSON.stringify(actorForbiddenComponents)}`);
-    console.log(`[FORBIDDEN CONFIG] Target forbidden: ${JSON.stringify(targetForbiddenComponents)}`);
-
-    // Validate actor doesn't have any forbidden components
-    console.log(`[FORBIDDEN CHECK] Actor forbidden components: ${JSON.stringify(actorForbiddenComponents)}`);
-    console.log(`[FORBIDDEN CHECK] Checking actor ${actorId} components: ${JSON.stringify(Object.keys(this.entityManager.getEntityInstance(actorId).components))}`);
-    for (const forbiddenComponent of actorForbiddenComponents) {
-      const hasForbidden = this.entityManager.hasComponent(actorId, forbiddenComponent);
-      console.log(`[FORBIDDEN CHECK] Actor has ${forbiddenComponent}? ${hasForbidden}`);
-      if (hasForbidden) {
-        console.log(
-          `Action ${fullActionId} blocked: actor ${actorId} has forbidden component ${forbiddenComponent}`
-        );
-        return {
-          blocked: true,
-          reason: `Actor has forbidden component: ${forbiddenComponent}`,
-          attemptedAction: fullActionId,
-          attemptedActor: actorId,
-        };
-      }
-    }
-
-    // Validate target doesn't have any forbidden components
-    for (const forbiddenComponent of targetForbiddenComponents) {
-      if (this.entityManager.hasComponent(targetId, forbiddenComponent)) {
-        console.log(
-          `Action ${fullActionId} blocked: target ${targetId} has forbidden component ${forbiddenComponent}`
-        );
-        return {
-          blocked: true,
-          reason: `Target has forbidden component: ${forbiddenComponent}`,
-          attemptedAction: fullActionId,
-          attemptedTarget: targetId,
-        };
-      }
-    }
+    // Note: Action definition loading and component validation now handled by
+    // validateActionExecution() above. The old validation code has been removed
+    // to avoid duplication and ensure consistent validation behavior.
 
     // If validation passed, execute the action
     const payload = {

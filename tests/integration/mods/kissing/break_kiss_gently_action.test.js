@@ -5,6 +5,10 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import {
+  ModEntityBuilder,
+  ModEntityScenarios,
+} from '../../../common/mods/ModEntityBuilder.js';
 import breakKissGentlyRule from '../../../../data/mods/kissing/rules/break_kiss_gently.rule.json';
 import eventIsActionBreakKissGently from '../../../../data/mods/kissing/conditions/event-is-action-break-kiss-gently.condition.json';
 
@@ -25,50 +29,58 @@ describe('kissing:break_kiss_gently action integration', () => {
   });
 
   it('removes kissing component when breaking kiss', async () => {
-    const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
-      location: 'bedroom',
-    });
+    const room = ModEntityScenarios.createRoom('bedroom', 'Bedroom');
 
-    // Add kissing component first (simulating active kiss)
-    scenario.actor.components['kissing:kissing'] = {
-      partner: scenario.target.id,
-      initiator: true,
-    };
-    scenario.target.components['kissing:kissing'] = {
-      partner: scenario.actor.id,
-      initiator: false,
-    };
+    const actor = new ModEntityBuilder('alice')
+      .withName('Alice')
+      .atLocation('bedroom')
+      .closeToEntity('bob')
+      .withComponent('kissing:kissing', { partner: 'bob', initiator: true })
+      .asActor()
+      .build();
 
-    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
+    const target = new ModEntityBuilder('bob')
+      .withName('Bob')
+      .atLocation('bedroom')
+      .closeToEntity('alice')
+      .withComponent('kissing:kissing', { partner: 'alice', initiator: false })
+      .asActor()
+      .build();
+
+    testFixture.reset([room, actor, target]);
+
+    await testFixture.executeAction('alice', 'bob');
 
     // Verify component removed from both actors
-    const actorInstance = testFixture.entityManager.getEntityInstance(
-      scenario.actor.id
-    );
-    const targetInstance = testFixture.entityManager.getEntityInstance(
-      scenario.target.id
-    );
+    const actorInstance = testFixture.entityManager.getEntityInstance('alice');
+    const targetInstance = testFixture.entityManager.getEntityInstance('bob');
 
     expect(actorInstance.components['kissing:kissing']).toBeUndefined();
     expect(targetInstance.components['kissing:kissing']).toBeUndefined();
   });
 
   it('generates correct perceptible event for breaking kiss', async () => {
-    const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
-      location: 'bedroom',
-    });
+    const room = ModEntityScenarios.createRoom('bedroom', 'Bedroom');
 
-    // Add kissing component first
-    scenario.actor.components['kissing:kissing'] = {
-      partner: scenario.target.id,
-      initiator: true,
-    };
-    scenario.target.components['kissing:kissing'] = {
-      partner: scenario.actor.id,
-      initiator: false,
-    };
+    const actor = new ModEntityBuilder('alice')
+      .withName('Alice')
+      .atLocation('bedroom')
+      .closeToEntity('bob')
+      .withComponent('kissing:kissing', { partner: 'bob', initiator: true })
+      .asActor()
+      .build();
 
-    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
+    const target = new ModEntityBuilder('bob')
+      .withName('Bob')
+      .atLocation('bedroom')
+      .closeToEntity('alice')
+      .withComponent('kissing:kissing', { partner: 'alice', initiator: false })
+      .asActor()
+      .build();
+
+    testFixture.reset([room, actor, target]);
+
+    await testFixture.executeAction('alice', 'bob');
 
     const perceptibleEvent = testFixture.events.find(
       (e) => e.eventType === 'core:perceptible_event'
@@ -77,21 +89,30 @@ describe('kissing:break_kiss_gently action integration', () => {
   });
 
   it('validates perceptible event message matches action success message', async () => {
-    const scenario = testFixture.createCloseActors(['Diana', 'Victor'], {
-      location: 'library',
-    });
+    const room = ModEntityScenarios.createRoom('library', 'Library');
 
-    // Add kissing component first
-    scenario.actor.components['kissing:kissing'] = {
-      partner: scenario.target.id,
-      initiator: true,
-    };
-    scenario.target.components['kissing:kissing'] = {
-      partner: scenario.actor.id,
-      initiator: false,
-    };
+    const actor = new ModEntityBuilder('diana')
+      .withName('Diana')
+      .atLocation('library')
+      .closeToEntity('victor')
+      .withComponent('kissing:kissing', { partner: 'victor', initiator: true })
+      .asActor()
+      .build();
 
-    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
+    const target = new ModEntityBuilder('victor')
+      .withName('Victor')
+      .atLocation('library')
+      .closeToEntity('diana')
+      .withComponent('kissing:kissing', {
+        partner: 'diana',
+        initiator: false,
+      })
+      .asActor()
+      .build();
+
+    testFixture.reset([room, actor, target]);
+
+    await testFixture.executeAction('diana', 'victor');
 
     const successEvent = testFixture.events.find(
       (e) => e.eventType === 'core:display_successful_action_result'

@@ -152,8 +152,10 @@ describe('positioning:straighten_up action integration', () => {
       const { room, actor, surface } = setupNotBendingScenario();
       testFixture.reset([room, actor, surface]);
 
-      // Act & Assert
-      await testFixture.executeAction('test:actor1', 'test:surface1');
+      // Act & Assert - should throw validation error
+      await expect(async () => {
+        await testFixture.executeAction('test:actor1', 'test:surface1');
+      }).rejects.toThrow(/missing required component/);
 
       // Should not have removed any components since prerequisites weren't met
       const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');

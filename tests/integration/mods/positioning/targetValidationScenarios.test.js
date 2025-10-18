@@ -45,12 +45,14 @@ describe('Positioning Target Validation Scenarios', () => {
       // Reset fixture with entities
       fixture.reset([room, actor, target]);
 
-      // Try to kneel before the kneeling target - should be blocked by validation
-      const result = await fixture.executeAction(actor.id, target.id);
+      // Try to kneel before the kneeling target - should be blocked by new validation
+      // New validation behavior: throws error instead of returning {blocked: true}
+      await expect(async () => {
+        await fixture.executeAction(actor.id, target.id);
+      }).rejects.toThrow(/forbidden component/);
 
-      // Target validation should prevent this action from being discovered/executed
-      // The action should not be added because target has forbidden component
-      expect(result).toBeDefined();
+      // Component should NOT be added (action was blocked before execution)
+      expect(fixture.entityManager.hasComponent(actor.id, 'positioning:kneeling_before')).toBe(false);
     });
 
     it('should prevent circular kneeling', async () => {
@@ -79,11 +81,13 @@ describe('Positioning Target Validation Scenarios', () => {
       expect(fixture.entityManager.hasComponent(actorA.id, 'positioning:kneeling_before')).toBe(true);
 
       // Actor B tries to kneel before Actor A (circular) - should be blocked
-      // Target validation prevents kneeling before someone who is already kneeling
-      await fixture.executeAction(actorB.id, actorA.id);
+      // New validation behavior: throws error when target has forbidden component
+      await expect(async () => {
+        await fixture.executeAction(actorB.id, actorA.id);
+      }).rejects.toThrow(/forbidden component/);
 
       // Circular kneeling is prevented by target validation
-      // Actor B should NOT have the kneeling component because action was filtered
+      // Actor B should NOT have the kneeling component because action was blocked
       expect(fixture.entityManager.hasComponent(actorB.id, 'positioning:kneeling_before')).toBe(false);
     });
 
@@ -143,7 +147,9 @@ describe('Positioning Target Validation Scenarios', () => {
       });
 
       // First attempt should be blocked by target validation
-      await fixture.executeAction(actor.id, target.id);
+      await expect(async () => {
+        await fixture.executeAction(actor.id, target.id);
+      }).rejects.toThrow(/forbidden component/);
 
       // Action should be blocked because target has forbidden kneeling_before component
       expect(fixture.entityManager.hasComponent(actor.id, 'positioning:kneeling_before')).toBe(false);
@@ -181,7 +187,9 @@ describe('Positioning Target Validation Scenarios', () => {
       fixture.entityManager.addComponent(target.id, 'positioning:lying_down', {});
 
       // Try to kneel - should be blocked because target is lying down
-      await fixture.executeAction(actor.id, target.id);
+      await expect(async () => {
+        await fixture.executeAction(actor.id, target.id);
+      }).rejects.toThrow(/forbidden component/);
 
       // Action should be blocked because target has forbidden lying_down component
       expect(fixture.entityManager.hasComponent(actor.id, 'positioning:kneeling_before')).toBe(false);
@@ -208,7 +216,9 @@ describe('Positioning Target Validation Scenarios', () => {
       fixture.entityManager.addComponent(target.id, 'positioning:bending_over', {});
 
       // Try to kneel - should be blocked because target is bending over
-      await fixture.executeAction(actor.id, target.id);
+      await expect(async () => {
+        await fixture.executeAction(actor.id, target.id);
+      }).rejects.toThrow(/forbidden component/);
 
       // Action should be blocked because target has forbidden bending_over component
       expect(fixture.entityManager.hasComponent(actor.id, 'positioning:kneeling_before')).toBe(false);
@@ -236,7 +246,9 @@ describe('Positioning Target Validation Scenarios', () => {
       fixture.entityManager.addComponent(target.id, 'positioning:bending_over', {});
 
       // Try to kneel - should be blocked because target has multiple forbidden components
-      await fixture.executeAction(actor.id, target.id);
+      await expect(async () => {
+        await fixture.executeAction(actor.id, target.id);
+      }).rejects.toThrow(/forbidden component/);
 
       // Action should be blocked because target has multiple forbidden components
       expect(fixture.entityManager.hasComponent(actor.id, 'positioning:kneeling_before')).toBe(false);
@@ -281,7 +293,9 @@ describe('Positioning Target Validation Scenarios', () => {
       expect(fixture.entityManager.hasComponent(knight.id, 'positioning:kneeling_before')).toBe(true);
 
       // Knight tries to kneel before kneeling servant - should be blocked
-      await fixture.executeAction(knight.id, servant.id);
+      await expect(async () => {
+        await fixture.executeAction(knight.id, servant.id);
+      }).rejects.toThrow(/forbidden component/);
 
       // Action should be blocked because servant has forbidden kneeling_before component
       // Knight should still be kneeling before lord (state unchanged by blocked action)
@@ -290,7 +304,9 @@ describe('Positioning Target Validation Scenarios', () => {
       expect(knightKneelingData.entityId).toBe(lord.id); // Still kneeling before lord, not servant
 
       // Lord tries to kneel before lying prisoner - should be blocked
-      await fixture.executeAction(lord.id, prisoner.id);
+      await expect(async () => {
+        await fixture.executeAction(lord.id, prisoner.id);
+      }).rejects.toThrow(/forbidden component/);
 
       // Action should be blocked because prisoner has forbidden lying_down component
       expect(fixture.entityManager.hasComponent(lord.id, 'positioning:kneeling_before')).toBe(false);
@@ -321,7 +337,9 @@ describe('Positioning Target Validation Scenarios', () => {
       expect(fixture.entityManager.hasComponent(actorA.id, 'positioning:kneeling_before')).toBe(true);
 
       // Actor B tries to kneel before Actor A - should be blocked by circular validation
-      await fixture.executeAction(actorB.id, actorA.id);
+      await expect(async () => {
+        await fixture.executeAction(actorB.id, actorA.id);
+      }).rejects.toThrow(/forbidden component/);
 
       // Circular kneeling is prevented by target validation
       expect(fixture.entityManager.hasComponent(actorB.id, 'positioning:kneeling_before')).toBe(false);
@@ -360,7 +378,9 @@ describe('Positioning Target Validation Scenarios', () => {
       fixture.entityManager.addComponent(target.id, 'positioning:bending_over', {});
 
       // Try to kneel - should be blocked because target is bending over
-      await fixture.executeAction(actor.id, target.id);
+      await expect(async () => {
+        await fixture.executeAction(actor.id, target.id);
+      }).rejects.toThrow(/forbidden component/);
 
       // Action should be blocked because target has forbidden bending_over component
       expect(fixture.entityManager.hasComponent(actor.id, 'positioning:kneeling_before')).toBe(false);
@@ -370,7 +390,9 @@ describe('Positioning Target Validation Scenarios', () => {
       fixture.entityManager.addComponent(target.id, 'positioning:lying_down', {});
 
       // Try again with lying_down - should still be blocked
-      await fixture.executeAction(actor.id, target.id);
+      await expect(async () => {
+        await fixture.executeAction(actor.id, target.id);
+      }).rejects.toThrow(/forbidden component/);
 
       // Action should be blocked because target has forbidden lying_down component
       expect(fixture.entityManager.hasComponent(actor.id, 'positioning:kneeling_before')).toBe(false);

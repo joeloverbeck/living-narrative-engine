@@ -268,5 +268,19 @@ if (typeof performance !== 'undefined') {
 
 console.log('jest.setup.js: DOM API mocks initialized');
 
+// --- Domain-Specific Test Matchers ---
+// Register custom matchers for mod testing
+(async () => {
+  try {
+    const { registerDomainMatchers } = await import(
+      './tests/common/mods/domainMatchers.js'
+    );
+    registerDomainMatchers();
+    console.log('jest.setup.js: Domain matchers registered successfully');
+  } catch (error) {
+    console.error('jest.setup.js: Failed to register domain matchers:', error);
+  }
+})();
+
 // Note: Removed default jest.useRealTimers() to avoid conflicts with tests that use fake timers
 // Individual test files should manage their own timer setup as needed

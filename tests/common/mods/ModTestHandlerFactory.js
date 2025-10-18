@@ -28,6 +28,8 @@ import TakeFromContainerHandler from '../../../src/logic/operationHandlers/takeF
 import PutInContainerHandler from '../../../src/logic/operationHandlers/putInContainerHandler.js';
 import ValidateContainerCapacityHandler from '../../../src/logic/operationHandlers/validateContainerCapacityHandler.js';
 import AtomicModifyComponentHandler from '../../../src/logic/operationHandlers/atomicModifyComponentHandler.js';
+import LockMouthEngagementHandler from '../../../src/logic/operationHandlers/lockMouthEngagementHandler.js';
+import UnlockMouthEngagementHandler from '../../../src/logic/operationHandlers/unlockMouthEngagementHandler.js';
 import { validateDependency } from '../../../src/utils/dependencyUtils.js';
 
 /* global jest */
@@ -226,6 +228,53 @@ export class ModTestHandlerFactory {
         safeEventDispatcher: safeDispatcher,
       }),
       REMOVE_COMPONENT: new RemoveComponentHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+    };
+  }
+
+  /**
+   * Creates handlers with mouth engagement locking/unlocking support for kissing actions.
+   *
+   * @description Extends the component mutation handler set with mouth engagement
+   * locking/unlocking operations for kissing mod rules.
+   * @param {object} entityManager - Entity manager instance
+   * @param {object} eventBus - Event bus instance
+   * @param {object} logger - Logger instance
+   * @returns {object} Handlers object with mouth engagement support
+   * @throws {Error} If any required parameter is missing or invalid
+   */
+  static createHandlersWithMouthEngagement(entityManager, eventBus, logger) {
+    this.#validateDependencies(
+      entityManager,
+      eventBus,
+      logger,
+      'createHandlersWithMouthEngagement'
+    );
+
+    const baseHandlers = this.createHandlersWithComponentMutations(
+      entityManager,
+      eventBus,
+      logger
+    );
+
+    const safeDispatcher = {
+      dispatch: jest.fn((eventType, payload) => {
+        eventBus.dispatch(eventType, payload);
+        return Promise.resolve(true);
+      }),
+    };
+
+    return {
+      ...baseHandlers,
+      LOCK_MOUTH_ENGAGEMENT: new LockMouthEngagementHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      UNLOCK_MOUTH_ENGAGEMENT: new UnlockMouthEngagementHandler({
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,
@@ -448,6 +497,7 @@ export class ModTestHandlerFactory {
       intimacy: this.createStandardHandlers.bind(this),
       affection: this.createHandlersWithComponentMutations.bind(this),
       hand_holding: this.createHandlersWithComponentMutations.bind(this),
+      kissing: this.createHandlersWithMouthEngagement.bind(this),
     };
 
     return (

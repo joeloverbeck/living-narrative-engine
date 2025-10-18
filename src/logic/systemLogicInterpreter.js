@@ -508,8 +508,6 @@ class SystemLogicInterpreter extends BaseService {
     );
 
     if (Array.isArray(rule.actions) && rule.actions.length) {
-      console.log(`[DEBUG] #processRule - About to execute ${rule.actions.length} actions for rule '${ruleId}'`);
-      
       this.#logger.debug(
         `🎬 [SystemLogicInterpreter] Rule ${ruleId}: Starting action sequence (${rule.actions.length} actions)`
       );

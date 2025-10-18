@@ -95,8 +95,11 @@ describe('Violence Mod: Slap Rule', () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Beth']);
 
       // This should not throw, but may fail during GET_NAME operation
+      // Skip validation to test the rule's error handling directly
       await expect(async () => {
-        await testFixture.executeAction('nonexistent', scenario.target.id);
+        await testFixture.executeAction('nonexistent', scenario.target.id, {
+          skipValidation: true,
+        });
       }).not.toThrow();
 
       // Should not generate successful action events with missing actor
@@ -107,8 +110,11 @@ describe('Violence Mod: Slap Rule', () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Beth']);
 
       // This should not throw, but may fail during GET_NAME operation
+      // Skip validation to test the rule's error handling directly
       await expect(async () => {
-        await testFixture.executeAction(scenario.actor.id, 'nonexistent');
+        await testFixture.executeAction(scenario.actor.id, 'nonexistent', {
+          skipValidation: true,
+        });
       }).not.toThrow();
 
       // Should not generate successful action events with missing target

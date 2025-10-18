@@ -7,6 +7,7 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ActionValidationError } from '../../../common/mods/actionExecutionValidator.js';
 import grabNeckRule from '../../../../data/mods/violence/rules/handle_grab_neck.rule.json';
 import eventIsActionGrabNeck from '../../../../data/mods/violence/conditions/event-is-action-grab-neck.condition.json';
 
@@ -58,14 +59,11 @@ describe('Violence Mod: Grab Neck Action Integration', () => {
     it('handles missing target gracefully', async () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Beth']);
 
-      // This test verifies the rule handles missing entities gracefully
-      // The action prerequisites would normally prevent this, but we test rule robustness
+      // Pre-flight validation now catches missing entities before rule execution
+      // This validates that the validation system properly detects missing targets
       await expect(async () => {
         await testFixture.executeAction(scenario.actor.id, 'nonexistent');
-      }).not.toThrow();
-
-      // Should not generate successful action events with missing target
-      testFixture.assertOnlyExpectedEvents(['core:attempt_action']);
+      }).rejects.toThrow(ActionValidationError);
     });
   });
 
