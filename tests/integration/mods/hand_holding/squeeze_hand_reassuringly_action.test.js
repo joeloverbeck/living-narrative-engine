@@ -1,25 +1,25 @@
 /**
- * @file Integration tests for the affection:warm_hands_between_yours action and rule.
- * @description Verifies the hand warming action produces the expected narrative output.
+ * @file Integration tests for the hand_holding:squeeze_hand_reassuringly action and rule.
+ * @description Verifies the reassuring hand squeeze action produces the expected narrative output.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
-import handleWarmHandsRule from '../../../../data/mods/affection/rules/handle_warm_hands_between_yours.rule.json';
-import eventIsActionWarmHands from '../../../../data/mods/affection/conditions/event-is-action-warm-hands-between-yours.condition.json';
+import handleSqueezeHandReassuringlyRule from '../../../../data/mods/hand_holding/rules/handle_squeeze_hand_reassuringly.rule.json';
+import eventIsActionSqueezeHandReassuringly from '../../../../data/mods/hand_holding/conditions/event-is-action-squeeze-hand-reassuringly.condition.json';
 
-const ACTION_ID = 'affection:warm_hands_between_yours';
+const ACTION_ID = 'hand_holding:squeeze_hand_reassuringly';
 
-describe('affection:warm_hands_between_yours action integration', () => {
+describe('hand_holding:squeeze_hand_reassuringly action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
       'affection',
       ACTION_ID,
-      handleWarmHandsRule,
-      eventIsActionWarmHands
+      handleSqueezeHandReassuringlyRule,
+      eventIsActionSqueezeHandReassuringly
     );
   });
 
@@ -34,11 +34,11 @@ describe('affection:warm_hands_between_yours action integration', () => {
       location: 'garden',
     });
 
-    scenario.actor.components['affection:holding_hand'] = {
+    scenario.actor.components['hand_holding:holding_hand'] = {
       held_entity_id: scenario.target.id,
       initiated: true,
     };
-    scenario.target.components['affection:hand_held'] = {
+    scenario.target.components['hand_holding:hand_held'] = {
       holding_entity_id: scenario.actor.id,
       consented: true,
     };
@@ -58,7 +58,7 @@ describe('affection:warm_hands_between_yours action integration', () => {
     expect(successEvent).toBeDefined();
     expect(perceptibleEvent).toBeDefined();
 
-    const expectedMessage = "Amelia warms Jonah's hands between theirs.";
+    const expectedMessage = "Amelia squeezes Jonah's hand reassuringly.";
     expect(successEvent.payload.message).toBe(expectedMessage);
     expect(perceptibleEvent.payload.descriptionText).toBe(expectedMessage);
     expect(perceptibleEvent.payload.perceptionType).toBe(
@@ -74,11 +74,11 @@ describe('affection:warm_hands_between_yours action integration', () => {
       scenario.target.id
     );
 
-    expect(actorInstance.components['affection:holding_hand']).toEqual({
+    expect(actorInstance.components['hand_holding:holding_hand']).toEqual({
       held_entity_id: scenario.target.id,
       initiated: true,
     });
-    expect(targetInstance.components['affection:hand_held']).toEqual({
+    expect(targetInstance.components['hand_holding:hand_held']).toEqual({
       holding_entity_id: scenario.actor.id,
       consented: true,
     });

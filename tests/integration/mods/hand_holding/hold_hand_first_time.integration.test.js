@@ -6,16 +6,16 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import holdHandRule from '../../../../data/mods/affection/rules/handle_hold_hand.rule.json';
-import eventIsActionHoldHand from '../../../../data/mods/affection/conditions/event-is-action-hold-hand.condition.json';
+import holdHandRule from '../../../../data/mods/hand_holding/rules/handle_hold_hand.rule.json';
+import eventIsActionHoldHand from '../../../../data/mods/hand_holding/conditions/event-is-action-hold-hand.condition.json';
 
-describe('affection:hold_hand first-time scenarios', () => {
+describe('hand_holding:hold_hand first-time scenarios', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
       'affection',
-      'affection:hold_hand',
+      'hand_holding:hold_hand',
       holdHandRule,
       eventIsActionHoldHand
     );
@@ -31,10 +31,10 @@ describe('affection:hold_hand first-time scenarios', () => {
     });
 
     // Verify clean state - NO hand-holding components
-    expect(scenario.actor.components['affection:holding_hand']).toBeUndefined();
-    expect(scenario.actor.components['affection:hand_held']).toBeUndefined();
-    expect(scenario.target.components['affection:holding_hand']).toBeUndefined();
-    expect(scenario.target.components['affection:hand_held']).toBeUndefined();
+    expect(scenario.actor.components['hand_holding:holding_hand']).toBeUndefined();
+    expect(scenario.actor.components['hand_holding:hand_held']).toBeUndefined();
+    expect(scenario.target.components['hand_holding:holding_hand']).toBeUndefined();
+    expect(scenario.target.components['hand_holding:hand_held']).toBeUndefined();
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -54,16 +54,16 @@ describe('affection:hold_hand first-time scenarios', () => {
       scenario.target.id
     );
 
-    expect(actorInstance.components['affection:holding_hand']).toEqual({
+    expect(actorInstance.components['hand_holding:holding_hand']).toEqual({
       held_entity_id: scenario.target.id,
       initiated: true,
     });
-    expect(actorInstance.components['affection:hand_held']).toBeUndefined();
-    expect(targetInstance.components['affection:hand_held']).toEqual({
+    expect(actorInstance.components['hand_holding:hand_held']).toBeUndefined();
+    expect(targetInstance.components['hand_holding:hand_held']).toEqual({
       holding_entity_id: scenario.actor.id,
       consented: true,
     });
-    expect(targetInstance.components['affection:holding_hand']).toBeUndefined();
+    expect(targetInstance.components['hand_holding:holding_hand']).toBeUndefined();
   });
 
   it('does not throw ComponentOverrideNotFoundError when removing non-existent components', async () => {
@@ -72,10 +72,10 @@ describe('affection:hold_hand first-time scenarios', () => {
     });
 
     // Ensure clean state
-    expect(scenario.actor.components['affection:holding_hand']).toBeUndefined();
-    expect(scenario.actor.components['affection:hand_held']).toBeUndefined();
-    expect(scenario.target.components['affection:holding_hand']).toBeUndefined();
-    expect(scenario.target.components['affection:hand_held']).toBeUndefined();
+    expect(scenario.actor.components['hand_holding:holding_hand']).toBeUndefined();
+    expect(scenario.actor.components['hand_holding:hand_held']).toBeUndefined();
+    expect(scenario.target.components['hand_holding:holding_hand']).toBeUndefined();
+    expect(scenario.target.components['hand_holding:hand_held']).toBeUndefined();
 
     // Execute action - should not throw
     let error;

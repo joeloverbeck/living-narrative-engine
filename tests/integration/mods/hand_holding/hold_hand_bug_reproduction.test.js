@@ -7,10 +7,10 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
-import holdHandRule from '../../../../data/mods/affection/rules/handle_hold_hand.rule.json';
-import eventIsActionHoldHand from '../../../../data/mods/affection/conditions/event-is-action-hold-hand.condition.json';
+import holdHandRule from '../../../../data/mods/hand_holding/rules/handle_hold_hand.rule.json';
+import eventIsActionHoldHand from '../../../../data/mods/hand_holding/conditions/event-is-action-hold-hand.condition.json';
 
-const ACTION_ID = 'affection:hold_hand';
+const ACTION_ID = 'hand_holding:hold_hand';
 
 describe('hold_hand Action - Bug Reproduction', () => {
   let testFixture;
@@ -43,14 +43,14 @@ describe('hold_hand Action - Bug Reproduction', () => {
     const actorEntity = testFixture.entityManager.getEntityInstance(scenario.actor.id);
     const targetEntity = testFixture.entityManager.getEntityInstance(scenario.target.id);
 
-    expect(actorEntity.components['affection:holding_hand']).toBeDefined();
-    expect(targetEntity.components['affection:hand_held']).toBeDefined();
+    expect(actorEntity.components['hand_holding:holding_hand']).toBeDefined();
+    expect(targetEntity.components['hand_holding:hand_held']).toBeDefined();
 
-    const actorHoldingData = actorEntity.components['affection:holding_hand'];
+    const actorHoldingData = actorEntity.components['hand_holding:holding_hand'];
     expect(actorHoldingData.held_entity_id).toBe(scenario.target.id);
     expect(actorHoldingData.initiated).toBe(true);
 
-    const targetHandHeldData = targetEntity.components['affection:hand_held'];
+    const targetHandHeldData = targetEntity.components['hand_holding:hand_held'];
     expect(targetHandHeldData.holding_entity_id).toBe(scenario.actor.id);
     expect(targetHandHeldData.consented).toBe(true);
   });

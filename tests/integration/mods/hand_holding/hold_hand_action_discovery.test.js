@@ -1,24 +1,21 @@
 /**
- * @file Integration tests for affection:warm_hands_between_yours action discovery.
- * @description Ensures the hand warming action is discoverable only when requirements are met.
+ * @file Integration tests for hand_holding:hold_hand action discovery.
+ * @description Ensures the hold hand action is discoverable only when requirements are met.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
-import warmHandsAction from '../../../../data/mods/affection/actions/warm_hands_between_yours.action.json';
+import holdHandAction from '../../../../data/mods/hand_holding/actions/hold_hand.action.json';
 
-const ACTION_ID = 'affection:warm_hands_between_yours';
+const ACTION_ID = 'hand_holding:hold_hand';
 
-describe('affection:warm_hands_between_yours action discovery', () => {
+describe('hand_holding:hold_hand action discovery', () => {
   let testFixture;
   let configureActionDiscovery;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction(
-      'affection',
-      ACTION_ID
-    );
+    testFixture = await ModTestFixture.forAction('hand_holding', ACTION_ID);
 
     configureActionDiscovery = () => {
       const { testEnv } = testFixture;
@@ -26,14 +23,14 @@ describe('affection:warm_hands_between_yours action discovery', () => {
         return;
       }
 
-      testEnv.actionIndex.buildIndex([warmHandsAction]);
+      testEnv.actionIndex.buildIndex([holdHandAction]);
 
       const scopeResolver = testEnv.unifiedScopeResolver;
       const originalResolve =
-        scopeResolver.__warmHandsOriginalResolve ||
+        scopeResolver.__holdHandOriginalResolve ||
         scopeResolver.resolveSync.bind(scopeResolver);
 
-      scopeResolver.__warmHandsOriginalResolve = originalResolve;
+      scopeResolver.__holdHandOriginalResolve = originalResolve;
       scopeResolver.resolveSync = (scopeName, context) => {
         if (
           scopeName ===
@@ -66,31 +63,13 @@ describe('affection:warm_hands_between_yours action discovery', () => {
               return acc;
             }
 
-            const actorHoldingPartner =
-              actorEntity.components?.['affection:holding_hand']?.held_entity_id ===
-              partnerId;
-            const actorHandHeldByPartner =
-              actorEntity.components?.['affection:hand_held']?.holding_entity_id ===
-              partnerId;
-            const partnerHoldingActor =
-              partner.components?.['affection:holding_hand']?.held_entity_id ===
-              actorId;
-            const partnerHandHeldByActor =
-              partner.components?.['affection:hand_held']?.holding_entity_id ===
-              actorId;
-
-            if (
-              !actorHoldingPartner &&
-              !actorHandHeldByPartner &&
-              !partnerHoldingActor &&
-              !partnerHandHeldByActor
-            ) {
+            if (partner.components?.['hand_holding:hand_held']) {
               return acc;
             }
 
             const partnerFacingAway =
-              partner.components?.['positioning:facing_away']
-                ?.facing_away_from || [];
+              partner.components?.['positioning:facing_away']?.facing_away_from ||
+              [];
             const facingEachOther =
               !actorFacingAway.includes(partnerId) &&
               !partnerFacingAway.includes(actorId);
@@ -119,36 +98,24 @@ describe('affection:warm_hands_between_yours action discovery', () => {
 
   describe('Action structure validation', () => {
     it('matches the expected affection action schema', () => {
-      expect(warmHandsAction).toBeDefined();
-      expect(warmHandsAction.id).toBe(ACTION_ID);
-      expect(warmHandsAction.template).toBe("warm {target}'s hands between yours");
-      expect(warmHandsAction.targets).toBe(
+      expect(holdHandAction).toBeDefined();
+      expect(holdHandAction.id).toBe(ACTION_ID);
+      expect(holdHandAction.template).toBe("hold {target}'s hand");
+      expect(holdHandAction.targets).toBe(
         'positioning:close_actors_facing_each_other_or_behind_target'
       );
-      expect(warmHandsAction.prerequisites).toEqual([
-        {
-          logic: {
-            condition_ref: 'affection:actors-are-holding-hands',
-          },
-        },
+      expect(holdHandAction.forbidden_components.actor).toEqual([
+        'hand_holding:holding_hand',
+        'hand_holding:hand_held',
       ]);
-    });
-
-    it('requires actor closeness and uses the affection color palette', () => {
-      expect(warmHandsAction.required_components.actor).toEqual([
-        'positioning:closeness',
+      expect(holdHandAction.forbidden_components.target).toEqual([
+        'hand_holding:hand_held',
       ]);
-      expect(warmHandsAction.visual).toEqual({
-        backgroundColor: '#6a1b9a',
-        textColor: '#f3e5f5',
-        hoverBackgroundColor: '#8e24aa',
-        hoverTextColor: '#ffffff',
-      });
     });
   });
 
   describe('Action discovery scenarios', () => {
-    it('is not available when actors are only close but not holding hands', () => {
+    it('is available for close actors who are not already holding hands', () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
       configureActionDiscovery();
 
@@ -157,17 +124,46 @@ describe('affection:warm_hands_between_yours action discovery', () => {
       );
       const ids = availableActions.map((action) => action.id);
 
-      expect(ids).not.toContain(ACTION_ID);
+      expect(ids).toContain(ACTION_ID);
     });
 
-    it('is available when the actor initiated the hand hold', () => {
-      const scenario = testFixture.createCloseActors(['Maya', 'Noah']);
-      scenario.actor.components['affection:holding_hand'] = {
+    it('is blocked when the actor already holds a hand and returns once released', () => {
+      const scenario = testFixture.createCloseActors(['Nina', 'Owen']);
+      scenario.actor.components['hand_holding:holding_hand'] = {
         held_entity_id: scenario.target.id,
         initiated: true,
       };
-      scenario.target.components['affection:hand_held'] = {
+      scenario.target.components['hand_holding:hand_held'] = {
         holding_entity_id: scenario.actor.id,
+        consented: true,
+      };
+
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+      configureActionDiscovery();
+
+      let availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
+      let ids = availableActions.map((action) => action.id);
+      expect(ids).not.toContain(ACTION_ID);
+
+      delete scenario.actor.components['hand_holding:holding_hand'];
+      delete scenario.target.components['hand_holding:hand_held'];
+      testFixture.reset([room, scenario.actor, scenario.target]);
+      configureActionDiscovery();
+
+      availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
+      ids = availableActions.map((action) => action.id);
+      expect(ids).toContain(ACTION_ID);
+    });
+
+    it('is blocked when the target already has their hand held', () => {
+      const scenario = testFixture.createCloseActors(['Ivy', 'Liam']);
+      scenario.target.components['hand_holding:hand_held'] = {
+        holding_entity_id: 'someone_else',
         consented: true,
       };
 
@@ -180,17 +176,13 @@ describe('affection:warm_hands_between_yours action discovery', () => {
       );
       const ids = availableActions.map((action) => action.id);
 
-      expect(ids).toContain(ACTION_ID);
+      expect(ids).not.toContain(ACTION_ID);
     });
 
-    it('is available to the partner whose hands are being warmed', () => {
-      const scenario = testFixture.createCloseActors(['Ivy', 'Liam']);
-      scenario.actor.components['affection:holding_hand'] = {
-        held_entity_id: scenario.target.id,
-        initiated: true,
-      };
-      scenario.target.components['affection:hand_held'] = {
-        holding_entity_id: scenario.actor.id,
+    it('is blocked when the actor has their hand held by someone else', () => {
+      const scenario = testFixture.createCloseActors(['Marla', 'Iker']);
+      scenario.actor.components['hand_holding:hand_held'] = {
+        holding_entity_id: 'someone_else',
         consented: true,
       };
 
@@ -199,51 +191,17 @@ describe('affection:warm_hands_between_yours action discovery', () => {
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
-        scenario.target.id
+        scenario.actor.id
       );
       const ids = availableActions.map((action) => action.id);
 
-      expect(ids).toContain(ACTION_ID);
+      expect(ids).not.toContain(ACTION_ID);
     });
 
-    it('is not available when actors are not in closeness even with hand holding', () => {
-      const scenario = testFixture.createCloseActors(['Ivy', 'Liam']);
-      scenario.actor.components['affection:holding_hand'] = {
-        held_entity_id: scenario.target.id,
-        initiated: true,
-      };
-      scenario.target.components['affection:hand_held'] = {
-        holding_entity_id: scenario.actor.id,
-        consented: true,
-      };
+    it('is not available when actors are not in closeness', () => {
+      const scenario = testFixture.createCloseActors(['Chloe', 'Evan']);
       delete scenario.actor.components['positioning:closeness'];
       delete scenario.target.components['positioning:closeness'];
-
-      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
-      configureActionDiscovery();
-
-      const availableActions = testFixture.testEnv.getAvailableActions(
-        scenario.actor.id
-      );
-      const ids = availableActions.map((action) => action.id);
-
-      expect(ids).not.toContain(ACTION_ID);
-    });
-
-    it('is not available when the actor faces away from the target', () => {
-      const scenario = testFixture.createCloseActors(['Chloe', 'Evan']);
-      scenario.actor.components['affection:holding_hand'] = {
-        held_entity_id: scenario.target.id,
-        initiated: true,
-      };
-      scenario.target.components['affection:hand_held'] = {
-        holding_entity_id: scenario.actor.id,
-        consented: true,
-      };
-      scenario.actor.components['positioning:facing_away'] = {
-        facing_away_from: [scenario.target.id],
-      };
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
