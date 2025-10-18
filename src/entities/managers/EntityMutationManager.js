@@ -99,13 +99,13 @@ export default class EntityMutationManager {
 
   /**
    * Removes a component override from an existing entity instance.
+   * This operation is idempotent - removing a non-existent override succeeds without error.
    *
    * @param {string} instanceId - The ID of the entity instance.
    * @param {string} componentTypeId - The unique ID of the component type to remove.
    * @throws {EntityNotFoundError} If entity not found.
    * @throws {InvalidArgumentError} If parameters are invalid.
-   * @throws {ComponentOverrideNotFoundError} If component override does not exist.
-   * @throws {Error} If removal fails.
+   * @throws {Error} If removal fails due to internal error.
    */
   async removeComponent(instanceId, componentTypeId) {
     // Validate instanceId and componentTypeId

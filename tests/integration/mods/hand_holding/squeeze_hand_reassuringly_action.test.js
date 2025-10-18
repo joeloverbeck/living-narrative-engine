@@ -16,7 +16,7 @@ describe('hand_holding:squeeze_hand_reassuringly action integration', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'affection',
+      'hand_holding',
       ACTION_ID,
       handleSqueezeHandReassuringlyRule,
       eventIsActionSqueezeHandReassuringly

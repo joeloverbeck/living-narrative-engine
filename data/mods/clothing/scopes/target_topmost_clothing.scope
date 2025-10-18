@@ -1,0 +1,20 @@
+// Returns all topmost clothing items worn by the target entity (from contextFrom)
+// This scope MUST be used with contextFrom to provide the target entity context
+//
+// BEHAVIOR: Returns ONE topmost item PER equipped slot for the TARGET entity
+// - torso_upper: outermost jacket/shirt/robe
+// - torso_lower: outermost pants/skirt
+// - legs: outermost tights/stockings
+// - feet: outermost shoes/boots
+// - groin: outermost codpiece/underwear
+// - etc.
+//
+// Layer priority within each slot: outer > base > underwear
+//
+// Example: If target wears jacket (outer) + shirt (base) + undershirt (underwear) in torso_upper,
+// only the jacket is returned. If target also wears pants in torso_lower, both jacket AND pants
+// are returned (one topmost item per slot).
+//
+// This is the CORRECT behavior for contextFrom actions - resolve clothing items
+// for the TARGET entity specified by the primary target, NOT the actor performing the action.
+clothing:target_topmost_clothing := target.topmost_clothing[]

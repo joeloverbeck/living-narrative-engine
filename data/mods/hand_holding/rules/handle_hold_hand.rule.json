@@ -1,9 +1,9 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_hold_hand",
-  "comment": "Handles the 'affection:hold_hand' action. Dispatches descriptive text and ends the turn.",
+  "comment": "Handles the 'hand_holding:hold_hand' action. Dispatches descriptive text and ends the turn.",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "affection:event-is-action-hold-hand" },
+  "condition": { "condition_ref": "hand_holding:event-is-action-hold-hand" },
   "actions": [
     {
       "type": "GET_NAME",
@@ -27,11 +27,11 @@
         "entity_ref": "actor",
         "pairs": [
           {
-            "component_type": "affection:holding_hand",
+            "component_type": "hand_holding:holding_hand",
             "result_variable": "actorExistingHoldingComponent"
           },
           {
-            "component_type": "affection:hand_held",
+            "component_type": "hand_holding:hand_held",
             "result_variable": "actorExistingHandHeldComponent"
           }
         ]
@@ -43,11 +43,11 @@
         "entity_ref": "target",
         "pairs": [
           {
-            "component_type": "affection:holding_hand",
+            "component_type": "hand_holding:holding_hand",
             "result_variable": "targetExistingHoldingComponent"
           },
           {
-            "component_type": "affection:hand_held",
+            "component_type": "hand_holding:hand_held",
             "result_variable": "targetExistingHandHeldComponent"
           }
         ]
@@ -62,7 +62,7 @@
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "{context.actorExistingHoldingComponent.held_entity_id}",
-              "component_type": "affection:hand_held"
+              "component_type": "hand_holding:hand_held"
             }
           }
         ]
@@ -77,7 +77,7 @@
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "{context.actorExistingHandHeldComponent.holding_entity_id}",
-              "component_type": "affection:holding_hand"
+              "component_type": "hand_holding:holding_hand"
             }
           }
         ]
@@ -92,7 +92,7 @@
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "{context.targetExistingHoldingComponent.held_entity_id}",
-              "component_type": "affection:hand_held"
+              "component_type": "hand_holding:hand_held"
             }
           }
         ]
@@ -107,7 +107,7 @@
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "{context.targetExistingHandHeldComponent.holding_entity_id}",
-              "component_type": "affection:holding_hand"
+              "component_type": "hand_holding:holding_hand"
             }
           }
         ]
@@ -117,35 +117,35 @@
       "type": "REMOVE_COMPONENT",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "affection:holding_hand"
+        "component_type": "hand_holding:holding_hand"
       }
     },
     {
       "type": "REMOVE_COMPONENT",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "affection:hand_held"
+        "component_type": "hand_holding:hand_held"
       }
     },
     {
       "type": "REMOVE_COMPONENT",
       "parameters": {
         "entity_ref": "target",
-        "component_type": "affection:holding_hand"
+        "component_type": "hand_holding:holding_hand"
       }
     },
     {
       "type": "REMOVE_COMPONENT",
       "parameters": {
         "entity_ref": "target",
-        "component_type": "affection:hand_held"
+        "component_type": "hand_holding:hand_held"
       }
     },
     {
       "type": "ADD_COMPONENT",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "affection:holding_hand",
+        "component_type": "hand_holding:holding_hand",
         "value": {
           "held_entity_id": "{event.payload.targetId}",
           "initiated": true
@@ -156,7 +156,7 @@
       "type": "ADD_COMPONENT",
       "parameters": {
         "entity_ref": "target",
-        "component_type": "affection:hand_held",
+        "component_type": "hand_holding:hand_held",
         "value": {
           "holding_entity_id": "{event.payload.actorId}",
           "consented": true

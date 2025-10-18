@@ -25,13 +25,9 @@
     }
   ],
   "content": {
-    "components": [
-      "hand_held.component.json",
-      "holding_hand.component.json"
-    ],
+    "components": [],
     "actions": [
       "brush_hand.action.json",
-      "hold_hand.action.json",
       "hug_tight.action.json",
       "link_arms.action.json",
       "massage_back.action.json",
@@ -42,23 +38,18 @@
       "rest_head_on_shoulder.action.json",
       "ruffle_hair_playfully.action.json",
       "sling_arm_around_shoulders.action.json",
-      "squeeze_hand_reassuringly.action.json",
       "tickle_target_playfully.action.json",
-      "warm_hands_between_yours.action.json",
       "wrap_arm_around_waist.action.json"
     ],
     "rules": [
       "brush_hand.rule.json",
-      "handle_hold_hand.rule.json",
       "handle_hug_tight.rule.json",
       "handle_link_arms.rule.json",
       "handle_massage_shoulders.rule.json",
       "handle_push_target_playfully.rule.json",
       "handle_rest_head_on_shoulder.rule.json",
       "handle_ruffle_hair_playfully.rule.json",
-      "handle_squeeze_hand_reassuringly.rule.json",
       "handle_tickle_target_playfully.rule.json",
-      "handle_warm_hands_between_yours.rule.json",
       "massage_back.rule.json",
       "place_hand_on_waist.rule.json",
       "place_hands_on_shoulders.rule.json",
@@ -66,9 +57,7 @@
       "wrap_arm_around_waist.rule.json"
     ],
     "conditions": [
-      "actors-are-holding-hands.condition.json",
       "event-is-action-brush-hand.condition.json",
-      "event-is-action-hold-hand.condition.json",
       "event-is-action-hug-tight.condition.json",
       "event-is-action-link-arms.condition.json",
       "event-is-action-massage-back.condition.json",
@@ -79,9 +68,7 @@
       "event-is-action-rest-head-on-shoulder.condition.json",
       "event-is-action-ruffle-hair-playfully.condition.json",
       "event-is-action-sling_arm_around_shoulders.condition.json",
-      "event-is-action-squeeze-hand-reassuringly.condition.json",
       "event-is-action-tickle-target-playfully.condition.json",
-      "event-is-action-warm-hands-between-yours.condition.json",
       "event-is-action-wrap-arm-around-waist.condition.json"
     ],
     "scopes": [

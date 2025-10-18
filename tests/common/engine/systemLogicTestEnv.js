@@ -96,11 +96,15 @@ export function createBaseRuleEnvironment({
           return undefined;
         },
       };
+      console.log(`[RULE EXPANSION] Rule "${rule.rule_id}" has ${rule.actions.length} actions BEFORE expansion`);
+      console.log(`[RULE EXPANSION] Operation types BEFORE: ${rule.actions.map(a => a.type || a.macro).join(', ')}`);
       expandedRule.actions = expandMacros(
         rule.actions,
         macroRegistry,
         testLogger
       );
+      console.log(`[RULE EXPANSION] Rule "${rule.rule_id}" has ${expandedRule.actions.length} actions AFTER expansion`);
+      console.log(`[RULE EXPANSION] Operation types AFTER: ${expandedRule.actions.map(a => a.type || a.macro).join(', ')}`);
       return expandedRule;
     }
     return rule;

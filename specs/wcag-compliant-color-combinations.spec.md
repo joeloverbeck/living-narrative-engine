@@ -599,7 +599,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 11.45:1 🌟 AAA
 - **Use Cases**: Elegant social actions, mysterious story beats
 - **Theme**: Luxurious nightfall, refined intrigue
-- 🟢 **AVAILABLE**
+- ✅ **USED BY**: Hand Holding mod (hand-holding interactions, state-based gestures)
 
 #### 11.4 Starlight Navy
 

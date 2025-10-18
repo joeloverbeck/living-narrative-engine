@@ -14,7 +14,7 @@ describe('hand_holding:hold_hand action integration', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'affection',
+      'hand_holding',
       'hand_holding:hold_hand',
       holdHandRule,
       eventIsActionHoldHand
@@ -128,7 +128,12 @@ describe('hand_holding:hold_hand action integration', () => {
       scenario.target.id
     );
 
-    expect(result).toMatchObject({ blocked: true });
+    expect(result).toEqual({
+      blocked: true,
+      reason: expect.stringContaining('forbidden component'),
+      attemptedAction: 'hand_holding:hold_hand',
+      attemptedActor: scenario.actor.id,
+    });
 
     // Verify no components were changed
     const actorInstance = testFixture.entityManager.getEntityInstance(
@@ -160,7 +165,12 @@ describe('hand_holding:hold_hand action integration', () => {
       scenario.target.id
     );
 
-    expect(result).toMatchObject({ blocked: true });
+    expect(result).toEqual({
+      blocked: true,
+      reason: expect.stringContaining('forbidden component'),
+      attemptedAction: 'hand_holding:hold_hand',
+      attemptedActor: scenario.actor.id,
+    });
     expect(testFixture.events.length).toBe(initialEventCount);
 
     const actorInstance = testFixture.entityManager.getEntityInstance(

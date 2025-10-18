@@ -31,7 +31,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 /**
  * @typedef {object} Goals
- * @property {string[]} shortTerm - Array of 1-2 short-term goals
+ * @property {string[]} shortTerm - Array of 1-3 short-term goals
  * @property {string} longTerm - Long-term goal description
  */
 
@@ -39,16 +39,16 @@ import { v4 as uuidv4 } from 'uuid';
  * @typedef {object} TraitData
  * @property {string} [id] - Unique identifier (auto-generated if not provided)
  * @property {NameItem[]} names - 3-5 name options with justifications
- * @property {string} physicalDescription - Physical description (100-500 characters)
- * @property {PersonalityItem[]} personality - 3-5 personality traits with explanations
- * @property {string[]} strengths - 2-4 character strengths
- * @property {string[]} weaknesses - 2-4 character weaknesses
- * @property {string[]} likes - 3-5 things the character likes
- * @property {string[]} dislikes - 3-5 things the character dislikes
+ * @property {string} physicalDescription - Physical description (100-700 characters)
+ * @property {PersonalityItem[]} personality - 3-8 personality traits with explanations
+ * @property {string[]} strengths - 2-6 character strengths
+ * @property {string[]} weaknesses - 2-6 character weaknesses
+ * @property {string[]} likes - 3-8 things the character likes
+ * @property {string[]} dislikes - 3-8 things the character dislikes
  * @property {string[]} fears - 1-2 character fears
  * @property {Goals} goals - Short-term and long-term goals
- * @property {string[]} notes - 2-3 additional notes
- * @property {string} profile - Character profile summary (200-800 characters)
+ * @property {string[]} notes - 2-6 additional notes
+ * @property {string} profile - Character profile summary (200-1200 characters)
  * @property {string[]} secrets - 1-2 character secrets
  * @property {string} [generatedAt] - ISO timestamp (auto-generated if not provided)
  * @property {LLMMetadata} [metadata] - LLM generation metadata
@@ -246,9 +246,9 @@ export class Trait {
       errors.push('Physical description is required and must be a string');
     } else if (this.physicalDescription.length < 100) {
       errors.push('Physical description is too short (min 100 characters)');
-    } else if (this.physicalDescription.length > 500) {
+    } else if (this.physicalDescription.length > 700) {
       warnings.push(
-        'Physical description is very long (max recommended 500 characters)'
+        'Physical description is very long (max recommended 700 characters)'
       );
     }
 
@@ -256,9 +256,9 @@ export class Trait {
     if (
       !Array.isArray(this.personality) ||
       this.personality.length < 3 ||
-      this.personality.length > 5
+      this.personality.length > 8
     ) {
-      errors.push('Personality must be an array with 3-5 items');
+      errors.push('Personality must be an array with 3-8 items');
     } else {
       this.personality.forEach((personalityItem, index) => {
         if (!personalityItem || typeof personalityItem !== 'object') {
@@ -292,9 +292,9 @@ export class Trait {
     if (
       !Array.isArray(this.strengths) ||
       this.strengths.length < 2 ||
-      this.strengths.length > 4
+      this.strengths.length > 6
     ) {
-      errors.push('Strengths must be an array with 2-4 items');
+      errors.push('Strengths must be an array with 2-6 items');
     } else {
       this.strengths.forEach((strength, index) => {
         if (
@@ -311,9 +311,9 @@ export class Trait {
     if (
       !Array.isArray(this.weaknesses) ||
       this.weaknesses.length < 2 ||
-      this.weaknesses.length > 4
+      this.weaknesses.length > 6
     ) {
-      errors.push('Weaknesses must be an array with 2-4 items');
+      errors.push('Weaknesses must be an array with 2-6 items');
     } else {
       this.weaknesses.forEach((weakness, index) => {
         if (
@@ -330,9 +330,9 @@ export class Trait {
     if (
       !Array.isArray(this.likes) ||
       this.likes.length < 3 ||
-      this.likes.length > 5
+      this.likes.length > 8
     ) {
-      errors.push('Likes must be an array with 3-5 items');
+      errors.push('Likes must be an array with 3-8 items');
     } else {
       this.likes.forEach((like, index) => {
         if (!like || typeof like !== 'string' || like.trim() === '') {
@@ -345,9 +345,9 @@ export class Trait {
     if (
       !Array.isArray(this.dislikes) ||
       this.dislikes.length < 3 ||
-      this.dislikes.length > 5
+      this.dislikes.length > 8
     ) {
-      errors.push('Dislikes must be an array with 3-5 items');
+      errors.push('Dislikes must be an array with 3-8 items');
     } else {
       this.dislikes.forEach((dislike, index) => {
         if (!dislike || typeof dislike !== 'string' || dislike.trim() === '') {
@@ -384,9 +384,9 @@ export class Trait {
       if (
         !Array.isArray(this.goals.shortTerm) ||
         this.goals.shortTerm.length < 1 ||
-        this.goals.shortTerm.length > 2
+        this.goals.shortTerm.length > 3
       ) {
-        errors.push('Goals.shortTerm must be an array with 1-2 items');
+        errors.push('Goals.shortTerm must be an array with 1-3 items');
       } else {
         this.goals.shortTerm.forEach((goal, index) => {
           if (!goal || typeof goal !== 'string' || goal.trim() === '') {
@@ -410,9 +410,9 @@ export class Trait {
     if (
       !Array.isArray(this.notes) ||
       this.notes.length < 2 ||
-      this.notes.length > 3
+      this.notes.length > 6
     ) {
-      errors.push('Notes must be an array with 2-3 items');
+      errors.push('Notes must be an array with 2-6 items');
     } else {
       this.notes.forEach((note, index) => {
         if (!note || typeof note !== 'string' || note.trim() === '') {
@@ -426,8 +426,8 @@ export class Trait {
       errors.push('Profile is required and must be a string');
     } else if (this.profile.length < 200) {
       errors.push('Profile is too short (min 200 characters)');
-    } else if (this.profile.length > 800) {
-      warnings.push('Profile is very long (max recommended 800 characters)');
+    } else if (this.profile.length > 1200) {
+      warnings.push('Profile is very long (max recommended 1200 characters)');
     }
 
     // Validate secrets

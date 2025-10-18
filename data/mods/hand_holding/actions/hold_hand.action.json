@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "affection:hold_hand",
+  "id": "hand_holding:hold_hand",
   "name": "Hold Hand",
   "description": "Reach out and hold someone's hand in an affectionate gesture.",
   "targets": "positioning:close_actors_facing_each_other_or_behind_target",
@@ -8,16 +8,15 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["affection:holding_hand", "affection:hand_held"],
-    "target": ["affection:hand_held"],
-    "primary": ["affection:hand_held"]
+    "actor": ["hand_holding:holding_hand", "hand_holding:hand_held"],
+    "primary": ["hand_holding:hand_held"]
   },
   "template": "hold {target}'s hand",
   "prerequisites": [],
   "visual": {
-    "backgroundColor": "#6a1b9a",
-    "textColor": "#f3e5f5",
-    "hoverBackgroundColor": "#8e24aa",
-    "hoverTextColor": "#ffffff"
+    "backgroundColor": "#2c0e37",
+    "textColor": "#ffebf0",
+    "hoverBackgroundColor": "#451952",
+    "hoverTextColor": "#f3e5f5"
   }
 }

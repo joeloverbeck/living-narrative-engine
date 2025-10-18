@@ -133,15 +133,15 @@ describe('hand_holding:squeeze_hand_reassuringly action discovery', () => {
       ]);
     });
 
-    it('requires actor closeness and uses the affection color palette', () => {
+    it('requires actor closeness and uses the hand_holding color palette', () => {
       expect(squeezeHandAction.required_components.actor).toEqual([
         'positioning:closeness',
       ]);
       expect(squeezeHandAction.visual).toEqual({
-        backgroundColor: '#6a1b9a',
-        textColor: '#f3e5f5',
-        hoverBackgroundColor: '#8e24aa',
-        hoverTextColor: '#ffffff',
+        backgroundColor: '#2c0e37',
+        textColor: '#ffebf0',
+        hoverBackgroundColor: '#451952',
+        hoverTextColor: '#f3e5f5',
       });
     });
   });

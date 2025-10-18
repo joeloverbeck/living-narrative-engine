@@ -21,7 +21,7 @@ export const PROMPT_VERSION_INFO = {
  */
 export const TRAITS_GENERATION_LLM_PARAMS = {
   temperature: 0.8,
-  max_tokens: 4000,
+  max_tokens: 6000,
 };
 
 /**
@@ -314,25 +314,25 @@ Based on the character concept, thematic direction, core motivations, and clich�
 
 1. **Names (3-5 unique names)**: Provide distinctive names that hint at character depth. Each name should include a 1-sentence justification showing how it subverts typical naming clichés and connects to the character's essence.
 
-2. **Physical Description (2-3 distinctive features)**: Focus on unique physical traits that subvert typical character appearances and hint at personality. Avoid generic descriptions - make each feature meaningful to the character's identity.
+2. **Physical Description (2-4 distinctive features)**: Focus on unique physical traits that subvert typical character appearances and hint at personality. Avoid generic descriptions - make each feature meaningful to the character's identity. (100-700 characters total)
 
-3. **Personality (3-5 key traits)**: Create a coherent, nuanced personality with detailed explanations. Each trait should form part of a complex whole, avoiding surface-level or contradictory combinations. Explain how each trait manifests in behavior.
+3. **Personality (3-8 key traits)**: Create a coherent, nuanced personality with detailed explanations. Each trait should form part of a complex whole, avoiding surface-level or contradictory combinations. Explain how each trait manifests in behavior.
 
-4. **Strengths (2-4 unexpected strengths)**: Identify strengths that are unexpected, uniquely applied, or subvert typical "hero" qualities. Connect these to core motivations and show how they might be double-edged.
+4. **Strengths (2-6 unexpected strengths)**: Identify strengths that are unexpected, uniquely applied, or subvert typical "hero" qualities. Connect these to core motivations and show how they might be double-edged.
 
-5. **Weaknesses (2-4 subversive weaknesses)**: Present weaknesses that avoid clichéd character flaws. Focus on unique applications or unexpected manifestations that relate to core contradictions.
+5. **Weaknesses (2-6 subversive weaknesses)**: Present weaknesses that avoid clichéd character flaws. Focus on unique applications or unexpected manifestations that relate to core contradictions.
 
-6. **Likes (3-5 specific, telling preferences)**: Choose likes that reveal deeper motivations and personality layers. Avoid generic preferences - make each like meaningful and connected to character psychology.
+6. **Likes (3-8 specific, telling preferences)**: Choose likes that reveal deeper motivations and personality layers. Avoid generic preferences - make each like meaningful and connected to character psychology.
 
-7. **Dislikes (3-5 revealing dislikes)**: Select dislikes that expose character sensitivities, principles, or past experiences. Avoid clichéd dislikes - focus on specific, character-revealing aversions.
+7. **Dislikes (3-8 revealing dislikes)**: Select dislikes that expose character sensitivities, principles, or past experiences. Avoid clichéd dislikes - focus on specific, character-revealing aversions.
 
 8. **Fears (1-2 profound fears)**: Identify deep, specific fears rooted in character psychology and core motivations. Go beyond common phobias to fears that connect to identity, relationships, or life purpose.
 
-9. **Goals (1-2 short-term + 1 long-term)**: Create goals driven by core motivations. Short-term goals should be immediate and actionable, while the long-term goal should represent the character's ultimate aspiration or need.
+9. **Goals (1-3 short-term + 1 long-term)**: Create goals driven by core motivations. Short-term goals should be immediate and actionable, while the long-term goal should represent the character's ultimate aspiration or need.
 
-10. **Notes (2-3 unique knowledge pieces)**: Include specialized knowledge, skills, or experiences acquired through non-clichéd means. These should add depth and potential story hooks.
+10. **Notes (2-6 unique knowledge pieces)**: Include specialized knowledge, skills, or experiences acquired through non-clichéd means. These should add depth and potential story hooks.
 
-11. **Profile (3-5 sentence background)**: Provide a concise but comprehensive background that explains the character's current situation and how their core motivations originated. Focus on formative experiences.
+11. **Profile (3-5 sentence background)**: Provide a concise but comprehensive background that explains the character's current situation and how their core motivations originated. Focus on formative experiences. (200-1200 characters)
 
 12. **Secrets (1-2 significant secrets)**: Create secrets tied directly to core motivations and internal contradictions. These should have potential to impact relationships and drive narrative conflict.
 
@@ -342,8 +342,8 @@ Each category should avoid the listed clichés and work together to create a coh
 <constraints>
 - Generate exactly the 12 trait categories specified
 - Ensure all array fields meet the minimum/maximum requirements
-- Physical description must be 100-500 characters
-- Profile must be 200-2400 characters
+- Physical description must be 100-700 characters
+- Profile must be 200-1200 characters
 - Each secret and fear must be substantial and character-defining
 - Goals must include both short-term array and single long-term goal
 - Names and personality items must include both the main field and explanation/justification
@@ -360,7 +360,7 @@ Each category should avoid the listed clichés and work together to create a coh
       "justification": "1-sentence explanation showing cliché subversion"
     }
   ],
-  "physicalDescription": "2-3 distinctive physical features that subvert typical appearances and hint at persona (100-500 chars)",
+  "physicalDescription": "2-4 distinctive physical features that subvert typical appearances and hint at persona (100-700 chars)",
   "personality": [
     {
       "trait": "Personality trait name",
@@ -373,11 +373,11 @@ Each category should avoid the listed clichés and work together to create a coh
   "dislikes": ["Specific dislike that reveals sensitivities or principles"],
   "fears": ["Profound, character-rooted fear beyond generic phobias"],
   "goals": {
-    "shortTerm": ["1-2 immediate, actionable goals"],
+    "shortTerm": ["1-3 immediate, actionable goals"],
     "longTerm": "Major life aspiration driven by core motivations"
   },
   "notes": ["Unique knowledge/skill/experience acquired in non-clichéd ways"],
-  "profile": "3-5 sentence background summary explaining current situation and core origin (200-2400 chars)",
+  "profile": "3-5 sentence background summary explaining current situation and core origin (200-1200 chars)",
   "secrets": ["Significant secret tied to core motivations with relationship impact potential"]
 }
 </response_format>
@@ -460,10 +460,10 @@ export function validateTraitsGenerationResponse(response) {
 
   if (
     response.physicalDescription.length < 100 ||
-    response.physicalDescription.length > 500
+    response.physicalDescription.length > 700
   ) {
     throw new Error(
-      'TraitsGenerationPrompt: physicalDescription must be 100-500 characters'
+      'TraitsGenerationPrompt: physicalDescription must be 100-700 characters'
     );
   }
 
@@ -474,9 +474,9 @@ export function validateTraitsGenerationResponse(response) {
     );
   }
 
-  if (response.personality.length < 3 || response.personality.length > 5) {
+  if (response.personality.length < 3 || response.personality.length > 8) {
     throw new Error(
-      'TraitsGenerationPrompt: Personality array must contain 3-5 items'
+      'TraitsGenerationPrompt: Personality array must contain 3-8 items'
     );
   }
 
@@ -513,9 +513,9 @@ export function validateTraitsGenerationResponse(response) {
     );
   }
 
-  if (response.strengths.length < 2 || response.strengths.length > 4) {
+  if (response.strengths.length < 2 || response.strengths.length > 6) {
     throw new Error(
-      'TraitsGenerationPrompt: Strengths array must contain 2-4 items'
+      'TraitsGenerationPrompt: Strengths array must contain 2-6 items'
     );
   }
 
@@ -538,9 +538,9 @@ export function validateTraitsGenerationResponse(response) {
     );
   }
 
-  if (response.weaknesses.length < 2 || response.weaknesses.length > 4) {
+  if (response.weaknesses.length < 2 || response.weaknesses.length > 6) {
     throw new Error(
-      'TraitsGenerationPrompt: Weaknesses array must contain 2-4 items'
+      'TraitsGenerationPrompt: Weaknesses array must contain 2-6 items'
     );
   }
 
@@ -563,9 +563,9 @@ export function validateTraitsGenerationResponse(response) {
     );
   }
 
-  if (response.likes.length < 3 || response.likes.length > 5) {
+  if (response.likes.length < 3 || response.likes.length > 8) {
     throw new Error(
-      'TraitsGenerationPrompt: Likes array must contain 3-5 items'
+      'TraitsGenerationPrompt: Likes array must contain 3-8 items'
     );
   }
 
@@ -584,9 +584,9 @@ export function validateTraitsGenerationResponse(response) {
     );
   }
 
-  if (response.dislikes.length < 3 || response.dislikes.length > 5) {
+  if (response.dislikes.length < 3 || response.dislikes.length > 8) {
     throw new Error(
-      'TraitsGenerationPrompt: Dislikes array must contain 3-5 items'
+      'TraitsGenerationPrompt: Dislikes array must contain 3-8 items'
     );
   }
 
@@ -638,10 +638,10 @@ export function validateTraitsGenerationResponse(response) {
 
   if (
     response.goals.shortTerm.length < 1 ||
-    response.goals.shortTerm.length > 2
+    response.goals.shortTerm.length > 3
   ) {
     throw new Error(
-      'TraitsGenerationPrompt: Short-term goals array must contain 1-2 items'
+      'TraitsGenerationPrompt: Short-term goals array must contain 1-3 items'
     );
   }
 
@@ -670,9 +670,9 @@ export function validateTraitsGenerationResponse(response) {
     );
   }
 
-  if (response.notes.length < 2 || response.notes.length > 3) {
+  if (response.notes.length < 2 || response.notes.length > 6) {
     throw new Error(
-      'TraitsGenerationPrompt: Notes array must contain 2-3 items'
+      'TraitsGenerationPrompt: Notes array must contain 2-6 items'
     );
   }
 
@@ -691,9 +691,9 @@ export function validateTraitsGenerationResponse(response) {
     );
   }
 
-  if (response.profile.length < 200 || response.profile.length > 2400) {
+  if (response.profile.length < 200 || response.profile.length > 1200) {
     throw new Error(
-      'TraitsGenerationPrompt: Profile must be 200-2400 characters'
+      'TraitsGenerationPrompt: Profile must be 200-1200 characters'
     );
   }
 

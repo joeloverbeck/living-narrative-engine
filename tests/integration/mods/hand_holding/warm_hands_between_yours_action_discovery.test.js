@@ -16,7 +16,7 @@ describe('hand_holding:warm_hands_between_yours action discovery', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'affection',
+      'hand_holding',
       ACTION_ID
     );
 
@@ -134,15 +134,15 @@ describe('hand_holding:warm_hands_between_yours action discovery', () => {
       ]);
     });
 
-    it('requires actor closeness and uses the affection color palette', () => {
+    it('requires actor closeness and uses the hand_holding color palette', () => {
       expect(warmHandsAction.required_components.actor).toEqual([
         'positioning:closeness',
       ]);
       expect(warmHandsAction.visual).toEqual({
-        backgroundColor: '#6a1b9a',
-        textColor: '#f3e5f5',
-        hoverBackgroundColor: '#8e24aa',
-        hoverTextColor: '#ffffff',
+        backgroundColor: '#2c0e37',
+        textColor: '#ffebf0',
+        hoverBackgroundColor: '#451952',
+        hoverTextColor: '#f3e5f5',
       });
     });
   });

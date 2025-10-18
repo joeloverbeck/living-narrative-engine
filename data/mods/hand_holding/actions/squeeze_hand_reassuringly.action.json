@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "affection:squeeze_hand_reassuringly",
+  "id": "hand_holding:squeeze_hand_reassuringly",
   "name": "Squeeze hand reassuringly",
   "description": "Give the target's hand a gentle squeeze to provide comfort.",
   "targets": "positioning:close_actors_facing_each_other_or_behind_target",
@@ -11,14 +11,14 @@
   "prerequisites": [
     {
       "logic": {
-        "condition_ref": "affection:actors-are-holding-hands"
+        "condition_ref": "hand_holding:actors-are-holding-hands"
       }
     }
   ],
   "visual": {
-    "backgroundColor": "#6a1b9a",
-    "textColor": "#f3e5f5",
-    "hoverBackgroundColor": "#8e24aa",
-    "hoverTextColor": "#ffffff"
+    "backgroundColor": "#2c0e37",
+    "textColor": "#ffebf0",
+    "hoverBackgroundColor": "#451952",
+    "hoverTextColor": "#f3e5f5"
   }
 }

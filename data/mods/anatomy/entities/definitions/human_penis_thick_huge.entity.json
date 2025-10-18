@@ -1,0 +1,22 @@
+{
+    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+    "id": "anatomy:human_penis_thick_huge",
+    "description": "A thick, huge human male genital organ",
+    "components": {
+        "anatomy:part": {
+            "subType": "penis"
+        },
+        "descriptors:build": {
+            "build": "thick"
+        },
+        "descriptors:size_category": {
+            "size": "huge"
+        },
+        "descriptors:weight_feel": {
+            "weight": "meaty"
+        },
+        "core:name": {
+            "text": "thick, huge penis"
+        }
+    }
+}

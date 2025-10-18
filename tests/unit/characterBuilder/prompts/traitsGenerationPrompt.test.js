@@ -28,7 +28,7 @@ describe('TraitsGenerationPrompt - Constants', () => {
     it('should have correct LLM parameters', () => {
       expect(TRAITS_GENERATION_LLM_PARAMS).toEqual({
         temperature: 0.8,
-        max_tokens: 4000,
+        max_tokens: 6000,
       });
     });
   });
@@ -528,15 +528,15 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     expect(() => {
       validateTraitsGenerationResponse(response);
     }).toThrow(
-      'TraitsGenerationPrompt: physicalDescription must be 100-500 characters'
+      'TraitsGenerationPrompt: physicalDescription must be 100-700 characters'
     );
 
-    response.physicalDescription = 'A'.repeat(501); // More than 500 chars
+    response.physicalDescription = 'A'.repeat(701); // More than 700 chars
 
     expect(() => {
       validateTraitsGenerationResponse(response);
     }).toThrow(
-      'TraitsGenerationPrompt: physicalDescription must be 100-500 characters'
+      'TraitsGenerationPrompt: physicalDescription must be 100-700 characters'
     );
   });
 
@@ -547,7 +547,7 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     expect(() => {
       validateTraitsGenerationResponse(response);
     }).toThrow(
-      'TraitsGenerationPrompt: Personality array must contain 3-5 items'
+      'TraitsGenerationPrompt: Personality array must contain 3-8 items'
     );
   });
 
@@ -569,15 +569,15 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     expect(() => {
       validateTraitsGenerationResponse(response);
     }).toThrow(
-      'TraitsGenerationPrompt: Strengths array must contain 2-4 items'
+      'TraitsGenerationPrompt: Strengths array must contain 2-6 items'
     );
 
-    response.strengths = ['One', 'Two', 'Three', 'Four', 'Five']; // Too many
+    response.strengths = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven']; // Too many
 
     expect(() => {
       validateTraitsGenerationResponse(response);
     }).toThrow(
-      'TraitsGenerationPrompt: Strengths array must contain 2-4 items'
+      'TraitsGenerationPrompt: Strengths array must contain 2-6 items'
     );
   });
 
@@ -588,7 +588,7 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     expect(() => {
       validateTraitsGenerationResponse(response);
     }).toThrow(
-      'TraitsGenerationPrompt: Weaknesses array must contain 2-4 items'
+      'TraitsGenerationPrompt: Weaknesses array must contain 2-6 items'
     );
   });
 
@@ -598,7 +598,7 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
 
     expect(() => {
       validateTraitsGenerationResponse(response);
-    }).toThrow('TraitsGenerationPrompt: Likes array must contain 3-5 items');
+    }).toThrow('TraitsGenerationPrompt: Likes array must contain 3-8 items');
   });
 
   it('should validate dislikes array', () => {
@@ -607,7 +607,7 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
 
     expect(() => {
       validateTraitsGenerationResponse(response);
-    }).toThrow('TraitsGenerationPrompt: Dislikes array must contain 3-5 items');
+    }).toThrow('TraitsGenerationPrompt: Dislikes array must contain 3-8 items');
   });
 
   it('should validate fears array', () => {
@@ -641,15 +641,15 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     expect(() => {
       validateTraitsGenerationResponse(response);
     }).toThrow(
-      'TraitsGenerationPrompt: Short-term goals array must contain 1-2 items'
+      'TraitsGenerationPrompt: Short-term goals array must contain 1-3 items'
     );
 
-    response.goals.shortTerm = ['One', 'Two', 'Three']; // Too many
+    response.goals.shortTerm = ['One', 'Two', 'Three', 'Four']; // Too many
 
     expect(() => {
       validateTraitsGenerationResponse(response);
     }).toThrow(
-      'TraitsGenerationPrompt: Short-term goals array must contain 1-2 items'
+      'TraitsGenerationPrompt: Short-term goals array must contain 1-3 items'
     );
   });
 
@@ -670,13 +670,13 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
 
     expect(() => {
       validateTraitsGenerationResponse(response);
-    }).toThrow('TraitsGenerationPrompt: Notes array must contain 2-3 items');
+    }).toThrow('TraitsGenerationPrompt: Notes array must contain 2-6 items');
 
-    response.notes = ['One', 'Two', 'Three', 'Four']; // Too many
+    response.notes = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven']; // Too many
 
     expect(() => {
       validateTraitsGenerationResponse(response);
-    }).toThrow('TraitsGenerationPrompt: Notes array must contain 2-3 items');
+    }).toThrow('TraitsGenerationPrompt: Notes array must contain 2-6 items');
   });
 
   it('should validate profile string length', () => {
@@ -685,13 +685,13 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
 
     expect(() => {
       validateTraitsGenerationResponse(response);
-    }).toThrow('TraitsGenerationPrompt: Profile must be 200-2400 characters');
+    }).toThrow('TraitsGenerationPrompt: Profile must be 200-1200 characters');
 
-    response.profile = 'A'.repeat(2401); // More than 2400 chars
+    response.profile = 'A'.repeat(1201); // More than 1200 chars
 
     expect(() => {
       validateTraitsGenerationResponse(response);
-    }).toThrow('TraitsGenerationPrompt: Profile must be 200-2400 characters');
+    }).toThrow('TraitsGenerationPrompt: Profile must be 200-1200 characters');
   });
 
   it('should validate secrets array', () => {
@@ -805,7 +805,7 @@ describe('TraitsGenerationPrompt - createTraitsGenerationLlmConfig', () => {
     });
     expect(result.defaultParameters).toEqual({
       temperature: 0.8, // Should be overridden by TRAITS_GENERATION_LLM_PARAMS
-      max_tokens: 4000, // Should be overridden by TRAITS_GENERATION_LLM_PARAMS
+      max_tokens: 6000, // Should be overridden by TRAITS_GENERATION_LLM_PARAMS
     });
   });
 

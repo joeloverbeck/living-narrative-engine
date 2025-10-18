@@ -30,6 +30,7 @@
         "black_calfskin_belt.entity.json",
         "black_cotton_boxer_briefs.entity.json",
         "black_foam_slide_sandals.entity.json",
+        "black_leather_codpiece.entity.json",
         "black_longline_sports_bra_medium_support.entity.json",
         "black_running_shorts_red_trim.entity.json",
         "black_stretch_silk_bodysuit.entity.json",
@@ -126,6 +127,7 @@
       "event-is-action-remove-others-clothing.condition.json"
     ],
     "scopes": [
+      "target_topmost_clothing.scope",
       "target_topmost_torso_lower_clothing.scope",
       "target_topmost_torso_lower_clothing_no_accessories.scope",
       "target_topmost_torso_upper_clothing.scope",

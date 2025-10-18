@@ -1095,27 +1095,37 @@
 
 /* Basic pattern appearance */
 .speech-pattern-item {
+  /* Keep opacity: 1 as default to ensure visibility after animation */
+  opacity: 1;
+}
+
+/* Animation class for initial entrance */
+.speech-pattern-item.fade-in {
+  /* Start with opacity 0 only for items with fade-in class */
   opacity: 0;
   animation: fadeIn 0.3s ease-out forwards;
 }
 
-.speech-pattern-item:nth-child(1) {
+.speech-pattern-item.fade-in:nth-child(1) {
   animation-delay: 0.1s;
 }
-.speech-pattern-item:nth-child(2) {
+.speech-pattern-item.fade-in:nth-child(2) {
   animation-delay: 0.2s;
 }
-.speech-pattern-item:nth-child(3) {
+.speech-pattern-item.fade-in:nth-child(3) {
   animation-delay: 0.3s;
 }
-.speech-pattern-item:nth-child(4) {
+.speech-pattern-item.fade-in:nth-child(4) {
   animation-delay: 0.4s;
 }
-.speech-pattern-item:nth-child(5) {
+.speech-pattern-item.fade-in:nth-child(5) {
   animation-delay: 0.5s;
 }
 
 @keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
   to {
     opacity: 1;
   }

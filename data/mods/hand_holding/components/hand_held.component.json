@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "affection:hand_held",
+  "id": "hand_holding:hand_held",
   "description": "Marks an entity whose hand is currently being held by another actor.",
   "dataSchema": {
     "type": "object",

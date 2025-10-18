@@ -97,7 +97,7 @@ describe('hand_holding:hold_hand action discovery', () => {
   });
 
   describe('Action structure validation', () => {
-    it('matches the expected affection action schema', () => {
+    it('matches the expected hand_holding action schema', () => {
       expect(holdHandAction).toBeDefined();
       expect(holdHandAction.id).toBe(ACTION_ID);
       expect(holdHandAction.template).toBe("hold {target}'s hand");
@@ -108,7 +108,7 @@ describe('hand_holding:hold_hand action discovery', () => {
         'hand_holding:holding_hand',
         'hand_holding:hand_held',
       ]);
-      expect(holdHandAction.forbidden_components.target).toEqual([
+      expect(holdHandAction.forbidden_components.primary).toEqual([
         'hand_holding:hand_held',
       ]);
     });
