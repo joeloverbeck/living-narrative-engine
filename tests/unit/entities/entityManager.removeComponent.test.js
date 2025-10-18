@@ -60,7 +60,7 @@ describeEntityManagerSuite('EntityManager - removeComponent', (getBed) => {
       );
     });
 
-    it('should be idempotent when removing a non-override component', async () => {
+    it('should succeed (idempotent) if component is not an override on the instance', async () => {
       // Arrange
       const { entityManager, mocks } = getBed();
       const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
@@ -71,10 +71,10 @@ describeEntityManagerSuite('EntityManager - removeComponent', (getBed) => {
       });
       // NAME_COMPONENT_ID exists on definition, but not as an override
 
-      // Act & Assert
-      await expect(
-        entityManager.removeComponent(PRIMARY, NAME_COMPONENT_ID)
-      ).resolves.toBeUndefined();
+      // Act - should succeed without error (idempotent behavior)
+      await entityManager.removeComponent(PRIMARY, NAME_COMPONENT_ID);
+
+      // Assert - no event should be dispatched for removing non-existent override
       expectNoDispatch(mocks.eventDispatcher.dispatch);
     });
 

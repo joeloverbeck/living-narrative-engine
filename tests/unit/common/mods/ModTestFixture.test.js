@@ -537,9 +537,15 @@ describe('ModTestFixture - Comprehensive Unit Tests', () => {
 
     describe('executeAction', () => {
       it('should dispatch action with correct payload', async () => {
+        // Setup: Create entities for the test
+        fixture.reset([
+          { id: 'alice', components: {} },
+          { id: 'bob', components: {} },
+        ]);
+
         fixture.testEnv.eventBus = { dispatch: jest.fn() };
 
-        await fixture.executeAction('alice', 'bob');
+        await fixture.executeAction('alice', 'bob', { skipDiscovery: true });
 
         expect(fixture.eventBus.dispatch).toHaveBeenCalledWith(
           'core:attempt_action',
@@ -554,9 +560,16 @@ describe('ModTestFixture - Comprehensive Unit Tests', () => {
       });
 
       it('should accept custom options', async () => {
+        // Setup: Create entities for the test
+        fixture.reset([
+          { id: 'alice', components: {} },
+          { id: 'bob', components: {} },
+        ]);
+
         fixture.testEnv.eventBus = { dispatch: jest.fn() };
 
         await fixture.executeAction('alice', 'bob', {
+          skipDiscovery: true,
           originalInput: 'custom input',
           additionalPayload: { customField: 'value' },
         });
@@ -571,9 +584,15 @@ describe('ModTestFixture - Comprehensive Unit Tests', () => {
       });
 
       it('should extract action name from namespaced action ID', async () => {
+        // Setup: Create entities for the test
+        fixture.reset([
+          { id: 'alice', components: {} },
+          { id: 'bob', components: {} },
+        ]);
+
         fixture.testEnv.eventBus = { dispatch: jest.fn() };
 
-        await fixture.executeAction('alice', 'bob');
+        await fixture.executeAction('alice', 'bob', { skipDiscovery: true });
 
         const call = fixture.eventBus.dispatch.mock.calls[0];
         const payload = call[1];

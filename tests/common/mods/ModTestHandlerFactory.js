@@ -447,6 +447,7 @@ export class ModTestHandlerFactory {
       sex: this.createStandardHandlers.bind(this),
       intimacy: this.createStandardHandlers.bind(this),
       affection: this.createHandlersWithComponentMutations.bind(this),
+      hand_holding: this.createHandlersWithComponentMutations.bind(this),
     };
 
     return (

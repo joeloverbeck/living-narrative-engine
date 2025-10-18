@@ -53,13 +53,13 @@
       "type": "string",
       "description": "Physical description of the character",
       "minLength": 100,
-      "maxLength": 500
+      "maxLength": 700
     },
     "personality": {
       "type": "array",
       "description": "Array of personality traits with explanations",
       "minItems": 3,
-      "maxItems": 5,
+      "maxItems": 8,
       "items": {
         "type": "object",
         "required": ["trait", "explanation"],
@@ -82,7 +82,7 @@
       "type": "array",
       "description": "Array of character strengths",
       "minItems": 2,
-      "maxItems": 4,
+      "maxItems": 6,
       "items": {
         "type": "string",
         "minLength": 1
@@ -92,7 +92,7 @@
       "type": "array",
       "description": "Array of character weaknesses",
       "minItems": 2,
-      "maxItems": 4,
+      "maxItems": 6,
       "items": {
         "type": "string",
         "minLength": 1
@@ -102,7 +102,7 @@
       "type": "array",
       "description": "Array of things the character likes",
       "minItems": 3,
-      "maxItems": 5,
+      "maxItems": 8,
       "items": {
         "type": "string",
         "minLength": 1
@@ -112,7 +112,7 @@
       "type": "array",
       "description": "Array of things the character dislikes",
       "minItems": 3,
-      "maxItems": 5,
+      "maxItems": 8,
       "items": {
         "type": "string",
         "minLength": 1
@@ -137,7 +137,7 @@
           "type": "array",
           "description": "Array of short-term goals",
           "minItems": 1,
-          "maxItems": 2,
+          "maxItems": 3,
           "items": {
             "type": "string",
             "minLength": 1
@@ -155,7 +155,7 @@
       "type": "array",
       "description": "Array of additional notes",
       "minItems": 2,
-      "maxItems": 3,
+      "maxItems": 6,
       "items": {
         "type": "string",
         "minLength": 1
@@ -165,7 +165,7 @@
       "type": "string",
       "description": "Character profile summary",
       "minLength": 200,
-      "maxLength": 800
+      "maxLength": 1200
     },
     "secrets": {
       "type": "array",

@@ -13,7 +13,6 @@ import {
 } from '@jest/globals';
 import { TraitsGenerator } from '../../../../src/characterBuilder/services/TraitsGenerator.js';
 import { TraitsGenerationError } from '../../../../src/characterBuilder/errors/TraitsGenerationError.js';
-import { createTestBed } from '../../../common/testBed.js';
 
 // Mock the prompt functions to prevent real implementation calls that can cause timeouts
 jest.mock(
@@ -54,7 +53,7 @@ jest.mock(
     },
     TRAITS_GENERATION_LLM_PARAMS: {
       temperature: 0.8,
-      max_tokens: 4000,
+      max_tokens: 6000,
     },
     PROMPT_VERSION_INFO: {
       version: '1.0.0',
@@ -71,7 +70,6 @@ const { buildTraitsGenerationPrompt, validateTraitsGenerationResponse } =
   );
 
 describe('TraitsGenerator', () => {
-  let testBed;
   let mockLogger;
   let mockLlmJsonService;
   let mockLlmStrategyFactory;
@@ -201,8 +199,6 @@ describe('TraitsGenerator', () => {
   beforeEach(() => {
     // Reset all mocks
     jest.clearAllMocks();
-
-    testBed = createTestBed();
 
     // Create mock dependencies
     mockLogger = {

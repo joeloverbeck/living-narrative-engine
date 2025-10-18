@@ -407,25 +407,25 @@ describe('Trait Model', () => {
       });
 
       it('should warn for very long descriptions', () => {
-        const longDescription = 'A'.repeat(501);
+        const longDescription = 'A'.repeat(701);
         const trait = new Trait({
           ...validTraitData,
           physicalDescription: longDescription,
         });
         const result = trait.validate();
         expect(result.warnings).toContain(
-          'Physical description is very long (max recommended 500 characters)'
+          'Physical description is very long (max recommended 700 characters)'
         );
       });
     });
 
     describe('personality validation', () => {
-      it('should require personality array with 3-5 items', () => {
+      it('should require personality array with 3-8 items', () => {
         const trait = new Trait({ ...validTraitData, personality: [] });
         const result = trait.validate();
         expect(result.valid).toBe(false);
         expect(result.errors).toContain(
-          'Personality must be an array with 3-5 items'
+          'Personality must be an array with 3-8 items'
         );
       });
 
@@ -449,12 +449,12 @@ describe('Trait Model', () => {
     });
 
     describe('strengths validation', () => {
-      it('should require strengths array with 2-4 items', () => {
+      it('should require strengths array with 2-6 items', () => {
         const trait = new Trait({ ...validTraitData, strengths: ['Only one'] });
         const result = trait.validate();
         expect(result.valid).toBe(false);
         expect(result.errors).toContain(
-          'Strengths must be an array with 2-4 items'
+          'Strengths must be an array with 2-6 items'
         );
       });
 
@@ -474,34 +474,34 @@ describe('Trait Model', () => {
     });
 
     describe('weaknesses validation', () => {
-      it('should require weaknesses array with 2-4 items', () => {
+      it('should require weaknesses array with 2-6 items', () => {
         const trait = new Trait({ ...validTraitData, weaknesses: [] });
         const result = trait.validate();
         expect(result.valid).toBe(false);
         expect(result.errors).toContain(
-          'Weaknesses must be an array with 2-4 items'
+          'Weaknesses must be an array with 2-6 items'
         );
       });
     });
 
     describe('likes validation', () => {
-      it('should require likes array with 3-5 items', () => {
+      it('should require likes array with 3-8 items', () => {
         const trait = new Trait({ ...validTraitData, likes: ['Only', 'Two'] });
         const result = trait.validate();
         expect(result.valid).toBe(false);
         expect(result.errors).toContain(
-          'Likes must be an array with 3-5 items'
+          'Likes must be an array with 3-8 items'
         );
       });
     });
 
     describe('dislikes validation', () => {
-      it('should require dislikes array with 3-5 items', () => {
+      it('should require dislikes array with 3-8 items', () => {
         const trait = new Trait({ ...validTraitData, dislikes: [] });
         const result = trait.validate();
         expect(result.valid).toBe(false);
         expect(result.errors).toContain(
-          'Dislikes must be an array with 3-5 items'
+          'Dislikes must be an array with 3-8 items'
         );
       });
     });
@@ -539,7 +539,7 @@ describe('Trait Model', () => {
         );
       });
 
-      it('should validate shortTerm array with 1-2 items', () => {
+      it('should validate shortTerm array with 1-3 items', () => {
         const trait = new Trait({
           ...validTraitData,
           goals: { shortTerm: [], longTerm: 'Test' },
@@ -547,7 +547,7 @@ describe('Trait Model', () => {
         const result = trait.validate();
         expect(result.valid).toBe(false);
         expect(result.errors).toContain(
-          'Goals.shortTerm must be an array with 1-2 items'
+          'Goals.shortTerm must be an array with 1-3 items'
         );
       });
 
@@ -565,12 +565,12 @@ describe('Trait Model', () => {
     });
 
     describe('notes validation', () => {
-      it('should require notes array with 2-3 items', () => {
+      it('should require notes array with 2-6 items', () => {
         const trait = new Trait({ ...validTraitData, notes: ['Only one'] });
         const result = trait.validate();
         expect(result.valid).toBe(false);
         expect(result.errors).toContain(
-          'Notes must be an array with 2-3 items'
+          'Notes must be an array with 2-6 items'
         );
       });
     });
@@ -595,11 +595,11 @@ describe('Trait Model', () => {
       });
 
       it('should warn for very long profiles', () => {
-        const longProfile = 'A'.repeat(801);
+        const longProfile = 'A'.repeat(1201);
         const trait = new Trait({ ...validTraitData, profile: longProfile });
         const result = trait.validate();
         expect(result.warnings).toContain(
-          'Profile is very long (max recommended 800 characters)'
+          'Profile is very long (max recommended 1200 characters)'
         );
       });
     });

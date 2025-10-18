@@ -1,0 +1,30 @@
+{
+    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+    "id": "anatomy:humanoid_arm_hulking_scarred",
+    "description": "A hulking, scarred humanoid arm",
+    "components": {
+        "anatomy:part": {
+            "subType": "arm"
+        },
+        "anatomy:sockets": {
+            "sockets": [
+                {
+                    "id": "wrist",
+                    "allowedTypes": [
+                        "hand"
+                    ],
+                    "nameTpl": "{{effective_orientation}} {{type}}"
+                }
+            ]
+        },
+        "descriptors:build": {
+            "build": "hulking"
+        },
+        "descriptors:texture": {
+            "texture": "scarred"
+        },
+        "core:name": {
+            "text": "hulking, scarred arm"
+        }
+    }
+}

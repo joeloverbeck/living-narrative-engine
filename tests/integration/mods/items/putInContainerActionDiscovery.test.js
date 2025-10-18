@@ -9,9 +9,11 @@ import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import putInContainerRule from '../../../../data/mods/items/rules/handle_put_in_container.rule.json' assert { type: 'json' };
 import eventIsActionPutInContainer from '../../../../data/mods/items/conditions/event-is-action-put-in-container.condition.json' assert { type: 'json' };
+import putInContainerAction from '../../../../data/mods/items/actions/put_in_container.action.json' assert { type: 'json' };
 
 describe('Put In Container Action Discovery Integration Tests', () => {
   let testFixture;
+  let configureActionDiscovery;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
@@ -20,6 +22,16 @@ describe('Put In Container Action Discovery Integration Tests', () => {
       putInContainerRule,
       eventIsActionPutInContainer
     );
+
+    configureActionDiscovery = () => {
+      const { testEnv } = testFixture;
+      if (!testEnv) {
+        return;
+      }
+
+      // Build the action index with the put_in_container action
+      testEnv.actionIndex.buildIndex([putInContainerAction]);
+    };
   });
 
   afterEach(() => {
@@ -60,6 +72,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
       .build();
 
     testFixture.reset([location, actor, item, chest]);
+    configureActionDiscovery();
 
     // Act: Get available actions
     const actions = testFixture.discoverActions('actor1');
@@ -127,6 +140,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
       .build();
 
     testFixture.reset([location, actor, chest]);
+    configureActionDiscovery();
 
     // Act: Get available actions
     const actions = testFixture.discoverActions('actor1');
@@ -172,6 +186,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
       .build();
 
     testFixture.reset([location, actor, item, chest]);
+    configureActionDiscovery();
 
     // Act: Get available actions
     const actions = testFixture.discoverActions('actor1');
@@ -237,6 +252,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
       .build();
 
     testFixture.reset([location, actor, item1, item2, chest1, chest2]);
+    configureActionDiscovery();
 
     // Act: Get available actions
     const actions = testFixture.discoverActions('actor1');

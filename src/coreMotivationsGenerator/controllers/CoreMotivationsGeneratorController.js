@@ -352,10 +352,9 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
     for (const direction of directions) {
       // Extract concept info from direction (assuming direction has concept property)
       const conceptId = direction.concept?.id || 'unknown';
-      const conceptTitle =
-        direction.concept?.text ||
-        direction.concept?.concept ||
-        'Unknown Concept';
+      const conceptText =
+        direction.concept?.text || direction.concept?.concept || null;
+      const conceptTitle = this.#extractConceptTitle(conceptText);
 
       if (!conceptMap.has(conceptId)) {
         conceptMap.set(conceptId, {
@@ -383,6 +382,27 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
     );
 
     return organizedArray;
+  }
+
+  /**
+   * Extract title from concept text (first line or first sentence)
+   *
+   * @param {string} conceptText - Full concept text
+   * @returns {string} Short concept title (max 50 chars)
+   * @private
+   */
+  #extractConceptTitle(conceptText) {
+    // Handle null or undefined concept text
+    if (!conceptText) {
+      return 'Unknown Concept';
+    }
+
+    const firstLine = conceptText.split('\n')[0];
+    const firstSentence = conceptText.split('.')[0];
+    const title = (
+      firstLine.length < firstSentence.length ? firstLine : firstSentence
+    ).trim();
+    return title.length > 50 ? title.substring(0, 47) + '...' : title;
   }
 
   /**

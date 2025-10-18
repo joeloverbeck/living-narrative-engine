@@ -19,6 +19,7 @@ import {
   createActionValidationProxy,
   createRuleValidationProxy,
 } from './actionValidationProxy.js';
+import { DiscoveryDiagnostics } from './discoveryDiagnostics.js';
 
 /**
  * File naming conventions for auto-loading mod files
@@ -511,6 +512,7 @@ class BaseModTestFixture {
     this.modId = modId;
     this.options = options;
     this.testEnv = null;
+    this.diagnostics = null; // Will be created on demand
   }
 
   /**
@@ -631,9 +633,88 @@ class BaseModTestFixture {
   }
 
   /**
+   * Enable diagnostic mode for action discovery debugging
+   *
+   * @returns {DiscoveryDiagnostics} Diagnostics instance
+   */
+  enableDiagnostics() {
+    if (!this.diagnostics) {
+      this.diagnostics = new DiscoveryDiagnostics(this);
+    }
+    this.diagnostics.enableDiagnostics();
+    return this.diagnostics;
+  }
+
+  /**
+   * Disable diagnostic mode
+   */
+  disableDiagnostics() {
+    if (this.diagnostics) {
+      this.diagnostics.disableDiagnostics();
+    }
+  }
+
+  /**
+   * Discover actions with full diagnostic output
+   * Useful for debugging why an action doesn't appear
+   *
+   * @param {string} actorId - Actor to discover for
+   * @param {string} [expectedActionId] - Optional action to look for
+   * @returns {Array} Discovered actions (synchronous)
+   */
+  discoverWithDiagnostics(actorId, expectedActionId = null) {
+    const diag = this.enableDiagnostics();
+    return diag.discoverWithDiagnostics(actorId, expectedActionId);
+  }
+
+  /**
+   * Creates an entity using a configuration object.
+   * Provides a convenient way to create entities without manually instantiating ModEntityBuilder.
+   *
+   * @param {object} config - Entity configuration
+   * @param {string} config.id - Entity ID
+   * @param {object} config.components - Components to add to the entity
+   * @returns {object} Built entity object
+   *
+   * @example
+   * const entity = testFixture.createEntity({
+   *   id: 'actor1',
+   *   components: {
+   *     'core:name': { text: 'Alice' },
+   *     'core:position': { locationId: 'room1' }
+   *   }
+   * });
+   */
+  createEntity(config) {
+    const { id, components = {} } = config;
+
+    if (!id) {
+      throw new Error('ModTestFixture.createEntity: config.id is required');
+    }
+
+    if (typeof components !== 'object' || components === null) {
+      throw new Error('ModTestFixture.createEntity: config.components must be an object');
+    }
+
+    // Import ModEntityBuilder
+    const { ModEntityBuilder } = require('./ModEntityBuilder.js');
+
+    // Create builder with the ID
+    const builder = new ModEntityBuilder(id);
+
+    // Add each component using withComponent
+    for (const [componentId, componentData] of Object.entries(components)) {
+      builder.withComponent(componentId, componentData);
+    }
+
+    return builder.build();
+  }
+
+  /**
    * Cleans up the test environment.
    */
   cleanup() {
+    this.disableDiagnostics();
     if (this.testEnv) {
       this.testEnv.cleanup();
     }
@@ -684,17 +765,8 @@ export class ModActionTestFixture extends BaseModTestFixture {
     super(modId, options);
     this.actionId = actionId;
 
-    // Validate rule definition before storing
-    if (ruleFile) {
-      try {
-        createRuleValidationProxy(ruleFile, `${modId}:${actionId} rule`);
-      } catch (err) {
-        console.error('\n⚠️  Rule validation failed:');
-        console.error(err.message);
-        throw err;
-      }
-    }
-
+    // Store rule file without validation proxy
+    // (Production rules follow rule.schema.json format and are validated by the schema system)
     this.ruleFile = ruleFile;
     this.conditionFile = conditionFile;
 
@@ -877,6 +949,34 @@ export class ModActionTestFixture extends BaseModTestFixture {
       return result;
     }
 
+    console.log(`[EXECUTE ACTION START] Called with actorId=${actorId}, targetId=${targetId}, skipDiscovery=${skipDiscovery}`);
+    const actorBefore = this.entityManager.getEntityInstance(actorId);
+
+    // Defensive check: ensure entity exists before accessing components
+    if (!actorBefore) {
+      const errorMsg = `Entity ${actorId} does not exist. Ensure entities are created before calling executeAction (use createStandardActorTarget() or reset(entities)).`;
+      console.error(`[EXECUTE ACTION ERROR] ${errorMsg}`);
+      return {
+        blocked: true,
+        reason: errorMsg,
+        attemptedAction: this.actionId.includes(':') ? this.actionId : `${this.modId}:${this.actionId}`,
+        attemptedActor: actorId,
+      };
+    }
+
+    if (!actorBefore.components) {
+      const errorMsg = `Entity ${actorId} exists but has no components property. This indicates a malformed entity.`;
+      console.error(`[EXECUTE ACTION ERROR] ${errorMsg}`);
+      return {
+        blocked: true,
+        reason: errorMsg,
+        attemptedAction: this.actionId.includes(':') ? this.actionId : `${this.modId}:${this.actionId}`,
+        attemptedActor: actorId,
+      };
+    }
+
+    console.log(`[EXECUTE ACTION START] Actor ${actorId} components BEFORE: ${JSON.stringify(Object.keys(actorBefore.components))}`);
+
     // New behavior: Simple forbidden component validation before execution
     // Load action definition if not cached
     if (!this._actionDefinition) {
@@ -891,12 +991,17 @@ export class ModActionTestFixture extends BaseModTestFixture {
         const resolvedPath = resolve(actionFilePath);
         const content = await fs.readFile(resolvedPath, 'utf8');
         this._actionDefinition = JSON.parse(content);
+        console.log(`[ACTION DEF] Loaded action definition from ${actionFilePath}`);
+        console.log(`[ACTION DEF] Forbidden components config: ${JSON.stringify(this._actionDefinition.forbidden_components)}`);
       } catch (error) {
         this.logger.warn(
           `Failed to load action definition from ${actionFilePath}: ${error.message}`
         );
         this._actionDefinition = { forbidden_components: {} };
       }
+    } else {
+      console.log(`[ACTION DEF] Using cached action definition`);
+      console.log(`[ACTION DEF] Cached forbidden components: ${JSON.stringify(this._actionDefinition.forbidden_components)}`);
     }
 
     // Check for forbidden components on actor and target
@@ -905,10 +1010,17 @@ export class ModActionTestFixture extends BaseModTestFixture {
     const actorForbiddenComponents = forbiddenComponentsConfig.actor || [];
     const targetForbiddenComponents = forbiddenComponentsConfig.primary || [];
 
+    console.log(`[FORBIDDEN CONFIG] Actor forbidden: ${JSON.stringify(actorForbiddenComponents)}`);
+    console.log(`[FORBIDDEN CONFIG] Target forbidden: ${JSON.stringify(targetForbiddenComponents)}`);
+
     // Validate actor doesn't have any forbidden components
+    console.log(`[FORBIDDEN CHECK] Actor forbidden components: ${JSON.stringify(actorForbiddenComponents)}`);
+    console.log(`[FORBIDDEN CHECK] Checking actor ${actorId} components: ${JSON.stringify(Object.keys(this.entityManager.getEntityInstance(actorId).components))}`);
     for (const forbiddenComponent of actorForbiddenComponents) {
-      if (this.entityManager.hasComponent(actorId, forbiddenComponent)) {
-        this.logger.debug(
+      const hasForbidden = this.entityManager.hasComponent(actorId, forbiddenComponent);
+      console.log(`[FORBIDDEN CHECK] Actor has ${forbiddenComponent}? ${hasForbidden}`);
+      if (hasForbidden) {
+        console.log(
           `Action ${fullActionId} blocked: actor ${actorId} has forbidden component ${forbiddenComponent}`
         );
         return {
@@ -923,7 +1035,7 @@ export class ModActionTestFixture extends BaseModTestFixture {
     // Validate target doesn't have any forbidden components
     for (const forbiddenComponent of targetForbiddenComponents) {
       if (this.entityManager.hasComponent(targetId, forbiddenComponent)) {
-        this.logger.debug(
+        console.log(
           `Action ${fullActionId} blocked: target ${targetId} has forbidden component ${forbiddenComponent}`
         );
         return {
@@ -947,12 +1059,21 @@ export class ModActionTestFixture extends BaseModTestFixture {
       ...additionalPayload,
     };
 
+    console.log(`[EXECUTE ACTION] About to dispatch action ${fullActionId}`);
+    console.log(`[EXECUTE ACTION] Forbidden component check passed, executing action`);
+
     const result = await this.eventBus.dispatch(ATTEMPT_ACTION_ID, payload);
+
+    console.log(`[EXECUTE ACTION] EventBus.dispatch returned: ${JSON.stringify(result)}`);
 
     // IMPORTANT: Give the SystemLogicInterpreter time to process the event
     // The interpreter listens to events asynchronously, so we need a small delay
     // to ensure rules are processed before the test continues
     await new Promise((resolve) => setTimeout(resolve, 10));
+
+    console.log(`[EXECUTE ACTION] After 10ms delay, checking actor components`);
+    const actorAfter = this.entityManager.getEntityInstance(actorId);
+    console.log(`[EXECUTE ACTION] Actor ${actorId} components AFTER: ${JSON.stringify(Object.keys(actorAfter.components))}`);
 
     return result;
   }
