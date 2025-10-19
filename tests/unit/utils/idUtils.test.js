@@ -1,5 +1,6 @@
 import { describe, it, expect } from '@jest/globals';
 import {
+  extractBaseId,
   extractBaseIdFromFilename,
   stripDirectories,
   removeFileExtension,
@@ -7,10 +8,36 @@ import {
   extractModId,
 } from '../../../src/utils/idUtils.js';
 
+describe('extractBaseId', () => {
+  it('returns null for non-string or empty ids', () => {
+    // @ts-ignore testing invalid types
+    expect(extractBaseId(null)).toBeNull();
+    expect(extractBaseId('   ')).toBeNull();
+  });
+
+  it('returns the original id when no namespace provided', () => {
+    expect(extractBaseId('simpleId')).toBe('simpleId');
+  });
+
+  it('extracts the base portion from namespaced ids', () => {
+    expect(extractBaseId('mod:item')).toBe('item');
+    expect(extractBaseId('mod:category:entry')).toBe('category:entry');
+  });
+
+  it('returns null when namespace or base component missing', () => {
+    expect(extractBaseId('mod:')).toBeNull();
+    expect(extractBaseId(':item')).toBeNull();
+  });
+});
+
 describe('extractBaseIdFromFilename', () => {
   it('strips directories and extension', () => {
     expect(extractBaseIdFromFilename('dir/sub/file.json', [])).toBe('file');
     expect(extractBaseIdFromFilename('dir\\sub\\file.yml', [])).toBe('file');
+  });
+
+  it('strips directories and extension when suffix list omitted', () => {
+    expect(extractBaseIdFromFilename('folder/nested/item.yaml')).toBe('item');
   });
 
   it('removes provided suffixes', () => {
@@ -28,6 +55,10 @@ describe('extractBaseIdFromFilename', () => {
     expect(extractBaseIdFromFilename('   ', ['.rule'])).toBe('');
     // @ts-ignore Testing invalid input type
     expect(extractBaseIdFromFilename(null, ['.rule'])).toBe('');
+  });
+
+  it('returns empty string when file is only an extension', () => {
+    expect(extractBaseIdFromFilename('path/.gitignore', ['.gitignore'])).toBe('');
   });
 });
 
@@ -53,6 +84,12 @@ describe('removeFileExtension', () => {
   it('returns input when no extension present', () => {
     expect(removeFileExtension('file')).toBe('file');
   });
+
+  it('returns empty string for invalid or blank input', () => {
+    // @ts-ignore testing invalid type
+    expect(removeFileExtension(undefined)).toBe('');
+    expect(removeFileExtension('   ')).toBe('');
+  });
 });
 
 describe('stripSuffixes', () => {
@@ -64,6 +101,20 @@ describe('stripSuffixes', () => {
 
   it('returns input when no suffix matches', () => {
     expect(stripSuffixes('sample.txt', suffixes)).toBe('sample.txt');
+  });
+
+  it('returns empty string when provided name is invalid', () => {
+    // @ts-ignore testing invalid type
+    expect(stripSuffixes(null, suffixes)).toBe('');
+  });
+
+  it('ignores non-string suffix entries', () => {
+    const mixedSuffixes = ['.json', 123];
+    expect(stripSuffixes('file.json', mixedSuffixes)).toBe('file');
+  });
+
+  it('returns input unchanged when suffix list omitted', () => {
+    expect(stripSuffixes('value')).toBe('value');
   });
 });
 
