@@ -115,18 +115,49 @@ export class ModEntityBuilder {
   /**
    * Adds positioning:closeness component with the specified partners.
    *
+   * Passing an array replaces any existing partners. Passing a single partner ID appends
+   * it to the existing list (unless it is already present).
+   *
    * @param {string|Array<string>} partnerIds - Single partner ID or array of partner IDs
    * @returns {ModEntityBuilder} This builder for chaining
    */
   closeToEntity(partnerIds) {
-    const newPartners = Array.isArray(partnerIds) ? partnerIds : [partnerIds];
+    const closenessComponentId = 'positioning:closeness';
 
-    // Append to existing partners array or create new one
-    const existingCloseness = this.entityData.components['positioning:closeness'];
-    const existingPartners = existingCloseness?.partners || [];
-    const allPartners = [...existingPartners, ...newPartners];
+    if (Array.isArray(partnerIds)) {
+      const validatedPartners = partnerIds.map((partnerId, index) => {
+        string.assertNonBlank(
+          partnerId,
+          `Closeness partner[${index}]`,
+          'ModEntityBuilder.closeToEntity'
+        );
 
-    this.entityData.components['positioning:closeness'] = { partners: allPartners };
+        return partnerId;
+      });
+
+      this.entityData.components[closenessComponentId] = {
+        partners: [...validatedPartners],
+      };
+
+      return this;
+    }
+
+    string.assertNonBlank(
+      partnerIds,
+      'Closeness partner',
+      'ModEntityBuilder.closeToEntity'
+    );
+
+    const existingCloseness =
+      this.entityData.components[closenessComponentId] || { partners: [] };
+    const existingPartners = existingCloseness.partners || [];
+
+    if (!existingPartners.includes(partnerIds)) {
+      this.entityData.components[closenessComponentId] = {
+        partners: [...existingPartners, partnerIds],
+      };
+    }
+
     return this;
   }
 
