@@ -65,6 +65,23 @@ describe('Enhanced discoveryErrorUtils', () => {
       );
     });
 
+    it('should reject contexts where required fields are empty strings', () => {
+      const blankPhase = { ...validErrorContext, phase: '' };
+      expect(() => createActionErrorContext(blankPhase)).toThrow(
+        'ActionErrorContext must have phase'
+      );
+
+      const blankActionId = { ...validErrorContext, actionId: '' };
+      expect(() => createActionErrorContext(blankActionId)).toThrow(
+        'ActionErrorContext must have actionId'
+      );
+
+      const blankError = { ...validErrorContext, error: '' };
+      expect(() => createActionErrorContext(blankError)).toThrow(
+        'ActionErrorContext must have error'
+      );
+    });
+
     it('should accept null targetId', () => {
       const contextWithNullTarget = { ...validErrorContext, targetId: null };
       const result = createActionErrorContext(contextWithNullTarget);
@@ -117,6 +134,11 @@ describe('Enhanced discoveryErrorUtils', () => {
       expect(extractTargetId(error)).toBeNull();
     });
 
+    it('should surface errors when called without an error object', () => {
+      expect(() => extractTargetId(undefined)).toThrow(TypeError);
+      expect(() => extractTargetId(null)).toThrow(TypeError);
+    });
+
     it('should prioritize direct targetId over nested properties', () => {
       const error = {
         targetId: 'primary',
@@ -125,6 +147,27 @@ describe('Enhanced discoveryErrorUtils', () => {
       };
 
       expect(extractTargetId(error)).toBe('primary');
+    });
+
+    it('should fall back to nested identifiers when targetId is undefined', () => {
+      const error = {
+        targetId: undefined,
+        target: { entityId: 'from-target' },
+        entityId: 'from-entity',
+      };
+
+      expect(extractTargetId(error)).toBe('from-target');
+    });
+
+    it('should return falsy target identifiers when explicitly provided', () => {
+      const errorWithZeroTarget = { targetId: 0 };
+      expect(extractTargetId(errorWithZeroTarget)).toBe(0);
+
+      const errorWithEmptyStringTarget = { targetId: '' };
+      expect(extractTargetId(errorWithEmptyStringTarget)).toBe('');
+
+      const errorWithNullTarget = { targetId: null, target: { entityId: 'fallback' } };
+      expect(extractTargetId(errorWithNullTarget)).toBeNull();
     });
   });
 });
