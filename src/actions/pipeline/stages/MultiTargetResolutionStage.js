@@ -115,12 +115,6 @@ export class MultiTargetResolutionStage extends PipelineStage {
     const stageStartTime = Date.now();
     const startPerformanceTime = performance.now(); // ACTTRA-018: Performance timing
 
-    console.log('\n=== MULTITARGETRESOLUTIONSTAGE ENTRY ===');
-    console.log('Candidate actions count:', candidateActions.length);
-    console.log('Candidate action IDs:', candidateActions.map(a => a.id));
-    console.log('Actor ID:', actor.id);
-    console.log('=== END ENTRY ===\n');
-
     trace?.step(
       `Resolving targets for ${candidateActions.length} candidate actions`,
       'MultiTargetResolutionStage'
@@ -147,10 +141,6 @@ export class MultiTargetResolutionStage extends PipelineStage {
 
     // Process each candidate action
     for (const actionDef of candidateActions) {
-      console.log(`\n--- Processing action: ${actionDef.id} ---`);
-      console.log('Action has targets?', !!actionDef.targets);
-      console.log('Targets:', JSON.stringify(actionDef.targets, null, 2));
-
       try {
         trace?.step(
           `Resolving targets for action '${actionDef.id}'`,
@@ -166,14 +156,6 @@ export class MultiTargetResolutionStage extends PipelineStage {
         // Check if this is a legacy single-target action
         const isLegacy = this.#legacyLayer.isLegacyAction(actionDef);
         const resolutionStartTime = Date.now();
-
-        // TEMPORARY DIAGNOSTIC: Log which resolution path is taken
-        console.log(`[DIAGNOSTIC] Action ${actionDef.id} resolution path:`, {
-          isLegacy,
-          hasStringTargets: typeof actionDef.targets === 'string',
-          targets: actionDef.targets,
-          scope: actionDef.scope,
-        });
 
         // Capture legacy detection if action-aware tracing is enabled
         if (isActionAwareTrace && trace.captureLegacyDetection) {
@@ -348,11 +330,6 @@ export class MultiTargetResolutionStage extends PipelineStage {
       );
     }
 
-    console.log('\n=== MULTITARGETRESOLUTIONSTAGE EXIT ===');
-    console.log('Actions with resolved targets:', allActionsWithTargets.length);
-    console.log('Action IDs with targets:', allActionsWithTargets.map(awt => awt.actionDef.id));
-    console.log('=== END EXIT ===\n');
-
     trace?.info(
       `Target resolution completed: ${allActionsWithTargets.length} actions with targets`,
       'MultiTargetResolutionStage'
@@ -430,21 +407,10 @@ export class MultiTargetResolutionStage extends PipelineStage {
       actionDef.targets ||
       actionDef.scope;
 
-    // TEMPORARY DIAGNOSTIC: Log legacy resolution details
-    console.log(`[DIAGNOSTIC] Legacy resolution for ${actionDef.id}:`, {
-      scope,
-      actorId: actor.id,
-      hasActionContext: !!actionContext,
-      actionContextKeys: actionContext ? Object.keys(actionContext) : [],
-    });
-
     trace?.step(
       `Resolving legacy scope '${scope}'`,
       'MultiTargetResolutionStage'
     );
-
-    // TEMPORARY DIAGNOSTIC: About to call resolveTargets
-    console.log(`[DIAGNOSTIC] About to call targetResolver.resolveTargets for ${actionDef.id}`);
 
     // Use existing target resolver for compatibility
     const result = await this.#targetResolver.resolveTargets(
@@ -454,17 +420,6 @@ export class MultiTargetResolutionStage extends PipelineStage {
       trace,
       actionDef.id
     );
-
-    // TEMPORARY DIAGNOSTIC: resolveTargets returned
-    console.log(`[DIAGNOSTIC] targetResolver.resolveTargets returned for ${actionDef.id}`);
-
-    // TEMPORARY DIAGNOSTIC: Log resolution result
-    console.log(`[DIAGNOSTIC] Legacy resolution result for ${actionDef.id}:`, {
-      success: result.success,
-      hasValue: !!result.value,
-      targetContextsLength: result.value?.length || 0,
-      targetContexts: result.value || [],
-    });
 
     if (!result.success) {
       return PipelineResult.failure(result.errors, context.data);
@@ -537,9 +492,6 @@ export class MultiTargetResolutionStage extends PipelineStage {
     const targetDefs = actionDef.targets;
     const resolutionStartTime = Date.now();
 
-    console.log(`\n### #resolveMultiTargets for action: ${actionDef.id} ###`);
-    console.log('targetDefs:', JSON.stringify(targetDefs, null, 2));
-
     // Validate targets object
     if (!targetDefs || typeof targetDefs !== 'object') {
       return PipelineResult.failure(
@@ -592,9 +544,6 @@ export class MultiTargetResolutionStage extends PipelineStage {
     for (const targetKey of resolutionOrder) {
       const targetDef = targetDefs[targetKey];
       const scopeStartTime = Date.now();
-
-      console.log(`\n  >> Resolving target key: ${targetKey}`);
-      console.log('  >> Target def:', JSON.stringify(targetDef, null, 2));
 
       trace?.step(
         `Resolving ${targetKey} target`,
@@ -745,9 +694,6 @@ export class MultiTargetResolutionStage extends PipelineStage {
           trace
         );
 
-        console.log(`  >> Scope '${targetDef.scope}' resolved to ${candidates.length} candidates`);
-        console.log('  >> Candidate IDs:', candidates);
-
         detailedResolutionResults[targetKey].candidatesFound =
           candidates.length;
         detailedResolutionResults[targetKey].evaluationTimeMs =
@@ -766,10 +712,6 @@ export class MultiTargetResolutionStage extends PipelineStage {
 
         // Check if we found no candidates
         if (candidates.length === 0) {
-          console.log(`  ❌ NO CANDIDATES FOUND for target '${targetKey}'`);
-          console.log(`  ❌ Scope: ${targetDef.scope}`);
-          console.log(`  ❌ Action will be filtered out: ${actionDef.id}`);
-
           detailedResolutionResults[targetKey].failureReason =
             `No candidates found for scope '${targetDef.scope}' with actor context`;
 
