@@ -361,12 +361,12 @@ function toHaveComponentData(received, componentType, expectedData) {
   }
 
   // Build detailed diff
-  let diff = '\n\nData differences:\n';
+  let diff = '\nData differences:\n';
   for (const key of Object.keys(expectedData)) {
     if (!this.equals(component[key], expectedData[key])) {
       diff += `  ${key}:\n`;
-      diff += `    Expected: ${printExpected(expectedData[key])}\n`;
-      diff += `    Received: ${printReceived(component[key])}\n`;
+      diff += `  Expected: ${printExpected(expectedData[key])}\n`;
+      diff += `  Received: ${printReceived(component[key])}\n`;
     }
   }
 

@@ -615,9 +615,11 @@ function calculateResponseStatistics(response) {
     for (const [category, items] of Object.entries(response.categories)) {
       if (Array.isArray(items)) {
         categoryCounts[category] = items.length;
+        // Use reduce to avoid stack overflow with large arrays
+        const lengths = items.map((item) => item.length);
         categoryLengths[category] = {
-          min: Math.min(...items.map((item) => item.length)),
-          max: Math.max(...items.map((item) => item.length)),
+          min: lengths.reduce((min, len) => Math.min(min, len), Infinity),
+          max: lengths.reduce((max, len) => Math.max(max, len), -Infinity),
           avg: items.reduce((sum, item) => sum + item.length, 0) / items.length,
         };
         totalItems += items.length;

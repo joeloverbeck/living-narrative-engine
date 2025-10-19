@@ -230,8 +230,11 @@ export class TraceVisualizer {
     output.push('');
 
     // Find the overall timeline bounds
-    const minTime = Math.min(...entries.map((e) => e.startTime));
-    const maxTime = Math.max(...entries.map((e) => e.endTime));
+    // Use reduce to avoid stack overflow with large arrays
+    const startTimes = entries.map((e) => e.startTime);
+    const endTimes = entries.map((e) => e.endTime);
+    const minTime = startTimes.reduce((min, t) => Math.min(min, t), Infinity);
+    const maxTime = endTimes.reduce((max, t) => Math.max(max, t), -Infinity);
     const timeRange = maxTime - minTime;
 
     // Render timeline header

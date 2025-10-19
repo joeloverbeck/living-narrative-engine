@@ -405,8 +405,9 @@ export default class MemoryAnalyzer extends BaseService {
     const statistics = {
       sampleCount: samples.length,
       timeSpan: (samples[samples.length - 1].timestamp - samples[0].timestamp) / 60000, // Minutes
-      minHeap: Math.min(...heapValues),
-      maxHeap: Math.max(...heapValues),
+      // Use reduce to avoid stack overflow with large arrays
+      minHeap: heapValues.reduce((min, v) => Math.min(min, v), Infinity),
+      maxHeap: heapValues.reduce((max, v) => Math.max(max, v), -Infinity),
       avgHeap: heapValues.reduce((sum, v) => sum + v, 0) / heapValues.length,
       currentHeap: heapValues[heapValues.length - 1],
     };

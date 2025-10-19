@@ -271,8 +271,10 @@ export default class PerformanceMonitor {
     if (totalOperations > 0) {
       averageOperationTime =
         this.#operationTimes.reduce((a, b) => a + b, 0) / totalOperations;
-      maxOperationTime = Math.max(...this.#operationTimes);
-      minOperationTime = Math.min(...this.#operationTimes);
+      // Use reduce to avoid stack overflow with large arrays
+      // Spreading large arrays as function arguments can exceed JS argument limit
+      maxOperationTime = this.#operationTimes.reduce((max, time) => Math.max(max, time), -Infinity);
+      minOperationTime = this.#operationTimes.reduce((min, time) => Math.min(min, time), Infinity);
     }
 
     return {

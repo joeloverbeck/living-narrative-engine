@@ -162,8 +162,10 @@ export class ActionPerformanceAnalyzer {
     this.#stats.averageDuration =
       this.#stats.totalDuration / this.#stats.totalTraces;
 
-    this.#stats.minDuration = Math.min(...this.#traces.map((t) => t.duration));
-    this.#stats.maxDuration = Math.max(...this.#traces.map((t) => t.duration));
+    // Use reduce to avoid stack overflow with large arrays
+    const durations = this.#traces.map((t) => t.duration);
+    this.#stats.minDuration = durations.reduce((min, d) => Math.min(min, d), Infinity);
+    this.#stats.maxDuration = durations.reduce((max, d) => Math.max(max, d), -Infinity);
 
     this.#updatePhaseStats();
   }

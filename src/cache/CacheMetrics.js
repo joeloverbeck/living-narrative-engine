@@ -302,8 +302,9 @@ export class CacheMetrics extends BaseService {
     }
 
     if (utilizationRates.length > 0) {
-      aggregated.memoryUtilization.highestUtilization = Math.max(...utilizationRates);
-      aggregated.memoryUtilization.averageUtilization = 
+      // Use reduce to avoid stack overflow with large arrays
+      aggregated.memoryUtilization.highestUtilization = utilizationRates.reduce((max, rate) => Math.max(max, rate), -Infinity);
+      aggregated.memoryUtilization.averageUtilization =
         utilizationRates.reduce((sum, rate) => sum + rate, 0) / utilizationRates.length;
     }
 

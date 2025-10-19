@@ -127,7 +127,9 @@ export class LFUStrategy {
     if (this.#frequencyGroups.size === 0) {
       return 1;
     }
-    return Math.min(...this.#frequencyGroups.keys());
+    // Use reduce to avoid stack overflow with large maps
+    const frequencies = Array.from(this.#frequencyGroups.keys());
+    return frequencies.reduce((min, freq) => Math.min(min, freq), Infinity);
   }
 
   /**
@@ -367,9 +369,13 @@ export class LFUStrategy {
    * @returns {object} Frequency distribution
    */
   getFrequencyStats() {
+    // Use reduce to avoid stack overflow with large maps
+    const frequencyValues = Array.from(this.#frequencies.values());
     const stats = {
       minFrequency: this.#minFrequency,
-      maxFrequency: Math.max(...this.#frequencies.values()),
+      maxFrequency: frequencyValues.length > 0
+        ? frequencyValues.reduce((max, freq) => Math.max(max, freq), -Infinity)
+        : 0,
       averageFrequency: 0,
       frequencyDistribution: {},
     };

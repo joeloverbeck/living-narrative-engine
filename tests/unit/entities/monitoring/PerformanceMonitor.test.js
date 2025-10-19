@@ -796,5 +796,29 @@ describe('PerformanceMonitor', () => {
       // Restore process
       global.process = savedProcess;
     });
+
+    it('should handle large number of operations without stack overflow', () => {
+      // Create monitor
+      monitor = new PerformanceMonitor({
+        logger,
+        enabled: true,
+        maxHistorySize: 20000, // Allow large history
+      });
+
+      // Record 10,000 operations to test large array handling
+      for (let i = 0; i < 10000; i++) {
+        const timerId = monitor.startTimer('testOperation');
+        monitor.stopTimer(timerId);
+      }
+
+      // This should not throw a RangeError (Maximum call stack size exceeded)
+      expect(() => {
+        const metrics = monitor.getMetrics();
+        expect(metrics.totalOperations).toBe(10000);
+        expect(metrics.averageOperationTime).toBeGreaterThanOrEqual(0);
+        expect(metrics.maxOperationTime).toBeGreaterThanOrEqual(0);
+        expect(metrics.minOperationTime).toBeGreaterThanOrEqual(0);
+      }).not.toThrow();
+    });
   });
 });

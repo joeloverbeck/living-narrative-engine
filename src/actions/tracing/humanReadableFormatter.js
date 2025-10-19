@@ -476,7 +476,9 @@ export class HumanReadableFormatter {
 
     if (Array.isArray(content)) {
       // Format as table
-      const maxKeyLength = Math.max(...content.map(([key]) => key.length));
+      // Use reduce to avoid stack overflow with large arrays
+      const keyLengths = content.map(([key]) => key.length);
+      const maxKeyLength = keyLengths.reduce((max, len) => Math.max(max, len), 0);
 
       for (const [key, value] of content) {
         const paddedKey = key.padEnd(maxKeyLength);

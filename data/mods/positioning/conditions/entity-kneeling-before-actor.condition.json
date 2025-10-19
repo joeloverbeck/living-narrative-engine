@@ -1,0 +1,15 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "positioning:entity-kneeling-before-actor",
+  "description": "Checks if the entity is currently kneeling before the actor (i.e., actor's ID is in entity's kneeling_before.entityId).",
+  "logic": {
+    "==": [
+      {
+        "var": "entity.components.positioning:kneeling_before.entityId"
+      },
+      {
+        "var": "actor.id"
+      }
+    ]
+  }
+}

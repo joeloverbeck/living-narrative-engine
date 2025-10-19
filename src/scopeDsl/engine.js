@@ -290,6 +290,17 @@ class ScopeEngine extends IScopeEngine {
   resolve(ast, actorEntity, runtimeCtx, trace = null) {
     const source = 'ScopeEngine';
 
+    // TEMPORARY DIAGNOSTIC: Log scope resolution entry
+    console.log('[DIAGNOSTIC] ScopeEngine.resolve called:', {
+      astType: ast?.type,
+      astValue: ast?.value,
+      astKind: ast?.kind,
+      astParam: ast?.param,
+      actorId: actorEntity?.id,
+      hasRuntimeCtx: !!runtimeCtx,
+      hasEntityManager: !!runtimeCtx?.entityManager,
+    });
+
     trace?.addLog('step', 'Starting scope resolution.', source, { ast });
 
     // Create isolated cycle detector and depth guard for this resolution

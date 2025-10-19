@@ -345,7 +345,7 @@ describe('Infrastructure Error Handling - Corrected', () => {
 
         expect(() => {
           builder.validate();
-        }).toThrow('Cannot read properties of null');
+        }).toThrow('Components must be an object');
       });
 
       it('should handle validation with invalid position component', () => {
@@ -354,7 +354,7 @@ describe('Infrastructure Error Handling - Corrected', () => {
 
         expect(() => {
           builder.validate();
-        }).toThrow('Position component must have locationId');
+        }).toThrow("Position component missing 'locationId'");
       });
 
       it('should handle validation with invalid name component', () => {
@@ -363,7 +363,7 @@ describe('Infrastructure Error Handling - Corrected', () => {
 
         expect(() => {
           builder.validate();
-        }).toThrow('Name component must have text');
+        }).toThrow("Name component missing 'text'");
       });
     });
 

@@ -34,6 +34,14 @@ export function createMockUnifiedScopeResolver(dependencies) {
     resolve(scopeName, context) {
       const source = 'MockUnifiedScopeResolver.resolve';
 
+      // TEMPORARY DIAGNOSTIC: Entry point
+      console.log(`[DIAGNOSTIC] MockUnifiedScopeResolver.resolve CALLED:`, {
+        scopeName,
+        hasContext: !!context,
+        hasActor: !!context?.actor,
+        actorId: context?.actor?.id,
+      });
+
       // Log that we're resolving the scope
       context?.trace?.info(`Resolving scope '${scopeName}'.`, source);
 
@@ -109,6 +117,14 @@ export function createMockUnifiedScopeResolver(dependencies) {
 
       // Get scope definition
       const scopeDefinition = scopeRegistry.getScope(scopeName);
+
+      // TEMPORARY DIAGNOSTIC: Log scope lookup
+      console.log(`[DIAGNOSTIC] MockUnifiedScopeResolver scope lookup:`, {
+        scopeName,
+        found: !!scopeDefinition,
+        hasExpr: !!scopeDefinition?.expr,
+        expr: scopeDefinition?.expr,
+      });
 
       // Check if scope definition exists
       if (!scopeDefinition) {
