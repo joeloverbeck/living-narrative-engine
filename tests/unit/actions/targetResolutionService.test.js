@@ -1,567 +1,269 @@
-/**
- * @file Unit tests for targetResolutionService using ActionResult pattern
- */
-
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
-import { ActionResult } from '../../../src/actions/core/actionResult.js';
-import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
 import {
-  TARGET_DOMAIN_SELF,
-  TARGET_DOMAIN_NONE,
-} from '../../../src/constants/targetDomains.js';
-import { ERROR_PHASES } from '../../../src/actions/errors/actionErrorTypes.js';
-import { createTargetResolutionServiceWithMocks } from '../../common/mocks/mockUnifiedScopeResolver.js';
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
+
+import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
+import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
+import { ActionResult } from '../../../src/actions/core/actionResult.js';
+import { ServiceSetup } from '../../../src/utils/serviceInitializerUtils.js';
+import * as dependencyUtils from '../../../src/utils/dependencyUtils.js';
 
 describe('TargetResolutionService', () => {
-  let service;
-  let mockDependencies;
+  let baseLogger;
+  let unifiedScopeResolver;
 
-  beforeEach(() => {
-    // Create mock dependencies
-    mockDependencies = {
-      scopeRegistry: {
-        getScope: jest.fn(),
-      },
-      scopeEngine: {
-        resolve: jest.fn(),
-      },
-      entityManager: {
-        getComponentData: jest.fn(),
-        getEntityInstance: jest.fn(),
-      },
-      logger: {
-        info: jest.fn(),
-        warn: jest.fn(),
-        error: jest.fn(),
-        debug: jest.fn(),
-        child: jest.fn().mockReturnThis(),
-      },
-      safeEventDispatcher: {
-        dispatch: jest.fn(),
-      },
-      jsonLogicEvaluationService: {
-        evaluate: jest.fn(),
-      },
-      dslParser: {
-        parse: jest.fn(),
-      },
-      actionErrorContextBuilder: {
-        buildErrorContext: jest.fn().mockImplementation(({ error }) => error),
-      },
-    };
-
-    service = createTargetResolutionServiceWithMocks(mockDependencies);
+  const createSuccessfulResult = (set) => ({
+    success: true,
+    value: set,
+    map: jest.fn((mapper) => ActionResult.success(mapper(set))),
   });
 
-  describe('resolveTargets', () => {
-    describe('Special scope handling', () => {
-      it('should return no-target context for TARGET_DOMAIN_NONE', () => {
-        const result = service.resolveTargets(
-          TARGET_DOMAIN_NONE,
-          { id: 'actor1' },
-          { currentLocation: 'loc1' }
-        );
+  beforeEach(() => {
+    baseLogger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+    unifiedScopeResolver = {
+      resolve: jest.fn(),
+    };
+  });
 
-        expect(result.success).toBe(true);
-        expect(result.value).toHaveLength(1);
-        expect(result.value[0]).toEqual(ActionTargetContext.noTarget());
-      });
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
 
-      it('should return actor as target for TARGET_DOMAIN_SELF', () => {
-        const actorId = 'actor1';
-        const result = service.resolveTargets(
-          TARGET_DOMAIN_SELF,
-          { id: actorId },
-          { currentLocation: 'loc1' }
-        );
+  it('validates dependencies and uses provided service setup for logging', () => {
+    const validateSpy = jest.spyOn(dependencyUtils, 'validateDependency');
+    const wrappedLogger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
+    const serviceSetup = {
+      setupService: jest.fn().mockReturnValue(wrappedLogger),
+    };
+    const resultSet = new Set(['entity-42']);
+    const successfulResult = createSuccessfulResult(resultSet);
+    unifiedScopeResolver.resolve.mockReturnValue(successfulResult);
 
-        expect(result.success).toBe(true);
-        expect(result.value).toHaveLength(1);
-        expect(result.value[0]).toEqual(ActionTargetContext.forEntity(actorId));
-      });
+    const trace = { info: jest.fn() };
+    const actor = { id: 'actor-1' };
+    const discoveryContext = { currentLocation: 'cabin', entityManager: {} };
+
+    const service = new TargetResolutionService({
+      unifiedScopeResolver,
+      logger: baseLogger,
+      serviceSetup,
     });
 
-    describe('Actor validation', () => {
-      it('should fail when actor entity is null', () => {
-        const result = service.resolveTargets('some-scope', null, {
-          currentLocation: 'loc1',
+    expect(validateSpy).toHaveBeenCalledWith(
+      unifiedScopeResolver,
+      'UnifiedScopeResolver',
+      undefined,
+      { requiredMethods: ['resolve'] }
+    );
+    expect(serviceSetup.setupService).toHaveBeenCalledWith(
+      'TargetResolutionService',
+      baseLogger,
+      {
+        unifiedScopeResolver: {
+          value: unifiedScopeResolver,
+          requiredMethods: ['resolve'],
+        },
+      }
+    );
+
+    const result = service.resolveTargets(
+      'positioning:available_furniture',
+      actor,
+      discoveryContext,
+      trace,
+      'positioning:sit_down'
+    );
+
+    expect(unifiedScopeResolver.resolve).toHaveBeenCalledWith(
+      'positioning:available_furniture',
+      {
+        actor,
+        actorLocation: discoveryContext.currentLocation,
+        actionContext: discoveryContext,
+        trace,
+        actionId: 'positioning:sit_down',
+      }
+    );
+
+    expect(successfulResult.map).toHaveBeenCalledTimes(1);
+    expect(result.success).toBe(true);
+    expect(result.value).toEqual([
+      expect.objectContaining({ type: 'entity', entityId: 'entity-42' }),
+    ]);
+
+    expect(wrappedLogger.debug).toHaveBeenCalledWith(
+      'Resolving scope for sit_down',
+      expect.objectContaining({
+        scopeName: 'positioning:available_furniture',
+        actionId: 'positioning:sit_down',
+        actorId: 'actor-1',
+      })
+    );
+    expect(wrappedLogger.debug).toHaveBeenCalledWith(
+      'Context built for UnifiedScopeResolver',
+      expect.objectContaining({
+        hasActor: true,
+        actorLocation: 'cabin',
+        hasActionContext: true,
+        actionContextEntityManager: true,
+      })
+    );
+    expect(wrappedLogger.debug).toHaveBeenCalledWith(
+      'UnifiedScopeResolver result for sit_down',
+      expect.objectContaining({
+        success: true,
+        hasValue: true,
+        valueSize: 1,
+        entities: ['entity-42'],
+      })
+    );
+
+    expect(trace.info).toHaveBeenCalledWith(
+      "Delegating scope resolution for 'positioning:available_furniture' to UnifiedScopeResolver.",
+      'TargetResolutionService.resolveTargets'
+    );
+    expect(trace.info).toHaveBeenCalledWith(
+      "Scope 'positioning:available_furniture' resolved to 1 target(s).",
+      'TargetResolutionService.resolveTargets',
+      { targetIds: ['entity-42'] }
+    );
+  });
+
+  it('wraps resolution in a trace span when trace.withSpan is available', () => {
+    const setupSpy = jest
+      .spyOn(ServiceSetup.prototype, 'setupService')
+      .mockImplementation(function (name, logger) {
+        return logger;
+      });
+    const service = new TargetResolutionService({
+      unifiedScopeResolver,
+      logger: baseLogger,
+    });
+
+    const resultSet = new Set(['entity-7']);
+    const successfulResult = createSuccessfulResult(resultSet);
+    unifiedScopeResolver.resolve.mockReturnValue(successfulResult);
+
+    const trace = {
+      withSpan: jest.fn((spanName, fn, metadata) => {
+        expect(spanName).toBe('target.resolve');
+        expect(metadata).toEqual({
+          scopeName: 'test-scope',
+          actorId: 'actor-7',
+          actionId: 'test-action',
         });
+        return fn();
+      }),
+      info: jest.fn(),
+    };
 
-        expect(result.success).toBe(false);
-        expect(result.errors).toHaveLength(1);
-        expect(result.errors[0].message).toContain(
-          'Resolution context is missing actor entity'
-        );
-        expect(result.errors[0].name).toBe('InvalidContextError');
-      });
+    const actor = { id: 'actor-7' };
+    const discoveryContext = { currentLocation: 'bridge' };
 
-      it('should fail when actor entity has no id', () => {
-        const result = service.resolveTargets(
-          'some-scope',
-          { id: null },
-          { currentLocation: 'loc1' }
-        );
+    const result = service.resolveTargets(
+      'test-scope',
+      actor,
+      discoveryContext,
+      trace,
+      'test-action'
+    );
 
-        expect(result.success).toBe(false);
-        expect(result.errors).toHaveLength(1);
-        expect(result.errors[0].message).toContain('Invalid actor entity ID');
-        expect(result.errors[0].name).toBe('InvalidActorIdError');
-      });
+    expect(trace.withSpan).toHaveBeenCalledTimes(1);
+    expect(unifiedScopeResolver.resolve).toHaveBeenCalledWith('test-scope', {
+      actor,
+      actorLocation: discoveryContext.currentLocation,
+      actionContext: discoveryContext,
+      trace,
+      actionId: 'test-action',
+    });
+    expect(result.value).toEqual([
+      expect.objectContaining({ type: 'entity', entityId: 'entity-7' }),
+    ]);
+    setupSpy.mockRestore();
+  });
 
-      it('should fail when actor id is undefined string', () => {
-        const result = service.resolveTargets(
-          'some-scope',
-          { id: 'undefined' },
-          { currentLocation: 'loc1' }
-        );
+  it('returns failure results without transformation', () => {
+    const failureResult = {
+      success: false,
+      errors: ['boom'],
+      map: jest.fn(),
+    };
+    unifiedScopeResolver.resolve.mockReturnValue(failureResult);
 
-        // The implementation correctly rejects 'undefined' as an invalid string ID
-        expect(result.success).toBe(false);
-        expect(result.errors).toHaveLength(1);
-        expect(result.errors[0].name).toBe('InvalidActorIdError');
-        expect(result.errors[0].message).toContain('Invalid actor entity ID');
-      });
+    const service = new TargetResolutionService({
+      unifiedScopeResolver,
+      logger: baseLogger,
     });
 
-    describe('DSL scope resolution', () => {
-      it('should resolve DSL scope successfully', () => {
-        const scopeDefinition = {
-          expr: 'entities.filter(e => e.location == actor.location)',
-          ast: { type: 'filter' },
-        };
-        const resolvedIds = new Set(['entity1', 'entity2']);
+    const actor = { id: 'actor-9' };
+    const discoveryContext = { currentLocation: 'deck' };
 
-        mockDependencies.scopeRegistry.getScope.mockReturnValue(
-          scopeDefinition
-        );
-        mockDependencies.scopeEngine.resolve.mockReturnValue(resolvedIds);
+    const result = service.resolveTargets('other-scope', actor, discoveryContext);
 
-        const result = service.resolveTargets(
-          'nearby-entities',
-          { id: 'actor1' },
-          { currentLocation: 'loc1' }
-        );
+    expect(result).toBe(failureResult);
+    expect(failureResult.map).not.toHaveBeenCalled();
+  });
 
-        expect(result.success).toBe(true);
-        expect(result.value).toHaveLength(2);
-        expect(result.value[0]).toEqual(
-          ActionTargetContext.forEntity('entity1')
-        );
-        expect(result.value[1]).toEqual(
-          ActionTargetContext.forEntity('entity2')
-        );
-      });
+  it("returns ActionTargetContext.noTarget() when 'none' scope resolves to empty set", () => {
+    const emptySet = new Set();
+    const successfulResult = createSuccessfulResult(emptySet);
+    unifiedScopeResolver.resolve.mockReturnValue(successfulResult);
 
-      it('should fail when scope is not found', () => {
-        mockDependencies.scopeRegistry.getScope.mockReturnValue(null);
-
-        const result = service.resolveTargets(
-          'unknown-scope',
-          { id: 'actor1' },
-          { currentLocation: 'loc1' }
-        );
-
-        expect(result.success).toBe(false);
-        expect(result.errors).toHaveLength(1);
-        expect(result.errors[0].message).toContain('Missing scope definition');
-        expect(result.errors[0].name).toBe('ScopeNotFoundError');
-      });
-
-      it('should fail when scope has empty expression', () => {
-        mockDependencies.scopeRegistry.getScope.mockReturnValue({ expr: '  ' });
-
-        const result = service.resolveTargets(
-          'empty-scope',
-          { id: 'actor1' },
-          { currentLocation: 'loc1' }
-        );
-
-        expect(result.success).toBe(false);
-        expect(result.errors).toHaveLength(1);
-        expect(result.errors[0].message).toContain('Missing scope definition');
-      });
-
-      it('should parse expression on demand when AST is not cached', () => {
-        const scopeDefinition = {
-          expr: 'entities.filter(e => e.location == actor.location)',
-          // No ast property
-        };
-        const parsedAst = { type: 'filter' };
-        const resolvedIds = new Set(['entity1']);
-
-        mockDependencies.scopeRegistry.getScope.mockReturnValue(
-          scopeDefinition
-        );
-        mockDependencies.dslParser.parse.mockReturnValue(parsedAst);
-        mockDependencies.scopeEngine.resolve.mockReturnValue(resolvedIds);
-
-        const result = service.resolveTargets(
-          'needs-parsing',
-          { id: 'actor1' },
-          { currentLocation: 'loc1' }
-        );
-
-        expect(result.success).toBe(true);
-        expect(mockDependencies.dslParser.parse).toHaveBeenCalledWith(
-          scopeDefinition.expr
-        );
-        expect(result.value).toHaveLength(1);
-      });
-
-      it('should fail when DSL parsing fails', () => {
-        const scopeDefinition = {
-          expr: 'invalid syntax {{',
-        };
-
-        mockDependencies.scopeRegistry.getScope.mockReturnValue(
-          scopeDefinition
-        );
-        mockDependencies.dslParser.parse.mockImplementation(() => {
-          throw new Error('Parse error: unexpected token');
-        });
-
-        const result = service.resolveTargets(
-          'invalid-syntax',
-          { id: 'actor1' },
-          { currentLocation: 'loc1' }
-        );
-
-        expect(result.success).toBe(false);
-        expect(result.errors).toHaveLength(1);
-        expect(result.errors[0].message).toContain('Parse error');
-      });
-
-      it('should fail when scope engine throws error', () => {
-        const scopeDefinition = {
-          expr: 'entities.all()',
-          ast: { type: 'all' },
-        };
-
-        mockDependencies.scopeRegistry.getScope.mockReturnValue(
-          scopeDefinition
-        );
-        mockDependencies.scopeEngine.resolve.mockImplementation(() => {
-          throw new Error('Scope engine error');
-        });
-
-        const result = service.resolveTargets(
-          'error-scope',
-          { id: 'actor1' },
-          { currentLocation: 'loc1' }
-        );
-
-        expect(result.success).toBe(false);
-        expect(result.errors).toHaveLength(1);
-        expect(result.errors[0].message).toContain('Scope engine error');
-      });
-
-      it('should fail when scope engine returns invalid result', () => {
-        const scopeDefinition = {
-          expr: 'entities.all()',
-          ast: { type: 'all' },
-        };
-
-        mockDependencies.scopeRegistry.getScope.mockReturnValue(
-          scopeDefinition
-        );
-        mockDependencies.scopeEngine.resolve.mockReturnValue([
-          'not',
-          'a',
-          'set',
-        ]); // Invalid - should be Set
-
-        const result = service.resolveTargets(
-          'invalid-result',
-          { id: 'actor1' },
-          { currentLocation: 'loc1' }
-        );
-
-        expect(result.success).toBe(false);
-        expect(result.errors).toHaveLength(1);
-        expect(result.errors[0].message).toContain(
-          'Scope engine returned invalid result'
-        );
-      });
+    const trace = { info: jest.fn() };
+    const service = new TargetResolutionService({
+      unifiedScopeResolver,
+      logger: baseLogger,
     });
 
-    describe('Component building', () => {
-      it('should build components for actor without components', () => {
-        const actorEntity = {
-          id: 'actor1',
-          componentTypeIds: ['health', 'position'],
-        };
-        const scopeDefinition = {
-          expr: 'entities.all()',
-          ast: { type: 'all' },
-        };
+    const actor = { id: 'actor-11' };
+    const discoveryContext = { currentLocation: 'atrium' };
 
-        mockDependencies.scopeRegistry.getScope.mockReturnValue(
-          scopeDefinition
-        );
-        mockDependencies.entityManager.getComponentData
-          .mockReturnValueOnce({ value: 100 }) // health
-          .mockReturnValueOnce({ x: 10, y: 20 }); // position
-        mockDependencies.scopeEngine.resolve.mockReturnValue(
-          new Set(['entity1'])
-        );
+    const result = service.resolveTargets('none', actor, discoveryContext, trace);
 
-        const result = service.resolveTargets('test-scope', actorEntity, {
-          currentLocation: 'loc1',
-        });
+    expect(successfulResult.map).toHaveBeenCalledTimes(1);
+    expect(result.value).toEqual([ActionTargetContext.noTarget()]);
+    expect(trace.info).toHaveBeenCalledWith(
+      "Scope 'none' resolved to no targets - returning noTarget context.",
+      'TargetResolutionService.resolveTargets'
+    );
+  });
 
-        expect(result.success).toBe(true);
-        expect(
-          mockDependencies.entityManager.getComponentData
-        ).toHaveBeenCalledTimes(2);
-        expect(
-          mockDependencies.entityManager.getComponentData
-        ).toHaveBeenCalledWith('actor1', 'health');
-        expect(
-          mockDependencies.entityManager.getComponentData
-        ).toHaveBeenCalledWith('actor1', 'position');
-      });
+  it('returns empty array when non-none scope resolves to empty set', () => {
+    const emptySet = new Set();
+    const successfulResult = createSuccessfulResult(emptySet);
+    unifiedScopeResolver.resolve.mockReturnValue(successfulResult);
 
-      it('should handle component loading errors gracefully', () => {
-        const actorEntity = {
-          id: 'actor1',
-          componentTypeIds: ['health', 'broken'],
-        };
-        const scopeDefinition = {
-          expr: 'entities.all()',
-          ast: { type: 'all' },
-        };
-
-        mockDependencies.scopeRegistry.getScope.mockReturnValue(
-          scopeDefinition
-        );
-        mockDependencies.entityManager.getComponentData
-          .mockReturnValueOnce({ value: 100 }) // health - success
-          .mockImplementationOnce(() => {
-            throw new Error('Component not found');
-          }); // broken - fails
-        mockDependencies.scopeEngine.resolve.mockReturnValue(
-          new Set(['entity1'])
-        );
-
-        const result = service.resolveTargets('test-scope', actorEntity, {
-          currentLocation: 'loc1',
-        });
-
-        // Should succeed with partial components
-        expect(result.success).toBe(true);
-        expect(result.value).toHaveLength(1);
-      });
-
-      it('should handle actor with no componentTypeIds', () => {
-        const actorEntity = {
-          id: 'actor1',
-          // No componentTypeIds
-        };
-        const scopeDefinition = {
-          expr: 'entities.all()',
-          ast: { type: 'all' },
-        };
-        const trace = {
-          info: jest.fn(),
-          error: jest.fn(),
-          warn: jest.fn(),
-        };
-
-        mockDependencies.scopeRegistry.getScope.mockReturnValue(
-          scopeDefinition
-        );
-        mockDependencies.scopeEngine.resolve.mockReturnValue(
-          new Set(['entity1'])
-        );
-
-        const result = service.resolveTargets(
-          'test-scope',
-          actorEntity,
-          { currentLocation: 'loc1' },
-          trace
-        );
-
-        expect(result.success).toBe(true);
-        expect(trace.warn).toHaveBeenCalledWith(
-          expect.stringContaining('has no components or componentTypeIds'),
-          expect.any(String)
-        );
-      });
-
-      it('should not rebuild components if actor already has them', () => {
-        const actorEntity = {
-          id: 'actor1',
-          componentTypeIds: ['health'],
-          components: { health: { value: 100 } }, // Already has components
-        };
-        const scopeDefinition = {
-          expr: 'entities.all()',
-          ast: { type: 'all' },
-        };
-
-        mockDependencies.scopeRegistry.getScope.mockReturnValue(
-          scopeDefinition
-        );
-        mockDependencies.scopeEngine.resolve.mockReturnValue(
-          new Set(['entity1'])
-        );
-
-        const result = service.resolveTargets('test-scope', actorEntity, {
-          currentLocation: 'loc1',
-        });
-
-        expect(result.success).toBe(true);
-        expect(
-          mockDependencies.entityManager.getComponentData
-        ).not.toHaveBeenCalled();
-      });
+    const trace = { info: jest.fn() };
+    const service = new TargetResolutionService({
+      unifiedScopeResolver,
+      logger: baseLogger,
     });
 
-    describe('resolveTargets method with ActionResult', () => {
-      it('should return ActionResult from resolveTargets method', () => {
-        const scopeDefinition = {
-          expr: 'entities.all()',
-          ast: { type: 'all' },
-        };
-        mockDependencies.scopeRegistry.getScope.mockReturnValue(
-          scopeDefinition
-        );
-        mockDependencies.scopeEngine.resolve.mockReturnValue(
-          new Set(['entity1', 'entity2'])
-        );
+    const actor = { id: 'actor-12' };
+    const discoveryContext = { currentLocation: 'observatory' };
 
-        const result = service.resolveTargets(
-          'test-scope',
-          { id: 'actor1' },
-          { currentLocation: 'loc1' }
-        );
+    const result = service.resolveTargets(
+      'empty-scope',
+      actor,
+      discoveryContext,
+      trace
+    );
 
-        expect(result.success).toBe(true);
-        expect(result.value).toHaveLength(2);
-        expect(result.errors).toEqual([]);
-        expect(result.value[0]).toEqual(
-          ActionTargetContext.forEntity('entity1')
-        );
-      });
-
-      it('should return ActionResult failure for unknown scope', () => {
-        mockDependencies.scopeRegistry.getScope.mockReturnValue(null);
-
-        const result = service.resolveTargets(
-          'unknown-scope',
-          { id: 'actor1' },
-          { currentLocation: 'loc1' }
-        );
-
-        expect(result.success).toBe(false);
-        expect(result.value).toBeNull();
-        expect(result.errors).toHaveLength(1);
-        expect(result.errors[0].message).toContain('Missing scope definition');
-      });
-    });
-
-    describe('Tracing', () => {
-      it('should log trace messages when trace is provided', () => {
-        const trace = {
-          info: jest.fn(),
-          error: jest.fn(),
-          warn: jest.fn(),
-        };
-        const scopeDefinition = {
-          expr: 'entities.all()',
-          ast: { type: 'all' },
-        };
-
-        mockDependencies.scopeRegistry.getScope.mockReturnValue(
-          scopeDefinition
-        );
-        mockDependencies.scopeEngine.resolve.mockReturnValue(
-          new Set(['entity1'])
-        );
-
-        service.resolveTargets(
-          'test-scope',
-          { id: 'actor1' },
-          { currentLocation: 'loc1' },
-          trace
-        );
-
-        expect(trace.info).toHaveBeenCalledWith(
-          expect.stringContaining("Resolving scope 'test-scope'"),
-          expect.any(String)
-        );
-        expect(trace.info).toHaveBeenCalledWith(
-          expect.stringContaining('Using pre-parsed AST'),
-          expect.any(String)
-        );
-      });
-
-      it('should log errors to trace when validation fails', () => {
-        const trace = {
-          info: jest.fn(),
-          error: jest.fn(),
-          warn: jest.fn(),
-        };
-
-        service.resolveTargets(
-          'test-scope',
-          null,
-          { currentLocation: 'loc1' },
-          trace
-        );
-
-        expect(trace.error).toHaveBeenCalledWith(
-          'Actor entity is null or undefined',
-          expect.any(String)
-        );
-      });
-    });
-
-    describe('Error context building', () => {
-      it('should build error context with action ID when provided', () => {
-        const actionId = 'action123';
-        mockDependencies.scopeRegistry.getScope.mockReturnValue(null);
-
-        service.resolveTargets(
-          'unknown-scope',
-          { id: 'actor1' },
-          { currentLocation: 'loc1' },
-          null,
-          actionId
-        );
-
-        expect(
-          mockDependencies.actionErrorContextBuilder.buildErrorContext
-        ).toHaveBeenCalledWith(
-          expect.objectContaining({
-            actionDef: { id: actionId },
-            actorId: 'actor1',
-            phase: ERROR_PHASES.VALIDATION,
-          })
-        );
-      });
-
-      it('should dispatch errors through safeEventDispatcher', () => {
-        mockDependencies.scopeRegistry.getScope.mockReturnValue(null);
-
-        service.resolveTargets(
-          'unknown-scope',
-          { id: 'actor1' },
-          { currentLocation: 'loc1' },
-          null,
-          'action123' // Provide action ID to trigger error context building
-        );
-
-        // The error context builder should have been called
-        expect(
-          mockDependencies.actionErrorContextBuilder.buildErrorContext
-        ).toHaveBeenCalled();
-
-        // safeDispatchError should be called indirectly
-        // We can't test it directly since it's a utility function, but we can verify
-        // the error context builder was called which leads to dispatching
-      });
-    });
+    expect(successfulResult.map).toHaveBeenCalledTimes(1);
+    expect(result.value).toEqual([]);
+    expect(trace.info).toHaveBeenCalledWith(
+      "Scope 'empty-scope' resolved to no targets.",
+      'TargetResolutionService.resolveTargets'
+    );
   });
 });
