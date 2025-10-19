@@ -27,45 +27,47 @@ describe('straddle_waist_facing action discovery - Integration Tests', () => {
       testEnv.actionIndex.buildIndex([straddleFacingAction]);
     };
 
-    // Add custom scope resolver for actors_sitting_close
+    /**
+     * Test-specific scope resolver for actors_sitting_close.
+     *
+     * NOTE: ModTestFixture.forAction doesn't load scope definition files (.scope files).
+     * This resolver implements the logic from:
+     * data/mods/positioning/scopes/actors_sitting_close.scope
+     *
+     * Scope DSL:
+     *   positioning:actors_sitting_close := actor.components.positioning:closeness.partners[][{
+     *     "!!": {"var": "entity.components.positioning:sitting_on"}
+     *   }]
+     *
+     * Translation: Filter the actor's closeness partners to only those who have sitting_on component.
+     */
     const { testEnv } = testFixture;
     const originalResolveSync = testEnv.unifiedScopeResolver.resolveSync;
     testEnv.unifiedScopeResolver.resolveSync = (scopeName, context) => {
-      console.log(`🔍 Resolving scope: ${scopeName}`);
-
-      // Custom resolver for actors_sitting_close
       if (scopeName === 'positioning:actors_sitting_close') {
         const actorId = context?.actor?.id;
         if (!actorId) {
-          console.log(`  ❌ No actor ID in context`);
           return { success: true, value: new Set() };
         }
 
         const actor = testFixture.entityManager.getEntityInstance(actorId);
         const closeness = actor?.components?.['positioning:closeness'];
-        console.log(`  Actor closeness partners:`, closeness?.partners);
 
         if (!closeness || !Array.isArray(closeness.partners)) {
-          console.log(`  ❌ No closeness partners`);
           return { success: true, value: new Set() };
         }
 
-        // Filter partners who are sitting
+        // Filter partners who have sitting_on component
         const sittingPartners = closeness.partners.filter(partnerId => {
           const partner = testFixture.entityManager.getEntityInstance(partnerId);
-          const hasSitting = !!partner?.components?.['positioning:sitting_on'];
-          console.log(`    Partner ${partnerId}: sitting=${hasSitting}`);
-          return hasSitting;
+          return !!partner?.components?.['positioning:sitting_on'];
         });
 
-        console.log(`  ✅ Sitting partners: [${sittingPartners.join(', ')}]`);
         return { success: true, value: new Set(sittingPartners) };
       }
 
       // Fall back to original resolution for other scopes
-      const result = originalResolveSync.call(testEnv.unifiedScopeResolver, scopeName, context);
-      console.log(`  Result: ${result.success ? `Set(${Array.from(result.value).join(', ')})` : 'FAILED'}`);
-      return result;
+      return originalResolveSync.call(testEnv.unifiedScopeResolver, scopeName, context);
     };
   });
 

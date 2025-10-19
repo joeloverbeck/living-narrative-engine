@@ -27,11 +27,23 @@ describe('straddle_waist_facing_away action discovery - Integration Tests', () =
       testEnv.actionIndex.buildIndex([straddleFacingAwayAction]);
     };
 
-    // Add custom scope resolver for actors_sitting_close
+    /**
+     * Test-specific scope resolver for actors_sitting_close.
+     *
+     * NOTE: ModTestFixture.forAction doesn't load scope definition files (.scope files).
+     * This resolver implements the logic from:
+     * data/mods/positioning/scopes/actors_sitting_close.scope
+     *
+     * Scope DSL:
+     *   positioning:actors_sitting_close := actor.components.positioning:closeness.partners[][{
+     *     "!!": {"var": "entity.components.positioning:sitting_on"}
+     *   }]
+     *
+     * Translation: Filter the actor's closeness partners to only those who have sitting_on component.
+     */
     const { testEnv } = testFixture;
     const originalResolveSync = testEnv.unifiedScopeResolver.resolveSync;
     testEnv.unifiedScopeResolver.resolveSync = (scopeName, context) => {
-      // Custom resolver for actors_sitting_close
       if (scopeName === 'positioning:actors_sitting_close') {
         const actorId = context?.actor?.id;
         if (!actorId) {
@@ -45,7 +57,7 @@ describe('straddle_waist_facing_away action discovery - Integration Tests', () =
           return { success: true, value: new Set() };
         }
 
-        // Filter partners who are sitting
+        // Filter partners who have sitting_on component
         const sittingPartners = closeness.partners.filter(partnerId => {
           const partner = testFixture.entityManager.getEntityInstance(partnerId);
           return !!partner?.components?.['positioning:sitting_on'];

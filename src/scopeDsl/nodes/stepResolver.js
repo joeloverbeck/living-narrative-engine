@@ -99,7 +99,15 @@ export default function createStepResolver({
   function resolveEntityParentValue(entityId, field, trace) {
     try {
       if (field === 'components') {
-        return getOrBuildComponents(entityId, null, entitiesGateway, trace);
+        // DIAGNOSTIC: Log when building components object
+        const componentsObj = getOrBuildComponents(entityId, null, entitiesGateway, trace);
+        console.log('[DIAGNOSTIC] StepResolver - Building components for entity:', {
+          entityId,
+          field: 'components',
+          componentKeys: componentsObj ? Object.keys(componentsObj) : null,
+          hasCloseness: componentsObj ? ('positioning:closeness' in componentsObj) : false,
+        });
+        return componentsObj;
       }
 
       return extractFieldFromEntity(entityId, field);
@@ -127,7 +135,22 @@ export default function createStepResolver({
    * @returns {any} Extracted value or undefined.
    */
   function resolveObjectParentValue(obj, field) {
-    return extractFieldFromObject(obj, field);
+    const value = extractFieldFromObject(obj, field);
+
+    // DIAGNOSTIC: Log field access from objects, especially for namespaced IDs
+    if (field.includes(':') || field === 'partners') {
+      console.log('[DIAGNOSTIC] StepResolver - Accessing field from object:', {
+        field,
+        objectKeys: obj ? Object.keys(obj) : null,
+        hasField: obj ? (field in obj) : false,
+        valueType: value ? typeof value : 'undefined',
+        valuePreview: Array.isArray(value) ? `Array(${value.length})` :
+                      (value && typeof value === 'object') ? 'Object' :
+                      value,
+      });
+    }
+
+    return value;
   }
 
   /**

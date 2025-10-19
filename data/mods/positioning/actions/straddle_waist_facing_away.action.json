@@ -18,12 +18,6 @@
   "prerequisites": [
     {
       "logic": {
-        "condition_ref": "movement:actor-can-move"
-      },
-      "failure_message": "You cannot move without functioning legs."
-    },
-    {
-      "logic": {
         "condition_ref": "core:actor-mouth-available"
       },
       "failure_message": "You cannot do that while your mouth is engaged."
