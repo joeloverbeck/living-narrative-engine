@@ -382,6 +382,34 @@ describe('BodyGraphService focused coverage', () => {
         mockEntityManager
       );
     });
+
+    it('logs truncated previews when more than five parts are returned', () => {
+      const service = createService();
+
+      mockCacheInstance.has.mockReturnValue(false);
+      mockAlgorithms.getAllParts.mockReturnValueOnce([
+        'root',
+        'child-1',
+        'child-2',
+        'child-3',
+        'child-4',
+        'child-5',
+        'child-6',
+      ]);
+
+      const result = service.getAllParts({ body: { root: 'root-blueprint' } });
+
+      expect(result).toHaveLength(7);
+
+      const previewLog = mockLogger.debug.mock.calls.find(([message]) =>
+        message.startsWith(
+          "BodyGraphService: AnatomyGraphAlgorithms.getAllParts returned 7 parts"
+        )
+      );
+
+      expect(previewLog).toBeDefined();
+      expect(previewLog?.[0]).toContain('...]');
+    });
   });
 
   describe('component search helpers', () => {
@@ -464,6 +492,30 @@ describe('BodyGraphService focused coverage', () => {
 
       getAllPartsSpy.mockRestore();
     });
+
+    it('continues searching when a component lookup returns null', () => {
+      const service = createService();
+      const getAllPartsSpy = jest
+        .spyOn(service, 'getAllParts')
+        .mockReturnValue(['p1', 'p2']);
+
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce(null)
+        .mockReturnValueOnce(undefined);
+
+      expect(
+        service.hasPartWithComponentValue(
+          { body: { root: 'root' } },
+          'component',
+          'stats.health.current',
+          10
+        )
+      ).toEqual({ found: false });
+
+      expect(mockEntityManager.getComponentData).toHaveBeenCalledTimes(2);
+
+      getAllPartsSpy.mockRestore();
+    });
   });
 
   describe('getBodyGraph', () => {
@@ -507,6 +559,20 @@ describe('BodyGraphService focused coverage', () => {
       expect(graph.getConnectedParts('part-child')).toEqual(['grandchild']);
 
       getAllPartsSpy.mockRestore();
+    });
+
+    it('getConnectedParts falls back to an empty list when cache entry is missing', async () => {
+      const service = createService();
+      mockEntityManager.getComponentData.mockResolvedValueOnce({
+        body: { root: 'blueprint-root' },
+      });
+      mockCacheInstance.hasCacheForRoot.mockReturnValue(true);
+      mockCacheInstance.get.mockReturnValueOnce(undefined);
+
+      const graph = await service.getBodyGraph('actor-1');
+
+      expect(graph.getConnectedParts('missing')).toEqual([]);
+      expect(mockCacheInstance.get).toHaveBeenCalledWith('missing');
     });
   });
 
