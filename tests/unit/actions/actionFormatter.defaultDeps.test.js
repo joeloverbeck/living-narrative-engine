@@ -28,7 +28,10 @@ import ActionCommandFormatter, {
   formatActionCommand,
 } from '../../../src/actions/actionFormatter.js';
 import { targetFormatterMap } from '../../../src/actions/formatters/targetFormatters.js';
-import { validateDependency } from '../../../src/utils/dependencyUtils.js';
+import {
+  validateDependency,
+  validateDependencies,
+} from '../../../src/utils/dependencyUtils.js';
 import { dispatchValidationError } from '../../../src/utils/safeDispatchErrorUtils.js';
 
 describe('ActionCommandFormatter default dependency fallbacks', () => {
@@ -180,5 +183,52 @@ describe('ActionCommandFormatter default dependency fallbacks', () => {
     expect(() =>
       formatActionCommand(action, targetContext, entityManager)
     ).toThrow('formatActionCommand: logger is required.');
+  });
+
+  it('continues formatting when dependency validation throws an unexpected error', () => {
+    const formatter = new ActionCommandFormatter();
+    const action = createAction({ id: 'core:resilient', template: 'use {target}' });
+    const targetContext = createTargetContext({ type: 'custom' });
+    const entityManager = createEntityManager({ label: 'Fallback Target' });
+    const options = createOptions();
+    const customDisplayName = jest.fn(() => 'Fallback Target');
+    const customFormatter = jest
+      .fn()
+      .mockImplementation((command, context, deps) => {
+        const entity = entityManager.getEntityInstance(context.entityId);
+        const resolvedName = deps.displayNameFn(entity, context.entityId, options.logger);
+        return { ok: true, value: command.replace('{target}', resolvedName) };
+      });
+
+    validateDependencies.mockImplementationOnce(() => {
+      throw new Error('mismatched dependency failure');
+    });
+
+    const result = formatter.format(
+      action,
+      targetContext,
+      entityManager,
+      { ...options },
+      { displayNameFn: customDisplayName, formatterMap: { custom: customFormatter } }
+    );
+
+    expect(result).toEqual({ ok: true, value: 'use Fallback Target' });
+    expect(validateDependencies).toHaveBeenCalledTimes(1);
+    expect(customFormatter).toHaveBeenCalledWith(
+      'use {target}',
+      expect.objectContaining({ type: 'custom', entityId: 'npc-42' }),
+      expect.objectContaining({
+        actionId: 'core:resilient',
+        displayNameFn: customDisplayName,
+        logger: options.logger,
+      })
+    );
+    expect(entityManager.getEntityInstance).toHaveBeenCalledWith('npc-42');
+    expect(customDisplayName).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'npc-42', label: 'Fallback Target' }),
+      'npc-42',
+      options.logger
+    );
+    expect(dispatchValidationError).not.toHaveBeenCalled();
   });
 });
