@@ -119,8 +119,14 @@ export class ModEntityBuilder {
    * @returns {ModEntityBuilder} This builder for chaining
    */
   closeToEntity(partnerIds) {
-    const partners = Array.isArray(partnerIds) ? partnerIds : [partnerIds];
-    this.entityData.components['positioning:closeness'] = { partners };
+    const newPartners = Array.isArray(partnerIds) ? partnerIds : [partnerIds];
+
+    // Append to existing partners array or create new one
+    const existingCloseness = this.entityData.components['positioning:closeness'];
+    const existingPartners = existingCloseness?.partners || [];
+    const allPartners = [...existingPartners, ...newPartners];
+
+    this.entityData.components['positioning:closeness'] = { partners: allPartners };
     return this;
   }
 
