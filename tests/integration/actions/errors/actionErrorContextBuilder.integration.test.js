@@ -1,425 +1,490 @@
 /**
- * @file Integration tests for ActionErrorContextBuilder
- * @description Validates that error context generation produces rich snapshots and traces.
+ * @file Integration tests for ActionErrorContextBuilder using real FixSuggestionEngine
+ *       and a concrete entity manager implementation.
  */
 
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { ActionErrorContextBuilder } from '../../../../src/actions/errors/actionErrorContextBuilder.js';
+import { FixSuggestionEngine } from '../../../../src/actions/errors/fixSuggestionEngine.js';
 import {
   EVALUATION_STEP_TYPES,
   FIX_TYPES,
 } from '../../../../src/actions/errors/actionErrorTypes.js';
+import {
+  TraceContext,
+  TRACE_STEP,
+  TRACE_INFO,
+  TRACE_ERROR,
+  TRACE_FAILURE,
+  TRACE_SUCCESS,
+  TRACE_DATA,
+} from '../../../../src/actions/tracing/traceContext.js';
 
 /**
- * Utility to build a trace log entry for the evaluation trace scenarios.
- *
- * @param {object} options
- * @param {number} options.timestamp
- * @param {string} options.type
- * @param {string} options.source
- * @param {string} options.message
- * @param {object} [options.data]
- * @returns {import('../../../../src/actions/tracing/traceContext.js').TraceLogEntry}
+ * Minimal in-memory action index used for integration tests.
  */
-function createTraceLog({ timestamp, type, source, message, data = {} }) {
-  return {
-    timestamp,
-    type,
-    source,
-    message,
-    data,
-  };
+class InMemoryActionIndex {
+  #candidates;
+
+  constructor(candidates = []) {
+    this.#candidates = candidates;
+  }
+
+  /**
+   * @returns {Array<object>} Candidate actions available to the actor.
+   */
+  getCandidateActions() {
+    return this.#candidates;
+  }
+}
+
+/**
+ * Minimal in-memory repository for action and component definitions.
+ */
+class InMemoryGameDataRepository {
+  #actions;
+
+  constructor(actions = []) {
+    this.#actions = new Map(actions.map((action) => [action.id, action]));
+  }
+
+  /**
+   * @param {string} id
+   * @returns {object|undefined}
+   */
+  getAction(id) {
+    return this.#actions.get(id);
+  }
+
+  /**
+   * @param {object} action
+   * @returns {void}
+   */
+  registerAction(action) {
+    this.#actions.set(action.id, action);
+  }
+
+  /**
+   * @param {string} id
+   * @returns {{id: string, name: string}}
+   */
+  getComponentDefinition(id) {
+    return { id, name: `Component ${id}` };
+  }
+
+  /**
+   * @param {string} id
+   * @returns {{id: string, description: string}}
+   */
+  getConditionDefinition(id) {
+    return { id, description: `Condition ${id}` };
+  }
+}
+
+/**
+ * Lightweight entity manager that exposes the real component data without mocks.
+ */
+class IntegrationEntityManager {
+  #entities;
+
+  /**
+   * @param {Array<{id: string, type?: string, components: Record<string, any>}>} entities
+   */
+  constructor(entities = []) {
+    this.#entities = new Map();
+    for (const entity of entities) {
+      this.#entities.set(entity.id, {
+        id: entity.id,
+        type: entity.type ?? 'integration:entity',
+        components: entity.components,
+      });
+    }
+  }
+
+  /**
+   * @param {string} id
+   * @returns {{id: string, type: string, components: Record<string, any>}}
+   */
+  getEntityInstance(id) {
+    const entity = this.#entities.get(id);
+    if (!entity) {
+      throw new Error(`Unknown entity ${id}`);
+    }
+    return {
+      id: entity.id,
+      type: entity.type,
+      components: entity.components,
+    };
+  }
+
+  /**
+   * @param {string} entityId
+   * @returns {string[]}
+   */
+  getAllComponentTypesForEntity(entityId) {
+    const entity = this.#entities.get(entityId);
+    if (!entity) {
+      return [];
+    }
+    return Object.keys(entity.components);
+  }
+
+  /**
+   * @param {string} entityId
+   * @param {string} componentType
+   * @returns {any}
+   */
+  getComponentData(entityId, componentType) {
+    const entity = this.#entities.get(entityId);
+    return entity?.components?.[componentType] ?? null;
+  }
 }
 
 describe('ActionErrorContextBuilder integration', () => {
-  /** @type {ReturnType<typeof jest.spyOn>} */
-  let dateSpy;
   let logger;
-  let entityManager;
-  let fixSuggestionEngine;
-  let builder;
-  let suggestedFixes;
-  let primaryActorComponents;
-  let componentsByActor;
+  let gameDataRepository;
+  let actionIndex;
+  let suggestionEngine;
 
   beforeEach(() => {
-    dateSpy = jest.spyOn(Date, 'now').mockReturnValue(1700000000000);
-
-    suggestedFixes = [
-      {
-        type: FIX_TYPES.SCOPE_RESOLUTION,
-        description: 'Ensure there are valid targets present',
-        details: { scope: 'target', hint: 'Spawn an additional NPC' },
-        confidence: 0.8,
-      },
-    ];
-
-    const circularComponent = {};
-    circularComponent.self = circularComponent;
-
-    primaryActorComponents = {
-      'core:location': { value: 'central-plaza' },
-      'core:name': 'Test Hero',
-      'core:description': 'x'.repeat(1005),
-      'core:inventory': Array.from({ length: 105 }, (_, index) => ({
-        id: `item-${index}`,
-        label: `Item ${index}`,
-      })),
-      'core:stats': {
-        strength: 12,
-        biography: 'b'.repeat(1005),
-        nested: { detail: 'ready' },
-      },
-      'core:nuller': null,
-      'core:bigData': 'y'.repeat(11000),
-      'core:circular': circularComponent,
-      'core:mixedArray': ['short', 'z'.repeat(1005)],
-    };
-
-    const actorWithoutLocationComponents = {
-      'core:name': 'Nomad',
-      'core:notes': { message: 'Wandering actor' },
-      'core:inventory': [],
-    };
-
-    componentsByActor = {
-      'actor-1': primaryActorComponents,
-      'actor-no-location': actorWithoutLocationComponents,
-    };
-
     logger = {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
     };
-
-    entityManager = {
-      getEntityInstance: jest.fn((actorId) => {
-        if (actorId === 'missing-actor') {
-          throw new Error('Actor not found');
-        }
-        const entityType = actorId === 'actor-no-location' ? undefined : 'actor';
-        return { id: actorId, type: entityType };
-      }),
-      getAllComponentTypesForEntity: jest.fn((actorId) => {
-        if (actorId === 'missing-actor') {
-          throw new Error('Cannot list components');
-        }
-        const components = componentsByActor[actorId] || primaryActorComponents;
-        return Object.keys(components);
-      }),
-      getComponentData: jest.fn((actorId, componentType) => {
-        if (actorId === 'missing-actor') {
-          throw new Error('No data');
-        }
-        const components = componentsByActor[actorId] || primaryActorComponents;
-        return components[componentType];
-      }),
-    };
-
-    fixSuggestionEngine = {
-      suggestFixes: jest.fn().mockReturnValue(suggestedFixes),
-    };
-
-    builder = new ActionErrorContextBuilder({
-      entityManager,
+    gameDataRepository = new InMemoryGameDataRepository();
+    actionIndex = new InMemoryActionIndex();
+    suggestionEngine = new FixSuggestionEngine({
       logger,
-      fixSuggestionEngine,
+      gameDataRepository,
+      actionIndex,
     });
   });
 
   afterEach(() => {
-    if (dateSpy) {
-      dateSpy.mockRestore();
-    }
-    jest.restoreAllMocks();
+    jest.useRealTimers();
   });
 
-  it('builds detailed error context with sanitized actor snapshot and evaluation trace', () => {
-    const error = new Error('Scope resolution failed for action');
-    error.name = 'ScopeResolutionError';
+  it('builds comprehensive error context with sanitized snapshots and evaluation trace data', () => {
+    const largeString = 'A'.repeat(12000);
+    const longInventory = Array.from({ length: 105 }, (_, index) => ({
+      slot: index,
+      label: `item-${index}`,
+    }));
+    const circularComponent = { label: 'loop' };
+    circularComponent.self = circularComponent;
+
+    const entityManager = new IntegrationEntityManager([
+      {
+        id: 'actor-1',
+        type: 'integration:actor',
+        components: {
+          'core:actor': { name: 'Integration Actor', biography: 'Extensive background data' },
+          'core:location': { value: 'observation-deck' },
+          'core:inventory': { items: longInventory },
+          'core:notes': { text: 'N'.repeat(1200) },
+          'core:huge': { transcript: largeString },
+          'core:circular': circularComponent,
+          'core:nested': {
+            layers: [
+              {
+                stage: 'outer',
+                children: [
+                  { stage: 'inner', tags: ['alpha', 'beta'] },
+                ],
+              },
+            ],
+            metadata: { critical: true, notes: null },
+          },
+          'core:state': { value: 'stunned' },
+          'core:status': { bleeding: false, focused: true },
+          'core:condition': { fatigue: 'heavy', morale: 'low' },
+          'core:optional': { note: null },
+        },
+      },
+    ]);
 
     const actionDef = {
-      id: 'test:cast-spell',
-      name: 'Cast Spell',
-      scope: 'target',
-    };
-
-    const trace = {
-      logs: [
-        createTraceLog({
-          timestamp: 1000,
-          type: 'step',
-          source: 'ValidationEngine',
-          message: 'Start validation',
-          data: {
-            input: { actorId: 'actor-1' },
-            output: { valid: true },
-          },
-        }),
-        createTraceLog({
-          timestamp: 1010,
-          type: 'success',
-          source: 'PrerequisiteChecker',
-          message: 'Prerequisite evaluation complete',
-          data: {
-            input: { requirements: ['core:magic'] },
-            output: { result: true },
-          },
-        }),
-        createTraceLog({
-          timestamp: 1020,
-          type: 'error',
-          source: 'ScopeResolver',
-          message: 'Scope resolution failed',
-          data: {
-            input: { scope: 'target' },
-            output: { matches: [] },
-          },
-        }),
-        createTraceLog({
-          timestamp: 1030,
-          type: 'info',
-          source: 'ConditionEvaluator',
-          message: 'Processing condition_ref for mana',
-          data: {
-            input: { condition: 'mana' },
-            output: { result: false },
-          },
-        }),
-        createTraceLog({
-          timestamp: 1040,
-          type: 'success',
-          source: 'JsonLogicEngine',
-          message: 'Evaluated expression tree',
-          data: {
-            input: { expression: '>' },
-            output: { result: true },
-          },
-        }),
-        createTraceLog({
-          timestamp: 1050,
-          type: 'data',
-          source: 'ContextCollector',
-          message: 'Capturing trace context',
-          data: { additional: 'info' },
-        }),
-        createTraceLog({
-          timestamp: 1060,
-          type: 'error',
-          source: 'ResolutionMonitor',
-          message: 'Resolution fallback triggered',
-        }),
+      id: 'integration:complex-action',
+      scope: 'companions',
+      prerequisites: [
+        { hasComponent: 'core:mobility' },
+        {
+          all: [
+            { hasComponent: 'core:discipline' },
+            { any: [{ hasComponent: 'core:focus' }, { hasComponent: 'core:perception' }] },
+            [
+              { hasComponent: 'core:resilience' },
+              { hasComponent: 'core:resolve' },
+            ],
+          ],
+        },
       ],
     };
+    gameDataRepository.registerAction(actionDef);
 
-    const additionalContext = { scenario: 'integration-test' };
+    const builder = new ActionErrorContextBuilder({
+      entityManager,
+      logger,
+      fixSuggestionEngine: suggestionEngine,
+    });
 
-    const result = builder.buildErrorContext({
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2025-01-01T10:00:00.000Z'));
+
+    const trace = new TraceContext();
+    const addLog = (type, message, source, data) => {
+      trace.addLog(type, message, source, data);
+      jest.advanceTimersByTime(5);
+    };
+
+    addLog(TRACE_STEP, 'Prerequisite check started', 'PrerequisiteEvaluator', {
+      input: { stage: 'initial' },
+      output: { success: true },
+    });
+    addLog(TRACE_STEP, 'JsonLogic evaluation succeeded', 'JsonLogicEvaluator', {
+      input: { expression: 'valid' },
+      output: { result: true },
+    });
+    addLog(TRACE_INFO, 'General validation info', 'ValidationEngine', {
+      sample: 'info',
+    });
+    addLog(TRACE_ERROR, 'condition_ref core:mobility failed', 'ValidationEngine', {
+      input: { condition_ref: 'core:mobility' },
+      output: { success: false },
+    });
+    addLog(
+      TRACE_FAILURE,
+      'Scope service failed to resolve target',
+      'ScopeResolutionService',
+      {
+        input: { attempt: 1 },
+      }
+    );
+    addLog(TRACE_DATA, 'Final context snapshot', 'TraceCollector', {
+      outcome: 'aborted',
+      attempts: 1,
+    });
+    addLog(TRACE_SUCCESS, 'Post evaluation summary', 'SummaryReporter');
+
+    const error = new Error(
+      'Scope resolution failed: missing component core:mobility, invalid state detected, and no target available'
+    );
+    error.name = 'ComponentNotFoundError';
+
+    const additionalContext = { correlationId: 'corr-123', severity: 'high' };
+
+    const errorContext = builder.buildErrorContext({
       error,
       actionDef,
       actorId: 'actor-1',
-      phase: 'resolution',
-      trace,
       targetId: 'target-42',
+      phase: 'validation',
+      trace,
       additionalContext,
     });
 
-    expect(result.actionId).toBe('test:cast-spell');
-    expect(result.actorId).toBe('actor-1');
-    expect(result.targetId).toBe('target-42');
-    expect(result.phase).toBe('resolution');
-    expect(result.timestamp).toBe(1700000000000);
-    expect(result.actionDefinition).toBe(actionDef);
-    expect(result.error).toBe(error);
+    expect(errorContext.actionId).toBe(actionDef.id);
+    expect(errorContext.actorId).toBe('actor-1');
+    expect(errorContext.targetId).toBe('target-42');
 
-    expect(fixSuggestionEngine.suggestFixes).toHaveBeenCalledWith(
-      error,
-      actionDef,
-      expect.objectContaining({ id: 'actor-1' }),
-      'resolution'
-    );
-    expect(result.suggestedFixes).toBe(suggestedFixes);
+    const snapshot = errorContext.actorSnapshot;
+    expect(snapshot.location).toBe('observation-deck');
+    expect(typeof snapshot.metadata.capturedAt).toBe('number');
+    expect(snapshot.metadata.entityType).toBe('integration:actor');
 
-    expect(entityManager.getEntityInstance).toHaveBeenCalledWith('actor-1');
-    expect(entityManager.getAllComponentTypesForEntity).toHaveBeenCalledWith(
-      'actor-1'
-    );
+    const sanitizedNotes = snapshot.components['core:notes'].text;
+    expect(sanitizedNotes.endsWith('...(truncated)')).toBe(true);
+    expect(sanitizedNotes.length).toBe(1000 + '...(truncated)'.length);
 
-    const snapshot = result.actorSnapshot;
-    expect(snapshot.id).toBe('actor-1');
-    expect(snapshot.location).toBe('central-plaza');
-    expect(snapshot.metadata.entityType).toBe('actor');
-    expect(snapshot.metadata.capturedAt).toBe(1700000000000);
-
-    const components = snapshot.components;
-    expect(components['core:name']).toBe('Test Hero');
-    expect(components['core:description']).toMatch(/\.{3}\(truncated\)$/);
-    expect(components['core:description'].length).toBe(1000 + '...(truncated)'.length);
-
-    expect(Array.isArray(components['core:inventory'])).toBe(true);
-    expect(components['core:inventory']).toHaveLength(101);
-    expect(components['core:inventory'][0]).toEqual({
-      id: 'item-0',
-      label: 'Item 0',
-    });
-    expect(components['core:inventory'][100]).toEqual({
+    const sanitizedInventory = snapshot.components['core:inventory'].items;
+    expect(sanitizedInventory).toHaveLength(101);
+    expect(sanitizedInventory[100]).toEqual({
       _truncated: true,
       _originalLength: 105,
     });
 
-    expect(components['core:stats'].strength).toBe(12);
-    expect(components['core:stats'].biography).toMatch(/\.{3}\(truncated\)$/);
-    expect(components['core:stats'].nested).toEqual({ detail: 'ready' });
+    const hugeComponent = snapshot.components['core:huge'];
+    expect(hugeComponent._truncated).toBe(true);
+    expect(hugeComponent._reason).toBe('Component too large');
+    expect(hugeComponent._size).toBeGreaterThan(10000);
 
-    expect(components['core:nuller']).toBeNull();
-    expect(components['core:bigData']).toEqual({
-      _truncated: true,
-      _reason: 'Component too large',
-      _size: expect.any(Number),
-    });
-    expect(components['core:circular']).toEqual({
+    expect(snapshot.components['core:circular']).toEqual({
       _error: true,
       _reason: 'Failed to serialize component',
     });
-    expect(components['core:mixedArray'][0]).toBe('short');
-    expect(components['core:mixedArray'][1]).toMatch(/\.{3}\(truncated\)$/);
 
-    const traceSteps = result.evaluationTrace.steps;
-    expect(traceSteps).toHaveLength(7);
-    expect(traceSteps[0]).toMatchObject({
-      type: EVALUATION_STEP_TYPES.VALIDATION,
-      success: true,
-      duration: 0,
-      message: 'Start validation',
-      input: { actorId: 'actor-1' },
-      output: { valid: true },
-    });
-    expect(traceSteps[1]).toMatchObject({
-      type: EVALUATION_STEP_TYPES.PREREQUISITE,
-      success: true,
-      duration: 10,
-      message: 'Prerequisite evaluation complete',
-      input: { requirements: ['core:magic'] },
-      output: { result: true },
-    });
-    expect(traceSteps[2]).toMatchObject({
-      type: EVALUATION_STEP_TYPES.SCOPE,
-      success: false,
-      duration: 20,
-      message: 'Scope resolution failed',
-      input: { scope: 'target' },
-      output: { matches: [] },
-    });
-    expect(traceSteps[3]).toMatchObject({
-      type: EVALUATION_STEP_TYPES.CONDITION_REF,
-      success: true,
-      duration: 30,
-      message: 'Processing condition_ref for mana',
-    });
-    expect(traceSteps[4]).toMatchObject({
-      type: EVALUATION_STEP_TYPES.JSON_LOGIC,
-      success: true,
-      duration: 40,
-      message: 'Evaluated expression tree',
-    });
-    expect(traceSteps[5]).toMatchObject({
-      type: EVALUATION_STEP_TYPES.VALIDATION,
-      success: false,
-      duration: 50,
-      message: 'Capturing trace context',
-      output: { additional: 'info' },
-    });
-    expect(traceSteps[6]).toMatchObject({
-      type: EVALUATION_STEP_TYPES.SCOPE,
-      success: false,
-      duration: 60,
-      message: 'Resolution fallback triggered',
-      input: {},
-      output: {},
-    });
+    expect(snapshot.components['core:nested'].layers[0].children[0].tags).toEqual([
+      'alpha',
+      'beta',
+    ]);
+    expect(snapshot.components['core:optional'].note).toBeNull();
 
-    expect(result.evaluationTrace.failurePoint).toBe('Scope resolution failed');
-    expect(result.evaluationTrace.finalContext).toEqual({ additional: 'info' });
+    const stepTypes = errorContext.evaluationTrace.steps.map((step) => step.type);
+    expect(stepTypes).toEqual([
+      EVALUATION_STEP_TYPES.PREREQUISITE,
+      EVALUATION_STEP_TYPES.JSON_LOGIC,
+      EVALUATION_STEP_TYPES.VALIDATION,
+      EVALUATION_STEP_TYPES.CONDITION_REF,
+      EVALUATION_STEP_TYPES.SCOPE,
+      EVALUATION_STEP_TYPES.VALIDATION,
+      EVALUATION_STEP_TYPES.VALIDATION,
+    ]);
 
-    expect(result.environmentContext).toMatchObject({
-      errorName: 'ScopeResolutionError',
-      phase: 'resolution',
-      timestamp: 1700000000000,
-      scenario: 'integration-test',
-    });
-  });
+    const durations = errorContext.evaluationTrace.steps.map((step) => step.duration);
+    for (let i = 1; i < durations.length; i += 1) {
+      expect(durations[i]).toBeGreaterThanOrEqual(durations[i - 1]);
+    }
 
-  it('provides fallback snapshot when actor data cannot be resolved', () => {
-    const error = new Error('Actor snapshot unavailable');
-    error.name = 'MissingActorError';
-
-    const trace = { logs: [] };
-
-    const result = builder.buildErrorContext({
-      error,
-      actionDef: null,
-      actorId: 'missing-actor',
-      phase: 'execution',
-      trace,
-    });
-
-    expect(entityManager.getEntityInstance).toHaveBeenCalledWith('missing-actor');
-    expect(logger.warn).toHaveBeenCalled();
-    expect(logger.warn.mock.calls[0][0]).toContain('missing-actor');
-
-    expect(result.actorSnapshot).toEqual({
-      id: 'missing-actor',
-      components: {},
-      location: 'unknown',
-      metadata: {
-        error: 'Failed to capture snapshot',
-        capturedAt: 1700000000000,
-      },
-    });
-
-    expect(result.suggestedFixes).toBe(suggestedFixes);
-    expect(fixSuggestionEngine.suggestFixes).toHaveBeenCalledWith(
-      error,
-      null,
-      result.actorSnapshot,
-      'execution'
+    expect(errorContext.evaluationTrace.failurePoint).toBe(
+      'condition_ref core:mobility failed'
     );
-
-    expect(result.evaluationTrace).toEqual({
-      steps: [],
-      finalContext: {},
-      failurePoint: 'Unknown',
+    expect(errorContext.evaluationTrace.finalContext).toEqual({
+      outcome: 'aborted',
+      attempts: 1,
     });
-    expect(result.environmentContext.errorName).toBe('MissingActorError');
-    expect(result.environmentContext.phase).toBe('execution');
-    expect(result.actionDefinition).toBeNull();
-    expect(result.actionId).toBeNull();
-    expect(result.targetId).toBeNull();
+
+    const fixTypes = new Set(errorContext.suggestedFixes.map((fix) => fix.type));
+    expect(fixTypes).toEqual(
+      new Set([
+        FIX_TYPES.MISSING_COMPONENT,
+        FIX_TYPES.INVALID_STATE,
+        FIX_TYPES.SCOPE_RESOLUTION,
+        FIX_TYPES.MISSING_PREREQUISITE,
+        FIX_TYPES.INVALID_TARGET,
+      ])
+    );
+    for (let i = 1; i < errorContext.suggestedFixes.length; i += 1) {
+      expect(errorContext.suggestedFixes[i - 1].confidence).toBeGreaterThanOrEqual(
+        errorContext.suggestedFixes[i].confidence
+      );
+    }
+
+    expect(errorContext.environmentContext).toMatchObject({
+      correlationId: 'corr-123',
+      severity: 'high',
+      errorName: 'ComponentNotFoundError',
+      phase: 'validation',
+      timestamp: errorContext.timestamp,
+    });
+    expect(errorContext.additionalContext).toEqual(additionalContext);
   });
 
-  it('captures default location and type when actor metadata is incomplete', () => {
-    const error = new Error('Validation failure');
-    error.name = 'ValidationError';
+  it('falls back to minimal snapshot when entity capture fails', () => {
+    class FaultyEntityManager {
+      getEntityInstance() {
+        throw new Error('Entity lookup failed');
+      }
 
-    const actionDef = { id: 'test:basic', name: 'Basic Action' };
+      getAllComponentTypesForEntity() {
+        return [];
+      }
+
+      getComponentData() {
+        return null;
+      }
+    }
+
+    const builder = new ActionErrorContextBuilder({
+      entityManager: new FaultyEntityManager(),
+      logger,
+      fixSuggestionEngine: suggestionEngine,
+    });
+
+    const actionDef = { id: 'integration:fallback', scope: 'none', prerequisites: [] };
+    const error = new Error('Target not found for action');
+    const trace = new TraceContext();
+    trace.addLog(TRACE_INFO, 'Starting resolution phase', 'ValidationEngine', {
+      detail: 'setup',
+    });
 
     const context = builder.buildErrorContext({
       error,
       actionDef,
-      actorId: 'actor-no-location',
+      actorId: 'unknown-actor',
+      phase: 'resolution',
+      trace,
+    });
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to create complete actor snapshot'),
+      expect.any(Error)
+    );
+    expect(context.actorSnapshot.components).toEqual({});
+    expect(context.actorSnapshot.location).toBe('unknown');
+    expect(context.actorSnapshot.metadata.error).toBe('Failed to capture snapshot');
+
+    expect(context.evaluationTrace.steps).toHaveLength(1);
+    expect(context.evaluationTrace.steps[0].type).toBe(
+      EVALUATION_STEP_TYPES.VALIDATION
+    );
+    expect(context.evaluationTrace.steps[0].success).toBe(true);
+
+    const fallbackFixTypes = new Set(context.suggestedFixes.map((fix) => fix.type));
+    expect(fallbackFixTypes.has(FIX_TYPES.INVALID_TARGET)).toBe(true);
+    expect(context.environmentContext.phase).toBe('resolution');
+  });
+
+  it('uses default fallbacks when optional context is missing', () => {
+    const minimalEntityManager = new IntegrationEntityManager([
+      {
+        id: 'actor-2',
+        type: '',
+        components: {
+          'core:actor': { name: 'Fallback Actor' },
+          'core:flags': { ready: true },
+        },
+      },
+    ]);
+
+    const builder = new ActionErrorContextBuilder({
+      entityManager: minimalEntityManager,
+      logger,
+      fixSuggestionEngine: suggestionEngine,
+    });
+
+    const error = new Error('Scope resolution error without context');
+    error.name = 'ScopeResolutionError';
+
+    const withoutTrace = builder.buildErrorContext({
+      error,
+      actionDef: { scope: 'any:scope' },
+      actorId: 'actor-2',
       phase: 'validation',
     });
 
-    expect(context.actorSnapshot.location).toBe('none');
-    expect(context.actorSnapshot.metadata.entityType).toBe('unknown');
-    expect(context.evaluationTrace).toEqual({
+    expect(withoutTrace.actionId).toBeNull();
+    expect(withoutTrace.targetId).toBeNull();
+    expect(withoutTrace.additionalContext).toEqual({});
+    expect(withoutTrace.actorSnapshot.location).toBe('none');
+    expect(withoutTrace.actorSnapshot.metadata.entityType).toBe('unknown');
+    expect(withoutTrace.evaluationTrace).toEqual({
       steps: [],
       finalContext: {},
       failurePoint: 'Unknown',
     });
-    expect(context.actionId).toBe('test:basic');
-    expect(context.targetId).toBeNull();
+    expect(
+      withoutTrace.suggestedFixes.some(
+        (fix) => fix.type === FIX_TYPES.SCOPE_RESOLUTION
+      )
+    ).toBe(true);
+
+    const emptyTrace = new TraceContext();
+    const withEmptyTrace = builder.buildErrorContext({
+      error,
+      actionDef: { scope: 'any:scope' },
+      actorId: 'actor-2',
+      phase: 'resolution',
+      trace: emptyTrace,
+    });
+
+    expect(withEmptyTrace.phase).toBe('resolution');
+    expect(withEmptyTrace.evaluationTrace.steps).toHaveLength(0);
+    expect(withEmptyTrace.evaluationTrace.failurePoint).toBe('Unknown');
+    expect(withEmptyTrace.environmentContext).toMatchObject({
+      errorName: 'ScopeResolutionError',
+      phase: 'resolution',
+    });
   });
 });
