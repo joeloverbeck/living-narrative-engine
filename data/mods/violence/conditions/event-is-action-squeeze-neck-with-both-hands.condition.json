@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "violence:event-is-action-squeeze-neck-with-both-hands",
+  "description": "Checks if the triggering event is for the 'violence:squeeze_neck_with_both_hands' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "violence:squeeze_neck_with_both_hands"
+    ]
+  }
+}

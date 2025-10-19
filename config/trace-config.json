@@ -2,11 +2,12 @@
   "$schema": "../data/schemas/trace-config.schema.json",
   "traceAnalysisEnabled": false,
   "actionTracing": {
-    "enabled": false,
+    "enabled": true,
     "tracedActions": [
-      "items:read_item", "items:examine_item"
+      "positioning:straddle_waist_facing_away",
+      "positioning:straddle_waist_facing"
     ],
-    "outputDirectory": "./traces/items",
+    "outputDirectory": "./traces/straddling",
     "verbosity": "verbose",
     "includeComponentData": true,
     "includePrerequisites": true,

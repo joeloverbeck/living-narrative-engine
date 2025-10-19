@@ -660,14 +660,35 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
   }
 
   /**
-   * Discover actions with detailed diagnostics.
+   * Discover actions with detailed diagnostics
    *
    * @param {object|string} actor - Actor entity or ID
    * @param {object} options - Discovery options
-   * @param {boolean} [options.includeDiagnostics] - Whether to include diagnostic information
-   * @returns {object} Result with actions and optional diagnostics
+   * @param {boolean} [options.includeDiagnostics] - Include trace diagnostics
+   * @param {boolean} [options.traceScopeResolution] - Use traced scope resolver
+   * @returns {Promise<object>} Result with actions and optional diagnostics
+   * @example
+   * // Basic discovery
+   * const result = await testBed.discoverActionsWithDiagnostics(actor);
+   * expect(result.actions).toHaveLength(3);
+   * @example
+   * // With diagnostics
+   * const result = await testBed.discoverActionsWithDiagnostics(actor, {
+   *   includeDiagnostics: true,
+   * });
+   * console.log(result.diagnostics.scopeEvaluations);
+   * @example
+   * // With scope tracing
+   * const result = await testBed.discoverActionsWithDiagnostics(actor, {
+   *   includeDiagnostics: true,
+   *   traceScopeResolution: true,
+   * });
+   * console.log(testBed.formatDiagnosticSummary(result.diagnostics));
    */
-  async discoverActionsWithDiagnostics(actor, { includeDiagnostics = false } = {}) {
+  async discoverActionsWithDiagnostics(
+    actor,
+    { includeDiagnostics = false, traceScopeResolution = false } = {}
+  ) {
     const actorId = typeof actor === 'string' ? actor : actor.id;
     // Note: SimpleEntityManager uses getEntityInstance(), mock uses getEntity()
     const getEntityFn = this.mocks.entityManager.getEntityInstance || this.mocks.entityManager.getEntity;
@@ -679,6 +700,15 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
 
     // Create trace context if diagnostics requested
     const traceContext = includeDiagnostics ? new TraceContext() : null;
+
+    // Optionally use traced scope resolver
+    if (traceScopeResolution && traceContext && this.mocks.scopeResolver) {
+      const { createTracedScopeResolver } = await import('../scopeDsl/scopeTracingHelpers.js');
+      this.mocks.scopeResolver = createTracedScopeResolver(
+        this.mocks.scopeResolver,
+        traceContext
+      );
+    }
 
     // Call service - ActionDiscoveryService uses getValidActions method
     const service = this.service || this.createStandardDiscoveryService();
@@ -692,13 +722,69 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
         diagnostics: {
           logs: traceContext.logs,
           operatorEvaluations: traceContext.getOperatorEvaluations(),
-          // getScopeEvaluations() doesn't exist yet - will be added in INTTESDEB-004
-          scopeEvaluations: traceContext.getScopeEvaluations?.() || [],
+          scopeEvaluations: traceContext.getScopeEvaluations(), // Method exists (validated)
         },
       };
     }
 
     return { actions: result.actions || result };
+  }
+
+  /**
+   * Format diagnostic output into readable summary
+   *
+   * @param {object} diagnostics - Diagnostics from discoverActionsWithDiagnostics
+   * @returns {string} Formatted diagnostic summary
+   * @example
+   * const result = await testBed.discoverActionsWithDiagnostics(actor, {
+   *   includeDiagnostics: true,
+   * });
+   * console.log(testBed.formatDiagnosticSummary(result.diagnostics));
+   */
+  formatDiagnosticSummary(diagnostics) {
+    const lines = ['', '=== Action Discovery Diagnostics ===', ''];
+
+    // Trace logs summary
+    lines.push(`Trace Logs: ${diagnostics.logs.length} entries`);
+    const errorLogs = diagnostics.logs.filter(log => log.type === 'error');
+    if (errorLogs.length > 0) {
+      lines.push(`  Errors: ${errorLogs.length}`);
+      errorLogs.forEach(log => {
+        lines.push(`    - ${log.message}`);
+      });
+    }
+    lines.push('');
+
+    // Operator evaluations summary
+    const opEvals = diagnostics.operatorEvaluations || [];
+    lines.push(`Operator Evaluations: ${opEvals.length}`);
+    if (opEvals.length > 0) {
+      opEvals.forEach(op => {
+        lines.push(`  - ${op.operator}: ${op.success ? '✅' : '❌'}`);
+      });
+    }
+    lines.push('');
+
+    // Scope evaluations summary
+    const scopeEvals = diagnostics.scopeEvaluations || [];
+    lines.push(`Scope Evaluations: ${scopeEvals.length}`);
+    if (scopeEvals.length > 0) {
+      scopeEvals.forEach(scope => {
+        const resolved = scope.resolvedEntities?.length || 0;
+        const candidates = scope.candidateEntities?.length || 0;
+        const filtered = candidates - resolved;
+
+        lines.push(`  - ${scope.scopeId}:`);
+        lines.push(`      Candidates: ${candidates}`);
+        lines.push(`      Resolved: ${resolved}`);
+        if (filtered > 0) {
+          lines.push(`      Filtered: ${filtered}`);
+        }
+      });
+    }
+    lines.push('');
+
+    return lines.join('\n');
   }
 
   /**
