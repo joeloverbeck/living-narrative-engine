@@ -129,10 +129,14 @@ export default function createArrayIterationResolver({
         ? ctx.dispatcher.resolve(node.parent, ctx)
         : new Set();
 
-      // TEMPORARY DIAGNOSTIC: Log array iteration input
-      console.log('[DIAGNOSTIC] Array iteration:', {
+      // DIAGNOSTIC: Enhanced logging for array iteration debugging
+      const parentResultsArray = Array.from(parentResults);
+      console.log('[DIAGNOSTIC] ArrayIterationResolver - Starting iteration:', {
         parentResultsSize: parentResults.size,
-        parentResultsPreview: Array.from(parentResults).slice(0, 3),
+        parentResultsPreview: parentResultsArray.slice(0, 3),
+        parentResultsTypes: parentResultsArray.slice(0, 3).map(v =>
+          Array.isArray(v) ? `Array(${v.length})` : typeof v
+        ),
       });
 
       const flattened = new Set();
@@ -171,6 +175,18 @@ export default function createArrayIterationResolver({
 
         // Handle regular arrays
         if (Array.isArray(parentValue)) {
+          // DIAGNOSTIC: Log array processing details
+          console.log('[DIAGNOSTIC] ArrayIterationResolver - Processing array:', {
+            arrayLength: parentValue.length,
+            arrayPreview: parentValue.slice(0, 5),
+            arrayItemTypes: parentValue.slice(0, 5).map(item =>
+              item === null ? 'null' :
+              item === undefined ? 'undefined' :
+              typeof item === 'string' ? 'string' :
+              typeof item
+            ),
+          });
+
           // Check array size limit before processing
           if (parentValue.length > MAX_ARRAY_SIZE) {
             if (errorHandler) {
@@ -237,6 +253,13 @@ export default function createArrayIterationResolver({
         }
         // For other cases (like Step nodes), non-arrays result in empty set
       }
+
+      // DIAGNOSTIC: Log final array iteration results
+      console.log('[DIAGNOSTIC] ArrayIterationResolver - Iteration complete:', {
+        totalArrayElements,
+        flattenedSize: flattened.size,
+        flattenedPreview: Array.from(flattened).slice(0, 5),
+      });
 
       if (ctx.trace && ctx.trace.addStep) {
         ctx.trace.addStep(
