@@ -278,8 +278,9 @@ export class TraceAnalyzer {
       }
 
       const totalDuration = durations.reduce((sum, d) => sum + d, 0);
-      const minDuration = Math.min(...durations);
-      const maxDuration = Math.max(...durations);
+      // Use reduce to avoid stack overflow with large arrays
+      const minDuration = durations.reduce((min, d) => Math.min(min, d), Infinity);
+      const maxDuration = durations.reduce((max, d) => Math.max(max, d), -Infinity);
       const averageDuration = totalDuration / durations.length;
       const errorRate = (data.errorCount / data.spans.length) * 100;
 
@@ -469,7 +470,10 @@ export class TraceAnalyzer {
       concurrencyLevels.push(currentConcurrency);
     }
 
-    const maxConcurrency = Math.max(...concurrencyLevels, 0);
+    // Use reduce to avoid stack overflow with large arrays
+    const maxConcurrency = concurrencyLevels.length > 0
+      ? concurrencyLevels.reduce((max, level) => Math.max(max, level), 0)
+      : 0;
     const averageConcurrency =
       concurrencyLevels.length > 0
         ? concurrencyLevels.reduce((sum, level) => sum + level, 0) /

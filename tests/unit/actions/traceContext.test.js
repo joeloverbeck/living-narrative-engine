@@ -187,4 +187,164 @@ describe('TraceContext', () => {
       nowSpy.mockRestore();
     });
   });
+
+  describe('scope evaluation capture', () => {
+    it('captures scope evaluation metadata with timestamps', () => {
+      const trace = new TraceContext();
+      const nowSpy = jest
+        .spyOn(Date, 'now')
+        .mockReturnValueOnce(2020) // capturedAt
+        .mockReturnValueOnce(3030); // log timestamp
+
+      trace.captureScopeEvaluation({
+        scopeId: 'affection:close_actors_facing_each_other',
+        actorId: 'actor1',
+        candidateEntities: ['target1', 'target2', 'target3'],
+        resolvedEntities: ['target1'],
+        success: true,
+        context: {
+          actorId: 'actor1',
+          hasFilters: true,
+        },
+        filterResults: [
+          {
+            filter: { '==': [{ var: 'facing' }, 'toward'] },
+            passed: ['target1'],
+            failed: ['target2', 'target3'],
+          },
+        ],
+      });
+
+      expect(trace.logs).toHaveLength(1);
+      expect(trace.logs[0]).toMatchObject({
+        type: TRACE_DATA,
+        message: 'Scope evaluation: affection:close_actors_facing_each_other',
+        source: 'ScopeEvaluation',
+        timestamp: 3030,
+        data: {
+          type: 'scope_evaluation',
+          scopeId: 'affection:close_actors_facing_each_other',
+          actorId: 'actor1',
+          candidateEntities: ['target1', 'target2', 'target3'],
+          resolvedEntities: ['target1'],
+          success: true,
+          context: {
+            actorId: 'actor1',
+            hasFilters: true,
+          },
+          filterResults: [
+            {
+              filter: { '==': [{ var: 'facing' }, 'toward'] },
+              passed: ['target1'],
+              failed: ['target2', 'target3'],
+            },
+          ],
+          capturedAt: 2020,
+        },
+      });
+      expect(trace.getScopeEvaluations()).toEqual([
+        {
+          type: 'scope_evaluation',
+          scopeId: 'affection:close_actors_facing_each_other',
+          actorId: 'actor1',
+          candidateEntities: ['target1', 'target2', 'target3'],
+          resolvedEntities: ['target1'],
+          success: true,
+          context: {
+            actorId: 'actor1',
+            hasFilters: true,
+          },
+          filterResults: [
+            {
+              filter: { '==': [{ var: 'facing' }, 'toward'] },
+              passed: ['target1'],
+              failed: ['target2', 'target3'],
+            },
+          ],
+          capturedAt: 2020,
+        },
+      ]);
+
+      nowSpy.mockRestore();
+    });
+
+    it('filters scope evaluation entries from other log types', () => {
+      const trace = new TraceContext();
+      const sequence = [0, 1, 100, 101, 200, 201];
+      const nowSpy = jest
+        .spyOn(Date, 'now')
+        .mockImplementation(() => sequence.shift());
+
+      trace.info('ignored info', 'source');
+      trace.data('other data', 'source', { type: 'other' });
+
+      trace.captureScopeEvaluation({
+        scopeId: 'affection:first_scope',
+        actorId: 'actor-a',
+        candidateEntities: ['entity1', 'entity2'],
+        resolvedEntities: ['entity1'],
+      });
+      trace.captureScopeEvaluation({
+        scopeId: 'positioning:second_scope',
+        actorId: 'actor-b',
+        candidateEntities: ['entity3'],
+        resolvedEntities: [],
+      });
+
+      const evaluations = trace.getScopeEvaluations();
+
+      expect(evaluations).toHaveLength(2);
+      expect(evaluations.map((entry) => entry.scopeId)).toEqual([
+        'affection:first_scope',
+        'positioning:second_scope',
+      ]);
+      expect(evaluations.map((entry) => entry.capturedAt)).toEqual([100, 200]);
+
+      nowSpy.mockRestore();
+    });
+
+    it('returns empty array when no scope evaluations captured', () => {
+      const trace = new TraceContext();
+      trace.info('just an info log', 'source');
+      trace.data('other data', 'source', { type: 'other' });
+
+      const evaluations = trace.getScopeEvaluations();
+
+      expect(evaluations).toEqual([]);
+    });
+
+    it('does not affect existing operator evaluation methods', () => {
+      const trace = new TraceContext();
+      const sequence = [100, 101, 200, 201];
+      const nowSpy = jest
+        .spyOn(Date, 'now')
+        .mockImplementation(() => sequence.shift());
+
+      // Add both operator and scope evaluations
+      trace.captureOperatorEvaluation({
+        operator: 'testOperator',
+        entityId: 'entity1',
+        result: true,
+      });
+
+      trace.captureScopeEvaluation({
+        scopeId: 'test:scope',
+        actorId: 'actor1',
+        candidateEntities: [],
+        resolvedEntities: [],
+      });
+
+      // Verify they are properly separated
+      const operatorEvals = trace.getOperatorEvaluations();
+      const scopeEvals = trace.getScopeEvaluations();
+
+      expect(operatorEvals).toHaveLength(1);
+      expect(operatorEvals[0].operator).toBe('testOperator');
+
+      expect(scopeEvals).toHaveLength(1);
+      expect(scopeEvals[0].scopeId).toBe('test:scope');
+
+      nowSpy.mockRestore();
+    });
+  });
 });

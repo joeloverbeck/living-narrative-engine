@@ -40,7 +40,7 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
     },
     massage_back: 'affection:close_actors_facing_away',
     massage_shoulders:
-      'affection:actors_with_arms_facing_each_other_or_behind_target',
+      'positioning:close_actors_or_entity_kneeling_before_actor',
     place_hand_on_waist: 'positioning:close_actors',
   };
 
@@ -130,11 +130,14 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
         } else {
           // Other actions use string format
           expect(content.targets.length).toBeGreaterThan(minLength);
-          // massage_shoulders is in affection mod, feel_arm_muscles is in caressing mod
-          const expectedMod = name === 'massage_shoulders' ? 'affection' : 'caressing';
-          expect(content.targets).toMatch(
-            new RegExp(`^${expectedMod}:actors_with_.*_facing_each_other_or_behind_target$`)
-          );
+          // massage_shoulders uses positioning mod with kneeling support, feel_arm_muscles uses caressing mod
+          if (name === 'massage_shoulders') {
+            expect(content.targets).toBe('positioning:close_actors_or_entity_kneeling_before_actor');
+          } else if (name === 'feel_arm_muscles') {
+            expect(content.targets).toMatch(
+              /^caressing:actors_with_.*_facing_each_other_or_behind_target$/
+            );
+          }
         }
       }
     );

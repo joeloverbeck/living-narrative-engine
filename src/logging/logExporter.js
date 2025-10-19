@@ -326,8 +326,9 @@ class LogExporter {
     const errors = logs.filter((l) => l.level === 'error').length;
 
     const timestamps = logs.map((l) => new Date(l.timestamp).getTime());
-    const minTime = timestamps.length > 0 ? Math.min(...timestamps) : null;
-    const maxTime = timestamps.length > 0 ? Math.max(...timestamps) : null;
+    // Use reduce to avoid stack overflow with large arrays
+    const minTime = timestamps.length > 0 ? timestamps.reduce((min, t) => Math.min(min, t), Infinity) : null;
+    const maxTime = timestamps.length > 0 ? timestamps.reduce((max, t) => Math.max(max, t), -Infinity) : null;
 
     return {
       total: logs.length,

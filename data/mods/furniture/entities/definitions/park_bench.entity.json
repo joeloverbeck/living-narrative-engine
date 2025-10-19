@@ -1,0 +1,20 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "furniture:park_bench",
+  "description": "A weathered park bench with two seating positions, worn smooth by years of use",
+  "components": {
+    "core:name": {
+      "text": "weathered park bench"
+    },
+    "core:description": {
+      "text": "This wooden bench bears the gentle marks of countless seasons and stories. Its slats, once golden oak, now wear the silvered patina of rain and sun, each board worn smooth by hands and bodies seeking rest. The wrought-iron frame curves in patient arcs at each end, painted black but showing hints of rust at the joints where moisture collects. Two distinct seating areas are separated by a subtle depression in the center plank, each spot worn to a comfortable hollow by years of use. The bench sits solidly on four legs, stable and welcoming, positioned to catch the filtered light that falls through the overhead canopy."
+    },
+    "core:portrait": {
+      "imagePath": "portraits/park_bench.png",
+      "altText": "A weathered wooden park bench with wrought-iron frame and two distinct seating areas"
+    },
+    "positioning:allows_sitting": {
+      "spots": [null, null]
+    }
+  }
+}

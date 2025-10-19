@@ -23,6 +23,8 @@ import { createServiceFactoryMixin } from '../serviceFactoryTestBedMixin.js';
 import { createTestBedHelpers } from '../createTestBedHelpers.js';
 import FactoryTestBed from '../factoryTestBed.js';
 import { ERROR_PHASES } from '../../../src/actions/errors/actionErrorTypes.js';
+import { ModEntityBuilder } from '../mods/ModEntityBuilder.js';
+import SimpleEntityManager from '../entities/simpleEntityManager.js';
 
 const ServiceFactoryMixin = createServiceFactoryMixin(
   {
@@ -114,7 +116,7 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
             capturedAt: Date.now(),
           },
         };
-      } catch (err) {
+      } catch (_err) {
         return {
           id: actorId,
           components: {},
@@ -354,7 +356,6 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
   FactoryTestBed
 ) {
   #lastCreatedTraceType = 'Unknown';
-  #currentService = null;
   #capturedLogs = {
     debug: [],
     info: [],
@@ -390,16 +391,16 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
 
     // Create mock logger that captures logs
     const mockLogger = {
-      debug: jest.fn((msg, ...args) => {
+      debug: jest.fn((msg, ..._args) => {
         this.#capturedLogs.debug.push(msg);
       }),
-      info: jest.fn((msg, ...args) => {
+      info: jest.fn((msg, ..._args) => {
         this.#capturedLogs.info.push(msg);
       }),
-      warn: jest.fn((msg, ...args) => {
+      warn: jest.fn((msg, ..._args) => {
         this.#capturedLogs.warn.push(msg);
       }),
-      error: jest.fn((msg, ...args) => {
+      error: jest.fn((msg, ..._args) => {
         this.#capturedLogs.error.push(msg);
       }),
     };
@@ -450,9 +451,6 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
       getActorLocationFn: parentMocks.getActorLocationFn,
     });
 
-    // Store reference so we can track state
-    this.#currentService = service;
-
     return service;
   }
 
@@ -500,7 +498,7 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
   }
 
   #createMockActionAwareTraceFactory(shouldFail = false) {
-    return jest.fn().mockImplementation((options) => {
+    return jest.fn().mockImplementation((_options) => {
       if (shouldFail) {
         throw new Error('ActionAwareTraceFactory creation failed');
       }
@@ -585,6 +583,166 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
 
   getErrorLogs() {
     return this.#capturedLogs.error;
+  }
+
+  /**
+   * Create actor with automatic entity structure validation.
+   *
+   * @param {string} actorId - Actor entity ID
+   * @param {object} options - Actor configuration
+   * @param {object} [options.components] - Custom components to add
+   * @param {string} [options.location] - Location ID for the actor
+   * @returns {object} Validated actor entity
+   */
+  createActorWithValidation(actorId, { components = {}, location = 'test-location' } = {}) {
+    // Use ModEntityBuilder for creation
+    const builder = new ModEntityBuilder(actorId).asActor();
+
+    // Add location if specified
+    if (location) {
+      builder.atLocation(location).withLocationComponent(location);
+    }
+
+    // Add components
+    for (const [componentId, data] of Object.entries(components)) {
+      builder.withComponent(componentId, data);
+    }
+
+    // Build and validate (uses enhanced validation from INTTESDEB-001)
+    const entity = builder.validate().build();
+
+    // Add to entity manager
+    // Note: Requires SimpleEntityManager for integration tests (has addEntity method)
+    this.mocks.entityManager.addEntity(entity);
+
+    return entity;
+  }
+
+  /**
+   * Establish closeness relationship with validation.
+   *
+   * @param {object|string} actor - Actor entity or ID
+   * @param {object|string} target - Target entity or ID
+   */
+  establishClosenessWithValidation(actor, target) {
+    const actorId = typeof actor === 'string' ? actor : actor.id;
+    const targetId = typeof target === 'string' ? target : target.id;
+
+    // Validate entities exist
+    // Note: SimpleEntityManager uses getEntityInstance(), mock uses getEntity()
+    const getEntityFn = this.mocks.entityManager.getEntityInstance || this.mocks.entityManager.getEntity;
+    const actorEntity = getEntityFn.call(this.mocks.entityManager, actorId);
+    const targetEntity = getEntityFn.call(this.mocks.entityManager, targetId);
+
+    if (!actorEntity) {
+      throw new Error(`Cannot establish closeness: Actor '${actorId}' not found in entity manager`);
+    }
+    if (!targetEntity) {
+      throw new Error(`Cannot establish closeness: Target '${targetId}' not found in entity manager`);
+    }
+
+    // Get or create closeness components
+    const actorCloseness = actorEntity.components['positioning:closeness'] || { partners: [] };
+    const targetCloseness = targetEntity.components['positioning:closeness'] || { partners: [] };
+
+    // Add bidirectional relationship
+    if (!actorCloseness.partners.includes(targetId)) {
+      actorCloseness.partners.push(targetId);
+    }
+    if (!targetCloseness.partners.includes(actorId)) {
+      targetCloseness.partners.push(actorId);
+    }
+
+    // Update entities
+    // Note: Requires SimpleEntityManager for integration tests (has addComponent method)
+    this.mocks.entityManager.addComponent(actorId, 'positioning:closeness', actorCloseness);
+    this.mocks.entityManager.addComponent(targetId, 'positioning:closeness', targetCloseness);
+  }
+
+  /**
+   * Discover actions with detailed diagnostics.
+   *
+   * @param {object|string} actor - Actor entity or ID
+   * @param {object} options - Discovery options
+   * @param {boolean} [options.includeDiagnostics] - Whether to include diagnostic information
+   * @returns {object} Result with actions and optional diagnostics
+   */
+  async discoverActionsWithDiagnostics(actor, { includeDiagnostics = false } = {}) {
+    const actorId = typeof actor === 'string' ? actor : actor.id;
+    // Note: SimpleEntityManager uses getEntityInstance(), mock uses getEntity()
+    const getEntityFn = this.mocks.entityManager.getEntityInstance || this.mocks.entityManager.getEntity;
+    const actorEntity = getEntityFn.call(this.mocks.entityManager, actorId);
+
+    if (!actorEntity) {
+      throw new Error(`Cannot discover actions: Actor '${actorId}' not found`);
+    }
+
+    // Create trace context if diagnostics requested
+    const traceContext = includeDiagnostics ? new TraceContext() : null;
+
+    // Call service - ActionDiscoveryService uses getValidActions method
+    const service = this.service || this.createStandardDiscoveryService();
+    const result = await service.getValidActions(actorEntity, {}, {
+      trace: traceContext,
+    });
+
+    if (includeDiagnostics) {
+      return {
+        actions: result.actions || result,
+        diagnostics: {
+          logs: traceContext.logs,
+          operatorEvaluations: traceContext.getOperatorEvaluations(),
+          // getScopeEvaluations() doesn't exist yet - will be added in INTTESDEB-004
+          scopeEvaluations: traceContext.getScopeEvaluations?.() || [],
+        },
+      };
+    }
+
+    return { actions: result.actions || result };
+  }
+
+  /**
+   * Create a complete actor-target scenario for testing.
+   *
+   * @param {object} options - Scenario configuration
+   * @param {string} [options.actorId] - Actor entity ID
+   * @param {string} [options.targetId] - Target entity ID
+   * @param {string} [options.location] - Location ID for both entities
+   * @param {boolean} [options.closeProximity] - Whether to establish closeness
+   * @param {object} [options.actorComponents] - Custom components for actor
+   * @param {object} [options.targetComponents] - Custom components for target
+   * @returns {object} Actor and target entities
+   */
+  createActorTargetScenario({
+    actorId = 'actor1',
+    targetId = 'target1',
+    location = 'test-location',
+    closeProximity = true,
+    actorComponents = {},
+    targetComponents = {},
+  } = {}) {
+    const actor = this.createActorWithValidation(actorId, {
+      components: actorComponents,
+      location,
+    });
+
+    const target = this.createActorWithValidation(targetId, {
+      components: targetComponents,
+      location,
+    });
+
+    if (closeProximity) {
+      this.establishClosenessWithValidation(actor, target);
+
+      // Re-fetch entities after closeness establishment to get updated components
+      const getEntityFn = this.mocks.entityManager.getEntityInstance || this.mocks.entityManager.getEntity;
+      return {
+        actor: getEntityFn.call(this.mocks.entityManager, actorId),
+        target: getEntityFn.call(this.mocks.entityManager, targetId),
+      };
+    }
+
+    return { actor, target };
   }
 
   cleanup() {

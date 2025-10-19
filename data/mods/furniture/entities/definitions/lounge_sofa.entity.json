@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "furniture:lounge_sofa",
+  "description": "A low-profile three-seat sofa upholstered in sand-colored fabric",
+  "components": {
+    "core:name": {
+      "text": "lounge sofa"
+    },
+    "core:description": {
+      "text": "A tailored, sand-colored sofa stretches along the wall with three deep seat cushions, slim arms, and two matching throw pillows. Its plush upholstery has a warm tone, and its low silhouette keeps sightlines clear."
+    },
+    "items:item": {},
+    "positioning:allows_sitting": {
+      "spots": [
+        null,
+        null,
+        null
+      ]
+    },
+    "positioning:allows_bending_over": {}
+  }
+}

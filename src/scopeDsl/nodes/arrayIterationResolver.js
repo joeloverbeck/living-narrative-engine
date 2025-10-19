@@ -129,6 +129,12 @@ export default function createArrayIterationResolver({
         ? ctx.dispatcher.resolve(node.parent, ctx)
         : new Set();
 
+      // TEMPORARY DIAGNOSTIC: Log array iteration input
+      console.log('[DIAGNOSTIC] Array iteration:', {
+        parentResultsSize: parentResults.size,
+        parentResultsPreview: Array.from(parentResults).slice(0, 3),
+      });
+
       const flattened = new Set();
       let totalArrayElements = 0;
 

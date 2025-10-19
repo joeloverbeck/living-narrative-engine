@@ -280,6 +280,17 @@ export default function createFilterResolver({
         );
       }
 
+      // TEMPORARY DIAGNOSTIC: Log filter results to console
+      console.log('[DIAGNOSTIC] Filter evaluation:', {
+        initialSize,
+        finalSize: result.size,
+        logic: JSON.stringify(node.logic),
+        filterEvaluations: filterEvaluations.map(e => ({
+          entityId: e.entityId,
+          passed: e.passedFilter,
+        })),
+      });
+
       return result;
     },
   };

@@ -173,4 +173,45 @@ export class TraceContext {
       )
       .map((entry) => entry.data);
   }
+
+  /**
+   * Capture scope resolution evaluation data for debugging and tracing purposes.
+   * Follows the same pattern as captureOperatorEvaluation.
+   *
+   * @param {object} scopeData - Data from the scope resolution
+   * @param {string} scopeData.scopeId - Scope identifier being evaluated
+   * @param {string} scopeData.actorId - Actor for whom scope is being resolved
+   * @param {Array<string>} scopeData.candidateEntities - Entities considered by scope
+   * @param {Array<string>} scopeData.resolvedEntities - Entities that passed filters
+   * @param {Array<object>} [scopeData.filterResults] - Detailed filter evaluation results
+   * @param {object} [scopeData.context] - Evaluation context
+   */
+  captureScopeEvaluation(scopeData) {
+    // Store scope evaluations as special data entries (same pattern as operator evaluations)
+    this.addLog(
+      'data',
+      `Scope evaluation: ${scopeData.scopeId}`,
+      'ScopeEvaluation',
+      {
+        type: 'scope_evaluation',
+        ...scopeData,
+        capturedAt: Date.now(),
+      }
+    );
+  }
+
+  /**
+   * Get all scope evaluation logs from the trace.
+   * Follows the same pattern as getOperatorEvaluations.
+   *
+   * @returns {Array<object>} Array of scope evaluation data
+   */
+  getScopeEvaluations() {
+    return this.logs
+      .filter(
+        (entry) =>
+          entry.type === 'data' && entry.data?.type === 'scope_evaluation'
+      )
+      .map((entry) => entry.data);
+  }
 }

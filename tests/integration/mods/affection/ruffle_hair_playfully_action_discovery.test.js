@@ -38,7 +38,7 @@ describe('affection:ruffle_hair_playfully action discovery', () => {
       scopeResolver.resolveSync = (scopeName, context) => {
         if (
           scopeName ===
-          'positioning:close_actors_facing_each_other_or_behind_target'
+          'positioning:close_actors_or_entity_kneeling_before_actor'
         ) {
           const actorId = context?.actor?.id;
           if (!actorId) {
@@ -75,7 +75,17 @@ describe('affection:ruffle_hair_playfully action discovery', () => {
               !partnerFacingAway.includes(actorId);
             const actorBehind = partnerFacingAway.includes(actorId);
 
-            if (facingEachOther || actorBehind) {
+            // Check kneeling states
+            const actorKneelingBefore = actorEntity.components?.['positioning:kneeling_before']?.entityId === partnerId;
+            const partnerKneelingBefore = partner.components?.['positioning:kneeling_before']?.entityId === actorId;
+
+            // Available if:
+            // - (facing each other OR actor behind) AND neither kneeling incompatibly
+            // - OR partner is kneeling before actor
+            const normalPosition = (facingEachOther || actorBehind) && !actorKneelingBefore && !partnerKneelingBefore;
+            const partnerKneeling = partnerKneelingBefore;
+
+            if (normalPosition || partnerKneeling) {
               acc.add(partnerId);
             }
 
@@ -102,7 +112,7 @@ describe('affection:ruffle_hair_playfully action discovery', () => {
       expect(ruffleHairAction.id).toBe(ACTION_ID);
       expect(ruffleHairAction.template).toBe("ruffle {target}'s hair playfully");
       expect(ruffleHairAction.targets).toBe(
-        'positioning:close_actors_facing_each_other_or_behind_target'
+        'positioning:close_actors_or_entity_kneeling_before_actor'
       );
     });
 

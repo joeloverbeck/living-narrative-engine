@@ -619,22 +619,212 @@ describe('ModEntityBuilder', () => {
       const builder = new ModEntityBuilder('test_entity');
       builder.entityData.components[POSITION_COMPONENT_ID] = {}; // Missing locationId
 
-      expect(() => builder.validate()).toThrow(
-        'Position component must have locationId'
-      );
+      expect(() => builder.validate()).toThrow("missing 'locationId' property");
     });
 
     it('should throw error for invalid name component', () => {
       const builder = new ModEntityBuilder('test_entity');
       builder.entityData.components[NAME_COMPONENT_ID] = {}; // Missing text
 
-      expect(() => builder.validate()).toThrow('Name component must have text');
+      expect(() => builder.validate()).toThrow("missing 'text' property");
     });
 
     it('should pass validation with minimal entity', () => {
       const builder = new ModEntityBuilder('test_entity');
 
       expect(() => builder.validate()).not.toThrow();
+    });
+
+    // Entity ID validation tests
+    describe('entity ID validation', () => {
+      it('should throw error when ID is not a string', () => {
+        const builder = new ModEntityBuilder('test_entity');
+        builder.entityData.id = 123; // Non-string ID
+
+        expect(() => builder.validate()).toThrow(
+          'entity.id should be STRING but is number'
+        );
+      });
+
+      it('should detect entity double-nesting with detailed error', () => {
+        const builder = new ModEntityBuilder('test_entity');
+        builder.entityData.id = {
+          id: 'nested_entity',
+          components: { 'core:name': { text: 'Nested' } },
+        }; // Entity object instead of string
+
+        expect(() => builder.validate()).toThrow(
+          '❌ ENTITY DOUBLE-NESTING DETECTED!'
+        );
+        expect(() => builder.validate()).toThrow(
+          'entity.id should be STRING but is object'
+        );
+        expect(() => builder.validate()).toThrow(
+          '❌ entityManager.addComponent(entity, componentId, data)'
+        );
+        expect(() => builder.validate()).toThrow(
+          '✅ entityManager.addComponent(entity.id, componentId, data)'
+        );
+      });
+
+      it('should throw error for blank string ID when set after construction', () => {
+        const builder = new ModEntityBuilder('valid_id');
+        builder.entityData.id = '   '; // Set blank ID after construction
+
+        expect(() => builder.validate()).toThrow(
+          'Entity ID cannot be blank'
+        );
+        expect(() => builder.validate()).toThrow(
+          'Entity IDs must be non-empty strings'
+        );
+      });
+
+      it('should include helpful examples in blank ID error', () => {
+        const builder = new ModEntityBuilder('valid_id');
+        builder.entityData.id = '  '; // Set whitespace-only ID after construction
+
+        expect(() => builder.validate()).toThrow('"actor1"');
+        expect(() => builder.validate()).toThrow('"room-library"');
+      });
+    });
+
+    // Component structure validation tests
+    describe('component structure validation', () => {
+      it('should validate closeness component partners array', () => {
+        const builder = new ModEntityBuilder('test_entity');
+        builder.entityData.components['positioning:closeness'] = {
+          partners: 'not-an-array', // Should be array
+        };
+
+        expect(() => builder.validate()).toThrow(
+          "Closeness component 'partners' must be array"
+        );
+        expect(() => builder.validate()).toThrow(
+          'builder.closeToEntity("target-id")'
+        );
+      });
+
+      it('should detect entity double-nesting in closeness partners', () => {
+        const builder = new ModEntityBuilder('test_entity');
+        const nestedEntity = {
+          id: 'target1',
+          components: { 'core:name': { text: 'Target' } },
+        };
+        builder.entityData.components['positioning:closeness'] = {
+          partners: [nestedEntity], // Should be string ID
+        };
+
+        expect(() => builder.validate()).toThrow(
+          'Closeness partner at index 0 must be string, got: object'
+        );
+        expect(() => builder.validate()).toThrow(
+          'This indicates entity double-nesting'
+        );
+        expect(() => builder.validate()).toThrow(
+          '❌ builder.closeToEntity(targetEntity)'
+        );
+        expect(() => builder.validate()).toThrow(
+          '✅ builder.closeToEntity(targetEntity.id)'
+        );
+      });
+
+      it('should validate kneeling component structure', () => {
+        const builder = new ModEntityBuilder('test_entity');
+        builder.entityData.components['positioning:kneeling_before'] = {};
+
+        expect(() => builder.validate()).toThrow(
+          "Kneeling component missing 'entityId' property"
+        );
+        expect(() => builder.validate()).toThrow(
+          'builder.kneelingBefore("target-id")'
+        );
+      });
+
+      it('should detect entity double-nesting in kneeling entityId', () => {
+        const builder = new ModEntityBuilder('test_entity');
+        const nestedEntity = {
+          id: 'target1',
+          components: { 'core:name': { text: 'Target' } },
+        };
+        builder.entityData.components['positioning:kneeling_before'] = {
+          entityId: nestedEntity, // Should be string ID
+        };
+
+        expect(() => builder.validate()).toThrow(
+          'Kneeling entityId must be string, got: object'
+        );
+        expect(() => builder.validate()).toThrow(
+          'This indicates entity double-nesting'
+        );
+        expect(() => builder.validate()).toThrow(
+          '❌ builder.kneelingBefore(targetEntity)'
+        );
+        expect(() => builder.validate()).toThrow(
+          '✅ builder.kneelingBefore(targetEntity.id)'
+        );
+      });
+
+      it('should validate position locationId is string', () => {
+        const builder = new ModEntityBuilder('test_entity');
+        builder.entityData.components[POSITION_COMPONENT_ID] = {
+          locationId: 123, // Should be string
+        };
+
+        expect(() => builder.validate()).toThrow(
+          'Position component locationId must be string'
+        );
+        expect(() => builder.validate()).toThrow(
+          'entity double-nesting in location references'
+        );
+      });
+
+      it('should validate name text is string', () => {
+        const builder = new ModEntityBuilder('test_entity');
+        builder.entityData.components[NAME_COMPONENT_ID] = {
+          text: 123, // Should be string
+        };
+
+        expect(() => builder.validate()).toThrow(
+          'Name component text must be string'
+        );
+      });
+    });
+
+    // Error message quality tests
+    describe('error message quality', () => {
+      it('should include code examples in position error', () => {
+        const builder = new ModEntityBuilder('test_entity');
+        builder.entityData.components[POSITION_COMPONENT_ID] = {};
+
+        expect(() => builder.validate()).toThrow(
+          'builder.atLocation("location-id")'
+        );
+        expect(() => builder.validate()).toThrow(
+          'builder.withComponent("core:position", { locationId: "location-id" })'
+        );
+      });
+
+      it('should include code examples in name error', () => {
+        const builder = new ModEntityBuilder('test_entity');
+        builder.entityData.components[NAME_COMPONENT_ID] = {};
+
+        expect(() => builder.validate()).toThrow(
+          'builder.withName("name-text")'
+        );
+        expect(() => builder.validate()).toThrow(
+          'builder.withComponent("core:name", { text: "name-text" })'
+        );
+      });
+
+      it('should show actual component data in error messages', () => {
+        const builder = new ModEntityBuilder('test_entity');
+        builder.entityData.components[POSITION_COMPONENT_ID] = {
+          wrongField: 'value',
+        };
+
+        expect(() => builder.validate()).toThrow('Position component data:');
+        expect(() => builder.validate()).toThrow('"wrongField"');
+      });
     });
   });
 

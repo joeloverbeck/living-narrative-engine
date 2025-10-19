@@ -270,31 +270,171 @@ export class ModEntityBuilder {
    * @throws {Error} If entity structure is invalid
    */
   validate() {
-    // Validate entity ID
+    // Validate entity ID exists
     if (!this.entityData.id) {
-      throw new Error('ModEntityBuilder.validate: Entity ID is required');
+      throw new Error(
+        'ModEntityBuilder.validate: Entity ID is required\n' +
+          '\n' +
+          'An entity must have a string ID. Use:\n' +
+          '  new ModEntityBuilder("entity-id")\n'
+      );
+    }
+
+    // Validate entity ID is string (detect double-nesting)
+    if (typeof this.entityData.id !== 'string') {
+      const actualType = typeof this.entityData.id;
+      const actualValue =
+        actualType === 'object'
+          ? JSON.stringify(this.entityData.id, null, 2)
+          : String(this.entityData.id);
+
+      throw new Error(
+        '❌ ENTITY DOUBLE-NESTING DETECTED!\n' +
+          '\n' +
+          `entity.id should be STRING but is ${actualType}:\n` +
+          `${actualValue}\n` +
+          '\n' +
+          'This usually happens when:\n' +
+          '  1. An entity instance was passed instead of string ID\n' +
+          '  2. A helper function used entity instead of entity.id\n' +
+          '\n' +
+          'Fix by ensuring all entity manager calls use string IDs:\n' +
+          '  ❌ entityManager.addComponent(entity, componentId, data)\n' +
+          '  ✅ entityManager.addComponent(entity.id, componentId, data)\n' +
+          '\n' +
+          '  ❌ builder.closeToEntity(targetEntity)\n' +
+          '  ✅ builder.closeToEntity(targetEntity.id)\n'
+      );
+    }
+
+    // Validate entity ID is non-blank
+    if (this.entityData.id.trim() === '') {
+      throw new Error(
+        'ModEntityBuilder.validate: Entity ID cannot be blank\n' +
+          '\n' +
+          'Entity IDs must be non-empty strings. Use descriptive IDs like:\n' +
+          '  "actor1", "target1", "room-library", "item-sword"\n'
+      );
     }
 
     // Validate components structure
-    if (typeof this.entityData.components !== 'object') {
+    if (
+      typeof this.entityData.components !== 'object' ||
+      this.entityData.components === null
+    ) {
       throw new Error(
-        'ModEntityBuilder.validate: Components must be an object'
+        `ModEntityBuilder.validate: Components must be an object, got: ${typeof this.entityData.components}\n` +
+          '\n' +
+          'Internal error in ModEntityBuilder - components should be initialized as {}.\n'
       );
     }
 
-    // Validate required components if any exist
+    // Validate position component if present
     const hasPosition = this.entityData.components[POSITION_COMPONENT_ID];
-    if (hasPosition && !hasPosition.locationId) {
-      throw new Error(
-        'ModEntityBuilder.validate: Position component must have locationId'
-      );
+    if (hasPosition) {
+      if (!hasPosition.locationId) {
+        throw new Error(
+          `ModEntityBuilder.validate: Position component missing 'locationId' property\n` +
+            '\n' +
+            'Position component data:\n' +
+            `${JSON.stringify(hasPosition, null, 2)}\n` +
+            '\n' +
+            'Fix using:\n' +
+            "  builder.atLocation(\"location-id\")\n" +
+            '\n' +
+            'Or manually:\n' +
+            '  builder.withComponent("core:position", { locationId: "location-id" })\n'
+        );
+      }
+
+      if (typeof hasPosition.locationId !== 'string') {
+        throw new Error(
+          `ModEntityBuilder.validate: Position component locationId must be string, got: ${typeof hasPosition.locationId}\n` +
+            '\n' +
+            'This may indicate entity double-nesting in location references.\n'
+        );
+      }
     }
 
+    // Validate name component if present
     const hasName = this.entityData.components[NAME_COMPONENT_ID];
-    if (hasName && !hasName.text) {
-      throw new Error(
-        'ModEntityBuilder.validate: Name component must have text'
-      );
+    if (hasName) {
+      if (!hasName.text) {
+        throw new Error(
+          `ModEntityBuilder.validate: Name component missing 'text' property\n` +
+            '\n' +
+            'Name component data:\n' +
+            `${JSON.stringify(hasName, null, 2)}\n` +
+            '\n' +
+            'Fix using:\n' +
+            '  builder.withName("name-text")\n' +
+            '\n' +
+            'Or manually:\n' +
+            '  builder.withComponent("core:name", { text: "name-text" })\n'
+        );
+      }
+
+      if (typeof hasName.text !== 'string') {
+        throw new Error(
+          `ModEntityBuilder.validate: Name component text must be string, got: ${typeof hasName.text}\n`
+        );
+      }
+    }
+
+    // Validate closeness component if present
+    const hasCloseness = this.entityData.components['positioning:closeness'];
+    if (hasCloseness) {
+      if (!Array.isArray(hasCloseness.partners)) {
+        throw new Error(
+          `ModEntityBuilder.validate: Closeness component 'partners' must be array, got: ${typeof hasCloseness.partners}\n` +
+            '\n' +
+            'Closeness component data:\n' +
+            `${JSON.stringify(hasCloseness, null, 2)}\n` +
+            '\n' +
+            'Fix using:\n' +
+            '  builder.closeToEntity("target-id")\n' +
+            '  builder.closeToEntity(["target1", "target2"])\n'
+        );
+      }
+
+      // Validate all partners are strings
+      for (const [index, partnerId] of hasCloseness.partners.entries()) {
+        if (typeof partnerId !== 'string') {
+          throw new Error(
+            `ModEntityBuilder.validate: Closeness partner at index ${index} must be string, got: ${typeof partnerId}\n` +
+              '\n' +
+              `Partner value: ${JSON.stringify(partnerId)}\n` +
+              '\n' +
+              'This indicates entity double-nesting. Use entity IDs, not entity objects:\n' +
+              '  ❌ builder.closeToEntity(targetEntity)\n' +
+              '  ✅ builder.closeToEntity(targetEntity.id)\n'
+          );
+        }
+      }
+    }
+
+    // Validate kneeling component if present
+    const hasKneeling =
+      this.entityData.components['positioning:kneeling_before'];
+    if (hasKneeling) {
+      if (!hasKneeling.entityId) {
+        throw new Error(
+          `ModEntityBuilder.validate: Kneeling component missing 'entityId' property\n` +
+            '\n' +
+            'Fix using:\n' +
+            '  builder.kneelingBefore("target-id")\n'
+        );
+      }
+
+      if (typeof hasKneeling.entityId !== 'string') {
+        throw new Error(
+          `ModEntityBuilder.validate: Kneeling entityId must be string, got: ${typeof hasKneeling.entityId}\n` +
+            '\n' +
+            'This indicates entity double-nesting. Use entity ID, not entity object:\n' +
+            '  ❌ builder.kneelingBefore(targetEntity)\n' +
+            '  ✅ builder.kneelingBefore(targetEntity.id)\n'
+        );
+      }
     }
 
     return this;

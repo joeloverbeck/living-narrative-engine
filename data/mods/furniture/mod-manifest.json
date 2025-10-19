@@ -1,0 +1,43 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "furniture",
+  "version": "1.0.0",
+  "name": "Furniture",
+  "description": "Provides reusable furniture entity definitions including beds, sofas, chairs, and benches with positioning capabilities.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "components": [],
+    "actions": [],
+    "conditions": [],
+    "rules": [],
+    "entities": {
+      "definitions": [
+        "bar_stools.entity.json",
+        "four_poster_bed.entity.json",
+        "living_room_sofa.entity.json",
+        "lounge_sofa.entity.json",
+        "metal_framed_patient_bed.entity.json",
+        "park_bench.entity.json",
+        "single_bed.entity.json",
+        "swivel_chair.entity.json",
+        "throne.entity.json",
+        "upholstered_king_bed.entity.json"
+      ],
+      "instances": []
+    },
+    "events": [],
+    "macros": [],
+    "scopes": []
+  }
+}

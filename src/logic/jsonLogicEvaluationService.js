@@ -410,6 +410,16 @@ class JsonLogicEvaluationService extends BaseService {
       `Evaluating rule: ${ruleSummary}. Context keys: ${Object.keys(context || {}).join(', ')}`
     );
 
+    // TEMPORARY DIAGNOSTIC: Log condition_ref evaluations
+    if (resolvedRule && typeof resolvedRule === 'object' && resolvedRule.condition_ref) {
+      console.log('[DIAGNOSTIC] Evaluating condition_ref:', {
+        conditionRef: resolvedRule.condition_ref,
+        contextKeys: Object.keys(context || {}),
+        actorId: context?.actor?.id,
+        entityId: context?.entity?.id,
+      });
+    }
+
     try {
       let rawResult;
       if (

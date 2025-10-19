@@ -167,6 +167,14 @@ export class MultiTargetResolutionStage extends PipelineStage {
         const isLegacy = this.#legacyLayer.isLegacyAction(actionDef);
         const resolutionStartTime = Date.now();
 
+        // TEMPORARY DIAGNOSTIC: Log which resolution path is taken
+        console.log(`[DIAGNOSTIC] Action ${actionDef.id} resolution path:`, {
+          isLegacy,
+          hasStringTargets: typeof actionDef.targets === 'string',
+          targets: actionDef.targets,
+          scope: actionDef.scope,
+        });
+
         // Capture legacy detection if action-aware tracing is enabled
         if (isActionAwareTrace && trace.captureLegacyDetection) {
           trace.captureLegacyDetection(actionDef.id, {
@@ -422,10 +430,21 @@ export class MultiTargetResolutionStage extends PipelineStage {
       actionDef.targets ||
       actionDef.scope;
 
+    // TEMPORARY DIAGNOSTIC: Log legacy resolution details
+    console.log(`[DIAGNOSTIC] Legacy resolution for ${actionDef.id}:`, {
+      scope,
+      actorId: actor.id,
+      hasActionContext: !!actionContext,
+      actionContextKeys: actionContext ? Object.keys(actionContext) : [],
+    });
+
     trace?.step(
       `Resolving legacy scope '${scope}'`,
       'MultiTargetResolutionStage'
     );
+
+    // TEMPORARY DIAGNOSTIC: About to call resolveTargets
+    console.log(`[DIAGNOSTIC] About to call targetResolver.resolveTargets for ${actionDef.id}`);
 
     // Use existing target resolver for compatibility
     const result = await this.#targetResolver.resolveTargets(
@@ -435,6 +454,17 @@ export class MultiTargetResolutionStage extends PipelineStage {
       trace,
       actionDef.id
     );
+
+    // TEMPORARY DIAGNOSTIC: resolveTargets returned
+    console.log(`[DIAGNOSTIC] targetResolver.resolveTargets returned for ${actionDef.id}`);
+
+    // TEMPORARY DIAGNOSTIC: Log resolution result
+    console.log(`[DIAGNOSTIC] Legacy resolution result for ${actionDef.id}:`, {
+      success: result.success,
+      hasValue: !!result.value,
+      targetContextsLength: result.value?.length || 0,
+      targetContexts: result.value || [],
+    });
 
     if (!result.success) {
       return PipelineResult.failure(result.errors, context.data);

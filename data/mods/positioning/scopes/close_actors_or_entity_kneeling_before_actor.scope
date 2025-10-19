@@ -1,0 +1,16 @@
+// Scope for actors in closeness where:
+// - Actors are facing each other OR actor is behind target
+// - Actor is NOT kneeling before entity (can't reach up from kneeling)
+// - Entity CAN be kneeling before actor (head/shoulders are reachable)
+// Used by actions targeting head/shoulders that work when target kneels before actor
+positioning:close_actors_or_entity_kneeling_before_actor := actor.components.positioning:closeness.partners[][{
+  "and": [
+    {
+      "or": [
+        {"condition_ref": "positioning:both-actors-facing-each-other"},
+        {"condition_ref": "positioning:actor-is-behind-entity"}
+      ]
+    },
+    {"!": {"condition_ref": "positioning:actor-kneeling-before-entity"}}
+  ]
+}]

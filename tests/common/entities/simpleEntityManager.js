@@ -149,17 +149,17 @@ export default class SimpleEntityManager {
 
   /**
    * Creates an empty entity with the given id.
-   * No-op if entity already exists.
+   * If entity already exists, recreates it with fresh components.
    *
    * @param {string} id - Entity id.
    * @returns {object} The created entity instance.
    */
   createEntity(id) {
-    if (!this.entities.has(id)) {
-      this.entities.set(id, { id, components: {} });
-      // Clear cache for this entity since it's new
-      this.entityInstanceCache.delete(id);
-    }
+    // Always create/recreate the entity with fresh components
+    // This ensures tests that reuse entity IDs get clean entities
+    this.entities.set(id, { id, components: {} });
+    // Clear cache for this entity
+    this.entityInstanceCache.delete(id);
     return this.getEntityInstance(id);
   }
 

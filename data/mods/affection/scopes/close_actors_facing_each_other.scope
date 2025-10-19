@@ -1,5 +1,9 @@
-// Scope for actors in closeness who are facing each other
-// Used by actions that require face-to-face interaction
+// Scope for actors in closeness who are facing each other and don't have incompatible kneeling positions
+// Used by actions that require face-to-face interaction and compatible vertical positioning
 affection:close_actors_facing_each_other := actor.components.positioning:closeness.partners[][{
-  "condition_ref": "positioning:both-actors-facing-each-other"
+  "and": [
+    {"condition_ref": "positioning:both-actors-facing-each-other"},
+    {"!": {"condition_ref": "positioning:entity-kneeling-before-actor"}},
+    {"!": {"condition_ref": "positioning:actor-kneeling-before-entity"}}
+  ]
 }]

@@ -142,6 +142,15 @@ export class ActionIndex {
     const actorComponentTypes =
       this.#entityManager.getAllComponentTypesForEntity(actorEntity.id) || [];
 
+    // TEMPORARY DIAGNOSTIC: Log actor components and index state
+    console.log('[DIAGNOSTIC] ActionIndex.getCandidateActions:', {
+      actorId: actorEntity.id,
+      actorComponents: actorComponentTypes,
+      indexByActorComponentSize: this.#byActorComponent.size,
+      indexByForbiddenComponentSize: this.#byForbiddenComponent.size,
+      noActorRequirementCount: this.#noActorRequirement.length,
+    });
+
     trace?.data(`Actor '${actorEntity.id}' has components.`, source, {
       components: actorComponentTypes.length > 0 ? actorComponentTypes : [],
     });
@@ -229,6 +238,16 @@ export class ActionIndex {
       }
 
       return hasAllRequired;
+    });
+
+    // TEMPORARY DIAGNOSTIC: Log filtering results
+    console.log('[DIAGNOSTIC] ActionIndex.getCandidateActions result:', {
+      actorId: actorEntity.id,
+      candidateSetSize: candidateSet.size,
+      forbiddenSize: forbiddenCandidates.size,
+      finalCandidatesCount: candidates.length,
+      finalCandidateIds: candidates.map(a => a.id),
+      filteredOutCount: candidateSet.size - candidates.length,
     });
 
     trace?.success(
