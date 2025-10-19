@@ -10,6 +10,9 @@ import {
 import {
   setupServiceLogger,
   validateServiceDependencies,
+  initHandlerLogger,
+  initializeServiceLogger,
+  resolveExecutionLogger,
 } from '../../../src/utils/serviceInitializerUtils.js';
 import { setupPrefixedLogger } from '../../../src/utils/loggerUtils.js';
 import { validateDependencies } from '../../../src/utils/dependencyUtils.js';
@@ -64,5 +67,64 @@ describe('serviceInitializerUtils helper functions', () => {
       ],
       baseLogger
     );
+  });
+
+  it('initHandlerLogger initializes prefixed logger and validates deps', () => {
+    const deps = {
+      handlerDep: { value: { handle: jest.fn() }, requiredMethods: ['handle'] },
+    };
+
+    const logger = initHandlerLogger('Handler', baseLogger, deps);
+
+    expect(setupPrefixedLogger).toHaveBeenCalledWith(baseLogger, 'Handler: ');
+    expect(validateDependencies).toHaveBeenCalledWith(
+      [
+        {
+          dependency: deps.handlerDep.value,
+          name: 'Handler: handlerDep',
+          methods: ['handle'],
+          isFunction: undefined,
+        },
+      ],
+      expect.objectContaining({ prefix: 'Handler: ', logger: baseLogger })
+    );
+    expect(logger).toEqual({ prefix: 'Handler: ', logger: baseLogger });
+  });
+
+  it('initializeServiceLogger reuses setup logic', () => {
+    const deps = {
+      serviceDep: { value: () => {}, isFunction: true },
+    };
+
+    const logger = initializeServiceLogger('InitSvc', baseLogger, deps);
+
+    expect(setupPrefixedLogger).toHaveBeenCalledWith(baseLogger, 'InitSvc: ');
+    expect(validateDependencies).toHaveBeenCalledWith(
+      [
+        {
+          dependency: deps.serviceDep.value,
+          name: 'InitSvc: serviceDep',
+          methods: undefined,
+          isFunction: true,
+        },
+      ],
+      expect.objectContaining({ prefix: 'InitSvc: ', logger: baseLogger })
+    );
+    expect(logger).toEqual({ prefix: 'InitSvc: ', logger: baseLogger });
+  });
+
+  describe('resolveExecutionLogger', () => {
+    it('prefers execution context logger when available', () => {
+      const execLogger = { custom: true };
+      const resolved = resolveExecutionLogger(baseLogger, { logger: execLogger });
+      expect(resolved).toBe(execLogger);
+    });
+
+    it('falls back to default logger when context missing logger', () => {
+      expect(resolveExecutionLogger(baseLogger, { logger: null })).toBe(
+        baseLogger
+      );
+      expect(resolveExecutionLogger(baseLogger)).toBe(baseLogger);
+    });
   });
 });
