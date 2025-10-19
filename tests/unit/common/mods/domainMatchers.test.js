@@ -382,10 +382,12 @@ describe('Domain Matchers - Unit Tests', () => {
         });
         throw new Error('Should have thrown');
       } catch (err) {
-        expect(err.message).toContain('Data differences');
-        expect(err.message).toContain('locationId:');
-        expect(err.message).toContain('  Expected: "bedroom"');
-        expect(err.message).toContain('  Received: "kitchen"');
+        const normalizedMessage = err.message.replace(/\u001b\[[0-9;]*m/g, '');
+
+        expect(normalizedMessage).toContain('Data differences');
+        expect(normalizedMessage).toContain('locationId:');
+        expect(normalizedMessage).toContain('Expected: "bedroom"');
+        expect(normalizedMessage).toContain('Received: "kitchen"');
       }
     });
 
