@@ -1011,4 +1011,155 @@ describe('ActionFormattingStage - Integration Tests', () => {
       expect(trace.info).not.toHaveBeenCalled();
     });
   });
+
+  describe('Visual property validation during full stage execution', () => {
+    /**
+     * Executes the stage with a single action definition so the validation
+     * helper runs inside the real coordinator pipeline.
+     *
+     * @param {{ id: string, visual: unknown }} params
+     * @returns {Promise<PipelineResult>}
+     */
+    async function runStageWithVisual({ id, visual, traceOverride }) {
+      const actionDef = {
+        id,
+        name: 'Visual Validation Action',
+        scope: 'none',
+        template: 'perform the action',
+        description: 'Validates visual metadata wiring',
+        visual,
+      };
+
+      return stage.execute({
+        actor,
+        actionsWithTargets: [
+          {
+            actionDef,
+            targetContexts: [ActionTargetContext.noTarget()],
+          },
+        ],
+        trace: traceOverride ?? trace,
+      });
+    }
+
+    it('passes through null visual metadata without emitting warnings', async () => {
+      const result = await runStageWithVisual({
+        id: 'test:visual-null',
+        visual: null,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(1);
+      expect(result.actions[0].visual).toBeNull();
+      expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    it('warns when the visual metadata is provided as a primitive value', async () => {
+      const result = await runStageWithVisual({
+        id: 'test:visual-string',
+        visual: 'glow-in-the-dark',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.actions[0].visual).toBe('glow-in-the-dark');
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "Invalid visual property structure for action 'test:visual-string'"
+        )
+      );
+    });
+
+    it('warns when the visual metadata is supplied as an array', async () => {
+      const visualArray = [
+        { backgroundColor: '#444444', textColor: '#ffffff' },
+      ];
+
+      const result = await runStageWithVisual({
+        id: 'test:visual-array',
+        visual: visualArray,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.actions[0].visual).toBe(visualArray);
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "Invalid visual property structure for action 'test:visual-array'"
+        )
+      );
+    });
+
+    it('accepts known visual properties without emitting any warnings', async () => {
+      const visual = {
+        backgroundColor: '#111111',
+        textColor: '#eeeeee',
+        hoverBackgroundColor: '#222222',
+        hoverTextColor: '#dddddd',
+      };
+
+      const result = await runStageWithVisual({
+        id: 'test:visual-known-properties',
+        visual,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.actions[0].visual).toEqual(visual);
+      expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    it('logs warnings for unknown properties and incorrect value types without blocking formatting', async () => {
+      const visual = {
+        backgroundColor: 42,
+        textColor: '#ff00ff',
+        hoverBackgroundColor: null,
+        customAccent: 'sparkle',
+      };
+
+      const result = await runStageWithVisual({
+        id: 'test:visual-warnings',
+        visual,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.actions[0].visual).toEqual(visual);
+
+      const warningMessages = logger.warn.mock.calls.map((call) => call[0]);
+      expect(
+        warningMessages.some((message) =>
+          message.includes(
+            "Unknown visual properties for action 'test:visual-warnings': customAccent"
+          )
+        )
+      ).toBe(true);
+      expect(
+        warningMessages.some((message) =>
+          message.includes(
+            "Visual property 'backgroundColor' for action 'test:visual-warnings' should be a string"
+          )
+        )
+      ).toBe(true);
+      expect(
+        warningMessages.some((message) =>
+          message.includes(
+            "Visual property 'hoverBackgroundColor' for action 'test:visual-warnings' should be a string"
+          )
+        )
+      ).toBe(true);
+    });
+
+    it('emits structured trace data when trace supports captureActionData', async () => {
+      const actionAwareTrace = {
+        ...trace,
+        captureActionData: jest.fn(),
+      };
+
+      const result = await runStageWithVisual({
+        id: 'test:visual-trace-aware',
+        visual: null,
+        traceOverride: actionAwareTrace,
+      });
+
+      expect(result.success).toBe(true);
+      expect(actionAwareTrace.captureActionData).toHaveBeenCalled();
+    });
+  });
 });
