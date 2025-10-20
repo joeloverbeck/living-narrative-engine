@@ -594,13 +594,13 @@ describe('Trait Model', () => {
         );
       });
 
-      it('should warn for very long profiles', () => {
-        const longProfile = 'A'.repeat(1201);
+      it('should accept very long profiles without warnings', () => {
+        const longProfile = 'A'.repeat(1500);
         const trait = new Trait({ ...validTraitData, profile: longProfile });
         const result = trait.validate();
-        expect(result.warnings).toContain(
-          'Profile is very long (max recommended 1200 characters)'
-        );
+        expect(result.valid).toBe(true);
+        expect(result.errors).toHaveLength(0);
+        expect(result.warnings).toHaveLength(0);
       });
     });
 

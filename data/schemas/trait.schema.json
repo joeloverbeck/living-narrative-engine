@@ -164,8 +164,7 @@
     "profile": {
       "type": "string",
       "description": "Character profile summary",
-      "minLength": 200,
-      "maxLength": 1200
+      "minLength": 200
     },
     "secrets": {
       "type": "array",

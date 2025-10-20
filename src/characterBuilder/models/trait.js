@@ -48,7 +48,7 @@ import { v4 as uuidv4 } from 'uuid';
  * @property {string[]} fears - 1-2 character fears
  * @property {Goals} goals - Short-term and long-term goals
  * @property {string[]} notes - 2-6 additional notes
- * @property {string} profile - Character profile summary (200-1200 characters)
+ * @property {string} profile - Character profile summary (at least 200 characters)
  * @property {string[]} secrets - 1-2 character secrets
  * @property {string} [generatedAt] - ISO timestamp (auto-generated if not provided)
  * @property {LLMMetadata} [metadata] - LLM generation metadata
@@ -426,8 +426,6 @@ export class Trait {
       errors.push('Profile is required and must be a string');
     } else if (this.profile.length < 200) {
       errors.push('Profile is too short (min 200 characters)');
-    } else if (this.profile.length > 1200) {
-      warnings.push('Profile is very long (max recommended 1200 characters)');
     }
 
     // Validate secrets

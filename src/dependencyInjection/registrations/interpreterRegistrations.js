@@ -134,6 +134,10 @@ export function registerInterpreters(container) {
       bind(tokens.RemoveSittingClosenessHandler)
     );
     registry.register(
+      'BREAK_CLOSENESS_WITH_TARGET',
+      bind(tokens.BreakClosenessWithTargetHandler)
+    );
+    registry.register(
       'HAS_BODY_PART_WITH_COMPONENT_VALUE',
       bind(tokens.HasBodyPartWithComponentValueHandler)
     );

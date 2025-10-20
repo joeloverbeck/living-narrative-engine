@@ -30,6 +30,8 @@ import ValidateContainerCapacityHandler from '../../../src/logic/operationHandle
 import AtomicModifyComponentHandler from '../../../src/logic/operationHandlers/atomicModifyComponentHandler.js';
 import LockMouthEngagementHandler from '../../../src/logic/operationHandlers/lockMouthEngagementHandler.js';
 import UnlockMouthEngagementHandler from '../../../src/logic/operationHandlers/unlockMouthEngagementHandler.js';
+import BreakClosenessWithTargetHandler from '../../../src/logic/operationHandlers/breakClosenessWithTargetHandler.js';
+import * as closenessCircleService from '../../../src/logic/services/closenessCircleService.js';
 import { validateDependency } from '../../../src/utils/dependencyUtils.js';
 
 /* global jest */
@@ -492,7 +494,7 @@ export class ModTestHandlerFactory {
       positioning: this.createHandlersWithPerceptionLogging.bind(this),
       items: this.createHandlersWithItemsSupport.bind(this),
       exercise: this.createStandardHandlers.bind(this),
-      violence: this.createStandardHandlers.bind(this),
+      violence: this.createHandlersWithPerceptionLogging.bind(this),
       sex: this.createStandardHandlers.bind(this),
       intimacy: this.createStandardHandlers.bind(this),
       affection: this.createHandlersWithComponentMutations.bind(this),
@@ -627,6 +629,12 @@ export class ModTestHandlerFactory {
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,
+      }),
+      BREAK_CLOSENESS_WITH_TARGET: new BreakClosenessWithTargetHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+        closenessCircleService,
       }),
     };
   }

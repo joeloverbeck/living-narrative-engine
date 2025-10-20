@@ -332,7 +332,7 @@ Based on the character concept, thematic direction, core motivations, and clich�
 
 10. **Notes (2-6 unique knowledge pieces)**: Include specialized knowledge, skills, or experiences acquired through non-clichéd means. These should add depth and potential story hooks.
 
-11. **Profile (3-5 sentence background)**: Provide a concise but comprehensive background that explains the character's current situation and how their core motivations originated. Focus on formative experiences. (200-1200 characters)
+11. **Profile (3-5 sentence background)**: Provide a concise but comprehensive background that explains the character's current situation and how their core motivations originated. Focus on formative experiences. (at least 200 characters)
 
 12. **Secrets (1-2 significant secrets)**: Create secrets tied directly to core motivations and internal contradictions. These should have potential to impact relationships and drive narrative conflict.
 
@@ -343,7 +343,7 @@ Each category should avoid the listed clichés and work together to create a coh
 - Generate exactly the 12 trait categories specified
 - Ensure all array fields meet the minimum/maximum requirements
 - Physical description must be 100-700 characters
-- Profile must be 200-1200 characters
+- Profile must be at least 200 characters
 - Each secret and fear must be substantial and character-defining
 - Goals must include both short-term array and single long-term goal
 - Names and personality items must include both the main field and explanation/justification
@@ -377,7 +377,7 @@ Each category should avoid the listed clichés and work together to create a coh
     "longTerm": "Major life aspiration driven by core motivations"
   },
   "notes": ["Unique knowledge/skill/experience acquired in non-clichéd ways"],
-  "profile": "3-5 sentence background summary explaining current situation and core origin (200-1200 chars)",
+  "profile": "3-5 sentence background summary explaining current situation and core origin (at least 200 chars)",
   "secrets": ["Significant secret tied to core motivations with relationship impact potential"]
 }
 </response_format>
@@ -691,9 +691,9 @@ export function validateTraitsGenerationResponse(response) {
     );
   }
 
-  if (response.profile.length < 200 || response.profile.length > 1200) {
+  if (response.profile.length < 200) {
     throw new Error(
-      'TraitsGenerationPrompt: Profile must be 200-1200 characters'
+      'TraitsGenerationPrompt: Profile must be at least 200 characters'
     );
   }
 

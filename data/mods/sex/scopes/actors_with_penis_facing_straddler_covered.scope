@@ -1,0 +1,20 @@
+// Scope for actors in closeness who have a covered penis, are facing each other, are currently sitting, and are being straddled
+// Used by actions that require covered penis anatomy, face-to-face interaction, sitting position, and straddling
+sex:actors_with_penis_facing_straddler_covered := actor.components.positioning:closeness.partners[][{
+  "and": [
+    {"hasPartOfType": [".", "penis"]},
+    {"condition_ref": "positioning:entity-not-in-facing-away"},
+    {"isSocketCovered": [".", "penis"]},
+    {
+      "!!": {
+        "var": "entity.components.positioning:sitting_on"
+      }
+    },
+    {
+      "==": [
+        {"var": "entity.id"},
+        {"var": "actor.components.positioning:straddling_waist.target_id"}
+      ]
+    }
+  ]
+}]

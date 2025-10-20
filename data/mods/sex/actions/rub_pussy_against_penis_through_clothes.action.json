@@ -1,0 +1,30 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex:rub_pussy_against_penis_through_clothes",
+  "name": "Rub Pussy Against Penis Through Clothes",
+  "description": "Rub your pussy sensually against the target's penis through their clothing while straddling them.",
+  "targets": {
+    "primary": {
+      "scope": "sex:actors_with_penis_facing_straddler_covered",
+      "placeholder": "primary",
+      "description": "Person with clothed penis to rub against"
+    },
+    "secondary": {
+      "scope": "clothing:target_topmost_torso_lower_clothing_no_accessories",
+      "placeholder": "secondary",
+      "description": "Clothing item covering the penis",
+      "contextFrom": "primary"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:closeness", "positioning:straddling_waist"]
+  },
+  "template": "rub your pussy sensually against {primary}'s penis through the {secondary}",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#4a148c",
+    "textColor": "#e1bee7",
+    "hoverBackgroundColor": "#6a1b9a",
+    "hoverTextColor": "#f3e5f5"
+  }
+}
