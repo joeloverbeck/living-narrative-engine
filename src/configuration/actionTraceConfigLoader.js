@@ -9,6 +9,20 @@ import ActionTraceConfigValidator from './actionTraceConfigValidator.js';
 import ActionTracingConfigMigration from './actionTracingMigration.js';
 
 /**
+ * Default performance thresholds (in milliseconds) for action trace operations.
+ * I/O bound operations such as configuration loading have higher limits than
+ * CPU-bound operations to account for disk and schema parsing overhead.
+ *
+ * @type {Record<string, number>}
+ */
+const DEFAULT_OPERATION_THRESHOLDS = {
+  default: 5,
+  'config-load': 25,
+  'config-validate': 10,
+  'cache-hit': 1,
+};
+
+/**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator
  */
@@ -816,6 +830,10 @@ class ActionTraceConfigLoader {
 
     // Initialize operation metrics if not exists
     if (!metrics.operations[operationType]) {
+      const defaultThreshold =
+        DEFAULT_OPERATION_THRESHOLDS[operationType] ??
+        DEFAULT_OPERATION_THRESHOLDS.default;
+
       metrics.operations[operationType] = {
         count: 0,
         totalTime: 0,
@@ -823,7 +841,7 @@ class ActionTraceConfigLoader {
         minTime: Number.MAX_VALUE,
         maxTime: 0,
         slowOperations: 0,
-        performanceThreshold: 5, // Default 5ms threshold
+        performanceThreshold: defaultThreshold,
       };
     }
 

@@ -170,7 +170,7 @@ describe('ActionTraceConfigLoader Enhancements', () => {
 
       // Simulate slow operation
       mockTraceConfigLoader.loadConfig.mockImplementation(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 35));
         return config;
       });
 
@@ -179,7 +179,7 @@ describe('ActionTraceConfigLoader Enhancements', () => {
       // Check for performance warnings
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Performance regression'),
-        expect.any(Object)
+        expect.objectContaining({ threshold: '25ms' })
       );
     });
 
