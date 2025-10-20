@@ -14,7 +14,7 @@
     "actor": ["positioning:closeness"],
     "primary": ["positioning:sitting_on", "positioning:closeness"]
   },
-  "template": "straddle {target}'s waist while facing away",
+  "template": "sit on {target}'s lap (facing away)",
   "prerequisites": [
     {
       "logic": {
