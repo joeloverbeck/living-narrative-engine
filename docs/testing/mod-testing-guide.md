@@ -10,6 +10,8 @@ The Mod Testing Guide consolidates everything needed to adopt the Test Module Pa
 
 Use this guide as the canonical reference for all new and migrated mod tests.
 
+> **Need to debug action discovery pipelines?** See the [Action Integration Testing Debugging Guide](./action-integration-debugging.md) for diagnostics-focused helpers that complement the Test Module Pattern.
+
 ## Test Module Pattern Architecture
 
 ### Layered Design
