@@ -7,6 +7,7 @@
 import { describe, it, expect } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
+import { performPreValidation } from '../../../src/utils/preValidationUtils.js';
 
 /**
  * @description Resolves a path relative to the repository root.
@@ -75,5 +76,21 @@ describe('BREAK_CLOSENESS_WITH_TARGET schema regression test', () => {
         entry.$ref === './operations/breakClosenessWithTarget.schema.json'
     );
     expect(hasBreakClosenessRef).toBe(true);
+  });
+
+  it('should pass rule pre-validation for BREAK_CLOSENESS_WITH_TARGET usage', () => {
+    const rulePath = resolveFromRoot(
+      'data/mods/violence/rules/handle_push_off.rule.json'
+    );
+    const rule = JSON.parse(fs.readFileSync(rulePath, 'utf8'));
+
+    const result = performPreValidation(
+      rule,
+      'schema://living-narrative-engine/rule.schema.json',
+      rulePath
+    );
+
+    expect(result.isValid).toBe(true);
+    expect(result.error).toBeNull();
   });
 });
