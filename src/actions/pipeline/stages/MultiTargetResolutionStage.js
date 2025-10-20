@@ -168,7 +168,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
         const resolutionStartTime = Date.now();
 
         // TEMPORARY DIAGNOSTIC: Log which resolution path is taken
-        console.log(`[DIAGNOSTIC] Action ${actionDef.id} resolution path:`, {
+        this.#logger.debug(`[DIAGNOSTIC] Action ${actionDef.id} resolution path:`, {
           isLegacy,
           hasStringTargets: typeof actionDef.targets === 'string',
           targets: actionDef.targets,
@@ -431,7 +431,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
       actionDef.scope;
 
     // TEMPORARY DIAGNOSTIC: Log legacy resolution details
-    console.log(`[DIAGNOSTIC] Legacy resolution for ${actionDef.id}:`, {
+    this.#logger.debug(`[DIAGNOSTIC] Legacy resolution for ${actionDef.id}:`, {
       scope,
       actorId: actor.id,
       hasActionContext: !!actionContext,
@@ -444,7 +444,9 @@ export class MultiTargetResolutionStage extends PipelineStage {
     );
 
     // TEMPORARY DIAGNOSTIC: About to call resolveTargets
-    console.log(`[DIAGNOSTIC] About to call targetResolver.resolveTargets for ${actionDef.id}`);
+    this.#logger.debug(
+      `[DIAGNOSTIC] About to call targetResolver.resolveTargets for ${actionDef.id}`
+    );
 
     // Use existing target resolver for compatibility
     const result = await this.#targetResolver.resolveTargets(
@@ -456,10 +458,12 @@ export class MultiTargetResolutionStage extends PipelineStage {
     );
 
     // TEMPORARY DIAGNOSTIC: resolveTargets returned
-    console.log(`[DIAGNOSTIC] targetResolver.resolveTargets returned for ${actionDef.id}`);
+    this.#logger.debug(
+      `[DIAGNOSTIC] targetResolver.resolveTargets returned for ${actionDef.id}`
+    );
 
     // TEMPORARY DIAGNOSTIC: Log resolution result
-    console.log(`[DIAGNOSTIC] Legacy resolution result for ${actionDef.id}:`, {
+    this.#logger.debug(`[DIAGNOSTIC] Legacy resolution result for ${actionDef.id}:`, {
       success: result.success,
       hasValue: !!result.value,
       targetContextsLength: result.value?.length || 0,

@@ -167,15 +167,22 @@ class OperationInterpreter extends BaseService {
     // -----------------------------------------------------------------------
     try {
       this.#logger.debug(`Executing handler for operation type "${opType}"…`);
-      console.log(`[DEBUG] OperationInterpreter.execute - Executing handler for operation type "${opType}"`);
+      this.#logger.debug(
+        `[DEBUG] OperationInterpreter.execute - Executing handler for operation type "${opType}"`
+      );
       await handler(paramsForHandler, executionContext);
-      console.log(`[DEBUG] OperationInterpreter.execute - Handler for "${opType}" completed successfully`);
+      this.#logger.debug(
+        `[DEBUG] OperationInterpreter.execute - Handler for "${opType}" completed successfully`
+      );
     } catch (handlerErr) {
       // Bubble up – SystemLogicInterpreter will handle halting the sequence
       this.#logger.debug(
         `Handler for operation "${opType}" threw – re-throwing to caller.`
       );
-      console.error(`[DEBUG] OperationInterpreter.execute - Handler for "${opType}" threw error:`, handlerErr.message);
+      this.#logger.debug(
+        `[DEBUG] OperationInterpreter.execute - Handler for "${opType}" threw error:`,
+        handlerErr
+      );
       throw handlerErr;
     }
   }

@@ -101,7 +101,7 @@ export default function createStepResolver({
       if (field === 'components') {
         // DIAGNOSTIC: Log when building components object
         const componentsObj = getOrBuildComponents(entityId, null, entitiesGateway, trace);
-        console.log('[DIAGNOSTIC] StepResolver - Building components for entity:', {
+        console.debug('[DIAGNOSTIC] StepResolver - Building components for entity:', {
           entityId,
           field: 'components',
           componentKeys: componentsObj ? Object.keys(componentsObj) : null,
@@ -139,7 +139,7 @@ export default function createStepResolver({
 
     // DIAGNOSTIC: Log field access from objects, especially for namespaced IDs
     if (field.includes(':') || field === 'partners') {
-      console.log('[DIAGNOSTIC] StepResolver - Accessing field from object:', {
+      console.debug('[DIAGNOSTIC] StepResolver - Accessing field from object:', {
         field,
         objectKeys: obj ? Object.keys(obj) : null,
         hasField: obj ? (field in obj) : false,

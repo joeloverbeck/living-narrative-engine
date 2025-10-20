@@ -412,7 +412,7 @@ class JsonLogicEvaluationService extends BaseService {
 
     // TEMPORARY DIAGNOSTIC: Log condition_ref evaluations
     if (resolvedRule && typeof resolvedRule === 'object' && resolvedRule.condition_ref) {
-      console.log('[DIAGNOSTIC] Evaluating condition_ref:', {
+      this.#logger.debug('[DIAGNOSTIC] Evaluating condition_ref:', {
         conditionRef: resolvedRule.condition_ref,
         contextKeys: Object.keys(context || {}),
         actorId: context?.actor?.id,

@@ -82,7 +82,7 @@ export class ComponentFilteringStage extends PipelineStage {
       );
 
       // TEMPORARY DIAGNOSTIC: Log filtering results
-      console.log('[DIAGNOSTIC] ComponentFilteringStage:', {
+      console.debug('[DIAGNOSTIC] ComponentFilteringStage:', {
         actorId: actor.id,
         actorComponents: actor.componentTypeIds || [],
         candidateCount: candidateActions.length,

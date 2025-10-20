@@ -131,7 +131,7 @@ export default function createArrayIterationResolver({
 
       // DIAGNOSTIC: Enhanced logging for array iteration debugging
       const parentResultsArray = Array.from(parentResults);
-      console.log('[DIAGNOSTIC] ArrayIterationResolver - Starting iteration:', {
+      console.debug('[DIAGNOSTIC] ArrayIterationResolver - Starting iteration:', {
         parentResultsSize: parentResults.size,
         parentResultsPreview: parentResultsArray.slice(0, 3),
         parentResultsTypes: parentResultsArray.slice(0, 3).map(v =>
@@ -176,7 +176,7 @@ export default function createArrayIterationResolver({
         // Handle regular arrays
         if (Array.isArray(parentValue)) {
           // DIAGNOSTIC: Log array processing details
-          console.log('[DIAGNOSTIC] ArrayIterationResolver - Processing array:', {
+          console.debug('[DIAGNOSTIC] ArrayIterationResolver - Processing array:', {
             arrayLength: parentValue.length,
             arrayPreview: parentValue.slice(0, 5),
             arrayItemTypes: parentValue.slice(0, 5).map(item =>
@@ -255,7 +255,7 @@ export default function createArrayIterationResolver({
       }
 
       // DIAGNOSTIC: Log final array iteration results
-      console.log('[DIAGNOSTIC] ArrayIterationResolver - Iteration complete:', {
+      console.debug('[DIAGNOSTIC] ArrayIterationResolver - Iteration complete:', {
         totalArrayElements,
         flattenedSize: flattened.size,
         flattenedPreview: Array.from(flattened).slice(0, 5),
