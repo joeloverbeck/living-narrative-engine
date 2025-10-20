@@ -96,7 +96,13 @@ describe('AppConfigService string environment logging integration', () => {
   });
 
   it('announces default handling when optional string env vars are undefined', () => {
-    applyEnv({ NODE_ENV: 'test', PROXY_PORT: '4302' });
+    applyEnv({
+      NODE_ENV: 'test',
+      PROXY_PORT: '4302',
+      LLM_CONFIG_PATH: undefined,
+      PROXY_ALLOWED_ORIGIN: undefined,
+      PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES: undefined,
+    });
 
     const appConfig = getAppConfigService(logger);
 

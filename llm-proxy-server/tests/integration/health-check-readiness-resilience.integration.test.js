@@ -49,14 +49,31 @@ const startReadinessApp = async ({ envOverrides = {} } = {}) => {
     },
   });
 
-  process.env = {
+  const nextEnv = {
     ...ORIGINAL_ENV,
     NODE_ENV: 'test',
     LLM_CONFIG_PATH: tempConfig.filePath,
     CACHE_ENABLED: 'true',
     HTTP_AGENT_ENABLED: 'true',
+    PROXY_ALLOWED_ORIGIN: envOverrides.PROXY_ALLOWED_ORIGIN ?? '',
+    READINESS_CRITICAL_HEAP_PERCENT:
+      envOverrides.READINESS_CRITICAL_HEAP_PERCENT ?? '90',
+    READINESS_CRITICAL_HEAP_TOTAL_MB:
+      envOverrides.READINESS_CRITICAL_HEAP_TOTAL_MB ?? '512',
+    READINESS_CRITICAL_HEAP_USED_MB:
+      envOverrides.READINESS_CRITICAL_HEAP_USED_MB ?? '512',
+    READINESS_CRITICAL_HEAP_LIMIT_PERCENT:
+      envOverrides.READINESS_CRITICAL_HEAP_LIMIT_PERCENT ?? '90',
     ...envOverrides,
   };
+
+  for (const [key, value] of Object.entries(envOverrides)) {
+    if (value === undefined) {
+      delete nextEnv[key];
+    }
+  }
+
+  process.env = nextEnv;
 
   resetAppConfigServiceInstance();
   const appConfigService = getAppConfigService(logger);
