@@ -133,9 +133,12 @@ describe('violence:force_to_knees action discovery', () => {
       expect(forceToKneesAction.targets.primary.placeholder).toBe('target');
     });
 
-    it('requires actor closeness, forbids kneeling targets, and uses violence colors', () => {
+    it('requires actor closeness, forbids kneeling actors and targets, and uses violence colors', () => {
       expect(forceToKneesAction.required_components.actor).toEqual([
         'positioning:closeness',
+      ]);
+      expect(forceToKneesAction.forbidden_components.actor).toEqual([
+        'positioning:kneeling_before',
       ]);
       expect(forceToKneesAction.forbidden_components.primary).toEqual([
         'positioning:kneeling_before',
@@ -203,6 +206,32 @@ describe('violence:force_to_knees action discovery', () => {
         'positioning:kneeling_before'
       );
       expect(targetKneeling?.entityId).toBe(scenario.actor.id);
+
+      configureActionDiscovery();
+
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
+      const ids = availableActions.map((action) => action.id);
+
+      expect(ids).not.toContain(ACTION_ID);
+    });
+
+    it('is not available when the actor kneels before the target', async () => {
+      const scenario = testFixture.createCloseActors(['Gina', 'Harper']);
+
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+      await testFixture.entityManager.addComponent(
+        scenario.actor.id,
+        'positioning:kneeling_before',
+        { entityId: scenario.target.id }
+      );
+      const actorKneeling = testFixture.entityManager.getComponentData(
+        scenario.actor.id,
+        'positioning:kneeling_before'
+      );
+      expect(actorKneeling?.entityId).toBe(scenario.target.id);
 
       configureActionDiscovery();
 
