@@ -1,380 +1,263 @@
-/**
- * @file Tests for ActionPipelineOrchestrator
- */
-
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { ActionPipelineOrchestrator } from '../../../src/actions/actionPipelineOrchestrator.js';
-import { Pipeline } from '../../../src/actions/pipeline/Pipeline.js';
-import { ComponentFilteringStage } from '../../../src/actions/pipeline/stages/ComponentFilteringStage.js';
-import { PrerequisiteEvaluationStage } from '../../../src/actions/pipeline/stages/PrerequisiteEvaluationStage.js';
-import { TargetComponentValidationStage } from '../../../src/actions/pipeline/stages/TargetComponentValidationStage.js';
-import { ActionFormattingStage } from '../../../src/actions/pipeline/stages/ActionFormattingStage.js';
-import { TraceContext } from '../../../src/actions/tracing/traceContext.js';
 
-// Mock the dependencies
-jest.mock('../../../src/actions/pipeline/Pipeline.js');
-jest.mock('../../../src/actions/pipeline/stages/ComponentFilteringStage.js');
+const mockPipelineExecute = jest.fn();
+const mockPipelineConstructor = jest.fn();
+
+function mockCreateClassDouble() {
+  const ctor = jest.fn();
+  const factory = jest.fn().mockImplementation(function (...args) {
+    ctor(...args);
+  });
+  return { factory, ctor };
+}
+
+jest.mock('../../../src/actions/pipeline/Pipeline.js', () => ({
+  __esModule: true,
+  Pipeline: class {
+    constructor(stages, logger) {
+      mockPipelineConstructor(stages, logger);
+      this.execute = mockPipelineExecute;
+    }
+  },
+}));
+
+jest.mock('../../../src/actions/pipeline/stages/ComponentFilteringStage.js', () => ({
+  __esModule: true,
+  ComponentFilteringStage: (
+    (globalThis.__mockStageDoubles ||= {}).componentFiltering =
+      mockCreateClassDouble()
+  ).factory,
+}));
+
+jest.mock('../../../src/actions/pipeline/stages/PrerequisiteEvaluationStage.js', () => ({
+  __esModule: true,
+  PrerequisiteEvaluationStage: (
+    (globalThis.__mockStageDoubles ||= {}).prerequisite = mockCreateClassDouble()
+  ).factory,
+}));
+
 jest.mock(
-  '../../../src/actions/pipeline/stages/PrerequisiteEvaluationStage.js'
+  '../../../src/actions/pipeline/stages/TargetComponentValidationStage.js',
+  () => ({
+    __esModule: true,
+    TargetComponentValidationStage: (
+      (globalThis.__mockStageDoubles ||= {}).targetValidation =
+        mockCreateClassDouble()
+    ).factory,
+  })
 );
+
+jest.mock('../../../src/actions/pipeline/stages/ActionFormattingStage.js', () => ({
+  __esModule: true,
+  ActionFormattingStage: (
+    (globalThis.__mockStageDoubles ||= {}).actionFormatting =
+      mockCreateClassDouble()
+  ).factory,
+}));
+
 jest.mock(
-  '../../../src/actions/pipeline/stages/TargetComponentValidationStage.js'
+  '../../../src/actions/pipeline/services/implementations/TargetCandidatePruner.js',
+  () => ({
+    __esModule: true,
+    default: (
+      (globalThis.__mockHelperDoubles ||= {}).targetCandidatePruner =
+        mockCreateClassDouble()
+    ).factory,
+  })
 );
-jest.mock('../../../src/actions/pipeline/stages/ActionFormattingStage.js');
+
+jest.mock(
+  '../../../src/actions/pipeline/stages/TargetValidationConfigProvider.js',
+  () => ({
+    __esModule: true,
+    default: (
+      (globalThis.__mockHelperDoubles ||= {}).validationConfigProvider =
+        mockCreateClassDouble()
+    ).factory,
+  })
+);
+
+jest.mock(
+  '../../../src/actions/pipeline/stages/TargetValidationReporter.js',
+  () => ({
+    __esModule: true,
+    default: (
+      (globalThis.__mockHelperDoubles ||= {}).validationReporter =
+        mockCreateClassDouble()
+    ).factory,
+  })
+);
+
+jest.mock(
+  '../../../src/actions/pipeline/services/implementations/ContextUpdateEmitter.js',
+  () => ({
+    __esModule: true,
+    default: (
+      (globalThis.__mockHelperDoubles ||= {}).contextUpdateEmitter =
+        mockCreateClassDouble()
+    ).factory,
+  })
+);
+
+const mockStageDoubles = globalThis.__mockStageDoubles;
+const mockHelperDoubles = globalThis.__mockHelperDoubles;
 
 describe('ActionPipelineOrchestrator', () => {
-  let orchestrator;
-  let mockDependencies;
-  let mockPipeline;
-  let mockPipelineResult;
+  const baseDependencies = () => ({
+    actionIndex: { name: 'index' },
+    prerequisiteService: { name: 'prereq' },
+    targetService: { name: 'target' },
+    formatter: { name: 'formatter' },
+    entityManager: { name: 'manager' },
+    safeEventDispatcher: { name: 'dispatcher' },
+    getEntityDisplayNameFn: jest.fn(),
+    errorBuilder: { name: 'errorBuilder' },
+    logger: { debug: jest.fn() },
+    unifiedScopeResolver: { name: 'resolver' },
+    targetContextBuilder: { name: 'contextBuilder' },
+    multiTargetResolutionStage: { name: 'multiStage' },
+    targetComponentValidator: { name: 'componentValidator' },
+    targetRequiredComponentsValidator: { name: 'requiredValidator' },
+  });
 
   beforeEach(() => {
-    // Clear all mocks
-    jest.clearAllMocks();
+    mockPipelineExecute.mockReset();
+    mockPipelineConstructor.mockReset();
 
-    // Create mock dependencies
-    mockDependencies = {
-      actionIndex: {
-        getCandidateActions: jest.fn(),
-      },
-      prerequisiteService: {
-        evaluatePrerequisites: jest.fn(),
-      },
-      targetService: {
-        resolveTargets: jest.fn(),
-      },
-      formatter: {
-        formatCommand: jest.fn(),
-      },
-      entityManager: {
-        getEntity: jest.fn(),
-        hasComponent: jest.fn(),
-        getComponent: jest.fn(),
-      },
-      safeEventDispatcher: {
-        dispatch: jest.fn(),
-      },
-      getEntityDisplayNameFn: jest.fn().mockReturnValue('Test Entity'),
-      errorBuilder: {
-        build: jest.fn(),
-      },
-      logger: {
-        debug: jest.fn(),
-        info: jest.fn(),
-        warn: jest.fn(),
-        error: jest.fn(),
-      },
-      unifiedScopeResolver: {
-        resolve: jest.fn(),
-      },
-      targetContextBuilder: {
-        build: jest.fn(),
-      },
-      multiTargetResolutionStage: {
-        name: 'MultiTargetResolutionStage',
-        execute: jest.fn(),
-      },
-      targetComponentValidator: {
-        validateTargetComponents: jest.fn(),
-      },
-      targetRequiredComponentsValidator: {
-        validateTargetRequirements: jest.fn(),
-      },
+    Object.values(mockStageDoubles).forEach(({ factory, ctor }) => {
+      factory.mockClear();
+      ctor.mockClear();
+    });
+
+    Object.values(mockHelperDoubles).forEach(({ factory, ctor }) => {
+      factory.mockClear();
+      ctor.mockClear();
+    });
+  });
+
+  it('builds the pipeline with the provided dependencies and returns execution output', async () => {
+    const dependencies = {
+      ...baseDependencies(),
+      targetCandidatePruner: { provided: 'pruner' },
+      targetValidationConfigProvider: { provided: 'config' },
+      targetValidationReporter: { provided: 'reporter' },
+      contextUpdateEmitter: { provided: 'emitter' },
     };
 
-    // Setup Pipeline mock
-    mockPipeline = {
-      execute: jest.fn(),
-    };
-    Pipeline.mockImplementation(() => mockPipeline);
+    const orchestrator = new ActionPipelineOrchestrator(dependencies);
+
+    const actor = { id: 'actor-123' };
+    const context = { scene: 'intro' };
+    const trace = { marker: 'trace' };
+    const pipelineResult = { actions: [{ id: 'a1' }], errors: [{ id: 'e1' }] };
+    mockPipelineExecute.mockResolvedValue(pipelineResult);
+
+    const result = await orchestrator.discoverActions(actor, context, { trace });
+
+    expect(result).toEqual({ actions: pipelineResult.actions, errors: pipelineResult.errors, trace });
+
+    expect(mockStageDoubles.componentFiltering.factory).toHaveBeenCalledWith(
+      dependencies.actionIndex,
+      dependencies.errorBuilder,
+      dependencies.logger,
+      dependencies.entityManager
+    );
+    expect(mockStageDoubles.prerequisite.factory).toHaveBeenCalledWith(
+      dependencies.prerequisiteService,
+      dependencies.errorBuilder,
+      dependencies.logger
+    );
+    expect(mockStageDoubles.targetValidation.factory).toHaveBeenCalledWith(
+      expect.objectContaining({
+        targetComponentValidator: dependencies.targetComponentValidator,
+        targetRequiredComponentsValidator: dependencies.targetRequiredComponentsValidator,
+        logger: dependencies.logger,
+        actionErrorContextBuilder: dependencies.errorBuilder,
+        targetCandidatePruner: dependencies.targetCandidatePruner,
+        configProvider: dependencies.targetValidationConfigProvider,
+        validationReporter: dependencies.targetValidationReporter,
+        contextUpdateEmitter: dependencies.contextUpdateEmitter,
+      })
+    );
+    expect(mockStageDoubles.actionFormatting.factory).toHaveBeenCalledWith(
+      expect.objectContaining({
+        commandFormatter: dependencies.formatter,
+        entityManager: dependencies.entityManager,
+        safeEventDispatcher: dependencies.safeEventDispatcher,
+        getEntityDisplayNameFn: dependencies.getEntityDisplayNameFn,
+        errorContextBuilder: dependencies.errorBuilder,
+        logger: dependencies.logger,
+      })
+    );
+
+    const pipelineStages = mockPipelineConstructor.mock.calls[0][0];
+    expect(pipelineStages).toEqual([
+      mockStageDoubles.componentFiltering.factory.mock.instances[0],
+      mockStageDoubles.prerequisite.factory.mock.instances[0],
+      dependencies.multiTargetResolutionStage,
+      mockStageDoubles.targetValidation.factory.mock.instances[0],
+      mockStageDoubles.actionFormatting.factory.mock.instances[0],
+    ]);
+    expect(mockPipelineConstructor).toHaveBeenCalledWith(pipelineStages, dependencies.logger);
+
+    expect(mockPipelineExecute).toHaveBeenCalledWith({
+      actor,
+      actionContext: context,
+      candidateActions: [],
+      trace,
+    });
+
+    expect(dependencies.logger.debug).toHaveBeenNthCalledWith(
+      1,
+      'Starting action discovery pipeline for actor actor-123'
+    );
+    expect(dependencies.logger.debug).toHaveBeenNthCalledWith(
+      2,
+      'Action discovery pipeline completed for actor actor-123. Found 1 actions, 1 errors.'
+    );
+
+    expect(mockHelperDoubles.targetCandidatePruner.factory).not.toHaveBeenCalled();
+    expect(mockHelperDoubles.validationConfigProvider.factory).not.toHaveBeenCalled();
+    expect(mockHelperDoubles.validationReporter.factory).not.toHaveBeenCalled();
+    expect(mockHelperDoubles.contextUpdateEmitter.factory).not.toHaveBeenCalled();
   });
 
-  describe('constructor', () => {
-    it('should create an instance with all required dependencies', () => {
-      orchestrator = new ActionPipelineOrchestrator(mockDependencies);
-      expect(orchestrator).toBeDefined();
-      expect(orchestrator).toBeInstanceOf(ActionPipelineOrchestrator);
+  it('creates default pipeline helpers when optional dependencies are omitted', async () => {
+    const dependencies = baseDependencies();
+    const orchestrator = new ActionPipelineOrchestrator(dependencies);
+
+    const actor = { id: 'actor-456' };
+    const context = { scene: 'middle' };
+    mockPipelineExecute.mockResolvedValue({ actions: [], errors: [] });
+
+    await orchestrator.discoverActions(actor, context);
+
+    expect(mockHelperDoubles.targetCandidatePruner.factory).toHaveBeenCalledWith({
+      logger: dependencies.logger,
     });
-
-    it('should initialize all private fields from dependencies', async () => {
-      orchestrator = new ActionPipelineOrchestrator(mockDependencies);
-      // Pipeline is created when discoverActions is called, not in constructor
-      mockPipeline.execute.mockResolvedValue({ actions: [], errors: [] });
-
-      await orchestrator.discoverActions({ id: 'test' }, {});
-
-      // Verify Pipeline was created with correct stages
-      expect(Pipeline).toHaveBeenCalledTimes(1);
-      const pipelineCall = Pipeline.mock.calls[0];
-      const stages = pipelineCall[0];
-      const logger = pipelineCall[1];
-
-      expect(stages).toHaveLength(5);
-      expect(logger).toBe(mockDependencies.logger);
+    expect(mockHelperDoubles.validationConfigProvider.factory).toHaveBeenCalledTimes(1);
+    expect(mockHelperDoubles.validationReporter.factory).toHaveBeenCalledWith({
+      logger: dependencies.logger,
     });
+    expect(mockHelperDoubles.contextUpdateEmitter.factory).toHaveBeenCalledTimes(1);
 
-    it('should create pipeline stages in correct order', async () => {
-      orchestrator = new ActionPipelineOrchestrator(mockDependencies);
-      mockPipeline.execute.mockResolvedValue({ actions: [], errors: [] });
+    const stageConfig = mockStageDoubles.targetValidation.ctor.mock.calls[0][0];
+    expect(stageConfig.targetCandidatePruner).toBe(
+      mockHelperDoubles.targetCandidatePruner.factory.mock.instances[0]
+    );
+    expect(stageConfig.configProvider).toBe(
+      mockHelperDoubles.validationConfigProvider.factory.mock.instances[0]
+    );
+    expect(stageConfig.validationReporter).toBe(
+      mockHelperDoubles.validationReporter.factory.mock.instances[0]
+    );
+    expect(stageConfig.contextUpdateEmitter).toBe(
+      mockHelperDoubles.contextUpdateEmitter.factory.mock.instances[0]
+    );
 
-      await orchestrator.discoverActions({ id: 'test' }, {});
-
-      expect(ComponentFilteringStage).toHaveBeenCalledWith(
-        mockDependencies.actionIndex,
-        mockDependencies.errorBuilder,
-        mockDependencies.logger,
-        mockDependencies.entityManager
-      );
-
-      expect(PrerequisiteEvaluationStage).toHaveBeenCalledWith(
-        mockDependencies.prerequisiteService,
-        mockDependencies.errorBuilder,
-        mockDependencies.logger
-      );
-
-      expect(TargetComponentValidationStage).toHaveBeenCalledWith(
-        expect.objectContaining({
-          targetComponentValidator: mockDependencies.targetComponentValidator,
-          targetRequiredComponentsValidator:
-            mockDependencies.targetRequiredComponentsValidator,
-          logger: mockDependencies.logger,
-          actionErrorContextBuilder: mockDependencies.errorBuilder,
-          targetCandidatePruner: expect.any(Object),
-          configProvider: expect.any(Object),
-          validationReporter: expect.any(Object),
-          contextUpdateEmitter: expect.any(Object),
-        })
-      );
-
-      expect(ActionFormattingStage).toHaveBeenCalledWith({
-        commandFormatter: mockDependencies.formatter,
-        entityManager: mockDependencies.entityManager,
-        safeEventDispatcher: mockDependencies.safeEventDispatcher,
-        getEntityDisplayNameFn: mockDependencies.getEntityDisplayNameFn,
-        errorContextBuilder: mockDependencies.errorBuilder,
-        logger: mockDependencies.logger,
-      });
-    });
-  });
-
-  describe('discoverActions', () => {
-    let mockActor;
-    let mockContext;
-    let mockTrace;
-
-    beforeEach(() => {
-      orchestrator = new ActionPipelineOrchestrator(mockDependencies);
-
-      mockActor = {
-        id: 'actor-123',
-        type: 'actor',
-      };
-
-      mockContext = {
-        location: 'test-location',
-        timestamp: Date.now(),
-      };
-
-      mockTrace = new TraceContext();
-
-      // Default successful pipeline result
-      mockPipelineResult = {
-        actions: [
-          { id: 'action1', name: 'Test Action 1' },
-          { id: 'action2', name: 'Test Action 2' },
-        ],
-        errors: [],
-      };
-    });
-
-    it('should successfully discover actions with valid input', async () => {
-      mockPipeline.execute.mockResolvedValue(mockPipelineResult);
-
-      const result = await orchestrator.discoverActions(mockActor, mockContext);
-
-      expect(result).toEqual({
-        actions: mockPipelineResult.actions,
-        errors: mockPipelineResult.errors,
-        trace: undefined,
-      });
-
-      expect(mockDependencies.logger.debug).toHaveBeenCalledWith(
-        'Starting action discovery pipeline for actor actor-123'
-      );
-
-      expect(mockDependencies.logger.debug).toHaveBeenCalledWith(
-        'Action discovery pipeline completed for actor actor-123. Found 2 actions, 0 errors.'
-      );
-
-      expect(mockPipeline.execute).toHaveBeenCalledWith({
-        actor: mockActor,
-        actionContext: mockContext,
-        candidateActions: [],
-        trace: undefined,
-      });
-    });
-
-    it('should handle trace context when provided', async () => {
-      mockPipeline.execute.mockResolvedValue(mockPipelineResult);
-
-      const result = await orchestrator.discoverActions(
-        mockActor,
-        mockContext,
-        { trace: mockTrace }
-      );
-
-      expect(result.trace).toBe(mockTrace);
-
-      expect(mockPipeline.execute).toHaveBeenCalledWith({
-        actor: mockActor,
-        actionContext: mockContext,
-        candidateActions: [],
-        trace: mockTrace,
-      });
-    });
-
-    it('should handle empty actions result', async () => {
-      const emptyResult = {
-        actions: [],
-        errors: [],
-      };
-      mockPipeline.execute.mockResolvedValue(emptyResult);
-
-      const result = await orchestrator.discoverActions(mockActor, mockContext);
-
-      expect(result).toEqual({
-        actions: [],
-        errors: [],
-        trace: undefined,
-      });
-
-      expect(mockDependencies.logger.debug).toHaveBeenCalledWith(
-        'Action discovery pipeline completed for actor actor-123. Found 0 actions, 0 errors.'
-      );
-    });
-
-    it('should handle pipeline errors', async () => {
-      const errorResult = {
-        actions: [],
-        errors: [
-          {
-            phase: 'FILTERING',
-            message: 'Component not found',
-            entityId: 'actor-123',
-          },
-        ],
-      };
-      mockPipeline.execute.mockResolvedValue(errorResult);
-
-      const result = await orchestrator.discoverActions(mockActor, mockContext);
-
-      expect(result).toEqual({
-        actions: [],
-        errors: errorResult.errors,
-        trace: undefined,
-      });
-
-      expect(mockDependencies.logger.debug).toHaveBeenCalledWith(
-        'Action discovery pipeline completed for actor actor-123. Found 0 actions, 1 errors.'
-      );
-    });
-
-    it('should handle mixed results with actions and errors', async () => {
-      const mixedResult = {
-        actions: [{ id: 'action1', name: 'Test Action' }],
-        errors: [
-          {
-            phase: 'PREREQUISITE',
-            message: 'Prerequisite failed',
-            actionId: 'action2',
-          },
-        ],
-      };
-      mockPipeline.execute.mockResolvedValue(mixedResult);
-
-      const result = await orchestrator.discoverActions(mockActor, mockContext);
-
-      expect(result).toEqual({
-        actions: mixedResult.actions,
-        errors: mixedResult.errors,
-        trace: undefined,
-      });
-
-      expect(mockDependencies.logger.debug).toHaveBeenCalledWith(
-        'Action discovery pipeline completed for actor actor-123. Found 1 actions, 1 errors.'
-      );
-    });
-
-    it('should propagate pipeline execution errors', async () => {
-      const error = new Error('Pipeline execution failed');
-      mockPipeline.execute.mockRejectedValue(error);
-
-      await expect(
-        orchestrator.discoverActions(mockActor, mockContext)
-      ).rejects.toThrow('Pipeline execution failed');
-
-      expect(mockDependencies.logger.debug).toHaveBeenCalledWith(
-        'Starting action discovery pipeline for actor actor-123'
-      );
-    });
-
-    it('should handle null options parameter', async () => {
-      mockPipeline.execute.mockResolvedValue(mockPipelineResult);
-
-      // Pass undefined instead of null to test default parameter behavior
-      const result = await orchestrator.discoverActions(mockActor, mockContext);
-
-      expect(result).toEqual({
-        actions: mockPipelineResult.actions,
-        errors: mockPipelineResult.errors,
-        trace: undefined,
-      });
-    });
-
-    it('should pass empty candidateActions array to pipeline', async () => {
-      mockPipeline.execute.mockResolvedValue(mockPipelineResult);
-
-      await orchestrator.discoverActions(mockActor, mockContext);
-
-      const executionContext = mockPipeline.execute.mock.calls[0][0];
-      expect(executionContext.candidateActions).toEqual([]);
-    });
-
-    it('should create new pipeline for each execution', async () => {
-      mockPipeline.execute.mockResolvedValue(mockPipelineResult);
-
-      // Execute twice
-      await orchestrator.discoverActions(mockActor, mockContext);
-      await orchestrator.discoverActions(mockActor, mockContext);
-
-      // Pipeline should be created twice (once per discoverActions call)
-      expect(Pipeline).toHaveBeenCalledTimes(2);
-    });
-  });
-
-  describe('pipeline creation', () => {
-    beforeEach(() => {
-      orchestrator = new ActionPipelineOrchestrator(mockDependencies);
-    });
-
-    it('should include multiTargetResolutionStage in pipeline', async () => {
-      mockPipeline.execute.mockResolvedValue({
-        actions: [],
-        errors: [],
-      });
-
-      // Force pipeline creation by calling discoverActions
-      await orchestrator.discoverActions(
-        { id: 'test-actor' },
-        { location: 'test' }
-      );
-
-      const pipelineCall = Pipeline.mock.calls[0]; // First call
-      const stages = pipelineCall[0];
-
-      // Find the multiTargetResolutionStage
-      expect(stages).toContain(mockDependencies.multiTargetResolutionStage);
-      expect(stages[2]).toBe(mockDependencies.multiTargetResolutionStage);
-    });
+    expect(mockStageDoubles.componentFiltering.factory).toHaveBeenCalledTimes(1);
+    expect(mockStageDoubles.prerequisite.factory).toHaveBeenCalledTimes(1);
+    expect(mockStageDoubles.actionFormatting.factory).toHaveBeenCalledTimes(1);
   });
 });
