@@ -51,7 +51,7 @@ const testEnvironment = await turnExecutionFacade.initializeTestEnvironment({
 // 5 lines with fluent API
 const testEnv = await TestModuleBuilder.forTurnExecution()
   .withMockLLM({ strategy: 'tool-calling' })
-  .withTestActors(['test-actor'])
+  .withTestActors(['ai-actor'])
   .withWorld({ name: 'Test World' })
   .build();
 ```
@@ -120,11 +120,11 @@ Select based on test focus:
 Replace facade imports with TestModuleBuilder:
 
 ```javascript
-// Remove:
-import { createMockFacades } from '../../../tests/common/facades/testingFacadeRegistrations.js';
+// Remove (adjust the relative path for your test file):
+import { createMockFacades } from '../../common/facades/testingFacadeRegistrations.js';
 
-// Add:
-import { TestModuleBuilder } from '../../../tests/common/builders/testModuleBuilder.js';
+// Add (adjust the relative path for your test file):
+import { TestModuleBuilder } from '../../common/testing/builders/testModuleBuilder.js';
 ```
 
 ### Step 4: Transform Setup Code
@@ -181,7 +181,7 @@ Replace manual cleanup with module cleanup:
 afterEach(async () => {
   await testEnvironment.cleanup();
   facades.actionService.clearMockData();
-  facades.llmService.clearMockData();
+  facades.llmService.clearMockResponses();
 });
 
 // AFTER:
@@ -244,7 +244,7 @@ const multiActorFacades = createMockFacades({}, jest.fn);
 // AFTER:
 const multiActorEnv = await TestModuleBuilder.forTurnExecution()
   .withMockLLM({ strategy: 'tool-calling' })
-  .withTestActors(['actor1', 'actor2', 'actor3'])
+  .withTestActors(['ai-1', 'ai-2', 'ai-3'])
   .withWorld({ name: 'Multi-Actor World' })
   .build();
 ```
@@ -353,7 +353,7 @@ describe('Action Processing', () => {
   beforeEach(async () => {
     testEnv = await TestModuleBuilder.forActionProcessing()
       .forActor('test-actor')
-      .withAvailableActions(['move'])
+      .withAvailableActions(['core:move'])
       .build();
   });
 });
@@ -460,5 +460,5 @@ The Test Module Pattern migration dramatically simplifies test setup while maint
 For additional resources:
 
 - [Test Module Pattern Guide](./test-module-pattern.md)
-- [API Reference](../../tests/common/builders/README.md)
+- [API Reference](../../tests/common/testing/builders/README.md)
 - [Example Tests](../../tests/e2e/)
