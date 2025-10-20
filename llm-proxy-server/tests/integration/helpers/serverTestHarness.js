@@ -138,14 +138,23 @@ export async function startProxyServer({
   const port = envOverrides.PROXY_PORT ? Number(envOverrides.PROXY_PORT) : await getAvailablePort();
 
   const applyEnv = () => {
-    process.env = {
+    const nextEnv = {
       ...originalEnv,
       NODE_ENV: envOverrides.NODE_ENV ?? 'test',
       METRICS_ENABLED: envOverrides.METRICS_ENABLED ?? 'false',
+      PROXY_ALLOWED_ORIGIN: envOverrides.PROXY_ALLOWED_ORIGIN ?? '',
       ...envOverrides,
       PROXY_PORT: String(port),
       LLM_CONFIG_PATH: configFile.filePath,
     };
+
+    for (const [key, value] of Object.entries(envOverrides)) {
+      if (value === undefined) {
+        delete nextEnv[key];
+      }
+    }
+
+    process.env = nextEnv;
   };
 
   const restoreEnv = () => {

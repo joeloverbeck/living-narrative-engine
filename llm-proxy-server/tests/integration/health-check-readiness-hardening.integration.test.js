@@ -58,6 +58,34 @@ const buildReadinessApp = ({
   httpAgentService = createHttpAgentService(),
 } = {}) => {
   const app = express();
+  const cleanupTasks = [];
+
+  const readinessEnvKeys = [
+    'READINESS_CRITICAL_HEAP_PERCENT',
+    'READINESS_CRITICAL_HEAP_TOTAL_MB',
+    'READINESS_CRITICAL_HEAP_USED_MB',
+    'READINESS_CRITICAL_HEAP_LIMIT_PERCENT',
+  ];
+  const originalEnv = readinessEnvKeys.reduce((acc, key) => {
+    acc[key] = process.env[key];
+    return acc;
+  }, {});
+
+  process.env.READINESS_CRITICAL_HEAP_PERCENT = '90';
+  process.env.READINESS_CRITICAL_HEAP_TOTAL_MB = '512';
+  process.env.READINESS_CRITICAL_HEAP_USED_MB = '512';
+  process.env.READINESS_CRITICAL_HEAP_LIMIT_PERCENT = '90';
+
+  cleanupTasks.push(() => {
+    for (const [key, value] of Object.entries(originalEnv)) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+  });
+
   app.get(
     '/health/ready',
     createReadinessCheck({
@@ -68,7 +96,6 @@ const buildReadinessApp = ({
     })
   );
 
-  const cleanupTasks = [];
   if (typeof cacheService?.cleanup === 'function') {
     cleanupTasks.push(() => {
       cacheService.cleanup();

@@ -228,6 +228,10 @@ describe('CacheService integration coverage', () => {
 
     setEnv('LLM_CONFIG_PATH', configPath);
     setEnv('CACHE_ENABLED', 'true');
+    setEnv('READINESS_CRITICAL_HEAP_PERCENT', '100');
+    setEnv('READINESS_CRITICAL_HEAP_TOTAL_MB', '16384');
+    setEnv('READINESS_CRITICAL_HEAP_USED_MB', '16384');
+    setEnv('READINESS_CRITICAL_HEAP_LIMIT_PERCENT', '100');
 
     resetAppConfigServiceInstance();
     const appConfig = getAppConfigService(logger);
