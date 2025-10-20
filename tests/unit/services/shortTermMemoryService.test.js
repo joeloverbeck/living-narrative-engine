@@ -165,3 +165,106 @@ describe('ShortTermMemoryService – ThoughtAdded domain event', () => {
     expect(dispatchSpy).not.toHaveBeenCalled();
   });
 });
+
+describe('ShortTermMemoryService edge cases', () => {
+  test('throws when the memory bag is missing or not an object', () => {
+    const service = new ShortTermMemoryService();
+
+    const callWithNull = () => service.addThought(null, 'orphan thought');
+    const callWithUndefined = () =>
+      service.addThought(undefined, 'fallback thought');
+
+    expect(callWithNull).toThrow(TypeError);
+    expect(callWithNull).toThrow(
+      'mem must be an object conforming to core:short_term_memory schema',
+    );
+
+    expect(callWithUndefined).toThrow(TypeError);
+    expect(callWithUndefined).toThrow(
+      'mem must be an object conforming to core:short_term_memory schema',
+    );
+  });
+
+  test('ignores empty or whitespace-only thoughts', () => {
+    const service = new ShortTermMemoryService();
+    const mem = { entityId: 'actor:empty', thoughts: [], maxEntries: 3 };
+
+    const result = service.addThought(mem, '    ');
+
+    expect(result.wasAdded).toBe(false);
+    expect(mem.thoughts).toHaveLength(0);
+  });
+
+  test('initialises the thoughts array when it is missing', () => {
+    const service = new ShortTermMemoryService();
+    const mem = { entityId: 'actor:missing-array', maxEntries: 3 };
+
+    const { wasAdded, mem: updated } = service.addThought(mem, 'first entry');
+
+    expect(wasAdded).toBe(true);
+    expect(Array.isArray(updated.thoughts)).toBe(true);
+    expect(updated.thoughts).toHaveLength(1);
+    expect(updated.thoughts[0].text).toBe('first entry');
+  });
+
+  test('ignores non-string values when checking for duplicates', () => {
+    const service = new ShortTermMemoryService();
+    const mem = {
+      entityId: 'actor:non-string',
+      maxEntries: 4,
+      thoughts: [{ text: 1234, timestamp: '2024-01-01T00:00:00.000Z' }],
+    };
+
+    const { wasAdded } = service.addThought(mem, 'Valid text');
+
+    expect(wasAdded).toBe(true);
+    expect(mem.thoughts.map((entry) => entry.text)).toEqual([
+      1234,
+      'Valid text',
+    ]);
+  });
+
+  test('falls back to the configured default when maxEntries is invalid', () => {
+    const service = new ShortTermMemoryService({ defaultMaxEntries: 2 });
+    const mem = { entityId: 'actor:max-fallback', thoughts: [], maxEntries: 0 };
+
+    service.addThought(mem, 'T1', new Date('2025-06-03T10:00:00.000Z'));
+    service.addThought(mem, 'T2', new Date('2025-06-03T10:01:00.000Z'));
+    service.addThought(mem, 'T3', new Date('2025-06-03T10:02:00.000Z'));
+
+    expect(mem.thoughts).toHaveLength(2);
+    expect(mem.thoughts.map((t) => t.text)).toEqual(['T2', 'T3']);
+  });
+
+  test('silently skips emitThoughtAdded when no dispatcher is available', () => {
+    const withDispatcher = new ShortTermMemoryService({
+      eventDispatcher: { dispatch: jest.fn() },
+    });
+    const withoutDispatcher = new ShortTermMemoryService({});
+    const invalidDispatcher = new ShortTermMemoryService({
+      eventDispatcher: { dispatch: 'nope' },
+    });
+
+    withDispatcher.emitThoughtAdded('actor:123', 'note', '2025-06-03T10:00Z');
+    withoutDispatcher.emitThoughtAdded(
+      'actor:123',
+      'note',
+      '2025-06-03T10:00Z',
+    );
+    invalidDispatcher.emitThoughtAdded(
+      'actor:123',
+      'note',
+      '2025-06-03T10:00Z',
+    );
+
+    expect(withDispatcher.eventDispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(withDispatcher.eventDispatcher.dispatch).toHaveBeenCalledWith(
+      'ThoughtAdded',
+      {
+        entityId: 'actor:123',
+        text: 'note',
+        timestamp: '2025-06-03T10:00Z',
+      },
+    );
+  });
+});
