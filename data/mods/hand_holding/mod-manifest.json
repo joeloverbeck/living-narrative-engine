@@ -19,21 +19,21 @@
   "content": {
     "actions": [
       "hold_hand.action.json",
+      "let_go_of_hand.action.json",
       "squeeze_hand_reassuringly.action.json",
       "warm_hands_between_yours.action.json"
     ],
-    "components": [
-      "hand_held.component.json",
-      "holding_hand.component.json"
-    ],
+    "components": ["hand_held.component.json", "holding_hand.component.json"],
     "conditions": [
       "actors-are-holding-hands.condition.json",
       "event-is-action-hold-hand.condition.json",
+      "event-is-action-let-go-of-hand.condition.json",
       "event-is-action-squeeze-hand-reassuringly.condition.json",
       "event-is-action-warm-hands-between-yours.condition.json"
     ],
     "rules": [
       "handle_hold_hand.rule.json",
+      "handle_let_go_of_hand.rule.json",
       "handle_squeeze_hand_reassuringly.rule.json",
       "handle_warm_hands_between_yours.rule.json"
     ],
