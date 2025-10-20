@@ -1113,40 +1113,61 @@ export function createRuleTestEnvironment(options) {
       pendingAssignments = nextAssignments;
     }
 
-    // Validate required_components for all resolved targets
-    // Filter out assignments where targets don't have required components
-    if (action.required_components) {
-      const validAssignments = pendingAssignments.filter(({ resolvedTargets }) => {
-        // Check if this assignment has all required components on all targets
-        for (const [targetKey, target] of Object.entries(resolvedTargets)) {
-          const requiredComponents = action.required_components[targetKey];
+    const filterAssignmentsByComponentRules = (assignments) => {
+      if (!assignments || assignments.length === 0) {
+        return assignments;
+      }
 
-          if (!requiredComponents || !Array.isArray(requiredComponents)) {
-            continue; // No requirements for this target
+      const applyTargetFilters = ({ resolvedTargets }) => {
+        for (const [targetKey, target] of Object.entries(resolvedTargets)) {
+          const targetComponents = target?.components || {};
+
+          if (action.required_components) {
+            const requiredComponents = action.required_components[targetKey];
+            if (Array.isArray(requiredComponents) && requiredComponents.length > 0) {
+              const missingComponent = requiredComponents.find(
+                (componentId) => !targetComponents[componentId]
+              );
+
+              if (missingComponent) {
+                env.logger.debug(
+                  `Action ${actionId}: ${targetKey} target ${target.id} missing required component ${missingComponent}`
+                );
+                return false;
+              }
+            }
           }
 
-          // Check if target has all required components
-          for (const componentId of requiredComponents) {
-            if (!target.components || !target.components[componentId]) {
-              env.logger.debug(
-                `Action ${actionId}: ${targetKey} target ${target.id} missing required component ${componentId}`
+          if (action.forbidden_components) {
+            const forbiddenComponents = action.forbidden_components[targetKey];
+            if (Array.isArray(forbiddenComponents) && forbiddenComponents.length > 0) {
+              const violatingComponent = forbiddenComponents.find(
+                (componentId) => targetComponents[componentId]
               );
-              return false; // This assignment is invalid
+
+              if (violatingComponent) {
+                env.logger.debug(
+                  `Action ${actionId}: ${targetKey} target ${target.id} has forbidden component ${violatingComponent}`
+                );
+                return false;
+              }
             }
           }
         }
 
-        // All targets in this assignment have required components
         return true;
-      });
+      };
 
-      if (validAssignments.length === 0) {
-        return false;
-      }
+      return assignments.filter(applyTargetFilters);
+    };
 
-      // Update pendingAssignments to only include valid ones
-      pendingAssignments = validAssignments;
+    // Validate required and forbidden components for all resolved targets
+    const filteredAssignments = filterAssignmentsByComponentRules(pendingAssignments);
+    if (!filteredAssignments || filteredAssignments.length === 0) {
+      return false;
     }
+
+    pendingAssignments = filteredAssignments;
 
     return pendingAssignments.length > 0;
   };
