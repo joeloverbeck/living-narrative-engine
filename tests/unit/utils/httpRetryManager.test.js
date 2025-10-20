@@ -75,4 +75,19 @@ describe('RetryManager', () => {
     expect(attemptFn).toHaveBeenCalledTimes(2);
     randomSpy.mockRestore();
   });
+
+  test('throws after exhausting retries when response handler keeps retrying', async () => {
+    const manager = new RetryManager(2, 10, 100, logger);
+    const attemptFn = jest.fn().mockResolvedValue('payload');
+    const responseHandler = jest
+      .fn()
+      .mockResolvedValue({ retry: true });
+
+    await expect(manager.perform(attemptFn, responseHandler)).rejects.toThrow(
+      'RetryManager: Failed after 2 attempts with no successful result.'
+    );
+
+    expect(attemptFn).toHaveBeenCalledTimes(2);
+    expect(responseHandler).toHaveBeenCalledTimes(2);
+  });
 });
