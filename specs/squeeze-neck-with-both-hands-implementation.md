@@ -374,7 +374,7 @@ The testing approach follows established patterns:
 
 ### Documentation Referenced
 
-- Test Module Pattern (docs/testing/test-module-pattern.md)
+- Mod Testing Guide (docs/testing/mod-testing-guide.md)
 - ModTestFixture patterns from existing violence mod tests
 - ECS architecture patterns from CLAUDE.md
 

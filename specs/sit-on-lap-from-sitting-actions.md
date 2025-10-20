@@ -396,7 +396,7 @@ positioning:actors_both_sitting_close := actor.components.positioning:closeness.
 
 All tests should follow the patterns established in the Living Narrative Engine test suite:
 
-1. **Use ModTestFixture Pattern**: Follow `docs/testing/test-module-pattern.md`
+1. **Use ModTestFixture Pattern**: Follow `docs/testing/mod-testing-guide.md`
 2. **Use ModEntityBuilder**: For creating test entities with fluent API
 3. **Reference Existing Tests**: Use these as templates:
    - `tests/integration/mods/positioning/straddle_waist_facing_action.test.js`
@@ -709,7 +709,7 @@ describe('Sit on Lap from Sitting - Workflow Integration', () => {
 - `tests/integration/mods/positioning/straddle_waist_facing_action_discovery.test.js`
 
 ### Documentation
-- `docs/testing/test-module-pattern.md` - Testing methodology
+- `docs/testing/mod-testing-guide.md` - Testing methodology
 - `CLAUDE.md` - Project conventions and patterns
 - Component schemas in `data/schemas/`
 
