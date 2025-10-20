@@ -97,7 +97,7 @@ const testEnv = await TestModuleBuilder.forTurnExecution()
 ### Component Structure
 
 ```
-tests/common/builders/
+tests/common/testing/builders/
 ├── testModuleBuilder.js           # Main entry point
 ├── modules/                       # Test module implementations
 │   ├── turnExecutionTestModule.js
@@ -110,8 +110,9 @@ tests/common/builders/
 │   └── testModuleValidator.js
 ├── interfaces/                    # Type definitions
 │   └── ITestModule.js
-└── errors/                        # Custom error types
-    └── testModuleValidationError.js
+├── errors/                        # Custom error types
+│   └── testModuleValidationError.js
+└── testModuleRegistry.js          # Preset registration and lookup
 ```
 
 ### Design Principles
@@ -165,7 +166,7 @@ if (!validation.valid) {
 
 ### Performance Tracking
 
-Modules can track performance metrics:
+Modules can track performance metrics. Threshold configuration is optional, and the current implementation automatically records turn execution durations when you call `executeAITurn`. Additional helper methods for action discovery and event processing metrics are available but need to be called manually in custom test flows:
 
 ```javascript
 const testEnv = await TestModuleBuilder.forTurnExecution()
@@ -199,16 +200,28 @@ Each module maintains internal configuration:
 ```javascript
 class TurnExecutionTestModule {
   #config = {
-    llmStrategy: 'tool-calling',
+    llm: {
+      strategy: 'tool-calling',
+      temperature: 1.0,
+      mockResponses: {},
+    },
     actors: [],
-    world: null,
-    performance: { enabled: false },
+    world: {
+      name: 'Test World',
+      createConnections: true,
+    },
+    monitoring: {
+      performance: false,
+      events: [],
+    },
     facades: {},
   };
 
-  withMockLLM(options) {
-    this.#config.llmStrategy = options.strategy;
-    // Merge other options...
+  withMockLLM(options = {}) {
+    this.#config.llm = {
+      ...this.#config.llm,
+      ...options,
+    };
     return this; // Enable chaining
   }
 }
@@ -220,27 +233,35 @@ Modules wrap the Service Facade Pattern:
 
 ```javascript
 async build() {
-  // Create facades
   const facades = createMockFacades(
     this.#config.facades,
-    this.#mockFn
+    this.#mockFn || (() => () => {})
   );
 
-  // Configure based on module settings
-  this.#configureLLM(facades.llmService);
-  this.#createActors(facades.entityService);
-  this.#setupWorld(facades.worldService);
+  const testEnvironment =
+    await facades.turnExecutionFacade.initializeTestEnvironment({
+      llmStrategy: this.#config.llm.strategy,
+      llmConfig: this.#config.llm,
+      worldConfig: this.#config.world,
+      actors: this.#config.actors,
+    });
 
-  // Return test environment
   return {
+    ...testEnvironment,
     facades,
-    // Convenience methods
-    executeAITurn: (actorId) => {
-      return facades.turnExecutionFacade.executeAITurn(actorId);
+    config: Object.freeze({ ...this.#config }),
+    async executeAITurn(actorId) {
+      return facades.turnExecutionFacade.executeAITurn(
+        actorId,
+        testEnvironment.context || {}
+      );
     },
-    cleanup: async () => {
-      await facades.cleanup();
-    }
+    async cleanup() {
+      if (testEnvironment.cleanup) {
+        await testEnvironment.cleanup();
+      }
+      await facades.turnExecutionFacade.clearTestData();
+    },
   };
 }
 ```
@@ -321,8 +342,10 @@ const testEnv = await TestModuleBuilder.forTurnExecution()
     createConnections: true,
   })
   .withPerformanceTracking({
-    enabled: true,
-    captureCallStacks: true,
+    thresholds: {
+      turnExecution: 120,
+      actionDiscovery: 60,
+    },
   })
   .build();
 ```
@@ -484,7 +507,6 @@ const testEnv = await TestModuleBuilder.forTurnExecution()
   .withPerformanceTracking({
     thresholds: {
       turnExecution: 50,
-      warnOnly: true, // Don't fail, just warn
     },
   })
   .build();
@@ -533,12 +555,15 @@ console.log(validation.errors);
 
 ### Debugging Tips
 
-1. **Enable Verbose Logging**:
+1. **Validate Configuration Without Building**:
 
 ```javascript
-const testEnv = await TestModuleBuilder.forTurnExecution()
-  .withDebugMode(true)
-  .build();
+const module = TestModuleBuilder.forTurnExecution();
+const validation = TestModuleBuilder.utils.validateConfig(
+  module.getConfiguration(),
+  'turnExecution'
+);
+console.log(validation);
 ```
 
 2. **Inspect Configuration**:
@@ -554,6 +579,8 @@ console.log(module.getConfiguration());
 // Access underlying facades for debugging
 console.log(testEnv.facades.turnExecutionFacade);
 ```
+
+> **Note:** Event capture helpers currently provide data structures and filtering, but you must manually wire them to emitted events until the event bus integration is completed.
 
 ### When to Use Custom Test Beds
 
@@ -586,4 +613,4 @@ Key takeaways:
 - Supports both simple and complex test scenarios
 - Maintains flexibility through facade access
 
-For specific API documentation, see the [API Reference](../../tests/common/builders/README.md).
+For specific API documentation, see the [API Reference](../../tests/common/testing/builders/README.md).
