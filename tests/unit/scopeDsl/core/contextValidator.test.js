@@ -196,6 +196,27 @@ describe('ContextValidator', () => {
       ).toThrow('[CRITICAL] depthGuard must have an ensure method');
     });
 
+    it('should allow contexts without a cycleDetector when not required', () => {
+      const relaxedValidator = ContextValidator.withCriticalProperties([
+        'actorEntity',
+        'runtimeCtx',
+        'dispatcher',
+        'depthGuard',
+      ]);
+
+      const contextWithoutCycleDetector = {
+        actorEntity: mockActorEntity,
+        runtimeCtx: mockRuntimeCtx,
+        dispatcher: mockDispatcher,
+        depthGuard: mockDepthGuard,
+        depth: 1,
+      };
+
+      expect(() =>
+        relaxedValidator.validate(contextWithoutCycleDetector)
+      ).not.toThrow();
+    });
+
     it('should allow undefined depth', () => {
       const contextWithUndefinedDepth = { ...validContext };
       delete contextWithUndefinedDepth.depth;
