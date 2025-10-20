@@ -2,7 +2,7 @@
 
 ## Overview
 
-The test configuration standardization system provides centralized management of test configurations, eliminating duplication and reducing configuration-related errors across test suites.
+The test configuration standardization system (implemented in [`tests/common/testConfigurationFactory.js`](../../tests/common/testConfigurationFactory.js) and mirrored for builder utilities in [`tests/common/testing/builders/testConfigurationFactory.js`](../../tests/common/testing/builders/testConfigurationFactory.js)) provides centralized management of test configurations, eliminating duplication and reducing configuration-related errors across test suites.
 
 ## Key Features
 
@@ -52,11 +52,13 @@ const testEnv = await TestModuleBuilder.forTurnExecution()
   .build();
 ```
 
+> **Note:** TestModuleBuilder presets inline the factory defaults to avoid circular dependencies. They configure LLM, actor, and world defaults but omit the mock objects that `TestConfigurationFactory.createTestEnvironment()` supplies. Use the factory method directly when you need the fully hydrated preset including mocks.
+
 ## API Reference
 
 ### TestConfigurationFactory
 
-#### createLLMConfig(strategy, overrides)
+#### createLLMConfig(strategy = 'tool-calling', overrides = {})
 
 Creates a standardized LLM configuration.
 
@@ -76,7 +78,7 @@ const llmConfig = TestConfigurationFactory.createLLMConfig('tool-calling', {
 });
 ```
 
-#### createTestEnvironment(type, overrides)
+#### createTestEnvironment(type, overrides = {})
 
 Creates a complete test environment configuration.
 
@@ -85,7 +87,11 @@ Creates a complete test environment configuration.
 - `type` (string): Environment type - 'turn-execution', 'action-processing', or 'prompt-generation'
 - `overrides` (object, optional): Configuration overrides
 
-**Returns:** Complete test environment configuration
+**Returns:** Complete test environment configuration. Each environment includes a standardized LLM configuration plus contextual defaults:
+
+- **turn-execution** – tool-calling LLM config, default AI (`ai-actor`) and player (`player-actor`) actors, a `Test World` definition, and turn execution mocks (LLM adapter + event bus).
+- **action-processing** – tool-calling LLM config, a minimal actor list, reusable action definitions, and action service + validation mocks.
+- **prompt-generation** – JSON schema LLM config, prompt-focused actor defaults, and prompt builder/token counter mocks.
 
 **Example:**
 
@@ -98,7 +104,7 @@ const env = TestConfigurationFactory.createTestEnvironment(
 );
 ```
 
-#### createMockConfiguration(mockType, options)
+#### createMockConfiguration(mockType, options = {})
 
 Creates mock configurations for different services.
 
@@ -107,7 +113,13 @@ Creates mock configurations for different services.
 - `mockType` (string): Type of mock - 'llm-adapter', 'event-bus', or 'entity-manager'
 - `options` (object, optional): Mock configuration options
 
-**Returns:** Mock configuration object
+**Returns:** Mock configuration object. Supported mock types map to predefined shapes:
+
+- `'llm-adapter'` – canned responses keyed by strategy (default `tool-calling`), a fake API key, and optional response delay.
+- `'event-bus'` – `captureAll` flag (default `false`) and configurable `eventTypes` allow list.
+- `'entity-manager'` – default entity definitions that can be overridden with `options.entities`.
+
+Unsupported mock types return an empty object; pair the result with `TestConfigurationValidator.validateMockConfiguration()` to ensure the configuration matches expectations.
 
 **Example:**
 
@@ -125,7 +137,7 @@ const llmMock = TestConfigurationFactory.createMockConfiguration(
 
 Returns all available configuration presets.
 
-**Returns:** Object containing categorized preset functions
+**Returns:** Object containing categorized preset functions grouped under `llm`, `environments`, and `mocks` for quick reuse.
 
 **Example:**
 
@@ -134,6 +146,14 @@ const presets = TestConfigurationFactory.getPresets();
 const llmConfig = presets.llm.toolCalling();
 const env = presets.environments.turnExecution();
 ```
+
+#### Additional Factory Utilities
+
+- `createTestConfiguration()` – Generates an isolated temp directory plus `TestPathConfiguration`, returning `{ pathConfiguration, tempDir, cleanup }`.
+- `createTestFiles(pathConfiguration)` – Seeds standardized config and prompt files inside a `TestPathConfiguration` instance.
+- `createTestModule(moduleType)` – Shortcut for `TestModuleBuilder` factories (`turnExecution`, `actionProcessing`, `entityManagement`, `llmTesting`).
+- `createScenario(scenario)` – Instantiates pre-configured builder scenarios (e.g., `'combat'`, `'socialInteraction'`).
+- `migrateToTestModule(legacyConfig)` – Applies legacy configuration data to a new `TestModuleBuilder` instance for gradual migrations.
 
 ### TestConfigurationValidator
 
@@ -202,7 +222,7 @@ Applies a complete environment preset.
 
 **Parameters:**
 
-- `presetName` (string): Preset name - 'turnExecution', 'actionProcessing', or 'promptGeneration'
+- `presetName` (string): Preset name - 'turnExecution', 'actionProcessing', or 'promptGeneration'. Hyphenated variants (e.g., 'turn-execution') remain supported for backward compatibility.
 
 **Returns:** TestModule instance for chaining
 
@@ -266,27 +286,27 @@ Used for testing token limit handling:
 
 Complete turn execution testing environment:
 
-- Tool-calling LLM configuration
-- AI and player actors
-- Test world with locations
-- Turn execution mocks
+- Tool-calling LLM configuration with XML-style prompt elements
+- AI (`ai-actor`) and player (`player-actor`) actors
+- Test world (`Test World`) with multiple locations
+- Turn execution mocks (LLM adapter default response + event bus settings)
 
 ### Action Processing
 
 Action discovery and processing environment:
 
 - Tool-calling LLM configuration
-- Minimal test actor
-- Available actions list
-- Action processing mocks
+- Minimal test actor list
+- Available actions (`core:move`, `core:look`, `core:wait`)
+- Action processing mocks (action service defaults + validation service)
 
 ### Prompt Generation
 
 Prompt generation and formatting environment:
 
 - JSON schema LLM configuration
-- Prompt-specific test actor
-- Prompt generation mocks
+- Prompt-specific test actor (`prompt-test-actor`)
+- Prompt generation mocks (prompt builder defaults + token counter helpers)
 
 ## Usage Patterns
 
@@ -447,6 +467,9 @@ const testEnv = await TestModuleBuilder.forTurnExecution()
 
 **Issue**: "Unknown environment preset"
 **Solution**: Check available presets: 'turnExecution', 'actionProcessing', 'promptGeneration'
+
+**Issue**: "Empty mock configuration"
+**Solution**: `createMockConfiguration` returns `{}` for unsupported mock types. Double-check the `mockType` spelling and run `TestConfigurationValidator.validateMockConfiguration()` to receive descriptive errors.
 
 ### Debugging Tips
 
