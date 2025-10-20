@@ -198,6 +198,38 @@ function setupMixedPositioningScenario() {
   return { room, kneeler, king, throne, secondKnight, thirdKnight };
 }
 
+/**
+ * Creates scenario where actor is straddling another actor.
+ */
+function setupStraddlingScenario() {
+  const scenario = setupKneelingScenario();
+
+  // Add a chair for the target to sit on
+  const chair = new ModEntityBuilder('test:chair')
+    .withName('Chair')
+    .atLocation('throne_room')
+    .build();
+
+  // Add another actor who is being straddled
+  const straddledTarget = new ModEntityBuilder('test:straddled_target')
+    .withName('Bob')
+    .atLocation('throne_room')
+    .asActor()
+    .withComponent('positioning:sitting_on', {
+      furniture_id: 'test:chair',
+      spot_index: 0,
+    })
+    .build();
+
+  // Actor is straddling the straddled target's waist
+  scenario.actor.components['positioning:straddling_waist'] = {
+    target_id: 'test:straddled_target',
+    facing_away: false,
+  };
+
+  return { ...scenario, chair, straddledTarget };
+}
+
 describe('positioning:kneel_before action integration', () => {
   let testFixture;
 
@@ -604,6 +636,35 @@ describe('positioning:kneel_before action integration', () => {
         const actor = testFixture.entityManager.getEntityInstance('test:actor1');
         expect(actor.components['positioning:lying_down']).toBeDefined();
         expect(actor.components['positioning:lying_down'].furniture_id).toBe('test:bed');
+      });
+
+      it('should handle kneeling attempt when straddling another actor', async () => {
+        // Arrange - actor straddling someone's waist
+        const { room, actor, target, chair, straddledTarget } = setupStraddlingScenario();
+        testFixture.reset([room, actor, target, chair, straddledTarget]);
+
+        // Verify initial state
+        const initialActor = testFixture.entityManager.getEntityInstance('test:actor1');
+        expect(initialActor.components['positioning:straddling_waist']).toEqual({
+          target_id: 'test:straddled_target',
+          facing_away: false,
+        });
+
+        // Act - attempt to kneel while straddling
+        await testFixture.executeAction('test:actor1', 'test:target1', { skipDiscovery: true });
+
+        // Assert - rule executes and adds kneeling_before component
+        // Note: In real gameplay, action discovery would prevent this scenario
+        // due to forbidden_components, but rule testing bypasses that layer
+        const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
+        expect(updatedActor.components['positioning:kneeling_before']).toEqual({
+          entityId: 'test:target1',
+        });
+        // Actor still retains straddling component as rule doesn't remove it
+        expect(updatedActor.components['positioning:straddling_waist']).toEqual({
+          target_id: 'test:straddled_target',
+          facing_away: false,
+        });
       });
     });
 

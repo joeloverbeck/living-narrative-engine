@@ -26,25 +26,35 @@ The Test Module Pattern wraps the Service Facade layer with a fluent builder abs
 └─────────────────────────────────────┘
 ```
 
-Builders, modules, presets, validation, and registry components live under `tests/common/testing/builders/`:
+The test infrastructure is organized across two main directories:
 
 ```
-tests/common/testing/builders/
-├── testModuleBuilder.js           # Primary entry point
-├── modules/                       # Specialized module implementations
-│   ├── turnExecutionTestModule.js
-│   ├── actionProcessingTestModule.js
-│   ├── entityManagementTestModule.js
-│   └── llmTestingModule.js
-├── presets/                       # Pre-configured scenarios
-│   └── testScenarioPresets.js
-├── validation/                    # Configuration validation
-│   └── testModuleValidator.js
-├── interfaces/                    # Type definitions
-│   └── ITestModule.js
-├── errors/                        # Custom error types
-│   └── testModuleValidationError.js
-└── testModuleRegistry.js          # Preset registration and lookup
+tests/common/
+├── testConfigurationFactory.js    # Main configuration factory (LLM configs, environments, presets)
+├── testPathConfiguration.js       # Path management for isolated test directories
+├── facades/                        # Service facade implementations
+│   ├── testingFacadeRegistrations.js  # Facade DI registration & createMockFacades()
+│   ├── turnExecutionFacade.js
+│   ├── actionServiceFacade.js
+│   ├── entityServiceFacade.js
+│   └── llmServiceFacade.js
+└── testing/builders/               # Test Module Pattern implementation
+    ├── testModuleBuilder.js        # Primary entry point
+    ├── testModuleRegistry.js       # Preset registration and lookup
+    ├── modules/                    # Specialized module implementations
+    │   ├── turnExecutionTestModule.js
+    │   ├── actionProcessingTestModule.js
+    │   ├── entityManagementTestModule.js
+    │   └── llmTestingModule.js
+    ├── presets/                    # Pre-configured scenarios
+    │   └── testScenarioPresets.js
+    ├── validation/                 # Configuration validation
+    │   ├── testModuleValidator.js
+    │   └── testConfigurationValidator.js
+    ├── interfaces/                 # Type definitions
+    │   └── ITestModule.js
+    └── errors/                     # Custom error types
+        └── testModuleValidationError.js
 ```
 
 ### Core Concepts
@@ -53,6 +63,37 @@ tests/common/testing/builders/
 - **Fluent configuration** – Chain builder methods such as `.withMockLLM()`, `.withTestActors()`, `.withWorld()`, and `.withCustomFacades()` before calling `.build()`.
 - **Fail-fast validation** – Builders perform validation through `testModuleValidator.js` and surface `TestModuleValidationError` when configuration drift occurs.
 - **Sensible defaults** – Presets and standard mocks keep common actor, world, and LLM setups short while remaining customizable through overrides.
+
+### Complete Architecture Flow
+
+Understanding how components interact helps debug issues and choose the right testing approach:
+
+```
+Test Code
+    ↓
+TestModuleBuilder (Entry Point)
+    ↓ creates
+Test Module (TurnExecution/ActionProcessing/EntityManagement/LLMTesting)
+    ↓ uses
+TestConfigurationFactory (Preset configurations)
+    ↓ configures
+createMockFacades() (Service facade creation)
+    ↓ returns
+Facade Instances (TurnExecutionFacade, ActionServiceFacade, etc.)
+    ↓ wraps
+Core Game Services (EntityManager, EventBus, ActionDiscovery, etc.)
+```
+
+**Key Relationships**:
+- **Test Modules** internally call `createMockFacades()` from `tests/common/facades/testingFacadeRegistrations.js`
+- **Facades** provide simplified APIs over complex service orchestration
+- **TestConfigurationFactory** centralizes LLM strategies, environment presets, and mock configurations
+- **TestModuleRegistry** manages scenario presets (combat, socialInteraction, etc.)
+
+**When to Use Each Layer**:
+- **Test Modules** (recommended) - Most mod tests, full workflow testing
+- **Facades directly** - Low-level adapter tests, HTTP integration tests
+- **Core Services** - Unit tests of individual service components
 
 ### Quick Example
 
@@ -147,13 +188,38 @@ const testEnv = await TestModuleBuilder.forTurnExecution()
 
 ### Troubleshooting Tips
 
+#### Configuration and Validation Issues
+
 - **Validation errors** usually mean a required builder method is missing or an override conflicts with defaults—inspect the thrown `TestModuleValidationError` for precise hints.
+- **"Unknown LLM strategy" errors** - Check that you're using one of the supported strategies: `'tool-calling'`, `'json-schema'`, or `'limited-context'`.
+- **Missing preset errors** - Verify the scenario name exists in `TestModuleRegistry.getPresetNames()` (e.g., `combat`, `socialInteraction`, `exploration`).
+
+#### Import and Path Issues
+
+- **Cannot find module errors** - Verify import paths match the file structure:
+  - `TestModuleBuilder` from `tests/common/testing/builders/testModuleBuilder.js`
+  - `TestConfigurationFactory` from `tests/common/testConfigurationFactory.js` (NOT from builders/)
+  - `createMockFacades` from `tests/common/facades/testingFacadeRegistrations.js`
+- **Circular dependency warnings** - Test modules should import from `builders/`, not vice versa; facades should not import test modules.
+
+#### Architecture Decision Points
+
+- **When to use facades directly vs test modules**:
+  - Use **Test Modules** for mod-level integration tests, AI turn execution, action workflows
+  - Use **Facades directly** (`createMockFacades`) for low-level adapter tests, HTTP integration tests, or when you need precise control over individual service mocking
+  - Use **Core Services** directly only for unit tests of individual service components
 - **Low-level adapter tests** should stay on custom fixtures; module builders are for mod-level workflows.
 - **Performance regressions** often trace back to redundant `.build()` calls—reuse test environments inside `beforeEach` where possible.
 
+#### Debugging Test Module Issues
+
+- **Facade methods not available** - Ensure you're accessing facades through `testEnv.facades.facadeName` after calling `.build()`
+- **Mock responses not working** - Check that mock setup happens after environment build and before test execution
+- **Event bus not firing** - Verify that `createMockFacades` was called with proper mock function creator (e.g., `jest.fn`)
+
 ## Configuration Factory Reference
 
-The configuration factory centralizes presets that module builders consume. It lives at [`tests/common/testing/builders/testConfigurationFactory.js`](../../tests/common/testing/builders/testConfigurationFactory.js) with a runtime mirror at [`tests/common/testConfigurationFactory.js`](../../tests/common/testConfigurationFactory.js).
+The configuration factory centralizes presets that module builders consume. The main factory class lives at [`tests/common/testConfigurationFactory.js`](../../tests/common/testConfigurationFactory.js) and imports validation and registry components from the `builders/` subdirectory.
 
 ### Core Factory APIs
 
@@ -191,6 +257,31 @@ const testEnv = await TestModuleBuilder.forTurnExecution()
 - `createTestModule(moduleType)` – Shortcut that instantiates module builders (`turnExecution`, `actionProcessing`, `entityManagement`, `llmTesting`).
 - `createScenario(scenario)` – Loads prebuilt scenarios such as `'combat'` or `'socialInteraction'` for integration-style tests.
 - `migrateToTestModule(legacyConfig)` – Applies legacy fixture data onto modern builders, easing gradual transitions.
+
+### Factory vs Builder Clarification
+
+**TestConfigurationFactory** (the class):
+- Located at `tests/common/testConfigurationFactory.js`
+- Provides **static methods** for creating LLM configs, test environments, and mock configurations
+- Used internally by test modules to get standardized presets
+- Can be used directly when you need just configuration objects without full test environment setup
+
+**TestModuleBuilder** (the pattern entry point):
+- Located at `tests/common/testing/builders/testModuleBuilder.js`
+- Provides **fluent API** for building complete test environments
+- Uses `TestConfigurationFactory` internally to get presets
+- Returns fully configured test module instances with facades and utilities
+
+**When to use each**:
+```javascript
+// Use TestConfigurationFactory directly for configuration objects
+const llmConfig = TestConfigurationFactory.createLLMConfig('tool-calling');
+
+// Use TestModuleBuilder for complete test environments (recommended)
+const testEnv = await TestModuleBuilder.forTurnExecution()
+  .withMockLLM({ strategy: 'tool-calling' })
+  .build();
+```
 
 ### Factory + Builder Workflow
 

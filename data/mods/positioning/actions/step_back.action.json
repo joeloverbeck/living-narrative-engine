@@ -7,6 +7,9 @@
   "required_components": {
     "actor": ["positioning:closeness"]
   },
+  "forbidden_components": {
+    "actor": ["positioning:straddling_waist", "positioning:sitting_on", "positioning:kneeling_before", "positioning:lying_down"]
+  },
   "template": "step back",
   "prerequisites": [
     {

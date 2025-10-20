@@ -4,8 +4,11 @@
  * @see src/modding/modLoadOrderResolver.js - Load order resolution
  */
 
+/* global process */
+
 import { validateDependency } from '../../src/utils/dependencyUtils.js';
 import ModDependencyError from '../../src/errors/modDependencyError.js';
+import ManifestFileExistenceValidator from './manifestFileExistenceValidator.js';
 import path from 'path';
 import { promises as fs } from 'fs';
 
@@ -59,9 +62,10 @@ class ModValidationOrchestrator {
   #modManifestLoader;
   #pathResolver;
   #configuration;
+  #fileExistenceValidator;
 
   /**
-   * @param {Object} dependencies
+   * @param {object} dependencies
    * @param {import('../../src/utils/loggerUtils.js').ILogger} dependencies.logger
    * @param {typeof import('../../src/modding/modDependencyValidator.js').default} dependencies.modDependencyValidator
    * @param {import('./modCrossReferenceValidator.js').default} dependencies.modCrossReferenceValidator
@@ -69,6 +73,7 @@ class ModValidationOrchestrator {
    * @param {import('../../src/modding/modManifestLoader.js').default} dependencies.modManifestLoader
    * @param {import('../../src/interfaces/coreServices.js').IPathResolver} dependencies.pathResolver
    * @param {import('../../src/interfaces/coreServices.js').IConfiguration} dependencies.configuration
+   * @param {ManifestFileExistenceValidator} [dependencies.fileExistenceValidator] - Optional file existence validator
    */
   constructor({
     logger,
@@ -78,6 +83,7 @@ class ModValidationOrchestrator {
     modManifestLoader,
     pathResolver,
     configuration,
+    fileExistenceValidator = null,
   }) {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
@@ -119,11 +125,13 @@ class ModValidationOrchestrator {
     this.#modManifestLoader = modManifestLoader;
     this.#pathResolver = pathResolver;
     this.#configuration = configuration;
+    this.#fileExistenceValidator = fileExistenceValidator || new ManifestFileExistenceValidator({ logger });
   }
 
   /**
    * Performs comprehensive validation of the entire mod ecosystem
-   * @param {Object} options - Validation options
+   *
+   * @param {object} options - Validation options
    * @param {boolean} options.skipCrossReferences - Skip cross-reference validation
    * @param {boolean} options.failFast - Stop on first validation failure
    * @param {string[]} options.modsToValidate - Specific mods to validate (default: all)
@@ -266,6 +274,41 @@ class ModValidationOrchestrator {
         this.#logger.info('Phase 4: Cross-reference validation skipped');
       }
 
+      // Phase 5: File existence validation
+      this.#logger.info('Phase 5: Validating manifest file references');
+      const fileExistenceStartTime = performance.now();
+
+      try {
+        results.fileExistence = await this.#fileExistenceValidator.validateAllMods(manifestsMap);
+        results.performance.phases.set(
+          'file-existence-validation',
+          performance.now() - fileExistenceStartTime
+        );
+
+        const invalidMods = Array.from(results.fileExistence.values()).filter(r => !r.isValid);
+        if (invalidMods.length > 0) {
+          const totalIssues = invalidMods.reduce(
+            (sum, r) => sum + r.missingFiles.length + r.namingIssues.length,
+            0
+          );
+          this.#logger.warn(
+            `File existence validation found ${totalIssues} issues in ${invalidMods.length} mod(s)`
+          );
+
+          if (failFast) {
+            throw new ModValidationError(results);
+          }
+          results.warnings.push(
+            `File existence validation found ${totalIssues} issues in ${invalidMods.length} mod(s)`
+          );
+        }
+      } catch (error) {
+        this.#logger.error('File existence validation failed', error);
+        results.errors.push(
+          `File existence validation failed: ${error.message}`
+        );
+      }
+
       // Determine overall validation status
       results.isValid =
         results.dependencies?.isValid &&
@@ -273,6 +316,10 @@ class ModValidationOrchestrator {
         (!results.crossReferences ||
           !Array.from(results.crossReferences.values()).some(
             (r) => r.hasViolations
+          )) &&
+        (!results.fileExistence ||
+          !Array.from(results.fileExistence.values()).some(
+            (r) => !r.isValid
           ));
 
       const totalTime = performance.now() - startTime;
@@ -295,8 +342,9 @@ class ModValidationOrchestrator {
 
   /**
    * Validates a specific mod with integrated validation pipeline
+   *
    * @param {string} modId - Mod identifier to validate
-   * @param {Object} options - Validation options
+   * @param {object} options - Validation options
    * @returns {Promise<ModValidationResult>} Single mod validation results
    */
   async validateMod(modId, options = {}) {
@@ -378,8 +426,9 @@ class ModValidationOrchestrator {
 
   /**
    * Integrates with existing mod loading pipeline for pre-load validation
+   *
    * @param {string[]} modIds - Ordered list of mod IDs to load
-   * @param {Object} options - Loading options
+   * @param {object} options - Loading options
    * @returns {Promise<LoadValidationResult>} Validation results for loading
    */
   async validateForLoading(modIds, options = {}) {
@@ -460,6 +509,7 @@ class ModValidationOrchestrator {
 
   /**
    * Discovers all mod IDs in the mods directory
+   *
    * @private
    * @returns {Promise<string[]>} Array of mod IDs
    */
@@ -504,9 +554,10 @@ class ModValidationOrchestrator {
 
   /**
    * Loads and validates manifests with enhanced error handling
+   *
    * @private
    * @param {string[]|null} modsToValidate - Specific mods or null for all
-   * @returns {Promise<Map<string, Object>>} Map of validated manifests
+   * @returns {Promise<Map<string, object>>} Map of validated manifests
    */
   async #loadAndValidateManifests(modsToValidate) {
     this.#logger.info('Phase 1: Loading and validating mod manifests');
@@ -530,11 +581,12 @@ class ModValidationOrchestrator {
 
   /**
    * Validates dependencies for a specific mod using existing infrastructure
+   *
    * @private
    * @param {string} modId - Mod identifier
-   * @param {Object} manifest - Mod manifest
-   * @param {Map<string, Object>} manifestsMap - All manifests for context
-   * @returns {Promise<Object>} Dependency validation results
+   * @param {object} manifest - Mod manifest
+   * @param {Map<string, object>} manifestsMap - All manifests for context
+   * @returns {Promise<object>} Dependency validation results
    */
   async #validateModDependencies(modId, manifest, manifestsMap) {
     try {
@@ -581,9 +633,10 @@ class ModValidationOrchestrator {
 
   /**
    * Validates dependencies for loading subset of mods
+   *
    * @private
-   * @param {Map<string, Object>} loadingMods - Mods being loaded
-   * @returns {Promise<Object>} Dependency validation results
+   * @param {Map<string, object>} loadingMods - Mods being loaded
+   * @returns {Promise<object>} Dependency validation results
    */
   async #validateLoadingDependencies(loadingMods) {
     try {
@@ -614,8 +667,9 @@ class ModValidationOrchestrator {
 
   /**
    * Generates loading recommendations based on validation results
+   *
    * @private
-   * @param {Object} dependencyResult - Dependency validation results
+   * @param {object} dependencyResult - Dependency validation results
    * @param {string[]} crossRefWarnings - Cross-reference warnings
    * @returns {string[]} List of recommendations
    */
@@ -646,9 +700,10 @@ class ModValidationOrchestrator {
 
   /**
    * Resolves mod path from manifest
+   *
    * @protected
    * @param {string} modId - Mod identifier
-   * @param {Object} manifest - Mod manifest
+   * @param {object} manifest - Mod manifest
    * @returns {string} Resolved mod path
    */
   _resolveModPath(modId, manifest) {
@@ -664,30 +719,30 @@ class ModValidationOrchestrator {
 }
 
 /**
- * @typedef {Object} ModEcosystemValidationResult
- * @property {Object} dependencies - Dependency validation results
- * @property {Map<string, Object>|null} crossReferences - Cross-reference validation results
- * @property {Object|null} loadOrder - Load order resolution results
- * @property {Object} performance - Performance metrics
+ * @typedef {object} ModEcosystemValidationResult
+ * @property {object} dependencies - Dependency validation results
+ * @property {Map<string, object> | null} crossReferences - Cross-reference validation results
+ * @property {object | null} loadOrder - Load order resolution results
+ * @property {object} performance - Performance metrics
  * @property {boolean} isValid - Overall validation status
  * @property {string[]} errors - Critical errors
  * @property {string[]} warnings - Non-critical warnings
  */
 
 /**
- * @typedef {Object} ModValidationResult
+ * @typedef {object} ModValidationResult
  * @property {string} modId - Mod identifier
- * @property {Object} dependencies - Dependency validation results
- * @property {Object|null} crossReferences - Cross-reference validation results
+ * @property {object} dependencies - Dependency validation results
+ * @property {object | null} crossReferences - Cross-reference validation results
  * @property {boolean} isValid - Validation status
  * @property {string[]} errors - Critical errors
  * @property {string[]} warnings - Non-critical warnings
  */
 
 /**
- * @typedef {Object} LoadValidationResult
+ * @typedef {object} LoadValidationResult
  * @property {boolean} canLoad - Whether mods can be loaded
- * @property {Object} dependencies - Dependency validation results
+ * @property {object} dependencies - Dependency validation results
  * @property {string[]} warnings - Warning messages
  * @property {string[]} loadOrder - Resolved load order
  * @property {string[]} recommendations - Loading recommendations

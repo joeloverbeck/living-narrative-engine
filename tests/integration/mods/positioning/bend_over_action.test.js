@@ -120,6 +120,40 @@ function setupMultiSurfaceScenario() {
   return { ...scenario, surface2 };
 }
 
+/**
+ * Creates scenario where actor is straddling another actor.
+ *
+ * @returns {object} Scenario object with entities including straddled actor
+ */
+function setupStraddlingScenario() {
+  const scenario = setupBendingScenario();
+
+  // Add a chair for the target to sit on
+  const chair = new ModEntityBuilder('test:chair')
+    .withName('Chair')
+    .atLocation('kitchen')
+    .build();
+
+  // Add another actor who is being straddled
+  const target = new ModEntityBuilder('test:target1')
+    .withName('Bob')
+    .atLocation('kitchen')
+    .asActor()
+    .withComponent('positioning:sitting_on', {
+      furniture_id: 'test:chair',
+      spot_index: 0,
+    })
+    .build();
+
+  // Actor is straddling the target's waist
+  scenario.actor.components['positioning:straddling_waist'] = {
+    target_id: 'test:target1',
+    facing_away: false,
+  };
+
+  return { ...scenario, chair, target };
+}
+
 describe('positioning:bend_over action integration', () => {
   let testFixture;
 
@@ -255,6 +289,35 @@ describe('positioning:bend_over action integration', () => {
       // Actor still retains kneeling component as rule doesn't remove it
       expect(updatedActor.components['positioning:kneeling_before']).toEqual({
         entityId: 'test:target1',
+      });
+    });
+
+    it('should handle bending attempt when straddling another actor', async () => {
+      // Arrange - actor straddling someone's waist
+      const { room, actor, surface, chair, target } = setupStraddlingScenario();
+      testFixture.reset([room, actor, surface, chair, target]);
+
+      // Verify initial state
+      const initialActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      expect(initialActor.components['positioning:straddling_waist']).toEqual({
+        target_id: 'test:target1',
+        facing_away: false,
+      });
+
+      // Act - attempt to bend over surface while straddling
+      await testFixture.executeAction('test:actor1', 'test:surface1', { skipDiscovery: true });
+
+      // Assert - rule executes and adds bending_over component
+      // Note: In real gameplay, action discovery would prevent this scenario
+      // due to forbidden_components, but rule testing bypasses that layer
+      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      expect(updatedActor.components['positioning:bending_over']).toEqual({
+        surface_id: 'test:surface1',
+      });
+      // Actor still retains straddling component as rule doesn't remove it
+      expect(updatedActor.components['positioning:straddling_waist']).toEqual({
+        target_id: 'test:target1',
+        facing_away: false,
       });
     });
   });
