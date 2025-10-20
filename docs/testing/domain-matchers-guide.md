@@ -167,7 +167,9 @@ it('should handle sit down action', async () => {
   const chair = new ModEntityBuilder('test:chair1')
     .withName('Chair')
     .atLocation('room1')
-    .withComponent('positioning:allows_sitting_on', {})
+    .withComponent('positioning:allows_sitting', {
+      spots: [null],
+    })
     .build();
 
   testFixture.reset([room, actor, chair]);
@@ -208,7 +210,9 @@ it('should handle sit down action', async () => {
   const chair = new ModEntityBuilder('test:chair1')
     .withName('Chair')
     .atLocation('room1')
-    .withComponent('positioning:allows_sitting_on', {})
+    .withComponent('positioning:allows_sitting', {
+      spots: [null],
+    })
     .build();
 
   testFixture.reset([room, actor, chair]);
