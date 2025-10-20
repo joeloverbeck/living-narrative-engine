@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "violence:force_to_knees",
+  "name": "Force to Knees",
+  "description": "Forcefully push someone down to kneel before you",
+  "targets": {
+    "primary": {
+      "scope": "positioning:close_actors_facing_each_other",
+      "placeholder": "target",
+      "description": "The actor to force to their knees"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": [],
+    "primary": ["positioning:kneeling_before"]
+  },
+  "template": "force {target} to their knees before you",
+  "visual": {
+    "backgroundColor": "#8b0000",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#b71c1c",
+    "hoverTextColor": "#ffebee"
+  }
+}

@@ -19,6 +19,7 @@
   ],
   "content": {
     "actions": [
+      "force_to_knees.action.json",
       "grab_neck.action.json",
       "push_off.action.json",
       "slap.action.json",
@@ -26,6 +27,7 @@
       "sucker_punch.action.json"
     ],
     "rules": [
+      "handle_force_to_knees.rule.json",
       "handle_grab_neck.rule.json",
       "handle_push_off.rule.json",
       "handle_slap.rule.json",
@@ -33,6 +35,7 @@
       "handle_sucker_punch.rule.json"
     ],
     "conditions": [
+      "event-is-action-force-to-knees.condition.json",
       "event-is-action-grab-neck.condition.json",
       "event-is-action-push-off.condition.json",
       "event-is-action-slap.condition.json",
