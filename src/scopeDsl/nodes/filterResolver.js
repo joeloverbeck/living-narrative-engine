@@ -281,7 +281,7 @@ export default function createFilterResolver({
       }
 
       // TEMPORARY DIAGNOSTIC: Log filter results to console
-      console.log('[DIAGNOSTIC] Filter evaluation:', {
+      console.debug('[DIAGNOSTIC] Filter evaluation:', {
         initialSize,
         finalSize: result.size,
         logic: JSON.stringify(node.logic),

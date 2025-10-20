@@ -61,7 +61,7 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
     // (b.priority - a.priority means higher priority comes first).
     this.#queue = new TinyQueue([], (a, b) => b.priority - a.priority);
     this.#removedEntityIds = new Set();
-    console.log('[DEBUG] Constructor: Queue initialized.'); // LOGGING
+    console.debug('[DEBUG] Constructor: Queue initialized.'); // LOGGING
   }
 
   /**
@@ -88,13 +88,13 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
       );
     }
 
-    console.log(
+    console.debug(
       `[DEBUG] add: Adding entity ${entity.id} (priority ${priority}). Current queue.length: ${this.#queue.length}, removedIds.size: ${this.#removedEntityIds.size}`
     ); // LOGGING
     // If the entity was marked for removal, adding it back overrides that.
     const wasRemoved = this.#removedEntityIds.delete(entity.id);
     if (wasRemoved) {
-      console.log(
+      console.debug(
         `[DEBUG] add: Entity ${entity.id} was in removedIds set, deleted it. removedIds.size: ${this.#removedEntityIds.size}`
       ); // LOGGING
     }
@@ -102,7 +102,7 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
     /** @type {QueueItem} */
     const newItem = { entity, priority };
     this.#queue.push(newItem);
-    console.log(
+    console.debug(
       `[DEBUG] add: Entity ${entity.id} pushed. New queue.length: ${this.#queue.length}`
     ); // LOGGING
   }
@@ -124,11 +124,11 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
         `InitiativePriorityQueue.remove: Attempted to remove entity with invalid ID "${entityId}".`
       );
     }
-    console.log(
+    console.debug(
       `[DEBUG] remove: Marking entity ${entityId} for removal. Current removedIds.size: ${this.#removedEntityIds.size}`
     ); // LOGGING
     this.#removedEntityIds.add(entityId);
-    console.log(
+    console.debug(
       `[DEBUG] remove: Entity ${entityId} added to removedIds. New removedIds.size: ${this.#removedEntityIds.size}`
     ); // LOGGING
     return null; // See JSDoc explanation.
@@ -143,22 +143,22 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
    * queue is effectively empty.
    */
   getNext() {
-    console.log(
+    console.debug(
       `[DEBUG] getNext: --- Called ---. Initial queue.length: ${this.#queue.length}, removedIds.size: ${this.#removedEntityIds.size}`
     ); // LOGGING
     while (this.#queue.length > 0) {
-      console.log(
+      console.debug(
         `[DEBUG] getNext: Loop start. queue.length: ${this.#queue.length}`
       ); // LOGGING
       const highestPriorityItem = this.#queue.pop(); // Pop item physically
       const poppedEntityId =
         highestPriorityItem?.entity?.id ?? 'null/undefined';
-      console.log(
+      console.debug(
         `[DEBUG] getNext: Popped item. New queue.length: ${this.#queue.length}. Popped entity ID: ${poppedEntityId}`
       ); // LOGGING
 
       if (!highestPriorityItem) {
-        console.log(
+        console.debug(
           '[DEBUG] getNext: Popped item was null/undefined, continuing loop.'
         ); // LOGGING
         continue;
@@ -167,22 +167,22 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
       const entityId = highestPriorityItem.entity.id;
 
       if (this.#removedEntityIds.has(entityId)) {
-        console.log(
+        console.debug(
           `[DEBUG] getNext: Popped entity ${entityId} IS in removedIds. Deleting from set.`
         ); // LOGGING
         this.#removedEntityIds.delete(entityId);
-        console.log(
+        console.debug(
           `[DEBUG] getNext: Removed ${entityId} from removedIds. New removedIds.size: ${this.#removedEntityIds.size}. Continuing loop.`
         ); // LOGGING
         continue;
       } else {
-        console.log(
+        console.debug(
           `[DEBUG] getNext: Popped entity ${entityId} is VALID. Returning it. Final queue.length: ${this.#queue.length}, removedIds.size: ${this.#removedEntityIds.size}`
         ); // LOGGING
         return highestPriorityItem.entity; // Return the actual entity
       }
     }
-    console.log(
+    console.debug(
       '[DEBUG] getNext: Queue is empty or only contained removed items. Returning null.'
     ); // LOGGING
     return null;
@@ -197,22 +197,22 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
    * queue is effectively empty.
    */
   peek() {
-    console.log(
+    console.debug(
       `[DEBUG] peek: --- Called ---. Initial queue.length: ${this.#queue.length}, removedIds.size: ${this.#removedEntityIds.size}`
     ); // LOGGING
     while (this.#queue.length > 0) {
-      console.log(
+      console.debug(
         `[DEBUG] peek: Loop start. queue.length: ${this.#queue.length}`
       ); // LOGGING
       const highestPriorityItem = this.#queue.peek(); // Look at top item
       const peekedEntityId =
         highestPriorityItem?.entity?.id ?? 'null/undefined';
-      console.log(
+      console.debug(
         `[DEBUG] peek: Peeked item entity ID: ${peekedEntityId}. queue.length remains ${this.#queue.length}.`
       ); // LOGGING
 
       if (!highestPriorityItem) {
-        console.log(
+        console.debug(
           '[DEBUG] peek: Peeked item was null/undefined, returning null.'
         ); // LOGGING
         return null; // Should be impossible if length > 0
@@ -221,23 +221,23 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
       const entityId = highestPriorityItem.entity.id;
 
       if (this.#removedEntityIds.has(entityId)) {
-        console.log(
+        console.debug(
           `[DEBUG] peek: Peeked entity ${entityId} IS in removedIds. Popping it for cleanup.`
         ); // LOGGING
         this.#queue.pop(); // Remove it physically from the queue
         this.#removedEntityIds.delete(entityId); // Clean up the removal set
-        console.log(
+        console.debug(
           `[DEBUG] peek: Popped ${entityId} for cleanup. New queue.length: ${this.#queue.length}. New removedIds.size: ${this.#removedEntityIds.size}. Continuing loop.`
         ); // LOGGING
         continue;
       } else {
-        console.log(
+        console.debug(
           `[DEBUG] peek: Peeked entity ${entityId} is VALID. Returning it. Final queue.length: ${this.#queue.length}, removedIds.size: ${this.#removedEntityIds.size}`
         ); // LOGGING
         return highestPriorityItem.entity;
       }
     }
-    console.log(
+    console.debug(
       '[DEBUG] peek: Queue is empty or only contained removed items. Returning null.'
     ); // LOGGING
     return null;
@@ -250,11 +250,11 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
    * @returns {boolean} True if the queue is effectively empty, false otherwise.
    */
   isEmpty() {
-    console.log(
+    console.debug(
       `[DEBUG] isEmpty: --- Called ---. Initial queue.length: ${this.#queue.length}, removedIds.size: ${this.#removedEntityIds.size}`
     ); // LOGGING
     if (this.#queue.length === 0) {
-      console.log(
+      console.debug(
         '[DEBUG] isEmpty: queue.length is 0. Clearing removedIds and returning true.'
       ); // LOGGING
       this.#removedEntityIds.clear();
@@ -262,7 +262,7 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
     }
     const currentSize = this.size(); // Calls size() which also logs
     const result = currentSize === 0;
-    console.log(
+    console.debug(
       `[DEBUG] isEmpty: Calculated size is ${currentSize}. Returning ${result}.`
     ); // LOGGING
     return result;
@@ -275,13 +275,13 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
    * @returns {void}
    */
   clear() {
-    console.log(
+    console.debug(
       `[DEBUG] clear: --- Called ---. Clearing queue and removedIds. Initial queue.length: ${this.#queue.length}, removedIds.size: ${this.#removedEntityIds.size}`
     ); // LOGGING
     const comparator = (a, b) => b.priority - a.priority;
     this.#queue = new TinyQueue([], comparator);
     this.#removedEntityIds.clear();
-    console.log(
+    console.debug(
       `[DEBUG] clear: Done. New queue.length: ${this.#queue.length}, removedIds.size: ${this.#removedEntityIds.size}`
     ); // LOGGING
   }
@@ -299,12 +299,12 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
     const currentQueueLength = this.#queue.length;
     const currentRemovedIdsSize = this.#removedEntityIds.size;
     // LOGGING: Added specific identifier for clarity
-    console.log(
+    console.debug(
       `[DEBUG] size(): --- Called ---. queue.length: ${currentQueueLength}, removedIds.size: ${currentRemovedIdsSize}`
     );
     const estimatedSize = currentQueueLength - currentRemovedIdsSize;
     const finalSize = Math.max(0, estimatedSize);
-    console.log(
+    console.debug(
       `[DEBUG] size(): Calculated: ${currentQueueLength} - ${currentRemovedIdsSize} = ${estimatedSize} -> Result: ${finalSize}`
     );
     return finalSize;
@@ -321,7 +321,7 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
    * if the queue is effectively empty.
    */
   toArray() {
-    console.log(
+    console.debug(
       `[DEBUG] toArray: --- Called ---. queue.length: ${this.#queue.length}, removedIds.size: ${this.#removedEntityIds.size}`
     ); // LOGGING
     const internalData = this.#queue.data || [];
@@ -329,11 +329,11 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
       .filter((item) => {
         const isValid =
           item && item.entity && !this.#removedEntityIds.has(item.entity.id);
-        // console.log(`[DEBUG] toArray: Filtering item ${item?.entity?.id}, isValid: ${isValid}`); // Optional finer logging
+        // console.debug(`[DEBUG] toArray: Filtering item ${item?.entity?.id}, isValid: ${isValid}`); // Optional finer logging
         return isValid;
       })
       .map((item) => item.entity);
-    console.log(
+    console.debug(
       `[DEBUG] toArray: Filtered ${internalData.length} items down to ${result.length} active entities.`
     ); // LOGGING
     return result;

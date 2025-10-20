@@ -291,7 +291,7 @@ class ScopeEngine extends IScopeEngine {
     const source = 'ScopeEngine';
 
     // TEMPORARY DIAGNOSTIC: Log scope resolution entry
-    console.log('[DIAGNOSTIC] ScopeEngine.resolve called:', {
+    console.debug('[DIAGNOSTIC] ScopeEngine.resolve called:', {
       astType: ast?.type,
       astValue: ast?.value,
       astKind: ast?.kind,

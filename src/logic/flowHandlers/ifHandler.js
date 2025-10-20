@@ -42,8 +42,14 @@ export async function handleIf(
     else_actions: elseActs = [],
   } = node.parameters || {};
 
-  console.log(`[DEBUG] handleIf - Evaluating IF condition:`, JSON.stringify(condition, null, 2));
-  console.log(`[DEBUG] handleIf - Context available:`, Object.keys(nestedCtx.evaluationContext.context || {}));
+  logger.debug(
+    `[DEBUG] handleIf - Evaluating IF condition:`,
+    JSON.stringify(condition, null, 2)
+  );
+  logger.debug(
+    `[DEBUG] handleIf - Context available:`,
+    Object.keys(nestedCtx.evaluationContext.context || {})
+  );
 
   const { scopeLabel = 'IF', jsonLogic, ...baseCtx } = nestedCtx;
   const { result, errored } = evaluateConditionWithLogging(
@@ -54,21 +60,27 @@ export async function handleIf(
     scopeLabel
   );
 
-  console.log(`[DEBUG] handleIf - Condition result: ${result}, errored: ${errored}`);
+  logger.debug(
+    `[DEBUG] handleIf - Condition result: ${result}, errored: ${errored}`
+  );
 
   if (errored) {
-    console.log(`[DEBUG] handleIf - Condition errored, exiting`);
+    logger.debug(`[DEBUG] handleIf - Condition errored, exiting`);
     return;
   }
 
   if (result) {
-    console.log(`[DEBUG] handleIf - Executing then_actions (${thenActs.length} actions)`);
+    logger.debug(
+      `[DEBUG] handleIf - Executing then_actions (${thenActs.length} actions)`
+    );
     logger.debug(`[handleIf] then_actions length: ${thenActs.length}`);
     logger.debug(
       `[handleIf] then_actions: ${JSON.stringify(thenActs, null, 2)}`
     );
   } else {
-    console.log(`[DEBUG] handleIf - Executing else_actions (${elseActs.length} actions)`);
+    logger.debug(
+      `[DEBUG] handleIf - Executing else_actions (${elseActs.length} actions)`
+    );
     logger.debug(`[handleIf] else_actions length: ${elseActs.length}`);
     logger.debug(
       `[handleIf] else_actions: ${JSON.stringify(elseActs, null, 2)}`
@@ -82,5 +94,5 @@ export async function handleIf(
     operationInterpreter
   );
 
-  console.log(`[DEBUG] handleIf - Action sequence completed`);
+  logger.debug(`[DEBUG] handleIf - Action sequence completed`);
 }

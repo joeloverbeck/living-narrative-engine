@@ -122,7 +122,7 @@ describe('Anatomy Performance Stress Testing', () => {
       await new Promise(resolve => setTimeout(resolve, 20));
       
       // Log generation result
-      console.log(`[DEBUG] Anatomy generation for ${partCount} parts: ${wasGenerated ? 'SUCCESS' : 'FAILED'}`);
+      console.debug(`[DEBUG] Anatomy generation for ${partCount} parts: ${wasGenerated ? 'SUCCESS' : 'FAILED'}`);
       
       // The root is the entity itself after generation
       return { rootId: entityId };
@@ -167,7 +167,7 @@ describe('Anatomy Performance Stress Testing', () => {
         const expectedMaxParts = count + 10; // Allow overhead for structure
         
         // Log actual vs expected for debugging
-        console.log(`[DEBUG] Part count ${count}: Requested=${count}, Actual=${allParts.length}, Expected range=[${expectedMinParts}, ${expectedMaxParts}]`);
+        console.debug(`[DEBUG] Part count ${count}: Requested=${count}, Actual=${allParts.length}, Expected range=[${expectedMinParts}, ${expectedMaxParts}]`);
         
         // For now, just ensure we have some parts generated
         if (count <= 25) {
@@ -305,14 +305,14 @@ describe('Anatomy Performance Stress Testing', () => {
 
       // Create an entity with a recipe for anatomy generation
       const entityId = `test-entity-depth-${depth}-${Date.now()}`;
-      console.log(`[DEBUG] Creating entity for depth ${depth}: ${entityId}`);
+      console.debug(`[DEBUG] Creating entity for depth ${depth}: ${entityId}`);
       
       const createStart = Date.now();
       const entity = await testBed.entityManager.createEntityInstance('core:actor', {
         instanceId: entityId,
       });
       const createTime = Date.now() - createStart;
-      console.log(`[DEBUG] Entity creation took ${createTime}ms: ${entity.id}`);
+      console.debug(`[DEBUG] Entity creation took ${createTime}ms: ${entity.id}`);
       
       // Wait for entity to be fully created
       await new Promise(resolve => setTimeout(resolve, 15));
@@ -323,7 +323,7 @@ describe('Anatomy Performance Stress Testing', () => {
         recipeId: `test:deep_hierarchy_${depth}`,
       });
       const addComponentTime = Date.now() - addComponentStart;
-      console.log(`[DEBUG] Add component took ${addComponentTime}ms`);
+      console.debug(`[DEBUG] Add component took ${addComponentTime}ms`);
       
       // Wait for component to be added
       await new Promise(resolve => setTimeout(resolve, 15));
@@ -332,7 +332,7 @@ describe('Anatomy Performance Stress Testing', () => {
       const generateStart = Date.now();
       const wasGenerated = await anatomyGenerationService.generateAnatomyIfNeeded(entityId);
       const generateTime = Date.now() - generateStart;
-      console.log(`[DEBUG] Anatomy generation took ${generateTime}ms for depth ${depth}, result: ${wasGenerated ? 'SUCCESS' : 'FAILED'}`);
+      console.debug(`[DEBUG] Anatomy generation took ${generateTime}ms for depth ${depth}, result: ${wasGenerated ? 'SUCCESS' : 'FAILED'}`);
       
       // Wait for generation to complete
       await new Promise(resolve => setTimeout(resolve, 20));
@@ -366,11 +366,11 @@ describe('Anatomy Performance Stress Testing', () => {
             hasValidStructure = hasBodyComponent || hasPartComponent;
             
             if (!hasValidStructure && attempts < maxAttempts - 1) {
-              console.log(`[DEBUG] Depth ${depth} attempt ${attempts + 1}: Entity exists but no anatomy components yet`);
+              console.debug(`[DEBUG] Depth ${depth} attempt ${attempts + 1}: Entity exists but no anatomy components yet`);
               await new Promise(resolve => setTimeout(resolve, 10 * (attempts + 1)));
             }
           } else if (attempts < maxAttempts - 1) {
-            console.log(`[DEBUG] Depth ${depth} attempt ${attempts + 1}: Entity ${anatomy.rootId} not found yet`);
+            console.debug(`[DEBUG] Depth ${depth} attempt ${attempts + 1}: Entity ${anatomy.rootId} not found yet`);
             await new Promise(resolve => setTimeout(resolve, 10 * (attempts + 1)));
           }
           attempts++;
@@ -380,7 +380,7 @@ describe('Anatomy Performance Stress Testing', () => {
 
         // Provide better error information if validation fails
         if (!hasValidStructure) {
-          console.error(`[DEBUG] Validation failed for depth ${depth}:`);
+          console.debug(`[DEBUG] Validation failed for depth ${depth}:`);
           console.error(`  Entity exists: ${!!rootEntity}`);
           console.error(`  Root ID: ${anatomy.rootId}`);
           console.error(`  Attempts: ${attempts}/${maxAttempts}`);
@@ -412,7 +412,7 @@ describe('Anatomy Performance Stress Testing', () => {
         const traversalTime = performanceMonitor.end(`traverse_depth_${depth}`);
         
         // Log actual vs expected depth for debugging
-        console.log(`[DEBUG] Depth ${depth}: Expected=${depth}, Actual=${maxDepth}`);
+        console.debug(`[DEBUG] Depth ${depth}: Expected=${depth}, Actual=${maxDepth}`);
         
         // Validate that we achieve at least some depth (blueprint system may limit actual depth)
         // The actual depth achieved depends on how the anatomy generation processes blueprints
@@ -457,7 +457,7 @@ describe('Anatomy Performance Stress Testing', () => {
         expect(anatomy.rootId).toBeDefined();
       } catch (error) {
         // If it fails, just log and continue - the main point is no stack overflow
-        console.log(`[DEBUG] Extreme depth test encountered error: ${error.message}`);
+        console.debug(`[DEBUG] Extreme depth test encountered error: ${error.message}`);
         // Create a simple dummy anatomy for the rest of the test
         anatomy = { rootId: `dummy-extreme-${Date.now()}` };
       }
@@ -477,18 +477,18 @@ describe('Anatomy Performance Stress Testing', () => {
             hasValidStructure = hasBodyComponent || hasPartComponent;
             
             if (!hasValidStructure && attempts < maxAttempts - 1) {
-              console.log(`[DEBUG] Extreme depth attempt ${attempts + 1}: Entity exists but no anatomy components yet`);
+              console.debug(`[DEBUG] Extreme depth attempt ${attempts + 1}: Entity exists but no anatomy components yet`);
               await new Promise(resolve => setTimeout(resolve, 15 * (attempts + 1)));
             }
           } else if (attempts < maxAttempts - 1) {
-            console.log(`[DEBUG] Extreme depth attempt ${attempts + 1}: Entity ${anatomy.rootId} not found yet`);
+            console.debug(`[DEBUG] Extreme depth attempt ${attempts + 1}: Entity ${anatomy.rootId} not found yet`);
             await new Promise(resolve => setTimeout(resolve, 15 * (attempts + 1)));
           }
           attempts++;
         }
         
         if (!hasValidStructure) {
-          console.error(`[DEBUG] Extreme depth validation failed:`);
+          console.debug(`[DEBUG] Extreme depth validation failed:`);
           console.error(`  Entity exists: ${!!rootEntity}`);
           console.error(`  Has anatomy:part: ${rootEntity ? rootEntity.hasComponent('anatomy:part') : 'N/A'}`);
           console.error(`  Root ID: ${anatomy.rootId}`);

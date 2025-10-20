@@ -216,7 +216,9 @@ class SystemLogicInterpreter extends BaseService {
   // Debug: Check raw rule before resolution
   const targetRule = rawRules.find(r => r.rule_id === 'handle_sit_down_at_distance');
   if (targetRule) {
-    console.log(`[DEBUG] #loadAndCacheRules - RAW rule 'handle_sit_down_at_distance' from dataRegistry:`);
+    this.#logger.debug(
+      `[DEBUG] #loadAndCacheRules - RAW rule 'handle_sit_down_at_distance' from dataRegistry:`
+    );
     console.log(`  - actions is Array: ${Array.isArray(targetRule.actions)}`);
     console.log(`  - actions.length: ${targetRule.actions ? targetRule.actions.length : 'N/A'}`);
   }
@@ -243,7 +245,9 @@ class SystemLogicInterpreter extends BaseService {
 
       // Debug: Check actions after resolution
       if (rule.rule_id === 'handle_sit_down_at_distance') {
-        console.log(`[DEBUG] #loadAndCacheRules - RESOLVED rule 'handle_sit_down_at_distance':`);
+        this.#logger.debug(
+          `[DEBUG] #loadAndCacheRules - RESOLVED rule 'handle_sit_down_at_distance':`
+        );
         console.log(`  - actions is Array: ${Array.isArray(resolvedRule.actions)}`);
         console.log(`  - actions.length: ${resolvedRule.actions ? resolvedRule.actions.length : 'N/A'}`);
       }
@@ -447,8 +451,14 @@ class SystemLogicInterpreter extends BaseService {
       `[Rule ${ruleId}] Condition found. Evaluating using jsonLogicDataForEval...`
     );
 
-    console.log(`[DEBUG] Evaluating condition for rule '${ruleId}':`, JSON.stringify(rule.condition, null, 2));
-    console.log(`[DEBUG] Event data:`, JSON.stringify(flatCtx.event, null, 2));
+    this.#logger.debug(
+      `[DEBUG] Evaluating condition for rule '${ruleId}':`,
+      JSON.stringify(rule.condition, null, 2)
+    );
+    this.#logger.debug(
+      `[DEBUG] Event data:`,
+      JSON.stringify(flatCtx.event, null, 2)
+    );
 
     const { result: passed, errored } = evaluateConditionWithLogging(
       this.#jsonLogic,
@@ -458,7 +468,9 @@ class SystemLogicInterpreter extends BaseService {
       `[Rule ${ruleId}]`
     );
 
-    console.log(`[DEBUG] Condition evaluation result for '${ruleId}': passed=${passed}, errored=${errored}`);
+    this.#logger.debug(
+      `[DEBUG] Condition evaluation result for '${ruleId}': passed=${passed}, errored=${errored}`
+    );
 
     return { passed, errored };
   }
@@ -481,7 +493,9 @@ class SystemLogicInterpreter extends BaseService {
       nestedCtx.evaluationContext
     );
 
-    console.log(`[DEBUG] #processRule - Rule '${ruleId}' condition result: passed=${passed}, errored=${errored}`);
+    this.#logger.debug(
+      `[DEBUG] #processRule - Rule '${ruleId}' condition result: passed=${passed}, errored=${errored}`
+    );
 
     if (!passed) {
       const reason = errored
@@ -499,9 +513,15 @@ class SystemLogicInterpreter extends BaseService {
       return;
     }
 
-    console.log(`[DEBUG] #processRule - Rule '${ruleId}' condition PASSED! Checking actions...`);
-    console.log(`[DEBUG] #processRule - rule.actions is Array: ${Array.isArray(rule.actions)}`);
-    console.log(`[DEBUG] #processRule - rule.actions.length: ${rule.actions ? rule.actions.length : 'N/A'}`);
+    this.#logger.debug(
+      `[DEBUG] #processRule - Rule '${ruleId}' condition PASSED! Checking actions...`
+    );
+    this.#logger.debug(
+      `[DEBUG] #processRule - rule.actions is Array: ${Array.isArray(rule.actions)}`
+    );
+    this.#logger.debug(
+      `[DEBUG] #processRule - rule.actions.length: ${rule.actions ? rule.actions.length : 'N/A'}`
+    );
 
     this.#logger.debug(
       `✅ [SystemLogicInterpreter] Rule ${ruleId}: Condition passed, proceeding to actions`
@@ -532,7 +552,9 @@ class SystemLogicInterpreter extends BaseService {
         throw err;
       }
     } else {
-      console.log(`[DEBUG] #processRule - NO ACTIONS to execute for rule '${ruleId}' - rule.actions is not a non-empty array`);
+      this.#logger.debug(
+        `[DEBUG] #processRule - NO ACTIONS to execute for rule '${ruleId}' - rule.actions is not a non-empty array`
+      );
       
       this.#logger.debug(
         `⚠️ [SystemLogicInterpreter] Rule ${ruleId}: No actions to execute`

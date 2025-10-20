@@ -626,7 +626,7 @@ export class ErrorRecoveryTestBed {
           clearTimeout(timeoutId);
           const elapsed = Date.now() - startTime;
           if (process.env.DEBUG_E2E) {
-            console.log(`[DEBUG] Operation completed in ${elapsed}ms`);
+            console.debug(`[DEBUG] Operation completed in ${elapsed}ms`);
           }
           resolve(result);
         })

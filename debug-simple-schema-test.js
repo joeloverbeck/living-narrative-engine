@@ -4,7 +4,7 @@
 
 // Mock minimal logger
 const mockLogger = {
-  debug: (...args) => console.log('[DEBUG]', ...args),
+  debug: (...args) => console.debug('[DEBUG]', ...args),
   info: (...args) => console.log('[INFO]', ...args),
   error: (...args) => console.log('[ERROR]', ...args),
   warn: (...args) => console.log('[WARN]', ...args),
