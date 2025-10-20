@@ -285,6 +285,17 @@ describe('getAllParts', () => {
     expect(service.getAllParts(undefined)).toEqual([]);
   });
 
+  it('returns empty array when body component lacks root references', () => {
+    service = createService();
+
+    const result = service.getAllParts({ body: {} });
+
+    expect(result).toEqual([]);
+    expect(logger.debug).toHaveBeenCalledWith(
+      'BodyGraphService.getAllParts: No root ID found in bodyComponent'
+    );
+  });
+
   it('uses actor entity as cache root when cached', () => {
     jest.spyOn(AnatomyCacheManager.prototype, 'has').mockImplementation((id) => id === 'actor-1');
     jest.spyOn(AnatomyCacheManager.prototype, 'size').mockReturnValue(5);
@@ -341,6 +352,31 @@ describe('getAllParts', () => {
       'blueprint-root',
       'child-2',
     ]);
+  });
+
+  it('truncates debug output when anatomy has many parts', () => {
+    jest.spyOn(AnatomyCacheManager.prototype, 'has').mockReturnValue(false);
+    jest.spyOn(AnatomyCacheManager.prototype, 'size').mockReturnValue(3);
+    jest
+      .spyOn(AnatomyQueryCache.prototype, 'getCachedGetAllParts')
+      .mockReturnValue(undefined);
+    jest
+      .spyOn(AnatomyGraphAlgorithms, 'getAllParts')
+      .mockReturnValue(['a', 'b', 'c', 'd', 'e', 'f', 'g']);
+
+    service = new BodyGraphService({
+      entityManager,
+      logger,
+      eventDispatcher,
+    });
+
+    const parts = service.getAllParts({ root: 'rich-root' });
+
+    expect(parts).toEqual(['a', 'b', 'c', 'd', 'e', 'f', 'g']);
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining("BodyGraphService: AnatomyGraphAlgorithms.getAllParts returned 7 parts for root 'rich-root':")
+    );
+    expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('...'));
   });
 
   it('returns cached results when available', () => {
@@ -431,6 +467,21 @@ describe('component presence helpers', () => {
       )
     ).toEqual({ found: false });
   });
+
+  it('returns not found when component is entirely absent', () => {
+    service = createService();
+    jest.spyOn(service, 'getAllParts').mockReturnValue(['part-a']);
+    entityManager.getComponentData.mockReturnValue(null);
+
+    expect(
+      service.hasPartWithComponentValue(
+        { root: 'root-x' },
+        'component:test',
+        'stats.health.current',
+        10
+      )
+    ).toEqual({ found: false });
+  });
 });
 
 describe('getBodyGraph', () => {
@@ -469,6 +520,23 @@ describe('getBodyGraph', () => {
     expect(buildSpy).toHaveBeenCalledWith('entity-graph');
     expect(graph.getAllPartIds()).toEqual(['part-1', 'part-2']);
     expect(graph.getConnectedParts('part-1')).toEqual(['part-1-child']);
+  });
+
+  it('returns empty connected parts when cache node missing', async () => {
+    entityManager.getComponentData.mockResolvedValue({
+      body: { root: 'root-1' },
+    });
+    const cacheSpy = jest.spyOn(AnatomyCacheManager.prototype, 'get');
+    cacheSpy.mockImplementation(() => undefined);
+
+    service = createService();
+    jest.spyOn(service, 'buildAdjacencyCache').mockResolvedValue(undefined);
+    jest.spyOn(service, 'getAllParts').mockReturnValue(['root-1']);
+
+    const graph = await service.getBodyGraph('actor-1');
+
+    expect(graph.getConnectedParts('missing-part')).toEqual([]);
+    expect(cacheSpy).toHaveBeenCalledWith('missing-part');
   });
 });
 
