@@ -20,9 +20,9 @@ Without documentation, adoption will be slow and developers may not fully utiliz
 ## Acceptance Criteria
 
 ✅ **Comprehensive API Reference**
-- Document all enhanced test bed methods
-- Document all custom Jest matchers
-- Document scope tracing helpers
+- Document the actionable test bed surface (`createActionDiscoveryBed()`, `createActorWithValidation()`, `createActorTargetScenario()`, `establishClosenessWithValidation()`, `discoverActionsWithDiagnostics()`, `formatDiagnosticSummary()`, lifecycle helpers, etc.)
+- Document the existing custom Jest matchers (`toHaveAction`, `toDiscoverActionCount`)
+- Document scope tracing helpers (`createTracedScopeResolver`, `formatScopeEvaluationSummary`, `traceScopeEvaluation`)
 - Include parameter descriptions and return types
 
 ✅ **Usage Examples**
@@ -102,15 +102,15 @@ describe('My Action Tests', () => {
     testBed = createActionDiscoveryBed();
   });
 
-  it('should discover action for target', () => {
+  it('should discover action for target', async () => {
     // One-line scenario setup
     const { actor, target } = testBed.createActorTargetScenario();
 
     // Discovery with diagnostics
-    const result = testBed.discoverActionsWithDiagnostics(actor);
+    const result = await testBed.discoverActionsWithDiagnostics(actor);
 
     // Custom matcher with detailed errors
-    expect(result).toHaveActionForTarget('my:action', 'target1');
+    expect(result).toHaveAction('my:action');
   });
 });
 ```
@@ -120,7 +120,7 @@ describe('My Action Tests', () => {
 For complex tests with debugging needs:
 
 ```javascript
-it('should handle complex scenario', () => {
+it('should handle complex scenario', async () => {
   // Setup with validation
   const { actor, target } = testBed.createActorTargetScenario({
     actorComponents: { /* ... */ },
@@ -128,13 +128,13 @@ it('should handle complex scenario', () => {
   });
 
   // Discover with diagnostics
-  const result = testBed.discoverActionsWithDiagnostics(actor, {
+  const result = await testBed.discoverActionsWithDiagnostics(actor, {
     includeDiagnostics: true,
     traceScopeResolution: true,
   });
 
   // Use custom matchers
-  expect(result).toHaveActionForTarget('my:action', 'target1');
+  expect(result).toHaveAction('my:action');
 
   // Debug if needed
   if (result.actions.length === 0) {
@@ -172,62 +172,108 @@ const actor = testBed.createActorWithValidation('actor1', {
 });
 ```
 
-[Continue with all other methods...]
+Also include coverage for:
+- `createDiscoveryServiceWithTracing(options)` – how to override defaults for advanced scenarios.
+- `createStandardDiscoveryService()` – when to drop down to the raw service.
+- `createMockActor(actorId)` and `createMockContext()` – lightweight helpers for unit-style tests.
+- `establishClosenessWithValidation(actor, target)` – ensuring proximity relationships are correctly wired.
+- `createActorTargetScenario(config)` – the higher-level helper described above.
+- `cleanup()` – resetting mocks/log capture between tests.
 
 ## Custom Jest Matchers
 
-### toHaveActionForTarget
+Document only the matchers that actually exist in `/tests/common/actionMatchers.js`. The current surface area provides two helpers that operate on either an array of actions or the `{ actions }` object returned from `discoverActionsWithDiagnostics()`.
 
-Assert that a specific action was discovered for a specific target.
+### toHaveAction
+
+Assert that a specific action was discovered.
 
 **Signature:**
 ```javascript
-expect(result).toHaveActionForTarget(actionId, targetId)
+expect(result).toHaveAction(actionId)
 ```
 
 **Parameters:**
-- `actionId` (string): Expected action ID
-- `targetId` (string): Expected target ID
+- `actionId` (string): Expected action ID (e.g., `'affection:place_hands_on_shoulders'`)
 
-**Success:** Action with exact target was discovered
+**Success:** Action with the provided ID exists in the discovery results.
 
-**Failure Messages:**
-- Action not discovered: Shows possible reasons and debugging steps
-- Action found with wrong target: Shows actual targets and scope debugging
+**Failure Messaging:** Summarizes available actions, highlights likely pipeline stages that filtered the action, and suggests next debugging steps.
 
 **Example:**
 ```javascript
-const result = testBed.discoverActionsWithDiagnostics(actor);
-expect(result).toHaveActionForTarget('affection:place_hands_on_shoulders', 'target1');
+const result = await testBed.discoverActionsWithDiagnostics(actor, {
+  includeDiagnostics: true,
+});
+
+expect(result).toHaveAction('affection:place_hands_on_shoulders');
 ```
 
-[Continue with all matchers...]
+### toDiscoverActionCount
+
+Assert that the number of discovered actions matches expectations.
+
+**Signature:**
+```javascript
+expect(result).toDiscoverActionCount(expectedCount)
+```
+
+**Parameters:**
+- `expectedCount` (number): The expected number of discovered actions.
+
+**Success:** Actual discovery count equals `expectedCount`.
+
+**Failure Messaging:** Explains whether the pipeline returned more or fewer actions than expected, lists the discovered action IDs, and suggests targeted debugging steps (checking prerequisites, closeness, or scope configuration).
+
+**Example:**
+```javascript
+const result = await testBed.discoverActionsWithDiagnostics(actor);
+expect(result).toDiscoverActionCount(3);
+```
+
+> ℹ️ There is currently **no** `toHaveActionForTarget` implementation. If per-target assertions are needed, note the gap in the troubleshooting section and provide manual example code for inspecting `result.actions`.
 
 ## Scope Tracing Utilities
 
-[Document scope tracing helpers...]
+Describe the helpers implemented in `/tests/common/scopeDsl/scopeTracingHelpers.js` and how they augment `TraceContext` diagnostics:
+
+- `createTracedScopeResolver(scopeResolver, traceContext)` – wraps an existing resolver instance, capturing each `resolve()` call and forwarding success/error information to the provided trace context.
+- `formatScopeEvaluationSummary(traceContext)` – produces a readable multi-line summary from the evaluations captured inside a `TraceContext`.
+- `traceScopeEvaluation({ scopeId, actor, scopeResolver, context })` – one-shot helper that creates a traced resolver, executes the evaluation, and returns `{ success, resolvedEntities, trace, summary }`.
+
+Highlight that these utilities depend on the production `TraceContext` class from `src/actions/tracing/traceContext.js`, so examples should import that type indirectly via the helpers rather than re-implementing tracing logic.
 
 ## Diagnostic Discovery
 
-[Document diagnostic capabilities...]
+Cover the enhanced discovery surface exposed by `ActionDiscoveryServiceTestBed`:
+
+- `discoverActionsWithDiagnostics(actor, { includeDiagnostics, traceScopeResolution })` – explain the options, the shape of the returned `{ actions, diagnostics? }` object, and how trace integration swaps in `createTracedScopeResolver()` when both diagnostics and tracing are requested.
+- `formatDiagnosticSummary(diagnostics)` – detail how it aggregates logs, operator evaluations, and scope evaluations, including expectations about the structure of `diagnostics` (e.g., `logs`, `operatorEvaluations`, `scopeEvaluations`).
+- Accessor helpers such as `getDebugLogs()`, `getInfoLogs()`, `getWarningLogs()`, `getErrorLogs()`, and `getCreatedTraceType()` that tests can use for fine-grained assertions when diagnosing failures.
+
+Provide runnable snippets that demonstrate capturing the diagnostics payload, piping it through `formatDiagnosticSummary()`, and writing targeted assertions when actions are filtered.
 
 ## Common Patterns
 
 ### Pattern 1: Basic Action Discovery Test
 
-[Example...]
+Walk through a minimal integration test that:
+- Creates a bed via `createActionDiscoveryBed()` in `beforeEach`
+- Calls `createActorTargetScenario()` for setup
+- Invokes `discoverActionsWithDiagnostics()`
+- Uses `toHaveAction()` to assert discovery success
 
 ### Pattern 2: Testing Action Restrictions
 
-[Example...]
+Show how to override components when calling `createActorWithValidation()` or the scenario helper to trigger failure cases, then assert with `toDiscoverActionCount()` and inspect diagnostics to confirm the filtering stage.
 
 ### Pattern 3: Debugging Scope Issues
 
-[Example...]
+Demonstrate enabling `{ includeDiagnostics: true, traceScopeResolution: true }`, wrapping the resolver via tracing helpers, and printing `formatScopeEvaluationSummary()` so readers can interpret scope results.
 
 ### Pattern 4: Testing Multiple Scenarios
 
-[Example...]
+Provide guidance on reusing the bed across tests, leveraging `cleanup()` in `afterEach`, and parameterizing calls to `createActorTargetScenario()` to cover variations without duplicating boilerplate.
 
 ## Troubleshooting
 
@@ -269,7 +315,27 @@ const result = testBed.discoverActionsWithDiagnostics(actor, {
 console.log(testBed.formatDiagnosticSummary(result.diagnostics));
 ```
 
-[Continue with other scenarios...]
+### Action Discovered for Unexpected Target
+
+**Symptom:** Discovery succeeds, but the action is associated with the wrong entity.
+
+**Debugging Steps:**
+1. Manually inspect `result.actions` because there is no `toHaveActionForTarget` matcher yet.
+2. Use `Array.prototype.find()` to locate the action and assert against `action.targets` (if present).
+3. Enable `traceScopeResolution` to confirm which scope produced the target set.
+
+**Example:**
+```javascript
+const result = await testBed.discoverActionsWithDiagnostics(actor, {
+  includeDiagnostics: true,
+  traceScopeResolution: true,
+});
+
+const action = result.actions.find((a) => a.id === 'affection:place_hands_on_shoulders');
+expect(action?.targets).toContain('target1');
+```
+
+Also cover other recurring issues such as scope resolution failures (with sample resolver error output) and prerequisite evaluation exceptions so readers can map diagnostics back to pipeline stages.
 
 ## API Reference
 
@@ -328,6 +394,7 @@ This ticket focuses on documentation, but documentation quality should be verifi
    - Custom matchers (from INTTESDEB-002)
    - Scope tracing (from INTTESDEB-005)
    - Diagnostics (from INTTESDEB-006)
+   - Cross-reference existing content in `docs/testing/mod-testing-guide.md` to avoid repeating builder-pattern guidance; link out where overlap exists.
 
 4. **Add Common Patterns**
    - Basic discovery test
@@ -352,6 +419,7 @@ This ticket focuses on documentation, but documentation quality should be verifi
    - Check for clarity
    - Add cross-references
    - Proofread
+   - Update `docs/testing/mod-testing-guide.md` (or other relevant testing docs) to point to the new debugging guide instead of duplicating material.
 
 ## Success Metrics
 
