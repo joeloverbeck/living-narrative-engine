@@ -11,7 +11,8 @@
     "actor": [
       "positioning:sitting_on",
       "positioning:bending_over",
-      "positioning:kneeling_before"
+      "positioning:kneeling_before",
+      "positioning:straddling_waist"
     ]
   },
   "template": "bend over {target}",

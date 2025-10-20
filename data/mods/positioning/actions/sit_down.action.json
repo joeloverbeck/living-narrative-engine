@@ -8,7 +8,7 @@
     "actor": []
   },
   "forbidden_components": {
-    "actor": ["positioning:sitting_on", "positioning:kneeling_before", "positioning:bending_over"]
+    "actor": ["positioning:sitting_on", "positioning:kneeling_before", "positioning:bending_over", "positioning:straddling_waist"]
   },
   "template": "sit down on {target}",
   "prerequisites": [],

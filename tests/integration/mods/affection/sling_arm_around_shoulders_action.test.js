@@ -6,7 +6,7 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import slingArmAroundShouldersRule from '../../../../data/mods/affection/rules/sling_arm_around_shoulders.rule.json';
-import eventIsActionSlingArmAroundShoulders from '../../../../data/mods/affection/conditions/event-is-action-sling_arm_around_shoulders.condition.json';
+import eventIsActionSlingArmAroundShoulders from '../../../../data/mods/affection/conditions/event-is-action-sling-arm-around-shoulders.condition.json';
 
 describe('affection:sling_arm_around_shoulders action integration', () => {
   let testFixture;

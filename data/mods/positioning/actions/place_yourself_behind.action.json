@@ -14,7 +14,7 @@
     "actor": []
   },
   "forbidden_components": {
-    "actor": ["positioning:sitting_on", "positioning:kneeling_before", "positioning:lying_down"]
+    "actor": ["positioning:sitting_on", "positioning:kneeling_before", "positioning:lying_down", "positioning:straddling_waist"]
   },
   "template": "place yourself behind {target}",
   "prerequisites": [

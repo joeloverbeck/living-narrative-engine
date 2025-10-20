@@ -14,6 +14,9 @@
     "actor": ["positioning:closeness"],
     "primary": ["positioning:sitting_on", "positioning:closeness"]
   },
+  "forbidden_components": {
+    "actor": ["positioning:sitting_on", "positioning:straddling_waist"]
+  },
   "template": "sit on {target}'s lap (face-to-face)",
   "prerequisites": [
     {

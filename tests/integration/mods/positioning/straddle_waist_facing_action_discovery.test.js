@@ -376,7 +376,7 @@ describe('straddle_waist_facing action discovery - Integration Tests', () => {
   });
 
   describe('Edge Cases', () => {
-    it('should handle actor sitting while trying to straddle', async () => {
+    it('should NOT discover when actor is sitting (straddling requires standing)', async () => {
       // Setup: Both actor and target are sitting
       const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
@@ -419,15 +419,114 @@ describe('straddle_waist_facing action discovery - Integration Tests', () => {
       const actions = await testFixture.discoverActions('actor1');
 
       // Debug output
-      console.log(`\n🔍 Testing edge case (both sitting):`);
+      console.log(`\n❌ Testing edge case (actor sitting - should NOT discover):`);
       console.log(`  Discovered actions:`, actions.map((a) => a.id));
 
-      // Assert - This should be discovered (actor can straddle while sitting)
+      // Assert - This should NOT be discovered (actor must be standing to straddle)
+      const straddleAction = actions.find(
+        (a) => a.id === 'positioning:straddle_waist_facing'
+      );
+
+      expect(straddleAction).toBeUndefined();
+    });
+
+    it('should discover when actor is standing close to sitting target', async () => {
+      // Setup: Actor standing, target sitting
+      const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
+
+      const chair = new ModEntityBuilder('chair1')
+        .withName('Chair')
+        .atLocation('room1')
+        .build();
+
+      const actor = new ModEntityBuilder('actor1')
+        .withName('Alice')
+        .atLocation('room1')
+        .closeToEntity('target1')
+        .asActor()
+        .build();
+      // Note: Actor does NOT have sitting_on component (standing)
+
+      const target = new ModEntityBuilder('target1')
+        .withName('Bob')
+        .atLocation('room1')
+        .closeToEntity('actor1')
+        .asActor()
+        .withComponent('positioning:sitting_on', {
+          furniture_id: 'chair1',
+          spot_index: 0,
+        })
+        .build();
+
+      testFixture.reset([room, chair, actor, target]);
+      configureActionDiscovery();
+
+      // Act
+      const actions = await testFixture.discoverActions('actor1');
+
+      // Debug output
+      console.log(`\n✅ Testing valid scenario (actor standing, target sitting):`);
+      console.log(`  Discovered actions:`, actions.map((a) => a.id));
+
+      // Assert - This SHOULD be discovered (correct scenario for straddling)
       const straddleAction = actions.find(
         (a) => a.id === 'positioning:straddle_waist_facing'
       );
 
       expect(straddleAction).toBeDefined();
+    });
+  });
+
+  describe('Straddling State Prevention', () => {
+    it('should NOT discover when actor is already straddling target (after sit-on-lap)', async () => {
+      // Setup: Actor already straddling target's waist (simulating after sit_on_lap action)
+      const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
+
+      const chair = new ModEntityBuilder('chair1')
+        .withName('Chair')
+        .atLocation('room1')
+        .build();
+
+      const actor = new ModEntityBuilder('actor1')
+        .withName('Alice')
+        .atLocation('room1')
+        .closeToEntity('target1')
+        .asActor()
+        .withComponent('positioning:straddling_waist', {
+          target_id: 'target1',
+          facing_away: false,
+        })
+        .build();
+      // Note: Actor has straddling_waist component (as if sit_on_lap was executed)
+
+      const target = new ModEntityBuilder('target1')
+        .withName('Bob')
+        .atLocation('room1')
+        .closeToEntity('actor1')
+        .asActor()
+        .withComponent('positioning:sitting_on', {
+          furniture_id: 'chair1',
+          spot_index: 0,
+        })
+        .build();
+
+      testFixture.reset([room, chair, actor, target]);
+      configureActionDiscovery();
+      configureActionDiscovery();
+
+      // Act
+      const actions = await testFixture.discoverActions('actor1');
+
+      // Debug output
+      console.log(`\n❌ Testing straddling prevention (actor already straddling):`);
+      console.log(`  Discovered actions:`, actions.map((a) => a.id));
+
+      // Assert - Should NOT discover because actor already has straddling_waist component
+      const straddleAction = actions.find(
+        (a) => a.id === 'positioning:straddle_waist_facing'
+      );
+
+      expect(straddleAction).toBeUndefined();
     });
   });
 });

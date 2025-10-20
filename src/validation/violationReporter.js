@@ -74,6 +74,11 @@ class ViolationReporter {
       return this._generateEcosystemConsoleReport(data.crossReferences, options);
     }
 
+    // Handle file existence validation results
+    if (data.fileExistence instanceof Map) {
+      return this._generateFileExistenceReport(data.fileExistence, options);
+    }
+
     // Enhanced single mod report
     lines.push(`Cross-Reference Validation Report for '${data.modId}'`);
     lines.push('='.repeat(50));
@@ -820,6 +825,61 @@ class ViolationReporter {
       );
       lines.push('');
     });
+
+    return lines.join('\n');
+  }
+
+  /**
+   * Generates file existence validation report
+   *
+   * @param {Map<string, ModFileValidationResult>} results - File existence validation results
+   * @param {object} options - Formatting options
+   * @returns {string} Formatted report
+   * @private
+   */
+  _generateFileExistenceReport(results, options = {}) {
+    const lines = [];
+    const invalidMods = Array.from(results.values()).filter(r => !r.isValid);
+
+    lines.push('Living Narrative Engine - File Existence Validation Report');
+    lines.push('='.repeat(60));
+    lines.push('');
+
+    if (invalidMods.length === 0) {
+      lines.push('✅ All manifest file references are valid');
+      lines.push(`📊 Validated ${results.size} mods successfully`);
+      return lines.join('\n');
+    }
+
+    const totalMissing = invalidMods.reduce((sum, r) => sum + r.missingFiles.length, 0);
+    const totalNamingIssues = invalidMods.reduce((sum, r) => sum + r.namingIssues.length, 0);
+
+    lines.push(`❌ Found ${totalMissing + totalNamingIssues} issues in ${invalidMods.length} mod(s):`);
+    lines.push(`   - ${totalMissing} missing files`);
+    lines.push(`   - ${totalNamingIssues} naming convention mismatches`);
+    lines.push('');
+
+    for (const result of invalidMods) {
+      lines.push(`📦 Mod: ${result.modId}`);
+
+      if (result.missingFiles.length > 0) {
+        lines.push('  ❌ Missing files:');
+        result.missingFiles.forEach(({ category, file }) => {
+          lines.push(`     - ${category}/${file}`);
+        });
+      }
+
+      if (result.namingIssues.length > 0) {
+        lines.push('  ⚠️  Naming mismatches (underscore vs hyphen):');
+        result.namingIssues.forEach(({ category, manifestRef, actualFile }) => {
+          lines.push(`     - Manifest: ${category}/${manifestRef}`);
+          lines.push(`       Actual:   ${category}/${actualFile}`);
+          lines.push(`       💡 Fix: Update manifest to use "${actualFile}"`);
+        });
+      }
+
+      lines.push('');
+    }
 
     return lines.join('\n');
   }
