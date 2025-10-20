@@ -218,8 +218,9 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       expect(handlers).toHaveProperty('LOCK_MOVEMENT');
       expect(handlers).toHaveProperty('UNLOCK_MOVEMENT');
 
-      // Violence uses perception logging handler set (17 handlers)
-      expect(Object.keys(handlers)).toHaveLength(17);
+      // Violence uses perception logging handler set (18 handlers)
+      // Includes BREAK_CLOSENESS_WITH_TARGET added in positioning system
+      expect(Object.keys(handlers)).toHaveLength(18);
     });
 
     it('should validate violence category entity patterns', () => {
@@ -482,11 +483,11 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       expect(handlers).toHaveProperty('DISPATCH_PERCEPTIBLE_EVENT');
       expect(handlers).toHaveProperty('END_TURN');
 
-      // Positioning uses extended handler set with perception logging (17 handlers instead of 9)
+      // Positioning uses extended handler set with perception logging (18 handlers instead of 9)
       // Includes: 9 standard + ADD_COMPONENT, ADD_PERCEPTION_LOG_ENTRY, REMOVE_COMPONENT,
       // LOCK_MOVEMENT, UNLOCK_MOVEMENT, MODIFY_ARRAY_FIELD, MODIFY_COMPONENT,
-      // ATOMIC_MODIFY_COMPONENT
-      expect(Object.keys(handlers)).toHaveLength(17);
+      // ATOMIC_MODIFY_COMPONENT, BREAK_CLOSENESS_WITH_TARGET
+      expect(Object.keys(handlers)).toHaveLength(18);
 
       // Verify ADD_COMPONENT is functional
       expect(typeof handlers.ADD_COMPONENT.execute).toBe('function');
@@ -664,7 +665,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
 
       const expectedHandlerConfig = {
         exercise: { handlerCount: 9, hasAddComponent: false },
-        violence: { handlerCount: 17, hasAddComponent: true },
+        violence: { handlerCount: 18, hasAddComponent: true },
         sex: { handlerCount: 9, hasAddComponent: false },
         affection: { handlerCount: 11, hasAddComponent: true },
       };
@@ -679,8 +680,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         }
       );
 
-      // Positioning should have 17 handlers (includes ADD_COMPONENT and perception logging handlers)
-      expect(factoryResults.positioning.handlerCount).toBe(17);
+      // Positioning should have 18 handlers (includes ADD_COMPONENT, perception logging handlers, and BREAK_CLOSENESS_WITH_TARGET)
+      expect(factoryResults.positioning.handlerCount).toBe(18);
       expect(factoryResults.positioning.hasAddComponent).toBe(true);
       expect(factoryResults.positioning.commonHandlers).toBe(true);
     });

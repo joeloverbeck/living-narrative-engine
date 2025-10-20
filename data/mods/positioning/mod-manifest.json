@@ -116,6 +116,7 @@
       "actor_faced_forward.event.json",
       "actor_turned_around.event.json",
       "actor_turned_back.event.json",
+      "closeness_with_target_broken.event.json",
       "sitting_closeness_established.event.json"
     ],
     "macros": [],

@@ -32,6 +32,7 @@ import LockMovementHandler from '../../../../src/logic/operationHandlers/lockMov
 import ModifyArrayFieldHandler from '../../../../src/logic/operationHandlers/modifyArrayFieldHandler.js';
 import ModifyComponentHandler from '../../../../src/logic/operationHandlers/modifyComponentHandler.js';
 import AtomicModifyComponentHandler from '../../../../src/logic/operationHandlers/atomicModifyComponentHandler.js';
+import BreakClosenessWithTargetHandler from '../../../../src/logic/operationHandlers/breakClosenessWithTargetHandler.js';
 
 describe('ModTestHandlerFactory Migration Validation', () => {
   let entityManager;
@@ -237,6 +238,14 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,
+      }),
+      BREAK_CLOSENESS_WITH_TARGET: new BreakClosenessWithTargetHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+        closenessCircleService: {
+          repair: jest.fn(),
+        },
       }),
     };
   }

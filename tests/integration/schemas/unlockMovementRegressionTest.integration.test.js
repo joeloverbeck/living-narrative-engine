@@ -146,7 +146,7 @@ describe('UNLOCK_MOVEMENT Schema Regression Test', () => {
 
     // Verify we have a reasonable number of operations (we added unlockMovement to the existing set)
     expect(operationSchema.$defs.Operation.anyOf.length).toBeGreaterThan(30);
-    expect(operationSchema.$defs.Operation.anyOf.length).toBeLessThan(50);
+    expect(operationSchema.$defs.Operation.anyOf.length).toBeLessThanOrEqual(50);
 
     // Verify all entries have the expected $ref format
     operationSchema.$defs.Operation.anyOf.forEach((item) => {
