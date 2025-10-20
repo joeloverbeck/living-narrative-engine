@@ -19,6 +19,9 @@
   "required_components": {
     "actor": ["positioning:closeness"]
   },
+  "forbidden_components": {
+    "actor": ["positioning:straddling_waist"]
+  },
   "template": "fondle {primary}'s ass over the {secondary}",
   "prerequisites": [],
   "visual": {

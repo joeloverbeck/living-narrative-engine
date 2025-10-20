@@ -168,7 +168,7 @@ describe('Traits Generator Schema Validation E2E', () => {
       expect(properties.physicalDescription.maxLength).toBe(700);
 
       expect(properties.profile.minLength).toBe(200);
-      expect(properties.profile.maxLength).toBe(1200);
+      expect(properties.profile.maxLength).toBeUndefined();
 
       expect(properties.strengths.minItems).toBe(2);
       expect(properties.strengths.maxItems).toBe(6);
@@ -436,7 +436,7 @@ function setupSchemaValidationMocks(fetchMock, ajvMock) {
   });
 
   // Setup AJV mock behaviors
-  ajvMock.compile.mockReturnValue((data) => {
+  ajvMock.compile.mockReturnValue(() => {
     // Mock validation function that always passes
     return true;
   });

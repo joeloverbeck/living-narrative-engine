@@ -406,6 +406,7 @@ describe('ModTestHandlerFactory', () => {
         'MODIFY_ARRAY_FIELD',
         'MODIFY_COMPONENT',
         'ATOMIC_MODIFY_COMPONENT',
+        'BREAK_CLOSENESS_WITH_TARGET',
       ];
 
       positioningHandlers.forEach((handlerKey) => {
@@ -413,8 +414,8 @@ describe('ModTestHandlerFactory', () => {
         expect(handlers[handlerKey]).toBeDefined();
       });
 
-      // Verify correct total number of handlers (9 standard + 8 positioning)
-      expect(Object.keys(handlers)).toHaveLength(17);
+      // Verify correct total number of handlers (9 standard + 9 positioning)
+      expect(Object.keys(handlers)).toHaveLength(18);
     });
 
     it('should configure all handlers with execute functions', () => {
@@ -612,9 +613,10 @@ describe('ModTestHandlerFactory', () => {
       expect(handlers.MODIFY_ARRAY_FIELD).toBeDefined();
       expect(handlers.MODIFY_COMPONENT).toBeDefined();
       expect(handlers.ATOMIC_MODIFY_COMPONENT).toBeDefined();
+      expect(handlers.BREAK_CLOSENESS_WITH_TARGET).toBeDefined();
 
-      // Should have 9 standard + 8 positioning-specific handlers
-      expect(Object.keys(handlers)).toHaveLength(17);
+      // Should have 9 standard + 9 positioning-specific handlers
+      expect(Object.keys(handlers)).toHaveLength(18);
     });
 
     it('should return createHandlersWithComponentMutations for affection', () => {
@@ -628,7 +630,7 @@ describe('ModTestHandlerFactory', () => {
     });
 
     it('should return createStandardHandlers for other categories', () => {
-      const categories = ['exercise', 'violence', 'sex', 'intimacy'];
+      const categories = ['exercise', 'sex', 'intimacy'];
 
       categories.forEach((category) => {
         const factory =

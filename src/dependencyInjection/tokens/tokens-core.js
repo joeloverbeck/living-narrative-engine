@@ -188,6 +188,7 @@ export const coreTokens = freeze({
   RemoveFromClosenessCircleHandler: 'RemoveFromClosenessCircleHandler',
   EstablishSittingClosenessHandler: 'EstablishSittingClosenessHandler',
   RemoveSittingClosenessHandler: 'RemoveSittingClosenessHandler',
+  BreakClosenessWithTargetHandler: 'BreakClosenessWithTargetHandler',
   AutoMoveFollowersHandler: 'AutoMoveFollowersHandler',
   MergeClosenessCircleHandler: 'MergeClosenessCircleHandler',
   HasBodyPartWithComponentValueHandler: 'HasBodyPartWithComponentValueHandler',

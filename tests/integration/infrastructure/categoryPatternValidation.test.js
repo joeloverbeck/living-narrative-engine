@@ -201,20 +201,25 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
   });
 
   describe('Violence Category Pattern Validation', () => {
-    it('should validate violence category uses standard handlers', () => {
+    it('should validate violence category uses perception logging handlers', () => {
       const factoryMethod =
         ModTestHandlerFactory.getHandlerFactoryForCategory('violence');
       const handlers = factoryMethod(entityManager, eventBus, logger);
 
-      // Violence category should use standard handlers
+      // Violence category uses perception logging handlers (17 handlers)
       expect(handlers).toHaveProperty('DISPATCH_EVENT');
       expect(handlers).toHaveProperty('DISPATCH_PERCEPTIBLE_EVENT');
       expect(handlers).toHaveProperty('QUERY_COMPONENTS');
       expect(handlers).toHaveProperty('GET_NAME');
       expect(handlers).toHaveProperty('SET_VARIABLE');
-      expect(handlers).not.toHaveProperty('ADD_COMPONENT');
+      expect(handlers).toHaveProperty('ADD_COMPONENT');
+      expect(handlers).toHaveProperty('ADD_PERCEPTION_LOG_ENTRY');
+      expect(handlers).toHaveProperty('REMOVE_COMPONENT');
+      expect(handlers).toHaveProperty('LOCK_MOVEMENT');
+      expect(handlers).toHaveProperty('UNLOCK_MOVEMENT');
 
-      expect(Object.keys(handlers)).toHaveLength(9);
+      // Violence uses perception logging handler set (17 handlers)
+      expect(Object.keys(handlers)).toHaveLength(17);
     });
 
     it('should validate violence category entity patterns', () => {
@@ -659,7 +664,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
 
       const expectedHandlerConfig = {
         exercise: { handlerCount: 9, hasAddComponent: false },
-        violence: { handlerCount: 9, hasAddComponent: false },
+        violence: { handlerCount: 17, hasAddComponent: true },
         sex: { handlerCount: 9, hasAddComponent: false },
         affection: { handlerCount: 11, hasAddComponent: true },
       };

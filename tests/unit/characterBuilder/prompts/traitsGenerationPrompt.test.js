@@ -685,13 +685,16 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
 
     expect(() => {
       validateTraitsGenerationResponse(response);
-    }).toThrow('TraitsGenerationPrompt: Profile must be 200-1200 characters');
+    }).toThrow('TraitsGenerationPrompt: Profile must be at least 200 characters');
+  });
 
-    response.profile = 'A'.repeat(1201); // More than 1200 chars
+  it('should accept profiles longer than 1200 characters', () => {
+    const response = createValidResponse();
+    response.profile = 'A'.repeat(1500); // More than 1200 chars - should be valid now
 
     expect(() => {
       validateTraitsGenerationResponse(response);
-    }).toThrow('TraitsGenerationPrompt: Profile must be 200-1200 characters');
+    }).not.toThrow();
   });
 
   it('should validate secrets array', () => {
