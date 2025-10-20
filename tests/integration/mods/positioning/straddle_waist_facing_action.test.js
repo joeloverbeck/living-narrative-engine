@@ -82,7 +82,7 @@ describe('Straddle Waist Facing - Action Execution', () => {
     // Check that action executed successfully (movement lock is internal)
     const successEvent = testFixture.events.find(e => e.eventType === 'core:display_successful_action_result');
     expect(successEvent).toBeDefined();
-    expect(successEvent.payload.message).toBe('Alice straddles Bob\'s waist while facing them.');
+    expect(successEvent.payload.message).toBe('Alice sits on Bob\'s lap (face-to-face).');
   });
 
   it('should keep target sitting after straddling', async () => {
@@ -104,7 +104,7 @@ describe('Straddle Waist Facing - Action Execution', () => {
 
     const successEvent = testFixture.events.find(e => e.eventType === 'core:display_successful_action_result');
     expect(successEvent).toBeDefined();
-    expect(successEvent.payload.message).toBe('Alice straddles Bob\'s waist while facing them.');
+    expect(successEvent.payload.message).toBe('Alice sits on Bob\'s lap (face-to-face).');
   });
 
   it('should dispatch perceptible event', async () => {
@@ -119,7 +119,7 @@ describe('Straddle Waist Facing - Action Execution', () => {
 
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.descriptionText).toBe(
-      'Alice straddles Bob\'s waist while facing them.'
+      'Alice sits on Bob\'s lap (face-to-face).'
     );
     expect(perceptibleEvent.payload.locationId).toBe('bedroom');
     expect(perceptibleEvent.payload.actorId).toBe('test:actor1');

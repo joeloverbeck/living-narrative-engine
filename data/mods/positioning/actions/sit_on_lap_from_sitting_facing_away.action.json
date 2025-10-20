@@ -1,20 +1,20 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "positioning:straddle_waist_facing",
-  "name": "Straddle Waist (Facing)",
-  "description": "Straddle the waist of a sitting actor while facing them",
+  "id": "positioning:sit_on_lap_from_sitting_facing_away",
+  "name": "Sit on Lap from Sitting (Facing Away)",
+  "description": "Transition from sitting on furniture to sitting on another sitting actor's lap while facing away from them",
   "targets": {
     "primary": {
-      "scope": "positioning:actors_sitting_close",
+      "scope": "positioning:actors_both_sitting_close",
       "placeholder": "target",
-      "description": "Sitting actor to straddle"
+      "description": "Sitting actor to sit on"
     }
   },
   "required_components": {
-    "actor": ["positioning:closeness"],
+    "actor": ["positioning:sitting_on", "positioning:closeness"],
     "primary": ["positioning:sitting_on", "positioning:closeness"]
   },
-  "template": "sit on {target}'s lap (face-to-face)",
+  "template": "sit on {target}'s lap (facing away)",
   "prerequisites": [
     {
       "logic": {

@@ -112,7 +112,7 @@ describe('Straddle Waist Facing Away - Action Execution', () => {
     );
 
     expect(successEvent).toBeDefined();
-    expect(successEvent.payload.message).toBe('Alice straddles Bob\'s waist while facing away.');
+    expect(successEvent.payload.message).toBe('Alice sits on Bob\'s lap (facing away).');
   });
 
   it('should keep both actors in closeness circle', async () => {
@@ -153,7 +153,7 @@ describe('Straddle Waist Facing Away - Action Execution', () => {
 
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.descriptionText).toBe(
-      'Alice straddles Bob\'s waist while facing away.'
+      'Alice sits on Bob\'s lap (facing away).'
     );
     expect(perceptibleEvent.payload.locationId).toBe('bedroom');
     expect(perceptibleEvent.payload.actorId).toBe('test:actor1');

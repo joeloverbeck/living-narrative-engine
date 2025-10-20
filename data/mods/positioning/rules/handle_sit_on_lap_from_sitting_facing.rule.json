@@ -1,10 +1,10 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "rule_id": "handle_straddle_waist_facing",
-  "comment": "Handles the 'positioning:straddle_waist_facing' action. Adds straddling_waist component with facing_away=false, locks movement.",
+  "rule_id": "handle_sit_on_lap_from_sitting_facing",
+  "comment": "Handles the 'positioning:sit_on_lap_from_sitting_facing' action. REMOVES sitting_on from actor, adds straddling_waist component with facing_away=false, locks movement.",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "positioning:event-is-action-straddle-waist-facing"
+    "condition_ref": "positioning:event-is-action-sit-on-lap-from-sitting-facing"
   },
   "actions": [
     {
@@ -27,6 +27,14 @@
         "entity_ref": "actor",
         "component_type": "core:position",
         "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "REMOVE_COMPONENT",
+      "comment": "CRITICAL: Remove actor's sitting_on component as they're no longer sitting on furniture",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "positioning:sitting_on"
       }
     },
     {

@@ -74,7 +74,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
-        "value": "{context.actorName} straddles {context.targetName}'s waist while facing away."
+        "value": "{context.actorName} sits on {context.targetName}'s lap (facing away)."
       }
     },
     {
