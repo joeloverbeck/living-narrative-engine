@@ -12,6 +12,164 @@ import {
 import { string } from '../../../src/utils/validationCore.js';
 import { assertPresent } from '../../../src/utils/dependencyUtils.js';
 
+const DEFAULT_INVENTORY_CAPACITY = { maxWeight: 50, maxItems: 10 };
+const DEFAULT_CONTAINER_CAPACITY = { maxWeight: 50, maxItems: 5 };
+
+/**
+ * @description Merges provided capacity data with defaults for inventory or container helpers.
+ *
+ * @param {object|undefined} providedCapacity - Optional caller-specified capacity configuration
+ * @param {object} fallbackCapacity - Default capacity values when fields are omitted
+ * @returns {object} Normalized capacity configuration with both maxWeight and maxItems populated
+ */
+function normalizeCapacity(providedCapacity, fallbackCapacity) {
+  const base = fallbackCapacity || DEFAULT_INVENTORY_CAPACITY;
+  return {
+    maxWeight:
+      providedCapacity && typeof providedCapacity.maxWeight === 'number'
+        ? providedCapacity.maxWeight
+        : base.maxWeight,
+    maxItems:
+      providedCapacity && typeof providedCapacity.maxItems === 'number'
+        ? providedCapacity.maxItems
+        : base.maxItems,
+  };
+}
+
+/**
+ * Normalizes an item definition used by inventory helpers.
+ *
+ * @param {object} definition - Caller-specified item configuration
+ * @param {number} index - Index of the item within the collection for fallback IDs/names
+ * @param {string} [prefix] - Prefix used when generating deterministic IDs. Defaults to "item".
+ * @returns {object} Normalized item definition
+ */
+function normalizeItemDefinition(definition = {}, index = 0, prefix = 'item') {
+  const normalizedId = definition.id || `${prefix}_${index + 1}`;
+  const normalizedName = definition.name || normalizedId.replace(/_/g, ' ');
+  return {
+    id: normalizedId,
+    name: normalizedName,
+    weight:
+      typeof definition.weight === 'number' ? definition.weight : 1,
+    itemData: definition.itemData || {},
+    portableData: definition.portableData || {},
+    weightData: definition.weightData,
+    components: definition.components || {},
+    locationId: definition.locationId,
+  };
+}
+
+/**
+ * Builds an item entity with the required inventory components.
+ *
+ * @param {object} definition - Normalized item definition
+ * @param {string|undefined} locationId - Optional location for the item (room or container)
+ * @returns {object} Complete entity representing the item
+ */
+function buildItemEntity(definition, locationId) {
+  const builder = new ModEntityBuilder(definition.id)
+    .withName(definition.name)
+    .withComponent('items:item', definition.itemData)
+    .withComponent('items:portable', definition.portableData)
+    .withComponent('items:weight', {
+      weight:
+        definition.weightData && typeof definition.weightData.weight === 'number'
+          ? definition.weightData.weight
+          : definition.weight,
+    });
+
+  const finalLocation = definition.locationId || locationId;
+  if (finalLocation) {
+    builder.atLocation(finalLocation);
+  }
+
+  if (definition.components && Object.keys(definition.components).length > 0) {
+    builder.withComponents(definition.components);
+  }
+
+  return builder.build();
+}
+
+/**
+ * Builds entities for a collection of item definitions.
+ *
+ * @param {Array<object>} definitions - Item definitions to normalize and build
+ * @param {string|undefined} locationId - Optional fallback location applied to every item
+ * @param {string} [prefix] - Prefix used for deterministic IDs when omitted. Defaults to "item".
+ * @returns {{ entities: Array<object>, normalized: Array<object>, ids: Array<string> }} Object containing the built entities, normalized definitions, and generated IDs
+ */
+function buildItemsFromDefinitions(definitions, locationId, prefix = 'item') {
+  const normalized = (Array.isArray(definitions) ? definitions : []).map((definition, index) =>
+    normalizeItemDefinition(definition, index, prefix)
+  );
+  const entities = normalized.map((item) => buildItemEntity(item, locationId));
+  const ids = entities.map((entity) => entity.id);
+  return { entities, normalized, ids };
+}
+
+/**
+ * Generates deterministic filler item definitions for capacity edge cases.
+ *
+ * @param {number} count - Number of filler items required
+ * @param {string} prefix - Identifier prefix for generated items
+ * @returns {Array<object>} Generated item definitions
+ */
+function generateFillerItems(count, prefix) {
+  const safeCount = Number.isInteger(count) && count > 0 ? count : 0;
+  return Array.from({ length: safeCount }, (_, index) => ({
+    id: `${prefix}_${index + 1}`,
+    name: `Filler Item ${index + 1}`,
+    weight: 0.1,
+  }));
+}
+
+/**
+ * Builds an actor entity configured with an inventory component.
+ *
+ * @param {object} actorOptions - Options controlling actor creation
+ * @param {string} roomId - Room identifier used for actor location metadata
+ * @param {Array<string>} itemIds - Item IDs that should populate the inventory
+ * @param {object} capacity - Inventory capacity configuration
+ * @returns {object} Actor entity with populated inventory component
+ */
+function buildInventoryActor(actorOptions, roomId, itemIds, capacity) {
+  const {
+    id = 'actor_inventory',
+    name = 'Inventory Actor',
+    actorData = {},
+    components = {},
+    inventoryOverrides = {},
+  } = actorOptions || {};
+
+  const builder = new ModEntityBuilder(id)
+    .withName(name)
+    .atLocation(roomId)
+    .withLocationComponent(roomId)
+    .asActor(actorData);
+
+  if (components && Object.keys(components).length > 0) {
+    builder.withComponents(components);
+  }
+
+  const finalItems = Array.isArray(inventoryOverrides.items)
+    ? [...inventoryOverrides.items]
+    : [...itemIds];
+
+  const finalCapacity = normalizeCapacity(
+    inventoryOverrides.capacity,
+    capacity || DEFAULT_INVENTORY_CAPACITY
+  );
+
+  builder.withComponent('items:inventory', {
+    items: finalItems,
+    capacity: finalCapacity,
+  });
+
+  return builder.build();
+}
+
+
 /**
  * Builder class for creating test entities with a fluent API.
  *
@@ -1191,6 +1349,881 @@ export class ModEntityScenarios {
       target: entities[1],
       bodyParts: bodyPartEntities,
       allEntities: [...entities, ...bodyPartEntities],
+    };
+  }
+
+  /**
+   * Creates an actor with a populated inventory inside a room.
+   *
+   * @param {object} [options] - Scenario customization options
+   * @param {string} [options.roomId] - Identifier for the generated room
+   * @param {string} [options.roomName] - Display name for the generated room
+   * @param {object} [options.actor] - Actor overrides passed to the builder
+   * @param {Array<object>} [options.items] - Item definitions to preload in the inventory
+   * @param {object} [options.capacity] - Inventory capacity overrides
+   * @returns {object} Scenario details containing the room, actor, and inventory items
+   */
+  static createInventoryLoadout(options = {}) {
+    const {
+      roomId = 'room_inventory',
+      roomName = 'Inventory Room',
+      actor = {},
+      items = [
+        { id: 'item_primary', name: 'Primary Item', weight: 1 },
+        { id: 'item_secondary', name: 'Secondary Item', weight: 0.5 },
+      ],
+      capacity,
+    } = options;
+
+    const room = this.createRoom(roomId, roomName);
+    const finalCapacity = normalizeCapacity(capacity, DEFAULT_INVENTORY_CAPACITY);
+
+    const finalItems = Array.isArray(items) && items.length > 0
+      ? items
+      : [
+          { id: 'item_primary', name: 'Primary Item', weight: 1 },
+          { id: 'item_secondary', name: 'Secondary Item', weight: 0.5 },
+        ];
+
+    const { entities: itemEntities, ids: itemIds } = buildItemsFromDefinitions(
+      finalItems,
+      undefined,
+      'inventory_item'
+    );
+
+    const actorEntity = buildInventoryActor(actor, room.id, itemIds, finalCapacity);
+
+    return {
+      room,
+      actor: actorEntity,
+      items: itemEntities,
+      itemIds,
+      capacity: finalCapacity,
+      entities: [room, actorEntity, ...itemEntities],
+    };
+  }
+
+  /**
+   * Creates loose items at a specific location with an optional observing actor.
+   *
+   * @param {object} [options] - Scenario customization options
+   * @param {string} [options.roomId] - Identifier for the generated room
+   * @param {string} [options.roomName] - Display name for the generated room
+   * @param {Array<object>} [options.items] - Item definitions that should appear on the ground
+   * @param {object|null} [options.actor] - Optional actor configuration for inventory-aware tests
+   * @returns {object} Scenario details containing the room, ground items, and optional actor
+   */
+  static createItemsOnGround(options = {}) {
+    const {
+      roomId = 'room_inventory',
+      roomName = 'Inventory Room',
+      items = [{ id: 'ground_item', name: 'Ground Item', weight: 1 }],
+      actor = null,
+    } = options;
+
+    const room = this.createRoom(roomId, roomName);
+
+    const finalGroundItems = Array.isArray(items) && items.length > 0
+      ? items
+      : [{ id: 'ground_item', name: 'Ground Item', weight: 1 }];
+
+    const {
+      entities: groundItems,
+      ids: groundItemIds,
+    } = buildItemsFromDefinitions(finalGroundItems, room.id, 'ground_item');
+
+    let actorEntity = null;
+    let actorInventoryEntities = [];
+
+    if (actor) {
+      const {
+        inventoryItems = [],
+        capacity: actorCapacityOption,
+        inventoryOverrides = {},
+        ...actorRest
+      } = actor;
+
+      const normalizedActorCapacity = normalizeCapacity(
+        actorCapacityOption,
+        DEFAULT_INVENTORY_CAPACITY
+      );
+
+      const {
+        entities: inventoryEntities,
+        ids: inventoryIds,
+      } = buildItemsFromDefinitions(
+        Array.isArray(inventoryItems) ? inventoryItems : [],
+        undefined,
+        `${actorRest.id || 'actor_inventory'}_inventory_item`
+      );
+
+      actorEntity = buildInventoryActor(
+        {
+          ...actorRest,
+          inventoryOverrides: {
+            ...inventoryOverrides,
+            items: Array.isArray(inventoryOverrides.items)
+              ? inventoryOverrides.items
+              : inventoryIds,
+          },
+        },
+        room.id,
+        inventoryIds,
+        normalizedActorCapacity
+      );
+
+      actorInventoryEntities = inventoryEntities;
+    }
+
+    const entities = [room];
+    if (actorEntity) {
+      entities.push(actorEntity);
+    }
+    entities.push(...groundItems);
+    if (actorInventoryEntities.length > 0) {
+      entities.push(...actorInventoryEntities);
+    }
+
+    return {
+      room,
+      actor: actorEntity,
+      items: groundItems,
+      itemIds: groundItemIds,
+      actorInventoryItems: actorInventoryEntities,
+      entities,
+    };
+  }
+
+  /**
+   * Creates a container entity with pre-populated contents.
+   *
+   * @param {object} [options] - Scenario customization options
+   * @param {string} [options.roomId] - Identifier for the generated room
+   * @param {string} [options.roomName] - Display name for the generated room
+   * @param {object} [options.container] - Container entity overrides
+   * @param {Array<object>} [options.contents] - Item definitions that should begin inside the container
+   * @param {object|null} [options.keyItem] - Optional key item definition when container is locked
+   * @returns {object} Scenario details including room, container, contents, and optional key item
+   */
+  static createContainerWithContents(options = {}) {
+    const {
+      roomId = 'room_inventory',
+      roomName = 'Inventory Storage',
+      container: containerOptions = {},
+      contents: providedContents,
+      keyItem: providedKeyItem,
+      capacity,
+      isOpen,
+      requiresKey,
+      includePortable,
+      containerWeight,
+      containerComponents,
+    } = options;
+
+    const containerId =
+      containerOptions.id || options.containerId || 'container_storage';
+    const containerName =
+      containerOptions.name || options.containerName || 'Storage Container';
+
+    const normalizedCapacity = normalizeCapacity(
+      containerOptions.capacity || capacity,
+      DEFAULT_CONTAINER_CAPACITY
+    );
+
+    const resolvedIsOpen =
+      typeof containerOptions.isOpen === 'boolean'
+        ? containerOptions.isOpen
+        : typeof isOpen === 'boolean'
+        ? isOpen
+        : true;
+
+    const resolvedRequiresKey =
+      typeof containerOptions.requiresKey === 'boolean'
+        ? containerOptions.requiresKey
+        : typeof requiresKey === 'boolean'
+        ? requiresKey
+        : false;
+
+    const defaultContents = [
+      { id: `${containerId}_item`, name: 'Stored Item', weight: 1 },
+    ];
+
+    const finalContents = Array.isArray(providedContents)
+      ? providedContents
+      : Array.isArray(containerOptions.contents)
+      ? containerOptions.contents
+      : defaultContents;
+
+    const resolvedKeyItemDefinition =
+      providedKeyItem || containerOptions.keyItem || null;
+
+    const room = this.createRoom(roomId, roomName);
+
+    const {
+      entities: contentEntities,
+      ids: contentIds,
+    } = buildItemsFromDefinitions(
+      finalContents,
+      containerId,
+      `${containerId}_content`
+    );
+
+    let keyItemEntity = null;
+    let keyItemId = null;
+    if (resolvedRequiresKey) {
+      const keyDefinition = resolvedKeyItemDefinition || {
+        id: `${containerId}_key`,
+        name: `${containerName} Key`,
+        weight: 0.1,
+      };
+
+      const normalizedKey = normalizeItemDefinition(
+        keyDefinition,
+        0,
+        `${containerId}_key`
+      );
+      keyItemEntity = buildItemEntity(normalizedKey, undefined);
+      keyItemId = normalizedKey.id;
+    }
+
+    const containerBuilder = new ModEntityBuilder(containerId)
+      .withName(containerName)
+      .atLocation(room.id)
+      .withComponent('items:item', containerOptions.itemData || {})
+      .withComponent('items:container', {
+        contents: contentIds,
+        capacity: normalizedCapacity,
+        isOpen: resolvedIsOpen,
+        requiresKey: resolvedRequiresKey,
+        ...(resolvedRequiresKey && keyItemId ? { keyItemId } : {}),
+      })
+      .withComponent('items:openable', containerOptions.openableData || {});
+
+    const portableFlag =
+      typeof containerOptions.includePortable === 'boolean'
+        ? containerOptions.includePortable
+        : typeof includePortable === 'boolean'
+        ? includePortable
+        : false;
+    if (portableFlag) {
+      containerBuilder.withComponent(
+        'items:portable',
+        containerOptions.portableData || {}
+      );
+    }
+
+    const weightValue =
+      typeof containerOptions.containerWeight === 'number'
+        ? containerOptions.containerWeight
+        : typeof containerWeight === 'number'
+        ? containerWeight
+        : undefined;
+    const hasWeightOverride =
+      containerOptions.weightData &&
+      typeof containerOptions.weightData.weight === 'number';
+    if (hasWeightOverride || typeof weightValue === 'number') {
+      containerBuilder.withComponent('items:weight', {
+        weight: hasWeightOverride
+          ? containerOptions.weightData.weight
+          : weightValue ?? 5,
+      });
+    }
+
+    const mergedComponents = {
+      ...(containerComponents || {}),
+      ...(containerOptions.components || {}),
+    };
+    if (Object.keys(mergedComponents).length > 0) {
+      containerBuilder.withComponents(mergedComponents);
+    }
+
+    const containerEntity = containerBuilder.build();
+
+    const entities = [room, containerEntity, ...contentEntities];
+    if (keyItemEntity) {
+      entities.push(keyItemEntity);
+    }
+
+    return {
+      room,
+      container: containerEntity,
+      contents: contentEntities,
+      contentIds,
+      keyItem: keyItemEntity,
+      entities,
+    };
+  }
+
+  /**
+   * Creates two actors prepared for an inventory transfer scenario.
+   *
+   * @param {object} [options] - Scenario customization options
+   * @param {string} [options.roomId] - Identifier for the generated room
+   * @param {string} [options.roomName] - Display name for the generated room
+   * @param {string} [options.giverId] - Identifier for the giving actor
+   * @param {string} [options.receiverId] - Identifier for the receiving actor
+   * @param {object} [options.giver] - Additional giver actor overrides
+   * @param {object} [options.receiver] - Additional receiver actor overrides
+   * @param {object} [options.item] - Item definition for the transferred entity
+   * @param {Array<object>} [options.giverItems] - Additional items in the giver's inventory
+   * @param {Array<object>} [options.receiverItems] - Items preloaded into the receiver inventory
+   * @returns {object} Scenario details including room, actors, transfer item, and supporting entities
+   */
+  static createInventoryTransfer(options = {}) {
+    const {
+      roomId = 'room_inventory',
+      roomName = 'Inventory Room',
+      giverId = 'actor_giver',
+      giverName = 'Giver',
+      receiverId = 'actor_receiver',
+      receiverName = 'Receiver',
+      giver = {},
+      receiver = {},
+      item = {},
+      itemId = 'item_transfer',
+      itemName = 'Transfer Item',
+      itemWeight = 1,
+      giverItems = [],
+      receiverItems = [],
+    } = options;
+
+    const finalGiverId = giver.id || giverId;
+    const finalReceiverId = receiver.id || receiverId;
+
+    const room = this.createRoom(roomId, roomName);
+
+    const transferItemDefinition = {
+      id: item.id || itemId,
+      name: item.name || itemName,
+      weight: typeof item.weight === 'number' ? item.weight : itemWeight,
+      itemData: item.itemData,
+      portableData: item.portableData,
+      weightData: item.weightData,
+      components: item.components,
+    };
+
+    const {
+      entities: giverInventoryEntities,
+      ids: giverInventoryIds,
+    } = buildItemsFromDefinitions(
+      [
+        transferItemDefinition,
+        ...(Array.isArray(giverItems) ? giverItems : []),
+      ],
+      undefined,
+      `${finalGiverId}_inventory_item`
+    );
+
+    const transferItem = giverInventoryEntities[0];
+    const remainingGiverItems = giverInventoryEntities.slice(1);
+
+    const {
+      entities: receiverInventoryEntities,
+      ids: receiverInventoryIds,
+    } = buildItemsFromDefinitions(
+      Array.isArray(receiverItems) ? receiverItems : [],
+      undefined,
+      `${finalReceiverId}_inventory_item`
+    );
+
+    const giverCapacity = normalizeCapacity(
+      giver.capacity,
+      DEFAULT_INVENTORY_CAPACITY
+    );
+    const receiverCapacity = normalizeCapacity(
+      receiver.capacity,
+      DEFAULT_INVENTORY_CAPACITY
+    );
+
+    const giverActor = buildInventoryActor(
+      {
+        ...giver,
+        id: finalGiverId,
+        name: giver.name || giverName,
+        inventoryOverrides: {
+          ...(giver.inventoryOverrides || {}),
+          items: Array.isArray(giver.inventoryOverrides?.items)
+            ? giver.inventoryOverrides.items
+            : giverInventoryIds,
+        },
+      },
+      room.id,
+      giverInventoryIds,
+      giverCapacity
+    );
+
+    const receiverActor = buildInventoryActor(
+      {
+        ...receiver,
+        id: finalReceiverId,
+        name: receiver.name || receiverName,
+        inventoryOverrides: {
+          ...(receiver.inventoryOverrides || {}),
+          items: Array.isArray(receiver.inventoryOverrides?.items)
+            ? receiver.inventoryOverrides.items
+            : receiverInventoryIds,
+        },
+      },
+      room.id,
+      receiverInventoryIds,
+      receiverCapacity
+    );
+
+    const entities = [
+      room,
+      giverActor,
+      receiverActor,
+      transferItem,
+      ...remainingGiverItems,
+      ...receiverInventoryEntities,
+    ];
+
+    return {
+      room,
+      giver: giverActor,
+      receiver: receiverActor,
+      transferItem,
+      giverItems: remainingGiverItems,
+      receiverItems: receiverInventoryEntities,
+      entities,
+    };
+  }
+
+  /**
+   * Creates an actor holding an item ready to be dropped in a room.
+   *
+   * @param {object} [options] - Scenario customization options
+   * @param {string} [options.roomId] - Identifier for the generated room
+   * @param {string} [options.roomName] - Display name for the generated room
+   * @param {object} [options.actor] - Actor overrides
+   * @param {object} [options.item] - Item definition for the droppable entity
+   * @param {Array<object>} [options.additionalInventoryItems] - Extra inventory items carried by the actor
+   * @param {object} [options.capacity] - Inventory capacity overrides
+   * @returns {object} Scenario details including room, actor, drop item, and supplemental entities
+   */
+  static createDropItemScenario(options = {}) {
+    const {
+      roomId = 'room_inventory',
+      roomName = 'Inventory Room',
+      actor = {},
+      item = {},
+      itemId = 'item_drop',
+      itemName = 'Droppable Item',
+      itemWeight = 1,
+      additionalInventoryItems = [],
+      capacity,
+    } = options;
+
+    const room = this.createRoom(roomId, roomName);
+
+    const finalActorId = actor.id || 'actor_dropper';
+
+    const dropItemDefinition = {
+      id: item.id || itemId,
+      name: item.name || itemName,
+      weight: typeof item.weight === 'number' ? item.weight : itemWeight,
+      itemData: item.itemData,
+      portableData: item.portableData,
+      weightData: item.weightData,
+      components: item.components,
+    };
+
+    const {
+      entities: inventoryEntities,
+      ids: inventoryIds,
+    } = buildItemsFromDefinitions(
+      [
+        dropItemDefinition,
+        ...(Array.isArray(additionalInventoryItems)
+          ? additionalInventoryItems
+          : []),
+      ],
+      undefined,
+      `${finalActorId}_inventory_item`
+    );
+
+    const dropItemEntity = inventoryEntities[0];
+    const extraInventoryEntities = inventoryEntities.slice(1);
+
+    const actorCapacity = normalizeCapacity(
+      actor.capacity || capacity,
+      DEFAULT_INVENTORY_CAPACITY
+    );
+
+    const actorEntity = buildInventoryActor(
+      {
+        ...actor,
+        id: finalActorId,
+        inventoryOverrides: {
+          ...(actor.inventoryOverrides || {}),
+          items: Array.isArray(actor.inventoryOverrides?.items)
+            ? actor.inventoryOverrides.items
+            : inventoryIds,
+        },
+      },
+      room.id,
+      inventoryIds,
+      actorCapacity
+    );
+
+    const entities = [room, actorEntity, dropItemEntity, ...extraInventoryEntities];
+
+    return {
+      room,
+      actor: actorEntity,
+      item: dropItemEntity,
+      additionalInventoryItems: extraInventoryEntities,
+      entities,
+    };
+  }
+
+  /**
+   * Creates a scenario with an item on the ground and an actor ready to pick it up.
+   *
+   * @param {object} [options] - Scenario customization options
+   * @param {string} [options.roomId] - Identifier for the generated room
+   * @param {string} [options.roomName] - Display name for the generated room
+   * @param {object} [options.actor] - Actor overrides
+   * @param {object} [options.item] - Item definition for the ground entity
+   * @param {Array<object>} [options.inventoryItems] - Items preloaded in the actor inventory
+   * @param {boolean} [options.fullInventory] - Whether to fill the inventory to capacity for failure tests
+   * @param {object} [options.capacity] - Inventory capacity overrides
+   * @returns {object} Scenario details including room, actor, ground item, and supplemental entities
+   */
+  static createPickupScenario(options = {}) {
+    const {
+      roomId = 'room_inventory',
+      roomName = 'Inventory Room',
+      actor = {},
+      item = {},
+      itemId = 'item_ground',
+      itemName = 'Ground Item',
+      itemWeight = 1,
+      inventoryItems = [],
+      fullInventory = false,
+      capacity,
+    } = options;
+
+    const room = this.createRoom(roomId, roomName);
+
+    const finalActorId = actor.id || 'actor_pickup';
+
+    const actorCapacity = normalizeCapacity(
+      actor.capacity || capacity,
+      DEFAULT_INVENTORY_CAPACITY
+    );
+
+    const baseInventoryDefinitions = Array.isArray(actor.inventoryItems)
+      ? actor.inventoryItems
+      : Array.isArray(inventoryItems)
+      ? inventoryItems
+      : [];
+
+    let combinedInventoryDefinitions = [...baseInventoryDefinitions];
+
+    if (fullInventory) {
+      const fillerCount = Math.max(
+        actorCapacity.maxItems - combinedInventoryDefinitions.length,
+        0
+      );
+      combinedInventoryDefinitions = [
+        ...combinedInventoryDefinitions,
+        ...generateFillerItems(fillerCount, `${finalActorId}_filler`),
+      ];
+    }
+
+    const {
+      entities: inventoryEntities,
+      ids: inventoryIds,
+    } = buildItemsFromDefinitions(
+      combinedInventoryDefinitions,
+      undefined,
+      `${finalActorId}_inventory_item`
+    );
+
+    const {
+      entities: groundEntities,
+      ids: groundIds,
+    } = buildItemsFromDefinitions(
+      [
+        {
+          id: item.id || itemId,
+          name: item.name || itemName,
+          weight: typeof item.weight === 'number' ? item.weight : itemWeight,
+          itemData: item.itemData,
+          portableData: item.portableData,
+          weightData: item.weightData,
+          components: item.components,
+        },
+      ],
+      room.id,
+      'pickup_item'
+    );
+
+    const actorEntity = buildInventoryActor(
+      {
+        ...actor,
+        id: finalActorId,
+        inventoryOverrides: {
+          ...(actor.inventoryOverrides || {}),
+          items: Array.isArray(actor.inventoryOverrides?.items)
+            ? actor.inventoryOverrides.items
+            : inventoryIds,
+        },
+      },
+      room.id,
+      inventoryIds,
+      actorCapacity
+    );
+
+    const entities = [room, actorEntity, ...groundEntities, ...inventoryEntities];
+
+    return {
+      room,
+      actor: actorEntity,
+      groundItem: groundEntities[0],
+      groundItemIds: groundIds,
+      actorInventoryItems: inventoryEntities,
+      entities,
+    };
+  }
+
+  /**
+   * Creates an actor and container pair for open_container scenarios.
+   *
+   * @param {object} [options] - Scenario customization options
+   * @param {string} [options.roomId] - Identifier for the generated room
+   * @param {string} [options.roomName] - Display name for the generated room
+   * @param {object} [options.actor] - Actor overrides
+   * @param {object} [options.container] - Container overrides passed to createContainerWithContents
+   * @param {Array<object>} [options.contents] - Container contents definitions
+   * @param {Array<object>} [options.actorInventoryItems] - Items preloaded into the actor inventory
+   * @param {boolean} [options.locked] - Whether the container should start locked
+   * @param {object|null} [options.keyItem] - Optional key item definition when locked
+   * @returns {object} Scenario details including room, actor, container, and supporting entities
+   */
+  static createOpenContainerScenario(options = {}) {
+    const {
+      roomId = 'room_inventory',
+      roomName = 'Inventory Storage',
+      actor = {},
+      container = {},
+      contents,
+      actorInventoryItems,
+      locked = false,
+      keyItem,
+    } = options;
+
+    const containerScenario = this.createContainerWithContents({
+      roomId,
+      roomName,
+      container: {
+        ...container,
+        isOpen:
+          typeof container.isOpen === 'boolean'
+            ? container.isOpen
+            : false,
+        requiresKey:
+          typeof container.requiresKey === 'boolean'
+            ? container.requiresKey
+            : locked,
+      },
+      contents,
+      keyItem,
+    });
+
+    const finalActorId = actor.id || 'actor_container';
+
+    const inventoryDefinitions = Array.isArray(actor.inventoryItems)
+      ? actor.inventoryItems
+      : Array.isArray(actorInventoryItems)
+      ? actorInventoryItems
+      : [];
+
+    const {
+      entities: actorInventoryEntities,
+      ids: actorInventoryIds,
+    } = buildItemsFromDefinitions(
+      inventoryDefinitions,
+      undefined,
+      `${finalActorId}_inventory_item`
+    );
+
+    const actorCapacity = normalizeCapacity(
+      actor.capacity,
+      DEFAULT_INVENTORY_CAPACITY
+    );
+
+    const actorEntity = buildInventoryActor(
+      {
+        ...actor,
+        id: finalActorId,
+        inventoryOverrides: {
+          ...(actor.inventoryOverrides || {}),
+          items: Array.isArray(actor.inventoryOverrides?.items)
+            ? actor.inventoryOverrides.items
+            : actorInventoryIds,
+        },
+      },
+      containerScenario.room.id,
+      actorInventoryIds,
+      actorCapacity
+    );
+
+    const entities = [
+      ...containerScenario.entities,
+      actorEntity,
+      ...actorInventoryEntities,
+    ];
+
+    return {
+      ...containerScenario,
+      actor: actorEntity,
+      actorInventoryItems: actorInventoryEntities,
+      entities,
+    };
+  }
+
+  /**
+   * Creates an actor holding an item with an open container target for put_in_container tests.
+   *
+   * @param {object} [options] - Scenario customization options
+   * @param {string} [options.roomId] - Identifier for the generated room
+   * @param {string} [options.roomName] - Display name for the generated room
+   * @param {object} [options.actor] - Actor overrides
+   * @param {object} [options.container] - Container overrides passed to createContainerWithContents
+   * @param {object} [options.item] - Item definition for the entity being stored
+   * @param {Array<object>} [options.containerContents] - Initial container contents
+   * @param {Array<object>} [options.actorInventoryItems] - Additional items in the actor inventory
+   * @param {boolean} [options.containerFull] - Whether to pre-fill the container to capacity
+   * @returns {object} Scenario details including room, actor, container, held item, and supporting entities
+   */
+  static createPutInContainerScenario(options = {}) {
+    const {
+      roomId = 'room_inventory',
+      roomName = 'Inventory Storage',
+      actor = {},
+      container = {},
+      item = {},
+      itemId = 'item_to_store',
+      itemName = 'Item to Store',
+      itemWeight = 1,
+      containerContents = [],
+      actorInventoryItems,
+      containerFull = false,
+    } = options;
+
+    const containerCapacity = normalizeCapacity(
+      container.capacity,
+      DEFAULT_CONTAINER_CAPACITY
+    );
+
+    const baseContents = Array.isArray(container.contents)
+      ? container.contents
+      : Array.isArray(containerContents)
+      ? containerContents
+      : [];
+
+    let finalContents = [...baseContents];
+    if (containerFull) {
+      const fillerCount = Math.max(
+        containerCapacity.maxItems - finalContents.length,
+        0
+      );
+      finalContents = [
+        ...finalContents,
+        ...generateFillerItems(
+          fillerCount,
+          `${(container.id || 'container_storage')}_filled`
+        ),
+      ];
+    }
+
+    const containerScenario = this.createContainerWithContents({
+      roomId,
+      roomName,
+      container: {
+        ...container,
+        isOpen:
+          typeof container.isOpen === 'boolean'
+            ? container.isOpen
+            : true,
+        requiresKey:
+          typeof container.requiresKey === 'boolean'
+            ? container.requiresKey
+            : false,
+        capacity: container.capacity,
+      },
+      contents: finalContents,
+      capacity: containerCapacity,
+    });
+
+    const finalActorId = actor.id || 'actor_putter';
+
+    const inventoryDefinitions = [
+      {
+        id: item.id || itemId,
+        name: item.name || itemName,
+        weight: typeof item.weight === 'number' ? item.weight : itemWeight,
+        itemData: item.itemData,
+        portableData: item.portableData,
+        weightData: item.weightData,
+        components: item.components,
+      },
+      ...(Array.isArray(actor.inventoryItems)
+        ? actor.inventoryItems
+        : Array.isArray(actorInventoryItems)
+        ? actorInventoryItems
+        : []),
+    ];
+
+    const {
+      entities: actorInventoryEntities,
+      ids: actorInventoryIds,
+    } = buildItemsFromDefinitions(
+      inventoryDefinitions,
+      undefined,
+      `${finalActorId}_inventory_item`
+    );
+
+    const heldItem = actorInventoryEntities[0];
+    const remainingInventory = actorInventoryEntities.slice(1);
+
+    const actorCapacity = normalizeCapacity(
+      actor.capacity,
+      DEFAULT_INVENTORY_CAPACITY
+    );
+
+    const actorEntity = buildInventoryActor(
+      {
+        ...actor,
+        id: finalActorId,
+        inventoryOverrides: {
+          ...(actor.inventoryOverrides || {}),
+          items: Array.isArray(actor.inventoryOverrides?.items)
+            ? actor.inventoryOverrides.items
+            : actorInventoryIds,
+        },
+      },
+      containerScenario.room.id,
+      actorInventoryIds,
+      actorCapacity
+    );
+
+    const entities = [
+      ...containerScenario.entities,
+      actorEntity,
+      ...actorInventoryEntities,
+    ];
+
+    return {
+      ...containerScenario,
+      actor: actorEntity,
+      heldItem,
+      actorInventoryItems: actorInventoryEntities,
+      additionalInventoryItems: remainingInventory,
+      containerCapacity,
+      entities,
     };
   }
 

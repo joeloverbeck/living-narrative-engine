@@ -3,6 +3,9 @@
  * @description Provides high-level test environment creation for common mod testing scenarios with auto-loading capabilities
  */
 
+import process from 'node:process';
+import { createRequire } from 'node:module';
+
 import { jest } from '@jest/globals';
 import { createRuleTestEnvironment } from '../engine/systemLogicTestEnv.js';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
@@ -13,7 +16,7 @@ import { promises as fs } from 'fs';
 import { resolve } from 'path';
 
 import { ModTestHandlerFactory } from './ModTestHandlerFactory.js';
-import { ModEntityScenarios } from './ModEntityBuilder.js';
+import { ModEntityBuilder, ModEntityScenarios } from './ModEntityBuilder.js';
 import { ModAssertionHelpers } from './ModAssertionHelpers.js';
 import {
   createActionValidationProxy,
@@ -24,6 +27,8 @@ import {
   validateActionExecution,
   ActionValidationError,
 } from './actionExecutionValidator.js';
+
+const localRequire = createRequire(import.meta.url);
 
 /**
  * File naming conventions for auto-loading mod files
@@ -696,9 +701,6 @@ class BaseModTestFixture {
       throw new Error('ModTestFixture.createEntity: config.components must be an object');
     }
 
-    // Import ModEntityBuilder
-    const { ModEntityBuilder } = require('./ModEntityBuilder.js');
-
     // Create builder with the ID
     const builder = new ModEntityBuilder(id);
 
@@ -932,6 +934,102 @@ export class ModActionTestFixture extends BaseModTestFixture {
    */
   createSoloSitting(options = {}) {
     const scenario = ModEntityScenarios.createSoloSitting(options);
+    this.reset([...scenario.entities]);
+    return scenario;
+  }
+
+  /**
+   * @description Creates an inventory loadout scenario and hydrates the fixture.
+   *
+   * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createInventoryLoadout
+   * @returns {object} Scenario details including room, actor, and inventory items
+   */
+  createInventoryLoadout(options = {}) {
+    const scenario = ModEntityScenarios.createInventoryLoadout(options);
+    this.reset([...scenario.entities]);
+    return scenario;
+  }
+
+  /**
+   * @description Creates a scenario with items on the ground and optional actor context.
+   *
+   * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createItemsOnGround
+   * @returns {object} Scenario details including room, items, and optional actor references
+   */
+  createItemsOnGround(options = {}) {
+    const scenario = ModEntityScenarios.createItemsOnGround(options);
+    this.reset([...scenario.entities]);
+    return scenario;
+  }
+
+  /**
+   * @description Creates a container with contents and loads it into the fixture.
+   *
+   * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createContainerWithContents
+   * @returns {object} Scenario details including room, container, and contents
+   */
+  createContainerWithContents(options = {}) {
+    const scenario = ModEntityScenarios.createContainerWithContents(options);
+    this.reset([...scenario.entities]);
+    return scenario;
+  }
+
+  /**
+   * @description Creates a giver/receiver transfer scenario for inventory actions.
+   *
+   * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createInventoryTransfer
+   * @returns {object} Scenario details including room, actors, and transfer item references
+   */
+  createInventoryTransfer(options = {}) {
+    const scenario = ModEntityScenarios.createInventoryTransfer(options);
+    this.reset([...scenario.entities]);
+    return scenario;
+  }
+
+  /**
+   * @description Creates an actor ready to drop an inventory item and loads it into the fixture.
+   *
+   * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createDropItemScenario
+   * @returns {object} Scenario details including room, actor, and item references
+   */
+  createDropItemScenario(options = {}) {
+    const scenario = ModEntityScenarios.createDropItemScenario(options);
+    this.reset([...scenario.entities]);
+    return scenario;
+  }
+
+  /**
+   * @description Creates a pickup scenario with a ground item and hydrates the fixture.
+   *
+   * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createPickupScenario
+   * @returns {object} Scenario details including room, actor, and ground item
+   */
+  createPickupScenario(options = {}) {
+    const scenario = ModEntityScenarios.createPickupScenario(options);
+    this.reset([...scenario.entities]);
+    return scenario;
+  }
+
+  /**
+   * @description Creates an actor and container pair for open container workflows and loads it into the fixture.
+   *
+   * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createOpenContainerScenario
+   * @returns {object} Scenario details including room, actor, container, and optional key references
+   */
+  createOpenContainerScenario(options = {}) {
+    const scenario = ModEntityScenarios.createOpenContainerScenario(options);
+    this.reset([...scenario.entities]);
+    return scenario;
+  }
+
+  /**
+   * @description Creates a put-in-container scenario and hydrates the fixture.
+   *
+   * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createPutInContainerScenario
+   * @returns {object} Scenario details including room, actor, container, and held item references
+   */
+  createPutInContainerScenario(options = {}) {
+    const scenario = ModEntityScenarios.createPutInContainerScenario(options);
     this.reset([...scenario.entities]);
     return scenario;
   }
@@ -1181,7 +1279,9 @@ export class ModActionTestFixture extends BaseModTestFixture {
       // In test environment, wrap actions with strict validation
       if (process.env.NODE_ENV === 'test') {
         // Lazy-load the helper to avoid circular dependencies
-        const { wrapActionsWithStrictValidation } = require('../strictTestHelpers.js');
+        const { wrapActionsWithStrictValidation } = localRequire(
+          '../strictTestHelpers.js'
+        );
         return wrapActionsWithStrictValidation(actions);
       }
 
