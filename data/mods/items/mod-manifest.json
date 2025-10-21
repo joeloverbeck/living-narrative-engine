@@ -18,16 +18,17 @@
   ],
   "content": {
     "components": [
+      "can_apply_lipstick.component.json",
       "container.component.json",
       "inventory.component.json",
       "item.component.json",
       "openable.component.json",
       "portable.component.json",
       "readable.component.json",
-      "weight.component.json",
-      "can_apply_lipstick.component.json"
+      "weight.component.json"
     ],
     "actions": [
+      "apply_lipstick.action.json",
       "drop_item.action.json",
       "examine_item.action.json",
       "give_item.action.json",
@@ -35,10 +36,10 @@
       "pick_up_item.action.json",
       "put_in_container.action.json",
       "read_item.action.json",
-      "take_from_container.action.json",
-      "apply_lipstick.action.json"
+      "take_from_container.action.json"
     ],
     "rules": [
+      "handle_apply_lipstick.rule.json",
       "handle_drop_item.rule.json",
       "handle_examine_item.rule.json",
       "handle_give_item.rule.json",
@@ -46,10 +47,10 @@
       "handle_pick_up_item.rule.json",
       "handle_put_in_container.rule.json",
       "handle_read_item.rule.json",
-      "handle_take_from_container.rule.json",
-      "handle_apply_lipstick.rule.json"
+      "handle_take_from_container.rule.json"
     ],
     "conditions": [
+      "event-is-action-apply-lipstick.condition.json",
       "event-is-action-drop-item.condition.json",
       "event-is-action-examine-item.condition.json",
       "event-is-action-give-item.condition.json",
@@ -58,8 +59,7 @@
       "event-is-action-put-in-container.condition.json",
       "event-is-action-read-item.condition.json",
       "event-is-action-take-from-container.condition.json",
-      "secondary-has-portable.condition.json",
-      "event-is-action-apply-lipstick.condition.json"
+      "secondary-has-portable.condition.json"
     ],
     "scopes": [
       "actor_inventory_items.scope",
@@ -84,11 +84,13 @@
         "brass_key.entity.json",
         "gold_bar.entity.json",
         "letter_to_sheriff.entity.json",
+        "red_lipstick.entity.json",
         "revolver.entity.json",
-        "treasure_chest.entity.json",
-        "red_lipstick.entity.json"
+        "treasure_chest.entity.json"
       ],
-      "instances": []
+      "instances": [
+        "red_lipstick.entity.json"
+      ]
     }
   }
 }
