@@ -50,6 +50,39 @@ const MOD_FILE_CONVENTIONS = {
 };
 
 /**
+ * Determines if the provided value matches the expected structure of a rule definition.
+ *
+ * @param {unknown} candidate - Parsed JSON candidate.
+ * @returns {boolean} True when the candidate looks like a rule definition.
+ */
+function isRuleDefinition(candidate) {
+  if (!candidate || typeof candidate !== 'object') {
+    return false;
+  }
+
+  const rule = /** @type {{ rule_id?: unknown, actions?: unknown }} */ (candidate);
+  return (
+    typeof rule.rule_id === 'string' &&
+    (Array.isArray(rule.actions) || rule.actions === undefined)
+  );
+}
+
+/**
+ * Determines if the provided value matches the expected structure of a condition definition.
+ *
+ * @param {unknown} candidate - Parsed JSON candidate.
+ * @returns {boolean} True when the candidate looks like a condition definition.
+ */
+function isConditionDefinition(candidate) {
+  if (!candidate || typeof candidate !== 'object') {
+    return false;
+  }
+
+  const condition = /** @type {{ id?: unknown }} */ (candidate);
+  return typeof condition.id === 'string';
+}
+
+/**
  * Extracts action name from full action ID
  *
  * @param {string} actionId - Action ID (e.g., 'intimacy:kiss_cheek')
@@ -341,7 +374,16 @@ export class ModTestFixture {
       try {
         const resolvedPath = resolve(rulePath);
         const content = await fs.readFile(resolvedPath, 'utf8');
-        return JSON.parse(content);
+        const parsedRule = JSON.parse(content);
+
+        if (!isRuleDefinition(parsedRule)) {
+          errors.push(
+            `Invalid rule definition at ${rulePath}: missing required rule fields.`
+          );
+          continue;
+        }
+
+        return parsedRule;
       } catch (error) {
         errors.push(`Failed to load rule from ${rulePath}: ${error.message}`);
       }
@@ -385,7 +427,16 @@ export class ModTestFixture {
       try {
         const resolvedPath = resolve(conditionPath);
         const content = await fs.readFile(resolvedPath, 'utf8');
-        return JSON.parse(content);
+        const parsedCondition = JSON.parse(content);
+
+        if (!isConditionDefinition(parsedCondition)) {
+          errors.push(
+            `Invalid condition definition at ${conditionPath}: missing required condition fields.`
+          );
+          continue;
+        }
+
+        return parsedCondition;
       } catch (error) {
         errors.push(
           `Failed to load condition from ${conditionPath}: ${error.message}`
@@ -435,7 +486,16 @@ export class ModTestFixture {
       try {
         const resolvedPath = resolve(rulePath);
         const content = await fs.readFile(resolvedPath, 'utf8');
-        ruleFile = JSON.parse(content);
+        const parsedRule = JSON.parse(content);
+
+        if (!isRuleDefinition(parsedRule)) {
+          errors.push(
+            `Invalid rule definition at ${rulePath}: missing required rule fields.`
+          );
+          continue;
+        }
+
+        ruleFile = parsedRule;
         break;
       } catch (error) {
         errors.push(`Failed to load rule from ${rulePath}: ${error.message}`);
@@ -459,7 +519,16 @@ export class ModTestFixture {
       try {
         const resolvedPath = resolve(conditionPath);
         const content = await fs.readFile(resolvedPath, 'utf8');
-        conditionFile = JSON.parse(content);
+        const parsedCondition = JSON.parse(content);
+
+        if (!isConditionDefinition(parsedCondition)) {
+          errors.push(
+            `Invalid condition definition at ${conditionPath}: missing required condition fields.`
+          );
+          continue;
+        }
+
+        conditionFile = parsedCondition;
         break;
       } catch (error) {
         errors.push(
