@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "items:red_lipstick",
+  "description": "A vivid cosmetic stick perfect for adding a bold red sheen.",
+  "components": {
+    "core:name": {
+      "text": "red lipstick"
+    },
+    "core:description": {
+      "text": "A sleek tube of richly pigmented red lipstick, ready to brighten any smile."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:can_apply_lipstick": {},
+    "items:weight": {
+      "weight": 0.1
+    }
+  }
+}
