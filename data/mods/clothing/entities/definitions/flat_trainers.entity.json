@@ -8,7 +8,9 @@
       "equipmentSlots": {
         "primary": "feet"
       },
-      "allowedLayers": ["base"]
+      "allowedLayers": [
+        "base"
+      ]
     },
     "core:material": {
       "material": "synthetic"
@@ -24,6 +26,8 @@
     },
     "descriptors:texture": {
       "texture": "smooth"
-    }
+    },
+    "items:item": {},
+    "items:portable": {}
   }
 }

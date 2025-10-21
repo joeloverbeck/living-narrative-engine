@@ -8,7 +8,9 @@
       "equipmentSlots": {
         "primary": "torso_upper"
       },
-      "allowedLayers": ["underwear"]
+      "allowedLayers": [
+        "underwear"
+      ]
     },
     "core:material": {
       "material": "silk"
@@ -21,6 +23,8 @@
     },
     "descriptors:color_extended": {
       "color": "nude"
-    }
+    },
+    "items:item": {},
+    "items:portable": {}
   }
 }

@@ -8,7 +8,9 @@
       "equipmentSlots": {
         "primary": "feet"
       },
-      "allowedLayers": ["underwear"]
+      "allowedLayers": [
+        "underwear"
+      ]
     },
     "core:material": {
       "material": "nylon"
@@ -24,6 +26,8 @@
     },
     "descriptors:texture": {
       "texture": "matte"
-    }
+    },
+    "items:item": {},
+    "items:portable": {}
   }
 }

@@ -8,7 +8,10 @@
       "equipmentSlots": {
         "primary": "legs"
       },
-      "allowedLayers": ["base", "outer"]
+      "allowedLayers": [
+        "base",
+        "outer"
+      ]
     },
     "core:material": {
       "material": "cotton"
@@ -26,8 +29,12 @@
       "texture": "smooth"
     },
     "clothing:coverage_mapping": {
-      "covers": ["torso_lower"],
+      "covers": [
+        "torso_lower"
+      ],
       "coveragePriority": "base"
-    }
+    },
+    "items:item": {},
+    "items:portable": {}
   }
 }

@@ -32,6 +32,8 @@
         "head_gear"
       ],
       "coveragePriority": "accessories"
-    }
+    },
+    "items:item": {},
+    "items:portable": {}
   }
 }

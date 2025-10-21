@@ -8,7 +8,10 @@
       "equipmentSlots": {
         "primary": "feet"
       },
-      "allowedLayers": ["base", "outer"]
+      "allowedLayers": [
+        "base",
+        "outer"
+      ]
     },
     "core:material": {
       "material": "leather"
@@ -24,6 +27,8 @@
     },
     "descriptors:texture": {
       "texture": "croc-embossed"
-    }
+    },
+    "items:item": {},
+    "items:portable": {}
   }
 }

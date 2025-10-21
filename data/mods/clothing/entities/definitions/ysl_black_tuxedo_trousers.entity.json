@@ -7,9 +7,14 @@
       "layer": "base",
       "equipmentSlots": {
         "primary": "legs",
-        "secondary": ["torso_lower"]
+        "secondary": [
+          "torso_lower"
+        ]
       },
-      "allowedLayers": ["base", "outer"]
+      "allowedLayers": [
+        "base",
+        "outer"
+      ]
     },
     "core:material": {
       "material": "wool"
@@ -27,8 +32,12 @@
       "texture": "smooth"
     },
     "clothing:coverage_mapping": {
-      "covers": ["torso_lower"],
+      "covers": [
+        "torso_lower"
+      ],
       "coveragePriority": "base"
-    }
+    },
+    "items:item": {},
+    "items:portable": {}
   }
 }

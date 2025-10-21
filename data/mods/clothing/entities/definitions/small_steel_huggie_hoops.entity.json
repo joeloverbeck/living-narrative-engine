@@ -8,11 +8,15 @@
       "equipmentSlots": {
         "primary": "head_gear"
       },
-      "allowedLayers": ["accessories"]
+      "allowedLayers": [
+        "accessories"
+      ]
     },
     "core:material": {
       "material": "steel",
-      "properties": ["reflective"]
+      "properties": [
+        "reflective"
+      ]
     },
     "core:name": {
       "text": "huggie hoop earrings"
@@ -27,8 +31,12 @@
       "texture": "smooth"
     },
     "clothing:coverage_mapping": {
-      "covers": ["head_gear"],
+      "covers": [
+        "head_gear"
+      ],
       "coveragePriority": "accessories"
-    }
+    },
+    "items:item": {},
+    "items:portable": {}
   }
 }

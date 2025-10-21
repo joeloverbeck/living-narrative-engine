@@ -8,7 +8,9 @@
       "equipmentSlots": {
         "primary": "torso_lower"
       },
-      "allowedLayers": ["underwear"]
+      "allowedLayers": [
+        "underwear"
+      ]
     },
     "core:material": {
       "material": "power-mesh"
@@ -29,8 +31,12 @@
       "size": "waist-cinching control panel"
     },
     "clothing:coverage_mapping": {
-      "covers": ["torso_lower"],
+      "covers": [
+        "torso_lower"
+      ],
       "coveragePriority": "underwear"
-    }
+    },
+    "items:item": {},
+    "items:portable": {}
   }
 }

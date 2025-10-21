@@ -38,6 +38,8 @@
         "torso_lower"
       ],
       "coveragePriority": "outer"
-    }
+    },
+    "items:item": {},
+    "items:portable": {}
   }
 }
