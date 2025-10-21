@@ -40,6 +40,9 @@
       "coveragePriority": "accessories"
     },
     "items:item": {},
-    "items:portable": {}
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.15
+    }
   }
 }
