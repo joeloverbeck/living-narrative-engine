@@ -44,6 +44,52 @@ describe('positioning:sit_down', () => {
 });
 ```
 
+## Fixture API Essentials
+
+The modern fixture factories replace the deprecated `ModTestFixture.createFixture()` and `ModTestHandlerFactory.createHandler()` helpers. Always await the static constructors and let the fixture manage entity creation.
+
+```javascript
+// ✅ Preferred pattern
+const fixture = await ModTestFixture.forAction(
+  'positioning',
+  'positioning:sit_down'
+);
+const scenario = fixture.createStandardActorTarget(['Actor Name', 'Target Name']);
+await fixture.executeAction(scenario.actor.id, scenario.target.id);
+
+// ❌ Deprecated and unsupported
+ModTestFixture.createFixture({ type: 'action' });
+ModTestHandlerFactory.createHandler({ actionId: 'sit_down' });
+new ModEntityBuilder(); // Missing ID and validation
+```
+
+### Static factory reference
+
+| Method | Description | Key parameters | Returns |
+| --- | --- | --- | --- |
+| `forActionAutoLoad(modId, fullActionId, options?)` | Loads rule and condition JSON automatically. | `modId`, fully-qualified action ID, optional config overrides. | `ModActionTestFixture` |
+| `forAction(modId, fullActionId, ruleFile?, conditionFile?)` | Creates an action fixture with explicit overrides. | `modId`, action ID, optional rule/condition JSON. | `ModActionTestFixture` |
+| `forRule(modId, fullActionId, ruleFile?, conditionFile?)` | Targets resolver rules without executing the whole action. | `modId`, action ID, optional rule/condition JSON. | `ModActionTestFixture` |
+| `forCategory(modId, options?)` | Builds a category-level harness for discovery-style assertions. | `modId`, optional configuration. | `ModCategoryTestFixture` |
+
+### Core instance helpers
+
+| Method | Purpose | Highlights |
+| --- | --- | --- |
+| `createStandardActorTarget([actorName, targetName])` | Creates reciprocal actor/target entities with validated components. | Use the returned IDs rather than hard-coded strings. |
+| `createSittingPair(options)` and other scenario builders | Provision seating, inventory, and bespoke setups. | Prefer these helpers before writing custom entity graphs. |
+| `executeAction(actorId, targetId, options?)` | Runs the action and captures emitted events. | Options support `additionalPayload`, `contextOverrides`, and validation toggles. |
+| `assertActionSuccess(message)` / domain matchers | Provides backward-compatible assertions. | Prefer Jest matchers from `domainMatchers` for clearer failures. |
+| `assertPerceptibleEvent(eventData)` | Validates perceptible event payloads. | Pair with event matchers when migrating legacy suites. |
+| `clearEvents()` / `cleanup()` | Reset captured events and teardown resources. | Call `cleanup()` in `afterEach` to avoid shared state. |
+
+**Usage notes**
+
+- Always supply fully-qualified action IDs (e.g., `'intimacy:kiss_cheek'`).
+- Scenario helpers eliminate the need for manual `ModEntityBuilder` usage; reach for them first.
+- The fixture handles lifecycle resets—avoid reusing a fixture across tests unless you explicitly call `fixture.reset()`.
+- Cleanup is mandatory: call `fixture.cleanup()` in `afterEach` blocks or shared helpers.
+
 ### Core Workflow
 
 1. **Provision a fixture** with `ModTestFixture.forAction(modId, fullActionId, rule?, condition?, options?)`. The factory automatically loads JSON definitions when omitted.
@@ -56,9 +102,9 @@ describe('positioning:sit_down', () => {
 
 ### Fixture Lifecycle
 
-- Always await factory methods (`forAction`, `forRule`, `forCategory`) and instantiate fixtures inside `beforeEach` for isolation.
+- Await factory methods inside `beforeEach` blocks for isolation.
 - Pair every fixture with `afterEach(() => fixture.cleanup())` or register cleanup in shared helpers.
-- Prefer `forAction` over `forActionAutoLoad` when you need explicit control of rule/condition overrides.
+- Prefer `forAction` over `forActionAutoLoad` when you need explicit control of rule/condition overrides or validation proxies.
 
 ### Scenario Composition
 
@@ -90,7 +136,7 @@ describe('positioning:sit_down', () => {
 ### Anti-patterns to Avoid
 
 - ❌ Creating fixtures with deprecated factories (`ModTestFixture.createFixture`, `ModTestHandlerFactory.createHandler`).
-- ❌ Building entities manually without `ModEntityBuilder` helpers, which leads to missing components and resolver failures.
+- ❌ Building entities manually without fixture scenario helpers, which leads to missing components and resolver failures.
 - ❌ Hard-coding action IDs without namespaces—always use the `modId:action_id` format for validation proxy compatibility.
 - ❌ Reusing fixtures across tests. Shared state hides ordering bugs; lean on fresh fixtures and scenario helpers instead.
 - ❌ Asserting against raw event arrays without matchers. Prefer `toHaveActionSuccess`/`toHaveActionFailure` to reduce copy-pasted parsing code.
