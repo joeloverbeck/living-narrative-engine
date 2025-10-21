@@ -384,17 +384,18 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
   });
 
   describe('Sex Category Pattern Validation', () => {
-    it('should validate sex category uses standard handlers', () => {
+    it('should validate sex category uses component mutation handlers', () => {
       const factoryMethod =
         ModTestHandlerFactory.getHandlerFactoryForCategory('sex');
       const handlers = factoryMethod(entityManager, eventBus, logger);
 
-      // Sex category should use standard handlers (same as intimacy)
+      // Sex category should support component mutations
       expect(handlers).toHaveProperty('DISPATCH_PERCEPTIBLE_EVENT');
       expect(handlers).toHaveProperty('SET_VARIABLE');
-      expect(handlers).not.toHaveProperty('ADD_COMPONENT');
+      expect(handlers).toHaveProperty('ADD_COMPONENT');
+      expect(handlers).toHaveProperty('REMOVE_COMPONENT');
 
-      expect(Object.keys(handlers)).toHaveLength(9);
+      expect(Object.keys(handlers)).toHaveLength(11);
     });
 
     it('should validate sex category entity patterns', () => {
@@ -666,7 +667,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       const expectedHandlerConfig = {
         exercise: { handlerCount: 9, hasAddComponent: false },
         violence: { handlerCount: 18, hasAddComponent: true },
-        sex: { handlerCount: 9, hasAddComponent: false },
+        sex: { handlerCount: 11, hasAddComponent: true },
         affection: { handlerCount: 11, hasAddComponent: true },
       };
 
