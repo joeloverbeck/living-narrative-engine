@@ -14,6 +14,9 @@ import {
   setupPrefixedLogger,
   initLogger,
   logPreview,
+  logStart,
+  logEnd,
+  logError,
 } from '../../../src/utils/loggerUtils.js';
 
 describe('loggerUtils', () => {
@@ -56,10 +59,26 @@ describe('loggerUtils', () => {
     );
   });
 
-  it('createPrefixedLogger prefixes messages', () => {
+  it('createPrefixedLogger prefixes messages across log levels', () => {
     const prefixed = createPrefixedLogger(valid, 'X: ');
-    prefixed.info('hello');
-    expect(valid.info).toHaveBeenCalledWith('X: hello');
+
+    prefixed.debug('debug msg', { id: 1 });
+    prefixed.info('info msg');
+    prefixed.warn('warn msg');
+    prefixed.error('error msg', new Error('boom'));
+
+    expect(valid.debug).toHaveBeenCalledWith('X: debug msg', { id: 1 });
+    expect(valid.info).toHaveBeenCalledWith('X: info msg');
+    expect(valid.warn).toHaveBeenCalledWith('X: warn msg');
+    expect(valid.error).toHaveBeenCalledWith('X: error msg', expect.any(Error));
+  });
+
+  it('createPrefixedLogger defaults to empty prefix when falsy', () => {
+    const prefixed = createPrefixedLogger(valid, '');
+
+    prefixed.info('no prefix');
+
+    expect(valid.info).toHaveBeenCalledWith('no prefix');
   });
 
   it('getModuleLogger prefixes messages with module name', () => {
@@ -128,5 +147,89 @@ describe('loggerUtils', () => {
     const logger = { debug: jest.fn() };
     logPreview(logger, 'l: ', 'short', 100);
     expect(logger.debug).toHaveBeenCalledWith('l: short');
+  });
+
+  it('ensureValidLogger fallback delegates to console with provided prefix', () => {
+    const fallback = ensureValidLogger(null, 'Service');
+
+    fallback.info('info message', { foo: 1 });
+    fallback.warn('warn message');
+    fallback.error('error message');
+    fallback.debug('debug message', 'details');
+
+    expect(consoleSpies.info).toHaveBeenCalledWith('Service: ', 'info message', {
+      foo: 1,
+    });
+    expect(consoleSpies.warn).toHaveBeenCalledWith('Service: ', 'warn message');
+    expect(consoleSpies.error).toHaveBeenCalledWith('Service: ', 'error message');
+    expect(consoleSpies.debug).toHaveBeenCalledWith('Service: ', 'debug message', 'details');
+  });
+
+  it('ensureValidLogger fallback omits prefix when empty string provided', () => {
+    const fallback = ensureValidLogger(null, '');
+
+    fallback.warn('just a warning');
+
+    expect(consoleSpies.warn).toHaveBeenCalledWith('', 'just a warning');
+  });
+
+  it('ensureValidLogger applies default fallback prefix when omitted', () => {
+    const fallback = ensureValidLogger(null);
+
+    fallback.info('defaulted');
+
+    expect(consoleSpies.info).toHaveBeenCalledWith('FallbackLogger: ', 'defaulted');
+  });
+
+  it('logStart, logEnd, and logError decorate messages with symbols', () => {
+    const logger = {
+      debug: jest.fn(),
+      error: jest.fn(),
+    };
+    const err = new Error('network offline');
+
+    logStart(logger, 'boot sequence');
+    logEnd(logger, 'boot sequence');
+    logError(logger, 'boot sequence', err);
+
+    expect(logger.debug).toHaveBeenNthCalledWith(1, '▶️  boot sequence');
+    expect(logger.debug).toHaveBeenNthCalledWith(2, '✅ boot sequence');
+    expect(logger.error).toHaveBeenCalledWith('❌ boot sequence: network offline', err);
+  });
+
+  it('getPrefixedLogger omits prefix when provided value is falsy', () => {
+    const baseLogger = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+    };
+
+    const prefixed = getPrefixedLogger(baseLogger, '');
+    prefixed.info('raw');
+
+    expect(baseLogger.info).toHaveBeenCalledWith('raw');
+  });
+
+  it('setupPrefixedLogger supports empty prefix values', () => {
+    const baseLogger = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+    };
+
+    const prefixed = setupPrefixedLogger(baseLogger, '');
+    prefixed.warn('message');
+
+    expect(baseLogger.warn).toHaveBeenCalledWith('message');
+  });
+
+  it('logPreview stringifies objects and uses default length', () => {
+    const logger = { debug: jest.fn() };
+
+    logPreview(logger, 'payload: ', { foo: 'bar' });
+
+    expect(logger.debug).toHaveBeenCalledWith('payload: {"foo":"bar"}');
   });
 });
