@@ -536,6 +536,513 @@ export class ModEntityScenarios {
   }
 
   /**
+   * @description Creates a configurable sitting arrangement with seated, standing, and kneeling actors.
+   *
+   * @param {object} [options] - Configuration overrides for the scenario
+   * @param {string} [options.locationId='room1'] - Location where all entities are placed
+   * @param {boolean} [options.includeRoom=true] - Whether to include a room entity in the output
+   * @param {string} [options.roomId] - Identifier for the optional room entity
+   * @param {string} [options.roomName='Test Room'] - Display name for the optional room entity
+   * @param {string} [options.furnitureId='couch1'] - Identifier for the primary furniture entity
+   * @param {string} [options.furnitureName='Comfy Couch'] - Display name for the primary furniture entity
+   * @param {string} [options.furnitureLocationId] - Location identifier for the primary furniture entity
+   * @param {object} [options.furnitureAllowsSitting] - Additional data merged into positioning:allows_sitting for the primary furniture
+   * @param {Array<object>} [options.additionalFurniture] - Extra furniture definitions with optional allows_sitting overrides
+   * @param {Array<object>} [options.seatedActors] - Actor definitions for seated occupants (id, name, spotIndex, furnitureId, closeTo)
+   * @param {Array<object>} [options.standingActors] - Actor definitions for standing occupants (id, name, behindTargetId, closeTo, standingData)
+   * @param {Array<object>} [options.kneelingActors] - Actor definitions for kneeling occupants (id, name, targetId, closeTo)
+   * @param {boolean} [options.closeSeatedActors=true] - Whether seated actors default to being close to one another when sharing furniture
+   * @returns {object} Scenario details with entities ready for fixture.reset
+   */
+  static createSittingArrangement(options = {}) {
+    const {
+      locationId = 'room1',
+      includeRoom = true,
+      roomId = locationId,
+      roomName = 'Test Room',
+      furnitureId = 'couch1',
+      furnitureName = 'Comfy Couch',
+      furnitureLocationId = locationId,
+      furnitureAllowsSitting = {},
+      additionalFurniture = [],
+      seatedActors: providedSeatedActors,
+      standingActors: providedStandingActors = [],
+      kneelingActors: providedKneelingActors = [],
+      closeSeatedActors = true,
+    } = options;
+
+    const normalizePartners = (partners) => {
+      if (!partners) {
+        return undefined;
+      }
+
+      if (Array.isArray(partners)) {
+        return partners.filter((partner) => Boolean(partner));
+      }
+
+      return [partners];
+    };
+
+    const defaultSeatedActors = [
+      { id: 'actor1', name: 'Alice', spotIndex: 0 },
+      { id: 'actor2', name: 'Bob', spotIndex: 1 },
+    ];
+
+    const seatedActorsInput = Array.isArray(providedSeatedActors)
+      ? [...providedSeatedActors]
+      : defaultSeatedActors;
+
+    if (seatedActorsInput.length === 0) {
+      throw new Error(
+        'ModEntityScenarios.createSittingArrangement: at least one seated actor is required'
+      );
+    }
+
+    const normalizedFurniture = new Map();
+    const ensureFurnitureDefinition = (definition) => {
+      const { id, name, locationId: furnitureLocation, allowsSitting, components } = definition;
+      if (!id) {
+        throw new Error(
+          'ModEntityScenarios.createSittingArrangement: furniture definitions must include an id'
+        );
+      }
+
+      if (!normalizedFurniture.has(id)) {
+        normalizedFurniture.set(id, {
+          id,
+          name: name || id,
+          locationId: furnitureLocation || locationId,
+          allowsSitting: allowsSitting || {},
+          components: components || {},
+        });
+      }
+    };
+
+    ensureFurnitureDefinition({
+      id: furnitureId,
+      name: furnitureName,
+      locationId: furnitureLocationId,
+      allowsSitting: furnitureAllowsSitting,
+    });
+
+    const extraFurniture = Array.isArray(additionalFurniture)
+      ? additionalFurniture
+      : [];
+    extraFurniture.forEach((furniture) => ensureFurnitureDefinition(furniture));
+
+    const normalizedSeatedActors = seatedActorsInput.map((actor, index) => {
+      const id = actor.id || `actor${index + 1}`;
+      const actorName = actor.name || `Actor ${index + 1}`;
+      const assignedFurnitureId = actor.furnitureId || furnitureId;
+
+      ensureFurnitureDefinition({ id: assignedFurnitureId });
+
+      return {
+        id,
+        name: actorName,
+        furnitureId: assignedFurnitureId,
+        spotIndex: actor.spotIndex,
+        closeTo: normalizePartners(actor.closeTo),
+        locationId: actor.locationId || locationId,
+      };
+    });
+
+    const furnitureGroups = new Map();
+    normalizedSeatedActors.forEach((actor) => {
+      if (!furnitureGroups.has(actor.furnitureId)) {
+        furnitureGroups.set(actor.furnitureId, []);
+      }
+      furnitureGroups.get(actor.furnitureId).push(actor);
+    });
+
+    furnitureGroups.forEach((actors) => {
+      const usedIndices = new Set(
+        actors
+          .filter((actor) => typeof actor.spotIndex === 'number')
+          .map((actor) => actor.spotIndex)
+      );
+
+      let nextIndex = 0;
+      actors.forEach((actor) => {
+        if (typeof actor.spotIndex !== 'number') {
+          while (usedIndices.has(nextIndex)) {
+            nextIndex += 1;
+          }
+          actor.spotIndex = nextIndex;
+          usedIndices.add(nextIndex);
+          nextIndex += 1;
+        }
+      });
+    });
+
+    const roomEntity = includeRoom
+      ? new ModEntityBuilder(roomId).asRoom(roomName).build()
+      : null;
+
+    const furnitureEntities = [];
+    normalizedFurniture.forEach((definition, id) => {
+      const actorsOnFurniture = furnitureGroups.get(id) || [];
+      const highestIndex = actorsOnFurniture.reduce(
+        (maxIndex, actor) => Math.max(maxIndex, actor.spotIndex),
+        -1
+      );
+      const spots = highestIndex >= 0 ? Array.from({ length: highestIndex + 1 }, () => null) : [];
+
+      actorsOnFurniture.forEach((actor) => {
+        spots[actor.spotIndex] = actor.id;
+      });
+
+      const builder = new ModEntityBuilder(id)
+        .withName(definition.name)
+        .atLocation(definition.locationId)
+        .withLocationComponent(definition.locationId);
+
+      if (definition.components && Object.keys(definition.components).length > 0) {
+        builder.withComponents(definition.components);
+      }
+
+      builder.withComponent('positioning:allows_sitting', {
+        spots,
+        ...definition.allowsSitting,
+      });
+
+      furnitureEntities.push(builder.build());
+    });
+
+    const seatedActorEntities = normalizedSeatedActors.map((actor) => {
+      const builder = new ModEntityBuilder(actor.id)
+        .withName(actor.name)
+        .atLocation(actor.locationId)
+        .withLocationComponent(actor.locationId)
+        .asActor()
+        .withComponent('positioning:sitting_on', {
+          furniture_id: actor.furnitureId,
+          spot_index: actor.spotIndex,
+        });
+
+      const partners = new Set();
+      const actorGroup = furnitureGroups.get(actor.furnitureId) || [];
+      if (closeSeatedActors) {
+        actorGroup
+          .filter((groupActor) => groupActor.id !== actor.id)
+          .forEach((groupActor) => partners.add(groupActor.id));
+      }
+
+      if (actor.closeTo) {
+        actor.closeTo.forEach((partner) => partners.add(partner));
+      }
+
+      if (partners.size > 0) {
+        const partnerArray = [...partners];
+        builder.closeToEntity(
+          partnerArray.length === 1 ? partnerArray[0] : partnerArray
+        );
+      }
+
+      return builder.build();
+    });
+
+    const normalizedStandingActors = Array.isArray(providedStandingActors)
+      ? providedStandingActors.map((actor, index) => ({
+          id: actor.id || `standing${index + 1}`,
+          name: actor.name || `Standing Actor ${index + 1}`,
+          locationId: actor.locationId || locationId,
+          behindTargetId: actor.behindTargetId,
+          closeTo: normalizePartners(actor.closeTo),
+          standingData: actor.standingData || {},
+          facingDirection: actor.facingDirection,
+        }))
+      : [];
+
+    const standingActorEntities = normalizedStandingActors.map((actor) => {
+      const builder = new ModEntityBuilder(actor.id)
+        .withName(actor.name)
+        .atLocation(actor.locationId)
+        .withLocationComponent(actor.locationId)
+        .asActor()
+        .withComponent('positioning:standing', actor.standingData || {});
+
+      if (actor.behindTargetId) {
+        builder.withComponent('positioning:standing_behind', {
+          entityId: actor.behindTargetId,
+        });
+      }
+
+      if (actor.facingDirection) {
+        builder.facing(actor.facingDirection);
+      }
+
+      if (actor.closeTo && actor.closeTo.length > 0) {
+        builder.closeToEntity(
+          actor.closeTo.length === 1 ? actor.closeTo[0] : actor.closeTo
+        );
+      }
+
+      return builder.build();
+    });
+
+    const normalizedKneelingActors = Array.isArray(providedKneelingActors)
+      ? providedKneelingActors.map((actor, index) => ({
+          id: actor.id || `kneeling${index + 1}`,
+          name: actor.name || `Kneeling Actor ${index + 1}`,
+          locationId: actor.locationId || locationId,
+          targetId: actor.targetId,
+          closeTo: normalizePartners(actor.closeTo),
+        }))
+      : [];
+
+    const kneelingActorEntities = normalizedKneelingActors.map((actor) => {
+      if (!actor.targetId) {
+        throw new Error(
+          'ModEntityScenarios.createSittingArrangement: kneeling actors require a targetId'
+        );
+      }
+
+      const builder = new ModEntityBuilder(actor.id)
+        .withName(actor.name)
+        .atLocation(actor.locationId)
+        .withLocationComponent(actor.locationId)
+        .asActor()
+        .kneelingBefore(actor.targetId);
+
+      if (actor.closeTo && actor.closeTo.length > 0) {
+        builder.closeToEntity(
+          actor.closeTo.length === 1 ? actor.closeTo[0] : actor.closeTo
+        );
+      }
+
+      return builder.build();
+    });
+
+    const entities = [];
+    if (roomEntity) {
+      entities.push(roomEntity);
+    }
+
+    entities.push(...furnitureEntities, ...seatedActorEntities, ...standingActorEntities, ...kneelingActorEntities);
+
+    return {
+      room: roomEntity,
+      furniture: furnitureEntities.length === 1 ? furnitureEntities[0] : furnitureEntities,
+      furnitureEntities,
+      seatedActors: seatedActorEntities,
+      standingActors: standingActorEntities,
+      kneelingActors: kneelingActorEntities,
+      entities,
+    };
+  }
+
+  /**
+   * @description Creates a default two-person sitting scenario with shared furniture.
+   *
+   * @param {object} [options] - Scenario overrides passed to createSittingArrangement
+   * @returns {object} Scenario details containing seated actors and furniture
+   */
+  static createSittingPair(options = {}) {
+    const { seatedActors = [], closeSeatedActors, ...rest } = options;
+
+    const finalSeatedActors = seatedActors.length > 0 ? seatedActors : [
+      { id: 'actor1', name: 'Alice', spotIndex: 0 },
+      { id: 'actor2', name: 'Bob', spotIndex: 1 },
+    ];
+
+    const finalCloseSetting =
+      typeof closeSeatedActors === 'boolean' ? closeSeatedActors : true;
+
+    return this.createSittingArrangement({
+      seatedActors: finalSeatedActors,
+      closeSeatedActors: finalCloseSetting,
+      ...rest,
+    });
+  }
+
+  /**
+   * @description Creates a solo sitting scenario for a single actor and furniture.
+   *
+   * @param {object} [options] - Scenario overrides passed to createSittingArrangement
+   * @returns {object} Scenario details for the solo sitter
+   */
+  static createSoloSitting(options = {}) {
+    const { seatedActors = [], closeSeatedActors, ...rest } = options;
+
+    const finalSeatedActors = seatedActors.length > 0 ? seatedActors : [
+      { id: 'actor1', name: 'Alice', spotIndex: 0 },
+    ];
+
+    const finalCloseSetting =
+      typeof closeSeatedActors === 'boolean' ? closeSeatedActors : false;
+
+    return this.createSittingArrangement({
+      seatedActors: finalSeatedActors,
+      closeSeatedActors: finalCloseSetting,
+      ...rest,
+    });
+  }
+
+  /**
+   * @description Creates a sitting scenario with at least one seated actor and nearby standing actors.
+   *
+   * @param {object} [options] - Scenario overrides passed to createSittingArrangement
+   * @returns {object} Scenario details with seated and standing actors
+   */
+  static createStandingNearSitting(options = {}) {
+    const {
+      seatedActors = [],
+      standingActors = [],
+      closeSeatedActors,
+      ...rest
+    } = options;
+
+    const finalSeatedActors = seatedActors.length > 0 ? seatedActors : [
+      { id: 'actor1', name: 'Alice', spotIndex: 0 },
+    ];
+
+    const defaultStandingActors = standingActors.length > 0
+      ? standingActors
+      : [
+          {
+            id: 'standing1',
+            name: 'Bob',
+            closeTo: [finalSeatedActors[0].id],
+          },
+        ];
+
+    const normalizedStandingActors = defaultStandingActors.map(
+      (actor, index) => ({
+        id: actor.id || `standing${index + 1}`,
+        name: actor.name || `Standing Actor ${index + 1}`,
+        closeTo:
+          actor.closeTo && actor.closeTo.length > 0
+            ? actor.closeTo
+            : [finalSeatedActors[0].id],
+        behindTargetId: actor.behindTargetId,
+        locationId: actor.locationId,
+        standingData: actor.standingData,
+        facingDirection: actor.facingDirection,
+      })
+    );
+
+    const finalCloseSetting =
+      typeof closeSeatedActors === 'boolean'
+        ? closeSeatedActors
+        : finalSeatedActors.length > 1;
+
+    return this.createSittingArrangement({
+      seatedActors: finalSeatedActors,
+      standingActors: normalizedStandingActors,
+      closeSeatedActors: finalCloseSetting,
+      ...rest,
+    });
+  }
+
+  /**
+   * @description Creates a scenario where actors occupy different furniture entities in the same room.
+   *
+   * @param {object} [options] - Scenario overrides passed to createSittingArrangement
+   * @returns {object} Scenario details with separate furniture instances
+   */
+  static createSeparateFurnitureArrangement(options = {}) {
+    const {
+      seatedActors = [],
+      additionalFurniture = [],
+      closeSeatedActors,
+      furnitureId = 'couch_left',
+      furnitureName = 'Left Couch',
+      ...rest
+    } = options;
+
+    const defaultSeatedActors = [
+      { id: 'actor1', name: 'Alice', furnitureId: furnitureId, spotIndex: 0 },
+      {
+        id: 'actor2',
+        name: 'Bob',
+        furnitureId:
+          (additionalFurniture[0] && additionalFurniture[0].id) || 'couch_right',
+        spotIndex: 0,
+      },
+    ];
+
+    const finalSeatedActors = seatedActors.length > 0 ? seatedActors : defaultSeatedActors;
+
+    const defaultAdditionalFurniture =
+      additionalFurniture.length > 0
+        ? additionalFurniture
+        : [
+            {
+              id: 'couch_right',
+              name: 'Right Couch',
+            },
+          ];
+
+    const finalCloseSetting =
+      typeof closeSeatedActors === 'boolean' ? closeSeatedActors : false;
+
+    return this.createSittingArrangement({
+      furnitureId,
+      furnitureName,
+      additionalFurniture: defaultAdditionalFurniture,
+      seatedActors: finalSeatedActors,
+      closeSeatedActors: finalCloseSetting,
+      ...rest,
+    });
+  }
+
+  /**
+   * @description Creates a scenario with a seated actor and kneeling actors positioned nearby.
+   *
+   * @param {object} [options] - Scenario overrides passed to createSittingArrangement
+   * @returns {object} Scenario details with seated and kneeling actors
+   */
+  static createKneelingBeforeSitting(options = {}) {
+    const {
+      seatedActors = [],
+      kneelingActors = [],
+      closeSeatedActors,
+      ...rest
+    } = options;
+
+    const finalSeatedActors = seatedActors.length > 0 ? seatedActors : [
+      { id: 'actor1', name: 'Alice', spotIndex: 0 },
+    ];
+
+    const defaultKneelingActors = kneelingActors.length > 0
+      ? kneelingActors
+      : [
+          {
+            id: 'kneeling1',
+            name: 'Charlie',
+            targetId: finalSeatedActors[0].id,
+            closeTo: [finalSeatedActors[0].id],
+          },
+        ];
+
+    const normalizedKneelingActors = defaultKneelingActors.map(
+      (actor, index) => ({
+        id: actor.id || `kneeling${index + 1}`,
+        name: actor.name || `Kneeling Actor ${index + 1}`,
+        targetId: actor.targetId || finalSeatedActors[0].id,
+        closeTo:
+          actor.closeTo && actor.closeTo.length > 0
+            ? actor.closeTo
+            : [finalSeatedActors[0].id],
+        locationId: actor.locationId,
+      })
+    );
+
+    const finalCloseSetting =
+      typeof closeSeatedActors === 'boolean'
+        ? closeSeatedActors
+        : finalSeatedActors.length > 1;
+
+    return this.createSittingArrangement({
+      seatedActors: finalSeatedActors,
+      kneelingActors: normalizedKneelingActors,
+      closeSeatedActors: finalCloseSetting,
+      ...rest,
+    });
+  }
+
+  /**
    * Creates a multi-actor scenario with observers.
    *
    * @param {object} options - Configuration options
