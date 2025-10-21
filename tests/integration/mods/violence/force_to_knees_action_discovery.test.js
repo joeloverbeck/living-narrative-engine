@@ -139,6 +139,7 @@ describe('violence:force_to_knees action discovery', () => {
       ]);
       expect(forceToKneesAction.forbidden_components.actor).toEqual([
         'positioning:kneeling_before',
+        'positioning:straddling_waist',
       ]);
       expect(forceToKneesAction.forbidden_components.primary).toEqual([
         'positioning:kneeling_before',
@@ -286,6 +287,27 @@ describe('violence:force_to_knees action discovery', () => {
       expect(targetFacingAway?.facing_away_from).toEqual([
         scenario.actor.id,
       ]);
+
+      configureActionDiscovery();
+
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
+      const ids = availableActions.map((action) => action.id);
+
+      expect(ids).not.toContain(ACTION_ID);
+    });
+
+    it('is not available when the actor is straddling the target', async () => {
+      const scenario = testFixture.createCloseActors(['Quinn', 'Sage']);
+
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+      await testFixture.entityManager.addComponent(
+        scenario.actor.id,
+        'positioning:straddling_waist',
+        { target_id: scenario.target.id, facing_away: false }
+      );
 
       configureActionDiscovery();
 
