@@ -350,7 +350,7 @@ describe('Action Discovery', () => {
 
 - Spec: `/specs/integration-test-debugging-improvements-revised.spec.md` (lines 1045-1053)
 - Migration Guide: `/docs/testing/action-integration-test-migration.md` (INTTESDEB-008)
-- Usage Guide: `/docs/testing/action-integration-debugging.md` (INTTESDEB-007)
+- Usage Guide: `/docs/testing/action-discovery-testing-toolkit.md` (INTTESDEB-007)
 - Project Documentation: README.md, tests/README.md, CLAUDE.md (INTTESDEB-009)
 
 ## Important Notes

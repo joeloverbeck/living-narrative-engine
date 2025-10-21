@@ -5,7 +5,7 @@
 - **Priority**: Low (Phase 3)
 - **Effort**: 0.5 days
 - **Dependencies**: All Phase 1 and Phase 2 tickets (INTTESDEB-001 through INTTESDEB-006)
-- **File Updated**: `/docs/testing/action-integration-debugging.md`
+- **File Updated**: `/docs/testing/action-discovery-testing-toolkit.md`
 
 ## Problem Statement
 
@@ -46,8 +46,8 @@ Without a clear migration path, developers may be reluctant to adopt new utiliti
 ## Implementation Details
 
 ### Document Updates
-- Extend `/docs/testing/action-integration-debugging.md`; do **not** create a separate migration document.
-- After the existing **Quick Start** section, insert a new "Migration Decision Guide" subsection containing the priority matrix (high/medium/low) and a concise benefits list. Reference existing utilities rather than restating matcher documentation from `domain-matchers-guide.md`.
+- Extend `/docs/testing/action-discovery-testing-toolkit.md`; do **not** create a separate migration document.
+- After the existing **Quick Start** section, insert a new "Migration Decision Guide" subsection containing the priority matrix (high/medium/low) and a concise benefits list. Reference existing utilities rather than restating matcher documentation from `action-discovery-testing-toolkit.md#domain-matchers`.
 - Follow the new decision guide with a "Migration Workflow" section that walks through the refactor steps (imports, bed setup, entity creation, assertions, diagnostics) using the correct helper names from `tests/common/actions/actionDiscoveryServiceTestBed.js`.
 - Keep headings aligned with the current table of contents. Update the doc TOC manually if anchors change.
 
@@ -146,7 +146,7 @@ Highlight the measurable deltas (line count, validation coverage, diagnostics) b
 ### Step-by-Step Migration Content
 - Reframe each step so it references existing helpers: `createActionDiscoveryBed`, `createActorTargetScenario`, `createActorWithValidation`, `establishClosenessWithValidation`, and the Jest matchers from `tests/common/actionMatchers.js`.
 - Emphasise that `discoverActionsWithDiagnostics` is async and returns `{ actions, diagnostics? }`; all examples must use `await`.
-- When describing assertions, point readers to the "Action Discovery Matchers" section of `domain-matchers-guide.md` instead of duplicating matcher docs. Note that custom matchers accept either the `{ actions }` object or the raw array.
+- When describing assertions, point readers to the "Domain Matchers" section of `action-discovery-testing-toolkit.md#domain-matchers` instead of duplicating matcher docs. Note that custom matchers accept either the `{ actions }` object or the raw array.
 - Call out the correct import paths for legacy utilities (e.g., `tests/common/mockFactories/entities.js` rather than non-existent `../../common/entityManager.js`).
 
 ### Diagnostics Guidance
@@ -158,7 +158,7 @@ Highlight the measurable deltas (line count, validation coverage, diagnostics) b
   - Multiple targets (use `createActorTargetScenario` + `createActorWithValidation`).
   - Kneeling or facing scenarios (demonstrate component overrides, mention validation catches wrong `entityId`).
   - Custom components or partial migrations (mixing manual entities with bed helpers).
-- Wherever matcher usage is needed, link back to `domain-matchers-guide.md#action-discovery-matchers`.
+- Wherever matcher usage is needed, link back to `action-discovery-testing-toolkit.md#domain-matchers`.
 
 ### Troubleshooting and FAQ Updates
 - Within the doc's existing **Troubleshooting** section, add entries for:
@@ -173,7 +173,7 @@ Highlight the measurable deltas (line count, validation coverage, diagnostics) b
 - Keep sample IDs/action IDs consistent with fixtures shipped in `tests/common/actions/actionDiscoveryServiceTestBed.js` to avoid confusing readers.
 
 ## Implementation Steps
-1. Draft the new sections directly in `/docs/testing/action-integration-debugging.md` following the outline above.
+1. Draft the new sections directly in `/docs/testing/action-discovery-testing-toolkit.md` following the outline above.
 2. Verify that all helper/function names match the current exports in `tests/common/actions/actionDiscoveryServiceTestBed.js` and related mocks.
 3. Update the document TOC if section headings change.
 4. Run `npm run format` on the modified Markdown to maintain wrapping conventions.

@@ -69,7 +69,7 @@ The project includes comprehensive integration test debugging utilities that red
 
 ### Documentation
 
-- **[Usage Guide](/docs/testing/action-integration-debugging.md)**: Complete reference for all testing utilities
+- **[Usage Guide](/docs/testing/action-discovery-testing-toolkit.md)**: Complete reference for all testing utilities
 - **[Migration Guide](/docs/testing/action-integration-test-migration.md)**: Step-by-step guide for updating existing tests
 - **[Tests README](/tests/README.md)**: Quick reference for test utilities
 
@@ -331,7 +331,7 @@ describe('My Feature', () => {
 
 ### Detailed Documentation
 
-- **[Action Integration Testing Debugging Guide](/docs/testing/action-integration-debugging.md)**
+- **[Action Discovery Testing Toolkit](/docs/testing/action-discovery-testing-toolkit.md)**
   - Complete API reference
   - Usage examples
   - Troubleshooting guide
@@ -358,7 +358,7 @@ Testing utilities were implemented in January 2025 through tickets INTTESDEB-001
 
 ### Getting Help
 
-- Check [troubleshooting guide](/docs/testing/action-integration-debugging.md#troubleshooting)
+- Check [troubleshooting guide](/docs/testing/action-discovery-testing-toolkit.md#troubleshooting)
 - Review [migration guide](/docs/testing/action-integration-test-migration.md) for examples
 - Inspect diagnostic output when tests fail
 - Use scope tracing for scope resolution issues
@@ -434,7 +434,7 @@ describe('Action Discovery', () => {
 
 ### Documentation
 
-- **[Usage Guide](/docs/testing/action-integration-debugging.md)**: Complete API reference
+- **[Usage Guide](/docs/testing/action-discovery-testing-toolkit.md)**: Complete API reference
 - **[Migration Guide](/docs/testing/action-integration-test-migration.md)**: Converting existing tests
 - **[Tests README](/tests/README.md)**: Quick reference
 
