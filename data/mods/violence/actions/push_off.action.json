@@ -7,6 +7,9 @@
   "required_components": {
     "actor": ["positioning:closeness"]
   },
+  "forbidden_components": {
+    "actor": ["positioning:straddling_waist"]
+  },
   "template": "push {target} off you",
   "visual": {
     "backgroundColor": "#8b0000",

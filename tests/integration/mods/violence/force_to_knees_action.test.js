@@ -73,6 +73,26 @@ describe('Violence Mod: Force to Knees Action Integration', () => {
         await testFixture.executeAction(scenario.actor.id, 'missing-target');
       }).rejects.toThrow(ActionValidationError);
     });
+
+    it('rejects when actor is straddling the target', async () => {
+      const scenario = testFixture.createCloseActors(['Uma', 'Vera']);
+
+      await testFixture.entityManager.addComponent(
+        scenario.actor.id,
+        'positioning:straddling_waist',
+        {
+          target_id: scenario.target.id,
+          facing_away: false,
+        }
+      );
+
+      await expect(async () => {
+        await testFixture.executeAction(
+          scenario.actor.id,
+          scenario.target.id
+        );
+      }).rejects.toThrow(/forbidden component.*positioning:straddling_waist/i);
+    });
   });
 
   describe('Component State Changes', () => {

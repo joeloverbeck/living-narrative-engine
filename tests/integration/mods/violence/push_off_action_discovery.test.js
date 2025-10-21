@@ -106,6 +106,9 @@ describe('violence:push_off action discovery', () => {
       expect(pushOffAction.required_components.actor).toEqual([
         'positioning:closeness',
       ]);
+      expect(pushOffAction.forbidden_components.actor).toEqual([
+        'positioning:straddling_waist',
+      ]);
       expect(pushOffAction.visual).toEqual({
         backgroundColor: '#8b0000',
         textColor: '#ffffff',
@@ -168,6 +171,26 @@ describe('violence:push_off action discovery', () => {
 
       scenario.actor.components['positioning:facing_away'] = {
         facing_away_from: [scenario.target.id],
+      };
+
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+      configureActionDiscovery();
+
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
+      const ids = availableActions.map((action) => action.id);
+
+      expect(ids).not.toContain(ACTION_ID);
+    });
+
+    it('is not available when the actor is straddling the target', () => {
+      const scenario = testFixture.createCloseActors(['Zoe', 'Rin']);
+
+      scenario.actor.components['positioning:straddling_waist'] = {
+        target_id: scenario.target.id,
+        facing_away: false,
       };
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
