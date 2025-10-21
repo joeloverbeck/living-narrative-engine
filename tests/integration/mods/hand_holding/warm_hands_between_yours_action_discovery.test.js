@@ -7,6 +7,7 @@ import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
 import warmHandsAction from '../../../../data/mods/hand_holding/actions/warm_hands_between_yours.action.json';
+import actorsAreHoldingHandsCondition from '../../../../data/mods/hand_holding/conditions/actors-are-holding-hands.condition.json';
 
 const ACTION_ID = 'hand_holding:warm_hands_between_yours';
 
@@ -27,6 +28,18 @@ describe('hand_holding:warm_hands_between_yours action discovery', () => {
       }
 
       testEnv.actionIndex.buildIndex([warmHandsAction]);
+
+      // Add the prerequisite condition to the data registry
+      const conditionId = 'hand_holding:actors-are-holding-hands';
+      const originalGetCondition = testEnv.dataRegistry.getConditionDefinition;
+      testEnv.dataRegistry.getConditionDefinition = jest
+        .fn()
+        .mockImplementation((id) => {
+          if (id === conditionId) {
+            return actorsAreHoldingHandsCondition;
+          }
+          return originalGetCondition(id);
+        });
 
       const scopeResolver = testEnv.unifiedScopeResolver;
       const originalResolve =
