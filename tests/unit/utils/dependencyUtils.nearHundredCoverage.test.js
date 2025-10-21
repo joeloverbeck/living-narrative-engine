@@ -57,6 +57,20 @@ describe('dependencyUtils – near 100% coverage', () => {
       ).toThrow(CustomError);
       expect(logger.error).toHaveBeenCalledWith('bad fn');
     });
+
+    it('skips logging when the provided logger lacks a callable error method', () => {
+      const logger = { error: 'not-a-function' };
+
+      expect(() =>
+        dependencyUtils.assertFunction(
+          { init: 42 },
+          'init',
+          'non-callable method',
+          InvalidArgumentError,
+          logger,
+        ),
+      ).toThrow(InvalidArgumentError);
+    });
   });
 
   describe('assertMethods', () => {
