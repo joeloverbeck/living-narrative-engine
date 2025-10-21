@@ -4,23 +4,34 @@
  */
 
 // Base classes
-export { ModActionTestBase } from './ModActionTestBase.js';
-export { ModRuleTestBase } from './ModRuleTestBase.js';
+import { ModActionTestBase } from './ModActionTestBase.js';
+import { ModRuleTestBase } from './ModRuleTestBase.js';
 
 // Test fixtures and factories
-export {
+import {
   ModTestFixture,
   ModActionTestFixture,
   ModRuleTestFixture,
   ModCategoryTestFixture,
 } from './ModTestFixture.js';
-export { ModTestHandlerFactory } from './ModTestHandlerFactory.js';
+import { ModTestHandlerFactory } from './ModTestHandlerFactory.js';
 
 // Entity building utilities
-export { ModEntityBuilder, ModEntityScenarios } from './ModEntityBuilder.js';
+import { ModEntityBuilder, ModEntityScenarios } from './ModEntityBuilder.js';
 
 // Assertion helpers
-export { ModAssertionHelpers } from './ModAssertionHelpers.js';
+import { ModAssertionHelpers } from './ModAssertionHelpers.js';
+
+export { ModActionTestBase, ModRuleTestBase };
+export {
+  ModTestFixture,
+  ModActionTestFixture,
+  ModRuleTestFixture,
+  ModCategoryTestFixture,
+};
+export { ModTestHandlerFactory };
+export { ModEntityBuilder, ModEntityScenarios };
+export { ModAssertionHelpers };
 
 /**
  * Convenience function to create a quick action test setup.
@@ -198,6 +209,86 @@ export function createSeparateFurnitureArrangement(options = {}) {
  */
 export function createKneelingBeforeSitting(options = {}) {
   return ModEntityScenarios.createKneelingBeforeSitting(options);
+}
+
+/**
+ * Convenience helper for inventory loadout scenarios.
+ *
+ * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createInventoryLoadout
+ * @returns {object} Scenario details including room, actor, and inventory items
+ */
+export function createInventoryLoadout(options = {}) {
+  return ModEntityScenarios.createInventoryLoadout(options);
+}
+
+/**
+ * Convenience helper for loose ground item scenarios.
+ *
+ * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createItemsOnGround
+ * @returns {object} Scenario details including room, items, and optional actor context
+ */
+export function createItemsOnGround(options = {}) {
+  return ModEntityScenarios.createItemsOnGround(options);
+}
+
+/**
+ * Convenience helper for container scenarios with pre-populated contents.
+ *
+ * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createContainerWithContents
+ * @returns {object} Scenario details including room, container, contents, and optional key item
+ */
+export function createContainerWithContents(options = {}) {
+  return ModEntityScenarios.createContainerWithContents(options);
+}
+
+/**
+ * Convenience helper for inventory transfer scenarios between two actors.
+ *
+ * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createInventoryTransfer
+ * @returns {object} Scenario details including room, actors, and transfer item references
+ */
+export function createInventoryTransfer(options = {}) {
+  return ModEntityScenarios.createInventoryTransfer(options);
+}
+
+/**
+ * Convenience helper for drop item scenarios.
+ *
+ * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createDropItemScenario
+ * @returns {object} Scenario details including room, actor, and item references
+ */
+export function createDropItemScenario(options = {}) {
+  return ModEntityScenarios.createDropItemScenario(options);
+}
+
+/**
+ * Convenience helper for pickup scenarios involving ground items.
+ *
+ * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createPickupScenario
+ * @returns {object} Scenario details including room, actor, and ground item references
+ */
+export function createPickupScenario(options = {}) {
+  return ModEntityScenarios.createPickupScenario(options);
+}
+
+/**
+ * Convenience helper for open container scenarios.
+ *
+ * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createOpenContainerScenario
+ * @returns {object} Scenario details including room, actor, container, and optional key references
+ */
+export function createOpenContainerScenario(options = {}) {
+  return ModEntityScenarios.createOpenContainerScenario(options);
+}
+
+/**
+ * Convenience helper for put-in-container scenarios.
+ *
+ * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createPutInContainerScenario
+ * @returns {object} Scenario details including room, actor, container, and held item references
+ */
+export function createPutInContainerScenario(options = {}) {
+  return ModEntityScenarios.createPutInContainerScenario(options);
 }
 
 /**
