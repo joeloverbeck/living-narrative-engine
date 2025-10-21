@@ -359,17 +359,21 @@ export class ModTestFixture {
    */
   static async loadConditionFile(modId, identifier) {
     const actionName = extractActionName(identifier);
+    const targetModId = identifier.includes(':')
+      ? identifier.split(':')[0]
+      : modId;
+    const effectiveModId = targetModId || modId;
     const errors = [];
 
     // Generate fullActionId for conditions - use hyphens instead of underscores
     const fullActionIdForConditions = identifier.includes(':')
       ? identifier.replace(/[:_]/g, '-')
-      : `${modId}-${actionName.replace(/_/g, '-')}`;
+      : `${effectiveModId}-${actionName.replace(/_/g, '-')}`;
 
     // Try to load condition file
     const conditionPaths = MOD_FILE_CONVENTIONS.conditions.map((pattern) =>
       pattern
-        .replace('{modId}', modId)
+        .replace('{modId}', effectiveModId)
         .replace('{actionName}', actionName.replace(/_/g, '-'))
         .replace('{fullActionId}', fullActionIdForConditions)
     );
@@ -387,7 +391,7 @@ export class ModTestFixture {
     }
 
     throw new Error(
-      `Could not load condition file for ${modId}:${identifier}. Tried paths: ${conditionPaths.join(', ')}`
+      `Could not load condition file for ${effectiveModId}:${actionName}. Tried paths: ${conditionPaths.join(', ')}`
     );
   }
 
@@ -598,7 +602,7 @@ class BaseModTestFixture {
       (definition) => definition.id === normalizedActionId
     );
 
-    if (!targetActionDefinition) {
+    if (!targetActionDefinition && actionDefinitions.length > 0) {
       const actionFilePath = this.actionId.includes(':')
         ? `data/mods/${this.modId}/actions/${this.actionId.split(':')[1]}.action.json`
         : `data/mods/${this.modId}/actions/${this.actionId}.action.json`;
