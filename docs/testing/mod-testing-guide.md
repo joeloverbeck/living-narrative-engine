@@ -107,9 +107,13 @@ const testEnv = await TestModuleBuilder.forTurnExecution()
   .build();
 ```
 
-### Sitting Arrangement Helpers
+### Scenario Helper Catalog
 
-High-level seating scenarios can now be composed with a single helper call instead of manually instantiating rooms, furniture, and positioning components. The `ModEntityScenarios.createSitting*` helpers—also exposed as instance methods on `ModTestFixture`—hydrate fixtures with a consistent entity graph and return generated IDs for direct assertions.
+Scenario helpers pair the Test Module Pattern with opinionated entity graphs so suites can exercise complex behavior without manual plumbing. Each helper is available as a static creator on `ModEntityScenarios` and as an instance method on `ModTestFixture`, ensuring parity between one-off setups and fixture-driven suites.
+
+#### Seating Scenarios
+
+High-level seating scenarios can now be composed with a single helper call instead of manually instantiating rooms, furniture, and positioning components. The `ModEntityScenarios.createSitting*` helpers hydrate fixtures with a consistent entity graph and return generated IDs for direct assertions.
 
 | Helper | Best for |
 | ------ | -------- |
@@ -152,6 +156,43 @@ Usage tips:
 - Pass `closeSeatedActors: false` when actors should sit apart without automatic closeness metadata.
 - Supply `additionalFurniture` to pre-create extra seating surfaces without manual builders.
 - Call helpers from `ModEntityScenarios` directly when working outside `ModTestFixture`.
+
+#### Inventory Scenarios
+
+Inventory scenario helpers extend the shared infrastructure with purpose-built entity graphs for items-focused actions such as `items:pick_up_item`, `items:drop_item`, `items:give_item`, `items:open_container`, and `items:put_in_container`. Each helper returns a structured object with convenience fields—`entities`, `room`, `actor`, `items`, `container`, etc.—so tests can reference canonical IDs without reconstructing the graph.
+
+| Helper | Purpose |
+| ------ | ------- |
+| `createInventoryLoadout(options)` | Actor with populated inventory and default capacity for ownership tests. |
+| `createItemsOnGround(options)` | Loose items positioned in a room with optional observing actor. |
+| `createContainerWithContents(options)` | Containers pre-filled with contents and optional key metadata. |
+| `createInventoryTransfer(options)` | Two actors configured for `items:give_item` style transfers. |
+| `createDropItemScenario(options)` | Actor ready to drop an owned item. |
+| `createPickupScenario(options)` | Actor and ground item setup for `items:pick_up_item`. |
+| `createOpenContainerScenario(options)` | Actor, container, and optional key for `items:open_container`. |
+| `createPutInContainerScenario(options)` | Actor holding an item plus container prepared for storage actions. |
+
+```javascript
+const fixture = await ModTestFixture.forAction('items', 'items:put_in_container');
+const scenario = fixture.createPutInContainerScenario({
+  actor: { id: 'actor_putter' },
+  container: { id: 'supply_crate' },
+  item: { id: 'supply', weight: 0.5 },
+});
+
+await fixture.executeAction('actor_putter', 'supply_crate', {
+  additionalPayload: { secondaryId: scenario.heldItem.id },
+});
+```
+
+Customization reference:
+
+- **Capacity overrides** – Supply `capacity: { maxWeight, maxItems }` to `createInventoryLoadout` or `createInventoryTransfer`; container helpers accept the same shape via `capacity`/`container.capacity`.
+- **Locked containers** – Provide `requiresKey: true` (or `locked: true` via `createOpenContainerScenario`) and an optional `keyItem` definition; pair the key ID with `actor.inventoryItems` to place it in the actor’s inventory.
+- **Full inventories/containers** – Pass `fullInventory: true` to `createPickupScenario` or `containerFull: true` to `createPutInContainerScenario` to generate filler items that exercise capacity failures.
+- **Item metadata** – Item definitions support `itemData`, `portableData`, `weightData`, and `components` for granular control.
+
+When using helpers outside of fixtures, pass the returned `entities` array to `fixture.reset([...scenario.entities])` or interact with `ModEntityScenarios` directly. Helper naming mirrors the actions they target, making migrations from bespoke entity graphs a one-to-one substitution.
 
 ## Migration Workflow
 
