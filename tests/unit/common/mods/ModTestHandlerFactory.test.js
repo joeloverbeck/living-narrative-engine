@@ -630,7 +630,7 @@ describe('ModTestHandlerFactory', () => {
     });
 
     it('should return createStandardHandlers for other categories', () => {
-      const categories = ['exercise', 'sex', 'intimacy'];
+      const categories = ['exercise', 'intimacy'];
 
       categories.forEach((category) => {
         const factory =
@@ -649,6 +649,16 @@ describe('ModTestHandlerFactory', () => {
 
         expect(Object.keys(handlers)).toHaveLength(9); // 9 standard handlers only
       });
+    });
+
+    it('should return createHandlersWithComponentMutations for sex', () => {
+      const factory =
+        ModTestHandlerFactory.getHandlerFactoryForCategory('sex');
+      const handlers = factory(mockEntityManager, mockEventBus, mockLogger);
+
+      expect(handlers.ADD_COMPONENT).toBeDefined();
+      expect(handlers.REMOVE_COMPONENT).toBeDefined();
+      expect(Object.keys(handlers)).toHaveLength(11);
     });
 
     it('should return createStandardHandlers for unknown categories', () => {
