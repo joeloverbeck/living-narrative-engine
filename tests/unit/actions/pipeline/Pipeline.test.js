@@ -164,6 +164,36 @@ describe('Pipeline', () => {
       );
     });
 
+    it('should halt immediately when stage failure stops processing', async () => {
+      const haltFailureResult = new PipelineResult({
+        success: false,
+        errors: [{ error: 'Critical failure', phase: 'STAGE1' }],
+        continueProcessing: false,
+      });
+
+      mockStage1.execute.mockResolvedValue(haltFailureResult);
+
+      const pipeline = new Pipeline([mockStage1, mockStage2], mockLogger);
+      const result = await pipeline.execute(initialContext);
+
+      expect(mockStage1.execute).toHaveBeenCalledTimes(1);
+      expect(mockStage2.execute).not.toHaveBeenCalled();
+      expect(result.success).toBe(false);
+      expect(result.errors).toEqual([
+        { error: 'Critical failure', phase: 'STAGE1' },
+      ]);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Stage Stage1 indicated to stop processing'
+      );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
+      expect(mockTrace.failure).not.toHaveBeenCalled();
+      expect(mockTrace.success).not.toHaveBeenCalled();
+      expect(mockTrace.info).toHaveBeenCalledWith(
+        'Pipeline halted at stage: Stage1',
+        'Pipeline.execute'
+      );
+    });
+
     it('should log warning when stage completes with errors but continues', async () => {
       // Create a result that has errors but still continues processing
       const errorResult = new PipelineResult({
@@ -277,6 +307,34 @@ describe('Pipeline', () => {
         actions: [{ id: 'action1' }],
         errors: [{ error: 'warning1' }],
       });
+    });
+
+    it('should override stage data placeholders for actions and errors', async () => {
+      const result1 = PipelineResult.success({
+        actions: [{ id: 'action1' }],
+        errors: [{ error: 'warning1' }],
+        data: {
+          actions: 'incorrect-actions-placeholder',
+          errors: 'incorrect-errors-placeholder',
+          additional: 'value1',
+        },
+      });
+      const result2 = PipelineResult.success({
+        actions: [{ id: 'action2' }],
+      });
+
+      mockStage1.execute.mockResolvedValue(result1);
+      mockStage2.execute.mockResolvedValue(result2);
+
+      const pipeline = new Pipeline([mockStage1, mockStage2], mockLogger);
+      await pipeline.execute(initialContext);
+
+      const stage2Context = mockStage2.execute.mock.calls[0][0];
+      expect(stage2Context.actions).toEqual([{ id: 'action1' }]);
+      expect(stage2Context.errors).toEqual([{ error: 'warning1' }]);
+      expect(stage2Context.additional).toBe('value1');
+      expect(stage2Context.actions).not.toBe('incorrect-actions-placeholder');
+      expect(stage2Context.errors).not.toBe('incorrect-errors-placeholder');
     });
 
     it('should log final execution summary', async () => {
