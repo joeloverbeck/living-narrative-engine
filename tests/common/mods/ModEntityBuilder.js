@@ -1001,9 +1001,16 @@ export class ModEntityScenarios {
       ...rest
     } = options;
 
-    const finalSeatedActors = seatedActors.length > 0 ? seatedActors : [
-      { id: 'actor1', name: 'Alice', spotIndex: 0 },
-    ];
+    const finalSeatedActors = seatedActors.length > 0
+      ? seatedActors
+      : [
+          { id: 'actor1', name: 'Alice', spotIndex: 0 },
+        ];
+
+    const normalizedSeatedActors = finalSeatedActors.map((actor, index) => ({
+      ...actor,
+      id: actor.id || `actor${index + 1}`,
+    }));
 
     const defaultKneelingActors = kneelingActors.length > 0
       ? kneelingActors
@@ -1011,8 +1018,8 @@ export class ModEntityScenarios {
           {
             id: 'kneeling1',
             name: 'Charlie',
-            targetId: finalSeatedActors[0].id,
-            closeTo: [finalSeatedActors[0].id],
+            targetId: normalizedSeatedActors[0].id,
+            closeTo: [normalizedSeatedActors[0].id],
           },
         ];
 
@@ -1020,11 +1027,11 @@ export class ModEntityScenarios {
       (actor, index) => ({
         id: actor.id || `kneeling${index + 1}`,
         name: actor.name || `Kneeling Actor ${index + 1}`,
-        targetId: actor.targetId || finalSeatedActors[0].id,
+        targetId: actor.targetId || normalizedSeatedActors[0].id,
         closeTo:
           actor.closeTo && actor.closeTo.length > 0
             ? actor.closeTo
-            : [finalSeatedActors[0].id],
+            : [normalizedSeatedActors[0].id],
         locationId: actor.locationId,
       })
     );
@@ -1032,10 +1039,10 @@ export class ModEntityScenarios {
     const finalCloseSetting =
       typeof closeSeatedActors === 'boolean'
         ? closeSeatedActors
-        : finalSeatedActors.length > 1;
+        : normalizedSeatedActors.length > 1;
 
     return this.createSittingArrangement({
-      seatedActors: finalSeatedActors,
+      seatedActors: normalizedSeatedActors,
       kneelingActors: normalizedKneelingActors,
       closeSeatedActors: finalCloseSetting,
       ...rest,
