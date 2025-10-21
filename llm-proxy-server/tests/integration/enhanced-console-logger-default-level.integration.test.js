@@ -123,8 +123,8 @@ describe('EnhancedConsoleLogger unconventional level routing integration', () =>
       '[FALLBACK] INFO: ApiKeyService: dispatching credentials'
     );
     expect(contextObject).toEqual({
-      apiKey: 'sk-1234567890FAKEKEY',
-      nested: { token: 'internal-secret' },
+      apiKey: '[MASKED]',
+      nested: { token: '[MASKED]' },
     });
   });
 

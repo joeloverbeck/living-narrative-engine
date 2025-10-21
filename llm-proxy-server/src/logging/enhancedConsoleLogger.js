@@ -325,10 +325,14 @@ class EnhancedConsoleLogger {
    * @private
    */
   #log(level, message, ...args) {
+    let sanitizedMessage = message;
+    let sanitizedArgs = [...args];
+
     try {
       // Sanitize message and arguments
-      const sanitizedMessage = this.#sanitizeArguments(message)[0] || message;
-      const sanitizedArgs = this.#sanitizeArguments(...args);
+      const [maybeSanitizedMessage] = this.#sanitizeArguments(message);
+      sanitizedMessage = maybeSanitizedMessage ?? message;
+      sanitizedArgs = this.#sanitizeArguments(...args);
 
       // Build formatted output
       const output = this.#buildFormattedOutput(
@@ -345,10 +349,10 @@ class EnhancedConsoleLogger {
       console.error(
         'EnhancedConsoleLogger: Formatting error, falling back to simple output'
       );
-      const fallbackOutput = `[FALLBACK] ${level.toUpperCase()}: ${message}`;
+      const fallbackOutput = `[FALLBACK] ${level.toUpperCase()}: ${sanitizedMessage}`;
       // eslint-disable-next-line no-console
       const consoleMethod = console[level] || console.log;
-      consoleMethod(fallbackOutput, ...args);
+      consoleMethod(fallbackOutput, ...sanitizedArgs);
     }
   }
 
