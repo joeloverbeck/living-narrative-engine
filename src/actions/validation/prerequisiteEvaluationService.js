@@ -199,6 +199,7 @@ export class PrerequisiteEvaluationService extends BaseService {
       this.#logger.debug(
         `${this.#logPrefix(actionId)}: Evaluation Context Built Successfully.`
       );
+      this.#auditActorComponents(evaluationContext, actionId, actorId);
     } catch (buildError) {
       this.#logger.error(
         `${this.#logPrefix(actionId)}: ← FAILED (Internal Error: Failed to build evaluation context). Error: ${buildError.message}`,
@@ -211,6 +212,92 @@ export class PrerequisiteEvaluationService extends BaseService {
     }
 
     return evaluationContext;
+  }
+
+  /**
+   * Performs diagnostics and logging for the actor section of the evaluation context.
+   *
+   * @private
+   * @param {JsonLogicEvaluationContext} evaluationContext - The generated evaluation context.
+   * @param {string} actionId - Identifier for the action being evaluated.
+   * @param {string} actorId - Identifier for the acting entity provided to evaluation.
+   * @throws {Error} If the actor components cannot be serialized for logging purposes.
+   * @returns {void}
+   */
+  #auditActorComponents(evaluationContext, actionId, actorId) {
+    if (!evaluationContext || typeof evaluationContext !== 'object') {
+      return;
+    }
+
+    const actorContext = evaluationContext.actor;
+    if (!actorContext || typeof actorContext !== 'object') {
+      return;
+    }
+
+    const prefix = this.#logPrefix(actionId);
+    const resolvedActorId = actorContext.id ?? actorId ?? 'unknown_actor';
+
+    this.#logger.debug(
+      `${prefix}: Actor context resolved for entity [${resolvedActorId}].`
+    );
+
+    const hasComponentsProperty = Object.prototype.hasOwnProperty.call(
+      actorContext,
+      'components'
+    );
+
+    if (!hasComponentsProperty) {
+      this.#logger.error(
+        `${prefix}: ERROR - Actor context is missing components property entirely!`
+      );
+      return;
+    }
+
+    const { components } = actorContext;
+
+    if (!components || typeof components !== 'object') {
+      this.#logger.warn(
+        `${prefix}: WARNING - Actor entity [${resolvedActorId}] appears to have NO components. This may indicate a loading issue.`
+      );
+      return;
+    }
+
+    let componentKeys;
+    try {
+      componentKeys = Object.keys(components);
+    } catch (err) {
+      this.#logger.warn(
+        `${prefix}: WARNING - Actor entity [${resolvedActorId}] components could not be inspected. Treating as missing.`
+      );
+      return;
+    }
+
+    if (componentKeys.length === 0) {
+      this.#logger.warn(
+        `${prefix}: WARNING - Actor entity [${resolvedActorId}] appears to have NO components. This may indicate a loading issue.`
+      );
+      return;
+    }
+
+    this.#logger.debug(
+      `${prefix}: Actor entity [${resolvedActorId}] has ${componentKeys.length} components available.`
+    );
+
+    try {
+      const serializedComponents = JSON.stringify(components);
+      this.#logger.debug(
+        `${prefix}: Actor components snapshot => ${serializedComponents}`
+      );
+    } catch (serializationError) {
+      this.#logger.debug(
+        `${prefix}: Could not serialize components for validation logging`,
+        serializationError
+      );
+
+      if (serializationError instanceof TypeError) {
+        throw serializationError;
+      }
+    }
   }
 
   /**
