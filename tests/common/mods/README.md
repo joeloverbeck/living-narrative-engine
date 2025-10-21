@@ -142,6 +142,12 @@ testFixture.assertComponentAdded('actor1', 'positioning:kneeling_before', {
 testFixture.assertOnlyExpectedEvents(['core:attempt_action']);
 ```
 
+### Sex Mod Scenario Helpers
+
+- **`sex/straddlingPenisMilkingFixtures.js`** – Provides `buildStraddlingMilkingScenario` and
+  `installStraddlingMilkingScopeOverrides` for reusable straddling penetration setups that ensure
+  anatomy, clothing coverage, and scope resolution mirror in-game expectations.
+
 ## Migration Guide
 
 ### Converting Existing Tests
