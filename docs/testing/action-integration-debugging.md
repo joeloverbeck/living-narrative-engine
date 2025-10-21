@@ -6,12 +6,15 @@ Comprehensive guide to the action discovery integration testing utilities introd
 
 1. [Overview](#overview)
 2. [Quick Start](#quick-start)
-3. [Enhanced Test Bed Methods](#enhanced-test-bed-methods)
-4. [Scope Tracing Utilities](#scope-tracing-utilities)
-5. [Diagnostic Discovery](#diagnostic-discovery)
-6. [Common Patterns](#common-patterns)
-7. [Troubleshooting](#troubleshooting)
-8. [API Reference](#api-reference)
+3. [Migration Decision Guide](#migration-decision-guide)
+4. [Migration Workflow](#migration-workflow)
+5. [Enhanced Test Bed Methods](#enhanced-test-bed-methods)
+6. [Scope Tracing Utilities](#scope-tracing-utilities)
+7. [Diagnostic Discovery](#diagnostic-discovery)
+8. [Common Patterns](#common-patterns)
+9. [Migration Pitfalls](#migration-pitfalls)
+10. [Troubleshooting](#troubleshooting)
+11. [API Reference](#api-reference)
 
 ## Overview
 
@@ -67,11 +70,177 @@ describe('My Action Tests', () => {
 5. **Clean up automatically** – the helper resets mocks between runs via the bed's lifecycle hooks, but call `testBed.cleanup()` explicitly when creating beds outside of Jest lifecycle utilities.
 6. **Reuse domain matchers** from the [Domain Matchers Guide](./domain-matchers-guide.md#action-discovery-matchers) for readable assertions instead of repeating matcher documentation here.
 
-### Migration Tips
+## Migration Decision Guide
 
-- Replace legacy manual entity creation with `createActorWithValidation()` to enforce component structure.
-- Import `tests/common/actionMatchers.js` once per file to register matchers globally; avoid duplicate `expect.extend` calls.
-- When migrating existing tests, start by swapping in the new bed while keeping assertions unchanged, then layer diagnostics to address flaky cases.
+Modernize suites when the new helpers materially reduce setup cost or unlock validation currently performed by hand. Use the
+matrix below to prioritize migration work across large files.
+
+### Prioritization Matrix
+
+| Priority | Indicators | Recommended first steps |
+| --- | --- | --- |
+| **High** | Repeated manual `SimpleEntityManager` wiring, duplicated closeness setup, flaky proximity assertions, or hand-written diagnostic logging. | Replace imports with `createActionDiscoveryBed` and register `../../common/actionMatchers.js`. Migrate one representative test end-to-end to validate the new flow. |
+| **Medium** | Stable tests that still manually seed entities or call `ActionDiscoveryService` directly. | Adopt `createActorTargetScenario()` for actors/targets while keeping existing assertions. Introduce matchers once helpers feel comfortable. |
+| **Low** | Experimental suites, pending refactors, or bespoke entity factories that conflict with the bed. | Defer until surrounding code stabilizes or wrap legacy setup inside the bed through partial migration (see [Common Patterns](#common-patterns)). |
+
+### Why Migrate
+
+- **Validation without boilerplate** – `createActorWithValidation()` and `createActorTargetScenario()` enforce component
+  structure and location wiring automatically.
+- **Expressive assertions** – Matchers from [Domain Matchers Guide](./domain-matchers-guide.md#action-discovery-matchers)
+  collapse several `.some()` checks into a single expectation with rich diagnostics.
+- **Diagnostics on demand** – `discoverActionsWithDiagnostics()` exposes `{ actions, diagnostics }` so you can capture traces
+  only when needed.
+- **Shared terminology** – Suites using the bed align with the documentation and debugging recipes in this guide.
+
+### Backward Compatibility
+
+Legacy helper factories (for example, `tests/common/mockFactories/entities.js`) continue to work beside the bed. Gradually wrap
+bespoke builders by passing their outputs into `testBed.entityManager` or by seeding additional components after the scenario
+helpers run.
+
+### Gradual Adoption Strategy
+
+1. Update imports and instantiate the bed while leaving original assertions untouched.
+2. Swap manual entity creation for `createActorTargetScenario()` or `createActorWithValidation()` to gain validation coverage.
+3. Replace bespoke assertions with custom matchers once discovery calls return the same results.
+4. Introduce diagnostics (`includeDiagnostics`, `traceScopeResolution`) only on problematic tests so fast paths stay lightweight.
+5. Remove leftover mocks or factories when the bed covers the configuration they provided.
+
+## Migration Workflow
+
+Follow these steps when transforming a legacy integration test. All helpers referenced here live in
+`tests/common/actions/actionDiscoveryServiceTestBed.js`.
+
+1. **Update imports** – Remove direct `SimpleEntityManager`, manual mock factories, and bespoke logger wiring. Import
+   `createActionDiscoveryBed` plus the shared matchers from `tests/common/actionMatchers.js`.
+2. **Instantiate the bed** – Create the bed in `beforeEach` (or use `describeActionDiscoverySuite`) to reset mocks and state for
+   every spec.
+3. **Rebuild entities with validation** – Replace manual calls to `entityManager.createEntity()` with `createActorTargetScenario()`
+   or `createActorWithValidation()` so that IDs, locations, and components are validated automatically.
+4. **Establish relationships** – Use `establishClosenessWithValidation()` for reciprocal proximity requirements instead of
+   editing `positioning:closeness` components manually.
+5. **Discover actions asynchronously** – Call `await testBed.discoverActionsWithDiagnostics(actor, options)`; it always returns
+   `{ actions, diagnostics? }`. Pass `{ includeDiagnostics: true }` when you need structured traces and add
+   `traceScopeResolution: true` for flaky scope bugs.
+6. **Assert with custom matchers** – Replace `.some()` checks with matchers such as `toHaveAction` or `toDiscoverActionCount`.
+   Refer to the [Domain Matchers Guide](./domain-matchers-guide.md#action-discovery-matchers) for matcher details rather than
+   re-documenting them locally.
+7. **Log diagnostics safely** – Guard `formatDiagnosticSummary()` behind a length check so quiet runs stay silent:
+
+   ```javascript
+   if (result.diagnostics?.operatorEvaluations?.length) {
+     logger.info(testBed.formatDiagnosticSummary(result.diagnostics));
+   }
+   ```
+
+8. **Mix legacy helpers when needed** – Inject bespoke component factories after calling the scenario helper to ease partial
+   migrations.
+
+### Example Transformation
+
+The snippet below demonstrates a complete migration from manual wiring to the shared bed utilities. It reflects the real helper
+names and async behavior used throughout the action discovery suites.
+
+```javascript
+// BEFORE: manual SimpleEntityManager wiring
+import { describe, it, beforeEach, expect, jest } from '@jest/globals';
+import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
+import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
+import {
+  createMockActionIndex,
+  createMockLogger,
+  createMockTargetResolutionService,
+} from '../../common/mockFactories/index.js';
+
+describe('Place Hands on Shoulders Action', () => {
+  let entityManager;
+  let service;
+
+  beforeEach(() => {
+    entityManager = new SimpleEntityManager();
+    service = new ActionDiscoveryService({
+      entityManager,
+      logger: createMockLogger(),
+      actionPipelineOrchestrator: {
+        discoverActions: jest.fn().mockResolvedValue({ actions: [] }),
+      },
+      actionIndex: createMockActionIndex(),
+      targetResolutionService: createMockTargetResolutionService(),
+    });
+  });
+
+  it('discovers the action when actors are close', async () => {
+    const actor = entityManager.createEntity('actor1');
+    entityManager.addComponent('actor1', 'core:name', { text: 'Alice' });
+    entityManager.addComponent('actor1', 'core:position', { locationId: 'tavern' });
+    entityManager.addComponent('actor1', 'positioning:standing', {});
+
+    const target = entityManager.createEntity('target1');
+    entityManager.addComponent('target1', 'core:name', { text: 'Bob' });
+    entityManager.addComponent('target1', 'core:position', { locationId: 'tavern' });
+
+    entityManager.addComponent('actor1', 'positioning:closeness', { partners: ['target1'] });
+    entityManager.addComponent('target1', 'positioning:closeness', { partners: ['actor1'] });
+
+    const result = await service.getValidActions(actor, {});
+    const hasAction = result.actions.some(
+      (action) =>
+        action.id === 'affection:place_hands_on_shoulders' &&
+        action.targetId === 'target1'
+    );
+
+    expect(hasAction).toBe(true);
+  });
+});
+```
+
+```javascript
+// AFTER: ActionDiscoveryServiceTestBed helpers
+import { describe, it, beforeEach, expect } from '@jest/globals';
+import { createActionDiscoveryBed } from '../../common/actions/actionDiscoveryServiceTestBed.js';
+import '../../common/actionMatchers.js';
+
+describe('Place Hands on Shoulders Action', () => {
+  let testBed;
+
+  beforeEach(() => {
+    testBed = createActionDiscoveryBed();
+  });
+
+  it('discovers the action when actors are close', async () => {
+    const { actor } = testBed.createActorTargetScenario({
+      location: 'tavern',
+      actorComponents: {
+        'core:name': { text: 'Alice' },
+        'positioning:standing': {},
+      },
+      targetComponents: {
+        'core:name': { text: 'Bob' },
+      },
+    });
+
+    const result = await testBed.discoverActionsWithDiagnostics(actor, {
+      includeDiagnostics: true,
+    });
+
+    expect(result).toHaveAction('affection:place_hands_on_shoulders');
+  });
+});
+```
+
+**Measured improvements**
+
+- **Lines of setup** drop from 32 to 16 (~50% reduction) while preserving actor/target intent.
+- **Validation coverage** increases because entity components run through `ModEntityBuilder.validate()` automatically.
+- **Diagnostics opt-in** delivers actionable traces without hand-written logging when `includeDiagnostics` is enabled.
+
+### Partial Migration Checklist
+
+- Keep bespoke factories by calling them after `createActorTargetScenario()` and mutating the returned entities.
+- Wrap lingering `ActionDiscoveryService` calls with `testBed.createDiscoveryServiceWithTracing()` so you can consolidate trace
+  handling.
+- Move repeated setup into helper functions once two or more tests share the same migration pattern.
 
 ## Enhanced Test Bed Methods
 
@@ -245,6 +414,119 @@ expect(testBed.getDebugLogs()).toContainEqual(
   expect.stringContaining('Resolved 2 entities')
 );
 ```
+
+### Migrating Multi-Target Scenarios
+
+```javascript
+const { actor, target } = testBed.createActorTargetScenario({
+  location: 'bazaar',
+  closeProximity: false,
+});
+
+const rival = testBed.createActorWithValidation('rival', {
+  location: 'bazaar',
+  components: {
+    'core:name': { text: 'Rival' },
+    'positioning:standing': {},
+  },
+});
+
+testBed.establishClosenessWithValidation(actor, target);
+testBed.establishClosenessWithValidation(actor, rival);
+
+const result = await testBed.discoverActionsWithDiagnostics(actor);
+
+expect(result).toHaveAction('affection:place_hands_on_shoulders');
+expect(result.actions.filter((action) => action.targetId === rival.id)).toHaveLength(1);
+```
+
+- Use `createActorTargetScenario()` for the primary pair, then add additional entities with `createActorWithValidation()`.
+- `establishClosenessWithValidation()` keeps reciprocal components synchronized so proximity-gated actions resolve for each target.
+- Combine matcher assertions with targeted array filters to validate per-target outcomes without rebuilding manual loops.
+
+### Handling Posture or Facing Requirements
+
+```javascript
+const { actor, target } = testBed.createActorTargetScenario({
+  actorComponents: {
+    'core:name': { text: 'Alice' },
+    'positioning:kneeling': {},
+  },
+  targetComponents: {
+    'core:name': { text: 'Bob' },
+    'positioning:facing': { direction: 'north' },
+  },
+});
+
+const result = await testBed.discoverActionsWithDiagnostics(actor, {
+  includeDiagnostics: true,
+});
+
+if (result.diagnostics?.scopeEvaluations?.length) {
+  console.log(testBed.formatDiagnosticSummary(result.diagnostics));
+}
+
+expect(result).not.toHaveAction('combat:shield_bash');
+```
+
+- Override posture or facing components directly through the helper options instead of mutating entities after creation.
+- Validation catches mismatched entity IDs or missing posture components before discovery runs.
+- Scoped diagnostics highlight when a posture requirement filters targets unexpectedly.
+
+### Custom Components or Partial Migrations
+
+```javascript
+const { actor } = testBed.createActorTargetScenario({
+  actorComponents: {
+    'core:name': { text: 'Scout' },
+  },
+});
+
+const legacyTarget = legacyFactory.buildTarget(testBed.entityManager); // existing helper
+
+testBed.establishClosenessWithValidation(actor, legacyTarget);
+
+const result = await testBed.discoverActionsWithDiagnostics(actor, {
+  includeDiagnostics: true,
+  traceScopeResolution: true,
+});
+
+if (result.diagnostics?.operatorEvaluations?.length) {
+  console.log(testBed.formatDiagnosticSummary(result.diagnostics));
+}
+
+expect(result.actions).toEqual(expect.any(Array));
+```
+
+- Mix legacy factories with the bed by passing their entities into `testBed.entityManager` or relationship helpers.
+- Guard diagnostic summaries with length checks to avoid noisy logs in passing runs.
+- Use `{ traceScopeResolution: true }` temporarily to confirm hybrid setups still satisfy scope rules.
+
+## Migration Pitfalls
+
+- **Skipping matcher imports** – Forgetting to import `../../common/actionMatchers.js` means expectations silently fall back to
+  vanilla Jest behavior. If `toHaveAction` is undefined, verify the import lives at the top of the file.
+- **Missing awaits on discovery** – `discoverActionsWithDiagnostics` is async; omitting `await` yields unresolved promises and
+  empty action arrays. Enable ESLint's `no-floating-promises` rule or search for `testBed.discoverActionsWithDiagnostics(` after
+  migration.
+- **Manual closeness without validation** – Directly mutating `positioning:closeness` skips reciprocal validation and commonly
+  leaves orphaned partner IDs. Always use `establishClosenessWithValidation()` when actors share proximity.
+- **Diagnostics everywhere** – Leaving `{ includeDiagnostics: true, traceScopeResolution: true }` on every test increases runtime
+  and log noise. Restrict tracing to flaky specs and guard `formatDiagnosticSummary()` calls behind length checks.
+- **Legacy factories missing IDs** – When mixing bespoke builders, ensure they respect the IDs passed into the bed helpers; run
+  `testBed.createActorWithValidation()` first to generate IDs, then hydrate additional components.
+- **Overlapping entity managers** – Instantiating `SimpleEntityManager` manually while also using the bed leads to entities being
+  registered in different stores. Prefer the bed's `entityManager` or ensure both helpers write to the same instance.
+
+### Debugging Checklist
+
+1. Re-run the test with `{ includeDiagnostics: true }` and inspect `testBed.formatDiagnosticSummary()` for missing prerequisites.
+2. Toggle `traceScopeResolution` to confirm scope filters match expectations; compare outputs with
+   `formatScopeEvaluationSummary()` when necessary.
+3. Validate custom entities via `createActorWithValidation()` before they participate in relationships.
+4. Confirm action matchers target the correct actor/target by logging `result.actions.map((action) => action.targetId)` once per
+   suite during migration and deleting the log after verification.
+5. For performance issues, wrap expensive diagnostics in `if (process.env.DEBUG_ACTIONS)` blocks so CI remains quiet.
 
 ## Troubleshooting
 
