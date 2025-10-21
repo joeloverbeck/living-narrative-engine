@@ -152,6 +152,42 @@ describe('PipelineStage', () => {
         expect(result).toBe(expectedResult);
       });
 
+      it('should default span metadata when actor information is missing', async () => {
+        const stage = new TestPipelineStage('MetadataStage');
+        const contextWithoutActor = {
+          ...mockContext,
+          actor: undefined,
+        };
+
+        stage.executeInternalFn.mockResolvedValue(PipelineResult.success());
+
+        await stage.execute(contextWithoutActor);
+
+        expect(mockTrace.startSpan).toHaveBeenCalledWith('MetadataStageStage', {
+          stage: 'MetadataStage',
+          actor: 'unknown',
+          candidateCount: 0,
+        });
+      });
+
+      it('should report candidate counts when available', async () => {
+        const stage = new TestPipelineStage('CandidateStage');
+        const contextWithCandidates = {
+          ...mockContext,
+          candidateActions: [{ id: 'a' }, { id: 'b' }],
+        };
+
+        stage.executeInternalFn.mockResolvedValue(PipelineResult.success());
+
+        await stage.execute(contextWithCandidates);
+
+        expect(mockTrace.startSpan).toHaveBeenCalledWith('CandidateStageStage', {
+          stage: 'CandidateStage',
+          actor: 'test-actor',
+          candidateCount: 2,
+        });
+      });
+
       it('should set error status on span when result indicates failure', async () => {
         const stage = new TestPipelineStage('FailingStage');
         const failureResult = new PipelineResult({
@@ -212,6 +248,67 @@ describe('PipelineStage', () => {
         expect(errorArg.message).toBe('Stage execution failed');
       });
 
+      it('should annotate span attributes when setAttribute is available', async () => {
+        mockSpan.setAttribute = jest.fn();
+        const stage = new TestPipelineStage('AttributeStage');
+        const stageResult = {
+          success: true,
+          processedCount: 3,
+          errors: [],
+        };
+
+        stage.executeInternalFn.mockResolvedValue(stageResult);
+
+        await stage.execute(mockContext);
+
+        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(1, 'success', true);
+        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(2, 'processedCount', 3);
+        expect(mockSpan.setAttribute).not.toHaveBeenCalledWith(
+          'errorCount',
+          expect.any(Number)
+        );
+        expect(mockSpan.setStatus).toHaveBeenCalledWith('success');
+      });
+
+      it('should default processed count attribute to zero when missing', async () => {
+        mockSpan.setAttribute = jest.fn();
+        const stage = new TestPipelineStage('ProcessedDefaultStage');
+        const stageResult = {
+          success: true,
+          errors: [],
+        };
+
+        stage.executeInternalFn.mockResolvedValue(stageResult);
+
+        await stage.execute(mockContext);
+
+        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(1, 'success', true);
+        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(2, 'processedCount', 0);
+        expect(mockSpan.setStatus).toHaveBeenCalledWith('success');
+      });
+
+      it('should record error count attribute for failing results', async () => {
+        mockSpan.setAttribute = jest.fn();
+        const stage = new TestPipelineStage('AttributeFailureStage');
+        const failureResult = {
+          success: false,
+          processedCount: 4,
+          errors: [
+            { error: 'first failure', phase: 'PHASE1' },
+            { error: 'second failure', phase: 'PHASE2' },
+          ],
+        };
+
+        stage.executeInternalFn.mockResolvedValue(failureResult);
+
+        await stage.execute(mockContext);
+
+        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(1, 'success', false);
+        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(2, 'processedCount', 4);
+        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(3, 'errorCount', 2);
+        expect(mockSpan.setError).toHaveBeenCalledWith(expect.any(Error));
+      });
+
       it('should catch and handle exceptions thrown by executeInternal', async () => {
         const stage = new TestPipelineStage('ThrowingStage');
         const thrownError = new Error('Internal execution failed');
@@ -257,6 +354,53 @@ describe('PipelineStage', () => {
         expect(mockSpan.setStatus).toHaveBeenCalledWith('success');
         expect(mockSpan.setError).not.toHaveBeenCalled();
         expect(result).toBe(successResult);
+      });
+
+      it('should treat failures without error details as successful for spans', async () => {
+        mockSpan.setAttribute = jest.fn();
+        const stage = new TestPipelineStage('NoErrorInfoStage');
+        const ambiguousResult = {
+          success: false,
+          processedCount: 1,
+        };
+
+        stage.executeInternalFn.mockResolvedValue(ambiguousResult);
+
+        const result = await stage.execute(mockContext);
+
+        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(1, 'success', false);
+        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(2, 'processedCount', 1);
+        expect(mockSpan.setAttribute).not.toHaveBeenCalledWith(
+          'errorCount',
+          expect.any(Number)
+        );
+        expect(mockSpan.setError).not.toHaveBeenCalled();
+        expect(mockSpan.setStatus).toHaveBeenCalledWith('success');
+        expect(result).toBe(ambiguousResult);
+      });
+
+      it('should treat failures with empty error arrays as successful for spans', async () => {
+        mockSpan.setAttribute = jest.fn();
+        const stage = new TestPipelineStage('EmptyErrorsStage');
+        const emptyErrorsResult = {
+          success: false,
+          processedCount: 2,
+          errors: [],
+        };
+
+        stage.executeInternalFn.mockResolvedValue(emptyErrorsResult);
+
+        const result = await stage.execute(mockContext);
+
+        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(1, 'success', false);
+        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(2, 'processedCount', 2);
+        expect(mockSpan.setAttribute).not.toHaveBeenCalledWith(
+          'errorCount',
+          expect.any(Number)
+        );
+        expect(mockSpan.setError).not.toHaveBeenCalled();
+        expect(mockSpan.setStatus).toHaveBeenCalledWith('success');
+        expect(result).toBe(emptyErrorsResult);
       });
     });
 
