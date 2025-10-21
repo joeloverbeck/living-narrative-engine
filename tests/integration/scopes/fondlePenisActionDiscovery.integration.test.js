@@ -22,6 +22,7 @@ import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
+import { TargetComponentValidator } from '../../../src/actions/validation/TargetComponentValidator.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import {
   createTargetResolutionServiceWithMocks,
@@ -181,21 +182,29 @@ describe('Fondle Penis Action Discovery Integration Tests', () => {
 
     
     // Create mock TargetComponentValidator
-    const mockTargetComponentValidator = {
-      validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
-      validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
-    };
+    const targetComponentValidator = new TargetComponentValidator({
+      logger,
+      entityManager,
+    });
 
     // Create mock TargetRequiredComponentsValidator
     const mockTargetRequiredComponentsValidator =
       createMockTargetRequiredComponentsValidator();
 const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex: {
-        getCandidateActions: jest
-          .fn()
-          .mockImplementation(() =>
-            gameDataRepository.getAllActionDefinitions()
-          ),
+        getCandidateActions: jest.fn().mockImplementation((actor) => {
+          const actions = gameDataRepository.getAllActionDefinitions();
+          const actorComponentIds =
+            entityManager.getAllComponentTypesForEntity(actor.id) || [];
+
+          return actions.filter((actionDef) => {
+            const forbiddenActorComponents =
+              actionDef.forbidden_components?.actor || [];
+            return !forbiddenActorComponents.some((componentId) =>
+              actorComponentIds.includes(componentId)
+            );
+          });
+        }),
       },
       prerequisiteService: prerequisiteEvaluationService,
       targetService: targetResolutionService,
@@ -212,7 +221,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       }),
       targetContextBuilder: createMockTargetContextBuilder(),
       multiTargetResolutionStage: stage,
-      targetComponentValidator: mockTargetComponentValidator,
+      targetComponentValidator,
       targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
     });
 
@@ -238,16 +247,22 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
      *
      * @param targetClothingConfig
      */
-    function setupEntities(targetClothingConfig = {}) {
+    function setupEntities(
+      targetClothingConfig = {},
+      actorAdditionalComponents = {}
+    ) {
+      const actorComponents = {
+        'positioning:closeness': {
+          partners: ['target1'],
+          facing_away_from: [],
+        },
+        ...actorAdditionalComponents,
+      };
+
       const entities = [
         {
           id: 'actor1',
-          components: {
-            'positioning:closeness': {
-              partners: ['target1'],
-              facing_away_from: [],
-            },
-          },
+          components: actorComponents,
         },
         {
           id: 'target1',
@@ -350,6 +365,22 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       );
 
       // Assert
+      const fondlePenisActions = result.actions.filter(
+        (action) => action.id === 'sex:fondle_penis'
+      );
+      expect(fondlePenisActions).toHaveLength(0);
+    });
+
+    it('should not discover action when actor is being vaginally penetrated', async () => {
+      setupEntities({}, {
+        'sex:being_fucked_vaginally': { actorId: 'charlie' },
+      });
+
+      const actorEntity = entityManager.getEntityInstance('actor1');
+      const result = await actionDiscoveryService.getValidActions(actorEntity, {
+        jsonLogicEval,
+      });
+
       const fondlePenisActions = result.actions.filter(
         (action) => action.id === 'sex:fondle_penis'
       );

@@ -13,6 +13,9 @@
   "required_components": {
     "actor": ["positioning:closeness"]
   },
+  "forbidden_components": {
+    "actor": ["sex:being_fucked_vaginally"]
+  },
   "template": "pump {target}'s penis",
   "prerequisites": [],
   "visual": {

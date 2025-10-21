@@ -182,6 +182,7 @@ describe('sex:slide_penis_along_labia action discovery', () => {
       includePenis = true,
       coverPenis = false,
       targetSitting = false,
+      actorFuckingVaginally = false,
     } = options;
 
     const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
@@ -206,6 +207,10 @@ describe('sex:slide_penis_along_labia action discovery', () => {
     if (includeCloseness) {
       actorBuilder.closeToEntity('beth');
       targetBuilder.closeToEntity('alice');
+    }
+
+    if (actorFuckingVaginally) {
+      actorBuilder.withComponent('sex:fucking_vaginally', { targetId: 'beth' });
     }
 
     if (actorKneeling) {
@@ -472,6 +477,23 @@ describe('sex:slide_penis_along_labia action discovery', () => {
     const entities = buildScenario({ includeCloseness: false });
     testFixture.reset(entities);
     configureActionDiscovery();
+
+    const actions = await testFixture.discoverActions('alice');
+    const foundAction = actions.find(
+      (action) => action.id === 'sex:slide_penis_along_labia'
+    );
+
+    expect(foundAction).toBeUndefined();
+  });
+
+  it('does not appear when the actor is already fucking vaginally', async () => {
+    const entities = buildScenario({ actorFuckingVaginally: true });
+    testFixture.reset(entities);
+    configureActionDiscovery();
+
+    expect(
+      testFixture.testEnv.validateAction('alice', 'sex:slide_penis_along_labia')
+    ).toBe(false);
 
     const actions = await testFixture.discoverActions('alice');
     const foundAction = actions.find(
