@@ -167,6 +167,7 @@ describe('sex:slide_penis_along_labia action discovery', () => {
    * @param {boolean} [options.coverPenis=false] - Whether clothing covers the actor's penis.
    * @param {boolean} [options.actorKneeling=false] - Whether the actor kneels before the target.
    * @param {boolean} [options.targetKneeling=false] - Whether the target kneels before the actor.
+   * @param {boolean} [options.targetSitting=false] - Whether the target is sitting on furniture.
    * @param {boolean} [options.includeVagina=true] - Whether to include a vagina anatomy part.
    * @returns {Array<object>} Entities to load into the test environment.
    */
@@ -180,6 +181,7 @@ describe('sex:slide_penis_along_labia action discovery', () => {
       includeVagina = true,
       includePenis = true,
       coverPenis = false,
+      targetSitting = false,
     } = options;
 
     const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
@@ -217,6 +219,13 @@ describe('sex:slide_penis_along_labia action discovery', () => {
     if (targetFacingAway) {
       targetBuilder.withComponent('positioning:facing_away', {
         facing_away_from: ['alice'],
+      });
+    }
+
+    if (targetSitting) {
+      targetBuilder.withComponent('positioning:sitting_on', {
+        furniture_id: 'stool1',
+        spot_index: 0,
       });
     }
 
@@ -299,6 +308,13 @@ describe('sex:slide_penis_along_labia action discovery', () => {
           .build()
       : null;
 
+    const furniture = targetSitting
+      ? new ModEntityBuilder('stool1')
+          .withName('Stool')
+          .atLocation('room1')
+          .build()
+      : null;
+
     const entities = [room, actor, target, actorGroin, targetPelvis];
 
     if (vagina) {
@@ -315,6 +331,10 @@ describe('sex:slide_penis_along_labia action discovery', () => {
 
     if (coverPenis) {
       entities.push(new ModEntityBuilder('pants1').withName('pants').build());
+    }
+
+    if (furniture) {
+      entities.push(furniture);
     }
 
     return entities;
@@ -478,6 +498,23 @@ describe('sex:slide_penis_along_labia action discovery', () => {
     const entities = buildScenario({ targetKneeling: true });
     testFixture.reset(entities);
     configureActionDiscovery();
+
+    const actions = await testFixture.discoverActions('alice');
+    const foundAction = actions.find(
+      (action) => action.id === 'sex:slide_penis_along_labia'
+    );
+
+    expect(foundAction).toBeUndefined();
+  });
+
+  it('does not appear when the target is sitting on furniture', async () => {
+    const entities = buildScenario({ targetSitting: true });
+    testFixture.reset(entities);
+    configureActionDiscovery();
+
+    expect(
+      testFixture.testEnv.validateAction('alice', 'sex:slide_penis_along_labia')
+    ).toBe(false);
 
     const actions = await testFixture.discoverActions('alice');
     const foundAction = actions.find(
