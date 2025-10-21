@@ -550,6 +550,89 @@ class BaseModTestFixture {
       }
     }
 
+    const normalizedActionId = this.actionId.includes(':')
+      ? this.actionId
+      : `${this.modId}:${this.actionId}`;
+    let targetActionDefinition = actionDefinitions.find(
+      (definition) => definition.id === normalizedActionId
+    );
+
+    if (!targetActionDefinition) {
+      const actionFilePath = this.actionId.includes(':')
+        ? `data/mods/${this.modId}/actions/${this.actionId.split(':')[1]}.action.json`
+        : `data/mods/${this.modId}/actions/${this.actionId}.action.json`;
+
+      try {
+        const resolvedPath = resolve(actionFilePath);
+        const content = await fs.readFile(resolvedPath, 'utf8');
+        targetActionDefinition = JSON.parse(content);
+      } catch (error) {
+        console.warn(
+          `⚠️  Failed to load action definition for ${normalizedActionId} from ${actionFilePath}: ${error.message}`
+        );
+      }
+    }
+
+    if (targetActionDefinition?.prerequisites) {
+      const collectConditionRefs = (node, accumulator) => {
+        if (!node) {
+          return;
+        }
+
+        if (Array.isArray(node)) {
+          node.forEach((item) => collectConditionRefs(item, accumulator));
+          return;
+        }
+
+        if (typeof node !== 'object') {
+          return;
+        }
+
+        if (typeof node.condition_ref === 'string') {
+          accumulator.add(node.condition_ref);
+        }
+
+        for (const value of Object.values(node)) {
+          if (value && typeof value === 'object') {
+            collectConditionRefs(value, accumulator);
+          }
+        }
+      };
+
+      const prerequisiteConditionIds = new Set();
+      for (const prerequisite of targetActionDefinition.prerequisites) {
+        collectConditionRefs(prerequisite, prerequisiteConditionIds);
+      }
+
+      for (const prerequisiteConditionId of prerequisiteConditionIds) {
+        if (conditions[prerequisiteConditionId]) {
+          continue;
+        }
+
+        try {
+          const loadedCondition = await ModTestFixture.loadConditionFile(
+            this.modId,
+            prerequisiteConditionId
+          );
+
+          if (loadedCondition) {
+            conditions[prerequisiteConditionId] = loadedCondition;
+
+            if (
+              loadedCondition.id &&
+              loadedCondition.id !== prerequisiteConditionId
+            ) {
+              conditions[loadedCondition.id] = loadedCondition;
+            }
+          }
+        } catch (error) {
+          console.warn(
+            `⚠️  Failed to auto-load prerequisite condition '${prerequisiteConditionId}' for action ${normalizedActionId}: ${error.message}`
+          );
+        }
+      }
+    }
+
     const handlerFactory = ModTestHandlerFactory.getHandlerFactoryForCategory(
       this.modId
     );
