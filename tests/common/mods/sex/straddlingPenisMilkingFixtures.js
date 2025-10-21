@@ -1,6 +1,7 @@
 /**
- * @file Shared fixtures for the straddling penis milking action suites.
- * @description Provides reusable builders and scope helpers tailored for vaginal milking scenarios while straddling a partner.
+ * @file Shared fixtures for the straddling penis milking and greedy riding action suites.
+ * @description Provides reusable builders and scope helpers tailored for vaginal milking scenarios while straddling a partner,
+ * and documents aliases used by additional riding actions so future vaginal penetration rides can share them.
  */
 
 import { ModEntityBuilder } from '../ModEntityBuilder.js';
@@ -10,6 +11,12 @@ import { ModEntityBuilder } from '../ModEntityBuilder.js';
  * @type {string}
  */
 export const STRADDLING_MILKING_ACTION_ID = 'sex:straddling_penis_milking';
+
+/**
+ * Identifier for the ride penis greedily action.
+ * @type {string}
+ */
+export const RIDE_PENIS_GREEDILY_ACTION_ID = 'sex:ride_penis_greedily';
 
 /**
  * Default actor identifier used in the shared scenarios.
@@ -174,11 +181,19 @@ export function buildStraddlingMilkingScenario(options = {}) {
   const primaryGroinChildren = includePenis ? [primaryPenisId] : [];
 
   const actorPelvis = new ModEntityBuilder(actorPelvisId)
-    .asBodyPart({ parent: null, children: actorPelvisChildren, subType: 'pelvis' })
+    .asBodyPart({
+      parent: null,
+      children: actorPelvisChildren,
+      subType: 'pelvis',
+    })
     .build();
 
   const primaryGroin = new ModEntityBuilder(primaryGroinId)
-    .asBodyPart({ parent: null, children: primaryGroinChildren, subType: 'groin' })
+    .asBodyPart({
+      parent: null,
+      children: primaryGroinChildren,
+      subType: 'groin',
+    })
     .build();
 
   const entities = [room, actor, primary, actorPelvis, primaryGroin];
@@ -228,6 +243,15 @@ export function buildStraddlingMilkingScenario(options = {}) {
 }
 
 /**
+ * @description Builds the full entity graph required for the greedy riding tests.
+ * @param {StraddlingMilkingScenarioOptions} [options] - Scenario customization options.
+ * @returns {Array<object>} Entities ready to be loaded into a test fixture.
+ */
+export function buildRidePenisGreedilyScenario(options = {}) {
+  return buildStraddlingMilkingScenario(options);
+}
+
+/**
  * @description Determines whether a clothing socket is covered on an entity.
  * @param {object} entity - Entity instance to inspect.
  * @param {string} socketName - Anatomy socket identifier.
@@ -235,7 +259,8 @@ export function buildStraddlingMilkingScenario(options = {}) {
  */
 function isSocketCovered(entity, socketName) {
   const equipment = entity?.components?.['clothing:equipment']?.equipped;
-  const slotMetadata = entity?.components?.['clothing:slot_metadata']?.slotMappings;
+  const slotMetadata =
+    entity?.components?.['clothing:slot_metadata']?.slotMappings;
 
   if (!equipment || !slotMetadata) {
     return false;
@@ -327,7 +352,8 @@ function resolveUncoveredPenisScope(testFixture, context) {
   }
 
   const actorFacingAway =
-    actorEntity?.components?.['positioning:facing_away']?.facing_away_from || [];
+    actorEntity?.components?.['positioning:facing_away']?.facing_away_from ||
+    [];
 
   const validPartners = partners.filter((partnerId) => {
     const partner = testFixture.entityManager.getEntityInstance(partnerId);
@@ -348,7 +374,8 @@ function resolveUncoveredPenisScope(testFixture, context) {
       partner.components?.['positioning:facing_away']?.facing_away_from || [];
 
     const facingEachOther =
-      !partnerFacingAway.includes(actorId) && !actorFacingAway.includes(partnerId);
+      !partnerFacingAway.includes(actorId) &&
+      !actorFacingAway.includes(partnerId);
     const actorBehindTarget = partnerFacingAway.includes(actorId);
 
     if (!facingEachOther && !actorBehindTarget) {
