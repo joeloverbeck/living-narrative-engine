@@ -335,5 +335,114 @@ describe('UnifiedErrorHandler – real module integration', () => {
       new UnifiedErrorHandler({ actionErrorContextBuilder: null, logger })
     ).toThrow('UnifiedErrorHandler requires actionErrorContextBuilder');
   });
+
+  it('handles missing optional context across phases', () => {
+    const discoveryContext = handler.handleDiscoveryError(
+      new Error('Discovered nothing'),
+      {
+        actorId: 'actor-1',
+      }
+    );
+
+    expect(discoveryContext.actionDefinition).toMatchObject({
+      id: 'unknown',
+      name: 'Unknown Action',
+    });
+    expect(discoveryContext.actionId).toBe('unknown');
+    expect(discoveryContext.targetId).toBeNull();
+    expect(discoveryContext.environmentContext).toEqual(
+      expect.objectContaining({
+        stage: 'discovery',
+        phase: ERROR_PHASES.DISCOVERY,
+      })
+    );
+
+    const executionContext = handler.handleExecutionError(
+      new Error('Execution pipeline failed'),
+      {
+        actorId: 'actor-1',
+        actionDef: actionDefinition,
+      }
+    );
+
+    expect(executionContext.targetId).toBeNull();
+    expect(executionContext.environmentContext).toEqual(
+      expect.objectContaining({
+        stage: 'execution',
+        phase: ERROR_PHASES.EXECUTION,
+      })
+    );
+
+    const validationContext = handler.handleValidationError(
+      new Error('Validation halted'),
+      {
+        actorId: 'actor-1',
+        actionDef: actionDefinition,
+      }
+    );
+
+    expect(validationContext.targetId).toBeNull();
+    expect(validationContext.environmentContext).toEqual(
+      expect.objectContaining({
+        stage: 'validation',
+        phase: ERROR_PHASES.VALIDATION,
+      })
+    );
+
+    const processingContext = handler.handleProcessingError(
+      new Error('Directive orchestration failure'),
+      {
+        actorId: 'actor-1',
+        stage: 'dispatch',
+      }
+    );
+
+    expect(processingContext.actionDefinition).toMatchObject({
+      id: 'unknown',
+      name: 'Unknown Action',
+    });
+    expect(processingContext.environmentContext).toEqual(
+      expect.objectContaining({
+        stage: 'command_processing_dispatch',
+        phase: ERROR_PHASES.EXECUTION,
+      })
+    );
+    expect(processingContext.environmentContext).not.toHaveProperty('step');
+  });
+
+  it('creates contexts and logs without optional parameters', () => {
+    const directContext = handler.createContext({
+      error: new Error('Direct context failure'),
+      phase: ERROR_PHASES.EXECUTION,
+      actorId: 'actor-1',
+    });
+
+    expect(directContext.actionDefinition).toMatchObject({
+      id: 'unknown',
+      name: 'Unknown Action',
+    });
+    expect(directContext.additionalContext).toEqual({});
+    expect(directContext.environmentContext).toEqual(
+      expect.objectContaining({
+        phase: ERROR_PHASES.EXECUTION,
+      })
+    );
+    expect(directContext.environmentContext).not.toHaveProperty('stage');
+
+    const logCountAfterContext = logger.errorLogs.length;
+    const bareError = new Error('Bare logging failure');
+
+    handler.logError('Minimal log context', bareError);
+
+    expect(logger.errorLogs).toHaveLength(logCountAfterContext + 1);
+    const finalLog = logger.errorLogs.at(-1);
+    expect(finalLog).toMatchObject({
+      message: 'Minimal log context',
+      extra: expect.objectContaining({
+        error: 'Bare logging failure',
+      }),
+    });
+    expect(finalLog.extra).not.toHaveProperty('channel');
+  });
 });
 
