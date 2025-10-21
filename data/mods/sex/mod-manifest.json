@@ -43,6 +43,7 @@
       "rub_pussy_against_penis_through_clothes.action.json",
       "rub_vagina_over_clothes.action.json",
       "slide_penis_along_labia.action.json",
+      "insert_penis_into_vagina.action.json",
       "suckle_testicle.action.json",
       "tease_asshole_with_glans.action.json"
     ],
@@ -65,7 +66,8 @@
       "event-is-action-rub-vagina-over-clothes.condition.json",
       "event-is-action-slide-penis-along-labia.condition.json",
       "event-is-action-suckle-testicle.condition.json",
-      "event-is-action-tease-asshole-with-glans.condition.json"
+      "event-is-action-tease-asshole-with-glans.condition.json",
+      "event-is-action-insert-penis-into-vagina.condition.json"
     ],
     "rules": [
       "handle_breathe_teasingly_on_penis.rule.json",
@@ -86,7 +88,8 @@
       "handle_rub_vagina_over_clothes.rule.json",
       "handle_slide_penis_along_labia.rule.json",
       "handle_suckle_testicle.rule.json",
-      "handle_tease_asshole_with_glans.rule.json"
+      "handle_tease_asshole_with_glans.rule.json",
+      "handle_insert_penis_into_vagina.rule.json"
     ],
     "scopes": [
       "actor_kneeling_before_target_with_covered_penis.scope",
@@ -104,6 +107,10 @@
       "actors_with_penis_in_intimacy.scope",
       "actors_with_uncovered_vagina_facing_each_other_or_target_facing_away.scope",
       "actors_with_vagina_facing_each_other_covered.scope"
+    ],
+    "components": [
+      "fucking_vaginally.component.json",
+      "being_fucked_vaginally.component.json"
     ]
   }
 }

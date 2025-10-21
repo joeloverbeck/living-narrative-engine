@@ -495,7 +495,7 @@ export class ModTestHandlerFactory {
       items: this.createHandlersWithItemsSupport.bind(this),
       exercise: this.createStandardHandlers.bind(this),
       violence: this.createHandlersWithPerceptionLogging.bind(this),
-      sex: this.createStandardHandlers.bind(this),
+      sex: this.createHandlersWithComponentMutations.bind(this),
       intimacy: this.createStandardHandlers.bind(this),
       affection: this.createHandlersWithComponentMutations.bind(this),
       hand_holding: this.createHandlersWithComponentMutations.bind(this),

@@ -11,6 +11,10 @@
     "id": {
       "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/id"
     },
+    "name": {
+      "type": "string",
+      "description": "Optional. Human-readable label for the component when exposed in tooling or debug output."
+    },
     "description": {
       "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/description"
     },
