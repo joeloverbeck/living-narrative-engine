@@ -13,6 +13,7 @@ import JsonLogicCustomOperators from '../../../src/logic/jsonLogicCustomOperator
 import { ActionValidationContextBuilder } from '../../../src/actions/validation/actionValidationContextBuilder.js';
 import { PrerequisiteEvaluationService } from '../../../src/actions/validation/prerequisiteEvaluationService.js';
 import { ActionIndex } from '../../../src/actions/actionIndex.js';
+import { createEntityContext } from '../../../src/logic/contextAssembler.js';
 import { SimpleEntityManager } from '../entities/index.js';
 import {
   createMockLogger,
@@ -1122,6 +1123,60 @@ export function createRuleTestEnvironment(options) {
       return context;
     };
 
+    const buildPrerequisiteContextOverride = (resolvedTargets, actorId) => {
+      if (!resolvedTargets || Object.keys(resolvedTargets).length === 0) {
+        return null;
+      }
+
+      const override = { targets: {} };
+
+      for (const [targetKey, resolvedTarget] of Object.entries(resolvedTargets)) {
+        if (!resolvedTarget || !resolvedTarget.id) {
+          continue;
+        }
+
+        const entityContext = createEntityContext(
+          resolvedTarget.id,
+          env.entityManager,
+          env.logger
+        );
+
+        override[targetKey] = entityContext;
+        override.targets[targetKey] = [entityContext];
+
+        if (targetKey === 'primary') {
+          override.primary = entityContext;
+        }
+
+        if (!override.target) {
+          override.target = entityContext;
+        }
+      }
+
+      if (!override.target) {
+        const firstContext = Object.values(override).find(
+          (value) =>
+            value &&
+            typeof value === 'object' &&
+            'id' in value &&
+            'components' in value
+        );
+
+        if (firstContext) {
+          override.target = firstContext;
+        }
+      }
+
+      if (actorId) {
+        const actorOverride = createResolvedTarget(actorId);
+        if (actorOverride) {
+          override.actor = actorOverride;
+        }
+      }
+
+      return override;
+    };
+
     const createResolvedTarget = (entityId) => {
       if (!entityId) {
         return null;
@@ -1276,18 +1331,44 @@ export function createRuleTestEnvironment(options) {
           return false;
         }
 
-        const prerequisitesPassed = env.prerequisiteService.evaluate(
-          action.prerequisites,
-          action,
-          actorEntity
-        );
+        const assignmentsPassingPrereqs = [];
 
-        if (!prerequisitesPassed) {
+        for (const assignment of pendingAssignments) {
+          const contextOverride = buildPrerequisiteContextOverride(
+            assignment.resolvedTargets,
+            actorId
+          );
+
+          if (!contextOverride) {
+            continue;
+          }
+
+          const actorOverride = createResolvedTarget(actorId);
+          const effectiveOverride = actorOverride
+            ? { ...contextOverride, actor: actorOverride }
+            : contextOverride;
+
+          const passed = env.prerequisiteService.evaluate(
+            action.prerequisites,
+            action,
+            actorEntity,
+            null,
+            { contextOverride: effectiveOverride }
+          );
+
+          if (passed) {
+            assignmentsPassingPrereqs.push(assignment);
+          }
+        }
+
+        if (assignmentsPassingPrereqs.length === 0) {
           env.logger.debug(
-            `Action ${actionId}: Actor ${actorId} failed prerequisite evaluation`
+            `Action ${actionId}: No target assignments passed prerequisite evaluation for actor ${actorId}`
           );
           return false;
         }
+
+        pendingAssignments = assignmentsPassingPrereqs;
       } catch (error) {
         env.logger.debug(
           `Action ${actionId}: Prerequisite evaluation error for actor ${actorId}: ${error.message}`

@@ -591,40 +591,86 @@ class BaseModTestFixture {
       }
     }
 
-    // Ensure prerequisite conditions are available for evaluation
-    for (const prereqConditionId of prerequisiteConditionIds) {
-      if (!prereqConditionId || conditions[prereqConditionId]) {
-        continue;
-      }
+    const normalizedActionId = this.actionId.includes(':')
+      ? this.actionId
+      : `${this.modId}:${this.actionId}`;
+    let targetActionDefinition = actionDefinitions.find(
+      (definition) => definition.id === normalizedActionId
+    );
 
-      const [modNamespace, conditionNameRaw] = prereqConditionId.split(':');
-      if (!modNamespace || !conditionNameRaw) {
-        continue;
-      }
-
-      const conditionFileName = `${conditionNameRaw
-        .replace(/_/g, '-')
-        .trim()}.condition.json`;
-      const conditionPath = resolve(
-        `data/mods/${modNamespace}/conditions/${conditionFileName}`
-      );
+    if (!targetActionDefinition) {
+      const actionFilePath = this.actionId.includes(':')
+        ? `data/mods/${this.modId}/actions/${this.actionId.split(':')[1]}.action.json`
+        : `data/mods/${this.modId}/actions/${this.actionId}.action.json`;
 
       try {
-        const content = await fs.readFile(conditionPath, 'utf8');
-        const parsedCondition = JSON.parse(content);
-
-        conditions[prereqConditionId] = parsedCondition;
-        if (
-          parsedCondition.id &&
-          parsedCondition.id !== prereqConditionId &&
-          !conditions[parsedCondition.id]
-        ) {
-          conditions[parsedCondition.id] = parsedCondition;
-        }
+        const resolvedPath = resolve(actionFilePath);
+        const content = await fs.readFile(resolvedPath, 'utf8');
+        targetActionDefinition = JSON.parse(content);
       } catch (error) {
         console.warn(
-          `⚠️  ModTestFixture: Unable to load prerequisite condition '${prereqConditionId}' from ${conditionPath}: ${error.message}`
+          `⚠️  Failed to load action definition for ${normalizedActionId} from ${actionFilePath}: ${error.message}`
         );
+      }
+    }
+
+    if (targetActionDefinition?.prerequisites) {
+      const collectConditionRefs = (node, accumulator) => {
+        if (!node) {
+          return;
+        }
+
+        if (Array.isArray(node)) {
+          node.forEach((item) => collectConditionRefs(item, accumulator));
+          return;
+        }
+
+        if (typeof node !== 'object') {
+          return;
+        }
+
+        if (typeof node.condition_ref === 'string') {
+          accumulator.add(node.condition_ref);
+        }
+
+        for (const value of Object.values(node)) {
+          if (value && typeof value === 'object') {
+            collectConditionRefs(value, accumulator);
+          }
+        }
+      };
+
+      const prerequisiteConditionIds = new Set();
+      for (const prerequisite of targetActionDefinition.prerequisites) {
+        collectConditionRefs(prerequisite, prerequisiteConditionIds);
+      }
+
+      for (const prerequisiteConditionId of prerequisiteConditionIds) {
+        if (conditions[prerequisiteConditionId]) {
+          continue;
+        }
+
+        try {
+          const loadedCondition = await ModTestFixture.loadConditionFile(
+            this.modId,
+            prerequisiteConditionId
+          );
+
+          if (loadedCondition) {
+            conditions[prerequisiteConditionId] = loadedCondition;
+
+            if (
+              loadedCondition.id &&
+              loadedCondition.id !== prerequisiteConditionId
+            ) {
+              conditions[loadedCondition.id] = loadedCondition;
+            }
+          }
+        } catch (error) {
+          console.warn(
+            `⚠️  Failed to auto-load prerequisite condition '${prerequisiteConditionId}' for action ${normalizedActionId}: ${error.message}`
+          );
+        }
       }
     }
 

@@ -199,48 +199,6 @@ export class PrerequisiteEvaluationService extends BaseService {
       this.#logger.debug(
         `${this.#logPrefix(actionId)}: Evaluation Context Built Successfully.`
       );
-
-      // Enhanced logging to detect truly missing entities
-      // Note: Since we can't directly access the entity manager from here,
-      // we'll check if the components accessor returns sensible data
-      if (evaluationContext?.actor?.components) {
-        try {
-          // The toJSON method we added should now work
-          const componentsSnapshot = JSON.parse(
-            JSON.stringify(evaluationContext.actor.components)
-          );
-          const componentCount = Object.keys(componentsSnapshot).length;
-
-          if (componentCount === 0) {
-            this.#logger.warn(
-              `${this.#logPrefix(actionId)}: WARNING - Actor entity [${evaluationContext.actor.id}] ` +
-                `appears to have NO components. This may indicate a loading issue.`
-            );
-          } else {
-            this.#logger.debug(
-              `${this.#logPrefix(actionId)}: Actor entity [${evaluationContext.actor.id}] ` +
-                `has ${componentCount} components available.`
-            );
-          }
-        } catch (err) {
-          this.#logger.debug(
-            `${this.#logPrefix(actionId)}: Could not serialize components for validation logging`,
-            err
-          );
-        }
-      }
-
-      // Check if the actor context is missing components property entirely
-      if (evaluationContext?.actor && !evaluationContext.actor.components) {
-        this.#logger.error(
-          `${this.#logPrefix(actionId)}: ERROR - Actor context is missing components property entirely!`
-        );
-      }
-
-      this.#logger.debug(
-        `${this.#logPrefix(actionId)} Context:`,
-        JSON.stringify(evaluationContext, null, 2)
-      );
     } catch (buildError) {
       this.#logger.error(
         `${this.#logPrefix(actionId)}: ← FAILED (Internal Error: Failed to build evaluation context). Error: ${buildError.message}`,
@@ -562,12 +520,22 @@ export class PrerequisiteEvaluationService extends BaseService {
    * @param {ActionDefinition} actionDefinition - The definition of the action being evaluated.
    * @param {Entity} actor - The entity performing the action.
    * @param {TraceContext} [trace] - Optional tracing context for detailed logging.
+   * @param {object} [options] - Optional configuration overrides.
+   * @param {object} [options.contextOverride] - Partial evaluation context to merge
+   *   into the generated prerequisite context (e.g. resolved targets).
    * @returns {boolean} True if all prerequisites pass, false otherwise.
    */
-  evaluate(prerequisites, actionDefinition, actor, trace = null) {
+  evaluate(
+    prerequisites,
+    actionDefinition,
+    actor,
+    trace = null,
+    options = {}
+  ) {
     const source = 'PrerequisiteEvaluationService.evaluate';
     const actionId = actionDefinition?.id ?? 'unknown_action';
     const actorId = actor?.id ?? 'unknown_actor';
+    const { contextOverride = null } = options || {};
 
     // Support both old and new trace APIs
     if (trace?.withSpan) {
@@ -580,7 +548,8 @@ export class PrerequisiteEvaluationService extends BaseService {
             actor,
             actionId,
             actorId,
-            trace
+            trace,
+            contextOverride
           );
         },
         {
@@ -598,7 +567,8 @@ export class PrerequisiteEvaluationService extends BaseService {
       actor,
       actionId,
       actorId,
-      trace
+      trace,
+      contextOverride
     );
   }
 
@@ -621,7 +591,8 @@ export class PrerequisiteEvaluationService extends BaseService {
     actor,
     actionId,
     actorId,
-    trace
+    trace,
+    contextOverride = null
   ) {
     const source = 'PrerequisiteEvaluationService.evaluate';
 
@@ -656,17 +627,23 @@ export class PrerequisiteEvaluationService extends BaseService {
       return false;
     }
 
+    const finalEvaluationContext = this.#applyContextOverride(
+      evaluationContext,
+      contextOverride,
+      actionId
+    );
+
     trace?.data('Built prerequisite evaluation context', source, {
-      actorId: evaluationContext.actor?.id,
-      hasComponents: !!evaluationContext.actor?.components,
-      componentCount: evaluationContext.actor?.components
-        ? Object.keys(evaluationContext.actor.components).length
+      actorId: finalEvaluationContext.actor?.id,
+      hasComponents: !!finalEvaluationContext.actor?.components,
+      componentCount: finalEvaluationContext.actor?.components
+        ? Object.keys(finalEvaluationContext.actor.components).length
         : 0,
     });
 
     const result = this.#evaluateRules(
       prerequisites,
-      evaluationContext,
+      finalEvaluationContext,
       actionId,
       trace
     );
@@ -684,5 +661,48 @@ export class PrerequisiteEvaluationService extends BaseService {
     }
 
     return result;
+  }
+
+  /**
+   * Applies a partial override to the generated evaluation context.
+   *
+   * @private
+   * @param {JsonLogicEvaluationContext} baseContext - Context produced by the builder.
+   * @param {object|null} contextOverride - Additional context data to merge.
+   * @param {string} actionId - Identifier of the action being evaluated.
+   * @returns {JsonLogicEvaluationContext} The merged evaluation context.
+   */
+  #applyContextOverride(baseContext, contextOverride, actionId) {
+    if (!contextOverride || typeof contextOverride !== 'object') {
+      return baseContext;
+    }
+
+    const mergedContext = { ...baseContext };
+
+    for (const [key, value] of Object.entries(contextOverride)) {
+      if (value === undefined) {
+        continue;
+      }
+
+      if (
+        value &&
+        typeof value === 'object' &&
+        !Array.isArray(value) &&
+        typeof mergedContext[key] === 'object' &&
+        mergedContext[key] !== null &&
+        !Array.isArray(mergedContext[key])
+      ) {
+        mergedContext[key] = { ...mergedContext[key], ...value };
+      } else {
+        mergedContext[key] = value;
+      }
+    }
+
+    this.#logger.debug(
+      `${this.#logPrefix(actionId)}: Applied context override for prerequisite evaluation.`,
+      { overrideKeys: Object.keys(contextOverride) }
+    );
+
+    return mergedContext;
   }
 }
