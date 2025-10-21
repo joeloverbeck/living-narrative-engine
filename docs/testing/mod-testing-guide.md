@@ -10,7 +10,7 @@ The Mod Testing Guide consolidates everything needed to adopt the Test Module Pa
 
 Use this guide as the canonical reference for all new and migrated mod tests.
 
-> **Need to debug action discovery pipelines?** See the [Action Integration Testing Debugging Guide](./action-integration-debugging.md) for diagnostics-focused helpers that complement the Test Module Pattern.
+> **Need to debug action discovery pipelines?** See the [Action Discovery Testing Toolkit](./action-discovery-testing-toolkit.md) for diagnostics, matchers, and scenario helpers tailored to discovery suites.
 
 ## Test Module Pattern Architecture
 
@@ -109,10 +109,16 @@ const testEnv = await TestModuleBuilder.forTurnExecution()
 
 ### Sitting Arrangement Helpers
 
-High-level seating scenarios can now be composed with a single helper call instead of manually instantiating rooms, furniture,
-and positioning components. The new `ModEntityScenarios.createSitting*` functions—also exposed through `ModTestFixture`
-(`createSittingPair`, `createSoloSitting`, `createStandingNearSitting`, `createSeparateFurnitureArrangement`, and
-`createKneelingBeforeSitting`)—hydrate the fixture with ready-to-use entities and return the generated IDs for assertions.
+High-level seating scenarios can now be composed with a single helper call instead of manually instantiating rooms, furniture, and positioning components. The `ModEntityScenarios.createSitting*` helpers—also exposed as instance methods on `ModTestFixture`—hydrate fixtures with a consistent entity graph and return generated IDs for direct assertions.
+
+| Helper | Best for |
+| ------ | -------- |
+| `createSittingArrangement(options)` | Full control over seated, standing, and kneeling actors plus additional furniture. |
+| `createSittingPair(options)` | Reciprocal seating relationships and closeness metadata for two actors sharing furniture. |
+| `createSoloSitting(options)` | Sit/stand transitions where only one actor occupies a seat. |
+| `createStandingNearSitting(options)` | Mixed posture scenarios with standing companions (including `standing_behind`). |
+| `createSeparateFurnitureArrangement(options)` | Multiple furniture entities populated in a single call for comparison tests. |
+| `createKneelingBeforeSitting(options)` | Seated actor plus kneeling observers linked by `positioning:kneeling_before`. |
 
 ```javascript
 const fixture = await ModTestFixture.forAction(
@@ -121,19 +127,31 @@ const fixture = await ModTestFixture.forAction(
   rule,
   condition
 );
-const scenario = fixture.createSittingPair({ furnitureId: 'couch1' });
 
-const actor = fixture.entityManager.getEntityInstance(scenario.seatedActors[0].id);
-expect(actor.components['positioning:sitting_on'].furniture_id).toBe(
-  scenario.furniture.id
-);
-expect(actor.components['positioning:closeness'].partners).toContain(
-  scenario.seatedActors[1].id
-);
+const scenario = fixture.createSittingPair({
+  furnitureId: 'couch1',
+  seatedActors: [
+    { id: 'alice', name: 'Alice', spotIndex: 0 },
+    { id: 'bob', name: 'Bob', spotIndex: 1 },
+  ],
+});
+
+await fixture.executeAction(scenario.seatedActors[0].id, scenario.furniture.id);
+
+const actor = fixture.entityManager.getEntityInstance('alice');
+expect(actor).toHaveComponentData('positioning:sitting_on', {
+  furniture_id: scenario.furniture.id,
+  spot_index: 0,
+});
+expect(actor.components['positioning:closeness'].partners).toContain('bob');
 ```
 
-Each helper supports overrides for seat indices, additional furniture, nearby standing partners, and kneeling observers, while
-automatically applying the correct `positioning:*` component IDs used across the positioning mod suite.
+Usage tips:
+
+- Override `seatedActors`, `standingActors`, or `kneelingActors` to control IDs, display names, and seat indices.
+- Pass `closeSeatedActors: false` when actors should sit apart without automatic closeness metadata.
+- Supply `additionalFurniture` to pre-create extra seating surfaces without manual builders.
+- Call helpers from `ModEntityScenarios` directly when working outside `ModTestFixture`.
 
 ## Migration Workflow
 

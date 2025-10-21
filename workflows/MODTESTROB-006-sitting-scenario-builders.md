@@ -160,7 +160,7 @@ Augment `tests/common/mods/ModTestFixture.js` so test fixtures can load the new 
 ### Step 3: Update Shared Exports & Guides
 
 - Re-export the new helpers from `tests/common/mods/index.js` (e.g., `export function createSittingPair(...) { ... }`). This keeps the one-stop import surface used by many specs in sync with the new functionality.
-- Extend any existing developer-facing docs that summarize `ModEntityScenarios` (for example `docs/testing/domain-matchers-guide.md` or other mod-testing guides) with a short “Sitting arrangements” subsection that references the new API:
+- Extend any existing developer-facing docs that summarize `ModEntityScenarios` (for example `docs/testing/action-discovery-testing-toolkit.md#domain-matchers` or other mod-testing guides) with a short “Sitting arrangements” subsection that references the new API:
 
   ```javascript
   const { ModTestFixture } = require('../common/mods');
@@ -203,7 +203,7 @@ Cover at least:
 
 ### Step 6: Provide Usage Examples
 
-Create or update a short guide (e.g., `docs/testing/sitting-scenarios-guide.md`) that illustrates how to load these scenarios using the real fixture API. Focus on patterns that actually exist in the codebase:
+Create or update a short guide (e.g., `docs/testing/mod-testing-guide.md#sitting-arrangement-helpers`) that illustrates how to load these scenarios using the real fixture API. Focus on patterns that actually exist in the codebase:
 
 ```markdown
 const fixture = await ModTestFixture.forAction('positioning', 'positioning:get_up_from_lying', rule, condition);

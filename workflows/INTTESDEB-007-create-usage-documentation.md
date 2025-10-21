@@ -5,7 +5,7 @@
 - **Priority**: Low (Phase 3)
 - **Effort**: 0.5 days
 - **Dependencies**: All Phase 1 and Phase 2 tickets (INTTESDEB-001 through INTTESDEB-006)
-- **File Created**: `/docs/testing/action-integration-debugging.md`
+- **File Created**: `/docs/testing/action-discovery-testing-toolkit.md`
 
 ## Problem Statement
 
@@ -46,12 +46,12 @@ Without documentation, adoption will be slow and developers may not fully utiliz
 ## Implementation Details
 
 ### File Location
-`/docs/testing/action-integration-debugging.md` (new file)
+`/docs/testing/action-discovery-testing-toolkit.md` (new file)
 
 ### Document Structure
 
 ```markdown
-# Action Integration Testing Debugging Guide
+# Action Discovery Testing Toolkit
 
 Comprehensive guide to the action discovery integration testing utilities.
 
@@ -380,7 +380,7 @@ This ticket focuses on documentation, but documentation quality should be verifi
 ## Implementation Steps
 
 1. **Create Document Structure**
-   - Create `/docs/testing/action-integration-debugging.md`
+   - Create `/docs/testing/action-discovery-testing-toolkit.md`
    - Add table of contents
    - Create section structure
 

@@ -963,8 +963,8 @@ const result = await testEnv.discoverWithDiagnostics(actorId, expectedActionId);
 
 ## Additional Resources
 
-- [Domain Matchers Guide](./domain-matchers-guide.md)
-- [Sitting Scenarios Guide](./sitting-scenarios-guide.md)
+- [Domain Matchers Guide](./action-discovery-testing-toolkit.md#domain-matchers)
+- [Sitting Arrangement Helpers](./mod-testing-guide.md#sitting-arrangement-helpers)
 - [Inventory Scenarios Guide](./inventory-scenarios-guide.md)
 - [Scope Resolver Helpers Guide](./scope-resolver-helpers-guide.md)
 
