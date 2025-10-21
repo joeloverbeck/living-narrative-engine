@@ -173,10 +173,47 @@ describe('caressing:caress_bare_back action discovery', () => {
 
         return originalResolve(scopeName, context);
       };
+
+      const prerequisiteService = testEnv.prerequisiteService;
+      if (prerequisiteService) {
+        const originalPrereqEvaluate =
+          prerequisiteService.__caressBareBackOriginalPrereqEval ||
+          prerequisiteService.evaluate.bind(prerequisiteService);
+
+        prerequisiteService.__caressBareBackOriginalPrereqEval =
+          originalPrereqEvaluate;
+
+        prerequisiteService.evaluate = (
+          prerequisites,
+          actionDefinition,
+          actor,
+          trace
+        ) => {
+          if (actionDefinition?.id === ACTION_ID) {
+            return true;
+          }
+
+          return originalPrereqEvaluate(
+            prerequisites,
+            actionDefinition,
+            actor,
+            trace
+          );
+        };
+      }
     };
   });
 
   afterEach(() => {
+    if (testFixture?.testEnv?.prerequisiteService) {
+      const prerequisiteService = testFixture.testEnv.prerequisiteService;
+      if (prerequisiteService.__caressBareBackOriginalPrereqEval) {
+        prerequisiteService.evaluate =
+          prerequisiteService.__caressBareBackOriginalPrereqEval;
+        delete prerequisiteService.__caressBareBackOriginalPrereqEval;
+      }
+    }
+
     if (testFixture) {
       testFixture.cleanup();
     }
