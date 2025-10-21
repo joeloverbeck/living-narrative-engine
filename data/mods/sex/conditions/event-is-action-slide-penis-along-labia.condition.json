@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex:event-is-action-slide-penis-along-labia",
+  "description": "Checks if the event is attempting the 'Slide Penis Along Labia' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "sex:slide_penis_along_labia"]
+  }
+}

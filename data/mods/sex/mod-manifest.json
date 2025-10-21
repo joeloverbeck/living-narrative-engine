@@ -38,6 +38,7 @@
       "press_penis_against_ass_through_clothes.action.json",
       "pump_penis.action.json",
       "pump_penis_from_up_close.action.json",
+      "slide_penis_along_labia.action.json",
       "rub_penis_between_ass_cheeks.action.json",
       "rub_penis_over_clothes.action.json",
       "rub_pussy_against_penis_through_clothes.action.json",
@@ -58,6 +59,7 @@
       "event-is-action-press-penis-against-ass-through-clothes.condition.json",
       "event-is-action-pump-penis-from-up-close.condition.json",
       "event-is-action-pump-penis.condition.json",
+      "event-is-action-slide-penis-along-labia.condition.json",
       "event-is-action-rub-penis-between-ass-cheeks.condition.json",
       "event-is-action-rub-penis-over-clothes.condition.json",
       "event-is-action-rub-pussy-against-penis-through-clothes.condition.json",
@@ -78,6 +80,7 @@
       "handle_press_penis_against_ass_through_clothes.rule.json",
       "handle_pump_penis.rule.json",
       "handle_pump_penis_from_up_close.rule.json",
+      "handle_slide_penis_along_labia.rule.json",
       "handle_rub_penis_between_ass_cheeks.rule.json",
       "handle_rub_penis_over_clothes.rule.json",
       "handle_rub_pussy_against_penis_through_clothes.rule.json",
@@ -99,6 +102,7 @@
       "actors_with_penis_facing_each_other_covered.scope",
       "actors_with_penis_facing_straddler_covered.scope",
       "actors_with_penis_in_intimacy.scope",
+      "actors_with_uncovered_vagina_facing_each_other_or_target_facing_away.scope",
       "actors_with_vagina_facing_each_other_covered.scope"
     ]
   }
