@@ -7,12 +7,11 @@ Comprehensive guide to the action discovery integration testing utilities introd
 1. [Overview](#overview)
 2. [Quick Start](#quick-start)
 3. [Enhanced Test Bed Methods](#enhanced-test-bed-methods)
-4. [Custom Jest Matchers](#custom-jest-matchers)
-5. [Scope Tracing Utilities](#scope-tracing-utilities)
-6. [Diagnostic Discovery](#diagnostic-discovery)
-7. [Common Patterns](#common-patterns)
-8. [Troubleshooting](#troubleshooting)
-9. [API Reference](#api-reference)
+4. [Scope Tracing Utilities](#scope-tracing-utilities)
+5. [Diagnostic Discovery](#diagnostic-discovery)
+6. [Common Patterns](#common-patterns)
+7. [Troubleshooting](#troubleshooting)
+8. [API Reference](#api-reference)
 
 ## Overview
 
@@ -66,6 +65,7 @@ describe('My Action Tests', () => {
 3. **Opt-in to diagnostics** by setting `{ includeDiagnostics: true, traceScopeResolution: true }` during discovery when investigating a failure.
 4. **Summarize trace output** through `testBed.formatDiagnosticSummary(result.diagnostics)` or `formatScopeEvaluationSummary(trace)` for quick inspection.
 5. **Clean up automatically** – the helper resets mocks between runs via the bed's lifecycle hooks, but call `testBed.cleanup()` explicitly when creating beds outside of Jest lifecycle utilities.
+6. **Reuse domain matchers** from the [Domain Matchers Guide](./domain-matchers-guide.md#action-discovery-matchers) for readable assertions instead of repeating matcher documentation here.
 
 ### Migration Tips
 
@@ -120,34 +120,6 @@ All helpers live in `tests/common/actions/actionDiscoveryServiceTestBed.js` and 
   - Reports the last trace type generated (structured vs. action-aware) to assert tracing configuration.
 - **`createMockActor(actorId)` / `createMockContext()`**
   - Lightweight factory helpers for targeted unit tests that do not require full entity setup.
-
-## Custom Jest Matchers
-
-Import `tests/common/actionMatchers.js` once per file to auto-register the matchers with Jest.
-
-### `toHaveAction`
-
-- **Purpose**: Assert that a discovered action array (or `{ actions }` object) includes a specific action ID.
-- **Failure Output**: Lists discovered actions, enumerates common pipeline failure points, and provides immediate debugging tips.
-- **Usage**:
-
-  ```javascript
-  const result = await testBed.discoverActionsWithDiagnostics(actor);
-  expect(result).toHaveAction('affection:place_hands_on_shoulders');
-  ```
-
-### `toDiscoverActionCount`
-
-- **Purpose**: Assert the exact number of actions discovered.
-- **Failure Output**: Differentiates between too few and too many actions with targeted causes (missing components, unexpected closeness, etc.).
-- **Usage**:
-
-  ```javascript
-  const result = await testBed.discoverActionsWithDiagnostics(actor);
-  expect(result).toDiscoverActionCount(3);
-  ```
-
-Both matchers accept either the `{ actions }` response object or the actions array directly.
 
 ## Scope Tracing Utilities
 
@@ -305,13 +277,6 @@ expect(testBed.getDebugLogs()).toContainEqual(
 | `createMockActor` | `(actorId) => { id, components }` | Lightweight actor object for unit tests. |
 | `createMockContext` | `() => object` | Minimal context object for orchestrator tests. |
 | `cleanup` | `() => void` | Resets the bed to its initial state. |
-
-### Custom Matchers
-
-| Matcher | Signature | Description |
-| --- | --- | --- |
-| `toHaveAction` | `(resultOrActions, actionId) => JestMatcherResult` | Asserts that a discovery result includes the specified action. |
-| `toDiscoverActionCount` | `(resultOrActions, expectedCount) => JestMatcherResult` | Asserts the number of discovered actions matches the expectation. |
 
 ### Scope Tracing Helpers
 
