@@ -901,6 +901,78 @@ export class ModActionTestFixture extends BaseModTestFixture {
   }
 
   /**
+   * @description Creates a configurable sitting arrangement and loads it into the fixture.
+   *
+   * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createSittingArrangement
+   * @returns {object} Scenario details including room, furniture, and actors
+   */
+  createSittingArrangement(options = {}) {
+    const scenario = ModEntityScenarios.createSittingArrangement(options);
+    this.reset([...scenario.entities]);
+    return scenario;
+  }
+
+  /**
+   * @description Creates a two-actor sitting pair scenario and loads it into the fixture.
+   *
+   * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createSittingPair
+   * @returns {object} Scenario details including seated actors and furniture
+   */
+  createSittingPair(options = {}) {
+    const scenario = ModEntityScenarios.createSittingPair(options);
+    this.reset([...scenario.entities]);
+    return scenario;
+  }
+
+  /**
+   * @description Creates a solo sitting scenario and loads it into the fixture.
+   *
+   * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createSoloSitting
+   * @returns {object} Scenario details including the seated actor and furniture
+   */
+  createSoloSitting(options = {}) {
+    const scenario = ModEntityScenarios.createSoloSitting(options);
+    this.reset([...scenario.entities]);
+    return scenario;
+  }
+
+  /**
+   * @description Creates a seated plus standing arrangement and loads it into the fixture.
+   *
+   * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createStandingNearSitting
+   * @returns {object} Scenario details including seated and standing actors
+   */
+  createStandingNearSitting(options = {}) {
+    const scenario = ModEntityScenarios.createStandingNearSitting(options);
+    this.reset([...scenario.entities]);
+    return scenario;
+  }
+
+  /**
+   * @description Creates a scenario with actors on separate furniture entities and loads it into the fixture.
+   *
+   * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createSeparateFurnitureArrangement
+   * @returns {object} Scenario details including multiple furniture entities
+   */
+  createSeparateFurnitureArrangement(options = {}) {
+    const scenario = ModEntityScenarios.createSeparateFurnitureArrangement(options);
+    this.reset([...scenario.entities]);
+    return scenario;
+  }
+
+  /**
+   * @description Creates a seated actor with kneeling companions and loads it into the fixture.
+   *
+   * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createKneelingBeforeSitting
+   * @returns {object} Scenario details including seated and kneeling actors
+   */
+  createKneelingBeforeSitting(options = {}) {
+    const scenario = ModEntityScenarios.createKneelingBeforeSitting(options);
+    this.reset([...scenario.entities]);
+    return scenario;
+  }
+
+  /**
    * Executes the action with standard parameters.
    *
    * Enhanced to include action discovery pipeline validation by default.

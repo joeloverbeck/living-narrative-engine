@@ -107,6 +107,34 @@ const testEnv = await TestModuleBuilder.forTurnExecution()
   .build();
 ```
 
+### Sitting Arrangement Helpers
+
+High-level seating scenarios can now be composed with a single helper call instead of manually instantiating rooms, furniture,
+and positioning components. The new `ModEntityScenarios.createSitting*` functions—also exposed through `ModTestFixture`
+(`createSittingPair`, `createSoloSitting`, `createStandingNearSitting`, `createSeparateFurnitureArrangement`, and
+`createKneelingBeforeSitting`)—hydrate the fixture with ready-to-use entities and return the generated IDs for assertions.
+
+```javascript
+const fixture = await ModTestFixture.forAction(
+  'positioning',
+  'positioning:sit_down',
+  rule,
+  condition
+);
+const scenario = fixture.createSittingPair({ furnitureId: 'couch1' });
+
+const actor = fixture.entityManager.getEntityInstance(scenario.seatedActors[0].id);
+expect(actor.components['positioning:sitting_on'].furniture_id).toBe(
+  scenario.furniture.id
+);
+expect(actor.components['positioning:closeness'].partners).toContain(
+  scenario.seatedActors[1].id
+);
+```
+
+Each helper supports overrides for seat indices, additional furniture, nearby standing partners, and kneeling observers, while
+automatically applying the correct `positioning:*` component IDs used across the positioning mod suite.
+
 ## Migration Workflow
 
 Legacy tests that create facades directly should move to module builders to reduce boilerplate and improve readability. Use the decision tree to confirm the migration makes sense, then apply the five-step process.
