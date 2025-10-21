@@ -330,7 +330,17 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
 
       expect(fixture.ruleFile).toEqual(providedRule);
       expect(fixture.conditionFile).toEqual(providedCondition);
-      expect(fs.readFile).not.toHaveBeenCalled();
+
+      const readPaths = fs.readFile.mock.calls.map(([path]) =>
+        path.replace(/\\/g, '/'),
+      );
+
+      expect(
+        readPaths.some((path) => path.includes('/data/mods/kissing/rules/')),
+      ).toBe(false);
+      expect(
+        readPaths.some((path) => path.includes('/data/mods/kissing/conditions/')),
+      ).toBe(false);
     });
 
     it('should auto-load only missing files', async () => {
@@ -447,11 +457,35 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
     it('should work with various action ID formats', async () => {
       // First call for 'kiss_cheek' (simple format)
       fs.readFile
-        .mockResolvedValueOnce(JSON.stringify(mockRuleFile))
-        .mockResolvedValueOnce(JSON.stringify(mockConditionFile))
+        .mockImplementationOnce(() =>
+          Promise.resolve(JSON.stringify(mockRuleFile)),
+        )
+        .mockImplementationOnce(() =>
+          Promise.resolve(JSON.stringify(mockConditionFile)),
+        )
+        .mockImplementationOnce(() =>
+          Promise.resolve(
+            JSON.stringify({
+              id: 'kissing:kiss_cheek',
+              prerequisites: [],
+            }),
+          ),
+        )
         // Second call for 'kissing:kiss_cheek' (namespaced format)
-        .mockResolvedValueOnce(JSON.stringify(mockRuleFile))
-        .mockResolvedValueOnce(JSON.stringify(mockConditionFile));
+        .mockImplementationOnce(() =>
+          Promise.resolve(JSON.stringify(mockRuleFile)),
+        )
+        .mockImplementationOnce(() =>
+          Promise.resolve(JSON.stringify(mockConditionFile)),
+        )
+        .mockImplementationOnce(() =>
+          Promise.resolve(
+            JSON.stringify({
+              id: 'kissing:kiss_cheek',
+              prerequisites: [],
+            }),
+          ),
+        );
 
       // Should work with simple format
       const fixture1 = await ModTestFixture.forActionAutoLoad(
