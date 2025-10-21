@@ -9,6 +9,9 @@ import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
+import JsonLogicCustomOperators from '../../../src/logic/jsonLogicCustomOperators.js';
+import { ActionValidationContextBuilder } from '../../../src/actions/validation/actionValidationContextBuilder.js';
+import { PrerequisiteEvaluationService } from '../../../src/actions/validation/prerequisiteEvaluationService.js';
 import { ActionIndex } from '../../../src/actions/actionIndex.js';
 import { SimpleEntityManager } from '../entities/index.js';
 import {
@@ -172,46 +175,123 @@ export function createBaseRuleEnvironment({
       operationRegistry,
     });
     // Create the bodyGraphService mock that actually checks entity components
+    const getDescendantPartIds = (rootId) => {
+      const visited = new Set();
+      const stack = rootId ? [rootId] : [];
+      const descendants = new Set();
+
+      while (stack.length > 0) {
+        const currentId = stack.pop();
+        if (!currentId || visited.has(currentId)) {
+          continue;
+        }
+
+        visited.add(currentId);
+
+        const partComponent = entityManager.getComponentData(
+          currentId,
+          'anatomy:part'
+        );
+        if (!partComponent) {
+          continue;
+        }
+
+        descendants.add(currentId);
+
+        const children = Array.isArray(partComponent.children)
+          ? partComponent.children
+          : [];
+        for (const childId of children) {
+          if (!visited.has(childId)) {
+            stack.push(childId);
+          }
+        }
+      }
+
+      return descendants;
+    };
+
     const mockBodyGraphService = {
       hasPartWithComponentValue: jest.fn(
         (bodyComponent, componentId, propertyPath, expectedValue) => {
-          // If no body component or root, return not found
-          if (!bodyComponent || !bodyComponent.root) {
+          if (!bodyComponent) {
             return { found: false };
           }
 
-          // Check the root entity first
-          const rootEntity = entityManager.getEntity(bodyComponent.root);
-          if (rootEntity && rootEntity.components[componentId]) {
-            const component = rootEntity.components[componentId];
+          const rootId = bodyComponent.root ?? bodyComponent.body?.root;
+          if (!rootId) {
+            return { found: false };
+          }
+
+          const descendantIds = getDescendantPartIds(rootId);
+
+          for (const partId of descendantIds) {
+            const component = entityManager.getComponentData(partId, componentId);
+
+            if (!component) {
+              continue;
+            }
+
             const actualValue = propertyPath
               ? component[propertyPath]
               : component;
             if (actualValue === expectedValue) {
-              return { found: true, partId: bodyComponent.root };
-            }
-          }
-
-          // For test environments, also check all entities that look like body parts
-          // This is a simplified approach since we don't have the full graph traversal
-          const allEntities = entityManager.getAllEntities();
-          for (const entity of allEntities) {
-            // Check if this entity has the component we're looking for
-            if (entity.components && entity.components[componentId]) {
-              const component = entity.components[componentId];
-              const actualValue = propertyPath
-                ? component[propertyPath]
-                : component;
-              if (actualValue === expectedValue) {
-                return { found: true, partId: entity.id };
-              }
+              return { found: true, partId };
             }
           }
 
           return { found: false };
         }
       ),
+      buildAdjacencyCache: jest.fn(() => undefined),
+      findPartsByType: jest.fn((rootId, partType) => {
+        if (!rootId) {
+          return [];
+        }
+
+        const descendantIds = getDescendantPartIds(rootId);
+        const matches = [];
+
+        for (const partId of descendantIds) {
+          const partComponent = entityManager.getComponentData(
+            partId,
+            'anatomy:part'
+          );
+          if (partComponent?.subType === partType) {
+            matches.push(partId);
+          }
+        }
+
+        return matches;
+      }),
+      getAllParts: jest.fn((bodyComponentOrRoot) => {
+        if (!bodyComponentOrRoot) {
+          return [];
+        }
+
+        let rootId = null;
+        if (typeof bodyComponentOrRoot === 'string') {
+          rootId = bodyComponentOrRoot;
+        } else {
+          rootId =
+            bodyComponentOrRoot.root ?? bodyComponentOrRoot.body?.root ?? null;
+        }
+
+        if (!rootId) {
+          return [];
+        }
+
+        return Array.from(getDescendantPartIds(rootId));
+      }),
+      clearCache: jest.fn(),
     };
+
+    const jsonLogicCustomOperators = new JsonLogicCustomOperators({
+      logger: testLogger,
+      entityManager,
+      bodyGraphService: mockBodyGraphService,
+    });
+    jsonLogicCustomOperators.registerOperators(jsonLogic);
 
     // Create and initialize ActionIndex
     const actionIndex = new ActionIndex({
@@ -734,6 +814,18 @@ export function createBaseRuleEnvironment({
 
   const init = initializeEnv(entities);
 
+  const actionValidationContextBuilder = new ActionValidationContextBuilder({
+    entityManager: init.entityManager,
+    logger: testLogger,
+  });
+
+  const prerequisiteService = new PrerequisiteEvaluationService({
+    logger: testLogger,
+    jsonLogicEvaluationService: jsonLogic,
+    actionValidationContextBuilder,
+    gameDataRepository: testDataRegistry,
+  });
+
   // Setup entity cache invalidation to match production behavior
   // This ensures the entity cache is automatically cleared when components are added/removed
   setupEntityCacheInvalidation(bus);
@@ -753,6 +845,7 @@ export function createBaseRuleEnvironment({
     unifiedScopeResolver: init.unifiedScopeResolver,
     logger: testLogger,
     dataRegistry: testDataRegistry,
+    prerequisiteService,
     createHandlers,
     cleanup: () => {
       interpreter.shutdown();
@@ -1169,7 +1262,41 @@ export function createRuleTestEnvironment(options) {
 
     pendingAssignments = filteredAssignments;
 
-    return pendingAssignments.length > 0;
+    if (pendingAssignments.length === 0) {
+      return false;
+    }
+
+    if (
+      Array.isArray(action.prerequisites) &&
+      action.prerequisites.length > 0
+    ) {
+      try {
+        const actorEntity = env.entityManager.getEntityInstance(actorId);
+        if (!actorEntity) {
+          return false;
+        }
+
+        const prerequisitesPassed = env.prerequisiteService.evaluate(
+          action.prerequisites,
+          action,
+          actorEntity
+        );
+
+        if (!prerequisitesPassed) {
+          env.logger.debug(
+            `Action ${actionId}: Actor ${actorId} failed prerequisite evaluation`
+          );
+          return false;
+        }
+      } catch (error) {
+        env.logger.debug(
+          `Action ${actionId}: Prerequisite evaluation error for actor ${actorId}: ${error.message}`
+        );
+        return false;
+      }
+    }
+
+    return true;
   };
 
   // Add a method to get available actions with scope validation

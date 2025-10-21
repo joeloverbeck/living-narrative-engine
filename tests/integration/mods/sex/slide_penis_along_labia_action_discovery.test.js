@@ -163,6 +163,8 @@ describe('sex:slide_penis_along_labia action discovery', () => {
    * @param {boolean} [options.targetFacingAway=false] - Whether the target faces away from the actor.
    * @param {boolean} [options.includeCloseness=true] - Whether both entities share closeness.
    * @param {boolean} [options.coverVagina=false] - Whether clothing covers the target's vagina.
+   * @param {boolean} [options.includePenis=true] - Whether to include a penis anatomy part for the actor.
+   * @param {boolean} [options.coverPenis=false] - Whether clothing covers the actor's penis.
    * @param {boolean} [options.actorKneeling=false] - Whether the actor kneels before the target.
    * @param {boolean} [options.targetKneeling=false] - Whether the target kneels before the actor.
    * @param {boolean} [options.includeVagina=true] - Whether to include a vagina anatomy part.
@@ -176,13 +178,21 @@ describe('sex:slide_penis_along_labia action discovery', () => {
       actorKneeling = false,
       targetKneeling = false,
       includeVagina = true,
+      includePenis = true,
+      coverPenis = false,
     } = options;
 
     const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
+    const actorGroinId = includePenis
+      ? 'actorGroinWithPenis1'
+      : 'actorGroinNoPenis1';
+    const actorPenisId = `${actorGroinId}_penis`;
+
     const actorBuilder = new ModEntityBuilder('alice')
       .withName('Alice')
       .atLocation('room1')
+      .withBody(actorGroinId)
       .asActor();
 
     const targetBuilder = new ModEntityBuilder('beth')
@@ -229,15 +239,43 @@ describe('sex:slide_penis_along_labia action discovery', () => {
         });
     }
 
+    if (coverPenis) {
+      actorBuilder
+        .withComponent('clothing:equipment', {
+          equipped: {
+            torso_lower: {
+              base: ['pants1'],
+            },
+          },
+        })
+        .withComponent('clothing:slot_metadata', {
+          slotMappings: {
+            torso_lower: {
+              coveredSockets: ['penis'],
+              allowedLayers: ['base', 'outer'],
+            },
+          },
+        });
+    }
+
     const actor = actorBuilder.build();
     const target = targetBuilder.build();
 
     const pelvisChildren = includeVagina ? ['vagina1'] : [];
+    const actorGroinChildren = includePenis ? [actorPenisId] : [];
     const targetPelvis = new ModEntityBuilder('targetPelvis1')
       .asBodyPart({
         parent: null,
         children: pelvisChildren,
         subType: 'pelvis',
+      })
+      .build();
+
+    const actorGroin = new ModEntityBuilder(actorGroinId)
+      .asBodyPart({
+        parent: null,
+        children: actorGroinChildren,
+        subType: 'groin',
       })
       .build();
 
@@ -251,14 +289,32 @@ describe('sex:slide_penis_along_labia action discovery', () => {
           .build()
       : null;
 
-    const entities = [room, actor, target, targetPelvis];
+    const actorPenis = includePenis
+      ? new ModEntityBuilder(actorPenisId)
+          .asBodyPart({
+            parent: actorGroinId,
+            children: [],
+            subType: 'penis',
+          })
+          .build()
+      : null;
+
+    const entities = [room, actor, target, actorGroin, targetPelvis];
 
     if (vagina) {
       entities.push(vagina);
     }
 
+    if (actorPenis) {
+      entities.push(actorPenis);
+    }
+
     if (coverVagina) {
       entities.push(new ModEntityBuilder('skirt1').withName('skirt').build());
+    }
+
+    if (coverPenis) {
+      entities.push(new ModEntityBuilder('pants1').withName('pants').build());
     }
 
     return entities;
@@ -312,6 +368,32 @@ describe('sex:slide_penis_along_labia action discovery', () => {
     testFixture.reset(entities);
     configureActionDiscovery();
 
+    const actorEntity = testFixture.entityManager.getEntityInstance('alice');
+    const hasPenis = testFixture.testEnv.jsonLogic.evaluate(
+      { hasPartOfType: ['actor', 'penis'] },
+      { actor: { id: 'alice' } }
+    );
+    const penisUncovered = testFixture.testEnv.jsonLogic.evaluate(
+      { not: { isSocketCovered: ['actor', 'penis'] } },
+      { actor: { id: 'alice' } }
+    );
+    expect(hasPenis).toBe(true);
+    expect(penisUncovered).toBe(true);
+
+    const prerequisitesPassed = testFixture.testEnv.prerequisiteService.evaluate(
+      slidePenisAlongLabiaAction.prerequisites,
+      slidePenisAlongLabiaAction,
+      actorEntity
+    );
+    expect(prerequisitesPassed).toBe(true);
+
+    expect(
+      testFixture.testEnv.validateAction(
+        'alice',
+        'sex:slide_penis_along_labia'
+      )
+    ).toBe(true);
+
     const actions = await testFixture.discoverActions('alice');
     const foundAction = actions.find(
       (action) => action.id === 'sex:slide_penis_along_labia'
@@ -352,6 +434,12 @@ describe('sex:slide_penis_along_labia action discovery', () => {
     testFixture.reset(entities);
     configureActionDiscovery();
 
+    const vaginaCovered = testFixture.testEnv.jsonLogic.evaluate(
+      { isSocketCovered: ['target', 'vagina'] },
+      { actor: { id: 'alice' }, target: { id: 'beth' } }
+    );
+    expect(vaginaCovered).toBe(true);
+
     const actions = await testFixture.discoverActions('alice');
     const foundAction = actions.find(
       (action) => action.id === 'sex:slide_penis_along_labia'
@@ -390,6 +478,60 @@ describe('sex:slide_penis_along_labia action discovery', () => {
     const entities = buildScenario({ targetKneeling: true });
     testFixture.reset(entities);
     configureActionDiscovery();
+
+    const actions = await testFixture.discoverActions('alice');
+    const foundAction = actions.find(
+      (action) => action.id === 'sex:slide_penis_along_labia'
+    );
+
+    expect(foundAction).toBeUndefined();
+  });
+
+  it('does not appear when the actor lacks a penis', async () => {
+    const entities = buildScenario({ includePenis: false });
+    testFixture.reset(entities);
+    configureActionDiscovery();
+
+    const hasPenis = testFixture.testEnv.jsonLogic.evaluate(
+      { hasPartOfType: ['actor', 'penis'] },
+      { actor: { id: 'alice' } }
+    );
+    expect(hasPenis).toBe(false);
+
+    const actions = await testFixture.discoverActions('alice');
+    const foundAction = actions.find(
+      (action) => action.id === 'sex:slide_penis_along_labia'
+    );
+
+    expect(foundAction).toBeUndefined();
+  });
+
+  it("does not appear when the actor's penis is covered", async () => {
+    const entities = buildScenario({ coverPenis: true });
+    testFixture.reset(entities);
+    configureActionDiscovery();
+
+    const equipment = testFixture.entityManager.getComponentData(
+      'alice',
+      'clothing:equipment'
+    );
+    expect(equipment).toBeDefined();
+    expect(equipment.equipped?.torso_lower?.base).toEqual(['pants1']);
+
+    const slotMetadata = testFixture.entityManager.getComponentData(
+      'alice',
+      'clothing:slot_metadata'
+    );
+    expect(slotMetadata).toBeDefined();
+    expect(slotMetadata.slotMappings?.torso_lower?.coveredSockets).toContain(
+      'penis'
+    );
+
+    const penisCovered = testFixture.testEnv.jsonLogic.evaluate(
+      { isSocketCovered: ['actor', 'penis'] },
+      { actor: { id: 'alice' } }
+    );
+    expect(penisCovered).toBe(true);
 
     const actions = await testFixture.discoverActions('alice');
     const foundAction = actions.find(
