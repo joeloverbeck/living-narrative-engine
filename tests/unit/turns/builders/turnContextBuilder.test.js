@@ -4,12 +4,18 @@
 // build operation work as expected.
 // -----------------------------------------------------------------------------
 
-import { describe, it, expect, jest } from '@jest/globals';
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { TurnContextBuilder } from '../../../../src/turns/builders/turnContextBuilder.js';
 
-const logger = { debug: jest.fn() };
-const factory = { create: jest.fn(() => ({ id: 'ctx' })) };
-const assertValidEntity = jest.fn();
+let logger;
+let factory;
+let assertValidEntity;
+
+beforeEach(() => {
+  logger = { debug: jest.fn() };
+  factory = { create: jest.fn(() => ({ id: 'ctx' })) };
+  assertValidEntity = jest.fn();
+});
 
 describe('TurnContextBuilder constructor validation', () => {
   it('throws if logger is missing', () => {
@@ -59,6 +65,9 @@ describe('TurnContextBuilder build', () => {
       logger,
       'TurnContextBuilder'
     );
+    expect(logger.debug).toHaveBeenCalledWith(
+      'TurnContextBuilder: Building context for actor a1.'
+    );
     expect(factory.create).toHaveBeenCalledWith({
       actor,
       strategy,
@@ -66,6 +75,39 @@ describe('TurnContextBuilder build', () => {
       handlerInstance: handler,
       isAwaitingExternalEventProvider: undefined,
       onSetAwaitingExternalEventCallback: undefined,
+    });
+    expect(ctx).toEqual({ id: 'ctx' });
+  });
+
+  it('passes optional awaiting handlers to the factory', () => {
+    const builder = new TurnContextBuilder({
+      logger,
+      turnContextFactory: factory,
+      assertValidEntity,
+    });
+    const actor = { id: 'optional-actor' };
+    const strategy = {};
+    const onEnd = jest.fn();
+    const handler = {};
+    const awaitFlagProvider = jest.fn(() => true);
+    const setAwaitFlag = jest.fn();
+
+    const ctx = builder.build({
+      actor,
+      strategy,
+      onEndTurn: onEnd,
+      handlerInstance: handler,
+      awaitFlagProvider,
+      setAwaitFlag,
+    });
+
+    expect(factory.create).toHaveBeenCalledWith({
+      actor,
+      strategy,
+      onEndTurnCallback: onEnd,
+      handlerInstance: handler,
+      isAwaitingExternalEventProvider: awaitFlagProvider,
+      onSetAwaitingExternalEventCallback: setAwaitFlag,
     });
     expect(ctx).toEqual({ id: 'ctx' });
   });
