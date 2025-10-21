@@ -319,17 +319,20 @@ export class ModTestFixture {
    */
   static async loadRuleFile(modId, identifier) {
     const actionName = extractActionName(identifier);
+    const effectiveModId = identifier.includes(':')
+      ? identifier.split(':')[0]
+      : modId;
     const errors = [];
 
     // Generate fullActionId - if identifier has no namespace, use modId_actionName pattern
     const fullActionId = identifier.includes(':')
       ? identifier.replace(':', '_')
-      : `${modId}_${actionName}`;
+      : `${effectiveModId}_${actionName}`;
 
     // Try to load rule file
     const rulePaths = MOD_FILE_CONVENTIONS.rules.map((pattern) =>
       pattern
-        .replace('{modId}', modId)
+        .replace('{modId}', effectiveModId)
         .replace('{actionName}', actionName)
         .replace('{fullActionId}', fullActionId)
     );
@@ -359,17 +362,20 @@ export class ModTestFixture {
    */
   static async loadConditionFile(modId, identifier) {
     const actionName = extractActionName(identifier);
+    const effectiveModId = identifier.includes(':')
+      ? identifier.split(':')[0]
+      : modId;
     const errors = [];
 
     // Generate fullActionId for conditions - use hyphens instead of underscores
     const fullActionIdForConditions = identifier.includes(':')
       ? identifier.replace(/[:_]/g, '-')
-      : `${modId}-${actionName.replace(/_/g, '-')}`;
+      : `${effectiveModId}-${actionName.replace(/_/g, '-')}`;
 
     // Try to load condition file
     const conditionPaths = MOD_FILE_CONVENTIONS.conditions.map((pattern) =>
       pattern
-        .replace('{modId}', modId)
+        .replace('{modId}', effectiveModId)
         .replace('{actionName}', actionName.replace(/_/g, '-'))
         .replace('{fullActionId}', fullActionIdForConditions)
     );
@@ -404,6 +410,9 @@ export class ModTestFixture {
    */
   static async loadModFiles(modId, identifier) {
     const actionName = extractActionName(identifier);
+    const effectiveModId = identifier.includes(':')
+      ? identifier.split(':')[0]
+      : modId;
     const errors = [];
     let ruleFile = null;
     let conditionFile = null;
@@ -411,12 +420,12 @@ export class ModTestFixture {
     // Generate fullActionId - if identifier has no namespace, use modId_actionName pattern
     const fullActionId = identifier.includes(':')
       ? identifier.replace(':', '_')
-      : `${modId}_${actionName}`;
+      : `${effectiveModId}_${actionName}`;
 
     // Try to load rule file
     const rulePaths = MOD_FILE_CONVENTIONS.rules.map((pattern) =>
       pattern
-        .replace('{modId}', modId)
+        .replace('{modId}', effectiveModId)
         .replace('{actionName}', actionName)
         .replace('{fullActionId}', fullActionId)
     );
@@ -435,12 +444,12 @@ export class ModTestFixture {
     // Generate fullActionId for conditions - use hyphens instead of underscores
     const fullActionIdForConditions = identifier.includes(':')
       ? identifier.replace(/[:_]/g, '-')
-      : `${modId}-${actionName.replace(/_/g, '-')}`;
+      : `${effectiveModId}-${actionName.replace(/_/g, '-')}`;
 
     // Try to load condition file
     const conditionPaths = MOD_FILE_CONVENTIONS.conditions.map((pattern) =>
       pattern
-        .replace('{modId}', modId)
+        .replace('{modId}', effectiveModId)
         .replace('{actionName}', actionName.replace(/_/g, '-')) // Convert all underscores to hyphens for condition files
         .replace('{fullActionId}', fullActionIdForConditions)
     );
@@ -484,15 +493,18 @@ export class ModTestFixture {
    */
   static getConventionalPaths(modId, identifier) {
     const actionName = extractActionName(identifier);
+    const effectiveModId = identifier.includes(':')
+      ? identifier.split(':')[0]
+      : modId;
 
     // Generate fullActionId - if identifier has no namespace, use modId_actionName pattern
     const fullActionId = identifier.includes(':')
       ? identifier.replace(':', '_')
-      : `${modId}_${actionName}`;
+      : `${effectiveModId}_${actionName}`;
 
     const rulePaths = MOD_FILE_CONVENTIONS.rules.map((pattern) =>
       pattern
-        .replace('{modId}', modId)
+        .replace('{modId}', effectiveModId)
         .replace('{actionName}', actionName)
         .replace('{fullActionId}', fullActionId)
     );
@@ -500,11 +512,11 @@ export class ModTestFixture {
     // Generate fullActionId for conditions - use hyphens instead of underscores
     const fullActionIdForConditions = identifier.includes(':')
       ? identifier.replace(/[:_]/g, '-')
-      : `${modId}-${actionName.replace(/_/g, '-')}`;
+      : `${effectiveModId}-${actionName.replace(/_/g, '-')}`;
 
     const conditionPaths = MOD_FILE_CONVENTIONS.conditions.map((pattern) =>
       pattern
-        .replace('{modId}', modId)
+        .replace('{modId}', effectiveModId)
         .replace('{actionName}', actionName.replace(/_/g, '-'))
         .replace('{fullActionId}', fullActionIdForConditions)
     );
