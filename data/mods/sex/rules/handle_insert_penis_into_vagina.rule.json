@@ -1,0 +1,91 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_insert_penis_into_vagina",
+  "comment": "Handles the 'sex:insert_penis_into_vagina' action. Applies penetration state, logs the outcome, and ends the turn.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "sex:event-is-action-insert-penis-into-vagina"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "primary",
+        "result_variable": "primaryName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "ADD_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "sex:fucking_vaginally",
+        "value": {
+          "targetId": "{event.payload.primaryId}"
+        }
+      }
+    },
+    {
+      "type": "ADD_COMPONENT",
+      "parameters": {
+        "entity_ref": "primary",
+        "component_type": "sex:being_fucked_vaginally",
+        "value": {
+          "actorId": "{event.payload.actorId}"
+        }
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} inserts their penis into {context.primaryName}'s vagina, that stretches to accomodate the girth."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "actorId",
+        "value": "{event.payload.actorId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.primaryId}"
+      }
+    },
+    {
+      "macro": "core:logSuccessAndEndTurn"
+    }
+  ]
+}

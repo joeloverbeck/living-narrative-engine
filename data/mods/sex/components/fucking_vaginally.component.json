@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "sex:fucking_vaginally",
+  "name": "Fucking Vaginally",
+  "description": "Marks an actor who is actively penetrating a partner's vagina.",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["targetId"],
+    "properties": {
+      "targetId": {
+        "description": "The entity ID of the partner currently being penetrated.",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId"
+      }
+    }
+  }
+}
