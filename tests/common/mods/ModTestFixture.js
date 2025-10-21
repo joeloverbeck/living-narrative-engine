@@ -540,6 +540,47 @@ class BaseModTestFixture {
     // Load action definitions for the mod to enable action discovery
     const actionDefinitions = await this.loadActionDefinitions();
 
+    // Track prerequisite condition references across loaded actions
+    const prerequisiteConditionIds = new Set();
+    for (const actionDef of actionDefinitions) {
+      const prerequisites = actionDef?.prerequisites;
+      if (!Array.isArray(prerequisites) || prerequisites.length === 0) {
+        continue;
+      }
+
+      for (const prereq of prerequisites) {
+        if (!prereq) {
+          continue;
+        }
+
+        if (typeof prereq === 'string') {
+          prerequisiteConditionIds.add(prereq);
+          continue;
+        }
+
+        if (
+          typeof prereq.condition_ref === 'string' &&
+          prereq.condition_ref.trim().length > 0
+        ) {
+          prerequisiteConditionIds.add(prereq.condition_ref.trim());
+          continue;
+        }
+
+        if (
+          typeof prereq.conditionId === 'string' &&
+          prereq.conditionId.trim().length > 0
+        ) {
+          prerequisiteConditionIds.add(prereq.conditionId.trim());
+          continue;
+        }
+
+        const logicConditionRef = prereq?.logic?.condition_ref;
+        if (typeof logicConditionRef === 'string' && logicConditionRef.trim()) {
+          prerequisiteConditionIds.add(logicConditionRef.trim());
+        }
+      }
+    }
+
     // Create conditions map for the test environment
     const conditions = {};
     if (conditionFile) {
@@ -547,6 +588,43 @@ class BaseModTestFixture {
       conditions[conditionId] = conditionFile;
       if (conditionFile.id && conditionFile.id !== conditionId) {
         conditions[conditionFile.id] = conditionFile;
+      }
+    }
+
+    // Ensure prerequisite conditions are available for evaluation
+    for (const prereqConditionId of prerequisiteConditionIds) {
+      if (!prereqConditionId || conditions[prereqConditionId]) {
+        continue;
+      }
+
+      const [modNamespace, conditionNameRaw] = prereqConditionId.split(':');
+      if (!modNamespace || !conditionNameRaw) {
+        continue;
+      }
+
+      const conditionFileName = `${conditionNameRaw
+        .replace(/_/g, '-')
+        .trim()}.condition.json`;
+      const conditionPath = resolve(
+        `data/mods/${modNamespace}/conditions/${conditionFileName}`
+      );
+
+      try {
+        const content = await fs.readFile(conditionPath, 'utf8');
+        const parsedCondition = JSON.parse(content);
+
+        conditions[prereqConditionId] = parsedCondition;
+        if (
+          parsedCondition.id &&
+          parsedCondition.id !== prereqConditionId &&
+          !conditions[parsedCondition.id]
+        ) {
+          conditions[parsedCondition.id] = parsedCondition;
+        }
+      } catch (error) {
+        console.warn(
+          `⚠️  ModTestFixture: Unable to load prerequisite condition '${prereqConditionId}' from ${conditionPath}: ${error.message}`
+        );
       }
     }
 
