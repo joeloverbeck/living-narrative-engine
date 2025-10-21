@@ -262,9 +262,14 @@ export class PrerequisiteEvaluationService extends BaseService {
       return;
     }
 
-    let componentKeys;
+    let componentSnapshot = null;
+
     try {
-      componentKeys = Object.keys(components);
+      if (components && typeof components.toJSON === 'function') {
+        componentSnapshot = components.toJSON();
+      } else if (components && typeof components === 'object') {
+        componentSnapshot = { ...components };
+      }
     } catch (err) {
       this.#logger.warn(
         `${prefix}: WARNING - Actor entity [${resolvedActorId}] components could not be inspected. Treating as missing.`
@@ -272,19 +277,21 @@ export class PrerequisiteEvaluationService extends BaseService {
       return;
     }
 
-    if (componentKeys.length === 0) {
+    if (!componentSnapshot || Object.keys(componentSnapshot).length === 0) {
       this.#logger.warn(
         `${prefix}: WARNING - Actor entity [${resolvedActorId}] appears to have NO components. This may indicate a loading issue.`
       );
       return;
     }
 
+    const componentKeys = Object.keys(componentSnapshot);
+
     this.#logger.debug(
       `${prefix}: Actor entity [${resolvedActorId}] has ${componentKeys.length} components available.`
     );
 
     try {
-      const serializedComponents = JSON.stringify(components);
+      const serializedComponents = JSON.stringify(componentSnapshot);
       this.#logger.debug(
         `${prefix}: Actor components snapshot => ${serializedComponents}`
       );
