@@ -1336,6 +1336,10 @@ export class ModActionTestFixture extends BaseModTestFixture {
       ...additionalPayload,
     };
 
+    if (targetId && payload.primaryId === undefined) {
+      payload.primaryId = targetId;
+    }
+
     console.log(`[EXECUTE ACTION] About to dispatch action ${fullActionId}`);
     console.log(`[EXECUTE ACTION] Forbidden component check passed, executing action`);
 
