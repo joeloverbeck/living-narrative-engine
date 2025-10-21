@@ -122,6 +122,22 @@ export function createActionValidationProxy(actionDef, context = 'Action') {
       const errors = [];
       const validTargetTypes = ['primary', 'secondary', 'tertiary'];
 
+      if (typeof targets === 'string') {
+        // Single scope string form – nothing further to validate
+        return errors;
+      }
+
+      if (!targets || typeof targets !== 'object') {
+        errors.push({
+          type: 'invalid_structure',
+          property: 'targets',
+          value: targets,
+          message: 'Targets must be either a scope string or an object keyed by target role.',
+          suggestion: 'Use a string for single-target actions or { "primary": { "scope": "mod:scope" } } for multi-target actions.',
+        });
+        return errors;
+      }
+
       Object.keys(targets).forEach((targetType) => {
         if (!validTargetTypes.includes(targetType)) {
           errors.push({
