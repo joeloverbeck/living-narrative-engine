@@ -14,6 +14,34 @@ Domain-specific Jest matchers for testing mod actions in the Living Narrative En
 
 ## Available Matchers
 
+Import `tests/common/actionMatchers.js` once per suite (for example inside `jest.setup.js`) to register all domain matchers, including the action-discovery helpers documented below.
+
+### Action Discovery Matchers
+
+These matchers operate on the return value from `ActionDiscoveryServiceTestBed` helpers. They accept either the `{ actions }` object or the array of action IDs directly.
+
+#### `toHaveAction(actionId)`
+
+- **Purpose**: Assert that a discovery result includes a specific action ID.
+- **Failure Output**: Lists discovered actions and highlights common pipeline failure points pulled from the diagnostics payload.
+- **Usage**:
+
+  ```javascript
+  const result = await testBed.discoverActionsWithDiagnostics(actor);
+  expect(result).toHaveAction('affection:place_hands_on_shoulders');
+  ```
+
+#### `toDiscoverActionCount(expectedCount)`
+
+- **Purpose**: Assert the exact number of actions discovered.
+- **Failure Output**: Differentiates between too few and too many actions with tips about missing components, proximity mismatches, or unexpected candidates.
+- **Usage**:
+
+  ```javascript
+  const result = await testBed.discoverActionsWithDiagnostics(actor);
+  expect(result).toDiscoverActionCount(3);
+  ```
+
 ### Event-Based Matchers
 
 #### `toHaveActionSuccess(message)`
