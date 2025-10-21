@@ -22,6 +22,7 @@ import { promises as fs } from 'fs';
 jest.mock('fs', () => ({
   promises: {
     readFile: jest.fn(),
+    readdir: jest.fn(),
   },
 }));
 
@@ -31,24 +32,33 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
 
   beforeEach(() => {
     mockRuleFile = {
-      id: 'test:rule',
+      $schema: 'schema://living-narrative-engine/rule.schema.json',
+      rule_id: 'handle_test_action',
+      event_type: 'core:attempt_action',
+      condition: { condition_ref: 'test_mod:event-is-action-test-action' },
       actions: [
         {
-          operationType: 'DISPATCH_PERCEPTIBLE_EVENT',
-          parameters: ['Test action executed'],
+          type: 'DISPATCH_PERCEPTIBLE_EVENT',
+          parameters: {
+            perception_type: 'narration',
+            description_text: 'Test action executed',
+          },
         },
       ],
     };
 
     mockConditionFile = {
-      id: 'test:condition',
-      condition: {
-        '==': [{ var: 'eventName' }, 'core:attempt_action'],
+      $schema: 'schema://living-narrative-engine/condition.schema.json',
+      id: 'test_mod:event-is-action-test-action',
+      description: 'Matches the test action event.',
+      logic: {
+        '==': [{ var: 'event.payload.actionId' }, 'test_mod:test_action'],
       },
     };
 
-    // Clear all mocks
-    jest.clearAllMocks();
+    fs.readFile.mockReset();
+    fs.readdir.mockReset();
+    fs.readdir.mockResolvedValue([]);
   });
 
   afterEach(() => {
@@ -77,10 +87,7 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
         // Mock successful file loading
         fs.readFile
           .mockResolvedValueOnce(JSON.stringify(mockRuleFile)) // rule file
-          .mockResolvedValueOnce(JSON.stringify(mockConditionFile)) // condition file
-          .mockResolvedValueOnce(
-            JSON.stringify({ id: 'test_mod:test_action', prerequisites: [] })
-          ); // action definition fallback
+          .mockResolvedValueOnce(JSON.stringify(mockConditionFile)); // condition file
 
         const fixture = await ModTestFixture.forAction(
           'test_mod',
@@ -89,16 +96,12 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
 
         expect(fixture).toBeDefined();
         expect(fixture).toBeInstanceOf(ModActionTestFixture);
-        expect(fs.readFile).toHaveBeenCalledTimes(3);
+        expect(fs.readFile).toHaveBeenCalledTimes(2);
       });
 
       it('should handle partial auto-loading (one file provided, one auto-loaded)', async () => {
         // Mock successful file loading for condition file
-        fs.readFile
-          .mockResolvedValueOnce(JSON.stringify(mockConditionFile))
-          .mockResolvedValueOnce(
-            JSON.stringify({ id: 'test_mod:test_action', prerequisites: [] })
-          );
+        fs.readFile.mockResolvedValueOnce(JSON.stringify(mockConditionFile));
 
         const fixture = await ModTestFixture.forAction(
           'test_mod',
@@ -109,7 +112,7 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
 
         expect(fixture).toBeDefined();
         expect(fixture.ruleFile).toEqual(mockRuleFile);
-        expect(fs.readFile).toHaveBeenCalledTimes(2);
+        expect(fs.readFile).toHaveBeenCalledTimes(1);
       });
 
       it('should throw clear errors when auto-loading fails', async () => {
@@ -129,10 +132,7 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
         // Mock successful file loading
         fs.readFile
           .mockResolvedValueOnce(JSON.stringify(mockRuleFile))
-          .mockResolvedValueOnce(JSON.stringify(mockConditionFile))
-          .mockResolvedValueOnce(
-            JSON.stringify({ id: 'test_mod:test_rule', prerequisites: [] })
-          );
+          .mockResolvedValueOnce(JSON.stringify(mockConditionFile));
 
         const fixture = await ModTestFixture.forRule('test_mod', 'test_rule');
 
@@ -144,11 +144,7 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
 
       it('should handle mixed auto-loading and manual parameters', async () => {
         // Mock condition file loading
-        fs.readFile
-          .mockResolvedValueOnce(JSON.stringify(mockConditionFile))
-          .mockResolvedValueOnce(
-            JSON.stringify({ id: 'test_mod:test_rule', prerequisites: [] })
-          );
+        fs.readFile.mockResolvedValueOnce(JSON.stringify(mockConditionFile));
 
         const fixture = await ModTestFixture.forRule(
           'test_mod',
@@ -167,10 +163,7 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
         // Mock successful file loading
         fs.readFile
           .mockResolvedValueOnce(JSON.stringify(mockRuleFile))
-          .mockResolvedValueOnce(JSON.stringify(mockConditionFile))
-          .mockResolvedValueOnce(
-            JSON.stringify({ id: 'test_mod:test_action', prerequisites: [] })
-          );
+          .mockResolvedValueOnce(JSON.stringify(mockConditionFile));
 
         const fixture = await ModTestFixture.forActionAutoLoad(
           'test_mod',
@@ -179,17 +172,14 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
 
         expect(fixture).toBeDefined();
         expect(fixture).toBeInstanceOf(ModActionTestFixture);
-        expect(fs.readFile).toHaveBeenCalledTimes(3); // Rule, condition, and action definition loaded
+        expect(fs.readFile).toHaveBeenCalledTimes(2); // Rule and condition files loaded
       });
 
       it('should provide forRuleAutoLoad for explicit auto-loading', async () => {
         // Mock successful file loading
         fs.readFile
           .mockResolvedValueOnce(JSON.stringify(mockRuleFile))
-          .mockResolvedValueOnce(JSON.stringify(mockConditionFile))
-          .mockResolvedValueOnce(
-            JSON.stringify({ id: 'test_mod:test_rule', prerequisites: [] })
-          );
+          .mockResolvedValueOnce(JSON.stringify(mockConditionFile));
 
         const fixture = await ModTestFixture.forRuleAutoLoad(
           'test_mod',
@@ -198,7 +188,7 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
 
         expect(fixture).toBeDefined();
         expect(fixture).toBeInstanceOf(ModRuleTestFixture);
-        expect(fs.readFile).toHaveBeenCalledTimes(3);
+        expect(fs.readFile).toHaveBeenCalledTimes(2);
       });
 
       it('should throw clear errors when explicit auto-loading fails', async () => {
@@ -305,8 +295,7 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
           .mockRejectedValueOnce(new Error('ENOENT')) // Second rule pattern fails
           .mockResolvedValueOnce(JSON.stringify(mockRuleFile)) // Third rule pattern succeeds
           .mockRejectedValueOnce(new Error('ENOENT')) // First condition pattern fails
-          .mockResolvedValueOnce(JSON.stringify(mockConditionFile)) // Second condition pattern succeeds
-          .mockRejectedValueOnce(new Error('ENOENT')); // Action definition fallback fails
+          .mockResolvedValueOnce(JSON.stringify(mockConditionFile)); // Second condition pattern succeeds
 
         const fixture = await ModTestFixture.forAction(
           'test_mod',
@@ -314,7 +303,7 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
         );
 
         expect(fixture).toBeDefined();
-        expect(fs.readFile).toHaveBeenCalledTimes(6); // Multiple attempts were made including action fallback
+        expect(fs.readFile).toHaveBeenCalledTimes(5); // Multiple attempts were made across rule and condition patterns
       });
 
       it('should provide detailed error messages with attempted paths', async () => {

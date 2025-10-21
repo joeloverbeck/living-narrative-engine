@@ -132,22 +132,41 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         .mockRejectedValueOnce(new Error('File not found')) // First rule path fails
         .mockRejectedValueOnce(new Error('File not found')) // Second rule path fails
         .mockResolvedValueOnce(
-          // Third rule path succeeds
+          // Third rule path succeeds with valid rule definition
           JSON.stringify({
-            id: 'exercise:show_off_biceps',
-            category: 'exercise',
-            name: 'Show Off Biceps',
+            $schema: 'schema://living-narrative-engine/rule.schema.json',
+            rule_id: 'handle_show_off_biceps',
+            event_type: 'core:attempt_action',
+            condition: {
+              condition_ref: 'exercise:event-is-action-show-off-biceps',
+            },
+            actions: [
+              {
+                type: 'DISPATCH_PERCEPTIBLE_EVENT',
+                parameters: {
+                  perception_type: 'visual',
+                  description_text: 'Show off those gains!',
+                },
+              },
+            ],
           })
         )
         .mockRejectedValueOnce(new Error('File not found')) // First condition path fails
         .mockRejectedValueOnce(new Error('File not found')) // Second condition path fails
         .mockResolvedValueOnce(
-          // Third condition path succeeds
+          // Third condition path succeeds with valid condition definition
           JSON.stringify({
-            condition: 'event-is-action-show-off-biceps',
+            $schema: 'schema://living-narrative-engine/condition.schema.json',
+            id: 'exercise:event-is-action-show-off-biceps',
+            description: 'Matches the show_off_biceps action.',
+            logic: {
+              '==': [
+                { var: 'event.payload.actionId' },
+                'exercise:show_off_biceps',
+              ],
+            },
           })
-        )
-        .mockRejectedValueOnce(new Error('File not found')); // Action definition fallback attempt
+        );
 
       const testData = await ModTestFixture.forAction(
         'exercise',
@@ -156,8 +175,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       expect(testData.actionFile).toBeDefined();
 
       // Verify correct fallback pattern was used (3 rule attempts + 3 condition attempts)
-      // Additional read is expected for the action definition fallback.
-      expect(fs.promises.readFile).toHaveBeenCalledTimes(7);
+      expect(fs.promises.readFile).toHaveBeenCalledTimes(6);
     });
 
     it('should validate exercise category event patterns', async () => {
@@ -605,17 +623,22 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         .mockResolvedValueOnce(
           // Rule file succeeds on first attempt
           JSON.stringify({
-            id: 'positioning:sit_on_chair',
-            category: 'positioning',
-            name: 'Sit on Chair',
-            effects: [
+            $schema: 'schema://living-narrative-engine/rule.schema.json',
+            rule_id: 'handle_sit_on_chair',
+            event_type: 'core:attempt_action',
+            condition: {
+              condition_ref: 'positioning:event-is-action-sit-on-chair',
+            },
+            actions: [
               {
-                operation: 'ADD_COMPONENT',
-                args: [
-                  'self',
-                  'positioning:sitting',
-                  '{"furniture": "{{FURNITURE}}"}',
-                ],
+                type: 'ADD_COMPONENT',
+                parameters: {
+                  entity_ref: 'actor',
+                  component_type: 'positioning:sitting',
+                  component_data: {
+                    furniture: '{{FURNITURE}}',
+                  },
+                },
               },
             ],
           })
@@ -623,7 +646,15 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         .mockResolvedValueOnce(
           // Condition file succeeds on first attempt
           JSON.stringify({
-            condition: 'event-is-action-sit-on-chair',
+            $schema: 'schema://living-narrative-engine/condition.schema.json',
+            id: 'positioning:event-is-action-sit-on-chair',
+            description: 'Matches the sit_on_chair action.',
+            logic: {
+              '==': [
+                { var: 'event.payload.actionId' },
+                'positioning:sit_on_chair',
+              ],
+            },
           })
         );
 
@@ -634,8 +665,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       expect(testData.actionFile).toBeDefined();
 
       const actionData = JSON.parse(testData.actionFile);
-      expect(actionData.category).toBe('positioning');
-      expect(actionData.effects[0].operation).toBe('ADD_COMPONENT');
+      expect(actionData.rule_id).toBe('handle_sit_on_chair');
+      expect(actionData.actions[0].type).toBe('ADD_COMPONENT');
     });
   });
 
@@ -809,16 +840,35 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
               // Return rule file for this category
               return Promise.resolve(
                 JSON.stringify({
-                  id: `${category}:test_action`,
-                  category: category,
-                  name: `Test ${category} Action`,
+                  $schema: 'schema://living-narrative-engine/rule.schema.json',
+                  rule_id: `handle_${category}_test_action`,
+                  event_type: 'core:attempt_action',
+                  condition: {
+                    condition_ref: `${category}:event-is-action-test-action`,
+                  },
+                  actions: [
+                    {
+                      type: 'LOG_MESSAGE',
+                      parameters: {
+                        message: `Test ${category} Action`,
+                      },
+                    },
+                  ],
                 })
               );
             } else if (pathStr.includes('/conditions/')) {
               // Return condition file
               return Promise.resolve(
                 JSON.stringify({
-                  condition: `event-is-action-test-action`,
+                  $schema: 'schema://living-narrative-engine/condition.schema.json',
+                  id: `${category}:event-is-action-test-action`,
+                  description: `Matches the ${category} test action.`,
+                  logic: {
+                    '==': [
+                      { var: 'event.payload.actionId' },
+                      `${category}:test_action`,
+                    ],
+                  },
                 })
               );
             }
@@ -837,7 +887,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         expect(testData.actionFile).toBeDefined();
 
         const actionData = JSON.parse(testData.actionFile);
-        expect(actionData.category).toBe(category);
+        expect(actionData.rule_id).toBe(`handle_${category}_test_action`);
         return actionData;
       });
 
@@ -845,10 +895,14 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
 
       // All categories should successfully load with consistent structure
       results.forEach((actionData, index) => {
-        expect(actionData).toHaveProperty('id');
-        expect(actionData).toHaveProperty('category');
-        expect(actionData).toHaveProperty('name');
-        expect(actionData.category).toBe(testCategories[index]);
+        expect(actionData).toHaveProperty('rule_id');
+        expect(actionData).toHaveProperty('event_type');
+        expect(actionData).toHaveProperty('actions');
+        expect(actionData.actions.length).toBeGreaterThan(0);
+        expect(actionData.condition).toHaveProperty('condition_ref');
+        expect(actionData.condition.condition_ref).toBe(
+          `${testCategories[index]}:event-is-action-test-action`
+        );
       });
     });
   });
