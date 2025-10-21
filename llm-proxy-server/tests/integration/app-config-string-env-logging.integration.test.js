@@ -185,4 +185,36 @@ describe('AppConfigService string environment logging integration', () => {
       )
     ).toBe(true);
   });
+
+  it('logs null-effective outcomes when an empty env value is sanitized by downstream services', () => {
+    applyEnv({
+      NODE_ENV: 'test',
+      PROXY_PORT: '4304',
+      LLM_CONFIG_PATH: '',
+    });
+
+    const appConfig = getAppConfigService(logger);
+
+    // Remove initialization chatter so the new log entry is easy to assert.
+    logger.debug.mockClear();
+
+    appConfig._logStringEnvVarStatus(
+      'LLM_CONFIG_PATH',
+      '',
+      null,
+      'Downstream sanitization restored default behaviour'
+    );
+
+    const recentMessages = logger.debug.mock.calls
+      .map(([message]) => message)
+      .filter(Boolean);
+
+    expect(
+      recentMessages.some((message) =>
+        message.includes(
+          "AppConfigService: LLM_CONFIG_PATH found in environment but is empty. Current effective value: 'null'."
+        )
+      )
+    ).toBe(true);
+  });
 });
