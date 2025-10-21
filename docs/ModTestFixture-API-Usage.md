@@ -49,7 +49,9 @@ const scenario = fixture.createStandardActorTarget([
   'Actor Name',
   'Target Name',
 ]);
-await fixture.executeAction(scenario.actor.id, scenario.target.id);
+await fixture.executeAction(scenario.actor.id, scenario.target.id, {
+  additionalPayload: { intensity: 'gentle' },
+});
 
 // Entity creation is handled by the fixture:
 // No need to manually create ModEntityBuilder instances
@@ -93,8 +95,10 @@ describe('Action Testing Example', () => {
     expect(scenario.actor).toBeDefined();
     expect(scenario.target).toBeDefined();
 
-    // Step 3: Execute action
-    await fixture.executeAction(scenario.actor.id, scenario.target.id);
+    // Step 3: Execute action (options are optional)
+    await fixture.executeAction(scenario.actor.id, scenario.target.id, {
+      additionalPayload: { intensity: 'gentle' },
+    });
 
     // Step 4: Verify results
     expect(fixture.events.length).toBeGreaterThan(0);
@@ -130,14 +134,14 @@ describe('Action Testing Example', () => {
 
 ### ModActionTestFixture Instance Methods
 
-| Method                                 | Purpose                                 | Parameters              | Returns         |
-| -------------------------------------- | --------------------------------------- | ----------------------- | --------------- |
-| `createStandardActorTarget(names)`     | Creates actor and target entities       | [actorName, targetName] | {actor, target} |
-| `executeAction(actorId, targetId)`     | Executes the action                     | actorId, targetId       | Promise<void>   |
-| `assertActionSuccess(expectedMessage)` | Asserts action executed successfully    | expected message        | void            |
-| `assertPerceptibleEvent(eventData)`    | Asserts perceptible event was generated | event properties        | void            |
-| `clearEvents()`                        | Clears the event list                   | none                    | void            |
-| `cleanup()`                            | Cleans up resources                     | none                    | void            |
+| Method                                 | Purpose                                 | Parameters                              | Returns         |
+| -------------------------------------- | --------------------------------------- | --------------------------------------- | --------------- |
+| `createStandardActorTarget(names)`     | Creates actor and target entities       | [actorName, targetName]                 | {actor, target} |
+| `executeAction(actorId, targetId, options?)` | Executes the action with optional overrides | actorId, targetId, options? (`additionalPayload`, `contextOverrides`, etc.) | Promise<void>   |
+| `assertActionSuccess(expectedMessage)` | Asserts action executed successfully    | expected message                        | void            |
+| `assertPerceptibleEvent(eventData)`    | Asserts perceptible event was generated | event properties                        | void            |
+| `clearEvents()`                        | Clears the event list                   | none                                    | void            |
+| `cleanup()`                            | Cleans up resources                     | none                                    | void            |
 
 ## Important Notes
 
@@ -145,7 +149,8 @@ describe('Action Testing Example', () => {
 2. **Auto-loading is preferred**: Use `forActionAutoLoad()` when possible - it automatically finds and loads the correct rule and condition files
 3. **No manual entity creation**: Let the fixture handle entity creation via `createStandardActorTarget()`
 4. **Always cleanup**: Call `fixture.cleanup()` in your tests to prevent resource leaks
-5. **Event validation**: Use the fixture's assertion helpers for consistent event validation
+5. **Event validation**: Import `tests/common/mods/domainMatchers.js` or use the fixture's assertion helpers for consistent validation
+6. **Diagnostics toggle**: Use `fixture.enableDiagnostics()` / `fixture.discoverWithDiagnostics(actorId)` only while debugging and disable afterward
 
 ## Common Pitfalls to Avoid
 

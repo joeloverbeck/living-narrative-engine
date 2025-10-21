@@ -2,121 +2,138 @@
 
 ## Overview
 
-The Mod Testing Guide consolidates everything needed to adopt the Test Module Pattern across mod suites. It explains how the fluent builder architecture composes with standardized configuration factories and provides a step-by-step migration workflow so legacy facade-based tests can transition smoothly.
+This guide is the canonical reference for writing and maintaining **mod action tests** in the Living Narrative Engine. It focuses on the Phase 1 and Phase 2 testing infrastructure that now powers every modern suite:
 
-- **Test Module Pattern architecture** – Understand the builder surface area, module registry, and validation flows that power mod fixtures.
-- **Migration workflow** – Follow a consistent, five-step process (decision tree included) to replace direct facade setup with module builders.
-- **Configuration factory usage** – Reuse standardized LLM, environment, and mock presets to keep test data consistent across suites.
+- [`ModTestFixture`](../../tests/common/mods/ModTestFixture.js) for fast action execution harnesses.
+- Scenario builders from [`ModEntityScenarios`](../../tests/common/mods/ModEntityBuilder.js) for seated, inventory, and bespoke entity graphs.
+- The validation proxy (`createActionValidationProxy`) for catching schema drift before the engine executes.
+- Discovery diagnostics (`fixture.enableDiagnostics()`, `fixture.discoverWithDiagnostics()`) that surface resolver traces only when needed.
+- Domain matchers from [`tests/common/mods/domainMatchers.js`](../../tests/common/mods/domainMatchers.js) for readable assertions.
 
-Use this guide as the canonical reference for all new and migrated mod tests.
+Use this document alongside the [Action Discovery Testing Toolkit](./action-discovery-testing-toolkit.md) when a workflow crosses over into discovery-specific diagnostics or tracing.
 
-> **Need to debug action discovery pipelines?** See the [Action Discovery Testing Toolkit](./action-discovery-testing-toolkit.md) for diagnostics, matchers, and scenario helpers tailored to discovery suites.
-
-## Test Module Pattern Architecture
-
-### Layered Design
-
-The Test Module Pattern wraps the Service Facade layer with a fluent builder abstraction that configures complete mod environments. Each builder exposes concise, chainable methods while keeping the heavy lifting behind the scenes.
-
-```
-┌─────────────────────────────────────┐
-│         Test Module Pattern         │  <- Tests interact with builders
-├─────────────────────────────────────┤
-│      Service Facade Pattern         │  <- Simplifies service orchestration
-├─────────────────────────────────────┤
-│       Core Game Services            │  <- Production implementation
-└─────────────────────────────────────┘
-```
-
-The test infrastructure is organized across two main directories:
-
-```
-tests/common/
-├── testConfigurationFactory.js    # Main configuration factory (LLM configs, environments, presets)
-├── testPathConfiguration.js       # Path management for isolated test directories
-├── facades/                        # Service facade implementations
-│   ├── testingFacadeRegistrations.js  # Facade DI registration & createMockFacades()
-│   ├── turnExecutionFacade.js
-│   ├── actionServiceFacade.js
-│   ├── entityServiceFacade.js
-│   └── llmServiceFacade.js
-└── testing/builders/               # Test Module Pattern implementation
-    ├── testModuleBuilder.js        # Primary entry point
-    ├── testModuleRegistry.js       # Preset registration and lookup
-    ├── modules/                    # Specialized module implementations
-    │   ├── turnExecutionTestModule.js
-    │   ├── actionProcessingTestModule.js
-    │   ├── entityManagementTestModule.js
-    │   └── llmTestingModule.js
-    ├── presets/                    # Pre-configured scenarios
-    │   └── testScenarioPresets.js
-    ├── validation/                 # Configuration validation
-    │   ├── testModuleValidator.js
-    │   └── testConfigurationValidator.js
-    ├── interfaces/                 # Type definitions
-    │   └── ITestModule.js
-    └── errors/                     # Custom error types
-        └── testModuleValidationError.js
-```
-
-### Core Concepts
-
-- **Builder selection** – Choose the right module through `TestModuleBuilder.forTurnExecution()`, `.forActionProcessing()`, `.forEntityManagement()`, or `.forLLMTesting()` depending on the scenario.
-- **Fluent configuration** – Chain builder methods such as `.withMockLLM()`, `.withTestActors()`, `.withWorld()`, and `.withCustomFacades()` before calling `.build()`.
-- **Fail-fast validation** – Builders perform validation through `testModuleValidator.js` and surface `TestModuleValidationError` when configuration drift occurs.
-- **Sensible defaults** – Presets and standard mocks keep common actor, world, and LLM setups short while remaining customizable through overrides.
-
-### Complete Architecture Flow
-
-Understanding how components interact helps debug issues and choose the right testing approach:
-
-```
-Test Code
-    ↓
-TestModuleBuilder (Entry Point)
-    ↓ creates
-Test Module (TurnExecution/ActionProcessing/EntityManagement/LLMTesting)
-    ↓ uses
-TestConfigurationFactory (Preset configurations)
-    ↓ configures
-createMockFacades() (Service facade creation)
-    ↓ returns
-Facade Instances (TurnExecutionFacade, ActionServiceFacade, etc.)
-    ↓ wraps
-Core Game Services (EntityManager, EventBus, ActionDiscovery, etc.)
-```
-
-**Key Relationships**:
-- **Test Modules** internally call `createMockFacades()` from `tests/common/facades/testingFacadeRegistrations.js`
-- **Facades** provide simplified APIs over complex service orchestration
-- **TestConfigurationFactory** centralizes LLM strategies, environment presets, and mock configurations
-- **TestModuleRegistry** manages scenario presets (combat, socialInteraction, etc.)
-
-**When to Use Each Layer**:
-- **Test Modules** (recommended) - Most mod tests, full workflow testing
-- **Facades directly** - Low-level adapter tests, HTTP integration tests
-- **Core Services** - Unit tests of individual service components
-
-### Quick Example
+## Quick Start
 
 ```javascript
-const testEnv = await TestModuleBuilder.forTurnExecution()
-  .withMockLLM({ strategy: 'tool-calling' })
-  .withTestActors([{ id: 'test-actor', name: 'Test Actor' }])
-  .withWorld({ name: 'Test World' })
-  .build();
+import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
+import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
+import '../../common/mods/domainMatchers.js';
+
+describe('positioning:sit_down', () => {
+  let fixture;
+
+  beforeEach(async () => {
+    fixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
+  });
+
+  afterEach(() => {
+    fixture.cleanup();
+  });
+
+  it('makes the actor sit on the target furniture', async () => {
+    const scenario = fixture.createSittingPair({ furnitureId: 'couch1' });
+
+    await fixture.executeAction(
+      scenario.seatedActors[0].id,
+      scenario.furniture.id
+    );
+
+    const actor = fixture.entityManager.getEntityInstance(scenario.seatedActors[0].id);
+    expect(actor).toHaveComponent('positioning:sitting_on');
+  });
+});
 ```
 
-### Scenario Helper Catalog
+### Core Workflow
 
-Scenario helpers pair the Test Module Pattern with opinionated entity graphs so suites can exercise complex behavior without manual plumbing. Each helper is available as a static creator on `ModEntityScenarios` and as an instance method on `ModTestFixture`, ensuring parity between one-off setups and fixture-driven suites.
+1. **Provision a fixture** with `ModTestFixture.forAction(modId, fullActionId, rule?, condition?, options?)`. The factory automatically loads JSON definitions when omitted.
+2. **Create entities** via fixture helpers (`createSittingPair`, `createInventoryLoadout`, `createEntity`) or reset with custom graphs.
+3. **Execute the action** using `await fixture.executeAction(actorId, targetId, { additionalPayload, contextOverrides })`.
+4. **Assert outcomes** with domain matchers or direct entity inspection through `fixture.entityManager`.
+5. **Clean up** using `fixture.cleanup()` to release mocks, events, and diagnostics state.
 
-#### Seating Scenarios
+## Best Practices
 
-High-level seating scenarios can now be composed with a single helper call instead of manually instantiating rooms, furniture, and positioning components. The `ModEntityScenarios.createSitting*` helpers hydrate fixtures with a consistent entity graph and return generated IDs for direct assertions.
+### Fixture Lifecycle
+
+- Always await factory methods (`forAction`, `forRule`, `forCategory`) and instantiate fixtures inside `beforeEach` for isolation.
+- Pair every fixture with `afterEach(() => fixture.cleanup())` or register cleanup in shared helpers.
+- Prefer `forAction` over `forActionAutoLoad` when you need explicit control of rule/condition overrides.
+
+### Scenario Composition
+
+- Reach for the scenario helpers documented in the [Scenario Helper Catalog](#scenario-helper-catalog) before crafting entities manually. They guarantee component completeness and naming consistency.
+- Use the `createSittingPair`, `createSittingArrangement`, and related helpers to cover seating variations; extend `additionalFurniture` or `seatedActors` overrides to exercise edge cases without rewriting the graph.
+- Inventory flows should lean on `createInventoryLoadout`, `createPutInContainerScenario`, and friends. They expose entity IDs, containers, and held items so assertions stay declarative.
+- When custom entities are inevitable, build them with `fixture.createEntity(config)` and reload the environment via `fixture.reset([...scenario.entities, customEntity])` to avoid partial state.
+
+### Executing Actions Safely
+
+- Always call `await fixture.executeAction(actorId, targetId, options?)`. The optional `options` object supports `additionalPayload`, `invocationOverrides`, and validation toggles; passing `{ skipValidation: true }` should be restricted to regression investigations.
+- Validate `actorId` and `targetId` using scenario return values instead of hard-coded IDs—helper outputs are the single source of truth.
+- Chain validation when preparing rules: wrap JSON definitions with `createActionValidationProxy(ruleJson, 'intimacy:kiss_cheek')` before handing them to the fixture. The proxy highlights typos (`required_components` vs `requiredComponents`) and missing namespace prefixes up front.
+
+### Assertions & Matchers
+
+- Import `../../common/mods/domainMatchers.js` once per suite. Expect to call `expect(fixture.events).toHaveActionSuccess(...)`, `expect(entity).toHaveComponent(...)`, and `expect(entity).toHaveComponentData(...)` during most flows.
+- Mix matcher usage with targeted entity inspections; for example, read `fixture.entityManager.getEntityInstance(actorId)` to confirm component payloads after calling `executeAction`.
+- Use `fixture.assertActionSuccess(message)` for legacy suites only when migrating gradually—new suites should standardize on the Jest matchers for clearer failure output.
+
+### Diagnostics on Demand
+
+- Toggle discovery tracing only while diagnosing failures:
+  - `fixture.enableDiagnostics()` wraps the unified scope resolver.
+  - `fixture.discoverWithDiagnostics(actorId, expectedActionId?)` streams summaries to stdout and returns the discovered actions.
+  - Pair the output with the [Action Discovery Testing Toolkit](./action-discovery-testing-toolkit.md#working-with-diagnostics) when deeper scope tracing is required.
+- Disable diagnostics in `afterEach` (or rely on `cleanup`) so subsequent tests remain silent.
+
+### Anti-patterns to Avoid
+
+- ❌ Creating fixtures with deprecated factories (`ModTestFixture.createFixture`, `ModTestHandlerFactory.createHandler`).
+- ❌ Building entities manually without `ModEntityBuilder` helpers, which leads to missing components and resolver failures.
+- ❌ Hard-coding action IDs without namespaces—always use the `modId:action_id` format for validation proxy compatibility.
+- ❌ Reusing fixtures across tests. Shared state hides ordering bugs; lean on fresh fixtures and scenario helpers instead.
+- ❌ Asserting against raw event arrays without matchers. Prefer `toHaveActionSuccess`/`toHaveActionFailure` to reduce copy-pasted parsing code.
+
+## Tool Selection Guide
+
+```text
+┌────────────────────────────────────────────┐
+│ Do you need to run an action end-to-end?   │
+└───────────────┬────────────────────────────┘
+                │ Yes
+                ▼
+┌────────────────────────────────────────────┐
+│ Can ModEntityScenarios build the entities? │
+└───────────────┬────────────────────────────┘
+                │ Yes                            No
+                ▼                                 ▼
+┌─────────────────────────────┐         ┌──────────────────────────────┐
+│ Use ModTestFixture scenario │         │ Build custom entities with   │
+│ helpers (e.g., createSitting│         │ fixture.createEntity + reset │
+│ Pair, createInventoryLoadout│         │ then reuse executeAction     │
+└─────────────────────────────┘         └──────────────────────────────┘
+                │
+                ▼
+┌────────────────────────────────────────────┐
+│ Did the action fail validation or resolve? │
+└───────────────┬────────────────────────────┘
+                │ Validation issue            Resolver issue
+                ▼                             ▼
+┌────────────────────────────┐       ┌─────────────────────────────────┐
+│ Wrap JSON with              │      │ Enable diagnostics +            │
+│ createActionValidationProxy │      │ discoverWithDiagnostics(actorId)│
+└────────────────────────────┘       └─────────────────────────────────┘
+```
+
+## Scenario Helper Catalog
+
+Scenario helpers pair fixtures with curated entity graphs. Each helper is available both on the fixture instance (`fixture.createSittingPair`) and as a static method on `ModEntityScenarios`. Prefer the fixture instance methods when already operating inside a test harness.
+
+### Seating Scenarios
 
 | Helper | Best for |
-| ------ | -------- |
+| --- | --- |
 | `createSittingArrangement(options)` | Full control over seated, standing, and kneeling actors plus additional furniture. |
 | `createSittingPair(options)` | Reciprocal seating relationships and closeness metadata for two actors sharing furniture. |
 | `createSoloSitting(options)` | Sit/stand transitions where only one actor occupies a seat. |
@@ -125,13 +142,6 @@ High-level seating scenarios can now be composed with a single helper call inste
 | `createKneelingBeforeSitting(options)` | Seated actor plus kneeling observers linked by `positioning:kneeling_before`. |
 
 ```javascript
-const fixture = await ModTestFixture.forAction(
-  'positioning',
-  'positioning:sit_down',
-  rule,
-  condition
-);
-
 const scenario = fixture.createSittingPair({
   furnitureId: 'couch1',
   seatedActors: [
@@ -140,7 +150,10 @@ const scenario = fixture.createSittingPair({
   ],
 });
 
-await fixture.executeAction(scenario.seatedActors[0].id, scenario.furniture.id);
+await fixture.executeAction(
+  scenario.seatedActors[0].id,
+  scenario.furniture.id
+);
 
 const actor = fixture.entityManager.getEntityInstance('alice');
 expect(actor).toHaveComponentData('positioning:sitting_on', {
@@ -153,16 +166,14 @@ expect(actor.components['positioning:closeness'].partners).toContain('bob');
 Usage tips:
 
 - Override `seatedActors`, `standingActors`, or `kneelingActors` to control IDs, display names, and seat indices.
-- Pass `closeSeatedActors: false` when actors should sit apart without automatic closeness metadata.
-- Supply `additionalFurniture` to pre-create extra seating surfaces without manual builders.
-- Call helpers from `ModEntityScenarios` directly when working outside `ModTestFixture`.
+- Set `closeSeatedActors: false` when actors should sit apart without automatic closeness metadata.
+- Provide `additionalFurniture` to preload extra seating surfaces for comparative assertions.
+- Call `ModEntityScenarios.createSittingPair()` directly when building entities for cross-fixture reuse.
 
-#### Inventory Scenarios
-
-Inventory scenario helpers extend the shared infrastructure with purpose-built entity graphs for items-focused actions such as `items:pick_up_item`, `items:drop_item`, `items:give_item`, `items:open_container`, and `items:put_in_container`. Each helper returns a structured object with convenience fields—`entities`, `room`, `actor`, `items`, `container`, etc.—so tests can reference canonical IDs without reconstructing the graph.
+### Inventory Scenarios
 
 | Helper | Purpose |
-| ------ | ------- |
+| --- | --- |
 | `createInventoryLoadout(options)` | Actor with populated inventory and default capacity for ownership tests. |
 | `createItemsOnGround(options)` | Loose items positioned in a room with optional observing actor. |
 | `createContainerWithContents(options)` | Containers pre-filled with contents and optional key metadata. |
@@ -173,7 +184,6 @@ Inventory scenario helpers extend the shared infrastructure with purpose-built e
 | `createPutInContainerScenario(options)` | Actor holding an item plus container prepared for storage actions. |
 
 ```javascript
-const fixture = await ModTestFixture.forAction('items', 'items:put_in_container');
 const scenario = fixture.createPutInContainerScenario({
   actor: { id: 'actor_putter' },
   container: { id: 'supply_crate' },
@@ -187,202 +197,50 @@ await fixture.executeAction('actor_putter', 'supply_crate', {
 
 Customization reference:
 
-- **Capacity overrides** – Supply `capacity: { maxWeight, maxItems }` to `createInventoryLoadout` or `createInventoryTransfer`; container helpers accept the same shape via `capacity`/`container.capacity`.
-- **Locked containers** – Provide `requiresKey: true` (or `locked: true` via `createOpenContainerScenario`) and an optional `keyItem` definition; pair the key ID with `actor.inventoryItems` to place it in the actor’s inventory.
-- **Full inventories/containers** – Pass `fullInventory: true` to `createPickupScenario` or `containerFull: true` to `createPutInContainerScenario` to generate filler items that exercise capacity failures.
-- **Item metadata** – Item definitions support `itemData`, `portableData`, `weightData`, and `components` for granular control.
+- **Capacity overrides** – Supply `capacity: { maxWeight, maxItems }` to loadout helpers; container helpers accept the same shape via `capacity` or `container.capacity`.
+- **Locked containers** – Provide `requiresKey: true` (or `locked: true`) and include a `keyItem` to ensure the actor starts with the unlocking item.
+- **Full inventories/containers** – Set `fullInventory: true` or `containerFull: true` to exercise capacity failure branches.
+- **Item metadata** – Populate `itemData`, `portableData`, `weightData`, and `components` for precise assertions.
 
-When using helpers outside of fixtures, pass the returned `entities` array to `fixture.reset([...scenario.entities])` or interact with `ModEntityScenarios` directly. Helper naming mirrors the actions they target, making migrations from bespoke entity graphs a one-to-one substitution.
+## Performance & Collaboration Tips
 
-## Migration Workflow
+- Cache fixtures only within a test when execution is expensive. For repeated assertions, perform setup in `beforeEach` and reuse the same fixture instance across `it` blocks only when the suite resets via `fixture.reset()` explicitly.
+- Use the validation proxy in pre-commit hooks or data-review scripts to catch schema drift before running the full suite.
+- Organize suites with [`tests/common/mods/examples`](../../tests/common/mods/examples) as references—each example demonstrates a recommended combination of fixture, scenario helper, and matcher usage.
 
-Legacy tests that create facades directly should move to module builders to reduce boilerplate and improve readability. Use the decision tree to confirm the migration makes sense, then apply the five-step process.
+## Troubleshooting Appendix
 
-### Migration Decision Tree
+### Validation Failures
 
-```
-┌─────────────────────────────────┐
-│ Does the test use facades?       │
-└────────────┬────────────────────┘
-             │ Yes
-             ▼
-┌─────────────────────────────────┐
-│ Is it testing low-level          │
-│ adapter functionality?           │
-└────────────┬────────────────────┘
-             │ No
-             ▼
-┌─────────────────────────────────┐
-│ Does it need internal access     │
-│ beyond module hooks?             │
-└────────────┬────────────────────┘
-             │ No
-             ▼
-┌─────────────────────────────────┐
-│ MIGRATE to Test Module Pattern  │
-└─────────────────────────────────┘
-```
+- **Proxy errors** – When `createActionValidationProxy` reports invalid properties, follow the suggested replacement (e.g., rename `actionId` to `id`). Do not disable validation unless debugging third-party mods.
+- **Namespace issues** – Errors referencing missing `:` separators indicate the action ID lacks a namespace. Update JSON definitions and fixture calls to include the prefix (e.g., `positioning:sit_down`).
 
-### Step-by-Step Migration
+### Discovery & Execution Failures
 
-1. **Analyze current setup** – Identify `createMockFacades` usage and manual service initialization.
-2. **Choose a module** – Map test intent to the appropriate `TestModuleBuilder.for*` method.
-3. **Update imports** – Replace facade imports with `tests/common/testing/builders/testModuleBuilder.js`.
-4. **Transform configuration** – Convert manual setup into fluent builder calls (LLM strategy, actors, world, mocks, etc.).
-5. **Rework assertions** – Use builder-provided helpers and domain matchers to interact with the resulting environment.
+- **Action missing from discovery** – Enable diagnostics: `const diagnostics = fixture.enableDiagnostics(); diagnostics.discoverWithDiagnostics(actorId, 'mod:action');`. Review scope summaries printed to stdout and consult the [diagnostics section](./action-discovery-testing-toolkit.md#working-with-diagnostics) for interpretation tips.
+- **Empty target scopes** – Scenario helpers guarantee valid scopes. If diagnostics show empty scopes, confirm overrides did not remove required components or that `scenario.furniture` IDs match the executed target.
+- **Execution throws for unknown entity** – Ensure the entity exists by using scenario return IDs or calling `fixture.reset([entity])` before `executeAction`.
 
-### Before and After Snapshot
+### Matcher Failures
 
-```javascript
-// BEFORE: Manual facade configuration
-const facades = createMockFacades({}, jest.fn);
-const turnExecutionFacade = facades.turnExecutionFacade;
-const actionService = facades.actionService;
-const entityService = facades.entityService;
-const llmService = facades.llmService;
+- **`toHaveActionSuccess` undefined** – Import `../../common/mods/domainMatchers.js` at the suite top or in `jest.setup.js`.
+- **Component mismatch output is noisy** – Pair matchers with targeted logging: `console.log(fixture.entityManager.getEntityInstance(actorId).components)` during debugging, then remove the log after resolution.
 
-actionService.setMockActions('test-actor', [
-  { actionId: 'core:move', name: 'Move', available: true },
-]);
+### Diagnostics Hygiene
 
-llmService.setMockResponse('test-actor', {
-  actionId: 'core:move',
-  targets: { direction: 'north' },
-});
+- After enabling diagnostics, call `fixture.disableDiagnostics()` or rely on `fixture.cleanup()` to restore the resolver. Lingering wrappers can cause duplicate logging in unrelated tests.
+- When capturing stdout snapshots, wrap diagnostics in conditionals to avoid brittle tests: `if (process.env.DEBUG_DISCOVERY) { fixture.discoverWithDiagnostics(actorId); }`.
 
-const testEnvironment = await turnExecutionFacade.initializeTestEnvironment({
-  actors: [{ id: 'test-actor', name: 'Test Actor' }],
-  llmStrategy: 'tool-calling',
-  world: { name: 'Test World', locations: ['tavern'] },
-});
-```
+## Action Test Checklist
 
-```javascript
-// AFTER: Fluent Test Module Pattern
-const testEnv = await TestModuleBuilder.forTurnExecution()
-  .withMockLLM({ strategy: 'tool-calling' })
-  .withTestActors([{ id: 'test-actor', name: 'Test Actor' }])
-  .withWorld({ name: 'Test World' })
-  .build();
-```
+Use this checklist before submitting a mod test update:
 
-### Common Migration Scenarios
+- [ ] Fixture created via `await ModTestFixture.forAction(modId, fullActionId)` (or another explicit factory) inside `beforeEach`.
+- [ ] Entities provisioned with fixture scenario helpers or `createEntity`—no raw object literals sprinkled throughout the test.
+- [ ] Action executed with `await fixture.executeAction(actorId, targetId, options?)` using scenario-provided IDs.
+- [ ] Assertions leverage `domainMatchers` (`toHaveActionSuccess`, `toHaveComponent`, `toHaveComponentData`) or clearly document deviations.
+- [ ] Validation proxy exercised for new or modified rule JSON before running the suite.
+- [ ] Diagnostics enabled only in targeted tests and cleaned up after use.
+- [ ] Checklist items documented in the test description or comments when deviations are intentional.
 
-| Scenario                | Recommended Module                            | Notes |
-| ----------------------- | --------------------------------------------- | ----- |
-| Full turn execution     | `TestModuleBuilder.forTurnExecution()`        | Ideal for AI decision or action resolution tests |
-| Action discovery only   | `TestModuleBuilder.forActionProcessing()`     | Keeps mocks focused on action services |
-| Entity lifecycle tests  | `TestModuleBuilder.forEntityManagement()`     | Provides entity manager utilities and presets |
-| Prompt/LLM validation   | `TestModuleBuilder.forLLMTesting()`           | Centralizes LLM mock responses and prompt builders |
-
-### Troubleshooting Tips
-
-#### Configuration and Validation Issues
-
-- **Validation errors** usually mean a required builder method is missing or an override conflicts with defaults—inspect the thrown `TestModuleValidationError` for precise hints.
-- **"Unknown LLM strategy" errors** - Check that you're using one of the supported strategies: `'tool-calling'`, `'json-schema'`, or `'limited-context'`.
-- **Missing preset errors** - Verify the scenario name exists in `TestModuleRegistry.getPresetNames()` (e.g., `combat`, `socialInteraction`, `exploration`).
-
-#### Import and Path Issues
-
-- **Cannot find module errors** - Verify import paths match the file structure:
-  - `TestModuleBuilder` from `tests/common/testing/builders/testModuleBuilder.js`
-  - `TestConfigurationFactory` from `tests/common/testConfigurationFactory.js` (NOT from builders/)
-  - `createMockFacades` from `tests/common/facades/testingFacadeRegistrations.js`
-- **Circular dependency warnings** - Test modules should import from `builders/`, not vice versa; facades should not import test modules.
-
-#### Architecture Decision Points
-
-- **When to use facades directly vs test modules**:
-  - Use **Test Modules** for mod-level integration tests, AI turn execution, action workflows
-  - Use **Facades directly** (`createMockFacades`) for low-level adapter tests, HTTP integration tests, or when you need precise control over individual service mocking
-  - Use **Core Services** directly only for unit tests of individual service components
-- **Low-level adapter tests** should stay on custom fixtures; module builders are for mod-level workflows.
-- **Performance regressions** often trace back to redundant `.build()` calls—reuse test environments inside `beforeEach` where possible.
-
-#### Debugging Test Module Issues
-
-- **Facade methods not available** - Ensure you're accessing facades through `testEnv.facades.facadeName` after calling `.build()`
-- **Mock responses not working** - Check that mock setup happens after environment build and before test execution
-- **Event bus not firing** - Verify that `createMockFacades` was called with proper mock function creator (e.g., `jest.fn`)
-
-## Configuration Factory Reference
-
-The configuration factory centralizes presets that module builders consume. The main factory class lives at [`tests/common/testConfigurationFactory.js`](../../tests/common/testConfigurationFactory.js) and imports validation and registry components from the `builders/` subdirectory.
-
-### Core Factory APIs
-
-- `createLLMConfig(strategy = 'tool-calling', overrides = {})` – Returns standardized LLM definitions for `'tool-calling'`, `'json-schema'`, or `'limited-context'` strategies.
-- `createTestEnvironment(type, overrides = {})` – Produces complete environment payloads for `'turn-execution'`, `'action-processing'`, and `'prompt-generation'` scenarios, bundling actors, world data, mocks, and LLM settings.
-- `createMockConfiguration(mockType, options = {})` – Generates reusable mock templates for `'llm-adapter'`, `'event-bus'`, and `'entity-manager'` (extend via overrides as needed).
-- `getPresets()` – Exposes categorized helpers (`llm`, `environments`, `mocks`) for drop-in reuse across multiple suites.
-
-### Quick Usage Patterns
-
-```javascript
-// Reuse a standardized LLM config
-const llmConfig = TestConfigurationFactory.createLLMConfig('tool-calling', {
-  contextTokenLimit: 4000,
-});
-
-// Seed a complete environment preset
-const env = TestConfigurationFactory.createTestEnvironment('action-processing', {
-  actors: [{ id: 'custom-actor' }],
-});
-
-// Reference presets directly
-const presets = TestConfigurationFactory.getPresets();
-const testEnv = await TestModuleBuilder.forTurnExecution()
-  .withStandardLLM('json-schema')
-  .withTestActors(['ai-actor'])
-  .withWorld(presets.environments.turnExecution().world)
-  .build();
-```
-
-### Additional Utilities
-
-- `createTestConfiguration()` – Allocates a temp directory and returns `{ pathConfiguration, tempDir, cleanup }` for file-heavy scenarios.
-- `createTestFiles(pathConfiguration)` – Seeds canonical config and prompt files within a `TestPathConfiguration` instance.
-- `createTestModule(moduleType)` – Shortcut that instantiates module builders (`turnExecution`, `actionProcessing`, `entityManagement`, `llmTesting`).
-- `createScenario(scenario)` – Loads prebuilt scenarios such as `'combat'` or `'socialInteraction'` for integration-style tests.
-- `migrateToTestModule(legacyConfig)` – Applies legacy fixture data onto modern builders, easing gradual transitions.
-
-### Factory vs Builder Clarification
-
-**TestConfigurationFactory** (the class):
-- Located at `tests/common/testConfigurationFactory.js`
-- Provides **static methods** for creating LLM configs, test environments, and mock configurations
-- Used internally by test modules to get standardized presets
-- Can be used directly when you need just configuration objects without full test environment setup
-
-**TestModuleBuilder** (the pattern entry point):
-- Located at `tests/common/testing/builders/testModuleBuilder.js`
-- Provides **fluent API** for building complete test environments
-- Uses `TestConfigurationFactory` internally to get presets
-- Returns fully configured test module instances with facades and utilities
-
-**When to use each**:
-```javascript
-// Use TestConfigurationFactory directly for configuration objects
-const llmConfig = TestConfigurationFactory.createLLMConfig('tool-calling');
-
-// Use TestModuleBuilder for complete test environments (recommended)
-const testEnv = await TestModuleBuilder.forTurnExecution()
-  .withMockLLM({ strategy: 'tool-calling' })
-  .build();
-```
-
-### Factory + Builder Workflow
-
-1. Use factory presets to fetch consistent defaults.
-2. Pass presets into builder methods (e.g., `.withStandardLLM()` or `.withEnvironmentPreset()`).
-3. Override only the pieces your test cares about, keeping the rest aligned with canonical fixtures.
-
-## Quick Reference Checklist
-
-- Start with this guide for any new mod test or migration.
-- Prefer module builders for everything above low-level adapter tests.
-- Leverage the configuration factory to avoid duplicating LLM and environment data.
-- Update cross-references in other documentation to point here when describing mod testing standards.
-
-By keeping architecture, migration steps, and configuration guidance in one place, teams can evolve mod tests quickly without losing the consistency benefits of the Test Module Pattern.
+By consolidating these practices in a single guide, contributors can author reliable mod tests without rediscovering patterns across individual suites.
