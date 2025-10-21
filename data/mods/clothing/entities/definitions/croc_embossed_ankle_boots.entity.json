@@ -29,6 +29,9 @@
       "texture": "croc-embossed"
     },
     "items:item": {},
-    "items:portable": {}
+    "items:portable": {},
+    "items:weight": {
+      "weight": 1.15
+    }
   }
 }
