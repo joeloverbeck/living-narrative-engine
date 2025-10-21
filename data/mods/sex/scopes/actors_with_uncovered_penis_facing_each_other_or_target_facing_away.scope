@@ -1,0 +1,18 @@
+// Scope for closeness partners with an uncovered penis accessible from the front or while the actor is behind
+// Ensures the target's penis is exposed, allows dual orientation interactions, and avoids kneeling conflicts that break alignment
+sex:actors_with_uncovered_penis_facing_each_other_or_target_facing_away := actor.components.positioning:closeness.partners[][
+  {
+    "and": [
+      {"hasPartOfType": [".", "penis"]},
+      {"not": {"isSocketCovered": [".", "penis"]}},
+      {
+        "or": [
+          {"condition_ref": "positioning:both-actors-facing-each-other"},
+          {"condition_ref": "positioning:actor-is-behind-entity"}
+        ]
+      },
+      {"!": {"condition_ref": "positioning:entity-kneeling-before-actor"}},
+      {"!": {"condition_ref": "positioning:actor-kneeling-before-entity"}}
+    ]
+  }
+]
