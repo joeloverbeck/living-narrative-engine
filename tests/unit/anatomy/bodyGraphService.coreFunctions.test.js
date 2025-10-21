@@ -9,6 +9,7 @@ import BodyGraphService, {
 } from '../../../src/anatomy/bodyGraphService.js';
 import { AnatomyCacheManager } from '../../../src/anatomy/anatomyCacheManager.js';
 import { AnatomyGraphAlgorithms } from '../../../src/anatomy/anatomyGraphAlgorithms.js';
+import { AnatomyQueryCache } from '../../../src/anatomy/cache/AnatomyQueryCache.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 
 describe('BodyGraphService core behaviors', () => {
@@ -54,6 +55,63 @@ describe('BodyGraphService core behaviors', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+  });
+
+  describe('constructor validation', () => {
+    it('throws when entityManager is missing', () => {
+      expect(
+        () =>
+          new BodyGraphService({
+            logger: mockLogger,
+            eventDispatcher: mockEventDispatcher,
+            queryCache: mockQueryCache,
+          })
+      ).toThrow('entityManager is required');
+    });
+
+    it('throws when logger is missing', () => {
+      expect(
+        () =>
+          new BodyGraphService({
+            entityManager: mockEntityManager,
+            eventDispatcher: mockEventDispatcher,
+            queryCache: mockQueryCache,
+          })
+      ).toThrow('logger is required');
+    });
+
+    it('throws when eventDispatcher is missing', () => {
+      expect(
+        () =>
+          new BodyGraphService({
+            entityManager: mockEntityManager,
+            logger: mockLogger,
+            queryCache: mockQueryCache,
+          })
+      ).toThrow('eventDispatcher is required');
+    });
+
+    it('creates a default query cache when not provided', () => {
+      const cacheSpy = jest.spyOn(
+        AnatomyQueryCache.prototype,
+        'cacheFindPartsByType'
+      );
+      const findSpy = jest
+        .spyOn(AnatomyGraphAlgorithms, 'findPartsByType')
+        .mockReturnValue(['limb-1']);
+
+      const serviceWithoutCache = new BodyGraphService({
+        entityManager: mockEntityManager,
+        logger: mockLogger,
+        eventDispatcher: mockEventDispatcher,
+      });
+
+      const result = serviceWithoutCache.findPartsByType('actor-root', 'arm');
+
+      expect(findSpy).toHaveBeenCalled();
+      expect(cacheSpy).toHaveBeenCalledWith('actor-root', 'arm', ['limb-1']);
+      expect(result).toEqual(['limb-1']);
+    });
   });
 
   describe('buildAdjacencyCache', () => {
@@ -287,6 +345,24 @@ describe('BodyGraphService core behaviors', () => {
       expect(getAllPartsSpy).not.toHaveBeenCalled();
     });
 
+    it('logs truncated previews when result set is large', () => {
+      const manyParts = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'];
+      jest
+        .spyOn(AnatomyGraphAlgorithms, 'getAllParts')
+        .mockReturnValue(manyParts);
+      jest.spyOn(AnatomyCacheManager.prototype, 'size').mockReturnValue(3);
+      jest.spyOn(AnatomyCacheManager.prototype, 'has').mockReturnValue(false);
+
+      service = createService();
+      service.getAllParts({ body: { root: 'root-6' } });
+
+      expect(
+        mockLogger.debug.mock.calls.some(([message]) =>
+          message.includes("root 'root-6'") && message.includes('...')
+        )
+      ).toBe(true);
+    });
+
     it('returns an empty array when no root ID can be determined', () => {
       service = createService();
       const result = service.getAllParts({ body: {} });
@@ -364,6 +440,21 @@ describe('BodyGraphService core behaviors', () => {
 
       expect(result).toEqual({ found: false });
     });
+
+    it('ignores parts when component data is null while checking nested values', () => {
+      service = createService();
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-3']);
+      mockEntityManager.getComponentData.mockReturnValue(null);
+
+      const result = service.hasPartWithComponentValue(
+        { body: { root: 'root-2' } },
+        'stats:health',
+        'stats.health.current',
+        7
+      );
+
+      expect(result).toEqual({ found: false });
+    });
   });
 
   describe('graph proxy methods', () => {
@@ -424,11 +515,15 @@ describe('BodyGraphService core behaviors', () => {
         .mockReturnValue(true);
       jest
         .spyOn(AnatomyCacheManager.prototype, 'get')
-        .mockImplementation((entityId) =>
-          entityId === 'part-1'
-            ? { children: ['child-1'] }
-            : { children: [] }
-        );
+        .mockImplementation((entityId) => {
+          if (entityId === 'part-1') {
+            return { children: ['child-1'] };
+          }
+          if (entityId === 'no-children') {
+            return {};
+          }
+          return undefined;
+        });
       service = createService();
       jest.spyOn(service, 'getAllParts').mockReturnValue(['part-1', 'part-2']);
 
@@ -437,7 +532,55 @@ describe('BodyGraphService core behaviors', () => {
       expect(typeof graph.getAllPartIds).toBe('function');
       expect(graph.getAllPartIds()).toEqual(['part-1', 'part-2']);
       expect(graph.getConnectedParts('part-1')).toEqual(['child-1']);
+      expect(graph.getConnectedParts('no-children')).toEqual([]);
       expect(graph.getConnectedParts('missing')).toEqual([]);
+    });
+  });
+
+  describe('getAnatomyData', () => {
+    it('validates entity ID input', async () => {
+      service = createService();
+      await expect(service.getAnatomyData(null)).rejects.toThrow(
+        InvalidArgumentError
+      );
+      await expect(service.getAnatomyData(42)).rejects.toThrow(
+        'Entity ID is required and must be a string'
+      );
+    });
+
+    it('returns null and logs when anatomy component is missing', async () => {
+      mockEntityManager.getComponentData.mockResolvedValue(null);
+
+      service = createService();
+      const result = await service.getAnatomyData('actor-1');
+
+      expect(result).toBeNull();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "BodyGraphService.getAnatomyData: Entity 'actor-1' has no anatomy:body component"
+      );
+    });
+
+    it('returns anatomy data when component exists', async () => {
+      mockEntityManager.getComponentData.mockResolvedValue({
+        recipeId: 'human',
+      });
+
+      service = createService();
+      const result = await service.getAnatomyData('actor-2');
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "BodyGraphService.getAnatomyData: Getting anatomy data for entity 'actor-2'"
+      );
+      expect(result).toEqual({ recipeId: 'human', rootEntityId: 'actor-2' });
+    });
+
+    it('falls back to null recipeId when component omits the field', async () => {
+      mockEntityManager.getComponentData.mockResolvedValue({});
+
+      service = createService();
+      const result = await service.getAnatomyData('actor-3');
+
+      expect(result).toEqual({ recipeId: null, rootEntityId: 'actor-3' });
     });
   });
 
