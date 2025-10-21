@@ -45,6 +45,7 @@
       "slide_penis_along_labia.action.json",
       "insert_penis_into_vagina.action.json",
       "insert_primary_penis_into_your_vagina.action.json",
+      "straddling_penis_milking.action.json",
       "suckle_testicle.action.json",
       "tease_asshole_with_glans.action.json"
     ],
@@ -69,7 +70,8 @@
       "event-is-action-suckle-testicle.condition.json",
       "event-is-action-tease-asshole-with-glans.condition.json",
       "event-is-action-insert-penis-into-vagina.condition.json",
-      "event-is-action-insert-primary-penis-into-your-vagina.condition.json"
+      "event-is-action-insert-primary-penis-into-your-vagina.condition.json",
+      "event-is-action-straddling-penis-milking.condition.json"
     ],
     "rules": [
       "handle_breathe_teasingly_on_penis.rule.json",
@@ -92,7 +94,8 @@
       "handle_suckle_testicle.rule.json",
       "handle_tease_asshole_with_glans.rule.json",
       "handle_insert_penis_into_vagina.rule.json",
-      "handle_insert_primary_penis_into_your_vagina.rule.json"
+      "handle_insert_primary_penis_into_your_vagina.rule.json",
+      "handle_straddling_penis_milking.rule.json"
     ],
     "scopes": [
       "actor_kneeling_before_target_with_covered_penis.scope",

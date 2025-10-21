@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex:event-is-action-straddling-penis-milking",
+  "description": "Checks if the event is attempting the 'sex:straddling_penis_milking' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "sex:straddling_penis_milking"
+    ]
+  }
+}

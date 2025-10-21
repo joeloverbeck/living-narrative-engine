@@ -1,0 +1,43 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex:straddling_penis_milking",
+  "name": "Milk Penis Slowly",
+  "description": "While straddling your partner's waist, rock and milk their penis with your vagina.",
+  "targets": {
+    "primary": {
+      "scope": "sex:actors_with_uncovered_penis_facing_each_other_or_target_facing_away",
+      "placeholder": "primary",
+      "description": "Partner with an uncovered penis positioned for vaginal intimacy"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:closeness", "positioning:straddling_waist"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:sitting_on"],
+    "primary": []
+  },
+  "template": "milk {primary}'s penis slowly",
+  "prerequisites": [
+    {
+      "logic": {
+        "hasPartOfType": ["actor", "vagina"]
+      },
+      "failure_message": "You need a vagina to perform this action."
+    },
+    {
+      "logic": {
+        "not": {
+          "isSocketCovered": ["actor", "vagina"]
+        }
+      },
+      "failure_message": "Your vagina must be uncovered to perform this action."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#4a148c",
+    "textColor": "#e1bee7",
+    "hoverBackgroundColor": "#6a1b9a",
+    "hoverTextColor": "#f3e5f5"
+  }
+}
