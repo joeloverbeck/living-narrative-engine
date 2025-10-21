@@ -43,7 +43,7 @@ const PENIS_SCOPE_NAME =
  * @property {boolean} [includePenis=true] - Whether to include a penis anatomy part for the partner.
  * @property {boolean} [includeVagina=true] - Whether to include a vagina anatomy part for the actor.
  * @property {boolean} [actorSitting=false] - Whether the actor has the sitting component applied.
- * @property {boolean} [actorBeingFucked=false] - Whether the actor already has the penetration state component.
+ * @property {boolean} [actorBeingFucked=true] - Whether the actor already has the penetration state component.
  * @property {boolean} [primaryAlreadyFucking=false] - Whether the partner already has the penetration component applied.
  */
 
@@ -62,7 +62,7 @@ export function buildStraddlingMilkingScenario(options = {}) {
     includePenis = true,
     includeVagina = true,
     actorSitting = false,
-    actorBeingFucked = false,
+    actorBeingFucked = true,
     primaryAlreadyFucking = false,
   } = options;
 

@@ -128,4 +128,10 @@ describe('sex:straddling_penis_milking action integration', () => {
     expect(perceptibleEvents).toHaveLength(1);
     expect(perceptibleEvents[0].payload.descriptionText).toBe(EXPECTED_MESSAGE);
   });
+
+  it('rejects execution when the actor lacks the vaginal penetration state', async () => {
+    testFixture.reset(buildStraddlingMilkingScenario({ actorBeingFucked: false }));
+
+    await expect(performAction()).rejects.toThrow(/missing required component/i);
+  });
 });

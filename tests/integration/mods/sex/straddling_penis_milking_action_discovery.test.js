@@ -54,10 +54,11 @@ describe('sex:straddling_penis_milking action discovery', () => {
       );
     });
 
-    it('requires straddling closeness and forbids seating conflicts', () => {
+    it('requires active vaginal penetration posture and forbids seating conflicts', () => {
       expect(straddlingMilkingAction.required_components.actor).toEqual([
         'positioning:closeness',
         'positioning:straddling_waist',
+        'sex:being_fucked_vaginally',
       ]);
       expect(straddlingMilkingAction.forbidden_components.actor).toEqual([
         'positioning:sitting_on',
@@ -213,6 +214,17 @@ describe('sex:straddling_penis_milking action discovery', () => {
 
     it('does not appear when the partner lacks a penis', async () => {
       const entities = buildStraddlingMilkingScenario({ includePenis: false });
+      testFixture.reset(entities);
+      configureActionDiscovery();
+
+      const actions = await testFixture.discoverActions(STRADDLING_MILKING_ACTOR_ID);
+      const discovered = actions.find((action) => action.id === ACTION_ID);
+
+      expect(discovered).toBeUndefined();
+    });
+
+    it('does not appear when the actor lacks the vaginal penetration state', async () => {
+      const entities = buildStraddlingMilkingScenario({ actorBeingFucked: false });
       testFixture.reset(entities);
       configureActionDiscovery();
 
