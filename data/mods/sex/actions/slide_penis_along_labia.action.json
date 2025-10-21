@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex:slide_penis_along_labia",
+  "name": "Slide Penis Along Labia",
+  "description": "Slide your penis along the target's bare labia to build teasing arousal.",
+  "targets": {
+    "primary": {
+      "scope": "sex:actors_with_uncovered_vagina_facing_each_other_or_target_facing_away",
+      "placeholder": "target",
+      "description": "Partner with an uncovered vagina the actor can tease"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "template": "slide your penis along {target}'s labia",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#4a148c",
+    "textColor": "#e1bee7",
+    "hoverBackgroundColor": "#6a1b9a",
+    "hoverTextColor": "#f3e5f5"
+  }
+}
