@@ -540,6 +540,47 @@ class BaseModTestFixture {
     // Load action definitions for the mod to enable action discovery
     const actionDefinitions = await this.loadActionDefinitions();
 
+    // Track prerequisite condition references across loaded actions
+    const prerequisiteConditionIds = new Set();
+    for (const actionDef of actionDefinitions) {
+      const prerequisites = actionDef?.prerequisites;
+      if (!Array.isArray(prerequisites) || prerequisites.length === 0) {
+        continue;
+      }
+
+      for (const prereq of prerequisites) {
+        if (!prereq) {
+          continue;
+        }
+
+        if (typeof prereq === 'string') {
+          prerequisiteConditionIds.add(prereq);
+          continue;
+        }
+
+        if (
+          typeof prereq.condition_ref === 'string' &&
+          prereq.condition_ref.trim().length > 0
+        ) {
+          prerequisiteConditionIds.add(prereq.condition_ref.trim());
+          continue;
+        }
+
+        if (
+          typeof prereq.conditionId === 'string' &&
+          prereq.conditionId.trim().length > 0
+        ) {
+          prerequisiteConditionIds.add(prereq.conditionId.trim());
+          continue;
+        }
+
+        const logicConditionRef = prereq?.logic?.condition_ref;
+        if (typeof logicConditionRef === 'string' && logicConditionRef.trim()) {
+          prerequisiteConditionIds.add(logicConditionRef.trim());
+        }
+      }
+    }
+
     // Create conditions map for the test environment
     const conditions = {};
     if (conditionFile) {
