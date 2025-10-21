@@ -1,0 +1,14 @@
+// Scope for close partners with uncovered backs allowing face-to-face or behind positions
+// Ensures both upper and lower back sockets are exposed before surfacing the action
+caressing:close_actors_with_uncovered_back := actor.components.positioning:closeness.partners[][{
+  "and": [
+    {
+      "or": [
+        {"condition_ref": "positioning:both-actors-facing-each-other"},
+        {"condition_ref": "positioning:actor-is-behind-entity"}
+      ]
+    },
+    {"not": {"isSocketCovered": [".", "upper_back"]}},
+    {"not": {"isSocketCovered": [".", "lower_back"]}}
+  ]
+}]

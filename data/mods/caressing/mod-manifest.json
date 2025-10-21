@@ -31,6 +31,7 @@
   "content": {
     "actions": [
       "adjust_clothing.action.json",
+      "caress_bare_back.action.json",
       "caress_abdomen.action.json",
       "cup_chin.action.json",
       "feel_arm_muscles.action.json",
@@ -43,6 +44,7 @@
     ],
     "rules": [
       "adjust_clothing.rule.json",
+      "caress_bare_back.rule.json",
       "caress_abdomen.rule.json",
       "cup_chin.rule.json",
       "handle_feel_arm_muscles.rule.json",
@@ -55,6 +57,7 @@
     ],
     "conditions": [
       "event-is-action-adjust-clothing.condition.json",
+      "event-is-action-caress-bare-back.condition.json",
       "event-is-action-caress-abdomen.condition.json",
       "event-is-action-cup-chin.condition.json",
       "event-is-action-feel-arm-muscles.condition.json",
@@ -73,7 +76,8 @@
       "close_actors_facing_away.scope",
       "close_actors_facing_each_other.scope",
       "close_actors_facing_each_other_or_behind_target.scope",
-      "close_actors_facing_each_other_with_torso_clothing.scope"
+      "close_actors_facing_each_other_with_torso_clothing.scope",
+      "close_actors_with_uncovered_back.scope"
     ]
   }
 }
