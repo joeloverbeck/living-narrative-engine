@@ -14,6 +14,26 @@ export default function createArrayIterationResolver({
   clothingAccessibilityService = null,
   errorHandler = null,
 } = {}) {
+  const safeConsoleDebug =
+    typeof console !== 'undefined' && typeof console.debug === 'function'
+      ? console.debug.bind(console)
+      : null;
+
+  /**
+   * Logs diagnostic messages for array iteration debugging.
+   *
+   * @param {import('../../types/runtimeContext.js').RuntimeContext['logger']} logger - Logger from runtime context.
+   * @param {string} message - Message to log.
+   * @param {object} payload - Structured log payload.
+   */
+  function logDiagnosticDebug(logger, message, payload) {
+    if (logger && typeof logger.debug === 'function') {
+      logger.debug(message, payload);
+    } else if (safeConsoleDebug) {
+      safeConsoleDebug(message, payload);
+    }
+  }
+
   // Validate if provided
   if (errorHandler) {
     validateDependency(errorHandler, 'IScopeDslErrorHandler', console, {
@@ -131,13 +151,18 @@ export default function createArrayIterationResolver({
 
       // DIAGNOSTIC: Enhanced logging for array iteration debugging
       const parentResultsArray = Array.from(parentResults);
-      console.debug('[DIAGNOSTIC] ArrayIterationResolver - Starting iteration:', {
-        parentResultsSize: parentResults.size,
-        parentResultsPreview: parentResultsArray.slice(0, 3),
-        parentResultsTypes: parentResultsArray.slice(0, 3).map(v =>
-          Array.isArray(v) ? `Array(${v.length})` : typeof v
-        ),
-      });
+      const logger = ctx?.runtimeCtx?.logger || null;
+      logDiagnosticDebug(
+        logger,
+        '[DIAGNOSTIC] ArrayIterationResolver - Starting iteration:',
+        {
+          parentResultsSize: parentResults.size,
+          parentResultsPreview: parentResultsArray.slice(0, 3),
+          parentResultsTypes: parentResultsArray.slice(0, 3).map(v =>
+            Array.isArray(v) ? `Array(${v.length})` : typeof v
+          ),
+        }
+      );
 
       const flattened = new Set();
       let totalArrayElements = 0;
@@ -176,16 +201,23 @@ export default function createArrayIterationResolver({
         // Handle regular arrays
         if (Array.isArray(parentValue)) {
           // DIAGNOSTIC: Log array processing details
-          console.debug('[DIAGNOSTIC] ArrayIterationResolver - Processing array:', {
-            arrayLength: parentValue.length,
-            arrayPreview: parentValue.slice(0, 5),
-            arrayItemTypes: parentValue.slice(0, 5).map(item =>
-              item === null ? 'null' :
-              item === undefined ? 'undefined' :
-              typeof item === 'string' ? 'string' :
-              typeof item
-            ),
-          });
+          logDiagnosticDebug(
+            logger,
+            '[DIAGNOSTIC] ArrayIterationResolver - Processing array:',
+            {
+              arrayLength: parentValue.length,
+              arrayPreview: parentValue.slice(0, 5),
+              arrayItemTypes: parentValue.slice(0, 5).map(item =>
+                item === null
+                  ? 'null'
+                  : item === undefined
+                    ? 'undefined'
+                    : typeof item === 'string'
+                      ? 'string'
+                      : typeof item
+              ),
+            }
+          );
 
           // Check array size limit before processing
           if (parentValue.length > MAX_ARRAY_SIZE) {
@@ -255,11 +287,15 @@ export default function createArrayIterationResolver({
       }
 
       // DIAGNOSTIC: Log final array iteration results
-      console.debug('[DIAGNOSTIC] ArrayIterationResolver - Iteration complete:', {
-        totalArrayElements,
-        flattenedSize: flattened.size,
-        flattenedPreview: Array.from(flattened).slice(0, 5),
-      });
+      logDiagnosticDebug(
+        logger,
+        '[DIAGNOSTIC] ArrayIterationResolver - Iteration complete:',
+        {
+          totalArrayElements,
+          flattenedSize: flattened.size,
+          flattenedPreview: Array.from(flattened).slice(0, 5),
+        }
+      );
 
       if (ctx.trace && ctx.trace.addStep) {
         ctx.trace.addStep(

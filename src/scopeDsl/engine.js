@@ -291,15 +291,28 @@ class ScopeEngine extends IScopeEngine {
     const source = 'ScopeEngine';
 
     // TEMPORARY DIAGNOSTIC: Log scope resolution entry
-    console.debug('[DIAGNOSTIC] ScopeEngine.resolve called:', {
-      astType: ast?.type,
-      astValue: ast?.value,
-      astKind: ast?.kind,
-      astParam: ast?.param,
-      actorId: actorEntity?.id,
-      hasRuntimeCtx: !!runtimeCtx,
-      hasEntityManager: !!runtimeCtx?.entityManager,
-    });
+    const logger = runtimeCtx?.logger;
+    if (logger && typeof logger.debug === 'function') {
+      logger.debug('[DIAGNOSTIC] ScopeEngine.resolve called:', {
+        astType: ast?.type,
+        astValue: ast?.value,
+        astKind: ast?.kind,
+        astParam: ast?.param,
+        actorId: actorEntity?.id,
+        hasRuntimeCtx: !!runtimeCtx,
+        hasEntityManager: !!runtimeCtx?.entityManager,
+      });
+    } else if (typeof console !== 'undefined' && typeof console.debug === 'function') {
+      console.debug('[DIAGNOSTIC] ScopeEngine.resolve called:', {
+        astType: ast?.type,
+        astValue: ast?.value,
+        astKind: ast?.kind,
+        astParam: ast?.param,
+        actorId: actorEntity?.id,
+        hasRuntimeCtx: !!runtimeCtx,
+        hasEntityManager: !!runtimeCtx?.entityManager,
+      });
+    }
 
     trace?.addLog('step', 'Starting scope resolution.', source, { ast });
 

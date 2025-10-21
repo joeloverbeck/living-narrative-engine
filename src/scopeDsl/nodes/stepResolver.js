@@ -23,6 +23,26 @@ export default function createStepResolver({
   entitiesGateway,
   errorHandler = null,
 }) {
+  const safeConsoleDebug =
+    typeof console !== 'undefined' && typeof console.debug === 'function'
+      ? console.debug.bind(console)
+      : null;
+
+  /**
+   * Logs diagnostic information at debug level when available.
+   *
+   * @param {import('../../types/runtimeContext.js').RuntimeContext['logger']} logger - Logger from runtime context.
+   * @param {string} message - Message to log.
+   * @param {object} payload - Structured log payload.
+   */
+  function logDiagnosticDebug(logger, message, payload) {
+    if (logger && typeof logger.debug === 'function') {
+      logger.debug(message, payload);
+    } else if (safeConsoleDebug) {
+      safeConsoleDebug(message, payload);
+    }
+  }
+
   // Only validate if provided (for backward compatibility)
   if (errorHandler) {
     validateDependency(errorHandler, 'IScopeDslErrorHandler', console, {
@@ -96,12 +116,12 @@ export default function createStepResolver({
    * @param {object} [trace] - Optional trace logger.
    * @returns {any} Extracted value or undefined.
    */
-  function resolveEntityParentValue(entityId, field, trace) {
+  function resolveEntityParentValue(entityId, field, trace, logger) {
     try {
       if (field === 'components') {
         // DIAGNOSTIC: Log when building components object
         const componentsObj = getOrBuildComponents(entityId, null, entitiesGateway, trace);
-        console.debug('[DIAGNOSTIC] StepResolver - Building components for entity:', {
+        logDiagnosticDebug(logger, '[DIAGNOSTIC] StepResolver - Building components for entity:', {
           entityId,
           field: 'components',
           componentKeys: componentsObj ? Object.keys(componentsObj) : null,
@@ -134,19 +154,21 @@ export default function createStepResolver({
    * @param {string} field - Field name to extract.
    * @returns {any} Extracted value or undefined.
    */
-  function resolveObjectParentValue(obj, field) {
+  function resolveObjectParentValue(obj, field, logger) {
     const value = extractFieldFromObject(obj, field);
 
     // DIAGNOSTIC: Log field access from objects, especially for namespaced IDs
     if (field.includes(':') || field === 'partners') {
-      console.debug('[DIAGNOSTIC] StepResolver - Accessing field from object:', {
+      logDiagnosticDebug(logger, '[DIAGNOSTIC] StepResolver - Accessing field from object:', {
         field,
         objectKeys: obj ? Object.keys(obj) : null,
         hasField: obj ? (field in obj) : false,
         valueType: value ? typeof value : 'undefined',
-        valuePreview: Array.isArray(value) ? `Array(${value.length})` :
-                      (value && typeof value === 'object') ? 'Object' :
-                      value,
+        valuePreview: Array.isArray(value)
+          ? `Array(${value.length})`
+          : value && typeof value === 'object'
+            ? 'Object'
+            : value,
       });
     }
 
@@ -183,6 +205,7 @@ export default function createStepResolver({
      */
     resolve(node, ctx) {
       const trace = ctx.trace;
+      const runtimeLogger = ctx?.runtimeCtx?.logger || null;
 
       // Validate context has required properties
       if (!ctx.actorEntity) {
@@ -256,7 +279,8 @@ export default function createStepResolver({
             const val = resolveEntityParentValue(
               parentValue,
               node.field,
-              trace
+              trace,
+              runtimeLogger
             );
             if (node.field === 'components') {
               if (val) result.add(val);
@@ -270,7 +294,11 @@ export default function createStepResolver({
             // Handle Set of objects - extract field from each object in the Set
             for (const setItem of parentValue) {
               if (setItem && typeof setItem === 'object') {
-                const val = resolveObjectParentValue(setItem, node.field);
+                const val = resolveObjectParentValue(
+                  setItem,
+                  node.field,
+                  runtimeLogger
+                );
                 if (val !== undefined) {
                   result.add(val);
                 }
@@ -278,7 +306,11 @@ export default function createStepResolver({
             }
           } else {
             // Handle single object
-            const val = resolveObjectParentValue(parentValue, node.field);
+            const val = resolveObjectParentValue(
+              parentValue,
+              node.field,
+              runtimeLogger
+            );
             if (val !== undefined) {
               result.add(val);
             }

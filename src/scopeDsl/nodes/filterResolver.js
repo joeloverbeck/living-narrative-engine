@@ -38,6 +38,27 @@ export default function createFilterResolver({
       requiredMethods: ['handleError', 'getErrorBuffer'],
     });
   }
+
+  const safeConsoleDebug =
+    typeof console !== 'undefined' && typeof console.debug === 'function'
+      ? console.debug.bind(console)
+      : null;
+
+  /**
+   * Logs diagnostic filter evaluation messages using the runtime logger when available.
+   *
+   * @param {import('../../types/runtimeContext.js').RuntimeContext['logger']} logger - Logger from runtime context.
+   * @param {string} message - Message to log.
+   * @param {object} payload - Structured log payload.
+   */
+  function logDiagnosticDebug(logger, message, payload) {
+    if (logger && typeof logger.debug === 'function') {
+      logger.debug(message, payload);
+    } else if (safeConsoleDebug) {
+      safeConsoleDebug(message, payload);
+    }
+  }
+
   return {
     /**
      * Determines if this resolver can handle the given node
@@ -61,6 +82,7 @@ export default function createFilterResolver({
      */
     resolve(node, ctx) {
       const { actorEntity, dispatcher, trace } = ctx;
+      const logger = ctx?.runtimeCtx?.logger || null;
 
       // Check if we have a cached processed actor from previous iterations
       // This avoids reprocessing the actor 10,000+ times in large datasets
@@ -281,7 +303,7 @@ export default function createFilterResolver({
       }
 
       // TEMPORARY DIAGNOSTIC: Log filter results to console
-      console.debug('[DIAGNOSTIC] Filter evaluation:', {
+      logDiagnosticDebug(logger, '[DIAGNOSTIC] Filter evaluation:', {
         initialSize,
         finalSize: result.size,
         logic: JSON.stringify(node.logic),
