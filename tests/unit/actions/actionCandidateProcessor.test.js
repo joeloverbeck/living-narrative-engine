@@ -36,6 +36,28 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       });
     });
 
+    it('handles an explicit null trace context without invoking trace hooks', () => {
+      const bed = getBed();
+      const actionDef = { id: 'null-trace', scope: 'none' };
+      const actorEntity = { id: 'actor-null-trace' };
+      const context = {};
+
+      const result = bed.service.process(
+        actionDef,
+        actorEntity,
+        context,
+        null
+      );
+
+      expect(result.success).toBe(true);
+      expect(
+        bed.mocks.prerequisiteEvaluationService.evaluate
+      ).not.toHaveBeenCalled();
+      expect(
+        bed.mocks.targetResolutionService.resolveTargets
+      ).toHaveBeenCalledWith('none', actorEntity, context, null, 'null-trace');
+    });
+
     it('returns actions when prerequisites pass and targets exist', () => {
       const bed = getBed();
       const actionDef = {
@@ -130,6 +152,45 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
         `Scope for action 'attack' resolved to 2 targets.`,
         'ActionCandidateProcessor.process',
         { targets: ['enemy1', 'enemy2'] }
+      );
+    });
+
+    it('records an initial trace step when span helpers are unavailable', () => {
+      const bed = getBed();
+      const actionDef = {
+        id: 'trace-step',
+        name: 'Trace Step',
+        commandVerb: 'inspect',
+        scope: 'inspectable',
+      };
+      const actorEntity = { id: 'actor-step' };
+      const context = {};
+      const mockTrace = {
+        step: jest.fn(),
+        info: jest.fn(),
+        success: jest.fn(),
+        failure: jest.fn(),
+      };
+
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue(
+        ActionResult.success([ActionTargetContext.forEntity('target-step')])
+      );
+      bed.mocks.actionCommandFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'inspect target-step',
+      });
+
+      const result = bed.service.process(
+        actionDef,
+        actorEntity,
+        context,
+        mockTrace
+      );
+
+      expect(result.success).toBe(true);
+      expect(mockTrace.step).toHaveBeenCalledWith(
+        "Processing candidate action: 'trace-step'",
+        'ActionCandidateProcessor.process'
       );
     });
 
@@ -361,6 +422,31 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       ).not.toHaveBeenCalled();
     });
 
+    it('treats null prerequisites as absent prerequisites', () => {
+      const bed = getBed();
+      const actionDef = {
+        id: 'null-prereq',
+        name: 'Null Prereq Action',
+        commandVerb: 'null',
+        scope: 'none',
+        prerequisites: null,
+      };
+      const actorEntity = { id: 'actor-null' };
+      const context = {};
+
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue(
+        ActionResult.success([ActionTargetContext.noTarget()])
+      );
+
+      const result = bed.service.process(actionDef, actorEntity, context);
+
+      expect(result.success).toBe(true);
+      expect(result.value.actions).toHaveLength(1);
+      expect(
+        bed.mocks.prerequisiteEvaluationService.evaluate
+      ).not.toHaveBeenCalled();
+    });
+
     it('processes actions with empty prerequisites array successfully', () => {
       const bed = getBed();
       const actionDef = {
@@ -390,6 +476,31 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
         visual: null,
       });
       expect(result.value.errors).toHaveLength(0);
+      expect(
+        bed.mocks.prerequisiteEvaluationService.evaluate
+      ).not.toHaveBeenCalled();
+    });
+
+    it('treats undefined prerequisites property as absent prerequisites', () => {
+      const bed = getBed();
+      const actionDef = {
+        id: 'undefined-prereq',
+        name: 'Undefined Prereq Action',
+        commandVerb: 'undef',
+        scope: 'none',
+        prerequisites: undefined,
+      };
+      const actorEntity = { id: 'actor-undef' };
+      const context = {};
+
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue(
+        ActionResult.success([ActionTargetContext.noTarget()])
+      );
+
+      const result = bed.service.process(actionDef, actorEntity, context);
+
+      expect(result.success).toBe(true);
+      expect(result.value.actions).toHaveLength(1);
       expect(
         bed.mocks.prerequisiteEvaluationService.evaluate
       ).not.toHaveBeenCalled();
