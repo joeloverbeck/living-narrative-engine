@@ -120,6 +120,13 @@ export function createActionValidationProxy(actionDef, context = 'Action') {
 
     validateTargets(targets) {
       const errors = [];
+
+      // Handle legacy string format (old single-target format)
+      if (typeof targets === 'string') {
+        // Legacy format is valid - it's a scope string
+        return errors;
+      }
+
       const validTargetTypes = ['primary', 'secondary', 'tertiary'];
 
       if (typeof targets === 'string') {
