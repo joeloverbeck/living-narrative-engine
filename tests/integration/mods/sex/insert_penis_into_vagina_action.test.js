@@ -23,7 +23,6 @@ function setupPenetrationScenario() {
     .atLocation('room1')
     .withBody('aliceGroin1')
     .closeToEntity('beth')
-    .withComponent('sex:fucking_vaginally', { targetId: 'beth' })
     .asActor()
     .build();
 
