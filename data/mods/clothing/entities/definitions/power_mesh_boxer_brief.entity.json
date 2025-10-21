@@ -8,7 +8,9 @@
       "equipmentSlots": {
         "primary": "torso_lower"
       },
-      "allowedLayers": ["underwear"]
+      "allowedLayers": [
+        "underwear"
+      ]
     },
     "core:material": {
       "material": "power-mesh"
@@ -24,6 +26,8 @@
     },
     "descriptors:texture": {
       "texture": "smooth"
-    }
+    },
+    "items:item": {},
+    "items:portable": {}
   }
 }

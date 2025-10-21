@@ -8,7 +8,11 @@
       "equipmentSlots": {
         "primary": "full_body"
       },
-      "allowedLayers": ["underwear", "base", "outer"]
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
     },
     "core:material": {
       "material": "stretch-silk"
@@ -23,8 +27,13 @@
       "color": "black"
     },
     "clothing:coverage_mapping": {
-      "covers": ["torso_upper", "torso_lower"],
+      "covers": [
+        "torso_upper",
+        "torso_lower"
+      ],
       "coveragePriority": "base"
-    }
+    },
+    "items:item": {},
+    "items:portable": {}
   }
 }

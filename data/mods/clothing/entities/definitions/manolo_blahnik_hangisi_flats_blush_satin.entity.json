@@ -8,7 +8,9 @@
       "equipmentSlots": {
         "primary": "feet"
       },
-      "allowedLayers": ["base"]
+      "allowedLayers": [
+        "base"
+      ]
     },
     "core:material": {
       "material": "satin"
@@ -29,8 +31,12 @@
       "embellishment": "crystal"
     },
     "clothing:coverage_mapping": {
-      "covers": ["feet"],
+      "covers": [
+        "feet"
+      ],
       "coveragePriority": "base"
-    }
+    },
+    "items:item": {},
+    "items:portable": {}
   }
 }

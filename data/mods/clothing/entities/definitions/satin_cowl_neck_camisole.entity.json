@@ -8,7 +8,9 @@
       "equipmentSlots": {
         "primary": "torso_upper"
       },
-      "allowedLayers": ["underwear"]
+      "allowedLayers": [
+        "underwear"
+      ]
     },
     "core:material": {
       "material": "satin"
@@ -17,13 +19,15 @@
       "text": "cowl neck camisole"
     },
     "core:description": {
-      "text": "An exquisite satin camisole featuring an elegant cowl neckline that drapes gracefully across the décolletage. The luxurious satin fabric has a subtle sheen that catches the light beautifully, while the flowing cowl design creates an alluring silhouette. The adjustable straps and comfortable fit make this piece both seductive and practical for layering or wearing alone."
+      "text": "An exquisite satin camisole featuring an elegant cowl neckline that drapes gracefully across the d\u00e9colletage. The luxurious satin fabric has a subtle sheen that catches the light beautifully, while the flowing cowl design creates an alluring silhouette. The adjustable straps and comfortable fit make this piece both seductive and practical for layering or wearing alone."
     },
     "descriptors:color_extended": {
       "color": "nude"
     },
     "descriptors:texture": {
       "texture": "silky"
-    }
+    },
+    "items:item": {},
+    "items:portable": {}
   }
 }

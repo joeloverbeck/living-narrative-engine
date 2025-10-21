@@ -8,7 +8,9 @@
       "equipmentSlots": {
         "primary": "torso_lower"
       },
-      "allowedLayers": ["accessories"]
+      "allowedLayers": [
+        "accessories"
+      ]
     },
     "core:material": {
       "material": "leather"
@@ -24,6 +26,8 @@
     },
     "descriptors:texture": {
       "texture": "smooth"
-    }
+    },
+    "items:item": {},
+    "items:portable": {}
   }
 }

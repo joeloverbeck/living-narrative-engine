@@ -8,7 +8,10 @@
       "equipmentSlots": {
         "primary": "feet"
       },
-      "allowedLayers": ["underwear", "base"]
+      "allowedLayers": [
+        "underwear",
+        "base"
+      ]
     },
     "core:material": {
       "material": "leather"
@@ -24,6 +27,8 @@
     },
     "descriptors:texture": {
       "texture": "smooth"
-    }
+    },
+    "items:item": {},
+    "items:portable": {}
   }
 }

@@ -8,7 +8,10 @@
       "equipmentSlots": {
         "primary": "torso_upper"
       },
-      "allowedLayers": ["base", "outer"]
+      "allowedLayers": [
+        "base",
+        "outer"
+      ]
     },
     "core:material": {
       "material": "silk"
@@ -24,6 +27,8 @@
     },
     "descriptors:texture": {
       "texture": "silky"
-    }
+    },
+    "items:item": {},
+    "items:portable": {}
   }
 }
