@@ -375,9 +375,11 @@ describe('PrerequisiteEvaluationService Integration Tests - Coverage Improvement
       expect(result).toBe(true);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          'Could not serialize components for validation logging'
-        ),
-        expect.any(Error)
+          `PrereqEval[test:action]: Actor entity [${actorId}] has 1 components available.`
+        )
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Actor components snapshot =>')
       );
     });
 

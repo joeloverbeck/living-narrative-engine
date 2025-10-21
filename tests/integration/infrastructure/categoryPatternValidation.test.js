@@ -146,7 +146,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
           JSON.stringify({
             condition: 'event-is-action-show-off-biceps',
           })
-        );
+        )
+        .mockRejectedValueOnce(new Error('File not found')); // Action definition fallback attempt
 
       const testData = await ModTestFixture.forAction(
         'exercise',
@@ -155,7 +156,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       expect(testData.actionFile).toBeDefined();
 
       // Verify correct fallback pattern was used (3 rule attempts + 3 condition attempts)
-      expect(fs.promises.readFile).toHaveBeenCalledTimes(6);
+      // Additional read is expected for the action definition fallback.
+      expect(fs.promises.readFile).toHaveBeenCalledTimes(7);
     });
 
     it('should validate exercise category event patterns', async () => {

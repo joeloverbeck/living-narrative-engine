@@ -559,7 +559,9 @@
       "Bash(NODE_ENV=test npm run test:unit:*)",
       "Bash(git checkout HEAD -- data/mods/positioning/scopes/close_actors.scope data/mods/positioning/scopes/close_actors_facing_each_other_or_behind_target.scope)",
       "Bash(git checkout HEAD -- data/mods/affection/actions/place_hands_on_shoulders.action.json data/mods/affection/actions/ruffle_hair_playfully.action.json NODE_ENV=test npx jest tests/integration/mods/affection/shoulder_hair_actions_with_kneeling.integration.test.js --no-coverage --silent --testNamePattern=\"should BE available when neither is kneeling\")",
-      "Bash(exit 1)"
+      "Bash(exit 1)",
+      "Bash(while read f)",
+      "Bash(do echo \"=== $f ===\")"
     ],
     "deny": [],
     "ask": []
