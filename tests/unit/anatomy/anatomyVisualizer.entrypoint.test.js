@@ -284,6 +284,70 @@ describe('anatomy-visualizer entrypoint', () => {
     addEventListenerSpy.mockRestore();
   });
 
+  it('propagates visualizer initialization failures to the fatal error handler', async () => {
+    Object.defineProperty(document, 'readyState', {
+      configurable: true,
+      value: 'complete',
+    });
+
+    const logger = {
+      info: jest.fn(),
+      warn: jest.fn(),
+    };
+    const services = {
+      logger,
+      registry: 'registry-service',
+      entityManager: 'entity-manager',
+      eventDispatcher: 'dispatcher',
+    };
+
+    const resolvedValues = {
+      [tokens.AnatomyDescriptionService]: 'anatomy-service',
+      [tokens.VisualizerStateController]: 'state-controller',
+      [tokens.VisualizationComposer]: 'composer',
+      [tokens.ClothingManagementService]: 'clothing-service',
+    };
+    const resolveMock = jest.fn((token) => resolvedValues[token]);
+    const container = { resolve: resolveMock };
+
+    const initializationError = new Error('UI initialization failure');
+    mockUIInitialize.mockReset();
+    mockUIInitialize.mockRejectedValue(initializationError);
+
+    bootstrapMock.mockImplementation(async (options) => {
+      await options.postInitHook(services, container);
+      return { container, services };
+    });
+
+    await jest.isolateModulesAsync(async () => {
+      await import('../../../src/anatomy-visualizer.js');
+    });
+
+    await flushMicrotasks();
+
+    expect(registerVisualizerComponents).toHaveBeenCalledWith(container);
+    expect(resolveMock).toHaveBeenCalledWith(tokens.AnatomyDescriptionService);
+    expect(resolveMock).toHaveBeenCalledWith(tokens.VisualizerStateController);
+    expect(resolveMock).toHaveBeenCalledWith(tokens.VisualizationComposer);
+    expect(resolveMock).toHaveBeenCalledWith(tokens.ClothingManagementService);
+
+    expect(mockUIInitialize).toHaveBeenCalledTimes(1);
+    await expect(bootstrapMock.mock.results[0].value).rejects.toBe(
+      initializationError,
+    );
+
+    expect(logger.info).toHaveBeenCalledTimes(1);
+    expect(logger.info).toHaveBeenCalledWith(
+      'Anatomy Visualizer: Initializing UI...',
+    );
+    expect(logger.warn).not.toHaveBeenCalled();
+
+    expect(displayFatalStartupErrorMock).toHaveBeenCalledWith(
+      'Failed to initialize anatomy visualizer: UI initialization failure',
+      initializationError,
+    );
+  });
+
   it('reports fatal startup error when bootstrap fails', async () => {
     Object.defineProperty(document, 'readyState', {
       configurable: true,
