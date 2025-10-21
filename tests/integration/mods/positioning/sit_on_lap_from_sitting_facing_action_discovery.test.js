@@ -4,6 +4,7 @@ import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import sitOnLapFacingRule from '../../../../data/mods/positioning/rules/handle_sit_on_lap_from_sitting_facing.rule.json' assert { type: 'json' };
 import eventIsActionSitOnLapFacing from '../../../../data/mods/positioning/conditions/event-is-action-sit-on-lap-from-sitting-facing.condition.json' assert { type: 'json' };
 import sitOnLapFacingAction from '../../../../data/mods/positioning/actions/sit_on_lap_from_sitting_facing.action.json' assert { type: 'json' };
+import mouthAvailableCondition from '../../../../data/mods/core/conditions/actor-mouth-available.condition.json' assert { type: 'json' };
 
 describe('sit_on_lap_from_sitting_facing action discovery - Integration Tests', () => {
   let testFixture;
@@ -59,6 +60,20 @@ describe('sit_on_lap_from_sitting_facing action discovery - Integration Tests', 
 
       return originalResolveSync.call(testEnv.unifiedScopeResolver, scopeName, context);
     };
+
+    const originalGetCondition =
+      testEnv.dataRegistry.getConditionDefinition.getMockImplementation?.();
+    testEnv.dataRegistry.getConditionDefinition.mockImplementation(
+      conditionId => {
+        if (conditionId === 'core:actor-mouth-available') {
+          return mouthAvailableCondition;
+        }
+
+        return originalGetCondition
+          ? originalGetCondition(conditionId)
+          : undefined;
+      }
+    );
   });
 
   afterEach(() => {
