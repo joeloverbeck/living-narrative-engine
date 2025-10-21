@@ -171,7 +171,9 @@ describe('sex:insert_penis_into_vagina action discovery', () => {
    * @param {boolean} [options.includePenis=true] - Whether to include a penis anatomy part for the actor.
    * @param {boolean} [options.coverPenis=false] - Whether clothing covers the actor's penis.
    * @param {boolean} [options.targetSitting=false] - Whether the target is sitting on furniture.
-   * @param {boolean} [options.includePenetrationComponent=true] - Whether the actor starts with the penetration state component.
+   * @param {boolean} [options.actorSitting=false] - Whether the actor is sitting on furniture.
+   * @param {boolean} [options.targetStraddling=false] - Whether the target is straddling the actor's waist.
+   * @param {boolean} [options.includePenetrationComponent=false] - Whether the actor starts with the penetration state component.
    * @returns {Array<object>} Entities to load into the test environment.
    */
   function buildScenario(options = {}) {
@@ -182,7 +184,9 @@ describe('sex:insert_penis_into_vagina action discovery', () => {
       includePenis = true,
       coverPenis = false,
       targetSitting = false,
-      includePenetrationComponent = true,
+      actorSitting = false,
+      targetStraddling = false,
+      includePenetrationComponent = false,
     } = options;
 
     const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
@@ -209,6 +213,7 @@ describe('sex:insert_penis_into_vagina action discovery', () => {
 
     if (includePenetrationComponent) {
       actorBuilder.withComponent('sex:fucking_vaginally', { targetId: 'beth' });
+      targetBuilder.withComponent('sex:being_fucked_vaginally', { actorId: 'alice' });
     }
 
     if (targetFacingAway) {
@@ -221,6 +226,20 @@ describe('sex:insert_penis_into_vagina action discovery', () => {
       targetBuilder.withComponent('positioning:sitting_on', {
         furniture_id: 'stool1',
         spot_index: 0,
+      });
+    }
+
+    if (actorSitting) {
+      actorBuilder.withComponent('positioning:sitting_on', {
+        furniture_id: 'stool1',
+        spot_index: 0,
+      });
+    }
+
+    if (targetStraddling) {
+      targetBuilder.withComponent('positioning:straddling_waist', {
+        target_id: 'alice',
+        facing_away: false,
       });
     }
 
@@ -313,7 +332,7 @@ describe('sex:insert_penis_into_vagina action discovery', () => {
       entities.push(new ModEntityBuilder('pants1').withName('Pants').build());
     }
 
-    if (targetSitting) {
+    if (targetSitting || actorSitting) {
       entities.push(
         new ModEntityBuilder('stool1').withName('Stool').atLocation('room1').build()
       );
@@ -387,9 +406,14 @@ describe('sex:insert_penis_into_vagina action discovery', () => {
       );
     });
 
-    it('should require closeness and the new penetration state component', () => {
+    it('should require actor closeness to the target', () => {
       expect(insertPenisIntoVaginaAction.required_components.actor).toEqual([
         'positioning:closeness',
+      ]);
+    });
+
+    it('should forbid actors already penetrating vaginally', () => {
+      expect(insertPenisIntoVaginaAction.forbidden_components.actor).toEqual([
         'sex:fucking_vaginally',
       ]);
     });
@@ -458,8 +482,24 @@ describe('sex:insert_penis_into_vagina action discovery', () => {
       expect(foundAction).toBeDefined();
     });
 
-    it('does not appear without the penetration state component on the actor', async () => {
-      const entities = buildScenario({ includePenetrationComponent: false });
+    it('appears when the actor is sitting and the target straddles their waist', async () => {
+      const entities = buildScenario({
+        actorSitting: true,
+        targetStraddling: true,
+      });
+      testFixture.reset(entities);
+      configureActionDiscovery();
+
+      const actions = await testFixture.discoverActions('alice');
+      const foundAction = actions.find(
+        (action) => action.id === 'sex:insert_penis_into_vagina'
+      );
+
+      expect(foundAction).toBeDefined();
+    });
+
+    it('does not appear when the actor is already penetrating the target', async () => {
+      const entities = buildScenario({ includePenetrationComponent: true });
       testFixture.reset(entities);
       configureActionDiscovery();
 
