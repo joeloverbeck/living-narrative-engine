@@ -1,9 +1,3 @@
-import { BodyGraphService, LIMB_DETACHED_EVENT_ID } from '../../../src/anatomy/bodyGraphService.js';
-import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
-import { AnatomyCacheManager } from '../../../src/anatomy/anatomyCacheManager.js';
-import { AnatomyGraphAlgorithms } from '../../../src/anatomy/anatomyGraphAlgorithms.js';
-import { AnatomyQueryCache } from '../../../src/anatomy/cache/AnatomyQueryCache.js';
-
 jest.mock('../../../src/anatomy/anatomyCacheManager.js', () => {
   const createInstance = () => ({
     hasCacheForRoot: jest.fn(),
@@ -42,6 +36,13 @@ jest.mock('../../../src/anatomy/anatomyGraphAlgorithms.js', () => ({
   },
 }));
 
+let BodyGraphService;
+let LIMB_DETACHED_EVENT_ID;
+let InvalidArgumentError;
+let AnatomyCacheManager;
+let AnatomyGraphAlgorithms;
+let AnatomyQueryCache;
+
 const createLogger = () => ({
   debug: jest.fn(),
   info: jest.fn(),
@@ -77,6 +78,16 @@ const setupService = (overrides = {}) => {
 };
 
 describe('BodyGraphService targeted graph and cache behaviour', () => {
+  beforeAll(async () => {
+    ({ BodyGraphService, LIMB_DETACHED_EVENT_ID } = await import(
+      '../../../src/anatomy/bodyGraphService.js'
+    ));
+    ({ InvalidArgumentError } = await import('../../../src/errors/invalidArgumentError.js'));
+    ({ AnatomyCacheManager } = await import('../../../src/anatomy/anatomyCacheManager.js'));
+    ({ AnatomyGraphAlgorithms } = await import('../../../src/anatomy/anatomyGraphAlgorithms.js'));
+    ({ AnatomyQueryCache } = await import('../../../src/anatomy/cache/AnatomyQueryCache.js'));
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
