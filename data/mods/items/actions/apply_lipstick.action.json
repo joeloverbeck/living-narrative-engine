@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "items:apply_lipstick",
+  "name": "Apply Lipstick",
+  "description": "Coat your lips evenly with a lipstick item from your inventory.",
+  "generateCombinations": true,
+  "targets": {
+    "primary": {
+      "scope": "items:actor_inventory_items",
+      "placeholder": "item",
+      "description": "Lipstick to apply"
+    }
+  },
+  "required_components": {
+    "actor": [
+      "items:inventory"
+    ],
+    "primary": [
+      "items:item",
+      "items:can_apply_lipstick"
+    ]
+  },
+  "prerequisites": [],
+  "template": "coat your lips evenly with {item}"
+}

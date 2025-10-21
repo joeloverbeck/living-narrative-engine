@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "items:can_apply_lipstick",
+  "description": "Marker component identifying cosmetic items that can be applied as lipstick.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}
