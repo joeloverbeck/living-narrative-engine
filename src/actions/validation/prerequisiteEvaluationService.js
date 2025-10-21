@@ -271,6 +271,10 @@ export class PrerequisiteEvaluationService extends BaseService {
         componentSnapshot = { ...components };
       }
     } catch (err) {
+      this.#logger.debug(
+        `${prefix}: Could not serialize components for validation logging`,
+        err
+      );
       this.#logger.warn(
         `${prefix}: WARNING - Actor entity [${resolvedActorId}] components could not be inspected. Treating as missing.`
       );
