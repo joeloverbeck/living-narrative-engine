@@ -27,7 +27,7 @@ import path from 'path';
 const breastsScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../data/mods/sex/scopes/actors_with_breasts_facing_each_other.scope'
+    '../../../data/mods/sex-breastplay/scopes/actors_with_breasts_facing_each_other.scope'
   ),
   'utf8'
 );
@@ -105,9 +105,8 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
     scopeRegistry.clear();
 
     scopeRegistry.initialize({
-      'sex:actors_with_breasts_facing_each_other': scopeDefinitions.get(
-        'sex:actors_with_breasts_facing_each_other'
-      ),
+      'sex-breastplay:actors_with_breasts_facing_each_other':
+        scopeDefinitions.get('sex-breastplay:actors_with_breasts_facing_each_other'),
     });
 
     scopeEngine = new ScopeEngine();
@@ -207,7 +206,7 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
   function evaluateScope(actorId) {
     const actorEntity = entityManager.getEntityInstance(actorId);
     const scopeDef = scopeRegistry.getScope(
-      'sex:actors_with_breasts_facing_each_other'
+      'sex-breastplay:actors_with_breasts_facing_each_other'
     );
 
     // Parse the scope expression
@@ -467,9 +466,8 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
       );
 
       scopeRegistry.initialize({
-        'sex:actors_with_breasts_facing_each_other': freshScopeDefinitions.get(
-          'sex:actors_with_breasts_facing_each_other'
-        ),
+        'sex-breastplay:actors_with_breasts_facing_each_other':
+          freshScopeDefinitions.get('sex-breastplay:actors_with_breasts_facing_each_other'),
       });
 
       // Mock hasPartOfType to find breasts

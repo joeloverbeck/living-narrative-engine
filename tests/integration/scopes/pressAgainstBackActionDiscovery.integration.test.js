@@ -48,7 +48,7 @@ const closeActorsFacingAwayScopeContent = fs.readFileSync(
 );
 
 // Import actual action files
-import pressAgainstBackAction from '../../../data/mods/sex/actions/press_against_back.action.json';
+import pressAgainstBackAction from '../../../data/mods/sex-breastplay/actions/press_against_back.action.json';
 
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
 
@@ -390,7 +390,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const pressAgainstBackActions = result.actions.filter(
-        (action) => action.id === 'sex:press_against_back'
+        (action) => action.id === 'sex-breastplay:press_against_back'
       );
       expect(pressAgainstBackActions).toHaveLength(0);
     });
@@ -420,7 +420,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert - should not find action due to scope filtering
       const pressAgainstBackActions = result.actions.filter(
-        (action) => action.id === 'sex:press_against_back'
+        (action) => action.id === 'sex-breastplay:press_against_back'
       );
       expect(pressAgainstBackActions).toHaveLength(0);
     });
@@ -475,7 +475,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert - should not find action due to lack of closeness
       const pressAgainstBackActions = result.actions.filter(
-        (action) => action.id === 'sex:press_against_back'
+        (action) => action.id === 'sex-breastplay:press_against_back'
       );
       expect(pressAgainstBackActions).toHaveLength(0);
     });

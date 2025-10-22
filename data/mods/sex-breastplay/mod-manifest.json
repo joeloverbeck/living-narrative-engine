@@ -1,0 +1,60 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "sex-breastplay",
+  "version": "1.0.0",
+  "name": "Sex - Breastplay",
+  "description": "Breast-focused intimacy actions and supporting logic split from the legacy sex module.",
+  "author": "Living Narrative Engine Team",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "anatomy",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "clothing",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "caressing",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "sex-core",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [
+      "fondle_breasts.action.json",
+      "fondle_breasts_over_clothes.action.json",
+      "press_against_back.action.json"
+    ],
+    "conditions": [
+      "event-is-action-fondle-breasts.condition.json",
+      "event-is-action-fondle-breasts-over-clothes.condition.json",
+      "event-is-action-press-against-back.condition.json"
+    ],
+    "rules": [
+      "handle_fondle_breasts.rule.json",
+      "handle_fondle_breasts_over_clothes.rule.json",
+      "handle_press_against_back.rule.json"
+    ],
+    "scopes": [
+      "actors_with_breasts_facing_each_other.scope",
+      "actors_with_breasts_facing_each_other_covered.scope",
+      "actors_with_breasts_in_intimacy.scope"
+    ],
+    "components": [],
+    "events": [],
+    "macros": [],
+    "entities": {
+      "definitions": [],
+      "instances": []
+    }
+  }
+}

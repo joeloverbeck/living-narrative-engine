@@ -12,9 +12,9 @@ Your task is to create a comprehensive PRP document to implement these changes.
 
 ## EXAMPLES:
 
-The existing actions data/mods/sex/actions/fondle_breasts.action.json and data/mods/intimacy/action/massage_shoulders.action.json should be valid basis for the new action.
-The existing scopes data/mods/sex/scopes/actors_with_breasts_in_intimacy.scope and data/mods/intimacy/scopes/actors_with_arms_in_intimacy.scope should be valid basis for the new scope.
-The existing rules data/mods/sex/rules/handle_fondle_breasts.rule.json and data/mods/intimacy/rules/handle_massage_shoulders.rule.json should be valid basis for the new rule.
+The existing actions data/mods/sex-breastplay/actions/fondle_breasts.action.json and data/mods/intimacy/action/massage_shoulders.action.json should be valid basis for the new action.
+The existing scopes data/mods/sex-breastplay/scopes/actors_with_breasts_in_intimacy.scope and data/mods/intimacy/scopes/actors_with_arms_in_intimacy.scope should be valid basis for the new scope.
+The existing rules data/mods/sex-breastplay/rules/handle_fondle_breasts.rule.json and data/mods/intimacy/rules/handle_massage_shoulders.rule.json should be valid basis for the new rule.
 
 ## DOCUMENTATION:
 

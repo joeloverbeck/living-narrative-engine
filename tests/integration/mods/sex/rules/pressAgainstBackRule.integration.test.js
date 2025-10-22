@@ -87,8 +87,8 @@ describe('press against back rule integration', () => {
   beforeEach(async () => {
     // Create test fixture with auto-loaded files for the press_against_back action
     testFixture = await ModTestFixture.forAction(
-      'sex',
-      'sex:press_against_back'
+      'sex-breastplay',
+      'sex-breastplay:press_against_back'
     );
 
     // Setup anatomy entities
@@ -193,7 +193,7 @@ describe('press against back rule integration', () => {
     // Test rule robustness with missing target entity
     await expect(async () => {
       await testFixture.eventBus.dispatch('core:attempt_action', {
-        actionId: 'sex:press_against_back',
+        actionId: 'sex-breastplay:press_against_back',
         actorId: 'alice',
         targetId: 'nonexistent',
       });
