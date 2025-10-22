@@ -276,6 +276,17 @@ describe('BodyGraphService focused coverage tests', () => {
       );
     });
 
+    it('gracefully handles body components without any root identifier', () => {
+      const service = createService();
+
+      const result = service.getAllParts({ metadata: { label: 'no-root' } });
+
+      expect(result).toEqual([]);
+      expect(logger.debug).toHaveBeenCalledWith(
+        'BodyGraphService.getAllParts: No root ID found in bodyComponent',
+      );
+    });
+
     it('resolves using the blueprint root when actor cache is missing', () => {
       const service = createService();
 
@@ -334,6 +345,32 @@ describe('BodyGraphService focused coverage tests', () => {
       );
       expect(secondResult).toEqual(['actor-root']);
     });
+
+    it('logs compact summaries for large result sets', () => {
+      const service = createService();
+
+      mockCacheInstance.size.mockReturnValue(1);
+      mockCacheInstance.has.mockReturnValue(false);
+      mockQueryCacheInstance.getCachedGetAllParts.mockReturnValueOnce(undefined);
+      AnatomyGraphAlgorithms.getAllParts.mockReturnValueOnce([
+        'root',
+        'child-1',
+        'child-2',
+        'child-3',
+        'child-4',
+        'child-5',
+      ]);
+
+      service.getAllParts({ body: { root: 'blueprint-root' } });
+
+      const summaryLog = logger.debug.mock.calls.find(([message]) =>
+        message.startsWith(
+          'BodyGraphService: AnatomyGraphAlgorithms.getAllParts returned',
+        ),
+      );
+
+      expect(summaryLog?.[0]).toContain('...');
+    });
   });
 
   describe('component lookup helpers', () => {
@@ -383,6 +420,22 @@ describe('BodyGraphService focused coverage tests', () => {
           'component:z',
           'stats.durability',
           'broken',
+        ),
+      ).toEqual({ found: false });
+    });
+
+    it('ignores parts that completely lack the requested component', () => {
+      const service = createService();
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['missing']);
+
+      entityManager.getComponentData.mockReturnValue(null);
+
+      expect(
+        service.hasPartWithComponentValue(
+          {},
+          'component:z',
+          'stats.durability',
+          'intact',
         ),
       ).toEqual({ found: false });
     });
@@ -442,6 +495,25 @@ describe('BodyGraphService focused coverage tests', () => {
         recipeId: 'recipe-1',
         rootEntityId: 'actor-3',
       });
+
+      entityManager.getComponentData.mockResolvedValue({});
+      await expect(service.getAnatomyData('actor-4')).resolves.toEqual({
+        recipeId: null,
+        rootEntityId: 'actor-4',
+      });
+    });
+
+    it('returns empty child collections for entities missing from the cache', async () => {
+      const service = createService();
+
+      entityManager.getComponentData.mockResolvedValue({
+        body: { root: 'blueprint-root' },
+      });
+      AnatomyGraphAlgorithms.getAllParts.mockReturnValue(['actor-root']);
+
+      const graph = await service.getBodyGraph('actor-404');
+
+      expect(graph.getConnectedParts('unknown-node')).toEqual([]);
     });
   });
 
@@ -468,6 +540,7 @@ describe('BodyGraphService focused coverage tests', () => {
     });
 
     expect(service.getChildren('root')).toEqual(['branch-1']);
+    expect(service.getChildren('unknown-child')).toEqual([]);
     expect(service.getParent('branch-1')).toBe('root');
     expect(service.getParent('unknown')).toBeNull();
     expect(service.getAncestors('leaf')).toEqual(['branch-1', 'root']);
