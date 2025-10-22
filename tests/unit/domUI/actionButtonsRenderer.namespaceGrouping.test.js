@@ -85,7 +85,14 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       groupActionsByNamespace: jest.fn().mockReturnValue(new Map()),
       getSortedNamespaces: jest
         .fn()
-        .mockReturnValue(['core', 'positioning', 'affection', 'kissing', 'caressing', 'sex']),
+        .mockReturnValue([
+          'core',
+          'positioning',
+          'affection',
+          'kissing',
+          'caressing',
+          'sex',
+        ]),
       formatNamespaceDisplayName: jest
         .fn()
         .mockImplementation((ns) => ns.toUpperCase()),
@@ -122,8 +129,9 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       );
       expect(result2).toBe('positioning');
 
-      const result3 =
-        mockActionCategorizationService.extractNamespace('sex-breastplay:fondle_breasts');
+      const result3 = mockActionCategorizationService.extractNamespace(
+        'sex-breastplay:fondle_breasts'
+      );
       expect(result3).toBe('sex-breastplay');
 
       // Verify the service was called with correct parameters
@@ -165,8 +173,16 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         createTestComposite(2, 'movement:go', 'go north'),
         createTestComposite(3, 'positioning:get_close', 'get close'),
         createTestComposite(4, 'kissing:kiss_cheek', 'kiss cheek'),
-        createTestComposite(5, 'sex-breastplay:fondle_breasts', 'fondle breasts'),
-        createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
+        createTestComposite(
+          5,
+          'sex-breastplay:fondle_breasts',
+          'fondle breasts'
+        ),
+        createTestComposite(
+          6,
+          'sex-penile-manual:fondle_penis',
+          'fondle penis'
+        ),
       ];
 
       // Configure service to return true for grouping
@@ -273,8 +289,16 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         createTestComposite(2, 'movement:go', 'go north'),
         createTestComposite(3, 'positioning:get_close', 'get close'),
         createTestComposite(4, 'kissing:kiss_cheek', 'kiss cheek'),
-        createTestComposite(5, 'sex-breastplay:fondle_breasts', 'fondle breasts'),
-        createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
+        createTestComposite(
+          5,
+          'sex-breastplay:fondle_breasts',
+          'fondle breasts'
+        ),
+        createTestComposite(
+          6,
+          'sex-penile-manual:fondle_penis',
+          'fondle penis'
+        ),
       ];
 
       // Configure service to return true for grouping (thresholds met)
@@ -370,8 +394,16 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         createTestComposite(2, 'movement:go', 'go north'),
         createTestComposite(3, 'positioning:get_close', 'get close'),
         createTestComposite(4, 'kissing:kiss_cheek', 'kiss cheek'),
-        createTestComposite(5, 'sex-breastplay:fondle_breasts', 'fondle breasts'),
-        createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
+        createTestComposite(
+          5,
+          'sex-breastplay:fondle_breasts',
+          'fondle breasts'
+        ),
+        createTestComposite(
+          6,
+          'sex-penile-manual:fondle_penis',
+          'fondle penis'
+        ),
       ];
 
       // Configure service for grouping
@@ -408,10 +440,18 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
         createTestComposite(2, 'positioning:get_close', 'get close'),
-        createTestComposite(3, 'sex-breastplay:fondle_breasts', 'fondle breasts'),
+        createTestComposite(
+          3,
+          'sex-breastplay:fondle_breasts',
+          'fondle breasts'
+        ),
         createTestComposite(4, 'movement:go', 'go north'),
         createTestComposite(5, 'kissing:kiss_cheek', 'kiss cheek'),
-        createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
+        createTestComposite(
+          6,
+          'sex-penile-manual:fondle_penis',
+          'fondle penis'
+        ),
       ];
 
       // Configure service for grouping
@@ -501,10 +541,18 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
         createTestComposite(2, 'positioning:get_close', 'get close'),
-        createTestComposite(3, 'sex-breastplay:fondle_breasts', 'fondle breasts'),
+        createTestComposite(
+          3,
+          'sex-breastplay:fondle_breasts',
+          'fondle breasts'
+        ),
         createTestComposite(4, 'movement:go', 'go north'),
         createTestComposite(5, 'kissing:kiss_cheek', 'kiss cheek'),
-        createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
+        createTestComposite(
+          6,
+          'sex-penile-manual:fondle_penis',
+          'fondle penis'
+        ),
       ];
 
       // Configure service to return false for grouping (disabled)
@@ -528,10 +576,18 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
         createTestComposite(2, 'positioning:get_close', 'get close'),
-        createTestComposite(3, 'sex-breastplay:fondle_breasts', 'fondle breasts'),
+        createTestComposite(
+          3,
+          'sex-breastplay:fondle_breasts',
+          'fondle breasts'
+        ),
         createTestComposite(4, 'movement:go', 'go north'),
         createTestComposite(5, 'kissing:kiss_cheek', 'kiss cheek'),
-        createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
+        createTestComposite(
+          6,
+          'sex-penile-manual:fondle_penis',
+          'fondle penis'
+        ),
       ];
 
       // Configure service for grouping

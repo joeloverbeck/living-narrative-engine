@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the sex:rub_penis_over_clothes action and rule.
+ * @file Integration tests for the sex-penile-manual:rub_penis_over_clothes action and rule.
  * @description Tests the rule execution after the rub_penis_over_clothes action is performed.
  * Note: This test does not test action discovery or scope resolution - it assumes
  * the action is valid and dispatches it directly. For action discovery tests,
@@ -82,14 +82,14 @@ function setupPenisClothingScenario() {
   };
 }
 
-describe('sex:rub_penis_over_clothes action integration', () => {
+describe('sex-penile-manual:rub_penis_over_clothes action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
     // Create test fixture with auto-loaded files
     testFixture = await ModTestFixture.forAction(
-      'sex',
-      'sex:rub_penis_over_clothes'
+      'sex-penile-manual',
+      'sex-penile-manual:rub_penis_over_clothes'
     );
 
     // Setup anatomy and clothing entities
@@ -169,7 +169,7 @@ describe('sex:rub_penis_over_clothes action integration', () => {
     // The action prerequisites would normally prevent this, but we test rule robustness
     await expect(async () => {
       await testFixture.eventBus.dispatch('core:attempt_action', {
-        actionId: 'sex:rub_penis_over_clothes',
+        actionId: 'sex-penile-manual:rub_penis_over_clothes',
         actorId: 'alice',
         targetId: 'nonexistent',
       });
@@ -186,7 +186,7 @@ describe('sex:rub_penis_over_clothes action integration', () => {
     expect(testFixture.ruleFile.rule_id).toBe('handle_rub_penis_over_clothes');
     expect(testFixture.ruleFile.event_type).toBe('core:attempt_action');
     expect(testFixture.conditionFile.id).toBe(
-      'sex:event-is-action-rub-penis-over-clothes'
+      'sex-penile-manual:event-is-action-rub-penis-over-clothes'
     );
 
     // Verify the macro is present in the actions

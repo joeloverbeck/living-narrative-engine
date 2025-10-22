@@ -4,7 +4,7 @@
 
 Expand the sex mod's teasing repertoire with an explicit penis-on-labia interaction that complements existing foreplay actions such as breathing on or licking a penis and grinding clothed anatomy. These actions share a consistent purple visual palette, rely on closeness, and differ mainly in anatomical targeting, providing strong implementation templates for copy depth, required components, and schema usage.【F:data/mods/sex/actions/breathe_teasingly_on_penis.action.json†L1-L24】【F:data/mods/sex/actions/lick_glans.action.json†L1-L24】【F:data/mods/sex/actions/rub_pussy_against_penis_through_clothes.action.json†L1-L30】
 
-The new interaction must keep the same purple visual scheme as `sex:pump_penis` while adjusting anatomical requirements to focus on an uncovered vagina. Its scope logic should mirror `sex-core:actors_with_penis_facing_each_other` for anatomy checks and kneeling exclusions, but add the orientation flexibility provided by `positioning:close_actors_facing_each_other_or_behind_target` so the action can trigger both face-to-face and when the actor is behind a forward-facing partner.【F:data/mods/sex/actions/pump_penis.action.json†L1-L24】【F:data/mods/sex-core/scopes/actors_with_penis_facing_each_other.scope†L1-L11】【F:data/mods/positioning/scopes/close_actors_facing_each_other_or_behind_target.scope†L1-L15】
+The new interaction must keep the same Ember Touch visual scheme as `sex-penile-manual:pump_penis` while adjusting anatomical requirements to focus on an uncovered vagina. Its scope logic should mirror `sex-core:actors_with_penis_facing_each_other` for anatomy checks and kneeling exclusions, but add the orientation flexibility provided by `positioning:close_actors_facing_each_other_or_behind_target` so the action can trigger both face-to-face and when the actor is behind a forward-facing partner.【F:data/mods/sex-penile-manual/actions/pump_penis.action.json†L1-L24】【F:data/mods/sex-core/scopes/actors_with_penis_facing_each_other.scope†L1-L11】【F:data/mods/positioning/scopes/close_actors_facing_each_other_or_behind_target.scope†L1-L15】
 
 ## Scope Requirements
 
@@ -22,7 +22,7 @@ Register the new scope in `data/mods/sex/mod-manifest.json` alongside the other 
 
 ## Action Requirements
 
-Implement `data/mods/sex/actions/slide_penis_along_labia.action.json` using `sex:pump_penis` as the structural reference for metadata, component requirements, and palette consistency.【F:data/mods/sex/actions/pump_penis.action.json†L1-L24】
+Implement `data/mods/sex/actions/slide_penis_along_labia.action.json` using `sex-penile-manual:pump_penis` as the structural reference for metadata, component requirements, and palette consistency.【F:data/mods/sex-penile-manual/actions/pump_penis.action.json†L1-L24】
 
 - `$schema`: `schema://living-narrative-engine/action.schema.json`.
 - `id`: `sex:slide_penis_along_labia`.
@@ -35,7 +35,7 @@ Implement `data/mods/sex/actions/slide_penis_along_labia.action.json` using `sex
 - `required_components.actor`: `["positioning:closeness"]` only—no kneeling, straddling, or other additions.
 - `template`: **exactly** `slide your penis along {target}'s labia` as requested.
 - `prerequisites`: empty array.
-- `visual`: Copy the purple color tokens from `sex:pump_penis` (`#4a148c` background, `#e1bee7` text, `#6a1b9a` hover background, `#f3e5f5` hover text).
+- `visual`: Copy the Ember Touch palette from `sex-penile-manual:pump_penis` (`#8a3b12` background, `#fff4e6` text, `#a04a1b` hover background, `#fffaf2` hover text).
 
 Update the sex manifest to include the new action file path so ModTestFixture auto-loads it during integration tests.
 

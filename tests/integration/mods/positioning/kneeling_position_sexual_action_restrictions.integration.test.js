@@ -54,10 +54,16 @@ function createMockBodyGraphService() {
   return {
     getPartsOfType: jest.fn((entityId, partType) => {
       // Return mock body parts based on entity ID and part type
-      if (partType === 'penis' && (entityId === 'test:actor1' || entityId === 'test:actor2')) {
+      if (
+        partType === 'penis' &&
+        (entityId === 'test:actor1' || entityId === 'test:actor2')
+      ) {
         return [`${entityId}:penis`];
       }
-      if (partType === 'ass_cheek' && (entityId === 'test:actor1' || entityId === 'test:actor2')) {
+      if (
+        partType === 'ass_cheek' &&
+        (entityId === 'test:actor1' || entityId === 'test:actor2')
+      ) {
         return [`${entityId}:ass_left`, `${entityId}:ass_right`];
       }
       return [];
@@ -442,8 +448,11 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       });
 
       // Verify kneeling component exists
-      const actor2AfterKneeling = entityManager.getEntityInstance('test:actor2');
-      expect(actor2AfterKneeling.components['positioning:kneeling_before']).toEqual({
+      const actor2AfterKneeling =
+        entityManager.getEntityInstance('test:actor2');
+      expect(
+        actor2AfterKneeling.components['positioning:kneeling_before']
+      ).toEqual({
         entityId: 'test:actor1',
       });
 
@@ -456,7 +465,8 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       // ASSERT: Verify fondle_penis is NOT available for Actor2 (who is kneeling)
       const fondlePenisActions = availableActions.filter(
         (a) =>
-          a.id === 'sex:fondle_penis' && a.params?.targetId === 'test:actor2'
+          a.id === 'sex-penile-manual:fondle_penis' &&
+          a.params?.targetId === 'test:actor2'
       );
 
       expect(fondlePenisActions).toHaveLength(0);
@@ -474,8 +484,11 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       });
 
       // Verify kneeling component exists
-      const actor1AfterKneeling = entityManager.getEntityInstance('test:actor1');
-      expect(actor1AfterKneeling.components['positioning:kneeling_before']).toEqual({
+      const actor1AfterKneeling =
+        entityManager.getEntityInstance('test:actor1');
+      expect(
+        actor1AfterKneeling.components['positioning:kneeling_before']
+      ).toEqual({
         entityId: 'test:actor2',
       });
 
@@ -488,7 +501,8 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       // ASSERT: Verify fondle_penis is NOT available for Actor2
       const fondlePenisActions = availableActions.filter(
         (a) =>
-          a.id === 'sex:fondle_penis' && a.params?.targetId === 'test:actor2'
+          a.id === 'sex-penile-manual:fondle_penis' &&
+          a.params?.targetId === 'test:actor2'
       );
 
       expect(fondlePenisActions).toHaveLength(0);
@@ -505,9 +519,13 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       await actionDiscoveryService.getValidActions(actor1Entity);
 
       // ASSERT: Verify that kneeling_before is NOT present on either actor
-      expect(actor1Entity.components['positioning:kneeling_before']).toBeUndefined();
+      expect(
+        actor1Entity.components['positioning:kneeling_before']
+      ).toBeUndefined();
       const actor2Entity = entityManager.getEntityInstance('test:actor2');
-      expect(actor2Entity.components['positioning:kneeling_before']).toBeUndefined();
+      expect(
+        actor2Entity.components['positioning:kneeling_before']
+      ).toBeUndefined();
 
       // The fondle_penis action may not be available due to anatomy mocking limitations,
       // but the important validation is that the kneeling exclusion conditions
@@ -529,8 +547,11 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       });
 
       // Verify kneeling component exists
-      const actor2AfterKneeling = entityManager.getEntityInstance('test:actor2');
-      expect(actor2AfterKneeling.components['positioning:kneeling_before']).toEqual({
+      const actor2AfterKneeling =
+        entityManager.getEntityInstance('test:actor2');
+      expect(
+        actor2AfterKneeling.components['positioning:kneeling_before']
+      ).toEqual({
         entityId: 'test:actor1',
       });
 
@@ -543,7 +564,8 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       // ASSERT: Verify fondle_ass is NOT available for Actor2 (who is kneeling)
       const fondleAssActions = availableActions.filter(
         (a) =>
-          a.id === 'caressing:fondle_ass' && a.params?.targetId === 'test:actor2'
+          a.id === 'caressing:fondle_ass' &&
+          a.params?.targetId === 'test:actor2'
       );
 
       expect(fondleAssActions).toHaveLength(0);
@@ -561,8 +583,11 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       });
 
       // Verify kneeling component exists
-      const actor1AfterKneeling = entityManager.getEntityInstance('test:actor1');
-      expect(actor1AfterKneeling.components['positioning:kneeling_before']).toEqual({
+      const actor1AfterKneeling =
+        entityManager.getEntityInstance('test:actor1');
+      expect(
+        actor1AfterKneeling.components['positioning:kneeling_before']
+      ).toEqual({
         entityId: 'test:actor2',
       });
 
@@ -575,7 +600,8 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       // ASSERT: Verify fondle_ass is NOT available for Actor2
       const fondleAssActions = availableActions.filter(
         (a) =>
-          a.id === 'caressing:fondle_ass' && a.params?.targetId === 'test:actor2'
+          a.id === 'caressing:fondle_ass' &&
+          a.params?.targetId === 'test:actor2'
       );
 
       expect(fondleAssActions).toHaveLength(0);
@@ -591,7 +617,8 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       // ASSERT: Verify fondle_ass IS available for Actor2
       const fondleAssActions = availableActions.filter(
         (a) =>
-          a.id === 'caressing:fondle_ass' && a.params?.targetId === 'test:actor2'
+          a.id === 'caressing:fondle_ass' &&
+          a.params?.targetId === 'test:actor2'
       );
 
       // Should be available in normal circumstances (requires clothing target though)
@@ -651,15 +678,23 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       });
 
       // Update body graph service to recognize actor3
-      mockBodyGraphService.getPartsOfType.mockImplementation((entityId, partType) => {
-        if (partType === 'penis' && ['test:actor1', 'test:actor2', 'test:actor3'].includes(entityId)) {
-          return [`${entityId}:penis`];
+      mockBodyGraphService.getPartsOfType.mockImplementation(
+        (entityId, partType) => {
+          if (
+            partType === 'penis' &&
+            ['test:actor1', 'test:actor2', 'test:actor3'].includes(entityId)
+          ) {
+            return [`${entityId}:penis`];
+          }
+          if (
+            partType === 'ass_cheek' &&
+            ['test:actor1', 'test:actor2', 'test:actor3'].includes(entityId)
+          ) {
+            return [`${entityId}:ass_left`, `${entityId}:ass_right`];
+          }
+          return [];
         }
-        if (partType === 'ass_cheek' && ['test:actor1', 'test:actor2', 'test:actor3'].includes(entityId)) {
-          return [`${entityId}:ass_left`, `${entityId}:ass_right`];
-        }
-        return [];
-      });
+      );
 
       // ACT: Actor2 kneels before Actor1
       await eventBus.dispatch({
@@ -680,14 +715,19 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       // Actor1 should NOT be able to fondle Actor2 (who is kneeling before them)
       const actor1ToActor2Fondle = actor1Actions.filter(
         (a) =>
-          a.id === 'sex:fondle_penis' && a.params?.targetId === 'test:actor2'
+          a.id === 'sex-penile-manual:fondle_penis' &&
+          a.params?.targetId === 'test:actor2'
       );
       expect(actor1ToActor2Fondle).toHaveLength(0);
 
       // Verify Actor1 has no kneeling restrictions toward Actor3
-      expect(actor1Entity.components['positioning:kneeling_before']).toBeUndefined();
+      expect(
+        actor1Entity.components['positioning:kneeling_before']
+      ).toBeUndefined();
       const actor3Entity = entityManager.getEntityInstance('test:actor3');
-      expect(actor3Entity.components['positioning:kneeling_before']).toBeUndefined();
+      expect(
+        actor3Entity.components['positioning:kneeling_before']
+      ).toBeUndefined();
 
       // The key validation is that Actor2's kneeling state doesn't affect
       // Actor1's ability to interact with Actor3. Due to anatomy mocking limitations,

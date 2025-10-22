@@ -56,7 +56,7 @@ describe('ActionFormattingStage legacy fallback for rub over clothes actions', (
         {
           actionDef: {
             id: template.includes('penis')
-              ? 'sex:rub_penis_over_clothes'
+              ? 'sex-penile-manual:rub_penis_over_clothes'
               : 'sex:rub_vagina_over_clothes',
             name: 'Rub Over Clothes',
             template,
