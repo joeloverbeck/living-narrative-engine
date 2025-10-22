@@ -31,9 +31,9 @@
       "lick_glans.action.json",
       "lick_glans_sitting_close.action.json",
       "lick_testicles_sensually.action.json",
-      "pull_head_to_clothed_crotch.action.json",
       "lick_testicles_sitting_close.action.json",
       "nuzzle_penis_through_clothing.action.json",
+      "pull_head_to_clothed_crotch.action.json",
       "suckle_testicle.action.json"
     ],
     "conditions": [
@@ -42,9 +42,9 @@
       "event-is-action-lick-glans-sitting-close.condition.json",
       "event-is-action-lick-glans.condition.json",
       "event-is-action-lick-testicles-sensually.condition.json",
-      "event-is-action-pull-head-to-clothed-crotch.condition.json",
       "event-is-action-lick-testicles-sitting-close.condition.json",
       "event-is-action-nuzzle-penis-through-clothing.condition.json",
+      "event-is-action-pull-head-to-clothed-crotch.condition.json",
       "event-is-action-suckle-testicle.condition.json"
     ],
     "rules": [
@@ -53,9 +53,9 @@
       "handle_lick_glans.rule.json",
       "handle_lick_glans_sitting_close.rule.json",
       "handle_lick_testicles_sensually.rule.json",
-      "handle_pull_head_to_clothed_crotch.rule.json",
       "handle_lick_testicles_sitting_close.rule.json",
       "handle_nuzzle_penis_through_clothing.rule.json",
+      "handle_pull_head_to_clothed_crotch.rule.json",
       "handle_suckle_testicle.rule.json"
     ],
     "scopes": [],
