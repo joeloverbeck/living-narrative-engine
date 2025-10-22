@@ -138,7 +138,7 @@ describe('JSON-Schema – Anatomy Formatting', () => {
 
     test('should fail with invalid id pattern', () => {
       const invalidData = {
-        id: 'invalid-id-with-dashes',
+        id: 'Invalid Id With Spaces',
       };
 
       const ok = validate(invalidData);
@@ -150,9 +150,9 @@ describe('JSON-Schema – Anatomy Formatting', () => {
       );
     });
 
-    test('should validate ids with underscores and numbers', () => {
+    test('should validate ids with underscores, hyphens, and numbers', () => {
       const validConfig = {
-        id: 'valid_id_123',
+        id: 'valid-id_123',
       };
 
       const ok = validate(validConfig);
