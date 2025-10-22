@@ -1,0 +1,48 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "sex-anal-penetration",
+  "version": "1.0.0",
+  "name": "Sex - Anal Penetration",
+  "description": "Anal teasing and penetration setup flows modularized from the legacy sex pack.",
+  "author": "Living Narrative Engine Team",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "anatomy",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "clothing",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "sex-core",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [
+      "tease_asshole_with_glans.action.json"
+    ],
+    "conditions": [
+      "event-is-action-tease-asshole-with-glans.condition.json"
+    ],
+    "rules": [
+      "handle_tease_asshole_with_glans.rule.json"
+    ],
+    "scopes": [
+      "actors_with_exposed_asshole_facing_away.scope"
+    ],
+    "components": [],
+    "events": [],
+    "macros": [],
+    "entities": {
+      "definitions": [],
+      "instances": []
+    }
+  }
+}

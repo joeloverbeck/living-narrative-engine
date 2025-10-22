@@ -1,11 +1,11 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "sex:tease_asshole_with_glans",
+  "id": "sex-anal-penetration:tease_asshole_with_glans",
   "name": "Tease Asshole with Glans",
   "description": "Tease the target's exposed asshole with the head of your penis.",
   "targets": {
     "primary": {
-      "scope": "sex:actors_with_exposed_asshole_facing_away",
+      "scope": "sex-anal-penetration:actors_with_exposed_asshole_facing_away",
       "placeholder": "primary",
       "description": "Person to tease from behind"
     }
@@ -23,9 +23,9 @@
     }
   ],
   "visual": {
-    "backgroundColor": "#4a148c",
-    "textColor": "#e1bee7",
-    "hoverBackgroundColor": "#6a1b9a",
-    "hoverTextColor": "#f3e5f5"
+    "backgroundColor": "#053b3f",
+    "textColor": "#e0f7f9",
+    "hoverBackgroundColor": "#075055",
+    "hoverTextColor": "#f1feff"
   }
 }
