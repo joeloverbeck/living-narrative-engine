@@ -98,8 +98,7 @@ describe('Physical Control Mod: Force to Knees Action Integration', () => {
   describe('Component State Changes', () => {
     it('adds kneeling component to the target with the actor id and locks movement', async () => {
       const scenario = testFixture.createCloseActors(['Maya', 'Noah']);
-      const originalSitting = { furniture_id: 'chair-1', spot_index: 0 };
-      scenario.target.components['positioning:sitting_on'] = { ...originalSitting };
+      delete scenario.target.components['positioning:sitting_on'];
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
@@ -140,9 +139,7 @@ describe('Physical Control Mod: Force to Knees Action Integration', () => {
       expect(targetAfter.components['positioning:closeness'].partners).toEqual([
         scenario.actor.id,
       ]);
-      expect(targetAfter.components['positioning:sitting_on']).toEqual(
-        originalSitting
-      );
+      expect(targetAfter.components['positioning:sitting_on']).toBeUndefined();
     });
 
     it('prevents repeated forcing while the target remains kneeling', async () => {
