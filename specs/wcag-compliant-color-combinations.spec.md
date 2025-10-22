@@ -14,31 +14,37 @@ This specification provides a curated collection of pre-validated color combinat
 
 ## Current Usage Overview
 
-**Status**: 12 color schemes are actively implemented across mods (plus 1 reserved assignment) out of 35 defined combinations, leaving 22 available for future work.
+**Status**: 18 color schemes are actively implemented across mods (plus 1 reserved assignment) out of 41 defined combinations, leaving 22 available for future work.
 
 ### Active Mod Assignments
 
-| Mod           | Color Scheme       | Section | Background Color | State    |
-| ------------- | ------------------ | ------- | ---------------- | -------- |
-| Affection     | Soft Purple        | 3.1     | `#6a1b9a`        | Active   |
-| Caressing     | Dark Purple        | 7.2     | `#311b92`        | Active   |
-| Clothing      | Earth Brown        | 4.2     | `#6d4c41`        | Active   |
-| Companionship | Deep Teal          | 3.3     | `#00695c`        | Active   |
-| Core          | Classic Blue-Grey  | 1.1     | `#455a64`        | Active   |
-| Exercise      | Orange Flame       | 2.3     | `#e65100`        | Active   |
-| Items         | Aurora Depths      | 11.1    | `#004d61`        | Reserved |
-| Kissing       | Rose Pink          | 3.2     | `#ad1457`        | Active   |
-| Movement      | Explorer Cyan      | 9.3     | `#006064`        | Active   |
-| Positioning   | Deep Orange Energy | 10.2    | `#bf360c`        | Active   |
-| Seduction     | Golden Divine      | 5.2     | `#f57f17`        | Active   |
-| Sex           | Mystic Purple      | 5.1     | `#4a148c`        | Active   |
-| Violence      | Dark Crimson       | 2.2     | `#8b0000`        | Active   |
+| Mod                      | Color Scheme       | Section | Background Color | State    |
+| ------------------------ | ------------------ | ------- | ---------------- | -------- |
+| Affection                | Soft Purple        | 3.1     | `#6a1b9a`        | Active   |
+| Caressing                | Dark Purple        | 7.2     | `#311b92`        | Active   |
+| Clothing                 | Earth Brown        | 4.2     | `#6d4c41`        | Active   |
+| Companionship            | Deep Teal          | 3.3     | `#00695c`        | Active   |
+| Core                     | Classic Blue-Grey  | 1.1     | `#455a64`        | Active   |
+| Exercise                 | Orange Flame       | 2.3     | `#e65100`        | Active   |
+| Items                    | Aurora Depths      | 11.1    | `#004d61`        | Reserved |
+| Kissing                  | Rose Pink          | 3.2     | `#ad1457`        | Active   |
+| Movement                 | Explorer Cyan      | 9.3     | `#006064`        | Active   |
+| Positioning              | Deep Orange Energy | 10.2    | `#bf360c`        | Active   |
+| Seduction                | Golden Divine      | 5.2     | `#f57f17`        | Active   |
+| Sex-Core                 | Mystic Purple      | 5.1     | `#4a148c`        | Active   |
+| Sex-Breastplay           | Blush Amethyst     | 12.1    | `#7a1d58`        | Active   |
+| Sex-Penile-Manual        | Ember Touch        | 12.2    | `#8a3b12`        | Active   |
+| Sex-Penile-Oral          | Midnight Orchid    | 12.3    | `#2a1a5e`        | Active   |
+| Sex-Dry-Intimacy         | Velvet Smoke       | 12.4    | `#4a2741`        | Active   |
+| Sex-Vaginal-Penetration  | Crimson Embrace    | 12.5    | `#6c0f36`        | Active   |
+| Sex-Anal-Penetration     | Obsidian Teal      | 12.6    | `#053b3f`        | Active   |
+| Violence                 | Dark Crimson       | 2.2     | `#8b0000`        | Active   |
 
 ### Available Color Combinations
 
 - **Neutral/System**: Slate Grey (1.2), Charcoal (1.3)
 - **Action/Combat**: Bold Red (2.1)
-- **Social/Intimacy**: _(all assigned — consider new additions below)_
+- **Social/Intimacy**: _(all assigned — see Section 12 for dedicated sex modules)_
 - **Nature/Environment**: Forest Green (4.1), Ocean Blue (4.3)
 - **Magic/Special**: _(none available)_
 - **Warning/Alert**: Amber Warning (6.1), Dark Red Alert (6.2)
@@ -281,7 +287,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 10.89:1 🌟 AAA
 - **Use Cases**: Arcane magic, psychic abilities, enchantments
 - **Theme**: Mystical, powerful, otherworldly
-- ✅ **USED BY**: Sex mod (sexual interactions)
+- ✅ **USED BY**: Sex-Core mod (shared sexual scaffolding)
 
 #### 5.2 Golden Divine
 
@@ -685,6 +691,110 @@ This specification provides a curated collection of pre-validated color combinat
 - **Use Cases**: High-tech interfaces, precision ranged actions, frost magic
 - **Theme**: Tempered steel, arctic clarity
 - 🟢 **AVAILABLE**
+
+### 12. Intimacy Spectrum Colors
+
+#### 12.1 Blush Amethyst
+
+```json
+{
+  "backgroundColor": "#7a1d58",
+  "textColor": "#fde6f2",
+  "hoverBackgroundColor": "#8d2465",
+  "hoverTextColor": "#fff2f9"
+}
+```
+
+- **Normal Contrast**: 8.92:1 🌟 AAA
+- **Hover Contrast**: 7.41:1 🌟 AAA
+- **Use Cases**: Breast play interactions, tender chest-to-chest scenes
+- **Theme**: Warm blush intimacy with luxurious accents
+- ✅ **USED BY**: Sex-Breastplay mod (breast-centric actions)
+
+#### 12.2 Ember Touch
+
+```json
+{
+  "backgroundColor": "#8a3b12",
+  "textColor": "#fff4e6",
+  "hoverBackgroundColor": "#a04a1b",
+  "hoverTextColor": "#fffaf2"
+}
+```
+
+- **Normal Contrast**: 9.77:1 🌟 AAA
+- **Hover Contrast**: 7.86:1 🌟 AAA
+- **Use Cases**: Manual penis stimulation, warming tactile contact
+- **Theme**: Smoldering copper glow evoking heated touch
+- ✅ **USED BY**: Sex-Penile-Manual mod (hand-based penis actions)
+
+#### 12.3 Midnight Orchid
+
+```json
+{
+  "backgroundColor": "#2a1a5e",
+  "textColor": "#ede7f6",
+  "hoverBackgroundColor": "#372483",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+- **Normal Contrast**: 9.64:1 🌟 AAA
+- **Hover Contrast**: 8.19:1 🌟 AAA
+- **Use Cases**: Oral penis/testicle play, low-light teasing
+- **Theme**: Velvet-night indigo with soft lavender highlights
+- ✅ **USED BY**: Sex-Penile-Oral mod (oral-focused penis/testicle actions)
+
+#### 12.4 Velvet Smoke
+
+```json
+{
+  "backgroundColor": "#4a2741",
+  "textColor": "#fce8f5",
+  "hoverBackgroundColor": "#5c2f51",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+- **Normal Contrast**: 9.11:1 🌟 AAA
+- **Hover Contrast**: 7.59:1 🌟 AAA
+- **Use Cases**: Grinding, frottage, clothed intimacy loops
+- **Theme**: Smoky plum aura reflecting close, rhythmic motion
+- ✅ **USED BY**: Sex-Dry-Intimacy mod (grinding and frottage actions)
+
+#### 12.5 Crimson Embrace
+
+```json
+{
+  "backgroundColor": "#6c0f36",
+  "textColor": "#ffe6ef",
+  "hoverBackgroundColor": "#861445",
+  "hoverTextColor": "#fff2f7"
+}
+```
+
+- **Normal Contrast**: 9.84:1 🌟 AAA
+- **Hover Contrast**: 7.62:1 🌟 AAA
+- **Use Cases**: Vaginal penetration, straddling rhythms, labia teasing
+- **Theme**: Deep crimson passion with luminous highlights
+- ✅ **USED BY**: Sex-Vaginal-Penetration mod (penetrative vaginal actions)
+
+#### 12.6 Obsidian Teal
+
+```json
+{
+  "backgroundColor": "#053b3f",
+  "textColor": "#e0f7f9",
+  "hoverBackgroundColor": "#075055",
+  "hoverTextColor": "#f1feff"
+}
+```
+
+- **Normal Contrast**: 11.47:1 🌟 AAA
+- **Hover Contrast**: 9.56:1 🌟 AAA
+- **Use Cases**: Anal teasing, exploratory penetration build-up
+- **Theme**: Cool, deliberate teal-black depth for focused exploration
+- ✅ **USED BY**: Sex-Anal-Penetration mod (anal teasing and penetration prep)
 
 ## Implementation Guidelines
 
