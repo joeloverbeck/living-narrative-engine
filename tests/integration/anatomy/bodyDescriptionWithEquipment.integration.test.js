@@ -18,6 +18,8 @@ describe('Body Description with Equipment Integration', () => {
   let mockEntityManager;
   let mockLogger;
   let mockAnatomyFormattingService;
+  let slotMetadataForActor;
+  let equippedItemsResponse;
 
   beforeEach(() => {
     // Setup mock logger
@@ -35,6 +37,16 @@ describe('Body Description with Equipment Integration', () => {
       getComponentData: jest.fn(),
       getEntitiesWithComponent: jest.fn().mockReturnValue([]),
     };
+
+    slotMetadataForActor = null;
+    mockEntityManager.getComponentData.mockImplementation(
+      (entityId, componentId) => {
+        if (componentId === 'clothing:slot_metadata') {
+          return slotMetadataForActor;
+        }
+        return null;
+      }
+    );
 
     // Create consistent anatomy formatting service mock
     mockAnatomyFormattingService = {
@@ -59,6 +71,18 @@ describe('Body Description with Equipment Integration', () => {
         itemSeparator: ', ',
         placement: 'after_anatomy',
       }),
+    };
+
+    equippedItemsResponse = {
+      success: true,
+      equipped: {
+        torso_clothing: {
+          0: 'bodysuit_1',
+        },
+        feet_clothing: {
+          0: 'boots_1',
+        },
+      },
     };
 
     // Setup services
@@ -140,17 +164,7 @@ describe('Body Description with Equipment Integration', () => {
         getEquippedItems: jest.fn().mockImplementation(async (entityId) => {
           // Return mock equipped items data for the test
           if (entityId === 'character_1') {
-            return {
-              success: true,
-              equipped: {
-                torso_clothing: {
-                  0: 'bodysuit_1',
-                },
-                feet_clothing: {
-                  0: 'boots_1',
-                },
-              },
-            };
+            return equippedItemsResponse;
           }
           return { success: true, equipped: {} };
         }),
@@ -357,6 +371,65 @@ describe('Body Description with Equipment Integration', () => {
     expect(result).toContain('Build: athletic');
     expect(result).toContain('Torso: lean, toned torso');
     expect(result).not.toContain('Wearing:');
+  });
+
+  it('should include exposure notes when torso slots have no clothing', async () => {
+    slotMetadataForActor = {
+      slotMappings: {
+        torso_upper: {
+          coveredSockets: ['left_breast', 'right_breast'],
+        },
+        torso_lower: {
+          coveredSockets: ['vagina'],
+        },
+      },
+    };
+    equippedItemsResponse = { success: true, equipped: {} };
+
+    const bodyEntity = {
+      id: 'character_1',
+      hasComponent: jest.fn().mockReturnValue(true),
+      getComponentData: jest.fn().mockImplementation((componentId) => {
+        if (componentId === ANATOMY_BODY_COMPONENT_ID) {
+          return {
+            body: {
+              root: 'torso_1',
+              parts: ['torso_1'],
+            },
+          };
+        }
+        if (componentId === 'descriptors:build') {
+          return { build: 'athletic' };
+        }
+        return null;
+      }),
+    };
+
+    const torsoEntity = {
+      id: 'torso_1',
+      hasComponent: jest.fn().mockReturnValue(true),
+      getComponentData: jest.fn().mockImplementation((componentId) => {
+        if (componentId === ANATOMY_PART_COMPONENT_ID) {
+          return { subType: 'torso' };
+        }
+        if (componentId === DESCRIPTION_COMPONENT_ID) {
+          return { text: 'lean, toned torso' };
+        }
+        return null;
+      }),
+    };
+
+    bodyDescriptionComposer.entityFinder.getEntityInstance.mockReturnValue(
+      torsoEntity
+    );
+
+    // Act
+    const result = await bodyDescriptionComposer.composeDescription(bodyEntity);
+
+    // Assert
+    expect(result).toContain(
+      'Wearing: Torso is fully exposed. The breasts are exposed. Genitals are fully exposed.'
+    );
   });
 
   it('should handle equipment description errors gracefully', async () => {

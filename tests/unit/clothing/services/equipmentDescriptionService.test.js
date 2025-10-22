@@ -24,6 +24,8 @@ describe('EquipmentDescriptionService', () => {
       getEntityInstance: jest.fn(),
     };
 
+    mockEntityManager.getComponentData.mockImplementation(() => null);
+
     mockDescriptorFormatter = {
       formatDescriptors: jest.fn(),
     };
@@ -54,6 +56,111 @@ describe('EquipmentDescriptionService', () => {
   });
 
   describe('generateEquipmentDescription', () => {
+    it('should describe exposed torso and breasts when torso_upper slot is empty', async () => {
+      // Arrange
+      const entityId = 'character_1';
+      mockClothingManagementService.getEquippedItems.mockResolvedValue({
+        success: true,
+        equipped: {},
+      });
+      mockEntityManager.getComponentData.mockImplementation(
+        (requestedEntityId, componentId) => {
+          if (componentId === 'clothing:slot_metadata') {
+            return {
+              slotMappings: {
+                torso_upper: {
+                  coveredSockets: ['left_breast', 'right_breast'],
+                },
+              },
+            };
+          }
+          return null;
+        }
+      );
+
+      // Act
+      const result = await service.generateEquipmentDescription(entityId);
+
+      // Assert
+      expect(result).toBe(
+        'Wearing: Torso is fully exposed. The breasts are exposed.'
+      );
+    });
+
+    it('should describe exposed genitals when torso_lower slot is empty', async () => {
+      // Arrange
+      const entityId = 'character_1';
+      mockClothingManagementService.getEquippedItems.mockResolvedValue({
+        success: true,
+        equipped: {},
+      });
+      mockEntityManager.getComponentData.mockImplementation(
+        (requestedEntityId, componentId) => {
+          if (componentId === 'clothing:slot_metadata') {
+            return {
+              slotMappings: {
+                torso_lower: {
+                  coveredSockets: ['vagina', 'pubic_hair'],
+                },
+              },
+            };
+          }
+          return null;
+        }
+      );
+
+      // Act
+      const result = await service.generateEquipmentDescription(entityId);
+
+      // Assert
+      expect(result).toBe('Wearing: Genitals are fully exposed.');
+    });
+
+    it('should append exposure notes after clothing descriptions', async () => {
+      // Arrange
+      const entityId = 'character_1';
+      mockClothingManagementService.getEquippedItems.mockResolvedValue({
+        success: true,
+        equipped: {
+          feet_clothing: {
+            base: 'boots_1',
+          },
+        },
+      });
+      const mockBootsEntity = {
+        id: 'boots_1',
+        components: {
+          'core:name': { text: 'boots' },
+        },
+      };
+      mockEntityManager.getEntityInstance.mockResolvedValue(mockBootsEntity);
+      mockEntityManager.getComponentData.mockImplementation(
+        (requestedEntityId, componentId) => {
+          if (componentId === 'clothing:slot_metadata') {
+            return {
+              slotMappings: {
+                torso_upper: {
+                  coveredSockets: ['left_breast', 'right_breast'],
+                },
+                torso_lower: {
+                  coveredSockets: ['vagina'],
+                },
+              },
+            };
+          }
+          return null;
+        }
+      );
+
+      // Act
+      const result = await service.generateEquipmentDescription(entityId);
+
+      // Assert
+      expect(result).toBe(
+        'Wearing: boots. Torso is fully exposed. The breasts are exposed. Genitals are fully exposed.'
+      );
+    });
+
     it('should return empty string when no equipment is equipped', async () => {
       // Arrange
       const entityId = 'character_1';
