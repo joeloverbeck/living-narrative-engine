@@ -8,84 +8,187 @@
 
 ---
 
-## Overview
+## Purpose
 
-Provide a practical migration playbook for converting legacy mod action tests that still use manual `ModEntityBuilder` setups and generic Jest assertions into the modern fixtures and matchers that now ship with the repository. The workflow should consolidate around the canonical references that already live in `docs/testing/` rather than creating redundant material.
+Provide a practical migration playbook for converting legacy mod action tests that still rely on manual `ModEntityBuilder`
+scaffolding and generic Jest assertions into the modern fixtures, helpers, and matchers that ship with the repository. The
+goal is to lean on the canonical documentation inside `docs/testing/` while giving maintainers a concrete checklist for updating
+existing suites.
 
-### Problem Statement
+## Audience & Prerequisites
 
-Many integration suites under `tests/integration/mods/` pre-date the Phase 2 tooling refresh. Those files typically:
+This workflow targets contributors who are:
 
-- Instantiate raw `ModEntityBuilder` graphs by hand and push them through `testFixture.reset(...)`.
-- Assert on `testFixture.events` using `expect(...).toBe(true)` style checks rather than the domain matchers from `tests/common/mods/domainMatchers.js`.
-- Re-implement scope resolvers inline instead of calling the shared helpers in `tests/common/mods/scopeResolverHelpers.js`.
-- Skip validation proxy coverage when wiring JSON fixtures.
+- Cleaning up integration suites under `tests/integration/mods/` that pre-date the Phase 2 tooling refresh.
+- Comfortable running Jest locally and navigating the helper utilities in `tests/common/mods/`.
+- Familiar with the guidance in `docs/testing/mod-testing-guide.md` and the discovery appendix in
+  `docs/testing/action-discovery-testing-toolkit.md`.
 
-The newer documentation in `docs/testing/mod-testing-guide.md` already explains the preferred APIs, but there is no concise migration plan tying the old patterns to the new ones. As a result the remaining legacy suites linger because the work feels open-ended.
+Before starting, skim the implementation of the helpers you will depend on:
 
-### Target State
-
-- Every migration task references the existing `docs/testing/mod-testing-guide.md` (and the companion action discovery guide) as the source of truth instead of spawning new standalone guides.
-- Legacy suites adopt `ModTestFixture` scenario helpers such as `createSittingPair`, `createInventoryTransfer`, and `createOpenContainerScenario` instead of bespoke entity builders.
-- Assertions leverage `expect(testFixture.events).toHaveActionSuccess(...)`, `expect(entity).toHaveComponent(...)`, and `expect(entity).toHaveComponentData(...)` from `domainMatchers.js`.
-- Scope resolution logic is centralized through `ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv)` (or the equivalent helper) when discovery diagnostics require additional scopes.
-- Action definitions and rules loaded inside tests are validated with `createActionValidationProxy` so migrations surface schema drift early.
-
----
-
-## Key References
-
-- `docs/testing/mod-testing-guide.md` – canonical guidance for fixtures, scenarios, validation proxies, diagnostics, and matchers.
-- `docs/testing/action-discovery-testing-toolkit.md` – deeper dives into diagnostics, tracing, and discovery helpers when migrations touch discovery suites.
-- `tests/common/mods/ModTestFixture.js` – fixture implementation exposing scenario helpers like `createSittingPair`, `createInventoryTransfer`, and `createOpenContainerScenario`.
-- `tests/common/mods/domainMatchers.js` – domain-specific Jest matchers (e.g., `toHaveActionSuccess`, `toHaveComponent`, `toHaveComponentData`).
-- `tests/common/mods/scopeResolverHelpers.js` – reusable resolver registrations.
-
-These files already hold the authoritative explanations; this ticket links them together and calls out concrete migration steps.
+- `tests/common/mods/ModTestFixture.js`
+- `tests/common/mods/domainMatchers.js`
+- `tests/common/mods/scopeResolverHelpers.js`
+- `tests/common/mods/actionValidationProxy.js`
 
 ---
 
-## Detailed Steps
+## Primary References
 
-### Step 1: Audit Legacy Suites
+Keep migrations anchored to the existing documentation instead of inventing parallel guides:
 
-Use the following commands to inventory candidates that still rely on manual builders or generic assertions:
+- `docs/testing/mod-testing-guide.md` – fixtures, scenario helpers, diagnostics, validation proxies, and matchers.
+- `docs/testing/action-discovery-testing-toolkit.md` – discovery diagnostics, tracing, and helper catalogues.
+- `tests/common/mods/ModTestFixture.js` – scenario helper entry points such as `createSittingPair`,
+  `createInventoryTransfer`, and `createOpenContainerScenario`.
+- `tests/common/mods/domainMatchers.js` – domain-specific Jest matchers (e.g., `toHaveActionSuccess`,
+  `toHaveComponent`, `toHaveComponentData`).
+- `tests/common/mods/scopeResolverHelpers.js` – shared scope registration helpers for positioning, discovery, and inventory
+  flows.
+
+---
+
+## Migration Quick Reference
+
+| Legacy Pattern | Replace With | Notes |
+| --- | --- | --- |
+| Manual `ModEntityBuilder` graphs constructed inline | Fixture scenario helpers such as `fixture.createSittingPair(options)`, `fixture.createInventoryTransfer(options)`, or `fixture.createOpenContainerScenario(options)` | Scenario helpers automatically register the same component graphs the builders created by hand. They are backed by `ModEntityScenarios` inside `tests/common/mods/ModTestFixture.js`. |
+| `testFixture.reset([...entities])` calls before every assertion | Scenario helper return values combined with the fixture lifecycle methods (`beforeEach`, `afterEach`, `fixture.cleanup()`) | The helpers provision entities and register them with the fixture for you. Use the returned ids through `fixture.entityManager`. |
+| `expect(...).toBe(true)` or raw array inspection on `testFixture.events` | `expect(testFixture.events).toHaveActionSuccess(...)`, `expect(entity).toHaveComponent(...)`, `expect(entity).toHaveComponentData(...)` | Import `../../common/mods/domainMatchers.js` at the top of each suite once. |
+| Inline `testFixture.registerScopeResolver(...)` implementations | `ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv)` (or the relevant helper) | Centralising scope logic prevents drift and keeps diagnostics consistent. |
+| Passing JSON definitions directly to `ModTestFixture.forAction(...)` | `createActionValidationProxy(json, 'label')` prior to invocation | Validation proxies surface schema drift immediately and are already described in the testing guide. |
+
+---
+
+## Migration Workflow
+
+### 1. Audit Legacy Suites
+
+Identify candidates that still construct entities manually or omit the shared helpers:
 
 ```bash
-# Identify tests creating ModEntityBuilder instances directly
+# Locate suites instantiating ModEntityBuilder manually
 rg "new ModEntityBuilder" tests/integration/mods -n
 
-# Find suites that never import the domain matchers
+# Find suites that never import the domain matchers (missing modern assertions)
 rg "domainMatchers" tests/integration/mods -l --invert-match -g"*.test.js"
 
-# Locate inline scope resolver registration
+# Detect inline scope resolver registration
 rg "registerScopeResolver" tests/integration/mods -n
 ```
 
-Capture the list of files and triage them into logical batches (e.g., sitting, inventory, discovery) so the migrations can land incrementally.
+Record the output and group suites into logical batches (e.g., positioning, inventory, discovery) so you can migrate in
+manageable chunks.
 
-### Step 2: Plan Documentation Touch Points
+### 2. Confirm Documentation Coverage
 
-Review `docs/testing/mod-testing-guide.md` and decide whether any sections need a short migration-focused addendum (for example, an appendix that maps "legacy pattern → modern helper"). Only add material that is missing—avoid duplicating content that already exists. When updates are required, extend the existing guide instead of creating new Markdown files.
+Re-read `docs/testing/mod-testing-guide.md` before touching code. If the existing guide already explains the helper you plan to
+use, link to that section in code review notes instead of authoring new material. Only extend the guide when you encounter a
+real gap (for example, adding a short appendix mapping manual builders to helper functions). When documentation updates are
+required, edit the existing file rather than creating a new Markdown document.
 
-Suggested additions:
+### 3. Replace Manual Builders with Scenario Helpers
 
-- A compact table that maps manual `ModEntityBuilder` snippets to the corresponding `ModTestFixture` helpers (`createSittingPair`, `createSeparateFurnitureArrangement`, `createInventoryTransfer`, etc.).
-- A reminder that domain matchers live in `tests/common/mods/domainMatchers.js` and that suites must import `../../common/mods/domainMatchers.js` once per file.
-- A checklist for verifying migrations (run focused Jest command, confirm diagnostics opt-in still works, validate coverage parity).
+For each suite:
 
-### Step 3: Convert a Representative Test
+1. Import the helpers once at the top:
+   ```javascript
+   import '../../common/mods/domainMatchers.js';
+   import { ScopeResolverHelpers } from '../../common/mods/scopeResolverHelpers.js';
+   ```
+2. Swap manual entity graphs for the corresponding fixture helper. For example, the `scoot_closer` integration test should use
+   `fixture.createSittingPair({...})`, mirroring the pattern already demonstrated in
+   `tests/integration/common/mods/sittingScenarios.integration.test.js`.
+3. Use the returned ids when executing the action:
+   ```javascript
+   const scenario = fixture.createSittingPair({ furnitureId: 'sofa1' });
+   await fixture.executeAction(scenario.primaryActor.id, scenario.furniture.id, {
+     additionalPayload: { secondaryId: scenario.secondaryActor.id },
+   });
+   ```
+4. Retrieve entities through `fixture.entityManager.getEntityInstance(id)` instead of storing manual references.
 
-For each candidate suite:
+### 4. Adopt Domain Matchers for Assertions
 
-1. Replace manual builders with scenario helpers.
-2. Swap generic assertions with domain matchers and `entityManager` helpers.
-3. Register shared scope resolvers when the suite previously hard-coded them.
-4. Wrap JSON definitions with `createActionValidationProxy` if they were previously passed through raw.
+Replace boolean checks on events with expressive matchers:
 
-#### Before → After Example (Sitting Action)
+```javascript
+expect(fixture.events).toHaveActionSuccess('Mover scoots closer to Partner');
+const actor = fixture.entityManager.getEntityInstance(scenario.primaryActor.id);
+expect(actor).toHaveComponentData('positioning:sitting_on', {
+  furniture_id: scenario.furniture.id,
+  spot_index: 1,
+});
+```
 
-**Before (legacy pattern)**
+These helpers live in `tests/common/mods/domainMatchers.js` and are already exercised in
+`tests/integration/common/mods/sittingScenarios.integration.test.js` for reference.
+
+### 5. Standardise Scope Helpers
+
+Legacy suites that register scope resolvers inline should call the shared helpers during setup:
+
+```javascript
+beforeEach(async () => {
+  fixture = await ModTestFixture.forAction('positioning', 'positioning:scoot_closer');
+  ScopeResolverHelpers.registerPositioningScopes(fixture.testEnv);
+});
+```
+
+If a suite relies on a resolver that does not exist yet, add it to `tests/common/mods/scopeResolverHelpers.js` so future
+migrations can reuse the same helper.
+
+### 6. Guard JSON Definitions with Validation Proxies
+
+Whenever an action or rule JSON file is imported, wrap it with `createActionValidationProxy` before passing it to the fixture:
+
+```javascript
+import ruleJson from '../../../data/mods/positioning/rules/handle_scoot_closer.rule.json' assert { type: 'json' };
+import { createActionValidationProxy } from '../../common/mods/actionValidationProxy.js';
+
+const validatedRule = createActionValidationProxy(ruleJson, 'positioning:scoot_closer rule');
+fixture = await ModTestFixture.forAction('positioning', 'positioning:scoot_closer', validatedRule, conditionJson);
+```
+
+This mirrors the approach documented in `docs/testing/mod-testing-guide.md` and ensures schema drift is caught immediately.
+
+### 7. Verify Incrementally
+
+Run focused Jest commands after each migration to keep feedback fast:
+
+```bash
+# Single file (replace with actual path)
+NODE_ENV=test npx jest tests/integration/mods/positioning/scoot_closer_action.test.js --runInBand
+
+# Entire mod category when ready
+NODE_ENV=test npx jest tests/integration/mods/positioning --runInBand
+```
+
+Once a batch lands, execute `npm run test:integration` from the repo root to confirm nothing else regressed.
+
+### 8. Update Documentation When Necessary
+
+If Step 2 highlighted missing documentation, add concise updates to `docs/testing/mod-testing-guide.md`. Suggested additions:
+
+- A small table mapping legacy manual builders to the helper responsible for the same scenario.
+- A migration checklist reminding authors to import domain matchers, rely on fixture helpers, register scope resolvers, and wrap
+  JSON via validation proxies.
+- Links back to the relevant sections already present in the guide instead of duplicating examples.
+
+Bundle documentation edits with the test migration that motivated them so reviewers can see the context.
+
+### 9. Commit and Track Progress
+
+- Commit per suite or per mod category to keep diffs reviewable.
+- Reference the audit commands in commit messages or PR descriptions so reviewers know the remaining surface area.
+- Use repository scripts (e.g., `scripts/validate-mod-fixtures.js`) only when they fill a concrete automation gap discovered
+  during the migration.
+
+---
+
+## Before → After Example (Sitting Action)
+
+**Legacy pattern:** manual builders, raw events, inline resolvers.
 
 ```javascript
 const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
@@ -101,120 +204,70 @@ testFixture.reset([room, furniture, actor]);
 await testFixture.executeAction('actor1', 'furniture1', {
   additionalPayload: { secondaryId: 'occupant1' },
 });
-
-const actorState = testFixture.entityManager.getComponentData('actor1', 'positioning:sitting_on');
-expect(actorState.spot_index).toBe(1);
+expect(testFixture.events.some((evt) => evt.type === 'action/success')).toBe(true);
 ```
 
-**After (modern pattern)**
+**Modern pattern:** fixture helpers, domain matchers, shared scopes.
 
 ```javascript
 import '../../common/mods/domainMatchers.js';
-
-const scenario = testFixture.createSittingPair({
-  furnitureId: 'sofa1',
-  seatedActors: [
-    { id: 'actor1', name: 'Mover', spotIndex: 2 },
-    { id: 'actor2', name: 'Partner', spotIndex: 0 },
-  ],
-});
-
-await testFixture.executeAction('actor1', scenario.furniture.id, {
-  additionalPayload: { secondaryId: 'actor2' },
-});
-
-expect(testFixture.events).toHaveActionSuccess('Mover scoots closer to Partner');
-const actor = testFixture.entityManager.getEntityInstance('actor1');
-expect(actor).toHaveComponentData('positioning:sitting_on', {
-  furniture_id: scenario.furniture.id,
-  spot_index: 1,
-});
-```
-
-This pattern mirrors the examples already baked into `docs/testing/mod-testing-guide.md` and keeps the migration guidance consistent with our living documentation.
-
-### Step 4: Standardize Scope Helpers
-
-When old suites call `testFixture.registerScopeResolver(...)`, swap those blocks for the centralized helpers:
-
-```javascript
 import { ScopeResolverHelpers } from '../../common/mods/scopeResolverHelpers.js';
 
+let fixture;
+
 beforeEach(async () => {
-  testFixture = await ModTestFixture.forAction(...);
-  ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
+  fixture = await ModTestFixture.forAction('positioning', 'positioning:scoot_closer');
+  ScopeResolverHelpers.registerPositioningScopes(fixture.testEnv);
+});
+
+afterEach(() => {
+  fixture.cleanup();
+});
+
+it('moves the actor closer to their partner', async () => {
+  const scenario = fixture.createSittingPair({
+    furnitureId: 'sofa1',
+    seatedActors: [
+      { id: 'actor1', name: 'Mover', spotIndex: 2 },
+      { id: 'actor2', name: 'Partner', spotIndex: 0 },
+    ],
+  });
+
+  await fixture.executeAction('actor1', scenario.furniture.id, {
+    additionalPayload: { secondaryId: 'actor2' },
+  });
+
+  expect(fixture.events).toHaveActionSuccess('Mover scoots closer to Partner');
+  const actor = fixture.entityManager.getEntityInstance('actor1');
+  expect(actor).toHaveComponentData('positioning:sitting_on', {
+    furniture_id: scenario.furniture.id,
+    spot_index: 1,
+  });
 });
 ```
 
-The helper operates on `testFixture.testEnv`, which is available on the fixture instance. If the suite needs a custom resolver that does not yet exist, add it to `scopeResolverHelpers.js` so future migrations can share it.
-
-### Step 5: Retain Validation Coverage
-
-When suites import rule or condition JSON files, pass them through `createActionValidationProxy` before handing them to the fixture:
-
-```javascript
-import { createActionValidationProxy } from '../../common/mods/actionValidationProxy.js';
-import ruleJson from '../../../data/mods/positioning/rules/handle_scoot_closer.rule.json' assert { type: 'json' };
-
-const validatedRule = createActionValidationProxy(ruleJson, 'positioning:scoot_closer rule');
-
-testFixture = await ModTestFixture.forAction(
-  'positioning',
-  'positioning:scoot_closer',
-  validatedRule,
-  conditionJson,
-);
-```
-
-This keeps migrations aligned with the guidance in the mod testing guide.
-
-### Step 6: Verify Incrementally
-
-Run focused Jest commands while migrating each suite:
-
-```bash
-# Single-file verification (replace with actual path)
-NODE_ENV=test npx jest tests/integration/mods/positioning/scoot_closer_action.test.js --runInBand
-
-# Batch verification for a mod category
-NODE_ENV=test npx jest tests/integration/mods/positioning --runInBand
-```
-
-Once a batch lands, execute `npm run test:integration` from the repo root to ensure broader coverage stays green.
-
-### Step 7: Update Documentation (If Needed)
-
-If Step 2 identified documentation gaps, extend `docs/testing/mod-testing-guide.md` in a focused way. Example additions:
-
-- `## Migration Playbook` subsection summarizing the key commands above.
-- A short checklist reminding authors to import domain matchers, rely on `ModTestFixture` helpers, and register shared scopes.
-
-Keep the language concise and defer to existing sections for deeper explanations.
-
-### Step 8: Commit and Track Progress
-
-- Commit test migrations in small batches (per suite or per mod category).
-- If documentation changes were required, bundle them with the relevant test migrations so reviewers can see the rationale in context.
-- Use repository scripts (see `scripts/validate-*.js`) as inspiration if you need to automate tracking, but only introduce a new helper if it solves a concrete gap discovered during the audit.
+This mirrors the examples already captured in the canonical testing guide and avoids duplicating logic between suites.
 
 ---
 
-## Risk Assessment & Rollback
+## Verification Checklist
 
-- **Low risk** when replacing manual entity builders with one of the existing scenario helpers and keeping assertions equivalent.
-- **Moderate risk** when migrating suites that rely on bespoke entity graphs; confirm that scenario helpers provide the same components or supplement them with `entityManager.getEntityInstance(...).components` adjustments.
-- **High risk** when rewriting discovery suites; involve diagnostics from the action discovery toolkit and run the entire directory to catch regressions.
-
-Rollback is straightforward: re-run the affected tests against the pre-migration commit, or revert the changes via `git checkout -- <file>` if issues surface.
+- [ ] Scenario helpers replace manual `ModEntityBuilder` usage.
+- [ ] Domain matchers power all assertions against entities or action events.
+- [ ] Scope resolvers come from `ScopeResolverHelpers` (or newly added helpers in that file).
+- [ ] JSON definitions pass through `createActionValidationProxy` before fixture execution.
+- [ ] Focused Jest runs (`--runInBand`) pass for each migrated suite, followed by `npm run test:integration`.
+- [ ] Documentation updates, if any, live in `docs/testing/mod-testing-guide.md`.
 
 ---
 
 ## Success Criteria
 
-- Legacy suites use `ModTestFixture` helpers instead of manual `ModEntityBuilder` scaffolding wherever feasible.
+- Legacy suites rely on `ModTestFixture` scenario helpers instead of bespoke entity graphs wherever feasible.
 - Domain matchers from `tests/common/mods/domainMatchers.js` replace generic assertions.
 - Shared scope helpers are registered through `ScopeResolverHelpers` when needed.
-- Validation proxies guard action and rule JSON loaded by the tests.
-- `docs/testing/mod-testing-guide.md` contains any additional migration notes that were missing before this ticket started.
+- Validation proxies guard action and rule JSON loaded by tests.
+- Any additional migration notes land inside `docs/testing/mod-testing-guide.md`, keeping all guidance in one place.
 
-Meeting these criteria ensures the workflow aligns with the actual codebase and leverages the existing documentation without duplicating it.
+Meeting these criteria ensures the workflow aligns with the real codebase and leverages the existing documentation without
+duplicating it.
