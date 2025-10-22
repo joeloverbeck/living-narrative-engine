@@ -67,20 +67,23 @@ Create `data/mods/violence/rules/handle_push_onto_lying_furniture.rule.json`:
 
 1. `GET_NAME` for the actor, primary target, and secondary target (store as `actorName`, `primaryName`, `furnitureName`).
 2. `QUERY_COMPONENT` for the actor's `core:position` to capture `locationId` for logging.
-3. `ADD_COMPONENT` on the **primary** target:
+3. `BREAK_CLOSENESS_WITH_TARGET` to sever the closeness link between the actor and the primary target (mirror the `handle_push_off` rule implementation):
+   - `actor_id`: `{event.payload.actorId}`
+   - `target_id`: `{event.payload.primaryTargetId}`
+4. `ADD_COMPONENT` on the **primary** target:
    - `component_type`: `positioning:lying_down`
    - `value`: `{ "furniture_id": "{event.payload.secondaryTargetId}" }`
-4. `LOCK_MOVEMENT` for the primary target to mirror lying state restrictions (`actor_id`: `{event.payload.primaryTargetId}`).
-5. Prepare shared messaging values:
+5. `LOCK_MOVEMENT` for the primary target to mirror lying state restrictions (`actor_id`: `{event.payload.primaryTargetId}`).
+6. Prepare shared messaging values:
    - `SET_VARIABLE` `logMessage`: `{context.actorName} pushes {context.primaryName} down roughly onto {context.furnitureName}.`
    - `SET_VARIABLE` `perceptionType`: `action_target_general`.
    - `SET_VARIABLE` `perceptionEventMessage`: same string as `logMessage` (requirement).
    - `SET_VARIABLE` `locationId`: `{context.actorPosition.locationId}`.
    - `SET_VARIABLE` `targetId`: `{event.payload.primaryTargetId}`.
-6. Invoke `core:logSuccessAndEndTurn` to emit the action log and finish the turn.
+7. Invoke `core:logSuccessAndEndTurn` to emit the action log and finish the turn.
 
 **Behavioral Notes**
-- Do **not** break the closeness link; the action should preserve closeness so follow-up moves that rely on closeness remain available.
+- Break the closeness link after the push since the displacement is significant enough to separate the actors.
 - No additional damage, stamina, or secondary effects are introduced in this version; the focus is positional control.
 
 - Remember to register the rule file inside `data/mods/violence/mod-manifest.json`.
@@ -110,10 +113,10 @@ Create comprehensive integration suites under `tests/integration/mods/violence/`
 
 2. **Rule Execution Suite** – `push_onto_lying_furniture_action.test.js`
    - Assert that executing the action:
-     - Adds `positioning:lying_down` to the primary target with the selected furniture id.
-     - Locks the primary target's movement.
-     - Leaves the actor's state unchanged except for action cost effects handled by the macro.
-     - Keeps the `positioning:closeness` relationship intact.
+       - Adds `positioning:lying_down` to the primary target with the selected furniture id.
+       - Locks the primary target's movement.
+       - Leaves the actor's state unchanged except for action cost effects handled by the macro.
+       - Removes the `positioning:closeness` relationship between the actor and primary target.
      - Emits the exact log/perception message string specified above.
    - Follow the structure of existing violence integration tests (e.g., `push_off_action.test.js`).
 
