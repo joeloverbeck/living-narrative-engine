@@ -4,7 +4,7 @@
  * Provides clear, actionable error messages for typos and mistakes
  */
 
-import { findSimilarProperty } from '../../../src/utils/strictObjectProxy.js';
+import { findSimilarProperty } from '../strictObjectProxy.js';
 
 /**
  * Helper function adapter for action validation context

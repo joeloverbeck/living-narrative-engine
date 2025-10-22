@@ -1,6 +1,6 @@
 import { describe, it, expect } from '@jest/globals';
 
-import { createStrictProxy } from '../../../src/utils/strictObjectProxy.js';
+import { createStrictProxy } from '../../common/strictObjectProxy.js';
 
 describe('createStrictProxy', () => {
   it('returns existing properties and respects allowedUndefined list', () => {

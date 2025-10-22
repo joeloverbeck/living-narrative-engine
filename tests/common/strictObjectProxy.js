@@ -1,14 +1,14 @@
 /**
- * @file Proxy wrapper that throws on undefined property access
- * Helps catch typos and incorrect property names during development
+ * @file Proxy wrapper utilities for tests that throw on undefined property access.
+ * Helps catch typos and incorrect property names while executing test scenarios.
  */
 
 /**
- * Creates a strict proxy that throws when accessing undefined properties
- * @param {Object} target - Object to wrap
- * @param {string} objectName - Name for error messages
- * @param {Array<string>} allowedUndefined - Properties allowed to be undefined
- * @returns {Proxy} Proxied object
+ * Creates a strict proxy that throws when accessing undefined properties.
+ * @param {object} target - Object to wrap.
+ * @param {string} [objectName='Object'] - Name for error messages.
+ * @param {string[]} [allowedUndefined=[]] - Properties allowed to be undefined.
+ * @returns {Proxy} Proxied object.
  */
 export function createStrictProxy(target, objectName = 'Object', allowedUndefined = []) {
   return new Proxy(target, {
@@ -18,7 +18,7 @@ export function createStrictProxy(target, objectName = 'Object', allowedUndefine
         return obj[prop];
       }
 
-      // Allow Symbol properties (used by iterators, etc)
+      // Allow Symbol properties (used by iterators, etc.)
       if (typeof prop === 'symbol') {
         return obj[prop];
       }
@@ -46,18 +46,18 @@ export function createStrictProxy(target, objectName = 'Object', allowedUndefine
       const availableProps = Object.keys(obj).join(', ');
       throw new Error(
         `❌ Property '${String(prop)}' does not exist on ${objectName}.\n` +
-        `Available properties: [${availableProps}]\n` +
-        `Did you mean: ${findSimilarProperty(String(prop), Object.keys(obj))}`
+          `Available properties: [${availableProps}]\n` +
+          `Did you mean: ${findSimilarProperty(String(prop), Object.keys(obj))}`
       );
     }
   });
 }
 
 /**
- * Find the most similar property name using Levenshtein distance
- * @param {string} target - Property that was accessed
- * @param {Array<string>} available - Available property names
- * @returns {string} Most similar property name
+ * Find the most similar property name using Levenshtein distance.
+ * @param {string} target - Property that was accessed.
+ * @param {string[]} available - Available property names.
+ * @returns {string} Most similar property name.
  */
 export function findSimilarProperty(target, available) {
   if (available.length === 0) return 'N/A';
@@ -77,10 +77,10 @@ export function findSimilarProperty(target, available) {
 }
 
 /**
- * Calculate Levenshtein distance between two strings
- * @param {string} a - First string
- * @param {string} b - Second string
- * @returns {number} Edit distance
+ * Calculate Levenshtein distance between two strings.
+ * @param {string} a - First string.
+ * @param {string} b - Second string.
+ * @returns {number} Edit distance.
  */
 function levenshteinDistance(a, b) {
   const matrix = [];
