@@ -40,21 +40,21 @@ describe('ExecutionContext Types - Type Definitions', () => {
     expect(fileContent).toContain(
       '@property {JsonLogicEvaluationContext} evaluationContext'
     );
-    expect(fileContent).toContain('@property {EntityManager} entityManager');
     expect(fileContent).toContain(
-      '@property {ValidatedEventDispatcher} validatedEventDispatcher'
+      '@property {ExecutionEntityManagerLike} entityManager'
     );
-    expect(fileContent).toContain('@property {ILogger} logger');
     expect(fileContent).toContain(
-      '@property {GameDataRepository} [gameDataRepository]'
+      '@property {ExecutionValidatedEventDispatcher} validatedEventDispatcher'
+    );
+    expect(fileContent).toContain('@property {ExecutionLogger} logger');
+    expect(fileContent).toContain(
+      '@property {ExecutionGameDataRepository | null | undefined} [gameDataRepository]'
     );
   });
 
   it('should provide JsonLogicEvaluationContext type', () => {
     expect(fileContent).toContain('@typedef {object} JsonLogicEvaluationContext');
-    expect(fileContent).toContain('@property {object} event');
-    expect(fileContent).toContain('@property {string} event.type');
-    expect(fileContent).toContain('@property {object | null} event.payload');
+    expect(fileContent).toContain('@property {{ type: string, payload: object | null }} event');
     expect(fileContent).toContain(
       '@property {JsonLogicEntityContext | null} actor'
     );
@@ -72,19 +72,16 @@ describe('ExecutionContext Types - Type Definitions', () => {
     );
   });
 
-  it('should have proper JSDoc imports', () => {
+  it('should define minimal service contracts instead of importing runtime modules', () => {
+    expect(fileContent).toContain('@typedef {object} ExecutionLogger');
+    expect(fileContent).toContain('@typedef {object} ExecutionEntityManagerLike');
     expect(fileContent).toContain(
-      "@typedef {import('../../entities/entityManager.js').default} EntityManager"
+      '@typedef {object} ExecutionValidatedEventDispatcher'
     );
-    expect(fileContent).toContain(
-      "@typedef {import('../../interfaces/coreServices.js').ILogger} ILogger"
-    );
-    expect(fileContent).toContain(
-      "@typedef {import('../../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher"
-    );
-    expect(fileContent).toContain(
-      "@typedef {import('../../data/gameDataRepository.js').default} GameDataRepository"
-    );
+    expect(fileContent).toContain('@typedef {object} ExecutionGameDataRepository');
+    expect(fileContent).not.toContain("import('../../entities/entityManager.js')");
+    expect(fileContent).not.toContain("import('../../events/validatedEventDispatcher.js')");
+    expect(fileContent).not.toContain("import('../../data/gameDataRepository.js')");
   });
 
   it('should contain export statement', () => {
@@ -94,8 +91,7 @@ describe('ExecutionContext Types - Type Definitions', () => {
   it('should have comprehensive file header documentation', () => {
     expect(fileContent).toContain('@file Execution context type definitions');
     expect(fileContent).toContain('@description');
-    expect(fileContent).toContain('circular dependencies');
-    expect(fileContent).toContain('@see src/logic/defs.js');
-    expect(fileContent).toContain('@see src/utils/serviceInitializerUtils.js');
+    expect(fileContent).toContain('leaf module with no runtime imports');
+    expect(fileContent).toContain('service initialization utilities');
   });
 });
