@@ -1,0 +1,31 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-penile-oral:nuzzle_penis_through_clothing_sitting_close",
+  "name": "Nuzzle Penis Through Clothing (Sitting Close)",
+  "description": "Lean almost horizontally across your shared seat to nuzzle against your partner's clothed erection.",
+  "targets": {
+    "primary": {
+      "scope": "sex-core:actors_sitting_close_with_covered_penis",
+      "placeholder": "primary",
+      "description": "Seated partner with a clothed penis within shared closeness"
+    },
+    "secondary": {
+      "scope": "clothing:target_topmost_torso_lower_clothing_no_accessories",
+      "placeholder": "secondary",
+      "description": "Garment that keeps the penis covered",
+      "contextFrom": "primary"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:sitting_on", "positioning:closeness"],
+    "primary": ["positioning:sitting_on", "positioning:closeness"]
+  },
+  "template": "nuzzle against {primary}'s penis through the {secondary}",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#2a1a5e",
+    "textColor": "#ede7f6",
+    "hoverBackgroundColor": "#372483",
+    "hoverTextColor": "#ffffff"
+  }
+}
