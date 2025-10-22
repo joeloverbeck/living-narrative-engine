@@ -21,8 +21,8 @@ module.exports = {
   },
 
   transformIgnorePatterns: [
-    // Ignore node_modules except for 'tinyqueue' and 'uuid'
-    '/node_modules/(?!tinyqueue/|uuid/)',
+    // Ignore node_modules except for dependencies that ship untranspiled ESM
+    '/node_modules/(?!tinyqueue/|uuid/|jsdom/|parse5/)',
     '\\.pnp\\.[^\\/]+$',
   ],
 
