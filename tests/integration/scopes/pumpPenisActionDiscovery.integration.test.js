@@ -29,7 +29,8 @@ import {
   createMockUnifiedScopeResolver,
 } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
-import {createMockActionErrorContextBuilder,
+import {
+  createMockActionErrorContextBuilder,
   createMockTargetRequiredComponentsValidator,
 } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
@@ -51,7 +52,7 @@ const penisScopeContent = fs.readFileSync(
 );
 
 // Import actual action files
-import pumpPenisAction from '../../../data/mods/sex/actions/pump_penis.action.json';
+import pumpPenisAction from '../../../data/mods/sex-penile-manual/actions/pump_penis.action.json';
 
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
 
@@ -100,7 +101,9 @@ describe('Pump Penis Action Discovery Integration Tests', () => {
         not: {
           in: [
             { var: 'actor.id' },
-            { var: 'entity.components.positioning:facing_away.facing_away_from' },
+            {
+              var: 'entity.components.positioning:facing_away.facing_away_from',
+            },
           ],
         },
       },
@@ -176,7 +179,6 @@ describe('Pump Penis Action Discovery Integration Tests', () => {
       ? createMockMultiTargetResolutionStage()
       : createEmptyMockMultiTargetResolutionStage();
 
-    
     // Create mock TargetComponentValidator
     const targetComponentValidator = new TargetComponentValidator({
       logger,
@@ -186,7 +188,7 @@ describe('Pump Penis Action Discovery Integration Tests', () => {
     // Create mock TargetRequiredComponentsValidator
     const mockTargetRequiredComponentsValidator =
       createMockTargetRequiredComponentsValidator();
-const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+    const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex: {
         getCandidateActions: jest.fn().mockImplementation((actor) => {
           const actions = gameDataRepository.getAllActionDefinitions();
@@ -318,7 +320,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const pumpPenisActions = result.actions.filter(
-        (action) => action.id === 'sex:pump_penis'
+        (action) => action.id === 'sex-penile-manual:pump_penis'
       );
       expect(pumpPenisActions).toHaveLength(1);
       expect(pumpPenisActions[0].params.targetId).toBe('target1');
@@ -358,15 +360,18 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const pumpPenisActions = result.actions.filter(
-        (action) => action.id === 'sex:pump_penis'
+        (action) => action.id === 'sex-penile-manual:pump_penis'
       );
       expect(pumpPenisActions).toHaveLength(0);
     });
 
     it('should not discover action when actor is being vaginally penetrated', async () => {
-      setupEntities({}, {
-        'sex-core:being_fucked_vaginally': { actorId: 'charlie' },
-      });
+      setupEntities(
+        {},
+        {
+          'sex-core:being_fucked_vaginally': { actorId: 'charlie' },
+        }
+      );
 
       const actorEntity = entityManager.getEntityInstance('actor1');
       const result = await actionDiscoveryService.getValidActions(actorEntity, {
@@ -374,7 +379,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       });
 
       const pumpPenisActions = result.actions.filter(
-        (action) => action.id === 'sex:pump_penis'
+        (action) => action.id === 'sex-penile-manual:pump_penis'
       );
       expect(pumpPenisActions).toHaveLength(0);
     });
@@ -456,7 +461,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const pumpPenisActions = result.actions.filter(
-        (action) => action.id === 'sex:pump_penis'
+        (action) => action.id === 'sex-penile-manual:pump_penis'
       );
       expect(pumpPenisActions).toHaveLength(0);
     });
@@ -522,7 +527,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const pumpPenisActions = result.actions.filter(
-        (action) => action.id === 'sex:pump_penis'
+        (action) => action.id === 'sex-penile-manual:pump_penis'
       );
       expect(pumpPenisActions).toHaveLength(0);
     });
@@ -588,7 +593,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const pumpPenisActions = result.actions.filter(
-        (action) => action.id === 'sex:pump_penis'
+        (action) => action.id === 'sex-penile-manual:pump_penis'
       );
       expect(pumpPenisActions).toHaveLength(0);
     });

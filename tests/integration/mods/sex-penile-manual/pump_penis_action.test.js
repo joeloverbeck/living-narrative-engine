@@ -1,9 +1,9 @@
 /**
- * @file Integration tests for the sex:fondle_penis action and rule.
- * @description Tests the rule execution after the fondle_penis action is performed.
+ * @file Integration tests for the sex-penile-manual:pump_penis action and rule.
+ * @description Tests the rule execution after the pump_penis action is performed.
  * Note: This test does not test action discovery or scope resolution - it assumes
  * the action is valid and dispatches it directly. For action discovery tests,
- * see fondle_penis_action_discovery.test.js.
+ * see pumpPenisActionDiscovery.integration.test.js.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
@@ -12,7 +12,7 @@ import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import { ModAssertionHelpers } from '../../../common/mods/ModAssertionHelpers.js';
 
 /**
- * Creates standardized anatomy setup for fondle penis scenarios.
+ * Creates standardized anatomy setup for pump penis scenarios.
  *
  * @returns {object} Object with actor, target, and all anatomy entities
  */
@@ -63,12 +63,15 @@ function setupAnatomyComponents() {
   };
 }
 
-describe('sex:fondle_penis action integration', () => {
+describe('sex-penile-manual:pump_penis action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
     // Create test fixture with auto-loaded files
-    testFixture = await ModTestFixture.forAction('sex', 'sex:fondle_penis');
+    testFixture = await ModTestFixture.forAction(
+      'sex-penile-manual',
+      'sex-penile-manual:pump_penis'
+    );
 
     // Setup anatomy entities
     const entities = setupAnatomyComponents();
@@ -84,14 +87,14 @@ describe('sex:fondle_penis action integration', () => {
   });
 
   // eslint-disable-next-line jest/expect-expect
-  it('performs fondle penis action successfully', async () => {
-    // Execute the fondle_penis action
+  it('performs pump penis action successfully', async () => {
+    // Execute the pump_penis action
     await testFixture.executeAction('alice', 'bob');
 
     // Assert action executed successfully with proper events
     ModAssertionHelpers.assertActionSuccess(
       testFixture.events,
-      "Alice eagerly fondles Bob's penis.",
+      "Alice pumps Bob's hard penis, intending to make Bob cum.",
       {
         shouldEndTurn: true,
         shouldHavePerceptibleEvent: true,
@@ -142,7 +145,7 @@ describe('sex:fondle_penis action integration', () => {
     // The action prerequisites would normally prevent this, but we test rule robustness
     await expect(async () => {
       await testFixture.eventBus.dispatch('core:attempt_action', {
-        actionId: 'sex:fondle_penis',
+        actionId: 'sex-penile-manual:pump_penis',
         actorId: 'alice',
         targetId: 'nonexistent',
       });
@@ -152,5 +155,41 @@ describe('sex:fondle_penis action integration', () => {
     // So only the initial attempt_action event should be present
     const types = testFixture.events.map((e) => e.eventType);
     expect(types).toEqual(['core:attempt_action']);
+  });
+
+  it('creates correct perceptible event with proper message format', async () => {
+    // Execute the pump_penis action
+    await testFixture.executeAction('alice', 'bob');
+
+    // Find the perceptible event
+    const perceptibleEvent = testFixture.events.find(
+      (e) => e.eventType === 'core:perceptible_event'
+    );
+
+    expect(perceptibleEvent).toBeDefined();
+    expect(perceptibleEvent.payload.descriptionText).toBe(
+      "Alice pumps Bob's hard penis, intending to make Bob cum."
+    );
+    expect(perceptibleEvent.payload.locationId).toBe('room1');
+    expect(perceptibleEvent.payload.actorId).toBe('alice');
+    expect(perceptibleEvent.payload.targetId).toBe('bob');
+    expect(perceptibleEvent.payload.perceptionType).toBe(
+      'action_target_general'
+    );
+  });
+
+  it('creates correct success message', async () => {
+    // Execute the pump_penis action
+    await testFixture.executeAction('alice', 'bob');
+
+    // Find the success message event
+    const successEvent = testFixture.events.find(
+      (e) => e.eventType === 'core:display_successful_action_result'
+    );
+
+    expect(successEvent).toBeDefined();
+    expect(successEvent.payload.message).toBe(
+      "Alice pumps Bob's hard penis, intending to make Bob cum."
+    );
   });
 });

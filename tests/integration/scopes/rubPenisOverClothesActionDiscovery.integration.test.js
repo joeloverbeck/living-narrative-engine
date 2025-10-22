@@ -28,7 +28,8 @@ import {
   createMockUnifiedScopeResolver,
 } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
-import {createMockActionErrorContextBuilder,
+import {
+  createMockActionErrorContextBuilder,
   createMockTargetRequiredComponentsValidator,
 } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
@@ -43,13 +44,13 @@ import path from 'path';
 const penisCoveredScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../data/mods/sex/scopes/actors_with_penis_facing_each_other_covered.scope'
+    '../../../data/mods/sex-penile-manual/scopes/actors_with_penis_facing_each_other_covered.scope'
   ),
   'utf8'
 );
 
 // Import actual action file
-import rubPenisOverClothesAction from '../../../data/mods/sex/actions/rub_penis_over_clothes.action.json';
+import rubPenisOverClothesAction from '../../../data/mods/sex-penile-manual/actions/rub_penis_over_clothes.action.json';
 
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
 
@@ -224,9 +225,10 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
     scopeRegistry.clear();
 
     scopeRegistry.initialize({
-      'sex:actors_with_penis_facing_each_other_covered': scopeDefinitions.get(
-        'sex:actors_with_penis_facing_each_other_covered'
-      ),
+      'sex-penile-manual:actors_with_penis_facing_each_other_covered':
+        scopeDefinitions.get(
+          'sex-penile-manual:actors_with_penis_facing_each_other_covered'
+        ),
     });
 
     scopeEngine = new ScopeEngine();
@@ -260,7 +262,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
         unsubscribe: jest.fn(),
       },
     });
-    
+
     // Create mock TargetComponentValidator
     const mockTargetComponentValidator = {
       validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
@@ -447,7 +449,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
 
       // Assert
       const rubOverClothesActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_over_clothes'
+        (action) => action.id === 'sex-penile-manual:rub_penis_over_clothes'
       );
       expect(rubOverClothesActions).toHaveLength(1);
       expect(rubOverClothesActions[0].params.targetId).toBe(entityIds.target);
@@ -465,7 +467,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
 
       // Assert
       const rubOverClothesActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_over_clothes'
+        (action) => action.id === 'sex-penile-manual:rub_penis_over_clothes'
       );
       expect(rubOverClothesActions).toHaveLength(0);
     });
@@ -491,7 +493,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
 
       // Assert
       const rubOverClothesActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_over_clothes'
+        (action) => action.id === 'sex-penile-manual:rub_penis_over_clothes'
       );
       expect(rubOverClothesActions).toHaveLength(0);
     });
@@ -526,7 +528,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
 
       // Assert
       const rubOverClothesActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_over_clothes'
+        (action) => action.id === 'sex-penile-manual:rub_penis_over_clothes'
       );
       expect(rubOverClothesActions).toHaveLength(1);
       expect(rubOverClothesActions[0].params.targetId).toBe(entityIds.target);
@@ -620,7 +622,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
 
       // Assert
       const rubOverClothesActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_over_clothes'
+        (action) => action.id === 'sex-penile-manual:rub_penis_over_clothes'
       );
       expect(rubOverClothesActions).toHaveLength(0);
     });
@@ -700,7 +702,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
 
       // Assert
       const rubOverClothesActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_over_clothes'
+        (action) => action.id === 'sex-penile-manual:rub_penis_over_clothes'
       );
       expect(rubOverClothesActions).toHaveLength(0);
     });
@@ -785,7 +787,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
 
       // Assert
       const rubOverClothesActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_over_clothes'
+        (action) => action.id === 'sex-penile-manual:rub_penis_over_clothes'
       );
       expect(rubOverClothesActions).toHaveLength(0);
     });

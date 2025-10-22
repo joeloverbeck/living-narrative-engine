@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-penile-manual:pump_penis",
+  "name": "Pump Penis",
+  "description": "Pump the target's penis while facing them.",
+  "targets": {
+    "primary": {
+      "scope": "sex-core:actors_with_penis_facing_each_other",
+      "placeholder": "target",
+      "description": "Person with penis to pump"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": ["sex-core:being_fucked_vaginally"]
+  },
+  "template": "pump {target}'s penis",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#8a3b12",
+    "textColor": "#fff4e6",
+    "hoverBackgroundColor": "#a04a1b",
+    "hoverTextColor": "#fffaf2"
+  }
+}

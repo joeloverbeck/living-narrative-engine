@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex-penile-manual:event-is-action-fondle-penis",
+  "description": "Checks if the triggering event is for the 'sex-penile-manual:fondle_penis' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "sex-penile-manual:fondle_penis"
+    ]
+  }
+}

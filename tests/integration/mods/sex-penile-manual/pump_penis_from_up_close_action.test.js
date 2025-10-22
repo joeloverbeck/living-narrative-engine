@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the sex:pump_penis_from_up_close action and rule.
+ * @file Integration tests for the sex-penile-manual:pump_penis_from_up_close action and rule.
  * @description Tests the rule execution after the pump_penis_from_up_close action is performed.
  * Note: This test does not test action discovery or scope resolution - it assumes
  * the action is valid and dispatches it directly. For action discovery tests,
@@ -64,14 +64,14 @@ function setupAnatomyComponents() {
   };
 }
 
-describe('sex:pump_penis_from_up_close action integration', () => {
+describe('sex-penile-manual:pump_penis_from_up_close action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
     // Create test fixture with auto-loaded files
     testFixture = await ModTestFixture.forAction(
-      'sex',
-      'sex:pump_penis_from_up_close'
+      'sex-penile-manual',
+      'sex-penile-manual:pump_penis_from_up_close'
     );
 
     // Setup anatomy entities
@@ -146,7 +146,7 @@ describe('sex:pump_penis_from_up_close action integration', () => {
     // The action prerequisites would normally prevent this, but we test rule robustness
     await expect(async () => {
       await testFixture.eventBus.dispatch('core:attempt_action', {
-        actionId: 'sex:pump_penis_from_up_close',
+        actionId: 'sex-penile-manual:pump_penis_from_up_close',
         actorId: 'alice',
         targetId: 'nonexistent',
       });

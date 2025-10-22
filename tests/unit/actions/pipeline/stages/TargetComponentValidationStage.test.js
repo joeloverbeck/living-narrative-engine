@@ -353,7 +353,7 @@ describe('TargetComponentValidationStage', () => {
 
     it('should remove actions when dependent targets lose all candidates', async () => {
       const actionDef = {
-        id: 'sex:rub_penis_over_clothes',
+        id: 'sex-penile-manual:rub_penis_over_clothes',
         targets: {
           primary: { placeholder: 'primary' },
           secondary: { placeholder: 'secondary', contextFrom: 'primary' },

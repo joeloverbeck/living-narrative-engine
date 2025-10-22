@@ -4,11 +4,12 @@
 
 ### Current Behavior
 
-When an actor (Actor A) uses the `positioning:kneel_before` action to kneel before another actor (Actor B), the game correctly adds the `positioning:kneeling_before` component to Actor A. However, sexual/caressing actions like `sex:fondle_penis` and `caressing:fondle_ass` are incorrectly available for Actor B (the standing actor) to perform on Actor A (the kneeling actor), even though these actions are anatomically impossible from this positioning configuration.
+When an actor (Actor A) uses the `positioning:kneel_before` action to kneel before another actor (Actor B), the game correctly adds the `positioning:kneeling_before` component to Actor A. However, sexual/caressing actions like `sex-penile-manual:fondle_penis` and `caressing:fondle_ass` are incorrectly available for Actor B (the standing actor) to perform on Actor A (the kneeling actor), even though these actions are anatomically impossible from this positioning configuration.
 
 ### Why This is a Problem
 
 **Anatomical Reality:**
+
 - When Actor A kneels before Actor B:
   - Actor A is in a lowered position (on knees)
   - Actor B is standing upright
@@ -16,16 +17,19 @@ When an actor (Actor A) uses the `positioning:kneel_before` action to kneel befo
   - Actor A's genitals/posterior are at kneeling height (below Actor B's standing hand reach)
 
 **Impossible Actions:**
+
 - Actor B (standing) **cannot** fondle Actor A's (kneeling) penis - it's too low to reach comfortably
 - Actor B (standing) **cannot** fondle Actor A's (kneeling) ass - it's too low and behind
 
 ### Root Cause Analysis
 
 The scopes used by these sexual/caressing actions:
+
 - `sex-core:actors_with_penis_facing_each_other` - Only checks facing direction via `entity-not-in-facing-away` condition
 - `caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target` - Only checks facing direction or behind positioning
 
 **Missing Validation:**
+
 - Neither scope checks for vertical positioning differences created by kneeling
 - The `positioning:kneeling_before` component exists but is not considered by these scopes
 
@@ -33,7 +37,7 @@ The scopes used by these sexual/caressing actions:
 
 - **Actions:**
   - `positioning:kneel_before` - Establishes kneeling position
-  - `sex:fondle_penis` - Affected sexual action
+  - `sex-penile-manual:fondle_penis` - Affected sexual action
   - `caressing:fondle_ass` - Affected caressing action
 
 - **Components:**
@@ -61,6 +65,7 @@ Create new conditions that detect incompatible kneeling states, then integrate t
 **Purpose:** Checks if the target entity is currently kneeling before the current actor
 
 **Logic:**
+
 ```json
 {
   "in": [
@@ -77,6 +82,7 @@ Create new conditions that detect incompatible kneeling states, then integrate t
 **Purpose:** Checks if the current actor is kneeling before the target entity
 
 **Logic:**
+
 ```json
 {
   "in": [
@@ -93,6 +99,7 @@ Create new conditions that detect incompatible kneeling states, then integrate t
 #### Update 1: `sex-core:actors_with_penis_facing_each_other.scope`
 
 **Current Logic:**
+
 ```
 sex-core:actors_with_penis_facing_each_other := actor.components.positioning:closeness.partners[][{
   "and": [
@@ -104,6 +111,7 @@ sex-core:actors_with_penis_facing_each_other := actor.components.positioning:clo
 ```
 
 **Updated Logic:**
+
 ```
 sex-core:actors_with_penis_facing_each_other := actor.components.positioning:closeness.partners[][{
   "and": [
@@ -117,6 +125,7 @@ sex-core:actors_with_penis_facing_each_other := actor.components.positioning:clo
 ```
 
 **Explanation:**
+
 - Adds two exclusion checks
 - Excludes targets who are kneeling before the actor (can't reach them)
 - Excludes targets if the actor is kneeling before them (can't reach them)
@@ -124,6 +133,7 @@ sex-core:actors_with_penis_facing_each_other := actor.components.positioning:clo
 #### Update 2: `caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target.scope`
 
 **Current Logic:**
+
 ```
 caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target := actor.components.positioning:closeness.partners[][{
   "and": [
@@ -139,6 +149,7 @@ caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target := actor.com
 ```
 
 **Updated Logic:**
+
 ```
 caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target := actor.components.positioning:closeness.partners[][{
   "and": [
@@ -156,6 +167,7 @@ caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target := actor.com
 ```
 
 **Explanation:**
+
 - Same exclusion logic as penis scope
 - Prevents fondling ass when incompatible kneeling positions exist
 
@@ -312,6 +324,7 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
 ### 4.2 Test Implementation Requirements
 
 Each test should:
+
 1. Set up actors with appropriate anatomy components (penis, ass_cheek)
 2. Ensure actors have `positioning:closeness` with each other
 3. Use `ActionDiscoveryService.getValidActions()` to query available actions
@@ -344,7 +357,8 @@ it('should reproduce the original issue and validate the fix', async () => {
   // ASSERT: Verify fondle_penis is NOT available for Actor2 (kneeling)
   const fondlePenisActions = actor1Actions.actions.filter(
     (a) =>
-      a.id === 'sex:fondle_penis' && a.params?.targetId === 'test:actor2'
+      a.id === 'sex-penile-manual:fondle_penis' &&
+      a.params?.targetId === 'test:actor2'
   );
 
   expect(fondlePenisActions).toHaveLength(0);
@@ -404,6 +418,7 @@ Update scope comments to clarify positioning requirements:
 ## sex-core:actors_with_penis_facing_each_other
 
 Filters actors in closeness who:
+
 - Have an uncovered penis
 - Are facing each other (not facing away)
 - Have compatible vertical positioning (neither kneeling before the other)
@@ -413,6 +428,7 @@ Used by actions requiring face-to-face penis interaction at compatible heights.
 ## caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target
 
 Filters actors in closeness who:
+
 - Have ass cheeks
 - Are either facing each other OR actor is behind target
 - Have compatible vertical positioning (neither kneeling before the other)
@@ -448,6 +464,7 @@ Used by actions requiring ass interaction at compatible heights.
 **Approach:** Create entirely new scopes like `actors_with_penis_compatible_positioning`.
 
 **Rejected Because:**
+
 - Duplication of existing scope logic
 - Less maintainable (two places to update for changes)
 - Scope system supports composition via conditions (current approach)
@@ -457,13 +474,14 @@ Used by actions requiring ass interaction at compatible heights.
 **Approach:** Keep scopes as-is but add validation in rule handlers.
 
 **Problem:**
+
 - Actions would appear available in UI but fail when attempted
 - Poor user experience
 - Doesn't follow the pattern of using scopes for action availability
 
 ## 9. Acceptance Criteria
 
-1. ✓ When Actor A kneels before Actor B, Actor B cannot select `sex:fondle_penis` targeting Actor A
+1. ✓ When Actor A kneels before Actor B, Actor B cannot select `sex-penile-manual:fondle_penis` targeting Actor A
 2. ✓ When Actor A kneels before Actor B, Actor B cannot select `caressing:fondle_ass` targeting Actor A
 3. ✓ When Actor A kneels before Actor B, Actor A cannot select these actions targeting Actor B
 4. ✓ When neither actor is kneeling, actions are available normally (regression test)
