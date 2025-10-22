@@ -1,0 +1,137 @@
+# Legacy Sex Mod Inventory
+
+## Methodology
+- Parsed legacy asset IDs with `jq` for JSON and `perl` for ScopeDSL files to guarantee full coverage of actions, rules, conditions, components, and scopes.
+- Verified cross-mod references with a filtered `rg` search that excluded `data/mods/sex/**` to surface any remaining `sex:` usages in other manifests.
+
+```bash
+jq -r '.id' data/mods/sex/actions/*.json | sort
+jq -r '.rule_id' data/mods/sex/rules/*.json | sort
+jq -r '.id' data/mods/sex/conditions/*.json | sort
+perl -ne 'print "$1\n" if /(sex:[^ ]+)\s*:=/' data/mods/sex/scopes/*.scope | sort
+jq -r '.id' data/mods/sex/components/*.json | sort
+find data/mods -path 'data/mods/sex' -prune -o -name '*.json' -print0 | xargs -0 rg -n "sex:" || true
+```
+
+---
+
+## Actions
+| Legacy ID | File | Destination Module | Notes |
+| --- | --- | --- | --- |
+| `sex:breathe_teasingly_on_penis` | `data/mods/sex/actions/breathe_teasingly_on_penis.action.json` | `sex-penile-oral` | Oral teasing setup. |
+| `sex:breathe_teasingly_on_penis_sitting_close` | `data/mods/sex/actions/breathe_teasingly_on_penis_sitting_close.action.json` | `sex-penile-oral` | Seated oral-teasing variant. |
+| `sex:fondle_breasts` | `data/mods/sex/actions/fondle_breasts.action.json` | `sex-breastplay` | Core breast stimulation loop. |
+| `sex:fondle_breasts_over_clothes` | `data/mods/sex/actions/fondle_breasts_over_clothes.action.json` | `sex-breastplay` | Clothed breast contact. |
+| `sex:fondle_penis` | `data/mods/sex/actions/fondle_penis.action.json` | `sex-penile-manual` | Manual penis play. |
+| `sex:grind_ass_against_penis` | `data/mods/sex/actions/grind_ass_against_penis.action.json` | `sex-dry-intimacy` | Grinding motion with clothing barrier. |
+| `sex:insert_penis_into_vagina` | `data/mods/sex/actions/insert_penis_into_vagina.action.json` | `sex-vaginal-penetration` | Vaginal penetration initiator. |
+| `sex:insert_primary_penis_into_your_vagina` | `data/mods/sex/actions/insert_primary_penis_into_your_vagina.action.json` | `sex-vaginal-penetration` | Receptive-perspective vaginal entry. |
+| `sex:lick_glans` | `data/mods/sex/actions/lick_glans.action.json` | `sex-penile-oral` | Oral focus on glans. |
+| `sex:lick_testicles_sensually` | `data/mods/sex/actions/lick_testicles_sensually.action.json` | `sex-penile-oral` | Oral attention to testicles. |
+| `sex:nuzzle_penis_through_clothing` | `data/mods/sex/actions/nuzzle_penis_through_clothing.action.json` | `sex-penile-oral` | Clothed oral teasing. |
+| `sex:press_against_back` | `data/mods/sex/actions/press_against_back.action.json` | `sex-breastplay` | Chest-to-back breast contact. |
+| `sex:press_penis_against_ass_through_clothes` | `data/mods/sex/actions/press_penis_against_ass_through_clothes.action.json` | `sex-dry-intimacy` | Clothed frottage against ass. |
+| `sex:pump_penis` | `data/mods/sex/actions/pump_penis.action.json` | `sex-penile-manual` | Standing manual stimulation. |
+| `sex:pump_penis_from_up_close` | `data/mods/sex/actions/pump_penis_from_up_close.action.json` | `sex-penile-manual` | Kneeling manual stimulation variant. |
+| `sex:ride_penis_greedily` | `data/mods/sex/actions/ride_penis_greedily.action.json` | `sex-vaginal-penetration` | High-energy vaginal riding. |
+| `sex:rub_penis_against_penis` | `data/mods/sex/actions/rub_penis_against_penis.action.json` | `sex-dry-intimacy` | Frottage between penises. |
+| `sex:rub_penis_between_ass_cheeks` | `data/mods/sex/actions/rub_penis_between_ass_cheeks.action.json` | `sex-dry-intimacy` | Frottage between cheeks. |
+| `sex:rub_penis_over_clothes` | `data/mods/sex/actions/rub_penis_over_clothes.action.json` | `sex-penile-manual` | Clothed manual stimulation. |
+| `sex:rub_pussy_against_penis_through_clothes` | `data/mods/sex/actions/rub_pussy_against_penis_through_clothes.action.json` | `sex-dry-intimacy` | Clothed crotch-to-crotch grinding. |
+| `sex:rub_vagina_over_clothes` | `data/mods/sex/actions/rub_vagina_over_clothes.action.json` | `sex-dry-intimacy` | Clothed vulva grinding. |
+| `sex:slide_penis_along_labia` | `data/mods/sex/actions/slide_penis_along_labia.action.json` | `sex-vaginal-penetration` | Pre-penetration teasing. |
+| `sex:straddling_penis_milking` | `data/mods/sex/actions/straddling_penis_milking.action.json` | `sex-vaginal-penetration` | Straddling milking loop. |
+| `sex:suckle_testicle` | `data/mods/sex/actions/suckle_testicle.action.json` | `sex-penile-oral` | Oral suction on testicle. |
+| `sex:tease_asshole_with_glans` | `data/mods/sex/actions/tease_asshole_with_glans.action.json` | `sex-anal-penetration` | Anal teasing lead-in. |
+
+## Rules
+| Legacy Rule ID | File | Destination Module | Notes |
+| --- | --- | --- | --- |
+| `handle_breathe_teasingly_on_penis` | `data/mods/sex/rules/handle_breathe_teasingly_on_penis.rule.json` | `sex-penile-oral` | Handles `sex:breathe_teasingly_on_penis`. |
+| `handle_breathe_teasingly_on_penis_sitting_close` | `data/mods/sex/rules/handle_breathe_teasingly_on_penis_sitting_close.rule.json` | `sex-penile-oral` | Handles `sex:breathe_teasingly_on_penis_sitting_close`. |
+| `handle_fondle_breasts` | `data/mods/sex/rules/handle_fondle_breasts.rule.json` | `sex-breastplay` | Handles `sex:fondle_breasts`. |
+| `handle_fondle_breasts_over_clothes` | `data/mods/sex/rules/handle_fondle_breasts_over_clothes.rule.json` | `sex-breastplay` | Handles `sex:fondle_breasts_over_clothes`. |
+| `handle_fondle_penis` | `data/mods/sex/rules/handle_fondle_penis.rule.json` | `sex-penile-manual` | Handles `sex:fondle_penis`. |
+| `handle_grind_ass_against_penis` | `data/mods/sex/rules/handle_grind_ass_against_penis.rule.json` | `sex-dry-intimacy` | Handles `sex:grind_ass_against_penis`. |
+| `handle_insert_penis_into_vagina` | `data/mods/sex/rules/handle_insert_penis_into_vagina.rule.json` | `sex-vaginal-penetration` | Handles `sex:insert_penis_into_vagina`. |
+| `handle_insert_primary_penis_into_your_vagina` | `data/mods/sex/rules/handle_insert_primary_penis_into_your_vagina.rule.json` | `sex-vaginal-penetration` | Handles `sex:insert_primary_penis_into_your_vagina`. |
+| `handle_lick_glans` | `data/mods/sex/rules/handle_lick_glans.rule.json` | `sex-penile-oral` | Handles `sex:lick_glans`. |
+| `handle_lick_testicles_sensually` | `data/mods/sex/rules/handle_lick_testicles_sensually.rule.json` | `sex-penile-oral` | Handles `sex:lick_testicles_sensually`. |
+| `handle_nuzzle_penis_through_clothing` | `data/mods/sex/rules/handle_nuzzle_penis_through_clothing.rule.json` | `sex-penile-oral` | Handles `sex:nuzzle_penis_through_clothing`. |
+| `handle_press_against_back` | `data/mods/sex/rules/handle_press_against_back.rule.json` | `sex-breastplay` | Handles `sex:press_against_back`. |
+| `handle_press_penis_against_ass_through_clothes` | `data/mods/sex/rules/handle_press_penis_against_ass_through_clothes.rule.json` | `sex-dry-intimacy` | Handles `sex:press_penis_against_ass_through_clothes`. |
+| `handle_pump_penis` | `data/mods/sex/rules/handle_pump_penis.rule.json` | `sex-penile-manual` | Handles `sex:pump_penis`. |
+| `handle_pump_penis_from_up_close` | `data/mods/sex/rules/handle_pump_penis_from_up_close.rule.json` | `sex-penile-manual` | Handles `sex:pump_penis_from_up_close`. |
+| `handle_ride_penis_greedily` | `data/mods/sex/rules/handle_ride_penis_greedily.rule.json` | `sex-vaginal-penetration` | Handles `sex:ride_penis_greedily`. |
+| `handle_rub_penis_against_penis` | `data/mods/sex/rules/handle_rub_penis_against_penis.rule.json` | `sex-dry-intimacy` | Handles `sex:rub_penis_against_penis`. |
+| `handle_rub_penis_between_ass_cheeks` | `data/mods/sex/rules/handle_rub_penis_between_ass_cheeks.rule.json` | `sex-dry-intimacy` | Handles `sex:rub_penis_between_ass_cheeks`. |
+| `handle_rub_penis_over_clothes` | `data/mods/sex/rules/handle_rub_penis_over_clothes.rule.json` | `sex-penile-manual` | Handles `sex:rub_penis_over_clothes`. |
+| `handle_rub_pussy_against_penis_through_clothes` | `data/mods/sex/rules/handle_rub_pussy_against_penis_through_clothes.rule.json` | `sex-dry-intimacy` | Handles `sex:rub_pussy_against_penis_through_clothes`. |
+| `handle_rub_vagina_over_clothes` | `data/mods/sex/rules/handle_rub_vagina_over_clothes.rule.json` | `sex-dry-intimacy` | Handles `sex:rub_vagina_over_clothes`. |
+| `handle_slide_penis_along_labia` | `data/mods/sex/rules/handle_slide_penis_along_labia.rule.json` | `sex-vaginal-penetration` | Handles `sex:slide_penis_along_labia`. |
+| `handle_straddling_penis_milking` | `data/mods/sex/rules/handle_straddling_penis_milking.rule.json` | `sex-vaginal-penetration` | Handles `sex:straddling_penis_milking`. |
+| `handle_suckle_testicle` | `data/mods/sex/rules/handle_suckle_testicle.rule.json` | `sex-penile-oral` | Handles `sex:suckle_testicle`. |
+| `handle_tease_asshole_with_glans` | `data/mods/sex/rules/handle_tease_asshole_with_glans.rule.json` | `sex-anal-penetration` | Handles `sex:tease_asshole_with_glans`. |
+
+## Conditions
+| Legacy ID | File | Destination Module | Notes |
+| --- | --- | --- | --- |
+| `sex:event-is-action-breathe-teasingly-on-penis` | `data/mods/sex/conditions/event-is-action-breathe-teasingly-on-penis.condition.json` | `sex-penile-oral` | Event check for `sex:breathe_teasingly_on_penis`. |
+| `sex:event-is-action-breathe-teasingly-on-penis-sitting-close` | `data/mods/sex/conditions/event-is-action-breathe-teasingly-on-penis-sitting-close.condition.json` | `sex-penile-oral` | Event check for sitting-close oral tease. |
+| `sex:event-is-action-fondle-breasts` | `data/mods/sex/conditions/event-is-action-fondle-breasts.condition.json` | `sex-breastplay` | Event check for `sex:fondle_breasts`. |
+| `sex:event-is-action-fondle-breasts-over-clothes` | `data/mods/sex/conditions/event-is-action-fondle-breasts-over-clothes.condition.json` | `sex-breastplay` | Event check for clothed fondling. |
+| `sex:event-is-action-fondle-penis` | `data/mods/sex/conditions/event-is-action-fondle-penis.condition.json` | `sex-penile-manual` | Event check for `sex:fondle_penis`. |
+| `sex:event-is-action-grind-ass-against-penis` | `data/mods/sex/conditions/event-is-action-grind-ass-against-penis.condition.json` | `sex-dry-intimacy` | Event check for `sex:grind_ass_against_penis`. |
+| `sex:event-is-action-insert-penis-into-vagina` | `data/mods/sex/conditions/event-is-action-insert-penis-into-vagina.condition.json` | `sex-vaginal-penetration` | Event check for `sex:insert_penis_into_vagina`. |
+| `sex:event-is-action-insert-primary-penis-into-your-vagina` | `data/mods/sex/conditions/event-is-action-insert-primary-penis-into-your-vagina.condition.json` | `sex-vaginal-penetration` | Event check for receptive vaginal entry. |
+| `sex:event-is-action-lick-glans` | `data/mods/sex/conditions/event-is-action-lick-glans.condition.json` | `sex-penile-oral` | Event check for `sex:lick_glans`. |
+| `sex:event-is-action-lick-testicles-sensually` | `data/mods/sex/conditions/event-is-action-lick-testicles-sensually.condition.json` | `sex-penile-oral` | Event check for `sex:lick_testicles_sensually`. |
+| `sex:event-is-action-nuzzle-penis-through-clothing` | `data/mods/sex/conditions/event-is-action-nuzzle-penis-through-clothing.condition.json` | `sex-penile-oral` | Event check for clothed oral teasing. |
+| `sex:event-is-action-press-against-back` | `data/mods/sex/conditions/event-is-action-press-against-back.condition.json` | `sex-breastplay` | Event check for `sex:press_against_back`. |
+| `sex:event-is-action-press-penis-against-ass-through-clothes` | `data/mods/sex/conditions/event-is-action-press-penis-against-ass-through-clothes.condition.json` | `sex-dry-intimacy` | Event check for clothed frottage. |
+| `sex:event-is-action-pump-penis` | `data/mods/sex/conditions/event-is-action-pump-penis.condition.json` | `sex-penile-manual` | Event check for `sex:pump_penis`. |
+| `sex:event-is-action-pump-penis-from-up-close` | `data/mods/sex/conditions/event-is-action-pump-penis-from-up-close.condition.json` | `sex-penile-manual` | Event check for kneeling manual play. |
+| `sex:event-is-action-ride-penis-greedily` | `data/mods/sex/conditions/event-is-action-ride-penis-greedily.condition.json` | `sex-vaginal-penetration` | Event check for `sex:ride_penis_greedily`. |
+| `sex:event-is-action-rub-penis-against-penis` | `data/mods/sex/conditions/event-is-action-rub-penis-against-penis.condition.json` | `sex-dry-intimacy` | Event check for penis-to-penis frottage. |
+| `sex:event-is-action-rub-penis-between-ass-cheeks` | `data/mods/sex/conditions/event-is-action-rub-penis-between-ass-cheeks.condition.json` | `sex-dry-intimacy` | Event check for cheek frottage. |
+| `sex:event-is-action-rub-penis-over-clothes` | `data/mods/sex/conditions/event-is-action-rub-penis-over-clothes.condition.json` | `sex-penile-manual` | Event check for clothed manual play. |
+| `sex:event-is-action-rub-pussy-against-penis-through-clothes` | `data/mods/sex/conditions/event-is-action-rub-pussy-against-penis-through-clothes.condition.json` | `sex-dry-intimacy` | Event check for clothed crotch grinding. |
+| `sex:event-is-action-rub-vagina-over-clothes` | `data/mods/sex/conditions/event-is-action-rub-vagina-over-clothes.condition.json` | `sex-dry-intimacy` | Event check for clothed vulva grinding. |
+| `sex:event-is-action-slide-penis-along-labia` | `data/mods/sex/conditions/event-is-action-slide-penis-along-labia.condition.json` | `sex-vaginal-penetration` | Event check for labia teasing. |
+| `sex:event-is-action-straddling-penis-milking` | `data/mods/sex/conditions/event-is-action-straddling-penis-milking.condition.json` | `sex-vaginal-penetration` | Event check for milking loop. |
+| `sex:event-is-action-suckle-testicle` | `data/mods/sex/conditions/event-is-action-suckle-testicle.condition.json` | `sex-penile-oral` | Event check for `sex:suckle_testicle`. |
+| `sex:event-is-action-tease-asshole-with-glans` | `data/mods/sex/conditions/event-is-action-tease-asshole-with-glans.condition.json` | `sex-anal-penetration` | Event check for anal teasing. |
+
+## Scopes
+| Legacy Scope ID | File | Destination Module | Notes |
+| --- | --- | --- | --- |
+| `sex:actor_kneeling_before_target_with_covered_penis` | `data/mods/sex/scopes/actor_kneeling_before_target_with_covered_penis.scope` | `sex-penile-oral` | Supports clothed oral teasing. |
+| `sex:actor_kneeling_before_target_with_penis` | `data/mods/sex/scopes/actor_kneeling_before_target_with_penis.scope` | `sex-core` | **Shared** between manual (`pump_penis_from_up_close`) and oral actions. |
+| `sex:actor_kneeling_before_target_with_testicle` | `data/mods/sex/scopes/actor_kneeling_before_target_with_testicle.scope` | `sex-penile-oral` | Used by testicle-focused oral actions. |
+| `sex:actors_sitting_close_with_uncovered_penis` | `data/mods/sex/scopes/actors_sitting_close_with_uncovered_penis.scope` | `sex-penile-oral` | Supports seated oral teasing. |
+| `sex:actors_with_breasts_facing_each_other` | `data/mods/sex/scopes/actors_with_breasts_facing_each_other.scope` | `sex-breastplay` | Drives exposed-breast fondling. |
+| `sex:actors_with_breasts_facing_each_other_covered` | `data/mods/sex/scopes/actors_with_breasts_facing_each_other_covered.scope` | `sex-breastplay` | Clothed breast fondling. |
+| `sex:actors_with_breasts_in_intimacy` | `data/mods/sex/scopes/actors_with_breasts_in_intimacy.scope` | `sex-breastplay` | Currently unused; keep with breast intimacy helpers. |
+| `sex:actors_with_covered_penis_im_facing_away_from` | `data/mods/sex/scopes/actors_with_covered_penis_im_facing_away_from.scope` | `sex-dry-intimacy` | Supports clothed grinding from behind. |
+| `sex:actors_with_exposed_ass_facing_away` | `data/mods/sex/scopes/actors_with_exposed_ass_facing_away.scope` | `sex-dry-intimacy` | Supports penis-between-cheeks frottage. |
+| `sex:actors_with_exposed_asshole_facing_away` | `data/mods/sex/scopes/actors_with_exposed_asshole_facing_away.scope` | `sex-anal-penetration` | Required for anal teasing setups. |
+| `sex:actors_with_penis_facing_each_other` | `data/mods/sex/scopes/actors_with_penis_facing_each_other.scope` | `sex-core` | **Shared** by manual (`fondle_penis`, `pump_penis`) and frottage actions. |
+| `sex:actors_with_penis_facing_each_other_covered` | `data/mods/sex/scopes/actors_with_penis_facing_each_other_covered.scope` | `sex-penile-manual` | Clothed manual positioning. |
+| `sex:actors_with_penis_facing_straddler_covered` | `data/mods/sex/scopes/actors_with_penis_facing_straddler_covered.scope` | `sex-dry-intimacy` | Supports clothed crotch grinding. |
+| `sex:actors_with_penis_in_intimacy` | `data/mods/sex/scopes/actors_with_penis_in_intimacy.scope` | `sex-core` | **Shared helper** for any close penis contact (currently unused but neutral). |
+| `sex:actors_with_uncovered_penis_facing_each_other_or_target_facing_away` | `data/mods/sex/scopes/actors_with_uncovered_penis_facing_each_other_or_target_facing_away.scope` | `sex-vaginal-penetration` | Shared across vaginal penetration actions. |
+| `sex:actors_with_uncovered_vagina_facing_each_other_or_target_facing_away` | `data/mods/sex/scopes/actors_with_uncovered_vagina_facing_each_other_or_target_facing_away.scope` | `sex-vaginal-penetration` | Supports vaginal teasing and entry. |
+| `sex:actors_with_vagina_facing_each_other_covered` | `data/mods/sex/scopes/actors_with_vagina_facing_each_other_covered.scope` | `sex-dry-intimacy` | Clothed vulva grinding helper. |
+
+## Components
+| Legacy Component ID | File | Destination Module | Notes |
+| --- | --- | --- | --- |
+| `sex:being_fucked_vaginally` | `data/mods/sex/components/being_fucked_vaginally.component.json` | `sex-core` | **Shared** vaginal state used by multiple penetration rules. |
+| `sex:fucking_vaginally` | `data/mods/sex/components/fucking_vaginally.component.json` | `sex-core` | **Shared** vaginal state counterpart applied to penetrator. |
+
+## Cross-Mod References
+No JSON files outside `data/mods/sex/` reference `sex:` IDs (`find … | rg "sex:"` returned no matches), so renaming can proceed without immediate downstream updates.
+
+## Stakeholder Notes
+- Shared assets flagged above (`sex-core` entries) should migrate first to preserve dependencies.
+- Module-specific assets can then be redistributed according to the assignments documented here.
