@@ -266,4 +266,101 @@ describe('TargetResolutionService', () => {
       'TargetResolutionService.resolveTargets'
     );
   });
+
+  it('logs null discovery context metadata when context is unavailable for sit_down debug flow', () => {
+    const serviceSetup = {
+      setupService: jest.fn().mockReturnValue(baseLogger),
+    };
+    const service = new TargetResolutionService({
+      unifiedScopeResolver,
+      logger: baseLogger,
+      serviceSetup,
+    });
+
+    baseLogger.debug.mockImplementationOnce(() => {
+      throw new Error('halt after initial debug');
+    });
+
+    const actor = { id: 'actor-13' };
+
+    expect(() =>
+      service.resolveTargets(
+        'positioning:available_furniture',
+        actor,
+        null,
+        null,
+        'positioning:sit_down'
+      )
+    ).toThrow('halt after initial debug');
+
+    expect(unifiedScopeResolver.resolve).not.toHaveBeenCalled();
+
+    const [message, details] = baseLogger.debug.mock.calls[0];
+    expect(message).toBe('Resolving scope for sit_down');
+    expect(details).toMatchObject({
+      scopeName: 'positioning:available_furniture',
+      actionId: 'positioning:sit_down',
+      actorId: 'actor-13',
+      hasDiscoveryContext: false,
+      discoveryContextKeys: null,
+    });
+  });
+
+  it('falls back to empty metrics when resolver omits value during sit_down debug flow', () => {
+    const serviceSetup = {
+      setupService: jest.fn().mockReturnValue(baseLogger),
+    };
+    const resolverResult = {
+      success: true,
+      value: null,
+      map: jest.fn(),
+    };
+    unifiedScopeResolver.resolve.mockReturnValue(resolverResult);
+
+    const service = new TargetResolutionService({
+      unifiedScopeResolver,
+      logger: baseLogger,
+      serviceSetup,
+    });
+
+    const actor = { id: 'actor-21' };
+    const discoveryContext = { currentLocation: 'lounge', entityManager: {} };
+
+    baseLogger.debug
+      .mockImplementationOnce(() => {})
+      .mockImplementationOnce(() => {})
+      .mockImplementationOnce(() => {
+        throw new Error('halt after result debug');
+      });
+
+    expect(() =>
+      service.resolveTargets(
+        'positioning:available_furniture',
+        actor,
+        discoveryContext,
+        null,
+        'positioning:sit_down'
+      )
+    ).toThrow('halt after result debug');
+
+    expect(unifiedScopeResolver.resolve).toHaveBeenCalledWith(
+      'positioning:available_furniture',
+      expect.objectContaining({
+        actor,
+        actionContext: discoveryContext,
+      })
+    );
+
+    const [, resultDetails] = baseLogger.debug.mock.calls[2];
+    expect(baseLogger.debug.mock.calls[2][0]).toBe(
+      'UnifiedScopeResolver result for sit_down'
+    );
+    expect(resultDetails).toMatchObject({
+      success: true,
+      hasValue: false,
+      valueSize: 0,
+      entities: [],
+    });
+    expect(resolverResult.map).not.toHaveBeenCalled();
+  });
 });
