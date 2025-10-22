@@ -1,28 +1,20 @@
 import { describe, beforeEach, afterEach, expect, it } from '@jest/globals';
-import express from 'express';
 import request from 'supertest';
 
-import healthRoutes from '../../src/routes/healthRoutes.js';
+import {
+  buildHealthRoutesApp,
+  createAppConfigService,
+  createOperationalLlmConfigService,
+} from '../common/healthRoutesTestUtils.js';
 import { TestEnvironmentManager } from '../common/testServerUtils.js';
 
-/**
- * Creates an express application wired with the real health routes.
- * @returns {import('express').Express} Configured express application instance.
- */
-function createHealthApp() {
-  const app = express();
-  app.use('/health', healthRoutes);
-  return app;
-}
-
 describe('healthRoutes operational endpoint integration', () => {
-  let app;
   let envManager;
 
   beforeEach(() => {
     envManager = new TestEnvironmentManager();
     envManager.backupEnvironment();
-    app = createHealthApp();
+    envManager.cleanEnvironment();
   });
 
   afterEach(() => {
@@ -31,46 +23,60 @@ describe('healthRoutes operational endpoint integration', () => {
     }
   });
 
-  it('exposes base health metadata with uptime and timestamps', async () => {
+  it('exposes base liveness metadata with uptime and timestamps', async () => {
+    const { app } = buildHealthRoutesApp({
+      llmConfigService: createOperationalLlmConfigService(),
+    });
+
     const response = await request(app).get('/health');
 
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({
-      status: 'ok',
-      service: 'llm-proxy-server',
+      status: 'UP',
+      version: expect.any(String),
+      details: expect.objectContaining({
+        uptime: expect.any(Number),
+        memory: expect.objectContaining({
+          used: expect.any(Number),
+          total: expect.any(Number),
+        }),
+      }),
     });
     expect(typeof response.body.timestamp).toBe('string');
-    expect(typeof response.body.uptime).toBe('number');
-    expect(response.body.uptime).toBeGreaterThanOrEqual(0);
   });
 
   it('reports liveness using the real process identifier', async () => {
+    const { app } = buildHealthRoutesApp();
+
     const response = await request(app).get('/health/live');
 
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({
-      status: 'alive',
+      status: 'UP',
       service: 'llm-proxy-server',
+      pid: process.pid,
     });
-    expect(response.body.pid).toBe(process.pid);
     expect(typeof response.body.timestamp).toBe('string');
   });
 
-  it('surfaces detailed system metrics including environment snapshots', async () => {
-    envManager.setEnvironment({
-      NODE_ENV: 'test',
-      PROXY_PORT: '4800',
+  it('surfaces detailed system metrics including environment snapshots from appConfigService', async () => {
+    const appConfigService = createAppConfigService({
+      nodeEnv: 'integration-test',
+      proxyPort: 4810,
+    });
+    const { app } = buildHealthRoutesApp({
+      appConfigService,
     });
 
     const response = await request(app).get('/health/detailed');
 
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({
-      status: 'ok',
+      status: 'UP',
       service: 'llm-proxy-server',
       environment: {
-        node_env: 'test',
-        proxy_port: '4800',
+        node_env: 'integration-test',
+        proxy_port: '4810',
       },
     });
     expect(typeof response.body.uptime).toBe('number');
@@ -85,9 +91,29 @@ describe('healthRoutes operational endpoint integration', () => {
           heap_total: expect.any(Number),
           external: expect.any(Number),
         }),
+        load_average: expect.arrayContaining([
+          expect.any(Number),
+          expect.any(Number),
+          expect.any(Number),
+        ]),
       })
     );
-    expect(Array.isArray(response.body.system.load_average)).toBe(true);
-    expect(response.body.system.load_average).toHaveLength(3);
+  });
+
+  it('falls back to process environment details when appConfigService is absent', async () => {
+    envManager.setEnvironment({
+      NODE_ENV: 'fallback-test',
+      PROXY_PORT: '4900',
+    });
+
+    const { app } = buildHealthRoutesApp();
+
+    const response = await request(app).get('/health/detailed');
+
+    expect(response.status).toBe(200);
+    expect(response.body.environment).toEqual({
+      node_env: 'fallback-test',
+      proxy_port: '4900',
+    });
   });
 });
