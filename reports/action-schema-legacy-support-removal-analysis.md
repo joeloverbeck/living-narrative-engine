@@ -32,7 +32,7 @@ Actions using the new object format with `{ "primary": {...} }`:
 - `sex:fondle_breasts` - Single target format
 - `sex-penile-manual:fondle_penis` - Single target format
 - `sex-penile-manual:rub_penis_over_clothes` - Single target format
-- `sex:rub_vagina_over_clothes` - Single target format
+- `sex-dry-intimacy:rub_vagina_over_clothes` - Single target format
 
 **Positioning Mod (4/5)**
 

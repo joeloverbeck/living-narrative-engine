@@ -47,7 +47,7 @@ npm run dev
 
 ### Step 3: Play the Game
 
-Perform actions in the game that trigger the traced action (`sex:rub_vagina_over_clothes` as configured in `config/trace-config.json`).
+Perform actions in the game that trigger the traced action (`sex-dry-intimacy:rub_vagina_over_clothes` as configured in `config/trace-config.json`).
 
 ### Step 4: Check for Trace Files
 
@@ -94,7 +94,7 @@ The tracing is configured in `config/trace-config.json`:
 {
   "actionTracing": {
     "enabled": true,
-    "tracedActions": ["sex:rub_vagina_over_clothes"],
+    "tracedActions": ["sex-dry-intimacy:rub_vagina_over_clothes"],
     "outputDirectory": "./traces/rub-vagina-debugging",
     "verbosity": "verbose",
     "includeComponentData": true,

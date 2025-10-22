@@ -2,7 +2,7 @@
 
 ## Overview
 
-Expand the sex mod's teasing repertoire with an explicit penis-on-labia interaction that complements existing foreplay actions such as breathing on or licking a penis and grinding clothed anatomy. These actions share a consistent purple visual palette, rely on closeness, and differ mainly in anatomical targeting, providing strong implementation templates for copy depth, required components, and schema usage.【F:data/mods/sex-penile-oral/actions/breathe_teasingly_on_penis.action.json†L1-L24】【F:data/mods/sex-penile-oral/actions/lick_glans.action.json†L1-L24】【F:data/mods/sex/actions/rub_pussy_against_penis_through_clothes.action.json†L1-L30】
+Expand the sex mod's teasing repertoire with an explicit penis-on-labia interaction that complements existing foreplay actions such as breathing on or licking a penis and grinding clothed anatomy. These actions share a consistent purple visual palette, rely on closeness, and differ mainly in anatomical targeting, providing strong implementation templates for copy depth, required components, and schema usage.【F:data/mods/sex-penile-oral/actions/breathe_teasingly_on_penis.action.json†L1-L24】【F:data/mods/sex-penile-oral/actions/lick_glans.action.json†L1-L24】【F:data/mods/sex-dry-intimacy/actions/rub_pussy_against_penis_through_clothes.action.json†L1-L30】
 
 The new interaction must keep the same Ember Touch visual scheme as `sex-penile-manual:pump_penis` while adjusting anatomical requirements to focus on an uncovered vagina. Its scope logic should mirror `sex-core:actors_with_penis_facing_each_other` for anatomy checks and kneeling exclusions, but add the orientation flexibility provided by `positioning:close_actors_facing_each_other_or_behind_target` so the action can trigger both face-to-face and when the actor is behind a forward-facing partner.【F:data/mods/sex-penile-manual/actions/pump_penis.action.json†L1-L24】【F:data/mods/sex-core/scopes/actors_with_penis_facing_each_other.scope†L1-L11】【F:data/mods/positioning/scopes/close_actors_facing_each_other_or_behind_target.scope†L1-L15】
 
@@ -52,7 +52,7 @@ Remember to register the condition in the sex manifest conditions array.【F:dat
 
 ## Rule Requirements
 
-Create `data/mods/sex/rules/handle_slide_penis_along_labia.rule.json` modeled on the pump penis handler while adjusting target references. Reuse the same variable sequencing (`GET_NAME` actor, `GET_NAME` target, `QUERY_COMPONENT` actor position) before composing the log message.【F:data/mods/sex/rules/handle_rub_pussy_against_penis_through_clothes.rule.json†L1-L68】
+Create `data/mods/sex/rules/handle_slide_penis_along_labia.rule.json` modeled on the pump penis handler while adjusting target references. Reuse the same variable sequencing (`GET_NAME` actor, `GET_NAME` target, `QUERY_COMPONENT` actor position) before composing the log message.【F:data/mods/sex-dry-intimacy/rules/handle_rub_pussy_against_penis_through_clothes.rule.json†L1-L68】
 
 - `rule_id`: `handle_slide_penis_along_labia`.
 - `comment`: "Handles the 'sex:slide_penis_along_labia' action. Dispatches descriptive text and ends the turn.".

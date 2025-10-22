@@ -30,52 +30,30 @@
   ],
   "content": {
     "actions": [
-      "grind_ass_against_penis.action.json",
       "insert_penis_into_vagina.action.json",
       "insert_primary_penis_into_your_vagina.action.json",
-      "press_penis_against_ass_through_clothes.action.json",
-      "rub_penis_against_penis.action.json",
-      "rub_penis_between_ass_cheeks.action.json",
-      "rub_pussy_against_penis_through_clothes.action.json",
-      "rub_vagina_over_clothes.action.json",
       "slide_penis_along_labia.action.json",
       "straddling_penis_milking.action.json",
       "tease_asshole_with_glans.action.json"
     ],
     "conditions": [
-      "event-is-action-grind-ass-against-penis.condition.json",
       "event-is-action-insert-penis-into-vagina.condition.json",
       "event-is-action-insert-primary-penis-into-your-vagina.condition.json",
-      "event-is-action-press-penis-against-ass-through-clothes.condition.json",
-      "event-is-action-rub-penis-against-penis.condition.json",
-      "event-is-action-rub-penis-between-ass-cheeks.condition.json",
-      "event-is-action-rub-pussy-against-penis-through-clothes.condition.json",
-      "event-is-action-rub-vagina-over-clothes.condition.json",
       "event-is-action-slide-penis-along-labia.condition.json",
       "event-is-action-straddling-penis-milking.condition.json",
       "event-is-action-tease-asshole-with-glans.condition.json"
     ],
     "rules": [
-      "handle_grind_ass_against_penis.rule.json",
       "handle_insert_penis_into_vagina.rule.json",
       "handle_insert_primary_penis_into_your_vagina.rule.json",
-      "handle_press_penis_against_ass_through_clothes.rule.json",
-      "handle_rub_penis_against_penis.rule.json",
-      "handle_rub_penis_between_ass_cheeks.rule.json",
-      "handle_rub_pussy_against_penis_through_clothes.rule.json",
-      "handle_rub_vagina_over_clothes.rule.json",
       "handle_slide_penis_along_labia.rule.json",
       "handle_straddling_penis_milking.rule.json",
       "handle_tease_asshole_with_glans.rule.json"
     ],
     "scopes": [
-      "actors_with_covered_penis_im_facing_away_from.scope",
-      "actors_with_exposed_ass_facing_away.scope",
       "actors_with_exposed_asshole_facing_away.scope",
-      "actors_with_penis_facing_straddler_covered.scope",
       "actors_with_uncovered_penis_facing_each_other_or_target_facing_away.scope",
-      "actors_with_uncovered_vagina_facing_each_other_or_target_facing_away.scope",
-      "actors_with_vagina_facing_each_other_covered.scope"
+      "actors_with_uncovered_vagina_facing_each_other_or_target_facing_away.scope"
     ]
   }
 }

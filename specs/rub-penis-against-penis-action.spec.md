@@ -3,9 +3,9 @@
 ## Overview
 Introduce a face-to-face penis-to-penis rubbing interaction in the `sex` mod. The acting character must have an uncovered penis and be in close proximity to a partner who also has an uncovered penis within the `sex-core:actors_with_penis_facing_each_other` scope. The experience should highlight the intimate contrast between their genitalia through matching narrative and perceptible event messaging.
 
-## Action Definition: `sex:rub_penis_against_penis`
+## Action Definition: `sex-dry-intimacy:rub_penis_against_penis`
 
-- **File**: `data/mods/sex/actions/rub_penis_against_penis.action.json`
+- **File**: `data/mods/sex-dry-intimacy/actions/rub_penis_against_penis.action.json`
 - **Scope**: Primary target resolves through `sex-core:actors_with_penis_facing_each_other`.
 - **Template**: `rub your penis against {primary}'s penis`
 - **Prerequisites**:
@@ -17,15 +17,15 @@ Introduce a face-to-face penis-to-penis rubbing interaction in the `sex` mod. Th
 
 ## Rule Definition: `handle_rub_penis_against_penis`
 
-- **File**: `data/mods/sex/rules/handle_rub_penis_against_penis.rule.json`
-- **Trigger**: `core:attempt_action` filtered via `sex:event-is-action-rub-penis-against-penis`.
+- **File**: `data/mods/sex-dry-intimacy/rules/handle_rub_penis_against_penis.rule.json`
+- **Trigger**: `core:attempt_action` filtered via `sex-dry-intimacy:event-is-action-rub-penis-against-penis`.
 - **Output Message**: `{actor} rubs their penis against {primary}'s penis, making both intimately aware of the differences in their genital organs.` — this line must be used for both the successful action display and the perceptible event payload.
 - **Perception Metadata**: `perceptionType` remains `action_target_general` and the event should resolve to the actor's location and the primary target's entity ID.
 - **Macro**: Finish with `core:logSuccessAndEndTurn` for consistency with existing intimate actions.
 
 ## Condition Definition
-- **File**: `data/mods/sex/conditions/event-is-action-rub-penis-against-penis.condition.json`
-- **Logic**: Strict equality check on `event.payload.actionId` to `sex:rub_penis_against_penis`.
+- **File**: `data/mods/sex-dry-intimacy/conditions/event-is-action-rub-penis-against-penis.condition.json`
+- **Logic**: Strict equality check on `event.payload.actionId` to `sex-dry-intimacy:rub_penis_against_penis`.
 
 ## Testing Requirements
 Create comprehensive integration coverage before shipping this feature.
@@ -33,7 +33,7 @@ Create comprehensive integration coverage before shipping this feature.
 ### 1. Rule Execution Suite
 - **File**: `tests/integration/mods/sex/rub_penis_against_penis_action.test.js`
 - **Goals**:
-  - Execute the action through `ModTestFixture.forAction('sex', 'sex:rub_penis_against_penis')` with a fully wired anatomy graph containing two uncovered penises and mutual closeness.
+  - Execute the action through `ModTestFixture.forAction('sex-dry-intimacy', 'sex-dry-intimacy:rub_penis_against_penis')` with a fully wired anatomy graph containing two uncovered penises and mutual closeness.
   - Assert the shared success/perceptible message matches the specification verbatim.
   - Verify the perceptible event metadata (location, actor, target, perception type) mirrors other sex actions.
   - Include a resilience check that the rule does not misfire for unrelated actions.
@@ -41,7 +41,7 @@ Create comprehensive integration coverage before shipping this feature.
 ### 2. Action Discovery Suite
 - **File**: `tests/integration/mods/sex/rub_penis_against_penis_action_discovery.test.js`
 - **Coverage Expectations**:
-  - Seed the action index with `sex:rub_penis_against_penis` and confirm discoverability when both actors are close, facing each other, and have uncovered penises.
+  - Seed the action index with `sex-dry-intimacy:rub_penis_against_penis` and confirm discoverability when both actors are close, facing each other, and have uncovered penises.
   - Negative assertions must cover:
     - Actor missing a penis.
     - Actor penis covered by clothing.

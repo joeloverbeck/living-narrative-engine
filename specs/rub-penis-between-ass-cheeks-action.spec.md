@@ -1,23 +1,23 @@
 # Specification: Rub Penis Between Ass Cheeks Action
 
 ## Overview
-This specification defines a new action/rule combination for the 'sex' mod that allows an actor with a penis to rub it between a target's exposed ass cheeks. This action represents intimate physical contact where the actor is positioned behind the target.
+This specification defines a new action/rule combination for the 'sex-dry-intimacy' mod that allows an actor with a penis to rub it between a target's exposed ass cheeks. This action represents intimate physical contact where the actor is positioned behind the target.
 
-## Action Definition: `sex:rub_penis_between_ass_cheeks`
+## Action Definition: `sex-dry-intimacy:rub_penis_between_ass_cheeks`
 
 ### File Location
-`data/mods/sex/actions/rub_penis_between_ass_cheeks.action.json`
+`data/mods/sex-dry-intimacy/actions/rub_penis_between_ass_cheeks.action.json`
 
 ### Action Structure
 ```json
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "sex:rub_penis_between_ass_cheeks",
+  "id": "sex-dry-intimacy:rub_penis_between_ass_cheeks",
   "name": "Rub Penis Between Ass Cheeks",
   "description": "Rub your penis between the target's exposed ass cheeks.",
   "targets": {
     "primary": {
-      "scope": "sex:actors_with_exposed_ass_facing_away",
+      "scope": "sex-dry-intimacy:actors_with_exposed_ass_facing_away",
       "placeholder": "primary",
       "description": "Person to rub against from behind"
     }
@@ -35,18 +35,18 @@ This specification defines a new action/rule combination for the 'sex' mod that 
     }
   ],
   "visual": {
-    "backgroundColor": "#4a148c",
-    "textColor": "#e1bee7",
-    "hoverBackgroundColor": "#6a1b9a",
-    "hoverTextColor": "#f3e5f5"
+    "backgroundColor": "#4a2741",
+    "textColor": "#fce8f5",
+    "hoverBackgroundColor": "#5c2f51",
+    "hoverTextColor": "#ffffff"
   }
 }
 ```
 
-## Scope Definition: `sex:actors_with_exposed_ass_facing_away`
+## Scope Definition: `sex-dry-intimacy:actors_with_exposed_ass_facing_away`
 
 ### File Location
-`data/mods/sex/scopes/actors_with_exposed_ass_facing_away.scope`
+`data/mods/sex-dry-intimacy/scopes/actors_with_exposed_ass_facing_away.scope`
 
 ### Scope Structure
 ```javascript
@@ -54,7 +54,7 @@ This specification defines a new action/rule combination for the 'sex' mod that 
 // Combines positioning validation (facing away + closeness) with anatomy and clothing checks
 // Used by actions that require the actor to be behind someone with exposed ass anatomy
 // Note: ass_cheek is the body part type, left_ass and right_ass are socket IDs
-sex:actors_with_exposed_ass_facing_away := actor.components.positioning:closeness.partners[][{
+sex-dry-intimacy:actors_with_exposed_ass_facing_away := caressing:actors_with_ass_cheeks_in_intimacy[][{
   "and": [
     {
       "condition_ref": "positioning:actor-in-entity-facing-away"
@@ -85,19 +85,19 @@ sex:actors_with_exposed_ass_facing_away := actor.components.positioning:closenes
 - Target must have ass_cheek body parts (attached to left_ass and/or right_ass sockets)
 - At least one ass cheek socket (left_ass or right_ass) must be uncovered (not covered by clothing)
 
-## Condition Definition: `sex:event-is-action-rub-penis-between-ass-cheeks`
+## Condition Definition: `sex-dry-intimacy:event-is-action-rub-penis-between-ass-cheeks`
 
 ### File Location
-`data/mods/sex/conditions/event-is-action-rub-penis-between-ass-cheeks.condition.json`
+`data/mods/sex-dry-intimacy/conditions/event-is-action-rub-penis-between-ass-cheeks.condition.json`
 
 ### Condition Structure
 ```json
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "sex:event-is-action-rub-penis-between-ass-cheeks",
-  "description": "Checks if the triggering event is for the 'sex:rub_penis_between_ass_cheeks' action.",
+  "id": "sex-dry-intimacy:event-is-action-rub-penis-between-ass-cheeks",
+  "description": "Checks if the triggering event is for the 'sex-dry-intimacy:rub_penis_between_ass_cheeks' action.",
   "logic": {
-    "==": [{ "var": "event.payload.actionId" }, "sex:rub_penis_between_ass_cheeks"]
+    "==": [{ "var": "event.payload.actionId" }, "sex-dry-intimacy:rub_penis_between_ass_cheeks"]
   }
 }
 ```
@@ -105,16 +105,16 @@ sex:actors_with_exposed_ass_facing_away := actor.components.positioning:closenes
 ## Rule Definition: `handle_rub_penis_between_ass_cheeks`
 
 ### File Location
-`data/mods/sex/rules/handle_rub_penis_between_ass_cheeks.rule.json`
+`data/mods/sex-dry-intimacy/rules/handle_rub_penis_between_ass_cheeks.rule.json`
 
 ### Rule Structure
 ```json
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_rub_penis_between_ass_cheeks",
-  "comment": "Handles the 'sex:rub_penis_between_ass_cheeks' action. Dispatches descriptive text and ends the turn.",
+  "comment": "Handles the 'sex-dry-intimacy:rub_penis_between_ass_cheeks' action. Dispatches descriptive text and ends the turn.",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "sex:event-is-action-rub-penis-between-ass-cheeks" },
+  "condition": { "condition_ref": "sex-dry-intimacy:event-is-action-rub-penis-between-ass-cheeks" },
   "actions": [
     {
       "type": "GET_NAME",
@@ -186,7 +186,7 @@ sex:actors_with_exposed_ass_facing_away := actor.components.positioning:closenes
   - Entities in closeness relationship
   - Target facing away from actor (actor in target's facing_away_from array)
   - Ass sockets (left_ass, right_ass) uncovered by clothing
-- Execute the action using `ModTestFixture.forAction('sex', 'sex:rub_penis_between_ass_cheeks')`
+- Execute the action using `ModTestFixture.forAction('sex-dry-intimacy', 'sex-dry-intimacy:rub_penis_between_ass_cheeks')`
 - Verify:
   - Action executes successfully
   - Correct log message is generated

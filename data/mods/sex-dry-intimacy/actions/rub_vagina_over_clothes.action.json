@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-dry-intimacy:rub_vagina_over_clothes",
+  "name": "Rub Vagina Over Clothes",
+  "description": "Rub the target's vagina over their clothing.",
+  "targets": {
+    "primary": {
+      "scope": "sex-dry-intimacy:actors_with_vagina_facing_each_other_covered",
+      "placeholder": "primary",
+      "description": "Person with clothed vagina to rub"
+    },
+    "secondary": {
+      "scope": "clothing:target_topmost_torso_lower_clothing_no_accessories",
+      "placeholder": "secondary",
+      "description": "Clothing item over which to rub",
+      "contextFrom": "primary"
+    }
+  },
+  "required_components": {
+    "actor": [
+      "positioning:closeness"
+    ]
+  },
+  "template": "rub {primary}'s vagina over the {secondary}",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#4a2741",
+    "textColor": "#fce8f5",
+    "hoverBackgroundColor": "#5c2f51",
+    "hoverTextColor": "#ffffff"
+  }
+}

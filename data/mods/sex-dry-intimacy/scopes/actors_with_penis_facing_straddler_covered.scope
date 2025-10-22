@@ -1,0 +1,17 @@
+// Scope for intimate partners with covered penises who are being straddled by the actor
+// Builds on sex-core penis intimacy helper and adds coverage plus posture checks
+sex-dry-intimacy:actors_with_penis_facing_straddler_covered := sex-core:actors_with_penis_in_intimacy[][
+  {
+    "and": [
+      { "condition_ref": "positioning:entity-not-in-facing-away" },
+      { "isSocketCovered": [".", "penis"] },
+      { "!!": { "var": "entity.components.positioning:sitting_on" } },
+      {
+        "==": [
+          { "var": "entity.id" },
+          { "var": "actor.components.positioning:straddling_waist.target_id" }
+        ]
+      }
+    ]
+  }
+]

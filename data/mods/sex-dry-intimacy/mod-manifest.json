@@ -1,0 +1,55 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "sex-dry-intimacy",
+  "version": "1.0.0",
+  "name": "Sex - Dry Intimacy",
+  "description": "Clothed grinding and frottage actions modularized from the legacy sex pack.",
+  "author": "Living Narrative Engine Team",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    { "id": "anatomy", "version": "^1.0.0" },
+    { "id": "clothing", "version": "^1.0.0" },
+    { "id": "positioning", "version": "^1.0.0" },
+    { "id": "caressing", "version": "^1.0.0" },
+    { "id": "sex-core", "version": "^1.0.0" }
+  ],
+  "content": {
+    "actions": [
+      "grind_ass_against_penis.action.json",
+      "press_penis_against_ass_through_clothes.action.json",
+      "rub_penis_against_penis.action.json",
+      "rub_penis_between_ass_cheeks.action.json",
+      "rub_pussy_against_penis_through_clothes.action.json",
+      "rub_vagina_over_clothes.action.json"
+    ],
+    "conditions": [
+      "event-is-action-grind-ass-against-penis.condition.json",
+      "event-is-action-press-penis-against-ass-through-clothes.condition.json",
+      "event-is-action-rub-penis-against-penis.condition.json",
+      "event-is-action-rub-penis-between-ass-cheeks.condition.json",
+      "event-is-action-rub-pussy-against-penis-through-clothes.condition.json",
+      "event-is-action-rub-vagina-over-clothes.condition.json"
+    ],
+    "rules": [
+      "handle_grind_ass_against_penis.rule.json",
+      "handle_press_penis_against_ass_through_clothes.rule.json",
+      "handle_rub_penis_against_penis.rule.json",
+      "handle_rub_penis_between_ass_cheeks.rule.json",
+      "handle_rub_pussy_against_penis_through_clothes.rule.json",
+      "handle_rub_vagina_over_clothes.rule.json"
+    ],
+    "scopes": [
+      "actors_with_covered_penis_im_facing_away_from.scope",
+      "actors_with_exposed_ass_facing_away.scope",
+      "actors_with_penis_facing_straddler_covered.scope",
+      "actors_with_vagina_facing_each_other_covered.scope"
+    ],
+    "components": [],
+    "events": [],
+    "macros": [],
+    "entities": {
+      "definitions": [],
+      "instances": []
+    }
+  }
+}

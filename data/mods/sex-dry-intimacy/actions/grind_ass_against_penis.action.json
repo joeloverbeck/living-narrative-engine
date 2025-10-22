@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-dry-intimacy:grind_ass_against_penis",
+  "name": "Grind Ass Against Penis",
+  "description": "Grind your ass against the penis of someone behind you through their clothing.",
+  "targets": {
+    "primary": {
+      "scope": "sex-dry-intimacy:actors_with_covered_penis_im_facing_away_from",
+      "placeholder": "primary",
+      "description": "Person behind you with covered penis to grind against"
+    },
+    "secondary": {
+      "scope": "clothing:target_topmost_torso_lower_clothing_no_accessories",
+      "placeholder": "secondary",
+      "description": "Clothing item through which to grind",
+      "contextFrom": "primary"
+    }
+  },
+  "required_components": {
+    "actor": [
+      "positioning:closeness",
+      "positioning:facing_away"
+    ]
+  },
+  "template": "grind your ass against {primary}'s penis through the {secondary}",
+  "visual": {
+    "backgroundColor": "#4a2741",
+    "textColor": "#fce8f5",
+    "hoverBackgroundColor": "#5c2f51",
+    "hoverTextColor": "#ffffff"
+  }
+}
