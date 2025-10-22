@@ -1,110 +1,178 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+/**
+ * @file metrics-middleware-llm-id-parsing.integration.test.js
+ * @description Validates that the LLM metrics middleware correctly normalizes
+ *              diverse llmId formats—including nested OpenRouter identifiers,
+ *              simple provider conventions, and malformed inputs—while
+ *              interacting with a real Express response flow.
+ */
+
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
 import { createLlmMetricsMiddleware } from '../../src/middleware/metrics.js';
-import MetricsService from '../../src/services/metricsService.js';
 
-const createTestLogger = () => ({
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-});
+class RecordingMetricsService {
+  constructor() {
+    /** @type {Array<import('../../src/services/metricsService.js').LlmRequestMetric>} */
+    this.llmRequests = [];
+  }
 
-describe('metrics middleware LLM identifier parsing integration', () => {
+  /**
+   * @param {import('../../src/services/metricsService.js').LlmRequestMetric} payload
+   */
+  recordLlmRequest(payload) {
+    this.llmRequests.push(payload);
+  }
+}
+
+describe('Metrics middleware LLM identifier parsing integration', () => {
+  let app;
   let metricsService;
   let logger;
 
   beforeEach(() => {
-    jest.useRealTimers();
-    logger = createTestLogger();
-    metricsService = new MetricsService({
-      logger,
-      collectDefaultMetrics: false,
-    });
-  });
+    metricsService = new RecordingMetricsService();
+    logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
 
-  afterEach(() => {
-    metricsService.clear();
-  });
-
-  const buildApp = (handler) => {
-    const app = express();
+    app = express();
     app.use(express.json());
 
-    app.use((req, _res, next) => {
-      req.correlationId = `llm-${req.method}-${req.path}`;
-      next();
-    });
+    app.post(
+      '/llm/metrics-parsing',
+      (req, _res, next) => {
+        req.correlationId = req.body?.correlationId || 'llm-metrics-parsing';
+        next();
+      },
+      createLlmMetricsMiddleware({ metricsService, logger }),
+      (req, res) => {
+        const statusCode =
+          typeof req.body?.statusCode === 'number' ? req.body.statusCode : 200;
 
-    app.use(
-      '/api/llm-request',
-      createLlmMetricsMiddleware({ metricsService, logger })
-    );
+        const fallbackPayload = {
+          usage: req.body?.responseUsage ?? req.body?.usage,
+          token_usage: req.body?.token_usage,
+          data: req.body?.responseData,
+        };
 
-    app.post('/api/llm-request', handler);
+        const payload = req.body?.responsePayload ?? fallbackPayload;
 
-    return app;
-  };
-
-  it('records nested provider mapping for OpenRouter identifiers', async () => {
-    const app = buildApp((_req, res) => {
-      res.status(200).json({
-        usage: {
-          prompt_tokens: 5,
-          completion_tokens: 7,
-        },
-      });
-    });
-
-    await request(app)
-      .post('/api/llm-request')
-      .set('content-type', 'application/json')
-      .send({ llmId: 'openrouter/Anthropic/claude-3-haiku' })
-      .expect(200);
-
-    await new Promise((resolve) => setImmediate(resolve));
-    const metricsOutput = await metricsService.getMetrics();
-
-    expect(metricsOutput).toContain(
-      'llm_proxy_llm_requests_total{llm_provider="openrouter_anthropic",model="claude-3-haiku",status="success"} 1'
-    );
-    expect(metricsOutput).toContain(
-      'llm_proxy_llm_tokens_processed_total{llm_provider="openrouter_anthropic",model="claude-3-haiku",token_type="input"} 5'
-    );
-    expect(metricsOutput).toContain(
-      'llm_proxy_llm_tokens_processed_total{llm_provider="openrouter_anthropic",model="claude-3-haiku",token_type="output"} 7'
+        res.status(statusCode).json(payload ?? {});
+      }
     );
   });
 
-  it('falls back to unknown provider for non-standard identifiers while preserving the model name', async () => {
-    const app = buildApp((_req, res) => {
-      res.status(200).json({
-        usage: {
-          prompt_tokens: 11,
-          completion_tokens: 13,
+  it('normalizes provider/model pairs for diverse llmId formats end-to-end', async () => {
+    const scenarios = [
+      {
+        llmId: 987,
+        correlationId: 'numeric-identifier',
+        statusCode: 200,
+        responsePayload: {
+          usage: { prompt_tokens: 7, completion_tokens: 3 },
         },
-      });
+        expected: {
+          provider: 'unknown',
+          model: 'unknown',
+          tokens: { input: 7, output: 3 },
+          status: 'success',
+        },
+      },
+      {
+        llmId: 'OpenAI-GPT-4o-Mini',
+        correlationId: 'openai-simple',
+        statusCode: 202,
+        responsePayload: {
+          token_usage: { input: 64, output: 32 },
+        },
+        expected: {
+          provider: 'openai',
+          model: 'gpt-4o-mini',
+          tokens: { input: 64, output: 32 },
+          status: 'success',
+        },
+      },
+      {
+        llmId: 'openrouter/Anthropic/Claude-3-Haiku',
+        correlationId: 'openrouter-nested',
+        statusCode: 207,
+        responsePayload: {
+          data: {
+            usage: { prompt_tokens: 24, completion_tokens: 12 },
+          },
+        },
+        expected: {
+          provider: 'openrouter_anthropic',
+          model: 'claude-3-haiku',
+          tokens: { input: 24, output: 12 },
+          status: 'success',
+        },
+      },
+      {
+        llmId: 'enterprise.model.v1',
+        correlationId: 'fallback-provider',
+        statusCode: 429,
+        responsePayload: {},
+        expected: {
+          provider: 'unknown',
+          model: 'enterprise.model.v1',
+          tokens: null,
+          status: 'error',
+        },
+      },
+    ];
+
+    for (const scenario of scenarios) {
+      const response = await request(app)
+        .post('/llm/metrics-parsing')
+        .send({
+          llmId: scenario.llmId,
+          correlationId: scenario.correlationId,
+          statusCode: scenario.statusCode,
+          responsePayload: scenario.responsePayload,
+        });
+
+      expect(response.status).toBe(scenario.statusCode);
+    }
+
+    expect(metricsService.llmRequests).toHaveLength(scenarios.length);
+
+    scenarios.forEach((scenario, index) => {
+      const recorded = metricsService.llmRequests[index];
+
+      expect(recorded.provider).toBe(scenario.expected.provider);
+      expect(recorded.model).toBe(scenario.expected.model);
+      expect(recorded.status).toBe(scenario.expected.status);
+
+      if (scenario.expected.tokens === null) {
+        expect(recorded.tokens).toBeNull();
+      } else {
+        expect(recorded.tokens).toEqual(scenario.expected.tokens);
+      }
+
+      expect(typeof recorded.duration).toBe('number');
+      expect(recorded.duration).toBeGreaterThanOrEqual(0);
     });
 
-    await request(app)
-      .post('/api/llm-request')
-      .set('content-type', 'application/json')
-      .send({ llmId: 'CustomProvider-Experimental' })
-      .expect(200);
+    expect(logger.debug).toHaveBeenCalledTimes(scenarios.length);
+    scenarios.forEach((scenario, index) => {
+      expect(logger.debug).toHaveBeenNthCalledWith(
+        index + 1,
+        'LLM request metrics recorded',
+        expect.objectContaining({
+          provider: scenario.expected.provider,
+          model: scenario.expected.model,
+          correlationId: scenario.correlationId,
+          status: scenario.expected.status,
+        })
+      );
+    });
 
-    await new Promise((resolve) => setImmediate(resolve));
-    const metricsOutput = await metricsService.getMetrics();
-
-    expect(metricsOutput).toContain(
-      'llm_proxy_llm_requests_total{llm_provider="unknown",model="customprovider-experimental",status="success"} 1'
-    );
-    expect(metricsOutput).toContain(
-      'llm_proxy_llm_tokens_processed_total{llm_provider="unknown",model="customprovider-experimental",token_type="input"} 11'
-    );
-    expect(metricsOutput).toContain(
-      'llm_proxy_llm_tokens_processed_total{llm_provider="unknown",model="customprovider-experimental",token_type="output"} 13'
-    );
+    expect(logger.error).not.toHaveBeenCalled();
   });
 });
