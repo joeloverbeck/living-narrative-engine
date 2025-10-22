@@ -16,6 +16,7 @@ import {
   dispatchValidationError,
   safeDispatchError,
 } from '../../../src/utils/safeDispatchErrorUtils.js';
+import * as dependencyUtils from '../../../src/utils/dependencyUtils.js';
 
 jest.mock('../../../src/utils/entityUtils.js', () => ({
   getEntityDisplayName: jest.fn(() => 'Mock Entity'),
@@ -293,6 +294,31 @@ describe('formatActionCommand', () => {
       error: 'placeholder substitution failed',
       details: 'formatter boom',
     });
+  });
+
+  it('continues formatting when dependency validation throws an unknown message', () => {
+    const logger = createMockLogger();
+    const dispatcher = createDispatcher();
+    const entityManager = createEntityManager();
+    const validateSpy = jest
+      .spyOn(dependencyUtils, 'validateDependencies')
+      .mockImplementation(() => {
+        throw new Error('unexpected dependency failure');
+      });
+
+    const result = formatActionCommand(
+      { id: 'mystery', template: 'study {target}' },
+      ActionTargetContext.noTarget(),
+      entityManager,
+      { logger, safeEventDispatcher: dispatcher }
+    );
+
+    expect(validateSpy).toHaveBeenCalledTimes(1);
+    expect(dispatchValidationError).not.toHaveBeenCalled();
+    expect(dispatcher.dispatch).not.toHaveBeenCalled();
+    expect(result).toEqual({ ok: true, value: 'study {target}' });
+
+    validateSpy.mockRestore();
   });
 });
 
