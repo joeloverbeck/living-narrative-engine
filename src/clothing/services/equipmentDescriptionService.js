@@ -15,6 +15,8 @@ import {
 /** @typedef {import('./clothingManagementService.js').ClothingManagementService} ClothingManagementService */
 /** @typedef {import('../../services/anatomyFormattingService.js').AnatomyFormattingService} AnatomyFormattingService */
 
+const BREAST_SOCKET_KEYWORDS = ['breast'];
+
 /**
  * Service for generating equipment descriptions for worn clothing items
  */
@@ -79,8 +81,18 @@ class EquipmentDescriptionService {
         `Generating equipment description for entity: ${entityId}`
       );
 
-      const equippedItems = await this.#getEquippedItems(entityId);
-      if (!equippedItems || equippedItems.length === 0) {
+      const { items: equippedItems, equippedData } =
+        await this.#getEquippedItems(entityId);
+
+      const exposureNotes = this.#calculateExposureDescriptions(
+        equippedData,
+        entityId
+      );
+
+      if (
+        (!equippedItems || equippedItems.length === 0) &&
+        exposureNotes.length === 0
+      ) {
         this.#logger.debug(`No equipment found for entity: ${entityId}`);
         return '';
       }
@@ -89,7 +101,7 @@ class EquipmentDescriptionService {
       const itemDescriptions =
         await this.#generateItemDescriptions(groupedItems);
 
-      return this.#formatEquipmentDescription(itemDescriptions);
+      return this.#formatEquipmentDescription(itemDescriptions, exposureNotes);
     } catch (error) {
       this.#logger.error(
         `Failed to generate equipment description for entity ${entityId}`,
@@ -103,7 +115,7 @@ class EquipmentDescriptionService {
    * Get equipped items using ClothingManagementService
    *
    * @param {string} entityId - Entity ID
-   * @returns {Promise<Array<{id: string, slotId: string, layerIndex: number, garmentId: string}>>}
+   * @returns {Promise<{items: Array<{id: string, slotId: string, layerIndex: number, garmentId: string}>, equippedData: object|null}>}
    * @private
    */
   async #getEquippedItems(entityId) {
@@ -116,12 +128,16 @@ class EquipmentDescriptionService {
         this.#logger.warn(
           `Failed to get equipped items for entity ${entityId}: ${response.errors?.join(', ')}`
         );
-        return [];
+        return { items: [], equippedData: null };
       }
 
-      const equippedData = response.equipped;
-      if (!equippedData || typeof equippedData !== 'object') {
-        return [];
+      const equippedData =
+        response.equipped && typeof response.equipped === 'object'
+          ? response.equipped
+          : {};
+
+      if (Object.keys(equippedData).length === 0) {
+        return { items: [], equippedData };
       }
 
       // Transform the equipped object structure to array format
@@ -147,13 +163,20 @@ class EquipmentDescriptionService {
       }
 
       // Sort by layer index (outer to inner)
-      return formattedItems.sort((a, b) => b.layerIndex - a.layerIndex);
+      const sortedItems = formattedItems.sort(
+        (a, b) => b.layerIndex - a.layerIndex
+      );
+
+      return {
+        items: sortedItems,
+        equippedData,
+      };
     } catch (error) {
       this.#logger.error(
         `Failed to get equipped items for entity ${entityId}`,
         error
       );
-      return [];
+      return { items: [], equippedData: null };
     }
   }
 
@@ -422,11 +445,12 @@ class EquipmentDescriptionService {
    * Format the complete equipment description
    *
    * @param {Array<{category: string, descriptions: string[]}>} itemDescriptions
+   * @param {string[]} [exposureNotes] - Exposure notes describing uncovered anatomy
    * @returns {string} Formatted equipment description
    * @private
    */
-  #formatEquipmentDescription(itemDescriptions) {
-    if (itemDescriptions.length === 0) {
+  #formatEquipmentDescription(itemDescriptions, exposureNotes = []) {
+    if (itemDescriptions.length === 0 && exposureNotes.length === 0) {
       return '';
     }
 
@@ -463,15 +487,110 @@ class EquipmentDescriptionService {
     const suffix = config.suffix || '.';
     const itemSeparator = config.itemSeparator || ' | ';
 
+    const exposuresText =
+      exposureNotes.length > 0 ? exposureNotes.join(' ') : '';
+
     // Format as a sentence with proper separators
-    if (allDescriptions.length === 1) {
-      return `${prefix}${allDescriptions[0]}${suffix}`;
+    let baseDescription = '';
+
+    if (allDescriptions.length === 0) {
+      if (!exposuresText) {
+        return '';
+      }
+      return `${prefix}${exposuresText}`.trim();
+    } else if (allDescriptions.length === 1) {
+      baseDescription = `${prefix}${allDescriptions[0]}${suffix}`;
     } else if (allDescriptions.length === 2) {
-      return `${prefix}${allDescriptions[0]} and ${allDescriptions[1]}${suffix}`;
+      baseDescription = `${prefix}${allDescriptions[0]} and ${allDescriptions[1]}${suffix}`;
     } else {
       const lastItem = allDescriptions.pop();
-      return `${prefix}${allDescriptions.join(itemSeparator)}, and ${lastItem}${suffix}`;
+      baseDescription = `${prefix}${allDescriptions.join(itemSeparator)}, and ${lastItem}${suffix}`;
     }
+
+    if (!exposuresText) {
+      return baseDescription;
+    }
+
+    return `${baseDescription} ${exposuresText}`.trim();
+  }
+
+  /**
+   * @description Determine whether any torso exposure notes should be added to the equipment description.
+   * @param {object|null} equippedData - Raw equipped slot data keyed by slot identifier.
+   * @param {string} entityId - Identifier for the entity whose equipment is being described.
+   * @returns {string[]} Array of exposure note sentences.
+   */
+  #calculateExposureDescriptions(equippedData, entityId) {
+    const exposureNotes = [];
+
+    const slotMetadata = this.#entityManager.getComponentData(
+      entityId,
+      'clothing:slot_metadata'
+    );
+
+    const slotMappings =
+      slotMetadata && typeof slotMetadata === 'object'
+        ? slotMetadata.slotMappings
+        : null;
+
+    if (!slotMappings || typeof slotMappings !== 'object') {
+      return exposureNotes;
+    }
+
+    const torsoUpperMapping = slotMappings.torso_upper;
+    if (
+      torsoUpperMapping &&
+      this.#isSlotUnoccupied(equippedData, 'torso_upper')
+    ) {
+      exposureNotes.push('Torso is fully exposed.');
+
+      if (
+        Array.isArray(torsoUpperMapping.coveredSockets) &&
+        this.#slotCoversBreasts(torsoUpperMapping.coveredSockets)
+      ) {
+        exposureNotes.push('The breasts are exposed.');
+      }
+    }
+
+    const torsoLowerMapping = slotMappings.torso_lower;
+    if (
+      torsoLowerMapping &&
+      this.#isSlotUnoccupied(equippedData, 'torso_lower')
+    ) {
+      exposureNotes.push('Genitals are fully exposed.');
+    }
+
+    return exposureNotes;
+  }
+
+  /**
+   * @description Determine whether the given clothing slot currently has no equipped garments.
+   * @param {object|null} equippedData - Raw equipped slot data keyed by slot identifier.
+   * @param {string} slotId - Identifier of the clothing slot to inspect.
+   * @returns {boolean} True when the slot has no layers equipped.
+   */
+  #isSlotUnoccupied(equippedData, slotId) {
+    if (!equippedData || typeof equippedData !== 'object') {
+      return true;
+    }
+
+    const slotLayers = equippedData[slotId];
+    if (!slotLayers || typeof slotLayers !== 'object') {
+      return true;
+    }
+
+    return Object.values(slotLayers).every((layerValue) => !layerValue);
+  }
+
+  /**
+   * @description Check whether a slot's covered sockets include breast anatomy.
+   * @param {string[]} sockets - Socket identifiers covered by the slot.
+   * @returns {boolean} True if any socket corresponds to breast anatomy.
+   */
+  #slotCoversBreasts(sockets) {
+    return sockets.some((socket) =>
+      BREAST_SOCKET_KEYWORDS.some((keyword) => socket.includes(keyword))
+    );
   }
 }
 
