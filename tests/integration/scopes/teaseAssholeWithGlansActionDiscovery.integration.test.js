@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for tease_asshole_with_glans action discovery
+ * @file Integration tests for sex-anal-penetration:tease_asshole_with_glans action discovery
  * @description Tests that the actors_with_exposed_asshole_facing_away scope properly filters
  * actors based on asshole socket coverage, facing direction, and closeness
  */
@@ -44,13 +44,13 @@ import path from 'path';
 const assholeScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../data/mods/sex/scopes/actors_with_exposed_asshole_facing_away.scope'
+    '../../../data/mods/sex-anal-penetration/scopes/actors_with_exposed_asshole_facing_away.scope'
   ),
   'utf8'
 );
 
 // Import actual action files
-import teaseAssholeAction from '../../../data/mods/sex/actions/tease_asshole_with_glans.action.json';
+import teaseAssholeAction from '../../../data/mods/sex-anal-penetration/actions/tease_asshole_with_glans.action.json';
 
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
 
@@ -128,8 +128,8 @@ describe('Tease Asshole With Glans Action Discovery Integration Tests', () => {
     scopeRegistry.clear();
 
     scopeRegistry.initialize({
-      'sex:actors_with_exposed_asshole_facing_away': scopeDefinitions.get(
-        'sex:actors_with_exposed_asshole_facing_away'
+      'sex-anal-penetration:actors_with_exposed_asshole_facing_away': scopeDefinitions.get(
+        'sex-anal-penetration:actors_with_exposed_asshole_facing_away'
       ),
     });
 
@@ -139,7 +139,7 @@ describe('Tease Asshole With Glans Action Discovery Integration Tests', () => {
     prerequisiteEvaluationService = {
       evaluate: jest.fn().mockImplementation((prerequisites, actionDef, actor, trace) => {
         // Check if the actor has a penis for this specific action
-        if (actionDef.id === 'sex:tease_asshole_with_glans' && prerequisites) {
+        if (actionDef.id === 'sex-anal-penetration:tease_asshole_with_glans' && prerequisites) {
           // Check if actor has penis using the hasPartOfType operator
           const hasPartOfTypeLogic = { hasPartOfType: ['actor', 'penis'] };
           const context = { actor };
@@ -489,7 +489,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const teaseActions = result.actions.filter(
-        (action) => action.id === 'sex:tease_asshole_with_glans'
+        (action) => action.id === 'sex-anal-penetration:tease_asshole_with_glans'
       );
       expect(teaseActions).toHaveLength(1);
       expect(teaseActions[0].params.targetId).toBe('target1');
@@ -515,7 +515,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert - action should NOT be available when target wears clothing
       const teaseActions = result.actions.filter(
-        (action) => action.id === 'sex:tease_asshole_with_glans'
+        (action) => action.id === 'sex-anal-penetration:tease_asshole_with_glans'
       );
       expect(teaseActions).toHaveLength(0);
     });
@@ -644,7 +644,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert - action should NOT be available when target wears underwear
       const teaseActions = result.actions.filter(
-        (action) => action.id === 'sex:tease_asshole_with_glans'
+        (action) => action.id === 'sex-anal-penetration:tease_asshole_with_glans'
       );
       expect(teaseActions).toHaveLength(0);
     });
@@ -666,7 +666,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const teaseActions = result.actions.filter(
-        (action) => action.id === 'sex:tease_asshole_with_glans'
+        (action) => action.id === 'sex-anal-penetration:tease_asshole_with_glans'
       );
       expect(teaseActions).toHaveLength(0);
     });
@@ -688,7 +688,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const teaseActions = result.actions.filter(
-        (action) => action.id === 'sex:tease_asshole_with_glans'
+        (action) => action.id === 'sex-anal-penetration:tease_asshole_with_glans'
       );
       expect(teaseActions).toHaveLength(0);
     });
@@ -710,7 +710,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const teaseActions = result.actions.filter(
-        (action) => action.id === 'sex:tease_asshole_with_glans'
+        (action) => action.id === 'sex-anal-penetration:tease_asshole_with_glans'
       );
       expect(teaseActions).toHaveLength(0);
     });
