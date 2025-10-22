@@ -46,6 +46,16 @@ Keep migrations anchored to the existing documentation instead of inventing para
 - `tests/common/mods/scopeResolverHelpers.js` – shared scope registration helpers for positioning, discovery, and inventory
   flows.
 
+## Migration Baseline Tracking
+
+Use the following table to capture the state of legacy helper usage before each migration batch begins. Tracking the counts
+for manual builders, assertion helpers, and domain matcher adoption makes it easy to measure progress as suites are
+modernised.
+
+| Batch | Captured On | Suites using `ModEntityBuilder` | Suites using `ModAssertionHelpers` | Suites importing `domainMatchers.js` | Notes |
+| --- | --- | --- | --- | --- | --- |
+| Batch 1 (MODTESTROB-010-01) | 2025-10-22 | 127 | 29 | 0 | Baseline established prior to migrating priority integration suites. |
+
 ---
 
 ## Migration Quick Reference
