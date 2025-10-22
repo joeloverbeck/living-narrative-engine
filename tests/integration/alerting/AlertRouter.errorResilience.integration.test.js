@@ -1,45 +1,59 @@
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import AlertRouter from '../../../src/alerting/alertRouter.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
 import EventBus from '../../../src/events/eventBus.js';
-import GameDataRepository from '../../../src/data/gameDataRepository.js';
-import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import {
   DISPLAY_ERROR_ID,
-  DISPLAY_WARNING_ID,
   SYSTEM_ERROR_OCCURRED_ID,
   SYSTEM_WARNING_OCCURRED_ID,
 } from '../../../src/constants/eventIds.js';
 
-const registerEventDefinition = (registry, eventId) => {
-  registry.store('events', eventId, {
-    id: eventId,
-    name: eventId,
-    description: 'alert-router-integration-event',
-  });
-};
+class RecordingLogger {
+  constructor() {
+    this.calls = { debug: [], info: [], warn: [], error: [] };
+  }
 
-const createLogger = () => ({
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-});
+  debug(...args) {
+    this.calls.debug.push(args);
+  }
 
-const createAlertRouterEnvironment = () => {
-  const logger = createLogger();
-  const registry = new InMemoryDataRegistry({ logger });
-  const gameDataRepository = new GameDataRepository(registry, logger);
-  const schemaValidator = {
-    isSchemaLoaded: () => true,
-    validate: () => ({ isValid: true }),
-  };
+  info(...args) {
+    this.calls.info.push(args);
+  }
+
+  warn(...args) {
+    this.calls.warn.push(args);
+  }
+
+  error(...args) {
+    this.calls.error.push(args);
+  }
+}
+
+class NullGameDataRepository {
+  getEventDefinition() {
+    return null;
+  }
+}
+
+class NoopSchemaValidator {
+  isSchemaLoaded() {
+    return false;
+  }
+
+  validate() {
+    return { isValid: true, errors: [] };
+  }
+}
+
+function createAlertRouterEnvironment() {
+  const logger = new RecordingLogger();
   const eventBus = new EventBus({ logger });
   const validatedEventDispatcher = new ValidatedEventDispatcher({
     eventBus,
-    gameDataRepository,
-    schemaValidator,
+    gameDataRepository: new NullGameDataRepository(),
+    schemaValidator: new NoopSchemaValidator(),
     logger,
   });
   const safeEventDispatcher = new SafeEventDispatcher({
@@ -47,52 +61,47 @@ const createAlertRouterEnvironment = () => {
     logger,
   });
 
-  [
-    SYSTEM_WARNING_OCCURRED_ID,
-    SYSTEM_ERROR_OCCURRED_ID,
-    DISPLAY_WARNING_ID,
-    DISPLAY_ERROR_ID,
-  ].forEach((eventId) => registerEventDefinition(registry, eventId));
-
   const alertRouter = new AlertRouter({ safeEventDispatcher });
 
-  return {
-    alertRouter,
-    safeEventDispatcher,
-    validatedEventDispatcher,
-  };
-};
+  return { alertRouter, safeEventDispatcher, logger };
+}
 
 describe('AlertRouter error resilience integration', () => {
+  let warnSpy;
+  let errorSpy;
+
   beforeEach(() => {
     jest.useFakeTimers();
+    warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
+    warnSpy.mockRestore();
+    errorSpy.mockRestore();
     jest.useRealTimers();
     jest.restoreAllMocks();
   });
 
-  it('logs queuing failures while the UI is not yet ready', async () => {
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  it('logs queue handling errors when corrupted state prevents enqueueing', async () => {
     const { alertRouter, safeEventDispatcher } = createAlertRouterEnvironment();
-
-    alertRouter.queue.push = () => {
-      throw new Error('queue push failure');
-    };
+    alertRouter.queue = null;
 
     await safeEventDispatcher.dispatch(SYSTEM_WARNING_OCCURRED_ID, {
-      message: 'will not enqueue',
+      message: 'should be ignored due to corruption',
     });
 
-    expect(errorSpy).toHaveBeenCalledWith(
-      'AlertRouter error:',
-      expect.objectContaining({ message: 'queue push failure' })
-    );
+    expect(
+      errorSpy.mock.calls.some(
+        ([message, err]) =>
+          message === 'AlertRouter error:' &&
+          err instanceof Error &&
+          err.message.includes('push')
+      )
+    ).toBe(true);
   });
 
-  it('captures flush-level failures if queued event iteration throws', async () => {
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  it('captures flush iteration failures and resets its internal queue', async () => {
     const { alertRouter, safeEventDispatcher } = createAlertRouterEnvironment();
 
     await safeEventDispatcher.dispatch(SYSTEM_WARNING_OCCURRED_ID, {
@@ -105,55 +114,102 @@ describe('AlertRouter error resilience integration', () => {
       throw new Error('iteration failure');
     };
 
-    jest.advanceTimersByTime(5000);
+    await jest.advanceTimersByTimeAsync(5000);
 
-    expect(errorSpy).toHaveBeenCalledWith(
-      'AlertRouter flush error:',
-      expect.objectContaining({ message: 'iteration failure' })
-    );
+    expect(
+      errorSpy.mock.calls.some(
+        ([message, err]) =>
+          message === 'AlertRouter flush error:' &&
+          err instanceof Error &&
+          err.message === 'iteration failure'
+      )
+    ).toBe(true);
     expect(alertRouter.queue).toEqual([]);
     expect(alertRouter.flushTimer).toBeNull();
   });
 
-  it('logs forwarding failures when notifyUIReady hits a bad stage', async () => {
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  it('logs and skips invalid queued entries when notifying UI readiness', async () => {
     const { alertRouter, safeEventDispatcher } = createAlertRouterEnvironment();
 
     await safeEventDispatcher.dispatch(SYSTEM_WARNING_OCCURRED_ID, {
-      message: 'queued warning',
+      message: 'queued before corruption',
     });
 
-    alertRouter.forwardToUI = () => {
-      throw new Error('forward failure');
-    };
+    alertRouter.queue[0] = null;
 
     alertRouter.notifyUIReady();
 
-    expect(errorSpy).toHaveBeenCalledWith(
-      'AlertRouter error forwarding queued event:',
-      expect.objectContaining({ message: 'forward failure' })
-    );
+    expect(
+      errorSpy.mock.calls.some(
+        ([message, err]) =>
+          message === 'AlertRouter error forwarding queued event:' &&
+          err instanceof Error
+      )
+    ).toBe(true);
     expect(alertRouter.queue).toEqual([]);
     expect(alertRouter.uiReady).toBe(true);
   });
 
-  it('captures dispatch failures when the UI is already ready', async () => {
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    const { alertRouter, validatedEventDispatcher } =
-      createAlertRouterEnvironment();
+  it('logs dispatch failures while forwarding events after UI ready', async () => {
+    const { alertRouter, safeEventDispatcher } = createAlertRouterEnvironment();
+    alertRouter.notifyUIReady();
 
-    alertRouter.uiReady = true;
-    alertRouter.dispatcher.dispatch = () => {
-      throw new Error('dispatch failure');
+    const dispatchError = new Error('dispatch failure');
+    const originalDispatch = alertRouter.dispatcher.dispatch;
+    const boundOriginalDispatch = originalDispatch.bind(alertRouter.dispatcher);
+    alertRouter.dispatcher.dispatch = (eventName, payload, options) => {
+      if (eventName === DISPLAY_ERROR_ID) {
+        throw dispatchError;
+      }
+      return boundOriginalDispatch(eventName, payload, options);
     };
 
-    await validatedEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-      message: 'immediate error',
+    await safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'should trigger dispatch error',
     });
 
-    expect(errorSpy).toHaveBeenCalledWith(
-      'AlertRouter dispatch error:',
-      expect.objectContaining({ message: 'dispatch failure' })
-    );
+    expect(
+      errorSpy.mock.calls.some(
+        ([message, err]) =>
+          message === 'AlertRouter dispatch error:' && err === dispatchError
+      )
+    ).toBe(true);
+
+    alertRouter.dispatcher.dispatch = originalDispatch;
+  });
+
+  it('still flushes queued error events to the console before failure', async () => {
+    const { alertRouter, safeEventDispatcher } = createAlertRouterEnvironment();
+
+    await safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'error before iteration failure',
+    });
+
+    expect(alertRouter.queue).toHaveLength(1);
+
+    const originalForEach = alertRouter.queue.forEach.bind(alertRouter.queue);
+    alertRouter.queue.forEach = (...args) => {
+      originalForEach(...args);
+      throw new Error('post-flush failure');
+    };
+
+    await jest.advanceTimersByTimeAsync(5000);
+
+    expect(
+      errorSpy.mock.calls.some(
+        ([message, err]) =>
+          message === 'AlertRouter flush error:' &&
+          err instanceof Error &&
+          err.message === 'post-flush failure'
+      )
+    ).toBe(true);
+    expect(
+      errorSpy.mock.calls.some(([message]) => message === 'AlertRouter dispatch error:')
+    ).toBe(false);
+    expect(
+      errorSpy.mock.calls.some(([msg]) => msg === 'error before iteration failure')
+    ).toBe(true);
+    expect(alertRouter.queue).toEqual([]);
+    expect(alertRouter.flushTimer).toBeNull();
   });
 });
