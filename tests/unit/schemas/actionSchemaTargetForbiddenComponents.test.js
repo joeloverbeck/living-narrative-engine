@@ -346,6 +346,7 @@ describe('Action Schema Target Forbidden Components', () => {
         'core:actor',
         'positioning:kneeling_before',
         'mod_name:component_name',
+        'mod-name:component-name',
         'MOD123:COMPONENT456',
         'a:b',
         'very_long_mod_name:very_long_component_name'
@@ -375,8 +376,6 @@ describe('Action Schema Target Forbidden Components', () => {
         'too:many:colons',
         ':starts_with_colon',
         'ends_with_colon:',
-        'has-dash:component',
-        'component:has-dash',
         'has space:component',
         'component:has space',
         'has.dot:component',

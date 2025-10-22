@@ -94,6 +94,7 @@ describe('ActionDefinitionValidator', () => {
       'my_mod:custom_action',
       'namespace123:identifier456',
       'mod_name:action-name',
+      'test-namespace:action',
       'a:b',
     ];
 
@@ -117,7 +118,6 @@ describe('ActionDefinitionValidator', () => {
       'empty-identifier:',
       'test::double-colon',
       'test:id:extra-colon',
-      'test-namespace:id', // hyphen in namespace not allowed
       'test:',
       ':test',
       '',
