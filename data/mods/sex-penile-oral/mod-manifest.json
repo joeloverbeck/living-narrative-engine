@@ -29,6 +29,7 @@
       "breathe_teasingly_on_penis.action.json",
       "breathe_teasingly_on_penis_sitting_close.action.json",
       "lick_glans.action.json",
+      "lick_glans_sitting_close.action.json",
       "lick_testicles_sensually.action.json",
       "nuzzle_penis_through_clothing.action.json",
       "suckle_testicle.action.json"
@@ -37,6 +38,7 @@
       "event-is-action-breathe-teasingly-on-penis-sitting-close.condition.json",
       "event-is-action-breathe-teasingly-on-penis.condition.json",
       "event-is-action-lick-glans.condition.json",
+      "event-is-action-lick-glans-sitting-close.condition.json",
       "event-is-action-lick-testicles-sensually.condition.json",
       "event-is-action-nuzzle-penis-through-clothing.condition.json",
       "event-is-action-suckle-testicle.condition.json"
@@ -45,6 +47,7 @@
       "handle_breathe_teasingly_on_penis.rule.json",
       "handle_breathe_teasingly_on_penis_sitting_close.rule.json",
       "handle_lick_glans.rule.json",
+      "handle_lick_glans_sitting_close.rule.json",
       "handle_lick_testicles_sensually.rule.json",
       "handle_nuzzle_penis_through_clothing.rule.json",
       "handle_suckle_testicle.rule.json"

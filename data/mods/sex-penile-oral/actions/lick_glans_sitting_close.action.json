@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-penile-oral:lick_glans_sitting_close",
+  "name": "Lick Glans (Sitting Close)",
+  "description": "Lean in from your shared seat to lick your partner's exposed glans.",
+  "targets": {
+    "primary": {
+      "scope": "sex-core:actors_sitting_close_with_uncovered_penis",
+      "placeholder": "primary",
+      "description": "Seated partner with an exposed penis"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:sitting_on", "positioning:closeness"],
+    "primary": ["positioning:sitting_on", "positioning:closeness"]
+  },
+  "template": "lick {primary}'s glans",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#2a1a5e",
+    "textColor": "#ede7f6",
+    "hoverBackgroundColor": "#372483",
+    "hoverTextColor": "#ffffff"
+  }
+}
