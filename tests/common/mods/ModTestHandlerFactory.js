@@ -502,6 +502,10 @@ export class ModTestHandlerFactory {
       kissing: this.createHandlersWithMouthEngagement.bind(this),
     };
 
+    if (typeof modCategory === 'string' && modCategory.startsWith('sex-')) {
+      return this.createHandlersWithComponentMutations.bind(this);
+    }
+
     return (
       categoryMappings[modCategory] || this.createStandardHandlers.bind(this)
     );
