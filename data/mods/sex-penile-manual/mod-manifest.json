@@ -33,8 +33,8 @@
     ],
     "conditions": [
       "event-is-action-fondle-penis.condition.json",
-      "event-is-action-pump-penis.condition.json",
       "event-is-action-pump-penis-from-up-close.condition.json",
+      "event-is-action-pump-penis.condition.json",
       "event-is-action-rub-penis-over-clothes.condition.json"
     ],
     "rules": [
@@ -43,7 +43,9 @@
       "handle_pump_penis_from_up_close.rule.json",
       "handle_rub_penis_over_clothes.rule.json"
     ],
-    "scopes": ["actors_with_penis_facing_each_other_covered.scope"],
+    "scopes": [
+      "actors_with_penis_facing_each_other_covered.scope"
+    ],
     "components": [],
     "events": [],
     "macros": [],
