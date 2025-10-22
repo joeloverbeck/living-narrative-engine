@@ -17,6 +17,29 @@ const FURNITURE_ID = 'test:furniture';
 const ROOM_ID = 'room1';
 
 /**
+ * Builds a multi-target payload that mirrors the production event builder.
+ *
+ * @param {string} primaryId - Primary target entity ID.
+ * @param {string} secondaryId - Secondary target entity ID.
+ * @returns {object} Multi-target payload structure.
+ */
+function createMultiTargetPayload(primaryId = TARGET_ID, secondaryId = FURNITURE_ID) {
+  return {
+    targets: {
+      primary: { entityId: primaryId },
+      secondary: { entityId: secondaryId },
+    },
+    hasTargets: true,
+    hasMultipleTargets: true,
+    resolvedTargetCount: 2,
+    primaryId,
+    secondaryId,
+    tertiaryId: null,
+    targetId: primaryId,
+  };
+}
+
+/**
  * Creates the default entities used by the action tests.
  *
  * @returns {object[]} Array of entities ready for fixture.reset.
@@ -79,12 +102,7 @@ describe('Violence Mod: push_onto_lying_furniture action', () => {
 
     await testFixture.executeAction(ACTOR_ID, TARGET_ID, {
       secondaryTargetId: FURNITURE_ID,
-      additionalPayload: {
-        primaryTargetId: TARGET_ID,
-        secondaryTargetId: FURNITURE_ID,
-        primaryId: TARGET_ID,
-        secondaryId: FURNITURE_ID,
-      },
+      additionalPayload: createMultiTargetPayload(),
     });
 
     const actorAfter = testFixture.entityManager.getEntityInstance(ACTOR_ID);
@@ -107,12 +125,7 @@ describe('Violence Mod: push_onto_lying_furniture action', () => {
 
     await testFixture.executeAction(ACTOR_ID, TARGET_ID, {
       secondaryTargetId: FURNITURE_ID,
-      additionalPayload: {
-        primaryTargetId: TARGET_ID,
-        secondaryTargetId: FURNITURE_ID,
-        primaryId: TARGET_ID,
-        secondaryId: FURNITURE_ID,
-      },
+      additionalPayload: createMultiTargetPayload(),
     });
 
     const expectedMessage = 'Rhea pushes Noah down roughly onto Steel Table.';

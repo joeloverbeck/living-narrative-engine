@@ -17,14 +17,14 @@
     {
       "type": "GET_NAME",
       "parameters": {
-        "entity_ref": "{event.payload.primaryTargetId}",
+        "entity_ref": "primary",
         "result_variable": "primaryName"
       }
     },
     {
       "type": "GET_NAME",
       "parameters": {
-        "entity_ref": "{event.payload.secondaryTargetId}",
+        "entity_ref": "secondary",
         "result_variable": "furnitureName"
       }
     },
@@ -41,17 +41,17 @@
       "comment": "Sever closeness between actor and primary target after the push",
       "parameters": {
         "actor_id": "{event.payload.actorId}",
-        "target_id": "{event.payload.primaryTargetId}"
+        "target_id": "{event.payload.primaryId}"
       }
     },
     {
       "type": "ADD_COMPONENT",
       "comment": "Add lying_down component to the primary target referencing the furniture",
       "parameters": {
-        "entity_ref": "{event.payload.primaryTargetId}",
+        "entity_ref": "primary",
         "component_type": "positioning:lying_down",
         "value": {
-          "furniture_id": "{event.payload.secondaryTargetId}"
+          "furniture_id": "{event.payload.secondaryId}"
         }
       }
     },
@@ -59,7 +59,7 @@
       "type": "LOCK_MOVEMENT",
       "comment": "Prevent the primary target from moving while pinned",
       "parameters": {
-        "actor_id": "{event.payload.primaryTargetId}"
+        "actor_id": "{event.payload.primaryId}"
       }
     },
     {
@@ -94,7 +94,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "targetId",
-        "value": "{event.payload.primaryTargetId}"
+        "value": "{event.payload.primaryId}"
       }
     },
     {
