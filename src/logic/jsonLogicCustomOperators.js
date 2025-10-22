@@ -10,6 +10,7 @@ import { IsSocketCoveredOperator } from './operators/isSocketCoveredOperator.js'
 import { HasSittingSpaceToRightOperator } from './operators/hasSittingSpaceToRightOperator.js';
 import { CanScootCloserOperator } from './operators/canScootCloserOperator.js';
 import { IsClosestLeftOccupantOperator } from './operators/isClosestLeftOccupantOperator.js';
+import { IsClosestRightOccupantOperator } from './operators/isClosestRightOccupantOperator.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
@@ -122,6 +123,11 @@ export class JsonLogicCustomOperators extends BaseService {
       logger: this.#logger,
     });
 
+    const isClosestRightOccupantOp = new IsClosestRightOccupantOperator({
+      entityManager: this.#entityManager,
+      logger: this.#logger,
+    });
+
     // Register hasPartWithComponentValue operator
     jsonLogicEvaluationService.addOperation(
       'hasPartWithComponentValue',
@@ -219,6 +225,17 @@ export class JsonLogicCustomOperators extends BaseService {
       function (entityPath, targetPath, actorPath) {
         // 'this' is the evaluation context
         return isClosestLeftOccupantOp.evaluate(
+          [entityPath, targetPath, actorPath],
+          this
+        );
+      }
+    );
+
+    // Register isClosestRightOccupant operator
+    jsonLogicEvaluationService.addOperation(
+      'isClosestRightOccupant',
+      function (entityPath, targetPath, actorPath) {
+        return isClosestRightOccupantOp.evaluate(
           [entityPath, targetPath, actorPath],
           this
         );

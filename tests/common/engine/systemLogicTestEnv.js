@@ -100,15 +100,11 @@ export function createBaseRuleEnvironment({
           return undefined;
         },
       };
-      console.log(`[RULE EXPANSION] Rule "${rule.rule_id}" has ${rule.actions.length} actions BEFORE expansion`);
-      console.log(`[RULE EXPANSION] Operation types BEFORE: ${rule.actions.map(a => a.type || a.macro).join(', ')}`);
       expandedRule.actions = expandMacros(
         rule.actions,
         macroRegistry,
         testLogger
       );
-      console.log(`[RULE EXPANSION] Rule "${rule.rule_id}" has ${expandedRule.actions.length} actions AFTER expansion`);
-      console.log(`[RULE EXPANSION] Operation types AFTER: ${expandedRule.actions.map(a => a.type || a.macro).join(', ')}`);
       return expandedRule;
     }
     return rule;
@@ -698,6 +694,54 @@ export function createBaseRuleEnvironment({
           }
 
           // No occupant found to the left
+          return { success: true, value: new Set() };
+        }
+
+        if (scopeName === 'positioning:closest_rightmost_occupant') {
+          const furnitureId = context?.target?.id;
+          const actorId = context?.actor?.id;
+
+          if (!furnitureId || !actorId) {
+            return { success: true, value: new Set() };
+          }
+
+          const furniture = entityManager.getEntityInstance(furnitureId);
+          const allowsSitting = furniture?.components?.['positioning:allows_sitting'];
+          if (!allowsSitting || !Array.isArray(allowsSitting.spots)) {
+            return { success: true, value: new Set() };
+          }
+
+          const spots = allowsSitting.spots;
+          const actor = entityManager.getEntityInstance(actorId);
+          const actorSitting = actor?.components?.['positioning:sitting_on'];
+          if (!actorSitting || actorSitting.furniture_id !== furnitureId) {
+            return { success: true, value: new Set() };
+          }
+
+          const actorIndex = actorSitting.spot_index;
+
+          if (
+            typeof actorIndex !== 'number' ||
+            actorIndex >= spots.length - 1 ||
+            spots[actorIndex + 1] !== null
+          ) {
+            return { success: true, value: new Set() };
+          }
+
+          for (let i = actorIndex + 1; i < spots.length; i++) {
+            if (spots[i] !== null) {
+              const occupantId = spots[i];
+              const occupant = entityManager.getEntityInstance(occupantId);
+              const occupantSitting = occupant?.components?.['positioning:sitting_on'];
+              if (
+                occupantSitting &&
+                occupantSitting.furniture_id === furnitureId &&
+                occupantSitting.spot_index === i
+              ) {
+                return { success: true, value: new Set([occupantId]) };
+              }
+            }
+          }
           return { success: true, value: new Set() };
         }
 

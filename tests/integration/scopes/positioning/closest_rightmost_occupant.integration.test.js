@@ -1,20 +1,19 @@
 /**
- * @file Integration test for closest_leftmost_occupant scope resolution
- * Tests that the isClosestLeftOccupant operator works correctly in scope evaluation
+ * @file Integration test for closest_rightmost_occupant scope resolution
+ * Tests that the isClosestRightOccupant operator works correctly in scope evaluation
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import ConsoleLogger from '../../../../src/logging/consoleLogger.js';
 import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
 
-describe('Closest Leftmost Occupant Scope - Integration', () => {
+describe('Closest Rightmost Occupant Scope - Integration', () => {
   let logger;
   let jsonLogicEval;
 
   beforeEach(() => {
     logger = new ConsoleLogger('ERROR');
 
-    // Mock GameDataRepository with empty conditions
     const mockGameDataRepository = {
       getConditionDefinition: () => null,
     };
@@ -25,26 +24,20 @@ describe('Closest Leftmost Occupant Scope - Integration', () => {
     });
 
     // Register a no-op implementation so evaluation succeeds during the whitelist check
-    jsonLogicEval.addOperation('isClosestLeftOccupant', () => false);
+    jsonLogicEval.addOperation('isClosestRightOccupant', () => false);
   });
 
-  it('should validate isClosestLeftOccupant operator without errors', () => {
-    // Create simple test setup to verify operator is in whitelist
-    // This test verifies the fix for the validation error
-
-    // The operator is used in a JSON Logic filter
+  it('should validate isClosestRightOccupant operator without errors', () => {
     const jsonLogicRule = {
-      isClosestLeftOccupant: ['entity', 'target', 'actor'],
+      isClosestRightOccupant: ['entity', 'target', 'actor'],
     };
 
-    // Test that validation passes (no error thrown/logged)
     const result = jsonLogicEval.evaluate(jsonLogicRule, {
       entity: { id: 'test_entity' },
       target: { id: 'test_target' },
       actor: { id: 'test_actor' },
     });
 
-    // Should return a boolean without validation errors
     expect(typeof result).toBe('boolean');
   });
 });

@@ -89,7 +89,7 @@ export function createActionValidationProxy(actionDef, context = 'Action') {
           value: obj.id,
           message: `Action ID '${obj.id}' missing namespace separator ':'`,
           suggestion:
-            'Use format: "modId:actionId" (e.g., "positioning:scoot_closer")',
+            'Use format: "modId:actionId" (e.g., "positioning:scoot_closer" or "positioning:scoot_closer_right")',
         });
       }
 
