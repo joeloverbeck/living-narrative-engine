@@ -192,7 +192,7 @@ export class ActionDefinitionValidator {
     // Validate namespace:identifier format
     // Namespace: alphanumeric + underscore (must start with letter or underscore)
     // Identifier: alphanumeric + underscore + hyphen (must start with letter, underscore, or number)
-    return /^[a-zA-Z_][a-zA-Z0-9_]*:[a-zA-Z0-9_][a-zA-Z0-9_-]*$/.test(id);
+    return /^[a-zA-Z_][a-zA-Z0-9_-]*:[a-zA-Z0-9_][a-zA-Z0-9_-]*$/.test(id);
   }
 }
 

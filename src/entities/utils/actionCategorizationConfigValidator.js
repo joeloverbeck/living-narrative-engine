@@ -132,7 +132,7 @@ function validateNamespaceOrder(namespaceOrder, logger) {
   }
 
   const seen = new Set();
-  const namespacePattern = /^[a-z][a-z0-9_]*[a-z0-9]$|^[a-z]$/;
+  const namespacePattern = /^[a-z][a-z0-9_-]*[a-z0-9]$|^[a-z]$/;
 
   for (let i = 0; i < namespaceOrder.length; i++) {
     const namespace = namespaceOrder[i];

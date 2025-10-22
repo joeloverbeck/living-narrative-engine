@@ -450,7 +450,7 @@ class GracefulDegradation {
         }
         
         // Extract references
-        const refPattern = /([a-zA-Z][a-zA-Z0-9_]*):([a-zA-Z][a-zA-Z0-9_-]*)/g;
+        const refPattern = /([a-zA-Z][a-zA-Z0-9_-]*):([a-zA-Z][a-zA-Z0-9_-]*)/g;
         const references = new Set();
         let match;
         while ((match = refPattern.exec(context.rawData)) !== null) {
