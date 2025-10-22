@@ -779,16 +779,10 @@ class BaseModTestFixture {
   async loadActionDefinitions() {
     const actionsDir = resolve(`data/mods/${this.modId}/actions`);
 
-    console.log('\n=== LOADING ACTION DEFINITIONS ===');
-    console.log('Actions directory:', actionsDir);
-    console.log('Mod ID:', this.modId);
-
     try {
       const files = await fs.readdir(actionsDir);
-      console.log('All files in directory:', files);
 
       const actionFiles = files.filter(f => f.endsWith('.action.json'));
-      console.log('Action files (filtered):', actionFiles);
 
       const actions = await Promise.all(
         actionFiles.map(async (file) => {
@@ -801,17 +795,11 @@ class BaseModTestFixture {
             try {
               createActionValidationProxy(parsed, `${this.modId}:${file} action`);
             } catch (validationError) {
-              console.log(
-                `❌ Validation failed for ${file}: ${validationError.message}`
-              );
               return null;
             }
-
-            console.log(`✅ Successfully loaded ${file}: ${parsed.id}`);
             return parsed;
           } catch (error) {
             // Silently skip files that can't be loaded
-            console.log(`❌ Failed to load ${file}: ${error.message}`);
             return null;
           }
         })
@@ -819,15 +807,10 @@ class BaseModTestFixture {
 
       // Filter out nulls from failed loads
       const validActions = actions.filter(a => a !== null);
-      console.log('Total actions loaded:', validActions.length);
-      console.log('Action IDs:', validActions.map(a => a.id));
-      console.log('=== END LOADING ACTION DEFINITIONS ===\n');
 
       return validActions;
     } catch (error) {
       // If the actions directory doesn't exist or can't be read, return empty array
-      console.log(`❌ Failed to read directory: ${error.message}`);
-      console.log('=== END LOADING ACTION DEFINITIONS ===\n');
       return [];
     }
   }
@@ -1326,8 +1309,6 @@ export class ModActionTestFixture extends BaseModTestFixture {
       return result;
     }
 
-    console.log(`[EXECUTE ACTION START] Called with actorId=${actorId}, targetId=${targetId}, skipDiscovery=${skipDiscovery}`);
-
     // Load action definition if not cached (needed for validation)
     if (!this._actionDefinition) {
       const { promises: fs } = await import('fs');
@@ -1341,7 +1322,6 @@ export class ModActionTestFixture extends BaseModTestFixture {
         const resolvedPath = resolve(actionFilePath);
         const content = await fs.readFile(resolvedPath, 'utf8');
         this._actionDefinition = JSON.parse(content);
-        console.log(`[ACTION DEF] Loaded action definition from ${actionFilePath}`);
       } catch (error) {
         this.logger.warn(
           `Failed to load action definition from ${actionFilePath}: ${error.message}`
@@ -1400,8 +1380,6 @@ export class ModActionTestFixture extends BaseModTestFixture {
       };
     }
 
-    console.log(`[EXECUTE ACTION START] Actor ${actorId} components BEFORE: ${JSON.stringify(Object.keys(actorBefore.components))}`);
-
     // Note: Action definition loading and component validation now handled by
     // validateActionExecution() above. The old validation code has been removed
     // to avoid duplication and ensure consistent validation behavior.
@@ -1422,21 +1400,14 @@ export class ModActionTestFixture extends BaseModTestFixture {
       payload.primaryId = targetId;
     }
 
-    console.log(`[EXECUTE ACTION] About to dispatch action ${fullActionId}`);
-    console.log(`[EXECUTE ACTION] Forbidden component check passed, executing action`);
-
     const result = await this.eventBus.dispatch(ATTEMPT_ACTION_ID, payload);
-
-    console.log(`[EXECUTE ACTION] EventBus.dispatch returned: ${JSON.stringify(result)}`);
 
     // IMPORTANT: Give the SystemLogicInterpreter time to process the event
     // The interpreter listens to events asynchronously, so we need a small delay
     // to ensure rules are processed before the test continues
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    console.log(`[EXECUTE ACTION] After 10ms delay, checking actor components`);
     const actorAfter = this.entityManager.getEntityInstance(actorId);
-    console.log(`[EXECUTE ACTION] Actor ${actorId} components AFTER: ${JSON.stringify(Object.keys(actorAfter.components))}`);
 
     return result;
   }

@@ -49,9 +49,17 @@ const vaginaCoveredScopeContent = fs.readFileSync(
   ),
   'utf8'
 );
+const closeActorsFacingScopeContent = fs.readFileSync(
+  path.resolve(
+    __dirname,
+    '../../../data/mods/positioning/scopes/close_actors_facing_each_other.scope'
+  ),
+  'utf8'
+);
 
-// Import actual action file
+// Import actual action and condition files
 import rubVaginaOverClothesAction from '../../../data/mods/sex-dry-intimacy/actions/rub_vagina_over_clothes.action.json';
+import bothActorsFacingEachOtherCondition from '../../../data/mods/positioning/conditions/both-actors-facing-each-other.condition.json';
 
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
 
@@ -231,7 +239,12 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
       rubVaginaOverClothesAction
     );
 
-    // Store the condition
+    // Store positioning conditions used by referenced scopes
+    dataRegistry.store(
+      'conditions',
+      bothActorsFacingEachOtherCondition.id,
+      bothActorsFacingEachOtherCondition
+    );
     dataRegistry.store('conditions', 'positioning:entity-not-in-facing-away', {
       id: 'positioning:entity-not-in-facing-away',
       logic: {
@@ -265,6 +278,10 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
       vaginaCoveredScopeContent,
       'actors_with_vagina_facing_each_other_covered.scope'
     );
+    const positioningScopeDefinitions = parseScopeDefinitions(
+      closeActorsFacingScopeContent,
+      'close_actors_facing_each_other.scope'
+    );
 
     scopeRegistry = new ScopeRegistry({ logger });
     scopeRegistry.clear();
@@ -272,12 +289,20 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
     const scopeDef = scopeDefinitions.get(
       'sex-dry-intimacy:actors_with_vagina_facing_each_other_covered'
     );
+    const positioningScopeDef = positioningScopeDefinitions.get(
+      'positioning:close_actors_facing_each_other'
+    );
+
+    if (!scopeDef || !positioningScopeDef) {
+      throw new Error('Failed to load required scope definitions for test');
+    }
 
     scopeRegistry.initialize({
+      'positioning:close_actors_facing_each_other': positioningScopeDef,
       'sex-dry-intimacy:actors_with_vagina_facing_each_other_covered': scopeDef,
     });
 
-    scopeEngine = new ScopeEngine();
+    scopeEngine = new ScopeEngine({ scopeRegistry });
     const prerequisiteEvaluationService = {
       evaluateActionConditions: jest.fn().mockResolvedValue({
         success: true,
@@ -528,6 +553,65 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
           },
         },
       });
+
+      const scopeDefinition = scopeRegistry.getScope(
+        'sex-dry-intimacy:actors_with_vagina_facing_each_other_covered'
+      );
+      const baseScopeDefinition = scopeRegistry.getScope(
+        'positioning:close_actors_facing_each_other'
+      );
+      const actorInstance = entityManager.getEntityInstance('actor1');
+      const actorWithComponents = {
+        id: actorInstance.id,
+        components: actorInstance.getAllComponents(),
+      };
+      expect(actorWithComponents.components['positioning:closeness']).toBeDefined();
+      expect(
+        actorWithComponents.components['positioning:closeness'].partners
+      ).toContain('target1');
+      expect(
+        entityManager.getComponentData('target1', 'clothing:equipment')
+      ).toBeDefined();
+      expect(
+        entityManager.getComponentData('target1', 'clothing:slot_metadata')
+      ).toBeDefined();
+      const targetInstance = entityManager.getEntityInstance('target1');
+      const targetWithComponents = {
+        id: targetInstance.id,
+        components: targetInstance.getAllComponents(),
+      };
+      const evaluationContext = {
+        entity: targetWithComponents,
+        actor: actorWithComponents,
+        components: targetWithComponents.components,
+        id: targetWithComponents.id,
+      };
+      expect(
+        jsonLogicEval.evaluate(
+          { hasPartOfType: ['.', 'vagina'] },
+          evaluationContext
+        )
+      ).toBe(true);
+      expect(
+        jsonLogicEval.evaluate(
+          { isSocketCovered: ['.', 'vagina'] },
+          evaluationContext
+        )
+      ).toBe(true);
+      const baseResolved = scopeEngine.resolve(
+        baseScopeDefinition.ast,
+        actorWithComponents,
+        { entityManager, jsonLogicEval, logger }
+      );
+      expect(Array.from(baseResolved)).toContain('target1');
+
+      const resolvedIds = scopeEngine.resolve(
+        scopeDefinition.ast,
+        actorWithComponents,
+        { entityManager, jsonLogicEval, logger }
+      );
+      expect(mockBodyGraphService.findPartsByType).toHaveBeenCalled();
+      expect(Array.from(resolvedIds)).toContain('target1');
 
       // Act
       const actorEntity = entityManager.getEntityInstance('actor1');

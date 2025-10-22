@@ -258,6 +258,16 @@ export default function createArrayIterationResolver({
           if (parentValue !== null && parentValue !== undefined) {
             flattened.add(parentValue);
           }
+        } else if (node.parent.type === 'Filter') {
+          // Pass through for filter nodes that emit entity IDs
+          if (parentValue !== null && parentValue !== undefined) {
+            flattened.add(parentValue);
+          }
+        } else if (node.parent.type === 'ScopeReference') {
+          // Pass through for scope references producing direct entity IDs
+          if (parentValue !== null && parentValue !== undefined) {
+            flattened.add(parentValue);
+          }
         } else if (
           node.parent.type === 'Step' &&
           node.parent.field === 'entities' &&
