@@ -69,17 +69,17 @@ Create `data/mods/violence/rules/handle_push_onto_lying_furniture.rule.json`:
 2. `QUERY_COMPONENT` for the actor's `core:position` to capture `locationId` for logging.
 3. `BREAK_CLOSENESS_WITH_TARGET` to sever the closeness link between the actor and the primary target (mirror the `handle_push_off` rule implementation):
    - `actor_id`: `{event.payload.actorId}`
-   - `target_id`: `{event.payload.primaryTargetId}`
+   - `target_id`: `{event.payload.primaryId}`
 4. `ADD_COMPONENT` on the **primary** target:
    - `component_type`: `positioning:lying_down`
-   - `value`: `{ "furniture_id": "{event.payload.secondaryTargetId}" }`
-5. `LOCK_MOVEMENT` for the primary target to mirror lying state restrictions (`actor_id`: `{event.payload.primaryTargetId}`).
+   - `value`: `{ "furniture_id": "{event.payload.secondaryId}" }`
+5. `LOCK_MOVEMENT` for the primary target to mirror lying state restrictions (`actor_id`: `{event.payload.primaryId}`).
 6. Prepare shared messaging values:
    - `SET_VARIABLE` `logMessage`: `{context.actorName} pushes {context.primaryName} down roughly onto {context.furnitureName}.`
    - `SET_VARIABLE` `perceptionType`: `action_target_general`.
    - `SET_VARIABLE` `perceptionEventMessage`: same string as `logMessage` (requirement).
    - `SET_VARIABLE` `locationId`: `{context.actorPosition.locationId}`.
-   - `SET_VARIABLE` `targetId`: `{event.payload.primaryTargetId}`.
+   - `SET_VARIABLE` `targetId`: `{event.payload.primaryId}`.
 7. Invoke `core:logSuccessAndEndTurn` to emit the action log and finish the turn.
 
 **Behavioral Notes**
