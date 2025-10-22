@@ -148,7 +148,7 @@ function validateNamespaceOrder(namespaceOrder, logger) {
     }
 
     if (!namespacePattern.test(namespace)) {
-      const errorMsg = `namespaceOrder[${i}] "${namespace}" must be lowercase alphanumeric with underscores`;
+      const errorMsg = `namespaceOrder[${i}] "${namespace}" must be lowercase alphanumeric with underscores or hyphens`;
       logger.error(errorMsg, { index: i, namespace });
       throw new InvalidArgumentError(
         errorMsg,

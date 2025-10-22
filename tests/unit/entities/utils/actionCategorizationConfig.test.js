@@ -201,7 +201,7 @@ describe('Action Categorization Configuration', () => {
       expect(() => {
         validateCategorizationConfig(
           {
-            namespaceOrder: ['core', 'test_ns', 'a'],
+            namespaceOrder: ['core', 'test_ns', 'core-test', 'a'],
           },
           mockLogger
         );
@@ -214,9 +214,9 @@ describe('Action Categorization Configuration', () => {
 
       expect(() => {
         validateCategorizationConfig(
-          { namespaceOrder: ['core-invalid'] },
+          { namespaceOrder: ['core invalid'] },
           mockLogger
-        ); // Dash
+        ); // Space
       }).toThrow(InvalidArgumentError);
 
       expect(() => {
