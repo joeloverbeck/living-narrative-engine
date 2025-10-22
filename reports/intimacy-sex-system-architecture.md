@@ -16,12 +16,15 @@ This report provides a comprehensive architectural analysis of the intimacy and 
 - 24 conditions for event filtering
 - 3 scope definitions for target selection
 
-**Sex Mod** (`data/mods/sex/`)
+**Sex Module Family** (modular replacement for the legacy `data/mods/sex/` package)
 
-- 4 actions for sexual interactions
-- 4 rules for action handling
-- 4 conditions for event filtering
-- 1+ scope definitions for target selection
+- `sex-core` – shared components and scopes consumed by the other sex modules
+- `sex-breastplay` – 3 actions, 3 rules, 3 conditions, and 3 scopes covering breast intimacy
+- `sex-penile-manual` – 4 actions, 4 rules, 4 conditions, and 1 scope for manual penis play
+- `sex-penile-oral` – oral-teasing and stimulation flows with matching rules/conditions
+- `sex-vaginal-penetration` – vaginal penetration actions plus supporting rules/conditions/scopes
+- `sex-dry-intimacy` – clothed grinding and frottage interactions
+- `sex-anal-penetration` – anal-teasing and penetration entries
 
 ## Action System Architecture
 
@@ -90,10 +93,10 @@ All actions follow a consistent JSON structure:
 
 | Action ID                                  | File                                  | Target Scope                                                    | Requirements                                                          | Effects             |
 | ------------------------------------------ | ------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------- | ------------------- |
-| `sex:fondle_breasts`                       | `fondle_breasts.action.json`          | `actors_with_breasts_facing_each_other`                         | Requires: `positioning:closeness`<br>Target must have exposed breasts | Sexual interaction  |
-| `sex-penile-manual:fondle_penis`           | `fondle_penis.action.json`            | `sex-core:actors_with_penis_facing_each_other`                  | Requires: `positioning:closeness`                                     | Sexual interaction  |
-| `sex-penile-manual:rub_penis_over_clothes` | `rub_penis_over_clothes.action.json`  | `sex-penile-manual:actors_with_penis_facing_each_other_covered` | Requires: `positioning:closeness`<br>Target must have covered penis   | Clothed interaction |
-| `sex-dry-intimacy:rub_vagina_over_clothes`              | `rub_vagina_over_clothes.action.json` | `actors_with_vagina_facing_each_other_covered`                  | Requires: `positioning:closeness`<br>Target must have covered vagina  | Clothed interaction |
+| `sex-breastplay:fondle_breasts`                       | `sex-breastplay/actions/fondle_breasts.action.json`          | `sex-breastplay:actors_with_breasts_facing_each_other`                         | Requires: `positioning:closeness`<br>Target must have exposed breasts | Sexual interaction  |
+| `sex-penile-manual:fondle_penis`           | `sex-penile-manual/actions/fondle_penis.action.json`            | `sex-core:actors_with_penis_facing_each_other`                  | Requires: `positioning:closeness`                                     | Sexual interaction  |
+| `sex-penile-manual:rub_penis_over_clothes` | `sex-penile-manual/actions/rub_penis_over_clothes.action.json`  | `sex-penile-manual:actors_with_penis_facing_each_other_covered` | Requires: `positioning:closeness`<br>Target must have covered penis   | Clothed interaction |
+| `sex-dry-intimacy:rub_vagina_over_clothes`              | `sex-dry-intimacy/actions/rub_vagina_over_clothes.action.json` | `sex-dry-intimacy:actors_with_vagina_facing_each_other_covered`                  | Requires: `positioning:closeness`<br>Target must have covered vagina  | Clothed interaction |
 
 ## Rule System Architecture
 
@@ -428,12 +431,15 @@ Based on the current architecture, the following areas could be expanded:
 - **Components**: 1 file in `data/mods/intimacy/components/`
 - **Scopes**: 3 files in `data/mods/intimacy/scopes/`
 
-### Sex Mod Files
+### Sex Module Family Files
 
-- **Actions**: 4 files in `data/mods/sex/actions/`
-- **Rules**: 4 files in `data/mods/sex/rules/`
-- **Conditions**: 4 files in `data/mods/sex/conditions/`
-- **Scopes**: 1+ files in `data/mods/sex/scopes/`
+- **sex-core**: Shared scopes (`actors_with_penis_*`, `actors_sitting_close_with_uncovered_penis`, etc.) and penetration components used across the family.
+- **sex-breastplay**: 3 actions, 3 rules, 3 conditions, and 3 scopes in `data/mods/sex-breastplay/`.
+- **sex-penile-manual**: 4 actions, 4 rules, 4 conditions, and 1 scope in `data/mods/sex-penile-manual/`.
+- **sex-penile-oral**: Oral-teasing actions plus matching rules and conditions in `data/mods/sex-penile-oral/`.
+- **sex-vaginal-penetration**: 5 actions, 5 rules, 5 conditions, and multiple scopes in `data/mods/sex-vaginal-penetration/`.
+- **sex-dry-intimacy**: 6 actions, 6 rules, 6 conditions, and 4 scopes in `data/mods/sex-dry-intimacy/`.
+- **sex-anal-penetration**: Anal teaser actions, rules, and scopes in `data/mods/sex-anal-penetration/`.
 
 ## Conclusion
 

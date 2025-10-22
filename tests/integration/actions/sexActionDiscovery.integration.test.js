@@ -16,7 +16,7 @@ import fs from 'fs';
 import path from 'path';
 
 // Import actual action and scope files
-import pumpPenisFromUpCloseAction from '../../../data/mods/sex/actions/pump_penis_from_up_close.action.json';
+import pumpPenisFromUpCloseAction from '../../../data/mods/sex-penile-manual/actions/pump_penis_from_up_close.action.json';
 const pumpPenisScopeContent = fs.readFileSync(
   path.resolve(
     process.cwd(),

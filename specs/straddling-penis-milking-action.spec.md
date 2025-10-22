@@ -2,22 +2,22 @@
 
 ## Overview
 
-Design a new `sex` mod action/rule pair where a female actor straddles a partner and sensually milks the partner's penis during ongoing sex. Reuse the existing penetration action's primary target scope `sex:actors_with_uncovered_penis_facing_each_other_or_target_facing_away` so the partner already has an exposed penis aligned for vaginal intimacy.【F:data/mods/sex/actions/insert_primary_penis_into_your_vagina.action.json†L6-L20】 Build on the penetration state components to model the mutual penetration relationship once the action succeeds.【F:data/mods/sex-core/components/fucking_vaginally.component.json†L1-L17】【F:data/mods/sex-core/components/being_fucked_vaginally.component.json†L1-L17】
+Design a new `sex-vaginal-penetration` mod action/rule pair where a female actor straddles a partner and sensually milks the partner's penis during ongoing sex. Reuse the existing penetration action's primary target scope `sex:actors_with_uncovered_penis_facing_each_other_or_target_facing_away` so the partner already has an exposed penis aligned for vaginal intimacy.【F:data/mods/sex-vaginal-penetration/actions/insert_primary_penis_into_your_vagina.action.json†L6-L20】 Build on the penetration state components to model the mutual penetration relationship once the action succeeds.【F:data/mods/sex-core/components/fucking_vaginally.component.json†L1-L17】【F:data/mods/sex-core/components/being_fucked_vaginally.component.json†L1-L17】
 
 ## Action Design
 
 - **Targets**
   - Primary target scope: `sex:actors_with_uncovered_penis_facing_each_other_or_target_facing_away` with the placeholder `primary`. This keeps anatomical compatibility while allowing face-to-face or reverse straddling setups.
 - **Required components (actor)**
-  - Require `positioning:closeness` and `positioning:straddling_waist` to reflect an intimate mount; straddling keeps her centered over the partner's pelvis while closeness preserves penetration range.【F:data/mods/sex/actions/insert_primary_penis_into_your_vagina.action.json†L13-L20】
+  - Require `positioning:closeness` and `positioning:straddling_waist` to reflect an intimate mount; straddling keeps her centered over the partner's pelvis while closeness preserves penetration range.【F:data/mods/sex-vaginal-penetration/actions/insert_primary_penis_into_your_vagina.action.json†L13-L20】
 - **Forbidden components (actor)**
-  - Forbid `positioning:sitting_on` to avoid conflicts with seated lap actions and to emphasize an active milking rhythm.【F:data/mods/sex/actions/insert_primary_penis_into_your_vagina.action.json†L16-L18】
+  - Forbid `positioning:sitting_on` to avoid conflicts with seated lap actions and to emphasize an active milking rhythm.【F:data/mods/sex-vaginal-penetration/actions/insert_primary_penis_into_your_vagina.action.json†L16-L18】
 - **Forbidden components (primary)**
   - None beyond what the shared target scope enforces.
 - **Template**
   - Use the exact template string `milk {primary}'s penis slowly` to surface the sensual cadence in UI listings.
 - **Prerequisites**
-  - Assert the actor has a vagina and that it is uncovered before the action can execute, mirroring the precedent set by the existing penetration invitation.【F:data/mods/sex/actions/insert_primary_penis_into_your_vagina.action.json†L21-L35】
+  - Assert the actor has a vagina and that it is uncovered before the action can execute, mirroring the precedent set by the existing penetration invitation.【F:data/mods/sex-vaginal-penetration/actions/insert_primary_penis_into_your_vagina.action.json†L21-L35】
 
 ## Rule Implementation
 
@@ -29,7 +29,7 @@ Create a companion rule triggered by the new action.
 
 ## Testing Requirements
 
-Deliver two comprehensive integration suites following the Mod Testing Guide methodologies and the patterns already established in `tests/integration/mods/sex/` suites.【F:docs/testing/mod-testing-guide.md†L1-L12】【F:tests/integration/mods/sex/fondle_penis_action.test.js†L1-L120】
+Deliver two comprehensive integration suites following the Mod Testing Guide methodologies and the patterns already established in `tests/integration/mods/sex-penile-manual/` suites.【F:docs/testing/mod-testing-guide.md†L1-L12】【F:tests/integration/mods/sex-penile-manual/fondle_penis_action.test.js†L1-L120】
 
 1. **Action discoverability** – Validate primary scope filtering (exposed penis, relative facing), enforced closeness + straddling requirements, the `positioning:sitting_on` exclusion, vagina ownership/coverage prerequisites, and exact template rendering. Include negative coverage for covered anatomy, missing straddling, and conflicting seating states.
 2. **Rule behavior** – Execute the action end-to-end, asserting the shared perceptible/success message, mutual component applications, and absence of double-application when the components are already present. Confirm downstream perception hooks fire once with the expected payload.

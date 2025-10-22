@@ -1,8 +1,0 @@
-{
-  "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "sex:event-is-action-pump-penis",
-  "description": "Checks if the event is attempting the 'Pump Penis' action.",
-  "logic": {
-    "==": [{ "var": "event.payload.actionId" }, "sex:pump_penis"]
-  }
-}

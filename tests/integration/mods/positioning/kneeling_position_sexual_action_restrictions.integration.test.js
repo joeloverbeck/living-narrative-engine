@@ -25,7 +25,7 @@ import { createMockTargetContextBuilder } from '../../../common/mocks/mockTarget
 import { createMultiTargetResolutionStage } from '../../../common/actions/multiTargetStageTestUtilities.js';
 import { ScopeContextBuilder } from '../../../../src/actions/pipeline/services/implementations/ScopeContextBuilder.js';
 import kneelBeforeAction from '../../../../data/mods/positioning/actions/kneel_before.action.json';
-import fondlePenisAction from '../../../../data/mods/sex/actions/fondle_penis.action.json';
+import fondlePenisAction from '../../../../data/mods/sex-penile-manual/actions/fondle_penis.action.json';
 import fondleAssAction from '../../../../data/mods/caressing/actions/fondle_ass.action.json';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
 import {

@@ -274,15 +274,15 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
 
       it('should handle complex action names with multiple underscores', () => {
         const paths = ModTestFixture.getConventionalPaths(
-          'sex',
-          'fondle_breast_gently'
+          'sex-breastplay',
+          'fondle_breasts_over_clothes'
         );
 
         expect(paths.conditionPaths).toContain(
-          'data/mods/sex/conditions/event-is-action-fondle-breast-gently.condition.json'
+          'data/mods/sex-breastplay/conditions/event-is-action-fondle-breasts-over-clothes.condition.json'
         );
         expect(paths.conditionPaths).toContain(
-          'data/mods/sex/conditions/fondle-breast-gently.condition.json'
+          'data/mods/sex-breastplay/conditions/fondle-breasts-over-clothes.condition.json'
         );
       });
     });
