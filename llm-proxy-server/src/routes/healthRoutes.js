@@ -4,125 +4,98 @@
  */
 
 import express from 'express';
-import { getAppConfigService } from '../config/appConfig.js';
+import os from 'node:os';
+
+import { createLivenessCheck, createReadinessCheck } from '../middleware/healthCheck.js';
 import { ConsoleLogger } from '../consoleLogger.js';
 
-const router = express.Router();
-const logger = new ConsoleLogger();
-
 /**
- * GET /health
- * Basic health check endpoint - returns 200 if server is running
+ * Creates the health routes for the proxy server.
+ * @description Exposes liveness, readiness, and diagnostic endpoints that reuse the core health check middleware.
+ * @param {object} dependencies - Dependencies required to build the routes.
+ * @param {import('../config/llmConfigService.js').LlmConfigService} dependencies.llmConfigService - Service tracking LLM configuration readiness.
+ * @param {import('../services/cacheService.js').default | null} [dependencies.cacheService] - Cache service instance, if caching is enabled.
+ * @param {import('../services/httpAgentService.js').default | null} [dependencies.httpAgentService] - HTTP agent service instance, if connection pooling is enabled.
+ * @param {import('../config/appConfig.js').AppConfigService} [dependencies.appConfigService] - Application configuration service for environment metadata.
+ * @param {import('../consoleLogger.js').ConsoleLogger} [dependencies.logger] - Logger instance for middleware diagnostics.
+ * @returns {import('express').Router} Configured health routes router.
  */
-router.get('/', (req, res) => {
-  res.status(200).json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    service: 'llm-proxy-server',
+const createHealthRoutes = ({
+  llmConfigService,
+  cacheService = null,
+  httpAgentService = null,
+  appConfigService = null,
+  logger = null,
+} = {}) => {
+  if (!llmConfigService) {
+    throw new Error('createHealthRoutes: llmConfigService is required');
+  }
+
+  const router = express.Router();
+  const effectiveLogger = logger ?? new ConsoleLogger();
+
+  router.get(
+    '/',
+    createLivenessCheck({
+      logger: effectiveLogger,
+    })
+  );
+
+  router.get(
+    '/ready',
+    createReadinessCheck({
+      logger: effectiveLogger,
+      llmConfigService,
+      cacheService,
+      httpAgentService,
+    })
+  );
+
+  router.get('/live', (req, res) => {
+    res.status(200).json({
+      status: 'UP',
+      timestamp: new Date().toISOString(),
+      pid: process.pid,
+      service: 'llm-proxy-server',
+    });
   });
-});
 
-/**
- * GET /health/ready
- * Readiness check endpoint - returns 200 if server is ready to accept requests
- * Performs more comprehensive checks than basic health
- */
-router.get('/ready', async (req, res) => {
-  try {
-    const appConfigService = getAppConfigService(logger);
-    const checks = {
-      server: 'ok',
-      config: 'unknown',
-      debug_logging: 'unknown',
+  router.get('/detailed', (req, res) => {
+    const memUsage = process.memoryUsage();
+    const environmentDetails = {
+      node_env:
+        (appConfigService && typeof appConfigService.getNodeEnv === 'function'
+          ? appConfigService.getNodeEnv()
+          : process.env.NODE_ENV) || 'production',
+      proxy_port: String(
+        (appConfigService && typeof appConfigService.getProxyPort === 'function'
+          ? appConfigService.getProxyPort()
+          : process.env.PROXY_PORT) ?? ''
+      ),
     };
 
-    // Check configuration service
-    try {
-      const port = appConfigService.getProxyPort();
-      const corsOrigins = appConfigService.getProxyAllowedOrigin();
-
-      checks.config = port && corsOrigins ? 'ok' : 'degraded';
-    } catch (configError) {
-      checks.config = 'error';
-    }
-
-    // Check debug logging availability
-    checks.debug_logging = appConfigService.isDebugLoggingEnabled()
-      ? 'ok'
-      : 'disabled';
-
-    const allHealthy = Object.values(checks).every(
-      (status) => status === 'ok' || status === 'disabled'
-    );
-
-    const statusCode = allHealthy ? 200 : 503;
-
-    res.status(statusCode).json({
-      status: allHealthy ? 'ready' : 'not_ready',
+    res.status(200).json({
+      status: 'UP',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       service: 'llm-proxy-server',
-      checks,
-    });
-  } catch (error) {
-    logger.error('Health check error:', error.message);
-
-    res.status(503).json({
-      status: 'not_ready',
-      timestamp: new Date().toISOString(),
-      service: 'llm-proxy-server',
-      error: 'Health check failed',
-      checks: {
-        server: 'error',
+      system: {
+        node_version: process.version,
+        platform: process.platform,
+        arch: process.arch,
+        memory: {
+          rss: memUsage.rss,
+          heap_used: memUsage.heapUsed,
+          heap_total: memUsage.heapTotal,
+          external: memUsage.external,
+        },
+        load_average: os.loadavg(),
       },
+      environment: environmentDetails,
     });
-  }
-});
-
-/**
- * GET /health/live
- * Liveness check endpoint - returns 200 if server is alive (not crashed)
- * This is the most basic check, just verifies the process is running
- */
-router.get('/live', (req, res) => {
-  res.status(200).json({
-    status: 'alive',
-    timestamp: new Date().toISOString(),
-    pid: process.pid,
-    service: 'llm-proxy-server',
   });
-});
 
-/**
- * GET /health/detailed
- * Detailed health information including system metrics
- */
-router.get('/detailed', (req, res) => {
-  const memUsage = process.memoryUsage();
+  return router;
+};
 
-  res.status(200).json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    service: 'llm-proxy-server',
-    system: {
-      node_version: process.version,
-      platform: process.platform,
-      arch: process.arch,
-      memory: {
-        rss: memUsage.rss,
-        heap_used: memUsage.heapUsed,
-        heap_total: memUsage.heapTotal,
-        external: memUsage.external,
-      },
-      load_average: require('os').loadavg(),
-    },
-    environment: {
-      node_env: process.env.NODE_ENV,
-      proxy_port: process.env.PROXY_PORT,
-    },
-  });
-});
-
-export default router;
+export default createHealthRoutes;
