@@ -44,7 +44,7 @@ find data/mods -path 'data/mods/sex' -prune -o -name '*.json' -print0 | xargs -0
 | `sex-dry-intimacy:slide_penis_along_labia`                  | `data/mods/sex-vaginal-penetration/actions/slide_penis_along_labia.action.json`                  | `sex-vaginal-penetration` | Pre-penetration teasing.               |
 | `sex-dry-intimacy:straddling_penis_milking`                 | `data/mods/sex-vaginal-penetration/actions/straddling_penis_milking.action.json`                 | `sex-vaginal-penetration` | Straddling milking loop.               |
 | `sex-dry-intimacy:suckle_testicle`                          | `data/mods/sex-penile-oral/actions/suckle_testicle.action.json`                          | `sex-penile-oral`         | Oral suction on testicle.              |
-| `sex-dry-intimacy:tease_asshole_with_glans`                 | `data/mods/sex/actions/tease_asshole_with_glans.action.json`                 | `sex-anal-penetration`    | Anal teasing lead-in.                  |
+| `sex-dry-intimacy:tease_asshole_with_glans`                 | `data/mods/sex-anal-penetration/actions/tease_asshole_with_glans.action.json`                 | `sex-anal-penetration`    | Migrated to `sex-anal-penetration:tease_asshole_with_glans`; anal teasing lead-in.                  |
 
 ## Rules
 
@@ -74,7 +74,7 @@ find data/mods -path 'data/mods/sex' -prune -o -name '*.json' -print0 | xargs -0
 | `handle_slide_penis_along_labia`                  | `data/mods/sex-vaginal-penetration/rules/handle_slide_penis_along_labia.rule.json`                  | `sex-vaginal-penetration` | Handles `sex-dry-intimacy:slide_penis_along_labia`.                  |
 | `handle_straddling_penis_milking`                 | `data/mods/sex-vaginal-penetration/rules/handle_straddling_penis_milking.rule.json`                 | `sex-vaginal-penetration` | Handles `sex-dry-intimacy:straddling_penis_milking`.                 |
 | `handle_suckle_testicle`                          | `data/mods/sex-penile-oral/rules/handle_suckle_testicle.rule.json`                          | `sex-penile-oral`         | Handles `sex-dry-intimacy:suckle_testicle`.                          |
-| `handle_tease_asshole_with_glans`                 | `data/mods/sex/rules/handle_tease_asshole_with_glans.rule.json`                 | `sex-anal-penetration`    | Handles `sex-dry-intimacy:tease_asshole_with_glans`.                 |
+| `handle_tease_asshole_with_glans`                 | `data/mods/sex-anal-penetration/rules/handle_tease_asshole_with_glans.rule.json`                 | `sex-anal-penetration`    | Handles `sex-anal-penetration:tease_asshole_with_glans`.                 |
 
 ## Conditions
 
@@ -104,7 +104,7 @@ find data/mods -path 'data/mods/sex' -prune -o -name '*.json' -print0 | xargs -0
 | `sex-dry-intimacy:event-is-action-slide-penis-along-labia`                  | `data/mods/sex-vaginal-penetration/conditions/event-is-action-slide-penis-along-labia.condition.json`                  | `sex-vaginal-penetration` | Event check for labia teasing.                    |
 | `sex-dry-intimacy:event-is-action-straddling-penis-milking`                 | `data/mods/sex-vaginal-penetration/conditions/event-is-action-straddling-penis-milking.condition.json`                 | `sex-vaginal-penetration` | Event check for milking loop.                     |
 | `sex-dry-intimacy:event-is-action-suckle-testicle`                          | `data/mods/sex-penile-oral/conditions/event-is-action-suckle-testicle.condition.json`                          | `sex-penile-oral`         | Event check for `sex-dry-intimacy:suckle_testicle`.            |
-| `sex-dry-intimacy:event-is-action-tease-asshole-with-glans`                 | `data/mods/sex/conditions/event-is-action-tease-asshole-with-glans.condition.json`                 | `sex-anal-penetration`    | Event check for anal teasing.                     |
+| `sex-dry-intimacy:event-is-action-tease-asshole-with-glans`                 | `data/mods/sex-anal-penetration/conditions/event-is-action-tease-asshole-with-glans.condition.json`                 | `sex-anal-penetration`    | Migrated as `sex-anal-penetration:event-is-action-tease-asshole-with-glans`; event check for anal teasing.                     |
 
 ## Scopes
 
@@ -119,7 +119,7 @@ find data/mods -path 'data/mods/sex' -prune -o -name '*.json' -print0 | xargs -0
 | `sex-dry-intimacy:actors_with_breasts_in_intimacy`                                      | `data/mods/sex/scopes/actors_with_breasts_in_intimacy.scope`                                      | `sex-breastplay`          | Currently unused; keep with breast intimacy helpers.                          |
 | `sex-dry-intimacy:actors_with_covered_penis_im_facing_away_from`                        | `data/mods/sex-dry-intimacy/scopes/actors_with_covered_penis_im_facing_away_from.scope`                        | `sex-dry-intimacy`        | Supports clothed grinding from behind.                                        |
 | `sex-dry-intimacy:actors_with_exposed_ass_facing_away`                                  | `data/mods/sex-dry-intimacy/scopes/actors_with_exposed_ass_facing_away.scope`                                  | `sex-dry-intimacy`        | Supports penis-between-cheeks frottage.                                       |
-| `sex-dry-intimacy:actors_with_exposed_asshole_facing_away`                              | `data/mods/sex/scopes/actors_with_exposed_asshole_facing_away.scope`                              | `sex-anal-penetration`    | Required for anal teasing setups.                                             |
+| `sex-dry-intimacy:actors_with_exposed_asshole_facing_away`                              | `data/mods/sex-anal-penetration/scopes/actors_with_exposed_asshole_facing_away.scope`                              | `sex-anal-penetration`    | Migrated to `sex-anal-penetration:actors_with_exposed_asshole_facing_away`; required for anal teasing setups.                                             |
 | `sex-dry-intimacy:actors_with_penis_facing_each_other`                                  | `data/mods/sex/scopes/actors_with_penis_facing_each_other.scope`                                  | `sex-core`                | **Shared** by manual (`fondle_penis`, `pump_penis`) and frottage actions.     |
 | `sex-penile-manual:actors_with_penis_facing_each_other_covered`            | `data/mods/sex-penile-manual/scopes/actors_with_penis_facing_each_other_covered.scope`            | `sex-penile-manual`       | Clothed manual positioning.                                                   |
 | `sex-dry-intimacy:actors_with_penis_facing_straddler_covered`                           | `data/mods/sex-dry-intimacy/scopes/actors_with_penis_facing_straddler_covered.scope`                           | `sex-dry-intimacy`        | Supports clothed crotch grinding.                                             |
