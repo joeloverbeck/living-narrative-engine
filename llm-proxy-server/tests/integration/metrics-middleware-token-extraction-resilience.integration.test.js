@@ -1,112 +1,111 @@
-/**
- * @file metrics-middleware-token-extraction-resilience.integration.test.js
- * @description Ensures the metrics middleware gracefully handles LLM responses
- *              whose token usage accessors throw while collaborating with a real
- *              Express pipeline.
- */
-
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
 import { createLlmMetricsMiddleware } from '../../src/middleware/metrics.js';
 
-class RecordingMetricsService {
-  constructor() {
-    /** @type {Array<object>} */
-    this.llmRequests = [];
+describe('LLM metrics middleware token extraction resilience', () => {
+  class RecordingMetricsService {
+    constructor() {
+      this.entries = [];
+    }
+
+    recordLlmRequest(payload) {
+      this.entries.push(payload);
+    }
   }
 
-  /**
-   * @param {object} payload
-   */
-  recordLlmRequest(payload) {
-    this.llmRequests.push(payload);
-  }
-}
+  const createTrackingLogger = () => {
+    const entries = [];
+    return {
+      entries,
+      logger: {
+        debug: (...args) => entries.push({ level: 'debug', args }),
+        info: (...args) => entries.push({ level: 'info', args }),
+        warn: (...args) => entries.push({ level: 'warn', args }),
+        error: (...args) => entries.push({ level: 'error', args }),
+      },
+    };
+  };
 
-const createTestLogger = () => ({
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-});
+  const createProblematicResponse = () => {
+    const payload = {};
 
-describe('metrics middleware token extraction resilience integration', () => {
+    Object.defineProperty(payload, 'usage', {
+      enumerable: false,
+      get() {
+        throw new Error('usage metrics unavailable');
+      },
+    });
+
+    Object.defineProperty(payload, 'toJSON', {
+      enumerable: false,
+      value() {
+        return { status: 'ok', payload: 'sanitized' };
+      },
+    });
+
+    return payload;
+  };
+
   let app;
   let metricsService;
-  let logger;
+  let loggerBundle;
 
   beforeEach(() => {
-    logger = createTestLogger();
     metricsService = new RecordingMetricsService();
+    loggerBundle = createTrackingLogger();
 
-    const expressApp = express();
-    expressApp.use(express.json());
+    app = express();
+    app.use(express.json());
 
-    expressApp.post(
-      '/llm/unstable',
+    app.post(
+      '/llm/problematic-tokens',
       (req, _res, next) => {
-        req.correlationId = 'token-extraction-resilience';
+        req.correlationId = 'token-extraction-correlation';
         next();
       },
-      createLlmMetricsMiddleware({ metricsService, logger }),
+      createLlmMetricsMiddleware({
+        metricsService,
+        logger: loggerBundle.logger,
+      }),
       (_req, res) => {
-        let usageAccessCount = 0;
-        const unstablePayload = { status: 'unstable-success' };
-
-        Object.defineProperty(unstablePayload, 'usage', {
-          enumerable: true,
-          get() {
-            usageAccessCount += 1;
-            throw new Error('usage-not-readable');
-          },
-        });
-
-        unstablePayload.toJSON = () => ({
-          status: 'unstable-success',
-          usageAccessCount,
-        });
-
-        res.status(200).json(unstablePayload);
+        const problematicResponse = createProblematicResponse();
+        res.status(200).json(problematicResponse);
       }
     );
-
-    app = expressApp;
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    app = null;
+    metricsService = null;
+    loggerBundle = null;
   });
 
-  it('records LLM request metrics even when token usage extraction throws', async () => {
-    const response = await request(app)
-      .post('/llm/unstable')
-      .set('content-type', 'application/json')
-      .send({ llmId: 'custom-provider-model-v1' })
-      .expect(200);
+  it('records metrics even when token extraction encounters accessor errors', async () => {
+    await request(app)
+      .post('/llm/problematic-tokens')
+      .send({ llmId: 'custom-model' })
+      .expect(200, { status: 'ok', payload: 'sanitized' });
 
-    expect(response.body).toEqual({
-      status: 'unstable-success',
-      usageAccessCount: 1,
-    });
-
-    expect(metricsService.llmRequests).toHaveLength(1);
-    const [entry] = metricsService.llmRequests;
+    expect(metricsService.entries).toHaveLength(1);
+    const [entry] = metricsService.entries;
 
     expect(entry.provider).toBe('unknown');
-    expect(entry.model).toBe('custom-provider-model-v1');
+    expect(entry.model).toBe('custom-model');
     expect(entry.status).toBe('success');
     expect(entry.tokens).toBeNull();
-    expect(typeof entry.duration).toBe('number');
+    expect(entry.duration).toBeGreaterThan(0);
 
-    expect(logger.error).not.toHaveBeenCalled();
-    expect(logger.debug).toHaveBeenCalledWith(
-      'LLM request metrics recorded',
-      expect.objectContaining({
-        correlationId: 'token-extraction-resilience',
-        tokens: null,
-      })
+    const errorLogs = loggerBundle.entries.filter(
+      (event) => event.level === 'error'
     );
+    expect(errorLogs).toHaveLength(0);
+
+    const debugLogs = loggerBundle.entries.filter(
+      (event) => event.level === 'debug'
+    );
+    expect(debugLogs.length).toBeGreaterThanOrEqual(1);
+    expect(String(debugLogs[0].args[0])).toContain('LLM request metrics recorded');
   });
 });
