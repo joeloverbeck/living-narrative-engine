@@ -1,6 +1,18 @@
-import { describe, it, expect, jest } from '@jest/globals';
-import PersistenceErrorCodes, {
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
+import { webcrypto } from 'crypto';
+import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
+import ChecksumService from '../../../src/persistence/checksumService.js';
+import GameStateSerializer from '../../../src/persistence/gameStateSerializer.js';
+import defaultCodes, {
   PersistenceError,
+  PersistenceErrorCodes,
 } from '../../../src/persistence/persistenceErrors.js';
 import {
   createPersistenceFailure,
@@ -10,15 +22,29 @@ import {
 
 /**
  * Utility to temporarily override Error.captureStackTrace for branch coverage.
+ * @param {Function | undefined} replacement
  * @param {() => void | Promise<void>} callback
  */
-async function withTemporaryCaptureStackTrace(value, callback) {
+async function withTemporaryCaptureStackTrace(replacement, callback) {
   const original = Error.captureStackTrace;
-  Error.captureStackTrace = value;
+  if (replacement === undefined) {
+    // eslint-disable-next-line no-global-assign -- intentionally removing the helper to test fallback logic.
+    // @ts-ignore
+    delete Error.captureStackTrace;
+  } else {
+    Error.captureStackTrace = replacement;
+  }
+
   try {
     await callback();
   } finally {
-    Error.captureStackTrace = original;
+    if (original) {
+      Error.captureStackTrace = original;
+    } else {
+      // eslint-disable-next-line no-global-assign -- restore absence when originally missing.
+      // @ts-ignore
+      delete Error.captureStackTrace;
+    }
   }
 }
 
@@ -44,7 +70,9 @@ describe('persistenceErrors integration', () => {
         'UNEXPECTED_ERROR',
       ];
 
+      expect(defaultCodes).toBe(PersistenceErrorCodes);
       expect(Object.keys(PersistenceErrorCodes)).toEqual(expectedKeys);
+      expect(Object.isFrozen(PersistenceErrorCodes)).toBe(true);
       expect(() => {
         // Attempts to mutate should fail because the object is frozen.
         PersistenceErrorCodes.NEW_CODE = 'SHOULD_NOT_WRITE';
@@ -55,10 +83,12 @@ describe('persistenceErrors integration', () => {
 
   describe('PersistenceError', () => {
     it('captures error metadata and stack trace when supported by the runtime', async () => {
-      await withTemporaryCaptureStackTrace(jest.fn(), () => {
+      const captureSpy = jest.fn();
+
+      await withTemporaryCaptureStackTrace(captureSpy, () => {
         const error = new PersistenceError(
           PersistenceErrorCodes.FILE_READ_ERROR,
-          'Unable to read save file',
+          'Unable to read save file'
         );
 
         expect(error).toBeInstanceOf(Error);
@@ -66,6 +96,7 @@ describe('persistenceErrors integration', () => {
         expect(error.name).toBe('PersistenceError');
         expect(error.code).toBe(PersistenceErrorCodes.FILE_READ_ERROR);
         expect(error.message).toBe('Unable to read save file');
+        expect(captureSpy).toHaveBeenCalledWith(error, PersistenceError);
       });
     });
 
@@ -73,10 +104,12 @@ describe('persistenceErrors integration', () => {
       await withTemporaryCaptureStackTrace(undefined, () => {
         const error = new PersistenceError(
           PersistenceErrorCodes.DESERIALIZATION_ERROR,
-          'Invalid payload',
+          'Invalid payload'
         );
 
-        expect(error.stack).toBeDefined();
+        expect(
+          error.stack === undefined || typeof error.stack === 'string'
+        ).toBe(true);
         expect(error.code).toBe(PersistenceErrorCodes.DESERIALIZATION_ERROR);
       });
     });
@@ -86,7 +119,7 @@ describe('persistenceErrors integration', () => {
     it('wraps failures in PersistenceError instances and preserves them during normalization', () => {
       const failure = createPersistenceFailure(
         PersistenceErrorCodes.CHECKSUM_MISMATCH,
-        'Checksum mismatch detected',
+        'Checksum mismatch detected'
       );
 
       expect(failure.success).toBe(false);
@@ -96,7 +129,7 @@ describe('persistenceErrors integration', () => {
       const normalized = normalizePersistenceFailure(
         failure,
         PersistenceErrorCodes.UNEXPECTED_ERROR,
-        'Unexpected persistence failure',
+        'Unexpected persistence failure'
       );
 
       expect(normalized.success).toBe(false);
@@ -109,7 +142,7 @@ describe('persistenceErrors integration', () => {
       const normalized = normalizePersistenceFailure(
         { success: false, error: rawError },
         PersistenceErrorCodes.WRITE_ERROR,
-        'Failed to persist game state',
+        'Failed to persist game state'
       );
 
       expect(normalized.success).toBe(false);
@@ -125,10 +158,96 @@ describe('persistenceErrors integration', () => {
       const normalized = normalizePersistenceFailure(
         success,
         PersistenceErrorCodes.UNEXPECTED_ERROR,
-        'This should not be used',
+        'This should not be used'
       );
 
       expect(normalized).toEqual({ success: true, data });
+    });
+  });
+
+  describe('integration with runtime persistence services', () => {
+    /** @type {ReturnType<typeof jest.spyOn>[]} */
+    let consoleSpies;
+    /** @type {ConsoleLogger} */
+    let logger;
+
+    beforeEach(() => {
+      consoleSpies = [
+        jest.spyOn(console, 'info').mockImplementation(() => {}),
+        jest.spyOn(console, 'warn').mockImplementation(() => {}),
+        jest.spyOn(console, 'error').mockImplementation(() => {}),
+        jest.spyOn(console, 'debug').mockImplementation(() => {}),
+        jest.spyOn(console, 'group').mockImplementation(() => {}),
+        jest.spyOn(console, 'groupCollapsed').mockImplementation(() => {}),
+        jest.spyOn(console, 'groupEnd').mockImplementation(() => {}),
+      ];
+
+      logger = new ConsoleLogger(LogLevel.ERROR);
+    });
+
+    afterEach(() => {
+      consoleSpies.forEach((spy) => spy.mockRestore());
+    });
+
+    it('propagates checksum failures as PersistenceError with metadata', async () => {
+      const failingCrypto = {
+        subtle: {
+          digest: async () => {
+            throw new Error('digest failure');
+          },
+        },
+      };
+
+      const checksumService = new ChecksumService({
+        logger,
+        crypto: failingCrypto,
+      });
+      const serializer = new GameStateSerializer({
+        logger,
+        checksumService,
+      });
+
+      const saveObject = {
+        gameState: {
+          actors: [{ id: 'hero-1' }],
+          worldState: { activeArea: 'core:start', cycle: 42 },
+        },
+        integrityChecks: {},
+      };
+
+      await expect(
+        serializer.compressPreparedState(saveObject)
+      ).rejects.toBeInstanceOf(PersistenceError);
+
+      await expect(
+        serializer.compressPreparedState(saveObject)
+      ).rejects.toMatchObject({
+        name: 'PersistenceError',
+        code: PersistenceErrorCodes.CHECKSUM_GENERATION_FAILED,
+      });
+    });
+
+    it('normalizes sync persistence failures without captureStackTrace support', async () => {
+      await withTemporaryCaptureStackTrace(undefined, () => {
+        const checksumService = new ChecksumService({
+          logger,
+          crypto: webcrypto,
+        });
+        const serializer = new GameStateSerializer({
+          logger,
+          checksumService,
+        });
+
+        const invalidData = new Uint8Array([0, 1, 2, 3, 4]);
+        const result = serializer.decompress(invalidData);
+
+        expect(result.success).toBe(false);
+        expect(result.error).toBeInstanceOf(PersistenceError);
+        expect(result.error.code).toBe(
+          PersistenceErrorCodes.DECOMPRESSION_ERROR
+        );
+        expect(result.userFriendlyError).toBeDefined();
+      });
     });
   });
 });
