@@ -107,6 +107,41 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       expect(result.value.errors).toHaveLength(0);
     });
 
+    it('logs debug output and skips trace info when no targets remain after resolution', () => {
+      const bed = getBed();
+      const actionDef = {
+        id: 'scout',
+        name: 'Scout',
+        commandVerb: 'scout',
+        scope: 'enemy',
+      };
+      const actorEntity = { id: 'actor-scout' };
+      const context = { turn: 4 };
+      const trace = {
+        step: jest.fn(),
+        info: jest.fn(),
+        success: jest.fn(),
+        failure: jest.fn(),
+      };
+
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue(
+        ActionResult.success([])
+      );
+
+      const result = bed.service.process(actionDef, actorEntity, context, trace);
+
+      expect(result.success).toBe(true);
+      expect(result.value).toEqual({ actions: [], errors: [], cause: 'no-targets' });
+      expect(bed.mocks.logger.debug).toHaveBeenCalledWith(
+        "Action 'scout' resolved to 0 targets. Skipping."
+      );
+      expect(trace.info).not.toHaveBeenCalled();
+      expect(trace.success).toHaveBeenCalledWith(
+        "Action 'scout' passed actor prerequisite check.",
+        'ActionCandidateProcessor.process'
+      );
+    });
+
     it('logs trace info when targets are resolved with trace context', () => {
       const bed = getBed();
       const actionDef = {
@@ -420,6 +455,37 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       expect(
         bed.mocks.prerequisiteEvaluationService.evaluate
       ).not.toHaveBeenCalled();
+    });
+
+    it('preserves visual metadata on formatted actions', () => {
+      const bed = getBed();
+      const actionDef = {
+        id: 'visual-cue',
+        name: 'Signal Ally',
+        commandVerb: 'signal',
+        scope: 'ally',
+        visual: { icon: 'signal', palette: 'blue' },
+      };
+      const actorEntity = { id: 'actor-visual' };
+      const context = {};
+
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue(
+        ActionResult.success([ActionTargetContext.forEntity('ally-1')])
+      );
+      bed.mocks.actionCommandFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'signal ally-1',
+      });
+
+      const result = bed.service.process(actionDef, actorEntity, context);
+
+      expect(result.success).toBe(true);
+      expect(result.value.actions).toHaveLength(1);
+      expect(result.value.actions[0]).toMatchObject({
+        id: 'visual-cue',
+        command: 'signal ally-1',
+        visual: { icon: 'signal', palette: 'blue' },
+      });
     });
 
     it('treats null prerequisites as absent prerequisites', () => {
