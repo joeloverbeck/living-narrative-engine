@@ -102,12 +102,15 @@ describe('physical-control:push_off action discovery', () => {
       );
     });
 
-    it('requires actor closeness and uses the physical-control color palette', () => {
+    it('requires actor closeness, forbids sitting targets, and uses the physical-control color palette', () => {
       expect(pushOffAction.required_components.actor).toEqual([
         'positioning:closeness',
       ]);
       expect(pushOffAction.forbidden_components.actor).toEqual([
         'positioning:straddling_waist',
+      ]);
+      expect(pushOffAction.forbidden_components.primary).toEqual([
+        'positioning:sitting_on',
       ]);
       expect(pushOffAction.visual).toEqual({
         backgroundColor: '#2f2f2f',
@@ -195,6 +198,36 @@ describe('physical-control:push_off action discovery', () => {
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
+      configureActionDiscovery();
+
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
+      const ids = availableActions.map((action) => action.id);
+
+      expect(ids).not.toContain(ACTION_ID);
+    });
+
+    it('is not available when the target is sitting on furniture', async () => {
+      const scenario = testFixture.createCloseActors(['Willow', 'Xander']);
+
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+      await testFixture.entityManager.addComponent(
+        scenario.target.id,
+        'positioning:sitting_on',
+        {
+          furniture_id: 'furniture:bench1',
+          spot_index: 1,
+        }
+      );
+      const targetSitting = testFixture.entityManager.getComponentData(
+        scenario.target.id,
+        'positioning:sitting_on'
+      );
+      expect(targetSitting?.furniture_id).toBe('furniture:bench1');
+      expect(targetSitting?.spot_index).toBe(1);
+
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
