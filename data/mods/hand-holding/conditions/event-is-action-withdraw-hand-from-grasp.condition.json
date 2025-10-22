@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "hand-holding:event-is-action-withdraw-hand-from-grasp",
+  "description": "Checks if the triggering event is for the 'hand-holding:withdraw_hand_from_grasp' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "hand-holding:withdraw_hand_from_grasp"
+    ]
+  }
+}

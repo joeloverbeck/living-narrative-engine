@@ -1,8 +1,0 @@
-{
-  "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "hand_holding:event-is-action-warm-hands-between-yours",
-  "description": "Checks if the triggering event is for the 'hand_holding:warm_hands_between_yours' action.",
-  "logic": {
-    "==": [{ "var": "event.payload.actionId" }, "hand_holding:warm_hands_between_yours"]
-  }
-}

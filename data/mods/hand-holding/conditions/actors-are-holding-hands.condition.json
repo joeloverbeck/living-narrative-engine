@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "hand-holding:actors-are-holding-hands",
+  "description": "Checks if the actor is currently in a hand-holding relationship (either holding someone's hand or having their hand held). Target validation is handled by the scope DSL.",
+  "logic": {
+    "or": [
+      {
+        "!!": [
+          { "var": "actor.components.hand-holding:holding_hand.held_entity_id" }
+        ]
+      },
+      {
+        "!!": [
+          { "var": "actor.components.hand-holding:hand_held.holding_entity_id" }
+        ]
+      }
+    ]
+  }
+}

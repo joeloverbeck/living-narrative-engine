@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "hand-holding:let_go_of_hand",
+  "name": "Let go of hand",
+  "description": "Release the target's hand and allow the moment to end on your terms.",
+  "targets": "positioning:close_actors_facing_each_other_or_behind_target",
+  "required_components": {
+    "actor": ["positioning:closeness", "hand-holding:holding_hand"],
+    "primary": ["hand-holding:hand_held"]
+  },
+  "template": "let go of {target}'s hand",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#2c0e37",
+    "textColor": "#ffebf0",
+    "hoverBackgroundColor": "#451952",
+    "hoverTextColor": "#f3e5f5"
+  }
+}
