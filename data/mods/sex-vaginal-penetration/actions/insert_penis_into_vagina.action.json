@@ -1,13 +1,13 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "sex:slide_penis_along_labia",
-  "name": "Slide Penis Along Labia",
-  "description": "Slide your penis along the target's bare labia to build teasing arousal.",
+  "id": "sex-vaginal-penetration:insert_penis_into_vagina",
+  "name": "Insert Penis Into Vagina",
+  "description": "Insert your penis into your partner's vagina to initiate vaginal penetration.",
   "targets": {
     "primary": {
-      "scope": "sex:actors_with_uncovered_vagina_facing_each_other_or_target_facing_away",
-      "placeholder": "target",
-      "description": "Partner with an uncovered vagina the actor can tease"
+      "scope": "sex-vaginal-penetration:actors_with_uncovered_vagina_facing_each_other_or_target_facing_away",
+      "placeholder": "primary",
+      "description": "Partner with an uncovered vagina who is positioned for penetration"
     }
   },
   "required_components": {
@@ -17,7 +17,7 @@
     "actor": ["sex-core:fucking_vaginally"],
     "primary": ["positioning:sitting_on"]
   },
-  "template": "slide your penis along {target}'s labia",
+  "template": "insert your penis into {primary}'s vagina",
   "prerequisites": [
     {
       "logic": {
@@ -35,9 +35,9 @@
     }
   ],
   "visual": {
-    "backgroundColor": "#4a148c",
-    "textColor": "#e1bee7",
-    "hoverBackgroundColor": "#6a1b9a",
-    "hoverTextColor": "#f3e5f5"
+    "backgroundColor": "#6c0f36",
+    "textColor": "#ffe6ef",
+    "hoverBackgroundColor": "#861445",
+    "hoverTextColor": "#fff2f7"
   }
 }

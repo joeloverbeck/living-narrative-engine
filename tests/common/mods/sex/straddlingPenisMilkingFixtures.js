@@ -10,13 +10,15 @@ import { ModEntityBuilder } from '../ModEntityBuilder.js';
  * Identifier for the straddling penis milking action.
  * @type {string}
  */
-export const STRADDLING_MILKING_ACTION_ID = 'sex:straddling_penis_milking';
+export const STRADDLING_MILKING_ACTION_ID =
+  'sex-vaginal-penetration:straddling_penis_milking';
 
 /**
  * Identifier for the ride penis greedily action.
  * @type {string}
  */
-export const RIDE_PENIS_GREEDILY_ACTION_ID = 'sex:ride_penis_greedily';
+export const RIDE_PENIS_GREEDILY_ACTION_ID =
+  'sex-vaginal-penetration:ride_penis_greedily';
 
 /**
  * Default actor identifier used in the shared scenarios.
@@ -37,7 +39,7 @@ export const STRADDLING_MILKING_PRIMARY_ID = 'marcus';
 export const STRADDLING_MILKING_ROOM_ID = 'velvet_suite';
 
 const PENIS_SCOPE_NAME =
-  'sex:actors_with_uncovered_penis_facing_each_other_or_target_facing_away';
+  'sex-vaginal-penetration:actors_with_uncovered_penis_facing_each_other_or_target_facing_away';
 
 /**
  * @typedef {object} StraddlingMilkingScenarioOptions

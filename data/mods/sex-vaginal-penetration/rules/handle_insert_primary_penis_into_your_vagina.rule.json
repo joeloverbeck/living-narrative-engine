@@ -1,10 +1,10 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "rule_id": "handle_insert_penis_into_vagina",
-  "comment": "Handles the 'sex:insert_penis_into_vagina' action. Applies penetration state, logs the outcome, and ends the turn.",
+  "rule_id": "handle_insert_primary_penis_into_your_vagina",
+  "comment": "Handles the 'sex-vaginal-penetration:insert_primary_penis_into_your_vagina' action from the receptive perspective.",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "sex:event-is-action-insert-penis-into-vagina"
+    "condition_ref": "sex-vaginal-penetration:event-is-action-insert-primary-penis-into-your-vagina"
   },
   "actions": [
     {
@@ -33,9 +33,9 @@
       "type": "ADD_COMPONENT",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "sex-core:fucking_vaginally",
+        "component_type": "sex-core:being_fucked_vaginally",
         "value": {
-          "targetId": "{event.payload.primaryId}"
+          "actorId": "{event.payload.primaryId}"
         }
       }
     },
@@ -43,9 +43,9 @@
       "type": "ADD_COMPONENT",
       "parameters": {
         "entity_ref": "primary",
-        "component_type": "sex-core:being_fucked_vaginally",
+        "component_type": "sex-core:fucking_vaginally",
         "value": {
-          "actorId": "{event.payload.actorId}"
+          "targetId": "{event.payload.actorId}"
         }
       }
     },
@@ -53,7 +53,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
-        "value": "{context.actorName} inserts their penis into {context.primaryName}'s vagina, that stretches to accomodate the girth."
+        "value": "{context.actorName} introduces {context.primaryName}'s penis into her vagina, that stretches to accomodate the girth."
       }
     },
     {

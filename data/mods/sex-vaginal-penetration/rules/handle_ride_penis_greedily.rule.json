@@ -1,10 +1,10 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_ride_penis_greedily",
-  "comment": "Handles the 'sex:ride_penis_greedily' action by reinforcing mutual vaginal penetration state and narrating a greedy ride.",
+  "comment": "Handles the 'sex-vaginal-penetration:ride_penis_greedily' action by reinforcing mutual vaginal penetration state and narrating a greedy ride.",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "sex:event-is-action-ride-penis-greedily"
+    "condition_ref": "sex-vaginal-penetration:event-is-action-ride-penis-greedily"
   },
   "actions": [
     {

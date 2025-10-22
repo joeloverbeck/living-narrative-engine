@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the sex:straddling_penis_milking action and rule.
+ * @file Integration tests for the sex-vaginal-penetration:straddling_penis_milking action and rule.
  * @description Validates the sensual milking narration, mutual component application, and
  * idempotent penetration state handling while straddling.
  */
@@ -19,11 +19,14 @@ const ACTION_ID = STRADDLING_MILKING_ACTION_ID;
 const EXPECTED_MESSAGE =
   "Selene rocks Marcus's penis slowly with her vagina, feeling each inch and vein of the penis.";
 
-describe('sex:straddling_penis_milking action integration', () => {
+describe('sex-vaginal-penetration:straddling_penis_milking action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('sex', ACTION_ID);
+    testFixture = await ModTestFixture.forAction(
+      'sex-vaginal-penetration',
+      ACTION_ID
+    );
   });
 
   afterEach(() => {
