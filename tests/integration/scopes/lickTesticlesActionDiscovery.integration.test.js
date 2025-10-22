@@ -44,13 +44,13 @@ import path from 'path';
 const testicleScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../data/mods/sex/scopes/actor_kneeling_before_target_with_testicle.scope'
+    '../../../data/mods/sex-core/scopes/actor_kneeling_before_target_with_testicle.scope'
   ),
   'utf8'
 );
 
 // Import actual action files
-import lickTesticlesAction from '../../../data/mods/sex/actions/lick_testicles_sensually.action.json';
+import lickTesticlesAction from '../../../data/mods/sex-penile-oral/actions/lick_testicles_sensually.action.json';
 
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
 
@@ -117,8 +117,8 @@ describe('Lick Testicles Sensually Action Discovery Integration Tests', () => {
     scopeRegistry.clear();
 
     scopeRegistry.initialize({
-      'sex:actor_kneeling_before_target_with_testicle': scopeDefinitions.get(
-        'sex:actor_kneeling_before_target_with_testicle'
+      'sex-core:actor_kneeling_before_target_with_testicle': scopeDefinitions.get(
+        'sex-core:actor_kneeling_before_target_with_testicle'
       ),
     });
 
@@ -309,7 +309,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const lickTesticlesActions = result.actions.filter(
-        (action) => action.id === 'sex:lick_testicles_sensually'
+        (action) => action.id === 'sex-penile-oral:lick_testicles_sensually'
       );
       expect(lickTesticlesActions).toHaveLength(1);
       expect(lickTesticlesActions[0].params.targetId).toBe('target1');
@@ -343,7 +343,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const lickTesticlesActions = result.actions.filter(
-        (action) => action.id === 'sex:lick_testicles_sensually'
+        (action) => action.id === 'sex-penile-oral:lick_testicles_sensually'
       );
       expect(lickTesticlesActions).toHaveLength(1);
     });
@@ -376,7 +376,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const lickTesticlesActions = result.actions.filter(
-        (action) => action.id === 'sex:lick_testicles_sensually'
+        (action) => action.id === 'sex-penile-oral:lick_testicles_sensually'
       );
       expect(lickTesticlesActions).toHaveLength(1);
     });
@@ -421,7 +421,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const lickTesticlesActions = result.actions.filter(
-        (action) => action.id === 'sex:lick_testicles_sensually'
+        (action) => action.id === 'sex-penile-oral:lick_testicles_sensually'
       );
       expect(lickTesticlesActions).toHaveLength(0);
     });
@@ -508,7 +508,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const lickTesticlesActions = result.actions.filter(
-        (action) => action.id === 'sex:lick_testicles_sensually'
+        (action) => action.id === 'sex-penile-oral:lick_testicles_sensually'
       );
       expect(lickTesticlesActions).toHaveLength(0);
     });
@@ -575,7 +575,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const lickTesticlesActions = result.actions.filter(
-        (action) => action.id === 'sex:lick_testicles_sensually'
+        (action) => action.id === 'sex-penile-oral:lick_testicles_sensually'
       );
       expect(lickTesticlesActions).toHaveLength(0);
     });
@@ -660,7 +660,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const lickTesticlesActions = result.actions.filter(
-        (action) => action.id === 'sex:lick_testicles_sensually'
+        (action) => action.id === 'sex-penile-oral:lick_testicles_sensually'
       );
       expect(lickTesticlesActions).toHaveLength(0);
     });
@@ -677,7 +677,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const lickTesticlesActions = result.actions.filter(
-        (action) => action.id === 'sex:lick_testicles_sensually'
+        (action) => action.id === 'sex-penile-oral:lick_testicles_sensually'
       );
       expect(lickTesticlesActions).toHaveLength(1);
     });
@@ -702,7 +702,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const lickTesticlesActions = result.actions.filter(
-        (action) => action.id === 'sex:lick_testicles_sensually'
+        (action) => action.id === 'sex-penile-oral:lick_testicles_sensually'
       );
       expect(lickTesticlesActions).toHaveLength(1);
     });

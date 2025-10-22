@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for sex:breathe_teasingly_on_penis_sitting_close action discovery.
+ * @file Integration tests for sex-penile-oral:breathe_teasingly_on_penis_sitting_close action discovery.
  * @description Validates seated teasing action availability for close partners with an exposed penis.
  */
 
@@ -11,7 +11,7 @@ import {
   buildBreatheTeasinglyOnPenisSittingCloseScenario,
   installSittingCloseUncoveredPenisScopeOverride,
 } from '../../../common/mods/sex/breatheTeasinglyOnPenisSittingCloseFixtures.js';
-import breatheTeasinglyOnPenisSittingCloseAction from '../../../../data/mods/sex/actions/breathe_teasingly_on_penis_sitting_close.action.json';
+import breatheTeasinglyOnPenisSittingCloseAction from '../../../../data/mods/sex-penile-oral/actions/breathe_teasingly_on_penis_sitting_close.action.json';
 
 /**
  * @description Registers the seated teasing action for discovery.
@@ -21,12 +21,12 @@ function configureActionDiscovery(fixture) {
   fixture.testEnv.actionIndex.buildIndex([breatheTeasinglyOnPenisSittingCloseAction]);
 }
 
-describe('sex:breathe_teasingly_on_penis_sitting_close action discovery', () => {
+describe('sex-penile-oral:breathe_teasingly_on_penis_sitting_close action discovery', () => {
   let testFixture;
   let restoreScopeResolver;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('sex', ACTION_ID);
+    testFixture = await ModTestFixture.forAction('sex-penile-oral', ACTION_ID);
     restoreScopeResolver = installSittingCloseUncoveredPenisScopeOverride(testFixture);
   });
 

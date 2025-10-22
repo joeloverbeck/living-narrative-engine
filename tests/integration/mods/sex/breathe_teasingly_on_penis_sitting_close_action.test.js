@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for sex:breathe_teasingly_on_penis_sitting_close action and rule.
+ * @file Integration tests for sex-penile-oral:breathe_teasingly_on_penis_sitting_close action and rule.
  * @description Verifies seated teasing narration, perceptible event wiring, and payload metadata.
  */
 
@@ -14,7 +14,7 @@ import {
   buildBreatheTeasinglyOnPenisSittingCloseScenario,
   installSittingCloseUncoveredPenisScopeOverride,
 } from '../../../common/mods/sex/breatheTeasinglyOnPenisSittingCloseFixtures.js';
-import breatheTeasinglyOnPenisSittingCloseAction from '../../../../data/mods/sex/actions/breathe_teasingly_on_penis_sitting_close.action.json';
+import breatheTeasinglyOnPenisSittingCloseAction from '../../../../data/mods/sex-penile-oral/actions/breathe_teasingly_on_penis_sitting_close.action.json';
 
 const EXPECTED_MESSAGE =
   "Ava breathes teasingly on Nolan's penis from up close, leaning toward Nolan's lap.";
@@ -27,12 +27,12 @@ function configureActionDiscovery(fixture) {
   fixture.testEnv.actionIndex.buildIndex([breatheTeasinglyOnPenisSittingCloseAction]);
 }
 
-describe('sex:breathe_teasingly_on_penis_sitting_close action integration', () => {
+describe('sex-penile-oral:breathe_teasingly_on_penis_sitting_close action integration', () => {
   let testFixture;
   let restoreScopeResolver;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forActionAutoLoad('sex', ACTION_ID);
+    testFixture = await ModTestFixture.forActionAutoLoad('sex-penile-oral', ACTION_ID);
     restoreScopeResolver = installSittingCloseUncoveredPenisScopeOverride(testFixture);
   });
 

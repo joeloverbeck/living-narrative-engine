@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the sex:suckle_testicle action and rule.
+ * @file Integration tests for the sex-penile-oral:suckle_testicle action and rule.
  * @description Tests the rule execution after the suckle_testicle action is performed.
  * Note: This test does not test action discovery or scope resolution - it assumes
  * the action is valid and dispatches it directly. For action discovery tests,
@@ -64,12 +64,15 @@ function setupAnatomyComponents() {
   };
 }
 
-describe('sex:suckle_testicle action integration', () => {
+describe('sex-penile-oral:suckle_testicle action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
     // Create test fixture with auto-loaded files
-    testFixture = await ModTestFixture.forAction('sex', 'sex:suckle_testicle');
+    testFixture = await ModTestFixture.forAction(
+      'sex-penile-oral',
+      'sex-penile-oral:suckle_testicle'
+    );
 
     // Setup anatomy entities
     const entities = setupAnatomyComponents();
@@ -143,7 +146,7 @@ describe('sex:suckle_testicle action integration', () => {
     // The action prerequisites would normally prevent this, but we test rule robustness
     await expect(async () => {
       await testFixture.eventBus.dispatch('core:attempt_action', {
-        actionId: 'sex:suckle_testicle',
+        actionId: 'sex-penile-oral:suckle_testicle',
         actorId: 'alice',
         targetId: 'nonexistent',
       });

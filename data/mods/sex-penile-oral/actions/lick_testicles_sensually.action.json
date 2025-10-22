@@ -1,11 +1,11 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "sex:lick_testicles_sensually",
+  "id": "sex-penile-oral:lick_testicles_sensually",
   "name": "Lick Testicles Sensually",
   "description": "Sensually lick the target's testicles while kneeling before them from up close.",
   "targets": {
     "primary": {
-      "scope": "sex:actor_kneeling_before_target_with_testicle",
+      "scope": "sex-core:actor_kneeling_before_target_with_testicle",
       "placeholder": "target",
       "description": "Person with testicles to lick"
     }
@@ -16,9 +16,9 @@
   "template": "lick {target}'s testicles sensually",
   "prerequisites": [],
   "visual": {
-    "backgroundColor": "#4a148c",
-    "textColor": "#e1bee7",
-    "hoverBackgroundColor": "#6a1b9a",
-    "hoverTextColor": "#f3e5f5"
+    "backgroundColor": "#2a1a5e",
+    "textColor": "#ede7f6",
+    "hoverBackgroundColor": "#372483",
+    "hoverTextColor": "#ffffff"
   }
 }

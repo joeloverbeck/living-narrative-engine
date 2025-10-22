@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "sex:breathe_teasingly_on_penis",
+  "id": "sex-penile-oral:breathe_teasingly_on_penis",
   "name": "Breathe Teasingly on Penis",
   "description": "Breathe teasingly on the target's penis while kneeling before them from up close.",
   "targets": {
@@ -16,9 +16,9 @@
   "template": "breathe teasingly on {target}'s penis",
   "prerequisites": [],
   "visual": {
-    "backgroundColor": "#4a148c",
-    "textColor": "#e1bee7",
-    "hoverBackgroundColor": "#6a1b9a",
-    "hoverTextColor": "#f3e5f5"
+    "backgroundColor": "#2a1a5e",
+    "textColor": "#ede7f6",
+    "hoverBackgroundColor": "#372483",
+    "hoverTextColor": "#ffffff"
   }
 }

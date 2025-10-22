@@ -1,8 +1,0 @@
-{
-  "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "sex:event-is-action-lick-testicles-sensually",
-  "description": "Checks if the triggering event is for the 'sex:lick_testicles_sensually' action.",
-  "logic": {
-    "==": [{ "var": "event.payload.actionId" }, "sex:lick_testicles_sensually"]
-  }
-}

@@ -1,10 +1,10 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "rule_id": "handle_suckle_testicle",
-  "comment": "Handles the 'sex:suckle_testicle' action. Dispatches descriptive text and ends the turn.",
+  "rule_id": "handle_lick_testicles_sensually",
+  "comment": "Handles the 'sex-penile-oral:lick_testicles_sensually' action. Dispatches descriptive text and ends the turn.",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "sex:event-is-action-suckle-testicle"
+    "condition_ref": "sex-penile-oral:event-is-action-lick-testicles-sensually"
   },
   "actions": [
     {
@@ -27,7 +27,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
-        "value": "{context.actorName} suckles on {context.targetName}'s testicle, tracing the hard oval inside with the tongue."
+        "value": "{context.actorName} licks {context.targetName}'s testicles sensually, hot breath on the sensitive skin, coating them in saliva."
       }
     },
     {

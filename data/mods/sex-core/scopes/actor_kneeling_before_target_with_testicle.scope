@@ -1,0 +1,21 @@
+// Scope for actors kneeling before a target with at least one exposed testicle
+// Shared across oral teasing actions targeting the scrotum
+sex-core:actor_kneeling_before_target_with_testicle := actor.components.positioning:closeness.partners[][
+  {
+    "and": [
+      {"hasPartOfType": [".", "testicle"]},
+      {
+        "or": [
+          {"not": {"isSocketCovered": [".", "left_testicle"]}},
+          {"not": {"isSocketCovered": [".", "right_testicle"]}}
+        ]
+      },
+      {
+        "==": [
+          {"var": "actor.components.positioning:kneeling_before.entityId"},
+          {"var": "id"}
+        ]
+      }
+    ]
+  }
+]
