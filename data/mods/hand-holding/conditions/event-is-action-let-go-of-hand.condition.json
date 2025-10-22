@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "hand-holding:event-is-action-let-go-of-hand",
+  "description": "Checks if the triggering event is for the 'hand-holding:let_go_of_hand' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "hand-holding:let_go_of_hand"]
+  }
+}

@@ -4,12 +4,12 @@
 
 Define a new action/rule pair under the `sex-vaginal-penetration` mod that covers the explicit start of vaginal penetration, following the existing slide-along-labia interaction for anatomical checks, closeness, and UI styling. The action must use the same partner scope that resolves uncovered vaginas with acceptable orientation and should continue to forbid sitting-on states that would interfere with a standing penetration beat.【F:data/mods/sex-vaginal-penetration/actions/slide_penis_along_labia.action.json†L8-L18】
 
-This interaction is now **state-based**. Introduce a paired-component pattern matching the hand-holding implementation so we can track which actor is penetrating and who is being penetrated.【F:data/mods/hand_holding/components/hand_held.component.json†L1-L21】【F:data/mods/hand_holding/components/holding_hand.component.json†L1-L19】
+This interaction is now **state-based**. Introduce a paired-component pattern matching the hand-holding implementation so we can track which actor is penetrating and who is being penetrated.【F:data/mods/hand-holding/components/hand_held.component.json†L1-L21】【F:data/mods/hand-holding/components/holding_hand.component.json†L1-L19】
 
 ## Reference Patterns
 
 - **Prerequisite symmetry** – Reuse the `hasPartOfType` and uncovered penis checks from `sex-vaginal-penetration:slide_penis_along_labia` so only actors with exposed penises can initiate penetration.【F:data/mods/sex-vaginal-penetration/actions/slide_penis_along_labia.action.json†L20-L33】
-- **Complementary interaction state** – Mirror the dual-component modeling used by hand-holding, where one component marks the initiator and another the partner, to guide how penetration state tracking can evolve if future work requires paired anatomy components or consent flags.【F:data/mods/hand_holding/components/holding_hand.component.json†L1-L19】【F:data/mods/hand_holding/components/hand_held.component.json†L1-L21】
+- **Complementary interaction state** – Mirror the dual-component modeling used by hand-holding, where one component marks the initiator and another the partner, to guide how penetration state tracking can evolve if future work requires paired anatomy components or consent flags.【F:data/mods/hand-holding/components/holding_hand.component.json†L1-L19】【F:data/mods/hand-holding/components/hand_held.component.json†L1-L21】
 - **Testing conventions** – Follow the established integration approach where one suite validates discoverability (structure, scopes, components) and a separate suite covers rule execution, as shown in existing sex mod tests.【F:tests/integration/mods/sex/fondle_breasts_over_clothes_action_discovery.test.js†L1-L79】【F:tests/integration/mods/sex/fondle_penis_action.test.js†L1-L119】
 
 ## Component Requirements

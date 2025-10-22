@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "hand-holding:event-is-action-squeeze-hand-reassuringly",
+  "description": "Checks if the triggering event is for the 'hand-holding:squeeze_hand_reassuringly' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "hand-holding:squeeze_hand_reassuringly"
+    ]
+  }
+}

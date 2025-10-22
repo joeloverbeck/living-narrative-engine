@@ -1,0 +1,56 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "hand-holding",
+  "version": "1.0.0",
+  "name": "Hand Holding",
+  "description": "Sophisticated state-based hand-holding interactions with bidirectional relationship tracking. Includes actions for establishing, enhancing, and breaking hand-holding state.",
+  "author": "Living Narrative Engine Team",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [
+      "hold_hand.action.json",
+      "let_go_of_hand.action.json",
+      "squeeze_hand_reassuringly.action.json",
+      "warm_hands_between_yours.action.json",
+      "withdraw_hand_from_grasp.action.json"
+    ],
+    "components": [
+      "hand_held.component.json",
+      "holding_hand.component.json"
+    ],
+    "conditions": [
+      "actors-are-holding-hands.condition.json",
+      "event-is-action-hold-hand.condition.json",
+      "event-is-action-let-go-of-hand.condition.json",
+      "event-is-action-squeeze-hand-reassuringly.condition.json",
+      "event-is-action-warm-hands-between-yours.condition.json",
+      "event-is-action-withdraw-hand-from-grasp.condition.json"
+    ],
+    "rules": [
+      "handle_hold_hand.rule.json",
+      "handle_let_go_of_hand.rule.json",
+      "handle_squeeze_hand_reassuringly.rule.json",
+      "handle_warm_hands_between_yours.rule.json",
+      "handle_withdraw_hand_from_grasp.rule.json"
+    ],
+    "entities": {
+      "definitions": [],
+      "instances": []
+    },
+    "events": [],
+    "macros": [],
+    "scopes": [
+      "actor_whose_hand_target_is_holding.scope"
+    ]
+  }
+}

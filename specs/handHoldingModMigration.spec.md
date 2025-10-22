@@ -13,7 +13,7 @@ This specification has been validated against the actual codebase and corrected 
 ### ✅ Verified Correct Assumptions
 - All 12 files to migrate exist (3 actions, 2 components, 4 conditions, 3 rules)
 - All 7 test files exist in correct locations
-- Mod ID pattern `^[a-zA-Z0-9_]+$` allows underscores (✅ `hand_holding`)
+- Mod ID pattern `^[a-zA-Z0-9_-]+$` allows hyphenated IDs (✅ `hand-holding`)
 - Color scheme (Velvet Twilight) details are accurate
 - Component schemas match spec descriptions
 - Validation scripts exist as referenced
@@ -27,14 +27,14 @@ This specification has been validated against the actual codebase and corrected 
 5. **Scope Namespace** - Added prerequisite phase to migrate scope first
 
 ### 🎯 Architecture Improvements
-- Cleaner dependency graph (hand_holding → positioning, not → affection)
+- Cleaner dependency graph (hand-holding → positioning, not → affection)
 - Shared scope in logical location (positioning mod)
 - Eliminates potential circular coupling
 - Follows single-source-of-truth principle
 
 ## Executive Summary
 
-This specification outlines the migration of hand-holding related content from the `affection` mod to a new dedicated `hand_holding` mod. This migration is necessary due to the introduction of state-based components for hand-holding interactions, which will enable future actions that break, modify, or enhance the hand-holding state.
+This specification outlines the migration of hand-holding related content from the `affection` mod to a new dedicated `hand-holding` mod. This migration is necessary due to the introduction of state-based components for hand-holding interactions, which will enable future actions that break, modify, or enhance the hand-holding state.
 
 ## Rationale
 
@@ -57,14 +57,15 @@ These actions use two state components:
 ## Mod Naming Convention
 
 ### Mod ID Requirements
-Per `data/schemas/mod-manifest.schema.json` (line 16), mod IDs must match pattern: `^[a-zA-Z0-9_]+$`
+Per `data/schemas/mod-manifest.schema.json` (line 16), mod IDs must match pattern: `^[a-zA-Z0-9_-]+$`
 
+**✅ Compliant**: `hand-holding` (hyphen separator)
 **✅ Compliant**: `hand_holding` (underscore separator)
-**❌ Non-Compliant**: `hand-holding` (dashes not allowed)
+**❌ Non-Compliant**: `hand holding` (spaces not allowed)
 
 ### Mod Structure
 ```
-data/mods/hand_holding/
+data/mods/hand-holding/
 ├── mod-manifest.json
 ├── actions/
 │   ├── hold_hand.action.json
@@ -175,80 +176,80 @@ positioning:close_actors_facing_each_other_or_behind_target := actor.components.
 
 ### Actions (3 files)
 Source: `data/mods/affection/actions/`
-Destination: `data/mods/hand_holding/actions/`
+Destination: `data/mods/hand-holding/actions/`
 
 1. **hold_hand.action.json**
    - Current ID: `affection:hold_hand`
-   - New ID: `hand_holding:hold_hand`
+   - New ID: `hand-holding:hold_hand`
    - Update visual properties to new color scheme
    - Update targets scope reference: `affection:close_actors_facing_each_other_or_behind_target` → `positioning:close_actors_facing_each_other_or_behind_target`
-   - Update forbidden_components references to use `hand_holding:` namespace
+   - Update forbidden_components references to use `hand-holding:` namespace
 
 2. **squeeze_hand_reassuringly.action.json**
    - Current ID: `affection:squeeze_hand_reassuringly`
-   - New ID: `hand_holding:squeeze_hand_reassuringly`
-   - Update condition reference: `affection:actors-are-holding-hands` → `hand_holding:actors-are-holding-hands`
+   - New ID: `hand-holding:squeeze_hand_reassuringly`
+   - Update condition reference: `affection:actors-are-holding-hands` → `hand-holding:actors-are-holding-hands`
    - Update targets scope reference: `affection:close_actors_facing_each_other_or_behind_target` → `positioning:close_actors_facing_each_other_or_behind_target`
    - Update visual properties to new color scheme
 
 3. **warm_hands_between_yours.action.json**
    - Current ID: `affection:warm_hands_between_yours`
-   - New ID: `hand_holding:warm_hands_between_yours`
-   - Update condition reference: `affection:actors-are-holding-hands` → `hand_holding:actors-are-holding-hands`
+   - New ID: `hand-holding:warm_hands_between_yours`
+   - Update condition reference: `affection:actors-are-holding-hands` → `hand-holding:actors-are-holding-hands`
    - Update targets scope reference: `affection:close_actors_facing_each_other_or_behind_target` → `positioning:close_actors_facing_each_other_or_behind_target`
    - Update visual properties to new color scheme
 
 ### Components (2 files)
 Source: `data/mods/affection/components/`
-Destination: `data/mods/hand_holding/components/`
+Destination: `data/mods/hand-holding/components/`
 
 1. **holding_hand.component.json**
    - Current ID: `affection:holding_hand`
-   - New ID: `hand_holding:holding_hand`
+   - New ID: `hand-holding:holding_hand`
    - No schema changes required
 
 2. **hand_held.component.json**
    - Current ID: `affection:hand_held`
-   - New ID: `hand_holding:hand_held`
+   - New ID: `hand-holding:hand_held`
    - No schema changes required
 
 ### Conditions (4 files)
 Source: `data/mods/affection/conditions/`
-Destination: `data/mods/hand_holding/conditions/`
+Destination: `data/mods/hand-holding/conditions/`
 
 1. **actors-are-holding-hands.condition.json**
    - Current ID: `affection:actors-are-holding-hands`
-   - New ID: `hand_holding:actors-are-holding-hands`
+   - New ID: `hand-holding:actors-are-holding-hands`
    - Update component references in logic:
-     - `affection:holding_hand` → `hand_holding:holding_hand`
-     - `affection:hand_held` → `hand_holding:hand_held`
+     - `affection:holding_hand` → `hand-holding:holding_hand`
+     - `affection:hand_held` → `hand-holding:hand_held`
 
 2. **event-is-action-hold-hand.condition.json**
    - Current ID: `affection:event-is-action-hold-hand`
-   - New ID: `hand_holding:event-is-action-hold-hand`
-   - Update action ID reference: `affection:hold_hand` → `hand_holding:hold_hand`
+   - New ID: `hand-holding:event-is-action-hold-hand`
+   - Update action ID reference: `affection:hold_hand` → `hand-holding:hold_hand`
 
 3. **event-is-action-squeeze-hand-reassuringly.condition.json**
    - Current ID: `affection:event-is-action-squeeze-hand-reassuringly`
-   - New ID: `hand_holding:event-is-action-squeeze-hand-reassuringly`
+   - New ID: `hand-holding:event-is-action-squeeze-hand-reassuringly`
    - Update action ID reference
 
 4. **event-is-action-warm-hands-between-yours.condition.json**
    - Current ID: `affection:event-is-action-warm-hands-between-yours`
-   - New ID: `hand_holding:event-is-action-warm-hands-between-yours`
+   - New ID: `hand-holding:event-is-action-warm-hands-between-yours`
    - Update action ID reference
 
 ### Rules (3 files)
 Source: `data/mods/affection/rules/`
-Destination: `data/mods/hand_holding/rules/`
+Destination: `data/mods/hand-holding/rules/`
 
 1. **handle_hold_hand.rule.json**
    - Current rule_id: `handle_hold_hand`
    - New rule_id: `handle_hold_hand` (can remain the same or prefix with mod)
-   - Update condition reference: `affection:event-is-action-hold-hand` → `hand_holding:event-is-action-hold-hand`
+   - Update condition reference: `affection:event-is-action-hold-hand` → `hand-holding:event-is-action-hold-hand`
    - Update component types in all operations:
-     - `affection:holding_hand` → `hand_holding:holding_hand`
-     - `affection:hand_held` → `hand_holding:hand_held`
+     - `affection:holding_hand` → `hand-holding:holding_hand`
+     - `affection:hand_held` → `hand-holding:hand_held`
 
 2. **handle_squeeze_hand_reassuringly.rule.json**
    - Update condition reference to new mod namespace
@@ -264,16 +265,16 @@ The affection mod uses `close_actors_facing_each_other_or_behind_target.scope` w
 **Analysis of scope dependencies**:
 - The scope uses only `positioning:closeness` component and positioning conditions
 - No affection-specific logic is in the scope
-- Both affection and hand_holding need this scope
+- Both affection and hand-holding need this scope
 - Scope logically belongs in `positioning` mod
 
 **Decision Required**:
-- **Option A**: ❌ Keep scope in affection mod, hand_holding depends on affection (creates circular coupling risk)
-- **Option B**: ⚠️ Duplicate scope in hand_holding mod (maintains independence but duplication)
+- **Option A**: ❌ Keep scope in affection mod, hand-holding depends on affection (creates circular coupling risk)
+- **Option B**: ⚠️ Duplicate scope in hand-holding mod (maintains independence but duplication)
 - **Option C**: ✅ Move scope to `positioning` mod (clean architecture, shared dependency)
 
 **REVISED RECOMMENDATION**: **Option C** - Move scope to `positioning` mod. This:
-- Eliminates circular coupling between affection and hand_holding
+- Eliminates circular coupling between affection and hand-holding
 - Places scope with its logical dependency (positioning components)
 - Allows both mods to depend on positioning without cross-dependency
 - Follows single-source-of-truth principle
@@ -281,7 +282,7 @@ The affection mod uses `close_actors_facing_each_other_or_behind_target.scope` w
 ## Dependency Management
 
 ### New Mod Dependencies
-`hand_holding` mod-manifest.json should declare:
+`hand-holding` mod-manifest.json should declare:
 
 ```json
 {
@@ -312,12 +313,12 @@ Update `data/mods/affection/mod-manifest.json`:
    - Remove 4 conditions from `content.conditions`
    - Remove 3 rules from `content.rules`
 
-2. **Potentially add dependency** on hand_holding if future affection actions reference hand-holding state:
+2. **Potentially add dependency** on hand-holding if future affection actions reference hand-holding state:
 ```json
 {
   "dependencies": [
     {
-      "id": "hand_holding",
+      "id": "hand-holding",
       "version": "^1.0.0"
     }
   ]
@@ -341,7 +342,7 @@ Update `data/game.json` to include new mod in load order:
     "violence",
     "seduction",
     "affection",
-    "hand_holding",
+    "hand-holding",
     "caressing",
     "kissing",
     "p_erotica"
@@ -350,7 +351,7 @@ Update `data/game.json` to include new mod in load order:
 ```
 
 **Critical**:
-- `hand_holding` must load after its dependencies (core, positioning)
+- `hand-holding` must load after its dependencies (core, positioning)
 - Placement after `affection` maintains logical grouping
 - Note: `descriptors` mod exists but is NOT currently loaded in game.json
 
@@ -358,17 +359,17 @@ Update `data/game.json` to include new mod in load order:
 
 ### Complete Mapping Table
 
-| Old ID (affection) | New ID (hand_holding) | Type |
+| Old ID (affection) | New ID (hand-holding) | Type |
 |-------------------|----------------------|------|
-| `affection:hold_hand` | `hand_holding:hold_hand` | Action |
-| `affection:squeeze_hand_reassuringly` | `hand_holding:squeeze_hand_reassuringly` | Action |
-| `affection:warm_hands_between_yours` | `hand_holding:warm_hands_between_yours` | Action |
-| `affection:holding_hand` | `hand_holding:holding_hand` | Component |
-| `affection:hand_held` | `hand_holding:hand_held` | Component |
-| `affection:actors-are-holding-hands` | `hand_holding:actors-are-holding-hands` | Condition |
-| `affection:event-is-action-hold-hand` | `hand_holding:event-is-action-hold-hand` | Condition |
-| `affection:event-is-action-squeeze-hand-reassuringly` | `hand_holding:event-is-action-squeeze-hand-reassuringly` | Condition |
-| `affection:event-is-action-warm-hands-between-yours` | `hand_holding:event-is-action-warm-hands-between-yours` | Condition |
+| `affection:hold_hand` | `hand-holding:hold_hand` | Action |
+| `affection:squeeze_hand_reassuringly` | `hand-holding:squeeze_hand_reassuringly` | Action |
+| `affection:warm_hands_between_yours` | `hand-holding:warm_hands_between_yours` | Action |
+| `affection:holding_hand` | `hand-holding:holding_hand` | Component |
+| `affection:hand_held` | `hand-holding:hand_held` | Component |
+| `affection:actors-are-holding-hands` | `hand-holding:actors-are-holding-hands` | Condition |
+| `affection:event-is-action-hold-hand` | `hand-holding:event-is-action-hold-hand` | Condition |
+| `affection:event-is-action-squeeze-hand-reassuringly` | `hand-holding:event-is-action-squeeze-hand-reassuringly` | Condition |
+| `affection:event-is-action-warm-hands-between-yours` | `hand-holding:event-is-action-warm-hands-between-yours` | Condition |
 
 ### Search and Replace Strategy
 
@@ -382,19 +383,19 @@ Update `data/game.json` to include new mod in load order:
 **Replace patterns**:
 ```bash
 # Component references
-"affection:holding_hand" → "hand_holding:holding_hand"
-"affection:hand_held" → "hand_holding:hand_held"
+"affection:holding_hand" → "hand-holding:holding_hand"
+"affection:hand_held" → "hand-holding:hand_held"
 
 # Action references
-"affection:hold_hand" → "hand_holding:hold_hand"
-"affection:squeeze_hand_reassuringly" → "hand_holding:squeeze_hand_reassuringly"
-"affection:warm_hands_between_yours" → "hand_holding:warm_hands_between_yours"
+"affection:hold_hand" → "hand-holding:hold_hand"
+"affection:squeeze_hand_reassuringly" → "hand-holding:squeeze_hand_reassuringly"
+"affection:warm_hands_between_yours" → "hand-holding:warm_hands_between_yours"
 
 # Condition references
-"affection:actors-are-holding-hands" → "hand_holding:actors-are-holding-hands"
-"affection:event-is-action-hold-hand" → "hand_holding:event-is-action-hold-hand"
-"affection:event-is-action-squeeze-hand-reassuringly" → "hand_holding:event-is-action-squeeze-hand-reassuringly"
-"affection:event-is-action-warm-hands-between-yours" → "hand_holding:event-is-action-warm-hands-between-yours"
+"affection:actors-are-holding-hands" → "hand-holding:actors-are-holding-hands"
+"affection:event-is-action-hold-hand" → "hand-holding:event-is-action-hold-hand"
+"affection:event-is-action-squeeze-hand-reassuringly" → "hand-holding:event-is-action-squeeze-hand-reassuringly"
+"affection:event-is-action-warm-hands-between-yours" → "hand-holding:event-is-action-warm-hands-between-yours"
 ```
 
 ## Test Suite Migration
@@ -402,39 +403,39 @@ Update `data/game.json` to include new mod in load order:
 ### Test Files to Migrate (8 identified)
 
 Source: `tests/integration/mods/affection/`
-Destination: `tests/integration/mods/hand_holding/`
+Destination: `tests/integration/mods/hand-holding/`
 
 #### Integration Tests
 1. **hold_hand_action.test.js**
-   - Move to `tests/integration/mods/hand_holding/`
-   - Update all imports: `affection` → `hand_holding`
+   - Move to `tests/integration/mods/hand-holding/`
+   - Update all imports: `affection` → `hand-holding`
    - Update component references in assertions
    - Update action ID references
 
 2. **hold_hand_action_discovery.test.js**
-   - Move to `tests/integration/mods/hand_holding/`
+   - Move to `tests/integration/mods/hand-holding/`
    - Update test bed configuration for new mod
    - Update action ID expectations
 
 3. **hold_hand_first_time.integration.test.js**
-   - Move to `tests/integration/mods/hand_holding/`
+   - Move to `tests/integration/mods/hand-holding/`
    - Update mod loading in test setup
    - Update component and action references
 
 4. **squeeze_hand_reassuringly_action.test.js**
-   - Move to `tests/integration/mods/hand_holding/`
+   - Move to `tests/integration/mods/hand-holding/`
    - Update all namespace references
 
 5. **squeeze_hand_reassuringly_action_discovery.test.js**
-   - Move to `tests/integration/mods/hand_holding/`
+   - Move to `tests/integration/mods/hand-holding/`
    - Update action discovery expectations
 
 6. **warm_hands_between_yours_action.test.js**
-   - Move to `tests/integration/mods/hand_holding/`
+   - Move to `tests/integration/mods/hand-holding/`
    - Update all namespace references
 
 7. **warm_hands_between_yours_action_discovery.test.js**
-   - Move to `tests/integration/mods/hand_holding/`
+   - Move to `tests/integration/mods/hand-holding/`
    - Update action discovery expectations
 
 #### Performance Tests (Review)
@@ -446,7 +447,7 @@ Destination: `tests/integration/mods/hand_holding/`
 ### Test Update Checklist
 For each test file:
 - [ ] Update mod ID in test bed initialization
-- [ ] Update all action ID references (`affection:*` → `hand_holding:*`)
+- [ ] Update all action ID references (`affection:*` → `hand-holding:*`)
 - [ ] Update all component ID references
 - [ ] Update all condition ID references
 - [ ] Update test descriptions to reflect new mod name
@@ -457,7 +458,7 @@ For each test file:
 ### Test Execution Commands
 ```bash
 # Run migrated tests
-npm run test:integration -- tests/integration/mods/hand_holding/
+npm run test:integration -- tests/integration/mods/hand-holding/
 
 # Run all integration tests to verify no breaks
 npm run test:integration
@@ -478,13 +479,13 @@ All migrated files must pass schema validation:
 
 ```bash
 # Validate entire mod
-npm run validate:mod:hand_holding
+npm run validate:mod:hand-holding
 
 # Validate specific file types
-node scripts/validateMods.js --mod hand_holding --type actions
-node scripts/validateMods.js --mod hand_holding --type components
-node scripts/validateMods.js --mod hand_holding --type conditions
-node scripts/validateMods.js --mod hand_holding --type rules
+node scripts/validateMods.js --mod hand-holding --type actions
+node scripts/validateMods.js --mod hand-holding --type components
+node scripts/validateMods.js --mod hand-holding --type conditions
+node scripts/validateMods.js --mod hand-holding --type rules
 ```
 
 ### Visual Properties Validation
@@ -568,7 +569,7 @@ grep -r "affection:hand_held" data/mods/
 Future components to consider:
 - `fingers_intertwined` - Enhanced intimacy marker
 - `hand_held_reluctantly` - Consent/comfort tracking
-- `hand_holding_initiated_at` - Timestamp for duration tracking
+- `hand-holding_initiated_at` - Timestamp for duration tracking
 
 ## Implementation Checklist
 
@@ -589,7 +590,7 @@ Future components to consider:
 - [ ] Set up test environment with mod validation enabled
 
 ### Phase 2: Mod Structure Creation
-- [ ] Create `data/mods/hand_holding/` directory
+- [ ] Create `data/mods/hand-holding/` directory
 - [ ] Create subdirectories: `actions/`, `components/`, `conditions/`, `rules/`
 - [ ] Create `mod-manifest.json` with proper dependencies
 - [ ] Validate directory structure
@@ -622,14 +623,14 @@ Future components to consider:
 - [ ] Commit color scheme documentation
 
 ### Phase 7: Test Migration
-- [ ] Move 7 integration test files to `tests/integration/mods/hand_holding/`
+- [ ] Move 7 integration test files to `tests/integration/mods/hand-holding/`
 - [ ] Update all test file references and imports
 - [ ] Update test descriptions and mod configurations
 - [ ] Review performance test for necessary updates
 - [ ] Verify tests can load new mod structure
 
 ### Phase 8: Validation
-- [ ] Run `npm run validate:mod:hand_holding`
+- [ ] Run `npm run validate:mod:hand-holding`
 - [ ] Run `node scripts/validateVisualContrast.js`
 - [ ] Verify no broken references: `grep -r "affection:hold" data/mods/`
 - [ ] Check dependency resolution: `npm run depcruise:validate`
@@ -637,7 +638,7 @@ Future components to consider:
 
 ### Phase 9: Testing
 - [ ] Run unit tests: `npm run test:unit`
-- [ ] Run hand_holding integration tests: `npm run test:integration -- tests/integration/mods/hand_holding/`
+- [ ] Run hand-holding integration tests: `npm run test:integration -- tests/integration/mods/hand-holding/`
 - [ ] Run affection integration tests to verify no breaks
 - [ ] Run full integration test suite: `npm run test:integration`
 - [ ] Run full test suite: `npm run test:ci`
@@ -652,7 +653,7 @@ Future components to consider:
 
 ### Phase 11: Documentation
 - [ ] Update main README.md if necessary
-- [ ] Create mod-specific README in `data/mods/hand_holding/README.md`
+- [ ] Create mod-specific README in `data/mods/hand-holding/README.md`
 - [ ] Document state machine and future extensibility
 - [ ] Update CHANGELOG.md with migration notes
 
@@ -691,7 +692,7 @@ Future components to consider:
 ### Rollback Plan
 If critical issues discovered post-migration:
 1. Revert to backup of affection mod
-2. Remove hand_holding mod from game.json
+2. Remove hand-holding mod from game.json
 3. Restore original test files
 4. Investigate issues and re-plan migration
 
@@ -732,7 +733,7 @@ data/mods/affection/
 
 ### Destination Files (Hand Holding Mod)
 ```
-data/mods/hand_holding/
+data/mods/hand-holding/
 ├── mod-manifest.json (NEW)
 ├── actions/
 │   ├── hold_hand.action.json (MIGRATED + UPDATED)
@@ -754,7 +755,7 @@ data/mods/hand_holding/
 
 ### Test Files
 ```
-tests/integration/mods/hand_holding/
+tests/integration/mods/hand-holding/
 ├── hold_hand_action.test.js (MIGRATED + UPDATED)
 ├── hold_hand_action_discovery.test.js (MIGRATED + UPDATED)
 ├── hold_hand_first_time.integration.test.js (MIGRATED + UPDATED)
@@ -793,14 +794,14 @@ Hover State:
 
 ```bash
 # Complete validation suite
-npm run validate:mod:hand_holding
+npm run validate:mod:hand-holding
 node scripts/validateVisualContrast.js
 npm run depcruise:validate
 npm run test:ci
 
 # Quick validation during development
-npx eslint data/mods/hand_holding/**/*.json
-npm run test:integration -- tests/integration/mods/hand_holding/
+npx eslint data/mods/hand-holding/**/*.json
+npm run test:integration -- tests/integration/mods/hand-holding/
 
 # Search for broken references
 grep -r "affection:hold_hand" data/mods/ tests/

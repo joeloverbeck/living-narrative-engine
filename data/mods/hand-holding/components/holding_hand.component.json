@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "hand-holding:holding_hand",
+  "description": "Marks an actor who is actively holding another entity's hand.",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["held_entity_id", "initiated"],
+    "properties": {
+      "held_entity_id": {
+        "type": "string",
+        "description": "The ID of the entity whose hand is being held",
+        "pattern": "^([a-zA-Z0-9_]+:[a-zA-Z0-9_-]+|[a-zA-Z0-9_]+)$"
+      },
+      "initiated": {
+        "type": "boolean",
+        "description": "Whether this entity initiated the hand-holding interaction"
+      }
+    }
+  }
+}

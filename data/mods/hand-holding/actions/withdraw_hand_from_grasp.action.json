@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "hand-holding:withdraw_hand_from_grasp",
+  "name": "Withdraw hand from grasp",
+  "description": "Pull your hand away to break free from the target's hold.",
+  "targets": "hand-holding:actor_whose_hand_target_is_holding",
+  "required_components": {
+    "actor": ["positioning:closeness", "hand-holding:hand_held"],
+    "primary": ["hand-holding:holding_hand"]
+  },
+  "template": "withdraw your hand from {target}'s grasp",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#2c0e37",
+    "textColor": "#ffebf0",
+    "hoverBackgroundColor": "#451952",
+    "hoverTextColor": "#f3e5f5"
+  }
+}
