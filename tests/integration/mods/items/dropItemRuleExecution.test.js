@@ -7,48 +7,9 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import '../../../common/mods/domainMatchers.js';
 import dropItemRule from '../../../../data/mods/items/rules/handle_drop_item.rule.json' assert { type: 'json' };
 import eventIsActionDropItem from '../../../../data/mods/items/conditions/event-is-action-drop-item.condition.json' assert { type: 'json' };
-
-/**
- * Creates a standardized drop item scenario with actor, location, and items.
- *
- * @param {string} actorName - Name for the actor
- * @param {string} locationId - Location for the scenario
- * @param {Array<{id: string, weight: number}>} items - Items for the actor's inventory
- * @param {object} actorCapacity - Inventory capacity for actor
- * @returns {object} Object with room, actor, and item entities
- */
-function setupDropItemScenario(
-  actorName = 'Alice',
-  locationId = 'saloon1',
-  items = [{ id: 'letter-1', weight: 0.05 }],
-  actorCapacity = { maxWeight: 50, maxItems: 10 }
-) {
-  const room = new ModEntityBuilder(locationId).asRoom('Saloon').build();
-
-  const actor = new ModEntityBuilder('test:actor1')
-    .withName(actorName)
-    .atLocation(locationId)
-    .asActor()
-    .withComponent('items:inventory', {
-      items: items.map((item) => item.id),
-      capacity: actorCapacity,
-    })
-    .build();
-
-  const itemEntities = items.map((item) =>
-    new ModEntityBuilder(item.id)
-      .withName(item.id)
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: item.weight })
-      .build()
-  );
-
-  return { room, actor, items: itemEntities };
-}
 
 describe('items:drop_item action integration', () => {
   let testFixture;
@@ -68,227 +29,256 @@ describe('items:drop_item action integration', () => {
 
   describe('successful drop operations', () => {
     it('successfully executes drop item action', async () => {
-      // Arrange: Setup scenario
-      const scenario = setupDropItemScenario();
-      testFixture.reset([scenario.room, scenario.actor, ...scenario.items]);
+      const scenario = testFixture.createDropItemScenario({
+        roomId: 'saloon1',
+        roomName: 'Saloon',
+        actor: {
+          id: 'test:actor1',
+          name: 'Alice',
+          capacity: { maxWeight: 50, maxItems: 10 },
+        },
+        item: {
+          id: 'letter-1',
+          name: 'letter-1',
+          weight: 0.05,
+        },
+      });
 
-      // Act: Drop letter at location
-      await testFixture.executeAction('test:actor1', 'letter-1');
+      testFixture.reset([...scenario.entities]);
 
-      // Assert: Verify item removed from inventory
-      const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).not.toContain('letter-1');
+      await testFixture.executeAction(scenario.actor.id, scenario.item.id);
 
-      // Assert: Verify item has position component at correct location
-      const item = testFixture.entityManager.getEntityInstance('letter-1');
-      expect(item.components['core:position']).toBeDefined();
-      expect(item.components['core:position'].locationId).toBe('saloon1');
+      const actor = testFixture.entityManager.getEntityInstance(
+        scenario.actor.id
+      );
+      expect(actor).toHaveComponentData('items:inventory', {
+        items: [],
+        capacity: { maxWeight: 50, maxItems: 10 },
+      });
 
-      // Assert: Verify items:item_dropped event was dispatched with correct payload
+      const item = testFixture.entityManager.getEntityInstance(
+        scenario.item.id
+      );
+      expect(item).toHaveComponent('core:position');
+      expect(item).toHaveComponentData('core:position', {
+        locationId: scenario.room.id,
+      });
+
+      expect(testFixture.events).toDispatchEvent('items:item_dropped');
+      expect(testFixture.events).toDispatchEvent('core:turn_ended');
+      expect(testFixture.events).toHaveActionSuccess('Alice drops letter-1.');
+
       const itemDroppedEvent = testFixture.events.find(
-        (e) => e.eventType === 'items:item_dropped'
+        (event) => event.eventType === 'items:item_dropped'
       );
-      expect(itemDroppedEvent).toBeDefined();
-      expect(itemDroppedEvent.payload.actorEntity).toBe('test:actor1');
-      expect(itemDroppedEvent.payload.itemEntity).toBe('letter-1');
-      expect(itemDroppedEvent.payload.locationId).toBe('saloon1');
-
-      // Assert: Verify turn ended successfully
-      const turnEndedEvent = testFixture.events.find(
-        (e) => e.eventType === 'core:turn_ended'
-      );
-      expect(turnEndedEvent).toBeDefined();
-      expect(turnEndedEvent.payload.success).toBe(true);
+      expect(itemDroppedEvent?.payload.actorEntity).toBe(scenario.actor.id);
+      expect(itemDroppedEvent?.payload.itemEntity).toBe(scenario.item.id);
+      expect(itemDroppedEvent?.payload.locationId).toBe(scenario.room.id);
     });
 
     it('removes item from inventory and preserves capacity settings', async () => {
-      const scenario = setupDropItemScenario(
-        'Sarah',
-        'garden',
-        [{ id: 'revolver-1', weight: 1.2 }],
-        { maxWeight: 50, maxItems: 10 }
+      const scenario = testFixture.createDropItemScenario({
+        roomId: 'garden',
+        roomName: 'Garden',
+        actor: {
+          id: 'test:actor1',
+          name: 'Sarah',
+        },
+        item: { id: 'revolver-1', name: 'revolver-1', weight: 1.2 },
+        capacity: { maxWeight: 50, maxItems: 10 },
+      });
+
+      testFixture.reset([...scenario.entities]);
+
+      await testFixture.executeAction(scenario.actor.id, scenario.item.id);
+
+      const actor = testFixture.entityManager.getEntityInstance(
+        scenario.actor.id
       );
-
-      testFixture.reset([scenario.room, scenario.actor, ...scenario.items]);
-
-      await testFixture.executeAction('test:actor1', 'revolver-1');
-
-      const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-
-      // Verify item removed
-      expect(actor.components['items:inventory'].items).not.toContain('revolver-1');
-
-      // Verify capacity preserved
-      expect(actor.components['items:inventory'].capacity).toEqual({
-        maxWeight: 50,
-        maxItems: 10,
+      expect(actor).toHaveComponentData('items:inventory', {
+        items: [],
+        capacity: { maxWeight: 50, maxItems: 10 },
       });
     });
 
     it('drops multiple items sequentially', async () => {
-      const scenario = setupDropItemScenario(
-        'Bob',
-        'tavern',
-        [
-          { id: 'item1', weight: 0.5 },
-          { id: 'item2', weight: 0.3 },
-          { id: 'item3', weight: 0.2 },
+      const scenario = testFixture.createDropItemScenario({
+        roomId: 'tavern',
+        roomName: 'Tavern',
+        actor: {
+          id: 'test:actor1',
+          name: 'Bob',
+        },
+        item: { id: 'item1', name: 'item1', weight: 0.5 },
+        additionalInventoryItems: [
+          { id: 'item2', name: 'item2', weight: 0.3 },
+          { id: 'item3', name: 'item3', weight: 0.2 },
         ],
-        { maxWeight: 50, maxItems: 10 }
+        capacity: { maxWeight: 50, maxItems: 10 },
+      });
+
+      testFixture.reset([...scenario.entities]);
+
+      const [secondItem, thirdItem] = scenario.additionalInventoryItems;
+
+      await testFixture.executeAction(scenario.actor.id, scenario.item.id);
+      let actor = testFixture.entityManager.getEntityInstance(
+        scenario.actor.id
       );
+      expect(actor).toHaveComponentData('items:inventory', {
+        items: [secondItem.id, thirdItem.id],
+      });
 
-      testFixture.reset([scenario.room, scenario.actor, ...scenario.items]);
+      let dropped = testFixture.entityManager.getEntityInstance(
+        scenario.item.id
+      );
+      expect(dropped).toHaveComponentData('core:position', {
+        locationId: scenario.room.id,
+      });
 
-      // Drop first item
-      await testFixture.executeAction('test:actor1', 'item1');
-      let actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).toEqual(['item2', 'item3']);
+      await testFixture.executeAction(scenario.actor.id, secondItem.id);
+      actor = testFixture.entityManager.getEntityInstance(scenario.actor.id);
+      expect(actor).toHaveComponentData('items:inventory', {
+        items: [thirdItem.id],
+      });
 
-      let item1 = testFixture.entityManager.getEntityInstance('item1');
-      expect(item1.components['core:position'].locationId).toBe('tavern');
+      dropped = testFixture.entityManager.getEntityInstance(secondItem.id);
+      expect(dropped).toHaveComponentData('core:position', {
+        locationId: scenario.room.id,
+      });
 
-      // Drop second item
-      await testFixture.executeAction('test:actor1', 'item2');
-      actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).toEqual(['item3']);
+      await testFixture.executeAction(scenario.actor.id, thirdItem.id);
+      actor = testFixture.entityManager.getEntityInstance(scenario.actor.id);
+      expect(actor).toHaveComponentData('items:inventory', {
+        items: [],
+      });
 
-      let item2 = testFixture.entityManager.getEntityInstance('item2');
-      expect(item2.components['core:position'].locationId).toBe('tavern');
-
-      // Drop third item
-      await testFixture.executeAction('test:actor1', 'item3');
-      actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).toEqual([]);
-
-      let item3 = testFixture.entityManager.getEntityInstance('item3');
-      expect(item3.components['core:position'].locationId).toBe('tavern');
+      dropped = testFixture.entityManager.getEntityInstance(thirdItem.id);
+      expect(dropped).toHaveComponentData('core:position', {
+        locationId: scenario.room.id,
+      });
     });
   });
 
   describe('perception logging', () => {
     it('creates perception log entry when item dropped', async () => {
-      const scenario = setupDropItemScenario();
-      testFixture.reset([scenario.room, scenario.actor, ...scenario.items]);
+      const scenario = testFixture.createDropItemScenario({
+        roomId: 'saloon1',
+        roomName: 'Saloon',
+        actor: { id: 'test:actor1', name: 'Alice' },
+        item: { id: 'letter-1', name: 'letter-1', weight: 0.05 },
+      });
 
-      await testFixture.executeAction('test:actor1', 'letter-1');
+      testFixture.reset([...scenario.entities]);
 
-      // Verify DISPATCH_PERCEPTIBLE_EVENT was called
+      await testFixture.executeAction(scenario.actor.id, scenario.item.id);
+
+      expect(testFixture.events).toDispatchEvent('core:perceptible_event');
+
       const perceptibleEvent = testFixture.events.find(
-        (e) => e.eventType === 'core:perceptible_event'
+        (event) => event.eventType === 'core:perceptible_event'
       );
 
-      expect(perceptibleEvent).toBeDefined();
-      expect(perceptibleEvent.payload.locationId).toBe('saloon1');
-      expect(perceptibleEvent.payload.perceptionType).toBe('item_dropped');
-      expect(perceptibleEvent.payload.actorId).toBe('test:actor1');
-      expect(perceptibleEvent.payload.targetId).toBe('letter-1');
-      expect(perceptibleEvent.payload.involvedEntities).toEqual([]);
+      expect(perceptibleEvent?.payload.locationId).toBe(scenario.room.id);
+      expect(perceptibleEvent?.payload.perceptionType).toBe('item_dropped');
+      expect(perceptibleEvent?.payload.actorId).toBe(scenario.actor.id);
+      expect(perceptibleEvent?.payload.targetId).toBe(scenario.item.id);
+      expect(perceptibleEvent?.payload.involvedEntities).toEqual([]);
     });
 
     it('includes correct description in perception log', async () => {
-      const scenario = setupDropItemScenario('Charlie', 'kitchen', [
-        { id: 'golden-watch', weight: 0.1 },
-      ]);
-      testFixture.reset([scenario.room, scenario.actor, ...scenario.items]);
+      const scenario = testFixture.createDropItemScenario({
+        roomId: 'kitchen',
+        roomName: 'Kitchen',
+        actor: { id: 'test:actor1', name: 'Charlie' },
+        item: { id: 'golden-watch', name: 'golden-watch', weight: 0.1 },
+      });
 
-      await testFixture.executeAction('test:actor1', 'golden-watch');
+      testFixture.reset([...scenario.entities]);
+
+      await testFixture.executeAction(scenario.actor.id, scenario.item.id);
 
       const perceptibleEvent = testFixture.events.find(
-        (e) => e.eventType === 'core:perceptible_event'
+        (event) => event.eventType === 'core:perceptible_event'
       );
 
       expect(perceptibleEvent).toBeDefined();
-      expect(perceptibleEvent.payload.descriptionText).toContain('Charlie');
-      expect(perceptibleEvent.payload.descriptionText).toContain('drops');
-      expect(perceptibleEvent.payload.descriptionText).toContain('golden-watch');
+      expect(perceptibleEvent?.payload.descriptionText).toContain('Charlie');
+      expect(perceptibleEvent?.payload.descriptionText).toContain('drops');
+      expect(perceptibleEvent?.payload.descriptionText).toContain(
+        'golden-watch'
+      );
     });
   });
 
   describe('error scenarios', () => {
     it('handles error when item not in inventory', async () => {
-      const scenario = setupDropItemScenario('Alice', 'saloon1', [], {
-        maxWeight: 50,
-        maxItems: 10,
+      const scenario = testFixture.createDropItemScenario({
+        roomId: 'saloon1',
+        roomName: 'Saloon',
+        actor: {
+          id: 'test:actor1',
+          name: 'Alice',
+          inventoryOverrides: { items: [] },
+        },
+        item: { id: 'not-in-inventory', name: 'NotInInventory', weight: 0.5 },
       });
-      testFixture.reset([scenario.room, scenario.actor]);
 
-      // Create an item not in inventory
-      const notInInventory = new ModEntityBuilder('not-in-inventory')
-        .withName('NotInInventory')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.5 })
-        .build();
-      testFixture.entityManager.createEntityInstance(notInInventory);
+      testFixture.reset([...scenario.entities]);
 
-      // Try to drop item not in inventory - should fail gracefully
-      await testFixture.executeAction('test:actor1', 'not-in-inventory');
+      await testFixture.executeAction(scenario.actor.id, scenario.item.id);
 
-      // Verify turn ended with failure
-      const turnEndedEvent = testFixture.events.find(
-        (e) => e.eventType === 'core:turn_ended'
+      expect(testFixture.events).toDispatchEvent('core:turn_ended');
+
+      const actor = testFixture.entityManager.getEntityInstance(
+        scenario.actor.id
       );
-      expect(turnEndedEvent).toBeDefined();
-      // The turn should still end, but the operation should fail internally
+      expect(actor).toHaveComponentData('items:inventory', { items: [] });
     });
   });
 
   describe('Drop Item - Additional Edge Cases', () => {
     it('should handle dropping last item from inventory', async () => {
-      // Setup actor with single item
-      const room = new ModEntityBuilder('saloon1').asRoom('Saloon').build();
-      const actor = new ModEntityBuilder('test:actor1')
-        .withName('Alice')
-        .atLocation('saloon1')
-        .asActor()
-        .withComponent('items:inventory', {
-          items: ['item-1'],
+      const scenario = testFixture.createDropItemScenario({
+        roomId: 'saloon1',
+        roomName: 'Saloon',
+        actor: {
+          id: 'test:actor1',
+          name: 'Alice',
           capacity: { maxWeight: 50, maxItems: 10 },
-        })
-        .build();
-      const item = new ModEntityBuilder('item-1')
-        .withName('item-1')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.5 })
-        .build();
+        },
+        item: { id: 'item-1', name: 'item-1', weight: 0.5 },
+      });
 
-      testFixture.reset([room, actor, item]);
+      testFixture.reset([...scenario.entities]);
 
-      // Drop the item
-      await testFixture.executeAction('test:actor1', 'item-1');
+      await testFixture.executeAction(scenario.actor.id, scenario.item.id);
 
-      // Verify inventory is now empty
-      const actorAfter = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorAfter.components['items:inventory'].items).toEqual([]);
+      const actorAfter = testFixture.entityManager.getEntityInstance(
+        scenario.actor.id
+      );
+      expect(actorAfter).toHaveComponentData('items:inventory', { items: [] });
     });
 
     it('should create position component with correct locationId', async () => {
-      const room = new ModEntityBuilder('tavern').asRoom('Tavern').build();
-      const actor = new ModEntityBuilder('test:actor1')
-        .withName('Bob')
-        .atLocation('tavern')
-        .asActor()
-        .withComponent('items:inventory', {
-          items: ['letter-1'],
-          capacity: { maxWeight: 50, maxItems: 10 },
-        })
-        .build();
-      const item = new ModEntityBuilder('letter-1')
-        .withName('Letter')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.05 })
-        .build();
+      const scenario = testFixture.createDropItemScenario({
+        roomId: 'tavern',
+        roomName: 'Tavern',
+        actor: { id: 'test:actor1', name: 'Bob' },
+        item: { id: 'letter-1', name: 'Letter', weight: 0.05 },
+      });
 
-      testFixture.reset([room, actor, item]);
+      testFixture.reset([...scenario.entities]);
 
-      await testFixture.executeAction('test:actor1', 'letter-1');
+      await testFixture.executeAction(scenario.actor.id, scenario.item.id);
 
-      // Verify item has position component with correct location
-      const itemAfter = testFixture.entityManager.getEntityInstance('letter-1');
-      expect(itemAfter.components['core:position']).toBeDefined();
-      expect(itemAfter.components['core:position'].locationId).toBe('tavern');
+      const itemAfter = testFixture.entityManager.getEntityInstance(
+        scenario.item.id
+      );
+      expect(itemAfter).toHaveComponent('core:position');
+      expect(itemAfter).toHaveComponentData('core:position', {
+        locationId: scenario.room.id,
+      });
     });
   });
 });
