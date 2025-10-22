@@ -7,62 +7,8 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import giveItemRule from '../../../../data/mods/items/rules/handle_give_item.rule.json' assert { type: 'json' };
 import eventIsActionGiveItem from '../../../../data/mods/items/conditions/event-is-action-give-item.condition.json' assert { type: 'json' };
-
-/**
- * Creates a standardized give item scenario with actors and items.
- *
- * @param {string} actorName - Name for the giver
- * @param {string} targetName - Name for the recipient
- * @param {string} locationId - Location for the scenario
- * @param {Array<{id: string, weight: number}>} items - Items for the actor's inventory
- * @param {object} actorCapacity - Inventory capacity for actor
- * @param {object} targetCapacity - Inventory capacity for target
- * @returns {object} Object with room, actor, target, and item entities
- */
-function setupGiveItemScenario(
-  actorName = 'Alice',
-  targetName = 'Bob',
-  locationId = 'saloon1',
-  items = [{ id: 'letter-1', weight: 0.05 }],
-  actorCapacity = { maxWeight: 50, maxItems: 10 },
-  targetCapacity = { maxWeight: 50, maxItems: 10 }
-) {
-  const room = new ModEntityBuilder(locationId).asRoom('Saloon').build();
-
-  const actor = new ModEntityBuilder('test:actor1')
-    .withName(actorName)
-    .atLocation(locationId)
-    .asActor()
-    .withComponent('items:inventory', {
-      items: items.map((item) => item.id),
-      capacity: actorCapacity,
-    })
-    .build();
-
-  const target = new ModEntityBuilder('test:actor2')
-    .withName(targetName)
-    .atLocation(locationId)
-    .asActor()
-    .withComponent('items:inventory', {
-      items: [],
-      capacity: targetCapacity,
-    })
-    .build();
-
-  const itemEntities = items.map((item) =>
-    new ModEntityBuilder(item.id)
-      .withName(item.id)
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
-      .withComponent('items:weight', { weight: item.weight })
-      .build()
-  );
-
-  return { room, actor, target, items: itemEntities };
-}
 
 describe('items:give_item action integration', () => {
   let testFixture;
@@ -82,59 +28,98 @@ describe('items:give_item action integration', () => {
 
   describe('successful transfers', () => {
     it('successfully executes give item action between actors with capacity', async () => {
-      // Arrange: Setup scenario
-      const scenario = setupGiveItemScenario();
-      testFixture.reset([scenario.room, scenario.actor, scenario.target, ...scenario.items]);
-
-      // Act: Give letter to Bob
-      await testFixture.executeAction('test:actor1', 'test:actor2', {
-        additionalPayload: {
-          secondaryId: 'letter-1',
+      const scenario = testFixture.createInventoryTransfer({
+        roomId: 'saloon1',
+        roomName: 'Saloon',
+        giver: {
+          id: 'test:actor1',
+          name: 'Alice',
+          capacity: { maxWeight: 50, maxItems: 10 },
         },
+        receiver: {
+          id: 'test:actor2',
+          name: 'Bob',
+          capacity: { maxWeight: 50, maxItems: 10 },
+        },
+        item: { id: 'letter-1', name: 'letter-1', weight: 0.05 },
       });
 
-      // Assert: Verify transfer occurred
-      const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      const target = testFixture.entityManager.getEntityInstance('test:actor2');
+      testFixture.reset(scenario.entities);
 
-      expect(actor.components['items:inventory'].items).not.toContain('letter-1');
-      expect(target.components['items:inventory'].items).toContain('letter-1');
+      await testFixture.executeAction(scenario.giver.id, scenario.receiver.id, {
+        additionalPayload: { secondaryId: scenario.transferItem.id },
+      });
 
-      // Assert: Verify turn ended successfully
+      const updatedGiver = testFixture.entityManager.getEntityInstance(
+        scenario.giver.id
+      );
+      const updatedReceiver = testFixture.entityManager.getEntityInstance(
+        scenario.receiver.id
+      );
+
+      expect(testFixture.events).toHaveActionSuccess(
+        'Alice gives letter-1 to Bob.'
+      );
+      expect(updatedGiver.components['items:inventory'].items).toEqual(
+        scenario.giverItems.map((item) => item.id)
+      );
+      expect(updatedReceiver.components['items:inventory'].items).toEqual([
+        ...scenario.receiverItems.map((item) => item.id),
+        scenario.transferItem.id,
+      ]);
+
       const turnEndedEvent = testFixture.events.find(
-        (e) => e.eventType === 'core:turn_ended'
+        (event) => event.eventType === 'core:turn_ended'
       );
       expect(turnEndedEvent).toBeDefined();
       expect(turnEndedEvent.payload.success).toBe(true);
     });
 
     it('transfers item and preserves capacity settings', async () => {
-      const scenario = setupGiveItemScenario(
-        'Sarah',
-        'James',
-        'garden',
-        [{ id: 'revolver-1', weight: 1.2 }],
-        { maxWeight: 50, maxItems: 10 },
-        { maxWeight: 30, maxItems: 5 }
-      );
-
-      testFixture.reset([scenario.room, scenario.actor, scenario.target, ...scenario.items]);
-
-      await testFixture.executeAction('test:actor1', 'test:actor2', {
-        additionalPayload: {
-          secondaryId: 'revolver-1',
+      const scenario = testFixture.createInventoryTransfer({
+        roomId: 'garden',
+        roomName: 'Garden',
+        giver: {
+          id: 'test:actor1',
+          name: 'Sarah',
+          capacity: { maxWeight: 50, maxItems: 10 },
         },
+        receiver: {
+          id: 'test:actor2',
+          name: 'James',
+          capacity: { maxWeight: 30, maxItems: 5 },
+        },
+        item: { id: 'revolver-1', name: 'revolver-1', weight: 1.2 },
       });
 
-      const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      const target = testFixture.entityManager.getEntityInstance('test:actor2');
+      testFixture.reset(scenario.entities);
 
-      // Verify capacities preserved
-      expect(actor.components['items:inventory'].capacity).toEqual({
+      await testFixture.executeAction(scenario.giver.id, scenario.receiver.id, {
+        additionalPayload: { secondaryId: scenario.transferItem.id },
+      });
+
+      const updatedGiver = testFixture.entityManager.getEntityInstance(
+        scenario.giver.id
+      );
+      const updatedReceiver = testFixture.entityManager.getEntityInstance(
+        scenario.receiver.id
+      );
+
+      expect(testFixture.events).toHaveActionSuccess(
+        'Sarah gives revolver-1 to James.'
+      );
+      expect(updatedGiver.components['items:inventory'].items).toEqual(
+        scenario.giverItems.map((item) => item.id)
+      );
+      expect(updatedReceiver.components['items:inventory'].items).toEqual([
+        ...scenario.receiverItems.map((item) => item.id),
+        scenario.transferItem.id,
+      ]);
+      expect(updatedGiver.components['items:inventory'].capacity).toEqual({
         maxWeight: 50,
         maxItems: 10,
       });
-      expect(target.components['items:inventory'].capacity).toEqual({
+      expect(updatedReceiver.components['items:inventory'].capacity).toEqual({
         maxWeight: 30,
         maxItems: 5,
       });
@@ -143,208 +128,219 @@ describe('items:give_item action integration', () => {
 
   describe('capacity failure scenarios', () => {
     it('fails when recipient inventory full (item count)', async () => {
-      const room = new ModEntityBuilder('saloon1').asRoom('Saloon').build();
-
-      const actor = new ModEntityBuilder('test:actor1')
-        .withName('Alice')
-        .atLocation('saloon1')
-        .asActor()
-        .withComponent('items:inventory', {
-          items: ['letter-1'],
+      const scenario = testFixture.createInventoryTransfer({
+        roomId: 'saloon1',
+        roomName: 'Saloon',
+        giver: {
+          id: 'test:actor1',
+          name: 'Alice',
           capacity: { maxWeight: 50, maxItems: 10 },
-        })
-        .build();
-
-      const target = new ModEntityBuilder('test:actor2')
-        .withName('Bob')
-        .atLocation('saloon1')
-        .asActor()
-        .withComponent('items:inventory', {
-          items: ['item-1', 'item-2'],
-          capacity: { maxWeight: 50, maxItems: 2 }, // At capacity
-        })
-        .build();
-
-      const letter = new ModEntityBuilder('letter-1')
-        .withName('letter-1')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.05 })
-        .build();
-
-      const item1 = new ModEntityBuilder('item-1')
-        .withName('item-1')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.1 })
-        .build();
-
-      const item2 = new ModEntityBuilder('item-2')
-        .withName('item-2')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.1 })
-        .build();
-
-      testFixture.reset([room, actor, target, letter, item1, item2]);
-
-      await testFixture.executeAction('test:actor1', 'test:actor2', {
-        additionalPayload: {
-          secondaryId: 'letter-1',
         },
+        receiver: {
+          id: 'test:actor2',
+          name: 'Bob',
+          capacity: { maxWeight: 50, maxItems: 2 },
+        },
+        item: { id: 'letter-1', name: 'letter-1', weight: 0.05 },
+        receiverItems: [
+          { id: 'item-1', name: 'item-1', weight: 0.1 },
+          { id: 'item-2', name: 'item-2', weight: 0.1 },
+        ],
       });
 
-      // Verify failure
+      testFixture.reset(scenario.entities);
+
+      await testFixture.executeAction(scenario.giver.id, scenario.receiver.id, {
+        additionalPayload: { secondaryId: scenario.transferItem.id },
+      });
+
+      expect(testFixture.events).toHaveActionFailure();
+
       const failureEvent = testFixture.events.find(
-        (e) => e.eventType === 'core:display_failed_action_result'
+        (event) => event.eventType === 'core:display_failed_action_result'
       );
 
       expect(failureEvent).toBeDefined();
       expect(failureEvent.payload.message).toContain('max_items_exceeded');
 
-      // Verify item didn't move
-      const actorAfter = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorAfter.components['items:inventory'].items).toContain('letter-1');
+      const updatedGiver = testFixture.entityManager.getEntityInstance(
+        scenario.giver.id
+      );
+      const updatedReceiver = testFixture.entityManager.getEntityInstance(
+        scenario.receiver.id
+      );
+
+      expect(updatedGiver.components['items:inventory'].items).toContain(
+        scenario.transferItem.id
+      );
+      expect(updatedReceiver.components['items:inventory'].items).toEqual(
+        scenario.receiverItems.map((item) => item.id)
+      );
     });
 
     it('fails when item too heavy for recipient', async () => {
-      const room = new ModEntityBuilder('saloon1').asRoom('Saloon').build();
-
-      const actor = new ModEntityBuilder('test:actor1')
-        .withName('Alice')
-        .atLocation('saloon1')
-        .asActor()
-        .withComponent('items:inventory', {
-          items: ['gold-bar-1'],
+      const scenario = testFixture.createInventoryTransfer({
+        roomId: 'saloon1',
+        roomName: 'Saloon',
+        giver: {
+          id: 'test:actor1',
+          name: 'Alice',
           capacity: { maxWeight: 50, maxItems: 10 },
-        })
-        .build();
-
-      const target = new ModEntityBuilder('test:actor2')
-        .withName('Bob')
-        .atLocation('saloon1')
-        .asActor()
-        .withComponent('items:inventory', {
-          items: [],
-          capacity: { maxWeight: 5, maxItems: 10 }, // Too low for gold bar
-        })
-        .build();
-
-      const goldBar = new ModEntityBuilder('gold-bar-1')
-        .withName('gold-bar-1')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 12.4 })
-        .build();
-
-      testFixture.reset([room, actor, target, goldBar]);
-
-      await testFixture.executeAction('test:actor1', 'test:actor2', {
-        additionalPayload: {
-          secondaryId: 'gold-bar-1',
         },
+        receiver: {
+          id: 'test:actor2',
+          name: 'Bob',
+          capacity: { maxWeight: 5, maxItems: 10 },
+        },
+        item: { id: 'gold-bar-1', name: 'gold-bar-1', weight: 12.4 },
       });
 
-      // Verify failure
+      testFixture.reset(scenario.entities);
+
+      await testFixture.executeAction(scenario.giver.id, scenario.receiver.id, {
+        additionalPayload: { secondaryId: scenario.transferItem.id },
+      });
+
+      expect(testFixture.events).toHaveActionFailure();
+
       const failureEvent = testFixture.events.find(
-        (e) => e.eventType === 'core:display_failed_action_result'
+        (event) => event.eventType === 'core:display_failed_action_result'
       );
 
       expect(failureEvent).toBeDefined();
       expect(failureEvent.payload.message).toContain('max_weight_exceeded');
 
-      // Verify item didn't move
-      const actorAfter = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorAfter.components['items:inventory'].items).toContain('gold-bar-1');
+      const updatedGiver = testFixture.entityManager.getEntityInstance(
+        scenario.giver.id
+      );
+      expect(updatedGiver.components['items:inventory'].items).toContain(
+        scenario.transferItem.id
+      );
     });
   });
 
   describe('perception logging', () => {
     it('dispatches perceptible event on successful transfer', async () => {
-      const scenario = setupGiveItemScenario('Elena', 'Marcus', 'bedroom');
-      testFixture.reset([scenario.room, scenario.actor, scenario.target, ...scenario.items]);
-
-      await testFixture.executeAction('test:actor1', 'test:actor2', {
-        additionalPayload: {
-          secondaryId: 'letter-1',
-        },
+      const scenario = testFixture.createInventoryTransfer({
+        roomId: 'bedroom',
+        roomName: 'Bedroom',
+        giver: { id: 'test:actor1', name: 'Elena' },
+        receiver: { id: 'test:actor2', name: 'Marcus' },
+        item: { id: 'letter-1', name: 'letter-1', weight: 0.05 },
       });
 
-      // Verify perceptible event
+      testFixture.reset(scenario.entities);
+
+      await testFixture.executeAction(scenario.giver.id, scenario.receiver.id, {
+        additionalPayload: { secondaryId: scenario.transferItem.id },
+      });
+
+      expect(testFixture.events).toHaveActionSuccess(
+        'Elena gives letter-1 to Marcus.'
+      );
+      expect(testFixture.events).toDispatchEvent('core:perceptible_event');
+
       const perceptibleEvent = testFixture.events.find(
-        (e) => e.eventType === 'core:perceptible_event'
+        (event) => event.eventType === 'core:perceptible_event'
       );
 
       expect(perceptibleEvent).toBeDefined();
       expect(perceptibleEvent.payload.perceptionType).toBe('item_transfer');
-      expect(perceptibleEvent.payload.locationId).toBe('bedroom');
+      expect(perceptibleEvent.payload.locationId).toBe(scenario.room.id);
       expect(perceptibleEvent.payload.descriptionText).toContain('gives');
-      expect(perceptibleEvent.payload.descriptionText).toContain('letter-1');
+      expect(perceptibleEvent.payload.descriptionText).toContain(
+        scenario.transferItem.id
+      );
     });
 
     it('validates perceptible event message matches action success message', async () => {
-      const scenario = setupGiveItemScenario(
-        'Diana',
-        'Victor',
-        'library',
-        [{ id: 'book-1', weight: 0.5 }]
-      );
-      testFixture.reset([scenario.room, scenario.actor, scenario.target, ...scenario.items]);
-
-      await testFixture.executeAction('test:actor1', 'test:actor2', {
-        additionalPayload: {
-          secondaryId: 'book-1',
-        },
+      const scenario = testFixture.createInventoryTransfer({
+        roomId: 'library',
+        roomName: 'Library',
+        giver: { id: 'test:actor1', name: 'Diana' },
+        receiver: { id: 'test:actor2', name: 'Victor' },
+        item: { id: 'book-1', name: 'book-1', weight: 0.5 },
       });
 
+      testFixture.reset(scenario.entities);
+
+      await testFixture.executeAction(scenario.giver.id, scenario.receiver.id, {
+        additionalPayload: { secondaryId: scenario.transferItem.id },
+      });
+
+      expect(testFixture.events).toHaveActionSuccess(
+        'Diana gives book-1 to Victor.'
+      );
+
+      const successEvent = testFixture.events.find(
+        (event) => event.eventType === 'core:display_successful_action_result'
+      );
       const perceptibleEvent = testFixture.events.find(
-        (e) => e.eventType === 'core:perceptible_event'
+        (event) => event.eventType === 'core:perceptible_event'
       );
 
       expect(perceptibleEvent).toBeDefined();
-
-      // Perceptible event should reference the item transfer
-      expect(perceptibleEvent.payload.descriptionText).toContain('book-1');
+      expect(successEvent).toBeDefined();
+      expect(perceptibleEvent.payload.descriptionText).toBe(
+        successEvent.payload.message
+      );
+      expect(perceptibleEvent.payload.descriptionText).toContain(
+        scenario.transferItem.id
+      );
     });
   });
 
   describe('turn management', () => {
     it('ends turn after successful action execution', async () => {
-      const scenario = setupGiveItemScenario();
-      testFixture.reset([scenario.room, scenario.actor, scenario.target, ...scenario.items]);
-
-      await testFixture.executeAction('test:actor1', 'test:actor2', {
-        additionalPayload: {
-          secondaryId: 'letter-1',
-        },
+      const scenario = testFixture.createInventoryTransfer({
+        roomId: 'saloon1',
+        roomName: 'Saloon',
+        giver: { id: 'test:actor1', name: 'Alice' },
+        receiver: { id: 'test:actor2', name: 'Bob' },
+        item: { id: 'letter-1', name: 'letter-1', weight: 0.05 },
       });
 
-      // Verify END_TURN event
+      testFixture.reset(scenario.entities);
+
+      await testFixture.executeAction(scenario.giver.id, scenario.receiver.id, {
+        additionalPayload: { secondaryId: scenario.transferItem.id },
+      });
+
+      expect(testFixture.events).toHaveActionSuccess(
+        'Alice gives letter-1 to Bob.'
+      );
+      expect(testFixture.events).toDispatchEvent('core:turn_ended');
+
       const endTurnEvent = testFixture.events.find(
-        (e) => e.eventType === 'core:turn_ended'
+        (event) => event.eventType === 'core:turn_ended'
       );
 
       expect(endTurnEvent).toBeDefined();
-      expect(endTurnEvent.payload.entityId).toBe('test:actor1');
+      expect(endTurnEvent.payload.entityId).toBe(scenario.giver.id);
       expect(endTurnEvent.payload.success).toBe(true);
     });
   });
 
   describe('action only fires for correct action ID', () => {
     it('does not fire for different action IDs', async () => {
-      const scenario = setupGiveItemScenario();
-      testFixture.reset([scenario.room, scenario.actor, scenario.target, ...scenario.items]);
+      const scenario = testFixture.createInventoryTransfer({
+        roomId: 'saloon1',
+        roomName: 'Saloon',
+        giver: { id: 'test:actor1', name: 'Alice' },
+        receiver: { id: 'test:actor2', name: 'Bob' },
+        item: { id: 'letter-1', name: 'letter-1', weight: 0.05 },
+      });
 
-      // Try with a different action
+      testFixture.reset(scenario.entities);
+
       await testFixture.eventBus.dispatch('core:attempt_action', {
         eventName: 'core:attempt_action',
-        actorId: 'test:actor1',
+        actorId: scenario.giver.id,
         actionId: 'kissing:kiss_cheek',
-        targetId: 'test:actor2',
+        targetId: scenario.receiver.id,
         originalInput: 'kiss_cheek target',
       });
 
-      // Should not have any perceptible events from our rule
       testFixture.assertOnlyExpectedEvents(['core:attempt_action']);
     });
   });
