@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-penile-oral:pull_head_to_clothed_crotch",
+  "name": "Pull Head to Clothed Crotch",
+  "description": "Guide your partner's head down toward your bulging, still-covered crotch while seated together.",
+  "targets": {
+    "primary": {
+      "scope": "positioning:actors_sitting_close",
+      "placeholder": "primary",
+      "description": "Seated partner within arm's reach"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:sitting_on", "positioning:closeness"],
+    "primary": ["positioning:sitting_on", "positioning:closeness"]
+  },
+  "template": "pull {primary}'s head to your clothed crotch",
+  "prerequisites": [
+    {
+      "logic": {
+        "hasPartOfType": ["actor", "penis"]
+      },
+      "failure_message": "You need a penis to drag them toward your lap."
+    },
+    {
+      "logic": {
+        "isSocketCovered": ["actor", "penis"]
+      },
+      "failure_message": "Your penis has to stay covered for this tease."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#2a1a5e",
+    "textColor": "#ede7f6",
+    "hoverBackgroundColor": "#372483",
+    "hoverTextColor": "#ffffff"
+  }
+}
