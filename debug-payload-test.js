@@ -4,16 +4,16 @@
 
 import { describe, it, beforeEach, expect } from '@jest/globals';
 import { ModTestFixture } from './tests/common/mods/ModTestFixture.js';
-import pushOffRule from './data/mods/violence/rules/handle_push_off.rule.json' assert { type: 'json' };
-import eventIsActionPushOff from './data/mods/violence/conditions/event-is-action-push-off.condition.json' assert { type: 'json' };
+import pushOffRule from './data/mods/physical-control/rules/handle_push_off.rule.json' assert { type: 'json' };
+import eventIsActionPushOff from './data/mods/physical-control/conditions/event-is-action-push-off.condition.json' assert { type: 'json' };
 
 describe('Debug Payload and Placeholder Resolution', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'violence',
-      'violence:push_off',
+      'physical-control',
+      'physical-control:push_off',
       pushOffRule,
       eventIsActionPushOff
     );
@@ -43,7 +43,7 @@ describe('Debug Payload and Placeholder Resolution', () => {
     const actorAfter = testFixture.entityManager.getEntityInstance(scenario.actor.id);
     console.log('Actor closeness AFTER:', JSON.stringify(actorAfter.components['positioning:closeness']));
 
-    // The test should fail if the array still contains the target
-    expect(actorAfter.components['positioning:closeness'].partners).toEqual([]);
+    // The test should fail if closeness remains attached to the target
+    expect(actorAfter.components['positioning:closeness']).toBeUndefined();
   });
 });

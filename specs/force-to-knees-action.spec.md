@@ -2,16 +2,16 @@
 
 ## Overview
 
-This specification defines the implementation requirements for a new "force to knees" action in the `violence` mod. The action allows an actor to forcefully push a close target down to their knees in a submissive or intimidating position before the actor. This is a violent action that differs from the voluntary `positioning:kneel_before` action.
+This specification defines the implementation requirements for a new "force to knees" action in the `physical-control` mod. The action allows an actor to forcefully push a close target down to their knees in a submissive or intimidating position before the actor. This is a violent action that differs from the voluntary `positioning:kneel_before` action.
 
 ## Action Definition
 
-### File: `data/mods/violence/actions/force_to_knees.action.json`
+### File: `data/mods/physical-control/actions/force_to_knees.action.json`
 
 ```json
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "violence:force_to_knees",
+  "id": "physical-control:force_to_knees",
   "name": "Force to Knees",
   "description": "Forcefully push someone down to kneel before you",
   "targets": {
@@ -30,17 +30,17 @@ This specification defines the implementation requirements for a new "force to k
   },
   "template": "force {target} to their knees before you",
   "visual": {
-    "backgroundColor": "#8b0000",
-    "textColor": "#ffffff",
-    "hoverBackgroundColor": "#b71c1c",
-    "hoverTextColor": "#ffebee"
+    "backgroundColor": "#2f2f2f",
+    "textColor": "#f8f9fa",
+    "hoverBackgroundColor": "#3f3d56",
+    "hoverTextColor": "#f8f9ff"
   }
 }
 ```
 
 ### Action Properties
 
-- **ID**: `violence:force_to_knees` - Unique identifier within the violence mod
+- **ID**: `physical-control:force_to_knees` - Unique identifier within the physical-control mod
 - **Name**: "Force to Knees" - Display name for the action
 - **Description**: Brief description emphasizing the forceful nature
 - **Targets**: Uses the scope `positioning:close_actors_facing_each_other`
@@ -54,24 +54,24 @@ This specification defines the implementation requirements for a new "force to k
   - This differs from voluntary kneeling which allows kneeling before someone already kneeling
 - **Template**: `"force {target} to their knees before you"`
   - Generates text like "force Alice to their knees before you" when Bob is the actor
-- **Visual Scheme**: Uses the violence mod color palette (matching `grab_neck.action.json`)
-  - Dark red background (#8b0000)
-  - White text (#ffffff)
-  - Lighter red on hover (#b71c1c)
-  - Light pink hover text (#ffebee)
+- **Visual Scheme**: Uses the physical-control mod color palette (matching `grab_neck.action.json`)
+  - Dark red background (#2f2f2f)
+  - White text (#f8f9fa)
+  - Lighter red on hover (#3f3d56)
+  - Light pink hover text (#f8f9ff)
 
 ## Rule Definition
 
-### File: `data/mods/violence/rules/handle_force_to_knees.rule.json`
+### File: `data/mods/physical-control/rules/handle_force_to_knees.rule.json`
 
 ```json
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_force_to_knees",
-  "comment": "Handles the 'violence:force_to_knees' action. Forces target to kneel before actor, locks movement, dispatches descriptive text and ends the turn.",
+  "comment": "Handles the 'physical-control:force_to_knees' action. Forces target to kneel before actor, locks movement, dispatches descriptive text and ends the turn.",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "violence:event-is-action-force-to-knees"
+    "condition_ref": "physical-control:event-is-action-force-to-knees"
   },
   "actions": [
     {
@@ -175,19 +175,19 @@ The rule executes the following operations in sequence:
 
 ## Condition Definition
 
-### File: `data/mods/violence/conditions/event-is-action-force-to-knees.condition.json`
+### File: `data/mods/physical-control/conditions/event-is-action-force-to-knees.condition.json`
 
 ```json
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "violence:event-is-action-force-to-knees",
+  "id": "physical-control:event-is-action-force-to-knees",
   "description": "True when the event is an attempt to execute the force_to_knees action",
   "logic": {
     "==": [
       {
         "var": "event.payload.actionId"
       },
-      "violence:force_to_knees"
+      "physical-control:force_to_knees"
     ]
   }
 }
@@ -195,28 +195,28 @@ The rule executes the following operations in sequence:
 
 ### Condition Purpose
 
-This condition is used by the rule to determine if the incoming `core:attempt_action` event is specifically for the `violence:force_to_knees` action. It checks the `actionId` field in the event payload.
+This condition is used by the rule to determine if the incoming `core:attempt_action` event is specifically for the `physical-control:force_to_knees` action. It checks the `actionId` field in the event payload.
 
 ## Testing Requirements
 
 ### Test Suite 1: Action Discovery Tests
 
-**File**: `tests/integration/mods/violence/force_to_knees_action_discovery.test.js`
+**File**: `tests/integration/mods/physical-control/force_to_knees_action_discovery.test.js`
 
 This test suite verifies that the action is discoverable under the correct circumstances.
 
 #### Test Cases Required
 
 1. **Action Structure Validation**
-   - Verify action matches the expected violence action schema
-   - Confirm action ID is `violence:force_to_knees`
+   - Verify action matches the expected physical-control action schema
+   - Confirm action ID is `physical-control:force_to_knees`
    - Confirm template is `"force {target} to their knees before you"`
    - Confirm targets scope is `positioning:close_actors_facing_each_other`
 
 2. **Required Components Validation**
    - Verify actor requires `positioning:closeness` component
    - Verify target forbidden component includes `positioning:kneeling_before`
-   - Verify visual scheme matches violence color palette (same as `grab_neck`)
+   - Verify visual scheme matches physical-control color palette (Ironclad Slate) (same as `grab_neck`)
 
 3. **Discovery Scenarios - Positive Cases**
    - Action IS available when actors are close and facing each other
@@ -235,17 +235,17 @@ Follow the pattern from `grab_neck_action_discovery.test.js`:
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
-import forceToKneesAction from '../../../../data/mods/violence/actions/force_to_knees.action.json';
+import forceToKneesAction from '../../../../data/mods/physical-control/actions/force_to_knees.action.json';
 import { clearEntityCache } from '../../../../src/scopeDsl/core/entityHelpers.js';
 
-const ACTION_ID = 'violence:force_to_knees';
+const ACTION_ID = 'physical-control:force_to_knees';
 
-describe('violence:force_to_knees action discovery', () => {
+describe('physical-control:force_to_knees action discovery', () => {
   let testFixture;
   let configureActionDiscovery;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('violence', ACTION_ID);
+    testFixture = await ModTestFixture.forAction('physical-control', ACTION_ID);
 
     configureActionDiscovery = () => {
       const { testEnv } = testFixture;
@@ -334,7 +334,7 @@ describe('violence:force_to_knees action discovery', () => {
 
 ### Test Suite 2: Rule Execution Tests
 
-**File**: `tests/integration/mods/violence/force_to_knees_action.test.js`
+**File**: `tests/integration/mods/physical-control/force_to_knees_action.test.js`
 
 This test suite verifies that the action executes correctly and the rule processes it properly.
 
@@ -378,16 +378,16 @@ import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModAssertionHelpers } from '../../../common/mods/ModAssertionHelpers.js';
 import { ActionValidationError } from '../../../common/mods/actionExecutionValidator.js';
-import forceToKneesRule from '../../../../data/mods/violence/rules/handle_force_to_knees.rule.json';
-import eventIsActionForceToKnees from '../../../../data/mods/violence/conditions/event-is-action-force-to-knees.condition.json';
+import forceToKneesRule from '../../../../data/mods/physical-control/rules/handle_force_to_knees.rule.json';
+import eventIsActionForceToKnees from '../../../../data/mods/physical-control/conditions/event-is-action-force-to-knees.condition.json';
 
-describe('Violence Mod: Force to Knees Action Integration', () => {
+describe('Physical-Control Mod: Force to Knees Action Integration', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'violence',
-      'violence:force_to_knees',
+      'physical-control',
+      'physical-control:force_to_knees',
       forceToKneesRule,
       eventIsActionForceToKnees
     );
@@ -441,7 +441,7 @@ Follow the guidelines in:
 
 4. **Integration Tests**
    - Test force to knees followed by other kneeling-related actions
-   - Test combining with grab_neck and other violence actions
+   - Test combining with grab_neck and other physical-control actions
    - Test social consequences or relationship impacts (if implemented)
 
 5. **Error Scenarios**
@@ -451,11 +451,11 @@ Follow the guidelines in:
 
 ## Implementation Checklist
 
-- [ ] Create `data/mods/violence/actions/force_to_knees.action.json`
-- [ ] Create `data/mods/violence/rules/handle_force_to_knees.rule.json`
-- [ ] Create `data/mods/violence/conditions/event-is-action-force-to-knees.condition.json`
-- [ ] Create `tests/integration/mods/violence/force_to_knees_action_discovery.test.js`
-- [ ] Create `tests/integration/mods/violence/force_to_knees_action.test.js`
+- [ ] Create `data/mods/physical-control/actions/force_to_knees.action.json`
+- [ ] Create `data/mods/physical-control/rules/handle_force_to_knees.rule.json`
+- [ ] Create `data/mods/physical-control/conditions/event-is-action-force-to-knees.condition.json`
+- [ ] Create `tests/integration/mods/physical-control/force_to_knees_action_discovery.test.js`
+- [ ] Create `tests/integration/mods/physical-control/force_to_knees_action.test.js`
 - [ ] Verify all tests pass with `npm run test:integration`
 - [ ] Run linting with `npx eslint` on modified test files
 - [ ] Verify action appears in game UI when conditions are met
@@ -506,7 +506,7 @@ The message uses "roughly forces" to:
 1. **Emphasize Violence**: Distinguishes from gentle or voluntary actions
 2. **Set Tone**: Establishes this as an aggressive, hostile action
 3. **Player Clarity**: Makes the action's nature immediately clear in narrative
-4. **Mod Consistency**: Fits the violence mod's thematic approach
+4. **Mod Consistency**: Fits the physical-control mod's thematic approach
 
 ### Why Repeat Actor Name in Message?
 
@@ -522,7 +522,7 @@ The message format `"{actor} roughly forces {target} to their knees before {acto
 
 | Aspect | force_to_knees | kneel_before |
 |--------|----------------|--------------|
-| **Mod** | violence | positioning |
+| **Mod** | physical-control | positioning |
 | **Nature** | Forceful, hostile | Voluntary, respectful |
 | **Scope** | close_actors_facing_each_other | actors_in_location_facing |
 | **Who Kneels** | Target (forced) | Actor (voluntary) |
@@ -552,14 +552,14 @@ Potential future additions to consider:
 5. **Follow-up Actions**: Enable additional violent actions only available when target is kneeling
 6. **Witness Reactions**: Special events for observers of forced kneeling
 7. **Escape Actions**: Allow target to attempt to stand up or break free
-8. **Combo System**: Chain with other violence actions for increased effect
+8. **Combo System**: Chain with other physical-control or violence actions for increased effect
 
 ## References
 
 - **Similar Actions**:
   - `positioning:kneel_before` (voluntary kneeling)
   - `violence:grab_neck` (violence mod action)
-  - `violence:push_off` (violence mod with component removal)
+  - `physical-control:push_off` (physical-control mod action with component removal)
 - **Components**:
   - `positioning:kneeling_before` (defined in positioning mod)
   - `positioning:closeness` (defined in positioning mod)
@@ -572,11 +572,11 @@ Potential future additions to consider:
 - **Testing Patterns**:
   - See `tests/integration/mods/positioning/kneel_before_action*.test.js`
   - See `tests/integration/mods/violence/grab_neck_*.test.js`
-  - See `tests/integration/mods/violence/push_off_action*.test.js`
+  - See `tests/integration/mods/physical-control/push_off_action*.test.js`
 - **Documentation**:
   - `docs/testing/mod-testing-guide.md`
   - `docs/testing/action-discovery-testing-toolkit.md#domain-matchers`
-  - `specs/push-off-action.spec.md` (reference for violence mod spec structure)
+  - `specs/push-off-action.spec.md` (reference for physical-control mod spec structure)
 
 ---
 

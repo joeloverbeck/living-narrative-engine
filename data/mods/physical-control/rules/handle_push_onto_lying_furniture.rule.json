@@ -1,10 +1,10 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_push_onto_lying_furniture",
-  "comment": "Handles the 'violence:push_onto_lying_furniture' action. Forces the primary target onto the selected furniture, locks their movement, logs the violent narration, and ends the turn.",
+  "comment": "Handles the 'physical-control:push_onto_lying_furniture' action. Forces the primary target onto the selected furniture, locks their movement, logs the narration, and ends the turn.",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "violence:event-is-action-push-onto-lying-furniture"
+    "condition_ref": "physical-control:event-is-action-push-onto-lying-furniture"
   },
   "actions": [
     {
@@ -38,7 +38,7 @@
     },
     {
       "type": "BREAK_CLOSENESS_WITH_TARGET",
-      "comment": "Sever closeness between actor and primary target after the push",
+      "comment": "Break closeness between actor and primary target before pinning them down",
       "parameters": {
         "actor_id": "{event.payload.actorId}",
         "target_id": "{event.payload.primaryId}"
@@ -46,7 +46,6 @@
     },
     {
       "type": "ADD_COMPONENT",
-      "comment": "Add lying_down component to the primary target referencing the furniture",
       "parameters": {
         "entity_ref": "primary",
         "component_type": "positioning:lying_down",
@@ -57,7 +56,6 @@
     },
     {
       "type": "LOCK_MOVEMENT",
-      "comment": "Prevent the primary target from moving while pinned",
       "parameters": {
         "actor_id": "{event.payload.primaryId}"
       }

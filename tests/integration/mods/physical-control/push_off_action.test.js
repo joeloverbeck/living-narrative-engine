@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the violence:push_off action using new mod test infrastructure.
+ * @file Integration tests for the physical-control:push_off action using new mod test infrastructure.
  * @description Tests the action execution and rule integration patterns, focusing on
  * correct component state changes (array modification for actor, removal for target).
  * Note: This test does not test action discovery or scope resolution - it assumes
@@ -9,17 +9,17 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ActionValidationError } from '../../../common/mods/actionExecutionValidator.js';
-import pushOffRule from '../../../../data/mods/violence/rules/handle_push_off.rule.json';
-import eventIsActionPushOff from '../../../../data/mods/violence/conditions/event-is-action-push-off.condition.json';
+import pushOffRule from '../../../../data/mods/physical-control/rules/handle_push_off.rule.json';
+import eventIsActionPushOff from '../../../../data/mods/physical-control/conditions/event-is-action-push-off.condition.json';
 
-describe('Violence Mod: Push Off Action Integration', () => {
+describe('Physical Control Mod: Push Off Action Integration', () => {
   let testFixture;
 
   beforeEach(async () => {
     // Create test fixture with explicit rule and condition files
     testFixture = await ModTestFixture.forAction(
-      'violence',
-      'violence:push_off',
+      'physical-control',
+      'physical-control:push_off',
       pushOffRule,
       eventIsActionPushOff
     );

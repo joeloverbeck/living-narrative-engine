@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "violence:push_onto_lying_furniture",
+  "id": "physical-control:push_onto_lying_furniture",
   "name": "Push Onto Furniture",
   "description": "Forcefully push a close actor down onto lying-friendly furniture",
   "generateCombinations": true,
@@ -25,9 +25,9 @@
   },
   "template": "push {primary} down onto {secondary}",
   "visual": {
-    "backgroundColor": "#8b0000",
-    "textColor": "#ffffff",
-    "hoverBackgroundColor": "#b71c1c",
-    "hoverTextColor": "#ffebee"
+    "backgroundColor": "#2f2f2f",
+    "textColor": "#f8f9fa",
+    "hoverBackgroundColor": "#3f3d56",
+    "hoverTextColor": "#f8f9ff"
   }
 }

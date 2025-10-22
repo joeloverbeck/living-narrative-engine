@@ -1,13 +1,13 @@
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "violence:event-is-action-push-onto-lying-furniture",
+  "id": "physical-control:event-is-action-push-onto-lying-furniture",
   "description": "True when the event is an attempt to execute the push_onto_lying_furniture action",
   "logic": {
     "==": [
       {
         "var": "event.payload.actionId"
       },
-      "violence:push_onto_lying_furniture"
+      "physical-control:push_onto_lying_furniture"
     ]
   }
 }

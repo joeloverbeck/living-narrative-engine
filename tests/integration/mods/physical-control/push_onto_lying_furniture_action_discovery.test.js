@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for violence:push_onto_lying_furniture action discovery.
+ * @file Integration tests for physical-control:push_onto_lying_furniture action discovery.
  * @description Ensures the push onto furniture action only appears when both actor and furniture requirements are satisfied.
  */
 
@@ -10,9 +10,9 @@ import {
   ModEntityScenarios,
 } from '../../../common/mods/ModEntityBuilder.js';
 import { validateActionExecution } from '../../../common/mods/actionExecutionValidator.js';
-import pushOntoFurnitureAction from '../../../../data/mods/violence/actions/push_onto_lying_furniture.action.json';
+import pushOntoFurnitureAction from '../../../../data/mods/physical-control/actions/push_onto_lying_furniture.action.json';
 
-const ACTION_ID = 'violence:push_onto_lying_furniture';
+const ACTION_ID = 'physical-control:push_onto_lying_furniture';
 const ACTOR_ID = 'test:actor';
 const TARGET_ID = 'test:target';
 const FURNITURE_ID = 'test:furniture';
@@ -101,11 +101,11 @@ function setupScenario(
   fixture.reset(entities);
 }
 
-describe('violence:push_onto_lying_furniture action discovery', () => {
+describe('physical-control:push_onto_lying_furniture action discovery', () => {
   let testFixture;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('violence', ACTION_ID);
+    testFixture = await ModTestFixture.forAction('physical-control', ACTION_ID);
     if (testFixture?.testEnv?.actionIndex) {
       testFixture.testEnv.actionIndex.buildIndex([pushOntoFurnitureAction]);
     }

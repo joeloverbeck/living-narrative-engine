@@ -1,10 +1,10 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_force_to_knees",
-  "comment": "Handles the 'violence:force_to_knees' action. Forces target to kneel before actor, locks movement, dispatches descriptive text and ends the turn.",
+  "comment": "Handles the 'physical-control:force_to_knees' action. Forces target to kneel before actor, locks movement, dispatches descriptive text and ends the turn.",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "violence:event-is-action-force-to-knees"
+    "condition_ref": "physical-control:event-is-action-force-to-knees"
   },
   "actions": [
     {

@@ -1,13 +1,13 @@
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "violence:event-is-action-push-off",
+  "id": "physical-control:event-is-action-push-off",
   "description": "True when the event is an attempt to execute the push_off action",
   "logic": {
     "==": [
       {
         "var": "event.payload.actionId"
       },
-      "violence:push_off"
+      "physical-control:push_off"
     ]
   }
 }

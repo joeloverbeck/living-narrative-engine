@@ -19,28 +19,19 @@
   ],
   "content": {
     "actions": [
-      "force_to_knees.action.json",
       "grab_neck.action.json",
-      "push_off.action.json",
-      "push_onto_lying_furniture.action.json",
       "slap.action.json",
       "squeeze_neck_with_both_hands.action.json",
       "sucker_punch.action.json"
     ],
     "rules": [
-      "handle_force_to_knees.rule.json",
       "handle_grab_neck.rule.json",
-      "handle_push_off.rule.json",
-      "handle_push_onto_lying_furniture.rule.json",
       "handle_slap.rule.json",
       "handle_squeeze_neck_with_both_hands.rule.json",
       "handle_sucker_punch.rule.json"
     ],
     "conditions": [
-      "event-is-action-force-to-knees.condition.json",
       "event-is-action-grab-neck.condition.json",
-      "event-is-action-push-off.condition.json",
-      "event-is-action-push-onto-lying-furniture.condition.json",
       "event-is-action-slap.condition.json",
       "event-is-action-squeeze-neck-with-both-hands.condition.json",
       "event-is-action-sucker-punch.condition.json"

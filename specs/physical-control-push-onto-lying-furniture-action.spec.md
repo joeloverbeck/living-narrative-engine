@@ -1,22 +1,22 @@
-# Violence Mod: Push Onto Lying Furniture Action & Rule Specification
+# Physical-Control Mod: Push Onto Lying Furniture Action & Rule Specification
 
 ## Overview
 
-This document defines the new **violence** mod action/rule pair that lets an actor violently push a close partner down onto furniture that supports lying. It builds on the existing `violence:push_off` action/rule flow and the positioning mod's lying mechanics (`positioning:lie_down`) while adopting the multi-target action pattern demonstrated by `items:give_item`.
+This document defines the new **physical-control** mod action/rule pair that lets an actor forcefully push a close partner down onto furniture that supports lying. It builds on the existing `physical-control:push_off` action/rule flow and the positioning mod's lying mechanics (`positioning:lie_down`) while adopting the multi-target action pattern demonstrated by `items:give_item`.
 
 ## Design References
 
-- `data/mods/violence/actions/push_off.action.json` & `data/mods/violence/rules/handle_push_off.rule.json` for violence action gating, component usage, and messaging structure.
+- `data/mods/physical-control/actions/push_off.action.json` & `data/mods/physical-control/rules/handle_push_off.rule.json` for physical-control action gating, component usage, and messaging structure.
 - `data/mods/positioning/actions/lie_down.action.json` & `data/mods/positioning/rules/handle_lie_down.rule.json` for how lying state components and movement locking are managed.
 - `data/mods/items/actions/give_item.action.json` for the canonical multi-target `primary`/`secondary` action configuration with `generateCombinations`.
 
 ## Action Definition Requirements
 
-Create `data/mods/violence/actions/push_onto_lying_furniture.action.json` with the following properties:
+Create `data/mods/physical-control/actions/push_onto_lying_furniture.action.json` with the following properties:
 
 - **Schema & Metadata**
   - `$schema`: `schema://living-narrative-engine/action.schema.json`
-  - `id`: `violence:push_onto_lying_furniture`
+  - `id`: `physical-control:push_onto_lying_furniture`
   - `name`: "Push Onto Furniture"
   - `description`: "Forcefully push a close actor down onto lying-friendly furniture"
 
@@ -39,29 +39,29 @@ Create `data/mods/violence/actions/push_onto_lying_furniture.action.json` with t
 
 - **Template & Visuals**
   - `template`: `push {primary} down onto {secondary}`
-  - Provide a red-toned `visual` block consistent with other violence actions (can mirror `push_off`).
+  - Provide an Ironclad Slate `visual` block consistent with other physical-control actions (mirror `push_off`).
 
 - **Manifest**
-  - Add the action file to `data/mods/violence/mod-manifest.json`.
+  - Add the action file to `data/mods/physical-control/mod-manifest.json`.
 
 ## Supporting Condition
 
-Introduce `data/mods/violence/conditions/event-is-action-push-onto-lying-furniture.condition.json` that mirrors other violence action conditions:
+Introduce `data/mods/physical-control/conditions/event-is-action-push-onto-lying-furniture.condition.json` that mirrors other physical-control action conditions:
 
 - `$schema`: `schema://living-narrative-engine/condition.schema.json`
-- `id`: `violence:event-is-action-push-onto-lying-furniture`
-- Logic: compare `event.payload.actionId` to `violence:push_onto_lying_furniture`.
+- `id`: `physical-control:event-is-action-push-onto-lying-furniture`
+- Logic: compare `event.payload.actionId` to `physical-control:push_onto_lying_furniture`.
 - Register the condition inside the mod manifest alongside existing condition references.
 
 ## Rule Definition Requirements
 
-Create `data/mods/violence/rules/handle_push_onto_lying_furniture.rule.json`:
+Create `data/mods/physical-control/rules/handle_push_onto_lying_furniture.rule.json`:
 
 - `$schema`: `schema://living-narrative-engine/rule.schema.json`
 - `rule_id`: `handle_push_onto_lying_furniture`
-- `comment`: Describe that it handles the new action by forcing the primary target to lie on the chosen furniture and logs a violent narration.
+- `comment`: Describe that it handles the new action by forcing the primary target to lie on the chosen furniture and logs a physical domination narration.
 - `event_type`: `core:attempt_action`
-- `condition.condition_ref`: `violence:event-is-action-push-onto-lying-furniture`
+- `condition.condition_ref`: `physical-control:event-is-action-push-onto-lying-furniture`
 
 ### Rule Action Pipeline
 
@@ -86,7 +86,7 @@ Create `data/mods/violence/rules/handle_push_onto_lying_furniture.rule.json`:
 - Break the closeness link after the push since the displacement is significant enough to separate the actors.
 - No additional damage, stamina, or secondary effects are introduced in this version; the focus is positional control.
 
-- Remember to register the rule file inside `data/mods/violence/mod-manifest.json`.
+- Remember to register the rule file inside `data/mods/physical-control/mod-manifest.json`.
 
 ## Logging & Messaging Requirements
 
@@ -100,7 +100,7 @@ Ensure variable substitution uses the names retrieved in the rule and that both 
 
 ## Testing Strategy
 
-Create comprehensive integration suites under `tests/integration/mods/violence/`:
+Create comprehensive integration suites under `tests/integration/mods/physical-control/`:
 
 1. **Action Discovery Suite** – `push_onto_lying_furniture_action_discovery.test.js`
    - Use the latest mod testing methodology from `docs/testing/`.
@@ -118,7 +118,7 @@ Create comprehensive integration suites under `tests/integration/mods/violence/`
        - Leaves the actor's state unchanged except for action cost effects handled by the macro.
        - Removes the `positioning:closeness` relationship between the actor and primary target.
      - Emits the exact log/perception message string specified above.
-   - Follow the structure of existing violence integration tests (e.g., `push_off_action.test.js`).
+   - Follow the structure of existing physical-control integration tests (e.g., `push_off_action.test.js`).
 
 Ensure both suites are wired into the integration test runner (they will be picked up automatically by filename) and that the mod manifest adjustments are reflected in the fixtures.
 

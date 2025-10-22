@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for violence:force_to_knees action discovery.
+ * @file Integration tests for physical-control:force_to_knees action discovery.
  * @description Ensures the force to knees action is only discoverable when proximity and facing requirements are met.
  */
 
@@ -7,16 +7,16 @@ import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
 import { clearEntityCache } from '../../../../src/scopeDsl/core/entityHelpers.js';
-import forceToKneesAction from '../../../../data/mods/violence/actions/force_to_knees.action.json';
+import forceToKneesAction from '../../../../data/mods/physical-control/actions/force_to_knees.action.json';
 
-const ACTION_ID = 'violence:force_to_knees';
+const ACTION_ID = 'physical-control:force_to_knees';
 
-describe('violence:force_to_knees action discovery', () => {
+describe('physical-control:force_to_knees action discovery', () => {
   let testFixture;
   let configureActionDiscovery;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('violence', ACTION_ID);
+    testFixture = await ModTestFixture.forAction('physical-control', ACTION_ID);
 
     configureActionDiscovery = () => {
       const { testEnv } = testFixture;
@@ -121,7 +121,7 @@ describe('violence:force_to_knees action discovery', () => {
   });
 
   describe('Action structure validation', () => {
-    it('matches the expected violence action schema', () => {
+    it('matches the expected physical-control action schema', () => {
       expect(forceToKneesAction).toBeDefined();
       expect(forceToKneesAction.id).toBe(ACTION_ID);
       expect(forceToKneesAction.template).toBe(
@@ -133,7 +133,7 @@ describe('violence:force_to_knees action discovery', () => {
       expect(forceToKneesAction.targets.primary.placeholder).toBe('target');
     });
 
-    it('requires actor closeness, forbids kneeling actors and targets, and uses violence colors', () => {
+    it('requires actor closeness, forbids kneeling actors and targets, and uses physical-control colors', () => {
       expect(forceToKneesAction.required_components.actor).toEqual([
         'positioning:closeness',
       ]);
@@ -145,10 +145,10 @@ describe('violence:force_to_knees action discovery', () => {
         'positioning:kneeling_before',
       ]);
       expect(forceToKneesAction.visual).toEqual({
-        backgroundColor: '#8b0000',
-        textColor: '#ffffff',
-        hoverBackgroundColor: '#b71c1c',
-        hoverTextColor: '#ffebee',
+        backgroundColor: '#2f2f2f',
+        textColor: '#f8f9fa',
+        hoverBackgroundColor: '#3f3d56',
+        hoverTextColor: '#f8f9ff',
       });
     });
   });

@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "violence:force_to_knees",
+  "id": "physical-control:force_to_knees",
   "name": "Force to Knees",
   "description": "Forcefully push someone down to kneel before you",
   "targets": {
@@ -19,9 +19,9 @@
   },
   "template": "force {target} to their knees before you",
   "visual": {
-    "backgroundColor": "#8b0000",
-    "textColor": "#ffffff",
-    "hoverBackgroundColor": "#b71c1c",
-    "hoverTextColor": "#ffebee"
+    "backgroundColor": "#2f2f2f",
+    "textColor": "#f8f9fa",
+    "hoverBackgroundColor": "#3f3d56",
+    "hoverTextColor": "#f8f9ff"
   }
 }

@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the violence:force_to_knees action and rule.
+ * @file Integration tests for the physical-control:force_to_knees action and rule.
  * @description Verifies that the force to knees action executes correctly, updates components, and emits the proper events.
  */
 
@@ -11,20 +11,20 @@ import {
   ModEntityScenarios,
 } from '../../../common/mods/ModEntityBuilder.js';
 import { ActionValidationError } from '../../../common/mods/actionExecutionValidator.js';
-import forceToKneesRule from '../../../../data/mods/violence/rules/handle_force_to_knees.rule.json';
-import eventIsActionForceToKnees from '../../../../data/mods/violence/conditions/event-is-action-force-to-knees.condition.json';
+import forceToKneesRule from '../../../../data/mods/physical-control/rules/handle_force_to_knees.rule.json';
+import eventIsActionForceToKnees from '../../../../data/mods/physical-control/conditions/event-is-action-force-to-knees.condition.json';
 
-const ACTION_ID = 'violence:force_to_knees';
+const ACTION_ID = 'physical-control:force_to_knees';
 
 const EXPECTED_MESSAGE =
   '{actor} roughly forces {target} to their knees before {actor}.';
 
-describe('Violence Mod: Force to Knees Action Integration', () => {
+describe('Physical Control Mod: Force to Knees Action Integration', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'violence',
+      'physical-control',
       ACTION_ID,
       forceToKneesRule,
       eventIsActionForceToKnees
