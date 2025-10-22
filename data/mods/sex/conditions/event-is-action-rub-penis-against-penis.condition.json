@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex:event-is-action-rub-penis-against-penis",
+  "description": "Checks if the triggering event is for the 'sex:rub_penis_against_penis' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "sex:rub_penis_against_penis"]
+  }
+}
