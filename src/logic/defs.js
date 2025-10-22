@@ -11,11 +11,11 @@
 export * from './types/executionTypes.js';
 
 // --- JSDoc Imports (Ensure paths are correct for your project) ---
-/** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // User confirmed preference
+/** @typedef {import('./types/executionTypes.js').ExecutionEntityManagerLike} ExecutionEntityManagerLike */
+/** @typedef {import('./types/executionTypes.js').ExecutionValidatedEventDispatcher} ExecutionValidatedEventDispatcher */
+/** @typedef {import('./types/executionTypes.js').ExecutionLogger} ExecutionLogger */
+/** @typedef {import('./types/executionTypes.js').ExecutionGameDataRepository} ExecutionGameDataRepository */
 /** @typedef {import('../entities/entity.js').default} Entity */
-/** @typedef {import('../data/gameDataRepository.js').default} GameDataRepository */ // <<< CORRECTED PATH based on provided service implementation
 /** @typedef {import('./services/closenessCircleService.js')} ClosenessCircleService */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
@@ -59,38 +59,38 @@ export * from './types/executionTypes.js';
 /**
  * @typedef {object} BaseHandlerDeps
  * Common dependencies required by most operation handlers.
- * @property {ILogger} logger - The logging service instance.
+ * @property {ExecutionLogger} logger - The logging service instance.
  */
 
 /**
  * @typedef {object} EntityOperationDeps
  * Dependencies for handlers that work with entities and components.
- * @property {EntityManager} entityManager - The entity management service.
- * @property {ILogger} logger - The logging service instance.
+ * @property {ExecutionEntityManagerLike} entityManager - The entity management service.
+ * @property {ExecutionLogger} logger - The logging service instance.
  * @property {ISafeEventDispatcher} safeEventDispatcher - Safe event dispatcher for error handling.
  */
 
 /**
  * @typedef {object} EventDispatchDeps
  * Dependencies for handlers that dispatch events.
- * @property {ValidatedEventDispatcher} validatedEventDispatcher - The validated event dispatcher.
- * @property {ILogger} logger - The logging service instance.
+ * @property {ExecutionValidatedEventDispatcher} validatedEventDispatcher - The validated event dispatcher.
+ * @property {ExecutionLogger} logger - The logging service instance.
  * @property {ISafeEventDispatcher} safeEventDispatcher - Safe event dispatcher for error handling.
  */
 
 /**
  * @typedef {object} ContextOperationDeps
  * Dependencies for handlers that modify execution context variables.
- * @property {ILogger} logger - The logging service instance.
+ * @property {ExecutionLogger} logger - The logging service instance.
  * @property {ISafeEventDispatcher} safeEventDispatcher - Safe event dispatcher for error handling.
  */
 
 /**
  * @typedef {object} ClosenessCircleDeps
  * Dependencies for handlers that work with closeness circles.
- * @property {EntityManager} entityManager - The entity management service.
+ * @property {ExecutionEntityManagerLike} entityManager - The entity management service.
  * @property {ClosenessCircleService} closenessCircleService - The closeness circle service.
- * @property {ILogger} logger - The logging service instance.
+ * @property {ExecutionLogger} logger - The logging service instance.
  * @property {ISafeEventDispatcher} safeEventDispatcher - Safe event dispatcher for error handling.
  */
 
