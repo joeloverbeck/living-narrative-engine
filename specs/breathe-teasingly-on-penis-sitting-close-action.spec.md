@@ -43,9 +43,9 @@ Implement `data/mods/sex-penile-oral/rules/handle_breathe_teasingly_on_penis_sit
 2. Retrieve `actorName` and `primaryName` via `GET_NAME` calls (`entity_ref` values `actor` and `primary` respectively).
 3. Query the actor's `core:position` component into `actorPosition` for logging metadata.
 4. Set `logMessage` to `{actor} breathes teasingly on {primary}'s penis from up close, leaning toward {primary}'s lap.` exactly as provided.
-5. Set `perceptionType` to `action_target_general`, copy the location resolution, and populate `actorId` / `targetId` using `{event.payload.actorId}` and `{event.payload.primaryId}` to align with the `{primary}` placeholder conventions used elsewhere.【F:data/mods/sex/rules/handle_ride_penis_greedily.rule.json†L1-L119】
+5. Set `perceptionType` to `action_target_general`, copy the location resolution, and populate `actorId` / `targetId` using `{event.payload.actorId}` and `{event.payload.primaryId}` to align with the `{primary}` placeholder conventions used elsewhere.【F:data/mods/sex-vaginal-penetration/rules/handle_ride_penis_greedily.rule.json†L1-L119】
 6. Finish with the `core:logSuccessAndEndTurn` macro.
-7. Add both the new rule and condition files to the sex mod manifest.
+7. Add both the new rule and condition files to the `sex-penile-oral` mod manifest.
 
 ## Testing Requirements
 

@@ -533,7 +533,7 @@ close_actors_facing_each_other_with_torso_clothing.scope
 
 2. **Search for `intimacy:` references in other mods**
    ```bash
-   grep -r "intimacy:" data/mods/sex/
+   grep -r "intimacy:" data/mods/sex-*/
    grep -r "intimacy:" data/mods/seduction/
    grep -r "intimacy:" data/mods/p_erotica/
    ```
@@ -625,7 +625,7 @@ Any rules/conditions referencing `intimacy:*` actions need updates:
 
 ```bash
 # Find all intimacy references
-grep -r "intimacy:" data/mods/sex/
+grep -r "intimacy:" data/mods/sex-*/
 grep -r "intimacy:" data/mods/seduction/
 grep -r "intimacy:" data/mods/p_erotica/
 
