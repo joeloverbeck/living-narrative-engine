@@ -322,12 +322,12 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
 
     it('should have correct visual styling', () => {
       expect(rubPussyAgainstPenisAction.visual).toBeDefined();
-      expect(rubPussyAgainstPenisAction.visual.backgroundColor).toBe('#4a148c');
-      expect(rubPussyAgainstPenisAction.visual.textColor).toBe('#e1bee7');
+      expect(rubPussyAgainstPenisAction.visual.backgroundColor).toBe('#4a2741');
+      expect(rubPussyAgainstPenisAction.visual.textColor).toBe('#fce8f5');
       expect(rubPussyAgainstPenisAction.visual.hoverBackgroundColor).toBe(
-        '#6a1b9a'
+        '#5c2f51'
       );
-      expect(rubPussyAgainstPenisAction.visual.hoverTextColor).toBe('#f3e5f5');
+      expect(rubPussyAgainstPenisAction.visual.hoverTextColor).toBe('#ffffff');
     });
   });
 
