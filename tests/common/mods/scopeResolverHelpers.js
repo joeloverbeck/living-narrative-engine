@@ -5,6 +5,44 @@
  */
 
 /**
+ * Resolves an entity reference from a scope context.
+ *
+ * @param {object} context - Scope evaluation context.
+ * @param {string} contextSource - Property on the context containing the entity reference.
+ * @param {import('../entities/index.js').SimpleEntityManager} entityManager - Entity manager instance.
+ * @returns {{ entityId: string|null, entity: object|null }} Resolved entity information.
+ */
+function resolveContextEntity(context, contextSource, entityManager) {
+  const reference = context?.[contextSource];
+
+  if (!reference) {
+    return { entityId: null, entity: null };
+  }
+
+  if (typeof reference === 'string') {
+    const entityInstance = entityManager.getEntityInstance(reference);
+    return { entityId: reference, entity: entityInstance ?? null };
+  }
+
+  if (typeof reference === 'object') {
+    if (typeof reference.id === 'string') {
+      return { entityId: reference.id, entity: reference };
+    }
+
+    if (
+      Object.prototype.hasOwnProperty.call(reference, 'id') &&
+      reference.id !== null &&
+      reference.id !== undefined
+    ) {
+      const entityId = String(reference.id);
+      return { entityId, entity: { ...reference, id: entityId } };
+    }
+  }
+
+  return { entityId: null, entity: null };
+}
+
+/**
  * Library of reusable scope resolver implementations.
  *
  * Provides factory methods for creating scope resolvers following common patterns,
@@ -35,13 +73,19 @@ export class ScopeResolverHelpers {
     { componentType, sourceField, resultField = 'id', contextSource = 'actor' }
   ) {
     return function (context) {
-      const sourceEntity = context?.[contextSource];
-      if (!sourceEntity?.id) {
+      const { entityManager } = this;
+      const { entityId: sourceEntityId } = resolveContextEntity(
+        context,
+        contextSource,
+        entityManager
+      );
+
+      if (!sourceEntityId) {
         return { success: true, value: new Set() };
       }
 
-      const component = this.entityManager.getComponentData(
-        sourceEntity.id,
+      const component = entityManager.getComponentData(
+        sourceEntityId,
         componentType
       );
 
@@ -81,18 +125,24 @@ export class ScopeResolverHelpers {
     { getArray, filterFn, contextSource = 'actor' }
   ) {
     return function (context) {
-      const sourceEntity = context?.[contextSource];
-      if (!sourceEntity?.id) {
+      const { entityManager } = this;
+      const { entityId: sourceEntityId, entity: sourceEntityRef } =
+        resolveContextEntity(context, contextSource, entityManager);
+
+      if (!sourceEntityId) {
         return { success: true, value: new Set() };
       }
 
-      const array = getArray(sourceEntity, context, this.entityManager);
+      const sourceEntity =
+        sourceEntityRef ?? entityManager.getEntityInstance(sourceEntityId) ?? { id: sourceEntityId };
+
+      const array = getArray(sourceEntity, context, entityManager);
       if (!Array.isArray(array)) {
         return { success: true, value: new Set() };
       }
 
       const matches = array.filter((item) =>
-        filterFn(item, sourceEntity, context, this.entityManager)
+        filterFn(item, sourceEntity, context, entityManager)
       );
 
       return {
@@ -117,12 +167,18 @@ export class ScopeResolverHelpers {
     { filterFn = null, contextSource = 'actor' }
   ) {
     return function (context) {
-      const sourceEntity = context?.[contextSource];
-      if (!sourceEntity?.id) {
+      const { entityManager } = this;
+      const { entityId: sourceEntityId, entity: sourceEntityRef } =
+        resolveContextEntity(context, contextSource, entityManager);
+
+      if (!sourceEntityId) {
         return { success: true, value: new Set() };
       }
 
-      const sourceLocation = this.entityManager.getComponentData(
+      const sourceEntity =
+        sourceEntityRef ?? entityManager.getEntityInstance(sourceEntityId) ?? { id: sourceEntityId };
+
+      const sourceLocation = entityManager.getComponentData(
         sourceEntity.id,
         'core:position'
       );
@@ -132,12 +188,12 @@ export class ScopeResolverHelpers {
       }
 
       // Get all entities at same location
-      const entitiesAtLocation = this.entityManager
+      const entitiesAtLocation = entityManager
         .getEntityIds()
         .filter((entityId) => {
           if (entityId === sourceEntity.id) return false; // Exclude source
 
-          const position = this.entityManager.getComponentData(
+          const position = entityManager.getComponentData(
             entityId,
             'core:position'
           );
@@ -145,7 +201,7 @@ export class ScopeResolverHelpers {
 
           // Apply optional filter
           if (filterFn) {
-            return filterFn(entityId, sourceEntity, context, this.entityManager);
+            return filterFn(entityId, sourceEntity, context, entityManager);
           }
 
           return true;
@@ -237,7 +293,7 @@ export class ScopeResolverHelpers {
               return entityId && entityId !== actor.id;
             },
           }
-        ),
+      ),
 
       // "closest leftmost occupant" (for scoot_closer action)
       'positioning:closest_leftmost_occupant': this.createArrayFilterResolver(
@@ -263,6 +319,57 @@ export class ScopeResolverHelpers {
             for (let i = leftSpots.length - 1; i >= 0; i--) {
               if (leftSpots[i] && leftSpots[i] !== null) {
                 return [leftSpots[i]];
+              }
+            }
+
+            return [];
+          },
+          filterFn: (entityId, actor) => {
+            return entityId && entityId !== actor.id;
+          },
+        }
+      ),
+
+      // "closest rightmost occupant" (for scoot_closer_right action)
+      'positioning:closest_rightmost_occupant': this.createArrayFilterResolver(
+        'positioning:closest_rightmost_occupant',
+        {
+          getArray: (actor, context, em) => {
+            const sitting = em.getComponentData(
+              actor.id,
+              'positioning:sitting_on'
+            );
+            if (!sitting) {
+              return [];
+            }
+
+            const furniture = em.getComponentData(
+              sitting.furniture_id,
+              'positioning:allows_sitting'
+            );
+            if (!furniture?.spots) {
+              return [];
+            }
+
+            const spots = furniture.spots;
+            const actorSpotIndex = sitting.spot_index;
+
+            if (typeof actorSpotIndex !== 'number') {
+              return [];
+            }
+
+            if (actorSpotIndex + 1 >= spots.length) {
+              return [];
+            }
+
+            if (spots[actorSpotIndex + 1] !== null) {
+              return [];
+            }
+
+            for (let i = actorSpotIndex + 2; i < spots.length; i++) {
+              const occupantId = spots[i];
+              if (occupantId && occupantId !== actor.id) {
+                return [occupantId];
               }
             }
 
@@ -472,7 +579,11 @@ export class ScopeResolverHelpers {
     Object.entries(resolvers).forEach(([scopeName, resolver]) => {
       const boundResolver =
         typeof resolver === 'function' && resolver.bind
-          ? resolver.bind({ entityManager })
+          ? resolver.bind({
+              get entityManager() {
+                return testEnv.entityManager || entityManager;
+              },
+            })
           : resolver;
       testEnv._registeredResolvers.set(scopeName, boundResolver);
     });

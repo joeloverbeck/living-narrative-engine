@@ -5,21 +5,40 @@ import {
 } from '../../../common/mods/actionValidationProxy.js';
 
 describe('actionValidationProxy - Property Validation', () => {
-  it('should accept valid action definition', () => {
-    const validAction = {
-      id: 'positioning:scoot_closer',
-      name: 'Scoot Closer',
-      targets: {
-        primary: {
-          scope: 'positioning:closest_leftmost_occupant',
-          placeholder: 'someone',
+  it('should accept valid action definitions for scoot closer variants', () => {
+    const validActions = [
+      {
+        id: 'positioning:scoot_closer',
+        name: 'Scoot Closer',
+        targets: {
+          primary: {
+            scope: 'positioning:closest_leftmost_occupant',
+            placeholder: 'someone',
+          },
         },
       },
-    };
+      {
+        id: 'positioning:scoot_closer_right',
+        name: 'Scoot Closer Right',
+        targets: {
+          primary: {
+            scope: 'positioning:furniture_actor_sitting_on',
+            placeholder: 'seat',
+          },
+          secondary: {
+            scope: 'positioning:closest_rightmost_occupant',
+            placeholder: 'occupant',
+            contextFrom: 'primary',
+          },
+        },
+      },
+    ];
 
-    expect(() => {
-      createActionValidationProxy(validAction, 'Test Action');
-    }).not.toThrow();
+    validActions.forEach((action) => {
+      expect(() => {
+        createActionValidationProxy(action, `Test Action ${action.id}`);
+      }).not.toThrow();
+    });
   });
 
   it('should catch typo: action_id instead of id', () => {

@@ -72,6 +72,26 @@ describe('JsonLogicEvaluationService - Custom Operators Validation', () => {
       );
     });
 
+    it('should allow isClosestRightOccupant operator', () => {
+      const rule = {
+        isClosestRightOccupant: ['entity', 'target', 'actor'],
+      };
+
+      const context = {
+        entity: { id: 'test_entity' },
+        target: { id: 'test_target' },
+        actor: { id: 'test_actor' },
+      };
+
+      const result = service.evaluate(rule, context);
+
+      expect(typeof result).toBe('boolean');
+      expect(logger.error).not.toHaveBeenCalledWith(
+        expect.stringContaining('Disallowed operation'),
+        expect.anything()
+      );
+    });
+
     it('should allow hasSittingSpaceToRight operator', () => {
       const rule = {
         hasSittingSpaceToRight: ['entity', 'target'],
