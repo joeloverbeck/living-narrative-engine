@@ -1,0 +1,29 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "seduction:grab_crotch_draw_attention",
+  "name": "Grab Crotch to Draw Attention",
+  "description": "Grab your clothed crotch to emphasize the outline of your bulge and draw attention to it.",
+  "targets": "none",
+  "required_components": {},
+  "template": "grab your crotch to draw attention",
+  "prerequisites": [
+    {
+      "logic": {
+        "hasPartOfType": ["actor", "penis"]
+      },
+      "failure_message": "You need a penis to grab and draw attention to it."
+    },
+    {
+      "logic": {
+        "hasClothingInSlot": ["actor", "torso_lower"]
+      },
+      "failure_message": "Your crotch needs to be covered to emphasize the bulge."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#f57f17",
+    "textColor": "#000000",
+    "hoverBackgroundColor": "#f9a825",
+    "hoverTextColor": "#212121"
+  }
+}
