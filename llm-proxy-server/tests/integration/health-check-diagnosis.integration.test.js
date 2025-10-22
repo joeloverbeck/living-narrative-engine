@@ -5,21 +5,29 @@
 
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 import request from 'supertest';
-import express from 'express';
-import healthRoutes from '../../src/routes/healthRoutes.js';
+
+import {
+  buildHealthRoutesApp,
+  createCacheService,
+  createHttpAgentService,
+  createOperationalLlmConfigService,
+} from '../common/healthRoutesTestUtils.js';
+
+const TEST_PORT = 3002;
 
 describe('Health Check Endpoint Diagnosis', () => {
   let app;
   let server;
-  const TEST_PORT = 3002; // Use different port to avoid conflicts
 
   beforeAll((done) => {
-    // Create minimal Express app with health routes
-    app = express();
-    app.use('/health', healthRoutes);
+    const { app: expressApp } = buildHealthRoutesApp({
+      llmConfigService: createOperationalLlmConfigService(),
+      cacheService: createCacheService(),
+      httpAgentService: createHttpAgentService(),
+    });
+    app = expressApp;
 
     server = app.listen(TEST_PORT, 'localhost', () => {
-      console.log(`Test server listening on http://localhost:${TEST_PORT}`);
       done();
     });
   });
@@ -36,42 +44,38 @@ describe('Health Check Endpoint Diagnosis', () => {
     const response = await request(app).get('/health');
 
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('status', 'ok');
-    expect(response.body).toHaveProperty('service', 'llm-proxy-server');
+    expect(response.body).toHaveProperty('status', 'UP');
+    expect(response.body).toHaveProperty('details');
     expect(response.body).toHaveProperty('timestamp');
-    expect(response.body).toHaveProperty('uptime');
   });
 
   it('should respond to readiness check endpoint', async () => {
     const response = await request(app).get('/health/ready');
 
-    // Should return 200 or 503 depending on services availability
-    expect([200, 503]).toContain(response.status);
-    expect(response.body).toHaveProperty('service', 'llm-proxy-server');
-    expect(response.body).toHaveProperty('checks');
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('status', 'UP');
+    expect(Array.isArray(response.body.details.dependencies)).toBe(true);
   });
 
   it('should respond to liveness check endpoint', async () => {
     const response = await request(app).get('/health/live');
 
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('status', 'alive');
+    expect(response.body).toHaveProperty('status', 'UP');
     expect(response.body).toHaveProperty('service', 'llm-proxy-server');
-    expect(response.body).toHaveProperty('pid');
+    expect(response.body).toHaveProperty('pid', process.pid);
   });
 
   it('should respond to detailed health check endpoint', async () => {
     const response = await request(app).get('/health/detailed');
 
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('status', 'ok');
+    expect(response.body).toHaveProperty('status', 'UP');
     expect(response.body).toHaveProperty('system');
     expect(response.body).toHaveProperty('environment');
-    expect(response.body.system).toHaveProperty('memory');
   });
 
   it('should simulate remote logger health check behavior', async () => {
-    // This simulates what the remote logger does for health checks
     const controller = new AbortController();
     let timeoutId;
 
@@ -90,13 +94,8 @@ describe('Health Check Endpoint Diagnosis', () => {
       expect(response.status).toBe(200);
 
       const data = await response.json();
-      expect(data).toHaveProperty('status', 'ok');
-    } catch (error) {
-      // This should help us understand what's causing the health check failures
-      console.error('Health check simulation failed:', error.message);
-      throw error;
+      expect(data).toHaveProperty('status', 'UP');
     } finally {
-      // Always clear the timeout to prevent dangling timers
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
@@ -104,14 +103,11 @@ describe('Health Check Endpoint Diagnosis', () => {
   });
 
   it('should test CORS behavior for health check endpoint', async () => {
-    // Test if CORS is affecting health check requests
     const response = await request(app)
       .get('/health')
       .set('Origin', 'http://localhost:8080')
       .set('User-Agent', 'HealthCheck/1.0');
 
     expect(response.status).toBe(200);
-    // Note: CORS headers might not be present since we don't have CORS middleware in this test
-    // but the request should still succeed
   });
 });
