@@ -26,6 +26,7 @@ import {
   LEADING_COMPONENT_ID,
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
+  ACTOR_COMPONENT_ID,
 } from '../../../../src/constants/componentIds.js';
 import GetNameHandler from '../../../../src/logic/operationHandlers/getNameHandler.js';
 import EndTurnHandler from '../../../../src/logic/operationHandlers/endTurnHandler.js';
@@ -335,6 +336,7 @@ describe('core_handle_follow_auto_move rule integration', () => {
       {
         id: 'actor1',
         components: {
+          [ACTOR_COMPONENT_ID]: {},
           [NAME_COMPONENT_ID]: { text: 'Actor' },
           [POSITION_COMPONENT_ID]: { locationId: 'room2' },
           [LEADING_COMPONENT_ID]: { followers: ['target1'] },
@@ -343,6 +345,7 @@ describe('core_handle_follow_auto_move rule integration', () => {
       {
         id: 'target1',
         components: {
+          [ACTOR_COMPONENT_ID]: {},
           [NAME_COMPONENT_ID]: { text: 'Target' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
           [FOLLOWING_COMPONENT_ID]: { leaderId: 'actor1' },
@@ -374,6 +377,7 @@ describe('core_handle_follow_auto_move rule integration', () => {
       {
         id: 'actor1',
         components: {
+          [ACTOR_COMPONENT_ID]: {},
           [NAME_COMPONENT_ID]: { text: 'Leader One' },
           [POSITION_COMPONENT_ID]: { locationId: 'room2' },
           [LEADING_COMPONENT_ID]: { followers: ['target1'] },
@@ -382,6 +386,7 @@ describe('core_handle_follow_auto_move rule integration', () => {
       {
         id: 'target1',
         components: {
+          [ACTOR_COMPONENT_ID]: {},
           [NAME_COMPONENT_ID]: { text: 'Follower One' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
           [FOLLOWING_COMPONENT_ID]: { leaderId: 'actor1' },
@@ -390,6 +395,7 @@ describe('core_handle_follow_auto_move rule integration', () => {
       {
         id: 'actor2',
         components: {
+          [ACTOR_COMPONENT_ID]: {},
           [NAME_COMPONENT_ID]: { text: 'Leader Two' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
           [LEADING_COMPONENT_ID]: { followers: ['target2'] },
@@ -398,6 +404,7 @@ describe('core_handle_follow_auto_move rule integration', () => {
       {
         id: 'target2',
         components: {
+          [ACTOR_COMPONENT_ID]: {},
           [NAME_COMPONENT_ID]: { text: 'Follower Two' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
           [FOLLOWING_COMPONENT_ID]: { leaderId: 'actor2' },
@@ -429,5 +436,63 @@ describe('core_handle_follow_auto_move rule integration', () => {
 
     expect(movedFollowerPosition.locationId).toBe('room2');
     expect(stationaryFollowerPosition.locationId).toBe('room1');
+  });
+
+  it('does not move non-actor entities even when they have a following component', async () => {
+    testEnv.reset([
+      {
+        id: 'leader',
+        components: {
+          [ACTOR_COMPONENT_ID]: {},
+          [NAME_COMPONENT_ID]: { text: 'Leader' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room2' },
+        },
+      },
+      {
+        id: 'actorFollower',
+        components: {
+          [ACTOR_COMPONENT_ID]: {},
+          [NAME_COMPONENT_ID]: { text: 'Follower' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          [FOLLOWING_COMPONENT_ID]: { leaderId: 'leader' },
+        },
+      },
+      {
+        id: 'sofaItem',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'Sofa' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          [FOLLOWING_COMPONENT_ID]: { leaderId: 'leader' },
+        },
+      },
+    ]);
+
+    await testEnv.entityManager.addComponent('leader', LEADING_COMPONENT_ID, {
+      followers: ['actorFollower', 'sofaItem'],
+    });
+
+    await testEnv.eventBus.dispatch('core:entity_moved', {
+      entityId: 'leader',
+      previousLocationId: 'room1',
+      currentLocationId: 'room2',
+    });
+
+    const followerPosition = testEnv.entityManager.getComponentData(
+      'actorFollower',
+      POSITION_COMPONENT_ID
+    );
+    const sofaPosition = testEnv.entityManager.getComponentData(
+      'sofaItem',
+      POSITION_COMPONENT_ID
+    );
+    const leadingComponent = testEnv.entityManager.getComponentData(
+      'leader',
+      LEADING_COMPONENT_ID
+    );
+
+    expect(followerPosition.locationId).toBe('room2');
+    expect(sofaPosition.locationId).toBe('room1');
+    expect(leadingComponent.followers).toContain('actorFollower');
+    expect(leadingComponent.followers).not.toContain('sofaItem');
   });
 });
