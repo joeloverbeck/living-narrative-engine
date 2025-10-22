@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "affection:pat_head_affectionately",
+  "name": "Pat head affectionately",
+  "description": "Pat the target's head to show gentle affection.",
+  "targets": "positioning:close_actors_or_entity_kneeling_before_actor",
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "template": "pat {target} on the head",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#6a1b9a",
+    "textColor": "#f3e5f5",
+    "hoverBackgroundColor": "#8e24aa",
+    "hoverTextColor": "#ffffff"
+  }
+}
