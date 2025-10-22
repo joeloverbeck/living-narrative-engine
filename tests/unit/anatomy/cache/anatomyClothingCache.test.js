@@ -137,6 +137,13 @@ describe('AnatomyClothingCache', () => {
       );
       expect(deleted).toBe(false);
     });
+
+    it('should return false immediately for unknown cache types', () => {
+      const deleted = cache.delete('unknown-type', 'anything');
+
+      expect(deleted).toBe(false);
+      expect(mockLogger.debug).not.toHaveBeenCalled();
+    });
   });
 
   describe('clearType operation', () => {
