@@ -20,7 +20,7 @@ import pumpPenisFromUpCloseAction from '../../../data/mods/sex/actions/pump_peni
 const pumpPenisScopeContent = fs.readFileSync(
   path.resolve(
     process.cwd(),
-    'data/mods/sex/scopes/actor_kneeling_before_target_with_penis.scope'
+    'data/mods/sex-core/scopes/actor_kneeling_before_target_with_penis.scope'
   ),
   'utf8'
 );
@@ -143,7 +143,7 @@ describe('Sex Action Discovery Integration Tests', () => {
 
       // Act - Evaluate the scope
       const scopeDef = scopeRegistry.getScope(
-        'sex:actor_kneeling_before_target_with_penis'
+        'sex-core:actor_kneeling_before_target_with_penis'
       );
 
       // Debug: Check if scope was found
@@ -204,7 +204,7 @@ describe('Sex Action Discovery Integration Tests', () => {
 
       // Act
       const scopeDef = scopeRegistry.getScope(
-        'sex:actor_kneeling_before_target_with_penis'
+        'sex-core:actor_kneeling_before_target_with_penis'
       );
       const result = scopeEngine.resolve(scopeDef.ast, actorEntity, {
         entityManager,
@@ -262,7 +262,7 @@ describe('Sex Action Discovery Integration Tests', () => {
 
       // Act
       const scopeDef = scopeRegistry.getScope(
-        'sex:actor_kneeling_before_target_with_penis'
+        'sex-core:actor_kneeling_before_target_with_penis'
       );
       const result = scopeEngine.resolve(scopeDef.ast, actorEntity, {
         entityManager,
@@ -312,7 +312,7 @@ describe('Sex Action Discovery Integration Tests', () => {
 
       // Act
       const scopeDef = scopeRegistry.getScope(
-        'sex:actor_kneeling_before_target_with_penis'
+        'sex-core:actor_kneeling_before_target_with_penis'
       );
       const result = scopeEngine.resolve(scopeDef.ast, actorEntity, {
         entityManager,

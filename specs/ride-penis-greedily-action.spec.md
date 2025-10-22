@@ -9,7 +9,7 @@ Design a follow-up `sex` mod action/rule pair where a female actor rides her par
 - **Targets**
   - Primary: `sex:actors_with_uncovered_penis_facing_each_other_or_target_facing_away` with placeholder `primary` so either face-to-face or reverse cowgirl setups qualify.【F:data/mods/sex/actions/straddling_penis_milking.action.json†L6-L11】
 - **Required components (actor)**
-  - Mirror the reference action by requiring `positioning:closeness`, `positioning:straddling_waist`, and `sex:being_fucked_vaginally` to guarantee active vaginal penetration positioning.【F:data/mods/sex/actions/straddling_penis_milking.action.json†L13-L18】
+  - Mirror the reference action by requiring `positioning:closeness`, `positioning:straddling_waist`, and `sex-core:being_fucked_vaginally` to guarantee active vaginal penetration positioning.【F:data/mods/sex/actions/straddling_penis_milking.action.json†L13-L18】
 - **Forbidden components**
   - Actor: extend the shared `positioning:sitting_on` exclusion to avoid conflicts with seated lap states.【F:data/mods/sex/actions/straddling_penis_milking.action.json†L20-L22】
   - Primary: no additional forbiddens beyond the target scope.
@@ -23,7 +23,7 @@ Design a follow-up `sex` mod action/rule pair where a female actor rides her par
 Implement a companion rule triggered by the new action that clones the existing straddling milking logic while updating the narration:
 
 1. Query actor/primary names, position, and pre-existing penetration components exactly as in the current rule so re-entry paths avoid duplicate component churn.【F:data/mods/sex/rules/handle_straddling_penis_milking.rule.json†L9-L157】
-2. Maintain the mutual component contract by ensuring the actor carries `sex:being_fucked_vaginally` (actorId → primary) and the primary carries `sex:fucking_vaginally` (targetId → actor), refreshing them only when mismatched.【F:data/mods/sex/rules/handle_straddling_penis_milking.rule.json†L33-L155】
+2. Maintain the mutual component contract by ensuring the actor carries `sex-core:being_fucked_vaginally` (actorId → primary) and the primary carries `sex-core:fucking_vaginally` (targetId → actor), refreshing them only when mismatched.【F:data/mods/sex/rules/handle_straddling_penis_milking.rule.json†L33-L155】
 3. Set both the perceptible event message and the success log to `{actor} rides {primary}'s penis greedily, wet slaps echoing as their groins meet.`, then reuse the standard `action_target_general` perception payload wiring before calling `core:logSuccessAndEndTurn`.【F:data/mods/sex/rules/handle_straddling_penis_milking.rule.json†L158-L195】
 
 ## Testing Requirements

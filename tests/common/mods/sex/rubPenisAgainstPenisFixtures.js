@@ -187,7 +187,7 @@ export function buildRubPenisAgainstPenisScenario(options = {}) {
 }
 
 /**
- * Installs a scope override for `sex:actors_with_penis_facing_each_other`.
+ * Installs a scope override for `sex-core:actors_with_penis_facing_each_other`.
  * The override mirrors the scope logic by filtering the actor's closeness partners
  * for uncovered penises that are not facing away or kneeling incompatibly.
  *
@@ -199,7 +199,7 @@ export function installPenisFacingEachOtherScopeOverride(testFixture) {
   const originalResolveSync = resolver.resolveSync.bind(resolver);
 
   resolver.resolveSync = (scopeName, context) => {
-    if (scopeName === 'sex:actors_with_penis_facing_each_other') {
+    if (scopeName === 'sex-core:actors_with_penis_facing_each_other') {
       const actorId = context?.actor?.id;
 
       if (!actorId) {

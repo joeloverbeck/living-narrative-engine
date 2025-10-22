@@ -22,7 +22,7 @@ When an actor (Actor A) uses the `positioning:kneel_before` action to kneel befo
 ### Root Cause Analysis
 
 The scopes used by these sexual/caressing actions:
-- `sex:actors_with_penis_facing_each_other` - Only checks facing direction via `entity-not-in-facing-away` condition
+- `sex-core:actors_with_penis_facing_each_other` - Only checks facing direction via `entity-not-in-facing-away` condition
 - `caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target` - Only checks facing direction or behind positioning
 
 **Missing Validation:**
@@ -41,7 +41,7 @@ The scopes used by these sexual/caressing actions:
   - `positioning:closeness` - Required for intimacy actions
 
 - **Scopes:**
-  - `sex:actors_with_penis_facing_each_other` - Needs kneeling awareness
+  - `sex-core:actors_with_penis_facing_each_other` - Needs kneeling awareness
   - `caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target` - Needs kneeling awareness
 
 - **Existing Conditions:**
@@ -90,11 +90,11 @@ Create new conditions that detect incompatible kneeling states, then integrate t
 
 ### Scope Updates
 
-#### Update 1: `sex:actors_with_penis_facing_each_other.scope`
+#### Update 1: `sex-core:actors_with_penis_facing_each_other.scope`
 
 **Current Logic:**
 ```
-sex:actors_with_penis_facing_each_other := actor.components.positioning:closeness.partners[][{
+sex-core:actors_with_penis_facing_each_other := actor.components.positioning:closeness.partners[][{
   "and": [
     {"hasPartOfType": [".", "penis"]},
     {"condition_ref": "positioning:entity-not-in-facing-away"},
@@ -105,7 +105,7 @@ sex:actors_with_penis_facing_each_other := actor.components.positioning:closenes
 
 **Updated Logic:**
 ```
-sex:actors_with_penis_facing_each_other := actor.components.positioning:closeness.partners[][{
+sex-core:actors_with_penis_facing_each_other := actor.components.positioning:closeness.partners[][{
   "and": [
     {"hasPartOfType": [".", "penis"]},
     {"condition_ref": "positioning:entity-not-in-facing-away"},
@@ -207,12 +207,12 @@ caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target := actor.com
 
 ### 3.3 Update Scope: `actors_with_penis_facing_each_other.scope`
 
-**File:** `data/mods/sex/scopes/actors_with_penis_facing_each_other.scope`
+**File:** `data/mods/sex-core/scopes/actors_with_penis_facing_each_other.scope`
 
 ```
 // Scope for actors in closeness who have an uncovered penis, are facing each other, and don't have incompatible kneeling positions
 // Used by actions that require exposed penis anatomy, face-to-face interaction, and compatible vertical positioning
-sex:actors_with_penis_facing_each_other := actor.components.positioning:closeness.partners[][{
+sex-core:actors_with_penis_facing_each_other := actor.components.positioning:closeness.partners[][{
   "and": [
     {"hasPartOfType": [".", "penis"]},
     {"condition_ref": "positioning:entity-not-in-facing-away"},
@@ -401,7 +401,7 @@ Checks if the current actor is kneeling before the target entity. This condition
 Update scope comments to clarify positioning requirements:
 
 ```markdown
-## sex:actors_with_penis_facing_each_other
+## sex-core:actors_with_penis_facing_each_other
 
 Filters actors in closeness who:
 - Have an uncovered penis
@@ -424,7 +424,7 @@ Used by actions requiring ass interaction at compatible heights.
 
 - [ ] Create `positioning:entity-kneeling-before-actor` condition file
 - [ ] Create `positioning:actor-kneeling-before-entity` condition file
-- [ ] Update `sex:actors_with_penis_facing_each_other.scope`
+- [ ] Update `sex-core:actors_with_penis_facing_each_other.scope`
 - [ ] Update `caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target.scope`
 - [ ] Create integration test file with comprehensive test coverage
 - [ ] Add reproduction test for original issue

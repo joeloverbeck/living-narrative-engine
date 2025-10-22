@@ -2,7 +2,7 @@
 
 ## Overview
 
-Design a new `sex` mod action/rule pair where a female actor straddles a partner and sensually milks the partner's penis during ongoing sex. Reuse the existing penetration action's primary target scope `sex:actors_with_uncovered_penis_facing_each_other_or_target_facing_away` so the partner already has an exposed penis aligned for vaginal intimacy.【F:data/mods/sex/actions/insert_primary_penis_into_your_vagina.action.json†L6-L20】 Build on the penetration state components to model the mutual penetration relationship once the action succeeds.【F:data/mods/sex/components/fucking_vaginally.component.json†L1-L17】【F:data/mods/sex/components/being_fucked_vaginally.component.json†L1-L17】
+Design a new `sex` mod action/rule pair where a female actor straddles a partner and sensually milks the partner's penis during ongoing sex. Reuse the existing penetration action's primary target scope `sex:actors_with_uncovered_penis_facing_each_other_or_target_facing_away` so the partner already has an exposed penis aligned for vaginal intimacy.【F:data/mods/sex/actions/insert_primary_penis_into_your_vagina.action.json†L6-L20】 Build on the penetration state components to model the mutual penetration relationship once the action succeeds.【F:data/mods/sex-core/components/fucking_vaginally.component.json†L1-L17】【F:data/mods/sex-core/components/being_fucked_vaginally.component.json†L1-L17】
 
 ## Action Design
 
@@ -24,7 +24,7 @@ Design a new `sex` mod action/rule pair where a female actor straddles a partner
 Create a companion rule triggered by the new action.
 
 1. Emit the same descriptive copy for both the perceptible event and the successful action message: `{actor} rocks {primary}'s penis slowly with her vagina, feeling each inch and vein of the penis.`
-2. Apply `sex:being_fucked_vaginally` to the actor with the `actorId` of the primary target, and `sex:fucking_vaginally` to the primary with the `targetId` of the actor, preserving the paired-state bookkeeping for vaginal penetration.【F:data/mods/sex/components/fucking_vaginally.component.json†L1-L17】【F:data/mods/sex/components/being_fucked_vaginally.component.json†L1-L17】
+2. Apply `sex-core:being_fucked_vaginally` to the actor with the `actorId` of the primary target, and `sex-core:fucking_vaginally` to the primary with the `targetId` of the actor, preserving the paired-state bookkeeping for vaginal penetration.【F:data/mods/sex-core/components/fucking_vaginally.component.json†L1-L17】【F:data/mods/sex-core/components/being_fucked_vaginally.component.json†L1-L17】
 3. Ensure the rule respects existing penetration cooldown/stacking norms by checking for these components before reapplying them, preventing redundant state churn.
 
 ## Testing Requirements

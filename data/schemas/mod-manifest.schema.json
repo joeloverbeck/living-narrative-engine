@@ -13,7 +13,7 @@
     "id": {
       "description": "Unique identifier for the mod (must match its folder name under mods/). Case-insensitive for lookups, but preserved casing stored.",
       "type": "string",
-      "pattern": "^[a-zA-Z0-9_]+$"
+      "pattern": "^[a-zA-Z0-9_-]+$"
     },
     "version": {
       "description": "Semantic version of the mod (SemVer: major.minor.patch[-prerelease][+build]).",
@@ -46,7 +46,7 @@
       "type": "array",
       "items": {
         "type": "string",
-        "pattern": "^[a-zA-Z0-9_]+$"
+        "pattern": "^[a-zA-Z0-9_-]+$"
       },
       "uniqueItems": true
     },
@@ -155,7 +155,7 @@
         "id": {
           "description": "ID of the dependency mod. Case-insensitive match.",
           "type": "string",
-          "pattern": "^[a-zA-Z0-9_]+$"
+          "pattern": "^[a-zA-Z0-9_-]+$"
         },
         "version": {
           "description": "SemVer version range required (e.g., \"^1.0.0\", \">=2.1.0\").",

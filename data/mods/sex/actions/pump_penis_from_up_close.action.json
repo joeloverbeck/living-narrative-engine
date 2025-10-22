@@ -5,7 +5,7 @@
   "description": "Pump the target's penis sensually while kneeling before them from up close.",
   "targets": {
     "primary": {
-      "scope": "sex:actor_kneeling_before_target_with_penis",
+      "scope": "sex-core:actor_kneeling_before_target_with_penis",
       "placeholder": "target",
       "description": "Person with penis to pump"
     }

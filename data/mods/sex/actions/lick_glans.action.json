@@ -5,7 +5,7 @@
   "description": "Lick the target's glans in anticipation of a blowjob.",
   "targets": {
     "primary": {
-      "scope": "sex:actor_kneeling_before_target_with_penis",
+      "scope": "sex-core:actor_kneeling_before_target_with_penis",
       "placeholder": "target",
       "description": "Person with penis whose glans to lick."
     }

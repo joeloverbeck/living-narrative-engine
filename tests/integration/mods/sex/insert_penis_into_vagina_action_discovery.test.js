@@ -212,8 +212,8 @@ describe('sex:insert_penis_into_vagina action discovery', () => {
     }
 
     if (includePenetrationComponent) {
-      actorBuilder.withComponent('sex:fucking_vaginally', { targetId: 'beth' });
-      targetBuilder.withComponent('sex:being_fucked_vaginally', { actorId: 'alice' });
+      actorBuilder.withComponent('sex-core:fucking_vaginally', { targetId: 'beth' });
+      targetBuilder.withComponent('sex-core:being_fucked_vaginally', { actorId: 'alice' });
     }
 
     if (targetFacingAway) {
@@ -414,7 +414,7 @@ describe('sex:insert_penis_into_vagina action discovery', () => {
 
     it('should forbid actors already penetrating vaginally', () => {
       expect(insertPenisIntoVaginaAction.forbidden_components.actor).toEqual([
-        'sex:fucking_vaginally',
+        'sex-core:fucking_vaginally',
       ]);
     });
 

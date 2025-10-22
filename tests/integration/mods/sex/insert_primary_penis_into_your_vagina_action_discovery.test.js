@@ -205,7 +205,7 @@ describe('sex:insert_primary_penis_into_your_vagina action discovery', () => {
     }
 
     if (actorBeingFucked) {
-      actorBuilder.withComponent('sex:being_fucked_vaginally', { actorId: 'dorian' });
+      actorBuilder.withComponent('sex-core:being_fucked_vaginally', { actorId: 'dorian' });
     }
 
     if (actorSitting) {
@@ -367,7 +367,7 @@ describe('sex:insert_primary_penis_into_your_vagina action discovery', () => {
         'positioning:closeness',
       ]);
       expect(insertPrimaryPenisAction.forbidden_components.actor).toEqual([
-        'sex:being_fucked_vaginally',
+        'sex-core:being_fucked_vaginally',
         'positioning:sitting_on',
       ]);
     });

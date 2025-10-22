@@ -7,7 +7,7 @@ Introduce a new caressing interaction where the actor sensually touches the bare
 ## Current Patterns and Constraints
 
 - **Target scoping** – Clothing-aware gestures gate availability through scopes that first resolve close partners and then filter on clothing or posture, such as `caressing:close_actors_facing_each_other_with_torso_clothing`. Orientation-flexible gestures reuse `caressing:close_actors_facing_each_other_or_behind_target` so actors can interact while standing behind or face to face.【F:data/mods/caressing/scopes/close_actors_facing_each_other_with_torso_clothing.scope†L1-L8】【F:data/mods/caressing/scopes/close_actors_facing_each_other_or_behind_target.scope†L1-L8】
-- **Uncovered anatomy checks** – Scopes that require exposed anatomy pair `hasPartOfType` with `not` `isSocketCovered`, ensuring the relevant socket is bare before surfacing the action, as seen in `sex:actor_kneeling_before_target_with_penis`. This is the precedent to follow for verifying bare skin on the target's back.【F:data/mods/sex/scopes/actor_kneeling_before_target_with_penis.scope†L1-L14】
+- **Uncovered anatomy checks** – Scopes that require exposed anatomy pair `hasPartOfType` with `not` `isSocketCovered`, ensuring the relevant socket is bare before surfacing the action, as seen in `sex-core:actor_kneeling_before_target_with_penis`. This is the precedent to follow for verifying bare skin on the target's back.【F:data/mods/sex-core/scopes/actor_kneeling_before_target_with_penis.scope†L1-L14】
 - **Back socket coverage** – The humanoid slot library maps the `upper_back` and `lower_back` anatomy sockets used by garments and accessories; both sockets must be uncovered to guarantee full back exposure for caressing.【F:data/mods/anatomy/libraries/humanoid.slot-library.json†L123-L171】
 
 ## Scope Requirements
@@ -16,7 +16,7 @@ Create a new scope file `data/mods/caressing/scopes/close_actors_with_uncovered_
 
 1. Starts from the actor's `positioning:closeness.partners` array, matching the pattern used by other caressing proximity scopes.【F:data/mods/caressing/scopes/close_actors_facing_each_other_with_torso_clothing.scope†L3-L8】
 2. Allows targets when either both actors face each other or the actor is positioned behind the target, mirroring the OR block in `close_actors_facing_each_other_or_behind_target`.【F:data/mods/caressing/scopes/close_actors_facing_each_other_or_behind_target.scope†L3-L8】
-3. Adds `not` `isSocketCovered` checks for both `upper_back` and `lower_back` on each partner entity, guaranteeing bare skin by confirming neither socket is covered, following the uncovered anatomy approach used in the kneeling scope.【F:data/mods/sex/scopes/actor_kneeling_before_target_with_penis.scope†L3-L14】【F:data/mods/anatomy/libraries/humanoid.slot-library.json†L123-L171】
+3. Adds `not` `isSocketCovered` checks for both `upper_back` and `lower_back` on each partner entity, guaranteeing bare skin by confirming neither socket is covered, following the uncovered anatomy approach used in the kneeling scope.【F:data/mods/sex-core/scopes/actor_kneeling_before_target_with_penis.scope†L3-L14】【F:data/mods/anatomy/libraries/humanoid.slot-library.json†L123-L171】
 4. Includes brief documentation comments explaining the orientation flexibility and uncovered-back requirement for future maintainers.
 5. Register the new scope inside `data/mods/caressing/mod-manifest.json` so it becomes available to the action discovery pipeline.
 

@@ -5,7 +5,7 @@
   "description": "Gently fondle the target's penis.",
   "targets": {
     "primary": {
-      "scope": "sex:actors_with_penis_facing_each_other",
+      "scope": "sex-core:actors_with_penis_facing_each_other",
       "placeholder": "target",
       "description": "Person with penis to fondle"
     }
@@ -14,7 +14,7 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["sex:being_fucked_vaginally"]
+    "actor": ["sex-core:being_fucked_vaginally"]
   },
   "template": "fondle {target}'s penis",
   "prerequisites": [],

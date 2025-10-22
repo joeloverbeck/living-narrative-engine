@@ -1,12 +1,12 @@
 # Specification: Rub Penis Against Penis Action
 
 ## Overview
-Introduce a face-to-face penis-to-penis rubbing interaction in the `sex` mod. The acting character must have an uncovered penis and be in close proximity to a partner who also has an uncovered penis within the `sex:actors_with_penis_facing_each_other` scope. The experience should highlight the intimate contrast between their genitalia through matching narrative and perceptible event messaging.
+Introduce a face-to-face penis-to-penis rubbing interaction in the `sex` mod. The acting character must have an uncovered penis and be in close proximity to a partner who also has an uncovered penis within the `sex-core:actors_with_penis_facing_each_other` scope. The experience should highlight the intimate contrast between their genitalia through matching narrative and perceptible event messaging.
 
 ## Action Definition: `sex:rub_penis_against_penis`
 
 - **File**: `data/mods/sex/actions/rub_penis_against_penis.action.json`
-- **Scope**: Primary target resolves through `sex:actors_with_penis_facing_each_other`.
+- **Scope**: Primary target resolves through `sex-core:actors_with_penis_facing_each_other`.
 - **Template**: `rub your penis against {primary}'s penis`
 - **Prerequisites**:
   - `hasPartOfType` check ensuring the actor possesses a penis.

@@ -109,7 +109,7 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
     const scopePaths = [
       'data/mods/core/scopes/actors_in_location.scope',
       'data/mods/positioning/scopes/actors_in_location_facing.scope',
-      'data/mods/sex/scopes/actors_with_penis_facing_each_other.scope',
+      'data/mods/sex-core/scopes/actors_with_penis_facing_each_other.scope',
       'data/mods/caressing/scopes/actors_with_ass_cheeks_facing_each_other_or_behind_target.scope',
       'data/mods/positioning/scopes/close_actors_facing_each_other_or_behind_target.scope',
     ];

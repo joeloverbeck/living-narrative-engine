@@ -8,7 +8,7 @@ Introduce a seated variation of the teasing breath interaction so partners who a
 
 - **Current teasing action** – Use `sex:breathe_teasingly_on_penis` as the baseline for schema layout, visual palette, and narrative structure.【F:data/mods/sex/actions/breathe_teasingly_on_penis.action.json†L1-L24】【F:data/mods/sex/rules/handle_breathe_teasingly_on_penis.rule.json†L1-L63】
 - **Seated proximity scope** – `positioning:actors_both_sitting_close` shows how the positioning mod guarantees both entities are seated and in closeness; reuse its approach when building the new sex scope.【F:data/mods/positioning/scopes/actors_both_sitting_close.scope†L1-L6】
-- **Uncovered penis checks** – Follow the uncovered anatomy gating implemented by `sex:actor_kneeling_before_target_with_penis` to ensure the primary target both has a penis and that it is exposed.【F:data/mods/sex/scopes/actor_kneeling_before_target_with_penis.scope†L1-L14】
+- **Uncovered penis checks** – Follow the uncovered anatomy gating implemented by `sex-core:actor_kneeling_before_target_with_penis` to ensure the primary target both has a penis and that it is exposed.【F:data/mods/sex-core/scopes/actor_kneeling_before_target_with_penis.scope†L1-L14】
 - **Required components precedent** – Match the dual `positioning:sitting_on` and `positioning:closeness` component requirements used by `positioning:sit_on_lap_from_sitting_facing` for both actor and primary entries.【F:data/mods/positioning/actions/sit_on_lap_from_sitting_facing.action.json†L13-L25】
 
 ## Scope Requirements
@@ -17,7 +17,7 @@ Create `data/mods/sex/scopes/actors_sitting_close_with_uncovered_penis.scope` (f
 
 1. Start from `actor.components.positioning:closeness.partners` just like both reference scopes.
 2. Require that **both** the actor and the partner own `positioning:sitting_on` components, mirroring `positioning:actors_both_sitting_close`.
-3. Add `hasPartOfType` and `not isSocketCovered` predicates for a penis on the partner, copying the structure used in `sex:actor_kneeling_before_target_with_penis`.
+3. Add `hasPartOfType` and `not isSocketCovered` predicates for a penis on the partner, copying the structure used in `sex-core:actor_kneeling_before_target_with_penis`.
 4. Include concise comments documenting that the scope is for seated, close partners where the partner's penis is exposed.
 5. Register the new scope file in `data/mods/sex/mod-manifest.json`.
 
