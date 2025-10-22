@@ -22,10 +22,6 @@ import {
   createTimeoutMiddleware,
   createSizeLimitConfig,
 } from '../middleware/timeout.js';
-import {
-  createLivenessCheck,
-  createReadinessCheck,
-} from '../middleware/healthCheck.js';
 import MetricsService from '../services/metricsService.js';
 import {
   createMetricsMiddleware,
@@ -62,7 +58,7 @@ import traceRoutes from '../routes/traceRoutes.js';
 // Import debug routes
 
 // Import health routes
-import healthRoutes from '../routes/healthRoutes.js';
+import createHealthRoutes from '../routes/healthRoutes.js';
 
 // Import log storage and maintenance scheduler services
 
@@ -245,25 +241,6 @@ app.get('/metrics', async (req, res) => {
   }
 });
 
-// Health check endpoints for production monitoring
-app.get(
-  '/health',
-  createLivenessCheck({
-    logger: proxyLogger,
-    metricsService,
-  })
-);
-
-app.get(
-  '/health/ready',
-  createReadinessCheck({
-    logger: proxyLogger,
-    llmConfigService,
-    cacheService,
-    httpAgentService,
-  })
-);
-
 // Legacy root endpoint (deprecated - use /health instead)
 app.get('/', (req, res) => {
   proxyLogger.warn(
@@ -320,7 +297,16 @@ app.use('/api/llm-request', createSalvageRoutes(salvageController));
 app.use('/api/traces', traceRoutes);
 
 // Register health check routes
-app.use('/health', healthRoutes);
+app.use(
+  '/health',
+  createHealthRoutes({
+    logger: proxyLogger,
+    llmConfigService,
+    cacheService,
+    httpAgentService,
+    appConfigService,
+  })
+);
 
 // Store server instance for graceful shutdown
 let server;
