@@ -143,6 +143,7 @@ describe('physical-control:force_to_knees action discovery', () => {
       ]);
       expect(forceToKneesAction.forbidden_components.primary).toEqual([
         'positioning:kneeling_before',
+        'positioning:sitting_on',
       ]);
       expect(forceToKneesAction.visual).toEqual({
         backgroundColor: '#2f2f2f',
@@ -259,6 +260,36 @@ describe('physical-control:force_to_knees action discovery', () => {
         'positioning:facing_away'
       );
       expect(actorFacingAway?.facing_away_from).toEqual([scenario.target.id]);
+
+      configureActionDiscovery();
+
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
+      const ids = availableActions.map((action) => action.id);
+
+      expect(ids).not.toContain(ACTION_ID);
+    });
+
+    it('is not available when the target is sitting on furniture', async () => {
+      const scenario = testFixture.createCloseActors(['Uma', 'Viktor']);
+
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+      await testFixture.entityManager.addComponent(
+        scenario.target.id,
+        'positioning:sitting_on',
+        {
+          furniture_id: 'furniture:stool1',
+          spot_index: 0,
+        }
+      );
+      const targetSitting = testFixture.entityManager.getComponentData(
+        scenario.target.id,
+        'positioning:sitting_on'
+      );
+      expect(targetSitting?.furniture_id).toBe('furniture:stool1');
+      expect(targetSitting?.spot_index).toBe(0);
 
       configureActionDiscovery();
 

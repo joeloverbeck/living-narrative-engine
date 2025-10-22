@@ -8,7 +8,8 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["positioning:straddling_waist"]
+    "actor": ["positioning:straddling_waist"],
+    "primary": ["positioning:sitting_on"]
   },
   "template": "push {target} off you",
   "visual": {
