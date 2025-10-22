@@ -78,7 +78,7 @@ new ModEntityBuilder(); // Missing ID and validation
 | --- | --- | --- |
 | `createStandardActorTarget([actorName, targetName])` | Creates reciprocal actor/target entities with validated components. | Use the returned IDs rather than hard-coded strings. |
 | `createSittingPair(options)` and other scenario builders | Provision seating, inventory, and bespoke setups. | Prefer these helpers before writing custom entity graphs. |
-| `executeAction(actorId, targetId, options?)` | Runs the action and captures emitted events. | Options support `additionalPayload`, `contextOverrides`, and validation toggles. |
+| `executeAction(actorId, targetId, options?)` | Runs the action and captures emitted events. | Options include `additionalPayload`, `originalInput`, `skipDiscovery`, `skipValidation`, and multi-target IDs such as `secondaryTargetId`. |
 | `assertActionSuccess(message)` / domain matchers | Provides backward-compatible assertions. | Prefer Jest matchers from `domainMatchers` for clearer failures. |
 | `assertPerceptibleEvent(eventData)` | Validates perceptible event payloads. | Pair with event matchers when migrating legacy suites. |
 | `clearEvents()` / `cleanup()` | Reset captured events and teardown resources. | Call `cleanup()` in `afterEach` to avoid shared state. |
@@ -94,7 +94,7 @@ new ModEntityBuilder(); // Missing ID and validation
 
 1. **Provision a fixture** with `ModTestFixture.forAction(modId, fullActionId, rule?, condition?, options?)`. The factory automatically loads JSON definitions when omitted.
 2. **Create entities** via fixture helpers (`createSittingPair`, `createInventoryLoadout`, `createEntity`) or reset with custom graphs.
-3. **Execute the action** using `await fixture.executeAction(actorId, targetId, { additionalPayload, contextOverrides })`.
+3. **Execute the action** using `await fixture.executeAction(actorId, targetId, { additionalPayload })`, adding toggles like `skipDiscovery`, `skipValidation`, or `secondaryTargetId`/`tertiaryTargetId` only when the action expects them.
 4. **Assert outcomes** with domain matchers or direct entity inspection through `fixture.entityManager`.
 5. **Clean up** using `fixture.cleanup()` to release mocks, events, and diagnostics state.
 
@@ -115,7 +115,7 @@ new ModEntityBuilder(); // Missing ID and validation
 
 ### Executing Actions Safely
 
-- Always call `await fixture.executeAction(actorId, targetId, options?)`. The optional `options` object supports `additionalPayload`, `invocationOverrides`, and validation toggles; passing `{ skipValidation: true }` should be restricted to regression investigations.
+- Always call `await fixture.executeAction(actorId, targetId, options?)`. The optional `options` object supports `additionalPayload`, `originalInput`, `skipDiscovery`, `skipValidation`, and extra identifiers such as `secondaryTargetId` or `tertiaryTargetId`; passing `{ skipValidation: true }` should be restricted to regression investigations.
 - Validate `actorId` and `targetId` using scenario return values instead of hard-coded IDs—helper outputs are the single source of truth.
 - Chain validation when preparing rules: wrap JSON definitions with `createActionValidationProxy(ruleJson, 'intimacy:kiss_cheek')` before handing them to the fixture. The proxy highlights typos (`required_components` vs `requiredComponents`) and missing namespace prefixes up front.
 
