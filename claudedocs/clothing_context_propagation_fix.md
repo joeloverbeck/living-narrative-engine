@@ -30,8 +30,10 @@ This follows the pattern of existing scopes like `clothing:target_topmost_torso_
 **Change:** Line 14 - changed scope from `"clothing:topmost_clothing"` to `"clothing:target_topmost_clothing"`
 
 ### 3. Fixed Missing Export
-**File:** `src/utils/strictObjectProxy.js`
-**Change:** Line 62 - exported the `findSimilarProperty` function which was being imported by test code but not actually exported
+**File (historical):** `src/utils/strictObjectProxy.js`
+**Change:** Line 62 - exported the `findSimilarProperty` function which was being imported by test code but not actually exported.
+
+> **Note:** The strict proxy helper now lives alongside the tests in `tests/common/strictObjectProxy.js`, and the runtime module has been removed.
 
 ## Files Modified
 
@@ -41,7 +43,7 @@ This follows the pattern of existing scopes like `clothing:target_topmost_torso_
 2. **data/mods/clothing/actions/remove_others_clothing.action.json**
    - Line 14: Changed scope from `"clothing:topmost_clothing"` to `"clothing:target_topmost_clothing"`
 
-3. **src/utils/strictObjectProxy.js**
+3. **src/utils/strictObjectProxy.js** (subsequently relocated to `tests/common/strictObjectProxy.js`)
    - Line 62: Added `export` keyword to `findSimilarProperty` function
 
 4. **tests/integration/mods/clothing/remove_others_clothing_action_discovery.test.js**

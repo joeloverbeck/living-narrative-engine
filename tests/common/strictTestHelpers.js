@@ -3,7 +3,7 @@
  * Automatically wraps test objects in proxies during development
  */
 
-import { createStrictProxy } from '../../src/utils/strictObjectProxy.js';
+import { createStrictProxy } from './strictObjectProxy.js';
 
 /**
  * Wrap discovered actions in strict proxies for property access validation
