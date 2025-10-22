@@ -218,6 +218,29 @@ describe('EventDispatchService', () => {
         }
       );
     });
+
+    it('should use a generated stack trace when the error lacks one', async () => {
+      // Arrange
+      const errorWithoutStack = { message: 'No stack available' };
+      mockSafeEventDispatcher.dispatch
+        .mockRejectedValueOnce(errorWithoutStack)
+        .mockReturnValueOnce(true);
+      createErrorDetails.mockReturnValue({});
+
+      const eventName = 'missing:stack';
+      const payload = { foo: 'bar' };
+      const context = 'fallback stack test';
+
+      // Act
+      await service.dispatchWithErrorHandling(eventName, payload, context);
+
+      // Assert
+      expect(createErrorDetails).toHaveBeenCalledTimes(1);
+      const [messageArg, stackArg] = createErrorDetails.mock.calls[0];
+      expect(messageArg).toBe(`Exception in dispatch for ${eventName}`);
+      expect(typeof stackArg).toBe('string');
+      expect(stackArg.length).toBeGreaterThan(0);
+    });
   });
 
   describe('safeDispatchEvent', () => {
@@ -796,5 +819,14 @@ describe('EventDispatchService', () => {
         );
       });
     });
+  });
+});
+
+describe('InvalidDispatcherError', () => {
+  it('defaults details to an empty object when omitted', () => {
+    const error = new InvalidDispatcherError('boom');
+
+    expect(error.details).toEqual({});
+    expect(error.message).toBe('boom');
   });
 });
