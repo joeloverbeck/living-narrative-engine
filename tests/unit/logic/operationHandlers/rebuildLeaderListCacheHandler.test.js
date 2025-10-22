@@ -13,7 +13,11 @@ import {
 } from '@jest/globals';
 import RebuildLeaderListCacheHandler from '../../../../src/logic/operationHandlers/rebuildLeaderListCacheHandler.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
-import { FOLLOWING_COMPONENT_ID, LEADING_COMPONENT_ID } from '../../../../src/constants/componentIds.js';
+import {
+  FOLLOWING_COMPONENT_ID,
+  LEADING_COMPONENT_ID,
+  ACTOR_COMPONENT_ID,
+} from '../../../../src/constants/componentIds.js';
 import { LOGGER_INFO_METHOD_ERROR } from '../../../common/constants.js';
 
 // --- Mocks ---
@@ -37,11 +41,20 @@ const makeMockLogger = () => ({
  * @param {object} [components] - A map of component IDs to their data.
  * @returns {{ id: string, getComponentData: jest.Mock, hasComponent: jest.Mock }}
  */
-const makeMockEntity = (id, components = {}) => ({
-  id,
-  getComponentData: jest.fn((componentTypeId) => components[componentTypeId]),
-  hasComponent: jest.fn((componentTypeId) => !!components[componentTypeId]),
-});
+const makeMockEntity = (id, components = {}, options = {}) => {
+  const { includeActorComponent = true } = options;
+  return {
+    id,
+    getComponentData: jest.fn((componentTypeId) => components[componentTypeId]),
+    hasComponent: jest.fn((componentTypeId) => {
+      if (componentTypeId === ACTOR_COMPONENT_ID) {
+        return includeActorComponent;
+      }
+
+      return !!components[componentTypeId];
+    }),
+  };
+};
 
 /**
  * Creates a mock IEntityManager.
