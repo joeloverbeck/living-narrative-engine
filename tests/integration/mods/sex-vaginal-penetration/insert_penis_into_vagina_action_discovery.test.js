@@ -430,12 +430,12 @@ describe('sex-vaginal-penetration:insert_penis_into_vagina action discovery', ()
       );
     });
 
-    it('should reuse the standard sex action visual styling', () => {
+    it('should match the sex-vaginal-penetration visual styling palette', () => {
       expect(insertPenisIntoVaginaAction.visual).toEqual({
-        backgroundColor: '#4a148c',
-        textColor: '#e1bee7',
-        hoverBackgroundColor: '#6a1b9a',
-        hoverTextColor: '#f3e5f5',
+        backgroundColor: '#6c0f36',
+        textColor: '#ffe6ef',
+        hoverBackgroundColor: '#861445',
+        hoverTextColor: '#fff2f7',
       });
     });
   });
