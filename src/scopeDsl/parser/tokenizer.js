@@ -127,7 +127,7 @@ export class Tokenizer {
       startPos = this.pos;
     while (
       this.pos < this.input.length &&
-      /[A-Za-z0-9_]/.test(this.input[this.pos])
+      /[A-Za-z0-9_-]/.test(this.input[this.pos])
     )
       this.advance();
     const value = this.input.slice(startPos, this.pos);
