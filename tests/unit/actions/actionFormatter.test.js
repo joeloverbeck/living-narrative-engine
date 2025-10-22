@@ -27,6 +27,7 @@ import ActionCommandFormatter, {
 import { getEntityDisplayName } from '../../../src/utils/entityUtils.js';
 import { targetFormatterMap } from '../../../src/actions/formatters/targetFormatters.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
+import * as dependencyUtils from '../../../src/utils/dependencyUtils.js';
 
 const createEntityManager = () => ({
   getEntityInstance: jest.fn(() => ({ id: 'entity-1', name: 'Entity' })),
@@ -60,6 +61,14 @@ describe('formatActionCommand', () => {
       formatActionCommand(actionDefinition, targetContext, entityManager, {
         safeEventDispatcher: createDispatcher(),
       })
+    ).toThrow('formatActionCommand: logger is required.');
+  });
+
+  it('throws when options argument is omitted and logger defaults to missing', () => {
+    const { actionDefinition, targetContext, entityManager } = createBaseParams();
+
+    expect(() =>
+      formatActionCommand(actionDefinition, targetContext, entityManager)
     ).toThrow('formatActionCommand: logger is required.');
   });
 
@@ -142,6 +151,37 @@ describe('formatActionCommand', () => {
     expect(() =>
       formatActionCommand(actionDefinition, targetContext, entityManager, options)
     ).toThrow(InvalidArgumentError);
+  });
+
+  it('throws when safeEventDispatcher dependency is missing', () => {
+    const { actionDefinition, targetContext, entityManager, options } = createBaseParams();
+    options.safeEventDispatcher = undefined;
+
+    expect(() =>
+      formatActionCommand(actionDefinition, targetContext, entityManager, options)
+    ).toThrow('Missing required dependency: safeEventDispatcher.');
+  });
+
+  it('continues when dependency validation throws an unrelated error', () => {
+    const { actionDefinition, targetContext, entityManager, options } = createBaseParams();
+    const spy = jest.spyOn(dependencyUtils, 'validateDependencies');
+    spy.mockImplementation(() => {
+      throw new Error('some other dependency failure');
+    });
+
+    try {
+      const result = formatActionCommand(
+        actionDefinition,
+        targetContext,
+        entityManager,
+        options
+      );
+
+      expect(result).toEqual({ ok: true, value: defaultFormatterResult });
+      expect(mockDispatchValidationError).not.toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
+    }
   });
 
   it('returns template unmodified and logs warning when formatter is missing', () => {
@@ -304,6 +344,15 @@ describe('ActionCommandFormatter', () => {
     );
 
     expect(result).toEqual(expected);
+  });
+
+  it('requires logger even when invoked without explicit options', () => {
+    const instance = new ActionCommandFormatter();
+    const { actionDefinition, targetContext, entityManager } = createBaseParams();
+
+    expect(() =>
+      instance.format(actionDefinition, targetContext, entityManager)
+    ).toThrow('formatActionCommand: logger is required.');
   });
 
   it('returns error for unsupported multi-target formatting', () => {
