@@ -443,9 +443,13 @@ describe('RebuildLeaderListCacheHandler', () => {
       });
       const followerInvalid3 = makeMockActorFollower('invalid3', {}); // no leaderId key
       const followerInvalid4 = makeMockActorFollower('invalid4', null); // component data is null
-      const followerNonActor = makeMockEntity('invalid5', {
-        [FOLLOWING_COMPONENT_ID]: { leaderId: 'leader1' },
-      });
+      const followerNonActor = makeMockEntity(
+        'invalid5',
+        {
+          [FOLLOWING_COMPONENT_ID]: { leaderId: 'leader1' },
+        },
+        { includeActorComponent: false }
+      );
 
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([
         follower1,
