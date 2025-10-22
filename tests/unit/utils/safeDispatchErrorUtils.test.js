@@ -16,6 +16,17 @@ describe('safeDispatchError', () => {
     });
   });
 
+  it('defaults to empty details object when none provided', () => {
+    const dispatcher = { dispatch: jest.fn() };
+
+    safeDispatchError(dispatcher, 'no details');
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'no details',
+      details: {},
+    });
+  });
+
   it('throws if dispatcher is invalid', () => {
     const call = () => safeDispatchError({}, 'oops');
     expect(call).toThrow(InvalidDispatcherError);
