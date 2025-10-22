@@ -20,6 +20,11 @@ import { createRequestTrackingMiddleware } from '../../src/middleware/requestTra
 import { createTimeoutMiddleware } from '../../src/middleware/timeout.js';
 import { createSalvageRoutes } from '../../src/routes/salvageRoutes.js';
 
+const REQUEST_TIMEOUT_MS = 50;
+const GRACE_PERIOD_MS = 20;
+const LATE_RESPONSE_DELAY_MS = REQUEST_TIMEOUT_MS + GRACE_PERIOD_MS + 10;
+const GRACE_PERIOD_RESPONSE_DELAY_MS = REQUEST_TIMEOUT_MS + Math.floor(GRACE_PERIOD_MS / 2);
+
 describe('Race Condition and Response Salvage Integration Tests', () => {
   let app;
   let mockLogger;
@@ -92,7 +97,10 @@ describe('Race Condition and Response Salvage Integration Tests', () => {
     // Add LLM request route with timeout
     app.post(
       '/api/llm-request',
-      createTimeoutMiddleware(5000, { logger: mockLogger, gracePeriod: 1000 }),
+      createTimeoutMiddleware(REQUEST_TIMEOUT_MS, {
+        logger: mockLogger,
+        gracePeriod: GRACE_PERIOD_MS,
+      }),
       (req, res) => llmController.handleLlmRequest(req, res)
     );
 
@@ -146,8 +154,8 @@ describe('Race Condition and Response Salvage Integration Tests', () => {
                   data: { content: 'Late response' },
                   contentTypeIfSuccess: 'application/json',
                 }),
-              6000
-            ); // Arrives after 5s timeout
+              LATE_RESPONSE_DELAY_MS
+            ); // Arrives after timeout + grace period
           })
       );
 
@@ -170,7 +178,7 @@ describe('Race Condition and Response Salvage Integration Tests', () => {
         expect.stringContaining('Timeout fired after'),
         expect.any(Object)
       );
-    }, 10000);
+    });
 
     test('should salvage successful response when headers already sent', async () => {
       let requestId = null;
@@ -378,8 +386,8 @@ describe('Race Condition and Response Salvage Integration Tests', () => {
                   statusCode: 200,
                   data: { content: 'Grace period response' },
                 }),
-              5500
-            ); // 5.5s - after 5s timeout, within 1s grace period
+              GRACE_PERIOD_RESPONSE_DELAY_MS
+            ); // After timeout but before grace period expires
           })
       );
 
@@ -390,12 +398,12 @@ describe('Race Condition and Response Salvage Integration Tests', () => {
           targetPayload: { model: 'test', messages: [] },
         });
 
-      // With grace period, timeout fires at 5s, grace period waits until 6s
-      // Response arrives at 5.5s, so should be handled during grace period
-      // But since timeout already committed, we expect timeout response
+      // With grace period, timeout commits after REQUEST_TIMEOUT_MS
+      // The additional GRACE_PERIOD_MS window still ends with the timeout response
+      // because the commitment has already been made when the grace response arrives
       expect(response.status).toBe(503);
       expect(response.body.stage).toBe('request_timeout');
-    }, 10000);
+    });
   });
 
   describe('Error Handling with Salvage', () => {
