@@ -35,8 +35,8 @@
       "press_against_back.action.json"
     ],
     "conditions": [
-      "event-is-action-fondle-breasts.condition.json",
       "event-is-action-fondle-breasts-over-clothes.condition.json",
+      "event-is-action-fondle-breasts.condition.json",
       "event-is-action-press-against-back.condition.json"
     ],
     "rules": [
