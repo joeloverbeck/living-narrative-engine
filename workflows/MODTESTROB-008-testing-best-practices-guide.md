@@ -10,25 +10,20 @@
 
 ## Overview
 
-Create a comprehensive guide documenting best practices, patterns, and anti-patterns for mod action testing using the new testing infrastructure (validation proxy, diagnostic mode, domain matchers, scenario builders).
+Audit the existing mod testing documentation to ensure it accurately reflects the current testing infrastructure (validation proxy, diagnostic mode, domain matchers, scenario builders) and highlight any corrections that are still needed. The living source of truth already lives in `docs/testing/`; keep improvements focused on that material instead of authoring parallel guides.
 
 ### Problem Statement
 
 Current state:
-- Testing knowledge scattered across individual test files
-- No centralized documentation of best practices
-- Developers repeat common mistakes
-- Inconsistent testing approaches across mods
-- New developers struggle to write effective tests
+- The consolidated guidance in `docs/testing/mod-testing-guide.md` already captures best practices, scenario helpers, troubleshooting, and a checklist for action tests.
+- Supplemental discovery instructions live in `docs/testing/action-discovery-testing-toolkit.md`.
+- Periodic audits are required to keep examples aligned with the real fixture API and to remove stale references when helper names evolve.
 
 ### Target State
 
-Comprehensive guide providing:
-- Clear testing patterns and examples
-- Common pitfalls and how to avoid them
-- Decision trees for tool selection
-- Performance optimization tips
-- Complete workflow examples
+- Confirm the existing documentation remains accurate and matches the current helper names, imports, and workflow expectations.
+- Identify and patch gaps only when a Phase 1/2 feature has changed behaviour without being reflected in the docs.
+- Remove instructions that reference deprecated utilities or files that no longer exist.
 
 ### Benefits
 
@@ -68,11 +63,11 @@ Comprehensive guide providing:
 ## Detailed Steps
 
 
-### Step 1: Strengthen `docs/testing/mod-testing-guide.md`
+### Step 1: Verify `docs/testing/mod-testing-guide.md`
 
-- Re-use the existing guide as the single source of truth—do **not** introduce a new Markdown file.
-- Add a "Best Practices" chapter that summarizes success patterns, anti-patterns, and test workflow guidance using the current infrastructure under `tests/common/mods/`.
-- Ensure all examples reflect the real fixture API:
+- Treat the existing guide as the single source of truth—do **not** introduce a new Markdown file.
+- Review the "Best Practices" and "Troubleshooting" chapters already present to confirm they reference real helpers under `tests/common/mods/`.
+- Ensure all examples continue to reflect the real fixture API:
   ```javascript
   import { afterEach, beforeEach, describe, it, expect } from '@jest/globals';
   import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
@@ -100,27 +95,28 @@ Comprehensive guide providing:
   ```
 - Reference existing helper names (e.g., `createSittingPair`, `createInventoryLoadout`) instead of the deprecated `testEnv.scenarios.*` surface.
 - Cross-link to the scenario catalog already documented in the same file instead of duplicating content.
+- Flag any drift between the guide and actual helper signatures so engineering can update the docs and/or utilities in tandem.
 
-### Step 2: Embed Troubleshooting Guidance Where Readers Already Look
+### Step 2: Keep Troubleshooting Guidance Accurate
 
-- Append a troubleshooting appendix to `docs/testing/mod-testing-guide.md` that calls out discovery diagnostics, validation errors, and execution failures.
-- Re-use the diagnostics helpers exported from `tests/common/mods/discoveryDiagnostics.js`; document them with accurate method names such as `fixture.enableDiagnostics()` and `fixture.discoverWithDiagnostics(actorId)`.
+- The troubleshooting appendix already lives inside `docs/testing/mod-testing-guide.md`; refresh it only when diagnostics helpers or error messaging change.
+- Ensure the documented helpers (e.g., `fixture.enableDiagnostics()`, `fixture.discoverWithDiagnostics(actorId)`) match the exports from `tests/common/mods/discoveryDiagnostics.js`.
 - Reference `docs/testing/action-discovery-testing-toolkit.md` for deep dives into discovery tracing instead of restating its content.
-- Remove or rewrite any references to non-existent files (e.g., the previous `scope-resolver-helpers-guide.md`).
+- Remove or rewrite any lingering references to non-existent files (e.g., the retired `scope-resolver-helpers-guide.md`).
 
-### Step 3: Surface Checklists Without Creating New Files
+### Step 3: Maintain the Embedded Checklist
 
-- Add an "Action Test Checklist" section at the end of `docs/testing/mod-testing-guide.md` so contributors can verify coverage without switching documents.
-- Keep the checklist concise and aligned with actual APIs (`await fixture.executeAction(...)`, matcher utilities from `tests/common/actionMatchers.js`).
+- The "Action Test Checklist" already resides at the end of `docs/testing/mod-testing-guide.md`; update it only when fixture lifecycle expectations change.
+- Keep the checklist aligned with actual APIs (`await fixture.executeAction(...)`, matcher utilities from `tests/common/actionMatchers.js`).
 - If discovery-specific items arise, link directly to sections inside `docs/testing/action-discovery-testing-toolkit.md` rather than duplicating bullet lists.
 
 ---
 
 ## Validation Criteria
 
-- Updated sections accurately describe `ModTestFixture.forAction(modId, actionId, ...)` and `fixture.executeAction(actorId, targetId, options?)`.
+- Confirm the guide continues to accurately describe `ModTestFixture.forAction(modId, actionId, ...)` and `fixture.executeAction(actorId, targetId, options?)`.
 - Troubleshooting guidance points to existing utilities and omits dead links.
-- The checklist lives inside an existing document and does not create redundant Markdown files.
+- The checklist remains inside the canonical guide and avoids redundant Markdown files.
 - Cross-references to other guides (e.g., action discovery toolkit) resolve correctly.
 
 ---
@@ -129,7 +125,6 @@ Comprehensive guide providing:
 
 1. `docs/testing/mod-testing-guide.md`
 2. `docs/testing/action-discovery-testing-toolkit.md` (only if additional cross-links or clarifications are required)
-3. `docs/ModTestFixture-API-Usage.md` (sync API notes if examples are adjusted)
 
 ---
 
@@ -137,7 +132,7 @@ Comprehensive guide providing:
 
 ```bash
 # Validate Markdown formatting for updated docs
-npx markdownlint docs/testing/*.md docs/ModTestFixture-API-Usage.md
+npx markdownlint docs/testing/*.md
 ```
 
 ---
@@ -147,8 +142,7 @@ npx markdownlint docs/testing/*.md docs/ModTestFixture-API-Usage.md
 ```bash
 # Revert documentation updates
 git checkout -- docs/testing/mod-testing-guide.md \
-               docs/testing/action-discovery-testing-toolkit.md \
-               docs/ModTestFixture-API-Usage.md
+               docs/testing/action-discovery-testing-toolkit.md
 ```
 
 ---
@@ -156,7 +150,7 @@ git checkout -- docs/testing/mod-testing-guide.md \
 ## Commit Strategy
 
 ```bash
-git add docs/testing/mod-testing-guide.md docs/testing/action-discovery-testing-toolkit.md docs/ModTestFixture-API-Usage.md
+git add docs/testing/mod-testing-guide.md docs/testing/action-discovery-testing-toolkit.md
 
 git commit -m "docs(testing): tighten mod action testing guidance"
 ```
