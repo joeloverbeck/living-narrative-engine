@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the sex:insert_primary_penis_into_your_vagina action and rule.
+ * @file Integration tests for the sex-vaginal-penetration:insert_penis_into_vagina action and rule.
  * @description Validates rule execution, messaging, perceptible events, and applied state components.
  */
 
@@ -9,65 +9,65 @@ import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import { ModAssertionHelpers } from '../../../common/mods/ModAssertionHelpers.js';
 
 const EXPECTED_MESSAGE =
-  "Alana introduces Dorian's penis into her vagina, that stretches to accomodate the girth.";
+  "Alice inserts their penis into Beth's vagina, that stretches to accomodate the girth.";
 
 /**
- * @description Creates a standardized receptive penetration scenario.
+ * @description Creates a standardized penetration scenario.
  * @returns {Array<object>} Entities for the fixture.
  */
 function setupPenetrationScenario() {
   const room = new ModEntityBuilder('room1').asRoom('Intimacy Suite').build();
 
-  const actor = new ModEntityBuilder('alana')
-    .withName('Alana')
+  const actor = new ModEntityBuilder('alice')
+    .withName('Alice')
     .atLocation('room1')
-    .withBody('alanaPelvis1')
-    .closeToEntity('dorian')
+    .withBody('aliceGroin1')
+    .closeToEntity('beth')
     .asActor()
     .build();
 
-  const target = new ModEntityBuilder('dorian')
-    .withName('Dorian')
+  const target = new ModEntityBuilder('beth')
+    .withName('Beth')
     .atLocation('room1')
-    .withBody('dorianGroin1')
-    .closeToEntity('alana')
+    .withBody('bethPelvis1')
+    .closeToEntity('alice')
     .asActor()
     .build();
 
-  const alanaPelvis = new ModEntityBuilder('alanaPelvis1')
-    .asBodyPart({ parent: null, children: ['alanaVagina1'], subType: 'pelvis' })
+  const aliceGroin = new ModEntityBuilder('aliceGroin1')
+    .asBodyPart({ parent: null, children: ['alicePenis1'], subType: 'groin' })
     .build();
 
-  const alanaVagina = new ModEntityBuilder('alanaVagina1')
-    .asBodyPart({ parent: 'alanaPelvis1', children: [], subType: 'vagina' })
+  const alicePenis = new ModEntityBuilder('alicePenis1')
+    .asBodyPart({ parent: 'aliceGroin1', children: [], subType: 'penis' })
     .build();
 
-  const dorianGroin = new ModEntityBuilder('dorianGroin1')
-    .asBodyPart({ parent: null, children: ['dorianPenis1'], subType: 'groin' })
+  const bethPelvis = new ModEntityBuilder('bethPelvis1')
+    .asBodyPart({ parent: null, children: ['bethVagina1'], subType: 'pelvis' })
     .build();
 
-  const dorianPenis = new ModEntityBuilder('dorianPenis1')
-    .asBodyPart({ parent: 'dorianGroin1', children: [], subType: 'penis' })
+  const bethVagina = new ModEntityBuilder('bethVagina1')
+    .asBodyPart({ parent: 'bethPelvis1', children: [], subType: 'vagina' })
     .build();
 
   return [
     room,
     actor,
     target,
-    alanaPelvis,
-    alanaVagina,
-    dorianGroin,
-    dorianPenis,
+    aliceGroin,
+    alicePenis,
+    bethPelvis,
+    bethVagina,
   ];
 }
 
-describe('sex:insert_primary_penis_into_your_vagina action integration', () => {
+describe('sex-vaginal-penetration:insert_penis_into_vagina action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'sex',
-      'sex:insert_primary_penis_into_your_vagina'
+      'sex-vaginal-penetration',
+      'sex-vaginal-penetration:insert_penis_into_vagina'
     );
 
     testFixture.reset(setupPenetrationScenario());
@@ -80,10 +80,10 @@ describe('sex:insert_primary_penis_into_your_vagina action integration', () => {
     }
   });
 
-  it('performs the receptive penetration initiation action successfully', async () => {
-    await testFixture.executeAction('alana', 'dorian', {
+  it('performs the penetration initiation action successfully', async () => {
+    await testFixture.executeAction('alice', 'beth', {
       additionalPayload: {
-        primaryId: 'dorian',
+        primaryId: 'beth',
       },
     });
 
@@ -96,52 +96,52 @@ describe('sex:insert_primary_penis_into_your_vagina action integration', () => {
       (event) => event.eventType === 'core:attempt_action'
     );
     expect(attemptEvent).toBeDefined();
-    expect(attemptEvent.payload.primaryId).toBe('dorian');
+    expect(attemptEvent.payload.primaryId).toBe('beth');
   });
 
   it('emits a perceptible event with the correct context payload', async () => {
-    await testFixture.executeAction('alana', 'dorian', {
+    await testFixture.executeAction('alice', 'beth', {
       additionalPayload: {
-        primaryId: 'dorian',
+        primaryId: 'beth',
       },
     });
 
     ModAssertionHelpers.assertPerceptibleEvent(testFixture.events, {
       descriptionText: EXPECTED_MESSAGE,
       locationId: 'room1',
-      actorId: 'alana',
-      targetId: 'dorian',
+      actorId: 'alice',
+      targetId: 'beth',
       perceptionType: 'action_target_general',
     });
   });
 
   it('applies penetration state components to actor and target', async () => {
-    await testFixture.executeAction('alana', 'dorian', {
+    await testFixture.executeAction('alice', 'beth', {
       additionalPayload: {
-        primaryId: 'dorian',
+        primaryId: 'beth',
       },
     });
 
     const actorComponent = testFixture.entityManager.getComponentData(
-      'alana',
-      'sex-core:being_fucked_vaginally'
+      'alice',
+      'sex-core:fucking_vaginally'
     );
     expect(actorComponent).toBeDefined();
-    expect(actorComponent).toEqual({ actorId: 'dorian' });
+    expect(actorComponent).toEqual({ targetId: 'beth' });
 
     const targetComponent = testFixture.entityManager.getComponentData(
-      'dorian',
-      'sex-core:fucking_vaginally'
+      'beth',
+      'sex-core:being_fucked_vaginally'
     );
 
     expect(targetComponent).toBeDefined();
-    expect(targetComponent).toEqual({ targetId: 'alana' });
+    expect(targetComponent).toEqual({ actorId: 'alice' });
   });
 
   it('only produces expected events during execution', async () => {
-    await testFixture.executeAction('alana', 'dorian', {
+    await testFixture.executeAction('alice', 'beth', {
       additionalPayload: {
-        primaryId: 'dorian',
+        primaryId: 'beth',
       },
     });
 
@@ -163,8 +163,8 @@ describe('sex:insert_primary_penis_into_your_vagina action integration', () => {
   it('does not fire the rule when a different action is attempted', async () => {
     const minimalEntities = [
       new ModEntityBuilder('room1').asRoom('Room').build(),
-      new ModEntityBuilder('alana')
-        .withName('Alana')
+      new ModEntityBuilder('alice')
+        .withName('Alice')
         .atLocation('room1')
         .asActor()
         .build(),
@@ -176,7 +176,7 @@ describe('sex:insert_primary_penis_into_your_vagina action integration', () => {
 
     await testFixture.eventBus.dispatch('core:attempt_action', {
       actionId: 'core:wait',
-      actorId: 'alana',
+      actorId: 'alice',
     });
 
     const newEventCount = testFixture.events.length;

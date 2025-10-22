@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the sex:ride_penis_greedily action and rule.
+ * @file Integration tests for the sex-vaginal-penetration:ride_penis_greedily action and rule.
  * @description Validates greedy riding narration, mutual component application, and
  * idempotent penetration state handling while straddling.
  */
@@ -19,11 +19,14 @@ const ACTION_ID = RIDE_PENIS_GREEDILY_ACTION_ID;
 const EXPECTED_MESSAGE =
   "Selene rides Marcus's penis greedily, wet slaps echoing as their groins meet.";
 
-describe('sex:ride_penis_greedily action integration', () => {
+describe('sex-vaginal-penetration:ride_penis_greedily action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('sex', ACTION_ID);
+    testFixture = await ModTestFixture.forAction(
+      'sex-vaginal-penetration',
+      ACTION_ID
+    );
   });
 
   afterEach(() => {

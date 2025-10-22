@@ -1,14 +1,14 @@
 /**
- * @file Integration tests for sex:slide_penis_along_labia action discovery.
+ * @file Integration tests for sex-vaginal-penetration:slide_penis_along_labia action discovery.
  * @description Confirms the slide penis along labia action appears only when anatomy, exposure, orientation, and positioning requirements are satisfied.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
-import slidePenisAlongLabiaAction from '../../../../data/mods/sex/actions/slide_penis_along_labia.action.json';
+import slidePenisAlongLabiaAction from '../../../../data/mods/sex-vaginal-penetration/actions/slide_penis_along_labia.action.json';
 
-describe('sex:slide_penis_along_labia action discovery', () => {
+describe('sex-vaginal-penetration:slide_penis_along_labia action discovery', () => {
   let testFixture;
   let configureActionDiscovery;
   let restoreScopeResolver;
@@ -348,7 +348,7 @@ describe('sex:slide_penis_along_labia action discovery', () => {
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
       'sex',
-      'sex:slide_penis_along_labia'
+      'sex-vaginal-penetration:slide_penis_along_labia'
     );
 
     const { testEnv } = testFixture;
@@ -363,7 +363,7 @@ describe('sex:slide_penis_along_labia action discovery', () => {
     resolver.resolveSync = (scopeName, context) => {
       if (
         scopeName ===
-        'sex:actors_with_uncovered_vagina_facing_each_other_or_target_facing_away'
+        'sex-vaginal-penetration:actors_with_uncovered_vagina_facing_each_other_or_target_facing_away'
       ) {
         return resolveUncoveredVaginaScope(context);
       }
@@ -415,17 +415,17 @@ describe('sex:slide_penis_along_labia action discovery', () => {
     expect(
       testFixture.testEnv.validateAction(
         'alice',
-        'sex:slide_penis_along_labia'
+        'sex-vaginal-penetration:slide_penis_along_labia'
       )
     ).toBe(true);
 
     const actions = await testFixture.discoverActions('alice');
     const foundAction = actions.find(
-      (action) => action.id === 'sex:slide_penis_along_labia'
+      (action) => action.id === 'sex-vaginal-penetration:slide_penis_along_labia'
     );
 
     expect(foundAction).toBeDefined();
-    expect(foundAction.id).toBe('sex:slide_penis_along_labia');
+    expect(foundAction.id).toBe('sex-vaginal-penetration:slide_penis_along_labia');
   });
 
   it('appears when actor is behind a target who is facing away', async () => {
@@ -435,7 +435,7 @@ describe('sex:slide_penis_along_labia action discovery', () => {
 
     const actions = await testFixture.discoverActions('alice');
     const foundAction = actions.find(
-      (action) => action.id === 'sex:slide_penis_along_labia'
+      (action) => action.id === 'sex-vaginal-penetration:slide_penis_along_labia'
     );
 
     expect(foundAction).toBeDefined();
@@ -448,7 +448,7 @@ describe('sex:slide_penis_along_labia action discovery', () => {
 
     const actions = await testFixture.discoverActions('alice');
     const foundAction = actions.find(
-      (action) => action.id === 'sex:slide_penis_along_labia'
+      (action) => action.id === 'sex-vaginal-penetration:slide_penis_along_labia'
     );
 
     expect(foundAction).toBeUndefined();
@@ -467,7 +467,7 @@ describe('sex:slide_penis_along_labia action discovery', () => {
 
     const actions = await testFixture.discoverActions('alice');
     const foundAction = actions.find(
-      (action) => action.id === 'sex:slide_penis_along_labia'
+      (action) => action.id === 'sex-vaginal-penetration:slide_penis_along_labia'
     );
 
     expect(foundAction).toBeUndefined();
@@ -480,7 +480,7 @@ describe('sex:slide_penis_along_labia action discovery', () => {
 
     const actions = await testFixture.discoverActions('alice');
     const foundAction = actions.find(
-      (action) => action.id === 'sex:slide_penis_along_labia'
+      (action) => action.id === 'sex-vaginal-penetration:slide_penis_along_labia'
     );
 
     expect(foundAction).toBeUndefined();
@@ -492,12 +492,12 @@ describe('sex:slide_penis_along_labia action discovery', () => {
     configureActionDiscovery();
 
     expect(
-      testFixture.testEnv.validateAction('alice', 'sex:slide_penis_along_labia')
+      testFixture.testEnv.validateAction('alice', 'sex-vaginal-penetration:slide_penis_along_labia')
     ).toBe(false);
 
     const actions = await testFixture.discoverActions('alice');
     const foundAction = actions.find(
-      (action) => action.id === 'sex:slide_penis_along_labia'
+      (action) => action.id === 'sex-vaginal-penetration:slide_penis_along_labia'
     );
 
     expect(foundAction).toBeUndefined();
@@ -510,7 +510,7 @@ describe('sex:slide_penis_along_labia action discovery', () => {
 
     const actions = await testFixture.discoverActions('alice');
     const foundAction = actions.find(
-      (action) => action.id === 'sex:slide_penis_along_labia'
+      (action) => action.id === 'sex-vaginal-penetration:slide_penis_along_labia'
     );
 
     expect(foundAction).toBeUndefined();
@@ -523,7 +523,7 @@ describe('sex:slide_penis_along_labia action discovery', () => {
 
     const actions = await testFixture.discoverActions('alice');
     const foundAction = actions.find(
-      (action) => action.id === 'sex:slide_penis_along_labia'
+      (action) => action.id === 'sex-vaginal-penetration:slide_penis_along_labia'
     );
 
     expect(foundAction).toBeUndefined();
@@ -535,12 +535,12 @@ describe('sex:slide_penis_along_labia action discovery', () => {
     configureActionDiscovery();
 
     expect(
-      testFixture.testEnv.validateAction('alice', 'sex:slide_penis_along_labia')
+      testFixture.testEnv.validateAction('alice', 'sex-vaginal-penetration:slide_penis_along_labia')
     ).toBe(false);
 
     const actions = await testFixture.discoverActions('alice');
     const foundAction = actions.find(
-      (action) => action.id === 'sex:slide_penis_along_labia'
+      (action) => action.id === 'sex-vaginal-penetration:slide_penis_along_labia'
     );
 
     expect(foundAction).toBeUndefined();
@@ -559,7 +559,7 @@ describe('sex:slide_penis_along_labia action discovery', () => {
 
     const actions = await testFixture.discoverActions('alice');
     const foundAction = actions.find(
-      (action) => action.id === 'sex:slide_penis_along_labia'
+      (action) => action.id === 'sex-vaginal-penetration:slide_penis_along_labia'
     );
 
     expect(foundAction).toBeUndefined();
@@ -594,7 +594,7 @@ describe('sex:slide_penis_along_labia action discovery', () => {
 
     const actions = await testFixture.discoverActions('alice');
     const foundAction = actions.find(
-      (action) => action.id === 'sex:slide_penis_along_labia'
+      (action) => action.id === 'sex-vaginal-penetration:slide_penis_along_labia'
     );
 
     expect(foundAction).toBeUndefined();

@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for sex:straddling_penis_milking action discovery.
+ * @file Integration tests for sex-vaginal-penetration:straddling_penis_milking action discovery.
  * @description Verifies target scope resolution, component requirements, and prerequisite gating
  * for the straddling penis milking invitation.
  */
@@ -13,11 +13,11 @@ import {
   STRADDLING_MILKING_ACTOR_ID,
   STRADDLING_MILKING_PRIMARY_ID,
 } from '../../../common/mods/sex/straddlingPenisMilkingFixtures.js';
-import straddlingMilkingAction from '../../../../data/mods/sex/actions/straddling_penis_milking.action.json';
+import straddlingMilkingAction from '../../../../data/mods/sex-vaginal-penetration/actions/straddling_penis_milking.action.json';
 
 const ACTION_ID = STRADDLING_MILKING_ACTION_ID;
 
-describe('sex:straddling_penis_milking action discovery', () => {
+describe('sex-vaginal-penetration:straddling_penis_milking action discovery', () => {
   let testFixture;
   let restoreScopeResolver;
 
@@ -29,7 +29,7 @@ describe('sex:straddling_penis_milking action discovery', () => {
   }
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('sex', ACTION_ID);
+    testFixture = await ModTestFixture.forAction('sex-vaginal-penetration', ACTION_ID);
     restoreScopeResolver = installStraddlingMilkingScopeOverrides(testFixture);
   });
 
@@ -50,7 +50,7 @@ describe('sex:straddling_penis_milking action discovery', () => {
       expect(straddlingMilkingAction.id).toBe(ACTION_ID);
       expect(straddlingMilkingAction.template).toBe("milk {primary}'s penis slowly");
       expect(straddlingMilkingAction.targets.primary.scope).toBe(
-        'sex:actors_with_uncovered_penis_facing_each_other_or_target_facing_away'
+        'sex-vaginal-penetration:actors_with_uncovered_penis_facing_each_other_or_target_facing_away'
       );
     });
 

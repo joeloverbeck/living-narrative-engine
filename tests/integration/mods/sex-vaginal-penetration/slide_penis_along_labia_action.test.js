@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the sex:slide_penis_along_labia action and rule.
+ * @file Integration tests for the sex-vaginal-penetration:slide_penis_along_labia action and rule.
  * @description Verifies rule execution, narrative output, and safety checks for the slide penis along labia action.
  */
 
@@ -77,13 +77,13 @@ function setupAnatomyComponents() {
 const EXPECTED_MESSAGE =
   "Alice slides their penis teasingly along Beth's bare labia.";
 
-describe('sex:slide_penis_along_labia action integration', () => {
+describe('sex-vaginal-penetration:slide_penis_along_labia action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'sex',
-      'sex:slide_penis_along_labia'
+      'sex-vaginal-penetration',
+      'sex-vaginal-penetration:slide_penis_along_labia'
     );
 
     const entities = setupAnatomyComponents();
@@ -166,7 +166,7 @@ describe('sex:slide_penis_along_labia action integration', () => {
 
     await expect(async () => {
       await testFixture.eventBus.dispatch('core:attempt_action', {
-        actionId: 'sex:slide_penis_along_labia',
+        actionId: 'sex-vaginal-penetration:slide_penis_along_labia',
         actorId: 'alice',
         targetId: 'nonexistent',
       });

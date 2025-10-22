@@ -1,11 +1,11 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "sex:insert_primary_penis_into_your_vagina",
+  "id": "sex-vaginal-penetration:insert_primary_penis_into_your_vagina",
   "name": "Invite Penis Into Your Vagina",
   "description": "Guide your partner's penis into your vagina to invite vaginal penetration.",
   "targets": {
     "primary": {
-      "scope": "sex:actors_with_uncovered_penis_facing_each_other_or_target_facing_away",
+      "scope": "sex-vaginal-penetration:actors_with_uncovered_penis_facing_each_other_or_target_facing_away",
       "placeholder": "primary",
       "description": "Partner with an uncovered penis who is positioned for penetration"
     }
@@ -35,9 +35,9 @@
     }
   ],
   "visual": {
-    "backgroundColor": "#4a148c",
-    "textColor": "#e1bee7",
-    "hoverBackgroundColor": "#6a1b9a",
-    "hoverTextColor": "#f3e5f5"
+    "backgroundColor": "#6c0f36",
+    "textColor": "#ffe6ef",
+    "hoverBackgroundColor": "#861445",
+    "hoverTextColor": "#fff2f7"
   }
 }

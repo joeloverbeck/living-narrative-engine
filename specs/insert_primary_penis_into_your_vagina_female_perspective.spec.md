@@ -2,17 +2,17 @@
 
 ## Overview
 
-Design a new `sex` mod action/rule pair that mirrors `sex:insert_penis_into_vagina` but frames the interaction from the woman being penetrated. The acting actor is the one with the vagina, and she prompts a partner with an uncovered penis to penetrate her.【F:data/mods/sex/actions/insert_penis_into_vagina.action.json†L1-L32】 The state components `sex-core:fucking_vaginally` and `sex-core:being_fucked_vaginally` already model the ongoing penetration relationship and should continue to gate repeat discoverability and rule effects.【F:data/mods/sex-core/components/fucking_vaginally.component.json†L1-L15】【F:data/mods/sex-core/components/being_fucked_vaginally.component.json†L1-L15】 The new combo should complement, not replace, the existing male-perspective initiation.
+Design a new `sex-vaginal-penetration` mod action/rule pair that mirrors `sex-vaginal-penetration:insert_penis_into_vagina` but frames the interaction from the woman being penetrated. The acting actor is the one with the vagina, and she prompts a partner with an uncovered penis to penetrate her.【F:data/mods/sex-vaginal-penetration/actions/insert_penis_into_vagina.action.json†L1-L32】 The state components `sex-core:fucking_vaginally` and `sex-core:being_fucked_vaginally` already model the ongoing penetration relationship and should continue to gate repeat discoverability and rule effects.【F:data/mods/sex-core/components/fucking_vaginally.component.json†L1-L15】【F:data/mods/sex-core/components/being_fucked_vaginally.component.json†L1-L15】 The new combo should complement, not replace, the existing male-perspective initiation.
 
 ## Targeting & Components
 
 - **Targets**
-  - Add a primary target scope equivalent to `sex:actors_with_uncovered_vagina_facing_each_other_or_target_facing_away`, but require the target to be either directly in front of or behind the actor and to expose a penis rather than a vagina. This ensures anatomical compatibility while keeping the directional constraints that support penetration choreography.
+  - Add a primary target scope equivalent to `sex-vaginal-penetration:actors_with_uncovered_penis_facing_each_other_or_target_facing_away`, but require the target to be either directly in front of or behind the actor and to expose a penis rather than a vagina. This ensures anatomical compatibility while keeping the directional constraints that support penetration choreography.
 - **Required components (actor)**
-  - Only `positioning:closeness` (reuse the existing closeness requirement for penetration range).【F:data/mods/sex/actions/insert_penis_into_vagina.action.json†L16-L17】
+  - Only `positioning:closeness` (reuse the existing closeness requirement for penetration range).【F:data/mods/sex-vaginal-penetration/actions/insert_penis_into_vagina.action.json†L16-L17】
 - **Forbidden components (actor)**
   - Forbid `sex-core:being_fucked_vaginally` to prevent conflicting penetration states.
-  - Forbid `positioning:sitting_on` because the actor is inviting penetration while standing or similarly positioned; a seated straddle would invert the roles established in the male-led action.【F:data/mods/sex/actions/insert_penis_into_vagina.action.json†L18-L21】
+  - Forbid `positioning:sitting_on` because the actor is inviting penetration while standing or similarly positioned; a seated straddle would invert the roles established in the male-led action.【F:data/mods/sex-vaginal-penetration/actions/insert_penis_into_vagina.action.json†L18-L21】
 - **Forbidden components (primary)**
   - None beyond what the new scope enforces; the directional filter and penis requirement already define the correct partner posture.
 

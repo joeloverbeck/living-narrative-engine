@@ -1,10 +1,10 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_straddling_penis_milking",
-  "comment": "Handles the 'sex:straddling_penis_milking' action by establishing mutual vaginal penetration state and broadcasting the sensual milking narration.",
+  "comment": "Handles the 'sex-vaginal-penetration:straddling_penis_milking' action by establishing mutual vaginal penetration state and broadcasting the sensual milking narration.",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "sex:event-is-action-straddling-penis-milking"
+    "condition_ref": "sex-vaginal-penetration:event-is-action-straddling-penis-milking"
   },
   "actions": [
     {

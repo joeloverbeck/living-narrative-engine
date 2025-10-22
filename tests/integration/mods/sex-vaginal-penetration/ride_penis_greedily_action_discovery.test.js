@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for sex:ride_penis_greedily action discovery.
+ * @file Integration tests for sex-vaginal-penetration:ride_penis_greedily action discovery.
  * @description Verifies greedy riding action metadata, scope resolution, component requirements,
  * and prerequisite gating while the actor straddles an uncovered penis.
  */
@@ -13,11 +13,11 @@ import {
   STRADDLING_MILKING_ACTOR_ID,
   STRADDLING_MILKING_PRIMARY_ID,
 } from '../../../common/mods/sex/straddlingPenisMilkingFixtures.js';
-import ridePenisGreedilyAction from '../../../../data/mods/sex/actions/ride_penis_greedily.action.json';
+import ridePenisGreedilyAction from '../../../../data/mods/sex-vaginal-penetration/actions/ride_penis_greedily.action.json';
 
 const ACTION_ID = RIDE_PENIS_GREEDILY_ACTION_ID;
 
-describe('sex:ride_penis_greedily action discovery', () => {
+describe('sex-vaginal-penetration:ride_penis_greedily action discovery', () => {
   let testFixture;
   let restoreScopeResolver;
 
@@ -29,7 +29,7 @@ describe('sex:ride_penis_greedily action discovery', () => {
   }
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('sex', ACTION_ID);
+    testFixture = await ModTestFixture.forAction('sex-vaginal-penetration', ACTION_ID);
     restoreScopeResolver = installStraddlingMilkingScopeOverrides(testFixture);
   });
 
@@ -52,7 +52,7 @@ describe('sex:ride_penis_greedily action discovery', () => {
         "ride {primary}'s penis greedily"
       );
       expect(ridePenisGreedilyAction.targets.primary.scope).toBe(
-        'sex:actors_with_uncovered_penis_facing_each_other_or_target_facing_away'
+        'sex-vaginal-penetration:actors_with_uncovered_penis_facing_each_other_or_target_facing_away'
       );
     });
 
