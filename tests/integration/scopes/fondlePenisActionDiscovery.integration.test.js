@@ -45,7 +45,7 @@ import path from 'path';
 const penisScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../data/mods/sex/scopes/actors_with_penis_facing_each_other.scope'
+    '../../../data/mods/sex-core/scopes/actors_with_penis_facing_each_other.scope'
   ),
   'utf8'
 );
@@ -131,8 +131,8 @@ describe('Fondle Penis Action Discovery Integration Tests', () => {
     scopeRegistry.clear();
 
     scopeRegistry.initialize({
-      'sex:actors_with_penis_facing_each_other': scopeDefinitions.get(
-        'sex:actors_with_penis_facing_each_other'
+      'sex-core:actors_with_penis_facing_each_other': scopeDefinitions.get(
+        'sex-core:actors_with_penis_facing_each_other'
       ),
     });
 
@@ -373,7 +373,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
     it('should not discover action when actor is being vaginally penetrated', async () => {
       setupEntities({}, {
-        'sex:being_fucked_vaginally': { actorId: 'charlie' },
+        'sex-core:being_fucked_vaginally': { actorId: 'charlie' },
       });
 
       const actorEntity = entityManager.getEntityInstance('actor1');

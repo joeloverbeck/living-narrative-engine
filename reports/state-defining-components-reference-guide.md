@@ -367,7 +367,7 @@ positioning:close_actors := actor.components.positioning:closeness.partners[]
 
 ```
 // Example from actor_kneeling_before_target_with_penis.scope
-sex:actor_kneeling_before_target_with_penis := actor.components.positioning:closeness.partners[][{
+sex-core:actor_kneeling_before_target_with_penis := actor.components.positioning:closeness.partners[][{
   "and": [
     {"hasPartOfType": [".", "penis"]},
     {"not": {"isSocketCovered": [".", "penis"]}},
@@ -512,7 +512,7 @@ sex:actor_kneeling_before_target_with_penis := actor.components.positioning:clos
 #### Complex Filtering: `actor_kneeling_before_target_with_penis.scope`
 
 ```
-sex:actor_kneeling_before_target_with_penis := actor.components.positioning:closeness.partners[][{
+sex-core:actor_kneeling_before_target_with_penis := actor.components.positioning:closeness.partners[][{
   "and": [
     {"hasPartOfType": [".", "penis"]},
     {"not": {"isSocketCovered": [".", "penis"]}},

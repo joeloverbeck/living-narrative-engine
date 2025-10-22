@@ -1,0 +1,34 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "sex-core",
+  "version": "1.0.0",
+  "name": "Sex Core - Shared Sexual Scaffolding",
+  "description": "Foundational sexual intimacy helpers shared across specialized intimacy modules.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "anatomy",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "clothing",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "scopes": [
+      "actor_kneeling_before_target_with_penis.scope",
+      "actors_with_penis_facing_each_other.scope",
+      "actors_with_penis_in_intimacy.scope"
+    ],
+    "components": [
+      "being_fucked_vaginally.component.json",
+      "fucking_vaginally.component.json"
+    ]
+  }
+}

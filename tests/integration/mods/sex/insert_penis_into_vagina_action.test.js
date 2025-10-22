@@ -124,14 +124,14 @@ describe('sex:insert_penis_into_vagina action integration', () => {
 
     const actorComponent = testFixture.entityManager.getComponentData(
       'alice',
-      'sex:fucking_vaginally'
+      'sex-core:fucking_vaginally'
     );
     expect(actorComponent).toBeDefined();
     expect(actorComponent).toEqual({ targetId: 'beth' });
 
     const targetComponent = testFixture.entityManager.getComponentData(
       'beth',
-      'sex:being_fucked_vaginally'
+      'sex-core:being_fucked_vaginally'
     );
 
     expect(targetComponent).toBeDefined();

@@ -4,7 +4,7 @@
 
 Expand the sex mod's teasing repertoire with an explicit penis-on-labia interaction that complements existing foreplay actions such as breathing on or licking a penis and grinding clothed anatomy. These actions share a consistent purple visual palette, rely on closeness, and differ mainly in anatomical targeting, providing strong implementation templates for copy depth, required components, and schema usage.【F:data/mods/sex/actions/breathe_teasingly_on_penis.action.json†L1-L24】【F:data/mods/sex/actions/lick_glans.action.json†L1-L24】【F:data/mods/sex/actions/rub_pussy_against_penis_through_clothes.action.json†L1-L30】
 
-The new interaction must keep the same purple visual scheme as `sex:pump_penis` while adjusting anatomical requirements to focus on an uncovered vagina. Its scope logic should mirror `sex:actors_with_penis_facing_each_other` for anatomy checks and kneeling exclusions, but add the orientation flexibility provided by `positioning:close_actors_facing_each_other_or_behind_target` so the action can trigger both face-to-face and when the actor is behind a forward-facing partner.【F:data/mods/sex/actions/pump_penis.action.json†L1-L24】【F:data/mods/sex/scopes/actors_with_penis_facing_each_other.scope†L1-L11】【F:data/mods/positioning/scopes/close_actors_facing_each_other_or_behind_target.scope†L1-L15】
+The new interaction must keep the same purple visual scheme as `sex:pump_penis` while adjusting anatomical requirements to focus on an uncovered vagina. Its scope logic should mirror `sex-core:actors_with_penis_facing_each_other` for anatomy checks and kneeling exclusions, but add the orientation flexibility provided by `positioning:close_actors_facing_each_other_or_behind_target` so the action can trigger both face-to-face and when the actor is behind a forward-facing partner.【F:data/mods/sex/actions/pump_penis.action.json†L1-L24】【F:data/mods/sex-core/scopes/actors_with_penis_facing_each_other.scope†L1-L11】【F:data/mods/positioning/scopes/close_actors_facing_each_other_or_behind_target.scope†L1-L15】
 
 ## Scope Requirements
 
@@ -16,7 +16,7 @@ Author `data/mods/sex/scopes/actors_with_uncovered_vagina_facing_each_other_or_t
   - Require the target's vagina socket to be uncovered via `{"not": {"isSocketCovered": [".", "vagina"]}}`.
   - Add an `or` branch matching either `positioning:both-actors-facing-each-other` or `positioning:actor-is-behind-entity`, duplicating the structure from the positioning scope so the acting entity can align behind a partner who is facing away.
   - Copy the kneeling exclusions (`positioning:entity-kneeling-before-actor` and `positioning:actor-kneeling-before-entity`) to remain compatible with face-to-face standing or upright-from-behind play.
-- Use scope comments explaining the uncovered requirement, orientation flexibility, and why kneeling is excluded, matching the documentation tone of the existing sex scopes.【F:data/mods/sex/scopes/actors_with_penis_facing_each_other.scope†L1-L11】【F:data/mods/positioning/scopes/close_actors_facing_each_other_or_behind_target.scope†L1-L15】
+- Use scope comments explaining the uncovered requirement, orientation flexibility, and why kneeling is excluded, matching the documentation tone of the existing sex scopes.【F:data/mods/sex-core/scopes/actors_with_penis_facing_each_other.scope†L1-L11】【F:data/mods/positioning/scopes/close_actors_facing_each_other_or_behind_target.scope†L1-L15】
 
 Register the new scope in `data/mods/sex/mod-manifest.json` alongside the other scope entries for discoverability parity.
 

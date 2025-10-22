@@ -14,7 +14,7 @@
     "actor": [
       "positioning:closeness",
       "positioning:straddling_waist",
-      "sex:being_fucked_vaginally"
+      "sex-core:being_fucked_vaginally"
     ]
   },
   "forbidden_components": {

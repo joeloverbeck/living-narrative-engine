@@ -16,15 +16,15 @@ This interaction is now **state-based**. Introduce a paired-component pattern ma
 
 Create two new components that record the active penetration state:
 
-1. `data/mods/sex/components/fucking_vaginally.component.json`
+1. `data/mods/sex-core/components/fucking_vaginally.component.json`
    - `$schema`: `schema://living-narrative-engine/component.schema.json`.
-   - `id`: `sex:fucking_vaginally`.
+   - `id`: `sex-core:fucking_vaginally`.
    - `name`: `Fucking Vaginally` with a description clarifying it marks the penetrating actor.
    - Include a single `fields.targetId` entry so rules can reference the currently penetrated partner by entity id.
 
-2. `data/mods/sex/components/being_fucked_vaginally.component.json`
+2. `data/mods/sex-core/components/being_fucked_vaginally.component.json`
    - `$schema`: `schema://living-narrative-engine/component.schema.json`.
-   - `id`: `sex:being_fucked_vaginally`.
+   - `id`: `sex-core:being_fucked_vaginally`.
    - `name`: `Being Fucked Vaginally` with a description clarifying it marks the penetrated target.
    - Include a single `fields.actorId` entry referencing the penetrating actor.
 
@@ -40,7 +40,7 @@ Create `data/mods/sex/actions/insert_penis_into_vagina.action.json` with:
 4. `targets.primary`:
    - `scope`: `sex:actors_with_uncovered_vagina_facing_each_other_or_target_facing_away`.
    - `placeholder`: `primary` and description explaining the uncovered vagina/orientation requirement.
-5. `required_components.actor`: `["positioning:closeness", "sex:fucking_vaginally"]` so the action is only discoverable before the state is applied again, preventing repeat initiations once penetration is underway.
+5. `required_components.actor`: `["positioning:closeness", "sex-core:fucking_vaginally"]` so the action is only discoverable before the state is applied again, preventing repeat initiations once penetration is underway.
 6. `forbidden_components.primary`: `["positioning:sitting_on"]`, retaining compatibility with straddling/standing contexts while blocking seated posture conflicts.【F:data/mods/sex/actions/slide_penis_along_labia.action.json†L13-L18】
 7. `template`: **Exactly** `insert your penis into {primary}'s vagina`.
 8. `prerequisites`: Copy the two prerequisite objects from `sex:slide_penis_along_labia`, including identical failure messages.【F:data/mods/sex/actions/slide_penis_along_labia.action.json†L20-L33】
@@ -57,8 +57,8 @@ Author `data/mods/sex/rules/handle_insert_penis_into_vagina.rule.json` that:
 3. Captures the actor's location with `QUERY_COMPONENT` (`core:position`) and stores `{context.actorPosition.locationId}`.
 4. Sets the shared message string `{actor} inserts their penis into {primary}'s vagina, that stretches to accomodate the girth.` for both perceptible and success outputs before delegating to the standard `core:logSuccessAndEndTurn` macro.
 5. Adds the new state components:
-   - `sex:fucking_vaginally` applied to the acting actor with `targetId: {event.payload.primaryId}`.
-   - `sex:being_fucked_vaginally` applied to the primary target with `actorId: {event.payload.actorId}`.
+   - `sex-core:fucking_vaginally` applied to the acting actor with `targetId: {event.payload.primaryId}`.
+   - `sex-core:being_fucked_vaginally` applied to the primary target with `actorId: {event.payload.actorId}`.
 6. Populates the macro context so the perceptible event fires with `perceptionType: action_target_general`, `actorId: {event.payload.actorId}`, `targetId: {event.payload.primaryId}`, and `locationId` from the captured position.
 7. Registers the rule and condition (and both new components if not already covered above) in the sex mod manifest.
 
@@ -66,7 +66,7 @@ Author `data/mods/sex/rules/handle_insert_penis_into_vagina.rule.json` that:
 
 Build two comprehensive integration suites under `tests/integration/mods/sex/` using the Test Module Pattern from the Mod Testing Guide.【F:docs/testing/mod-testing-guide.md†L1-L119】
 
-1. **`insert_penis_into_vagina_action_discovery.test.js`** – Validate structure parity, closeness requirements, forbidden `sitting_on`, template text, the new `sex:fucking_vaginally` required component, and ensure discoverability when actors are close, penis is uncovered, and the primary target meets the scope. Include negative cases for covered anatomy, missing closeness, sitting posture, or pre-existing state components blocking discovery.
-2. **`insert_penis_into_vagina_action.test.js`** – Execute the action directly to assert the perceptible and success messages both read `{actor} inserts their penis into {primary}'s vagina, that stretches to accomodate the girth.`, confirm the rule ends the turn, ensure the actor gains `sex:fucking_vaginally` with a `targetId` pointing at the primary, ensure the primary gains `sex:being_fucked_vaginally` referencing the actor, and ensure no events fire for unrelated actions.
+1. **`insert_penis_into_vagina_action_discovery.test.js`** – Validate structure parity, closeness requirements, forbidden `sitting_on`, template text, the new `sex-core:fucking_vaginally` required component, and ensure discoverability when actors are close, penis is uncovered, and the primary target meets the scope. Include negative cases for covered anatomy, missing closeness, sitting posture, or pre-existing state components blocking discovery.
+2. **`insert_penis_into_vagina_action.test.js`** – Execute the action directly to assert the perceptible and success messages both read `{actor} inserts their penis into {primary}'s vagina, that stretches to accomodate the girth.`, confirm the rule ends the turn, ensure the actor gains `sex-core:fucking_vaginally` with a `targetId` pointing at the primary, ensure the primary gains `sex-core:being_fucked_vaginally` referencing the actor, and ensure no events fire for unrelated actions.
 
 All new suites must pass locally before raising a PR, and they should demonstrate both action discovery and rule execution behavior end to end.
