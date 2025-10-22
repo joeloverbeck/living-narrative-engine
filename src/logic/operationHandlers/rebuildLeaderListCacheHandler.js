@@ -10,7 +10,6 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import {
   FOLLOWING_COMPONENT_ID,
   LEADING_COMPONENT_ID,
-  ACTOR_COMPONENT_ID,
 } from '../../constants/componentIds.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
@@ -84,16 +83,6 @@ class RebuildLeaderListCacheHandler extends BaseOperationHandler {
     const followerMap = new Map();
     const followers = this.#entityManager.getEntitiesWithComponent(FOLLOWING);
     for (const ent of followers) {
-      if (!ent || typeof ent.hasComponent !== 'function') {
-        continue;
-      }
-      if (!ent.hasComponent(ACTOR_COMPONENT_ID)) {
-        this.#logger.debug(
-          `[RebuildLeaderListCacheHandler] Skipping non-actor follower '${ent.id}'.`
-        );
-        continue;
-      }
-
       const data = ent.getComponentData(FOLLOWING);
       const leaderId = data?.leaderId;
       if (isNonBlankString(leaderId)) {
