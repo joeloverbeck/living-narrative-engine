@@ -11,7 +11,7 @@ import { ModEntityBuilder } from '../ModEntityBuilder.js';
  * @type {string}
  */
 export const BREATHE_TEASINGLY_ON_PENIS_SITTING_CLOSE_ACTION_ID =
-  'sex:breathe_teasingly_on_penis_sitting_close';
+  'sex-penile-oral:breathe_teasingly_on_penis_sitting_close';
 
 /**
  * Default actor identifier used in seated teasing scenarios.
@@ -198,7 +198,7 @@ export function installSittingCloseUncoveredPenisScopeOverride(testFixture) {
   const originalResolveSync = resolver.resolveSync.bind(resolver);
 
   resolver.resolveSync = (scopeName, context) => {
-    if (scopeName === 'sex:actors_sitting_close_with_uncovered_penis') {
+    if (scopeName === 'sex-core:actors_sitting_close_with_uncovered_penis') {
       const actorId = context?.actor?.id;
 
       if (!actorId) {

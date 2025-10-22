@@ -19,11 +19,11 @@ import fs from 'fs';
 import path from 'path';
 
 // Import actual action and scope files
-import nuzzlePenisThroughClothingAction from '../../../data/mods/sex/actions/nuzzle_penis_through_clothing.action.json';
+import nuzzlePenisThroughClothingAction from '../../../data/mods/sex-penile-oral/actions/nuzzle_penis_through_clothing.action.json';
 const nuzzlePenisScopeContent = fs.readFileSync(
   path.resolve(
     process.cwd(),
-    'data/mods/sex/scopes/actor_kneeling_before_target_with_covered_penis.scope'
+    'data/mods/sex-core/scopes/actor_kneeling_before_target_with_covered_penis.scope'
   ),
   'utf8'
 );
@@ -144,7 +144,7 @@ describe('Nuzzle Penis Through Clothing Action Discovery Integration Tests', () 
       // Act
       const context = { actor: actorId };
       const scopeDef = scopeRegistry.getScope(
-        'sex:actor_kneeling_before_target_with_covered_penis'
+        'sex-core:actor_kneeling_before_target_with_covered_penis'
       );
       const actorEntity = entityManager.getEntityInstance(actorId);
       const result = scopeEngine.resolve(scopeDef.ast, actorEntity, {
@@ -203,7 +203,7 @@ describe('Nuzzle Penis Through Clothing Action Discovery Integration Tests', () 
       // Act
       const context = { actor: actorId };
       const scopeDef = scopeRegistry.getScope(
-        'sex:actor_kneeling_before_target_with_covered_penis'
+        'sex-core:actor_kneeling_before_target_with_covered_penis'
       );
       const actorEntity = entityManager.getEntityInstance(actorId);
       const result = scopeEngine.resolve(scopeDef.ast, actorEntity, {
@@ -260,7 +260,7 @@ describe('Nuzzle Penis Through Clothing Action Discovery Integration Tests', () 
       // Act
       const context = { actor: actorId };
       const scopeDef = scopeRegistry.getScope(
-        'sex:actor_kneeling_before_target_with_covered_penis'
+        'sex-core:actor_kneeling_before_target_with_covered_penis'
       );
       const actorEntity = entityManager.getEntityInstance(actorId);
       const result = scopeEngine.resolve(scopeDef.ast, actorEntity, {
@@ -315,7 +315,7 @@ describe('Nuzzle Penis Through Clothing Action Discovery Integration Tests', () 
       // Act
       const context = { actor: actorId };
       const scopeDef = scopeRegistry.getScope(
-        'sex:actor_kneeling_before_target_with_covered_penis'
+        'sex-core:actor_kneeling_before_target_with_covered_penis'
       );
       const actorEntity = entityManager.getEntityInstance(actorId);
       const result = scopeEngine.resolve(scopeDef.ast, actorEntity, {
@@ -379,7 +379,7 @@ describe('Nuzzle Penis Through Clothing Action Discovery Integration Tests', () 
       // Act
       const context = { actor: actorId };
       const scopeDef = scopeRegistry.getScope(
-        'sex:actor_kneeling_before_target_with_covered_penis'
+        'sex-core:actor_kneeling_before_target_with_covered_penis'
       );
       const actorEntity = entityManager.getEntityInstance(actorId);
       const result = scopeEngine.resolve(scopeDef.ast, actorEntity, {
@@ -458,7 +458,7 @@ describe('Nuzzle Penis Through Clothing Action Discovery Integration Tests', () 
       // Act
       const context = { actor: actorId };
       const scopeDef = scopeRegistry.getScope(
-        'sex:actor_kneeling_before_target_with_covered_penis'
+        'sex-core:actor_kneeling_before_target_with_covered_penis'
       );
       const actorEntity = entityManager.getEntityInstance(actorId);
       const result = scopeEngine.resolve(scopeDef.ast, actorEntity, {
