@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the sex:fondle_breasts action and rule.
+ * @file Integration tests for the sex-breastplay:fondle_breasts action and rule.
  * @description Tests the rule execution after the fondle_breasts action is performed.
  * Note: This test does not test action discovery or scope resolution - it assumes
  * the action is valid and dispatches it directly. For action discovery tests,
@@ -72,12 +72,15 @@ function setupAnatomyComponents() {
   };
 }
 
-describe('sex:fondle_breasts action integration', () => {
+describe('sex-breastplay:fondle_breasts action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
     // Create test fixture with auto-loaded files
-    testFixture = await ModTestFixture.forAction('sex', 'sex:fondle_breasts');
+    testFixture = await ModTestFixture.forAction(
+      'sex-breastplay',
+      'sex-breastplay:fondle_breasts'
+    );
 
     // Setup anatomy entities
     const entities = setupAnatomyComponents();
@@ -149,11 +152,11 @@ describe('sex:fondle_breasts action integration', () => {
     // This test verifies the rule handles missing entities gracefully
     // The action prerequisites would normally prevent this, but we test rule robustness
     await expect(async () => {
-      await testFixture.eventBus.dispatch('core:attempt_action', {
-        actionId: 'sex:fondle_breasts',
-        actorId: 'alice',
-        targetId: 'nonexistent',
-      });
+    await testFixture.eventBus.dispatch('core:attempt_action', {
+      actionId: 'sex-breastplay:fondle_breasts',
+      actorId: 'alice',
+      targetId: 'nonexistent',
+    });
     }).not.toThrow();
 
     // With missing target, the rule should fail during GET_NAME operation

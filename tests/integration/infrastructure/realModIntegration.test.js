@@ -205,8 +205,8 @@ describe('Real Mod Integration Testing', () => {
       try {
         // Try common sex category actions
         test = await ModTestFixture.forActionAutoLoad(
-          'sex',
-          'sex:fondle_breasts'
+          'sex-breastplay',
+          'sex-breastplay:fondle_breasts'
         );
       } catch (error) {
         try {

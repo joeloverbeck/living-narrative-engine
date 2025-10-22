@@ -1,11 +1,11 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "sex:fondle_breasts_over_clothes",
+  "id": "sex-breastplay:fondle_breasts_over_clothes",
   "name": "Fondle Breasts Over Clothes",
   "description": "Gently fondle the target's breasts over their clothing.",
   "targets": {
     "primary": {
-      "scope": "sex:actors_with_breasts_facing_each_other_covered",
+      "scope": "sex-breastplay:actors_with_breasts_facing_each_other_covered",
       "placeholder": "primary",
       "description": "Person with covered breasts to fondle"
     },
@@ -22,9 +22,9 @@
   "template": "fondle {primary}'s breasts over her {secondary}",
   "prerequisites": [],
   "visual": {
-    "backgroundColor": "#4a148c",
-    "textColor": "#e1bee7",
-    "hoverBackgroundColor": "#6a1b9a",
-    "hoverTextColor": "#f3e5f5"
+    "backgroundColor": "#7a1d58",
+    "textColor": "#fde6f2",
+    "hoverBackgroundColor": "#8d2465",
+    "hoverTextColor": "#fff2f9"
   }
 }

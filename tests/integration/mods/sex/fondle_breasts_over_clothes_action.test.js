@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the sex:fondle_breasts_over_clothes action and rule.
+ * @file Integration tests for the sex-breastplay:fondle_breasts_over_clothes action and rule.
  * @description Tests the rule execution after the fondle_breasts_over_clothes action is performed.
  * Note: This test does not test action discovery or scope resolution - it assumes
  * the action is valid and dispatches it directly. For action discovery tests,
@@ -91,14 +91,14 @@ function setupBreastsClothingScenario() {
   };
 }
 
-describe('sex:fondle_breasts_over_clothes action integration', () => {
+describe('sex-breastplay:fondle_breasts_over_clothes action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
     // Create test fixture with auto-loaded files
     testFixture = await ModTestFixture.forAction(
-      'sex',
-      'sex:fondle_breasts_over_clothes'
+      'sex-breastplay',
+      'sex-breastplay:fondle_breasts_over_clothes'
     );
 
     // Setup anatomy and clothing entities
@@ -178,7 +178,7 @@ describe('sex:fondle_breasts_over_clothes action integration', () => {
     // The action prerequisites would normally prevent this, but we test rule robustness
     await expect(async () => {
       await testFixture.eventBus.dispatch('core:attempt_action', {
-        actionId: 'sex:fondle_breasts_over_clothes',
+        actionId: 'sex-breastplay:fondle_breasts_over_clothes',
         actorId: 'alice',
         targetId: 'nonexistent',
       });
@@ -195,7 +195,7 @@ describe('sex:fondle_breasts_over_clothes action integration', () => {
     expect(testFixture.ruleFile.rule_id).toBe('handle_fondle_breasts_over_clothes');
     expect(testFixture.ruleFile.event_type).toBe('core:attempt_action');
     expect(testFixture.conditionFile.id).toBe(
-      'sex:event-is-action-fondle-breasts-over-clothes'
+      'sex-breastplay:event-is-action-fondle-breasts-over-clothes'
     );
 
     // Verify the macro is present in the actions

@@ -601,20 +601,20 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
       );
     });
 
-    it('should handle sex actions correctly', () => {
+    it('should handle sex-breastplay actions correctly', () => {
       const { rulePaths, conditionPaths } = ModTestFixture.getConventionalPaths(
-        'sex',
-        'sex:fondle_breasts'
+        'sex-breastplay',
+        'sex-breastplay:fondle_breasts'
       );
 
       expect(rulePaths).toContain(
-        'data/mods/sex/rules/fondle_breasts.rule.json'
+        'data/mods/sex-breastplay/rules/fondle_breasts.rule.json'
       );
       expect(rulePaths).toContain(
-        'data/mods/sex/rules/handle_fondle_breasts.rule.json'
+        'data/mods/sex-breastplay/rules/handle_fondle_breasts.rule.json'
       );
       expect(conditionPaths).toContain(
-        'data/mods/sex/conditions/event-is-action-fondle-breasts.condition.json'
+        'data/mods/sex-breastplay/conditions/event-is-action-fondle-breasts.condition.json'
       );
     });
   });

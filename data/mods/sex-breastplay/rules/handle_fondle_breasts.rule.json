@@ -1,9 +1,9 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "rule_id": "handle_press_against_back",
-  "comment": "Handles the 'sex:press_against_back' action. Dispatches descriptive text and ends the turn.",
+  "rule_id": "handle_fondle_breasts",
+  "comment": "Handles the 'sex-breastplay:fondle_breasts' action. Dispatches descriptive text and ends the turn.",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "sex:event-is-action-press-against-back" },
+  "condition": { "condition_ref": "sex-breastplay:event-is-action-fondle-breasts" },
   "actions": [
     {
       "type": "GET_NAME",
@@ -25,7 +25,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
-        "value": "{context.actorName} presses herself against {context.targetName}'s back, her breasts getting squeezed against {context.targetName}'s flesh."
+        "value": "{context.actorName} eagerly fondles {context.targetName}'s breasts."
       }
     },
     {

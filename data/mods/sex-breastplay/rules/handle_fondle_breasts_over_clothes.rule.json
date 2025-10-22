@@ -1,9 +1,11 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "rule_id": "handle_fondle_breasts",
-  "comment": "Handles the 'sex:fondle_breasts' action. Dispatches descriptive text and ends the turn.",
+  "rule_id": "handle_fondle_breasts_over_clothes",
+  "comment": "Handles the 'sex-breastplay:fondle_breasts_over_clothes' action. Dispatches descriptive text and ends the turn.",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "sex:event-is-action-fondle-breasts" },
+  "condition": {
+    "condition_ref": "sex-breastplay:event-is-action-fondle-breasts-over-clothes"
+  },
   "actions": [
     {
       "type": "GET_NAME",
@@ -11,7 +13,17 @@
     },
     {
       "type": "GET_NAME",
-      "parameters": { "entity_ref": "target", "result_variable": "targetName" }
+      "parameters": {
+        "entity_ref": "primary",
+        "result_variable": "primaryName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "secondary",
+        "result_variable": "clothingName"
+      }
     },
     {
       "type": "QUERY_COMPONENT",
@@ -25,7 +37,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
-        "value": "{context.actorName} eagerly fondles {context.targetName}'s breasts."
+        "value": "{context.actorName} eagerly fondles {context.primaryName}'s breasts over her {context.clothingName}."
       }
     },
     {
@@ -46,7 +58,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "targetId",
-        "value": "{event.payload.targetId}"
+        "value": "{event.payload.primaryId}"
       }
     },
     { "macro": "core:logSuccessAndEndTurn" }

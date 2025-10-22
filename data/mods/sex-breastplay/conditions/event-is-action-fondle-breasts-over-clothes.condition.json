@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex-breastplay:event-is-action-fondle-breasts-over-clothes",
+  "description": "Checks if the triggering event is for the 'sex-breastplay:fondle_breasts_over_clothes' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "sex-breastplay:fondle_breasts_over_clothes"
+    ]
+  }
+}

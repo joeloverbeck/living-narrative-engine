@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the sex:press_against_back action and rule.
+ * @file Integration tests for the sex-breastplay:press_against_back action and rule.
  * @description Tests the rule execution after the press_against_back action is performed.
  * Note: This test does not test action discovery or scope resolution - it assumes
  * the action is valid and dispatches it directly. For action discovery tests,
@@ -83,14 +83,14 @@ function setupAnatomyComponents() {
   };
 }
 
-describe('sex:press_against_back action integration', () => {
+describe('sex-breastplay:press_against_back action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
     // Create test fixture with auto-loaded files
     testFixture = await ModTestFixture.forAction(
-      'sex',
-      'sex:press_against_back'
+      'sex-breastplay',
+      'sex-breastplay:press_against_back'
     );
 
     // Setup anatomy entities
@@ -165,7 +165,7 @@ describe('sex:press_against_back action integration', () => {
     // The action prerequisites would normally prevent this, but we test rule robustness
     await expect(async () => {
       await testFixture.eventBus.dispatch('core:attempt_action', {
-        actionId: 'sex:press_against_back',
+        actionId: 'sex-breastplay:press_against_back',
         actorId: 'alice',
         targetId: 'nonexistent',
       });

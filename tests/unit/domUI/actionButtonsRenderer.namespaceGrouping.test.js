@@ -123,8 +123,8 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       expect(result2).toBe('positioning');
 
       const result3 =
-        mockActionCategorizationService.extractNamespace('sex:fondle_breasts');
-      expect(result3).toBe('sex');
+        mockActionCategorizationService.extractNamespace('sex-breastplay:fondle_breasts');
+      expect(result3).toBe('sex-breastplay');
 
       // Verify the service was called with correct parameters
       expect(
@@ -135,7 +135,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       ).toHaveBeenCalledWith('positioning:get_close');
       expect(
         mockActionCategorizationService.extractNamespace
-      ).toHaveBeenCalledWith('sex:fondle_breasts');
+      ).toHaveBeenCalledWith('sex-breastplay:fondle_breasts');
     });
 
     it('should handle action ID without colon', () => {
@@ -165,7 +165,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         createTestComposite(2, 'movement:go', 'go north'),
         createTestComposite(3, 'positioning:get_close', 'get close'),
         createTestComposite(4, 'kissing:kiss_cheek', 'kiss cheek'),
-        createTestComposite(5, 'sex:fondle_breasts', 'fondle breasts'),
+        createTestComposite(5, 'sex-breastplay:fondle_breasts', 'fondle breasts'),
         createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
       ];
 
@@ -273,7 +273,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         createTestComposite(2, 'movement:go', 'go north'),
         createTestComposite(3, 'positioning:get_close', 'get close'),
         createTestComposite(4, 'kissing:kiss_cheek', 'kiss cheek'),
-        createTestComposite(5, 'sex:fondle_breasts', 'fondle breasts'),
+        createTestComposite(5, 'sex-breastplay:fondle_breasts', 'fondle breasts'),
         createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
       ];
 
@@ -300,7 +300,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
             : 'unknown';
         })
       );
-      expect(namespaces.size).toBe(5); // core, movement, positioning, kissing, sex
+      expect(namespaces.size).toBe(6); // core, movement, positioning, kissing, sex, sex-breastplay
       expect(actions.length).toBe(6); // All actions present
     });
   });
@@ -370,7 +370,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         createTestComposite(2, 'movement:go', 'go north'),
         createTestComposite(3, 'positioning:get_close', 'get close'),
         createTestComposite(4, 'kissing:kiss_cheek', 'kiss cheek'),
-        createTestComposite(5, 'sex:fondle_breasts', 'fondle breasts'),
+        createTestComposite(5, 'sex-breastplay:fondle_breasts', 'fondle breasts'),
         createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
       ];
 
@@ -408,7 +408,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
         createTestComposite(2, 'positioning:get_close', 'get close'),
-        createTestComposite(3, 'sex:fondle_breasts', 'fondle breasts'),
+        createTestComposite(3, 'sex-breastplay:fondle_breasts', 'fondle breasts'),
         createTestComposite(4, 'movement:go', 'go north'),
         createTestComposite(5, 'kissing:kiss_cheek', 'kiss cheek'),
         createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
@@ -439,7 +439,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
             : 'unknown';
         })
       );
-      expect(namespaces.size).toBe(5); // core, movement, positioning, kissing, sex
+      expect(namespaces.size).toBe(6); // core, movement, positioning, kissing, sex, sex-breastplay
 
       // Verify DOM structure with accessibility attributes was created
       const actionGroups = document.querySelectorAll('.action-group');
@@ -458,6 +458,12 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         mockActionCategorizationService.formatNamespaceDisplayName('sex');
       expect(sexDisplayName).toBe('SEX');
 
+      const breastplayDisplayName =
+        mockActionCategorizationService.formatNamespaceDisplayName(
+          'sex-breastplay'
+        );
+      expect(breastplayDisplayName).toBe('SEX-BREASTPLAY');
+
       // Verify the service method was called with correct parameters
       expect(
         mockActionCategorizationService.formatNamespaceDisplayName
@@ -465,6 +471,9 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       expect(
         mockActionCategorizationService.formatNamespaceDisplayName
       ).toHaveBeenCalledWith('sex');
+      expect(
+        mockActionCategorizationService.formatNamespaceDisplayName
+      ).toHaveBeenCalledWith('sex-breastplay');
     });
 
     it('should handle special cases like unknown namespace', () => {
@@ -492,7 +501,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
         createTestComposite(2, 'positioning:get_close', 'get close'),
-        createTestComposite(3, 'sex:fondle_breasts', 'fondle breasts'),
+        createTestComposite(3, 'sex-breastplay:fondle_breasts', 'fondle breasts'),
         createTestComposite(4, 'movement:go', 'go north'),
         createTestComposite(5, 'kissing:kiss_cheek', 'kiss cheek'),
         createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
@@ -519,7 +528,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
         createTestComposite(2, 'positioning:get_close', 'get close'),
-        createTestComposite(3, 'sex:fondle_breasts', 'fondle breasts'),
+        createTestComposite(3, 'sex-breastplay:fondle_breasts', 'fondle breasts'),
         createTestComposite(4, 'movement:go', 'go north'),
         createTestComposite(5, 'kissing:kiss_cheek', 'kiss cheek'),
         createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),

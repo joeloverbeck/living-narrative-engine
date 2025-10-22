@@ -1,19 +1,19 @@
 /**
- * @file Integration tests for sex:fondle_breasts_over_clothes action discovery.
+ * @file Integration tests for sex-breastplay:fondle_breasts_over_clothes action discovery.
  * @description Tests that the action is properly discoverable when actors meet requirements.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import fondleBreastsOverClothesAction from '../../../../data/mods/sex/actions/fondle_breasts_over_clothes.action.json';
+import fondleBreastsOverClothesAction from '../../../../data/mods/sex-breastplay/actions/fondle_breasts_over_clothes.action.json';
 
-describe('sex:fondle_breasts_over_clothes action discovery', () => {
+describe('sex-breastplay:fondle_breasts_over_clothes action discovery', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'sex',
-      'sex:fondle_breasts_over_clothes'
+      'sex-breastplay',
+      'sex-breastplay:fondle_breasts_over_clothes'
     );
   });
 
@@ -27,7 +27,7 @@ describe('sex:fondle_breasts_over_clothes action discovery', () => {
     it('should have correct action structure', () => {
       expect(fondleBreastsOverClothesAction).toBeDefined();
       expect(fondleBreastsOverClothesAction.id).toBe(
-        'sex:fondle_breasts_over_clothes'
+        'sex-breastplay:fondle_breasts_over_clothes'
       );
       expect(fondleBreastsOverClothesAction.name).toBe('Fondle Breasts Over Clothes');
       expect(fondleBreastsOverClothesAction.description).toBe(
@@ -42,7 +42,7 @@ describe('sex:fondle_breasts_over_clothes action discovery', () => {
       expect(fondleBreastsOverClothesAction.targets).toBeDefined();
       expect(fondleBreastsOverClothesAction.targets.primary).toBeDefined();
       expect(fondleBreastsOverClothesAction.targets.primary.scope).toBe(
-        'sex:actors_with_breasts_facing_each_other_covered'
+        'sex-breastplay:actors_with_breasts_facing_each_other_covered'
       );
       expect(fondleBreastsOverClothesAction.targets.secondary).toBeDefined();
       expect(fondleBreastsOverClothesAction.targets.secondary.scope).toBe(
@@ -63,14 +63,14 @@ describe('sex:fondle_breasts_over_clothes action discovery', () => {
       ]);
     });
 
-    it('should have correct visual styling matching other sex actions', () => {
+    it('should have correct visual styling matching other sex-breastplay actions', () => {
       expect(fondleBreastsOverClothesAction.visual).toBeDefined();
-      expect(fondleBreastsOverClothesAction.visual.backgroundColor).toBe('#4a148c');
-      expect(fondleBreastsOverClothesAction.visual.textColor).toBe('#e1bee7');
+      expect(fondleBreastsOverClothesAction.visual.backgroundColor).toBe('#7a1d58');
+      expect(fondleBreastsOverClothesAction.visual.textColor).toBe('#fde6f2');
       expect(fondleBreastsOverClothesAction.visual.hoverBackgroundColor).toBe(
-        '#6a1b9a'
+        '#8d2465'
       );
-      expect(fondleBreastsOverClothesAction.visual.hoverTextColor).toBe('#f3e5f5');
+      expect(fondleBreastsOverClothesAction.visual.hoverTextColor).toBe('#fff2f9');
     });
   });
 
@@ -89,9 +89,9 @@ describe('sex:fondle_breasts_over_clothes action discovery', () => {
     it('should NOT appear when breasts are exposed', () => {
       // EXPECTED BEHAVIOR:
       // If Beth's breasts are exposed (at least one chest socket uncovered):
-      // - sex:actors_with_breasts_facing_each_other_covered scope returns empty set
+      // - sex-breastplay:actors_with_breasts_facing_each_other_covered scope returns empty set
       // - Therefore, fondle_breasts_over_clothes action should NOT be available
-      // - Instead, sex:fondle_breasts action should be available
+      // - Instead, sex-breastplay:fondle_breasts action should be available
       //
       // This enforces the distinction between covered/uncovered breast actions
       expect(true).toBe(true);
@@ -111,7 +111,7 @@ describe('sex:fondle_breasts_over_clothes action discovery', () => {
       // EXPECTED BEHAVIOR:
       // If Beth is facing away from Alice:
       // - positioning:entity-not-in-facing-away condition fails
-      // - sex:actors_with_breasts_facing_each_other_covered scope returns empty set
+      // - sex-breastplay:actors_with_breasts_facing_each_other_covered scope returns empty set
       // - Action should NOT be available
       //
       // This enforces that actors must be facing each other for this intimate action
@@ -133,7 +133,7 @@ describe('sex:fondle_breasts_over_clothes action discovery', () => {
     it('should work with multiple close actors as primary targets', () => {
       // EXPECTED BEHAVIOR:
       // If Alice is close to both Beth and Carol (both with covered breasts):
-      // - sex:actors_with_breasts_facing_each_other_covered returns [Beth, Carol]
+      // - sex-breastplay:actors_with_breasts_facing_each_other_covered returns [Beth, Carol]
       // - For Beth: resolves clothing:target_topmost_torso_upper_clothing in Beth's context
       // - For Carol: resolves clothing:target_topmost_torso_upper_clothing in Carol's context
       // - Multiple action instances are generated (one for each combination)

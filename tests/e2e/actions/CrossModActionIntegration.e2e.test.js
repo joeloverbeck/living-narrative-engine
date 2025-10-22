@@ -110,7 +110,7 @@ describe('Cross-Mod Action Integration E2E', () => {
 
     const sexActions = [
       {
-        actionId: 'sex:fondle_breasts',
+        actionId: 'sex-breastplay:fondle_breasts',
         name: 'Fondle Breasts',
         available: true,
       },
@@ -219,10 +219,10 @@ describe('Cross-Mod Action Integration E2E', () => {
     // Sex actions (only for actors with high intimacy)
     const sexActors = [playerId, 'test-npc-anatomical'];
     for (const actorId of sexActors) {
-      mockValidationResults[`${actorId}:sex:fondle_breasts`] = {
+      mockValidationResults[`${actorId}:sex-breastplay:fondle_breasts`] = {
         success: true,
         validatedAction: {
-          actionId: 'sex:fondle_breasts',
+          actionId: 'sex-breastplay:fondle_breasts',
           actorId: actorId,
           targets: { target: 'test-npc-anatomical' },
         },
@@ -306,7 +306,7 @@ describe('Cross-Mod Action Integration E2E', () => {
 
     // Should succeed based on our mock setup
     expect(sexResult.success).toBe(true);
-    // The parser maps to core:fondle, not sex:fondle_breasts
+    // The parser maps to core:fondle, not sex-breastplay:fondle_breasts
     expect(sexResult.parsedCommand.actionId).toBe('core:fondle');
   });
 

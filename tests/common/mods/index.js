@@ -367,7 +367,7 @@ export const ModTestUtils = {
    * @returns {boolean} True if action likely requires closeness
    */
   requiresCloseness(modId, actionName) {
-    const closenessCategories = ['intimacy', 'sex'];
+    const closenessCategories = ['intimacy', 'sex', 'sex-breastplay'];
     const closenessActions = [
       'kiss_',
       'hug_',

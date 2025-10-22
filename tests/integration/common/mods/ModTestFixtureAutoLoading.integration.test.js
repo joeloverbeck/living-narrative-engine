@@ -86,22 +86,22 @@ describe('ModTestFixture - Auto-Loading Integration', () => {
       );
     });
 
-    it('should auto-load sex:fondle_breasts files', async () => {
+    it('should auto-load sex-breastplay:fondle_breasts files', async () => {
       const fixture = await ModTestFixture.forActionAutoLoad(
-        'sex',
-        'sex:fondle_breasts'
+        'sex-breastplay',
+        'sex-breastplay:fondle_breasts'
       );
 
       expect(fixture).toBeInstanceOf(ModActionTestFixture);
-      expect(fixture.modId).toBe('sex');
-      expect(fixture.actionId).toBe('sex:fondle_breasts');
+      expect(fixture.modId).toBe('sex-breastplay');
+      expect(fixture.actionId).toBe('sex-breastplay:fondle_breasts');
       expect(fixture.ruleFile).toBeDefined();
       expect(fixture.conditionFile).toBeDefined();
 
       // Verify file structure
       expect(fixture.ruleFile.rule_id).toBe('handle_fondle_breasts');
       expect(fixture.conditionFile.id).toBe(
-        'sex:event-is-action-fondle-breasts'
+        'sex-breastplay:event-is-action-fondle-breasts'
       );
     });
 

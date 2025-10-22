@@ -163,7 +163,7 @@ export class ModActionTestBase {
    */
   requiresCloseness() {
     // Default behavior: intimacy and some positioning actions require closeness
-    const closenessCategories = ['intimacy', 'sex'];
+    const closenessCategories = ['intimacy', 'sex', 'sex-breastplay'];
     const closenessActions = ['kiss_', 'hug_', 'fondle_', 'massage_'];
 
     if (closenessCategories.includes(this.modId)) {

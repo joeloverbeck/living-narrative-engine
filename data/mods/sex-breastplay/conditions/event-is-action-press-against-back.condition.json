@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex-breastplay:event-is-action-press-against-back",
+  "description": "Checks if the triggering event is for the 'sex-breastplay:press_against_back' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "sex-breastplay:press_against_back"
+    ]
+  }
+}

@@ -225,7 +225,7 @@ Both test files should leverage existing test utilities:
 
 ## Implementation Notes
 
-1. **Visual Scheme**: Uses the same color scheme as `sex:press_against_back` for visual consistency
+1. **Visual Scheme**: Uses the same color scheme as `sex-breastplay:press_against_back` for visual consistency
 2. **Scope Pattern**: Follows the established pattern of combining positioning checks with anatomy/clothing checks
 3. **Rule Pattern**: Follows the standard rule pattern using the core:logSuccessAndEndTurn macro
 4. **Mature Content**: This content is for mature audiences and follows the established patterns in the sex mod

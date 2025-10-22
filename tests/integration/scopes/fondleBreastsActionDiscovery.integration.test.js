@@ -45,13 +45,13 @@ import path from 'path';
 const breastsScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../data/mods/sex/scopes/actors_with_breasts_facing_each_other.scope'
+    '../../../data/mods/sex-breastplay/scopes/actors_with_breasts_facing_each_other.scope'
   ),
   'utf8'
 );
 
 // Import actual action files
-import fondleBreastsAction from '../../../data/mods/sex/actions/fondle_breasts.action.json';
+import fondleBreastsAction from '../../../data/mods/sex-breastplay/actions/fondle_breasts.action.json';
 
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
 
@@ -155,9 +155,8 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
     scopeRegistry.clear();
 
     scopeRegistry.initialize({
-      'sex:actors_with_breasts_facing_each_other': scopeDefinitions.get(
-        'sex:actors_with_breasts_facing_each_other'
-      ),
+      'sex-breastplay:actors_with_breasts_facing_each_other':
+        scopeDefinitions.get('sex-breastplay:actors_with_breasts_facing_each_other'),
     });
 
     scopeEngine = new ScopeEngine();
@@ -341,7 +340,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const fondleBreastsActions = result.actions.filter(
-        (action) => action.id === 'sex:fondle_breasts'
+        (action) => action.id === 'sex-breastplay:fondle_breasts'
       );
       expect(fondleBreastsActions).toHaveLength(1);
       expect(fondleBreastsActions[0].params.targetId).toBe('target1');
@@ -375,7 +374,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const fondleBreastsActions = result.actions.filter(
-        (action) => action.id === 'sex:fondle_breasts'
+        (action) => action.id === 'sex-breastplay:fondle_breasts'
       );
       expect(fondleBreastsActions).toHaveLength(1);
       expect(fondleBreastsActions[0].params.targetId).toBe('target1');
@@ -393,7 +392,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const fondleBreastsActions = result.actions.filter(
-        (action) => action.id === 'sex:fondle_breasts'
+        (action) => action.id === 'sex-breastplay:fondle_breasts'
       );
       expect(fondleBreastsActions).toHaveLength(1);
     });
@@ -418,7 +417,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const fondleBreastsActions = result.actions.filter(
-        (action) => action.id === 'sex:fondle_breasts'
+        (action) => action.id === 'sex-breastplay:fondle_breasts'
       );
       expect(fondleBreastsActions).toHaveLength(1);
     });
