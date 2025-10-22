@@ -2,15 +2,15 @@
 
 ## Overview
 
-This guide is the canonical reference for writing and maintaining **mod action tests** in the Living Narrative Engine. It focuses on the Phase 1 and Phase 2 testing infrastructure that now powers every modern suite:
+This guide is the canonical reference for writing and maintaining **mod action tests** in the Living Narrative Engine. It unifies the fixture, scenario, discovery, and matcher guidance so authors have a single source of truth when building or modernizing suites. Every contemporary mod test relies on the following building blocks:
 
 - [`ModTestFixture`](../../tests/common/mods/ModTestFixture.js) for fast action execution harnesses.
 - Scenario builders from [`ModEntityScenarios`](../../tests/common/mods/ModEntityBuilder.js) for seated, inventory, and bespoke entity graphs.
 - The validation proxy (`createActionValidationProxy`) for catching schema drift before the engine executes.
-- Discovery diagnostics (`fixture.enableDiagnostics()`, `fixture.discoverWithDiagnostics()`) that surface resolver traces only when needed.
-- Domain matchers from [`tests/common/mods/domainMatchers.js`](../../tests/common/mods/domainMatchers.js) for readable assertions.
+- Discovery tooling (`fixture.enableDiagnostics()`, `fixture.discoverWithDiagnostics()`, and the Action Discovery Bed helpers) for resolver introspection.
+- Domain matchers from [`tests/common/mods/domainMatchers.js`](../../tests/common/mods/domainMatchers.js) and [`tests/common/actionMatchers.js`](../../tests/common/actionMatchers.js) for readable assertions.
 
-Use this document alongside the [Action Discovery Testing Toolkit](./action-discovery-testing-toolkit.md) when a workflow crosses over into discovery-specific diagnostics or tracing.
+The companion [Action Discovery Testing Toolkit](./action-discovery-testing-toolkit.md) now focuses on migration checklists and upgrade strategy while pointing back to the API summaries captured here.
 
 ## Quick Start
 
@@ -18,6 +18,7 @@ Use this document alongside the [Action Discovery Testing Toolkit](./action-disc
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
 import '../../common/mods/domainMatchers.js';
+import '../../common/actionMatchers.js';
 
 describe('positioning:sit_down', () => {
   let fixture;
@@ -40,11 +41,14 @@ describe('positioning:sit_down', () => {
 
     const actor = fixture.entityManager.getEntityInstance(scenario.seatedActors[0].id);
     expect(actor).toHaveComponent('positioning:sitting_on');
+    expect(fixture.events).toHaveActionSuccess();
   });
 });
 ```
 
-## Fixture API Essentials
+## Core Infrastructure
+
+### Fixture API Essentials
 
 The modern fixture factories replace the deprecated `ModTestFixture.createFixture()` and `ModTestHandlerFactory.createHandler()` helpers. Always await the static constructors and let the fixture manage entity creation.
 
@@ -63,8 +67,6 @@ ModTestHandlerFactory.createHandler({ actionId: 'sit_down' });
 new ModEntityBuilder(); // Missing ID and validation
 ```
 
-### Static factory reference
-
 | Method | Description | Key parameters | Returns |
 | --- | --- | --- | --- |
 | `forActionAutoLoad(modId, fullActionId, options?)` | Loads rule and condition JSON automatically. | `modId`, fully-qualified action ID, optional config overrides. | `ModActionTestFixture` |
@@ -72,14 +74,14 @@ new ModEntityBuilder(); // Missing ID and validation
 | `forRule(modId, fullActionId, ruleFile?, conditionFile?)` | Targets resolver rules without executing the whole action. | `modId`, action ID, optional rule/condition JSON. | `ModActionTestFixture` |
 | `forCategory(modId, options?)` | Builds a category-level harness for discovery-style assertions. | `modId`, optional configuration. | `ModCategoryTestFixture` |
 
-### Core instance helpers
+#### Core instance helpers
 
 | Method | Purpose | Highlights |
 | --- | --- | --- |
 | `createStandardActorTarget([actorName, targetName])` | Creates reciprocal actor/target entities with validated components. | Use the returned IDs rather than hard-coded strings. |
 | `createSittingPair(options)` and other scenario builders | Provision seating, inventory, and bespoke setups. | Prefer these helpers before writing custom entity graphs. |
 | `executeAction(actorId, targetId, options?)` | Runs the action and captures emitted events. | Options include `additionalPayload`, `originalInput`, `skipDiscovery`, `skipValidation`, and multi-target IDs such as `secondaryTargetId`. |
-| `assertActionSuccess(message)` / domain matchers | Provides backward-compatible assertions. | Prefer Jest matchers from `domainMatchers` for clearer failures. |
+| `assertActionSuccess(message)` / legacy assertions | Provides backward-compatible assertions. | Prefer Jest matchers from `domainMatchers` for clearer failures. |
 | `assertPerceptibleEvent(eventData)` | Validates perceptible event payloads. | Pair with event matchers when migrating legacy suites. |
 | `clearEvents()` / `cleanup()` | Reset captured events and teardown resources. | Call `cleanup()` in `afterEach` to avoid shared state. |
 
@@ -90,13 +92,79 @@ new ModEntityBuilder(); // Missing ID and validation
 - The fixture handles lifecycle resets—avoid reusing a fixture across tests unless you explicitly call `fixture.reset()`.
 - Cleanup is mandatory: call `fixture.cleanup()` in `afterEach` blocks or shared helpers.
 
-### Core Workflow
+### Action Discovery Harness
 
-1. **Provision a fixture** with `ModTestFixture.forAction(modId, fullActionId, rule?, condition?, options?)`. The factory automatically loads JSON definitions when omitted.
-2. **Create entities** via fixture helpers (`createSittingPair`, `createInventoryLoadout`, `createEntity`) or reset with custom graphs.
-3. **Execute the action** using `await fixture.executeAction(actorId, targetId, { additionalPayload })`, adding toggles like `skipDiscovery`, `skipValidation`, or `secondaryTargetId`/`tertiaryTargetId` only when the action expects them.
-4. **Assert outcomes** with domain matchers or direct entity inspection through `fixture.entityManager`.
-5. **Clean up** using `fixture.cleanup()` to release mocks, events, and diagnostics state.
+The Action Discovery Bed complements the mod fixture when suites need to inspect resolver behavior or migrate legacy discovery suites.
+
+```javascript
+import { createActionDiscoveryBed } from '../../common/actions/actionDiscoveryServiceTestBed.js';
+import '../../common/actionMatchers.js';
+
+describe('my action suite', () => {
+  let testBed;
+
+  beforeEach(() => {
+    testBed = createActionDiscoveryBed();
+  });
+
+  it('discovers the action for nearby actors', async () => {
+    const { actor } = testBed.createActorTargetScenario();
+    const result = await testBed.discoverActionsWithDiagnostics(actor);
+
+    expect(result).toHaveAction('affection:place_hands_on_shoulders');
+  });
+});
+```
+
+| Helper | Purpose | Notes |
+| --- | --- | --- |
+| `createActionDiscoveryBed()` | Provision a validated bed with mocks, logging capture, and diagnostics toggles. | Pair with manual lifecycle management when suites need custom setup. |
+| `describeActionDiscoverySuite(title, suiteFn, overrides?)` | Wrap `describe` to automate bed setup/teardown. | Ideal when modernizing multiple suites. |
+| `createActorWithValidation(actorId, options)` | Build validated actors through `ModEntityBuilder`. | Use to mix custom entities with bed-managed fixtures. |
+| `createActorTargetScenario(options)` | Produce an actor/target pair sharing a location with optional `closeProximity`. | Mirrors fixture scenario helpers. |
+| `establishClosenessWithValidation(actor, target)` | Adds reciprocal `positioning:closeness` components safely. | Avoid manual component wiring. |
+| `discoverActionsWithDiagnostics(actorOrId, options?)` | Run discovery and optionally capture `{ actions, diagnostics }`. | Set `includeDiagnostics` or `traceScopeResolution` only when needed. |
+| `formatDiagnosticSummary(diagnostics)` | Present captured diagnostics for logging or snapshots. | Use when assertions fail to surface detailed traces. |
+| `createDiscoveryServiceWithTracing(options?)` | Instantiate `ActionDiscoveryService` with tracing toggles. | Helpful for targeted debugging. |
+| `getDebugLogs()`/`getInfoLogs()`/`getWarningLogs()`/`getErrorLogs()` | Retrieve captured log messages. | Enables log-based assertions without touching console output. |
+| `createTracedScopeResolver(scopeResolver, traceContext)` | Wrap resolvers to capture per-scope decisions. | Use with `formatScopeEvaluationSummary(traceContext)`. |
+
+#### Modernizing discovery suites
+
+1. **Update imports** – Replace manual `SimpleEntityManager` wiring with `createActionDiscoveryBed()` and register the matchers module.
+2. **Instantiate the bed** – Use `beforeEach` or `describeActionDiscoverySuite()` to avoid shared state.
+3. **Rebuild entities** – Call `createActorTargetScenario()` and `createActorWithValidation()` for validated setup; mix legacy helpers after the bed seeds core entities.
+4. **Establish relationships** – Use `establishClosenessWithValidation()` rather than mutating component maps.
+5. **Run discovery** – `await testBed.discoverActionsWithDiagnostics(actor)`; enable diagnostics only while debugging.
+6. **Assert with matchers** – Swap `.some()` loops for domain matchers such as `toHaveAction` and `toDiscoverActionCount`.
+7. **Log selectively** – Format diagnostics with `formatDiagnosticSummary()` and guard logging so passing runs remain quiet.
+
+### Diagnostics & Logging
+
+- Call `fixture.enableDiagnostics()` only while investigating failures. Clean up with `fixture.disableDiagnostics()` or `fixture.cleanup()`.
+- `fixture.discoverWithDiagnostics(actorId, expectedActionId?)` funnels discovery through the fixture and returns trace summaries.
+- The Action Discovery Bed exposes the same diagnostics payload through `discoverActionsWithDiagnostics()`; format traces with `formatDiagnosticSummary()` or `formatScopeEvaluationSummary()`.
+- Guard diagnostic logging with environment checks (e.g., `if (process.env.DEBUG_DISCOVERY)`) to keep standard runs silent.
+- Use the captured log accessors (`getDebugLogs()`, `getInfoLogs()`, etc.) instead of reading from `console` output.
+
+### Domain Matchers
+
+Import the relevant matcher modules once per suite to unlock expressive assertions.
+
+| Matcher | Module | Best used for |
+| --- | --- | --- |
+| `toHaveActionSuccess(message?)` | `../../common/mods/domainMatchers.js` | Confirm successful action execution events. |
+| `toHaveActionFailure()` | `../../common/mods/domainMatchers.js` | Assert the absence of success events. |
+| `toHaveComponent(componentType)` / `toNotHaveComponent(componentType)` | `../../common/mods/domainMatchers.js` | Verify component presence on entities. |
+| `toHaveComponentData(componentType, expectedData)` | `../../common/mods/domainMatchers.js` | Deep-match component payloads. |
+| `toDispatchEvent(eventType)` | `../../common/mods/domainMatchers.js` | Validate emitted event types. |
+| `toHaveAction(actionId)` | `../../common/actionMatchers.js` | Check that discovery included a specific action. |
+| `toDiscoverActionCount(expectedCount)` | `../../common/actionMatchers.js` | Assert exact discovery counts. |
+| `toHaveActionSuccess(message)` (discovery event form) | `../../common/actionMatchers.js` | Match action success events captured via the bed. |
+| `toHaveComponent(componentType)` (entity matcher variant) | `../../common/actionMatchers.js` | Assert entity components when using the discovery bed. |
+| `toBeAt(locationId)` | `../../common/actionMatchers.js` | Assert entity location relationships. |
+
+Mix matcher usage with targeted entity inspections; for example, call `fixture.entityManager.getEntityInstance(actorId)` to inspect component payloads directly.
 
 ## Best Practices
 
@@ -109,37 +177,23 @@ new ModEntityBuilder(); // Missing ID and validation
 ### Scenario Composition
 
 - Reach for the scenario helpers documented in the [Scenario Helper Catalog](#scenario-helper-catalog) before crafting entities manually. They guarantee component completeness and naming consistency.
-- Use the `createSittingPair`, `createSittingArrangement`, and related helpers to cover seating variations; extend `additionalFurniture` or `seatedActors` overrides to exercise edge cases without rewriting the graph.
-- Inventory flows should lean on `createInventoryLoadout`, `createPutInContainerScenario`, and friends. They expose entity IDs, containers, and held items so assertions stay declarative.
+- Use `createSittingPair`, `createSittingArrangement`, and related helpers to cover seating variations; extend `additionalFurniture` or `seatedActors` overrides to exercise edge cases without rewriting the graph.
+- Inventory flows should lean on `createInventoryLoadout`, `createPutInContainerScenario`, and related helpers. They expose entity IDs, containers, and held items so assertions stay declarative.
 - When custom entities are inevitable, build them with `fixture.createEntity(config)` and reload the environment via `fixture.reset([...scenario.entities, customEntity])` to avoid partial state.
 
 ### Executing Actions Safely
 
-- Always call `await fixture.executeAction(actorId, targetId, options?)`. The optional `options` object supports `additionalPayload`, `originalInput`, `skipDiscovery`, `skipValidation`, and extra identifiers such as `secondaryTargetId` or `tertiaryTargetId`; passing `{ skipValidation: true }` should be restricted to regression investigations.
+- Always call `await fixture.executeAction(actorId, targetId, options?)`. The optional `options` object supports `additionalPayload`, `originalInput`, `skipDiscovery`, `skipValidation`, and extra identifiers such as `secondaryTargetId` or `tertiaryTargetId`; restrict `{ skipValidation: true }` to regression investigations.
 - Validate `actorId` and `targetId` using scenario return values instead of hard-coded IDs—helper outputs are the single source of truth.
 - Chain validation when preparing rules: wrap JSON definitions with `createActionValidationProxy(ruleJson, 'intimacy:kiss_cheek')` before handing them to the fixture. The proxy highlights typos (`required_components` vs `requiredComponents`) and missing namespace prefixes up front.
 
-### Assertions & Matchers
+### Assertions & Anti-patterns
 
-- Import `../../common/mods/domainMatchers.js` once per suite. Expect to call `expect(fixture.events).toHaveActionSuccess(...)`, `expect(entity).toHaveComponent(...)`, and `expect(entity).toHaveComponentData(...)` during most flows.
-- Mix matcher usage with targeted entity inspections; for example, read `fixture.entityManager.getEntityInstance(actorId)` to confirm component payloads after calling `executeAction`.
-- Use `fixture.assertActionSuccess(message)` for legacy suites only when migrating gradually—new suites should standardize on the Jest matchers for clearer failure output.
-
-### Diagnostics on Demand
-
-- Toggle discovery tracing only while diagnosing failures:
-  - `fixture.enableDiagnostics()` wraps the unified scope resolver.
-  - `fixture.discoverWithDiagnostics(actorId, expectedActionId?)` streams summaries to stdout and returns the discovered actions.
-  - Pair the output with the [Action Discovery Testing Toolkit](./action-discovery-testing-toolkit.md#working-with-diagnostics) when deeper scope tracing is required.
-- Disable diagnostics in `afterEach` (or rely on `cleanup`) so subsequent tests remain silent.
-
-### Anti-patterns to Avoid
-
-- ❌ Creating fixtures with deprecated factories (`ModTestFixture.createFixture`, `ModTestHandlerFactory.createHandler`).
-- ❌ Building entities manually without fixture scenario helpers, which leads to missing components and resolver failures.
-- ❌ Hard-coding action IDs without namespaces—always use the `modId:action_id` format for validation proxy compatibility.
-- ❌ Reusing fixtures across tests. Shared state hides ordering bugs; lean on fresh fixtures and scenario helpers instead.
-- ❌ Asserting against raw event arrays without matchers. Prefer `toHaveActionSuccess`/`toHaveActionFailure` to reduce copy-pasted parsing code.
+- Favor matcher-based assertions over manual array parsing or `.some()` checks.
+- Avoid creating fixtures with deprecated factories (`ModTestFixture.createFixture`, `ModTestHandlerFactory.createHandler`).
+- Do not build entities manually without fixture scenario helpers; missing components lead to resolver failures.
+- Never hard-code action IDs without namespaces—always use the `modId:action_id` format for validation proxy compatibility.
+- Do not reuse fixtures across tests without an explicit `fixture.reset()`.
 
 ## Tool Selection Guide
 
@@ -248,13 +302,7 @@ Customization reference:
 - **Full inventories/containers** – Set `fullInventory: true` or `containerFull: true` to exercise capacity failure branches.
 - **Item metadata** – Populate `itemData`, `portableData`, `weightData`, and `components` for precise assertions.
 
-## Performance & Collaboration Tips
-
-- Cache fixtures only within a test when execution is expensive. For repeated assertions, perform setup in `beforeEach` and reuse the same fixture instance across `it` blocks only when the suite resets via `fixture.reset()` explicitly.
-- Use the validation proxy in pre-commit hooks or data-review scripts to catch schema drift before running the full suite.
-- Organize suites with [`tests/common/mods/examples`](../../tests/common/mods/examples) as references—each example demonstrates a recommended combination of fixture, scenario helper, and matcher usage.
-
-## Troubleshooting Appendix
+## Troubleshooting & Diagnostics Hygiene
 
 ### Validation Failures
 
@@ -263,19 +311,25 @@ Customization reference:
 
 ### Discovery & Execution Failures
 
-- **Action missing from discovery** – Enable diagnostics: `const diagnostics = fixture.enableDiagnostics(); diagnostics.discoverWithDiagnostics(actorId, 'mod:action');`. Review scope summaries printed to stdout and consult the [diagnostics section](./action-discovery-testing-toolkit.md#working-with-diagnostics) for interpretation tips.
-- **Empty target scopes** – Scenario helpers guarantee valid scopes. If diagnostics show empty scopes, confirm overrides did not remove required components or that `scenario.furniture` IDs match the executed target.
+- **Action missing from discovery** – Enable diagnostics through the fixture or discovery bed, then review scope summaries. Empty operator/scope traces usually indicate missing components or closeness relationships.
+- **Empty target scopes** – Scenario helpers guarantee valid scopes. If diagnostics show empty scopes, confirm overrides did not remove required components and that target IDs match the executed entity.
 - **Execution throws for unknown entity** – Ensure the entity exists by using scenario return IDs or calling `fixture.reset([entity])` before `executeAction`.
 
 ### Matcher Failures
 
-- **`toHaveActionSuccess` undefined** – Import `../../common/mods/domainMatchers.js` at the suite top or in `jest.setup.js`.
-- **Component mismatch output is noisy** – Pair matchers with targeted logging: `console.log(fixture.entityManager.getEntityInstance(actorId).components)` during debugging, then remove the log after resolution.
+- **Matchers undefined** – Import `../../common/mods/domainMatchers.js` and/or `../../common/actionMatchers.js` at the suite top or in `jest.setup.js`.
+- **Noisy component mismatch output** – Pair matchers with targeted logging during debugging (`console.log(fixture.entityManager.getEntityInstance(actorId).components)`), then remove the log after resolution.
 
 ### Diagnostics Hygiene
 
-- After enabling diagnostics, call `fixture.disableDiagnostics()` or rely on `fixture.cleanup()` to restore the resolver. Lingering wrappers can cause duplicate logging in unrelated tests.
+- Disable diagnostics after use (`fixture.disableDiagnostics()` or `fixture.cleanup()`). Lingering wrappers cause duplicate logging in unrelated tests.
 - When capturing stdout snapshots, wrap diagnostics in conditionals to avoid brittle tests: `if (process.env.DEBUG_DISCOVERY) { fixture.discoverWithDiagnostics(actorId); }`.
+
+## Performance & Collaboration Tips
+
+- Cache fixtures only within a test when execution is expensive. For repeated assertions, perform setup in `beforeEach` and reuse the same fixture instance across `it` blocks only when the suite resets via `fixture.reset()` explicitly.
+- Use the validation proxy in pre-commit hooks or data-review scripts to catch schema drift before running the full suite.
+- Organize suites with [`tests/common/mods/examples`](../../tests/common/mods/examples) as references—each example demonstrates a recommended combination of fixture, scenario helper, and matcher usage.
 
 ## Action Test Checklist
 
@@ -284,7 +338,7 @@ Use this checklist before submitting a mod test update:
 - [ ] Fixture created via `await ModTestFixture.forAction(modId, fullActionId)` (or another explicit factory) inside `beforeEach`.
 - [ ] Entities provisioned with fixture scenario helpers or `createEntity`—no raw object literals sprinkled throughout the test.
 - [ ] Action executed with `await fixture.executeAction(actorId, targetId, options?)` using scenario-provided IDs.
-- [ ] Assertions leverage `domainMatchers` (`toHaveActionSuccess`, `toHaveComponent`, `toHaveComponentData`) or clearly document deviations.
+- [ ] Assertions leverage domain/discovery matchers (`toHaveActionSuccess`, `toHaveComponent`, `toHaveAction`, etc.) or clearly document deviations.
 - [ ] Validation proxy exercised for new or modified rule JSON before running the suite.
 - [ ] Diagnostics enabled only in targeted tests and cleaned up after use.
 - [ ] Checklist items documented in the test description or comments when deviations are intentional.
