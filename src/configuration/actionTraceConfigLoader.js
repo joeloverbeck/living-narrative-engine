@@ -756,17 +756,17 @@ class ActionTraceConfigLoader {
     }
 
     // Check for invalid characters - be lenient with uppercase
-    const lenientAllowedPattern = /^[a-zA-Z0-9_:*]+$/;
+    const lenientAllowedPattern = /^[a-zA-Z0-9_:\-*]+$/;
     if (!lenientAllowedPattern.test(pattern)) {
       result.valid = false;
       result.errors.push(
-        `Pattern contains invalid characters - only alphanumeric, underscore, colon, and asterisk allowed`
+        `Pattern contains invalid characters - only alphanumeric, underscore, hyphen, colon, and asterisk allowed`
       );
       return result;
     }
 
     // Warn about uppercase but don't fail
-    const strictAllowedPattern = /^[a-z0-9_:*]+$/;
+    const strictAllowedPattern = /^[a-z0-9_:\-*]+$/;
     if (!strictAllowedPattern.test(pattern)) {
       result.errors.push(
         'Pattern contains uppercase characters - should be lowercase'
@@ -794,7 +794,7 @@ class ActionTraceConfigLoader {
         return result;
       }
 
-      if (modPart !== '*' && !/^[a-zA-Z][a-zA-Z0-9_]*$/.test(modPart)) {
+      if (modPart !== '*' && !/^[a-zA-Z][a-zA-Z0-9_-]*$/.test(modPart)) {
         result.valid = false;
         result.errors.push(
           `Invalid mod name '${modPart}' - must be alphanumeric with underscores, or '*' for wildcard`
@@ -803,7 +803,7 @@ class ActionTraceConfigLoader {
       }
 
       // Warn about uppercase in mod name but don't fail
-      if (modPart !== '*' && !/^[a-z][a-z0-9_]*$/.test(modPart)) {
+      if (modPart !== '*' && !/^[a-z][a-z0-9_-]*$/.test(modPart)) {
         result.errors.push(`Mod name '${modPart}' should be lowercase`);
         // Don't set valid = false, just warn
       }

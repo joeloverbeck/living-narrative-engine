@@ -288,7 +288,7 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
         const content = JSON.parse(await fs.readFile(filePath, 'utf8'));
 
         expect(typeof content.targets).toBe('string');
-        expect(content.targets).toMatch(/^[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$/);
+        expect(content.targets).toMatch(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/);
       }
     });
   });

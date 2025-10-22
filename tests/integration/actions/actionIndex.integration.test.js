@@ -558,7 +558,7 @@ describe('ActionIndex Integration Tests', () => {
         $id: 'schema://test/action.schema.json',
         type: 'object',
         properties: {
-          id: { type: 'string', pattern: '^[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$' },
+          id: { type: 'string', pattern: '^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$' },
           name: { type: 'string' },
           required_components: {
             type: 'object',

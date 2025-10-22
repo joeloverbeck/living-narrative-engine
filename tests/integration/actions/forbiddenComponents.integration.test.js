@@ -58,7 +58,7 @@ describe('Forbidden Components - Integration', () => {
       type: 'object',
       properties: {
         $schema: { type: 'string' },
-        id: { type: 'string', pattern: '^[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$' },
+        id: { type: 'string', pattern: '^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$' },
         name: { type: 'string' },
         description: { type: 'string' },
         scope: { type: 'string' },
@@ -79,7 +79,7 @@ describe('Forbidden Components - Integration', () => {
               type: 'array',
               items: {
                 type: 'string',
-                pattern: '^[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$',
+                pattern: '^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$',
               },
             },
           },

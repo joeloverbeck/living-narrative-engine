@@ -305,8 +305,8 @@ class ActionTraceConfigValidator {
       }
 
       // Check for invalid characters - allow uppercase as warning
-      const strictAllowedPattern = /^[a-z0-9_:*]+$/;
-      const lenientAllowedPattern = /^[a-zA-Z0-9_:*]+$/;
+      const strictAllowedPattern = /^[a-z0-9_:\-*]+$/;
+      const lenientAllowedPattern = /^[a-zA-Z0-9_:\-*]+$/;
 
       if (!lenientAllowedPattern.test(action)) {
         // Contains truly invalid characters
@@ -344,11 +344,11 @@ class ActionTraceConfigValidator {
 
         // Check mod name format - be lenient with uppercase
         if (modPart !== '*') {
-          if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(modPart)) {
+          if (!/^[a-zA-Z][a-zA-Z0-9_-]*$/.test(modPart)) {
             criticallyInvalidActions.push(action);
             return;
           }
-          if (!/^[a-z][a-z0-9_]*$/.test(modPart)) {
+          if (!/^[a-z][a-z0-9_-]*$/.test(modPart)) {
             warningPatterns.push({
               pattern: action,
               reason: 'Mod name should be lowercase',

@@ -395,7 +395,7 @@ export class MultiTargetEventValidator {
    */
   #isValidEntityId(entityId) {
     // Allow letters, numbers, underscores, and colons (for namespaced IDs)
-    return /^[a-zA-Z0-9_:]+$/.test(entityId);
+    return /^[a-zA-Z0-9_:-]+$/.test(entityId);
   }
 
   /**

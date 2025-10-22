@@ -12,7 +12,7 @@
     },
     "id": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9_]+$",
+      "pattern": "^[a-zA-Z0-9_-]+$",
       "description": "Unique identifier for this formatting configuration"
     },
     "descriptionOrder": {
@@ -46,7 +46,7 @@
       "description": "Order in which descriptor component types appear in descriptions",
       "items": {
         "type": "string",
-        "pattern": "^descriptors:[a-zA-Z0-9_]+$"
+        "pattern": "^descriptors:[a-zA-Z0-9_-]+$"
       },
       "uniqueItems": true
     },
