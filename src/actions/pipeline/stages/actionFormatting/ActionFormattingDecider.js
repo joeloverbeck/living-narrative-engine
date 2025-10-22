@@ -9,7 +9,7 @@
  * @typedef {import('../../../../interfaces/IGameDataRepository.js').ActionDefinition} ActionDefinition
  */
 /**
- * @typedef {import('../../../../tracing/traceContext.js').TraceContext|import('../../../../tracing/structuredTrace.js').StructuredTrace|import('../../../../tracing/actionAwareStructuredTrace.js').default|undefined} TraceLike
+ * @typedef {import('../../../tracing/traceContext.js').TraceContext|import('../../../tracing/structuredTrace.js').StructuredTrace|import('../../../tracing/actionAwareStructuredTrace.js').default|undefined} TraceLike
  */
 /**
  * @typedef {import('./ActionFormattingErrorFactory.js').ActionFormattingErrorFactory} ActionFormattingErrorFactory

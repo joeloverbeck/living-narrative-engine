@@ -447,7 +447,7 @@ export class ActionFormattingCoordinator {
    * @param {ActionDefinition} actionDef - Action definition metadata.
    * @param {ActionTargetContext} targetContext - Target context payload.
    * @param {object} formatterOptions - Formatter configuration options.
-   * @returns {import('../../../../formatters/formatActionTypedefs.js').FormatActionCommandResult} Formatter result payload.
+   * @returns {import('../../../formatters/formatActionTypedefs.js').FormatActionCommandResult} Formatter result payload.
    */
   #formatLegacyAction(actionDef, targetContext, formatterOptions) {
     return this.#commandFormatter.format(
