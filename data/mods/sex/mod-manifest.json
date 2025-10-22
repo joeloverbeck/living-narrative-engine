@@ -31,6 +31,8 @@
       "fondle_breasts_over_clothes.action.json",
       "fondle_penis.action.json",
       "grind_ass_against_penis.action.json",
+      "insert_penis_into_vagina.action.json",
+      "insert_primary_penis_into_your_vagina.action.json",
       "lick_glans.action.json",
       "lick_testicles_sensually.action.json",
       "nuzzle_penis_through_clothing.action.json",
@@ -43,9 +45,6 @@
       "rub_pussy_against_penis_through_clothes.action.json",
       "rub_vagina_over_clothes.action.json",
       "slide_penis_along_labia.action.json",
-      "insert_penis_into_vagina.action.json",
-      "insert_primary_penis_into_your_vagina.action.json",
-      "ride_penis_greedily.action.json",
       "straddling_penis_milking.action.json",
       "suckle_testicle.action.json",
       "tease_asshole_with_glans.action.json"
@@ -56,6 +55,8 @@
       "event-is-action-fondle-breasts.condition.json",
       "event-is-action-fondle-penis.condition.json",
       "event-is-action-grind-ass-against-penis.condition.json",
+      "event-is-action-insert-penis-into-vagina.condition.json",
+      "event-is-action-insert-primary-penis-into-your-vagina.condition.json",
       "event-is-action-lick-glans.condition.json",
       "event-is-action-lick-testicles-sensually.condition.json",
       "event-is-action-nuzzle-penis-through-clothing.condition.json",
@@ -68,12 +69,9 @@
       "event-is-action-rub-pussy-against-penis-through-clothes.condition.json",
       "event-is-action-rub-vagina-over-clothes.condition.json",
       "event-is-action-slide-penis-along-labia.condition.json",
+      "event-is-action-straddling-penis-milking.condition.json",
       "event-is-action-suckle-testicle.condition.json",
-      "event-is-action-tease-asshole-with-glans.condition.json",
-      "event-is-action-insert-penis-into-vagina.condition.json",
-      "event-is-action-insert-primary-penis-into-your-vagina.condition.json",
-      "event-is-action-ride-penis-greedily.condition.json",
-      "event-is-action-straddling-penis-milking.condition.json"
+      "event-is-action-tease-asshole-with-glans.condition.json"
     ],
     "rules": [
       "handle_breathe_teasingly_on_penis.rule.json",
@@ -81,6 +79,8 @@
       "handle_fondle_breasts_over_clothes.rule.json",
       "handle_fondle_penis.rule.json",
       "handle_grind_ass_against_penis.rule.json",
+      "handle_insert_penis_into_vagina.rule.json",
+      "handle_insert_primary_penis_into_your_vagina.rule.json",
       "handle_lick_glans.rule.json",
       "handle_lick_testicles_sensually.rule.json",
       "handle_nuzzle_penis_through_clothing.rule.json",
@@ -93,12 +93,9 @@
       "handle_rub_pussy_against_penis_through_clothes.rule.json",
       "handle_rub_vagina_over_clothes.rule.json",
       "handle_slide_penis_along_labia.rule.json",
+      "handle_straddling_penis_milking.rule.json",
       "handle_suckle_testicle.rule.json",
-      "handle_tease_asshole_with_glans.rule.json",
-      "handle_insert_penis_into_vagina.rule.json",
-      "handle_insert_primary_penis_into_your_vagina.rule.json",
-      "handle_ride_penis_greedily.rule.json",
-      "handle_straddling_penis_milking.rule.json"
+      "handle_tease_asshole_with_glans.rule.json"
     ],
     "scopes": [
       "actor_kneeling_before_target_with_covered_penis.scope",
@@ -114,13 +111,13 @@
       "actors_with_penis_facing_each_other_covered.scope",
       "actors_with_penis_facing_straddler_covered.scope",
       "actors_with_penis_in_intimacy.scope",
-      "actors_with_uncovered_vagina_facing_each_other_or_target_facing_away.scope",
       "actors_with_uncovered_penis_facing_each_other_or_target_facing_away.scope",
+      "actors_with_uncovered_vagina_facing_each_other_or_target_facing_away.scope",
       "actors_with_vagina_facing_each_other_covered.scope"
     ],
     "components": [
-      "fucking_vaginally.component.json",
-      "being_fucked_vaginally.component.json"
+      "being_fucked_vaginally.component.json",
+      "fucking_vaginally.component.json"
     ]
   }
 }
