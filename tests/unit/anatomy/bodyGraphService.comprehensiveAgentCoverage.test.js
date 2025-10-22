@@ -274,6 +274,29 @@ describe('BodyGraphService near-total coverage suite', () => {
         expect(mockQueryCacheInstance.cacheGetAllParts).toHaveBeenCalledWith('actor-1', parts);
       });
 
+      it('logs truncated previews when many parts are returned', () => {
+        const bodyComponent = { body: { root: 'root-blueprint' } };
+        const longResult = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'];
+
+        mockCacheInstance.has.mockReturnValue(false);
+        mockCacheInstance.size.mockReturnValue(3);
+        mockQueryCacheInstance.getCachedGetAllParts.mockReturnValueOnce(undefined);
+        AnatomyGraphAlgorithms.getAllParts.mockReturnValueOnce(longResult);
+
+        const parts = service.getAllParts(bodyComponent);
+
+        expect(parts).toEqual(longResult);
+        const message = logger.debug.mock.calls
+          .map(([msg]) => msg)
+          .find((msg) =>
+            typeof msg === 'string' &&
+            msg.includes('BodyGraphService: AnatomyGraphAlgorithms.getAllParts returned'),
+          );
+        expect(message).toBeDefined();
+        expect(message).toContain('...');
+        expect(mockQueryCacheInstance.cacheGetAllParts).toHaveBeenCalledWith('root-blueprint', longResult);
+      });
+
       it('returns cached results without recomputing', () => {
         const bodyComponent = { root: 'root-direct' };
         mockQueryCacheInstance.getCachedGetAllParts.mockReturnValueOnce(['cached1', 'cached2']);
@@ -332,6 +355,21 @@ describe('BodyGraphService near-total coverage suite', () => {
       expect(
         service.hasPartWithComponentValue({ body: { root: 'root' } }, 'component:x', 'stats.hp', 10),
       ).toEqual({ found: false });
+    });
+
+    it('handles null component data when checking nested values', () => {
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-null']);
+      entityManager.getComponentData.mockReturnValue(null);
+
+      expect(
+        service.hasPartWithComponentValue(
+          { body: { root: 'root' } },
+          'component:x',
+          'stats.hp',
+          10,
+        ),
+      ).toEqual({ found: false });
+      expect(entityManager.getComponentData).toHaveBeenCalledWith('part-null', 'component:x');
     });
 
     describe('getBodyGraph', () => {
@@ -420,6 +458,12 @@ describe('BodyGraphService near-total coverage suite', () => {
       expect(service.hasCache('root-1')).toBe(true);
       expect(service.getChildren('node-1')).toEqual(['child-1']);
       expect(service.getParent('node-1')).toBe('parent-1');
+    });
+
+    it('returns empty arrays for children when cache has no entry', () => {
+      mockCacheInstance.get.mockReturnValue(undefined);
+
+      expect(service.getChildren('missing-node')).toEqual([]);
     });
 
     it('calculates ancestors from cache entries', () => {
