@@ -57,6 +57,18 @@ const makeMockEntity = (id, components = {}, options = {}) => {
 };
 
 /**
+ * Creates a mock entity with actor + following components.
+ *
+ * @param {string} id
+ * @param {object | null} followingData
+ */
+const makeMockActorFollower = (id, followingData) =>
+  makeMockEntity(id, {
+    [FOLLOWING_COMPONENT_ID]: followingData,
+    [ACTOR_COMPONENT_ID]: {},
+  });
+
+/**
  * Creates a mock IEntityManager.
  *
  * @returns {jest.Mocked<import('../../../../src/entities/entityManager.js').default>}
@@ -244,8 +256,8 @@ describe('RebuildLeaderListCacheHandler', () => {
     test('should add a "core:leading" component to a leader with one follower', async () => {
       // Arrange
       const leader = makeMockEntity('leader1');
-      const follower = makeMockEntity('follower1', {
-        [FOLLOWING_COMPONENT_ID]: { leaderId: 'leader1' },
+      const follower = makeMockActorFollower('follower1', {
+        leaderId: 'leader1',
       });
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([follower]);
       mockEntityManager.getEntityInstance.mockReturnValue(leader);
@@ -273,15 +285,15 @@ describe('RebuildLeaderListCacheHandler', () => {
     test('should add a "core:leading" component with a list of multiple followers', async () => {
       // Arrange
       const leader = makeMockEntity('leader1');
-      const follower1 = makeMockEntity('follower1', {
-        [FOLLOWING_COMPONENT_ID]: { leaderId: 'leader1' },
+      const follower1 = makeMockActorFollower('follower1', {
+        leaderId: 'leader1',
       });
-      const follower2 = makeMockEntity('follower2', {
-        [FOLLOWING_COMPONENT_ID]: { leaderId: 'leader1' },
+      const follower2 = makeMockActorFollower('follower2', {
+        leaderId: 'leader1',
       });
       // This follower follows someone else and should be ignored for leader1
-      const otherFollower = makeMockEntity('follower3', {
-        [FOLLOWING_COMPONENT_ID]: { leaderId: 'leader2' },
+      const otherFollower = makeMockActorFollower('follower3', {
+        leaderId: 'leader2',
       });
 
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([
@@ -338,14 +350,14 @@ describe('RebuildLeaderListCacheHandler', () => {
       const leader2 = makeMockEntity('leader2'); // Will have no followers
       const leader3 = makeMockEntity('leader3'); // Will have a follower
 
-      const follower1a = makeMockEntity('follower1a', {
-        [FOLLOWING_COMPONENT_ID]: { leaderId: 'leader1' },
+      const follower1a = makeMockActorFollower('follower1a', {
+        leaderId: 'leader1',
       });
-      const follower1b = makeMockEntity('follower1b', {
-        [FOLLOWING_COMPONENT_ID]: { leaderId: 'leader1' },
+      const follower1b = makeMockActorFollower('follower1b', {
+        leaderId: 'leader1',
       });
-      const follower3 = makeMockEntity('follower3', {
-        [FOLLOWING_COMPONENT_ID]: { leaderId: 'leader3' },
+      const follower3 = makeMockActorFollower('follower3', {
+        leaderId: 'leader3',
       });
 
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([
@@ -422,21 +434,18 @@ describe('RebuildLeaderListCacheHandler', () => {
 
     test('should ignore followers with invalid or missing leaderId data', async () => {
       const leader = makeMockEntity('leader1');
-      const follower1 = makeMockEntity('follower1', {
+      const follower1 = makeMockActorFollower('follower1', { leaderId: 'leader1' });
+      const followerInvalid1 = makeMockActorFollower('invalid1', {
+        leaderId: null,
+      });
+      const followerInvalid2 = makeMockActorFollower('invalid2', {
+        leaderId: '   ',
+      });
+      const followerInvalid3 = makeMockActorFollower('invalid3', {}); // no leaderId key
+      const followerInvalid4 = makeMockActorFollower('invalid4', null); // component data is null
+      const followerNonActor = makeMockEntity('invalid5', {
         [FOLLOWING_COMPONENT_ID]: { leaderId: 'leader1' },
       });
-      const followerInvalid1 = makeMockEntity('invalid1', {
-        [FOLLOWING_COMPONENT_ID]: { leaderId: null },
-      });
-      const followerInvalid2 = makeMockEntity('invalid2', {
-        [FOLLOWING_COMPONENT_ID]: { leaderId: '   ' },
-      });
-      const followerInvalid3 = makeMockEntity('invalid3', {
-        [FOLLOWING_COMPONENT_ID]: {},
-      }); // no leaderId key
-      const followerInvalid4 = makeMockEntity('invalid4', {
-        [FOLLOWING_COMPONENT_ID]: null,
-      }); // component data is null
 
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([
         follower1,
@@ -444,6 +453,7 @@ describe('RebuildLeaderListCacheHandler', () => {
         followerInvalid2,
         followerInvalid3,
         followerInvalid4,
+        followerNonActor,
       ]);
       mockEntityManager.getEntityInstance.mockReturnValue(leader);
 
@@ -460,18 +470,17 @@ describe('RebuildLeaderListCacheHandler', () => {
           followers: ['follower1'],
         }
       );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "[RebuildLeaderListCacheHandler] Skipping non-actor follower 'invalid5'."
+      );
     });
 
     test('should log an error if addComponent fails but continue processing', async () => {
       // Arrange
       const leader1 = makeMockEntity('leader1');
       const leader2 = makeMockEntity('leader2');
-      const follower1 = makeMockEntity('follower1', {
-        [FOLLOWING_COMPONENT_ID]: { leaderId: 'leader1' },
-      });
-      const follower2 = makeMockEntity('follower2', {
-        [FOLLOWING_COMPONENT_ID]: { leaderId: 'leader2' },
-      });
+      const follower1 = makeMockActorFollower('follower1', { leaderId: 'leader1' });
+      const follower2 = makeMockActorFollower('follower2', { leaderId: 'leader2' });
       const error = new Error('EntityManager failed');
 
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([
