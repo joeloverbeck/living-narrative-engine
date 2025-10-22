@@ -1,7 +1,9 @@
 /**
  * @file Shared fixtures for the lick testicles (sitting close) action suites.
- * @description Provides reusable builders and scope overrides for seated testicle teasing
- * scenarios where partners remain seated close together and at least one testicle is uncovered.
+ * @description Provides reusable builders for seated testicle teasing scenarios
+ * where partners remain seated close together and at least one testicle is uncovered.
+ * Includes a scope fallback used by tests when the integration harness cannot
+ * evaluate the uncovered-testicle scope directly.
  */
 
 import { ModEntityBuilder } from '../ModEntityBuilder.js';
@@ -214,7 +216,7 @@ export function buildLickTesticlesSittingCloseScenario(options = {}) {
 }
 
 /**
- * @description Installs a scope resolver override for seated uncovered testicle discovery.
+ * @description Installs a scope resolver fallback for uncovered testicle discovery.
  * @param {import('../ModTestFixture.js').ModTestFixture} testFixture - Active mod test fixture.
  * @returns {Function} Cleanup function restoring the original resolver.
  */
@@ -223,64 +225,71 @@ export function installSittingCloseUncoveredTesticleScopeOverride(testFixture) {
   const originalResolveSync = resolver.resolveSync.bind(resolver);
 
   resolver.resolveSync = (scopeName, context) => {
-    if (scopeName === 'sex-core:actors_sitting_close_with_uncovered_testicle') {
-      const actorId = context?.actor?.id;
+    const baseResult = originalResolveSync(scopeName, context);
 
-      if (!actorId) {
-        return { success: true, value: new Set() };
-      }
-
-      const actor = testFixture.entityManager.getEntityInstance(actorId);
-      const actorSitting = actor?.components?.['positioning:sitting_on'];
-      const closenessPartners = actor?.components?.['positioning:closeness']?.partners;
-
-      if (!actorSitting || !Array.isArray(closenessPartners) || closenessPartners.length === 0) {
-        return { success: true, value: new Set() };
-      }
-
-      const validPartners = closenessPartners.filter((partnerId) => {
-        const partner = testFixture.entityManager.getEntityInstance(partnerId);
-
-        if (!partner) {
-          return false;
-        }
-
-        const partnerSitting = partner.components?.['positioning:sitting_on'];
-        const partnerCloseness = partner.components?.['positioning:closeness']?.partners || [];
-
-        if (!partnerSitting || !partnerCloseness.includes(actorId)) {
-          return false;
-        }
-
-        const hasTesticle = testFixture.testEnv.jsonLogic.evaluate(
-          { hasPartOfType: ['target', 'testicle'] },
-          { target: partner }
-        );
-
-        if (!hasTesticle) {
-          return false;
-        }
-
-        const leftCovered = testFixture.testEnv.jsonLogic.evaluate(
-          { isSocketCovered: ['target', 'left_testicle'] },
-          { target: partner }
-        );
-
-        const rightCovered = testFixture.testEnv.jsonLogic.evaluate(
-          { isSocketCovered: ['target', 'right_testicle'] },
-          { target: partner }
-        );
-
-        return !(leftCovered && rightCovered);
-      });
-
-      return { success: true, value: new Set(validPartners) };
+    if (scopeName !== 'sex-core:actors_sitting_close_with_uncovered_testicle') {
+      return baseResult;
     }
 
-    return originalResolveSync(scopeName, context);
+    if (baseResult?.success && baseResult.value instanceof Set && baseResult.value.size > 0) {
+      return baseResult;
+    }
+
+    const actorId = context?.actor?.id;
+
+    if (!actorId) {
+      return { success: true, value: new Set() };
+    }
+
+    const actor = testFixture.entityManager.getEntityInstance(actorId);
+    const actorSitting = actor?.components?.['positioning:sitting_on'];
+    const closenessPartners = actor?.components?.['positioning:closeness']?.partners;
+
+    if (!actorSitting || !Array.isArray(closenessPartners) || closenessPartners.length === 0) {
+      return { success: true, value: new Set() };
+    }
+
+    const validPartners = closenessPartners.filter((partnerId) => {
+      const partner = testFixture.entityManager.getEntityInstance(partnerId);
+
+      if (!partner) {
+        return false;
+      }
+
+      const partnerSitting = partner.components?.['positioning:sitting_on'];
+      const partnerCloseness = partner.components?.['positioning:closeness']?.partners || [];
+
+      if (!partnerSitting || !partnerCloseness.includes(actorId)) {
+        return false;
+      }
+
+      const hasTesticle = testFixture.testEnv.jsonLogic.evaluate(
+        { hasPartOfType: ['target', 'testicle'] },
+        { target: partner }
+      );
+
+      if (!hasTesticle) {
+        return false;
+      }
+
+      const leftCovered = testFixture.testEnv.jsonLogic.evaluate(
+        { isSocketCovered: ['target', 'left_testicle'] },
+        { target: partner }
+      );
+
+      const rightCovered = testFixture.testEnv.jsonLogic.evaluate(
+        { isSocketCovered: ['target', 'right_testicle'] },
+        { target: partner }
+      );
+
+      return !(leftCovered && rightCovered);
+    });
+
+    return { success: true, value: new Set(validPartners) };
   };
 
   return () => {
     resolver.resolveSync = originalResolveSync;
   };
 }
+
