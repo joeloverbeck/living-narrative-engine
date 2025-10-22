@@ -30,6 +30,7 @@
               "result_variable": "followersToMove",
               "filters": [
                 { "by_location": "{event.payload.previousLocationId}" },
+                { "with_component": "core:actor" },
                 {
                   "with_component_data": {
                     "component_type": "companionship:following",
