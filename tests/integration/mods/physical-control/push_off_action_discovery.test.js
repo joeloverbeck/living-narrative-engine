@@ -1,21 +1,21 @@
 /**
- * @file Integration tests for violence:push_off action discovery.
+ * @file Integration tests for physical-control:push_off action discovery.
  * @description Ensures the push off action is only discoverable when proximity requirements are met.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
-import pushOffAction from '../../../../data/mods/violence/actions/push_off.action.json';
+import pushOffAction from '../../../../data/mods/physical-control/actions/push_off.action.json';
 
-const ACTION_ID = 'violence:push_off';
+const ACTION_ID = 'physical-control:push_off';
 
-describe('violence:push_off action discovery', () => {
+describe('physical-control:push_off action discovery', () => {
   let testFixture;
   let configureActionDiscovery;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('violence', ACTION_ID);
+    testFixture = await ModTestFixture.forAction('physical-control', ACTION_ID);
 
     configureActionDiscovery = () => {
       const { testEnv } = testFixture;
@@ -93,7 +93,7 @@ describe('violence:push_off action discovery', () => {
   });
 
   describe('Action structure validation', () => {
-    it('matches the expected violence action schema', () => {
+    it('matches the expected physical-control action schema', () => {
       expect(pushOffAction).toBeDefined();
       expect(pushOffAction.id).toBe(ACTION_ID);
       expect(pushOffAction.template).toBe('push {target} off you');
@@ -102,7 +102,7 @@ describe('violence:push_off action discovery', () => {
       );
     });
 
-    it('requires actor closeness and uses the violence color palette', () => {
+    it('requires actor closeness and uses the physical-control color palette', () => {
       expect(pushOffAction.required_components.actor).toEqual([
         'positioning:closeness',
       ]);
@@ -110,10 +110,10 @@ describe('violence:push_off action discovery', () => {
         'positioning:straddling_waist',
       ]);
       expect(pushOffAction.visual).toEqual({
-        backgroundColor: '#8b0000',
-        textColor: '#ffffff',
-        hoverBackgroundColor: '#b71c1c',
-        hoverTextColor: '#ffebee',
+        backgroundColor: '#2f2f2f',
+        textColor: '#f8f9fa',
+        hoverBackgroundColor: '#3f3d56',
+        hoverTextColor: '#f8f9ff',
       });
     });
   });

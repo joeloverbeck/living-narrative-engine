@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "violence:push_off",
+  "id": "physical-control:push_off",
   "name": "Push Off",
   "description": "Push someone off you, breaking closeness forcefully",
   "targets": "positioning:close_actors_facing_each_other_or_behind_target",
@@ -12,9 +12,9 @@
   },
   "template": "push {target} off you",
   "visual": {
-    "backgroundColor": "#8b0000",
-    "textColor": "#ffffff",
-    "hoverBackgroundColor": "#b71c1c",
-    "hoverTextColor": "#ffebee"
+    "backgroundColor": "#2f2f2f",
+    "textColor": "#f8f9fa",
+    "hoverBackgroundColor": "#3f3d56",
+    "hoverTextColor": "#f8f9ff"
   }
 }

@@ -39,6 +39,7 @@ This specification provides a curated collection of pre-validated color combinat
 | Sex-Vaginal-Penetration  | Crimson Embrace    | 12.5    | `#6c0f36`        | Active   |
 | Sex-Anal-Penetration     | Obsidian Teal      | 12.6    | `#053b3f`        | Active   |
 | Violence                 | Dark Crimson       | 2.2     | `#8b0000`        | Active   |
+| Physical-Control         | Ironclad Slate     | 11.2    | `#2f2f2f`        | Active   |
 
 ### Available Color Combinations
 
@@ -52,7 +53,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **High Contrast**: Pure Black & White (8.1), White & Black (8.2), Yellow on Black (8.3)
 - **Additional Versatile**: Journey Cobalt (9.1), Pathfinder Slate (9.2)
 - **Professional/Modern**: Indigo Professional (10.1), Cool Grey Modern (10.3)
-- **Expansion Set (Section 11)**: Ironclad Slate (11.2), Velvet Twilight (11.3), Starlight Navy (11.4), Evergreen Shadow (11.5), Molten Copper (11.6), Obsidian Frost (11.7), Arctic Steel (11.8)
+- **Expansion Set (Section 11)**: Ironclad Slate (11.2) — used by Physical-Control, Velvet Twilight (11.3), Starlight Navy (11.4), Evergreen Shadow (11.5), Molten Copper (11.6), Obsidian Frost (11.7), Arctic Steel (11.8)
 
 **Recommendation**: When creating new mods, select from the available combinations above to maintain visual consistency and avoid conflicts.
 
@@ -588,7 +589,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 9.93:1 🌟 AAA
 - **Use Cases**: Crafting menus, defensive stances, engineering tools
 - **Theme**: Industrial precision, fortified neutrality
-- 🟢 **AVAILABLE**
+- ✅ **USED BY**: Physical-Control mod (physical restraint actions)
 
 #### 11.3 Velvet Twilight
 

@@ -17,16 +17,16 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
-import pushOffRule from '../../../../data/mods/violence/rules/handle_push_off.rule.json';
-import eventIsActionPushOff from '../../../../data/mods/violence/conditions/event-is-action-push-off.condition.json';
+import pushOffRule from '../../../../data/mods/physical-control/rules/handle_push_off.rule.json';
+import eventIsActionPushOff from '../../../../data/mods/physical-control/conditions/event-is-action-push-off.condition.json';
 
 describe('Push Off Closeness Bug Reproduction', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'violence',
-      'violence:push_off',
+      'physical-control',
+      'physical-control:push_off',
       pushOffRule,
       eventIsActionPushOff
     );

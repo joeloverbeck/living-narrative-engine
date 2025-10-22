@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for violence:push_onto_lying_furniture action execution.
+ * @file Integration tests for physical-control:push_onto_lying_furniture action execution.
  * @description Verifies that the rule pins the primary target onto furniture, locks movement, and logs the correct narration.
  */
 
@@ -10,7 +10,7 @@ import {
   ModEntityScenarios,
 } from '../../../common/mods/ModEntityBuilder.js';
 
-const ACTION_ID = 'violence:push_onto_lying_furniture';
+const ACTION_ID = 'physical-control:push_onto_lying_furniture';
 const ACTOR_ID = 'test:actor';
 const TARGET_ID = 'test:target';
 const FURNITURE_ID = 'test:furniture';
@@ -73,11 +73,11 @@ function createEntities() {
   return [room, actor, target, furniture];
 }
 
-describe('Violence Mod: push_onto_lying_furniture action', () => {
+describe('Physical Control Mod: push_onto_lying_furniture action', () => {
   let testFixture;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('violence', ACTION_ID);
+    testFixture = await ModTestFixture.forAction('physical-control', ACTION_ID);
   });
 
   afterEach(() => {

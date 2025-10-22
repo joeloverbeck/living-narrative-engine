@@ -25,7 +25,7 @@ describe('BREAK_CLOSENESS_WITH_TARGET schema regression test', () => {
       'data/schemas/operations/breakClosenessWithTarget.schema.json'
     );
     const rulePath = resolveFromRoot(
-      'data/mods/violence/rules/handle_push_off.rule.json'
+      'data/mods/physical-control/rules/handle_push_off.rule.json'
     );
 
     expect(fs.existsSync(operationSchemaPath)).toBe(true);
@@ -80,7 +80,7 @@ describe('BREAK_CLOSENESS_WITH_TARGET schema regression test', () => {
 
   it('should pass rule pre-validation for BREAK_CLOSENESS_WITH_TARGET usage', () => {
     const rulePath = resolveFromRoot(
-      'data/mods/violence/rules/handle_push_off.rule.json'
+      'data/mods/physical-control/rules/handle_push_off.rule.json'
     );
     const rule = JSON.parse(fs.readFileSync(rulePath, 'utf8'));
 

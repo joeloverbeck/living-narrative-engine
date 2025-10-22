@@ -1,13 +1,13 @@
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "violence:event-is-action-force-to-knees",
+  "id": "physical-control:event-is-action-force-to-knees",
   "description": "True when the event is an attempt to execute the force_to_knees action",
   "logic": {
     "==": [
       {
         "var": "event.payload.actionId"
       },
-      "violence:force_to_knees"
+      "physical-control:force_to_knees"
     ]
   }
 }

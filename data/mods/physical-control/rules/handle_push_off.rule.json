@@ -1,10 +1,10 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_push_off",
-  "comment": "Handles the 'violence:push_off' action. Removes closeness between entities, dispatches descriptive text, and ends the turn.",
+  "comment": "Handles the 'physical-control:push_off' action. Removes closeness between entities, dispatches descriptive text, and ends the turn.",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "violence:event-is-action-push-off"
+    "condition_ref": "physical-control:event-is-action-push-off"
   },
   "actions": [
     {
