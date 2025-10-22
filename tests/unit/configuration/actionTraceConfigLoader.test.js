@@ -1164,7 +1164,7 @@ describe('ActionTraceConfigLoader', () => {
             tracedActions: [
               'valid:action',
               'invalid@pattern', // Contains @ which is invalid
-              'pattern-with-dash', // Contains dash which is invalid
+              'pattern-with-dash', // Hyphen is now valid and should not warn
               'pattern$with$dollar', // Contains $ which is invalid
               '', // Empty string
               null, // Invalid type
@@ -1179,16 +1179,24 @@ describe('ActionTraceConfigLoader', () => {
 
         await loaderWithMockLogger.loadConfig();
 
-        // Should warn about each invalid pattern
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('invalid@pattern')
+        const warnMessages = mockLogger.warn.mock.calls.map(([message]) => message);
+
+        expect(mockLogger.warn).toHaveBeenCalledTimes(4);
+        expect(warnMessages).toEqual(
+          expect.arrayContaining([
+            expect.stringContaining('invalid@pattern'),
+            expect.stringContaining('pattern$with$dollar'),
+            expect.stringContaining('Pattern must be a non-empty string'),
+          ])
         );
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('pattern-with-dash')
-        );
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('pattern$with$dollar')
-        );
+        expect(
+          warnMessages.filter((msg) =>
+            msg.includes('Pattern must be a non-empty string')
+          )
+        ).toHaveLength(2);
+        expect(
+          warnMessages.some((msg) => msg.includes('pattern-with-dash'))
+        ).toBe(false);
       });
 
       it('should validate mod name patterns with edge cases', async () => {
