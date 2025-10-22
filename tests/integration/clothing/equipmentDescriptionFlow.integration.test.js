@@ -15,6 +15,7 @@ describe('Equipment Description Flow Integration', () => {
 
     mockEntityManager = {
       getEntityInstance: jest.fn(),
+      getComponentData: jest.fn(),
     };
 
     mockDescriptorFormatter = {
@@ -42,6 +43,17 @@ describe('Equipment Description Flow Integration', () => {
       descriptorFormatter: mockDescriptorFormatter,
       clothingManagementService: mockClothingManagementService,
       anatomyFormattingService: mockAnatomyFormattingService,
+    });
+
+    mockEntityManager.getComponentData.mockReturnValue({
+      slotMappings: {
+        torso_upper: {
+          coveredSockets: ['upper_torso', 'breast_left', 'breast_right'],
+        },
+        torso_lower: {
+          coveredSockets: ['genitals'],
+        },
+      },
     });
   });
 
@@ -146,6 +158,10 @@ describe('Equipment Description Flow Integration', () => {
 
       // Verify that all entities were retrieved
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledTimes(4);
+      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+        characterId,
+        'clothing:slot_metadata'
+      );
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
         'blazer-id'
       );
@@ -235,11 +251,15 @@ describe('Equipment Description Flow Integration', () => {
 
       // Assert
       expect(result).toBe(
-        'Wearing: blue cotton shirt and white canvas sneakers.'
+        'Wearing: blue cotton shirt and white canvas sneakers. Genitals are fully exposed.'
       );
 
       // Verify that both entity formats were handled
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledTimes(2);
+      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+        characterId,
+        'clothing:slot_metadata'
+      );
 
       // Verify new entity format was accessed properly
       expect(shoesEntity.getComponentData).toHaveBeenCalledWith('core:name');
