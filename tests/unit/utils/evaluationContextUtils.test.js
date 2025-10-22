@@ -5,6 +5,12 @@ import {
 } from '../../../src/utils/evaluationContextUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
+import * as safeDispatchErrorUtils from '../../../src/utils/safeDispatchErrorUtils.js';
+
+const safeDispatchSpy = jest.spyOn(
+  safeDispatchErrorUtils,
+  'safeDispatchError'
+);
 
 const makeLogger = () => ({
   info: jest.fn(),
@@ -16,6 +22,18 @@ const makeLogger = () => ({
 const makeDispatcher = () => ({ dispatch: jest.fn() });
 
 describe('ensureEvaluationContext', () => {
+  const messageMatcher =
+    /ensureEvaluationContext: executionContext\.evaluationContext\.context is missing or invalid\./;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    safeDispatchSpy.mockClear();
+  });
+
+  afterAll(() => {
+    safeDispatchSpy.mockRestore();
+  });
+
   test('returns context when present', () => {
     const ctx = { evaluationContext: { context: { foo: 1 } } };
     const dispatcher = makeDispatcher();
@@ -43,6 +61,29 @@ describe('ensureEvaluationContext', () => {
         ),
       })
     );
+  });
+
+  test('logs an error when dispatcher is not provided', () => {
+    const ctx = { evaluationContext: {} };
+    const logger = makeLogger();
+
+    const result = ensureEvaluationContext(ctx, null, logger);
+
+    expect(result).toBeNull();
+    expect(logger.error).toHaveBeenCalledWith(expect.stringMatching(messageMatcher));
+    expect(safeDispatchSpy).not.toHaveBeenCalled();
+  });
+
+  test('logs an error when dispatcher lacks dispatch function', () => {
+    const ctx = { evaluationContext: {} };
+    const dispatcher = {};
+    const logger = makeLogger();
+
+    const result = ensureEvaluationContext(ctx, dispatcher, logger);
+
+    expect(result).toBeNull();
+    expect(logger.error).toHaveBeenCalledWith(expect.stringMatching(messageMatcher));
+    expect(safeDispatchSpy).not.toHaveBeenCalled();
   });
 });
 
