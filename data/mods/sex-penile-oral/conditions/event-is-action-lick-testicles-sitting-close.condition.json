@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex-penile-oral:event-is-action-lick-testicles-sitting-close",
+  "description": "Checks if the triggering event is for the 'sex-penile-oral:lick_testicles_sitting_close' action.",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "sex-penile-oral:lick_testicles_sitting_close"
+    ]
+  }
+}
