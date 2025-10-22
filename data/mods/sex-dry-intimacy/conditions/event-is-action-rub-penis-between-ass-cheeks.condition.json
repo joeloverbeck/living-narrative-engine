@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex-dry-intimacy:event-is-action-rub-penis-between-ass-cheeks",
+  "description": "Checks if the triggering event is for the 'sex-dry-intimacy:rub_penis_between_ass_cheeks' action.",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "sex-dry-intimacy:rub_penis_between_ass_cheeks"
+    ]
+  }
+}

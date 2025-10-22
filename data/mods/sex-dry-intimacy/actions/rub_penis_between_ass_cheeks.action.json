@@ -1,0 +1,36 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-dry-intimacy:rub_penis_between_ass_cheeks",
+  "name": "Rub Penis Between Ass Cheeks",
+  "description": "Rub your penis between the target's exposed ass cheeks.",
+  "targets": {
+    "primary": {
+      "scope": "sex-dry-intimacy:actors_with_exposed_ass_facing_away",
+      "placeholder": "primary",
+      "description": "Person to rub against from behind"
+    }
+  },
+  "required_components": {
+    "actor": [
+      "positioning:closeness"
+    ]
+  },
+  "template": "rub your penis between {primary}'s ass cheeks",
+  "prerequisites": [
+    {
+      "logic": {
+        "hasPartOfType": [
+          "actor",
+          "penis"
+        ]
+      },
+      "failure_message": "You need a penis to perform this action."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#4a2741",
+    "textColor": "#fce8f5",
+    "hoverBackgroundColor": "#5c2f51",
+    "hoverTextColor": "#ffffff"
+  }
+}

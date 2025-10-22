@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex-dry-intimacy:event-is-action-grind-ass-against-penis",
+  "description": "Checks if the triggering event is for the 'sex-dry-intimacy:grind_ass_against_penis' action.",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "sex-dry-intimacy:grind_ass_against_penis"
+    ]
+  }
+}

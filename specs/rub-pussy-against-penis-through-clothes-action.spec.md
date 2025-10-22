@@ -28,14 +28,14 @@ Implement a sexual positioning action that allows a female actor who is straddli
 
 This action introduces:
 
-1. **Action**: `sex:rub_pussy_against_penis_through_clothes` - Multi-target action with primary (actor with penis) and secondary (clothing item)
+1. **Action**: `sex-dry-intimacy:rub_pussy_against_penis_through_clothes` - Multi-target action with primary (actor with penis) and secondary (clothing item)
 2. **Rule**: `handle_rub_pussy_against_penis_through_clothes` - Processes the action and generates descriptive text
-3. **New Scope**: `sex:actors_with_penis_facing_straddler_covered` - Filters for valid targets
-4. **Condition**: `sex:event-is-action-rub-pussy-against-penis-through-clothes` - Action identification
+3. **New Scope**: `sex-dry-intimacy:actors_with_penis_facing_straddler_covered` - Filters for valid targets
+4. **Condition**: `sex-dry-intimacy:event-is-action-rub-pussy-against-penis-through-clothes` - Action identification
 
 ### Design Principles
 
-Following existing sex mod patterns:
+Following existing sex-dry-intimacy module patterns:
 
 - **Multi-target structure** - Similar to `rub_penis_over_clothes` with primary/secondary targets
 - **Clothing integration** - Secondary target resolves to topmost clothing item
@@ -62,19 +62,19 @@ This action requires a specific positioning context:
 
 **Purpose:** Allow female actor to rub against target's covered penis while straddling.
 
-**Location:** `data/mods/sex/actions/rub_pussy_against_penis_through_clothes.action.json`
+**Location:** `data/mods/sex-dry-intimacy/actions/rub_pussy_against_penis_through_clothes.action.json`
 
 **Schema:**
 
 ```json
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "sex:rub_pussy_against_penis_through_clothes",
+  "id": "sex-dry-intimacy:rub_pussy_against_penis_through_clothes",
   "name": "Rub Pussy Against Penis Through Clothes",
   "description": "Rub your pussy sensually against the target's penis through their clothing while straddling them.",
   "targets": {
     "primary": {
-      "scope": "sex:actors_with_penis_facing_straddler_covered",
+      "scope": "sex-dry-intimacy:actors_with_penis_facing_straddler_covered",
       "placeholder": "primary",
       "description": "Person with clothed penis to rub against"
     },
@@ -91,10 +91,10 @@ This action requires a specific positioning context:
   "template": "rub your pussy sensually against {primary}'s penis through the {secondary}",
   "prerequisites": [],
   "visual": {
-    "backgroundColor": "#4a148c",
-    "textColor": "#e1bee7",
-    "hoverBackgroundColor": "#6a1b9a",
-    "hoverTextColor": "#f3e5f5"
+    "backgroundColor": "#4a2741",
+    "textColor": "#fce8f5",
+    "hoverBackgroundColor": "#5c2f51",
+    "hoverTextColor": "#ffffff"
   }
 }
 ```
@@ -108,7 +108,7 @@ This action requires a specific positioning context:
 - **No prerequisites**: Assumes positioning prerequisites already satisfied by straddling actions
 - **Scope filters**: Primary scope handles all validation (penis, coverage, sitting, orientation)
 - **Secondary contextFrom**: Clothing resolution happens in primary's context
-- **Visual styling**: Matches other sex mod actions (purple theme)
+- **Visual styling**: Matches other sex-dry-intimacy module actions (purple theme)
 
 ---
 
@@ -118,7 +118,7 @@ This action requires a specific positioning context:
 
 **Purpose:** Handles action execution, generates descriptive text, ends turn.
 
-**Location:** `data/mods/sex/rules/handle_rub_pussy_against_penis_through_clothes.rule.json`
+**Location:** `data/mods/sex-dry-intimacy/rules/handle_rub_pussy_against_penis_through_clothes.rule.json`
 
 **Implementation:**
 
@@ -126,10 +126,10 @@ This action requires a specific positioning context:
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_rub_pussy_against_penis_through_clothes",
-  "comment": "Handles the 'sex:rub_pussy_against_penis_through_clothes' action. Dispatches descriptive text about rubbing pussy against penis through clothes and ends the turn.",
+  "comment": "Handles the 'sex-dry-intimacy:rub_pussy_against_penis_through_clothes' action. Dispatches descriptive text about rubbing pussy against penis through clothes and ends the turn.",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "sex:event-is-action-rub-pussy-against-penis-through-clothes"
+    "condition_ref": "sex-dry-intimacy:event-is-action-rub-pussy-against-penis-through-clothes"
   },
   "actions": [
     {
@@ -216,12 +216,12 @@ This action requires a specific positioning context:
 3. Are NOT facing away from straddler
 4. Are currently sitting (have `sitting_on` component)
 
-**Location:** `data/mods/sex/scopes/actors_with_penis_facing_straddler_covered.scope`
+**Location:** `data/mods/sex-dry-intimacy/scopes/actors_with_penis_facing_straddler_covered.scope`
 
 **Query:**
 
 ```
-sex:actors_with_penis_facing_straddler_covered := actor.components.positioning:closeness.partners[][{
+sex-dry-intimacy:actors_with_penis_facing_straddler_covered := actor.components.positioning:closeness.partners[][{
   "and": [
     {"hasPartOfType": [".", "penis"]},
     {"condition_ref": "positioning:entity-not-in-facing-away"},
@@ -246,7 +246,7 @@ sex:actors_with_penis_facing_straddler_covered := actor.components.positioning:c
 
 **Why New Scope Needed:**
 
-Existing scope `sex:actors_with_penis_facing_each_other_covered` doesn't validate sitting status. This action specifically requires the target to be sitting (prerequisite for straddling). Creating a specialized scope keeps validation in the appropriate layer.
+Existing scope `sex-dry-intimacy:actors_with_penis_facing_each_other_covered` doesn't validate sitting status. This action specifically requires the target to be sitting (prerequisite for straddling). Creating a specialized scope keeps validation in the appropriate layer.
 
 ### Reused Scope: `target_topmost_torso_lower_clothing_no_accessories`
 
@@ -271,19 +271,19 @@ Existing scope `sex:actors_with_penis_facing_each_other_covered` doesn't validat
 
 **Purpose:** Identifies when the event is attempting this specific action.
 
-**Location:** `data/mods/sex/conditions/event-is-action-rub-pussy-against-penis-through-clothes.condition.json`
+**Location:** `data/mods/sex-dry-intimacy/conditions/event-is-action-rub-pussy-against-penis-through-clothes.condition.json`
 
 **Schema:**
 
 ```json
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "sex:event-is-action-rub-pussy-against-penis-through-clothes",
-  "description": "Checks if the triggering event is for the 'sex:rub_pussy_against_penis_through_clothes' action.",
+  "id": "sex-dry-intimacy:event-is-action-rub-pussy-against-penis-through-clothes",
+  "description": "Checks if the triggering event is for the 'sex-dry-intimacy:rub_pussy_against_penis_through_clothes' action.",
   "logic": {
     "==": [
       { "var": "event.payload.actionId" },
-      "sex:rub_pussy_against_penis_through_clothes"
+      "sex-dry-intimacy:rub_pussy_against_penis_through_clothes"
     ]
   }
 }
@@ -361,7 +361,7 @@ Clothing Entity (Pants/Shorts/etc):
 ```
 1. Action Discovery Phase:
    ├─ Check actor has required_components (closeness, straddling_waist)
-   ├─ Resolve primary scope: sex:actors_with_penis_facing_straddler_covered
+   ├─ Resolve primary scope: sex-dry-intimacy:actors_with_penis_facing_straddler_covered
    │  ├─ Filter actor.components.positioning:closeness.partners
    │  ├─ Check hasPartOfType(penis)
    │  ├─ Check condition_ref(entity-not-in-facing-away)
@@ -469,15 +469,15 @@ All tests follow the **Test Module Pattern** as documented in `docs/testing/mod-
 ```javascript
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import rubPussyAgainstPenisAction from '../../../../data/mods/sex/actions/rub_pussy_against_penis_through_clothes.action.json';
+import rubPussyAgainstPenisAction from '../../../../data/mods/sex-dry-intimacy/actions/rub_pussy_against_penis_through_clothes.action.json';
 
-describe('sex:rub_pussy_against_penis_through_clothes action discovery', () => {
+describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discovery', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
       'sex',
-      'sex:rub_pussy_against_penis_through_clothes'
+      'sex-dry-intimacy:rub_pussy_against_penis_through_clothes'
     );
   });
 
@@ -503,11 +503,11 @@ describe('sex:rub_pussy_against_penis_through_clothes action discovery', () => {
    - ✅ Should have correct action ID
    - ✅ Should have correct action name and description
    - ✅ Should use multi-target structure with primary and secondary
-   - ✅ Should have correct primary scope (`sex:actors_with_penis_facing_straddler_covered`)
+   - ✅ Should have correct primary scope (`sex-dry-intimacy:actors_with_penis_facing_straddler_covered`)
    - ✅ Should have correct secondary scope (`clothing:target_topmost_torso_lower_clothing_no_accessories`)
    - ✅ Should have `contextFrom: "primary"` on secondary target
    - ✅ Should require `positioning:closeness` and `positioning:straddling_waist` on actor
-   - ✅ Should have correct visual styling (purple sex mod theme)
+   - ✅ Should have correct visual styling (purple sex-dry-intimacy module theme)
 
 2. **Action discovery scenarios:**
    - ✅ Should appear when actor is straddling sitting target with covered penis
@@ -597,7 +597,7 @@ it('should appear when actor is straddling sitting target with covered penis', a
   // Assert action appears
   expect(actions).toContainEqual(
     expect.objectContaining({
-      actionId: 'sex:rub_pussy_against_penis_through_clothes',
+      actionId: 'sex-dry-intimacy:rub_pussy_against_penis_through_clothes',
       primaryId: 'bob',
       secondaryId: 'pants1'
     })
@@ -829,7 +829,7 @@ This specification draws patterns from:
 
 ### Similar Scopes
 
-1. **`sex:actors_with_penis_facing_each_other_covered`** - Penis + coverage + facing template
+1. **`sex-dry-intimacy:actors_with_penis_facing_each_other_covered`** - Penis + coverage + facing template
 2. **`positioning:actors_sitting_close`** - Sitting + closeness filter pattern
 3. **`clothing:target_topmost_torso_lower_clothing_no_accessories`** - Clothing resolution
 
@@ -875,16 +875,16 @@ No new operation handlers needed! Existing handlers cover all requirements:
 **Total files to create: 6**
 
 #### Actions (1)
-- [ ] `data/mods/sex/actions/rub_pussy_against_penis_through_clothes.action.json`
+- [ ] `data/mods/sex-dry-intimacy/actions/rub_pussy_against_penis_through_clothes.action.json`
 
 #### Rules (1)
-- [ ] `data/mods/sex/rules/handle_rub_pussy_against_penis_through_clothes.rule.json`
+- [ ] `data/mods/sex-dry-intimacy/rules/handle_rub_pussy_against_penis_through_clothes.rule.json`
 
 #### Scopes (1)
-- [ ] `data/mods/sex/scopes/actors_with_penis_facing_straddler_covered.scope`
+- [ ] `data/mods/sex-dry-intimacy/scopes/actors_with_penis_facing_straddler_covered.scope`
 
 #### Conditions (1)
-- [ ] `data/mods/sex/conditions/event-is-action-rub-pussy-against-penis-through-clothes.condition.json`
+- [ ] `data/mods/sex-dry-intimacy/conditions/event-is-action-rub-pussy-against-penis-through-clothes.condition.json`
 
 #### Tests (2)
 - [ ] `tests/integration/mods/sex/rub_pussy_against_penis_through_clothes_action_discovery.test.js`
@@ -920,9 +920,9 @@ No new operation handlers needed! Existing handlers cover all requirements:
 
 ## Conclusion
 
-This specification provides a complete design for implementing a mature sexual action in the Living Narrative Engine's sex mod. The design:
+This specification provides a complete design for implementing a mature sexual action in the Living Narrative Engine's sex-dry-intimacy module. The design:
 
-- ✅ Follows existing sex mod patterns consistently
+- ✅ Follows existing sex-dry-intimacy module patterns consistently
 - ✅ Reuses existing operation handlers (no new handlers needed)
 - ✅ Integrates cleanly with straddling and clothing systems
 - ✅ Validates all requirements through scope filters
@@ -934,7 +934,7 @@ This specification provides a complete design for implementing a mature sexual a
 
 **No code modifications required to existing systems** - purely additive implementation.
 
-**Mature Content Notice:** This action is designed for mature audiences only. All actions in the sex mod are consensual interactions between adult characters in a fictional narrative context.
+**Mature Content Notice:** This action is designed for mature audiences only. All actions in the sex-dry-intimacy module are consensual interactions between adult characters in a fictional narrative context.
 
 ---
 

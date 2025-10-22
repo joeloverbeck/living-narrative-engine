@@ -44,13 +44,13 @@ import path from 'path';
 const assScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../data/mods/sex/scopes/actors_with_exposed_ass_facing_away.scope'
+    '../../../data/mods/sex-dry-intimacy/scopes/actors_with_exposed_ass_facing_away.scope'
   ),
   'utf8'
 );
 
 // Import actual action files
-import rubPenisBetweenAssCheeksAction from '../../../data/mods/sex/actions/rub_penis_between_ass_cheeks.action.json';
+import rubPenisBetweenAssCheeksAction from '../../../data/mods/sex-dry-intimacy/actions/rub_penis_between_ass_cheeks.action.json';
 
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
 
@@ -128,8 +128,8 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
     scopeRegistry.clear();
 
     scopeRegistry.initialize({
-      'sex:actors_with_exposed_ass_facing_away': scopeDefinitions.get(
-        'sex:actors_with_exposed_ass_facing_away'
+      'sex-dry-intimacy:actors_with_exposed_ass_facing_away': scopeDefinitions.get(
+        'sex-dry-intimacy:actors_with_exposed_ass_facing_away'
       ),
     });
 
@@ -141,7 +141,7 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
         console.log('PrerequisiteEvaluationService.evaluate called for action:', actionDef.id);
         
         // Check if the actor has a penis for this specific action
-        if (actionDef.id === 'sex:rub_penis_between_ass_cheeks' && prerequisites) {
+        if (actionDef.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks' && prerequisites) {
           // Check if actor has penis using the hasPartOfType operator
           const hasPartOfTypeLogic = { hasPartOfType: ['actor', 'penis'] };
           const context = { actor };
@@ -637,12 +637,12 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       console.log('Prerequisite evaluation result:', prereqResult);
       
       // Check if scope is registered
-      const registeredScope = scopeRegistry.getScope('sex:actors_with_exposed_ass_facing_away');
+      const registeredScope = scopeRegistry.getScope('sex-dry-intimacy:actors_with_exposed_ass_facing_away');
       console.log('Scope is registered:', !!registeredScope);
 
       // Assert
       const rubActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_between_ass_cheeks'
+        (action) => action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
       );
       expect(rubActions).toHaveLength(1);
       expect(rubActions[0].params.targetId).toBe('target1');
@@ -666,7 +666,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const rubActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_between_ass_cheeks'
+        (action) => action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
       );
       expect(rubActions).toHaveLength(1);
       expect(rubActions[0].params.targetId).toBe('target1');
@@ -690,7 +690,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const rubActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_between_ass_cheeks'
+        (action) => action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
       );
       expect(rubActions).toHaveLength(1);
       expect(rubActions[0].params.targetId).toBe('target1');
@@ -714,7 +714,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const rubActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_between_ass_cheeks'
+        (action) => action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
       );
       expect(rubActions).toHaveLength(0);
     });
@@ -737,7 +737,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const rubActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_between_ass_cheeks'
+        (action) => action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
       );
       expect(rubActions).toHaveLength(0);
     });
@@ -760,7 +760,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const rubActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_between_ass_cheeks'
+        (action) => action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
       );
       expect(rubActions).toHaveLength(0);
     });
@@ -783,7 +783,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const rubActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_between_ass_cheeks'
+        (action) => action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
       );
       expect(rubActions).toHaveLength(0);
     });
@@ -809,7 +809,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert - action should NOT be available when target wears clothing
       const rubActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_between_ass_cheeks'
+        (action) => action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
       );
       expect(rubActions).toHaveLength(0);
     });
@@ -948,7 +948,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert - action should NOT be available when target wears underwear
       const rubActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_penis_between_ass_cheeks'
+        (action) => action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
       );
       expect(rubActions).toHaveLength(0);
     });

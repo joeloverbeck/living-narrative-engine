@@ -1,0 +1,42 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-dry-intimacy:press_penis_against_ass_through_clothes",
+  "name": "Press Penis Against Ass Through Clothes",
+  "description": "Press your penis against the target's ass through their clothing.",
+  "targets": {
+    "primary": {
+      "scope": "caressing:close_actors_facing_away",
+      "placeholder": "primary",
+      "description": "Person whose ass to press against"
+    },
+    "secondary": {
+      "scope": "clothing:target_topmost_torso_lower_clothing_no_accessories",
+      "placeholder": "secondary",
+      "description": "Clothing item through which to press",
+      "contextFrom": "primary"
+    }
+  },
+  "required_components": {
+    "actor": [
+      "positioning:closeness"
+    ]
+  },
+  "template": "press your penis against {primary}'s ass through the {secondary}",
+  "prerequisites": [
+    {
+      "logic": {
+        "hasPartOfType": [
+          "actor",
+          "penis"
+        ]
+      },
+      "failure_message": "You need a penis to perform this action."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#4a2741",
+    "textColor": "#fce8f5",
+    "hoverBackgroundColor": "#5c2f51",
+    "hoverTextColor": "#ffffff"
+  }
+}

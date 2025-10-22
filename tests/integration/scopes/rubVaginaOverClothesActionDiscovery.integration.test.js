@@ -45,13 +45,13 @@ import path from 'path';
 const vaginaCoveredScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../data/mods/sex/scopes/actors_with_vagina_facing_each_other_covered.scope'
+    '../../../data/mods/sex-dry-intimacy/scopes/actors_with_vagina_facing_each_other_covered.scope'
   ),
   'utf8'
 );
 
 // Import actual action file
-import rubVaginaOverClothesAction from '../../../data/mods/sex/actions/rub_vagina_over_clothes.action.json';
+import rubVaginaOverClothesAction from '../../../data/mods/sex-dry-intimacy/actions/rub_vagina_over_clothes.action.json';
 
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
 
@@ -270,11 +270,11 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
     scopeRegistry.clear();
 
     const scopeDef = scopeDefinitions.get(
-      'sex:actors_with_vagina_facing_each_other_covered'
+      'sex-dry-intimacy:actors_with_vagina_facing_each_other_covered'
     );
 
     scopeRegistry.initialize({
-      'sex:actors_with_vagina_facing_each_other_covered': scopeDef,
+      'sex-dry-intimacy:actors_with_vagina_facing_each_other_covered': scopeDef,
     });
 
     scopeEngine = new ScopeEngine();
@@ -538,7 +538,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const rubOverClothesActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_vagina_over_clothes'
+        (action) => action.id === 'sex-dry-intimacy:rub_vagina_over_clothes'
       );
       expect(rubOverClothesActions).toHaveLength(1);
       expect(rubOverClothesActions[0].params.targetId).toBe('target1');
@@ -557,7 +557,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const rubOverClothesActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_vagina_over_clothes'
+        (action) => action.id === 'sex-dry-intimacy:rub_vagina_over_clothes'
       );
       expect(rubOverClothesActions).toHaveLength(0);
     });
@@ -584,7 +584,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const rubOverClothesActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_vagina_over_clothes'
+        (action) => action.id === 'sex-dry-intimacy:rub_vagina_over_clothes'
       );
       expect(rubOverClothesActions).toHaveLength(0);
     });
@@ -620,7 +620,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const rubOverClothesActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_vagina_over_clothes'
+        (action) => action.id === 'sex-dry-intimacy:rub_vagina_over_clothes'
       );
       expect(rubOverClothesActions).toHaveLength(1);
       expect(rubOverClothesActions[0].params.targetId).toBe('target1');
@@ -724,7 +724,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const rubOverClothesActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_vagina_over_clothes'
+        (action) => action.id === 'sex-dry-intimacy:rub_vagina_over_clothes'
       );
       expect(rubOverClothesActions).toHaveLength(0);
     });
@@ -814,7 +814,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const rubOverClothesActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_vagina_over_clothes'
+        (action) => action.id === 'sex-dry-intimacy:rub_vagina_over_clothes'
       );
       expect(rubOverClothesActions).toHaveLength(0);
     });
@@ -909,7 +909,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const rubOverClothesActions = result.actions.filter(
-        (action) => action.id === 'sex:rub_vagina_over_clothes'
+        (action) => action.id === 'sex-dry-intimacy:rub_vagina_over_clothes'
       );
       expect(rubOverClothesActions).toHaveLength(0);
     });

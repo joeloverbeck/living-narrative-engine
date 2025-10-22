@@ -93,7 +93,7 @@ All actions follow a consistent JSON structure:
 | `sex:fondle_breasts`                       | `fondle_breasts.action.json`          | `actors_with_breasts_facing_each_other`                         | Requires: `positioning:closeness`<br>Target must have exposed breasts | Sexual interaction  |
 | `sex-penile-manual:fondle_penis`           | `fondle_penis.action.json`            | `sex-core:actors_with_penis_facing_each_other`                  | Requires: `positioning:closeness`                                     | Sexual interaction  |
 | `sex-penile-manual:rub_penis_over_clothes` | `rub_penis_over_clothes.action.json`  | `sex-penile-manual:actors_with_penis_facing_each_other_covered` | Requires: `positioning:closeness`<br>Target must have covered penis   | Clothed interaction |
-| `sex:rub_vagina_over_clothes`              | `rub_vagina_over_clothes.action.json` | `actors_with_vagina_facing_each_other_covered`                  | Requires: `positioning:closeness`<br>Target must have covered vagina  | Clothed interaction |
+| `sex-dry-intimacy:rub_vagina_over_clothes`              | `rub_vagina_over_clothes.action.json` | `actors_with_vagina_facing_each_other_covered`                  | Requires: `positioning:closeness`<br>Target must have covered vagina  | Clothed interaction |
 
 ## Rule System Architecture
 

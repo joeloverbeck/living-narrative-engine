@@ -1,0 +1,15 @@
+// Scope for partners in intimate range with exposed ass cheeks while the actor is behind them
+// Leverages caressing helper for ass cheek detection and positioning checks for orientation
+sex-dry-intimacy:actors_with_exposed_ass_facing_away := caressing:actors_with_ass_cheeks_in_intimacy[][
+  {
+    "and": [
+      { "condition_ref": "positioning:actor-in-entity-facing-away" },
+      {
+        "or": [
+          { "not": { "isSocketCovered": [".", "left_ass"] } },
+          { "not": { "isSocketCovered": [".", "right_ass"] } }
+        ]
+      }
+    ]
+  }
+]
