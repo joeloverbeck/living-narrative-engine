@@ -27,6 +27,7 @@ import {
   LEADING_COMPONENT_ID,
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
+  ACTOR_COMPONENT_ID,
 } from '../../../../src/constants/componentIds.js';
 import { ATTEMPT_ACTION_ID } from '../../../../src/constants/eventIds.js';
 import SetVariableHandler from '../../../../src/logic/operationHandlers/setVariableHandler.js';
@@ -302,6 +303,7 @@ describe('core_handle_follow rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Follower' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          [ACTOR_COMPONENT_ID]: {},
         },
       },
       {
@@ -309,6 +311,7 @@ describe('core_handle_follow rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Leader' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          [ACTOR_COMPONENT_ID]: {},
         },
       },
     ]);
@@ -346,6 +349,7 @@ describe('core_handle_follow rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Follower' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          [ACTOR_COMPONENT_ID]: {},
         },
       },
       {
@@ -353,6 +357,7 @@ describe('core_handle_follow rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Leader' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          [ACTOR_COMPONENT_ID]: {},
         },
       },
     ]);
@@ -392,6 +397,7 @@ describe('core_handle_follow rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Follower' },
           [POSITION_COMPONENT_ID]: { locationId: 'locA' },
+          [ACTOR_COMPONENT_ID]: {},
         },
       },
       {
@@ -400,6 +406,7 @@ describe('core_handle_follow rule integration', () => {
           [NAME_COMPONENT_ID]: { text: 'Leader' },
           [POSITION_COMPONENT_ID]: { locationId: 'locA' },
           [FOLLOWING_COMPONENT_ID]: { leaderId: 'f1' },
+          [ACTOR_COMPONENT_ID]: {},
         },
       },
     ]);
@@ -424,6 +431,7 @@ describe('core_handle_follow rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Follower' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          [ACTOR_COMPONENT_ID]: {},
         },
       },
       {
@@ -431,6 +439,7 @@ describe('core_handle_follow rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Leader' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          [ACTOR_COMPONENT_ID]: {},
         },
       },
     ]);
