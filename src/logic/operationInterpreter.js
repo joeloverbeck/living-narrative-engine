@@ -16,6 +16,43 @@ import jsonLogic from 'json-logic-js';
 const ACTION_ARRAY_KEYS = new Set(['then_actions', 'else_actions', 'actions']);
 
 /**
+ * Paths (expressed as arrays of keys) where JSON Logic evaluation should be skipped.
+ * Supports wildcard segments using the string '*'.
+ *
+ * Currently used to ensure QUERY_ENTITIES filters keep their JSON Logic conditions
+ * so that handlers such as QueryEntitiesHandler can evaluate them against
+ * component data instead of the interpreter eagerly resolving them.
+ */
+const JSON_LOGIC_SKIP_PATHS = Object.freeze([
+  ['filters', '*', 'with_component_data', 'condition'],
+]);
+
+/**
+ * Determines if the current traversal path should skip JSON Logic evaluation.
+ *
+ * @param {Array<string>} path - The traversal path represented as an array of keys.
+ * @param {Array<Array<string>>} skipPaths - Collection of paths where evaluation is disallowed.
+ * @returns {boolean} True when evaluation must be skipped for the provided path.
+ */
+function shouldSkipJsonLogicEvaluation(path, skipPaths) {
+  return skipPaths.some((skipPath) => {
+    if (skipPath.length !== path.length) {
+      return false;
+    }
+    for (let i = 0; i < skipPath.length; i += 1) {
+      const expected = skipPath[i];
+      if (expected === '*') {
+        continue;
+      }
+      if (expected !== path[i]) {
+        return false;
+      }
+    }
+    return true;
+  });
+}
+
+/**
  * Recursively evaluate JSON Logic expressions in an object.
  * Detects if a value is a JSON Logic expression (non-empty plain object)
  * and evaluates it using the provided context.
@@ -24,9 +61,18 @@ const ACTION_ARRAY_KEYS = new Set(['then_actions', 'else_actions', 'actions']);
  * @param {object} evaluationContext - Context data for JSON Logic evaluation
  * @param {ILogger} logger - Logger instance
  * @param {Set<string>} skipKeys - Keys to skip during evaluation
+ * @param {Array<Array<string>>} skipEvaluationPaths - Specific key paths where evaluation should not occur.
+ * @param {Array<string>} currentPath - Path of keys leading to the current value.
  * @returns {*} Evaluated value
  */
-function evaluateJsonLogicRecursively(value, evaluationContext, logger, skipKeys = new Set()) {
+function evaluateJsonLogicRecursively(
+  value,
+  evaluationContext,
+  logger,
+  skipKeys = new Set(),
+  skipEvaluationPaths = [],
+  currentPath = []
+) {
   // Skip if value is null or undefined
   if (value == null) {
     return value;
@@ -34,7 +80,16 @@ function evaluateJsonLogicRecursively(value, evaluationContext, logger, skipKeys
 
   // Handle arrays
   if (Array.isArray(value)) {
-    return value.map(item => evaluateJsonLogicRecursively(item, evaluationContext, logger, skipKeys));
+    return value.map((item, index) =>
+      evaluateJsonLogicRecursively(
+        item,
+        evaluationContext,
+        logger,
+        skipKeys,
+        skipEvaluationPaths,
+        currentPath.concat(String(index))
+      )
+    );
   }
 
   // Check if this is a plain object that could be JSON Logic
@@ -46,19 +101,57 @@ function evaluateJsonLogicRecursively(value, evaluationContext, logger, skipKeys
       return value;
     }
 
+    if (shouldSkipJsonLogicEvaluation(currentPath, skipEvaluationPaths)) {
+      return value;
+    }
+
     // Check if this looks like a JSON Logic expression
     // JSON Logic expressions are objects with operator keys like 'var', 'cat', 'if', etc.
     // We detect this by checking if it has known JSON Logic operators or starts with typical operators
-    const jsonLogicOperators = ['var', 'cat', 'if', '==', '!=', '>', '<', '>=', '<=', 'and', 'or', 'not', '+', '-', '*', '/', '%', 'in', 'map', 'filter', 'reduce', 'all', 'none', 'some', 'merge', 'missing', 'missing_some'];
-    const hasJsonLogicOperator = keys.some(key => jsonLogicOperators.includes(key));
+    const jsonLogicOperators = [
+      'var',
+      'cat',
+      'if',
+      '==',
+      '!=',
+      '>',
+      '<',
+      '>=',
+      '<=',
+      'and',
+      'or',
+      'not',
+      '+',
+      '-',
+      '*',
+      '/',
+      '%',
+      'in',
+      'map',
+      'filter',
+      'reduce',
+      'all',
+      'none',
+      'some',
+      'merge',
+      'missing',
+      'missing_some',
+    ];
+    const hasJsonLogicOperator = keys.some((key) =>
+      jsonLogicOperators.includes(key)
+    );
 
     if (hasJsonLogicOperator) {
       try {
         const result = jsonLogic.apply(value, evaluationContext);
-        logger.debug(`OperationInterpreter: Evaluated JSON Logic expression. Input: ${JSON.stringify(value)}, Result: ${JSON.stringify(result)}`);
+        logger.debug(
+          `OperationInterpreter: Evaluated JSON Logic expression. Input: ${JSON.stringify(value)}, Result: ${JSON.stringify(result)}`
+        );
         return result;
       } catch (error) {
-        logger.warn(`OperationInterpreter: Failed to evaluate JSON Logic expression: ${error.message}. Using original value.`);
+        logger.warn(
+          `OperationInterpreter: Failed to evaluate JSON Logic expression: ${error.message}. Using original value.`
+        );
         return value;
       }
     }
@@ -69,7 +162,14 @@ function evaluateJsonLogicRecursively(value, evaluationContext, logger, skipKeys
       if (skipKeys.has(key)) {
         result[key] = value[key];
       } else {
-        result[key] = evaluateJsonLogicRecursively(value[key], evaluationContext, logger, skipKeys);
+        result[key] = evaluateJsonLogicRecursively(
+          value[key],
+          evaluationContext,
+          logger,
+          skipKeys,
+          skipEvaluationPaths,
+          currentPath.concat(key)
+        );
       }
     }
     return result;
@@ -149,7 +249,8 @@ class OperationInterpreter extends BaseService {
           withResolvedPlaceholders,
           executionContext.evaluationContext,
           this.#logger,
-          ACTION_ARRAY_KEYS
+          ACTION_ARRAY_KEYS,
+          JSON_LOGIC_SKIP_PATHS
         );
       } else {
         paramsForHandler = operation.parameters;

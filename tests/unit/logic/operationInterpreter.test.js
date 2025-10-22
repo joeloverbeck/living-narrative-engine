@@ -28,6 +28,7 @@ const mockLogger = {
 const mockLogHandler = jest.fn();
 const mockModifyHandler = jest.fn();
 const mockSetVariableHandler = jest.fn();
+const mockQueryEntitiesHandler = jest.fn();
 const mockHandlerWithError = jest.fn(() => {
   throw new Error('Handler failed!');
 });
@@ -82,6 +83,25 @@ const resolvedSetVariableParameters = {
   value: 'Hero',
 };
 
+const withComponentDataCondition = {
+  '==': [{ var: 'leaderId' }, 'leader-123'],
+};
+
+const queryEntitiesOperation = {
+  type: 'QUERY_ENTITIES',
+  parameters: {
+    result_variable: 'followers',
+    filters: [
+      {
+        with_component_data: {
+          component_type: 'companionship:following',
+          condition: withComponentDataCondition,
+        },
+      },
+    ],
+  },
+};
+
 /** operation with bad placeholder (for failing-path test) */
 const opInvalidPlaceholder = {
   type: 'LOG',
@@ -100,6 +120,9 @@ const mockExecutionContext = {
   context: { existingVar: 'abc' },
   getService: jest.fn(),
   logger: mockLogger,
+  evaluationContext: {
+    context: {},
+  },
 };
 
 /**
@@ -113,6 +136,7 @@ describe('OperationInterpreter', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockRegistry.getHandler.mockReset();
+    mockQueryEntitiesHandler.mockReset();
     interpreter = new OperationInterpreter({
       logger: mockLogger,
       operationRegistry: mockRegistry,
@@ -195,6 +219,25 @@ describe('OperationInterpreter', () => {
       mockExecutionContext
     );
     expect(mockLogger.error).not.toHaveBeenCalled();
+  });
+
+  test('execute should preserve JSON Logic conditions inside with_component_data filters', () => {
+    mockRegistry.getHandler.mockReturnValue(mockQueryEntitiesHandler);
+
+    const executionContext = {
+      ...mockExecutionContext,
+      evaluationContext: { context: {} },
+    };
+
+    interpreter.execute(queryEntitiesOperation, executionContext);
+
+    expect(mockRegistry.getHandler).toHaveBeenCalledWith('QUERY_ENTITIES');
+    expect(mockQueryEntitiesHandler).toHaveBeenCalledTimes(1);
+
+    const [params] = mockQueryEntitiesHandler.mock.calls[0];
+    expect(params.filters[0].with_component_data.condition).toEqual(
+      withComponentDataCondition
+    );
   });
 
   /* SET_VARIABLE */
