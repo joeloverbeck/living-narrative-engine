@@ -26,7 +26,7 @@ describe('sex-penile-oral:lick_testicles_sitting_close action discovery', () => 
   let restoreScopeResolver;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('sex-penile-oral', ACTION_ID);
+    testFixture = await ModTestFixture.forActionAutoLoad('sex-penile-oral', ACTION_ID);
     restoreScopeResolver = installSittingCloseUncoveredTesticleScopeOverride(testFixture);
   });
 
