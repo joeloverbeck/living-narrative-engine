@@ -368,4 +368,66 @@ describe('core_handle_follow_auto_move rule integration', () => {
       ])
     );
   });
+
+  it('only moves followers assigned to the moving leader when others share the location', async () => {
+    testEnv.reset([
+      {
+        id: 'actor1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'Leader One' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room2' },
+          [LEADING_COMPONENT_ID]: { followers: ['target1'] },
+        },
+      },
+      {
+        id: 'target1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'Follower One' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          [FOLLOWING_COMPONENT_ID]: { leaderId: 'actor1' },
+        },
+      },
+      {
+        id: 'actor2',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'Leader Two' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          [LEADING_COMPONENT_ID]: { followers: ['target2'] },
+        },
+      },
+      {
+        id: 'target2',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'Follower Two' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          [FOLLOWING_COMPONENT_ID]: { leaderId: 'actor2' },
+        },
+      },
+    ]);
+
+    await testEnv.entityManager.addComponent('actor1', LEADING_COMPONENT_ID, {
+      followers: ['target1'],
+    });
+    await testEnv.entityManager.addComponent('actor2', LEADING_COMPONENT_ID, {
+      followers: ['target2'],
+    });
+
+    await testEnv.eventBus.dispatch('core:entity_moved', {
+      entityId: 'actor1',
+      previousLocationId: 'room1',
+      currentLocationId: 'room2',
+    });
+
+    const movedFollowerPosition = testEnv.entityManager.getComponentData(
+      'target1',
+      POSITION_COMPONENT_ID
+    );
+    const stationaryFollowerPosition = testEnv.entityManager.getComponentData(
+      'target2',
+      POSITION_COMPONENT_ID
+    );
+
+    expect(movedFollowerPosition.locationId).toBe('room2');
+    expect(stationaryFollowerPosition.locationId).toBe('room1');
+  });
 });
