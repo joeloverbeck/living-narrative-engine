@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-penile-oral:lick_testicles_sitting_close",
+  "name": "Lick Testicles (Sitting Close)",
+  "description": "Lean almost horizontally over your seated partner's lap to lavish their exposed testicles with slow, saliva-rich attention.",
+  "targets": {
+    "primary": {
+      "scope": "sex-core:actors_sitting_close_with_uncovered_testicle",
+      "placeholder": "target",
+      "description": "Seated partner with at least one uncovered testicle"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:sitting_on", "positioning:closeness"],
+    "primary": ["positioning:sitting_on", "positioning:closeness"]
+  },
+  "template": "lick {target}'s testicles sensually",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#2a1a5e",
+    "textColor": "#ede7f6",
+    "hoverBackgroundColor": "#372483",
+    "hoverTextColor": "#ffffff"
+  }
+}
