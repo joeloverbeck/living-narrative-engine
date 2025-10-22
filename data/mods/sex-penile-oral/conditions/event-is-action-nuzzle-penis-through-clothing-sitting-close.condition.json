@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex-penile-oral:event-is-action-nuzzle-penis-through-clothing-sitting-close",
+  "description": "Checks if the triggering event is for the 'sex-penile-oral:nuzzle_penis_through_clothing_sitting_close' action.",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "sex-penile-oral:nuzzle_penis_through_clothing_sitting_close"
+    ]
+  }
+}

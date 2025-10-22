@@ -73,6 +73,7 @@ export function buildBreatheTeasinglyOnPenisSittingCloseScenario(options = {}) {
   const primaryTorsoId = `${PRIMARY_ID}_torso`;
   const primaryGroinId = `${PRIMARY_ID}_groin`;
   const primaryPenisId = `${primaryGroinId}_penis`;
+  const primaryClothingId = `${PRIMARY_ID}_briefs`;
 
   const room = new ModEntityBuilder(ROOM_ID)
     .withName('Velvet Salon')
@@ -128,7 +129,7 @@ export function buildBreatheTeasinglyOnPenisSittingCloseScenario(options = {}) {
       .withComponent('clothing:equipment', {
         equipped: {
           torso_lower: {
-            base: [`${PRIMARY_ID}_briefs`],
+            base: [primaryClothingId],
           },
         },
       })
@@ -178,6 +179,13 @@ export function buildBreatheTeasinglyOnPenisSittingCloseScenario(options = {}) {
     primaryPenis,
   ];
 
+  if (coverPrimaryPenis) {
+    const primaryClothing = new ModEntityBuilder(primaryClothingId)
+      .withName('silk briefs')
+      .build();
+    entities.push(primaryClothing);
+  }
+
   return {
     entities,
     actorId: ACTOR_ID,
@@ -185,6 +193,7 @@ export function buildBreatheTeasinglyOnPenisSittingCloseScenario(options = {}) {
     roomId: ROOM_ID,
     furnitureId: FURNITURE_ID,
     primaryPenisId,
+    clothingId: coverPrimaryPenis ? primaryClothingId : null,
   };
 }
 
@@ -247,6 +256,111 @@ export function installSittingCloseUncoveredPenisScopeOverride(testFixture) {
       });
 
       return { success: true, value: new Set(validPartners) };
+    }
+
+    return originalResolveSync(scopeName, context);
+  };
+
+  return () => {
+    resolver.resolveSync = originalResolveSync;
+  };
+}
+
+/**
+ * @description Installs a scope resolver override for seated covered penis discovery.
+ * @param {import('../ModTestFixture.js').ModTestFixture} testFixture - Active mod test fixture.
+ * @returns {Function} Cleanup function restoring the original resolver.
+ */
+export function installSittingCloseCoveredPenisScopeOverride(testFixture) {
+  const resolver = testFixture.testEnv.unifiedScopeResolver;
+  const originalResolveSync = resolver.resolveSync.bind(resolver);
+
+  resolver.resolveSync = (scopeName, context) => {
+    if (scopeName === 'sex-core:actors_sitting_close_with_covered_penis') {
+      const actorId = context?.actor?.id;
+
+      if (!actorId) {
+        return { success: true, value: new Set() };
+      }
+
+      const actor = testFixture.entityManager.getEntityInstance(actorId);
+      const actorSitting = actor?.components?.['positioning:sitting_on'];
+      const closenessPartners = actor?.components?.['positioning:closeness']?.partners;
+
+      if (!actorSitting || !Array.isArray(closenessPartners) || closenessPartners.length === 0) {
+        return { success: true, value: new Set() };
+      }
+
+      const validPartners = closenessPartners.filter((partnerId) => {
+        const partner = testFixture.entityManager.getEntityInstance(partnerId);
+
+        if (!partner) {
+          return false;
+        }
+
+        const partnerSitting = partner.components?.['positioning:sitting_on'];
+        if (!partnerSitting) {
+          return false;
+        }
+
+        const hasPenis = testFixture.testEnv.jsonLogic.evaluate(
+          { hasPartOfType: ['target', 'penis'] },
+          { target: partner }
+        );
+
+        if (!hasPenis) {
+          return false;
+        }
+
+        const penisCovered = testFixture.testEnv.jsonLogic.evaluate(
+          { isSocketCovered: ['target', 'penis'] },
+          { target: partner }
+        );
+
+        return Boolean(penisCovered);
+      });
+
+      return { success: true, value: new Set(validPartners) };
+    }
+
+    if (
+      scopeName ===
+      'clothing:target_topmost_torso_lower_clothing_no_accessories'
+    ) {
+      const targetId = context?.target?.id || context?.primary?.id;
+
+      if (!targetId) {
+        return { success: true, value: new Set() };
+      }
+
+      const target = testFixture.entityManager.getEntityInstance(targetId);
+      const equipment = target?.components?.['clothing:equipment'];
+
+      if (!equipment?.equipped) {
+        return { success: true, value: new Set() };
+      }
+
+      const torsoLowerLayers = equipment.equipped.torso_lower;
+
+      if (!torsoLowerLayers) {
+        return { success: true, value: new Set() };
+      }
+
+      const priorityLayers = ['outer', 'base', 'underwear'];
+
+      for (const layer of priorityLayers) {
+        const items = torsoLowerLayers[layer];
+
+        if (Array.isArray(items) && items.length > 0) {
+          return { success: true, value: new Set([items[0]]) };
+        }
+
+        if (typeof items === 'string' && items) {
+          return { success: true, value: new Set([items]) };
+        }
+      }
+
+      return { success: true, value: new Set() };
     }
 
     return originalResolveSync(scopeName, context);
