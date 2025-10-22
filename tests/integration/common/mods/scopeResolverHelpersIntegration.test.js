@@ -33,6 +33,7 @@ describe('ScopeResolverHelpers Integration - Positioning Registration', () => {
       'positioning:furniture_actor_sitting_on',
       'positioning:actors_sitting_on_same_furniture',
       'positioning:closest_leftmost_occupant',
+      'positioning:closest_rightmost_occupant',
       'positioning:furniture_allowing_sitting_at_location',
       'positioning:standing_actors_at_location',
       'positioning:sitting_actors',
@@ -196,8 +197,8 @@ describe('ScopeResolverHelpers Integration - Multiple Category Registration', ()
     expect(testFixture.testEnv._registeredResolvers.has('items:portable_items_at_location')).toBe(true);
     expect(testFixture.testEnv._registeredResolvers.has('anatomy:actors_at_location')).toBe(true);
 
-    // Verify total count is the sum of all categories (8 + 5 + 2 = 15)
-    expect(testFixture.testEnv._registeredResolvers.size).toBe(15);
+    // Verify total count is the sum of all categories (9 + 5 + 2 = 16)
+    expect(testFixture.testEnv._registeredResolvers.size).toBe(16);
   });
 
   it('should preserve original resolver functionality', () => {
