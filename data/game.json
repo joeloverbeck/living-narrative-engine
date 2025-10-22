@@ -1,0 +1,22 @@
+{
+  "mods": [
+    "core",
+    "movement",
+    "companionship",
+    "positioning",
+    "items",
+    "furniture",
+    "anatomy",
+    "clothing",
+    "exercise",
+    "distress",
+    "violence",
+    "seduction",
+    "affection",
+    "hand_holding",
+    "caressing",
+    "kissing",
+    "p_erotica"
+  ],
+  "startWorld": "p_erotica:kern"
+}

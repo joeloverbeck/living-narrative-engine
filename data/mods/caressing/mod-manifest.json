@@ -1,0 +1,83 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "caressing",
+  "version": "1.0.0",
+  "name": "Caressing - Sensual Touch Actions",
+  "description": "Flirtatious and sensual touching that creates or escalates sexual tension. More intimate than affection, distinct from kissing through touch-based interaction.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "anatomy",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "kissing",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "descriptors",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "clothing",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [
+      "adjust_clothing.action.json",
+      "caress_abdomen.action.json",
+      "caress_bare_back.action.json",
+      "cup_chin.action.json",
+      "feel_arm_muscles.action.json",
+      "fondle_ass.action.json",
+      "lick_lips.action.json",
+      "nuzzle_face_into_neck.action.json",
+      "run_fingers_through_hair.action.json",
+      "run_thumb_across_lips.action.json",
+      "thumb_wipe_cheek.action.json"
+    ],
+    "rules": [
+      "adjust_clothing.rule.json",
+      "caress_abdomen.rule.json",
+      "caress_bare_back.rule.json",
+      "cup_chin.rule.json",
+      "handle_feel_arm_muscles.rule.json",
+      "handle_fondle_ass.rule.json",
+      "handle_run_fingers_through_hair.rule.json",
+      "lick_lips.rule.json",
+      "nuzzle_face_into_neck.rule.json",
+      "run_thumb_across_lips.rule.json",
+      "thumb_wipe_cheek.rule.json"
+    ],
+    "conditions": [
+      "event-is-action-adjust-clothing.condition.json",
+      "event-is-action-caress-abdomen.condition.json",
+      "event-is-action-caress-bare-back.condition.json",
+      "event-is-action-cup-chin.condition.json",
+      "event-is-action-feel-arm-muscles.condition.json",
+      "event-is-action-fondle-ass.condition.json",
+      "event-is-action-lick-lips.condition.json",
+      "event-is-action-nuzzle-face-into-neck.condition.json",
+      "event-is-action-run-fingers-through-hair.condition.json",
+      "event-is-action-run-thumb-across-lips.condition.json",
+      "event-is-action-thumb-wipe-cheek.condition.json"
+    ],
+    "scopes": [
+      "actors_with_ass_cheeks_facing_each_other.scope",
+      "actors_with_ass_cheeks_facing_each_other_or_behind_target.scope",
+      "actors_with_ass_cheeks_in_intimacy.scope",
+      "actors_with_muscular_arms_facing_each_other_or_behind_target.scope",
+      "close_actors_facing_away.scope",
+      "close_actors_facing_each_other.scope",
+      "close_actors_facing_each_other_or_behind_target.scope",
+      "close_actors_facing_each_other_with_torso_clothing.scope",
+      "close_actors_with_uncovered_back.scope"
+    ]
+  }
+}
