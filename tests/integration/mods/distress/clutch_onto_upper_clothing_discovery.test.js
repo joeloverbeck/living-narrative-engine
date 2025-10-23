@@ -258,7 +258,7 @@ describe('distress:clutch_onto_upper_clothing action discovery', () => {
         'positioning:closeness',
       ]);
       expect(clutchOntoUpperClothingAction.forbidden_components).toEqual({
-        actor: [],
+        actor: ['positioning:hugging'],
         primary: [],
         secondary: [],
       });
@@ -373,6 +373,37 @@ describe('distress:clutch_onto_upper_clothing action discovery', () => {
       };
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target, garment]);
+      configureActionDiscovery();
+
+      expect(discoverActionForActor(scenario.actor.id)).toBe(false);
+    });
+
+    it('is not available when the actor is currently hugging someone else', () => {
+      const scenario = testFixture.createCloseActors(['Quinn', 'Riley'], {
+        location: 'arboretum',
+      });
+
+      scenario.actor.components['positioning:hugging'] = {
+        embraced_entity_id: scenario.target.id,
+        initiated: true,
+      };
+
+      const garment = {
+        id: 'cloak1',
+        components: {
+          'core:name': { text: 'soft cloak' },
+          'core:position': { locationId: 'arboretum' },
+        },
+      };
+
+      scenario.target.components['clothing:equipment'] = {
+        equipped: {
+          torso_upper: { base: garment.id },
+        },
+      };
+
+      const room = ModEntityScenarios.createRoom('arboretum', 'Arboretum');
       testFixture.reset([room, scenario.actor, scenario.target, garment]);
       configureActionDiscovery();
 

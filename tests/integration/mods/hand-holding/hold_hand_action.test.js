@@ -177,6 +177,37 @@ describe('hand-holding:hold_hand action integration', () => {
     });
   });
 
+  it('prevents the action when the actor is currently hugging someone', async () => {
+    const scenario = testFixture.createCloseActors(['Nora', 'Orion'], {
+      location: 'conservatory',
+      includeRoom: false,
+    });
+
+    scenario.actor.components['positioning:hugging'] = {
+      embraced_entity_id: scenario.target.id,
+      initiated: true,
+    };
+
+    const room = ModEntityScenarios.createRoom('conservatory', 'Conservatory');
+    testFixture.reset([room, scenario.actor, scenario.target]);
+
+    await expect(
+      testFixture.executeAction(scenario.actor.id, scenario.target.id)
+    ).rejects.toThrow('forbidden component');
+
+    const actorInstance = testFixture.entityManager.getEntityInstance(
+      scenario.actor.id
+    );
+
+    expect(actorInstance.components['positioning:hugging']).toEqual({
+      embraced_entity_id: scenario.target.id,
+      initiated: true,
+    });
+    expect(
+      actorInstance.components['hand-holding:holding_hand']
+    ).toBeUndefined();
+  });
+
   it('action only fires for correct action ID', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
       location: 'room1',

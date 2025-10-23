@@ -8,7 +8,11 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["hand-holding:holding_hand", "hand-holding:hand_held"],
+    "actor": [
+      "hand-holding:holding_hand",
+      "hand-holding:hand_held",
+      "positioning:hugging"
+    ],
     "primary": ["hand-holding:hand_held"]
   },
   "template": "hold {target}'s hand",
