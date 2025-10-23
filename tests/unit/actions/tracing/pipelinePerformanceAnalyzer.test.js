@@ -344,6 +344,25 @@ describe('PipelinePerformanceAnalyzer (ACTTRA-018)', () => {
       );
     });
 
+    it('should record violation metrics when stages exceed thresholds', () => {
+      // Arrange
+      const violatingPerformance = {
+        component_filtering: { duration: 150, timestamp: Date.now() }, // Above 100ms threshold
+        prerequisite_evaluation: { duration: 50, timestamp: Date.now() },
+      };
+
+      mockTrace.calculateStagePerformance.mockReturnValue(violatingPerformance);
+
+      // Act
+      analyzer.generatePerformanceReport(mockTrace);
+
+      // Assert
+      expect(mockPerformanceMonitor.recordMetric).toHaveBeenCalledWith(
+        'pipeline.stage.component_filtering.violations',
+        2
+      );
+    });
+
     it('should handle performance monitor recording errors gracefully', () => {
       // Arrange
       mockPerformanceMonitor.recordMetric.mockImplementation(() => {
@@ -450,6 +469,24 @@ describe('PipelinePerformanceAnalyzer (ACTTRA-018)', () => {
         150,
         100
       );
+    });
+
+    it('should skip threshold checks when monitor lacks support', () => {
+      // Arrange
+      delete mockPerformanceMonitor.checkThreshold;
+      const violatingStagePerformance = {
+        component_filtering: { duration: 150, timestamp: Date.now() },
+      };
+
+      mockTrace.calculateStagePerformance.mockReturnValue(
+        violatingStagePerformance
+      );
+
+      // Act
+      const analysis = analyzer.analyzeTracePerformance(mockTrace);
+
+      // Assert
+      expect(analysis.stages.component_filtering.violations).toBe(2);
     });
 
     it('should handle performance monitor threshold checking errors', () => {

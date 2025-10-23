@@ -5,8 +5,8 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import pecOnLipsRule from '../../../../data/mods/kissing/rules/peck_on_lips.rule.json';
-import eventIsActionPecOnLips from '../../../../data/mods/kissing/conditions/event-is-action-peck-on-lips.condition.json';
+import peckOnLipsRule from '../../../../data/mods/kissing/rules/peck_on_lips.rule.json';
+import eventIsActionPeckOnLips from '../../../../data/mods/kissing/conditions/event-is-action-peck-on-lips.condition.json';
 
 describe('kissing:peck_on_lips action integration', () => {
   let testFixture;
@@ -15,8 +15,8 @@ describe('kissing:peck_on_lips action integration', () => {
     testFixture = await ModTestFixture.forAction(
       'kissing',
       'kissing:peck_on_lips',
-      pecOnLipsRule,
-      eventIsActionPecOnLips
+      peckOnLipsRule,
+      eventIsActionPeckOnLips
     );
   });
 
@@ -35,7 +35,7 @@ describe('kissing:peck_on_lips action integration', () => {
       (e) => e.eventType === 'core:display_successful_action_result'
     );
     expect(successEvent).toBeDefined();
-    expect(successEvent.payload.message).toContain('pec');
+    expect(successEvent.payload.message).toContain('peck');
   });
 
   it('validates perceptible event message matches action success message', async () => {

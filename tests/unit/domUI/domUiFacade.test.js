@@ -1,252 +1,156 @@
-// tests/domUI/domUiFacade.test.js
+import { describe, it, expect, jest } from '@jest/globals';
+import { DomUiFacade } from '../../../src/domUI/domUiFacade.js';
 
-/**
- * @file Unit tests for the DomUiFacade class.
- */
+const createRenderer = (methods = {}) => ({
+  dispose: jest.fn(),
+  ...methods,
+});
 
-import { DomUiFacade } from '../../../src/domUI';
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-
-/* -------- mock components -------- */
-// Updated mocks to provide refreshList instead of render where appropriate
-const mockActionButtonsRenderer = {
-  refreshList: jest.fn(),
-  dispose: jest.fn(),
-};
-const mockLocationRenderer = { render: jest.fn(), dispose: jest.fn() };
-const mockTitleRenderer = { set: jest.fn(), dispose: jest.fn() };
-const mockInputStateController = { setEnabled: jest.fn(), dispose: jest.fn() };
-const mockSpeechBubbleRenderer = {
-  renderSpeech: jest.fn(),
-  dispose: jest.fn(),
-};
-const mockPerceptionLogRenderer = {
-  refreshList: jest.fn(),
-  dispose: jest.fn(),
-};
-const mockActionResultRenderer = { dispose: jest.fn() }; // Added mock for actionResultRenderer
-const mockSaveGameUI = { show: jest.fn(), dispose: jest.fn() };
-const mockLoadGameUI = { show: jest.fn(), dispose: jest.fn() };
-const mockLlmSelectionModal = { show: jest.fn(), dispose: jest.fn() };
-const mockEntityLifecycleMonitor = {
-  clearEvents: jest.fn(),
-  dispose: jest.fn(),
-};
+const createDependencies = (overrides = {}) => ({
+  actionButtonsRenderer: createRenderer({ refreshList: jest.fn() }),
+  locationRenderer: createRenderer({ render: jest.fn() }),
+  titleRenderer: createRenderer({ set: jest.fn() }),
+  inputStateController: createRenderer({ setEnabled: jest.fn() }),
+  speechBubbleRenderer: createRenderer({ renderSpeech: jest.fn() }),
+  perceptionLogRenderer: createRenderer({ refreshList: jest.fn() }),
+  actionResultRenderer: createRenderer(),
+  saveGameUI: createRenderer({ show: jest.fn() }),
+  loadGameUI: createRenderer({ show: jest.fn() }),
+  llmSelectionModal: createRenderer({ show: jest.fn() }),
+  entityLifecycleMonitor: createRenderer({ clearEvents: jest.fn() }),
+  ...overrides,
+});
 
 describe('DomUiFacade', () => {
-  let validDeps;
+  it('exposes each dependency via dedicated getters', () => {
+    const deps = createDependencies();
+    const facade = new DomUiFacade(deps);
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-
-    validDeps = {
-      actionButtonsRenderer: mockActionButtonsRenderer,
-      locationRenderer: mockLocationRenderer,
-      titleRenderer: mockTitleRenderer,
-      inputStateController: mockInputStateController,
-      speechBubbleRenderer: mockSpeechBubbleRenderer,
-      perceptionLogRenderer: mockPerceptionLogRenderer,
-      actionResultRenderer: mockActionResultRenderer, // Added dependency
-      saveGameUI: mockSaveGameUI,
-      loadGameUI: mockLoadGameUI,
-      llmSelectionModal: mockLlmSelectionModal,
-      entityLifecycleMonitor: mockEntityLifecycleMonitor,
-    };
+    expect(facade.actionButtons).toBe(deps.actionButtonsRenderer);
+    expect(facade.location).toBe(deps.locationRenderer);
+    expect(facade.title).toBe(deps.titleRenderer);
+    expect(facade.input).toBe(deps.inputStateController);
+    expect(facade.speechBubble).toBe(deps.speechBubbleRenderer);
+    expect(facade.perceptionLog).toBe(deps.perceptionLogRenderer);
+    expect(facade.actionResults).toBe(deps.actionResultRenderer);
+    expect(facade.saveGame).toBe(deps.saveGameUI);
+    expect(facade.loadGame).toBe(deps.loadGameUI);
+    expect(facade.llmSelectionModal).toBe(deps.llmSelectionModal);
+    expect(facade.entityLifecycleMonitor).toBe(deps.entityLifecycleMonitor);
   });
 
-  /* ---------- constructor happy-path ---------- */
-  it('should create an instance successfully with valid dependencies', () => {
-    expect(() => new DomUiFacade(validDeps)).not.toThrow();
+  it('accepts a null entityLifecycleMonitor without throwing', () => {
+    const deps = createDependencies({ entityLifecycleMonitor: null });
+    const facade = new DomUiFacade(deps);
+    expect(facade.entityLifecycleMonitor).toBeNull();
   });
 
-  /* ---------- constructor guard clauses ---------- */
-  it('should throw an error if actionButtonsRenderer is missing', () => {
-    const deps = { ...validDeps };
-    delete deps.actionButtonsRenderer;
-    expect(() => new DomUiFacade(deps)).toThrow(
-      'DomUiFacade: Missing or invalid actionButtonsRenderer dependency.'
-    );
+  it('uses the default entityLifecycleMonitor when the dependency is omitted', () => {
+    const { entityLifecycleMonitor: _unused, ...rest } = createDependencies();
+    const facade = new DomUiFacade(rest);
+    expect(facade.entityLifecycleMonitor).toBeNull();
   });
 
-  it('should throw an error if locationRenderer is missing', () => {
-    const deps = { ...validDeps };
-    delete deps.locationRenderer;
-    expect(() => new DomUiFacade(deps)).toThrow(
-      'DomUiFacade: Missing or invalid locationRenderer dependency.'
-    );
+  describe('constructor validation', () => {
+    it.each([
+      [
+        'actionButtonsRenderer',
+        { actionButtonsRenderer: createRenderer({}) },
+        'DomUiFacade: Missing or invalid actionButtonsRenderer dependency.',
+      ],
+      [
+        'locationRenderer',
+        { locationRenderer: createRenderer({}) },
+        'DomUiFacade: Missing or invalid locationRenderer dependency.',
+      ],
+      [
+        'titleRenderer',
+        { titleRenderer: createRenderer({}) },
+        'DomUiFacade: Missing or invalid titleRenderer dependency.',
+      ],
+      [
+        'inputStateController',
+        { inputStateController: createRenderer({}) },
+        'DomUiFacade: Missing or invalid inputStateController dependency.',
+      ],
+      [
+        'speechBubbleRenderer',
+        { speechBubbleRenderer: createRenderer({}) },
+        'DomUiFacade: Missing or invalid speechBubbleRenderer dependency.',
+      ],
+      [
+        'perceptionLogRenderer',
+        { perceptionLogRenderer: createRenderer({}) },
+        'DomUiFacade: Missing or invalid perceptionLogRenderer dependency.',
+      ],
+      [
+        'actionResultRenderer',
+        { actionResultRenderer: null },
+        'DomUiFacade: Missing or invalid actionResultRenderer dependency.',
+      ],
+      [
+        'saveGameUI',
+        { saveGameUI: createRenderer({}) },
+        'DomUiFacade: Missing or invalid saveGameUI dependency.',
+      ],
+      [
+        'loadGameUI',
+        { loadGameUI: createRenderer({}) },
+        'DomUiFacade: Missing or invalid loadGameUI dependency.',
+      ],
+      [
+        'llmSelectionModal',
+        { llmSelectionModal: createRenderer({}) },
+        'DomUiFacade: Missing or invalid llmSelectionModal dependency.',
+      ],
+      [
+        'entityLifecycleMonitor',
+        { entityLifecycleMonitor: { dispose: jest.fn() } },
+        'DomUiFacade: Invalid entityLifecycleMonitor dependency.',
+      ],
+    ])('validates the %s dependency', (_, override, expectedMessage) => {
+      expect(() => new DomUiFacade(createDependencies(override))).toThrow(
+        expectedMessage,
+      );
+    });
   });
 
-  it('should throw an error if titleRenderer is missing', () => {
-    const deps = { ...validDeps };
-    delete deps.titleRenderer;
-    expect(() => new DomUiFacade(deps)).toThrow(
-      'DomUiFacade: Missing or invalid titleRenderer dependency.'
-    );
-  });
+  it('invokes dispose on each dependency when available', () => {
+    const deps = createDependencies();
+    const facade = new DomUiFacade(deps);
 
-  it('should throw an error if inputStateController is missing', () => {
-    const deps = { ...validDeps };
-    delete deps.inputStateController;
-    expect(() => new DomUiFacade(deps)).toThrow(
-      'DomUiFacade: Missing or invalid inputStateController dependency.'
-    );
-  });
-
-  it('should throw an error if speechBubbleRenderer is missing', () => {
-    const deps = { ...validDeps };
-    delete deps.speechBubbleRenderer;
-    expect(() => new DomUiFacade(deps)).toThrow(
-      'DomUiFacade: Missing or invalid speechBubbleRenderer dependency.'
-    );
-  });
-
-  it('should throw an error if perceptionLogRenderer is missing', () => {
-    const deps = { ...validDeps };
-    delete deps.perceptionLogRenderer;
-    expect(() => new DomUiFacade(deps)).toThrow(
-      'DomUiFacade: Missing or invalid perceptionLogRenderer dependency.'
-    );
-  });
-
-  // Added test for actionResultRenderer
-  it('should throw an error if actionResultRenderer is missing', () => {
-    const deps = { ...validDeps };
-    delete deps.actionResultRenderer;
-    expect(() => new DomUiFacade(deps)).toThrow(
-      'DomUiFacade: Missing or invalid actionResultRenderer dependency.'
-    );
-  });
-
-  it('should throw an error if saveGameUI is missing', () => {
-    const deps = { ...validDeps };
-    delete deps.saveGameUI;
-    expect(() => new DomUiFacade(deps)).toThrow(
-      'DomUiFacade: Missing or invalid saveGameUI dependency.'
-    );
-  });
-
-  it('should throw an error if loadGameUI is missing', () => {
-    const deps = { ...validDeps };
-    delete deps.loadGameUI;
-    expect(() => new DomUiFacade(deps)).toThrow(
-      'DomUiFacade: Missing or invalid loadGameUI dependency.'
-    );
-  });
-
-  it('should throw an error if llmSelectionModal is missing', () => {
-    const deps = { ...validDeps };
-    delete deps.llmSelectionModal;
-    expect(() => new DomUiFacade(deps)).toThrow(
-      'DomUiFacade: Missing or invalid llmSelectionModal dependency.'
-    );
-  });
-
-  it('should NOT throw an error if entityLifecycleMonitor is missing (optional)', () => {
-    const deps = { ...validDeps };
-    delete deps.entityLifecycleMonitor;
-    expect(() => new DomUiFacade(deps)).not.toThrow();
-  });
-
-  /* ---------- getters ---------- */
-  it('should provide a getter for actionButtonsRenderer', () => {
-    const facade = new DomUiFacade(validDeps);
-    expect(facade.actionButtons).toBe(mockActionButtonsRenderer);
-  });
-
-  it('should provide a getter for locationRenderer', () => {
-    const facade = new DomUiFacade(validDeps);
-    expect(facade.location).toBe(mockLocationRenderer);
-  });
-
-  it('should provide a getter for titleRenderer', () => {
-    const facade = new DomUiFacade(validDeps);
-    expect(facade.title).toBe(mockTitleRenderer);
-  });
-
-  it('should provide a getter for inputStateController', () => {
-    const facade = new DomUiFacade(validDeps);
-    expect(facade.input).toBe(mockInputStateController);
-  });
-
-  it('should provide a getter for speechBubbleRenderer', () => {
-    const facade = new DomUiFacade(validDeps);
-    expect(facade.speechBubble).toBe(mockSpeechBubbleRenderer);
-  });
-
-  it('should provide a getter for perceptionLog', () => {
-    const facade = new DomUiFacade(validDeps);
-    expect(facade.perceptionLog).toBe(mockPerceptionLogRenderer);
-  });
-
-  // Added getter test for actionResults
-  it('should provide a getter for actionResults', () => {
-    const facade = new DomUiFacade(validDeps);
-    expect(facade.actionResults).toBe(mockActionResultRenderer);
-  });
-
-  it('should provide a getter for saveGame', () => {
-    const facade = new DomUiFacade(validDeps);
-    expect(facade.saveGame).toBe(mockSaveGameUI);
-  });
-
-  it('should provide a getter for loadGame', () => {
-    const facade = new DomUiFacade(validDeps);
-    expect(facade.loadGame).toBe(mockLoadGameUI);
-  });
-
-  it('should provide a getter for llmSelectionModal', () => {
-    const facade = new DomUiFacade(validDeps);
-    expect(facade.llmSelectionModal).toBe(mockLlmSelectionModal);
-  });
-
-  it('should provide a getter for entityLifecycleMonitor', () => {
-    const facade = new DomUiFacade(validDeps);
-    expect(facade.entityLifecycleMonitor).toBe(mockEntityLifecycleMonitor);
-  });
-
-  /* ---------- dispose ---------- */
-  it('should call dispose on all underlying renderers if they have a dispose method', () => {
-    const facade = new DomUiFacade(validDeps);
     facade.dispose();
 
-    expect(mockActionButtonsRenderer.dispose).toHaveBeenCalledTimes(1);
-    expect(mockLocationRenderer.dispose).toHaveBeenCalledTimes(1);
-    expect(mockTitleRenderer.dispose).toHaveBeenCalledTimes(1);
-    expect(mockInputStateController.dispose).toHaveBeenCalledTimes(1);
-    expect(mockSpeechBubbleRenderer.dispose).toHaveBeenCalledTimes(1);
-    expect(mockPerceptionLogRenderer.dispose).toHaveBeenCalledTimes(1);
-    expect(mockActionResultRenderer.dispose).toHaveBeenCalledTimes(1); // Added dispose check
-    expect(mockSaveGameUI.dispose).toHaveBeenCalledTimes(1);
-    expect(mockLoadGameUI.dispose).toHaveBeenCalledTimes(1);
-    expect(mockLlmSelectionModal.dispose).toHaveBeenCalledTimes(1);
-    expect(mockEntityLifecycleMonitor.dispose).toHaveBeenCalledTimes(1);
+    expect(deps.actionButtonsRenderer.dispose).toHaveBeenCalledTimes(1);
+    expect(deps.locationRenderer.dispose).toHaveBeenCalledTimes(1);
+    expect(deps.titleRenderer.dispose).toHaveBeenCalledTimes(1);
+    expect(deps.inputStateController.dispose).toHaveBeenCalledTimes(1);
+    expect(deps.speechBubbleRenderer.dispose).toHaveBeenCalledTimes(1);
+    expect(deps.perceptionLogRenderer.dispose).toHaveBeenCalledTimes(1);
+    expect(deps.actionResultRenderer.dispose).toHaveBeenCalledTimes(1);
+    expect(deps.saveGameUI.dispose).toHaveBeenCalledTimes(1);
+    expect(deps.loadGameUI.dispose).toHaveBeenCalledTimes(1);
+    expect(deps.llmSelectionModal.dispose).toHaveBeenCalledTimes(1);
+    expect(deps.entityLifecycleMonitor.dispose).toHaveBeenCalledTimes(1);
   });
 
-  it('should not throw if a renderer lacks a dispose method', () => {
-    const incompleteDeps = {
-      ...validDeps,
-      actionButtonsRenderer: { refreshList: jest.fn() }, // no dispose, but has refreshList
-      speechBubbleRenderer: { renderSpeech: jest.fn() }, // no dispose
-      actionResultRenderer: {}, // no dispose
-      saveGameUI: { show: jest.fn() }, // no dispose
-      entityLifecycleMonitor: { clearEvents: jest.fn() }, // no dispose
-    };
+  it('skips dispose calls gracefully when dependencies omit the method', () => {
+    const depsWithoutDispose = createDependencies({
+      actionButtonsRenderer: { refreshList: jest.fn() },
+      locationRenderer: { render: jest.fn() },
+      titleRenderer: { set: jest.fn() },
+      inputStateController: { setEnabled: jest.fn() },
+      speechBubbleRenderer: { renderSpeech: jest.fn() },
+      perceptionLogRenderer: { refreshList: jest.fn() },
+      actionResultRenderer: {},
+      saveGameUI: { show: jest.fn() },
+      loadGameUI: { show: jest.fn() },
+      llmSelectionModal: { show: jest.fn() },
+      entityLifecycleMonitor: null,
+    });
 
-    const facade = new DomUiFacade(incompleteDeps);
+    const facade = new DomUiFacade(depsWithoutDispose);
+
     expect(() => facade.dispose()).not.toThrow();
-
-    // These should still be called
-    expect(mockLocationRenderer.dispose).toHaveBeenCalledTimes(1);
-    expect(mockTitleRenderer.dispose).toHaveBeenCalledTimes(1);
-    expect(mockInputStateController.dispose).toHaveBeenCalledTimes(1);
-    expect(mockPerceptionLogRenderer.dispose).toHaveBeenCalledTimes(1);
-    expect(mockLoadGameUI.dispose).toHaveBeenCalledTimes(1);
-    expect(mockLlmSelectionModal.dispose).toHaveBeenCalledTimes(1);
-
-    // And these should not have been called because they weren't provided.
-    expect(mockActionButtonsRenderer.dispose).not.toHaveBeenCalled();
-    expect(mockSpeechBubbleRenderer.dispose).not.toHaveBeenCalled();
-    expect(mockSaveGameUI.dispose).not.toHaveBeenCalled();
-    expect(mockEntityLifecycleMonitor.dispose).not.toHaveBeenCalled();
   });
 });
