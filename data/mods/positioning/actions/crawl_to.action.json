@@ -1,0 +1,47 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "positioning:crawl_to",
+  "name": "Crawl To",
+  "description": "Crawl submissively to the entity you are kneeling before, entering their personal space.",
+  "targets": {
+    "primary": {
+      "scope": "positioning:entity_actor_is_kneeling_before",
+      "placeholder": "target",
+      "description": "The entity you are kneeling before"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:kneeling_before"]
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:sitting_on",
+      "positioning:bending_over",
+      "positioning:lying_down",
+      "positioning:straddling_waist",
+      "positioning:being_hugged",
+      "positioning:hugging",
+      "positioning:closeness"
+    ],
+    "primary": [
+      "positioning:kneeling_before",
+      "positioning:lying_down",
+      "positioning:bending_over"
+    ]
+  },
+  "template": "crawl to {target}",
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "core:actor-mouth-available"
+      },
+      "failure_message": "You cannot do that while your mouth is engaged."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#bf360c",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#8d2c08",
+    "hoverTextColor": "#ffffff"
+  }
+}

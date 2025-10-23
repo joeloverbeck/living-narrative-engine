@@ -19,6 +19,7 @@ The Positioning System mod provides foundational mechanics for managing physical
 - **turn_around**: Turn another actor around or have them face you
 - **turn_around_to_face**: Turn to face someone you're currently facing away from
 - **kneel_before**: Kneel before another actor in a respectful or submissive gesture
+- **crawl_to**: Crawl submissively to the entity you are kneeling before, establishing closeness while maintaining the kneeling posture
 - **sit_down**: Sit on available furniture in any open seat
 - **sit_down_at_distance**: Sit on available furniture while maintaining a one-seat buffer from a selected occupant
   - Requires: Furniture with at least 2 empty seats to the right of an occupant

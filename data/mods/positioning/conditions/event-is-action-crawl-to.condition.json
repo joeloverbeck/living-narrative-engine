@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "positioning:event-is-action-crawl-to",
+  "description": "Checks if the triggering event is for the 'positioning:crawl_to' action.",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "positioning:crawl_to"
+    ]
+  }
+}
