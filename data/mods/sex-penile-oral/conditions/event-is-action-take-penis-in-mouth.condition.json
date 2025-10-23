@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex-penile-oral:event-is-action-take-penis-in-mouth",
+  "description": "True when the action ID is sex-penile-oral:take_penis_in_mouth.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "sex-penile-oral:take_penis_in_mouth"]
+  }
+}

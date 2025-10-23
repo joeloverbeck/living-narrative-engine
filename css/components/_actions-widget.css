@@ -11,26 +11,33 @@
 
 /* Limit the height of the actions widget to prevent it from shrinking the chat panel */
 #actions-widget {
-  max-height: 30vh; /* Maximum 30% of viewport height */
-  max-height: min(30vh, 250px); /* Use the smaller of 30vh or 250px */
+  max-height: 30vh;
+  /* Maximum 30% of viewport height */
+  max-height: min(30vh, 250px);
+  /* Use the smaller of 30vh or 250px */
   display: flex;
   flex-direction: column;
-  flex-shrink: 0; /* Prevent the widget from shrinking */
+  flex-shrink: 0;
+  /* Prevent the widget from shrinking */
 }
 
 #action-buttons {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-start; /* Aligns buttons to the start of the container */
-  overflow-y: auto; /* Enable vertical scrolling when content exceeds container height */
-  flex: 1; /* Take up remaining space in the actions widget */
-  min-height: 0; /* Allow the container to shrink properly for scrolling */
+  justify-content: flex-start;
+  /* Aligns buttons to the start of the container */
+  overflow-y: auto;
+  /* Enable vertical scrolling when content exceeds container height */
+  flex: 1;
+  /* Take up remaining space in the actions widget */
+  min-height: 0;
+  /* Allow the container to shrink properly for scrolling */
 }
 
 /* Context-specific button sizing/margin within the actions widget */
 #action-buttons button {
-  width: auto; /* Allow buttons to size based on their content */
-  margin: var(--spacing-xs); /* Consistent small margin around each button */
+  width: auto;
+  /* Allow buttons to size based on their content */
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -57,6 +64,7 @@
       opacity: 0;
       transform: scale(0.96);
     }
+
     to {
       opacity: 1;
       transform: scale(1);
@@ -68,6 +76,7 @@
       opacity: 1;
       transform: scale(1);
     }
+
     to {
       opacity: 0;
       transform: scale(0.96);
@@ -79,6 +88,7 @@
       opacity: 0;
       transform: scale(0.5);
     }
+
     to {
       opacity: 1;
       transform: scale(1);
@@ -90,6 +100,7 @@
       opacity: 1;
       transform: scale(1);
     }
+
     to {
       opacity: 0;
       transform: scale(0.5);
@@ -127,7 +138,8 @@
   padding: 0.2em 0;
   border-bottom: 1px solid var(--border-light);
   letter-spacing: 0.5px;
-  flex-basis: 100%; /* Force full width in flex container */
+  flex-basis: 100%;
+  /* Force full width in flex container */
 }
 
 .action-section-header:first-child {
@@ -140,7 +152,8 @@
   flex-wrap: wrap;
   gap: 0.5em;
   margin-bottom: 1em;
-  width: 100%; /* Ensure full width in flex container */
+  width: 100%;
+  /* Ensure full width in flex container */
 }
 
 .action-group:last-child {
@@ -150,7 +163,8 @@
 /* Action Buttons within Groups */
 .action-group .action-button {
   min-width: auto;
-  margin: 0; /* Remove default margins since gap handles spacing */
+  margin: 0;
+  /* Remove default margins since gap handles spacing */
 }
 
 /* Responsive Adjustments */
@@ -186,6 +200,7 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -223,12 +238,6 @@
     0 0 4px var(--selection-color);
 }
 
-/* Focus state - accessible by default */
-.action-button-custom-visual:focus {
-  outline: 2px solid var(--focus-color);
-  outline-offset: 2px;
-}
-
 /* Hover state enhancement */
 .action-button-custom-visual.action-button-hovering {
   transform: translateY(-1px);
@@ -254,12 +263,12 @@
   line-height: 16px;
   text-align: center;
   pointer-events: none;
-  display: none; /* Hidden in production, shown in dev mode */
+  display: none;
+  /* Hidden in production, shown in dev mode */
 }
 
 /* Show contrast warnings in development */
-body[data-dev-mode='true']
-  .action-button-custom-visual.contrast-warning::after {
+body[data-dev-mode='true'] .action-button-custom-visual.contrast-warning::after {
   display: block;
 }
 
