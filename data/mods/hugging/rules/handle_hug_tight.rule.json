@@ -1,9 +1,9 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_hug_tight",
-  "comment": "Handles the 'affection:hug_tight' action. Dispatches descriptive text and ends the turn.",
+  "comment": "Handles the 'hugging:hug_tight' action. Dispatches descriptive text and ends the turn.",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "affection:event-is-action-hug-tight" },
+  "condition": { "condition_ref": "hugging:event-is-action-hug-tight" },
   "actions": [
     {
       "type": "GET_NAME",

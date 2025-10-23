@@ -116,7 +116,7 @@ describe('affection:rest_head_on_shoulder action integration', () => {
     await testFixture.eventBus.dispatch('core:attempt_action', {
       eventName: 'core:attempt_action',
       actorId: scenario.actor.id,
-      actionId: 'affection:hug_tight',
+      actionId: 'hugging:hug_tight',
       targetId: scenario.target.id,
       originalInput: 'hug_tight target',
     });

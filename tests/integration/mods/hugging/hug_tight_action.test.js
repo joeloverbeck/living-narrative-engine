@@ -1,20 +1,20 @@
 /**
- * @file Integration tests for the affection:hug_tight action and rule.
+ * @file Integration tests for the hugging:hug_tight action and rule.
  * @description Tests the rule execution after the hug_tight action is performed.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import hugTightRule from '../../../../data/mods/affection/rules/handle_hug_tight.rule.json';
-import eventIsActionHugTight from '../../../../data/mods/affection/conditions/event-is-action-hug-tight.condition.json';
+import hugTightRule from '../../../../data/mods/hugging/rules/handle_hug_tight.rule.json';
+import eventIsActionHugTight from '../../../../data/mods/hugging/conditions/event-is-action-hug-tight.condition.json';
 
-describe('affection:hug_tight action integration', () => {
+describe('hugging:hug_tight action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'affection',
-      'affection:hug_tight',
+      'hugging',
+      'hugging:hug_tight',
       hugTightRule,
       eventIsActionHugTight
     );
