@@ -241,13 +241,7 @@ export async function beginGame(showLoadUI = false) {
       const errorObj = new Error(errMsg);
       (logger || console).error(`main.js: ${errMsg}`);
       displayFatalStartupError(
-        uiElements || {
-          outputDiv: document.getElementById('outputDiv'),
-          errorDiv: document.getElementById('error-output'),
-          titleElement: document.querySelector('h1'),
-          inputElement: document.getElementById('speech-input'),
-          document,
-        },
+        uiElements,
         {
           userMessage: errMsg,
           consoleMessage: errMsg,
