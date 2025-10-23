@@ -8,7 +8,7 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": []
+    "actor": ["positioning:being_hugged"]
   },
   "template": "rest your head on {target}'s shoulder",
   "prerequisites": [],

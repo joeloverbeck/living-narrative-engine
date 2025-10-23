@@ -180,5 +180,23 @@ describe('affection:link_arms action discovery', () => {
 
       expect(ids).not.toContain(ACTION_ID);
     });
+
+    it('is not available when the actor is currently being hugged', () => {
+      const scenario = testFixture.createCloseActors(['Nina', 'Omar']);
+      scenario.actor.components['positioning:being_hugged'] = {
+        hugging_entity_id: scenario.target.id,
+      };
+
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+      configureActionDiscovery();
+
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
+      const ids = availableActions.map((action) => action.id);
+
+      expect(ids).not.toContain(ACTION_ID);
+    });
   });
 });
