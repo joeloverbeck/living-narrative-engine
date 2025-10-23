@@ -1,29 +1,8 @@
 {
-  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "sex-penile-oral",
   "version": "1.0.0",
-  "name": "Sex - Penile Oral",
-  "description": "Oral-focused penis and testicle actions modularized from the legacy sex pack.",
-  "author": "Living Narrative Engine Team",
-  "gameVersion": ">=0.0.1",
-  "dependencies": [
-    {
-      "id": "anatomy",
-      "version": "^1.0.0"
-    },
-    {
-      "id": "clothing",
-      "version": "^1.0.0"
-    },
-    {
-      "id": "positioning",
-      "version": "^1.0.0"
-    },
-    {
-      "id": "sex-core",
-      "version": "^1.0.0"
-    }
-  ],
+  "name": "sex-penile-oral",
+  "dependencies": [],
   "content": {
     "actions": [
       "breathe_teasingly_on_penis.action.json",
@@ -64,13 +43,6 @@
       "handle_suckle_testicle.rule.json",
       "handle_suckle_testicle_sitting_close.rule.json"
     ],
-    "scopes": [],
-    "components": [],
-    "events": [],
-    "macros": [],
-    "entities": {
-      "definitions": [],
-      "instances": []
-    }
+    "scopes": []
   }
 }
