@@ -257,9 +257,19 @@ export class ModAssertionHelpers {
    * @param {Array<string>} allowedEventTypes - Event types that are allowed
    */
   static assertOnlyExpectedEvents(events, allowedEventTypes) {
-    const eventTypes = events.map((e) => e.eventType);
+    const eventTypes = Array.isArray(events)
+      ? events.map((e) => e.eventType)
+      : [];
+    const normalizedAllowed = Array.isArray(allowedEventTypes)
+      ? allowedEventTypes
+      : [];
+    const allowedSet = new Set([
+      ...normalizedAllowed,
+      'core:action_success',
+    ]);
+
     const unexpectedEvents = eventTypes.filter(
-      (type) => !allowedEventTypes.includes(type)
+      (type) => !allowedSet.has(type)
     );
 
     expect(unexpectedEvents).toEqual([]);

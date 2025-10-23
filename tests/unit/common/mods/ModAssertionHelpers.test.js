@@ -854,6 +854,14 @@ describe('ModAssertionHelpers', () => {
         ModAssertionHelpers.assertOnlyExpectedEvents(mockEvents, ['allowed:a']);
       }).toThrow();
     });
+
+    it('should allow core:action_success without explicit allowance', () => {
+      mockEvents = [{ eventType: 'core:action_success' }];
+
+      expect(() => {
+        ModAssertionHelpers.assertOnlyExpectedEvents(mockEvents, []);
+      }).not.toThrow();
+    });
   });
 
   describe('findEventByType', () => {

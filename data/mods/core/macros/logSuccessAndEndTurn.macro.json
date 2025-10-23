@@ -35,6 +35,19 @@
       }
     },
     {
+      "type": "DISPATCH_EVENT",
+      "parameters": {
+        "eventType": "core:action_success",
+        "payload": {
+          "eventName": "core:action_success",
+          "actionId": "{event.payload.actionId}",
+          "actorId": "{event.payload.actorId}",
+          "targetId": "{event.payload.targetId}",
+          "success": true
+        }
+      }
+    },
+    {
       "type": "END_TURN",
       "parameters": {
         "entityId": "{event.payload.actorId}",

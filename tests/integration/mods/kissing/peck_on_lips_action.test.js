@@ -6,7 +6,7 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import pecOnLipsRule from '../../../../data/mods/kissing/rules/peck_on_lips.rule.json';
-import eventIsActionPecOnLips from '../../../../data/mods/kissing/conditions/event-is-action-peck_on_lips.condition.json';
+import eventIsActionPecOnLips from '../../../../data/mods/kissing/conditions/event-is-action-peck-on-lips.condition.json';
 
 describe('kissing:peck_on_lips action integration', () => {
   let testFixture;

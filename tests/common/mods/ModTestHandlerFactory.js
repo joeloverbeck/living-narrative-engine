@@ -31,6 +31,7 @@ import AtomicModifyComponentHandler from '../../../src/logic/operationHandlers/a
 import LockMouthEngagementHandler from '../../../src/logic/operationHandlers/lockMouthEngagementHandler.js';
 import UnlockMouthEngagementHandler from '../../../src/logic/operationHandlers/unlockMouthEngagementHandler.js';
 import BreakClosenessWithTargetHandler from '../../../src/logic/operationHandlers/breakClosenessWithTargetHandler.js';
+import MergeClosenessCircleHandler from '../../../src/logic/operationHandlers/mergeClosenessCircleHandler.js';
 import * as closenessCircleService from '../../../src/logic/services/closenessCircleService.js';
 import { validateDependency } from '../../../src/utils/dependencyUtils.js';
 
@@ -606,6 +607,12 @@ export class ModTestHandlerFactory {
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,
+      }),
+      MERGE_CLOSENESS_CIRCLE: new MergeClosenessCircleHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+        closenessCircleService,
       }),
       LOCK_MOVEMENT: new LockMovementHandler({
         entityManager,
