@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-penile-oral:pull_penis_out_of_mouth",
+  "name": "Pull Penis Out of Mouth",
+  "description": "Slowly withdraw your partner's penis from your mouth, ending the oral sex interaction with a sensual release.",
+  "targets": {
+    "primary": {
+      "scope": "sex-penile-oral:receiving_blowjob_from_actor",
+      "placeholder": "primary",
+      "description": "Partner whose penis you are currently pleasuring"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:giving_blowjob", "positioning:closeness"]
+  },
+  "forbidden_components": {},
+  "template": "slowly pull {primary}'s cock out of your mouth",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#2a1a5e",
+    "textColor": "#ede7f6",
+    "hoverBackgroundColor": "#372483",
+    "hoverTextColor": "#ffffff"
+  }
+}

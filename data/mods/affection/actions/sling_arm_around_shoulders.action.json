@@ -12,7 +12,8 @@
       "kissing:kissing",
       "positioning:straddling_waist",
       "positioning:being_hugged"
-    ]
+    ],
+    "target": ["positioning:giving_blowjob"]
   },
   "template": "sling an arm around {target}'s shoulders",
   "prerequisites": [],

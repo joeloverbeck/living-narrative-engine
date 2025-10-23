@@ -8,7 +8,8 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": []
+    "actor": [],
+    "target": ["positioning:giving_blowjob"]
   },
   "template": "place a hand on {target}'s knee",
   "prerequisites": [],

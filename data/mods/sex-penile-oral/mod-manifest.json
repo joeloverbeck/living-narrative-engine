@@ -13,10 +13,13 @@
       "lick_testicles_sitting_close.action.json",
       "nuzzle_penis_through_clothing.action.json",
       "nuzzle_penis_through_clothing_sitting_close.action.json",
+      "pull_head_to_bare_penis.action.json",
       "pull_head_to_clothed_crotch.action.json",
+      "pull_penis_out_of_mouth.action.json",
       "suckle_testicle.action.json",
       "suckle_testicle_sitting_close.action.json",
-      "take_penis_in_mouth.action.json"
+      "take_penis_in_mouth.action.json",
+      "take_penis_in_mouth_kneeling.action.json"
     ],
     "conditions": [
       "event-is-action-breathe-teasingly-on-penis-sitting-close.condition.json",
@@ -27,9 +30,12 @@
       "event-is-action-lick-testicles-sitting-close.condition.json",
       "event-is-action-nuzzle-penis-through-clothing-sitting-close.condition.json",
       "event-is-action-nuzzle-penis-through-clothing.condition.json",
+      "event-is-action-pull-head-to-bare-penis.condition.json",
       "event-is-action-pull-head-to-clothed-crotch.condition.json",
+      "event-is-action-pull-penis-out-of-mouth.condition.json",
       "event-is-action-suckle-testicle-sitting-close.condition.json",
       "event-is-action-suckle-testicle.condition.json",
+      "event-is-action-take-penis-in-mouth-kneeling.condition.json",
       "event-is-action-take-penis-in-mouth.condition.json"
     ],
     "rules": [
@@ -41,11 +47,14 @@
       "handle_lick_testicles_sitting_close.rule.json",
       "handle_nuzzle_penis_through_clothing.rule.json",
       "handle_nuzzle_penis_through_clothing_sitting_close.rule.json",
+      "handle_pull_head_to_bare_penis.rule.json",
       "handle_pull_head_to_clothed_crotch.rule.json",
+      "handle_pull_penis_out_of_mouth.rule.json",
       "handle_suckle_testicle.rule.json",
       "handle_suckle_testicle_sitting_close.rule.json",
-      "handle_take_penis_in_mouth.rule.json"
+      "handle_take_penis_in_mouth.rule.json",
+      "handle_take_penis_in_mouth_kneeling.rule.json"
     ],
-    "scopes": []
+    "scopes": ["receiving_blowjob_from_actor.scope"]
   }
 }
