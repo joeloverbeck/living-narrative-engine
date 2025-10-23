@@ -127,7 +127,7 @@ Caring, supportive physical interactions that can be platonic or romantic. These
 | Action ID | Name | Description |
 |-----------|------|-------------|
 | `affection:hold_hand` | Hold Hand | Reach out and hold someone's hand affectionately |
-| `affection:hug_tight` | Hug Tight | Give someone a tight, tender hug |
+| `hugging:hug_tight` | Hug Tight | Give someone a tight, tender hug |
 | `affection:brush_hand` | Brush Hand | Lightly brush your hand against theirs |
 | `affection:massage_back` | Massage Back | Gently massage the target's back |
 | `affection:massage_shoulders` | Massage Shoulders | Massage the target's shoulders |

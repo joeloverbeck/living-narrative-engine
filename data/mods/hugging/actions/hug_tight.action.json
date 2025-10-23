@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "affection:hug_tight",
+  "id": "hugging:hug_tight",
   "name": "Hug Tight",
   "description": "Give someone a tight, tender hug.",
   "targets": "positioning:close_actors_facing_each_other_or_behind_target",

@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "hugging",
+  "version": "1.0.0",
+  "name": "Hugging",
+  "description": "Tight, tender hugs that express warmth and closeness through enveloping embraces.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [
+      "hug_tight.action.json"
+    ],
+    "components": [],
+    "conditions": [
+      "event-is-action-hug-tight.condition.json"
+    ],
+    "rules": [
+      "handle_hug_tight.rule.json"
+    ],
+    "entities": {
+      "definitions": [],
+      "instances": []
+    },
+    "events": [],
+    "macros": [],
+    "scopes": []
+  }
+}

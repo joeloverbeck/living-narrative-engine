@@ -662,7 +662,7 @@ describe('Complete Action Categorization Workflow Integration', () => {
             },
             {
               index: 4,
-              actionId: 'affection:hug_tight',
+              actionId: 'hugging:hug_tight',
               commandString: 'hold close',
               description: 'Pull them close.',
               params: {},

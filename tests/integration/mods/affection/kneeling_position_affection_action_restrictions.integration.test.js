@@ -40,7 +40,7 @@ import DefaultDslParser from '../../../../src/scopeDsl/parser/defaultDslParser.j
 import { ATTEMPT_ACTION_ID } from '../../../../src/constants/eventIds.js';
 
 // Import action definitions
-import hugTightAction from '../../../../data/mods/affection/actions/hug_tight.action.json';
+import hugTightAction from '../../../../data/mods/hugging/actions/hug_tight.action.json';
 import linkArmsAction from '../../../../data/mods/affection/actions/link_arms.action.json';
 import placeHandOnWaistAction from '../../../../data/mods/affection/actions/place_hand_on_waist.action.json';
 import restHeadOnShoulderAction from '../../../../data/mods/affection/actions/rest_head_on_shoulder.action.json';
@@ -390,7 +390,7 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
 
       // Assert: Hug tight action should NOT be available for Actor2
-      expect(hasActionForTarget(actor1Actions, 'affection:hug_tight', actor2)).toBe(false);
+      expect(hasActionForTarget(actor1Actions, 'hugging:hug_tight', actor2)).toBe(false);
     });
 
     it('should NOT be available when actor is kneeling before target', async () => {
@@ -406,7 +406,7 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
 
       // Assert: Hug tight action should NOT be available for Actor2
-      expect(hasActionForTarget(actor1Actions, 'affection:hug_tight', actor2)).toBe(false);
+      expect(hasActionForTarget(actor1Actions, 'hugging:hug_tight', actor2)).toBe(false);
     });
 
     it('should BE available when neither is kneeling', async () => {
@@ -419,7 +419,7 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
 
       // Assert: Hug tight action SHOULD be available
-      expect(hasActionForTarget(actor1Actions, 'affection:hug_tight', actor2)).toBe(true);
+      expect(hasActionForTarget(actor1Actions, 'hugging:hug_tight', actor2)).toBe(true);
     });
   });
 
@@ -562,12 +562,12 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       const actor3Actions = await actionDiscoveryService.getValidActions(actor3);
 
       // Assert: Actor1 can hug Actor3 but not Actor2 (who is kneeling)
-      expect(hasActionForTarget(actor1Actions, 'affection:hug_tight', actor3)).toBe(true);
-      expect(hasActionForTarget(actor1Actions, 'affection:hug_tight', actor2)).toBe(false);
+      expect(hasActionForTarget(actor1Actions, 'hugging:hug_tight', actor3)).toBe(true);
+      expect(hasActionForTarget(actor1Actions, 'hugging:hug_tight', actor2)).toBe(false);
 
       // Assert: Actor3 can hug both Actor1 and Actor2
-      expect(hasActionForTarget(actor3Actions, 'affection:hug_tight', actor1)).toBe(true);
-      expect(hasActionForTarget(actor3Actions, 'affection:hug_tight', actor2)).toBe(true);
+      expect(hasActionForTarget(actor3Actions, 'hugging:hug_tight', actor1)).toBe(true);
+      expect(hasActionForTarget(actor3Actions, 'hugging:hug_tight', actor2)).toBe(true);
     });
 
     it('should make actions available again after standing up', async () => {
@@ -581,7 +581,7 @@ describe('Kneeling Position Affection Action Restrictions', () => {
 
       // Act 1: Verify actions are unavailable while kneeling
       let actor1Actions = await actionDiscoveryService.getValidActions(actor1);
-      expect(hasActionForTarget(actor1Actions, 'affection:hug_tight', actor2)).toBe(false);
+      expect(hasActionForTarget(actor1Actions, 'hugging:hug_tight', actor2)).toBe(false);
 
       // Act 2: Actor2 stands up
       entityManager.removeComponent(actor2.id, 'positioning:kneeling_before');
@@ -593,7 +593,7 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       actor1Actions = await actionDiscoveryService.getValidActions(actor1);
 
       // Assert: Actions should be available again
-      expect(hasActionForTarget(actor1Actions, 'affection:hug_tight', actor2)).toBe(true);
+      expect(hasActionForTarget(actor1Actions, 'hugging:hug_tight', actor2)).toBe(true);
     });
   });
 });
