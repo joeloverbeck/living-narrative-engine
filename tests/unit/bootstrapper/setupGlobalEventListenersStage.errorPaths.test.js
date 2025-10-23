@@ -34,9 +34,7 @@ describe('setupGlobalEventListenersStage error handling', () => {
     stageFailure.mockReturnValue(failureResult);
     stageSuccess.mockReturnValue({ success: true });
 
-    const { setupGlobalEventListenersStage } = await import(
-      '../../../src/bootstrapper/stages/eventStages.js'
-    );
+    const { setupGlobalEventListenersStage } = await import('../../../src/bootstrapper/stages/eventStages.js');
 
     const logger = createLogger();
     const result = await setupGlobalEventListenersStage(
@@ -69,9 +67,7 @@ describe('setupGlobalEventListenersStage error handling', () => {
       handler();
     });
 
-    const { setupGlobalEventListenersStage } = await import(
-      '../../../src/bootstrapper/stages/eventStages.js'
-    );
+    const { setupGlobalEventListenersStage } = await import('../../../src/bootstrapper/stages/eventStages.js');
 
     const logger = createLogger();
     const gameEngine = { stop: jest.fn() };
