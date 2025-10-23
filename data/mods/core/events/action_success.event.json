@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "id": "core:action_success",
+  "description": "Emitted when an action completes successfully so downstream systems can react to the outcome.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "eventName": {
+        "type": "string",
+        "const": "core:action_success",
+        "description": "Optional explicit event name included for legacy compatibility."
+      },
+      "actionId": {
+        "type": "string",
+        "minLength": 1,
+        "description": "The fully-qualified identifier of the action that succeeded."
+      },
+      "actorId": {
+        "type": "string",
+        "minLength": 1,
+        "description": "The entity identifier for the actor who performed the action."
+      },
+      "targetId": {
+        "anyOf": [
+          {
+            "type": "string",
+            "minLength": 1
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Identifier for the primary target of the action when one exists."
+      },
+      "success": {
+        "type": "boolean",
+        "const": true,
+        "description": "Indicates the action completed successfully. Always true for this event."
+      }
+    },
+    "required": ["actionId", "actorId", "success"],
+    "additionalProperties": false
+  }
+}
