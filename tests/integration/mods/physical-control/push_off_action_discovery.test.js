@@ -108,6 +108,7 @@ describe('physical-control:push_off action discovery', () => {
       ]);
       expect(pushOffAction.forbidden_components.actor).toEqual([
         'positioning:straddling_waist',
+        'positioning:hugging',
         'positioning:being_hugged',
       ]);
       expect(pushOffAction.forbidden_components.primary).toEqual([
@@ -195,6 +196,30 @@ describe('physical-control:push_off action discovery', () => {
       scenario.actor.components['positioning:straddling_waist'] = {
         target_id: scenario.target.id,
         facing_away: false,
+      };
+
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+      configureActionDiscovery();
+
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
+      const ids = availableActions.map((action) => action.id);
+
+      expect(ids).not.toContain(ACTION_ID);
+    });
+
+    it('is not available when the actor is hugging the target', () => {
+      const scenario = testFixture.createCloseActors(['Una', 'Viktor']);
+
+      scenario.actor.components['positioning:hugging'] = {
+        embraced_entity_id: scenario.target.id,
+        initiated: true,
+        consented: true,
+      };
+      scenario.target.components['positioning:being_hugged'] = {
+        hugging_entity_id: scenario.actor.id,
       };
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
