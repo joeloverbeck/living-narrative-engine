@@ -322,6 +322,27 @@ describe('positioning:bend_over action integration', () => {
     });
   });
 
+  describe('forbidden component enforcement', () => {
+    it('rejects the action when the actor is being hugged', async () => {
+      const { room, actor, surface } = setupBendingScenario();
+      const hugger = new ModEntityBuilder('test:hugger')
+        .withName('Charlie')
+        .atLocation('kitchen')
+        .asActor()
+        .build();
+
+      actor.components['positioning:being_hugged'] = {
+        hugging_entity_id: hugger.id,
+      };
+
+      testFixture.reset([room, actor, surface, hugger]);
+
+      await expect(
+        testFixture.executeAction(actor.id, surface.id)
+      ).rejects.toThrow(/forbidden component.*positioning:being_hugged/i);
+    });
+  });
+
   describe('action validation', () => {
     it('should validate rule structure', () => {
       // The rule file should be loaded
