@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "affection:event-is-action-rest-head-against-flat-chest",
+  "description": "Checks if the triggering event is for the 'affection:rest_head_against_flat_chest' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "affection:rest_head_against_flat_chest"
+    ]
+  }
+}

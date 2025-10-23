@@ -1,0 +1,7 @@
+// Actors in reciprocal closeness, facing each other, and lacking any breast anatomy
+affection:actors_without_breasts_facing_each_other := actor.components.positioning:closeness.partners[][{ "and": [
+  {"condition_ref": "positioning:both-actors-facing-each-other"},
+  {"!": {"condition_ref": "positioning:entity-kneeling-before-actor"}},
+  {"!": {"condition_ref": "positioning:actor-kneeling-before-entity"}},
+  {"not": {"hasPartOfType": [".", "breast"]}}
+]}]

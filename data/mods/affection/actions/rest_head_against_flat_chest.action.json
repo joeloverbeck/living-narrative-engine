@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "affection:rest_head_against_flat_chest",
+  "name": "Rest head against chest",
+  "description": "Lean in close and rest your head against your partner's chest for comfort.",
+  "targets": {
+    "primary": {
+      "scope": "affection:actors_without_breasts_facing_each_other",
+      "placeholder": "primary",
+      "description": "Partner facing you without any breast anatomy"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": ["kissing:kissing"]
+  },
+  "template": "rest your head on {primary}'s chest",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#6a1b9a",
+    "textColor": "#f3e5f5",
+    "hoverBackgroundColor": "#8e24aa",
+    "hoverTextColor": "#ffffff"
+  }
+}
