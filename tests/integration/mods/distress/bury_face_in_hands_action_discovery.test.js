@@ -5,6 +5,7 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
 import buryFaceInHandsAction from '../../../../data/mods/distress/actions/bury_face_in_hands.action.json';
 
 const ACTION_ID = 'distress:bury_face_in_hands';
@@ -36,6 +37,9 @@ describe('distress:bury_face_in_hands action discovery', () => {
     it('should be a self-targeting action', () => {
       expect(buryFaceInHandsAction.targets).toBe('none');
       expect(buryFaceInHandsAction.required_components).toEqual({});
+      expect(buryFaceInHandsAction.forbidden_components).toEqual({
+        actor: ['positioning:hugging'],
+      });
     });
   });
 
@@ -64,6 +68,32 @@ describe('distress:bury_face_in_hands action discovery', () => {
       await testFixture.executeAction(scenario.actor.id, null);
 
       testFixture.assertActionSuccess('Ava buries their face in their hands.');
+    });
+
+    it('should be blocked when the actor is currently hugging someone', async () => {
+      const scenario = testFixture.createStandardActorTarget(['Rin', 'Theo'], {
+        includeRoom: false,
+      });
+
+      scenario.actor.components['positioning:hugging'] = {
+        embraced_entity_id: scenario.target.id,
+        initiated: true,
+      };
+
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+
+      await expect(
+        testFixture.executeAction(scenario.actor.id, null)
+      ).rejects.toThrow('forbidden component');
+
+      const actorInstance = testFixture.entityManager.getEntityInstance(
+        scenario.actor.id
+      );
+      expect(actorInstance.components['positioning:hugging']).toEqual({
+        embraced_entity_id: scenario.target.id,
+        initiated: true,
+      });
     });
   });
 });

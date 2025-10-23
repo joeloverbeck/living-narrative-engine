@@ -5,6 +5,9 @@
   "description": "Collapse inward and hide your face behind your hands, shutting out the world as the weight of it all presses down.",
   "targets": "none",
   "required_components": {},
+  "forbidden_components": {
+    "actor": ["positioning:hugging"]
+  },
   "template": "bury your face in your hands",
   "prerequisites": [],
   "visual": {

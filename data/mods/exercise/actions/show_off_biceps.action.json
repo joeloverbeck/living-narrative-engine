@@ -5,7 +5,9 @@
   "description": "Flex your arms to show off your muscular biceps and triceps.",
   "targets": "none",
   "required_components": {},
-  "forbidden_components": {},
+  "forbidden_components": {
+    "actor": ["positioning:hugging"]
+  },
   "template": "show off your muscular arms",
   "prerequisites": [
     {

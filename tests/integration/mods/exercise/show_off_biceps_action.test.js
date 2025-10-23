@@ -3,8 +3,12 @@
  * @description Tests basic action properties and structure validation using the new test infrastructure.
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import showOffBicepsAction from '../../../../data/mods/exercise/actions/show_off_biceps.action.json';
+import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
+import showOffBicepsRule from '../../../../data/mods/exercise/rules/handle_show_off_biceps.rule.json';
+import eventIsActionShowOffBiceps from '../../../../data/mods/exercise/conditions/event-is-action-show-off-biceps.condition.json';
 import {
   validateActionProperties,
   validateVisualStyling,
@@ -38,7 +42,7 @@ describe('Exercise Mod: Show Off Biceps Action', () => {
     it('should have no component requirements or restrictions', () => {
       validateComponentRequirements(showOffBicepsAction, {
         required: {},
-        forbidden: {},
+        forbidden: { actor: ['positioning:hugging'] },
       });
     });
 
@@ -86,6 +90,49 @@ describe('Exercise Mod: Show Off Biceps Action', () => {
         'Flex your arms to show off your muscular biceps and triceps.'
       );
       expect(showOffBicepsAction.description.length).toBeGreaterThan(0);
+    });
+  });
+});
+
+describe('Exercise Mod: Show Off Biceps action availability restrictions', () => {
+  let testFixture;
+
+  beforeEach(async () => {
+    testFixture = await ModTestFixture.forAction(
+      'exercise',
+      'exercise:show_off_biceps',
+      showOffBicepsRule,
+      eventIsActionShowOffBiceps
+    );
+  });
+
+  afterEach(() => {
+    testFixture.cleanup();
+  });
+
+  it('blocks execution when the actor is currently hugging someone', async () => {
+    const scenario = testFixture.createStandardActorTarget(['Vera', 'Wyatt'], {
+      includeRoom: false,
+    });
+
+    scenario.actor.components['positioning:hugging'] = {
+      embraced_entity_id: scenario.target.id,
+      initiated: true,
+    };
+
+    const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+    testFixture.reset([room, scenario.actor, scenario.target]);
+
+    await expect(
+      testFixture.executeAction(scenario.actor.id, null)
+    ).rejects.toThrow('forbidden component');
+
+    const actorInstance = testFixture.entityManager.getEntityInstance(
+      scenario.actor.id
+    );
+    expect(actorInstance.components['positioning:hugging']).toEqual({
+      embraced_entity_id: scenario.target.id,
+      initiated: true,
     });
   });
 });
