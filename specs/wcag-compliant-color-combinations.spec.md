@@ -14,7 +14,7 @@ This specification provides a curated collection of pre-validated color combinat
 
 ## Current Usage Overview
 
-**Status**: 18 color schemes are actively implemented across mods (plus 1 reserved assignment) out of 41 defined combinations, leaving 22 available for future work.
+**Status**: 19 color schemes are actively implemented across mods (plus 1 reserved assignment) out of 42 defined combinations, leaving 22 available for future work.
 
 ### Active Mod Assignments
 
@@ -26,6 +26,7 @@ This specification provides a curated collection of pre-validated color combinat
 | Companionship            | Deep Teal          | 3.3     | `#00695c`        | Active   |
 | Core                     | Classic Blue-Grey  | 1.1     | `#455a64`        | Active   |
 | Exercise                 | Orange Flame       | 2.3     | `#e65100`        | Active   |
+| Hugging                  | Warm Embrace       | 3.4     | `#7d2a50`        | Active   |
 | Items                    | Aurora Depths      | 11.1    | `#004d61`        | Reserved |
 | Kissing                  | Rose Pink          | 3.2     | `#ad1457`        | Active   |
 | Movement                 | Explorer Cyan      | 9.3     | `#006064`        | Active   |
@@ -45,7 +46,7 @@ This specification provides a curated collection of pre-validated color combinat
 
 - **Neutral/System**: Slate Grey (1.2), Charcoal (1.3)
 - **Action/Combat**: Bold Red (2.1)
-- **Social/Intimacy**: _(all assigned — see Section 12 for dedicated sex modules)_
+- **Social/Intimacy**: _(all assigned — see Section 3 for active intimacy hues)_
 - **Nature/Environment**: Forest Green (4.1), Ocean Blue (4.3)
 - **Magic/Special**: _(none available)_
 - **Warning/Alert**: Amber Warning (6.1), Dark Red Alert (6.2)
@@ -217,6 +218,23 @@ This specification provides a curated collection of pre-validated color combinat
 - **Use Cases**: Calming interactions, trust-building
 - **Theme**: Trust, stability, depth
 - ✅ **USED BY**: Companionship mod (follow, stop_following, dismiss)
+
+#### 3.4 Warm Embrace
+
+```json
+{
+  "backgroundColor": "#7d2a50",
+  "textColor": "#fbeaf2",
+  "hoverBackgroundColor": "#a13a6a",
+  "hoverTextColor": "#fff3f9"
+}
+```
+
+- **Normal Contrast**: 7.83:1 🌟 AAA
+- **Hover Contrast**: 5.84:1 ✅ AA
+- **Use Cases**: Comforting hugs, supportive reassurance, nurturing contact
+- **Theme**: Cozy warmth, heartfelt closeness, gentle reassurance
+- ✅ **USED BY**: Hugging mod (hug_tight and related hugging actions)
 
 ### 4. Nature/Environment Colors
 
