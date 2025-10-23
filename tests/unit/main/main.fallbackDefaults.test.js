@@ -201,7 +201,14 @@ describe('main.js fallback coverage', () => {
 
   it('provides DOM helpers when beginGame is invoked without initialization', async () => {
     mockDisplayFatal.mockImplementation((elements, details, loggerArg, domOps) => {
-      expect(elements).toBeUndefined();
+      // beginGame now provides fallback UI elements when uiElements is undefined
+      expect(elements).toMatchObject({
+        outputDiv: expect.anything(),
+        errorDiv: expect.anything(),
+        titleElement: expect.anything(),
+        inputElement: expect.anything(),
+        document: expect.anything(),
+      });
       expect(details.phase).toBe('Start Game');
       expect(loggerArg).toBeNull();
 

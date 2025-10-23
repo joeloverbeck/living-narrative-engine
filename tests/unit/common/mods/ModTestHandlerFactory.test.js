@@ -414,8 +414,8 @@ describe('ModTestHandlerFactory', () => {
         expect(handlers[handlerKey]).toBeDefined();
       });
 
-      // Verify correct total number of handlers (9 standard + 9 positioning)
-      expect(Object.keys(handlers)).toHaveLength(18);
+      // Verify correct total number of handlers (9 standard + 10 positioning)
+      expect(Object.keys(handlers)).toHaveLength(19);
     });
 
     it('should configure all handlers with execute functions', () => {
@@ -615,8 +615,8 @@ describe('ModTestHandlerFactory', () => {
       expect(handlers.ATOMIC_MODIFY_COMPONENT).toBeDefined();
       expect(handlers.BREAK_CLOSENESS_WITH_TARGET).toBeDefined();
 
-      // Should have 9 standard + 9 positioning-specific handlers
-      expect(Object.keys(handlers)).toHaveLength(18);
+      // Should have 9 standard + 10 positioning-specific handlers
+      expect(Object.keys(handlers)).toHaveLength(19);
     });
 
     it('should return createHandlersWithComponentMutations for affection', () => {
