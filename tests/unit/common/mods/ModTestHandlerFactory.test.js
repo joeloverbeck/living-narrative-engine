@@ -370,7 +370,7 @@ describe('ModTestHandlerFactory', () => {
   });
 
   describe('createHandlersWithPerceptionLogging', () => {
-    it('should create standard handlers plus 8 positioning-specific handlers', () => {
+    it('should create standard handlers plus 10 positioning-specific handlers', () => {
       const handlers =
         ModTestHandlerFactory.createHandlersWithPerceptionLogging(
           mockEntityManager,
@@ -401,6 +401,7 @@ describe('ModTestHandlerFactory', () => {
         'ADD_COMPONENT',
         'ADD_PERCEPTION_LOG_ENTRY',
         'REMOVE_COMPONENT',
+        'MERGE_CLOSENESS_CIRCLE',
         'LOCK_MOVEMENT',
         'UNLOCK_MOVEMENT',
         'MODIFY_ARRAY_FIELD',
@@ -608,6 +609,7 @@ describe('ModTestHandlerFactory', () => {
       expect(handlers.ADD_COMPONENT).toBeDefined();
       expect(handlers.ADD_PERCEPTION_LOG_ENTRY).toBeDefined();
       expect(handlers.REMOVE_COMPONENT).toBeDefined();
+      expect(handlers.MERGE_CLOSENESS_CIRCLE).toBeDefined();
       expect(handlers.LOCK_MOVEMENT).toBeDefined();
       expect(handlers.UNLOCK_MOVEMENT).toBeDefined();
       expect(handlers.MODIFY_ARRAY_FIELD).toBeDefined();

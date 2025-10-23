@@ -244,15 +244,17 @@ describe('main.js bootstrap orchestration', () => {
     );
 
     expect(displayFatalStartupError).toHaveBeenCalledTimes(1);
-    const [uiElementsArg, errorDetails, loggerArg, helpers] = displayFatalStartupError.mock.calls[0];
-    // beginGame now provides fallback UI elements when uiElements is undefined
-    expect(uiElementsArg).toMatchObject({
-      outputDiv: expect.anything(),
-      errorDiv: expect.anything(),
-      titleElement: expect.anything(),
-      inputElement: expect.anything(),
-      document: expect.anything(),
-    });
+    const [uiElementsArg, errorDetails, loggerArg, helpers] =
+      displayFatalStartupError.mock.calls[0];
+    expect(uiElementsArg).toEqual(
+      expect.objectContaining({
+        outputDiv: expect.any(HTMLElement),
+        errorDiv: expect.any(HTMLElement),
+        titleElement: expect.any(HTMLElement),
+        inputElement: expect.any(HTMLElement),
+        document,
+      })
+    );
     expect(errorDetails.phase).toBe('Start Game');
     expect(loggerArg).toBeNull();
     expect(helpers).toEqual(
