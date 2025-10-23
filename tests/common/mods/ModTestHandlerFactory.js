@@ -197,11 +197,7 @@ export class ModTestHandlerFactory {
    * @returns {object} Handlers object with component mutation support
    * @throws {Error} If any required parameter is missing or invalid
    */
-  static createHandlersWithComponentMutations(
-    entityManager,
-    eventBus,
-    logger
-  ) {
+  static createHandlersWithComponentMutations(entityManager, eventBus, logger) {
     this.#validateDependencies(
       entityManager,
       eventBus,
@@ -500,6 +496,7 @@ export class ModTestHandlerFactory {
       intimacy: this.createStandardHandlers.bind(this),
       affection: this.createHandlersWithComponentMutations.bind(this),
       'hand-holding': this.createHandlersWithComponentMutations.bind(this),
+      hugging: this.createHandlersWithComponentMutations.bind(this),
       kissing: this.createHandlersWithMouthEngagement.bind(this),
     };
 

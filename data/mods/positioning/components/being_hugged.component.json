@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "positioning:being_hugged",
+  "description": "Marks an entity currently enveloped in a tight hug by another actor, signaling that other conflicting embraces are unavailable.",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["hugging_entity_id"],
+    "properties": {
+      "hugging_entity_id": {
+        "type": "string",
+        "description": "The ID of the entity that is hugging this actor",
+        "pattern": "^([a-zA-Z0-9_]+:[a-zA-Z0-9_-]+|[a-zA-Z0-9_]+)$"
+      },
+      "consented": {
+        "type": "boolean",
+        "description": "Whether this entity consents to remain in the tight hug",
+        "default": true
+      }
+    }
+  }
+}
