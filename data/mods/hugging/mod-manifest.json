@@ -27,8 +27,8 @@
     "conditions": [
       "event-is-action-hug-tight.condition.json",
       "event-is-action-release-hug.condition.json",
-      "event-is-action-release-self-from-hug.condition.json",
-      "event-is-action-release-self-from-hug-forceful.condition.json"
+      "event-is-action-release-self-from-hug-forceful.condition.json",
+      "event-is-action-release-self-from-hug.condition.json"
     ],
     "rules": [
       "handle_hug_tight.rule.json",

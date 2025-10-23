@@ -213,6 +213,26 @@ export function validateActionExecution({
     });
   }
 
+  // Validate forbidden components on target (legacy single-target format)
+  if (targetId && actionDefinition?.forbidden_components?.target) {
+    const targetForbidden = actionDefinition.forbidden_components.target;
+
+    targetForbidden.forEach(componentType => {
+      if (entityManager.hasComponent(targetId, componentType)) {
+        errors.push({
+          type: 'forbidden_component_present',
+          entityId: targetId,
+          role: 'target',
+          componentType,
+          message: `Target '${targetId}' has forbidden component '${componentType}'`,
+          suggestion: `This action cannot be performed while target has ${componentType}`,
+          reason: `Action is blocked by forbidden_components constraint in ${actionId}`,
+          severity: 'medium',
+        });
+      }
+    });
+  }
+
   return errors;
 }
 

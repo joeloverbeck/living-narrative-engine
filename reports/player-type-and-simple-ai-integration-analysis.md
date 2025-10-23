@@ -218,9 +218,10 @@ class DecisionProvider {
    - Generates speech, thoughts, notes
 
 3. **GoapDecisionProvider** (`src/turns/providers/goapDecisionProvider.js`)
-   - Goal-oriented action planning
-   - Evaluates actions against goals
-   - Similar output structure
+   - **Current Implementation:** Minimal placeholder that always selects first action (index: 1)
+   - **Future Vision:** Goal-oriented action planning with action evaluation against goals
+   - **Note:** Registered as a player type but awaiting full GOAP implementation
+   - Output structure compatible with other providers
 
 **Common Pattern:** All providers return choice from available actions list
 
