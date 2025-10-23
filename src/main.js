@@ -235,34 +235,40 @@ export async function bootstrapApp() {
 export async function beginGame(showLoadUI = false) {
   currentPhaseForError = 'Start Game';
 
-  if (!gameEngine) {
-    const errMsg =
-      'Critical: GameEngine not initialized before attempting Start Game stage.';
-    const errorObj = new Error(errMsg);
-    (logger || console).error(`main.js: ${errMsg}`);
-    displayFatalStartupError(
-      uiElements,
-      {
-        userMessage: errMsg,
-        consoleMessage: errMsg,
-        errorObject: errorObj,
-        phase: currentPhaseForError,
-      },
-      logger,
-      {
-        createElement: (tag) => document.createElement(tag),
-        insertAfter: (ref, el) => ref.insertAdjacentElement('afterend', el),
-        setTextContent: (el, text) => {
-          el.textContent = text;
+    if (!gameEngine) {
+      const errMsg =
+        'Critical: GameEngine not initialized before attempting Start Game stage.';
+      const errorObj = new Error(errMsg);
+      (logger || console).error(`main.js: ${errMsg}`);
+      displayFatalStartupError(
+        uiElements || {
+          outputDiv: document.getElementById('outputDiv'),
+          errorDiv: document.getElementById('error-output'),
+          titleElement: document.querySelector('h1'),
+          inputElement: document.getElementById('speech-input'),
+          document,
         },
-        setStyle: (el, prop, val) => {
-          el.style[prop] = val;
+        {
+          userMessage: errMsg,
+          consoleMessage: errMsg,
+          errorObject: errorObj,
+          phase: currentPhaseForError,
         },
-        alert,
-      }
-    );
-    throw errorObj;
-  }
+        logger,
+        {
+          createElement: (tag) => document.createElement(tag),
+          insertAfter: (ref, el) => ref.insertAdjacentElement('afterend', el),
+          setTextContent: (el, text) => {
+            el.textContent = text;
+          },
+          setStyle: (el, prop, val) => {
+            el.style[prop] = val;
+          },
+          alert,
+        }
+      );
+      throw errorObj;
+    }
 
   try {
     // Use the startWorld loaded from game configuration
