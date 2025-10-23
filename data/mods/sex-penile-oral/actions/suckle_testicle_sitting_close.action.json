@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-penile-oral:suckle_testicle_sitting_close",
+  "name": "Suckle Testicle (Sitting Close)",
+  "description": "Bury your face in your seated partner's lap to suckle lovingly on an exposed testicle while remaining snuggled close together.",
+  "targets": {
+    "primary": {
+      "scope": "sex-core:actors_sitting_close_with_uncovered_testicle",
+      "placeholder": "primary",
+      "description": "Seated partner with at least one uncovered testicle"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:sitting_on", "positioning:closeness"],
+    "primary": ["positioning:sitting_on", "positioning:closeness"]
+  },
+  "template": "suckle on {primary}'s testicle",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#2a1a5e",
+    "textColor": "#ede7f6",
+    "hoverBackgroundColor": "#372483",
+    "hoverTextColor": "#ffffff"
+  }
+}
