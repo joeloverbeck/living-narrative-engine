@@ -1,11 +1,14 @@
 import { describe, it, expect } from '@jest/globals';
-import { __formatActionTypedefs } from '../../../../src/actions/formatters/formatActionTypedefs.js';
 
-/**
- * Ensures the formatAction typedef module is executed and exports the expected marker.
- */
+// The module only defines typedefs and a marker export used to keep bundlers
+// from tree-shaking the file. Importing it ensures the typedef-only module is
+// executed so Istanbul can record coverage for the statements and lines.
 describe('formatActionTypedefs module coverage', () => {
-  it('exposes the expected coverage sentinel', () => {
-    expect(__formatActionTypedefs).toBe(true);
+  it('exports the coverage marker to keep typedefs reachable', async () => {
+    const module = await import(
+      '../../../../src/actions/formatters/formatActionTypedefs.js'
+    );
+
+    expect(module).toHaveProperty('__formatActionTypedefs', true);
   });
 });
