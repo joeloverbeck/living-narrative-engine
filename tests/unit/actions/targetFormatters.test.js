@@ -79,6 +79,27 @@ describe('targetFormatters', () => {
     );
   });
 
+  it('replaces custom placeholders when provided in the context', () => {
+    const entity = { id: 'obj-7' };
+    entityManager.getEntityInstance.mockReturnValue(entity);
+    displayNameFn.mockReturnValue('Mystic Orb');
+
+    const result = formatEntityTarget(
+      'inspect {object}',
+      { type: TARGET_TYPE_ENTITY, entityId: 'obj-7', placeholder: 'object' },
+      {
+        actionId: 'core:inspect',
+        entityManager,
+        displayNameFn,
+        logger,
+        debug: false,
+      }
+    );
+
+    expect(result).toEqual({ ok: true, value: 'inspect Mystic Orb' });
+    expect(displayNameFn).toHaveBeenCalledWith(entity, 'obj-7', logger);
+  });
+
   it('logs debug output for none target when debug flag is true', () => {
     const result = formatNoneTarget(
       'wait',
