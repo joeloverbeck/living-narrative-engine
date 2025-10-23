@@ -306,7 +306,17 @@ describe('main.js uncovered branches', () => {
       const [elements, errorDetails, passedLogger, helpers] =
         mockDisplayFatal.mock.calls[0];
 
-      expect(elements).toBeUndefined();
+      // beginGame now provides fallback UI elements when uiElements is undefined
+      // DOM elements may be null if not set up in the test
+      expect(elements).toEqual(
+        expect.objectContaining({
+          document: expect.anything(),
+        })
+      );
+      expect(elements).toHaveProperty('outputDiv');
+      expect(elements).toHaveProperty('errorDiv');
+      expect(elements).toHaveProperty('titleElement');
+      expect(elements).toHaveProperty('inputElement');
       expect(errorDetails.phase).toBe('Start Game');
       expect(errorDetails.userMessage).toContain('Critical: GameEngine not initialized');
       expect(passedLogger).toBeNull();

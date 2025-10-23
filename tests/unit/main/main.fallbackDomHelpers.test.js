@@ -149,7 +149,14 @@ describe('main.js fallback DOM helper coverage', () => {
     const [fallbackElements, errorDetails, loggerArg, domHelpers] =
       mockDisplayFatal.mock.calls[0];
 
-    expect(fallbackElements).toBeUndefined();
+    // beginGame now provides fallback UI elements when uiElements is undefined
+    expect(fallbackElements).toMatchObject({
+      outputDiv: expect.anything(),
+      errorDiv: expect.anything(),
+      titleElement: expect.anything(),
+      inputElement: expect.anything(),
+      document: expect.anything(),
+    });
     expect(errorDetails.phase).toBe('Start Game');
     expect(loggerArg).toBeNull();
 

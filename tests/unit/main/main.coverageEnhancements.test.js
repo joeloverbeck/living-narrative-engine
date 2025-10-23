@@ -342,7 +342,14 @@ describe('main.js high fidelity coverage', () => {
     const [elements, errorDetails, passedLogger] =
       mockDisplayFatalStartupError.mock.calls[0];
 
-    expect(elements).toBeUndefined();
+    // beginGame now provides fallback UI elements when uiElements is undefined
+    expect(elements).toMatchObject({
+      outputDiv: expect.anything(),
+      errorDiv: expect.anything(),
+      titleElement: expect.anything(),
+      inputElement: expect.anything(),
+      document: expect.anything(),
+    });
     expect(errorDetails.phase).toBe('Start Game');
     expect(errorDetails.consoleMessage).toBe(
       'Critical: GameEngine not initialized before attempting Start Game stage.'

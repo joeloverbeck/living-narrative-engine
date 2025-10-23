@@ -168,7 +168,14 @@ describe('main.js additional coverage', () => {
       helpers.setStyle(created, 'color', 'red');
       helpers.alert('bootstrap begin');
       expect(passedLogger).toBeNull();
-      expect(uiElements).toBeUndefined();
+      // beginGame now provides fallback UI elements when uiElements is undefined
+      expect(uiElements).toMatchObject({
+        outputDiv: expect.anything(),
+        errorDiv: expect.anything(),
+        titleElement: expect.anything(),
+        inputElement: expect.anything(),
+        document: expect.anything(),
+      });
     });
     const consoleErrorSpy = jest
       .spyOn(console, 'error')

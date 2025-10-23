@@ -55,6 +55,7 @@
     },
     "events": [
       "action_decided.event.json",
+      "action_success.event.json",
       "analytics_track.event.json",
       "attempt_action.event.json",
       "cache_evicted.event.json",

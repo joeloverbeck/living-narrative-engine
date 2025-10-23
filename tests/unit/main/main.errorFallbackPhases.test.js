@@ -252,7 +252,14 @@ describe('main.js bootstrap error fallbacks', () => {
 
     expect(mockDisplayFatalStartupError).toHaveBeenCalledTimes(1);
     const [uiArg, errorDetails] = mockDisplayFatalStartupError.mock.calls[0];
-    expect(uiArg).toBeUndefined();
+    // beginGame now provides fallback UI elements when uiElements is undefined
+    expect(uiArg).toMatchObject({
+      outputDiv: expect.anything(),
+      errorDiv: expect.anything(),
+      titleElement: expect.anything(),
+      inputElement: expect.anything(),
+      document: expect.anything(),
+    });
     expect(errorDetails.phase).toBe('Start Game');
   });
 });
