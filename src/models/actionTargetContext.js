@@ -19,14 +19,28 @@ export class ActionTargetContext {
    * @param {ActionTargetType} type - The type of the target.
    * @param {object} [options] - Additional options based on type.
    * @param {string} [options.entityId] - Required if type is 'entity'. Must be a non-empty string.
+   * @param {string|null} [options.placeholder=null] - Template placeholder associated with the target.
+   * @param {string|null} [options.displayName=null] - Preferred display name for formatted output.
+   * @param {string|null} [options.contextFromId=null] - Originating primary target identifier when dependent.
    * @throws {Error} If required options for the given type are missing or invalid.
    */
-  constructor(type, { entityId = null } = {}) {
+  constructor(
+    type,
+    {
+      entityId = null,
+      placeholder = null,
+      displayName = null,
+      contextFromId = null,
+    } = {}
+  ) {
     if (!['entity', 'none'].includes(type)) {
       throw new Error(`ActionTargetContext: Invalid type specified: ${type}`);
     }
     this.type = type;
     this.entityId = entityId;
+    this.placeholder = placeholder ?? null;
+    this.displayName = displayName ?? null;
+    this.contextFromId = contextFromId ?? null;
 
     if (
       type === 'entity' &&
@@ -48,11 +62,13 @@ export class ActionTargetContext {
   /**
    * Static factory for creating a context targeting an entity.
    *
-   * @param entityId
+   * @param {string} entityId - Identifier of the targeted entity.
+   * @param {object} [metadata] - Optional metadata applied to the target context.
+   * @returns {ActionTargetContext}
    */
-  static forEntity(entityId) {
+  static forEntity(entityId, metadata = {}) {
     // Validation is handled by the constructor
-    return new ActionTargetContext('entity', { entityId });
+    return new ActionTargetContext('entity', { entityId, ...metadata });
   }
 }
 
