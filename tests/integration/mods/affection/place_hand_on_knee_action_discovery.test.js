@@ -5,7 +5,6 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
 import placeHandOnKneeAction from '../../../../data/mods/affection/actions/place_hand_on_knee.action.json';
 
 const ACTION_ID = 'affection:place_hand_on_knee';
@@ -32,7 +31,10 @@ describe('affection:place_hand_on_knee action discovery', () => {
 
       scopeResolver.__placeHandOnKneeOriginalResolve = originalResolve;
       scopeResolver.resolveSync = (scopeName, context) => {
-        if (scopeName === 'positioning:close_actors') {
+        if (
+          scopeName === 'positioning:close_actors' ||
+          scopeName === 'positioning:actors_sitting_close'
+        ) {
           const actorId = context?.actor?.id;
           if (!actorId) {
             return { success: true, value: new Set() };
@@ -52,7 +54,23 @@ describe('affection:place_hand_on_knee action discovery', () => {
 
           const validTargets = closeness.reduce((acc, partnerId) => {
             const partner = entityManager.getEntityInstance(partnerId);
-            if (partner) {
+            if (!partner) {
+              return acc;
+            }
+
+            if (
+              scopeName === 'positioning:actors_sitting_close' &&
+              !partner.components?.['positioning:sitting_on']
+            ) {
+              return acc;
+            }
+
+            if (scopeName === 'positioning:close_actors') {
+              acc.add(partnerId);
+              return acc;
+            }
+
+            if (partner.components?.['positioning:sitting_on']) {
               acc.add(partnerId);
             }
             return acc;
@@ -80,7 +98,9 @@ describe('affection:place_hand_on_knee action discovery', () => {
       expect(placeHandOnKneeAction.template).toBe(
         "place a hand on {target}'s knee"
       );
-      expect(placeHandOnKneeAction.targets).toBe('positioning:close_actors');
+      expect(placeHandOnKneeAction.targets).toBe(
+        'positioning:actors_sitting_close'
+      );
     });
 
     it('requires actor closeness, no forbidden components, and uses the affection color palette', () => {
@@ -98,8 +118,24 @@ describe('affection:place_hand_on_knee action discovery', () => {
   });
 
   describe('Action discovery scenarios', () => {
-    it('is available for close actors sharing the closeness component', () => {
-      const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
+    const createSeatedPair = (actorName = 'Alice', targetName = 'Bob') => {
+      const sittingScenario = testFixture.createSittingPair({
+        seatedActors: [
+          { id: 'actor1', name: actorName, spotIndex: 0 },
+          { id: 'actor2', name: targetName, spotIndex: 1 },
+        ],
+      });
+
+      const [actor, target] = sittingScenario.seatedActors;
+      return {
+        actor,
+        target,
+        entities: [...sittingScenario.entities],
+      };
+    };
+
+    it('is available for close actors when the target is seated', () => {
+      const scenario = createSeatedPair('Alice', 'Bob');
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
@@ -111,12 +147,26 @@ describe('affection:place_hand_on_knee action discovery', () => {
     });
 
     it('is not available when the actor lacks the closeness component', () => {
-      const scenario = testFixture.createCloseActors(['Ivy', 'Liam']);
+      const scenario = createSeatedPair('Ivy', 'Liam');
       delete scenario.actor.components['positioning:closeness'];
       delete scenario.target.components['positioning:closeness'];
 
-      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
+      testFixture.reset([...scenario.entities]);
+      configureActionDiscovery();
+
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
+      const ids = availableActions.map((action) => action.id);
+
+      expect(ids).not.toContain(ACTION_ID);
+    });
+
+    it('is not available when the target lacks the sitting requirement', () => {
+      const scenario = createSeatedPair('Uma', 'Viktor');
+      delete scenario.target.components['positioning:sitting_on'];
+
+      testFixture.reset([...scenario.entities]);
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
@@ -128,9 +178,11 @@ describe('affection:place_hand_on_knee action discovery', () => {
     });
 
     it('is withheld when the scope resolves no close partners', () => {
-      const scenario = testFixture.createCloseActors(['Nia', 'Owen']);
-      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor]);
+      const scenario = createSeatedPair('Nia', 'Owen');
+      const entitiesWithoutTarget = scenario.entities.filter(
+        (entity) => entity.id !== scenario.target.id
+      );
+      testFixture.reset([...entitiesWithoutTarget]);
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(

@@ -37,10 +37,24 @@ describe('affection:place_hand_on_knee action integration', () => {
       (event) => event.eventType === 'core:perceptible_event'
     );
 
-  it('produces matching success and perceptible messages with correct metadata', async () => {
-    const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
-      location: 'garden_patio',
+  const createSeatedScenario = (actorName, targetName, locationId) => {
+    const location = locationId || 'room1';
+    const scenario = testFixture.createSittingPair({
+      locationId: location,
+      roomId: location,
+      roomName: `${location} room`,
+      seatedActors: [
+        { id: 'actor1', name: actorName, spotIndex: 0, locationId: location },
+        { id: 'actor2', name: targetName, spotIndex: 1, locationId: location },
+      ],
     });
+
+    const [actor, target] = scenario.seatedActors;
+    return { actor, target };
+  };
+
+  it('produces matching success and perceptible messages with correct metadata', async () => {
+    const scenario = createSeatedScenario('Alice', 'Bob', 'garden_patio');
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -70,9 +84,7 @@ describe('affection:place_hand_on_knee action integration', () => {
   });
 
   it('propagates location, target, and perception metadata exactly as configured', async () => {
-    const scenario = testFixture.createCloseActors(['Serena', 'Miguel'], {
-      location: 'sunroom',
-    });
+    const scenario = createSeatedScenario('Serena', 'Miguel', 'sunroom');
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -89,9 +101,7 @@ describe('affection:place_hand_on_knee action integration', () => {
   });
 
   it('does not fire when a different affection action is attempted', async () => {
-    const scenario = testFixture.createCloseActors(['Tina', 'Ravi'], {
-      location: 'lounge',
-    });
+    const scenario = createSeatedScenario('Tina', 'Ravi', 'lounge');
 
     await testFixture.eventBus.dispatch('core:attempt_action', {
       eventName: 'core:attempt_action',
