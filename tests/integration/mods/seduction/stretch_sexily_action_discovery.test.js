@@ -5,7 +5,10 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
 import stretchSexilyAction from '../../../../data/mods/seduction/actions/stretch_sexily.action.json';
+import stretchSexilyRule from '../../../../data/mods/seduction/rules/stretch_sexily.rule.json';
+import eventIsActionStretchSexily from '../../../../data/mods/seduction/conditions/event-is-action-stretch-sexily.condition.json';
 
 const ACTION_ID = 'seduction:stretch_sexily';
 
@@ -13,7 +16,12 @@ describe('seduction:stretch_sexily action discovery', () => {
   let testFixture;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('seduction', ACTION_ID);
+    testFixture = await ModTestFixture.forAction(
+      'seduction',
+      ACTION_ID,
+      stretchSexilyRule,
+      eventIsActionStretchSexily
+    );
   });
 
   afterEach(() => {
@@ -36,6 +44,9 @@ describe('seduction:stretch_sexily action discovery', () => {
     it('should be a self-targeting action', () => {
       expect(stretchSexilyAction.targets).toBe('none');
       expect(stretchSexilyAction.required_components).toEqual({});
+      expect(stretchSexilyAction.forbidden_components).toEqual({
+        actor: ['positioning:hugging'],
+      });
     });
   });
 
@@ -66,6 +77,32 @@ describe('seduction:stretch_sexily action discovery', () => {
       testFixture.assertActionSuccess(
         'Ava tilts head and spine, claiming space with a languid stretch, drawing attention to their body.'
       );
+    });
+
+    it('rejects execution when the actor is currently hugging someone', async () => {
+      const scenario = testFixture.createStandardActorTarget(['Dana', 'Elliot'], {
+        includeRoom: false,
+      });
+
+      scenario.actor.components['positioning:hugging'] = {
+        embraced_entity_id: scenario.target.id,
+        initiated: true,
+      };
+
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+
+      await expect(
+        testFixture.executeAction(scenario.actor.id, null)
+      ).rejects.toThrow(/forbidden component/i);
+
+      const actorInstance = testFixture.entityManager.getEntityInstance(
+        scenario.actor.id
+      );
+      expect(actorInstance.components['positioning:hugging']).toEqual({
+        embraced_entity_id: scenario.target.id,
+        initiated: true,
+      });
     });
   });
 });

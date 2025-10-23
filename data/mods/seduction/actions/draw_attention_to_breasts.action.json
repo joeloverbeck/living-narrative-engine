@@ -5,6 +5,9 @@
   "description": "Angle and position yourself to flatter your bustline, drawing attention to your breasts in an alluring manner.",
   "targets": "none",
   "required_components": {},
+  "forbidden_components": {
+    "actor": ["positioning:hugging"]
+  },
   "template": "draw attention to your breasts",
   "prerequisites": [
     {

@@ -5,6 +5,9 @@
   "description": "Roll your shoulders back and lengthen into a languid stretch, drawing attention to your body as you claim the space around you.",
   "targets": "none",
   "required_components": {},
+  "forbidden_components": {
+    "actor": ["positioning:hugging"]
+  },
   "template": "stretch sexily",
   "prerequisites": [],
   "visual": {

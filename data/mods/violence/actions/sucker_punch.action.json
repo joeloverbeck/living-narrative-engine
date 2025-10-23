@@ -10,6 +10,9 @@
       "description": "Person to punch unexpectedly"
     }
   },
+  "forbidden_components": {
+    "actor": ["positioning:hugging"]
+  },
   "template": "sucker-punch {target}",
   "visual": {
     "backgroundColor": "#8b0000",

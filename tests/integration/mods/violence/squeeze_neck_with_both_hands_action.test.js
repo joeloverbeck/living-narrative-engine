@@ -7,6 +7,7 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
 import { ActionValidationError } from '../../../common/mods/actionExecutionValidator.js';
 import squeezeNeckRule from '../../../../data/mods/violence/rules/handle_squeeze_neck_with_both_hands.rule.json';
 import eventIsActionSqueezeNeck from '../../../../data/mods/violence/conditions/event-is-action-squeeze-neck-with-both-hands.condition.json';
@@ -39,6 +40,32 @@ describe('Violence Mod: Squeeze Neck With Both Hands Action Integration', () => 
       testFixture.assertActionSuccess(
         "Alice squeezes their hands around Beth's neck with murderous intentions, Alice's forearms trembling from the effort."
       );
+    });
+
+    it('rejects the action when the actor is hugging someone', async () => {
+      const scenario = testFixture.createStandardActorTarget(['Noah', 'Piper'], {
+        includeRoom: false,
+      });
+
+      scenario.actor.components['positioning:hugging'] = {
+        embraced_entity_id: scenario.target.id,
+        initiated: true,
+      };
+
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+
+      await expect(
+        testFixture.executeAction(scenario.actor.id, scenario.target.id)
+      ).rejects.toThrow(/forbidden component/i);
+
+      const actorInstance = testFixture.entityManager.getEntityInstance(
+        scenario.actor.id
+      );
+      expect(actorInstance.components['positioning:hugging']).toEqual({
+        embraced_entity_id: scenario.target.id,
+        initiated: true,
+      });
     });
 
     it('does not fire rule for different action', async () => {

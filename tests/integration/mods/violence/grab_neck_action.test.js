@@ -7,6 +7,7 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
 import { ActionValidationError } from '../../../common/mods/actionExecutionValidator.js';
 import grabNeckRule from '../../../../data/mods/violence/rules/handle_grab_neck.rule.json';
 import eventIsActionGrabNeck from '../../../../data/mods/violence/conditions/event-is-action-grab-neck.condition.json';
@@ -37,6 +38,32 @@ describe('Violence Mod: Grab Neck Action Integration', () => {
       await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
       testFixture.assertActionSuccess("Alice grabs Beth's neck.");
+    });
+
+    it('rejects the action when the actor is hugging someone', async () => {
+      const scenario = testFixture.createStandardActorTarget(['Kara', 'Liam'], {
+        includeRoom: false,
+      });
+
+      scenario.actor.components['positioning:hugging'] = {
+        embraced_entity_id: scenario.target.id,
+        initiated: true,
+      };
+
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+
+      await expect(
+        testFixture.executeAction(scenario.actor.id, scenario.target.id)
+      ).rejects.toThrow(/forbidden component/i);
+
+      const actorInstance = testFixture.entityManager.getEntityInstance(
+        scenario.actor.id
+      );
+      expect(actorInstance.components['positioning:hugging']).toEqual({
+        embraced_entity_id: scenario.target.id,
+        initiated: true,
+      });
     });
 
     it('does not fire rule for different action', async () => {
