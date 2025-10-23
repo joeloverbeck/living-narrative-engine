@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "affection:place_hands_on_flat_chest",
+  "name": "Place hands on chest",
+  "description": "Settle your palms against your partner's chest to share a steady, reassuring touch.",
+  "targets": {
+    "primary": {
+      "scope": "affection:actors_without_breasts_facing_each_other",
+      "placeholder": "primary",
+      "description": "Partner facing you without any breast anatomy"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "template": "place your hands on {primary}'s chest",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#6a1b9a",
+    "textColor": "#f3e5f5",
+    "hoverBackgroundColor": "#8e24aa",
+    "hoverTextColor": "#ffffff"
+  }
+}
