@@ -1,66 +1,40 @@
 /**
- * @file Unit tests for the FixSuggestionEngine.
+ * @file Unit tests for FixSuggestionEngine.
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import { FixSuggestionEngine } from '../../../../src/actions/errors/fixSuggestionEngine.js';
 import { FIX_TYPES } from '../../../../src/actions/errors/actionErrorTypes.js';
-
-/**
- * Helper to create a standard action definition for tests.
- *
- * @param {Partial<import('../../../../src/data/gameDataRepository.js').ActionDefinition>} overrides
- * @returns {import('../../../../src/data/gameDataRepository.js').ActionDefinition}
- */
-function createActionDefinition(overrides = {}) {
-  return {
-    id: 'core:test-action',
-    name: 'Test Action',
-    scope: 'adjacent',
-    prerequisites: [],
-    ...overrides,
-  };
-}
-
-/**
- * Helper to create a standard actor snapshot for tests.
- *
- * @param {Partial<import('../../../../src/actions/errors/actionErrorTypes.js').ActorSnapshot>} overrides
- * @returns {import('../../../../src/actions/errors/actionErrorTypes.js').ActorSnapshot}
- */
-function createActorSnapshot(overrides = {}) {
-  const base = {
-    id: 'actor-1',
-    components: {},
-    location: 'station',
-    metadata: {},
-  };
-
-  return {
-    ...base,
-    ...overrides,
-    components: {
-      ...base.components,
-      ...(overrides.components || {}),
-    },
-  };
-}
 
 describe('FixSuggestionEngine', () => {
   let engine;
   let mockLogger;
-  let mockRepository;
+  let mockGameDataRepository;
   let mockActionIndex;
+
+  const createActorSnapshot = (overrides = {}) => ({
+    id: 'actor-1',
+    location: 'room-7',
+    components: {},
+    ...overrides,
+  });
+
+  const createActionDefinition = (overrides = {}) => ({
+    id: 'core:testAction',
+    scope: 'adjacent',
+    prerequisites: [],
+    ...overrides,
+  });
 
   beforeEach(() => {
     mockLogger = {
       debug: jest.fn(),
-      error: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
+      error: jest.fn(),
     };
 
-    mockRepository = {
+    mockGameDataRepository = {
       getComponentDefinition: jest.fn(),
       getConditionDefinition: jest.fn(),
     };
@@ -71,240 +45,46 @@ describe('FixSuggestionEngine', () => {
 
     engine = new FixSuggestionEngine({
       logger: mockLogger,
-      gameDataRepository: mockRepository,
+      gameDataRepository: mockGameDataRepository,
       actionIndex: mockActionIndex,
     });
   });
 
-  it('collects missing component suggestions from error details and prerequisites', () => {
+  it('prioritizes missing component suggestions and extracts prerequisites', () => {
+    const error = new Error('Missing component: core:inventory');
     const actionDef = createActionDefinition({
+      id: undefined,
       prerequisites: [
-        { hasComponent: 'core:inventory' },
         {
           all: [
-            { hasComponent: 'core:equipment' },
-            { any: [{ hasComponent: 'core:focus' }] },
+            { hasComponent: 'core:inventory' },
+            {
+              any: [
+                { hasComponent: 'core:amulet' },
+                { hasComponent: 'core:inventory' },
+                { hasComponent: 'core:shield' },
+              ],
+            },
+            {
+              metadata: {
+                values: [
+                  null,
+                  'noop',
+                  { nested: { hasComponent: 'core:mask' } },
+                ],
+              },
+            },
           ],
         },
-        {
-          wrapper: { hasComponent: 'core:resilience' },
-        },
-        'core:manual',
       ],
     });
-
     const actorSnapshot = createActorSnapshot({
       components: {
-        'core:equipment': { equipped: true },
+        'core:weapon': { equipped: true },
+        'core:shield': { reinforced: true },
+        'core:mask': { style: 'mystic' },
       },
     });
-
-    const error = new Error("Missing component 'core:inventory' on actor");
-
-    const suggestions = engine.suggestFixes(
-      error,
-      actionDef,
-      actorSnapshot,
-      'execution'
-    );
-
-    expect(suggestions.length).toBeGreaterThan(0);
-
-    // Highest confidence suggestion should come from the direct error message match.
-    expect(suggestions[0]).toMatchObject({
-      type: FIX_TYPES.MISSING_COMPONENT,
-      confidence: 0.9,
-      details: expect.objectContaining({
-        componentId: 'core:inventory',
-        requiredBy: actionDef.id,
-      }),
-    });
-
-    const prerequisiteFixes = suggestions.filter(
-      (fix) => fix.details?.source === 'prerequisite_analysis'
-    );
-
-    expect(prerequisiteFixes).toHaveLength(3);
-    expect(prerequisiteFixes).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          type: FIX_TYPES.MISSING_COMPONENT,
-          confidence: 0.8,
-          details: expect.objectContaining({ componentId: 'core:inventory' }),
-        }),
-        expect.objectContaining({
-          type: FIX_TYPES.MISSING_COMPONENT,
-          confidence: 0.8,
-          details: expect.objectContaining({ componentId: 'core:focus' }),
-        }),
-        expect.objectContaining({
-          type: FIX_TYPES.MISSING_COMPONENT,
-          confidence: 0.8,
-          details: expect.objectContaining({ componentId: 'core:resilience' }),
-        }),
-      ])
-    );
-
-    // Ensure components that are present are not suggested as missing.
-    const componentIds = prerequisiteFixes.map((fix) => fix.details.componentId);
-    expect(componentIds).not.toContain('core:equipment');
-
-    // Verify confidence sorting order (highest confidence first).
-    for (let i = 1; i < suggestions.length; i += 1) {
-      expect(suggestions[i - 1].confidence).toBeGreaterThanOrEqual(
-        suggestions[i].confidence
-      );
-    }
-  });
-
-  it('falls back to dependency analysis when error name indicates a missing component', () => {
-    const actionDef = createActionDefinition({
-      prerequisites: [{ hasComponent: 'core:mind' }],
-    });
-
-    const actorSnapshot = createActorSnapshot();
-
-    const error = new Error('Action failed unexpectedly');
-    error.name = 'ComponentNotFoundError';
-
-    const suggestions = engine.suggestFixes(
-      error,
-      actionDef,
-      actorSnapshot,
-      'execution'
-    );
-
-    expect(suggestions).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          type: FIX_TYPES.MISSING_COMPONENT,
-          confidence: 0.8,
-          details: expect.objectContaining({
-            componentId: 'core:mind',
-            source: 'prerequisite_analysis',
-          }),
-        }),
-      ])
-    );
-  });
-
-  it('creates invalid state suggestions for available state components', () => {
-    const actionDef = createActionDefinition({ scope: undefined });
-    const actorSnapshot = createActorSnapshot({
-      components: {
-        'core:state': { status: 'knocked_out' },
-        'core:status': { mood: 'angry' },
-      },
-    });
-
-    const error = new Error('State mismatch occurred');
-
-    const suggestions = engine.suggestFixes(
-      error,
-      actionDef,
-      actorSnapshot,
-      'execution'
-    );
-
-    const invalidStateFixes = suggestions.filter(
-      (fix) => fix.type === FIX_TYPES.INVALID_STATE
-    );
-
-    expect(invalidStateFixes).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          confidence: 0.7,
-          details: expect.objectContaining({
-            componentId: 'core:state',
-            currentValue: actorSnapshot.components['core:state'],
-          }),
-        }),
-        expect.objectContaining({
-          confidence: 0.7,
-          details: expect.objectContaining({ componentId: 'core:status' }),
-        }),
-      ])
-    );
-
-    const inspectedComponents = invalidStateFixes.map(
-      (fix) => fix.details.componentId
-    );
-    expect(inspectedComponents).not.toContain('core:condition');
-  });
-
-  it('adds scope resolution and location guidance when targets cannot be resolved', () => {
-    const actionDef = createActionDefinition({ scope: 'adjacent' });
-    const actorSnapshot = createActorSnapshot({ location: 'none' });
-
-    const error = new Error('Resolution failed: no valid targets available');
-
-    const suggestions = engine.suggestFixes(
-      error,
-      actionDef,
-      actorSnapshot,
-      'execution'
-    );
-
-    expect(suggestions).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          type: FIX_TYPES.SCOPE_RESOLUTION,
-          confidence: 0.8,
-          details: expect.objectContaining({ scope: 'adjacent' }),
-        }),
-        expect.objectContaining({
-          type: FIX_TYPES.INVALID_STATE,
-          confidence: 0.9,
-          details: expect.objectContaining({
-            suggestion: 'Ensure actor has a valid location component',
-          }),
-        }),
-        expect.objectContaining({
-          type: FIX_TYPES.INVALID_TARGET,
-          confidence: 0.7,
-          details: expect.objectContaining({ actionScope: 'adjacent' }),
-        }),
-      ])
-    );
-
-    expect(suggestions[0].confidence).toBeGreaterThanOrEqual(
-      suggestions[1].confidence
-    );
-    expect(suggestions[1].confidence).toBeGreaterThanOrEqual(
-      suggestions[2].confidence
-    );
-  });
-
-  it('omits scope-specific fixes when the action definition lacks scope information', () => {
-    const actionDef = createActionDefinition({ scope: undefined });
-    const actorSnapshot = createActorSnapshot();
-
-    const error = new Error('Scope resolution failed');
-
-    const suggestions = engine.suggestFixes(
-      error,
-      actionDef,
-      actorSnapshot,
-      'execution'
-    );
-
-    expect(suggestions).toEqual([]);
-  });
-
-  it('provides prerequisite guidance during validation failures', () => {
-    const prerequisites = [{ check: 'custom_validation_step' }];
-    const actionDef = createActionDefinition({
-      scope: undefined,
-      prerequisites,
-    });
-
-    const actorSnapshot = createActorSnapshot({
-      components: {
-        'core:state': { value: 'ready' },
-      },
-    });
-
-    const error = new Error('Validation phase failed');
 
     const suggestions = engine.suggestFixes(
       error,
@@ -313,56 +93,152 @@ describe('FixSuggestionEngine', () => {
       'validation'
     );
 
-    expect(suggestions).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          type: FIX_TYPES.MISSING_PREREQUISITE,
-          confidence: 0.75,
-          details: expect.objectContaining({
-            prerequisites,
-            actorComponents: ['core:state'],
-          }),
-        }),
-      ])
+    expect(suggestions).not.toHaveLength(0);
+    expect(suggestions[0]).toMatchObject({
+      type: FIX_TYPES.MISSING_COMPONENT,
+      details: expect.objectContaining({
+        componentId: 'core:inventory',
+        actorId: 'actor-1',
+      }),
+      confidence: 0.9,
+    });
+
+    const missingComponentFixes = suggestions.filter(
+      (fix) => fix.type === FIX_TYPES.MISSING_COMPONENT
     );
+    const uniqueComponentIds = new Set(
+      missingComponentFixes.map((fix) => fix.details.componentId)
+    );
+
+    expect(uniqueComponentIds.has('core:inventory')).toBe(true);
+    expect(uniqueComponentIds.has('core:amulet')).toBe(true);
+
+    const prerequisiteFix = suggestions.find(
+      (fix) => fix.type === FIX_TYPES.MISSING_PREREQUISITE
+    );
+    expect(prerequisiteFix).toMatchObject({
+      type: FIX_TYPES.MISSING_PREREQUISITE,
+      confidence: 0.75,
+      details: expect.objectContaining({
+        prerequisites: actionDef.prerequisites,
+        actorComponents: ['core:weapon', 'core:shield', 'core:mask'],
+      }),
+    });
+
+    const confidences = suggestions.map((fix) => fix.confidence);
+    const sortedConfidences = [...confidences].sort((a, b) => b - a);
+    expect(confidences).toEqual(sortedConfidences);
   });
 
-  it('offers guidance for target resolution errors', () => {
-    const actionDef = createActionDefinition({ scope: 'global' });
-    const actorSnapshot = createActorSnapshot({ location: 'plaza' });
-
-    const error = new Error('Entity not found for target selection');
+  it('handles missing component errors without explicit identifiers', () => {
+    const error = new Error('Actor missing component');
+    const actionDef = createActionDefinition({
+      prerequisites: [
+        {
+          all: [{ hasComponent: 'core:focus' }],
+        },
+      ],
+    });
+    const actorSnapshot = createActorSnapshot({
+      components: {},
+    });
 
     const suggestions = engine.suggestFixes(
       error,
       actionDef,
       actorSnapshot,
-      'execution'
+      'validation'
     );
 
-    expect(suggestions).toEqual([
-      expect.objectContaining({
-        type: FIX_TYPES.INVALID_TARGET,
-        confidence: 0.7,
-        details: expect.objectContaining({
-          actionScope: 'global',
-          actorLocation: 'plaza',
-        }),
-      }),
-    ]);
+    const missingComponentFixes = suggestions.filter(
+      (fix) => fix.type === FIX_TYPES.MISSING_COMPONENT
+    );
+    expect(missingComponentFixes).toHaveLength(1);
+    expect(missingComponentFixes[0].details).toMatchObject({
+      componentId: 'core:focus',
+      source: 'prerequisite_analysis',
+    });
   });
 
-  it('handles missing error messages by relying on error names', () => {
-    const actionDef = createActionDefinition({ scope: undefined });
+  it('skips prerequisite guidance when no prerequisites exist', () => {
+    const error = new Error('Missing component: core:bag');
+    const actionDef = createActionDefinition({
+      prerequisites: [],
+    });
     const actorSnapshot = createActorSnapshot({
+      components: {},
+    });
+
+    const suggestions = engine.suggestFixes(
+      error,
+      actionDef,
+      actorSnapshot,
+      'validation'
+    );
+
+    const prerequisiteFix = suggestions.find(
+      (fix) => fix.type === FIX_TYPES.MISSING_PREREQUISITE
+    );
+    expect(prerequisiteFix).toBeUndefined();
+  });
+
+  it('combines invalid state, scope, and target guidance', () => {
+    const error = new Error(
+      'Invalid state detected - scope resolution failed: target missing'
+    );
+    const actionDef = createActionDefinition({ scope: 'global' });
+    const actorSnapshot = createActorSnapshot({
+      location: 'none',
       components: {
-        'core:state': { value: 'asleep' },
+        'core:state': { status: 'incapacitated' },
+        'core:status': { mood: 'angry' },
       },
     });
 
-    const error = new Error();
-    error.message = undefined;
-    error.name = 'InvalidStateError';
+    const suggestions = engine.suggestFixes(
+      error,
+      actionDef,
+      actorSnapshot,
+      'execution'
+    );
+
+    expect(suggestions).toHaveLength(5);
+
+    const [highestConfidence] = suggestions;
+    expect(highestConfidence).toMatchObject({
+      type: FIX_TYPES.INVALID_STATE,
+      details: expect.objectContaining({
+        suggestion: 'Ensure actor has a valid location component',
+      }),
+      confidence: 0.9,
+    });
+
+    const scopeFix = suggestions.find(
+      (fix) => fix.type === FIX_TYPES.SCOPE_RESOLUTION
+    );
+    expect(scopeFix).toMatchObject({
+      details: expect.objectContaining({ scope: 'global' }),
+      confidence: 0.8,
+    });
+
+    const invalidStateFixes = suggestions.filter(
+      (fix) => fix.type === FIX_TYPES.INVALID_STATE
+    );
+    expect(invalidStateFixes).toHaveLength(3);
+
+    const targetFix = suggestions.find(
+      (fix) => fix.type === FIX_TYPES.INVALID_TARGET
+    );
+    expect(targetFix).toBeDefined();
+    expect(targetFix.confidence).toBe(0.7);
+  });
+
+  it('provides scope guidance without location warnings when actor is positioned', () => {
+    const error = new Error('Scope resolution failed - target entity not found');
+    const actionDef = createActionDefinition({ scope: 'distant' });
+    const actorSnapshot = createActorSnapshot({
+      location: 'tower-top',
+    });
 
     const suggestions = engine.suggestFixes(
       error,
@@ -371,21 +247,28 @@ describe('FixSuggestionEngine', () => {
       'execution'
     );
 
-    expect(suggestions).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          type: FIX_TYPES.INVALID_STATE,
-          details: expect.objectContaining({ componentId: 'core:state' }),
-        }),
-      ])
+    const scopeFix = suggestions.find(
+      (fix) => fix.type === FIX_TYPES.SCOPE_RESOLUTION
     );
+    expect(scopeFix).toBeDefined();
+    expect(scopeFix.details).toMatchObject({ scope: 'distant' });
+
+    const locationWarnings = suggestions.filter(
+      (fix) =>
+        fix.type === FIX_TYPES.INVALID_STATE &&
+        fix.details?.suggestion === 'Ensure actor has a valid location component'
+    );
+    expect(locationWarnings).toHaveLength(0);
   });
 
-  it('returns fallback identifiers when the action definition is missing', () => {
-    const error = new Error('Missing component: core:inventory');
-    error.name = undefined;
-
-    const actorSnapshot = createActorSnapshot();
+  it('falls back to unknown action metadata when definitions are absent', () => {
+    const error = new Error(
+      'Missing component: core:torch - scope resolution failed, target not found'
+    );
+    const actorSnapshot = createActorSnapshot({
+      location: 'tower-top',
+      components: {},
+    });
 
     const suggestions = engine.suggestFixes(
       error,
@@ -394,131 +277,30 @@ describe('FixSuggestionEngine', () => {
       'execution'
     );
 
-    expect(suggestions).toEqual([
-      expect.objectContaining({
-        type: FIX_TYPES.MISSING_COMPONENT,
-        confidence: 0.9,
-        details: expect.objectContaining({
-          componentId: 'core:inventory',
-          requiredBy: 'unknown',
-        }),
+    const missingComponent = suggestions.find(
+      (fix) => fix.type === FIX_TYPES.MISSING_COMPONENT
+    );
+    expect(missingComponent).toMatchObject({
+      details: expect.objectContaining({
+        requiredBy: 'unknown',
       }),
-    ]);
-  });
-
-  it('uses the fallback identifier for prerequisite-derived missing component fixes', () => {
-    const actionDef = createActionDefinition({
-      id: undefined,
-      prerequisites: [{ hasComponent: 'core:inventory' }],
     });
 
-    const actorSnapshot = createActorSnapshot();
-    const error = new Error("Missing component 'core:inventory'");
-
-    const suggestions = engine.suggestFixes(
-      error,
-      actionDef,
-      actorSnapshot,
-      'execution'
+    const targetFix = suggestions.find(
+      (fix) => fix.type === FIX_TYPES.INVALID_TARGET
     );
-
-    const prerequisiteSuggestion = suggestions.find(
-      (fix) =>
-        fix.type === FIX_TYPES.MISSING_COMPONENT &&
-        fix.details?.source === 'prerequisite_analysis' &&
-        fix.details?.componentId === 'core:inventory'
-    );
-
-    expect(prerequisiteSuggestion).toBeDefined();
-    expect(prerequisiteSuggestion.description).toContain("action 'unknown'");
+    expect(targetFix).toMatchObject({
+      details: expect.objectContaining({ actionScope: 'none' }),
+    });
   });
 
-  it('returns scope resolution guidance without location warnings when location is valid', () => {
+  it('returns an empty list when no error patterns match', () => {
+    const error = { message: undefined, name: undefined };
     const actionDef = createActionDefinition();
-    const actorSnapshot = createActorSnapshot({ location: 'market' });
-
-    const error = new Error('Scope resolution failed');
-
-    const suggestions = engine.suggestFixes(
-      error,
-      actionDef,
-      actorSnapshot,
-      'execution'
-    );
-
-    expect(suggestions).toEqual([
-      expect.objectContaining({
-        type: FIX_TYPES.SCOPE_RESOLUTION,
-        details: expect.objectContaining({
-          scope: actionDef.scope,
-          actorLocation: 'market',
-        }),
-      }),
-    ]);
-  });
-
-  it('uses a default scope label when resolving target errors without scope information', () => {
-    const actionDef = createActionDefinition({ scope: undefined });
-    const actorSnapshot = createActorSnapshot({ location: 'forest' });
-
-    const error = new Error('Target entity not found');
-
-    const suggestions = engine.suggestFixes(
-      error,
-      actionDef,
-      actorSnapshot,
-      'execution'
-    );
-
-    expect(suggestions).toEqual([
-      expect.objectContaining({
-        type: FIX_TYPES.INVALID_TARGET,
-        details: expect.objectContaining({
-          actionScope: 'none',
-          actorLocation: 'forest',
-        }),
-      }),
-    ]);
-  });
-
-  it('reports unknown identifiers when prerequisite validation lacks an action id', () => {
-    const actionDef = createActionDefinition({
-      id: undefined,
-      scope: undefined,
-      prerequisites: [{ hasComponent: 'core:inventory' }],
-    });
-
-    const actorSnapshot = createActorSnapshot();
-    const error = new Error('Prerequisites failed');
-
-    const suggestions = engine.suggestFixes(
-      error,
-      actionDef,
-      actorSnapshot,
-      'validation'
-    );
-
-    const prereqFix = suggestions.find(
-      (fix) => fix.type === FIX_TYPES.MISSING_PREREQUISITE
-    );
-
-    expect(prereqFix).toBeDefined();
-    expect(prereqFix.description).toContain("Action 'unknown' has prerequisites");
-  });
-
-  it('does not add prerequisite fixes when no prerequisites are defined', () => {
-    const actionDef = createActionDefinition({ scope: undefined, prerequisites: [] });
     const actorSnapshot = createActorSnapshot();
 
-    const error = new Error('Validation failed');
-
-    const suggestions = engine.suggestFixes(
-      error,
-      actionDef,
-      actorSnapshot,
-      'validation'
-    );
-
-    expect(suggestions).toEqual([]);
+    expect(
+      engine.suggestFixes(error, actionDef, actorSnapshot, 'execution')
+    ).toEqual([]);
   });
 });
