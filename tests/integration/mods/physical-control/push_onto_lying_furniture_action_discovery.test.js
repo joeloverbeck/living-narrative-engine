@@ -136,6 +136,7 @@ describe('physical-control:push_onto_lying_furniture action discovery', () => {
       ]);
       expect(pushOntoFurnitureAction.forbidden_components.actor).toEqual([
         'positioning:lying_down',
+        'positioning:being_hugged',
       ]);
       expect(pushOntoFurnitureAction.forbidden_components.primary).toEqual([
         'positioning:lying_down',
@@ -213,6 +214,27 @@ describe('physical-control:push_onto_lying_furniture action discovery', () => {
       setupScenario(testFixture, {
         actorComponents: {
           'positioning:lying_down': { furniture_id: 'test:bed' },
+        },
+      });
+
+      const errors = validateActionExecution({
+        actorId: ACTOR_ID,
+        targetId: TARGET_ID,
+        secondaryTargetId: FURNITURE_ID,
+        actionDefinition: pushOntoFurnitureAction,
+        entityManager: testFixture.entityManager,
+        actionId: ACTION_ID,
+      });
+
+      expect(
+        errors.some((error) => error.type === 'forbidden_component_present')
+      ).toBe(true);
+    });
+
+    it('fails validation when the actor is being hugged', () => {
+      setupScenario(testFixture, {
+        actorComponents: {
+          'positioning:being_hugged': { hugging_entity_id: TARGET_ID },
         },
       });
 

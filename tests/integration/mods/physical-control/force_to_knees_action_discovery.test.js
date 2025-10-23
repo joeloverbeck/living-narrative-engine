@@ -140,6 +140,7 @@ describe('physical-control:force_to_knees action discovery', () => {
       expect(forceToKneesAction.forbidden_components.actor).toEqual([
         'positioning:kneeling_before',
         'positioning:straddling_waist',
+        'positioning:being_hugged',
       ]);
       expect(forceToKneesAction.forbidden_components.primary).toEqual([
         'positioning:kneeling_before',
@@ -338,6 +339,27 @@ describe('physical-control:force_to_knees action discovery', () => {
         scenario.actor.id,
         'positioning:straddling_waist',
         { target_id: scenario.target.id, facing_away: false }
+      );
+
+      configureActionDiscovery();
+
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
+      const ids = availableActions.map((action) => action.id);
+
+      expect(ids).not.toContain(ACTION_ID);
+    });
+
+    it('is not available when the actor is being hugged', async () => {
+      const scenario = testFixture.createCloseActors(['Una', 'Theo']);
+
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+      await testFixture.entityManager.addComponent(
+        scenario.actor.id,
+        'positioning:being_hugged',
+        { hugging_entity_id: scenario.target.id }
       );
 
       configureActionDiscovery();
