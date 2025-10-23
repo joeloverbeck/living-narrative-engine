@@ -14,7 +14,11 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["positioning:kneeling_before", "positioning:straddling_waist"],
+    "actor": [
+      "positioning:kneeling_before",
+      "positioning:straddling_waist",
+      "positioning:being_hugged"
+    ],
     "primary": ["positioning:kneeling_before", "positioning:sitting_on"]
   },
   "template": "force {target} to their knees before you",
