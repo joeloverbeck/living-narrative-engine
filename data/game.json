@@ -13,11 +13,12 @@
     "violence",
     "seduction",
     "affection",
+    "hugging",
     "hand-holding",
     "caressing",
     "kissing",
     "physical-control",
-    "p_erotica"
+    "p_erotica_alicia"
   ],
-  "startWorld": "p_erotica:uncle"
+  "startWorld": "p_erotica_alicia:alicia"
 }
