@@ -1,0 +1,34 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "seduction:stroke_penis_to_draw_attention",
+  "name": "Stroke Penis to Draw Attention",
+  "description": "Highlight the actor stroking their bare penis in an alluring manner to command focus.",
+  "targets": "none",
+  "required_components": {},
+  "forbidden_components": {
+    "actor": ["positioning:hugging"]
+  },
+  "template": "stroke your penis to draw attention",
+  "prerequisites": [
+    {
+      "logic": {
+        "hasPartOfType": ["actor", "penis"]
+      },
+      "failure_message": "You need a penis to perform this action."
+    },
+    {
+      "logic": {
+        "not": {
+          "isSocketCovered": ["actor", "penis"]
+        }
+      },
+      "failure_message": "Your penis must be uncovered to perform this action."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#f57f17",
+    "textColor": "#000000",
+    "hoverBackgroundColor": "#f9a825",
+    "hoverTextColor": "#212121"
+  }
+}

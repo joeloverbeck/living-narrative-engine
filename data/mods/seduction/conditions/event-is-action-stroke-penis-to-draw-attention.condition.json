@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "seduction:event-is-action-stroke-penis-to-draw-attention",
+  "description": "Checks if the triggering event is for the 'seduction:stroke_penis_to_draw_attention' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "seduction:stroke_penis_to_draw_attention"
+    ]
+  }
+}
