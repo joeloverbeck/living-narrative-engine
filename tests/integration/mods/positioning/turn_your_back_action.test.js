@@ -31,6 +31,8 @@ import {
 } from '../../../../src/constants/componentIds.js';
 import { ATTEMPT_ACTION_ID } from '../../../../src/constants/eventIds.js';
 import { createRuleTestEnvironment } from '../../../common/engine/systemLogicTestEnv.js';
+import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 
 /**
  * Creates scenario where actor is sitting on furniture.
@@ -684,5 +686,43 @@ describe('positioning:turn_your_back action integration', () => {
 
     // This test proves the restriction is at the action discovery level,
     // not at the rule execution level - which is the correct design
+  });
+});
+
+describe('positioning:turn_your_back forbidden component enforcement', () => {
+  let testFixture;
+
+  beforeEach(async () => {
+    testFixture = await ModTestFixture.forAction('positioning', 'turn_your_back');
+  });
+
+  afterEach(() => {
+    testFixture?.cleanup();
+  });
+
+  it('rejects turning your back while hugging another actor', async () => {
+    const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
+
+    const actor = new ModEntityBuilder('actor1')
+      .withName('Alice')
+      .atLocation('room1')
+      .asActor()
+      .withComponent('positioning:hugging', {
+        embraced_entity_id: 'target1',
+        initiated: true,
+      })
+      .build();
+
+    const target = new ModEntityBuilder('target1')
+      .withName('Bob')
+      .atLocation('room1')
+      .asActor()
+      .build();
+
+    testFixture.reset([room, actor, target]);
+
+    await expect(
+      testFixture.executeAction(actor.id, target.id)
+    ).rejects.toThrow(/forbidden component.*positioning:hugging/i);
   });
 });

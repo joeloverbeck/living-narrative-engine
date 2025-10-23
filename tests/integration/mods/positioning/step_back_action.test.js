@@ -43,4 +43,32 @@ describe('positioning:step_back action forbidden state enforcement', () => {
       testFixture.executeAction(actor.id, null)
     ).rejects.toThrow(/forbidden component.*positioning:being_hugged/i);
   });
+
+  it('rejects stepping back while hugging someone else', async () => {
+    const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
+
+    const actor = new ModEntityBuilder('actor1')
+      .withName('Alice')
+      .atLocation('room1')
+      .asActor()
+      .withComponent('positioning:closeness', { partners: ['partner1'] })
+      .withComponent('positioning:hugging', {
+        embraced_entity_id: 'partner1',
+        initiated: true,
+      })
+      .build();
+
+    const partner = new ModEntityBuilder('partner1')
+      .withName('Bob')
+      .atLocation('room1')
+      .asActor()
+      .withComponent('positioning:closeness', { partners: ['actor1'] })
+      .build();
+
+    testFixture.reset([room, actor, partner]);
+
+    await expect(
+      testFixture.executeAction(actor.id, null)
+    ).rejects.toThrow(/forbidden component.*positioning:hugging/i);
+  });
 });

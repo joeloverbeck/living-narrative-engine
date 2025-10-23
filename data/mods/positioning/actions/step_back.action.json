@@ -13,7 +13,8 @@
       "positioning:sitting_on",
       "positioning:kneeling_before",
       "positioning:lying_down",
-      "positioning:being_hugged"
+      "positioning:being_hugged",
+      "positioning:hugging"
     ]
   },
   "template": "step back",

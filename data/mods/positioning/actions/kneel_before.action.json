@@ -14,7 +14,7 @@
     "actor": []
   },
   "forbidden_components": {
-    "actor": ["positioning:kneeling_before", "positioning:sitting_on", "positioning:bending_over", "positioning:lying_down", "positioning:straddling_waist", "positioning:being_hugged"],
+    "actor": ["positioning:kneeling_before", "positioning:sitting_on", "positioning:bending_over", "positioning:lying_down", "positioning:straddling_waist", "positioning:being_hugged", "positioning:hugging"],
     "primary": ["positioning:kneeling_before", "positioning:lying_down", "positioning:bending_over"]
   },
   "template": "kneel before {actor}",

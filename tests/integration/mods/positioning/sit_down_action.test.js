@@ -47,4 +47,36 @@ describe('positioning:sit_down action forbidden state enforcement', () => {
       testFixture.executeAction(actor.id, chair.id)
     ).rejects.toThrow(/forbidden component.*positioning:being_hugged/i);
   });
+
+  it('rejects sitting down while hugging someone else', async () => {
+    const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
+
+    const chair = new ModEntityBuilder('chair1')
+      .withName('Comfy Chair')
+      .atLocation('room1')
+      .withComponent('positioning:allows_sitting', { spots: [{ occupied: false }] })
+      .build();
+
+    const actor = new ModEntityBuilder('actor1')
+      .withName('Alice')
+      .atLocation('room1')
+      .asActor()
+      .withComponent('positioning:hugging', {
+        embraced_entity_id: 'huggee1',
+        initiated: true,
+      })
+      .build();
+
+    const huggee = new ModEntityBuilder('huggee1')
+      .withName('Charlie')
+      .atLocation('room1')
+      .asActor()
+      .build();
+
+    testFixture.reset([room, actor, huggee, chair]);
+
+    await expect(
+      testFixture.executeAction(actor.id, chair.id)
+    ).rejects.toThrow(/forbidden component.*positioning:hugging/i);
+  });
 });
