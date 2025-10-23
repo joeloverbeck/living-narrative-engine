@@ -8,7 +8,7 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["kissing:kissing"]
+    "actor": ["kissing:kissing", "positioning:giving_blowjob"]
   },
   "template": "cup {target}'s chin",
   "prerequisites": [],

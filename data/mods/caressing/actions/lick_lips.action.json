@@ -7,6 +7,9 @@
   "required_components": {
     "actor": ["positioning:closeness"]
   },
+  "forbidden_components": {
+    "actor": ["positioning:giving_blowjob"]
+  },
   "template": "lick {target}'s lips",
   "visual": {
     "backgroundColor": "#311b92",
