@@ -8,7 +8,8 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": []
+    "actor": ["positioning:hugging", "positioning:being_hugged"],
+    "primary": ["positioning:being_hugged"]
   },
   "template": "hug {target} tight",
   "prerequisites": [],
