@@ -25,7 +25,11 @@ const ACTION_ID = 'seduction:grab_crotch_draw_attention';
  */
 function loadScenario(
   fixture,
-  { includePenis = true, includeTorsoLowerClothing = true } = {}
+  {
+    includePenis = true,
+    includeTorsoLowerClothing = true,
+    includeHugging = false,
+  } = {}
 ) {
   const room = ModEntityScenarios.createRoom('room1', 'Test Room');
 
@@ -35,6 +39,13 @@ function loadScenario(
     .withLocationComponent('room1')
     .asActor()
     .withBody('actorPelvis');
+
+  if (includeHugging) {
+    actorBuilder.withComponent('positioning:hugging', {
+      embraced_entity_id: 'target1',
+      initiated: true,
+    });
+  }
 
   if (includeTorsoLowerClothing) {
     actorBuilder.withComponent('clothing:equipment', {
@@ -190,6 +201,18 @@ describe('seduction:grab_crotch_draw_attention action discovery', () => {
           testFixture.entityManager.getEntityInstance(actorId)
         );
       expect(prerequisitesPassed).toBe(false);
+
+      const availableActions = testFixture.discoverActions(actorId);
+
+      expect(availableActions).not.toHaveAction(ACTION_ID);
+    });
+  });
+
+  describe('Forbidden component restrictions', () => {
+    it('does not surface the action when the actor is hugging someone', () => {
+      const { actorId } = loadScenario(testFixture, {
+        includeHugging: true,
+      });
 
       const availableActions = testFixture.discoverActions(actorId);
 

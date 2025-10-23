@@ -5,6 +5,9 @@
   "description": "Grab your clothed crotch to emphasize the outline of your bulge and draw attention to it.",
   "targets": "none",
   "required_components": {},
+  "forbidden_components": {
+    "actor": ["positioning:hugging"]
+  },
   "template": "grab your crotch to draw attention",
   "prerequisites": [
     {

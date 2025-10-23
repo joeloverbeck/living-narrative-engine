@@ -10,6 +10,9 @@
       "description": "Person to slap"
     }
   },
+  "forbidden_components": {
+    "actor": ["positioning:hugging"]
+  },
   "template": "slap {target}",
   "visual": {
     "backgroundColor": "#8b0000",

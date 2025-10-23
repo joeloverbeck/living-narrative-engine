@@ -3,8 +3,12 @@
  * @description Tests basic action properties and structure validation using the action property helpers.
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import drawAttentionToAssAction from '../../../../data/mods/seduction/actions/draw_attention_to_ass.action.json';
+import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
+import drawAttentionToAssRule from '../../../../data/mods/seduction/rules/draw_attention_to_ass.rule.json';
+import eventIsActionDrawAttentionToAss from '../../../../data/mods/seduction/conditions/event-is-action-draw-attention-to-ass.condition.json';
 import {
   validateActionProperties,
   validateVisualStyling,
@@ -39,9 +43,10 @@ describe('Seduction Mod: Draw Attention to Ass Action', () => {
       );
     });
 
-    it('should have no component requirements or restrictions', () => {
+    it('should require actor to not be hugging anyone', () => {
       validateComponentRequirements(drawAttentionToAssAction, {
         required: {},
+        forbidden: { actor: ['positioning:hugging'] },
       });
     });
 
@@ -123,6 +128,49 @@ describe('Seduction Mod: Draw Attention to Ass Action', () => {
       // Messages should be descriptive and user-friendly
       expect(assFailure.length).toBeGreaterThan(20);
       expect(clothingFailure.length).toBeGreaterThan(20);
+    });
+  });
+});
+
+describe('Seduction Mod: Draw Attention to Ass hugging restrictions', () => {
+  let testFixture;
+
+  beforeEach(async () => {
+    testFixture = await ModTestFixture.forAction(
+      'seduction',
+      'seduction:draw_attention_to_ass',
+      drawAttentionToAssRule,
+      eventIsActionDrawAttentionToAss
+    );
+  });
+
+  afterEach(() => {
+    testFixture.cleanup();
+  });
+
+  it('rejects the action when the actor is currently hugging someone', async () => {
+    const scenario = testFixture.createStandardActorTarget(['Alex', 'Jordan'], {
+      includeRoom: false,
+    });
+
+    scenario.actor.components['positioning:hugging'] = {
+      embraced_entity_id: scenario.target.id,
+      initiated: true,
+    };
+
+    const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+    testFixture.reset([room, scenario.actor, scenario.target]);
+
+    await expect(
+      testFixture.executeAction(scenario.actor.id, null)
+    ).rejects.toThrow(/forbidden component/i);
+
+    const actorInstance = testFixture.entityManager.getEntityInstance(
+      scenario.actor.id
+    );
+    expect(actorInstance.components['positioning:hugging']).toEqual({
+      embraced_entity_id: scenario.target.id,
+      initiated: true,
     });
   });
 });
