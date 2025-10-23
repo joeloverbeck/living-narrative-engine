@@ -1,0 +1,286 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_release_self_from_hug_forceful",
+  "comment": "Handles the 'hugging:release_self_from_hug_forceful' action by clearing hugging state when the actor forcefully frees themselves.",
+  "event_type": "core:attempt_action",
+  "condition": { "condition_ref": "hugging:event-is-action-release-self-from-hug-forceful" },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "target", "result_variable": "targetName" }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENTS",
+      "parameters": {
+        "entity_ref": "actor",
+        "pairs": [
+          {
+            "component_type": "positioning:hugging",
+            "result_variable": "actorExistingHuggingComponent"
+          },
+          {
+            "component_type": "positioning:being_hugged",
+            "result_variable": "actorExistingBeingHuggedComponent"
+          }
+        ]
+      }
+    },
+    {
+      "type": "QUERY_COMPONENTS",
+      "parameters": {
+        "entity_ref": "target",
+        "pairs": [
+          {
+            "component_type": "positioning:hugging",
+            "result_variable": "targetExistingHuggingComponent"
+          },
+          {
+            "component_type": "positioning:being_hugged",
+            "result_variable": "targetExistingBeingHuggedComponent"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "parameters": {
+        "condition": {
+          "and": [
+            { "var": "context.actorExistingBeingHuggedComponent" },
+            {
+              "!=": [
+                { "var": "context.actorExistingBeingHuggedComponent.hugging_entity_id" },
+                { "var": "event.payload.targetId" }
+              ]
+            }
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "REMOVE_COMPONENT",
+            "parameters": {
+              "entity_ref": "{context.actorExistingBeingHuggedComponent.hugging_entity_id}",
+              "component_type": "positioning:hugging"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "parameters": {
+        "condition": {
+          "and": [
+            { "var": "context.actorExistingHuggingComponent" },
+            {
+              "!=": [
+                { "var": "context.actorExistingHuggingComponent.embraced_entity_id" },
+                { "var": "event.payload.targetId" }
+              ]
+            }
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "REMOVE_COMPONENT",
+            "parameters": {
+              "entity_ref": "{context.actorExistingHuggingComponent.embraced_entity_id}",
+              "component_type": "positioning:being_hugged"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "parameters": {
+        "condition": {
+          "and": [
+            { "var": "context.targetExistingHuggingComponent" },
+            {
+              "!=": [
+                { "var": "context.targetExistingHuggingComponent.embraced_entity_id" },
+                { "var": "event.payload.actorId" }
+              ]
+            }
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "REMOVE_COMPONENT",
+            "parameters": {
+              "entity_ref": "{context.targetExistingHuggingComponent.embraced_entity_id}",
+              "component_type": "positioning:being_hugged"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "parameters": {
+        "condition": {
+          "and": [
+            { "var": "context.targetExistingBeingHuggedComponent" },
+            {
+              "!=": [
+                { "var": "context.targetExistingBeingHuggedComponent.hugging_entity_id" },
+                { "var": "event.payload.actorId" }
+              ]
+            }
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "REMOVE_COMPONENT",
+            "parameters": {
+              "entity_ref": "{context.targetExistingBeingHuggedComponent.hugging_entity_id}",
+              "component_type": "positioning:hugging"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "parameters": {
+        "condition": {
+          "and": [
+            { "var": "context.actorExistingBeingHuggedComponent" },
+            {
+              "==": [
+                { "var": "context.actorExistingBeingHuggedComponent.hugging_entity_id" },
+                { "var": "event.payload.targetId" }
+              ]
+            }
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "REMOVE_COMPONENT",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "positioning:being_hugged"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "parameters": {
+        "condition": {
+          "and": [
+            { "var": "context.actorExistingHuggingComponent" },
+            {
+              "==": [
+                { "var": "context.actorExistingHuggingComponent.embraced_entity_id" },
+                { "var": "event.payload.targetId" }
+              ]
+            }
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "REMOVE_COMPONENT",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "positioning:hugging"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "parameters": {
+        "condition": {
+          "and": [
+            { "var": "context.targetExistingHuggingComponent" },
+            {
+              "==": [
+                { "var": "context.targetExistingHuggingComponent.embraced_entity_id" },
+                { "var": "event.payload.actorId" }
+              ]
+            }
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "REMOVE_COMPONENT",
+            "parameters": {
+              "entity_ref": "target",
+              "component_type": "positioning:hugging"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "parameters": {
+        "condition": {
+          "and": [
+            { "var": "context.targetExistingBeingHuggedComponent" },
+            {
+              "==": [
+                { "var": "context.targetExistingBeingHuggedComponent.hugging_entity_id" },
+                { "var": "event.payload.actorId" }
+              ]
+            }
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "REMOVE_COMPONENT",
+            "parameters": {
+              "entity_ref": "target",
+              "component_type": "positioning:being_hugged"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} frees themselves forcefully from {context.targetName}'s hug."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.targetId}"
+      }
+    },
+    { "macro": "core:logSuccessAndEndTurn" }
+  ]
+}

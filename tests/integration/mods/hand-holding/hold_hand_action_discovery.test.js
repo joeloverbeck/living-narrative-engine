@@ -107,6 +107,7 @@ describe('hand-holding:hold_hand action discovery', () => {
       expect(holdHandAction.forbidden_components.actor).toEqual([
         'hand-holding:holding_hand',
         'hand-holding:hand_held',
+        'positioning:hugging',
       ]);
       expect(holdHandAction.forbidden_components.primary).toEqual([
         'hand-holding:hand_held',

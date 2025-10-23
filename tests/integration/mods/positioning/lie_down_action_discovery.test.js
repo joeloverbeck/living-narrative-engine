@@ -35,6 +35,8 @@ describe('positioning:lie_down action discovery', () => {
     it('should have correct forbidden components', () => {
       expect(lieDownAction.forbidden_components).toBeDefined();
       expect(lieDownAction.forbidden_components.actor).toEqual([
+        'positioning:being_hugged',
+        'positioning:hugging',
         'positioning:sitting_on',
         'positioning:bending_over',
         'positioning:kneeling_before',
