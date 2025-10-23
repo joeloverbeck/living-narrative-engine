@@ -546,7 +546,8 @@ class EquipmentDescriptionService {
 
       if (
         Array.isArray(torsoUpperMapping.coveredSockets) &&
-        this.#slotCoversBreasts(torsoUpperMapping.coveredSockets)
+        this.#slotCoversBreasts(torsoUpperMapping.coveredSockets) &&
+        this.#entityHasBreastAnatomy(entityId)
       ) {
         exposureNotes.push('The breasts are exposed.');
       }
@@ -591,6 +592,48 @@ class EquipmentDescriptionService {
     return sockets.some((socket) =>
       BREAST_SOCKET_KEYWORDS.some((keyword) => socket.includes(keyword))
     );
+  }
+
+  /**
+   * @description Determine whether the entity has breast anatomy parts present.
+   * @param {string} entityId - Identifier of the entity being inspected.
+   * @returns {boolean} True if at least one breast part exists on the entity.
+   */
+  #entityHasBreastAnatomy(entityId) {
+    const bodyComponent = this.#entityManager.getComponentData(
+      entityId,
+      'anatomy:body'
+    );
+
+    if (!bodyComponent || !bodyComponent.body) {
+      return false;
+    }
+
+    const parts = bodyComponent.body.parts;
+    let partIds = [];
+
+    if (Array.isArray(parts)) {
+      partIds = parts;
+    } else if (parts && typeof parts === 'object') {
+      partIds = Object.values(parts);
+    }
+
+    for (const partId of partIds) {
+      if (!partId || typeof partId !== 'string') {
+        continue;
+      }
+
+      const anatomyPart = this.#entityManager.getComponentData(
+        partId,
+        'anatomy:part'
+      );
+
+      if (anatomyPart && anatomyPart.subType === 'breast') {
+        return true;
+      }
+    }
+
+    return false;
   }
 }
 

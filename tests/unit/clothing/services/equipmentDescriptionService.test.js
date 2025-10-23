@@ -59,21 +59,43 @@ describe('EquipmentDescriptionService', () => {
     it('should describe exposed torso and breasts when torso_upper slot is empty', async () => {
       // Arrange
       const entityId = 'character_1';
+      const leftBreastPartId = 'character_1_left_breast';
+      const rightBreastPartId = 'character_1_right_breast';
+
       mockClothingManagementService.getEquippedItems.mockResolvedValue({
         success: true,
         equipped: {},
       });
       mockEntityManager.getComponentData.mockImplementation(
         (requestedEntityId, componentId) => {
-          if (componentId === 'clothing:slot_metadata') {
-            return {
-              slotMappings: {
-                torso_upper: {
-                  coveredSockets: ['left_breast', 'right_breast'],
+          if (requestedEntityId === entityId) {
+            if (componentId === 'clothing:slot_metadata') {
+              return {
+                slotMappings: {
+                  torso_upper: {
+                    coveredSockets: ['left_breast', 'right_breast'],
+                  },
                 },
-              },
-            };
+              };
+            }
+            if (componentId === 'anatomy:body') {
+              return {
+                body: {
+                  root: 'torso_1',
+                  parts: ['torso_1', leftBreastPartId, rightBreastPartId],
+                },
+              };
+            }
           }
+
+          if (
+            componentId === 'anatomy:part' &&
+            (requestedEntityId === leftBreastPartId ||
+              requestedEntityId === rightBreastPartId)
+          ) {
+            return { subType: 'breast' };
+          }
+
           return null;
         }
       );
@@ -85,6 +107,53 @@ describe('EquipmentDescriptionService', () => {
       expect(result).toBe(
         'Wearing: Torso is fully exposed. The breasts are exposed.'
       );
+    });
+
+    it('should not describe breasts as exposed when the actor lacks breast anatomy', async () => {
+      // Arrange
+      const entityId = 'character_1';
+      mockClothingManagementService.getEquippedItems.mockResolvedValue({
+        success: true,
+        equipped: {},
+      });
+      mockEntityManager.getComponentData.mockImplementation(
+        (requestedEntityId, componentId) => {
+          if (requestedEntityId === entityId) {
+            if (componentId === 'clothing:slot_metadata') {
+              return {
+                slotMappings: {
+                  torso_upper: {
+                    coveredSockets: ['left_breast', 'right_breast'],
+                  },
+                },
+              };
+            }
+            if (componentId === 'anatomy:body') {
+              return {
+                body: {
+                  root: 'torso_1',
+                  parts: ['torso_1'],
+                },
+              };
+            }
+          }
+
+          if (
+            componentId === 'anatomy:part' &&
+            requestedEntityId === 'torso_1'
+          ) {
+            return { subType: 'torso' };
+          }
+
+          return null;
+        }
+      );
+
+      // Act
+      const result = await service.generateEquipmentDescription(entityId);
+
+      // Assert
+      expect(result).toBe('Wearing: Torso is fully exposed.');
     });
 
     it('should describe exposed genitals when torso_lower slot is empty', async () => {
@@ -134,20 +203,41 @@ describe('EquipmentDescriptionService', () => {
         },
       };
       mockEntityManager.getEntityInstance.mockResolvedValue(mockBootsEntity);
+      const leftBreastPartId = 'character_1_left_breast';
+      const rightBreastPartId = 'character_1_right_breast';
       mockEntityManager.getComponentData.mockImplementation(
         (requestedEntityId, componentId) => {
-          if (componentId === 'clothing:slot_metadata') {
-            return {
-              slotMappings: {
-                torso_upper: {
-                  coveredSockets: ['left_breast', 'right_breast'],
+          if (requestedEntityId === entityId) {
+            if (componentId === 'clothing:slot_metadata') {
+              return {
+                slotMappings: {
+                  torso_upper: {
+                    coveredSockets: ['left_breast', 'right_breast'],
+                  },
+                  torso_lower: {
+                    coveredSockets: ['vagina'],
+                  },
                 },
-                torso_lower: {
-                  coveredSockets: ['vagina'],
+              };
+            }
+            if (componentId === 'anatomy:body') {
+              return {
+                body: {
+                  root: 'torso_1',
+                  parts: ['torso_1', leftBreastPartId, rightBreastPartId],
                 },
-              },
-            };
+              };
+            }
           }
+
+          if (
+            componentId === 'anatomy:part' &&
+            (requestedEntityId === leftBreastPartId ||
+              requestedEntityId === rightBreastPartId)
+          ) {
+            return { subType: 'breast' };
+          }
+
           return null;
         }
       );
