@@ -18,14 +18,17 @@
   ],
   "content": {
     "actions": [
-      "hug_tight.action.json"
+      "hug_tight.action.json",
+      "release_hug.action.json"
     ],
     "components": [],
     "conditions": [
-      "event-is-action-hug-tight.condition.json"
+      "event-is-action-hug-tight.condition.json",
+      "event-is-action-release-hug.condition.json"
     ],
     "rules": [
-      "handle_hug_tight.rule.json"
+      "handle_hug_tight.rule.json",
+      "handle_release_hug.rule.json"
     ],
     "entities": {
       "definitions": [],
@@ -33,6 +36,8 @@
     },
     "events": [],
     "macros": [],
-    "scopes": []
+    "scopes": [
+      "hugged_by_actor.scope"
+    ]
   }
 }
