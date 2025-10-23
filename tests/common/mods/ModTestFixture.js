@@ -113,6 +113,8 @@ export class ModTestFixture {
    * @param {object|null} [ruleFile] - The rule definition JSON (auto-loaded if null/undefined)
    * @param {object|null} [conditionFile] - The condition definition JSON (auto-loaded if null/undefined)
    * @param {object} [options] - Additional configuration options
+   * @param {Array<string>} [options.supportingActions] - Additional action IDs whose rules
+   *   and conditions should be loaded into the environment for multi-action workflows
    * @returns {Promise<ModActionTestFixture>} Configured test fixture for the action
    * @throws {Error} If auto-loading fails when files are not provided
    */
@@ -160,6 +162,18 @@ export class ModTestFixture {
             }
           }
         }
+      }
+
+      if (typeof finalRuleFile === 'string') {
+        const resolvedPath = resolve(finalRuleFile);
+        const content = await fs.readFile(resolvedPath, 'utf8');
+        finalRuleFile = JSON.parse(content);
+      }
+
+      if (typeof finalConditionFile === 'string') {
+        const resolvedPath = resolve(finalConditionFile);
+        const content = await fs.readFile(resolvedPath, 'utf8');
+        finalConditionFile = JSON.parse(content);
       }
 
       // Use existing ModActionTestFixture constructor
@@ -237,6 +251,18 @@ export class ModTestFixture {
             }
           }
         }
+      }
+
+      if (typeof finalRuleFile === 'string') {
+        const resolvedPath = resolve(finalRuleFile);
+        const content = await fs.readFile(resolvedPath, 'utf8');
+        finalRuleFile = JSON.parse(content);
+      }
+
+      if (typeof finalConditionFile === 'string') {
+        const resolvedPath = resolve(finalConditionFile);
+        const content = await fs.readFile(resolvedPath, 'utf8');
+        finalConditionFile = JSON.parse(content);
       }
 
       // Use existing ModRuleTestFixture constructor
@@ -622,6 +648,15 @@ class BaseModTestFixture {
     // Load action definitions for the mod to enable action discovery
     const actionDefinitions = await this.loadActionDefinitions();
 
+    const supportingActions = Array.isArray(this.options.supportingActions)
+      ? this.options.supportingActions
+          .filter((actionId) => typeof actionId === 'string')
+          .map((actionId) => actionId.trim())
+          .filter((actionId) => actionId.length > 0)
+      : [];
+
+    const uniqueSupportingActions = Array.from(new Set(supportingActions));
+
     // Track prerequisite condition references across loaded actions
     const prerequisiteConditionIds = new Set();
     for (const actionDef of actionDefinitions) {
@@ -670,6 +705,42 @@ class BaseModTestFixture {
       conditions[conditionId] = conditionFile;
       if (conditionFile.id && conditionFile.id !== conditionId) {
         conditions[conditionFile.id] = conditionFile;
+      }
+    }
+
+    const supportingRuleFiles = [];
+    for (const supportingAction of uniqueSupportingActions) {
+      try {
+        const { ruleFile: supportingRule, conditionFile: supportingCondition } =
+          await ModTestFixture.tryAutoLoadFiles(this.modId, supportingAction);
+
+        if (supportingRule) {
+          supportingRuleFiles.push(supportingRule);
+        }
+
+        if (supportingCondition) {
+          const normalizedActionName = extractActionName(supportingAction);
+          const supportingModId = supportingAction.includes(':')
+            ? supportingAction.split(':')[0]
+            : this.modId;
+          const derivedConditionId = `${supportingModId}:event-is-action-${normalizedActionName.replace(
+            /_/g,
+            '-'
+          )}`;
+
+          conditions[derivedConditionId] = supportingCondition;
+
+          if (
+            supportingCondition.id &&
+            supportingCondition.id !== derivedConditionId
+          ) {
+            conditions[supportingCondition.id] = supportingCondition;
+          }
+        }
+      } catch (error) {
+        console.warn(
+          `⚠️  Failed to load supporting action '${supportingAction}' for ${this.modId}:${this.actionId}: ${error.message}`
+        );
       }
     }
 
@@ -760,11 +831,29 @@ class BaseModTestFixture {
       this.modId
     );
 
+    const rulesToLoad = [ruleFile, ...supportingRuleFiles].filter(Boolean);
+    const seenRuleIds = new Set();
+    const uniqueRules = [];
+    for (const ruleDefinition of rulesToLoad) {
+      const ruleId =
+        typeof ruleDefinition?.rule_id === 'string'
+          ? ruleDefinition.rule_id
+          : null;
+      if (!ruleId || seenRuleIds.has(ruleId)) {
+        if (!ruleId) {
+          uniqueRules.push(ruleDefinition);
+        }
+        continue;
+      }
+      seenRuleIds.add(ruleId);
+      uniqueRules.push(ruleDefinition);
+    }
+
     // Don't pass dataRegistry - let createRuleTestEnvironment create one that uses the expanded rules
     this.testEnv = createRuleTestEnvironment({
       createHandlers: handlerFactory,
       entities: [],
-      rules: [ruleFile],  // Pass unexpanded rule - createBaseRuleEnvironment will expand it
+      rules: uniqueRules, // Pass unexpanded rules - createBaseRuleEnvironment will expand them
       actions: actionDefinitions,
       conditions,  // Pass conditions map instead of dataRegistry
       macros,  // Pass macros for expansion
@@ -1431,7 +1520,25 @@ export class ModActionTestFixture extends BaseModTestFixture {
       originalInput: originalInput || `${actionId.split(':')[1]} ${targetId}`,
       ...additionalPayload,
     };
-    return this.eventBus.dispatch(ATTEMPT_ACTION_ID, payload);
+    if (targetId && payload.primaryId === undefined) {
+      payload.primaryId = targetId;
+    }
+    const initialEventCount = Array.isArray(this.events)
+      ? this.events.length
+      : 0;
+
+    const result = await this.eventBus.dispatch(ATTEMPT_ACTION_ID, payload);
+
+    const timeoutAt = Date.now() + 100;
+    while (
+      Array.isArray(this.events) &&
+      this.events.length === initialEventCount &&
+      Date.now() < timeoutAt
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 5));
+    }
+
+    return result;
   }
 
   /**

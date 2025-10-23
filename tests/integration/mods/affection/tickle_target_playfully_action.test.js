@@ -14,6 +14,7 @@ const EXPECTED_ALLOWED_EVENTS = [
   'core:attempt_action',
   'core:perceptible_event',
   'core:display_successful_action_result',
+  'core:action_success',
   'core:turn_ended',
 ];
 

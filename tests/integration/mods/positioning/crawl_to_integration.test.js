@@ -13,7 +13,15 @@ describe('positioning:crawl_to - Integration Tests', () => {
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
       'positioning',
-      'positioning:crawl_to'
+      'positioning:crawl_to',
+      null,
+      null,
+      {
+        supportingActions: [
+          'positioning:kneel_before',
+          'positioning:get_close',
+        ],
+      }
     );
   });
 
@@ -32,14 +40,12 @@ describe('positioning:crawl_to - Integration Tests', () => {
       const alice = new ModEntityBuilder('test:alice')
         .withName('Alice')
         .atLocation('throne_room')
-        .closeToEntity('test:bob')
         .asActor()
         .build();
 
       const bob = new ModEntityBuilder('test:bob')
         .withName('Bob')
         .atLocation('throne_room')
-        .closeToEntity('test:alice')
         .asActor()
         .build();
 
@@ -132,14 +138,12 @@ describe('positioning:crawl_to - Integration Tests', () => {
       const alice = new ModEntityBuilder('test:alice')
         .withName('Alice')
         .atLocation('room1')
-        .closeToEntity('test:bob')
         .asActor()
         .build();
 
       const bob = new ModEntityBuilder('test:bob')
         .withName('Bob')
         .atLocation('room1')
-        .closeToEntity('test:alice')
         .asActor()
         .build();
 
