@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex-penile-oral:event-is-action-suck-penis-slowly",
+  "description": "True when the action being attempted is suck_penis_slowly",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "sex-penile-oral:suck_penis_slowly"
+    ]
+  }
+}

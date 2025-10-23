@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-penile-oral:suck_penis_slowly",
+  "name": "Suck Penis Slowly",
+  "description": "Suck your partner's penis slowly and deliberately, giving careful attention with your lips and tongue to every inch during ongoing oral sex.",
+  "targets": {
+    "primary": {
+      "scope": "sex-penile-oral:receiving_blowjob_from_actor",
+      "placeholder": "primary",
+      "description": "Partner whose penis you are currently pleasuring with slow, deliberate sucking"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:giving_blowjob", "positioning:closeness"]
+  },
+  "forbidden_components": {},
+  "template": "suck {primary}'s cock slowly",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#2a1a5e",
+    "textColor": "#ede7f6",
+    "hoverBackgroundColor": "#372483",
+    "hoverTextColor": "#ffffff"
+  }
+}
