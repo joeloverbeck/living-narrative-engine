@@ -13,9 +13,9 @@
   "template": "hug {target} tight",
   "prerequisites": [],
   "visual": {
-    "backgroundColor": "#6a1b9a",
-    "textColor": "#f3e5f5",
-    "hoverBackgroundColor": "#8e24aa",
-    "hoverTextColor": "#ffffff"
+    "backgroundColor": "#7d2a50",
+    "textColor": "#fbeaf2",
+    "hoverBackgroundColor": "#a13a6a",
+    "hoverTextColor": "#fff3f9"
   }
 }
