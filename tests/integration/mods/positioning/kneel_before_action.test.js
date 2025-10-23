@@ -144,6 +144,26 @@ function setupTargetBendingScenario() {
 }
 
 /**
+ * Creates scenario where the actor is currently being hugged.
+ */
+function setupBeingHuggedScenario() {
+  const scenario = setupKneelingScenario();
+
+  const hugger = new ModEntityBuilder('test:hugger')
+    .withName('Embracer')
+    .atLocation('throne_room')
+    .closeToEntity('test:actor1')
+    .asActor()
+    .build();
+
+  scenario.actor.components['positioning:being_hugged'] = {
+    hugging_entity_id: hugger.id,
+  };
+
+  return { ...scenario, hugger };
+}
+
+/**
  * Creates multi-actor scenario with mixed positioning states.
  */
 function setupMixedPositioningScenario() {
@@ -543,6 +563,15 @@ describe('positioning:kneel_before action integration', () => {
     });
 
     describe('invalid actor scenarios', () => {
+      it('rejects kneeling before someone while being hugged', async () => {
+        const { room, actor, target, hugger } = setupBeingHuggedScenario();
+        testFixture.reset([room, actor, target, hugger]);
+
+        await expect(
+          testFixture.executeAction(actor.id, target.id)
+        ).rejects.toThrow(/forbidden component.*positioning:being_hugged/i);
+      });
+
       it('should prevent kneeling while already kneeling', async () => {
         const entities = setupAlreadyKneelingScenario();
         testFixture.reset(Object.values(entities));

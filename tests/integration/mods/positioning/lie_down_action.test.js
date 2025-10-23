@@ -287,6 +287,39 @@ describe('positioning:lie_down action rule execution', () => {
     });
   });
 
+  describe('forbidden component enforcement', () => {
+    it('rejects the action when the actor is being hugged', async () => {
+      const bed = new ModEntityBuilder('test:bed1')
+        .withName('Cozy Bed')
+        .atLocation('bedroom')
+        .withComponent('positioning:allows_lying_on', {})
+        .build();
+
+      const actor = new ModEntityBuilder('test:alice')
+        .withName('Alice')
+        .atLocation('bedroom')
+        .asActor()
+        .withComponent('positioning:being_hugged', {
+          hugging_entity_id: 'test:hugger',
+        })
+        .build();
+
+      const hugger = new ModEntityBuilder('test:hugger')
+        .withName('Bob')
+        .atLocation('bedroom')
+        .asActor()
+        .build();
+
+      const room = new ModEntityBuilder('bedroom').asRoom('Bedroom').build();
+
+      testFixture.reset([room, actor, hugger, bed]);
+
+      await expect(
+        testFixture.executeAction(actor.id, bed.id)
+      ).rejects.toThrow(/forbidden component.*positioning:being_hugged/i);
+    });
+  });
+
   describe('Rule validation', () => {
     it('should validate rule structure', () => {
       // The rule file should be loaded

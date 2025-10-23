@@ -188,6 +188,26 @@ function setupStraddlingBehindScenario() {
   return { ...scenario, chair, straddledTarget };
 }
 
+/**
+ * Creates scenario where the actor is currently being hugged.
+ */
+function setupBeingHuggedBehindScenario() {
+  const scenario = setupBehindPositioningScenario();
+
+  const hugger = new ModEntityBuilder('test:hugger')
+    .withName('Close Friend')
+    .atLocation('test:room')
+    .closeToEntity('test:player')
+    .asActor()
+    .build();
+
+  scenario.actor.components['positioning:being_hugged'] = {
+    hugging_entity_id: hugger.id,
+  };
+
+  return { ...scenario, hugger };
+}
+
 describe('Place Yourself Behind Action Integration Tests', () => {
   let testFixture;
 
@@ -233,6 +253,15 @@ describe('Place Yourself Behind Action Integration Tests', () => {
     );
     expect(placedBehindEvent.payload.actor).toBe('test:player');
     expect(placedBehindEvent.payload.target).toBe('test:npc');
+  });
+
+  it('rejects placing yourself behind someone while being hugged', async () => {
+    const entities = setupBeingHuggedBehindScenario();
+    testFixture.reset(Object.values(entities));
+
+    await expect(
+      testFixture.executeAction('test:player', 'test:npc')
+    ).rejects.toThrow(/forbidden component.*positioning:being_hugged/i);
   });
 
   it('should handle multiple actors placing themselves behind the same target', async () => {
