@@ -9,6 +9,7 @@ describe('BodyDescriptionComposer', () => {
   let mockEntityFinder;
   let mockAnatomyFormattingService;
   let mockPartDescriptionGenerator;
+  let mockLogger;
 
   beforeEach(() => {
     // Create mocks
@@ -37,6 +38,13 @@ describe('BodyDescriptionComposer', () => {
       generateSimpleDescription: jest.fn(),
     };
 
+    mockLogger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
     // Create composer instance
     composer = new BodyDescriptionComposer({
       bodyPartDescriptionBuilder: mockBodyPartDescriptionBuilder,
@@ -44,13 +52,82 @@ describe('BodyDescriptionComposer', () => {
       entityFinder: mockEntityFinder,
       anatomyFormattingService: mockAnatomyFormattingService,
       partDescriptionGenerator: mockPartDescriptionGenerator,
+      logger: mockLogger,
     });
+  });
+
+  it('supports construction without dependencies', () => {
+    expect(() => new BodyDescriptionComposer()).not.toThrow();
   });
 
   describe('composeDescription', () => {
     it('should return empty string for null entity', async () => {
       const result = await composer.composeDescription(null);
       expect(result).toBe('');
+    });
+
+    it('logs error when hasComponent method is missing', async () => {
+      const localLogger = {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      };
+      const localComposer = new BodyDescriptionComposer({
+        bodyPartDescriptionBuilder: mockBodyPartDescriptionBuilder,
+        bodyGraphService: mockBodyGraphService,
+        entityFinder: mockEntityFinder,
+        anatomyFormattingService: mockAnatomyFormattingService,
+        partDescriptionGenerator: mockPartDescriptionGenerator,
+        logger: localLogger,
+      });
+
+      const entity = {
+        getComponentData: jest.fn(),
+      };
+
+      const result = await localComposer.composeDescription(entity);
+
+      expect(result).toBe('');
+      expect(localLogger.error).toHaveBeenCalledWith(
+        'BodyDescriptionComposer.composeDescription: bodyEntity does not have hasComponent method',
+        expect.objectContaining({
+          bodyEntityId: 'unknown',
+          bodyEntityType: 'object',
+        })
+      );
+    });
+
+    it('logs error when getComponentData method is missing', async () => {
+      const localLogger = {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      };
+      const localComposer = new BodyDescriptionComposer({
+        bodyPartDescriptionBuilder: mockBodyPartDescriptionBuilder,
+        bodyGraphService: mockBodyGraphService,
+        entityFinder: mockEntityFinder,
+        anatomyFormattingService: mockAnatomyFormattingService,
+        partDescriptionGenerator: mockPartDescriptionGenerator,
+        logger: localLogger,
+      });
+
+      const entity = {
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+
+      const result = await localComposer.composeDescription(entity);
+
+      expect(result).toBe('');
+      expect(localLogger.error).toHaveBeenCalledWith(
+        'BodyDescriptionComposer.composeDescription: bodyEntity does not have getComponentData method',
+        expect.objectContaining({
+          bodyEntityId: 'unknown',
+          bodyEntityType: 'object',
+        })
+      );
     });
 
     it('should return empty string for entity without anatomy:body component', async () => {
@@ -206,6 +283,7 @@ describe('BodyDescriptionComposer', () => {
         bodyGraphService: mockBodyGraphService,
         entityFinder: mockEntityFinder,
         partDescriptionGenerator: mockPartDescriptionGenerator,
+        logger: mockLogger,
         // No anatomyFormattingService
       });
 
@@ -521,6 +599,39 @@ describe('BodyDescriptionComposer', () => {
 
       const result = composer.extractHeightDescription(entity);
       expect(result).toBe('');
+    });
+
+    it('logs and returns empty string when retrieving body component throws', () => {
+      const localLogger = {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      };
+      const localComposer = new BodyDescriptionComposer({
+        bodyPartDescriptionBuilder: mockBodyPartDescriptionBuilder,
+        bodyGraphService: mockBodyGraphService,
+        entityFinder: mockEntityFinder,
+        anatomyFormattingService: mockAnatomyFormattingService,
+        partDescriptionGenerator: mockPartDescriptionGenerator,
+        logger: localLogger,
+      });
+
+      const failure = new Error('boom');
+      const entity = {
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === ANATOMY_BODY_COMPONENT_ID) {
+            throw failure;
+          }
+          return null;
+        }),
+      };
+
+      expect(localComposer.extractHeightDescription(entity)).toBe('');
+      expect(localLogger.error).toHaveBeenCalledWith(
+        'Failed to get anatomy:body component',
+        failure
+      );
     });
   });
 
@@ -923,6 +1034,7 @@ describe('BodyDescriptionComposer', () => {
           anatomyFormattingService: mockAnatomyFormattingService,
           partDescriptionGenerator: mockPartDescriptionGenerator,
           equipmentDescriptionService: mockEquipmentService,
+          logger: mockLogger,
         });
 
         mockAnatomyFormattingService.getDescriptionOrder.mockReturnValue([
@@ -961,6 +1073,7 @@ describe('BodyDescriptionComposer', () => {
           anatomyFormattingService: mockAnatomyFormattingService,
           partDescriptionGenerator: mockPartDescriptionGenerator,
           equipmentDescriptionService: mockEquipmentService,
+          logger: mockLogger,
         });
 
         mockAnatomyFormattingService.getDescriptionOrder.mockReturnValue([
