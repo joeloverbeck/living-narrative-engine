@@ -20,6 +20,9 @@ describe('Body Description with Equipment Integration', () => {
   let mockAnatomyFormattingService;
   let slotMetadataForActor;
   let equippedItemsResponse;
+  let anatomyBodyForActor;
+  let anatomyPartComponents;
+  let clothingEquipmentForActor;
 
   beforeEach(() => {
     // Setup mock logger
@@ -39,11 +42,27 @@ describe('Body Description with Equipment Integration', () => {
     };
 
     slotMetadataForActor = null;
+    anatomyBodyForActor = null;
+    anatomyPartComponents = {};
+    clothingEquipmentForActor = null;
     mockEntityManager.getComponentData.mockImplementation(
       (entityId, componentId) => {
-        if (componentId === 'clothing:slot_metadata') {
-          return slotMetadataForActor;
+        if (entityId === 'character_1') {
+          if (componentId === 'clothing:slot_metadata') {
+            return slotMetadataForActor;
+          }
+          if (componentId === 'clothing:equipment') {
+            return clothingEquipmentForActor;
+          }
+          if (componentId === ANATOMY_BODY_COMPONENT_ID) {
+            return anatomyBodyForActor;
+          }
         }
+
+        if (componentId === ANATOMY_PART_COMPONENT_ID) {
+          return anatomyPartComponents[entityId] || null;
+        }
+
         return null;
       }
     );
@@ -285,17 +304,7 @@ describe('Body Description with Equipment Integration', () => {
       }
     });
 
-    mockEntityManager.getComponentData.mockImplementation(
-      (entityId, componentId) => {
-        if (
-          entityId === 'character_1' &&
-          componentId === 'clothing:equipment'
-        ) {
-          return clothingComponent;
-        }
-        return null;
-      }
-    );
+    clothingEquipmentForActor = clothingComponent;
 
     // Act
     const result = await bodyDescriptionComposer.composeDescription(bodyEntity);
@@ -352,18 +361,6 @@ describe('Body Description with Equipment Integration', () => {
       return null;
     });
 
-    mockEntityManager.getComponentData.mockImplementation(
-      (entityId, componentId) => {
-        if (
-          entityId === 'character_1' &&
-          componentId === 'clothing:equipment'
-        ) {
-          return null; // No equipment
-        }
-        return null;
-      }
-    );
-
     // Act
     const result = await bodyDescriptionComposer.composeDescription(bodyEntity);
 
@@ -386,17 +383,23 @@ describe('Body Description with Equipment Integration', () => {
     };
     equippedItemsResponse = { success: true, equipped: {} };
 
+    const leftBreastPartId = 'character_1_left_breast';
+    const rightBreastPartId = 'character_1_right_breast';
+    anatomyBodyForActor = {
+      body: {
+        root: 'torso_1',
+        parts: ['torso_1', leftBreastPartId, rightBreastPartId],
+      },
+    };
+    anatomyPartComponents[leftBreastPartId] = { subType: 'breast' };
+    anatomyPartComponents[rightBreastPartId] = { subType: 'breast' };
+
     const bodyEntity = {
       id: 'character_1',
       hasComponent: jest.fn().mockReturnValue(true),
       getComponentData: jest.fn().mockImplementation((componentId) => {
         if (componentId === ANATOMY_BODY_COMPONENT_ID) {
-          return {
-            body: {
-              root: 'torso_1',
-              parts: ['torso_1'],
-            },
-          };
+          return anatomyBodyForActor;
         }
         if (componentId === 'descriptors:build') {
           return { build: 'athletic' };
