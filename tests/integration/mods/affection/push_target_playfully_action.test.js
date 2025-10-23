@@ -5,6 +5,7 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import handlePushTargetPlayfullyRule from '../../../../data/mods/affection/rules/handle_push_target_playfully.rule.json';
 import eventIsActionPushTargetPlayfully from '../../../../data/mods/affection/conditions/event-is-action-push-target-playfully.condition.json';
 
@@ -53,5 +54,38 @@ describe('affection:push_target_playfully action integration', () => {
     );
     expect(perceptibleEvent.payload.locationId).toBe('garden');
     expect(perceptibleEvent.payload.targetId).toBe(scenario.target.id);
+  });
+
+  it('rejects the playful push when the actor is hugging their target', async () => {
+    const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
+
+    const actor = new ModEntityBuilder('actor1')
+      .withName('Amelia')
+      .atLocation('room1')
+      .asActor()
+      .withComponent('positioning:closeness', { partners: ['target1'] })
+      .withComponent('positioning:hugging', {
+        embraced_entity_id: 'target1',
+        initiated: true,
+        consented: true,
+      })
+      .build();
+
+    const target = new ModEntityBuilder('target1')
+      .withName('Jonah')
+      .atLocation('room1')
+      .asActor()
+      .withComponent('positioning:closeness', { partners: ['actor1'] })
+      .withComponent('positioning:being_hugged', {
+        hugging_entity_id: 'actor1',
+        consented: true,
+      })
+      .build();
+
+    testFixture.reset([room, actor, target]);
+
+    await expect(
+      testFixture.executeAction(actor.id, target.id)
+    ).rejects.toThrow(/forbidden component.*positioning:hugging/i);
   });
 });

@@ -7,6 +7,9 @@
   "required_components": {
     "actor": ["positioning:closeness"]
   },
+  "forbidden_components": {
+    "actor": ["positioning:hugging"]
+  },
   "template": "push {target} playfully",
   "prerequisites": [],
   "visual": {

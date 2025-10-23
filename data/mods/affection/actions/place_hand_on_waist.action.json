@@ -8,7 +8,7 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["positioning:facing_away"]
+    "actor": ["positioning:facing_away", "positioning:hugging"]
   },
   "template": "place a hand on {target}'s waist",
   "prerequisites": [],
