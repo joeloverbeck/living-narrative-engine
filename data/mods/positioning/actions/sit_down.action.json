@@ -13,7 +13,8 @@
       "positioning:kneeling_before",
       "positioning:bending_over",
       "positioning:straddling_waist",
-      "positioning:being_hugged"
+      "positioning:being_hugged",
+      "positioning:hugging"
     ]
   },
   "template": "sit down on {target}",

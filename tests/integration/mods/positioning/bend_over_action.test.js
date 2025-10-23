@@ -341,6 +341,26 @@ describe('positioning:bend_over action integration', () => {
         testFixture.executeAction(actor.id, surface.id)
       ).rejects.toThrow(/forbidden component.*positioning:being_hugged/i);
     });
+
+    it('rejects the action when the actor is hugging someone else', async () => {
+      const { room, actor, surface } = setupBendingScenario();
+      const huggee = new ModEntityBuilder('test:huggee')
+        .withName('Dana')
+        .atLocation('kitchen')
+        .asActor()
+        .build();
+
+      actor.components['positioning:hugging'] = {
+        embraced_entity_id: huggee.id,
+        initiated: true,
+      };
+
+      testFixture.reset([room, actor, surface, huggee]);
+
+      await expect(
+        testFixture.executeAction(actor.id, surface.id)
+      ).rejects.toThrow(/forbidden component.*positioning:hugging/i);
+    });
   });
 
   describe('action validation', () => {
