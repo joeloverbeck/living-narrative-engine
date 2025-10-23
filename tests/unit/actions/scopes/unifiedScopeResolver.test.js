@@ -120,6 +120,20 @@ describe('UnifiedScopeResolver', () => {
         expect(result.value).toEqual(new Set(['actor123']));
         expect(mockScopeRegistry.getScope).not.toHaveBeenCalled();
       });
+
+      it('should propagate component loading failure for SELF scope', () => {
+        const context = createValidContext();
+        mockEntityManager.getComponentData.mockImplementation(() => {
+          throw new Error('Component load failed');
+        });
+
+        const result = resolver.resolve(TARGET_DOMAIN_SELF, context);
+
+        expect(result.success).toBe(false);
+        expect(result.errors[0].message).toBe(
+          'Failed to load any components for actor'
+        );
+      });
     });
 
     describe('context validation', () => {
@@ -372,6 +386,44 @@ describe('UnifiedScopeResolver', () => {
           'Scope engine returned invalid result'
         );
       });
+
+      it('should log detailed debug info for available furniture scope', () => {
+        const context = createValidContext();
+        context.actor.components = {};
+        mockScopeRegistry.getScope.mockReturnValue({
+          expr: 'all',
+          ast: { type: 'all' },
+        });
+        const resolvedSet = new Set(['seat-1']);
+        mockScopeEngine.resolve.mockReturnValue(resolvedSet);
+        mockEntityManager.getComponentData.mockReturnValue({});
+        mockEntityManager.getEntityInstance.mockReturnValue({ id: 'seat-1' });
+
+        const result = resolver.resolve('positioning:available_furniture', context);
+
+        expect(result.success).toBe(true);
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'UnifiedScopeResolver: Resolving available_furniture scope',
+          expect.objectContaining({
+            scopeName: 'positioning:available_furniture',
+            actorId: 'actor123',
+          })
+        );
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'UnifiedScopeResolver: Before scope engine resolve',
+          expect.objectContaining({
+            scopeName: 'positioning:available_furniture',
+            hasAst: true,
+          })
+        );
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'UnifiedScopeResolver: After scope engine resolve',
+          expect.objectContaining({
+            resolvedCount: 1,
+            isSet: true,
+          })
+        );
+      });
     });
 
     describe('entity validation', () => {
@@ -416,6 +468,26 @@ describe('UnifiedScopeResolver', () => {
 
         expect(result.success).toBe(true);
         expect(mockEntityManager.getEntityInstance).not.toHaveBeenCalled();
+      });
+
+      it('should treat entity manager exceptions as invalid entities', () => {
+        const context = createValidContext();
+        mockScopeRegistry.getScope.mockReturnValue({
+          expr: 'all',
+          ast: { type: 'all' },
+        });
+        mockScopeEngine.resolve.mockReturnValue(new Set(['entity1']));
+        mockEntityManager.getEntityInstance.mockImplementation(() => {
+          throw new Error('Lookup failed');
+        });
+
+        const result = resolver.resolve('test-scope', context, {
+          validateEntities: true,
+        });
+
+        expect(result.success).toBe(false);
+        expect(result.errors[0].invalidEntityIds).toEqual(['entity1']);
+        expect(result.errors[0].name).toBe('InvalidResolvedEntitiesError');
       });
     });
 
@@ -506,6 +578,20 @@ describe('UnifiedScopeResolver', () => {
           'Failed to load any components for actor'
         );
       });
+
+      it('should handle unexpected component iteration errors gracefully', () => {
+        const context = createValidContext();
+        context.actor.componentTypeIds = { length: 1 };
+        mockScopeRegistry.getScope.mockReturnValue({
+          expr: 'all',
+          ast: { type: 'all' },
+        });
+
+        const result = resolver.resolve('test-scope', context);
+
+        expect(result.success).toBe(false);
+        expect(result.errors[0].message).toMatch(/is not iterable/);
+      });
     });
 
     describe('tracing', () => {
@@ -539,6 +625,89 @@ describe('UnifiedScopeResolver', () => {
           "Using pre-parsed AST for scope 'test-scope'.",
           'UnifiedScopeResolver.#parseAst'
         );
+      });
+
+      it('should wrap resolution in trace span when available', () => {
+        const trace = {
+          withSpan: jest.fn((name, callback, metadata) => {
+            expect(name).toBe('scope.resolve');
+            expect(metadata).toEqual({
+              scopeName: 'test-scope',
+              actorId: 'actor123',
+              actionId: 'action-42',
+            });
+            return callback();
+          }),
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+        };
+        const context = {
+          ...createValidContext(),
+          trace,
+          actionId: 'action-42',
+          actor: { id: 'actor123', components: {} },
+        };
+        mockScopeRegistry.getScope.mockReturnValue({
+          expr: 'all',
+          ast: { type: 'all' },
+        });
+        mockScopeEngine.resolve.mockReturnValue(new Set(['entity1']));
+
+        const result = resolver.resolve('test-scope', context);
+
+        expect(result.success).toBe(true);
+        expect(trace.withSpan).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('runtime context composition', () => {
+      it('should include top-level target and targets when provided', () => {
+        const context = {
+          actor: { id: 'actor123', components: {} },
+          actorLocation: 'location1',
+          target: { id: 'direct-target' },
+          targets: ['t1', 't2'],
+          actionContext: {
+            target: { id: 'ignored-target' },
+            targets: ['ignored'],
+          },
+        };
+        mockScopeRegistry.getScope.mockReturnValue({
+          expr: 'all',
+          ast: { type: 'all' },
+        });
+        mockScopeEngine.resolve.mockReturnValue(new Set());
+
+        const result = resolver.resolve('test-scope', context);
+
+        expect(result.success).toBe(true);
+        const runtimeCtx = mockScopeEngine.resolve.mock.calls[0][2];
+        expect(runtimeCtx.target).toBe(context.target);
+        expect(runtimeCtx.targets).toBe(context.targets);
+      });
+
+      it('should derive target data from action context when missing on root context', () => {
+        const context = {
+          actor: { id: 'actor123', components: {} },
+          actorLocation: 'location1',
+          actionContext: {
+            target: { id: 'fallback-target' },
+            targets: ['fallback-1'],
+          },
+        };
+        mockScopeRegistry.getScope.mockReturnValue({
+          expr: 'all',
+          ast: { type: 'all' },
+        });
+        mockScopeEngine.resolve.mockReturnValue(new Set());
+
+        const result = resolver.resolve('test-scope', context);
+
+        expect(result.success).toBe(true);
+        const runtimeCtx = mockScopeEngine.resolve.mock.calls[0][2];
+        expect(runtimeCtx.target).toBe(context.actionContext.target);
+        expect(runtimeCtx.targets).toBe(context.actionContext.targets);
       });
     });
   });
