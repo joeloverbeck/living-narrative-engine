@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { ActionTargetContext } from '../../../../../src/models/actionTargetContext.js';
 import { MultiTargetResolutionStage } from '../../../../../src/actions/pipeline/stages/MultiTargetResolutionStage.js';
 import { PipelineResult } from '../../../../../src/actions/pipeline/PipelineResult.js';
 import { ActionResult } from '../../../../../src/actions/core/actionResult.js';
@@ -197,7 +198,7 @@ describe('MultiTargetResolutionStage', () => {
         {
           entityId: 'target1',
           displayName: 'Target 1',
-          placeholder: undefined,
+          placeholder: 'target',
         },
       ]);
     });
@@ -254,6 +255,54 @@ describe('MultiTargetResolutionStage', () => {
       // The stage itself doesn't set continueProcessing to false
       expect(result.continueProcessing).toBe(true);
       expect(result.data.actionsWithTargets).toEqual([]);
+    });
+
+    it('propagates template-derived placeholder metadata for legacy actions', async () => {
+      const actionDef = {
+        id: 'test:legacy',
+        targets: 'test:legacy_scope',
+        template: 'release {primary} from the hug',
+      };
+      mockContext.candidateActions = [actionDef];
+
+      setupLegacyAction('test:legacy_scope');
+      mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat.mockReturnValue({
+        isLegacy: true,
+        targetDefinitions: {
+          primary: { scope: 'test:legacy_scope', placeholder: 'primary' },
+        },
+      });
+
+      mockDeps.targetResolver.resolveTargets.mockResolvedValue({
+        success: true,
+        value: [ActionTargetContext.forEntity('target1')],
+      });
+
+      mockDeps.entityManager.getEntityInstance.mockReturnValue({
+        id: 'target1',
+        getComponentData: jest
+          .fn()
+          .mockImplementation((componentId) =>
+            componentId === 'core:name' ? { text: 'Alicia Western' } : null
+          ),
+      });
+
+      const result = await stage.executeInternal(mockContext);
+
+      expect(result.success).toBe(true);
+      expect(result.data.actionsWithTargets).toHaveLength(1);
+
+      const legacyResult = result.data.actionsWithTargets[0];
+      expect(legacyResult.targetContexts[0]).toMatchObject({
+        entityId: 'target1',
+        placeholder: 'primary',
+        displayName: 'Alicia Western',
+      });
+
+      expect(legacyResult.resolvedTargets.primary[0]).toMatchObject({
+        id: 'target1',
+        displayName: 'Alicia Western',
+      });
     });
   });
 

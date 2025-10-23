@@ -478,6 +478,33 @@ export class MultiTargetResolutionStage extends PipelineStage {
     }
 
     const targetContexts = result.value;
+    const placeholder =
+      conversionResult.targetDefinitions?.primary?.placeholder || 'target';
+
+    // Annotate legacy contexts with placeholder and display metadata so
+    // downstream formatters can substitute the correct entity names.
+    for (const targetContext of targetContexts) {
+      if (!targetContext || typeof targetContext !== 'object') {
+        continue;
+      }
+
+      targetContext.placeholder = placeholder;
+
+      if (targetContext.entityId) {
+        const existingDisplayName =
+          typeof targetContext.displayName === 'string' &&
+          targetContext.displayName.length > 0
+            ? targetContext.displayName
+            : null;
+
+        const resolvedDisplayName =
+          existingDisplayName ||
+          this.#nameResolver.getEntityDisplayName(targetContext.entityId) ||
+          targetContext.entityId;
+
+        targetContext.displayName = resolvedDisplayName;
+      }
+    }
 
     // For actions with 'none' scope, we still need to include them
     // even though they have no actual targets
@@ -499,17 +526,14 @@ export class MultiTargetResolutionStage extends PipelineStage {
     const resolvedTargets = {
       primary: targetContexts.map((tc) => ({
         id: tc.entityId,
-        displayName:
-          this.#nameResolver.getEntityDisplayName(tc.entityId) || tc.entityId,
+        displayName: tc.displayName ||
+          this.#nameResolver.getEntityDisplayName(tc.entityId) ||
+          tc.entityId,
         entity: tc.entityId
           ? this.#entityManager.getEntityInstance(tc.entityId)
           : null,
       })),
     };
-
-    // Get the placeholder from the conversion result
-    const placeholder =
-      conversionResult.targetDefinitions?.primary?.placeholder || 'target';
 
     return PipelineResult.success({
       data: {

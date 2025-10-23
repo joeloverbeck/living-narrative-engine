@@ -8,6 +8,9 @@ describe('ActionTargetContext', () => {
     expect(context).toBeInstanceOf(ActionTargetContext);
     expect(context.type).toBe('entity');
     expect(context.entityId).toBe('npc-42');
+    expect(context.placeholder).toBeNull();
+    expect(context.displayName).toBeNull();
+    expect(context.contextFromId).toBeNull();
   });
 
   it('throws when constructed with an unknown type', () => {
@@ -41,6 +44,9 @@ describe('ActionTargetContext', () => {
     expect(context).toBeInstanceOf(ActionTargetContext);
     expect(context.type).toBe('entity');
     expect(context.entityId).toBe('hero-7');
+    expect(context.placeholder).toBeNull();
+    expect(context.displayName).toBeNull();
+    expect(context.contextFromId).toBeNull();
   });
 
   it('validates identifiers supplied to the entity factory', () => {
@@ -57,8 +63,26 @@ describe('ActionTargetContext', () => {
     expect(second).toBeInstanceOf(ActionTargetContext);
     expect(first.type).toBe('none');
     expect(first.entityId).toBeNull();
+    expect(first.placeholder).toBeNull();
+    expect(first.displayName).toBeNull();
+    expect(first.contextFromId).toBeNull();
     expect(second.type).toBe('none');
     expect(second.entityId).toBeNull();
+    expect(second.placeholder).toBeNull();
+    expect(second.displayName).toBeNull();
+    expect(second.contextFromId).toBeNull();
     expect(first).not.toBe(second);
+  });
+
+  it('supports optional metadata when constructing entity contexts', () => {
+    const context = ActionTargetContext.forEntity('ally-1', {
+      placeholder: 'primary',
+      displayName: 'Ally One',
+      contextFromId: 'hero-7',
+    });
+
+    expect(context.placeholder).toBe('primary');
+    expect(context.displayName).toBe('Ally One');
+    expect(context.contextFromId).toBe('hero-7');
   });
 });
