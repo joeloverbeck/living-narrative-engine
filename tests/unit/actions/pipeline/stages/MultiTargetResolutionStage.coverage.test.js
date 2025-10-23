@@ -474,8 +474,8 @@ describe('MultiTargetResolutionStage - Coverage Tests', () => {
       mockDeps.targetResolver.resolveTargets.mockResolvedValue({
         success: true,
         value: [
-          { entityId: 'target1', displayName: 'Target 1' },
-          { entityId: 'target2', displayName: 'Target 2' },
+          { entityId: 'target1', displayName: null },
+          { entityId: 'target2', displayName: null },
         ],
       });
 
@@ -540,7 +540,7 @@ describe('MultiTargetResolutionStage - Coverage Tests', () => {
 
       mockDeps.targetResolver.resolveTargets.mockResolvedValue({
         success: true,
-        value: [{ entityId: 'target1', displayName: 'Target 1' }],
+        value: [{ entityId: 'target1', displayName: null }],
       });
 
       mockDeps.entityManager.getEntityInstance.mockReturnValue({
