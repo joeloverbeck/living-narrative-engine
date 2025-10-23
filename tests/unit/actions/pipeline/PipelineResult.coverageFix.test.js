@@ -13,6 +13,16 @@ describe('PipelineResult - targeted coverage', () => {
     expect(result.continueProcessing).toBe(true);
   });
 
+  it('creates a successful result with default arguments', () => {
+    const result = PipelineResult.success();
+
+    expect(result.success).toBe(true);
+    expect(result.actions).toEqual([]);
+    expect(result.errors).toEqual([]);
+    expect(result.data).toEqual({});
+    expect(result.continueProcessing).toBe(true);
+  });
+
   it('creates a successful result with provided collections', () => {
     const actions = [{ id: 'alpha' }, { id: 'beta' }];
     const errors = [{ phase: 'WARN', detail: 'non-blocking' }];
@@ -69,6 +79,29 @@ describe('PipelineResult - targeted coverage', () => {
     expect(merged.continueProcessing).toBe(false);
   });
 
+  it('merges consecutive successes and respects continueProcessing flags', () => {
+    const first = PipelineResult.success({
+      actions: [{ id: 'a1' }],
+      data: { stage: 'first' },
+    });
+    const second = PipelineResult.success({
+      actions: [{ id: 'a2' }],
+      data: { stage: 'second' },
+    });
+
+    const mergedSuccess = first.merge(second);
+
+    expect(mergedSuccess.success).toBe(true);
+    expect(mergedSuccess.actions).toEqual([{ id: 'a1' }, { id: 'a2' }]);
+    expect(mergedSuccess.errors).toEqual([]);
+    expect(mergedSuccess.data).toEqual({ stage: 'second' });
+    expect(mergedSuccess.continueProcessing).toBe(true);
+
+    const halted = PipelineResult.success({ continueProcessing: false });
+    const mergedHalted = halted.merge(second);
+    expect(mergedHalted.continueProcessing).toBe(false);
+  });
+
   it('converts successful ActionResult payloads into pipeline data', () => {
     const actionResult = ActionResult.success({ payload: 42 });
 
@@ -80,6 +113,15 @@ describe('PipelineResult - targeted coverage', () => {
     expect(result.data).toEqual({ stage: 'discovery', payload: 42 });
     expect(result.errors).toEqual([]);
     expect(result.continueProcessing).toBe(true);
+  });
+
+  it('converts successful ActionResult using default additional data', () => {
+    const actionResult = ActionResult.success({ payload: 7 });
+
+    const result = PipelineResult.fromActionResult(actionResult);
+
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual({ payload: 7 });
   });
 
   it('converts failing ActionResult into a halted pipeline result', () => {
@@ -127,6 +169,56 @@ describe('PipelineResult - targeted coverage', () => {
       failure.errors[0],
     ]);
     expect(chained.data).toEqual({ stage: 'initial' });
+    expect(chained.continueProcessing).toBe(false);
+  });
+
+  it('appends warnings returned from successful chained operations', () => {
+    const base = PipelineResult.success({
+      data: { stage: 'initial' },
+      errors: [{ message: 'existing warning' }],
+    });
+
+    const chained = base.chainActionResult(() => ({
+      success: true,
+      value: { stage: 'processed' },
+      errors: [{ message: 'new warning' }],
+    }));
+
+    expect(chained.success).toBe(true);
+    expect(chained.errors).toEqual([
+      { message: 'existing warning' },
+      { message: 'new warning' },
+    ]);
+    expect(chained.data).toEqual({ stage: 'processed' });
+    expect(chained.continueProcessing).toBe(true);
+  });
+
+  it('treats missing chained error collections as empty arrays', () => {
+    const base = PipelineResult.success({
+      data: { stage: 'initial' },
+      errors: [{ message: 'existing warning' }],
+    });
+
+    const chained = base.chainActionResult(() => ({
+      success: true,
+      value: { stage: 'processed' },
+    }));
+
+    expect(chained.errors).toEqual([{ message: 'existing warning' }]);
+  });
+
+  it('keeps continueProcessing halted when chaining after a soft stop', () => {
+    const halted = PipelineResult.success({
+      data: { stage: 'initial' },
+      continueProcessing: false,
+    });
+
+    const chained = halted.chainActionResult(() =>
+      ActionResult.success({ stage: 'next' })
+    );
+
+    expect(chained.success).toBe(true);
+    expect(chained.data).toEqual({ stage: 'next' });
     expect(chained.continueProcessing).toBe(false);
   });
 
