@@ -199,6 +199,36 @@ describe('ScopeCacheStrategy', () => {
         ttl: 2000,
       });
     });
+
+    it('should evict expired entries before invoking factory', async () => {
+      const customCache = new Map();
+      const staleEntry = {
+        value: ActionResult.success(new Set(['stale'])),
+        timestamp: Date.now() - 10_000,
+        ttl: 1,
+      };
+      customCache.set('stale-key', staleEntry);
+
+      cacheStrategy = new ScopeCacheStrategy({
+        cache: customCache,
+        logger: mockLogger,
+        defaultTTL: 1000,
+      });
+
+      const factoryResult = ActionResult.success(new Set(['fresh']));
+      const factory = jest.fn().mockResolvedValue(factoryResult);
+
+      const result = await cacheStrategy.get('stale-key', factory);
+
+      expect(factory).toHaveBeenCalledTimes(1);
+      expect(result).toBe(factoryResult);
+      const cachedEntry = customCache.get('stale-key');
+      expect(cachedEntry.value).toBe(factoryResult);
+      expect(cachedEntry.timestamp).toBeGreaterThan(staleEntry.timestamp);
+      expect(mockLogger.debug).toHaveBeenCalledWith('Cache entry expired', {
+        key: 'stale-key',
+      });
+    });
   });
 
   describe('cache size management', () => {
@@ -277,6 +307,30 @@ describe('ScopeCacheStrategy', () => {
       );
     });
 
+    it('should skip logging when no keys match during invalidation', () => {
+      const customCache = new Map();
+      customCache.set('scope:a:actor1', {
+        value: 'value',
+        timestamp: Date.now(),
+        ttl: 1000,
+      });
+
+      cacheStrategy = new ScopeCacheStrategy({
+        cache: customCache,
+        logger: mockLogger,
+      });
+
+      mockLogger.info.mockClear();
+      const removed = cacheStrategy.invalidateMatching(() => false);
+
+      expect(removed).toBe(0);
+      expect(customCache.has('scope:a:actor1')).toBe(true);
+      expect(mockLogger.info).not.toHaveBeenCalledWith(
+        'Invalidated matching cache entries',
+        expect.anything()
+      );
+    });
+
     it('should clear all entries', () => {
       const initialSize = cacheStrategy.size;
       expect(initialSize).toBeGreaterThan(0);
@@ -341,6 +395,30 @@ describe('ScopeCacheStrategy', () => {
       expect(stats.expiredEntries).toBe(1);
       expect(stats.size).toBe(2); // Total entries including expired
     });
+
+    it('should avoid cleanup when no entries are expired', () => {
+      const customCache = new Map();
+      customCache.set('fresh-key', {
+        value: 'value',
+        timestamp: Date.now(),
+        ttl: 1000,
+      });
+
+      cacheStrategy = new ScopeCacheStrategy({
+        cache: customCache,
+        logger: mockLogger,
+      });
+
+      mockLogger.info.mockClear();
+      const removed = cacheStrategy.cleanup();
+
+      expect(removed).toBe(0);
+      expect(customCache.size).toBe(1);
+      expect(mockLogger.info).not.toHaveBeenCalledWith(
+        'Cleaned up expired cache entries',
+        expect.anything()
+      );
+    });
   });
 
   describe('edge cases', () => {
@@ -373,6 +451,50 @@ describe('ScopeCacheStrategy', () => {
       cacheStrategy.setSync('key1', 'value1');
       const statsWithData = cacheStrategy.getStats();
       expect(statsWithData.memoryUsage).toBeGreaterThan(0);
+    });
+
+    it('should treat entries without timestamps as invalid', () => {
+      const customCache = new Map();
+      customCache.set('invalid-entry', { value: 'value-without-timestamp' });
+
+      cacheStrategy = new ScopeCacheStrategy({
+        cache: customCache,
+        logger: mockLogger,
+      });
+
+      const result = cacheStrategy.getSync('invalid-entry');
+
+      expect(result).toBeNull();
+      expect(customCache.has('invalid-entry')).toBe(false);
+      expect(mockLogger.debug).toHaveBeenCalledWith('Cache entry expired', {
+        key: 'invalid-entry',
+      });
+    });
+
+    it('should fall back to default TTL when entry ttl is falsy', () => {
+      const baseTime = Date.now();
+      const customCache = new Map();
+      customCache.set('zero-ttl', {
+        value: 'cached-value',
+        timestamp: baseTime,
+        ttl: 0,
+      });
+
+      const nowSpy = jest
+        .spyOn(Date, 'now')
+        .mockImplementation(() => baseTime + 500);
+
+      cacheStrategy = new ScopeCacheStrategy({
+        cache: customCache,
+        logger: mockLogger,
+        defaultTTL: 1000,
+      });
+
+      const result = cacheStrategy.getSync('zero-ttl');
+
+      expect(result).toBe('cached-value');
+
+      nowSpy.mockRestore();
     });
   });
 });
