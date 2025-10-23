@@ -5,6 +5,7 @@
  */
 
 import { describe, it, expect } from '@jest/globals';
+import { performance } from 'node:perf_hooks';
 import { parseDslExpression } from '../../../src/scopeDsl/parser/parser.js';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
 
@@ -12,7 +13,7 @@ describe('Error Message Validation Performance', () => {
   describe('Documentation Performance Validation', () => {
     it('should validate performance error behavior matches documentation', () => {
       // Test that large operations complete within documented timeframes
-      const start = Date.now();
+      const start = performance.now();
 
       // Simple scope should complete quickly (< 1ms target from docs)
       const ast = parseDslExpression('actor');
@@ -28,7 +29,7 @@ describe('Error Message Validation Performance', () => {
       const engine = new ScopeEngine();
       const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
 
-      const duration = Date.now() - start;
+      const duration = performance.now() - start;
 
       // Should complete very quickly for simple scopes
       expect(duration).toBeLessThan(10); // Give some leeway for test environment

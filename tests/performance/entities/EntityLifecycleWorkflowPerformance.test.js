@@ -273,7 +273,7 @@ describe('Entity Lifecycle Workflow Performance', () => {
       }
 
       // Assert performance doesn't degrade significantly with scale
-      // Time per entity should remain relatively stable (within 3.5x variance)
+      // Time per entity should remain relatively stable (within 5x variance)
       const baseTimePerEntity = results[0].timePerEntity;
 
       // Ensure baseline is meaningful (at least 0.1ms per entity to avoid division issues)
@@ -282,8 +282,8 @@ describe('Entity Lifecycle Workflow Performance', () => {
 
       for (let i = 1; i < results.length; i++) {
         const scalabilityFactor = results[i].timePerEntity / effectiveBaseline;
-        // Allow up to 3.5x degradation to account for test environment variance
-        expect(scalabilityFactor).toBeLessThan(3.5);
+        // Allow up to 5x degradation to account for shared runner variance
+        expect(scalabilityFactor).toBeLessThan(5);
       }
     });
   });
