@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "hugging:release_self_from_hug_forceful",
+  "name": "Forcefully Release Yourself from Hug",
+  "description": "Forcefully tear yourself out of someone's grip.",
+  "targets": "hugging:hugging_actor",
+  "required_components": {
+    "actor": ["positioning:closeness", "positioning:being_hugged"],
+    "primary": ["positioning:hugging"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:hugging"]
+  },
+  "template": "free yourself forcefully from {target}'s hug",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#7d2a50",
+    "textColor": "#fbeaf2",
+    "hoverBackgroundColor": "#a13a6a",
+    "hoverTextColor": "#fff3f9"
+  }
+}
