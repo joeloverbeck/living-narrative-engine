@@ -5,6 +5,7 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import massageShouldersRule from '../../../../data/mods/affection/rules/handle_massage_shoulders.rule.json';
 import eventIsActionMassageShoulders from '../../../../data/mods/affection/conditions/event-is-action-massage-shoulders.condition.json';
 
@@ -75,5 +76,32 @@ describe('affection:massage_shoulders action integration', () => {
     expect(successEvent.payload.message).toBe(
       perceptibleEvent.payload.descriptionText
     );
+  });
+
+  it('rejects the action when the actor is being hugged', async () => {
+    const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
+
+    const actor = new ModEntityBuilder('actor1')
+      .withName('Alice')
+      .atLocation('room1')
+      .asActor()
+      .withComponent('positioning:closeness', { partners: ['target1'] })
+      .withComponent('positioning:being_hugged', {
+        hugging_entity_id: 'target1',
+      })
+      .build();
+
+    const target = new ModEntityBuilder('target1')
+      .withName('Bob')
+      .atLocation('room1')
+      .asActor()
+      .withComponent('positioning:closeness', { partners: ['actor1'] })
+      .build();
+
+    testFixture.reset([room, actor, target]);
+
+    await expect(
+      testFixture.executeAction(actor.id, target.id)
+    ).rejects.toThrow(/forbidden component.*positioning:being_hugged/i);
   });
 });
