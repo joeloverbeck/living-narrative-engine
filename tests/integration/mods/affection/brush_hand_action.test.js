@@ -104,4 +104,37 @@ describe('affection:brush_hand action integration', () => {
       testFixture.executeAction(actor.id, target.id)
     ).rejects.toThrow(/forbidden component.*positioning:being_hugged/i);
   });
+
+  it('rejects the action when the actor is currently hugging someone', async () => {
+    const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
+
+    const actor = new ModEntityBuilder('actor1')
+      .withName('Alice')
+      .atLocation('room1')
+      .asActor()
+      .withComponent('positioning:closeness', { partners: ['target1'] })
+      .withComponent('positioning:hugging', {
+        embraced_entity_id: 'target1',
+        initiated: true,
+        consented: true,
+      })
+      .build();
+
+    const target = new ModEntityBuilder('target1')
+      .withName('Bob')
+      .atLocation('room1')
+      .asActor()
+      .withComponent('positioning:closeness', { partners: ['actor1'] })
+      .withComponent('positioning:being_hugged', {
+        hugging_entity_id: 'actor1',
+        consented: true,
+      })
+      .build();
+
+    testFixture.reset([room, actor, target]);
+
+    await expect(
+      testFixture.executeAction(actor.id, target.id)
+    ).rejects.toThrow(/forbidden component.*positioning:hugging/i);
+  });
 });

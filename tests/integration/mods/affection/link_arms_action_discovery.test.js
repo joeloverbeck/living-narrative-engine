@@ -106,6 +106,11 @@ describe('affection:link_arms action discovery', () => {
       expect(linkArmsAction.required_components.actor).toEqual([
         'positioning:closeness',
       ]);
+      expect(linkArmsAction.forbidden_components.actor).toEqual([
+        'positioning:straddling_waist',
+        'positioning:being_hugged',
+        'positioning:hugging',
+      ]);
       expect(linkArmsAction.visual).toEqual({
         backgroundColor: '#6a1b9a',
         textColor: '#f3e5f5',
@@ -185,6 +190,30 @@ describe('affection:link_arms action discovery', () => {
       const scenario = testFixture.createCloseActors(['Nina', 'Omar']);
       scenario.actor.components['positioning:being_hugged'] = {
         hugging_entity_id: scenario.target.id,
+      };
+
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+      configureActionDiscovery();
+
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
+      const ids = availableActions.map((action) => action.id);
+
+      expect(ids).not.toContain(ACTION_ID);
+    });
+
+    it('is not available when the actor is hugging the target', () => {
+      const scenario = testFixture.createCloseActors(['Holly', 'Ian']);
+      scenario.actor.components['positioning:hugging'] = {
+        embraced_entity_id: scenario.target.id,
+        initiated: true,
+        consented: true,
+      };
+      scenario.target.components['positioning:being_hugged'] = {
+        hugging_entity_id: scenario.actor.id,
+        consented: true,
       };
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');

@@ -5,6 +5,7 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import placeHandOnWaistRule from '../../../../data/mods/affection/rules/place_hand_on_waist.rule.json';
 import eventIsActionPlaceHandOnWaist from '../../../../data/mods/affection/conditions/event-is-action-place-hand-on-waist.condition.json';
 
@@ -76,5 +77,38 @@ describe('affection:place_hand_on_waist action integration', () => {
     expect(successEvent.payload.message).toBe(
       perceptibleEvent.payload.descriptionText
     );
+  });
+
+  it('rejects placing a hand on the waist while the actor is hugging someone', async () => {
+    const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
+
+    const actor = new ModEntityBuilder('actor1')
+      .withName('Alice')
+      .atLocation('room1')
+      .asActor()
+      .withComponent('positioning:closeness', { partners: ['target1'] })
+      .withComponent('positioning:hugging', {
+        embraced_entity_id: 'target1',
+        initiated: true,
+        consented: true,
+      })
+      .build();
+
+    const target = new ModEntityBuilder('target1')
+      .withName('Bob')
+      .atLocation('room1')
+      .asActor()
+      .withComponent('positioning:closeness', { partners: ['actor1'] })
+      .withComponent('positioning:being_hugged', {
+        hugging_entity_id: 'actor1',
+        consented: true,
+      })
+      .build();
+
+    testFixture.reset([room, actor, target]);
+
+    await expect(
+      testFixture.executeAction(actor.id, target.id)
+    ).rejects.toThrow(/forbidden component.*positioning:hugging/i);
   });
 });

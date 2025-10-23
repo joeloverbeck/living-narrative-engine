@@ -5,6 +5,7 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import handleLinkArmsRule from '../../../../data/mods/affection/rules/handle_link_arms.rule.json';
 import eventIsActionLinkArms from '../../../../data/mods/affection/conditions/event-is-action-link-arms.condition.json';
 
@@ -166,5 +167,38 @@ describe('affection:link_arms action integration', () => {
     expect(perceptibleEvent).toBeDefined();
     expect(successEvent.payload.message).toBe(expectedMessage);
     expect(perceptibleEvent.payload.descriptionText).toBe(expectedMessage);
+  });
+
+  it('rejects linking arms when the actor is hugging someone', async () => {
+    const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
+
+    const actor = new ModEntityBuilder('actor1')
+      .withName('Alice')
+      .atLocation('room1')
+      .asActor()
+      .withComponent('positioning:closeness', { partners: ['target1'] })
+      .withComponent('positioning:hugging', {
+        embraced_entity_id: 'target1',
+        initiated: true,
+        consented: true,
+      })
+      .build();
+
+    const target = new ModEntityBuilder('target1')
+      .withName('Bob')
+      .atLocation('room1')
+      .asActor()
+      .withComponent('positioning:closeness', { partners: ['actor1'] })
+      .withComponent('positioning:being_hugged', {
+        hugging_entity_id: 'actor1',
+        consented: true,
+      })
+      .build();
+
+    testFixture.reset([room, actor, target]);
+
+    await expect(
+      testFixture.executeAction(actor.id, target.id)
+    ).rejects.toThrow(/forbidden component.*positioning:hugging/i);
   });
 });

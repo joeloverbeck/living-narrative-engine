@@ -8,7 +8,11 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["kissing:kissing", "positioning:being_hugged"]
+    "actor": [
+      "kissing:kissing",
+      "positioning:being_hugged",
+      "positioning:hugging"
+    ]
   },
   "template": "brush {target}'s hand with your own",
   "prerequisites": [],
