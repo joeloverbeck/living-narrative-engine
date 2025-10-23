@@ -211,6 +211,22 @@ describe('ArrayIterationResolver', () => {
       expect(result).toEqual(new Set(['entity1', 'entity2', 'entity3']));
     });
 
+    it('should pass through values when parent is a ScopeReference', () => {
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'ScopeReference' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      dispatcher.resolve.mockReturnValue(new Set(['scope-entity', null]));
+
+      const result = resolver.resolve(node, ctx);
+
+      expect(result).toEqual(new Set(['scope-entity']));
+      expect(errorHandler.handleError).not.toHaveBeenCalled();
+    });
+
     it('should ignore nullish values from Source parents', () => {
       const node = {
         type: 'ArrayIterationStep',
@@ -224,6 +240,32 @@ describe('ArrayIterationResolver', () => {
       const result = resolver.resolve(node, ctx);
 
       expect(result).toEqual(new Set(['entity3']));
+    });
+
+    it('should skip pass-through when special parent values are nullish', () => {
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      dispatcher.resolve.mockReset();
+      const parents = [
+        { type: 'Source' },
+        { type: 'ArrayIterationStep' },
+        { type: 'ScopeReference' },
+        { type: 'Step', field: 'entities', param: { component: 'core:actor' } },
+        { type: 'Step' },
+      ];
+
+      parents.forEach(() => {
+        dispatcher.resolve.mockReturnValueOnce(new Set([null, undefined]));
+      });
+
+      parents.forEach(parent => {
+        const node = { type: 'ArrayIterationStep', parent };
+        const result = resolver.resolve(node, ctx);
+        expect(result.size).toBe(0);
+      });
+
+      expect(errorHandler.handleError).not.toHaveBeenCalled();
     });
 
     it('should handle non-array values from non-Source parents', () => {
@@ -257,6 +299,68 @@ describe('ArrayIterationResolver', () => {
       const result = resolver.resolve(node, ctx);
 
       expect(result).toEqual(new Set(['item1', 'item2']));
+    });
+
+    it('should use runtime logger diagnostics when debug is available', () => {
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const logger = { debug: jest.fn() };
+      const ctx = {
+        dispatcher,
+        trace,
+        actorEntity,
+        runtimeCtx: { logger },
+      };
+
+      dispatcher.resolve.mockReturnValue(new Set([['item1', 'item2']]));
+
+      const consoleDebugSpy = jest
+        .spyOn(console, 'debug')
+        .mockImplementation(() => {});
+
+      try {
+        const result = resolver.resolve(node, ctx);
+        expect(result).toEqual(new Set(['item1', 'item2']));
+      } finally {
+        consoleDebugSpy.mockRestore();
+      }
+
+      expect(logger.debug).toHaveBeenCalled();
+      expect(consoleDebugSpy).not.toHaveBeenCalled();
+    });
+
+    it('should avoid console diagnostics when debug logging is unavailable', async () => {
+      const originalDebug = console.debug;
+      // Ensure console.debug is not treated as a function so the fallback branch executes
+      // eslint-disable-next-line no-console
+      delete console.debug;
+
+      try {
+        await jest.isolateModulesAsync(async () => {
+          const { default: isolatedResolverFactory } = await import(
+            '../../../../src/scopeDsl/nodes/arrayIterationResolver.js'
+          );
+
+          const localResolver = isolatedResolverFactory();
+          const node = {
+            type: 'ArrayIterationStep',
+            parent: { type: 'Step' },
+          };
+          const actorEntity = createTestEntity('test-actor', {
+            'core:actor': {},
+          });
+          const ctx = { dispatcher, trace, actorEntity };
+
+          dispatcher.resolve.mockReturnValue(new Set([['alpha']]));
+
+          expect(() => localResolver.resolve(node, ctx)).not.toThrow();
+        });
+      } finally {
+        console.debug = originalDebug;
+      }
     });
 
     describe('clothing access object handling', () => {
