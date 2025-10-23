@@ -255,18 +255,27 @@ export class ModAssertionHelpers {
    *
    * @param {Array} events - The captured events from the test environment
    * @param {Array<string>} allowedEventTypes - Event types that are allowed
+   * @param {object} [options] - Additional configuration options
+   * @param {boolean} [options.allowSuccessEvents=false] - Whether to implicitly allow
+   * `core:action_success` events
    */
-  static assertOnlyExpectedEvents(events, allowedEventTypes) {
+  static assertOnlyExpectedEvents(
+    events,
+    allowedEventTypes,
+    options = {}
+  ) {
     const eventTypes = Array.isArray(events)
       ? events.map((e) => e.eventType)
       : [];
     const normalizedAllowed = Array.isArray(allowedEventTypes)
       ? allowedEventTypes
       : [];
-    const allowedSet = new Set([
-      ...normalizedAllowed,
-      'core:action_success',
-    ]);
+    const { allowSuccessEvents = false } = options;
+    const allowedSet = new Set(normalizedAllowed);
+
+    if (allowSuccessEvents) {
+      allowedSet.add('core:action_success');
+    }
 
     const unexpectedEvents = eventTypes.filter(
       (type) => !allowedSet.has(type)

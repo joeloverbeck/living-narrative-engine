@@ -1635,11 +1635,13 @@ export class ModActionTestFixture extends BaseModTestFixture {
    * Asserts that only expected events were generated.
    *
    * @param {Array<string>} allowedEventTypes - Allowed event types
+   * @param {object} [options] - Assertion options forwarded to ModAssertionHelpers
    */
-  assertOnlyExpectedEvents(allowedEventTypes) {
+  assertOnlyExpectedEvents(allowedEventTypes, options = {}) {
     ModAssertionHelpers.assertOnlyExpectedEvents(
       this.events,
-      allowedEventTypes
+      allowedEventTypes,
+      options
     );
   }
 

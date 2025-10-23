@@ -674,11 +674,13 @@ describe('ModTestFixture - Comprehensive Unit Tests', () => {
           .mockImplementation(() => {});
 
         fixture.testEnv.events = [{ type: 'allowed' }];
-        fixture.assertOnlyExpectedEvents(['allowed']);
+        const options = { allowSuccessEvents: true };
+        fixture.assertOnlyExpectedEvents(['allowed'], options);
 
         expect(assertOnlyExpectedEventsSpy).toHaveBeenCalledWith(
           fixture.events,
-          ['allowed']
+          ['allowed'],
+          options
         );
 
         assertOnlyExpectedEventsSpy.mockRestore();

@@ -855,11 +855,31 @@ describe('ModAssertionHelpers', () => {
       }).toThrow();
     });
 
-    it('should allow core:action_success without explicit allowance', () => {
+    it('should throw when core:action_success is present without allowance', () => {
       mockEvents = [{ eventType: 'core:action_success' }];
 
       expect(() => {
         ModAssertionHelpers.assertOnlyExpectedEvents(mockEvents, []);
+      }).toThrow();
+    });
+
+    it('should allow core:action_success when explicitly listed', () => {
+      mockEvents = [{ eventType: 'core:action_success' }];
+
+      expect(() => {
+        ModAssertionHelpers.assertOnlyExpectedEvents(mockEvents, [
+          'core:action_success',
+        ]);
+      }).not.toThrow();
+    });
+
+    it('should allow core:action_success when option enables it', () => {
+      mockEvents = [{ eventType: 'core:action_success' }];
+
+      expect(() => {
+        ModAssertionHelpers.assertOnlyExpectedEvents(mockEvents, [], {
+          allowSuccessEvents: true,
+        });
       }).not.toThrow();
     });
   });
