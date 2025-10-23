@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "hugging:event-is-action-release-hug",
+  "description": "Checks if the triggering event is for the 'hugging:release_hug' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "hugging:release_hug"]
+  }
+}
