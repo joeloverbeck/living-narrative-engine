@@ -16,6 +16,7 @@ import {
 /** @typedef {import('../../services/anatomyFormattingService.js').AnatomyFormattingService} AnatomyFormattingService */
 
 const BREAST_SOCKET_KEYWORDS = ['breast'];
+const BREAST_ANATOMY_SUBTYPES = new Set(['breast', 'breasts']);
 
 /**
  * Service for generating equipment descriptions for worn clothing items
@@ -628,7 +629,11 @@ class EquipmentDescriptionService {
         'anatomy:part'
       );
 
-      if (anatomyPart && anatomyPart.subType === 'breast') {
+      if (
+        anatomyPart &&
+        typeof anatomyPart.subType === 'string' &&
+        BREAST_ANATOMY_SUBTYPES.has(anatomyPart.subType.toLowerCase())
+      ) {
         return true;
       }
     }

@@ -435,6 +435,62 @@ describe('Body Description with Equipment Integration', () => {
     );
   });
 
+  it('should include breast exposure notes when anatomy part uses plural subtype', async () => {
+    slotMetadataForActor = {
+      slotMappings: {
+        torso_upper: {
+          coveredSockets: ['left_breast', 'right_breast'],
+        },
+      },
+    };
+    equippedItemsResponse = { success: true, equipped: {} };
+
+    const breastsPartId = 'character_1_breasts';
+    anatomyBodyForActor = {
+      body: {
+        root: 'torso_1',
+        parts: ['torso_1', breastsPartId],
+      },
+    };
+    anatomyPartComponents[breastsPartId] = { subType: 'breasts' };
+
+    const bodyEntity = {
+      id: 'character_1',
+      hasComponent: jest.fn().mockReturnValue(true),
+      getComponentData: jest.fn().mockImplementation((componentId) => {
+        if (componentId === ANATOMY_BODY_COMPONENT_ID) {
+          return anatomyBodyForActor;
+        }
+        if (componentId === 'descriptors:build') {
+          return { build: 'athletic' };
+        }
+        return null;
+      }),
+    };
+
+    const torsoEntity = {
+      id: 'torso_1',
+      hasComponent: jest.fn().mockReturnValue(true),
+      getComponentData: jest.fn().mockImplementation((componentId) => {
+        if (componentId === ANATOMY_PART_COMPONENT_ID) {
+          return { subType: 'torso' };
+        }
+        if (componentId === DESCRIPTION_COMPONENT_ID) {
+          return { text: 'lean, toned torso' };
+        }
+        return null;
+      }),
+    };
+
+    bodyDescriptionComposer.entityFinder.getEntityInstance.mockReturnValue(
+      torsoEntity
+    );
+
+    const result = await bodyDescriptionComposer.composeDescription(bodyEntity);
+
+    expect(result).toContain('The breasts are exposed.');
+  });
+
   it('should handle equipment description errors gracefully', async () => {
     // Setup body entity
     const bodyEntity = {

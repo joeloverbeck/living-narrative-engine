@@ -109,6 +109,57 @@ describe('EquipmentDescriptionService', () => {
       );
     });
 
+    it('should detect breast anatomy when the part subType is plural', async () => {
+      // Arrange
+      const entityId = 'character_1';
+      const breastsPartId = 'character_1_breasts';
+
+      mockClothingManagementService.getEquippedItems.mockResolvedValue({
+        success: true,
+        equipped: {},
+      });
+      mockEntityManager.getComponentData.mockImplementation(
+        (requestedEntityId, componentId) => {
+          if (requestedEntityId === entityId) {
+            if (componentId === 'clothing:slot_metadata') {
+              return {
+                slotMappings: {
+                  torso_upper: {
+                    coveredSockets: ['left_breast', 'right_breast'],
+                  },
+                },
+              };
+            }
+            if (componentId === 'anatomy:body') {
+              return {
+                body: {
+                  root: 'torso_1',
+                  parts: ['torso_1', breastsPartId],
+                },
+              };
+            }
+          }
+
+          if (
+            componentId === 'anatomy:part' &&
+            requestedEntityId === breastsPartId
+          ) {
+            return { subType: 'breasts' };
+          }
+
+          return null;
+        }
+      );
+
+      // Act
+      const result = await service.generateEquipmentDescription(entityId);
+
+      // Assert
+      expect(result).toBe(
+        'Wearing: Torso is fully exposed. The breasts are exposed.'
+      );
+    });
+
     it('should not describe breasts as exposed when the actor lacks breast anatomy', async () => {
       // Arrange
       const entityId = 'character_1';
