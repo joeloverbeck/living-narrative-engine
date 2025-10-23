@@ -17,6 +17,7 @@
     "actor": [
       "positioning:kneeling_before",
       "positioning:straddling_waist",
+      "positioning:hugging",
       "positioning:being_hugged"
     ],
     "primary": ["positioning:kneeling_before", "positioning:sitting_on"]
