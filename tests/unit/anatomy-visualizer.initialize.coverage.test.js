@@ -298,4 +298,74 @@ describe('anatomy-visualizer.js initialization coverage', () => {
       bootstrapError,
     );
   });
+
+  it('propagates post-initialization failures to the fatal startup handler', async () => {
+    Object.defineProperty(document, 'readyState', {
+      configurable: true,
+      value: 'complete',
+    });
+
+    const tokens = createTokens();
+    const services = createServices();
+
+    const resolvedTokens = new Map([
+      [tokens.AnatomyDescriptionService, { id: 'anatomy-service' }],
+      [tokens.VisualizerStateController, { id: 'state-controller' }],
+      [tokens.VisualizationComposer, { id: 'composer' }],
+      [tokens.ClothingManagementService, { id: 'clothing' }],
+    ]);
+
+    const container = {
+      resolve: jest.fn((token) => {
+        if (!resolvedTokens.has(token)) {
+          throw new Error(`unexpected token ${String(token)}`);
+        }
+        return resolvedTokens.get(token);
+      }),
+    };
+
+    const postInitError = new Error('post init failure');
+
+    const registerVisualizerComponents = jest.fn(() => {
+      throw postInitError;
+    });
+
+    const AnatomyVisualizerUI = jest.fn(() => ({ initialize: jest.fn() }));
+
+    const bootstrapperInstance = {
+      bootstrap: jest.fn(async ({ postInitHook }) => {
+        await postInitHook(services, container);
+        return { container, services };
+      }),
+      displayFatalStartupError: jest.fn(),
+    };
+
+    const CommonBootstrapper = jest.fn(() => bootstrapperInstance);
+
+    await jest.isolateModulesAsync(async () => {
+      jest.doMock('../../src/bootstrapper/CommonBootstrapper.js', () => ({
+        CommonBootstrapper,
+      }));
+      jest.doMock('../../src/dependencyInjection/tokens.js', () => ({ tokens }));
+      jest.doMock(
+        '../../src/dependencyInjection/registrations/visualizerRegistrations.js',
+        () => ({ registerVisualizerComponents }),
+      );
+      jest.doMock('../../src/domUI/AnatomyVisualizerUI.js', () => ({
+        __esModule: true,
+        default: AnatomyVisualizerUI,
+      }));
+
+      await import('../../src/anatomy-visualizer.js');
+    });
+
+    await flushTasks();
+
+    expect(registerVisualizerComponents).toHaveBeenCalledWith(container);
+    expect(bootstrapperInstance.displayFatalStartupError).toHaveBeenCalledWith(
+      'Failed to initialize anatomy visualizer: post init failure',
+      postInitError,
+    );
+    expect(bootstrapperInstance.displayFatalStartupError).toHaveBeenCalledTimes(1);
+  });
 });
