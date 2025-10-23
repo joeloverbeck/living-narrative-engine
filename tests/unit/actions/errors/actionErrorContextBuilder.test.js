@@ -451,5 +451,22 @@ describe('ActionErrorContextBuilder', () => {
         actor: actorId,
       });
     });
+
+    it('should default evaluation step type to validation when no keywords match', () => {
+      const trace = new TraceContext();
+      trace.step('Generic evaluation underway', 'GenericService');
+
+      const context = builder.buildErrorContext({
+        error: mockError,
+        actionDef: mockActionDef,
+        actorId,
+        phase: ERROR_PHASES.VALIDATION,
+        trace,
+      });
+
+      const [singleStep] = context.evaluationTrace.steps;
+      expect(singleStep.type).toBe(EVALUATION_STEP_TYPES.VALIDATION);
+      expect(singleStep.message).toBe('Generic evaluation underway');
+    });
   });
 });
