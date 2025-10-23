@@ -22,6 +22,7 @@ jest.mock('fs', () => ({
   promises: {
     access: jest.fn(),
     readFile: jest.fn(),
+    readdir: jest.fn(),
   },
   constants: {
     F_OK: 0,
@@ -54,6 +55,8 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
     fs = require('fs');
     fs.promises.access.mockClear();
     fs.promises.readFile.mockClear();
+    fs.promises.readdir.mockClear();
+    fs.promises.readdir.mockResolvedValue([]);
   });
 
   afterEach(() => {
@@ -124,6 +127,42 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
     };
 
     return stats;
+  }
+
+  const defaultRuleContent = {
+    rule_id: 'test:mock_rule',
+    event_type: 'core:attempt_action',
+    actions: [],
+  };
+
+  const defaultConditionContent = {
+    id: 'test:mock_condition',
+  };
+
+  function configureMockModFiles({
+    ruleContent = defaultRuleContent,
+    conditionContent = defaultConditionContent,
+    failInitialRuleReads = 0,
+  } = {}) {
+    let ruleAttempts = 0;
+
+    fs.promises.readFile.mockImplementation(async (filePath) => {
+      const normalizedPath = String(filePath).replace(/\\/g, '/');
+
+      if (normalizedPath.includes('/rules/')) {
+        ruleAttempts += 1;
+        if (ruleAttempts <= failInitialRuleReads) {
+          throw new Error('File not found');
+        }
+        return JSON.stringify(ruleContent);
+      }
+
+      if (normalizedPath.includes('/conditions/')) {
+        return JSON.stringify(conditionContent);
+      }
+
+      throw new Error(`Unexpected file read during performance test: ${filePath}`);
+    });
   }
 
   describe('ModTestHandlerFactory Performance Baselines', () => {
@@ -229,13 +268,16 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
     it('should perform auto-loading within performance baseline', async () => {
       // Mock successful file loading
       fs.promises.access.mockResolvedValue();
-      fs.promises.readFile.mockResolvedValue(
-        JSON.stringify({
-          id: 'test:action',
-          category: 'test',
-          name: 'Test Action',
-        })
-      );
+      configureMockModFiles({
+        ruleContent: {
+          rule_id: 'test:action_rule',
+          event_type: 'core:attempt_action',
+          actions: [],
+        },
+        conditionContent: {
+          id: 'test:event-is-action-action',
+        },
+      });
 
       const stats = await performanceTest(
         async () => {
@@ -256,15 +298,18 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
     });
 
     it('should handle fallback patterns within performance baseline', async () => {
-      // Mock file access to trigger fallback behavior
-      fs.promises.access
-        .mockRejectedValue(new Error('File not found'))
-        .mockRejectedValue(new Error('File not found'))
-        .mockResolvedValue(); // Third attempt succeeds
-
-      fs.promises.readFile.mockResolvedValue(
-        JSON.stringify({ id: 'fallback:test' })
-      );
+      // Mock file reads to trigger fallback behavior
+      configureMockModFiles({
+        failInitialRuleReads: 2,
+        ruleContent: {
+          rule_id: 'fallback:test_rule',
+          event_type: 'core:attempt_action',
+          actions: [],
+        },
+        conditionContent: {
+          id: 'fallback:event-is-action-test',
+        },
+      });
 
       const stats = await performanceTest(
         async () => {
@@ -286,9 +331,16 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
 
     it('should perform rule loading within performance baseline', async () => {
       fs.promises.access.mockResolvedValue();
-      fs.promises.readFile.mockResolvedValue(
-        JSON.stringify([{ condition: '{"==": [1, 1]}', effects: [] }])
-      );
+      configureMockModFiles({
+        ruleContent: {
+          rule_id: 'test:rule_rule',
+          event_type: 'core:attempt_action',
+          actions: [],
+        },
+        conditionContent: {
+          id: 'test:event-is-action-rule',
+        },
+      });
 
       const stats = await performanceTest(
         async () => {
@@ -554,17 +606,16 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
     it('should complete full workflow within performance baseline', async () => {
       // Mock file loading for realistic workflow
       fs.promises.access.mockResolvedValue();
-      fs.promises.readFile.mockResolvedValue(
-        JSON.stringify({
-          id: 'perf:workflow_test',
-          category: 'performance',
-          effects: [
-            { operation: 'GET_NAME', args: ['test-entity'] },
-            { operation: 'LOG_MESSAGE', args: ['Performance test'] },
-            { operation: 'END_TURN', args: [] },
-          ],
-        })
-      );
+      configureMockModFiles({
+        ruleContent: {
+          rule_id: 'performance:workflow_test_rule',
+          event_type: 'core:attempt_action',
+          actions: [],
+        },
+        conditionContent: {
+          id: 'performance:event-is-action-workflow-test',
+        },
+      });
 
       const stats = await performanceTest(
         async () => {
@@ -632,9 +683,16 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
 
     it('should handle concurrent operations within performance baseline', async () => {
       fs.promises.access.mockResolvedValue();
-      fs.promises.readFile.mockResolvedValue(
-        JSON.stringify({ id: 'concurrent:test' })
-      );
+      configureMockModFiles({
+        ruleContent: {
+          rule_id: 'concurrent:test_rule',
+          event_type: 'core:attempt_action',
+          actions: [],
+        },
+        conditionContent: {
+          id: 'concurrent:event-is-action-test',
+        },
+      });
 
       const stats = await performanceTest(
         async () => {
