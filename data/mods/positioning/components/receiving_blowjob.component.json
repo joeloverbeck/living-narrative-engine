@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "positioning:receiving_blowjob",
+  "description": "Marks an entity currently receiving oral sex on their penis, signaling that other conflicting genital actions are unavailable.",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["giving_entity_id"],
+    "properties": {
+      "giving_entity_id": {
+        "type": "string",
+        "description": "The ID of the entity performing oral sex",
+        "pattern": "^([a-zA-Z0-9_]+:[a-zA-Z0-9_-]+|[a-zA-Z0-9_]+)$"
+      },
+      "consented": {
+        "type": "boolean",
+        "description": "Whether this entity consents to continue receiving oral sex",
+        "default": true
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-penile-oral:take_penis_in_mouth",
+  "name": "Take Penis In Mouth",
+  "description": "Lean in from your shared seat to take your partner's penis in your mouth, initiating oral sex.",
+  "targets": {
+    "primary": {
+      "scope": "sex-core:actors_sitting_close_with_uncovered_penis",
+      "placeholder": "primary",
+      "description": "Seated partner with an exposed penis"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:sitting_on", "positioning:closeness"],
+    "primary": ["positioning:sitting_on", "positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:giving_blowjob"]
+  },
+  "template": "take {primary}'s penis in your mouth",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#2a1a5e",
+    "textColor": "#ede7f6",
+    "hoverBackgroundColor": "#372483",
+    "hoverTextColor": "#ffffff"
+  }
+}
