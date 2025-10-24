@@ -155,6 +155,15 @@ class PlaytimeTracker extends IPlaytimeTracker {
       });
       throw new TypeError(errorMessage);
     }
+    if (!Number.isFinite(seconds)) {
+      const errorMessage =
+        `PlaytimeTracker: setAccumulatedPlaytime expects a finite number, but received ${seconds}.`;
+      this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+        message: errorMessage,
+        details: { seconds },
+      });
+      throw new RangeError(errorMessage);
+    }
     if (seconds < 0) {
       const errorMessage = `PlaytimeTracker: setAccumulatedPlaytime expects a non-negative number, but received ${seconds}.`;
       this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
