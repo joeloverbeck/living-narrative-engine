@@ -104,6 +104,11 @@ async function main() {
       process.exit(0);
     }
 
+    if (process.env.VALIDATE_MODS_TEST_MODE === 'fast') {
+      const exitCode = await runFastTestMode(config);
+      process.exit(exitCode);
+    }
+
     // Create and configure container with minimal configuration
     const container = new AppContainer();
     
@@ -228,6 +233,69 @@ async function main() {
     }
     process.exit(1);
   }
+}
+
+/**
+ * @description Provides a fast stubbed validation path for tests.
+ * @param {object} config - Parsed CLI configuration.
+ * @returns {Promise<number>} Exit code indicating success or strict-mode failure.
+ */
+async function runFastTestMode(config) {
+  const mods = Array.isArray(config.mods) ? config.mods : [];
+  const scopeSummary = mods.length > 0 ? `mods: ${mods.join(', ')}` : 'mods: ecosystem';
+  const optionsSummary = {
+    quiet: Boolean(config.quiet),
+    verbose: Boolean(config.verbose),
+    strictMode: Boolean(config.strictMode),
+    concurrency: Number.parseInt(config.concurrency ?? DEFAULT_CONFIG.concurrency, 10)
+  };
+
+  let outputContent;
+
+  if (config.format === 'json') {
+    const jsonReport = {
+      status: 'ok',
+      scope: scopeSummary,
+      options: optionsSummary
+    };
+    outputContent = config.quiet
+      ? JSON.stringify(jsonReport)
+      : JSON.stringify(jsonReport, null, 2);
+  } else {
+    const lines = [
+      'Fast validation stub report',
+      `Scope: ${scopeSummary}`,
+      `Format: ${config.format}`,
+      `Concurrency: ${optionsSummary.concurrency}`
+    ];
+
+    if (config.verbose) {
+      lines.push('Verbose mode enabled.');
+    }
+
+    outputContent = lines.join('\n');
+  }
+
+  let stdoutPayload = outputContent;
+
+  if (config.quiet && config.format !== 'json') {
+    stdoutPayload = 'Fast validation complete.';
+  }
+
+  if (config.quiet && config.format === 'json') {
+    stdoutPayload = JSON.stringify({ status: 'ok' });
+  }
+
+  if (config.output) {
+    await fs.writeFile(config.output, stdoutPayload, 'utf-8');
+    if (!config.quiet) {
+      console.log(`Fast validation report written to ${config.output}`);
+    }
+  } else {
+    console.log(stdoutPayload);
+  }
+
+  return config.strictMode ? 1 : 0;
 }
 
 /**

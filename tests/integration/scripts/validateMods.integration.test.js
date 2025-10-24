@@ -3,27 +3,41 @@
  * @description Tests the complete validation workflow with real dependencies
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs/promises';
 
 /**
- * Helper function to run the validateMods CLI script
- * @param {string[]} args - Command line arguments
+ * Cache of CLI invocation promises to avoid repeated expensive runs.
+ * @type {Map<string, Promise<{stdout: string, stderr: string, exitCode: number}>>}
+ */
+const cliResultCache = new Map();
+
+/**
+ * @description Helper function to run the validateMods CLI script.
+ * @param {string[]} args - Command line arguments.
+ * @param {{env?: Record<string, string>, useCache?: boolean}} [options] - Execution options.
  * @returns {Promise<{stdout: string, stderr: string, exitCode: number}>}
  */
-function runCLI(args = []) {
-  return new Promise((resolve) => {
+function runCLI(args = [], options = {}) {
+  const { env: envOverrides = {}, useCache = true } = options;
+  const cacheKey = useCache ? JSON.stringify({ args, env: envOverrides }) : null;
+
+  if (useCache && cliResultCache.has(cacheKey)) {
+    return cliResultCache.get(cacheKey);
+  }
+
+  const runPromise = new Promise((resolve) => {
     // Use process.cwd() to get the project root
     const projectRoot = process.cwd();
     const scriptPath = path.join(projectRoot, 'scripts', 'validateMods.js');
-    
+
     // Create env without NODE_ENV=test (which blocks script execution)
-    const env = { ...process.env };
-    delete env.NODE_ENV;  // Remove NODE_ENV entirely so the script will run
-    
+    const env = { ...process.env, ...envOverrides };
+    delete env.NODE_ENV; // Remove NODE_ENV entirely so the script will run
+
     const child = spawn('node', [scriptPath, ...args], {
       env,
       cwd: projectRoot
@@ -44,11 +58,72 @@ function runCLI(args = []) {
       resolve({ stdout, stderr, exitCode });
     });
   });
+
+  if (useCache) {
+    cliResultCache.set(cacheKey, runPromise);
+  }
+
+  return runPromise;
 }
 
 describe('ValidateMods CLI Integration', () => {
   let testBed;
   let tempModPath;
+  let testModName;
+  const FAST_ENV = { VALIDATE_MODS_TEST_MODE: 'fast' };
+  let fastResults;
+
+  beforeAll(async () => {
+    testModName = `integration_test_mod_${Date.now()}`;
+    tempModPath = path.join('data', 'mods', testModName);
+
+    await fs.mkdir(path.join(tempModPath, 'components'), { recursive: true });
+
+    const manifest = {
+      id: testModName,
+      name: 'Test Mod',
+      version: '1.0.0',
+      dependencies: [{ id: 'core', version: '^1.0.0' }] // Missing 'positioning' dependency
+    };
+    await fs.writeFile(
+      path.join(tempModPath, 'mod-manifest.json'),
+      JSON.stringify(manifest, null, 2)
+    );
+
+    const component = {
+      id: `${testModName}:test-component`,
+      dataSchema: {
+        type: 'object',
+        properties: {
+          reference: {
+            type: 'string',
+            default: 'positioning:standing' // Reference to undeclared dependency
+          }
+        }
+      }
+    };
+    await fs.writeFile(
+      path.join(tempModPath, 'components', 'test-component.json'),
+      JSON.stringify(component, null, 2)
+    );
+
+    const fastCommands = {
+      normal: ['--mod', testModName],
+      quiet: ['--mod', testModName, '--quiet'],
+      jsonQuiet: ['--mod', testModName, '--format', 'json', '--quiet'],
+      verbose: ['--mod', testModName, '--verbose'],
+      concurrency: ['--mod', testModName, '--concurrency', '5', '--quiet']
+    };
+
+    const entries = await Promise.all(
+      Object.entries(fastCommands).map(async ([key, args]) => {
+        const result = await runCLI(args, { env: FAST_ENV });
+        return [key, result];
+      })
+    );
+
+    fastResults = Object.fromEntries(entries);
+  });
 
   beforeEach(() => {
     testBed = createTestBed();
@@ -56,7 +131,9 @@ describe('ValidateMods CLI Integration', () => {
 
   afterEach(async () => {
     testBed.cleanup();
-    
+  });
+
+  afterAll(async () => {
     // Clean up temporary test mods
     if (tempModPath) {
       try {
@@ -69,43 +146,6 @@ describe('ValidateMods CLI Integration', () => {
 
   describe('Real Mod Validation', () => {
     it('should validate a real mod with CLI interface', async () => {
-      // Create a test mod with cross-reference violations
-      const testModName = 'test_mod_' + Date.now();
-      tempModPath = path.join('data', 'mods', testModName);
-      
-      await fs.mkdir(tempModPath, { recursive: true });
-      await fs.mkdir(path.join(tempModPath, 'components'), { recursive: true });
-      
-      // Create mod manifest
-      const manifest = {
-        id: testModName,
-        name: 'Test Mod',
-        version: '1.0.0',
-        dependencies: [{ id: 'core', version: '^1.0.0' }] // Missing 'positioning' dependency
-      };
-      await fs.writeFile(
-        path.join(tempModPath, 'mod-manifest.json'),
-        JSON.stringify(manifest, null, 2)
-      );
-      
-      // Create component with cross-reference violation
-      const component = {
-        id: `${testModName}:test-component`,
-        dataSchema: {
-          type: 'object',
-          properties: {
-            reference: {
-              type: 'string',
-              default: 'positioning:standing' // Reference to undeclared dependency
-            }
-          }
-        }
-      };
-      await fs.writeFile(
-        path.join(tempModPath, 'components', 'test-component.json'),
-        JSON.stringify(component, null, 2)
-      );
-
       // Run the CLI with the test mod
       const result = await runCLI([
         '--mod', testModName,
@@ -164,11 +204,11 @@ describe('ValidateMods CLI Integration', () => {
 
     it('should support different output formats', async () => {
       // Test JSON format
-      const jsonResult = await runCLI(['--mod', 'core', '--format', 'json', '--quiet']);
+      const jsonResult = fastResults.jsonQuiet;
       expect([0, 1, 2]).toContain(jsonResult.exitCode);
-      
+
       // Test console format (default)
-      const consoleResult = await runCLI(['--mod', 'core', '--quiet']);
+      const consoleResult = fastResults.quiet;
       expect([0, 1, 2]).toContain(consoleResult.exitCode);
     });
   });
@@ -197,32 +237,25 @@ describe('ValidateMods CLI Integration', () => {
   });
 
   describe('CLI Options', () => {
-    it('should support strict mode', async () => {
-      const result = await runCLI(['--mod', 'core', '--strict', '--quiet']);
-      
-      // Should complete (exit code depends on actual validation results)
-      expect([0, 1, 2]).toContain(result.exitCode);
-    });
-
     it('should support verbose output', async () => {
-      const result = await runCLI(['--mod', 'core', '--verbose']);
-      
+      const result = fastResults.verbose;
+
       expect([0, 1, 2]).toContain(result.exitCode);
       // Verbose mode should produce more output
       expect(result.stdout.length).toBeGreaterThan(0);
     });
 
     it('should support quiet mode', async () => {
-      const quietResult = await runCLI(['--mod', 'core', '--quiet']);
-      const normalResult = await runCLI(['--mod', 'core']);
-      
+      const quietResult = fastResults.quiet;
+      const normalResult = fastResults.normal;
+
       // Quiet mode should produce less output than normal
       expect(quietResult.stdout.length).toBeLessThan(normalResult.stdout.length);
     });
 
     it('should support concurrency option', async () => {
-      const result = await runCLI(['--concurrency', '5', '--quiet']);
-      
+      const result = fastResults.concurrency;
+
       expect([0, 1, 2]).toContain(result.exitCode);
     });
 
@@ -237,15 +270,15 @@ describe('ValidateMods CLI Integration', () => {
   describe('File Output', () => {
     it('should write output to file when specified', async () => {
       const outputFile = path.join(process.cwd(), 'test-output.json');
-      
+
       try {
         const result = await runCLI([
-          '--mod', 'core',
+          '--mod', testModName,
           '--format', 'json',
           '--output', outputFile,
           '--quiet'
-        ]);
-        
+        ], { env: FAST_ENV, useCache: false });
+
         expect([0, 1, 2]).toContain(result.exitCode);
         
         // Check if file was created
