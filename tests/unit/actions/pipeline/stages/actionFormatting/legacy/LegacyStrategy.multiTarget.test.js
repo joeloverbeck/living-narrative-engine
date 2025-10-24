@@ -1,3 +1,9 @@
+/**
+ * @file Unit tests for LegacyStrategy multi-target formatting methods
+ * Tests multi-target formatting logic through the public format() API
+ */
+
+import { describe, it, expect } from '@jest/globals';
 import { LegacyStrategy } from '../../../../../../../src/actions/pipeline/stages/actionFormatting/legacy/LegacyStrategy.js';
 
 const createStrategy = (overrides = {}) => {
@@ -14,6 +20,7 @@ const createStrategy = (overrides = {}) => {
     debug: jest.fn(),
     warn: jest.fn(),
     info: jest.fn(),
+    error: jest.fn(),
   };
 
   const targetNormalizationService = {
@@ -68,194 +75,8 @@ const createStrategy = (overrides = {}) => {
   };
 };
 
-describe('LegacyStrategy', () => {
-  describe('single target formatting', () => {
-    it('formats actions without fallback and emits summary logging', async () => {
-      const {
-        strategy,
-        commandFormatter,
-        validateVisualProperties,
-        logger,
-      } = createStrategy();
-
-      commandFormatter.format.mockReturnValue({ ok: true, value: 'attack target' });
-
-      const outcome = await strategy.format({
-        actor: { id: 'actor-1' },
-        actionsWithTargets: [
-          {
-            actionDef: {
-              id: 'action-1',
-              name: 'Attack',
-              description: 'desc',
-            },
-            targetContexts: [{ entityId: 'target-1', displayName: 'Enemy' }],
-          },
-        ],
-        trace: undefined,
-        traceSource: 'ActionFormattingStage.execute',
-      });
-
-      expect(validateVisualProperties).toHaveBeenCalledWith(undefined, 'action-1');
-      expect(commandFormatter.format).toHaveBeenCalledWith(
-        expect.objectContaining({ id: 'action-1' }),
-        { entityId: 'target-1', displayName: 'Enemy' },
-        expect.any(Object),
-        expect.objectContaining({ debug: true }),
-        { displayNameFn: expect.any(Function) }
-      );
-      expect(outcome.formattedCommands).toEqual([
-        expect.objectContaining({
-          id: 'action-1',
-          name: 'Attack',
-          command: 'attack target',
-          params: { targetId: 'target-1' },
-        }),
-      ]);
-      expect(outcome.fallbackUsed).toBe(false);
-      expect(logger.debug).toHaveBeenCalledWith(
-        'Action formatting complete: 1 actions formatted successfully'
-      );
-    });
-
-    it('records failures, increments stats, and reports trace information', async () => {
-      const {
-        strategy,
-        commandFormatter,
-        logger,
-        createError,
-      } = createStrategy();
-
-      commandFormatter.format
-        .mockReturnValueOnce({ ok: true, value: 'cmd-1' })
-        .mockReturnValueOnce({ ok: false, error: 'bad-target' });
-
-      const trace = {
-        captureActionData: jest.fn(),
-        info: jest.fn(),
-      };
-
-      const processingStats = {
-        successful: 'not-a-number',
-        failed: 'not-a-number',
-        legacy: 'not-a-number',
-        multiTarget: 0,
-      };
-
-      const outcome = await strategy.format({
-        actor: { id: 'actor-2' },
-        actionsWithTargets: [
-          {
-            actionDef: { id: 'action-single', name: 'Poke' },
-            targetContexts: [
-              { entityId: 'target-a', displayName: 'Friend' },
-              { entityId: 'target-b', displayName: 'Enemy' },
-            ],
-          },
-        ],
-        trace,
-        processingStats,
-        traceSource: 'ActionFormattingStage.execute',
-      });
-
-      expect(logger.warn).toHaveBeenCalledWith(
-        "Failed to format command for action 'action-single' with target 'target-b'",
-        expect.objectContaining({
-          formatResult: { ok: false, error: 'bad-target' },
-        })
-      );
-      expect(createError).toHaveBeenCalledWith(
-        { ok: false, error: 'bad-target' },
-        expect.objectContaining({ id: 'action-single' }),
-        'actor-2',
-        trace,
-        'target-b'
-      );
-      expect(processingStats).toEqual({
-        successful: 1,
-        failed: 1,
-        legacy: 1,
-        multiTarget: 0,
-      });
-      expect(trace.captureActionData).toHaveBeenLastCalledWith(
-        'formatting',
-        'action-single',
-        expect.objectContaining({
-          status: 'partial',
-          successCount: 1,
-          failureCount: 1,
-          formatterMethod: 'format',
-        })
-      );
-      expect(outcome.errors).toHaveLength(1);
-      expect(outcome.pipelineResult.success).toBe(true);
-    });
-
-    it('captures thrown formatter errors with fallback target resolution', async () => {
-      const { strategy, commandFormatter, createError } = createStrategy();
-
-      commandFormatter.format.mockImplementation(() => {
-        throw { target: { entityId: 'embedded' } };
-      });
-
-      await strategy.format({
-        actor: { id: 'actor-throw' },
-        actionsWithTargets: [
-          {
-            actionDef: { id: 'action-throw', name: 'Yell' },
-            targetContexts: [{ entityId: 'target-throw' }],
-          },
-        ],
-        trace: undefined,
-        traceSource: 'ActionFormattingStage.execute',
-      });
-
-      expect(createError).toHaveBeenCalledWith(
-        { target: { entityId: 'embedded' } },
-        expect.objectContaining({ id: 'action-throw' }),
-        'actor-throw',
-        null,
-        null,
-        'target-throw'
-      );
-    });
-
-    it('captures thrown formatter errors while tracing single-target actions', async () => {
-      const { strategy, commandFormatter, createError } = createStrategy();
-
-      commandFormatter.format.mockImplementation(() => {
-        throw { target: { entityId: 'trace-embedded' } };
-      });
-
-      const trace = {
-        captureActionData: jest.fn(),
-        info: jest.fn(),
-      };
-
-      await strategy.format({
-        actor: { id: 'actor-trace-throw' },
-        actionsWithTargets: [
-          {
-            actionDef: { id: 'action-trace-throw', name: 'Trace Throw' },
-            targetContexts: [{ entityId: 'target-trace-throw' }],
-          },
-        ],
-        trace,
-        traceSource: 'ActionFormattingStage.execute',
-      });
-
-      expect(createError).toHaveBeenCalledWith(
-        { target: { entityId: 'trace-embedded' } },
-        expect.objectContaining({ id: 'action-trace-throw' }),
-        'actor-trace-throw',
-        trace,
-        null,
-        'target-trace-throw'
-      );
-    });
-  });
-
-  describe('multi-target formatting', () => {
+describe('LegacyStrategy - Multi-Target Formatting', () => {
+  describe('Traced Mode - Successful formatting', () => {
     it('formats multiple commands when normalization succeeds', async () => {
       const {
         strategy,
@@ -353,114 +174,6 @@ describe('LegacyStrategy', () => {
         expect.objectContaining({ formattingPath: 'legacy' })
       );
       expect(outcome.fallbackUsed).toBe(false);
-    });
-
-    it('records normalization errors and skips invalid commands', async () => {
-      const {
-        strategy,
-        commandFormatter,
-        targetNormalizationService,
-        createError,
-      } = createStrategy();
-
-      commandFormatter.formatMultiTarget.mockReturnValue({ ok: true, value: 'cmd' });
-      targetNormalizationService.normalize.mockReturnValue({
-        error: 'normalize failure',
-      });
-
-      const outcome = await strategy.format({
-        actor: { id: 'actor-normalize' },
-        actionsWithTargets: [
-          {
-            actionDef: {
-              id: 'multi-normalize',
-              name: 'Normalize',
-              targets: { primary: {} },
-            },
-            targetContexts: [
-              { entityId: 'target-x', placeholder: 'primary' },
-            ],
-          },
-        ],
-        trace: undefined,
-        traceSource: 'ActionFormattingStage.execute',
-      });
-
-      expect(createError).toHaveBeenCalledWith(
-        'normalize failure',
-        expect.objectContaining({ id: 'multi-normalize' }),
-        'actor-normalize',
-        undefined
-      );
-      expect(outcome.formattedCommands).toEqual([]);
-      expect(outcome.errors).toHaveLength(1);
-    });
-
-    it('propagates normalization errors while tracing multi-target actions', async () => {
-      const {
-        strategy,
-        commandFormatter,
-        targetNormalizationService,
-        createError,
-      } = createStrategy();
-
-      commandFormatter.formatMultiTarget.mockReturnValue({
-        ok: true,
-        value: [
-          {
-            command: 'cmd-traced',
-            targets: {
-              primary: [
-                {
-                  id: 'target-trace',
-                  displayName: 'Trace Target',
-                  contextFromId: 'ctx-trace',
-                },
-              ],
-            },
-          },
-        ],
-      });
-
-      targetNormalizationService.normalize.mockReturnValue({
-        error: 'trace-normalization-failure',
-      });
-
-      const trace = {
-        captureActionData: jest.fn(),
-        info: jest.fn(),
-      };
-
-      const outcome = await strategy.format({
-        actor: { id: 'actor-trace-normalize' },
-        actionsWithTargets: [
-          {
-            actionDef: {
-              id: 'multi-trace-normalize',
-              name: 'Trace Normalize',
-              targets: { primary: {} },
-            },
-            targetContexts: [
-              {
-                entityId: 'target-trace',
-                placeholder: 'primary',
-                contextFromId: 'ctx-trace',
-              },
-            ],
-          },
-        ],
-        trace,
-        traceSource: 'ActionFormattingStage.execute',
-      });
-
-      expect(createError).toHaveBeenCalledWith(
-        'trace-normalization-failure',
-        expect.objectContaining({ id: 'multi-trace-normalize' }),
-        'actor-trace-normalize',
-        trace
-      );
-      expect(outcome.errors).toHaveLength(1);
-      expect(outcome.formattedCommands).toEqual([]);
     });
 
     it('uses fallback when formatter fails and marks statistics', async () => {
@@ -679,38 +392,33 @@ describe('LegacyStrategy', () => {
         expect.objectContaining({ formattingPath: 'legacy' })
       );
     });
+  });
 
-    it('handles formatter absence by delegating entirely to the fallback', async () => {
+  describe('Traced Mode - Error handling', () => {
+    it('records normalization errors and skips invalid commands', async () => {
       const {
         strategy,
         commandFormatter,
-        fallbackFormatter,
-      } = createStrategy({
-        commandFormatter: {
-          format: jest.fn(),
-          formatMultiTarget: undefined,
-        },
-      });
+        targetNormalizationService,
+        createError,
+      } = createStrategy();
 
-      fallbackFormatter.formatWithFallback.mockReturnValue({
-        ok: true,
-        value: 'legacy-only',
+      commandFormatter.formatMultiTarget.mockReturnValue({ ok: true, value: 'cmd' });
+      targetNormalizationService.normalize.mockReturnValue({
+        error: 'normalize failure',
       });
 
       const outcome = await strategy.format({
-        actor: { id: 'actor-only-fallback' },
+        actor: { id: 'actor-normalize' },
         actionsWithTargets: [
           {
             actionDef: {
-              id: 'multi-no-formatter',
-              name: 'Legacy',
+              id: 'multi-normalize',
+              name: 'Normalize',
               targets: { primary: {} },
             },
             targetContexts: [
-              {
-                entityId: 'target-legacy',
-                placeholder: 'primary',
-              },
+              { entityId: 'target-x', placeholder: 'primary' },
             ],
           },
         ],
@@ -718,12 +426,81 @@ describe('LegacyStrategy', () => {
         traceSource: 'ActionFormattingStage.execute',
       });
 
-      expect(commandFormatter.formatMultiTarget).toBeUndefined();
-      expect(fallbackFormatter.formatWithFallback).toHaveBeenCalled();
-      expect(outcome.fallbackUsed).toBe(true);
-      expect(outcome.formattedCommands[0]).toEqual(
-        expect.objectContaining({ command: 'legacy-only' })
+      expect(createError).toHaveBeenCalledWith(
+        'normalize failure',
+        expect.objectContaining({ id: 'multi-normalize' }),
+        'actor-normalize',
+        undefined
       );
+      expect(outcome.formattedCommands).toEqual([]);
+      expect(outcome.errors).toHaveLength(1);
+    });
+
+    it('propagates normalization errors while tracing multi-target actions', async () => {
+      const {
+        strategy,
+        commandFormatter,
+        targetNormalizationService,
+        createError,
+      } = createStrategy();
+
+      commandFormatter.formatMultiTarget.mockReturnValue({
+        ok: true,
+        value: [
+          {
+            command: 'cmd-traced',
+            targets: {
+              primary: [
+                {
+                  id: 'target-trace',
+                  displayName: 'Trace Target',
+                  contextFromId: 'ctx-trace',
+                },
+              ],
+            },
+          },
+        ],
+      });
+
+      targetNormalizationService.normalize.mockReturnValue({
+        error: 'trace-normalization-failure',
+      });
+
+      const trace = {
+        captureActionData: jest.fn(),
+        info: jest.fn(),
+      };
+
+      const outcome = await strategy.format({
+        actor: { id: 'actor-trace-normalize' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'multi-trace-normalize',
+              name: 'Trace Normalize',
+              targets: { primary: {} },
+            },
+            targetContexts: [
+              {
+                entityId: 'target-trace',
+                placeholder: 'primary',
+                contextFromId: 'ctx-trace',
+              },
+            ],
+          },
+        ],
+        trace,
+        traceSource: 'ActionFormattingStage.execute',
+      });
+
+      expect(createError).toHaveBeenCalledWith(
+        'trace-normalization-failure',
+        expect.objectContaining({ id: 'multi-trace-normalize' }),
+        'actor-trace-normalize',
+        trace
+      );
+      expect(outcome.errors).toHaveLength(1);
+      expect(outcome.formattedCommands).toEqual([]);
     });
 
     it('surfaces fallback failures through createError', async () => {
@@ -896,6 +673,54 @@ describe('LegacyStrategy', () => {
       expect(outcome.errors).toHaveLength(1);
       expect(outcome.fallbackUsed).toBe(false);
     });
+  });
+
+  describe('Traced Mode - Edge cases', () => {
+    it('handles formatter absence by delegating entirely to the fallback', async () => {
+      const {
+        strategy,
+        commandFormatter,
+        fallbackFormatter,
+      } = createStrategy({
+        commandFormatter: {
+          format: jest.fn(),
+          formatMultiTarget: undefined,
+        },
+      });
+
+      fallbackFormatter.formatWithFallback.mockReturnValue({
+        ok: true,
+        value: 'legacy-only',
+      });
+
+      const outcome = await strategy.format({
+        actor: { id: 'actor-only-fallback' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'multi-no-formatter',
+              name: 'Legacy',
+              targets: { primary: {} },
+            },
+            targetContexts: [
+              {
+                entityId: 'target-legacy',
+                placeholder: 'primary',
+              },
+            ],
+          },
+        ],
+        trace: undefined,
+        traceSource: 'ActionFormattingStage.execute',
+      });
+
+      expect(commandFormatter.formatMultiTarget).toBeUndefined();
+      expect(fallbackFormatter.formatWithFallback).toHaveBeenCalled();
+      expect(outcome.fallbackUsed).toBe(true);
+      expect(outcome.formattedCommands[0]).toEqual(
+        expect.objectContaining({ command: 'legacy-only' })
+      );
+    });
 
     it('logs when no resolved targets are available', async () => {
       const { strategy, logger, commandFormatter, fallbackFormatter } =
@@ -962,7 +787,9 @@ describe('LegacyStrategy', () => {
       );
       expect(commandFormatter.formatMultiTarget).not.toHaveBeenCalled();
     });
+  });
 
+  describe('Standard Mode - Formatting', () => {
     it('formats multi-target commands on the standard path', async () => {
       const {
         strategy,
@@ -1119,150 +946,340 @@ describe('LegacyStrategy', () => {
       );
       expect(outcome.errors).toHaveLength(1);
     });
+  });
 
-    it('logs single-target formatter failures on the standard path', async () => {
-      const { strategy, commandFormatter, logger, createError } =
-        createStrategy();
+  describe('#processCommandData - Command Processing Logic', () => {
+    it('processes string command data correctly', async () => {
+      const { strategy, commandFormatter } = createStrategy();
 
-      commandFormatter.format.mockReturnValue({
-        ok: false,
-        error: 'standard-single-failure',
+      commandFormatter.formatMultiTarget.mockReturnValue({
+        ok: true,
+        value: 'simple-string-command',
       });
 
-      const trace = { info: jest.fn() };
-
       const outcome = await strategy.format({
-        actor: { id: 'actor-standard-single' },
+        actor: { id: 'actor-string' },
         actionsWithTargets: [
           {
-            actionDef: { id: 'action-standard-single', name: 'Standard Single' },
-            targetContexts: [{ entityId: 'target-standard-single' }],
+            actionDef: {
+              id: 'multi-string',
+              name: 'String Command',
+              targets: { primary: {} },
+            },
+            targetContexts: [
+              {
+                entityId: 'target-1',
+                displayName: 'Target 1',
+                placeholder: 'primary',
+              },
+            ],
           },
         ],
-        trace,
+        trace: undefined,
         traceSource: 'ActionFormattingStage.execute',
       });
 
-      expect(logger.warn).toHaveBeenCalledWith(
-        "Failed to format command for action 'action-standard-single' with target 'target-standard-single'",
-        expect.objectContaining({
-          formatResult: { ok: false, error: 'standard-single-failure' },
-        })
-      );
-      expect(createError).toHaveBeenCalledWith(
-        { ok: false, error: 'standard-single-failure' },
-        expect.objectContaining({ id: 'action-standard-single' }),
-        'actor-standard-single',
-        trace,
-        'target-standard-single'
-      );
-      expect(outcome.errors).toHaveLength(1);
+      expect(outcome.formattedCommands).toHaveLength(1);
+      expect(outcome.formattedCommands[0].command).toBe('simple-string-command');
     });
-  });
 
-  describe('optional safeEventDispatcher', () => {
-    it('works correctly when safeEventDispatcher is omitted (default null)', async () => {
-      const strategy = new LegacyStrategy({
-        commandFormatter: {
-          format: jest.fn(() => ({ ok: true, value: 'success command' })),
-          formatMultiTarget: jest.fn(),
+    it('processes object command data with targets property', async () => {
+      const { strategy, commandFormatter, targetNormalizationService } =
+        createStrategy();
+
+      const specificTargets = {
+        primary: [{ id: 'specific-1', displayName: 'Specific Target' }],
+      };
+
+      commandFormatter.formatMultiTarget.mockReturnValue({
+        ok: true,
+        value: {
+          command: 'object-with-targets',
+          targets: specificTargets,
         },
-        entityManager: {
-          getEntityInstance: jest.fn((entityId) => ({ id: entityId })),
-        },
-        // safeEventDispatcher intentionally omitted - should use null default
-        getEntityDisplayNameFn: jest.fn(),
-        logger: {
-          debug: jest.fn(),
-          warn: jest.fn(),
-          info: jest.fn(),
-        },
-        fallbackFormatter: {
-          formatWithFallback: jest.fn(),
-        },
-        createError: jest.fn(),
-        targetNormalizationService: {
-          normalize: jest.fn(() => ({ error: null, params: {} })),
-        },
-        validateVisualProperties: jest.fn(),
+      });
+
+      targetNormalizationService.normalize.mockReturnValue({
+        error: null,
+        params: { targetId: 'specific-1' },
       });
 
       const outcome = await strategy.format({
-        actor: { id: 'actor-optional' },
+        actor: { id: 'actor-object-targets' },
         actionsWithTargets: [
           {
             actionDef: {
-              id: 'action-optional',
-              name: 'Optional Test',
+              id: 'multi-object-targets',
+              name: 'Object With Targets',
+              targets: { primary: {} },
             },
-            targetContexts: [{ entityId: 'target-optional' }],
+            targetContexts: [
+              {
+                entityId: 'default-1',
+                displayName: 'Default Target',
+                placeholder: 'primary',
+              },
+            ],
           },
         ],
         trace: undefined,
-        traceSource: 'test',
+        traceSource: 'ActionFormattingStage.execute',
       });
 
-      // Should format successfully even without safeEventDispatcher
       expect(outcome.formattedCommands).toHaveLength(1);
-      expect(outcome.formattedCommands[0]).toEqual(
-        expect.objectContaining({
-          id: 'action-optional',
-          command: 'success command',
-        })
-      );
-      expect(outcome.pipelineResult.success).toBe(true);
+      expect(outcome.formattedCommands[0].command).toBe('object-with-targets');
+      expect(targetNormalizationService.normalize).toHaveBeenCalledWith({
+        resolvedTargets: specificTargets,
+        isMultiTarget: true,
+      });
     });
 
-    it('works correctly when safeEventDispatcher is explicitly set to null', async () => {
-      const strategy = new LegacyStrategy({
-        commandFormatter: {
-          format: jest.fn(() => ({ ok: true, value: 'null dispatcher command' })),
-          formatMultiTarget: jest.fn(),
+    it('processes object command data without targets property', async () => {
+      const { strategy, commandFormatter, targetNormalizationService } =
+        createStrategy();
+
+      commandFormatter.formatMultiTarget.mockReturnValue({
+        ok: true,
+        value: {
+          command: 'object-without-targets',
         },
-        entityManager: {
-          getEntityInstance: jest.fn((entityId) => ({ id: entityId })),
-        },
-        safeEventDispatcher: null, // Explicitly null
-        getEntityDisplayNameFn: jest.fn(),
-        logger: {
-          debug: jest.fn(),
-          warn: jest.fn(),
-          info: jest.fn(),
-        },
-        fallbackFormatter: {
-          formatWithFallback: jest.fn(),
-        },
-        createError: jest.fn(),
-        targetNormalizationService: {
-          normalize: jest.fn(() => ({ error: null, params: {} })),
-        },
-        validateVisualProperties: jest.fn(),
+      });
+
+      targetNormalizationService.normalize.mockReturnValue({
+        error: null,
+        params: { targetId: 'default-1' },
       });
 
       const outcome = await strategy.format({
-        actor: { id: 'actor-explicit-null' },
+        actor: { id: 'actor-object-no-targets' },
         actionsWithTargets: [
           {
             actionDef: {
-              id: 'action-explicit-null',
-              name: 'Explicit Null Test',
+              id: 'multi-object-no-targets',
+              name: 'Object Without Targets',
+              targets: { primary: {} },
             },
-            targetContexts: [{ entityId: 'target-null' }],
+            targetContexts: [
+              {
+                entityId: 'default-1',
+                displayName: 'Default Target',
+                placeholder: 'primary',
+              },
+            ],
           },
         ],
         trace: undefined,
-        traceSource: 'test',
+        traceSource: 'ActionFormattingStage.execute',
       });
 
-      // Should format successfully with explicit null
       expect(outcome.formattedCommands).toHaveLength(1);
-      expect(outcome.formattedCommands[0]).toEqual(
-        expect.objectContaining({
-          id: 'action-explicit-null',
-          command: 'null dispatcher command',
-        })
-      );
-      expect(outcome.pipelineResult.success).toBe(true);
+      expect(outcome.formattedCommands[0].command).toBe('object-without-targets');
+      // Should use default targets from actionSpecificTargets
+      expect(targetNormalizationService.normalize).toHaveBeenCalledWith({
+        resolvedTargets: expect.objectContaining({
+          primary: expect.arrayContaining([
+            expect.objectContaining({ id: 'default-1' }),
+          ]),
+        }),
+        isMultiTarget: true,
+      });
+    });
+
+    it('handles mixed array of string and object commands', async () => {
+      const { strategy, commandFormatter, targetNormalizationService } =
+        createStrategy();
+
+      const specificTargets = {
+        primary: [{ id: 'specific-2', displayName: 'Specific 2' }],
+      };
+
+      commandFormatter.formatMultiTarget.mockReturnValue({
+        ok: true,
+        value: [
+          'string-command',
+          { command: 'object-command', targets: specificTargets },
+          { command: 'object-no-targets' },
+        ],
+      });
+
+      targetNormalizationService.normalize
+        .mockReturnValueOnce({ error: null, params: { idx: 0 } })
+        .mockReturnValueOnce({ error: null, params: { idx: 1 } })
+        .mockReturnValueOnce({ error: null, params: { idx: 2 } });
+
+      const outcome = await strategy.format({
+        actor: { id: 'actor-mixed' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'multi-mixed',
+              name: 'Mixed Commands',
+              targets: { primary: {} },
+            },
+            targetContexts: [
+              {
+                entityId: 'default-target',
+                displayName: 'Default',
+                placeholder: 'primary',
+              },
+            ],
+          },
+        ],
+        trace: undefined,
+        traceSource: 'ActionFormattingStage.execute',
+      });
+
+      expect(outcome.formattedCommands).toHaveLength(3);
+      expect(outcome.formattedCommands[0].command).toBe('string-command');
+      expect(outcome.formattedCommands[1].command).toBe('object-command');
+      expect(outcome.formattedCommands[2].command).toBe('object-no-targets');
+    });
+
+    it('handles empty targets object in command data', async () => {
+      const { strategy, commandFormatter, targetNormalizationService } =
+        createStrategy();
+
+      commandFormatter.formatMultiTarget.mockReturnValue({
+        ok: true,
+        value: {
+          command: 'with-empty-targets',
+          targets: {},
+        },
+      });
+
+      targetNormalizationService.normalize.mockReturnValue({
+        error: null,
+        params: { normalized: true },
+      });
+
+      const outcome = await strategy.format({
+        actor: { id: 'actor-empty-targets' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'multi-empty-targets',
+              name: 'Empty Targets',
+              targets: { primary: {} },
+            },
+            targetContexts: [
+              {
+                entityId: 'target-empty',
+                placeholder: 'primary',
+              },
+            ],
+          },
+        ],
+        trace: undefined,
+        traceSource: 'ActionFormattingStage.execute',
+      });
+
+      expect(outcome.formattedCommands).toHaveLength(1);
+      expect(outcome.formattedCommands[0].command).toBe('with-empty-targets');
+      // Should use the empty targets object from command data
+      expect(targetNormalizationService.normalize).toHaveBeenCalledWith({
+        resolvedTargets: {},
+        isMultiTarget: true,
+      });
+    });
+
+    it('handles null targets in command data by falling back to defaults', async () => {
+      const { strategy, commandFormatter, targetNormalizationService } =
+        createStrategy();
+
+      commandFormatter.formatMultiTarget.mockReturnValue({
+        ok: true,
+        value: {
+          command: 'with-null-targets',
+          targets: null,
+        },
+      });
+
+      targetNormalizationService.normalize.mockReturnValue({
+        error: null,
+        params: { normalized: true },
+      });
+
+      const outcome = await strategy.format({
+        actor: { id: 'actor-null-targets' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'multi-null-targets',
+              name: 'Null Targets',
+              targets: { primary: {} },
+            },
+            targetContexts: [
+              {
+                entityId: 'target-null',
+                displayName: 'Null Target',
+                placeholder: 'primary',
+              },
+            ],
+          },
+        ],
+        trace: undefined,
+        traceSource: 'ActionFormattingStage.execute',
+      });
+
+      expect(outcome.formattedCommands).toHaveLength(1);
+      // Should fall back to actionSpecificTargets since targets is null (not an object)
+      expect(targetNormalizationService.normalize).toHaveBeenCalledWith({
+        resolvedTargets: expect.objectContaining({
+          primary: expect.any(Array),
+        }),
+        isMultiTarget: true,
+      });
+    });
+
+    it('processes command with multiple target placeholders', async () => {
+      const { strategy, commandFormatter, targetNormalizationService } =
+        createStrategy();
+
+      const multiTargets = {
+        primary: [{ id: 'primary-1', displayName: 'Primary' }],
+        secondary: [{ id: 'secondary-1', displayName: 'Secondary' }],
+      };
+
+      commandFormatter.formatMultiTarget.mockReturnValue({
+        ok: true,
+        value: {
+          command: 'multi-placeholder-command',
+          targets: multiTargets,
+        },
+      });
+
+      targetNormalizationService.normalize.mockReturnValue({
+        error: null,
+        params: { multi: true },
+      });
+
+      const outcome = await strategy.format({
+        actor: { id: 'actor-multi-placeholder' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'multi-placeholder',
+              name: 'Multi Placeholder',
+              targets: {
+                primary: { placeholder: 'primary' },
+                secondary: { placeholder: 'secondary' },
+              },
+            },
+            targetContexts: [
+              { entityId: 'primary-1', placeholder: 'primary' },
+              { entityId: 'secondary-1', placeholder: 'secondary' },
+            ],
+          },
+        ],
+        trace: undefined,
+        traceSource: 'ActionFormattingStage.execute',
+      });
+
+      expect(outcome.formattedCommands).toHaveLength(1);
+      expect(targetNormalizationService.normalize).toHaveBeenCalledWith({
+        resolvedTargets: multiTargets,
+        isMultiTarget: true,
+      });
     });
   });
 });

@@ -38,25 +38,25 @@ export class LegacyStrategy {
    * @param {object} deps
    * @param {IActionCommandFormatter} deps.commandFormatter - Command formatter dependency
    * @param {EntityManager} deps.entityManager - Entity manager reference
-   * @param {ISafeEventDispatcher} deps.safeEventDispatcher - Dispatcher for formatter side effects
    * @param {Function} deps.getEntityDisplayNameFn - Helper to resolve entity display names
    * @param {import('../../../../../logging/consoleLogger.js').default} deps.logger - Logger instance
    * @param {import('./LegacyFallbackFormatter.js').LegacyFallbackFormatter} deps.fallbackFormatter - Legacy fallback formatter
    * @param {Function} deps.createError - Factory to build structured errors
    * @param {import('../TargetNormalizationService.js').TargetNormalizationService} deps.targetNormalizationService - Target normalisation service
    * @param {Function} deps.validateVisualProperties - Visual validation helper
+   * @param {ISafeEventDispatcher} [deps.safeEventDispatcher=null] - Optional dispatcher for formatter side effects
    * @description Creates a new legacy formatting strategy.
    */
   constructor({
     commandFormatter,
     entityManager,
-    safeEventDispatcher,
     getEntityDisplayNameFn,
     logger,
     fallbackFormatter,
     createError,
     targetNormalizationService,
     validateVisualProperties,
+    safeEventDispatcher = null,
   }) {
     this.#commandFormatter = commandFormatter;
     this.#entityManager = entityManager;
@@ -70,6 +70,9 @@ export class LegacyStrategy {
   }
 
   /**
+   * Formats actions with targets into formatted commands.
+   * Automatically routes to unified formatting logic with appropriate trace handling.
+   * @public
    * @param {object} params
    * @param {import('../../../../../entities/entity.js').default} params.actor - Actor performing the actions
    * @param {Array<{actionDef: ActionDefinition, targetContexts: ActionTargetContext[]}>} params.actionsWithTargets - Actions and contexts
@@ -87,25 +90,13 @@ export class LegacyStrategy {
     traceSource,
   }) {
     const formatterOptions = this.#buildFormatterOptions();
-    const isActionAwareTrace =
-      trace && typeof trace.captureActionData === 'function';
 
-    if (isActionAwareTrace) {
-      return this.#formatTraced({
-        actor,
-        actionsWithTargets,
-        trace,
-        formatterOptions,
-        processingStats,
-        traceSource,
-      });
-    }
-
-    return this.#formatStandard({
+    return this.#formatActions({
       actor,
       actionsWithTargets,
       trace,
       formatterOptions,
+      processingStats,
       traceSource,
     });
   }
@@ -123,17 +114,20 @@ export class LegacyStrategy {
   }
 
   /**
+   * Unified formatting method for all action formatting.
+   * Handles both traced and standard formatting paths.
+   * @private
    * @param {object} params
-   * @param {import('../../../../../entities/entity.js').default} params.actor
-   * @param {Array<{actionDef: ActionDefinition, targetContexts: ActionTargetContext[]}>} params.actionsWithTargets
-   * @param {import('../../../../tracing/actionAwareStructuredTrace.js').default} params.trace
-   * @param {object} params.formatterOptions
-   * @param {object|undefined} params.processingStats
-   * @param {string} params.traceSource
+   * @param {import('../../../../../entities/entity.js').default} params.actor - Actor performing the actions
+   * @param {Array<{actionDef: ActionDefinition, targetContexts: ActionTargetContext[]}>} params.actionsWithTargets - Actions and contexts
+   * @param {import('../../../../tracing/actionAwareStructuredTrace.js').default|import('../../../../tracing/traceContext.js').TraceContext|import('../../../../tracing/structuredTrace.js').StructuredTrace|undefined} params.trace - Trace adapter (optional)
+   * @param {object} params.formatterOptions - Formatter options
+   * @param {object|undefined} params.processingStats - Mutable statistics accumulator (optional)
+   * @param {string} params.traceSource - Source label for trace logging
    * @returns {Promise<{ formattedCommands: Array, errors: Array, fallbackUsed: boolean, statistics: { formatted: number, errors: number, fallbackInvocations: number }, pipelineResult: PipelineResult }>}
-   * @description Formats actions while emitting action-aware trace events.
+   * @description Formats actions using trace adapter for polymorphic trace behavior.
    */
-  async #formatTraced({
+  async #formatActions({
     actor,
     actionsWithTargets,
     trace,
@@ -145,211 +139,52 @@ export class LegacyStrategy {
     const errors = [];
     let fallbackInvocations = 0;
 
+    // Create trace adapter for polymorphic behavior
+    const traceAdapter = this.#createTraceAdapter(trace, processingStats);
+
     for (const { actionDef, targetContexts } of actionsWithTargets) {
       const actionStartTime = Date.now();
 
+      // Validate visual properties using injected dependency
       this.#validateVisualProperties(actionDef.visual, actionDef.id);
 
       const isMultiTargetAction =
         actionDef.targets && typeof actionDef.targets === 'object';
 
-      trace.captureActionData('formatting', actionDef.id, {
-        timestamp: actionStartTime,
-        status: 'formatting',
-        formattingPath: 'legacy',
-        isMultiTargetInLegacy: isMultiTargetAction,
-        targetContextCount: targetContexts.length,
-      });
+      // Capture start event (no-op for standard trace)
+      traceAdapter.captureStart(actionDef, targetContexts, isMultiTargetAction);
 
       if (isMultiTargetAction) {
-        const actionSpecificTargets = this.#extractTargetsFromContexts(
+        const result = await this.#formatMultiTargetAction({
+          actionDef,
           targetContexts,
-          actionDef
-        );
-
-        if (
-          !actionSpecificTargets ||
-          Object.keys(actionSpecificTargets).length === 0
-        ) {
-          this.#logger.warn(
-            `Skipping multi-target action '${actionDef.id}' in legacy formatting ` +
-              `path - no resolved targets available for proper formatting`
-          );
-          continue;
-        }
-
-        if (this.#commandFormatter.formatMultiTarget) {
-          const formatResult = this.#commandFormatter.formatMultiTarget(
-            actionDef,
-            actionSpecificTargets,
-            this.#entityManager,
-            formatterOptions,
-            {
-              displayNameFn: this.#getEntityDisplayNameFn,
-              targetDefinitions: actionDef.targets,
-            }
-          );
-
-          if (formatResult.ok) {
-            const commands = Array.isArray(formatResult.value)
-              ? formatResult.value
-              : [formatResult.value];
-
-            for (const commandData of commands) {
-              const command =
-                typeof commandData === 'string'
-                  ? commandData
-                  : commandData.command;
-              const specificTargets =
-                typeof commandData === 'object' && commandData.targets
-                  ? commandData.targets
-                  : actionSpecificTargets;
-
-              const normalizationResult =
-                this.#targetNormalizationService.normalize({
-                  resolvedTargets: specificTargets,
-                  isMultiTarget: true,
-                });
-
-              if (normalizationResult.error) {
-                errors.push(
-                  this.#createError(
-                    normalizationResult.error,
-                    actionDef,
-                    actor.id,
-                    trace
-                  )
-                );
-                continue;
-              }
-
-              const params = {
-                ...normalizationResult.params,
-                isMultiTarget: true,
-              };
-
-              formattedActions.push({
-                id: actionDef.id,
-                name: actionDef.name,
-                command,
-                description: actionDef.description || '',
-                params,
-                visual: actionDef.visual || null,
-              });
-            }
-
-            this.#incrementStat(processingStats, 'successful');
-            this.#incrementStat(processingStats, 'multiTarget');
-          } else if (targetContexts.length > 0) {
-            fallbackInvocations += this.#handleFallback({
-              formattedActions,
-              errors,
-              processingStats,
-              targetContexts,
-              actionDef,
-              formatterOptions,
-              actionSpecificTargets,
-              actorId: actor.id,
-              trace,
-              allowMissingTargetId: true,
-            });
-          }
-        } else if (targetContexts.length > 0) {
-          fallbackInvocations += this.#handleFallback({
-            formattedActions,
-            errors,
-            processingStats,
-            targetContexts,
-            actionDef,
-            formatterOptions,
-            actionSpecificTargets,
-            actorId: actor.id,
-            trace,
-            allowMissingTargetId: false,
-          });
-        }
-      } else {
-        let successCount = 0;
-        let failureCount = 0;
-
-        for (const targetContext of targetContexts) {
-          try {
-            const formatResult = this.#commandFormatter.format(
-              actionDef,
-              targetContext,
-              this.#entityManager,
-              formatterOptions,
-              { displayNameFn: this.#getEntityDisplayNameFn }
-            );
-
-            if (formatResult.ok) {
-              formattedActions.push({
-                id: actionDef.id,
-                name: actionDef.name,
-                command: formatResult.value,
-                description: actionDef.description || '',
-                params: { targetId: targetContext.entityId },
-                visual: actionDef.visual || null,
-              });
-              successCount++;
-            } else {
-              failureCount++;
-              this.#logger.warn(
-                `Failed to format command for action '${actionDef.id}' with target '${targetContext.entityId}'`,
-                { formatResult, actionDef, targetContext }
-              );
-              errors.push(
-                this.#createError(
-                  formatResult,
-                  actionDef,
-                  actor.id,
-                  trace,
-                  targetContext.entityId
-                )
-              );
-            }
-          } catch (error) {
-            failureCount++;
-            const targetId =
-              error?.target?.entityId ||
-              error?.entityId ||
-              targetContext.entityId;
-            this.#logger.warn(
-              `Failed to format command for action '${actionDef.id}' with target '${targetId}'`,
-              { error, actionDef, targetContext }
-            );
-            errors.push(
-              this.#createError(
-                error,
-                actionDef,
-                actor.id,
-                trace,
-                null,
-                targetContext.entityId
-              )
-            );
-          }
-        }
-
-        if (successCount > 0) {
-          this.#incrementStat(processingStats, 'successful');
-          this.#incrementStat(processingStats, 'legacy');
-        }
-        if (failureCount > 0) {
-          this.#incrementStat(processingStats, 'failed');
-        }
-
-        const actionEndTime = Date.now();
-        trace.captureActionData('formatting', actionDef.id, {
-          timestamp: actionEndTime,
-          status: failureCount > 0 ? 'partial' : 'completed',
-          formatterMethod: 'format',
-          successCount,
-          failureCount,
-          performance: {
-            duration: actionEndTime - actionStartTime,
-          },
+          formatterOptions,
+          actor,
+          trace,
+          processingStats,
         });
+
+        formattedActions.push(...result.formatted);
+        errors.push(...result.errors);
+        fallbackInvocations += result.fallbackCount;
+
+        // Capture end event (no-op for standard trace)
+        traceAdapter.captureEnd(actionDef, result, actionStartTime);
+      } else {
+        const singleTargetResult = this.#formatSingleTargetAction({
+          actionDef,
+          targetContexts,
+          formatterOptions,
+          actor,
+          trace,
+          processingStats,
+        });
+
+        formattedActions.push(...singleTargetResult.formatted);
+        errors.push(...singleTargetResult.errors);
+
+        // Capture end event (no-op for standard trace)
+        traceAdapter.captureEnd(actionDef, singleTargetResult, actionStartTime);
       }
     }
 
@@ -362,7 +197,7 @@ export class LegacyStrategy {
       traceSource
     );
 
-    const outcome = {
+    return {
       formattedCommands: formattedActions,
       errors,
       fallbackUsed: fallbackInvocations > 0,
@@ -371,10 +206,6 @@ export class LegacyStrategy {
         errors: errors.length,
         fallbackInvocations,
       },
-    };
-
-    return {
-      ...outcome,
       pipelineResult: PipelineResult.success({
         actions: formattedActions,
         errors,
@@ -383,221 +214,407 @@ export class LegacyStrategy {
   }
 
   /**
-   * @param {object} params
-   * @param {import('../../../../../entities/entity.js').default} params.actor
-   * @param {Array<{actionDef: ActionDefinition, targetContexts: ActionTargetContext[]}>} params.actionsWithTargets
-   * @param {import('../../../../tracing/structuredTrace.js').StructuredTrace|import('../../../../tracing/traceContext.js').TraceContext|undefined} params.trace
-   * @param {object} params.formatterOptions
-   * @param {string} params.traceSource
-   * @returns {Promise<{ formattedCommands: Array, errors: Array, fallbackUsed: boolean, statistics: { formatted: number, errors: number, fallbackInvocations: number }, pipelineResult: PipelineResult }>}
-   * @description Formats actions without action-aware tracing.
+   * Creates a trace adapter for polymorphic behavior.
+   * @private
+   * @param {object|undefined} trace - Trace context
+   * @param {object|undefined} processingStats - Statistics accumulator
+   * @returns {object} Adapter with captureStart, captureEnd, and incrementStat methods
+   * @description Returns action-aware adapter or no-op adapter based on trace capabilities.
    */
-  async #formatStandard({
-    actor,
-    actionsWithTargets,
-    trace,
-    formatterOptions,
-    traceSource,
-  }) {
-    const formattedActions = [];
-    const errors = [];
-    let fallbackInvocations = 0;
+  #createTraceAdapter(trace, processingStats) {
+    const isActionAware = trace && typeof trace.captureActionData === 'function';
 
-    for (const { actionDef, targetContexts } of actionsWithTargets) {
-      this.#validateVisualProperties(actionDef.visual, actionDef.id);
-
-      const isMultiTargetAction =
-        actionDef.targets && typeof actionDef.targets === 'object';
-
-      if (isMultiTargetAction) {
-        const actionSpecificTargets = this.#extractTargetsFromContexts(
-          targetContexts,
-          actionDef
-        );
-
-        if (
-          !actionSpecificTargets ||
-          Object.keys(actionSpecificTargets).length === 0
-        ) {
-          this.#logger.warn(
-            `Skipping multi-target action '${actionDef.id}' in legacy formatting path - no resolved targets available for proper formatting`
-          );
-          continue;
-        }
-
-        if (this.#commandFormatter.formatMultiTarget) {
-          const formatResult = this.#commandFormatter.formatMultiTarget(
-            actionDef,
-            actionSpecificTargets,
-            this.#entityManager,
-            formatterOptions,
-            {
-              displayNameFn: this.#getEntityDisplayNameFn,
-              targetDefinitions: actionDef.targets,
-            }
-          );
-
-          if (formatResult.ok) {
-            const commands = Array.isArray(formatResult.value)
-              ? formatResult.value
-              : [formatResult.value];
-
-            for (const commandData of commands) {
-              const command =
-                typeof commandData === 'string'
-                  ? commandData
-                  : commandData.command;
-              const specificTargets =
-                typeof commandData === 'object' && commandData.targets
-                  ? commandData.targets
-                  : actionSpecificTargets;
-
-              const normalizationResult =
-                this.#targetNormalizationService.normalize({
-                  resolvedTargets: specificTargets,
-                  isMultiTarget: true,
-                });
-
-              if (normalizationResult.error) {
-                errors.push(
-                  this.#createError(
-                    normalizationResult.error,
-                    actionDef,
-                    actor.id,
-                    trace
-                  )
-                );
-                continue;
-              }
-
-              const params = {
-                ...normalizationResult.params,
-                isMultiTarget: true,
-              };
-
-              formattedActions.push({
-                id: actionDef.id,
-                name: actionDef.name,
-                command,
-                description: actionDef.description || '',
-                params,
-                visual: actionDef.visual || null,
-              });
-            }
-          } else if (targetContexts.length > 0) {
-            fallbackInvocations += this.#handleFallback({
-              formattedActions,
-              errors,
-              processingStats: undefined,
-              targetContexts,
-              actionDef,
-              formatterOptions,
-              actionSpecificTargets,
-              actorId: actor.id,
-              trace,
-              allowMissingTargetId: false,
-            });
-          }
-        } else if (targetContexts.length > 0) {
-          fallbackInvocations += this.#handleFallback({
-            formattedActions,
-            errors,
-            processingStats: undefined,
-            targetContexts,
-            actionDef,
-            formatterOptions,
-            actionSpecificTargets,
-            actorId: actor.id,
-            trace,
-            allowMissingTargetId: false,
+    if (isActionAware) {
+      return {
+        captureStart: (actionDef, targetContexts, isMultiTarget) => {
+          trace.captureActionData('formatting', actionDef.id, {
+            timestamp: Date.now(),
+            status: 'formatting',
+            formattingPath: 'legacy',
+            isMultiTargetInLegacy: isMultiTarget,
+            targetContextCount: targetContexts.length,
           });
-        }
-      } else {
-        for (const targetContext of targetContexts) {
-          try {
-            const formatResult = this.#commandFormatter.format(
-              actionDef,
-              targetContext,
-              this.#entityManager,
-              formatterOptions,
-              { displayNameFn: this.#getEntityDisplayNameFn }
-            );
-
-            if (formatResult.ok) {
-              formattedActions.push({
-                id: actionDef.id,
-                name: actionDef.name,
-                command: formatResult.value,
-                description: actionDef.description || '',
-                params: { targetId: targetContext.entityId },
-                visual: actionDef.visual || null,
-              });
-            } else {
-              this.#logger.warn(
-                `Failed to format command for action '${actionDef.id}' with target '${targetContext.entityId}'`,
-                { formatResult, actionDef, targetContext }
-              );
-              errors.push(
-                this.#createError(
-                  formatResult,
-                  actionDef,
-                  actor.id,
-                  trace,
-                  targetContext.entityId
-                )
-              );
+        },
+        captureEnd: (actionDef, result, startTime) => {
+          trace.captureActionData('formatting', actionDef.id, {
+            timestamp: Date.now(),
+            status: result.failureCount > 0 ? 'partial' : 'completed',
+            formatterMethod: 'format',
+            successCount: result.successCount || 0,
+            failureCount: result.failureCount || 0,
+            performance: { duration: Date.now() - startTime },
+          });
+        },
+        incrementStat: (processingStats, key) => {
+          if (processingStats && typeof processingStats === 'object') {
+            if (typeof processingStats[key] !== 'number') {
+              processingStats[key] = 0;
             }
-          } catch (error) {
-            const targetId =
-              error?.target?.entityId ||
-              error?.entityId ||
-              targetContext.entityId;
-            this.#logger.warn(
-              `Failed to format command for action '${actionDef.id}' with target '${targetId}'`,
-              { error, actionDef, targetContext }
-            );
-            errors.push(
-              this.#createError(
-                error,
-                actionDef,
-                actor.id,
-                trace,
-                null,
-                targetContext.entityId
-              )
-            );
+            processingStats[key] += 1;
           }
+        },
+      };
+    }
+
+    // No-op adapter for standard trace
+    return {
+      captureStart: () => {},
+      captureEnd: () => {},
+      incrementStat: (processingStats, key) => {
+        if (processingStats && typeof processingStats === 'object') {
+          if (typeof processingStats[key] !== 'number') {
+            processingStats[key] = 0;
+          }
+          processingStats[key] += 1;
         }
+      },
+    };
+  }
+
+  /**
+   * Formats a single target with error handling.
+   * Uses #createError directly (FormattingErrorHandler not yet integrated).
+   *
+   * @private
+   * @param {object} params - Formatting parameters
+   * @param {object} params.actionDef - Action definition
+   * @param {object} params.targetContext - Target context
+   * @param {object} params.formatterOptions - Formatter options
+   * @param {object} params.actor - Actor entity
+   * @param {object} params.trace - Trace object (optional)
+   * @returns {object} Result with success flag and formatted data or error
+   */
+  #formatSingleTarget({
+    actionDef,
+    targetContext,
+    formatterOptions,
+    actor,
+    trace = null,
+  }) {
+    try {
+      const formatResult = this.#commandFormatter.format(
+        actionDef,
+        targetContext,
+        this.#entityManager,
+        formatterOptions,
+        { displayNameFn: this.#getEntityDisplayNameFn }
+      );
+
+      if (formatResult.ok) {
+        return {
+          success: true,
+          formatted: {
+            id: actionDef.id,
+            name: actionDef.name,
+            command: formatResult.value,
+            description: actionDef.description || '',
+            params: { targetId: targetContext.entityId },
+            visual: actionDef.visual || null,
+          },
+        };
+      }
+
+      // Format failure - log and use #createError directly
+      this.#logger.warn(
+        `Failed to format command for action '${actionDef.id}' with target '${targetContext.entityId}'`,
+        { formatResult, actionDef, targetContext }
+      );
+      return {
+        success: false,
+        error: this.#createError(
+          formatResult,
+          actionDef,
+          actor.id,
+          trace,
+          targetContext.entityId
+        ),
+      };
+    } catch (error) {
+      // Exception during formatting - log with target id fallback and create error
+      const targetId =
+        error?.target?.entityId ||
+        error?.entityId ||
+        targetContext.entityId;
+      this.#logger.warn(
+        `Failed to format command for action '${actionDef.id}' with target '${targetId}'`,
+        { error, actionDef, targetContext }
+      );
+
+      return {
+        success: false,
+        error: this.#createError(
+          error,
+          actionDef,
+          actor.id,
+          trace,
+          null,
+          targetContext.entityId
+        ),
+      };
+    }
+  }
+
+  /**
+   * Formats a single-target action with error handling.
+   * Handles iteration over target contexts, error collection, and statistics.
+   *
+   * @private
+   * @param {object} params - Formatting parameters
+   * @param {object} params.actionDef - Action definition
+   * @param {Array} params.targetContexts - Target contexts to format
+   * @param {object} params.formatterOptions - Formatter options
+   * @param {object} params.actor - Actor entity
+   * @param {object} params.trace - Trace object (optional, only in traced mode)
+   * @param {object} params.processingStats - Statistics object (optional, only in traced mode)
+   * @returns {object} Result with formatted actions, errors, counts, and timing
+   */
+  #formatSingleTargetAction({
+    actionDef,
+    targetContexts,
+    formatterOptions,
+    actor,
+    trace = null,
+    processingStats = null,
+  }) {
+    const formatted = [];
+    const errors = [];
+    let successCount = 0;
+    let failureCount = 0;
+    const startTime = Date.now();
+
+    for (const targetContext of targetContexts) {
+      const result = this.#formatSingleTarget({
+        actionDef,
+        targetContext,
+        formatterOptions,
+        actor,
+        trace,
+      });
+
+      if (result.success) {
+        formatted.push(result.formatted);
+        successCount++;
+      } else {
+        errors.push(result.error);
+        failureCount++;
       }
     }
 
-    this.#logger.debug(
-      `Action formatting complete: ${formattedActions.length} actions formatted successfully`
-    );
-
-    trace?.info(
-      `Action formatting completed: ${formattedActions.length} formatted actions, ${errors.length} errors`,
-      traceSource
-    );
-
-    const outcome = {
-      formattedCommands: formattedActions,
-      errors,
-      fallbackUsed: fallbackInvocations > 0,
-      statistics: {
-        formatted: formattedActions.length,
-        errors: errors.length,
-        fallbackInvocations,
-      },
-    };
+    // Statistics only tracked in traced mode
+    if (processingStats) {
+      if (successCount > 0) {
+        this.#incrementStat(processingStats, 'successful');
+        this.#incrementStat(processingStats, 'legacy');
+      }
+      if (failureCount > 0) {
+        this.#incrementStat(processingStats, 'failed');
+      }
+    }
 
     return {
-      ...outcome,
-      pipelineResult: PipelineResult.success({
-        actions: formattedActions,
-        errors,
-      }),
+      formatted,
+      errors,
+      successCount,
+      failureCount,
+      startTime,
     };
+  }
+
+  /**
+   * Formats a multi-target action with proper validation and error handling.
+   * Handles both traced and standard formatting paths.
+   *
+   * @private
+   * @param {object} params - Formatting parameters
+   * @param {ActionDefinition} params.actionDef - Action definition
+   * @param {ActionTargetContext[]} params.targetContexts - Target contexts
+   * @param {object} params.formatterOptions - Formatter options
+   * @param {object} params.actor - Actor entity
+   * @param {object | null} params.trace - Trace object (null for standard path)
+   * @param {object | null} params.processingStats - Statistics object (null for standard path)
+   * @returns {Promise<object>} Result with formatted actions and errors
+   */
+  async #formatMultiTargetAction({
+    actionDef,
+    targetContexts,
+    formatterOptions,
+    actor,
+    trace,
+    processingStats,
+  }) {
+    // Extract targets from contexts
+    const actionSpecificTargets = this.#extractTargetsFromContexts(
+      targetContexts,
+      actionDef
+    );
+
+    // Validate targets exist
+    if (
+      !actionSpecificTargets ||
+      Object.keys(actionSpecificTargets).length === 0
+    ) {
+      this.#logger.warn(
+        `Skipping multi-target action '${actionDef.id}' in legacy formatting path - ` +
+          `no resolved targets available for proper formatting`
+      );
+      return { formatted: [], errors: [], fallbackCount: 0 };
+    }
+
+    // Attempt formatMultiTarget if available
+    if (this.#commandFormatter.formatMultiTarget) {
+      const result = await this.#formatWithMultiTargetFormatter({
+        actionDef,
+        actionSpecificTargets,
+        formatterOptions,
+        actor,
+        trace,
+        processingStats,
+      });
+
+      if (result.success) {
+        return result;
+      }
+    }
+
+    // Fallback formatting for multi-target actions
+    if (targetContexts.length > 0) {
+      const formattedActions = [];
+      const errors = [];
+
+      const actualFallbackCount = this.#handleFallback({
+        formattedActions,
+        errors,
+        processingStats,
+        targetContexts,
+        actionDef,
+        formatterOptions,
+        actionSpecificTargets,
+        actorId: actor.id,
+        trace,
+        allowMissingTargetId:
+          trace && typeof trace.captureActionData === 'function',
+      });
+
+      return {
+        formatted: formattedActions,
+        errors,
+        fallbackCount: actualFallbackCount,
+      };
+    }
+
+    return { formatted: [], errors: [], fallbackCount: 0 };
+  }
+
+  /**
+   * Processes command data from multi-target formatter.
+   * Handles both string commands and object commands with optional targets.
+   *
+   * @private
+   * @param {string|object} commandData - Command string or object with command/targets
+   * @param {object} actionSpecificTargets - Default targets for the action
+   * @returns {{ command: string, targets: object }}
+   * @description Extracts command and determines which targets to use.
+   */
+  #processCommandData(commandData, actionSpecificTargets) {
+    const command =
+      typeof commandData === 'string' ? commandData : commandData.command;
+
+    const specificTargets =
+      typeof commandData === 'object' && commandData.targets
+        ? commandData.targets
+        : actionSpecificTargets;
+
+    return { command, targets: specificTargets };
+  }
+
+  /**
+   * Formats multi-target action using formatMultiTarget formatter.
+   *
+   * @private
+   * @param {object} params - Formatting parameters
+   * @param {ActionDefinition} params.actionDef - Action definition
+   * @param {object} params.actionSpecificTargets - Extracted targets by placeholder
+   * @param {object} params.formatterOptions - Formatter options
+   * @param {object} params.actor - Actor entity
+   * @param {object | null} params.trace - Trace object (null for standard path)
+   * @param {object | null} params.processingStats - Statistics object (null for standard path)
+   * @returns {Promise<object>} Result with success flag, formatted actions, and errors
+   */
+  async #formatWithMultiTargetFormatter({
+    actionDef,
+    actionSpecificTargets,
+    formatterOptions,
+    actor,
+    trace,
+    processingStats,
+  }) {
+    const formatResult = this.#commandFormatter.formatMultiTarget(
+      actionDef,
+      actionSpecificTargets,
+      this.#entityManager,
+      formatterOptions,
+      {
+        displayNameFn: this.#getEntityDisplayNameFn,
+        targetDefinitions: actionDef.targets,
+      }
+    );
+
+    if (!formatResult.ok) {
+      return { success: false };
+    }
+
+    const commands = Array.isArray(formatResult.value)
+      ? formatResult.value
+      : [formatResult.value];
+
+    const formatted = [];
+    const errors = [];
+
+    for (const commandData of commands) {
+      const { command, targets: specificTargets } = this.#processCommandData(
+        commandData,
+        actionSpecificTargets
+      );
+
+      const normalizationResult = this.#targetNormalizationService.normalize({
+        resolvedTargets: specificTargets,
+        isMultiTarget: true,
+      });
+
+      if (normalizationResult.error) {
+        errors.push(
+          this.#createError(
+            normalizationResult.error,
+            actionDef,
+            actor.id,
+            trace
+          )
+        );
+        continue;
+      }
+
+      const params = {
+        ...normalizationResult.params,
+        isMultiTarget: true,
+      };
+
+      formatted.push({
+        id: actionDef.id,
+        name: actionDef.name,
+        command,
+        description: actionDef.description || '',
+        params,
+        visual: actionDef.visual || null,
+      });
+    }
+
+    // Track statistics only in traced mode (when processingStats is provided)
+    if (processingStats) {
+      this.#incrementStat(processingStats, 'successful');
+      this.#incrementStat(processingStats, 'multiTarget');
+    }
+
+    return { success: true, formatted, errors, fallbackCount: 0 };
   }
 
   /**

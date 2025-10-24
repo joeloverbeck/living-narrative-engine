@@ -277,6 +277,14 @@ describe('GameEngineSaveAdapter real integration', () => {
         options: undefined,
       },
       {
+        eventId: 'core:ui_operation_failed',
+        payload: {
+          errorMessage: 'Failed to save game: disk full',
+          errorTitle: 'Save Failed',
+        },
+        options: undefined,
+      },
+      {
         eventId: ENGINE_READY_UI,
         payload: {
           activeWorld: 'Twilight Haven',
@@ -311,6 +319,14 @@ describe('GameEngineSaveAdapter real integration', () => {
         payload: {
           titleMessage: 'Saving...',
           inputDisabledMessage: 'Saving game "Aurora Archive"...',
+        },
+        options: undefined,
+      },
+      {
+        eventId: 'core:ui_operation_failed',
+        payload: {
+          errorMessage: 'Failed to save game: Unexpected error during save: Disk I/O failure',
+          errorTitle: 'Save Failed',
         },
         options: undefined,
       },
