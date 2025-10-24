@@ -128,6 +128,26 @@ describe('TargetComponentValidator', () => {
       });
     });
 
+    describe('actor-only forbidden components', () => {
+      it('should bypass validation when only actor constraints are defined', () => {
+        const actionDef = {
+          id: 'actor-only-action',
+          forbidden_components: {
+            actor: ['core:actor-only'],
+          },
+        };
+
+        const targetEntities = {
+          target: { id: 'target-entity' },
+        };
+
+        const result = validator.validateTargetComponents(actionDef, targetEntities);
+
+        expect(result).toEqual({ valid: true });
+        expect(mockEntityManager.getAllComponentTypesForEntity).not.toHaveBeenCalled();
+      });
+    });
+
     describe('legacy single-target format', () => {
       it('should allow action when target lacks forbidden components', () => {
         const actionDef = {
@@ -358,6 +378,96 @@ describe('TargetComponentValidator', () => {
         const result = validator.validateTargetComponents(actionDef, targetEntities);
 
         expect(result).toEqual({ valid: true });
+      });
+
+      it('should fall back to primary targets when legacy target role is empty', () => {
+        const actionDef = {
+          id: 'legacy-fallback-action',
+          forbidden_components: {
+            actor: ['core:actor-component'],
+            target: ['core:blocked'],
+          },
+        };
+
+        const targetEntities = {
+          primary: { id: 'primary-entity' },
+        };
+
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:safe']);
+
+        const result = validator.validateTargetComponents(actionDef, targetEntities);
+
+        expect(result).toEqual({ valid: true });
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          "Action 'legacy-fallback-action': Using primary targets for legacy 'target' role validation"
+        );
+        expect(mockEntityManager.getAllComponentTypesForEntity).toHaveBeenCalledWith('primary-entity');
+      });
+
+      it('should continue when no entities exist for a role with forbidden components', () => {
+        const actionDef = {
+          id: 'empty-role-action',
+          forbidden_components: {
+            primary: ['core:restricted'],
+            secondary: ['core:blocked'],
+          },
+        };
+
+        const targetEntities = {
+          primary: { id: 'primary-entity' },
+        };
+
+        const validateSpy = jest.spyOn(validator, 'validateEntityComponents');
+
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:safe']);
+
+        const result = validator.validateTargetComponents(actionDef, targetEntities);
+
+        expect(result).toEqual({ valid: true });
+        expect(validateSpy).toHaveBeenCalledTimes(1);
+      });
+
+      it('should skip validation when a role has an empty candidate array', () => {
+        const actionDef = {
+          id: 'empty-array-action',
+          forbidden_components: {
+            primary: ['core:restricted'],
+          },
+        };
+
+        const targetEntities = {
+          primary: [],
+        };
+
+        const validateSpy = jest.spyOn(validator, 'validateEntityComponents');
+
+        const result = validator.validateTargetComponents(actionDef, targetEntities);
+
+        expect(result).toEqual({ valid: true });
+        expect(validateSpy).not.toHaveBeenCalled();
+      });
+
+      it('should ignore candidates without entities and continue validation', () => {
+        const actionDef = {
+          id: 'null-candidate-action',
+          forbidden_components: {
+            primary: ['core:restricted'],
+          },
+        };
+
+        const targetEntities = {
+          primary: [null, { id: 'valid-entity' }],
+        };
+
+        const validateSpy = jest.spyOn(validator, 'validateEntityComponents');
+
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:safe']);
+
+        const result = validator.validateTargetComponents(actionDef, targetEntities);
+
+        expect(result).toEqual({ valid: true });
+        expect(validateSpy).toHaveBeenCalledTimes(1);
+        expect(mockEntityManager.getAllComponentTypesForEntity).toHaveBeenCalledWith('valid-entity');
       });
     });
 
