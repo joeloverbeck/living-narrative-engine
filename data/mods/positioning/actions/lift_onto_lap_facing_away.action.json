@@ -15,6 +15,7 @@
     "primary": ["positioning:sitting_on", "positioning:closeness"]
   },
   "forbidden_components": {
+    "actor": ["positioning:giving_blowjob"],
     "primary": ["positioning:straddling_waist"]
   },
   "template": "lift {primary} onto your lap (facing away)",

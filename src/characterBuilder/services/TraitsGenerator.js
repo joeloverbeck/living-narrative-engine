@@ -25,6 +25,7 @@ import { TraitsGenerationError } from '../errors/TraitsGenerationError.js';
  * @typedef {import('../../llms/interfaces/ILLMConfigurationManager.js').ILLMConfigurationManager} ILLMConfigurationManager
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  * @typedef {import('../../llms/interfaces/ITokenEstimator.js').ITokenEstimator} ITokenEstimator
+ * @typedef {import('../../interfaces/IRetryManager.js').IRetryManager} IRetryManager
  */
 
 /**
@@ -41,6 +42,7 @@ export class TraitsGenerator {
   #llmConfigManager;
   #eventBus;
   #tokenEstimator;
+  #retryManager;
 
   /**
    * Create a new TraitsGenerator instance
@@ -52,6 +54,7 @@ export class TraitsGenerator {
    * @param {ILLMConfigurationManager} dependencies.llmConfigManager - LLM configuration manager
    * @param {ISafeEventDispatcher} dependencies.eventBus - Event bus for dispatching events
    * @param {ITokenEstimator} [dependencies.tokenEstimator] - Token estimation service (optional)
+   * @param {IRetryManager} dependencies.retryManager - Retry manager for exponential backoff
    */
   constructor({
     logger,
@@ -60,6 +63,7 @@ export class TraitsGenerator {
     llmConfigManager,
     eventBus,
     tokenEstimator,
+    retryManager,
   }) {
     validateDependency(logger, 'ILogger', null, {
       requiredMethods: ['debug', 'info', 'warn', 'error'],
@@ -88,12 +92,17 @@ export class TraitsGenerator {
       });
     }
 
+    validateDependency(retryManager, 'IRetryManager', null, {
+      requiredMethods: ['retry'],
+    });
+
     this.#logger = logger;
     this.#llmJsonService = llmJsonService;
     this.#llmStrategyFactory = llmStrategyFactory;
     this.#llmConfigManager = llmConfigManager;
     this.#eventBus = eventBus;
     this.#tokenEstimator = tokenEstimator;
+    this.#retryManager = retryManager;
   }
 
   /**
@@ -405,11 +414,10 @@ export class TraitsGenerator {
    * @private
    */
   async #generateWithRetry(params, maxRetries = 2) {
-    let lastError;
     let attemptCount = 0;
 
-    for (let attempt = 1; attempt <= maxRetries + 1; attempt++) {
-      attemptCount = attempt;
+    const operation = async () => {
+      attemptCount++;
 
       try {
         // Build the prompt
@@ -424,7 +432,7 @@ export class TraitsGenerator {
           promptLength: prompt.length,
           conceptId: params.concept.id,
           directionId: params.direction.id,
-          attempt,
+          attempt: attemptCount,
           maxRetries,
         });
 
@@ -439,68 +447,65 @@ export class TraitsGenerator {
         this.#logger.debug('TraitsGenerator: Generation succeeded', {
           conceptId: params.concept.id,
           directionId: params.direction.id,
-          attempt,
+          attempt: attemptCount,
         });
 
         return parsedResponse;
       } catch (error) {
-        lastError = error;
-
-        if (attempt <= maxRetries) {
-          // Calculate exponential backoff delay (1s, 2s, 4s, ...)
-          const delayMs = Math.pow(2, attempt) * 1000;
-
-          this.#logger.warn(
-            `TraitsGenerator: Attempt ${attempt} failed, retrying in ${delayMs}ms`,
-            {
-              error: error.message,
-              attempt,
-              maxRetries,
-              conceptId: params.concept.id,
-              directionId: params.direction.id,
-              delayMs,
-            }
-          );
-
-          // Wait before retry
-          await new Promise((resolve) => setTimeout(resolve, delayMs));
-        } else {
-          this.#logger.error('TraitsGenerator: All retry attempts exhausted', {
-            totalAttempts: attempt,
-            maxRetries,
-            conceptId: params.concept.id,
-            directionId: params.direction.id,
-            finalError: error.message,
-          });
-        }
-      }
-    }
-
-    // All attempts failed, throw the last error
-    if (lastError instanceof TraitsGenerationError) {
-      // Add retry context to existing error
-      throw new TraitsGenerationError(
-        `${lastError.message} (after ${attemptCount} attempts)`,
-        {
-          ...lastError.context,
-          totalAttempts: attemptCount,
+        this.#logger.warn(`TraitsGenerator: Attempt ${attemptCount} failed`, {
+          error: error.message,
+          attempt: attemptCount,
           maxRetries,
-        },
-        lastError.cause
-      );
-    }
+          conceptId: params.concept.id,
+          directionId: params.direction.id,
+        });
+        throw error; // Let RetryManager handle retry logic
+      }
+    };
 
-    throw new TraitsGenerationError(
-      `Generation failed after ${attemptCount} attempts: ${lastError.message}`,
-      {
-        conceptId: params.concept.id,
-        directionId: params.direction.id,
+    try {
+      // Delegate retry logic to injected RetryManager
+      return await this.#retryManager.retry(operation, {
+        maxAttempts: maxRetries + 1,
+        delay: 1000,
+        exponentialBackoff: true,
+        maxDelay: 30000,
+      });
+    } catch (error) {
+      this.#logger.error('TraitsGenerator: All retry attempts exhausted', {
         totalAttempts: attemptCount,
         maxRetries,
-        stage: 'retry_exhausted',
-      },
-      lastError
-    );
+        conceptId: params.concept.id,
+        directionId: params.direction.id,
+        finalError: error.message,
+      });
+
+      // All attempts failed, throw the last error
+      if (error instanceof TraitsGenerationError) {
+        // Add retry context to existing error
+        throw new TraitsGenerationError(
+          `${error.message} (after ${attemptCount} attempts)`,
+          {
+            ...error.context,
+            totalAttempts: attemptCount,
+            maxRetries,
+          },
+          error.cause
+        );
+      }
+
+      throw new TraitsGenerationError(
+        `Generation failed after ${attemptCount} attempts: ${error.message}`,
+        {
+          conceptId: params.concept.id,
+          directionId: params.direction.id,
+          totalAttempts: attemptCount,
+          maxRetries,
+          stage: 'retry_exhausted',
+        },
+        error
+      );
+    }
   }
 
   /**

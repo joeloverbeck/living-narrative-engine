@@ -6,6 +6,7 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { TraitsGenerator } from '../../../../src/characterBuilder/services/TraitsGenerator.js';
+import { NoDelayRetryManager } from '../../../common/mocks/noDelayRetryManager.js';
 
 // Shared mock response object to eliminate duplication
 const MOCK_PARSED_RESPONSE = {
@@ -171,6 +172,7 @@ describe('TraitsGenerator - Null Cliches Reproduction', () => {
       llmConfigManager: createMockLlmConfigManager(),
       eventBus: createMockEventBus(),
       tokenEstimator: createMockTokenEstimator(),
+      retryManager: new NoDelayRetryManager(),
     };
   });
 

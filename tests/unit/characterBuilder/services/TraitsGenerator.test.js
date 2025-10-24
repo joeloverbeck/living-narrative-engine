@@ -13,6 +13,7 @@ import {
 } from '@jest/globals';
 import { TraitsGenerator } from '../../../../src/characterBuilder/services/TraitsGenerator.js';
 import { TraitsGenerationError } from '../../../../src/characterBuilder/errors/TraitsGenerationError.js';
+import { NoDelayRetryManager } from '../../../common/mocks/noDelayRetryManager.js';
 
 // Mock the prompt functions to prevent real implementation calls that can cause timeouts
 jest.mock(
@@ -255,6 +256,7 @@ describe('TraitsGenerator', () => {
       llmConfigManager: mockLlmConfigManager,
       eventBus: mockEventBus,
       tokenEstimator: mockTokenEstimator,
+      retryManager: new NoDelayRetryManager(),
     });
   });
 
@@ -274,6 +276,7 @@ describe('TraitsGenerator', () => {
         llmStrategyFactory: mockLlmStrategyFactory,
         llmConfigManager: mockLlmConfigManager,
         eventBus: mockEventBus,
+        retryManager: new NoDelayRetryManager(),
         // tokenEstimator not provided
       });
 
@@ -740,6 +743,7 @@ describe('TraitsGenerator', () => {
         llmStrategyFactory: mockLlmStrategyFactory,
         llmConfigManager: mockLlmConfigManager,
         eventBus: mockEventBus,
+        retryManager: new NoDelayRetryManager(),
         // no tokenEstimator
       });
 

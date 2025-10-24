@@ -9,6 +9,7 @@
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
+import { actionTracingTokens } from '../tokens/actionTracingTokens.js';
 import { Registrar } from '../../utils/registrarHelpers.js';
 
 // --- Character Builder Service Imports ---
@@ -120,6 +121,7 @@ function registerCharacterBuilderServices(registrar, logger) {
       llmConfigManager: c.resolve(tokens.ILLMConfigurationManager),
       eventBus: c.resolve(tokens.ISafeEventDispatcher),
       tokenEstimator: c.resolve(tokens.ITokenEstimator),
+      retryManager: c.resolve(actionTracingTokens.IRetryManager),
     });
   });
   logger.debug(
