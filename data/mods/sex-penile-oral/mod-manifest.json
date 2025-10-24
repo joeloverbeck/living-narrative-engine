@@ -7,6 +7,7 @@
     "actions": [
       "breathe_teasingly_on_penis.action.json",
       "breathe_teasingly_on_penis_sitting_close.action.json",
+      "ejaculate_in_mouth.action.json",
       "lick_glans.action.json",
       "lick_glans_sitting_close.action.json",
       "lick_testicles_sensually.action.json",
@@ -16,6 +17,7 @@
       "pull_head_to_bare_penis.action.json",
       "pull_head_to_clothed_crotch.action.json",
       "pull_penis_out_of_mouth.action.json",
+      "suck_penis_hard.action.json",
       "suck_penis_slowly.action.json",
       "suckle_testicle.action.json",
       "suckle_testicle_sitting_close.action.json",
@@ -25,6 +27,7 @@
     "conditions": [
       "event-is-action-breathe-teasingly-on-penis-sitting-close.condition.json",
       "event-is-action-breathe-teasingly-on-penis.condition.json",
+      "event-is-action-ejaculate-in-mouth.condition.json",
       "event-is-action-lick-glans-sitting-close.condition.json",
       "event-is-action-lick-glans.condition.json",
       "event-is-action-lick-testicles-sensually.condition.json",
@@ -34,6 +37,7 @@
       "event-is-action-pull-head-to-bare-penis.condition.json",
       "event-is-action-pull-head-to-clothed-crotch.condition.json",
       "event-is-action-pull-penis-out-of-mouth.condition.json",
+      "event-is-action-suck-penis-hard.condition.json",
       "event-is-action-suck-penis-slowly.condition.json",
       "event-is-action-suckle-testicle-sitting-close.condition.json",
       "event-is-action-suckle-testicle.condition.json",
@@ -43,6 +47,7 @@
     "rules": [
       "handle_breathe_teasingly_on_penis.rule.json",
       "handle_breathe_teasingly_on_penis_sitting_close.rule.json",
+      "handle_ejaculate_in_mouth.rule.json",
       "handle_lick_glans.rule.json",
       "handle_lick_glans_sitting_close.rule.json",
       "handle_lick_testicles_sensually.rule.json",
@@ -52,6 +57,7 @@
       "handle_pull_head_to_bare_penis.rule.json",
       "handle_pull_head_to_clothed_crotch.rule.json",
       "handle_pull_penis_out_of_mouth.rule.json",
+      "handle_suck_penis_hard.rule.json",
       "handle_suck_penis_slowly.rule.json",
       "handle_suckle_testicle.rule.json",
       "handle_suckle_testicle_sitting_close.rule.json",
