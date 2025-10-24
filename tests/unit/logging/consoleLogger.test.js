@@ -44,7 +44,9 @@ describe('ConsoleLogger', () => {
       expect.stringContaining('Log level changing from INFO to DEBUG')
     );
     expect(consoleSpies.debug).toHaveBeenCalledWith(
-      expect.stringContaining('[ConsoleLogger] Initialized. Log level set to DEBUG (0).')
+      expect.stringContaining(
+        '[ConsoleLogger] Initialized. Log level set to DEBUG (0).'
+      )
     );
   });
 
@@ -130,6 +132,31 @@ describe('ConsoleLogger', () => {
 
     logger.error('error message');
     expect(consoleSpies.error).toHaveBeenCalledWith('error message');
+  });
+
+  it('treats [DEBUG]-tagged messages as debug-level output', () => {
+    const infoLogger = new ConsoleLogger(LogLevel.INFO);
+    jest.clearAllMocks();
+
+    infoLogger.info('[DEBUG] should be hidden');
+    infoLogger.warn('   [DEBUG] also hidden');
+    infoLogger.error('\t[DEBUG]\t suppressed');
+
+    expect(consoleSpies.info).not.toHaveBeenCalled();
+    expect(consoleSpies.warn).not.toHaveBeenCalled();
+    expect(consoleSpies.error).not.toHaveBeenCalled();
+    expect(consoleSpies.debug).not.toHaveBeenCalled();
+
+    const debugLogger = new ConsoleLogger(LogLevel.DEBUG);
+    jest.clearAllMocks();
+
+    debugLogger.info('[DEBUG] promoted to debug', 'extra');
+
+    expect(consoleSpies.info).not.toHaveBeenCalled();
+    expect(consoleSpies.debug).toHaveBeenCalledWith(
+      'promoted to debug',
+      'extra'
+    );
   });
 
   it('only emits group and table calls when debug logging is enabled', () => {
