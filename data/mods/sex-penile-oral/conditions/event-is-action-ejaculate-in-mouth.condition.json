@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex-penile-oral:event-is-action-ejaculate-in-mouth",
+  "description": "Validates that the current event is an attempt_action event for the ejaculate_in_mouth action",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "sex-penile-oral:ejaculate_in_mouth"
+    ]
+  }
+}

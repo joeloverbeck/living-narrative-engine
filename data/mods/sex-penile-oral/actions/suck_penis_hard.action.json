@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-penile-oral:suck_penis_hard",
+  "name": "Suck Penis Hard",
+  "description": "Suck your partner's penis hard with intense suction, intending to bring them to climax during ongoing oral sex.",
+  "targets": {
+    "primary": {
+      "scope": "sex-penile-oral:receiving_blowjob_from_actor",
+      "placeholder": "primary",
+      "description": "Partner whose penis you are currently sucking hard to draw out their cum"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:giving_blowjob", "positioning:closeness"]
+  },
+  "forbidden_components": {},
+  "template": "suck {primary}'s cock hard",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#2a1a5e",
+    "textColor": "#ede7f6",
+    "hoverBackgroundColor": "#372483",
+    "hoverTextColor": "#ffffff"
+  }
+}
