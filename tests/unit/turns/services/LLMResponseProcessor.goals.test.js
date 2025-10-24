@@ -37,7 +37,10 @@ describe('LLMResponseProcessor – Handling of disallowed properties', () => {
       isSchemaLoaded: jest.fn(() => true),
     };
 
-    safeEventDispatcher = { dispatch: jest.fn() };
+    // By default, the safe dispatcher resolves `true` on success. Reflect that
+    // real behavior here so we do not trigger the warning path in
+    // `safeDispatchError` simply because the mock returned `undefined`.
+    safeEventDispatcher = { dispatch: jest.fn(() => true) };
     processor = new LLMResponseProcessor({
       schemaValidator: mockSchemaValidator,
       logger: mockLogger,
