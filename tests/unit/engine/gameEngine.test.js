@@ -4,6 +4,7 @@ import { describe, expect, it, beforeEach } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import {
   ENGINE_INITIALIZING_UI,
+  ENGINE_OPERATION_FAILED_UI,
   ENGINE_STOPPED_UI,
   REQUEST_SHOW_SAVE_GAME_UI,
   REQUEST_SHOW_LOAD_GAME_UI,
@@ -166,6 +167,28 @@ describeEngineSuite('GameEngine', (context) => {
         expect.stringContaining('Overall catch in startNewGame'),
         expect.any(Error)
       );
+    });
+
+    it('should not dispatch failure UI twice when initialization returns a string error', async () => {
+      const initError = 'Initialization failed due to string error';
+      context.bed
+        .getInitializationService()
+        .runInitializationSequence.mockResolvedValue({
+          success: false,
+          error: initError,
+        });
+
+      await expect(
+        context.engine.startNewGame(DEFAULT_TEST_WORLD)
+      ).rejects.toThrow(initError);
+
+      const failureDispatches = context.bed
+        .getSafeEventDispatcher()
+        .dispatch.mock.calls.filter(
+          ([eventName]) => eventName === ENGINE_OPERATION_FAILED_UI
+        );
+
+      expect(failureDispatches).toHaveLength(1);
     });
   });
 
