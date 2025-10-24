@@ -6,6 +6,7 @@
 
 // Mock FileTraceOutputHandler module
 let mockFileOutputHandler;
+let mockFileOutputHandlerInstance;
 jest.mock('../../../../src/actions/tracing/fileTraceOutputHandler.js', () => {
   // Return a class constructor that creates the mock instance
   return class MockFileTraceOutputHandler {
@@ -18,6 +19,7 @@ jest.mock('../../../../src/actions/tracing/fileTraceOutputHandler.js', () => {
       };
       // Copy methods to this instance
       Object.assign(this, mockFileOutputHandler);
+      mockFileOutputHandlerInstance = this;
     }
   };
 });
@@ -71,6 +73,7 @@ describe('ActionTraceOutputService - Additional Coverage Tests', () => {
     mockStorageAdapter = createMockStorageAdapter();
     mockTimerService = createMockTimerService();
     mockFileOutputHandler = undefined;
+    mockFileOutputHandlerInstance = undefined;
     mockTraceQueueProcessor = undefined;
     mockStorageRotationManager = undefined;
   });
@@ -707,6 +710,386 @@ describe('ActionTraceOutputService - Additional Coverage Tests', () => {
 
       // Should complete immediately without logging
       expect(mockLogger.info).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Queue resilience and rotation coverage', () => {
+    it('should log rotation errors when forceRotation rejects for oversized storage', async () => {
+      const oversizedTraces = Array.from({ length: 120 }, (_, index) => ({
+        id: `existing-${index}`,
+      }));
+
+      // Override splice so the array stays oversized and triggers rotation logic
+      oversizedTraces.splice = jest.fn().mockImplementation(() => []);
+
+      const rotationError = new Error('rotation failed');
+      let rotationManagerInstance;
+
+      mockStorageRotationManager = class MockRotationManager {
+        constructor() {
+          rotationManagerInstance = this;
+          this.forceRotation = jest.fn().mockRejectedValue(rotationError);
+          this.getStatistics = jest.fn();
+          this.shutdown = jest.fn();
+        }
+      };
+
+      const storageAdapter = {
+        getItem: jest.fn().mockResolvedValue(oversizedTraces),
+        setItem: jest.fn().mockResolvedValue(undefined),
+        removeItem: jest.fn(),
+        getAllKeys: jest.fn(),
+      };
+
+      const service = new ActionTraceOutputService({
+        logger: mockLogger,
+        storageAdapter,
+        timerService: createMockTimerService(),
+      });
+
+      const trace = {
+        actionId: 'rotation:test',
+        actorId: 'actor-1',
+        toJSON: jest.fn().mockReturnValue({ actionId: 'rotation:test' }),
+      };
+
+      await service.writeTrace(trace);
+
+      // Allow the queued write to process
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(rotationManagerInstance.forceRotation).toHaveBeenCalled();
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Background rotation failed',
+        rotationError
+      );
+    });
+  });
+
+  describe('File operation completion waiting', () => {
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should warn when file handler queue never empties', async () => {
+      jest.useFakeTimers();
+
+      const service = new ActionTraceOutputService({
+        logger: mockLogger,
+        outputToFiles: true,
+      });
+
+      if (mockFileOutputHandler) {
+        const queueCheck = jest.fn().mockReturnValue(false);
+        mockFileOutputHandler.isQueueEmpty = queueCheck;
+        if (mockFileOutputHandlerInstance) {
+          mockFileOutputHandlerInstance.isQueueEmpty = queueCheck;
+        }
+      }
+
+      const waitPromise = service.waitForFileOperations();
+
+      await jest.advanceTimersByTimeAsync(5000);
+      await waitPromise;
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'File operations may not have completed within timeout'
+      );
+    });
+
+    it('should log debug when file handler queue drains successfully', async () => {
+      const service = new ActionTraceOutputService({
+        logger: mockLogger,
+        outputToFiles: true,
+      });
+
+      if (mockFileOutputHandler) {
+        const queueCheck = jest
+          .fn()
+          .mockReturnValueOnce(false)
+          .mockReturnValue(true);
+        mockFileOutputHandler.isQueueEmpty = queueCheck;
+        if (mockFileOutputHandlerInstance) {
+          mockFileOutputHandlerInstance.isQueueEmpty = queueCheck;
+        }
+      }
+
+      const waitPromise = service.waitForFileOperations();
+
+      await waitPromise;
+
+      expect(mockLogger.debug.mock.calls).toEqual(
+        expect.arrayContaining([['File operations completed successfully']])
+      );
+    });
+  });
+
+  describe('File system export fallbacks', () => {
+    let originalWindow;
+    let originalShowDirectoryPicker;
+
+    beforeEach(() => {
+      originalWindow = global.window;
+      originalShowDirectoryPicker =
+        originalWindow?.showDirectoryPicker || undefined;
+      if (originalWindow) {
+        originalWindow.showDirectoryPicker = jest
+          .fn()
+          .mockResolvedValue({ name: 'root' });
+      }
+    });
+
+    afterEach(() => {
+      if (originalWindow) {
+        originalWindow.showDirectoryPicker = originalShowDirectoryPicker;
+      } else {
+        global.window = originalWindow;
+      }
+    });
+
+    it('should handle missing storage adapter during file system export', async () => {
+      const fakeWritable = {
+        write: jest.fn().mockResolvedValue(undefined),
+        close: jest.fn().mockResolvedValue(undefined),
+      };
+
+      const fakeExportDirectory = {
+        getFileHandle: jest.fn().mockResolvedValue({
+          createWritable: jest.fn().mockResolvedValue(fakeWritable),
+        }),
+      };
+
+      const traceDirectoryManager = {
+        selectDirectory: jest.fn().mockResolvedValue({ name: 'base' }),
+        ensureSubdirectoryExists: jest
+          .fn()
+          .mockResolvedValue(fakeExportDirectory),
+      };
+
+      const service = new ActionTraceOutputService({
+        logger: mockLogger,
+        traceDirectoryManager,
+      });
+
+      const result = await service.exportTracesToFileSystem();
+
+      expect(result.success).toBe(false);
+      expect(result.reason).toBe('No traces found to export');
+      expect(traceDirectoryManager.selectDirectory).toHaveBeenCalled();
+    });
+
+    it('should fall back when JSON formatter fails during file export', async () => {
+      const fakeWritable = {
+        write: jest.fn().mockResolvedValue(undefined),
+        close: jest.fn().mockResolvedValue(undefined),
+      };
+
+      const fakeExportDirectory = {
+        getFileHandle: jest.fn().mockResolvedValue({
+          createWritable: jest.fn().mockResolvedValue(fakeWritable),
+        }),
+      };
+
+      const traceDirectoryManager = {
+        selectDirectory: jest.fn().mockResolvedValue({ name: 'base' }),
+        ensureSubdirectoryExists: jest
+          .fn()
+          .mockResolvedValue(fakeExportDirectory),
+      };
+
+      const failingFormatter = {
+        format: jest.fn().mockImplementation(() => {
+          throw new Error('json export failure');
+        }),
+      };
+
+      const storageAdapter = createMockStorageAdapter();
+      storageAdapter.getItem.mockResolvedValue([
+        {
+          id: 'export-1',
+          timestamp: Date.now(),
+          data: { actionType: 'test' },
+        },
+      ]);
+
+      const service = new ActionTraceOutputService({
+        logger: mockLogger,
+        storageAdapter,
+        jsonFormatter: failingFormatter,
+        traceDirectoryManager,
+      });
+
+      const result = await service.exportTracesToFileSystem(null, 'json');
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Failed to use JSON formatter, falling back',
+        expect.any(Error)
+      );
+      expect(result.success).toBe(true);
+      expect(fakeExportDirectory.getFileHandle).toHaveBeenCalled();
+    });
+
+    it('should recover when human-readable formatter fails during text export', async () => {
+      const fakeWritable = {
+        write: jest.fn().mockResolvedValue(undefined),
+        close: jest.fn().mockResolvedValue(undefined),
+      };
+
+      const fakeExportDirectory = {
+        getFileHandle: jest.fn().mockResolvedValue({
+          createWritable: jest.fn().mockResolvedValue(fakeWritable),
+        }),
+      };
+
+      const traceDirectoryManager = {
+        selectDirectory: jest.fn().mockResolvedValue({ name: 'base' }),
+        ensureSubdirectoryExists: jest
+          .fn()
+          .mockResolvedValue(fakeExportDirectory),
+      };
+
+      const failingFormatter = {
+        format: jest.fn().mockImplementation(() => {
+          throw new Error('text export failure');
+        }),
+      };
+
+      const storageAdapter = createMockStorageAdapter();
+      storageAdapter.getItem.mockResolvedValue([
+        {
+          id: 'export-2',
+          timestamp: Date.now(),
+          data: { actionType: 'test' },
+        },
+      ]);
+
+      const service = new ActionTraceOutputService({
+        logger: mockLogger,
+        storageAdapter,
+        humanReadableFormatter: failingFormatter,
+        traceDirectoryManager,
+      });
+
+      const result = await service.exportTracesToFileSystem(null, 'text');
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Failed to use human-readable formatter, falling back',
+        expect.any(Error)
+      );
+      expect(result.success).toBe(true);
+      expect(fakeExportDirectory.getFileHandle).toHaveBeenCalled();
+    });
+  });
+
+  describe('Structured trace metrics coverage', () => {
+    it('should calculate total duration based on stage timestamps', async () => {
+      const service = new ActionTraceOutputService({
+        logger: mockLogger,
+        outputToFiles: true,
+      });
+
+      const trace = {
+        getTracedActions: jest.fn().mockReturnValue(
+          new Map([
+            [
+              'action:duration',
+              {
+                actorId: 'actor-123',
+                stages: {
+                  start: { timestamp: 1000 },
+                  middle: { timestamp: 1600 },
+                  end: { timestamp: 1900 },
+                },
+              },
+            ],
+          ])
+        ),
+        getSpans: jest.fn().mockReturnValue([]),
+      };
+
+      if (mockFileOutputHandler) {
+        mockFileOutputHandler.writeTrace.mockResolvedValue(true);
+      }
+
+      await service.writeTrace(trace);
+
+      const callArgs = mockFileOutputHandler.writeTrace.mock.calls[0][0];
+      const parsedData =
+        typeof callArgs === 'string' ? JSON.parse(callArgs) : callArgs;
+
+      expect(parsedData.actions['action:duration'].totalDuration).toBe(900);
+    });
+  });
+
+  describe('Shutdown pending write handling', () => {
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should wait on pending writes during shutdown using Promise.race', async () => {
+      jest.useFakeTimers();
+
+      let resolveWrite;
+      const customOutputHandler = jest.fn().mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveWrite = resolve;
+          })
+      );
+
+      const service = new ActionTraceOutputService({
+        logger: mockLogger,
+        outputHandler: customOutputHandler,
+      });
+
+      const trace = {
+        actionId: 'pending:shutdown',
+        actorId: 'actor',
+        toJSON: jest.fn().mockReturnValue({ actionId: 'pending:shutdown' }),
+      };
+
+      const writePromise = service.writeTrace(trace);
+
+      await Promise.resolve();
+
+      const waitSpy = jest.spyOn(service, 'waitForPendingWrites');
+
+      const shutdownPromise = service.shutdown();
+
+      jest.advanceTimersByTime(500);
+      resolveWrite();
+
+      await writePromise;
+      await shutdownPromise;
+
+      expect(waitSpy).toHaveBeenCalled();
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'ActionTraceOutputService: Shutdown complete'
+      );
+    });
+  });
+
+  describe('Dynamic file output configuration', () => {
+    it('should reuse existing file handler when enabling file output again', () => {
+      const service = new ActionTraceOutputService({
+        logger: mockLogger,
+        outputToFiles: true,
+      });
+
+      if (mockFileOutputHandler) {
+        mockFileOutputHandler.setOutputDirectory.mockClear();
+      }
+
+      const result = service.enableFileOutput('./alt-traces');
+
+      expect(result).toBe(true);
+      expect(mockFileOutputHandler.setOutputDirectory).toHaveBeenCalledWith(
+        './alt-traces'
+      );
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'ActionTraceOutputService: File output mode enabled',
+        expect.objectContaining({ outputDirectory: './alt-traces' })
+      );
     });
   });
 });
