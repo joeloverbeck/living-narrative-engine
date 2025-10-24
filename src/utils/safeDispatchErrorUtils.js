@@ -130,7 +130,18 @@ export async function safeDispatchError(
  * @returns {{ ok: false, error: string, details?: object }} Result object for validation failures.
  */
 export function dispatchValidationError(dispatcher, message, details, logger) {
-  safeDispatchError(dispatcher, message, details, logger);
+  const log = ensureValidLogger(logger, 'dispatchValidationError');
+  const hasDispatch = dispatcher && typeof dispatcher.dispatch === 'function';
+  if (!hasDispatch) {
+    const errorMsg =
+      "Invalid or missing method 'dispatch' on dependency 'dispatchValidationError: dispatcher'.";
+    log.error(errorMsg);
+    throw new InvalidDispatcherError(errorMsg, {
+      functionName: 'dispatchValidationError',
+    });
+  }
+
+  safeDispatchError(dispatcher, message, details, log);
   return details !== undefined
     ? { ok: false, error: message, details }
     : { ok: false, error: message };

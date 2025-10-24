@@ -147,6 +147,22 @@ describe('dispatchValidationError', () => {
     });
     expect(result).toEqual({ ok: false, error: 'oops' });
   });
+
+  it('throws when dispatcher is invalid', () => {
+    const logger = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+    };
+
+    expect(() =>
+      dispatchValidationError(null, 'oopsie', undefined, logger)
+    ).toThrow(InvalidDispatcherError);
+    expect(logger.error).toHaveBeenCalledWith(
+      "Invalid or missing method 'dispatch' on dependency 'dispatchValidationError: dispatcher'."
+    );
+  });
 });
 
 describe('additional coverage', () => {
