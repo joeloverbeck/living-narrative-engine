@@ -124,9 +124,11 @@ export function getPrefixedLogger(logger, prefix) {
  * @returns {import("../interfaces/coreServices.js").ILogger} Logger instance that prefixes messages with `prefix`.
  */
 export function setupPrefixedLogger(logger, prefix) {
-  const name = (prefix || '').replace(/[:\s]+$/, '');
-  const validated = initLogger(name, logger);
-  return createPrefixedLogger(validated, prefix || '');
+  const sanitizedPrefix = typeof prefix === 'string' ? prefix : '';
+  const serviceName = sanitizedPrefix.replace(/[:\s]+$/, '');
+  const initOptions = logger == null ? { optional: true } : undefined;
+  const validated = initLogger(serviceName, logger, initOptions);
+  return createPrefixedLogger(validated, sanitizedPrefix);
 }
 
 /**
