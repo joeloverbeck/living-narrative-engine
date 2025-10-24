@@ -244,6 +244,122 @@ describe('ViolationReporter', () => {
 
       severitySpy.mockRestore();
     });
+
+    it('delegates file existence validation results to the specialized reporter', () => {
+      const fileExistenceResults = new Map([
+        [
+          'example_mod',
+          {
+            modId: 'example_mod',
+            isValid: false,
+            missingFiles: [],
+            namingIssues: [],
+          },
+        ],
+      ]);
+      const options = { verbose: true };
+      const originalImplementation = reporter._generateFileExistenceReport.bind(
+        reporter
+      );
+      const fileReportSpy = jest
+        .spyOn(reporter, '_generateFileExistenceReport')
+        .mockImplementation(originalImplementation);
+
+      const wrapper = { fileExistence: fileExistenceResults };
+      const result = reporter.generateReport(wrapper, 'console', options);
+
+      expect(fileReportSpy).toHaveBeenCalledTimes(1);
+      expect(fileReportSpy).toHaveBeenCalledWith(fileExistenceResults, options);
+      expect(result).toContain(
+        'Living Narrative Engine - File Existence Validation Report'
+      );
+
+      fileReportSpy.mockRestore();
+    });
+
+    it('summarizes missing files and naming mismatches for invalid mods', () => {
+      const fileExistenceResults = new Map([
+        [
+          'valid_mod',
+          {
+            modId: 'valid_mod',
+            isValid: true,
+            missingFiles: [],
+            namingIssues: [],
+          },
+        ],
+        [
+          'problem_mod',
+          {
+            modId: 'problem_mod',
+            isValid: false,
+            missingFiles: [
+              { category: 'rules', file: 'missing.rule.json' },
+              { category: 'stories', file: 'absent.story.json' },
+            ],
+            namingIssues: [
+              {
+                category: 'events',
+                manifestRef: 'bad_event',
+                actualFile: 'bad-event',
+              },
+            ],
+          },
+        ],
+      ]);
+
+      const output = reporter.generateReport(
+        { fileExistence: fileExistenceResults },
+        'console'
+      );
+
+      expect(output).toContain(
+        'Living Narrative Engine - File Existence Validation Report'
+      );
+      expect(output).toContain('❌ Found 3 issues in 1 mod(s):');
+      expect(output).toContain('   - 2 missing files');
+      expect(output).toContain('   - 1 naming convention mismatches');
+      expect(output).toContain('📦 Mod: problem_mod');
+      expect(output).toContain('❌ Missing files:');
+      expect(output).toContain('- rules/missing.rule.json');
+      expect(output).toContain('- stories/absent.story.json');
+      expect(output).toContain('⚠️  Naming mismatches (underscore vs hyphen):');
+      expect(output).toContain('Manifest: events/bad_event');
+      expect(output).toContain('Actual:   events/bad-event');
+      expect(output).toContain('💡 Fix: Update manifest to use "bad-event"');
+    });
+
+    it('reports success when all manifest file references are valid', () => {
+      const fileExistenceResults = new Map([
+        [
+          'modA',
+          {
+            modId: 'modA',
+            isValid: true,
+            missingFiles: [],
+            namingIssues: [],
+          },
+        ],
+        [
+          'modB',
+          {
+            modId: 'modB',
+            isValid: true,
+            missingFiles: [],
+            namingIssues: [],
+          },
+        ],
+      ]);
+
+      const output = reporter.generateReport(
+        { fileExistence: fileExistenceResults },
+        'console',
+        { colors: false }
+      );
+
+      expect(output).toContain('✅ All manifest file references are valid');
+      expect(output).toContain('📊 Validated 2 mods successfully');
+    });
   });
 
   describe('Ecosystem Console Report Generation', () => {
