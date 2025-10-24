@@ -741,6 +741,19 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
       const trulyDependentKeys = [];
       const independentKeys = [];
 
+      const finalizeCombination = (combo) => {
+        if (independentKeys.length > 0) {
+          this.#expandCombinationsForIndependentTargets(
+            combo,
+            independentKeys,
+            combinations,
+            maxCombinations
+          );
+        } else {
+          combinations.push(combo);
+        }
+      };
+
       for (const [key, targets] of dependentTargetsByKey) {
         const isDependent = resolvedTargets[key].every((t) => t.contextFromId);
         if (isDependent) {
@@ -764,78 +777,35 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
 
       // Handle truly dependent targets (always generate separate combinations for each target)
       // and independent targets (always expand into separate combinations)
-      if (trulyDependentKeys.length === 1) {
-        // Single dependent key - create separate combinations for each dependent target
-        const dependentKey = trulyDependentKeys[0];
-        const dependentTargets = dependentTargetsByKey.get(dependentKey);
+        if (trulyDependentKeys.length === 1) {
+          // Single dependent key - create separate combinations for each dependent target
+          const dependentKey = trulyDependentKeys[0];
+          const dependentTargets = dependentTargetsByKey.get(dependentKey);
 
-        for (const dependentTarget of dependentTargets) {
-          if (combinations.length >= maxCombinations) break;
+          for (const dependentTarget of dependentTargets) {
+            if (combinations.length >= maxCombinations) break;
 
-          const depCombination = {
-            [primaryKey]: [primaryTarget],
-            [dependentKey]: [dependentTarget],
-          };
+            const depCombination = {
+              [primaryKey]: [primaryTarget],
+              [dependentKey]: [dependentTarget],
+            };
 
-          // Add independent targets as-is (they'll be expanded later)
-          for (const indepKey of independentKeys) {
-            depCombination[indepKey] = dependentTargetsByKey.get(indepKey);
+            // Add independent targets as-is (they'll be expanded later)
+            for (const indepKey of independentKeys) {
+              depCombination[indepKey] = dependentTargetsByKey.get(indepKey);
+            }
+
+            finalizeCombination(depCombination);
           }
-
-          // Expand independent targets if any exist
-          if (independentKeys.length > 0) {
-            this.#expandCombinationsForIndependentTargets(
-              depCombination,
-              independentKeys,
-              combinations,
-              maxCombinations
-            );
-          } else {
-            combinations.push(depCombination);
-          }
-        }
-      } else if (trulyDependentKeys.length > 1) {
-        // Multiple dependent keys - use generateAllCombinations flag to decide behavior
-        if (generateAllCombinations) {
+        } else if (trulyDependentKeys.length > 1) {
           // TODO: Implement proper cartesian product for multiple dependent keys
-          // For now, use standard behavior
-          if (independentKeys.length > 0) {
-            this.#expandCombinationsForIndependentTargets(
-              combination,
-              independentKeys,
-              combinations,
-              maxCombinations
-            );
-          } else {
-            combinations.push(combination);
-          }
+          // Currently we group them together regardless of generateAllCombinations flag
+          finalizeCombination(combination);
         } else {
-          // Standard behavior for multiple dependent keys
-          if (independentKeys.length > 0) {
-            this.#expandCombinationsForIndependentTargets(
-              combination,
-              independentKeys,
-              combinations,
-              maxCombinations
-            );
-          } else {
-            combinations.push(combination);
-          }
-        }
-      } else {
-        // No truly dependent keys, only independent keys
-        if (independentKeys.length > 0) {
-          this.#expandCombinationsForIndependentTargets(
-            combination,
-            independentKeys,
-            combinations,
-            maxCombinations
-          );
-        } else {
-          combinations.push(combination);
+          // No truly dependent keys, only independent keys
+          finalizeCombination(combination);
         }
       }
-    }
 
     this.#logger.debug('Generated combinations:', {
       count: combinations.length,

@@ -211,4 +211,121 @@ describe('MultiTargetActionFormatter uncovered branches', () => {
     expect(result.ok).toBe(false);
     expect(result.error).toContain('No valid target combinations could be generated');
   });
+
+  it('falls back to the base target value when dot-notation omits a property path', () => {
+    const actionDef = {
+      id: 'test:dot-path-fallback',
+      template: 'greet {primary.}',
+      targets: {
+        primary: { placeholder: 'person' },
+      },
+    };
+
+    const resolvedTargets = {
+      primary: [
+        {
+          id: 'actor-1',
+          displayName: 'Alex',
+        },
+      ],
+    };
+
+    const result = formatter.formatMultiTarget(
+      actionDef,
+      resolvedTargets,
+      {},
+      {},
+      { targetDefinitions: actionDef.targets }
+    );
+
+    expect(result.ok).toBe(true);
+    expect(result.value).toBe('greet Alex');
+  });
+
+  it('keeps dependent targets grouped together when generateCombinations is true', () => {
+    const actionDef = {
+      id: 'test:multiple-dependent-combos',
+      template: 'assign {primary} to guard {secondary} at {tertiary}',
+      generateCombinations: true,
+      targets: {
+        primary: { placeholder: 'person' },
+        secondary: { placeholder: 'role', contextFrom: 'primary' },
+        tertiary: { placeholder: 'location', contextFrom: 'primary' },
+      },
+    };
+
+    const resolvedTargets = {
+      primary: [
+        { id: 'actor-1', displayName: 'Alex' },
+      ],
+      secondary: [
+        { id: 'duty-1', displayName: 'Gate watch', contextFromId: 'actor-1' },
+        { id: 'duty-2', displayName: 'Night patrol', contextFromId: 'actor-1' },
+      ],
+      tertiary: [
+        { id: 'post-1', displayName: 'North Tower', contextFromId: 'actor-1' },
+        { id: 'post-2', displayName: 'South Gate', contextFromId: 'actor-1' },
+      ],
+    };
+
+    const result = formatter.formatMultiTarget(
+      actionDef,
+      resolvedTargets,
+      {},
+      {},
+      { targetDefinitions: actionDef.targets }
+    );
+
+    expect(result.ok).toBe(true);
+    expect(Array.isArray(result.value)).toBe(true);
+    expect(result.value).toHaveLength(1);
+    expect(result.value[0].command).toBe(
+      'assign Alex to guard Gate watch at North Tower'
+    );
+    expect(result.value[0].targets.secondary).toHaveLength(2);
+    expect(result.value[0].targets.tertiary).toHaveLength(2);
+  });
+
+  it('groups multiple dependent keys even when generateCombinations is not provided', () => {
+    const actionDef = {
+      id: 'test:dependent-default-behavior',
+      template: 'assign {primary} with {secondary} at {tertiary}',
+      targets: {
+        primary: { placeholder: 'person' },
+        secondary: { placeholder: 'role', contextFrom: 'primary' },
+        tertiary: { placeholder: 'location', contextFrom: 'primary' },
+      },
+    };
+
+    const resolvedTargets = {
+      primary: [
+        { id: 'actor-2', displayName: 'Jamie' },
+      ],
+      secondary: [
+        { id: 'task-1', displayName: 'Repair duty', contextFromId: 'actor-2' },
+        { id: 'task-2', displayName: 'Scout mission', contextFromId: 'actor-2' },
+      ],
+      tertiary: [
+        { id: 'zone-1', displayName: 'Workshop', contextFromId: 'actor-2' },
+        { id: 'zone-2', displayName: 'North Ridge', contextFromId: 'actor-2' },
+      ],
+    };
+
+    const result = formatter.formatMultiTarget(
+      actionDef,
+      resolvedTargets,
+      {},
+      {},
+      { targetDefinitions: actionDef.targets }
+    );
+
+    expect(result.ok).toBe(true);
+    expect(Array.isArray(result.value)).toBe(true);
+    expect(result.value).toHaveLength(1);
+    expect(result.value[0].command).toBe(
+      'assign Jamie with Repair duty at Workshop'
+    );
+    expect(result.value[0].targets.secondary).toHaveLength(2);
+    expect(result.value[0].targets.tertiary).toHaveLength(2);
+  });
 });
