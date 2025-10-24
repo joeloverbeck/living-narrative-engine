@@ -507,6 +507,65 @@ describe('TargetDisplayNameResolver', () => {
         expect(result.source).toBe('actor');
         expect(result.isDefault).toBe(false);
       });
+
+      it('should flag ID fallback when no display components resolve', () => {
+        const entity = {
+          id: 'entity-123',
+          getComponentData: jest.fn().mockReturnValue(null),
+        };
+
+        mockEntityManager.getEntityInstance.mockReturnValue(entity);
+
+        const result = targetDisplayNameResolver.getDisplayNameDetails(entity);
+
+        expect(result).toEqual({
+          displayName: 'entity-123',
+          source: 'id',
+          isDefault: true,
+        });
+      });
+
+      it('should mark description component as the source when matched', () => {
+        const entity = {
+          id: 'entity-123',
+          getComponentData: jest
+            .fn()
+            .mockImplementation((comp) =>
+              comp === 'core:description' ? { name: 'Descriptive Name' } : null
+            ),
+        };
+
+        mockEntityManager.getEntityInstance.mockReturnValue(entity);
+
+        const result = targetDisplayNameResolver.getDisplayNameDetails(entity);
+
+        expect(result).toEqual({
+          displayName: 'Descriptive Name',
+          source: 'description',
+          isDefault: false,
+        });
+      });
+
+      it('should mark item component as the source when matched', () => {
+        const entity = {
+          id: 'entity-123',
+          getComponentData: jest
+            .fn()
+            .mockImplementation((comp) =>
+              comp === 'core:item' ? { name: 'Item Display' } : null
+            ),
+        };
+
+        mockEntityManager.getEntityInstance.mockReturnValue(entity);
+
+        const result = targetDisplayNameResolver.getDisplayNameDetails(entity);
+
+        expect(result).toEqual({
+          displayName: 'Item Display',
+          source: 'item',
+          isDefault: false,
+        });
+      });
     });
 
     describe('getDisplayNames', () => {
@@ -533,6 +592,24 @@ describe('TargetDisplayNameResolver', () => {
         expect(() => {
           targetDisplayNameResolver.getDisplayNames('not-array');
         }).toThrow(ServiceError);
+      });
+
+      it('should skip entities without IDs in the batch', () => {
+        const entities = [{ id: 'entity-1' }, { name: 'no-id' }];
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => ({
+          id,
+          getComponentData: jest
+            .fn()
+            .mockImplementation((comp) =>
+              comp === 'core:name' ? { text: `Name for ${id}` } : null
+            ),
+        }));
+
+        const result = targetDisplayNameResolver.getDisplayNames(entities);
+
+        expect(result.size).toBe(1);
+        expect(result.get('entity-1')).toBe('Name for entity-1');
       });
     });
 
@@ -591,6 +668,47 @@ describe('TargetDisplayNameResolver', () => {
 
         expect(result).toBe('Unknown Entity');
       });
+
+      it('should return base name when actual entity cannot be fetched', () => {
+        const entity = { id: 'entity-999' };
+        const baseEntity = {
+          id: 'entity-999',
+          getComponentData: jest.fn().mockReturnValue(null),
+        };
+
+        mockEntityManager.getEntityInstance.mockReset();
+        mockEntityManager.getEntityInstance
+          .mockReturnValueOnce(baseEntity)
+          .mockReturnValueOnce(null);
+
+        const result = targetDisplayNameResolver.formatWithContext(entity, {
+          includeLocation: true,
+          includeState: true,
+        });
+
+        expect(result).toBe('entity-999');
+      });
+
+      it('should avoid adding state context when at full health', () => {
+        const entity = { id: 'entity-123' };
+
+        const healthyEntity = {
+          id: 'entity-123',
+          getComponentData: jest.fn().mockImplementation((comp) => {
+            if (comp === 'core:name') return { text: 'Healthy Entity' };
+            if (comp === 'core:health') return { current: 100, max: 100 };
+            return null;
+          }),
+        };
+
+        mockEntityManager.getEntityInstance.mockReturnValue(healthyEntity);
+
+        const result = targetDisplayNameResolver.formatWithContext(entity, {
+          includeState: true,
+        });
+
+        expect(result).toBe('Healthy Entity');
+      });
     });
 
     describe('hasValidDisplayName', () => {
@@ -628,6 +746,48 @@ describe('TargetDisplayNameResolver', () => {
         const result = targetDisplayNameResolver.hasValidDisplayName(null);
 
         expect(result).toBe(false);
+      });
+
+      it('should respect custom fallback names when determining validity', () => {
+        const entity = { id: 'entity-123' };
+
+        targetDisplayNameResolver.setFallbackName('Mystery Being');
+
+        mockEntityManager.getEntityInstance.mockReturnValue({
+          ...mockEntity,
+          getComponentData: jest.fn().mockReturnValue(null),
+        });
+
+        const result = targetDisplayNameResolver.hasValidDisplayName(entity);
+
+        expect(result).toBe(false);
+      });
+    });
+
+    describe('getEntityDisplayNames', () => {
+      it('should use fallback name for invalid identifiers', () => {
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'valid-entity') {
+            return {
+              id,
+              getComponentData: jest.fn().mockImplementation((comp) =>
+                comp === 'core:name' ? { text: 'Valid Name' } : null
+              ),
+            };
+          }
+
+          return null;
+        });
+
+        const result = targetDisplayNameResolver.getEntityDisplayNames([
+          'valid-entity',
+          null,
+          42,
+        ]);
+
+        expect(result['valid-entity']).toBe('Valid Name');
+        expect(result.null).toBe('Unknown Entity');
+        expect(result[42]).toBe('Unknown Entity');
       });
     });
   });
