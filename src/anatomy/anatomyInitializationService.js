@@ -266,27 +266,55 @@ export class AnatomyInitializationService {
     }
 
     // Create a promise to wait for this specific generation
-    const promise = new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       if (!this.#generationPromises.has(entityId)) {
         this.#generationPromises.set(entityId, []);
       }
-      this.#generationPromises.get(entityId).push({ resolve, reject });
-    });
 
-    // Add timeout
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(
-        () =>
-          reject(
-            new Error(
-              `AnatomyInitializationService: Timeout waiting for anatomy generation for entity '${entityId}'`
-            )
-          ),
-        timeoutMs
-      );
-    });
+      let timeoutId = null;
 
-    return Promise.race([promise, timeoutPromise]);
+      const resolveWithCleanup = (value) => {
+        if (timeoutId !== null) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+        resolve(value);
+      };
+
+      const rejectWithCleanup = (error) => {
+        if (timeoutId !== null) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+        reject(error);
+      };
+
+      const callbacks = {
+        resolve: resolveWithCleanup,
+        reject: rejectWithCleanup,
+      };
+
+      const waiters = this.#generationPromises.get(entityId);
+      waiters.push(callbacks);
+
+      timeoutId = setTimeout(() => {
+        const updatedWaiters = this.#generationPromises.get(entityId);
+        if (updatedWaiters) {
+          const index = updatedWaiters.indexOf(callbacks);
+          if (index !== -1) {
+            updatedWaiters.splice(index, 1);
+          }
+          if (updatedWaiters.length === 0) {
+            this.#generationPromises.delete(entityId);
+          }
+        }
+        reject(
+          new Error(
+            `AnatomyInitializationService: Timeout waiting for anatomy generation for entity '${entityId}'`
+          )
+        );
+      }, timeoutMs);
+    });
   }
 
   /**
