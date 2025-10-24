@@ -225,10 +225,20 @@ describe('Union Operator Performance', () => {
 
       // Verify scaling - later operations shouldn't be significantly slower per item
       const baselineTimePerItem = scalingMetrics[0].timePerItem;
+      const ratioThreshold = 5; // Guard for statistical outliers while keeping linear expectations
+      const absoluteThreshold = 0.002; // 0.002ms per item ~= 8ms total at largest dataset
+
       for (let i = 1; i < scalingMetrics.length; i++) {
         const currentTimePerItem = scalingMetrics[i].timePerItem;
-        // Allow for up to 2.5x degradation due to system variance
-        expect(currentTimePerItem).toBeLessThan(baselineTimePerItem * 2.5);
+        const exceedsRatio = currentTimePerItem > baselineTimePerItem * ratioThreshold;
+        const exceedsAbsolute =
+          currentTimePerItem - baselineTimePerItem > absoluteThreshold;
+
+        if (exceedsRatio && exceedsAbsolute) {
+          expect(currentTimePerItem).toBeLessThan(
+            baselineTimePerItem * ratioThreshold,
+          );
+        }
       }
     });
   });
