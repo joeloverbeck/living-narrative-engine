@@ -395,6 +395,68 @@ describeEngineSuite('GameEngine', (context) => {
       );
       expect(result).toBe(mockResult);
     });
+
+    it('should trim save names before delegating to persistenceCoordinator', async () => {
+      const mockResult = { success: true };
+      const rawSaveName = '   trimmed-save   ';
+      const trimmedSaveName = 'trimmed-save';
+
+      const mockPersistenceCoordinator = {
+        triggerManualSave: jest.fn().mockResolvedValue(mockResult),
+      };
+
+      const engine = new GameEngine({
+        container: context.bed.env.mockContainer,
+        logger: context.bed.getLogger(),
+        persistenceCoordinator: mockPersistenceCoordinator,
+      });
+
+      await engine.triggerManualSave(rawSaveName);
+
+      expect(mockPersistenceCoordinator.triggerManualSave).toHaveBeenCalledWith(
+        trimmedSaveName
+      );
+    });
+
+    it('should throw when saveName is null', async () => {
+      const mockPersistenceCoordinator = {
+        triggerManualSave: jest.fn(),
+      };
+
+      const engine = new GameEngine({
+        container: context.bed.env.mockContainer,
+        logger: context.bed.getLogger(),
+        persistenceCoordinator: mockPersistenceCoordinator,
+      });
+
+      await expect(engine.triggerManualSave(null)).rejects.toThrow();
+
+      expect(mockPersistenceCoordinator.triggerManualSave).not.toHaveBeenCalled();
+      expect(context.bed.getLogger().error).toHaveBeenCalledWith(
+        expect.stringContaining("Invalid saveName 'null'"),
+        expect.any(Object)
+      );
+    });
+
+    it('should throw when saveName is blank', async () => {
+      const mockPersistenceCoordinator = {
+        triggerManualSave: jest.fn(),
+      };
+
+      const engine = new GameEngine({
+        container: context.bed.env.mockContainer,
+        logger: context.bed.getLogger(),
+        persistenceCoordinator: mockPersistenceCoordinator,
+      });
+
+      await expect(engine.triggerManualSave('   ')).rejects.toThrow();
+
+      expect(mockPersistenceCoordinator.triggerManualSave).not.toHaveBeenCalled();
+      expect(context.bed.getLogger().error).toHaveBeenCalledWith(
+        expect.stringContaining("Invalid saveName '   '"),
+        expect.any(Object)
+      );
+    });
   });
 
   describe('showSaveGameUI', () => {
