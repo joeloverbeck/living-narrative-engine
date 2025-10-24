@@ -79,5 +79,46 @@ describe('GameStateCaptureService persistence tests', () => {
       foo: 'bar',
     });
   });
+
+  it('uses the entities iterator when activeEntities map is unavailable', () => {
+    const mockEntity = {
+      id: 'solo',
+      definitionId: 'core:solo',
+      componentEntries: new Map([['core:identity', { name: 'Hero' }]]),
+    };
+    const iterator = {
+      [Symbol.iterator]: function* iterate() {
+        yield mockEntity;
+      },
+    };
+    const minimalEntityManager = {
+      entities: iterator,
+    };
+
+    const localCaptureService = new GameStateCaptureService({
+      logger,
+      entityManager: minimalEntityManager,
+      playtimeTracker,
+      componentCleaningService,
+      metadataBuilder,
+      activeModsManifestBuilder,
+    });
+
+    componentCleaningService.clean.mockReturnValue({ name: 'Hero' });
+
+    const result = localCaptureService.captureCurrentGameState('IteratorWorld');
+
+    expect(componentCleaningService.clean).toHaveBeenCalledWith(
+      'core:identity',
+      { name: 'Hero' }
+    );
+    expect(result.gameState.entities).toEqual([
+      {
+        instanceId: 'solo',
+        definitionId: 'core:solo',
+        overrides: { 'core:identity': { name: 'Hero' } },
+      },
+    ]);
+  });
 });
 // --- FILE END ---
