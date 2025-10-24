@@ -253,6 +253,18 @@ describe('LegacyTargetCompatibilityLayer', () => {
       expect(result.targetDefinitions.primary.placeholder).toBe('companion');
     });
 
+    it('should derive placeholder from template tokens when available', () => {
+      const actionDef = {
+        id: 'template-action',
+        targets: 'actor.partners',
+        template: 'Interact with {friendAlias} today',
+      };
+
+      const result = layer.convertLegacyFormat(actionDef, mockActor);
+
+      expect(result.targetDefinitions.primary.placeholder).toBe('friendAlias');
+    });
+
     it('should use targetDescription if provided', () => {
       const actionDef = {
         id: 'test-action',
@@ -277,6 +289,28 @@ describe('LegacyTargetCompatibilityLayer', () => {
 
       expect(result.isLegacy).toBe(false);
       expect(result.error).toBe('Action is not in legacy format');
+    });
+
+    it('should handle unexpected template structures by returning an error', () => {
+      const actionDef = {
+        id: 'error-action',
+        targets: 'actor.partners',
+        template: {},
+      };
+
+      const result = layer.convertLegacyFormat(actionDef, mockActor);
+
+      expect(result.isLegacy).toBe(true);
+      expect(result.error).toContain('Failed to convert legacy format');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('convertLegacyFormat'),
+        expect.objectContaining({
+          service: 'LegacyTargetCompatibilityLayer',
+          operation: 'convertLegacyFormat',
+          actionId: 'error-action',
+          error: expect.stringContaining('match'),
+        })
+      );
     });
 
     it('should validate required parameters', () => {
