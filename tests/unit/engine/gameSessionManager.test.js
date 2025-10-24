@@ -161,6 +161,20 @@ describe('GameSessionManager', () => {
       );
     });
 
+    it('should ignore trailing separators when deriving the save name', async () => {
+      const saveIdentifier = 'C\\\\Users\\\\Player\\\\Saves\\\\';
+
+      await gameSessionManager.prepareForLoadGameSession(saveIdentifier);
+
+      expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENGINE_OPERATION_IN_PROGRESS_UI,
+        {
+          titleMessage: 'Loading Saves...',
+          inputDisabledMessage: 'Loading game from Saves...',
+        }
+      );
+    });
+
     it('should handle save identifier without path separators', async () => {
       const saveIdentifier = 'QuickSave';
 

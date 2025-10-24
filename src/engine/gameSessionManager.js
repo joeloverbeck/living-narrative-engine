@@ -208,6 +208,41 @@ class GameSessionManager {
   }
 
   /**
+   * Derives a concise, user-facing save name from a raw identifier.
+   *
+   * @private
+   * @description Strips directory segments and trailing separators so load
+   * operations display a readable save name in UI messages.
+   * @param {string} saveIdentifier - Identifier used to locate the save file.
+   * @returns {string} Condensed save name suitable for UI messaging.
+   */
+  #getDisplayNameForSave(saveIdentifier) {
+    const normalizedIdentifier =
+      typeof saveIdentifier === 'string'
+        ? saveIdentifier
+        : String(saveIdentifier ?? '');
+
+    const pathSegments = normalizedIdentifier
+      .split(/[/\\]+/)
+      .map((segment) => segment.trim())
+      .filter((segment) => segment.length > 0);
+
+    if (pathSegments.length > 0) {
+      return pathSegments[pathSegments.length - 1];
+    }
+
+    const identifierWithoutSeparators = normalizedIdentifier
+      .replace(/[/\\]/g, '')
+      .trim();
+
+    if (identifierWithoutSeparators.length > 0) {
+      return identifierWithoutSeparators;
+    }
+
+    return '';
+  }
+
+  /**
    * Prepares for loading a game session.
    *
    * @param {string} saveIdentifier - Identifier of the save to load.
@@ -218,7 +253,7 @@ class GameSessionManager {
       `GameSessionManager.prepareForLoadGameSession: Preparing to load game from identifier: ${saveIdentifier}`
     );
 
-    const shortSaveName = saveIdentifier.split(/[/\\]/).pop() || saveIdentifier;
+    const shortSaveName = this.#getDisplayNameForSave(saveIdentifier);
 
     await this.#prepareEngineForOperation(ENGINE_OPERATION_IN_PROGRESS_UI, {
       titleMessage: `Loading ${shortSaveName}...`,
