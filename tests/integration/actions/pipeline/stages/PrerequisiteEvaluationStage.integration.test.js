@@ -70,13 +70,156 @@ class StubFixSuggestionEngine {
   }
 }
 
+class ControlledLogger {
+  constructor(baseLogger) {
+    this.baseLogger = baseLogger;
+    this.failures = {
+      debug: [],
+      info: [],
+      warn: [],
+      error: [],
+    };
+    this.records = {
+      debug: [],
+      info: [],
+      warn: [],
+      error: [],
+    };
+  }
+
+  failNext(level, predicate, errorMessage) {
+    this.failures[level].push({
+      predicate,
+      errorMessage,
+      triggered: false,
+    });
+  }
+
+  failNextDebugWhen(predicate, errorMessage) {
+    this.failNext('debug', predicate, errorMessage);
+  }
+
+  failNextInfoWhen(predicate, errorMessage) {
+    this.failNext('info', predicate, errorMessage);
+  }
+
+  failNextWarnWhen(predicate, errorMessage) {
+    this.failNext('warn', predicate, errorMessage);
+  }
+
+  failNextErrorWhen(predicate, errorMessage) {
+    this.failNext('error', predicate, errorMessage);
+  }
+
+  getEntries(level) {
+    return [...this.records[level]];
+  }
+
+  #maybeThrow(level, message, args) {
+    for (const failure of this.failures[level]) {
+      if (!failure.triggered && failure.predicate(message, args)) {
+        failure.triggered = true;
+        throw new Error(failure.errorMessage || `${level} failure`);
+      }
+    }
+  }
+
+  debug(message, ...args) {
+    this.#maybeThrow('debug', message, args);
+    this.records.debug.push({ message, args });
+    this.baseLogger.debug(message, ...args);
+  }
+
+  info(message, ...args) {
+    this.#maybeThrow('info', message, args);
+    this.records.info.push({ message, args });
+    this.baseLogger.info(message, ...args);
+  }
+
+  warn(message, ...args) {
+    this.#maybeThrow('warn', message, args);
+    this.records.warn.push({ message, args });
+    this.baseLogger.warn(message, ...args);
+  }
+
+  error(message, ...args) {
+    this.#maybeThrow('error', message, args);
+    this.records.error.push({ message, args });
+    this.baseLogger.error(message, ...args);
+  }
+}
+
+class FaultyActionAwareStructuredTrace extends ActionAwareStructuredTrace {
+  constructor(options, plan = {}) {
+    super(options);
+    this.plan = plan;
+  }
+
+  #maybeThrow(handler, payload) {
+    if (!handler) {
+      return;
+    }
+
+    const result = handler(payload);
+    if (!result) {
+      return;
+    }
+
+    if (result instanceof Error) {
+      throw result;
+    }
+
+    throw new Error(String(result));
+  }
+
+  success(message, source, data) {
+    this.#maybeThrow(this.plan.onSuccess, { message, source, data });
+    return super.success(message, source, data);
+  }
+
+  info(message, source, data) {
+    this.#maybeThrow(this.plan.onInfo, { message, source, data });
+    return super.info(message, source, data);
+  }
+
+  async captureActionData(stage, actionId, data) {
+    await this.#maybeMaybeAsyncThrow(this.plan.onCapture, {
+      stage,
+      actionId,
+      data,
+    });
+    return super.captureActionData(stage, actionId, data);
+  }
+
+  async #maybeMaybeAsyncThrow(handler, payload) {
+    if (!handler) {
+      return;
+    }
+
+    const result = handler(payload);
+    const errorCandidate = result instanceof Promise ? await result : result;
+
+    if (!errorCandidate) {
+      return;
+    }
+
+    if (errorCandidate instanceof Error) {
+      throw errorCandidate;
+    }
+
+    throw new Error(String(errorCandidate));
+  }
+}
+
 class StageIntegrationHarness {
-  constructor() {
-    this.logger = new ConsoleLogger(LogLevel.ERROR);
+  constructor({ logger } = {}) {
+    const baseLogger = logger ?? new ConsoleLogger(LogLevel.DEBUG);
+    this.logger = new ControlledLogger(baseLogger);
     this.entityManager = new FakeEntityManager();
     this.gameDataRepository = new FakeGameDataRepository();
     this.fixSuggestionEngine = new StubFixSuggestionEngine();
     this.forcedErrors = new Map();
+    this.actionBehaviors = new Map();
 
     this.errorContextBuilder = new ActionErrorContextBuilder({
       entityManager: this.entityManager,
@@ -110,6 +253,10 @@ class StageIntegrationHarness {
     this.#installTraceIntrospection();
   }
 
+  configureActionBehavior(actionId, behavior) {
+    this.actionBehaviors.set(actionId, behavior);
+  }
+
   #installTraceIntrospection() {
     const originalEvaluate = this.prerequisiteService.evaluate.bind(
       this.prerequisiteService
@@ -129,25 +276,61 @@ class StageIntegrationHarness {
       );
 
       if (trace) {
-        const context = {
-          actorId: actor?.id,
-          actionId: actionDefinition?.id,
-          longDescription: 'x'.repeat(520),
-        };
+        const behavior = this.actionBehaviors.get(actionDefinition?.id) ?? {};
+
+        const context =
+          typeof behavior.createContext === 'function'
+            ? behavior.createContext({ actionDefinition, actor, trace, result })
+            : {
+                actorId: actor?.id,
+                actionId: actionDefinition?.id,
+                longDescription: 'x'.repeat(520),
+              };
+
         context.self = context;
 
+        if (behavior.includeBigIntContext) {
+          context.massiveValue = 42n;
+        }
+
+        if (behavior.freezeJsonLogicTraces) {
+          trace._jsonLogicTraces = Object.freeze([]);
+        }
+
         trace.captureEvaluationContext?.(context);
-        trace.captureJsonLogicTrace?.(
-          { var: 'actor.components.core:stats.mana' },
-          context,
-          result,
+
+        const logicExpression =
+          behavior.logicExpression || { var: 'actor.components.core:stats.mana' };
+
+        const logicContext = behavior.logicContext || context;
+
+        const jsonLogicResult =
+          behavior.jsonLogicResult !== undefined
+            ? behavior.jsonLogicResult
+            : result;
+
+        const logicSteps =
+          behavior.jsonLogicSteps ||
           [
             {
               step: 'mock-evaluation',
-              result,
+              result: jsonLogicResult,
             },
-          ]
+          ];
+
+        trace.captureJsonLogicTrace?.(
+          logicExpression,
+          logicContext,
+          jsonLogicResult,
+          logicSteps
         );
+
+        behavior.afterTraceCapture?.({
+          actionDefinition,
+          actor,
+          trace,
+          result,
+        });
       }
 
       const forcedError = this.forcedErrors.get(actionDefinition?.id);
@@ -171,7 +354,7 @@ class StageIntegrationHarness {
     this.gameDataRepository.registerCondition(id, logic);
   }
 
-  createTrace(tracedActions) {
+  createTrace(tracedActions, options = {}) {
     const actionTraceFilter = new ActionTraceFilter({
       tracedActions,
       verbosityLevel: 'verbose',
@@ -183,18 +366,41 @@ class StageIntegrationHarness {
       logger: this.logger,
     });
 
-    return new ActionAwareStructuredTrace({
+    const TraceClass = options.TraceClass || ActionAwareStructuredTrace;
+    const traceOptions = {
       actionTraceFilter,
       actorId: this.currentActorId ?? 'unknown-actor',
-      context: { sessionId: 'integration-test' },
+      context: options.context ?? { sessionId: 'integration-test' },
       logger: this.logger,
-    });
+    };
+
+    if (TraceClass === ActionAwareStructuredTrace) {
+      return new ActionAwareStructuredTrace(traceOptions);
+    }
+
+    return new TraceClass(traceOptions, options.tracePlan || {});
   }
 
   forceEvaluationFailureFor(actionId, errorMessage) {
     this.forcedErrors.set(actionId, new Error(errorMessage));
   }
 }
+
+const extractActionIdFromMessage = (message) => {
+  const match = /Action '([^']+)'/.exec(message);
+  return match ? match[1] : null;
+};
+
+const createArrayLikePrerequisites = (items) => ({
+  length: items.length,
+  items: [...items],
+  entries() {
+    return this.items.entries();
+  },
+  [Symbol.iterator]() {
+    return this.items[Symbol.iterator]();
+  },
+});
 
 describe('PrerequisiteEvaluationStage integration', () => {
   let harness;
@@ -211,6 +417,14 @@ describe('PrerequisiteEvaluationStage integration', () => {
   it('evaluates prerequisites and captures detailed tracing data', async () => {
     harness.registerCondition('conditions:high_level', {
       '>=': [{ var: 'actor.components.core:stats.level' }, 5],
+    });
+
+    harness.configureActionBehavior('core:cast_spell', {
+      includeBigIntContext: true,
+    });
+
+    harness.configureActionBehavior('core:ritual_object', {
+      jsonLogicExpression: { '<=': [{ var: 'actor.components.core:stats.mana' }, 100] },
     });
 
     const candidateActions = [
@@ -239,6 +453,20 @@ describe('PrerequisiteEvaluationStage integration', () => {
         ],
       },
       {
+        id: 'core:ritual_object',
+        name: 'Perform Ritual',
+        prerequisites: createArrayLikePrerequisites([
+          {
+            logic: {
+              and: [
+                { '>=': [{ var: 'actor.components.core:stats.level' }, 5] },
+                { '<=': [{ var: 'actor.components.core:stats.mana' }, 60] },
+              ],
+            },
+          },
+        ]),
+      },
+      {
         id: 'core:inspect',
         name: 'Inspect',
         prerequisites: null,
@@ -251,6 +479,7 @@ describe('PrerequisiteEvaluationStage integration', () => {
     const trace = harness.createTrace([
       'core:cast_spell',
       'core:low_mana',
+      'core:ritual_object',
       'core:inspect',
     ]);
 
@@ -264,6 +493,7 @@ describe('PrerequisiteEvaluationStage integration', () => {
     expect(result.success).toBe(true);
     expect(result.data.candidateActions.map((action) => action.id)).toEqual([
       'core:cast_spell',
+      'core:ritual_object',
       'core:inspect',
     ]);
 
@@ -283,15 +513,38 @@ describe('PrerequisiteEvaluationStage integration', () => {
     ).toBe(true);
     expect(
       castSpellTrace.stages.prerequisite_evaluation.data.evaluationDetails
-        .evaluationContext.self
-    ).toBe('[Circular Reference]');
+        .evaluationContext.longDescription
+    ).toBeUndefined();
     expect(
       castSpellTrace.stages.prerequisite_evaluation.data.evaluationDetails
-        .evaluationContext.longDescription
-    ).toContain('[truncated]');
+        .evaluationContext.self
+    ).toBeUndefined();
+    expect(
+      castSpellTrace.stages.prerequisite_evaluation.data.evaluationDetails
+        .evaluationContext.massiveValue
+    ).toBeUndefined();
+    expect(
+      castSpellTrace.stages.prerequisite_evaluation.data.evaluationDetails
+        .evaluationContext.contextError
+    ).toBe('Failed to serialize context safely');
     expect(
       castSpellTrace.stages.stage_performance.data.itemsProcessed
     ).toBe(candidateActions.length);
+
+    const ritualTrace = tracedActions.get('core:ritual_object');
+    expect(ritualTrace).toBeDefined();
+    expect(
+      ritualTrace.stages.prerequisite_evaluation.data.evaluationDetails
+        .prerequisiteCount
+    ).toBe(1);
+    expect(
+      Array.isArray(
+        ritualTrace.stages.prerequisite_evaluation.data.prerequisites
+      )
+    ).toBe(false);
+    expect(
+      ritualTrace.stages.prerequisite_evaluation.data.prerequisites.length
+    ).toBe(1);
 
     const lowManaTrace = tracedActions.get('core:low_mana');
     expect(lowManaTrace.stages.prerequisite_evaluation.data.evaluationPassed).toBe(
@@ -310,31 +563,98 @@ describe('PrerequisiteEvaluationStage integration', () => {
     );
   });
 
-  it('captures structured errors when prerequisite evaluation throws', async () => {
-    harness.forceEvaluationFailureFor(
-      'core:dangerous',
-      'JSON Logic failure'
+  it('gracefully handles trace capture failures and logging exceptions', async () => {
+    harness.logger.failNextDebugWhen(
+      (message) => message.includes('Captured pre-evaluation data'),
+      'pre-evaluation logging failure'
     );
+    harness.logger.failNextDebugWhen(
+      (message) => message.includes('Captured post-evaluation summary'),
+      'post-evaluation logging failure'
+    );
+
+    harness.configureActionBehavior('core:object_style', {
+      freezeJsonLogicTraces: true,
+    });
+
+    harness.configureActionBehavior('core:volatile', {
+      includeBigIntContext: true,
+    });
+
+    harness.forceEvaluationFailureFor('core:volatile', 'JSON Logic failure');
 
     const candidateActions = [
       {
-        id: 'core:dangerous',
-        name: 'Dangerous Action',
+        id: 'core:object_style',
+        name: 'Object Style',
+        prerequisites: createArrayLikePrerequisites([
+          {
+            logic: { '>=': [{ var: 'actor.components.core:stats.mana' }, 40] },
+          },
+        ]),
+      },
+      {
+        id: 'core:volatile',
+        name: 'Volatile Action',
         prerequisites: [
           {
             logic: { '>=': [{ var: 'actor.components.core:stats.mana' }, 10] },
-            failure_message: 'Unexpected failure',
           },
         ],
       },
       {
-        id: 'core:backup',
-        name: 'Backup Action',
+        id: 'core:no_prereq',
+        name: 'Simple Interaction',
         prerequisites: null,
       },
     ];
 
-    const trace = harness.createTrace(['core:dangerous', 'core:backup']);
+    const captureFailurePlan = new Map([
+      [
+        'prerequisite_evaluation',
+        new Map([
+          ['core:object_style', 1],
+          ['core:volatile', 1],
+          ['core:no_prereq', 1],
+        ]),
+      ],
+      [
+        'stage_performance',
+        new Map([
+          ['core:object_style', 1],
+        ]),
+      ],
+    ]);
+
+    const tracePlan = {
+      onCapture: ({ stage, actionId }) => {
+        const stageMap = captureFailurePlan.get(stage);
+        if (!stageMap) {
+          return null;
+        }
+        const remaining = stageMap.get(actionId);
+        if (!remaining) {
+          return null;
+        }
+        stageMap.set(actionId, remaining - 1);
+        return new Error(`capture failure for ${stage}:${actionId}`);
+      },
+      onInfo: ({ message }) => {
+        const actionId = extractActionIdFromMessage(message);
+        if (actionId === 'core:volatile') {
+          return new Error('trace info failure');
+        }
+        return null;
+      },
+    };
+
+    const trace = harness.createTrace(
+      ['core:object_style', 'core:volatile', 'core:no_prereq'],
+      {
+        TraceClass: FaultyActionAwareStructuredTrace,
+        tracePlan,
+      }
+    );
 
     const result = await harness.stage.executeInternal({
       actor,
@@ -344,23 +664,45 @@ describe('PrerequisiteEvaluationStage integration', () => {
 
     expect(result.success).toBe(true);
     expect(result.data.candidateActions.map((action) => action.id)).toEqual([
-      'core:backup',
+      'core:object_style',
+      'core:no_prereq',
     ]);
-    expect(result.errors).toHaveLength(0);
-    expect(result.data.prerequisiteErrors).toHaveLength(0);
+    expect(result.errors).toHaveLength(1);
+    expect(result.data.prerequisiteErrors).toHaveLength(1);
+    expect(result.data.prerequisiteErrors[0].actionId).toBe('core:volatile');
 
-    const dangerousTrace = trace.getTracedActions().get('core:dangerous');
-    expect(dangerousTrace).toBeDefined();
-    if (dangerousTrace) {
-      const performanceData = dangerousTrace.stages.stage_performance?.data;
-      expect(performanceData).toBeDefined();
-      if (performanceData) {
-        expect(performanceData.stage).toBe('prerequisite_evaluation');
-        expect(performanceData.itemsProcessed).toBe(candidateActions.length);
-        expect(performanceData.itemsPassed).toBe(
-          result.data.candidateActions.length
-        );
-      }
-    }
+    const warnings = harness.logger.getEntries('warn').map((entry) => entry.message);
+    expect(warnings).toContain(
+      'Failed to capture pre-evaluation data for tracing'
+    );
+    expect(warnings).toContain(
+      "Failed to capture prerequisite evaluation data for action 'core:object_style'"
+    );
+    expect(warnings).toContain(
+      "Failed to capture JSON Logic trace for action 'core:object_style'"
+    );
+    expect(warnings).toContain(
+      "Failed to capture no-prerequisites data for action 'core:no_prereq'"
+    );
+    expect(warnings).toContain(
+      "Failed to capture prerequisite error data for action 'core:volatile'"
+    );
+    expect(warnings).toContain(
+      'Failed to capture post-evaluation summary for tracing'
+    );
+
+    const debugMessages = harness.logger
+      .getEntries('debug')
+      .map((entry) => entry.message);
+    expect(debugMessages).toContain(
+      "Failed to capture performance data for action 'core:object_style': capture failure for stage_performance:core:object_style"
+    );
+
+    const traceData = trace.getTracedActions();
+    const objectStyleTrace = traceData.get('core:object_style');
+    expect(objectStyleTrace?.stages.stage_performance).toBeUndefined();
+
+    const volatileTrace = traceData.get('core:volatile');
+    expect(volatileTrace?.stages.prerequisite_evaluation).toBeUndefined();
   });
 });
