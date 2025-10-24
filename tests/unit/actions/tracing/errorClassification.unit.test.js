@@ -197,6 +197,15 @@ describe('ErrorClassifier', () => {
       expect(fatalClassification.severity).toBe(ERROR_SEVERITY.CRITICAL);
     });
 
+    it('should use category severity fallback when no keywords present', () => {
+      const error = new Error('System internal failure detected');
+
+      const classification = classifier.classifyError(error);
+
+      expect(classification.category).toBe(ERROR_CATEGORIES.SYSTEM);
+      expect(classification.severity).toBe(ERROR_SEVERITY.CRITICAL);
+    });
+
     it('should detect warning and deprecated messages', () => {
       const warningError = new Error('Warning: deprecated API usage');
       const deprecatedError = new Error('Deprecated function called');
@@ -500,6 +509,15 @@ describe('ErrorClassifier', () => {
 
       expect(classification.category).toBeTruthy();
       expect(classification.severity).toBeTruthy();
+    });
+
+    it('should handle null error inputs gracefully', () => {
+      const classification = classifier.classifyError(null);
+
+      expect(classification.category).toBe(ERROR_CATEGORIES.UNKNOWN);
+      expect(classification.severity).toBe(ERROR_SEVERITY.LOW);
+      expect(classification.isTransient).toBe(false);
+      expect(classification.isRetryable).toBe(true);
     });
   });
 
