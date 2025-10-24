@@ -72,6 +72,8 @@ describe('textUtils integration', () => {
       expect(formatPlaytime(-1)).toBe('N/A');
       expect(formatPlaytime(Number.NaN)).toBe('N/A');
       expect(formatPlaytime('not-a-number')).toBe('N/A');
+      expect(formatPlaytime(Number.POSITIVE_INFINITY)).toBe('N/A');
+      expect(formatPlaytime(Number.NEGATIVE_INFINITY)).toBe('N/A');
     });
   });
 

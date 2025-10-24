@@ -9,9 +9,11 @@ describe('formatPlaytime', () => {
     expect(formatPlaytime('abc')).toBe('N/A');
   });
 
-  it('returns "N/A" for NaN or negative numbers', () => {
+  it('returns "N/A" for NaN, negative or non-finite numbers', () => {
     expect(formatPlaytime(NaN)).toBe('N/A');
     expect(formatPlaytime(-5)).toBe('N/A');
+    expect(formatPlaytime(Infinity)).toBe('N/A');
+    expect(formatPlaytime(-Infinity)).toBe('N/A');
   });
 
   it('formats zero seconds correctly', () => {
