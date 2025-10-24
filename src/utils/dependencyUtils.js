@@ -105,15 +105,29 @@ export function assertValidId(id, context, logger) {
  * @returns {void}
  * @throws {InvalidArgumentError} If the string is blank or not a string.
  */
-export function assertNonBlankString(str, name, context, logger) {
+export function assertNonBlankString(
+  str,
+  name,
+  context = '',
+  logger = console
+) {
   if (!isNonBlankString(str)) {
-    const message = `${context}: Invalid ${name} '${str}'. Expected non-blank string.`;
-    logger.error(message, {
+    const hasContext = typeof context === 'string' && context.trim().length > 0;
+    const messagePrefix = hasContext ? `${context}: ` : '';
+    const message = `${messagePrefix}Invalid ${name} '${str}'. Expected non-blank string.`;
+    const logDetails = {
       receivedValue: str,
       receivedType: typeof str,
       parameterName: name,
-      context,
-    });
+    };
+    if (hasContext) {
+      logDetails.context = context;
+    }
+
+    const effectiveLogger =
+      logger && typeof logger.error === 'function' ? logger : console;
+    effectiveLogger.error(message, logDetails);
+
     throw new InvalidArgumentError(message, name, str);
   }
 }

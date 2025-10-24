@@ -271,6 +271,45 @@ describe('dependencyUtils', () => {
         })
       );
     });
+
+    it('falls back to console.error when logger is not provided', () => {
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      expect(() => assertNonBlankString('', 'param')).toThrow(
+        InvalidArgumentError
+      );
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        "Invalid param ''. Expected non-blank string.",
+        expect.objectContaining({
+          receivedValue: '',
+          receivedType: 'string',
+          parameterName: 'param',
+        })
+      );
+
+      errorSpy.mockRestore();
+    });
+
+    it('omits context metadata when context is empty or whitespace', () => {
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      try {
+        assertNonBlankString('   ', 'param', '  ');
+      } catch (error) {
+        expect(error).toBeInstanceOf(InvalidArgumentError);
+        expect(error.message).toBe(
+          "Invalid param '   '. Expected non-blank string."
+        );
+      }
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        "Invalid param '   '. Expected non-blank string.",
+        expect.not.objectContaining({ context: expect.any(String) })
+      );
+
+      errorSpy.mockRestore();
+    });
   });
 
   describe('validateDependency', () => {
