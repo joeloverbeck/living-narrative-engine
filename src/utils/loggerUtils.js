@@ -192,9 +192,43 @@ export function initLogger(serviceName, logger, { optional = false } = {}) {
  * @returns {void}
  */
 export function logPreview(logger, label, data, length = 100) {
-  const str = typeof data === 'string' ? data : JSON.stringify(data);
-  const preview = str.substring(0, length) + (str.length > length ? '...' : '');
-  logger.debug(`${label}${preview}`);
+  const debug =
+    logger && typeof logger.debug === 'function'
+      ? logger.debug.bind(logger)
+      : console.debug.bind(console);
+  const warnLogger =
+    logger && typeof logger.warn === 'function'
+      ? logger.warn.bind(logger)
+      : logger && typeof logger.error === 'function'
+        ? logger.error.bind(logger)
+        : console.warn.bind(console);
+
+  let serializedValue;
+
+  if (typeof data === 'string') {
+    serializedValue = data;
+  } else {
+    try {
+      const jsonValue = JSON.stringify(data);
+      serializedValue =
+        typeof jsonValue === 'string' ? jsonValue : String(data);
+    } catch (error) {
+      const typeDescription = Object.prototype.toString.call(data);
+      warnLogger('logPreview: Failed to serialize data for preview.', error);
+      serializedValue = `[Unserializable data: ${typeDescription}]`;
+    }
+  }
+
+  if (typeof serializedValue !== 'string') {
+    serializedValue = String(serializedValue);
+  }
+
+  const preview =
+    serializedValue.length > length
+      ? serializedValue.substring(0, length) + '...'
+      : serializedValue;
+
+  debug(`${label}${preview}`);
 }
 
 /**
