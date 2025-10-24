@@ -19,6 +19,9 @@
   "required_components": {
     "actor": ["positioning:closeness"]
   },
+  "forbidden_components": {
+    "primary": ["positioning:giving_blowjob"]
+  },
   "template": "fondle {primary}'s breasts over her {secondary}",
   "prerequisites": [],
   "visual": {

@@ -13,6 +13,9 @@
   "required_components": {
     "actor": ["positioning:closeness", "positioning:kneeling_before"]
   },
+  "forbidden_components": {
+    "actor": ["positioning:giving_blowjob"]
+  },
   "template": "suckle on {target}'s testicle",
   "prerequisites": [],
   "visual": {

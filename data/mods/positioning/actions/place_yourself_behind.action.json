@@ -22,7 +22,7 @@
       "positioning:lying_down",
       "positioning:straddling_waist"
     ],
-    "primary": ["positioning:lying_down"]
+    "primary": ["positioning:lying_down", "positioning:giving_blowjob"]
   },
   "template": "place yourself behind {target}",
   "prerequisites": [

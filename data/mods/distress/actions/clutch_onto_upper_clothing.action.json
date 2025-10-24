@@ -22,7 +22,7 @@
   },
   "forbidden_components": {
     "actor": ["positioning:hugging"],
-    "primary": [],
+    "primary": ["positioning:giving_blowjob"],
     "secondary": []
   },
   "prerequisites": [],

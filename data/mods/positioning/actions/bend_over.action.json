@@ -14,7 +14,8 @@
       "positioning:sitting_on",
       "positioning:bending_over",
       "positioning:kneeling_before",
-      "positioning:straddling_waist"
+      "positioning:straddling_waist",
+      "positioning:giving_blowjob"
     ]
   },
   "template": "bend over {target}",

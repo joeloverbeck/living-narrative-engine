@@ -4,7 +4,7 @@
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
-import { ALL_MULTI_TARGET_ROLES } from '../pipeline/TargetRoleRegistry.js';
+import { ALL_TARGET_ROLES } from '../pipeline/TargetRoleRegistry.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../entities/entityManager.js').default} IEntityManager */
@@ -67,17 +67,26 @@ export class TargetComponentValidator {
 
     let result;
 
-    // Check if this is legacy single-target format
-    if (
-      actionDef.forbidden_components.target &&
-      !actionDef.forbidden_components.primary &&
-      !actionDef.forbidden_components.secondary &&
-      !actionDef.forbidden_components.tertiary
-    ) {
+    // Check if this uses NEW multi-target roles (primary/secondary/tertiary)
+    const hasMultiTargetRoles =
+      actionDef.forbidden_components.primary ||
+      actionDef.forbidden_components.secondary ||
+      actionDef.forbidden_components.tertiary;
+
+    // Check if it has BOTH actor and target forbidden components
+    const hasActorAndTarget =
+      actionDef.forbidden_components.actor &&
+      actionDef.forbidden_components.target;
+
+    if (hasMultiTargetRoles || hasActorAndTarget) {
+      // Use multi-target validation (handles both actor and all target roles)
+      result = this.#validateMultiTargetFormat(actionDef, targetEntities);
+    } else if (actionDef.forbidden_components.target) {
+      // Pure legacy single-target format (ONLY has .target, no .actor)
       result = this.#validateLegacyFormat(actionDef, targetEntities);
     } else {
-      // Multi-target format
-      result = this.#validateMultiTargetFormat(actionDef, targetEntities);
+      // No target validation needed (only actor forbidden components or none)
+      return { valid: true };
     }
 
     // Log performance metrics in debug mode
@@ -196,19 +205,29 @@ export class TargetComponentValidator {
    */
   #validateMultiTargetFormat(actionDef, targetEntities) {
     const forbiddenConfig = actionDef.forbidden_components;
-    const targetRoles = ALL_MULTI_TARGET_ROLES;
+    const targetRoles = ALL_TARGET_ROLES;
 
     // Check each target role
     for (const role of targetRoles) {
       const forbiddenComponents = forbiddenConfig[role];
-      const rawTarget = targetEntities[role];
+      let rawTarget = targetEntities[role];
 
       // Skip if no forbidden components for this role
       if (!forbiddenComponents || forbiddenComponents.length === 0) {
         continue;
       }
 
-      // Skip if no entity for this role
+      // LEGACY ACTION COMPATIBILITY FIX:
+      // Legacy actions populate resolvedTargets.primary, not resolvedTargets.target
+      // If checking 'target' role but it's empty, check 'primary' as fallback
+      if (role === 'target' && !rawTarget && targetEntities.primary) {
+        rawTarget = targetEntities.primary;
+        this.#logger.debug(
+          `Action '${actionDef.id}': Using primary targets for legacy 'target' role validation`
+        );
+      }
+
+      // Skip if no entity for this role (after legacy fallback)
       if (!rawTarget) {
         continue;
       }
