@@ -277,6 +277,33 @@ describe('TraceDirectoryManager', () => {
       expect(mockLogger.error).toHaveBeenCalled();
     });
 
+    it('should handle unexpected errors while finalizing directory creation', async () => {
+      const firstSubDir = {
+        name: 'traces',
+        kind: 'directory',
+        getDirectoryHandle: jest.fn().mockResolvedValue({
+          name: 'actions',
+          kind: 'directory',
+        }),
+      };
+      mockDirectoryHandle.getDirectoryHandle.mockResolvedValueOnce(firstSubDir);
+
+      mockLogger.info.mockImplementation(() => {
+        throw new Error('Logger failure');
+      });
+
+      const result = await manager.ensureDirectoryExists('./traces/actions');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Logger failure');
+      expect(result.path).toBe('./traces/actions');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to ensure directory exists',
+        expect.any(Error),
+        { path: './traces/actions' }
+      );
+    });
+
     it('should handle empty directory path', async () => {
       await expect(manager.ensureDirectoryExists('')).rejects.toThrow();
       expect(mockLogger.error).toHaveBeenCalled();
