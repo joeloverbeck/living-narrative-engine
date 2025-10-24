@@ -305,10 +305,6 @@ export class ActionFormattingCoordinator {
    * @returns {Promise<void>} Resolves once formatting completes.
    */
   async #formatLegacyFallbackTask({ task, accumulator, createError, trace }) {
-    if (!task) {
-      return;
-    }
-
     const { actionDef, targetContexts = [], actor } = task;
     const actionId = actionDef.id;
 
