@@ -278,6 +278,13 @@ describe('RetryManager', () => {
   });
 
   describe('Edge cases', () => {
+    it('should throw when configured with zero maxAttempts', async () => {
+      const promise = retryManager.retry(mockOperation, { maxAttempts: 0 });
+
+      await expect(promise).rejects.toBeUndefined();
+      expect(mockOperation).not.toHaveBeenCalled();
+    });
+
     it('should handle maxAttempts of 1', async () => {
       mockOperation.mockRejectedValue(new Error('Failed'));
 
@@ -322,6 +329,35 @@ describe('RetryManager', () => {
 
       expect(result).toBe('success');
       expect(mockOperation).toHaveBeenCalledTimes(3);
+    });
+  });
+
+  describe('Timer handling', () => {
+    it('should unref timers when supported by the environment', async () => {
+      const unref = jest.fn();
+      const timer = { unref };
+
+      const setTimeoutSpy = jest
+        .spyOn(global, 'setTimeout')
+        .mockImplementation((callback, ms) => {
+          callback();
+          return timer;
+        });
+
+      mockOperation
+        .mockRejectedValueOnce(new Error('First attempt failed'))
+        .mockResolvedValueOnce('success');
+
+      const result = await retryManager.retry(mockOperation, {
+        delay: 10,
+        jitter: false,
+      });
+
+      expect(result).toBe('success');
+      expect(unref).toHaveBeenCalledTimes(1);
+      expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 10);
+
+      setTimeoutSpy.mockRestore();
     });
   });
 });
