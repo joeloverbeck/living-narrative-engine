@@ -328,4 +328,56 @@ describe('MultiTargetActionFormatter uncovered branches', () => {
     expect(result.value[0].targets.secondary).toHaveLength(2);
     expect(result.value[0].targets.tertiary).toHaveLength(2);
   });
+
+  it('expands independent combinations when dependent data is mixed with global targets', () => {
+    const actionDef = {
+      id: 'test:mixed-dependent-independent',
+      template: 'coordinate {primary} with {secondary} at {tertiary}',
+      generateCombinations: true,
+    };
+
+    const resolvedTargets = {
+      primary: [{ id: 'actor-5', displayName: 'Morgan' }],
+      secondary: [
+        {
+          id: 'ally-1',
+          displayName: 'Trusted Ally',
+          contextFromId: 'actor-5',
+        },
+        {
+          id: 'contact-2',
+          displayName: 'Neutral Contact',
+        },
+      ],
+      tertiary: [{ id: 'loc-9', displayName: 'Command Post' }],
+    };
+
+    const targetDefinitions = {
+      primary: { placeholder: 'primary' },
+      secondary: { placeholder: 'secondary', contextFrom: 'primary' },
+      tertiary: { placeholder: 'tertiary' },
+    };
+
+    const result = formatter.formatMultiTarget(
+      actionDef,
+      resolvedTargets,
+      {},
+      {},
+      { targetDefinitions }
+    );
+
+    expect(result.ok).toBe(true);
+    expect(Array.isArray(result.value)).toBe(true);
+    expect(result.value).toHaveLength(2);
+    expect(result.value.map((entry) => entry.command)).toEqual([
+      'coordinate Morgan with Trusted Ally at Command Post',
+      'coordinate Morgan with Neutral Contact at Command Post',
+    ]);
+    expect(result.value[0].targets.secondary).toEqual([
+      expect.objectContaining({ displayName: 'Trusted Ally' }),
+    ]);
+    expect(result.value[1].targets.secondary).toEqual([
+      expect.objectContaining({ displayName: 'Neutral Contact' }),
+    ]);
+  });
 });
