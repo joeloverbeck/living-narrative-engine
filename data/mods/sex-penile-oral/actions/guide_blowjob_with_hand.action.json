@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-penile-oral:guide_blowjob_with_hand",
+  "name": "Guide Blowjob with Hand",
+  "description": "Place your hand on their head to guide the pace and depth of the oral pleasure",
+  "targets": {
+    "primary": {
+      "scope": "sex-penile-oral:actor_giving_blowjob_to_me",
+      "placeholder": "primary",
+      "description": "Partner currently pleasuring you orally"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:closeness", "positioning:receiving_blowjob"]
+  },
+  "forbidden_components": {},
+  "template": "guide {primary}'s blowjob with your hand",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#2a1a5e",
+    "textColor": "#ede7f6",
+    "hoverBackgroundColor": "#372483",
+    "hoverTextColor": "#ffffff"
+  }
+}

@@ -15,7 +15,8 @@
       "positioning:lying_down",
       "positioning:being_hugged",
       "positioning:hugging",
-      "positioning:giving_blowjob"
+      "positioning:giving_blowjob",
+      "positioning:receiving_blowjob"
     ]
   },
   "template": "step back",

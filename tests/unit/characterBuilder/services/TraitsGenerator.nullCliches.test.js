@@ -162,11 +162,8 @@ describe('TraitsGenerator - Null Cliches Reproduction', () => {
   let traitsGenerator;
   let mocks;
 
-  beforeEach(() => {
-    // Reset all mocks
-    jest.clearAllMocks();
-
-    // Create mock dependencies using factory functions
+  beforeAll(() => {
+    // Create mock dependencies once for all tests
     mocks = {
       logger: createMockLogger(),
       llmJsonService: createMockLlmJsonService(),
@@ -175,12 +172,22 @@ describe('TraitsGenerator - Null Cliches Reproduction', () => {
       eventBus: createMockEventBus(),
       tokenEstimator: createMockTokenEstimator(),
     };
+  });
 
-    // Create the TraitsGenerator instance with correct dependencies
+  beforeEach(() => {
+    // Reset all mock calls but reuse mock objects
+    jest.clearAllMocks();
+
+    // Create the TraitsGenerator instance with reused dependencies
     traitsGenerator = new TraitsGenerator(mocks);
   });
 
   describe('Null Cliches Validation Error Reproduction', () => {
+    // Set up successful mock response once for all valid tests
+    beforeAll(() => {
+      setupSuccessfulMockResponse(mocks);
+    });
+
     describe.each([
       ['null', null],
       ['undefined', undefined],
@@ -200,8 +207,6 @@ describe('TraitsGenerator - Null Cliches Reproduction', () => {
           if (clichesValue !== undefined) {
             params.cliches = clichesValue;
           }
-
-          setupSuccessfulMockResponse(mocks);
 
           // Act: Should NOT throw an error - valid cliches values
           const result = await traitsGenerator.generateTraits(params);

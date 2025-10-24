@@ -177,7 +177,7 @@ describe('seduction:stroke_penis_to_draw_attention action discovery', () => {
     it('keeps seduction self-targeting defaults', () => {
       expect(strokePenisToDrawAttentionAction.targets).toBe('none');
       expect(strokePenisToDrawAttentionAction.forbidden_components).toEqual({
-        actor: ['positioning:hugging'],
+        actor: ['positioning:hugging', 'positioning:giving_blowjob'],
       });
     });
   });

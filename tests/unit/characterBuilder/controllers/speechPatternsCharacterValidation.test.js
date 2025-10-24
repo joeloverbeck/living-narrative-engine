@@ -13,6 +13,7 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
   let controller;
 
   beforeEach(() => {
+    jest.useFakeTimers();
     testBed = createTestBed();
 
     // Set up DOM structure for the controller
@@ -50,11 +51,12 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
   });
 
   afterEach(() => {
+    jest.useRealTimers();
     testBed.cleanup();
   });
 
   describe('Character Definition Format Recognition', () => {
-    it('should validate character with core:name component correctly', (done) => {
+    it('should validate character with core:name component correctly', async () => {
       // This should reproduce the "Character name is required and must be a string" error
       const characterDefinition = {
         components: {
@@ -89,19 +91,18 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
       const inputEvent = new Event('input', { bubbles: true });
       textarea.dispatchEvent(inputEvent);
 
-      // Wait a bit for debounced validation (controller uses 300ms debounce)
-      setTimeout(() => {
-        // Check if the validation is working by checking error state
-        // Since we can't access private methods, we'll test that no error is shown
-        // which indicates the validation passed
-        // Note: empty string means no inline style set, which is good (no error shown)
-        expect(errorContainer.style.display).toBe('');
-        expect(errorContainer.innerHTML).toBe('');
-        done();
-      }, 400);
+      // Advance timers for debounced validation (controller uses 300ms debounce)
+      await jest.advanceTimersByTimeAsync(400);
+
+      // Check if the validation is working by checking error state
+      // Since we can't access private methods, we'll test that no error is shown
+      // which indicates the validation passed
+      // Note: empty string means no inline style set, which is good (no error shown)
+      expect(errorContainer.style.display).toBe('');
+      expect(errorContainer.innerHTML).toBe('');
     });
 
-    it('should handle legacy format character definitions', (done) => {
+    it('should handle legacy format character definitions', async () => {
       // Test direct component format (no "components" wrapper)
       const legacyCharacterDefinition = {
         'core:name': {
@@ -127,18 +128,17 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
       const inputEvent = new Event('input', { bubbles: true });
       textarea.dispatchEvent(inputEvent);
 
-      // Wait for debounced validation
-      setTimeout(() => {
-        // Legacy format should be supported and valid
-        // For now, we're testing that no error is shown (validation passes)
-        // TODO: Investigate why button isn't being enabled despite valid input
-        expect(errorContainer.style.display).toBe('');
-        expect(errorContainer.innerHTML).toBe('');
-        done();
-      }, 400);
+      // Advance timers for debounced validation
+      await jest.advanceTimersByTimeAsync(400);
+
+      // Legacy format should be supported and valid
+      // For now, we're testing that no error is shown (validation passes)
+      // TODO: Investigate why button isn't being enabled despite valid input
+      expect(errorContainer.style.display).toBe('');
+      expect(errorContainer.innerHTML).toBe('');
     });
 
-    it('should accept character definitions with different core:name formats', (done) => {
+    it('should accept character definitions with different core:name formats', async () => {
       const testCases = [
         {
           name: 'text field format',
@@ -171,15 +171,8 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
       const textarea = document.getElementById('character-definition');
       const errorContainer = document.getElementById('character-input-error');
       const generateBtn = document.getElementById('generate-btn');
-      let testIndex = 0;
 
-      const testNextCase = () => {
-        if (testIndex >= testCases.length) {
-          done();
-          return;
-        }
-
-        const testCase = testCases[testIndex];
+      for (const testCase of testCases) {
         const characterDefinition = {
           components: {
             'core:name': testCase.nameComponent,
@@ -194,22 +187,19 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
         const inputEvent = new Event('input', { bubbles: true });
         textarea.dispatchEvent(inputEvent);
 
-        setTimeout(() => {
-          // All name formats should be accepted as valid
-          // Test that no error is shown (validation passes)
-          expect(errorContainer.style.display).toBe('');
-          expect(errorContainer.innerHTML).toBe('');
-          testIndex++;
-          testNextCase();
-        }, 400);
-      };
+        // Advance timers for debounced validation
+        await jest.advanceTimersByTimeAsync(400);
 
-      testNextCase();
+        // All name formats should be accepted as valid
+        // Test that no error is shown (validation passes)
+        expect(errorContainer.style.display).toBe('');
+        expect(errorContainer.innerHTML).toBe('');
+      }
     });
   });
 
   describe('Speech Patterns Component Validation', () => {
-    it('should allow empty patterns array in core:speech_patterns', (done) => {
+    it('should allow empty patterns array in core:speech_patterns', async () => {
       // This should reproduce the "Speech patterns must be an array" error
       const characterDefinition = {
         components: {
@@ -240,16 +230,16 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
       const inputEvent = new Event('input', { bubbles: true });
       textarea.dispatchEvent(inputEvent);
 
-      setTimeout(() => {
-        // This should not trigger "Speech patterns must be an array" error
-        // because we're validating CHARACTER DEFINITION input, not speech pattern RESPONSE
-        expect(errorContainer.style.display).toBe('');
-        expect(errorContainer.innerHTML).toBe('');
-        done();
-      }, 400);
+      // Advance timers for debounced validation
+      await jest.advanceTimersByTimeAsync(400);
+
+      // This should not trigger "Speech patterns must be an array" error
+      // because we're validating CHARACTER DEFINITION input, not speech pattern RESPONSE
+      expect(errorContainer.style.display).toBe('');
+      expect(errorContainer.innerHTML).toBe('');
     });
 
-    it('should not validate character input against speech patterns response schema', (done) => {
+    it('should not validate character input against speech patterns response schema', async () => {
       // The controller was incorrectly applying speech patterns response validation
       // to character definition input - this should be fixed
       const characterDefinition = {
@@ -270,18 +260,18 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
       const inputEvent = new Event('input', { bubbles: true });
       textarea.dispatchEvent(inputEvent);
 
-      setTimeout(() => {
-        // Should not expect speechPatterns array in character definition
-        // Should not expect characterName at top level in character definition
-        expect(errorContainer.style.display).toBe('');
-        expect(errorContainer.innerHTML).toBe('');
-        done();
-      }, 400);
+      // Advance timers for debounced validation
+      await jest.advanceTimersByTimeAsync(400);
+
+      // Should not expect speechPatterns array in character definition
+      // Should not expect characterName at top level in character definition
+      expect(errorContainer.style.display).toBe('');
+      expect(errorContainer.innerHTML).toBe('');
     });
   });
 
   describe('Complex Character Definition Scenarios', () => {
-    it('should validate realistic character definition with all components', (done) => {
+    it('should validate realistic character definition with all components', async () => {
       // Based on the user's example (amaia_castillo.character.json format)
       const realisticCharacter = {
         id: 'amaia_castillo',
@@ -365,17 +355,17 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
       const inputEvent = new Event('input', { bubbles: true });
       textarea.dispatchEvent(inputEvent);
 
-      setTimeout(() => {
-        // This complex, realistic character should validate successfully
-        expect(errorContainer.style.display).toBe('');
-        expect(errorContainer.innerHTML).toBe('');
-        done();
-      }, 400);
+      // Advance timers for debounced validation
+      await jest.advanceTimersByTimeAsync(400);
+
+      // This complex, realistic character should validate successfully
+      expect(errorContainer.style.display).toBe('');
+      expect(errorContainer.innerHTML).toBe('');
     });
   });
 
   describe('Error Cases That Should Fail', () => {
-    it('should reject character definition with no components', (done) => {
+    it('should reject character definition with no components', async () => {
       const emptyCharacter = {};
 
       const textarea = document.getElementById('character-definition');
@@ -388,15 +378,15 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
       const inputEvent = new Event('input', { bubbles: true });
       textarea.dispatchEvent(inputEvent);
 
-      setTimeout(() => {
-        // This should properly fail validation
-        expect(generateBtn.disabled).toBe(true);
-        expect(errorContainer.style.display).not.toBe('none');
-        done();
-      }, 400);
+      // Advance timers for debounced validation
+      await jest.advanceTimersByTimeAsync(400);
+
+      // This should properly fail validation
+      expect(generateBtn.disabled).toBe(true);
+      expect(errorContainer.style.display).not.toBe('none');
     });
 
-    it('should reject character definition with malformed core:name', (done) => {
+    it('should reject character definition with malformed core:name', async () => {
       const malformedCharacter = {
         components: {
           'core:name': null, // Invalid - should be object with text/name/value
@@ -416,12 +406,12 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
       const inputEvent = new Event('input', { bubbles: true });
       textarea.dispatchEvent(inputEvent);
 
-      setTimeout(() => {
-        // Should properly detect malformed name component
-        expect(generateBtn.disabled).toBe(true);
-        expect(errorContainer.style.display).not.toBe('none');
-        done();
-      }, 400);
+      // Advance timers for debounced validation
+      await jest.advanceTimersByTimeAsync(400);
+
+      // Should properly detect malformed name component
+      expect(generateBtn.disabled).toBe(true);
+      expect(errorContainer.style.display).not.toBe('none');
     });
   });
 });

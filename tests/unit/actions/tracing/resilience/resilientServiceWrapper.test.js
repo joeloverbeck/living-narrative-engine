@@ -10,6 +10,7 @@ describe('ResilientServiceWrapper', () => {
   let mockLogger;
 
   beforeEach(() => {
+    jest.useFakeTimers();
     mockService = {
       writeTrace: jest.fn().mockResolvedValue(),
       outputTrace: jest.fn().mockResolvedValue(),
@@ -46,6 +47,10 @@ describe('ResilientServiceWrapper', () => {
       logger: mockLogger,
       serviceName: 'TestService',
     });
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   describe('Constructor', () => {
@@ -257,7 +262,12 @@ describe('ResilientServiceWrapper', () => {
       });
 
       const proxy = wrapper.createResilientProxy();
-      const result = await proxy.someMethod();
+      const resultPromise = proxy.someMethod();
+
+      // Run all timers to handle retry delays
+      await jest.runAllTimersAsync();
+
+      const result = await resultPromise;
 
       expect(result).toBeUndefined();
     });
@@ -382,7 +392,6 @@ describe('ResilientServiceWrapper', () => {
     });
 
     it('should reset error count after 5-minute window expires', async () => {
-      jest.useFakeTimers();
       const error = new Error('Test error');
       mockService.someMethod.mockRejectedValue(error);
 
@@ -408,20 +417,10 @@ describe('ResilientServiceWrapper', () => {
 
       // Should now be disabled after 6 errors in new window
       expect(wrapper.isEnabled()).toBe(false);
-
-      jest.useRealTimers();
     });
   });
 
   describe('Retry mechanism', () => {
-    beforeEach(() => {
-      jest.useFakeTimers();
-    });
-
-    afterEach(() => {
-      jest.useRealTimers();
-    });
-
     it('should successfully retry and clear fallback mode', async () => {
       const error = new Error('Temporary error');
 
