@@ -77,6 +77,7 @@ describe('TargetRoleRegistry', () => {
 
     expect(isLegacyTargetPayload(null)).toBe(false);
     expect(isMultiTargetPayload(null)).toBe(false);
+    expect(isMultiTargetPayload({})).toBe(false);
     expect(
       isLegacyTargetPayload({
         targets: { [LEGACY_TARGET_ROLE]: { id: 'legacy' } },

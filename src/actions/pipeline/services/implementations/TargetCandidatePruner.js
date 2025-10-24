@@ -231,13 +231,6 @@ export class TargetCandidatePruner {
     }
 
     const targetEntity = candidate.entity || candidate;
-    if (!targetEntity) {
-      return {
-        valid: false,
-        reason: `No ${role} target available for validation`,
-        reasonCode: 'missing_candidate',
-      };
-    }
 
     for (const componentId of requiredComponents) {
       if (!componentId) {
