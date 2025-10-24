@@ -7,6 +7,9 @@
   "required_components": {
     "actor": ["positioning:closeness"]
   },
+  "forbidden_components": {
+    "actor": ["positioning:giving_blowjob"]
+  },
   "template": "brush a lock of hair behind {target}'s ear",
   "prerequisites": [],
   "visual": {

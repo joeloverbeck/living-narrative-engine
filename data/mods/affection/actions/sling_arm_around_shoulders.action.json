@@ -11,7 +11,8 @@
     "actor": [
       "kissing:kissing",
       "positioning:straddling_waist",
-      "positioning:being_hugged"
+      "positioning:being_hugged",
+      "positioning:giving_blowjob"
     ],
     "target": ["positioning:giving_blowjob"]
   },
