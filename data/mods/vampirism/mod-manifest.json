@@ -1,0 +1,40 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "vampirism",
+  "version": "1.0.0",
+  "name": "Vampirism",
+  "description": "Vampire-themed content including blood mechanics, vampire abilities, and supernatural interactions.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "anatomy",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "clothing",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [],
+    "components": [],
+    "conditions": [],
+    "rules": [],
+    "entities": {
+      "definitions": [],
+      "instances": []
+    },
+    "events": [],
+    "macros": [],
+    "scopes": []
+  }
+}

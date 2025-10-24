@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { CharacterBuilderBootstrap } from '../../../src/characterBuilder/CharacterBuilderBootstrap.js';
 import { TraitsGenerator } from '../../../src/characterBuilder/services/TraitsGenerator.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
+import { NoDelayRetryManager } from '../../common/mocks/noDelayRetryManager.js';
 
 describe('TraitsGenerator Event Naming - Integration Tests', () => {
   let bootstrap;
@@ -311,6 +312,7 @@ describe('TraitsGenerator Event Naming - Integration Tests', () => {
         llmStrategyFactory,
         llmConfigManager,
         tokenEstimator: null, // Optional, can be null
+        retryManager: new NoDelayRetryManager(),
       });
 
       // Generate traits

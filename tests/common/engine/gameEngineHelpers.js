@@ -105,7 +105,7 @@ export async function withRunningGameEngineBed(engineBedOptions = {}, testFn) {
  * test initializes a temporary {@link GameEngineTestBed} with the specified
  * token overridden to `null`, optionally starts the engine, executes the
  * provided callback, and asserts that the returned logger mock was called with
- * the expected message while the dispatch mock was not.
+ * the expected message. Optionally asserts no dispatches occurred if expectNoDispatch is true.
  * @param {Array<[string, string, { preInit?: boolean }]>} cases - Array of
  *   `[token, message, options]` tuples.
  * @param {(bed: GameEngineTestBed,
@@ -114,9 +114,10 @@ export async function withRunningGameEngineBed(engineBedOptions = {}, testFn) {
  *   Promise<[import('@jest/globals').Mock, import('@jest/globals').Mock]> |
  *   [import('@jest/globals').Mock, import('@jest/globals').Mock]} invokeFn -
  *   Callback performing the invocation and returning logger/dispatch mocks.
+ * @param {{ expectNoDispatches?: boolean }} [options] - Additional options.
  * @returns {Array<[string, () => Promise<void>]>} Generated test cases.
  */
-export function runUnavailableServiceTest(cases, invokeFn) {
+export function runUnavailableServiceTest(cases, invokeFn, { expectNoDispatches = true } = {}) {
   return cases.map(([token, expectedMessage, opts = {}]) => [
     token,
     async () => {
@@ -130,7 +131,9 @@ export function runUnavailableServiceTest(cases, invokeFn) {
           expectedMessage
         );
         expect(loggerMock).toHaveBeenCalledWith(expectedMessage);
-        expectNoDispatch(dispatchMock);
+        if (expectNoDispatches) {
+          expectNoDispatch(dispatchMock);
+        }
       });
     },
   ]);
@@ -145,7 +148,7 @@ export function runUnavailableServiceTest(cases, invokeFn) {
  *   the `preInit` flag on the case tuple. The supplied `invokeFn` performs the
  *   operation under test and must return the logger and dispatch mocks used for
  *   assertions. `generateServiceUnavailableTests` verifies the expected log
- *   output and that no dispatches occurred, then delegates to the returned
+ *   output and optionally that no dispatches occurred, then delegates to the returned
  *   function to run any extra assertions.
  * @param {Array<[string, string, { preInit?: boolean }]>} cases - List of
  *   `[token, expectedMessage, options]` tuples describing the service token to
@@ -158,21 +161,23 @@ export function runUnavailableServiceTest(cases, invokeFn) {
  *   [import('@jest/globals').Mock, import('@jest/globals').Mock]} invokeFn -
  *   Function invoked during each test case. It should perform the call under
  *   test and return the logger and dispatch mocks to validate.
- * @param {{ extraAssertions?: number }} [options] - Additional options.
+ * @param {{ extraAssertions?: number, expectNoDispatches?: boolean }} [options] - Additional options.
  *   Use `extraAssertions` to specify the number of assertions performed
- *   inside {@code invokeFn}.
+ *   inside {@code invokeFn}. Use `expectNoDispatches` to control whether the helper
+ *   should assert that no dispatches occurred (default: true for backward compatibility).
  * @returns {(title: string) => void} Callback that runs the generated `it.each`
  *   suite when provided a test title.
  */
 export function generateServiceUnavailableTests(
   cases,
   invokeFn,
-  { extraAssertions = 0 } = {}
+  { extraAssertions = 0, expectNoDispatches = true } = {}
 ) {
-  const eachFn = it.each(runUnavailableServiceTest(cases, invokeFn));
+  const eachFn = it.each(runUnavailableServiceTest(cases, invokeFn, { expectNoDispatches }));
   return (title) =>
     eachFn(title, async (_token, fn) => {
-      expect.assertions(2 + extraAssertions);
+      const baseAssertions = expectNoDispatches ? 2 : 1;
+      expect.assertions(baseAssertions + extraAssertions);
       await fn();
     });
 }

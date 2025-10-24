@@ -29,10 +29,10 @@ describe('assertValidActionIndex', () => {
     jest.clearAllMocks();
   });
 
-  it('dispatches and throws when chosen index is not an integer', () => {
-    expect(() =>
+  it('dispatches and throws when chosen index is not an integer', async () => {
+    await expect(
       assertValidActionIndex(1.2, 4, 'provider', 'actor-1', dispatcher, logger)
-    ).toThrow('Could not resolve the chosen action to a valid index.');
+    ).rejects.toThrow('Could not resolve the chosen action to a valid index.');
 
     expect(safeDispatchError).toHaveBeenCalledTimes(1);
     expect(safeDispatchError).toHaveBeenCalledWith(
@@ -43,12 +43,12 @@ describe('assertValidActionIndex', () => {
     );
   });
 
-  it('dispatches with merged debug data when index is outside bounds', () => {
+  it('dispatches with merged debug data when index is outside bounds', async () => {
     const debugData = { reason: 'too-high' };
 
-    expect(() =>
+    await expect(
       assertValidActionIndex(5, 3, 'provider', 'actor-2', dispatcher, logger, debugData)
-    ).toThrow('Player chose an index that does not exist for this turn.');
+    ).rejects.toThrow('Player chose an index that does not exist for this turn.');
 
     expect(safeDispatchError).toHaveBeenCalledTimes(1);
     const [, , details] = safeDispatchError.mock.calls[0];
@@ -57,10 +57,10 @@ describe('assertValidActionIndex', () => {
     expect(debugData).toEqual({ reason: 'too-high' });
   });
 
-  it('returns silently when the index is valid', () => {
-    expect(() =>
+  it('returns silently when the index is valid', async () => {
+    await expect(
       assertValidActionIndex(2, 5, 'provider', 'actor-3', dispatcher, logger)
-    ).not.toThrow();
+    ).resolves.not.toThrow();
 
     expect(safeDispatchError).not.toHaveBeenCalled();
   });

@@ -10,6 +10,7 @@ import { TraitsGenerator } from '../../../src/characterBuilder/services/TraitsGe
 import { CharacterBuilderService } from '../../../src/characterBuilder/services/characterBuilderService.js';
 import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
 import { createEventBus } from '../../common/mockFactories/eventBus.js';
+import { NoDelayRetryManager } from '../../common/mocks/noDelayRetryManager.js';
 import { JSDOM } from 'jsdom';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -205,6 +206,7 @@ describe('TraitsGenerator Display Issues Integration Test', () => {
         llmConfigManager: mockLlmConfigManager,
         eventBus: mockEventBus,
         tokenEstimator: mockTokenEstimator,
+        retryManager: new NoDelayRetryManager(),
       });
     });
 

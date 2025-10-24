@@ -18,6 +18,7 @@ import { CharacterBuilderBootstrap } from '../../../src/characterBuilder/Charact
 import { TraitsGenerator } from '../../../src/characterBuilder/services/TraitsGenerator.js';
 import { AppContainer } from '../../../src/dependencyInjection/appContainer.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
+import { NoDelayRetryManager } from '../../common/mocks/noDelayRetryManager.js';
 
 describe('TraitsGenerator - Event Namespace Integration', () => {
   let container;
@@ -233,6 +234,7 @@ describe('TraitsGenerator - Event Namespace Integration', () => {
       llmStrategyFactory,
       llmConfigManager,
       eventBus,
+      retryManager: new NoDelayRetryManager(),
     });
 
     // Mock the LLM response for generateTraits

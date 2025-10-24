@@ -13,6 +13,7 @@ import {
 } from '@jest/globals';
 import { TraitsGenerator } from '../../../src/characterBuilder/services/TraitsGenerator.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
+import { NoDelayRetryManager } from '../../common/mocks/noDelayRetryManager.js';
 
 describe('TraitsGenerator - Event Validation Integration', () => {
   let consoleWarnSpy;
@@ -70,6 +71,8 @@ describe('TraitsGenerator - Event Validation Integration', () => {
       },
     };
 
+    const retryManager = new NoDelayRetryManager();
+
     traitsGenerator = new TraitsGenerator({
       logger: mockLlmServices.logger,
       llmJsonService: mockLlmServices.llmJsonService,
@@ -77,6 +80,7 @@ describe('TraitsGenerator - Event Validation Integration', () => {
       llmConfigManager: mockLlmServices.llmConfigManager,
       eventBus: mockEventBus,
       tokenEstimator: mockLlmServices.tokenEstimator,
+      retryManager,
     });
   });
 

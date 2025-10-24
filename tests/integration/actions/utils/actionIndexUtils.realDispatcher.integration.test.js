@@ -104,10 +104,10 @@ describe('actionIndexUtils assertValidActionIndex with real dispatcher', () => {
     }
   });
 
-  it('dispatches a system error event when chosenIndex is not an integer', () => {
+  it('dispatches a system error event when chosenIndex is not an integer', async () => {
     const debugData = { rawSelection: 'two', available: 3 };
 
-    expect(() =>
+    await expect(
       assertValidActionIndex(
         'two',
         3,
@@ -117,7 +117,7 @@ describe('actionIndexUtils assertValidActionIndex with real dispatcher', () => {
         logger,
         debugData
       )
-    ).toThrow('Could not resolve the chosen action to a valid index.');
+    ).rejects.toThrow('Could not resolve the chosen action to a valid index.');
 
     expect(validatedDispatcher.events).toHaveLength(1);
     const event = validatedDispatcher.events[0];
@@ -134,8 +134,8 @@ describe('actionIndexUtils assertValidActionIndex with real dispatcher', () => {
     });
   });
 
-  it('uses an empty details object when debug data is omitted', () => {
-    expect(() =>
+  it('uses an empty details object when debug data is omitted', async () => {
+    await expect(
       assertValidActionIndex(
         'invalid',
         1,
@@ -144,17 +144,17 @@ describe('actionIndexUtils assertValidActionIndex with real dispatcher', () => {
         safeDispatcher,
         logger
       )
-    ).toThrow('Could not resolve the chosen action to a valid index.');
+    ).rejects.toThrow('Could not resolve the chosen action to a valid index.');
 
     expect(validatedDispatcher.events).toHaveLength(1);
     const event = validatedDispatcher.events[0];
     expect(event.payload.details).toEqual({});
   });
 
-  it('includes actionsCount detail when index is outside the available range', () => {
+  it('includes actionsCount detail when index is outside the available range', async () => {
     const debugData = { attempted: 5 };
 
-    expect(() =>
+    await expect(
       assertValidActionIndex(
         5,
         2,
@@ -164,7 +164,7 @@ describe('actionIndexUtils assertValidActionIndex with real dispatcher', () => {
         logger,
         debugData
       )
-    ).toThrow('Player chose an index that does not exist for this turn.');
+    ).rejects.toThrow('Player chose an index that does not exist for this turn.');
 
     expect(validatedDispatcher.events).toHaveLength(1);
     const event = validatedDispatcher.events[0];
@@ -180,7 +180,7 @@ describe('actionIndexUtils assertValidActionIndex with real dispatcher', () => {
     validatedDispatcher.clear();
     recordedNotifications.length = 0;
 
-    expect(() =>
+    await expect(
       assertValidActionIndex(
         0,
         2,
@@ -190,7 +190,7 @@ describe('actionIndexUtils assertValidActionIndex with real dispatcher', () => {
         logger,
         { attempted: 0 }
       )
-    ).toThrow('Player chose an index that does not exist for this turn.');
+    ).rejects.toThrow('Player chose an index that does not exist for this turn.');
 
     expect(validatedDispatcher.events).toHaveLength(1);
     const lowerEvent = validatedDispatcher.events[0];
@@ -200,8 +200,8 @@ describe('actionIndexUtils assertValidActionIndex with real dispatcher', () => {
     });
   });
 
-  it('passes silently when the selected index is valid', () => {
-    expect(() =>
+  it('passes silently when the selected index is valid', async () => {
+    await expect(
       assertValidActionIndex(
         1,
         3,
@@ -211,7 +211,7 @@ describe('actionIndexUtils assertValidActionIndex with real dispatcher', () => {
         logger,
         { context: 'sanity-check' }
       )
-    ).not.toThrow();
+    ).resolves.not.toThrow();
 
     expect(validatedDispatcher.events).toHaveLength(0);
     expect(recordedNotifications).toHaveLength(0);

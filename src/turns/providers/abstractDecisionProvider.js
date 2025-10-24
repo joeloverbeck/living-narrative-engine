@@ -78,7 +78,7 @@ export class AbstractDecisionProvider extends ITurnDecisionProvider {
       abortSignal
     );
 
-    assertValidActionIndex(
+    await assertValidActionIndex(
       index,
       actions.length,
       this.constructor.name,

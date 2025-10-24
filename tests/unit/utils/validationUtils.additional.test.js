@@ -65,11 +65,11 @@ describe('validateDependencies', () => {
 });
 
 describe('assertValidActionIndex', () => {
-  it('throws and dispatches when index is not an integer', () => {
-    const dispatcher = { dispatch: jest.fn() };
-    expect(() =>
+  it('throws and dispatches when index is not an integer', async () => {
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+    await expect(
       assertValidActionIndex(1.5, 3, 'Prov', 'actor1', dispatcher, {})
-    ).toThrow('Could not resolve the chosen action to a valid index.');
+    ).rejects.toThrow('Could not resolve the chosen action to a valid index.');
     expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
       message:
         "Prov: Did not receive a valid integer 'chosenIndex' for actor actor1.",
@@ -77,9 +77,9 @@ describe('assertValidActionIndex', () => {
     });
   });
 
-  it('throws and dispatches when index is out of range', () => {
-    const dispatcher = { dispatch: jest.fn() };
-    expect(() =>
+  it('throws and dispatches when index is out of range', async () => {
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+    await expect(
       assertValidActionIndex(
         5,
         3,
@@ -89,18 +89,18 @@ describe('assertValidActionIndex', () => {
         {},
         { extra: 'data' }
       )
-    ).toThrow('Player chose an index that does not exist for this turn.');
+    ).rejects.toThrow('Player chose an index that does not exist for this turn.');
     expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
       message: 'Prov: invalid chosenIndex (5) for actor actor2.',
       details: { extra: 'data', actionsCount: 3 },
     });
   });
 
-  it('passes silently for valid index', () => {
-    const dispatcher = { dispatch: jest.fn() };
-    expect(() =>
+  it('passes silently for valid index', async () => {
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+    await expect(
       assertValidActionIndex(2, 3, 'Prov', 'actor3', dispatcher, {})
-    ).not.toThrow();
+    ).resolves.not.toThrow();
     expectNoDispatch(dispatcher.dispatch);
   });
 });

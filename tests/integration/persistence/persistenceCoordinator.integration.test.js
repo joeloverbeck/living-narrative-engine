@@ -148,9 +148,10 @@ class TestSessionManager {
 }
 
 class LoadFailureHandler {
-  constructor({ safeEventDispatcher, logger }) {
+  constructor({ safeEventDispatcher, logger, engineState }) {
     this.safeEventDispatcher = safeEventDispatcher;
     this.logger = logger;
+    this.engineState = engineState;
     this.calls = [];
   }
 
@@ -165,6 +166,8 @@ class LoadFailureHandler {
       errorMessage: `Failed to load game: ${message}`,
       saveIdentifier,
     });
+    // Reset engine state to match production behavior
+    this.engineState.reset();
     return { success: false, error: message, data: null };
   }
 }
@@ -199,7 +202,7 @@ function createEnvironment({
     ? new TestPersistenceService({ saveHandler, loadHandler })
     : null;
   const failureHandler =
-    loadFailureHandler ?? new LoadFailureHandler({ safeEventDispatcher, logger });
+    loadFailureHandler ?? new LoadFailureHandler({ safeEventDispatcher, logger, engineState });
 
   const coordinator = new PersistenceCoordinator({
     logger,
