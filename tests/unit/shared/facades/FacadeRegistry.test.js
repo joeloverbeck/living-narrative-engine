@@ -11,12 +11,13 @@ describe('FacadeRegistry', () => {
   let mockFactory;
   let mockLogger;
   let registry;
+  let mockEventBus;
 
   beforeEach(() => {
     testBed = createTestBed();
     mockFactory = testBed.createMock('factory', ['getSingletonFacade', 'createFacade', 'registerFacade', 'isRegistered']);
     mockLogger = testBed.createMockLogger();
-    const mockEventBus = testBed.createMock('eventBus', ['dispatch', 'subscribe']);
+    mockEventBus = testBed.createMock('eventBus', ['dispatch', 'subscribe']);
 
     registry = new FacadeRegistry({
       facadeFactory: mockFactory,
@@ -71,6 +72,10 @@ describe('FacadeRegistry', () => {
       registry.register(metadata, config);
 
       expect(mockLogger.debug).toHaveBeenCalledWith('Registered facade: TestFacade v1.0.0');
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith('FACADE_REGISTERED', expect.objectContaining({
+        name: 'TestFacade',
+        version: '1.0.0'
+      }));
     });
 
     it('should throw error for duplicate registration', () => {
@@ -113,6 +118,21 @@ describe('FacadeRegistry', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith('Registered facade: TestFacade v1.0.0');
     });
 
+    it('should log and rethrow when factory registration fails', () => {
+      const metadata = { name: 'BrokenFacade', version: '1.0.0' };
+      const config = {};
+      const error = new Error('Factory failure');
+      mockFactory.registerFacade.mockImplementation(() => {
+        throw error;
+      });
+
+      expect(() => {
+        registry.register(metadata, config);
+      }).toThrow(error);
+
+      expect(mockLogger.error).toHaveBeenCalledWith('Failed to register facade: BrokenFacade', error);
+    });
+
     it('should normalize capabilities and tags to arrays', () => {
       const metadata = {
         name: 'TestFacade',
@@ -124,6 +144,45 @@ describe('FacadeRegistry', () => {
       const registered = registry.getRegisteredFacades();
       expect(registered[0].capabilities).toEqual([]);
       expect(registered[0].tags).toEqual([]);
+    });
+  });
+
+  describe('metadata accessors', () => {
+    beforeEach(() => {
+      registry.register({
+        name: 'MetaFacade',
+        version: '1.0.0',
+        description: 'Metadata fixture',
+        category: 'core',
+        capabilities: ['read'],
+        tags: ['meta']
+      }, { timeout: 50 });
+    });
+
+    it('should return metadata for registered facade', () => {
+      const metadata = registry.getMetadata('MetaFacade');
+
+      expect(metadata.name).toBe('MetaFacade');
+      expect(metadata.description).toBe('Metadata fixture');
+    });
+
+    it('should return null for unknown metadata lookup', () => {
+      expect(registry.getMetadata('MissingFacade')).toBeNull();
+    });
+
+    it('should provide lists of all registered facades and categories', () => {
+      const allFacades = registry.getAllFacades();
+      const categories = registry.getCategories();
+
+      expect(allFacades.map(f => f.name)).toContain('MetaFacade');
+      expect(categories).toEqual(['core']);
+    });
+
+    it('should return facades by category', () => {
+      const facades = registry.getFacadesByCategory('core');
+
+      expect(facades).toHaveLength(1);
+      expect(facades[0].name).toBe('MetaFacade');
     });
   });
 
@@ -374,6 +433,63 @@ describe('FacadeRegistry', () => {
       expect(facade.capabilities).toEqual(['query']);
       expect(facade.tags).toEqual(['test']);
       expect(facade.config).toEqual(config);
+    });
+  });
+
+  describe('category and lifecycle management', () => {
+    beforeEach(() => {
+      registry.register({
+        name: 'LifecycleFacade',
+        version: '1.0.0',
+        category: 'lifecycle'
+      }, {});
+      mockEventBus.dispatch.mockClear();
+      mockLogger.info.mockClear();
+      mockLogger.warn.mockClear();
+    });
+
+    it('should unregister facade and clean category index', () => {
+      registry.unregister('LifecycleFacade');
+
+      expect(registry.isRegistered('LifecycleFacade')).toBe(false);
+      expect(registry.getFacadesByCategory('lifecycle')).toEqual([]);
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
+        type: 'FACADE_UNREGISTERED',
+        payload: { name: 'LifecycleFacade', category: 'lifecycle' },
+        timestamp: expect.any(Number)
+      });
+      expect(mockLogger.info).toHaveBeenCalledWith('Unregistered facade: LifecycleFacade', { category: 'lifecycle' });
+    });
+
+    it('should warn when unregistering unknown facade', () => {
+      registry.unregister('UnknownFacade');
+
+      expect(mockLogger.warn).toHaveBeenCalledWith('Attempted to unregister unknown facade: UnknownFacade');
+      expect(mockEventBus.dispatch).not.toHaveBeenCalled();
+    });
+
+    it('should provide registry statistics', () => {
+      const stats = registry.getStatistics();
+
+      expect(stats).toMatchObject({
+        totalFacades: 1,
+        categories: 1,
+        singletonInstances: 0,
+        facadesByCategory: { lifecycle: 1 }
+      });
+    });
+
+    it('should handle singleton clearing without stored instances', () => {
+      registry.clearSingleton('LifecycleFacade');
+      expect(mockEventBus.dispatch).not.toHaveBeenCalled();
+
+      registry.clearAllSingletons();
+      expect(mockLogger.info).toHaveBeenCalledWith('Cleared 0 singleton facade instances');
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
+        type: 'FACADE_SINGLETONS_CLEARED',
+        payload: { count: 0, names: [] },
+        timestamp: expect.any(Number)
+      });
     });
   });
 
