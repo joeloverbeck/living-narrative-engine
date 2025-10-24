@@ -107,6 +107,70 @@ describe('TargetValidationReporter', () => {
     );
   });
 
+  it('logs a warning when validation analysis capture fails', async () => {
+    const error = new Error('network issue');
+    trace.captureActionData.mockRejectedValueOnce(error);
+
+    await reporter.reportValidationAnalysis({
+      trace,
+      actionDef: { id: 'warn-test' },
+      targetEntities: {},
+      validation: { valid: true },
+      validationTime: 5,
+    });
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      "Failed to capture validation analysis for action 'warn-test': network issue"
+    );
+  });
+
+  it('handles missing target entities by emitting an empty map', async () => {
+    await reporter.reportValidationAnalysis({
+      trace,
+      actionDef: { id: 'no-targets' },
+      targetEntities: null,
+      validation: { valid: true },
+      validationTime: 2,
+    });
+
+    expect(trace.captureActionData).toHaveBeenCalledWith(
+      'target_component_validation',
+      'no-targets',
+      expect.objectContaining({ targetEntityIds: {} })
+    );
+  });
+
+  it('normalizes array-based targets and falls back to unknown identifiers', async () => {
+    const actionDef = { id: 'array-targets' };
+    const targetEntities = {
+      [LEGACY_TARGET_ROLE]: [],
+      [ACTOR_ROLE]: [],
+      [ALL_MULTI_TARGET_ROLES[0]]: [{ id: 'primary-1' }],
+      [ALL_MULTI_TARGET_ROLES[1]]: [{ }],
+    };
+
+    await reporter.reportValidationAnalysis({
+      trace,
+      actionDef,
+      targetEntities,
+      validation: { valid: true },
+      validationTime: 4,
+    });
+
+    expect(trace.captureActionData).toHaveBeenCalledWith(
+      'target_component_validation',
+      'array-targets',
+      expect.objectContaining({
+        targetEntityIds: expect.objectContaining({
+          [LEGACY_TARGET_ROLE]: 'unknown',
+          [ACTOR_ROLE]: 'unknown',
+          [ALL_MULTI_TARGET_ROLES[0]]: 'primary-1',
+          [ALL_MULTI_TARGET_ROLES[1]]: 'unknown',
+        }),
+      })
+    );
+  });
+
   it('reports performance data and logs debug on failure', async () => {
     const error = new Error('capture failed');
     trace.captureActionData.mockResolvedValueOnce(undefined);
