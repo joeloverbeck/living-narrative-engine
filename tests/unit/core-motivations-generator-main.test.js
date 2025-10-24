@@ -33,25 +33,70 @@ describe('Core Motivations Generator Entry Point', () => {
   let CoreMotivationsDisplayEnhancer;
   let CoreMotivationsGenerator;
   let initializeApp;
+  let originalDocumentReadyStateDescriptor;
+  let originalDocumentGetElementById;
+  let originalDocumentAddEventListener;
+  let originalWindowAddEventListener;
 
-  beforeEach(async () => {
-    // Clear module cache
+  const flushPromises = async () => {
+    await Promise.resolve();
+    await Promise.resolve();
+  };
+
+  const storeOriginalDomGlobals = () => {
+    if (!originalDocumentReadyStateDescriptor) {
+      originalDocumentReadyStateDescriptor =
+        Object.getOwnPropertyDescriptor(document, 'readyState');
+    }
+
+    if (!originalDocumentGetElementById) {
+      originalDocumentGetElementById = document.getElementById;
+    }
+
+    if (!originalDocumentAddEventListener) {
+      originalDocumentAddEventListener = document.addEventListener;
+    }
+
+    if (!originalWindowAddEventListener) {
+      originalWindowAddEventListener = window.addEventListener;
+    }
+  };
+
+  const restoreDomGlobals = () => {
+    if (originalDocumentReadyStateDescriptor) {
+      Object.defineProperty(
+        document,
+        'readyState',
+        originalDocumentReadyStateDescriptor
+      );
+    }
+
+    if (originalDocumentGetElementById) {
+      document.getElementById = originalDocumentGetElementById;
+    }
+
+    if (originalDocumentAddEventListener) {
+      document.addEventListener = originalDocumentAddEventListener;
+    }
+
+    if (originalWindowAddEventListener) {
+      window.addEventListener = originalWindowAddEventListener;
+    }
+  };
+
+  const setupEnvironment = async ({ readyState = 'loading' } = {}) => {
     jest.resetModules();
 
-    // Store original console methods
-    originalConsoleLog = console.log;
-    originalConsoleError = console.error;
-
-    // Mock console methods
     console.log = jest.fn();
     console.error = jest.fn();
 
-    // Mock controller
+    storeOriginalDomGlobals();
+    restoreDomGlobals();
+
     mockController = {
       cleanup: jest.fn().mockResolvedValue(undefined),
     };
 
-    // Mock bootstrap
     mockBootstrap = {
       bootstrap: jest.fn().mockResolvedValue({
         controller: mockController,
@@ -60,7 +105,6 @@ describe('Core Motivations Generator Entry Point', () => {
       }),
     };
 
-    // Import mocked modules
     CharacterBuilderBootstrap = (
       await import('../../src/characterBuilder/CharacterBuilderBootstrap.js')
     ).CharacterBuilderBootstrap;
@@ -80,26 +124,23 @@ describe('Core Motivations Generator Entry Point', () => {
       )
     ).CoreMotivationsGenerator;
 
-    // Mock implementations
     CharacterBuilderBootstrap.mockImplementation(() => mockBootstrap);
     CoreMotivationsGeneratorController.mockImplementation(() => mockController);
     CoreMotivationsDisplayEnhancer.mockImplementation(() => ({}));
     CoreMotivationsGenerator.mockImplementation(() => ({}));
 
-    // Mock DOM methods
     mockGetElementById = jest.fn();
     mockAddEventListener = jest.fn();
 
-    global.document = {
-      getElementById: mockGetElementById,
-      readyState: 'loading', // Prevent immediate execution during import
-      addEventListener: mockAddEventListener,
-    };
+    document.getElementById = mockGetElementById;
+    document.addEventListener = mockAddEventListener;
+    Object.defineProperty(document, 'readyState', {
+      configurable: true,
+      get: () => readyState,
+    });
 
-    global.window = {
-      addEventListener: jest.fn(),
-      __coreMotivationsController: undefined,
-    };
+    window.addEventListener = jest.fn();
+    window.__coreMotivationsController = undefined;
 
     global.process = {
       env: {
@@ -107,9 +148,15 @@ describe('Core Motivations Generator Entry Point', () => {
       },
     };
 
-    // Import the module under test after setting up mocks
     const module = await import('../../src/core-motivations-generator-main.js');
     initializeApp = module.initializeApp;
+  };
+
+  beforeEach(async () => {
+    originalConsoleLog = console.log;
+    originalConsoleError = console.error;
+
+    await setupEnvironment({ readyState: 'loading' });
   });
 
   afterEach(() => {
@@ -117,9 +164,18 @@ describe('Core Motivations Generator Entry Point', () => {
     console.log = originalConsoleLog;
     console.error = originalConsoleError;
 
+    restoreDomGlobals();
+
     // Clear all mocks
     jest.clearAllMocks();
     jest.resetModules();
+  });
+
+  it('should register DOMContentLoaded handler when document is still loading', () => {
+    expect(mockAddEventListener).toHaveBeenCalledWith(
+      'DOMContentLoaded',
+      initializeApp
+    );
   });
 
   it('should bootstrap with correct configuration', async () => {
@@ -373,6 +429,26 @@ describe('Core Motivations Generator Entry Point', () => {
     expect(callArgs.controllerClass).toBe(CoreMotivationsGeneratorController);
   });
 
+  it('should handle missing bootstrap result without logging success message', async () => {
+    mockBootstrap.bootstrap.mockResolvedValue(undefined);
+
+    console.log.mockClear();
+
+    const result = await initializeApp();
+
+    expect(result).toBeUndefined();
+    expect(console.log).toHaveBeenCalledWith(
+      'Initializing Core Motivations Generator...'
+    );
+    expect(console.log).not.toHaveBeenCalledWith(
+      'Core Motivations Generator initialized successfully'
+    );
+    expect(global.window.addEventListener).toHaveBeenCalledWith(
+      'beforeunload',
+      expect.any(Function)
+    );
+  });
+
   it('should handle bootstrap result without bootstrapTime', async () => {
     // Arrange
     mockBootstrap.bootstrap.mockResolvedValue({
@@ -399,6 +475,22 @@ describe('Core Motivations Generator Entry Point', () => {
     // Should not log the timing message
     expect(console.log).not.toHaveBeenCalledWith(
       expect.stringMatching(/initialized in \d+\.\d+ms/)
+    );
+  });
+
+  it('should initialize immediately when the DOM is already loaded', async () => {
+    await setupEnvironment({ readyState: 'complete' });
+
+    await flushPromises();
+
+    expect(mockAddEventListener).not.toHaveBeenCalled();
+    expect(mockBootstrap.bootstrap).toHaveBeenCalledTimes(1);
+    expect(console.log).toHaveBeenCalledWith(
+      'Initializing Core Motivations Generator...'
+    );
+    expect(global.window.addEventListener).toHaveBeenCalledWith(
+      'beforeunload',
+      expect.any(Function)
     );
   });
 });
