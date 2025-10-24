@@ -58,7 +58,21 @@ describe('persistenceResultUtils', () => {
     expect(result.success).toBe(false);
     expect(result.error).toBeInstanceOf(PersistenceError);
     expect(result.error.code).toBe(PersistenceErrorCodes.UNEXPECTED_ERROR);
-    expect(result.error.message).toBe('unexpected');
+    expect(result.error.message).toBe('unexpected: bad');
+    expect(result.data).toBeNull();
+  });
+
+  it('normalizePersistenceFailure preserves string error messages', () => {
+    const result = normalizePersistenceFailure(
+      { success: false, error: 'Disk full' },
+      PersistenceErrorCodes.WRITE_ERROR,
+      'Failed to persist game state'
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBeInstanceOf(PersistenceError);
+    expect(result.error.code).toBe(PersistenceErrorCodes.WRITE_ERROR);
+    expect(result.error.message).toBe('Failed to persist game state: Disk full');
     expect(result.data).toBeNull();
   });
 });
