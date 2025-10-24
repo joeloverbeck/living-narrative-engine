@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import CommandProcessingWorkflow from '../../../../../src/turns/states/helpers/commandProcessingWorkflow.js';
 import { ProcessingExceptionHandler } from '../../../../../src/turns/states/helpers/processingExceptionHandler.js';
 import EndTurnSuccessStrategy from '../../../../../src/turns/strategies/endTurnSuccessStrategy.js';
@@ -223,6 +223,69 @@ class OptionalDirectiveExecutor {
   }
 }
 
+class RecordingExceptionHandler extends ProcessingExceptionHandler {
+  constructor(state) {
+    super(state);
+    this.calls = [];
+  }
+
+  async handle(turnCtx, error, actorIdContext, shouldEndTurn = true) {
+    this.calls.push({
+      turnCtx,
+      error,
+      actorIdContext,
+      shouldEndTurn,
+    });
+    await super.handle(turnCtx, error, actorIdContext, shouldEndTurn);
+  }
+}
+
+class StateChangingDirectiveExecutor {
+  constructor(handler) {
+    this.handler = handler;
+    this.calls = [];
+    this.resolver = null;
+  }
+
+  async execute({ turnContext, directiveType, commandResult, stateName }) {
+    this.calls.push({ turnContext, directiveType, commandResult, stateName });
+    const strategy = this.resolver?.resolveStrategy(directiveType);
+    if (strategy) {
+      await strategy.execute(turnContext, directiveType, commandResult);
+    }
+
+    const nextState = {
+      getStateName: () => `${stateName}:post-directive`,
+    };
+    this.handler.setCurrentState(nextState);
+    return { executed: true, stateChanged: true };
+  }
+}
+
+class NonFinishingProcessingState extends TestProcessingState {
+  finishProcessing() {
+    this.finishCalls += 1;
+    if (this.finishCalls > 1) {
+      this._isProcessing = false;
+    }
+  }
+}
+
+class StateChangingDirectiveStrategy extends EndTurnSuccessStrategy {
+  constructor(handler) {
+    super();
+    this._handler = handler;
+  }
+
+  async execute(turnContext, directive, commandResult) {
+    await super.execute(turnContext, directive, commandResult);
+    const nextState = {
+      getStateName: () => 'PostProcessingState',
+    };
+    this._handler.setCurrentState(nextState);
+  }
+}
+
 const createActor = () => ({ id: 'actor-1', type: 'test:actor' });
 
 function createTurnContextEnvironment({
@@ -268,6 +331,10 @@ describe('CommandProcessingWorkflow integration', () => {
     endTurnCalls = [];
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   function buildWorkflow({
     commandProcessorImpl,
     interpreterImpl,
@@ -276,6 +343,8 @@ describe('CommandProcessingWorkflow integration', () => {
     resultInterpreter,
     directiveExecutor,
     mutateHandler,
+    exceptionHandler,
+    useDefaultExceptionHandler,
   }) {
     const { turnContext, handler } = createTurnContextEnvironment({
       logger,
@@ -300,13 +369,17 @@ describe('CommandProcessingWorkflow integration', () => {
         interpreterImpl
       ),
       directiveStrategyResolver: resolver,
-      exceptionHandler: new ProcessingExceptionHandler(state),
+      ...(exceptionHandler
+        ? { exceptionHandler }
+        : useDefaultExceptionHandler
+        ? {}
+        : { exceptionHandler: new ProcessingExceptionHandler(state) }),
       commandDispatcher,
       resultInterpreter,
       directiveExecutor,
     });
 
-    if (directiveExecutor instanceof OptionalDirectiveExecutor) {
+    if (directiveExecutor) {
       directiveExecutor.resolver = resolver;
     }
 
@@ -523,5 +596,278 @@ describe('CommandProcessingWorkflow integration', () => {
 
     expect(failingTurnContext.handler.resetCalls).toHaveLength(1);
     expect(failingTurnContext.handler.transitionCalls).toHaveLength(1);
+  });
+
+  it('constructs a default exception handler when none is provided', () => {
+    const errorContextSpy = jest.spyOn(
+      CommandProcessingWorkflow.prototype,
+      '_createErrorContext'
+    );
+
+    const { workflow } = buildWorkflow({
+      commandProcessorImpl: async () => ({ success: true }),
+      interpreterImpl: async () => TurnDirective.END_TURN_SUCCESS,
+      strategyMap: {
+        [TurnDirective.END_TURN_SUCCESS]: new EndTurnSuccessStrategy(),
+      },
+      useDefaultExceptionHandler: true,
+    });
+
+    const context = workflow._createErrorContext(
+      'default',
+      new Error('boom'),
+      actor.id,
+      { detail: 'sample' }
+    );
+
+    expect(workflow._exceptionHandler).toBeInstanceOf(ProcessingExceptionHandler);
+    expect(context).toEqual(
+      expect.objectContaining({
+        phase: 'command_processing_default',
+        actorId: actor.id,
+        detail: 'sample',
+      })
+    );
+    expect(errorContextSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports interpretation errors through the provided exception handler', async () => {
+    const handleSpy = jest.spyOn(ProcessingExceptionHandler.prototype, 'handle');
+    const errorContextSpy = jest.spyOn(
+      CommandProcessingWorkflow.prototype,
+      '_createErrorContext'
+    );
+
+    const { workflow, turnContext } = buildWorkflow({
+      commandProcessorImpl: async () => ({ success: true, payload: 'noop' }),
+      interpreterImpl: async () => null,
+      strategyMap: {
+        [TurnDirective.END_TURN_SUCCESS]: new EndTurnSuccessStrategy(),
+      },
+    });
+
+    await workflow.processCommand(turnContext, actor, {
+      actionDefinitionId: 'test:action',
+      commandString: 'invalid directive',
+    });
+
+    expect(handleSpy).toHaveBeenCalledTimes(1);
+    const [, errorArg] = handleSpy.mock.calls[0];
+    expect(errorArg).toBeInstanceOf(Error);
+    expect(errorArg.message).toContain('Invalid directive type returned');
+    expect(errorContextSpy).toHaveBeenCalledWith(
+      'interpretation',
+      expect.any(Error),
+      actor.id,
+      expect.objectContaining({ commandSuccess: true })
+    );
+  });
+
+  it('falls back to the original context when dispatch invalidates the active turn context', async () => {
+    const errorContextSpy = jest.spyOn(
+      CommandProcessingWorkflow.prototype,
+      '_createErrorContext'
+    );
+    const { turnContext, handler } = createTurnContextEnvironment({
+      logger,
+      dispatcher,
+      onEndTurn: (error) => endTurnCalls.push(error ?? null),
+      actor,
+    });
+
+    const invalidContext = {
+      getActor: () => null,
+      getLogger: () => logger,
+    };
+
+    const state = new TestProcessingState(handler, turnContext);
+    state._getTurnContext = () => invalidContext;
+    handler.setCurrentState(state);
+
+    const exceptionHandler = new RecordingExceptionHandler(state);
+
+    const workflow = new CommandProcessingWorkflow({
+      state,
+      commandProcessor: new TestCommandProcessor(async () => ({
+        success: true,
+        detail: 'context changed',
+      })),
+      commandOutcomeInterpreter: new TestCommandOutcomeInterpreter(async () =>
+        TurnDirective.END_TURN_SUCCESS
+      ),
+      directiveStrategyResolver: new TestDirectiveResolver({
+        [TurnDirective.END_TURN_SUCCESS]: new EndTurnSuccessStrategy(),
+      }),
+      exceptionHandler,
+    });
+
+    await workflow.processCommand(turnContext, actor, {
+      actionDefinitionId: 'test:action',
+      commandString: 'context invalid',
+    });
+
+    expect(exceptionHandler.calls).toHaveLength(1);
+    expect(exceptionHandler.calls[0].turnCtx).toBe(turnContext);
+    expect(exceptionHandler.calls[0].shouldEndTurn).toBe(false);
+    expect(logger.calls.warn).toEqual(
+      expect.arrayContaining([
+        expect.arrayContaining([
+          expect.stringContaining('Context validation failed after dispatch'),
+        ]),
+      ])
+    );
+    expect(errorContextSpy).toHaveBeenCalledWith(
+      'dispatch',
+      expect.any(Error),
+      actor.id,
+      expect.objectContaining({ currentActorId: 'N/A' })
+    );
+  });
+
+  it('handles state changes surfaced by the optional directive executor', async () => {
+    const { workflow, turnContext, state } = buildWorkflow({
+      commandProcessorImpl: async () => ({ success: true }),
+      interpreterImpl: async () => TurnDirective.END_TURN_SUCCESS,
+      strategyMap: {
+        [TurnDirective.END_TURN_SUCCESS]: new EndTurnSuccessStrategy(),
+      },
+      directiveExecutor: new StateChangingDirectiveExecutor(null),
+    });
+
+    // The executor requires access to the handler to record the state change
+    workflow._directiveExecutor.handler = workflow._state._handler;
+
+    await workflow.processCommand(turnContext, actor, {
+      actionDefinitionId: 'test:action',
+      commandString: 'executor state change',
+    });
+
+    expect(state.isProcessing).toBe(false);
+    expect(state.finishCalls).toBeGreaterThan(0);
+    expect(
+      workflow._directiveExecutor.handler.getCurrentState()
+    ).not.toBe(state);
+  });
+
+  it('logs when the fallback directive strategy transitions to a new state', async () => {
+    const { turnContext, handler } = createTurnContextEnvironment({
+      logger,
+      dispatcher,
+      onEndTurn: (error) => endTurnCalls.push(error ?? null),
+      actor,
+    });
+
+    const state = new TestProcessingState(handler, turnContext);
+    handler.setCurrentState(state);
+
+    const strategy = new StateChangingDirectiveStrategy(handler);
+
+    const workflow = new CommandProcessingWorkflow({
+      state,
+      commandProcessor: new TestCommandProcessor(async () => ({ success: true })),
+      commandOutcomeInterpreter: new TestCommandOutcomeInterpreter(async () =>
+        TurnDirective.END_TURN_SUCCESS
+      ),
+      directiveStrategyResolver: new TestDirectiveResolver({
+        [TurnDirective.END_TURN_SUCCESS]: strategy,
+      }),
+      exceptionHandler: new ProcessingExceptionHandler(state),
+    });
+
+    await workflow.processCommand(turnContext, actor, {
+      actionDefinitionId: 'test:action',
+      commandString: 'fallback state change',
+    });
+
+    expect(state.finishCalls).toBeGreaterThan(0);
+    expect(
+      logger.calls.debug.some(([message]) =>
+        message.includes('Directive strategy executed for actor') &&
+        message.includes('state changed')
+      )
+    ).toBe(true);
+  });
+
+  it('normalizes non-Error exceptions from directive execution', async () => {
+    const handleSpy = jest.spyOn(ProcessingExceptionHandler.prototype, 'handle');
+    const errorContextSpy = jest.spyOn(
+      CommandProcessingWorkflow.prototype,
+      '_createErrorContext'
+    );
+
+    const directiveExecutor = {
+      calls: [],
+      resolver: null,
+      async execute(params) {
+        this.calls.push(params);
+        const error = { message: 'directive blew up', stack: 'trace:1' };
+        throw error;
+      },
+    };
+
+    const { workflow, turnContext } = buildWorkflow({
+      commandProcessorImpl: async () => ({ success: true }),
+      interpreterImpl: async () => TurnDirective.END_TURN_SUCCESS,
+      strategyMap: {
+        [TurnDirective.END_TURN_SUCCESS]: new EndTurnSuccessStrategy(),
+      },
+      directiveExecutor,
+    });
+
+    await workflow.processCommand(turnContext, actor, {
+      actionDefinitionId: 'test:action',
+      commandString: 'non-error failure',
+    });
+
+    expect(handleSpy).toHaveBeenCalledTimes(1);
+    const [, errorArg] = handleSpy.mock.calls[0];
+    expect(errorArg).toBeInstanceOf(Error);
+    expect(errorArg.message).toBe('directive blew up');
+    expect(logger.calls.error.some(([msg]) => msg.includes('workflow'))).toBe(
+      true
+    );
+    expect(errorContextSpy).toHaveBeenCalledWith(
+      'workflow',
+      expect.any(Error),
+      actor.id,
+      expect.objectContaining({ commandString: 'non-error failure' })
+    );
+  });
+
+  it('forces processing to finish during the finally block when the state remains active', async () => {
+    const { turnContext, handler } = createTurnContextEnvironment({
+      logger,
+      dispatcher,
+      onEndTurn: (error) => endTurnCalls.push(error ?? null),
+      actor,
+    });
+
+    const state = new NonFinishingProcessingState(handler, turnContext);
+    handler.setCurrentState(state);
+
+    const workflow = new CommandProcessingWorkflow({
+      state,
+      commandProcessor: new TestCommandProcessor(async () => ({ success: true })),
+      commandOutcomeInterpreter: new TestCommandOutcomeInterpreter(async () =>
+        TurnDirective.END_TURN_SUCCESS
+      ),
+      directiveStrategyResolver: new TestDirectiveResolver({
+        [TurnDirective.END_TURN_SUCCESS]: new EndTurnSuccessStrategy(),
+      }),
+      exceptionHandler: new ProcessingExceptionHandler(state),
+    });
+
+    await workflow.processCommand(turnContext, actor, {
+      actionDefinitionId: 'test:action',
+      commandString: 'finally cleanup',
+    });
+
+    expect(state.finishCalls).toBeGreaterThanOrEqual(1);
+    expect(state.isProcessing).toBe(false);
+    expect(
+      logger.calls.warn.some(([message]) =>
+        message.includes('isProcessing was unexpectedly true at the end')
+      )
+    ).toBe(true);
   });
 });
