@@ -354,5 +354,108 @@ describe('Apparent Age Component Integration', () => {
         )
       ).rejects.toThrow('Validation failed');
     });
+
+    it('should surface validation errors for non-numeric age values', () => {
+      const invalidAgeData = { minAge: '25', maxAge: 30 };
+
+      expect(() => AgeUtils.getAverageAge(invalidAgeData)).toThrow(
+        'Age values must be numbers'
+      );
+      expect(() => AgeUtils.getAgeUncertainty(invalidAgeData)).toThrow(
+        'Age values must be numbers'
+      );
+      expect(() => AgeUtils.isAgeInRange(invalidAgeData, 25)).toThrow(
+        'Age values must be numbers'
+      );
+      expect(() => AgeUtils.formatAgeDescription(invalidAgeData)).toThrow(
+        'Age values must be numbers'
+      );
+      expect(() => AgeUtils.validateAgeComponent(invalidAgeData)).toThrow(
+        'Age values must be numbers'
+      );
+    });
+
+    it('should surface validation errors for inverted age ranges', () => {
+      const invertedAgeData = { minAge: 40, maxAge: 30 };
+
+      expect(() => AgeUtils.getAverageAge(invertedAgeData)).toThrow(
+        'maxAge must be greater than or equal to minAge'
+      );
+      expect(() => AgeUtils.getAgeUncertainty(invertedAgeData)).toThrow(
+        'maxAge must be greater than or equal to minAge'
+      );
+      expect(() => AgeUtils.isAgeInRange(invertedAgeData, 35)).toThrow(
+        'maxAge must be greater than or equal to minAge'
+      );
+      expect(() => AgeUtils.formatAgeDescription(invertedAgeData)).toThrow(
+        'maxAge must be greater than or equal to minAge'
+      );
+      expect(() => AgeUtils.validateAgeComponent(invertedAgeData)).toThrow(
+        'maxAge must be greater than or equal to minAge'
+      );
+    });
+
+    it('should surface validation errors for invalid target ages', () => {
+      const validRange = { minAge: 20, maxAge: 30 };
+
+      expect(() => AgeUtils.isAgeInRange(validRange, '27')).toThrow(
+        'Target age must be a number'
+      );
+      expect(() => AgeUtils.isAgeInRange(validRange, undefined)).toThrow(
+        'Target age is required'
+      );
+    });
+
+    it('should surface validation errors for malformed best guess data', () => {
+      const nonNumericBestGuess = { minAge: 20, maxAge: 30, bestGuess: '25' };
+      const outOfBoundsBestGuess = { minAge: 20, maxAge: 30, bestGuess: -5 };
+      const outOfRangeBestGuess = { minAge: 20, maxAge: 30, bestGuess: 35 };
+      const exactAgeData = { minAge: 42, maxAge: 42 };
+
+      expect(() => AgeUtils.formatAgeDescription(nonNumericBestGuess)).toThrow(
+        'bestGuess must be a number'
+      );
+      expect(() => AgeUtils.validateAgeComponent(nonNumericBestGuess)).toThrow(
+        'bestGuess must be a number'
+      );
+
+      expect(() => AgeUtils.validateAgeComponent(outOfBoundsBestGuess)).toThrow(
+        'bestGuess must be between 0 and 200'
+      );
+
+      expect(() => AgeUtils.formatAgeDescription(outOfRangeBestGuess)).toThrow(
+        'bestGuess must be between minAge and maxAge'
+      );
+      expect(() => AgeUtils.validateAgeComponent(outOfRangeBestGuess)).toThrow(
+        'bestGuess must be between minAge and maxAge'
+      );
+
+      // Exact ages should still be formatted precisely when valid
+      expect(AgeUtils.formatAgeDescription(exactAgeData)).toBe(
+        '42 years old'
+      );
+    });
+
+    it('should surface validation errors for out-of-policy age ranges', () => {
+      const negativeAgeData = { minAge: -1, maxAge: 10 };
+      const excessiveAgeData = { minAge: 10, maxAge: 250 };
+      const excessiveBestGuessData = {
+        minAge: 10,
+        maxAge: 20,
+        bestGuess: 250,
+      };
+
+      expect(() => AgeUtils.validateAgeComponent(negativeAgeData)).toThrow(
+        'Age values must be non-negative'
+      );
+
+      expect(() => AgeUtils.validateAgeComponent(excessiveAgeData)).toThrow(
+        'Age values must not exceed 200'
+      );
+
+      expect(() => AgeUtils.validateAgeComponent(excessiveBestGuessData)).toThrow(
+        'bestGuess must be between 0 and 200'
+      );
+    });
   });
 });
