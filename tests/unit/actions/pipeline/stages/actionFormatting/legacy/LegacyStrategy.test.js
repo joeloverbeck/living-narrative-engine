@@ -537,6 +537,66 @@ describe('LegacyStrategy', () => {
       expect(outcome.statistics.fallbackInvocations).toBe(1);
     });
 
+    it('increments stats when traced fallback succeeds without formatter support', async () => {
+      const {
+        strategy,
+        fallbackFormatter,
+        commandFormatter,
+      } = createStrategy({
+        commandFormatter: { format: jest.fn(), formatMultiTarget: undefined },
+      });
+
+      fallbackFormatter.formatWithFallback.mockReturnValue({
+        ok: true,
+        value: 'traced-fallback-only',
+      });
+
+      const processingStats = { successful: 0, legacy: 0, failed: 0, multiTarget: 0 };
+      const trace = { captureActionData: jest.fn(), info: jest.fn() };
+
+      const outcome = await strategy.format({
+        actor: { id: 'actor-traced-only-fallback' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'multi-traced-only-fallback',
+              name: 'Traced Only Fallback',
+              targets: { primary: {} },
+            },
+            targetContexts: [
+              { entityId: 'target-traced-only', placeholder: 'primary' },
+            ],
+          },
+        ],
+        trace,
+        processingStats,
+        traceSource: 'ActionFormattingStage.execute',
+      });
+
+      expect(commandFormatter.formatMultiTarget).toBeUndefined();
+      expect(fallbackFormatter.formatWithFallback).toHaveBeenCalledWith(
+        expect.objectContaining({
+          actionDefinition: expect.objectContaining({
+            id: 'multi-traced-only-fallback',
+          }),
+        })
+      );
+      expect(processingStats).toEqual({
+        successful: 1,
+        legacy: 1,
+        failed: 0,
+        multiTarget: 0,
+      });
+      expect(outcome.fallbackUsed).toBe(true);
+      expect(outcome.formattedCommands[0]).toEqual(
+        expect.objectContaining({
+          id: 'multi-traced-only-fallback',
+          command: 'traced-fallback-only',
+          params: { targetId: 'target-traced-only' },
+        })
+      );
+    });
+
     it('falls back with empty params when the resolved target lacks an entity id', async () => {
       const {
         strategy,
@@ -787,6 +847,54 @@ describe('LegacyStrategy', () => {
         'multi-failure',
         expect.objectContaining({ formattingPath: 'legacy' })
       );
+    });
+
+    it('records traced fallback failures when formatter support is missing', async () => {
+      const createError = jest.fn();
+      const {
+        strategy,
+        fallbackFormatter,
+      } = createStrategy({
+        commandFormatter: { format: jest.fn(), formatMultiTarget: undefined },
+        createError,
+      });
+
+      fallbackFormatter.formatWithFallback.mockReturnValue({
+        ok: false,
+        error: 'traced-fallback-failure',
+      });
+
+      const processingStats = { successful: 0, legacy: 0, failed: 0, multiTarget: 0 };
+      const trace = { captureActionData: jest.fn(), info: jest.fn() };
+
+      await strategy.format({
+        actor: { id: 'actor-traced-fallback-failure' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'multi-traced-fallback-failure',
+              name: 'Traced Fallback Failure',
+              targets: { primary: {} },
+            },
+            targetContexts: [
+              { entityId: 'target-traced-fallback-failure', placeholder: 'primary' },
+            ],
+          },
+        ],
+        trace,
+        processingStats,
+        traceSource: 'ActionFormattingStage.execute',
+      });
+
+      expect(fallbackFormatter.formatWithFallback).toHaveBeenCalled();
+      expect(createError).toHaveBeenCalledWith(
+        { ok: false, error: 'traced-fallback-failure' },
+        expect.objectContaining({ id: 'multi-traced-fallback-failure' }),
+        'actor-traced-fallback-failure',
+        trace,
+        'target-traced-fallback-failure'
+      );
+      expect(processingStats.failed).toBe(1);
     });
 
     it('propagates fallback failures without an entity id when tracing multi-target actions', async () => {
@@ -1071,6 +1179,59 @@ describe('LegacyStrategy', () => {
         expect.objectContaining({ command: 'standard-fallback' })
       );
       expect(outcome.fallbackUsed).toBe(true);
+    });
+
+    it('propagates standard fallback failures when formatter returns an error', async () => {
+      const {
+        strategy,
+        commandFormatter,
+        fallbackFormatter,
+        createError,
+      } = createStrategy();
+
+      commandFormatter.formatMultiTarget.mockReturnValue({
+        ok: false,
+        error: 'standard-format-failure',
+      });
+
+      fallbackFormatter.formatWithFallback.mockReturnValue({
+        ok: false,
+        error: 'standard-fallback-failure',
+      });
+
+      const trace = { info: jest.fn() };
+
+      const outcome = await strategy.format({
+        actor: { id: 'actor-standard-fallback-failure' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'multi-standard-fallback-failure',
+              name: 'Standard Fallback Failure',
+              targets: { primary: {} },
+            },
+            targetContexts: [
+              {
+                entityId: 'target-standard-fallback-failure',
+                placeholder: 'primary',
+              },
+            ],
+          },
+        ],
+        trace,
+        traceSource: 'ActionFormattingStage.execute',
+      });
+
+      expect(fallbackFormatter.formatWithFallback).toHaveBeenCalled();
+      expect(createError).toHaveBeenCalledWith(
+        { ok: false, error: 'standard-fallback-failure' },
+        expect.objectContaining({ id: 'multi-standard-fallback-failure' }),
+        'actor-standard-fallback-failure',
+        trace,
+        'target-standard-fallback-failure'
+      );
+      expect(outcome.errors).toHaveLength(1);
+      expect(outcome.fallbackUsed).toBe(false);
     });
 
     it('surfaces fallback failures on the standard path without formatter support', async () => {
