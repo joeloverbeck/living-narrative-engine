@@ -175,6 +175,26 @@ describe('ActionAwareStructuredTrace - Enhanced Filtering (ACTTRA-017)', () => {
       expect(regularFilter.shouldTrace).toHaveBeenCalledWith(actionId);
     });
 
+    it('should stop capture when fallback filter rejects the action', () => {
+      const regularFilter = testBed.createMockActionTraceFilter({
+        tracedActions: ['other:action'],
+        verbosity: 'standard',
+      });
+
+      const traceRegular = new ActionAwareStructuredTrace({
+        actionTraceFilter: regularFilter,
+        actorId: 'test-actor',
+        logger: testBed.mockLogger,
+      });
+
+      traceRegular.captureEnhancedActionData('fallback_test', 'core:test', {
+        test: 'data',
+      });
+
+      expect(regularFilter.shouldTrace).toHaveBeenCalledWith('core:test');
+      expect(traceRegular.getActionTrace('core:test')).toBeNull();
+    });
+
     it('should not capture when enhanced filter rejects', () => {
       mockEnhancedFilter.shouldCaptureEnhanced.mockReturnValue(false);
 
