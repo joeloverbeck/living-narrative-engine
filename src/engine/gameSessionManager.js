@@ -88,7 +88,7 @@ class GameSessionManager {
       await this.#stopFn();
     }
 
-    this.#resetCoreGameStateFn();
+    await this.#resetCoreGameStateFn();
 
     if (uiEventId) {
       this.#logger.debug(

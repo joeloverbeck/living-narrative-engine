@@ -198,6 +198,30 @@ describe('GameSessionManager', () => {
         }
       );
     });
+
+    it('should await core game reset before dispatching UI events', async () => {
+      let resetCompleted = false;
+      resetCoreGameStateFn.mockImplementation(async () => {
+        await new Promise((resolve) =>
+          setTimeout(() => {
+            resetCompleted = true;
+            resolve();
+          }, 0)
+        );
+      });
+
+      safeEventDispatcher.dispatch.mockImplementation(async () => {
+        expect(resetCompleted).toBe(true);
+      });
+
+      await gameSessionManager.prepareForLoadGameSession('delayed.sav');
+
+      expect(resetCoreGameStateFn).toHaveBeenCalledTimes(1);
+      expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENGINE_OPERATION_IN_PROGRESS_UI,
+        expect.any(Object)
+      );
+    });
   });
 
   describe('finalizeNewGameSuccess', () => {
