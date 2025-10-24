@@ -337,9 +337,13 @@ class GameEngine {
             return initResult;
           }
 
+          const rawInitError = initResult.error;
           initError =
-            initResult.error ||
-            new Error('Unknown failure from InitializationService.');
+            rawInitError instanceof Error
+              ? rawInitError
+              : rawInitError
+              ? new Error(String(rawInitError))
+              : new Error('Unknown failure from InitializationService.');
           this.#logger.warn(
             `GameEngine: InitializationService reported failure for "${worldName}".`
           );
