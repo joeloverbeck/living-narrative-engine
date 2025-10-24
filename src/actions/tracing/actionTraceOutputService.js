@@ -386,9 +386,7 @@ export class ActionTraceOutputService {
     this.#isProcessing = false;
 
     // Resume processing if items were added during error recovery
-    if (this.#outputQueue.length > 0 && this.#writeErrors < 10) {
-      this.#timerService.setTimeout(() => this.#processQueue(), 1000);
-    }
+    this.#scheduleQueueResume();
   }
 
   /**
@@ -440,6 +438,17 @@ export class ActionTraceOutputService {
       this.#rotationManager.forceRotation().catch((error) => {
         this.#logger.error('Background rotation failed', error);
       });
+    }
+  }
+
+  /**
+   * Schedule queue resume after error recovery
+   *
+   * @private
+   */
+  #scheduleQueueResume() {
+    if (this.#outputQueue && this.#outputQueue.length > 0 && this.#writeErrors < 10) {
+      this.#timerService.setTimeout(() => this.#processQueue(), 1000);
     }
   }
 
@@ -1497,6 +1506,36 @@ export class ActionTraceOutputService {
       );
       return false;
     }
+  }
+
+  /**
+   * Test-only helper to schedule queue resume logic
+   *
+   * @returns {void}
+   */
+  __TEST_ONLY_scheduleQueueResume() {
+    this.#scheduleQueueResume();
+  }
+
+  /**
+   * Test-only helper to invoke default output handler
+   *
+   * @param {object} writeData - Serialized trace data
+   * @param {object} trace - Original trace instance
+   * @returns {Promise<void>}
+   */
+  async __TEST_ONLY_defaultOutputHandler(writeData, trace) {
+    await this.#defaultOutputHandler(writeData, trace);
+  }
+
+  /**
+   * Test-only helper to call private storeTrace implementation
+   *
+   * @param {object} trace - Trace to persist
+   * @returns {Promise<void>}
+   */
+  async __TEST_ONLY_storeTrace(trace) {
+    await this.#storeTrace(trace);
   }
 
   /**
