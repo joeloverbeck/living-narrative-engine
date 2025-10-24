@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "id": "positioning:actor_placed_behind",
+  "description": "Dispatched when an actor successfully positions themselves behind another actor.",
+  "payloadSchema": {
+    "title": "Positioning: Actor Placed Behind Payload",
+    "description": "Payload for the positioning:actor_placed_behind event.",
+    "type": "object",
+    "properties": {
+      "actor": {
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the actor who moved behind the target."
+      },
+      "target": {
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the actor who is now being stood behind."
+      }
+    },
+    "required": ["actor", "target"],
+    "additionalProperties": false
+  }
+}

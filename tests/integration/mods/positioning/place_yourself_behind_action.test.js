@@ -276,6 +276,28 @@ describe('Place Yourself Behind Action Integration Tests', () => {
     expect(placedBehindEvent.payload.target).toBe('test:npc');
   });
 
+  it('should not log validation warnings for positioning:actor_placed_behind event', async () => {
+    const entities = setupBehindPositioningScenario();
+    testFixture.reset(Object.values(entities));
+
+    testFixture.logger.warn.mockClear();
+
+    await testFixture.executeAction('test:player', 'test:npc');
+
+    const validationWarnings = testFixture.logger.warn.mock.calls.filter(
+      (call) =>
+        typeof call[0] === 'string' &&
+        call[0].includes('EventDefinition not found') &&
+        call[0].includes('positioning:actor_placed_behind')
+    );
+
+    if (validationWarnings.length > 0) {
+      console.log('Unexpected validation warnings:', validationWarnings);
+    }
+
+    expect(validationWarnings).toHaveLength(0);
+  });
+
   it('rejects placing yourself behind someone while being hugged', async () => {
     const entities = setupBeingHuggedBehindScenario();
     testFixture.reset(Object.values(entities));
