@@ -36,6 +36,12 @@ describe('TargetRoleRegistry', () => {
 
     expect(placeholder).toBe('target.secondary');
     expect(getPlaceholderForRole('missing', {})).toBeUndefined();
+    expect(getPlaceholderForRole('missing', null)).toBeUndefined();
+    expect(
+      getPlaceholderForRole(ALL_MULTI_TARGET_ROLES[0], {
+        [ALL_MULTI_TARGET_ROLES[0]]: 'not-an-object',
+      })
+    ).toBeUndefined();
   });
 
   it('detects payload shapes', () => {
@@ -59,11 +65,41 @@ describe('TargetRoleRegistry', () => {
 
     expect(
       isMultiTargetPayload({
+        resolvedTargets: { [ALL_MULTI_TARGET_ROLES[1]]: [{ id: 'multi' }] },
+      })
+    ).toBe(true);
+
+    expect(
+      isMultiTargetPayload({
         targetDefinitions: { [ALL_MULTI_TARGET_ROLES[2]]: {} },
       })
     ).toBe(true);
 
     expect(isLegacyTargetPayload(null)).toBe(false);
     expect(isMultiTargetPayload(null)).toBe(false);
+    expect(
+      isLegacyTargetPayload({
+        targets: { [LEGACY_TARGET_ROLE]: { id: 'legacy' } },
+      })
+    ).toBe(true);
+
+    expect(
+      isLegacyTargetPayload({
+        resolvedTargets: {},
+        targets: {},
+      })
+    ).toBe(false);
+  });
+
+  it('handles missing or empty requirements safely', () => {
+    expect(getRolesWithRequirements(undefined)).toEqual([]);
+    expect(getRolesWithRequirements('invalid')).toEqual([]);
+    expect(
+      getRolesWithRequirements({
+        [LEGACY_TARGET_ROLE]: [],
+        [ALL_MULTI_TARGET_ROLES[0]]: null,
+        [ALL_MULTI_TARGET_ROLES[1]]: ['comp.c'],
+      })
+    ).toEqual([ALL_MULTI_TARGET_ROLES[1]]);
   });
 });
