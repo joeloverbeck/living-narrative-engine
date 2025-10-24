@@ -17,6 +17,7 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
   let mockElements;
 
   beforeEach(async () => {
+    jest.useFakeTimers();
     // Reset DOM
     document.body.innerHTML = '';
 
@@ -130,6 +131,10 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
     await controller.initialize();
   });
 
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   describe('Character Definition Structure Validation', () => {
     it('should accept valid character definition with nested components structure', async () => {
       // This is the actual structure from character.json files
@@ -166,8 +171,8 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
       const inputEvent = new Event('input', { bubbles: true });
       textarea.dispatchEvent(inputEvent);
 
-      // Wait for debounce
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      // Advance timers for debounced validation
+      await jest.advanceTimersByTimeAsync(600);
 
       // Generate button should be enabled for valid input
       const generateBtn = document.getElementById('generate-btn');
@@ -203,8 +208,8 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
       const inputEvent = new Event('input', { bubbles: true });
       textarea.dispatchEvent(inputEvent);
 
-      // Wait for debounce
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      // Advance timers for debounced validation
+      await jest.advanceTimersByTimeAsync(600);
 
       // Generate button should be disabled for invalid input
       const generateBtn = document.getElementById('generate-btn');
@@ -242,8 +247,8 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
       const inputEvent = new Event('input', { bubbles: true });
       textarea.dispatchEvent(inputEvent);
 
-      // Wait for debounce
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      // Advance timers for debounced validation
+      await jest.advanceTimersByTimeAsync(600);
 
       // Should be valid with minimal components
       const generateBtn = document.getElementById('generate-btn');
@@ -263,8 +268,8 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
       const inputEvent = new Event('input', { bubbles: true });
       textarea.dispatchEvent(inputEvent);
 
-      // Wait for debounce
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      // Advance timers for debounced validation
+      await jest.advanceTimersByTimeAsync(600);
 
       // Should be invalid
       const generateBtn = document.getElementById('generate-btn');
@@ -328,8 +333,8 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
       const inputEvent = new Event('input', { bubbles: true });
       textarea.dispatchEvent(inputEvent);
 
-      // Wait for debounce
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      // Advance timers for debounced validation
+      await jest.advanceTimersByTimeAsync(600);
 
       // Should accept complex valid structure
       const generateBtn = document.getElementById('generate-btn');
@@ -369,8 +374,8 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
       const inputEvent = new Event('input', { bubbles: true });
       textarea.dispatchEvent(inputEvent);
 
-      // Wait for debounce
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      // Advance timers for debounced validation
+      await jest.advanceTimersByTimeAsync(600);
 
       const errorDiv = document.getElementById('character-input-error');
       expect(errorDiv.style.display).not.toBe('none');
@@ -390,8 +395,8 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
       const inputEvent = new Event('input', { bubbles: true });
       textarea.dispatchEvent(inputEvent);
 
-      // Wait for debounce
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      // Advance timers for debounced validation
+      await jest.advanceTimersByTimeAsync(600);
 
       const generateBtn = document.getElementById('generate-btn');
       expect(generateBtn.disabled).toBe(true);
@@ -410,7 +415,8 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
       textarea.value = '{ invalid }';
       textarea.dispatchEvent(new Event('input', { bubbles: true }));
 
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      // Advance timers for debounced validation
+      await jest.advanceTimersByTimeAsync(600);
 
       // Error should be shown
       const errorDiv = document.getElementById('character-input-error');
@@ -436,7 +442,8 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
       textarea.value = JSON.stringify(validDef);
       textarea.dispatchEvent(new Event('input', { bubbles: true }));
 
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      // Advance timers for debounced validation
+      await jest.advanceTimersByTimeAsync(600);
 
       // Enhanced validator may show success message or clear display
       const isHidden = errorDiv.style.display === 'none';

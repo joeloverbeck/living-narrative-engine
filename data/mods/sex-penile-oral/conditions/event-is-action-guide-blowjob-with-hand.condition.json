@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex-penile-oral:event-is-action-guide-blowjob-with-hand",
+  "description": "Validates that the current event is an attempt_action event for the guide_blowjob_with_hand action",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "sex-penile-oral:guide_blowjob_with_hand"
+    ]
+  }
+}
