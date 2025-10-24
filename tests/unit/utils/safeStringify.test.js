@@ -43,4 +43,13 @@ describe('safeStringify', () => {
     expect(safeStringify(123)).toBe('123');
     expect(safeStringify(null)).toBe('null');
   });
+
+  test('converts bigint values to strings to avoid serialization errors', () => {
+    const payload = { count: 123n, nested: { depth: 456n } };
+
+    const parsed = JSON.parse(safeStringify(payload));
+
+    expect(parsed).toEqual({ count: '123', nested: { depth: '456' } });
+    expect(safeStringify(789n)).toBe('"789"');
+  });
 });

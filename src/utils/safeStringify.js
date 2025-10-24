@@ -13,13 +13,23 @@
  */
 export function safeStringify(value) {
   const seen = new WeakSet();
-  return JSON.stringify(value, (key, val) => {
+  const replacer = (key, val) => {
+    if (typeof val === 'bigint') {
+      return val.toString();
+    }
+
     if (val && typeof val === 'object') {
       if (seen.has(val)) {
         return '[Circular]';
       }
       seen.add(val);
     }
+
     return val;
-  });
+  };
+
+  const sanitizedRoot =
+    typeof value === 'bigint' ? value.toString() : value;
+
+  return JSON.stringify(sanitizedRoot, replacer);
 }
