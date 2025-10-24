@@ -198,7 +198,7 @@ describe('processingErrorUtils integration', () => {
 
       expect(logger.errorEntries).toHaveLength(1);
       expect(logger.errorEntries[0].message).toContain(
-        'Unexpected error dispatching SYSTEM_ERROR_OCCURRED_ID'
+        'safeDispatchError: Failed to dispatch core:system_error_occurred.'
       );
     });
 

@@ -266,8 +266,9 @@ describe('GameEngineLoadAdapter integration – failure recovery coverage', () =
 
     expect(result).toEqual({ success: false, error: 'storage offline', data: null });
     expect(env.persistenceService.loadCalls).toEqual(['slot-crash']);
-    expect(env.entityManager.clearCount).toBe(1);
-    expect(env.playtimeTracker.resetCount).toBe(1);
+    // Entity manager and playtime tracker are cleared/reset twice: once during prepare phase, once during failure recovery
+    expect(env.entityManager.clearCount).toBe(2);
+    expect(env.playtimeTracker.resetCount).toBe(2);
     expect(env.playtimeTracker.sessionStarted).toBe(false);
     expect(env.turnManager.startCount).toBe(0);
     expect(env.turnManager.started).toBe(false);

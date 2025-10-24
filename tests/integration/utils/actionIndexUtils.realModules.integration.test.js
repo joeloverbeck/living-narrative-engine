@@ -71,19 +71,19 @@ describe('assertValidActionIndex integration with safeDispatchError', () => {
     logger = new RecordingLogger();
   });
 
-  it('allows valid indices without dispatching errors', () => {
-    expect(() =>
+  it('allows valid indices without dispatching errors', async () => {
+    await expect(
       assertValidActionIndex(2, 5, 'TestProvider', 'actor:1', dispatcher, logger)
-    ).not.toThrow();
+    ).resolves.not.toThrow();
 
     expect(dispatcher.events).toHaveLength(0);
     expect(logger.errorLogs).toHaveLength(0);
   });
 
-  it('dispatches system error events when the index is not an integer', () => {
+  it('dispatches system error events when the index is not an integer', async () => {
     const debugData = { context: 'non-integer-selection' };
 
-    expect(() =>
+    await expect(
       assertValidActionIndex(
         1.5,
         4,
@@ -93,7 +93,7 @@ describe('assertValidActionIndex integration with safeDispatchError', () => {
         logger,
         debugData
       )
-    ).toThrow('Could not resolve the chosen action to a valid index.');
+    ).rejects.toThrow('Could not resolve the chosen action to a valid index.');
 
     expect(dispatcher.events).toHaveLength(1);
     const event = dispatcher.events[0];
@@ -104,10 +104,10 @@ describe('assertValidActionIndex integration with safeDispatchError', () => {
     expect(event.payload.details).toEqual(debugData);
   });
 
-  it('rejects indices below 1 and augments the dispatched details', () => {
+  it('rejects indices below 1 and augments the dispatched details', async () => {
     const debugData = { currentLocation: 'central-plaza' };
 
-    expect(() =>
+    await expect(
       assertValidActionIndex(
         0,
         3,
@@ -117,7 +117,7 @@ describe('assertValidActionIndex integration with safeDispatchError', () => {
         logger,
         debugData
       )
-    ).toThrow('Player chose an index that does not exist for this turn.');
+    ).rejects.toThrow('Player chose an index that does not exist for this turn.');
 
     expect(dispatcher.events).toHaveLength(1);
     const event = dispatcher.events[0];
@@ -133,8 +133,8 @@ describe('assertValidActionIndex integration with safeDispatchError', () => {
     expect(debugData).toEqual({ currentLocation: 'central-plaza' });
   });
 
-  it('rejects indices above the available range', () => {
-    expect(() =>
+  it('rejects indices above the available range', async () => {
+    await expect(
       assertValidActionIndex(
         10,
         2,
@@ -143,7 +143,7 @@ describe('assertValidActionIndex integration with safeDispatchError', () => {
         dispatcher,
         logger
       )
-    ).toThrow('Player chose an index that does not exist for this turn.');
+    ).rejects.toThrow('Player chose an index that does not exist for this turn.');
 
     expect(dispatcher.events).toHaveLength(1);
     const event = dispatcher.events[0];
@@ -151,10 +151,10 @@ describe('assertValidActionIndex integration with safeDispatchError', () => {
     expect(event.payload.details.actionsCount).toBe(2);
   });
 
-  it('throws InvalidDispatcherError when dispatcher lacks a dispatch method', () => {
+  it('throws InvalidDispatcherError when dispatcher lacks a dispatch method', async () => {
     const badDispatcher = {};
 
-    expect(() =>
+    await expect(
       assertValidActionIndex(
         0,
         1,
@@ -163,6 +163,6 @@ describe('assertValidActionIndex integration with safeDispatchError', () => {
         badDispatcher,
         logger
       )
-    ).toThrow(InvalidDispatcherError);
+    ).rejects.toThrow(InvalidDispatcherError);
   });
 });

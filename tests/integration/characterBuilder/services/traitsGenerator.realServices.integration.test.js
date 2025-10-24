@@ -11,6 +11,7 @@ import EventBus from '../../../../src/events/eventBus.js';
 import ValidatedEventDispatcher from '../../../../src/events/validatedEventDispatcher.js';
 import { SafeEventDispatcher } from '../../../../src/events/safeEventDispatcher.js';
 import { TraitsGenerationError } from '../../../../src/characterBuilder/errors/TraitsGenerationError.js';
+import { NoDelayRetryManager } from '../../../common/mocks/noDelayRetryManager.js';
 
 const currentFilePath = fileURLToPath(import.meta.url);
 const currentDir = path.dirname(currentFilePath);
@@ -356,6 +357,7 @@ async function createTraitsGeneratorHarness({
   const llmJsonService = new LlmJsonService();
   const strategyFactory = new TestLLMStrategyFactory(responses);
   const configManager = new TestLLMConfigManager(configManagerOptions);
+  const retryManager = new NoDelayRetryManager();
 
   const traitsGenerator = new TraitsGenerator({
     logger,
@@ -364,6 +366,7 @@ async function createTraitsGeneratorHarness({
     llmConfigManager: configManager,
     eventBus: safeDispatcher,
     tokenEstimator,
+    retryManager,
   });
 
   const capturedEvents = [];

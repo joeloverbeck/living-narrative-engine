@@ -181,6 +181,7 @@ describe('affection:rest_head_against_flat_chest action discovery', () => {
       ]);
       expect(restHeadAgainstFlatChestAction.forbidden_components.actor).toEqual([
         'kissing:kissing',
+        'positioning:giving_blowjob',
       ]);
       expect(restHeadAgainstFlatChestAction.visual).toEqual({
         backgroundColor: '#6a1b9a',

@@ -13,8 +13,9 @@ import { safeDispatchError } from './safeDispatchErrorUtils.js';
  * @param {import('../interfaces/coreServices.js').ILogger} logger
  * @param {object} [debugData]
  * @throws {Error} If the index is invalid or out of range.
+ * @returns {Promise<void>}
  */
-export function assertValidActionIndex(
+export async function assertValidActionIndex(
   chosenIndex,
   actionsLength,
   providerName,
@@ -24,7 +25,7 @@ export function assertValidActionIndex(
   debugData = {}
 ) {
   if (!Number.isInteger(chosenIndex)) {
-    safeDispatchError(
+    await safeDispatchError(
       dispatcher,
       `${providerName}: Did not receive a valid integer 'chosenIndex' for actor ${actorId}.`,
       debugData,
@@ -34,7 +35,7 @@ export function assertValidActionIndex(
   }
 
   if (chosenIndex < 1 || chosenIndex > actionsLength) {
-    safeDispatchError(
+    await safeDispatchError(
       dispatcher,
       `${providerName}: invalid chosenIndex (${chosenIndex}) for actor ${actorId}.`,
       { ...debugData, actionsCount: actionsLength },
