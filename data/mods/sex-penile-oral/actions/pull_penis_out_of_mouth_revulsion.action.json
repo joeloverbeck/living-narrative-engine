@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-penile-oral:pull_penis_out_of_mouth_revulsion",
+  "name": "Pull Penis Out of Mouth in Revulsion",
+  "description": "Abruptly withdraw your partner's penis from your mouth with a disgusted expression, ending the oral sex interaction.",
+  "targets": {
+    "primary": {
+      "scope": "sex-penile-oral:receiving_blowjob_from_actor",
+      "placeholder": "primary",
+      "description": "Partner whose penis you are currently pleasuring"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:giving_blowjob", "positioning:closeness"]
+  },
+  "forbidden_components": {},
+  "template": "pull {primary}'s penis out of your mouth in revulsion",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#4a1a1a",
+    "textColor": "#ffcccc",
+    "hoverBackgroundColor": "#6b2424",
+    "hoverTextColor": "#ffffff"
+  }
+}

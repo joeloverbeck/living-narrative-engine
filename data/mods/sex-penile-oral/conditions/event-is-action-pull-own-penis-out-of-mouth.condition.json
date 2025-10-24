@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex-penile-oral:event-is-action-pull-own-penis-out-of-mouth",
+  "description": "Checks if the event is an attempt_action event for pull_own_penis_out_of_mouth",
+  "logic": {
+    "and": [
+      { "==": [{ "var": "event.type" }, "core:attempt_action"] },
+      { "==": [{ "var": "event.payload.actionId" }, "sex-penile-oral:pull_own_penis_out_of_mouth"] }
+    ]
+  }
+}
