@@ -121,6 +121,32 @@ describe('UnifiedScopeResolver', () => {
         expect(mockScopeRegistry.getScope).not.toHaveBeenCalled();
       });
 
+      it('should log trace information for special scopes when trace is provided', () => {
+        const trace = {
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+        };
+        const context = {
+          ...createValidContext(),
+          actor: { id: 'actor123', components: {} },
+          trace,
+        };
+
+        const result = resolver.resolve(TARGET_DOMAIN_SELF, context);
+
+        expect(result.success).toBe(true);
+        expect(trace.info).toHaveBeenCalledWith(
+          `Resolving scope '${TARGET_DOMAIN_SELF}'.`,
+          'UnifiedScopeResolver.resolve'
+        );
+        expect(trace.info).toHaveBeenCalledWith(
+          `Resolved special scope '${TARGET_DOMAIN_SELF}'.`,
+          'UnifiedScopeResolver.resolve',
+          expect.objectContaining({ entityCount: 1 })
+        );
+      });
+
       it('should propagate component loading failure for SELF scope', () => {
         const context = createValidContext();
         mockEntityManager.getComponentData.mockImplementation(() => {
@@ -175,6 +201,7 @@ describe('UnifiedScopeResolver', () => {
       it('should fail when actor location is missing', () => {
         const context = {
           actor: { id: 'actor123' },
+          actionId: 'action-42',
         };
 
         const result = resolver.resolve('some-scope', context);
@@ -205,6 +232,28 @@ describe('UnifiedScopeResolver', () => {
         expect(mockCacheStrategy.getSync).toHaveBeenCalled();
         expect(result).toBe(cachedResult);
         expect(mockScopeRegistry.getScope).not.toHaveBeenCalled();
+      });
+
+      it('should log cache hit telemetry when trace is available', () => {
+        const trace = {
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+        };
+        const context = { ...createValidContext(), trace };
+        const cachedResult = ActionResult.success(new Set(['entity1']));
+        mockCacheStrategy.getSync.mockReturnValue(cachedResult);
+
+        const result = resolver.resolve('test-scope', context, {
+          useCache: true,
+        });
+
+        expect(result).toBe(cachedResult);
+        expect(trace.info).toHaveBeenCalledWith(
+          "Resolved scope 'test-scope' from cache with 1 entities.",
+          'UnifiedScopeResolver.resolve',
+          expect.objectContaining({ entityIds: ['entity1'] })
+        );
       });
 
       it('should skip cache when disabled', () => {
@@ -424,6 +473,28 @@ describe('UnifiedScopeResolver', () => {
           })
         );
       });
+
+      it('should include debug metadata when available furniture scope resolves to invalid data', () => {
+        const context = createValidContext();
+        context.actor = { id: 'actor123', components: {} };
+        mockScopeRegistry.getScope.mockReturnValue({
+          expr: 'all',
+          ast: { type: 'all' },
+        });
+        mockScopeEngine.resolve.mockReturnValue(null);
+
+        const result = resolver.resolve('positioning:available_furniture', context);
+
+        expect(result.success).toBe(false);
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'UnifiedScopeResolver: After scope engine resolve',
+          expect.objectContaining({
+            resolvedIds: null,
+            resolvedCount: 0,
+            isSet: false,
+          })
+        );
+      });
     });
 
     describe('entity validation', () => {
@@ -559,6 +630,64 @@ describe('UnifiedScopeResolver', () => {
 
         expect(result.success).toBe(true); // Should continue with partial data
         expect(mockLogger.error).not.toHaveBeenCalled(); // Uses trace instead
+      });
+
+      it('should warn through trace when actor has no components defined', () => {
+        const trace = {
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+        };
+        const context = {
+          actor: { id: 'actor123' },
+          actorLocation: 'location1',
+          trace,
+        };
+        mockScopeRegistry.getScope.mockReturnValue({
+          expr: 'all',
+          ast: { type: 'all' },
+        });
+        mockScopeEngine.resolve.mockReturnValue(new Set(['entity1']));
+
+        const result = resolver.resolve('test-scope', context);
+
+        expect(result.success).toBe(true);
+        expect(trace.warn).toHaveBeenCalledWith(
+          'Actor entity actor123 has no components.',
+          'UnifiedScopeResolver.#buildActorWithComponents'
+        );
+        expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
+      });
+
+      it('should log component loading errors to trace when available', () => {
+        const trace = {
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+        };
+        const context = {
+          ...createValidContext(),
+          trace,
+        };
+        context.actor.componentTypeIds = ['core:actor', 'core:inventory'];
+        mockScopeRegistry.getScope.mockReturnValue({
+          expr: 'all',
+          ast: { type: 'all' },
+        });
+        mockEntityManager.getComponentData
+          .mockReturnValueOnce({ name: 'Test Actor' })
+          .mockImplementationOnce(() => {
+            throw new Error('Component load failed');
+          });
+        mockScopeEngine.resolve.mockReturnValue(new Set(['entity1']));
+
+        const result = resolver.resolve('test-scope', context);
+
+        expect(result.success).toBe(true);
+        expect(trace.error).toHaveBeenCalledWith(
+          'Failed to load component core:inventory: Component load failed',
+          'UnifiedScopeResolver.#buildActorWithComponents'
+        );
       });
 
       it('should fail if no components could be loaded', () => {

@@ -129,7 +129,7 @@ export class UnifiedScopeResolver {
    * @param {ScopeResolutionOptions} [options] - Resolution options
    * @returns {ActionResult} ActionResult containing Set of entity IDs or errors
    */
-  resolve(scopeName, context, options = {}) {
+  resolve(scopeName, context, options) {
     // Support both old and new trace APIs
     if (context?.trace?.withSpan) {
       return context.trace.withSpan(
@@ -158,14 +158,14 @@ export class UnifiedScopeResolver {
    * @param {ScopeResolutionOptions} [options] - Resolution options
    * @returns {ActionResult} ActionResult containing Set of entity IDs or errors
    */
-  #resolveInternal(scopeName, context, options = {}) {
+  #resolveInternal(scopeName, context, options) {
     const source = 'UnifiedScopeResolver.resolve';
     const {
       useCache = true,
       cacheTTL = 5000,
       includeMetadata = false,
       validateEntities = true,
-    } = options;
+    } = options ?? {};
 
     // Validate context first before using it
     const contextValidation = this.#validateContext(context, scopeName);
@@ -426,7 +426,7 @@ export class UnifiedScopeResolver {
             scopeName,
             actorId: actorResult.value?.id,
             hasAst: !!astResult.value,
-            runtimeCtxKeys: Object.keys(runtimeCtx || {}),
+            runtimeCtxKeys: Object.keys(runtimeCtx),
           }
         );
       }
@@ -556,17 +556,6 @@ export class UnifiedScopeResolver {
           components: {},
         };
         return ActionResult.success(actorWithComponents);
-      }
-
-      // Also warn if componentTypeIds is explicitly an empty array
-      if (
-        Array.isArray(actorEntity.componentTypeIds) &&
-        actorEntity.componentTypeIds.length === 0
-      ) {
-        context.trace?.warn(
-          `Actor entity ${actorEntity.id} has no components.`,
-          source
-        );
       }
 
       // Build components
