@@ -195,6 +195,30 @@ describe('PersistenceCoordinator', () => {
     );
   });
 
+  it('triggerManualSave treats invalid persistence results as failure', async () => {
+    const { coordinator, dispatcher, persistenceService, logger } =
+      createCoordinator();
+    persistenceService.saveGame.mockResolvedValue(undefined);
+
+    const result = await coordinator.triggerManualSave(DEFAULT_SAVE_NAME);
+
+    expect(result).toEqual({
+      success: false,
+      error: 'Persistence service returned an invalid save result.',
+    });
+    expect(logger.error).toHaveBeenCalledWith(
+      `GameEngine.triggerManualSave: Persistence service returned invalid result for "${DEFAULT_SAVE_NAME}".`,
+      {
+        receivedType: 'undefined',
+        receivedValue: undefined,
+      }
+    );
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      ENGINE_READY_UI,
+      expect.objectContaining({ message: SAVE_OPERATION_FINISHED_MESSAGE })
+    );
+  });
+
   it('triggerManualSave returns error when engine not initialized', async () => {
     const { coordinator, state } = createCoordinator();
     state.reset(); // This sets isInitialized to false
