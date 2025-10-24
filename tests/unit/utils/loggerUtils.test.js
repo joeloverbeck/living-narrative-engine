@@ -232,10 +232,35 @@ describe('loggerUtils', () => {
   });
 
   it('logPreview stringifies objects and uses default length', () => {
-    const logger = { debug: jest.fn() };
+    const logger = { debug: jest.fn(), warn: jest.fn() };
 
     logPreview(logger, 'payload: ', { foo: 'bar' });
 
     expect(logger.debug).toHaveBeenCalledWith('payload: {"foo":"bar"}');
+  });
+
+  it('logPreview gracefully handles undefined payloads', () => {
+    const logger = { debug: jest.fn(), warn: jest.fn() };
+
+    logPreview(logger, 'payload: ', undefined);
+
+    expect(logger.warn).not.toHaveBeenCalled();
+    expect(logger.debug).toHaveBeenCalledWith('payload: undefined');
+  });
+
+  it('logPreview falls back when serialization throws', () => {
+    const logger = { debug: jest.fn(), warn: jest.fn() };
+    const circular = {};
+    circular.self = circular;
+
+    logPreview(logger, 'payload: ', circular);
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      'logPreview: Failed to serialize data for preview.',
+      expect.any(TypeError)
+    );
+    expect(logger.debug).toHaveBeenCalledWith(
+      'payload: [Unserializable data: [object Object]]'
+    );
   });
 });
