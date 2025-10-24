@@ -268,6 +268,37 @@ describe('AnatomyInitializationService', () => {
     await expect(waitTwo).resolves.toBe(true);
   });
 
+  it('clears pending timeouts when generation finishes before the deadline', async () => {
+    jest.useFakeTimers();
+
+    const deferred = createDeferred();
+    generationService.generateAnatomyIfNeeded.mockReturnValueOnce(deferred.promise);
+
+    const handler = getHandler();
+    await handler({ payload: { instanceId: 'timely' } });
+
+    const unhandledRejections = [];
+    const onUnhandledRejection = (reason) => {
+      unhandledRejections.push(reason);
+    };
+    process.on('unhandledRejection', onUnhandledRejection);
+
+    try {
+      const waitPromise = service.waitForEntityGeneration('timely', 25);
+
+      deferred.resolve(true);
+
+      await expect(waitPromise).resolves.toBe(true);
+
+      jest.advanceTimersByTime(50);
+      await Promise.resolve();
+
+      expect(unhandledRejections).toHaveLength(0);
+    } finally {
+      process.off('unhandledRejection', onUnhandledRejection);
+    }
+  });
+
   it('handles generation failures gracefully when no waiters are registered', async () => {
     const failure = new Error('silent failure');
     generationService.generateAnatomyIfNeeded.mockRejectedValueOnce(failure);
