@@ -184,6 +184,88 @@ describe('PrerequisiteEvaluationService', () => {
       );
     });
 
+    it('should return false when evaluation context is not an object', () => {
+      const prerequisites = [
+        {
+          logic: { '==': [1, 1] },
+        },
+      ];
+      mockActionValidationContextBuilder.buildContext.mockReturnValue(null);
+
+      const result = service.evaluate(
+        prerequisites,
+        mockActionDefinition,
+        mockActor
+      );
+
+      expect(result).toBe(false);
+      expect(mockJsonLogicEvaluationService.evaluate).not.toHaveBeenCalled();
+      expect(mockLogger.debug).not.toHaveBeenCalledWith(
+        expect.stringContaining('Actor context resolved for entity')
+      );
+    });
+
+    it('should handle evaluation context missing actor object', () => {
+      const prerequisites = [
+        {
+          logic: { '==': [1, 1] },
+        },
+      ];
+      const contextWithoutActor = {};
+      mockActionValidationContextBuilder.buildContext.mockReturnValue(
+        contextWithoutActor
+      );
+      mockJsonLogicEvaluationService.evaluate.mockReturnValue(true);
+
+      const result = service.evaluate(
+        prerequisites,
+        mockActionDefinition,
+        mockActor
+      );
+
+      expect(result).toBe(true);
+      expect(mockJsonLogicEvaluationService.evaluate).toHaveBeenCalledWith(
+        { '==': [1, 1] },
+        contextWithoutActor
+      );
+      expect(mockLogger.debug).not.toHaveBeenCalledWith(
+        expect.stringContaining('Actor context resolved for entity')
+      );
+    });
+
+    it('should warn when actor components are missing or invalid', () => {
+      const prerequisites = [
+        {
+          logic: { '==': [1, 1] },
+        },
+      ];
+      const contextWithMissingComponents = {
+        actor: {
+          id: 'test:actor',
+          components: null,
+        },
+      };
+      mockActionValidationContextBuilder.buildContext.mockReturnValue(
+        contextWithMissingComponents
+      );
+      mockJsonLogicEvaluationService.evaluate.mockReturnValue(true);
+
+      const result = service.evaluate(
+        prerequisites,
+        mockActionDefinition,
+        mockActor
+      );
+
+      expect(result).toBe(true);
+      expect(mockJsonLogicEvaluationService.evaluate).toHaveBeenCalledWith(
+        { '==': [1, 1] },
+        contextWithMissingComponents
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'PrerequisiteEvaluationService: PrereqEval[test:action]: WARNING - Actor entity [test:actor] appears to have NO components. This may indicate a loading issue.'
+      );
+    });
+
     it('should handle invalid prerequisite objects', () => {
       const prerequisites = [
         {
