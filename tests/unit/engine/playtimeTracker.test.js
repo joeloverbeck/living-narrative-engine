@@ -80,7 +80,7 @@ describe('PlaytimeTracker', () => {
     );
   });
 
-  test('startSession warns when called twice', () => {
+  test('startSession warns and accumulates when called while active', () => {
     const tracker = new PlaytimeTracker({
       logger: mockLogger,
       safeEventDispatcher: mockDispatcher,
@@ -92,7 +92,7 @@ describe('PlaytimeTracker', () => {
     expect(mockLogger.warn).toHaveBeenCalledWith(
       `PlaytimeTracker: startSession called while a session was already active (started at ${BASE_TIME}). Restarting session timer.`
     );
-    expect(tracker.getTotalPlaytime()).toBe(1);
+    expect(tracker.getTotalPlaytime()).toBe(2);
   });
 
   test('endSessionAndAccumulate adds playtime when session active', () => {

@@ -87,9 +87,11 @@ class PlaytimeTracker extends IPlaytimeTracker {
    */
   startSession() {
     if (this.#sessionStartTime > 0) {
+      const previousStart = this.#sessionStartTime;
       this.#logger.warn(
-        `PlaytimeTracker: startSession called while a session was already active (started at ${this.#sessionStartTime}). Restarting session timer.`
+        `PlaytimeTracker: startSession called while a session was already active (started at ${previousStart}). Restarting session timer.`
       );
+      this.endSessionAndAccumulate();
     }
     this.#sessionStartTime = Date.now();
     this.#logger.debug(
