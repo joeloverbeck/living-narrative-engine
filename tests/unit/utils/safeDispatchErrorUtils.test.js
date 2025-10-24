@@ -105,6 +105,31 @@ describe('safeDispatchError', () => {
       },
     });
   });
+
+  it('treats plain objects without error metadata as generic messages', () => {
+    const dispatcher = { dispatch: jest.fn() };
+    const payload = { actionId: 'maybe-context', reason: 'missing error object' };
+    const diagnostics = { correlationId: 'diag-7' };
+
+    safeDispatchError(dispatcher, payload, diagnostics);
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+      message: payload,
+      details: diagnostics,
+    });
+  });
+
+  it('falls back to generic messaging when actionId is absent on context-like input', () => {
+    const dispatcher = { dispatch: jest.fn() };
+    const payload = { error: { message: 'still not a full context' } };
+
+    safeDispatchError(dispatcher, payload, undefined);
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+      message: payload,
+      details: {},
+    });
+  });
 });
 
 describe('dispatchValidationError', () => {
@@ -158,5 +183,13 @@ describe('additional coverage', () => {
       details: null,
     });
     expect(result).toEqual({ ok: false, error: 'bad', details: null });
+  });
+
+  it('preserves provided diagnostic metadata in InvalidDispatcherError', () => {
+    const metadata = { correlationId: 'critical', severity: 'fatal' };
+    const err = new InvalidDispatcherError('invalid dispatcher', metadata);
+
+    expect(err.details).toBe(metadata);
+    expect(err.name).toBe('InvalidDispatcherError');
   });
 });
