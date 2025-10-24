@@ -150,6 +150,29 @@ describe('EnhancedActionTraceFilter', () => {
       // Debug types should not be captured at standard level
       expect(shouldCaptureDebug).toBe(false);
     });
+
+    it('should require detailed level for performance-like unknown types', () => {
+      // Standard verbosity should not capture performance heuristics
+      const shouldCaptureStandard = filter.shouldCaptureEnhanced(
+        'unknown',
+        'custom_performance_metric',
+        {}
+      );
+
+      expect(shouldCaptureStandard).toBe(false);
+
+      // Increase verbosity to ensure the heuristic allows the capture
+      filter.setVerbosityLevel('verbose');
+      filter.clearEnhancedCache();
+
+      const shouldCaptureVerbose = filter.shouldCaptureEnhanced(
+        'unknown',
+        'custom_performance_metric',
+        {}
+      );
+
+      expect(shouldCaptureVerbose).toBe(true);
+    });
   });
 
   describe('Dynamic Rules', () => {
@@ -228,6 +251,23 @@ describe('EnhancedActionTraceFilter', () => {
       expect(filter.shouldCaptureEnhanced('core', 'blocked1', {})).toBe(false);
       expect(filter.shouldCaptureEnhanced('core', 'blocked2', {})).toBe(false);
     });
+
+    it('should re-apply dynamic rules for cached entries that require them', () => {
+      const dynamicRule = jest.fn(() => true);
+
+      filter.addDynamicRule('dynamic', dynamicRule);
+
+      // First call caches the decision with dynamic rule metadata
+      filter.shouldCaptureEnhanced('core', 'cached_type', {});
+
+      dynamicRule.mockClear();
+
+      // Second call hits the cache and should re-run the dynamic rule
+      const result = filter.shouldCaptureEnhanced('core', 'cached_type', {});
+
+      expect(result).toBe(true);
+      expect(dynamicRule).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('Performance Optimization', () => {
@@ -304,6 +344,22 @@ describe('EnhancedActionTraceFilter', () => {
       // Also test optimize separately to ensure it works
       filter.optimizeCache(0);
       expect(filter).toBeDefined(); // Verify it doesn't throw
+    });
+
+    it('should remove expired cache entries and log the cleanup', () => {
+      const nowSpy = jest.spyOn(Date, 'now');
+
+      nowSpy.mockReturnValue(1000);
+      filter.shouldCaptureEnhanced('core', 'expiring', {});
+
+      nowSpy.mockReturnValue(2001);
+      filter.optimizeCache(500);
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Removed 1 expired entries from enhanced filter cache')
+      );
+
+      nowSpy.mockRestore();
     });
 
     it('should reset statistics', () => {
