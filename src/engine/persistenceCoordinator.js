@@ -269,6 +269,28 @@ class PersistenceCoordinator {
     );
     const restoreOutcome =
       await this.#persistenceService.loadAndRestoreGame(saveIdentifier);
+
+    if (
+      !restoreOutcome ||
+      typeof restoreOutcome !== 'object' ||
+      typeof restoreOutcome.success !== 'boolean'
+    ) {
+      const receivedType =
+        restoreOutcome === null ? 'null' : typeof restoreOutcome;
+      this.#logger.error(
+        `GameEngine._executeLoadAndRestore: Persistence service returned invalid result for "${saveIdentifier}".`,
+        {
+          receivedType,
+          receivedValue: restoreOutcome,
+        }
+      );
+      return {
+        success: false,
+        error: 'Persistence service returned an invalid load result.',
+        data: null,
+      };
+    }
+
     this.#logger.debug(
       `GameEngine._executeLoadAndRestore: Load and restore call completed for "${saveIdentifier}". Success: ${restoreOutcome.success}`
     );
