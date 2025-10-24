@@ -63,7 +63,20 @@ export class RecoveryManager {
       this.#openCircuitBreaker(componentName);
     }
 
-    const strategy = this.#selectRecoveryStrategy(errorInfo);
+    let strategy = this.#selectRecoveryStrategy(errorInfo);
+
+    // Allow components to provide explicit recovery overrides when they
+    // have additional context about what action is safest.
+    const override =
+      errorInfo.recoveryStrategyOverride ||
+      errorInfo.context?.recoveryStrategyOverride;
+    if (override?.action) {
+      strategy = {
+        ...strategy,
+        ...override,
+        action: override.action,
+      };
+    }
 
     this.#logger.info(`Attempting recovery with strategy: ${strategy.action}`, {
       errorId: errorInfo.id,
@@ -71,6 +84,12 @@ export class RecoveryManager {
     });
 
     try {
+      const customHandler =
+        this.#config.customRecoveryHandlers?.[strategy.action];
+      if (typeof customHandler === 'function') {
+        return await customHandler(errorInfo, strategy);
+      }
+
       switch (strategy.action) {
         case RecoveryAction.CONTINUE:
           return this.#handleContinue(errorInfo, strategy);
@@ -384,5 +403,30 @@ export class RecoveryManager {
         }
       );
     }
+  }
+
+  /**
+   * @description Exposes internal utilities to support focused unit testing.
+   * @returns {object} Helper functions for invoking private recovery flows.
+   */
+  getTestUtils() {
+    return {
+      invokeRestartService: (errorInfo, strategy) =>
+        this.#handleRestartService(errorInfo, strategy),
+      invokeEmergencyStop: (errorInfo, strategy) =>
+        this.#handleEmergencyStop(errorInfo, strategy),
+      invokeExecuteOriginalOperation: (errorInfo) =>
+        this.#executeOriginalOperation(errorInfo),
+      trackComponentError: (componentName) =>
+        this.#trackComponentError(componentName),
+      setCircuitBreaker: (componentName, breaker) =>
+        this.#circuitBreakers.set(componentName, breaker),
+      getCircuitBreaker: (componentName) =>
+        this.#circuitBreakers.get(componentName),
+      setLastResetTime: (componentName, timestamp) =>
+        this.#lastResetTimes.set(componentName, timestamp),
+      getErrorCount: (componentName) =>
+        this.#errorCounts.get(componentName),
+    };
   }
 }
