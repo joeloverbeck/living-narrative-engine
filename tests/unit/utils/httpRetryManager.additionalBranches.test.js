@@ -43,6 +43,19 @@ describe('RetryManager additional branches', () => {
     expect(timeoutSpy).not.toHaveBeenCalled();
   });
 
+  it('retries when Node fetch emits "fetch failed" message', async () => {
+    const manager = new RetryManager(2, 50, 200, logger);
+    const timeoutSpy = jest.spyOn(global, 'setTimeout');
+    const err = new TypeError('fetch failed');
+    const promise = manager.handleNetworkError(err, 1);
+    await jest.runOnlyPendingTimersAsync();
+    const result = await promise;
+
+    expect(result).toEqual({ retried: true });
+    expect(timeoutSpy).toHaveBeenCalled();
+    timeoutSpy.mockRestore();
+  });
+
   it('calculates retry delay with jitter within bounds', () => {
     jest.spyOn(Math, 'random').mockReturnValue(0);
     const delayLow = RetryManager.calculateRetryDelay(2, 100, 500);
