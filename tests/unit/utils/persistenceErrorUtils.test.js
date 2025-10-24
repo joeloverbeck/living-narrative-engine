@@ -1,5 +1,6 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import {
+  executePersistenceOp,
   wrapPersistenceOperation,
   wrapSyncPersistenceOperation,
 } from '../../../src/utils/persistenceErrorUtils.js';
@@ -66,5 +67,24 @@ describe('wrapSyncPersistenceOperation', () => {
     expect(result.success).toBe(false);
     expect(result.error.code).toBe('ERR');
     expect(result.userFriendlyError).toBe('Nice');
+  });
+});
+
+describe('executePersistenceOp', () => {
+  it('attaches user-friendly message when async operation fails', async () => {
+    const logger = { error: jest.fn(), debug: jest.fn() };
+    const result = await executePersistenceOp({
+      asyncOperation: async () => {
+        throw new Error('nope');
+      },
+      logger,
+      errorCode: PersistenceErrorCodes.FILE_READ_ERROR,
+      userMessage: 'Unable to read save file',
+      context: 'TestOp',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error.code).toBe(PersistenceErrorCodes.FILE_READ_ERROR);
+    expect(result.userFriendlyError).toBe('Unable to read save file');
   });
 });
