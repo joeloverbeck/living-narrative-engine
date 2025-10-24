@@ -635,6 +635,45 @@ describe('LegacyStrategy integration', () => {
 
     jest.spyOn(baseFormatter, 'format').mockImplementation(() => {
       const error = new Error('formatter explode');
+      error.target = { entityId: 'target.from.throw' };
+      throw error;
+    });
+
+    const result = await strategy.format({
+      actor,
+      actionsWithTargets: [
+        {
+          actionDef,
+          targetContexts: [
+            buildTargetContext({
+              entityId: primaryTargetId,
+              displayName: 'Primary Friend',
+              placeholder: 'target',
+            }),
+          ],
+        },
+      ],
+      trace,
+      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      traceSource: 'ActionFormattingStage.execute',
+    });
+
+    expect(result.errors).toHaveLength(1);
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining("Failed to format command for action '" + actionDef.id),
+      expect.objectContaining({
+        error: expect.objectContaining({ target: { entityId: 'target.from.throw' } }),
+      }),
+    );
+  });
+
+  it('captures thrown errors using entity id fallback in traced path when target is missing', async () => {
+    const actor = entityManager.getEntityInstance(actorId);
+    const actionDef = buildSingleTargetAction();
+    const trace = { captureActionData: jest.fn(), info: jest.fn() };
+
+    jest.spyOn(baseFormatter, 'format').mockImplementation(() => {
+      const error = new Error('formatter entity only');
       error.entityId = primaryTargetId;
       throw error;
     });
@@ -661,7 +700,54 @@ describe('LegacyStrategy integration', () => {
     expect(result.errors).toHaveLength(1);
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining("Failed to format command for action '" + actionDef.id),
-      expect.any(Object),
+      expect.objectContaining({
+        error: expect.objectContaining({ entityId: primaryTargetId }),
+      }),
+    );
+  });
+
+  it('falls back to context identifier when traced errors lack entity metadata', async () => {
+    const actor = entityManager.getEntityInstance(actorId);
+    const actionDef = buildSingleTargetAction();
+    const trace = { captureActionData: jest.fn(), info: jest.fn() };
+
+    jest.spyOn(baseFormatter, 'format').mockImplementation(() => {
+      throw new Error('formatter missing metadata');
+    });
+
+    const result = await strategy.format({
+      actor,
+      actionsWithTargets: [
+        {
+          actionDef,
+          targetContexts: [
+            buildTargetContext({
+              entityId: primaryTargetId,
+              displayName: 'Primary Friend',
+              placeholder: 'target',
+            }),
+          ],
+        },
+      ],
+      trace,
+      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      traceSource: 'ActionFormattingStage.execute',
+    });
+
+    expect(result.errors).toHaveLength(1);
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining("Failed to format command for action '" + actionDef.id),
+      expect.objectContaining({
+        error: expect.any(Error),
+      }),
+    );
+    expect(createError).toHaveBeenCalledWith(
+      expect.any(Error),
+      actionDef,
+      actor.id,
+      trace,
+      null,
+      primaryTargetId,
     );
   });
 
@@ -784,6 +870,143 @@ describe('LegacyStrategy integration', () => {
       actor.id,
       null,
       primaryTargetId,
+    );
+  });
+
+  it('skips standard fallback when multi-target formatter fails without contexts', async () => {
+    const actor = entityManager.getEntityInstance(actorId);
+    const actionDef = buildMultiTargetAction();
+
+    jest
+      .spyOn(commandFormatter, 'formatMultiTarget')
+      .mockReturnValue({ ok: false, error: 'no-targets' });
+
+    const result = await strategy.format({
+      actor,
+      actionsWithTargets: [
+        {
+          actionDef,
+          targetContexts: [],
+        },
+      ],
+      trace: null,
+      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      traceSource: 'ActionFormattingStage.execute',
+    });
+
+    expect(result.formattedCommands).toEqual([]);
+    expect(result.fallbackUsed).toBe(false);
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining("Skipping multi-target action '" + actionDef.id),
+    );
+  });
+
+  it('skips standard fallback when formatter is unavailable and contexts are empty', async () => {
+    const actor = entityManager.getEntityInstance(actorId);
+    const actionDef = buildMultiTargetAction();
+
+    const singleTargetFormatter = new ActionCommandFormatter();
+    singleTargetFormatter.formatMultiTarget = undefined;
+    const singleFallbackFormatter = new LegacyFallbackFormatter({
+      commandFormatter: singleTargetFormatter,
+      entityManager,
+      getEntityDisplayNameFn: (entity, fallback) =>
+        getEntityDisplayName(entity, fallback, logger),
+    });
+    strategy = new LegacyStrategy({
+      commandFormatter: singleTargetFormatter,
+      entityManager,
+      safeEventDispatcher: dispatcher,
+      getEntityDisplayNameFn: (entity, fallback) =>
+        getEntityDisplayName(entity, fallback, logger),
+      logger,
+      fallbackFormatter: singleFallbackFormatter,
+      createError,
+      targetNormalizationService,
+      validateVisualProperties,
+    });
+
+    const result = await strategy.format({
+      actor,
+      actionsWithTargets: [
+        {
+          actionDef,
+          targetContexts: [],
+        },
+      ],
+      trace: null,
+      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      traceSource: 'ActionFormattingStage.execute',
+    });
+
+    expect(result.formattedCommands).toEqual([]);
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining("Skipping multi-target action '" + actionDef.id),
+    );
+  });
+
+  it('uses defaults when standard fallback handles unavailable formatter with minimal metadata', async () => {
+    const actor = entityManager.getEntityInstance(actorId);
+    const actionDef = {
+      id: 'unavailable-standard-minimal',
+      name: 'Unavailable Standard Minimal',
+      template: 'Assist {primary}',
+      targets: {
+        primary: { placeholder: 'primary' },
+      },
+    };
+
+    const singleTargetFormatter = new ActionCommandFormatter();
+    singleTargetFormatter.formatMultiTarget = undefined;
+    const singleFallbackFormatter = new LegacyFallbackFormatter({
+      commandFormatter: singleTargetFormatter,
+      entityManager,
+      getEntityDisplayNameFn: (entity, fallback) =>
+        getEntityDisplayName(entity, fallback, logger),
+    });
+    strategy = new LegacyStrategy({
+      commandFormatter: singleTargetFormatter,
+      entityManager,
+      safeEventDispatcher: dispatcher,
+      getEntityDisplayNameFn: (entity, fallback) =>
+        getEntityDisplayName(entity, fallback, logger),
+      logger,
+      fallbackFormatter: singleFallbackFormatter,
+      createError,
+      targetNormalizationService,
+      validateVisualProperties,
+    });
+
+    jest
+      .spyOn(singleFallbackFormatter, 'formatWithFallback')
+      .mockReturnValue({ ok: true, value: 'Assist Primary Friend' });
+
+    const result = await strategy.format({
+      actor,
+      actionsWithTargets: [
+        {
+          actionDef,
+          targetContexts: [
+            {
+              entityId: primaryTargetId,
+              displayName: 'Primary Friend',
+              type: TARGET_TYPE_ENTITY,
+            },
+          ],
+        },
+      ],
+      trace: null,
+      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      traceSource: 'ActionFormattingStage.execute',
+    });
+
+    expect(result.fallbackUsed).toBe(true);
+    expect(result.formattedCommands[0]).toEqual(
+      expect.objectContaining({
+        description: '',
+        visual: null,
+        params: { targetId: primaryTargetId },
+      }),
     );
   });
 
@@ -975,7 +1198,7 @@ describe('LegacyStrategy integration', () => {
 
     jest.spyOn(baseFormatter, 'format').mockImplementation(() => {
       const error = new Error('explode');
-      error.entityId = primaryTargetId;
+      error.target = { entityId: 'target.from.throw' };
       throw error;
     });
 
@@ -1000,7 +1223,85 @@ describe('LegacyStrategy integration', () => {
     expect(result.errors).toHaveLength(1);
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining("Failed to format command for action '" + actionDef.id),
-      expect.any(Object),
+      expect.objectContaining({
+        error: expect.objectContaining({ target: { entityId: 'target.from.throw' } }),
+      }),
+    );
+  });
+
+  it('captures thrown errors using entity id fallback without trace when target missing', async () => {
+    const actor = entityManager.getEntityInstance(actorId);
+    const actionDef = buildSingleTargetAction();
+
+    jest.spyOn(baseFormatter, 'format').mockImplementation(() => {
+      const error = new Error('explode entity only');
+      error.entityId = primaryTargetId;
+      throw error;
+    });
+
+    const result = await strategy.format({
+      actor,
+      actionsWithTargets: [
+        {
+          actionDef,
+          targetContexts: [
+            buildTargetContext({
+              entityId: primaryTargetId,
+              displayName: 'Primary Friend',
+              placeholder: 'target',
+            }),
+          ],
+        },
+      ],
+      trace: null,
+      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      traceSource: 'ActionFormattingStage.execute',
+    });
+
+    expect(result.errors).toHaveLength(1);
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining("Failed to format command for action '" + actionDef.id),
+      expect.objectContaining({
+        error: expect.objectContaining({ entityId: primaryTargetId }),
+      }),
+    );
+  });
+
+  it('falls back to context identifier without trace when error lacks metadata', async () => {
+    const actor = entityManager.getEntityInstance(actorId);
+    const actionDef = buildSingleTargetAction();
+
+    jest.spyOn(baseFormatter, 'format').mockImplementation(() => {
+      throw new Error('no metadata');
+    });
+
+    const result = await strategy.format({
+      actor,
+      actionsWithTargets: [
+        {
+          actionDef,
+          targetContexts: [
+            buildTargetContext({
+              entityId: primaryTargetId,
+              displayName: 'Primary Friend',
+              placeholder: 'target',
+            }),
+          ],
+        },
+      ],
+      trace: null,
+      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      traceSource: 'ActionFormattingStage.execute',
+    });
+
+    expect(result.errors).toHaveLength(1);
+    expect(createError).toHaveBeenCalledWith(
+      expect.any(Error),
+      actionDef,
+      actor.id,
+      null,
+      null,
+      primaryTargetId,
     );
   });
 
@@ -1053,5 +1354,772 @@ describe('LegacyStrategy integration', () => {
     });
 
     expect(result.formattedCommands).toEqual([]);
+  });
+
+  it('supports multi-target formatter returning explicit command objects in traced flow', async () => {
+    const actor = entityManager.getEntityInstance(actorId);
+    const actionDef = buildMultiTargetAction();
+    const trace = { captureActionData: jest.fn(), info: jest.fn() };
+    const processingStats = { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 };
+
+    const explicitTargets = {
+      primary: [
+        {
+          id: primaryTargetId,
+          displayName: 'Primary Friend',
+        },
+      ],
+      secondary: [
+        {
+          id: secondaryTargetId,
+          displayName: 'Secondary Ally',
+        },
+      ],
+    };
+
+    jest.spyOn(commandFormatter, 'formatMultiTarget').mockReturnValue({
+      ok: true,
+      value: [
+        {
+          command: 'Salute the alliance',
+          targets: explicitTargets,
+        },
+      ],
+    });
+
+    const result = await strategy.format({
+      actor,
+      actionsWithTargets: [
+        {
+          actionDef,
+          targetContexts: [
+            buildTargetContext({
+              entityId: primaryTargetId,
+              displayName: 'Primary Friend',
+              placeholder: 'primary',
+            }),
+            buildTargetContext({
+              entityId: secondaryTargetId,
+              displayName: 'Secondary Ally',
+              placeholder: 'secondary',
+            }),
+          ],
+        },
+      ],
+      trace,
+      processingStats,
+      traceSource: 'ActionFormattingStage.execute',
+    });
+
+    expect(result.errors).toEqual([]);
+    expect(result.formattedCommands[0]).toEqual(
+      expect.objectContaining({
+        command: 'Salute the alliance',
+        params: expect.objectContaining({
+          isMultiTarget: true,
+          targetIds: expect.objectContaining({ primary: [primaryTargetId] }),
+        }),
+      }),
+    );
+    expect(processingStats.multiTarget).toBeGreaterThan(0);
+  });
+
+  it('omits target identifier when traced fallback receives a context without entity id', async () => {
+    const actor = entityManager.getEntityInstance(actorId);
+    const actionDef = buildMultiTargetAction();
+    const trace = { captureActionData: jest.fn(), info: jest.fn() };
+
+    jest
+      .spyOn(commandFormatter, 'formatMultiTarget')
+      .mockReturnValue({ ok: false, error: 'no-multi-target' });
+    jest
+      .spyOn(fallbackFormatter, 'formatWithFallback')
+      .mockReturnValue({ ok: true, value: 'Fallback salute' });
+
+    const result = await strategy.format({
+      actor,
+      actionsWithTargets: [
+        {
+          actionDef,
+          targetContexts: [
+            {
+              entityId: undefined,
+              displayName: 'Unknown Primary',
+              type: TARGET_TYPE_ENTITY,
+            },
+            buildTargetContext({
+              entityId: secondaryTargetId,
+              displayName: 'Secondary Ally',
+              placeholder: 'secondary',
+            }),
+          ],
+        },
+      ],
+      trace,
+      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      traceSource: 'ActionFormattingStage.execute',
+    });
+
+    expect(result.fallbackUsed).toBe(true);
+    expect(result.formattedCommands[0]).toEqual(
+      expect.objectContaining({
+        params: {},
+      }),
+    );
+    expect(createError).not.toHaveBeenCalled();
+  });
+
+  it('propagates null target identifiers when traced fallback fails without entity id', async () => {
+    const actor = entityManager.getEntityInstance(actorId);
+    const actionDef = buildMultiTargetAction();
+    const trace = { captureActionData: jest.fn(), info: jest.fn() };
+
+    jest
+      .spyOn(commandFormatter, 'formatMultiTarget')
+      .mockReturnValue({ ok: false, error: 'still-invalid' });
+    jest
+      .spyOn(fallbackFormatter, 'formatWithFallback')
+      .mockReturnValue({ ok: false, error: 'no-fallback-target' });
+
+    const result = await strategy.format({
+      actor,
+      actionsWithTargets: [
+        {
+          actionDef,
+          targetContexts: [
+            {
+              entityId: undefined,
+              displayName: 'Unknown Primary',
+              type: TARGET_TYPE_ENTITY,
+            },
+            buildTargetContext({
+              entityId: secondaryTargetId,
+              displayName: 'Secondary Ally',
+              placeholder: 'secondary',
+            }),
+          ],
+        },
+      ],
+      trace,
+      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      traceSource: 'ActionFormattingStage.execute',
+    });
+
+    expect(result.formattedCommands).toEqual([]);
+    expect(result.errors).toHaveLength(1);
+    expect(createError).toHaveBeenCalledWith(
+      expect.objectContaining({ error: 'no-fallback-target' }),
+      actionDef,
+      actor.id,
+      trace,
+      null,
+    );
+  });
+
+  it('skips traced fallback when multi-target formatter fails without contexts', async () => {
+    const actor = entityManager.getEntityInstance(actorId);
+    const actionDef = buildMultiTargetAction();
+    const trace = { captureActionData: jest.fn(), info: jest.fn() };
+
+    jest
+      .spyOn(commandFormatter, 'formatMultiTarget')
+      .mockReturnValue({ ok: false, error: 'no-targets' });
+
+    const result = await strategy.format({
+      actor,
+      actionsWithTargets: [
+        {
+          actionDef,
+          targetContexts: [],
+        },
+      ],
+      trace,
+      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      traceSource: 'ActionFormattingStage.execute',
+    });
+
+    expect(result.formattedCommands).toEqual([]);
+    expect(result.fallbackUsed).toBe(false);
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining("Skipping multi-target action '" + actionDef.id),
+    );
+  });
+
+  it('skips traced fallback when formatter is unavailable and contexts are empty', async () => {
+    const actor = entityManager.getEntityInstance(actorId);
+    const actionDef = buildMultiTargetAction();
+    const trace = { captureActionData: jest.fn(), info: jest.fn() };
+
+    const singleTargetFormatter = new ActionCommandFormatter();
+    singleTargetFormatter.formatMultiTarget = undefined;
+    const singleFallbackFormatter = new LegacyFallbackFormatter({
+      commandFormatter: singleTargetFormatter,
+      entityManager,
+      getEntityDisplayNameFn: (entity, fallback) =>
+        getEntityDisplayName(entity, fallback, logger),
+    });
+
+    strategy = new LegacyStrategy({
+      commandFormatter: singleTargetFormatter,
+      entityManager,
+      safeEventDispatcher: dispatcher,
+      getEntityDisplayNameFn: (entity, fallback) =>
+        getEntityDisplayName(entity, fallback, logger),
+      logger,
+      fallbackFormatter: singleFallbackFormatter,
+      createError,
+      targetNormalizationService,
+      validateVisualProperties,
+    });
+
+    const result = await strategy.format({
+      actor,
+      actionsWithTargets: [
+        {
+          actionDef,
+          targetContexts: [],
+        },
+      ],
+      trace,
+      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      traceSource: 'ActionFormattingStage.execute',
+    });
+
+    expect(result.formattedCommands).toEqual([]);
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining("Skipping multi-target action '" + actionDef.id),
+    );
+  });
+
+  it('uses defaults when traced fallback handles unavailable formatter with minimal metadata', async () => {
+    const actor = entityManager.getEntityInstance(actorId);
+    const actionDef = {
+      id: 'unavailable-traced-minimal',
+      name: 'Unavailable Traced Minimal',
+      template: 'Assist {primary}',
+      targets: {
+        primary: { placeholder: 'primary' },
+      },
+    };
+    const trace = { captureActionData: jest.fn(), info: jest.fn() };
+
+    const singleTargetFormatter = new ActionCommandFormatter();
+    singleTargetFormatter.formatMultiTarget = undefined;
+    const singleFallbackFormatter = new LegacyFallbackFormatter({
+      commandFormatter: singleTargetFormatter,
+      entityManager,
+      getEntityDisplayNameFn: (entity, fallback) =>
+        getEntityDisplayName(entity, fallback, logger),
+    });
+    strategy = new LegacyStrategy({
+      commandFormatter: singleTargetFormatter,
+      entityManager,
+      safeEventDispatcher: dispatcher,
+      getEntityDisplayNameFn: (entity, fallback) =>
+        getEntityDisplayName(entity, fallback, logger),
+      logger,
+      fallbackFormatter: singleFallbackFormatter,
+      createError,
+      targetNormalizationService,
+      validateVisualProperties,
+    });
+
+    jest
+      .spyOn(singleFallbackFormatter, 'formatWithFallback')
+      .mockReturnValue({ ok: true, value: 'Assist Primary Friend' });
+
+    const result = await strategy.format({
+      actor,
+      actionsWithTargets: [
+        {
+          actionDef,
+          targetContexts: [
+            {
+              entityId: primaryTargetId,
+              displayName: 'Primary Friend',
+              type: TARGET_TYPE_ENTITY,
+            },
+          ],
+        },
+      ],
+      trace,
+      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      traceSource: 'ActionFormattingStage.execute',
+    });
+
+    expect(result.fallbackUsed).toBe(true);
+    expect(result.formattedCommands[0]).toEqual(
+      expect.objectContaining({
+        description: '',
+        visual: null,
+        params: { targetId: primaryTargetId },
+      }),
+    );
+  });
+  it('omits target identifier when standard fallback receives a context without entity id', async () => {
+    const actor = entityManager.getEntityInstance(actorId);
+    const actionDef = buildMultiTargetAction();
+
+    jest
+      .spyOn(commandFormatter, 'formatMultiTarget')
+      .mockReturnValue({ ok: false, error: 'no-multi-target' });
+    jest
+      .spyOn(fallbackFormatter, 'formatWithFallback')
+      .mockReturnValue({ ok: true, value: 'Fallback salute' });
+
+    const result = await strategy.format({
+      actor,
+      actionsWithTargets: [
+        {
+          actionDef,
+          targetContexts: [
+            {
+              entityId: undefined,
+              displayName: 'Unknown Primary',
+              type: TARGET_TYPE_ENTITY,
+            },
+            buildTargetContext({
+              entityId: secondaryTargetId,
+              displayName: 'Secondary Ally',
+              placeholder: 'secondary',
+            }),
+          ],
+        },
+      ],
+      trace: null,
+      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      traceSource: 'ActionFormattingStage.execute',
+    });
+
+    expect(result.fallbackUsed).toBe(true);
+    expect(result.formattedCommands[0]).toEqual(
+      expect.objectContaining({
+        params: {},
+      }),
+    );
+    expect(createError).not.toHaveBeenCalled();
+  });
+
+  it('formats traced multi-target success without optional metadata fields', async () => {
+    const actor = entityManager.getEntityInstance(actorId);
+    const actionDef = {
+      id: 'minimal-multi-success-traced',
+      name: 'Minimal Multi Success Traced',
+      template: 'Coordinate {primary}',
+      targets: {
+        primary: { placeholder: 'primary' },
+      },
+    };
+    const trace = { captureActionData: jest.fn(), info: jest.fn() };
+    const processingStats = { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 };
+
+    const commandTargets = {
+      primary: [
+        { id: primaryTargetId, displayName: 'Primary Friend' },
+        { id: secondaryTargetId, displayName: 'Secondary Ally' },
+      ],
+    };
+
+    jest.spyOn(commandFormatter, 'formatMultiTarget').mockReturnValue({
+      ok: true,
+      value: [
+        {
+          command: 'Coordinate team',
+          targets: commandTargets,
+        },
+      ],
+    });
+
+    const result = await strategy.format({
+      actor,
+      actionsWithTargets: [
+        {
+          actionDef,
+          targetContexts: [
+            {
+              entityId: primaryTargetId,
+              placeholder: 'primary',
+              type: TARGET_TYPE_ENTITY,
+            },
+            {
+              entityId: secondaryTargetId,
+              placeholder: 'primary',
+              type: TARGET_TYPE_ENTITY,
+            },
+          ],
+        },
+      ],
+      trace,
+      processingStats,
+      traceSource: 'ActionFormattingStage.execute',
+    });
+
+    expect(result.errors).toEqual([]);
+    expect(result.formattedCommands[0]).toEqual(
+      expect.objectContaining({
+        command: 'Coordinate team',
+        description: '',
+        visual: null,
+      }),
+    );
+    expect(result.formattedCommands[0].params).toEqual(
+      expect.objectContaining({
+        targetIds: expect.objectContaining({ primary: [primaryTargetId, secondaryTargetId] }),
+      }),
+    );
+  });
+
+  it('supports multi-target formatter returning explicit command objects without trace', async () => {
+    const actor = entityManager.getEntityInstance(actorId);
+    const actionDef = buildMultiTargetAction();
+
+    const explicitTargets = {
+      primary: [
+        {
+          id: primaryTargetId,
+          displayName: 'Primary Friend',
+        },
+      ],
+      secondary: [
+        {
+          id: secondaryTargetId,
+          displayName: 'Secondary Ally',
+        },
+      ],
+    };
+
+    jest.spyOn(commandFormatter, 'formatMultiTarget').mockReturnValue({
+      ok: true,
+      value: [
+        {
+          command: 'Coordinate allies',
+          targets: explicitTargets,
+        },
+      ],
+    });
+
+    const result = await strategy.format({
+      actor,
+      actionsWithTargets: [
+        {
+          actionDef,
+          targetContexts: [
+            buildTargetContext({
+              entityId: primaryTargetId,
+              displayName: 'Primary Friend',
+              placeholder: 'primary',
+            }),
+            buildTargetContext({
+              entityId: secondaryTargetId,
+              displayName: 'Secondary Ally',
+              placeholder: 'secondary',
+            }),
+          ],
+        },
+      ],
+      trace: null,
+      traceSource: 'ActionFormattingStage.execute',
+    });
+
+    expect(result.errors).toEqual([]);
+    expect(result.formattedCommands[0]).toEqual(
+      expect.objectContaining({
+        command: 'Coordinate allies',
+        params: expect.objectContaining({
+          isMultiTarget: true,
+          targetIds: expect.objectContaining({ primary: [primaryTargetId] }),
+        }),
+      }),
+    );
+  });
+
+  it('formats standard multi-target success without optional metadata fields', async () => {
+    const actor = entityManager.getEntityInstance(actorId);
+    const actionDef = {
+      id: 'minimal-multi-success-standard',
+      name: 'Minimal Multi Success Standard',
+      template: 'Coordinate {primary}',
+      targets: {
+        primary: { placeholder: 'primary' },
+      },
+    };
+
+    const commandTargets = {
+      primary: [
+        { id: primaryTargetId, displayName: 'Primary Friend' },
+        { id: secondaryTargetId, displayName: 'Secondary Ally' },
+      ],
+    };
+
+    jest.spyOn(commandFormatter, 'formatMultiTarget').mockReturnValue({
+      ok: true,
+      value: [
+        {
+          command: 'Coordinate standard team',
+          targets: commandTargets,
+        },
+      ],
+    });
+
+    const result = await strategy.format({
+      actor,
+      actionsWithTargets: [
+        {
+          actionDef,
+          targetContexts: [
+            {
+              entityId: primaryTargetId,
+              placeholder: 'primary',
+              type: TARGET_TYPE_ENTITY,
+            },
+            {
+              entityId: secondaryTargetId,
+              placeholder: 'primary',
+              type: TARGET_TYPE_ENTITY,
+            },
+          ],
+        },
+      ],
+      trace: null,
+      traceSource: 'ActionFormattingStage.execute',
+    });
+
+    expect(result.errors).toEqual([]);
+    expect(result.formattedCommands[0]).toEqual(
+      expect.objectContaining({
+        command: 'Coordinate standard team',
+        description: '',
+        visual: null,
+      }),
+    );
+    expect(result.formattedCommands[0].params).toEqual(
+      expect.objectContaining({
+        targetIds: expect.objectContaining({ primary: [primaryTargetId, secondaryTargetId] }),
+      }),
+    );
+  });
+
+  it('formats successfully when actions are omitted and defaults are used', async () => {
+    const actor = entityManager.getEntityInstance(actorId);
+
+    const result = await strategy.format({
+      actor,
+      trace: null,
+      traceSource: 'ActionFormattingStage.execute',
+    });
+
+    expect(result.formattedCommands).toEqual([]);
+    expect(result.errors).toEqual([]);
+    expect(result.pipelineResult.success).toBe(true);
+  });
+
+  it('resolves targets when placeholders and definitions rely on defaults', async () => {
+    const actor = entityManager.getEntityInstance(actorId);
+    const actionDef = {
+      id: 'assist-action',
+      name: 'Assist',
+      description: 'Help an ally',
+      template: 'Assist {primary}',
+      targets: {
+        primary: {},
+      },
+      visual: null,
+    };
+
+    jest
+      .spyOn(commandFormatter, 'formatMultiTarget')
+      .mockReturnValue({ ok: false, error: 'missing' });
+    jest
+      .spyOn(fallbackFormatter, 'formatWithFallback')
+      .mockReturnValue({ ok: true, value: 'Assist Primary Friend' });
+
+    const result = await strategy.format({
+      actor,
+      actionsWithTargets: [
+        {
+          actionDef,
+          targetContexts: [
+            {
+              entityId: primaryTargetId,
+              displayName: 'Primary Friend',
+              type: TARGET_TYPE_ENTITY,
+            },
+          ],
+        },
+      ],
+      trace: null,
+      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      traceSource: 'ActionFormattingStage.execute',
+    });
+
+    expect(result.fallbackUsed).toBe(true);
+    expect(result.formattedCommands[0]).toEqual(
+      expect.objectContaining({
+        command: 'Assist Primary Friend',
+        params: { targetId: primaryTargetId },
+      }),
+    );
+  });
+
+  it('uses traced fallback with minimal metadata to populate default fields', async () => {
+    const actor = entityManager.getEntityInstance(actorId);
+    const actionDef = {
+      id: 'minimal-traced-fallback',
+      name: 'Minimal Traced',
+      template: 'Assist {primary}',
+      targets: {
+        primary: { placeholder: 'primary' },
+      },
+    };
+    const trace = { captureActionData: jest.fn(), info: jest.fn() };
+
+    jest
+      .spyOn(commandFormatter, 'formatMultiTarget')
+      .mockReturnValue({ ok: false, error: 'nope' });
+    jest
+      .spyOn(fallbackFormatter, 'formatWithFallback')
+      .mockReturnValue({ ok: true, value: 'Fallback minimal traced' });
+
+    const result = await strategy.format({
+      actor,
+      actionsWithTargets: [
+        {
+          actionDef,
+          targetContexts: [
+            {
+              entityId: primaryTargetId,
+              type: TARGET_TYPE_ENTITY,
+            },
+          ],
+        },
+      ],
+      trace,
+      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      traceSource: 'ActionFormattingStage.execute',
+    });
+
+    expect(result.fallbackUsed).toBe(true);
+    expect(result.formattedCommands[0]).toEqual(
+      expect.objectContaining({
+        description: '',
+        visual: null,
+        params: { targetId: primaryTargetId },
+      }),
+    );
+  });
+
+  it('uses standard fallback with minimal metadata to populate default fields', async () => {
+    const actor = entityManager.getEntityInstance(actorId);
+    const actionDef = {
+      id: 'minimal-standard-fallback',
+      name: 'Minimal Standard',
+      template: 'Assist {primary}',
+      targets: {
+        primary: { placeholder: 'primary' },
+      },
+    };
+
+    jest
+      .spyOn(commandFormatter, 'formatMultiTarget')
+      .mockReturnValue({ ok: false, error: 'nope' });
+    jest
+      .spyOn(fallbackFormatter, 'formatWithFallback')
+      .mockReturnValue({ ok: true, value: 'Fallback minimal standard' });
+
+    const result = await strategy.format({
+      actor,
+      actionsWithTargets: [
+        {
+          actionDef,
+          targetContexts: [
+            {
+              entityId: primaryTargetId,
+              type: TARGET_TYPE_ENTITY,
+            },
+          ],
+        },
+      ],
+      trace: null,
+      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      traceSource: 'ActionFormattingStage.execute',
+    });
+
+    expect(result.fallbackUsed).toBe(true);
+    expect(result.formattedCommands[0]).toEqual(
+      expect.objectContaining({
+        description: '',
+        visual: null,
+        params: { targetId: primaryTargetId },
+      }),
+    );
+  });
+
+  it('formats traced single-target actions without optional metadata fields', async () => {
+    const actor = entityManager.getEntityInstance(actorId);
+    const actionDef = {
+      id: 'minimal-traced-single',
+      name: 'Minimal Traced Single',
+      template: 'Greet {target}',
+    };
+    const trace = { captureActionData: jest.fn(), info: jest.fn() };
+
+    const result = await strategy.format({
+      actor,
+      actionsWithTargets: [
+        {
+          actionDef,
+          targetContexts: [
+            {
+              entityId: primaryTargetId,
+              placeholder: 'target',
+              type: TARGET_TYPE_ENTITY,
+            },
+          ],
+        },
+      ],
+      trace,
+      traceSource: 'ActionFormattingStage.execute',
+    });
+
+    expect(result.formattedCommands[0]).toEqual(
+      expect.objectContaining({
+        description: '',
+        visual: null,
+      }),
+    );
+  });
+
+  it('formats standard single-target actions without optional metadata fields', async () => {
+    const actor = entityManager.getEntityInstance(actorId);
+    const actionDef = {
+      id: 'minimal-standard-single',
+      name: 'Minimal Standard Single',
+      template: 'Greet {target}',
+    };
+
+    const result = await strategy.format({
+      actor,
+      actionsWithTargets: [
+        {
+          actionDef,
+          targetContexts: [
+            {
+              entityId: primaryTargetId,
+              placeholder: 'target',
+              type: TARGET_TYPE_ENTITY,
+            },
+          ],
+        },
+      ],
+      trace: null,
+      traceSource: 'ActionFormattingStage.execute',
+    });
+
+    expect(result.formattedCommands[0]).toEqual(
+      expect.objectContaining({
+        description: '',
+        visual: null,
+      }),
+    );
   });
 });
