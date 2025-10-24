@@ -95,6 +95,26 @@ describe('TraceVisualizer', () => {
       expect(output).toContain('[CRITICAL]');
     });
 
+    it('should allow disabling critical path indicators', () => {
+      const rootSpan = structuredTrace.startSpan('RootOp');
+      const criticalChild = structuredTrace.startSpan('CriticalOp');
+      timeCounter += 200;
+      structuredTrace.endSpan(criticalChild);
+
+      const normalChild = structuredTrace.startSpan('NormalOp');
+      timeCounter += 50;
+      structuredTrace.endSpan(normalChild);
+
+      structuredTrace.endSpan(rootSpan);
+
+      const output = visualizer.displayHierarchy({
+        colorsEnabled: false,
+        showCriticalPath: false,
+      });
+
+      expect(output).not.toContain('[CRITICAL]');
+    });
+
     it('should show error indicators', () => {
       const span = structuredTrace.startSpan('ErrorOp');
       span.setError(new Error('Test error'));
@@ -104,6 +124,21 @@ describe('TraceVisualizer', () => {
 
       expect(output).toContain('❌');
       expect(output).toContain('Error: Test error');
+    });
+
+    it('should hide inline error details when disabled', () => {
+      const span = structuredTrace.startSpan('ErrorOp');
+      span.setError(new Error('Test error'));
+      structuredTrace.endSpan(span);
+
+      const output = visualizer.displayHierarchy({
+        colorsEnabled: false,
+        showErrors: false,
+        showAttributes: false,
+      });
+
+      expect(output).toContain('ErrorOp');
+      expect(output).not.toContain('Error: Test error');
     });
 
     it('should respect maxDepth option', () => {
@@ -165,6 +200,42 @@ describe('TraceVisualizer', () => {
 
       expect(output).toContain('userId: 123');
       expect(output).toContain('action: "test"');
+    });
+
+    it('should suppress attributes when disabled', () => {
+      const span = structuredTrace.startSpan('AttrOp', {
+        foo: 'bar',
+      });
+      structuredTrace.endSpan(span);
+
+      const output = visualizer.displayHierarchy({
+        colorsEnabled: false,
+        showAttributes: false,
+      });
+
+      expect(output).toContain('AttrOp');
+      expect(output).not.toContain('foo:');
+    });
+
+    it('should format attribute prefixes for intermediate nodes', () => {
+      const root = structuredTrace.startSpan('Root');
+
+      const firstChild = structuredTrace.startSpan('FirstChild', { foo: 'bar' });
+      structuredTrace.endSpan(firstChild);
+
+      const secondChild = structuredTrace.startSpan('SecondChild');
+      structuredTrace.endSpan(secondChild);
+
+      structuredTrace.endSpan(root);
+
+      const output = visualizer.displayHierarchy({
+        colorsEnabled: false,
+        showAttributes: true,
+      });
+
+      expect(output).toContain('├── FirstChild');
+      expect(output).toContain('│     foo: "bar"');
+      expect(output).toContain('└── SecondChild');
     });
 
     it('should handle complex hierarchy with multiple children', () => {
@@ -275,6 +346,60 @@ describe('TraceVisualizer', () => {
 
       expect(output).toContain('[CRITICAL]');
     });
+
+    it('should allow hiding critical path data from the waterfall', () => {
+      const root = structuredTrace.startSpan('Root');
+      const critical = structuredTrace.startSpan('CriticalOp');
+      timeCounter += 300;
+      structuredTrace.endSpan(critical);
+      structuredTrace.endSpan(root);
+
+      const output = visualizer.displayWaterfall({
+        colorsEnabled: false,
+        showCriticalPath: false,
+      });
+
+      expect(output).not.toContain('[CRITICAL]');
+    });
+
+    it('should filter waterfall entries by maxDepth', () => {
+      const root = structuredTrace.startSpan('Root');
+
+      const child = structuredTrace.startSpan('Child');
+      timeCounter += 50;
+      const grandchild = structuredTrace.startSpan('Grandchild');
+      timeCounter += 50;
+      structuredTrace.endSpan(grandchild);
+      structuredTrace.endSpan(child);
+
+      structuredTrace.endSpan(root);
+
+      const output = visualizer.displayWaterfall({
+        colorsEnabled: false,
+        maxDepth: 1,
+      });
+
+      expect(output).toContain('Root');
+      expect(output).toContain('Child');
+      expect(output).not.toContain('Grandchild');
+    });
+
+    it('should highlight error spans in the waterfall view', () => {
+      const root = structuredTrace.startSpan('Root');
+      const errorSpan = structuredTrace.startSpan('ErrorOp');
+      errorSpan.setError(new Error('Boom'));
+      timeCounter += 120;
+      structuredTrace.endSpan(errorSpan);
+      structuredTrace.endSpan(root);
+
+      const output = visualizer.displayWaterfall({
+        colorsEnabled: true,
+        showCriticalPath: false,
+      });
+
+      expect(output).toContain('ErrorOp (120.00ms)');
+      expect(output).toContain('\x1b[31m'); // Red color applied to error bar
+    });
   });
 
   describe('displaySummary', () => {
@@ -331,6 +456,23 @@ describe('TraceVisualizer', () => {
       expect(output).toContain('SlowOp:');
       expect(output).toContain('%');
     });
+
+    it('should handle traces without spans gracefully', () => {
+      const emptyTrace = new StructuredTrace();
+      const emptyVisualizer = new TraceVisualizer(emptyTrace);
+
+      const output = emptyVisualizer.displaySummary({ colorsEnabled: false });
+
+      expect(output).toContain('Total Duration: 0.00ms');
+      expect(output).not.toContain('Critical Path:');
+      expect(output).not.toContain('Slowest Operations:');
+    });
+
+    it('should allow omitting visualization options', () => {
+      const output = visualizer.displaySummary();
+
+      expect(output).toContain('Trace Summary');
+    });
   });
 
   describe('displayErrors', () => {
@@ -364,6 +506,26 @@ describe('TraceVisualizer', () => {
       expect(output).toContain('Error: Second error');
     });
 
+    it('should render error prefixes for intermediate nodes', () => {
+      const root = structuredTrace.startSpan('Root');
+
+      const firstError = structuredTrace.startSpan('FirstError');
+      firstError.setError(new Error('first'));
+      structuredTrace.endSpan(firstError);
+
+      const secondError = structuredTrace.startSpan('SecondError');
+      secondError.setError(new Error('second'));
+      structuredTrace.endSpan(secondError);
+
+      structuredTrace.endSpan(root);
+
+      const output = visualizer.displayHierarchy({ colorsEnabled: false });
+
+      expect(output).toContain('├── FirstError');
+      expect(output).toContain('│     Error: first');
+      expect(output).toContain('└── SecondError');
+    });
+
     it('should show attributes when enabled', () => {
       const span = structuredTrace.startSpan('ErrorOp', {
         userId: 123,
@@ -380,6 +542,34 @@ describe('TraceVisualizer', () => {
       expect(output).toContain('Attributes:');
       expect(output).toContain('userId: 123');
       expect(output).toContain('action: "test"');
+    });
+
+    it('should omit timing details when disabled', () => {
+      const span = structuredTrace.startSpan('ErrorOp');
+      span.setError(new Error('Test error'));
+      timeCounter += 75;
+      structuredTrace.endSpan(span);
+
+      const output = visualizer.displayErrors({
+        colorsEnabled: false,
+        showTimings: false,
+        showAttributes: false,
+      });
+
+      expect(output).toContain('ErrorOp');
+      expect(output).not.toContain('Duration:');
+    });
+
+    it('should handle spans without error details', () => {
+      const span = structuredTrace.startSpan('ErrorWithoutDetails');
+      span.setStatus('error');
+      timeCounter += 20;
+      structuredTrace.endSpan(span);
+
+      const output = visualizer.displayErrors({ colorsEnabled: false });
+
+      expect(output).toContain('ErrorWithoutDetails');
+      expect(output).not.toContain('Error:');
     });
   });
 
@@ -413,6 +603,15 @@ describe('TraceVisualizer', () => {
 
       // Should not contain timing information
       expect(displays.hierarchy).not.toContain('ms)');
+    });
+
+    it('should use defaults when options are omitted', () => {
+      const displays = visualizer.getAllDisplays();
+
+      expect(displays.hierarchy).toContain('Trace Hierarchy');
+      expect(displays.waterfall).toContain('Trace Waterfall');
+      expect(displays.summary).toContain('Trace Summary');
+      expect(displays.errors).toBeDefined();
     });
   });
 
