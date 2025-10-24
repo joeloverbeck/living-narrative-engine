@@ -286,7 +286,7 @@ export class LegacyStrategy {
                 name: actionDef.name,
                 command: fallbackResult.value,
                 description: actionDef.description || '',
-                params: { targetId: targetContexts[0].entityId },
+                params: this.#buildFallbackParams(targetContexts[0]),
                 visual: actionDef.visual || null,
               });
               this.#incrementStat(processingStats, 'successful');
@@ -538,7 +538,7 @@ export class LegacyStrategy {
                   name: actionDef.name,
                   command: fallbackResult.value,
                   description: actionDef.description || '',
-                  params: { targetId: targetContexts[0].entityId },
+                  params: this.#buildFallbackParams(targetContexts[0]),
                   visual: actionDef.visual || null,
                 });
                 fallbackInvocations++;
@@ -569,7 +569,7 @@ export class LegacyStrategy {
                 name: actionDef.name,
                 command: fallbackResult.value,
                 description: actionDef.description || '',
-                params: { targetId: targetContexts[0].entityId },
+                params: this.#buildFallbackParams(targetContexts[0]),
                 visual: actionDef.visual || null,
               });
               fallbackInvocations++;
@@ -728,6 +728,21 @@ export class LegacyStrategy {
     }
 
     return targetsByPlaceholder;
+  }
+
+  /**
+   * @param {ActionTargetContext|undefined|null} targetContext - Target context to extract the entity identifier from.
+   * @returns {Record<string, unknown>} Parameters for the fallback formatted action.
+   * @description Ensures fallback params omit targetId when no identifier is available.
+   */
+  #buildFallbackParams(targetContext) {
+    const targetId = targetContext?.entityId;
+
+    if (!targetId) {
+      return {};
+    }
+
+    return { targetId };
   }
 
   /**
