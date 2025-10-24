@@ -425,6 +425,19 @@ describe('GameSessionManager', () => {
       );
     });
 
+    it('should trim whitespace from metadata gameTitle before use', async () => {
+      const saveData = {
+        metadata: { gameTitle: '  Trimmed World  ' },
+        entities: [],
+        gameState: {},
+      };
+
+      await gameSessionManager.finalizeLoadSuccess(saveData, 'trim.sav');
+
+      expect(engineState.activeWorld).toBe('Trimmed World');
+      expect(startEngineFn).toHaveBeenCalledWith('Trimmed World');
+    });
+
     it('should handle save data without metadata', async () => {
       const saveData = {
         entities: [],
@@ -453,6 +466,22 @@ describe('GameSessionManager', () => {
       const result = await gameSessionManager.finalizeLoadSuccess(
         saveData,
         'autosave'
+      );
+
+      expect(engineState.activeWorld).toBe('Restored Game');
+      expect(startEngineFn).toHaveBeenCalledWith('Restored Game');
+      expect(result.success).toBe(true);
+    });
+
+    it('should treat whitespace-only gameTitle as missing', async () => {
+      const saveData = {
+        metadata: { gameTitle: '   ' },
+        entities: [],
+      };
+
+      const result = await gameSessionManager.finalizeLoadSuccess(
+        saveData,
+        'whitespace'
       );
 
       expect(engineState.activeWorld).toBe('Restored Game');
