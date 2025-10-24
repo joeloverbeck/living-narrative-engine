@@ -90,7 +90,7 @@ class PersistenceCoordinator {
     try {
       const result = await this.#persistenceService.saveGame(
         saveName,
-        true,
+        this.#state.isInitialized,
         this.#state.activeWorld
       );
       return { ...result, saveName };

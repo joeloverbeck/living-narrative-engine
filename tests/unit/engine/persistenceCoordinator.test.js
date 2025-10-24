@@ -15,6 +15,7 @@ import {
   DEFAULT_ACTIVE_WORLD_FOR_SAVE,
   DEFAULT_SAVE_NAME,
   DEFAULT_SAVE_ID,
+  SAVE_OPERATION_FINISHED_MESSAGE,
 } from '../../common/constants.js';
 import {
   ENGINE_OPERATION_IN_PROGRESS_UI,
@@ -73,7 +74,8 @@ function createCoordinator(overrides = {}) {
 
 describe('PersistenceCoordinator', () => {
   it('triggerManualSave dispatches events in order and returns success', async () => {
-    const { coordinator, dispatcher, persistenceService } = createCoordinator();
+    const { coordinator, dispatcher, persistenceService, state } =
+      createCoordinator();
     const filePath = 'path/to.sav';
     persistenceService.saveGame.mockResolvedValue({ success: true, filePath });
 
@@ -81,7 +83,7 @@ describe('PersistenceCoordinator', () => {
 
     expect(persistenceService.saveGame).toHaveBeenCalledWith(
       DEFAULT_SAVE_NAME,
-      true,
+      state.isInitialized,
       DEFAULT_ACTIVE_WORLD_FOR_SAVE
     );
     expect(result).toEqual({ success: true, filePath });
@@ -89,6 +91,33 @@ describe('PersistenceCoordinator', () => {
       dispatcher.dispatch,
       ...buildSaveDispatches(DEFAULT_SAVE_NAME, filePath)
     );
+  });
+
+  it('triggerManualSave forwards the latest engine state to the persistence service', async () => {
+    const { coordinator, dispatcher, persistenceService, state } =
+      createCoordinator();
+    const filePath = 'path/to.sav';
+    persistenceService.saveGame.mockResolvedValue({ success: true, filePath });
+
+    dispatcher.dispatch.mockImplementationOnce(async () => {
+      state.reset();
+    });
+
+    const result = await coordinator.triggerManualSave(DEFAULT_SAVE_NAME);
+
+    expect(result).toEqual({ success: true, filePath });
+    expect(persistenceService.saveGame).toHaveBeenCalledWith(
+      DEFAULT_SAVE_NAME,
+      false,
+      null
+    );
+    const readyDispatch = dispatcher.dispatch.mock.calls.find(
+      ([eventId]) => eventId === ENGINE_READY_UI
+    );
+    expect(readyDispatch).toEqual([
+      ENGINE_READY_UI,
+      { activeWorld: null, message: SAVE_OPERATION_FINISHED_MESSAGE },
+    ]);
   });
 
   it('loadGame handles persistence failure and dispatches failure UI', async () => {
