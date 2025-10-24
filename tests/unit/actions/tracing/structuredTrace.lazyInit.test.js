@@ -192,6 +192,13 @@ describe('StructuredTrace - Lazy Initialization', () => {
       expect(visualizer).toBeDefined();
       expect(visualizer.displayHierarchy).toBeDefined();
     });
+
+    it('should return same visualizer instance on repeated calls', async () => {
+      const firstCall = await structuredTrace.getVisualizer();
+      const secondCall = await structuredTrace.getVisualizer();
+
+      expect(secondCall).toBe(firstCall);
+    });
   });
 
   describe('getPerformanceMonitor', () => {
@@ -233,6 +240,13 @@ describe('StructuredTrace - Lazy Initialization', () => {
       expect(monitor).toBeDefined();
       expect(monitor.enableSampling).toBeDefined();
       expect(typeof monitor.enableSampling).toBe('function');
+    });
+
+    it('should return same performance monitor instance on repeated calls', async () => {
+      const firstCall = await structuredTrace.getPerformanceMonitor();
+      const secondCall = await structuredTrace.getPerformanceMonitor();
+
+      expect(secondCall).toBe(firstCall);
     });
 
     it('should work without sampling configuration', async () => {
