@@ -279,20 +279,12 @@ export class TraceErrorHandler {
       ...errorInfo.context, // Include all sanitized context fields
     };
 
-    switch (errorInfo.severity) {
-      case TraceErrorSeverity.LOW:
-        this.#logger.warn(logMessage, logContext);
-        break;
-      case TraceErrorSeverity.MEDIUM:
-        this.#logger.error(logMessage, logContext);
-        break;
-      case TraceErrorSeverity.HIGH:
-      case TraceErrorSeverity.CRITICAL:
-        this.#logger.error(logMessage, logContext);
-        break;
-      default:
-        this.#logger.error(logMessage, logContext);
+    if (errorInfo.severity === TraceErrorSeverity.LOW) {
+      this.#logger.warn(logMessage, logContext);
+      return;
     }
+
+    this.#logger.error(logMessage, logContext);
   }
 
   async #attemptRecovery(errorInfo) {
