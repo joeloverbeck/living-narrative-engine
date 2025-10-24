@@ -4,6 +4,7 @@
 
 import { PipelineResult } from '../../PipelineResult.js';
 import { createActionFormattingTask } from './ActionFormattingTaskFactory.js';
+import { FormattingAccumulator } from './FormattingAccumulator.js';
 
 /**
  * @typedef {import('../../../../entities/entity.js').default} Entity
@@ -121,7 +122,7 @@ export class ActionFormattingCoordinator {
     this.#decider = decider;
     this.#accumulatorFactory = typeof accumulatorFactory === 'function'
       ? accumulatorFactory
-      : () => /** @type {FormattingAccumulator} */ ({});
+      : () => new FormattingAccumulator();
     this.#errorFactory = errorFactory;
     this.#fallbackFormatter = fallbackFormatter;
     this.#targetNormalizationService = targetNormalizationService;

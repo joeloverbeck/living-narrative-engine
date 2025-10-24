@@ -384,6 +384,7 @@ describe('ActionFormattingCoordinator', () => {
 
   it('records validation failures once per action and emits instrumentation', async () => {
     const failureError = { error: 'validation-structured' };
+    const secondaryFailure = { error: { message: 'no-code' } };
     const decider = {
       decide: jest.fn(() => ({
         strategy: null,
@@ -398,6 +399,7 @@ describe('ActionFormattingCoordinator', () => {
             message: 'Metadata missing',
             error: failureError,
           },
+          secondaryFailure,
         ],
       })),
     };
@@ -443,7 +445,7 @@ describe('ActionFormattingCoordinator', () => {
     });
 
     expect(commandFormatter.format).toHaveBeenCalledTimes(1);
-    expect(result.errors).toEqual([failureError]);
+    expect(result.errors).toEqual([failureError, secondaryFailure.error]);
     expect(dependencies.instrumentation.actionCompleted).toHaveBeenCalledWith({
       actionDef: dependencies.context.actionsWithTargets[0].actionDef,
       timestamp: expect.any(Number),
@@ -467,7 +469,301 @@ describe('ActionFormattingCoordinator', () => {
         multiTarget: 0,
         legacy: 1,
       },
-      errorCount: 1,
+      errorCount: 2,
     });
+  });
+
+  it('uses fallback accumulator and validation when not provided and skips tasks without definitions', async () => {
+    const providedFormatterOptions = { provided: true };
+    const commandFormatter = {
+      format: jest.fn(() => ({ ok: true, value: 'legacy-command' })),
+    };
+    const createTask = jest.fn(({ actionWithTargets, actor, formatterOptions }) => {
+      expect(formatterOptions).toBe(providedFormatterOptions);
+
+      if (!actionWithTargets.actionDef) {
+        return {
+          actor,
+          actionDef: undefined,
+          metadata: { source: 'legacy' },
+          targetContexts: undefined,
+        };
+      }
+
+      return {
+        actor,
+        actionDef: actionWithTargets.actionDef,
+        metadata: { source: 'legacy', hasPerActionMetadata: false },
+        targetContexts: [{ entityId: 'target-1' }],
+        formatterOptions: { injected: true },
+      };
+    });
+
+    const dependencies = buildBaseDependencies({
+      accumulatorFactory: null,
+      validateVisualProperties: undefined,
+      formatterOptions: providedFormatterOptions,
+      createTask,
+      commandFormatter,
+      context: {
+        actor: { id: 'actor-42', name: 'Rogue' },
+        actionsWithTargets: [
+          {},
+          {
+            actionDef: {
+              id: 'legacy-1',
+              name: 'Legacy Action',
+              description: 'Legacy run',
+              visual: { icon: 'dagger' },
+            },
+            metadata: { source: 'legacy' },
+            targetContexts: [{ entityId: 'target-1' }],
+          },
+        ],
+        resolvedTargets: { primary: [] },
+        targetDefinitions: { primary: {} },
+        trace: undefined,
+      },
+    });
+
+    const coordinator = new ActionFormattingCoordinator(dependencies);
+    const result = await coordinator.run();
+
+    expect(createTask).toHaveBeenCalledTimes(2);
+    expect(dependencies.decider.decide).toHaveBeenCalledTimes(1);
+    expect(commandFormatter.format).toHaveBeenCalledTimes(1);
+    expect(commandFormatter.format).toHaveBeenCalledWith(
+      dependencies.context.actionsWithTargets[1].actionDef,
+      { entityId: 'target-1' },
+      dependencies.entityManager,
+      expect.objectContaining({
+        logger: dependencies.logger,
+        debug: true,
+        safeEventDispatcher: dependencies.safeEventDispatcher,
+        injected: true,
+      }),
+      { displayNameFn: dependencies.getEntityDisplayNameFn }
+    );
+    expect(result.success).toBe(true);
+    expect(result.actions).toHaveLength(1);
+    expect(result.errors).toHaveLength(0);
+  });
+
+  it('records missing target context errors during legacy fallback', async () => {
+    const commandFormatter = {
+      format: jest.fn(() => ({ ok: true, value: 'legacy-command' })),
+    };
+    const dependencies = buildBaseDependencies({
+      commandFormatter,
+      context: {
+        actor: { id: 'actor-1', name: 'Hero' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'missing-ctx',
+              name: 'Missing Targets',
+              description: 'No targets available',
+              visual: null,
+            },
+            metadata: { source: 'legacy' },
+            targetContexts: [],
+          },
+        ],
+      },
+      createTask: jest.fn(({ actionWithTargets, actor }) => ({
+        actor,
+        actionDef: actionWithTargets.actionDef,
+        metadata: actionWithTargets.metadata,
+      })),
+    });
+
+    const coordinator = new ActionFormattingCoordinator(dependencies);
+    const result = await coordinator.run();
+
+    expect(commandFormatter.format).not.toHaveBeenCalled();
+    expect(dependencies.errorFactory.create).toHaveBeenCalledTimes(1);
+    expect(dependencies.errorFactory.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        errorOrResult: expect.objectContaining({
+          error: expect.any(Error),
+          details: expect.objectContaining({ code: 'legacy_missing_target_contexts' }),
+        }),
+        actionDef: dependencies.context.actionsWithTargets[0].actionDef,
+        actorId: 'actor-1',
+      })
+    );
+    expect(dependencies.instrumentation.actionFailed).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload: expect.objectContaining({ reason: 'missing-target-contexts' }),
+      })
+    );
+    expect(result.success).toBe(true);
+    expect(result.actions).toHaveLength(0);
+    expect(result.errors).toHaveLength(1);
+  });
+
+  it('records partial legacy formatting outcomes when some targets fail', async () => {
+    const commandFormatter = {
+      format: jest
+        .fn()
+        .mockImplementationOnce(() => ({ ok: true, value: 'formatted-a' }))
+        .mockImplementationOnce(() => ({ ok: false, error: 'bad-format' }))
+        .mockImplementationOnce(() => undefined)
+        .mockImplementationOnce(() => {
+          throw new Error('boom');
+        }),
+    };
+
+    const dependencies = buildBaseDependencies({
+      commandFormatter,
+      context: {
+        actor: { id: 'actor-7', name: 'Veteran' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'legacy-2',
+              name: 'Legacy Partial',
+              description: undefined,
+              visual: null,
+            },
+            metadata: { source: 'legacy' },
+            targetContexts: [
+              { entityId: 'target-a' },
+              { entityId: 'target-b' },
+              {},
+              {},
+            ],
+          },
+        ],
+      },
+      createTask: jest.fn(({ actionWithTargets, actor }) => ({
+        actor,
+        actionDef: actionWithTargets.actionDef,
+        metadata: actionWithTargets.metadata,
+        targetContexts: actionWithTargets.targetContexts,
+      })),
+    });
+
+    const coordinator = new ActionFormattingCoordinator(dependencies);
+    const result = await coordinator.run();
+
+    expect(commandFormatter.format).toHaveBeenCalledTimes(4);
+    expect(dependencies.errorFactory.create).toHaveBeenCalledTimes(3);
+    expect(dependencies.instrumentation.actionCompleted).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          successCount: 1,
+          failureCount: 3,
+          status: 'partial',
+        }),
+      })
+    );
+    expect(result.success).toBe(true);
+    expect(result.actions).toHaveLength(1);
+    expect(result.errors).toHaveLength(3);
+  });
+
+  it('emits failure instrumentation when legacy formatting fails for all targets', async () => {
+    const commandFormatter = {
+      format: jest.fn(() => ({ ok: false, error: 'bad-format' })),
+    };
+
+    const dependencies = buildBaseDependencies({
+      commandFormatter,
+      context: {
+        actor: { id: 'actor-9', name: 'Warden' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'legacy-3',
+              name: 'Legacy Failure',
+              description: 'Complete failure',
+              visual: null,
+            },
+            metadata: { source: 'legacy' },
+            targetContexts: [{ entityId: 'target-z' }],
+          },
+        ],
+      },
+      createTask: jest.fn(({ actionWithTargets, actor }) => ({
+        actor,
+        actionDef: actionWithTargets.actionDef,
+        metadata: actionWithTargets.metadata,
+        targetContexts: actionWithTargets.targetContexts,
+      })),
+    });
+
+    const coordinator = new ActionFormattingCoordinator(dependencies);
+    const result = await coordinator.run();
+
+    expect(commandFormatter.format).toHaveBeenCalledTimes(1);
+    expect(dependencies.errorFactory.create).toHaveBeenCalledTimes(1);
+    expect(dependencies.instrumentation.actionFailed).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actionDef: dependencies.context.actionsWithTargets[0].actionDef,
+        payload: expect.objectContaining({
+          failureCount: 1,
+          successCount: 0,
+          status: 'failed',
+        }),
+      })
+    );
+    expect(dependencies.instrumentation.actionCompleted).not.toHaveBeenCalledWith(
+      expect.objectContaining({ actionDef: dependencies.context.actionsWithTargets[0].actionDef })
+    );
+    expect(result.success).toBe(true);
+    expect(result.actions).toHaveLength(0);
+    expect(result.errors).toHaveLength(1);
+  });
+
+  it('skips validation recording when decider does not provide failures array', async () => {
+    const decider = {
+      decide: jest.fn(() => ({
+        strategy: null,
+        metadata: { selectedStrategy: 'legacy', evaluations: [], validationErrors: [] },
+        validationFailures: null,
+      })),
+    };
+
+    const dependencies = buildBaseDependencies({
+      decider,
+      context: {
+        actor: { id: 'actor-10', name: 'Observer' },
+        actionsWithTargets: [
+          {
+            actionDef: { id: 'legacy-4', name: 'Legacy Idle', description: null, visual: null },
+            targetContexts: [{ entityId: 'target-0' }],
+          },
+        ],
+      },
+    });
+
+    const coordinator = new ActionFormattingCoordinator(dependencies);
+    const result = await coordinator.run();
+
+    expect(decider.decide).toHaveBeenCalledTimes(1);
+    expect(dependencies.instrumentation.actionFailed).not.toHaveBeenCalledWith(
+      expect.objectContaining({ payload: expect.objectContaining({ reason: 'validation-failed' }) })
+    );
+    expect(result.errors).toHaveLength(0);
+  });
+
+  it('handles undefined context with fallback accumulator without executing tasks', async () => {
+    const dependencies = buildBaseDependencies({
+      context: null,
+      accumulatorFactory: 'not-a-function',
+      validateVisualProperties: undefined,
+      instrumentation: undefined,
+      createTask: jest.fn(),
+    });
+
+    const coordinator = new ActionFormattingCoordinator(dependencies);
+    const result = await coordinator.run();
+
+    expect(dependencies.instrumentation).toBeUndefined();
+    expect(dependencies.createTask).not.toHaveBeenCalled();
+    expect(result.success).toBe(true);
+    expect(result.actions).toHaveLength(0);
+    expect(result.errors).toHaveLength(0);
   });
 });
