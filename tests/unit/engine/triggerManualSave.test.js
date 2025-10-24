@@ -9,6 +9,7 @@ import { generateServiceUnavailableTests } from '../../common/engine/gameEngineH
 import {
   expectDispatchSequence,
   buildSaveDispatches,
+  buildFailedSaveDispatches,
   expectNoDispatch,
 } from '../../common/engine/dispatchTestUtils.js';
 import {
@@ -104,7 +105,7 @@ describeEngineSuite('GameEngine', (context) => {
 
           expectDispatchSequence(
             context.bed.getSafeEventDispatcher().dispatch,
-            ...buildSaveDispatches('')
+            ...buildFailedSaveDispatches('', error.message)
           );
 
           expect(
@@ -159,9 +160,14 @@ describeEngineSuite('GameEngine', (context) => {
 
             const result = await context.engine.triggerManualSave(SAVE_NAME);
 
+            const expectedErrorMessage =
+              failureValue instanceof Error
+                ? `Unexpected error during save: ${failureValue.message}`
+                : failureValue.error;
+
             expectDispatchSequence(
               context.bed.getSafeEventDispatcher().dispatch,
-              ...buildSaveDispatches(SAVE_NAME)
+              ...buildFailedSaveDispatches(SAVE_NAME, expectedErrorMessage)
             );
 
             expect(
@@ -172,7 +178,7 @@ describeEngineSuite('GameEngine', (context) => {
               failureValue instanceof Error
                 ? {
                     success: false,
-                    error: `Unexpected error during save: ${failureValue.message}`,
+                    error: expectedErrorMessage,
                   }
                 : failureValue;
             expect(result).toEqual(expectedResult);

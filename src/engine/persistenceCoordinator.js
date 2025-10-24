@@ -4,6 +4,7 @@ import {
   GAME_SAVED_ID,
   ENGINE_OPERATION_IN_PROGRESS_UI,
   ENGINE_READY_UI,
+  ENGINE_OPERATION_FAILED_UI,
 } from '../constants/eventIds.js';
 
 /**
@@ -207,6 +208,10 @@ class PersistenceCoordinator {
       this.#logger.debug(
         `GameEngine.triggerManualSave: Save failed. Name: "${saveName}".`
       );
+      await this.#dispatcher.dispatch(ENGINE_OPERATION_FAILED_UI, {
+        errorMessage: `Failed to save game: ${formattedError}`,
+        errorTitle: 'Save Failed',
+      });
     }
 
     this.#logger.debug(
