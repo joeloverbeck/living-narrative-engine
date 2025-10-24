@@ -160,7 +160,8 @@ class GameStateCaptureService extends BaseService {
     );
 
     const entitiesData = [];
-    for (const entity of this.#entityManager.activeEntities.values()) {
+    const entityIterable = this.#resolveEntityIterable();
+    for (const entity of entityIterable) {
       entitiesData.push(this.#serializeEntity(entity));
     }
     this.#logger.debug(
@@ -196,6 +197,29 @@ class GameStateCaptureService extends BaseService {
       `GameStateCaptureService: Game state capture complete. Game Title: ${metadata.gameTitle}, ${entitiesData.length} entities captured. Playtime: ${currentTotalPlaytime}s.`
     );
     return gameStateObject;
+  }
+
+  /**
+   * Resolves the iterable of active entities from the entity manager.
+   *
+   * @private
+   * @returns {Iterable<Entity>} Iterable of active entities.
+   */
+  #resolveEntityIterable() {
+    const { entities } = this.#entityManager;
+    if (entities && typeof entities[Symbol.iterator] === 'function') {
+      return entities;
+    }
+
+    const activeEntities = this.#entityManager?.activeEntities;
+    if (activeEntities && typeof activeEntities.values === 'function') {
+      return activeEntities.values();
+    }
+
+    this.#logger.warn(
+      'GameStateCaptureService.captureCurrentGameState: EntityManager does not expose an entity iterator. Returning empty set.'
+    );
+    return [];
   }
 }
 
