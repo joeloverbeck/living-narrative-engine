@@ -265,6 +265,7 @@ describe('PersistenceCoordinator integration', () => {
     expect(result).toEqual({ success: false, error: 'Disk full' });
     expect(environment.validatedDispatcher.events.map((e) => e.eventName)).toEqual([
       ENGINE_OPERATION_IN_PROGRESS_UI,
+      ENGINE_OPERATION_FAILED_UI,
       ENGINE_READY_UI,
     ]);
   });
@@ -284,6 +285,7 @@ describe('PersistenceCoordinator integration', () => {
     });
     expect(environment.validatedDispatcher.events.map((e) => e.eventName)).toEqual([
       ENGINE_OPERATION_IN_PROGRESS_UI,
+      ENGINE_OPERATION_FAILED_UI,
       ENGINE_READY_UI,
     ]);
     expect(environment.logger.errorLogs.some((entry) => entry.message.includes('Unexpected error during save'))).toBe(
@@ -306,6 +308,7 @@ describe('PersistenceCoordinator integration', () => {
     });
     expect(environment.validatedDispatcher.events.map((e) => e.eventName)).toEqual([
       ENGINE_OPERATION_IN_PROGRESS_UI,
+      ENGINE_OPERATION_FAILED_UI,
       ENGINE_READY_UI,
     ]);
   });

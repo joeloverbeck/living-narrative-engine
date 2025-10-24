@@ -295,7 +295,7 @@ describe('MemoryMonitor', () => {
       InvalidArgumentError
     );
 
-    expect(() => patternMonitor.onThresholdExceeded('', () => {})).toThrow(TypeError);
+    expect(() => patternMonitor.onThresholdExceeded('', () => {})).toThrow(InvalidArgumentError);
     expect(() => patternMonitor.onThresholdExceeded('warning')).toThrow(Error);
 
     eventBus.dispatch.mockClear();

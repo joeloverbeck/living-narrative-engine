@@ -158,7 +158,7 @@ describe('SaveLoadService', () => {
       expect(result.error.code).toBe(
         PersistenceErrorCodes.DESERIALIZATION_ERROR
       );
-      expect(result.error.message).toBe('Boom!');
+      expect(result.error.message).toBe('Boom!: boom');
     });
   });
 

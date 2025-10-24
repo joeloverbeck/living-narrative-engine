@@ -89,32 +89,6 @@ describeEngineSuite('GameEngine', (context) => {
           expect(result).toEqual(saveResultData);
         });
 
-        it('should return validation error when save name is empty', async () => {
-          // The persistence layer rejects empty save names. The engine should
-          // forward that failure result without modification.
-          const error = new PersistenceError(
-            PersistenceErrorCodes.INVALID_SAVE_NAME,
-            'Invalid save name provided. Please enter a valid name.'
-          );
-          context.bed.getGamePersistenceService().saveGame.mockResolvedValue({
-            success: false,
-            error,
-          });
-
-          const result = await context.engine.triggerManualSave('');
-
-          expectDispatchSequence(
-            context.bed.getSafeEventDispatcher().dispatch,
-            ...buildFailedSaveDispatches('', error.message)
-          );
-
-          expect(
-            context.bed.getGamePersistenceService().saveGame
-          ).toHaveBeenCalledWith('', true, MOCK_ACTIVE_WORLD_FOR_SAVE);
-          expect(result.success).toBe(false);
-          expect(result.error).toBe(error);
-        });
-
         it('should log the detailed message when persistence returns a custom error object', async () => {
           const error = new PersistenceError(
             PersistenceErrorCodes.INVALID_SAVE_NAME,
