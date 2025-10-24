@@ -22,7 +22,29 @@ export function compareLoadSlots(a, b) {
     );
   }
   try {
-    return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+    const timestampA =
+      typeof a.timestamp === 'string' ? Date.parse(a.timestamp) : Number.NaN;
+    const timestampB =
+      typeof b.timestamp === 'string' ? Date.parse(b.timestamp) : Number.NaN;
+
+    const aHasValidTimestamp = Number.isFinite(timestampA);
+    const bHasValidTimestamp = Number.isFinite(timestampB);
+
+    if (aHasValidTimestamp && bHasValidTimestamp) {
+      return timestampB - timestampA;
+    }
+
+    if (aHasValidTimestamp) {
+      return -1;
+    }
+
+    if (bHasValidTimestamp) {
+      return 1;
+    }
+
+    const nameA = (a.saveName || a.identifier || '').toString();
+    const nameB = (b.saveName || b.identifier || '').toString();
+    return nameA.localeCompare(nameB);
   } catch {
     return 0;
   }

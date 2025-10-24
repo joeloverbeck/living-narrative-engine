@@ -24,6 +24,34 @@ describe('compareLoadSlots', () => {
     expect(compareLoadSlots(newer, older)).toBeLessThan(0);
   });
 
+  it('treats invalid timestamps as older than valid ones', () => {
+    const invalid = { isCorrupted: false, timestamp: 'not-a-date', identifier: 'invalid' };
+    const valid = {
+      isCorrupted: false,
+      timestamp: '2023-02-01T00:00:00Z',
+      identifier: 'valid',
+    };
+
+    expect(compareLoadSlots(invalid, valid)).toBeGreaterThan(0);
+    expect(compareLoadSlots(valid, invalid)).toBeLessThan(0);
+  });
+
+  it('falls back to alphabetical ordering when both timestamps are invalid', () => {
+    const alpha = {
+      isCorrupted: false,
+      timestamp: 'invalid',
+      saveName: 'Alpha',
+    };
+    const beta = {
+      isCorrupted: false,
+      timestamp: 'invalid',
+      identifier: 'Beta',
+    };
+
+    expect(compareLoadSlots(alpha, beta)).toBeLessThan(0);
+    expect(compareLoadSlots(beta, alpha)).toBeGreaterThan(0);
+  });
+
   it('returns 0 when timestamp access throws', () => {
     const throwing = {
       isCorrupted: false,
