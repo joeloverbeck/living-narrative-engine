@@ -428,7 +428,17 @@ class GameEngine {
   }
 
   async triggerManualSave(saveName) {
-    return this.#persistenceCoordinator.triggerManualSave(saveName);
+    assertNonBlankString(
+      saveName,
+      'saveName',
+      'GameEngine.triggerManualSave',
+      this.#logger
+    );
+
+    const normalizedSaveName = saveName.trim();
+    return this.#persistenceCoordinator.triggerManualSave(
+      normalizedSaveName
+    );
   }
 
   async loadGame(saveIdentifier) {
