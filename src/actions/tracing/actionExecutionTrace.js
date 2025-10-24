@@ -846,6 +846,24 @@ export class ActionExecutionTrace {
   }
 
   /**
+   * @description Toggle the internal processing lock for test scenarios.
+   * @param {ActionExecutionTrace} traceInstance - Trace instance whose lock should change.
+   * @param {boolean} locked - Indicates whether the lock should be engaged.
+   * @returns {void}
+   */
+  static __setProcessingLockForTesting(traceInstance, locked) {
+    if (
+      typeof process === 'undefined' ||
+      process?.env?.NODE_ENV !== 'test' ||
+      !(traceInstance instanceof ActionExecutionTrace)
+    ) {
+      return;
+    }
+
+    traceInstance.#processingLock = Boolean(locked);
+  }
+
+  /**
    * Get current execution phase
    *
    * @private
