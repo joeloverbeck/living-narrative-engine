@@ -60,4 +60,19 @@ describe('PlaytimeTracker additional branches', () => {
       expect.objectContaining({ message: expect.stringContaining('-5') })
     );
   });
+
+  test('setAccumulatedPlaytime rejects non-finite numbers', () => {
+    expect(() => tracker.setAccumulatedPlaytime(Infinity)).toThrow(RangeError);
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({ message: expect.stringContaining('Infinity') })
+    );
+
+    mockDispatcher.dispatch.mockClear();
+    expect(() => tracker.setAccumulatedPlaytime(NaN)).toThrow(RangeError);
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({ message: expect.stringContaining('NaN') })
+    );
+  });
 });
