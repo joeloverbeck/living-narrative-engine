@@ -597,6 +597,94 @@ describe('TargetDependencyResolver', () => {
       }
     });
 
+    it('should wrap unexpected errors in ServiceError with operation failed code', () => {
+      const unexpectedError = new Error('Unexpected failure');
+      const dependencyValidationSpy = jest
+        .spyOn(resolver, 'validateDependencies')
+        .mockImplementation(() => {
+          throw unexpectedError;
+        });
+
+      const targetDefs = {
+        primary: { scope: 'actor', placeholder: 'primary' },
+      };
+
+      let thrownError;
+      try {
+        resolver.getResolutionOrder(targetDefs);
+      } catch (error) {
+        thrownError = error;
+      } finally {
+        dependencyValidationSpy.mockRestore();
+      }
+
+      expect(thrownError).toBeInstanceOf(ServiceError);
+      expect(thrownError.code).toBe(ServiceErrorCodes.OPERATION_FAILED);
+      expect(thrownError.value).toBe(unexpectedError);
+      expect(thrownError.message).toBe(
+        `Resolution order calculation failed: ${unexpectedError.message}`
+      );
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to determine resolution order',
+        expect.objectContaining({ error: unexpectedError.message })
+      );
+    });
+
+    it('should throw an error when resolution exceeds maximum iterations', () => {
+      const originalDelete = Set.prototype.delete;
+      Set.prototype.delete = () => true; // Prevent pending set from shrinking
+
+      const targetDefs = {
+        primary: { scope: 'actor', placeholder: 'primary' },
+        secondary: { scope: 'actor', placeholder: 'secondary' },
+      };
+
+      let thrownError;
+      try {
+        resolver.getResolutionOrder(targetDefs);
+      } catch (error) {
+        thrownError = error;
+      } finally {
+        Set.prototype.delete = originalDelete;
+      }
+
+      expect(thrownError).toBeInstanceOf(ServiceError);
+      expect(thrownError.code).toBe(ServiceErrorCodes.OPERATION_FAILED);
+      expect(thrownError.message).toContain('exceeded maximum iterations');
+      expect(thrownError.value).toEqual(
+        expect.objectContaining({
+          maxIterations: Object.keys(targetDefs).length * 2,
+        })
+      );
+    });
+
+    it('should analyze dependency chains for unresolved references', () => {
+      const targetDefs = {
+        a: { scope: 'actor.a', placeholder: 'a', contextFrom: 'missing' },
+        b: { scope: 'actor.b', placeholder: 'b', contextFrom: 'a' },
+      };
+
+      const dependencyValidationSpy = jest
+        .spyOn(resolver, 'validateDependencies')
+        .mockReturnValue({ success: true, errors: [], warnings: [] });
+
+      let thrownError;
+      try {
+        resolver.getResolutionOrder(targetDefs);
+      } catch (error) {
+        thrownError = error;
+      } finally {
+        dependencyValidationSpy.mockRestore();
+      }
+
+      expect(thrownError).toBeInstanceOf(ServiceError);
+      expect(thrownError.code).toBe(ServiceErrorCodes.CIRCULAR_DEPENDENCY);
+      expect(thrownError.value.dependencyMap).toEqual({
+        a: { fullChain: ['a', 'missing'], cycle: null },
+        b: { fullChain: ['b', 'a', 'missing'], cycle: null },
+      });
+    });
+
     it('should log operations correctly', () => {
       const targetDefs = {
         primary: { scope: 'actor', placeholder: 'primary' },
