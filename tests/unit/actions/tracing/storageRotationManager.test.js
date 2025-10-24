@@ -142,6 +142,33 @@ describe('StorageRotationManager - Rotation Policies', () => {
 
       expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 60000);
     });
+
+    it('should execute scheduled rotation callback', async () => {
+      const timerService = {
+        setInterval: jest.fn((callback) => {
+          timerService.callback = callback;
+          return 'timer-1';
+        }),
+        clearInterval: jest.fn(),
+      };
+
+      manager = new StorageRotationManager({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        config: { rotationInterval: 12345 },
+        timerService,
+      });
+
+      const intervalCallback = timerService.setInterval.mock.calls[0][0];
+      const rotateSpy = jest
+        .spyOn(manager, 'rotateTraces')
+        .mockResolvedValue({ skipped: false });
+
+      await intervalCallback();
+
+      expect(rotateSpy).toHaveBeenCalledTimes(1);
+      rotateSpy.mockRestore();
+    });
   });
 
   describe('Age-Based Rotation', () => {
@@ -247,6 +274,37 @@ describe('StorageRotationManager - Rotation Policies', () => {
       expect(mockStorageAdapter.setItem).toHaveBeenCalled();
     });
 
+    it('should delete traces when cumulative size exceeds limit', async () => {
+      const recentTrace = {
+        id: 'small_trace',
+        timestamp: Date.now(),
+        data: { payload: 'x'.repeat(50) },
+      };
+      const olderTrace = {
+        id: 'cumulative_limit_trace',
+        timestamp: Date.now() - 1000,
+        data: { payload: 'y'.repeat(2500) },
+      };
+
+      mockStorageAdapter.getItem.mockResolvedValue([
+        recentTrace,
+        olderTrace,
+      ]);
+
+      manager.updateConfig({
+        maxStorageSize: 500,
+        maxTraceSize: 10000,
+        preserveCount: 0,
+      });
+
+      const result = await manager.rotateTraces();
+
+      expect(result.deleted).toBe(1);
+      const savedTraces = mockStorageAdapter.setItem.mock.calls[0][1];
+      expect(savedTraces).toHaveLength(1);
+      expect(savedTraces[0].id).toBe('small_trace');
+    });
+
     it('should skip oversized traces', async () => {
       const oversizedTrace = {
         id: 'huge_trace',
@@ -295,6 +353,31 @@ describe('StorageRotationManager - Rotation Policies', () => {
         expect(age).toBeLessThanOrEqual(86400000); // Within age limit
       });
     });
+
+    it('should drop oversized traces when evaluating hybrid policy size limits', async () => {
+      const oversizedTrace = {
+        id: 'oversized_trace',
+        timestamp: Date.now() - 500,
+        data: { payload: 'z'.repeat(4000) },
+      };
+
+      mockStorageAdapter.getItem.mockResolvedValue([
+        oversizedTrace,
+        ...mockTraces,
+      ]);
+
+      manager.updateConfig({
+        maxTraceSize: 200,
+        maxStorageSize: 20000,
+        preserveCount: 0,
+      });
+
+      const result = await manager.rotateTraces();
+
+      expect(result.deleted).toBeGreaterThan(0);
+      const savedTraces = mockStorageAdapter.setItem.mock.calls[0][1];
+      expect(savedTraces.find((trace) => trace.id === 'oversized_trace')).toBeUndefined();
+    });
   });
 
   describe('Preservation Rules', () => {
@@ -328,6 +411,7 @@ describe('StorageRotationManager - Rotation Policies', () => {
           policy: RotationPolicy.COUNT,
           maxTraceCount: 1,
           preservePattern: 'trace_[34]', // Preserve trace_3 and trace_4
+          preserveCount: 0,
         },
       });
 

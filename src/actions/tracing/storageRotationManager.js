@@ -351,9 +351,6 @@ export class StorageRotationManager {
         break;
       }
 
-      default:
-        this.#logger.warn(`StorageRotationManager: Unknown policy ${policy}`);
-        toKeep = traces;
     }
 
     return { toKeep, toDelete };
