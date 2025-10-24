@@ -86,7 +86,6 @@ export class StackTraceAnalyzer {
       }
     }
 
-    return null;
   }
 
   /**

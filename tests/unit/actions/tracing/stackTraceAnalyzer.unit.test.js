@@ -289,6 +289,18 @@ describe('StackTraceAnalyzer', () => {
       expect(formatted).toContain('Call depth:');
     });
 
+    it('should note when async calls are present in analysis output', () => {
+      const stackTrace = `Error: Async test error\n    at regularFunc (/home/project/src/test.js:10:5)\n    at async asyncFunc (/home/project/src/async.js:20:10)`;
+
+      const parsed = analyzer.parseStackTrace(stackTrace);
+      const formatted = analyzer.formatStackTrace(parsed, {
+        includeAnalysis: true,
+      });
+
+      expect(parsed.analysis.hasAsyncFrames).toBe(true);
+      expect(formatted).toContain('Contains async calls');
+    });
+
     it('should limit number of frames displayed', () => {
       const frames = Array.from(
         { length: 10 },
