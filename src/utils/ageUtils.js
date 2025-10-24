@@ -39,9 +39,18 @@ export class AgeUtils {
       throw new Error('maxAge must be greater than or equal to minAge');
     }
 
-    return (
-      ageComponent.bestGuess || (ageComponent.minAge + ageComponent.maxAge) / 2
-    );
+    const { bestGuess } = ageComponent;
+    const hasBestGuess = bestGuess !== undefined && bestGuess !== null;
+
+    if (hasBestGuess) {
+      if (typeof bestGuess !== 'number') {
+        throw new Error('bestGuess must be a number');
+      }
+
+      return bestGuess;
+    }
+
+    return (ageComponent.minAge + ageComponent.maxAge) / 2;
   }
 
   /**
@@ -125,19 +134,22 @@ export class AgeUtils {
       throw new Error('maxAge must be greater than or equal to minAge');
     }
 
-    if (ageComponent.bestGuess) {
-      if (typeof ageComponent.bestGuess !== 'number') {
+    const { bestGuess } = ageComponent;
+    const hasBestGuess = bestGuess !== undefined && bestGuess !== null;
+
+    if (hasBestGuess) {
+      if (typeof bestGuess !== 'number') {
         throw new Error('bestGuess must be a number');
       }
 
       if (
-        ageComponent.bestGuess < ageComponent.minAge ||
-        ageComponent.bestGuess > ageComponent.maxAge
+        bestGuess < ageComponent.minAge ||
+        bestGuess > ageComponent.maxAge
       ) {
         throw new Error('bestGuess must be between minAge and maxAge');
       }
 
-      return `around ${ageComponent.bestGuess} years old`;
+      return `around ${bestGuess} years old`;
     }
 
     if (ageComponent.minAge === ageComponent.maxAge) {

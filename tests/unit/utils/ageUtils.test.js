@@ -312,6 +312,17 @@ describe('AgeUtils', () => {
       );
     });
 
+    it('should respect a bestGuess value of zero', () => {
+      const ageComponent = { minAge: 0, maxAge: 10, bestGuess: 0 };
+
+      expect(AgeUtils.validateAgeComponent(ageComponent)).toBe(true);
+      expect(AgeUtils.getAverageAge(ageComponent)).toBe(0);
+      expect(AgeUtils.isAgeInRange(ageComponent, 0)).toBe(true);
+      expect(AgeUtils.formatAgeDescription(ageComponent)).toBe(
+        'around 0 years old'
+      );
+    });
+
     it('should handle maximum age values', () => {
       const ageComponent = { minAge: 195, maxAge: 200 };
       expect(AgeUtils.getAverageAge(ageComponent)).toBe(197.5);
