@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import ScopeDslErrorHandler, {
   ErrorCategories,
 } from '../../../../src/scopeDsl/core/scopeDslErrorHandler.js';
+import { ErrorCodes } from '../../../../src/scopeDsl/constants/errorCodes.js';
 import { ScopeDslError } from '../../../../src/scopeDsl/errors/scopeDslError.js';
 
 describe('ScopeDslErrorHandler', () => {
@@ -138,6 +139,31 @@ describe('ScopeDslErrorHandler', () => {
         })
       );
     });
+
+    it('should fallback to console logging when logger fails', () => {
+      process.env.NODE_ENV = 'production';
+      mockLogger.error = jest.fn(() => {
+        throw new Error('logger failure');
+      });
+      const consoleErrorSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
+      try {
+        errorHandler = new ScopeDslErrorHandler(validDependencies);
+
+        expect(() =>
+          errorHandler.handleError('log failure', mockContext, 'logResolver')
+        ).toThrow(ScopeDslError);
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          '[ScopeDSL:logResolver] Logging failed:',
+          'logger failure'
+        );
+      } finally {
+        consoleErrorSpy.mockRestore();
+      }
+    });
   });
 
   describe('handleError', () => {
@@ -195,6 +221,39 @@ describe('ScopeDslErrorHandler', () => {
         expect.objectContaining({
           message: expect.stringMatching(/^\[CUSTOM_ERROR_001\]/),
         })
+      );
+    });
+
+    it('should fallback when error info creation fails', () => {
+      const problematicContext = {};
+      Object.defineProperty(problematicContext, 'constructor', {
+        get() {
+          throw new Error('constructor access failed');
+        },
+      });
+
+      expect(() =>
+        errorHandler.handleError(
+          'fallback path triggered',
+          problematicContext,
+          'fallbackResolver'
+        )
+      ).toThrow(ScopeDslError);
+
+      const [bufferedError] = errorHandler.getErrorBuffer();
+      expect(bufferedError).toEqual(
+        expect.objectContaining({
+          message: 'fallback path triggered',
+          resolverName: 'fallbackResolver',
+          category: ErrorCategories.UNKNOWN,
+          code: ErrorCodes.UNKNOWN_ERROR,
+        })
+      );
+      expect(bufferedError.sanitizedContext).toEqual({
+        error: 'Context sanitization failed',
+      });
+      expect(bufferedError.originalError).toContain(
+        'constructor access failed'
       );
     });
 
@@ -305,6 +364,43 @@ describe('ScopeDslErrorHandler', () => {
       ).toThrow(ScopeDslError);
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].category).toBe(ErrorCategories.UNKNOWN);
+    });
+
+    it('should clear category cache when threshold exceeded', () => {
+      const clearSpy = jest.spyOn(Map.prototype, 'clear');
+      errorHandler = new ScopeDslErrorHandler({
+        ...validDependencies,
+        config: { isDevelopment: false },
+      });
+
+      try {
+        for (let i = 0; i < 105; i++) {
+          try {
+            errorHandler.handleError(
+              `unique invalid error ${i}`,
+              mockContext,
+              'testResolver'
+            );
+          } catch (error) {
+            expect(error).toBeInstanceOf(ScopeDslError);
+          }
+        }
+        expect(clearSpy).toHaveBeenCalled();
+      } finally {
+        clearSpy.mockRestore();
+      }
+    });
+
+    it('should classify general invalid messages as invalid data', () => {
+      expect(() =>
+        errorHandler.handleError(
+          'The provided scope is invalid',
+          mockContext,
+          'testResolver'
+        )
+      ).toThrow(ScopeDslError);
+      const buffer = errorHandler.getErrorBuffer();
+      expect(buffer[0].category).toBe(ErrorCategories.INVALID_DATA);
     });
   });
 
@@ -421,6 +517,136 @@ describe('ScopeDslErrorHandler', () => {
         '[Max Depth Exceeded]'
       );
     });
+
+    it('should retain null and undefined within complex arrays', () => {
+      const contextWithNullArray = {
+        items: [null, undefined, 'value'],
+      };
+
+      expect(() =>
+        errorHandler.handleError(
+          'array with nulls',
+          contextWithNullArray,
+          'testResolver'
+        )
+      ).toThrow(ScopeDslError);
+
+      const buffer = errorHandler.getErrorBuffer();
+      expect(buffer[0].sanitizedContext.items).toEqual([
+        null,
+        undefined,
+        'value',
+      ]);
+    });
+
+    it('should capture inner sanitization failures', () => {
+      const originalKeys = Object.keys;
+      const problematic = new Proxy(
+        {},
+        {
+          ownKeys() {
+            throw new Error('keys override trigger');
+          },
+        }
+      );
+
+      const contextWithProxy = { problematic };
+
+      try {
+        Object.keys = function keysOverride(target) {
+          if (target === problematic) {
+            throw new Error('keys override trigger');
+          }
+          return originalKeys(target);
+        };
+
+        expect(() =>
+          errorHandler.handleError(
+            'proxy sanitization failure',
+            contextWithProxy,
+            'testResolver'
+          )
+        ).toThrow(ScopeDslError);
+
+        const buffer = errorHandler.getErrorBuffer();
+        expect(buffer[0].sanitizedContext.problematic).toBe(
+          '[Inner Sanitization Error: keys override trigger]'
+        );
+      } finally {
+        Object.keys = originalKeys;
+      }
+    });
+
+    it('should mark complex objects by constructor name', () => {
+      class CustomClass {
+        constructor() {
+          this.value = 1;
+        }
+      }
+      const complexContext = {
+        element: new CustomClass(),
+      };
+
+      expect(() =>
+        errorHandler.handleError('complex object', complexContext, 'resolver')
+      ).toThrow(ScopeDslError);
+
+      const buffer = errorHandler.getErrorBuffer();
+      expect(buffer[0].sanitizedContext.element).toBe('[CustomClass]');
+    });
+
+    it('should provide outer fallback when sanitization setup fails', () => {
+      const OriginalWeakSet = globalThis.WeakSet;
+      globalThis.WeakSet = class WeakSetFails {
+        constructor() {
+          throw new Error('weakset failure');
+        }
+      };
+
+      try {
+        expect(() =>
+          errorHandler.handleError(
+            'outer fallback',
+            { nested: { value: 'test' } },
+            'fallbackResolver'
+          )
+        ).toThrow(ScopeDslError);
+
+        const buffer = errorHandler.getErrorBuffer();
+        expect(buffer[0].sanitizedContext).toEqual(
+          expect.objectContaining({
+            error: 'Context sanitization completely failed',
+            reason: 'weakset failure',
+            type: 'object',
+            hasKeys: true,
+          })
+        );
+      } finally {
+        globalThis.WeakSet = OriginalWeakSet;
+      }
+    });
+
+    it('should treat array contexts as non-simple objects', () => {
+      expect(() =>
+        errorHandler.handleError('array context', [1, 2, 3], 'resolver')
+      ).toThrow(ScopeDslError);
+
+      const buffer = errorHandler.getErrorBuffer();
+      expect(buffer[0].sanitizedContext).toEqual([1, 2, 3]);
+    });
+
+    it('should treat non-plain objects as complex', () => {
+      class Wrapper {}
+      const wrappedContext = new Wrapper();
+      wrappedContext.value = 'test';
+
+      expect(() =>
+        errorHandler.handleError('wrapped context', wrappedContext, 'resolver')
+      ).toThrow(ScopeDslError);
+
+      const buffer = errorHandler.getErrorBuffer();
+      expect(buffer[0].sanitizedContext).toEqual({ value: 'test' });
+    });
   });
 
   describe('error buffer management', () => {
@@ -495,6 +721,36 @@ describe('ScopeDslErrorHandler', () => {
 
       expect(buffer1).toEqual(buffer2);
       expect(buffer1).not.toBe(buffer2); // Different object references
+    });
+
+    it('should warn when buffering fails and recover gracefully', () => {
+      errorHandler = new ScopeDslErrorHandler({
+        ...validDependencies,
+        config: { isDevelopment: true },
+      });
+
+      const originalPush = Array.prototype.push;
+      Array.prototype.push = function failingPush() {
+        throw new Error('push failure');
+      };
+
+      try {
+        expect(() =>
+          errorHandler.handleError(
+            'buffer failure',
+            mockContext,
+            'bufferResolver'
+          )
+        ).toThrow(ScopeDslError);
+      } finally {
+        Array.prototype.push = originalPush;
+      }
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Error buffering failed:',
+        'Buffer operation failed: push failure'
+      );
+      expect(errorHandler.getErrorBuffer()).toEqual([]);
     });
   });
 
