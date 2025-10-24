@@ -875,6 +875,90 @@ describe('MultiTargetResolutionStage - Coverage Tests', () => {
       expect(result.data.actionsWithTargets).toHaveLength(0);
     });
 
+    it('should return failure when legacy conversion yields an error (line 420)', async () => {
+      const actionDef = {
+        id: 'test:legacy-conversion-error',
+        targets: 'legacy:problem_scope',
+      };
+      mockContext.candidateActions = [actionDef];
+
+      mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+        true
+      );
+      mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat
+        .mockReturnValueOnce({
+          targetDefinitions: {
+            primary: { scope: 'legacy:problem_scope', placeholder: 'target' },
+          },
+        })
+        .mockReturnValueOnce({
+          error: 'Legacy conversion failed',
+        });
+
+      const result = await stage.executeInternal(mockContext);
+
+      expect(result.success).toBe(true);
+      expect(result.data.actionsWithTargets).toEqual([]);
+      expect(
+        mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat
+      ).toHaveBeenCalledTimes(2);
+      expect(mockDeps.targetResolver.resolveTargets).not.toHaveBeenCalled();
+    });
+
+    it('should skip non-object legacy target contexts (line 488)', async () => {
+      const actionDef = {
+        id: 'test:legacy-context-skip',
+        targets: 'legacy:context_scope',
+      };
+      mockContext.candidateActions = [actionDef];
+
+      mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+        true
+      );
+      mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat.mockReturnValue(
+        {
+          isLegacy: true,
+          targetDefinitions: {
+            primary: { scope: 'legacy:context_scope', placeholder: 'friend' },
+          },
+        }
+      );
+
+      mockDeps.targetResolver.resolveTargets.mockResolvedValue({
+        success: true,
+        value: ['bad-entry', { entityId: 'hero-1', displayName: '' }],
+      });
+
+      mockDeps.targetDisplayNameResolver.getEntityDisplayName.mockImplementation(
+        (id) => (id ? `Display ${id}` : undefined)
+      );
+      mockDeps.entityManager.getEntityInstance.mockImplementation((id) =>
+        id ? { id, components: {} } : null
+      );
+
+      const result = await stage.executeInternal(mockContext);
+
+      expect(result.success).toBe(true);
+      expect(result.data.actionsWithTargets).toHaveLength(1);
+
+      const actionWithTargets = result.data.actionsWithTargets[0];
+      const validTargets = actionWithTargets.resolvedTargets.primary.filter(
+        (target) => target.id
+      );
+      expect(validTargets).toHaveLength(1);
+      expect(validTargets[0]).toEqual({
+        id: 'hero-1',
+        displayName: 'Display hero-1',
+        entity: { id: 'hero-1', components: {} },
+      });
+
+      const enrichedContext = actionWithTargets.targetContexts.find(
+        (ctx) => ctx && ctx.entityId === 'hero-1'
+      );
+      expect(enrichedContext.placeholder).toBe('friend');
+      expect(enrichedContext.displayName).toBe('Display hero-1');
+    });
+
     it('should handle invalid targets configuration (line 338)', async () => {
       const actionDef = {
         id: 'test:action',
@@ -917,6 +1001,64 @@ describe('MultiTargetResolutionStage - Coverage Tests', () => {
 
       expect(result.success).toBe(true);
       expect(result.data.actionsWithTargets).toHaveLength(0);
+    });
+
+    it('should normalize scope results with mixed entry shapes (lines 992-1002)', async () => {
+      const actionDef = {
+        id: 'test:multi-normalize',
+        targets: {
+          primary: {
+            scope: 'scope:normalize',
+            placeholder: 'item',
+          },
+        },
+      };
+      mockContext.candidateActions = [actionDef];
+
+      mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+        false
+      );
+      mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue([
+        'primary',
+      ]);
+
+      mockDeps.scopeContextBuilder.buildScopeContext.mockReturnValue({
+        actor: { id: 'player' },
+        location: { id: 'room' },
+      });
+
+      mockDeps.unifiedScopeResolver.resolve.mockResolvedValue(
+        ActionResult.success(
+          new Set([
+            'entity-1',
+            { id: ' entity-2 ' },
+            { itemId: ' item-3 ' },
+            { foo: 'bar' },
+          ])
+        )
+      );
+
+      mockDeps.entityManager.getEntityInstance.mockImplementation((id) => ({
+        id,
+        components: {},
+      }));
+      mockDeps.targetDisplayNameResolver.getEntityDisplayName.mockImplementation(
+        (id) => `Display ${id}`
+      );
+
+      const result = await stage.executeInternal(mockContext);
+
+      expect(result.success).toBe(true);
+      expect(result.data.actionsWithTargets).toHaveLength(1);
+
+      const resolvedTargets =
+        result.data.actionsWithTargets[0].resolvedTargets.primary;
+      expect(resolvedTargets).toHaveLength(3);
+      expect(resolvedTargets.map((target) => target.id)).toEqual([
+        'entity-1',
+        'entity-2',
+        'item-3',
+      ]);
     });
 
     it('should handle no candidates for required contextFrom target (lines 432-436)', async () => {
