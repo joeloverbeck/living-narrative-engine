@@ -11,6 +11,7 @@ import {
  * @typedef {import('../interfaces/IPlaytimeTracker.js').IPlaytimeTracker} IPlaytimeTracker
  * @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
+ * @typedef {import('../interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure
  */
 
 /**
@@ -243,6 +244,23 @@ class GameSessionManager {
   }
 
   /**
+   * Normalizes the world name recovered from save metadata.
+   *
+   * @private
+   * @description Trims whitespace and falls back to a default label when the
+   * metadata does not provide a usable world name.
+   * @param {SaveGameStructure} loadedSaveData - Restored save data.
+   * @returns {string} Sanitized world name ready for engine state updates.
+   */
+  #resolveWorldNameFromSave(loadedSaveData) {
+    const rawTitle =
+      typeof loadedSaveData?.metadata?.gameTitle === 'string'
+        ? loadedSaveData.metadata.gameTitle.trim()
+        : '';
+    return rawTitle.length > 0 ? rawTitle : 'Restored Game';
+  }
+
+  /**
    * Prepares for loading a game session.
    *
    * @param {string} saveIdentifier - Identifier of the save to load.
@@ -274,10 +292,9 @@ class GameSessionManager {
       `GameSessionManager.finalizeLoadSuccess: Game state restored successfully from ${saveIdentifier}. Finalizing load setup.`
     );
 
-    this.#state.setActiveWorld(
-      loadedSaveData.metadata?.gameTitle || 'Restored Game'
-    );
-    await this.#finalizeGameStart(this.#state.activeWorld);
+    const resolvedWorldName = this.#resolveWorldNameFromSave(loadedSaveData);
+    this.#state.setActiveWorld(resolvedWorldName);
+    await this.#finalizeGameStart(resolvedWorldName);
     this.#logger.debug(
       `GameSessionManager.finalizeLoadSuccess: Game loaded from "${saveIdentifier}" (World: ${this.#state.activeWorld}) and resumed.`
     );
