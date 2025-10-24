@@ -40,6 +40,7 @@ function createCoordinator(overrides = {}) {
   const state = new EngineState();
   state.setStarted(DEFAULT_ACTIVE_WORLD_FOR_SAVE);
   const handleLoadFailure = jest.fn(async (err) => {
+    state.reset();
     await dispatcher.dispatch(ENGINE_OPERATION_FAILED_UI, {
       errorMessage: `Failed to load game: ${err instanceof Error ? err.message : err}`,
       errorTitle: 'Load Failed',
@@ -191,18 +192,39 @@ describe('PersistenceCoordinator', () => {
   });
 
   it('loadGame returns error when persistence service unavailable', async () => {
-    const { coordinator, state } = createCoordinator({
+    const {
+      coordinator,
+      state,
+      handleLoadFailure,
+      dispatcher,
+      sessionManager,
+    } = createCoordinator({
       gamePersistenceService: null,
     });
 
     const result = await coordinator.loadGame(DEFAULT_SAVE_ID);
 
+    const expectedErrorMsg =
+      'GameEngine.loadGame: GamePersistenceService is not available. Cannot load game.';
+
     expect(result).toEqual({
       success: false,
-      error:
-        'GameEngine.loadGame: GamePersistenceService is not available. Cannot load game.',
+      error: expectedErrorMsg,
       data: null,
     });
+    expect(handleLoadFailure).toHaveBeenCalledWith(
+      expectedErrorMsg,
+      DEFAULT_SAVE_ID
+    );
+    expect(sessionManager.prepareForLoadGameSession).not.toHaveBeenCalled();
+    expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      ENGINE_OPERATION_FAILED_UI,
+      {
+        errorMessage: `Failed to load game: ${expectedErrorMsg}`,
+        errorTitle: 'Load Failed',
+      }
+    );
     // Verify state gets reset when persistence service unavailable
     expect(state.isInitialized).toBe(false);
   });
