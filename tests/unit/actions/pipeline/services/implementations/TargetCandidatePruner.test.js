@@ -172,6 +172,22 @@ describe('TargetCandidatePruner', () => {
     });
   });
 
+  it('treats non-object resolved target inputs as unavailable', () => {
+    const result = pruner.prune({
+      actionDef: {
+        id: 'test:action',
+        required_components: { primary: ['core:ready'] },
+      },
+      resolvedTargets: 42,
+    });
+
+    expect(result).toEqual({
+      keptTargets: null,
+      removedTargets: [],
+      removalReasons: [],
+    });
+  });
+
   it('short-circuits when the registry reports no roles to validate', () => {
     const registry = {
       getRolesWithRequirements: jest.fn(() => []),
@@ -195,6 +211,25 @@ describe('TargetCandidatePruner', () => {
     expect(result.keptTargets).not.toBe(resolvedTargets);
     expect(result.removedTargets).toEqual([]);
     expect(result.removalReasons).toEqual([]);
+  });
+
+  it('normalizes undefined resolved target values to null when cloning results', () => {
+    const resolvedTargets = {
+      primary: undefined,
+      secondary: [
+        {
+          id: 'npc-keep',
+        },
+      ],
+    };
+
+    const result = pruner.prune({
+      resolvedTargets,
+    });
+
+    expect(result.keptTargets.primary).toBeNull();
+    expect(result.keptTargets.secondary).toEqual(resolvedTargets.secondary);
+    expect(result.keptTargets.secondary).not.toBe(resolvedTargets.secondary);
   });
 
   it('skips roles that do not have resolved target entries', () => {
@@ -226,6 +261,26 @@ describe('TargetCandidatePruner', () => {
         components: { 'core:ready': {} },
       },
     });
+    expect(result.removedTargets).toEqual([]);
+    expect(result.removalReasons).toEqual([]);
+  });
+
+  it('treats registry-enumerated roles without array definitions as optional', () => {
+    const candidate = { id: 'npc-keep' };
+    const registry = {
+      getRolesWithRequirements: () => ['primary'],
+    };
+
+    const result = pruner.prune({
+      actionDef: {
+        id: 'test:action',
+        required_components: { primary: 'unexpected' },
+      },
+      resolvedTargets: { primary: candidate },
+      registry,
+    });
+
+    expect(result.keptTargets.primary).toEqual(candidate);
     expect(result.removedTargets).toEqual([]);
     expect(result.removalReasons).toEqual([]);
   });
@@ -322,6 +377,34 @@ describe('TargetCandidatePruner', () => {
     expect(result.keptTargets.primary).toEqual({ entity });
     expect(hasComponent).toHaveBeenCalledTimes(1);
     expect(result.removedTargets).toHaveLength(0);
+  });
+
+  it('treats hasComponent returning false as a missing required component', () => {
+    const hasComponent = jest.fn(() => false);
+
+    const result = pruner.prune({
+      actionDef: {
+        id: 'test:action',
+        required_components: { primary: ['core:ready'] },
+      },
+      resolvedTargets: {
+        primary: {
+          entity: {
+            id: 'npc-11',
+            hasComponent,
+          },
+        },
+      },
+    });
+
+    expect(hasComponent).toHaveBeenCalledWith('core:ready');
+    expect(result.removedTargets).toContainEqual(
+      expect.objectContaining({
+        role: 'primary',
+        reason: 'Target (primary) must have component: core:ready',
+        reasonCode: 'missing_required_component',
+      })
+    );
   });
 
   it('logs evaluation failures and missing components even when logger fallback is used', () => {
