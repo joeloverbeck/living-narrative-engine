@@ -22,7 +22,35 @@
  */
 export async function safeDispatch(bus, id, payload, logger) {
   try {
-    await bus.dispatch(id, payload);
+    const result = await bus.dispatch(id, payload);
+
+    if (result === false) {
+      const warn =
+        logger && typeof logger.warn === 'function'
+          ? logger.warn.bind(logger)
+          : logger && typeof logger.error === 'function'
+          ? logger.error.bind(logger)
+          : console.warn.bind(console);
+
+      warn(
+        `Dispatch ${id} was rejected by the dispatcher.`,
+        { payload }
+      );
+      return;
+    }
+
+    if (result !== true && result !== undefined) {
+      const warn =
+        logger && typeof logger.warn === 'function'
+          ? logger.warn.bind(logger)
+          : logger && typeof logger.error === 'function'
+          ? logger.error.bind(logger)
+          : console.warn.bind(console);
+
+      warn(`Dispatch ${id} returned unexpected result: ${result}.`, {
+        payload,
+      });
+    }
   } catch (e) {
     logger.error(`Dispatch ${id} failed: ${e.message}`, e);
   }
