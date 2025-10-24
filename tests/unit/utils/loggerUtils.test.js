@@ -105,6 +105,12 @@ describe('loggerUtils', () => {
     expect(valid.info).toHaveBeenCalledWith('SP: msg');
   });
 
+  it('setupPrefixedLogger falls back to console when logger missing', () => {
+    const log = setupPrefixedLogger(null, 'Svc: ');
+    expect(() => log.error('boom')).not.toThrow();
+    expect(consoleSpies.error).toHaveBeenCalledWith('Svc: ', 'Svc: boom');
+  });
+
   it('initLogger validates when not optional and returns logger', () => {
     const logger = initLogger('Svc', valid);
     expect(logger).toBe(valid);
