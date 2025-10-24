@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "affection:event-is-action-brush-hair-behind-ear",
+  "description": "Checks if the event represents the brush hair behind ear action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "affection:brush_hair_behind_ear"
+    ]
+  }
+}

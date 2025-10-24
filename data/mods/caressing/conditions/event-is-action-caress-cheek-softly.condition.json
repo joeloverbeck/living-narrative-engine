@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "caressing:event-is-action-caress-cheek-softly",
+  "description": "Checks if the triggering event is for the 'caressing:caress_cheek_softly' action.",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "caressing:caress_cheek_softly"
+    ]
+  }
+}

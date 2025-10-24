@@ -27,6 +27,7 @@
   "content": {
     "components": [],
     "actions": [
+      "brush_hair_behind_ear.action.json",
       "brush_hand.action.json",
       "link_arms.action.json",
       "massage_back.action.json",
@@ -43,10 +44,12 @@
       "ruffle_hair_playfully.action.json",
       "sling_arm_around_shoulders.action.json",
       "tickle_target_playfully.action.json",
+      "touch_nose_tenderly.action.json",
       "wrap_arm_around_waist.action.json"
     ],
     "rules": [
       "brush_hand.rule.json",
+      "handle_brush_hair_behind_ear.rule.json",
       "handle_link_arms.rule.json",
       "handle_massage_shoulders.rule.json",
       "handle_pat_head_affectionately.rule.json",
@@ -57,6 +60,7 @@
       "handle_rest_head_on_shoulder.rule.json",
       "handle_ruffle_hair_playfully.rule.json",
       "handle_tickle_target_playfully.rule.json",
+      "handle_touch_nose_tenderly.rule.json",
       "massage_back.rule.json",
       "place_hand_on_knee.rule.json",
       "place_hand_on_waist.rule.json",
@@ -65,6 +69,7 @@
       "wrap_arm_around_waist.rule.json"
     ],
     "conditions": [
+      "event-is-action-brush-hair-behind-ear.condition.json",
       "event-is-action-brush-hand.condition.json",
       "event-is-action-link-arms.condition.json",
       "event-is-action-massage-back.condition.json",
@@ -81,6 +86,7 @@
       "event-is-action-ruffle-hair-playfully.condition.json",
       "event-is-action-sling-arm-around-shoulders.condition.json",
       "event-is-action-tickle-target-playfully.condition.json",
+      "event-is-action-touch-nose-tenderly.condition.json",
       "event-is-action-wrap-arm-around-waist.condition.json"
     ],
     "scopes": [
