@@ -1,7 +1,8 @@
 // src/tests/utils/objectUtils.test.js
 
-import { resolvePath } from '../../../src/utils/objectUtils.js';
 import { describe, expect, it } from '@jest/globals';
+import { freeze } from '../../../src/utils/cloneUtils.js';
+import { resolvePath } from '../../../src/utils/objectUtils.js';
 
 describe('resolvePath', () => {
   const testObj = {
@@ -113,6 +114,15 @@ describe('resolvePath', () => {
     expect(() => resolvePath(testObj, 123)).toThrow(TypeError);
     expect(() => resolvePath(testObj, {})).toThrow(TypeError);
     expect(() => resolvePath(testObj, [])).toThrow(TypeError);
+  });
+
+  it('does not mutate the source object when resolving paths', () => {
+    const frozen = { alpha: { beta: 'value' } };
+    freeze(frozen);
+    freeze(frozen.alpha);
+
+    expect(() => resolvePath(frozen, 'alpha.beta')).not.toThrow();
+    expect(frozen).toEqual({ alpha: { beta: 'value' } });
   });
 
   // --- Edge Cases: Path Format ---
