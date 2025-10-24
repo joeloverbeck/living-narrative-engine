@@ -343,6 +343,27 @@ describe('ResilientServiceWrapper', () => {
       expect(inclusionResult).toEqual({});
       expect(mockService.getInclusionConfig).not.toHaveBeenCalled();
     });
+
+    it('should log when getFallbackData throws while disabled', async () => {
+      const fallbackError = new Error('Fallback failed');
+      mockService.getFallbackData = jest.fn(() => {
+        throw fallbackError;
+      });
+
+      wrapper.disable('Test');
+      const proxy = wrapper.createResilientProxy();
+      const result = await proxy.someMethod('arg1');
+
+      expect(result).toBeUndefined();
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Fallback method failed for disabled service',
+        expect.objectContaining({
+          service: 'TestService',
+          method: 'someMethod',
+          error: 'Fallback failed',
+        })
+      );
+    });
   });
 
   describe('Fallback mode recovery', () => {
@@ -422,34 +443,37 @@ describe('ResilientServiceWrapper', () => {
 
   describe('Retry mechanism', () => {
     it('should successfully retry and clear fallback mode', async () => {
-      const error = new Error('Temporary error');
+      const fallbackError = new Error('Temporary fallback failure');
+      const retryError = new Error('Retry failure');
 
-      // First call fails, then succeeds on retry
       mockService.someMethod
-        .mockRejectedValueOnce(error)
+        .mockRejectedValueOnce(fallbackError)
+        .mockRejectedValueOnce(retryError)
         .mockResolvedValueOnce('retry-success');
 
-      // Set up initial fallback mode
-      wrapper['getFallbackMode'] = jest.fn().mockReturnValue('degraded');
-      const originalGetFallbackMode = wrapper.getFallbackMode.bind(wrapper);
-      wrapper.getFallbackMode = jest.fn().mockImplementation(() => {
-        return wrapper['#fallbackMode'] || null;
-      });
-
-      mockErrorHandler.handleError.mockResolvedValue({
-        recoveryAction: 'retry',
-        shouldContinue: true,
-      });
+      mockErrorHandler.handleError
+        .mockResolvedValueOnce({
+          recoveryAction: 'fallback',
+          shouldContinue: true,
+          fallbackMode: 'degraded',
+        })
+        .mockResolvedValueOnce({
+          recoveryAction: 'retry',
+          shouldContinue: true,
+        });
 
       const proxy = wrapper.createResilientProxy();
-      const resultPromise = proxy.someMethod();
 
-      // Fast-forward through retry delays
+      await proxy.someMethod();
+      expect(wrapper.getFallbackMode()).toBe('degraded');
+
+      const resultPromise = proxy.someMethod();
       await jest.runAllTimersAsync();
       const result = await resultPromise;
 
       expect(result).toBe('retry-success');
-      expect(mockService.someMethod).toHaveBeenCalledTimes(2);
+      expect(wrapper.getFallbackMode()).toBeNull();
+      expect(mockService.someMethod).toHaveBeenCalledTimes(3);
     });
 
     it('should exhaust all retry attempts and return fallback', async () => {
@@ -487,6 +511,36 @@ describe('ResilientServiceWrapper', () => {
 
       expect(result).toBeUndefined();
       expect(mockService.someMethod).toHaveBeenCalledTimes(1); // No retry attempts
+    });
+
+    it('should unref timers when available during retry delay', async () => {
+      jest.useRealTimers();
+      const unrefMock = jest.fn();
+      const setTimeoutSpy = jest
+        .spyOn(global, 'setTimeout')
+        .mockImplementation((callback) => {
+          callback();
+          return { unref: unrefMock };
+        });
+
+      const retryError = new Error('Retry needed');
+      mockService.someMethod
+        .mockRejectedValueOnce(retryError)
+        .mockResolvedValueOnce('retry-success');
+
+      mockErrorHandler.handleError.mockResolvedValue({
+        recoveryAction: 'retry',
+        shouldContinue: true,
+      });
+
+      const proxy = wrapper.createResilientProxy();
+      const result = await proxy.someMethod();
+
+      expect(result).toBe('retry-success');
+      expect(unrefMock).toHaveBeenCalled();
+
+      setTimeoutSpy.mockRestore();
+      jest.useFakeTimers();
     });
   });
 
@@ -751,6 +805,19 @@ describe('ResilientServiceWrapper', () => {
       const result = await proxy.isEnabled();
 
       expect(result).toBe(false);
+    });
+
+    it('should provide default processData fallback', async () => {
+      const error = new Error('Process failure');
+      mockService.processData = jest.fn().mockRejectedValue(error);
+
+      mockErrorHandler.handleError.mockResolvedValue({
+        recoveryAction: 'continue',
+        shouldContinue: true,
+      });
+
+      const proxy = wrapper.createResilientProxy();
+      await expect(proxy.processData()).resolves.toBe('fallback-data');
     });
   });
 });
