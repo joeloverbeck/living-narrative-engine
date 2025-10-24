@@ -6,6 +6,7 @@ import {
   ENGINE_INITIALIZING_UI,
   ENGINE_OPERATION_FAILED_UI,
   ENGINE_STOPPED_UI,
+  ENGINE_READY_UI,
   REQUEST_SHOW_SAVE_GAME_UI,
   REQUEST_SHOW_LOAD_GAME_UI,
   CANNOT_SAVE_GAME_INFO,
@@ -167,6 +168,34 @@ describeEngineSuite('GameEngine', (context) => {
         expect.stringContaining('Overall catch in startNewGame'),
         expect.any(Error)
       );
+    });
+
+    it('should trim surrounding whitespace from world names before initialization', async () => {
+      const rawWorldName = '  Aurora Station  ';
+      const normalizedWorldName = 'Aurora Station';
+      context.bed
+        .getInitializationService()
+        .runInitializationSequence.mockResolvedValue({ success: true });
+
+      await context.engine.startNewGame(rawWorldName);
+
+      expect(
+        context.bed
+          .getInitializationService()
+          .runInitializationSequence
+      ).toHaveBeenCalledWith(normalizedWorldName);
+
+      const status = context.engine.getEngineStatus();
+      expect(status.activeWorld).toBe(normalizedWorldName);
+
+      const readyDispatch = context.bed
+        .getSafeEventDispatcher()
+        .dispatch.mock.calls.find(([eventName]) => eventName === ENGINE_READY_UI);
+
+      expect(readyDispatch).toBeDefined();
+      expect(readyDispatch[1]).toMatchObject({
+        activeWorld: normalizedWorldName,
+      });
     });
 
     it('should not dispatch failure UI twice when initialization returns a string error', async () => {

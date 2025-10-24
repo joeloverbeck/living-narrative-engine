@@ -314,8 +314,9 @@ class GameEngine {
 
   async startNewGame(worldName) {
     this.#validateWorldName(worldName);
+    const normalizedWorldName = worldName.trim();
     this.#logger.debug(
-      `GameEngine: startNewGame called for world "${worldName}".`
+      `GameEngine: startNewGame called for world "${normalizedWorldName}".`
     );
 
     // Create safe error logger with SafeEventDispatcher batch mode management
@@ -330,10 +331,10 @@ class GameEngine {
         let initError = null;
 
         try {
-          const initResult = await this.#initializeNewGame(worldName);
+          const initResult = await this.#initializeNewGame(normalizedWorldName);
 
           if (initResult.success) {
-            await this.#finalizeInitializationSuccess(worldName);
+            await this.#finalizeInitializationSuccess(normalizedWorldName);
             return initResult;
           }
 
@@ -345,12 +346,16 @@ class GameEngine {
               ? new Error(String(rawInitError))
               : new Error('Unknown failure from InitializationService.');
           this.#logger.warn(
-            `GameEngine: InitializationService reported failure for "${worldName}".`
+            `GameEngine: InitializationService reported failure for "${normalizedWorldName}".`
           );
-          await this.#handleNewGameFailure(initError, worldName);
+          await this.#handleNewGameFailure(initError, normalizedWorldName);
           throw initError;
         } catch (error) {
-          await this.#handleInitializationError(error, initError, worldName);
+          await this.#handleInitializationError(
+            error,
+            initError,
+            normalizedWorldName
+          );
         }
       },
       {
