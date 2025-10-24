@@ -192,6 +192,8 @@ describe('GameEngine uncovered branches', () => {
 
       const resetFn = processOperationFailure.mock.calls[0][6];
       await resetFn();
+      expect(entityManager.clearAll).toHaveBeenCalledTimes(1);
+      expect(playtimeTracker.reset).toHaveBeenCalledTimes(1);
       expect(engineStateInstance.reset).toHaveBeenCalledTimes(1);
       expect(result).toEqual({ success: false, error: 'boom', data: null });
     });

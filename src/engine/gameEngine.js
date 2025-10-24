@@ -225,6 +225,10 @@ class GameEngine {
     userPrefix,
     returnResult = false
   ) {
+    const resetState = () => {
+      this.#resetCoreGameState();
+      this.#resetEngineState();
+    };
     return processOperationFailure(
       this.#logger,
       this.#safeEventDispatcher,
@@ -232,7 +236,7 @@ class GameEngine {
       error,
       title,
       userPrefix,
-      this.#resetEngineState.bind(this),
+      resetState,
       returnResult
     );
   }
