@@ -216,7 +216,7 @@ describe('engineErrorUtils', () => {
       expect(mockResetEngineState).toHaveBeenCalled();
     });
 
-    it('should handle non-string, non-Error values', async () => {
+    it('should serialize object errors into readable messages', async () => {
       // Arrange
       const contextMessage = 'testOperation';
       const error = { someProperty: 'value' };
@@ -236,7 +236,7 @@ describe('engineErrorUtils', () => {
       );
 
       // Assert
-      const expectedErrorMessage = String(error);
+      const expectedErrorMessage = JSON.stringify(error);
       expect(result).toEqual({
         success: false,
         error: expectedErrorMessage,
@@ -244,12 +244,48 @@ describe('engineErrorUtils', () => {
       });
       expect(mockLogger.error).toHaveBeenCalledWith(
         `GameEngine.${contextMessage}: ${expectedErrorMessage}`,
-        expect.any(Error)
+        expect.objectContaining({ message: expectedErrorMessage })
       );
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
         ENGINE_OPERATION_FAILED_UI,
         {
           errorMessage: `${userPrefix}: ${expectedErrorMessage}`,
+          errorTitle: title,
+        }
+      );
+      expect(mockResetEngineState).toHaveBeenCalled();
+    });
+
+    it('should extract message from error-like objects', async () => {
+      const contextMessage = 'loadOperation';
+      const error = { message: 'Detailed failure occurred', code: 'E_FAIL' };
+      const title = 'Operation Failed';
+      const userPrefix = 'Unable to load game';
+
+      const result = await processOperationFailure(
+        mockLogger,
+        mockDispatcher,
+        contextMessage,
+        error,
+        title,
+        userPrefix,
+        mockResetEngineState,
+        true
+      );
+
+      expect(result).toEqual({
+        success: false,
+        error: 'Detailed failure occurred',
+        data: null,
+      });
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        `GameEngine.${contextMessage}: Detailed failure occurred`,
+        expect.objectContaining({ message: 'Detailed failure occurred' })
+      );
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        ENGINE_OPERATION_FAILED_UI,
+        {
+          errorMessage: 'Unable to load game: Detailed failure occurred',
           errorTitle: title,
         }
       );

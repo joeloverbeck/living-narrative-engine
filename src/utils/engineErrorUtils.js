@@ -7,6 +7,61 @@
 import { ENGINE_OPERATION_FAILED_UI } from '../constants/eventIds.js';
 
 /**
+ * Derives a readable error message from arbitrary error-like values.
+ *
+ * @param {unknown} error - Value describing the failure.
+ * @returns {string} Human-friendly error message.
+ */
+function getReadableErrorMessage(error) {
+  if (error instanceof Error) {
+    return error.message || 'Unknown error.';
+  }
+
+  if (typeof error === 'string') {
+    const trimmed = error.trim();
+    return trimmed || 'Unknown error.';
+  }
+
+  if (typeof error === 'number' || typeof error === 'boolean') {
+    return String(error);
+  }
+
+  if (error && typeof error === 'object') {
+    const messageCandidates = ['message', 'error', 'details', 'reason', 'description'];
+    for (const key of messageCandidates) {
+      const value = /** @type {Record<string, unknown>} */ (error)[key];
+      if (typeof value === 'string') {
+        const trimmedValue = value.trim();
+        if (trimmedValue) {
+          return trimmedValue;
+        }
+      }
+    }
+
+    if (
+      typeof error.toString === 'function' &&
+      error.toString !== Object.prototype.toString
+    ) {
+      const asString = String(error);
+      if (asString && asString !== '[object Object]') {
+        return asString;
+      }
+    }
+
+    try {
+      const serialized = JSON.stringify(error);
+      if (serialized && serialized !== '{}' && serialized !== '[]') {
+        return serialized;
+      }
+    } catch {
+      // Ignore serialization errors and fall back to default message
+    }
+  }
+
+  return 'Unknown error.';
+}
+
+/**
  * Dispatches a failure UI event and resets the engine state.
  *
  * @description Sends a standardized failure event to the UI and resets the
@@ -68,23 +123,34 @@ export async function processOperationFailure(
   resetEngineState,
   returnResult = false
 ) {
+  const readableMessage = getReadableErrorMessage(error);
   const normalizedError =
-    error instanceof Error ? error : new Error(String(error));
+    error instanceof Error ? error : new Error(readableMessage);
+
+  if (!(error instanceof Error)) {
+    try {
+      // Preserve the original error context for downstream loggers if supported.
+      normalizedError.cause = error;
+    } catch {
+      // Setting cause failed (older runtimes); attach as metadata instead.
+      normalizedError.originalError = error;
+    }
+  }
 
   logger.error(
-    `GameEngine.${contextMessage}: ${normalizedError.message}`,
+    `GameEngine.${contextMessage}: ${readableMessage}`,
     normalizedError
   );
 
   await dispatchFailureAndReset(
     dispatcher,
-    `${userPrefix}: ${normalizedError.message}`,
+    `${userPrefix}: ${readableMessage}`,
     title,
     resetEngineState,
     logger
   );
 
   if (returnResult) {
-    return { success: false, error: normalizedError.message, data: null };
+    return { success: false, error: readableMessage, data: null };
   }
 }
