@@ -184,10 +184,14 @@ export class JsonTraceFormatter {
       );
     }
 
-    if (verbosity !== 'minimal' && trace.getSpans) {
+    if (trace.getSpans) {
       const spans = trace.getSpans();
       if (spans && spans.length > 0) {
-        formatted.spans = this.#formatSpans(spans, verbosity);
+        const formattedSpans = this.#formatSpans(spans, verbosity);
+
+        if (formattedSpans !== undefined) {
+          formatted.spans = formattedSpans;
+        }
       }
     }
 

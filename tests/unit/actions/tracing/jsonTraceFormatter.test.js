@@ -295,6 +295,43 @@ describe('JsonTraceFormatter', () => {
       expect(stages.target_resolution.targetCount).toBe(3);
     });
 
+    it('should mark repeated stage references using JSON replacer safeguards', () => {
+      const sharedComponents = ['comp1', 'comp2'];
+
+      mockFilter.getVerbosityLevel.mockReturnValue('standard');
+      mockFilter.getInclusionConfig.mockReturnValue({
+        componentData: true,
+      });
+
+      const tracedActions = new Map();
+      tracedActions.set('action1', {
+        actionId: 'action1',
+        actorId: 'actor1',
+        startTime: Date.now(),
+        stages: {
+          component_filtering: {
+            timestamp: Date.now(),
+            data: {
+              actorComponents: sharedComponents,
+              requiredComponents: sharedComponents,
+            },
+          },
+        },
+      });
+
+      const trace = {
+        constructor: { name: 'ActionAwareStructuredTrace' },
+        getTracedActions: jest.fn(() => tracedActions),
+        getSpans: jest.fn(() => []),
+      };
+
+      const result = JSON.parse(formatter.format(trace));
+      const stage = result.actions.action1.stages.component_filtering;
+
+      expect(stage.actorComponents).toEqual(['comp1', 'comp2']);
+      expect(stage.requiredComponents).toBe('[Circular]');
+    });
+
     it('should handle different indentation levels based on verbosity', () => {
       mockFilter.getVerbosityLevel.mockReturnValue('minimal');
 
@@ -350,7 +387,7 @@ describe('JsonTraceFormatter', () => {
       expect(verboseResult.spans[0].data).toBeDefined(); // Included in verbose
     });
 
-    it('should not format spans with minimal verbosity', () => {
+    it('should summarize spans with minimal verbosity', () => {
       const spans = [
         { name: 'span1', startTime: 1000, endTime: 1100 },
         { name: 'span2', startTime: 1100, endTime: 1300 },
@@ -365,8 +402,8 @@ describe('JsonTraceFormatter', () => {
       mockFilter.getVerbosityLevel.mockReturnValue('minimal');
       const result = JSON.parse(formatter.format(trace));
 
-      // Minimal verbosity should not include spans at all
-      expect(result.spans).toBeUndefined();
+      // Minimal verbosity should summarize spans by count
+      expect(result.spans).toBe(spans.length);
     });
 
     it('should handle turnAction with detailed verbosity and resolvedTargets', () => {
@@ -868,7 +905,7 @@ describe('JsonTraceFormatter', () => {
 
       // This test ensures that when spans exist and verbosity is minimal,
       // the formatSpans method returns just the count (line 429)
-      expect(result.spans).toBeUndefined(); // spans won't be included in minimal verbosity for pipeline
+      expect(result.spans).toBe(spans.length);
     });
 
     it('should handle eventPayload sanitization with minimal verbosity', () => {
@@ -903,6 +940,65 @@ describe('JsonTraceFormatter', () => {
       expect(result.eventPayload.data).toBe('some data');
       expect(result.eventPayload.entityCache).toBeDefined();
       expect(result.eventPayload.componentData).toBeDefined();
+    });
+
+    it('should reduce event payload to type when verbosity switches to minimal', () => {
+      mockFilter.getVerbosityLevel
+        .mockReturnValueOnce('verbose')
+        .mockReturnValueOnce('minimal')
+        .mockReturnValue('minimal');
+      mockFilter.getInclusionConfig.mockReturnValue({
+        componentData: true,
+      });
+
+      const trace = {
+        constructor: { name: 'ActionExecutionTrace' },
+        actionId: 'test:action',
+        actorId: 'test-actor',
+        execution: {
+          startTime: Date.now(),
+          eventPayload: {
+            type: 'TEST_EVENT',
+            data: 'heavy payload',
+          },
+        },
+      };
+
+      const result = JSON.parse(formatter.format(trace));
+
+      expect(result.eventPayload).toEqual({ type: 'TEST_EVENT' });
+    });
+
+    it('should strip heavy payload fields when not in verbose mode', () => {
+      mockFilter.getVerbosityLevel
+        .mockReturnValueOnce('verbose')
+        .mockReturnValueOnce('standard')
+        .mockReturnValue('standard');
+      mockFilter.getInclusionConfig.mockReturnValue({
+        componentData: true,
+      });
+
+      const trace = {
+        constructor: { name: 'ActionExecutionTrace' },
+        actionId: 'test:action',
+        actorId: 'test-actor',
+        execution: {
+          startTime: Date.now(),
+          eventPayload: {
+            type: 'TEST_EVENT',
+            data: 'heavy payload',
+            entityCache: { cached: true },
+            componentData: { component: 'data' },
+          },
+        },
+      };
+
+      const result = JSON.parse(formatter.format(trace));
+
+      expect(result.eventPayload.type).toBe('TEST_EVENT');
+      expect(result.eventPayload.data).toBe('heavy payload');
+      expect(result.eventPayload.entityCache).toBeUndefined();
+      expect(result.eventPayload.componentData).toBeUndefined();
     });
 
     it('should test sanitizePayload method behavior with non-verbose cleanup', () => {
