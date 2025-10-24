@@ -21,6 +21,7 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
   let accumulator;
   let instrumentation;
   let createError;
+  let logger;
 
   const buildTask = (overrides = {}) => ({
     actor: { id: 'actor-42' },
@@ -78,13 +79,19 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
     };
 
     createError = jest.fn((payload) => ({ structured: true, payload }));
+    logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
 
     strategy = new PerActionMetadataStrategy({
       commandFormatter,
       entityManager: {},
       safeEventDispatcher: {},
       getEntityDisplayNameFn: jest.fn(),
-      logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn() },
+      logger,
       fallbackFormatter,
       targetNormalizationService,
     });
@@ -392,6 +399,61 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
 
     expect(createError).toHaveBeenCalledWith(
       expect.objectContaining({ errorOrResult: expect.objectContaining({ error: 'legacy-error' }), targetId: null })
+    );
+  });
+
+  it('logs formatter exceptions and combines distinct fallback errors', async () => {
+    const normalization = createNormalization();
+    const thrownError = new Error('formatter exploded');
+    const fallbackError = new Error('fallback unavailable');
+
+    targetNormalizationService.normalize.mockReturnValue(normalization);
+    commandFormatter.formatMultiTarget.mockImplementation(() => {
+      throw thrownError;
+    });
+    fallbackFormatter.formatWithFallback.mockResolvedValue({ ok: false, error: fallbackError });
+
+    const task = buildTask();
+
+    await strategy.format({ task, instrumentation, accumulator, createError, trace: { id: 'trace-multi' } });
+
+    expect(logger.error).toHaveBeenCalledWith(
+      "PerActionMetadataStrategy: formatMultiTarget threw for action 'action-42'",
+      thrownError
+    );
+    expect(fallbackFormatter.prepareFallback).toHaveBeenCalled();
+    expect(createError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        errorOrResult: expect.objectContaining({
+          message: 'formatter exploded (fallback: fallback unavailable)',
+          cause: thrownError,
+        }),
+      })
+    );
+    expect(instrumentation.actionFailed).toHaveBeenCalledWith(
+      expect.objectContaining({ payload: expect.objectContaining({ fallbackUsed: true, error: fallbackError }) })
+    );
+  });
+
+  it('reuses original formatter exception when fallback error matches', async () => {
+    const normalization = createNormalization();
+    const thrownError = new Error('formatter failed');
+
+    targetNormalizationService.normalize.mockReturnValue(normalization);
+    commandFormatter.formatMultiTarget.mockImplementation(() => {
+      throw thrownError;
+    });
+    fallbackFormatter.formatWithFallback.mockResolvedValue({ ok: false, error: thrownError });
+
+    const task = buildTask();
+
+    await strategy.format({ task, instrumentation, accumulator, createError });
+
+    expect(createError).toHaveBeenCalledWith(
+      expect.objectContaining({ errorOrResult: thrownError })
+    );
+    expect(instrumentation.actionFailed).toHaveBeenCalledWith(
+      expect.objectContaining({ payload: expect.objectContaining({ fallbackUsed: true, error: thrownError }) })
     );
   });
 });
