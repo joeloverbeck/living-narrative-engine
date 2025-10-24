@@ -35,6 +35,8 @@ describeTurnManagerSuite(
           mockHandler
         );
 
+        expect(testBed.turnManager.getActiveTurnHandler()).toBeNull();
+
         await testBed.turnManager.start();
 
         // Verify handler was resolved and set
@@ -42,10 +44,13 @@ describeTurnManagerSuite(
           testBed.mocks.turnHandlerResolver.resolveHandler
         ).toHaveBeenCalled();
 
+        expect(testBed.turnManager.getActiveTurnHandler()).toBe(mockHandler);
+
         await testBed.turnManager.stop();
 
         // Verify handler destroy was attempted
         expect(mockHandler.destroy).toHaveBeenCalled();
+        expect(testBed.turnManager.getActiveTurnHandler()).toBeNull();
       });
 
       test('should handle handler without destroy method gracefully', async () => {
