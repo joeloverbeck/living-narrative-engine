@@ -7,19 +7,20 @@ import {
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/systemEventIds.js';
 
 describe('safeDispatchError', () => {
-  it('dispatches the display error event', () => {
-    const dispatcher = { dispatch: jest.fn() };
-    safeDispatchError(dispatcher, 'boom', { a: 1 });
+  it('dispatches the display error event', async () => {
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+    const result = await safeDispatchError(dispatcher, 'boom', { a: 1 });
+    expect(result).toBe(true);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
       message: 'boom',
       details: { a: 1 },
     });
   });
 
-  it('defaults to empty details object when none provided', () => {
-    const dispatcher = { dispatch: jest.fn() };
+  it('defaults to empty details object when none provided', async () => {
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
 
-    safeDispatchError(dispatcher, 'no details');
+    await safeDispatchError(dispatcher, 'no details');
 
     expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
       message: 'no details',
@@ -27,23 +28,17 @@ describe('safeDispatchError', () => {
     });
   });
 
-  it('throws if dispatcher is invalid', () => {
-    const call = () => safeDispatchError({}, 'oops');
-    expect(call).toThrow(InvalidDispatcherError);
-    let error;
-    try {
-      call();
-    } catch (err) {
-      error = err;
-    }
-    expect(error.message).toBe(
-      "Invalid or missing method 'dispatch' on dependency 'safeDispatchError: dispatcher'."
-    );
-    expect(error.details).toEqual({ functionName: 'safeDispatchError' });
+  it('throws if dispatcher is invalid', async () => {
+    await expect(safeDispatchError({}, 'oops')).rejects.toMatchObject({
+      name: 'InvalidDispatcherError',
+      message:
+        "Invalid or missing method 'dispatch' on dependency 'safeDispatchError: dispatcher'.",
+      details: { functionName: 'safeDispatchError' },
+    });
   });
 
-  it('handles ActionErrorContext object', () => {
-    const dispatcher = { dispatch: jest.fn() };
+  it('handles ActionErrorContext object', async () => {
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
     const actionErrorContext = {
       actionId: 'test-action',
       targetId: 'target-123',
@@ -61,7 +56,7 @@ describe('safeDispatchError', () => {
       timestamp: 1234567890,
     };
 
-    safeDispatchError(dispatcher, actionErrorContext);
+    await safeDispatchError(dispatcher, actionErrorContext);
 
     expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
       message: 'Action failed due to invalid state',
@@ -74,8 +69,8 @@ describe('safeDispatchError', () => {
     });
   });
 
-  it('handles ActionErrorContext with missing error message', () => {
-    const dispatcher = { dispatch: jest.fn() };
+  it('handles ActionErrorContext with missing error message', async () => {
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
     const actionErrorContext = {
       actionId: 'test-action',
       targetId: null,
@@ -93,7 +88,7 @@ describe('safeDispatchError', () => {
       timestamp: 1234567890,
     };
 
-    safeDispatchError(dispatcher, actionErrorContext);
+    await safeDispatchError(dispatcher, actionErrorContext);
 
     expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
       message: 'An error occurred in the action system',
@@ -106,12 +101,12 @@ describe('safeDispatchError', () => {
     });
   });
 
-  it('treats plain objects without error metadata as generic messages', () => {
-    const dispatcher = { dispatch: jest.fn() };
+  it('treats plain objects without error metadata as generic messages', async () => {
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
     const payload = { actionId: 'maybe-context', reason: 'missing error object' };
     const diagnostics = { correlationId: 'diag-7' };
 
-    safeDispatchError(dispatcher, payload, diagnostics);
+    await safeDispatchError(dispatcher, payload, diagnostics);
 
     expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
       message: payload,
@@ -119,11 +114,11 @@ describe('safeDispatchError', () => {
     });
   });
 
-  it('falls back to generic messaging when actionId is absent on context-like input', () => {
-    const dispatcher = { dispatch: jest.fn() };
+  it('falls back to generic messaging when actionId is absent on context-like input', async () => {
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
     const payload = { error: { message: 'still not a full context' } };
 
-    safeDispatchError(dispatcher, payload, undefined);
+    await safeDispatchError(dispatcher, payload, undefined);
 
     expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
       message: payload,
@@ -134,7 +129,7 @@ describe('safeDispatchError', () => {
 
 describe('dispatchValidationError', () => {
   it('dispatches the error and returns result with details', () => {
-    const dispatcher = { dispatch: jest.fn() };
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
     const result = dispatchValidationError(dispatcher, 'bad', { foo: 1 });
     expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
       message: 'bad',
@@ -144,7 +139,7 @@ describe('dispatchValidationError', () => {
   });
 
   it('omits details when none provided', () => {
-    const dispatcher = { dispatch: jest.fn() };
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
     const result = dispatchValidationError(dispatcher, 'oops');
     expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
       message: 'oops',
@@ -160,23 +155,23 @@ describe('additional coverage', () => {
     expect(err.details).toEqual({});
   });
 
-  it('logs and throws when dispatcher is null', () => {
+  it('logs and throws when dispatcher is null', async () => {
     const logger = {
       info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
       debug: jest.fn(),
     };
-    expect(() =>
+    await expect(
       safeDispatchError(null, 'no dispatcher', undefined, logger)
-    ).toThrow(InvalidDispatcherError);
+    ).rejects.toBeInstanceOf(InvalidDispatcherError);
     expect(logger.error).toHaveBeenCalledWith(
       "Invalid or missing method 'dispatch' on dependency 'safeDispatchError: dispatcher'."
     );
   });
 
   it('handles null details in dispatchValidationError', () => {
-    const dispatcher = { dispatch: jest.fn() };
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
     const result = dispatchValidationError(dispatcher, 'bad', null);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
       message: 'bad',

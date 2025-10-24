@@ -12,8 +12,6 @@ import GameDataRepository from '../../../src/data/gameDataRepository.js';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
 import systemErrorEventDefinition from '../../../data/mods/core/events/system_error_occurred.event.json';
 
-const waitForDispatch = () => new Promise((resolve) => setTimeout(resolve, 0));
-
 const createTestLogger = () => ({
   info: jest.fn(),
   debug: jest.fn(),
@@ -73,10 +71,14 @@ describe('safeDispatchError edge cases', () => {
       evaluationTrace: { steps: [] },
     };
 
-    safeDispatchError(dispatcher, actionErrorContext, undefined, logger);
+    const success = await safeDispatchError(
+      dispatcher,
+      actionErrorContext,
+      undefined,
+      logger
+    );
 
-    await waitForDispatch();
-
+    expect(success).toBe(true);
     expect(receivedEvents).toHaveLength(1);
     expect(receivedEvents[0].payload.message).toBe(
       'An error occurred in the action system'

@@ -41,13 +41,14 @@ export class InvalidDispatcherError extends Error {
  * @param {ILogger} [logger] - Optional logger for error logging. When omitted, a
  * console-based fallback is used.
  * @throws {InvalidDispatcherError} If the dispatcher is missing or invalid.
- * @returns {void}
+ * @returns {Promise<boolean>} Resolves `true` when the dispatcher confirms the
+ * error event was emitted, or `false` when the dispatch fails.
  * @example
  * safeDispatchError(safeEventDispatcher, 'Invalid action', { id: 'bad-action' });
  * // or
  * safeDispatchError(safeEventDispatcher, actionErrorContext);
  */
-export function safeDispatchError(
+export async function safeDispatchError(
   dispatcher,
   messageOrContext,
   details = {},
@@ -91,10 +92,31 @@ export function safeDispatchError(
     eventDetails = details === undefined ? {} : details;
   }
 
-  dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-    message,
-    details: eventDetails,
-  });
+  try {
+    const dispatchResult = await dispatcher.dispatch(
+      SYSTEM_ERROR_OCCURRED_ID,
+      {
+        message,
+        details: eventDetails,
+      }
+    );
+
+    if (dispatchResult !== true) {
+      log.warn(
+        `safeDispatchError: Dispatcher reported failure for ${SYSTEM_ERROR_OCCURRED_ID}.`,
+        { dispatchResult }
+      );
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    log.error(
+      `safeDispatchError: Failed to dispatch ${SYSTEM_ERROR_OCCURRED_ID}.`,
+      error
+    );
+    return false;
+  }
 }
 
 /**
