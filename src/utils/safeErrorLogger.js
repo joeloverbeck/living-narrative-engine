@@ -43,8 +43,48 @@ export function createSafeErrorLogger({
    * This helps auto-enable batch mode during legitimate bulk operations.
    */
   let isGameLoading = false;
-  let loadingStartTime = null;
+  /** @type {ReturnType<typeof setTimeout> | null} */
   let loadingTimeoutId = null;
+  let outermostStartTime = null;
+  /**
+   * Tracks nested loading contexts so we can restore configuration when exiting.
+   * @type {Array<{options: {context: string, timeoutMs: number}, config: {maxRecursionDepth: number, maxGlobalRecursion: number, timeoutMs: number, context: string}}>} */
+  const loadingContextStack = [];
+
+  const clearExistingTimeout = () => {
+    if (loadingTimeoutId) {
+      clearTimeout(loadingTimeoutId);
+      loadingTimeoutId = null;
+    }
+  };
+
+  const scheduleAutoDisable = (timeoutMs, contextLabel) => {
+    clearExistingTimeout();
+
+    if (!(Number.isFinite(timeoutMs) && timeoutMs > 0)) {
+      return;
+    }
+
+    loadingTimeoutId = setTimeout(() => {
+      safeLogger.debug(
+        `SafeErrorLogger: Auto-disabling game loading mode after ${timeoutMs}ms timeout (context: ${contextLabel})`
+      );
+      disableGameLoadingMode({ force: true, reason: 'timeout' });
+    }, timeoutMs);
+  };
+
+  const restorePreviousContext = () => {
+    const previousContext = loadingContextStack[loadingContextStack.length - 1];
+    if (!previousContext) {
+      return;
+    }
+
+    dispatcher.setBatchMode(true, previousContext.config);
+    scheduleAutoDisable(
+      previousContext.config.timeoutMs,
+      previousContext.options.context
+    );
+  };
 
   /**
    * Enables game loading mode which automatically manages EventBus batch mode.
@@ -61,11 +101,6 @@ export function createSafeErrorLogger({
 
     const loadingOptions = { ...defaultOptions, ...options };
 
-    isGameLoading = true;
-    loadingStartTime = Date.now();
-
-    // Enable batch mode on EventBus with context-aware limits
-    // EventBus now handles event-specific limits based on context automatically
     const batchModeConfig = {
       maxRecursionDepth: 25, // Base limit - EventBus will apply event-specific overrides
       maxGlobalRecursion:
@@ -74,55 +109,65 @@ export function createSafeErrorLogger({
       context: loadingOptions.context,
     };
 
+    const now = Date.now();
+    const contextEntry = {
+      options: loadingOptions,
+      config: batchModeConfig,
+    };
+
+    if (loadingContextStack.length === 0) {
+      outermostStartTime = now;
+    }
+
+    loadingContextStack.push(contextEntry);
+
+    isGameLoading = true;
+
+    // Enable batch mode on EventBus with context-aware limits
+    // EventBus now handles event-specific limits based on context automatically
     dispatcher.setBatchMode(true, batchModeConfig);
 
     safeLogger.debug(
-      `SafeErrorLogger: Enabled batch mode for ${loadingOptions.context} - ` +
+      `SafeErrorLogger: Enabled batch mode for ${loadingOptions.context} (depth: ${loadingContextStack.length}) - ` +
         `maxRecursionDepth: ${batchModeConfig.maxRecursionDepth}, ` +
         `maxGlobalRecursion: ${batchModeConfig.maxGlobalRecursion}`
     );
 
-    // Safety timeout to disable loading mode
-    if (loadingTimeoutId) {
-      clearTimeout(loadingTimeoutId);
-    }
-
-    loadingTimeoutId = setTimeout(() => {
-      safeLogger.debug(
-        `SafeErrorLogger: Auto-disabling game loading mode after ${loadingOptions.timeoutMs}ms timeout`
-      );
-      disableGameLoadingMode();
-    }, loadingOptions.timeoutMs);
-
-    safeLogger.debug(
-      `SafeErrorLogger: Game loading mode enabled for context: ${loadingOptions.context}`
-    );
+    scheduleAutoDisable(batchModeConfig.timeoutMs, loadingOptions.context);
   }
 
   /**
    * Disables game loading mode and EventBus batch mode.
    */
-  function disableGameLoadingMode() {
+  function disableGameLoadingMode({ force = false, reason = 'manual' } = {}) {
     if (!isGameLoading) {
       return; // Already disabled
     }
 
-    isGameLoading = false;
-    const loadingDuration = loadingStartTime
-      ? Date.now() - loadingStartTime
-      : 0;
-    loadingStartTime = null;
-
-    if (loadingTimeoutId) {
-      clearTimeout(loadingTimeoutId);
-      loadingTimeoutId = null;
+    if (!force && loadingContextStack.length > 1) {
+      const endedContext = loadingContextStack.pop();
+      safeLogger.debug(
+        `SafeErrorLogger: Exited nested game loading mode for ${endedContext.options.context}. Remaining depth: ${loadingContextStack.length}`
+      );
+      restorePreviousContext();
+      return;
     }
+
+    const totalDuration = outermostStartTime
+      ? Date.now() - outermostStartTime
+      : 0;
+
+    outermostStartTime = null;
+    loadingContextStack.length = 0;
+    isGameLoading = false;
+
+    clearExistingTimeout();
 
     // Disable batch mode on SafeEventDispatcher
     dispatcher.setBatchMode(false);
 
     safeLogger.debug(
-      `SafeErrorLogger: Game loading mode disabled after ${loadingDuration}ms`
+      `SafeErrorLogger: Game loading mode disabled (${reason}) after ${totalDuration}ms`
     );
   }
 

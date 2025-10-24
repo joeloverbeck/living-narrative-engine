@@ -381,6 +381,51 @@ describe('EventBus Infinite Recursion Prevention', () => {
       expect(eventBus.isBatchModeEnabled()).toBe(false);
     });
 
+    it('maintains batch mode across nested withGameLoadingMode calls', async () => {
+      expect(eventBus.isBatchModeEnabled()).toBe(false);
+
+      await safeErrorLogger.withGameLoadingMode(
+        async () => {
+          expect(eventBus.isBatchModeEnabled()).toBe(true);
+
+          await safeErrorLogger.withGameLoadingMode(
+            async () => {
+              expect(eventBus.isBatchModeEnabled()).toBe(true);
+            },
+            { context: 'nested-loading-test', timeoutMs: 2000 }
+          );
+
+          expect(eventBus.isBatchModeEnabled()).toBe(true);
+        },
+        { context: 'outer-loading-test', timeoutMs: 2000 }
+      );
+
+      expect(eventBus.isBatchModeEnabled()).toBe(false);
+    });
+
+    it('keeps game loading mode active when nested enables are torn down', () => {
+      safeErrorLogger.enableGameLoadingMode({
+        context: 'outer-manual',
+        timeoutMs: 4000,
+      });
+      safeErrorLogger.enableGameLoadingMode({
+        context: 'inner-manual',
+        timeoutMs: 4000,
+      });
+
+      expect(eventBus.isBatchModeEnabled()).toBe(true);
+
+      safeErrorLogger.disableGameLoadingMode();
+
+      expect(eventBus.isBatchModeEnabled()).toBe(true);
+      expect(safeErrorLogger.isGameLoadingActive()).toBe(true);
+
+      safeErrorLogger.disableGameLoadingMode();
+
+      expect(eventBus.isBatchModeEnabled()).toBe(false);
+      expect(safeErrorLogger.isGameLoadingActive()).toBe(false);
+    });
+
     it('should disable batch mode even if function throws', async () => {
       expect(eventBus.isBatchModeEnabled()).toBe(false);
 
