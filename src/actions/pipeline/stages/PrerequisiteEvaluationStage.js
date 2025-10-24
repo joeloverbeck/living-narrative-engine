@@ -246,30 +246,68 @@ export class PrerequisiteEvaluationStage extends PipelineStage {
         : trace;
 
       // Perform prerequisite evaluation using the service
-      const evaluationPassed = this.#prerequisiteService.evaluate(
+      const serviceResult = this.#prerequisiteService.evaluate(
         prerequisites,
         actionDef,
         actor,
         enhancedTrace
       );
 
-      // Extract detailed evaluation data from enhanced trace
+      const isObjectResult =
+        typeof serviceResult === 'object' && serviceResult !== null;
+      const evaluationPassed = isObjectResult
+        ? Object.prototype.hasOwnProperty.call(serviceResult, 'passed')
+          ? Boolean(serviceResult.passed)
+          : Boolean(serviceResult)
+        : Boolean(serviceResult);
+
+      const normalizedPrerequisites = isObjectResult
+        ? (serviceResult.prerequisites ?? prerequisites)
+        : prerequisites;
+
       const evaluationDetails = this.#extractEvaluationDetails(
         enhancedTrace,
-        prerequisites,
+        normalizedPrerequisites,
         evaluationPassed
       );
 
+      const evaluationReason =
+        isObjectResult && serviceResult.reason
+          ? serviceResult.reason
+          : evaluationPassed
+            ? 'All prerequisites satisfied'
+            : 'One or more prerequisites failed';
+
+      const hasPrerequisites =
+        isObjectResult &&
+        Object.prototype.hasOwnProperty.call(serviceResult, 'hasPrerequisites')
+          ? Boolean(serviceResult.hasPrerequisites)
+          : true;
+
       const result = {
         passed: evaluationPassed,
-        reason: evaluationPassed
-          ? 'All prerequisites satisfied'
-          : 'One or more prerequisites failed',
-        hasPrerequisites: true,
-        prerequisites: prerequisites,
+        reason: evaluationReason,
+        hasPrerequisites,
+        prerequisites: normalizedPrerequisites,
         evaluationDetails: evaluationDetails,
-        evaluationTime: Date.now() - evaluationStartTime,
+        evaluationTime:
+          isObjectResult &&
+          Object.prototype.hasOwnProperty.call(
+            serviceResult,
+            'evaluationTime'
+          ) &&
+          typeof serviceResult.evaluationTime === 'number'
+            ? serviceResult.evaluationTime
+            : Date.now() - evaluationStartTime,
       };
+
+      if (isObjectResult && serviceResult.error) {
+        result.error = serviceResult.error;
+      }
+
+      if (isObjectResult && serviceResult.errorType) {
+        result.errorType = serviceResult.errorType;
+      }
 
       // Capture detailed evaluation data if tracing enabled
       if (isActionAwareTrace && trace.captureActionData) {

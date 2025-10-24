@@ -1199,12 +1199,17 @@ describe('PrerequisiteEvaluationStage', () => {
 
     describe('Error handling in capture methods', () => {
       it('should handle errors in capturePreEvaluationData', async () => {
-        const throwingTrace = {
-          ...mockActionAwareTrace,
-          captureActionData: jest.fn().mockImplementation(() => {
-            throw new Error('Capture failed');
-          }),
-        };
+        mockLogger.debug.mockImplementation((message, payload) => {
+          if (
+            message ===
+            'PrerequisiteEvaluationStage: Captured pre-evaluation data'
+          ) {
+            throw new Error('Pre-evaluation trace failure');
+          }
+          return undefined;
+        });
+
+        mockPrerequisiteService.evaluate.mockReturnValue(true);
 
         const candidateActions = [
           { id: 'core:capture_error_action', prerequisites: [] },
@@ -1213,14 +1218,15 @@ describe('PrerequisiteEvaluationStage', () => {
         const context = {
           actor: mockActor,
           candidateActions,
-          trace: throwingTrace,
+          actionContext: { foo: 'bar' },
+          trace: mockActionAwareTrace,
         };
 
         const result = await stage.executeInternal(context);
 
         expect(result.success).toBe(true);
         expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('Failed to capture'),
+          'Failed to capture pre-evaluation data for tracing',
           expect.any(Error)
         );
       });
@@ -1257,6 +1263,56 @@ describe('PrerequisiteEvaluationStage', () => {
           expect.stringContaining(
             'Failed to capture prerequisite evaluation data'
           ),
+          expect.any(Error)
+        );
+      });
+
+      it('should warn when JSON Logic trace capture fails internally', async () => {
+        const trace = {
+          ...mockActionAwareTrace,
+          captureActionData: jest.fn(),
+        };
+
+        const candidateActions = [
+          { id: 'core:json-logic-trace', prerequisites: [{ id: 'rule-1' }] },
+        ];
+
+        mockPrerequisiteService.evaluate.mockImplementation(
+          (prereqs, actionDef, actor, enhancedTrace) => {
+            Object.defineProperty(enhancedTrace, '_jsonLogicTraces', {
+              configurable: true,
+              get() {
+                throw new Error('Accessor failure');
+              },
+              set() {
+                throw new Error('Mutator failure');
+              },
+            });
+
+            expect(() =>
+              enhancedTrace.captureJsonLogicTrace(
+                { '===': [1, 1] },
+                { foo: 'bar' },
+                true,
+                ['step-1']
+              )
+            ).not.toThrow();
+
+            return true;
+          }
+        );
+
+        const context = {
+          actor: mockActor,
+          candidateActions,
+          trace,
+        };
+
+        const result = await stage.executeInternal(context);
+
+        expect(result.success).toBe(true);
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          "Failed to capture JSON Logic trace for action 'core:json-logic-trace'",
           expect.any(Error)
         );
       });
@@ -1491,6 +1547,57 @@ describe('PrerequisiteEvaluationStage', () => {
         // It only calls it within evaluateActionWithTracing
         // Let's verify the error was handled properly
         expect(result.data.candidateActions).toEqual([]);
+      });
+    });
+
+    describe('service result normalization and tracing', () => {
+      it('should propagate structured service error details into trace data', async () => {
+        const trace = {
+          ...mockActionAwareTrace,
+          captureActionData: jest.fn(),
+        };
+
+        const candidateActions = [
+          { id: 'core:service-error', prerequisites: [{ id: 'rule-a' }] },
+        ];
+
+        const serviceResult = {
+          passed: false,
+          reason: 'Service reported prerequisite failure',
+          prerequisites: [{ id: 'rule-a' }],
+          error: 'EvaluationError: condition failed',
+          errorType: 'EvaluationError',
+          evaluationTime: 42,
+        };
+
+        mockPrerequisiteService.evaluate.mockReturnValue(serviceResult);
+
+        const context = {
+          actor: mockActor,
+          candidateActions,
+          trace,
+        };
+
+        const result = await stage.executeInternal(context);
+
+        expect(result.success).toBe(true);
+        expect(result.data.candidateActions).toHaveLength(0);
+        expect(trace.captureActionData).toHaveBeenCalledWith(
+          'prerequisite_evaluation',
+          'core:service-error',
+          expect.objectContaining({
+            evaluationPassed: false,
+            evaluationReason: 'Service reported prerequisite failure',
+            error: 'EvaluationError: condition failed',
+            errorType: 'EvaluationError',
+          })
+        );
+        expect(mockLogger.warn).not.toHaveBeenCalledWith(
+          expect.stringContaining(
+            'Failed to capture prerequisite evaluation data'
+          ),
+          expect.anything()
+        );
       });
     });
   });
