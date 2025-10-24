@@ -6,6 +6,10 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
 import { validateAgainstSchema } from '../../../src/utils/schemaValidationUtils.js';
+import {
+  formatAnyOfErrors,
+  formatAjvErrorsEnhanced,
+} from '../../../src/utils/ajvAnyOfErrorFormatter.js';
 
 /**
  * Creates a mock logger for testing.
@@ -17,6 +21,62 @@ function createMockLogger() {
     info: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
+  };
+}
+
+/**
+ * Builds a synthetic anyOf schema with many operation branches to trigger
+ * high-volume Ajv error cascades during validation.
+ *
+ * @param {number} [branchCount=120] - Number of decoy operation branches.
+ * @returns {object} JSON schema definition.
+ */
+function createHighVolumeOperationSchema(branchCount = 120) {
+  const anyOfBranches = [];
+
+  for (let i = 0; i < branchCount; i++) {
+    anyOfBranches.push({
+      type: 'object',
+      properties: {
+        type: { const: `BULK_OPERATION_${i}` },
+        parameters: {
+          type: 'object',
+          properties: {
+            [`field_${i}`]: { type: 'string' },
+            [`value_${i}`]: { type: 'number' },
+          },
+          required: [`field_${i}`, `value_${i}`],
+          additionalProperties: false,
+        },
+      },
+      required: ['type', 'parameters'],
+      additionalProperties: false,
+    });
+  }
+
+  anyOfBranches.push({
+    type: 'object',
+    properties: {
+      type: { const: 'TARGET_OPERATION' },
+      parameters: {
+        type: 'object',
+        properties: {
+          entity_ref: { type: 'string', minLength: 1 },
+          result_variable: { type: 'string', minLength: 1 },
+          default_value: { type: 'string' },
+        },
+        required: ['entity_ref', 'result_variable'],
+        additionalProperties: false,
+      },
+    },
+    required: ['type', 'parameters'],
+    additionalProperties: false,
+  });
+
+  return {
+    $id: 'schema://test/high-volume.schema.json',
+    type: 'object',
+    anyOf: anyOfBranches,
   };
 }
 
@@ -448,6 +508,197 @@ describe('AnyOf Error Formatting Integration', () => {
       const formattedError = validator.formatAjvErrors(result.errors, data);
       expect(formattedError).toContain("Missing required property 'id'");
       expect(formattedError).toContain("Expected type 'array'");
+    });
+  });
+
+  describe('High volume structural guidance', () => {
+    const schemaId = 'schema://test/high-volume.schema.json';
+
+    beforeEach(async () => {
+      await validator.addSchema(createHighVolumeOperationSchema(140), schemaId);
+    });
+
+    it('provides actionable guidance when entity_id is supplied instead of entity_ref', () => {
+      const data = {
+        type: 'TARGET_OPERATION',
+        parameters: {
+          entity_id: 'npc-001',
+        },
+      };
+
+      const result = validator.validate(schemaId, data);
+      expect(result.isValid).toBe(false);
+      expect(result.errors.length).toBeGreaterThan(100);
+
+      const formattedError = validator.formatAjvErrors(result.errors, data);
+      expect(formattedError).toContain(
+        "Operation type 'TARGET_OPERATION' has invalid parameters"
+      );
+      expect(formattedError).toContain('entity_id');
+      expect(formattedError).toContain('"entity_id" should be "entity_ref"');
+    });
+
+    it('detects missing type when cascades exceed one hundred errors', () => {
+      const data = {
+        parameters: {
+          entity_id: 'npc-001',
+        },
+      };
+
+      const result = validator.validate(schemaId, data);
+      expect(result.isValid).toBe(false);
+      expect(result.errors.length).toBeGreaterThan(100);
+
+      const augmentedErrors = [
+        ...result.errors,
+        {
+          instancePath: '/type',
+          schemaPath: '#/anyOf/0/properties/type/const',
+          keyword: 'const',
+          params: { allowedValue: 'BULK_OPERATION_0' },
+          message: 'must be equal to constant',
+        },
+      ];
+
+      const formattedError = formatAjvErrorsEnhanced(augmentedErrors, data);
+      expect(formattedError).toContain(
+        'Critical structural issue: Missing "type" field in operation.'
+      );
+      expect(formattedError).toContain('Add a "type" field with a valid operation type');
+    });
+
+    it('detects non-string type fields inside large validation cascades', () => {
+      const data = {
+        type: 42,
+        parameters: {
+          entity_id: 'npc-001',
+        },
+      };
+
+      const result = validator.validate(schemaId, data);
+      expect(result.isValid).toBe(false);
+      expect(result.errors.length).toBeGreaterThan(100);
+
+      const formattedError = formatAjvErrorsEnhanced(result.errors, data);
+      expect(formattedError).toContain(
+        'Critical structural issue: Invalid "type" field value.'
+      );
+      expect(formattedError).toContain('but got number');
+    });
+  });
+
+  describe('Enum guidance formatting', () => {
+    const schemaId = 'schema://test/perception-enum.schema.json';
+
+    beforeEach(async () => {
+      const perceptionSchema = {
+        $id: schemaId,
+        type: 'object',
+        anyOf: [
+          {
+            type: 'object',
+            properties: {
+              type: { const: 'DISPATCH_PERCEPTIBLE_EVENT' },
+              parameters: {
+                type: 'object',
+                properties: {
+                  perception_type: {
+                    type: 'string',
+                    enum: ['speech_local', 'thought_internal'],
+                  },
+                },
+                required: ['perception_type'],
+                additionalProperties: false,
+              },
+            },
+            required: ['type', 'parameters'],
+            additionalProperties: false,
+          },
+        ],
+      };
+
+      await validator.addSchema(perceptionSchema, schemaId);
+    });
+
+    it('adds remediation hints for perception_type enum failures', () => {
+      const data = {
+        type: 'DISPATCH_PERCEPTIBLE_EVENT',
+        parameters: {
+          perception_type: 'invalid_value',
+        },
+      };
+
+      const result = validator.validate(schemaId, data);
+      expect(result.isValid).toBe(false);
+
+      const formattedError = validator.formatAjvErrors(result.errors, data);
+      expect(formattedError).toContain("Invalid enum value 'invalid_value'");
+      expect(formattedError).toContain(
+        '⚠️  ENUM VALIDATION ERROR for \'perception_type\' field'
+      );
+      expect(formattedError).toContain(
+        'data/schemas/operations/dispatchPerceptibleEvent.schema.json'
+      );
+    });
+  });
+
+  describe('Direct formatter edge cases', () => {
+    it('infers intended operation when grouped errors indicate the closest match', () => {
+      const fabricatedErrors = [
+        {
+          instancePath: '',
+          schemaPath: '#/anyOf/0/properties/type/const',
+          keyword: 'customKeyword',
+          params: { allowedValue: 'INFER_OPERATION' },
+          message: 'custom type discriminator failed',
+        },
+        {
+          instancePath: '/parameters',
+          schemaPath: '#/anyOf/0/properties/parameters/required',
+          keyword: 'required',
+          params: { missingProperty: 'entity_ref' },
+          message: "must have required property 'entity_ref'",
+        },
+        {
+          instancePath: '',
+          schemaPath: '#/anyOf',
+          keyword: 'anyOf',
+          params: {},
+          message: 'must match a schema in anyOf',
+        },
+      ];
+
+      const formattedError = formatAnyOfErrors(fabricatedErrors, {
+        parameters: {},
+      });
+
+      expect(formattedError).toContain(
+        "Operation type 'INFER_OPERATION' validation failed:"
+      );
+      expect(formattedError).toContain(
+        "Missing required property 'entity_ref'"
+      );
+    });
+
+    it('guides macro references when validation cannot determine an operation type', () => {
+      const fabricatedErrors = [
+        {
+          instancePath: '',
+          schemaPath: '#/anyOf',
+          keyword: 'anyOf',
+          params: {},
+          message: 'must match a schema in anyOf',
+        },
+      ];
+
+      const formattedError = formatAnyOfErrors(fabricatedErrors, {
+        macro: 'core:sample_macro',
+      });
+
+      expect(formattedError).toContain('Invalid macro reference format detected.');
+      expect(formattedError).toContain(
+        'Do NOT include a "type" field with macro references.'
+      );
     });
   });
 });
