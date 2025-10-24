@@ -253,10 +253,31 @@ describe('environmentUtils', () => {
       expect(shouldSkipDebugConfig()).toBe(true);
     });
 
+    it.each(['TRUE', 'YeS', '  On  '])(
+      'treats %s as truthy ignoring case and whitespace',
+      (value) => {
+        globalThis.process = {
+          versions: { node: '16.0.0' },
+          env: { SKIP_DEBUG_CONFIG: value },
+        };
+
+        expect(shouldSkipDebugConfig()).toBe(true);
+      }
+    );
+
     it('returns false for other values', () => {
       globalThis.process = {
         versions: { node: '16.0.0' },
         env: { SKIP_DEBUG_CONFIG: 'false' },
+      };
+
+      expect(shouldSkipDebugConfig()).toBe(false);
+    });
+
+    it('trims whitespace before evaluating falsy values', () => {
+      globalThis.process = {
+        versions: { node: '16.0.0' },
+        env: { SKIP_DEBUG_CONFIG: '  false  ' },
       };
 
       expect(shouldSkipDebugConfig()).toBe(false);

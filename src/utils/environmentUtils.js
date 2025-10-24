@@ -134,13 +134,14 @@ export function getEnvironmentMode() {
  */
 export function shouldSkipDebugConfig() {
   const skipValue = getEnvironmentVariable('SKIP_DEBUG_CONFIG', 'false');
+  const normalizedValue = String(skipValue).trim().toLowerCase();
 
   // Handle various truthy values
   return (
-    skipValue === 'true' ||
-    skipValue === '1' ||
-    skipValue === 'yes' ||
-    skipValue === 'on'
+    normalizedValue === 'true' ||
+    normalizedValue === '1' ||
+    normalizedValue === 'yes' ||
+    normalizedValue === 'on'
   );
 }
 
