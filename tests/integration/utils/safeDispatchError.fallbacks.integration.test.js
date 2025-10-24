@@ -89,6 +89,24 @@ describe('safeDispatchError edge cases', () => {
     });
   });
 
+  it('gracefully handles null message payloads without throwing', async () => {
+    const receivedEvents = [];
+    eventBus.subscribe(SYSTEM_ERROR_OCCURRED_ID, (event) => {
+      receivedEvents.push(event);
+    });
+
+    await expect(
+      safeDispatchError(dispatcher, null, undefined, logger)
+    ).resolves.toBe(false);
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('safeDispatchError: Dispatcher reported failure'),
+      expect.objectContaining({ dispatchResult: false })
+    );
+
+    expect(receivedEvents).toHaveLength(0);
+  });
+
   it('defaults InvalidDispatcherError details to an empty object when omitted', () => {
     const error = new InvalidDispatcherError('Dispatcher unavailable');
 

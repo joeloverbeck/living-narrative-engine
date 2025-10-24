@@ -70,6 +70,7 @@ export async function safeDispatchError(
 
   // Check if we received an ActionErrorContext
   if (
+    messageOrContext &&
     typeof messageOrContext === 'object' &&
     messageOrContext.actionId &&
     messageOrContext.error
