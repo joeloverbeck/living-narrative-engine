@@ -170,7 +170,12 @@ export class HumanReadableFormatter {
     }
 
     // Event Payload
-    if (verbosity === 'verbose' && trace.execution?.eventPayload) {
+    const hasExecution = Boolean(trace.execution);
+    const hasEventPayload =
+      hasExecution &&
+      Object.prototype.hasOwnProperty.call(trace.execution, 'eventPayload');
+
+    if (verbosity === 'verbose' && hasEventPayload) {
       sections.push(
         this.#createSection(
           'Event Payload',
