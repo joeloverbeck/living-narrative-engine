@@ -168,148 +168,105 @@ export class LegacyStrategy {
         );
 
         if (
-          actionSpecificTargets &&
-          Object.keys(actionSpecificTargets).length > 0
+          !actionSpecificTargets ||
+          Object.keys(actionSpecificTargets).length === 0
         ) {
-          if (this.#commandFormatter.formatMultiTarget) {
-            const formatResult = this.#commandFormatter.formatMultiTarget(
-              actionDef,
-              actionSpecificTargets,
-              this.#entityManager,
-              formatterOptions,
-              {
-                displayNameFn: this.#getEntityDisplayNameFn,
-                targetDefinitions: actionDef.targets,
-              }
-            );
-
-            if (formatResult.ok) {
-              const commands = Array.isArray(formatResult.value)
-                ? formatResult.value
-                : [formatResult.value];
-
-              for (const commandData of commands) {
-                const command =
-                  typeof commandData === 'string'
-                    ? commandData
-                    : commandData.command;
-                const specificTargets =
-                  typeof commandData === 'object' && commandData.targets
-                    ? commandData.targets
-                    : actionSpecificTargets;
-
-                const normalizationResult =
-                  this.#targetNormalizationService.normalize({
-                    resolvedTargets: specificTargets,
-                    isMultiTarget: true,
-                  });
-
-                if (normalizationResult.error) {
-                  errors.push(
-                    this.#createError(
-                      normalizationResult.error,
-                      actionDef,
-                      actor.id,
-                      trace
-                    )
-                  );
-                  continue;
-                }
-
-                const params = {
-                  ...normalizationResult.params,
-                  isMultiTarget: true,
-                };
-
-                formattedActions.push({
-                  id: actionDef.id,
-                  name: actionDef.name,
-                  command,
-                  description: actionDef.description || '',
-                  params,
-                  visual: actionDef.visual || null,
-                });
-              }
-
-              this.#incrementStat(processingStats, 'successful');
-              this.#incrementStat(processingStats, 'multiTarget');
-            } else if (targetContexts.length > 0) {
-              const fallbackResult = this.#fallbackFormatter.formatWithFallback(
-                {
-                  actionDefinition: actionDef,
-                  targetContext: targetContexts[0],
-                  formatterOptions,
-                  targetDefinitions: actionDef.targets,
-                  resolvedTargets: actionSpecificTargets,
-                }
-              );
-
-              if (fallbackResult.ok) {
-                formattedActions.push({
-                  id: actionDef.id,
-                  name: actionDef.name,
-                  command: fallbackResult.value,
-                  description: actionDef.description || '',
-                  params: targetContexts[0]?.entityId
-                    ? { targetId: targetContexts[0].entityId }
-                    : {},
-                  visual: actionDef.visual || null,
-                });
-                this.#incrementStat(processingStats, 'successful');
-                this.#incrementStat(processingStats, 'legacy');
-                fallbackInvocations++;
-              } else {
-                this.#incrementStat(processingStats, 'failed');
-                errors.push(
-                  this.#createError(
-                    fallbackResult,
-                    actionDef,
-                    actor.id,
-                    trace,
-                    targetContexts[0]?.entityId || null
-                  )
-                );
-              }
-            }
-          } else if (targetContexts.length > 0) {
-            const fallbackResult = this.#fallbackFormatter.formatWithFallback({
-              actionDefinition: actionDef,
-              targetContext: targetContexts[0],
-              formatterOptions,
-              targetDefinitions: actionDef.targets,
-              resolvedTargets: actionSpecificTargets,
-            });
-
-            if (fallbackResult.ok) {
-              formattedActions.push({
-                id: actionDef.id,
-                name: actionDef.name,
-                command: fallbackResult.value,
-                description: actionDef.description || '',
-                params: { targetId: targetContexts[0].entityId },
-                visual: actionDef.visual || null,
-              });
-              this.#incrementStat(processingStats, 'successful');
-              this.#incrementStat(processingStats, 'legacy');
-              fallbackInvocations++;
-            } else {
-              this.#incrementStat(processingStats, 'failed');
-              errors.push(
-                this.#createError(
-                  fallbackResult,
-                  actionDef,
-                  actor.id,
-                  trace,
-                  targetContexts[0].entityId
-                )
-              );
-            }
-          }
-        } else {
           this.#logger.warn(
             `Skipping multi-target action '${actionDef.id}' in legacy formatting ` +
               `path - no resolved targets available for proper formatting`
           );
+          continue;
+        }
+
+        if (this.#commandFormatter.formatMultiTarget) {
+          const formatResult = this.#commandFormatter.formatMultiTarget(
+            actionDef,
+            actionSpecificTargets,
+            this.#entityManager,
+            formatterOptions,
+            {
+              displayNameFn: this.#getEntityDisplayNameFn,
+              targetDefinitions: actionDef.targets,
+            }
+          );
+
+          if (formatResult.ok) {
+            const commands = Array.isArray(formatResult.value)
+              ? formatResult.value
+              : [formatResult.value];
+
+            for (const commandData of commands) {
+              const command =
+                typeof commandData === 'string'
+                  ? commandData
+                  : commandData.command;
+              const specificTargets =
+                typeof commandData === 'object' && commandData.targets
+                  ? commandData.targets
+                  : actionSpecificTargets;
+
+              const normalizationResult =
+                this.#targetNormalizationService.normalize({
+                  resolvedTargets: specificTargets,
+                  isMultiTarget: true,
+                });
+
+              if (normalizationResult.error) {
+                errors.push(
+                  this.#createError(
+                    normalizationResult.error,
+                    actionDef,
+                    actor.id,
+                    trace
+                  )
+                );
+                continue;
+              }
+
+              const params = {
+                ...normalizationResult.params,
+                isMultiTarget: true,
+              };
+
+              formattedActions.push({
+                id: actionDef.id,
+                name: actionDef.name,
+                command,
+                description: actionDef.description || '',
+                params,
+                visual: actionDef.visual || null,
+              });
+            }
+
+            this.#incrementStat(processingStats, 'successful');
+            this.#incrementStat(processingStats, 'multiTarget');
+          } else if (targetContexts.length > 0) {
+            fallbackInvocations += this.#handleFallback({
+              formattedActions,
+              errors,
+              processingStats,
+              targetContexts,
+              actionDef,
+              formatterOptions,
+              actionSpecificTargets,
+              actorId: actor.id,
+              trace,
+              allowMissingTargetId: true,
+            });
+          }
+        } else if (targetContexts.length > 0) {
+          fallbackInvocations += this.#handleFallback({
+            formattedActions,
+            errors,
+            processingStats,
+            targetContexts,
+            actionDef,
+            formatterOptions,
+            actionSpecificTargets,
+            actorId: actor.id,
+            trace,
+            allowMissingTargetId: false,
+          });
         }
       } else {
         let successCount = 0;
@@ -459,136 +416,101 @@ export class LegacyStrategy {
         );
 
         if (
-          actionSpecificTargets &&
-          Object.keys(actionSpecificTargets).length > 0
+          !actionSpecificTargets ||
+          Object.keys(actionSpecificTargets).length === 0
         ) {
-          if (this.#commandFormatter.formatMultiTarget) {
-            const formatResult = this.#commandFormatter.formatMultiTarget(
-              actionDef,
-              actionSpecificTargets,
-              this.#entityManager,
-              formatterOptions,
-              {
-                displayNameFn: this.#getEntityDisplayNameFn,
-                targetDefinitions: actionDef.targets,
-              }
-            );
-
-            if (formatResult.ok) {
-              const commands = Array.isArray(formatResult.value)
-                ? formatResult.value
-                : [formatResult.value];
-
-              for (const commandData of commands) {
-                const command =
-                  typeof commandData === 'string'
-                    ? commandData
-                    : commandData.command;
-                const specificTargets =
-                  typeof commandData === 'object' && commandData.targets
-                    ? commandData.targets
-                    : actionSpecificTargets;
-
-                const normalizationResult =
-                  this.#targetNormalizationService.normalize({
-                    resolvedTargets: specificTargets,
-                    isMultiTarget: true,
-                  });
-
-                if (normalizationResult.error) {
-                  errors.push(
-                    this.#createError(
-                      normalizationResult.error,
-                      actionDef,
-                      actor.id,
-                      trace
-                    )
-                  );
-                  continue;
-                }
-
-                const params = {
-                  ...normalizationResult.params,
-                  isMultiTarget: true,
-                };
-
-                formattedActions.push({
-                  id: actionDef.id,
-                  name: actionDef.name,
-                  command,
-                  description: actionDef.description || '',
-                  params,
-                  visual: actionDef.visual || null,
-                });
-              }
-            } else if (targetContexts.length > 0) {
-              const fallbackResult = this.#fallbackFormatter.formatWithFallback(
-                {
-                  actionDefinition: actionDef,
-                  targetContext: targetContexts[0],
-                  formatterOptions,
-                  targetDefinitions: actionDef.targets,
-                  resolvedTargets: actionSpecificTargets,
-                }
-              );
-
-              if (fallbackResult.ok) {
-                formattedActions.push({
-                  id: actionDef.id,
-                  name: actionDef.name,
-                  command: fallbackResult.value,
-                  description: actionDef.description || '',
-                  params: { targetId: targetContexts[0].entityId },
-                  visual: actionDef.visual || null,
-                });
-                fallbackInvocations++;
-              } else {
-                errors.push(
-                  this.#createError(
-                    fallbackResult,
-                    actionDef,
-                    actor.id,
-                    trace,
-                    targetContexts[0].entityId
-                  )
-                );
-              }
-            }
-          } else if (targetContexts.length > 0) {
-            const fallbackResult = this.#fallbackFormatter.formatWithFallback({
-              actionDefinition: actionDef,
-              targetContext: targetContexts[0],
-              formatterOptions,
-              targetDefinitions: actionDef.targets,
-              resolvedTargets: actionSpecificTargets,
-            });
-
-            if (fallbackResult.ok) {
-              formattedActions.push({
-                id: actionDef.id,
-                name: actionDef.name,
-                command: fallbackResult.value,
-                description: actionDef.description || '',
-                params: { targetId: targetContexts[0].entityId },
-                visual: actionDef.visual || null,
-              });
-              fallbackInvocations++;
-            } else {
-              errors.push(
-                this.#createError(
-                  fallbackResult,
-                  actionDef,
-                  actor.id,
-                  trace,
-                  targetContexts[0].entityId
-                )
-              );
-            }
-          }
-        } else {
           this.#logger.warn(
             `Skipping multi-target action '${actionDef.id}' in legacy formatting path - no resolved targets available for proper formatting`
           );
+          continue;
+        }
+
+        if (this.#commandFormatter.formatMultiTarget) {
+          const formatResult = this.#commandFormatter.formatMultiTarget(
+            actionDef,
+            actionSpecificTargets,
+            this.#entityManager,
+            formatterOptions,
+            {
+              displayNameFn: this.#getEntityDisplayNameFn,
+              targetDefinitions: actionDef.targets,
+            }
+          );
+
+          if (formatResult.ok) {
+            const commands = Array.isArray(formatResult.value)
+              ? formatResult.value
+              : [formatResult.value];
+
+            for (const commandData of commands) {
+              const command =
+                typeof commandData === 'string'
+                  ? commandData
+                  : commandData.command;
+              const specificTargets =
+                typeof commandData === 'object' && commandData.targets
+                  ? commandData.targets
+                  : actionSpecificTargets;
+
+              const normalizationResult =
+                this.#targetNormalizationService.normalize({
+                  resolvedTargets: specificTargets,
+                  isMultiTarget: true,
+                });
+
+              if (normalizationResult.error) {
+                errors.push(
+                  this.#createError(
+                    normalizationResult.error,
+                    actionDef,
+                    actor.id,
+                    trace
+                  )
+                );
+                continue;
+              }
+
+              const params = {
+                ...normalizationResult.params,
+                isMultiTarget: true,
+              };
+
+              formattedActions.push({
+                id: actionDef.id,
+                name: actionDef.name,
+                command,
+                description: actionDef.description || '',
+                params,
+                visual: actionDef.visual || null,
+              });
+            }
+          } else if (targetContexts.length > 0) {
+            fallbackInvocations += this.#handleFallback({
+              formattedActions,
+              errors,
+              processingStats: undefined,
+              targetContexts,
+              actionDef,
+              formatterOptions,
+              actionSpecificTargets,
+              actorId: actor.id,
+              trace,
+              allowMissingTargetId: false,
+            });
+          }
+        } else if (targetContexts.length > 0) {
+          fallbackInvocations += this.#handleFallback({
+            formattedActions,
+            errors,
+            processingStats: undefined,
+            targetContexts,
+            actionDef,
+            formatterOptions,
+            actionSpecificTargets,
+            actorId: actor.id,
+            trace,
+            allowMissingTargetId: false,
+          });
         }
       } else {
         for (const targetContext of targetContexts) {
@@ -676,6 +598,77 @@ export class LegacyStrategy {
         errors,
       }),
     };
+  }
+
+  /**
+   * @param {object} params
+   * @param {Array} params.formattedActions
+   * @param {Array} params.errors
+   * @param {object|undefined} params.processingStats
+   * @param {ActionTargetContext[]} params.targetContexts
+   * @param {ActionDefinition} params.actionDef
+   * @param {object} params.formatterOptions
+   * @param {Record<string, Array>} params.actionSpecificTargets
+   * @param {string} params.actorId
+   * @param {object|undefined} params.trace
+   * @param {boolean} params.allowMissingTargetId
+   * @returns {number}
+   * @description Applies fallback formatting logic and returns invocation count.
+   */
+  #handleFallback({
+    formattedActions,
+    errors,
+    processingStats,
+    targetContexts,
+    actionDef,
+    formatterOptions,
+    actionSpecificTargets,
+    actorId,
+    trace,
+    allowMissingTargetId,
+  }) {
+    const fallbackResult = this.#fallbackFormatter.formatWithFallback({
+      actionDefinition: actionDef,
+      targetContext: targetContexts[0],
+      formatterOptions,
+      targetDefinitions: actionDef.targets,
+      resolvedTargets: actionSpecificTargets,
+    });
+
+    if (fallbackResult.ok) {
+      const targetId = targetContexts[0]?.entityId;
+      const params =
+        allowMissingTargetId && !targetId ? {} : { targetId };
+
+      formattedActions.push({
+        id: actionDef.id,
+        name: actionDef.name,
+        command: fallbackResult.value,
+        description: actionDef.description || '',
+        params,
+        visual: actionDef.visual || null,
+      });
+      this.#incrementStat(processingStats, 'successful');
+      this.#incrementStat(processingStats, 'legacy');
+      return 1;
+    }
+
+    this.#incrementStat(processingStats, 'failed');
+    const resolvedTargetId = allowMissingTargetId
+      ? targetContexts[0]?.entityId || null
+      : targetContexts[0]?.entityId;
+
+    errors.push(
+      this.#createError(
+        fallbackResult,
+        actionDef,
+        actorId,
+        trace,
+        resolvedTargetId
+      )
+    );
+
+    return 0;
   }
 
   /**
