@@ -267,6 +267,36 @@ describe('ActionAwareStructuredTrace - Multi-Target Support', () => {
       );
     });
 
+    it('should include enhanced scope evaluation data when provided', () => {
+      const captureDataSpy = jest.spyOn(trace, 'captureActionData');
+
+      const enhancedData = {
+        entityDiscovery: [{ componentId: 'component-1' }],
+        filterEvaluations: [{ itemId: 'seat-1', filterPassed: true }],
+        resolverDetails: { resolver: 'contextResolver' },
+      };
+
+      trace.captureScopeEvaluation(
+        'test:action',
+        'primary',
+        {
+          scope: 'actor.followers[]',
+          context: 'actor',
+        },
+        enhancedData
+      );
+
+      expect(captureDataSpy).toHaveBeenCalledWith(
+        'scope_evaluation',
+        'test:action',
+        expect.objectContaining({
+          entityDiscovery: enhancedData.entityDiscovery,
+          filterEvaluations: enhancedData.filterEvaluations,
+          resolverDetails: enhancedData.resolverDetails,
+        })
+      );
+    });
+
     it('should not capture for non-traced actions', async () => {
       trace = await testBed.createActionAwareTrace({
         actorId: 'test-actor',

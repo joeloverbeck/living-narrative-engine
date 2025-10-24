@@ -188,6 +188,38 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
       // Should have logged errors but not captured invalid data
       expect(trace.getActionTrace('movement:go')).toBeNull();
     });
+
+    it('should log and recover when verbosity filtering fails', async () => {
+      const trace = await testBed.createActionAwareTrace({
+        tracedActions: ['movement:go'],
+        verbosity: 'minimal',
+      });
+
+      testBed.mockLogger.error.mockClear();
+
+      const problematicData = {};
+      Object.defineProperty(problematicData, 'passed', {
+        get() {
+          throw new Error('Cannot access passed flag');
+        },
+      });
+
+      expect(() =>
+        trace.captureActionData('diagnostic_stage', 'movement:go', problematicData)
+      ).not.toThrow();
+
+      const actionTrace = trace.getActionTrace('movement:go');
+      expect(actionTrace).toBeDefined();
+      expect(actionTrace.stages.diagnostic_stage).toBeDefined();
+      expect(actionTrace.stages.diagnostic_stage.data.error).toBe(
+        'Data filtering failed'
+      );
+
+      expect(testBed.mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Error filtering data for verbosity'),
+        expect.any(Error)
+      );
+    });
   });
 
   describe('Verbosity Filtering', () => {
@@ -1197,6 +1229,24 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
 
       // Should skip verbose data when exporting at minimal level
       expect(exported['movement:go'].stages.stage2).toBeUndefined();
+    });
+
+    it('should omit stages outside the requested categories', async () => {
+      const trace = await testBed.createActionAwareTrace({
+        tracedActions: ['movement:go'],
+        verbosity: 'standard',
+      });
+
+      trace.captureActionData('component_filtering', 'movement:go', {
+        detail: 'business',
+      });
+      trace.captureActionData('timing_data', 'movement:go', { detail: 'perf' });
+
+      const exported = trace.exportFilteredTraceData('verbose', ['performance']);
+      const stages = exported['movement:go'].stages;
+
+      expect(stages.timing_data).toBeDefined();
+      expect(stages.component_filtering).toBeUndefined();
     });
   });
 
