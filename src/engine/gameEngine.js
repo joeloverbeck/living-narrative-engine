@@ -330,16 +330,17 @@ class GameEngine {
 
           if (initResult.success) {
             await this.#finalizeInitializationSuccess(worldName);
-          } else {
-            initError =
-              initResult.error ||
-              new Error('Unknown failure from InitializationService.');
-            this.#logger.warn(
-              `GameEngine: InitializationService reported failure for "${worldName}".`
-            );
-            await this.#handleNewGameFailure(initError, worldName);
-            throw initError;
+            return initResult;
           }
+
+          initError =
+            initResult.error ||
+            new Error('Unknown failure from InitializationService.');
+          this.#logger.warn(
+            `GameEngine: InitializationService reported failure for "${worldName}".`
+          );
+          await this.#handleNewGameFailure(initError, worldName);
+          throw initError;
         } catch (error) {
           await this.#handleInitializationError(error, initError, worldName);
         }
