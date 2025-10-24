@@ -3,6 +3,7 @@ import {
   expectDispatchSequence,
   expectSingleDispatch,
   buildSaveDispatches,
+  buildFailedSaveDispatches,
   buildStopDispatches,
   buildStartDispatches,
   buildLoadSuccessDispatches,
@@ -116,8 +117,8 @@ describe('dispatchTestUtils', () => {
   });
 
   describe('buildSaveDispatches', () => {
-    it('builds success dispatch sequence with path', () => {
-      const result = buildSaveDispatches('Save1', 'path/to.sav');
+    it('builds success dispatch sequence without requiring a file path', () => {
+      const result = buildSaveDispatches('Save1');
       expect(result).toEqual([
         [
           ENGINE_OPERATION_IN_PROGRESS_UI,
@@ -128,7 +129,7 @@ describe('dispatchTestUtils', () => {
         ],
         [
           GAME_SAVED_ID,
-          { saveName: 'Save1', path: 'path/to.sav', type: 'manual' },
+          { saveName: 'Save1', path: undefined, type: 'manual' },
         ],
         [
           ENGINE_READY_UI,
@@ -140,14 +141,34 @@ describe('dispatchTestUtils', () => {
       ]);
     });
 
-    it('omits GAME_SAVED_ID when path not provided', () => {
-      const result = buildSaveDispatches('Save1');
+    it('includes provided file path in saved event payload', () => {
+      const result = buildSaveDispatches('Save1', 'path/to.sav');
+      expect(result[1]).toEqual([
+        GAME_SAVED_ID,
+        { saveName: 'Save1', path: 'path/to.sav', type: 'manual' },
+      ]);
+    });
+  });
+
+  describe('buildFailedSaveDispatches', () => {
+    it('builds failure dispatch sequence with formatted error', () => {
+      const result = buildFailedSaveDispatches(
+        'Save1',
+        'Unexpected error during save: disk full'
+      );
       expect(result).toEqual([
         [
           ENGINE_OPERATION_IN_PROGRESS_UI,
           {
             titleMessage: 'Saving...',
             inputDisabledMessage: 'Saving game "Save1"...',
+          },
+        ],
+        [
+          ENGINE_OPERATION_FAILED_UI,
+          {
+            errorMessage: 'Failed to save game: Unexpected error during save: disk full',
+            errorTitle: 'Save Failed',
           },
         ],
         [

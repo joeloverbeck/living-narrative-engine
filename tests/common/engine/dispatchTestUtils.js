@@ -48,15 +48,15 @@ export function expectDispatchSequence(mock, ...events) {
 
 /**
  * Builds the dispatch sequence emitted during a manual save.
- * When `filePath` is omitted, the GAME_SAVED_ID event is excluded, mimicking
- * a failure scenario.
+ * Always includes the GAME_SAVED_ID event; use
+ * {@link buildFailedSaveDispatches} for failure sequences.
  *
  * @param {string} saveName - Name of the save file.
  * @param {string} [filePath] - Optional saved file path.
  * @returns {Array<[string, any]>} Dispatch call sequence.
  */
 export function buildSaveDispatches(saveName, filePath) {
-  const sequence = [
+  return [
     [
       ENGINE_OPERATION_IN_PROGRESS_UI,
       {
@@ -64,24 +64,44 @@ export function buildSaveDispatches(saveName, filePath) {
         inputDisabledMessage: `Saving game "${saveName}"...`,
       },
     ],
-  ];
-
-  if (filePath) {
-    sequence.push([
+    [
       GAME_SAVED_ID,
       { saveName, path: filePath, type: 'manual' },
-    ]);
-  }
+    ],
+    [
+      ENGINE_READY_UI,
+      {
+        activeWorld: DEFAULT_ACTIVE_WORLD_FOR_SAVE,
+        message: SAVE_OPERATION_FINISHED_MESSAGE,
+      },
+    ],
+  ];
+}
 
-  sequence.push([
-    ENGINE_READY_UI,
-    {
-      activeWorld: DEFAULT_ACTIVE_WORLD_FOR_SAVE,
-      message: SAVE_OPERATION_FINISHED_MESSAGE,
-    },
-  ]);
-
-  return sequence;
+export function buildFailedSaveDispatches(saveName, errorMessage) {
+  return [
+    [
+      ENGINE_OPERATION_IN_PROGRESS_UI,
+      {
+        titleMessage: 'Saving...',
+        inputDisabledMessage: `Saving game "${saveName}"...`,
+      },
+    ],
+    [
+      ENGINE_OPERATION_FAILED_UI,
+      {
+        errorMessage: `Failed to save game: ${errorMessage}`,
+        errorTitle: 'Save Failed',
+      },
+    ],
+    [
+      ENGINE_READY_UI,
+      {
+        activeWorld: DEFAULT_ACTIVE_WORLD_FOR_SAVE,
+        message: SAVE_OPERATION_FINISHED_MESSAGE,
+      },
+    ],
+  ];
 }
 
 /**

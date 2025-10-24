@@ -9,6 +9,7 @@ import {
 import {
   expectDispatchSequence,
   buildSaveDispatches,
+  buildFailedSaveDispatches,
   buildLoadFailureDispatches,
 } from '../../common/engine/dispatchTestUtils.js';
 import {
@@ -166,10 +167,12 @@ describe('PersistenceCoordinator', () => {
       success: false,
       error: 'Unexpected error during save: Save operation failed',
     });
-    // Should still dispatch UI events even when save fails
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      ENGINE_OPERATION_IN_PROGRESS_UI,
-      expect.any(Object)
+    expectDispatchSequence(
+      dispatcher.dispatch,
+      ...buildFailedSaveDispatches(
+        DEFAULT_SAVE_NAME,
+        'Unexpected error during save: Save operation failed'
+      )
     );
   });
 
@@ -184,14 +187,9 @@ describe('PersistenceCoordinator', () => {
     const result = await coordinator.triggerManualSave(DEFAULT_SAVE_NAME);
 
     expect(result).toEqual({ success: false, error: errorMessage });
-    // Verify UI dispatches for failed saves
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      ENGINE_OPERATION_IN_PROGRESS_UI,
-      expect.any(Object)
-    );
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      ENGINE_READY_UI,
-      expect.any(Object)
+    expectDispatchSequence(
+      dispatcher.dispatch,
+      ...buildFailedSaveDispatches(DEFAULT_SAVE_NAME, errorMessage)
     );
   });
 
@@ -213,9 +211,12 @@ describe('PersistenceCoordinator', () => {
         receivedValue: undefined,
       }
     );
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      ENGINE_READY_UI,
-      expect.objectContaining({ message: SAVE_OPERATION_FINISHED_MESSAGE })
+    expectDispatchSequence(
+      dispatcher.dispatch,
+      ...buildFailedSaveDispatches(
+        DEFAULT_SAVE_NAME,
+        'Persistence service returned an invalid save result.'
+      )
     );
   });
 
