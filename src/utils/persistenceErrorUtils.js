@@ -54,7 +54,10 @@ export function executePersistenceOp({
         const message =
           userMessage ||
           (error instanceof Error ? error.message : String(error));
-        return createPersistenceFailure(errorCode, message);
+        return {
+          ...createPersistenceFailure(errorCode, message),
+          userFriendlyError: userMessage,
+        };
       }
     );
   }
