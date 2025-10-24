@@ -131,6 +131,51 @@ class PersistenceCoordinator {
   }
 
   /**
+   * Formats persistence-layer errors so log entries remain readable.
+   *
+   * @private
+   * @description Normalizes persistence-layer errors for log output.
+   * @param {unknown} error - Error value returned by the persistence service.
+   * @returns {string} Readable description of the error.
+   */
+  #formatSaveError(error) {
+    if (error instanceof Error) {
+      return error.message || 'Unknown error.';
+    }
+
+    if (typeof error === 'string') {
+      const trimmed = error.trim();
+      return trimmed || 'Unknown error.';
+    }
+
+    if (typeof error === 'number' || typeof error === 'boolean') {
+      return String(error);
+    }
+
+    if (error && typeof error === 'object') {
+      const message =
+        typeof error.message === 'string' ? error.message.trim() : '';
+      if (message) {
+        return message;
+      }
+
+      try {
+        const serialized = JSON.stringify(error);
+        if (serialized && serialized !== '{}' && serialized !== '[]') {
+          return serialized;
+        }
+      } catch (serializationError) {
+        this.#logger.debug(
+          'GameEngine.triggerManualSave: Failed to serialize persistence error for logging.',
+          serializationError
+        );
+      }
+    }
+
+    return 'Unknown error.';
+  }
+
+  /**
    * Dispatches UI events corresponding to the save result and final ready state.
    *
    * @private
@@ -155,8 +200,9 @@ class PersistenceCoordinator {
         `GameEngine.triggerManualSave: Save successful. Name: "${saveName}".`
       );
     } else {
+      const formattedError = this.#formatSaveError(saveResult.error);
       this.#logger.error(
-        `GameEngine.triggerManualSave: Save failed. Name: "${saveName}". Reported error: ${saveResult.error}`
+        `GameEngine.triggerManualSave: Save failed. Name: "${saveName}". Reported error: ${formattedError}`
       );
       this.#logger.debug(
         `GameEngine.triggerManualSave: Save failed. Name: "${saveName}".`
