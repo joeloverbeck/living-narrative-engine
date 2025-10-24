@@ -402,6 +402,11 @@ class GameEngine {
         );
       }
 
+      this.#resetCoreGameState();
+      this.#logger.debug(
+        'GameEngine.stop: Core game state cleared after stop.'
+      );
+
       this.#resetEngineState();
       this.#logger.debug(
         'GameEngine.stop: Engine fully stopped and state reset.'

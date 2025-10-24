@@ -287,6 +287,19 @@ describeEngineSuite('GameEngine', (context) => {
       );
     });
 
+    it('should clear entity manager and reset playtime tracker when stopping', async () => {
+      const entityManager = context.bed.getEntityManager();
+      const playtimeTracker = context.bed.getPlaytimeTracker();
+
+      entityManager.clearAll.mockClear();
+      playtimeTracker.reset.mockClear();
+
+      await context.engine.stop();
+
+      expect(entityManager.clearAll).toHaveBeenCalledTimes(1);
+      expect(playtimeTracker.reset).toHaveBeenCalledTimes(1);
+    });
+
     it('should not take action when engine is already stopped', async () => {
       // Stop the engine first
       await context.engine.stop();
