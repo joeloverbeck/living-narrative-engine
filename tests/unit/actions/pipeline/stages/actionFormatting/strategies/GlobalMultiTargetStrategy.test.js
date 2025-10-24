@@ -136,6 +136,19 @@ describe('GlobalMultiTargetStrategy', () => {
     );
   });
 
+  it('returns immediately when no task is provided', async () => {
+    await strategy.format({
+      task: null,
+      instrumentation,
+      accumulator,
+      createError,
+    });
+
+    expect(commandFormatter.formatMultiTarget).not.toHaveBeenCalled();
+    expect(instrumentation.actionStarted).not.toHaveBeenCalled();
+    expect(accumulator.getFormattedActions()).toHaveLength(0);
+  });
+
   it('falls back to legacy formatting when formatter is unavailable', async () => {
     commandFormatter.formatMultiTarget = undefined;
     fallbackFormatter.formatWithFallback.mockReturnValue({
@@ -186,5 +199,80 @@ describe('GlobalMultiTargetStrategy', () => {
     expect(accumulator.getFormattedActions()).toHaveLength(0);
     expect(accumulator.getErrors()).toHaveLength(1);
     expect(instrumentation.actionFailed).toHaveBeenCalled();
+  });
+
+  it('handles mixed command payloads with per-command normalization errors', async () => {
+    const baseNormalization = {
+      error: null,
+      params: {
+        isMultiTarget: true,
+        targetId: 'target-1',
+        targetIds: { primary: ['target-1'] },
+      },
+      primaryTargetContext: { entityId: 'target-1' },
+    };
+
+    const erroredNormalization = {
+      error: { code: 'TARGETS_INVALID', message: 'bad targets' },
+      params: undefined,
+      primaryTargetContext: { entityId: 'target-3' },
+    };
+
+    const normalizeSpy = jest
+      .spyOn(normalizationService, 'normalize')
+      .mockReturnValueOnce(baseNormalization)
+      .mockReturnValueOnce(erroredNormalization);
+
+    commandFormatter.formatMultiTarget.mockReturnValue({
+      ok: true,
+      value: [
+        'first-command',
+        { command: 'second-command', targets: { primary: [{ id: 'target-3' }] } },
+      ],
+    });
+
+    const task = buildTask({ formatterOptions: undefined });
+
+    await strategy.format({
+      task,
+      instrumentation,
+      accumulator,
+      createError,
+      trace: { id: 'trace-1' },
+    });
+
+    expect(commandFormatter.formatMultiTarget).toHaveBeenCalledWith(
+      task.actionDef,
+      task.resolvedTargets,
+      expect.any(Object),
+      expect.objectContaining({ debug: true, logger: expect.any(Object) }),
+      expect.objectContaining({ targetDefinitions: task.targetDefinitions })
+    );
+
+    expect(accumulator.getFormattedActions()).toHaveLength(1);
+    expect(accumulator.getErrors()).toHaveLength(1);
+
+    const summary = accumulator.getActionSummary(task.actionDef.id);
+    expect(summary.successes).toBe(1);
+    expect(summary.failures).toBe(1);
+
+    expect(instrumentation.actionFailed).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          commandCount: 2,
+          successCount: 1,
+          failureCount: 1,
+          fallbackUsed: false,
+        }),
+      })
+    );
+
+    const errorCall = createError.mock.calls.find(
+      ([context]) => context.errorOrResult === erroredNormalization.error
+    );
+    expect(errorCall).toBeDefined();
+    expect(errorCall[0].targetId).toBe('target-3');
+
+    normalizeSpy.mockRestore();
   });
 });
