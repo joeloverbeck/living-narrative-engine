@@ -81,7 +81,7 @@ function padTwo(num) {
 export function formatPlaytime(totalSeconds) {
   if (
     typeof totalSeconds !== 'number' ||
-    Number.isNaN(totalSeconds) ||
+    !Number.isFinite(totalSeconds) ||
     totalSeconds < 0
   ) {
     return 'N/A';
