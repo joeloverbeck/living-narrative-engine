@@ -219,7 +219,13 @@ describe('main bootstrap integration', () => {
 
     expect(mockDisplayFatalStartupError).toHaveBeenCalledTimes(1);
     const [uiRefs, details] = mockDisplayFatalStartupError.mock.calls[0];
-    expect(uiRefs).toBeUndefined();
+    expect(uiRefs).toMatchObject({
+      outputDiv: document.getElementById('outputDiv'),
+      errorDiv: document.getElementById('error-output'),
+      inputElement: document.getElementById('speech-input'),
+      titleElement: document.querySelector('h1'),
+      document,
+    });
     expect(details).toMatchObject({
       userMessage:
         'Critical: GameEngine not initialized before attempting Start Game stage.',
