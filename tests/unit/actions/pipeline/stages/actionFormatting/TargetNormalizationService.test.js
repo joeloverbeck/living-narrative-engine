@@ -16,6 +16,14 @@ describe('TargetNormalizationService', () => {
     service = new TargetNormalizationService({ logger });
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('can be constructed without dependencies', () => {
+    expect(() => new TargetNormalizationService()).not.toThrow();
+  });
+
   it('normalizes multi-target maps into target ids and params', () => {
     const resolvedTargets = {
       primary: [
@@ -85,6 +93,43 @@ describe('TargetNormalizationService', () => {
     });
   });
 
+  it('falls back to default context metadata when no matching context exists', () => {
+    const extractionResult = TargetExtractionResult.fromResolvedParameters(
+      {
+        targetIds: { primary: ['target-hero'] },
+        isMultiTarget: true,
+      },
+      logger
+    );
+
+    const result = service.normalize({
+      resolvedTargets: extractionResult,
+      targetContexts: [{ entityId: 'someone-else', type: 'entity' }],
+    });
+
+    expect(result.error).toBeNull();
+    expect(result.targetIds).toEqual({ primary: ['target-hero'] });
+    expect(result.primaryTargetContext).toEqual({
+      type: 'entity',
+      entityId: 'target-hero',
+      displayName: null,
+    });
+  });
+
+  it('skips extraction placeholders that do not resolve to entity identifiers', () => {
+    const extractionResult = TargetExtractionResult.createEmpty(logger);
+    jest.spyOn(extractionResult, 'getTargetNames').mockReturnValue(['primary']);
+    jest
+      .spyOn(extractionResult, 'getEntityIdByPlaceholder')
+      .mockReturnValue(null);
+
+    const result = service.normalize({ resolvedTargets: extractionResult });
+
+    expect(result.error).toBeNull();
+    expect(result.targetIds).toEqual({});
+    expect(result.params).toEqual({});
+  });
+
   it('derives context information from legacy target contexts', () => {
     const result = service.normalize({
       resolvedTargets: null,
@@ -127,6 +172,18 @@ describe('TargetNormalizationService', () => {
     expect(result.primaryTargetContext).toBeNull();
   });
 
+  it('includes the action identifier when reporting missing targets', () => {
+    const result = service.normalize({
+      resolvedTargets: null,
+      actionId: 'attack-action',
+    });
+
+    expect(result.error).toEqual({
+      code: 'TARGETS_MISSING',
+      message: "No target information supplied for action 'attack-action'.",
+    });
+  });
+
   it('warns and reports error when resolved targets contain malformed entries', () => {
     const resolvedTargets = {
       primary: [{}],
@@ -144,5 +201,107 @@ describe('TargetNormalizationService', () => {
     });
     expect(logger.warn).not.toHaveBeenCalled();
     expect(result.targetIds).toEqual({});
+  });
+
+  it('warns about specific placeholders when some targets are malformed', () => {
+    const resolvedTargets = {
+      primary: [{ id: 42, displayName: 'Invalid target type' }],
+      support: [{ id: 'support-1', displayName: 'Support Ally' }],
+    };
+
+    const result = service.normalize({ resolvedTargets });
+
+    expect(result.error).toBeNull();
+    expect(logger.warn).toHaveBeenCalledWith(
+      'Invalid target entries detected for placeholders: primary'
+    );
+    expect(result.targetIds).toEqual({ support: ['support-1'] });
+    expect(result.primaryTargetContext).toBeNull();
+    expect(result.params).toEqual({ targetIds: { support: ['support-1'] } });
+    expect(result.targetExtractionResult).toBeInstanceOf(TargetExtractionResult);
+  });
+
+  it('ignores placeholders that provide no targets while preserving valid entries', () => {
+    const resolvedTargets = {
+      primary: [],
+      support: [{ id: 'support-1', displayName: 'Support Ally' }],
+    };
+
+    const result = service.normalize({ resolvedTargets });
+
+    expect(result.error).toBeNull();
+    expect(logger.warn).not.toHaveBeenCalled();
+    expect(result.targetIds).toEqual({ support: ['support-1'] });
+    expect(result.primaryTargetContext).toBeNull();
+    expect(result.params).toEqual({
+      targetIds: { support: ['support-1'] },
+    });
+  });
+
+  it('derives a targetId when only non-primary placeholder carries a valid target', () => {
+    const resolvedTargets = {
+      auxiliary: [{ id: 'aux-9', displayName: 'Auxiliary Target' }],
+    };
+
+    const result = service.normalize({ resolvedTargets });
+
+    expect(result.error).toBeNull();
+    expect(result.targetIds).toEqual({ auxiliary: ['aux-9'] });
+    expect(result.primaryTargetContext).toEqual({
+      type: 'entity',
+      entityId: 'aux-9',
+      displayName: 'Auxiliary Target',
+    });
+    expect(result.params).toEqual({
+      targetIds: { auxiliary: ['aux-9'] },
+      targetId: 'aux-9',
+    });
+  });
+
+  it('handles extraction results without a primary target gracefully', () => {
+    const extractionResult = TargetExtractionResult.createEmpty(logger);
+
+    const result = service.normalize({ resolvedTargets: extractionResult });
+
+    expect(result.error).toBeNull();
+    expect(result.targetExtractionResult).toBe(extractionResult);
+    expect(result.targetIds).toEqual({});
+    expect(result.primaryTargetContext).toBeNull();
+    expect(result.params).toEqual({});
+  });
+
+  it('derives primary context from resolved targets that omit display names', () => {
+    const resolvedTargets = {
+      primary: [{ id: 'mystery-1' }],
+    };
+
+    const result = service.normalize({ resolvedTargets });
+
+    expect(result.error).toBeNull();
+    expect(result.primaryTargetContext).toEqual({
+      type: 'entity',
+      entityId: 'mystery-1',
+      displayName: null,
+    });
+  });
+
+  it('builds legacy context payloads when metadata lacks display names', () => {
+    const result = service.normalize({
+      resolvedTargets: null,
+      targetContexts: [
+        {
+          entityId: 'legacy-without-name',
+          type: 'entity',
+        },
+      ],
+    });
+
+    expect(result.error).toBeNull();
+    expect(result.primaryTargetContext).toEqual({
+      type: 'entity',
+      entityId: 'legacy-without-name',
+      displayName: null,
+    });
+    expect(result.params).toEqual({ targetId: 'legacy-without-name' });
   });
 });

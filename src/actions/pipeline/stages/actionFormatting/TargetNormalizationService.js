@@ -308,13 +308,11 @@ export class TargetNormalizationService {
    * @returns {ActionTargetContext|null} Primary target context or null when none found
    */
   #resolvePrimaryFromResolvedTargets(resolvedTargets) {
-    if (!resolvedTargets || typeof resolvedTargets !== 'object') {
-      return null;
-    }
+    const entries = Object.entries(resolvedTargets || {});
 
-    const primaryList = Array.isArray(resolvedTargets.primary)
+    const primaryList = Array.isArray(resolvedTargets?.primary)
       ? resolvedTargets.primary
-      : resolvedTargets[Object.keys(resolvedTargets)[0]];
+      : entries[0]?.[1];
 
     if (!Array.isArray(primaryList) || primaryList.length === 0) {
       return null;
@@ -339,11 +337,7 @@ export class TargetNormalizationService {
    * @returns {ActionTargetContext|null} Primary context or null when missing
    */
   #resolvePrimaryFromContexts(targetContexts) {
-    if (!Array.isArray(targetContexts) || targetContexts.length === 0) {
-      return null;
-    }
-
-    const primaryContext = targetContexts[0];
+    const primaryContext = targetContexts?.[0];
     if (!primaryContext || !primaryContext.entityId) {
       return null;
     }
