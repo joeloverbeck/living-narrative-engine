@@ -241,7 +241,14 @@ export async function beginGame(showLoadUI = false) {
       const errorObj = new Error(errMsg);
       (logger || console).error(`main.js: ${errMsg}`);
       displayFatalStartupError(
-        uiElements,
+        uiElements || {
+          // Provide default UI elements if uiElements is undefined
+          outputDiv: document.getElementById('outputDiv'),
+          errorDiv: document.getElementById('error-output'),
+          titleElement: document.querySelector('h1'),
+          inputElement: document.getElementById('speech-input'),
+          document: document,
+        },
         {
           userMessage: errMsg,
           consoleMessage: errMsg,
@@ -276,7 +283,14 @@ export async function beginGame(showLoadUI = false) {
     }
   } catch (error) {
     displayFatalStartupError(
-      uiElements,
+      uiElements || {
+        // Provide default UI elements if uiElements is undefined
+        outputDiv: document.getElementById('outputDiv'),
+        errorDiv: document.getElementById('error-output'),
+        titleElement: document.querySelector('h1'),
+        inputElement: document.getElementById('speech-input'),
+        document: document,
+      },
       {
         userMessage: `Application failed to start due to a critical error: ${error.message}`,
         consoleMessage: `Critical error during application bootstrap in phase: ${currentPhaseForError}.`,
