@@ -573,101 +573,6 @@ describe('JsonTraceFormatter', () => {
       expect(stage.data.metadata.key).toBe('value');
     });
 
-    it('should not include eventPayload with non-verbose verbosity', () => {
-      mockFilter.getVerbosityLevel.mockReturnValue('standard');
-      mockFilter.getInclusionConfig.mockReturnValue({
-        componentData: true,
-      });
-
-      const trace = {
-        constructor: { name: 'ActionExecutionTrace' },
-        actionId: 'test:action',
-        actorId: 'test-actor',
-        execution: {
-          startTime: Date.now(),
-          eventPayload: {
-            type: 'TEST_EVENT',
-            data: 'some data',
-            entityCache: { entity1: 'cached' },
-            componentData: { component1: 'data' },
-          },
-        },
-      };
-
-      const result = JSON.parse(formatter.format(trace));
-
-      // eventPayload should not be included unless verbosity is 'verbose'
-      expect(result.eventPayload).toBeUndefined();
-    });
-
-    it('should handle payload sanitization in verbose mode with cleanup', () => {
-      mockFilter.getVerbosityLevel.mockReturnValue('verbose');
-      mockFilter.getInclusionConfig.mockReturnValue({
-        componentData: true,
-      });
-
-      const trace = {
-        constructor: { name: 'ActionExecutionTrace' },
-        actionId: 'test:action',
-        actorId: 'test-actor',
-        execution: {
-          startTime: Date.now(),
-          eventPayload: {
-            type: 'TEST_EVENT',
-            data: 'some data',
-            entityCache: { entity1: 'cached' },
-            componentData: { component1: 'data' },
-          },
-        },
-      };
-
-      const result = JSON.parse(formatter.format(trace));
-
-      expect(result.eventPayload).toBeDefined();
-      expect(result.eventPayload.type).toBe('TEST_EVENT');
-      expect(result.eventPayload.data).toBe('some data');
-      // In verbose mode, entityCache and componentData should be preserved
-      expect(result.eventPayload.entityCache).toBeDefined();
-      expect(result.eventPayload.componentData).toBeDefined();
-    });
-
-    it('should sanitize payload with minimal verbosity returning only type', () => {
-      // Create a test that directly tests the sanitizePayload method behavior
-      const testPayload = {
-        type: 'TEST_EVENT',
-        data: 'some data',
-        entityCache: { entity1: 'cached' },
-        componentData: { component1: 'data' },
-      };
-
-      // Test minimal verbosity by mocking the internal method call
-      const originalGetVerbosity = mockFilter.getVerbosityLevel;
-
-      // We need to test the sanitizePayload method behavior when verbosity is minimal
-      // This tests line 470 in the source code
-      mockFilter.getVerbosityLevel.mockReturnValue('minimal');
-
-      // Create a simple formatter instance to test with
-      const testFormatter = new JsonTraceFormatter({
-        logger: mockLogger,
-        actionTraceFilter: mockFilter,
-      });
-
-      // The sanitizePayload method is private, but we can test its behavior
-      // by creating an object that would use it
-      const testObject = {
-        payload: testPayload,
-      };
-
-      const result = JSON.parse(testFormatter.format(testObject));
-
-      // The sanitized object should be in the generic trace format
-      expect(result.data.payload).toBeDefined();
-
-      // Restore mock
-      mockFilter.getVerbosityLevel = originalGetVerbosity;
-    });
-
     it('should handle error formatting with stack trace in detailed verbosity', () => {
       mockFilter.getVerbosityLevel.mockReturnValue('detailed');
 
@@ -871,13 +776,9 @@ describe('JsonTraceFormatter', () => {
       expect(result.spans).toBeUndefined(); // spans won't be included in minimal verbosity for pipeline
     });
 
-    it('should handle eventPayload sanitization with minimal verbosity', () => {
-      // Test the sanitizePayload method directly by using verbose mode
-      // but creating a scenario where minimal sanitization happens internally
-      mockFilter.getVerbosityLevel.mockReturnValue('verbose');
-      mockFilter.getInclusionConfig.mockReturnValue({
-        componentData: true,
-      });
+    it('should include minimal event payload data when verbosity is minimal', () => {
+      mockFilter.getVerbosityLevel.mockReturnValue('minimal');
+      mockFilter.getInclusionConfig.mockReturnValue({ componentData: true });
 
       const trace = {
         constructor: { name: 'ActionExecutionTrace' },
@@ -894,68 +795,99 @@ describe('JsonTraceFormatter', () => {
         },
       };
 
-      // This should include eventPayload since verbosity is verbose and componentData is true
       const result = JSON.parse(formatter.format(trace));
 
-      expect(result.eventPayload).toBeDefined();
-      expect(result.eventPayload.type).toBe('TEST_EVENT');
-      // In verbose mode, all data should be included
-      expect(result.eventPayload.data).toBe('some data');
-      expect(result.eventPayload.entityCache).toBeDefined();
-      expect(result.eventPayload.componentData).toBeDefined();
+      expect(result.eventPayload).toEqual({ type: 'TEST_EVENT' });
     });
 
-    it('should test sanitizePayload method behavior with non-verbose cleanup', () => {
-      // Since sanitizePayload is private, we'll test it indirectly by triggering
-      // the code paths that exercise lines 476-477 (delete statements)
-      // We can't easily test this directly since eventPayload only appears
-      // in verbose mode with componentData: true
+    it('should strip heavy payload fields for non-verbose verbosity levels', () => {
+      mockFilter.getVerbosityLevel.mockReturnValue('standard');
+      mockFilter.getInclusionConfig.mockReturnValue({ componentData: true });
 
-      const testPayload = {
+      const trace = {
+        constructor: { name: 'ActionExecutionTrace' },
+        actionId: 'test:action',
+        actorId: 'test-actor',
+        execution: {
+          startTime: Date.now(),
+          eventPayload: {
+            type: 'TEST_EVENT',
+            data: 'some data',
+            entityCache: { entity1: 'cached' },
+            componentData: { component1: 'data' },
+          },
+        },
+      };
+
+      const result = JSON.parse(formatter.format(trace));
+
+      expect(result.eventPayload.type).toBe('TEST_EVENT');
+      expect(result.eventPayload.data).toBe('some data');
+      expect(result.eventPayload.entityCache).toBeUndefined();
+      expect(result.eventPayload.componentData).toBeUndefined();
+    });
+
+    it('should retain full payload information in verbose verbosity', () => {
+      mockFilter.getVerbosityLevel.mockReturnValue('verbose');
+      mockFilter.getInclusionConfig.mockReturnValue({ componentData: true });
+
+      const trace = {
+        constructor: { name: 'ActionExecutionTrace' },
+        actionId: 'test:action',
+        actorId: 'test-actor',
+        execution: {
+          startTime: Date.now(),
+          eventPayload: {
+            type: 'TEST_EVENT',
+            data: 'some data',
+            entityCache: { entity1: 'cached' },
+            componentData: { component1: 'data' },
+          },
+        },
+      };
+
+      const result = JSON.parse(formatter.format(trace));
+
+      expect(result.eventPayload).toMatchObject({
         type: 'TEST_EVENT',
         data: 'some data',
         entityCache: { entity1: 'cached' },
         componentData: { component1: 'data' },
-      };
-
-      // Test through object sanitization which will call similar cleanup logic
-      const trace = {
-        actionId: 'test:action',
-        actorId: 'test-actor',
-        testPayload: testPayload,
-      };
-
-      // Use standard verbosity (not verbose) to trigger cleanup paths
-      mockFilter.getVerbosityLevel.mockReturnValue('standard');
-      formatter.format(trace);
-
-      // This tests that the sanitization logic executes without errors
-      expect(mockFilter.getVerbosityLevel).toHaveBeenCalled();
-      // Note: The cleanup logic (lines 476-477) is specific to sanitizePayload
-      // but we can verify the object was properly sanitized
+      });
     });
 
-    it('should handle true circular references in JSON replacer', () => {
-      // Create a scenario that will trigger the JSON replacer circular detection
-      const obj = { name: 'test' };
-      obj.self = obj;
+    it('should replace circular references when sanitization is bypassed', () => {
+      mockFilter.getVerbosityLevel.mockReturnValue('verbose');
+      mockFilter.getInclusionConfig.mockReturnValue({ componentData: false });
+
+      const circularData = { name: 'stage-data' };
+      circularData.self = circularData;
+
+      const tracedActions = new Map([
+        [
+          'action1',
+          {
+            actorId: 'actor1',
+            startTime: 1000,
+            stages: {
+              custom_stage: {
+                timestamp: 1000,
+                data: circularData,
+              },
+            },
+          },
+        ],
+      ]);
 
       const trace = {
-        actionId: 'test:action',
-        actorId: 'test-actor',
-        circular: obj,
+        constructor: { name: 'ActionAwareStructuredTrace' },
+        getTracedActions: jest.fn(() => tracedActions),
+        getSpans: jest.fn(() => []),
       };
 
-      // Mock JSON.stringify to use our replacer with a circular reference
-      // that bypasses the sanitizeObject method
-      const mockStringify = jest.spyOn(JSON, 'stringify');
+      const result = formatter.format(trace);
 
-      formatter.format(trace);
-
-      // Verify that JSON.stringify was called (which uses our replacer)
-      expect(mockStringify).toHaveBeenCalled();
-
-      mockStringify.mockRestore();
+      expect(result).toContain('"self": "[Circular]"');
     });
   });
 });

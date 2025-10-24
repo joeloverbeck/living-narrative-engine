@@ -139,12 +139,10 @@ export class JsonTraceFormatter {
       }
     }
 
-    if (verbosity === 'verbose' && config.componentData) {
-      if (trace.execution?.eventPayload) {
-        formatted.eventPayload = this.#sanitizePayload(
-          trace.execution.eventPayload
-        );
-      }
+    if (config.componentData && trace.execution?.eventPayload) {
+      formatted.eventPayload = this.#sanitizePayload(
+        trace.execution.eventPayload
+      );
     }
 
     if (trace.execution?.error) {
@@ -425,10 +423,6 @@ export class JsonTraceFormatter {
    * @private
    */
   #formatSpans(spans, verbosity) {
-    if (verbosity === 'minimal') {
-      return spans.length;
-    }
-
     return spans.map((span) => ({
       name: span.name,
       startTime: span.startTime,
