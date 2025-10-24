@@ -114,6 +114,30 @@ describeEngineSuite('GameEngine', (context) => {
           expect(result.error).toBe(error);
         });
 
+        it('should log the detailed message when persistence returns a custom error object', async () => {
+          const error = new PersistenceError(
+            PersistenceErrorCodes.INVALID_SAVE_NAME,
+            'Invalid save name provided. Please enter a valid name.'
+          );
+          context.bed.getGamePersistenceService().saveGame.mockResolvedValue({
+            success: false,
+            error,
+          });
+
+          await context.engine.triggerManualSave(SAVE_NAME);
+
+          const errorLogCall = context.bed
+            .getLogger()
+            .error.mock.calls.find(([message]) =>
+              message.includes('Reported error:')
+            );
+
+          expect(errorLogCall).toBeDefined();
+          expect(errorLogCall[0]).toContain(
+            'Reported error: Invalid save name provided. Please enter a valid name.'
+          );
+        });
+
         it.each([
           [
             'service returns failure',
