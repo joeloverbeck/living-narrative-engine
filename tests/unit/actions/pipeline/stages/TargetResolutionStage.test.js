@@ -315,6 +315,69 @@ describe('TargetResolutionStage', () => {
         );
       });
 
+      it('should log and skip actions when resolveTargets returns null result', async () => {
+        const nullResultAction = { id: 'movement:invalid', scope: 'entity' };
+        const validAction = { id: 'movement:go', scope: 'entity' };
+        const context = {
+          actor: mockActor,
+          candidateActions: [nullResultAction, validAction],
+          actionContext: mockActionContext,
+          trace: mockTrace,
+        };
+
+        const expectedTargets = [
+          ActionTargetContext.forEntity('resolved-target'),
+        ];
+
+        mockTargetResolutionService.resolveTargets
+          .mockReturnValueOnce(null)
+          .mockReturnValueOnce(ActionResult.success(expectedTargets));
+
+        const result = await stage.execute(context);
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          "TargetResolutionService.resolveTargets returned null/undefined for action 'movement:invalid'"
+        );
+        expect(result.data.actionsWithTargets).toHaveLength(1);
+        expect(result.data.actionsWithTargets[0]).toEqual({
+          actionDef: validAction,
+          targetContexts: expectedTargets,
+        });
+        expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledTimes(
+          2
+        );
+      });
+
+      it('should preserve existing error contexts without rebuilding them', async () => {
+        const entityAction = { id: 'movement:go', scope: 'entity' };
+        const context = {
+          actor: mockActor,
+          candidateActions: [entityAction],
+          actionContext: mockActionContext,
+          trace: mockTrace,
+        };
+
+        const existingErrorContext = {
+          message: 'prebuilt error context',
+          timestamp: Date.now(),
+          phase: ERROR_PHASES.VALIDATION,
+        };
+
+        mockTargetResolutionService.resolveTargets.mockReturnValue({
+          success: false,
+          errors: [existingErrorContext],
+        });
+
+        const result = await stage.execute(context);
+
+        expect(result.errors).toEqual([existingErrorContext]);
+        expect(mockErrorContextBuilder.buildErrorContext).not.toHaveBeenCalled();
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          "Error resolving scope for action 'movement:go'",
+          { errors: [existingErrorContext] }
+        );
+      });
+
       it('should handle exceptions thrown by targetResolutionService', async () => {
         const entityAction = { id: 'movement:go', scope: 'entity' };
         const context = {
