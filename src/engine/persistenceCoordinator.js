@@ -88,12 +88,33 @@ class PersistenceCoordinator {
    */
   async #performSave(saveName) {
     try {
-      const result = await this.#persistenceService.saveGame(
+      const rawResult = await this.#persistenceService.saveGame(
         saveName,
         this.#state.isInitialized,
         this.#state.activeWorld
       );
-      return { ...result, saveName };
+
+      if (
+        !rawResult ||
+        typeof rawResult !== 'object' ||
+        typeof rawResult.success !== 'boolean'
+      ) {
+        const receivedType = rawResult === null ? 'null' : typeof rawResult;
+        this.#logger.error(
+          `GameEngine.triggerManualSave: Persistence service returned invalid result for "${saveName}".`,
+          {
+            receivedType,
+            receivedValue: rawResult,
+          }
+        );
+        return {
+          success: false,
+          error: 'Persistence service returned an invalid save result.',
+          saveName,
+        };
+      }
+
+      return { ...rawResult, saveName };
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
