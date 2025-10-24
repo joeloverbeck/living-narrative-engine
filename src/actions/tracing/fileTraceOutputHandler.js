@@ -24,6 +24,7 @@ class FileTraceOutputHandler {
   #batchedTraceCount = 0;
   #batchSuccesses = 0;
   #testMode = false;
+  #batchWriter;
 
   /**
    * Create a new FileTraceOutputHandler
@@ -33,8 +34,17 @@ class FileTraceOutputHandler {
    * @param {object} dependencies.traceDirectoryManager - Directory manager for file operations
    * @param {object} dependencies.logger - Logger instance
    * @param {boolean} dependencies.testMode - Enable test mode to disable network calls
-   */
-  constructor({ outputDirectory, traceDirectoryManager, logger, testMode = false }) {
+   * @param {object} [dependencies.queueImplementation] - Optional custom queue implementation
+   * @param {Function} [dependencies.batchWriter] - Optional batch writer override
+  */
+  constructor({
+    outputDirectory,
+    traceDirectoryManager,
+    logger,
+    testMode = false,
+    queueImplementation,
+    batchWriter,
+  } = {}) {
     this.#logger = ensureValidLogger(logger, 'FileTraceOutputHandler');
     this.#outputDirectory = outputDirectory || './traces';
     this.#testMode = testMode;
@@ -49,6 +59,34 @@ class FileTraceOutputHandler {
         }
       );
       this.#traceDirectoryManager = traceDirectoryManager;
+    }
+
+    if (queueImplementation) {
+      validateDependency(queueImplementation, 'ITraceQueue', this.#logger, {
+        requiredMethods: ['push', 'shift'],
+      });
+
+      if (!Object.prototype.hasOwnProperty.call(queueImplementation, 'length')) {
+        throw new Error(
+          "Invalid trace queue implementation: missing required 'length' property."
+        );
+      }
+
+      const queueLength = queueImplementation.length;
+      if (typeof queueLength !== 'number' || Number.isNaN(queueLength)) {
+        throw new Error(
+          "Invalid trace queue implementation: 'length' property must resolve to a number."
+        );
+      }
+
+      this.#queuedTraces = queueImplementation;
+    }
+
+    if (batchWriter) {
+      validateDependency(batchWriter, 'BatchWriter', this.#logger, {
+        isFunction: true,
+      });
+      this.#batchWriter = batchWriter;
     }
 
     this.#logger.debug('FileTraceOutputHandler initialized', {
@@ -159,7 +197,9 @@ class FileTraceOutputHandler {
       this.#batchedTraceCount += traceBatch.length;
 
       // Try batch endpoint first
-      const batchResult = await this.#writeBatchToServer(traceBatch);
+      const batchResult = await (this.#batchWriter
+        ? this.#batchWriter(traceBatch)
+        : this.#writeBatchToServer(traceBatch));
 
       if (batchResult === true) {
         // Batch endpoint succeeded
