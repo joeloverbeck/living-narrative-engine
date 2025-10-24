@@ -357,6 +357,62 @@ describe('TestTimerService', () => {
         expect.any(Error)
       );
     });
+
+    it('should skip timers cleared while processing the current batch', async () => {
+      let secondaryTimerId;
+      const firstCallback = jest.fn().mockImplementation(() => {
+        testTimerService.clearTimeout(secondaryTimerId);
+      });
+      const secondCallback = jest.fn();
+
+      testTimerService.setTimeout(firstCallback, 0);
+      secondaryTimerId = testTimerService.setTimeout(secondCallback, 0);
+
+      await testTimerService.triggerAll();
+
+      expect(firstCallback).toHaveBeenCalledTimes(1);
+      expect(secondCallback).not.toHaveBeenCalled();
+    });
+
+    it('should await any remaining running callbacks after processing', async () => {
+      const originalAdd = Set.prototype.add;
+      const originalDelete = Set.prototype.delete;
+      const allSettledSpy = jest.spyOn(Promise, 'allSettled');
+      let capturedSet;
+
+      Set.prototype.add = function patchedAdd(value) {
+        if (!capturedSet) {
+          capturedSet = this;
+          Set.prototype.add = originalAdd;
+        }
+        return originalAdd.call(this, value);
+      };
+
+      Set.prototype.delete = function patchedDelete(value) {
+        if (this === capturedSet) {
+          return false;
+        }
+        return originalDelete.call(this, value);
+      };
+
+      try {
+        const asyncCallback = jest.fn().mockResolvedValue(undefined);
+        testTimerService.setTimeout(asyncCallback, 0);
+
+        await testTimerService.triggerAll();
+
+        expect(allSettledSpy).toHaveBeenCalledWith(
+          expect.arrayContaining([expect.any(Promise)])
+        );
+        expect(capturedSet).toBeDefined();
+        expect(capturedSet.size).toBeGreaterThan(0);
+        capturedSet.clear();
+      } finally {
+        Set.prototype.add = originalAdd;
+        Set.prototype.delete = originalDelete;
+        allSettledSpy.mockRestore();
+      }
+    });
   });
 
   describe('advanceTime', () => {
@@ -448,6 +504,62 @@ describe('TestTimerService', () => {
         'Timer callback error:',
         expect.any(Error)
       );
+    });
+
+    it('should skip timers cleared after being scheduled for advancement', async () => {
+      let secondaryTimerId;
+      const firstCallback = jest.fn().mockImplementation(() => {
+        testTimerService.clearTimeout(secondaryTimerId);
+      });
+      const secondCallback = jest.fn();
+
+      testTimerService.setTimeout(firstCallback, 0);
+      secondaryTimerId = testTimerService.setTimeout(secondCallback, 0);
+
+      await testTimerService.advanceTime(0);
+
+      expect(firstCallback).toHaveBeenCalledTimes(1);
+      expect(secondCallback).not.toHaveBeenCalled();
+    });
+
+    it('should await remaining running callbacks when advancing time', async () => {
+      const originalAdd = Set.prototype.add;
+      const originalDelete = Set.prototype.delete;
+      const allSettledSpy = jest.spyOn(Promise, 'allSettled');
+      let capturedSet;
+
+      Set.prototype.add = function patchedAdd(value) {
+        if (!capturedSet) {
+          capturedSet = this;
+          Set.prototype.add = originalAdd;
+        }
+        return originalAdd.call(this, value);
+      };
+
+      Set.prototype.delete = function patchedDelete(value) {
+        if (this === capturedSet) {
+          return false;
+        }
+        return originalDelete.call(this, value);
+      };
+
+      try {
+        const asyncCallback = jest.fn().mockResolvedValue(undefined);
+        testTimerService.setTimeout(asyncCallback, 0);
+
+        await testTimerService.advanceTime(0);
+
+        expect(allSettledSpy).toHaveBeenCalledWith(
+          expect.arrayContaining([expect.any(Promise)])
+        );
+        expect(capturedSet).toBeDefined();
+        expect(capturedSet.size).toBeGreaterThan(0);
+        capturedSet.clear();
+      } finally {
+        Set.prototype.add = originalAdd;
+        Set.prototype.delete = originalDelete;
+        allSettledSpy.mockRestore();
+      }
     });
   });
 
