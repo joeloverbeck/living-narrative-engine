@@ -347,6 +347,29 @@ describeEngineSuite('GameEngine', (context) => {
       );
       expect(result).toBe(mockResult);
     });
+
+    it('should trim surrounding whitespace from save identifiers before loading', async () => {
+      const mockResult = { success: true, data: {} };
+      const rawIdentifier = '   slot-42   ';
+      const trimmedIdentifier = 'slot-42';
+
+      const mockPersistenceCoordinator = {
+        loadGame: jest.fn().mockResolvedValue(mockResult),
+      };
+
+      const engine = new GameEngine({
+        container: context.bed.env.mockContainer,
+        logger: context.bed.getLogger(),
+        persistenceCoordinator: mockPersistenceCoordinator,
+      });
+
+      const result = await engine.loadGame(rawIdentifier);
+
+      expect(mockPersistenceCoordinator.loadGame).toHaveBeenCalledWith(
+        trimmedIdentifier
+      );
+      expect(result).toBe(mockResult);
+    });
   });
 
   describe('triggerManualSave', () => {

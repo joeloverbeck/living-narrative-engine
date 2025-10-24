@@ -438,7 +438,8 @@ class GameEngine {
       'GameEngine.loadGame',
       this.#logger
     );
-    return this.#persistenceCoordinator.loadGame(saveIdentifier);
+    const normalizedSaveIdentifier = saveIdentifier.trim();
+    return this.#persistenceCoordinator.loadGame(normalizedSaveIdentifier);
   }
 
   /**
