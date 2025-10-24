@@ -382,11 +382,6 @@ class GameEngine {
       );
     }
 
-    await this.#safeEventDispatcher.dispatch(ENGINE_STOPPED_UI, {
-      inputDisabledMessage: 'Game stopped. Engine is inactive.',
-    });
-    this.#logger.debug('GameEngine.stop: ENGINE_STOPPED_UI event dispatched.');
-
     try {
       if (this.#turnManager) {
         await this.#turnManager.stop();
@@ -410,6 +405,11 @@ class GameEngine {
       );
       throw caughtError;
     }
+
+    await this.#safeEventDispatcher.dispatch(ENGINE_STOPPED_UI, {
+      inputDisabledMessage: 'Game stopped. Engine is inactive.',
+    });
+    this.#logger.debug('GameEngine.stop: ENGINE_STOPPED_UI event dispatched.');
   }
 
   async #handleLoadFailure(errorInfo, saveIdentifier) {
