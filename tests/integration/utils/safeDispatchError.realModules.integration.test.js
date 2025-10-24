@@ -71,13 +71,12 @@ describe('safeDispatchError integration with real dispatcher stack', () => {
       receivedEvents.push(event);
     });
 
-    safeDispatchError(dispatcher, 'Network request failed', {
+    const success = await safeDispatchError(dispatcher, 'Network request failed', {
       statusCode: 503,
       url: 'https://example.com/status',
     });
 
-    await waitForDispatch();
-
+    expect(success).toBe(true);
     expect(receivedEvents).toHaveLength(1);
     expect(receivedEvents[0]).toMatchObject({
       type: SYSTEM_ERROR_OCCURRED_ID,
@@ -112,10 +111,14 @@ describe('safeDispatchError integration with real dispatcher stack', () => {
       timestamp: 1700000000000,
     };
 
-    safeDispatchError(dispatcher, actionErrorContext, undefined, logger);
+    const result = await safeDispatchError(
+      dispatcher,
+      actionErrorContext,
+      undefined,
+      logger
+    );
 
-    await waitForDispatch();
-
+    expect(result).toBe(true);
     expect(receivedEvents).toHaveLength(1);
     expect(receivedEvents[0].payload.message).toBe(
       'Target missing required component'
@@ -128,11 +131,11 @@ describe('safeDispatchError integration with real dispatcher stack', () => {
     });
   });
 
-  it('logs and throws when the dispatcher dependency is invalid', () => {
+  it('logs and throws when the dispatcher dependency is invalid', async () => {
     const badLogger = createTestLogger();
-    expect(() =>
+    await expect(
       safeDispatchError(null, 'no dispatcher available', undefined, badLogger)
-    ).toThrow(InvalidDispatcherError);
+    ).rejects.toBeInstanceOf(InvalidDispatcherError);
     expect(badLogger.error).toHaveBeenCalledWith(
       "Invalid or missing method 'dispatch' on dependency 'safeDispatchError: dispatcher'."
     );
