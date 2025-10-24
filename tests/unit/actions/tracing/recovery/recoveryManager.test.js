@@ -369,17 +369,18 @@ describe('RecoveryManager', () => {
 
   describe('Error Recovery Edge Cases', () => {
     it('should handle unknown recovery action with default case', async () => {
-      // Create a scenario that would trigger default case by using an invalid error type
       const errorInfo = {
         id: 'error-unknown-action',
-        type: 'INVALID_TYPE', // This should trigger default behavior
-        severity: TraceErrorSeverity.LOW,
-        context: { componentName: 'TestComponent' },
+        type: TraceErrorType.CONFIGURATION,
+        severity: TraceErrorSeverity.MEDIUM,
+        context: {
+          componentName: 'TestComponent',
+          recoveryStrategyOverride: { action: 'unknown-action' },
+        },
       };
 
       const result = await recoveryManager.attemptRecovery(errorInfo);
 
-      // Default case should return continue action
       expect(result).toEqual({
         action: RecoveryAction.CONTINUE,
         shouldContinue: true,
@@ -455,14 +456,12 @@ describe('RecoveryManager', () => {
 
   describe('Service Management Operations', () => {
     it('should handle service restart operation directly', async () => {
-      // Create a custom recovery manager to test restart service path
       const customRecoveryManager = new RecoveryManager({
         logger: mockLogger,
         config: mockConfig,
         retryManager: mockRetryManager,
       });
 
-      // Access the private method directly to test restart service
       const errorInfo = {
         id: 'error-restart-service',
         type: TraceErrorType.CONFIGURATION,
@@ -470,26 +469,18 @@ describe('RecoveryManager', () => {
         context: { componentName: 'ServiceComponent' },
       };
 
-      // We'll test the restart service path by manually calling the method
       const strategy = { action: RecoveryAction.RESTART_SERVICE, priority: 1 };
 
-      // Use reflection to access the private method for testing
-      const handleRestartService =
-        customRecoveryManager.constructor.prototype['#handleRestartService'];
-      if (handleRestartService) {
-        const result = await handleRestartService.call(
-          customRecoveryManager,
-          errorInfo,
-          strategy
-        );
+      const result = await customRecoveryManager
+        .getTestUtils()
+        .invokeRestartService(errorInfo, strategy);
 
-        expect(result).toEqual({
-          action: RecoveryAction.RESTART_SERVICE,
-          shouldContinue: false,
-          fallbackMode: 'restarting',
-          success: true,
-        });
-      }
+      expect(result).toEqual({
+        action: RecoveryAction.RESTART_SERVICE,
+        shouldContinue: false,
+        fallbackMode: 'restarting',
+        success: true,
+      });
     });
 
     it('should handle emergency stop with multiple registered components', async () => {
@@ -518,6 +509,161 @@ describe('RecoveryManager', () => {
       expect(recoveryManager.isCircuitOpen('Component1')).toBe(true);
       expect(recoveryManager.isCircuitOpen('Component2')).toBe(true);
       expect(recoveryManager.isCircuitOpen('Component3')).toBe(true);
+    });
+
+    it('should expose execute original operation for testing and throw', async () => {
+      await expect(
+        recoveryManager
+          .getTestUtils()
+          .invokeExecuteOriginalOperation({ id: 'op-error' })
+      ).rejects.toThrow('Original operation re-execution not implemented');
+    });
+
+    it('should expose emergency stop handler through test utilities', async () => {
+      const utils = recoveryManager.getTestUtils();
+      recoveryManager.registerFallbackMode('UtilityComponent', jest.fn());
+
+      const result = await utils.invokeEmergencyStop(
+        { id: 'util-emergency', severity: TraceErrorSeverity.CRITICAL },
+        { action: RecoveryAction.EMERGENCY_STOP }
+      );
+
+      expect(result).toEqual({
+        action: RecoveryAction.EMERGENCY_STOP,
+        shouldContinue: false,
+        fallbackMode: 'emergency_disabled',
+        success: true,
+      });
+    });
+  });
+
+  describe('Strategy overrides and custom handlers', () => {
+    it('should allow overriding strategy to restart service', async () => {
+      const manager = new RecoveryManager({
+        logger: mockLogger,
+        config: mockConfig,
+        retryManager: mockRetryManager,
+      });
+
+      const errorInfo = {
+        id: 'override-restart',
+        type: TraceErrorType.CONFIGURATION,
+        severity: TraceErrorSeverity.MEDIUM,
+        context: {
+          componentName: 'OverriddenComponent',
+          recoveryStrategyOverride: {
+            action: RecoveryAction.RESTART_SERVICE,
+            priority: 0,
+          },
+        },
+      };
+
+      const result = await manager.attemptRecovery(errorInfo);
+
+      expect(result).toEqual({
+        action: RecoveryAction.RESTART_SERVICE,
+        shouldContinue: false,
+        fallbackMode: 'restarting',
+        success: true,
+      });
+    });
+
+    it('should catch handler failures and return safe default', async () => {
+      const manager = new RecoveryManager({
+        logger: mockLogger,
+        config: {
+          ...mockConfig,
+          customRecoveryHandlers: {
+            'custom-action': async () => {
+              throw new Error('custom-failure');
+            },
+          },
+        },
+        retryManager: mockRetryManager,
+      });
+
+      const errorInfo = {
+        id: 'handler-failure',
+        type: TraceErrorType.CONFIGURATION,
+        severity: TraceErrorSeverity.MEDIUM,
+        context: {
+          componentName: 'CustomComponent',
+          recoveryStrategyOverride: { action: 'custom-action' },
+        },
+      };
+
+      const result = await manager.attemptRecovery(errorInfo);
+
+      expect(result).toEqual({
+        action: RecoveryAction.DISABLE_COMPONENT,
+        shouldContinue: false,
+        fallbackMode: 'disabled',
+        success: false,
+      });
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Recovery attempt failed',
+        expect.objectContaining({ originalError: 'handler-failure' })
+      );
+    });
+
+    it('should respect top-level recovery strategy override configuration', async () => {
+      const componentName = 'TopLevelOverrideComponent';
+      const fallbackHandler = jest.fn().mockResolvedValue('forced-success');
+      recoveryManager.registerFallbackMode(componentName, fallbackHandler);
+
+      const errorInfo = {
+        id: 'top-level-override',
+        type: TraceErrorType.VALIDATION,
+        severity: TraceErrorSeverity.MEDIUM,
+        recoveryStrategyOverride: {
+          action: RecoveryAction.FALLBACK,
+          fallbackMode: 'forced',
+        },
+        context: { componentName },
+      };
+
+      const result = await recoveryManager.attemptRecovery(errorInfo);
+
+      expect(result).toEqual({
+        action: RecoveryAction.FALLBACK,
+        shouldContinue: true,
+        fallbackMode: 'enabled',
+        success: true,
+      });
+      expect(fallbackHandler).toHaveBeenCalledWith(errorInfo);
+    });
+  });
+
+  describe('Circuit breaker utilities', () => {
+    it('should treat breaker without isOpen as open', () => {
+      const componentName = 'ManualBreakerComponent';
+      const now = Date.now();
+      recoveryManager
+        .getTestUtils()
+        .setCircuitBreaker(componentName, { openTime: now });
+
+      expect(recoveryManager.isCircuitOpen(componentName)).toBe(true);
+    });
+
+    it('should reset error counts when threshold window expires', () => {
+      const componentName = 'AgedComponent';
+      const now = Date.now();
+      const utils = recoveryManager.getTestUtils();
+
+      utils.setLastResetTime(componentName, now - 600000);
+      utils.trackComponentError(componentName);
+
+      expect(utils.getErrorCount(componentName)).toBe(1);
+    });
+
+    it('should provide access to internal circuit breaker state for tests', () => {
+      const componentName = 'InspectableComponent';
+      const utils = recoveryManager.getTestUtils();
+
+      const breakerState = { openTime: Date.now(), isOpen: () => true };
+      utils.setCircuitBreaker(componentName, breakerState);
+
+      expect(utils.getCircuitBreaker(componentName)).toBe(breakerState);
     });
   });
 
@@ -553,8 +699,11 @@ describe('RecoveryManager', () => {
         context: { componentName: 'TestComponent' },
       };
 
-      // Mock successful retry
-      mockRetryManager.retry.mockResolvedValue('retry-success');
+      // Mock retry manager to execute provided operation for coverage
+      mockRetryManager.retry.mockImplementation(async (operation) => {
+        const value = await operation();
+        return value;
+      });
 
       const result = await recoveryManager.attemptRecovery(errorInfo);
 
