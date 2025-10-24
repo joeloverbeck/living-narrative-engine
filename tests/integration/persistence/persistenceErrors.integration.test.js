@@ -148,7 +148,9 @@ describe('persistenceErrors integration', () => {
       expect(normalized.success).toBe(false);
       expect(normalized.error).toBeInstanceOf(PersistenceError);
       expect(normalized.error.code).toBe(PersistenceErrorCodes.WRITE_ERROR);
-      expect(normalized.error.message).toBe('Failed to persist game state');
+      expect(normalized.error.message).toBe(
+        'Failed to persist game state: Disk full'
+      );
     });
 
     it('passes through success results unchanged', () => {
