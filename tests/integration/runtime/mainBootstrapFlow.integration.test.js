@@ -352,14 +352,22 @@ describe('main.js bootstrap orchestration', () => {
       'Critical: GameEngine not initialized before attempting Start Game stage.'
     );
 
-    expect(displayFatalStartupError).toHaveBeenCalledWith(
-      undefined,
+    expect(displayFatalStartupError).toHaveBeenCalledTimes(1);
+    const [uiElementsArg, errorDetailsArg, loggerArg] =
+      displayFatalStartupError.mock.calls[0];
+    expect(uiElementsArg).toMatchObject({
+      outputDiv: document.getElementById('outputDiv'),
+      errorDiv: document.getElementById('error-output'),
+      inputElement: document.getElementById('speech-input'),
+      titleElement: document.querySelector('h1'),
+      document,
+    });
+    expect(errorDetailsArg).toEqual(
       expect.objectContaining({
         phase: 'Start Game',
-      }),
-      null,
-      expect.any(Object)
+      })
     );
+    expect(loggerArg).toBeNull();
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       'main.js: Critical: GameEngine not initialized before attempting Start Game stage.'
     );

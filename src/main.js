@@ -34,6 +34,24 @@ let gameEngine = null; // Will be populated by initializeGameEngineStage
 let currentPhaseForError = 'Initial Setup';
 
 /**
+ * @description Resolves UI elements for fatal error handling, performing DOM lookups when bootstrap data is unavailable.
+ * @returns {import('./utils/errorTypes.js').FatalErrorUIElements} References to UI elements used during fatal error display.
+ */
+function resolveFatalErrorUIElements() {
+  if (uiElements) {
+    return uiElements;
+  }
+
+  return {
+    outputDiv: document.getElementById('outputDiv'),
+    errorDiv: document.getElementById('error-output'),
+    titleElement: document.querySelector('h1'),
+    inputElement: document.getElementById('speech-input'),
+    document,
+  };
+}
+
+/**
  * @description Test-only helper to override the tracked bootstrap phase.
  * @param {string | null | undefined} phase - Phase label to assign for coverage scenarios.
  * @returns {void}
@@ -202,14 +220,7 @@ export async function bootstrapApp() {
     }
 
     displayFatalStartupError(
-      uiElements || {
-        // Provide default UI elements if uiElements is undefined
-        outputDiv: document.getElementById('outputDiv'),
-        errorDiv: document.getElementById('error-output'),
-        titleElement: document.querySelector('h1'),
-        inputElement: document.getElementById('speech-input'),
-        document: document,
-      },
+      resolveFatalErrorUIElements(),
       errorDetails,
       logger,
       {
@@ -235,34 +246,34 @@ export async function bootstrapApp() {
 export async function beginGame(showLoadUI = false) {
   currentPhaseForError = 'Start Game';
 
-    if (!gameEngine) {
-      const errMsg =
-        'Critical: GameEngine not initialized before attempting Start Game stage.';
-      const errorObj = new Error(errMsg);
-      (logger || console).error(`main.js: ${errMsg}`);
-      displayFatalStartupError(
-        uiElements,
-        {
-          userMessage: errMsg,
-          consoleMessage: errMsg,
-          errorObject: errorObj,
-          phase: currentPhaseForError,
+  if (!gameEngine) {
+    const errMsg =
+      'Critical: GameEngine not initialized before attempting Start Game stage.';
+    const errorObj = new Error(errMsg);
+    (logger || console).error(`main.js: ${errMsg}`);
+    displayFatalStartupError(
+      resolveFatalErrorUIElements(),
+      {
+        userMessage: errMsg,
+        consoleMessage: errMsg,
+        errorObject: errorObj,
+        phase: currentPhaseForError,
+      },
+      logger,
+      {
+        createElement: (tag) => document.createElement(tag),
+        insertAfter: (ref, el) => ref.insertAdjacentElement('afterend', el),
+        setTextContent: (el, text) => {
+          el.textContent = text;
         },
-        logger,
-        {
-          createElement: (tag) => document.createElement(tag),
-          insertAfter: (ref, el) => ref.insertAdjacentElement('afterend', el),
-          setTextContent: (el, text) => {
-            el.textContent = text;
-          },
-          setStyle: (el, prop, val) => {
-            el.style[prop] = val;
-          },
-          alert,
-        }
-      );
-      throw errorObj;
-    }
+        setStyle: (el, prop, val) => {
+          el.style[prop] = val;
+        },
+        alert,
+      }
+    );
+    throw errorObj;
+  }
 
   try {
     // Use the startWorld loaded from game configuration
