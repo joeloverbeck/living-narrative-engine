@@ -763,6 +763,18 @@ class AjvSchemaValidator {
   formatAjvErrors(errors, data) {
     return formatAjvErrorsEnhanced(errors, data);
   }
+
+  /**
+   * @description Overrides the internal Ajv instance. This is intended solely for test scenarios
+   * that need to simulate Ajv unavailability in order to exercise error handling paths.
+   *
+   * @param {import('ajv').default | null | undefined} ajvInstance - Ajv instance to assign or
+   *   {@link null} to clear the reference.
+   * @returns {void}
+   */
+  _setAjvInstanceForTesting(ajvInstance) {
+    this.#ajv = ajvInstance ?? null;
+  }
 }
 
 export default AjvSchemaValidator;
