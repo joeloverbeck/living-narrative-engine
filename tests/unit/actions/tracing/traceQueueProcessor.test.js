@@ -12,7 +12,11 @@ import {
 } from '@jest/globals';
 import { TraceQueueProcessor } from '../../../../src/actions/tracing/traceQueueProcessor.js';
 import { TracePriority } from '../../../../src/actions/tracing/tracePriority.js';
-import { QUEUE_EVENTS } from '../../../../src/actions/tracing/actionTraceTypes.js';
+import {
+  QUEUE_EVENTS,
+  QUEUE_CONSTANTS,
+} from '../../../../src/actions/tracing/actionTraceTypes.js';
+import { TraceIdGenerator } from '../../../../src/actions/tracing/traceIdGenerator.js';
 import { TraceQueueProcessorTestBed } from '../../../common/tracing/traceQueueProcessorTestBed.js';
 
 describe('TraceQueueProcessor', () => {
@@ -156,6 +160,91 @@ describe('TraceQueueProcessor', () => {
     });
   });
 
+  describe('Validation and safety checks', () => {
+    it('should warn and reject when enqueuing a null trace', () => {
+      const result = testBed.processor.enqueue(null);
+
+      expect(result).toBe(false);
+      expect(testBed.mockLogger.warn).toHaveBeenCalledWith(
+        'TraceQueueProcessor: Null trace provided'
+      );
+    });
+
+    it('should respect browser memory pressure thresholds', () => {
+      const originalPerformance = globalThis.performance;
+      const originalWindowPerformance =
+        globalThis.window && globalThis.window.performance;
+      const originalGlobalMemory =
+        originalPerformance && originalPerformance.memory;
+      const originalWindowMemory =
+        originalWindowPerformance && originalWindowPerformance.memory;
+      const originalThreshold = QUEUE_CONSTANTS.MEMORY_THRESHOLD;
+
+      const performanceMemoryStub = {
+        usedJSHeapSize: 150,
+        jsHeapSizeLimit: 200,
+      };
+      if (!originalPerformance) {
+        globalThis.performance = { memory: performanceMemoryStub };
+      } else {
+        originalPerformance.memory = performanceMemoryStub;
+      }
+      global.performance = globalThis.performance;
+      if (globalThis.window) {
+        if (!globalThis.window.performance) {
+          globalThis.window.performance = { memory: performanceMemoryStub };
+        } else {
+          globalThis.window.performance.memory = performanceMemoryStub;
+        }
+      }
+
+      QUEUE_CONSTANTS.MEMORY_THRESHOLD = 0.2;
+
+      try {
+        testBed.withConfig({ memoryLimit: Number.MAX_SAFE_INTEGER });
+
+        const largeTrace = testBed.createMockTrace({
+          actionId: 'memory-heavy',
+          data: 'x'.repeat(5000),
+        });
+
+        expect(JSON.stringify(largeTrace).length).toBeGreaterThan(4000);
+        expect(performance.memory).toEqual(performanceMemoryStub);
+
+        const initialDropped = testBed.getMetrics().totalDropped;
+        const result = testBed.processor.enqueue(largeTrace, TracePriority.HIGH);
+        const afterDropped = testBed.getMetrics().totalDropped;
+
+        expect(afterDropped).toBeGreaterThan(initialDropped);
+        expect(result).toBe(false);
+        expect(testBed.mockLogger.warn).toHaveBeenCalledWith(
+          'TraceQueueProcessor: Memory limit still exceeded after backpressure, dropping trace',
+          expect.objectContaining({
+            limit: Number.MAX_SAFE_INTEGER,
+          })
+        );
+      } finally {
+        QUEUE_CONSTANTS.MEMORY_THRESHOLD = originalThreshold;
+        if (!originalPerformance) {
+          delete globalThis.performance;
+          delete global.performance;
+        } else {
+          originalPerformance.memory = originalGlobalMemory;
+          globalThis.performance = originalPerformance;
+          global.performance = originalPerformance;
+        }
+        if (globalThis.window) {
+          if (!originalWindowPerformance) {
+            delete globalThis.window.performance;
+          } else {
+            originalWindowPerformance.memory = originalWindowMemory;
+            globalThis.window.performance = originalWindowPerformance;
+          }
+        }
+      }
+    });
+  });
+
   describe('Batch Processing', () => {
     it('should process traces in configurable batches', async () => {
       const batchSize = 3;
@@ -235,6 +324,53 @@ describe('TraceQueueProcessor', () => {
       const metrics = testBed.getMetrics();
       expect(metrics.totalProcessed).toBe(3);
     });
+
+    it('should surface errors from immediate batch scheduling', async () => {
+      testBed.withConfig({ batchSize: 1 });
+
+      testBed.mockLogger.debug.mockImplementation((message, details) => {
+        if (message === 'TraceQueueProcessor: Processing batch') {
+          throw new Error('debug failure');
+        }
+        return undefined;
+      });
+
+      const criticalTrace = testBed.createMockTrace({
+        actionId: 'critical-immediate',
+        hasError: true,
+      });
+
+      testBed.processor.enqueue(criticalTrace, TracePriority.CRITICAL);
+
+      await testBed.advanceTimersAndFlush(0);
+
+      expect(testBed.mockLogger.error).toHaveBeenCalledWith(
+        'TraceQueueProcessor: Batch processing error',
+        expect.any(Error)
+      );
+    });
+
+    it('should surface errors from delayed batch scheduling', async () => {
+      testBed.withConfig({ batchSize: 10, batchTimeout: 50 });
+
+      testBed.mockLogger.debug.mockImplementation((message) => {
+        if (message === 'TraceQueueProcessor: Processing batch') {
+          throw new Error('delayed failure');
+        }
+        return undefined;
+      });
+
+      const normalTrace = testBed.createMockTrace({ actionId: 'delayed-trace' });
+      testBed.processor.enqueue(normalTrace, TracePriority.NORMAL);
+
+      await testBed.advanceTimersAndFlush(50);
+
+      expect(testBed.mockLogger.error).toHaveBeenCalledWith(
+        'TraceQueueProcessor: Batch processing error',
+        expect.any(Error)
+      );
+    });
+
   });
 
   describe('Resource Management and Memory Tracking', () => {
@@ -284,6 +420,26 @@ describe('TraceQueueProcessor', () => {
       // Additional traces should be rejected
       const overflowTrace = testBed.createMockTrace({ actionId: 'overflow' });
       expect(testBed.processor.enqueue(overflowTrace)).toBe(false);
+    });
+
+    it('should rotate stored traces when storage limit is exceeded', async () => {
+      testBed.withConfig({
+        maxStoredTraces: 2,
+        enableParallelProcessing: false,
+        batchSize: 1,
+      });
+
+      const traces = testBed.createMultipleTraces(4, {
+        actionId: 'rotation',
+      });
+      traces.forEach((trace) => testBed.processor.enqueue(trace));
+
+      await testBed.advanceTimersAndFlush(500);
+
+      const storedTraces = testBed.getStoredTraces();
+      expect(storedTraces.length).toBeLessThanOrEqual(2);
+      const actionIds = storedTraces.map((entry) => entry.data.actionId);
+      expect(actionIds).toEqual(['rotation-2', 'rotation-3']);
     });
   });
 
@@ -410,6 +566,70 @@ describe('TraceQueueProcessor', () => {
 
       // Circuit breaker should eventually close on successful processing
       // (This would require implementing circuit breaker recovery logic)
+    });
+
+    it('should stop retries once circuit breaker opens during batch failure', async () => {
+      const originalThreshold = QUEUE_CONSTANTS.CIRCUIT_BREAKER_THRESHOLD;
+      QUEUE_CONSTANTS.CIRCUIT_BREAKER_THRESHOLD = 1;
+
+      try {
+        testBed.withConfig({ enableParallelProcessing: false, maxRetries: 2 });
+
+        testBed.mockStorageAdapter.setItem.mockRejectedValue(
+          new Error('batch failure')
+        );
+
+        const trace = testBed.createMockTrace({ actionId: 'circuit-stop' });
+        testBed.processor.enqueue(trace);
+
+        await testBed.advanceTimersAndFlush(200);
+
+        expect(testBed.wasEventDispatched(QUEUE_EVENTS.CIRCUIT_BREAKER)).toBe(
+          true
+        );
+
+        const retryLogs = testBed.mockLogger.debug.mock.calls.filter(
+          ([message]) =>
+            message === 'TraceQueueProcessor: Item scheduled for retry'
+        );
+        expect(retryLogs.length).toBe(0);
+      } finally {
+        QUEUE_CONSTANTS.CIRCUIT_BREAKER_THRESHOLD = originalThreshold;
+      }
+    });
+
+    it('should skip processing already completed trace IDs', async () => {
+      const generateIdSpy = jest
+        .spyOn(TraceIdGenerator.prototype, 'generateId')
+        .mockReturnValue('duplicate-id');
+
+      try {
+        testBed.withConfig({ enableParallelProcessing: false, batchSize: 1 });
+
+        const firstTrace = testBed.createMockTrace({ actionId: 'dedupe-1' });
+        testBed.processor.enqueue(firstTrace, TracePriority.NORMAL);
+        await testBed.advanceTimersAndFlush(100);
+
+        const initialSetItemCalls =
+          testBed.mockStorageAdapter.setItem.mock.calls.length;
+        testBed.mockLogger.debug.mockClear();
+
+        const secondTrace = testBed.createMockTrace({ actionId: 'dedupe-2' });
+        testBed.processor.enqueue(secondTrace, TracePriority.NORMAL);
+        await testBed.advanceTimersAndFlush(100);
+
+        const duplicateLogs = testBed.mockLogger.debug.mock.calls.filter(
+          ([message]) =>
+            message === 'TraceQueueProcessor: Item already processed or processing'
+        );
+
+        expect(duplicateLogs.length).toBeGreaterThanOrEqual(1);
+        expect(testBed.mockStorageAdapter.setItem.mock.calls.length).toBe(
+          initialSetItemCalls
+        );
+      } finally {
+        generateIdSpy.mockRestore();
+      }
     });
   });
 
@@ -608,6 +828,92 @@ describe('TraceQueueProcessor', () => {
 
       const metrics = testBed.getMetrics();
       expect(metrics.totalProcessed).toBe(1);
+    });
+
+    it('should avoid retry scheduling when shutdown begins during failure handling', async () => {
+      testBed.withConfig({ enableParallelProcessing: false, maxRetries: 2 });
+
+      testBed.mockStorageAdapter.setItem.mockImplementation(async () => {
+        testBed.processor.shutdown();
+        throw new Error('shutdown failure');
+      });
+
+      const trace = testBed.createMockTrace({ actionId: 'shutdown-retry' });
+      testBed.processor.enqueue(trace);
+
+      await testBed.advanceTimersAndFlush(200);
+
+      const shutdownLog = testBed.mockLogger.debug.mock.calls.find(
+        ([message]) =>
+          message === 'TraceQueueProcessor: Not retrying item during shutdown'
+      );
+      expect(shutdownLog).toBeDefined();
+      expect(testBed.timerService.getPendingCount()).toBe(0);
+    });
+
+    it('should abort scheduled retries if shutdown occurs before retry executes', async () => {
+      testBed.withConfig({ enableParallelProcessing: false, maxRetries: 3 });
+
+      let attempt = 0;
+      testBed.mockStorageAdapter.setItem.mockImplementation(async () => {
+        attempt += 1;
+        if (attempt === 1) {
+          throw new Error('transient failure');
+        }
+        return undefined;
+      });
+
+      const trace = testBed.createMockTrace({ actionId: 'shutdown-abort' });
+      testBed.processor.enqueue(trace);
+
+      await testBed.timerService.advanceTime(0);
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(testBed.timerService.getPendingCount()).toBeGreaterThan(0);
+
+      await testBed.processor.shutdown();
+
+      const pendingBeforeAdvance = testBed.timerService.getPendingCount();
+      await testBed.advanceTimersAndFlush(QUEUE_CONSTANTS.RETRY_BASE_DELAY * 4);
+
+      expect(testBed.mockStorageAdapter.setItem.mock.calls.length).toBe(1);
+      expect(testBed.timerService.getPendingCount()).toBeLessThanOrEqual(
+        pendingBeforeAdvance
+      );
+    });
+
+    it('should warn if timer completion wait fails during shutdown', async () => {
+      const waitSpy = jest
+        .spyOn(testBed.timerService, 'waitForCompletion')
+        .mockRejectedValue(new Error('wait failure'));
+
+      await testBed.processor.shutdown();
+
+      expect(testBed.mockLogger.warn).toHaveBeenCalledWith(
+        'TraceQueueProcessor: Error waiting for timer completion',
+        expect.any(Error)
+      );
+
+      waitSpy.mockRestore();
+    });
+
+    it('should rotate remaining traces when persisting during shutdown', async () => {
+      testBed.withConfig({
+        maxStoredTraces: 1,
+        enableParallelProcessing: false,
+      });
+
+      const traces = testBed.createMultipleTraces(3, {
+        actionId: 'shutdown-rotation',
+      });
+      traces.forEach((trace) => testBed.processor.enqueue(trace));
+
+      await testBed.processor.shutdown();
+
+      const storedTraces = testBed.getStoredTraces();
+      expect(storedTraces.length).toBe(1);
+      expect(storedTraces[0].data.actionId).toBe('shutdown-rotation-2');
     });
   });
 });
