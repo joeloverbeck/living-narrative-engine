@@ -27,6 +27,21 @@ describeEngineSuite('GameEngine', (context) => {
       mockInitializationSuccess(context.bed);
     });
 
+    it('returns the initialization result provided by the service', async () => {
+      const initResult = {
+        success: true,
+        metadata: { seededActors: 5 },
+      };
+      context.bed
+        .getInitializationService()
+        .runInitializationSequence.mockResolvedValue(initResult);
+
+      const result = await context.engine.startNewGame(DEFAULT_TEST_WORLD);
+
+      expect(result).toBe(initResult);
+      expectStartSuccess(context.bed, context.engine, DEFAULT_TEST_WORLD);
+    });
+
     it('should successfully start a new game', async () => {
       await context.engine.startNewGame(DEFAULT_TEST_WORLD);
       expectStartSuccess(context.bed, context.engine, DEFAULT_TEST_WORLD);
