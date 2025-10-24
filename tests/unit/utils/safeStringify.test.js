@@ -44,6 +44,16 @@ describe('safeStringify', () => {
     expect(safeStringify(null)).toBe('null');
   });
 
+  test('falls back to string output for non-JSON primitives', () => {
+    expect(safeStringify(undefined)).toBe('undefined');
+    const fnResult = safeStringify(() => 'noop');
+    expect(typeof fnResult).toBe('string');
+    expect(fnResult).toContain('noop');
+
+    const symbolResult = safeStringify(Symbol('value'));
+    expect(symbolResult).toBe('Symbol(value)');
+  });
+
   test('converts bigint values to strings to avoid serialization errors', () => {
     const payload = { count: 123n, nested: { depth: 456n } };
 
