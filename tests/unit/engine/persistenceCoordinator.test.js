@@ -360,6 +360,52 @@ describe('PersistenceCoordinator', () => {
     );
   });
 
+  it('loadGame treats invalid load result as failure', async () => {
+    const {
+      coordinator,
+      persistenceService,
+      handleLoadFailure,
+      dispatcher,
+      logger,
+      sessionManager,
+    } = createCoordinator();
+
+    persistenceService.loadAndRestoreGame.mockResolvedValue(undefined);
+    sessionManager.prepareForLoadGameSession.mockImplementation(async (id) => {
+      const shortName = id.split(/[/\\]/).pop() || id;
+      await dispatcher.dispatch(ENGINE_OPERATION_IN_PROGRESS_UI, {
+        titleMessage: `Loading ${shortName}...`,
+        inputDisabledMessage: `Loading game from ${shortName}...`,
+      });
+    });
+
+    const result = await coordinator.loadGame(DEFAULT_SAVE_ID);
+
+    expect(logger.error).toHaveBeenCalledWith(
+      `GameEngine._executeLoadAndRestore: Persistence service returned invalid result for "${DEFAULT_SAVE_ID}".`,
+      {
+        receivedType: 'undefined',
+        receivedValue: undefined,
+      }
+    );
+    expect(handleLoadFailure).toHaveBeenCalledWith(
+      'Persistence service returned an invalid load result.',
+      DEFAULT_SAVE_ID
+    );
+    expect(result).toEqual({
+      success: false,
+      error: 'Persistence service returned an invalid load result.',
+      data: null,
+    });
+    expectDispatchSequence(
+      dispatcher.dispatch,
+      ...buildLoadFailureDispatches(
+        DEFAULT_SAVE_ID,
+        'Persistence service returned an invalid load result.'
+      )
+    );
+  });
+
   it('loadGame handles non-Error exceptions during load process', async () => {
     const { coordinator, sessionManager, handleLoadFailure } =
       createCoordinator();
