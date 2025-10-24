@@ -7,6 +7,7 @@ import ConsoleLogger, { LogLevel } from './consoleLogger.js';
 import NoOpLogger from './noOpLogger.js';
 import { DEFAULT_CONFIG } from './config/defaultConfig.js';
 import { createSafeErrorLogger } from '../utils/safeErrorLogger.js';
+import { deepClone } from '../utils/cloneUtils.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -121,7 +122,9 @@ class LoggerStrategy {
     this.#currentLevel = 'INFO'; // Default log level
 
     // Merge config with defaults (but don't use mode from DEFAULT_CONFIG)
-    const { mode: _defaultMode, ...defaultConfigWithoutMode } = DEFAULT_CONFIG;
+    const { mode: _defaultMode, ...defaultConfigWithoutMode } = deepClone(
+      DEFAULT_CONFIG
+    );
     this.#config = this.#validateConfig({
       ...defaultConfigWithoutMode,
       ...config,
@@ -427,12 +430,12 @@ class LoggerStrategy {
 
     // Ensure remote config exists
     if (!config.remote || typeof config.remote !== 'object') {
-      config.remote = DEFAULT_CONFIG.remote;
+      config.remote = deepClone(DEFAULT_CONFIG.remote);
     }
 
     // Ensure categories config exists
     if (!config.categories || typeof config.categories !== 'object') {
-      config.categories = DEFAULT_CONFIG.categories;
+      config.categories = deepClone(DEFAULT_CONFIG.categories);
     }
 
     return config;
