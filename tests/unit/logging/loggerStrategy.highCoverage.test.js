@@ -103,6 +103,10 @@ describe('LoggerStrategy near-complete coverage', () => {
     consoleLoggerInstances = [];
     noOpLoggerInstances = [];
     mockCreateSafeErrorLogger = jest.fn();
+    defaultConfig.remote = { endpoint: '/debug', batchSize: 10 };
+    defaultConfig.categories = {
+      general: { enabled: true, level: 'info' },
+    };
 
     mockConsoleLoggerFactory = jest.fn().mockImplementation(function MockConsoleLogger(level) {
       const instance = createConsoleLoggerInstance();
@@ -170,6 +174,20 @@ describe('LoggerStrategy near-complete coverage', () => {
       expect.stringContaining('[LoggerStrategy] Initialized with mode:'),
     );
     expect(mockCreateSafeErrorLogger).not.toHaveBeenCalled();
+  });
+
+  it('does not mutate DEFAULT_CONFIG when normalizing missing config sections', () => {
+    const originalRemote = JSON.parse(JSON.stringify(defaultConfig.remote));
+    const originalCategories = JSON.parse(
+      JSON.stringify(defaultConfig.categories)
+    );
+
+    createStrategy({
+      config: { remote: null, categories: null },
+    });
+
+    expect(defaultConfig.remote).toEqual(originalRemote);
+    expect(defaultConfig.categories).toEqual(originalCategories);
   });
 
   it('detects mode from DEBUG_LOG_MODE environment variable when explicit mode missing', () => {
