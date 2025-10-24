@@ -2,6 +2,7 @@ import { LegacyFallbackFormatter } from '../../../../../../../src/actions/pipeli
 
 describe('LegacyFallbackFormatter', () => {
   let commandFormatter;
+  let entityManager;
   let formatter;
 
   beforeEach(() => {
@@ -9,9 +10,11 @@ describe('LegacyFallbackFormatter', () => {
       format: jest.fn().mockReturnValue({ ok: true, value: 'legacy-command' }),
     };
 
+    entityManager = { getEntityInstance: jest.fn() };
+
     formatter = new LegacyFallbackFormatter({
       commandFormatter,
-      entityManager: { getEntityInstance: jest.fn() },
+      entityManager,
       getEntityDisplayNameFn: jest.fn(),
     });
   });
@@ -71,6 +74,25 @@ describe('LegacyFallbackFormatter', () => {
     });
   });
 
+  it('preserves missing action definitions when building the fallback payload', () => {
+    const prepared = formatter.prepareFallback({
+      actionDefinition: null,
+      targetContext: {
+        entityId: 'entity-7',
+        displayName: '  Nominal Hero  ',
+        placeholder: 'primary',
+      },
+      targetDefinitions: undefined,
+      resolvedTargets: undefined,
+    });
+
+    expect(prepared.actionDefinition).toBeNull();
+    expect(prepared.targetContext).toEqual({
+      entityId: 'entity-7',
+      displayName: 'Nominal Hero',
+    });
+  });
+
   it('forwards sanitized options to the command formatter', () => {
     const actionDefinition = {
       id: 'act-3',
@@ -112,6 +134,99 @@ describe('LegacyFallbackFormatter', () => {
         debug: true,
         safeEventDispatcher,
       },
+      { displayNameFn: expect.any(Function) }
+    );
+  });
+
+  it('returns the original action definition when no template changes are required', () => {
+    const actionDefinition = {
+      id: 'act-5',
+      template: 'Observe surroundings',
+    };
+
+    const prepared = formatter.prepareFallback({
+      actionDefinition,
+      targetContext: {
+        entityId: 'entity-5',
+        displayName: ' Explorer ',
+        placeholder: 'primary',
+      },
+      targetDefinitions: undefined,
+      resolvedTargets: undefined,
+    });
+
+    expect(prepared.actionDefinition).toBe(actionDefinition);
+    expect(prepared.targetContext).toEqual({
+      entityId: 'entity-5',
+      displayName: 'Explorer',
+    });
+  });
+
+  it('preserves non-string templates without modification', () => {
+    const actionDefinition = {
+      id: 'act-6',
+      template: 42,
+    };
+
+    const prepared = formatter.prepareFallback({
+      actionDefinition,
+      targetContext: {
+        entityId: 'entity-6',
+        displayName: '  Analyst ',
+        placeholder: 'primary',
+      },
+      targetDefinitions: undefined,
+      resolvedTargets: undefined,
+    });
+
+    expect(prepared.actionDefinition).toBe(actionDefinition);
+    expect(prepared.actionDefinition.template).toBe(42);
+  });
+
+  it('derives placeholders from resolved targets when definitions are absent', () => {
+    const actionDefinition = {
+      id: 'act-4',
+      template: 'Guard {primary} against {secondary} and {tertiary}',
+    };
+
+    const targetContext = {
+      entityId: 'entity-4',
+      displayName: ' Captain ',
+      placeholder: 'primary',
+    };
+
+    const resolvedTargets = {
+      primary: [{ id: 'entity-4', displayName: 'Captain' }],
+      secondary: [],
+      tertiary: [{ name: 'Third Ally' }],
+    };
+
+    const prepared = formatter.prepareFallback({
+      actionDefinition,
+      targetContext,
+      targetDefinitions: undefined,
+      resolvedTargets,
+    });
+
+    expect(prepared.actionDefinition.template).toBe(
+      'Guard {target} against and Third Ally'
+    );
+    expect(prepared.targetContext).toEqual({
+      entityId: 'entity-4',
+      displayName: 'Captain',
+    });
+
+    const result = formatter.formatWithFallback({
+      preparedFallback: prepared,
+      formatterOptions: null,
+    });
+
+    expect(result).toEqual({ ok: true, value: 'legacy-command' });
+    expect(commandFormatter.format).toHaveBeenLastCalledWith(
+      prepared.actionDefinition,
+      { entityId: 'entity-4', displayName: 'Captain' },
+      entityManager,
+      {},
       { displayNameFn: expect.any(Function) }
     );
   });
