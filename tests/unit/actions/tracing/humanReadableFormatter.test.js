@@ -346,6 +346,26 @@ describe('HumanReadableFormatter - Text Formatting', () => {
       expect(result).not.toContain('undefined');
     });
 
+    it('should display event payload section when payload is explicitly null', () => {
+      const trace = {
+        constructor: { name: 'ActionExecutionTrace' },
+        actionId: 'test:action',
+        actorId: 'test-actor',
+        execution: {
+          startTime: Date.now(),
+          endTime: Date.now() + 10,
+          result: { success: true },
+          eventPayload: null,
+        },
+      };
+
+      mockFilter.getVerbosityLevel.mockReturnValue('verbose');
+      const result = formatter.format(trace);
+
+      expect(result).toContain('EVENT PAYLOAD');
+      expect(result).toMatch(/EVENT PAYLOAD[\s\S]*\bnull\b/);
+    });
+
     it('should format generic traces as fallback', () => {
       const trace = {
         someData: 'value',
