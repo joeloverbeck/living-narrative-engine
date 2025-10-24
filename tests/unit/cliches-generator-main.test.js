@@ -22,11 +22,15 @@ describe('Clichés Generator Entry Point', () => {
   let mockController;
   let originalConsoleLog;
   let originalConsoleError;
-  let mockGetElementById;
-  let mockAddEventListener;
   let CharacterBuilderBootstrap;
   let ClichesGeneratorController;
   let initializeApp;
+  let windowAddEventListenerSpy;
+  let documentAddEventListenerSpy;
+  let getElementByIdSpy;
+  let setReadyState;
+  let restoreReadyState;
+  let originalNodeEnv;
 
   beforeEach(async () => {
     // Clear module cache
@@ -40,26 +44,31 @@ describe('Clichés Generator Entry Point', () => {
     console.log = jest.fn();
     console.error = jest.fn();
 
-    // Set up global mocks before importing the production module
-    mockGetElementById = jest.fn();
-    mockAddEventListener = jest.fn();
+    // Prepare DOM spies using the real jsdom document and window
+    document.body.innerHTML = '';
+    window.__clichesController = undefined;
 
-    global.document = {
-      getElementById: mockGetElementById,
-      readyState: 'loading',
-      addEventListener: mockAddEventListener,
+    getElementByIdSpy = jest.spyOn(document, 'getElementById');
+    documentAddEventListenerSpy = jest.spyOn(document, 'addEventListener');
+    windowAddEventListenerSpy = jest.spyOn(window, 'addEventListener');
+
+    // Control the document ready state so the module doesn't auto-initialize on import
+    let readyState = 'loading';
+    Object.defineProperty(document, 'readyState', {
+      configurable: true,
+      get: () => readyState,
+    });
+
+    setReadyState = (state) => {
+      readyState = state;
     };
 
-    global.window = {
-      addEventListener: jest.fn(),
-      __clichesController: undefined,
+    restoreReadyState = () => {
+      delete document.readyState;
     };
 
-    global.process = {
-      env: {
-        NODE_ENV: 'test',
-      },
-    };
+    originalNodeEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'test';
 
     // Mock controller
     mockController = {
@@ -99,9 +108,27 @@ describe('Clichés Generator Entry Point', () => {
     console.log = originalConsoleLog;
     console.error = originalConsoleError;
 
+    process.env.NODE_ENV = originalNodeEnv;
+
+    // Restore DOM state
+    windowAddEventListenerSpy.mockRestore();
+    documentAddEventListenerSpy.mockRestore();
+    getElementByIdSpy.mockRestore();
+    restoreReadyState();
+    document.body.innerHTML = '';
+    window.__clichesController = undefined;
+
     // Clear all mocks
     jest.clearAllMocks();
     jest.resetModules();
+  });
+
+  it('should register DOMContentLoaded listener when the document is still loading', () => {
+    expect(documentAddEventListenerSpy).toHaveBeenCalledWith(
+      'DOMContentLoaded',
+      expect.any(Function)
+    );
+    expect(mockBootstrap.bootstrap).not.toHaveBeenCalled();
   });
 
   it('should bootstrap with correct configuration', async () => {
@@ -154,26 +181,24 @@ describe('Clichés Generator Entry Point', () => {
 
   it('should set up cleanup on page unload', async () => {
     // Spy on window.addEventListener after module import
-    const addEventListenerSpy = jest.spyOn(global.window, 'addEventListener');
-
     // Act
     await initializeApp();
 
     // Assert
-    expect(addEventListenerSpy).toHaveBeenCalledWith(
+    expect(windowAddEventListenerSpy).toHaveBeenCalledWith(
       'beforeunload',
       expect.any(Function)
     );
 
     // Test the cleanup function
-    const cleanupHandler = addEventListenerSpy.mock.calls[0][1];
+    const cleanupHandler = windowAddEventListenerSpy.mock.calls[0][1];
     await cleanupHandler();
     expect(mockController.cleanup).toHaveBeenCalled();
   });
 
   it('should expose debug objects in development mode', async () => {
     // Arrange
-    global.process.env.NODE_ENV = 'development';
+    process.env.NODE_ENV = 'development';
 
     // Act
     const result = await initializeApp();
@@ -184,7 +209,7 @@ describe('Clichés Generator Entry Point', () => {
     postInitHook(mockController);
 
     // Assert
-    expect(global.window.__clichesController).toBe(mockController);
+    expect(window.__clichesController).toBe(mockController);
     expect(console.log).toHaveBeenCalledWith(
       'Debug: Controller exposed on window object'
     );
@@ -192,8 +217,8 @@ describe('Clichés Generator Entry Point', () => {
 
   it('should not expose debug objects in production mode', async () => {
     // Arrange
-    global.process.env.NODE_ENV = 'production';
-    global.window.__clichesController = undefined;
+    process.env.NODE_ENV = 'production';
+    window.__clichesController = undefined;
 
     // Act
     const result = await initializeApp();
@@ -204,27 +229,45 @@ describe('Clichés Generator Entry Point', () => {
     postInitHook(mockController);
 
     // Assert
-    expect(global.window.__clichesController).toBeUndefined();
+    expect(window.__clichesController).toBeUndefined();
     expect(console.log).not.toHaveBeenCalledWith(
       'Debug: Controller exposed on window object'
     );
   });
 
-  // NOTE: Error handling tests for document.getElementById removed due to ES module limitations
-  // ES modules capture global objects like 'document' at import time, not execution time,
-  // making it impossible to properly mock document.getElementById for error handler verification
+  it('should render a friendly error message when initialization fails', async () => {
+    // Arrange
+    const bootstrapError = new Error('Bootstrap failed');
+    mockBootstrap.bootstrap.mockRejectedValue(bootstrapError);
+    const errorContainer = document.createElement('div');
+    errorContainer.id = 'cliches-generator-container';
+    document.body.appendChild(errorContainer);
+
+    // Act & Assert
+    await expect(initializeApp()).rejects.toThrow('Bootstrap failed');
+
+    expect(console.error).toHaveBeenCalledWith(
+      'Failed to initialize Clichés Generator:',
+      bootstrapError
+    );
+    expect(getElementByIdSpy).toHaveBeenCalledWith(
+      'cliches-generator-container'
+    );
+    expect(errorContainer.innerHTML).toContain(
+      'Unable to Load Clichés Generator'
+    );
+    expect(errorContainer.innerHTML).toContain('Bootstrap failed');
+  });
 
   it('should handle cleanup errors gracefully', async () => {
     // Arrange
     const cleanupError = new Error('Cleanup failed');
     mockController.cleanup.mockRejectedValue(cleanupError);
-    const addEventListenerSpy = jest.spyOn(global.window, 'addEventListener');
-
     // Act
     await initializeApp();
 
     // Get and execute the cleanup handler
-    const cleanupHandler = addEventListenerSpy.mock.calls[0][1];
+    const cleanupHandler = windowAddEventListenerSpy.mock.calls[0][1];
 
     // Act & Assert - The production code doesn't catch cleanup errors, so they will be thrown
     await expect(cleanupHandler()).rejects.toThrow('Cleanup failed');
@@ -237,13 +280,12 @@ describe('Clichés Generator Entry Point', () => {
       container: {},
       bootstrapTime: 123.45,
     });
-    const addEventListenerSpy = jest.spyOn(global.window, 'addEventListener');
 
     // Act
     await initializeApp();
 
     // Get and execute the cleanup handler
-    const cleanupHandler = addEventListenerSpy.mock.calls[0][1];
+    const cleanupHandler = windowAddEventListenerSpy.mock.calls[0][1];
 
     // Act & Assert - Should not throw
     await expect(cleanupHandler()).resolves.toBeUndefined();
@@ -260,5 +302,45 @@ describe('Clichés Generator Entry Point', () => {
 
     // Verify that includeModLoading is true, which will cause events to be loaded from mods
     expect(callArgs.includeModLoading).toBe(true);
+  });
+
+  it('should initialize immediately when the document is already ready', async () => {
+    // Arrange - reset modules and change ready state before importing again
+    jest.resetModules();
+    mockBootstrap.bootstrap.mockClear();
+    documentAddEventListenerSpy.mockClear();
+    windowAddEventListenerSpy.mockClear();
+    getElementByIdSpy.mockClear();
+    setReadyState('complete');
+
+    CharacterBuilderBootstrap = (
+      await import('../../src/characterBuilder/CharacterBuilderBootstrap.js')
+    ).CharacterBuilderBootstrap;
+    ClichesGeneratorController = (
+      await import(
+        '../../src/clichesGenerator/controllers/ClichesGeneratorController.js'
+      )
+    ).ClichesGeneratorController;
+
+    CharacterBuilderBootstrap.mockImplementation(() => mockBootstrap);
+    ClichesGeneratorController.mockImplementation(() => mockController);
+
+    // Act - importing triggers initializeApp immediately
+    await import('../../src/cliches-generator-main.js');
+
+    // Assert - initialization ran right away
+    expect(mockBootstrap.bootstrap).toHaveBeenCalledTimes(1);
+    expect(documentAddEventListenerSpy).not.toHaveBeenCalledWith(
+      'DOMContentLoaded',
+      expect.any(Function)
+    );
+    await Promise.resolve();
+    expect(windowAddEventListenerSpy).toHaveBeenCalledWith(
+      'beforeunload',
+      expect.any(Function)
+    );
+
+    // Reset ready state for subsequent tests
+    setReadyState('loading');
   });
 });
