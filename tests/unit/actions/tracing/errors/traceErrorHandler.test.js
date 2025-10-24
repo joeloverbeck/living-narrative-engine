@@ -147,6 +147,17 @@ describe('TraceErrorHandler', () => {
       expect(recoveryCall.context.largeField).toHaveLength(1014); // 1000 + '...[truncated]'
       expect(recoveryCall.context.largeField).toContain('[truncated]');
     });
+
+    it('should provide default error information when error is null', async () => {
+      await errorHandler.handleError(null, { componentName: 'NullComponent' });
+
+      const recoveryCall = mockRecoveryManager.attemptRecovery.mock.calls[0][0];
+      expect(recoveryCall.error).toEqual({
+        name: 'UnknownError',
+        message: 'No error information provided',
+        code: undefined,
+      });
+    });
   });
 
   describe('shouldDisableComponent', () => {
@@ -228,6 +239,43 @@ describe('TraceErrorHandler', () => {
       expect(stats.errorsBySeverity[TraceErrorSeverity.LOW]).toBe(1);
       expect(stats.errorsBySeverity[TraceErrorSeverity.MEDIUM]).toBe(1);
       expect(stats.recentErrors).toBe(2);
+    });
+
+    it('should retain only the most recent 50 errors per component', async () => {
+      const error = new Error('Repeated error');
+      const componentName = 'OverflowComponent';
+
+      for (let i = 0; i < 60; i++) {
+        await errorHandler.handleError(
+          error,
+          { componentName },
+          TraceErrorType.UNKNOWN
+        );
+      }
+
+      const stats = errorHandler.getErrorStatistics();
+
+      expect(stats.totalErrors).toBe(50);
+      expect(
+        errorHandler.shouldDisableComponent(componentName)
+      ).toBe(true);
+    });
+
+    it('should remove the oldest component history when exceeding the global limit', async () => {
+      const error = new Error('Component error');
+
+      for (let i = 0; i < 101; i++) {
+        await errorHandler.handleError(
+          error,
+          { componentName: `Component-${i}` },
+          TraceErrorType.UNKNOWN
+        );
+      }
+
+      const stats = errorHandler.getErrorStatistics();
+
+      expect(stats.totalErrors).toBe(100);
+      expect(stats.errorsByType[TraceErrorType.UNKNOWN]).toBe(100);
     });
   });
 
