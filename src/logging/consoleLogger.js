@@ -47,6 +47,55 @@ const LOG_LEVEL_MAP = {
  */
 class ConsoleLogger {
   /**
+   * @description Determines if a value represents a debug-tagged log message.
+   * @param {unknown} message - Candidate log message value.
+   * @returns {boolean} True when the message begins with the `[DEBUG]` tag.
+   */
+  #isDebugTaggedMessage(message) {
+    return (
+      typeof message === 'string' && message.trimStart().startsWith('[DEBUG]')
+    );
+  }
+
+  /**
+   * @description Removes the leading `[DEBUG]` tag from a message when present.
+   * @param {unknown} message - Original log message value.
+   * @returns {unknown} Message with the `[DEBUG]` prefix stripped when possible.
+   */
+  #stripDebugTag(message) {
+    if (typeof message !== 'string') {
+      return message;
+    }
+
+    const trimmedStart = message.trimStart();
+    if (!trimmedStart.startsWith('[DEBUG]')) {
+      return message;
+    }
+
+    const withoutTag = trimmedStart.slice('[DEBUG]'.length);
+    return withoutTag.trimStart();
+  }
+
+  /**
+   * @description Routes debug-tagged messages through the debug channel.
+   * @param {unknown} message - Primary log message value.
+   * @param {any[]} args - Additional console arguments supplied by the caller.
+   * @returns {boolean} True when the message was handled as a debug log.
+   */
+  #handleDebugTaggedMessage(message, args) {
+    if (!this.#isDebugTaggedMessage(message)) {
+      return false;
+    }
+
+    if (this.#currentLogLevel <= LogLevel.DEBUG) {
+      const normalizedMessage = this.#stripDebugTag(message);
+      console.debug(normalizedMessage, ...args);
+    }
+
+    return true;
+  }
+
+  /**
    * @private
    * @type {number}
    */
@@ -141,6 +190,10 @@ class ConsoleLogger {
    * @param {...any} args - Additional arguments or objects to include in the log output.
    */
   info(message, ...args) {
+    if (this.#handleDebugTaggedMessage(message, args)) {
+      return;
+    }
+
     if (this.#currentLogLevel <= LogLevel.INFO) {
       console.info(message, ...args);
     }
@@ -153,6 +206,10 @@ class ConsoleLogger {
    * @param {...any} args - Additional arguments or objects to include in the warning output.
    */
   warn(message, ...args) {
+    if (this.#handleDebugTaggedMessage(message, args)) {
+      return;
+    }
+
     if (this.#currentLogLevel <= LogLevel.WARN) {
       console.warn(message, ...args);
     }
@@ -165,6 +222,10 @@ class ConsoleLogger {
    * @param {...any} args - Additional arguments or objects, typically including an Error object, to log.
    */
   error(message, ...args) {
+    if (this.#handleDebugTaggedMessage(message, args)) {
+      return;
+    }
+
     if (this.#currentLogLevel <= LogLevel.ERROR) {
       console.error(message, ...args);
     }
