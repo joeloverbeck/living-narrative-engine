@@ -258,4 +258,292 @@ describe('ContextUpdateEmitter', () => {
     expect(results).toHaveLength(2);
     expect(results.every((result) => result.kept === false)).toBe(true);
   });
+
+  it('reinitialises actionsWithTargets when context lacks an array and preserves entity references', () => {
+    const actor = { id: 'actor-scout' };
+    const allyEntity = { id: 'ally-entity' };
+    const relicEntity = { id: 'relic-entity' };
+    const nestedRelicEntity = { id: 'nested-relic-entity' };
+    const deepEntity = { id: 'deep-entity' };
+    const originalTargetContext = {
+      entity: allyEntity,
+      placeholder: 'support-slot',
+      metadata: { hint: 'original' },
+    };
+
+    const componentEntity = {
+      hasComponent: () => true,
+      getComponentData: () => ({ vision: 'keen' }),
+      tag: 'component-entity',
+    };
+
+    const candidateWithEntity = {
+      entity: allyEntity,
+      label: 'support-ally',
+      traits: ['cunning'],
+    };
+
+    const items = [
+      {
+        actionDef: { id: 'action-scout' },
+        resolvedTargets: {
+          [ACTOR_ROLE]: actor,
+          allies: [candidateWithEntity, 'string-placeholder'],
+          relic: {
+            entity: relicEntity,
+            nested: {
+              guardian: {
+                entity: nestedRelicEntity,
+                qualifiers: [{ entity: deepEntity, type: 'spirit' }],
+              },
+            },
+          },
+          sentinel: componentEntity,
+        },
+        targetContexts: undefined,
+        targetDefinitions: null,
+        originalIndex: 0,
+        sourceFormat: 'actionsWithTargets',
+        originalRef: {
+          actionDef: { id: 'action-scout' },
+          customFlag: true,
+          targetContexts: [originalTargetContext],
+        },
+      },
+    ];
+
+    const context = { actionsWithTargets: { unexpected: true } };
+    const metadata = { sharedResolvedTargetsRef: null, stageUpdates: [] };
+
+    const results = emitter.applyTargetValidationResults({
+      context,
+      format: 'actionsWithTargets',
+      items,
+      metadata,
+      validatedItems: items,
+    });
+
+    expect(Array.isArray(context.actionsWithTargets)).toBe(true);
+    expect(context.actionsWithTargets).toHaveLength(1);
+    const rebuilt = context.actionsWithTargets[0];
+
+    expect(rebuilt).toMatchObject({
+      actionDef: items[0].actionDef,
+      customFlag: true,
+    });
+
+    expect(rebuilt.targetContexts).toHaveLength(1);
+    expect(rebuilt.targetContexts[0]).not.toBe(originalTargetContext);
+    expect(rebuilt.targetContexts[0].entity).toBe(allyEntity);
+
+    const sanitizedTargets = rebuilt.resolvedTargets;
+    expect(sanitizedTargets).toEqual(
+      expect.objectContaining({
+        allies: [
+          expect.objectContaining({
+            label: 'support-ally',
+            entity: allyEntity,
+          }),
+          'string-placeholder',
+        ],
+        relic: expect.objectContaining({
+          entity: relicEntity,
+          nested: expect.objectContaining({
+            guardian: expect.objectContaining({
+              entity: nestedRelicEntity,
+              qualifiers: [
+                expect.objectContaining({
+                  entity: deepEntity,
+                  type: 'spirit',
+                }),
+              ],
+            }),
+          }),
+        }),
+        sentinel: componentEntity,
+      })
+    );
+    expect(sanitizedTargets.allies[0]).not.toBe(candidateWithEntity);
+    expect(sanitizedTargets.allies[0].entity).toBe(allyEntity);
+    expect(sanitizedTargets.relic).not.toBe(items[0].resolvedTargets.relic);
+    expect(sanitizedTargets.relic.entity).toBe(relicEntity);
+    expect(
+      sanitizedTargets.relic.nested.guardian.qualifiers[0].entity,
+    ).toBe(deepEntity);
+    expect(sanitizedTargets.sentinel).toBe(componentEntity);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].keptTargets).toEqual(sanitizedTargets);
+    expect(results[0].targetContexts).toEqual([]);
+  });
+
+  it('synchronises shared resolved targets for candidate actions while skipping invalid entries', () => {
+    const actor = { id: 'actor-hunter' };
+    const sharedTargets = {
+      primary: [{ id: 'stale-primary', entity: { id: 'stale-primary-entity' } }],
+      backup: { entity: { id: 'stale-backup-entity' } },
+      stale: { id: 'remove-me' },
+    };
+
+    const actionA = {
+      id: 'action-alpha',
+      resolvedTargets: { shouldBeReplaced: true },
+    };
+    const actionB = {
+      id: 'action-beta',
+      resolvedTargets: { lingering: true },
+    };
+
+    const primaryEntity = { id: 'primary-ally' };
+    const backupEntity = { id: 'backup-ally' };
+
+    const items = [
+      {
+        actionDef: actionA,
+        resolvedTargets: {
+          [ACTOR_ROLE]: actor,
+          primary: [
+            { entity: primaryEntity, role: 'primary', score: 1 },
+            { entity: primaryEntity, info: { entity: primaryEntity } },
+          ],
+          backup: {
+            entity: backupEntity,
+            metadata: {
+              tag: 'support',
+              nested: [{ entity: backupEntity, tier: 2 }],
+            },
+          },
+        },
+        targetContexts: 'not-an-array',
+        targetDefinitions: null,
+        originalIndex: 0,
+        sourceFormat: 'candidateActions',
+        originalRef: null,
+      },
+      {
+        actionDef: actionB,
+        resolvedTargets: null,
+        targetContexts: null,
+        targetDefinitions: null,
+        originalIndex: 1,
+        sourceFormat: 'candidateActions',
+        originalRef: null,
+      },
+    ];
+
+    const metadata = {
+      sharedResolvedTargetsRef: sharedTargets,
+      stageUpdates: [
+        {
+          stage: 'TargetComponentValidation',
+          type: 'pruner',
+          actionId: 'action-alpha',
+          removedTargets: null,
+          removalReasons: null,
+        },
+        {
+          stage: 'TargetComponentValidation',
+          type: 'pruner',
+          actionId: 'action-beta',
+          removedTargets: [
+            {
+              role: 'primary',
+              targetId: 'primary-ally',
+            },
+          ],
+          removalReasons: ['Insufficient score'],
+        },
+        {
+          stage: 'TargetComponentValidation',
+          type: 'audit',
+          actionId: null,
+          removedTargets: [{ role: 'global' }],
+          removalReasons: ['global'],
+        },
+      ],
+    };
+
+    const context = {
+      candidateActions: [actionA, actionB],
+      resolvedTargets: sharedTargets,
+    };
+
+    const results = emitter.applyTargetValidationResults({
+      context,
+      format: 'candidateActions',
+      items,
+      metadata,
+      validatedItems: items,
+    });
+
+    expect(context.candidateActions).toEqual([actionA, actionB]);
+    expect(actionA.resolvedTargets).toEqual({
+      primary: [
+        { entity: primaryEntity, role: 'primary', score: 1 },
+        { entity: primaryEntity, info: { entity: primaryEntity } },
+      ],
+      backup: {
+        entity: backupEntity,
+        metadata: { tag: 'support', nested: [{ entity: backupEntity, tier: 2 }] },
+      },
+    });
+    expect(actionA.resolvedTargets.primary[0]).not.toBe(
+      items[0].resolvedTargets.primary[0],
+    );
+    expect(actionA.resolvedTargets.primary[0].entity).toBe(primaryEntity);
+    expect(
+      actionA.resolvedTargets.backup.metadata.nested[0].entity,
+    ).toBe(backupEntity);
+    expect(actionB.resolvedTargets).toBeUndefined();
+
+    expect(sharedTargets).toEqual(
+      expect.objectContaining({
+        primary: [
+          expect.objectContaining({
+            entity: primaryEntity,
+            role: 'primary',
+          }),
+          expect.objectContaining({ entity: primaryEntity }),
+        ],
+        backup: expect.objectContaining({
+          entity: backupEntity,
+          metadata: expect.objectContaining({
+            nested: [expect.objectContaining({ entity: backupEntity, tier: 2 })],
+          }),
+        }),
+      })
+    );
+    expect(sharedTargets.stale).toBeUndefined();
+    expect(sharedTargets.primary[0]).not.toBe(items[0].resolvedTargets.primary[0]);
+    expect(sharedTargets.primary[0].entity).toBe(primaryEntity);
+    expect(sharedTargets.backup.metadata.nested[0].entity).toBe(backupEntity);
+
+    expect(results).toHaveLength(2);
+    expect(results[0]).toMatchObject({
+      actionId: 'action-alpha',
+      kept: true,
+      targetContexts: [],
+    });
+    expect(results[0].stageUpdates).toEqual([
+      expect.objectContaining({
+        actionId: 'action-alpha',
+        removedTargets: [],
+        removalReasons: [],
+      }),
+    ]);
+    expect(results[1]).toMatchObject({
+      actionId: 'action-beta',
+      kept: true,
+      keptTargets: null,
+    });
+    expect(results[1].stageUpdates).toEqual([
+      expect.objectContaining({
+        actionId: 'action-beta',
+        removedTargets: [
+          expect.objectContaining({ role: 'primary', targetId: 'primary-ally' }),
+        ],
+        removalReasons: ['Insufficient score'],
+      }),
+    ]);
+  });
 });
