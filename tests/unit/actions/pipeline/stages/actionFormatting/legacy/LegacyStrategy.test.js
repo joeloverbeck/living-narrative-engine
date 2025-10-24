@@ -486,6 +486,8 @@ describe('LegacyStrategy', () => {
         multiTarget: 0,
       };
 
+      const trace = { captureActionData: jest.fn(), info: jest.fn() };
+
       const outcome = await strategy.format({
         actor: { id: 'actor-fallback' },
         actionsWithTargets: [
@@ -505,7 +507,7 @@ describe('LegacyStrategy', () => {
             ],
           },
         ],
-        trace: { captureActionData: jest.fn(), info: jest.fn() },
+        trace,
         processingStats,
         traceSource: 'ActionFormattingStage.execute',
       });
@@ -527,6 +529,155 @@ describe('LegacyStrategy', () => {
         failed: 0,
         multiTarget: 0,
       });
+      expect(trace.captureActionData).toHaveBeenCalledWith(
+        'formatting',
+        'multi-fallback',
+        expect.objectContaining({ formattingPath: 'legacy' })
+      );
+      expect(outcome.statistics.fallbackInvocations).toBe(1);
+    });
+
+    it('falls back with empty params when the resolved target lacks an entity id', async () => {
+      const {
+        strategy,
+        commandFormatter,
+        fallbackFormatter,
+      } = createStrategy();
+
+      commandFormatter.formatMultiTarget.mockReturnValue({
+        ok: false,
+        error: 'format missing target id',
+      });
+
+      fallbackFormatter.formatWithFallback.mockReturnValue({
+        ok: true,
+        value: 'fallback-without-target',
+      });
+
+      const processingStats = { successful: 0, legacy: 0, multiTarget: 0 };
+
+      const trace = { captureActionData: jest.fn(), info: jest.fn() };
+
+      const outcome = await strategy.format({
+        actor: { id: 'actor-fallback-no-target' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'multi-fallback-no-target',
+              name: 'Fallback Missing Target',
+              targets: { primary: {} },
+            },
+            targetContexts: [
+              {
+                placeholder: 'primary',
+                displayName: 'Anonymous Target',
+              },
+            ],
+          },
+        ],
+        trace,
+        processingStats,
+        traceSource: 'ActionFormattingStage.execute',
+      });
+
+      expect(outcome.formattedCommands).toEqual([
+        expect.objectContaining({
+          id: 'multi-fallback-no-target',
+          command: 'fallback-without-target',
+          params: {},
+        }),
+      ]);
+      expect(processingStats).toEqual({
+        successful: 1,
+        legacy: 1,
+        multiTarget: 0,
+      });
+      expect(outcome.fallbackUsed).toBe(true);
+      expect(trace.captureActionData).toHaveBeenCalledWith(
+        'formatting',
+        'multi-fallback-no-target',
+        expect.objectContaining({ formattingPath: 'legacy' })
+      );
+    });
+
+    it('executes the traced fallback path end-to-end with realistic dependencies', async () => {
+      const formatterCalls = [];
+      const fallbackInvocations = [];
+
+      const strategy = new LegacyStrategy({
+        commandFormatter: {
+          format: () => {
+            throw new Error('single-target format should not run');
+          },
+          formatMultiTarget: (actionDef, resolvedTargets) => {
+            formatterCalls.push({ actionDef, resolvedTargets });
+            return { ok: false, error: 'traced-failure' };
+          },
+        },
+        entityManager: {
+          getEntityInstance: (entityId) => ({ id: entityId, managed: true }),
+        },
+        safeEventDispatcher: {},
+        getEntityDisplayNameFn: () => 'display-name',
+        logger: {
+          debug: jest.fn(),
+          warn: jest.fn(),
+          info: jest.fn(),
+        },
+        fallbackFormatter: {
+          formatWithFallback: ({ actionDefinition, targetContext }) => {
+            fallbackInvocations.push({ actionDefinition, targetContext });
+            return { ok: true, value: 'realistic-fallback' };
+          },
+        },
+        createError: (...args) => ({ args }),
+        targetNormalizationService: {
+          normalize: () => ({ error: null, params: { normalized: true } }),
+        },
+        validateVisualProperties: () => {},
+      });
+
+      const trace = { captureActionData: jest.fn(), info: jest.fn() };
+
+      const outcome = await strategy.format({
+        actor: { id: 'actor-end-to-end' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'multi-end-to-end',
+              name: 'End To End',
+              description: 'desc',
+              targets: { primary: {} },
+            },
+            targetContexts: [
+              {
+                entityId: 'target-end-to-end',
+                displayName: 'Target End',
+                placeholder: 'primary',
+              },
+            ],
+          },
+        ],
+        trace,
+        processingStats: { successful: 0, legacy: 0, multiTarget: 0 },
+        traceSource: 'ActionFormattingStage.execute',
+      });
+
+      expect(outcome.formattedCommands).toEqual([
+        expect.objectContaining({
+          id: 'multi-end-to-end',
+          command: 'realistic-fallback',
+          params: { targetId: 'target-end-to-end' },
+        }),
+      ]);
+      expect(outcome.fallbackUsed).toBe(true);
+      expect(formatterCalls).toHaveLength(1);
+      expect(fallbackInvocations).toHaveLength(1);
+      expect(trace.captureActionData).toHaveBeenCalledWith(
+        'formatting',
+        'multi-end-to-end',
+        expect.objectContaining({ formattingPath: 'legacy' })
+      );
     });
 
     it('handles formatter absence by delegating entirely to the fallback', async () => {
@@ -598,6 +749,8 @@ describe('LegacyStrategy', () => {
         legacy: 0,
       };
 
+      const trace = { captureActionData: jest.fn(), info: jest.fn() };
+
       const outcome = await strategy.format({
         actor: { id: 'actor-fallback-fail' },
         actionsWithTargets: [
@@ -615,7 +768,7 @@ describe('LegacyStrategy', () => {
             ],
           },
         ],
-        trace: undefined,
+        trace,
         processingStats,
         traceSource: 'ActionFormattingStage.execute',
       });
@@ -624,11 +777,73 @@ describe('LegacyStrategy', () => {
         { ok: false, error: 'fallback failure' },
         expect.objectContaining({ id: 'multi-failure' }),
         'actor-fallback-fail',
-        undefined,
+        trace,
         'target-error'
       );
       expect(outcome.errors).toHaveLength(1);
       expect(outcome.fallbackUsed).toBe(false);
+      expect(trace.captureActionData).toHaveBeenCalledWith(
+        'formatting',
+        'multi-failure',
+        expect.objectContaining({ formattingPath: 'legacy' })
+      );
+    });
+
+    it('propagates fallback failures without an entity id when tracing multi-target actions', async () => {
+      const {
+        strategy,
+        commandFormatter,
+        fallbackFormatter,
+        createError,
+      } = createStrategy();
+
+      commandFormatter.formatMultiTarget.mockReturnValue({
+        ok: false,
+        error: 'trace-format-missing-target',
+      });
+
+      fallbackFormatter.formatWithFallback.mockReturnValue({
+        ok: false,
+        error: 'trace-fallback-missing-target',
+      });
+
+      const trace = { captureActionData: jest.fn(), info: jest.fn() };
+
+      await strategy.format({
+        actor: { id: 'actor-trace-fallback-missing-target' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'multi-trace-fallback-missing-target',
+              name: 'Trace Fallback Missing Target',
+              targets: { primary: {} },
+            },
+            targetContexts: [
+              {
+                placeholder: 'primary',
+                displayName: 'Nameless Target',
+              },
+            ],
+          },
+        ],
+        trace,
+        traceSource: 'ActionFormattingStage.execute',
+      });
+
+      expect(createError).toHaveBeenCalledWith(
+        { ok: false, error: 'trace-fallback-missing-target' },
+        expect.objectContaining({
+          id: 'multi-trace-fallback-missing-target',
+        }),
+        'actor-trace-fallback-missing-target',
+        trace,
+        null
+      );
+      expect(trace.captureActionData).toHaveBeenCalledWith(
+        'formatting',
+        'multi-trace-fallback-missing-target',
+        expect.objectContaining({ formattingPath: 'legacy' })
+      );
     });
 
     it('propagates fallback failures with tracing enabled', async () => {
@@ -686,6 +901,8 @@ describe('LegacyStrategy', () => {
       const { strategy, logger, commandFormatter, fallbackFormatter } =
         createStrategy();
 
+      const trace = { captureActionData: jest.fn(), info: jest.fn() };
+
       await strategy.format({
         actor: { id: 'actor-empty' },
         actionsWithTargets: [
@@ -698,10 +915,11 @@ describe('LegacyStrategy', () => {
             targetContexts: [],
           },
         ],
-        trace: undefined,
+        trace,
         traceSource: 'ActionFormattingStage.execute',
       });
 
+      expect(logger.warn).toHaveBeenCalled();
       expect(logger.warn).toHaveBeenCalledWith(
         "Skipping multi-target action 'multi-empty' in legacy formatting path - no resolved targets available for proper formatting"
       );
@@ -711,6 +929,8 @@ describe('LegacyStrategy', () => {
 
     it('indicates missing required targets via debug logging', async () => {
       const { strategy, logger, commandFormatter } = createStrategy();
+
+      const trace = { captureActionData: jest.fn(), info: jest.fn() };
 
       await strategy.format({
         actor: { id: 'actor-missing' },
@@ -729,13 +949,14 @@ describe('LegacyStrategy', () => {
             ],
           },
         ],
-        trace: undefined,
+        trace,
         traceSource: 'ActionFormattingStage.execute',
       });
 
       expect(logger.debug).toHaveBeenCalledWith(
         "Missing required target 'primary' for action 'multi-missing'"
       );
+      expect(logger.warn).toHaveBeenCalled();
       expect(logger.warn).toHaveBeenCalledWith(
         "Skipping multi-target action 'multi-missing' in legacy formatting path - no resolved targets available for proper formatting"
       );
