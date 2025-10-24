@@ -1,6 +1,6 @@
 /**
- * @file Integration tests for ThematicDirectionsManagerController
- * @description Tests complete workflow integration including service calls and UI updates
+ * @file Comprehensive integration tests for ThematicDirectionsManagerController
+ * @description Exercises the full controller workflow with real collaborators
  */
 
 import {
@@ -13,60 +13,70 @@ import {
 } from '@jest/globals';
 import { BaseCharacterBuilderControllerTestBase } from '../../../unit/characterBuilder/controllers/BaseCharacterBuilderController.testbase.js';
 import { ThematicDirectionsManagerController } from '../../../../src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js';
+import { PreviousItemsDropdown } from '../../../../src/shared/characterBuilder/previousItemsDropdown.js';
 
-// Mock the PreviousItemsDropdown
-jest.mock(
-  '../../../../src/shared/characterBuilder/previousItemsDropdown.js',
-  () => ({
-    PreviousItemsDropdown: jest.fn().mockImplementation((config) => {
-      // Store the callback globally so tests can access it
-      if (config && config.onSelectionChange) {
-        global.__testSelectionHandler = config.onSelectionChange;
-      }
-      return {
-        loadItems: jest.fn().mockResolvedValue(true),
-        destroy: jest.fn(),
-        _onSelectionChange: config?.onSelectionChange,
-      };
-    }),
-  })
-);
+const createDirection = ({
+  id,
+  title,
+  conceptId,
+  description = `${title} description`,
+  coreTension = `${title} core tension`,
+  uniqueTwist = `${title} unique twist`,
+  narrativePotential = `${title} narrative potential`,
+}) => ({
+  direction: {
+    id,
+    title,
+    description,
+    coreTension,
+    uniqueTwist,
+    narrativePotential,
+    conceptId,
+  },
+  concept:
+    conceptId === null
+      ? null
+      : {
+          id: conceptId,
+          concept: `${title} concept details`,
+          status: 'completed',
+          createdAt: new Date('2024-01-01T12:00:00Z').toISOString(),
+          updatedAt: new Date('2024-01-01T12:00:00Z').toISOString(),
+          thematicDirections: [id],
+        },
+});
 
-// Mock the InPlaceEditor
-jest.mock('../../../../src/shared/characterBuilder/inPlaceEditor.js', () => ({
-  InPlaceEditor: jest.fn().mockImplementation(() => ({
-    destroy: jest.fn(),
-  })),
-}));
+const flushAsync = async () => {
+  await Promise.resolve();
+  await Promise.resolve();
+};
 
-describe('ThematicDirectionsManagerController - Integration Tests', () => {
+describe('ThematicDirectionsManagerController – Full Integration Suite', () => {
   let testBase;
   let controller;
+  let alertSpy;
+  let confirmSpy;
 
-  beforeEach(async () => {
-    // Initialize test base
-    testBase = new BaseCharacterBuilderControllerTestBase();
-    await testBase.setup();
-
-    // Add complete DOM structure for integration testing
-    testBase.addDOMElement(`
-      <div class="character-builder-container">
+  const buildDOM = () => {
+    document.body.innerHTML = `
+      <div class="controller-root">
         <div class="cb-input-panel concept-selection-panel">
-          <select id="concept-selector"></select>
+          <label for="concept-selector">Choose Concept:</label>
+          <select id="concept-selector" class="cb-input"></select>
           <div id="concept-display-container" style="display: none;">
             <div id="concept-display-content"></div>
           </div>
         </div>
         <div class="cb-main-content">
           <div id="empty-state" style="display: none;">
-            <p class="empty-message">No thematic directions found</p>
+            <p class="empty-message">Default empty message</p>
           </div>
           <div id="loading-state" style="display: none;"></div>
           <div id="error-state" style="display: none;">
             <div id="error-message-text"></div>
           </div>
           <div id="results-state" style="display: none;">
-            <div id="direction-filter"></div>
+            <input id="direction-filter" type="text" />
             <div id="directions-results"></div>
             <div id="total-directions"></div>
             <div id="orphaned-count"></div>
@@ -75,403 +85,307 @@ describe('ThematicDirectionsManagerController - Integration Tests', () => {
         <div class="cb-actions">
           <button id="refresh-btn">Refresh</button>
           <button id="cleanup-orphans-btn">Cleanup Orphans</button>
-          <button id="back-to-menu-btn">Back to Menu</button>
-          <button id="retry-btn" style="display: none;">Retry</button>
+          <button id="back-to-menu-btn">Back</button>
+          <button id="retry-btn" style="display:none;">Retry</button>
         </div>
-        <div id="confirmation-modal" class="modal" style="display: none;">
+        <div id="confirmation-modal" style="display: none;">
           <div class="modal-content">
-            <button id="close-modal-btn" class="modal-close">×</button>
+            <button id="close-modal-btn" type="button">×</button>
             <h2 id="modal-title"></h2>
             <p id="modal-message"></p>
-            <div class="modal-actions">
-              <button id="modal-confirm-btn"></button>
-              <button id="modal-cancel-btn"></button>
-            </div>
+            <button id="modal-confirm-btn" type="button">Confirm</button>
+            <button id="modal-cancel-btn" type="button">Cancel</button>
           </div>
         </div>
-        <div id="success-notification" class="notification notification-success" style="display: none;"></div>
+        <div id="success-notification" class="notification" style="display: none;"></div>
       </div>
-    `);
+    `;
+  };
 
-    // Setup global functions
-    global.setTimeout = jest.fn((callback, delay) => {
-      callback();
-      return 'mock-timeout-id';
-    });
-    global.clearTimeout = jest.fn();
-    global.alert = jest.fn();
+  beforeEach(async () => {
+    jest.useFakeTimers();
+    testBase = new BaseCharacterBuilderControllerTestBase();
+    await testBase.setup();
+    buildDOM();
 
-    // Mock document event listeners for modal tests
-    global.document.addEventListener = jest.fn();
-    global.document.removeEventListener = jest.fn();
+    alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {});
+    confirmSpy = jest.spyOn(window, 'confirm').mockImplementation(() => true);
 
-    // Clean up any previous global handler
-    delete global.__testSelectionHandler;
-
-    // Create controller instance using test base mocks
     controller = new ThematicDirectionsManagerController(testBase.mocks);
   });
 
   afterEach(async () => {
+    try {
+      if (controller && typeof controller.destroy === 'function') {
+        await controller.destroy();
+      }
+    } catch (err) {
+      // ignore destroy issues in cleanup paths under test
+    }
+
     await testBase.cleanup();
+    if (typeof setTimeout === 'function' && setTimeout._isMockFunction) {
+      jest.runOnlyPendingTimers();
+    }
+    jest.useRealTimers();
     jest.restoreAllMocks();
+    localStorage.clear();
+    document.body.innerHTML = '';
   });
 
-  describe('Complete Initialization Workflow', () => {
-    it('should initialize controller with all components', async () => {
-      await controller.initialize();
-
-      // Verify PreviousItemsDropdown was created
-      expect(global.__testSelectionHandler).toBeDefined();
-
-      // Verify no errors were logged during initialization
-      expect(testBase.mocks.logger.error).not.toHaveBeenCalled();
+  const arrangeStandardData = () => {
+    const data = [
+      createDirection({ id: 'dir-1', title: 'Heroic Journey', conceptId: 'concept-1' }),
+      createDirection({ id: 'dir-2', title: 'Dark Path', conceptId: null }),
+    ];
+    testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(data);
+    testBase.mocks.characterBuilderService.getCharacterConcept.mockImplementation(async (conceptId) => {
+      return data.find((item) => item.concept?.id === conceptId)?.concept || null;
     });
+    return data;
+  };
 
-    it('should handle initialization errors gracefully', async () => {
-      // Mock service to throw error during initialization
-      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockRejectedValue(
-        new Error('Service initialization failed')
-      );
+  it('loads directions, supports filtering, concept selection, keyboard shortcuts, and state persistence', async () => {
+    arrangeStandardData();
 
-      await controller.initialize();
+    await controller.initialize();
 
-      // Should log error but not throw
-      expect(testBase.mocks.logger.error).toHaveBeenCalled();
-    });
+    expect(document.querySelectorAll('.direction-card-editable').length).toBe(2);
+    expect(document.getElementById('total-directions').textContent).toBe('2');
+
+    const filterInput = document.getElementById('direction-filter');
+    filterInput.value = 'dark';
+    filterInput.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsync();
+
+    expect(document.querySelectorAll('.direction-card-editable').length).toBe(1);
+    expect(testBase.mocks.eventBus.dispatch).toHaveBeenCalledWith(
+      'core:analytics_track',
+      expect.objectContaining({ event: 'thematic_dropdown_interaction' })
+    );
+
+    // Concept selection shows concept details
+    const select = document.getElementById('concept-selector');
+    select.value = 'concept-1';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushAsync();
+
+    expect(
+      testBase.mocks.characterBuilderService.getCharacterConcept
+    ).toHaveBeenCalledWith('concept-1');
+    expect(document.getElementById('concept-display-container').style.display).toBe('block');
+
+    // Orphaned filter hides display
+    select.value = 'orphaned';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushAsync();
+    expect(document.getElementById('concept-display-container').style.display).toBe('none');
+
+    // Keyboard shortcut clears filter and persists state
+    filterInput.value = 'shadow';
+    filterInput.dispatchEvent(new Event('input', { bubbles: true }));
+    filterInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await flushAsync();
+    expect(filterInput.value).toBe('');
+
+    const storedState = JSON.parse(
+      localStorage.getItem('thematic-directions-dropdown-state')
+    );
+    expect(storedState.lastSelection).toBe('orphaned');
+    expect(storedState.lastFilter).toBe('');
   });
 
-  describe('Complete Data Loading Workflow', () => {
-    beforeEach(async () => {
-      await controller.initialize();
+  it('validates inline edits, reports failures, and persists successful updates', async () => {
+    arrangeStandardData();
+
+    await controller.initialize();
+
+    const titleField = document.querySelector(
+      '.direction-card-editable [data-field="title"][data-direction-id="dir-1"]'
+    );
+    titleField.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    let editor = titleField.parentElement.querySelector('.in-place-editor');
+    const input = editor.querySelector('.in-place-editor-input');
+    const saveBtn = editor.querySelector('.in-place-save-btn');
+
+    input.value = 'abc';
+    saveBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await flushAsync();
+    expect(
+      testBase.mocks.characterBuilderService.updateThematicDirection
+    ).not.toHaveBeenCalled();
+
+    input.value = 'Heroic Saga';
+    testBase.mocks.characterBuilderService.updateThematicDirection.mockRejectedValueOnce(
+      new Error('save failed')
+    );
+    saveBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await flushAsync();
+    editor = titleField.parentElement.querySelector('.in-place-editor');
+    expect(editor.querySelector('.in-place-editor-error').textContent).toContain(
+      'Failed to save changes'
+    );
+
+    testBase.mocks.characterBuilderService.updateThematicDirection.mockResolvedValue({
+      id: 'dir-1',
     });
+    saveBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await flushAsync();
 
-    it('should load and display thematic directions with concepts', async () => {
-      const mockDirections = [
-        {
-          direction: {
-            id: 'dir-1',
-            title: 'Heroic Journey',
-            description: 'A path of heroism and self-discovery',
-            thematicDirection: 'Hero becomes legend through trials',
-            conceptId: 'concept-1',
-          },
-          concept: {
-            id: 'concept-1',
-            concept: 'A brave knight seeking redemption',
-            status: 'completed',
-          },
-        },
-        {
-          direction: {
-            id: 'dir-2',
-            title: 'Dark Path',
-            description: 'A journey into darkness',
-            thematicDirection: 'Character falls to corruption',
-            conceptId: null,
-          },
-          concept: null,
-        },
-      ];
-
-      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
-        mockDirections
-      );
-
-      // Trigger data loading by calling the refresh method
-      const refreshMethod = controller._refreshDirections || controller.refresh;
-      if (typeof refreshMethod === 'function') {
-        await refreshMethod.call(controller);
-      }
-
-      // Verify service was called
-      expect(
-        testBase.mocks.characterBuilderService
-          .getAllThematicDirectionsWithConcepts
-      ).toHaveBeenCalled();
-
-      // The controller should process the data without errors
-      expect(testBase.mocks.logger.error).not.toHaveBeenCalled();
-    });
-
-    it('should handle empty data gracefully', async () => {
-      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
-        []
-      );
-
-      // Trigger data loading
-      const refreshMethod = controller._refreshDirections || controller.refresh;
-      if (typeof refreshMethod === 'function') {
-        await refreshMethod.call(controller);
-      }
-
-      // Should show empty state
-      expect(testBase.mocks.logger.error).not.toHaveBeenCalled();
-    });
-
-    it('should handle service errors during data loading', async () => {
-      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockRejectedValue(
-        new Error('Failed to load directions')
-      );
-
-      // Trigger data loading via refreshDropdown
-      await controller.refreshDropdown();
-
-      // Should log error and show error state
-      expect(testBase.mocks.logger.error).toHaveBeenCalled();
-    });
+    expect(
+      testBase.mocks.characterBuilderService.updateThematicDirection
+    ).toHaveBeenCalledWith('dir-1', { title: 'Heroic Saga' });
+    expect(titleField.textContent).toBe('Heroic Saga');
   });
 
-  describe('Concept Selection Integration', () => {
-    beforeEach(async () => {
-      await controller.initialize();
-    });
+  it('handles deletion workflow, notifications, and failures gracefully', async () => {
+    arrangeStandardData();
+    await controller.initialize();
 
-    it('should load and display concept when selected', async () => {
-      const mockConcept = {
-        id: 'concept-123',
-        concept: 'A brave knight seeking redemption for past mistakes',
-        status: 'completed',
-        createdAt: new Date('2023-01-01T12:00:00Z'),
-        updatedAt: new Date('2023-01-01T12:00:00Z'),
-        thematicDirections: [{ id: 'dir-1' }, { id: 'dir-2' }],
-        metadata: {},
-      };
+    const deleteBtn = document.querySelector('.direction-action-btn.delete-btn');
+    deleteBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    jest.runOnlyPendingTimers();
 
-      testBase.mocks.characterBuilderService.getCharacterConcept.mockResolvedValue(
-        mockConcept
-      );
+    const confirmBtn = document.getElementById('modal-confirm-btn');
+    confirmBtn.click();
+    await flushAsync();
 
-      // Get the selection handler
-      const selectionHandler = global.__testSelectionHandler;
-      expect(selectionHandler).toBeDefined();
+    expect(
+      testBase.mocks.characterBuilderService.deleteThematicDirection
+    ).toHaveBeenCalledWith('dir-1');
+    expect(testBase.mocks.eventBus.dispatch).toHaveBeenCalledWith(
+      'core:direction_deleted',
+      expect.objectContaining({ directionId: 'dir-1' })
+    );
 
-      // Trigger concept selection
-      await selectionHandler('concept-123');
+    const notification = document.getElementById('success-notification');
+    expect(notification.classList.contains('notification-visible')).toBe(true);
+    jest.runOnlyPendingTimers();
+    expect(notification.classList.contains('notification-visible')).toBe(false);
 
-      // Verify service was called
-      expect(
-        testBase.mocks.characterBuilderService.getCharacterConcept
-      ).toHaveBeenCalledWith('concept-123');
-
-      // Verify concept display is visible
-      const conceptDisplayContainer = document.getElementById(
-        'concept-display-container'
-      );
-      expect(conceptDisplayContainer.style.display).toBe('block');
-    });
-
-    it('should handle concept loading errors', async () => {
-      testBase.mocks.characterBuilderService.getCharacterConcept.mockRejectedValue(
-        new Error('Failed to load concept')
-      );
-
-      const selectionHandler = global.__testSelectionHandler;
-      await selectionHandler('concept-error');
-
-      // Should log error and hide concept display
-      expect(testBase.mocks.logger.error).toHaveBeenCalledWith(
-        expect.stringMatching(/Failed to load character concept/),
-        expect.any(Error)
-      );
-
-      const conceptDisplayContainer = document.getElementById(
-        'concept-display-container'
-      );
-      expect(conceptDisplayContainer.style.display).toBe('none');
-    });
+    // Simulate failure path
+    arrangeStandardData();
+    await controller.refreshDropdown();
+    testBase.mocks.characterBuilderService.deleteThematicDirection.mockRejectedValueOnce(
+      new Error('delete failed')
+    );
+    document.querySelector('.direction-action-btn.delete-btn').click();
+    jest.runOnlyPendingTimers();
+    document.getElementById('modal-confirm-btn').click();
+    await flushAsync();
+    expect(alertSpy).toHaveBeenCalledWith(
+      'Failed to delete direction. Please try again.'
+    );
   });
 
-  describe('Delete Direction Workflow Integration', () => {
-    beforeEach(async () => {
-      await controller.initialize();
-    });
+  it('cleans up orphaned directions and shows alert when none exist', async () => {
+    arrangeStandardData();
+    await controller.initialize();
 
-    it('should complete full delete workflow with confirmation', async () => {
-      const mockDirection = {
-        id: 'dir-to-delete',
-        title: 'Test Direction',
-      };
+    const alertModalSpy = jest.spyOn(controller, '_showConfirmationModal');
 
-      testBase.mocks.characterBuilderService.deleteThematicDirection.mockResolvedValue();
+    // First remove orphaned direction
+    document.getElementById('cleanup-orphans-btn').click();
+    jest.runOnlyPendingTimers();
+    document.getElementById('modal-confirm-btn').click();
+    await flushAsync();
 
-      // Create a spy for the confirmation modal
-      const showConfirmationSpy = jest
-        .spyOn(controller, '_showConfirmationModal')
-        .mockImplementation((options) => {
-          // Simulate user clicking confirm
-          setTimeout(() => {
-            if (options.onConfirm) {
-              options.onConfirm();
-            }
-          }, 0);
-        });
+    expect(
+      testBase.mocks.characterBuilderService.deleteThematicDirection
+    ).toHaveBeenLastCalledWith('dir-2');
+    expect(testBase.mocks.eventBus.dispatch).toHaveBeenCalledWith(
+      'core:orphans_cleaned',
+      expect.objectContaining({ deletedCount: 1 })
+    );
 
-      // Simulate delete button click by calling the delete method
-      const deleteMethod =
-        controller._deleteDirection || controller.deleteDirection;
-      if (typeof deleteMethod === 'function') {
-        await deleteMethod.call(controller, mockDirection);
-      }
-
-      // Wait for async operations
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
-      // Verify confirmation modal was shown
-      expect(showConfirmationSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          title: 'Delete Thematic Direction',
-          confirmText: 'Delete',
-          cancelText: 'Keep',
-          type: 'confirm',
-        })
-      );
-
-      showConfirmationSpy.mockRestore();
-    });
+    // No orphaned directions -> alert modal path
+    alertModalSpy.mockClear();
+    testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue([
+      createDirection({ id: 'dir-3', title: 'Unified', conceptId: 'concept-3' }),
+    ]);
+    await controller.refreshDropdown();
+    const cleanupBtn = document.getElementById('cleanup-orphans-btn');
+    cleanupBtn.disabled = false; // simulate manual trigger despite UI disablement
+    cleanupBtn.click();
+    expect(alertModalSpy).toHaveBeenCalledTimes(1);
+    expect(alertModalSpy.mock.calls[0][0]).toEqual(
+      expect.objectContaining({ type: 'alert', confirmText: 'OK' })
+    );
   });
 
-  describe('Modal Integration Workflow', () => {
-    beforeEach(async () => {
-      await controller.initialize();
-    });
+  it('refreshes dropdown preserving state and falls back on dropdown errors', async () => {
+    arrangeStandardData();
+    await controller.initialize();
 
-    it('should show and handle confirmation modal', () => {
-      const confirmAction = jest.fn();
-      const cancelAction = jest.fn();
+    const select = document.getElementById('concept-selector');
+    select.value = 'concept-1';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushAsync();
 
-      controller._showConfirmationModal({
-        title: 'Integration Test Modal',
-        message: 'This is a test message',
-        onConfirm: confirmAction,
-        onCancel: cancelAction,
-        confirmText: 'Yes',
-        cancelText: 'No',
-        type: 'confirm',
+    testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue([
+      createDirection({ id: 'dir-4', title: 'Fresh Start', conceptId: 'concept-4' }),
+    ]);
+    await controller.refreshDropdown();
+    expect(select.value).toBe('');
+    expect(testBase.mocks.eventBus.dispatch).toHaveBeenCalledWith(
+      'core:analytics_track',
+      expect.objectContaining({
+        properties: expect.objectContaining({ action: 'refresh_reset' }),
+      })
+    );
+
+    const clearSpy = jest
+      .spyOn(PreviousItemsDropdown.prototype, 'clear')
+      .mockImplementation(() => {
+        throw new Error('clear failed');
       });
-
-      // Verify modal is displayed
-      const modal = document.getElementById('confirmation-modal');
-      const modalTitle = document.getElementById('modal-title');
-      const modalMessage = document.getElementById('modal-message');
-
-      expect(modal.style.display).toBe('flex');
-      expect(modalTitle.textContent).toBe('Integration Test Modal');
-      expect(modalMessage.textContent).toBe('This is a test message');
-    });
-
-    it('should handle modal keyboard interactions', () => {
-      controller._showConfirmationModal({
-        title: 'Test',
-        message: 'Test',
-        onConfirm: jest.fn(),
-      });
-
-      // Verify ESC key handler was added
-      expect(global.document.addEventListener).toHaveBeenCalledWith(
-        'keydown',
-        expect.any(Function),
-        true
-      );
-    });
+    testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockRejectedValueOnce(
+      new Error('load failed')
+    );
+    await controller.refreshDropdown();
+    expect(select.classList.contains('native-fallback')).toBe(true);
+    clearSpy.mockRestore();
   });
 
-  describe('Error Recovery Integration', () => {
-    beforeEach(async () => {
-      await controller.initialize();
+  it('manages modal lifecycle, keyboard handlers, and performs thorough cleanup on destroy', async () => {
+    arrangeStandardData();
+    await controller.initialize();
+
+    controller._handleModalConfirm();
+    expect(testBase.mocks.logger.warn).toHaveBeenCalledWith(
+      'No pending modal action to confirm'
+    );
+
+    const cancelCallback = jest.fn();
+    controller._showConfirmationModal({
+      title: 'Confirm',
+      message: 'Confirm message',
+      onConfirm: jest.fn(),
+      onCancel: cancelCallback,
     });
+    jest.runOnlyPendingTimers();
 
-    it('should recover from service errors and allow retry', async () => {
-      // First call fails
-      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts
-        .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValueOnce([]);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(cancelCallback).toHaveBeenCalled();
 
-      // Trigger initial load (fails)
-      await controller.refreshDropdown();
+    controller._showEmptyWithMessage('Nothing here');
+    expect(
+      document.querySelector('#empty-state .empty-message').textContent
+    ).toBe('Nothing here');
 
-      // Verify error was logged
-      expect(testBase.mocks.logger.error).toHaveBeenCalled();
+    controller._showSuccess('Saved!', 10);
+    expect(
+      document.getElementById('success-notification').classList.contains(
+        'notification-visible'
+      )
+    ).toBe(true);
+    jest.runOnlyPendingTimers();
 
-      // Clear previous calls
-      testBase.mocks.logger.error.mockClear();
-
-      // Retry (succeeds)
-      await controller.refreshDropdown();
-
-      // Should not log new errors
-      expect(testBase.mocks.logger.error).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('Resource Cleanup Integration', () => {
-    beforeEach(async () => {
-      await controller.initialize();
-    });
-
-    it('should perform complete cleanup on destroy', () => {
-      // Set up various resources
-      controller._showSuccess('Test notification');
-      controller._showConfirmationModal({
-        title: 'Test Modal',
-        message: 'Test message',
-        onConfirm: jest.fn(),
-      });
-
-      // Verify resources are active
-      expect(global.setTimeout).toHaveBeenCalled();
-      expect(global.document.addEventListener).toHaveBeenCalled();
-
-      // Perform cleanup
-      controller._preDestroy();
-      controller._postDestroy();
-
-      // Verify cleanup occurred
-      expect(global.clearTimeout).toHaveBeenCalled();
-      expect(testBase.mocks.logger.error).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('State Transition Integration', () => {
-    beforeEach(async () => {
-      await controller.initialize();
-    });
-
-    it('should transition between loading, results, and empty states', async () => {
-      // Add spies for state methods
-      const showLoadingSpy = jest
-        .spyOn(controller, '_showLoading')
-        .mockImplementation(() => {});
-      const showResultsSpy = jest
-        .spyOn(controller, '_showResults')
-        .mockImplementation(() => {});
-      const showEmptySpy = jest
-        .spyOn(controller, '_showEmpty')
-        .mockImplementation(() => {});
-
-      // Mock service to return data
-      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
-        [
-          {
-            direction: { id: 'dir-1', title: 'Test' },
-            concept: { id: 'concept-1', concept: 'Test concept' },
-          },
-        ]
-      );
-
-      // Trigger refresh
-      const refreshMethod = controller._refreshDirections || controller.refresh;
-      if (typeof refreshMethod === 'function') {
-        await refreshMethod.call(controller);
-      }
-
-      // Should have shown loading initially (implementation dependent)
-      // and then shown results
-      expect(testBase.mocks.logger.error).not.toHaveBeenCalled();
-
-      showLoadingSpy.mockRestore();
-      showResultsSpy.mockRestore();
-      showEmptySpy.mockRestore();
-    });
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
+    await controller.destroy();
+    process.env.NODE_ENV = originalEnv;
   });
 });
+
