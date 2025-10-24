@@ -189,6 +189,18 @@ describe('GameSessionManager', () => {
       );
     });
 
+    it('should fall back to a default name when identifier is blank or missing', async () => {
+      await gameSessionManager.prepareForLoadGameSession('   ');
+
+      expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENGINE_OPERATION_IN_PROGRESS_UI,
+        {
+          titleMessage: 'Loading Saved Game...',
+          inputDisabledMessage: 'Loading game from Saved Game...',
+        }
+      );
+    });
+
     it('should stop engine if initialized before loading', async () => {
       engineState.setStarted('CurrentWorld');
 
@@ -207,8 +219,8 @@ describe('GameSessionManager', () => {
       expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
         ENGINE_OPERATION_IN_PROGRESS_UI,
         {
-          titleMessage: 'Loading ...',
-          inputDisabledMessage: 'Loading game from ...',
+          titleMessage: 'Loading Saved Game...',
+          inputDisabledMessage: 'Loading game from Saved Game...',
         }
       );
     });

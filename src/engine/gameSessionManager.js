@@ -240,7 +240,7 @@ class GameSessionManager {
       return identifierWithoutSeparators;
     }
 
-    return '';
+    return 'Saved Game';
   }
 
   /**
