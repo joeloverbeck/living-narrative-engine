@@ -21,6 +21,9 @@
       "positioning:closeness"
     ]
   },
+  "forbidden_components": {
+    "primary": ["positioning:giving_blowjob"]
+  },
   "template": "rub {primary}'s vagina over the {secondary}",
   "prerequisites": [],
   "visual": {
