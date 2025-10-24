@@ -372,7 +372,6 @@ class GameEngine {
     }
 
     this.#logger.debug('GameEngine.stop: Stopping game engine session...');
-    this.#resetEngineState();
 
     if (this.#playtimeTracker) {
       this.#playtimeTracker.endSessionAndAccumulate();
@@ -388,18 +387,29 @@ class GameEngine {
     });
     this.#logger.debug('GameEngine.stop: ENGINE_STOPPED_UI event dispatched.');
 
-    if (this.#turnManager) {
-      await this.#turnManager.stop();
-      this.#logger.debug('GameEngine.stop: TurnManager stopped.');
-    } else {
-      this.#logger.warn(
-        'GameEngine.stop: TurnManager service not available, cannot stop.'
-      );
-    }
+    try {
+      if (this.#turnManager) {
+        await this.#turnManager.stop();
+        this.#logger.debug('GameEngine.stop: TurnManager stopped.');
+      } else {
+        this.#logger.warn(
+          'GameEngine.stop: TurnManager service not available, cannot stop.'
+        );
+      }
 
-    this.#logger.debug(
-      'GameEngine.stop: Engine fully stopped and state reset.'
-    );
+      this.#resetEngineState();
+      this.#logger.debug(
+        'GameEngine.stop: Engine fully stopped and state reset.'
+      );
+    } catch (error) {
+      const caughtError =
+        error instanceof Error ? error : new Error(String(error));
+      this.#logger.error(
+        'GameEngine.stop: Failed to stop TurnManager cleanly. Engine state remains active.',
+        caughtError
+      );
+      throw caughtError;
+    }
   }
 
   async #handleLoadFailure(errorInfo, saveIdentifier) {

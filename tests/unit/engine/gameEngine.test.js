@@ -231,6 +231,33 @@ describeEngineSuite('GameEngine', (context) => {
       );
     });
 
+    it('should keep engine state active when turnManager.stop fails', async () => {
+      const stopError = new Error('Turn manager stop failed');
+      context.bed.getTurnManager().stop.mockImplementationOnce(() => {
+        throw stopError;
+      });
+
+      await expect(context.engine.stop()).rejects.toThrow(
+        'Turn manager stop failed'
+      );
+
+      expect(context.bed.getLogger().error).toHaveBeenCalledWith(
+        'GameEngine.stop: Failed to stop TurnManager cleanly. Engine state remains active.',
+        stopError
+      );
+
+      const status = context.engine.getEngineStatus();
+      expect(status).toEqual({
+        isInitialized: true,
+        isLoopRunning: true,
+        activeWorld: DEFAULT_TEST_WORLD,
+      });
+
+      expect(context.bed.getLogger().debug).not.toHaveBeenCalledWith(
+        'GameEngine.stop: Engine fully stopped and state reset.'
+      );
+    });
+
     it('should not take action when engine is already stopped', async () => {
       // Stop the engine first
       await context.engine.stop();
