@@ -7,7 +7,7 @@
  * @property {boolean} [isFunction] - Whether the dependency should be a function.
  */
 
-import { setupPrefixedLogger } from './loggerUtils.js';
+import { createPrefixedLogger, initLogger } from './loggerUtils.js';
 import { validateDependencies } from './dependencyUtils.js';
 
 // Import from dedicated types file - breaks circular dependency!
@@ -29,7 +29,8 @@ export class ServiceSetup {
    * @returns {import('../interfaces/coreServices.js').ILogger} Prefixed logger instance.
    */
   createLogger(serviceName, logger) {
-    return setupPrefixedLogger(logger, `${serviceName}: `);
+    const validatedLogger = initLogger(serviceName, logger);
+    return createPrefixedLogger(validatedLogger, `${serviceName}: `);
   }
 
   /**

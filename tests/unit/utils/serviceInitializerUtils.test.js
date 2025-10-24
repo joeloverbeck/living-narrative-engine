@@ -16,31 +16,24 @@ import {
   initializeServiceLogger,
   resolveExecutionLogger as resolveExecutionLoggerFn,
 } from '../../../src/utils/serviceInitializerUtils.js';
-import { setupPrefixedLogger } from '../../../src/utils/loggerUtils.js';
 import { validateDependencies } from '../../../src/utils/dependencyUtils.js';
 
 jest.mock('../../../src/utils/dependencyUtils.js', () => ({
   validateDependencies: jest.fn(),
 }));
 
-jest.mock('../../../src/utils/loggerUtils.js', () => ({
-  setupPrefixedLogger: jest.fn(),
-}));
-
 describe('serviceInitializer utilities', () => {
-  const baseLogger = {
-    debug: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    info: jest.fn(),
-  };
+  /** @type {import('../../../src/interfaces/coreServices.js').ILogger} */
+  let baseLogger;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    setupPrefixedLogger.mockImplementation((logger, prefix) => ({
-      prefix,
-      logger,
-    }));
+    baseLogger = {
+      debug: jest.fn(),
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+    };
   });
 
   afterEach(() => {
@@ -106,7 +99,6 @@ describe('serviceInitializer utilities', () => {
         depA: { value: {}, requiredMethods: ['a'] },
       };
       const logger = setupService('Svc', baseLogger, deps);
-      expect(setupPrefixedLogger).toHaveBeenCalledWith(baseLogger, 'Svc: ');
       expect(validateDependencies).toHaveBeenCalledWith(
         [
           {
@@ -118,17 +110,25 @@ describe('serviceInitializer utilities', () => {
         ],
         expect.any(Object)
       );
-      expect(logger).toEqual({ prefix: 'Svc: ', logger: baseLogger });
+      logger.info('msg');
+      expect(baseLogger.info).toHaveBeenCalledWith('Svc: msg');
     });
   });
 
   describe('ServiceSetup class helpers', () => {
-    it('createLogger delegates to setupPrefixedLogger with prefix', () => {
+    it('createLogger applies prefix to logger output', () => {
       const setup = new ServiceSetup();
       const logger = setup.createLogger('Component', baseLogger);
 
-      expect(setupPrefixedLogger).toHaveBeenCalledWith(baseLogger, 'Component: ');
-      expect(logger).toEqual({ prefix: 'Component: ', logger: baseLogger });
+      logger.warn('notice');
+      expect(baseLogger.warn).toHaveBeenCalledWith('Component: notice');
+    });
+
+    it('createLogger throws when logger dependency missing', () => {
+      const setup = new ServiceSetup();
+      expect(() => setup.createLogger('Component')).toThrow(
+        'Missing required dependency: logger.'
+      );
     });
 
     it('resolveExecutionLogger prioritizes execution context logger when available', () => {
@@ -150,8 +150,8 @@ describe('serviceInitializer utilities', () => {
     it('setupServiceLogger uses the shared ServiceSetup instance', () => {
       const logger = setupServiceLogger('LegacySvc', baseLogger);
 
-      expect(setupPrefixedLogger).toHaveBeenCalledWith(baseLogger, 'LegacySvc: ');
-      expect(logger).toEqual({ prefix: 'LegacySvc: ', logger: baseLogger });
+      logger.debug('legacy');
+      expect(baseLogger.debug).toHaveBeenCalledWith('LegacySvc: legacy');
       expect(validateDependencies).not.toHaveBeenCalled();
     });
 
@@ -162,7 +162,6 @@ describe('serviceInitializer utilities', () => {
 
       const logger = initHandlerLogger('Handler', baseLogger, deps);
 
-      expect(setupPrefixedLogger).toHaveBeenCalledWith(baseLogger, 'Handler: ');
       expect(validateDependencies).toHaveBeenCalledWith(
         [
           {
@@ -174,7 +173,8 @@ describe('serviceInitializer utilities', () => {
         ],
         expect.any(Object)
       );
-      expect(logger).toEqual({ prefix: 'Handler: ', logger: baseLogger });
+      logger.error('boom');
+      expect(baseLogger.error).toHaveBeenCalledWith('Handler: boom');
     });
 
     it('initializeServiceLogger mirrors setupService behavior', () => {
@@ -184,7 +184,6 @@ describe('serviceInitializer utilities', () => {
 
       const logger = initializeServiceLogger('InitSvc', baseLogger, deps);
 
-      expect(setupPrefixedLogger).toHaveBeenCalledWith(baseLogger, 'InitSvc: ');
       expect(validateDependencies).toHaveBeenCalledWith(
         [
           {
@@ -196,7 +195,8 @@ describe('serviceInitializer utilities', () => {
         ],
         expect.any(Object)
       );
-      expect(logger).toEqual({ prefix: 'InitSvc: ', logger: baseLogger });
+      logger.debug('init');
+      expect(baseLogger.debug).toHaveBeenCalledWith('InitSvc: init');
     });
 
     it('resolveExecutionLogger falls back to the default logger when no override exists', () => {
