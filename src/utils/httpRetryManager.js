@@ -48,10 +48,16 @@ export class RetryManager {
    * @returns {Promise<{retried: boolean}>} Whether a retry occurred.
    */
   async handleNetworkError(error, currentAttempt) {
+    const message =
+      typeof error?.message === 'string' ? error.message.toLowerCase() : '';
+    const networkErrorMessages = [
+      'failed to fetch',
+      'network request failed',
+      'fetch failed',
+    ];
     const isNetworkError =
       error instanceof TypeError &&
-      (error.message.toLowerCase().includes('failed to fetch') ||
-        error.message.toLowerCase().includes('network request failed'));
+      networkErrorMessages.some((snippet) => message.includes(snippet));
 
     if (isNetworkError && currentAttempt < this.maxRetries) {
       const waitTimeMs = RetryManager.calculateRetryDelay(
