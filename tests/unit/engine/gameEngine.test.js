@@ -480,6 +480,14 @@ describeEngineSuite('GameEngine', (context) => {
         persistenceCoordinator: mockPersistenceCoordinator,
       });
 
+      // Mock initialization service to return success
+      context.bed.env.initializationService.runInitializationSequence.mockResolvedValue(
+        { success: true }
+      );
+
+      // Initialize the engine to satisfy guard conditions
+      await engine.startNewGame(DEFAULT_TEST_WORLD);
+
       const result = await engine.triggerManualSave(saveName);
 
       expect(mockPersistenceCoordinator.triggerManualSave).toHaveBeenCalledWith(
@@ -502,6 +510,14 @@ describeEngineSuite('GameEngine', (context) => {
         logger: context.bed.getLogger(),
         persistenceCoordinator: mockPersistenceCoordinator,
       });
+
+      // Mock initialization service to return success
+      context.bed.env.initializationService.runInitializationSequence.mockResolvedValue(
+        { success: true }
+      );
+
+      // Initialize the engine to satisfy guard conditions
+      await engine.startNewGame(DEFAULT_TEST_WORLD);
 
       await engine.triggerManualSave(rawSaveName);
 
