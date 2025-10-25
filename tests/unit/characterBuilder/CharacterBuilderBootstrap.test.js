@@ -492,6 +492,27 @@ describe('CharacterBuilderBootstrap', () => {
       );
     });
 
+    it('logs debug when LLM adapter is unavailable', async () => {
+      const services = getAllServices({ [tokens.LLMAdapter]: undefined });
+      mockContainer.resolve.mockImplementation((token) => {
+        if (token === tokens.LLMAdapter) {
+          return undefined;
+        }
+        return services[token];
+      });
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+      };
+
+      await bootstrap.bootstrap(config);
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        '[CharacterBuilderBootstrap] LLM adapter not available or already initialized'
+      );
+    });
+
     it('logs an error when LLM services fail to initialize', async () => {
       let firstLLMAdapterCall = true;
       mockContainer.resolve.mockImplementation((token) => {
@@ -593,6 +614,62 @@ describe('CharacterBuilderBootstrap', () => {
       expect(mockContainer.register).toHaveBeenCalledWith(
         'customService2',
         customService2
+      );
+    });
+
+    it('resolves core motivations services using specialized tokens when provided as constructors', async () => {
+      class CoreMotivationsDisplayEnhancer {}
+      class CoreMotivationsGenerator {}
+
+      const enhancerInstance = { enhance: jest.fn() };
+      const generatorInstance = { generate: jest.fn() };
+
+      const baseServices = getAllServices({
+        [tokens.CoreMotivationsDisplayEnhancer]: enhancerInstance,
+        [tokens.CoreMotivationsGenerator]: generatorInstance,
+      });
+
+      mockContainer.resolve.mockImplementation((token) => {
+        if (token === tokens.CoreMotivationsDisplayEnhancer) {
+          return enhancerInstance;
+        }
+        if (token === tokens.CoreMotivationsGenerator) {
+          return generatorInstance;
+        }
+        if (token === 'displayEnhancer') {
+          return enhancerInstance;
+        }
+        if (token === 'coreMotivationsGenerator') {
+          return generatorInstance;
+        }
+        return baseServices[token];
+      });
+
+      class CustomController {
+        constructor(deps) {
+          this.deps = deps;
+          this.initialize = jest.fn().mockResolvedValue();
+        }
+      }
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: CustomController,
+        services: {
+          displayEnhancer: CoreMotivationsDisplayEnhancer,
+          coreMotivationsGenerator: CoreMotivationsGenerator,
+        },
+      };
+
+      const result = await bootstrap.bootstrap(config);
+
+      expect(result.controller.deps.displayEnhancer).toBe(enhancerInstance);
+      expect(result.controller.deps.coreMotivationsGenerator).toBe(generatorInstance);
+      expect(mockContainer.resolve).toHaveBeenCalledWith(
+        tokens.CoreMotivationsDisplayEnhancer
+      );
+      expect(mockContainer.resolve).toHaveBeenCalledWith(
+        tokens.CoreMotivationsGenerator
       );
     });
 
