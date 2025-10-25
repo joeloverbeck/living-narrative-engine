@@ -247,6 +247,42 @@ describe('clicheGenerationPrompt', () => {
           'ClicheGenerationPrompt: direction.coreTension must be a non-empty string'
         );
       });
+
+      it('should throw error for invalid direction.uniqueTwist', () => {
+        const invalidDirection = { ...validDirection, uniqueTwist: '   ' };
+        expect(() => {
+          buildClicheGenerationPrompt(validCharacterConcept, invalidDirection);
+        }).toThrow(
+          'ClicheGenerationPrompt: direction.uniqueTwist must be a non-empty string if provided'
+        );
+      });
+
+      it('should throw error when direction.uniqueTwist is not a string', () => {
+        const invalidDirection = { ...validDirection, uniqueTwist: 42 };
+        expect(() => {
+          buildClicheGenerationPrompt(validCharacterConcept, invalidDirection);
+        }).toThrow(
+          'ClicheGenerationPrompt: direction.uniqueTwist must be a non-empty string if provided'
+        );
+      });
+
+      it('should throw error for invalid direction.narrativePotential', () => {
+        const invalidDirection = { ...validDirection, narrativePotential: '' };
+        expect(() => {
+          buildClicheGenerationPrompt(validCharacterConcept, invalidDirection);
+        }).toThrow(
+          'ClicheGenerationPrompt: direction.narrativePotential must be a non-empty string if provided'
+        );
+      });
+
+      it('should throw error when direction.narrativePotential is not a string', () => {
+        const invalidDirection = { ...validDirection, narrativePotential: 100 };
+        expect(() => {
+          buildClicheGenerationPrompt(validCharacterConcept, invalidDirection);
+        }).toThrow(
+          'ClicheGenerationPrompt: direction.narrativePotential must be a non-empty string if provided'
+        );
+      });
     });
   });
 
@@ -689,6 +725,26 @@ describe('clicheGenerationPrompt', () => {
         );
       });
 
+      it('should not warn when trope count meets recommendation', () => {
+        const ampleTropesResponse = {
+          ...validLlmResponse,
+          tropesAndStereotypes: [
+            'trope 1',
+            'trope 2',
+            'trope 3',
+            'trope 4',
+            'trope 5',
+          ],
+        };
+
+        const result =
+          validateClicheGenerationResponseEnhanced(ampleTropesResponse);
+
+        expect(result.warnings).not.toContain(
+          expect.stringContaining('tropes provided (recommended: 5+)')
+        );
+      });
+
       it('should calculate quality metrics', () => {
         const result =
           validateClicheGenerationResponseEnhanced(validLlmResponse);
@@ -703,29 +759,66 @@ describe('clicheGenerationPrompt', () => {
         expect(result.qualityMetrics.overallScore).toBeGreaterThan(0);
       });
 
-      it('should generate recommendations', () => {
-        const sparseResponse = {
+      it('should generate recommendations for weak responses', () => {
+        const weakResponse = {
           categories: {
-            names: ['John'], // Sparse
-            physicalDescriptions: ['tall'],
-            personalityTraits: ['brooding'],
-            skillsAbilities: ['swordsmanship'],
-            typicalLikes: ['justice'],
-            typicalDislikes: ['evil'],
-            commonFears: ['death'],
-            genericGoals: ['save world'],
-            backgroundElements: ['orphaned'],
-            overusedSecrets: ['secret power'],
-            speechPatterns: ['heroic'],
+            names: [],
+            physicalDescriptions: ['a'],
+            personalityTraits: [],
+            skillsAbilities: [],
+            typicalLikes: [],
+            typicalDislikes: [],
+            commonFears: [],
+            genericGoals: [],
+            backgroundElements: [],
+            overusedSecrets: [],
+            speechPatterns: [],
           },
-          tropesAndStereotypes: ['chosen one'], // Few tropes
+          tropesAndStereotypes: [],
         };
 
-        const result = validateClicheGenerationResponseEnhanced(sparseResponse);
+        const result =
+          validateClicheGenerationResponseEnhanced(weakResponse);
 
         expect(result.recommendations.length).toBeGreaterThan(0);
-        expect(result.recommendations).toContain(
+        expect(result.recommendations).toEqual(
+          expect.arrayContaining([
+            'Ensure all required categories are populated',
+            'Consider generating more items per category for better coverage',
+            'Review response quality - multiple issues detected',
+          ])
+        );
+      });
+
+      it('should skip density recommendation when coverage is sufficient', () => {
+        const richItems = Array.from({ length: 5 }, (_, index) =>
+          `Detailed entry ${index}`
+        );
+
+        const robustResponse = {
+          categories: Object.fromEntries(
+            Object.keys(validLlmResponse.categories).map((category) => [
+              category,
+              richItems,
+            ])
+          ),
+          tropesAndStereotypes: [
+            'trope 1',
+            'trope 2',
+            'trope 3',
+            'trope 4',
+            'trope 5',
+          ],
+        };
+
+        const result =
+          validateClicheGenerationResponseEnhanced(robustResponse);
+
+        expect(result.recommendations).not.toContain(
           'Consider generating more items per category for better coverage'
+        );
+        expect(result.warnings).not.toContain(
+          expect.stringContaining('items are quite short')
         );
       });
 
