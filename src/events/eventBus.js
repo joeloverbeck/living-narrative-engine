@@ -58,15 +58,13 @@ class EventBus extends IEventBus {
       const mergedOptions = { ...defaultOptions, ...options };
 
       if (this.#batchMode) {
-        const existingOptions = this.#batchModeOptions;
-        const optionsUnchanged =
-          existingOptions !== null &&
-          Object.keys({ ...existingOptions, ...mergedOptions }).every(
-            (key) => existingOptions[key] === mergedOptions[key]
-          );
-
-        if (optionsUnchanged) {
-          return; // No changes required
+        if (
+          !this.#haveBatchOptionsChanged(
+            this.#batchModeOptions,
+            mergedOptions
+          )
+        ) {
+          return; // No-op when nothing changed
         }
 
         // Update configuration while remaining in batch mode (nested contexts)
@@ -147,6 +145,25 @@ class EventBus extends IEventBus {
 
     this.#logger.debug(
       `EventBus: Batch mode disabled for context: ${context}. Recursion depth counters reset.`
+    );
+  }
+
+  /**
+   * @description Determines whether the requested batch mode options differ from the current configuration.
+   * @param {object|null} currentOptions - Previously applied batch mode options.
+   * @param {object} newOptions - Incoming batch mode options.
+   * @returns {boolean} True when options have changed and should trigger an update.
+   */
+  #haveBatchOptionsChanged(currentOptions, newOptions) {
+    if (!currentOptions) {
+      return true;
+    }
+
+    return (
+      currentOptions.maxRecursionDepth !== newOptions.maxRecursionDepth ||
+      currentOptions.maxGlobalRecursion !== newOptions.maxGlobalRecursion ||
+      currentOptions.timeoutMs !== newOptions.timeoutMs ||
+      currentOptions.context !== newOptions.context
     );
   }
 
