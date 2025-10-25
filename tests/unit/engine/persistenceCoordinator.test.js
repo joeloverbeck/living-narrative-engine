@@ -31,27 +31,47 @@ import {
  * @returns {object} Test coordinator and its dependencies
  */
 function createCoordinator(overrides = {}) {
-  const logger = createMockLogger();
-  const dispatcher = createMockSafeEventDispatcher();
-  const persistenceService = createMockGamePersistenceService();
-  const sessionManager = {
-    prepareForLoadGameSession: jest.fn(),
-    finalizeLoadSuccess: jest.fn(),
-  };
-  const state = new EngineState();
-  state.setStarted(DEFAULT_ACTIVE_WORLD_FOR_SAVE);
-  const handleLoadFailure = jest.fn(async (err) => {
-    state.reset();
-    await dispatcher.dispatch(ENGINE_OPERATION_FAILED_UI, {
-      errorMessage: `Failed to load game: ${err instanceof Error ? err.message : err}`,
-      errorTitle: 'Load Failed',
+  const {
+    engineState: providedState,
+    logger: providedLogger,
+    safeEventDispatcher: providedDispatcher,
+    gamePersistenceService: providedPersistenceService,
+    sessionManager: providedSessionManager,
+    handleLoadFailure: providedHandleLoadFailure,
+    ...additionalOverrides
+  } = overrides;
+
+  const logger = providedLogger ?? createMockLogger();
+  const dispatcher = providedDispatcher ?? createMockSafeEventDispatcher();
+  const persistenceService =
+    providedPersistenceService !== undefined
+      ? providedPersistenceService
+      : createMockGamePersistenceService();
+  const sessionManager =
+    providedSessionManager !== undefined
+      ? providedSessionManager
+      : {
+          prepareForLoadGameSession: jest.fn(),
+          finalizeLoadSuccess: jest.fn(),
+        };
+  const state = providedState ?? new EngineState();
+  if (!providedState) {
+    state.setStarted(DEFAULT_ACTIVE_WORLD_FOR_SAVE);
+  }
+  const handleLoadFailure =
+    providedHandleLoadFailure ??
+    jest.fn(async (err) => {
+      state.reset();
+      await dispatcher.dispatch(ENGINE_OPERATION_FAILED_UI, {
+        errorMessage: `Failed to load game: ${err instanceof Error ? err.message : err}`,
+        errorTitle: 'Load Failed',
+      });
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : err,
+        data: null,
+      };
     });
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : err,
-      data: null,
-    };
-  });
   const coordinator = new PersistenceCoordinator({
     logger,
     gamePersistenceService: persistenceService,
@@ -59,7 +79,7 @@ function createCoordinator(overrides = {}) {
     sessionManager,
     engineState: state,
     handleLoadFailure,
-    ...overrides,
+    ...additionalOverrides,
   });
   return {
     coordinator,
@@ -116,6 +136,65 @@ describe('PersistenceCoordinator', () => {
     expect(logger.warn).toHaveBeenCalledWith(
       `GameEngine.triggerManualSave: SafeEventDispatcher reported failure when dispatching ENGINE_READY_UI after save "${DEFAULT_SAVE_NAME}".`
     );
+  });
+
+  it('triggerManualSave dispatches failure UI when engine is not initialized', async () => {
+    const customState = new EngineState();
+    const { coordinator, dispatcher, logger } = createCoordinator({
+      engineState: customState,
+    });
+
+    const result = await coordinator.triggerManualSave(DEFAULT_SAVE_NAME);
+
+    const expectedError = 'Game engine is not initialized. Cannot save game.';
+    expect(result).toEqual({ success: false, error: expectedError });
+    expect(logger.error).toHaveBeenCalledWith(
+      `GameEngine.triggerManualSave: ${expectedError}`
+    );
+    expect(dispatcher.dispatch.mock.calls).toEqual([
+      [
+        ENGINE_OPERATION_FAILED_UI,
+        {
+          errorMessage: `Failed to save game: ${expectedError}`,
+          errorTitle: 'Save Failed',
+        },
+      ],
+      [
+        ENGINE_READY_UI,
+        { activeWorld: null, message: SAVE_OPERATION_FINISHED_MESSAGE },
+      ],
+    ]);
+  });
+
+  it('triggerManualSave dispatches failure UI when persistence service is missing', async () => {
+    const { coordinator, dispatcher, logger, state } = createCoordinator({
+      gamePersistenceService: null,
+    });
+
+    const result = await coordinator.triggerManualSave(DEFAULT_SAVE_NAME);
+
+    const expectedError =
+      'GamePersistenceService is not available. Cannot save game.';
+    expect(result).toEqual({ success: false, error: expectedError });
+    expect(logger.error).toHaveBeenCalledWith(
+      `GameEngine.triggerManualSave: ${expectedError}`
+    );
+    expect(dispatcher.dispatch.mock.calls).toEqual([
+      [
+        ENGINE_OPERATION_FAILED_UI,
+        {
+          errorMessage: `Failed to save game: ${expectedError}`,
+          errorTitle: 'Save Failed',
+        },
+      ],
+      [
+        ENGINE_READY_UI,
+        {
+          activeWorld: state.activeWorld,
+          message: SAVE_OPERATION_FINISHED_MESSAGE,
+        },
+      ],
+    ]);
   });
 
   it('triggerManualSave forwards the latest engine state to the persistence service', async () => {
