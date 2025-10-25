@@ -15,13 +15,13 @@ import {
 
 class ActivityDescriptionService {
   #logger;
-  // eslint-disable-next-line no-unused-private-class-members
+   
   #entityManager;
-  // eslint-disable-next-line no-unused-private-class-members
+   
   #anatomyFormattingService;
-  // eslint-disable-next-line no-unused-private-class-members
+   
   #entityNameCache = new Map();
-  // eslint-disable-next-line no-unused-private-class-members
+   
   #activityIndex = null; // Phase 3: ACTDESC-020
 
   /**
@@ -118,37 +118,134 @@ class ActivityDescriptionService {
   }
 
   // Stub methods - to be implemented in subsequent tickets
-  // eslint-disable-next-line no-unused-private-class-members
+   
   #collectActivityMetadata(entityId) {
     // ACTDESC-006, ACTDESC-007
+    const activities = [];
+
+    // Collect from activity index (Phase 3)
     if (
-      !this.#activityIndex ||
-      typeof this.#activityIndex.findActivitiesForEntity !== 'function'
+      this.#activityIndex &&
+      typeof this.#activityIndex.findActivitiesForEntity === 'function'
     ) {
-      return [];
+      try {
+        const indexedActivities =
+          this.#activityIndex.findActivitiesForEntity(entityId);
+
+        if (!Array.isArray(indexedActivities)) {
+          this.#logger.warn(
+            `Activity index returned invalid data for entity ${entityId}`
+          );
+        } else {
+          activities.push(...indexedActivities.filter(Boolean));
+        }
+      } catch (error) {
+        this.#logger.error(
+          `Failed to collect activity metadata for entity ${entityId}`,
+          error
+        );
+      }
     }
 
+    // Collect inline metadata (ACTDESC-006)
     try {
-      const activities = this.#activityIndex.findActivitiesForEntity(entityId);
-
-      if (!Array.isArray(activities)) {
-        this.#logger.warn(
-          `Activity index returned invalid data for entity ${entityId}`
-        );
-        return [];
-      }
-
-      return activities.filter(Boolean);
+      const entity = this.#entityManager.getEntityInstance(entityId);
+      const inlineActivities = this.#collectInlineMetadata(entity);
+      activities.push(...inlineActivities);
     } catch (error) {
       this.#logger.error(
-        `Failed to collect activity metadata for entity ${entityId}`,
+        `Failed to collect inline metadata for entity ${entityId}`,
         error
       );
-      return [];
     }
+
+    return activities;
   }
 
-  // eslint-disable-next-line no-unused-private-class-members
+  /**
+   * Collect inline metadata from components.
+   *
+   * @param {object} entity - Entity instance
+   * @returns {Array<object>} Inline metadata activities
+   * @private
+   */
+   
+  #collectInlineMetadata(entity) {
+    const activities = [];
+    const componentIds = entity.componentTypeIds ?? [];
+
+    for (const componentId of componentIds) {
+      // Skip dedicated metadata components (already processed)
+      if (componentId === 'activity:description_metadata') {
+        continue;
+      }
+
+      const componentData = entity.getComponentData(componentId);
+      const activityMetadata = componentData?.activityMetadata;
+
+      if (activityMetadata?.shouldDescribeInActivity) {
+        try {
+          const activity = this.#parseInlineMetadata(
+            componentId,
+            componentData,
+            activityMetadata
+          );
+          if (activity) {
+            activities.push(activity);
+          }
+        } catch (error) {
+          this.#logger.error(
+            `Failed to parse inline metadata for ${componentId}`,
+            error
+          );
+        }
+      }
+    }
+
+    return activities;
+  }
+
+  /**
+   * Parse inline metadata into activity object.
+   *
+   * @param {string} componentId - Component ID
+   * @param {object} componentData - Full component data
+   * @param {object} activityMetadata - Activity metadata from component
+   * @returns {object|null} Activity object or null if invalid
+   * @private
+   */
+   
+  #parseInlineMetadata(componentId, componentData, activityMetadata) {
+    const { template, targetRole = 'entityId', priority = 50 } = activityMetadata;
+
+    if (!template) {
+      this.#logger.warn(`Inline metadata missing template for ${componentId}`);
+      return null;
+    }
+
+    // Resolve target entity ID
+    const targetEntityId = componentData[targetRole];
+
+    // For Phase 1 compatibility with existing formatter, provide a basic description
+    // Phase 2 (ACTDESC-008) will handle proper template interpolation
+    const basicDescription = template
+      .replace(/\{actor\}/g, '')
+      .replace(/\{target\}/g, '')
+      .trim();
+
+    return {
+      type: 'inline',
+      sourceComponent: componentId,
+      sourceData: componentData,
+      targetEntityId,
+      targetId: targetEntityId, // Alias for compatibility with formatter
+      priority,
+      template,
+      description: basicDescription, // Temporary for Phase 1 formatter
+    };
+  }
+
+   
   #filterByConditions(activities, _entity) {
     // ACTDESC-018 (Phase 3)
     return activities.filter((activity) => {
@@ -172,7 +269,7 @@ class ActivityDescriptionService {
     });
   }
 
-  // eslint-disable-next-line no-unused-private-class-members
+   
   #sortByPriority(activities) {
     // ACTDESC-016 (Phase 2)
     return [...activities].sort(
@@ -180,7 +277,7 @@ class ActivityDescriptionService {
     );
   }
 
-  // eslint-disable-next-line no-unused-private-class-members
+   
   #formatActivityDescription(activities, entity) {
     // ACTDESC-008 (Phase 1)
     const config =
@@ -216,7 +313,7 @@ class ActivityDescriptionService {
     return `${prefix}${formatted}${suffix}`.trim();
   }
 
-  // eslint-disable-next-line no-unused-private-class-members
+   
   #resolveEntityName(entityId) {
     // ACTDESC-009
     if (!entityId) {
