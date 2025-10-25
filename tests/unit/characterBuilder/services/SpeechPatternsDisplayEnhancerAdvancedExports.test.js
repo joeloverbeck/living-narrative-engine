@@ -10,7 +10,7 @@
  * - Category grouping
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import SpeechPatternsDisplayEnhancer from '../../../../src/characterBuilder/services/SpeechPatternsDisplayEnhancer.js';
 import {
@@ -407,6 +407,21 @@ describe('SpeechPatternsDisplayEnhancer - Advanced Exports', () => {
       expect(stats.categoryDistribution).toBeDefined();
       expect(typeof stats.categoryDistribution).toBe('object');
     });
+
+    it('should surface errors when statistics generation fails', () => {
+      const malformedPatterns = {
+        characterName: 'Glitched Character',
+      };
+
+      expect(() => enhancer.generateStatistics(malformedPatterns)).toThrow(
+        /Statistics generation failed: .*length/i
+      );
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to generate pattern statistics',
+        expect.any(Error)
+      );
+    });
   });
 
   describe('Export Filename Generation', () => {
@@ -436,6 +451,74 @@ describe('SpeechPatternsDisplayEnhancer - Advanced Exports', () => {
   });
 
   describe('Error Handling', () => {
+    it('should wrap validation failures when formatting for export', () => {
+      const invalidPatterns = {
+        speechPatterns: [],
+        characterName: 'Invalid Character',
+      };
+
+      expect(() => enhancer.formatForExport(invalidPatterns)).toThrow(
+        'Export formatting failed: No speech patterns to process'
+      );
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to format speech patterns for export',
+        expect.any(Error)
+      );
+    });
+
+    it('should wrap JSON formatting errors with helpful context', () => {
+      const patterns = createMockSpeechPatterns();
+      const circularDefinition = {};
+      circularDefinition.self = circularDefinition;
+
+      expect(() =>
+        enhancer.formatAsJson(patterns, {
+          includeCharacterData: true,
+          characterDefinition: circularDefinition,
+        })
+      ).toThrow(/JSON formatting failed: .*circular structure/i);
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to format patterns as JSON',
+        expect.any(Error)
+      );
+    });
+
+    it('should wrap template application errors with context', () => {
+      const invalidPatterns = {
+        speechPatterns: [],
+        characterName: 'Empty',
+      };
+
+      expect(() => enhancer.applyTemplate(invalidPatterns, 'default')).toThrow(
+        'Template application failed: No speech patterns to process'
+      );
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to apply template default',
+        expect.any(Error)
+      );
+    });
+
+    it('should fall back to a timestamped filename when generation fails', () => {
+      const originalToISOString = Date.prototype.toISOString;
+      Date.prototype.toISOString = jest.fn(() => {
+        throw new Error('ISO failure');
+      });
+
+      try {
+        const filename = enhancer.generateExportFilename('Hero Name');
+        expect(filename).toMatch(/^speech_patterns_export_\d+\.txt$/);
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'Failed to generate export filename',
+          expect.any(Error)
+        );
+      } finally {
+        Date.prototype.toISOString = originalToISOString;
+      }
+    });
+
     it('should handle invalid patterns in Markdown export', () => {
       expect(() => {
         enhancer.formatAsMarkdown(null);
