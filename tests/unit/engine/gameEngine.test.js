@@ -260,6 +260,40 @@ describeEngineSuite('GameEngine', (context) => {
       );
     });
 
+    it('should continue shutdown when playtime tracking fails', async () => {
+      const playtimeTracker = context.bed.getPlaytimeTracker();
+      const entityManager = context.bed.getEntityManager();
+      const trackerError = new Error('Playtime tracker failed');
+
+      playtimeTracker.endSessionAndAccumulate.mockImplementationOnce(() => {
+        throw trackerError;
+      });
+
+      playtimeTracker.reset.mockClear();
+      entityManager.clearAll.mockClear();
+      context.bed.getSafeEventDispatcher().dispatch.mockClear();
+
+      await expect(context.engine.stop()).rejects.toThrow(
+        'Playtime tracker failed'
+      );
+
+      expect(context.bed.getLogger().error).toHaveBeenCalledWith(
+        'GameEngine.stop: Failed to end playtime session cleanly.',
+        trackerError
+      );
+      expect(context.bed.getSafeEventDispatcher().dispatch).toHaveBeenCalledWith(
+        ENGINE_STOPPED_UI,
+        { inputDisabledMessage: ENGINE_STOPPED_MESSAGE }
+      );
+      expect(entityManager.clearAll).toHaveBeenCalledTimes(1);
+      expect(playtimeTracker.reset).toHaveBeenCalledTimes(1);
+      expect(context.engine.getEngineStatus()).toEqual({
+        isInitialized: false,
+        isLoopRunning: false,
+        activeWorld: null,
+      });
+    });
+
     it('should reset engine state even when turnManager.stop fails', async () => {
       const stopError = new Error('Turn manager stop failed');
       context.bed.getTurnManager().stop.mockImplementationOnce(() => {
