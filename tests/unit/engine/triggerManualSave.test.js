@@ -99,7 +99,13 @@ describeEngineSuite('GameEngine', (context) => {
             error,
           });
 
-          await context.engine.triggerManualSave(SAVE_NAME);
+          const result = await context.engine.triggerManualSave(SAVE_NAME);
+
+          expect(result).toEqual({
+            success: false,
+            error: error.message,
+            errorCode: PersistenceErrorCodes.INVALID_SAVE_NAME,
+          });
 
           const errorLogCall = context.bed
             .getLogger()

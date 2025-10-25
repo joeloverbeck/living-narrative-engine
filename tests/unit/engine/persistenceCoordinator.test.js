@@ -24,6 +24,10 @@ import {
   ENGINE_READY_UI,
   GAME_SAVED_ID,
 } from '../../../src/constants/eventIds.js';
+import {
+  PersistenceError,
+  PersistenceErrorCodes,
+} from '../../../src/persistence/persistenceErrors.js';
 
 /**
  * Helper to instantiate PersistenceCoordinator with mocks
@@ -383,6 +387,26 @@ describe('PersistenceCoordinator', () => {
       dispatcher.dispatch,
       ...buildFailedSaveDispatches(DEFAULT_SAVE_NAME, errorMessage)
     );
+  });
+
+  it('triggerManualSave normalizes PersistenceError failures to readable strings', async () => {
+    const { coordinator, persistenceService } = createCoordinator();
+    const persistenceError = new PersistenceError(
+      PersistenceErrorCodes.INVALID_SAVE_NAME,
+      'Invalid save name provided. Please enter a valid name.'
+    );
+    persistenceService.saveGame.mockResolvedValue({
+      success: false,
+      error: persistenceError,
+    });
+
+    const result = await coordinator.triggerManualSave(DEFAULT_SAVE_NAME);
+
+    expect(result).toEqual({
+      success: false,
+      error: persistenceError.message,
+      errorCode: PersistenceErrorCodes.INVALID_SAVE_NAME,
+    });
   });
 
   it('triggerManualSave logs warnings when dispatcher fails during failure notifications', async () => {
