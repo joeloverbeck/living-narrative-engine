@@ -137,6 +137,56 @@ describe('PersistenceCoordinator', () => {
     expect(logger.warn).toHaveBeenCalledWith(
       `GameEngine.triggerManualSave: SafeEventDispatcher reported failure when dispatching ENGINE_READY_UI after save "${DEFAULT_SAVE_NAME}".`
     );
+    expect(
+      logger.debug.mock.calls.some(([message]) =>
+        message.includes('Dispatched GAME_SAVED_ID')
+      )
+    ).toBe(false);
+  });
+
+  it('triggerManualSave logs saved notification dispatch success only when dispatcher succeeds', async () => {
+    const { coordinator, dispatcher, persistenceService, logger } =
+      createCoordinator();
+    const filePath = 'path/to.sav';
+    persistenceService.saveGame.mockResolvedValue({ success: true, filePath });
+
+    dispatcher.dispatch
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(true);
+
+    await coordinator.triggerManualSave(DEFAULT_SAVE_NAME);
+
+    expect(
+      logger.debug.mock.calls.some(([message]) =>
+        message.includes(
+          `Dispatched GAME_SAVED_ID for "${DEFAULT_SAVE_NAME}"`
+        )
+      )
+    ).toBe(true);
+  });
+
+  it('triggerManualSave avoids saved notification dispatch log when dispatcher reports failure', async () => {
+    const { coordinator, dispatcher, persistenceService, logger } =
+      createCoordinator();
+    const filePath = 'path/to.sav';
+    persistenceService.saveGame.mockResolvedValue({ success: true, filePath });
+
+    dispatcher.dispatch
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(true);
+
+    await coordinator.triggerManualSave(DEFAULT_SAVE_NAME);
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      `GameEngine.triggerManualSave: SafeEventDispatcher reported failure when dispatching GAME_SAVED_ID for save "${DEFAULT_SAVE_NAME}".`
+    );
+    expect(
+      logger.debug.mock.calls.some(([message]) =>
+        message.includes('Dispatched GAME_SAVED_ID')
+      )
+    ).toBe(false);
   });
 
   it('triggerManualSave continues when dispatcher throws and logs errors', async () => {

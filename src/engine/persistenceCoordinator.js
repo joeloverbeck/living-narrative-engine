@@ -223,9 +223,11 @@ class PersistenceCoordinator {
           normalizedError
         );
       }
-      this.#logger.debug(
-        `GameEngine.triggerManualSave: Dispatched GAME_SAVED_ID for "${saveName}".`
-      );
+      if (savedDispatched === true) {
+        this.#logger.debug(
+          `GameEngine.triggerManualSave: Dispatched GAME_SAVED_ID for "${saveName}".`
+        );
+      }
       this.#logger.debug(
         `GameEngine.triggerManualSave: Save successful. Name: "${saveName}".`
       );
