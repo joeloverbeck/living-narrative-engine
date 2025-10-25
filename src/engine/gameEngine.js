@@ -561,25 +561,43 @@ class GameEngine {
       this.#logger.debug(
         'GameEngine.showSaveGameUI: Dispatching request to show Save Game UI.'
       );
-      const success = await this.#safeEventDispatcher.dispatch(
-        REQUEST_SHOW_SAVE_GAME_UI,
-        {}
-      );
-      if (!success) {
-        this.#logger.warn(
-          'GameEngine.showSaveGameUI: SafeEventDispatcher reported failure when dispatching Save Game UI request.'
+      try {
+        const success = await this.#safeEventDispatcher.dispatch(
+          REQUEST_SHOW_SAVE_GAME_UI,
+          {}
+        );
+        if (!success) {
+          this.#logger.warn(
+            'GameEngine.showSaveGameUI: SafeEventDispatcher reported failure when dispatching Save Game UI request.'
+          );
+        }
+      } catch (error) {
+        const normalizedError =
+          error instanceof Error ? error : new Error(String(error));
+        this.#logger.error(
+          'GameEngine.showSaveGameUI: SafeEventDispatcher threw when dispatching Save Game UI request.',
+          normalizedError
         );
       }
     } else {
       this.#logger.warn(
         'GameEngine.showSaveGameUI: Saving is not currently allowed.'
       );
-      const infoDispatched = await this.#safeEventDispatcher.dispatch(
-        CANNOT_SAVE_GAME_INFO
-      );
-      if (!infoDispatched) {
-        this.#logger.warn(
-          'GameEngine.showSaveGameUI: SafeEventDispatcher reported failure when dispatching CANNOT_SAVE_GAME_INFO.'
+      try {
+        const infoDispatched = await this.#safeEventDispatcher.dispatch(
+          CANNOT_SAVE_GAME_INFO
+        );
+        if (!infoDispatched) {
+          this.#logger.warn(
+            'GameEngine.showSaveGameUI: SafeEventDispatcher reported failure when dispatching CANNOT_SAVE_GAME_INFO.'
+          );
+        }
+      } catch (error) {
+        const normalizedError =
+          error instanceof Error ? error : new Error(String(error));
+        this.#logger.error(
+          'GameEngine.showSaveGameUI: SafeEventDispatcher threw when dispatching CANNOT_SAVE_GAME_INFO.',
+          normalizedError
         );
       }
     }
@@ -604,13 +622,22 @@ class GameEngine {
     this.#logger.debug(
       'GameEngine.showLoadGameUI: Dispatching request to show Load Game UI.'
     );
-    const success = await this.#safeEventDispatcher.dispatch(
-      REQUEST_SHOW_LOAD_GAME_UI,
-      {}
-    );
-    if (!success) {
-      this.#logger.warn(
-        'GameEngine.showLoadGameUI: SafeEventDispatcher reported failure when dispatching Load Game UI request.'
+    try {
+      const success = await this.#safeEventDispatcher.dispatch(
+        REQUEST_SHOW_LOAD_GAME_UI,
+        {}
+      );
+      if (!success) {
+        this.#logger.warn(
+          'GameEngine.showLoadGameUI: SafeEventDispatcher reported failure when dispatching Load Game UI request.'
+        );
+      }
+    } catch (error) {
+      const normalizedError =
+        error instanceof Error ? error : new Error(String(error));
+      this.#logger.error(
+        'GameEngine.showLoadGameUI: SafeEventDispatcher threw when dispatching Load Game UI request.',
+        normalizedError
       );
     }
   }

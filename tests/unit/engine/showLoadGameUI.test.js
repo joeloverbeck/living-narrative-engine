@@ -37,6 +37,23 @@ describeEngineSuite('GameEngine', (context) => {
       );
     });
 
+    it('should log error if dispatcher throws while requesting Load Game UI', async () => {
+      const dispatchError = new Error('load ui dispatch failed');
+      context.bed
+        .getSafeEventDispatcher()
+        .dispatch.mockRejectedValueOnce(dispatchError);
+
+      await context.engine.showLoadGameUI();
+
+      expect(context.bed.getLogger().error).toHaveBeenCalledWith(
+        'GameEngine.showLoadGameUI: SafeEventDispatcher threw when dispatching Load Game UI request.',
+        dispatchError
+      );
+      expectShowLoadGameUIDispatch(
+        context.bed.getSafeEventDispatcher().dispatch
+      );
+    });
+
     generateServiceUnavailableTests(
       [[tokens.GamePersistenceService, GAME_PERSISTENCE_LOAD_UI_UNAVAILABLE]],
       async (bed, engine) => {

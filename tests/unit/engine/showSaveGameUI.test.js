@@ -50,6 +50,26 @@ describeInitializedEngineSuite(
         );
       });
 
+      it('should log error if dispatcher throws while requesting Save Game UI', async () => {
+        context.bed
+          .getGamePersistenceService()
+          .isSavingAllowed.mockReturnValue(true);
+        const dispatchError = new Error('dispatch failed');
+        context.bed
+          .getSafeEventDispatcher()
+          .dispatch.mockRejectedValueOnce(dispatchError);
+
+        await context.engine.showSaveGameUI();
+
+        expect(context.bed.getLogger().error).toHaveBeenCalledWith(
+          'GameEngine.showSaveGameUI: SafeEventDispatcher threw when dispatching Save Game UI request.',
+          dispatchError
+        );
+        expectShowSaveGameUIDispatch(
+          context.bed.getSafeEventDispatcher().dispatch
+        );
+      });
+
       it('should dispatch CANNOT_SAVE_GAME_INFO if saving is not allowed and log reason', async () => {
         context.bed
           .getGamePersistenceService()
@@ -86,6 +106,29 @@ describeInitializedEngineSuite(
         expect(context.bed.getLogger().warn).toHaveBeenCalledWith(
           'GameEngine.showSaveGameUI: SafeEventDispatcher reported failure when dispatching CANNOT_SAVE_GAME_INFO.'
         );
+      });
+
+      it('should log error when dispatcher throws while dispatching CANNOT_SAVE_GAME_INFO', async () => {
+        context.bed
+          .getGamePersistenceService()
+          .isSavingAllowed.mockReturnValue(false);
+        const dispatchError = new Error('info dispatch failed');
+        context.bed
+          .getSafeEventDispatcher()
+          .dispatch.mockRejectedValueOnce(dispatchError);
+
+        await context.engine.showSaveGameUI();
+
+        expect(context.bed.getLogger().warn).toHaveBeenCalledWith(
+          'GameEngine.showSaveGameUI: Saving is not currently allowed.'
+        );
+        expect(context.bed.getLogger().error).toHaveBeenCalledWith(
+          'GameEngine.showSaveGameUI: SafeEventDispatcher threw when dispatching CANNOT_SAVE_GAME_INFO.',
+          dispatchError
+        );
+        expect(
+          context.bed.getSafeEventDispatcher().dispatch
+        ).toHaveBeenCalledWith(CANNOT_SAVE_GAME_INFO);
       });
 
       generateServiceUnavailableTests(
