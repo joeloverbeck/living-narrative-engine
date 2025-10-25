@@ -134,7 +134,15 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
     // Direction selector change
     if (this._getElement('directionSelector')) {
       this._addEventListener('directionSelector', 'change', (e) => {
-        this.#handleDirectionSelection(e.target.value);
+        Promise.resolve()
+          .then(() => this.#handleDirectionSelection(e.target.value))
+          .catch((error) => {
+            this._handleServiceError(
+              error,
+              'select direction',
+              'Failed to load direction data. Please try selecting another direction.'
+            );
+          });
       });
     }
 
