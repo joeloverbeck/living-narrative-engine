@@ -140,6 +140,8 @@
     ],
     "macros": [],
     "scopes": [
+      "actor_being_bitten_by_me.scope",
+      "actor_biting_my_neck.scope",
       "actor_im_straddling.scope",
       "actors_both_sitting_close.scope",
       "actors_im_facing_away_from.scope",
