@@ -25,10 +25,28 @@
     }
   ],
   "content": {
-    "actions": ["bare_fangs.action.json", "bite_neck_carefully.action.json", "lunge_bite_neck_violently.action.json"],
+    "actions": [
+      "bare_fangs.action.json",
+      "bite_neck_carefully.action.json",
+      "drink_blood.action.json",
+      "lunge_bite_neck_violently.action.json",
+      "pull_out_fangs.action.json"
+    ],
     "components": ["is_vampire.component.json"],
-    "conditions": ["event-is-action-bare-fangs.condition.json", "event-is-action-bite-neck-carefully.condition.json", "event-is-action-lunge-bite-neck-violently.condition.json"],
-    "rules": ["handle_bare_fangs.rule.json", "handle_bite_neck_carefully.rule.json", "handle_lunge_bite_neck_violently.rule.json"],
+    "conditions": [
+      "event-is-action-bare-fangs.condition.json",
+      "event-is-action-bite-neck-carefully.condition.json",
+      "event-is-action-drink-blood.condition.json",
+      "event-is-action-lunge-bite-neck-violently.condition.json",
+      "event-is-action-pull-out-fangs.condition.json"
+    ],
+    "rules": [
+      "handle_bare_fangs.rule.json",
+      "handle_bite_neck_carefully.rule.json",
+      "handle_drink_blood.rule.json",
+      "handle_lunge_bite_neck_violently.rule.json",
+      "handle_pull_out_fangs.rule.json"
+    ],
     "entities": {
       "definitions": [],
       "instances": []
