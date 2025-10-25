@@ -113,7 +113,7 @@ describe('Spatial Index Synchronization Timing Bug', () => {
     expect(entitiesInLocation.has(targetId)).toBe(true);
   });
 
-  it('DEMONSTRATES THE BUG: SpatialIndexSynchronizer initialized AFTER entities are created', () => {
+  it('populates the spatial index when SpatialIndexSynchronizer attaches after entities exist', () => {
     // Create real infrastructure
     const spatialIndexManager = new SpatialIndexManager({ logger });
     const locationQueryService = new LocationQueryService({
@@ -175,6 +175,7 @@ describe('Spatial Index Synchronization Timing Bug', () => {
       spatialIndexManager,
       safeEventDispatcher,
       logger,
+      entityManager,
     });
 
     // The spatial index should be empty because SpatialIndexSynchronizer
@@ -182,13 +183,13 @@ describe('Spatial Index Synchronization Timing Bug', () => {
     const entitiesInLocation =
       realEntityManagerAdapter.getEntitiesInLocation(locationId);
     console.log(
-      'TIMING BUG: entities found in location:',
+      'Spatial index after late initialization:',
       Array.from(entitiesInLocation)
     );
 
-    // This demonstrates the timing bug: spatial index is empty because
-    // SpatialIndexSynchronizer missed the entity creation events
-    expect(entitiesInLocation.size).toBe(0);
+    expect(entitiesInLocation.size).toBe(2);
+    expect(entitiesInLocation.has(actorId)).toBe(true);
+    expect(entitiesInLocation.has(targetId)).toBe(true);
   });
 
   it('Works correctly when SpatialIndexSynchronizer is initialized BEFORE entities', async () => {
@@ -342,6 +343,7 @@ describe('Spatial Index Synchronization Timing Bug', () => {
       spatialIndexManager,
       safeEventDispatcher,
       logger,
+      entityManager,
     });
   });
 });
