@@ -422,3 +422,5 @@ export function createCoreMotivationsGenerationLlmConfig(baseLlmConfig) {
 
   return enhancedConfig;
 }
+
+export { formatClichesForPrompt };
