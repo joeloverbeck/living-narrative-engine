@@ -378,16 +378,28 @@ class GameEngine {
 
     this.#logger.debug('GameEngine.stop: Stopping game engine session...');
 
+    let caughtError = null;
+
     if (this.#playtimeTracker) {
-      this.#playtimeTracker.endSessionAndAccumulate();
-      this.#logger.debug('GameEngine.stop: Playtime session ended.');
+      try {
+        this.#playtimeTracker.endSessionAndAccumulate();
+        this.#logger.debug('GameEngine.stop: Playtime session ended.');
+      } catch (trackerError) {
+        const normalizedTrackerError =
+          trackerError instanceof Error
+            ? trackerError
+            : new Error(String(trackerError));
+        this.#logger.error(
+          'GameEngine.stop: Failed to end playtime session cleanly.',
+          normalizedTrackerError
+        );
+        caughtError = normalizedTrackerError;
+      }
     } else {
       this.#logger.warn(
         'GameEngine.stop: PlaytimeTracker service not available, cannot end session.'
       );
     }
-
-    let caughtError = null;
 
     try {
       const stopEventResult = await this.#safeEventDispatcher.dispatch(
@@ -414,10 +426,14 @@ class GameEngine {
         );
       }
     } catch (error) {
-      caughtError = error instanceof Error ? error : new Error(String(error));
+      const normalizedError =
+        error instanceof Error ? error : new Error(String(error));
+      if (!caughtError) {
+        caughtError = normalizedError;
+      }
       this.#logger.error(
         'GameEngine.stop: Encountered error while stopping engine. Engine state will be reset.',
-        caughtError
+        normalizedError
       );
     } finally {
       try {
