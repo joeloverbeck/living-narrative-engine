@@ -2023,6 +2023,30 @@ export class CharacterBuilderService {
     );
   }
 
+  /**
+   * Test-only helper to set circuit breaker state
+   *
+   * @param {string} key - Circuit breaker key
+   * @param {{failures: number, lastFailureTime: number}} state - Circuit breaker state
+   * @returns {void}
+   */
+  __setCircuitBreakerStateForTests(key, state) {
+    this.#circuitBreakers.set(key, state);
+  }
+
+  /**
+   * Test-only helper to read circuit breaker state
+   *
+   * @param {string} key - Circuit breaker key
+   * @returns {{failures: number, lastFailureTime: number}} Circuit breaker state snapshot
+   */
+  __getCircuitBreakerStateForTests(key) {
+    return {
+      failures: this.#getCircuitBreakerCount(key),
+      lastFailureTime: this.#getLastFailureTime(key),
+    };
+  }
+
   // ============= Cliché Cache Management =============
 
   /**
@@ -2075,15 +2099,6 @@ export class CharacterBuilderService {
    */
   #invalidateClicheCache(directionId) {
     this.#clicheCache.delete(directionId);
-  }
-
-  /**
-   * Clear all cliché caches
-   *
-   * @private
-   */
-  #clearClicheCache() {
-    this.#clicheCache.clear();
   }
 
   /**
