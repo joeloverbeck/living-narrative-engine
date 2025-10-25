@@ -100,6 +100,57 @@ export function getEnvironmentVariable(key, defaultValue = '') {
   return defaultValue;
 }
 
+const TRUTHY_ENV_VALUES = new Set(['true', '1', 'yes', 'on']);
+const FALSY_ENV_VALUES = new Set(['false', '0', 'no', 'off']);
+
+/**
+ * Normalizes a raw environment flag value into a boolean.
+ *
+ * @description Accepts a variety of truthy and falsy string representations
+ * (case and whitespace insensitive) and falls back to a default when no value
+ * is provided.
+ * @param {unknown} rawValue - The raw value retrieved from environment lookup.
+ * @param {boolean} [defaultValue=false] - Fallback boolean used when the value
+ *   is absent or empty.
+ * @returns {boolean} Normalized boolean flag.
+ */
+function normalizeBooleanEnvValue(rawValue, defaultValue = false) {
+  if (rawValue === undefined || rawValue === null) {
+    return defaultValue;
+  }
+
+  const normalized = String(rawValue).trim().toLowerCase();
+  if (normalized.length === 0) {
+    return defaultValue;
+  }
+
+  if (TRUTHY_ENV_VALUES.has(normalized)) {
+    return true;
+  }
+
+  if (FALSY_ENV_VALUES.has(normalized)) {
+    return false;
+  }
+
+  return defaultValue;
+}
+
+/**
+ * Retrieves an environment variable and converts it to a boolean flag.
+ *
+ * @description Uses {@link getEnvironmentVariable} for lookup and normalizes
+ * common truthy and falsy values (e.g., "TRUE", "1", "on"). When the
+ * variable is undefined or empty, the provided default value is returned.
+ * @param {string} key - Environment variable key.
+ * @param {boolean} [defaultValue=false] - Default boolean returned when the
+ *   variable is missing.
+ * @returns {boolean} Normalized boolean value.
+ */
+export function getBooleanEnvironmentVariable(key, defaultValue = false) {
+  const rawValue = getEnvironmentVariable(key, undefined);
+  return normalizeBooleanEnvValue(rawValue, defaultValue);
+}
+
 /**
  * Gets the current NODE_ENV or equivalent
  * @returns {string} The environment mode: 'test', 'production', 'development'
@@ -133,16 +184,7 @@ export function getEnvironmentMode() {
  * @returns {boolean} True if debug config loading should be skipped
  */
 export function shouldSkipDebugConfig() {
-  const skipValue = getEnvironmentVariable('SKIP_DEBUG_CONFIG', 'false');
-  const normalizedValue = String(skipValue).trim().toLowerCase();
-
-  // Handle various truthy values
-  return (
-    normalizedValue === 'true' ||
-    normalizedValue === '1' ||
-    normalizedValue === 'yes' ||
-    normalizedValue === 'on'
-  );
+  return getBooleanEnvironmentVariable('SKIP_DEBUG_CONFIG', false);
 }
 
 /**
@@ -166,8 +208,7 @@ export function getEnvironmentConfig() {
     // Common environment variables
     nodeEnv: getEnvironmentVariable('NODE_ENV', 'development'),
     debugLogMode: getEnvironmentVariable('DEBUG_LOG_MODE', ''),
-    debugLogSilent:
-      getEnvironmentVariable('DEBUG_LOG_SILENT', 'false') === 'true',
+    debugLogSilent: getBooleanEnvironmentVariable('DEBUG_LOG_SILENT', false),
   };
 }
 
