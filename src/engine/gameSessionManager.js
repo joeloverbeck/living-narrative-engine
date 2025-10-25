@@ -229,8 +229,9 @@ class GameSessionManager {
    * Derives a concise, user-facing save name from a raw identifier.
    *
    * @private
-   * @description Strips directory segments and trailing separators so load
-   * operations display a readable save name in UI messages.
+   * @description Strips directory segments, trailing separators and dot-only
+   * path tokens so load operations display a readable save name in UI
+   * messages.
    * @param {string} saveIdentifier - Identifier used to locate the save file.
    * @returns {string} Condensed save name suitable for UI messaging.
    */
@@ -240,20 +241,27 @@ class GameSessionManager {
         ? saveIdentifier
         : String(saveIdentifier ?? '');
 
-    const pathSegments = normalizedIdentifier
+    const trimmedSegments = normalizedIdentifier
       .split(/[/\\]+/)
       .map((segment) => segment.trim())
       .filter((segment) => segment.length > 0);
 
-    if (pathSegments.length > 0) {
-      return pathSegments[pathSegments.length - 1];
+    const meaningfulSegments = trimmedSegments.filter(
+      (segment) => !/^[.]+$/.test(segment)
+    );
+
+    if (meaningfulSegments.length > 0) {
+      return meaningfulSegments[meaningfulSegments.length - 1];
     }
 
     const identifierWithoutSeparators = normalizedIdentifier
       .replace(/[/\\]/g, '')
       .trim();
 
-    if (identifierWithoutSeparators.length > 0) {
+    if (
+      identifierWithoutSeparators.length > 0 &&
+      !/^[.]+$/.test(identifierWithoutSeparators)
+    ) {
       return identifierWithoutSeparators;
     }
 
