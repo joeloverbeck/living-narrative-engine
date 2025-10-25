@@ -1,0 +1,77 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_lunge_bite_neck_violently",
+  "comment": "Handles the 'vampirism:lunge_bite_neck_violently' action. Adds biting components to actor and target, dispatches descriptive perceptible event with predatory message, and ends turn.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "vampirism:event-is-action-lunge-bite-neck-violently"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "target", "result_variable": "targetName" }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "ADD_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "positioning:biting_neck",
+        "value": {
+          "bitten_entity_id": "{event.payload.targetId}",
+          "initiated": true
+        }
+      }
+    },
+    {
+      "type": "ADD_COMPONENT",
+      "parameters": {
+        "entity_ref": "target",
+        "component_type": "positioning:being_bitten_in_neck",
+        "value": {
+          "biting_entity_id": "{event.payload.actorId}"
+        }
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} lunges at {context.targetName} and sinks their teeth on {context.targetName}'s neck predatorily."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.targetId}"
+      }
+    },
+    { "macro": "core:logSuccessAndEndTurn" }
+  ]
+}

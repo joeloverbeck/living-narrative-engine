@@ -47,7 +47,7 @@ export async function resolveAndInitialize(
       throw new Error(`${token} missing ${initFnName}()`);
     }
 
-    await Promise.resolve(initFn.apply(service, args));
+    await initFn.apply(service, args);
     logger.debug(`${stage}: Initialized successfully.`);
     return baseStageSuccess();
   } catch (err) {

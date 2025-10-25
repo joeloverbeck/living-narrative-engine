@@ -499,6 +499,7 @@ export class ModTestHandlerFactory {
       'hand-holding': this.createHandlersWithComponentMutations.bind(this),
       hugging: this.createHandlersWithComponentMutations.bind(this),
       kissing: this.createHandlersWithMouthEngagement.bind(this),
+      vampirism: this.createHandlersWithComponentMutations.bind(this),
     };
 
     if (typeof modCategory === 'string' && modCategory.startsWith('sex-')) {

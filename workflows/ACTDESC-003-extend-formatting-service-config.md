@@ -76,53 +76,75 @@ getActivityIntegrationConfig() {
 - [ ] Configuration object matches specification
 - [ ] All properties have appropriate defaults
 - [ ] JSDoc documentation complete
-- [ ] Method is accessible to ActivityDescriptionService
+- [ ] Method is accessible to ActivityDescriptionService (will be created in ACTDESC-005)
 - [ ] Phase 1 properties are functional
 - [ ] Phase 2/3 properties are defined but inactive (flags set to false)
 
 ## Dependencies
 - None (can be done independently)
+- **Note**: This configuration will be consumed by ActivityDescriptionService (created in ACTDESC-005)
 
 ## Testing Requirements
 - Unit test verifies method returns correct config object
 - Test that all required properties are present
 - Test that defaults are appropriate for Phase 1
-- Verify config can be retrieved by other services
+- Verify config structure matches the pattern used by `getEquipmentIntegrationConfig()`
+- Test follows existing patterns in `tests/unit/services/anatomyFormattingService.test.js`
 
 ## Implementation Notes
-1. Follow the pattern used by `getEquipmentIntegrationConfig()` (if exists)
-2. Start with Phase 1 defaults (simple, safe)
-3. Add Phase 2/3 properties with disabled flags for future activation
-4. Consider making configuration overridable through external config file (future enhancement)
+1. **Follow existing pattern**: Use `getEquipmentIntegrationConfig()` (lines 317-329) as the reference pattern
+2. **Pattern consistency**: Note that `getEquipmentIntegrationConfig()` uses a flat structure, while this config uses nested `nameResolution` object - document this architectural decision
+3. Start with Phase 1 defaults (simple, safe)
+4. Add Phase 2/3 properties with disabled flags for future activation
+5. Consider making configuration overridable through external config file (future enhancement)
+6. **Placement**: Add the new method after `getEquipmentIntegrationConfig()` (around line 330)
 
 ## Code Example
 ```javascript
 describe('AnatomyFormattingService', () => {
   it('should provide activity integration config', () => {
-    const service = new AnatomyFormattingService({ /* deps */ });
+    // Use existing test helpers from anatomyFormattingService.test.js
+    const registry = createMockRegistry([], ['core']);
+    const logger = createMockLogger();
+    const safeEventDispatcher = createMockSafeEventDispatcher();
+
+    const service = new AnatomyFormattingService({
+      dataRegistry: registry,
+      logger,
+      safeEventDispatcher
+    });
+
+    service.initialize();
+
     const config = service.getActivityIntegrationConfig();
 
     expect(config.prefix).toBe('Activity: ');
     expect(config.separator).toBe('. ');
     expect(config.maxActivities).toBe(10);
     expect(config.nameResolution.usePronounsWhenAvailable).toBe(false); // Phase 2
+    expect(config.nameResolution.fallbackToNames).toBe(true);
+    expect(config.respectPriorityTiers).toBe(true);
+    expect(config.enableCaching).toBe(false); // Phase 3
   });
 });
 ```
 
 ## Reference Files
-- Service to modify: `src/services/anatomyFormattingService.js`
-- Design document: `brainstorming/ACTDESC-activity-description-composition-design.md` (lines 1733-1753)
-- Similar pattern: `EquipmentDescriptionService` configuration
+- **Service to modify**: `src/services/anatomyFormattingService.js`
+- **Design document**: `brainstorming/ACTDESC-activity-description-composition-design.md` (lines 1733-1753)
+- **Reference pattern**: `getEquipmentIntegrationConfig()` method (lines 317-329 in anatomyFormattingService.js)
+- **Test file**: `tests/unit/services/anatomyFormattingService.test.js`
+- **Related service**: `src/clothing/services/equipmentDescriptionService.js` (similar domain concept)
 
 ## Success Metrics
 - Configuration method is callable
 - All Phase 1 properties functional
 - Phase 2/3 properties properly disabled
 - Code is well-documented and testable
+- Follows existing codebase patterns and conventions
 
 ## Related Tickets
-- **Blocks**: ACTDESC-005 (ActivityDescriptionService implementation)
+- **Blocks**: ACTDESC-005 (ActivityDescriptionService implementation - will consume this config)
 - **Used By**: ACTDESC-008 (Basic phrase generation)
 - **Used By**: ACTDESC-016 (Priority filtering)
 - **Used By**: ACTDESC-017 (Pronoun resolution)

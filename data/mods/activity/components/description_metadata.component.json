@@ -1,0 +1,104 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "activity:description_metadata",
+  "description": "Metadata for generating activity descriptions from related components. This component defines how to describe a component's state in activity summaries, supporting template-based generation, conditional visibility, and priority management.",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["sourceComponent", "descriptionType"],
+    "properties": {
+      "sourceComponent": {
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
+        "description": "Component ID this metadata describes (e.g., 'kissing:kissing', 'companionship:following')"
+      },
+      "descriptionType": {
+        "type": "string",
+        "enum": ["template", "verb", "custom", "conditional"],
+        "description": "How to generate the description: 'template' uses a template string, 'verb' generates from verb+adverb, 'custom' for custom logic, 'conditional' for complex conditional rules"
+      },
+      "template": {
+        "type": "string",
+        "description": "Template string with placeholders: {actor}, {target}, {verb}, {adverb}. Example: '{actor} is {verb} {target}' or '{actor} is {verb} {target} {adverb}'",
+        "examples": [
+          "{actor} is {verb} {target}",
+          "{actor} is {verb} {target} {adverb}",
+          "{actor} is following {target}"
+        ]
+      },
+      "verb": {
+        "type": "string",
+        "description": "Action verb for template-based generation (e.g., 'kissing', 'hugging', 'following', 'kneeling before')",
+        "examples": ["kissing", "hugging", "following", "kneeling before", "embracing"]
+      },
+      "adverb": {
+        "type": "string",
+        "description": "Optional adverb modifier to add nuance to the description",
+        "examples": ["passionately", "gently", "closely", "tenderly", "eagerly"]
+      },
+      "targetRole": {
+        "type": "string",
+        "description": "Property name in source component containing target entity ID. Defaults to 'entityId' for standard entity references.",
+        "default": "entityId",
+        "examples": ["entityId", "partner", "leaderId", "embraced_entity_id", "sittingOn"]
+      },
+      "priority": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50,
+        "description": "Display priority for activity ordering. Higher values appear first in activity lists. Range: 0 (lowest) to 100 (highest). Default: 50."
+      },
+      "conditions": {
+        "type": "object",
+        "description": "Conditional visibility rules that determine when this activity description should be shown or hidden",
+        "additionalProperties": false,
+        "properties": {
+          "showOnlyIfProperty": {
+            "type": "object",
+            "description": "Show this description only if the source component has a property matching the specified value",
+            "additionalProperties": false,
+            "properties": {
+              "property": {
+                "type": "string",
+                "description": "Name of the property to check in the source component"
+              },
+              "equals": {
+                "description": "Value that the property must equal for this description to be shown. Can be any JSON type."
+              }
+            },
+            "required": ["property", "equals"]
+          },
+          "hideIfTargetHasComponent": {
+            "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
+            "description": "Hide this description if the target entity has the specified component (e.g., hide 'kissing' if target is 'kissing:being_kissed')"
+          },
+          "requiredComponents": {
+            "type": "array",
+            "items": {
+              "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId"
+            },
+            "description": "Show this description only if the actor has all of these components. Useful for context-dependent descriptions."
+          }
+        }
+      },
+      "grouping": {
+        "type": "object",
+        "description": "Configuration for grouping this activity with other related activities in display",
+        "additionalProperties": false,
+        "properties": {
+          "groupKey": {
+            "type": "string",
+            "description": "Activities with the same groupKey can be combined in display. Example: 'intimate_contact', 'physical_positioning'"
+          },
+          "combineWith": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of other description types this activity can be combined with when displayed together"
+          }
+        }
+      }
+    }
+  }
+}

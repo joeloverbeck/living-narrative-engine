@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "vampirism:lunge_bite_neck_violently",
+  "name": "Lunge and Bite Neck Violently",
+  "description": "Lunge at a target across the room and sink your fangs into their neck predatorily",
+  "targets": "core:actors_in_location",
+  "required_components": {
+    "actor": ["vampirism:is_vampire"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:biting_neck", "positioning:giving_blowjob"],
+    "primary": ["positioning:being_bitten_in_neck"]
+  },
+  "template": "bite {target}'s neck violently",
+  "visual": {
+    "backgroundColor": "#6c0f36",
+    "textColor": "#ffe6ef",
+    "hoverBackgroundColor": "#861445",
+    "hoverTextColor": "#fff2f7"
+  }
+}

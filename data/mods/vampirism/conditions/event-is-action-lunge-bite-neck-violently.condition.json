@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "vampirism:event-is-action-lunge-bite-neck-violently",
+  "description": "Matches events where the action is 'vampirism:lunge_bite_neck_violently'",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "vampirism:lunge_bite_neck_violently"
+    ]
+  }
+}
