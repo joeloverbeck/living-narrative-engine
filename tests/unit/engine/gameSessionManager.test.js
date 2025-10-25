@@ -124,6 +124,22 @@ describe('GameSessionManager', () => {
       expect(stopFn).toHaveBeenCalledTimes(1);
       expect(resetCoreGameStateFn).toHaveBeenCalledTimes(1);
     });
+
+    it('should reset core state and propagate errors when stopFn rejects', async () => {
+      engineState.setStarted('ErrorWorld');
+      const stopError = new Error('Stop failure');
+      stopFn.mockRejectedValue(stopError);
+
+      await expect(
+        gameSessionManager.prepareForNewGameSession('RecoveryWorld')
+      ).rejects.toThrow('Stop failure');
+
+      expect(resetCoreGameStateFn).toHaveBeenCalledTimes(1);
+      expect(logger.error).toHaveBeenCalledWith(
+        'GameSessionManager._prepareEngineForOperation: stopFn threw while stopping current session.',
+        stopError
+      );
+    });
   });
 
   describe('prepareForLoadGameSession', () => {

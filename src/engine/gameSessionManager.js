@@ -85,11 +85,39 @@ class GameSessionManager {
    * @returns {Promise<void>} Resolves when preparation completes.
    */
   async #prepareEngineForOperation(uiEventId, payload) {
+    let failure = null;
+
     if (this.#state.isInitialized || this.#state.isGameLoopRunning) {
-      await this.#stopFn();
+      try {
+        await this.#stopFn();
+      } catch (error) {
+        const normalizedError =
+          error instanceof Error ? error : new Error(String(error));
+        this.#logger.error(
+          'GameSessionManager._prepareEngineForOperation: stopFn threw while stopping current session.',
+          normalizedError
+        );
+        failure = normalizedError;
+      }
     }
 
-    await this.#resetCoreGameStateFn();
+    try {
+      await this.#resetCoreGameStateFn();
+    } catch (error) {
+      const normalizedError =
+        error instanceof Error ? error : new Error(String(error));
+      this.#logger.error(
+        'GameSessionManager._prepareEngineForOperation: resetCoreGameStateFn threw while clearing core state.',
+        normalizedError
+      );
+      if (!failure) {
+        failure = normalizedError;
+      }
+    }
+
+    if (failure) {
+      throw failure;
+    }
 
     if (uiEventId) {
       this.#logger.debug(
