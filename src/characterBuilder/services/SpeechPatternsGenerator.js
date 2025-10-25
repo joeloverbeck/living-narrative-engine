@@ -679,10 +679,6 @@ export class SpeechPatternsGenerator {
    * @returns {boolean}
    */
   #shouldAttemptReset() {
-    if (!this.#lastFailureTime) {
-      return true;
-    }
-
     const timeSinceLastFailure = Date.now() - this.#lastFailureTime;
     return timeSinceLastFailure >= CIRCUIT_BREAKER_CONFIG.resetTimeout;
   }
@@ -691,12 +687,8 @@ export class SpeechPatternsGenerator {
    * Schedule automatic circuit breaker reset
    *
    * @private
-   */
+  */
   #scheduleCircuitReset() {
-    if (this.#circuitResetTimer) {
-      clearTimeout(this.#circuitResetTimer);
-    }
-
     this.#circuitResetTimer = setTimeout(() => {
       this.#logger.info('Attempting automatic circuit breaker reset');
       this.#circuitBreakerState = 'half-open';
