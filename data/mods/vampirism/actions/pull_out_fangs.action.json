@@ -1,0 +1,20 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "vampirism:pull_out_fangs",
+  "name": "Pull Out Fangs",
+  "description": "Withdraw your fangs from the target's neck, ending the bite.",
+  "targets": "vampirism:actor_being_bitten_by_me",
+  "required_components": {
+    "actor": ["positioning:biting_neck"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:being_bitten_in_neck"]
+  },
+  "template": "pull out your fangs from {target}'s neck",
+  "visual": {
+    "backgroundColor": "#6c0f36",
+    "textColor": "#ffe6ef",
+    "hoverBackgroundColor": "#861445",
+    "hoverTextColor": "#fff2f7"
+  }
+}

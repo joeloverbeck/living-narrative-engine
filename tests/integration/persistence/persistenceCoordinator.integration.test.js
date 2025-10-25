@@ -322,7 +322,10 @@ describe('PersistenceCoordinator integration', () => {
       success: false,
       error: 'Game engine is not initialized. Cannot save game.',
     });
-    expect(environment.validatedDispatcher.events).toHaveLength(0);
+    expect(environment.validatedDispatcher.events.map((event) => event.eventName)).toEqual([
+      ENGINE_OPERATION_FAILED_UI,
+      ENGINE_READY_UI,
+    ]);
   });
 
   it('reports missing persistence service during manual save attempts', async () => {
@@ -334,7 +337,10 @@ describe('PersistenceCoordinator integration', () => {
       success: false,
       error: 'GamePersistenceService is not available. Cannot save game.',
     });
-    expect(environment.validatedDispatcher.events).toHaveLength(0);
+    expect(environment.validatedDispatcher.events.map((event) => event.eventName)).toEqual([
+      ENGINE_OPERATION_FAILED_UI,
+      ENGINE_READY_UI,
+    ]);
   });
 
   it('loads a game successfully and coordinates session finalization', async () => {
