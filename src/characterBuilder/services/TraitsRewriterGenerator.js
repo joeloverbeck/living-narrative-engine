@@ -159,7 +159,7 @@ export class TraitsRewriterGenerator {
 
       // Step 6: Prepare final result
       const result = {
-        characterName: validatedResult.characterName || characterName,
+        characterName: validatedResult.characterName,
         rewrittenTraits: validatedResult.rewrittenTraits,
         generatedAt: validatedResult.generatedAt || new Date().toISOString(),
         processingTime: Date.now() - startTime,
@@ -268,7 +268,7 @@ export class TraitsRewriterGenerator {
    * @param {object} options - Generation options
    * @returns {string} Formatted prompt
    */
-  #createLLMPrompt(characterDefinition, options = {}) {
+  #createLLMPrompt(characterDefinition, options) {
     try {
       return createTraitsRewriterPrompt(characterDefinition, options);
     } catch (error) {
@@ -329,15 +329,18 @@ export class TraitsRewriterGenerator {
       const parsedResponse =
         this.#llmJsonService.parseAndRepair(responseContent);
 
+      const getSafeKeys = (value) =>
+        value && typeof value === 'object' ? Object.keys(value) : [];
+
       // Debug logging to understand response structure
       this.#logger.debug(
         'TraitsRewriterGenerator: Raw parsed response structure',
         {
           characterName,
-          responseKeys: Object.keys(parsedResponse),
-          hasCharacterName: !!parsedResponse.characterName,
-          hasFunctionCall: !!parsedResponse.function_call,
-          hasNestedCharacterName: !!parsedResponse.function_call?.characterName,
+          responseKeys: getSafeKeys(parsedResponse),
+          hasCharacterName: !!parsedResponse?.characterName,
+          hasFunctionCall: !!parsedResponse?.function_call,
+          hasNestedCharacterName: !!parsedResponse?.function_call?.characterName,
         }
       );
 
@@ -345,8 +348,12 @@ export class TraitsRewriterGenerator {
       // The LLM might return the response wrapped in a function_call object
       let actualResponse = parsedResponse;
 
+      const isObjectResponse =
+        parsedResponse && typeof parsedResponse === 'object';
+
       // Check if response is wrapped in function_call or similar structure
       if (
+        isObjectResponse &&
         parsedResponse.function_call &&
         typeof parsedResponse.function_call === 'object'
       ) {
@@ -354,22 +361,24 @@ export class TraitsRewriterGenerator {
           'TraitsRewriterGenerator: Extracting response from function_call wrapper',
           {
             characterName,
-            wrapperKeys: Object.keys(parsedResponse.function_call),
+            wrapperKeys: getSafeKeys(parsedResponse.function_call),
           }
         );
         actualResponse = parsedResponse.function_call;
       } else if (
+        isObjectResponse &&
         !parsedResponse.characterName &&
         !parsedResponse.rewrittenTraits
       ) {
         // If the expected fields aren't at the root, check for other wrapper properties
-        const possibleWrappers = Object.keys(parsedResponse).filter(
-          (key) =>
-            typeof parsedResponse[key] === 'object' &&
-            parsedResponse[key] !== null &&
-            (parsedResponse[key].characterName ||
-              parsedResponse[key].rewrittenTraits)
-        );
+        const possibleWrappers = Object.keys(parsedResponse).filter((key) => {
+          const value = parsedResponse[key];
+          return (
+            value &&
+            typeof value === 'object' &&
+            (value.characterName || value.rewrittenTraits)
+          );
+        });
 
         if (possibleWrappers.length > 0) {
           this.#logger.info(
@@ -388,10 +397,10 @@ export class TraitsRewriterGenerator {
         'TraitsRewriterGenerator: Extracted response for validation',
         {
           characterName,
-          extractedKeys: Object.keys(actualResponse),
-          hasCharacterName: !!actualResponse.characterName,
-          hasRewrittenTraits: !!actualResponse.rewrittenTraits,
-          rewrittenTraitsKeys: actualResponse.rewrittenTraits
+          extractedKeys: getSafeKeys(actualResponse),
+          hasCharacterName: !!actualResponse?.characterName,
+          hasRewrittenTraits: !!actualResponse?.rewrittenTraits,
+          rewrittenTraitsKeys: actualResponse?.rewrittenTraits
             ? Object.keys(actualResponse.rewrittenTraits)
             : [],
         }
