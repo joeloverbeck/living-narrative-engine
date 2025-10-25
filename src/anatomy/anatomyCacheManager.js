@@ -403,10 +403,10 @@ export class AnatomyCacheManager {
         );
 
         // Add the root part as a child of the body root
+        // At this point rootNode is guaranteed to exist because the method
+        // returns early when it is missing.
         const rootNode = this.#adjacencyCache.get(rootEntityId);
-        if (rootNode) {
-          rootNode.children.push(rootPartId);
-        }
+        rootNode.children.push(rootPartId);
 
         // Recursively process the anatomy structure starting from the root part
         this.#buildCacheRecursive(
