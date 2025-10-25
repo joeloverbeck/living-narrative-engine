@@ -2,7 +2,7 @@
  * @file Unit tests for FIFO cache strategy
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { FIFOStrategy } from '../../../../src/cache/strategies/FIFOStrategy.js';
 
 describe('FIFOStrategy', () => {
@@ -179,6 +179,24 @@ describe('FIFOStrategy', () => {
         }, 100);
       }, 100);
     });
+
+    it('should remove expired entries when checking existence', () => {
+      jest.useFakeTimers();
+      try {
+        const shortTtlStrategy = new FIFOStrategy({
+          maxSize: 5,
+          ttl: 100,
+        });
+
+        shortTtlStrategy.set('key1', 'value1');
+        jest.advanceTimersByTime(150);
+
+        expect(shortTtlStrategy.has('key1')).toBe(false);
+        expect(shortTtlStrategy.size).toBe(0);
+      } finally {
+        jest.useRealTimers();
+      }
+    });
   });
 
   describe('Memory Management', () => {
@@ -209,6 +227,30 @@ describe('FIFOStrategy', () => {
 
       memorySizeStrategy.set('key1', 'small');
       expect(memorySizeStrategy.memorySize).toBeGreaterThan(0);
+    });
+
+    it('should accurately estimate memory usage for various data types', () => {
+      const scenarios = [
+        { key: 'string', value: 'data', expectedSize: 8 },
+        { key: 'number', value: 123, expectedSize: 8 },
+        { key: 'array', value: ['a', 'bc'], expectedSize: 30 },
+        { key: 'object', value: { foo: 'bar' }, expectedSize: 26 },
+      ];
+
+      scenarios.forEach(({ key, value, expectedSize }) => {
+        const strategy = new FIFOStrategy({ maxSize: 5, maxMemoryUsage: 1024 });
+        strategy.set(key, value);
+        expect(strategy.memorySize).toBe(expectedSize);
+      });
+    });
+
+    it('should fallback to default size for non-serializable objects', () => {
+      const strategy = new FIFOStrategy({ maxSize: 5, maxMemoryUsage: 1024 });
+      const circular = {};
+      circular.self = circular;
+
+      strategy.set('circular', circular);
+      expect(strategy.memorySize).toBe(100);
     });
   });
 
