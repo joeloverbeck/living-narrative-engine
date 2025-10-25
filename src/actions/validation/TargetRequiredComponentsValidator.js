@@ -150,8 +150,17 @@ class TargetRequiredComponentsValidator {
       }
 
       // Extract the actual entity - it may be nested under 'entity' property
-      // or it may be the entity object directly
-      const targetEntity = candidate.entity || candidate;
+      // or it may be the entity object directly. If the wrapper explicitly
+      // exposes an `entity` property but it resolves to a falsy value, treat
+      // it as missing so we emit a targeted debug message instead of trying to
+      // validate the wrapper object itself.
+      const candidateHasEntityProperty =
+        candidate !== null &&
+        typeof candidate === 'object' &&
+        Object.prototype.hasOwnProperty.call(candidate, 'entity');
+      const targetEntity = candidateHasEntityProperty
+        ? candidate.entity
+        : candidate;
 
       if (!targetEntity) {
         this.#logger.debug(
