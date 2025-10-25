@@ -60,6 +60,20 @@ describe('EndpointConfig Browser Compatibility', () => {
       );
     });
 
+    it('should respect boolean build-time HTTPS flag values', async () => {
+      global.__PROXY_HOST__ = 'bool-host';
+      global.__PROXY_PORT__ = '8443';
+      global.__PROXY_USE_HTTPS__ = true;
+
+      const { getEndpointConfig, resetEndpointConfig } = await import(
+        '../../../src/config/endpointConfig.js'
+      );
+      resetEndpointConfig();
+      const config = getEndpointConfig();
+
+      expect(config.getBaseUrl()).toBe('https://bool-host:8443');
+    });
+
     it('should use default values when build-time constants are undefined', async () => {
       // Ensure build-time constants are undefined
       global.__PROXY_HOST__ = undefined;

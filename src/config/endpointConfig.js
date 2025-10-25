@@ -14,6 +14,30 @@
  */
 
 /**
+ * @description Normalizes boolean-like configuration flags to actual booleans.
+ *
+ * @param {unknown} value - Configuration value to normalize.
+ * @returns {boolean} {@code true} when the input represents an enabled flag.
+ */
+function normalizeBooleanFlag(value) {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'true') {
+      return true;
+    }
+    if (normalized === 'false') {
+      return false;
+    }
+  }
+
+  return Boolean(value);
+}
+
+/**
  * Environment-based endpoint configuration
  * Allows configuration via environment variables while providing sensible defaults
  */
@@ -51,7 +75,7 @@ class EndpointConfig {
           ? process.env.PROXY_PORT || '3001'
           : '3001';
 
-    this.#useSecureConnection = proxyUseHttps === 'true';
+    this.#useSecureConnection = normalizeBooleanFlag(proxyUseHttps);
 
     const protocol = this.#useSecureConnection ? 'https' : 'http';
 
