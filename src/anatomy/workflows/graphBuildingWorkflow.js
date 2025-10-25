@@ -177,8 +177,39 @@ export class GraphBuildingWorkflow extends BaseService {
 
       // Additional validation could be added here based on bodyGraphService capabilities
       // For example, checking if all referenced entities in the cache still exist
+      let serviceReportedInvalid = false;
 
-      const valid = issues.length === 0;
+      if (
+        this.#bodyGraphService.validateCache &&
+        typeof this.#bodyGraphService.validateCache === 'function'
+      ) {
+        const serviceResult =
+          await this.#bodyGraphService.validateCache(rootId);
+
+        if (Array.isArray(serviceResult?.issues)) {
+          issues.push(
+            ...serviceResult.issues.filter((issue) => typeof issue === 'string')
+          );
+        } else if (Array.isArray(serviceResult)) {
+          issues.push(
+            ...serviceResult.filter((issue) => typeof issue === 'string')
+          );
+        } else if (typeof serviceResult === 'string') {
+          issues.push(serviceResult);
+        }
+
+        if (serviceResult?.valid === false) {
+          serviceReportedInvalid = true;
+
+          if (!serviceResult?.issues?.length) {
+            issues.push(
+              `BodyGraphService reported invalid cache state for root entity '${rootId}'`
+            );
+          }
+        }
+      }
+
+      const valid = issues.length === 0 && !serviceReportedInvalid;
 
       if (valid) {
         this.#logger.debug(
