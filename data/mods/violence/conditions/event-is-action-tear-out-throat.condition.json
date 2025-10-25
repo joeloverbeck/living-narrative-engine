@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "violence:event-is-action-tear_out_throat",
+  "description": "True when the event is an attempt to perform the tear_out_throat action",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "violence:tear_out_throat"
+    ]
+  }
+}

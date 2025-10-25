@@ -22,19 +22,22 @@
       "grab_neck.action.json",
       "slap.action.json",
       "squeeze_neck_with_both_hands.action.json",
-      "sucker_punch.action.json"
+      "sucker_punch.action.json",
+      "tear_out_throat.action.json"
     ],
     "rules": [
       "handle_grab_neck.rule.json",
       "handle_slap.rule.json",
       "handle_squeeze_neck_with_both_hands.rule.json",
-      "handle_sucker_punch.rule.json"
+      "handle_sucker_punch.rule.json",
+      "handle_tear_out_throat.rule.json"
     ],
     "conditions": [
       "event-is-action-grab-neck.condition.json",
       "event-is-action-slap.condition.json",
       "event-is-action-squeeze-neck-with-both-hands.condition.json",
-      "event-is-action-sucker-punch.condition.json"
+      "event-is-action-sucker-punch.condition.json",
+      "event-is-action-tear-out-throat.condition.json"
     ]
   }
 }

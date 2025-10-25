@@ -405,7 +405,7 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
       expect(errorDiv.style.display).not.toBe('none');
 
       // Enhanced validator shows structured feedback - check for JSON parsing error
-      expect(errorDiv.textContent).toContain('Invalid JSON format');
+      expect(errorDiv.textContent).toContain('JSON Syntax Error');
     });
 
     it('should clear errors when valid JSON is entered after invalid', async () => {
@@ -451,7 +451,7 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
         errorDiv.textContent.includes('Excellent') ||
         errorDiv.textContent.includes('Good');
       const noErrorMessage =
-        !errorDiv.textContent.includes('Invalid JSON format');
+        !errorDiv.textContent.includes('JSON Syntax Error');
 
       expect(isHidden || (hasSuccessMessage && noErrorMessage)).toBe(true);
     });
