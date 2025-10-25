@@ -105,6 +105,49 @@ describe('engineErrorUtils', () => {
       expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
       expect(mockResetEngineState).toHaveBeenCalled();
     });
+
+    it('should log and still reset when dispatcher throws', async () => {
+      const errorMessage = 'Test error message';
+      const title = 'Test Error Title';
+      const dispatchError = new Error('Dispatch failed');
+      mockDispatcher.dispatch.mockRejectedValueOnce(dispatchError);
+
+      await dispatchFailureAndReset(
+        mockDispatcher,
+        errorMessage,
+        title,
+        mockResetEngineState,
+        mockLogger
+      );
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'engineErrorUtils.dispatchFailureAndReset: Failed to dispatch UI failure event.',
+        dispatchError
+      );
+      expect(mockResetEngineState).toHaveBeenCalledTimes(1);
+    });
+
+    it('should log when resetEngineState throws after dispatch', async () => {
+      const errorMessage = 'Another error';
+      const title = 'Another title';
+      const resetError = new Error('Reset failed');
+      mockResetEngineState.mockImplementationOnce(() => {
+        throw resetError;
+      });
+
+      await dispatchFailureAndReset(
+        mockDispatcher,
+        errorMessage,
+        title,
+        mockResetEngineState,
+        mockLogger
+      );
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'engineErrorUtils.dispatchFailureAndReset: Failed to reset engine state after failure.',
+        resetError
+      );
+    });
   });
 
   describe('processOperationFailure', () => {
