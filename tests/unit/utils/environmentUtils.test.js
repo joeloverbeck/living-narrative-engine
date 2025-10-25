@@ -17,6 +17,7 @@ import {
   getEnvironmentMode,
   shouldSkipDebugConfig,
   getEnvironmentConfig,
+  getBooleanEnvironmentVariable,
   hasEnvironmentVariable,
   createProcessEnvShim,
   isTestEnvironment,
@@ -284,6 +285,46 @@ describe('environmentUtils', () => {
     });
   });
 
+  describe('getBooleanEnvironmentVariable', () => {
+    it.each(['true', 'TRUE', '  On  ', '1', 'YeS'])(
+      'treats %s as a truthy value',
+      (rawValue) => {
+        globalThis.process = {
+          versions: { node: '16.0.0' },
+          env: { FEATURE_FLAG: rawValue },
+        };
+
+        expect(getBooleanEnvironmentVariable('FEATURE_FLAG')).toBe(true);
+      }
+    );
+
+    it.each(['false', 'FALSE', '0', 'No', ' off '])(
+      'treats %s as a falsy value',
+      (rawValue) => {
+        globalThis.process = {
+          versions: { node: '16.0.0' },
+          env: { FEATURE_FLAG: rawValue },
+        };
+
+        expect(getBooleanEnvironmentVariable('FEATURE_FLAG', true)).toBe(
+          false
+        );
+      }
+    );
+
+    it('returns default when value is missing or empty', () => {
+      globalThis.process = {
+        versions: { node: '16.0.0' },
+        env: {},
+      };
+
+      expect(getBooleanEnvironmentVariable('FEATURE_FLAG', true)).toBe(true);
+
+      globalThis.process.env.FEATURE_FLAG = '   ';
+      expect(getBooleanEnvironmentVariable('FEATURE_FLAG', true)).toBe(true);
+    });
+  });
+
   describe('getEnvironmentConfig', () => {
     it('should return complete config', () => {
       globalThis.process = {
@@ -295,6 +336,30 @@ describe('environmentUtils', () => {
       expect(config.environment).toBe('node');
       expect(config.mode).toBe('development');
     });
+
+    it.each(['TRUE', ' yes ', '1', 'On'])(
+      'normalizes DEBUG_LOG_SILENT=%s to true',
+      (value) => {
+        globalThis.process = {
+          versions: { node: '16.0.0' },
+          env: { NODE_ENV: 'test', DEBUG_LOG_SILENT: value },
+        };
+
+        expect(getEnvironmentConfig().debugLogSilent).toBe(true);
+      }
+    );
+
+    it.each(['FALSE', '0', ' off ', 'No'])(
+      'normalizes DEBUG_LOG_SILENT=%s to false',
+      (value) => {
+        globalThis.process = {
+          versions: { node: '16.0.0' },
+          env: { NODE_ENV: 'test', DEBUG_LOG_SILENT: value },
+        };
+
+        expect(getEnvironmentConfig().debugLogSilent).toBe(false);
+      }
+    );
   });
 
   describe('hasEnvironmentVariable', () => {
