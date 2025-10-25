@@ -558,6 +558,24 @@ export class TraceQueueProcessor {
   }
 
   /**
+   * @description Manually reset the circuit breaker after handling failure scenarios.
+   * @returns {boolean} True if the circuit breaker was open before the reset.
+   */
+  resetCircuitBreaker() {
+    const wasOpen = this.#circuitBreakerOpen;
+    this.#resetFailureTracking();
+    return wasOpen;
+  }
+
+  /**
+   * @description Process the next available batch immediately for manual control scenarios.
+   * @returns {Promise<void>} Resolves when the batch handling finishes.
+   */
+  async processNextBatch() {
+    await this.#processBatch();
+  }
+
+  /**
    * Process batch of items from queues
    *
    * @private

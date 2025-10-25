@@ -701,6 +701,110 @@ describe('TraceQueueProcessor', () => {
     });
   });
 
+  describe('Manual Control Helpers', () => {
+    it('should allow manual circuit breaker reset after failures', async () => {
+      const originalThreshold = QUEUE_CONSTANTS.CIRCUIT_BREAKER_THRESHOLD;
+      QUEUE_CONSTANTS.CIRCUIT_BREAKER_THRESHOLD = 1;
+
+      try {
+        testBed.simulateStorageFailure(new Error('manual reset failure'));
+        const failingTrace = testBed.createMockTrace({ actionId: 'manual-reset' });
+        testBed.processor.enqueue(failingTrace);
+
+        await testBed.advanceTimersAndFlush(200);
+
+        expect(testBed.processor.getQueueStats().circuitBreakerOpen).toBe(true);
+
+        const resetResult = testBed.processor.resetCircuitBreaker();
+        expect(resetResult).toBe(true);
+
+        const infoLog = testBed.mockLogger.info.mock.calls.find(
+          ([message]) => message === 'TraceQueueProcessor: Circuit breaker closed'
+        );
+        expect(infoLog).toBeDefined();
+
+        const statsAfterReset = testBed.processor.getQueueStats();
+        expect(statsAfterReset.circuitBreakerOpen).toBe(false);
+
+        testBed.simulateStorageSuccess();
+        const recoveryTrace = testBed.createMockTrace({ actionId: 'recovery' });
+        expect(testBed.processor.enqueue(recoveryTrace)).toBe(true);
+        await testBed.advanceTimersAndFlush(200);
+
+        const metrics = testBed.getMetrics();
+        expect(metrics.totalProcessed).toBeGreaterThan(0);
+      } finally {
+        QUEUE_CONSTANTS.CIRCUIT_BREAKER_THRESHOLD = originalThreshold;
+      }
+    });
+
+    it('should return early when processing during shutdown with empty queue', async () => {
+      await testBed.processor.shutdown();
+
+      const initialStats = testBed.processor.getQueueStats();
+      expect(initialStats.totalSize).toBe(0);
+      expect(initialStats.circuitBreakerOpen).toBe(false);
+
+      await testBed.processor.processNextBatch();
+
+      const statsAfter = testBed.processor.getQueueStats();
+      expect(statsAfter.isProcessing).toBe(false);
+      expect(testBed.timerService.getPendingCount()).toBe(0);
+    });
+
+    it('should no-op when manually processing with empty queue', async () => {
+      await testBed.processor.processNextBatch();
+
+      expect(testBed.processor.getQueueStats().isProcessing).toBe(false);
+      expect(testBed.mockStorageAdapter.setItem).not.toHaveBeenCalled();
+    });
+
+    it('should skip retry requeue when shutdown happens before retry executes', async () => {
+      testBed.withConfig({ enableParallelProcessing: false, maxRetries: 2 });
+
+      let attempt = 0;
+      testBed.mockStorageAdapter.setItem.mockImplementation(async () => {
+        attempt += 1;
+        if (attempt === 1) {
+          throw new Error('retry shutdown');
+        }
+        return undefined;
+      });
+
+      const scheduledCallbacks = [];
+      const originalSetTimeout = testBed.timerService.setTimeout.bind(
+        testBed.timerService
+      );
+      const timerSpy = jest
+        .spyOn(testBed.timerService, 'setTimeout')
+        .mockImplementation((callback, delay) => {
+          scheduledCallbacks.push(callback);
+          return originalSetTimeout(callback, delay);
+        });
+
+      const trace = testBed.createMockTrace({ actionId: 'retry-during-shutdown' });
+      testBed.processor.enqueue(trace);
+
+      await testBed.timerService.advanceTime(0);
+      await Promise.resolve();
+
+      expect(scheduledCallbacks.length).toBeGreaterThan(0);
+
+      await testBed.processor.shutdown();
+
+      try {
+        for (const callback of scheduledCallbacks) {
+          await callback();
+        }
+
+        expect(testBed.mockStorageAdapter.setItem).toHaveBeenCalledTimes(1);
+        expect(testBed.timerService.getPendingCount()).toBe(0);
+      } finally {
+        timerSpy.mockRestore();
+      }
+    });
+  });
+
   describe('Metrics and Statistics', () => {
     it('should track comprehensive metrics', async () => {
       // Enqueue and process various traces
