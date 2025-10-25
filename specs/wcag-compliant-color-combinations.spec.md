@@ -14,7 +14,7 @@ This specification provides a curated collection of pre-validated color combinat
 
 ## Current Usage Overview
 
-**Status**: 19 color schemes are actively implemented across mods (plus 1 reserved assignment) out of 42 defined combinations, leaving 22 available for future work.
+**Status**: 20 color schemes are actively implemented across mods (plus 1 reserved assignment) out of 42 defined combinations, leaving 21 available for future work.
 
 ### Active Mod Assignments
 
@@ -39,6 +39,7 @@ This specification provides a curated collection of pre-validated color combinat
 | Sex-Dry-Intimacy         | Velvet Smoke       | 12.4    | `#4a2741`        | Active   |
 | Sex-Vaginal-Penetration  | Crimson Embrace    | 12.5    | `#6c0f36`        | Active   |
 | Sex-Anal-Penetration     | Obsidian Teal      | 12.6    | `#053b3f`        | Active   |
+| Vampirism                | Crimson Embrace    | 12.5    | `#6c0f36`        | Active   |
 | Violence                 | Dark Crimson       | 2.2     | `#8b0000`        | Active   |
 | Physical-Control         | Ironclad Slate     | 11.2    | `#2f2f2f`        | Active   |
 
@@ -794,9 +795,9 @@ This specification provides a curated collection of pre-validated color combinat
 
 - **Normal Contrast**: 9.84:1 🌟 AAA
 - **Hover Contrast**: 7.62:1 🌟 AAA
-- **Use Cases**: Vaginal penetration, straddling rhythms, labia teasing
+- **Use Cases**: Vaginal penetration, straddling rhythms, labia teasing, vampiric menace displays
 - **Theme**: Deep crimson passion with luminous highlights
-- ✅ **USED BY**: Sex-Vaginal-Penetration mod (penetrative vaginal actions)
+- ✅ **USED BY**: Sex-Vaginal-Penetration mod (penetrative vaginal actions), Vampirism mod (vampiric threat displays)
 
 #### 12.6 Obsidian Teal
 

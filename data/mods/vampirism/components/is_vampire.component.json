@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "vampirism:is_vampire",
+  "description": "Marker component identifying an entity as a vampire. Entities with this component are recognized by vampire-related systems and can perform vampire-specific actions.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}
