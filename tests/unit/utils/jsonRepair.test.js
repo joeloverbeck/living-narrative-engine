@@ -36,6 +36,21 @@ describe('JsonProcessingError', () => {
     expect(err.attemptedJsonString).toBe('x');
     expect(err.stack).toContain('boom');
   });
+
+  it('preserves the initial parse error when provided', () => {
+    const orig = new Error('repair failed');
+    const initial = new SyntaxError('bad json');
+    const err = new JsonProcessingError('failed', {
+      stage: 'repair',
+      originalError: orig,
+      initialParseError: initial,
+      attemptedJsonString: '{bad}',
+    });
+
+    expect(err.initialParseError).toBe(initial);
+    expect(err.stack).toContain('Initial parse error:');
+    expect(err.stack).toContain('bad json');
+  });
 });
 
 describe('initialParse', () => {

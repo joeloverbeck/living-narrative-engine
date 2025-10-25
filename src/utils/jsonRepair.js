@@ -17,6 +17,7 @@ export class JsonProcessingError extends Error {
    * @param {object} [details] - Additional details about the error.
    * @param {string} [details.stage] - The stage where the error occurred.
    * @param {Error} [details.originalError] - The original error object, if any.
+   * @param {Error} [details.initialParseError] - The initial parse error thrown before repair attempts.
    * @param {string} [details.attemptedJsonString] - The JSON string that was being processed.
    */
   constructor(message, details = {}) {
@@ -24,9 +25,14 @@ export class JsonProcessingError extends Error {
     this.name = 'JsonProcessingError';
     this.stage = details.stage;
     this.originalError = details.originalError;
+    this.initialParseError = details.initialParseError;
     this.attemptedJsonString = details.attemptedJsonString;
     if (details.originalError && details.originalError.stack) {
       this.stack = `${this.stack}\nCaused by: ${details.originalError.stack}`;
+    }
+    if (details.initialParseError && details.initialParseError.stack) {
+      this.stack =
+        `${this.stack}\nInitial parse error: ${details.initialParseError.stack}`;
     }
   }
 }
