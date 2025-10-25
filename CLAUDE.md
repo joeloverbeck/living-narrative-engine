@@ -18,9 +18,10 @@ Living Narrative Engine is a browser-based platform for creating and playing adv
 ```
 Main Application (/)              LLM Proxy Server (/llm-proxy-server)
 ├── Game Engine (Browser)    ←→   Node.js Microservice
-├── ECS Architecture              ├── API Key Management
-├── Event Bus System              ├── LLM Provider Abstraction
-└── Mod Loading System            └── Request Formatting
+├── ECS Architecture              ├── Entry: src/core/server.js
+├── Event Bus System              ├── API Key Management
+└── Mod Loading System            ├── LLM Provider Abstraction
+                                  └── Request Formatting
 ```
 
 ### Entity Component System (ECS)
@@ -56,7 +57,7 @@ All communication flows through a central event bus with validated events.
 
 ```
 /
-├── src/                    # Main application source
+├── src/                    # Main application source (key directories shown)
 │   ├── engine/            # Core game engine
 │   ├── entities/          # ECS implementation
 │   ├── events/            # Event system
@@ -65,7 +66,15 @@ All communication flows through a central event bus with validated events.
 │   ├── domUI/             # UI components
 │   ├── logic/             # JSON Logic evaluation
 │   ├── scopeDsl/          # Custom query language
-│   └── dependencyInjection/ # IoC container
+│   ├── dependencyInjection/ # IoC container
+│   ├── anatomy/           # Character anatomy system
+│   ├── characterBuilder/  # Character creation tools
+│   ├── coreMotivationsGenerator/ # Psychological profile generator
+│   ├── thematicDirection/ # Narrative theme system
+│   ├── clothing/          # Clothing system
+│   ├── config/            # Configuration management
+│   ├── validation/        # Schema validation
+│   └── ... (40+ directories total)
 ├── data/
 │   ├── mods/              # Game content as mods
 │   ├── schemas/           # JSON Schema definitions
@@ -73,9 +82,20 @@ All communication flows through a central event bus with validated events.
 ├── tests/
 │   ├── unit/              # Unit tests (mirror src/)
 │   ├── integration/       # Integration tests
+│   ├── e2e/               # End-to-end tests
+│   ├── performance/       # Performance tests
+│   ├── memory/            # Memory leak tests
+│   ├── visual/            # Visual validation tests
+│   ├── manual/            # Manual testing scenarios
+│   ├── examples/          # Test examples
+│   ├── setup/             # Test setup utilities
+│   ├── helpers/           # Additional test helpers
+│   ├── monitoring/        # Monitoring tests
 │   └── common/            # Test utilities & helpers
-├── llm-proxy-server/      # Separate LLM service
+├── llm-proxy-server/      # Separate LLM service (main: src/core/server.js)
 └── docs/                  # Documentation
+    ├── testing/           # Testing guides & patterns
+    └── ... (15+ subdirectories)
 ```
 
 ## 🔧 Development Guidelines
@@ -259,6 +279,47 @@ describe('ComponentName - Feature', () => {
 - Test utilities: `/tests/common/`
 - Use descriptive test suite functions when available
 
+### Mod Testing Guidelines
+
+When working with mod content in `data/mods/`, follow the established testing patterns documented in `docs/testing/`:
+
+- **Primary Reference**: [`docs/testing/mod-testing-guide.md`](../docs/testing/mod-testing-guide.md)
+  - ModTestFixture factories (`forAction`, `forRule`, `forCategory`)
+  - Scenario helpers (seating, inventory, containers)
+  - Domain matchers from `tests/common/mods/domainMatchers.js`
+  - Action validation proxies for schema enforcement
+
+- **Discovery Testing**: [`docs/testing/action-discovery-testing-toolkit.md`](../docs/testing/action-discovery-testing-toolkit.md)
+  - Action Discovery Bed for resolver introspection
+  - Diagnostics workflows and troubleshooting
+
+- **Migration Guide**: [`docs/testing/MODTESTROB-009-migration-guide.md`](../docs/testing/MODTESTROB-009-migration-guide.md)
+  - Pattern replacement reference for legacy tests
+  - Modernization checklists
+
+**Key practices for mod testing:**
+
+- Use `await ModTestFixture.forAction(modId, fullActionId)` for action tests
+- Leverage scenario builders (`createSittingPair`, `createInventoryLoadout`, etc.)
+- Import domain matchers: `import '../../common/mods/domainMatchers.js'`
+- Validate rule JSON with `createActionValidationProxy` before testing
+- Enable diagnostics only for debugging: `fixture.enableDiagnostics()`
+- Always call `fixture.cleanup()` in `afterEach` blocks
+
+**Quick reference:**
+
+```javascript
+// ✅ Preferred pattern
+const fixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
+const scenario = fixture.createStandardActorTarget(['Actor Name', 'Target Name']);
+await fixture.executeAction(scenario.actor.id, scenario.target.id);
+
+// ❌ Deprecated and unsupported
+ModTestFixture.createFixture({ type: 'action' });
+ModTestHandlerFactory.createHandler({ actionId: 'sit_down' });
+new ModEntityBuilder(); // Missing ID and validation
+```
+
 ## 📋 JSON Schema & Validation
 
 ### Schema Patterns
@@ -280,7 +341,7 @@ describe('ComponentName - Feature', () => {
 
 ### Validation Flow
 
-1. **AJV Configuration**: Centralized in `AjvSchemaValidator`
+1. **AJV Configuration**: Centralized in `ajvSchemaValidator.js` (src/validation/)
 2. **Schema Loading**: Batch loading during startup
 3. **Validation Helper**: `validateAgainstSchema(data, schemaId)`
 4. **Error Formatting**: `formatAjvErrors()` for readable messages

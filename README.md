@@ -661,6 +661,54 @@ To scaffold a new mod directory with a starter `mod-manifest.json` run:
 Replace `<modId>` with your desired identifier. The script creates
 `data/mods/<modId>/` and populates a minimal manifest you can edit further.
 
+### Testing Your Mods
+
+Comprehensive testing guides are available for mod action testing:
+
+- **[Mod Testing Guide](docs/testing/mod-testing-guide.md)** - Complete reference for fixtures, scenarios, matchers, and diagnostics
+- **[Action Discovery Testing Toolkit](docs/testing/action-discovery-testing-toolkit.md)** - Migration strategies and troubleshooting
+- **[Migration Guide (MODTESTROB-009)](docs/testing/MODTESTROB-009-migration-guide.md)** - Practical playbook for modernizing legacy tests
+
+These guides cover:
+
+- `ModTestFixture` API for action execution harnesses
+- Scenario builders for seating, inventory, and container setups
+- Domain matchers for expressive assertions
+- Diagnostics tools for resolver introspection
+- Best practices and migration checklists
+
+**Quick Example:**
+
+```javascript
+import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
+import '../../common/mods/domainMatchers.js';
+
+describe('positioning:sit_down', () => {
+  let fixture;
+
+  beforeEach(async () => {
+    fixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
+  });
+
+  afterEach(() => {
+    fixture.cleanup();
+  });
+
+  it('makes the actor sit on the target furniture', async () => {
+    const scenario = fixture.createSittingPair({ furnitureId: 'couch1' });
+
+    await fixture.executeAction(
+      scenario.seatedActors[0].id,
+      scenario.furniture.id
+    );
+
+    const actor = fixture.entityManager.getEntityInstance(scenario.seatedActors[0].id);
+    expect(actor).toHaveComponent('positioning:sitting_on');
+    expect(fixture.events).toHaveActionSuccess();
+  });
+});
+```
+
 ## 🎨 Visual Customization
 
 Actions can now be visually customized with custom colors! Modders can specify:
