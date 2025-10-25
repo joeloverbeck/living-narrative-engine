@@ -62,6 +62,20 @@ describe('SafeEventDispatcher', () => {
       );
     });
 
+    it('handles circular payloads without throwing when underlying dispatcher returns false', async () => {
+      deps.validatedEventDispatcher.dispatch.mockResolvedValue(false);
+
+      const payload = {};
+      payload.self = payload;
+
+      const ok = await dispatcher.dispatch('evt', payload);
+
+      expect(ok).toBe(false);
+      expect(deps.logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('[Circular]')
+      );
+    });
+
     it('logs error and returns false when dispatch throws', async () => {
       deps.validatedEventDispatcher.dispatch.mockRejectedValue(
         new Error('boom')

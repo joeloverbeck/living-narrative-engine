@@ -12,6 +12,7 @@
 /** @typedef {() => void} UnsubscribeFn */
 
 import { ISafeEventDispatcher } from '../interfaces/ISafeEventDispatcher.js';
+import { safeStringify } from '../utils/safeStringify.js';
 
 /**
  * @class SafeEventDispatcher
@@ -206,10 +207,20 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
     }
 
     if (dispatchResult === false) {
+      let payloadSummary;
+
+      try {
+        payloadSummary = safeStringify(payload);
+      } catch (error) {
+        this.#logger.debug(
+          'SafeEventDispatcher: Failed to stringify payload after VED returned false.',
+          { error }
+        );
+        payloadSummary = '[Unserializable payload]';
+      }
+
       this.#logger.warn(
-        `SafeEventDispatcher: Underlying VED failed to dispatch event '${eventName}' (returned false). See VED logs for details. Payload: ${JSON.stringify(
-          payload
-        )}`
+        `SafeEventDispatcher: Underlying VED failed to dispatch event '${eventName}' (returned false). See VED logs for details. Payload: ${payloadSummary}`
       );
     }
 
