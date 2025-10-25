@@ -40,7 +40,10 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = { id: 'test:action' };
       const targetEntities = {};
 
-      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
 
       expect(result).toEqual({ valid: true });
     });
@@ -52,7 +55,10 @@ describe('TargetRequiredComponentsValidator', () => {
       };
       const targetEntities = {};
 
-      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
 
       expect(result).toEqual({ valid: true });
     });
@@ -71,7 +77,10 @@ describe('TargetRequiredComponentsValidator', () => {
         },
       };
 
-      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
 
       expect(result).toEqual({ valid: true });
     });
@@ -93,7 +102,10 @@ describe('TargetRequiredComponentsValidator', () => {
         },
       };
 
-      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
 
       expect(result).toEqual({ valid: true });
     });
@@ -112,7 +124,10 @@ describe('TargetRequiredComponentsValidator', () => {
         },
       };
 
-      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
 
       expect(result).toEqual({ valid: true });
     });
@@ -131,7 +146,10 @@ describe('TargetRequiredComponentsValidator', () => {
         },
       };
 
-      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
 
       expect(result).toEqual({ valid: true });
     });
@@ -150,7 +168,10 @@ describe('TargetRequiredComponentsValidator', () => {
         },
       };
 
-      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
 
       expect(result).toEqual({ valid: true });
     });
@@ -174,7 +195,10 @@ describe('TargetRequiredComponentsValidator', () => {
         },
       };
 
-      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
 
       expect(result).toEqual({ valid: true });
     });
@@ -199,7 +223,10 @@ describe('TargetRequiredComponentsValidator', () => {
         ],
       };
 
-      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
 
       expect(result).toEqual({ valid: true });
     });
@@ -223,7 +250,10 @@ describe('TargetRequiredComponentsValidator', () => {
         },
       };
 
-      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
 
       expect(result).toEqual({
         valid: false,
@@ -246,7 +276,10 @@ describe('TargetRequiredComponentsValidator', () => {
         },
       };
 
-      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
 
       expect(result).toEqual({
         valid: false,
@@ -265,7 +298,10 @@ describe('TargetRequiredComponentsValidator', () => {
         primary: { id: 'npc1' }, // No components field
       };
 
-      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
 
       expect(result).toEqual({
         valid: false,
@@ -293,7 +329,10 @@ describe('TargetRequiredComponentsValidator', () => {
         ],
       };
 
-      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
 
       expect(result).toEqual({
         valid: false,
@@ -310,7 +349,10 @@ describe('TargetRequiredComponentsValidator', () => {
       };
       const targetEntities = {}; // No primary target
 
-      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
 
       expect(result).toEqual({
         valid: false,
@@ -333,7 +375,10 @@ describe('TargetRequiredComponentsValidator', () => {
         },
       };
 
-      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
 
       expect(result).toEqual({
         valid: false,
@@ -360,7 +405,10 @@ describe('TargetRequiredComponentsValidator', () => {
         },
       };
 
-      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
 
       // Should fail on first check (primary since legacy target is checked first, then primary)
       expect(result.valid).toBe(false);
@@ -380,7 +428,10 @@ describe('TargetRequiredComponentsValidator', () => {
         primary: { id: 'npc1', components: {} },
       };
 
-      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
 
       expect(result).toEqual({ valid: true });
     });
@@ -396,7 +447,10 @@ describe('TargetRequiredComponentsValidator', () => {
         primary: null,
       };
 
-      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
 
       expect(result.valid).toBe(false);
       expect(result.reason).toContain('primary');
@@ -421,6 +475,25 @@ describe('TargetRequiredComponentsValidator', () => {
       );
     });
 
+    it('should handle undefined target entities', () => {
+      const actionDef = {
+        id: 'test:action',
+        required_components: {
+          primary: ['positioning:closeness'],
+        },
+      };
+
+      const result = validator.validateTargetRequirements(actionDef, undefined);
+
+      expect(result).toEqual({
+        valid: false,
+        reason: 'No target entities available for primary validation',
+      });
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'No target entities provided for primary validation'
+      );
+    });
+
     it('should handle empty target candidate arrays', () => {
       const actionDef = {
         id: 'test:action',
@@ -432,7 +505,10 @@ describe('TargetRequiredComponentsValidator', () => {
         primary: [],
       };
 
-      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
 
       expect(result).toEqual({
         valid: false,
@@ -440,6 +516,31 @@ describe('TargetRequiredComponentsValidator', () => {
       });
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'Empty primary target array for required components validation'
+      );
+    });
+
+    it('should report when target candidate array only contains falsy entries', () => {
+      const actionDef = {
+        id: 'test:action',
+        required_components: {
+          primary: ['positioning:closeness'],
+        },
+      };
+      const targetEntities = {
+        primary: [null, undefined, false],
+      };
+
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
+
+      expect(result).toEqual({
+        valid: false,
+        reason: 'No primary target available for validation',
+      });
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Invalid primary target candidate encountered during required components validation'
       );
     });
 
@@ -460,7 +561,10 @@ describe('TargetRequiredComponentsValidator', () => {
         ],
       };
 
-      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
 
       expect(result).toEqual({ valid: true });
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -487,9 +591,66 @@ describe('TargetRequiredComponentsValidator', () => {
         ],
       };
 
-      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
 
       expect(result).toEqual({ valid: true });
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Resolved primary target candidate lacks entity reference'
+      );
+    });
+
+    it('should unwrap candidates exposing an entity property', () => {
+      const actionDef = {
+        id: 'test:action',
+        required_components: {
+          primary: ['positioning:closeness'],
+        },
+      };
+      const targetEntities = {
+        primary: [
+          {
+            entity: {
+              id: 'wrapped-npc',
+              components: { 'positioning:closeness': {} },
+            },
+          },
+        ],
+      };
+
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
+
+      expect(result).toEqual({ valid: true });
+      expect(mockLogger.debug).not.toHaveBeenCalledWith(
+        'Resolved primary target candidate lacks entity reference'
+      );
+    });
+
+    it('should report when wrapper candidates expose falsy entities', () => {
+      const actionDef = {
+        id: 'test:action',
+        required_components: {
+          primary: ['positioning:closeness'],
+        },
+      };
+      const targetEntities = {
+        primary: [{ entity: null }, { entity: undefined }],
+      };
+
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
+
+      expect(result).toEqual({
+        valid: false,
+        reason: 'No primary target available for validation',
+      });
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'Resolved primary target candidate lacks entity reference'
       );
@@ -516,7 +677,10 @@ describe('TargetRequiredComponentsValidator', () => {
         ],
       };
 
-      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
 
       expect(result).toEqual({ valid: true });
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -537,7 +701,10 @@ describe('TargetRequiredComponentsValidator', () => {
         },
       };
 
-      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
 
       expect(result).toEqual({
         valid: false,
