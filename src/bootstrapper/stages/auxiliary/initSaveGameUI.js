@@ -10,7 +10,12 @@ import './typedefs.js';
  * @param {AuxHelperDeps} deps
  * @returns {{success: boolean, error?: Error}}
  */
-export function initSaveGameUI({ container, gameEngine, logger, tokens }) {
+export async function initSaveGameUI({
+  container,
+  gameEngine,
+  logger,
+  tokens,
+}) {
   const adapter = new GameEngineSaveAdapter(gameEngine);
   return resolveAndInitialize(
     container,

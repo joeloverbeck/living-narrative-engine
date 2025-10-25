@@ -20,13 +20,13 @@ describe('bootstrapperHelpers', () => {
       error: jest.fn(),
     });
 
-    it('returns success when service resolves and initializes', () => {
+    it('returns success when service resolves and initializes', async () => {
       const logger = createLogger();
       const initSpy = jest.fn();
       const service = { [initFn]: initSpy };
       const container = { resolve: jest.fn(() => service) };
 
-      const result = resolveAndInitialize(
+      const result = await resolveAndInitialize(
         container,
         token,
         initFn,
@@ -48,11 +48,11 @@ describe('bootstrapperHelpers', () => {
       expect(logger.error).not.toHaveBeenCalled();
     });
 
-    it('returns failure when service cannot be resolved', () => {
+    it('returns failure when service cannot be resolved', async () => {
       const logger = createLogger();
       const container = { resolve: jest.fn(() => undefined) };
 
-      const result = resolveAndInitialize(
+      const result = await resolveAndInitialize(
         container,
         token,
         initFn,
@@ -68,11 +68,11 @@ describe('bootstrapperHelpers', () => {
       expect(logger.error).not.toHaveBeenCalled();
     });
 
-    it('returns failure when init method is missing', () => {
+    it('returns failure when init method is missing', async () => {
       const logger = createLogger();
       const container = { resolve: jest.fn(() => ({})) };
 
-      const result = resolveAndInitialize(
+      const result = await resolveAndInitialize(
         container,
         token,
         initFn,
@@ -88,7 +88,7 @@ describe('bootstrapperHelpers', () => {
       expect(result.error).toBe(error);
     });
 
-    it('returns failure when initialization throws an error', () => {
+    it('returns failure when initialization throws an error', async () => {
       const logger = createLogger();
       const thrown = new Error('boom');
       const service = {
@@ -98,7 +98,7 @@ describe('bootstrapperHelpers', () => {
       };
       const container = { resolve: jest.fn(() => service) };
 
-      const result = resolveAndInitialize(
+      const result = await resolveAndInitialize(
         container,
         token,
         initFn,
@@ -111,6 +111,31 @@ describe('bootstrapperHelpers', () => {
       );
       expect(result.success).toBe(false);
       expect(result.error).toBe(thrown);
+    });
+
+    it('awaits asynchronous initialization before returning success', async () => {
+      const logger = createLogger();
+      let resolved = false;
+      const initSpy = jest.fn(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        resolved = true;
+      });
+      const service = { [initFn]: initSpy };
+      const container = { resolve: jest.fn(() => service) };
+
+      const resultPromise = resolveAndInitialize(
+        container,
+        token,
+        initFn,
+        logger
+      );
+
+      expect(resolved).toBe(false);
+
+      const result = await resultPromise;
+
+      expect(resolved).toBe(true);
+      expect(result).toEqual({ success: true, payload: undefined });
     });
   });
 
@@ -166,7 +191,9 @@ describe('bootstrapperHelpers', () => {
     });
 
     it('returns false when loop is not running', () => {
-      const engine = { getEngineStatus: jest.fn(() => ({ isLoopRunning: false })) };
+      const engine = {
+        getEngineStatus: jest.fn(() => ({ isLoopRunning: false })),
+      };
       expect(shouldStopEngine(engine)).toBe(false);
     });
   });
@@ -199,7 +226,10 @@ describe('bootstrapperHelpers', () => {
 
   describe('stageSuccess', () => {
     it('returns successful result with payload', () => {
-      expect(stageSuccess('payload')).toEqual({ success: true, payload: 'payload' });
+      expect(stageSuccess('payload')).toEqual({
+        success: true,
+        payload: 'payload',
+      });
       expect(stageSuccess()).toEqual({ success: true, payload: undefined });
     });
   });

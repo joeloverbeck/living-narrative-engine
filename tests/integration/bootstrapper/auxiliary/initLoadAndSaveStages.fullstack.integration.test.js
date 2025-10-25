@@ -8,9 +8,7 @@ import {
   initLoadGameUI,
   initSaveGameUI,
 } from '../../../../src/bootstrapper/stages/auxiliary/index.js';
-import {
-  initProcessingIndicatorController,
-} from '../../../../src/bootstrapper/stages/auxiliary/initProcessingIndicatorController.js';
+import { initProcessingIndicatorController } from '../../../../src/bootstrapper/stages/auxiliary/initProcessingIndicatorController.js';
 import {
   ENGINE_OPERATION_IN_PROGRESS_UI,
   ENGINE_READY_UI,
@@ -223,9 +221,12 @@ describe('Auxiliary bootstrap stages – full integration coverage', () => {
 
   describe('initLoadGameUI', () => {
     it('wires the real load adapter and proxies through the game engine', async () => {
-      env.container.register(tokens.LoadGameUI, () => new RecordingLoadGameUI());
+      env.container.register(
+        tokens.LoadGameUI,
+        () => new RecordingLoadGameUI()
+      );
 
-      const stageResult = initLoadGameUI({
+      const stageResult = await initLoadGameUI({
         container: env.container,
         gameEngine: env.engine,
         logger: env.logger,
@@ -260,21 +261,30 @@ describe('Auxiliary bootstrap stages – full integration coverage', () => {
       expect(env.playtimeTracker.resetCount).toBeGreaterThanOrEqual(1);
       expect(env.turnManager.started).toBe(true);
 
-      const debugMessages = env.logger.debugEntries.map((entry) => entry.message);
+      const debugMessages = env.logger.debugEntries.map(
+        (entry) => entry.message
+      );
       expect(
-        debugMessages.some((msg) => msg.includes('LoadGameUI Init: Resolving LoadGameUI'))
+        debugMessages.some((msg) =>
+          msg.includes('LoadGameUI Init: Resolving LoadGameUI')
+        )
       ).toBe(true);
       expect(
-        debugMessages.some((msg) => msg.includes('LoadGameUI Init: Initialized successfully'))
+        debugMessages.some((msg) =>
+          msg.includes('LoadGameUI Init: Initialized successfully')
+        )
       ).toBe(true);
     });
   });
 
   describe('initSaveGameUI', () => {
     it('connects the save adapter and performs a real manual save through the engine', async () => {
-      env.container.register(tokens.SaveGameUI, () => new RecordingSaveGameUI());
+      env.container.register(
+        tokens.SaveGameUI,
+        () => new RecordingSaveGameUI()
+      );
 
-      const stageResult = initSaveGameUI({
+      const stageResult = await initSaveGameUI({
         container: env.container,
         gameEngine: env.engine,
         logger: env.logger,
@@ -302,14 +312,22 @@ describe('Auxiliary bootstrap stages – full integration coverage', () => {
         filePath: '/saves/stage-world.json',
       });
 
-      const saveOutcome = await saveGameUI.adapter.save('slot-stage', 'Stage Save');
+      const saveOutcome = await saveGameUI.adapter.save(
+        'slot-stage',
+        'Stage Save'
+      );
 
-      expect(saveOutcome).toEqual({ success: true, filePath: '/saves/stage-world.json' });
+      expect(saveOutcome).toEqual({
+        success: true,
+        filePath: '/saves/stage-world.json',
+      });
       expect(env.persistenceService.saveCalls).toEqual([
         { saveName: 'Stage Save', isManual: true, activeWorld: 'Stage World' },
       ]);
 
-      const dispatchedEvents = env.safeEventDispatcher.events.map((event) => event.eventId);
+      const dispatchedEvents = env.safeEventDispatcher.events.map(
+        (event) => event.eventId
+      );
       expect(dispatchedEvents).toContain(ENGINE_OPERATION_IN_PROGRESS_UI);
       expect(dispatchedEvents).toContain(GAME_SAVED_ID);
       expect(dispatchedEvents).toContain(ENGINE_READY_UI);
@@ -330,8 +348,12 @@ describe('Auxiliary bootstrap stages – full integration coverage', () => {
       });
 
       expect(stageResult).toEqual({ success: true });
-      const debugMessages = env.logger.debugEntries.map((entry) => entry.message);
-      expect(debugMessages.at(-1)).toContain('ProcessingIndicatorController Init: Resolved successfully');
+      const debugMessages = env.logger.debugEntries.map(
+        (entry) => entry.message
+      );
+      expect(debugMessages.at(-1)).toContain(
+        'ProcessingIndicatorController Init: Resolved successfully'
+      );
     });
 
     it('returns a StageError when the controller cannot be resolved', () => {
@@ -348,7 +370,9 @@ describe('Auxiliary bootstrap stages – full integration coverage', () => {
       expect(stageResult.error.message).toBe(
         'ProcessingIndicatorController could not be resolved.'
       );
-      expect(stageResult.error.phase).toBe('ProcessingIndicatorController Init');
+      expect(stageResult.error.phase).toBe(
+        'ProcessingIndicatorController Init'
+      );
       expect(env.logger.warnEntries[0].message).toContain(
         'ProcessingIndicatorController could not be resolved'
       );
@@ -363,7 +387,9 @@ describe('Auxiliary bootstrap stages – full integration coverage', () => {
 
       expect(stageResult.success).toBe(false);
       expect(stageResult.error).toBeInstanceOf(StageError);
-      expect(stageResult.error.message).toContain('AppContainer: No service registered');
+      expect(stageResult.error.message).toContain(
+        'AppContainer: No service registered'
+      );
       expect(env.logger.errorEntries[0].message).toContain(
         'ProcessingIndicatorController Init: Error during resolution.'
       );

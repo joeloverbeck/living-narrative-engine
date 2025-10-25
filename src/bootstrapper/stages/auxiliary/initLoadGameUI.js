@@ -10,7 +10,12 @@ import './typedefs.js';
  * @param {AuxHelperDeps} deps
  * @returns {{success: boolean, error?: Error}}
  */
-export function initLoadGameUI({ container, gameEngine, logger, tokens }) {
+export async function initLoadGameUI({
+  container,
+  gameEngine,
+  logger,
+  tokens,
+}) {
   const adapter = new GameEngineLoadAdapter(gameEngine);
   return resolveAndInitialize(
     container,
