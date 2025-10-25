@@ -84,18 +84,40 @@ export async function dispatchFailureAndReset(
     'engineErrorUtils.dispatchFailureAndReset: Dispatching UI event for operation failed.'
   );
 
-  if (dispatcher) {
-    await dispatcher.dispatch(ENGINE_OPERATION_FAILED_UI, {
-      errorMessage,
-      errorTitle: title,
-    });
-  } else {
+  try {
+    if (dispatcher) {
+      await dispatcher.dispatch(ENGINE_OPERATION_FAILED_UI, {
+        errorMessage,
+        errorTitle: title,
+      });
+    } else {
+      logger.error(
+        'engineErrorUtils.dispatchFailureAndReset: ISafeEventDispatcher not available, cannot dispatch UI failure event.'
+      );
+    }
+  } catch (dispatchError) {
+    const normalizedError =
+      dispatchError instanceof Error
+        ? dispatchError
+        : new Error(String(dispatchError));
     logger.error(
-      'engineErrorUtils.dispatchFailureAndReset: ISafeEventDispatcher not available, cannot dispatch UI failure event.'
+      'engineErrorUtils.dispatchFailureAndReset: Failed to dispatch UI failure event.',
+      normalizedError
     );
+  } finally {
+    try {
+      resetEngineState();
+    } catch (resetError) {
+      const normalizedResetError =
+        resetError instanceof Error
+          ? resetError
+          : new Error(String(resetError));
+      logger.error(
+        'engineErrorUtils.dispatchFailureAndReset: Failed to reset engine state after failure.',
+        normalizedResetError
+      );
+    }
   }
-
-  resetEngineState();
 }
 
 /**
