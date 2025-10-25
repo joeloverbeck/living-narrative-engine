@@ -207,7 +207,7 @@ describe('BaseCharacterBuilderController - Coverage Tests', () => {
 
     mockEventBus = {
       dispatch: jest.fn(),
-      subscribe: jest.fn(),
+      subscribe: jest.fn().mockImplementation(() => jest.fn()),
       unsubscribe: jest.fn(),
     };
 
@@ -275,6 +275,32 @@ describe('BaseCharacterBuilderController - Coverage Tests', () => {
       expect(controller).toBeDefined();
       expect(controller.testHasService('complexService')).toBe(true);
     });
+
+    it('should validate additional services when matching rules are provided', () => {
+      const analyticsService = { track: jest.fn() };
+      const validationRules = {
+        analyticsService: {
+          requiredMethods: ['track'],
+        },
+      };
+
+      controller = new TestControllerWithPrivates(
+        {
+          logger: mockLogger,
+          characterBuilderService: mockCharacterBuilderService,
+          eventBus: mockEventBus,
+          schemaValidator: mockSchemaValidator,
+          analyticsService,
+        },
+        validationRules
+      );
+
+      expect(controller).toBeDefined();
+      expect(controller.additionalServices.analyticsService).toBe(analyticsService);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining("Validated additional service 'analyticsService'")
+      );
+    });
   });
 
   describe('Private Service Methods (lines 363-374)', () => {
@@ -313,6 +339,25 @@ describe('BaseCharacterBuilderController - Coverage Tests', () => {
 
       const nonExistent = controller.testGetService('nonExistentService');
       expect(nonExistent).toBeUndefined();
+    });
+  });
+
+  describe('DOM element caching safeguards (lines 595-609)', () => {
+    it('should throw descriptive error when required selector is missing', () => {
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      expect(() =>
+        controller._cacheElement('missingButton', '.missing-button')
+      ).toThrow(
+        new Error(
+          "TestControllerWithPrivates: Failed to cache element 'missingButton'. Required element matching selector '.missing-button' not found in DOM"
+        )
+      );
     });
   });
 
@@ -373,6 +418,91 @@ describe('BaseCharacterBuilderController - Coverage Tests', () => {
           controller: 'TestControllerWithPrivates',
           currentState: UI_STATES.LOADING,
           timestamp: expect.any(String),
+        })
+      );
+    });
+  });
+
+  describe('Event bus subscription fallbacks (lines 1389-1414)', () => {
+    beforeEach(() => {
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+    });
+
+    it('should unsubscribe tracked listeners and warn when event bus is unavailable', () => {
+      const unsubscribe = jest.fn();
+      mockEventBus.subscribe.mockReturnValueOnce(unsubscribe);
+
+      const subscriptionId = controller._subscribeToEvent(
+        'unit:test',
+        function handler() {}
+      );
+
+      expect(subscriptionId).toBeTruthy();
+
+      controller._detachEventBus();
+
+      expect(unsubscribe).toHaveBeenCalledTimes(1);
+
+      mockLogger.warn.mockClear();
+
+      const result = controller._subscribeToEvent('unit:test', () => {});
+      expect(result).toBeNull();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining("Cannot subscribe to 'unit:test'")
+      );
+      // Ensure no new subscriptions were attempted after detaching
+      expect(mockEventBus.subscribe).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('Container resolution helper (line 1482)', () => {
+    it('should return provided elements without modification', () => {
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      const container = document.createElement('section');
+      const resolvedContainer = controller._getContainer(container);
+
+      expect(resolvedContainer).toBe(container);
+    });
+  });
+
+  describe('Initialization error handling (lines 2033-2055)', () => {
+    it('should dispatch initialization errors to the event bus', async () => {
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      controller._showError = jest.fn();
+      controller._showState = jest.fn();
+
+      const initializationError = new Error('init failure');
+      initializationError.phase = 'setup';
+
+      mockEventBus.dispatch.mockClear();
+
+      await controller._handleInitializationError(initializationError);
+
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'SYSTEM_ERROR_OCCURRED',
+        expect.objectContaining({
+          error: 'init failure',
+          context: 'TestControllerWithPrivates initialization',
+          phase: 'setup',
+          timestamp: expect.any(String),
+          stack: expect.any(String),
         })
       );
     });
@@ -502,6 +632,34 @@ describe('BaseCharacterBuilderController - Coverage Tests', () => {
 
       // Verify retry was called
       expect(controller._retryLastOperation).toHaveBeenCalled();
+    });
+
+    it('should log when retrying a network error fails', () => {
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      const retryFailure = new Error('Retry failure');
+      controller._retryLastOperation = jest.fn(() => {
+        throw retryFailure;
+      });
+
+      mockLogger.error.mockClear();
+
+      controller._attemptErrorRecovery({
+        category: ERROR_CATEGORIES.NETWORK,
+        severity: ERROR_SEVERITY.RECOVERABLE,
+      });
+
+      jest.advanceTimersByTime(5000);
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Recovery retry failed'),
+        retryFailure
+      );
     });
 
     it('should not attempt recovery for unrecognized error categories', () => {
@@ -952,6 +1110,8 @@ describe('BaseCharacterBuilderController - Coverage Tests', () => {
         ],
       });
 
+      mockLogger.warn.mockClear();
+
       const result = controller._validateData(
         { profile: { name: '' } },
         'profileSchema',
@@ -969,6 +1129,16 @@ describe('BaseCharacterBuilderController - Coverage Tests', () => {
         'Generic issue',
       ]);
       expect(result.errorMessage).toContain('Please fix the following errors');
+      expect(result.failureMessage).toContain(
+        "Validation failed for schema 'profileSchema'"
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining("Validation failed for schema 'profileSchema'"),
+        expect.objectContaining({
+          operation: 'saveProfile',
+          schemaId: 'profileSchema',
+        })
+      );
     });
 
     it('should handle validators that return non-array errors', () => {
@@ -977,11 +1147,23 @@ describe('BaseCharacterBuilderController - Coverage Tests', () => {
         errors: null,
       });
 
+      mockLogger.warn.mockClear();
+
       const result = controller._validateData({}, 'emptySchema');
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toEqual(['Invalid data format']);
       expect(result.errorMessage).toBe('Invalid data format');
+      expect(result.failureMessage).toContain(
+        "Validation failed for schema 'emptySchema'"
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining("Validation failed for schema 'emptySchema'"),
+        expect.objectContaining({
+          operation: 'validateData',
+          schemaId: 'emptySchema',
+        })
+      );
     });
 
     it('should recover gracefully when schema validation throws', () => {
@@ -1287,6 +1469,83 @@ describe('BaseCharacterBuilderController - Coverage Tests', () => {
       const throttled = controller._getThrottledHandler('key-2', fn, 30);
       const throttledAgain = controller._getThrottledHandler('key-2', fn, 30);
       expect(throttled).toBe(throttledAgain);
+    });
+
+    it('should clear scheduled timers when maxWait triggers immediate debounce execution', () => {
+      const fn = jest.fn();
+      const clearTimeoutSpy = jest.spyOn(controller, '_clearTimeout');
+      const nowSpy = jest.spyOn(Date, 'now');
+
+      nowSpy
+        .mockReturnValueOnce(100)
+        .mockReturnValueOnce(110)
+        .mockReturnValueOnce(170)
+        .mockReturnValueOnce(180);
+
+      const debounced = controller._debounce(fn, 30, {
+        maxWait: 50,
+        leading: false,
+        trailing: true,
+      });
+
+      debounced('first');
+      expect(fn).toHaveBeenCalledTimes(1);
+
+      debounced('second');
+      expect(fn).toHaveBeenCalledTimes(2);
+      expect(clearTimeoutSpy).toHaveBeenCalled();
+
+      debounced.cancel();
+
+      clearTimeoutSpy.mockRestore();
+      nowSpy.mockRestore();
+    });
+
+    it('should cancel debounced handlers and clear all pending timers', () => {
+      const fn = jest.fn();
+      const clearTimeoutSpy = jest.spyOn(controller, '_clearTimeout');
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValueOnce(0);
+
+      const debounced = controller._debounce(fn, 40, {
+        maxWait: 100,
+        leading: false,
+        trailing: true,
+      });
+
+      debounced('queued');
+      expect(clearTimeoutSpy).not.toHaveBeenCalled();
+
+      debounced.cancel();
+      expect(clearTimeoutSpy).toHaveBeenCalledTimes(2);
+
+      clearTimeoutSpy.mockRestore();
+      nowSpy.mockRestore();
+    });
+
+    it('should clear pending throttle timers when leading edge execution occurs', () => {
+      const fn = jest.fn();
+      const clearTimeoutSpy = jest.spyOn(controller, '_clearTimeout');
+      const nowSpy = jest.spyOn(Date, 'now');
+
+      nowSpy
+        .mockReturnValueOnce(0)
+        .mockReturnValueOnce(120)
+        .mockReturnValueOnce(130);
+
+      const throttled = controller._throttle(fn, 100, {
+        leading: true,
+        trailing: true,
+      });
+
+      throttled('first');
+      expect(fn).not.toHaveBeenCalled();
+
+      throttled('second');
+      expect(fn).toHaveBeenCalledTimes(1);
+      expect(clearTimeoutSpy).toHaveBeenCalled();
+
+      clearTimeoutSpy.mockRestore();
+      nowSpy.mockRestore();
     });
 
     it('should register cleanup tasks and execute them in LIFO order', () => {

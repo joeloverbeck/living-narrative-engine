@@ -376,28 +376,6 @@ export class BaseCharacterBuilderController {
   }
 
   /**
-   * Check if an additional service is available
-   *
-   * @private
-   * @param {string} serviceName - Name of the service to check
-   * @returns {boolean} True if service is available and validated
-   */
-  #hasService(serviceName) {
-    return this.#additionalServices[serviceName] !== undefined;
-  }
-
-  /**
-   * Get an additional service by name
-   *
-   * @private
-   * @param {string} serviceName - Name of the service to retrieve
-   * @returns {*} The service instance or undefined
-   */
-  #getService(serviceName) {
-    return this.#additionalServices[serviceName];
-  }
-
-  /**
    * Get initialization status
    *
    * @public
@@ -436,6 +414,49 @@ export class BaseCharacterBuilderController {
    */
   get eventBus() {
     return this.#eventBus;
+  }
+
+  /**
+   * Detach the controller from the event bus and unsubscribe tracked listeners
+   *
+   * @protected
+   * @returns {void}
+   */
+  _detachEventBus() {
+    if (!this.#eventBus) {
+      return;
+    }
+
+    const listenersToRestore = [];
+    let detachedCount = 0;
+
+    while (this.#eventListeners.length > 0) {
+      const listener = this.#eventListeners.pop();
+
+      if (listener.type === 'eventBus' && listener.unsubscribe) {
+        try {
+          listener.unsubscribe();
+          detachedCount += 1;
+        } catch (error) {
+          this.#logger.error(
+            `${this.constructor.name}: Error detaching event bus listener`,
+            error
+          );
+        }
+      } else {
+        listenersToRestore.push(listener);
+      }
+    }
+
+    listenersToRestore.reverse().forEach((listener) => {
+      this.#eventListeners.push(listener);
+    });
+
+    this.#logger.debug(
+      `${this.constructor.name}: Detached from event bus after unsubscribing ${detachedCount} listener(s)`
+    );
+
+    this.#eventBus = null;
   }
 
   /**
@@ -2450,25 +2471,6 @@ export class BaseCharacterBuilderController {
    */
   _validateData(data, schemaId, context = {}) {
     try {
-      // Use the sophisticated validateAgainstSchema utility from schemaValidationUtils.js
-      // with proper context configuration for enhanced error handling
-      const validationContext = {
-        validationDebugMessage: `${this.constructor.name}: Validating data against schema '${schemaId}'`,
-        notLoadedMessage: `${this.constructor.name}: Schema '${schemaId}' not loaded`,
-        notLoadedLogLevel: 'error',
-        skipIfSchemaNotLoaded: false,
-        failureMessage: (errors) =>
-          `${this.constructor.name}: Validation failed for schema '${schemaId}' with ${errors.length} error(s)`,
-        failureContext: {
-          operation: context.operation || 'validateData',
-          controller: this.constructor.name,
-          schemaId,
-        },
-        failureThrowMessage: 'Schema validation failed',
-        appendErrorDetails: true,
-        ...context,
-      };
-
       // Note: The schemaValidator interface expects validate() to return a ValidationResult object
       // The validateAgainstSchema utility from schemaValidationUtils.js handles the context but throws on error
       // So we need to use the validator's validate() method directly for non-throwing validation
@@ -2477,6 +2479,14 @@ export class BaseCharacterBuilderController {
       if (validationResult.isValid) {
         return { isValid: true };
       }
+
+      const failureMessage = `${this.constructor.name}: Validation failed for schema '${schemaId}' with ${
+        validationResult.errors?.length || 0
+      } error(s)`;
+      this.#logger.warn(failureMessage, {
+        operation: context.operation || 'validateData',
+        schemaId,
+      });
 
       // Format the validation errors from the result
       const formattedErrors = this._formatValidationErrors(
@@ -2487,6 +2497,7 @@ export class BaseCharacterBuilderController {
         isValid: false,
         errors: formattedErrors,
         errorMessage: this._buildValidationErrorMessage(formattedErrors),
+        failureMessage,
       };
     } catch (error) {
       // Handle schema loading errors or validation system failures
