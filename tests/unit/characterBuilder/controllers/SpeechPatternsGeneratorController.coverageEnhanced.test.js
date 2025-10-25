@@ -1660,4 +1660,122 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
 
     document.createElement.mockRestore();
   });
+
+  it('populates export controls via display enhancer and toggles template visibility', async () => {
+    setupControllerDOM();
+
+    const { dependencies, mocks } = createDependencies({ withDisplayEnhancer: true });
+    const formatOptions = [
+      {
+        id: 'json-narrative',
+        name: 'Narrative JSON',
+        description: 'Structured JSON output',
+      },
+      { id: 'txt', name: 'Plain Text', description: 'Simple text export' },
+    ];
+    const templateOptions = [
+      {
+        id: 'standard-template',
+        name: 'Standard',
+        description: 'Balanced output',
+      },
+      {
+        id: 'detailed-template',
+        name: 'Detailed',
+        description: 'Adds extended annotations',
+      },
+    ];
+
+    mocks.displayEnhancer.getSupportedExportFormats.mockReturnValue(formatOptions);
+    mocks.displayEnhancer.getAvailableTemplates.mockReturnValue(templateOptions);
+
+    const controller = createControllerInstance(dependencies);
+    const originalCache = controller._cacheElements.bind(controller);
+    controller._cacheElements = function () {
+      originalCache();
+      this._cacheElementsFromMap({
+        exportFormat: '#export-format',
+        exportTemplate: '#export-template',
+        templateGroup: '#template-group',
+      });
+    };
+
+    await controller.initialize();
+
+    const formatSelector = document.getElementById('export-format');
+    const templateSelector = document.getElementById('export-template');
+    const templateGroup = document.getElementById('template-group');
+
+    expect(mocks.displayEnhancer.getSupportedExportFormats).toHaveBeenCalledTimes(1);
+    expect(Array.from(formatSelector.options).map((option) => option.value)).toEqual(
+      formatOptions.map((format) => format.id)
+    );
+
+    expect(mocks.displayEnhancer.getAvailableTemplates).toHaveBeenCalledTimes(1);
+    expect(Array.from(templateSelector.options).map((option) => option.value)).toEqual(
+      templateOptions.map((template) => template.id)
+    );
+
+    // Initial visibility should hide templates for non-text formats
+    expect(templateGroup.style.display).toBe('none');
+
+    formatSelector.value = 'txt';
+    formatSelector.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(templateGroup.style.display).toBe('flex');
+
+    formatSelector.value = 'json-narrative';
+    formatSelector.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(templateGroup.style.display).toBe('none');
+  });
+
+  it('announces screen reader updates and clears them after timeout', async () => {
+    jest.useFakeTimers();
+
+    try {
+      setupControllerDOM();
+      const { dependencies, mocks } = createDependencies({ withDisplayEnhancer: true });
+      mocks.displayEnhancer.getSupportedExportFormats.mockReturnValue([
+        { id: 'txt', name: 'Text', description: 'Plain text' },
+      ]);
+      mocks.displayEnhancer.getAvailableTemplates.mockReturnValue([
+        { id: 'default', name: 'Default', description: 'Baseline template' },
+      ]);
+
+      const controller = createControllerInstance(dependencies);
+      const originalCache = controller._cacheElements.bind(controller);
+      controller._cacheElements = function () {
+        originalCache();
+        this._cacheElementsFromMap({
+          exportFormat: '#export-format',
+          exportTemplate: '#export-template',
+          templateGroup: '#template-group',
+        });
+      };
+
+      await controller.initialize();
+
+      const announcementRegion = document.getElementById(
+        'screen-reader-announcement'
+      );
+      const clearButton = document.getElementById('clear-all-btn');
+
+      expect(controller._getElement('clearBtn')).toBe(clearButton);
+      expect(controller._getElement('screenReaderAnnouncement')).toBe(
+        announcementRegion
+      );
+
+      expect(announcementRegion.textContent).toBe('');
+
+      clearButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+      expect(announcementRegion.textContent).toBe('All content cleared');
+
+      jest.advanceTimersByTime(1000);
+      await flushMicrotasks();
+
+      expect(announcementRegion.textContent).toBe('');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 });
