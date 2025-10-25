@@ -47,59 +47,96 @@ class EventBus extends IEventBus {
    * @param {string} [options.context] - Context description for logging
    */
   setBatchMode(enabled, options = {}) {
-    if (enabled === this.#batchMode) {
-      return; // No change needed
-    }
+    const defaultOptions = {
+      maxRecursionDepth: 10,
+      maxGlobalRecursion: 25,
+      timeoutMs: 30000,
+      context: 'unknown',
+    };
 
     if (enabled) {
-      const defaultOptions = {
-        maxRecursionDepth: 10,
-        maxGlobalRecursion: 25,
-        timeoutMs: 30000,
-        context: 'unknown',
-      };
+      const mergedOptions = { ...defaultOptions, ...options };
 
-      this.#batchModeOptions = { ...defaultOptions, ...options };
-      this.#batchMode = true;
+      if (this.#batchMode) {
+        // Update configuration while remaining in batch mode (nested contexts)
+        this.#batchModeOptions = mergedOptions;
 
-      // Safety timeout to auto-disable batch mode
-      if (this.#batchModeTimeoutId) {
-        clearTimeout(this.#batchModeTimeoutId);
+        if (this.#batchModeTimeoutId) {
+          clearTimeout(this.#batchModeTimeoutId);
+          this.#batchModeTimeoutId = null;
+        }
+
+        if (
+          Number.isFinite(mergedOptions.timeoutMs) &&
+          mergedOptions.timeoutMs > 0
+        ) {
+          this.#batchModeTimeoutId = setTimeout(() => {
+            this.#logger.debug(
+              `EventBus: Auto-disabling batch mode after ${mergedOptions.timeoutMs}ms timeout for context: ${mergedOptions.context}`
+            );
+            this.setBatchMode(false);
+          }, mergedOptions.timeoutMs);
+        }
+
+        this.#logger.debug(
+          `EventBus: Batch mode configuration updated for context: ${mergedOptions.context}, ` +
+            `maxRecursionDepth: ${mergedOptions.maxRecursionDepth}, ` +
+            `maxGlobalRecursion: ${mergedOptions.maxGlobalRecursion}`
+        );
+        return;
       }
 
-      this.#batchModeTimeoutId = setTimeout(() => {
-        this.#logger.debug(
-          `EventBus: Auto-disabling batch mode after ${this.#batchModeOptions.timeoutMs}ms timeout for context: ${this.#batchModeOptions.context}`
-        );
-        this.setBatchMode(false);
-      }, this.#batchModeOptions.timeoutMs);
-
-      this.#logger.debug(
-        `EventBus: Batch mode enabled for context: ${this.#batchModeOptions.context}, ` +
-          `maxRecursionDepth: ${this.#batchModeOptions.maxRecursionDepth}, ` +
-          `maxGlobalRecursion: ${this.#batchModeOptions.maxGlobalRecursion}`
-      );
-    } else {
-      // Disable batch mode
-      this.#batchMode = false;
+      this.#batchModeOptions = mergedOptions;
+      this.#batchMode = true;
 
       if (this.#batchModeTimeoutId) {
         clearTimeout(this.#batchModeTimeoutId);
         this.#batchModeTimeoutId = null;
       }
 
-      // Reset recursion depth counters when exiting batch mode
-      // This prevents accumulated depth from batch operations affecting normal gameplay
-      this.#recursionDepth.clear();
-      this.#handlerExecutionDepth.clear();
-
-      const context = this.#batchModeOptions?.context || 'unknown';
-      this.#batchModeOptions = null;
+      if (
+        Number.isFinite(mergedOptions.timeoutMs) &&
+        mergedOptions.timeoutMs > 0
+      ) {
+        this.#batchModeTimeoutId = setTimeout(() => {
+          this.#logger.debug(
+            `EventBus: Auto-disabling batch mode after ${mergedOptions.timeoutMs}ms timeout for context: ${mergedOptions.context}`
+          );
+          this.setBatchMode(false);
+        }, mergedOptions.timeoutMs);
+      }
 
       this.#logger.debug(
-        `EventBus: Batch mode disabled for context: ${context}. Recursion depth counters reset.`
+        `EventBus: Batch mode enabled for context: ${mergedOptions.context}, ` +
+          `maxRecursionDepth: ${mergedOptions.maxRecursionDepth}, ` +
+          `maxGlobalRecursion: ${mergedOptions.maxGlobalRecursion}`
       );
+      return;
     }
+
+    if (!this.#batchMode) {
+      return; // Already disabled
+    }
+
+    // Disable batch mode
+    this.#batchMode = false;
+
+    if (this.#batchModeTimeoutId) {
+      clearTimeout(this.#batchModeTimeoutId);
+      this.#batchModeTimeoutId = null;
+    }
+
+    // Reset recursion depth counters when exiting batch mode
+    // This prevents accumulated depth from batch operations affecting normal gameplay
+    this.#recursionDepth.clear();
+    this.#handlerExecutionDepth.clear();
+
+    const context = this.#batchModeOptions?.context || 'unknown';
+    this.#batchModeOptions = null;
+
+    this.#logger.debug(
+      `EventBus: Batch mode disabled for context: ${context}. Recursion depth counters reset.`
+    );
   }
 
   /**

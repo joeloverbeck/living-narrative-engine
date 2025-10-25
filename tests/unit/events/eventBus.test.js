@@ -64,4 +64,57 @@ describe('EventBus', () => {
     const result = bus.unsubscribe('missing', handler);
     expect(result).toBe(false);
   });
+
+  describe('setBatchMode', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+      bus = new EventBus({ logger: createLogger() });
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('updates configuration when enabling batch mode while already enabled', () => {
+      bus.setBatchMode(true, {
+        context: 'initial-load',
+        timeoutMs: 1000,
+        maxGlobalRecursion: 50,
+      });
+
+      expect(bus.isBatchModeEnabled()).toBe(true);
+      expect(bus.getBatchModeOptions()).toMatchObject({
+        context: 'initial-load',
+        timeoutMs: 1000,
+        maxGlobalRecursion: 50,
+        maxRecursionDepth: 10,
+      });
+
+      bus.setBatchMode(true, {
+        context: 'nested-load',
+        timeoutMs: 2000,
+        maxGlobalRecursion: 150,
+        maxRecursionDepth: 30,
+      });
+
+      expect(bus.getBatchModeOptions()).toMatchObject({
+        context: 'nested-load',
+        timeoutMs: 2000,
+        maxGlobalRecursion: 150,
+        maxRecursionDepth: 30,
+      });
+
+      // Original timeout should be cleared; batch mode should remain enabled after 1s
+      jest.advanceTimersByTime(1001);
+      expect(bus.isBatchModeEnabled()).toBe(true);
+      expect(bus.getBatchModeOptions()).not.toBeNull();
+
+      // Batch mode should auto-disable after the updated timeout elapses
+      jest.advanceTimersByTime(998);
+      expect(bus.isBatchModeEnabled()).toBe(true);
+      jest.advanceTimersByTime(2);
+      expect(bus.isBatchModeEnabled()).toBe(false);
+      expect(bus.getBatchModeOptions()).toBeNull();
+    });
+  });
 });
