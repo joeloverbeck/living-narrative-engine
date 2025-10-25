@@ -58,8 +58,6 @@ describe('InitiativePriorityQueue', () => {
       queue.add(entityA, 10);
       expect(queue.size()).toBe(1); // Pre-condition: not empty
       queue.remove('a');
-      // Note: At this point, queue.length is 1, removedIds has 'a' (size 1).
-      // size() calculates 1 - 1 = 0.
 
       // Act
       const result = queue.isEmpty();
@@ -94,8 +92,6 @@ describe('InitiativePriorityQueue', () => {
       queue.add(entityB, 5);
       expect(queue.size()).toBe(2); // Pre-condition: has two items
       queue.remove('a');
-      // Note: queue.length is 2, removedIds has 'a' (size 1).
-      // size() calculates 2 - 1 = 1.
 
       // Act
       const result = queue.isEmpty();

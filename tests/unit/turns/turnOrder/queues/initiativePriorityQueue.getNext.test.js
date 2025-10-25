@@ -128,8 +128,7 @@ describe('InitiativePriorityQueue', () => {
       expect(queue.size()).toBe(0);
       expect(queue.isEmpty()).toBe(true);
       expect(queue.peek()).toBeNull();
-      // Note: Cannot directly assert on the internal #removedEntityIds set being empty,
-      // but the correct retrieval of A and the final empty state confirm B was processed.
+      // The retrieval order confirms that the removed entry for B was discarded as expected.
     });
 
     // Test Case 9.5 (Get Skips Multiple Lazily Removed Items)

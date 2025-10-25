@@ -106,7 +106,7 @@ describe('TurnOrderService - Round Transitions', () => {
         // Dynamic size based on add/clear calls
         size: jest.fn().mockImplementation(() => entityCount),
         _queue: { length: 0, data: [] }, // Mock internal state minimally if needed
-        _removedEntityIds: new Set(),
+        _activeSize: 0,
       };
       mockInitQueueInstance = instance; // Capture the instance
       return instance;

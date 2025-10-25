@@ -39,8 +39,7 @@ describe('InitiativePriorityQueue', () => {
       queue.add(entityA, 10);
 
       // Assert
-      // Note: size() implementation in InitiativePriorityQueue relies on physical length minus removed IDs.
-      // Here, physical length is 1, removed IDs size is 0.
+      // size() reflects the number of active (non-removed) entries in O(1).
       expect(queue.size()).toBe(1);
       expect(queue.peek()).toBe(entityA);
       expect(queue.isEmpty()).toBe(false);
@@ -219,7 +218,7 @@ describe('InitiativePriorityQueue', () => {
       expect(first).toBe(entityA);
       expect(second).toBe(entityB);
       expect(queue.isEmpty()).toBe(true);
-      // We cannot directly check #removedEntityIds, but the behavior confirms 'a' is no longer considered removed.
+      // The retrieval order confirms the stale entry for 'a' was discarded.
     });
   }); // End describe('add() Method Functionality')
 }); // End describe('InitiativePriorityQueue')
