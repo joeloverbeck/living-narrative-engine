@@ -52,6 +52,33 @@ describe('safeDispatchEvent', () => {
     expect(logger.warn).not.toHaveBeenCalled();
   });
 
+  it('passes dispatcher options when provided', async () => {
+    const payload = { id: 99 };
+    const options = { allowSchemaNotFound: true };
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(undefined) };
+
+    await safeDispatchEvent(
+      dispatcher,
+      'story:dispatch-with-options',
+      payload,
+      logger,
+      options
+    );
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      'story:dispatch-with-options',
+      payload,
+      options
+    );
+    expect(logger.debug).toHaveBeenCalledWith(
+      'Dispatched story:dispatch-with-options',
+      {
+        payload,
+        options,
+      }
+    );
+  });
+
   it('logs an error when dispatch throws', async () => {
     const error = new Error('network failure');
     const dispatcher = { dispatch: jest.fn().mockRejectedValue(error) };

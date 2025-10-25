@@ -35,8 +35,8 @@ class RecordingDispatcher {
     this.errorFactory = errorFactory;
   }
 
-  async dispatch(eventId, payload) {
-    this.calls.push({ eventId, payload });
+  async dispatch(eventId, payload, options) {
+    this.calls.push({ eventId, payload, options });
     if (this.shouldFail) {
       throw this.errorFactory();
     }
@@ -83,6 +83,7 @@ describe('safeDispatchEvent integration', () => {
       {
         eventId: 'system:status-updated',
         payload,
+        options: undefined,
       },
     ]);
     expect(logger.entries.debug).toEqual([
@@ -128,5 +129,33 @@ describe('safeDispatchEvent integration', () => {
     const dispatchedError = errorCall[2];
     expect(dispatchedError).toBeInstanceOf(Error);
     expect(dispatchedError.message).toBe('network unreachable');
+  });
+
+  it('passes through dispatcher options when provided', async () => {
+    const dispatcher = new RecordingDispatcher();
+    const payload = { important: true };
+    const options = { allowSchemaNotFound: true };
+
+    await safeDispatchEvent(
+      dispatcher,
+      'system:with-options',
+      payload,
+      logger,
+      options
+    );
+
+    expect(dispatcher.calls).toEqual([
+      {
+        eventId: 'system:with-options',
+        payload,
+        options,
+      },
+    ]);
+    expect(logger.entries.debug).toEqual([
+      {
+        message: 'Dispatched system:with-options',
+        metadata: { payload, options },
+      },
+    ]);
   });
 });
