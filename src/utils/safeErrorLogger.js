@@ -223,6 +223,7 @@ export function createSafeErrorLogger({
    * @returns {Promise<any>} Result of the function execution
    */
   async function withGameLoadingMode(fn, options = {}) {
+    const previousDepth = loadingContextStack.length;
     enableGameLoadingMode(options);
 
     try {
@@ -230,7 +231,8 @@ export function createSafeErrorLogger({
     } finally {
       disableGameLoadingMode();
 
-      if (isGameLoadingActive()) {
+      const expectedDepth = previousDepth;
+      if (loadingContextStack.length > expectedDepth) {
         safeLogger.warn(
           'SafeErrorLogger: Game loading mode still active after scope exit. Forcing batch mode disable to prevent leaks.',
           { context: options.context }

@@ -48,4 +48,29 @@ describe('SafeErrorLogger.withGameLoadingMode cleanup', () => {
       { context: 'outer-operation' }
     );
   });
+
+  it('preserves outer loading context when nested mode exits cleanly', async () => {
+    await safeErrorLogger.withGameLoadingMode(
+      async () => {
+        await safeErrorLogger.withGameLoadingMode(
+          async () => {
+            expect(safeErrorLogger.isGameLoadingActive()).toBe(true);
+          },
+          {
+            context: 'inner-operation',
+            timeoutMs: 0,
+          }
+        );
+
+        expect(safeErrorLogger.isGameLoadingActive()).toBe(true);
+      },
+      {
+        context: 'outer-operation',
+        timeoutMs: 0,
+      }
+    );
+
+    expect(safeErrorLogger.isGameLoadingActive()).toBe(false);
+    expect(mockLogger.warn).not.toHaveBeenCalled();
+  });
 });
