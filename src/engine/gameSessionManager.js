@@ -95,13 +95,22 @@ class GameSessionManager {
       this.#logger.debug(
         'GameSessionManager._prepareEngineForOperation: Dispatching UI event.'
       );
-      const dispatchSuccessful = await this.#safeEventDispatcher.dispatch(
-        uiEventId,
-        payload
-      );
-      if (!dispatchSuccessful) {
-        this.#logger.warn(
-          `GameSessionManager._prepareEngineForOperation: SafeEventDispatcher reported failure when dispatching ${uiEventId}.`
+      try {
+        const dispatchSuccessful = await this.#safeEventDispatcher.dispatch(
+          uiEventId,
+          payload
+        );
+        if (!dispatchSuccessful) {
+          this.#logger.warn(
+            `GameSessionManager._prepareEngineForOperation: SafeEventDispatcher reported failure when dispatching ${uiEventId}.`
+          );
+        }
+      } catch (error) {
+        const normalizedError =
+          error instanceof Error ? error : new Error(String(error));
+        this.#logger.error(
+          `GameSessionManager._prepareEngineForOperation: SafeEventDispatcher threw when dispatching ${uiEventId}. Error: ${normalizedError.message}`,
+          normalizedError
         );
       }
     }

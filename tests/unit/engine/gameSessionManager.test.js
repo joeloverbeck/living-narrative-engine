@@ -272,6 +272,21 @@ describe('GameSessionManager', () => {
         'GameSessionManager._prepareEngineForOperation: SafeEventDispatcher reported failure when dispatching core:ui_operation_in_progress.'
       );
     });
+
+    it('should log and continue when the loading UI dispatch throws', async () => {
+      const dispatchError = new Error('Dispatch failed');
+      safeEventDispatcher.dispatch.mockRejectedValueOnce(dispatchError);
+
+      await expect(
+        gameSessionManager.prepareForLoadGameSession('slot-13')
+      ).resolves.toBeUndefined();
+
+      expect(logger.error).toHaveBeenCalledWith(
+        'GameSessionManager._prepareEngineForOperation: SafeEventDispatcher threw when dispatching core:ui_operation_in_progress. Error: Dispatch failed',
+        dispatchError
+      );
+      expect(resetCoreGameStateFn).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('finalizeNewGameSuccess', () => {
