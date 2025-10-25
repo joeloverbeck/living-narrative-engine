@@ -176,6 +176,65 @@ describe('LegacyStrategy - Multi-Target Formatting', () => {
       expect(outcome.fallbackUsed).toBe(false);
     });
 
+    it('normalizes contexts without placeholders and groups repeated placeholders', async () => {
+      const { strategy, commandFormatter, fallbackFormatter } = createStrategy();
+
+      commandFormatter.formatMultiTarget.mockReturnValue({
+        ok: false,
+        error: 'format failed',
+      });
+      fallbackFormatter.formatWithFallback.mockReturnValue({
+        ok: true,
+        value: 'fallback command',
+      });
+
+      await strategy.format({
+        actor: { id: 'actor-multi' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'multi-action',
+              name: 'Coordinate',
+              targets: {
+                primary: { placeholder: 'primary' },
+                secondary: { placeholder: 'secondary' },
+              },
+            },
+            targetContexts: [
+              {
+                entityId: 'target-a',
+                displayName: undefined,
+                contextFromId: 'ctx-1',
+              },
+              {
+                entityId: 'target-b',
+                displayName: 'Target B',
+                placeholder: 'primary',
+                contextFromId: 'ctx-2',
+              },
+              {
+                entityId: 'target-c',
+                displayName: 'Target C',
+                placeholder: 'secondary',
+                contextFromId: 'ctx-3',
+              },
+            ],
+          },
+        ],
+        trace: undefined,
+        traceSource: 'ActionFormattingStage.execute',
+      });
+
+      const [, extractedTargets] = commandFormatter.formatMultiTarget.mock.calls[0];
+      expect(extractedTargets.primary).toHaveLength(2);
+      expect(extractedTargets.primary.map((entry) => entry.id)).toEqual([
+        'target-a',
+        'target-b',
+      ]);
+      expect(extractedTargets.primary[0].displayName).toBe('target-a');
+      expect(extractedTargets.secondary).toHaveLength(1);
+    });
+
     it('uses fallback when formatter fails and marks statistics', async () => {
       const {
         strategy,

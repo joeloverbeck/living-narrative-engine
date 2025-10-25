@@ -99,7 +99,6 @@ describe('LegacyStrategy - Single Target Formatting', () => {
             targetContexts: [{ entityId: 'target1', displayName: 'Target 1' }],
           },
         ],
-        trace: undefined,
         traceSource: 'test',
       });
 
@@ -143,7 +142,6 @@ describe('LegacyStrategy - Single Target Formatting', () => {
             ],
           },
         ],
-        trace: undefined,
         traceSource: 'test',
       });
 
@@ -175,7 +173,6 @@ describe('LegacyStrategy - Single Target Formatting', () => {
             targetContexts: [{ entityId: 'target1', displayName: 'Target 1' }],
           },
         ],
-        trace: undefined,
         traceSource: 'test',
       });
 
@@ -225,6 +222,72 @@ describe('LegacyStrategy - Single Target Formatting', () => {
       expect(createError).toHaveBeenCalled();
     });
 
+    it('prefers entityId on thrown errors when no nested target is available', async () => {
+      const { strategy, commandFormatter, logger, createError } =
+        createStrategy();
+      commandFormatter.format.mockImplementation(() => {
+        const error = new Error('format exploded');
+        error.entityId = 'entity-from-error';
+        throw error;
+      });
+
+      await strategy.format({
+        actor: { id: 'actor-1' },
+        actionsWithTargets: [
+          {
+            actionDef: { id: 'test:action', name: 'Test Action' },
+            targetContexts: [{ entityId: 'target1', displayName: 'Target 1' }],
+          },
+        ],
+        traceSource: 'test',
+      });
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining("target 'entity-from-error'"),
+        expect.objectContaining({ error: expect.any(Error) })
+      );
+      expect(createError).toHaveBeenCalledWith(
+        expect.any(Error),
+        expect.objectContaining({ id: 'test:action' }),
+        'actor-1',
+        null,
+        null,
+        'target1'
+      );
+    });
+
+    it('falls back to the target context id when thrown errors lack identifiers', async () => {
+      const { strategy, commandFormatter, logger, createError } =
+        createStrategy();
+      commandFormatter.format.mockImplementation(() => {
+        throw new Error('format exploded');
+      });
+
+      await strategy.format({
+        actor: { id: 'actor-1' },
+        actionsWithTargets: [
+          {
+            actionDef: { id: 'test:action', name: 'Test Action' },
+            targetContexts: [{ entityId: 'target1', displayName: 'Target 1' }],
+          },
+        ],
+        traceSource: 'test',
+      });
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining("target 'target1'"),
+        expect.objectContaining({ error: expect.any(Error) })
+      );
+      expect(createError).toHaveBeenCalledWith(
+        expect.any(Error),
+        expect.objectContaining({ id: 'test:action' }),
+        'actor-1',
+        null,
+        null,
+        'target1'
+      );
+    });
+
     it('should handle mixed success/failure scenarios', async () => {
       // Arrange
       const { strategy, commandFormatter } = createStrategy();
@@ -249,7 +312,6 @@ describe('LegacyStrategy - Single Target Formatting', () => {
             ],
           },
         ],
-        trace: undefined,
         traceSource: 'test',
       });
 
@@ -389,6 +451,31 @@ describe('LegacyStrategy - Single Target Formatting', () => {
       // Assert
       expect(processingStats.failed).toBe(1);
       expect(processingStats.successful).toBeUndefined();
+    });
+
+    it('does not increment statistics when no targets are available to format', async () => {
+      const { strategy, commandFormatter } = createStrategy();
+      commandFormatter.format.mockReturnValue({ ok: true, value: 'command' });
+
+      const processingStats = { successful: 0, legacy: 0, failed: 0 };
+      const mockTrace = { captureActionData: jest.fn(), info: jest.fn() };
+
+      const outcome = await strategy.format({
+        actor: { id: 'actor-1' },
+        actionsWithTargets: [
+          {
+            actionDef: { id: 'test:action', name: 'Test Action' },
+            targetContexts: [],
+          },
+        ],
+        trace: mockTrace,
+        processingStats,
+        traceSource: 'test',
+      });
+
+      expect(outcome.formattedCommands).toEqual([]);
+      expect(outcome.errors).toEqual([]);
+      expect(processingStats).toEqual({ successful: 0, legacy: 0, failed: 0 });
     });
   });
 });
