@@ -34,7 +34,9 @@ export function validateSaveMetadataFields(metadata, fileName, logger) {
       saveName: saveName || `${extractSaveName(fileName)} (Bad Metadata)`,
       timestamp: timestamp || 'N/A',
       playtimeSeconds:
-        typeof playtimeSeconds === 'number' ? playtimeSeconds : 0,
+        typeof playtimeSeconds === 'number' && Number.isFinite(playtimeSeconds)
+          ? playtimeSeconds
+          : 0,
       isCorrupted: true,
     };
   }
