@@ -581,11 +581,7 @@ function getGenreSpecificContext(genre) {
  */
 export function validateClicheGenerationResponseEnhanced(response) {
   // Use existing validation as base
-  const isValid = validateClicheGenerationResponse(response);
-
-  if (!isValid) {
-    throw new Error('Basic validation failed');
-  }
+  validateClicheGenerationResponse(response);
 
   const stats = calculateResponseStatistics(response);
   const warnings = generateResponseWarnings(response, stats);
@@ -607,37 +603,42 @@ export function validateClicheGenerationResponseEnhanced(response) {
  * @returns {object} Statistical analysis
  */
 function calculateResponseStatistics(response) {
-  let totalItems = 0;
   const categoryCounts = {};
   const categoryLengths = {};
+  let totalItems = 0;
 
-  if (response.categories) {
-    for (const [category, items] of Object.entries(response.categories)) {
-      if (Array.isArray(items)) {
-        categoryCounts[category] = items.length;
-        // Use reduce to avoid stack overflow with large arrays
-        const lengths = items.map((item) => item.length);
-        categoryLengths[category] = {
-          min: lengths.reduce((min, len) => Math.min(min, len), Infinity),
-          max: lengths.reduce((max, len) => Math.max(max, len), -Infinity),
-          avg: items.reduce((sum, item) => sum + item.length, 0) / items.length,
-        };
-        totalItems += items.length;
-      }
+  for (const [category, items] of Object.entries(response.categories)) {
+    categoryCounts[category] = items.length;
+
+    if (items.length === 0) {
+      categoryLengths[category] = { min: 0, max: 0, avg: 0 };
+    } else {
+      // Use reduce to avoid stack overflow with large arrays
+      const lengths = items.map((item) => item.length);
+      categoryLengths[category] = {
+        min: lengths.reduce((min, len) => Math.min(min, len), Infinity),
+        max: lengths.reduce((max, len) => Math.max(max, len), -Infinity),
+        avg: items.reduce((sum, item) => sum + item.length, 0) / items.length,
+      };
     }
+
+    totalItems += items.length;
   }
 
-  const tropesCount = Array.isArray(response.tropesAndStereotypes)
-    ? response.tropesAndStereotypes.length
-    : 0;
+  const tropesCount = response.tropesAndStereotypes.length;
+  const categoryKeys = Object.keys(categoryCounts);
+  const filledCategories = categoryKeys.filter(
+    (category) => categoryCounts[category] > 0
+  ).length;
+  const categoryDivisor = Math.max(categoryKeys.length, 1);
 
   return {
     totalItems: totalItems + tropesCount,
     categoryCounts,
     categoryLengths,
     tropesCount,
-    averageItemsPerCategory: totalItems / Object.keys(categoryCounts).length,
-    completenessScore: Object.keys(categoryCounts).length / 11, // 11 required categories
+    averageItemsPerCategory: totalItems / categoryDivisor,
+    completenessScore: filledCategories / categoryDivisor,
   };
 }
 
