@@ -343,8 +343,8 @@ class GameEngine {
             rawInitError instanceof Error
               ? rawInitError
               : rawInitError
-              ? new Error(String(rawInitError))
-              : new Error('Unknown failure from InitializationService.');
+                ? new Error(String(rawInitError))
+                : new Error('Unknown failure from InitializationService.');
           this.#logger.warn(
             `GameEngine: InitializationService reported failure for "${normalizedWorldName}".`
           );
@@ -466,9 +466,7 @@ class GameEngine {
     );
 
     const normalizedSaveName = saveName.trim();
-    return this.#persistenceCoordinator.triggerManualSave(
-      normalizedSaveName
-    );
+    return this.#persistenceCoordinator.triggerManualSave(normalizedSaveName);
   }
 
   async loadGame(saveIdentifier) {
@@ -547,7 +545,14 @@ class GameEngine {
       this.#logger.warn(
         'GameEngine.showSaveGameUI: Saving is not currently allowed.'
       );
-      await this.#safeEventDispatcher.dispatch(CANNOT_SAVE_GAME_INFO);
+      const infoDispatched = await this.#safeEventDispatcher.dispatch(
+        CANNOT_SAVE_GAME_INFO
+      );
+      if (!infoDispatched) {
+        this.#logger.warn(
+          'GameEngine.showSaveGameUI: SafeEventDispatcher reported failure when dispatching CANNOT_SAVE_GAME_INFO.'
+        );
+      }
     }
   }
 

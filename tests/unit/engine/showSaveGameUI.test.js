@@ -70,6 +70,24 @@ describeInitializedEngineSuite(
         ).toHaveBeenCalledTimes(1);
       });
 
+      it('should log warning when dispatcher fails to emit CANNOT_SAVE_GAME_INFO', async () => {
+        context.bed
+          .getGamePersistenceService()
+          .isSavingAllowed.mockReturnValue(false);
+        context.bed
+          .getSafeEventDispatcher()
+          .dispatch.mockResolvedValueOnce(false);
+
+        await context.engine.showSaveGameUI();
+
+        expect(context.bed.getLogger().warn).toHaveBeenCalledWith(
+          'GameEngine.showSaveGameUI: Saving is not currently allowed.'
+        );
+        expect(context.bed.getLogger().warn).toHaveBeenCalledWith(
+          'GameEngine.showSaveGameUI: SafeEventDispatcher reported failure when dispatching CANNOT_SAVE_GAME_INFO.'
+        );
+      });
+
       generateServiceUnavailableTests(
         [[tokens.GamePersistenceService, GAME_PERSISTENCE_SAVE_UI_UNAVAILABLE]],
         async (bed, engine) => {
