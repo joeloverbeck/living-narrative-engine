@@ -480,12 +480,25 @@ describeEngineSuite('GameEngine', (context) => {
         persistenceCoordinator: mockPersistenceCoordinator,
       });
 
+      context.bed
+        .getSafeEventDispatcher()
+        .dispatch.mockResolvedValue(true);
+      context.bed
+        .getInitializationService()
+        .runInitializationSequence.mockResolvedValue({ success: true });
+
+      await engine.startNewGame(DEFAULT_TEST_WORLD);
       const result = await engine.triggerManualSave(saveName);
 
       expect(mockPersistenceCoordinator.triggerManualSave).toHaveBeenCalledWith(
         saveName
       );
       expect(result).toBe(mockResult);
+
+      context.bed.getSafeEventDispatcher().dispatch.mockReset();
+      context.bed
+        .getInitializationService()
+        .runInitializationSequence.mockReset();
     });
 
     it('should trim save names before delegating to persistenceCoordinator', async () => {
@@ -503,11 +516,24 @@ describeEngineSuite('GameEngine', (context) => {
         persistenceCoordinator: mockPersistenceCoordinator,
       });
 
+      context.bed
+        .getSafeEventDispatcher()
+        .dispatch.mockResolvedValue(true);
+      context.bed
+        .getInitializationService()
+        .runInitializationSequence.mockResolvedValue({ success: true });
+
+      await engine.startNewGame(DEFAULT_TEST_WORLD);
       await engine.triggerManualSave(rawSaveName);
 
       expect(mockPersistenceCoordinator.triggerManualSave).toHaveBeenCalledWith(
         trimmedSaveName
       );
+
+      context.bed.getSafeEventDispatcher().dispatch.mockReset();
+      context.bed
+        .getInitializationService()
+        .runInitializationSequence.mockReset();
     });
 
     it('should throw when saveName is null', async () => {
