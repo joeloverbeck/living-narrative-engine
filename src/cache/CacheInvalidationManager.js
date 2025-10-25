@@ -122,6 +122,31 @@ export class CacheInvalidationManager extends BaseService {
   }
 
   /**
+   * @description Emit an event to any listeners registered through the manager
+   *
+   * @param {string} eventType - Event type to emit
+   * @param {object} [event={}] - Event payload wrapper
+   * @returns {number} Number of handlers invoked
+   */
+  emitEvent(eventType, event = {}) {
+    let handlersInvoked = 0;
+
+    for (const listener of this.#eventListeners) {
+      if (listener.eventType === eventType) {
+        handlersInvoked += 1;
+
+        try {
+          listener.handler(event);
+        } catch (error) {
+          this.#logger.error(`Error handling event: ${eventType}`, error);
+        }
+      }
+    }
+
+    return handlersInvoked;
+  }
+
+  /**
    * Register a cache instance for invalidation management
    *
    * @param {string} cacheId - Unique identifier for the cache
