@@ -223,6 +223,35 @@ describe('AnatomyGraphAlgorithms', () => {
       );
       expect(result).toEqual([]);
     });
+
+    it('should prevent revisiting nodes in cyclic graphs', () => {
+      const armNode = mockCacheManager.get('left-arm-1');
+      const handNode = mockCacheManager.get('left-hand-1');
+      handNode.children = ['left-arm-1'];
+
+      const parts = AnatomyGraphAlgorithms.findPartsByType(
+        'left-arm-1',
+        'hand',
+        mockCacheManager
+      );
+
+      expect(parts).toEqual(['left-hand-1']);
+      expect(handNode.children).toEqual(['left-arm-1']);
+      expect(armNode.children).toEqual(['left-hand-1']);
+    });
+
+    it('should handle nodes without child collections', () => {
+      const handNode = mockCacheManager.get('right-hand-1');
+      handNode.children = null;
+
+      const parts = AnatomyGraphAlgorithms.findPartsByType(
+        'right-arm-1',
+        'hand',
+        mockCacheManager
+      );
+
+      expect(parts).toEqual(['right-hand-1']);
+    });
   });
 
   describe('getAnatomyRoot', () => {
@@ -391,6 +420,70 @@ describe('AnatomyGraphAlgorithms', () => {
       );
       expect(path).toBeNull();
     });
+
+    it('should remove duplicate ancestor entries when target is ancestor', () => {
+      const path = AnatomyGraphAlgorithms.getPath(
+        'left-hand-1',
+        'torso-1',
+        mockCacheManager
+      );
+
+      expect(path).toEqual(['left-hand-1', 'left-arm-1', 'torso-1']);
+    });
+
+    it('should respect depth limits when building ancestor paths', () => {
+      const path = AnatomyGraphAlgorithms.getPath(
+        'left-hand-1',
+        'right-hand-1',
+        mockCacheManager,
+        1
+      );
+
+      expect(path).toBeNull();
+    });
+
+    it('should handle missing cache entries when traversing downward paths', () => {
+      const baseNodes = {
+        'torso-1': { parentId: null },
+        'left-arm-1': { parentId: 'torso-1' },
+        'left-hand-1': { parentId: 'left-arm-1' },
+        'right-arm-1': { parentId: 'torso-1' },
+        'right-hand-1': { parentId: 'right-arm-1' },
+      };
+
+      const accessCounts = new Map();
+      const customCacheManager = {
+        get: jest.fn((entityId) => {
+          const count = accessCounts.get(entityId) ?? 0;
+          accessCounts.set(entityId, count + 1);
+
+          if (entityId === 'right-arm-1' && count >= 1) {
+            return undefined;
+          }
+
+          return baseNodes[entityId];
+        }),
+      };
+
+      const path = AnatomyGraphAlgorithms.getPath(
+        'left-hand-1',
+        'right-hand-1',
+        customCacheManager
+      );
+
+      expect(path).toEqual([
+        'left-hand-1',
+        'left-arm-1',
+        'torso-1',
+        'right-arm-1',
+        'right-hand-1',
+      ]);
+      expect(customCacheManager.get).toHaveBeenCalledWith('right-arm-1');
+      expect(accessCounts.get('right-arm-1')).toBeGreaterThan(1);
+      expect(
+        customCacheManager.get.mock.results.some((call) => call.value === undefined)
+      ).toBe(true);
+    });
   });
 
   describe('getAllParts', () => {
@@ -530,6 +623,23 @@ describe('AnatomyGraphAlgorithms', () => {
         ])
       );
       expect(result).toHaveLength(5);
+    });
+
+    it('should tolerate entity manager errors during existence checks', () => {
+      const emptyCacheManager = new AnatomyCacheManager({ logger: mockLogger });
+
+      mockEntityManager.getEntityInstance.mockImplementation(() => {
+        throw new Error('not found');
+      });
+
+      const result = AnatomyGraphAlgorithms.getAllParts(
+        'torso-1',
+        emptyCacheManager,
+        mockEntityManager
+      );
+
+      expect(result).toEqual([]);
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('torso-1');
     });
   });
 
