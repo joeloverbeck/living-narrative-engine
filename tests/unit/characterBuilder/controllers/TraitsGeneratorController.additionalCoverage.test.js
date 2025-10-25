@@ -188,6 +188,146 @@ describe('TraitsGeneratorController (additional coverage)', () => {
     expect(optionValues).toEqual(['dir-new', 'dir-old']);
   });
 
+  it('recovers from unexpected errors thrown inside the direction selector handler', async () => {
+    const directionSelector = document.getElementById('direction-selector');
+    const addEventListenerSpy = jest.spyOn(directionSelector, 'addEventListener');
+    const handleServiceErrorSpy = jest.spyOn(controller, '_handleServiceError');
+
+    await controller.initialize();
+    handleServiceErrorSpy.mockClear();
+
+    const originalPromiseResolve = Promise.resolve;
+    const catchCallbacks = [];
+    Promise.resolve = jest.fn(() => ({
+      then: () => ({
+        catch: (catchCallback) => {
+          catchCallbacks.push(catchCallback);
+          return null;
+        },
+      }),
+    }));
+
+    const changeCall = addEventListenerSpy.mock.calls.find(
+      ([eventName]) => eventName === 'change'
+    );
+    expect(changeCall).toBeDefined();
+    const [, changeHandler] = changeCall;
+
+    try {
+      changeHandler({ target: { value: 'dir-simulated' } });
+      expect(catchCallbacks).toHaveLength(1);
+
+      const simulatedError = new Error('simulated failure');
+      let thrownError;
+      try {
+        catchCallbacks[0](simulatedError);
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(handleServiceErrorSpy).toHaveBeenCalledWith(
+        simulatedError,
+        'select direction',
+        'Failed to load direction data. Please try selecting another direction.'
+      );
+      expect(thrownError).toBe(simulatedError);
+    } finally {
+      Promise.resolve = originalPromiseResolve;
+      addEventListenerSpy.mockRestore();
+      handleServiceErrorSpy.mockRestore();
+    }
+  });
+
+  it('routes selection failures through the service error handler', async () => {
+    const direction = createDirectionWithConcept({
+      id: 'dir-error',
+      conceptName: 'Errant Path',
+      createdAt: '2024-03-01T00:00:00Z',
+    });
+
+    testBed.services.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue([
+      direction,
+    ]);
+    testBed.services.characterBuilderService.hasClichesForDirection.mockResolvedValue(true);
+    testBed.services.characterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue([
+      testBed.createValidCoreMotivation(),
+    ]);
+
+    const directionSelector = document.getElementById('direction-selector');
+    const addEventListenerSpy = jest.spyOn(directionSelector, 'addEventListener');
+    const handleServiceErrorSpy = jest.spyOn(controller, '_handleServiceError');
+
+    await controller.initialize();
+    handleServiceErrorSpy.mockClear();
+
+    const originalPromiseResolve = Promise.resolve;
+    const thenCallbacks = [];
+    const catchCallbacks = [];
+    Promise.resolve = jest.fn(() => ({
+      then: (thenCallback) => {
+        thenCallbacks.push(thenCallback);
+        return {
+          catch: (catchCallback) => {
+            catchCallbacks.push(catchCallback);
+            return null;
+          },
+        };
+      },
+    }));
+
+    const originalGetElement = controller._getElement.bind(controller);
+    const getElementSpy = jest
+      .spyOn(controller, '_getElement')
+      .mockImplementation((key) => {
+        if (key === 'selectedDirectionDisplay') {
+          throw new Error('render failure');
+        }
+        return originalGetElement(key);
+      });
+
+    const changeCall = addEventListenerSpy.mock.calls.find(
+      ([eventName]) => eventName === 'change'
+    );
+    expect(changeCall).toBeDefined();
+    const [, changeHandler] = changeCall;
+
+    try {
+      changeHandler({ target: { value: direction.direction.id } });
+
+      expect(thenCallbacks).toHaveLength(1);
+      expect(catchCallbacks).toHaveLength(1);
+
+      let capturedError;
+      try {
+        await thenCallbacks[0]();
+      } catch (error) {
+        capturedError = error;
+      }
+
+      expect(capturedError).toBeInstanceOf(Error);
+      expect(capturedError?.message).toBe('render failure');
+
+      let rethrownError;
+      try {
+        catchCallbacks[0](capturedError);
+      } catch (error) {
+        rethrownError = error;
+      }
+
+      expect(handleServiceErrorSpy).toHaveBeenCalledWith(
+        capturedError,
+        'select direction',
+        'Failed to load direction data. Please try selecting another direction.'
+      );
+      expect(rethrownError).toBe(capturedError);
+    } finally {
+      Promise.resolve = originalPromiseResolve;
+      addEventListenerSpy.mockRestore();
+      getElementSpy.mockRestore();
+      handleServiceErrorSpy.mockRestore();
+    }
+  });
+
   it('logs filtering diagnostics for invalid data while retaining valid directions', async () => {
     const invalidConcept = {
       direction: {
