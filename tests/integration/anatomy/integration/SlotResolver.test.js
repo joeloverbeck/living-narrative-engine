@@ -40,9 +40,9 @@ describe('SlotResolver', () => {
       findEntityWithSocket: jest.fn(),
     };
 
-    // Mock cache that simulates AnatomyClothingCache behavior
+    // Mock cache that simulates AnatomyClothingCache behavior with new 2-arg signature
     mockCache = {
-      get: jest.fn().mockReturnValue(undefined), // Default to cache miss
+      get: jest.fn((type, key) => undefined), // Default to cache miss, accepts 2 args
       set: jest.fn(),
       clearType: jest.fn(),
       has: jest.fn().mockReturnValue(false),
@@ -213,7 +213,7 @@ describe('SlotResolver', () => {
 
       // Reset mocks before second call
       mockCache.get.mockReset();
-      mockCache.get.mockReturnValue([{ entityId: 'cached_entity' }]);
+      mockCache.get.mockImplementation((type, key) => [{ entityId: 'cached_entity' }]);
 
       // Second call should use cache
       const cachedResult = await slotResolver.resolve(

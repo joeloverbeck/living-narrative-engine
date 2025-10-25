@@ -25,10 +25,10 @@
     }
   ],
   "content": {
-    "actions": ["vampirism:bare_fangs"],
-    "components": ["vampirism:is_vampire"],
-    "conditions": ["vampirism:event-is-action-bare_fangs"],
-    "rules": ["handle_bare_fangs"],
+    "actions": ["bare_fangs.action.json", "bite_neck_carefully.action.json", "lunge_bite_neck_violently.action.json"],
+    "components": ["is_vampire.component.json"],
+    "conditions": ["event-is-action-bare-fangs.condition.json", "event-is-action-bite-neck-carefully.condition.json", "event-is-action-lunge-bite-neck-violently.condition.json"],
+    "rules": ["handle_bare_fangs.rule.json", "handle_bite_neck_carefully.rule.json", "handle_lunge_bite_neck_violently.rule.json"],
     "entities": {
       "definitions": [],
       "instances": []

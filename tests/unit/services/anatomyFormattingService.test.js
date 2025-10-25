@@ -446,6 +446,39 @@ describe('AnatomyFormattingService', () => {
     });
   });
 
+  describe('getActivityIntegrationConfig', () => {
+    it('should provide activity integration config with Phase 1 defaults', () => {
+      registry = createMockRegistry([], ['core']);
+      logger = createMockLogger();
+      safeEventDispatcher = createMockSafeEventDispatcher();
+
+      const service = new AnatomyFormattingService({
+        dataRegistry: registry,
+        logger,
+        safeEventDispatcher,
+      });
+
+      service.initialize();
+
+      const config = service.getActivityIntegrationConfig();
+
+      // Phase 1 properties (active)
+      expect(config.prefix).toBe('Activity: ');
+      expect(config.suffix).toBe('');
+      expect(config.separator).toBe('. ');
+
+      // Phase 2 properties (defined but inactive)
+      expect(config.nameResolution.usePronounsWhenAvailable).toBe(false);
+      expect(config.nameResolution.fallbackToNames).toBe(true);
+      expect(config.maxActivities).toBe(10);
+
+      // Phase 3 properties (defined but inactive)
+      expect(config.respectPriorityTiers).toBe(true);
+      expect(config.enableCaching).toBe(false);
+      expect(config.cacheTimeout).toBe(5000);
+    });
+  });
+
   describe('getPairedParts return value', () => {
     it('returns a new Set instance, not the internal reference', () => {
       registry = createMockRegistry([

@@ -329,6 +329,38 @@ export class AnatomyFormattingService {
   }
 
   /**
+   * Get activity integration configuration.
+   * Controls how activity descriptions are formatted and displayed.
+   *
+   * @returns {object} Activity configuration
+   */
+  getActivityIntegrationConfig() {
+    this._ensureInitialized();
+    return (
+      this._mergedConfig.activityIntegration || {
+        // Formatting
+        prefix: 'Activity: ',
+        suffix: '',
+        separator: '. ',
+
+        // Name resolution (Phase 2)
+        nameResolution: {
+          usePronounsWhenAvailable: false, // Enable in Phase 2
+          fallbackToNames: true,
+        },
+
+        // Priority filtering (Phase 2)
+        maxActivities: 10,
+        respectPriorityTiers: true, // Enable in Phase 3
+
+        // Performance (Phase 3)
+        enableCaching: false, // Enable in Phase 3
+        cacheTimeout: 5000, // 5 seconds
+      }
+    );
+  }
+
+  /**
    * Ensure the service has been initialized
    *
    * @private

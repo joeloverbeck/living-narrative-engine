@@ -36,14 +36,14 @@ describe('bootstrapperHelpers integration', () => {
   });
 
   describe('resolveAndInitialize', () => {
-    it('resolves a registered service and invokes the initialization method', () => {
+    it('resolves a registered service and invokes the initialization method', async () => {
       const initSpy = jest.fn();
       const serviceInstance = {
         initialize: initSpy,
       };
       container.register('TestService', serviceInstance);
 
-      const result = resolveAndInitialize(
+      const result = await resolveAndInitialize(
         container,
         'TestService',
         'initialize',
@@ -64,10 +64,10 @@ describe('bootstrapperHelpers integration', () => {
       );
     });
 
-    it('returns a failure result and logs when resolution throws', () => {
+    it('returns a failure result and logs when resolution throws', async () => {
       const errorLogger = jest.spyOn(logger, 'error');
 
-      const result = resolveAndInitialize(
+      const result = await resolveAndInitialize(
         container,
         'MissingService',
         'initialize',
@@ -83,10 +83,10 @@ describe('bootstrapperHelpers integration', () => {
       expect(errorLogger.mock.calls[0][1]).toBeInstanceOf(Error);
     });
 
-    it('surfaces stage failure when the service lacks the init method', () => {
+    it('surfaces stage failure when the service lacks the init method', async () => {
       container.register('BrokenService', {});
 
-      const result = resolveAndInitialize(
+      const result = await resolveAndInitialize(
         container,
         'BrokenService',
         'initialize',

@@ -217,8 +217,10 @@ describe('Integration: loadSlotUtils with persistence pipeline', () => {
     const slots = await fetchAndFormatLoadSlots(serviceWithWeirdData);
 
     expect(slots).toHaveLength(2);
-    expect(slots[0].slotItemMeta.name).toBe('Slot One');
-    expect(slots[0].slotItemMeta.timestamp).toBe('Saved: Invalid Date');
-    expect(slots[1].slotItemMeta.name).toBe('Slot Two');
+    // Slot Two comes first because it has a valid timestamp
+    // Slot One comes second because its explosive timestamp isn't a string, so it gets NaN
+    expect(slots[0].slotItemMeta.name).toBe('Slot Two');
+    expect(slots[1].slotItemMeta.name).toBe('Slot One');
+    expect(slots[1].slotItemMeta.timestamp).toBe('Saved: Invalid Date');
   });
 });

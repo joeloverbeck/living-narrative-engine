@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "vampirism:bite_neck_carefully",
+  "name": "Bite Neck Carefully",
+  "description": "Carefully sink your fangs into the target's neck to feed",
+  "targets": "positioning:close_actors_facing_each_other_or_behind_target",
+  "required_components": {
+    "actor": ["positioning:closeness", "vampirism:is_vampire"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:biting_neck", "positioning:giving_blowjob"],
+    "primary": ["positioning:being_bitten_in_neck"]
+  },
+  "template": "bite {target}'s neck carefully",
+  "visual": {
+    "backgroundColor": "#6c0f36",
+    "textColor": "#ffe6ef",
+    "hoverBackgroundColor": "#861445",
+    "hoverTextColor": "#fff2f7"
+  }
+}

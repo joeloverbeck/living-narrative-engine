@@ -85,8 +85,10 @@ describe('Clothing Slot Resolution Integration', () => {
       findEntityWithSocket: jest.fn(),
     };
 
+    // Mock cache that implements the new cache service interface
+    // The get function must accept 2 parameters (cacheType, key) to be recognized
     mockCache = {
-      get: jest.fn().mockReturnValue(undefined),
+      get: jest.fn((cacheType, key) => undefined),
       set: jest.fn(),
       clearType: jest.fn(),
     };
@@ -341,7 +343,13 @@ describe('Clothing Slot Resolution Integration', () => {
           { entityId: 'cached_entity', socketId: 'cached_socket' },
         ];
 
-        mockCache.get.mockReturnValue(cachedResult);
+        // Mock the cache to return the cached result for slot_resolution type
+        mockCache.get.mockImplementation((cacheType, key) => {
+          if (cacheType === 'slot_resolution' && key === 'actor123:bra') {
+            return cachedResult;
+          }
+          return undefined;
+        });
 
         const mapping = { clothingSlotId: 'bra' };
         const result = await slotResolver.resolve('actor123', 'bra', mapping);
