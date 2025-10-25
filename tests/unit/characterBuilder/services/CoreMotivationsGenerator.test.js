@@ -1299,6 +1299,34 @@ describe('CoreMotivationsGenerator', () => {
       expect(validateSpy).toHaveBeenCalled();
     });
 
+    it('should reject responses whose motivations payload is not an array', async () => {
+      const malformedResponse = { motivations: null };
+
+      const dependencies = createDependencies({
+        llmJsonService: {
+          clean: jest.fn(async (response) => response),
+          parseAndRepair: jest.fn(async () => malformedResponse),
+        },
+        llmStrategyFactory: {
+          getAIDecision: jest.fn(async () => JSON.stringify(malformedResponse)),
+        },
+      });
+
+      jest
+        .spyOn(promptModule, 'validateCoreMotivationsGenerationResponse')
+        .mockReturnValue(true);
+
+      const service = new CoreMotivationsGenerator(dependencies);
+
+      await expect(
+        service.generate(validParams, { maxRetries: 0 })
+      ).rejects.toThrow(
+        /Response quality validation failed: motivations must be an array/
+      );
+
+      expect(dependencies.llmJsonService.parseAndRepair).toHaveBeenCalled();
+    });
+
     it('should report detailed quality validation issues when motivations are weak', async () => {
       const poorResponse = {
         motivations: [
@@ -1340,6 +1368,93 @@ describe('CoreMotivationsGenerator', () => {
         'CoreMotivationsGenerator: Response quality issues detected',
         expect.objectContaining({ issueCount: expect.any(Number) })
       );
+    });
+
+    it('should surface issues for missing questions and repetitive phrasing', async () => {
+      const responseWithQuestionProblems = {
+        motivations: [
+          {
+            coreDesire:
+              'A richly detailed desire statement that easily exceeds the minimum thresholds for validation checks',
+            internalContradiction:
+              'An equally detailed contradiction that ensures the validation path reaches the central question checks',
+          },
+          {
+            coreDesire:
+              'Another sufficiently descriptive motivation that clears the early validation gates without difficulty',
+            internalContradiction:
+              'This contradiction contains enough nuance and length to let the question mark validation execute fully',
+            centralQuestion: 'What legacy will they leave behind',
+          },
+          {
+            coreDesire: 'Destiny destiny destiny destiny destiny destiny',
+            internalContradiction:
+              'Despite great effort, the character cannot escape expectations, creating a contradiction rich in detail',
+            centralQuestion: 'Will destiny change?',
+          },
+        ],
+      };
+
+      const dependencies = createDependencies({
+        llmJsonService: {
+          clean: jest.fn(async (response) => response),
+          parseAndRepair: jest.fn(async () => responseWithQuestionProblems),
+        },
+        llmStrategyFactory: {
+          getAIDecision: jest
+            .fn()
+            .mockResolvedValue(JSON.stringify(responseWithQuestionProblems)),
+        },
+      });
+
+      jest
+        .spyOn(promptModule, 'validateCoreMotivationsGenerationResponse')
+        .mockReturnValue(true);
+
+      const service = new CoreMotivationsGenerator(dependencies);
+
+      await expect(
+        service.generate(validParams, { maxRetries: 0 })
+      ).rejects.toThrow(/Response quality issues:/);
+
+      const warnCall = dependencies.logger.warn.mock.calls.find(
+        ([message]) =>
+          message ===
+          'CoreMotivationsGenerator: Response quality issues detected'
+      );
+
+      expect(warnCall).toBeDefined();
+      const warnPayload = warnCall[1];
+
+      expect(warnPayload.issues).toEqual(
+        expect.arrayContaining([
+          'Motivation 1: Central question missing or invalid',
+          'Motivation 2: Central question missing question mark',
+          'Motivation 3: Core desire appears repetitive',
+        ])
+      );
+    });
+
+    it('should classify configuration related failures as configuration stage errors', async () => {
+      const dependencies = createDependencies({
+        llmStrategyFactory: {
+          getAIDecision: jest.fn(async () => {
+            throw new CoreMotivationsGenerationError(
+              'Configuration service unavailable'
+            );
+          }),
+        },
+      });
+
+      const service = new CoreMotivationsGenerator(dependencies);
+
+      await expect(
+        service.generate(validParams, { maxRetries: 0 })
+      ).rejects.toThrow(/Configuration service unavailable/);
+
+      const failureCall = dependencies.eventBus.dispatch.mock.calls.at(-1);
+
+      expect(failureCall[1].failureStage).toBe('configuration');
     });
 
     it('should map diverse failure messages to meaningful failure stages', async () => {
