@@ -75,19 +75,38 @@ class ActivityDescriptionService {
     try {
       this.#logger.debug(`Generating activity description for entity: ${entityId}`);
 
-      // TODO: ACTDESC-006, ACTDESC-007 - Implement metadata collection
-      const activities = [];
+      const entity = this.#entityManager.getEntityInstance(entityId);
+
+      const activities = this.#collectActivityMetadata(entityId);
 
       if (activities.length === 0) {
         this.#logger.debug(`No activities found for entity: ${entityId}`);
         return '';
       }
 
-      // TODO: ACTDESC-018 - Implement conditional filtering (Phase 3)
-      // TODO: ACTDESC-016 - Implement priority filtering (Phase 2)
-      // TODO: ACTDESC-008 - Implement description formatting (Phase 1)
+      const conditionedActivities = this.#filterByConditions(activities, entity);
 
-      return ''; // Placeholder
+      if (conditionedActivities.length === 0) {
+        this.#logger.debug(
+          `No visible activities available after filtering for entity: ${entityId}`
+        );
+        return '';
+      }
+
+      const prioritizedActivities = this.#sortByPriority(conditionedActivities);
+      const description = this.#formatActivityDescription(
+        prioritizedActivities,
+        entity
+      );
+
+      if (!description) {
+        this.#logger.debug(
+          `No formatted activity description produced for entity: ${entityId}`
+        );
+        return '';
+      }
+
+      return description;
 
     } catch (error) {
       this.#logger.error(
@@ -100,33 +119,128 @@ class ActivityDescriptionService {
 
   // Stub methods - to be implemented in subsequent tickets
   // eslint-disable-next-line no-unused-private-class-members
-  #collectActivityMetadata(_entityId) {
+  #collectActivityMetadata(entityId) {
     // ACTDESC-006, ACTDESC-007
-    return [];
+    if (
+      !this.#activityIndex ||
+      typeof this.#activityIndex.findActivitiesForEntity !== 'function'
+    ) {
+      return [];
+    }
+
+    try {
+      const activities = this.#activityIndex.findActivitiesForEntity(entityId);
+
+      if (!Array.isArray(activities)) {
+        this.#logger.warn(
+          `Activity index returned invalid data for entity ${entityId}`
+        );
+        return [];
+      }
+
+      return activities.filter(Boolean);
+    } catch (error) {
+      this.#logger.error(
+        `Failed to collect activity metadata for entity ${entityId}`,
+        error
+      );
+      return [];
+    }
   }
 
   // eslint-disable-next-line no-unused-private-class-members
   #filterByConditions(activities, _entity) {
     // ACTDESC-018 (Phase 3)
-    return activities;
+    return activities.filter((activity) => {
+      if (!activity || activity.visible === false) {
+        return false;
+      }
+
+      if (typeof activity.condition === 'function') {
+        try {
+          return activity.condition(_entity);
+        } catch (error) {
+          this.#logger.warn(
+            'Condition evaluation failed for activity description entry',
+            error
+          );
+          return false;
+        }
+      }
+
+      return true;
+    });
   }
 
   // eslint-disable-next-line no-unused-private-class-members
   #sortByPriority(activities) {
     // ACTDESC-016 (Phase 2)
-    return activities;
+    return [...activities].sort(
+      (a, b) => (b?.priority ?? 0) - (a?.priority ?? 0)
+    );
   }
 
   // eslint-disable-next-line no-unused-private-class-members
-  #formatActivityDescription(_activities, _entity) {
+  #formatActivityDescription(activities, entity) {
     // ACTDESC-008 (Phase 1)
-    return '';
+    const config =
+      this.#anatomyFormattingService.getActivityIntegrationConfig?.() ?? {};
+
+    const primary = activities[0];
+    const descriptionText =
+      typeof primary?.description === 'string'
+        ? primary.description.trim()
+        : '';
+
+    if (!descriptionText && !primary?.verb && !primary?.targetId) {
+      return '';
+    }
+
+    const actorId = primary?.actorId ?? entity?.id;
+    const actorName = this.#resolveEntityName(actorId);
+
+    let formatted = descriptionText
+      ? `${actorName} ${descriptionText}`
+      : `${actorName} ${primary?.verb ?? ''}`.trim();
+
+    if (primary?.targetId) {
+      const targetName = this.#resolveEntityName(primary.targetId);
+      formatted = descriptionText
+        ? `${actorName} ${descriptionText} ${targetName}`.trim()
+        : `${actorName} ${primary?.verb ?? 'interacts with'} ${targetName}`;
+    }
+
+    const prefix = config.prefix ?? '';
+    const suffix = config.suffix ?? '';
+
+    return `${prefix}${formatted}${suffix}`.trim();
   }
 
   // eslint-disable-next-line no-unused-private-class-members
-  #resolveEntityName(_entityId) {
+  #resolveEntityName(entityId) {
     // ACTDESC-009
-    return _entityId;
+    if (!entityId) {
+      return 'Unknown entity';
+    }
+
+    if (this.#entityNameCache.has(entityId)) {
+      return this.#entityNameCache.get(entityId);
+    }
+
+    try {
+      const entity = this.#entityManager.getEntityInstance(entityId);
+      const resolvedName =
+        entity?.displayName ?? entity?.name ?? entity?.id ?? entityId;
+
+      this.#entityNameCache.set(entityId, resolvedName);
+      return resolvedName;
+    } catch (error) {
+      this.#logger.warn(
+        `Failed to resolve entity name for ${entityId}`,
+        error
+      );
+      return entityId;
+    }
   }
 }
 
