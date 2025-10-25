@@ -375,6 +375,51 @@ describe('TraitsRewriterController', () => {
       );
       expect(mockElements.rewriteTraitsButton.disabled).toBe(true);
     });
+
+    it('should reset validation state when character input is cleared', async () => {
+      // Arrange - set valid input first to enable generation
+      const validCharacterJSON = JSON.stringify({
+        components: {
+          'core:name': 'Test Character',
+          'core:personality': 'Brave',
+        },
+      });
+      mockElements.characterDefinition.value = validCharacterJSON;
+      simulateEvent(mockElements.characterDefinition, 'input');
+      await waitForNextTick();
+      expect(mockElements.rewriteTraitsButton.disabled).toBe(false);
+
+      // Act - clear the input and ensure state resets
+      mockElements.characterInputError.style.display = 'block';
+      mockElements.characterDefinition.value = '   ';
+      simulateEvent(mockElements.characterDefinition, 'input');
+      await waitForNextTick();
+
+      // Assert
+      expect(mockElements.rewriteTraitsButton.disabled).toBe(true);
+      expect(mockElements.characterInputError.style.display).toBe('none');
+    });
+
+    it('should require character definitions to include the core:name component', async () => {
+      // Arrange - missing core:name while including another trait
+      const missingNameJSON = JSON.stringify({
+        components: {
+          'core:personality': 'Bold and curious',
+        },
+      });
+
+      mockElements.characterDefinition.value = missingNameJSON;
+
+      // Act
+      simulateEvent(mockElements.characterDefinition, 'input');
+      await waitForNextTick();
+
+      // Assert
+      expect(mockElements.characterInputError.textContent).toContain(
+        'core:name component inside the components property'
+      );
+      expect(mockElements.rewriteTraitsButton.disabled).toBe(true);
+    });
   });
 
   describe('Generation Workflow', () => {
@@ -477,6 +522,104 @@ describe('TraitsRewriterController', () => {
       ).toHaveBeenCalledWith(mockCharacterDefinition, {
         includeMetadata: true,
       });
+    });
+
+    it('should update progress text while traits are being rewritten', async () => {
+      // Arrange
+      await controller.initialize();
+      const validJSON = JSON.stringify({
+        components: {
+          'core:name': 'Progress Test',
+          'core:personality': 'Curious',
+        },
+      });
+      const mockResult = {
+        rewrittenTraits: {
+          'core:personality': 'Curious and thoughtful',
+        },
+        characterName: 'Progress Test',
+      };
+
+      const originalGetElement = controller._getElement;
+      const progressElement = { textContent: 'Waiting' };
+      controller._getElement = function (key) {
+        if (key === 'progressText') {
+          return progressElement;
+        }
+        return originalGetElement.call(this, key);
+      };
+      mockTraitsRewriterGenerator.generateRewrittenTraits.mockResolvedValue(
+        mockResult
+      );
+      mockTraitsRewriterDisplayEnhancer.enhanceForDisplay.mockReturnValue({
+        sections: [
+          {
+            id: 'personality',
+            title: 'Personality',
+            content: 'Curious and thoughtful',
+          },
+        ],
+        characterName: 'Progress Test',
+      });
+
+      mockElements.characterDefinition.value = validJSON;
+      simulateEvent(mockElements.characterDefinition, 'input');
+      await waitForNextTick();
+
+      // Act
+      simulateEvent(mockElements.rewriteTraitsButton, 'click');
+      await waitForNextTick();
+
+      // Assert
+      expect(progressElement.textContent).toBe(
+        'Rewriting traits in character voice...'
+      );
+    });
+
+    it('should render HTML-enhanced trait sections returned by the enhancer', async () => {
+      // Arrange
+      await controller.initialize();
+      const validJSON = JSON.stringify({
+        components: {
+          'core:name': 'HTML Test',
+          'core:personality': 'Bold',
+        },
+      });
+      const mockResult = {
+        rewrittenTraits: {
+          'core:personality': 'Bold and inspiring',
+        },
+        characterName: 'HTML Test',
+      };
+      const enhancedSection = {
+        id: 'personality',
+        title: 'Personality',
+        htmlContent: '<strong>Bold and inspiring</strong>',
+        content: 'Fallback text',
+      };
+
+      mockTraitsRewriterGenerator.generateRewrittenTraits.mockResolvedValue(
+        mockResult
+      );
+      mockTraitsRewriterDisplayEnhancer.enhanceForDisplay.mockReturnValue({
+        sections: [enhancedSection],
+        characterName: 'HTML Test',
+      });
+
+      mockElements.traitsSections.innerHTML = '';
+      mockElements.characterDefinition.value = validJSON;
+      simulateEvent(mockElements.characterDefinition, 'input');
+      await waitForNextTick();
+
+      // Act
+      simulateEvent(mockElements.rewriteTraitsButton, 'click');
+      await waitForNextTick();
+
+      // Assert
+      const renderedSection =
+        mockElements.traitsSections.querySelector('.trait-content');
+      expect(renderedSection).toBeTruthy();
+      expect(renderedSection.innerHTML).toBe('<strong>Bold and inspiring</strong>');
     });
 
     it('should handle generation progress events', async () => {
@@ -668,6 +811,12 @@ describe('TraitsRewriterController', () => {
       global.URL.revokeObjectURL = jest.fn();
     });
 
+    afterEach(() => {
+      delete global.navigator.clipboard;
+      delete global.URL.createObjectURL;
+      delete global.URL.revokeObjectURL;
+    });
+
     it('should support JSON export via dedicated button', async () => {
       // Arrange
       await controller.initialize();
@@ -836,6 +985,171 @@ describe('TraitsRewriterController', () => {
       expect(global.navigator.clipboard.writeText).toHaveBeenCalledWith(
         mockTextContent
       );
+    });
+
+    it('should surface errors encountered during JSON export', async () => {
+      // Arrange
+      await controller.initialize();
+      const mockResult = {
+        rewrittenTraits: { 'core:personality': 'Clever' },
+        characterName: 'Export Failure',
+      };
+
+      mockTraitsRewriterGenerator.generateRewrittenTraits.mockResolvedValue(
+        mockResult
+      );
+      mockTraitsRewriterDisplayEnhancer.enhanceForDisplay.mockReturnValue({
+        sections: [],
+        characterName: 'Export Failure',
+      });
+      mockTraitsRewriterDisplayEnhancer.formatForExport.mockImplementation(() => {
+        throw new Error('format error');
+      });
+
+      const validJSON = JSON.stringify({
+        components: {
+          'core:name': 'Export Failure',
+          'core:personality': 'Clever',
+        },
+      });
+
+      const originalGetElement = controller._getElement;
+      const errorElement = { textContent: '' };
+      controller._getElement = function (key) {
+        if (key === 'errorMessage') {
+          return errorElement;
+        }
+        return originalGetElement.call(this, key);
+      };
+      mockElements.generationError.style.display = 'none';
+      mockElements.characterDefinition.value = validJSON;
+      simulateEvent(mockElements.characterDefinition, 'input');
+      await waitForNextTick();
+
+      simulateEvent(mockElements.rewriteTraitsButton, 'click');
+      await waitForNextTick();
+
+      // Act
+      simulateEvent(mockElements.exportJsonButton, 'click');
+      await waitForNextTick();
+
+      // Assert
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'TraitsRewriterController: JSON export failed',
+        expect.any(Error)
+      );
+      expect(mockElements.generationError.style.display).toBe('block');
+      expect(errorElement.textContent).toBe('Export failed');
+    });
+
+    it('should surface errors encountered during text export', async () => {
+      // Arrange
+      await controller.initialize();
+      const mockResult = {
+        rewrittenTraits: { 'core:personality': 'Strategic' },
+        characterName: 'Text Failure',
+      };
+
+      mockTraitsRewriterGenerator.generateRewrittenTraits.mockResolvedValue(
+        mockResult
+      );
+      mockTraitsRewriterDisplayEnhancer.enhanceForDisplay.mockReturnValue({
+        sections: [],
+        characterName: 'Text Failure',
+      });
+      mockTraitsRewriterDisplayEnhancer.formatForExport.mockImplementation(() => {
+        throw new Error('text export error');
+      });
+
+      const validJSON = JSON.stringify({
+        components: {
+          'core:name': 'Text Failure',
+          'core:personality': 'Strategic',
+        },
+      });
+
+      const originalGetElement = controller._getElement;
+      const errorElement = { textContent: '' };
+      controller._getElement = function (key) {
+        if (key === 'errorMessage') {
+          return errorElement;
+        }
+        return originalGetElement.call(this, key);
+      };
+      mockElements.generationError.style.display = 'none';
+      mockElements.characterDefinition.value = validJSON;
+      simulateEvent(mockElements.characterDefinition, 'input');
+      await waitForNextTick();
+
+      simulateEvent(mockElements.rewriteTraitsButton, 'click');
+      await waitForNextTick();
+
+      // Act
+      simulateEvent(mockElements.exportTextButton, 'click');
+      await waitForNextTick();
+
+      // Assert
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'TraitsRewriterController: Text export failed',
+        expect.any(Error)
+      );
+      expect(mockElements.generationError.style.display).toBe('block');
+      expect(errorElement.textContent).toBe('Export failed');
+    });
+
+    it('should display an error if copying traits to the clipboard fails', async () => {
+      // Arrange
+      await controller.initialize();
+      const mockResult = {
+        rewrittenTraits: { 'core:personality': 'Friendly' },
+        characterName: 'Copy Failure',
+      };
+
+      mockTraitsRewriterGenerator.generateRewrittenTraits.mockResolvedValue(
+        mockResult
+      );
+      mockTraitsRewriterDisplayEnhancer.enhanceForDisplay.mockReturnValue({
+        sections: [],
+        characterName: 'Copy Failure',
+      });
+      global.navigator.clipboard.writeText.mockRejectedValue(
+        new Error('clipboard not available')
+      );
+
+      const validJSON = JSON.stringify({
+        components: {
+          'core:name': 'Copy Failure',
+          'core:personality': 'Friendly',
+        },
+      });
+
+      const originalGetElement = controller._getElement;
+      const errorElement = { textContent: '' };
+      controller._getElement = function (key) {
+        if (key === 'errorMessage') {
+          return errorElement;
+        }
+        return originalGetElement.call(this, key);
+      };
+      mockElements.generationError.style.display = 'none';
+      mockElements.characterDefinition.value = validJSON;
+      simulateEvent(mockElements.characterDefinition, 'input');
+      await waitForNextTick();
+
+      simulateEvent(mockElements.rewriteTraitsButton, 'click');
+      await waitForNextTick();
+
+      // Act
+      simulateEvent(mockElements.copyTraitsButton, 'click');
+      await waitForNextTick();
+
+      // Assert
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'TraitsRewriterController: Copy to clipboard failed',
+        expect.any(Error)
+      );
+      expect(mockElements.generationError.style.display).toBe('block');
+      expect(errorElement.textContent).toBe('Copy failed');
     });
   });
 
