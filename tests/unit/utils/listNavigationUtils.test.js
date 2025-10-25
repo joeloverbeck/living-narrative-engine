@@ -88,21 +88,38 @@ describe('setupRadioListNavigation', () => {
     });
     handler(wrongTargetEvent);
     expect(selectMock).not.toHaveBeenCalled();
-  });
 
-  it('handles events from matching elements outside the container', () => {
     const externalItem = document.createElement('div');
     externalItem.className = 'item';
     externalItem.dataset.index = '99';
-    const event = new document.defaultView.KeyboardEvent('keydown', {
+    const externalEvent = new document.defaultView.KeyboardEvent('keydown', {
       key: 'ArrowDown',
     });
-    Object.defineProperty(event, 'target', {
+    Object.defineProperty(externalEvent, 'target', {
       value: externalItem,
       enumerable: true,
     });
-    handler(event);
-    expect(selectMock).toHaveBeenCalledWith(items[0], '0');
+    handler(externalEvent);
+    expect(selectMock).not.toHaveBeenCalled();
+  });
+
+  it('supports events fired from nested focusable elements', () => {
+    items[0].innerHTML = '<button id="nested"></button>';
+    const nested = /** @type {HTMLElement} */ (
+      items[0].querySelector('#nested')
+    );
+    if (!nested) {
+      throw new Error('Failed to create nested focusable element');
+    }
+    const nestedEvent = new document.defaultView.KeyboardEvent('keydown', {
+      key: 'ArrowDown',
+    });
+    Object.defineProperty(nestedEvent, 'target', {
+      value: nested,
+      enumerable: true,
+    });
+    handler(nestedEvent);
+    expect(selectMock).toHaveBeenCalledWith(items[1], '1');
   });
 
   it('returns early for disabled items or no items', () => {
