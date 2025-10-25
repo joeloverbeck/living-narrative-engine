@@ -289,6 +289,7 @@ export class CacheMetrics extends BaseService {
       // Individual cache summary
       aggregated.caches[metrics.cacheId || 'unknown'] = {
         size: metrics.size,
+        maxSize: metrics.maxSize,
         hitRate: metrics.hitRate,
         memoryMB: metrics.memoryUsageMB,
         strategy: metrics.strategyName,

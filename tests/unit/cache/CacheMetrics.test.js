@@ -2,7 +2,7 @@
  * @file Unit tests for CacheMetrics
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import { CacheMetrics } from '../../../src/cache/CacheMetrics.js';
 
@@ -236,6 +236,48 @@ describe('CacheMetrics', () => {
     });
   });
 
+  describe('Cache Accessors', () => {
+    it('should return the most recent metrics snapshot for a cache', () => {
+      metrics.registerCache('test-cache', mockCache);
+
+      const snapshot = metrics.collectCacheMetrics('test-cache');
+      const retrieved = metrics.getCacheMetrics('test-cache');
+
+      expect(retrieved).toEqual(snapshot);
+      expect(metrics.getCacheMetrics('missing-cache')).toBeNull();
+    });
+
+    it('should merge historical data across caches in chronological order', () => {
+      const altCache = testBed.createMock('cache', ['getMetrics']);
+      altCache.getMetrics.mockReturnValue({
+        size: 5,
+        maxSize: 10,
+        hitRate: 0.5,
+        stats: { hits: 5, misses: 5 },
+        strategyName: 'FIFO'
+      });
+
+      metrics.registerCache('primary-cache', mockCache);
+      metrics.registerCache('secondary-cache', altCache);
+
+      const nowSpy = jest.spyOn(Date, 'now');
+      nowSpy.mockReturnValue(1000);
+      metrics.collectCacheMetrics('primary-cache');
+      nowSpy.mockReturnValue(3000);
+      metrics.collectCacheMetrics('secondary-cache');
+      nowSpy.mockReturnValue(2000);
+      metrics.collectCacheMetrics('primary-cache');
+      nowSpy.mockRestore();
+
+      const history = metrics.getHistoricalData();
+
+      expect(history).toHaveLength(3);
+      expect(history.map(entry => entry.timestamp)).toEqual([1000, 2000, 3000]);
+      expect(history[0].cacheId).toBe('primary-cache');
+      expect(history[2].cacheId).toBe('secondary-cache');
+    });
+  });
+
   describe('Aggregated Metrics', () => {
     let mockCache2;
 
@@ -308,7 +350,7 @@ describe('CacheMetrics', () => {
     it('should handle empty metrics', () => {
       const emptyMetrics = new CacheMetrics({ logger: mockLogger });
       const aggregated = emptyMetrics.getAggregatedMetrics();
-      
+
       expect(aggregated).toMatchObject({
         cacheCount: 0,
         totalSize: 0,
@@ -321,6 +363,43 @@ describe('CacheMetrics', () => {
         strategyDistribution: {},
         caches: {}
       });
+    });
+
+    it('should compute memory utilization statistics when usage data is available', () => {
+      const primaryCache = testBed.createMock('cache', ['getMetrics']);
+      primaryCache.getMetrics.mockReturnValue({
+        size: 5,
+        maxSize: 50,
+        hitRate: 0.6,
+        stats: { hits: 30, misses: 20 },
+        strategyName: 'LRU',
+        memoryUsageMB: 20,
+        memorySize: 20480,
+        utilizationPercent: 92
+      });
+
+      const detailedCache = testBed.createMock('cache', ['getMetrics']);
+      detailedCache.getMetrics.mockReturnValue({
+        size: 7,
+        maxSize: 70,
+        hitRate: 0.5,
+        stats: { hits: 35, misses: 35 },
+        strategyName: 'FIFO',
+        memoryUsageMB: 15,
+        memorySize: 15360,
+        utilizationPercent: 88
+      });
+
+      const service = new CacheMetrics({ logger: mockLogger });
+      service.registerCache('cacheA', primaryCache);
+      service.registerCache('cacheB', detailedCache);
+
+      const aggregated = service.getAggregatedMetrics();
+
+      expect(aggregated.memoryUtilization.totalMB).toBeCloseTo(35, 5);
+      expect(aggregated.memoryUtilization.totalBytes).toBe(35840);
+      expect(aggregated.memoryUtilization.highestUtilization).toBe(92);
+      expect(aggregated.memoryUtilization.averageUtilization).toBeCloseTo(90, 5);
     });
 
     it('should handle partial cache errors in aggregation', () => {
@@ -386,13 +465,13 @@ describe('CacheMetrics', () => {
 
     it('should provide specific recommendations', () => {
       const summary = metrics.getPerformanceSummary();
-      
+
       // Check that recommendations are generated based on metrics
       expect(summary.recommendations).toBeDefined();
       expect(Array.isArray(summary.recommendations)).toBe(true);
-      
+
       // Since overall hit rate is 0.575 ((85+30)/(85+15+30+70)) which is < 0.6, should have recommendation
-      expect(summary.recommendations.some(r => 
+      expect(summary.recommendations.some(r =>
         r.includes('hit rate') || r.includes('60%')
       )).toBe(true);
     });
@@ -400,13 +479,73 @@ describe('CacheMetrics', () => {
     it('should handle performance summary with no caches', () => {
       const emptyMetrics = new CacheMetrics({ logger: mockLogger });
       const summary = emptyMetrics.getPerformanceSummary();
-      
+
       expect(summary.overview.cacheCount).toBe(0);
       expect(summary.performance.highPerformingCaches).toHaveLength(0);
       expect(summary.performance.lowPerformingCaches).toHaveLength(0);
       // Empty caches may still generate recommendations based on the lack of caches
       expect(summary.recommendations).toBeDefined();
       expect(Array.isArray(summary.recommendations)).toBe(true);
+    });
+
+    it('should generate recommendations for memory, capacity, and strategy concerns', () => {
+      const service = new CacheMetrics({ logger: mockLogger });
+
+      const saturatedCache = testBed.createMock('cache', ['getMetrics']);
+      saturatedCache.getMetrics.mockReturnValue({
+        size: 100,
+        maxSize: 100,
+        hitRate: 0.9,
+        stats: { hits: 90, misses: 10 },
+        strategyName: 'LRU',
+        memoryUsageMB: 50,
+        memorySize: 51200,
+        utilizationPercent: 95,
+        metadata: { type: 'entity' }
+      });
+
+      const slowCache = testBed.createMock('cache', ['getMetrics']);
+      slowCache.getMetrics.mockReturnValue({
+        size: 70,
+        maxSize: 100,
+        hitRate: 0.2,
+        stats: { hits: 10, misses: 40 },
+        strategyName: 'FIFO',
+        memoryUsageMB: 12,
+        memorySize: 12288,
+        utilizationPercent: 90
+      });
+
+      const mediumCache = testBed.createMock('cache', ['getMetrics']);
+      mediumCache.getMetrics.mockReturnValue({
+        size: 40,
+        maxSize: 80,
+        hitRate: 0.4,
+        stats: { hits: 30, misses: 45 },
+        strategyName: 'LFU',
+        memoryUsageMB: 11,
+        memorySize: 11264,
+        utilizationPercent: 88
+      });
+
+      service.registerCache('saturated-cache', saturatedCache);
+      service.registerCache('slow-cache', slowCache);
+      service.registerCache('medium-cache', mediumCache);
+
+      const summary = service.getPerformanceSummary();
+
+      expect(summary.performance.memoryIntensiveCaches).toEqual(expect.arrayContaining([
+        { id: 'saturated-cache', memoryMB: 50 },
+        { id: 'slow-cache', memoryMB: 12 },
+        { id: 'medium-cache', memoryMB: 11 }
+      ]));
+
+      expect(summary.recommendations).toEqual(expect.arrayContaining([
+        expect.stringContaining('hit rate'),
+        expect.stringContaining('Memory utilization is high'),
+        expect.stringContaining('Consider using LRU strategy'),
+        expect.stringContaining('maximum capacity')
+      ]));
     });
   });
 
@@ -417,7 +556,7 @@ describe('CacheMetrics', () => {
 
     it('should collect metrics from all registered caches', () => {
       const allMetrics = metrics.collectAllMetrics();
-      
+
       expect(allMetrics).toHaveLength(1);
       expect(allMetrics[0]).toMatchObject({
         cacheId: 'test-cache',
@@ -425,6 +564,102 @@ describe('CacheMetrics', () => {
         maxSize: 100,
         hitRate: 0.75
       });
+    });
+  });
+
+  describe('Automatic Metrics Management', () => {
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should start and stop automatic metrics collection on the provided interval', () => {
+      jest.useFakeTimers();
+      const collectSpy = jest.spyOn(metrics, 'collectAllMetrics').mockReturnValue([]);
+
+      metrics.startCollection(100);
+      jest.advanceTimersByTime(350);
+
+      expect(collectSpy).toHaveBeenCalledTimes(3);
+
+      const callCount = collectSpy.mock.calls.length;
+      metrics.stopCollection();
+      jest.advanceTimersByTime(200);
+      expect(collectSpy).toHaveBeenCalledTimes(callCount);
+
+      collectSpy.mockRestore();
+    });
+
+    it('should restart automatic collection when already running', () => {
+      jest.useFakeTimers();
+      const collectSpy = jest.spyOn(metrics, 'collectAllMetrics').mockReturnValue([]);
+
+      metrics.startCollection(200);
+      jest.advanceTimersByTime(200);
+      const firstInvocationCount = collectSpy.mock.calls.length;
+
+      metrics.startCollection(50);
+      jest.advanceTimersByTime(150);
+
+      expect(collectSpy.mock.calls.length).toBeGreaterThan(firstInvocationCount);
+
+      metrics.stopCollection();
+      collectSpy.mockRestore();
+    });
+
+    it('should destroy the service by clearing caches and timers', () => {
+      jest.useFakeTimers();
+      const service = new CacheMetrics({ logger: mockLogger });
+      const stopSpy = jest.spyOn(service, 'stopCollection');
+
+      service.registerCache('test-cache', mockCache);
+      service.startCollection(100);
+      service.destroy();
+
+      expect(stopSpy).toHaveBeenCalled();
+      expect(service.getRegisteredCaches()).toHaveLength(0);
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('CacheMetrics service destroyed'));
+
+      stopSpy.mockRestore();
+    });
+  });
+
+  describe('Performance Analysis', () => {
+    it('should analyze caches to identify top and poor performers', () => {
+      const service = new CacheMetrics({ logger: mockLogger });
+
+      const highCache = testBed.createMock('cache', ['getMetrics']);
+      highCache.getMetrics.mockReturnValue({
+        size: 10,
+        maxSize: 100,
+        hitRate: 0.9,
+        stats: { hits: 90, misses: 10 },
+        strategyName: 'LRU'
+      });
+
+      const lowCache = testBed.createMock('cache', ['getMetrics']);
+      lowCache.getMetrics.mockReturnValue({
+        size: 50,
+        maxSize: 100,
+        hitRate: 0.2,
+        stats: { hits: 10, misses: 40 },
+        strategyName: 'FIFO'
+      });
+
+      service.registerCache('high-cache', highCache);
+      service.registerCache('low-cache', lowCache);
+      service.collectAllMetrics();
+
+      const analysis = service.analyzePerformance();
+
+      expect(analysis.summary.totalCaches).toBe(2);
+      expect(analysis.topPerformers).toEqual([
+        expect.objectContaining({ id: 'high-cache', hitRate: 0.9 })
+      ]);
+      expect(analysis.poorPerformers).toEqual([
+        expect.objectContaining({ id: 'low-cache', hitRate: 0.2 })
+      ]);
+      expect(Array.isArray(analysis.recommendations)).toBe(true);
+      expect(analysis.strategyDistribution).toMatchObject({ LRU: 1, FIFO: 1 });
     });
   });
 
