@@ -5,6 +5,67 @@
 import { PipelineResult } from '../../../PipelineResult.js';
 
 /**
+ * @param {object|undefined} stats
+ * @param {string} key
+ * @returns {void}
+ * @description Safely increments the specified statistic counter when possible.
+ */
+const safeIncrementStat = (stats, key) => {
+  if (!stats || typeof stats !== 'object') {
+    return;
+  }
+
+  if (typeof stats[key] !== 'number') {
+    stats[key] = 0;
+  }
+
+  stats[key] += 1;
+};
+
+/**
+ * @param {object|undefined} trace
+ * @returns {{
+ *   captureStart: Function,
+ *   captureEnd: Function,
+ *   incrementStat: Function
+ * }}
+ * @description Builds a polymorphic adapter around the provided trace instance.
+ */
+export const createLegacyTraceAdapter = (trace) => {
+  if (trace && typeof trace.captureActionData === 'function') {
+    return {
+      captureStart: (actionDef, targetContexts, isMultiTarget) => {
+        trace.captureActionData('formatting', actionDef.id, {
+          timestamp: Date.now(),
+          status: 'formatting',
+          formattingPath: 'legacy',
+          isMultiTargetInLegacy: isMultiTarget,
+          targetContextCount: targetContexts.length,
+        });
+      },
+      captureEnd: (actionDef, result, startTime) => {
+        trace.captureActionData('formatting', actionDef.id, {
+          timestamp: Date.now(),
+          status: result.failureCount > 0 ? 'partial' : 'completed',
+          formatterMethod: 'format',
+          successCount: result.successCount || 0,
+          failureCount: result.failureCount || 0,
+          performance: { duration: Date.now() - startTime },
+        });
+      },
+      incrementStat: safeIncrementStat,
+    };
+  }
+
+  // No-op adapter for standard trace
+  return {
+    captureStart: () => {},
+    captureEnd: () => {},
+    incrementStat: safeIncrementStat,
+  };
+};
+
+/**
  * @typedef {import('../../../../../interfaces/IActionCommandFormatter.js').IActionCommandFormatter} IActionCommandFormatter
  */
 /**
@@ -140,7 +201,7 @@ export class LegacyStrategy {
     let fallbackInvocations = 0;
 
     // Create trace adapter for polymorphic behavior
-    const traceAdapter = this.#createTraceAdapter(trace, processingStats);
+    const traceAdapter = this.#createTraceAdapter(trace);
 
     for (const { actionDef, targetContexts } of actionsWithTargets) {
       const actionStartTime = Date.now();
@@ -217,58 +278,11 @@ export class LegacyStrategy {
    * Creates a trace adapter for polymorphic behavior.
    * @private
    * @param {object|undefined} trace - Trace context
-   * @param {object|undefined} processingStats - Statistics accumulator
    * @returns {object} Adapter with captureStart, captureEnd, and incrementStat methods
    * @description Returns action-aware adapter or no-op adapter based on trace capabilities.
    */
-  #createTraceAdapter(trace, processingStats) {
-    const isActionAware = trace && typeof trace.captureActionData === 'function';
-
-    if (isActionAware) {
-      return {
-        captureStart: (actionDef, targetContexts, isMultiTarget) => {
-          trace.captureActionData('formatting', actionDef.id, {
-            timestamp: Date.now(),
-            status: 'formatting',
-            formattingPath: 'legacy',
-            isMultiTargetInLegacy: isMultiTarget,
-            targetContextCount: targetContexts.length,
-          });
-        },
-        captureEnd: (actionDef, result, startTime) => {
-          trace.captureActionData('formatting', actionDef.id, {
-            timestamp: Date.now(),
-            status: result.failureCount > 0 ? 'partial' : 'completed',
-            formatterMethod: 'format',
-            successCount: result.successCount || 0,
-            failureCount: result.failureCount || 0,
-            performance: { duration: Date.now() - startTime },
-          });
-        },
-        incrementStat: (processingStats, key) => {
-          if (processingStats && typeof processingStats === 'object') {
-            if (typeof processingStats[key] !== 'number') {
-              processingStats[key] = 0;
-            }
-            processingStats[key] += 1;
-          }
-        },
-      };
-    }
-
-    // No-op adapter for standard trace
-    return {
-      captureStart: () => {},
-      captureEnd: () => {},
-      incrementStat: (processingStats, key) => {
-        if (processingStats && typeof processingStats === 'object') {
-          if (typeof processingStats[key] !== 'number') {
-            processingStats[key] = 0;
-          }
-          processingStats[key] += 1;
-        }
-      },
-    };
+  #createTraceAdapter(trace) {
+    return createLegacyTraceAdapter(trace);
   }
 
   /**
@@ -476,33 +490,32 @@ export class LegacyStrategy {
       }
     }
 
-    // Fallback formatting for multi-target actions
-    if (targetContexts.length > 0) {
-      const formattedActions = [];
-      const errors = [];
-
-      const actualFallbackCount = this.#handleFallback({
-        formattedActions,
-        errors,
-        processingStats,
-        targetContexts,
-        actionDef,
-        formatterOptions,
-        actionSpecificTargets,
-        actorId: actor.id,
-        trace,
-        allowMissingTargetId:
-          trace && typeof trace.captureActionData === 'function',
-      });
-
-      return {
-        formatted: formattedActions,
-        errors,
-        fallbackCount: actualFallbackCount,
-      };
+    if (targetContexts.length === 0) {
+      return { formatted: [], errors: [], fallbackCount: 0 };
     }
 
-    return { formatted: [], errors: [], fallbackCount: 0 };
+    const formattedActions = [];
+    const errors = [];
+
+    const actualFallbackCount = this.#handleFallback({
+      formattedActions,
+      errors,
+      processingStats,
+      targetContexts,
+      actionDef,
+      formatterOptions,
+      actionSpecificTargets,
+      actorId: actor.id,
+      trace,
+      allowMissingTargetId:
+        trace && typeof trace.captureActionData === 'function',
+    });
+
+    return {
+      formatted: formattedActions,
+      errors,
+      fallbackCount: actualFallbackCount,
+    };
   }
 
   /**
@@ -746,15 +759,7 @@ export class LegacyStrategy {
    * @description Safely increments statistic counters when provided.
    */
   #incrementStat(stats, key) {
-    if (!stats || typeof stats !== 'object') {
-      return;
-    }
-
-    if (typeof stats[key] !== 'number') {
-      stats[key] = 0;
-    }
-
-    stats[key] += 1;
+    safeIncrementStat(stats, key);
   }
 }
 

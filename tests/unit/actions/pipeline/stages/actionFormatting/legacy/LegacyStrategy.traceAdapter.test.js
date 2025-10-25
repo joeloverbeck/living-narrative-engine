@@ -3,7 +3,10 @@
  * Tests the adapter behavior indirectly through the format() method
  */
 
-import { LegacyStrategy } from '../../../../../../../src/actions/pipeline/stages/actionFormatting/legacy/LegacyStrategy.js';
+import {
+  LegacyStrategy,
+  createLegacyTraceAdapter,
+} from '../../../../../../../src/actions/pipeline/stages/actionFormatting/legacy/LegacyStrategy.js';
 
 /**
  * Helper to create a minimal LegacyStrategy instance for testing
@@ -596,6 +599,27 @@ describe('LegacyStrategy - Trace Adapter', () => {
       // Should return successfully with no formatted actions
       expect(result.formattedCommands).toEqual([]);
       expect(result.errors).toEqual([]);
+    });
+  });
+
+  describe('createLegacyTraceAdapter helper', () => {
+    it('normalizes non-numeric counters when incrementing in traced mode', () => {
+      const trace = { captureActionData: jest.fn() };
+      const adapter = createLegacyTraceAdapter(trace);
+      const stats = { legacy: 'not-a-number' };
+
+      adapter.incrementStat(stats, 'legacy');
+
+      expect(stats.legacy).toBe(1);
+    });
+
+    it('initializes counters when trace is not provided', () => {
+      const adapter = createLegacyTraceAdapter(undefined);
+      const stats = {};
+
+      adapter.incrementStat(stats, 'failed');
+
+      expect(stats.failed).toBe(1);
     });
   });
 });
