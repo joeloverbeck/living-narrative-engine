@@ -525,6 +525,32 @@ describe('TraceQueueProcessor', () => {
       );
     });
 
+    it('should log when the circuit breaker is manually reset', async () => {
+      const originalThreshold = QUEUE_CONSTANTS.CIRCUIT_BREAKER_THRESHOLD;
+      QUEUE_CONSTANTS.CIRCUIT_BREAKER_THRESHOLD = 1;
+
+      try {
+        testBed.simulateStorageFailure(new Error('force breaker open'));
+
+        const failingTrace = testBed.createMockTrace({ actionId: 'breaker-open' });
+        testBed.processor.enqueue(failingTrace);
+
+        await testBed.advanceTimersAndFlush(200);
+
+        expect(testBed.processor.getQueueStats().circuitBreakerOpen).toBe(true);
+
+        testBed.mockLogger.info.mockClear();
+
+        const wasOpen = testBed.processor.resetCircuitBreaker();
+        expect(wasOpen).toBe(true);
+        expect(testBed.mockLogger.info).toHaveBeenCalledWith(
+          'TraceQueueProcessor: Circuit breaker closed'
+        );
+      } finally {
+        QUEUE_CONSTANTS.CIRCUIT_BREAKER_THRESHOLD = originalThreshold;
+      }
+    });
+
     it('should reject new items when circuit breaker is open', async () => {
       testBed.simulateStorageFailure(new Error('Circuit breaker test'));
 
@@ -566,6 +592,42 @@ describe('TraceQueueProcessor', () => {
 
       // Circuit breaker should eventually close on successful processing
       // (This would require implementing circuit breaker recovery logic)
+    });
+
+    it('should calculate retry delay using exponential backoff when scheduling retries', async () => {
+      testBed.withConfig({
+        enableParallelProcessing: false,
+        batchTimeout: 0,
+        maxRetries: 3,
+      });
+
+      const setTimeoutSpy = jest.spyOn(testBed.timerService, 'setTimeout');
+
+      try {
+        testBed.simulateStorageFailure(new Error('retry delay test'));
+
+        const trace = testBed.createMockTrace({ actionId: 'retry-delay' });
+        testBed.processor.enqueue(trace);
+
+        await testBed.advanceTimersAndFlush(0);
+
+        const retryDelays = setTimeoutSpy.mock.calls
+          .map(([, delay]) => delay)
+          .filter(
+            (delay) =>
+              typeof delay === 'number' &&
+              delay > 0 &&
+              delay !== QUEUE_CONSTANTS.DEFAULT_BATCH_TIMEOUT
+          );
+
+        expect(retryDelays).toEqual([
+          QUEUE_CONSTANTS.RETRY_BASE_DELAY * 2,
+          QUEUE_CONSTANTS.RETRY_BASE_DELAY * 4,
+          QUEUE_CONSTANTS.RETRY_BASE_DELAY * 8,
+        ]);
+      } finally {
+        setTimeoutSpy.mockRestore();
+      }
     });
 
     it('should stop retries once circuit breaker opens during batch failure', async () => {
@@ -757,6 +819,21 @@ describe('TraceQueueProcessor', () => {
 
       expect(testBed.processor.getQueueStats().isProcessing).toBe(false);
       expect(testBed.mockStorageAdapter.setItem).not.toHaveBeenCalled();
+    });
+
+    it('should process queued traces when manually triggering the next batch', async () => {
+      const manualTrace = testBed.createMockTrace({ actionId: 'manual-batch' });
+
+      expect(testBed.processor.enqueue(manualTrace)).toBe(true);
+
+      await testBed.processor.processNextBatch();
+
+      const storedTraces = testBed.getStoredTraces();
+      expect(storedTraces).toHaveLength(1);
+      expect(storedTraces[0].data.actionId).toBe('manual-batch');
+
+      // Ensure no residual work remains scheduled after manual processing
+      expect(testBed.processor.getQueueStats().totalSize).toBe(0);
     });
 
     it('should skip retry requeue when shutdown happens before retry executes', async () => {
