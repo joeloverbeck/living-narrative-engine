@@ -397,13 +397,18 @@ export class LegacyStrategy {
     const startTime = Date.now();
 
     for (const targetContext of targetContexts) {
-      const result = this.#formatSingleTarget({
+      const singleTargetParams = {
         actionDef,
         targetContext,
         formatterOptions,
         actor,
-        trace,
-      });
+      };
+
+      if (trace !== null) {
+        singleTargetParams.trace = trace;
+      }
+
+      const result = this.#formatSingleTarget(singleTargetParams);
 
       if (result.success) {
         formatted.push(result.formatted);
@@ -488,10 +493,6 @@ export class LegacyStrategy {
       if (result.success) {
         return result;
       }
-    }
-
-    if (targetContexts.length === 0) {
-      return { formatted: [], errors: [], fallbackCount: 0 };
     }
 
     const formattedActions = [];
@@ -731,22 +732,20 @@ export class LegacyStrategy {
       });
     }
 
-    if (actionDef.targets && typeof actionDef.targets === 'object') {
-      const expectedTargets = Object.keys(actionDef.targets);
+    const expectedTargets = Object.keys(actionDef.targets);
 
-      for (const targetKey of expectedTargets) {
-        const targetDef = actionDef.targets[targetKey];
-        const placeholder = targetDef.placeholder || targetKey;
+    for (const targetKey of expectedTargets) {
+      const targetDef = actionDef.targets[targetKey];
+      const placeholder = targetDef.placeholder || targetKey;
 
-        if (
-          !targetsByPlaceholder[placeholder] ||
-          targetsByPlaceholder[placeholder].length === 0
-        ) {
-          this.#logger.debug(
-            `Missing required target '${targetKey}' for action '${actionDef.id}'`
-          );
-          return {};
-        }
+      if (
+        !targetsByPlaceholder[placeholder] ||
+        targetsByPlaceholder[placeholder].length === 0
+      ) {
+        this.#logger.debug(
+          `Missing required target '${targetKey}' for action '${actionDef.id}'`
+        );
+        return {};
       }
     }
 

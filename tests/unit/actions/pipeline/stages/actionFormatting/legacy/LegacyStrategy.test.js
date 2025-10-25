@@ -70,6 +70,27 @@ const createStrategy = (overrides = {}) => {
 
 describe('LegacyStrategy', () => {
   describe('single target formatting', () => {
+    it('returns an empty result when no actions are supplied', async () => {
+      const { strategy, commandFormatter, logger } = createStrategy();
+
+      const outcome = await strategy.format({
+        actor: { id: 'actor-1' },
+        traceSource: 'ActionFormattingStage.execute',
+      });
+
+      expect(commandFormatter.format).not.toHaveBeenCalled();
+      expect(outcome.formattedCommands).toEqual([]);
+      expect(outcome.errors).toEqual([]);
+      expect(outcome.statistics).toEqual({
+        formatted: 0,
+        errors: 0,
+        fallbackInvocations: 0,
+      });
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Action formatting complete: 0 actions formatted successfully'
+      );
+    });
+
     it('formats actions without fallback and emits summary logging', async () => {
       const {
         strategy,
