@@ -81,6 +81,39 @@ describe('AnatomyFormattingService', () => {
     );
   });
 
+  it('returns descriptor value keys as cloned arrays', () => {
+    const descriptorKeys = ['primary', 'secondary'];
+
+    registry = createMockRegistry(
+      [
+        {
+          _modId: 'core',
+          descriptorValueKeys: descriptorKeys,
+        },
+      ],
+      ['core']
+    );
+    logger = createMockLogger();
+    safeEventDispatcher = createMockSafeEventDispatcher();
+
+    const service = new AnatomyFormattingService({
+      dataRegistry: registry,
+      logger,
+      safeEventDispatcher,
+    });
+
+    service.initialize();
+
+    const firstCall = service.getDescriptorValueKeys();
+    expect(firstCall).toEqual(['primary', 'secondary']);
+
+    firstCall.push('mutated');
+
+    const secondCall = service.getDescriptorValueKeys();
+    expect(secondCall).toEqual(['primary', 'secondary']);
+    expect(secondCall).not.toBe(firstCall);
+  });
+
   it('respects replace merge strategies', () => {
     registry = createMockRegistry(
       [
@@ -114,6 +147,38 @@ describe('AnatomyFormattingService', () => {
     expect(service.getDescriptionOrder()).toEqual(['b']);
     expect(service.getIrregularPlurals()).toEqual({ bar: 'bars' });
     expect(service.getDescriptorOrder()).toEqual(['y']);
+  });
+
+  it('logs zero lengths when descriptor arrays are missing', () => {
+    registry = createMockRegistry(
+      [
+        {
+          _modId: 'core',
+          descriptionOrder: ['head'],
+        },
+      ],
+      ['core']
+    );
+    logger = createMockLogger();
+    safeEventDispatcher = createMockSafeEventDispatcher();
+
+    const service = new AnatomyFormattingService({
+      dataRegistry: registry,
+      logger,
+      safeEventDispatcher,
+    });
+
+    service.initialize();
+
+    expect(logger.debug).toHaveBeenCalledWith(
+      "AnatomyFormattingService: Merging config from mod 'core':",
+      expect.objectContaining({
+        hasDescriptorOrder: false,
+        descriptorOrderLength: 0,
+        hasDescriptorValueKeys: false,
+        descriptorValueKeysLength: 0,
+      })
+    );
   });
 
   it('throws if accessed before initialization', () => {
@@ -296,6 +361,24 @@ describe('AnatomyFormattingService', () => {
     // Should log empty mod order
     expect(logger.debug).toHaveBeenCalledWith(
       'AnatomyFormattingService: Using mod load order: []'
+    );
+  });
+
+  it('falls back to empty configuration list when registry returns null', () => {
+    registry = createMockRegistry(null, ['core']);
+    logger = createMockLogger();
+    safeEventDispatcher = createMockSafeEventDispatcher();
+
+    const service = new AnatomyFormattingService({
+      dataRegistry: registry,
+      logger,
+      safeEventDispatcher,
+    });
+
+    service.initialize();
+
+    expect(logger.debug).toHaveBeenCalledWith(
+      "AnatomyFormattingService: Found 0 configs for mod 'core'"
     );
   });
 
