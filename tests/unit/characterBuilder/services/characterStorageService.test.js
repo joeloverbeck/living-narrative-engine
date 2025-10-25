@@ -43,6 +43,7 @@ describe('CharacterStorageService', () => {
       deleteCharacterConcept: jest.fn(),
       saveThematicDirections: jest.fn(),
       getThematicDirectionsByConceptId: jest.fn(),
+      getThematicDirection: jest.fn(),
       getAllThematicDirections: jest.fn(),
       updateThematicDirection: jest.fn(),
       deleteThematicDirection: jest.fn(),
@@ -687,6 +688,72 @@ describe('CharacterStorageService', () => {
       await expect(
         uninitializedService.getAllThematicDirections()
       ).rejects.toThrow('CharacterStorageService not initialized');
+    });
+  });
+
+  describe('getThematicDirection', () => {
+    const mockDirection = { id: 'dir1', content: 'Direction 1' };
+
+    beforeEach(async () => {
+      service = new CharacterStorageService({
+        logger: mockLogger,
+        database: mockDatabase,
+        schemaValidator: mockSchemaValidator,
+      });
+      await service.initialize();
+      mockLogger.debug.mockClear();
+    });
+
+    it('should retrieve a thematic direction when it exists', async () => {
+      mockDatabase.getThematicDirection.mockResolvedValue(mockDirection);
+
+      const result = await service.getThematicDirection(mockDirection.id);
+
+      expect(result).toEqual(mockDirection);
+      expect(mockDatabase.getThematicDirection).toHaveBeenCalledWith(
+        mockDirection.id
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'CharacterStorageService: Retrieved thematic direction',
+        { directionId: mockDirection.id }
+      );
+    });
+
+    it('should log when the thematic direction is not found', async () => {
+      mockDatabase.getThematicDirection.mockResolvedValue(null);
+
+      const result = await service.getThematicDirection('missing-direction');
+
+      expect(result).toBeNull();
+      expect(mockDatabase.getThematicDirection).toHaveBeenCalledWith(
+        'missing-direction'
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'CharacterStorageService: Thematic direction not found',
+        { directionId: 'missing-direction' }
+      );
+    });
+
+    it('should throw an error when the direction id is invalid', async () => {
+      await expect(service.getThematicDirection(null)).rejects.toThrow(
+        'directionId must be a non-empty string'
+      );
+      await expect(service.getThematicDirection('')).rejects.toThrow(
+        'directionId must be a non-empty string'
+      );
+    });
+
+    it('should wrap database errors in CharacterStorageError', async () => {
+      mockDatabase.getThematicDirection.mockRejectedValue(
+        new Error('Database error')
+      );
+
+      await expect(service.getThematicDirection('dir1')).rejects.toThrow(
+        CharacterStorageError
+      );
+      await expect(service.getThematicDirection('dir1')).rejects.toThrow(
+        'Failed to get thematic direction dir1: Database error'
+      );
     });
   });
 
