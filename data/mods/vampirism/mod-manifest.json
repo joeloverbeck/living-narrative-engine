@@ -25,10 +25,10 @@
     }
   ],
   "content": {
-    "actions": [],
-    "components": [],
-    "conditions": [],
-    "rules": [],
+    "actions": ["vampirism:bare_fangs"],
+    "components": ["vampirism:is_vampire"],
+    "conditions": ["vampirism:event-is-action-bare_fangs"],
+    "rules": ["handle_bare_fangs"],
     "entities": {
       "definitions": [],
       "instances": []

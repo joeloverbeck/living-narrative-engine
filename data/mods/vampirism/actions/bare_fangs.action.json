@@ -1,0 +1,20 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "vampirism:bare_fangs",
+  "name": "Bare Fangs",
+  "description": "Display your fangs menacingly at a target to establish dominance or intimidate",
+  "targets": "core:actors_in_location",
+  "required_components": {
+    "actor": ["vampirism:is_vampire"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:giving_blowjob"]
+  },
+  "template": "bare your fangs menacingly at {target}",
+  "visual": {
+    "backgroundColor": "#6c0f36",
+    "textColor": "#ffe6ef",
+    "hoverBackgroundColor": "#861445",
+    "hoverTextColor": "#fff2f7"
+  }
+}
