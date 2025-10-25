@@ -377,5 +377,101 @@ describe('GraphBuildingWorkflow', () => {
         expect.objectContaining({ error: error.message })
       );
     });
+
+    it('should include service-provided issues and warn when invalid', async () => {
+      const rootId = 'root-456';
+      const mockEntity = { hasComponent: jest.fn().mockReturnValue(true) };
+      mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+      mockBodyGraphService.validateCache = jest.fn().mockResolvedValue({
+        valid: false,
+        issues: ['Dangling connection detected'],
+      });
+
+      const result = await workflow.validateCache(rootId);
+
+      expect(mockBodyGraphService.validateCache).toHaveBeenCalledWith(rootId);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `Cache validation failed for root entity '${rootId}'`
+        ),
+        { issues: ['Dangling connection detected'] }
+      );
+      expect(result).toEqual({
+        valid: false,
+        issues: ['Dangling connection detected'],
+      });
+    });
+
+    it('should support service returning issue array without validity flag', async () => {
+      const rootId = 'root-789';
+      const mockEntity = { hasComponent: jest.fn().mockReturnValue(true) };
+      mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+      mockBodyGraphService.validateCache = jest
+        .fn()
+        .mockResolvedValue(['Missing child link']);
+
+      const result = await workflow.validateCache(rootId);
+
+      expect(result).toEqual({
+        valid: false,
+        issues: ['Missing child link'],
+      });
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `Cache validation failed for root entity '${rootId}'`
+        ),
+        { issues: ['Missing child link'] }
+      );
+    });
+
+    it('should support service returning string issue', async () => {
+      const rootId = 'root-321';
+      const mockEntity = { hasComponent: jest.fn().mockReturnValue(true) };
+      mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+      mockBodyGraphService.validateCache = jest
+        .fn()
+        .mockResolvedValue('Cache mismatch detected');
+
+      const result = await workflow.validateCache(rootId);
+
+      expect(result).toEqual({
+        valid: false,
+        issues: ['Cache mismatch detected'],
+      });
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `Cache validation failed for root entity '${rootId}'`
+        ),
+        { issues: ['Cache mismatch detected'] }
+      );
+    });
+
+    it('should add default message when service reports invalid without issues', async () => {
+      const rootId = 'root-654';
+      const mockEntity = { hasComponent: jest.fn().mockReturnValue(true) };
+      mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+      mockBodyGraphService.validateCache = jest.fn().mockResolvedValue({
+        valid: false,
+      });
+
+      const result = await workflow.validateCache(rootId);
+
+      expect(result).toEqual({
+        valid: false,
+        issues: [
+          `BodyGraphService reported invalid cache state for root entity '${rootId}'`,
+        ],
+      });
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `Cache validation failed for root entity '${rootId}'`
+        ),
+        {
+          issues: [
+            `BodyGraphService reported invalid cache state for root entity '${rootId}'`,
+          ],
+        }
+      );
+    });
   });
 });
