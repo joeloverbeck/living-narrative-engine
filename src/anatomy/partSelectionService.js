@@ -101,10 +101,6 @@ export class PartSelectionService {
       recipeSlot
     );
 
-    if (candidates.length === 0) {
-      return null;
-    }
-
     // Random selection from candidates
     const index = Math.floor(rng() * candidates.length);
     const selected = candidates[index];
