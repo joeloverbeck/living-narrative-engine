@@ -523,6 +523,22 @@ describe('GameSessionManager', () => {
       expect(result.success).toBe(true);
     });
 
+    it('should use metadata worldName when gameTitle is missing', async () => {
+      const saveData = {
+        metadata: { gameTitle: '', worldName: 'Canonical World' },
+        entities: [],
+      };
+
+      const result = await gameSessionManager.finalizeLoadSuccess(
+        saveData,
+        'slot-world'
+      );
+
+      expect(engineState.activeWorld).toBe('Canonical World');
+      expect(startEngineFn).toHaveBeenCalledWith('Canonical World');
+      expect(result.success).toBe(true);
+    });
+
     it('should use metadata saveName when gameTitle is missing', async () => {
       const saveData = {
         metadata: { gameTitle: '', saveName: 'Slot 3' },
