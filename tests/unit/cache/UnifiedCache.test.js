@@ -159,9 +159,16 @@ describe('UnifiedCache', () => {
       expect(() => cache.get('')).toThrow(InvalidArgumentError);
       expect(() => cache.get(null)).toThrow(InvalidArgumentError);
       expect(() => cache.get(123)).toThrow(InvalidArgumentError);
-      
+
       expect(() => cache.set('', 'value')).toThrow(InvalidArgumentError);
       expect(() => cache.set(null, 'value')).toThrow(InvalidArgumentError);
+    });
+
+    it('should return false for invalid keys in has and delete operations', () => {
+      expect(cache.has('')).toBe(false);
+      expect(cache.has(null)).toBe(false);
+      expect(cache.delete('')).toBe(false);
+      expect(cache.delete(null)).toBe(false);
     });
 
     it('should handle edge case values', () => {
@@ -257,7 +264,7 @@ describe('UnifiedCache', () => {
     it('should provide comprehensive metrics', () => {
       cache.set('key1', 'value1');
       cache.set('key2', 'value2');
-      
+
       const metrics = cache.getMetrics();
       
       expect(metrics.size).toBe(2);
@@ -265,6 +272,22 @@ describe('UnifiedCache', () => {
       expect(metrics.strategyName).toBe('LRU');
       expect(metrics.config).toBeDefined();
       expect(metrics.stats).toBeDefined();
+    });
+
+    it('should include strategy specific metrics when available', () => {
+      const fifoCache = new UnifiedCache({ logger: mockLogger }, {
+        evictionPolicy: EvictionPolicy.FIFO,
+      });
+
+      fifoCache.set('fifo-key', 'value');
+
+      const fifoMetrics = fifoCache.getMetrics();
+
+      expect(fifoMetrics.insertionStats).toMatchObject({
+        oldestKey: 'fifo-key',
+        newestKey: 'fifo-key',
+      });
+      expect(fifoMetrics.frequencyStats).toBeUndefined();
     });
 
     it('should not track stats when metrics are disabled', () => {
