@@ -23,11 +23,13 @@ export function setupRadioListNavigation(
 ) {
   return function handleNavigation(event) {
     const target = /** @type {HTMLElement} */ (event.target);
+    const currentItem = target.closest(itemSelector);
 
     if (
       !container ||
-      !target.matches(itemSelector) ||
-      target.closest('.disabled-interaction')
+      !currentItem ||
+      !container.contains(currentItem) ||
+      currentItem.closest('.disabled-interaction')
     ) {
       return;
     }
@@ -35,7 +37,7 @@ export function setupRadioListNavigation(
     const items = Array.from(container.querySelectorAll(itemSelector));
     if (items.length === 0) return;
 
-    const currentIndex = items.findIndex((el) => el === target);
+    const currentIndex = items.findIndex((el) => el === currentItem);
     let nextIndex = -1;
 
     switch (event.key) {
