@@ -263,6 +263,28 @@ describe('ActivityDescriptionService', () => {
       );
     });
 
+    it('should log an error when inline metadata collection fails', async () => {
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
+
+      mockEntityManager.getEntityInstance
+        .mockImplementationOnce(() => ({
+          id: 'entity_1',
+          componentTypeIds: ['core:name'],
+          getComponentData: jest.fn(),
+        }))
+        .mockImplementationOnce(() => {
+          throw new Error('Inline failure');
+        });
+
+      const result = await service.generateActivityDescription('entity_1');
+
+      expect(result).toBe('');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to collect inline metadata for entity entity_1',
+        expect.any(Error)
+      );
+    });
+
     it('should discard falsy activities returned by the index', async () => {
       mockActivityIndex.findActivitiesForEntity.mockReturnValue([
         null,
@@ -763,6 +785,39 @@ describe('ActivityDescriptionService', () => {
         expect.stringContaining('missing template')
       );
       expect(result).toBe('');
+    });
+
+    it('should log an error when inline metadata parsing throws', async () => {
+      const mockEntity = {
+        id: 'jon',
+        componentTypeIds: ['bad:component'],
+        getComponentData: jest.fn((id) => {
+          if (id === 'bad:component') {
+            return {
+              activityMetadata: {
+                shouldDescribeInActivity: true,
+                template: 123, // Non-string to trigger parsing failure
+              },
+            };
+          }
+          return null;
+        }),
+      };
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'jon') return mockEntity;
+        return { id, name: id };
+      });
+
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
+
+      const result = await service.generateActivityDescription('jon');
+
+      expect(result).toBe('');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to parse inline metadata for bad:component',
+        expect.any(Error)
+      );
     });
 
     it('should use default values for optional properties', async () => {
