@@ -34,13 +34,22 @@ export async function safeDispatchEvent(
   }
 
   try {
-    if (typeof options === 'undefined') {
-      await dispatcher.dispatch(eventId, payload);
-    } else {
-      await dispatcher.dispatch(eventId, payload, options);
-    }
+    const dispatchResult =
+      typeof options === 'undefined'
+        ? await dispatcher.dispatch(eventId, payload)
+        : await dispatcher.dispatch(eventId, payload, options);
+
     const metadata =
       typeof options === 'undefined' ? { payload } : { payload, options };
+
+    if (dispatchResult === false) {
+      log.warn(
+        `Dispatcher reported failure for ${eventId}. Payload may have been rejected.`,
+        metadata
+      );
+      return;
+    }
+
     log.debug(`Dispatched ${eventId}`, metadata);
   } catch (error) {
     log.error(`Failed to dispatch ${eventId}`, error);

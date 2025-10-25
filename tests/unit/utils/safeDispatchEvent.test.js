@@ -52,6 +52,32 @@ describe('safeDispatchEvent', () => {
     expect(logger.warn).not.toHaveBeenCalled();
   });
 
+  it('logs a warning when the dispatcher reports a failure result', async () => {
+    const payload = { id: 314 }; // 3.14 for easy spotting in logs
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(false) };
+
+    await safeDispatchEvent(
+      dispatcher,
+      'story:dispatch-failed-result',
+      payload,
+      logger
+    );
+
+    expect(loggerUtils.ensureValidLogger).toHaveBeenCalledWith(
+      logger,
+      'safeDispatchEvent'
+    );
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      'story:dispatch-failed-result',
+      payload
+    );
+    expect(logger.warn).toHaveBeenCalledWith(
+      'Dispatcher reported failure for story:dispatch-failed-result. Payload may have been rejected.',
+      { payload }
+    );
+    expect(logger.debug).not.toHaveBeenCalled();
+  });
+
   it('passes dispatcher options when provided', async () => {
     const payload = { id: 99 };
     const options = { allowSchemaNotFound: true };
