@@ -11,6 +11,7 @@ import {
   CORE_MOTIVATIONS_RESPONSE_SCHEMA,
   CORE_MOTIVATIONS_LLM_PARAMS,
   PROMPT_VERSION_INFO,
+  formatClichesForPrompt,
 } from '../../../../src/characterBuilder/prompts/coreMotivationsGenerationPrompt.js';
 
 describe('coreMotivationsGenerationPrompt', () => {
@@ -135,6 +136,18 @@ describe('coreMotivationsGenerationPrompt', () => {
       expect(motivationItem.properties.internalContradiction.minLength).toBe(1);
       expect(motivationItem.properties.centralQuestion.type).toBe('string');
       expect(motivationItem.properties.centralQuestion.minLength).toBe(1);
+    });
+  });
+
+  describe('formatClichesForPrompt', () => {
+    it('should return fallback message when cliches is null', () => {
+      expect(formatClichesForPrompt(null)).toBe('No specific clichés provided.');
+    });
+
+    it('should return fallback message when cliches is not an object', () => {
+      expect(formatClichesForPrompt('invalid')).toBe(
+        'No specific clichés provided.'
+      );
     });
   });
 
@@ -386,6 +399,58 @@ describe('coreMotivationsGenerationPrompt', () => {
           );
         }).toThrow(
           'CoreMotivationsGenerationPrompt: cliches must be a valid object'
+        );
+      });
+
+      it('should throw error when direction.uniqueTwist is provided but not a string', () => {
+        const invalidDirection = { ...validDirection, uniqueTwist: 42 };
+        expect(() => {
+          buildCoreMotivationsGenerationPrompt(
+            validCharacterConcept,
+            invalidDirection,
+            validCliches
+          );
+        }).toThrow(
+          'CoreMotivationsGenerationPrompt: direction.uniqueTwist must be a non-empty string if provided'
+        );
+      });
+
+      it('should throw error when direction.uniqueTwist is an empty string', () => {
+        const invalidDirection = { ...validDirection, uniqueTwist: '   ' };
+        expect(() => {
+          buildCoreMotivationsGenerationPrompt(
+            validCharacterConcept,
+            invalidDirection,
+            validCliches
+          );
+        }).toThrow(
+          'CoreMotivationsGenerationPrompt: direction.uniqueTwist must be a non-empty string if provided'
+        );
+      });
+
+      it('should throw error when direction.narrativePotential is provided but not a string', () => {
+        const invalidDirection = { ...validDirection, narrativePotential: 123 };
+        expect(() => {
+          buildCoreMotivationsGenerationPrompt(
+            validCharacterConcept,
+            invalidDirection,
+            validCliches
+          );
+        }).toThrow(
+          'CoreMotivationsGenerationPrompt: direction.narrativePotential must be a non-empty string if provided'
+        );
+      });
+
+      it('should throw error when direction.narrativePotential is an empty string', () => {
+        const invalidDirection = { ...validDirection, narrativePotential: '   ' };
+        expect(() => {
+          buildCoreMotivationsGenerationPrompt(
+            validCharacterConcept,
+            invalidDirection,
+            validCliches
+          );
+        }).toThrow(
+          'CoreMotivationsGenerationPrompt: direction.narrativePotential must be a non-empty string if provided'
         );
       });
     });
