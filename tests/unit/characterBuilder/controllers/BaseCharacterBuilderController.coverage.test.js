@@ -562,14 +562,14 @@ describe('BaseCharacterBuilderController - Coverage Tests', () => {
         schemaValidator: mockSchemaValidator,
       });
 
-      // Remove _showError method
-      delete controller._showError;
+      // Remove _showError method by overriding the prototype implementation
+      controller._showError = undefined;
 
       // Trigger initialization error handling
       const error = new Error('Test initialization error');
       error.phase = 'test-phase';
 
-      controller._handleInitializationError(error);
+      await controller._handleInitializationError(error);
 
       // Verify _showState was called as fallback
       expect(controller._lastShowStateCall).toEqual({
