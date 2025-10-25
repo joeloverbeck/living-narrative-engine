@@ -510,6 +510,17 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     }).toThrow('TraitsGenerationPrompt: Names array must contain 3-5 items');
   });
 
+  it('should validate name entries are objects', () => {
+    const response = createValidResponse();
+    response.names[0] = null;
+
+    expect(() => {
+      validateTraitsGenerationResponse(response);
+    }).toThrow(
+      'TraitsGenerationPrompt: Name at index 0 must be an object'
+    );
+  });
+
   it('should validate name object structure', () => {
     const response = createValidResponse();
     response.names[0] = { name: 'Test' }; // Missing justification
@@ -540,6 +551,17 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     );
   });
 
+  it('should require physical description string', () => {
+    const response = createValidResponse();
+    response.physicalDescription = null;
+
+    expect(() => {
+      validateTraitsGenerationResponse(response);
+    }).toThrow(
+      'TraitsGenerationPrompt: Response must contain physicalDescription string'
+    );
+  });
+
   it('should validate personality array', () => {
     const response = createValidResponse();
     response.personality = [{ trait: 'Test', explanation: 'Test' }]; // Too few
@@ -551,6 +573,17 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     );
   });
 
+  it('should require personality array', () => {
+    const response = createValidResponse();
+    response.personality = null;
+
+    expect(() => {
+      validateTraitsGenerationResponse(response);
+    }).toThrow(
+      'TraitsGenerationPrompt: Response must contain personality array'
+    );
+  });
+
   it('should validate personality object structure', () => {
     const response = createValidResponse();
     response.personality[0] = { trait: 'Test' }; // Missing explanation
@@ -559,6 +592,31 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
       validateTraitsGenerationResponse(response);
     }).toThrow(
       'TraitsGenerationPrompt: Personality at index 0 must have a non-empty explanation string'
+    );
+  });
+
+  it('should validate personality trait string', () => {
+    const response = createValidResponse();
+    response.personality[0] = {
+      trait: '   ',
+      explanation: 'Has explanation',
+    };
+
+    expect(() => {
+      validateTraitsGenerationResponse(response);
+    }).toThrow(
+      'TraitsGenerationPrompt: Personality at index 0 must have a non-empty trait string'
+    );
+  });
+
+  it('should require personality entries to be objects', () => {
+    const response = createValidResponse();
+    response.personality[0] = 'not-an-object';
+
+    expect(() => {
+      validateTraitsGenerationResponse(response);
+    }).toThrow(
+      'TraitsGenerationPrompt: Personality at index 0 must be an object'
     );
   });
 
@@ -581,6 +639,17 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     );
   });
 
+  it('should require strengths array', () => {
+    const response = createValidResponse();
+    response.strengths = null;
+
+    expect(() => {
+      validateTraitsGenerationResponse(response);
+    }).toThrow(
+      'TraitsGenerationPrompt: Response must contain strengths array'
+    );
+  });
+
   it('should validate weaknesses array', () => {
     const response = createValidResponse();
     response.weaknesses = ['One']; // Too few
@@ -589,6 +658,17 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
       validateTraitsGenerationResponse(response);
     }).toThrow(
       'TraitsGenerationPrompt: Weaknesses array must contain 2-6 items'
+    );
+  });
+
+  it('should require weaknesses array', () => {
+    const response = createValidResponse();
+    response.weaknesses = undefined;
+
+    expect(() => {
+      validateTraitsGenerationResponse(response);
+    }).toThrow(
+      'TraitsGenerationPrompt: Response must contain weaknesses array'
     );
   });
 
@@ -601,6 +681,15 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     }).toThrow('TraitsGenerationPrompt: Likes array must contain 3-8 items');
   });
 
+  it('should require likes array', () => {
+    const response = createValidResponse();
+    response.likes = null;
+
+    expect(() => {
+      validateTraitsGenerationResponse(response);
+    }).toThrow('TraitsGenerationPrompt: Response must contain likes array');
+  });
+
   it('should validate dislikes array', () => {
     const response = createValidResponse();
     response.dislikes = ['One', 'Two']; // Too few
@@ -608,6 +697,17 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     expect(() => {
       validateTraitsGenerationResponse(response);
     }).toThrow('TraitsGenerationPrompt: Dislikes array must contain 3-8 items');
+  });
+
+  it('should require dislikes array', () => {
+    const response = createValidResponse();
+    response.dislikes = undefined;
+
+    expect(() => {
+      validateTraitsGenerationResponse(response);
+    }).toThrow(
+      'TraitsGenerationPrompt: Response must contain dislikes array'
+    );
   });
 
   it('should validate fears array', () => {
@@ -625,6 +725,15 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     }).toThrow('TraitsGenerationPrompt: Fears array must contain 1-2 items');
   });
 
+  it('should require fears array', () => {
+    const response = createValidResponse();
+    response.fears = null;
+
+    expect(() => {
+      validateTraitsGenerationResponse(response);
+    }).toThrow('TraitsGenerationPrompt: Response must contain fears array');
+  });
+
   it('should validate goals object', () => {
     const response = createValidResponse();
     delete response.goals;
@@ -632,6 +741,15 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     expect(() => {
       validateTraitsGenerationResponse(response);
     }).toThrow('TraitsGenerationPrompt: Response must contain goals object');
+  });
+
+  it('should require shortTerm goals array', () => {
+    const response = createValidResponse();
+    delete response.goals.shortTerm;
+
+    expect(() => {
+      validateTraitsGenerationResponse(response);
+    }).toThrow('TraitsGenerationPrompt: Goals must contain shortTerm array');
   });
 
   it('should validate goals shortTerm array', () => {
@@ -664,6 +782,15 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     );
   });
 
+  it('should require notes array', () => {
+    const response = createValidResponse();
+    delete response.notes;
+
+    expect(() => {
+      validateTraitsGenerationResponse(response);
+    }).toThrow('TraitsGenerationPrompt: Response must contain notes array');
+  });
+
   it('should validate notes array', () => {
     const response = createValidResponse();
     response.notes = ['One']; // Too few
@@ -677,6 +804,15 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     expect(() => {
       validateTraitsGenerationResponse(response);
     }).toThrow('TraitsGenerationPrompt: Notes array must contain 2-6 items');
+  });
+
+  it('should require profile string', () => {
+    const response = createValidResponse();
+    response.profile = null;
+
+    expect(() => {
+      validateTraitsGenerationResponse(response);
+    }).toThrow('TraitsGenerationPrompt: Response must contain profile string');
   });
 
   it('should validate profile string length', () => {
@@ -710,6 +846,15 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     expect(() => {
       validateTraitsGenerationResponse(response);
     }).toThrow('TraitsGenerationPrompt: Secrets array must contain 1-2 items');
+  });
+
+  it('should require secrets array', () => {
+    const response = createValidResponse();
+    delete response.secrets;
+
+    expect(() => {
+      validateTraitsGenerationResponse(response);
+    }).toThrow('TraitsGenerationPrompt: Response must contain secrets array');
   });
 
   it('should validate empty strings in arrays', () => {
