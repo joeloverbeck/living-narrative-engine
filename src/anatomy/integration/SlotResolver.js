@@ -121,14 +121,24 @@ class SlotResolver {
       entityId,
       slotId
     );
-    if (this.#cache.get) {
+    const supportsCacheServiceInterface =
+      this.#cache &&
+      typeof this.#cache.get === 'function' &&
+      this.#cache.get.length >= 2;
+
+    if (supportsCacheServiceInterface) {
       // Using new cache service
       const cached = this.#cache.get(CacheKeyTypes.SLOT_RESOLUTION, cacheKey);
       if (cached) {
         this.#logger.debug(`Cache hit for slot resolution: ${cacheKey}`);
         return cached;
       }
-    } else if (this.#cache.has(cacheKey)) {
+    } else if (
+      this.#cache &&
+      typeof this.#cache.has === 'function' &&
+      typeof this.#cache.get === 'function' &&
+      this.#cache.has(cacheKey)
+    ) {
       // Fallback to Map cache
       this.#logger.debug(`Cache hit for slot resolution: ${cacheKey}`);
       return this.#cache.get(cacheKey);
@@ -149,14 +159,14 @@ class SlotResolver {
       const attachmentPoints = await strategy.resolve(entityId, mapping);
 
       // Cache the result
-      if (this.#cache.set && this.#cache.get) {
+      if (supportsCacheServiceInterface && typeof this.#cache.set === 'function') {
         // Using new cache service
         this.#cache.set(
           CacheKeyTypes.SLOT_RESOLUTION,
           cacheKey,
           attachmentPoints
         );
-      } else {
+      } else if (typeof this.#cache.set === 'function') {
         // Fallback to Map cache
         this.#cache.set(cacheKey, attachmentPoints);
       }

@@ -162,8 +162,8 @@ describe('SlotResolver', () => {
   it('returns cached slot resolution results with AnatomyClothingCache service', async () => {
     const cachedAttachment = ['cached'];
     const cache = {
-      get: jest.fn().mockReturnValue(cachedAttachment),
-      set: jest.fn(),
+      get: jest.fn((cacheType, key) => cachedAttachment),
+      set: jest.fn((cacheType, key, value) => value),
       clearType: jest.fn(),
     };
 
@@ -177,10 +177,27 @@ describe('SlotResolver', () => {
     expect(result).toBe(cachedAttachment);
   });
 
+  it('returns cached results using legacy map-style caches', async () => {
+    const legacyCache = new Map();
+    legacyCache.set('actor-1:legacy-slot', ['legacy-cached']);
+
+    const resolver = createResolver({ cache: legacyCache });
+
+    const result = await resolver.resolve('actor-1', 'legacy-slot', { type: 'legacy' });
+
+    expect(result).toEqual(['legacy-cached']);
+    expect(logger.debug).toHaveBeenCalledWith(
+      'Cache hit for slot resolution: actor-1:legacy-slot'
+    );
+  });
+
   it('resolves using strategies and caches the result when not cached', async () => {
     const cache = {
-      get: jest.fn().mockReturnValueOnce(undefined).mockReturnValueOnce(['cached-second-call']),
-      set: jest.fn(),
+      get: jest
+        .fn((cacheType, key) => undefined)
+        .mockReturnValueOnce(undefined)
+        .mockReturnValueOnce(['cached-second-call']),
+      set: jest.fn((cacheType, key, value) => value),
       clearType: jest.fn(),
     };
     clothingStrategy.canResolve.mockReturnValueOnce(false);
@@ -206,12 +223,33 @@ describe('SlotResolver', () => {
     expect(cached).toEqual(['cached-second-call']);
   });
 
+  it('stores resolved results in legacy map caches when modern interface is unavailable', async () => {
+    clothingStrategy.canResolve.mockReturnValueOnce(false);
+    blueprintStrategy.resolve.mockResolvedValueOnce(['legacy-result']);
+    const legacyCache = new Map();
+
+    const resolver = createResolver({ cache: legacyCache });
+
+    const result = await resolver.resolve('actor-legacy', 'legacy-slot', {
+      type: 'blueprint',
+    });
+
+    expect(result).toEqual(['legacy-result']);
+    expect(legacyCache.get('actor-legacy:legacy-slot')).toEqual(['legacy-result']);
+  });
+
   it('logs a warning and returns an empty array when no strategy can resolve a mapping', async () => {
     clothingStrategy.canResolve.mockReturnValue(false);
     blueprintStrategy.canResolve.mockReturnValue(false);
     directStrategy.canResolve.mockReturnValue(false);
 
-    const resolver = createResolver({ cache: { get: jest.fn(() => undefined), set: jest.fn(), clearType: jest.fn() } });
+    const resolver = createResolver({
+      cache: {
+        get: jest.fn((cacheType, key) => undefined),
+        set: jest.fn((cacheType, key, value) => value),
+        clearType: jest.fn(),
+      },
+    });
 
     const result = await resolver.resolve('actor-x', 'slot-x', { kind: 'unsupported' });
 
@@ -224,7 +262,13 @@ describe('SlotResolver', () => {
     clothingStrategy.canResolve.mockReturnValueOnce(true);
     clothingStrategy.resolve.mockRejectedValueOnce(failure);
 
-    const resolver = createResolver({ cache: { get: jest.fn(() => undefined), set: jest.fn(), clearType: jest.fn() } });
+    const resolver = createResolver({
+      cache: {
+        get: jest.fn((cacheType, key) => undefined),
+        set: jest.fn((cacheType, key, value) => value),
+        clearType: jest.fn(),
+      },
+    });
 
     await expect(
       resolver.resolve('actor-fail', 'slot-fail', { type: 'clothing' })
@@ -237,7 +281,13 @@ describe('SlotResolver', () => {
   });
 
   it('validates required parameters using assertPresent', async () => {
-    const resolver = createResolver({ cache: { get: jest.fn(() => undefined), set: jest.fn(), clearType: jest.fn() } });
+    const resolver = createResolver({
+      cache: {
+        get: jest.fn((cacheType, key) => undefined),
+        set: jest.fn((cacheType, key, value) => value),
+        clearType: jest.fn(),
+      },
+    });
     assertPresent.mockClear();
 
     await expect(resolver.resolve(undefined, 'slot', {})).rejects.toThrow('Entity ID is required');
