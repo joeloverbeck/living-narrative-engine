@@ -260,7 +260,7 @@ describeEngineSuite('GameEngine', (context) => {
       );
     });
 
-    it('should keep engine state active when turnManager.stop fails', async () => {
+    it('should reset engine state even when turnManager.stop fails', async () => {
       const stopError = new Error('Turn manager stop failed');
       context.bed.getTurnManager().stop.mockImplementationOnce(() => {
         throw stopError;
@@ -271,20 +271,63 @@ describeEngineSuite('GameEngine', (context) => {
       );
 
       expect(context.bed.getLogger().error).toHaveBeenCalledWith(
-        'GameEngine.stop: Failed to stop TurnManager cleanly. Engine state remains active.',
+        'GameEngine.stop: Encountered error while stopping engine. Engine state will be reset.',
         stopError
       );
 
       const status = context.engine.getEngineStatus();
       expect(status).toEqual({
-        isInitialized: true,
-        isLoopRunning: true,
-        activeWorld: DEFAULT_TEST_WORLD,
+        isInitialized: false,
+        isLoopRunning: false,
+        activeWorld: null,
       });
 
-      expect(context.bed.getLogger().debug).not.toHaveBeenCalledWith(
+      expect(context.bed.getLogger().debug).toHaveBeenCalledWith(
         'GameEngine.stop: Engine fully stopped and state reset.'
       );
+
+      expect(context.bed.getEntityManager().clearAll).toHaveBeenCalled();
+      expect(context.bed.getPlaytimeTracker().reset).toHaveBeenCalled();
+    });
+
+    it('should reset state if ENGINE_STOPPED_UI dispatch rejects', async () => {
+      const dispatchError = new Error('Dispatch failed');
+      context.bed
+        .getSafeEventDispatcher()
+        .dispatch.mockRejectedValueOnce(dispatchError);
+
+      await expect(context.engine.stop()).rejects.toThrow('Dispatch failed');
+
+      expect(context.bed.getLogger().error).toHaveBeenCalledWith(
+        'GameEngine.stop: Encountered error while stopping engine. Engine state will be reset.',
+        dispatchError
+      );
+
+      const status = context.engine.getEngineStatus();
+      expect(status).toEqual({
+        isInitialized: false,
+        isLoopRunning: false,
+        activeWorld: null,
+      });
+
+      expect(context.bed.getEntityManager().clearAll).toHaveBeenCalled();
+      expect(context.bed.getPlaytimeTracker().reset).toHaveBeenCalled();
+    });
+
+    it('should warn if ENGINE_STOPPED_UI dispatch reports failure', async () => {
+      context.bed.getSafeEventDispatcher().dispatch.mockResolvedValueOnce(false);
+
+      await context.engine.stop();
+
+      expect(context.bed.getLogger().warn).toHaveBeenCalledWith(
+        'GameEngine.stop: SafeEventDispatcher reported failure when dispatching ENGINE_STOPPED_UI event.'
+      );
+
+      expect(context.engine.getEngineStatus()).toEqual({
+        isInitialized: false,
+        isLoopRunning: false,
+        activeWorld: null,
+      });
     });
 
     it('should clear entity manager and reset playtime tracker when stopping', async () => {
