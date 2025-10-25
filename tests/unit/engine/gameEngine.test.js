@@ -180,9 +180,7 @@ describeEngineSuite('GameEngine', (context) => {
       await context.engine.startNewGame(rawWorldName);
 
       expect(
-        context.bed
-          .getInitializationService()
-          .runInitializationSequence
+        context.bed.getInitializationService().runInitializationSequence
       ).toHaveBeenCalledWith(normalizedWorldName);
 
       const status = context.engine.getEngineStatus();
@@ -190,7 +188,9 @@ describeEngineSuite('GameEngine', (context) => {
 
       const readyDispatch = context.bed
         .getSafeEventDispatcher()
-        .dispatch.mock.calls.find(([eventName]) => eventName === ENGINE_READY_UI);
+        .dispatch.mock.calls.find(
+          ([eventName]) => eventName === ENGINE_READY_UI
+        );
 
       expect(readyDispatch).toBeDefined();
       expect(readyDispatch[1]).toMatchObject({
@@ -315,7 +315,9 @@ describeEngineSuite('GameEngine', (context) => {
     });
 
     it('should warn if ENGINE_STOPPED_UI dispatch reports failure', async () => {
-      context.bed.getSafeEventDispatcher().dispatch.mockResolvedValueOnce(false);
+      context.bed
+        .getSafeEventDispatcher()
+        .dispatch.mockResolvedValueOnce(false);
 
       await context.engine.stop();
 
@@ -487,7 +489,9 @@ describeEngineSuite('GameEngine', (context) => {
 
       await expect(engine.triggerManualSave(null)).rejects.toThrow();
 
-      expect(mockPersistenceCoordinator.triggerManualSave).not.toHaveBeenCalled();
+      expect(
+        mockPersistenceCoordinator.triggerManualSave
+      ).not.toHaveBeenCalled();
       expect(context.bed.getLogger().error).toHaveBeenCalledWith(
         expect.stringContaining("Invalid saveName 'null'"),
         expect.any(Object)
@@ -507,7 +511,9 @@ describeEngineSuite('GameEngine', (context) => {
 
       await expect(engine.triggerManualSave('   ')).rejects.toThrow();
 
-      expect(mockPersistenceCoordinator.triggerManualSave).not.toHaveBeenCalled();
+      expect(
+        mockPersistenceCoordinator.triggerManualSave
+      ).not.toHaveBeenCalled();
       expect(context.bed.getLogger().error).toHaveBeenCalledWith(
         expect.stringContaining("Invalid saveName '   '"),
         expect.any(Object)
@@ -558,6 +564,24 @@ describeEngineSuite('GameEngine', (context) => {
       expect(
         context.bed.getSafeEventDispatcher().dispatch
       ).toHaveBeenCalledWith(CANNOT_SAVE_GAME_INFO);
+    });
+
+    it('should warn when CANNOT_SAVE_GAME_INFO dispatch fails', async () => {
+      context.bed
+        .getGamePersistenceService()
+        .isSavingAllowed.mockReturnValue(false);
+      context.bed
+        .getSafeEventDispatcher()
+        .dispatch.mockResolvedValueOnce(false);
+
+      await context.engine.showSaveGameUI();
+
+      expect(context.bed.getLogger().warn).toHaveBeenCalledWith(
+        'GameEngine.showSaveGameUI: Saving is not currently allowed.'
+      );
+      expect(context.bed.getLogger().warn).toHaveBeenCalledWith(
+        'GameEngine.showSaveGameUI: SafeEventDispatcher reported failure when dispatching CANNOT_SAVE_GAME_INFO.'
+      );
     });
 
     it('should handle missing persistence service', async () => {
