@@ -407,6 +407,28 @@ describe('TraceQueueProcessor', () => {
       expect(rejectedCount).toBeGreaterThan(0);
     });
 
+    it('should fall back to default size when trace serialization fails', async () => {
+      const circularTrace = {};
+      circularTrace.self = circularTrace;
+
+      const result = testBed.processor.enqueue(
+        circularTrace,
+        TracePriority.NORMAL
+      );
+
+      expect(result).toBe(true);
+
+      const warnCall = testBed.mockLogger.warn.mock.calls.find(
+        ([message]) => message === 'TraceQueueProcessor: Failed to estimate trace size'
+      );
+      expect(warnCall).toBeDefined();
+
+      const stats = testBed.getQueueStats();
+      expect(stats.memoryUsage).toBeGreaterThanOrEqual(1024);
+
+      await testBed.advanceTimersAndFlush(0);
+    });
+
     it('should respect maximum queue size', () => {
       const maxSize = 5;
       testBed.withConfig({ maxQueueSize: maxSize });
@@ -1029,6 +1051,43 @@ describe('TraceQueueProcessor', () => {
           message === 'TraceQueueProcessor: Not retrying item during shutdown'
       );
       expect(shutdownLog).toBeDefined();
+      expect(testBed.timerService.getPendingCount()).toBe(0);
+    });
+
+    it('should prevent retry callback work after shutdown begins', async () => {
+      testBed.withConfig({ enableParallelProcessing: false, maxRetries: 3 });
+
+      let attempt = 0;
+      testBed.mockStorageAdapter.setItem.mockImplementation(async () => {
+        attempt += 1;
+        if (attempt === 1) {
+          throw new Error('transient retry failure');
+        }
+        return undefined;
+      });
+
+      const trace = testBed.createMockTrace({
+        actionId: 'shutdown-pending-retry',
+      });
+      testBed.processor.enqueue(trace);
+
+      await testBed.timerService.advanceTime(testBed.config.batchTimeout);
+      await Promise.resolve();
+      await Promise.resolve();
+
+      const retryLog = testBed.mockLogger.debug.mock.calls.find(
+        ([message]) => message === 'TraceQueueProcessor: Item scheduled for retry'
+      );
+      expect(retryLog).toBeDefined();
+
+      const pendingBeforeShutdown = testBed.timerService.getPendingCount();
+      expect(pendingBeforeShutdown).toBeGreaterThan(0);
+
+      await testBed.processor.shutdown();
+
+      await testBed.timerService.triggerAll();
+
+      expect(testBed.mockStorageAdapter.setItem).toHaveBeenCalledTimes(1);
       expect(testBed.timerService.getPendingCount()).toBe(0);
     });
 
