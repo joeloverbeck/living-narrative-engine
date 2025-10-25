@@ -248,6 +248,16 @@ describe('GameSessionManager', () => {
         expect.any(Object)
       );
     });
+
+    it('should warn when dispatching the loading UI event fails', async () => {
+      safeEventDispatcher.dispatch.mockResolvedValue(false);
+
+      await gameSessionManager.prepareForLoadGameSession('slot-9');
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        'GameSessionManager._prepareEngineForOperation: SafeEventDispatcher reported failure when dispatching core:ui_operation_in_progress.'
+      );
+    });
   });
 
   describe('finalizeNewGameSuccess', () => {

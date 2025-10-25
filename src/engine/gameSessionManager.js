@@ -95,7 +95,15 @@ class GameSessionManager {
       this.#logger.debug(
         'GameSessionManager._prepareEngineForOperation: Dispatching UI event.'
       );
-      await this.#safeEventDispatcher.dispatch(uiEventId, payload);
+      const dispatchSuccessful = await this.#safeEventDispatcher.dispatch(
+        uiEventId,
+        payload
+      );
+      if (!dispatchSuccessful) {
+        this.#logger.warn(
+          `GameSessionManager._prepareEngineForOperation: SafeEventDispatcher reported failure when dispatching ${uiEventId}.`
+        );
+      }
     }
   }
 
