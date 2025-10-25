@@ -4,7 +4,10 @@
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { Cliche } from '../../../../src/characterBuilder/models/cliche.js';
+import {
+  Cliche,
+  createClichesFromLLMResponse,
+} from '../../../../src/characterBuilder/models/cliche.js';
 
 describe('Cliche Model', () => {
   let validData;
@@ -329,6 +332,111 @@ describe('Cliche Model', () => {
       // Date format depends on locale, so just check it's a string
       expect(typeof display.metadata.createdAt).toBe('string');
       expect(display.metadata.createdAt).toBeTruthy();
+    });
+  });
+
+  describe('Immutable mutations', () => {
+    it('should create new instance with item removed', () => {
+      const cliche = new Cliche(validData);
+      const updated = cliche.createWithItemRemoved('names', 'John');
+
+      expect(updated).not.toBe(cliche);
+      expect(updated.categories.names).toEqual(['Mary']);
+      expect(cliche.categories.names).toEqual(['John', 'Mary']);
+    });
+
+    it('should throw when removing missing item', () => {
+      const cliche = new Cliche(validData);
+
+      expect(() =>
+        cliche.createWithItemRemoved('names', 'Nonexistent')
+      ).toThrow('Item "Nonexistent" not found in category "names"');
+    });
+
+    it('should throw when removing from missing category', () => {
+      const cliche = new Cliche(validData);
+
+      expect(() =>
+        cliche.createWithItemRemoved('unknownCategory', 'John')
+      ).toThrow('Category "unknownCategory" not found');
+    });
+
+    it('should remove trope immutably', () => {
+      validData.tropesAndStereotypes = ['The Chosen One', 'Secret Heir'];
+      const cliche = new Cliche(validData);
+      const updated = cliche.createWithTropeRemoved('Secret Heir');
+
+      expect(updated.tropesAndStereotypes).toEqual(['The Chosen One']);
+      expect(cliche.tropesAndStereotypes).toEqual([
+        'The Chosen One',
+        'Secret Heir',
+      ]);
+    });
+
+    it('should validate inputs when removing trope', () => {
+      const cliche = new Cliche(validData);
+
+      expect(() => cliche.createWithTropeRemoved('Unknown')).toThrow(
+        'Trope "Unknown" not found'
+      );
+      expect(() => cliche.createWithTropeRemoved('')).toThrow(
+        'tropeText must be a non-empty string'
+      );
+    });
+
+    it('should validate inputs when removing category item', () => {
+      const cliche = new Cliche(validData);
+
+      expect(() => cliche.createWithItemRemoved('', 'John')).toThrow(
+        'categoryId must be a non-empty string'
+      );
+      expect(() => cliche.createWithItemRemoved('names', '')).toThrow(
+        'itemText must be a non-empty string'
+      );
+    });
+  });
+
+  describe('LLM response helpers', () => {
+    it('should create cliche from LLM response data', () => {
+      const [cliche] = createClichesFromLLMResponse(
+        'concept-456',
+        validData.categories,
+        validData.tropesAndStereotypes,
+        { model: 'gpt-4o' },
+        'dir-123'
+      );
+
+      expect(cliche).toBeInstanceOf(Cliche);
+      expect(cliche.directionId).toBe('dir-123');
+      expect(cliche.llmMetadata.model).toBe('gpt-4o');
+    });
+
+    it('should generate temporary direction id when missing', () => {
+      const [cliche] = createClichesFromLLMResponse(
+        'concept-456',
+        validData.categories,
+        validData.tropesAndStereotypes
+      );
+
+      expect(cliche.directionId).toMatch(/^temp-direction-/);
+    });
+
+    it('should validate concept id input', () => {
+      expect(() =>
+        createClichesFromLLMResponse('', validData.categories, [])
+      ).toThrow('conceptId must be a non-empty string');
+    });
+
+    it('should validate categories input', () => {
+      expect(() =>
+        createClichesFromLLMResponse('concept-456', null, [])
+      ).toThrow('categories must be a valid object');
+    });
+
+    it('should validate tropes array input', () => {
+      expect(() =>
+        createClichesFromLLMResponse('concept-456', validData.categories, null)
+      ).toThrow('tropesAndStereotypes must be an array');
     });
   });
 
