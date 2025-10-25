@@ -371,6 +371,25 @@ export class ClicheErrorHandler {
   }
 
   /**
+   * @description Records a successful operation to reset circuit breaker counters
+   * @param {string} operation - Operation name that completed successfully
+   * @returns {void}
+   */
+  recordSuccessfulOperation(operation) {
+    if (!operation) {
+      this.#logger.debug(
+        'recordSuccessfulOperation called without a valid operation name'
+      );
+      return;
+    }
+
+    this.#updateCircuitBreaker(operation, true);
+    this.#logger.info(
+      `Circuit breaker marked as healthy for operation: ${operation}`
+    );
+  }
+
+  /**
    * Reset circuit breaker for a specific operation
    *
    * @param {string} operation - Operation name

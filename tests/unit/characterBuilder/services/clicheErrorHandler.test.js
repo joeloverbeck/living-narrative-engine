@@ -230,6 +230,61 @@ describe('ClicheErrorHandler', () => {
       expect(result3.shouldRetry).toBe(false);
       expect(result3.delay).toBeUndefined();
     });
+
+    it('should treat generation errors as retryable by default', async () => {
+      const error = new ClicheGenerationError('LLM output malformed');
+      const context = { operation: 'generate', attempt: 1 };
+
+      const result = await errorHandler.handleError(error, context);
+
+      expect(result.shouldRetry).toBe(true);
+      expect(result.nextAttempt).toBe(2);
+      expect(result.errorCategory).toBe('retryable');
+    });
+
+    it('should surface busy message for non-retryable rate limits', async () => {
+      const error = new ClicheLLMError('Rate limited', 429, {
+        isRetryable: false,
+      });
+      const context = { operation: 'rate_limit', attempt: 1, maxRetries: 3 };
+
+      const result = await errorHandler.handleError(error, context);
+
+      expect(result.shouldRetry).toBe(false);
+      expect(result.userMessage).toContain('service is busy');
+      expect(result.recommendation).toBe('SHOW_FALLBACK_OPTIONS');
+    });
+
+    it('should provide outage message for server failures without retry', async () => {
+      const error = new ClicheLLMError('Service outage', 503, {
+        isRetryable: false,
+      });
+      const context = { operation: 'generate', attempt: 1, maxRetries: 2 };
+
+      const result = await errorHandler.handleError(error, context);
+
+      expect(result.shouldRetry).toBe(false);
+      expect(result.userMessage).toContain('temporarily unavailable');
+      expect(result.recommendation).toBe('SHOW_FALLBACK_OPTIONS');
+    });
+
+    it('should log rate limiting errors at warning level', async () => {
+      const error = new ClicheLLMError('Too many requests', 429, {
+        isRetryable: false,
+      });
+      const context = { operation: 'rate_warning', attempt: 1 };
+
+      mockLogger.warn.mockClear();
+      mockLogger.error.mockClear();
+
+      await errorHandler.handleError(error, context);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Cliché error in rate_warning:'),
+        expect.any(Object)
+      );
+      expect(mockLogger.error).not.toHaveBeenCalled();
+    });
   });
 
   describe('handleError - Storage Errors', () => {
@@ -290,6 +345,26 @@ describe('ClicheErrorHandler', () => {
 
       expect(result.userMessage).toContain('required information');
       expect(result.errorCategory).toBe('user_action_required');
+    });
+
+    it('should provide actionable steps for direction and category issues', async () => {
+      const validationErrors = [
+        'Direction is invalid',
+        'Category has invalid formatting',
+      ];
+      const error = new ClicheValidationError(
+        'Validation failed',
+        validationErrors
+      );
+
+      const result = await errorHandler.handleError(error);
+
+      expect(result.actionableSteps).toEqual(
+        expect.arrayContaining([
+          'Select a valid direction from the available options',
+          'Ensure all required categories are properly formatted',
+        ])
+      );
     });
   });
 
@@ -360,6 +435,61 @@ describe('ClicheErrorHandler', () => {
       const result = await errorHandler.handleError(error, { operation });
       expect(result.circuitBreakerOpen).toBeUndefined();
     });
+
+    it('should transition to half-open state after reset timeout elapses', async () => {
+      const error = new ClicheLLMError('Service failure', 500);
+      const operation = 'half_open_operation';
+      let currentTime = 0;
+      const nowSpy = jest.spyOn(Date, 'now').mockImplementation(() => currentTime);
+
+      try {
+        for (let i = 0; i < 5; i++) {
+          await errorHandler.handleError(error, {
+            operation,
+            attempt: 3,
+            maxRetries: 3,
+          });
+        }
+
+        mockLogger.info.mockClear();
+
+        currentTime = 60001; // Beyond the 60 second reset timeout
+
+        await errorHandler.handleError(error, {
+          operation,
+          attempt: 3,
+          maxRetries: 3,
+        });
+
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          expect.stringContaining('Circuit breaker transitioning to half-open')
+        );
+      } finally {
+        nowSpy.mockRestore();
+      }
+    });
+
+    it('should reset failure counts when recording a successful operation', async () => {
+      const error = new ClicheLLMError('Service failure', 500);
+      const operation = 'successful_operation';
+
+      for (let i = 0; i < 5; i++) {
+        await errorHandler.handleError(error, { operation, attempt: 3, maxRetries: 3 });
+      }
+
+      mockLogger.warn.mockClear();
+      mockLogger.info.mockClear();
+
+      errorHandler.recordSuccessfulOperation(operation);
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        `Circuit breaker marked as healthy for operation: ${operation}`
+      );
+
+      await errorHandler.handleError(error, { operation, attempt: 1 });
+
+      expect(mockLogger.warn).not.toHaveBeenCalled();
+    });
   });
 
   describe('formatUserMessage', () => {
@@ -423,6 +553,36 @@ describe('ClicheErrorHandler', () => {
       expect(errorStats).toHaveProperty('averageResolution');
       expect(typeof errorStats.lastOccurrence).toBe('string');
       expect(typeof errorStats.averageResolution).toBe('number');
+    });
+
+    it('should remove stale statistics during throttled cleanup', async () => {
+      const staleError = new ClicheError('Stale error');
+      const freshError = new ClicheError('Fresh error');
+      const baseTime = new Date('2024-01-01T00:00:00.000Z');
+
+      jest.useFakeTimers();
+      jest.setSystemTime(baseTime);
+
+      try {
+        await errorHandler.handleError(staleError, {
+          operation: 'stale_operation',
+        });
+
+        jest.setSystemTime(
+          new Date(baseTime.getTime() + 25 * 60 * 60 * 1000)
+        );
+
+        await errorHandler.handleError(freshError, {
+          operation: 'fresh_operation',
+        });
+
+        const stats = errorHandler.getErrorStatistics();
+
+        expect(stats).not.toHaveProperty('ClicheError:stale_operation');
+        expect(stats).toHaveProperty('ClicheError:fresh_operation');
+      } finally {
+        jest.useRealTimers();
+      }
     });
   });
 
