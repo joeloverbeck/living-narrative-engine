@@ -187,6 +187,29 @@ describe('TraitsRewriterResponseProcessor', () => {
       );
     });
 
+    it('should wrap unexpected schema validator errors', async () => {
+      const validResponseJson = JSON.stringify(validResponse);
+      const validatorFailure = new Error('validator blew up');
+      mockSchemaValidator.validateAgainstSchema.mockImplementation(() => {
+        throw validatorFailure;
+      });
+
+      await expect(
+        processor.processResponse(validResponseJson, mockCharacterData)
+      ).rejects.toBeInstanceOf(TraitsRewriterError);
+
+      const errorCall = mockLogger.error.mock.calls.find(
+        ([message]) => message === 'Schema validation process failed'
+      );
+
+      expect(errorCall?.[1]).toEqual(
+        expect.objectContaining({
+          error: 'validator blew up',
+          characterName: 'Test Character',
+        })
+      );
+    });
+
     it('should skip schema validation when validator not available', async () => {
       const processorWithoutValidator = new TraitsRewriterResponseProcessor({
         logger: mockLogger,
@@ -246,6 +269,61 @@ describe('TraitsRewriterResponseProcessor', () => {
       );
     });
 
+    it('should warn for empty trait content without failing quality threshold', async () => {
+      const responseWithEmptyTrait = {
+        characterName: 'Test Character',
+        rewrittenTraits: {
+          'core:personality': '   ',
+          'core:likes': 'Detailed likes description',
+        },
+      };
+      mockLlmJsonService.parseAndRepair.mockResolvedValue(responseWithEmptyTrait);
+
+      const result = await processor.processResponse(
+        JSON.stringify(responseWithEmptyTrait),
+        mockCharacterData
+      );
+
+      expect(result.rewrittenTraits['core:personality']).toBe('');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Some traits are empty in response',
+        expect.objectContaining({
+          emptyTraits: ['core:personality'],
+          characterName: 'Test Character',
+        })
+      );
+    });
+
+    it('should throw quality failure when most traits are missing or empty', async () => {
+      const poorQualityResponse = {
+        characterName: 'Test Character',
+        rewrittenTraits: {
+          'core:personality': '',
+        },
+      };
+      mockLlmJsonService.parseAndRepair.mockResolvedValue(poorQualityResponse);
+
+      try {
+        await processor.processResponse(
+          JSON.stringify(poorQualityResponse),
+          mockCharacterData
+        );
+        throw new Error('Expected quality failure error');
+      } catch (error) {
+        expect(error).toBeInstanceOf(TraitsRewriterError);
+        expect(error.context).toEqual(
+          expect.objectContaining({
+            errorCode: TRAITS_REWRITER_ERROR_CODES.VALIDATION_FAILED,
+          })
+        );
+        expect(error.context.missingTraits).toEqual([
+          'core:likes',
+          'core:personality',
+        ]);
+        expect(error.context.emptyTraits).toEqual([]);
+      }
+    });
+
     it('should sanitize HTML content in traits', async () => {
       const responseWithHtml = {
         characterName: 'Test Character',
@@ -264,6 +342,27 @@ describe('TraitsRewriterResponseProcessor', () => {
       expect(result.rewrittenTraits['core:personality']).toBe(
         '&lt;script&gt;alert(&quot;xss&quot;)&lt;&#x2F;script&gt;I am analytical &amp; methodical.'
       );
+    });
+
+    it('should preserve non-string trait values during sanitization', async () => {
+      const responseWithArrayTrait = {
+        characterName: 'Test Character',
+        rewrittenTraits: {
+          'core:personality': 'I am analytical.',
+          'core:likes': 'I enjoy solving puzzles.',
+          'core:goals': ['Win every tournament'],
+        },
+      };
+      mockLlmJsonService.parseAndRepair.mockResolvedValue(responseWithArrayTrait);
+
+      const result = await processor.processResponse(
+        JSON.stringify(responseWithArrayTrait),
+        mockCharacterData
+      );
+
+      expect(result.rewrittenTraits['core:goals']).toEqual([
+        'Win every tournament',
+      ]);
     });
 
     it('should extract character name from different formats', async () => {
@@ -296,6 +395,41 @@ describe('TraitsRewriterResponseProcessor', () => {
         'Failed to parse LLM response as JSON',
         expect.objectContaining({
           error: 'Unexpected error',
+        })
+      );
+    });
+
+    it('should wrap unexpected errors from downstream logging', async () => {
+      mockLogger.info.mockImplementation(() => {
+        throw new Error('Logging failure');
+      });
+
+      try {
+        await processor.processResponse(
+          JSON.stringify(validResponse),
+          mockCharacterData
+        );
+        throw new Error('Expected generation failure error');
+      } catch (error) {
+        expect(error).toBeInstanceOf(TraitsRewriterError);
+        expect(error.context).toEqual(
+          expect.objectContaining({
+            errorCode: TRAITS_REWRITER_ERROR_CODES.GENERATION_FAILED,
+          })
+        );
+      }
+
+      const unexpectedErrorLog = mockLogger.error.mock.calls.find(
+        ([message]) =>
+          message === 'Unexpected error during traits rewriter processing'
+      );
+
+      expect(unexpectedErrorLog?.[1]).toEqual(
+        expect.objectContaining({
+          error: 'Logging failure',
+          context: expect.objectContaining({
+            stage: 'processResponse',
+          }),
         })
       );
     });

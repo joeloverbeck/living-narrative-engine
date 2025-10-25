@@ -312,10 +312,6 @@ export class TraitsRewriterResponseProcessor {
    * @returns {object} Sanitized response
    */
   #sanitizeTraitContent(response) {
-    if (!response.rewrittenTraits) {
-      return response;
-    }
-
     const sanitizedTraits = {};
 
     Object.entries(response.rewrittenTraits).forEach(
@@ -400,10 +396,6 @@ export class TraitsRewriterResponseProcessor {
    * @returns {string} HTML-escaped text
    */
   #escapeHtmlContent(text) {
-    if (typeof text !== 'string') {
-      return text;
-    }
-
     return text
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
