@@ -265,16 +265,28 @@ class GameSessionManager {
    *
    * @private
    * @description Trims whitespace and falls back to a default label when the
-   * metadata does not provide a usable world name.
+   * metadata does not provide a usable world name. Prefers the user-visible
+   * save name when available so legacy saves without titles still surface
+   * meaningful labels.
    * @param {SaveGameStructure} loadedSaveData - Restored save data.
    * @returns {string} Sanitized world name ready for engine state updates.
    */
   #resolveWorldNameFromSave(loadedSaveData) {
+    const metadata = loadedSaveData?.metadata ?? {};
+
     const rawTitle =
-      typeof loadedSaveData?.metadata?.gameTitle === 'string'
-        ? loadedSaveData.metadata.gameTitle.trim()
-        : '';
-    return rawTitle.length > 0 ? rawTitle : 'Restored Game';
+      typeof metadata.gameTitle === 'string' ? metadata.gameTitle.trim() : '';
+    if (rawTitle.length > 0) {
+      return rawTitle;
+    }
+
+    const rawSaveName =
+      typeof metadata.saveName === 'string' ? metadata.saveName.trim() : '';
+    if (rawSaveName.length > 0) {
+      return rawSaveName;
+    }
+
+    return 'Restored Game';
   }
 
   /**
