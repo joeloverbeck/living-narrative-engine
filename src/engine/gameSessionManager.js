@@ -178,9 +178,18 @@ class GameSessionManager {
             'GameSessionManager._finalizeGameStart: Anatomy generation completed, starting turns.'
           );
         } catch (error) {
+          const errorMessage =
+            error instanceof Error
+              ? error.message || 'Unknown error.'
+              : typeof error === 'string'
+                ? error.trim() || 'Unknown error.'
+                : error !== undefined && error !== null
+                  ? String(error)
+                  : 'Unknown error.';
+
           this.#logger.warn(
             'GameSessionManager._finalizeGameStart: Anatomy generation did not complete in time, starting turns anyway.',
-            { error: error.message, pendingCount }
+            { error: errorMessage, pendingCount }
           );
         }
       } else {
