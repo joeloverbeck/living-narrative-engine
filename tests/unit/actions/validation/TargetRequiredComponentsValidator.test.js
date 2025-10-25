@@ -402,6 +402,152 @@ describe('TargetRequiredComponentsValidator', () => {
       expect(result.reason).toContain('primary');
     });
 
+    it('should handle completely missing target entities', () => {
+      const actionDef = {
+        id: 'test:action',
+        required_components: {
+          primary: ['positioning:closeness'],
+        },
+      };
+
+      const result = validator.validateTargetRequirements(actionDef, null);
+
+      expect(result).toEqual({
+        valid: false,
+        reason: 'No target entities available for primary validation',
+      });
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'No target entities provided for primary validation'
+      );
+    });
+
+    it('should handle empty target candidate arrays', () => {
+      const actionDef = {
+        id: 'test:action',
+        required_components: {
+          primary: ['positioning:closeness'],
+        },
+      };
+      const targetEntities = {
+        primary: [],
+      };
+
+      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+
+      expect(result).toEqual({
+        valid: false,
+        reason: 'No primary target available for validation',
+      });
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Empty primary target array for required components validation'
+      );
+    });
+
+    it('should skip null candidates within the target list', () => {
+      const actionDef = {
+        id: 'test:action',
+        required_components: {
+          primary: ['positioning:closeness'],
+        },
+      };
+      const targetEntities = {
+        primary: [
+          null,
+          {
+            id: 'npc-valid',
+            components: { 'positioning:closeness': {} },
+          },
+        ],
+      };
+
+      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+
+      expect(result).toEqual({ valid: true });
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Invalid primary target candidate encountered during required components validation'
+      );
+    });
+
+    it('should skip candidates without an entity reference', () => {
+      const actionDef = {
+        id: 'test:action',
+        required_components: {
+          primary: ['positioning:closeness'],
+        },
+      };
+      const targetEntities = {
+        primary: [
+          { entity: null },
+          {
+            entity: {
+              id: 'npc-valid',
+              components: { 'positioning:closeness': {} },
+            },
+          },
+        ],
+      };
+
+      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+
+      expect(result).toEqual({ valid: true });
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Resolved primary target candidate lacks entity reference'
+      );
+    });
+
+    it('should recover when hasComponent throws and still validate other candidates', () => {
+      const actionDef = {
+        id: 'test:action',
+        required_components: {
+          primary: ['positioning:closeness'],
+        },
+      };
+      const targetEntities = {
+        primary: [
+          {
+            hasComponent: () => {
+              throw new Error('hasComponent failed');
+            },
+          },
+          {
+            id: 'npc-valid',
+            components: { 'positioning:closeness': {} },
+          },
+        ],
+      };
+
+      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+
+      expect(result).toEqual({ valid: true });
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "Error checking hasComponent('positioning:closeness') on primary target unknown: hasComponent failed"
+      );
+    });
+
+    it('should log missing component when entity id is unavailable', () => {
+      const actionDef = {
+        id: 'test:action',
+        required_components: {
+          primary: ['positioning:closeness'],
+        },
+      };
+      const targetEntities = {
+        primary: {
+          components: {},
+        },
+      };
+
+      const result = validator.validateTargetRequirements(actionDef, targetEntities);
+
+      expect(result).toEqual({
+        valid: false,
+        reason: 'Target (primary) must have component: positioning:closeness',
+      });
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Target entity unknown missing required component: positioning:closeness'
+      );
+    });
+
     it('should log debug messages for validation', () => {
       const actionDef = {
         id: 'test:action',
