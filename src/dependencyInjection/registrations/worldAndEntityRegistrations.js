@@ -158,6 +158,10 @@ export function registerWorldAndEntity(container) {
         spatialIndexManager: c.resolve(tokens.ISpatialIndexManager),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         logger: c.resolve(tokens.ILogger),
+        entityManager:
+          /** @type {import('../../interfaces/IEntityManager.js').IEntityManager} */ (
+            c.resolve(tokens.IEntityManager)
+          ),
       });
     });
   logger.debug(
@@ -667,11 +671,11 @@ export function registerWorldAndEntity(container) {
   registrar.singletonFactory(tokens.ClothingAccessibilityService, (c) => {
     const entityManager = c.resolve(tokens.IEntityManager);
     const logger = c.resolve(tokens.ILogger);
-    
+
     return new ClothingAccessibilityService({
       logger,
       entityManager,
-      entitiesGateway: entityManager // Use EntityManager directly as gateway
+      entitiesGateway: entityManager, // Use EntityManager directly as gateway
     });
   });
 

@@ -15,6 +15,7 @@ import {
  * @typedef {import('../interfaces/ISpatialIndexManager.js').ISpatialIndexManager} ISpatialIndexManager
  * @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
+ * @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager
  * @typedef {import('../entities/entity.js').default} Entity
  * @typedef {import('../constants/eventIds.js').EntityCreatedPayload} EntityCreatedPayload
  * @typedef {import('../constants/eventIds.js').EntityRemovedPayload} EntityRemovedPayload
@@ -49,8 +50,14 @@ export class SpatialIndexSynchronizer {
    * @param {ISpatialIndexManager} dependencies.spatialIndexManager - Spatial index manager instance.
    * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher - Event dispatcher.
    * @param {ILogger} dependencies.logger - Logger instance.
+   * @param {IEntityManager} [dependencies.entityManager] - Optional entity manager used to bootstrap existing entities.
    */
-  constructor({ spatialIndexManager, safeEventDispatcher, logger }) {
+  constructor({
+    spatialIndexManager,
+    safeEventDispatcher,
+    logger,
+    entityManager,
+  }) {
     /** @private */
     this.spatialIndex = spatialIndexManager;
     /** @private */
@@ -59,6 +66,7 @@ export class SpatialIndexSynchronizer {
     this.#entityPositions = new Map();
 
     this.#subscribeToEvents(safeEventDispatcher);
+    this.#bootstrapExistingEntities(entityManager);
 
     this.logger.debug(
       'SpatialIndexSynchronizer initialized and listening for events.'
@@ -79,6 +87,118 @@ export class SpatialIndexSynchronizer {
       COMPONENT_REMOVED_ID,
       this.onPositionChanged.bind(this)
     );
+  }
+
+  /**
+   * Extracts a normalized location id from an entity's position component.
+   *
+   * @private
+   * @param {Entity} entity - Entity to inspect.
+   * @returns {string|null} Trimmed location identifier when available.
+   */
+  #extractLocationId(entity) {
+    if (!entity || typeof entity.getComponentData !== 'function') {
+      return null;
+    }
+
+    const locationId = entity.getComponentData(
+      POSITION_COMPONENT_ID
+    )?.locationId;
+    if (typeof locationId !== 'string') {
+      return null;
+    }
+
+    const trimmed = locationId.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+
+  /**
+   * Seeds the spatial index from entities that already exist when the synchronizer initializes.
+   *
+   * @private
+   * @param {IEntityManager} [entityManager] - Entity manager providing current entities.
+   * @returns {void}
+   */
+  #bootstrapExistingEntities(entityManager) {
+    if (!entityManager) {
+      this.logger.debug(
+        'SpatialIndexSynchronizer: No entity manager provided, skipping bootstrap of existing entities.'
+      );
+      return;
+    }
+
+    const hasIterableEntities =
+      entityManager.entities &&
+      typeof entityManager.entities[Symbol.iterator] === 'function';
+    const canQueryByComponent =
+      typeof entityManager.getEntitiesWithComponent === 'function';
+
+    if (!hasIterableEntities && !canQueryByComponent) {
+      this.logger.warn(
+        'SpatialIndexSynchronizer: Provided entity manager cannot be iterated. Skipping bootstrap.'
+      );
+      return;
+    }
+
+    try {
+      let seedSource;
+      let shouldManuallyIndex = true;
+
+      if (hasIterableEntities) {
+        seedSource = entityManager.entities;
+        if (typeof this.spatialIndex?.buildIndex === 'function') {
+          this.spatialIndex.buildIndex(entityManager);
+          shouldManuallyIndex = false;
+        } else if (typeof this.spatialIndex?.clearIndex === 'function') {
+          this.spatialIndex.clearIndex();
+        }
+      } else if (canQueryByComponent) {
+        seedSource = entityManager.getEntitiesWithComponent(
+          POSITION_COMPONENT_ID
+        );
+        if (typeof this.spatialIndex?.clearIndex === 'function') {
+          this.spatialIndex.clearIndex();
+        }
+      }
+
+      if (!seedSource || typeof seedSource[Symbol.iterator] !== 'function') {
+        this.logger.warn(
+          'SpatialIndexSynchronizer: Unable to iterate existing entities during bootstrap.'
+        );
+        return;
+      }
+
+      this.#entityPositions.clear();
+      let seededCount = 0;
+
+      for (const entity of seedSource) {
+        const entityId = typeof entity?.id === 'string' ? entity.id.trim() : '';
+        if (!entityId) {
+          continue;
+        }
+
+        const locationId = this.#extractLocationId(entity);
+        if (!locationId) {
+          continue;
+        }
+
+        if (shouldManuallyIndex) {
+          this.spatialIndex.addEntity(entityId, locationId);
+        }
+
+        this.#entityPositions.set(entityId, locationId);
+        seededCount += 1;
+      }
+
+      this.logger.debug(
+        `SpatialIndexSynchronizer: Bootstrapped ${seededCount} existing entities into spatial index.`
+      );
+    } catch (error) {
+      this.logger.error(
+        'SpatialIndexSynchronizer: Failed to bootstrap spatial index from existing entities.',
+        error
+      );
+    }
   }
 
   /**
@@ -128,12 +248,12 @@ export class SpatialIndexSynchronizer {
       entity?.constructor?.name
     );
 
-    const position = entity.getComponentData(POSITION_COMPONENT_ID);
-    if (position?.locationId) {
-      this.spatialIndex.addEntity(entity.id, position.locationId);
-      this.#entityPositions.set(entity.id, position.locationId);
+    const locationId = this.#extractLocationId(entity);
+    if (locationId) {
+      this.spatialIndex.addEntity(entity.id, locationId);
+      this.#entityPositions.set(entity.id, locationId);
       this.logger.debug(
-        `SpatialSync: Added ${entity.id} to index at ${position.locationId}`
+        `SpatialSync: Added ${entity.id} to index at ${locationId}`
       );
     }
   }
