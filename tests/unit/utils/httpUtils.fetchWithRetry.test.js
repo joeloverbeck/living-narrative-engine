@@ -51,6 +51,26 @@ describe('fetchWithRetry', () => {
   const url = 'https://api.test.local';
   const opts = { method: 'GET' };
 
+  test('defaults options to empty object when omitted', async () => {
+    const okResponse = mockResponse(200, { ok: true }, true, {}, true);
+    okResponse.json.mockResolvedValue({ ok: true });
+    fetch.mockResolvedValueOnce(okResponse);
+
+    const result = await fetchWithRetry(
+      url,
+      undefined,
+      1,
+      1,
+      1,
+      dispatcher,
+      undefined,
+      fetch
+    );
+
+    expect(result).toEqual({ ok: true });
+    expect(fetch).toHaveBeenCalledWith(url, {});
+  });
+
   test('parses JSON body for HTTP errors', async () => {
     const body = { error: 'bad' };
     const resp = mockResponse(400, body, false, {}, true);
