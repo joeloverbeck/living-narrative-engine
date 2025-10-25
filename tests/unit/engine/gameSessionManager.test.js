@@ -522,6 +522,23 @@ describe('GameSessionManager', () => {
       expect(startEngineFn).toHaveBeenCalledWith('Restored Game');
       expect(result.success).toBe(true);
     });
+
+    it('should use metadata saveName when gameTitle is missing', async () => {
+      const saveData = {
+        metadata: { gameTitle: '', saveName: 'Slot 3' },
+        entities: [],
+        gameState: {},
+      };
+
+      const result = await gameSessionManager.finalizeLoadSuccess(
+        saveData,
+        'slot-3'
+      );
+
+      expect(engineState.activeWorld).toBe('Slot 3');
+      expect(startEngineFn).toHaveBeenCalledWith('Slot 3');
+      expect(result.success).toBe(true);
+    });
   });
 
   describe('private method coverage via public methods', () => {
