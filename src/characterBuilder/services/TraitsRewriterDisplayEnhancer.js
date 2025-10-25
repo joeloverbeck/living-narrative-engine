@@ -360,11 +360,14 @@ export class TraitsRewriterDisplayEnhancer {
    * @returns {string} Escaped text
    */
   #escapeHtmlContent(text) {
-    if (typeof text !== 'string') {
+    if (text === null || text === undefined) {
       return '';
     }
 
-    return text
+    const stringValue =
+      typeof text === 'string' ? text : String(text);
+
+    return stringValue
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
@@ -382,12 +385,19 @@ export class TraitsRewriterDisplayEnhancer {
    * @returns {string} Sanitized content
    */
   #sanitizeForDisplay(content) {
-    if (!content || typeof content !== 'string') {
+    if (content === null || content === undefined) {
+      return '';
+    }
+
+    const normalizedContent =
+      typeof content === 'string' ? content : String(content);
+
+    if (!normalizedContent) {
       return '';
     }
 
     // HTML escape
-    let sanitized = this.#escapeHtmlContent(content);
+    let sanitized = this.#escapeHtmlContent(normalizedContent);
 
     // Trim whitespace
     sanitized = sanitized.trim();
@@ -396,7 +406,7 @@ export class TraitsRewriterDisplayEnhancer {
     if (sanitized.length > 5000) {
       sanitized = sanitized.substring(0, 5000) + '...';
       this.#logger.warn('Content truncated due to length limit', {
-        originalLength: content.length,
+        originalLength: normalizedContent.length,
       });
     }
 
