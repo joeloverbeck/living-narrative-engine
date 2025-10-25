@@ -349,6 +349,25 @@ describe('Trait Model', () => {
         );
       });
 
+      it('should flag name entries that are not objects', () => {
+        const trait = new Trait({
+          ...validTraitData,
+          names: [
+            null,
+            { name: 'Valid Name', justification: 'Valid justification' },
+            { name: 'Another Name', justification: 'Another justification' },
+          ],
+        });
+        const result = trait.validate();
+
+        expect(result.valid).toBe(false);
+        expect(
+          result.errors.some((e) =>
+            e.includes('Names[0] must be an object with name and justification')
+          )
+        ).toBe(true);
+      });
+
       it('should validate name object structure', () => {
         const trait = new Trait({
           ...validTraitData,
@@ -429,6 +448,25 @@ describe('Trait Model', () => {
         );
       });
 
+      it('should flag personality entries that are not objects', () => {
+        const trait = new Trait({
+          ...validTraitData,
+          personality: [
+            null,
+            { trait: 'Test2', explanation: 'test' },
+            { trait: 'Test3', explanation: 'test' },
+          ],
+        });
+        const result = trait.validate();
+
+        expect(result.valid).toBe(false);
+        expect(
+          result.errors.some((e) =>
+            e.includes('Personality[0] must be an object with trait and explanation')
+          )
+        ).toBe(true);
+      });
+
       it('should validate personality object structure', () => {
         const trait = new Trait({
           ...validTraitData,
@@ -443,6 +481,25 @@ describe('Trait Model', () => {
         expect(
           result.errors.some((e) =>
             e.includes('Personality[0].explanation is required')
+          )
+        ).toBe(true);
+      });
+
+      it('should validate personality traits are non-empty strings', () => {
+        const trait = new Trait({
+          ...validTraitData,
+          personality: [
+            { trait: '', explanation: 'Valid explanation' },
+            { trait: 'Test2', explanation: 'test' },
+            { trait: 'Test3', explanation: 'test' },
+          ],
+        });
+        const result = trait.validate();
+
+        expect(result.valid).toBe(false);
+        expect(
+          result.errors.some((e) =>
+            e.includes('Personality[0].trait is required and must be a non-empty string')
           )
         ).toBe(true);
       });
@@ -482,6 +539,21 @@ describe('Trait Model', () => {
           'Weaknesses must be an array with 2-6 items'
         );
       });
+
+      it('should validate weakness items are non-empty strings', () => {
+        const trait = new Trait({
+          ...validTraitData,
+          weaknesses: ['Impulsive decisions', '   '],
+        });
+        const result = trait.validate();
+
+        expect(result.valid).toBe(false);
+        expect(
+          result.errors.some((e) =>
+            e.includes('Weaknesses[1] must be a non-empty string')
+          )
+        ).toBe(true);
+      });
     });
 
     describe('likes validation', () => {
@@ -493,6 +565,21 @@ describe('Trait Model', () => {
           'Likes must be an array with 3-8 items'
         );
       });
+
+      it('should validate like items are non-empty strings', () => {
+        const trait = new Trait({
+          ...validTraitData,
+          likes: ['Training at dawn', '   ', 'Helping others'],
+        });
+        const result = trait.validate();
+
+        expect(result.valid).toBe(false);
+        expect(
+          result.errors.some((e) =>
+            e.includes('Likes[1] must be a non-empty string')
+          )
+        ).toBe(true);
+      });
     });
 
     describe('dislikes validation', () => {
@@ -503,6 +590,21 @@ describe('Trait Model', () => {
         expect(result.errors).toContain(
           'Dislikes must be an array with 3-8 items'
         );
+      });
+
+      it('should validate dislike items are non-empty strings', () => {
+        const trait = new Trait({
+          ...validTraitData,
+          dislikes: ['Injustice', '   ', 'Unnecessary violence', 'Being idle'],
+        });
+        const result = trait.validate();
+
+        expect(result.valid).toBe(false);
+        expect(
+          result.errors.some((e) =>
+            e.includes('Dislikes[1] must be a non-empty string')
+          )
+        ).toBe(true);
       });
     });
 
@@ -526,6 +628,21 @@ describe('Trait Model', () => {
         expect(result.errors).toContain(
           'Fears must be an array with 1-2 items'
         );
+      });
+
+      it('should validate fear items are non-empty strings', () => {
+        const trait = new Trait({
+          ...validTraitData,
+          fears: ['   '],
+        });
+        const result = trait.validate();
+
+        expect(result.valid).toBe(false);
+        expect(
+          result.errors.some((e) =>
+            e.includes('Fears[0] must be a non-empty string')
+          )
+        ).toBe(true);
       });
     });
 
@@ -562,6 +679,21 @@ describe('Trait Model', () => {
           'Goals.longTerm is required and must be a non-empty string'
         );
       });
+
+      it('should validate short-term goals are non-empty strings', () => {
+        const trait = new Trait({
+          ...validTraitData,
+          goals: { shortTerm: ['   '], longTerm: validTraitData.goals.longTerm },
+        });
+        const result = trait.validate();
+
+        expect(result.valid).toBe(false);
+        expect(
+          result.errors.some((e) =>
+            e.includes('Goals.shortTerm[0] must be a non-empty string')
+          )
+        ).toBe(true);
+      });
     });
 
     describe('notes validation', () => {
@@ -572,6 +704,21 @@ describe('Trait Model', () => {
         expect(result.errors).toContain(
           'Notes must be an array with 2-6 items'
         );
+      });
+
+      it('should validate note items are non-empty strings', () => {
+        const trait = new Trait({
+          ...validTraitData,
+          notes: ['Has a habit of humming when concentrating', '   '],
+        });
+        const result = trait.validate();
+
+        expect(result.valid).toBe(false);
+        expect(
+          result.errors.some((e) =>
+            e.includes('Notes[1] must be a non-empty string')
+          )
+        ).toBe(true);
       });
     });
 
@@ -624,6 +771,21 @@ describe('Trait Model', () => {
         expect(result.errors).toContain(
           'Secrets must be an array with 1-2 items'
         );
+      });
+
+      it('should validate secret items are non-empty strings', () => {
+        const trait = new Trait({
+          ...validTraitData,
+          secrets: ['   '],
+        });
+        const result = trait.validate();
+
+        expect(result.valid).toBe(false);
+        expect(
+          result.errors.some((e) =>
+            e.includes('Secrets[0] must be a non-empty string')
+          )
+        ).toBe(true);
       });
     });
   });
@@ -683,6 +845,14 @@ describe('Trait Model', () => {
 
       expect(summary.physicalDescription.length).toBeLessThanOrEqual(100);
       expect(summary.profile.length).toBeLessThanOrEqual(100);
+    });
+
+    it('should avoid truncation when max length exceeds field size', () => {
+      const trait = new Trait(validTraitData);
+      const summary = trait.getSummary(1000);
+
+      expect(summary.physicalDescription).toBe(validTraitData.physicalDescription);
+      expect(summary.profile).toBe(validTraitData.profile);
     });
   });
 
