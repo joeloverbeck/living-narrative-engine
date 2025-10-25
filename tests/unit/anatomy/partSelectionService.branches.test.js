@@ -125,6 +125,44 @@ describe('PartSelectionService additional branch coverage', () => {
     expect(rng).toHaveBeenCalled();
   });
 
+  it('rejects candidates that fail base property requirements', async () => {
+    const defs = [
+      {
+        id: 'fails-properties',
+        components: {
+          'anatomy:part': { subType: 'arm' },
+          stat: { locked: false },
+        },
+      },
+      {
+        id: 'matches-properties',
+        components: {
+          'anatomy:part': { subType: 'arm' },
+          stat: { locked: true },
+        },
+      },
+    ];
+
+    const registry = createMockDataRegistry(defs);
+    const logger = createMockLogger();
+    const service = new PartSelectionService({
+      dataRegistry: registry,
+      logger,
+      eventDispatchService: createMockEventDispatchService(),
+    });
+
+    const rng = jest.fn().mockReturnValue(0.3);
+    const requirements = { properties: { stat: { locked: true } } };
+
+    const result = await service.selectPart(requirements, ['arm'], undefined, rng);
+
+    expect(result).toBe('matches-properties');
+    expect(rng).toHaveBeenCalled();
+    expect(logger.debug).toHaveBeenCalledWith(
+      "PartSelectionService: Selected 'matches-properties' from 1 candidates"
+    );
+  });
+
   it('builds detailed error context when no candidates match', async () => {
     const defs = [
       {
