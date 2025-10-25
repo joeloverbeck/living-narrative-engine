@@ -424,6 +424,35 @@ describe('TraitsRewriterDisplayEnhancer', () => {
       expect(sections[0].content).toBe('12345');
     });
 
+    it('should safely handle null and undefined trait values', () => {
+      const traits = {
+        'custom:nullTrait': null,
+        'custom:undefinedTrait': undefined,
+      };
+
+      const sections = enhancer.createDisplaySections(traits);
+
+      expect(sections).toHaveLength(2);
+      expect(
+        sections.find(section => section.key === 'custom:nullTrait').content
+      ).toBe('');
+      expect(
+        sections.find(section => section.key === 'custom:undefinedTrait').content
+      ).toBe('');
+      expect(mockLogger.warn).not.toHaveBeenCalled();
+    });
+
+    it('should return empty string for blank trait content', () => {
+      const traits = {
+        'custom:emptyTrait': '',
+      };
+
+      const sections = enhancer.createDisplaySections(traits);
+
+      expect(sections[0].content).toBe('');
+      expect(mockLogger.warn).not.toHaveBeenCalled();
+    });
+
     it('should truncate very long content', () => {
       const longContent = 'a'.repeat(6000);
       const traits = {

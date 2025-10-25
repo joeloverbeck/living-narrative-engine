@@ -386,14 +386,14 @@ export class TraitsRewriterDisplayEnhancer {
    */
   #sanitizeForDisplay(content) {
     if (content === null || content === undefined) {
-      return '';
+      return this.#escapeHtmlContent(content);
     }
 
     const normalizedContent =
       typeof content === 'string' ? content : String(content);
 
     if (!normalizedContent) {
-      return '';
+      return this.#escapeHtmlContent(normalizedContent);
     }
 
     // HTML escape
