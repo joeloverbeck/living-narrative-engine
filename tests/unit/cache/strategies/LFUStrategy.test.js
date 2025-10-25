@@ -178,12 +178,12 @@ describe('LFUStrategy', () => {
 
     it('should respect max size limit', () => {
       expect(lfuStrategy.maxSize).toBe(3);
-      
+
       lfuStrategy.set('key1', 'value1');
       lfuStrategy.set('key2', 'value2');
       lfuStrategy.set('key3', 'value3');
       lfuStrategy.set('key4', 'value4'); // Should evict least frequent
-      
+
       expect(lfuStrategy.size).toBe(3);
     });
 
@@ -195,6 +195,54 @@ describe('LFUStrategy', () => {
 
       memorySizeStrategy.set('key1', 'small');
       expect(memorySizeStrategy.memorySize).toBeGreaterThan(0);
+    });
+
+    it('should size arrays, primitives, and non-serializable objects consistently', () => {
+      const memorySizingStrategy = new LFUStrategy({
+        maxSize: 10,
+        maxMemoryUsage: 10_000,
+      });
+
+      memorySizingStrategy.set('array', [1, 'two', [3]]);
+      const afterArray = memorySizingStrategy.memorySize;
+      expect(afterArray).toBeGreaterThan(24);
+
+      memorySizingStrategy.set('primitive', 123);
+      const afterPrimitive = memorySizingStrategy.memorySize;
+      expect(afterPrimitive).toBeGreaterThan(afterArray);
+
+      const circular = {};
+      circular.self = circular;
+      memorySizingStrategy.set('circular', circular);
+      const afterCircular = memorySizingStrategy.memorySize;
+
+      expect(afterCircular - afterPrimitive).toBe(100);
+    });
+  });
+
+  describe('Expiration handling', () => {
+    it('should remove expired entries when checking existence', () => {
+      jest.useFakeTimers();
+
+      try {
+        jest.setSystemTime(0);
+
+        const expiringStrategy = new LFUStrategy({
+          maxSize: 5,
+          ttl: 50,
+          updateAgeOnGet: false,
+        });
+
+        expiringStrategy.set('transient', 'value');
+
+        jest.advanceTimersByTime(60);
+
+        expect(expiringStrategy.has('transient')).toBe(false);
+        expect(expiringStrategy.size).toBe(0);
+      } finally {
+        jest.runOnlyPendingTimers();
+        jest.useRealTimers();
+      }
     });
   });
 
