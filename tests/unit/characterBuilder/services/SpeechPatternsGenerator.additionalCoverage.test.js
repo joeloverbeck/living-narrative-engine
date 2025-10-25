@@ -392,6 +392,16 @@ describe('SpeechPatternsGenerator additional coverage', () => {
       },
     };
 
+    const componentAltText = {
+      components: {
+        'profile:display-name': { text: 'Profile Text Alias' },
+        'core:biography': {
+          summary:
+            'A collaborative orator who shapes metaphors mid-conversation, tuning cadence to the moment and audience.',
+        },
+      },
+    };
+
     const directNameOnly = {
       'persona:nickname': { name: 'Direct Alias' },
       'core:background': {
@@ -402,10 +412,12 @@ describe('SpeechPatternsGenerator additional coverage', () => {
 
     await generator.generateSpeechPatterns(componentNameOnly);
     await generator.generateSpeechPatterns(componentAltKey);
+    await generator.generateSpeechPatterns(componentAltText);
     await generator.generateSpeechPatterns(directNameOnly);
 
     expect(contexts[0].characterName).toBe('Component Name Only');
     expect(contexts[1].characterName).toBe('Profile Alias');
-    expect(contexts[2].characterName).toBe('Direct Alias');
+    expect(contexts[2].characterName).toBe('Profile Text Alias');
+    expect(contexts[3].characterName).toBe('Direct Alias');
   });
 });
