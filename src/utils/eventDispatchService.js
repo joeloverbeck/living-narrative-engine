@@ -195,9 +195,10 @@ export class EventDispatchService {
    *
    * @param {string} eventId - Identifier of the event to dispatch.
    * @param {object} payload - Payload for the event.
+   * @param {object} [options] - Optional dispatcher configuration (e.g. schema overrides).
    * @returns {Promise<void>} Resolves when the dispatch attempt completes.
    */
-  async safeDispatchEvent(eventId, payload) {
+  async safeDispatchEvent(eventId, payload, options) {
     if (
       !this.#safeEventDispatcher ||
       typeof this.#safeEventDispatcher.dispatch !== 'function'
@@ -207,8 +208,14 @@ export class EventDispatchService {
     }
 
     try {
-      await this.#safeEventDispatcher.dispatch(eventId, payload);
-      this.#logger.debug(`Dispatched ${eventId}`, { payload });
+      if (typeof options === 'undefined') {
+        await this.#safeEventDispatcher.dispatch(eventId, payload);
+      } else {
+        await this.#safeEventDispatcher.dispatch(eventId, payload, options);
+      }
+      const metadata =
+        typeof options === 'undefined' ? { payload } : { payload, options };
+      this.#logger.debug(`Dispatched ${eventId}`, metadata);
     } catch (error) {
       this.#logger.error(`Failed to dispatch ${eventId}`, error);
     }

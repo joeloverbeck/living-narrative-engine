@@ -16,9 +16,16 @@ import { ensureValidLogger } from './loggerUtils.js';
  * @param {string} eventId - Identifier of the event to dispatch.
  * @param {object} payload - Payload for the event.
  * @param {ILogger} [logger] - Logger for debug and error output.
+ * @param {object} [options] - Optional dispatcher configuration (e.g. schema overrides).
  * @returns {Promise<void>} Resolves when the dispatch attempt completes.
  */
-export async function safeDispatchEvent(dispatcher, eventId, payload, logger) {
+export async function safeDispatchEvent(
+  dispatcher,
+  eventId,
+  payload,
+  logger,
+  options
+) {
   const log = ensureValidLogger(logger, 'safeDispatchEvent');
 
   if (!dispatcher || typeof dispatcher.dispatch !== 'function') {
@@ -27,8 +34,14 @@ export async function safeDispatchEvent(dispatcher, eventId, payload, logger) {
   }
 
   try {
-    await dispatcher.dispatch(eventId, payload);
-    log.debug(`Dispatched ${eventId}`, { payload });
+    if (typeof options === 'undefined') {
+      await dispatcher.dispatch(eventId, payload);
+    } else {
+      await dispatcher.dispatch(eventId, payload, options);
+    }
+    const metadata =
+      typeof options === 'undefined' ? { payload } : { payload, options };
+    log.debug(`Dispatched ${eventId}`, metadata);
   } catch (error) {
     log.error(`Failed to dispatch ${eventId}`, error);
   }

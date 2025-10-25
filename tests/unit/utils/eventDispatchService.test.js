@@ -263,6 +263,28 @@ describe('EventDispatchService', () => {
       });
     });
 
+    it('should pass dispatcher options when provided', async () => {
+      // Arrange
+      mockSafeEventDispatcher.dispatch.mockResolvedValue(true);
+      const eventId = 'test:event';
+      const payload = { data: 'test' };
+      const options = { allowSchemaNotFound: true };
+
+      // Act
+      await service.safeDispatchEvent(eventId, payload, options);
+
+      // Assert
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        eventId,
+        payload,
+        options
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(`Dispatched ${eventId}`, {
+        payload,
+        options,
+      });
+    });
+
     it('should log error when dispatch fails', async () => {
       // Arrange
       const error = new Error('Dispatch failed');
