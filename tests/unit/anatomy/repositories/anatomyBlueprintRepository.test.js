@@ -289,6 +289,23 @@ describe('AnatomyBlueprintRepository', () => {
 
       expect(result).toBeNull();
     });
+
+    it('should log and return null when unexpected error occurs', async () => {
+      const error = new Error('Unexpected failure');
+      jest.spyOn(repository, 'getRecipe').mockRejectedValue(error);
+
+      const result = await repository.getBlueprintByRecipeId(
+        'test:humanoid_recipe'
+      );
+
+      expect(result).toBeNull();
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "Failed to retrieve blueprint for recipe 'test:humanoid_recipe'"
+        ),
+        error
+      );
+    });
   });
 
   describe('clearCache', () => {
