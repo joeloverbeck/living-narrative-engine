@@ -74,10 +74,19 @@ class PersistenceCoordinator {
     this.#logger.debug(
       `GameEngine.triggerManualSave: Dispatching ENGINE_OPERATION_IN_PROGRESS_UI for save: "${saveName}".`
     );
-    await this.#dispatcher.dispatch(ENGINE_OPERATION_IN_PROGRESS_UI, {
-      titleMessage: 'Saving...',
-      inputDisabledMessage: `Saving game "${saveName}"...`,
-    });
+    const progressDispatched = await this.#dispatcher.dispatch(
+      ENGINE_OPERATION_IN_PROGRESS_UI,
+      {
+        titleMessage: 'Saving...',
+        inputDisabledMessage: `Saving game "${saveName}"...`,
+      }
+    );
+
+    if (!progressDispatched) {
+      this.#logger.warn(
+        `GameEngine.triggerManualSave: SafeEventDispatcher reported failure when dispatching ENGINE_OPERATION_IN_PROGRESS_UI for save "${saveName}".`
+      );
+    }
   }
 
   /**
@@ -189,7 +198,7 @@ class PersistenceCoordinator {
       this.#logger.debug(
         `GameEngine.triggerManualSave: Save successful. Name: "${saveName}", Path: ${saveResult.filePath || 'N/A'}`
       );
-      await this.#dispatcher.dispatch(GAME_SAVED_ID, {
+      const savedDispatched = await this.#dispatcher.dispatch(GAME_SAVED_ID, {
         saveName,
         path: saveResult.filePath,
         type: 'manual',
@@ -200,6 +209,12 @@ class PersistenceCoordinator {
       this.#logger.debug(
         `GameEngine.triggerManualSave: Save successful. Name: "${saveName}".`
       );
+
+      if (!savedDispatched) {
+        this.#logger.warn(
+          `GameEngine.triggerManualSave: SafeEventDispatcher reported failure when dispatching GAME_SAVED_ID for save "${saveName}".`
+        );
+      }
     } else {
       const formattedError = this.#formatSaveError(saveResult.error);
       this.#logger.error(
@@ -208,19 +223,34 @@ class PersistenceCoordinator {
       this.#logger.debug(
         `GameEngine.triggerManualSave: Save failed. Name: "${saveName}".`
       );
-      await this.#dispatcher.dispatch(ENGINE_OPERATION_FAILED_UI, {
-        errorMessage: `Failed to save game: ${formattedError}`,
-        errorTitle: 'Save Failed',
-      });
+      const failureDispatched = await this.#dispatcher.dispatch(
+        ENGINE_OPERATION_FAILED_UI,
+        {
+          errorMessage: `Failed to save game: ${formattedError}`,
+          errorTitle: 'Save Failed',
+        }
+      );
+
+      if (!failureDispatched) {
+        this.#logger.warn(
+          `GameEngine.triggerManualSave: SafeEventDispatcher reported failure when dispatching ENGINE_OPERATION_FAILED_UI for save "${saveName}".`
+        );
+      }
     }
 
     this.#logger.debug(
       `GameEngine.triggerManualSave: Dispatching ENGINE_READY_UI after save attempt for "${saveName}".`
     );
-    await this.#dispatcher.dispatch(ENGINE_READY_UI, {
+    const readyDispatched = await this.#dispatcher.dispatch(ENGINE_READY_UI, {
       activeWorld: this.#state.activeWorld,
       message: 'Save operation finished. Ready.',
     });
+
+    if (!readyDispatched) {
+      this.#logger.warn(
+        `GameEngine.triggerManualSave: SafeEventDispatcher reported failure when dispatching ENGINE_READY_UI after save "${saveName}".`
+      );
+    }
   }
 
   /**
