@@ -26,12 +26,14 @@ export function setupRadioListNavigation(
       return;
     }
 
-    const target = event.target;
-    if (!(target instanceof HTMLElement)) {
+    const target = /** @type {Element | null} */ (event.target);
+    if (!target || typeof target.closest !== 'function') {
       return;
     }
 
-    const currentItem = target.closest(itemSelector);
+    const currentItem = /** @type {HTMLElement | null} */ (
+      target.closest(itemSelector)
+    );
     if (
       !currentItem ||
       !container.contains(currentItem) ||
@@ -71,7 +73,9 @@ export function setupRadioListNavigation(
 
     if (nextIndex !== -1 && nextIndex !== currentIndex) {
       const nextItem = /** @type {HTMLElement} */ (items[nextIndex]);
-      nextItem.focus();
+      if (typeof nextItem.focus === 'function') {
+        nextItem.focus();
+      }
       const value = nextItem.dataset[datasetKey];
       selectCallback(nextItem, value);
     }
