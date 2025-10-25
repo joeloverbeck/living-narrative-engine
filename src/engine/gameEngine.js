@@ -387,12 +387,24 @@ class GameEngine {
       );
     }
 
-    await this.#safeEventDispatcher.dispatch(ENGINE_STOPPED_UI, {
-      inputDisabledMessage: 'Game stopped. Engine is inactive.',
-    });
-    this.#logger.debug('GameEngine.stop: ENGINE_STOPPED_UI event dispatched.');
+    let caughtError = null;
 
     try {
+      const stopEventResult = await this.#safeEventDispatcher.dispatch(
+        ENGINE_STOPPED_UI,
+        {
+          inputDisabledMessage: 'Game stopped. Engine is inactive.',
+        }
+      );
+      this.#logger.debug(
+        'GameEngine.stop: ENGINE_STOPPED_UI event dispatched.'
+      );
+      if (stopEventResult === false) {
+        this.#logger.warn(
+          'GameEngine.stop: SafeEventDispatcher reported failure when dispatching ENGINE_STOPPED_UI event.'
+        );
+      }
+
       if (this.#turnManager) {
         await this.#turnManager.stop();
         this.#logger.debug('GameEngine.stop: TurnManager stopped.');
@@ -401,23 +413,36 @@ class GameEngine {
           'GameEngine.stop: TurnManager service not available, cannot stop.'
         );
       }
-
-      this.#resetCoreGameState();
-      this.#logger.debug(
-        'GameEngine.stop: Core game state cleared after stop.'
+    } catch (error) {
+      caughtError = error instanceof Error ? error : new Error(String(error));
+      this.#logger.error(
+        'GameEngine.stop: Encountered error while stopping engine. Engine state will be reset.',
+        caughtError
       );
+    } finally {
+      try {
+        this.#resetCoreGameState();
+        this.#logger.debug(
+          'GameEngine.stop: Core game state cleared after stop.'
+        );
+      } catch (resetError) {
+        const normalizedResetError =
+          resetError instanceof Error
+            ? resetError
+            : new Error(String(resetError));
+        this.#logger.error(
+          'GameEngine.stop: Failed to reset core game state cleanly.',
+          normalizedResetError
+        );
+      }
 
       this.#resetEngineState();
       this.#logger.debug(
         'GameEngine.stop: Engine fully stopped and state reset.'
       );
-    } catch (error) {
-      const caughtError =
-        error instanceof Error ? error : new Error(String(error));
-      this.#logger.error(
-        'GameEngine.stop: Failed to stop TurnManager cleanly. Engine state remains active.',
-        caughtError
-      );
+    }
+
+    if (caughtError) {
       throw caughtError;
     }
   }
