@@ -15,7 +15,9 @@ import { createTestBed } from '../../../common/testBed.js';
 import TraitsRewriterGenerator from '../../../../src/characterBuilder/services/TraitsRewriterGenerator.js';
 import { TraitsRewriterError } from '../../../../src/characterBuilder/errors/TraitsRewriterError.js';
 import { CHARACTER_BUILDER_EVENTS } from '../../../../src/characterBuilder/services/characterBuilderService.js';
-import { DEFAULT_TRAIT_KEYS } from '../../../../src/characterBuilder/prompts/traitsRewriterPrompts.js';
+import * as traitsRewriterPrompts from '../../../../src/characterBuilder/prompts/traitsRewriterPrompts.js';
+
+const { DEFAULT_TRAIT_KEYS } = traitsRewriterPrompts;
 
 /**
  * Create valid character definition for testing
@@ -124,6 +126,8 @@ describe('TraitsRewriterGenerator', () => {
 
     mockLlmConfigManager = testBed.createMock('ILLMConfigurationManager', [
       'getActiveConfiguration',
+      'getActiveConfigId',
+      'setActiveConfiguration',
     ]);
 
     mockEventBus = testBed.createMock('ISafeEventDispatcher', ['dispatch']);
@@ -137,6 +141,8 @@ describe('TraitsRewriterGenerator', () => {
       name: 'test-config',
       provider: 'test-provider',
     });
+    mockLlmConfigManager.getActiveConfigId.mockResolvedValue('original-config');
+    mockLlmConfigManager.setActiveConfiguration.mockResolvedValue();
 
     mockLlmStrategyFactory.getAIDecision.mockResolvedValue({
       content: JSON.stringify(createValidLLMResponse()),
@@ -157,6 +163,10 @@ describe('TraitsRewriterGenerator', () => {
       eventBus: mockEventBus,
       tokenEstimator: mockTokenEstimator,
     });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('Constructor Validation', () => {
@@ -248,6 +258,40 @@ describe('TraitsRewriterGenerator', () => {
       expect(result.rewrittenTraits).toHaveProperty('core:dislikes');
     });
 
+    it('should extract array-based traits such as goals and notes', async () => {
+      const characterDef = {
+        components: {
+          'core:name': { text: 'Array Character' },
+          'core:personality': { text: 'Contemplative.' },
+          'core:goals': {
+            goals: [{ text: 'Solve mysteries' }, 'Learn constantly'],
+          },
+          'core:notes': {
+            notes: [{ text: 'Keeps a journal' }, 'Enjoys stargazing'],
+          },
+        },
+      };
+
+      mockLlmJsonService.parseAndRepair.mockReturnValue({
+        characterName: 'Array Character',
+        rewrittenTraits: {
+          'core:personality': 'I am contemplative.',
+          'core:goals': 'I will solve mysteries and keep learning.',
+          'core:notes': 'I keep a journal and love stargazing.',
+        },
+      });
+
+      const result = await generator.generateRewrittenTraits(characterDef);
+
+      expect(result.originalTraitCount).toBe(3);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'TraitsRewriterGenerator: Extracted traits',
+        expect.objectContaining({
+          traitKeys: expect.arrayContaining(['core:goals', 'core:notes']),
+        })
+      );
+    });
+
     it('should throw error when no extractable traits found', async () => {
       const characterDef = {
         'core:name': { text: 'Empty Character' },
@@ -276,6 +320,65 @@ describe('TraitsRewriterGenerator', () => {
 
       expect(result.originalTraitCount).toBe(1);
       expect(result.rewrittenTraitCount).toBe(1);
+    });
+
+    it('should ignore trait objects without recognized text fields', async () => {
+      const characterDef = {
+        ...createMinimalCharacterDefinition(),
+        'core:weaknesses': { unsupported: 'value' },
+      };
+
+      const result = await generator.generateRewrittenTraits(characterDef);
+
+      expect(result.originalTraitCount).toBe(1);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'TraitsRewriterGenerator: Extracted traits',
+        expect.objectContaining({
+          traitKeys: expect.not.arrayContaining(['core:weaknesses']),
+        })
+      );
+    });
+  });
+
+  describe('LLM configuration management', () => {
+    it('should temporarily switch and restore LLM configuration when an override is provided', async () => {
+      const characterDef = createValidCharacterDefinition();
+
+      await generator.generateRewrittenTraits(characterDef, {
+        llmConfigId: 'temporary-config',
+      });
+
+      expect(mockLlmConfigManager.setActiveConfiguration).toHaveBeenNthCalledWith(
+        1,
+        'temporary-config'
+      );
+      expect(mockLlmConfigManager.setActiveConfiguration).toHaveBeenNthCalledWith(
+        2,
+        'original-config'
+      );
+    });
+
+    it('should log an error if restoring the original LLM configuration fails after an error', async () => {
+      const characterDef = createValidCharacterDefinition();
+
+      mockLlmConfigManager.setActiveConfiguration
+        .mockResolvedValueOnce()
+        .mockRejectedValueOnce(new Error('Restore failed'));
+
+      mockLlmJsonService.parseAndRepair.mockReturnValue({
+        rewrittenTraits: { 'core:personality': 'Broken response' },
+      });
+
+      await expect(
+        generator.generateRewrittenTraits(characterDef, {
+          llmConfigId: 'temporary-config',
+        })
+      ).rejects.toThrow('Missing character name in response');
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to restore original LLM configuration',
+        expect.any(Error)
+      );
     });
   });
 
@@ -346,6 +449,104 @@ describe('TraitsRewriterGenerator', () => {
           estimatedTokens: 1500,
         })
       );
+    });
+
+    it('should generate traits when token estimation is not available', async () => {
+      const characterDef = createValidCharacterDefinition();
+      const generatorWithoutEstimator = new TraitsRewriterGenerator({
+        logger: mockLogger,
+        llmJsonService: mockLlmJsonService,
+        llmStrategyFactory: mockLlmStrategyFactory,
+        llmConfigManager: mockLlmConfigManager,
+        eventBus: mockEventBus,
+      });
+
+      mockTokenEstimator.estimateTokens.mockClear();
+
+      const result = await generatorWithoutEstimator.generateRewrittenTraits(
+        characterDef
+      );
+
+      expect(result.rewrittenTraits).toBeDefined();
+      expect(mockTokenEstimator.estimateTokens).not.toHaveBeenCalled();
+    });
+
+    it('should throw a descriptive error when prompt creation fails', async () => {
+      const characterDef = createValidCharacterDefinition();
+      const promptError = new Error('Prompt building exploded');
+
+      const promptSpy = jest
+        .spyOn(traitsRewriterPrompts, 'createTraitsRewriterPrompt')
+        .mockImplementation(() => {
+          throw promptError;
+        });
+
+      await expect(
+        generator.generateRewrittenTraits(characterDef)
+      ).rejects.toThrow('Failed to create LLM prompt');
+
+      promptSpy.mockRestore();
+    });
+
+    it('should unwrap responses returned inside a function_call wrapper', async () => {
+      const characterDef = createValidCharacterDefinition();
+
+      mockLlmJsonService.parseAndRepair.mockReturnValue({
+        function_call: {
+          characterName: 'Wrapped Character',
+          rewrittenTraits: {
+            'core:personality': 'I am wrapped.',
+          },
+        },
+      });
+
+      const result = await generator.generateRewrittenTraits(characterDef);
+
+      expect(result.characterName).toBe('Wrapped Character');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'TraitsRewriterGenerator: Extracting response from function_call wrapper',
+        expect.objectContaining({
+          wrapperKeys: expect.arrayContaining(['characterName', 'rewrittenTraits']),
+        })
+      );
+    });
+
+    it('should unwrap responses nested under alternate wrapper properties', async () => {
+      const characterDef = createValidCharacterDefinition();
+
+      mockLlmJsonService.parseAndRepair.mockReturnValue({
+        tool_output: {
+          characterName: 'Tool Character',
+          rewrittenTraits: {
+            'core:personality': 'Tool based response.',
+          },
+        },
+      });
+
+      const result = await generator.generateRewrittenTraits(characterDef);
+
+      expect(result.characterName).toBe('Tool Character');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'TraitsRewriterGenerator: Found response in wrapper property',
+        expect.objectContaining({ wrapperProperty: 'tool_output' })
+      );
+    });
+
+    it('should accept LLM responses provided as raw JSON strings', async () => {
+      const characterDef = createValidCharacterDefinition();
+
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(
+        JSON.stringify({
+          characterName: 'String Response',
+          rewrittenTraits: {
+            'core:personality': 'I was returned as a string.',
+          },
+        })
+      );
+
+      const result = await generator.generateRewrittenTraits(characterDef);
+
+      expect(result.characterName).toBe('String Response');
     });
   });
 
@@ -428,6 +629,37 @@ describe('TraitsRewriterGenerator', () => {
         expect.objectContaining({
           invalidKeys: ['invalid:trait'],
         })
+      );
+    });
+
+    it('should throw a validation error when the extracted response is null', async () => {
+      const characterDef = createValidCharacterDefinition();
+
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue({
+        content: 'null',
+      });
+      mockLlmJsonService.parseAndRepair.mockReturnValue(null);
+
+      await expect(
+        generator.generateRewrittenTraits(characterDef)
+      ).rejects.toThrow('Null or undefined response');
+    });
+
+    it('should handle wrapper candidates that do not contain the required fields', async () => {
+      const characterDef = createValidCharacterDefinition();
+
+      mockLogger.info.mockClear();
+      mockLlmJsonService.parseAndRepair.mockReturnValue({
+        wrapper: { irrelevant: true },
+      });
+
+      await expect(
+        generator.generateRewrittenTraits(characterDef)
+      ).rejects.toThrow('Missing character name in response');
+
+      expect(mockLogger.info).not.toHaveBeenCalledWith(
+        'TraitsRewriterGenerator: Found response in wrapper property',
+        expect.anything()
       );
     });
   });
@@ -558,6 +790,22 @@ describe('TraitsRewriterGenerator', () => {
 
       expect(result.characterName).toBe('Unknown Character');
     });
+
+    it('should fall back when name object lacks text or name fields', async () => {
+      const characterDef = {
+        'core:name': { alias: 'Mysterious' },
+        'core:personality': { text: 'Ambiguous identity.' },
+      };
+
+      mockLlmJsonService.parseAndRepair.mockReturnValue({
+        characterName: 'Unknown Character',
+        rewrittenTraits: { 'core:personality': 'Ambiguous identity.' },
+      });
+
+      const result = await generator.generateRewrittenTraits(characterDef);
+
+      expect(result.characterName).toBe('Unknown Character');
+    });
   });
 
   describe('Error Handling', () => {
@@ -613,6 +861,23 @@ describe('TraitsRewriterGenerator', () => {
         })
       );
     });
+
+    it('should convert unexpected errors during token estimation into TraitsRewriterError instances', async () => {
+      const characterDef = createValidCharacterDefinition();
+
+      mockTokenEstimator.estimateTokens.mockImplementation(() => {
+        throw new Error('Token estimation failed');
+      });
+
+      await expect(
+        generator.generateRewrittenTraits(characterDef)
+      ).rejects.toThrow('Token estimation failed');
+
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        CHARACTER_BUILDER_EVENTS.TRAITS_REWRITER_GENERATION_FAILED,
+        expect.objectContaining({ error: 'Token estimation failed' })
+      );
+    });
   });
 
   describe('Service Information', () => {
@@ -626,6 +891,12 @@ describe('TraitsRewriterGenerator', () => {
         supportedTraitTypes: DEFAULT_TRAIT_KEYS,
         implementationStatus: 'completed',
       });
+    });
+
+    it('should expose the JSON schema used for response validation', () => {
+      expect(generator.getResponseSchema()).toBe(
+        traitsRewriterPrompts.TRAITS_REWRITER_RESPONSE_SCHEMA
+      );
     });
   });
 
