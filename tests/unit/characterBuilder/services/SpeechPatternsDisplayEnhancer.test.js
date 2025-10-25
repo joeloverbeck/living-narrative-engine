@@ -166,6 +166,38 @@ describe('SpeechPatternsDisplayEnhancer', () => {
       expect(result.patterns[1].categories).toContain('sadness');
       expect(result.patterns[1].categories).toContain('quiet');
     });
+
+    it('should detect nuanced emotional and situational categories', () => {
+      const complexPatterns = {
+        speechPatterns: [
+          {
+            pattern:
+              'A terrified yet relaxed and comfortable speaker who feels stressed under pressure but keeps a casual, informal tone while whisper quiet thoughts before a loud shout full of sarcasm.',
+            example:
+              'When feeling relaxed but still stressed, they might whisper softly before a sarcastic and loud outburst during informal chats.',
+            circumstances:
+              'Typically happens when the character is comfortable yet tense in professional settings.',
+          },
+        ],
+        characterName: 'Nuanced Character',
+        generatedAt: new Date().toISOString(),
+      };
+
+      const [{ categories }] = enhancer.enhanceForDisplay(complexPatterns).patterns;
+
+      expect(categories).toEqual(
+        expect.arrayContaining([
+          'fear',
+          'comfortable',
+          'stressed',
+          'casual',
+          'formal',
+          'quiet',
+          'loud',
+          'sarcastic',
+        ])
+      );
+    });
   });
 
   describe('HTML Escaping and XSS Prevention', () => {
