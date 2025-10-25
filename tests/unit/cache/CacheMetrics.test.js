@@ -406,12 +406,76 @@ describe('CacheMetrics', () => {
       mockCache.getMetrics.mockImplementation(() => {
         throw new Error('Cache error');
       });
-      
+
       const aggregated = metrics.getAggregatedMetrics();
-      
+
       expect(aggregated.cacheCount).toBe(2); // Both caches still registered
       expect(aggregated.totalSize).toBe(20); // Only successful cache data
       expect(mockLogger.error).toHaveBeenCalled();
+    });
+
+    it('should treat missing stat values as zero when updating totals', () => {
+      const zeroStatCache = testBed.createMock('cache', ['getMetrics']);
+      zeroStatCache.getMetrics.mockReturnValue({
+        size: 0,
+        maxSize: 0,
+        hitRate: 0,
+        stats: {
+          hits: 0,
+          misses: 0,
+          sets: 0,
+          deletes: 0
+        },
+        strategyName: 'LRU'
+      });
+
+      const service = new CacheMetrics({ logger: mockLogger });
+      service.registerCache('zero-cache', zeroStatCache);
+
+      const collected = service.collectAllMetrics();
+      expect(collected).toHaveLength(1);
+
+      const aggregated = service.getAggregatedMetrics();
+
+      expect(aggregated.totalHits).toBe(0);
+      expect(aggregated.totalMisses).toBe(0);
+      expect(aggregated.totalSets).toBe(0);
+      expect(aggregated.totalDeletes).toBe(0);
+      expect(aggregated.globalStats).toEqual(
+        expect.objectContaining({
+          totalHits: 0,
+          totalMisses: 0,
+          totalSets: 0,
+          totalDeletes: 0
+        })
+      );
+    });
+
+    it('should label caches without identifiers as unknown in aggregated output', () => {
+      const service = new CacheMetrics({ logger: mockLogger });
+      service.registerCache('alpha-cache', mockCache);
+
+      const metricsSpy = jest
+        .spyOn(service, 'collectCacheMetrics')
+        .mockImplementation(() => ({
+          size: 3,
+          maxSize: 30,
+          hitRate: 0.5,
+          strategyName: 'custom-strategy',
+          stats: { hits: 0, misses: 0 }
+        }));
+
+      const aggregated = service.getAggregatedMetrics();
+
+      expect(aggregated.caches).toHaveProperty(
+        'unknown',
+        expect.objectContaining({
+          size: 3,
+          strategy: 'custom-strategy'
+        })
+      );
+
+      metricsSpy.mockRestore();
     });
   });
 
@@ -621,6 +685,28 @@ describe('CacheMetrics', () => {
 
       stopSpy.mockRestore();
     });
+
+    it('should default to configured interval when none is provided', () => {
+      jest.useFakeTimers();
+      const service = new CacheMetrics({ logger: mockLogger }, { collectionInterval: 250 });
+      const intervalSpy = jest.spyOn(global, 'setInterval');
+
+      service.startCollection();
+
+      expect(intervalSpy).toHaveBeenCalledWith(expect.any(Function), 250);
+
+      intervalSpy.mockRestore();
+      service.stopCollection();
+    });
+
+    it('should safely handle stopCollection with no active timer', () => {
+      mockLogger.info.mockClear();
+
+      expect(() => metrics.stopCollection()).not.toThrow();
+      expect(mockLogger.info).not.toHaveBeenCalledWith(
+        expect.stringContaining('Stopped automatic metrics collection')
+      );
+    });
   });
 
   describe('Performance Analysis', () => {
@@ -660,6 +746,64 @@ describe('CacheMetrics', () => {
       ]);
       expect(Array.isArray(analysis.recommendations)).toBe(true);
       expect(analysis.strategyDistribution).toMatchObject({ LRU: 1, FIFO: 1 });
+    });
+
+    it('should order performance lists by relative hit rates', () => {
+      const service = new CacheMetrics({ logger: mockLogger });
+
+      const highPrimary = testBed.createMock('cache', ['getMetrics']);
+      highPrimary.getMetrics.mockReturnValue({
+        size: 10,
+        maxSize: 100,
+        hitRate: 0.95,
+        stats: { hits: 95, misses: 5 },
+        strategyName: 'LRU'
+      });
+
+      const highSecondary = testBed.createMock('cache', ['getMetrics']);
+      highSecondary.getMetrics.mockReturnValue({
+        size: 8,
+        maxSize: 80,
+        hitRate: 0.9,
+        stats: { hits: 90, misses: 10 },
+        strategyName: 'LFU'
+      });
+
+      const lowPrimary = testBed.createMock('cache', ['getMetrics']);
+      lowPrimary.getMetrics.mockReturnValue({
+        size: 50,
+        maxSize: 100,
+        hitRate: 0.3,
+        stats: { hits: 30, misses: 70 },
+        strategyName: 'FIFO'
+      });
+
+      const lowSecondary = testBed.createMock('cache', ['getMetrics']);
+      lowSecondary.getMetrics.mockReturnValue({
+        size: 60,
+        maxSize: 90,
+        hitRate: 0.1,
+        stats: { hits: 10, misses: 90 },
+        strategyName: 'MRU'
+      });
+
+      service.registerCache('high-primary', highPrimary);
+      service.registerCache('high-secondary', highSecondary);
+      service.registerCache('low-primary', lowPrimary);
+      service.registerCache('low-secondary', lowSecondary);
+
+      service.collectAllMetrics();
+
+      const analysis = service.analyzePerformance();
+
+      expect(analysis.topPerformers.map(p => p.id)).toEqual([
+        'high-primary',
+        'high-secondary'
+      ]);
+      expect(analysis.poorPerformers.map(p => p.id)).toEqual([
+        'low-secondary',
+        'low-primary'
+      ]);
     });
   });
 
