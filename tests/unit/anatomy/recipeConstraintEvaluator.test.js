@@ -108,14 +108,11 @@ describe('RecipeConstraintEvaluator', () => {
       });
 
       it('should log warning when constraints pass with warnings', () => {
-        // Since the current implementation doesn't generate warnings,
-        // we'll use a spy to replace one of the private methods to add a warning
-
         const recipe = {
           slots: {
             arm: {
               type: 'arm',
-              count: { min: 0, max: 4 },
+              count: { recommended: 2 },
             },
           },
         };
@@ -130,56 +127,16 @@ describe('RecipeConstraintEvaluator', () => {
           }
         );
 
-        // Use Jest spyOn to intercept the private method
-        const originalBuildGraphMetadata =
-          evaluator['_buildGraphMetadata'] ||
-          evaluator[
-            Object.getOwnPropertySymbols(evaluator).find((s) =>
-              String(s).includes('buildGraphMetadata')
-            )
-          ];
-
-        // Since we can't easily spy on private methods, we'll test this differently
-        // by monkey-patching the evaluateConstraints method
-        const originalEvaluateConstraints =
-          evaluator.evaluateConstraints.bind(evaluator);
-
-        evaluator.evaluateConstraints = function (entityIds, recipe) {
-          const errors = [];
-          const warnings = [
-            'Test warning: This is a simulated warning for coverage',
-          ];
-
-          const valid = errors.length === 0;
-
-          // Execute the logging logic directly to test the warning branch
-          if (!valid) {
-            mockLogger.error(
-              `RecipeConstraintEvaluator: Constraints failed with ${errors.length} errors`
-            );
-          } else if (warnings.length > 0) {
-            mockLogger.warn(
-              `RecipeConstraintEvaluator: Constraints passed with ${warnings.length} warnings`
-            );
-          } else {
-            mockLogger.debug(
-              'RecipeConstraintEvaluator: All constraints satisfied'
-            );
-          }
-
-          return { valid, errors, warnings };
-        };
-
         const result = evaluator.evaluateConstraints(entityIds, recipe);
 
         expect(result.valid).toBe(true);
-        expect(result.warnings).toHaveLength(1);
+        expect(result.errors).toHaveLength(0);
+        expect(result.warnings).toEqual([
+          "Slot 'arm': recommended 2 parts of type 'arm' but found 1",
+        ]);
         expect(mockLogger.warn).toHaveBeenCalledWith(
           'RecipeConstraintEvaluator: Constraints passed with 1 warnings'
         );
-
-        // Restore original method
-        evaluator.evaluateConstraints = originalEvaluateConstraints;
       });
     });
 
@@ -663,6 +620,38 @@ describe('RecipeConstraintEvaluator', () => {
 
         expect(result.valid).toBe(true);
         expect(result.errors).toHaveLength(0);
+      });
+
+      it('should record warnings when recommended count does not match and no errors exist', () => {
+        const recipe = {
+          slots: {
+            tail: {
+              type: 'tail',
+              count: { recommended: 1 },
+            },
+          },
+        };
+        const entityIds = ['entity1', 'entity2'];
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return { subType: 'tail' };
+            }
+            return null;
+          }
+        );
+
+        const result = evaluator.evaluateConstraints(entityIds, recipe);
+
+        expect(result.valid).toBe(true);
+        expect(result.errors).toHaveLength(0);
+        expect(result.warnings).toEqual([
+          "Slot 'tail': recommended 1 parts of type 'tail' but found 2",
+        ]);
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'RecipeConstraintEvaluator: Constraints passed with 1 warnings'
+        );
       });
     });
 
