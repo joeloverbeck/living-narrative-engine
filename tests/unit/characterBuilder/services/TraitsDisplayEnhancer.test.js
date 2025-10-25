@@ -156,6 +156,9 @@ describe('TraitsDisplayEnhancer', () => {
       expect(result).toHaveProperty('metadata');
       expect(result.metadata).toHaveProperty('model', 'gpt-4');
       expect(result.metadata).toHaveProperty('temperature', 0.8);
+      expect(result.metadata).toHaveProperty('tokenCount', 3500);
+      expect(result.metadata).toHaveProperty('generationTime', '2500ms');
+      expect(result.metadata).toHaveProperty('promptVersion', '1.0.0');
     });
 
     it('should exclude metadata when option is false', () => {
@@ -263,6 +266,19 @@ describe('TraitsDisplayEnhancer', () => {
       expect(result).toContain('Long-term: Achieve redemption');
     });
 
+    it('should include fallback when short-term goals are missing', () => {
+      const traitsData = createMockTraitsData({
+        goals: {
+          shortTerm: [],
+          longTerm: '',
+        },
+      });
+
+      const result = enhancer.formatForExport(traitsData);
+      expect(result).toContain('• No short-term goals');
+      expect(result).toContain('Long-term: No long-term goal');
+    });
+
     it('should include all trait categories in order', () => {
       const traitsData = createMockTraitsData();
       const result = enhancer.formatForExport(traitsData);
@@ -303,6 +319,43 @@ describe('TraitsDisplayEnhancer', () => {
       // Should format as "March 15 at 2024 at 10:30 AM" (based on UTC)
       expect(result).toMatch(
         /Generated: \w+ \d+ at \d{4} at \d{1,2}:\d{2} [AP]M/
+      );
+    });
+
+    it('should return unknown date when timestamp is missing', () => {
+      const traitsData = createMockTraitsData({ generatedAt: undefined });
+      const isoSpy = jest
+        .spyOn(Date.prototype, 'toISOString')
+        .mockReturnValue('');
+
+      let result;
+      try {
+        result = enhancer.formatForExport(traitsData);
+      } finally {
+        isoSpy.mockRestore();
+      }
+
+      expect(result).toContain('Generated: Unknown date');
+    });
+
+    it('should recover when timestamp formatting throws', () => {
+      const traitsData = createMockTraitsData();
+      const localeSpy = jest
+        .spyOn(Date.prototype, 'toLocaleString')
+        .mockImplementation(() => {
+          throw new Error('Locale failure');
+        });
+
+      let result;
+      try {
+        result = enhancer.formatForExport(traitsData);
+      } finally {
+        localeSpy.mockRestore();
+      }
+
+      expect(result).toContain('Generated: Unknown date');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error formatting timestamp: Locale failure'
       );
     });
   });
@@ -357,6 +410,15 @@ describe('TraitsDisplayEnhancer', () => {
       expect(result).toMatch(/^traits_\d{4}-\d{2}-\d{2}_\d{6}\.txt$/);
 
       result = enhancer.generateExportFilename(traitsData, { direction: null });
+      expect(result).toMatch(/^traits_\d{4}-\d{2}-\d{2}_\d{6}\.txt$/);
+    });
+
+    it('should ignore non-string direction values', () => {
+      const traitsData = createMockTraitsData();
+      const result = enhancer.generateExportFilename(traitsData, {
+        direction: { complex: 'structure' },
+      });
+
       expect(result).toMatch(/^traits_\d{4}-\d{2}-\d{2}_\d{6}\.txt$/);
     });
 
