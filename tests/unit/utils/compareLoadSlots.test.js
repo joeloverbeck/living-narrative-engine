@@ -17,6 +17,20 @@ describe('compareLoadSlots', () => {
     expect(compareLoadSlots(second, first)).toBeLessThan(0);
   });
 
+  it('supports corrupted slots whose identifiers are not strings', () => {
+    const slots = [
+      { isCorrupted: true, identifier: 10 },
+      { isCorrupted: true, identifier: 2 },
+      { isCorrupted: true, saveName: 'alpha' },
+    ];
+
+    const sorted = [...slots].sort(compareLoadSlots);
+
+    expect(
+      sorted.map((slot) => String(slot.saveName ?? slot.identifier ?? ''))
+    ).toEqual(['10', '2', 'alpha']);
+  });
+
   it('orders by timestamp when neither slot is corrupted', () => {
     const older = { isCorrupted: false, timestamp: '2023-01-01T00:00:00Z' };
     const newer = { isCorrupted: false, timestamp: '2023-02-01T00:00:00Z' };

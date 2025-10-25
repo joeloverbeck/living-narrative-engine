@@ -17,9 +17,9 @@ export function compareLoadSlots(a, b) {
   if (a.isCorrupted && !b.isCorrupted) return 1;
   if (!a.isCorrupted && b.isCorrupted) return -1;
   if (a.isCorrupted && b.isCorrupted) {
-    return (a.saveName || a.identifier).localeCompare(
-      b.saveName || b.identifier
-    );
+    const corruptedNameA = (a.saveName || a.identifier || '').toString();
+    const corruptedNameB = (b.saveName || b.identifier || '').toString();
+    return corruptedNameA.localeCompare(corruptedNameB);
   }
   try {
     const timestampA =
