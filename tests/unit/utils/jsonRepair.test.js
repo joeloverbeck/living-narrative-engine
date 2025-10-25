@@ -103,4 +103,20 @@ describe('repairAndParse', () => {
       expect.any(Object)
     );
   });
+
+  it('falls back to console logging when logger is missing', () => {
+    const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+    try {
+      repairJson.mockReturnValue('{"c":3}');
+      const result = repairAndParse('{"c":3}', null, undefined, new Error('boom'));
+      expect(result).toEqual({ c: 3 });
+      expect(debugSpy).toHaveBeenCalledWith(
+        'JsonRepair: ',
+        'parseAndRepairJson: Successfully parsed JSON after repair.',
+        { cleanedLength: '{"c":3}'.length, repairedLength: '{"c":3}'.length }
+      );
+    } finally {
+      debugSpy.mockRestore();
+    }
+  });
 });

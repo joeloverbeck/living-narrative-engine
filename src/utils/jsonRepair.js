@@ -5,6 +5,7 @@
 
 import { repairJson } from '@toolsycc/json-repair';
 import { safeDispatchError } from './safeDispatchErrorUtils.js';
+import { ensureValidLogger } from './loggerUtils.js';
 
 /**
  * Custom error class for errors encountered during JSON processing,
@@ -60,10 +61,11 @@ export function initialParse(cleanedJsonString, log) {
  * @throws {JsonProcessingError} If repair or parsing fails.
  */
 export function repairAndParse(cleanedString, log, dispatcher, initialError) {
+  const logger = ensureValidLogger(log, 'JsonRepair');
   try {
     const repairedString = repairJson(cleanedString);
     const repairedObject = JSON.parse(repairedString);
-    log.debug('parseAndRepairJson: Successfully parsed JSON after repair.', {
+    logger.debug('parseAndRepairJson: Successfully parsed JSON after repair.', {
       cleanedLength: cleanedString.length,
       repairedLength: repairedString.length,
     });
@@ -86,7 +88,7 @@ export function repairAndParse(cleanedString, log, dispatcher, initialError) {
         },
       });
     } else {
-      log.error(`parseAndRepairJson: ${errorMessage}`, {
+      logger.error(`parseAndRepairJson: ${errorMessage}`, {
         cleanedJsonStringLength: cleanedString.length,
         cleanedJsonPreview:
           cleanedString.substring(0, 100) +
