@@ -183,9 +183,14 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
    * @protected
    */
   _setupEventListeners() {
+    // Choose validation strategy based on enhanced validator availability
+    const validationHandler = this.#enhancedValidator
+      ? () => this.#validateCharacterInputEnhanced()
+      : () => this.#validateCharacterInput();
+
     // Create debounced validation function with faster response time
     this.#debouncedValidation = this._debounce(
-      () => this.#validateCharacterInputEnhanced(),
+      validationHandler,
       300, // Reduced from 500ms to 300ms for better responsiveness
       { trailing: true }
     );
@@ -196,9 +201,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
         this.#handleCharacterInput();
       });
 
-      this._addEventListener('characterDefinition', 'blur', () => {
-        this.#validateCharacterInputEnhanced();
-      });
+      this._addEventListener('characterDefinition', 'blur', validationHandler);
     }
 
     // Generate button
