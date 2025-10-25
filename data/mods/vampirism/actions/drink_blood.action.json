@@ -1,0 +1,20 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "vampirism:drink_blood",
+  "name": "Drink Blood",
+  "description": "Drink blood from the target whose neck you are currently biting",
+  "targets": "vampirism:actor_being_bitten_by_me",
+  "required_components": {
+    "actor": ["positioning:biting_neck"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:being_bitten_in_neck"]
+  },
+  "template": "drink {target}'s blood",
+  "visual": {
+    "backgroundColor": "#6c0f36",
+    "textColor": "#ffe6ef",
+    "hoverBackgroundColor": "#861445",
+    "hoverTextColor": "#fff2f7"
+  }
+}
