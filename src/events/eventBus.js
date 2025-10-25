@@ -58,6 +58,17 @@ class EventBus extends IEventBus {
       const mergedOptions = { ...defaultOptions, ...options };
 
       if (this.#batchMode) {
+        const existingOptions = this.#batchModeOptions;
+        const optionsUnchanged =
+          existingOptions !== null &&
+          Object.keys({ ...existingOptions, ...mergedOptions }).every(
+            (key) => existingOptions[key] === mergedOptions[key]
+          );
+
+        if (optionsUnchanged) {
+          return; // No changes required
+        }
+
         // Update configuration while remaining in batch mode (nested contexts)
         this.#batchModeOptions = mergedOptions;
 
