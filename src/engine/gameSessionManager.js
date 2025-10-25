@@ -280,6 +280,12 @@ class GameSessionManager {
       return rawTitle;
     }
 
+    const rawWorldName =
+      typeof metadata.worldName === 'string' ? metadata.worldName.trim() : '';
+    if (rawWorldName.length > 0) {
+      return rawWorldName;
+    }
+
     const rawSaveName =
       typeof metadata.saveName === 'string' ? metadata.saveName.trim() : '';
     if (rawSaveName.length > 0) {
