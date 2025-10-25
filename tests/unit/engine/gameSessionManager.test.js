@@ -225,6 +225,20 @@ describe('GameSessionManager', () => {
       );
     });
 
+    it('should ignore dot-only path segments when deriving display names', async () => {
+      safeEventDispatcher.dispatch.mockClear();
+
+      await gameSessionManager.prepareForLoadGameSession('../..');
+
+      expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENGINE_OPERATION_IN_PROGRESS_UI,
+        {
+          titleMessage: 'Loading Saved Game...',
+          inputDisabledMessage: 'Loading game from Saved Game...',
+        }
+      );
+    });
+
     it('should await core game reset before dispatching UI events', async () => {
       let resetCompleted = false;
       resetCoreGameStateFn.mockImplementation(async () => {
