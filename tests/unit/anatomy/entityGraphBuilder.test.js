@@ -120,6 +120,24 @@ describe('EntityGraphBuilder', () => {
       expect(id).toBe('base');
     });
 
+    it('warns when preferId does not reference a torso part', async () => {
+      mocks.dataRegistry.get.mockReturnValue({
+        components: { 'anatomy:part': { subType: 'arm' } },
+      });
+
+      const id = await builder.createRootEntity('base', {
+        slots: { torso: { preferId: 'badTorso' } },
+      });
+
+      expect(mocks.logger.warn).toHaveBeenCalledWith(
+        "EntityGraphBuilder: Recipe torso override 'badTorso' is not a valid torso part, using blueprint default"
+      );
+      expect(mocks.entityManager.createEntityInstance).toHaveBeenCalledWith(
+        'base'
+      );
+      expect(id).toBe('base');
+    });
+
     it('uses PartSelectionService when recipe has torso properties but no preferId', async () => {
       // Mock PartSelectionService to return a specific torso
       mocks.partSelectionService.selectPart.mockResolvedValue(
@@ -214,6 +232,110 @@ describe('EntityGraphBuilder', () => {
       expect(mocks.logger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Property-based torso selection failed')
       );
+    });
+
+    it('warns when property-based torso search finds no match', async () => {
+      mocks.partSelectionService.selectPart.mockResolvedValue(undefined);
+      mocks.entityManager.createEntityInstance.mockResolvedValue({
+        id: 'default-entity-123',
+      });
+
+      const recipe = {
+        slots: {
+          torso: {
+            properties: {
+              'descriptors:build': { build: 'tall' },
+            },
+          },
+        },
+      };
+
+      const id = await builder.createRootEntity(
+        'anatomy:default_torso',
+        recipe
+      );
+
+      expect(mocks.partSelectionService.selectPart).toHaveBeenCalled();
+      expect(mocks.logger.warn).toHaveBeenCalledWith(
+        "EntityGraphBuilder: No torso found matching recipe properties, using blueprint default 'anatomy:default_torso'"
+      );
+      expect(mocks.entityManager.createEntityInstance).toHaveBeenCalledWith(
+        'anatomy:default_torso'
+      );
+      expect(id).toBe('default-entity-123');
+    });
+
+    it('retries entity verification before succeeding', async () => {
+      jest.useFakeTimers();
+      try {
+        mocks.entityManager.createEntityInstance.mockResolvedValue({
+          id: 'entity-123',
+        });
+        const getEntityMock = jest
+          .fn()
+          .mockReturnValueOnce(null)
+          .mockReturnValueOnce(null)
+          .mockReturnValueOnce({ id: 'entity-123' });
+        mocks.entityManager.getEntityInstance = getEntityMock;
+
+        const promise = builder.createRootEntity('base', {});
+
+        await jest.advanceTimersByTimeAsync(10);
+        await jest.advanceTimersByTimeAsync(20);
+
+        const id = await promise;
+
+        expect(id).toBe('entity-123');
+        expect(getEntityMock).toHaveBeenCalledTimes(3);
+        expect(mocks.logger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('not immediately available'),
+          expect.any(Object)
+        );
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it('throws when entity is never verified after retries', async () => {
+      jest.useFakeTimers();
+      try {
+        mocks.entityManager.createEntityInstance.mockResolvedValue({
+          id: 'entity-999',
+        });
+        const getEntityMock = jest.fn().mockReturnValue(null);
+        mocks.entityManager.getEntityInstance = getEntityMock;
+
+        let caughtError;
+        const promise = builder
+          .createRootEntity('base', {})
+          .catch((error) => {
+            caughtError = error;
+            return null;
+          });
+
+        await jest.advanceTimersByTimeAsync(10);
+        await jest.advanceTimersByTimeAsync(20);
+        await jest.advanceTimersByTimeAsync(40);
+        await jest.advanceTimersByTimeAsync(80);
+        await jest.advanceTimersByTimeAsync(160);
+
+        await promise;
+
+        expect(caughtError).toBeInstanceOf(Error);
+        expect(caughtError.message).toBe(
+          'Entity creation-verification race condition: entity-999'
+        );
+        expect(getEntityMock).toHaveBeenCalledTimes(6);
+        expect(mocks.logger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Entity creation-verification failed after 5 retries'),
+          expect.objectContaining({
+            entityId: 'entity-999',
+            definitionId: 'base',
+          })
+        );
+      } finally {
+        jest.useRealTimers();
+      }
     });
 
     it('prefers preferId over properties when both are specified', async () => {
@@ -338,6 +460,73 @@ describe('EntityGraphBuilder', () => {
         { ownerId: 'owner123' }
       );
       expect(id).toBe('armDef');
+    });
+
+    it('retries child verification before continuing', async () => {
+      jest.useFakeTimers();
+      try {
+        mocks.entityManager.createEntityInstance.mockResolvedValue({
+          id: 'child-1',
+        });
+        const getEntityMock = jest
+          .fn()
+          .mockReturnValueOnce(null)
+          .mockReturnValueOnce({ id: 'child-1' });
+        mocks.entityManager.getEntityInstance = getEntityMock;
+
+        const promise = builder.createAndAttachPart(
+          'torso',
+          'shoulder',
+          'armDef'
+        );
+
+        await jest.advanceTimersByTimeAsync(10);
+
+        const id = await promise;
+
+        expect(id).toBe('child-1');
+        expect(getEntityMock).toHaveBeenCalledTimes(2);
+        expect(mocks.logger.error).toHaveBeenCalledWith(
+          'EntityGraphBuilder: Created child entity child-1 not immediately available',
+          { entityId: 'child-1', partDefinitionId: 'armDef', parentId: 'torso' }
+        );
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it('returns null when child verification fails after retry', async () => {
+      jest.useFakeTimers();
+      try {
+        mocks.entityManager.createEntityInstance.mockResolvedValue({
+          id: 'child-2',
+        });
+        const getEntityMock = jest.fn().mockReturnValue(null);
+        mocks.entityManager.getEntityInstance = getEntityMock;
+
+        const promise = builder.createAndAttachPart(
+          'torso',
+          'shoulder',
+          'armDef'
+        );
+
+        await jest.advanceTimersByTimeAsync(10);
+
+        const id = await promise;
+
+        expect(id).toBeNull();
+        expect(getEntityMock).toHaveBeenCalledTimes(2);
+        expect(mocks.logger.error).toHaveBeenCalledWith(
+          'EntityGraphBuilder: Created child entity child-2 not immediately available',
+          { entityId: 'child-2', partDefinitionId: 'armDef', parentId: 'torso' }
+        );
+        expect(mocks.logger.error).toHaveBeenCalledWith(
+          "EntityGraphBuilder: Failed to create and attach part 'armDef'",
+          expect.objectContaining({ error: expect.any(Error) })
+        );
+      } finally {
+        jest.useRealTimers();
+      }
     });
 
     it('logs and returns null on failure', async () => {
