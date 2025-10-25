@@ -40,25 +40,36 @@ describeRunningTurnManagerSuite(
 
     // Removed parameterized test for actor identification due to handler.destroy assertion failures
 
-    test('Non-actor entity: logs warning, does not resolve handler or dispatch events', async () => {
+    test('Non-actor entity: skips invalid entry and continues to next actor', async () => {
       const nonActor = createMockEntity('non-actor', {
         isActor: false,
         isPlayer: false,
       });
-      testBed.mockNextActor(nonActor);
+      const nextActor = createAiActor('actor-after-non-actor');
+      testBed.mockActorSequence(nonActor, nextActor);
+      const handler = testBed.setupHandlerForActor(nextActor);
 
       await testBed.turnManager.advanceTurn();
 
-      expect(testBed.mocks.turnOrderService.isEmpty).toHaveBeenCalledTimes(1);
+      expect(testBed.mocks.turnOrderService.isEmpty).toHaveBeenCalledTimes(2);
       expect(
         testBed.mocks.turnOrderService.getNextEntity
+      ).toHaveBeenCalledTimes(2);
+      expect(
+        testBed.mocks.turnHandlerResolver.resolveHandler
       ).toHaveBeenCalledTimes(1);
       expect(
         testBed.mocks.turnHandlerResolver.resolveHandler
-      ).toHaveBeenCalledTimes(0);
-      expect(testBed.mocks.dispatcher.dispatch).not.toHaveBeenCalledWith(
-        'core:turn_started',
-        expect.any(Object)
+      ).toHaveBeenCalledWith(nextActor);
+      expect(handler.startTurn).toHaveBeenCalledTimes(1);
+      expect(handler.startTurn).toHaveBeenCalledWith(nextActor);
+      expectTurnStartedEvents(
+        testBed.mocks.dispatcher.dispatch,
+        nextActor.id,
+        'ai'
+      );
+      expect(testBed.mocks.logger.warn).toHaveBeenCalledWith(
+        'Entity non-actor is not an actor. Skipping turn advancement for this entity.'
       );
       expect(stopSpy).not.toHaveBeenCalled();
     });

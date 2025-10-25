@@ -305,173 +305,197 @@ class TurnManager extends ITurnManager {
     this.#currentHandler = null;
 
     try {
-      const nextEntity = await this.#turnCycle.nextActor();
+      const skippedNonActorIds = new Set();
 
-      if (!nextEntity) {
-        // TurnCycle.nextActor() returns null only when the queue is empty
-        // (TurnCycle calls isEmpty() first, then getNextEntity() only if not empty)
-        this.#logger.debug(
-          'Turn queue is empty. Preparing for new round or stopping.'
-        );
+      while (this.#isRunning) {
+        const nextEntity = await this.#turnCycle.nextActor();
 
-        // --- NEW CHECK: Stop if previous round had no success ---
-        if (this.#roundManager.inProgress && !this.#roundManager.hadSuccess) {
-          const errorMsg =
-            'No successful turns completed in the previous round. Stopping TurnManager.';
-          this.#logger.error(errorMsg);
-          await this.#dispatchSystemError(
-            'System Error: No progress made in the last round.',
-            errorMsg
-          );
-          await this.stop();
-          return; // Stop processing
-        }
-        // --- END NEW CHECK ---
-
-        // --- Start new round using RoundManager ---
-        this.#logger.debug('Attempting to start a new round.');
-        try {
-          await this.#roundManager.startRound();
+        if (!nextEntity) {
+          // TurnCycle.nextActor() returns null only when the queue is empty
+          // (TurnCycle calls isEmpty() first, then getNextEntity() only if not empty)
           this.#logger.debug(
-            'New round started, recursively calling advanceTurn() to process the first turn.'
+            'Turn queue is empty. Preparing for new round or stopping.'
           );
-          await this.advanceTurn(); // Recursive call to process the first turn of the new round
-          return;
-        } catch (roundError) {
-          // Restore original error handling for test compatibility
-          safeDispatchError(
-            this.#dispatcher,
-            'Critical error during turn advancement logic',
-            { error: roundError.message }
-          );
-          await this.#dispatchSystemError(
-            'System Error: No active actors found to start a round. Stopping game.',
-            roundError.message
-          );
-          await this.stop();
-          return;
+
+          // --- NEW CHECK: Stop if previous round had no success ---
+          if (this.#roundManager.inProgress && !this.#roundManager.hadSuccess) {
+            const errorMsg =
+              'No successful turns completed in the previous round. Stopping TurnManager.';
+            this.#logger.error(errorMsg);
+            await this.#dispatchSystemError(
+              'System Error: No progress made in the last round.',
+              errorMsg
+            );
+            await this.stop();
+            return; // Stop processing
+          }
+          // --- END NEW CHECK ---
+
+          // --- Start new round using RoundManager ---
+          this.#logger.debug('Attempting to start a new round.');
+          try {
+            await this.#roundManager.startRound();
+            this.#logger.debug(
+              'New round started, recursively calling advanceTurn() to process the first turn.'
+            );
+            await this.advanceTurn(); // Recursive call to process the first turn of the new round
+            return;
+          } catch (roundError) {
+            // Restore original error handling for test compatibility
+            safeDispatchError(
+              this.#dispatcher,
+              'Critical error during turn advancement logic',
+              { error: roundError.message }
+            );
+            await this.#dispatchSystemError(
+              'System Error: No active actors found to start a round. Stopping game.',
+              roundError.message
+            );
+            await this.stop();
+            return;
+          }
+          // --- End Start new round ---
         }
-        // --- End Start new round ---
-      } else {
-        // Queue is not empty, process next turn
-        this.#logger.debug('Queue not empty, processing next entity.');
 
-        this.#currentActor = nextEntity; // Set the new current actor
-        const actorId = this.#currentActor.id;
-        const isActor = this.#currentActor.hasComponent(ACTOR_COMPONENT_ID);
+        const actorId = nextEntity?.id ?? 'unknown';
+        const hasActorComponent =
+          typeof nextEntity?.hasComponent === 'function' &&
+          nextEntity.hasComponent(ACTOR_COMPONENT_ID);
 
-        // Determine entity type using new player_type component
-        let entityType = 'ai'; // default
-        if (this.#currentActor.hasComponent(PLAYER_TYPE_COMPONENT_ID)) {
-          const playerTypeData = this.#currentActor.getComponentData(
-            PLAYER_TYPE_COMPONENT_ID
-          );
-          entityType = playerTypeData?.type === 'human' ? 'player' : 'ai';
-        } else if (this.#currentActor.hasComponent(PLAYER_COMPONENT_ID)) {
-          // Fallback to old player component for backward compatibility
-          entityType = 'player';
-        }
-
-        if (!isActor) {
+        if (!hasActorComponent) {
           this.#logger.warn(
             `Entity ${actorId} is not an actor. Skipping turn advancement for this entity.`
           );
-          this.#currentActor = null; // Clear current actor for non-actor entities
-          return;
+
+          if (actorId !== 'unknown') {
+            if (skippedNonActorIds.has(actorId)) {
+              this.#logger.error(
+                `Entity ${actorId} reappeared without an actor component while advancing turns. Aborting turn advancement to avoid infinite loop.`
+              );
+              return;
+            }
+            skippedNonActorIds.add(actorId);
+          }
+
+          // Try the next entity in the queue
+          continue;
         }
 
-        this.#logger.debug(
-          `>>> Starting turn initiation for Entity: ${actorId} (${entityType}) <<<`
-        );
-        await safeDispatch(
-          this.#dispatcher,
-          'core:turn_started',
-          {
-            entityId: actorId,
-            entityType: entityType,
-          },
-          this.#logger
-        );
-
-        await safeDispatch(
-          this.#dispatcher,
-          TURN_PROCESSING_STARTED,
-          {
-            entityId: actorId,
-            actorType: entityType,
-          },
-          this.#logger
-        );
-
-        this.#logger.debug(`Resolving turn handler for entity ${actorId}...`);
-        const handler = await this.#turnHandlerResolver.resolveHandler(
-          this.#currentActor
-        );
-        this.#currentHandler = handler; // Set the new current handler
-
-        if (!handler) {
-          this.#logger.warn(
-            `Could not resolve a turn handler for actor ${actorId}. Skipping turn and advancing.`
-          );
-          // Simulate an unsuccessful turn end to allow round progression check
-          // Since #handleTurnEndedEvent is now called asynchronously via the event bus,
-          // we directly call it here if we want immediate processing for this specific case.
-          // However, to maintain consistency with event-driven flow, it might be better
-          // to dispatch a dummy 'core:turn_ended' event, but that could be overkill.
-          // For now, directly calling #handleTurnEndedEvent (which is not async itself) is okay.
-          this.#handleTurnEndedEvent({
-            // This will schedule advanceTurn via its own logic
-            type: TURN_ENDED_ID,
-            payload: {
-              entityId: actorId,
-              success: false,
-              error: new Error(
-                `No turn handler resolved for actor ${actorId}.`
-              ),
-            },
-          });
-          return;
-        }
-
-        const handlerName = handler.constructor?.name || 'resolved handler';
-        this.#logger.debug(
-          `Calling startTurn on ${handlerName} for entity ${actorId}`
-        );
-
-        // Await the startTurn to properly handle errors
-        try {
-          await handler.startTurn(this.#currentActor);
-        } catch (startTurnError) {
-          const errorMsg = `Error during handler.startTurn() initiation for entity ${actorId} (${handlerName}): ${startTurnError.message}`;
-          safeDispatchError(
-            this.#dispatcher,
-            `Error initiating turn for ${actorId}`,
-            { error: startTurnError.message, handlerName }
-          );
-
-          await this.#dispatchSystemError(
-            `Error initiating turn for ${actorId}.`,
-            startTurnError
-          );
-
-          // Always handle turn end for startTurn failures
-          this.#logger.warn(
-            `Manually handling turn end after startTurn initiation failure for ${actorId}.`
-          );
-          this.#handleTurnEndedEvent({
-            type: TURN_ENDED_ID,
-            payload: {
-              entityId: actorId,
-              success: false,
-              error: startTurnError,
-            },
-          });
-          return; // Exit early on error
-        }
-        this.#logger.debug(
-          `Turn initiation for ${actorId} started via ${handlerName}. TurnManager now WAITING for '${TURN_ENDED_ID}' event.`
-        );
+        // Queue is not empty and we have a valid actor
+        this.#logger.debug('Queue not empty, processing next entity.');
+        this.#currentActor = nextEntity;
+        break;
       }
+
+      if (!this.#isRunning || !this.#currentActor) {
+        return;
+      }
+
+      const actorId = this.#currentActor.id;
+
+      // Determine entity type using new player_type component
+      let entityType = 'ai'; // default
+      if (this.#currentActor.hasComponent(PLAYER_TYPE_COMPONENT_ID)) {
+        const playerTypeData = this.#currentActor.getComponentData(
+          PLAYER_TYPE_COMPONENT_ID
+        );
+        entityType = playerTypeData?.type === 'human' ? 'player' : 'ai';
+      } else if (this.#currentActor.hasComponent(PLAYER_COMPONENT_ID)) {
+        // Fallback to old player component for backward compatibility
+        entityType = 'player';
+      }
+
+      this.#logger.debug(
+        `>>> Starting turn initiation for Entity: ${actorId} (${entityType}) <<<`
+      );
+      await safeDispatch(
+        this.#dispatcher,
+        'core:turn_started',
+        {
+          entityId: actorId,
+          entityType: entityType,
+        },
+        this.#logger
+      );
+
+      await safeDispatch(
+        this.#dispatcher,
+        TURN_PROCESSING_STARTED,
+        {
+          entityId: actorId,
+          actorType: entityType,
+        },
+        this.#logger
+      );
+
+      this.#logger.debug(`Resolving turn handler for entity ${actorId}...`);
+      const handler = await this.#turnHandlerResolver.resolveHandler(
+        this.#currentActor
+      );
+      this.#currentHandler = handler; // Set the new current handler
+
+      if (!handler) {
+        this.#logger.warn(
+          `Could not resolve a turn handler for actor ${actorId}. Skipping turn and advancing.`
+        );
+        // Simulate an unsuccessful turn end to allow round progression check
+        // Since #handleTurnEndedEvent is now called asynchronously via the event bus,
+        // we directly call it here if we want immediate processing for this specific case.
+        // However, to maintain consistency with event-driven flow, it might be better
+        // to dispatch a dummy 'core:turn_ended' event, but that could be overkill.
+        // For now, directly calling #handleTurnEndedEvent (which is not async itself) is okay.
+        this.#handleTurnEndedEvent({
+          // This will schedule advanceTurn via its own logic
+          type: TURN_ENDED_ID,
+          payload: {
+            entityId: actorId,
+            success: false,
+            error: new Error(
+              `No turn handler resolved for actor ${actorId}.`
+            ),
+          },
+        });
+        return;
+      }
+
+      const handlerName = handler.constructor?.name || 'resolved handler';
+      this.#logger.debug(
+        `Calling startTurn on ${handlerName} for entity ${actorId}`
+      );
+
+      // Await the startTurn to properly handle errors
+      try {
+        await handler.startTurn(this.#currentActor);
+      } catch (startTurnError) {
+        const errorMsg = `Error during handler.startTurn() initiation for entity ${actorId} (${handlerName}): ${startTurnError.message}`;
+        safeDispatchError(
+          this.#dispatcher,
+          `Error initiating turn for ${actorId}`,
+          { error: startTurnError.message, handlerName }
+        );
+
+        await this.#dispatchSystemError(
+          `Error initiating turn for ${actorId}.`,
+          startTurnError
+        );
+
+        // Always handle turn end for startTurn failures
+        this.#logger.warn(
+          `Manually handling turn end after startTurn initiation failure for ${actorId}.`
+        );
+        this.#handleTurnEndedEvent({
+          type: TURN_ENDED_ID,
+          payload: {
+            entityId: actorId,
+            success: false,
+            error: startTurnError,
+          },
+        });
+        return; // Exit early on error
+      }
+      this.#logger.debug(
+        `Turn initiation for ${actorId} started via ${handlerName}. TurnManager now WAITING for '${TURN_ENDED_ID}' event.`
+      );
     } catch (error) {
       const errorMsg = `CRITICAL Error during turn advancement logic (before handler initiation): ${error.message}`;
       safeDispatchError(
