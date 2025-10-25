@@ -26,7 +26,7 @@ import {
  * @param {...any} args - Arguments forwarded to the initialization method.
  * @returns {{success: boolean, error?: Error}} Result object describing success or failure.
  */
-export function resolveAndInitialize(
+export async function resolveAndInitialize(
   container,
   token,
   initFnName,
@@ -46,7 +46,8 @@ export function resolveAndInitialize(
     if (typeof initFn !== 'function') {
       throw new Error(`${token} missing ${initFnName}()`);
     }
-    initFn.apply(service, args);
+
+    await Promise.resolve(initFn.apply(service, args));
     logger.debug(`${stage}: Initialized successfully.`);
     return baseStageSuccess();
   } catch (err) {

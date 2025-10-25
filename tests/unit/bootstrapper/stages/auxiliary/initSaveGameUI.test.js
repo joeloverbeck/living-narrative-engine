@@ -5,7 +5,7 @@ import GameEngineSaveAdapter from '../../../../../src/adapters/GameEngineSaveAda
 
 jest.mock('../../../../../src/utils/bootstrapperHelpers.js', () => ({
   __esModule: true,
-  resolveAndInitialize: jest.fn(() => ({ success: true })),
+  resolveAndInitialize: jest.fn(async () => ({ success: true })),
 }));
 
 jest.mock('../../../../../src/adapters/GameEngineSaveAdapter.js', () => ({
@@ -19,7 +19,12 @@ jest.mock('../../../../../src/adapters/GameEngineSaveAdapter.js', () => ({
  * @returns {{debug: jest.Mock, info: jest.Mock, warn: jest.Mock, error: jest.Mock}}
  */
 function createLogger() {
-  return { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
+  return {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
 }
 
 const tokens = { SaveGameUI: 'SaveGameUI' };
@@ -28,10 +33,10 @@ describe('initSaveGameUI', () => {
   afterEach(() => {
     jest.clearAllMocks();
     GameEngineSaveAdapter.mockImplementation(() => ({ mock: 'adapter' }));
-    resolveAndInitialize.mockImplementation(() => ({ success: true }));
+    resolveAndInitialize.mockImplementation(async () => ({ success: true }));
   });
 
-  it('creates a GameEngineSaveAdapter and resolves the UI with it', () => {
+  it('creates a GameEngineSaveAdapter and resolves the UI with it', async () => {
     const container = { id: 'container' };
     const logger = createLogger();
     const gameEngine = { id: 'engine-001' };
@@ -43,7 +48,12 @@ describe('initSaveGameUI', () => {
       return instance;
     });
 
-    const result = initSaveGameUI({ container, logger, gameEngine, tokens });
+    const result = await initSaveGameUI({
+      container,
+      logger,
+      gameEngine,
+      tokens,
+    });
 
     expect(adapterInstances).toHaveLength(1);
     expect(adapterInstances[0].engine).toBe(gameEngine);
@@ -57,21 +67,26 @@ describe('initSaveGameUI', () => {
     expect(result).toEqual({ success: true });
   });
 
-  it('returns the value produced by resolveAndInitialize verbatim', () => {
+  it('returns the value produced by resolveAndInitialize verbatim', async () => {
     const failure = { success: false, error: new Error('init failed') };
-    resolveAndInitialize.mockReturnValueOnce(failure);
+    resolveAndInitialize.mockResolvedValueOnce(failure);
 
     const container = {};
     const logger = createLogger();
     const gameEngine = {};
 
-    const result = initSaveGameUI({ container, logger, gameEngine, tokens });
+    const result = await initSaveGameUI({
+      container,
+      logger,
+      gameEngine,
+      tokens,
+    });
 
     expect(result).toBe(failure);
     expect(GameEngineSaveAdapter).toHaveBeenCalledTimes(1);
   });
 
-  it('creates a fresh adapter for each invocation to avoid shared state', () => {
+  it('creates a fresh adapter for each invocation to avoid shared state', async () => {
     const container = {};
     const logger = createLogger();
     const firstEngine = { id: 'engine-unique' };
@@ -79,8 +94,18 @@ describe('initSaveGameUI', () => {
 
     GameEngineSaveAdapter.mockImplementation(({ id }) => ({ adapterFor: id }));
 
-    initSaveGameUI({ container, logger, gameEngine: firstEngine, tokens });
-    initSaveGameUI({ container, logger, gameEngine: secondEngine, tokens });
+    await initSaveGameUI({
+      container,
+      logger,
+      gameEngine: firstEngine,
+      tokens,
+    });
+    await initSaveGameUI({
+      container,
+      logger,
+      gameEngine: secondEngine,
+      tokens,
+    });
 
     expect(GameEngineSaveAdapter).toHaveBeenNthCalledWith(1, firstEngine);
     expect(GameEngineSaveAdapter).toHaveBeenNthCalledWith(2, secondEngine);

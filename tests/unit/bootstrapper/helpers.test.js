@@ -33,47 +33,47 @@ describe('bootstrapper helpers', () => {
   });
 
   describe('resolveAndInitialize', () => {
-    it('resolves service and calls init', () => {
+    it('resolves service and calls init', async () => {
       const init = jest.fn();
       const container = { resolve: jest.fn(() => ({ init })) };
       const logger = createLogger();
 
-      const result = resolveAndInitialize(container, 'X', 'init', logger);
+      const result = await resolveAndInitialize(container, 'X', 'init', logger);
 
       expect(container.resolve).toHaveBeenCalledWith('X');
       expect(init).toHaveBeenCalled();
       expect(result.success).toBe(true);
     });
 
-    it('fails when service missing', () => {
+    it('fails when service missing', async () => {
       const container = { resolve: jest.fn(() => null) };
       const logger = createLogger();
 
-      const result = resolveAndInitialize(container, 'Y', 'init', logger);
+      const result = await resolveAndInitialize(container, 'Y', 'init', logger);
 
       expect(result.success).toBe(false);
       expect(result.error).toBeInstanceOf(Error);
     });
 
-    it('fails when init function is missing', () => {
+    it('fails when init function is missing', async () => {
       const container = { resolve: jest.fn(() => ({})) };
       const logger = createLogger();
 
-      const result = resolveAndInitialize(container, 'Z', 'init', logger);
+      const result = await resolveAndInitialize(container, 'Z', 'init', logger);
 
       expect(result.success).toBe(false);
       expect(result.error).toBeInstanceOf(Error);
       expect(logger.error).toHaveBeenCalled();
     });
 
-    it('fails when init throws an error', () => {
+    it('fails when init throws an error', async () => {
       const init = jest.fn(() => {
         throw new Error('boom');
       });
       const container = { resolve: jest.fn(() => ({ init })) };
       const logger = createLogger();
 
-      const result = resolveAndInitialize(container, 'X', 'init', logger);
+      const result = await resolveAndInitialize(container, 'X', 'init', logger);
 
       expect(init).toHaveBeenCalled();
       expect(result.success).toBe(false);

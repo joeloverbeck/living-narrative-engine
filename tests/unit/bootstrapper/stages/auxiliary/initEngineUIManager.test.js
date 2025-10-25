@@ -4,7 +4,7 @@ import { resolveAndInitialize } from '../../../../../src/utils/bootstrapperHelpe
 
 jest.mock('../../../../../src/utils/bootstrapperHelpers.js', () => ({
   __esModule: true,
-  resolveAndInitialize: jest.fn(() => ({ success: true })),
+  resolveAndInitialize: jest.fn(async () => ({ success: true })),
 }));
 
 /**
@@ -24,11 +24,11 @@ describe('initEngineUIManager', () => {
     jest.clearAllMocks();
   });
 
-  it('calls resolveAndInitialize with correct arguments', () => {
+  it('calls resolveAndInitialize with correct arguments', async () => {
     const container = {};
     const logger = createLogger();
 
-    const result = initEngineUIManager({ container, logger, tokens });
+    const result = await initEngineUIManager({ container, logger, tokens });
 
     expect(resolveAndInitialize).toHaveBeenCalledWith(
       container,
@@ -39,13 +39,13 @@ describe('initEngineUIManager', () => {
     expect(result).toEqual({ success: true });
   });
 
-  it('returns whatever resolveAndInitialize returns', () => {
+  it('returns whatever resolveAndInitialize returns', async () => {
     const ret = { success: false, error: new Error('boom') };
-    resolveAndInitialize.mockReturnValueOnce(ret);
+    resolveAndInitialize.mockResolvedValueOnce(ret);
     const container = {};
     const logger = createLogger();
 
-    const result = initEngineUIManager({ container, logger, tokens });
+    const result = await initEngineUIManager({ container, logger, tokens });
     expect(result).toBe(ret);
   });
 });

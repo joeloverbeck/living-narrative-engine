@@ -38,80 +38,94 @@ export async function initializeAuxiliaryServicesStage(
 ) {
   const stageName = 'Auxiliary Services Initialization';
   logger.debug(`Bootstrap Stage: Starting ${stageName}...`);
-  const results = [
+  const serviceInitializers = [
     [
       'EngineUIManager',
-      initEngineUIManager({
-        container,
-        gameEngine,
-        logger,
-        tokens,
-      }),
+      () =>
+        initEngineUIManager({
+          container,
+          gameEngine,
+          logger,
+          tokens,
+        }),
     ],
     [
       'SaveGameUI',
-      initSaveGameUI({
-        container,
-        gameEngine,
-        logger,
-        tokens,
-      }),
+      () =>
+        initSaveGameUI({
+          container,
+          gameEngine,
+          logger,
+          tokens,
+        }),
     ],
     [
       'LoadGameUI',
-      initLoadGameUI({
-        container,
-        gameEngine,
-        logger,
-        tokens,
-      }),
+      () =>
+        initLoadGameUI({
+          container,
+          gameEngine,
+          logger,
+          tokens,
+        }),
     ],
     [
       'LlmSelectionModal',
-      initLlmSelectionModal({
-        container,
-        gameEngine,
-        logger,
-        tokens,
-      }),
+      () =>
+        initLlmSelectionModal({
+          container,
+          gameEngine,
+          logger,
+          tokens,
+        }),
     ],
     [
       'CurrentTurnActorRenderer',
-      initCurrentTurnActorRenderer({
-        container,
-        gameEngine,
-        logger,
-        tokens,
-      }),
+      () =>
+        initCurrentTurnActorRenderer({
+          container,
+          gameEngine,
+          logger,
+          tokens,
+        }),
     ],
     [
       'SpeechBubbleRenderer',
-      initSpeechBubbleRenderer({
-        container,
-        gameEngine,
-        logger,
-        tokens,
-      }),
+      () =>
+        initSpeechBubbleRenderer({
+          container,
+          gameEngine,
+          logger,
+          tokens,
+        }),
     ],
     [
       'ProcessingIndicatorController',
-      initProcessingIndicatorController({
-        container,
-        gameEngine,
-        logger,
-        tokens,
-      }),
+      () =>
+        initProcessingIndicatorController({
+          container,
+          gameEngine,
+          logger,
+          tokens,
+        }),
     ],
     [
       'CriticalLogNotifier',
-      initCriticalLogNotifier({
-        container,
-        gameEngine,
-        logger,
-        tokens,
-      }),
+      () =>
+        initCriticalLogNotifier({
+          container,
+          gameEngine,
+          logger,
+          tokens,
+        }),
     ],
   ];
+
+  const results = [];
+  for (const [name, initializer] of serviceInitializers) {
+    const result = await initializer();
+    results.push([name, result]);
+  }
 
   const failures = results
     .filter(([, r]) => !r.success)
@@ -135,7 +149,8 @@ export async function initializeAuxiliaryServicesStage(
     const eventBus = container.resolve(tokens.IEventBus);
 
     if (!eventBus) {
-      const errorMsg = 'EventBus resolution returned undefined. Cannot setup cache invalidation.';
+      const errorMsg =
+        'EventBus resolution returned undefined. Cannot setup cache invalidation.';
       logger.error(`Bootstrap Stage: ${stageName} - ${errorMsg}`);
       return stageFailure(stageName, errorMsg);
     }

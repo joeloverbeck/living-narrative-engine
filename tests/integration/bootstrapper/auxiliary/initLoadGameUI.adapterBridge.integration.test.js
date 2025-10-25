@@ -63,7 +63,7 @@ describe('initLoadGameUI integration wiring', () => {
   });
 
   it('initializes the UI with a real adapter that proxies to the engine', async () => {
-    const result = initLoadGameUI({
+    const result = await initLoadGameUI({
       container,
       gameEngine,
       logger,
@@ -81,7 +81,9 @@ describe('initLoadGameUI integration wiring', () => {
       success: true,
       data: { metadata: { gameTitle: 'Test World' } },
     });
-    expect(logger.debugEntries[0].message).toContain('LoadGameUI Init: Resolving');
+    expect(logger.debugEntries[0].message).toContain(
+      'LoadGameUI Init: Resolving'
+    );
     expect(logger.debugEntries.at(-1)?.message).toContain(
       'LoadGameUI Init: Initialized successfully'
     );
@@ -90,7 +92,7 @@ describe('initLoadGameUI integration wiring', () => {
   it('propagates engine errors through the adapter for consumers to handle', async () => {
     gameEngine.loadGame.mockRejectedValue(new Error('engine unavailable'));
 
-    initLoadGameUI({ container, gameEngine, logger, tokens });
+    await initLoadGameUI({ container, gameEngine, logger, tokens });
 
     await expect(loadGameUI.loadSlot('slot-error')).rejects.toThrow(
       'engine unavailable'
