@@ -342,7 +342,9 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
         return false;
       }
     } catch (parseError) {
-      this.#showValidationError(['Invalid JSON format: ' + parseError.message]);
+      this.#showValidationError([
+        'JSON Syntax Error: ' + parseError.message,
+      ]);
       this.#characterDefinition = null;
       this.#updateUIState();
       return false;
@@ -368,6 +370,10 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       return false;
     }
 
+    if (!this.#enhancedValidator) {
+      return this.#validateCharacterInput();
+    }
+
     // Show validation progress indicator
     this.#showValidationProgress(true);
 
@@ -391,31 +397,14 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
         return false;
       }
 
-      // Use enhanced validator if available, fallback to basic validation
-      let validationResult;
-      if (this.#enhancedValidator) {
-        validationResult = await this.#enhancedValidator.validateInput(
-          parsedData,
-          {
-            includeQualityAssessment: true,
-            includeSuggestions: true,
-          }
-        );
-      } else {
-        // Fallback to basic validation
-        const basicResult = this.#validateCharacterStructure(parsedData);
-        validationResult = {
-          isValid: basicResult.isValid,
-          errors: basicResult.errors || [],
-          warnings: [],
-          suggestions: basicResult.isValid
-            ? []
-            : [
-                'Consider using the enhanced validator for more detailed feedback',
-              ],
-          quality: { overallScore: basicResult.isValid ? 0.7 : 0.3 },
-        };
-      }
+      // Use enhanced validator when available
+      const validationResult = await this.#enhancedValidator.validateInput(
+        parsedData,
+        {
+          includeQualityAssessment: true,
+          includeSuggestions: true,
+        }
+      );
 
       // Update UI based on validation results
       this.#displayEnhancedValidationResults(validationResult);
@@ -509,8 +498,6 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
         errors.push(
           'Character name component exists but does not contain a valid name. Expected text, name, or value field.'
         );
-      } else if (characterName.trim().length === 0) {
-        errors.push('Character name cannot be empty');
       }
     }
 
