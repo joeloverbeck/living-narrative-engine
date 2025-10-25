@@ -153,11 +153,9 @@ export class BodyDescriptionOrchestrator {
     if (
       existingDesc &&
       existingDesc.text &&
-      this.#isDescriptionCurrent(entity)
+      this.#isDescriptionCurrent(entity, existingDesc)
     ) {
-      // Note: This line is currently unreachable because #isDescriptionCurrent always returns false
-      // Future implementation of #isDescriptionCurrent could make this reachable
-      return existingDesc.text; // istanbul ignore line
+      return existingDesc.text;
     }
 
     // Generate new description
@@ -177,13 +175,18 @@ export class BodyDescriptionOrchestrator {
   /**
    * Check if the current description is up to date
    *
-   * @param {object} _entity - The entity to check (unused for now)
-   * @returns {boolean} Always returns false to force regeneration
+   * @param {object} entity - The entity to check
+   * @param {{metadata?: {isCurrent?: boolean}}} existingDescription - Existing description data
+   * @returns {boolean} Whether the description is current
    * @private
    */
-  #isDescriptionCurrent(_entity) {
-    // For now, we'll always regenerate to ensure accuracy
-    // In the future, we could add timestamp tracking or checksums
+  #isDescriptionCurrent(entity, existingDescription) {
+    // Allow description components to mark themselves as current via metadata
+    if (existingDescription?.metadata?.isCurrent === true) {
+      return true;
+    }
+
+    // Future enhancements could compare timestamps or checksums here
     return false;
   }
 }
