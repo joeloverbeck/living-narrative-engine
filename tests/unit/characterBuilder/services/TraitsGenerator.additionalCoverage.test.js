@@ -355,4 +355,27 @@ describe('TraitsGenerator additional coverage', () => {
       expect.objectContaining({ failureStage: 'quality_validation' })
     );
   });
+
+  it('wraps generic structural errors thrown by validator', async () => {
+    validateTraitsGenerationResponse.mockImplementationOnce(() => {
+      throw new Error('Schema validation mismatch');
+    });
+
+    let caughtError;
+    try {
+      await generator.generateTraits(params, { maxRetries: 0 });
+    } catch (error) {
+      caughtError = error;
+    }
+
+    expect(caughtError).toBeInstanceOf(TraitsGenerationError);
+    expect(caughtError.message).toContain(
+      'Invalid response structure: Schema validation mismatch'
+    );
+    expect(caughtError.context.stage).toBe('structure_validation');
+    expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+      'core:traits_generation_failed',
+      expect.objectContaining({ failureStage: 'structure_validation' })
+    );
+  });
 });
