@@ -232,6 +232,7 @@ export class RecipeConstraintEvaluator {
    */
   #evaluateSlotCountConstraints(slots, graphMetadata, errors, warnings) {
     for (const [slotKey, slot] of Object.entries(slots)) {
+      const slotErrorCountBefore = errors.length;
       const partType = slot.type || slot.partType;
       const actualCount = graphMetadata.partTypeCounts.get(partType) || 0;
 
@@ -267,6 +268,15 @@ export class RecipeConstraintEvaluator {
           ) {
             errors.push(
               `Slot '${slotKey}': expected at most ${slot.count.max} parts of type '${partType}' ` +
+                `but found ${actualCount}`
+            );
+          } else if (
+            slot.count.recommended !== undefined &&
+            actualCount !== slot.count.recommended &&
+            errors.length === slotErrorCountBefore
+          ) {
+            warnings.push(
+              `Slot '${slotKey}': recommended ${slot.count.recommended} parts of type '${partType}' ` +
                 `but found ${actualCount}`
             );
           }
