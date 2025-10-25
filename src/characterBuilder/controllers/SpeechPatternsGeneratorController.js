@@ -278,6 +278,15 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
     this.#updateUIState();
   }
 
+  /**
+   * @description Disable enhanced validation support so the controller falls back to basic validation logic.
+   * @protected
+   * @returns {void}
+   */
+  _disableEnhancedValidation() {
+    this.#enhancedValidator = null;
+  }
+
   // Input Handling Methods
 
   /**

@@ -393,6 +393,40 @@ describe('SpeechPatternsGeneratorController', () => {
     return element;
   }
 
+  /**
+   * Retrieve the most recently registered event handler for the provided element and event.
+   *
+   * @param {object} element - The mocked DOM element with an addEventListener spy
+   * @param {string} eventName - The event name that was registered
+   * @returns {Function|undefined} The most recent handler or undefined if none registered
+   */
+  function getLatestHandler(element, eventName) {
+    const calls = element.addEventListener.mock.calls.filter(
+      (call) => call[0] === eventName
+    );
+    const latestCall = calls[calls.length - 1];
+    return latestCall ? latestCall[1] : undefined;
+  }
+
+  /**
+   * Flush pending asynchronous callbacks (microtasks + macrotasks) so
+   * controller workflows that rely on awaited timers/requestAnimationFrame
+   * settle before assertions run.
+   *
+   * @returns {Promise<void>} Resolves once the current task queue is drained
+   */
+  async function flushAsyncWork() {
+    await new Promise((resolve) => {
+      if (typeof setImmediate === 'function') {
+        setImmediate(resolve);
+      } else if (typeof queueMicrotask === 'function') {
+        queueMicrotask(resolve);
+      } else {
+        Promise.resolve().then(resolve);
+      }
+    });
+  }
+
   describe('Constructor Tests', () => {
     it('should create instance with all required dependencies', () => {
       const dependencies = {
@@ -700,6 +734,23 @@ describe('SpeechPatternsGeneratorController', () => {
       expect(() => inputHandler()).not.toThrow();
     });
 
+    it('should ignore input events when the character textarea is unavailable', () => {
+      controller._getElement.mockImplementation((key) => {
+        if (key === 'characterDefinition') {
+          return null;
+        }
+        return mockElements[key] || null;
+      });
+
+      const inputHandler = getLatestHandler(
+        mockElements.characterDefinition,
+        'input'
+      );
+
+      expect(() => inputHandler()).not.toThrow();
+      expect(controller._getElement).toHaveBeenCalledWith('characterDefinition');
+    });
+
     it('should handle blur event for enhanced validation', () => {
       const blurHandler =
         mockElements.characterDefinition.addEventListener.mock.calls.find(
@@ -837,6 +888,188 @@ describe('SpeechPatternsGeneratorController', () => {
         'Enhanced validation failed:',
         validatorError
       );
+    });
+
+    it('should return false when validating without a textarea element', async () => {
+      mockElements.characterDefinition.addEventListener.mockClear();
+      EnhancedSpeechPatternsValidator.mockImplementationOnce(() => {
+        throw new Error('validator unavailable');
+      });
+      controller = await createInitializedController({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      controller._getElement.mockImplementation((key) => {
+        if (key === 'characterDefinition') {
+          return null;
+        }
+        return mockElements[key] || null;
+      });
+
+      const blurHandler = getLatestHandler(
+        mockElements.characterDefinition,
+        'blur'
+      );
+
+      expect(blurHandler()).toBe(false);
+    });
+
+    it('should fallback to basic validation when enhanced validation is disabled', async () => {
+      mockElements.characterDefinition.addEventListener.mockClear();
+      mockEnhancedValidator.validateInput.mockClear();
+
+      controller = await createInitializedController({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      controller._disableEnhancedValidation();
+
+      const characterData = {
+        'core:name': { text: 'Fallback Hero' },
+        'core:personality': {
+          description:
+            'A deeply developed personality profile that highlights bravery, empathy, and a history of complex decision-making situations.',
+        },
+        'core:profile': {
+          background:
+            'Detailed history that easily exceeds the minimum content length requirement by providing substantial narrative depth and context for validation.',
+        },
+      };
+      mockElements.characterDefinition.value = JSON.stringify(characterData);
+
+      const blurHandler = getLatestHandler(
+        mockElements.characterDefinition,
+        'blur'
+      );
+
+      const result = await blurHandler();
+
+      expect(result).toBe(true);
+      expect(mockEnhancedValidator.validateInput).not.toHaveBeenCalled();
+    });
+
+    it('should skip validation error display when the error container is missing', async () => {
+      mockElements.characterDefinition.addEventListener.mockClear();
+      controller = await createInitializedController({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      controller._disableEnhancedValidation();
+      controller._getElement.mockImplementation((key) => {
+        if (key === 'characterInputError') {
+          return null;
+        }
+        return mockElements[key] || null;
+      });
+
+      mockElements.characterDefinition.value = '{ invalid json }';
+
+      const blurHandler = getLatestHandler(
+        mockElements.characterDefinition,
+        'blur'
+      );
+
+      const result = await blurHandler();
+
+      expect(result).toBe(false);
+      expect(mockElements.characterInputError.innerHTML).toBe('');
+      expect(mockElements.characterInputError.style.display).toBe('');
+    });
+
+    it('should bypass enhanced validation UI when the error container cannot be resolved', async () => {
+      mockElements.characterDefinition.addEventListener.mockClear();
+      controller = await createInitializedController({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      mockEnhancedValidator.validateInput.mockResolvedValue({
+        isValid: true,
+        errors: [],
+        warnings: [],
+        suggestions: [],
+        quality: { overallScore: 0.95 },
+      });
+
+      controller._getElement.mockImplementation((key) => {
+        if (key === 'characterInputError') {
+          return null;
+        }
+        return mockElements[key] || null;
+      });
+
+      const characterData = {
+        'core:name': { text: 'Silent Hero' },
+        'core:personality': { traits: ['calm'] },
+      };
+      mockElements.characterDefinition.value = JSON.stringify(characterData);
+
+      const blurHandler = getLatestHandler(
+        mockElements.characterDefinition,
+        'blur'
+      );
+
+      await blurHandler();
+
+      expect(mockElements.characterInputError.innerHTML).toBe('');
+      expect(mockElements.characterInputError.style.display).toBe('');
+    });
+
+    it('should skip success display when the error container disappears mid-update', async () => {
+      mockElements.characterDefinition.addEventListener.mockClear();
+      controller = await createInitializedController({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      mockEnhancedValidator.validateInput.mockResolvedValue({
+        isValid: true,
+        errors: [],
+        warnings: [],
+        suggestions: [],
+        quality: { overallScore: 0.95 },
+      });
+
+      let errorCallCount = 0;
+      controller._getElement.mockImplementation((key) => {
+        if (key === 'characterInputError') {
+          errorCallCount += 1;
+          if (errorCallCount === 4) {
+            return null;
+          }
+          return mockElements.characterInputError;
+        }
+        return mockElements[key] || null;
+      });
+
+      const characterData = {
+        'core:name': { text: 'Graceful Hero' },
+        'core:personality': { traits: ['patient'] },
+      };
+      mockElements.characterDefinition.value = JSON.stringify(characterData);
+
+      const blurHandler = getLatestHandler(
+        mockElements.characterDefinition,
+        'blur'
+      );
+
+      await blurHandler();
+
+      expect(mockElements.characterInputError.innerHTML).toBe('');
+      expect(mockElements.characterInputError.style.display).not.toBe('block');
     });
   });
 
@@ -1209,6 +1442,152 @@ describe('SpeechPatternsGeneratorController', () => {
 
       // Verify the controller has access to performance tracking
       expect(typeof performance.now()).toBe('number');
+    });
+
+    it('should handle progress updates when the progress bar cannot be resolved', async () => {
+      mockEnhancedValidator.validateInput.mockResolvedValue({
+        isValid: true,
+        errors: [],
+        warnings: [],
+        suggestions: [],
+        quality: { overallScore: 0.95 },
+      });
+
+      const characterData = {
+        'core:name': { text: 'Progress Guard Hero' },
+        'core:personality': { traits: ['resilient'] },
+      };
+      mockElements.characterDefinition.value = JSON.stringify(characterData);
+
+      const blurHandler = getLatestHandler(
+        mockElements.characterDefinition,
+        'blur'
+      );
+      await blurHandler();
+
+      let progressCallCount = 0;
+      controller._getElement.mockImplementation((key) => {
+        if (key === 'progressBar') {
+          progressCallCount += 1;
+          if (progressCallCount === 1) {
+            return mockElements.progressBar;
+          }
+          return null;
+        }
+        return mockElements[key] || null;
+      });
+
+      mockSpeechPatternsGenerator.generateSpeechPatterns.mockImplementation(
+        async (_definition, options) => {
+          options?.progressCallback?.(0.5);
+          return {
+            speechPatterns: [],
+            characterName: 'Progress Guard Hero',
+          };
+        }
+      );
+
+      mockElements.progressBar.style.width = '';
+
+      const generateHandler = getLatestHandler(mockElements.generateBtn, 'click');
+      const timeoutSpy = jest
+        .spyOn(global, 'setTimeout')
+        .mockImplementation((cb) => {
+          if (typeof cb === 'function') {
+            cb();
+          }
+          return 0;
+        });
+      try {
+        const generationPromise = generateHandler();
+        await generationPromise;
+      } finally {
+        timeoutSpy.mockRestore();
+      }
+
+      expect(mockElements.progressBar.style.width).toBe('');
+    });
+
+    it('should sanitize non-string pattern metadata in fallback rendering', async () => {
+      mockEnhancedValidator.validateInput.mockResolvedValue({
+        isValid: true,
+        errors: [],
+        warnings: [],
+        suggestions: [],
+        quality: { overallScore: 0.9 },
+      });
+
+      const characterData = {
+        'core:name': { text: 'Fallback Hero' },
+        'core:personality': { traits: ['adaptable'] },
+      };
+      mockElements.characterDefinition.value = JSON.stringify(characterData);
+
+      const blurHandler = getLatestHandler(
+        mockElements.characterDefinition,
+        'blur'
+      );
+      const blurResult = await blurHandler();
+      expect(blurResult).toBe(true);
+
+      const defaultCreateElement = document.createElement.getMockImplementation();
+      const createdArticles = [];
+      document.createElement.mockImplementation((tagName) => {
+        const element = defaultCreateElement(tagName);
+        if (tagName === 'article') {
+          createdArticles.push(element);
+        }
+        return element;
+      });
+
+      mockSpeechPatternsGenerator.generateSpeechPatterns.mockClear();
+      mockSpeechPatternsGenerator.generateSpeechPatterns.mockImplementation(
+        async () => ({
+          speechPatterns: [
+            {
+              pattern: '<strong>Excited</strong> response',
+              example: '<em>Hello!</em>',
+              circumstances: 42,
+            },
+          ],
+          characterName: 'Fallback Hero',
+        })
+      );
+
+      const rafSpy = jest
+        .spyOn(controller, '_requestAnimationFrame')
+        .mockImplementation((callback) => {
+          callback();
+          return 0;
+        });
+      const timeoutSpy = jest
+        .spyOn(global, 'setTimeout')
+        .mockImplementation((cb) => {
+          if (typeof cb === 'function') {
+            cb();
+          }
+          return 0;
+        });
+
+      const generateHandler = getLatestHandler(mockElements.generateBtn, 'click');
+      try {
+        generateHandler();
+        await flushAsyncWork();
+        await flushAsyncWork();
+        await flushAsyncWork();
+
+        expect(
+          mockSpeechPatternsGenerator.generateSpeechPatterns
+        ).toHaveBeenCalled();
+        expect(createdArticles.length).toBeGreaterThan(0);
+        expect(createdArticles[0].innerHTML).not.toContain(
+          'pattern-circumstances'
+        );
+      } finally {
+        document.createElement.mockImplementation(defaultCreateElement);
+        rafSpy.mockRestore();
+        timeoutSpy.mockRestore();
+      }
     });
 
     // Removed: Test for UI states during generation - tests internal implementation details
