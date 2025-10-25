@@ -335,8 +335,30 @@ class PersistenceCoordinator {
 
     await this.#dispatchSaveResult(saveResultWithName);
 
-    const { saveName: _ignored, ...result } = saveResultWithName;
-    return result;
+    const { saveName: _ignored, error: rawError, ...resultWithoutError } =
+      saveResultWithName;
+
+    if (!resultWithoutError.success) {
+      const normalizedError = this.#formatSaveError(rawError);
+      const failureResult = {
+        ...resultWithoutError,
+        error: normalizedError,
+      };
+
+      if (
+        rawError &&
+        typeof rawError === 'object' &&
+        'code' in rawError &&
+        typeof rawError.code === 'string' &&
+        !('errorCode' in failureResult)
+      ) {
+        failureResult.errorCode = rawError.code;
+      }
+
+      return failureResult;
+    }
+
+    return resultWithoutError;
   }
 
   /**
