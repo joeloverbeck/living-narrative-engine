@@ -263,6 +263,73 @@ describe('ActivityDescriptionService', () => {
       );
     });
 
+    it('should discard falsy activities returned by the index', async () => {
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        null,
+        undefined,
+        false,
+        {
+          actorId: 'entity_1',
+          verb: 'greets',
+          targetId: 'entity_2',
+        },
+      ]);
+
+      const result = await service.generateActivityDescription('entity_1');
+
+      expect(result).toBe('Activity: Entity entity_1 greets Entity entity_2.');
+      expect(mockActivityIndex.findActivitiesForEntity).toHaveBeenCalledWith(
+        'entity_1'
+      );
+    });
+
+    it('should prioritize entries with the highest priority value', async () => {
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        {
+          actorId: 'entity_1',
+          verb: 'waits patiently',
+          priority: 1,
+        },
+        {
+          actorId: 'entity_1',
+          verb: 'takes center stage',
+          priority: 10,
+        },
+        {
+          actorId: 'entity_1',
+          verb: 'considers the options',
+          priority: 5,
+        },
+      ]);
+
+      const result = await service.generateActivityDescription('entity_1');
+
+      expect(result).toBe('Activity: Entity entity_1 takes center stage.');
+    });
+
+    it('should treat missing priority as the lowest weight during sorting', async () => {
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        {
+          actorId: 'entity_1',
+          verb: 'leads the charge',
+          priority: 9,
+        },
+        {
+          actorId: 'entity_1',
+          verb: 'lingers near the exit',
+        },
+        {
+          actorId: 'entity_1',
+          verb: 'assesses the options',
+          priority: 4,
+        },
+      ]);
+
+      const result = await service.generateActivityDescription('entity_1');
+
+      expect(result).toBe('Activity: Entity entity_1 leads the charge.');
+    });
+
     it('should reuse cached entity names across calls', async () => {
       mockActivityIndex.findActivitiesForEntity.mockReturnValue([
         {
@@ -297,6 +364,22 @@ describe('ActivityDescriptionService', () => {
 
       expect(actorCalls.length).toBe(3); // two entity fetches and one cached resolution
       expect(targetCalls.length).toBe(1);
+    });
+
+    it('should use description text when provided without a target', async () => {
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        {
+          actorId: 'entity_1',
+          description: 'leaps across the chasm',
+          priority: 4,
+        },
+      ]);
+
+      const result = await service.generateActivityDescription('entity_1');
+
+      expect(result).toBe(
+        'Activity: Entity entity_1 leaps across the chasm.'
+      );
     });
 
     it('should fall back to entity id when name resolution fails', async () => {
@@ -387,6 +470,24 @@ describe('ActivityDescriptionService', () => {
       );
     });
 
+    it('should treat missing finder method on the index as no activities', async () => {
+      const serviceWithInvalidIndex = new ActivityDescriptionService({
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        anatomyFormattingService: mockAnatomyFormattingService,
+        activityIndex: { findActivitiesForEntity: null },
+      });
+
+      const result = await serviceWithInvalidIndex.generateActivityDescription(
+        'entity_1'
+      );
+
+      expect(result).toBe('');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('No activities found for entity: entity_1')
+      );
+    });
+
     it('should handle logger errors gracefully and return empty string', async () => {
       const throwingLogger = {
         ...mockLogger,
@@ -438,6 +539,56 @@ describe('ActivityDescriptionService', () => {
       }));
     });
 
+    it('should default to entityId when the entity record is empty', async () => {
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        {
+          actorId: 'faceless_actor',
+          verb: 'waits',
+          priority: 2,
+        },
+      ]);
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'faceless_actor') {
+          return {};
+        }
+        return { id, name: `Entity ${id}` };
+      });
+
+      const result = await service.generateActivityDescription('entity_1');
+
+      expect(result).toBe('Activity: faceless_actor waits.');
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => ({
+        id,
+        name: `Entity ${id}`,
+      }));
+    });
+
+    it('should default to an interaction verb when target is present without verb', async () => {
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        {
+          actorId: 'entity_1',
+          targetId: 'entity_2',
+          priority: 3,
+        },
+      ]);
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => ({
+        id,
+        name: id === 'entity_2' ? 'Target' : `Entity ${id}`,
+      }));
+
+      const result = await service.generateActivityDescription('entity_1');
+
+      expect(result).toBe('Activity: Entity entity_1 interacts with Target.');
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => ({
+        id,
+        name: `Entity ${id}`,
+      }));
+    });
+
     it('should honor formatting defaults when config omits prefix and suffix', async () => {
       mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
         enabled: true,
@@ -459,6 +610,34 @@ describe('ActivityDescriptionService', () => {
         prefix: 'Activity: ',
         suffix: '.',
       });
+    });
+
+    it('should gracefully handle formatting services without configuration getter', async () => {
+      const minimalFormattingService = {};
+      const lightweightIndex = {
+        findActivitiesForEntity: jest.fn().mockReturnValue([
+          {
+            actorId: 'entity_1',
+            verb: 'observes',
+          },
+        ]),
+      };
+
+      const serviceWithoutGetter = new ActivityDescriptionService({
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        anatomyFormattingService: minimalFormattingService,
+        activityIndex: lightweightIndex,
+      });
+
+      const result = await serviceWithoutGetter.generateActivityDescription(
+        'entity_1'
+      );
+
+      expect(result).toBe('Entity entity_1 observes');
+      expect(lightweightIndex.findActivitiesForEntity).toHaveBeenCalledWith(
+        'entity_1'
+      );
     });
   });
 
