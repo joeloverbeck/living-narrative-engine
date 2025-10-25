@@ -15,7 +15,9 @@ import {
   CoreMotivationsGenerator,
   CoreMotivationsGenerationError,
 } from '../../../../src/characterBuilder/services/CoreMotivationsGenerator.js';
-import { PROMPT_VERSION_INFO } from '../../../../src/characterBuilder/prompts/coreMotivationsGenerationPrompt.js';
+import * as promptModule from '../../../../src/characterBuilder/prompts/coreMotivationsGenerationPrompt.js';
+
+const { PROMPT_VERSION_INFO } = promptModule;
 
 describe('CoreMotivationsGenerator', () => {
   let service;
@@ -133,6 +135,7 @@ describe('CoreMotivationsGenerator', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   describe('constructor', () => {
@@ -1072,6 +1075,376 @@ describe('CoreMotivationsGenerator', () => {
       expect(mockLlmConfigManager.setActiveConfiguration).toHaveBeenCalledWith(
         'config-2'
       );
+    });
+  });
+
+  describe('generate - advanced coverage scenarios', () => {
+    const validParams = {
+      concept: sampleConcept,
+      direction: sampleDirection,
+      clichés: sampleClichés,
+    };
+
+    const buildValidMotivation = (index = 1) => ({
+      coreDesire:
+        `Motivation ${index} core desire contains sufficient descriptive language to surpass validation requirements easily.`,
+      internalContradiction:
+        `Motivation ${index} internal contradiction clearly explains the nuanced conflict with more than enough characters to pass validation.`,
+      centralQuestion: `How will motivation ${index} reconcile its core dilemma?`,
+    });
+
+    const buildValidResponse = () => ({
+      motivations: [
+        buildValidMotivation(1),
+        buildValidMotivation(2),
+        buildValidMotivation(3),
+      ],
+    });
+
+    const createDependencies = (overrides = {}) => {
+      const rawResponse = JSON.stringify(buildValidResponse());
+
+      const dependencies = {
+        logger: {
+          debug: jest.fn(),
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+        },
+        llmJsonService: {
+          clean: jest.fn(async (response) => response),
+          parseAndRepair: jest.fn(async () => buildValidResponse()),
+        },
+        llmStrategyFactory: {
+          getAIDecision: jest.fn(async () => rawResponse),
+        },
+        llmConfigManager: {
+          loadConfiguration: jest.fn(async () => ({ configId: 'fallback-config' })),
+          getActiveConfiguration: jest.fn(async () => ({ configId: 'active-config' })),
+          setActiveConfiguration: jest.fn(async () => true),
+        },
+        eventBus: {
+          dispatch: jest.fn(async () => undefined),
+        },
+        tokenEstimator: undefined,
+      };
+
+      return {
+        ...dependencies,
+        ...overrides,
+        logger: overrides.logger || dependencies.logger,
+        llmJsonService: overrides.llmJsonService || dependencies.llmJsonService,
+        llmStrategyFactory:
+          overrides.llmStrategyFactory || dependencies.llmStrategyFactory,
+        llmConfigManager:
+          overrides.llmConfigManager || dependencies.llmConfigManager,
+        eventBus: overrides.eventBus || dependencies.eventBus,
+        tokenEstimator:
+          overrides.hasOwnProperty('tokenEstimator')
+            ? overrides.tokenEstimator
+            : dependencies.tokenEstimator,
+      };
+    };
+
+    it('should include token estimator metadata and gracefully handle missing prompt text when estimating tokens', async () => {
+      const buildSpy = jest
+        .spyOn(promptModule, 'buildCoreMotivationsGenerationPrompt')
+        .mockImplementationOnce(() => 'initial prompt for llm')
+        .mockImplementationOnce(() => null)
+        .mockImplementation(() => 'final prompt for metadata');
+
+      const tokenEstimator = {
+        estimateTokens: jest.fn().mockResolvedValueOnce(128),
+      };
+
+      const dependencies = createDependencies({ tokenEstimator });
+      const service = new CoreMotivationsGenerator(dependencies);
+
+      const result = await service.generate(validParams, {
+        llmConfigId: 'config-with-estimator',
+      });
+
+      expect(result).toHaveLength(3);
+      expect(tokenEstimator.estimateTokens).toHaveBeenCalledTimes(1);
+      expect(result[0].metadata.promptTokens).toBe(0);
+      expect(result[0].metadata.responseTokens).toBe(128);
+      expect(result[0].metadata.clicheIds).toContain('personalityTraits_0');
+      expect(buildSpy).toHaveBeenCalledTimes(3);
+      expect(dependencies.logger.debug).toHaveBeenCalledWith(
+        'CoreMotivationsGenerator: Token estimation (TokenEstimator)',
+        expect.objectContaining({ method: 'TokenEstimator', estimatedTokens: 128 })
+      );
+    });
+
+    it('should fall back to simple token estimation when estimator is not provided', async () => {
+      const dependencies = createDependencies();
+      const service = new CoreMotivationsGenerator(dependencies);
+
+      const result = await service.generate(validParams, { maxRetries: 0 });
+
+      const promptLength =
+        promptModule
+          .buildCoreMotivationsGenerationPrompt(
+            validParams.concept.concept,
+            validParams.direction,
+            validParams.clichés
+          )
+          .length;
+      const expectedTokens = Math.ceil(promptLength / 4);
+
+      expect(result[0].metadata.promptTokens).toBe(expectedTokens);
+      expect(result[0].metadata.responseTokens).toBeGreaterThan(0);
+      expect(dependencies.logger.debug).toHaveBeenCalledWith(
+        'CoreMotivationsGenerator: Token estimation (fallback)',
+        expect.objectContaining({ method: 'fallback', estimatedTokens: expectedTokens })
+      );
+    });
+
+    it('should recover with fallback estimation when the token estimator throws', async () => {
+      const failingEstimator = {
+        estimateTokens: jest.fn().mockRejectedValue(new Error('estimation failed')),
+      };
+
+      const dependencies = createDependencies({ tokenEstimator: failingEstimator });
+      const service = new CoreMotivationsGenerator(dependencies);
+
+      const result = await service.generate(validParams);
+
+      expect(failingEstimator.estimateTokens).toHaveBeenCalled();
+      expect(dependencies.logger.warn).toHaveBeenCalledWith(
+        'CoreMotivationsGenerator: Token estimation failed, using fallback',
+        expect.objectContaining({ error: 'estimation failed' })
+      );
+      const promptLength =
+        promptModule
+          .buildCoreMotivationsGenerationPrompt(
+            validParams.concept.concept,
+            validParams.direction,
+            validParams.clichés
+          )
+          .length;
+      const expectedPromptTokens = Math.ceil(promptLength / 4);
+      const expectedResponseTokens = Math.ceil(
+        JSON.stringify(buildValidResponse()).length / 4
+      );
+
+      expect(result[0].metadata.promptTokens).toBe(expectedPromptTokens);
+      expect(result[0].metadata.responseTokens).toBe(expectedResponseTokens);
+    });
+
+    it('should wrap completion dispatch errors in CoreMotivationsGenerationError and report processing stage', async () => {
+      const dependencies = createDependencies();
+      dependencies.eventBus.dispatch = jest
+        .fn()
+        .mockResolvedValueOnce(undefined) // generation started
+        .mockRejectedValueOnce(new Error('dispatch failure'))
+        .mockResolvedValueOnce(undefined); // failure event
+
+      const service = new CoreMotivationsGenerator(dependencies);
+
+      await expect(
+        service.generate(validParams, { maxRetries: 0 })
+      ).rejects.toThrow(CoreMotivationsGenerationError);
+
+      const failureCall = dependencies.eventBus.dispatch.mock.calls[2];
+      expect(failureCall[1].failureStage).toBe('processing');
+    });
+
+    it('should surface configuration errors when the requested llmConfigId is unknown', async () => {
+      const dependencies = createDependencies();
+      dependencies.llmConfigManager.setActiveConfiguration = jest
+        .fn()
+        .mockResolvedValue(false);
+      dependencies.llmConfigManager.loadConfiguration = jest
+        .fn()
+        .mockResolvedValue(null);
+
+      const service = new CoreMotivationsGenerator(dependencies);
+
+      await expect(
+        service.generate(validParams, {
+          llmConfigId: 'missing-config',
+          maxRetries: 0,
+        })
+      ).rejects.toThrow(/LLM configuration not found: missing-config/);
+    });
+
+    it('should rethrow existing CoreMotivationsGenerationError instances from LLM calls', async () => {
+      const dependencies = createDependencies();
+      dependencies.llmStrategyFactory.getAIDecision = jest
+        .fn()
+        .mockRejectedValue(new CoreMotivationsGenerationError('llm down'));
+
+      const service = new CoreMotivationsGenerator(dependencies);
+
+      await expect(
+        service.generate(validParams, { maxRetries: 0 })
+      ).rejects.toThrow(/llm down/);
+    });
+
+    it('should rethrow CoreMotivationsGenerationError from schema validation without wrapping it twice', async () => {
+      const validateSpy = jest
+        .spyOn(promptModule, 'validateCoreMotivationsGenerationResponse')
+        .mockImplementation(() => {
+          throw new CoreMotivationsGenerationError('structural issue');
+        });
+
+      const dependencies = createDependencies();
+      const service = new CoreMotivationsGenerator(dependencies);
+
+      await expect(
+        service.generate(validParams, { maxRetries: 0 })
+      ).rejects.toThrow(/structural issue/);
+
+      expect(validateSpy).toHaveBeenCalled();
+    });
+
+    it('should report detailed quality validation issues when motivations are weak', async () => {
+      const poorResponse = {
+        motivations: [
+          {
+            coreDesire: 'Too short',
+            internalContradiction: 'Brief conflict',
+            centralQuestion: 'Is redemption possible?',
+          },
+          {
+            coreDesire: 'Barely enough words',
+            internalContradiction: 'Still quite short',
+            centralQuestion: 'Can hope survive?',
+          },
+          {
+            coreDesire: 'Short desire text',
+            internalContradiction: 'Simple conflict',
+            centralQuestion: 'Will they change?',
+          },
+        ],
+      };
+
+      const dependencies = createDependencies({
+        llmJsonService: {
+          clean: jest.fn(async () => JSON.stringify(poorResponse)),
+          parseAndRepair: jest.fn(async () => poorResponse),
+        },
+        llmStrategyFactory: {
+          getAIDecision: jest.fn(async () => JSON.stringify(poorResponse)),
+        },
+      });
+
+      const service = new CoreMotivationsGenerator(dependencies);
+
+      await expect(
+        service.generate(validParams, { maxRetries: 0 })
+      ).rejects.toThrow(/Response quality issues/);
+
+      expect(dependencies.logger.warn).toHaveBeenCalledWith(
+        'CoreMotivationsGenerator: Response quality issues detected',
+        expect.objectContaining({ issueCount: expect.any(Number) })
+      );
+    });
+
+    it('should map diverse failure messages to meaningful failure stages', async () => {
+      const scenarios = [
+        {
+          name: 'llm_request',
+          configure(deps) {
+            deps.llmStrategyFactory.getAIDecision = jest
+              .fn()
+              .mockRejectedValue(new Error('Network outage during call'));
+          },
+          expected: 'llm_request',
+        },
+        {
+          name: 'response_parsing',
+          configure(deps) {
+            deps.llmJsonService.parseAndRepair = jest
+              .fn()
+              .mockRejectedValue(new Error('Parsing issue occurred'));
+          },
+          expected: 'response_parsing',
+        },
+        {
+          name: 'structure_validation',
+          configure() {
+            jest
+              .spyOn(promptModule, 'validateCoreMotivationsGenerationResponse')
+              .mockImplementation(() => {
+                throw new Error('Schema validation failed');
+              });
+          },
+          expected: 'structure_validation',
+        },
+        {
+          name: 'quality_validation',
+          configure(deps) {
+            const almostValid = buildValidResponse();
+            almostValid.motivations[0].coreDesire = 'Short desire';
+            almostValid.motivations[0].internalContradiction = 'Brief conflict';
+            deps.llmJsonService.parseAndRepair = jest
+              .fn()
+              .mockResolvedValue(almostValid);
+            deps.llmStrategyFactory.getAIDecision = jest
+              .fn()
+              .mockResolvedValue(JSON.stringify(almostValid));
+          },
+          expected: 'quality_validation',
+        },
+        {
+          name: 'configuration',
+          configure(deps) {
+            deps.llmConfigManager.getActiveConfiguration = jest
+              .fn()
+              .mockResolvedValue(null);
+          },
+          expected: 'llm_request',
+        },
+        {
+          name: 'unknown',
+          configure(deps) {
+            deps.eventBus.dispatch = jest
+              .fn()
+              .mockResolvedValueOnce(undefined)
+              .mockRejectedValueOnce({})
+              .mockResolvedValueOnce(undefined);
+          },
+          expected: 'unknown',
+        },
+        {
+          name: 'recursive',
+          configure(deps) {
+            deps.eventBus.dispatch = jest
+              .fn()
+              .mockResolvedValueOnce(undefined)
+              .mockRejectedValueOnce(
+                new CoreMotivationsGenerationError(
+                  'outer error',
+                  new Error('Timeout while waiting for response')
+                )
+              )
+              .mockResolvedValueOnce(undefined);
+          },
+          expected: 'llm_request',
+        },
+      ];
+
+      for (const { name, configure, expected } of scenarios) {
+        jest.restoreAllMocks();
+        const dependencies = createDependencies();
+        configure(dependencies);
+        const service = new CoreMotivationsGenerator(dependencies);
+
+        await expect(
+          service.generate(validParams, { maxRetries: 0 })
+        ).rejects.toThrow(CoreMotivationsGenerationError);
+
+        const failureCall = dependencies.eventBus.dispatch.mock.calls.at(-1);
+
+        const stage = failureCall[1].failureStage;
+        if (stage !== expected) {
+          throw new Error(
+            `Scenario ${name} expected stage ${expected} but received ${stage}`
+          );
+        }
+      }
     });
   });
 });
