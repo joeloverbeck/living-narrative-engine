@@ -163,6 +163,27 @@ describe('SafeEventDispatcher', () => {
       }
     );
   });
+
+  it('normalizes non-Error rejections into readable log messages', async () => {
+    const rawError = 'fatal failure';
+    mockVed.dispatch.mockRejectedValue(rawError);
+    const dispatcher = new SafeEventDispatcher({
+      validatedEventDispatcher: mockVed,
+      logger: mockLogger,
+    });
+
+    const result = await dispatcher.dispatch(testEventName, testPayload);
+
+    expect(result).toBe(false);
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      `SafeEventDispatcher: Exception caught while dispatching event '${testEventName}'. Error: ${rawError}`,
+      {
+        payload: testPayload,
+        error: rawError,
+        options: expectedDefaultOptions,
+      }
+    );
+  });
 });
 
 // --- FILE END ---

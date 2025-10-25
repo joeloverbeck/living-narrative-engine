@@ -42,6 +42,47 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
   #isHandlingError = false; // Track if we're already handling an error
 
   /**
+   * Derives a readable error message from unknown error-like values.
+   *
+   * @private
+   * @param {unknown} error - Error value provided by the dispatcher.
+   * @returns {string} Normalized error message.
+   */
+  #normalizeErrorMessage(error) {
+    if (error instanceof Error) {
+      return error.message || 'Unknown error.';
+    }
+
+    if (typeof error === 'string') {
+      const trimmed = error.trim();
+      return trimmed || 'Unknown error.';
+    }
+
+    if (error && typeof error === 'object' && 'message' in error) {
+      const messageValue = /** @type {{ message?: unknown }} */ (error).message;
+      if (typeof messageValue === 'string') {
+        const trimmedMessage = messageValue.trim();
+        if (trimmedMessage) {
+          return trimmedMessage;
+        }
+      }
+    }
+
+    if (error === null || error === undefined) {
+      return 'Unknown error.';
+    }
+
+    try {
+      const asString = String(error);
+      return asString && asString !== '[object Object]'
+        ? asString
+        : 'Unknown error.';
+    } catch {
+      return 'Unknown error.';
+    }
+  }
+
+  /**
    * Creates an instance of SafeEventDispatcher.
    *
    * @param {object} dependencies - The required dependencies.
@@ -100,36 +141,35 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
    * @param {object} [context] - Additional context to include in error logs.
    * @returns {Promise<*>} The return value of `fn`, or `undefined` if an error
    * occurs.
-   */
+  */
   #executeSafely(description, fn, context = {}) {
     try {
       const result = fn();
       if (result && typeof result.then === 'function') {
         return result.catch((error) => {
+          const errorMessage = this.#normalizeErrorMessage(error);
           // Enhanced recursion detection
           const isErrorEvent =
             description.includes('system_error_occurred') ||
             description.includes('error');
           const hasErrorKeywords = description.match(/(error|exception|fail)/i);
 
+          const logMessage =
+            `SafeEventDispatcher: Exception caught while ${description}. Error: ${errorMessage}`;
+          const logContext = { ...context, error };
+
           if (isErrorEvent || hasErrorKeywords || this.#isHandlingError) {
             // Use console directly to avoid potential recursion
-            console.error(
-              `SafeEventDispatcher: Exception caught while ${description}. Error: ${error.message}`,
-              { ...context, error }
-            );
+            console.error(logMessage, logContext);
           } else {
             this.#isHandlingError = true;
             try {
               // Use try-catch around logger to prevent any logger-triggered events
-              this.#logger.error(
-                `SafeEventDispatcher: Exception caught while ${description}. Error: ${error.message}`,
-                { ...context, error }
-              );
+              this.#logger.error(logMessage, logContext);
             } catch (loggerError) {
               // Logger failed - use console as ultimate fallback
               console.error(
-                `SafeEventDispatcher: Logger failed while handling error in ${description}. Original:`,
+                `SafeEventDispatcher: Logger failed while handling error in ${description}. Original message: ${errorMessage}`,
                 error,
                 'Logger error:',
                 loggerError
@@ -143,30 +183,29 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
       }
       return result;
     } catch (error) {
+      const errorMessage = this.#normalizeErrorMessage(error);
       // Enhanced recursion detection for synchronous errors
       const isErrorEvent =
         description.includes('system_error_occurred') ||
         description.includes('error');
       const hasErrorKeywords = description.match(/(error|exception|fail)/i);
 
+      const logMessage =
+        `SafeEventDispatcher: Exception caught while ${description}. Error: ${errorMessage}`;
+      const logContext = { ...context, error };
+
       if (isErrorEvent || hasErrorKeywords || this.#isHandlingError) {
         // Use console directly to avoid potential recursion
-        console.error(
-          `SafeEventDispatcher: Exception caught while ${description}. Error: ${error.message}`,
-          { ...context, error }
-        );
+        console.error(logMessage, logContext);
       } else {
         this.#isHandlingError = true;
         try {
           // Use try-catch around logger to prevent any logger-triggered events
-          this.#logger.error(
-            `SafeEventDispatcher: Exception caught while ${description}. Error: ${error.message}`,
-            { ...context, error }
-          );
+          this.#logger.error(logMessage, logContext);
         } catch (loggerError) {
           // Logger failed - use console as ultimate fallback
           console.error(
-            `SafeEventDispatcher: Logger failed while handling error in ${description}. Original:`,
+            `SafeEventDispatcher: Logger failed while handling error in ${description}. Original message: ${errorMessage}`,
             error,
             'Logger error:',
             loggerError
