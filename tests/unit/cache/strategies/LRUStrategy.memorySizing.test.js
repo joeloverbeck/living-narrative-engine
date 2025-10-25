@@ -33,6 +33,20 @@ describe('LRUStrategy memory sizing edge cases', () => {
     expect(strategy.memorySize).toBe(100);
   });
 
+  it('recursively sums sizes when caching arrays with mixed values', () => {
+    const strategy = new LRUStrategy({ maxSize: 5, maxMemoryUsage: 10_000 });
+
+    const arrayValue = ['ab', { foo: 'bar' }, [1, 2]];
+    strategy.set('mixed-array', arrayValue);
+
+    const stringBytes = 'ab'.length * 2;
+    const objectBytes = JSON.stringify({ foo: 'bar' }).length * 2;
+    const nestedArrayBytes = 24 + 8 + 8; // Array overhead + two primitive numbers
+    const expectedSize = 24 + stringBytes + objectBytes + nestedArrayBytes;
+
+    expect(strategy.memorySize).toBe(expectedSize);
+  });
+
   it('does not refresh TTL when updateAgeOnGet is explicitly disabled', async () => {
     const strategy = new LRUStrategy({ ttl: 200, updateAgeOnGet: false });
 

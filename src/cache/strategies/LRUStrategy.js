@@ -31,7 +31,9 @@ export class LRUStrategy {
       max: this.#config.maxSize,
       ttl: this.#config.ttl,
       updateAgeOnGet: this.#config.updateAgeOnGet,
-      sizeCalculation: this.#config.maxMemoryUsage ? this.#calculateSize : undefined,
+      sizeCalculation: this.#config.maxMemoryUsage
+        ? (value) => this.#calculateSize(value)
+        : undefined,
       maxSize: this.#config.maxMemoryUsage,
     });
   }
