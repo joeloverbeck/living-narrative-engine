@@ -97,4 +97,32 @@ describe('validateSaveMetadataFields', () => {
       isCorrupted: true,
     });
   });
+
+  test('normalizes playtimeSeconds when metadata provides NaN', () => {
+    extractSaveName.mockReturnValue('Mystery Save');
+    const metadata = {
+      identifier: 'save-4',
+      saveName: 'Unknown Duration',
+      timestamp: '2024-03-03T00:00:00Z',
+      playtimeSeconds: Number.NaN,
+    };
+
+    const result = validateSaveMetadataFields(
+      metadata,
+      'manual_save_save-4.sav',
+      logger
+    );
+
+    expect(extractSaveName).not.toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('save-4')
+    );
+    expect(result).toEqual({
+      identifier: 'save-4',
+      saveName: 'Unknown Duration',
+      timestamp: '2024-03-03T00:00:00Z',
+      playtimeSeconds: 0,
+      isCorrupted: true,
+    });
+  });
 });
