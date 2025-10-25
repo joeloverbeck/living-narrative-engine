@@ -124,6 +124,8 @@ describe('PartGroupingStrategies', () => {
           expect.any(Function),
           new Set()
         );
+        const pluralizerFn = mockTextFormatter.getPartLabel.mock.calls[0][2];
+        expect(pluralizerFn()).toBe('arm');
         expect(mockTextFormatter.formatLabelValue).toHaveBeenCalledWith(
           'Arm',
           'strong arm'
@@ -334,6 +336,33 @@ describe('PartGroupingStrategies', () => {
         );
       });
 
+      it('should use irregular plural forms when available', () => {
+        const parts = [mockPart, mockPart];
+        const descriptions = ['agile foot', 'agile foot'];
+
+        const result = strategy.format(
+          'foot',
+          parts,
+          descriptions,
+          mockTextFormatter,
+          mockConfig
+        );
+
+        expect(mockTextFormatter.getPartLabel).toHaveBeenCalledWith(
+          'foot',
+          2,
+          expect.any(Function),
+          expect.any(Set)
+        );
+        const pluralizerFn = mockTextFormatter.getPartLabel.mock.calls[0][2];
+        expect(pluralizerFn('foot')).toBe('feet');
+        expect(mockTextFormatter.formatLabelValue).toHaveBeenCalledWith(
+          'Feet',
+          'agile foot'
+        );
+        expect(result).toBe('Feet: agile foot');
+      });
+
       it('should format multiple different parts with indexed items', () => {
         const parts = [mockPart, mockPart, mockPart];
         const descriptions = [
@@ -419,6 +448,12 @@ describe('PartGroupingStrategies', () => {
 
     it('should have correct number of strategies', () => {
       expect(factory.strategies).toHaveLength(3);
+    });
+
+    it('should throw an error when no strategy can handle the configuration', () => {
+      expect(() =>
+        factory.getStrategy('arm', [], [], mockConfig)
+      ).toThrow('No strategy found for part type: arm');
     });
   });
 });
