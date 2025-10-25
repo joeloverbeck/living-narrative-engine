@@ -48,6 +48,7 @@ describe('TraitsRewriterController - EventBus Integration', () => {
   let controller;
   let mockEventBus;
   let mockElements;
+  let mockLogger;
 
   beforeEach(async () => {
     testBed = createTestBed();
@@ -87,6 +88,7 @@ describe('TraitsRewriterController - EventBus Integration', () => {
     mockElements.retryButton.id = 'retry-button';
     mockElements.generationProgress.id = 'generation-progress';
     mockElements.progressText.id = 'progress-text';
+    mockElements.progressText.className = 'progress-text';
     mockElements.rewrittenTraitsContainer.id = 'rewritten-traits-container';
     mockElements.generationError.id = 'generation-error';
     mockElements.emptyState.id = 'empty-state';
@@ -114,7 +116,7 @@ describe('TraitsRewriterController - EventBus Integration', () => {
     mockEventBus.unsubscribe = jest.fn();
 
     // Setup mocks
-    const mockLogger = testBed.createMockLogger();
+    mockLogger = testBed.createMockLogger();
     const mockCharacterBuilderService = testBed.createMock(
       'mockCharacterBuilderService',
       [
@@ -199,6 +201,69 @@ describe('TraitsRewriterController - EventBus Integration', () => {
 
       // Assert - Handler executes without errors
       expect(() => handler(mockEvent)).not.toThrow();
+    });
+  });
+
+  describe('Additional Generation Event Handling', () => {
+    it('should update progress text when progress events include a message', () => {
+      const registeredCalls = mockEventBus.subscribe.mock.calls;
+      const progressHandlerCall = registeredCalls.find(
+        (call) =>
+          call[0] ===
+          CHARACTER_BUILDER_EVENTS.TRAITS_REWRITER_GENERATION_STARTED
+      );
+
+      expect(progressHandlerCall).toBeDefined();
+
+      const progressHandler = progressHandlerCall[1];
+      mockElements.progressText.textContent = 'Waiting';
+
+      progressHandler({
+        payload: {
+          message: 'Halfway done',
+        },
+      });
+
+      expect(mockElements.progressText.textContent).toBe('Halfway done');
+    });
+
+    it('should surface errors dispatched through generation failure events', () => {
+      const registeredCalls = mockEventBus.subscribe.mock.calls;
+      const errorHandlerCall = registeredCalls.find(
+        (call) =>
+          call[0] ===
+          CHARACTER_BUILDER_EVENTS.TRAITS_REWRITER_GENERATION_FAILED
+      );
+
+      expect(errorHandlerCall).toBeDefined();
+
+      const errorHandler = errorHandlerCall[1];
+      mockElements.generationError.style.display = 'none';
+      const originalGetElement = controller._getElement;
+      const errorElement = { textContent: '' };
+      controller._getElement = function (key) {
+        if (key === 'errorMessage') {
+          return errorElement;
+        }
+        return originalGetElement.call(this, key);
+      };
+
+      const eventError = new Error('Network offline');
+
+      errorHandler({
+        payload: {
+          error: eventError,
+        },
+      });
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'TraitsRewriterController: Generation error',
+        expect.objectContaining({
+          payload: { error: eventError },
+        })
+      );
+      expect(errorElement.textContent).toBe('Network offline');
+      expect(mockElements.generationError.style.display).toBe('block');
     });
   });
 });
