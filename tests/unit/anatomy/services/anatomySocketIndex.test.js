@@ -191,6 +191,17 @@ describe('AnatomySocketIndex', () => {
       // Should handle failures gracefully
     });
 
+    it('should log and rethrow errors when index building fails', async () => {
+      const failure = new Error('Graph unavailable');
+      mockBodyGraphService.getBodyGraph.mockRejectedValue(failure);
+
+      await expect(service.buildIndex('root1')).rejects.toThrow('Graph unavailable');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to build socket index for root entity root1'),
+        failure
+      );
+    });
+
     it('should clear existing index before rebuilding', async () => {
       mockBodyGraph.getAllPartIds.mockReturnValue([]);
       mockEntityManager.getComponentData.mockResolvedValue({
@@ -455,6 +466,35 @@ describe('AnatomySocketIndex', () => {
       const result = await newService.getEntitiesWithSockets('root1');
       expect(result).toEqual(expect.arrayContaining(['root1', 'part1']));
       expect(mockBodyGraphService.getBodyGraph).toHaveBeenCalledWith('root1');
+    });
+
+    it('should return empty array when index build does not populate cache', async () => {
+      const isolatedLogger = createMockLogger();
+      const isolatedEntityManager = {
+        getComponentData: jest.fn(),
+        getEntitiesWithComponent: jest.fn(),
+      };
+      const isolatedBodyGraphService = {
+        getBodyGraph: jest.fn(),
+      };
+
+      const newService = new AnatomySocketIndex({
+        logger: isolatedLogger,
+        entityManager: isolatedEntityManager,
+        bodyGraphService: isolatedBodyGraphService,
+      });
+
+      const buildIndexSpy = jest
+        .spyOn(newService, 'buildIndex')
+        .mockImplementation(async () => {});
+
+      const result = await newService.getEntitiesWithSockets('root1');
+
+      expect(buildIndexSpy).toHaveBeenCalledWith('root1');
+      expect(result).toEqual([]);
+      expect(isolatedBodyGraphService.getBodyGraph).not.toHaveBeenCalled();
+
+      buildIndexSpy.mockRestore();
     });
   });
 
