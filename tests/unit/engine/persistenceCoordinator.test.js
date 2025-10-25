@@ -22,6 +22,7 @@ import {
   ENGINE_OPERATION_IN_PROGRESS_UI,
   ENGINE_OPERATION_FAILED_UI,
   ENGINE_READY_UI,
+  GAME_SAVED_ID,
 } from '../../../src/constants/eventIds.js';
 
 /**
@@ -135,6 +136,44 @@ describe('PersistenceCoordinator', () => {
     );
     expect(logger.warn).toHaveBeenCalledWith(
       `GameEngine.triggerManualSave: SafeEventDispatcher reported failure when dispatching ENGINE_READY_UI after save "${DEFAULT_SAVE_NAME}".`
+    );
+  });
+
+  it('triggerManualSave continues when dispatcher throws and logs errors', async () => {
+    const { coordinator, dispatcher, persistenceService, logger, state } =
+      createCoordinator();
+    const filePath = 'path/to.sav';
+    const progressError = new Error('progress dispatch failed');
+    const readyError = new Error('ready dispatch failed');
+
+    persistenceService.saveGame.mockResolvedValue({ success: true, filePath });
+    dispatcher.dispatch
+      .mockRejectedValueOnce(progressError)
+      .mockResolvedValueOnce(true)
+      .mockRejectedValueOnce(readyError);
+
+    const result = await coordinator.triggerManualSave(DEFAULT_SAVE_NAME);
+
+    expect(result).toEqual({ success: true, filePath });
+    expect(persistenceService.saveGame).toHaveBeenCalledWith(
+      DEFAULT_SAVE_NAME,
+      state.isInitialized,
+      DEFAULT_ACTIVE_WORLD_FOR_SAVE
+    );
+    expect(dispatcher.dispatch).toHaveBeenCalledTimes(3);
+    expect(dispatcher.dispatch.mock.calls[0][0]).toBe(
+      ENGINE_OPERATION_IN_PROGRESS_UI
+    );
+    expect(dispatcher.dispatch.mock.calls[1][0]).toBe(GAME_SAVED_ID);
+    expect(dispatcher.dispatch.mock.calls[2][0]).toBe(ENGINE_READY_UI);
+
+    expect(logger.error).toHaveBeenCalledWith(
+      `GameEngine.triggerManualSave: SafeEventDispatcher threw when dispatching ENGINE_OPERATION_IN_PROGRESS_UI for save "${DEFAULT_SAVE_NAME}". Error: ${progressError.message}`,
+      progressError
+    );
+    expect(logger.error).toHaveBeenCalledWith(
+      `GameEngine.triggerManualSave: SafeEventDispatcher threw when dispatching ENGINE_READY_UI after save "${DEFAULT_SAVE_NAME}". Error: ${readyError.message}`,
+      readyError
     );
   });
 
