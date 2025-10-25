@@ -379,6 +379,152 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     expect(errorContainer.innerHTML).toContain('Character components appear to lack detail');
   });
 
+  it('clears validation errors and disables generation when empty input is blurred', async () => {
+    setValidatorBehavior(() => {
+      throw new Error('validator unavailable');
+    });
+
+    const { dependencies } = createDependencies();
+    const controller = createControllerInstance(dependencies);
+
+    const originalCache = controller._cacheElements.bind(controller);
+    controller._cacheElements = function () {
+      originalCache();
+      this._cacheElementsFromMap({
+        exportFormat: '#export-format',
+        exportTemplate: '#export-template',
+        templateGroup: '#template-group',
+      });
+    };
+
+    await controller.initialize();
+
+    const textarea = document.getElementById('character-definition');
+    const generateBtn = document.getElementById('generate-btn');
+    const errorContainer = document.getElementById('character-input-error');
+
+    generateBtn.disabled = false;
+    errorContainer.style.display = 'block';
+    errorContainer.innerHTML = '<p>Old error</p>';
+
+    textarea.value = '   ';
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    textarea.dispatchEvent(new Event('blur', { bubbles: true }));
+    await flushMicrotasks();
+
+    expect(generateBtn.disabled).toBe(true);
+    expect(errorContainer.style.display).toBe('none');
+    expect(errorContainer.innerHTML).toBe('');
+  });
+
+  it('reports detailed validation errors for malformed character definitions', async () => {
+    setValidatorBehavior(() => {
+      throw new Error('validator unavailable');
+    });
+
+    const { dependencies } = createDependencies();
+    const controller = createControllerInstance(dependencies);
+
+    const originalCache = controller._cacheElements.bind(controller);
+    controller._cacheElements = function () {
+      originalCache();
+      this._cacheElementsFromMap({
+        exportFormat: '#export-format',
+        exportTemplate: '#export-template',
+        templateGroup: '#template-group',
+      });
+    };
+
+    await controller.initialize();
+
+    const textarea = document.getElementById('character-definition');
+    const errorContainer = document.getElementById('character-input-error');
+
+    const triggerValidation = async (value) => {
+      textarea.value = value;
+      textarea.dispatchEvent(new Event('input', { bubbles: true }));
+      textarea.dispatchEvent(new Event('blur', { bubbles: true }));
+      await flushMicrotasks();
+    };
+
+    await triggerValidation('123');
+    expect(errorContainer.innerHTML).toContain(
+      'Character definition must be a JSON object'
+    );
+
+    const missingCoreComponents = {
+      components: {
+        'core:likes': {
+          description: 'Loves expansive adventures across the lands '.repeat(3),
+        },
+      },
+    };
+    await triggerValidation(JSON.stringify(missingCoreComponents));
+    expect(errorContainer.innerHTML).toContain('Missing essential components');
+
+    const blankNameDefinition = {
+      components: {
+        'core:name': { text: '   ' },
+        'core:personality': {
+          description: 'A deeply written description that easily exceeds validation thresholds.'.repeat(
+            2
+          ),
+        },
+        'core:profile': {
+          background:
+            'An equally detailed background to keep the validator satisfied with content length.'.repeat(
+              2
+            ),
+        },
+      },
+    };
+    await triggerValidation(JSON.stringify(blankNameDefinition));
+    expect(errorContainer.innerHTML).toContain(
+      'Character name component exists but does not contain a valid name'
+    );
+
+    const nonObjectNameDefinition = {
+      components: {
+        'core:name': 'Althea',
+        'core:personality': {
+          description: 'Extensive personality notes to satisfy validation depth.'.repeat(
+            2
+          ),
+        },
+        'core:profile': {
+          background: 'Extensive history with plenty of details to avoid depth warnings.'.repeat(
+            2
+          ),
+        },
+      },
+    };
+    await triggerValidation(JSON.stringify(nonObjectNameDefinition));
+    expect(errorContainer.innerHTML).toContain(
+      'Character name component exists but does not contain a valid name'
+    );
+
+    const missingFieldsNameDefinition = {
+      components: {
+        'core:name': { alias: 'The Wanderer' },
+        'core:personality': {
+          description: 'Another long personality description to keep validations satisfied.'.repeat(
+            2
+          ),
+        },
+        'core:profile': {
+          background:
+            'Rich narrative history to satisfy component depth requirements across the validator.'.repeat(
+              2
+            ),
+        },
+      },
+    };
+    await triggerValidation(JSON.stringify(missingFieldsNameDefinition));
+    expect(errorContainer.innerHTML).toContain(
+      'Character name component exists but does not contain a valid name'
+    );
+  });
+
   it('runs the full generation workflow with enhanced validation, progress updates, and rich export options', async () => {
     const { dependencies, mocks } = createDependencies({
       withDisplayEnhancer: true,
@@ -544,6 +690,60 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     expect(global.URL.createObjectURL).toHaveBeenCalled();
     expect(document.getElementById('screen-reader-announcement').textContent)
       .toContain('Speech patterns exported as');
+  });
+
+  it('adds medium confidence styling to the progress bar during mid-stage updates', async () => {
+    const { dependencies, mocks } = createDependencies();
+
+    mocks.speechPatternsGenerator.generateSpeechPatterns.mockImplementation(
+      async (_definition, options) => {
+        options?.progressCallback?.(0.6);
+        return {
+          speechPatterns: [
+            {
+              pattern: 'Carefully considers each response',
+              example: '"Let us think this through before we commit."',
+              circumstances: 'During strategic planning sessions',
+            },
+          ],
+          characterName: 'Deliberate Strategist',
+          generatedAt: new Date('2024-01-05T00:00:00Z').toISOString(),
+        };
+      }
+    );
+
+    setPerformanceSequence([0, 2500, 5000, 8000, 12000, 15000, 18000]);
+
+    const controller = createControllerInstance(dependencies);
+    const originalCache = controller._cacheElements.bind(controller);
+    controller._cacheElements = function () {
+      originalCache();
+      this._cacheElementsFromMap({
+        exportFormat: '#export-format',
+        exportTemplate: '#export-template',
+        templateGroup: '#template-group',
+      });
+    };
+
+    await controller.initialize();
+
+    const validatorInstance = getLatestValidatorInstance();
+    validatorInstance.validateInput.mockResolvedValue({
+      isValid: true,
+      errors: [],
+      warnings: [],
+      suggestions: [],
+      quality: { overallScore: 0.9 },
+    });
+
+    await waitForValidationAndGeneration({
+      characterData: createValidCharacterData({ text: 'Deliberate Strategist' }),
+      validatorInstance,
+      waitMs: 800,
+    });
+
+    const progressBar = document.getElementById('progress-bar');
+    expect(progressBar.classList.contains('medium-confidence')).toBe(true);
   });
 
   it('falls back to text export when no display enhancer is provided', async () => {
@@ -1265,7 +1465,7 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     await flushMicrotasks();
 
     expect(generateBtn.disabled).toBe(true);
-    expect(errorContainer.innerHTML).toContain('Invalid JSON format');
+    expect(errorContainer.innerHTML).toContain('JSON Syntax Error');
     expect(textarea.classList.contains('error')).toBe(true);
   });
 
