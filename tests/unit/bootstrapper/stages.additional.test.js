@@ -308,4 +308,21 @@ describe('startGameStage', () => {
     expect(resultError.error).toBeInstanceOf(StageError);
     expect(resultError.error.phase).toBe('Start Game');
   });
+
+  it('logs recursion guidance when recursion errors occur', async () => {
+    const logger = createLogger();
+    const recursionError = new Error('Maximum recursion depth exceeded');
+    const gameEngine = {
+      startNewGame: jest.fn(() => Promise.reject(recursionError)),
+    };
+
+    const result = await startGameStage(gameEngine, 'crystal-reef', logger);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBeInstanceOf(StageError);
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('Event recursion issue detected'),
+      recursionError
+    );
+  });
 });
