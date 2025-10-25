@@ -157,6 +157,18 @@ describe('TraitsRewriterDisplayEnhancer', () => {
         const result = enhancer.formatForExport(sampleTraits, 'text');
         expect(result).toContain('Character: Character');
       });
+
+      it('should include bullet formatting for array traits', () => {
+        const traitsWithArray = {
+          'core:goals': ['First goal', 'Second goal'],
+        };
+
+        const result = enhancer.formatForExport(traitsWithArray, 'text');
+
+        expect(result).toContain('Goals:');
+        expect(result).toContain('• First goal');
+        expect(result).toMatch(/• Second goal\n\n/);
+      });
     });
 
     describe('JSON Format', () => {
@@ -353,6 +365,17 @@ describe('TraitsRewriterDisplayEnhancer', () => {
       expect(sections[1].key).toBe('custom:trait');
       expect(sections[2].key).toBe('another:trait');
     });
+
+    it('should format array trait values as bullet lists', () => {
+      const traits = {
+        'core:goals': ['First goal', 'Second goal'],
+      };
+
+      const sections = enhancer.createDisplaySections(traits);
+
+      expect(sections[0].content).toBe('• First goal\n• Second goal');
+      expect(sections[0].isArray).toBe(true);
+    });
   });
 
   describe('Content Safety', () => {
@@ -389,6 +412,16 @@ describe('TraitsRewriterDisplayEnhancer', () => {
       const sections = enhancer.createDisplaySections(traits);
 
       expect(sections[0].content).toBe('Content with spaces');
+    });
+
+    it('should convert non-string values safely', () => {
+      const traits = {
+        'core:personality': 12345,
+      };
+
+      const sections = enhancer.createDisplaySections(traits);
+
+      expect(sections[0].content).toBe('12345');
     });
 
     it('should truncate very long content', () => {
@@ -445,6 +478,33 @@ describe('TraitsRewriterDisplayEnhancer', () => {
 
       expect(html).not.toContain('<b>Bold</b>');
       expect(html).toContain('&lt;b&gt;Bold&lt;&#x2F;b&gt;'); // Forward slash is also escaped
+    });
+
+    it('should wrap errors when HTML rendering fails', () => {
+      const failure = new Error('HTML failure');
+      const spy = jest
+        .spyOn(enhancer, 'createDisplaySections')
+        .mockImplementation(() => {
+          throw failure;
+        });
+
+      let thrownError;
+      try {
+        enhancer.createHtmlDisplay({ 'core:personality': 'value' });
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(TraitsRewriterError);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to create HTML display',
+        failure
+      );
+      expect(thrownError.context.errorCode).toBe(
+        TRAITS_REWRITER_ERROR_CODES.CONTENT_SANITIZATION_FAILED
+      );
+
+      spy.mockRestore();
     });
   });
 
@@ -563,6 +623,91 @@ describe('TraitsRewriterDisplayEnhancer', () => {
       expect(() => {
         enhancer.formatForExport(null, 'text');
       }).toThrow();
+    });
+
+    it('should wrap section creation errors with sanitization context', () => {
+      const traits = {};
+      Object.defineProperty(traits, 'core:personality', {
+        enumerable: true,
+        get() {
+          throw new Error('boom');
+        },
+      });
+
+      let thrownError;
+      try {
+        enhancer.createDisplaySections(traits);
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(TraitsRewriterError);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to create display sections',
+        expect.any(Error)
+      );
+      expect(thrownError.context.errorCode).toBe(
+        TRAITS_REWRITER_ERROR_CODES.CONTENT_SANITIZATION_FAILED
+      );
+      expect(thrownError.context.traitCount).toBe(1);
+    });
+
+    it('should wrap export failures with detailed context', () => {
+      const traits = { 'core:personality': 'value' };
+      const failure = new Error('format failure');
+      const spy = jest
+        .spyOn(enhancer, 'createDisplaySections')
+        .mockImplementation(() => {
+          throw failure;
+        });
+
+      let thrownError;
+      try {
+        enhancer.formatForExport(traits, 'text');
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(TraitsRewriterError);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to format traits for text export',
+        failure
+      );
+      expect(thrownError.context.errorCode).toBe(
+        TRAITS_REWRITER_ERROR_CODES.EXPORT_FAILED
+      );
+      expect(thrownError.context.format).toBe('text');
+
+      spy.mockRestore();
+    });
+
+    it('should wrap comparison failures with validation context', () => {
+      const original = {};
+      Object.defineProperty(original, 'core:personality', {
+        enumerable: true,
+        get() {
+          throw new Error('comparison failure');
+        },
+      });
+
+      const rewritten = { 'core:personality': 'value' };
+
+      let thrownError;
+      try {
+        enhancer.compareTraits(original, rewritten);
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(TraitsRewriterError);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to compare traits',
+        expect.any(Error)
+      );
+      expect(thrownError.context.errorCode).toBe(
+        TRAITS_REWRITER_ERROR_CODES.VALIDATION_FAILED
+      );
+      expect(thrownError.context.validationField).toBe('comparison');
     });
 
     it('should log warnings for truncated content', () => {
