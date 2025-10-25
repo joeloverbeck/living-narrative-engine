@@ -145,7 +145,7 @@ async function _handleResponse(
  * @description Perform a single fetch attempt and determine if a retry is needed.
  * @param {number} currentAttempt Current attempt number starting at 1.
  * @param {string} url Request URL.
- * @param {object} options Fetch options.
+ * @param {object} [options={}] Fetch options.
  * @param {number} maxRetries Maximum allowed retries.
  * @param {number} baseDelayMs Base delay in milliseconds for retries.
  * @param {number} maxDelayMs Maximum backoff delay in milliseconds.
@@ -164,7 +164,7 @@ async function _handleResponse(
  * errors and specific HTTP status codes. It implements an exponential backoff
  * strategy with added jitter.
  * @param {string} url The URL to fetch.
- * @param {object} options The options object for the fetch call (method, headers, body, etc.).
+ * @param {object} [options={}] The options object for the fetch call (method, headers, body, etc.).
  * @param {number} maxRetries Maximum number of attempts before failing.
  * @param {number} baseDelayMs Initial delay in milliseconds for the first retry.
  * @param {number} maxDelayMs Maximum delay in milliseconds between retries, capping the exponential backoff.
@@ -179,7 +179,7 @@ async function _handleResponse(
  */
 export async function fetchWithRetry(
   url,
-  options,
+  options = {},
   maxRetries,
   baseDelayMs,
   maxDelayMs,
