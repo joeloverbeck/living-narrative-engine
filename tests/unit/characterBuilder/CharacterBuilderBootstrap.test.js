@@ -296,6 +296,52 @@ describe('CharacterBuilderBootstrap', () => {
       expect(payloadSchemaCalls.length).toBeGreaterThan(0);
     });
 
+    it('logs when critical system event services are not ready yet', async () => {
+      let firstDataRegistryCall = true;
+      mockContainer.resolve.mockImplementation((token) => {
+        if (token === tokens.IDataRegistry && firstDataRegistryCall) {
+          firstDataRegistryCall = false;
+          return {}; // Missing setEventDefinition
+        }
+        const services = getAllServices();
+        return services[token];
+      });
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+      };
+
+      await bootstrap.bootstrap(config);
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        '[CharacterBuilderBootstrap] Services not ready for event registration, will register later'
+      );
+    });
+
+    it('logs when critical system event service resolution throws initially', async () => {
+      let firstDataRegistryCall = true;
+      mockContainer.resolve.mockImplementation((token) => {
+        if (token === tokens.IDataRegistry && firstDataRegistryCall) {
+          firstDataRegistryCall = false;
+          throw new Error('resolve pending');
+        }
+        const services = getAllServices();
+        return services[token];
+      });
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+      };
+
+      await bootstrap.bootstrap(config);
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        '[CharacterBuilderBootstrap] Services not ready for event registration: resolve pending'
+      );
+    });
+
     it('should handle event registration errors gracefully', async () => {
       mockSchemaValidator.addSchema.mockRejectedValueOnce(
         new Error('Schema registration failed')
@@ -431,6 +477,62 @@ describe('CharacterBuilderBootstrap', () => {
       expect(mockModsLoader.loadMods).toHaveBeenCalledWith('default', ['core']);
     });
 
+    it('warns when LlmConfigLoader is unavailable during LLM initialization', async () => {
+      mockLlmConfigLoader = null;
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+      };
+
+      await bootstrap.bootstrap(config);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        '[CharacterBuilderBootstrap] LlmConfigLoader not available, skipping LLM initialization'
+      );
+    });
+
+    it('logs an error when LLM services fail to initialize', async () => {
+      let firstLLMAdapterCall = true;
+      mockContainer.resolve.mockImplementation((token) => {
+        if (token === tokens.LLMAdapter && firstLLMAdapterCall) {
+          firstLLMAdapterCall = false;
+          throw new Error('adapter failure');
+        }
+        const services = getAllServices();
+        return services[token];
+      });
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+      };
+
+      await bootstrap.bootstrap(config);
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '[CharacterBuilderBootstrap] Failed to initialize LLM services: adapter failure',
+        expect.any(Error)
+      );
+    });
+
+    it('propagates CharacterStorageService initialization failures', async () => {
+      const storageError = new Error('storage init failed');
+      mockCharacterStorageService.initialize.mockRejectedValueOnce(storageError);
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+      };
+
+      await expect(bootstrap.bootstrap(config)).rejects.toThrow('storage init failed');
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '[CharacterBuilderBootstrap] Failed to initialize CharacterStorageService: storage init failed',
+        storageError
+      );
+    });
+
     it('should register custom services', async () => {
       const customService = { doSomething: jest.fn() };
       const config = {
@@ -446,6 +548,26 @@ describe('CharacterBuilderBootstrap', () => {
       expect(mockContainer.register).toHaveBeenCalledWith(
         'customService',
         customService
+      );
+    });
+
+    it('registers constructor-based custom services with empty dependencies metadata', async () => {
+      class CustomService {}
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        services: {
+          customService: CustomService,
+        },
+      };
+
+      await bootstrap.bootstrap(config);
+
+      expect(mockContainer.register).toHaveBeenCalledWith(
+        'customService',
+        CustomService,
+        { dependencies: [] }
       );
     });
 
@@ -471,6 +593,95 @@ describe('CharacterBuilderBootstrap', () => {
       expect(mockContainer.register).toHaveBeenCalledWith(
         'customService2',
         customService2
+      );
+    });
+
+    it('instantiates TraitsDisplayEnhancer when it is not registered in the container', async () => {
+      class TraitsDisplayEnhancer {
+        constructor({ logger }) {
+          this.logger = logger;
+        }
+      }
+
+      mockContainer.resolve.mockImplementation((token) => {
+        if (token === tokens.TraitsDisplayEnhancer) {
+          throw new Error('not registered');
+        }
+        const services = getAllServices();
+        return services[token];
+      });
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        services: {
+          traitsDisplayEnhancer: TraitsDisplayEnhancer,
+        },
+      };
+
+      await bootstrap.bootstrap(config);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "Service 'traitsDisplayEnhancer' (TraitsDisplayEnhancer) not found in container. Attempting to instantiate..."
+      );
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Successfully instantiated TraitsDisplayEnhancer with logger dependency.'
+      );
+    });
+
+    it('warns when an unknown custom service cannot be resolved from the container', async () => {
+      class MysteryService {}
+
+      mockContainer.resolve.mockImplementation((token) => {
+        if (token === 'mysteryService') {
+          throw new Error('missing service');
+        }
+        const services = getAllServices();
+        return services[token];
+      });
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        services: {
+          mysteryService: MysteryService,
+        },
+      };
+
+      await bootstrap.bootstrap(config);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "Unknown service 'MysteryService'. Consider registering it in the DI container."
+      );
+    });
+
+    it('logs an error when instantiating a fallback display enhancer fails', async () => {
+      class TraitsDisplayEnhancer {
+        constructor() {
+          throw new Error('boom');
+        }
+      }
+
+      mockContainer.resolve.mockImplementation((token) => {
+        if (token === tokens.TraitsDisplayEnhancer) {
+          throw new Error('not registered');
+        }
+        const services = getAllServices();
+        return services[token];
+      });
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        services: {
+          traitsDisplayEnhancer: TraitsDisplayEnhancer,
+        },
+      };
+
+      await bootstrap.bootstrap(config);
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to instantiate TraitsDisplayEnhancer: boom'
       );
     });
 
