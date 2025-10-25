@@ -32,6 +32,12 @@ function normalizeBooleanFlag(value) {
     if (normalized === 'false') {
       return false;
     }
+    if (normalized === '1') {
+      return true;
+    }
+    if (normalized === '0') {
+      return false;
+    }
   }
 
   return Boolean(value);
