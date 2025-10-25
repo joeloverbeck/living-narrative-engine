@@ -267,6 +267,11 @@ class PersistenceCoordinator {
     if (!this.#state.isInitialized) {
       const errorMsg = 'Game engine is not initialized. Cannot save game.';
       this.#logger.error(`GameEngine.triggerManualSave: ${errorMsg}`);
+      await this.#dispatchSaveResult({
+        success: false,
+        error: errorMsg,
+        saveName,
+      });
       return { success: false, error: errorMsg };
     }
 
@@ -274,6 +279,11 @@ class PersistenceCoordinator {
       const errorMsg =
         'GamePersistenceService is not available. Cannot save game.';
       this.#logger.error(`GameEngine.triggerManualSave: ${errorMsg}`);
+      await this.#dispatchSaveResult({
+        success: false,
+        error: errorMsg,
+        saveName,
+      });
       return { success: false, error: errorMsg };
     }
 
