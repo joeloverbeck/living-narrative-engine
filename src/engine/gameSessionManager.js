@@ -148,10 +148,19 @@ class GameSessionManager {
     this.#logger.debug(
       'GameSessionManager._finalizeGameStart: Dispatching UI event for game ready.'
     );
-    await this.#safeEventDispatcher.dispatch(ENGINE_READY_UI, {
-      activeWorld: worldName,
-      message: 'Enter command...',
-    });
+    const readyDispatched = await this.#safeEventDispatcher.dispatch(
+      ENGINE_READY_UI,
+      {
+        activeWorld: worldName,
+        message: 'Enter command...',
+      }
+    );
+
+    if (!readyDispatched) {
+      this.#logger.warn(
+        'GameSessionManager._finalizeGameStart: SafeEventDispatcher reported failure when dispatching ENGINE_READY_UI.'
+      );
+    }
 
     // Wait for anatomy generation to complete before starting turns
     if (this.#anatomyInitializationService) {

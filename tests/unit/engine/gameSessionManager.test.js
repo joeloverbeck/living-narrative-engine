@@ -286,6 +286,18 @@ describe('GameSessionManager', () => {
       );
     });
 
+    it('should warn when ready UI dispatch fails', async () => {
+      safeEventDispatcher.dispatch
+        .mockResolvedValueOnce(false)
+        .mockResolvedValue(true);
+
+      await gameSessionManager.finalizeNewGameSuccess('NewWorld');
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        'GameSessionManager._finalizeGameStart: SafeEventDispatcher reported failure when dispatching ENGINE_READY_UI.'
+      );
+    });
+
     it('should handle missing playtimeTracker gracefully', async () => {
       // Create manager without playtimeTracker
       const managerWithoutTracker = new GameSessionManager({
