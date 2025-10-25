@@ -43,8 +43,8 @@ describe('InitiativePriorityQueue', () => {
       expect(queue.peek()).toBeNull();
       expect(queue.getNext()).toBeNull();
       expect(queue.toArray()).toEqual([]);
-      // Indirectly checks if #removedEntityIds is cleared because size() depends on it.
-      // If we add an item after clear, it should work normally.
+      // Clearing should reset internal bookkeeping so subsequent adds behave normally.
+      // If we add an item after clear, it should work without stale removal state.
       queue.add(entityA, 1);
       expect(queue.size()).toBe(1);
       expect(queue.peek()).toBe(entityA);
@@ -69,7 +69,7 @@ describe('InitiativePriorityQueue', () => {
       expect(queue.peek()).toBeNull();
       expect(queue.getNext()).toBeNull();
       expect(queue.toArray()).toEqual([]);
-      // Indirectly checks if #removedEntityIds is cleared.
+      // Clearing removes stale removal markers so re-adding works as expected.
       // If we add 'a' back after clear, it shouldn't be treated as removed.
       queue.add(entityA, 15);
       expect(queue.size()).toBe(1);

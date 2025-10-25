@@ -76,8 +76,6 @@ describe('InitiativePriorityQueue', () => {
       const currentSize = queue.size();
 
       // Assert
-      // Internal state: queue.length = 2, removedIds = {'a'}
-      // Size calculation: Math.max(0, 2 - 1) = 1
       expect(currentSize).toBe(1);
       expect(queue.peek()).toBe(entityB); // Verify B is still the active one
     });
@@ -94,8 +92,6 @@ describe('InitiativePriorityQueue', () => {
       const currentSize = queue.size();
 
       // Assert
-      // Internal state: queue.length = 1, removedIds = {'a'}
-      // Size calculation: Math.max(0, 1 - 1) = 0
       expect(currentSize).toBe(0);
       expect(queue.isEmpty()).toBe(true); // Should also report as empty
     });
@@ -114,8 +110,6 @@ describe('InitiativePriorityQueue', () => {
       const currentSize = queue.size();
 
       // Assert
-      // Internal state: queue.length = 1 (B remains), removedIds = {} (A was physically removed)
-      // Size calculation: Math.max(0, 1 - 0) = 1
       expect(currentSize).toBe(1);
       expect(queue.peek()).toBe(entityB);
     });
@@ -156,8 +150,6 @@ describe('InitiativePriorityQueue', () => {
       const currentSize = queue.size();
 
       // Assert
-      // Internal state: queue.length = 0 (A was popped during getNext skip, B was popped and returned), removedIds = {} (A was processed)
-      // Size calculation: Math.max(0, 0 - 0) = 0
       expect(currentSize).toBe(0);
       expect(queue.isEmpty()).toBe(true);
     });
@@ -176,8 +168,6 @@ describe('InitiativePriorityQueue', () => {
       const currentSize = queue.size();
 
       // Assert
-      // Internal state: queue.length = 0, removedIds = {}
-      // Size calculation: Math.max(0, 0 - 0) = 0
       expect(currentSize).toBe(0);
       expect(queue.isEmpty()).toBe(true);
     });
