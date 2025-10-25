@@ -3,7 +3,7 @@
   "id": "vampirism:pull_out_fangs",
   "name": "Pull Out Fangs",
   "description": "Withdraw your fangs from the target's neck, ending the bite.",
-  "targets": "vampirism:actor_being_bitten_by_me",
+  "targets": "positioning:actor_being_bitten_by_me",
   "required_components": {
     "actor": ["positioning:biting_neck"]
   },

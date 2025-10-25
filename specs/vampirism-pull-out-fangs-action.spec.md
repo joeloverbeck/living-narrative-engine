@@ -16,7 +16,7 @@ This document defines a new action and rule for the vampirism mod that allows a 
 ## Action Design
 
 ### Targets Scope
-- Use `vampirism:actor_being_bitten_by_me` (see `data/mods/vampirism/actions/drink_blood.action.json` for precedent).
+- Use `positioning:actor_being_bitten_by_me` (see `data/mods/vampirism/actions/drink_blood.action.json` for precedent).
 
 ### Required Components
 - `actor`: `["positioning:biting_neck"]`
@@ -50,7 +50,7 @@ This document defines a new action and rule for the vampirism mod that allows a 
 ### Effects
 - Remove `positioning:biting_neck` from the acting vampire.
 - Remove `positioning:being_bitten_in_neck` from the target specified by the action scope.
-- Ensure reciprocal removal only occurs when component IDs correspond to each other, similar to validation logic in `vampirism:actor_being_bitten_by_me` scope.
+- Ensure reciprocal removal only occurs when component IDs correspond to each other, similar to validation logic in `positioning:actor_being_bitten_by_me` scope.
 
 ### Messaging
 - **Perceptible Event Message**: `{actor} pulls out their fangs from {target}'s neck.`
@@ -66,7 +66,7 @@ This document defines a new action and rule for the vampirism mod that allows a 
 - Add integration tests under `tests/integration/mods/vampirism/` to confirm the action appears in the action list when:
   - The actor has `positioning:biting_neck` referencing the target.
   - The target has `positioning:being_bitten_in_neck` referencing the actor.
-  - The scope `vampirism:actor_being_bitten_by_me` yields the target.
+  - The scope `positioning:actor_being_bitten_by_me` yields the target.
 - Ensure tests cover absence cases (e.g., action hidden when the actor lacks `positioning:biting_neck`).
 - Use existing fixtures and helpers documented in `docs/testing/` and reference patterns from tests such as `bare_fangs_action.test.js`.
 

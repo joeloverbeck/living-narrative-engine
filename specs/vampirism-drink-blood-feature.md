@@ -64,7 +64,7 @@ Vampire Entity                    Victim Entity
 ```
 // Returns the entity being bitten by the acting vampire
 // Validates reciprocal component relationship for safety
-vampirism:actor_being_bitten_by_me := actor.components.positioning:closeness.partners[][{
+positioning:actor_being_bitten_by_me := actor.components.positioning:closeness.partners[][{
   "and": [
     {"!!": {"var": "actor.components.positioning:biting_neck"}},
     {"!!": {"var": "entity.components.positioning:being_bitten_in_neck"}},
@@ -105,7 +105,7 @@ vampirism:actor_being_bitten_by_me := actor.components.positioning:closeness.par
 ```
 // Returns the vampire currently biting the acting entity's neck
 // Validates reciprocal component relationship for safety
-vampirism:actor_biting_my_neck := actor.components.positioning:closeness.partners[][{
+positioning:actor_biting_my_neck := actor.components.positioning:closeness.partners[][{
   "and": [
     {"!!": {"var": "actor.components.positioning:being_bitten_in_neck"}},
     {"!!": {"var": "entity.components.positioning:biting_neck"}},
@@ -151,7 +151,7 @@ vampirism:actor_biting_my_neck := actor.components.positioning:closeness.partner
   "id": "vampirism:drink_blood",
   "name": "Drink Blood",
   "description": "Drink blood from the target whose neck you are currently biting",
-  "targets": "vampirism:actor_being_bitten_by_me",
+  "targets": "positioning:actor_being_bitten_by_me",
   "required_components": {
     "actor": ["positioning:biting_neck"]
   },

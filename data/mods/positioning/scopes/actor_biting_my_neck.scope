@@ -1,6 +1,6 @@
-// Scope restricting potential targets to the vampire currently biting the actor's neck
+// Scope restricting potential targets to the actor currently biting the entity's neck
 // Validates reciprocal component relationship for safety
-vampirism:actor_biting_my_neck := actor.components.positioning:closeness.partners[][{
+positioning:actor_biting_my_neck := actor.components.positioning:closeness.partners[][{
   "and": [
     {"!!": {"var": "actor.components.positioning:being_bitten_in_neck"}},
     {"!!": {"var": "entity.components.positioning:biting_neck"}},

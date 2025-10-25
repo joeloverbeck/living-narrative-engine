@@ -3,7 +3,7 @@
   "id": "vampirism:drink_blood",
   "name": "Drink Blood",
   "description": "Drink blood from the target whose neck you are currently biting",
-  "targets": "vampirism:actor_being_bitten_by_me",
+  "targets": "positioning:actor_being_bitten_by_me",
   "required_components": {
     "actor": ["positioning:biting_neck"]
   },

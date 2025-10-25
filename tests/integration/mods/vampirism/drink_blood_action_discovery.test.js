@@ -31,7 +31,7 @@ describe('vampirism:drink_blood - Action Discovery', () => {
       drinkBloodAction,
     ]);
 
-    // Mock target resolution service to implement actor_being_bitten_by_me scope
+    // Mock target resolution service to implement positioning:actor_being_bitten_by_me scope
     testBed.mocks.targetResolutionService.resolveTargets.mockImplementation(
       (_scopeName, actorEntity) => {
         // Check actor required components first
