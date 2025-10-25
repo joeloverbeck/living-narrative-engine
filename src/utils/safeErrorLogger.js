@@ -215,6 +215,8 @@ export function createSafeErrorLogger({
   /**
    * Executes a function with game loading mode enabled.
    * Automatically manages batch mode for the duration of the operation.
+   * Detects and force-cleans any lingering nested loading contexts that
+   * remain active after the function resolves to prevent batch mode leaks.
    *
    * @param {Function} fn - Function to execute during loading mode
    * @param {object} [options] - Loading mode options
@@ -227,6 +229,14 @@ export function createSafeErrorLogger({
       return await fn();
     } finally {
       disableGameLoadingMode();
+
+      if (isGameLoadingActive()) {
+        safeLogger.warn(
+          'SafeErrorLogger: Game loading mode still active after scope exit. Forcing batch mode disable to prevent leaks.',
+          { context: options.context }
+        );
+        disableGameLoadingMode({ force: true, reason: 'scope-exit' });
+      }
     }
   }
 
