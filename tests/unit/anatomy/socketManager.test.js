@@ -1,5 +1,6 @@
 import { beforeEach, describe, it, expect, jest } from '@jest/globals';
 import SocketManager from '../../../src/anatomy/socketManager.js';
+import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 
 /** Helper to create minimal mocks for the entity manager. */
 function createMocks() {
@@ -17,6 +18,26 @@ describe('SocketManager', () => {
   let logger;
   let manager;
   let occupancy;
+
+  describe('constructor validation', () => {
+    it('throws when entityManager is missing', () => {
+      expect(() => new SocketManager({ logger: { debug: jest.fn() } })).toThrow(
+        InvalidArgumentError
+      );
+      expect(() => new SocketManager({ logger: { debug: jest.fn() } })).toThrow(
+        'entityManager is required'
+      );
+    });
+
+    it('throws when logger is missing', () => {
+      expect(() =>
+        new SocketManager({ entityManager: { getComponentData: jest.fn() } })
+      ).toThrow(InvalidArgumentError);
+      expect(() =>
+        new SocketManager({ entityManager: { getComponentData: jest.fn() } })
+      ).toThrow('logger is required');
+    });
+  });
 
   beforeEach(() => {
     ({ entityManager, logger } = createMocks());
