@@ -396,6 +396,24 @@ describe('GameSessionManager', () => {
       expect(turnManager.start).toHaveBeenCalledTimes(1);
     });
 
+    it('should normalize non-Error anatomy generation failures when logging', async () => {
+      anatomyInitializationService.getPendingGenerationCount.mockReturnValue(1);
+      anatomyInitializationService.waitForAllGenerationsToComplete.mockRejectedValue(
+        '  anatomy service stalled  '
+      );
+
+      await gameSessionManager.finalizeNewGameSuccess('NewWorld');
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        'GameSessionManager._finalizeGameStart: Anatomy generation did not complete in time, starting turns anyway.',
+        {
+          error: 'anatomy service stalled',
+          pendingCount: 1,
+        }
+      );
+      expect(turnManager.start).toHaveBeenCalledTimes(1);
+    });
+
     it('should skip anatomy wait when no generations are pending', async () => {
       // No pending generations (covers lines 168-169)
       anatomyInitializationService.getPendingGenerationCount.mockReturnValue(0);
