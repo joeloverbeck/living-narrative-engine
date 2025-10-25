@@ -380,6 +380,46 @@ describe('BlueprintSlotStrategy', () => {
         "BlueprintSlotStrategy: Found direct slot mapping for 'direct_slot' → 'mapped_entity'"
       );
     });
+
+    it('should resolve to the root entity when slot path is empty', async () => {
+      const mockBlueprint = {
+        slots: {
+          '': { socket: 'root_socket' },
+        },
+      };
+
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (componentType === 'anatomy:body') {
+            return Promise.resolve({ recipeId: 'human_base' });
+          }
+          if (componentType === 'anatomy:sockets') {
+            return Promise.resolve({
+              sockets: [{ id: 'root_socket', orientation: 'neutral' }],
+            });
+          }
+          return Promise.resolve(null);
+        }
+      );
+
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+        mockBlueprint
+      );
+      mockBodyGraphService.getBodyGraph.mockResolvedValue({});
+
+      const mapping = { blueprintSlots: [''] };
+      const result = await strategy.resolve('actor123', mapping);
+
+      expect(result).toEqual([
+        {
+          entityId: 'actor123',
+          socketId: 'root_socket',
+          slotPath: '',
+          orientation: 'neutral',
+        },
+      ]);
+      expect(mockAnatomySocketIndex.findEntityWithSocket).not.toHaveBeenCalled();
+    });
   });
 
   describe('setSlotEntityMappings', () => {
@@ -754,6 +794,51 @@ describe('BlueprintSlotStrategy', () => {
       expect(result[0].entityId).toBe('async_entity');
     });
 
+    it('should await promise-like joint data returned from entity manager', async () => {
+      const mockBlueprint = {
+        slots: {
+          promise_slot: { type: 'promise_type', socket: 'promise_socket' },
+        },
+      };
+
+      const fakePromise = Object.create(Promise.prototype);
+      fakePromise.then = undefined;
+      fakePromise.parentEntityId = 'promise_parent';
+
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (componentType === 'anatomy:body') {
+            return Promise.resolve({ recipeId: 'human_base' });
+          }
+          if (componentType === 'anatomy:joint') {
+            return fakePromise;
+          }
+          if (componentType === 'anatomy:sockets') {
+            return Promise.resolve({
+              sockets: [{ id: 'promise_socket', orientation: 'neutral' }],
+            });
+          }
+          return Promise.resolve(null);
+        }
+      );
+
+      const mockBodyGraph = {
+        getConnectedParts: jest.fn().mockReturnValue(['promise_entity']),
+      };
+
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+        mockBlueprint
+      );
+      mockBodyGraphService.getBodyGraph.mockResolvedValue(mockBodyGraph);
+      mockAnatomySocketIndex.findEntityWithSocket.mockResolvedValue(null);
+
+      const mapping = { blueprintSlots: ['promise_slot'] };
+      const result = await strategy.resolve('actor123', mapping);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].entityId).toBe('promise_entity');
+    });
+
     it('should handle missing intermediate slots in path', async () => {
       const mockBlueprint = {
         slots: {
@@ -825,6 +910,58 @@ describe('BlueprintSlotStrategy', () => {
       expect(result).toEqual([]);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         "No entity found for intermediate slot 'intermediate'"
+      );
+    });
+
+    it('should continue searching when joint type does not match blueprint slot', async () => {
+      const mockBlueprint = {
+        slots: {
+          unmatched_slot: { type: 'unmatched_type', socket: 'unmatched_socket' },
+        },
+      };
+
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (componentType === 'anatomy:body') {
+            return Promise.resolve({ recipeId: 'human_base' });
+          }
+          if (componentType === 'anatomy:joint') {
+            return { unrelated: true };
+          }
+          if (componentType === 'anatomy:sockets') {
+            if (entityId === 'fallback_entity') {
+              return Promise.resolve({
+                sockets: [
+                  { id: 'unmatched_socket', orientation: 'neutral' },
+                ],
+              });
+            }
+            return Promise.resolve({ sockets: [] });
+          }
+          return Promise.resolve(null);
+        }
+      );
+
+      const mockBodyGraph = {
+        getConnectedParts: jest.fn().mockReturnValue(['candidate_entity']),
+      };
+
+      mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+        mockBlueprint
+      );
+      mockBodyGraphService.getBodyGraph.mockResolvedValue(mockBodyGraph);
+      mockAnatomySocketIndex.findEntityWithSocket.mockResolvedValue(
+        'fallback_entity'
+      );
+
+      const mapping = { blueprintSlots: ['unmatched_slot'] };
+      const result = await strategy.resolve('actor123', mapping);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].entityId).toBe('fallback_entity');
+      expect(mockAnatomySocketIndex.findEntityWithSocket).toHaveBeenCalledWith(
+        'actor123',
+        'unmatched_socket'
       );
     });
 
