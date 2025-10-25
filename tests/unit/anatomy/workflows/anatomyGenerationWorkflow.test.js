@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { AnatomyGenerationWorkflow } from '../../../../src/anatomy/workflows/anatomyGenerationWorkflow.js';
 import { ValidationError } from '../../../../src/errors/validationError.js';
+import { BodyDescriptorValidator } from '../../../../src/anatomy/utils/bodyDescriptorValidator.js';
 
 describe('AnatomyGenerationWorkflow', () => {
   let workflow;
@@ -163,6 +164,58 @@ describe('AnatomyGenerationWorkflow', () => {
       expect(result.partsMap).toBeInstanceOf(Map);
       expect(result.partsMap.size).toBe(0);
       expect(result.slotEntityMappings).toBeInstanceOf(Map);
+    });
+
+    it('should persist recipe body descriptors on the anatomy body component', async () => {
+      const descriptorRecipeId = 'recipe-with-body-descriptors';
+      const descriptorBlueprintId = 'blueprint-with-body-descriptors';
+      const descriptorOwnerId = 'descriptor-owner';
+      const graphResult = { rootId: 'root-entity', entities: ['root-entity'] };
+
+      mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue(graphResult);
+
+      mockEntityManager.getEntityInstance.mockReturnValue({
+        hasComponent: jest.fn().mockReturnValue(false),
+        getComponentData: jest.fn(),
+      });
+      mockEntityManager.getComponentData.mockReturnValue({ existing: true });
+
+      const recipeBodyDescriptors = {
+        build: 'athletic',
+        composition: 'lean',
+      };
+
+      mockDataRegistry.get.mockImplementation((collection) => {
+        if (collection === 'anatomyRecipes') {
+          return {
+            blueprintId: descriptorBlueprintId,
+            bodyDescriptors: recipeBodyDescriptors,
+          };
+        }
+
+        if (collection === 'anatomyBlueprints') {
+          return {
+            slots: null,
+            clothingSlotMappings: null,
+          };
+        }
+
+        return undefined;
+      });
+
+      await workflow.generate(descriptorBlueprintId, descriptorRecipeId, {
+        ownerId: descriptorOwnerId,
+      });
+
+      const anatomyBodyCall = mockEntityManager.addComponent.mock.calls.find(
+        ([, componentId]) => componentId === 'anatomy:body'
+      );
+
+      expect(anatomyBodyCall).toBeDefined();
+      expect(anatomyBodyCall[0]).toBe(descriptorOwnerId);
+      expect(anatomyBodyCall[2].body.descriptors).toEqual(
+        recipeBodyDescriptors
+      );
     });
 
     it('should propagate errors from bodyBlueprintFactory', async () => {
@@ -580,6 +633,21 @@ describe('AnatomyGenerationWorkflow', () => {
           workflow.validateBodyDescriptors(bodyDescriptors, 'test-recipe')
         ).not.toThrow();
       });
+    });
+
+    it('should rethrow unexpected errors from the body descriptor validator', () => {
+      const unexpectedError = new Error('Unexpected validator failure');
+      const validatorSpy = jest
+        .spyOn(BodyDescriptorValidator, 'validate')
+        .mockImplementation(() => {
+          throw unexpectedError;
+        });
+
+      expect(() =>
+        workflow.validateBodyDescriptors({ build: 'athletic' }, 'test-recipe')
+      ).toThrow(unexpectedError);
+
+      validatorSpy.mockRestore();
     });
   });
 
