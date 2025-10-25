@@ -175,6 +175,62 @@ describe('validateSpeechPatternsGenerationResponse', () => {
     expect(logger.debug).not.toHaveBeenCalled();
   });
 
+  it('fails fast when the response payload is missing or invalid', () => {
+    const result = validateSpeechPatternsGenerationResponse(null);
+
+    expect(result).toEqual({
+      isValid: false,
+      errors: ['Response must be a valid object'],
+    });
+  });
+
+  it('fails fast when the speechPatterns array is missing', () => {
+    const result = validateSpeechPatternsGenerationResponse({
+      characterName: 'Echo',
+    });
+
+    expect(result).toEqual({
+      isValid: false,
+      errors: ['speechPatterns array is required'],
+    });
+  });
+
+  it('flags missing pattern descriptions on individual entries', () => {
+    const result = validateSpeechPatternsGenerationResponse({
+      characterName: 'Echo',
+      speechPatterns: [
+        { example: 'Says things twice.' },
+        { pattern: 'Echoing cadence', example: 'Echo echo' },
+        { pattern: 'Rhythmic delivery', example: 'Tap tap tap' },
+      ],
+    });
+
+    expect(result.isValid).toBe(false);
+    expect(result.errors).toEqual(
+      expect.arrayContaining([
+        "Pattern 1: 'pattern' field is required and must be a string",
+      ])
+    );
+  });
+
+  it('flags missing example dialogue on individual entries', () => {
+    const result = validateSpeechPatternsGenerationResponse({
+      characterName: 'Echo',
+      speechPatterns: [
+        { pattern: 'Repeating phrases', example: null },
+        { pattern: 'Echoing cadence', example: 'Echo echo' },
+        { pattern: 'Rhythmic delivery', example: 'Tap tap tap' },
+      ],
+    });
+
+    expect(result.isValid).toBe(false);
+    expect(result.errors).toEqual(
+      expect.arrayContaining([
+        "Pattern 1: 'example' field is required and must be a string",
+      ])
+    );
+  });
+
   it('returns a catch-all error when response access throws', () => {
     const explosivePattern = {};
     Object.defineProperty(explosivePattern, 'pattern', {
