@@ -15,6 +15,7 @@ import {
   ThematicDirectionGenerator,
   ThematicDirectionGenerationError,
 } from '../../../../src/characterBuilder/services/thematicDirectionGenerator.js';
+import * as ThematicDirectionModel from '../../../../src/characterBuilder/models/thematicDirection.js';
 import {
   THEMATIC_DIRECTIONS_RESPONSE_SCHEMA,
   buildThematicDirectionsPrompt,
@@ -421,6 +422,17 @@ describe('ThematicDirectionGenerator', () => {
         );
       });
 
+      it('should default metadata modelId to unknown when active config lacks identifier', async () => {
+        mockLlmConfigManager.getActiveConfiguration.mockResolvedValue({});
+
+        const result = await generator.generateDirections(
+          validConceptId,
+          validCharacterConcept
+        );
+
+        expect(result[0].llmMetadata.modelId).toBe('unknown');
+      });
+
       it('should use custom LLM config when provided', async () => {
         const customConfigId = 'custom-config';
         mockLlmConfigManager.setActiveConfiguration.mockResolvedValue(true);
@@ -637,6 +649,79 @@ describe('ThematicDirectionGenerator', () => {
         ).rejects.toThrow(
           'Invalid response structure: ThematicDirectionsPrompt: Must contain 3-5 thematic directions'
         );
+      });
+
+      it('should wrap unexpected transformation errors with context and original cause', async () => {
+        const mockLlmResponse = '{"thematicDirections": []}';
+        const mockParsedResponse = {
+          thematicDirections: [
+            {
+              title: 'Valid Direction',
+              description:
+                'A description long enough to satisfy validation expectations for thematic directions.',
+              coreTension:
+                'Some meaningful conflict that tests loyalties and personal convictions beyond the obvious battle.',
+              uniqueTwist:
+                'An unexpected twist that elaborates on the dramatic shift in the narrative arc.',
+              narrativePotential:
+                'Plenty of opportunities for exploration and dramatic development.',
+            },
+            {
+              title: 'Second Direction',
+              description:
+                'Another sufficiently descriptive thematic direction for validation.',
+              coreTension:
+                'Another tension point that weighs community obligations against the call of distant adventures.',
+              uniqueTwist:
+                'Different twist that provides several surprising angles for the protagonist to explore.',
+              narrativePotential:
+                'Additional narrative potential to ensure validation passes.',
+            },
+            {
+              title: 'Third Direction',
+              description:
+                'More descriptive content that should be acceptable for validation routines.',
+              coreTension:
+                'Tension three that challenges deeply held beliefs while forcing difficult compromises for allies.',
+              uniqueTwist:
+                'Twist three that introduces a detailed ethical dilemma to complicate the storyline further.',
+              narrativePotential:
+                'This ensures the validation sees a complete thematic direction.',
+            },
+          ],
+        };
+
+        mockLlmStrategyFactory.getAIDecision.mockResolvedValue(mockLlmResponse);
+        mockLlmJsonService.clean.mockReturnValue(mockLlmResponse);
+        mockLlmJsonService.parseAndRepair.mockResolvedValue(mockParsedResponse);
+
+        const transformationError = new Error('Transformation failed');
+        const createSpy = jest
+          .spyOn(
+            ThematicDirectionModel,
+            'createThematicDirectionsFromLLMResponse'
+          )
+          .mockImplementation(() => {
+            throw transformationError;
+          });
+
+        let caughtError;
+        try {
+          await generator.generateDirections(
+            validConceptId,
+            validCharacterConcept
+          );
+        } catch (error) {
+          caughtError = error;
+        }
+
+        expect(caughtError).toBeInstanceOf(ThematicDirectionGenerationError);
+        expect(caughtError?.message).toBe(
+          `Failed to generate thematic directions for concept ${validConceptId}: ${transformationError.message}`
+        );
+        expect(caughtError?.cause).toBe(transformationError);
+
+        createSpy.mockRestore();
       });
     });
   });
