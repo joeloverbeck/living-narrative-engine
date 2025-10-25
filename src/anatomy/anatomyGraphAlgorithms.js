@@ -301,7 +301,7 @@ export class AnatomyGraphAlgorithms {
     while (current && depth < maxDepth) {
       ancestors.push(current);
       const node = cacheManager.get(current);
-      current = node?.parentId || null;
+      current = node?.parentId;
       depth++;
     }
 
