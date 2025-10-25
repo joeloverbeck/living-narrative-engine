@@ -22,11 +22,17 @@ export function setupRadioListNavigation(
   selectCallback
 ) {
   return function handleNavigation(event) {
-    const target = /** @type {HTMLElement} */ (event.target);
-    const currentItem = target.closest(itemSelector);
+    if (!container) {
+      return;
+    }
 
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+
+    const currentItem = target.closest(itemSelector);
     if (
-      !container ||
       !currentItem ||
       !container.contains(currentItem) ||
       currentItem.closest('.disabled-interaction')
