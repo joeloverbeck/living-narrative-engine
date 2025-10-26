@@ -35,6 +35,20 @@ describe('advancedArrayModify', () => {
     expect(arr).toEqual([{ a: 1 }]);
   });
 
+  it('push_unique treats objects with different key order as duplicates', () => {
+    const arr = [{ a: 1, b: 2 }];
+    const { nextArray, modified } = advancedArrayModify(
+      'push_unique',
+      arr,
+      { b: 2, a: 1 },
+      logger
+    );
+
+    expect(nextArray).toEqual([{ a: 1, b: 2 }]);
+    expect(nextArray).not.toBe(arr);
+    expect(modified).toBe(false);
+  });
+
   it('pop returns popped item', () => {
     const arr = [1, 2];
     const { nextArray, result } = advancedArrayModify('pop', arr, null, logger);
@@ -46,7 +60,12 @@ describe('advancedArrayModify', () => {
 
   it('pop on empty array returns undefined result without modification', () => {
     const arr = [];
-    const { nextArray, result, modified } = advancedArrayModify('pop', arr, null, logger);
+    const { nextArray, result, modified } = advancedArrayModify(
+      'pop',
+      arr,
+      null,
+      logger
+    );
     expect(nextArray).toEqual([]);
     expect(nextArray).not.toBe(arr);
     expect(result).toBeUndefined();
@@ -82,6 +101,20 @@ describe('advancedArrayModify', () => {
     expect(nextArray).not.toBe(arr);
   });
 
+  it('remove_by_value matches objects irrespective of key order', () => {
+    const arr = [{ a: 1, b: 2, nested: { c: 3, d: 4 } }, { id: 2 }];
+    const { nextArray, modified } = advancedArrayModify(
+      'remove_by_value',
+      arr,
+      { b: 2, a: 1, nested: { d: 4, c: 3 } },
+      logger
+    );
+
+    expect(nextArray).toEqual([{ id: 2 }]);
+    expect(nextArray).not.toBe(arr);
+    expect(modified).toBe(true);
+  });
+
   it('remove_by_value returns new array when value not found', () => {
     const arr = [1, 2];
     const { nextArray } = advancedArrayModify(
@@ -97,18 +130,19 @@ describe('advancedArrayModify', () => {
 
   it('push_unique with primitive handles duplicates and additions', () => {
     const arr = [1, 2];
-    const { nextArray, modified } = advancedArrayModify('push_unique', arr, 2, logger);
+    const { nextArray, modified } = advancedArrayModify(
+      'push_unique',
+      arr,
+      2,
+      logger
+    );
     expect(nextArray).toEqual([1, 2]);
     expect(nextArray).not.toBe(arr);
     expect(modified).toBe(false);
     expect(arr).toEqual([1, 2]);
 
-    const { nextArray: extended, modified: extendedModified } = advancedArrayModify(
-      'push_unique',
-      arr,
-      3,
-      logger
-    );
+    const { nextArray: extended, modified: extendedModified } =
+      advancedArrayModify('push_unique', arr, 3, logger);
     expect(extended).toEqual([1, 2, 3]);
     expect(extended).not.toBe(arr);
     expect(extendedModified).toBe(true);
@@ -117,7 +151,11 @@ describe('advancedArrayModify', () => {
   it('logs error when provided value is not an array', () => {
     const notArray = 'oops';
     const result = advancedArrayModify('push', notArray, 1, logger);
-    expect(result).toEqual({ nextArray: notArray, result: undefined, modified: false });
+    expect(result).toEqual({
+      nextArray: notArray,
+      result: undefined,
+      modified: false,
+    });
     expect(logger.error).toHaveBeenCalledWith(
       'advancedArrayModify: provided value is not an array'
     );
@@ -125,7 +163,12 @@ describe('advancedArrayModify', () => {
 
   it('returns fallback result and logs error for unknown mode', () => {
     const arr = [1, 2];
-    const { nextArray, result, modified } = advancedArrayModify('invalid', arr, 3, logger);
+    const { nextArray, result, modified } = advancedArrayModify(
+      'invalid',
+      arr,
+      3,
+      logger
+    );
     expect(nextArray).toEqual([1, 2]);
     expect(nextArray).not.toBe(arr);
     expect(result).toBeUndefined();

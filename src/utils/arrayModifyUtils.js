@@ -10,6 +10,98 @@ export const ARRAY_MODIFICATION_MODES = [
 ];
 
 /**
+ * @description Checks whether a value is a plain object (object literal or has a null prototype).
+ * @param {any} value - Value to inspect.
+ * @returns {boolean} True when the value is a plain object.
+ */
+function isPlainObject(value) {
+  if (value === null || typeof value !== 'object') {
+    return false;
+  }
+
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+/**
+ * @description Performs a deep equality comparison between two values.
+ * @param {any} a - First value to compare.
+ * @param {any} b - Second value to compare.
+ * @param {WeakMap<object, WeakSet<object>>} [seen] - Memoization structure to guard against circular references.
+ * @returns {boolean} True when both values are deeply equal.
+ */
+function areDeeplyEqual(a, b, seen = new WeakMap()) {
+  if (Object.is(a, b)) {
+    return true;
+  }
+
+  if (
+    a === null ||
+    b === null ||
+    typeof a !== 'object' ||
+    typeof b !== 'object'
+  ) {
+    return false;
+  }
+
+  if (a instanceof Date && b instanceof Date) {
+    return a.getTime() === b.getTime();
+  }
+
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) {
+      return false;
+    }
+
+    for (let i = 0; i < a.length; i += 1) {
+      if (!areDeeplyEqual(a[i], b[i], seen)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  if (Array.isArray(a) || Array.isArray(b)) {
+    return false;
+  }
+
+  if (!isPlainObject(a) || !isPlainObject(b)) {
+    return false;
+  }
+
+  const seenForA = seen.get(a);
+  if (seenForA && seenForA.has(b)) {
+    return true;
+  }
+
+  const nextSeenForA = seenForA || new WeakSet();
+  nextSeenForA.add(b);
+  if (!seenForA) {
+    seen.set(a, nextSeenForA);
+  }
+
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+
+  if (keysA.length !== keysB.length) {
+    return false;
+  }
+
+  for (const key of keysA) {
+    if (!Object.prototype.hasOwnProperty.call(b, key)) {
+      return false;
+    }
+
+    if (!areDeeplyEqual(a[key], b[key], seen)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
  * Applies an array modification operation.
  *
  * @description Utility to mutate an array according to the given mode. It returns
@@ -63,8 +155,7 @@ export function advancedArrayModify(mode, array, value, logger) {
       if (typeof value !== 'object' || value === null) {
         exists = array.includes(value);
       } else {
-        const valueJson = JSON.stringify(value);
-        exists = array.some((item) => JSON.stringify(item) === valueJson);
+        exists = array.some((item) => areDeeplyEqual(item, value));
       }
       const next = exists ? [...array] : [...array, value];
       return { nextArray: next, result: next, modified: !exists };
@@ -84,10 +175,7 @@ export function advancedArrayModify(mode, array, value, logger) {
           modified = true;
         }
       } else {
-        const valueJson = JSON.stringify(value);
-        const index = array.findIndex(
-          (item) => JSON.stringify(item) === valueJson
-        );
+        const index = array.findIndex((item) => areDeeplyEqual(item, value));
         if (index > -1) {
           next = [...array.slice(0, index), ...array.slice(index + 1)];
           modified = true;
