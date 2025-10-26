@@ -51,7 +51,7 @@ describe('InitiativePriorityQueue', () => {
 
       const result = queue.remove('a');
 
-      expect(result).toBeNull();
+      expect(result).toBe(entityA);
       expect(queue.size()).toBe(1);
       expect(queue.peek()).toBe(entityB);
       expect(queue.getNext()).toBe(entityB);
@@ -72,7 +72,7 @@ describe('InitiativePriorityQueue', () => {
     it('is idempotent when removing the same entity multiple times', () => {
       queue.add(entityA, 10);
 
-      expect(queue.remove('a')).toBeNull();
+      expect(queue.remove('a')).toBe(entityA);
       expect(queue.size()).toBe(0);
       expect(queue.peek()).toBeNull();
 
@@ -106,7 +106,8 @@ describe('InitiativePriorityQueue', () => {
       queue.add(entityA, 5);
       queue.add(entityB, 10);
 
-      queue.remove('a');
+      const removed = queue.remove('a');
+      expect(removed).toBe(entityA);
 
       const updatedEntityA = { id: 'a', name: 'Entity A (updated)' };
       queue.add(updatedEntityA, 20);
