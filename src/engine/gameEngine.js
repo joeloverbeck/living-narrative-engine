@@ -544,7 +544,48 @@ class GameEngine {
       return;
     }
 
-    if (persistenceService.isSavingAllowed(this.#engineState.isInitialized)) {
+    const notifySavingUnavailable = async (shouldLogWarning = true) => {
+      if (shouldLogWarning) {
+        this.#logger.warn(
+          'GameEngine.showSaveGameUI: Saving is not currently allowed.'
+        );
+      }
+      try {
+        const infoDispatched = await this.#safeEventDispatcher.dispatch(
+          CANNOT_SAVE_GAME_INFO
+        );
+        if (!infoDispatched) {
+          this.#logger.warn(
+            'GameEngine.showSaveGameUI: SafeEventDispatcher reported failure when dispatching CANNOT_SAVE_GAME_INFO.'
+          );
+        }
+      } catch (error) {
+        const normalizedError =
+          error instanceof Error ? error : new Error(String(error));
+        this.#logger.error(
+          'GameEngine.showSaveGameUI: SafeEventDispatcher threw when dispatching CANNOT_SAVE_GAME_INFO.',
+          normalizedError
+        );
+      }
+    };
+
+    let savingAllowed = false;
+    try {
+      savingAllowed = persistenceService.isSavingAllowed(
+        this.#engineState.isInitialized
+      );
+    } catch (error) {
+      const normalizedError =
+        error instanceof Error ? error : new Error(String(error));
+      this.#logger.error(
+        'GameEngine.showSaveGameUI: GamePersistenceService threw when checking if saving is allowed.',
+        normalizedError
+      );
+      await notifySavingUnavailable(false);
+      return;
+    }
+
+    if (savingAllowed) {
       this.#logger.debug(
         'GameEngine.showSaveGameUI: Dispatching request to show Save Game UI.'
       );
@@ -567,26 +608,7 @@ class GameEngine {
         );
       }
     } else {
-      this.#logger.warn(
-        'GameEngine.showSaveGameUI: Saving is not currently allowed.'
-      );
-      try {
-        const infoDispatched = await this.#safeEventDispatcher.dispatch(
-          CANNOT_SAVE_GAME_INFO
-        );
-        if (!infoDispatched) {
-          this.#logger.warn(
-            'GameEngine.showSaveGameUI: SafeEventDispatcher reported failure when dispatching CANNOT_SAVE_GAME_INFO.'
-          );
-        }
-      } catch (error) {
-        const normalizedError =
-          error instanceof Error ? error : new Error(String(error));
-        this.#logger.error(
-          'GameEngine.showSaveGameUI: SafeEventDispatcher threw when dispatching CANNOT_SAVE_GAME_INFO.',
-          normalizedError
-        );
-      }
+      await notifySavingUnavailable();
     }
   }
 
