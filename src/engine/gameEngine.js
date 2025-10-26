@@ -493,7 +493,18 @@ class GameEngine {
       this.#logger
     );
     const normalizedSaveIdentifier = saveIdentifier.trim();
-    return this.#persistenceCoordinator.loadGame(normalizedSaveIdentifier);
+    const safeErrorLogger = createSafeErrorLogger({
+      logger: this.#logger,
+      safeEventDispatcher: this.#safeEventDispatcher,
+    });
+
+    return await safeErrorLogger.withGameLoadingMode(
+      () => this.#persistenceCoordinator.loadGame(normalizedSaveIdentifier),
+      {
+        context: 'game-load',
+        timeoutMs: 60000,
+      }
+    );
   }
 
   /**

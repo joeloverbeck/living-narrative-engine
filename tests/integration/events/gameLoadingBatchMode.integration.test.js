@@ -185,6 +185,25 @@ describe('Game Loading Batch Mode Integration', () => {
       });
     });
 
+    it('should use enhanced limits for game-load context', () => {
+      const safeErrorLogger = createSafeErrorLogger({
+        logger: mockLogger,
+        safeEventDispatcher: mockSafeEventDispatcher,
+      });
+
+      safeErrorLogger.enableGameLoadingMode({
+        context: 'game-load',
+        timeoutMs: 45000,
+      });
+
+      expect(mockSafeEventDispatcher.setBatchMode).toHaveBeenCalledWith(true, {
+        maxRecursionDepth: 25,
+        maxGlobalRecursion: 200,
+        timeoutMs: 45000,
+        context: 'game-load',
+      });
+    });
+
     it('should use standard limits for other contexts', () => {
       // Arrange
       const safeErrorLogger = createSafeErrorLogger({

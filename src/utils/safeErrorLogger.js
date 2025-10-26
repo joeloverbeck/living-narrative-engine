@@ -21,6 +21,8 @@ import { ensureValidLogger } from './loggerUtils.js';
  * @param {object} [deps.eventBus] - EventBus instance (deprecated - use safeEventDispatcher)
  * @returns {object} Safe error logging utilities
  */
+const HIGH_VOLUME_CONTEXTS = new Set(['game-initialization', 'game-load']);
+
 export function createSafeErrorLogger({
   logger,
   safeEventDispatcher,
@@ -101,10 +103,12 @@ export function createSafeErrorLogger({
 
     const loadingOptions = { ...defaultOptions, ...options };
 
+    const isHighVolumeContext = HIGH_VOLUME_CONTEXTS.has(
+      loadingOptions.context
+    );
     const batchModeConfig = {
       maxRecursionDepth: 25, // Base limit - EventBus will apply event-specific overrides
-      maxGlobalRecursion:
-        loadingOptions.context === 'game-initialization' ? 200 : 50,
+      maxGlobalRecursion: isHighVolumeContext ? 200 : 50,
       timeoutMs: loadingOptions.timeoutMs,
       context: loadingOptions.context,
     };
