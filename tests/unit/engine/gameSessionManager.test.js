@@ -292,6 +292,21 @@ describe('GameSessionManager', () => {
       );
     });
 
+    it('should decode percent-encoded save identifiers for UI messaging', async () => {
+      const encodedIdentifier =
+        'saves/manual_saves/manual_save_My%20Adventure%20Slot%201.sav';
+
+      await gameSessionManager.prepareForLoadGameSession(encodedIdentifier);
+
+      expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENGINE_OPERATION_IN_PROGRESS_UI,
+        {
+          titleMessage: 'Loading My Adventure Slot 1...',
+          inputDisabledMessage: 'Loading game from My Adventure Slot 1...',
+        }
+      );
+    });
+
     it('should await core game reset before dispatching UI events', async () => {
       let resetCompleted = false;
       resetCoreGameStateFn.mockImplementation(async () => {
