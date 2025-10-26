@@ -176,6 +176,32 @@ describe('Cliché Validators', () => {
       }).toThrow(ClicheDataIntegrityError);
     });
 
+    it('should detect directions that lose required identifiers after retrieval', () => {
+      const dynamicDirection = { title: 'Fluxing Title', description: 'Fluxing' };
+      let accessCount = 0;
+      Object.defineProperty(dynamicDirection, 'id', {
+        configurable: true,
+        enumerable: true,
+        get() {
+          accessCount += 1;
+          return accessCount === 1 ? 'direction-dynamic' : '';
+        },
+      });
+
+      const data = [
+        {
+          conceptId: 'concept-flux',
+          conceptText: 'Temporal anomalies everywhere.',
+          conceptTitle: 'Temporal Flux',
+          directions: [dynamicDirection],
+        },
+      ];
+
+      expect(() => {
+        validateDirectionSelection('direction-dynamic', data);
+      }).toThrow(ClicheDataIntegrityError);
+    });
+
     it('should handle malformed directions data gracefully', () => {
       const malformedData = [
         {
@@ -403,6 +429,17 @@ describe('Cliché Validators', () => {
       }).toThrow(ClicheValidationError);
     });
 
+    it('should throw ClicheValidationError when categories container is not an object', () => {
+      const malformedResponse = {
+        categories: 'not-an-object',
+        tropesAndStereotypes: ['Valid trope', 'Another trope', 'Yet another trope'],
+      };
+
+      expect(() => {
+        validateLLMResponse(malformedResponse);
+      }).toThrow(ClicheValidationError);
+    });
+
     it('should throw ClicheValidationError for missing required category', () => {
       const incompleteResponse = { ...validResponse };
       delete incompleteResponse.categories.names;
@@ -455,6 +492,19 @@ describe('Cliché Validators', () => {
       }).toThrow(ClicheValidationError);
     });
 
+    it('should throw ClicheValidationError for category entries with unreasonable length', () => {
+      const invalidResponse = { ...validResponse };
+      invalidResponse.categories.names = [
+        'A',
+        'Sufficiently descriptive entry',
+        'Another descriptive entry',
+      ];
+
+      expect(() => {
+        validateLLMResponse(invalidResponse);
+      }).toThrow(ClicheValidationError);
+    });
+
     it('should throw ClicheValidationError for category with duplicate items', () => {
       const invalidResponse = { ...validResponse };
       invalidResponse.categories.names = ['John', 'Mary', 'John']; // Duplicate
@@ -475,6 +525,17 @@ describe('Cliché Validators', () => {
     it('should throw ClicheValidationError for too few tropes', () => {
       const invalidResponse = { ...validResponse };
       invalidResponse.tropesAndStereotypes = ['Only one', 'Only two']; // Need minimum 3
+
+      expect(() => {
+        validateLLMResponse(invalidResponse);
+      }).toThrow(ClicheValidationError);
+    });
+
+    it('should throw ClicheValidationError for too many tropes', () => {
+      const invalidResponse = { ...validResponse };
+      invalidResponse.tropesAndStereotypes = Array.from({ length: 11 }, () =>
+        'A remarkably descriptive trope'
+      );
 
       expect(() => {
         validateLLMResponse(invalidResponse);
@@ -594,6 +655,15 @@ describe('Cliché Validators', () => {
       }).toThrow(ClicheValidationError);
     });
 
+    it('should throw ClicheValidationError when tropes data is not an array', () => {
+      const invalidData = { ...validClicheData };
+      invalidData.tropesAndStereotypes = { unexpected: 'structure' };
+
+      expect(() => {
+        validateClicheData(invalidData);
+      }).toThrow(ClicheValidationError);
+    });
+
     it('should throw ClicheValidationError for invalid timestamp', () => {
       const invalidData = { ...validClicheData };
       invalidData.createdAt = 'invalid date';
@@ -610,6 +680,37 @@ describe('Cliché Validators', () => {
       expect(() => {
         validateClicheData(invalidData);
       }).toThrow(ClicheValidationError);
+    });
+
+    it('should surface unexpected errors from nested validation checks', () => {
+      const invalidData = { ...validClicheData };
+      const erroringCategories = {};
+
+      Object.keys(validClicheData.categories).forEach((categoryKey) => {
+        Object.defineProperty(erroringCategories, categoryKey, {
+          configurable: true,
+          enumerable: true,
+          get() {
+            throw new Error('Unexpected failure');
+          },
+        });
+      });
+
+      invalidData.categories = erroringCategories;
+
+      const error = (() => {
+        try {
+          validateClicheData(invalidData);
+        } catch (err) {
+          return err;
+        }
+        return null;
+      })();
+
+      expect(error).toBeInstanceOf(ClicheValidationError);
+      expect(error.validationErrors).toContain(
+        'Categories validation failed: Unexpected failure'
+      );
     });
   });
 
