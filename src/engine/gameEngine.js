@@ -631,7 +631,7 @@ class GameEngine {
       }
     };
 
-    let savingAllowed = false;
+    let savingAllowed;
     try {
       savingAllowed = persistenceService.isSavingAllowed(
         this.#engineState.isInitialized
@@ -644,6 +644,18 @@ class GameEngine {
         normalizedError
       );
       await notifySavingUnavailable(false);
+      return;
+    }
+
+    if (typeof savingAllowed !== 'boolean') {
+      this.#logger.error(
+        'GameEngine.showSaveGameUI: GamePersistenceService.isSavingAllowed returned invalid result.',
+        {
+          receivedType: typeof savingAllowed,
+          receivedValue: savingAllowed,
+        }
+      );
+      await notifySavingUnavailable();
       return;
     }
 
