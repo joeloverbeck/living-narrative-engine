@@ -16,6 +16,7 @@ import {
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
+import { configureBaseContainer } from '../../../src/dependencyInjection/baseContainerConfig.js';
 
 // --- Mock all registration bundles ---
 // We mock these to isolate the test to the logic within containerConfig.js itself.
@@ -67,6 +68,17 @@ jest.mock(
   '../../../src/dependencyInjection/registrations/characterBuilderRegistrations.js'
 );
 
+jest.mock('../../../src/dependencyInjection/baseContainerConfig.js', () => {
+  const actualModule = jest.requireActual(
+    '../../../src/dependencyInjection/baseContainerConfig.js'
+  );
+
+  return {
+    ...actualModule,
+    configureBaseContainer: jest.fn(actualModule.configureBaseContainer),
+  };
+});
+
 // We need the real LoggerConfigLoader to be instantiated.
 // We will mock the 'fetch' call it makes instead.
 jest.mock('../../../src/configuration/loggerConfigLoader.js', () => {
@@ -101,6 +113,9 @@ describe('configureContainer', () => {
   let container;
   let mockUiElements;
   let consoleErrorSpy;
+  const actualConfigureBaseContainer = jest.requireActual(
+    '../../../src/dependencyInjection/baseContainerConfig.js'
+  ).configureBaseContainer;
 
   beforeEach(() => {
     // Set up a fresh container and mocks for each test
@@ -123,6 +138,10 @@ describe('configureContainer', () => {
         json: () => Promise.resolve({ logLevel: 'DEBUG' }),
       })
     );
+
+    // Reset the mocked base container configuration to use the real implementation
+    configureBaseContainer.mockReset();
+    configureBaseContainer.mockImplementation(actualConfigureBaseContainer);
 
     // Mock all registration functions to be no-ops or minimal implementations
     // This isolates the test to just the configureContainer logic
@@ -239,5 +258,41 @@ describe('configureContainer', () => {
     const logger = container.resolve(tokens.ILogger);
     expect(logger).toBeDefined();
     expect(typeof logger.info).toBe('function');
+  });
+
+  it('logs and rethrows when base container configuration fails', async () => {
+    const failure = new Error('base container failure');
+    configureBaseContainer.mockImplementationOnce(async () => {
+      throw failure;
+    });
+
+    await expect(
+      configureContainer(container, mockUiElements)
+    ).rejects.toBe(failure);
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[ContainerConfig] Base container configuration failed:'),
+      failure
+    );
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[ContainerConfig] Container configuration failed:'),
+      failure
+    );
+  });
+
+  it('throws a descriptive error when a critical service is missing', async () => {
+    const missingService = String(tokens.IEntityManager);
+    registerWorldAndEntity.mockImplementationOnce(() => {});
+
+    await expect(
+      configureContainer(container, mockUiElements)
+    ).rejects.toThrow(
+      `[ContainerConfig] Critical service ${missingService} was not registered`
+    );
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[ContainerConfig] Container configuration failed:'),
+      expect.any(Error)
+    );
   });
 });
