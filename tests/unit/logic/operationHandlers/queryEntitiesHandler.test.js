@@ -13,6 +13,8 @@ import {
 } from '@jest/globals';
 import QueryEntitiesHandler from '../../../../src/logic/operationHandlers/queryEntitiesHandler.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
+import * as contextVariableUtils from '../../../../src/utils/contextVariableUtils.js';
+import * as safeDispatchErrorUtils from '../../../../src/utils/safeDispatchErrorUtils.js';
 
 // 1. Test Harness Setup
 /**
@@ -309,6 +311,16 @@ describe('QueryEntitiesHandler', () => {
 
   // 7. Tests for Edge Cases
   describe('Edge Cases', () => {
+    test('should return early when params are not an object', () => {
+      handler.execute(null, mockExecutionContext);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'QUERY_ENTITIES: params missing or invalid.',
+        { params: null }
+      );
+      expect(mockExecutionContext.evaluationContext.context).toEqual({});
+    });
+
     test('should return an empty array if no entities match the filters', () => {
       // Arrange
       mockEntityManager.getEntitiesInLocation.mockReturnValue(new Set()); // No one is here
@@ -410,6 +422,21 @@ describe('QueryEntitiesHandler', () => {
         })
       );
     });
+
+    test('should warn and skip filters that are not objects', () => {
+      const params = {
+        result_variable: 'skip_invalid',
+        filters: [null, 'bad_filter'],
+      };
+
+      handler.execute(params, mockExecutionContext);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'QUERY_ENTITIES: Invalid filter object. Skipping.'
+      );
+      const result = mockExecutionContext.evaluationContext.context.skip_invalid;
+      expect(result.length).toBe(5);
+    });
   });
 
   describe('Helper Behavior', () => {
@@ -459,6 +486,97 @@ describe('QueryEntitiesHandler', () => {
 
       const result = mockExecutionContext.evaluationContext.context.no_limit;
       expect(result.length).toBe(5);
+    });
+
+    test('invalid component filter values produce a warning', () => {
+      const params = {
+        result_variable: 'component_warning',
+        filters: [{ with_component: null }],
+      };
+
+      handler.execute(params, mockExecutionContext);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "QUERY_ENTITIES: Invalid value for 'with_component' filter. Skipping."
+      );
+      const result =
+        mockExecutionContext.evaluationContext.context.component_warning;
+      expect(result.length).toBe(5);
+    });
+
+    test('invalid component data filter component_type produces a warning', () => {
+      const params = {
+        result_variable: 'invalid_component_type',
+        filters: [
+          {
+            with_component_data: {
+              component_type: '',
+              condition: { always: true },
+            },
+          },
+        ],
+      };
+
+      handler.execute(params, mockExecutionContext);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "QUERY_ENTITIES: Invalid 'component_type' in 'with_component_data' filter. Skipping."
+      );
+      const result =
+        mockExecutionContext.evaluationContext.context.invalid_component_type;
+      expect(result.length).toBe(5);
+    });
+
+    test('invalid component data filter condition produces a warning', () => {
+      const params = {
+        result_variable: 'invalid_condition',
+        filters: [
+          {
+            with_component_data: {
+              component_type: 'core:needs_condition',
+              condition: null,
+            },
+          },
+        ],
+      };
+
+      handler.execute(params, mockExecutionContext);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "QUERY_ENTITIES: Invalid 'condition' in 'with_component_data' filter. Skipping."
+      );
+      const result =
+        mockExecutionContext.evaluationContext.context.invalid_condition;
+      expect(result.length).toBe(5);
+    });
+
+    test('dispatches an error when context storage fails unexpectedly', () => {
+      const tryWriteSpy = jest
+        .spyOn(contextVariableUtils, 'tryWriteContextVariable')
+        .mockReturnValue({ success: false, error: new Error('nope') });
+      const safeDispatchSpy = jest.spyOn(
+        safeDispatchErrorUtils,
+        'safeDispatchError'
+      );
+
+      const params = {
+        result_variable: 'store_failure',
+        filters: [],
+      };
+
+      try {
+        handler.execute(params, mockExecutionContext);
+
+        expect(tryWriteSpy).toHaveBeenCalled();
+        expect(safeDispatchSpy).toHaveBeenCalledWith(
+          dispatcher,
+          'QUERY_ENTITIES: Cannot store result. `executionContext.evaluationContext.context` is not available.',
+          { resultVariable: 'store_failure' }
+        );
+      } finally {
+        tryWriteSpy.mockRestore();
+        safeDispatchSpy.mockRestore();
+      }
     });
   });
 });
