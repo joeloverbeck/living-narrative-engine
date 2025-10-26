@@ -18,7 +18,15 @@ export const CONVERSATIONAL_PREFIXES = [
 ];
 
 // Regex to identify and extract content from markdown code block wrappers.
-const MARKDOWN_WRAPPER_REGEX = /^```(?:json|markdown)?\s*?\n?(.*?)\n?\s*?```$/s;
+//
+// The previous implementation only matched lower-case "json"/"markdown" code
+// fences. Many LLMs emit uppercase language identifiers (e.g. ```JSON) or
+// variants like ```jsonc. When that happened, the wrapper survived the
+// sanitisation step and the downstream JSON parser received the literal
+// backticks, producing hard-to-diagnose parse errors. By making the language
+// identifier optional, case-insensitive and tolerant of hyphenated or suffixed
+// variants we correctly normalise a much wider set of LLM responses.
+const MARKDOWN_WRAPPER_REGEX = /^```(?:[\w-]+)?\s*?\n?(.*?)\n?\s*?```$/is;
 
 /**
  * Sanitizes raw string responses from LLMs by removing conversational prefixes and

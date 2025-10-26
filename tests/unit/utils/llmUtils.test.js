@@ -132,6 +132,16 @@ describe('cleanLLMJsonOutput', () => {
         cleanLLMJsonOutput(`\`\`\`json \n ${jsonDataWithNewlines} \n \`\`\``)
       ).toBe(jsonDataWithNewlines);
     });
+    test('should remove ```JSON wrapper (case-insensitive language id)', () => {
+      expect(cleanLLMJsonOutput('```JSON\n{"key": "value"}\n```')).toBe(
+        '{"key": "value"}'
+      );
+    });
+    test('should remove ```jsonc wrapper (language suffix handling)', () => {
+      expect(cleanLLMJsonOutput('```jsonc\n{"key": "value"}\n```')).toBe(
+        '{"key": "value"}'
+      );
+    });
     test('should remove ```json wrapper with only whitespace content', () => {
       expect(cleanLLMJsonOutput('```json\n   \n```')).toBe('');
     });
