@@ -10,11 +10,11 @@ import {
   expectDispatchSequence,
   buildSaveDispatches,
   buildFailedSaveDispatches,
-  expectNoDispatch,
 } from '../../common/engine/dispatchTestUtils.js';
 import {
   DEFAULT_ACTIVE_WORLD_FOR_SAVE,
   DEFAULT_SAVE_NAME,
+  SAVE_OPERATION_FINISHED_MESSAGE,
 } from '../../common/constants.js';
 import {
   GAME_PERSISTENCE_TRIGGER_SAVE_UNAVAILABLE,
@@ -24,6 +24,10 @@ import {
   PersistenceError,
   PersistenceErrorCodes,
 } from '../../../src/persistence/persistenceErrors.js';
+import {
+  ENGINE_OPERATION_FAILED_UI,
+  ENGINE_READY_UI,
+} from '../../../src/constants/eventIds.js';
 
 describeEngineSuite('GameEngine', (context) => {
   describe('triggerManualSave', () => {
@@ -34,8 +38,25 @@ describeEngineSuite('GameEngine', (context) => {
       const result = await context.engine.triggerManualSave(SAVE_NAME);
       const expectedErrorMsg =
         'Game engine is not initialized. Cannot save game.';
+      const { activeWorld } = context.engine.getEngineStatus();
 
-      expectNoDispatch(context.bed.getSafeEventDispatcher().dispatch);
+      expectDispatchSequence(
+        context.bed.getSafeEventDispatcher().dispatch,
+        [
+          ENGINE_OPERATION_FAILED_UI,
+          {
+            errorMessage: `Failed to save game: ${expectedErrorMsg}`,
+            errorTitle: 'Save Failed',
+          },
+        ],
+        [
+          ENGINE_READY_UI,
+          {
+            activeWorld,
+            message: SAVE_OPERATION_FINISHED_MESSAGE,
+          },
+        ]
+      );
       expect(
         context.bed.getGamePersistenceService().saveGame
       ).not.toHaveBeenCalled();
@@ -56,7 +77,23 @@ describeEngineSuite('GameEngine', (context) => {
           async (bed, engine) => {
             const result = await engine.triggerManualSave(SAVE_NAME);
 
-            expectNoDispatch(bed.getSafeEventDispatcher().dispatch);
+            expectDispatchSequence(
+              bed.getSafeEventDispatcher().dispatch,
+              [
+                ENGINE_OPERATION_FAILED_UI,
+                {
+                  errorMessage: `Failed to save game: ${GAME_PERSISTENCE_SAVE_RESULT_UNAVAILABLE}`,
+                  errorTitle: 'Save Failed',
+                },
+              ],
+              [
+                ENGINE_READY_UI,
+                {
+                  activeWorld: engine.getEngineStatus().activeWorld,
+                  message: SAVE_OPERATION_FINISHED_MESSAGE,
+                },
+              ]
+            );
             // eslint-disable-next-line jest/no-standalone-expect
             expect(result).toEqual({
               success: false,
@@ -67,7 +104,7 @@ describeEngineSuite('GameEngine', (context) => {
               bed.getSafeEventDispatcher().dispatch,
             ];
           },
-          { extraAssertions: 2 }
+          { extraAssertions: 2, expectNoDispatches: false }
         )('should dispatch error if %s is unavailable');
 
         it('should successfully save, dispatch all UI events in order, and return success result', async () => {
