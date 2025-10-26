@@ -712,24 +712,28 @@ describe('ClicheDisplayEnhancer', () => {
     });
 
     it('should update DOM after successful deletion', async () => {
-      jest.useFakeTimers();
       const deleteBtn = container.querySelector('.delete-item-btn');
       const item = deleteBtn.closest('.cliche-item');
 
       await deleteBtn.click();
+      await Promise.resolve();
+      await Promise.resolve();
 
       // Check immediate changes
       expect(item.style.opacity).toBe('0.5');
       expect(deleteBtn.disabled).toBe(true);
       expect(deleteBtn.textContent).toBe('⏳');
 
-      // Fast-forward animation
-      jest.advanceTimersByTime(300);
+      // Wait for the removal timeout to complete
+      await new Promise((resolve) => setTimeout(resolve, 350));
 
       // Item should be removed
       expect(item.parentNode).toBeNull();
 
-      jest.useRealTimers();
+      const countEl = container.querySelector(
+        '[data-category="names"] .category-count'
+      );
+      expect(countEl.textContent).toBe('(2)');
     });
 
     it('should handle delete item error', async () => {
@@ -988,6 +992,46 @@ describe('ClicheDisplayEnhancer', () => {
       });
 
       expect(newEnhancer).toBeDefined();
+    });
+  });
+
+  describe('Collapsed state restoration', () => {
+    it('should apply saved collapsed states to matching categories', () => {
+      window.localStorage.setItem(
+        'cliche-collapsed-categories',
+        JSON.stringify(['names'])
+      );
+
+      const newEnhancer = new ClicheDisplayEnhancer({
+        logger: mockLogger,
+        container,
+      });
+
+      newEnhancer.enhance(mockDisplayData);
+
+      expect(window.localStorage.getItem).toHaveBeenCalledWith(
+        'cliche-collapsed-categories'
+      );
+      expect(window.localStorage.getItem('cliche-collapsed-categories')).toBe(
+        JSON.stringify(['names'])
+      );
+
+      const category = container.querySelector(
+        '.cliche-category[data-category="names"]'
+      );
+      expect(category).toBeTruthy();
+      const toggle = category.querySelector('.category-toggle');
+      const list = category.querySelector('.cliche-list');
+
+      expect(toggle).toBeTruthy();
+      expect(list).toBeTruthy();
+
+      const chevron = toggle.querySelector('.chevron');
+      expect(chevron).toBeTruthy();
+
+      expect(toggle.getAttribute('aria-expanded')).toBe('false');
+      expect(chevron.textContent).toBe('▶');
+      expect(list.style.display).toBe('none');
     });
   });
 
