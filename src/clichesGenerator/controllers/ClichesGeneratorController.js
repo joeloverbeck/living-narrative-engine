@@ -63,6 +63,7 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
   #errorHandler = null;
   #retryAttempts = new Map();
   #errorRecoveryState = new Map();
+  #errorHandlerFactory = null;
 
   // Display enhancement
   #displayEnhancer = null;
@@ -75,7 +76,9 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
   #clichesContainer = null;
   #statusMessages = null;
   #loadingOverlay = null;
+  #lastNavigationTarget = null;
   #navigationHandler = (url) => {
+    this.#lastNavigationTarget = url;
     window.location.href = url;
   };
 
@@ -89,6 +92,10 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
 
     // Validate page-specific dependencies
     validateDependency(_dependencies.clicheGenerator, 'IClicheGenerator');
+
+    this.#errorHandlerFactory =
+      _dependencies?.errorHandlerFactory ||
+      ((handlerDeps) => new ClicheErrorHandler(handlerDeps));
 
     // Initialize enhanced error handling
     this.#initializeErrorHandler(_dependencies);
@@ -104,7 +111,12 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
    */
   #initializeErrorHandler(_dependencies) {
     try {
-      this.#errorHandler = new ClicheErrorHandler({
+      const factory =
+        typeof this.#errorHandlerFactory === 'function'
+          ? this.#errorHandlerFactory
+          : (handlerDeps) => new ClicheErrorHandler(handlerDeps);
+
+      this.#errorHandler = factory({
         logger: this.logger,
         eventBus: this.eventBus,
         retryConfig: {
@@ -370,24 +382,24 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
           }
         }
 
-          if (!concept) {
-            // Use a placeholder concept so the direction still appears in the UI
-            this.logger?.warn(
-              `Concept ${direction.conceptId} not found - using fallback placeholder`
-            );
-            concept = {
-              id: direction.conceptId,
-              concept: '',
-              text: '',
-              metadata: {},
-            };
-          }
-
-          conceptMap.set(direction.conceptId, {
-            concept,
-            directions: [],
-          });
+        if (!concept) {
+          // Use a placeholder concept so the direction still appears in the UI
+          this.logger?.warn(
+            `Concept ${direction.conceptId} not found - using fallback placeholder`
+          );
+          concept = {
+            id: direction.conceptId,
+            concept: '',
+            text: '',
+            metadata: {},
+          };
         }
+
+        conceptMap.set(direction.conceptId, {
+          concept,
+          directions: [],
+        });
+      }
 
       // Only push direction if the concept exists in the map
       if (conceptMap.has(direction.conceptId)) {
@@ -396,23 +408,23 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
     }
 
     // Convert to array for easier handling
-      for (const [conceptId, data] of conceptMap) {
-        const rawConceptText =
-          typeof data.concept?.concept === 'string' ? data.concept.concept : '';
+    for (const [conceptId, data] of conceptMap) {
+      const rawConceptText =
+        typeof data.concept?.concept === 'string' ? data.concept.concept : '';
 
-        if (!rawConceptText) {
-          this.logger?.warn(
-            `Concept ${conceptId} is missing text - displaying as Untitled Concept`
-          );
-        }
-
-        organized.push({
-          conceptId,
-          conceptText: rawConceptText || 'Untitled Concept',
-          conceptTitle: this.#extractConceptTitle(rawConceptText),
-          directions: data.directions,
-        });
+      if (!rawConceptText) {
+        this.logger?.warn(
+          `Concept ${conceptId} is missing text - displaying as Untitled Concept`
+        );
       }
+
+      organized.push({
+        conceptId,
+        conceptText: rawConceptText || 'Untitled Concept',
+        conceptTitle: this.#extractConceptTitle(rawConceptText),
+        directions: data.directions,
+      });
+    }
 
     return organized;
   }
@@ -2436,6 +2448,37 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
     if (typeof handler === 'function') {
       this.#navigationHandler = handler;
     }
+  }
+
+  /**
+   * @description Test helper to reinitialize the error handler with a custom factory
+   * @param {Function} factory - Factory function that should return a new error handler instance
+   * @returns {void}
+   * @private
+   */
+  _testInitializeErrorHandlerWithFactory(factory) {
+    if (typeof factory === 'function') {
+      this.#errorHandlerFactory = factory;
+      this.#initializeErrorHandler({});
+    }
+  }
+
+  /**
+   * @description Test helper to disable the enhanced error handler
+   * @returns {void}
+   * @private
+   */
+  _testDisableErrorHandler() {
+    this.#errorHandler = null;
+  }
+
+  /**
+   * @description Test helper to read the last navigation target
+   * @returns {string|null}
+   * @private
+   */
+  _testGetLastNavigationTarget() {
+    return this.#lastNavigationTarget;
   }
 
   /**

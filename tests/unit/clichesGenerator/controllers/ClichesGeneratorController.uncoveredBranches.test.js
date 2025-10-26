@@ -63,6 +63,39 @@ describe('ClichesGeneratorController uncovered logic', () => {
     );
   });
 
+  it('fetches missing concept details from the service and caches the result', async () => {
+    testBed = new ClichesGeneratorControllerTestBed();
+
+    const direction = testBed.createMockDirection('dir-fetch');
+    const fetchedConcept = testBed.createMockConcept(direction.conceptId);
+
+    testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue([
+      { direction, concept: null },
+    ]);
+    testBed.mockCharacterBuilderService.getAllThematicDirections.mockResolvedValue([
+      direction,
+    ]);
+    testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
+      fetchedConcept
+    );
+    testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(false);
+
+    await testBed.setup();
+
+    await testBed.controller._testDirectionSelection(direction.id);
+    await testBed.waitForAsyncOperations();
+
+    expect(
+      testBed.mockCharacterBuilderService.getCharacterConcept
+    ).toHaveBeenCalledWith(direction.conceptId);
+
+    const cacheStats = testBed.controller.getCacheStats();
+    expect(cacheStats.conceptsCacheSize).toBe(1);
+
+    const state = testBed.controller._testGetCurrentState();
+    expect(state.currentConcept.id).toBe(fetchedConcept.id);
+  });
+
   it('uses directionsWithConceptsMap fallback when organized data lacks a direction', async () => {
     testBed = new ClichesGeneratorControllerTestBed();
     testBed.setupSuccessfulDirectionLoad();
@@ -207,29 +240,24 @@ describe('ClichesGeneratorController uncovered logic', () => {
 
     expect(navigationSpy).toHaveBeenCalledWith('index.html');
   });
+
+  it('uses the default navigation handler to update the browser location', async () => {
+    testBed = new ClichesGeneratorControllerTestBed();
+    testBed.setupSuccessfulDirectionLoad();
+    await testBed.setup();
+
+    const backBtn = document.getElementById('back-btn');
+    backBtn.click();
+
+    expect(testBed.controller._testGetLastNavigationTarget()).toBe('index.html');
+  });
 });
 
 describe('ClichesGeneratorController error handler fallback coverage', () => {
   beforeAll(async () => {
-    jest.resetModules();
-    jest.unstable_mockModule(
-      '../../../../src/characterBuilder/services/clicheErrorHandler.js',
-      () => ({
-        ClicheErrorHandler: class {
-          constructor() {
-            throw new Error('Intentional initialization failure');
-          }
-        },
-      })
-    );
-
     ({ ClichesGeneratorControllerTestBed } = await import(
       '../../../common/clichesGeneratorControllerTestBed.js'
     ));
-  });
-
-  afterAll(() => {
-    jest.resetModules();
   });
 
   let testBed;
@@ -244,7 +272,12 @@ describe('ClichesGeneratorController error handler fallback coverage', () => {
     await testBed?.cleanup();
   });
 
-  it('falls back to basic messaging when error handler initialization fails', async () => {
+  it('falls back to basic messaging when the enhanced handler is unavailable', async () => {
+    testBed.controller._testDisableErrorHandler();
+
+    const statusElement = testBed.getStatusMessages();
+    const innerHTMLSetter = jest.spyOn(statusElement, 'innerHTML', 'set');
+
     const loadingSpy = jest
       .spyOn(testBed.controller, '_showLoading')
       .mockImplementation(() => {
@@ -254,15 +287,52 @@ describe('ClichesGeneratorController error handler fallback coverage', () => {
     await testBed.controller._testDirectionSelection('dir-1');
     await testBed.waitForAsyncOperations();
 
-    const messages = testBed.getStatusMessages().textContent;
-    expect(messages).toContain(
-      'An unexpected error occurred. Please refresh the page and try again.'
+    expect(innerHTMLSetter).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Failed to load direction details. Please try selecting a different direction.'
+      )
     );
-    expect(messages).toContain(
-      'Could not load existing clichés. You can generate new ones.'
+    expect(innerHTMLSetter).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Could not load existing clichés. You can generate new ones.'
+      )
     );
 
     loadingSpy.mockRestore();
+    innerHTMLSetter.mockRestore();
+  });
+});
+
+describe('ClichesGeneratorController error handler initialization failures', () => {
+  beforeAll(async () => {
+    ({ ClichesGeneratorControllerTestBed } = await import(
+      '../../../common/clichesGeneratorControllerTestBed.js'
+    ));
+  });
+
+  let testBed;
+
+  beforeEach(async () => {
+    testBed = new ClichesGeneratorControllerTestBed();
+    testBed.setupSuccessfulDirectionLoad();
+    await testBed.setup();
+  });
+
+  afterEach(async () => {
+    await testBed?.cleanup();
+  });
+
+  it('logs initialization failures from the enhanced handler', async () => {
+    const failingFactory = () => {
+      throw new Error('Intentional initialization failure');
+    };
+
+    testBed.controller._testInitializeErrorHandlerWithFactory(failingFactory);
+
+    expect(testBed.logger.error).toHaveBeenCalledWith(
+      'Failed to initialize error handler:',
+      expect.any(Error)
+    );
   });
 });
 
