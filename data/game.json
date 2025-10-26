@@ -19,7 +19,7 @@
     "caressing",
     "kissing",
     "physical-control",
-    "p_erotica"
+    "p_erotica_vampire"
   ],
-  "startWorld": "p_erotica:hawthorne"
+  "startWorld": "p_erotica_vampire:vampire"
 }

@@ -1,0 +1,19 @@
+{
+    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+    "id": "anatomy:human_eye_red_hooded",
+    "description": "A human eye with red irises and hooded shape",
+    "components": {
+        "anatomy:part": {
+            "subType": "eye"
+        },
+        "descriptors:color_basic": {
+            "color": "red"
+        },
+        "descriptors:shape_eye": {
+            "shape": "hooded"
+        },
+        "core:name": {
+            "text": "eye"
+        }
+    }
+}

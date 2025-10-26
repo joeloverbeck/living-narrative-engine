@@ -15,6 +15,7 @@
   },
   "forbidden_components": {
     "actor": [
+      "positioning:biting_neck",
       "positioning:kneeling_before",
       "positioning:straddling_waist",
       "positioning:hugging",

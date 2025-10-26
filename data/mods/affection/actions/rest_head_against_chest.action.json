@@ -14,7 +14,7 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["kissing:kissing", "positioning:giving_blowjob"],
+    "actor": ["kissing:kissing", "positioning:biting_neck", "positioning:giving_blowjob"],
     "primary": ["positioning:giving_blowjob"]
   },
   "template": "rest your head on {primary}'s chest",

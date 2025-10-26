@@ -11,9 +11,9 @@
 During implementation of the `violence:tear_out_throat` action and its test suites, **5 major errors** were encountered and resolved. The most significant complication was the requirement for **manual scope resolution configuration** - a 40+ line boilerplate pattern that had to be implemented to make action discovery work.
 
 **Critical Discovery**: A helper library (`ScopeResolverHelpers`) exists that could have eliminated this entire category of problems, but it is:
-- ❌ Not documented in testing guides
-- ❌ Not used in existing violence or vampirism mod tests
-- ❌ Not discoverable through normal workflow
+- ❌ Not documented in primary mod-testing-guide.md (though mentioned in MODTESTROB-009-migration-guide.md)
+- ❌ Not used in violence or vampirism mod tests
+- ⚠️ Only discoverable by examining positioning mod tests (e.g., scoot_closer_right_action_discovery.test.js)
 
 **Key Finding**: Different mods use inconsistent testing patterns, creating confusion about which approach to follow.
 
@@ -245,7 +245,7 @@ configureActionDiscovery();
 
 ### ScopeResolverHelpers Discovery
 
-**Location**: `tests/common/mods/scopeResolverHelpers.js` (607 lines)
+**Location**: `tests/common/mods/scopeResolverHelpers.js` (606 lines)
 
 **Discovered Capabilities**:
 ```javascript
@@ -309,12 +309,58 @@ beforeEach(async () => {
 });
 ```
 
-**Why This Wasn't Discovered**:
-1. ❌ Not mentioned in `docs/testing/mod-testing-guide.md`
-2. ❌ Not used in existing violence mod tests (`grab_neck_action_discovery.test.js`)
-3. ❌ Not used in existing vampirism mod tests (`drink_blood_action_discovery.test.js`)
-4. ❌ No examples in documentation showing its usage
-5. ❌ File name doesn't suggest it solves scope problems
+**Why This Wasn't Easily Discovered**:
+1. ❌ Not mentioned in `docs/testing/mod-testing-guide.md` (primary guide)
+2. ⚠️ Mentioned in `docs/testing/MODTESTROB-009-migration-guide.md` but as migration reference, not tutorial
+3. ❌ Not used in violence mod tests (`grab_neck_action_discovery.test.js`)
+4. ❌ Not used in vampirism mod tests (`drink_blood_action_discovery.test.js`)
+5. ✅ IS used in positioning mod tests (e.g., `scoot_closer_right_action_discovery.test.js:4,21`)
+6. ❌ File name doesn't suggest it solves scope problems
+7. ❌ No examples in primary testing guide showing its usage
+
+---
+
+### Scope Definition Context: The Deeper Issue
+
+**Critical Finding**: The scope `positioning:actor_being_bitten_by_me` **already exists** as a proper scope definition in the positioning mod:
+
+**File**: `data/mods/positioning/scopes/actor_being_bitten_by_me.scope`
+
+**Content**:
+```javascript
+// Scope restricting potential targets to the entity whose neck the actor is currently biting
+// Validates reciprocal component relationship for safety
+positioning:actor_being_bitten_by_me := actor.components.positioning:closeness.partners[][{
+  "and": [
+    {"!!": {"var": "actor.components.positioning:biting_neck"}},
+    {"!!": {"var": "entity.components.positioning:being_bitten_in_neck"}},
+    {"==": [
+      {"var": "actor.components.positioning:biting_neck.bitten_entity_id"},
+      {"var": "entity.id"}
+    ]},
+    {"==": [
+      {"var": "entity.components.positioning:being_bitten_in_neck.biting_entity_id"},
+      {"var": "actor.id"}
+    ]}
+  ]
+}]
+```
+
+**Implications**:
+
+1. **Scope Already Defined**: The scope logic exists in the positioning mod's scope files
+2. **Test Duplication**: The manual scope implementation in tests duplicates this existing definition
+3. **Root Cause Revealed**: The test framework does NOT automatically load scope definitions from mods
+4. **Production vs Test Gap**: Scopes work in production (loaded from mod files) but not in tests (require manual registration)
+
+**Why This Matters**:
+
+The friction isn't just about ScopeResolverHelpers being undocumented. The deeper architectural issue is that **ModTestFixture doesn't load scope files from dependency mods**. This forces test authors to either:
+- Manually implement scope logic (40+ lines of boilerplate)
+- Use ScopeResolverHelpers (if they discover it exists)
+- Implement a custom scope loader (even more work)
+
+**Ideal Solution**: ModTestFixture should automatically load scope definitions from mod dependencies, just like the production engine does. This would eliminate the need for both manual implementations and ScopeResolverHelpers for standard mod scopes.
 
 ---
 
@@ -385,11 +431,12 @@ await fixture.executeAction(scenario.actor.id, scenario.target.id);
 - ✅ Migration from legacy patterns
 
 **What's Missing**:
-- ❌ **ScopeResolverHelpers library** (not mentioned at all)
+- ❌ **ScopeResolverHelpers library** (not mentioned at all in primary guide)
 - ❌ How to test actions with custom scopes
 - ❌ When to register scopes vs manual implementation
 - ❌ Cross-mod dependency testing strategies
 - ❌ Scope registration patterns and examples
+- ❌ Auto-loading of mod scope definitions in tests
 
 ### action-discovery-testing-toolkit.md (64 lines)
 
@@ -408,10 +455,13 @@ await fixture.executeAction(scenario.actor.id, scenario.target.id);
 - ✅ Legacy pattern replacements
 - ✅ ModEntityBuilder migration
 - ✅ Fixture factory patterns
+- ✅ **ScopeResolverHelpers mentions** (6+ references)
+- ✅ Scope resolver migration guidance
 
 **What's Missing**:
-- ❌ Scope resolver migration patterns
-- ❌ Helper library adoption guide
+- ❌ Detailed tutorial on using ScopeResolverHelpers
+- ❌ Examples of creating custom scope resolvers
+- ❌ Guidance on mod scope auto-loading limitations
 
 ---
 
@@ -763,31 +813,37 @@ Returns all actors sitting on the same furniture as the actor.
 
 ## Conclusion
 
-The `violence:tear_out_throat` action testing revealed a **critical gap in testing infrastructure discoverability**: a powerful helper library exists but is completely undocumented and unused in existing tests.
+The `violence:tear_out_throat` action testing revealed **multiple layers of testing infrastructure issues**: from documentation gaps to architectural limitations in how test fixtures handle mod dependencies.
 
-**Root Causes**:
-1. **Documentation Gap**: ScopeResolverHelpers not mentioned in any testing guides
-2. **Pattern Inconsistency**: Different mods use different testing approaches
-3. **Example Shortage**: Existing tests don't demonstrate best practices
-4. **Discoverability Problem**: Helper library filename doesn't suggest its purpose
+**Root Causes** (Refined):
+1. **Documentation Gap**: ScopeResolverHelpers not mentioned in primary testing guide (mod-testing-guide.md)
+2. **Pattern Inconsistency**: Different mods use different testing approaches (violence uses manual, positioning uses helpers)
+3. **Example Discovery**: Helper IS used in positioning tests but not discoverable from violence/vampirism examples
+4. **Architectural Limitation**: **ModTestFixture doesn't auto-load scope definitions from mod dependencies**
+5. **Test/Production Gap**: Scopes work in production (auto-loaded from .scope files) but not in tests
 
 **Impact on Development**:
 - **40+ lines of boilerplate** per test file for scope registration
+- **Code duplication** between mod scope definitions and test implementations
 - **Confusion** about which testing pattern to follow
-- **Wasted time** re-implementing existing functionality
-- **Maintenance burden** from inconsistent patterns
+- **Wasted time** re-implementing scope logic that already exists in mod files
+- **Maintenance burden** from inconsistent patterns and duplicate scope logic
 
 **Immediate Actions Required**:
-1. ✅ Document ScopeResolverHelpers in mod-testing-guide.md
+1. ✅ Document ScopeResolverHelpers in mod-testing-guide.md (primary guide)
 2. ✅ Add scope troubleshooting checklist
 3. ✅ Clarify file naming conventions
-4. ✅ Migrate existing tests to establish consistent pattern
+4. ✅ Add examples from positioning mod tests to documentation
+5. ✅ Migrate existing tests to establish consistent pattern
+6. ✅ Document the scope auto-loading limitation explicitly
 
 **Long-Term Vision**:
-- Auto-registration of common scopes in ModTestFixture
+- **Auto-load scope definitions** from mod dependencies in tests (matching production behavior)
+- Auto-registration of common scopes in ModTestFixture (fallback for non-standard scopes)
 - Self-documenting error messages for scope issues
 - Comprehensive scope resolver registry
 - Zero-config testing for 90% of common actions
+- Eliminate need for ScopeResolverHelpers for standard mod scopes
 
 ---
 

@@ -1,0 +1,47 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "clothing:dark_burgundy_long_sleeve_tshirt",
+  "description": "Dark burgundy or washed-out oxblood long-sleeve T-shirt in stretch cotton-spandex",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": [
+          "left_arm_clothing",
+          "right_arm_clothing"
+        ]
+      },
+      "allowedLayers": [
+        "underwear",
+        "base"
+      ]
+    },
+    "core:material": {
+      "material": "cotton"
+    },
+    "core:name": {
+      "text": "long-sleeve T-shirt"
+    },
+    "core:description": {
+      "text": "A fitted long-sleeve T-shirt in a rich dark burgundy or washed-out oxblood tone. Made from a stretch cotton-spandex blend that moves with your body while maintaining its shape. The smooth fabric drapes comfortably and the long sleeves provide versatile coverage. The deep red hue offers a sophisticated alternative to basic neutrals."
+    },
+    "descriptors:color_basic": {
+      "color": "red"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.25
+    }
+  }
+}
