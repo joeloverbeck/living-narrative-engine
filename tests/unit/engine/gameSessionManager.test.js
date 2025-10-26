@@ -140,6 +140,28 @@ describe('GameSessionManager', () => {
         stopError
       );
     });
+
+    it('should log and rethrow when resetCoreGameStateFn throws without prior failures', async () => {
+      const resetErrorMessage = 'Reset failure';
+      resetCoreGameStateFn.mockImplementation(() => {
+        throw resetErrorMessage;
+      });
+
+      await expect(
+        gameSessionManager.prepareForNewGameSession('UnluckyWorld')
+      ).rejects.toThrow(resetErrorMessage);
+
+      const errorLogCall = logger.error.mock.calls.find(([message]) =>
+        message.includes(
+          'GameSessionManager._prepareEngineForOperation: resetCoreGameStateFn threw while clearing core state.'
+        )
+      );
+      expect(errorLogCall).toBeDefined();
+      const [, capturedError] = errorLogCall;
+
+      expect(capturedError).toBeInstanceOf(Error);
+      expect(capturedError.message).toBe(resetErrorMessage);
+    });
   });
 
   describe('prepareForLoadGameSession', () => {
@@ -318,6 +340,44 @@ describe('GameSessionManager', () => {
       );
       expect(resetCoreGameStateFn).toHaveBeenCalledTimes(1);
     });
+
+    it('should derive a fallback name when manual save segments normalize to empty strings', async () => {
+      await gameSessionManager.prepareForLoadGameSession(
+        'manual_save_.sav/manual_save_.sav'
+      );
+
+      expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENGINE_OPERATION_IN_PROGRESS_UI,
+        {
+          titleMessage: 'Loading .savmanual save...',
+          inputDisabledMessage: 'Loading game from .savmanual save...',
+        }
+      );
+    });
+
+    it('should preserve underscore-only identifiers after normalization', async () => {
+      await gameSessionManager.prepareForLoadGameSession('__');
+
+      expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENGINE_OPERATION_IN_PROGRESS_UI,
+        {
+          titleMessage: 'Loading __...',
+          inputDisabledMessage: 'Loading game from __...',
+        }
+      );
+    });
+
+    it('should treat whitespace-only fallback identifiers as missing', async () => {
+      await gameSessionManager.prepareForLoadGameSession(' /   / ');
+
+      expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENGINE_OPERATION_IN_PROGRESS_UI,
+        {
+          titleMessage: 'Loading Saved Game...',
+          inputDisabledMessage: 'Loading game from Saved Game...',
+        }
+      );
+    });
   });
 
   describe('finalizeNewGameSuccess', () => {
@@ -473,6 +533,38 @@ describe('GameSessionManager', () => {
         }
       );
       expect(turnManager.start).toHaveBeenCalledTimes(1);
+    });
+
+    it('should normalize rollback errors when cleanup helpers fail during start failure recovery', async () => {
+      playtimeTracker.endSessionAndAccumulate.mockImplementation(() => {
+        throw 'tracker panic';
+      });
+      resetCoreGameStateFn.mockImplementation(() => {
+        throw 'reset panic';
+      });
+      turnManager.start.mockRejectedValue(new Error('Turn start failed'));
+
+      await expect(
+        gameSessionManager.finalizeNewGameSuccess('NewWorld')
+      ).rejects.toThrow('Turn start failed');
+
+      const trackerLogCall = logger.error.mock.calls.find(([message]) =>
+        message.includes(
+          'GameSessionManager._finalizeGameStart: Failed to rollback playtime session after start failure.'
+        )
+      );
+      expect(trackerLogCall).toBeDefined();
+      expect(trackerLogCall[1]).toBeInstanceOf(Error);
+      expect(trackerLogCall[1].message).toBe('tracker panic');
+
+      const resetLogCall = logger.error.mock.calls.find(([message]) =>
+        message.includes(
+          'GameSessionManager._finalizeGameStart: Failed to reset core game state after start failure.'
+        )
+      );
+      expect(resetLogCall).toBeDefined();
+      expect(resetLogCall[1]).toBeInstanceOf(Error);
+      expect(resetLogCall[1].message).toBe('reset panic');
     });
 
     it('should skip anatomy wait when no generations are pending', async () => {

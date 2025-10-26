@@ -346,9 +346,10 @@ class GameSessionManager {
       }
     }
 
-    const identifierWithoutSeparators = normalizedIdentifier
-      .replace(/[/\\]/g, '')
-      .trim();
+    const identifierWithoutSeparators = normalizedIdentifier.replace(
+      /[/\\]/g,
+      ''
+    );
 
     if (
       identifierWithoutSeparators.length > 0 &&
@@ -374,11 +375,9 @@ class GameSessionManager {
    * @returns {string} Human-readable save label or an empty string when none can be derived.
    */
   #normalizeSaveName(rawName) {
-    if (typeof rawName !== 'string') {
-      return '';
-    }
-
-    const trimmedName = rawName.trim();
+    const normalizedName =
+      typeof rawName === 'string' ? rawName : String(rawName ?? '');
+    const trimmedName = normalizedName.trim();
     if (!trimmedName) {
       return '';
     }
