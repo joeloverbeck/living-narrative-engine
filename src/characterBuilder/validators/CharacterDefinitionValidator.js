@@ -181,7 +181,9 @@ export class CharacterDefinitionValidator {
         result.suggestions.push(...qualityResult.suggestions);
 
         // Add quality-based warnings
-        if (qualityResult.overallScore < 0.4) {
+        const overallScore =
+          qualityResult.metrics?.overallScore ?? qualityResult.overallScore ?? 0;
+        if (overallScore < 0.4) {
           result.warnings.push(
             'Character definition may need more detail for optimal results'
           );
@@ -313,12 +315,41 @@ export class CharacterDefinitionValidator {
     if (nameComponent) {
       const characterName =
         this.#extractCharacterNameFromComponent(nameComponent);
+
+      const candidateFields = ['text', 'name', 'value'];
+      const hasWhitespaceOnlyExplicitName = candidateFields.some((field) => {
+        const value = nameComponent[field];
+        return typeof value === 'string' && value.trim().length === 0;
+      });
+
+      let hasWhitespaceOnlyPersonalName = false;
+      if (
+        nameComponent.personal &&
+        typeof nameComponent.personal === 'object'
+      ) {
+        const { firstName, lastName } = nameComponent.personal;
+        const firstTrimmed =
+          typeof firstName === 'string' ? firstName.trim() : '';
+        const lastTrimmed =
+          typeof lastName === 'string' ? lastName.trim() : '';
+
+        if (
+          (typeof firstName === 'string' || typeof lastName === 'string') &&
+          firstTrimmed.length === 0 &&
+          lastTrimmed.length === 0
+        ) {
+          hasWhitespaceOnlyPersonalName = true;
+        }
+      }
+
       if (!characterName) {
-        errors.push(
-          'Character name component exists but does not contain a valid name. Expected text, name, or value field.'
-        );
-      } else if (characterName.trim().length === 0) {
-        errors.push('Character name cannot be empty');
+        if (hasWhitespaceOnlyExplicitName || hasWhitespaceOnlyPersonalName) {
+          errors.push('Character name cannot be empty');
+        } else {
+          errors.push(
+            'Character name component exists but does not contain a valid name. Expected text, name, or value field.'
+          );
+        }
       }
     }
 
@@ -501,6 +532,35 @@ export class CharacterDefinitionValidator {
   }
 
   /**
+   * Register custom semantic validation rule
+   * @description Allows dynamic registration of additional semantic validation rules for extensibility and testing.
+   * @param {SemanticValidationRule} rule - Rule to register
+   * @returns {void}
+   */
+  registerSemanticRule(rule) {
+    if (!rule || typeof rule !== 'object') {
+      throw new Error('Semantic rule must be an object');
+    }
+
+    if (!rule.id || typeof rule.id !== 'string') {
+      throw new Error('Semantic rule must include an id');
+    }
+
+    if (typeof rule.validator !== 'function') {
+      throw new Error('Semantic rule must provide a validator function');
+    }
+
+    const normalizedRule = {
+      priority: typeof rule.priority === 'number' ? rule.priority : 5,
+      name: rule.name || rule.id,
+      category: rule.category || 'custom',
+      ...rule,
+    };
+
+    this.#addSemanticRule(normalizedRule);
+  }
+
+  /**
    * Add quality assessment metric
    *
    * @private
@@ -508,6 +568,41 @@ export class CharacterDefinitionValidator {
    */
   #addQualityMetric(metric) {
     this.#qualityMetrics.set(metric.id, metric);
+  }
+
+  /**
+   * Register custom quality assessment metric
+   * @description Allows dynamic registration of quality metrics for extensibility and focused testing scenarios.
+   * @param {QualityMetric} metric - Metric definition to register
+   * @returns {void}
+   */
+  registerQualityMetric(metric) {
+    if (!metric || typeof metric !== 'object') {
+      throw new Error('Quality metric must be an object');
+    }
+
+    if (!metric.id || typeof metric.id !== 'string') {
+      throw new Error('Quality metric must include an id');
+    }
+
+    if (typeof metric.assessor !== 'function') {
+      throw new Error('Quality metric must provide an assessor function');
+    }
+
+    if (typeof metric.weight !== 'number' || Number.isNaN(metric.weight)) {
+      throw new Error('Quality metric must include a numeric weight');
+    }
+
+    const normalizedMetric = {
+      thresholds: metric.thresholds || {
+        low: 0.3,
+        medium: 0.6,
+        high: 0.9,
+      },
+      ...metric,
+    };
+
+    this.#addQualityMetric(normalizedMetric);
   }
 
   /**
