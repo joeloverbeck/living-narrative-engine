@@ -9,6 +9,10 @@
  * @returns {boolean} True if the assignment succeeded, false otherwise.
  */
 export function setByPath(root, path, value) {
+  if (root === null || typeof root !== 'object') {
+    return false;
+  }
+
   const parts = path.split('.').filter(Boolean);
   let cur = root;
   for (let i = 0; i < parts.length; i++) {
