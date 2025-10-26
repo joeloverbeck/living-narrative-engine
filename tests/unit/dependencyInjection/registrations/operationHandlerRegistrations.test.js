@@ -1,854 +1,774 @@
-import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import AppContainer from '../../../../src/dependencyInjection/appContainer.js';
-import { Registrar } from '../../../../src/utils/registrarHelpers.js';
-import { tokens } from '../../../../src/dependencyInjection/tokens.js';
-import { registerOperationHandlers } from '../../../../src/dependencyInjection/registrations/operationHandlerRegistrations.js';
 import {
-  MockContainer,
-  createMockLogger,
-  createSimpleMock,
-  createMockEntityManager,
-} from '../../../common/mockFactories/index.js';
+  describe,
+  it,
+  beforeAll,
+  beforeEach,
+  expect,
+  jest,
+} from '@jest/globals';
 
-/**
- * @file Tests for registerOperationHandlers ensuring each handler token is registered once
- * and that all factory functions work correctly.
- */
+const handlerBasePath =
+  '../../../../src/logic/operationHandlers';
+
+const handlerModuleDefinitions = [
+  ['DispatchEventHandler', `${handlerBasePath}/dispatchEventHandler.js`],
+  [
+    'DispatchPerceptibleEventHandler',
+    `${handlerBasePath}/dispatchPerceptibleEventHandler.js`,
+  ],
+  ['DispatchSpeechHandler', `${handlerBasePath}/dispatchSpeechHandler.js`],
+  ['DispatchThoughtHandler', `${handlerBasePath}/dispatchThoughtHandler.js`],
+  ['LogHandler', `${handlerBasePath}/logHandler.js`],
+  [
+    'ModifyComponentHandler',
+    `${handlerBasePath}/modifyComponentHandler.js`,
+  ],
+  ['AddComponentHandler', `${handlerBasePath}/addComponentHandler.js`],
+  ['RemoveComponentHandler', `${handlerBasePath}/removeComponentHandler.js`],
+  ['QueryComponentHandler', `${handlerBasePath}/queryComponentHandler.js`],
+  ['QueryComponentsHandler', `${handlerBasePath}/queryComponentsHandler.js`],
+  ['SetVariableHandler', `${handlerBasePath}/setVariableHandler.js`],
+  ['EndTurnHandler', `${handlerBasePath}/endTurnHandler.js`],
+  [
+    'SystemMoveEntityHandler',
+    `${handlerBasePath}/systemMoveEntityHandler.js`,
+  ],
+  ['GetTimestampHandler', `${handlerBasePath}/getTimestampHandler.js`],
+  ['GetNameHandler', `${handlerBasePath}/getNameHandler.js`],
+  [
+    'RebuildLeaderListCacheHandler',
+    `${handlerBasePath}/rebuildLeaderListCacheHandler.js`,
+  ],
+  [
+    'CheckFollowCycleHandler',
+    `${handlerBasePath}/checkFollowCycleHandler.js`,
+  ],
+  [
+    'EstablishFollowRelationHandler',
+    `${handlerBasePath}/establishFollowRelationHandler.js`,
+  ],
+  [
+    'BreakFollowRelationHandler',
+    `${handlerBasePath}/breakFollowRelationHandler.js`,
+  ],
+  [
+    'AddPerceptionLogEntryHandler',
+    `${handlerBasePath}/addPerceptionLogEntryHandler.js`,
+  ],
+  ['QueryEntitiesHandler', `${handlerBasePath}/queryEntitiesHandler.js`],
+  ['HasComponentHandler', `${handlerBasePath}/hasComponentHandler.js`],
+  [
+    'ModifyArrayFieldHandler',
+    `${handlerBasePath}/modifyArrayFieldHandler.js`,
+  ],
+  [
+    'ModifyContextArrayHandler',
+    `${handlerBasePath}/modifyContextArrayHandler.js`,
+  ],
+  ['IfCoLocatedHandler', `${handlerBasePath}/ifCoLocatedHandler.js`],
+  ['MathHandler', `${handlerBasePath}/mathHandler.js`],
+  [
+    'AutoMoveFollowersHandler',
+    `${handlerBasePath}/autoMoveFollowersHandler.js`,
+  ],
+  [
+    'MergeClosenessCircleHandler',
+    `${handlerBasePath}/mergeClosenessCircleHandler.js`,
+  ],
+  [
+    'RemoveFromClosenessCircleHandler',
+    `${handlerBasePath}/removeFromClosenessCircleHandler.js`,
+  ],
+  [
+    'EstablishSittingClosenessHandler',
+    `${handlerBasePath}/establishSittingClosenessHandler.js`,
+  ],
+  [
+    'RemoveSittingClosenessHandler',
+    `${handlerBasePath}/removeSittingClosenessHandler.js`,
+  ],
+  [
+    'BreakClosenessWithTargetHandler',
+    `${handlerBasePath}/breakClosenessWithTargetHandler.js`,
+  ],
+  [
+    'HasBodyPartWithComponentValueHandler',
+    `${handlerBasePath}/hasBodyPartWithComponentValueHandler.js`,
+  ],
+  ['UnequipClothingHandler', `${handlerBasePath}/unequipClothingHandler.js`],
+  ['LockMovementHandler', `${handlerBasePath}/lockMovementHandler.js`],
+  [
+    'LockMouthEngagementHandler',
+    `${handlerBasePath}/lockMouthEngagementHandler.js`,
+  ],
+  ['UnlockMovementHandler', `${handlerBasePath}/unlockMovementHandler.js`],
+  [
+    'UnlockMouthEngagementHandler',
+    `${handlerBasePath}/unlockMouthEngagementHandler.js`,
+  ],
+  [
+    'RegenerateDescriptionHandler',
+    `${handlerBasePath}/regenerateDescriptionHandler.js`,
+  ],
+  [
+    'AtomicModifyComponentHandler',
+    `${handlerBasePath}/atomicModifyComponentHandler.js`,
+  ],
+  ['SequenceHandler', `${handlerBasePath}/sequenceHandler.js`],
+  ['TransferItemHandler', `${handlerBasePath}/transferItemHandler.js`],
+  [
+    'ValidateInventoryCapacityHandler',
+    `${handlerBasePath}/validateInventoryCapacityHandler.js`,
+  ],
+  [
+    'DropItemAtLocationHandler',
+    `${handlerBasePath}/dropItemAtLocationHandler.js`,
+  ],
+  [
+    'PickUpItemFromLocationHandler',
+    `${handlerBasePath}/pickUpItemFromLocationHandler.js`,
+  ],
+  ['OpenContainerHandler', `${handlerBasePath}/openContainerHandler.js`],
+  ['TakeFromContainerHandler', `${handlerBasePath}/takeFromContainerHandler.js`],
+  ['PutInContainerHandler', `${handlerBasePath}/putInContainerHandler.js`],
+  [
+    'ValidateContainerCapacityHandler',
+    `${handlerBasePath}/validateContainerCapacityHandler.js`,
+  ],
+];
+
+const registerHandlerMock = (name, modulePath) => {
+  jest.mock(modulePath, () => {
+    class MockHandler {
+      constructor(config) {
+        this.config = config;
+        MockHandler.instances.push(this);
+      }
+    }
+    MockHandler.instances = [];
+
+    return { __esModule: true, default: MockHandler };
+  });
+};
+
+handlerModuleDefinitions.forEach(([name, modulePath]) => {
+  registerHandlerMock(name, modulePath);
+});
+
+const mockHandlerRegistry = new Map();
+
+const JSON_LOGIC_SENTINEL = Symbol('jsonLogic');
+
+let registerOperationHandlers;
+let tokens;
+let jsonLogic;
+let handlerExpectations;
+
+beforeAll(async () => {
+  ({ registerOperationHandlers } = await import(
+    '../../../../src/dependencyInjection/registrations/operationHandlerRegistrations.js'
+  ));
+  for (const [name, modulePath] of handlerModuleDefinitions) {
+    const module = await import(modulePath);
+    mockHandlerRegistry.set(name, module.default);
+  }
+  ({ tokens } = await import(
+    '../../../../src/dependencyInjection/tokens.js'
+  ));
+  ({ default: jsonLogic } = await import('json-logic-js'));
+
+  const {
+    ILogger,
+    IValidatedEventDispatcher,
+    ISafeEventDispatcher,
+    IEntityManager,
+    AddPerceptionLogEntryHandler: AddPerceptionLogEntryHandlerToken,
+    RebuildLeaderListCacheHandler: RebuildLeaderListCacheHandlerToken,
+    JsonLogicEvaluationService: JsonLogicEvaluationServiceToken,
+    OperationInterpreter: OperationInterpreterToken,
+    IMoveEntityHandler: IMoveEntityHandlerToken,
+    SystemMoveEntityHandler: SystemMoveEntityHandlerToken,
+    ClosenessCircleService: ClosenessCircleServiceToken,
+    BodyGraphService: BodyGraphServiceToken,
+    EquipmentOrchestrator: EquipmentOrchestratorToken,
+    BodyDescriptionComposer: BodyDescriptionComposerToken,
+    ActionSequence: ActionSequenceToken,
+  } = tokens;
+
+  handlerExpectations = [
+    {
+      token: tokens.DispatchEventHandler,
+      handlerName: 'DispatchEventHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'dispatcher', token: IValidatedEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.DispatchPerceptibleEventHandler,
+      handlerName: 'DispatchPerceptibleEventHandler',
+      dependencies: [
+        { property: 'dispatcher', token: ISafeEventDispatcher },
+        { property: 'logger', token: ILogger },
+        {
+          property: 'addPerceptionLogEntryHandler',
+          token: AddPerceptionLogEntryHandlerToken,
+        },
+      ],
+    },
+    {
+      token: tokens.DispatchSpeechHandler,
+      handlerName: 'DispatchSpeechHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'dispatcher', token: IValidatedEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.DispatchThoughtHandler,
+      handlerName: 'DispatchThoughtHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'dispatcher', token: IValidatedEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.LogHandler,
+      handlerName: 'LogHandler',
+      dependencies: [{ property: 'logger', token: ILogger }],
+    },
+    {
+      token: tokens.ModifyComponentHandler,
+      handlerName: 'ModifyComponentHandler',
+      dependencies: [
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'logger', token: ILogger },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.AddComponentHandler,
+      handlerName: 'AddComponentHandler',
+      dependencies: [
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'logger', token: ILogger },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.RemoveComponentHandler,
+      handlerName: 'RemoveComponentHandler',
+      dependencies: [
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'logger', token: ILogger },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.QueryComponentHandler,
+      handlerName: 'QueryComponentHandler',
+      dependencies: [
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'logger', token: ILogger },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.QueryComponentsHandler,
+      handlerName: 'QueryComponentsHandler',
+      dependencies: [
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'logger', token: ILogger },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.SetVariableHandler,
+      handlerName: 'SetVariableHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'jsonLogic', token: JSON_LOGIC_SENTINEL },
+      ],
+    },
+    {
+      token: tokens.EndTurnHandler,
+      handlerName: 'EndTurnHandler',
+      dependencies: [
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+        { property: 'logger', token: ILogger },
+      ],
+    },
+    {
+      token: tokens.SystemMoveEntityHandler,
+      handlerName: 'SystemMoveEntityHandler',
+      dependencies: [
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'logger', token: ILogger },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: IMoveEntityHandlerToken,
+      factoryResultToken: SystemMoveEntityHandlerToken,
+    },
+    {
+      token: tokens.GetTimestampHandler,
+      handlerName: 'GetTimestampHandler',
+      dependencies: [{ property: 'logger', token: ILogger }],
+    },
+    {
+      token: tokens.GetNameHandler,
+      handlerName: 'GetNameHandler',
+      dependencies: [
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'logger', token: ILogger },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.RebuildLeaderListCacheHandler,
+      handlerName: 'RebuildLeaderListCacheHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.CheckFollowCycleHandler,
+      handlerName: 'CheckFollowCycleHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.EstablishFollowRelationHandler,
+      handlerName: 'EstablishFollowRelationHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        {
+          property: 'rebuildLeaderListCacheHandler',
+          token: RebuildLeaderListCacheHandlerToken,
+        },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.BreakFollowRelationHandler,
+      handlerName: 'BreakFollowRelationHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        {
+          property: 'rebuildLeaderListCacheHandler',
+          token: RebuildLeaderListCacheHandlerToken,
+        },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.AddPerceptionLogEntryHandler,
+      handlerName: 'AddPerceptionLogEntryHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.QueryEntitiesHandler,
+      handlerName: 'QueryEntitiesHandler',
+      dependencies: [
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'logger', token: ILogger },
+        {
+          property: 'jsonLogicEvaluationService',
+          token: JsonLogicEvaluationServiceToken,
+        },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.HasComponentHandler,
+      handlerName: 'HasComponentHandler',
+      dependencies: [
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'logger', token: ILogger },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.ModifyArrayFieldHandler,
+      handlerName: 'ModifyArrayFieldHandler',
+      dependencies: [
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'logger', token: ILogger },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.ModifyContextArrayHandler,
+      handlerName: 'ModifyContextArrayHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.IfCoLocatedHandler,
+      handlerName: 'IfCoLocatedHandler',
+      dependencies: [
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'logger', token: ILogger },
+        { property: 'operationInterpreter', token: OperationInterpreterToken },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.MathHandler,
+      handlerName: 'MathHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.AutoMoveFollowersHandler,
+      handlerName: 'AutoMoveFollowersHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'moveEntityHandler', token: IMoveEntityHandlerToken },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.MergeClosenessCircleHandler,
+      handlerName: 'MergeClosenessCircleHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+        {
+          property: 'closenessCircleService',
+          token: ClosenessCircleServiceToken,
+        },
+      ],
+    },
+    {
+      token: tokens.RemoveFromClosenessCircleHandler,
+      handlerName: 'RemoveFromClosenessCircleHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+        {
+          property: 'closenessCircleService',
+          token: ClosenessCircleServiceToken,
+        },
+      ],
+    },
+    {
+      token: tokens.EstablishSittingClosenessHandler,
+      handlerName: 'EstablishSittingClosenessHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+        {
+          property: 'closenessCircleService',
+          token: ClosenessCircleServiceToken,
+        },
+      ],
+    },
+    {
+      token: tokens.RemoveSittingClosenessHandler,
+      handlerName: 'RemoveSittingClosenessHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+        {
+          property: 'closenessCircleService',
+          token: ClosenessCircleServiceToken,
+        },
+      ],
+    },
+    {
+      token: tokens.BreakClosenessWithTargetHandler,
+      handlerName: 'BreakClosenessWithTargetHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+        {
+          property: 'closenessCircleService',
+          token: ClosenessCircleServiceToken,
+        },
+      ],
+    },
+    {
+      token: tokens.HasBodyPartWithComponentValueHandler,
+      handlerName: 'HasBodyPartWithComponentValueHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'bodyGraphService', token: BodyGraphServiceToken },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.UnequipClothingHandler,
+      handlerName: 'UnequipClothingHandler',
+      dependencies: [
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'logger', token: ILogger },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+        {
+          property: 'equipmentOrchestrator',
+          token: EquipmentOrchestratorToken,
+        },
+      ],
+    },
+    {
+      token: tokens.LockMovementHandler,
+      handlerName: 'LockMovementHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.LockMouthEngagementHandler,
+      handlerName: 'LockMouthEngagementHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.UnlockMovementHandler,
+      handlerName: 'UnlockMovementHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.UnlockMouthEngagementHandler,
+      handlerName: 'UnlockMouthEngagementHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.RegenerateDescriptionHandler,
+      handlerName: 'RegenerateDescriptionHandler',
+      dependencies: [
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'logger', token: ILogger },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+        {
+          property: 'bodyDescriptionComposer',
+          token: BodyDescriptionComposerToken,
+        },
+      ],
+    },
+    {
+      token: tokens.AtomicModifyComponentHandler,
+      handlerName: 'AtomicModifyComponentHandler',
+      dependencies: [
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'logger', token: ILogger },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.SequenceHandler,
+      handlerName: 'SequenceHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'actionSequence', token: ActionSequenceToken },
+      ],
+    },
+    {
+      token: tokens.TransferItemHandler,
+      handlerName: 'TransferItemHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.ValidateInventoryCapacityHandler,
+      handlerName: 'ValidateInventoryCapacityHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.DropItemAtLocationHandler,
+      handlerName: 'DropItemAtLocationHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.PickUpItemFromLocationHandler,
+      handlerName: 'PickUpItemFromLocationHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.OpenContainerHandler,
+      handlerName: 'OpenContainerHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.TakeFromContainerHandler,
+      handlerName: 'TakeFromContainerHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.PutInContainerHandler,
+      handlerName: 'PutInContainerHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.ValidateContainerCapacityHandler,
+      handlerName: 'ValidateContainerCapacityHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+  ];
+});
 
 describe('registerOperationHandlers', () => {
-  /** @type {AppContainer} */
-  let container;
-  /** @type {Registrar} */
+  /** @type {Map<string | symbol, (container: any) => any>} */
+  let registrations;
   let registrar;
-  let registerSpy;
 
   beforeEach(() => {
-    container = new AppContainer();
-    registrar = new Registrar(container);
-    registerSpy = jest.spyOn(container, 'register');
-  });
+    jest.clearAllMocks();
+    mockHandlerRegistry.forEach((stats) => {
+      if (stats?.instances) {
+        stats.instances.length = 0;
+      }
+    });
+    registrations = new Map();
+    registrar = {
+      singletonFactory: jest.fn((token, factory) => {
+        if (registrations.has(token)) {
+          throw new Error(`Duplicate registration for token ${String(token)}`);
+        }
+        registrations.set(token, factory);
+      }),
+    };
 
-  it('registers each handler token exactly once', () => {
     registerOperationHandlers(registrar);
-
-    const handlerTokens = [
-      tokens.DispatchEventHandler,
-      tokens.DispatchPerceptibleEventHandler,
-      tokens.DispatchSpeechHandler,
-      tokens.LogHandler,
-      tokens.ModifyComponentHandler,
-      tokens.AddComponentHandler,
-      tokens.RemoveComponentHandler,
-      tokens.QueryComponentHandler,
-      tokens.QueryComponentsHandler,
-      tokens.SetVariableHandler,
-      tokens.EndTurnHandler,
-      tokens.SystemMoveEntityHandler,
-      tokens.IMoveEntityHandler,
-      tokens.GetTimestampHandler,
-      tokens.GetNameHandler,
-      tokens.RebuildLeaderListCacheHandler,
-      tokens.CheckFollowCycleHandler,
-      tokens.EstablishFollowRelationHandler,
-      tokens.BreakFollowRelationHandler,
-      tokens.AddPerceptionLogEntryHandler,
-      tokens.QueryEntitiesHandler,
-      tokens.HasComponentHandler,
-      tokens.ModifyArrayFieldHandler,
-      tokens.ModifyContextArrayHandler,
-      tokens.IfCoLocatedHandler,
-      tokens.MathHandler,
-      tokens.AutoMoveFollowersHandler,
-      tokens.MergeClosenessCircleHandler,
-      tokens.RemoveFromClosenessCircleHandler,
-      tokens.HasBodyPartWithComponentValueHandler,
-      tokens.UnequipClothingHandler,
-      tokens.LockMovementHandler,
-      tokens.LockMouthEngagementHandler,
-      tokens.UnlockMovementHandler,
-      tokens.UnlockMouthEngagementHandler,
-      tokens.RegenerateDescriptionHandler,
-      tokens.AtomicModifyComponentHandler,
-    ];
-
-    handlerTokens.forEach((token) => {
-      const calls = registerSpy.mock.calls.filter((c) => c[0] === token);
-      expect(calls).toHaveLength(1);
-    });
   });
 
-  describe('handler factory functions', () => {
-    let mockContainer;
-    let mockLogger;
-    let mockEntityManager;
-    let mockSafeEventDispatcher;
-    let mockValidatedEventDispatcher;
-
-    beforeEach(() => {
-      mockLogger = createMockLogger();
-      // Use the comprehensive entity manager mock that includes all required methods
-      mockEntityManager = createMockEntityManager();
-
-      // Add any additional methods that may not be in the mock
-      mockEntityManager.hasEntity = jest.fn();
-      mockEntityManager.createEntity = jest.fn();
-      mockEntityManager.removeEntity = jest.fn();
-      mockEntityManager.getComponent = jest.fn();
-      mockEntityManager.hasComponent = jest.fn();
-      mockEntityManager.addComponent = jest.fn();
-      mockEntityManager.removeComponent = jest.fn();
-      mockEntityManager.modifyComponent = jest.fn();
-      mockEntityManager.queryEntities = jest.fn();
-      mockEntityManager.getAllEntities = jest.fn();
-      mockEntityManager.getEntitiesWithComponent = jest.fn(() => []);
-      mockEntityManager.getEntitiesInLocation = jest.fn(() => []);
-      mockSafeEventDispatcher = createSimpleMock(['dispatch']);
-      mockValidatedEventDispatcher = createSimpleMock(['dispatch']);
-
-      mockContainer = new MockContainer();
-
-      // Register all common dependencies
-      mockContainer.register(tokens.ILogger, mockLogger);
-      mockContainer.register(tokens.IEntityManager, mockEntityManager);
-      mockContainer.register(
-        tokens.ISafeEventDispatcher,
-        mockSafeEventDispatcher
-      );
-      mockContainer.register(
-        tokens.IValidatedEventDispatcher,
-        mockValidatedEventDispatcher
-      );
-    });
-
-    it('creates DispatchEventHandler with correct dependencies', () => {
-      registerOperationHandlers(registrar);
-
-      // Get the registered factory
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.DispatchEventHandler
-      );
-      const factory = factoryCall[1];
-
-      // Execute the factory
-      const handler = factory(mockContainer);
-
-      // Verify the handler was created with correct dependencies
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('DispatchEventHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.IValidatedEventDispatcher
-      );
-    });
-
-    it('creates DispatchPerceptibleEventHandler with correct dependencies', () => {
-      // Register the AddPerceptionLogEntryHandler dependency
-      mockContainer.register(
-        tokens.AddPerceptionLogEntryHandler,
-        createSimpleMock(['execute'])
-      );
-
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.DispatchPerceptibleEventHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('DispatchPerceptibleEventHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.AddPerceptionLogEntryHandler
-      );
-    });
-
-    it('creates DispatchSpeechHandler with correct dependencies', () => {
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.DispatchSpeechHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('DispatchSpeechHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.IValidatedEventDispatcher
-      );
-    });
-
-    it('creates LogHandler with correct dependencies', () => {
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.LogHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('LogHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-    });
-
-    it('creates ModifyComponentHandler with correct dependencies', () => {
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.ModifyComponentHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('ModifyComponentHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-    });
-
-    it('creates AddComponentHandler with correct dependencies', () => {
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.AddComponentHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('AddComponentHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-    });
-
-    it('creates RemoveComponentHandler with correct dependencies', () => {
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.RemoveComponentHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('RemoveComponentHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-    });
-
-    it('creates QueryComponentHandler with correct dependencies', () => {
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.QueryComponentHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('QueryComponentHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-    });
-
-    it('creates QueryComponentsHandler with correct dependencies', () => {
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.QueryComponentsHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('QueryComponentsHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-    });
-
-    it('creates SetVariableHandler with correct dependencies', () => {
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.SetVariableHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('SetVariableHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      // Verify jsonLogic is passed
-      expect(handler).toBeDefined();
-    });
-
-    it('creates EndTurnHandler with correct dependencies', () => {
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.EndTurnHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('EndTurnHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-    });
-
-    it('creates SystemMoveEntityHandler with correct dependencies', () => {
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.SystemMoveEntityHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('SystemMoveEntityHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-    });
-
-    it('creates IMoveEntityHandler that resolves to SystemMoveEntityHandler', () => {
-      // First register SystemMoveEntityHandler
-      mockContainer.register(tokens.SystemMoveEntityHandler, {
-        name: 'SystemMoveEntityHandler',
-      });
-
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.IMoveEntityHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.name).toBe('SystemMoveEntityHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.SystemMoveEntityHandler
-      );
-    });
-
-    it('creates GetTimestampHandler with correct dependencies', () => {
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.GetTimestampHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('GetTimestampHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-    });
-
-    it('creates GetNameHandler with correct dependencies', () => {
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.GetNameHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('GetNameHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-    });
-
-    it('creates RebuildLeaderListCacheHandler with correct dependencies', () => {
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.RebuildLeaderListCacheHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('RebuildLeaderListCacheHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-    });
-
-    it('creates CheckFollowCycleHandler with correct dependencies', () => {
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.CheckFollowCycleHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('CheckFollowCycleHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-    });
-
-    it('creates EstablishFollowRelationHandler with correct dependencies', () => {
-      // Register the RebuildLeaderListCacheHandler dependency
-      mockContainer.register(
-        tokens.RebuildLeaderListCacheHandler,
-        createSimpleMock(['execute'])
-      );
-
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.EstablishFollowRelationHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('EstablishFollowRelationHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.RebuildLeaderListCacheHandler
-      );
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-    });
-
-    it('creates BreakFollowRelationHandler with correct dependencies', () => {
-      // Register the RebuildLeaderListCacheHandler dependency
-      mockContainer.register(
-        tokens.RebuildLeaderListCacheHandler,
-        createSimpleMock(['execute'])
-      );
-
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.BreakFollowRelationHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('BreakFollowRelationHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.RebuildLeaderListCacheHandler
-      );
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-    });
-
-    it('creates AddPerceptionLogEntryHandler with correct dependencies', () => {
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.AddPerceptionLogEntryHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('AddPerceptionLogEntryHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-    });
-
-    it('creates QueryEntitiesHandler with correct dependencies', () => {
-      // Register the JsonLogicEvaluationService dependency
-      mockContainer.register(
-        tokens.JsonLogicEvaluationService,
-        createSimpleMock(['evaluate'])
-      );
-
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.QueryEntitiesHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('QueryEntitiesHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.JsonLogicEvaluationService
-      );
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-    });
-
-    it('creates HasComponentHandler with correct dependencies', () => {
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.HasComponentHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('HasComponentHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-    });
-
-    it('creates ModifyArrayFieldHandler with correct dependencies', () => {
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.ModifyArrayFieldHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('ModifyArrayFieldHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-    });
-
-    it('creates ModifyContextArrayHandler with correct dependencies', () => {
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.ModifyContextArrayHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('ModifyContextArrayHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-    });
-
-    it('creates IfCoLocatedHandler with correct dependencies', () => {
-      // Register the OperationInterpreter dependency
-      mockContainer.register(
-        tokens.OperationInterpreter,
-        createSimpleMock(['execute'])
-      );
-
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.IfCoLocatedHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('IfCoLocatedHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.OperationInterpreter
-      );
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-    });
-
-    it('creates MathHandler with correct dependencies', () => {
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.MathHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('MathHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-    });
-
-    it('creates AutoMoveFollowersHandler with correct dependencies', () => {
-      // Register the IMoveEntityHandler dependency
-      mockContainer.register(
-        tokens.IMoveEntityHandler,
-        createSimpleMock(['execute'])
-      );
-
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.AutoMoveFollowersHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('AutoMoveFollowersHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.IMoveEntityHandler
-      );
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-    });
-
-    it('creates MergeClosenessCircleHandler with correct dependencies', () => {
-      // Register the ClosenessCircleService dependency
-      mockContainer.register(
-        tokens.ClosenessCircleService,
-        createSimpleMock(['merge', 'repair'])
-      );
-
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.MergeClosenessCircleHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('MergeClosenessCircleHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ClosenessCircleService
-      );
-    });
-
-    it('creates RemoveFromClosenessCircleHandler with correct dependencies', () => {
-      // Register the ClosenessCircleService dependency
-      mockContainer.register(
-        tokens.ClosenessCircleService,
-        createSimpleMock(['remove', 'repair'])
-      );
-
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.RemoveFromClosenessCircleHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('RemoveFromClosenessCircleHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ClosenessCircleService
-      );
-    });
-
-    it('creates HasBodyPartWithComponentValueHandler with correct dependencies', () => {
-      // Register the BodyGraphService dependency
-      mockContainer.register(
-        tokens.BodyGraphService,
-        createSimpleMock([
-          'hasBodyPartWithComponentValue',
-          'hasPartWithComponentValue',
-        ])
-      );
-
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.HasBodyPartWithComponentValueHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe(
-        'HasBodyPartWithComponentValueHandler'
-      );
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.BodyGraphService
-      );
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-    });
-
-    it('creates UnequipClothingHandler with correct dependencies', () => {
-      // Register the EquipmentOrchestrator dependency
-      mockContainer.register(
-        tokens.EquipmentOrchestrator,
-        createSimpleMock(['orchestrateUnequipment'])
-      );
-
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.UnequipClothingHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('UnequipClothingHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.EquipmentOrchestrator
-      );
-    });
-
-    it('creates LockMovementHandler with correct dependencies', () => {
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.LockMovementHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('LockMovementHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-    });
-
-    it('creates UnlockMovementHandler with correct dependencies', () => {
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.UnlockMovementHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('UnlockMovementHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-    });
-
-    it('creates AtomicModifyComponentHandler with correct dependencies', () => {
-      registerOperationHandlers(registrar);
-
-      const factoryCall = registerSpy.mock.calls.find(
-        (c) => c[0] === tokens.AtomicModifyComponentHandler
-      );
-      const factory = factoryCall[1];
-
-      const handler = factory(mockContainer);
-
-      expect(handler).toBeDefined();
-      expect(handler.constructor.name).toBe('AtomicModifyComponentHandler');
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
+  it('registers each operation handler token exactly once', () => {
+    expect(mockHandlerRegistry.size).toBe(handlerModuleDefinitions.length);
+    expect(registrations.size).toBe(handlerExpectations.length);
+    expect(registrar.singletonFactory).toHaveBeenCalledTimes(
+      handlerExpectations.length
+    );
+
+    const registeredTokens = Array.from(registrations.keys());
+    const expectedTokens = handlerExpectations.map(({ token }) => token);
+
+    expect(registeredTokens).toEqual(expectedTokens);
+  });
+
+  it('creates each handler with resolved dependencies', () => {
+    const dependencyInstances = new Map();
+    const getDependencyInstance = (token) => {
+      if (!dependencyInstances.has(token)) {
+        dependencyInstances.set(token, { token });
+      }
+      return dependencyInstances.get(token);
+    };
+
+    const mockContainer = {
+      resolve: jest.fn((token) => getDependencyInstance(token)),
+    };
+
+    handlerExpectations.forEach((expectation) => {
+      const factory = registrations.get(expectation.token);
+      expect(factory).toBeDefined();
+
+      const previousCallCount = mockContainer.resolve.mock.calls.length;
+      const result = factory(mockContainer);
+      const newResolveCalls = mockContainer.resolve.mock.calls.slice(
+        previousCallCount
+      );
+
+      if (expectation.dependencies) {
+        const handlerStats = mockHandlerRegistry.get(expectation.handlerName);
+        expect(handlerStats).toBeDefined();
+        expect(handlerStats.instances).toHaveLength(1);
+
+        const [handlerInstance] = handlerStats.instances;
+        const config = handlerInstance.config;
+        expectation.dependencies.forEach(({ property, token }) => {
+          expect(config).toHaveProperty(property);
+          if (token === JSON_LOGIC_SENTINEL) {
+            expect(config[property]).toBe(jsonLogic);
+          } else {
+            const dependencyInstance = getDependencyInstance(token);
+            expect(config[property]).toBe(dependencyInstance);
+          }
+        });
+
+        const expectedTokens = expectation.dependencies
+          .filter(({ token }) => token !== JSON_LOGIC_SENTINEL)
+          .map(({ token }) => token);
+        expect(newResolveCalls.map(([token]) => token)).toEqual(
+          expectedTokens
+        );
+      } else if (expectation.factoryResultToken) {
+        const expectedInstance = getDependencyInstance(
+          expectation.factoryResultToken
+        );
+        expect(result).toBe(expectedInstance);
+        expect(newResolveCalls.map(([token]) => token)).toEqual([
+          expectation.factoryResultToken,
+        ]);
+      } else {
+        throw new Error('Invalid handler expectation configuration.');
+      }
     });
   });
 });
