@@ -390,6 +390,21 @@ describe('GameSessionManager', () => {
       );
     });
 
+    it('should rollback engine state when turnManager.start fails', async () => {
+      const turnFailure = new Error('Turn start failed');
+      turnManager.start.mockRejectedValue(turnFailure);
+
+      await expect(
+        gameSessionManager.finalizeNewGameSuccess('NewWorld')
+      ).rejects.toThrow(turnFailure);
+
+      expect(playtimeTracker.endSessionAndAccumulate).toHaveBeenCalledTimes(1);
+      expect(resetCoreGameStateFn).toHaveBeenCalledTimes(1);
+      expect(engineState.isInitialized).toBe(false);
+      expect(engineState.isGameLoopRunning).toBe(false);
+      expect(engineState.activeWorld).toBeNull();
+    });
+
     it('should wait for pending anatomy generations before starting turns', async () => {
       // Set up pending anatomy generations (covers lines 150-161)
       anatomyInitializationService.getPendingGenerationCount.mockReturnValue(3);

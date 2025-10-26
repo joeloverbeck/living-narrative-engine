@@ -172,86 +172,128 @@ class GameSessionManager {
    * @returns {Promise<void>} Resolves when setup is complete.
    */
   async #finalizeGameStart(worldName) {
-    this.#startEngineFn(worldName);
+    let playSessionStarted = false;
 
-    if (this.#playtimeTracker) {
-      this.#playtimeTracker.startSession();
-    } else {
-      this.#logger.warn(
-        'GameSessionManager._finalizeGameStart: PlaytimeTracker not available, cannot start session.'
-      );
-    }
+    try {
+      this.#startEngineFn(worldName);
 
-    this.#logger.debug(
-      'GameSessionManager._finalizeGameStart: Dispatching UI event for game ready.'
-    );
-    const readyDispatched = await this.#safeEventDispatcher.dispatch(
-      ENGINE_READY_UI,
-      {
-        activeWorld: worldName,
-        message: 'Enter command...',
-      }
-    );
-
-    if (!readyDispatched) {
-      this.#logger.warn(
-        'GameSessionManager._finalizeGameStart: SafeEventDispatcher reported failure when dispatching ENGINE_READY_UI.'
-      );
-    }
-
-    // Wait for anatomy generation to complete before starting turns
-    if (this.#anatomyInitializationService) {
-      const pendingCount =
-        this.#anatomyInitializationService.getPendingGenerationCount();
-      if (pendingCount > 0) {
-        this.#logger.info(
-          `GameSessionManager._finalizeGameStart: Waiting for ${pendingCount} anatomy generations to complete before starting turns...`
+      if (this.#playtimeTracker) {
+        this.#playtimeTracker.startSession();
+        playSessionStarted = true;
+      } else {
+        this.#logger.warn(
+          'GameSessionManager._finalizeGameStart: PlaytimeTracker not available, cannot start session.'
         );
-        try {
-          await this.#anatomyInitializationService.waitForAllGenerationsToComplete(
-            15000
-          ); // 15 second timeout
-          this.#logger.info(
-            'GameSessionManager._finalizeGameStart: Anatomy generation completed, starting turns.'
-          );
-        } catch (error) {
-          const errorMessage =
-            error instanceof Error
-              ? error.message || 'Unknown error.'
-              : typeof error === 'string'
-                ? error.trim() || 'Unknown error.'
-                : error !== undefined && error !== null
-                  ? String(error)
-                  : 'Unknown error.';
+      }
 
-          this.#logger.warn(
-            'GameSessionManager._finalizeGameStart: Anatomy generation did not complete in time, starting turns anyway.',
-            { error: errorMessage, pendingCount }
+      this.#logger.debug(
+        'GameSessionManager._finalizeGameStart: Dispatching UI event for game ready.'
+      );
+      const readyDispatched = await this.#safeEventDispatcher.dispatch(
+        ENGINE_READY_UI,
+        {
+          activeWorld: worldName,
+          message: 'Enter command...',
+        }
+      );
+
+      if (!readyDispatched) {
+        this.#logger.warn(
+          'GameSessionManager._finalizeGameStart: SafeEventDispatcher reported failure when dispatching ENGINE_READY_UI.'
+        );
+      }
+
+      // Wait for anatomy generation to complete before starting turns
+      if (this.#anatomyInitializationService) {
+        const pendingCount =
+          this.#anatomyInitializationService.getPendingGenerationCount();
+        if (pendingCount > 0) {
+          this.#logger.info(
+            `GameSessionManager._finalizeGameStart: Waiting for ${pendingCount} anatomy generations to complete before starting turns...`
+          );
+          try {
+            await this.#anatomyInitializationService.waitForAllGenerationsToComplete(
+              15000
+            ); // 15 second timeout
+            this.#logger.info(
+              'GameSessionManager._finalizeGameStart: Anatomy generation completed, starting turns.'
+            );
+          } catch (error) {
+            const errorMessage =
+              error instanceof Error
+                ? error.message || 'Unknown error.'
+                : typeof error === 'string'
+                  ? error.trim() || 'Unknown error.'
+                  : error !== undefined && error !== null
+                    ? String(error)
+                    : 'Unknown error.';
+
+            this.#logger.warn(
+              'GameSessionManager._finalizeGameStart: Anatomy generation did not complete in time, starting turns anyway.',
+              { error: errorMessage, pendingCount }
+            );
+          }
+        } else {
+          this.#logger.debug(
+            'GameSessionManager._finalizeGameStart: No pending anatomy generations detected.'
           );
         }
       } else {
-        this.#logger.debug(
-          'GameSessionManager._finalizeGameStart: No pending anatomy generations detected.'
+        this.#logger.warn(
+          'GameSessionManager._finalizeGameStart: AnatomyInitializationService not available, cannot wait for anatomy generation.'
         );
       }
-    } else {
-      this.#logger.warn(
-        'GameSessionManager._finalizeGameStart: AnatomyInitializationService not available, cannot wait for anatomy generation.'
-      );
-    }
 
-    this.#logger.debug(
-      'GameSessionManager._finalizeGameStart: Starting TurnManager...'
-    );
-    if (this.#turnManager) {
-      await this.#turnManager.start();
-    } else {
-      this.#logger.error(
-        'GameSessionManager._finalizeGameStart: TurnManager not available. Game cannot start turns.'
+      this.#logger.debug(
+        'GameSessionManager._finalizeGameStart: Starting TurnManager...'
       );
-      throw new Error(
-        'GameSessionManager critical error: TurnManager service is unavailable during game finalization.'
-      );
+      if (this.#turnManager) {
+        await this.#turnManager.start();
+      } else {
+        this.#logger.error(
+          'GameSessionManager._finalizeGameStart: TurnManager not available. Game cannot start turns.'
+        );
+        throw new Error(
+          'GameSessionManager critical error: TurnManager service is unavailable during game finalization.'
+        );
+      }
+    } catch (error) {
+      const normalizedError =
+        error instanceof Error ? error : new Error(String(error));
+
+      if (this.#playtimeTracker && playSessionStarted) {
+        try {
+          this.#playtimeTracker.endSessionAndAccumulate();
+        } catch (trackerError) {
+          const normalizedTrackerError =
+            trackerError instanceof Error
+              ? trackerError
+              : new Error(String(trackerError));
+          this.#logger.error(
+            'GameSessionManager._finalizeGameStart: Failed to rollback playtime session after start failure.',
+            normalizedTrackerError
+          );
+        }
+      }
+
+      if (this.#resetCoreGameStateFn) {
+        try {
+          await this.#resetCoreGameStateFn();
+        } catch (resetError) {
+          const normalizedResetError =
+            resetError instanceof Error
+              ? resetError
+              : new Error(String(resetError));
+          this.#logger.error(
+            'GameSessionManager._finalizeGameStart: Failed to reset core game state after start failure.',
+            normalizedResetError
+          );
+        }
+      }
+
+      this.#state.reset();
+
+      throw normalizedError;
     }
   }
 
