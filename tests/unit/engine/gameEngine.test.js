@@ -138,6 +138,35 @@ describeEngineSuite('GameEngine', (context) => {
       ).rejects.toThrow('Unknown failure from InitializationService.');
     });
 
+    it('should reset engine state even when core reset throws during failure handling', async () => {
+      const initError = new Error('Initialization failed');
+      context.bed
+        .getInitializationService()
+        .runInitializationSequence.mockResolvedValue({
+          success: false,
+          error: initError,
+        });
+
+      const clearFailure = new Error('clearAll failure');
+      const { clearAll } = context.bed.getEntityManager();
+      clearAll.mockImplementationOnce(() => {});
+      clearAll.mockImplementationOnce(() => {});
+      clearAll.mockImplementationOnce(() => {
+        throw clearFailure;
+      });
+
+      await expect(
+        context.engine.startNewGame(DEFAULT_TEST_WORLD)
+      ).rejects.toThrow(initError);
+
+      expect(clearAll).toHaveBeenCalledTimes(3);
+      expect(context.engine.getEngineStatus()).toEqual({
+        isInitialized: false,
+        isLoopRunning: false,
+        activeWorld: null,
+      });
+    });
+
     it('should handle exceptions during initialization', async () => {
       const unexpectedError = new Error('Unexpected failure');
       context.bed
@@ -314,10 +343,11 @@ describeEngineSuite('GameEngine', (context) => {
         'GameEngine.stop: Failed to end playtime session cleanly.',
         trackerError
       );
-      expect(context.bed.getSafeEventDispatcher().dispatch).toHaveBeenCalledWith(
-        ENGINE_STOPPED_UI,
-        { inputDisabledMessage: ENGINE_STOPPED_MESSAGE }
-      );
+      expect(
+        context.bed.getSafeEventDispatcher().dispatch
+      ).toHaveBeenCalledWith(ENGINE_STOPPED_UI, {
+        inputDisabledMessage: ENGINE_STOPPED_MESSAGE,
+      });
       expect(entityManager.clearAll).toHaveBeenCalledTimes(1);
       expect(playtimeTracker.reset).toHaveBeenCalledTimes(1);
       expect(context.engine.getEngineStatus()).toEqual({
@@ -575,9 +605,7 @@ describeEngineSuite('GameEngine', (context) => {
         persistenceCoordinator: mockPersistenceCoordinator,
       });
 
-      context.bed
-        .getSafeEventDispatcher()
-        .dispatch.mockResolvedValue(true);
+      context.bed.getSafeEventDispatcher().dispatch.mockResolvedValue(true);
       context.bed
         .getInitializationService()
         .runInitializationSequence.mockResolvedValue({ success: true });
@@ -611,9 +639,7 @@ describeEngineSuite('GameEngine', (context) => {
         persistenceCoordinator: mockPersistenceCoordinator,
       });
 
-      context.bed
-        .getSafeEventDispatcher()
-        .dispatch.mockResolvedValue(true);
+      context.bed.getSafeEventDispatcher().dispatch.mockResolvedValue(true);
       context.bed
         .getInitializationService()
         .runInitializationSequence.mockResolvedValue({ success: true });
@@ -725,9 +751,7 @@ describeEngineSuite('GameEngine', (context) => {
       context.bed
         .getGamePersistenceService()
         .isSavingAllowed.mockReturnValue('false');
-      context.bed
-        .getSafeEventDispatcher()
-        .dispatch.mockResolvedValue(true);
+      context.bed.getSafeEventDispatcher().dispatch.mockResolvedValue(true);
 
       await context.engine.showSaveGameUI();
 
