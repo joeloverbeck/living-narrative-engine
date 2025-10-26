@@ -1,16 +1,14 @@
 /* eslint-env jest */
 /**
- * @file Test suite for orchestrationRegistrations.
- * @see tests/dependencyInjection/registrations/orchestrationRegistrations.test.js
+ * @file Unit tests for the orchestration registrations.
  */
 
 import {
   describe,
-  beforeEach,
-  afterEach,
   it,
   expect,
   jest,
+  afterEach,
 } from '@jest/globals';
 
 import AppContainer from '../../../../src/dependencyInjection/appContainer.js';
@@ -18,80 +16,104 @@ import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import { registerOrchestration } from '../../../../src/dependencyInjection/registrations/orchestrationRegistrations.js';
 import InitializationService from '../../../../src/initializers/services/initializationService.js';
 import ShutdownService from '../../../../src/shutdown/services/shutdownService.js';
+import ComponentAccessService from '../../../../src/entities/componentAccessService.js';
 import { expectSingleton } from '../../../common/containerAssertions.js';
 
+/**
+ * Creates a mock logger with the methods required by the registrations.
+ *
+ * @returns {{ debug: jest.Mock, info: jest.Mock, warn: jest.Mock, error: jest.Mock }}
+ *   Logger mock with the required interface.
+ */
+function createLoggerMock() {
+  return {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
+}
+
+/**
+ * Builds a container populated with the dependencies required by
+ * {@link registerOrchestration}.
+ *
+ * @returns {{
+ *   container: AppContainer,
+ *   logger: ReturnType<typeof createLoggerMock>,
+ *   validatedEventDispatcher: { dispatch: jest.Mock },
+ *   safeEventDispatcher: { subscribe: jest.Mock },
+ *   gameLoop: { stop: jest.Mock }
+ * }}
+ *   The populated container along with a few commonly asserted mocks.
+ */
+function createContainerWithDefaults() {
+  const container = new AppContainer();
+
+  const logger = createLoggerMock();
+  const validatedEventDispatcher = { dispatch: jest.fn() };
+  const safeEventDispatcher = { subscribe: jest.fn() };
+  const modsLoader = { loadMods: jest.fn() };
+  const scopeRegistry = { initialize: jest.fn() };
+  const dataRegistry = { getAll: jest.fn().mockReturnValue([]) };
+  const llmAdapter = {
+    init: jest.fn(),
+    isInitialized: jest.fn(),
+    isOperational: jest.fn(),
+  };
+  const llmConfigLoader = { loadConfigs: jest.fn() };
+  const systemInitializer = { initializeAll: jest.fn() };
+  const worldInitializer = { initializeWorldEntities: jest.fn() };
+  const entityManager = { getEntityInstance: jest.fn() };
+  const domUiFacade = {};
+  const actionIndex = {
+    buildIndex: jest.fn(),
+    getCandidateActions: jest.fn(),
+  };
+  const gameDataRepository = {
+    getAllActionDefinitions: jest.fn().mockReturnValue([]),
+  };
+  const spatialIndexManager = { buildIndex: jest.fn() };
+  const anatomyFormattingService = { initialize: jest.fn() };
+  const gameLoop = { stop: jest.fn() };
+
+  container.register(tokens.ILogger, () => logger);
+  container.register(tokens.IValidatedEventDispatcher, () => validatedEventDispatcher);
+  container.register(tokens.ModsLoader, () => modsLoader);
+  container.register(tokens.IScopeRegistry, () => scopeRegistry);
+  container.register(tokens.IDataRegistry, () => dataRegistry);
+  container.register(tokens.LLMAdapter, () => llmAdapter);
+  container.register(tokens.LlmConfigLoader, () => llmConfigLoader);
+  container.register(tokens.SystemInitializer, () => systemInitializer);
+  container.register(tokens.WorldInitializer, () => worldInitializer);
+  container.register(tokens.ISafeEventDispatcher, () => safeEventDispatcher);
+  container.register(tokens.IEntityManager, () => entityManager);
+  container.register(tokens.DomUiFacade, () => domUiFacade);
+  container.register(tokens.ActionIndex, () => actionIndex);
+  container.register(tokens.IGameDataRepository, () => gameDataRepository);
+  container.register(tokens.ISpatialIndexManager, () => spatialIndexManager);
+  container.register(tokens.AnatomyFormattingService, () => anatomyFormattingService);
+  container.register(tokens.GameLoop, () => gameLoop);
+
+  return {
+    container,
+    logger,
+    validatedEventDispatcher,
+    safeEventDispatcher,
+    gameLoop,
+  };
+}
+
+afterEach(() => {
+  jest.clearAllMocks();
+  jest.restoreAllMocks();
+});
+
 describe('registerOrchestration', () => {
-  /** @type {AppContainer} */
-  let container;
-  let mockLogger;
-  let mockDispatcher;
-  let mockGameLoop;
-  let registerSpy;
-
-  beforeEach(() => {
-    container = new AppContainer();
-    registerSpy = jest.spyOn(container, 'register');
-
-    mockLogger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
-    mockDispatcher = { dispatch: jest.fn() };
-    mockGameLoop = {};
-
-    container.register(tokens.ILogger, () => mockLogger);
-    container.register(tokens.IValidatedEventDispatcher, () => mockDispatcher);
-    container.register(tokens.ModsLoader, () => ({ loadMods: jest.fn() }));
-    container.register(tokens.IScopeRegistry, () => ({
-      initialize: jest.fn(),
-    }));
-    container.register(tokens.IDataRegistry, () => ({
-      getAll: jest.fn().mockReturnValue([]),
-    }));
-    container.register(tokens.LLMAdapter, () => ({
-      init: jest.fn(),
-      isInitialized: jest.fn(),
-      isOperational: jest.fn(),
-    }));
-    container.register(tokens.LlmConfigLoader, () => ({
-      loadConfigs: jest.fn(),
-    }));
-    container.register(tokens.SystemInitializer, () => ({
-      initializeAll: jest.fn(),
-    }));
-    container.register(tokens.WorldInitializer, () => ({
-      initializeWorldEntities: jest.fn(),
-    }));
-    container.register(tokens.ISafeEventDispatcher, () => ({
-      subscribe: jest.fn(),
-    }));
-    container.register(tokens.IEntityManager, () => ({}));
-    container.register(tokens.DomUiFacade, () => ({}));
-    container.register(tokens.GameLoop, () => mockGameLoop);
-
-    // Add ActionIndex and GameDataRepository registrations for InitializationService
-    container.register(tokens.ActionIndex, () => ({
-      buildIndex: jest.fn(),
-      getCandidateActions: jest.fn().mockReturnValue([]),
-    }));
-    container.register(tokens.IGameDataRepository, () => ({
-      getAllActionDefinitions: jest.fn().mockReturnValue([]),
-    }));
-    container.register(tokens.ISpatialIndexManager, () => ({
-      buildIndex: jest.fn(),
-    }));
-    container.register(tokens.AnatomyFormattingService, () => ({
-      initialize: jest.fn(),
-    }));
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
   it('registers InitializationService and ShutdownService as singleton factories', () => {
+    const { container, logger } = createContainerWithDefaults();
+    const registerSpy = jest.spyOn(container, 'register');
+
     registerOrchestration(container);
 
     expectSingleton(
@@ -102,16 +124,16 @@ describe('registerOrchestration', () => {
     expectSingleton(container, tokens.ShutdownService, ShutdownService);
 
     const initCall = registerSpy.mock.calls.find(
-      (c) => c[0] === tokens.IInitializationService
+      ([token]) => token === tokens.IInitializationService
     );
-    expect(initCall[2]?.lifecycle).toBe('singletonFactory');
+    expect(initCall?.[2]?.lifecycle).toBe('singletonFactory');
 
     const shutdownCall = registerSpy.mock.calls.find(
-      (c) => c[0] === tokens.ShutdownService
+      ([token]) => token === tokens.ShutdownService
     );
-    expect(shutdownCall[2]?.lifecycle).toBe('singletonFactory');
+    expect(shutdownCall?.[2]?.lifecycle).toBe('singletonFactory');
 
-    const logs = mockLogger.debug.mock.calls.map((c) => c[0]);
+    const logs = logger.debug.mock.calls.map(([message]) => message);
     expect(logs[0]).toBe('Orchestration Registration: Starting...');
     expect(logs).toContain(
       `Orchestration Registration: Registered ${tokens.IInitializationService} (Singleton).`
@@ -122,381 +144,126 @@ describe('registerOrchestration', () => {
     expect(logs).toContain('Orchestration Registration: Complete.');
   });
 
-  it('throws descriptive error when dispatcher resolves to undefined', () => {
-    const badContainer = new AppContainer();
-    badContainer.register(tokens.ILogger, () => mockLogger);
-    badContainer.register(tokens.IValidatedEventDispatcher, () => undefined);
-    badContainer.register(tokens.ModsLoader, () => ({ loadMods: jest.fn() }));
-    badContainer.register(tokens.IScopeRegistry, () => ({
-      initialize: jest.fn(),
-    }));
-    badContainer.register(tokens.IDataRegistry, () => ({ getAll: jest.fn() }));
-    badContainer.register(tokens.LLMAdapter, () => ({ init: jest.fn() }));
-    badContainer.register(tokens.LlmConfigLoader, () => ({
-      loadConfigs: jest.fn(),
-    }));
-    badContainer.register(tokens.SystemInitializer, () => ({
-      initializeAll: jest.fn(),
-    }));
-    badContainer.register(tokens.WorldInitializer, () => ({
-      initializeWorldEntities: jest.fn(),
-    }));
-    badContainer.register(tokens.ISafeEventDispatcher, () => ({
-      subscribe: jest.fn(),
-    }));
-    badContainer.register(tokens.IEntityManager, () => ({}));
-    badContainer.register(tokens.DomUiFacade, () => ({}));
-    badContainer.register(tokens.GameLoop, () => mockGameLoop);
-
-    // Add ActionIndex and GameDataRepository registrations
-    badContainer.register(tokens.ActionIndex, () => ({
-      buildIndex: jest.fn(),
-      getCandidateActions: jest.fn().mockReturnValue([]),
-    }));
-    badContainer.register(tokens.IGameDataRepository, () => ({
-      getAllActionDefinitions: jest.fn().mockReturnValue([]),
-    }));
-    badContainer.register(tokens.ISpatialIndexManager, () => ({
-      buildIndex: jest.fn(),
-    }));
-    badContainer.register(tokens.AnatomyFormattingService, () => ({
-      initialize: jest.fn(),
-    }));
-
-    registerOrchestration(badContainer);
-
-    expect(() => badContainer.resolve(tokens.IInitializationService)).toThrow(
-      `InitializationService Factory: Failed to resolve dependency: ${tokens.IValidatedEventDispatcher}`
-    );
-  });
-
-  it('throws descriptive error when GameLoop resolves to undefined', () => {
-    const badContainer = new AppContainer();
-    badContainer.register(tokens.ILogger, () => mockLogger);
-    badContainer.register(
-      tokens.IValidatedEventDispatcher,
-      () => mockDispatcher
-    );
-    badContainer.register(tokens.ModsLoader, () => ({ loadMods: jest.fn() }));
-    badContainer.register(tokens.IScopeRegistry, () => ({
-      initialize: jest.fn(),
-    }));
-    badContainer.register(tokens.IDataRegistry, () => ({ getAll: jest.fn() }));
-    badContainer.register(tokens.LLMAdapter, () => ({ init: jest.fn() }));
-    badContainer.register(tokens.LlmConfigLoader, () => ({
-      loadConfigs: jest.fn(),
-    }));
-    badContainer.register(tokens.SystemInitializer, () => ({
-      initializeAll: jest.fn(),
-    }));
-    badContainer.register(tokens.WorldInitializer, () => ({
-      initializeWorldEntities: jest.fn(),
-    }));
-    badContainer.register(tokens.ISafeEventDispatcher, () => ({
-      subscribe: jest.fn(),
-    }));
-    badContainer.register(tokens.IEntityManager, () => ({}));
-    badContainer.register(tokens.DomUiFacade, () => ({}));
-    badContainer.register(tokens.GameLoop, () => undefined);
-
-    // Add ActionIndex and GameDataRepository registrations
-    badContainer.register(tokens.ActionIndex, () => ({
-      buildIndex: jest.fn(),
-      getCandidateActions: jest.fn().mockReturnValue([]),
-    }));
-    badContainer.register(tokens.IGameDataRepository, () => ({
-      getAllActionDefinitions: jest.fn().mockReturnValue([]),
-    }));
-    badContainer.register(tokens.ISpatialIndexManager, () => ({
-      buildIndex: jest.fn(),
-    }));
-    badContainer.register(tokens.AnatomyFormattingService, () => ({
-      initialize: jest.fn(),
-    }));
-
-    registerOrchestration(badContainer);
-
-    expect(() => badContainer.resolve(tokens.ShutdownService)).toThrow(
-      `ShutdownService Factory: Failed to resolve dependency: ${tokens.GameLoop}`
-    );
-  });
-
-  // Test coverage for lines 67 and 145 - these are defensive checks that are challenging to trigger
-  // in normal operation but represent important error handling code paths
-  it('covers InitializationService logger validation line 67', () => {
-    // This test verifies the specific error handling logic in the factory function
-    // by simulating the exact condition that would trigger line 67
-    const testContainer = new AppContainer();
-    testContainer.register(tokens.ILogger, () => mockLogger);
-
-    // Register a custom factory that mimics the exact condition from line 67
-    testContainer.register(
-      tokens.IInitializationService,
-      (c) => {
-        // Simulate the exact condition that triggers line 67: !initLogger
-        const initLogger = null; // This simulates resolve returning null/undefined
-        if (!initLogger)
-          throw new Error(
-            `InitializationService Factory: Failed to resolve dependency: ${tokens.ILogger}`
-          );
-      },
-      { lifecycle: 'singletonFactory' }
-    );
-
-    expect(() => testContainer.resolve(tokens.IInitializationService)).toThrow(
-      `InitializationService Factory: Failed to resolve dependency: ${tokens.ILogger}`
-    );
-  });
-
-  it('throws descriptive error when ModsLoader resolves to undefined', () => {
-    const badContainer = new AppContainer();
-    badContainer.register(tokens.ILogger, () => mockLogger);
-    badContainer.register(
-      tokens.IValidatedEventDispatcher,
-      () => mockDispatcher
-    );
-    badContainer.register(tokens.ModsLoader, () => undefined);
-    badContainer.register(tokens.IScopeRegistry, () => ({
-      initialize: jest.fn(),
-    }));
-    badContainer.register(tokens.IDataRegistry, () => ({ getAll: jest.fn() }));
-    badContainer.register(tokens.LLMAdapter, () => ({ init: jest.fn() }));
-    badContainer.register(tokens.LlmConfigLoader, () => ({
-      loadConfigs: jest.fn(),
-    }));
-    badContainer.register(tokens.SystemInitializer, () => ({
-      initializeAll: jest.fn(),
-    }));
-    badContainer.register(tokens.WorldInitializer, () => ({
-      initializeWorldEntities: jest.fn(),
-    }));
-    badContainer.register(tokens.ISafeEventDispatcher, () => ({
-      subscribe: jest.fn(),
-    }));
-    badContainer.register(tokens.IEntityManager, () => ({}));
-    badContainer.register(tokens.DomUiFacade, () => ({}));
-    badContainer.register(tokens.ActionIndex, () => ({
-      buildIndex: jest.fn(),
-    }));
-    badContainer.register(tokens.IGameDataRepository, () => ({
-      getAllActionDefinitions: jest.fn(),
-    }));
-    badContainer.register(tokens.ISpatialIndexManager, () => ({
-      buildIndex: jest.fn(),
-    }));
-    badContainer.register(tokens.AnatomyFormattingService, () => ({
-      initialize: jest.fn(),
-    }));
-
-    registerOrchestration(badContainer);
-
-    expect(() => badContainer.resolve(tokens.IInitializationService)).toThrow(
-      `InitializationService Factory: Failed to resolve dependency: ${tokens.ModsLoader}`
-    );
-  });
-
-  it('throws descriptive error when SystemInitializer resolves to undefined', () => {
-    const badContainer = new AppContainer();
-    badContainer.register(tokens.ILogger, () => mockLogger);
-    badContainer.register(
-      tokens.IValidatedEventDispatcher,
-      () => mockDispatcher
-    );
-    badContainer.register(tokens.ModsLoader, () => ({ loadMods: jest.fn() }));
-    badContainer.register(tokens.IScopeRegistry, () => ({
-      initialize: jest.fn(),
-    }));
-    badContainer.register(tokens.IDataRegistry, () => ({ getAll: jest.fn() }));
-    badContainer.register(tokens.LLMAdapter, () => ({ init: jest.fn() }));
-    badContainer.register(tokens.LlmConfigLoader, () => ({
-      loadConfigs: jest.fn(),
-    }));
-    badContainer.register(tokens.SystemInitializer, () => undefined);
-    badContainer.register(tokens.WorldInitializer, () => ({
-      initializeWorldEntities: jest.fn(),
-    }));
-    badContainer.register(tokens.ISafeEventDispatcher, () => ({
-      subscribe: jest.fn(),
-    }));
-    badContainer.register(tokens.IEntityManager, () => ({}));
-    badContainer.register(tokens.DomUiFacade, () => ({}));
-    badContainer.register(tokens.ActionIndex, () => ({
-      buildIndex: jest.fn(),
-    }));
-    badContainer.register(tokens.IGameDataRepository, () => ({
-      getAllActionDefinitions: jest.fn(),
-    }));
-    badContainer.register(tokens.ISpatialIndexManager, () => ({
-      buildIndex: jest.fn(),
-    }));
-    badContainer.register(tokens.AnatomyFormattingService, () => ({
-      initialize: jest.fn(),
-    }));
-
-    registerOrchestration(badContainer);
-
-    expect(() => badContainer.resolve(tokens.IInitializationService)).toThrow(
-      `InitializationService Factory: Failed to resolve dependency: ${tokens.SystemInitializer}`
-    );
-  });
-
-  it('throws descriptive error when WorldInitializer resolves to undefined', () => {
-    const badContainer = new AppContainer();
-    badContainer.register(tokens.ILogger, () => mockLogger);
-    badContainer.register(
-      tokens.IValidatedEventDispatcher,
-      () => mockDispatcher
-    );
-    badContainer.register(tokens.ModsLoader, () => ({ loadMods: jest.fn() }));
-    badContainer.register(tokens.IScopeRegistry, () => ({
-      initialize: jest.fn(),
-    }));
-    badContainer.register(tokens.IDataRegistry, () => ({ getAll: jest.fn() }));
-    badContainer.register(tokens.LLMAdapter, () => ({ init: jest.fn() }));
-    badContainer.register(tokens.LlmConfigLoader, () => ({
-      loadConfigs: jest.fn(),
-    }));
-    badContainer.register(tokens.SystemInitializer, () => ({
-      initializeAll: jest.fn(),
-    }));
-    badContainer.register(tokens.WorldInitializer, () => undefined);
-    badContainer.register(tokens.ISafeEventDispatcher, () => ({
-      subscribe: jest.fn(),
-    }));
-    badContainer.register(tokens.IEntityManager, () => ({}));
-    badContainer.register(tokens.DomUiFacade, () => ({}));
-    badContainer.register(tokens.ActionIndex, () => ({
-      buildIndex: jest.fn(),
-    }));
-    badContainer.register(tokens.IGameDataRepository, () => ({
-      getAllActionDefinitions: jest.fn(),
-    }));
-    badContainer.register(tokens.ISpatialIndexManager, () => ({
-      buildIndex: jest.fn(),
-    }));
-    badContainer.register(tokens.AnatomyFormattingService, () => ({
-      initialize: jest.fn(),
-    }));
-
-    registerOrchestration(badContainer);
-
-    expect(() => badContainer.resolve(tokens.IInitializationService)).toThrow(
-      `InitializationService Factory: Failed to resolve dependency: ${tokens.WorldInitializer}`
-    );
-  });
-
-  // ShutdownService dependency validation tests
-  it('covers ShutdownService logger validation line 145', () => {
-    // This test verifies the specific error handling logic in the factory function
-    // by simulating the exact condition that would trigger line 145
-    const testContainer = new AppContainer();
-    testContainer.register(tokens.ILogger, () => mockLogger);
-
-    // Register a custom factory that mimics the exact condition from line 145
-    testContainer.register(
-      tokens.ShutdownService,
-      (c) => {
-        // Simulate the exact condition that triggers line 145: !shutdownLogger
-        const shutdownLogger = null; // This simulates resolve returning null/undefined
-        if (!shutdownLogger)
-          throw new Error(
-            `ShutdownService Factory: Failed to resolve dependency: ${tokens.ILogger}`
-          );
-      },
-      { lifecycle: 'singletonFactory' }
-    );
-
-    expect(() => testContainer.resolve(tokens.ShutdownService)).toThrow(
-      `ShutdownService Factory: Failed to resolve dependency: ${tokens.ILogger}`
-    );
-  });
-
-  it('throws descriptive error when IValidatedEventDispatcher resolves to undefined for ShutdownService', () => {
-    const badContainer = new AppContainer();
-    badContainer.register(tokens.ILogger, () => mockLogger);
-    badContainer.register(tokens.IValidatedEventDispatcher, () => undefined);
-    badContainer.register(tokens.GameLoop, () => mockGameLoop);
-
-    registerOrchestration(badContainer);
-
-    expect(() => badContainer.resolve(tokens.ShutdownService)).toThrow(
-      `ShutdownService Factory: Failed to resolve dependency: ${tokens.IValidatedEventDispatcher}`
-    );
-  });
-
-  // ComponentAccessService registration tests
   it('registers ComponentAccessService when not already registered', () => {
-    const freshContainer = new AppContainer();
-    freshContainer.register(tokens.ILogger, () => mockLogger);
+    const { container, logger } = createContainerWithDefaults();
 
-    expect(freshContainer.isRegistered(tokens.ComponentAccessService)).toBe(
-      false
-    );
+    expect(container.isRegistered(tokens.ComponentAccessService)).toBe(false);
 
-    registerOrchestration(freshContainer);
+    registerOrchestration(container);
 
-    expect(freshContainer.isRegistered(tokens.ComponentAccessService)).toBe(
-      true
-    );
+    expect(container.isRegistered(tokens.ComponentAccessService)).toBe(true);
+    expect(
+      container.resolve(tokens.ComponentAccessService)
+    ).toBeInstanceOf(ComponentAccessService);
 
-    const logs = mockLogger.debug.mock.calls.map((c) => c[0]);
+    const logs = logger.debug.mock.calls.map(([message]) => message);
     expect(logs).toContain(
       `Orchestration Registration: Registered ${String(tokens.ComponentAccessService)} (default).`
     );
   });
 
   it('skips ComponentAccessService registration when already registered', () => {
-    const preRegisteredContainer = new AppContainer();
-    const existingComponentAccessService = { existing: true };
+    const { container, logger } = createContainerWithDefaults();
+    const existingService = { already: true };
 
-    preRegisteredContainer.register(tokens.ILogger, () => mockLogger);
-    preRegisteredContainer.register(
-      tokens.ComponentAccessService,
-      () => existingComponentAccessService
-    );
+    container.register(tokens.ComponentAccessService, () => existingService);
 
-    expect(
-      preRegisteredContainer.isRegistered(tokens.ComponentAccessService)
-    ).toBe(true);
+    registerOrchestration(container);
 
-    registerOrchestration(preRegisteredContainer);
+    expect(container.resolve(tokens.ComponentAccessService)).toBe(existingService);
 
-    // Should still be registered
-    expect(
-      preRegisteredContainer.isRegistered(tokens.ComponentAccessService)
-    ).toBe(true);
-    // Should resolve to the existing service, not a new one
-    expect(preRegisteredContainer.resolve(tokens.ComponentAccessService)).toBe(
-      existingComponentAccessService
-    );
-
-    const logs = mockLogger.debug.mock.calls.map((c) => c[0]);
-    // Should NOT contain the registration message since it was skipped
+    const logs = logger.debug.mock.calls.map(([message]) => message);
     expect(logs).not.toContain(
       `Orchestration Registration: Registered ${String(tokens.ComponentAccessService)} (default).`
     );
   });
 
-  // Integration test for successful service creation
-  it('successfully creates both services with all dependencies properly resolved', () => {
+  describe('InitializationService factory error handling', () => {
+    it.each([
+      {
+        description: 'logger resolves to undefined',
+        override: (container) => container.setOverride(tokens.ILogger, undefined),
+        expectedMessage: `InitializationService Factory: Failed to resolve dependency: ${tokens.ILogger}`,
+      },
+      {
+        description: 'validated dispatcher resolves to undefined',
+        override: (container) =>
+          container.setOverride(tokens.IValidatedEventDispatcher, undefined),
+        expectedMessage: `InitializationService Factory: Failed to resolve dependency: ${tokens.IValidatedEventDispatcher}`,
+      },
+      {
+        description: 'mods loader resolves to undefined',
+        override: (container) => container.setOverride(tokens.ModsLoader, undefined),
+        expectedMessage: `InitializationService Factory: Failed to resolve dependency: ${tokens.ModsLoader}`,
+      },
+      {
+        description: 'system initializer resolves to undefined',
+        override: (container) =>
+          container.setOverride(tokens.SystemInitializer, undefined),
+        expectedMessage: `InitializationService Factory: Failed to resolve dependency: ${tokens.SystemInitializer}`,
+      },
+      {
+        description: 'world initializer resolves to undefined',
+        override: (container) =>
+          container.setOverride(tokens.WorldInitializer, undefined),
+        expectedMessage: `InitializationService Factory: Failed to resolve dependency: ${tokens.WorldInitializer}`,
+      },
+    ])('throws descriptive error when $description', ({ override, expectedMessage }) => {
+      const { container } = createContainerWithDefaults();
+
+      registerOrchestration(container);
+      override(container);
+
+      expect(() => container.resolve(tokens.IInitializationService)).toThrow(
+        expectedMessage
+      );
+    });
+  });
+
+  describe('ShutdownService factory error handling', () => {
+    it.each([
+      {
+        description: 'logger resolves to undefined',
+        override: (container) => container.setOverride(tokens.ILogger, undefined),
+        expectedMessage: `ShutdownService Factory: Failed to resolve dependency: ${tokens.ILogger}`,
+      },
+      {
+        description: 'validated dispatcher resolves to undefined',
+        override: (container) =>
+          container.setOverride(tokens.IValidatedEventDispatcher, undefined),
+        expectedMessage: `ShutdownService Factory: Failed to resolve dependency: ${tokens.IValidatedEventDispatcher}`,
+      },
+      {
+        description: 'game loop resolves to undefined',
+        override: (container) => container.setOverride(tokens.GameLoop, undefined),
+        expectedMessage: `ShutdownService Factory: Failed to resolve dependency: ${tokens.GameLoop}`,
+      },
+    ])('throws descriptive error when $description', ({ override, expectedMessage }) => {
+      const { container } = createContainerWithDefaults();
+
+      registerOrchestration(container);
+      override(container);
+
+      expect(() => container.resolve(tokens.ShutdownService)).toThrow(
+        expectedMessage
+      );
+    });
+  });
+
+  it('successfully creates both services with all dependencies resolved', () => {
+    const { container, logger } = createContainerWithDefaults();
+
     registerOrchestration(container);
 
-    // Both services should be resolvable without throwing
-    const initService = container.resolve(tokens.IInitializationService);
+    const initializationService = container.resolve(tokens.IInitializationService);
     const shutdownService = container.resolve(tokens.ShutdownService);
 
-    expect(initService).toBeInstanceOf(InitializationService);
+    expect(initializationService).toBeInstanceOf(InitializationService);
     expect(shutdownService).toBeInstanceOf(ShutdownService);
 
-    // Verify logging messages
-    const logs = mockLogger.debug.mock.calls.map((c) => c[0]);
+    const logs = logger.debug.mock.calls.map(([message]) => message);
     expect(logs).toContain('Orchestration Registration: Starting...');
     expect(logs).toContain('Orchestration Registration: Complete.');
-    expect(logs).toContain(
-      `Orchestration Registration: Registered ${tokens.IInitializationService} (Singleton).`
-    );
-    expect(logs).toContain(
-      `Orchestration Registration: Registered ${tokens.ShutdownService} (Singleton).`
-    );
   });
 });
+
