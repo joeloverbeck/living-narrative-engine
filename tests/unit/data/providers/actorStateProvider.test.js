@@ -5,6 +5,7 @@ import {
   DESCRIPTION_COMPONENT_ID,
   LIKES_COMPONENT_ID,
   SPEECH_PATTERNS_COMPONENT_ID,
+  APPARENT_AGE_COMPONENT_ID,
 } from '../../../../src/constants/componentIds.js';
 import {
   DEFAULT_FALLBACK_CHARACTER_NAME,
@@ -79,5 +80,33 @@ describe('ActorStateProvider', () => {
     });
     expect(state[LIKES_COMPONENT_ID]).toBeUndefined();
     expect(state[SPEECH_PATTERNS_COMPONENT_ID]).toBeUndefined();
+  });
+
+  it('includes apparent age data when both min and max ages are provided', () => {
+    const components = {
+      [APPARENT_AGE_COMPONENT_ID]: { minAge: 25, maxAge: 35, notes: 'adult' },
+    };
+    const entity = new MockEntity('actor3', components);
+    const provider = new ActorStateProvider();
+
+    const state = provider.build(entity, logger);
+
+    expect(state[APPARENT_AGE_COMPONENT_ID]).toEqual({
+      minAge: 25,
+      maxAge: 35,
+      notes: 'adult',
+    });
+  });
+
+  it('excludes apparent age data when bounds are missing', () => {
+    const components = {
+      [APPARENT_AGE_COMPONENT_ID]: { minAge: 25 },
+    };
+    const entity = new MockEntity('actor4', components);
+    const provider = new ActorStateProvider();
+
+    const state = provider.build(entity, logger);
+
+    expect(state[APPARENT_AGE_COMPONENT_ID]).toBeUndefined();
   });
 });
