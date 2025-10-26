@@ -343,10 +343,11 @@ export class AnatomyFormattingService {
         suffix: '',
         separator: '. ',
 
-        // Name resolution (Phase 2)
+        // Name resolution (Phase 2) - ACTDESC-014 Implementation
         nameResolution: {
-          usePronounsWhenAvailable: false, // Enable in Phase 2
+          usePronounsWhenAvailable: true, // Phase 2: Enabled for pronoun resolution
           fallbackToNames: true,
+          respectGenderComponents: true, // Optional: defaults to true
         },
 
         // Priority filtering (Phase 2)

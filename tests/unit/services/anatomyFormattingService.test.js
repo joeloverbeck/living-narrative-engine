@@ -550,9 +550,10 @@ describe('AnatomyFormattingService', () => {
       expect(config.suffix).toBe('');
       expect(config.separator).toBe('. ');
 
-      // Phase 2 properties (defined but inactive)
-      expect(config.nameResolution.usePronounsWhenAvailable).toBe(false);
+      // Phase 2 properties (ACTDESC-014: Now active with pronoun resolution)
+      expect(config.nameResolution.usePronounsWhenAvailable).toBe(true); // ACTDESC-014: Enabled
       expect(config.nameResolution.fallbackToNames).toBe(true);
+      expect(config.nameResolution.respectGenderComponents).toBe(true); // ACTDESC-014: New field
       expect(config.maxActivities).toBe(10);
 
       // Phase 3 properties (defined but inactive)

@@ -96,6 +96,7 @@ describe('JSON-Schema – core component data contracts', () => {
     'core:owned_by': { ownerId: 'entity-123' },
     'core:material': { material: 'cotton' },
     'core:mouth_engagement': { locked: false },
+    'core:gender': { value: 'male' },
   };
 
   /** @type {Record<string, unknown>} */
@@ -137,6 +138,7 @@ describe('JSON-Schema – core component data contracts', () => {
     'core:owned_by': {},
     'core:material': { material: 'invalid_material_not_in_enum' },
     'core:mouth_engagement': { locked: 'not-a-boolean' },
+    'core:gender': {},
   };
 
   Object.entries(validators).forEach(([id, validate]) => {

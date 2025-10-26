@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:gender",
+  "description": "The gender identity of a character for pronoun resolution and natural language generation",
+  "dataSchema": {
+    "type": "object",
+    "required": ["value"],
+    "properties": {
+      "value": {
+        "type": "string",
+        "enum": ["male", "female", "neutral"],
+        "description": "Gender identity used for pronoun selection: 'male' (he/him), 'female' (she/her), 'neutral' (they/them)"
+      }
+    },
+    "additionalProperties": false
+  }
+}

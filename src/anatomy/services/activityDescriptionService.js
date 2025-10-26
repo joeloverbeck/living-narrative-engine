@@ -370,7 +370,8 @@ class ActivityDescriptionService {
 
 
   #formatActivityDescription(activities, entity) {
-    // ACTDESC-008 (Phase 2 - Enhanced)
+    // ACTDESC-008 (Phase 2 - Enhanced with Pronoun Resolution)
+    // ACTDESC-014: Pronoun resolution implementation
     const config =
       this.#anatomyFormattingService.getActivityIntegrationConfig?.() ?? {};
 
@@ -378,18 +379,43 @@ class ActivityDescriptionService {
       return '';
     }
 
-    // Get actor name
+    // Get actor name and gender for pronoun resolution
     const actorId = entity?.id;
     const actorName = this.#resolveEntityName(actorId);
+    const actorGender = this.#detectEntityGender(actorId);
+    const actorPronouns = this.#getPronounSet(actorGender);
 
     // Respect maxActivities limit
     const maxActivities = config.maxActivities ?? 10;
     const limitedActivities = activities.slice(0, maxActivities);
 
-    // ENHANCEMENT: Generate descriptions for activities (limited by maxActivities)
-    const descriptions = limitedActivities.map(activity =>
-      this.#generateActivityPhrase(actorName, activity)
-    ).filter(phrase => phrase && phrase.trim());
+    // ENHANCEMENT: Generate descriptions with pronoun support
+    // First activity uses full name, subsequent use pronouns if enabled
+    const descriptions = [];
+    let usedActorName = false;
+
+    for (const activity of limitedActivities) {
+      let phrase;
+      if (!usedActorName) {
+        // First activity: use full name
+        phrase = this.#generateActivityPhrase(actorName, activity, false);
+        usedActorName = true;
+      } else if (config.nameResolution?.usePronounsWhenAvailable) {
+        // Subsequent activities: use pronouns if enabled
+        phrase = this.#generateActivityPhrase(
+          actorPronouns.subject,
+          activity,
+          true
+        );
+      } else {
+        // Fall back to names if pronouns disabled
+        phrase = this.#generateActivityPhrase(actorName, activity, false);
+      }
+
+      if (phrase && phrase.trim()) {
+        descriptions.push(phrase);
+      }
+    }
 
     if (descriptions.length === 0) {
       return '';
@@ -406,43 +432,54 @@ class ActivityDescriptionService {
 
   /**
    * Generate a single activity phrase.
+   * ACTDESC-014: Enhanced with pronoun support for target entities
    *
-   * @param {string} actorName - Name of entity performing activity
+   * @param {string} actorRef - Actor name or pronoun
    * @param {object} activity - Activity object
+   * @param {boolean} usePronounsForTarget - Whether to use pronouns for target (default: false)
    * @returns {string} Activity phrase
    * @private
    */
 
-  #generateActivityPhrase(actorName, activity) {
+  #generateActivityPhrase(actorRef, activity, usePronounsForTarget = false) {
     const targetEntityId = activity.targetEntityId || activity.targetId;
-    const targetName = targetEntityId
-      ? this.#resolveEntityName(targetEntityId)
-      : '';
+
+    // Resolve target reference (name or pronoun)
+    let targetRef = '';
+    if (targetEntityId) {
+      if (usePronounsForTarget) {
+        const targetGender = this.#detectEntityGender(targetEntityId);
+        const targetPronouns = this.#getPronounSet(targetGender);
+        targetRef = targetPronouns.object; // 'him', 'her', 'them'
+      } else {
+        targetRef = this.#resolveEntityName(targetEntityId);
+      }
+    }
 
     if (activity.type === 'inline') {
       // Use template replacement
       if (activity.template) {
         return activity.template
-          .replace(/\{actor\}/g, actorName)
-          .replace(/\{target\}/g, targetName);
+          .replace(/\{actor\}/g, actorRef)
+          .replace(/\{target\}/g, targetRef);
       }
       // Fallback to description field for backward compatibility
       if (activity.description) {
         const normalizedDesc = activity.description.trim();
         if (!normalizedDesc) return '';
-        return targetName
-          ? `${actorName} ${normalizedDesc} ${targetName}`.trim()
-          : `${actorName} ${normalizedDesc}`.trim();
+        return targetRef
+          ? `${actorRef} ${normalizedDesc} ${targetRef}`.trim()
+          : `${actorRef} ${normalizedDesc}`.trim();
       }
     } else if (activity.type === 'dedicated') {
       // Dedicated metadata: construct from verb/adverb
       const verb = (activity.verb || 'interacting with').trim();
       const adverb = activity.adverb ? ` ${activity.adverb.trim()}` : '';
 
-      if (targetName) {
-        return `${actorName} is ${verb} ${targetName}${adverb}`;
+      if (targetRef) {
+        return `${actorRef} is ${verb} ${targetRef}${adverb}`;
       } else {
-        return `${actorName} is ${verb}${adverb}`;
+        return `${actorRef} is ${verb}${adverb}`;
       }
     }
 
@@ -450,23 +487,23 @@ class ActivityDescriptionService {
     if (activity.description) {
       const normalizedDesc = activity.description.trim();
       if (!normalizedDesc) return '';
-      return targetName
-        ? `${actorName} ${normalizedDesc} ${targetName}`.trim()
-        : `${actorName} ${normalizedDesc}`.trim();
+      return targetRef
+        ? `${actorRef} ${normalizedDesc} ${targetRef}`.trim()
+        : `${actorRef} ${normalizedDesc}`.trim();
     }
 
     if (activity.verb) {
       const normalizedVerb = activity.verb.trim();
       if (!normalizedVerb) return '';
-      return targetName
-        ? `${actorName} ${normalizedVerb} ${targetName}`
-        : `${actorName} ${normalizedVerb}`;
+      return targetRef
+        ? `${actorRef} ${normalizedVerb} ${targetRef}`
+        : `${actorRef} ${normalizedVerb}`;
     }
 
     return '';
   }
 
-   
+
   #resolveEntityName(entityId) {
     // ACTDESC-009
     if (!entityId) {
@@ -479,7 +516,7 @@ class ActivityDescriptionService {
 
     try {
       const entity = this.#entityManager.getEntityInstance(entityId);
-      
+
       // Entities use core:name component for their names
       const nameComponent = entity.getComponentData?.('core:name');
       const resolvedName = nameComponent?.text ?? entity?.id ?? entityId;
@@ -493,6 +530,81 @@ class ActivityDescriptionService {
       );
       return entityId;
     }
+  }
+
+  /**
+   * Detect entity gender for pronoun resolution.
+   * ACTDESC-014: Phase 2 Natural Language Enhancement
+   *
+   * @param {string} entityId - Entity ID
+   * @returns {string} Gender: 'male', 'female', 'neutral', or 'unknown'
+   * @private
+   */
+  #detectEntityGender(entityId) {
+    if (!entityId) {
+      return 'unknown';
+    }
+
+    try {
+      const entity = this.#entityManager.getEntityInstance(entityId);
+      if (!entity) {
+        return 'unknown';
+      }
+
+      // Check for explicit gender component
+      const genderComponent = entity.getComponentData?.('core:gender');
+      if (genderComponent?.value) {
+        return genderComponent.value; // 'male', 'female', 'neutral'
+      }
+
+      // Default to neutral pronouns if unknown
+      return 'neutral';
+    } catch (error) {
+      this.#logger.warn(
+        `Failed to detect gender for entity ${entityId}`,
+        error
+      );
+      return 'neutral';
+    }
+  }
+
+  /**
+   * Get pronouns for entity based on gender.
+   * ACTDESC-014: Phase 2 Natural Language Enhancement
+   *
+   * @param {string} gender - Gender value ('male', 'female', 'neutral', 'unknown')
+   * @returns {object} Pronoun set with subject, object, possessive, possessivePronoun
+   * @private
+   */
+  #getPronounSet(gender) {
+    const pronounSets = {
+      male: {
+        subject: 'he',
+        object: 'him',
+        possessive: 'his',
+        possessivePronoun: 'his',
+      },
+      female: {
+        subject: 'she',
+        object: 'her',
+        possessive: 'her',
+        possessivePronoun: 'hers',
+      },
+      neutral: {
+        subject: 'they',
+        object: 'them',
+        possessive: 'their',
+        possessivePronoun: 'theirs',
+      },
+      unknown: {
+        subject: 'they',
+        object: 'them',
+        possessive: 'their',
+        possessivePronoun: 'theirs',
+      },
+    };
+
+    return pronounSets[gender] || pronounSets.neutral;
   }
 }
 
