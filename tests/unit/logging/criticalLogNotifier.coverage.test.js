@@ -556,4 +556,147 @@ describe('CriticalLogNotifier additional coverage', () => {
       )
     ).toBe(false);
   });
+
+  it('covers UI listener flows, keyboard actions, and timer cleanup paths', async () => {
+    const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+
+    try {
+      notifier = new CriticalLogNotifier({
+        logger: mockLogger,
+        documentContext: mockDocumentContext,
+        validatedEventDispatcher: mockEventDispatcher,
+        config: {
+          enableVisualNotifications: true,
+          notificationPosition: 'top-right',
+          maxRecentLogs: 4,
+          maxBufferSize: 4,
+        },
+      });
+
+      const container = document.querySelector('.lne-critical-log-notifier');
+      const panel = container.querySelector('.lne-log-panel');
+      const badge = container.querySelector('.lne-badge-container');
+
+      const criticalLogSubscription = mockEventDispatcher.subscribe.mock.calls.find(
+        ([eventName]) => eventName === 'CRITICAL_LOG_ADDED'
+      );
+      expect(criticalLogSubscription).toBeTruthy();
+      const criticalLogHandler = criticalLogSubscription[1];
+      mockEventDispatcher.dispatch.mockClear();
+      criticalLogHandler({
+        payload: {
+          level: 'warn',
+          message: 'event-driven warning',
+          timestamp: Date.now(),
+        },
+      });
+      expect(
+        mockEventDispatcher.dispatch.mock.calls.some(
+          ([eventName]) => eventName === 'core:critical_notification_shown'
+        )
+      ).toBe(true);
+
+      mockLogger.error('panel-update');
+      jest.advanceTimersByTime(1000);
+
+      badge.click();
+      expect(panel.hidden).toBe(false);
+
+      mockLogFilterInstance.setCategories(['all', 'network']);
+      mockLogFilterInstance.triggerFilterChange([], {
+        filtered: 0,
+        total: 0,
+        warnings: 0,
+        errors: 0,
+      });
+
+      const searchInput = panel.querySelector('.lne-search-input');
+      searchInput.value = 'net';
+      searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+      jest.advanceTimersByTime(300);
+
+      const levelFilter = panel.querySelector('.lne-level-filter');
+      levelFilter.value = 'warn';
+      levelFilter.dispatchEvent(new Event('change', { bubbles: true }));
+
+      const categoryFilter = panel.querySelector('.lne-category-filter');
+      categoryFilter.value = 'network';
+      categoryFilter.dispatchEvent(new Event('change', { bubbles: true }));
+
+      const timeFilter = panel.querySelector('.lne-time-filter');
+      timeFilter.value = 'lasthour';
+      timeFilter.dispatchEvent(new Event('change', { bubbles: true }));
+
+      expect(
+        mockLogFilterInstance.setFilter.mock.calls.some(
+          ([arg]) => arg.searchText === 'net'
+        )
+      ).toBe(true);
+      expect(
+        mockLogFilterInstance.setFilter.mock.calls.some(
+          ([arg]) => arg.level === 'warn'
+        )
+      ).toBe(true);
+      expect(
+        mockLogFilterInstance.setFilter.mock.calls.some(
+          ([arg]) => arg.category === 'network'
+        )
+      ).toBe(true);
+      expect(
+        mockLogFilterInstance.setFilter.mock.calls.some(
+          ([arg]) => arg.timeRange === 'lasthour'
+        )
+      ).toBe(true);
+
+      const exportBtn = panel.querySelector('.lne-export-btn');
+      const exportMenu = panel.querySelector('.lne-export-menu');
+      exportBtn.click();
+      expect(exportMenu.hidden).toBe(false);
+
+      const csvOption = exportMenu.querySelector('[data-format="csv"]');
+      csvOption.click();
+      expect(mockExporterInstance.exportAsCSV).toHaveBeenCalled();
+      expect(exportMenu.hidden).toBe(true);
+
+      exportBtn.click();
+      const menuOutside = document.createElement('div');
+      document.body.appendChild(menuOutside);
+      menuOutside.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      expect(exportMenu.hidden).toBe(true);
+
+      keyboardActionCallback('filter-warnings');
+      expect(levelFilter.value).toBe('warn');
+      keyboardActionCallback('filter-errors');
+      expect(levelFilter.value).toBe('error');
+      keyboardActionCallback('filter-all');
+      expect(levelFilter.value).toBe('all');
+
+      keyboardActionCallback('close-panel');
+      badge.click();
+      keyboardActionCallback('close-panel');
+      expect(clearTimeoutSpy).toHaveBeenCalled();
+
+      keyboardActionCallback('export');
+      expect(exportMenu.hidden).toBe(false);
+
+      keyboardActionCallback('close-panel');
+      const priorClearCount = clearTimeoutSpy.mock.calls.length;
+      keyboardActionCallback('focus-search');
+      expect(document.activeElement).toBe(searchInput);
+      expect(clearTimeoutSpy.mock.calls.length).toBe(priorClearCount);
+
+      const collapseOutside = document.createElement('div');
+      document.body.appendChild(collapseOutside);
+      collapseOutside.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+      const clearCallsBeforeDispose = clearTimeoutSpy.mock.calls.length;
+      notifier.dispose();
+      notifier = undefined;
+      expect(clearTimeoutSpy.mock.calls.length).toBeGreaterThan(
+        clearCallsBeforeDispose
+      );
+    } finally {
+      clearTimeoutSpy.mockRestore();
+    }
+  });
 });
