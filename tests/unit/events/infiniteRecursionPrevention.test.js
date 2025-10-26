@@ -128,6 +128,20 @@ describe('EventBus Infinite Recursion Prevention', () => {
   });
 
   describe('Recursion Protection in Normal Mode', () => {
+    let dateSpy;
+
+    beforeEach(() => {
+      dateSpy = jest.spyOn(Date, 'now');
+      let current = 0;
+      dateSpy.mockImplementation(() => {
+        current += 20;
+        return current;
+      });
+    });
+
+    afterEach(() => {
+      dateSpy.mockRestore();
+    });
     it('should block events exceeding normal recursion depth (15)', async () => {
       const consoleSpy = jest
         .spyOn(console, 'error')
@@ -191,6 +205,20 @@ describe('EventBus Infinite Recursion Prevention', () => {
   });
 
   describe('Recursion Protection in Batch Mode', () => {
+    let dateSpy;
+
+    beforeEach(() => {
+      dateSpy = jest.spyOn(Date, 'now');
+      let current = 0;
+      dateSpy.mockImplementation(() => {
+        current += 20;
+        return current;
+      });
+    });
+
+    afterEach(() => {
+      dateSpy.mockRestore();
+    });
     it('should allow higher recursion depth in batch mode', async () => {
       const consoleSpy = jest
         .spyOn(console, 'error')
@@ -305,6 +333,20 @@ describe('EventBus Infinite Recursion Prevention', () => {
   });
 
   describe('Component Addition Scenario', () => {
+    let dateSpy;
+
+    beforeEach(() => {
+      dateSpy = jest.spyOn(Date, 'now');
+      let current = 0;
+      dateSpy.mockImplementation(() => {
+        current += 20;
+        return current;
+      });
+    });
+
+    afterEach(() => {
+      dateSpy.mockRestore();
+    });
     it('should allow legitimate bulk component additions in batch mode', async () => {
       let componentAddedCount = 0;
       const maxComponents = 15; // Higher than normal recursion limit (3)

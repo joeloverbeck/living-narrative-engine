@@ -28,11 +28,16 @@ class EventBus extends IEventBus {
   /**
    * Creates an EventBus instance.
    *
-   * @param {{ logger?: ILogger }} [deps] - Optional logger dependency.
+   * @param {{ logger?: ILogger, chainHistoryLimit?: number }} [deps] - Optional dependencies.
+   * @param {number} [deps.chainHistoryLimit] - Overrides the history window used for infinite loop detection.
    */
-  constructor({ logger = console } = {}) {
+  constructor({ logger = console, chainHistoryLimit } = {}) {
     super();
     this.#logger = logger;
+
+    if (Number.isInteger(chainHistoryLimit) && chainHistoryLimit > 0) {
+      this.#chainHistoryLimit = chainHistoryLimit;
+    }
   }
 
   /**
@@ -98,11 +103,6 @@ class EventBus extends IEventBus {
       this.#batchModeOptions = mergedOptions;
       this.#batchMode = true;
 
-      if (this.#batchModeTimeoutId) {
-        clearTimeout(this.#batchModeTimeoutId);
-        this.#batchModeTimeoutId = null;
-      }
-
       if (
         Number.isFinite(mergedOptions.timeoutMs) &&
         mergedOptions.timeoutMs > 0
@@ -155,11 +155,8 @@ class EventBus extends IEventBus {
    * @returns {boolean} True when options have changed and should trigger an update.
    */
   #haveBatchOptionsChanged(currentOptions, newOptions) {
-    if (!currentOptions) {
-      return true;
-    }
-
     return (
+      !currentOptions ||
       currentOptions.maxRecursionDepth !== newOptions.maxRecursionDepth ||
       currentOptions.maxGlobalRecursion !== newOptions.maxGlobalRecursion ||
       currentOptions.timeoutMs !== newOptions.timeoutMs ||
@@ -376,8 +373,6 @@ class EventBus extends IEventBus {
 
     // Don't treat error events as critical - they should be allowed to dispatch concurrently
     // Only actual deep recursion (beyond normal limits) should be blocked
-    const isCriticalEvent = false; // Removed critical event classification for error events
-
     // Define workflow events that are part of legitimate game loops and should have higher limits
     const workflowEvents = new Set([
       'core:turn_started',
@@ -422,9 +417,7 @@ class EventBus extends IEventBus {
 
     if (this.#batchMode && this.#batchModeOptions) {
       // In batch mode, use higher limits unless it's a critical event
-      if (isCriticalEvent) {
-        MAX_RECURSION_DEPTH = 1;
-      } else if (
+      if (
         isComponentLifecycleEvent &&
         this.#batchModeOptions.context === 'game-initialization'
       ) {
@@ -441,9 +434,7 @@ class EventBus extends IEventBus {
       MAX_GLOBAL_RECURSION = this.#batchModeOptions.maxGlobalRecursion;
     } else {
       // Normal mode limits
-      if (isCriticalEvent) {
-        MAX_RECURSION_DEPTH = 1;
-      } else if (isComponentLifecycleEvent) {
+      if (isComponentLifecycleEvent) {
         // Allow much higher limits for component lifecycle events during initialization
         // Complex entities can trigger many cascading component additions
         MAX_RECURSION_DEPTH = 100; // Increased from 50 to handle deep component hierarchies
@@ -596,7 +587,7 @@ class EventBus extends IEventBus {
                 await listener(eventObject);
               } catch (error) {
                 // Enhanced error handling - always use console for any event that might trigger recursion
-                if (isCriticalEvent || totalGlobalRecursion > 10) {
+                if (totalGlobalRecursion > 10) {
                   // Already handling critical events or high recursion - use console directly
                   console.error(
                     `EventBus: Error in "${eventName}" listener (using console to prevent recursion):`,

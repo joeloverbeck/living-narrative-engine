@@ -261,6 +261,20 @@ describe('EventBus Batch Mode and Warnings', () => {
   });
 
   describe('Normal Mode vs Batch Mode Limits', () => {
+    let dateSpy;
+
+    beforeEach(() => {
+      dateSpy = jest.spyOn(Date, 'now');
+      let current = 0;
+      dateSpy.mockImplementation(() => {
+        current += 20;
+        return current;
+      });
+    });
+
+    afterEach(() => {
+      dateSpy.mockRestore();
+    });
     it('should use lower limits in normal mode', async () => {
       // Arrange - Normal mode (no batch mode enabled)
       let callCount = 0;
@@ -313,6 +327,20 @@ describe('EventBus Batch Mode and Warnings', () => {
   });
 
   describe('Critical Event Protection', () => {
+    let dateSpy;
+
+    beforeEach(() => {
+      dateSpy = jest.spyOn(Date, 'now');
+      let current = 0;
+      dateSpy.mockImplementation(() => {
+        current += 20;
+        return current;
+      });
+    });
+
+    afterEach(() => {
+      dateSpy.mockRestore();
+    });
     it('should use batch mode limits for error events (no longer treated as critical)', async () => {
       // Arrange
       eventBus.setBatchMode(true, {
