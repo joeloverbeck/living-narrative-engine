@@ -10,6 +10,7 @@ import { isNonBlankString } from './textUtils.js';
 /**
  * @typedef {object} NameComponentData
  * @property {string} text - The display name text
+ * @property {string} [value] - Legacy display name value
  */
 
 /**
