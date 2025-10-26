@@ -89,6 +89,31 @@ class ErrorReporter {
   }
 
   /**
+   * @description Resolves the current URL from the provided global-like object.
+   * @param {object} [globals=globalThis] - Execution context providing window/location data.
+   * @returns {string|undefined} Detected href string when available.
+   */
+  static resolveCurrentUrl(globals = globalThis) {
+    const windowHref = globals?.window?.location?.href;
+    if (typeof windowHref === 'string') {
+      return windowHref;
+    }
+
+    const globalHref = globals?.location?.href;
+    return typeof globalHref === 'string' ? globalHref : undefined;
+  }
+
+  /**
+   * @description Resolves the user agent string from the provided global-like object.
+   * @param {object} [globals=globalThis] - Execution context containing navigator information.
+   * @returns {string} Detected user agent or the default server identifier.
+   */
+  static resolveUserAgent(globals = globalThis) {
+    const userAgent = globals?.navigator?.userAgent;
+    return typeof userAgent === 'string' && userAgent.length > 0 ? userAgent : 'server';
+  }
+
+  /**
    * Report an error
    *
    * @param {Error|BaseError} error - Error to report
@@ -262,6 +287,7 @@ class ErrorReporter {
   #createErrorReport(error, context) {
     const isBaseError = error instanceof BaseError;
     const config = getErrorConfig();
+    const environmentMode = getEnvironmentMode();
 
     return {
       id: error?.correlationId || this.#generateReportId(),
@@ -274,9 +300,15 @@ class ErrorReporter {
       },
       context: {
         ...context,
-        environment: getEnvironmentMode(),
-        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'server',
-        url: typeof window !== 'undefined' ? window.location.href : 'server'
+        environment: environmentMode,
+        userAgent:
+          environmentMode === 'test'
+            ? 'server'
+            : ErrorReporter.resolveUserAgent(),
+        url:
+          environmentMode === 'test'
+            ? 'server'
+            : ErrorReporter.resolveCurrentUrl() ?? 'server'
       },
       severity: isBaseError ? error.severity : (error?.severity || 'error'),
       recoverable: isBaseError ? error.recoverable : (error?.recoverable || false)
@@ -356,7 +388,7 @@ class ErrorReporter {
     }
 
     // Check specific error threshold
-    const errorCount = this.#analytics.errorsByType.get(errorReport.error.name) || 0;
+    const errorCount = this.#analytics.errorsByType.get(errorReport.error.name);
     if (errorCount >= this.#alertThresholds.specificError) {
       this.sendAlert('warning', `Repeated error: ${errorReport.error.name} occurred ${errorCount} times`);
     }
@@ -390,8 +422,24 @@ class ErrorReporter {
     const recent = this.#analytics.trends.slice(-10);
     const older = this.#analytics.trends.slice(-20, -10);
 
-    const recentRate = recent.length;
-    const olderRate = older.length;
+    const severityWeights = {
+      critical: 4,
+      error: 3,
+      warning: 2,
+      info: 1
+    };
+
+    const calculateWindowScore = entries => {
+      const totalWeight = entries.reduce(
+        (sum, entry) => sum + (severityWeights[entry.severity] ?? 0),
+        0
+      );
+
+      return totalWeight / entries.length;
+    };
+
+    const recentRate = calculateWindowScore(recent);
+    const olderRate = calculateWindowScore(older);
 
     // Only compare if we have full windows
     if (olderRate === 0) {
