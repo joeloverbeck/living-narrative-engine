@@ -46,12 +46,6 @@ class ActionTraceConfigValidator {
     try {
       this.#logger.debug('Initializing action trace config validator');
 
-      // Just verify that the schema validator service is available
-      // Actual schema validation will happen when validateConfiguration is called
-      if (!this.#schemaValidator) {
-        throw new Error('Schema validator service not available');
-      }
-
       this.#logger.info(
         'Action trace config validator initialized successfully'
       );
