@@ -167,6 +167,7 @@ describe('CoverageAnalyzer', () => {
 
       expect(result.isAccessible('any-item')).toBe(true);
       expect(result.getBlockedItems()).toEqual([]);
+      expect(result.getBlockingItems('any-item')).toEqual([]);
       expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
         'Invalid equipped parameter',
         expect.objectContaining({
@@ -185,6 +186,8 @@ describe('CoverageAnalyzer', () => {
           errorCode: ErrorCodes.INVALID_ENTITY_ID,
         })
       );
+      expect(result.getBlockedItems()).toEqual([]);
+      expect(result.getBlockingItems('any-item')).toEqual([]);
     });
 
     it('should handle missing coverage mapping data', () => {
@@ -221,16 +224,54 @@ describe('CoverageAnalyzer', () => {
       expect(mockErrorHandler.handleError).toHaveBeenCalled();
     });
 
+    it('should treat non-array coverage areas as non-overlapping', () => {
+      const equipped = {
+        torso_lower: {
+          base: 'clothing:linen_trousers',
+          underwear: 'clothing:cotton_boxers',
+        },
+      };
+
+      mockEntitiesGateway.getComponentData.mockImplementation(
+        (itemId, componentId) => {
+          if (componentId === 'clothing:coverage_mapping') {
+            if (itemId === 'clothing:linen_trousers') {
+              return {
+                // Intentionally return a non-array value to cover the guard clause
+                covers: 'torso_lower',
+                coveragePriority: 'base',
+              };
+            }
+
+            if (itemId === 'clothing:cotton_boxers') {
+              return {
+                covers: undefined,
+                coveragePriority: undefined,
+              };
+            }
+          }
+
+          return null;
+        }
+      );
+
+      const result = analyzer.analyzeCoverageBlocking(
+        equipped,
+        'non-array-coverage-entity'
+      );
+
+      expect(result.isAccessible('clothing:linen_trousers')).toBe(true);
+      expect(result.isAccessible('clothing:cotton_boxers')).toBe(true);
+      expect(result.getBlockedItems()).toEqual([]);
+    });
+
     it('should handle equipment with null values in slots', () => {
       const equipped = {
         torso_upper: {
           base: 'clothing:shirt',
           outer: null,
         },
-        torso_lower: {
-          base: null,
-          underwear: undefined,
-        },
+        torso_lower: null,
       };
 
       mockEntitiesGateway.getComponentData.mockReturnValue({
@@ -242,6 +283,53 @@ describe('CoverageAnalyzer', () => {
 
       expect(result.isAccessible('clothing:shirt')).toBe(true);
       expect(result.getBlockedItems()).toEqual([]);
+    });
+
+    it('should handle coverage data errors without optional error handler', () => {
+      const minimalAnalyzer = createCoverageAnalyzer({
+        entitiesGateway: {
+          getComponentData: () => {
+            throw new Error('Component missing');
+          },
+        },
+      });
+
+      const equipped = {
+        torso_upper: {
+          base: 'clothing:shirt',
+        },
+      };
+
+      const result = minimalAnalyzer.analyzeCoverageBlocking(
+        equipped,
+        'no-handler-entity'
+      );
+
+      expect(result.isAccessible('clothing:shirt')).toBe(true);
+    });
+
+    it('should return permissive analyzer on invalid input without error handler', () => {
+      const minimalAnalyzer = createCoverageAnalyzer({
+        entitiesGateway: mockEntitiesGateway,
+      });
+
+      const result = minimalAnalyzer.analyzeCoverageBlocking(null, null);
+
+      expect(result.isAccessible('anything')).toBe(true);
+      expect(result.getBlockedItems()).toEqual([]);
+      expect(result.getBlockingItems('anything')).toEqual([]);
+    });
+
+    it('should handle invalid entity id without error handler', () => {
+      const minimalAnalyzer = createCoverageAnalyzer({
+        entitiesGateway: mockEntitiesGateway,
+      });
+
+      const result = minimalAnalyzer.analyzeCoverageBlocking({}, null);
+
+      expect(result.isAccessible('anything')).toBe(true);
+      expect(result.getBlockedItems()).toEqual([]);
+      expect(result.getBlockingItems('anything')).toEqual([]);
     });
   });
 

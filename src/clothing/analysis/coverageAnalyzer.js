@@ -82,8 +82,12 @@ export default function createCoverageAnalyzer({
 
     // First pass: collect all items and their coverage data
     const equippedItems = [];
-    for (const [slotName, slotData] of Object.entries(equipped || {})) {
-      for (const [layer, itemId] of Object.entries(slotData || {})) {
+    for (const [slotName, slotData] of Object.entries(equipped)) {
+      if (!slotData || typeof slotData !== 'object') {
+        continue;
+      }
+
+      for (const [layer, itemId] of Object.entries(slotData)) {
         if (itemId && typeof itemId === 'string') {
           equippedItems.push({ itemId, slotName, layer });
 
@@ -95,9 +99,16 @@ export default function createCoverageAnalyzer({
             );
 
             if (coverageMapping) {
+              const covers =
+                coverageMapping.covers !== undefined
+                  ? coverageMapping.covers
+                  : [];
+              const coveragePriority =
+                coverageMapping.coveragePriority ?? layer;
+
               itemCoverageCache.set(itemId, {
-                covers: coverageMapping.covers || [],
-                coveragePriority: coverageMapping.coveragePriority || layer,
+                covers,
+                coveragePriority,
               });
             } else {
               // Fallback: use layer as coverage priority if no mapping exists
@@ -130,8 +141,6 @@ export default function createCoverageAnalyzer({
     // Second pass: determine blocking relationships
     for (const blocker of equippedItems) {
       const blockerCoverage = itemCoverageCache.get(blocker.itemId);
-      if (!blockerCoverage) continue;
-
       const blockedItems = new Set();
 
       for (const target of equippedItems) {
@@ -139,8 +148,6 @@ export default function createCoverageAnalyzer({
         if (blocker.itemId === target.itemId) continue;
 
         const targetCoverage = itemCoverageCache.get(target.itemId);
-        if (!targetCoverage) continue;
-
         // Check blocking conditions:
         // 1. Areas must overlap
         // 2. Blocker must have higher priority (lower value)
