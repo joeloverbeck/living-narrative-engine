@@ -1313,7 +1313,10 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
    * @returns {string} Filename
    */
   #createFallbackExportFilename(characterName) {
-    const safeName = characterName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const rawName =
+      typeof characterName === 'string' ? characterName.trim() : '';
+    const safeSource = rawName || 'character';
+    const safeName = safeSource.replace(/[^a-z0-9]/gi, '_').toLowerCase();
     const timestamp = new Date()
       .toISOString()
       .slice(0, 19)
