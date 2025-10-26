@@ -324,6 +324,25 @@ describe('CoreMotivationsDisplayEnhancer', () => {
       expect(result).toBe('Unknown date');
     });
 
+    it('should log and return fallback when formatting throws', () => {
+      const localeSpy = jest
+        .spyOn(Date.prototype, 'toLocaleString')
+        .mockImplementation(() => {
+          throw new Error('Formatting failure');
+        });
+
+      const result = displayEnhancer.formatTimestamp(
+        '2024-12-20T15:45:00.000Z'
+      );
+
+      expect(result).toBe('Unknown date');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error formatting timestamp: Formatting failure'
+      );
+
+      localeSpy.mockRestore();
+    });
+
     it('should format different times correctly', () => {
       const morning = displayEnhancer.formatTimestamp(
         '2024-01-15T09:30:00.000Z'
