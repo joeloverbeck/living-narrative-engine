@@ -452,8 +452,9 @@ class GameEngine {
       );
     }
 
+    let stopEventResult;
     try {
-      const stopEventResult = await this.#safeEventDispatcher.dispatch(
+      stopEventResult = await this.#safeEventDispatcher.dispatch(
         ENGINE_STOPPED_UI,
         {
           inputDisabledMessage: 'Game stopped. Engine is inactive.',
@@ -467,7 +468,19 @@ class GameEngine {
           'GameEngine.stop: SafeEventDispatcher reported failure when dispatching ENGINE_STOPPED_UI event.'
         );
       }
+    } catch (error) {
+      const normalizedError =
+        error instanceof Error ? error : new Error(String(error));
+      if (!caughtError) {
+        caughtError = normalizedError;
+      }
+      this.#logger.error(
+        'GameEngine.stop: Encountered error while stopping engine. Engine state will be reset.',
+        normalizedError
+      );
+    }
 
+    try {
       if (this.#turnManager) {
         await this.#turnManager.stop();
         this.#logger.debug('GameEngine.stop: TurnManager stopped.');
