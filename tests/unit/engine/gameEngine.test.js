@@ -170,6 +170,39 @@ describeEngineSuite('GameEngine', (context) => {
       );
     });
 
+    it('should treat invalid initialization results as failures with a clear error', async () => {
+      context.bed
+        .getInitializationService()
+        .runInitializationSequence.mockResolvedValue(null);
+
+      await expect(
+        context.engine.startNewGame(DEFAULT_TEST_WORLD)
+      ).rejects.toThrow('InitializationService returned an invalid result.');
+
+      const invalidResultLog = context.bed
+        .getLogger()
+        .error.mock.calls.find(([message]) =>
+          message.includes('InitializationService returned invalid result')
+        );
+
+      expect(invalidResultLog).toBeDefined();
+      expect(invalidResultLog[1]).toMatchObject({ receivedType: 'null' });
+
+      const failureDispatch = context.bed
+        .getSafeEventDispatcher()
+        .dispatch.mock.calls.find(
+          ([eventName]) => eventName === ENGINE_OPERATION_FAILED_UI
+        );
+
+      expect(failureDispatch).toBeDefined();
+      expect(failureDispatch[1]).toMatchObject({
+        errorMessage: expect.stringContaining(
+          'InitializationService returned an invalid result.'
+        ),
+        errorTitle: 'Initialization Error',
+      });
+    });
+
     it('should trim surrounding whitespace from world names before initialization', async () => {
       const rawWorldName = '  Aurora Station  ';
       const normalizedWorldName = 'Aurora Station';
