@@ -371,8 +371,8 @@ describe('GameSessionManager integration (real collaborators)', () => {
         {
           eventName: ENGINE_OPERATION_IN_PROGRESS_UI,
           payload: {
-            titleMessage: 'Loading mySave.sav...',
-            inputDisabledMessage: 'Loading game from mySave.sav...',
+            titleMessage: 'Loading mySave...',
+            inputDisabledMessage: 'Loading game from mySave...',
           },
         },
       ]);

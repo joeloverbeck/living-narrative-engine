@@ -36,7 +36,6 @@ class CriticalLogNotifier extends RendererBase {
   #badgeContainer = null;
   #panel = null;
   #updateTimer = null;
-  #keyboardHandler = null;
   #animationTimer = null;
   #dragHandler = null;
   #logFilter = null;
@@ -1393,14 +1392,6 @@ class CriticalLogNotifier extends RendererBase {
     // Clean up exporter
     if (this.#exporter) {
       this.#exporter = null;
-    }
-
-    // Clean up old keyboard handler (if still present)
-    if (this.#keyboardHandler) {
-      this.documentContext
-        .query('document')
-        .removeEventListener('keydown', this.#keyboardHandler);
-      this.#keyboardHandler = null;
     }
 
     this.logger.debug(`${this._logPrefix} Disposing with cleanup`);

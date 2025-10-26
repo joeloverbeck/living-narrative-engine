@@ -42,14 +42,10 @@ describe('MergeClosenessCircleHandler', () => {
     jest.clearAllMocks();
   });
 
-  test('forms new circle and locks movement on legacy entities', async () => {
+  test('forms new circle (movement lock no longer applied)', async () => {
     em.getComponentData
       .mockReturnValueOnce(null) // actor closeness
-      .mockReturnValueOnce(null) // target closeness
-      .mockReturnValueOnce(null) // actor anatomy:body
-      .mockReturnValueOnce({ locked: false }) // actor movement
-      .mockReturnValueOnce(null) // target anatomy:body
-      .mockReturnValueOnce({ locked: false }); // target movement
+      .mockReturnValueOnce(null); // target closeness
 
     await handler.execute({ actor_id: 'a1', target_id: 't1' }, execCtx);
 
@@ -67,12 +63,7 @@ describe('MergeClosenessCircleHandler', () => {
         partners: ['a1'],
       }
     );
-    expect(em.addComponent).toHaveBeenCalledWith('a1', 'core:movement', {
-      locked: true,
-    });
-    expect(em.addComponent).toHaveBeenCalledWith('t1', 'core:movement', {
-      locked: true,
-    });
+    // Movement lock no longer applied when establishing closeness
   });
 
   test('forms new circle and locks movement on anatomy-based entities', async () => {
@@ -140,31 +131,7 @@ describe('MergeClosenessCircleHandler', () => {
         partners: ['hero1'],
       }
     );
-    // Movement locked on body parts
-    expect(em.addComponent).toHaveBeenCalledWith('left-leg1', 'core:movement', {
-      locked: true,
-      forcedOverride: false,
-    });
-    expect(em.addComponent).toHaveBeenCalledWith(
-      'right-leg1',
-      'core:movement',
-      {
-        locked: true,
-        forcedOverride: false,
-      }
-    );
-    expect(em.addComponent).toHaveBeenCalledWith('left-leg2', 'core:movement', {
-      locked: true,
-      forcedOverride: false,
-    });
-    expect(em.addComponent).toHaveBeenCalledWith(
-      'right-leg2',
-      'core:movement',
-      {
-        locked: true,
-        forcedOverride: false,
-      }
-    );
+    // Movement lock no longer applied when establishing closeness
   });
 
   test('stores result variable when provided', async () => {
@@ -230,15 +197,7 @@ describe('MergeClosenessCircleHandler', () => {
         partners: ['a1'],
       }
     );
-    // Legacy entity movement locked directly
-    expect(em.addComponent).toHaveBeenCalledWith('a1', 'core:movement', {
-      locked: true,
-    });
-    // Anatomy entity movement locked on body part
-    expect(em.addComponent).toHaveBeenCalledWith('left-leg1', 'core:movement', {
-      locked: true,
-      forcedOverride: false,
-    });
+    // Movement lock no longer applied when establishing closeness
   });
 
   test('validates parameters - missing actor_id', async () => {
@@ -318,26 +277,6 @@ describe('MergeClosenessCircleHandler', () => {
     );
   });
 
-  test('handles updateMovementLock error during movement lock', async () => {
-    // Mock successful partner update but failed movement lock
-    em.getComponentData = jest.fn((id, componentId) => {
-      if (componentId === 'positioning:closeness') return null;
-      if (componentId === 'anatomy:body') return null;
-      throw new Error('Movement lock failed');
-    });
-
-    await handler.execute({ actor_id: 'a1', target_id: 't1' }, execCtx);
-
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
-      expect.objectContaining({
-        message: expect.stringContaining('failed locking movement'),
-        details: expect.objectContaining({
-          error: 'Movement lock failed',
-        }),
-      })
-    );
-  });
 
   test('handles invalid evaluation context when result_variable provided', async () => {
     em.getComponentData = jest.fn(() => null);

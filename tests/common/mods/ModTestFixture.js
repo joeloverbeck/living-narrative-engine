@@ -880,6 +880,9 @@ class BaseModTestFixture {
       }
     }
 
+    // Store action definition for hint generation
+    this._actionDefinition = targetActionDefinition;
+
     if (targetActionDefinition?.prerequisites) {
       const collectConditionRefs = (node, accumulator) => {
         if (!node) {
@@ -1183,6 +1186,56 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
     // Store conditionId for deferred initialization
     this.conditionId = `${modId}:event-is-action-${actionId.replace(`${modId}:`, '').replace(/_/g, '-')}`;
+
+    /**
+     * Registry of known scopes and their registration categories.
+     * Used for providing helpful error hints when scopes are not registered.
+     * @private
+     */
+    this._knownScopes = {
+      positioning: [
+        'positioning:furniture_actor_sitting_on',
+        'positioning:actors_sitting_on_same_furniture',
+        'positioning:closest_leftmost_occupant',
+        'positioning:closest_rightmost_occupant',
+        'positioning:furniture_allowing_sitting_at_location',
+        'positioning:standing_actors_at_location',
+        'positioning:sitting_actors',
+        'positioning:kneeling_actors',
+        'positioning:furniture_actor_behind',
+        'positioning:actor_being_bitten_by_me',
+        'positioning:close_actors_facing_each_other_or_behind_target',
+        'positioning:close_actors',
+        'positioning:close_actors_facing_each_other',
+        'positioning:actors_both_sitting_close',
+        'positioning:actor_biting_my_neck',
+        'positioning:actors_sitting_close',
+        'positioning:close_actors_or_entity_kneeling_before_actor',
+        'positioning:actor_im_straddling',
+        'positioning:entity_actor_is_kneeling_before',
+        'positioning:actors_sitting_with_space_to_right',
+        'positioning:available_furniture',
+        'positioning:available_lying_furniture',
+        'positioning:furniture_im_lying_on',
+        'positioning:furniture_im_sitting_on',
+        'positioning:surface_im_bending_over',
+        'positioning:actors_im_facing_away_from',
+      ],
+      inventory: [
+        'items:actor_inventory_items',
+        'items:items_at_location',
+        'items:portable_items_at_location',
+        'items:actors_at_location',
+        'items:containers_at_location',
+      ],
+      anatomy: ['anatomy:actors_at_location', 'anatomy:target_body_parts'],
+    };
+
+    /**
+     * Flag to suppress action discovery hints.
+     * @private
+     */
+    this._suppressHints = false;
   }
 
   /**
@@ -1677,6 +1730,9 @@ export class ModActionTestFixture extends BaseModTestFixture {
     try {
       const actions = this.testEnv.getAvailableActions(actorId);
 
+      // Provide hint if no actions discovered
+      this._provideActionDiscoveryHint(actorId, actions);
+
       // In test environment, wrap actions with strict validation
       if (process.env.NODE_ENV === 'test') {
         // Lazy-load the helper to avoid circular dependencies
@@ -1762,6 +1818,153 @@ export class ModActionTestFixture extends BaseModTestFixture {
   clearEvents() {
     if (this.events) {
       this.events.length = 0;
+    }
+  }
+
+  /**
+   * Suppress action discovery hints (for tests that expect empty results).
+   */
+  suppressHints() {
+    this._suppressHints = true;
+  }
+
+  /**
+   * Enable action discovery hints.
+   */
+  enableHints() {
+    this._suppressHints = false;
+  }
+
+  /**
+   * Detect which category a scope belongs to.
+   *
+   * @private
+   * @param {string} scopeName - Scope to categorize
+   * @returns {string|null} Category name or null if unknown
+   */
+  _detectScopeCategory(scopeName) {
+    for (const [category, scopes] of Object.entries(this._knownScopes)) {
+      if (scopes.includes(scopeName)) {
+        return category;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Capitalize first letter of a string.
+   *
+   * @private
+   * @param {string} str - String to capitalize
+   * @returns {string} Capitalized string
+   */
+  _capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  /**
+   * Provide helpful hint when action discovery fails due to missing scope registration.
+   *
+   * @private
+   * @param {string} actorId - Actor ID
+   * @param {string[]} availableActions - Discovered actions (empty when hint is needed)
+   */
+  _provideActionDiscoveryHint(actorId, availableActions) {
+    // Skip if hints suppressed or actions were discovered
+    if (this._suppressHints || availableActions.length > 0) {
+      return;
+    }
+
+    // Check if we have a loaded action definition
+    if (!this._actionDefinition) {
+      return;
+    }
+
+    const actionId = this._actionDefinition.id;
+
+    // Extract scope name from action definition
+    const scopeName = this._actionDefinition.targets;
+
+    // Only provide hint if action uses a scope
+    if (!scopeName) {
+      return;
+    }
+
+    // Check if scope is known
+    const category = this._detectScopeCategory(scopeName);
+
+    if (category) {
+      // Known scope - suggest auto-registration and manual registration
+      const actionName = this.actionId.split(':')[1] || this.actionId;
+      console.warn(`
+⚠️  Action Discovery Hint
+
+Action discovery returned 0 actions for actor '${actorId}'.
+
+The action '${actionId}' uses scope '${scopeName}' which is not registered.
+
+💡 Solution 1 (Recommended): Enable auto-registration
+
+beforeEach(async () => {
+  testFixture = await ModTestFixture.forAction(
+    '${this.modId}',
+    '${actionName}',
+    null,
+    null,
+    { autoRegisterScopes: true }
+  );
+});
+
+💡 Solution 2: Manual registration
+
+import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
+
+beforeEach(async () => {
+  testFixture = await ModTestFixture.forAction('${this.modId}', '${actionName}');
+  ScopeResolverHelpers.register${this._capitalize(category)}Scopes(testFixture.testEnv);
+});
+
+📚 Documentation: See docs/testing/mod-testing-guide.md#testing-actions-with-custom-scopes
+      `.trim());
+    } else {
+      // Unknown scope - suggest custom resolver
+      const actionName = this.actionId.split(':')[1] || this.actionId;
+      console.warn(`
+⚠️  Action Discovery Hint
+
+Action discovery returned 0 actions for actor '${actorId}'.
+
+The action '${actionId}' uses scope '${scopeName}' which is not in the standard library.
+
+💡 Solution: Create custom scope resolver
+
+import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
+
+beforeEach(async () => {
+  testFixture = await ModTestFixture.forAction('${this.modId}', '${actionName}');
+
+  // Register standard scopes first (if applicable)
+  ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
+
+  // Create custom resolver for ${scopeName}
+  const customResolver = ScopeResolverHelpers.createComponentLookupResolver(
+    '${scopeName}',
+    {
+      componentType: 'mod:component',  // Update with actual component
+      sourceField: 'field',             // Update with actual field
+      contextSource: 'actor'
+    }
+  );
+
+  ScopeResolverHelpers._registerResolvers(
+    testFixture.testEnv,
+    testFixture.testEnv.entityManager,
+    { '${scopeName}': customResolver }
+  );
+});
+
+📚 Documentation: See docs/testing/scope-resolver-registry.md#creating-custom-scope-resolvers
+      `.trim());
     }
   }
 }

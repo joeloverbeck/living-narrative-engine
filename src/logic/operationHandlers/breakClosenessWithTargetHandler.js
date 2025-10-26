@@ -15,7 +15,6 @@
 
 import BaseOperationHandler from './baseOperationHandler.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
-import { updateMovementLock } from '../../utils/movementUtils.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import * as closenessCircleService from '../services/closenessCircleService.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
@@ -27,8 +26,8 @@ import { assertNonBlankString } from '../../utils/dependencyUtils.js';
  * @description Breaks closeness relationship between actor and specific target with conditional
  * component removal. When an actor pushes a target or otherwise breaks closeness with them:
  * - Removes target from actor's partners array
- * - If actor's partners array becomes empty → removes component + unlocks movement
- * - If actor still has other partners → updates component, keeps movement locked
+ * - If actor's partners array becomes empty → removes component
+ * - If actor still has other partners → updates component
  * - Applies same conditional logic to target side for symmetric state management
  */
 class BreakClosenessWithTargetHandler extends BaseOperationHandler {
@@ -238,19 +237,18 @@ class BreakClosenessWithTargetHandler extends BaseOperationHandler {
 
     // Conditional removal based on remaining partners
     if (repairedPartners.length === 0) {
-      // No more partners → remove component and unlock movement
+      // No more partners → remove component
       await this.#entityManager.removeComponent(
         actorId,
         'positioning:closeness'
       );
-      await updateMovementLock(this.#entityManager, actorId, false);
 
       logger.info('Removed actor closeness component (no remaining partners)', {
         actorId,
         targetId,
       });
     } else {
-      // Still has partners → update component, keep movement locked
+      // Still has partners → update component
       await this.#entityManager.addComponent(actorId, 'positioning:closeness', {
         partners: repairedPartners,
       });
@@ -304,19 +302,18 @@ class BreakClosenessWithTargetHandler extends BaseOperationHandler {
 
     // Conditional removal based on remaining partners
     if (repairedPartners.length === 0) {
-      // No more partners → remove component and unlock movement
+      // No more partners → remove component
       await this.#entityManager.removeComponent(
         targetId,
         'positioning:closeness'
       );
-      await updateMovementLock(this.#entityManager, targetId, false);
 
       logger.info('Removed target closeness component (no remaining partners)', {
         targetId,
         actorId,
       });
     } else {
-      // Still has partners → update component, keep movement locked
+      // Still has partners → update component
       await this.#entityManager.addComponent(
         targetId,
         'positioning:closeness',

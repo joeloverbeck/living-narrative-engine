@@ -183,6 +183,57 @@ describe('SystemLogicInterpreter - Event Handling', () => {
       });
     });
 
+    it('derives target identifiers from targets.primary and logs trace detection', async () => {
+      const trace = { captureOperationStart: jest.fn() };
+      const testRules = [
+        {
+          rule_id: 'trace-rule',
+          event_type: 'test:event',
+          condition: null,
+          actions: [],
+        },
+      ];
+
+      mockDataRegistry.getAllSystemRules.mockReturnValue(testRules);
+      interpreter.initialize();
+
+      createNestedExecutionContext.mockClear();
+
+      const eventHandler = mockEventBus.subscribe.mock.calls[0][1];
+      await eventHandler({
+        type: 'test:event',
+        payload: {
+          actorId: 'actor-1',
+          targets: { primary: { entityId: 'target-9' } },
+          trace,
+        },
+      });
+
+      expect(createNestedExecutionContext).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'test:event' }),
+        'actor-1',
+        'target-9',
+        mockEntityManager,
+        expect.objectContaining({
+          debug: expect.any(Function),
+          error: expect.any(Function),
+          info: expect.any(Function),
+          warn: expect.any(Function),
+        }),
+        trace
+      );
+
+      const traceLogFound = mockLogger.debug.mock.calls.some(
+        (call) =>
+          typeof call[0] === 'string' &&
+          call[0].includes(
+            'SystemLogicInterpreter: 🔍 [SystemLogicInterpreter] Trace object found in event payload, passing to execution context'
+          )
+      );
+
+      expect(traceLogFound).toBe(true);
+    });
+
     it('should handle ATTEMPT_ACTION_ID events with specific action rules', async () => {
       const testRules = [
         {

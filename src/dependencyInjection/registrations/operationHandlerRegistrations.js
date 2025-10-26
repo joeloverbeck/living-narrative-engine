@@ -32,6 +32,7 @@ import MathHandler from '../../logic/operationHandlers/mathHandler.js';
 import IfCoLocatedHandler from '../../logic/operationHandlers/ifCoLocatedHandler.js';
 import ModifyContextArrayHandler from '../../logic/operationHandlers/modifyContextArrayHandler.js';
 import AutoMoveFollowersHandler from '../../logic/operationHandlers/autoMoveFollowersHandler.js';
+import AutoMoveClosenessPartnersHandler from '../../logic/operationHandlers/autoMoveClosenessPartnersHandler.js';
 import MergeClosenessCircleHandler from '../../logic/operationHandlers/mergeClosenessCircleHandler.js';
 import RemoveFromClosenessCircleHandler from '../../logic/operationHandlers/removeFromClosenessCircleHandler.js';
 import EstablishSittingClosenessHandler from '../../logic/operationHandlers/establishSittingClosenessHandler.js';
@@ -332,6 +333,17 @@ export function registerOperationHandlers(registrar) {
           logger: c.resolve(tokens.ILogger),
           entityManager: c.resolve(tokens.IEntityManager),
           moveEntityHandler: c.resolve(tokens.IMoveEntityHandler),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.AutoMoveClosenessPartnersHandler,
+      AutoMoveClosenessPartnersHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          systemMoveEntityHandler: c.resolve(tokens.SystemMoveEntityHandler),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         }),
     ],
