@@ -2002,8 +2002,10 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
       timestamp: new Date().toISOString(),
     });
 
+    let recovery = null;
+
     if (this.#errorHandler) {
-      const recovery = await this.#errorHandler.handleError(error, context);
+      recovery = await this.#errorHandler.handleError(error, context);
 
       this.#showErrorMessage(recovery.userMessage || error.message, 'error');
 
@@ -2034,11 +2036,27 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
       this.#showEmptyClichesState();
       this.#updateGenerateButtonEnhanced();
 
-      // Show warning but keep direction display visible
-      this.#showStatusMessage(
-        'Could not load existing clichés. You can generate new ones.',
-        'warning'
-      );
+      const fallbackWarning =
+        'Could not load existing clichés. You can generate new ones.';
+
+      if (
+        recovery &&
+        this.#statusMessages &&
+        (recovery.requiresRefresh ||
+          (recovery.actionableSteps && recovery.actionableSteps.length > 0))
+      ) {
+        this.#statusMessages.innerHTML += `
+          <div class="cb-message cb-message--warning" role="alert">
+            <span class="cb-message__icon" aria-hidden="true">⚠️</span>
+            <span class="cb-message__text">${this.#sanitizeForDisplay(
+              fallbackWarning
+            )}</span>
+            <button class="cb-message__close" aria-label="Close message" onclick="this.parentElement.remove()">×</button>
+          </div>
+        `;
+      } else {
+        this.#showStatusMessage(fallbackWarning, 'warning');
+      }
     }
   }
 
