@@ -196,6 +196,19 @@ export function createMockFacades(mockDeps = {}, mockFn = () => () => {}) {
       })(),
     },
     actionPipelineOrchestrator: {
+      discoverActions: (() => {
+        const mock = mockFn();
+        const defaultResult = {
+          actions: [
+            { id: 'core:look', name: 'Look' },
+            { id: 'core:wait', name: 'Wait' },
+          ],
+          errors: [],
+        };
+        return mock.mockResolvedValue
+          ? mock.mockResolvedValue(defaultResult)
+          : async () => defaultResult;
+      })(),
       execute: (() => {
         const mock = mockFn();
         return mock.mockResolvedValue

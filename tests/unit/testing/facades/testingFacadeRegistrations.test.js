@@ -100,7 +100,10 @@ describe('testingFacadeRegistrations', () => {
     it('should create ActionServiceFacade with resolved dependencies', () => {
       const mockDependencies = {
         actionDiscoveryService: { discoverActions: jest.fn() },
-        actionPipelineOrchestrator: { execute: jest.fn() },
+        actionPipelineOrchestrator: {
+          discoverActions: jest.fn(),
+          execute: jest.fn(),
+        },
         availableActionsProvider: { getAvailableActions: jest.fn() },
         actionIndex: { getActionDefinition: jest.fn() },
         targetResolutionService: { resolveTargets: jest.fn() },
@@ -135,6 +138,58 @@ describe('testingFacadeRegistrations', () => {
       const actionFacade = actionFactory({});
 
       expect(actionFacade).toBeInstanceOf(ActionServiceFacade);
+    });
+
+    it('supports ActionServiceFacade when orchestrator only provides discovery', async () => {
+      const mockDependencies = {
+        actionDiscoveryService: { discoverActions: jest.fn() },
+        actionPipelineOrchestrator: { discoverActions: jest.fn() },
+        availableActionsProvider: { getAvailableActions: jest.fn() },
+        actionIndex: {
+          getActionDefinition: jest.fn().mockReturnValue({
+            id: 'test:action',
+            targets: [],
+          }),
+        },
+        targetResolutionService: { resolveTargets: jest.fn() },
+        logger: {
+          debug: jest.fn(),
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+        },
+      };
+
+      mockResolve.mockImplementation((token) => {
+        const tokenToKey = {
+          [tokens.IActionDiscoveryService]: 'actionDiscoveryService',
+          [tokens.ActionPipelineOrchestrator]: 'actionPipelineOrchestrator',
+          [tokens.IAvailableActionsProvider]: 'availableActionsProvider',
+          [tokens.ActionIndex]: 'actionIndex',
+          [tokens.ITargetResolutionService]: 'targetResolutionService',
+          [tokens.ILogger]: 'logger',
+        };
+        return mockDependencies[tokenToKey[token]];
+      });
+
+      registerTestingFacades(mockContainer);
+
+      const [, actionFactory] = mockContainer.register.mock.calls.find(
+        (call) => call[0] === tokens.IActionServiceFacade
+      );
+
+      const actionFacade = actionFactory({});
+
+      expect(actionFacade).toBeInstanceOf(ActionServiceFacade);
+
+      const validation = await actionFacade.validateAction({
+        actionId: 'test:action',
+        actorId: 'actor-1',
+      });
+
+      expect(validation.success).toBe(false);
+      expect(validation.code).toBe('PIPELINE_UNAVAILABLE');
+      expect(validation.error).toContain('execute');
     });
 
     it('should create EntityServiceFacade with resolved dependencies', () => {
