@@ -173,9 +173,16 @@ describe('ClichesGeneratorController', () => {
       // Act
       await testBed.controller.initialize();
 
-      // Assert - Should have warning for missing concept
+      // Assert - Should log warnings for missing concept data
       expect(testBed.mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Skipping concept concept-2')
+        expect.stringContaining(
+          'Concept concept-2 not found - using fallback placeholder'
+        )
+      );
+      expect(testBed.mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Concept concept-2 is missing text - displaying as Untitled Concept'
+        )
       );
     });
 

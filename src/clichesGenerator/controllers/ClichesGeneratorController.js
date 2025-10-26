@@ -75,6 +75,9 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
   #clichesContainer = null;
   #statusMessages = null;
   #loadingOverlay = null;
+  #navigationHandler = (url) => {
+    window.location.href = url;
+  };
 
   /**
    * Constructor
@@ -261,7 +264,7 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
     // Back to menu button
     const backBtn = document.getElementById('back-btn');
     backBtn?.addEventListener('click', () => {
-      window.location.href = 'index.html';
+      this.#navigationHandler('index.html');
     });
 
     // Setup keyboard shortcuts for improved UX
@@ -367,18 +370,24 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
           }
         }
 
-        if (concept) {
+          if (!concept) {
+            // Use a placeholder concept so the direction still appears in the UI
+            this.logger?.warn(
+              `Concept ${direction.conceptId} not found - using fallback placeholder`
+            );
+            concept = {
+              id: direction.conceptId,
+              concept: '',
+              text: '',
+              metadata: {},
+            };
+          }
+
           conceptMap.set(direction.conceptId, {
             concept,
             directions: [],
           });
-        } else {
-          // Log warning for missing concept
-          this.logger?.warn(
-            `Skipping concept ${direction.conceptId} - concept not found`
-          );
         }
-      }
 
       // Only push direction if the concept exists in the map
       if (conceptMap.has(direction.conceptId)) {
@@ -387,22 +396,23 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
     }
 
     // Convert to array for easier handling
-    for (const [conceptId, data] of conceptMap) {
-      // Skip if concept is null or missing concept field
-      if (!data.concept || !data.concept.concept) {
-        this.logger?.warn(
-          `Skipping concept ${conceptId} - missing or invalid concept text`
-        );
-        continue;
-      }
+      for (const [conceptId, data] of conceptMap) {
+        const rawConceptText =
+          typeof data.concept?.concept === 'string' ? data.concept.concept : '';
 
-      organized.push({
-        conceptId,
-        conceptText: data.concept.concept, // Changed from data.concept.text to data.concept.concept
-        conceptTitle: this.#extractConceptTitle(data.concept.concept), // Changed from data.concept.text to data.concept.concept
-        directions: data.directions,
-      });
-    }
+        if (!rawConceptText) {
+          this.logger?.warn(
+            `Concept ${conceptId} is missing text - displaying as Untitled Concept`
+          );
+        }
+
+        organized.push({
+          conceptId,
+          conceptText: rawConceptText || 'Untitled Concept',
+          conceptTitle: this.#extractConceptTitle(rawConceptText),
+          directions: data.directions,
+        });
+      }
 
     return organized;
   }
@@ -2395,6 +2405,36 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
     }
     if (isGenerating !== undefined) {
       this.#isGenerating = isGenerating;
+    }
+  }
+
+  /**
+   * @description Test helper to override direction caches for targeted scenarios
+   * @param {object} [options] - Options to configure the caches
+   * @param {Array<object>} [options.directionsData] - Pre-organized directions data
+   * @param {Array<Array>} [options.directionsMapEntries] - Entries for directionsWithConceptsMap
+   * @returns {void}
+   * @private
+   */
+  _testSetDirectionCaches({ directionsData, directionsMapEntries } = {}) {
+    if (Array.isArray(directionsData)) {
+      this.#directionsData = directionsData;
+    }
+
+    if (Array.isArray(directionsMapEntries)) {
+      this.#directionsWithConceptsMap = new Map(directionsMapEntries);
+    }
+  }
+
+  /**
+   * @description Test helper to override navigation handler for deterministic testing
+   * @param {Function} handler - Custom navigation handler
+   * @returns {void}
+   * @private
+   */
+  _testSetNavigationHandler(handler) {
+    if (typeof handler === 'function') {
+      this.#navigationHandler = handler;
     }
   }
 
