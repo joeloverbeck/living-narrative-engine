@@ -359,12 +359,15 @@ describeEngineSuite('GameEngine', (context) => {
 
     it('should reset state if ENGINE_STOPPED_UI dispatch rejects', async () => {
       const dispatchError = new Error('Dispatch failed');
+      const turnManager = context.bed.getTurnManager();
+      turnManager.stop.mockClear();
       context.bed
         .getSafeEventDispatcher()
         .dispatch.mockRejectedValueOnce(dispatchError);
 
       await expect(context.engine.stop()).rejects.toThrow('Dispatch failed');
 
+      expect(turnManager.stop).toHaveBeenCalledTimes(1);
       expect(context.bed.getLogger().error).toHaveBeenCalledWith(
         'GameEngine.stop: Encountered error while stopping engine. Engine state will be reset.',
         dispatchError
