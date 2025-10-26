@@ -133,6 +133,19 @@ describe('CharacterDefinitionValidator comprehensive behavior', () => {
     expect(result.errors).toContain('Character name cannot be empty');
   });
 
+  it('flags personal name entries containing only whitespace', async () => {
+    const result = await validator.validateCharacterDefinition({
+      components: {
+        'core:name': {
+          personal: { firstName: '   ', lastName: '\t' },
+        },
+      },
+    });
+
+    expect(result.isValid).toBe(false);
+    expect(result.errors).toContain('Character name cannot be empty');
+  });
+
   it('extracts character names from multiple formats', () => {
     expect(validator.extractCharacterName(null)).toBeNull();
     expect(
@@ -150,6 +163,34 @@ describe('CharacterDefinitionValidator comprehensive behavior', () => {
         },
       })
     ).toBe('Jamie Rivera');
+  });
+
+  it('returns null when character definition omits a name component', () => {
+    expect(
+      validator.extractCharacterName({
+        components: { 'core:personality': { traits: ['curious'] } },
+      })
+    ).toBeNull();
+  });
+
+  it('extracts requested traits and safely handles invalid input', () => {
+    expect(validator.extractTraits(null, ['core:likes'])).toEqual({});
+
+    const traits = validator.extractTraits(
+      {
+        components: {
+          'core:likes': ['mysteries'],
+          'core:fears': ['failure'],
+          'core:name': { text: 'Trait Hunter' },
+        },
+      },
+      ['core:likes', 'core:fears', 'core:strengths']
+    );
+
+    expect(traits).toEqual({
+      'core:likes': ['mysteries'],
+      'core:fears': ['failure'],
+    });
   });
 
   it('logs semantic rule failures and adds internal warning when rule throws', async () => {
