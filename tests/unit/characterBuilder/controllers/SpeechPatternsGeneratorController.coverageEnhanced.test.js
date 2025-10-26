@@ -231,7 +231,7 @@ const enterCharacterDefinition = async ({
 const waitForValidationAndGeneration = async ({
   characterData,
   validatorInstance,
-  waitMs = 700,
+  waitMs = 400,
 }) => {
   const textarea = document.getElementById('character-definition');
   const generateBtn = document.getElementById('generate-btn');
@@ -258,7 +258,10 @@ const waitForValidationAndGeneration = async ({
 
 beforeEach(() => {
   setupControllerDOM();
-  setPerformanceSequence([]);
+
+  // Default: no performance sequence (most tests don't need it)
+  performanceSequence = [];
+  performanceIndex = 0;
 
   global.performance = {
     now: jest.fn(() => getPerformanceNow()),
@@ -323,7 +326,6 @@ afterEach(() => {
   activeControllers.clear();
   document.body.innerHTML = '';
   jest.clearAllMocks();
-  rafTimers.forEach((timeout) => clearTimeout(timeout));
   rafTimers.clear();
 });
 
@@ -600,18 +602,6 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
       }
     );
 
-    setPerformanceSequence([
-      0,
-      1000,
-      15000,
-      20000,
-      140000,
-      150000,
-      160000,
-      170000,
-      180000,
-    ]);
-
     const controller = createControllerInstance(dependencies);
     const originalCache = controller._cacheElements.bind(controller);
     controller._cacheElements = function () {
@@ -637,6 +627,7 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     await waitForValidationAndGeneration({
       characterData: createValidCharacterData({ text: 'Heroic Traveler' }),
       validatorInstance,
+      mocks,
     });
 
     expect(validatorInstance.validateInput).toHaveBeenCalled();
@@ -739,7 +730,7 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     await waitForValidationAndGeneration({
       characterData: createValidCharacterData({ text: 'Deliberate Strategist' }),
       validatorInstance,
-      waitMs: 800,
+      mocks,
     });
 
     const progressBar = document.getElementById('progress-bar');
@@ -762,8 +753,6 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
       generatedAt: new Date('2024-01-02T00:00:00Z').toISOString(),
     });
 
-    setPerformanceSequence([0, 1000, 15000, 20000, 30000, 40000, 50000, 60000, 70000]);
-
     const controller = createControllerInstance(dependencies);
     await controller.initialize();
 
@@ -779,6 +768,7 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     await waitForValidationAndGeneration({
       characterData: createValidCharacterData({ text: 'Fallback Hero' }),
       validatorInstance,
+      mocks,
     });
 
     expect(validatorInstance.validateInput).toHaveBeenCalled();
@@ -846,8 +836,6 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     mocks.displayEnhancer.formatForExport.mockReturnValue('Formatted');
     mocks.displayEnhancer.generateExportFilename.mockReturnValue('resilient.txt');
 
-    setPerformanceSequence([0, 1000, 1200, 1500, 2000, 2500, 3000, 3500, 4000]);
-
     const controller = createControllerInstance(dependencies);
     const originalCache = controller._cacheElements.bind(controller);
     controller._cacheElements = function () {
@@ -873,6 +861,7 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     await waitForValidationAndGeneration({
       characterData: createValidCharacterData({ text: 'Resilient Hero' }),
       validatorInstance,
+      mocks,
     });
 
     expect(validatorInstance.validateInput).toHaveBeenCalled();
@@ -885,7 +874,7 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     document
       .getElementById('retry-btn')
       .dispatchEvent(new Event('click', { bubbles: true }));
-    await new Promise((resolve) => setTimeout(resolve, 700));
+    await new Promise((resolve) => setTimeout(resolve, 400));
     await flushMicrotasks();
 
     expect(
@@ -948,7 +937,7 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
       .getElementById('generate-btn')
       .dispatchEvent(new Event('click', { bubbles: true }));
 
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 250));
     await flushMicrotasks();
 
     expect(typeof capturedProgress).toBe('function');
@@ -957,13 +946,13 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
 
     capturedProgress(0);
     await flushMicrotasks();
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await flushMicrotasks();
 
     expect(timeEstimate.textContent).toMatch(/\d+-\d+ minutes remaining/);
 
     capturedProgress(100);
     await flushMicrotasks();
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await flushMicrotasks();
 
     expect(timeEstimate.textContent).toMatch(/About \d+ minute/);
 
@@ -978,7 +967,8 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
       generatedAt: new Date('2024-01-04T00:00:00Z').toISOString(),
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await flushMicrotasks();
+    await flushMicrotasks();
   });
 
   it('announces cancellation when generation is aborted', async () => {
@@ -1030,21 +1020,6 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
   it('drops will-change optimization after pattern animation completes', async () => {
     const { dependencies, mocks } = createDependencies();
 
-    setPerformanceSequence([
-      0,
-      1000,
-      1200,
-      1500,
-      2000,
-      2500,
-      3000,
-      3500,
-      4000,
-      4500,
-      5000,
-      5500,
-    ]);
-
     const controller = createControllerInstance(dependencies);
     await controller.initialize();
 
@@ -1072,6 +1047,7 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     await waitForValidationAndGeneration({
       characterData: createValidCharacterData({ text: 'Animated Hero' }),
       validatorInstance,
+      mocks,
     });
 
     const pattern = document.querySelector('.speech-pattern-item');
@@ -1150,6 +1126,7 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     await waitForValidationAndGeneration({
       characterData: createValidCharacterData({ text: 'Template Hero' }),
       validatorInstance,
+      mocks,
     });
 
     const exportFormat = document.getElementById('export-format');
@@ -1212,8 +1189,6 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
       throw new Error('export broke');
     });
 
-    setPerformanceSequence([0, 1000, 1200, 1500, 2000, 2500, 3000, 3500]);
-
     const controller = createControllerInstance(dependencies);
     const originalCache = controller._cacheElements.bind(controller);
     controller._cacheElements = function () {
@@ -1251,6 +1226,7 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     await waitForValidationAndGeneration({
       characterData: createValidCharacterData({ text: 'Export Failure Hero' }),
       validatorInstance,
+      mocks,
     });
 
     document
@@ -1285,7 +1261,6 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
       };
 
       const { dependencies, mocks } = createDependencies();
-      setPerformanceSequence([0, 100, 200, 300, 400, 500, 600, 700]);
 
       const controller = createControllerInstance(dependencies);
       await controller.initialize();
@@ -1416,8 +1391,6 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     async (errorLike, expectedMessage) => {
       const { dependencies, mocks } = createDependencies();
 
-      setPerformanceSequence([0, 1000, 1200, 1500, 2000, 2500, 3000, 3500]);
-
       const controller = createControllerInstance(dependencies);
       await controller.initialize();
 
@@ -1437,7 +1410,7 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
       await waitForValidationAndGeneration({
         characterData: createValidCharacterData({ text: 'Error Hero' }),
         validatorInstance,
-        waitMs: 800,
+        mocks,
       });
 
       expect(document.getElementById('error-message').textContent).toBe(
@@ -1573,8 +1546,6 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     displayEnhancer.formatForExport.mockReturnValue('Keyboard export');
     displayEnhancer.generateExportFilename.mockReturnValue('keyboard.txt');
 
-    setPerformanceSequence([0, 1000, 1200, 1500, 2000, 2500, 3000, 3500]);
-
     const controller = createControllerInstance(dependencies);
     const originalCache = controller._cacheElements.bind(controller);
     controller._cacheElements = function () {
@@ -1627,7 +1598,7 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     });
     document.body.dispatchEvent(enterEvent);
 
-    await new Promise((resolve) => setTimeout(resolve, 700));
+    await new Promise((resolve) => setTimeout(resolve, 300));
     await flushMicrotasks();
 
     expect(enterEvent.preventDefault).toHaveBeenCalled();

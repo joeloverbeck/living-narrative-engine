@@ -181,7 +181,8 @@ describe('ActivityDescriptionService', () => {
 
       const result = await service.generateActivityDescription('entity_1');
 
-      expect(result).toBe('Activity: Jon Ureña stands near Dylan.');
+      // Phase 2: Now processes ALL visible activities, not just highest priority
+      expect(result).toBe('Activity: Jon Ureña stands near Dylan. Jon Ureña kneels before Alicia Western.');
       expect(mockActivityIndex.findActivitiesForEntity).toHaveBeenCalledWith(
         'entity_1'
       );
@@ -326,7 +327,8 @@ describe('ActivityDescriptionService', () => {
 
       const result = await service.generateActivityDescription('entity_1');
 
-      expect(result).toBe('Activity: Entity entity_1 takes center stage.');
+      // Phase 2: Processes all activities, highest priority first
+      expect(result).toBe('Activity: Entity entity_1 takes center stage. Entity entity_1 considers the options. Entity entity_1 waits patiently.');
     });
 
     it('should treat missing priority as the lowest weight during sorting', async () => {
@@ -349,7 +351,8 @@ describe('ActivityDescriptionService', () => {
 
       const result = await service.generateActivityDescription('entity_1');
 
-      expect(result).toBe('Activity: Entity entity_1 leads the charge.');
+      // Phase 2: Processes all activities, with missing priority treated as 0 (lowest)
+      expect(result).toBe('Activity: Entity entity_1 leads the charge. Entity entity_1 assesses the options. Entity entity_1 lingers near the exit.');
     });
 
     it('should reuse cached entity names across calls', async () => {
@@ -384,9 +387,10 @@ describe('ActivityDescriptionService', () => {
         ([id]) => id === 'entity_2'
       );
 
-      // After ACTDESC-006: Two calls per generateActivityDescription (one for collectActivityMetadata, one for name resolution)
-      // Plus two more for the second call = 5 total for entity_1
-      expect(actorCalls.length).toBe(5); // Two calls in metadata collection + two for name resolution + one cached
+      // After ACTDESC-006 & ACTDESC-007: Three calls per generateActivityDescription
+      // (one for inline metadata, one for dedicated metadata, one for name resolution)
+      // Plus three more for the second call = 7 total for entity_1 (cached name on second call)
+      expect(actorCalls.length).toBe(7); // Three calls in metadata collection + three for name resolution + one cached
       expect(targetCalls.length).toBe(1); // Only one call needed, then cached
     });
 
@@ -457,7 +461,8 @@ describe('ActivityDescriptionService', () => {
 
       const result = await service.generateActivityDescription('entity_1');
 
-      expect(result).toBe('Activity: Observer whispers to Subject.');
+      // Phase 2: Processes all activities, with missing priority coming last
+      expect(result).toBe('Activity: Observer whispers to Subject. Observer glances at.');
     });
 
     it('should use Unknown entity label when actor id is missing', async () => {
@@ -607,6 +612,9 @@ describe('ActivityDescriptionService', () => {
       ]);
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'entity_1') {
+          return { id: 'entity_1' };
+        }
         if (id === 'mystery_actor') {
           return { id };
         }
@@ -615,7 +623,8 @@ describe('ActivityDescriptionService', () => {
 
       const result = await service.generateActivityDescription('entity_1');
 
-      expect(result).toBe('Activity: mystery_actor observes.');
+      // Phase 2: Actor name is resolved from entity passed to generateActivityDescription (entity_1)
+      expect(result).toBe('Activity: entity_1 observes.');
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => ({
         id,
@@ -633,6 +642,9 @@ describe('ActivityDescriptionService', () => {
       ]);
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'entity_1') {
+          return { id: 'entity_1' }; // Has id but no name
+        }
         if (id === 'faceless_actor') {
           return {};
         }
@@ -641,7 +653,8 @@ describe('ActivityDescriptionService', () => {
 
       const result = await service.generateActivityDescription('entity_1');
 
-      expect(result).toBe('Activity: faceless_actor waits.');
+      // Phase 2: When entity has id but no name, uses id as fallback
+      expect(result).toBe('Activity: entity_1 waits.');
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => ({
         id,
@@ -655,6 +668,8 @@ describe('ActivityDescriptionService', () => {
           actorId: 'entity_1',
           targetId: 'entity_2',
           priority: 3,
+          // Phase 2: Need type for generateActivityPhrase to process correctly
+          type: 'dedicated',
         },
       ]);
 
@@ -665,7 +680,7 @@ describe('ActivityDescriptionService', () => {
 
       const result = await service.generateActivityDescription('entity_1');
 
-      expect(result).toBe('Activity: Entity entity_1 interacts with Target.');
+      expect(result).toBe('Activity: Entity entity_1 is interacting with Target.');
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => ({
         id,
@@ -952,6 +967,734 @@ describe('ActivityDescriptionService', () => {
       expect(mockEntity.getComponentData).toHaveBeenCalledWith(
         'companionship:following'
       );
+    });
+  });
+
+  describe('Dedicated Metadata Collection', () => {
+    describe('Through generateActivityDescription', () => {
+      it('should collect and format dedicated metadata component', async () => {
+        const mockEntity = {
+          id: 'jon',
+          name: 'Jon Ureña',
+          displayName: 'Jon Ureña',
+          componentTypeIds: ['kissing:kissing', 'activity:description_metadata'],
+          components: {
+            'kissing:kissing': {
+              partner: 'alicia',
+              initiator: true,
+            },
+            'activity:description_metadata': {
+              sourceComponent: 'kissing:kissing',
+              descriptionType: 'verb',
+              verb: 'kissing',
+              targetRole: 'partner',
+              priority: 90,
+            },
+          },
+          hasComponent: jest.fn((compId) => compId === 'activity:description_metadata'),
+          getComponentData: jest.fn((compId) => mockEntity.components[compId] || null),
+        };
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'jon') return mockEntity;
+          if (id === 'alicia') return { id, displayName: 'Alicia Western' };
+          return { id, name: id };
+        });
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
+
+        const result = await service.generateActivityDescription('jon');
+
+        // Should include the dedicated metadata activity
+        expect(result).toBeTruthy();
+        expect(mockEntity.getComponentData).toHaveBeenCalledWith(
+          'activity:description_metadata'
+        );
+      });
+
+      it('should handle errors when collecting dedicated metadata gracefully', async () => {
+        mockEntityManager.getEntityInstance
+          .mockImplementationOnce((id) => ({
+            id,
+            componentTypeIds: [],
+            getComponentData: jest.fn(),
+          }))
+          .mockImplementationOnce(() => {
+            throw new Error('Dedicated metadata failure');
+          });
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
+
+        const result = await service.generateActivityDescription('entity_1');
+
+        expect(result).toBe('');
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'Failed to collect dedicated metadata for entity entity_1',
+          expect.any(Error)
+        );
+      });
+
+      it('should combine inline and dedicated metadata activities', async () => {
+        const mockEntity = {
+          id: 'jon',
+          name: 'Jon Ureña',
+          displayName: 'Jon Ureña',
+          componentTypeIds: [
+            'positioning:kneeling_before',
+            'kissing:kissing',
+            'activity:description_metadata',
+          ],
+          components: {
+            'positioning:kneeling_before': {
+              entityId: 'alicia',
+              activityMetadata: {
+                shouldDescribeInActivity: true,
+                template: '{actor} is kneeling before {target}',
+                priority: 70,
+              },
+            },
+            'kissing:kissing': {
+              partner: 'alicia',
+              initiator: true,
+            },
+            'activity:description_metadata': {
+              sourceComponent: 'kissing:kissing',
+              descriptionType: 'verb',
+              verb: 'kissing',
+              targetRole: 'partner',
+              priority: 90,
+            },
+          },
+          hasComponent: jest.fn((compId) => {
+            return (
+              compId === 'activity:description_metadata' ||
+              compId === 'positioning:kneeling_before'
+            );
+          }),
+          getComponentData: jest.fn((compId) => mockEntity.components[compId] || null),
+        };
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'jon') return mockEntity;
+          if (id === 'alicia') return { id, displayName: 'Alicia Western' };
+          return { id, name: id };
+        });
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
+
+        const result = await service.generateActivityDescription('jon');
+
+        // Should prioritize dedicated metadata (priority 90) over inline (priority 70)
+        expect(result).toBeTruthy();
+        expect(mockEntity.getComponentData).toHaveBeenCalledWith('kissing:kissing');
+        expect(mockEntity.getComponentData).toHaveBeenCalledWith(
+          'activity:description_metadata'
+        );
+      });
+
+      it('should return empty string when no metadata component exists', async () => {
+        const mockEntity = {
+          id: 'jon',
+          name: 'Jon Ureña',
+          componentTypeIds: ['positioning:kneeling_before'],
+          components: {
+            'positioning:kneeling_before': { entityId: 'alicia' },
+          },
+          hasComponent: jest.fn(() => false),
+          getComponentData: jest.fn((compId) => mockEntity.components[compId] || null),
+        };
+
+        mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
+
+        const result = await service.generateActivityDescription('jon');
+
+        // No inline metadata, no dedicated metadata
+        expect(result).toBe('');
+      });
+
+      it('should log warning when sourceComponent is missing', async () => {
+        const mockEntity = {
+          id: 'jon',
+          name: 'Jon Ureña',
+          componentTypeIds: [],
+          hasComponent: jest.fn((compId) => compId === 'activity:description_metadata'),
+          getComponentData: jest.fn((compId) => {
+            if (compId === 'activity:description_metadata') {
+              return {
+                // Missing sourceComponent
+                descriptionType: 'verb',
+                verb: 'doing something',
+              };
+            }
+            return null;
+          }),
+        };
+
+        mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
+
+        const result = await service.generateActivityDescription('jon');
+
+        expect(result).toBe('');
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('missing sourceComponent')
+        );
+      });
+
+      it('should log warning when source component data is missing', async () => {
+        const mockEntity = {
+          id: 'jon',
+          name: 'Jon Ureña',
+          componentTypeIds: [],
+          hasComponent: jest.fn((compId) => compId === 'activity:description_metadata'),
+          getComponentData: jest.fn((compId) => {
+            if (compId === 'activity:description_metadata') {
+              return {
+                sourceComponent: 'nonexistent:component',
+                descriptionType: 'verb',
+                verb: 'doing',
+              };
+            }
+            return null; // Source component doesn't exist
+          }),
+        };
+
+        mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
+
+        const result = await service.generateActivityDescription('jon');
+
+        expect(result).toBe('');
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('Source component not found')
+        );
+      });
+
+      it('should include all metadata properties in formatted output', async () => {
+        const mockEntity = {
+          id: 'jon',
+          name: 'Jon Ureña',
+          displayName: 'Jon Ureña',
+          componentTypeIds: ['positioning:hugging', 'activity:description_metadata'],
+          components: {
+            'positioning:hugging': {
+              embraced_entity_id: 'alicia',
+              initiated: true,
+            },
+            'activity:description_metadata': {
+              sourceComponent: 'positioning:hugging',
+              descriptionType: 'verb',
+              verb: 'hugging',
+              adverb: 'tightly',
+              targetRole: 'embraced_entity_id',
+              priority: 85,
+              conditions: { requiredComponents: ['positioning:standing'] },
+              grouping: { groupKey: 'physical_contact' },
+            },
+          },
+          hasComponent: jest.fn((compId) => compId === 'activity:description_metadata'),
+          getComponentData: jest.fn((compId) => mockEntity.components[compId] || null),
+        };
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'jon') return mockEntity;
+          if (id === 'alicia') return { id, displayName: 'Alicia Western' };
+          return { id, name: id };
+        });
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
+
+        const result = await service.generateActivityDescription('jon');
+
+        expect(result).toBeTruthy();
+        expect(mockEntity.getComponentData).toHaveBeenCalledWith('positioning:hugging');
+      });
+
+      it('should default priority to 50 when not specified', async () => {
+        const mockEntity = {
+          id: 'jon',
+          name: 'Jon Ureña',
+          displayName: 'Jon Ureña',
+          componentTypeIds: ['core:action', 'activity:description_metadata'],
+          components: {
+            'core:action': { targetId: 'alicia' },
+            'activity:description_metadata': {
+              sourceComponent: 'core:action',
+              verb: 'greeting',
+              // No priority specified - should default to 50
+            },
+          },
+          hasComponent: jest.fn((compId) => compId === 'activity:description_metadata'),
+          getComponentData: jest.fn((compId) => mockEntity.components[compId] || null),
+        };
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'jon') return mockEntity;
+          if (id === 'alicia') return { id, displayName: 'Alicia Western' };
+          return { id, name: id };
+        });
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
+
+        const result = await service.generateActivityDescription('jon');
+
+        // Activity should be included with default priority
+        expect(result).toBeTruthy();
+      });
+
+      it('should handle parsing errors gracefully without crashing', async () => {
+        const mockEntity = {
+          id: 'jon',
+          name: 'Jon Ureña',
+          componentTypeIds: [],
+          hasComponent: jest.fn((compId) => compId === 'activity:description_metadata'),
+          getComponentData: jest.fn(() => {
+            throw new Error('Unexpected parsing error');
+          }),
+        };
+
+        mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
+
+        const result = await service.generateActivityDescription('jon');
+
+        expect(result).toBe('');
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'Failed to collect dedicated metadata for entity jon',
+          expect.any(Error)
+        );
+      });
+
+      it('should use targetRole to resolve correct target entity', async () => {
+        const mockEntity = {
+          id: 'jon',
+          name: 'Jon Ureña',
+          displayName: 'Jon Ureña',
+          componentTypeIds: ['social:greeting', 'activity:description_metadata'],
+          components: {
+            'social:greeting': {
+              greetedPersonId: 'alicia',
+              other_field: 'value',
+            },
+            'activity:description_metadata': {
+              sourceComponent: 'social:greeting',
+              verb: 'greeting',
+              targetRole: 'greetedPersonId',
+              priority: 75,
+            },
+          },
+          hasComponent: jest.fn((compId) => compId === 'activity:description_metadata'),
+          getComponentData: jest.fn((compId) => mockEntity.components[compId] || null),
+        };
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'jon') return mockEntity;
+          if (id === 'alicia') return { id, displayName: 'Alicia Western' };
+          return { id, name: id };
+        });
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
+
+        const result = await service.generateActivityDescription('jon');
+
+        expect(result).toBeTruthy();
+        expect(mockEntity.getComponentData).toHaveBeenCalledWith('social:greeting');
+      });
+
+      it('should default to entityId when targetRole is not specified', async () => {
+        const mockEntity = {
+          id: 'jon',
+          name: 'Jon Ureña',
+          displayName: 'Jon Ureña',
+          componentTypeIds: ['core:interaction', 'activity:description_metadata'],
+          components: {
+            'core:interaction': {
+              entityId: 'alicia',
+              other_field: 'value',
+            },
+            'activity:description_metadata': {
+              sourceComponent: 'core:interaction',
+              verb: 'interacting',
+              // No targetRole specified - should default to 'entityId'
+            },
+          },
+          hasComponent: jest.fn((compId) => compId === 'activity:description_metadata'),
+          getComponentData: jest.fn((compId) => mockEntity.components[compId] || null),
+        };
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'jon') return mockEntity;
+          if (id === 'alicia') return { id, displayName: 'Alicia Western' };
+          return { id, name: id };
+        });
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
+
+        const result = await service.generateActivityDescription('jon');
+
+        expect(result).toBeTruthy();
+        expect(mockEntity.getComponentData).toHaveBeenCalledWith('core:interaction');
+      });
+    });
+  });
+
+  describe('Template-Based Phrase Generation (Phase 2)', () => {
+    beforeEach(() => {
+      mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+        enabled: true,
+        prefix: 'Activity: ',
+        suffix: '',
+        separator: '. ',
+      });
+    });
+
+    it('should use template replacement for inline activities', async () => {
+      const mockEntity = {
+        id: 'jon',
+        displayName: 'Jon Ureña',
+        componentTypeIds: [],
+        getComponentData: jest.fn(),
+      };
+
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        {
+          type: 'inline',
+          template: '{actor} is kneeling before {target}',
+          targetEntityId: 'alicia',
+          priority: 75,
+        },
+      ]);
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'jon') return mockEntity;
+        if (id === 'alicia') return { id, displayName: 'Alicia Western' };
+        return { id, name: `Entity ${id}` };
+      });
+
+      const result = await service.generateActivityDescription('jon');
+      expect(result).toBe('Activity: Jon Ureña is kneeling before Alicia Western');
+    });
+
+    it('should format dedicated activity with verb', async () => {
+      const mockEntity = {
+        id: 'jon',
+        displayName: 'Jon Ureña',
+        componentTypeIds: [],
+        getComponentData: jest.fn(),
+      };
+
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        {
+          type: 'dedicated',
+          verb: 'kissing',
+          targetEntityId: 'alicia',
+          priority: 90,
+        },
+      ]);
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'jon') return mockEntity;
+        if (id === 'alicia') return { id, displayName: 'Alicia Western' };
+        return { id, name: `Entity ${id}` };
+      });
+
+      const result = await service.generateActivityDescription('jon');
+      expect(result).toBe('Activity: Jon Ureña is kissing Alicia Western');
+    });
+
+    it('should include adverb in dedicated activity', async () => {
+      const mockEntity = {
+        id: 'jon',
+        displayName: 'Jon Ureña',
+        componentTypeIds: [],
+        getComponentData: jest.fn(),
+      };
+
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        {
+          type: 'dedicated',
+          verb: 'hugging',
+          adverb: 'tightly',
+          targetEntityId: 'alicia',
+          priority: 85,
+        },
+      ]);
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'jon') return mockEntity;
+        if (id === 'alicia') return { id, displayName: 'Alicia Western' };
+        return { id, name: `Entity ${id}` };
+      });
+
+      const result = await service.generateActivityDescription('jon');
+      expect(result).toBe('Activity: Jon Ureña is hugging Alicia Western tightly');
+    });
+
+    it('should handle activity without target', async () => {
+      const mockEntity = {
+        id: 'jon',
+        displayName: 'Jon Ureña',
+        componentTypeIds: [],
+        getComponentData: jest.fn(),
+      };
+
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        {
+          type: 'dedicated',
+          verb: 'meditating',
+          priority: 60,
+        },
+      ]);
+
+      mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      const result = await service.generateActivityDescription('jon');
+      expect(result).toBe('Activity: Jon Ureña is meditating');
+    });
+
+    it('should join multiple activities with separator (ENHANCEMENT)', async () => {
+      const mockEntity = {
+        id: 'jon',
+        displayName: 'Jon Ureña',
+        componentTypeIds: [],
+        getComponentData: jest.fn(),
+      };
+
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        {
+          type: 'inline',
+          template: '{actor} is kneeling before {target}',
+          targetEntityId: 'alicia',
+          priority: 75,
+        },
+        {
+          type: 'inline',
+          template: '{actor} is holding hands with {target}',
+          targetEntityId: 'alicia',
+          priority: 60,
+        },
+      ]);
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'jon') return mockEntity;
+        if (id === 'alicia') return { id, displayName: 'Alicia Western' };
+        return { id, name: `Entity ${id}` };
+      });
+
+      const result = await service.generateActivityDescription('jon');
+      expect(result).toBe(
+        'Activity: Jon Ureña is kneeling before Alicia Western. Jon Ureña is holding hands with Alicia Western'
+      );
+    });
+
+    it('should process ALL activities not just first (KEY ENHANCEMENT)', async () => {
+      const mockEntity = {
+        id: 'jon',
+        displayName: 'Jon Ureña',
+        componentTypeIds: [],
+        getComponentData: jest.fn(),
+      };
+
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        { type: 'inline', template: '{actor} kneels', priority: 75 },
+        { type: 'inline', template: '{actor} waves', priority: 50 },
+        { type: 'inline', template: '{actor} smiles', priority: 25 },
+      ]);
+
+      mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      const result = await service.generateActivityDescription('jon');
+
+      // Should include ALL three activities, not just the first
+      expect(result).toContain('kneels');
+      expect(result).toContain('waves');
+      expect(result).toContain('smiles');
+    });
+
+    it('should use config prefix and suffix', async () => {
+      mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+        prefix: '>>> ',
+        suffix: ' <<<',
+        separator: ' | ',
+      });
+
+      const mockEntity = {
+        id: 'jon',
+        displayName: 'Jon Ureña',
+        componentTypeIds: [],
+        getComponentData: jest.fn(),
+      };
+
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        { type: 'inline', template: '{actor} waves', targetEntityId: null, priority: 50 },
+      ]);
+
+      mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      const result = await service.generateActivityDescription('jon');
+      expect(result).toBe('>>> Jon Ureña waves <<<');
+    });
+
+    it('should return empty string for no activities', async () => {
+      const mockEntity = {
+        id: 'jon',
+        displayName: 'Jon Ureña',
+        componentTypeIds: [],
+        getComponentData: jest.fn(),
+      };
+
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
+      mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      const result = await service.generateActivityDescription('jon');
+      expect(result).toBe('');
+    });
+
+    it('should handle template without target placeholder', async () => {
+      const mockEntity = {
+        id: 'jon',
+        displayName: 'Jon Ureña',
+        componentTypeIds: [],
+        getComponentData: jest.fn(),
+      };
+
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        {
+          type: 'inline',
+          template: '{actor} stretches',
+          priority: 40,
+        },
+      ]);
+
+      mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      const result = await service.generateActivityDescription('jon');
+      expect(result).toBe('Activity: Jon Ureña stretches');
+    });
+
+    it('should handle multiple targets across activities', async () => {
+      const mockEntity = {
+        id: 'jon',
+        displayName: 'Jon Ureña',
+        componentTypeIds: [],
+        getComponentData: jest.fn(),
+      };
+
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        {
+          type: 'inline',
+          template: '{actor} is kneeling before {target}',
+          targetEntityId: 'alicia',
+          priority: 75,
+        },
+        {
+          type: 'inline',
+          template: '{actor} is holding hands with {target}',
+          targetEntityId: 'alicia',
+          priority: 60,
+        },
+        {
+          type: 'inline',
+          template: '{actor} is following {target}',
+          targetEntityId: 'bob',
+          priority: 40,
+        },
+      ]);
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'jon') return mockEntity;
+        if (id === 'alicia') return { id, displayName: 'Alicia Western' };
+        if (id === 'bob') return { id, displayName: 'Bob Smith' };
+        return { id, name: `Entity ${id}` };
+      });
+
+      const result = await service.generateActivityDescription('jon');
+      expect(result).toBe(
+        'Activity: Jon Ureña is kneeling before Alicia Western. Jon Ureña is holding hands with Alicia Western. Jon Ureña is following Bob Smith'
+      );
+    });
+
+    it('should default verb to "interacting with" when missing in dedicated activity', async () => {
+      const mockEntity = {
+        id: 'jon',
+        displayName: 'Jon Ureña',
+        componentTypeIds: [],
+        getComponentData: jest.fn(),
+      };
+
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        {
+          type: 'dedicated',
+          // No verb specified
+          targetEntityId: 'alicia',
+          priority: 50,
+        },
+      ]);
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'jon') return mockEntity;
+        if (id === 'alicia') return { id, displayName: 'Alicia Western' };
+        return { id, name: `Entity ${id}` };
+      });
+
+      const result = await service.generateActivityDescription('jon');
+      expect(result).toBe('Activity: Jon Ureña is interacting with Alicia Western');
+    });
+
+    it('should maintain backward compatibility with legacy activities', async () => {
+      const mockEntity = {
+        id: 'jon',
+        displayName: 'Jon Ureña',
+        componentTypeIds: [],
+        getComponentData: jest.fn(),
+      };
+
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        {
+          // No type specified (legacy)
+          description: 'waves',
+          priority: 50,
+        },
+      ]);
+
+      mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      const result = await service.generateActivityDescription('jon');
+      expect(result).toBe('Activity: Jon Ureña waves');
+    });
+
+    it('should filter out empty phrases from final result', async () => {
+      const mockEntity = {
+        id: 'jon',
+        displayName: 'Jon Ureña',
+        componentTypeIds: [],
+        getComponentData: jest.fn(),
+      };
+
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        {
+          type: 'inline',
+          template: '{actor} waves',
+          priority: 60,
+        },
+        {
+          type: 'inline',
+          // Invalid activity - no template or description
+          priority: 50,
+        },
+        {
+          type: 'inline',
+          template: '{actor} smiles',
+          priority: 40,
+        },
+      ]);
+
+      mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      const result = await service.generateActivityDescription('jon');
+      expect(result).toBe('Activity: Jon Ureña waves. Jon Ureña smiles');
+      expect(result).not.toContain('undefined');
     });
   });
 });

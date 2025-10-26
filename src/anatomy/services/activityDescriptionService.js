@@ -159,6 +159,18 @@ class ActivityDescriptionService {
       );
     }
 
+    // Collect dedicated metadata (ACTDESC-007)
+    try {
+      const entity = this.#entityManager.getEntityInstance(entityId);
+      const dedicatedActivities = this.#collectDedicatedMetadata(entity);
+      activities.push(...dedicatedActivities);
+    } catch (error) {
+      this.#logger.error(
+        `Failed to collect dedicated metadata for entity ${entityId}`,
+        error
+      );
+    }
+
     return activities;
   }
 
@@ -245,7 +257,86 @@ class ActivityDescriptionService {
     };
   }
 
-   
+  /**
+   * Collect dedicated metadata component.
+   *
+   * @param {object} entity - Entity instance
+   * @returns {Array<object>} Dedicated metadata activities (single item or empty)
+   * @private
+   */
+
+  #collectDedicatedMetadata(entity) {
+    const activities = [];
+
+    // Check if entity has dedicated metadata component type
+    // Note: Entity can only have ONE instance of each component type
+    if (!entity.hasComponent('activity:description_metadata')) {
+      return activities;
+    }
+
+    // Get the single metadata component
+    const metadata = entity.getComponentData('activity:description_metadata');
+
+    if (!metadata) {
+      return activities;
+    }
+
+    try {
+      const activity = this.#parseDedicatedMetadata(metadata, entity);
+      if (activity) {
+        activities.push(activity);
+      }
+    } catch (error) {
+      this.#logger.error(`Failed to parse dedicated metadata`, error);
+    }
+
+    return activities;
+  }
+
+  /**
+   * Parse dedicated metadata component into activity object.
+   *
+   * @param {object} metadata - Metadata component data
+   * @param {object} entity - Entity instance
+   * @returns {object|null} Activity object or null if invalid
+   * @private
+   */
+
+  #parseDedicatedMetadata(metadata, entity) {
+    const { sourceComponent, descriptionType, targetRole, priority = 50 } = metadata;
+
+    if (!sourceComponent) {
+      this.#logger.warn('Dedicated metadata missing sourceComponent');
+      return null;
+    }
+
+    // Get source component data
+    const sourceData = entity.getComponentData(sourceComponent);
+    if (!sourceData) {
+      this.#logger.warn(`Source component not found: ${sourceComponent}`);
+      return null;
+    }
+
+    // Resolve target entity ID
+    const targetEntityId = sourceData[targetRole || 'entityId'];
+
+    return {
+      type: 'dedicated',
+      sourceComponent,
+      descriptionType,
+      metadata,
+      sourceData,
+      targetEntityId,
+      priority,
+      verb: metadata.verb,
+      template: metadata.template,
+      adverb: metadata.adverb,
+      conditions: metadata.conditions,
+      grouping: metadata.grouping,
+    };
+  }
+
+
   #filterByConditions(activities, _entity) {
     // ACTDESC-018 (Phase 3)
     return activities.filter((activity) => {
@@ -277,40 +368,92 @@ class ActivityDescriptionService {
     );
   }
 
-   
+
   #formatActivityDescription(activities, entity) {
-    // ACTDESC-008 (Phase 1)
+    // ACTDESC-008 (Phase 2 - Enhanced)
     const config =
       this.#anatomyFormattingService.getActivityIntegrationConfig?.() ?? {};
 
-    const primary = activities[0];
-    const descriptionText =
-      typeof primary?.description === 'string'
-        ? primary.description.trim()
-        : '';
-
-    if (!descriptionText && !primary?.verb && !primary?.targetId) {
+    if (activities.length === 0) {
       return '';
     }
 
-    const actorId = primary?.actorId ?? entity?.id;
+    // Get actor name
+    const actorId = entity?.id;
     const actorName = this.#resolveEntityName(actorId);
 
-    let formatted = descriptionText
-      ? `${actorName} ${descriptionText}`
-      : `${actorName} ${primary?.verb ?? ''}`.trim();
+    // ENHANCEMENT: Generate descriptions for ALL activities (not just first)
+    const descriptions = activities.map(activity =>
+      this.#generateActivityPhrase(actorName, activity)
+    ).filter(phrase => phrase && phrase.trim());
 
-    if (primary?.targetId) {
-      const targetName = this.#resolveEntityName(primary.targetId);
-      formatted = descriptionText
-        ? `${actorName} ${descriptionText} ${targetName}`.trim()
-        : `${actorName} ${primary?.verb ?? 'interacts with'} ${targetName}`;
+    if (descriptions.length === 0) {
+      return '';
     }
 
+    // Format with configuration
     const prefix = config.prefix ?? '';
     const suffix = config.suffix ?? '';
+    const separator = config.separator ?? '. ';
 
-    return `${prefix}${formatted}${suffix}`.trim();
+    const activityText = descriptions.join(separator);
+    return `${prefix}${activityText}${suffix}`.trim();
+  }
+
+  /**
+   * Generate a single activity phrase.
+   *
+   * @param {string} actorName - Name of entity performing activity
+   * @param {object} activity - Activity object
+   * @returns {string} Activity phrase
+   * @private
+   */
+
+  #generateActivityPhrase(actorName, activity) {
+    const targetEntityId = activity.targetEntityId || activity.targetId;
+    const targetName = targetEntityId
+      ? this.#resolveEntityName(targetEntityId)
+      : '';
+
+    if (activity.type === 'inline') {
+      // Use template replacement
+      if (activity.template) {
+        return activity.template
+          .replace(/\{actor\}/g, actorName)
+          .replace(/\{target\}/g, targetName);
+      }
+      // Fallback to description field for backward compatibility
+      if (activity.description) {
+        return targetName
+          ? `${actorName} ${activity.description} ${targetName}`.trim()
+          : `${actorName} ${activity.description}`.trim();
+      }
+    } else if (activity.type === 'dedicated') {
+      // Dedicated metadata: construct from verb/adverb
+      const verb = activity.verb || 'interacting with';
+      const adverb = activity.adverb ? ` ${activity.adverb}` : '';
+
+      if (targetName) {
+        return `${actorName} is ${verb} ${targetName}${adverb}`;
+      } else {
+        return `${actorName} is ${verb}${adverb}`;
+      }
+    }
+
+    // Fallback for legacy activities without type
+    if (activity.description) {
+      return targetName
+        ? `${actorName} ${activity.description} ${targetName}`.trim()
+        : `${actorName} ${activity.description}`.trim();
+    }
+
+    if (activity.verb) {
+      return targetName
+        ? `${actorName} ${activity.verb} ${targetName}`
+        : `${actorName} ${activity.verb}`;
+    }
+
+    return '';
   }
 
    

@@ -12,7 +12,150 @@ This guide is the canonical reference for writing and maintaining **mod action t
 
 The companion [Action Discovery Testing Toolkit](./action-discovery-testing-toolkit.md) now focuses on migration checklists and upgrade strategy while pointing back to the API summaries captured here.
 
+## Mod File Naming Conventions
+
+ModTestFixture expects specific naming patterns for mod content files. Following these conventions is **critical** for test discovery to work correctly.
+
+### Rule Files (Underscores)
+
+Rule files use **underscores** to separate words in action names:
+
+```
+Format: {actionName}.rule.json
+Examples:
+  ✅ tear_out_throat.rule.json
+  ✅ kiss_cheek.rule.json
+  ✅ grab_neck.rule.json
+  ❌ tear-out-throat.rule.json  (hyphens not allowed)
+```
+
+**Handler Rule Files** (also underscores):
+```
+Format: handle_{actionName}.rule.json
+Examples:
+  ✅ handle_tear_out_throat.rule.json
+  ✅ handle_kiss_cheek.rule.json
+  ❌ handle-tear-out-throat.rule.json  (hyphens not allowed)
+```
+
+### Condition Files (Hyphens)
+
+Condition files use **hyphens** to separate words, regardless of whether the action name uses underscores:
+
+```
+Format: event-is-action-{actionName-with-hyphens}.condition.json
+Examples:
+  ✅ event-is-action-tear-out-throat.condition.json
+  ✅ event-is-action-kiss-cheek.condition.json
+  ✅ event-is-action-grab-neck.condition.json
+  ❌ event-is-action-tear_out_throat.condition.json  (underscores not allowed)
+  ❌ event_is_action_tear_out_throat.condition.json  (underscores not allowed)
+```
+
+**Key Rule**: Condition files **always** use hyphens, even if the action name itself uses underscores.
+
+### Action Files (Underscores)
+
+Action definition files use **underscores**:
+
+```
+Format: {actionName}.action.json
+Examples:
+  ✅ tear_out_throat.action.json
+  ✅ kiss_cheek.action.json
+  ❌ tear-out-throat.action.json  (hyphens not allowed)
+```
+
+### Component Files (Underscores)
+
+Component definition files use **underscores**:
+
+```
+Format: {componentName}.component.json
+Examples:
+  ✅ biting_neck.component.json
+  ✅ being_bitten_in_neck.component.json
+  ❌ biting-neck.component.json  (hyphens not allowed)
+```
+
+### Scope Files (Underscores)
+
+Scope definition files use **underscores**:
+
+```
+Format: {scopeName}.scope
+Examples:
+  ✅ actor_being_bitten_by_me.scope
+  ✅ close_actors.scope
+  ❌ actor-being-bitten-by-me.scope  (hyphens not allowed)
+```
+
+### Quick Reference Table
+
+| File Type | Naming Convention | Example |
+|-----------|------------------|---------|
+| **Rule** | `{action_name}.rule.json` | `tear_out_throat.rule.json` |
+| **Handler Rule** | `handle_{action_name}.rule.json` | `handle_tear_out_throat.rule.json` |
+| **Condition** | `event-is-action-{action-name}.condition.json` | `event-is-action-tear-out-throat.condition.json` |
+| **Action** | `{action_name}.action.json` | `tear_out_throat.action.json` |
+| **Component** | `{component_name}.component.json` | `biting_neck.component.json` |
+| **Scope** | `{scope_name}.scope` | `actor_being_bitten_by_me.scope` |
+
+### Common Mistake: Mixing Conventions
+
+❌ **WRONG** - Mixing hyphens and underscores inconsistently:
+```
+data/mods/violence/
+├── actions/
+│   └── tear_out_throat.action.json              ← underscores (correct)
+├── rules/
+│   ├── tear_out_throat.rule.json                ← underscores (correct)
+│   └── handle_tear_out_throat.rule.json         ← underscores (correct)
+└── conditions/
+    └── event-is-action-tear_out_throat.condition.json  ← WRONG! Mixed conventions
+```
+
+✅ **CORRECT** - Consistent application of conventions:
+```
+data/mods/violence/
+├── actions/
+│   └── tear_out_throat.action.json              ← underscores (correct)
+├── rules/
+│   ├── tear_out_throat.rule.json                ← underscores (correct)
+│   └── handle_tear_out_throat.rule.json         ← underscores (correct)
+└── conditions/
+    └── event-is-action-tear-out-throat.condition.json  ← hyphens (correct)
+```
+
+### Why These Conventions Exist
+
+**Historical Context**: The condition file convention (hyphens) comes from the event naming system, which uses hyphens by convention. Rule files and other content files follow JavaScript/TypeScript naming conventions (underscores for multi-word identifiers).
+
+**ModTestFixture Expectations**: The test framework is hardcoded to expect these specific patterns when auto-loading mod content files. Deviating from these conventions will cause test failures.
+
+### Validation
+
+To verify your mod follows conventions:
+
+```bash
+# Check for incorrect condition files (underscores)
+find data/mods/{modId}/conditions -name "*_*.condition.json"
+# Should return nothing
+
+# Check for incorrect rule files (hyphens)
+find data/mods/{modId}/rules -name "*-*.rule.json"
+# Should return nothing
+
+# Check for incorrect action files (hyphens)
+find data/mods/{modId}/actions -name "*-*.action.json"
+# Should return nothing
+```
+
+If these commands find files, rename them to follow the correct convention.
+
 ## Quick Start
+
+> ⚠️ **Important**: Before starting, familiarize yourself with [Mod File Naming Conventions](#mod-file-naming-conventions). Incorrect naming will cause test failures.
 
 ```javascript
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
@@ -45,6 +188,8 @@ describe('positioning:sit_down', () => {
   });
 });
 ```
+
+> 💡 **Tip**: If your action uses scopes from dependency mods (positioning, items, anatomy), you'll need to register scope resolvers. See [Testing Actions with Custom Scopes](#testing-actions-with-custom-scopes) for details.
 
 ## Core Infrastructure
 
@@ -141,6 +286,28 @@ describe('my action suite', () => {
 
 ### Diagnostics & Logging
 
+#### enableDiagnostics()
+Enable detailed logging for action discovery and execution debugging.
+
+```javascript
+beforeEach(async () => {
+  testFixture = await ModTestFixture.forAction('violence', 'grab_neck');
+
+  // Enable diagnostics - disable after debugging
+  testFixture.enableDiagnostics();
+});
+```
+
+**When to Use**:
+- Action not being discovered
+- Unexpected action execution results
+- Scope resolution issues
+- Debugging test failures
+
+**Note**: Disable diagnostics in production tests (very verbose output)
+
+#### Additional Diagnostic Tools
+
 - Call `fixture.enableDiagnostics()` only while investigating failures. Clean up with `fixture.disableDiagnostics()` or `fixture.cleanup()`.
 - `fixture.discoverWithDiagnostics(actorId, expectedActionId?)` funnels discovery through the fixture and returns trace summaries.
 - The Action Discovery Bed exposes the same diagnostics payload through `discoverActionsWithDiagnostics()`; format traces with `formatDiagnosticSummary()` or `formatScopeEvaluationSummary()`.
@@ -165,6 +332,316 @@ Import the relevant matcher modules once per suite to unlock expressive assertio
 | `toBeAt(locationId)` | `../../common/actionMatchers.js` | Assert entity location relationships. |
 
 Mix matcher usage with targeted entity inspections; for example, call `fixture.entityManager.getEntityInstance(actorId)` to inspect component payloads directly.
+
+### Testing Actions with Custom Scopes
+
+Actions that use scopes from dependency mods (e.g., `positioning:close_actors`, `positioning:furniture_actor_sitting_on`) require scope registration in tests. While the production engine auto-loads scope definitions from `.scope` files, **ModTestFixture does not automatically load scopes from dependency mods**.
+
+#### Why Scope Registration is Required
+
+The test environment is isolated and doesn't load all mod dependencies by default. When your action uses a scope like `positioning:close_actors`, you must register the scope resolver in your test setup.
+
+#### Using ScopeResolverHelpers (Recommended)
+
+For common positioning, inventory, or anatomy scopes, use the ScopeResolverHelpers library:
+
+```javascript
+import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
+
+beforeEach(async () => {
+  testFixture = await ModTestFixture.forAction('intimacy', 'kiss_cheek');
+
+  // Register all standard positioning scopes
+  ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
+
+  // Now actions using positioning scopes will work
+});
+```
+
+**Available Registration Methods**:
+
+| Method | Coverage | Use When |
+|--------|----------|----------|
+| `registerPositioningScopes(testEnv)` | Sitting, standing, closeness, kneeling, facing | Action uses positioning mod scopes |
+| `registerInventoryScopes(testEnv)` | Items, containers, inventory, equipped items | Action uses items mod scopes |
+| `registerAnatomyScopes(testEnv)` | Body parts, anatomy interactions | Action uses anatomy mod scopes |
+
+#### Combining Multiple Scope Categories
+
+```javascript
+beforeEach(async () => {
+  testFixture = await ModTestFixture.forAction('intimacy', 'caress_face');
+
+  // Register multiple scope categories
+  ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
+  ScopeResolverHelpers.registerAnatomyScopes(testFixture.testEnv);
+});
+```
+
+#### Creating Custom Scope Resolvers
+
+For scopes not in the standard library, use the factory methods:
+
+```javascript
+import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
+
+beforeEach(async () => {
+  testFixture = await ModTestFixture.forAction('violence', 'tear_out_throat');
+
+  // Register standard scopes first
+  ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
+
+  // Create custom scope resolver using factory
+  const bitingResolver = ScopeResolverHelpers.createComponentLookupResolver(
+    'positioning:actor_being_bitten_by_me',
+    {
+      componentType: 'positioning:biting_neck',
+      sourceField: 'bitten_entity_id',
+      contextSource: 'actor'
+    }
+  );
+
+  // Register the custom resolver
+  ScopeResolverHelpers._registerResolvers(
+    testFixture.testEnv,
+    testFixture.testEnv.entityManager,
+    { 'positioning:actor_being_bitten_by_me': bitingResolver }
+  );
+});
+```
+
+**Available Factory Methods**:
+
+| Factory Method | Pattern | Example Use Case |
+|----------------|---------|------------------|
+| `createComponentLookupResolver()` | "Get entity ID from component field" | "Furniture actor is sitting on" |
+| `createArrayFilterResolver()` | "Filter array of entities" | "Close actors facing each other" |
+| `createLocationMatchResolver()` | "Entities at same location" | "Actors in same room" |
+| `createComponentFilterResolver()` | "Entities with component" | "All sitting actors" |
+
+#### Example: Complete Test Setup with Scopes
+
+```javascript
+import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
+
+describe('violence:grab_neck - Action Discovery', () => {
+  let testFixture;
+
+  beforeEach(async () => {
+    // Create fixture for action
+    testFixture = await ModTestFixture.forAction('violence', 'grab_neck');
+
+    // Register positioning scopes (1 line instead of 40+)
+    ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
+  });
+
+  afterEach(() => {
+    testFixture.cleanup();
+  });
+
+  it('should discover action when actor and target are close and facing', async () => {
+    // Create scenario with standard helper
+    const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
+
+    // Get available actions
+    const availableActions = await testFixture.getAvailableActions(scenario.actor.id);
+
+    // Assert action is discovered
+    expect(availableActions).toContain('violence:grab_neck');
+  });
+});
+```
+
+**Impact**: This approach reduces scope configuration from 40+ lines of manual implementation to 1-5 lines of helper calls.
+
+### Action Discovery Troubleshooting Checklist
+
+If your action is not being discovered (`availableActions` returns empty array `[]`), follow this systematic checklist:
+
+#### ✅ Step 1: Verify Action File Exists
+**Check**: Action definition file is present and correctly named
+
+```bash
+# Check if action file exists
+ls data/mods/{modId}/actions/{actionName}.action.json
+
+# Example
+ls data/mods/violence/actions/tear_out_throat.action.json
+```
+
+**Common Issues**:
+- File missing or in wrong directory
+- Incorrect file extension (should be `.action.json`)
+- Typo in action name
+
+**Fix**: Create or rename action file to match expected path
+
+---
+
+#### ✅ Step 2: Verify Condition File Naming
+**Check**: Condition file uses **hyphens**, not underscores
+
+```bash
+# ❌ WRONG (underscores)
+data/mods/violence/conditions/event-is-action-tear_out_throat.condition.json
+
+# ✅ CORRECT (hyphens)
+data/mods/violence/conditions/event-is-action-tear-out-throat.condition.json
+```
+
+**Rule**: Condition files use hyphens to separate words, even if action name uses underscores.
+
+**Fix**: Rename condition file to use hyphens
+```bash
+mv data/mods/violence/conditions/event-is-action-tear_out_throat.condition.json \
+   data/mods/violence/conditions/event-is-action-tear-out-throat.condition.json
+```
+
+> **Note**: For complete file naming conventions, see the upcoming documentation in TEAOUTTHR-003.
+
+---
+
+#### ✅ Step 3: Verify ModTestFixture Parameters
+**Check**: `forAction()` receives `(modId, actionName)`, not `(modId, fullActionId)`
+
+```javascript
+// ❌ WRONG - Double prefixing
+const testFixture = await ModTestFixture.forAction('violence', 'violence:tear_out_throat');
+// Results in: violence:violence:tear_out_throat
+
+// ✅ CORRECT - Just action name
+const testFixture = await ModTestFixture.forAction('violence', 'tear_out_throat');
+// Results in: violence:tear_out_throat
+```
+
+**Fix**: Remove mod prefix from action name parameter
+
+---
+
+#### ✅ Step 4: Register Dependency Mod Scopes
+**Check**: If action uses positioning/inventory/anatomy scopes, they must be registered
+
+```javascript
+import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
+
+beforeEach(async () => {
+  testFixture = await ModTestFixture.forAction('violence', 'grab_neck');
+
+  // ⚠️ REQUIRED: Register scopes if action uses them
+  ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
+});
+```
+
+**How to Check**: Look at action's `targets` field in action definition:
+- `positioning:*` → Need `registerPositioningScopes()`
+- `items:*` → Need `registerInventoryScopes()`
+- `anatomy:*` → Need `registerAnatomyScopes()`
+
+**Fix**: Add appropriate `register*Scopes()` call to `beforeEach()`
+
+See [Testing Actions with Custom Scopes](#testing-actions-with-custom-scopes) for details.
+
+---
+
+#### ✅ Step 5: Handle Custom Scopes
+**Check**: If action uses custom scopes not in standard library, create resolver
+
+```javascript
+// Check if scope is custom
+const action = require('./data/mods/violence/actions/tear_out_throat.action.json');
+console.log('Targets scope:', action.targets);
+// Example: "positioning:actor_being_bitten_by_me"
+
+// If not in standard library, create custom resolver
+const customResolver = ScopeResolverHelpers.createComponentLookupResolver(
+  'positioning:actor_being_bitten_by_me',
+  {
+    componentType: 'positioning:biting_neck',
+    sourceField: 'bitten_entity_id',
+    contextSource: 'actor'
+  }
+);
+
+ScopeResolverHelpers._registerResolvers(
+  testFixture.testEnv,
+  testFixture.testEnv.entityManager,
+  { 'positioning:actor_being_bitten_by_me': customResolver }
+);
+```
+
+**How to Identify Custom Scopes**:
+- Check `tests/common/mods/scopeResolverHelpers.js` for registered scopes
+- If your scope isn't listed in `registerPositioningScopes()`, it's custom
+
+**Fix**: Use factory methods to create and register custom resolver
+
+---
+
+#### ✅ Step 6: Enable Diagnostics Mode
+**Check**: Enable detailed logging to see what's happening
+
+```javascript
+beforeEach(async () => {
+  testFixture = await ModTestFixture.forAction('violence', 'tear_out_throat');
+  ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
+
+  // Enable diagnostics for detailed logging
+  testFixture.enableDiagnostics();
+});
+
+it('should discover action', async () => {
+  const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
+
+  // This will now log detailed discovery process
+  const availableActions = await testFixture.getAvailableActions(scenario.actor.id);
+
+  expect(availableActions).toContain('violence:tear_out_throat');
+});
+```
+
+**Diagnostics Output Shows**:
+- Which actions were evaluated
+- Which conditions passed/failed
+- Scope resolution results
+- Entity component states
+
+**Fix**: Review diagnostic logs to identify specific failure point
+
+---
+
+#### Quick Checklist Summary
+
+Use this quick checklist for rapid diagnosis:
+
+1. ✅ **Action file exists** → `ls data/mods/{mod}/actions/{action}.action.json`
+2. ✅ **Condition file uses hyphens** → `event-is-action-{action}.condition.json`
+3. ✅ **Correct forAction() params** → `(modId, actionName)` not fullActionId
+4. ✅ **Scopes registered** → Call `ScopeResolverHelpers.register*Scopes()`
+5. ✅ **Custom scopes handled** → Create resolvers with factory methods
+6. ✅ **Diagnostics enabled** → `testFixture.enableDiagnostics()`
+
+#### Still Having Issues?
+
+If action discovery still fails after this checklist:
+
+1. **Verify entity components**: Ensure test entities have required components
+   ```javascript
+   console.log('Actor components:', scenario.actor.components);
+   console.log('Target components:', scenario.target.components);
+   ```
+
+2. **Check action condition logic**: Review condition JSON for logical errors
+   ```bash
+   cat data/mods/{mod}/conditions/event-is-action-{action}.condition.json
+   ```
+
+3. **Validate rule execution**: Ensure rule file exists and is correctly formed
+   ```bash
+   cat data/mods/{mod}/rules/{action}.rule.json
+   ```
+
+4. **Review diagnostic logs**: Look for specific error messages or failed conditions
 
 ## Best Practices
 
@@ -194,6 +671,12 @@ Mix matcher usage with targeted entity inspections; for example, call `fixture.e
 - Do not build entities manually without fixture scenario helpers; missing components lead to resolver failures.
 - Never hard-code action IDs without namespaces—always use the `modId:action_id` format for validation proxy compatibility.
 - Do not reuse fixtures across tests without an explicit `fixture.reset()`.
+- **Use ScopeResolverHelpers for dependency mod scopes** - Don't manually implement scope resolution logic when the helper library already provides it. This reduces boilerplate from 40+ lines to 1-5 lines.
+- **Validate file naming conventions** - Run validation commands before testing to catch naming issues early:
+  ```bash
+  # Check for naming violations
+  npm run validate:mod:{modId}
+  ```
 
 ## Tool Selection Guide
 
@@ -344,3 +827,38 @@ Use this checklist before submitting a mod test update:
 - [ ] Checklist items documented in the test description or comments when deviations are intentional.
 
 By consolidating these practices in a single guide, contributors can author reliable mod tests without rediscovering patterns across individual suites.
+
+## Common Pitfalls
+
+### File Naming Mismatches
+**Symptom**: Test fails with "Could not load condition file" error
+
+**Cause**: Condition file uses underscores instead of hyphens
+
+**Example Error**:
+```
+Could not load condition file for violence:tear_out_throat.
+Tried paths: data/mods/violence/conditions/event-is-action-tear-out-throat.condition.json
+```
+
+**Fix**: Rename condition file to use hyphens
+```bash
+# ❌ Wrong naming
+event-is-action-tear_out_throat.condition.json
+
+# ✅ Correct naming
+event-is-action-tear-out-throat.condition.json
+```
+
+See [Mod File Naming Conventions](#mod-file-naming-conventions) for complete rules.
+
+### Empty availableActions Array
+
+If your test shows `availableActions` as an empty array `[]`, follow the [Action Discovery Troubleshooting Checklist](#action-discovery-troubleshooting-checklist) for systematic diagnosis.
+
+### Scope Not Found Errors
+
+If you see errors about undefined scopes:
+- Import ScopeResolverHelpers and call the appropriate `register*Scopes()` method
+- For custom scopes, use factory methods to create resolvers
+- See [Creating Custom Scope Resolvers](#creating-custom-scope-resolvers) for examples
