@@ -1,6 +1,11 @@
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import { AvailableActionsProvider } from '../../../../src/data/providers/availableActionsProvider.js';
 import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../../../src/constants/core.js';
+import {
+  COMPONENT_ADDED_ID,
+  COMPONENTS_BATCH_ADDED_ID,
+} from '../../../../src/constants/eventIds.js';
+import { ServiceSetup } from '../../../../src/utils/serviceInitializerUtils.js';
 
 const createLogger = (withTable = false) => {
   const logger = {
@@ -35,6 +40,11 @@ describe('AvailableActionsProvider additional branches', () => {
   let actionIndexer;
   let serviceSetup;
   let actor;
+  let subscriptions;
+  let componentChangeHandler;
+  let batchChangeHandler;
+  let eventBus;
+  const turnContext = { game: { turn: 1 } };
 
   beforeEach(() => {
     serviceSetup = {
@@ -42,20 +52,49 @@ describe('AvailableActionsProvider additional branches', () => {
     };
     logger = createLogger(true);
     entityManager = { getEntityInstance: jest.fn() };
+    entityManager.getEntityInstance.mockResolvedValue(null);
     actionDiscoveryService = { getValidActions: jest.fn() };
+    actionDiscoveryService.getValidActions.mockResolvedValue({
+      actions: [
+        { id: 'core:wait', command: 'wait', params: {}, description: 'Wait' },
+      ],
+      errors: [],
+      trace: null,
+    });
     actionIndexer = { index: jest.fn() };
+    actionIndexer.index.mockReturnValue([
+      {
+        index: 1,
+        actionId: 'core:wait',
+        commandString: 'wait',
+        params: {},
+        description: 'Wait',
+      },
+    ]);
     actor = new MockEntity('actor1', {});
+    subscriptions = [];
+    eventBus = {
+      subscribe: jest.fn((eventId, handler) => {
+        const token = { eventId, handler };
+        subscriptions.push(token);
+        return token;
+      }),
+      unsubscribe: jest.fn(),
+    };
     provider = new AvailableActionsProvider({
       actionDiscoveryService,
       actionIndexingService: actionIndexer,
       entityManager,
-      eventBus: {
-        subscribe: jest.fn().mockReturnValue({}),
-        unsubscribe: jest.fn(),
-      },
+      eventBus,
       logger,
       serviceSetup,
     });
+    componentChangeHandler = subscriptions.find(
+      (sub) => sub.eventId === COMPONENT_ADDED_ID
+    )?.handler;
+    batchChangeHandler = subscriptions.find(
+      (sub) => sub.eventId === COMPONENTS_BATCH_ADDED_ID
+    )?.handler;
   });
 
   it('handles missing position component gracefully', async () => {
@@ -113,5 +152,157 @@ describe('AvailableActionsProvider additional branches', () => {
     actionIndexer.index.mockReturnValue(actions);
     await provider.get(actor, { game: {} }, logger);
     expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it('subscribes to component change events and cleans up on destroy', () => {
+    expect(eventBus.subscribe).toHaveBeenCalledTimes(2);
+    expect(subscriptions.map((sub) => sub.eventId)).toEqual([
+      COMPONENT_ADDED_ID,
+      COMPONENTS_BATCH_ADDED_ID,
+    ]);
+
+    provider.destroy();
+
+    expect(eventBus.unsubscribe).toHaveBeenCalledTimes(2);
+    expect(eventBus.unsubscribe).toHaveBeenCalledWith(subscriptions[0]);
+    expect(eventBus.unsubscribe).toHaveBeenCalledWith(subscriptions[1]);
+  });
+
+  it('falls back to the default ServiceSetup when none is provided', () => {
+    const setupSpy = jest
+      .spyOn(ServiceSetup.prototype, 'setupService')
+      .mockReturnValue(logger);
+
+    const localEventBus = {
+      subscribe: jest.fn().mockReturnValue({}),
+      unsubscribe: jest.fn(),
+    };
+
+    let defaultProvider;
+    try {
+      defaultProvider = new AvailableActionsProvider({
+        actionDiscoveryService,
+        actionIndexingService: actionIndexer,
+        entityManager,
+        eventBus: localEventBus,
+        logger,
+      });
+
+      expect(setupSpy).toHaveBeenCalledWith(
+        'AvailableActionsProvider',
+        logger,
+        expect.objectContaining({
+          actionDiscoveryService: expect.any(Object),
+          actionIndexer: expect.any(Object),
+          entityManager: expect.any(Object),
+        })
+      );
+    } finally {
+      defaultProvider?.destroy();
+      setupSpy.mockRestore();
+    }
+  });
+
+  it('keeps cache when component event lacks a type', async () => {
+    expect(componentChangeHandler).toBeDefined();
+    await provider.get(actor, turnContext, logger);
+    actionDiscoveryService.getValidActions.mockClear();
+    actionIndexer.index.mockClear();
+
+    componentChangeHandler({ payload: {} });
+
+    await provider.get(actor, turnContext, logger);
+
+    expect(actionDiscoveryService.getValidActions).not.toHaveBeenCalled();
+    expect(actionIndexer.index).not.toHaveBeenCalled();
+  });
+
+  it('invalidates cache when component event affects availability', async () => {
+    expect(componentChangeHandler).toBeDefined();
+    await provider.get(actor, turnContext, logger);
+    actionDiscoveryService.getValidActions.mockClear();
+    actionIndexer.index.mockClear();
+
+    componentChangeHandler({
+      payload: { componentTypeId: 'core:position' },
+    });
+
+    await provider.get(actor, turnContext, logger);
+
+    expect(actionDiscoveryService.getValidActions).toHaveBeenCalledTimes(1);
+    expect(actionIndexer.index).toHaveBeenCalledTimes(1);
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('core:position component change')
+    );
+  });
+
+  it('does not invalidate cache for unrelated component events', async () => {
+    expect(componentChangeHandler).toBeDefined();
+    await provider.get(actor, turnContext, logger);
+    actionDiscoveryService.getValidActions.mockClear();
+    actionIndexer.index.mockClear();
+
+    componentChangeHandler({
+      payload: { componentTypeId: 'npc:emotion' },
+    });
+
+    await provider.get(actor, turnContext, logger);
+
+    expect(actionDiscoveryService.getValidActions).not.toHaveBeenCalled();
+    expect(actionIndexer.index).not.toHaveBeenCalled();
+  });
+
+  it('ignores batch events without component lists', async () => {
+    expect(batchChangeHandler).toBeDefined();
+    await provider.get(actor, turnContext, logger);
+    actionDiscoveryService.getValidActions.mockClear();
+    actionIndexer.index.mockClear();
+
+    batchChangeHandler({ payload: null });
+    batchChangeHandler({ payload: { componentTypeIds: 'not-an-array' } });
+
+    await provider.get(actor, turnContext, logger);
+
+    expect(actionDiscoveryService.getValidActions).not.toHaveBeenCalled();
+    expect(actionIndexer.index).not.toHaveBeenCalled();
+  });
+
+  it('invalidates cache when batch event contains affecting component', async () => {
+    expect(batchChangeHandler).toBeDefined();
+    await provider.get(actor, turnContext, logger);
+    actionDiscoveryService.getValidActions.mockClear();
+    actionIndexer.index.mockClear();
+
+    batchChangeHandler({
+      payload: {
+        componentTypeIds: ['npc:emotion', 'items:inventory'],
+      },
+    });
+
+    await provider.get(actor, turnContext, logger);
+
+    expect(actionDiscoveryService.getValidActions).toHaveBeenCalledTimes(1);
+    expect(actionIndexer.index).toHaveBeenCalledTimes(1);
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('batch component changes')
+    );
+  });
+
+  it('retains cache when batch component change does not affect availability', async () => {
+    expect(batchChangeHandler).toBeDefined();
+    await provider.get(actor, turnContext, logger);
+    actionDiscoveryService.getValidActions.mockClear();
+    actionIndexer.index.mockClear();
+
+    batchChangeHandler({
+      payload: {
+        componentTypeIds: ['npc:emotion', 'world:time'],
+      },
+    });
+
+    await provider.get(actor, turnContext, logger);
+
+    expect(actionDiscoveryService.getValidActions).not.toHaveBeenCalled();
+    expect(actionIndexer.index).not.toHaveBeenCalled();
   });
 });
