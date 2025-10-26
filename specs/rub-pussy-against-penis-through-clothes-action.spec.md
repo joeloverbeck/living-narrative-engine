@@ -866,7 +866,7 @@ No new operation handlers needed! Existing handlers cover all requirements:
 ### Documentation References
 
 - `docs/testing/mod-testing-guide.md` - Test Module Pattern documentation
-- `docs/testing/action-discovery-testing-toolkit.md#domain-matchers` - Domain-specific assertion helpers
+- `docs/testing/mod-testing-guide.md#action-discovery-harness#domain-matchers` - Domain-specific assertion helpers
 - `specs/straddling-waist-system.spec.md` - Straddling system architecture
 - `CLAUDE.md` - Project conventions and patterns
 

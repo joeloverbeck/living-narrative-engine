@@ -288,14 +288,9 @@ When working with mod content in `data/mods/`, follow the established testing pa
   - Scenario helpers (seating, inventory, containers)
   - Domain matchers from `tests/common/mods/domainMatchers.js`
   - Action validation proxies for schema enforcement
-
-- **Discovery Testing**: [`docs/testing/action-discovery-testing-toolkit.md`](../docs/testing/action-discovery-testing-toolkit.md)
   - Action Discovery Bed for resolver introspection
   - Diagnostics workflows and troubleshooting
-
-- **Migration Guide**: [`docs/testing/MODTESTROB-009-migration-guide.md`](../docs/testing/MODTESTROB-009-migration-guide.md)
-  - Pattern replacement reference for legacy tests
-  - Modernization checklists
+  - Migration from legacy patterns guide
 
 **Key practices for mod testing:**
 

@@ -28,6 +28,7 @@ import {
   PersistenceError,
   PersistenceErrorCodes,
 } from '../../../src/persistence/persistenceErrors.js';
+import { extractSaveName } from '../../../src/utils/savePathUtils.js';
 
 /**
  * Helper to instantiate PersistenceCoordinator with mocks
@@ -56,7 +57,13 @@ function createCoordinator(overrides = {}) {
     providedSessionManager !== undefined
       ? providedSessionManager
       : {
-          prepareForLoadGameSession: jest.fn(),
+          prepareForLoadGameSession: jest.fn(async (saveIdentifier) => {
+            const displayName = extractSaveName(saveIdentifier);
+            await dispatcher.dispatch(ENGINE_OPERATION_IN_PROGRESS_UI, {
+              titleMessage: `Loading ${displayName}...`,
+              inputDisabledMessage: `Loading game from ${displayName}...`,
+            });
+          }),
           finalizeLoadSuccess: jest.fn(),
         };
   const state = providedState ?? new EngineState();
@@ -332,7 +339,7 @@ describe('PersistenceCoordinator', () => {
       data: null,
     });
     sessionManager.prepareForLoadGameSession.mockImplementation(async (id) => {
-      const shortName = id.split(/[/\\]/).pop() || id;
+      const shortName = extractSaveName(id);
       await dispatcher.dispatch(ENGINE_OPERATION_IN_PROGRESS_UI, {
         titleMessage: `Loading ${shortName}...`,
         inputDisabledMessage: `Loading game from ${shortName}...`,
@@ -613,7 +620,7 @@ describe('PersistenceCoordinator', () => {
 
     persistenceService.loadAndRestoreGame.mockResolvedValue(undefined);
     sessionManager.prepareForLoadGameSession.mockImplementation(async (id) => {
-      const shortName = id.split(/[/\\]/).pop() || id;
+      const shortName = extractSaveName(id);
       await dispatcher.dispatch(ENGINE_OPERATION_IN_PROGRESS_UI, {
         titleMessage: `Loading ${shortName}...`,
         inputDisabledMessage: `Loading game from ${shortName}...`,

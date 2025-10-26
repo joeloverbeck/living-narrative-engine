@@ -1,0 +1,60 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "positioning_closeness_auto_move",
+  "comment": "When an entity in a closeness circle moves, automatically move all partners to maintain the circle",
+  "event_type": "core:entity_moved",
+  "condition": {
+    "condition_ref": "core:actor-is-not-null"
+  },
+  "actions": [
+    {
+      "type": "IF",
+      "comment": "Check if the moved entity is part of a closeness circle",
+      "parameters": {
+        "condition": {
+          "!": {
+            "missing": "actor.components.positioning:closeness"
+          }
+        },
+        "then_actions": [
+          {
+            "type": "QUERY_COMPONENT",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "positioning:closeness",
+              "result_variable": "closenessComponent"
+            }
+          },
+          {
+            "type": "IF",
+            "parameters": {
+              "condition": {
+                "and": [
+                  { "var": "context.closenessComponent" },
+                  {
+                    ">": [
+                      {
+                        "var": "context.closenessComponent.partners.length"
+                      },
+                      0
+                    ]
+                  }
+                ]
+              },
+              "then_actions": [
+                {
+                  "type": "AUTO_MOVE_CLOSENESS_PARTNERS",
+                  "parameters": {
+                    "actor_id": "{event.payload.entityId}",
+                    "destination_id": "{event.payload.currentLocationId}",
+                    "previous_location_id": "{event.payload.previousLocationId}"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

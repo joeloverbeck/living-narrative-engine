@@ -419,7 +419,7 @@ describe('Physical-Control Mod: Force to Knees Action Integration', () => {
 
 Follow the guidelines in:
 - **`docs/testing/mod-testing-guide.md`**: For Test Module Pattern and configuration
-- **`docs/testing/action-discovery-testing-toolkit.md#domain-matchers`**: For using domain-specific Jest matchers
+- **`docs/testing/mod-testing-guide.md#action-discovery-harness#domain-matchers`**: For using domain-specific Jest matchers
 
 ### Additional Test Coverage Recommendations
 
@@ -575,7 +575,7 @@ Potential future additions to consider:
   - See `tests/integration/mods/physical-control/push_off_action*.test.js`
 - **Documentation**:
   - `docs/testing/mod-testing-guide.md`
-  - `docs/testing/action-discovery-testing-toolkit.md#domain-matchers`
+  - `docs/testing/mod-testing-guide.md#action-discovery-harness#domain-matchers`
   - `specs/push-off-action.spec.md` (reference for physical-control mod spec structure)
 
 ---

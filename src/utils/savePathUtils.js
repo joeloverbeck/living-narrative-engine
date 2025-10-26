@@ -26,7 +26,7 @@ export const FULL_MANUAL_SAVE_DIRECTORY_PATH = `${BASE_SAVE_DIRECTORY}/${MANUAL_
  *
  * @type {RegExp}
  */
-export const MANUAL_SAVE_PATTERN = /^manual_save_.*\.sav$/;
+export const MANUAL_SAVE_PATTERN = /^manual_save_.*\.sav$/i;
 
 /**
  * Builds a sanitized manual save filename.
@@ -46,7 +46,7 @@ export function buildManualFileName(saveName) {
  * @returns {string} Extracted save name.
  */
 export function extractSaveName(fileName) {
-  return fileName.replace(/^manual_save_/, '').replace(/\.sav$/, '');
+  return fileName.replace(/^manual_save_/i, '').replace(/\.sav$/i, '');
 }
 
 /**

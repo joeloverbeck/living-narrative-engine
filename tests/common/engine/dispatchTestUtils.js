@@ -24,6 +24,7 @@ import {
   ENGINE_STOPPED_MESSAGE,
   SAVE_OPERATION_FINISHED_MESSAGE,
 } from '../constants.js';
+import { extractSaveName } from '../../../src/utils/savePathUtils.js';
 
 /**
  * Asserts that dispatch calls match the provided event sequence.
@@ -139,12 +140,13 @@ export function buildStartDispatches(worldName) {
  * @returns {Array<[string, any]>} Dispatch sequence.
  */
 export function buildLoadSuccessDispatches(saveId, worldName) {
+  const displayName = extractSaveName(saveId);
   return [
     [
       ENGINE_OPERATION_IN_PROGRESS_UI,
       {
-        titleMessage: `Loading ${saveId}...`,
-        inputDisabledMessage: `Loading game from ${saveId}...`,
+        titleMessage: `Loading ${displayName}...`,
+        inputDisabledMessage: `Loading game from ${displayName}...`,
       },
     ],
     [
@@ -162,12 +164,13 @@ export function buildLoadSuccessDispatches(saveId, worldName) {
  * @returns {Array<[string, any]>} Dispatch sequence.
  */
 export function buildLoadFailureDispatches(saveId, errorMsg) {
+  const displayName = extractSaveName(saveId);
   return [
     [
       ENGINE_OPERATION_IN_PROGRESS_UI,
       {
-        titleMessage: `Loading ${saveId}...`,
-        inputDisabledMessage: `Loading game from ${saveId}...`,
+        titleMessage: `Loading ${displayName}...`,
+        inputDisabledMessage: `Loading game from ${displayName}...`,
       },
     ],
     [

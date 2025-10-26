@@ -665,11 +665,9 @@ Replace `<modId>` with your desired identifier. The script creates
 
 Comprehensive testing guides are available for mod action testing:
 
-- **[Mod Testing Guide](docs/testing/mod-testing-guide.md)** - Complete reference for fixtures, scenarios, matchers, and diagnostics
-- **[Action Discovery Testing Toolkit](docs/testing/action-discovery-testing-toolkit.md)** - Migration strategies and troubleshooting
-- **[Migration Guide (MODTESTROB-009)](docs/testing/MODTESTROB-009-migration-guide.md)** - Practical playbook for modernizing legacy tests
+- **[Mod Testing Guide](docs/testing/mod-testing-guide.md)** - Complete unified reference for fixtures, scenarios, matchers, diagnostics, and migration from legacy patterns
 
-These guides cover:
+This guide covers:
 
 - `ModTestFixture` API for action execution harnesses
 - Scenario builders for seating, inventory, and container setups
