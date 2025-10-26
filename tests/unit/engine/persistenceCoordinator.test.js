@@ -379,6 +379,27 @@ describe('PersistenceCoordinator', () => {
     );
   });
 
+  it('triggerManualSave avoids duplicating failure prefix in dispatched message', async () => {
+    const { coordinator, dispatcher, persistenceService } = createCoordinator();
+    const prefixedMessage = 'Failed to save game: Not enough disk space.';
+    persistenceService.saveGame.mockResolvedValue({
+      success: false,
+      error: prefixedMessage,
+    });
+
+    await coordinator.triggerManualSave(DEFAULT_SAVE_NAME);
+
+    const failureDispatch = dispatcher.dispatch.mock.calls.find(
+      ([eventId]) => eventId === ENGINE_OPERATION_FAILED_UI
+    );
+
+    expect(failureDispatch).toBeDefined();
+    expect(failureDispatch[1]).toEqual({
+      errorMessage: prefixedMessage,
+      errorTitle: 'Save Failed',
+    });
+  });
+
   it('triggerManualSave handles save failure results', async () => {
     const { coordinator, dispatcher, persistenceService } = createCoordinator();
     const errorMessage = 'Disk full';
