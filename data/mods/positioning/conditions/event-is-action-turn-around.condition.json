@@ -1,8 +1,0 @@
-{
-  "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "positioning:event-is-action-turn-around",
-  "description": "Checks if the triggering event is for the 'positioning:turn_around' action.",
-  "logic": {
-    "==": [{ "var": "event.payload.actionId" }, "positioning:turn_around"]
-  }
-}

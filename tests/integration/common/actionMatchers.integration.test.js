@@ -8,7 +8,7 @@ import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
 import { ModEntityScenarios } from '../../common/mods/ModEntityBuilder.js';
 import '../../common/actionMatchers.js'; // Auto-extends Jest
 import placeHandsOnShouldersAction from '../../../data/mods/affection/actions/place_hands_on_shoulders.action.json';
-import turnAroundAction from '../../../data/mods/positioning/actions/turn_around.action.json';
+import turnAroundAction from '../../../data/mods/physical-control/actions/turn_around.action.json';
 
 describe('actionMatchers integration - real action discovery', () => {
   let testFixture;
@@ -251,7 +251,7 @@ describe('actionMatchers integration - real action discovery', () => {
 
       // Should list actual actions (at least one should be present)
       const hasActionList =
-        errorMessage.includes('positioning:turn_around') ||
+        errorMessage.includes('physical-control:turn_around') ||
         errorMessage.includes('affection:place_hands_on_shoulders');
       expect(hasActionList).toBe(true);
     });

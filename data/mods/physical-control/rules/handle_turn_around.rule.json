@@ -1,9 +1,9 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_turn_around",
-  "comment": "Handles the 'positioning:turn_around' action. Toggles the facing_away state between actors in closeness.",
+  "comment": "Handles the 'physical-control:turn_around' action. Toggles the facing_away state between actors in closeness.",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "positioning:event-is-action-turn-around" },
+  "condition": { "condition_ref": "physical-control:event-is-action-turn-around" },
   "actions": [
     {
       "type": "GET_NAME",
@@ -151,7 +151,7 @@
           {
             "type": "DISPATCH_EVENT",
             "parameters": {
-              "eventType": "positioning:actor_turned_around",
+              "eventType": "physical-control:actor_turned_around",
               "payload": {
                 "actor": "{event.payload.targetId}",
                 "turned_by": "{event.payload.actorId}"

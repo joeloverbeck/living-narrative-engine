@@ -19,7 +19,7 @@ import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluatio
 import JsonLogicCustomOperators from '../../../../src/logic/jsonLogicCustomOperators.js';
 
 // Import the action definition directly to test its structure
-import turnAroundAction from '../../../../data/mods/positioning/actions/turn_around.action.json';
+import turnAroundAction from '../../../../data/mods/physical-control/actions/turn_around.action.json';
 
 // Import the mouth and movement availability conditions
 import mouthAvailableCondition from '../../../../data/mods/core/conditions/actor-mouth-available.condition.json';
@@ -468,7 +468,7 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
       // The fact that we can import and use the action definition
       // without errors proves there are no dependency violations
       expect(turnAroundAction).toBeDefined();
-      expect(turnAroundAction.id).toBe('positioning:turn_around');
+      expect(turnAroundAction.id).toBe('physical-control:turn_around');
 
       // Prerequisites should reference only core or movement conditions (no intimacy)
       turnAroundAction.prerequisites.forEach((prereq) => {
@@ -481,7 +481,7 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
     it('should have valid JSON structure', () => {
       // Verify the action has all required fields
       expect(turnAroundAction.$schema).toBeDefined();
-      expect(turnAroundAction.id).toBe('positioning:turn_around');
+      expect(turnAroundAction.id).toBe('physical-control:turn_around');
       expect(turnAroundAction.name).toBeDefined();
       expect(turnAroundAction.description).toBeDefined();
       expect(turnAroundAction.targets).toBeDefined();

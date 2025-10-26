@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "positioning:turn_around",
+  "id": "physical-control:turn_around",
   "name": "Turn Around",
   "description": "Turn the target around or have them face you again.",
   "targets": {
@@ -32,9 +32,9 @@
     }
   ],
   "visual": {
-    "backgroundColor": "#bf360c",
-    "textColor": "#ffffff",
-    "hoverBackgroundColor": "#8d2c08",
-    "hoverTextColor": "#ffffff"
+    "backgroundColor": "#2f2f2f",
+    "textColor": "#f8f9fa",
+    "hoverBackgroundColor": "#3f3d56",
+    "hoverTextColor": "#f8f9ff"
   }
 }

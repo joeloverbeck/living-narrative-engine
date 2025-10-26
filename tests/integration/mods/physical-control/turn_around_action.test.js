@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the positioning:turn_around action.
+ * @file Integration tests for the physical-control:turn_around action.
  * @description Tests basic action discovery and behavior - verifies the action appears when
  * the actor has the required components and correctly toggles the facing_away state.
  */
@@ -22,7 +22,7 @@ import {
 } from '../../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../../common/mocks/mockTargetContextBuilder.js';
 import { createMultiTargetResolutionStage } from '../../../common/actions/multiTargetStageTestUtilities.js';
-import turnAroundAction from '../../../../data/mods/positioning/actions/turn_around.action.json';
+import turnAroundAction from '../../../../data/mods/physical-control/actions/turn_around.action.json';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
 import {
   createTargetResolutionServiceWithMocks,
@@ -245,7 +245,7 @@ describe('Turn Around Action Discovery', () => {
       const actions = result.actions;
 
       const turnAroundAction = actions.find(
-        (a) => a.id === 'positioning:turn_around'
+        (a) => a.id === 'physical-control:turn_around'
       );
       expect(turnAroundAction).toBeUndefined();
     });
@@ -343,7 +343,7 @@ describe('Turn Around Action Discovery', () => {
       const actions = result.actions;
 
       const turnAroundAction = actions.find(
-        (a) => a.id === 'positioning:turn_around'
+        (a) => a.id === 'physical-control:turn_around'
       );
       expect(turnAroundAction).toBeDefined();
       expect(turnAroundAction.command).toBe('turn bob-entity around');
@@ -369,7 +369,7 @@ describe('Turn Around Action Discovery', () => {
       const actions = result.actions;
 
       const turnAroundAction = actions.find(
-        (a) => a.id === 'positioning:turn_around'
+        (a) => a.id === 'physical-control:turn_around'
       );
       expect(turnAroundAction).toBeUndefined();
     });
@@ -478,7 +478,7 @@ describe('Turn Around Action Discovery', () => {
       const actions = result.actions;
 
       const turnAroundActions = actions.filter(
-        (a) => a.id === 'positioning:turn_around'
+        (a) => a.id === 'physical-control:turn_around'
       );
 
       // Should have actions for all partners in closeness
@@ -575,7 +575,7 @@ describe('Turn Around Action Discovery', () => {
       const actions = result.actions;
 
       const turnAroundActions = actions.filter(
-        (a) => a.id === 'positioning:turn_around'
+        (a) => a.id === 'physical-control:turn_around'
       );
 
       // Should include Bob as a target since Alice is behind Bob

@@ -224,7 +224,7 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
         path.join(positioningActionPath, 'turn_around.action.json'),
         JSON.stringify(
           {
-            id: 'positioning:turn_around',
+            id: 'physical-control:turn_around',
             forbidden_components: {
               actor: ['kissing:kissing'], // Violation: intimacy not declared as dependency
             },

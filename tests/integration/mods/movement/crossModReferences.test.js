@@ -8,7 +8,7 @@ describe('Cross-Mod References', () => {
       // Load positioning action that references movement condition
       const turnAroundPath = path.resolve(
         process.cwd(),
-        'data/mods/positioning/actions/turn_around.action.json',
+        'data/mods/physical-control/actions/turn_around.action.json',
       );
       const turnAroundAction = JSON.parse(fs.readFileSync(turnAroundPath, 'utf8'));
 

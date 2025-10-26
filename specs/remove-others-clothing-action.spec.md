@@ -693,5 +693,5 @@ describe('clothing:remove_others_clothing rule execution', () => {
 
 - `clothing:remove_clothing` - Self-removal action (single target)
 - `intimacy:adjust_clothing` - Uses similar `close_actors` scope pattern
-- `positioning:turn_around` - Example of action with no target
+- `physical-control:turn_around` - Example of action with no target
 - Multi-target actions in `intimacy` mod - Pattern reference for primary/secondary structure

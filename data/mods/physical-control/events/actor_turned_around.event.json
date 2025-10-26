@@ -1,10 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "id": "positioning:actor_turned_around",
+  "id": "physical-control:actor_turned_around",
   "description": "Dispatched when an actor turns another actor around so they are facing away.",
   "payloadSchema": {
-    "title": "Positioning: Actor Turned Around Payload",
-    "description": "Payload for the positioning:actor_turned_around event.",
+    "title": "Physical Control: Actor Turned Around Payload",
+    "description": "Payload for the physical-control:actor_turned_around event.",
     "type": "object",
     "properties": {
       "actor": {

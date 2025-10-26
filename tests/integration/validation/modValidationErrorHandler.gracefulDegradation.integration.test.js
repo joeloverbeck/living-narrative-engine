@@ -149,8 +149,8 @@ describe('Mod validation error handling with graceful degradation (integration)'
 
     const cache = new Map();
     cache.set(
-      '/mods/positioning/actions/turn_around.action.json',
-      { id: 'positioning:turn_around', cached: true }
+      '/mods/physical-control/actions/turn_around.action.json',
+      { id: 'physical-control:turn_around', cached: true }
     );
 
     const defaults = {
@@ -171,17 +171,17 @@ describe('Mod validation error handling with graceful degradation (integration)'
   it('reuses cached data when access errors occur and records emitted events', () => {
     const error = new ModAccessError(
       'ENOENT: missing file',
-      '/mods/positioning/actions/turn_around.action.json',
+      '/mods/physical-control/actions/turn_around.action.json',
       { hasDefault: true }
     );
 
     const context = {
-      filePath: '/mods/positioning/actions/turn_around.action.json',
+      filePath: '/mods/physical-control/actions/turn_around.action.json',
       modId: 'positioning',
       type: 'mod',
       hasDefault: true,
       hasCache: true,
-      defaultValue: { id: 'positioning:turn_around', placeholder: true },
+      defaultValue: { id: 'physical-control:turn_around', placeholder: true },
     };
 
     const { recovery, degradation: degradationResult } = pipeline.processExtraction(
@@ -194,7 +194,7 @@ describe('Mod validation error handling with graceful degradation (integration)'
     expect(recovery.partialResults).toEqual(context.defaultValue);
     expect(degradationResult.strategy).toBe(DegradationStrategy.USE_CACHED);
     expect(degradationResult.data).toEqual({
-      id: 'positioning:turn_around',
+      id: 'physical-control:turn_around',
       cached: true,
     });
 

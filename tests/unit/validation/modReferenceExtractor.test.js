@@ -399,7 +399,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       const testPath = '/test/mods/positioning';
       const turnAroundContent = {
         $schema: 'schema://living-narrative-engine/action.schema.json',
-        id: 'positioning:turn_around',
+        id: 'physical-control:turn_around',
         name: 'Turn Around',
         targets: {
           primary: {
@@ -1026,7 +1026,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       const testPath = '/test/mods/positioning';
       const turnAroundContent = {
         $schema: 'schema://living-narrative-engine/action.schema.json',
-        id: 'positioning:turn_around',
+        id: 'physical-control:turn_around',
         name: 'Turn Around',
         targets: {
           primary: {

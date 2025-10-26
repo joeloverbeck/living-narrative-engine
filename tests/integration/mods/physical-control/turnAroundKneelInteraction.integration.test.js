@@ -22,7 +22,7 @@ import {
 import { createMockTargetContextBuilder } from '../../../common/mocks/mockTargetContextBuilder.js';
 import { createMultiTargetResolutionStage } from '../../../common/actions/multiTargetStageTestUtilities.js';
 import { ScopeContextBuilder } from '../../../../src/actions/pipeline/services/implementations/ScopeContextBuilder.js';
-import turnAroundAction from '../../../../data/mods/positioning/actions/turn_around.action.json';
+import turnAroundAction from '../../../../data/mods/physical-control/actions/turn_around.action.json';
 import kneelBeforeAction from '../../../../data/mods/positioning/actions/kneel_before.action.json';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
 import {
@@ -156,7 +156,7 @@ describe('Turn around and kneel before interaction', () => {
         // Handle turn_around action
         if (
           event.type === ATTEMPT_ACTION_ID &&
-          event.payload.actionId === 'positioning:turn_around'
+          event.payload.actionId === 'physical-control:turn_around'
         ) {
           const target = entityManager.getEntityInstance(
             event.payload.targetId
@@ -414,7 +414,7 @@ describe('Turn around and kneel before interaction', () => {
     await eventBus.dispatch({
       type: ATTEMPT_ACTION_ID,
       payload: {
-        actionId: 'positioning:turn_around',
+        actionId: 'physical-control:turn_around',
         actorId: 'test:actor1',
         targetId: 'test:actor2',
       },
@@ -449,7 +449,7 @@ describe('Turn around and kneel before interaction', () => {
     await eventBus.dispatch({
       type: ATTEMPT_ACTION_ID,
       payload: {
-        actionId: 'positioning:turn_around',
+        actionId: 'physical-control:turn_around',
         actorId: 'test:actor1',
         targetId: 'test:actor2',
       },
@@ -465,7 +465,7 @@ describe('Turn around and kneel before interaction', () => {
     await eventBus.dispatch({
       type: ATTEMPT_ACTION_ID,
       payload: {
-        actionId: 'positioning:turn_around',
+        actionId: 'physical-control:turn_around',
         actorId: 'test:actor1',
         targetId: 'test:actor2',
       },

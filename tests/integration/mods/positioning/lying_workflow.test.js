@@ -372,7 +372,7 @@ describe('Complete Lying Workflow', () => {
         .withComponent('positioning:allows_lying_on', {})
         .build();
 
-      const turnFixture = await ModTestFixture.forAction('positioning', 'turn_around');
+      const turnFixture = await ModTestFixture.forAction('physical-control', 'turn_around');
       turnFixture.reset([room, actor, bed]);
 
       // Act: Try to turn around (should throw validation error due to missing closeness component)
