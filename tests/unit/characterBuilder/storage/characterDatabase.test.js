@@ -2661,6 +2661,21 @@ describe('CharacterDatabase', () => {
           'Failed to dump concepts: Unknown error'
         );
       });
+
+      it('should handle transaction failure before dump starts', async () => {
+        mockDbInstance.transaction.mockImplementationOnce(() => {
+          throw new Error('Transaction failure');
+        });
+
+        await expect(database.debugDumpAllCharacterConcepts()).rejects.toThrow(
+          'Transaction failure'
+        );
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'DEBUG DB: Exception dumping concepts:',
+          expect.any(Error)
+        );
+      });
     });
   });
 
@@ -2771,6 +2786,25 @@ describe('CharacterDatabase', () => {
         );
         expect(mockLogger.error).toHaveBeenCalled();
       });
+
+      it('should reject when transaction creation fails', async () => {
+        database.close();
+
+        await expect(
+          database.saveCoreMotivation({
+            ...mockMotivation,
+            id: 'existing',
+            createdAt: '2024-01-01T00:00:00Z',
+          })
+        ).rejects.toThrow(
+          'CharacterDatabase: Database not initialized. Call initialize() first.'
+        );
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'Failed to save core motivation:',
+          expect.any(Error)
+        );
+      });
     });
 
     describe('saveCoreMotivations', () => {
@@ -2849,6 +2883,42 @@ describe('CharacterDatabase', () => {
         expect(mockLogger.warn).toHaveBeenCalled();
         expect(mockLogger.info).toHaveBeenCalledWith(
           'Saved 1 core motivations'
+        );
+      });
+
+      it('should resolve after processing when all motivations fail', async () => {
+        const putRequest1 = { onsuccess: null, onerror: null, error: { message: 'fail-1' } };
+        const putRequest2 = { onsuccess: null, onerror: null, error: { message: 'fail-2' } };
+        mockObjectStore.put
+          .mockReturnValueOnce(putRequest1)
+          .mockReturnValueOnce(putRequest2);
+
+        const savePromise = database.saveCoreMotivations(mockMotivations);
+
+        setTimeout(() => {
+          putRequest1.onerror();
+          putRequest2.onerror();
+        }, 0);
+
+        const result = await savePromise;
+
+        expect(result).toEqual([]);
+        expect(mockLogger.warn).toHaveBeenCalledTimes(2);
+        expect(mockLogger.info).toHaveBeenCalledWith('Saved 0 core motivations');
+      });
+
+      it('should reject when transaction creation fails', async () => {
+        database.close();
+
+        await expect(
+          database.saveCoreMotivations([{ ...mockMotivations[0] }])
+        ).rejects.toThrow(
+          'CharacterDatabase: Database not initialized. Call initialize() first.'
+        );
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'Failed to save core motivations:',
+          expect.any(Error)
         );
       });
     });
@@ -2933,15 +3003,40 @@ describe('CharacterDatabase', () => {
         );
         expect(mockLogger.error).toHaveBeenCalled();
       });
+
+      it('should reject when transaction creation fails', async () => {
+        database.close();
+
+        await expect(
+          database.getCoreMotivationsByDirectionId('direction-1')
+        ).rejects.toThrow(
+          'CharacterDatabase: Database not initialized. Call initialize() first.'
+        );
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'Failed to get core motivations by direction:',
+          expect.any(Error)
+        );
+      });
     });
 
     describe('getCoreMotivationsByConceptId', () => {
-      it('should retrieve motivations for a concept', async () => {
+      it('should retrieve motivations for a concept sorted by createdAt desc', async () => {
         const mockMotivations = [
           {
             id: 'motivation-1',
             conceptId: 'concept-1',
             createdAt: '2024-01-01T00:00:00Z',
+          },
+          {
+            id: 'motivation-2',
+            conceptId: 'concept-1',
+            createdAt: '2024-01-03T00:00:00Z',
+          },
+          {
+            id: 'motivation-3',
+            conceptId: 'concept-1',
+            createdAt: '2024-01-02T00:00:00Z',
           },
         ];
         const getAllRequest = {
@@ -2957,11 +3052,16 @@ describe('CharacterDatabase', () => {
         setTimeout(() => getAllRequest.onsuccess(), 0);
         const result = await retrievePromise;
 
-        expect(result).toHaveLength(1);
+        expect(result).toHaveLength(3);
+        expect(result.map((item) => item.id)).toEqual([
+          'motivation-2',
+          'motivation-3',
+          'motivation-1',
+        ]);
         expect(mockObjectStore.index).toHaveBeenCalledWith('conceptId');
         expect(mockIndex.getAll).toHaveBeenCalledWith('concept-1');
         expect(mockLogger.info).toHaveBeenCalledWith(
-          'Retrieved 1 motivations for concept concept-1'
+          'Retrieved 3 motivations for concept concept-1'
         );
       });
 
@@ -2969,6 +3069,43 @@ describe('CharacterDatabase', () => {
         await expect(
           database.getCoreMotivationsByConceptId('')
         ).rejects.toThrow('getCoreMotivationsByConceptId: Invalid conceptId');
+      });
+
+      it('should handle IndexedDB getAll error for concept retrieval', async () => {
+        const getAllRequest = {
+          onsuccess: null,
+          onerror: null,
+          error: { message: 'Concept query error' },
+        };
+        mockIndex.getAll.mockReturnValue(getAllRequest);
+
+        const retrievePromise =
+          database.getCoreMotivationsByConceptId('concept-1');
+
+        setTimeout(() => getAllRequest.onerror(), 0);
+
+        await expect(retrievePromise).rejects.toThrow(
+          'Failed to get core motivations: Concept query error'
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'Failed to get core motivations by concept:',
+          expect.any(Error)
+        );
+      });
+
+      it('should reject when transaction creation fails', async () => {
+        database.close();
+
+        await expect(
+          database.getCoreMotivationsByConceptId('concept-1')
+        ).rejects.toThrow(
+          'CharacterDatabase: Database not initialized. Call initialize() first.'
+        );
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'Failed to get core motivations by concept:',
+          expect.any(Error)
+        );
       });
     });
 
@@ -3015,6 +3152,42 @@ describe('CharacterDatabase', () => {
       it('should throw error for missing motivationId', async () => {
         await expect(database.getCoreMotivationById('')).rejects.toThrow(
           'getCoreMotivationById: Invalid motivationId'
+        );
+      });
+
+      it('should handle IndexedDB get error', async () => {
+        const getRequest = {
+          onsuccess: null,
+          onerror: null,
+          error: { message: 'Lookup failure' },
+        };
+        mockObjectStore.get.mockReturnValue(getRequest);
+
+        const retrievePromise = database.getCoreMotivationById('motivation-1');
+
+        setTimeout(() => getRequest.onerror(), 0);
+
+        await expect(retrievePromise).rejects.toThrow(
+          'Failed to get core motivation: Lookup failure'
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'Failed to get core motivation by ID:',
+          expect.any(Error)
+        );
+      });
+
+      it('should reject when transaction creation fails', async () => {
+        database.close();
+
+        await expect(
+          database.getCoreMotivationById('motivation-1')
+        ).rejects.toThrow(
+          'CharacterDatabase: Database not initialized. Call initialize() first.'
+        );
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'Failed to get core motivation by ID:',
+          expect.any(Error)
         );
       });
     });
@@ -3075,6 +3248,58 @@ describe('CharacterDatabase', () => {
       it('should throw error for missing motivationId', async () => {
         await expect(database.deleteCoreMotivation('')).rejects.toThrow(
           'deleteCoreMotivation: Invalid motivationId'
+        );
+      });
+
+      it('should reject when deletion fails', async () => {
+        const mockMotivation = {
+          id: 'motivation-1',
+          directionId: 'direction-1',
+        };
+        const getRequest = {
+          onsuccess: null,
+          onerror: null,
+          result: mockMotivation,
+        };
+        const deleteRequest = {
+          onsuccess: null,
+          onerror: null,
+          error: { message: 'Delete failure' },
+        };
+        mockObjectStore.get.mockReturnValue(getRequest);
+        mockObjectStore.delete.mockReturnValue(deleteRequest);
+
+        const deletePromise = database.deleteCoreMotivation('motivation-1');
+
+        setTimeout(() => {
+          getRequest.onsuccess();
+          setTimeout(() => deleteRequest.onerror(), 0);
+        }, 0);
+
+        await expect(deletePromise).rejects.toThrow(
+          'Failed to delete core motivation: Delete failure'
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'Failed to delete core motivation:',
+          expect.any(Error)
+        );
+      });
+
+      it('should reject when transaction creation fails', async () => {
+        jest
+          .spyOn(database, 'getCoreMotivationById')
+          .mockResolvedValue({ id: 'motivation-1' });
+        database.close();
+
+        await expect(
+          database.deleteCoreMotivation('motivation-1')
+        ).rejects.toThrow(
+          'CharacterDatabase: Database not initialized. Call initialize() first.'
+        );
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'Failed to delete core motivation:',
+          expect.any(Error)
         );
       });
     });
@@ -3152,6 +3377,66 @@ describe('CharacterDatabase', () => {
           database.updateCoreMotivation('motivation-1', null)
         ).rejects.toThrow('Updates are required');
       });
+
+      it('should reject when update write fails', async () => {
+        const existingMotivation = {
+          id: 'motivation-1',
+          directionId: 'direction-1',
+          conceptId: 'concept-1',
+          coreDesire: 'Original',
+          createdAt: '2024-01-01T00:00:00Z',
+        };
+        const getRequest = {
+          onsuccess: null,
+          onerror: null,
+          result: existingMotivation,
+        };
+        const putRequest = {
+          onsuccess: null,
+          onerror: null,
+          error: { message: 'Update failure' },
+        };
+        mockObjectStore.get.mockReturnValue(getRequest);
+        mockObjectStore.put.mockReturnValue(putRequest);
+
+        const updatePromise = database.updateCoreMotivation('motivation-1', {
+          coreDesire: 'Updated',
+        });
+
+        setTimeout(() => {
+          getRequest.onsuccess();
+          setTimeout(() => putRequest.onerror(), 0);
+        }, 0);
+
+        await expect(updatePromise).rejects.toThrow(
+          'Failed to update core motivation: Update failure'
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'Failed to update core motivation:',
+          expect.any(Error)
+        );
+      });
+
+      it('should reject when transaction creation fails', async () => {
+        jest
+          .spyOn(database, 'getCoreMotivationById')
+          .mockResolvedValue({
+            id: 'motivation-1',
+            createdAt: '2024-01-01T00:00:00Z',
+          });
+        database.close();
+
+        await expect(
+          database.updateCoreMotivation('motivation-1', { coreDesire: 'New' })
+        ).rejects.toThrow(
+          'CharacterDatabase: Database not initialized. Call initialize() first.'
+        );
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'Failed to update core motivation:',
+          expect.any(Error)
+        );
+      });
     });
 
     describe('deleteAllCoreMotivationsForDirection', () => {
@@ -3226,6 +3511,69 @@ describe('CharacterDatabase', () => {
           database.deleteAllCoreMotivationsForDirection('')
         ).rejects.toThrow(
           'deleteAllCoreMotivationsForDirection: Invalid directionId'
+        );
+      });
+
+      it('should resolve even when some deletions fail', async () => {
+        const mockMotivations = [
+          { id: 'motivation-1', directionId: 'direction-1' },
+          { id: 'motivation-2', directionId: 'direction-1' },
+        ];
+
+        const getAllRequest = {
+          onsuccess: null,
+          onerror: null,
+          result: mockMotivations,
+        };
+        const deleteRequestSuccess = { onsuccess: null, onerror: null };
+        const deleteRequestError = {
+          onsuccess: null,
+          onerror: null,
+          error: { message: 'Delete failure' },
+        };
+
+        mockIndex.getAll.mockReturnValue(getAllRequest);
+        mockObjectStore.delete
+          .mockReturnValueOnce(deleteRequestSuccess)
+          .mockReturnValueOnce(deleteRequestError);
+
+        const deletePromise =
+          database.deleteAllCoreMotivationsForDirection('direction-1');
+
+        setTimeout(() => {
+          getAllRequest.onsuccess();
+          setTimeout(() => {
+            deleteRequestSuccess.onsuccess();
+            deleteRequestError.onerror();
+          }, 0);
+        }, 0);
+
+        const deletedCount = await deletePromise;
+
+        expect(deletedCount).toBe(1);
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'Failed to delete motivation motivation-2: Delete failure'
+        );
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          'Deleted 1 motivations for direction direction-1'
+        );
+      });
+
+      it('should reject when transaction creation fails', async () => {
+        jest
+          .spyOn(database, 'getCoreMotivationsByDirectionId')
+          .mockResolvedValue([{ id: 'motivation-1' }]);
+        database.close();
+
+        await expect(
+          database.deleteAllCoreMotivationsForDirection('direction-1')
+        ).rejects.toThrow(
+          'CharacterDatabase: Database not initialized. Call initialize() first.'
+        );
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'Failed to delete all core motivations for direction:',
+          expect.any(Error)
         );
       });
     });
@@ -3338,6 +3686,19 @@ describe('CharacterDatabase', () => {
       it('should throw error for missing directionId', async () => {
         await expect(database.getCoreMotivationsCount('')).rejects.toThrow(
           'getCoreMotivationsCount: Invalid directionId'
+        );
+      });
+
+      it('should resolve to 0 when transaction creation fails', async () => {
+        database.close();
+
+        await expect(
+          database.getCoreMotivationsCount('direction-1')
+        ).resolves.toBe(0);
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'Failed to get core motivations count:',
+          expect.any(Error)
         );
       });
     });
