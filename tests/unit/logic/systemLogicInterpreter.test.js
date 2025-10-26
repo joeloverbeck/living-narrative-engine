@@ -4,6 +4,7 @@ import { jest } from '@jest/globals';
 import { describe, beforeEach, afterEach, it, expect } from '@jest/globals';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
 import { REQUIRED_ENTITY_MANAGER_METHODS } from '../../../src/constants/entityManager.js';
+import * as ruleCacheUtils from '../../../src/utils/ruleCacheUtils.js';
 
 describe('SystemLogicInterpreter - Core Functionality', () => {
   let interpreter;
@@ -33,6 +34,7 @@ describe('SystemLogicInterpreter - Core Functionality', () => {
     // Mock data registry
     mockDataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([]),
+      getConditionDefinition: jest.fn(),
     };
 
     // Mock JSON logic
@@ -356,6 +358,122 @@ describe('SystemLogicInterpreter - Core Functionality', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'SystemLogicInterpreter: Finished caching rules. 1 event types have associated rules.'
       );
+    });
+
+    it('logs detailed diagnostics for handle_sit_down_at_distance rules', () => {
+      const consoleLogSpy = jest
+        .spyOn(console, 'log')
+        .mockImplementation(() => {});
+
+      try {
+        const specialRule = {
+          rule_id: 'handle_sit_down_at_distance',
+          event_type: 'special:event',
+          condition: null,
+          actions: [{ type: 'NO_OP' }],
+        };
+
+        mockDataRegistry.getAllSystemRules.mockReturnValue([specialRule]);
+
+        interpreter.initialize();
+
+        expect(consoleLogSpy).toHaveBeenCalledWith(
+          '  - actions is Array: true'
+        );
+        expect(consoleLogSpy).toHaveBeenCalledWith('  - actions.length: 1');
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining(
+            "SystemLogicInterpreter: [DEBUG] #loadAndCacheRules - RAW rule 'handle_sit_down_at_distance'"
+          )
+        );
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining(
+            "SystemLogicInterpreter: [DEBUG] #loadAndCacheRules - RESOLVED rule 'handle_sit_down_at_distance'"
+          )
+        );
+      } finally {
+        consoleLogSpy.mockRestore();
+      }
+    });
+
+    it('falls back to an always-false condition when condition resolution fails', () => {
+      const consoleErrorSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+      const buildRuleCacheSpy = jest.spyOn(
+        ruleCacheUtils,
+        'buildRuleCache'
+      );
+
+      try {
+        const failingRule = {
+          rule_id: 'failing-rule',
+          event_type: 'error:event',
+          condition: { condition_ref: 'missing-condition' },
+          actions: [{ type: 'NO_OP' }],
+        };
+
+        mockDataRegistry.getAllSystemRules.mockReturnValue([failingRule]);
+        mockDataRegistry.getConditionDefinition.mockReturnValue(null);
+
+        interpreter.initialize();
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining(
+            "SystemLogicInterpreter: Failed to resolve condition references in rule 'failing-rule'"
+          ),
+          expect.any(Error)
+        );
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          expect.stringContaining(
+            "[SystemLogicInterpreter] ERROR resolving condition for rule 'failing-rule':"
+          ),
+          expect.stringContaining('Could not resolve condition_ref')
+        );
+
+        const cachedRules = buildRuleCacheSpy.mock.calls[0][0];
+        expect(cachedRules).toHaveLength(1);
+        expect(cachedRules[0].condition).toEqual({ '==': [true, false] });
+      } finally {
+        consoleErrorSpy.mockRestore();
+        buildRuleCacheSpy.mockRestore();
+      }
+    });
+  });
+
+  describe('processEvent', () => {
+    it('converts event payloads before forwarding to the internal handler', async () => {
+      interpreter = new SystemLogicInterpreter({
+        logger: mockLogger,
+        eventBus: mockEventBus,
+        dataRegistry: mockDataRegistry,
+        jsonLogicEvaluationService: mockJsonLogic,
+        entityManager: mockEntityManager,
+        operationInterpreter: mockOperationInterpreter,
+        bodyGraphService: mockBodyGraphService,
+      });
+
+      const eventPayload = {
+        eventType: 'test:event',
+        payload: { key: 'value' },
+      };
+
+      await interpreter.processEvent(eventPayload);
+
+      const eventLog = mockLogger.debug.mock.calls.find(
+        (call) =>
+          call[0] &&
+          call[0].includes(
+            'SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] Event received: test:event'
+          )
+      );
+
+      expect(eventLog).toBeDefined();
+      expect(eventLog[1]).toEqual({
+        payload: { key: 'value' },
+        timestamp: expect.any(Number),
+        isAsync: true,
+      });
     });
   });
 
