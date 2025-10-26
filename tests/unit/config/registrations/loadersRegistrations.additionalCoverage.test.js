@@ -89,7 +89,7 @@ describe('registerLoaders additional coverage', () => {
     delete global.window;
     process.env.NODE_ENV = 'test';
 
-    jest.doMock('../../../../src/validation/modReferenceExtractor', () => ({
+    jest.doMock('../../../../cli/validation/modReferenceExtractor.js', () => ({
       __esModule: true,
       default: class MockModReferenceExtractor {
         constructor(deps) {
@@ -98,7 +98,7 @@ describe('registerLoaders additional coverage', () => {
       },
     }), { virtual: true });
 
-    jest.doMock('../../../../src/validation/modCrossReferenceValidator', () => ({
+    jest.doMock('../../../../cli/validation/modCrossReferenceValidator.js', () => ({
       __esModule: true,
       default: class MockModCrossReferenceValidator {
         constructor(deps) {
@@ -107,7 +107,7 @@ describe('registerLoaders additional coverage', () => {
       },
     }), { virtual: true });
 
-    jest.doMock('../../../../src/validation/modValidationOrchestrator', () => ({
+    jest.doMock('../../../../cli/validation/modValidationOrchestrator.js', () => ({
       __esModule: true,
       default: class MockModValidationOrchestrator {
         constructor(deps) {
@@ -153,7 +153,7 @@ describe('registerLoaders additional coverage', () => {
     delete global.window;
     process.env.NODE_ENV = 'test';
 
-    jest.doMock('../../../../src/validation/modReferenceExtractor.js', () => {
+    jest.doMock('../../../../cli/validation/modReferenceExtractor.js', () => {
       throw new Error('dynamic import failure');
     });
 
