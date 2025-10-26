@@ -85,6 +85,18 @@ describe('SpeechPatternsSchemaValidator', () => {
         });
       }).toThrow();
     });
+
+    it('should support schema validator proxies that are not plain objects', () => {
+      const functionBasedValidator = () => {};
+
+      expect(
+        () =>
+          new SpeechPatternsSchemaValidator({
+            schemaValidator: functionBasedValidator,
+            logger: mockLogger,
+          })
+      ).not.toThrow();
+    });
   });
 
   describe('validateResponse', () => {
@@ -174,15 +186,43 @@ describe('SpeechPatternsSchemaValidator', () => {
       );
     });
 
+    it('should handle invalid error payload formats gracefully', async () => {
+      mockSchemaValidator.validate.mockReturnValue({
+        isValid: false,
+        errors: 'totally invalid',
+      });
+
+      const result = await validator.validateResponse(validResponse);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toEqual(['Invalid response format']);
+    });
+
+    it('should return user friendly message for unknown error shapes', async () => {
+      mockSchemaValidator.validate.mockReturnValue({
+        isValid: false,
+        errors: [{ instancePath: '/speechPatterns/0' }],
+      });
+
+      const result = await validator.validateResponse(validResponse);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toEqual(['Unknown validation error']);
+    });
+
     it('should format various schema error types', async () => {
       const errors = [
         { keyword: 'minItems', instancePath: '/speechPatterns' },
         { keyword: 'maxItems', instancePath: '/speechPatterns' },
         { keyword: 'required', params: { missingProperty: 'characterName' } },
+        { keyword: 'required', params: {} },
         {
           keyword: 'minLength',
           instancePath: '/characterName',
           message: 'too short',
+        },
+        {
+          message: 'minLength',
         },
         { message: 'Some other error', instancePath: '/example' },
         'String error message',
@@ -203,11 +243,13 @@ describe('SpeechPatternsSchemaValidator', () => {
         'Too many speech patterns generated (maximum 30 allowed)'
       );
       expect(result.errors).toContain('Missing required field: characterName');
+      expect(result.errors).toContain('Missing required field: unknown');
       expect(
         result.errors.some(
           (e) => e.includes('characterName') && e.includes('too short')
         )
       ).toBe(true);
+      expect(result.errors).toContain('field length invalid: minLength');
       expect(result.errors.some((e) => e.includes('/example'))).toBe(true);
       expect(result.errors).toContain('String error message');
     });
@@ -472,6 +514,44 @@ describe('SpeechPatternsSchemaValidator', () => {
 
       // Restore original method
       validator.sanitizeInput = originalMethod;
+    });
+
+    it('should bypass response sanitization for non-object inputs', async () => {
+      const rawResponse = 'unexpected string response';
+
+      mockSchemaValidator.validate.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const result = await validator.validateAndSanitizeResponse(rawResponse);
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+      expect(result.sanitizedResponse).toBe(rawResponse);
+      expect(mockSchemaValidator.validate).toHaveBeenCalledWith(
+        'schema://living-narrative-engine/speech-patterns-response.schema.json',
+        rawResponse
+      );
+    });
+
+    it('should preserve non-array speech patterns values without mutation', async () => {
+      const malformedResponse = {
+        characterName: 'Valid Name',
+        speechPatterns: 'not-an-array',
+      };
+
+      mockSchemaValidator.validate.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const result = await validator.validateAndSanitizeResponse(malformedResponse);
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+      expect(result.sanitizedResponse.speechPatterns).toBe('not-an-array');
+      expect(result.sanitizedResponse.generatedAt).toBeUndefined();
     });
   });
 
