@@ -113,6 +113,67 @@ describe('ActionTraceConfigValidator additional coverage', () => {
         RegExp.prototype.test = originalTest;
       }
     });
+
+    it('identifies wildcard-only patterns without namespaces as invalid', () => {
+      const schemaValidator = createSchemaValidator();
+      const logger = createLogger();
+      const validator = new ActionTraceConfigValidator({
+        schemaValidator,
+        logger,
+      });
+
+      const result = validator.validateProperty('tracedActions', [
+        'prefix*',
+        '*',
+      ]);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining("Invalid action ID patterns: prefix*"),
+        ])
+      );
+      expect(result.warnings).toEqual(
+        expect.arrayContaining([
+          "Wildcard '*' will trace all actions, making other specific actions redundant.",
+        ])
+      );
+    });
+
+    it('formats non-array schema validation errors consistently', async () => {
+      const schemaValidator = createSchemaValidator();
+      const logger = createLogger();
+      schemaValidator.validate.mockResolvedValue({
+        valid: false,
+        errors: {
+          keyword: 'type',
+          instancePath: '/actionTracing/enabled',
+          message: 'must be boolean',
+          data: 'yes',
+          params: { type: 'boolean' },
+        },
+      });
+
+      const validator = new ActionTraceConfigValidator({
+        schemaValidator,
+        logger,
+      });
+
+      const result = await validator.validateConfiguration({
+        actionTracing: {},
+      });
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toEqual(
+        expect.arrayContaining([
+          "Property enabled must be of type boolean, got string",
+        ])
+      );
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Action tracing configuration validation failed',
+        expect.objectContaining({ errorCount: expect.any(Number) })
+      );
+    });
   });
 });
 
