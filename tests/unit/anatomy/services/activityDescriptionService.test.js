@@ -264,6 +264,71 @@ describe('ActivityDescriptionService', () => {
       );
     });
 
+    it('should return no dedicated activities when metadata component is missing', async () => {
+      const dedicatedEntity = {
+        id: 'entity_1',
+        componentTypeIds: [],
+        hasComponent: jest.fn().mockReturnValue(true),
+        getComponentData: jest
+          .fn()
+          .mockImplementation((componentId) => {
+            if (componentId === 'activity:description_metadata') {
+              return null;
+            }
+            return undefined;
+          }),
+      };
+
+      mockEntityManager.getEntityInstance.mockReturnValue(dedicatedEntity);
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
+
+      const result = await service.generateActivityDescription('entity_1');
+
+      expect(result).toBe('');
+      expect(dedicatedEntity.getComponentData).toHaveBeenCalledWith(
+        'activity:description_metadata'
+      );
+      expect(mockLogger.error).not.toHaveBeenCalledWith(
+        'Failed to parse dedicated metadata',
+        expect.any(Error)
+      );
+    });
+
+    it('should log an error when dedicated metadata parsing fails', async () => {
+      const dedicatedEntity = {
+        id: 'entity_1',
+        componentTypeIds: [],
+        hasComponent: jest.fn().mockReturnValue(true),
+        getComponentData: jest
+          .fn()
+          .mockImplementation((componentId) => {
+            if (componentId === 'activity:description_metadata') {
+              return {
+                sourceComponent: 'pose:stance',
+                targetRole: 'entityId',
+              };
+            }
+
+            if (componentId === 'pose:stance') {
+              throw new Error('component failure');
+            }
+
+            return undefined;
+          }),
+      };
+
+      mockEntityManager.getEntityInstance.mockReturnValue(dedicatedEntity);
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
+
+      const result = await service.generateActivityDescription('entity_1');
+
+      expect(result).toBe('');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to parse dedicated metadata',
+        expect.any(Error)
+      );
+    });
+
     it('should log an error when inline metadata collection fails', async () => {
       mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
 
@@ -589,6 +654,7 @@ describe('ActivityDescriptionService', () => {
         {
           actorId: 'entity_1',
           description: '   ',
+          type: 'inline',
           priority: 3,
         },
       ]);
