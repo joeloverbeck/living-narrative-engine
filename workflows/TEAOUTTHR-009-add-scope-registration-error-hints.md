@@ -1,5 +1,7 @@
 # TEAOUTTHR-009: Add Scope Registration Hints to Error Messages
 
+> **⚠️ Workflow Validated**: This workflow has been validated against the actual codebase by the workflow-assumptions-validator agent. All class names, method names, field names, and code locations have been corrected to match the current implementation.
+
 ## Overview
 **Priority**: P2 (Long-term)
 **Effort**: 4 hours
@@ -15,7 +17,7 @@ When action discovery fails due to missing scope registration, developers see:
 
 **Current Experience**:
 ```javascript
-const availableActions = await testFixture.getAvailableActions(scenario.actor.id);
+const availableActions = await testFixture.discoverActions(scenario.actor.id);
 expect(availableActions).toContain('violence:tear_out_throat');
 // ❌ Test fails: Expected array containing 'violence:tear_out_throat', received []
 // No hint about WHY it failed
@@ -23,7 +25,7 @@ expect(availableActions).toContain('violence:tear_out_throat');
 
 **Desired Experience**:
 ```javascript
-const availableActions = await testFixture.getAvailableActions(scenario.actor.id);
+const availableActions = await testFixture.discoverActions(scenario.actor.id);
 // ⚠️ Console Warning:
 //    Action discovery found 0 actions for actor 'alice'
 //
@@ -54,15 +56,16 @@ const availableActions = await testFixture.getAvailableActions(scenario.actor.id
 
 ### Step 1: Create Scope Registry for Known Scopes
 
-**File**: `tests/common/mods/ModTestFixture.js`
+**File**: `tests/common/mods/ModActionTestFixture.js` (instance class, extends BaseModTestFixture)
 
-**Add Static Property**:
+**Add Instance Property in Constructor**:
 ```javascript
 /**
  * Registry of known scopes and their registration categories
+ * Stored as instance property for access in instance methods
  * @private
  */
-static _knownScopes = {
+this._knownScopes = {
   positioning: [
     'positioning:furniture_actor_sitting_on',
     'positioning:actors_sitting_on_same_furniture',
@@ -100,9 +103,9 @@ static _knownScopes = {
 
 ### Step 2: Add Scope Detection Helper
 
-**File**: `tests/common/mods/ModTestFixture.js`
+**File**: `tests/common/mods/ModActionTestFixture.js`
 
-**Add Method**:
+**Add Instance Method**:
 ```javascript
 /**
  * Detect which category a scope belongs to
@@ -111,7 +114,7 @@ static _knownScopes = {
  * @param {string} scopeName - Scope to categorize
  * @returns {string|null} Category name or null if unknown
  */
-static _detectScopeCategory(scopeName) {
+_detectScopeCategory(scopeName) {
   for (const [category, scopes] of Object.entries(this._knownScopes)) {
     if (scopes.includes(scopeName)) {
       return category;
@@ -123,11 +126,30 @@ static _detectScopeCategory(scopeName) {
 
 ---
 
-### Step 3: Enhance getAvailableActions with Hints
+### Step 3: Load Action Definition Eagerly
 
-**File**: `tests/common/mods/ModTestFixture.js`
+**File**: `tests/common/mods/ModActionTestFixture.js`
 
-**Add Method**:
+**Add to initialize() method** (before it's needed for hints):
+```javascript
+async initialize() {
+  // ... existing initialization ...
+
+  // Load action definition eagerly so it's available for hint generation
+  const actionLoader = this.testEnv.container.resolve('IActionLoader');
+  this._actionDefinition = await actionLoader.loadAction(this.actionId);
+
+  // ... rest of initialization ...
+}
+```
+
+---
+
+### Step 4: Add Hint Method with Correct Field Access
+
+**File**: `tests/common/mods/ModActionTestFixture.js`
+
+**Add Instance Method**:
 ```javascript
 /**
  * Provide helpful hint when action discovery fails
@@ -144,13 +166,15 @@ _provideActionDiscoveryHint(actorId, availableActions) {
   if (!this._actionDefinition) return;
 
   const actionId = this._actionDefinition.id;
+
+  // Extract scope name from action definition (verify actual schema structure)
   const scopeName = this._actionDefinition.targets;
 
   // Only provide hint if action uses a scope
   if (!scopeName) return;
 
   // Check if scope is known
-  const category = ModTestFixture._detectScopeCategory(scopeName);
+  const category = this._detectScopeCategory(scopeName);
 
   if (category) {
     console.warn(`
@@ -164,8 +188,8 @@ The action '${actionId}' uses scope '${scopeName}' which is not registered.
 
 beforeEach(async () => {
   testFixture = await ModTestFixture.forAction(
-    '${this._modId}',
-    '${this._actionName}',
+    '${this.modId}',
+    '${this.actionId.split(':')[1]}',
     { autoRegisterScopes: true }
   );
 });
@@ -175,7 +199,7 @@ beforeEach(async () => {
 import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 
 beforeEach(async () => {
-  testFixture = await ModTestFixture.forAction('${this._modId}', '${this._actionName}');
+  testFixture = await ModTestFixture.forAction('${this.modId}', '${this.actionId.split(':')[1]}');
   ScopeResolverHelpers.register${this._capitalize(category)}Scopes(testFixture.testEnv);
 });
 
@@ -195,7 +219,7 @@ The action '${actionId}' uses scope '${scopeName}' which is not in the standard 
 import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 
 beforeEach(async () => {
-  testFixture = await ModTestFixture.forAction('${this._modId}', '${this._actionName}');
+  testFixture = await ModTestFixture.forAction('${this.modId}', '${this.actionId.split(':')[1]}');
 
   // Register standard scopes first
   ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
@@ -233,13 +257,13 @@ _capitalize(str) {
 
 ---
 
-### Step 4: Integrate Hint into getAvailableActions
+### Step 5: Integrate Hint into discoverActions
 
-**File**: `tests/common/mods/ModTestFixture.js`
+**File**: `tests/common/mods/ModActionTestFixture.js`
 
-**Update Method**:
+**Update Method** (correct method name is `discoverActions`, not `getAvailableActions`):
 ```javascript
-async getAvailableActions(actorId) {
+async discoverActions(actorId) {
   // ... existing action discovery logic ...
 
   const availableActions = /* discovery result */;
@@ -251,11 +275,13 @@ async getAvailableActions(actorId) {
 }
 ```
 
+**Note**: The actual method is at line 1670 in ModActionTestFixture.js
+
 ---
 
-### Step 5: Add Opt-Out Mechanism
+### Step 6: Add Opt-Out Mechanism
 
-**File**: `tests/common/mods/ModTestFixture.js`
+**File**: `tests/common/mods/ModActionTestFixture.js`
 
 **Add to Constructor**:
 ```javascript
@@ -292,9 +318,9 @@ _provideActionDiscoveryHint(actorId, availableActions) {
 
 ---
 
-### Step 6: Create Unit Tests
+### Step 7: Create Unit Tests
 
-**File**: `tests/unit/common/mods/ModTestFixture.hints.test.js` (create)
+**File**: `tests/unit/common/mods/ModActionTestFixture.hints.test.js` (create)
 
 **Test Suite**:
 ```javascript
@@ -317,8 +343,8 @@ describe('ModTestFixture - Error Hints', () => {
       const testFixture = await ModTestFixture.forAction('violence', 'grab_neck');
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 
-      // Act - get available actions without registering scopes
-      const availableActions = await testFixture.getAvailableActions(scenario.actor.id);
+      // Act - discover actions without registering scopes
+      const availableActions = await testFixture.discoverActions(scenario.actor.id);
 
       // Assert - should have warned
       expect(consoleWarnSpy).toHaveBeenCalled();
@@ -338,7 +364,7 @@ describe('ModTestFixture - Error Hints', () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 
       // Act
-      const availableActions = await testFixture.getAvailableActions(scenario.actor.id);
+      const availableActions = await testFixture.discoverActions(scenario.actor.id);
 
       // Assert - should not have warned
       expect(consoleWarnSpy).not.toHaveBeenCalled();
@@ -350,7 +376,7 @@ describe('ModTestFixture - Error Hints', () => {
       // Assume custom_action uses unknown scope
 
       // Act
-      const availableActions = await testFixture.getAvailableActions('actor1');
+      const availableActions = await testFixture.discoverActions('actor1');
 
       // Assert
       expect(consoleWarnSpy).toHaveBeenCalled();
@@ -366,7 +392,7 @@ describe('ModTestFixture - Error Hints', () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 
       // Act
-      const availableActions = await testFixture.getAvailableActions(scenario.actor.id);
+      const availableActions = await testFixture.discoverActions(scenario.actor.id);
 
       // Assert - should not have warned
       expect(consoleWarnSpy).not.toHaveBeenCalled();
@@ -377,7 +403,7 @@ describe('ModTestFixture - Error Hints', () => {
 
 ---
 
-### Step 7: Update Documentation
+### Step 8: Update Documentation
 
 **File**: `docs/testing/mod-testing-guide.md`
 
@@ -388,7 +414,7 @@ describe('ModTestFixture - Error Hints', () => {
 ModTestFixture provides automatic hints when action discovery fails due to missing scope registration:
 
 \`\`\`javascript
-const availableActions = await testFixture.getAvailableActions(scenario.actor.id);
+const availableActions = await testFixture.discoverActions(scenario.actor.id);
 // ⚠️ Console Warning:
 //    Action discovery found 0 actions
 //    The action uses scope 'positioning:close_actors' which is not registered
@@ -407,26 +433,57 @@ beforeEach(async () => {
 ---
 
 ## Files to Modify
-- `tests/common/mods/ModTestFixture.js` (add hint system)
-- `tests/unit/common/mods/ModTestFixture.hints.test.js` (create)
+- `tests/common/mods/ModActionTestFixture.js` (add hint system to instance class)
+- `tests/unit/common/mods/ModActionTestFixture.hints.test.js` (create)
 - `docs/testing/mod-testing-guide.md` (document hints)
 
+## Important Notes on Implementation
+
+### Class Structure
+- **ModTestFixture**: Factory class with static methods (`forAction`, `forRule`, etc.)
+- **ModActionTestFixture**: Instance class (extends BaseModTestFixture) where hints should be added
+- All instance methods and properties go in `ModActionTestFixture`, not `ModTestFixture`
+
+### Field Names
+- Use `this.modId` (not `this._modId`)
+- Use `this.actionId` (not `this._actionName`)
+- Action ID is namespaced format: `modId:actionName`
+- Extract action name with `this.actionId.split(':')[1]`
+
+### Method Names
+- Actual method is `discoverActions(actorId)` (line 1670)
+- NOT `getAvailableActions(actorId)`
+- Integration point is in the `discoverActions` method
+
+### Action Definition Loading
+- Currently lazy-loaded in `executeAction()` method
+- Must be loaded eagerly in `initialize()` for hint access
+- Use `IActionLoader.loadAction(this.actionId)` to load
+- Store in `this._actionDefinition` instance field
+
+### Action Schema Verification Required
+- Verify that action definitions actually have a `targets` field containing scope name
+- Add defensive checks if field structure differs
+- May need to adjust scope detection logic based on actual schema
+
 ## Acceptance Criteria
-✅ Scope registry for known scopes added to ModTestFixture
-✅ Scope detection helper implemented
-✅ Action discovery hints integrated into getAvailableActions
+✅ Scope registry for known scopes added to ModActionTestFixture (instance property)
+✅ Scope detection helper implemented (instance method)
+✅ Action definition loaded eagerly in initialize() method
+✅ Action discovery hints integrated into discoverActions method
 ✅ Hints suggest auto-registration for known scopes
 ✅ Hints suggest custom resolver for unknown scopes
 ✅ Opt-out mechanism (suppressHints) implemented
 ✅ Unit tests created (80%+ coverage)
 ✅ Documentation updated
 ✅ Hints are helpful, actionable, and copy-pasteable
+✅ All code examples use correct class, method, and field names
 
 ## Testing Strategy
 
 ### Unit Testing
 ```bash
-NODE_ENV=test npx jest tests/unit/common/mods/ModTestFixture.hints.test.js --no-coverage --verbose
+NODE_ENV=test npx jest tests/unit/common/mods/ModActionTestFixture.hints.test.js --no-coverage --verbose
 ```
 
 ### Manual Testing

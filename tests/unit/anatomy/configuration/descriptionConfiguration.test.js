@@ -70,6 +70,7 @@ describe('DescriptionConfiguration', () => {
         'foot',
         'tail',
         'wing',
+        'activity',
       ]);
     });
 
@@ -77,7 +78,7 @@ describe('DescriptionConfiguration', () => {
       config = new DescriptionConfiguration({});
       const result = config.getDescriptionOrder();
 
-      expect(result.length).toBe(20);
+      expect(result.length).toBe(21);
       expect(result[0]).toBe('height');
     });
 
@@ -88,6 +89,39 @@ describe('DescriptionConfiguration', () => {
 
       expect(result1).not.toBe(result2);
       expect(result1).toEqual(result2);
+    });
+  });
+
+  describe('DescriptionConfiguration - Activity Order', () => {
+    it('should include activity in default description order', () => {
+      config = new DescriptionConfiguration();
+      const order = config.getDescriptionOrder();
+
+      expect(order).toContain('activity');
+    });
+
+    it('should place activity at end of description order', () => {
+      config = new DescriptionConfiguration();
+      const order = config.getDescriptionOrder();
+
+      const activityIndex = order.indexOf('activity');
+      const lastIndex = order.length - 1;
+
+      expect(activityIndex).toBe(lastIndex);
+    });
+
+    it('should allow activity order to be customized via anatomyFormattingService', () => {
+      const mockFormattingService = {
+        getDescriptionOrder: jest.fn(() => ['height', 'activity', 'breast']),
+      };
+      config = new DescriptionConfiguration(mockFormattingService);
+
+      expect(config.getDescriptionOrder()).toEqual([
+        'height',
+        'activity',
+        'breast',
+      ]);
+      expect(mockFormattingService.getDescriptionOrder).toHaveBeenCalled();
     });
   });
 

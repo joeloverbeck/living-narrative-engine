@@ -32,6 +32,7 @@ export class DescriptionConfiguration {
       'foot',
       'tail',
       'wing',
+      'activity',
     ];
 
     this._defaultPairedParts = new Set([
@@ -116,6 +117,7 @@ export const DESCRIPTION_CONFIG_CONSTANTS = {
     'foot',
     'tail',
     'wing',
+    'activity',
   ],
   DEFAULT_PAIRED_PARTS: new Set([
     'eye',
