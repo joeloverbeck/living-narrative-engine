@@ -109,21 +109,22 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
    *
    * @override
    * @param {string} entityId - The unique ID of the entity to remove.
-   * @returns {null} Always returns null due to the lazy removal strategy,
-   * as efficiently finding the Entity object without heap modification is complex.
-   * This deviates slightly from the interface's ideal return but is pragmatic.
+   * @returns {Entity | null} The first matching entity marked for removal, or null when not found.
+   * Returned entities remain lazily removed in the queue and will be skipped by {@link getNext} / {@link peek}.
    */
   remove(entityId) {
     if (typeof entityId !== 'string' || entityId === '') {
       console.warn(
         `InitiativePriorityQueue.remove: Attempted to remove entity with invalid ID "${entityId}".`
       );
+      return null;
     }
     console.debug(
       `[DEBUG] remove: Marking entity ${entityId} for removal. Current queue.length: ${this.#queue.length}`
     ); // LOGGING
 
     let removedCount = 0;
+    let removedEntity = null;
     const internalData = this.#queue.data || [];
     for (const item of internalData) {
       if (!item || item.removed || !item.entity) {
@@ -133,6 +134,9 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
       if (item.entity.id === entityId) {
         item.removed = true;
         removedCount += 1;
+        if (!removedEntity) {
+          removedEntity = item.entity;
+        }
       }
     }
 
@@ -144,7 +148,7 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
         } for entity ${entityId} as removed. Active size now ${this.#activeSize}.`
       ); // LOGGING
     }
-    return null; // See JSDoc explanation.
+    return removedEntity;
   }
 
   /**
