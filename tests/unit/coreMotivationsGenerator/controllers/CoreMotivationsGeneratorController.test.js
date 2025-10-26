@@ -162,6 +162,33 @@ describe('CoreMotivationsGeneratorController', () => {
       expect(typeof initEvent.payload.eligibleDirectionsCount).toBe('number');
     });
 
+    it('should surface initialization failures with a user-friendly error', async () => {
+      // Arrange
+      testBed.setupSuccessfulDirectionLoad();
+      const initError = new Error('mutation observer failure');
+      const originalMutationObserver = global.MutationObserver;
+      class FailingObserver {
+        constructor() {
+          throw initError;
+        }
+      }
+      global.MutationObserver = FailingObserver;
+
+      try {
+        // Act & Assert
+        await expect(testBed.controller.initialize()).rejects.toBe(initError);
+        expect(testBed.logger.error).toHaveBeenCalledWith(
+          'Failed to initialize Core Motivations Generator:',
+          initError
+        );
+        expect(testBed.controller.showError).toHaveBeenCalledWith(
+          'Failed to initialize. Please refresh the page.'
+        );
+      } finally {
+        global.MutationObserver = originalMutationObserver;
+      }
+    });
+
     it('should handle when no directions exist at all', async () => {
       // Arrange
       testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
