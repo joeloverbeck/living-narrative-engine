@@ -386,10 +386,21 @@ class GameSessionManager {
     const isManualPattern =
       extracted !== trimmedName || trimmedName.toLowerCase().endsWith('.sav');
     const candidate = isManualPattern ? extracted : trimmedName;
-    const withSpaces = candidate.replace(/[_]+/g, ' ').trim();
+    const decodedCandidate = this.#decodePercentEncodedSegment(candidate);
+    const withSpaces = decodedCandidate.replace(/[_]+/g, ' ').trim();
 
     if (withSpaces.length > 0) {
       return withSpaces;
+    }
+
+    const trimmedDecoded = decodedCandidate.trim();
+    if (trimmedDecoded.length > 0) {
+      return trimmedDecoded;
+    }
+
+    const fallback = this.#decodePercentEncodedSegment(candidate.trim()).trim();
+    if (fallback.length > 0) {
+      return fallback;
     }
 
     return candidate.trim();
@@ -428,7 +439,10 @@ class GameSessionManager {
       return rawSaveName;
     }
 
-    if (typeof saveIdentifier === 'string' && saveIdentifier.trim().length > 0) {
+    if (
+      typeof saveIdentifier === 'string' &&
+      saveIdentifier.trim().length > 0
+    ) {
       const fallbackName = this.#getDisplayNameForSave(saveIdentifier);
       if (fallbackName && fallbackName !== 'Saved Game') {
         return fallbackName;
@@ -436,6 +450,33 @@ class GameSessionManager {
     }
 
     return 'Restored Game';
+  }
+
+  /**
+   * Safely decodes percent-encoded sequences found in save identifiers.
+   *
+   * @private
+   * @description Converts URI-encoded segments (e.g., `%20`) into readable
+   * characters while preserving the original value when decoding fails.
+   * @param {string} segment - Identifier fragment potentially containing percent encoding.
+   * @returns {string} The decoded segment when possible, otherwise the original value.
+   */
+  #decodePercentEncodedSegment(segment) {
+    if (segment === null || segment === undefined) {
+      return '';
+    }
+
+    const value = typeof segment === 'string' ? segment : String(segment ?? '');
+
+    if (value.length === 0) {
+      return '';
+    }
+
+    try {
+      return decodeURIComponent(value);
+    } catch {
+      return value;
+    }
   }
 
   /**
