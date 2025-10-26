@@ -75,4 +75,31 @@ describe('PlaytimeTracker additional branches', () => {
       expect.objectContaining({ message: expect.stringContaining('NaN') })
     );
   });
+
+  test('setAccumulatedPlaytime still throws validation error when dispatcher throws', () => {
+    const dispatchError = new Error('dispatch failure');
+    mockDispatcher.dispatch.mockImplementation(() => {
+      throw dispatchError;
+    });
+
+    expect(() => tracker.setAccumulatedPlaytime('bad')).toThrow(TypeError);
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'PlaytimeTracker: SafeEventDispatcher threw while reporting invalid playtime input.',
+      dispatchError
+    );
+  });
+
+  test('setAccumulatedPlaytime logs rejected dispatcher promises without preventing validation error', async () => {
+    const dispatchError = new Error('async failure');
+    mockDispatcher.dispatch.mockReturnValue(Promise.reject(dispatchError));
+
+    expect(() => tracker.setAccumulatedPlaytime('bad')).toThrow(TypeError);
+
+    await Promise.resolve();
+
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'PlaytimeTracker: SafeEventDispatcher rejected while reporting invalid playtime input.',
+      dispatchError
+    );
+  });
 });

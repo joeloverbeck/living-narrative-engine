@@ -52,6 +52,50 @@ class PlaytimeTracker extends IPlaytimeTracker {
   #safeEventDispatcher;
 
   /**
+   * Reports validation failures to the system error channel while shielding
+   * callers from dispatcher failures.
+   *
+   * @private
+   * @description Dispatches {@link SYSTEM_ERROR_OCCURRED_ID} and logs when the
+   * dispatcher throws or rejects so validation errors still propagate
+   * deterministically.
+   * @param {string} message - Human-readable validation error message.
+   * @param {Record<string, unknown>} details - Additional diagnostic details.
+   * @returns {void}
+   */
+  #reportValidationError(message, details) {
+    let dispatchResult;
+    try {
+      dispatchResult = this.#safeEventDispatcher.dispatch(
+        SYSTEM_ERROR_OCCURRED_ID,
+        { message, details }
+      );
+    } catch (error) {
+      const normalizedError =
+        error instanceof Error ? error : new Error(String(error));
+      this.#logger.error(
+        'PlaytimeTracker: SafeEventDispatcher threw while reporting invalid playtime input.',
+        normalizedError
+      );
+      return;
+    }
+
+    if (
+      dispatchResult &&
+      typeof dispatchResult.catch === 'function'
+    ) {
+      dispatchResult.catch((error) => {
+        const normalizedError =
+          error instanceof Error ? error : new Error(String(error));
+        this.#logger.error(
+          'PlaytimeTracker: SafeEventDispatcher rejected while reporting invalid playtime input.',
+          normalizedError
+        );
+      });
+    }
+  }
+
+  /**
    * Creates a new PlaytimeTracker instance.
    *
    * @param {object} dependencies - The dependencies for the service.
@@ -151,27 +195,20 @@ class PlaytimeTracker extends IPlaytimeTracker {
   setAccumulatedPlaytime(seconds) {
     if (typeof seconds !== 'number') {
       const errorMessage = `PlaytimeTracker: setAccumulatedPlaytime expects a number, but received ${typeof seconds}.`;
-      this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: errorMessage,
-        details: { receivedType: typeof seconds },
+      this.#reportValidationError(errorMessage, {
+        receivedType: typeof seconds,
       });
       throw new TypeError(errorMessage);
     }
     if (!Number.isFinite(seconds)) {
       const errorMessage =
         `PlaytimeTracker: setAccumulatedPlaytime expects a finite number, but received ${seconds}.`;
-      this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: errorMessage,
-        details: { seconds },
-      });
+      this.#reportValidationError(errorMessage, { seconds });
       throw new RangeError(errorMessage);
     }
     if (seconds < 0) {
       const errorMessage = `PlaytimeTracker: setAccumulatedPlaytime expects a non-negative number, but received ${seconds}.`;
-      this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: errorMessage,
-        details: { seconds },
-      });
+      this.#reportValidationError(errorMessage, { seconds });
       throw new RangeError(errorMessage);
     }
 
