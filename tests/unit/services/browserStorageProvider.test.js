@@ -279,6 +279,143 @@ describe('BrowserStorageProvider - writeFileAtomically', () => {
     );
   });
 
+  test('normalizes leading dot segments before resolving directories', async () => {
+    const filePath = './saves/manual_saves/dottedGame.sav';
+    const tempFileName = 'dottedGame.sav.tmp';
+    const tempFilePath = 'saves/manual_saves/dottedGame.sav.tmp';
+    const finalFilePath = 'saves/manual_saves/dottedGame.sav';
+    const data = new Uint8Array([7, 8, 9]);
+
+    const savesDirHandleMock = {
+      ...mockDirectoryHandleProto,
+      name: 'saves',
+      fullPath: 'saves',
+      getDirectoryHandle: jest.fn(),
+    };
+
+    const manualDirHandleMock = {
+      ...mockDirectoryHandleProto,
+      name: 'manual_saves',
+      fullPath: 'saves/manual_saves',
+      getFileHandle: jest.fn(),
+      removeEntry: jest.fn(),
+    };
+
+    const tempFileHandleMock = createMockFileHandle(
+      tempFileName,
+      tempFilePath
+    );
+    const finalFileHandleMock = createMockFileHandle(
+      'dottedGame.sav',
+      finalFilePath
+    );
+
+    rootDirHandleMockInstance.getDirectoryHandle.mockImplementation(
+      async (name, options) => {
+        if (name === 'saves') {
+          if (options?.create && !mockFileSystemState.saves) {
+            mockFileSystemState.saves = { __isDirectoryMock: true };
+          }
+          if (mockFileSystemState.saves?.__isDirectoryMock) {
+            return savesDirHandleMock;
+          }
+        }
+        throw new Error(`Unexpected directory handle request in root: ${name}`);
+      }
+    );
+
+    savesDirHandleMock.getDirectoryHandle.mockImplementation(
+      async (name, options) => {
+        if (name === 'manual_saves') {
+          if (options?.create && !mockFileSystemState['saves/manual_saves']) {
+            mockFileSystemState['saves/manual_saves'] = { __isDirectoryMock: true };
+          }
+          if (mockFileSystemState['saves/manual_saves']?.__isDirectoryMock) {
+            return manualDirHandleMock;
+          }
+        }
+        throw new Error(
+          `Unexpected directory handle request in saves: ${name}`
+        );
+      }
+    );
+
+    manualDirHandleMock.getFileHandle.mockImplementation(
+      async (name, options) => {
+        if (name === tempFileName) {
+          if (options?.create) {
+            mockFileSystemState[tempFilePath] = { __isFileMock: true };
+          }
+          return tempFileHandleMock;
+        }
+        if (name === 'dottedGame.sav') {
+          if (options?.create) {
+            mockFileSystemState[finalFilePath] = { __isFileMock: true };
+          }
+          return finalFileHandleMock;
+        }
+        throw new Error(`Unexpected getFileHandle in manual_saves: ${name}`);
+      }
+    );
+
+    manualDirHandleMock.removeEntry.mockImplementation(async (name) => {
+      if (name === tempFileName) {
+        delete mockFileSystemState[tempFilePath];
+        return Promise.resolve(undefined);
+      }
+      throw new Error(`Unexpected removeEntry in manual_saves: ${name}`);
+    });
+
+    const result = await storageProvider.writeFileAtomically(filePath, data);
+
+    expect(result.success).toBe(true);
+    expect(mockFileSystemState[finalFilePath]).toEqual(data);
+
+    const rootDirCalls = rootDirHandleMockInstance.getDirectoryHandle.mock.calls.map(
+      ([requested]) => requested
+    );
+    expect(rootDirCalls).toEqual(expect.arrayContaining(['saves']));
+    expect(rootDirCalls).not.toContain('.');
+    expect(rootDirCalls).not.toContain('./saves');
+
+    expect(savesDirHandleMock.getDirectoryHandle).toHaveBeenCalledWith(
+      'manual_saves',
+      expect.objectContaining({ create: true })
+    );
+    expect(manualDirHandleMock.removeEntry).toHaveBeenCalledWith(tempFileName);
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      'BrowserStorageProvider: Atomic write to ./saves/manual_saves/dottedGame.sav completed successfully.'
+    );
+  });
+
+  test('rejects parent directory segments in file paths', async () => {
+    const data = new Uint8Array([99]);
+
+    const result = await storageProvider.writeFileAtomically(
+      '../escape.sav',
+      data
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Path traversal segment ".."');
+    expect(storageProvider._testDispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message: 'BrowserStorageProvider: Refused directory traversal attempt.',
+        details: expect.objectContaining({
+          error: expect.stringContaining('Path traversal segment ".."'),
+        }),
+      })
+    );
+    expect(storageProvider._testDispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('Error writing to temporary file'),
+      })
+    );
+    expect(Object.keys(mockFileSystemState)).toHaveLength(0);
+  });
+
   test('should return error if underlying tempFileHandle.createWritable fails', async () => {
     const filePath = 'errorFile.sav';
     const tempFilePath = `${filePath}.tmp`;
