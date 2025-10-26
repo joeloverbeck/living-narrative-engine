@@ -4,6 +4,7 @@ import {
   ENGINE_OPERATION_IN_PROGRESS_UI,
   ENGINE_READY_UI,
 } from '../constants/eventIds.js';
+import { extractSaveName } from '../utils/savePathUtils.js';
 
 /**
  * @typedef {import('./engineState.js').default} EngineState
@@ -338,8 +339,11 @@ class GameSessionManager {
       (segment) => !/^[.]+$/.test(segment)
     );
 
-    if (meaningfulSegments.length > 0) {
-      return meaningfulSegments[meaningfulSegments.length - 1];
+    for (let i = meaningfulSegments.length - 1; i >= 0; i -= 1) {
+      const formatted = this.#normalizeSaveName(meaningfulSegments[i]);
+      if (formatted) {
+        return formatted;
+      }
     }
 
     const identifierWithoutSeparators = normalizedIdentifier
@@ -350,10 +354,46 @@ class GameSessionManager {
       identifierWithoutSeparators.length > 0 &&
       !/^[.]+$/.test(identifierWithoutSeparators)
     ) {
-      return identifierWithoutSeparators;
+      const fallback = this.#normalizeSaveName(identifierWithoutSeparators);
+      if (fallback) {
+        return fallback;
+      }
     }
 
     return 'Saved Game';
+  }
+
+  /**
+   * Converts raw identifier segments into a user-friendly save name.
+   *
+   * @private
+   * @description Removes known manual save prefixes, trims common file
+   * extensions, and replaces underscores with spaces to mirror the
+   * player-provided name as closely as possible.
+   * @param {string} rawName - Identifier fragment extracted from the path.
+   * @returns {string} Human-readable save label or an empty string when none can be derived.
+   */
+  #normalizeSaveName(rawName) {
+    if (typeof rawName !== 'string') {
+      return '';
+    }
+
+    const trimmedName = rawName.trim();
+    if (!trimmedName) {
+      return '';
+    }
+
+    const extracted = extractSaveName(trimmedName);
+    const isManualPattern =
+      extracted !== trimmedName || trimmedName.toLowerCase().endsWith('.sav');
+    const candidate = isManualPattern ? extracted : trimmedName;
+    const withSpaces = candidate.replace(/[_]+/g, ' ').trim();
+
+    if (withSpaces.length > 0) {
+      return withSpaces;
+    }
+
+    return candidate.trim();
   }
 
   /**

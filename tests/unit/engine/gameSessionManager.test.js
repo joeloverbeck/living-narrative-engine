@@ -156,8 +156,8 @@ describe('GameSessionManager', () => {
       expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
         ENGINE_OPERATION_IN_PROGRESS_UI,
         {
-          titleMessage: 'Loading MySave.sav...',
-          inputDisabledMessage: 'Loading game from MySave.sav...',
+          titleMessage: 'Loading MySave...',
+          inputDisabledMessage: 'Loading game from MySave...',
         }
       );
       expect(resetCoreGameStateFn).toHaveBeenCalledTimes(1);
@@ -171,8 +171,8 @@ describe('GameSessionManager', () => {
       expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
         ENGINE_OPERATION_IN_PROGRESS_UI,
         {
-          titleMessage: 'Loading GameSave.sav...',
-          inputDisabledMessage: 'Loading game from GameSave.sav...',
+          titleMessage: 'Loading GameSave...',
+          inputDisabledMessage: 'Loading game from GameSave...',
         }
       );
     });
@@ -251,6 +251,21 @@ describe('GameSessionManager', () => {
         {
           titleMessage: 'Loading Saved Game...',
           inputDisabledMessage: 'Loading game from Saved Game...',
+        }
+      );
+    });
+
+    it('should convert manual save filenames into readable titles', async () => {
+      const manualIdentifier =
+        'saves/manual_saves/manual_save_Galactic_Quest.sav';
+
+      await gameSessionManager.prepareForLoadGameSession(manualIdentifier);
+
+      expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENGINE_OPERATION_IN_PROGRESS_UI,
+        {
+          titleMessage: 'Loading Galactic Quest...',
+          inputDisabledMessage: 'Loading game from Galactic Quest...',
         }
       );
     });
