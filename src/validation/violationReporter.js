@@ -2,7 +2,7 @@
  * @file Multi-format violation reporter for cross-reference validation
  * @description Generates comprehensive reports in various formats (console, JSON, HTML, Markdown)
  * for violation detection results. Integrates with existing logging infrastructure.
- * @see src/validation/modCrossReferenceValidator.js - Source of validation data
+ * @see cli/validation/modCrossReferenceValidator.js - Source of validation data
  */
 
 import { validateDependency } from '../utils/dependencyUtils.js';

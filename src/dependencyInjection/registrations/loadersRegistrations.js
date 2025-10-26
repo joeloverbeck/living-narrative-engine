@@ -496,12 +496,14 @@ export async function registerLoaders(container) {
     ) {
       // Server-side environment - register validation services
       // Dynamic imports with string concatenation to avoid esbuild static analysis
+      const cliValidationBasePath = '../../../cli/validation/';
+      // Keep CLI validation modules outside of src/ to avoid bundling Node-only dependencies
       const validationBasePath = '../../validation/';
       const modReferenceExtractorModule = await import(
-        validationBasePath + 'modReferenceExtractor.js'
+        cliValidationBasePath + 'modReferenceExtractor.js'
       );
       const modCrossReferenceValidatorModule = await import(
-        validationBasePath + 'modCrossReferenceValidator.js'
+        cliValidationBasePath + 'modCrossReferenceValidator.js'
       );
 
       const ModReferenceExtractor = modReferenceExtractorModule.default;
@@ -531,7 +533,7 @@ export async function registerLoaders(container) {
 
       // Dynamic import for ModValidationOrchestrator
       const modValidationOrchestratorModule = await import(
-        validationBasePath + 'modValidationOrchestrator.js'
+        cliValidationBasePath + 'modValidationOrchestrator.js'
       );
       const ModValidationOrchestrator = modValidationOrchestratorModule.default;
 
