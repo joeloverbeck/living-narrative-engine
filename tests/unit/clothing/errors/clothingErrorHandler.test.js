@@ -338,6 +338,77 @@ describe('ClothingErrorHandler', () => {
       );
     });
 
+    it('should execute registered fallback strategies using local helpers', () => {
+      const strategies = Object.fromEntries(
+        mockRecoveryStrategyManager.registerStrategy.mock.calls.map(([errorType, config]) => [
+          errorType,
+          config
+        ])
+      );
+
+      mockLogger.warn.mockClear();
+
+      const serviceFallbackResult = strategies.ClothingServiceError.fallback(
+        new ClothingServiceError('Service down', 'ClothingAccessibilityService', 'op'),
+        { name: 'operation' }
+      );
+      expect(serviceFallbackResult).toEqual({ mode: 'legacy', items: [], accessible: true });
+
+      const coverageFallbackResult = strategies.CoverageAnalysisError.fallback(
+        new CoverageAnalysisError('Coverage failed', {}),
+        { name: 'operation' }
+      );
+      expect(coverageFallbackResult).toEqual({ mode: 'layer_only', blockingDisabled: true });
+
+      const priorityFallbackResult = strategies.PriorityCalculationError.fallback(
+        new PriorityCalculationError('Priority failed', 'layer', 'op', {}),
+        { name: 'operation' }
+      );
+      expect(priorityFallbackResult).toEqual({
+        mode: 'default_priorities',
+        priorities: {
+          outer: 1,
+          base: 2,
+          underwear: 3,
+          accessories: 4
+        }
+      });
+
+      const validationFallbackResult = strategies.ClothingValidationError.fallback(
+        new ClothingValidationError('Validation failed', 'field', 'value', 'string', {}),
+        { name: 'operation' }
+      );
+      expect(validationFallbackResult).toEqual({
+        mode: 'sanitized',
+        retryable: true,
+        sanitizedField: 'field',
+        sanitizedValue: null
+      });
+
+      const accessibilityFallbackResult = strategies.ClothingAccessibilityError.fallback(
+        new ClothingAccessibilityError('Accessibility failed', 'entity', 'item', {}),
+        { name: 'operation' }
+      );
+      expect(accessibilityFallbackResult).toEqual({
+        mode: 'simple_accessibility',
+        allAccessible: true
+      });
+
+      expect(mockLogger.warn).toHaveBeenCalledWith('Falling back to legacy clothing logic');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Coverage analysis failed, using layer priority only'
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Priority calculation failed, using default priorities'
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Validation error, attempting data sanitization'
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Accessibility check failed, using simple fallback'
+      );
+    });
+
     it('should handle sync errors through central handler', () => {
       const error = new ClothingServiceError('Test error', 'Service', 'op');
       const expectedResult = { errorId: 'sync_123', recovered: true };
@@ -375,6 +446,32 @@ describe('ClothingErrorHandler', () => {
   });
 
   describe('Recovery Strategy Execution', () => {
+    it('should log recovery failure when strategy throws', async () => {
+      mockLogger.warn.mockImplementation(() => {
+        throw new Error('warn failure');
+      });
+
+      const error = new ClothingServiceError(
+        'Service failed',
+        'ClothingAccessibilityService',
+        'operation'
+      );
+
+      const recovery = await errorHandler.handleError(error);
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error recovery failed',
+        expect.objectContaining({
+          originalError: 'Service failed',
+          recoveryError: 'warn failure',
+          strategy: ''
+        })
+      );
+      expect(recovery.recovered).toBe(false);
+      expect(recovery.fallbackData).toBeNull();
+      expect(recovery.recoveryStrategy).toBe('');
+    });
+
     it('should handle unknown error types without recovery', async () => {
       // Test with a generic Error that has no recovery strategy
       const error = new Error('Generic error');
