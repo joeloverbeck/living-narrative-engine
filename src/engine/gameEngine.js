@@ -599,13 +599,6 @@ class GameEngine {
    * @returns {Promise<void>} Resolves when dispatching completes.
    */
   async showSaveGameUI() {
-    const persistenceService = this.#ensurePersistenceServiceAvailable(
-      'GameEngine.showSaveGameUI: GamePersistenceService is unavailable. Cannot show Save Game UI.'
-    );
-    if (!persistenceService) {
-      return;
-    }
-
     const notifySavingUnavailable = async (shouldLogWarning = true) => {
       if (shouldLogWarning) {
         this.#logger.warn(
@@ -630,6 +623,14 @@ class GameEngine {
         );
       }
     };
+
+    const persistenceService = this.#ensurePersistenceServiceAvailable(
+      'GameEngine.showSaveGameUI: GamePersistenceService is unavailable. Cannot show Save Game UI.'
+    );
+    if (!persistenceService) {
+      await notifySavingUnavailable(false);
+      return;
+    }
 
     let savingAllowed;
     try {

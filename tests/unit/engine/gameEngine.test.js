@@ -775,8 +775,9 @@ describeEngineSuite('GameEngine', (context) => {
       expect(testBed.getLogger().error).toHaveBeenCalledWith(
         'GameEngine.showSaveGameUI: GamePersistenceService is unavailable. Cannot show Save Game UI.'
       );
-      // Should not dispatch any events
-      expect(testBed.getSafeEventDispatcher().dispatch).not.toHaveBeenCalled();
+      expect(testBed.getSafeEventDispatcher().dispatch).toHaveBeenCalledWith(
+        CANNOT_SAVE_GAME_INFO
+      );
     });
   });
 

@@ -164,9 +164,13 @@ describeInitializedEngineSuite(
           expect(
             bed.getGamePersistenceService().isSavingAllowed
           ).not.toHaveBeenCalled();
+          // eslint-disable-next-line jest/no-standalone-expect
+          expect(bed.getSafeEventDispatcher().dispatch).toHaveBeenCalledWith(
+            CANNOT_SAVE_GAME_INFO
+          );
           return [bed.getLogger().error, bed.getSafeEventDispatcher().dispatch];
         },
-        { extraAssertions: 1 }
+        { extraAssertions: 2, expectNoDispatches: false }
       )('should log error if %s is unavailable when showing save UI');
     });
   },
