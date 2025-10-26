@@ -197,8 +197,8 @@ describe('ScopeResolverHelpers Integration - Multiple Category Registration', ()
     expect(testFixture.testEnv._registeredResolvers.has('items:portable_items_at_location')).toBe(true);
     expect(testFixture.testEnv._registeredResolvers.has('anatomy:actors_at_location')).toBe(true);
 
-    // Verify total count is the sum of all categories (9 + 5 + 2 = 16)
-    expect(testFixture.testEnv._registeredResolvers.size).toBe(16);
+    // Verify total count is the sum of all categories (26 + 5 + 2 = 33)
+    expect(testFixture.testEnv._registeredResolvers.size).toBe(33);
   });
 
   it('should preserve original resolver functionality', () => {
@@ -212,5 +212,89 @@ describe('ScopeResolverHelpers Integration - Multiple Category Registration', ()
 
     // Should complete without error (original behavior)
     expect(result).toBeDefined();
+  });
+});
+
+
+describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
+  let testFixture;
+
+  beforeEach(async () => {
+    testFixture = await ModTestFixture.forAction(
+      'positioning',
+      'positioning:sit_down',
+      null,
+      null
+    );
+    ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
+  });
+
+  afterEach(() => {
+    testFixture.cleanup();
+  });
+
+  it('should register all 15 new TEAOUTTHR-006 positioning scopes', () => {
+    const newScopes = [
+      'positioning:close_actors',
+      'positioning:close_actors_facing_each_other',
+      'positioning:actors_both_sitting_close',
+      'positioning:actor_biting_my_neck',
+      'positioning:actors_sitting_close',
+      'positioning:close_actors_or_entity_kneeling_before_actor',
+      'positioning:actor_im_straddling',
+      'positioning:entity_actor_is_kneeling_before',
+      'positioning:actors_sitting_with_space_to_right',
+      'positioning:available_furniture',
+      'positioning:available_lying_furniture',
+      'positioning:furniture_im_lying_on',
+      'positioning:furniture_im_sitting_on',
+      'positioning:surface_im_bending_over',
+      'positioning:actors_im_facing_away_from',
+    ];
+
+    newScopes.forEach((scopeName) => {
+      expect(testFixture.testEnv._registeredResolvers.has(scopeName)).toBe(true);
+    });
+  });
+
+  it('should verify total count of 26 positioning scopes registered', () => {
+    const positioningScopes = Array.from(testFixture.testEnv._registeredResolvers.keys()).filter(
+      (key) => key.startsWith('positioning:')
+    );
+
+    expect(positioningScopes.length).toBe(26);
+  });
+
+  it('should call all new scopes without errors (smoke test)', () => {
+    const scenario = testFixture.createStandardActorTarget(['Actor', 'Partner']);
+    testFixture.reset([scenario.actor, scenario.target]);
+
+    const scopesToTest = [
+      'positioning:close_actors',
+      'positioning:close_actors_facing_each_other',
+      'positioning:actors_both_sitting_close',
+      'positioning:actor_biting_my_neck',
+      'positioning:actors_sitting_close',
+      'positioning:close_actors_or_entity_kneeling_before_actor',
+      'positioning:actor_im_straddling',
+      'positioning:entity_actor_is_kneeling_before',
+      'positioning:actors_sitting_with_space_to_right',
+      'positioning:available_furniture',
+      'positioning:available_lying_furniture',
+      'positioning:furniture_im_lying_on',
+      'positioning:furniture_im_sitting_on',
+      'positioning:surface_im_bending_over',
+      'positioning:actors_im_facing_away_from',
+    ];
+
+    scopesToTest.forEach((scopeName) => {
+      expect(() => {
+        const result = testFixture.testEnv.unifiedScopeResolver.resolveSync(
+          scopeName,
+          { actor: scenario.actor }
+        );
+        expect(result.success).toBe(true);
+      }).not.toThrow();
+    });
   });
 });

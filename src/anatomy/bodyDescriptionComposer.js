@@ -19,6 +19,7 @@ export class BodyDescriptionComposer {
     anatomyFormattingService,
     partDescriptionGenerator,
     equipmentDescriptionService = null,
+    activityDescriptionService = null,
     logger = null,
   } = {}) {
     this.bodyPartDescriptionBuilder = bodyPartDescriptionBuilder;
@@ -27,6 +28,7 @@ export class BodyDescriptionComposer {
     this.anatomyFormattingService = anatomyFormattingService;
     this.partDescriptionGenerator = partDescriptionGenerator;
     this.equipmentDescriptionService = equipmentDescriptionService;
+    this.activityDescriptionService = activityDescriptionService;
     this.#logger = ensureValidLogger(logger, 'BodyDescriptionComposer');
 
     // Initialize configuration and template services
@@ -148,6 +150,19 @@ export class BodyDescriptionComposer {
           );
         if (equipmentDescription) {
           lines.push(equipmentDescription);
+        }
+        processedTypes.add(partType);
+        continue;
+      }
+
+      // Handle activity descriptions
+      if (partType === 'activity' && this.activityDescriptionService) {
+        const activityDescription =
+          await this.activityDescriptionService.generateActivityDescription(
+            bodyEntity.id
+          );
+        if (activityDescription) {
+          lines.push(activityDescription);
         }
         processedTypes.add(partType);
         continue;

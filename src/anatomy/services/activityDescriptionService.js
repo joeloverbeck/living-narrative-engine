@@ -424,14 +424,16 @@ class ActivityDescriptionService {
       }
       // Fallback to description field for backward compatibility
       if (activity.description) {
+        const normalizedDesc = activity.description.trim();
+        if (!normalizedDesc) return '';
         return targetName
-          ? `${actorName} ${activity.description} ${targetName}`.trim()
-          : `${actorName} ${activity.description}`.trim();
+          ? `${actorName} ${normalizedDesc} ${targetName}`.trim()
+          : `${actorName} ${normalizedDesc}`.trim();
       }
     } else if (activity.type === 'dedicated') {
       // Dedicated metadata: construct from verb/adverb
-      const verb = activity.verb || 'interacting with';
-      const adverb = activity.adverb ? ` ${activity.adverb}` : '';
+      const verb = (activity.verb || 'interacting with').trim();
+      const adverb = activity.adverb ? ` ${activity.adverb.trim()}` : '';
 
       if (targetName) {
         return `${actorName} is ${verb} ${targetName}${adverb}`;
@@ -442,15 +444,19 @@ class ActivityDescriptionService {
 
     // Fallback for legacy activities without type
     if (activity.description) {
+      const normalizedDesc = activity.description.trim();
+      if (!normalizedDesc) return '';
       return targetName
-        ? `${actorName} ${activity.description} ${targetName}`.trim()
-        : `${actorName} ${activity.description}`.trim();
+        ? `${actorName} ${normalizedDesc} ${targetName}`.trim()
+        : `${actorName} ${normalizedDesc}`.trim();
     }
 
     if (activity.verb) {
+      const normalizedVerb = activity.verb.trim();
+      if (!normalizedVerb) return '';
       return targetName
-        ? `${actorName} ${activity.verb} ${targetName}`
-        : `${actorName} ${activity.verb}`;
+        ? `${actorName} ${normalizedVerb} ${targetName}`
+        : `${actorName} ${normalizedVerb}`;
     }
 
     return '';

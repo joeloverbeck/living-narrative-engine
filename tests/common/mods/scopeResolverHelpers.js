@@ -433,6 +433,431 @@ export class ScopeResolverHelpers {
           sourceField: 'furniture_id',
         }
       ),
+
+      // Violence mod scopes - complex closeness + facing logic
+      'positioning:close_actors_facing_each_other_or_behind_target':
+        this.createArrayFilterResolver(
+          'positioning:close_actors_facing_each_other_or_behind_target',
+          {
+            getArray: (actor, context, em) => {
+              const closeness = em.getComponentData(
+                actor.id,
+                'positioning:closeness'
+              );
+              return closeness?.partners || [];
+            },
+            filterFn: (partnerId, actor, context, em) => {
+              const actorFacingAway =
+                em.getComponentData(actor.id, 'positioning:facing_away')
+                  ?.facing_away_from || [];
+              const partnerFacingAway =
+                em.getComponentData(partnerId, 'positioning:facing_away')
+                  ?.facing_away_from || [];
+
+              const facingEachOther =
+                !actorFacingAway.includes(partnerId) &&
+                !partnerFacingAway.includes(actor.id);
+              const actorBehind = partnerFacingAway.includes(actor.id);
+
+              return facingEachOther || actorBehind;
+            },
+          }
+        ),
+
+      // Biting relationship scope - filters closeness partners for biting relationship
+      'positioning:actor_being_bitten_by_me': this.createArrayFilterResolver(
+        'positioning:actor_being_bitten_by_me',
+        {
+          getArray: (actor, context, em) => {
+            const closeness = em.getComponentData(
+              actor.id,
+              'positioning:closeness'
+            );
+            return closeness?.partners || [];
+          },
+          filterFn: (partnerId, actor, context, em) => {
+            // Check if actor has biting_neck component
+            const actorBitingNeck = em.getComponentData(
+              actor.id,
+              'positioning:biting_neck'
+            );
+            if (!actorBitingNeck) {
+              return false;
+            }
+
+            // Check if target has being_bitten_in_neck component
+            const partnerBeingBitten = em.getComponentData(
+              partnerId,
+              'positioning:being_bitten_in_neck'
+            );
+            if (!partnerBeingBitten) {
+              return false;
+            }
+
+            // Verify reciprocal relationship
+            return (
+              actorBitingNeck.bitten_entity_id === partnerId &&
+              partnerBeingBitten.biting_entity_id === actor.id
+            );
+          },
+        }
+      ),
+
+      // HIGH PRIORITY SCOPES (Phase 1)
+
+      // "close actors" - Base closeness without kneeling filters
+      'positioning:close_actors': this.createArrayFilterResolver(
+        'positioning:close_actors',
+        {
+          getArray: (actor, context, em) => {
+            const closeness = em.getComponentData(
+              actor.id,
+              'positioning:closeness'
+            );
+            return closeness?.partners || [];
+          },
+          filterFn: (partnerId, actor, context, em) => {
+            // Exclude if either actor is kneeling before the other
+            const actorKneeling = em.getComponentData(
+              actor.id,
+              'positioning:kneeling_before'
+            );
+            const partnerKneeling = em.getComponentData(
+              partnerId,
+              'positioning:kneeling_before'
+            );
+
+            return !(
+              actorKneeling?.entity_id === partnerId ||
+              partnerKneeling?.entity_id === actor.id
+            );
+          },
+        }
+      ),
+
+      // "close actors facing each other" - Mutual facing validation
+      'positioning:close_actors_facing_each_other':
+        this.createArrayFilterResolver(
+          'positioning:close_actors_facing_each_other',
+          {
+            getArray: (actor, context, em) => {
+              const closeness = em.getComponentData(
+                actor.id,
+                'positioning:closeness'
+              );
+              return closeness?.partners || [];
+            },
+            filterFn: (partnerId, actor, context, em) => {
+              const actorFacingAway =
+                em.getComponentData(actor.id, 'positioning:facing_away')
+                  ?.facing_away_from || [];
+              const partnerFacingAway =
+                em.getComponentData(partnerId, 'positioning:facing_away')
+                  ?.facing_away_from || [];
+
+              // Both must be facing each other (not facing away from each other)
+              return (
+                !actorFacingAway.includes(partnerId) &&
+                !partnerFacingAway.includes(actor.id)
+              );
+            },
+          }
+        ),
+
+      // "actors both sitting close" - Closeness + sitting filter
+      'positioning:actors_both_sitting_close': this.createArrayFilterResolver(
+        'positioning:actors_both_sitting_close',
+        {
+          getArray: (actor, context, em) => {
+            const closeness = em.getComponentData(
+              actor.id,
+              'positioning:closeness'
+            );
+            return closeness?.partners || [];
+          },
+          filterFn: (partnerId, actor, context, em) => {
+            // Both actor and partner must be sitting
+            return (
+              em.hasComponent(actor.id, 'positioning:sitting_on') &&
+              em.hasComponent(partnerId, 'positioning:sitting_on')
+            );
+          },
+        }
+      ),
+
+      // "actor biting my neck" - Reverse biting relationship
+      'positioning:actor_biting_my_neck': this.createArrayFilterResolver(
+        'positioning:actor_biting_my_neck',
+        {
+          getArray: (actor, context, em) => {
+            const closeness = em.getComponentData(
+              actor.id,
+              'positioning:closeness'
+            );
+            return closeness?.partners || [];
+          },
+          filterFn: (partnerId, actor, context, em) => {
+            // Check if actor has being_bitten_in_neck component
+            const actorBeingBitten = em.getComponentData(
+              actor.id,
+              'positioning:being_bitten_in_neck'
+            );
+            if (!actorBeingBitten) {
+              return false;
+            }
+
+            // Check if partner has biting_neck component
+            const partnerBitingNeck = em.getComponentData(
+              partnerId,
+              'positioning:biting_neck'
+            );
+            if (!partnerBitingNeck) {
+              return false;
+            }
+
+            // Verify reciprocal relationship (opposite of actor_being_bitten_by_me)
+            return (
+              actorBeingBitten.biting_entity_id === partnerId &&
+              partnerBitingNeck.bitten_entity_id === actor.id
+            );
+          },
+        }
+      ),
+
+      // "actors sitting close" - Seated actors with closeness
+      'positioning:actors_sitting_close': this.createArrayFilterResolver(
+        'positioning:actors_sitting_close',
+        {
+          getArray: (actor, context, em) => {
+            const closeness = em.getComponentData(
+              actor.id,
+              'positioning:closeness'
+            );
+            return closeness?.partners || [];
+          },
+          filterFn: (partnerId, actor, context, em) => {
+            // Partner must be sitting (actor sitting status doesn't matter)
+            return em.hasComponent(partnerId, 'positioning:sitting_on');
+          },
+        }
+      ),
+
+      // "close actors or entity kneeling before actor" - Complex closeness with kneeling union
+      'positioning:close_actors_or_entity_kneeling_before_actor':
+        this.createArrayFilterResolver(
+          'positioning:close_actors_or_entity_kneeling_before_actor',
+          {
+            getArray: (actor, context, em) => {
+              const closeness = em.getComponentData(
+                actor.id,
+                'positioning:closeness'
+              );
+              return closeness?.partners || [];
+            },
+            filterFn: (partnerId, actor, context, em) => {
+              // Get facing away data
+              const actorFacingAway =
+                em.getComponentData(actor.id, 'positioning:facing_away')
+                  ?.facing_away_from || [];
+              const partnerFacingAway =
+                em.getComponentData(partnerId, 'positioning:facing_away')
+                  ?.facing_away_from || [];
+
+              // Check if facing each other
+              const facingEachOther =
+                !actorFacingAway.includes(partnerId) &&
+                !partnerFacingAway.includes(actor.id);
+
+              // Check if actor is behind partner
+              const actorBehind = partnerFacingAway.includes(actor.id);
+
+              // Check kneeling relationships
+              const actorKneeling = em.getComponentData(
+                actor.id,
+                'positioning:kneeling_before'
+              );
+              const partnerKneeling = em.getComponentData(
+                partnerId,
+                'positioning:kneeling_before'
+              );
+
+              // Actor must NOT be kneeling before partner
+              if (actorKneeling?.entity_id === partnerId) {
+                return false;
+              }
+
+              // Must be: (facing each other OR actor behind) AND actor not kneeling before partner
+              return facingEachOther || actorBehind;
+            },
+          }
+        ),
+
+      // MEDIUM PRIORITY SCOPES (Phase 2)
+
+      // "actor im straddling" - Straddling relationship lookup
+      'positioning:actor_im_straddling': this.createComponentLookupResolver(
+        'positioning:actor_im_straddling',
+        {
+          componentType: 'positioning:straddling_waist',
+          sourceField: 'target_id',
+          contextSource: 'actor',
+        }
+      ),
+
+      // "entity actor is kneeling before" - Kneeling target lookup
+      'positioning:entity_actor_is_kneeling_before':
+        this.createComponentLookupResolver(
+          'positioning:entity_actor_is_kneeling_before',
+          {
+            componentType: 'positioning:kneeling_before',
+            sourceField: 'entity_id',
+            contextSource: 'actor',
+          }
+        ),
+
+      // "actors sitting with space to right" - Seating availability check
+      // Note: This scope uses a custom hasSittingSpaceToRight operation in production
+      // For test purposes, we approximate with simplified logic
+      'positioning:actors_sitting_with_space_to_right':
+        this.createComponentFilterResolver(
+          'positioning:actors_sitting_with_space_to_right',
+          {
+            componentType: 'positioning:sitting_on',
+            filterFn: (entityId, context, em) => {
+              const sitting = em.getComponentData(
+                entityId,
+                'positioning:sitting_on'
+              );
+              if (!sitting?.furniture_id || typeof sitting.spot_index !== 'number') {
+                return false;
+              }
+
+              const furniture = em.getComponentData(
+                sitting.furniture_id,
+                'positioning:allows_sitting'
+              );
+              if (!furniture?.spots) {
+                return false;
+              }
+
+              const spots = furniture.spots;
+              const actorSpotIndex = sitting.spot_index;
+
+              // Check if there are at least 2 empty spots to the right
+              let emptyCount = 0;
+              for (let i = actorSpotIndex + 1; i < spots.length; i++) {
+                if (spots[i] === null || spots[i] === undefined) {
+                  emptyCount++;
+                } else {
+                  break; // Stop at first occupied spot
+                }
+              }
+
+              // Must have at least 2 empty spots and be rightmost occupant
+              if (emptyCount < 2) {
+                return false;
+              }
+
+              // Check if rightmost occupant (no one sitting further right)
+              for (let i = actorSpotIndex + 1; i < spots.length; i++) {
+                if (spots[i] !== null && spots[i] !== undefined) {
+                  return false;
+                }
+              }
+
+              return true;
+            },
+          }
+        ),
+
+      // LOWER PRIORITY & SPECIALIZED SCOPES (Phase 3)
+
+      // "available furniture" - Furniture with empty spots at location
+      'positioning:available_furniture': this.createLocationMatchResolver(
+        'positioning:available_furniture',
+        {
+          filterFn: (entityId, source, context, em) => {
+            if (!em.hasComponent(entityId, 'positioning:allows_sitting')) {
+              return false;
+            }
+
+            const furniture = em.getComponentData(
+              entityId,
+              'positioning:allows_sitting'
+            );
+
+            // Check if furniture has at least one empty spot
+            return (
+              furniture?.spots &&
+              furniture.spots.some((spot) => spot === null || spot === undefined)
+            );
+          },
+        }
+      ),
+
+      // "available lying furniture" - Furniture allowing lying at location
+      'positioning:available_lying_furniture': this.createLocationMatchResolver(
+        'positioning:available_lying_furniture',
+        {
+          filterFn: (entityId, source, context, em) => {
+            return em.hasComponent(entityId, 'positioning:allows_lying_on');
+          },
+        }
+      ),
+
+      // "furniture im lying on" - Current lying surface
+      'positioning:furniture_im_lying_on': this.createComponentLookupResolver(
+        'positioning:furniture_im_lying_on',
+        {
+          componentType: 'positioning:lying_down',
+          sourceField: 'furniture_id',
+          contextSource: 'actor',
+        }
+      ),
+
+      // "furniture im sitting on" - Current sitting surface (alias for furniture_actor_sitting_on)
+      'positioning:furniture_im_sitting_on':
+        this.createComponentLookupResolver(
+          'positioning:furniture_im_sitting_on',
+          {
+            componentType: 'positioning:sitting_on',
+            sourceField: 'furniture_id',
+            contextSource: 'actor',
+          }
+        ),
+
+      // "surface im bending over" - Bending-over surface lookup
+      'positioning:surface_im_bending_over':
+        this.createComponentLookupResolver(
+          'positioning:surface_im_bending_over',
+          {
+            componentType: 'positioning:bending_over',
+            sourceField: 'surface_id',
+            contextSource: 'actor',
+          }
+        ),
+
+      // "actors im facing away from" - Facing-away targets in closeness
+      'positioning:actors_im_facing_away_from': this.createArrayFilterResolver(
+        'positioning:actors_im_facing_away_from',
+        {
+          getArray: (actor, context, em) => {
+            const facingAway = em.getComponentData(
+              actor.id,
+              'positioning:facing_away'
+            );
+            return facingAway?.facing_away_from || [];
+          },
+          filterFn: (partnerId, actor, context, em) => {
+            // Partner must be in closeness with actor
+            const closeness = em.getComponentData(
+              actor.id,
+              'positioning:closeness'
+            );
+            return closeness?.partners?.includes(partnerId) || false;
+          },
+        }
+      ),
     };
 
     // Register all resolvers with proper context binding
@@ -567,7 +992,9 @@ export class ScopeResolverHelpers {
   static _registerResolvers(testEnv, entityManager, resolvers) {
     // Store original resolver if not already stored
     if (!testEnv._originalResolveSync) {
-      testEnv._originalResolveSync = testEnv.unifiedScopeResolver.resolveSync;
+      testEnv._originalResolveSync = testEnv.unifiedScopeResolver.resolveSync.bind(
+        testEnv.unifiedScopeResolver
+      );
     }
 
     // Store registered resolvers map if not exists

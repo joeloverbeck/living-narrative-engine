@@ -107,6 +107,7 @@ describe('physical-control:push_off action discovery', () => {
         'positioning:closeness',
       ]);
       expect(pushOffAction.forbidden_components.actor).toEqual([
+        'positioning:biting_neck',
         'positioning:straddling_waist',
         'positioning:hugging',
         'positioning:being_hugged',

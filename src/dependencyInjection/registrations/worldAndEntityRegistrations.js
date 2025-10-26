@@ -47,6 +47,7 @@ import { BodyDescriptionComposer } from '../../anatomy/bodyDescriptionComposer.j
 import { AnatomyDescriptionService } from '../../anatomy/anatomyDescriptionService.js';
 import { AnatomyFormattingService } from '../../services/anatomyFormattingService.js';
 import EquipmentDescriptionService from '../../clothing/services/equipmentDescriptionService.js';
+import ActivityDescriptionService from '../../anatomy/services/activityDescriptionService.js';
 import { RecipeProcessor } from '../../anatomy/recipeProcessor.js';
 import PartSelectionService from '../../anatomy/partSelectionService.js';
 import { SocketManager } from '../../anatomy/socketManager.js';
@@ -412,6 +413,20 @@ export function registerWorldAndEntity(container) {
     )}.`
   );
 
+  registrar.singletonFactory(tokens.ActivityDescriptionService, (c) => {
+    return new ActivityDescriptionService({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+      anatomyFormattingService: c.resolve(tokens.AnatomyFormattingService),
+      // activityIndex will be added in Phase 3 (ACTDESC-020)
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.ActivityDescriptionService
+    )}.`
+  );
+
   registrar.singletonFactory(tokens.DescriptorFormatter, (c) => {
     return new DescriptorFormatter({
       anatomyFormattingService: c.resolve(tokens.AnatomyFormattingService),
@@ -445,6 +460,7 @@ export function registerWorldAndEntity(container) {
       equipmentDescriptionService: c.resolve(
         tokens.EquipmentDescriptionService
       ),
+      activityDescriptionService: c.resolve(tokens.ActivityDescriptionService),
       logger: c.resolve(tokens.ILogger),
     });
   });
