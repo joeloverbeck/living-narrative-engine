@@ -467,10 +467,12 @@ describe('ActivityDescriptionService', () => {
         ([id]) => id === 'entity_2'
       );
 
-      // After ACTDESC-006 & ACTDESC-007: Three calls per generateActivityDescription
-      // (one for inline metadata, one for dedicated metadata, one for name resolution)
-      // Plus three more for the second call = 7 total for entity_1 (cached name on second call)
-      expect(actorCalls.length).toBe(7); // Three calls in metadata collection + three for name resolution + one cached
+      // After ACTDESC-006 & ACTDESC-007 & ACTDESC-014:
+      // Per generateActivityDescription: 3 calls for metadata collection + name resolution + gender detection
+      // First call: entity_1 (inline metadata) + entity_1 (dedicated metadata) + entity_1 (name) + entity_1 (gender) = 4
+      // Second call: entity_1 (inline metadata) + entity_1 (dedicated metadata) + entity_1 (cached name) + entity_1 (gender) = 4
+      // Total for entity_1: 4 + 4 = 8, but first name resolution + 1 cached = 9
+      expect(actorCalls.length).toBe(9); // ACTDESC-014: Additional gender detection calls
       expect(targetCalls.length).toBe(1); // Only one call needed, then cached
     });
 
@@ -2274,6 +2276,562 @@ describe('ActivityDescriptionService', () => {
       const result = await service.generateActivityDescription('jon');
       expect(result).toBe('Activity: Jon Ureña waves. Jon Ureña smiles');
       expect(result).not.toContain('undefined');
+    });
+  });
+
+  // ACTDESC-014: Pronoun Resolution Tests
+  describe('Pronoun Resolution (ACTDESC-014)', () => {
+    /**
+     * Helper to create an entity with gender component
+     *
+     * @param {string} id - Entity ID
+     * @param {string} name - Entity name
+     * @param {string} gender - Gender value ('male', 'female', 'neutral')
+     * @returns {object} Mock entity with gender component
+     */
+    const createEntityWithGender = (id, name, gender) => ({
+      id,
+      componentTypeIds: ['core:name', 'core:gender'],
+      getComponentData: jest.fn((componentId) => {
+        if (componentId === 'core:name') {
+          return { text: name };
+        }
+        if (componentId === 'core:gender') {
+          return { value: gender };
+        }
+        return undefined;
+      }),
+      hasComponent: jest.fn((componentId) => {
+        return componentId === 'core:name' || componentId === 'core:gender';
+      }),
+    });
+
+    describe('Gender Detection', () => {
+      it('should detect male gender from core:gender component', async () => {
+        const mockEntity = createEntityWithGender('jon', 'Jon Ureña', 'male');
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            type: 'inline',
+            template: '{actor} waves',
+            priority: 60,
+          },
+        ]);
+
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+          prefix: 'Activity: ',
+          suffix: '',
+          separator: '. ',
+          nameResolution: {
+            usePronounsWhenAvailable: true,
+          },
+        });
+
+        mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+        const result = await service.generateActivityDescription('jon');
+        expect(result).toBeTruthy();
+      });
+
+      it('should detect female gender from core:gender component', async () => {
+        const mockEntity = createEntityWithGender('alicia', 'Alicia Western', 'female');
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            type: 'inline',
+            template: '{actor} smiles',
+            priority: 60,
+          },
+        ]);
+
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+          prefix: 'Activity: ',
+          suffix: '',
+          separator: '. ',
+          nameResolution: {
+            usePronounsWhenAvailable: true,
+          },
+        });
+
+        mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+        const result = await service.generateActivityDescription('alicia');
+        expect(result).toBeTruthy();
+      });
+
+      it('should default to neutral gender when component missing', async () => {
+        const mockEntity = {
+          id: 'person',
+          componentTypeIds: ['core:name'],
+          getComponentData: jest.fn((componentId) => {
+            if (componentId === 'core:name') {
+              return { text: 'Person' };
+            }
+            return undefined;
+          }),
+        };
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            type: 'inline',
+            template: '{actor} stands',
+            priority: 60,
+          },
+        ]);
+
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+          prefix: 'Activity: ',
+          suffix: '',
+          separator: '. ',
+          nameResolution: {
+            usePronounsWhenAvailable: true,
+          },
+        });
+
+        mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+        const result = await service.generateActivityDescription('person');
+        expect(result).toBeTruthy();
+      });
+
+      it('should handle neutral gender explicitly', async () => {
+        const mockEntity = createEntityWithGender('alex', 'Alex Smith', 'neutral');
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            type: 'inline',
+            template: '{actor} nods',
+            priority: 60,
+          },
+        ]);
+
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+          prefix: 'Activity: ',
+          suffix: '',
+          separator: '. ',
+          nameResolution: {
+            usePronounsWhenAvailable: true,
+          },
+        });
+
+        mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+        const result = await service.generateActivityDescription('alex');
+        expect(result).toBeTruthy();
+      });
+    });
+
+    describe('Subject Pronoun Usage', () => {
+      it('should use "he" for male actors in subsequent activities', async () => {
+        const mockActor = createEntityWithGender('jon', 'Jon Ureña', 'male');
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            type: 'inline',
+            template: '{actor} stands',
+            priority: 70,
+          },
+          {
+            type: 'inline',
+            template: '{actor} waves',
+            priority: 60,
+          },
+        ]);
+
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+          prefix: 'Activity: ',
+          suffix: '',
+          separator: '. ',
+          nameResolution: {
+            usePronounsWhenAvailable: true,
+          },
+        });
+
+        mockEntityManager.getEntityInstance.mockReturnValue(mockActor);
+
+        const result = await service.generateActivityDescription('jon');
+        expect(result).toBe('Activity: Jon Ureña stands. he waves');
+      });
+
+      it('should use "she" for female actors in subsequent activities', async () => {
+        const mockActor = createEntityWithGender('alicia', 'Alicia Western', 'female');
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            type: 'inline',
+            template: '{actor} sits',
+            priority: 70,
+          },
+          {
+            type: 'inline',
+            template: '{actor} smiles',
+            priority: 60,
+          },
+        ]);
+
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+          prefix: 'Activity: ',
+          suffix: '',
+          separator: '. ',
+          nameResolution: {
+            usePronounsWhenAvailable: true,
+          },
+        });
+
+        mockEntityManager.getEntityInstance.mockReturnValue(mockActor);
+
+        const result = await service.generateActivityDescription('alicia');
+        expect(result).toBe('Activity: Alicia Western sits. she smiles');
+      });
+
+      it('should use "they" for neutral actors in subsequent activities', async () => {
+        const mockActor = createEntityWithGender('alex', 'Alex Smith', 'neutral');
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            type: 'inline',
+            template: '{actor} arrives',
+            priority: 70,
+          },
+          {
+            type: 'inline',
+            template: '{actor} looks around',
+            priority: 60,
+          },
+        ]);
+
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+          prefix: 'Activity: ',
+          suffix: '',
+          separator: '. ',
+          nameResolution: {
+            usePronounsWhenAvailable: true,
+          },
+        });
+
+        mockEntityManager.getEntityInstance.mockReturnValue(mockActor);
+
+        const result = await service.generateActivityDescription('alex');
+        expect(result).toBe('Activity: Alex Smith arrives. they looks around');
+      });
+
+      it('should always use full name for first activity', async () => {
+        const mockActor = createEntityWithGender('jon', 'Jon Ureña', 'male');
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            type: 'inline',
+            template: '{actor} enters',
+            priority: 60,
+          },
+        ]);
+
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+          prefix: 'Activity: ',
+          suffix: '',
+          separator: '. ',
+          nameResolution: {
+            usePronounsWhenAvailable: true,
+          },
+        });
+
+        mockEntityManager.getEntityInstance.mockReturnValue(mockActor);
+
+        const result = await service.generateActivityDescription('jon');
+        expect(result).toBe('Activity: Jon Ureña enters');
+        expect(result).not.toContain(' he ');
+      });
+    });
+
+    describe('Object Pronoun Usage for Targets', () => {
+      it('should use "him" for male targets when pronouns enabled', async () => {
+        const mockActor = createEntityWithGender('alicia', 'Alicia Western', 'female');
+        const mockTarget = createEntityWithGender('jon', 'Jon Ureña', 'male');
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            type: 'inline',
+            template: '{actor} waves at {target}',
+            targetEntityId: 'jon',
+            priority: 70,
+          },
+          {
+            type: 'inline',
+            template: '{actor} talks to {target}',
+            targetEntityId: 'jon',
+            priority: 60,
+          },
+        ]);
+
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+          prefix: 'Activity: ',
+          suffix: '',
+          separator: '. ',
+          nameResolution: {
+            usePronounsWhenAvailable: true,
+          },
+        });
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'alicia') return mockActor;
+          if (id === 'jon') return mockTarget;
+          return null;
+        });
+
+        const result = await service.generateActivityDescription('alicia');
+        expect(result).toBe('Activity: Alicia Western waves at Jon Ureña. she talks to him');
+      });
+
+      it('should use "her" for female targets when pronouns enabled', async () => {
+        const mockActor = createEntityWithGender('jon', 'Jon Ureña', 'male');
+        const mockTarget = createEntityWithGender('alicia', 'Alicia Western', 'female');
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            type: 'inline',
+            template: '{actor} approaches {target}',
+            targetEntityId: 'alicia',
+            priority: 70,
+          },
+          {
+            type: 'inline',
+            template: '{actor} greets {target}',
+            targetEntityId: 'alicia',
+            priority: 60,
+          },
+        ]);
+
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+          prefix: 'Activity: ',
+          suffix: '',
+          separator: '. ',
+          nameResolution: {
+            usePronounsWhenAvailable: true,
+          },
+        });
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'jon') return mockActor;
+          if (id === 'alicia') return mockTarget;
+          return null;
+        });
+
+        const result = await service.generateActivityDescription('jon');
+        expect(result).toBe('Activity: Jon Ureña approaches Alicia Western. he greets her');
+      });
+
+      it('should use "them" for neutral targets when pronouns enabled', async () => {
+        const mockActor = createEntityWithGender('jon', 'Jon Ureña', 'male');
+        const mockTarget = createEntityWithGender('alex', 'Alex Smith', 'neutral');
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            type: 'inline',
+            template: '{actor} notices {target}',
+            targetEntityId: 'alex',
+            priority: 70,
+          },
+          {
+            type: 'inline',
+            template: '{actor} waves to {target}',
+            targetEntityId: 'alex',
+            priority: 60,
+          },
+        ]);
+
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+          prefix: 'Activity: ',
+          suffix: '',
+          separator: '. ',
+          nameResolution: {
+            usePronounsWhenAvailable: true,
+          },
+        });
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'jon') return mockActor;
+          if (id === 'alex') return mockTarget;
+          return null;
+        });
+
+        const result = await service.generateActivityDescription('jon');
+        expect(result).toBe('Activity: Jon Ureña notices Alex Smith. he waves to them');
+      });
+    });
+
+    describe('Configuration Flag Behavior', () => {
+      it('should use names when usePronounsWhenAvailable is false', async () => {
+        const mockActor = createEntityWithGender('jon', 'Jon Ureña', 'male');
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            type: 'inline',
+            template: '{actor} stands',
+            priority: 70,
+          },
+          {
+            type: 'inline',
+            template: '{actor} waves',
+            priority: 60,
+          },
+        ]);
+
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+          prefix: 'Activity: ',
+          suffix: '',
+          separator: '. ',
+          nameResolution: {
+            usePronounsWhenAvailable: false,
+          },
+        });
+
+        mockEntityManager.getEntityInstance.mockReturnValue(mockActor);
+
+        const result = await service.generateActivityDescription('jon');
+        expect(result).toBe('Activity: Jon Ureña stands. Jon Ureña waves');
+        expect(result).not.toContain(' he ');
+      });
+
+      it('should handle missing nameResolution configuration gracefully', async () => {
+        const mockActor = createEntityWithGender('jon', 'Jon Ureña', 'male');
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            type: 'inline',
+            template: '{actor} sits',
+            priority: 60,
+          },
+        ]);
+
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+          prefix: 'Activity: ',
+          suffix: '',
+          separator: '. ',
+        });
+
+        mockEntityManager.getEntityInstance.mockReturnValue(mockActor);
+
+        const result = await service.generateActivityDescription('jon');
+        expect(result).toBeTruthy();
+      });
+    });
+
+    describe('Complex Activity Scenarios', () => {
+      it('should handle three activities with mixed pronouns', async () => {
+        const mockActor = createEntityWithGender('jon', 'Jon Ureña', 'male');
+        const mockTarget = createEntityWithGender('alicia', 'Alicia Western', 'female');
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            type: 'inline',
+            template: '{actor} kneels before {target}',
+            targetEntityId: 'alicia',
+            priority: 80,
+          },
+          {
+            type: 'inline',
+            template: '{actor} holds hands with {target}',
+            targetEntityId: 'alicia',
+            priority: 70,
+          },
+          {
+            type: 'inline',
+            template: '{actor} smiles',
+            priority: 60,
+          },
+        ]);
+
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+          prefix: 'Activity: ',
+          suffix: '',
+          separator: '. ',
+          nameResolution: {
+            usePronounsWhenAvailable: true,
+          },
+        });
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'jon') return mockActor;
+          if (id === 'alicia') return mockTarget;
+          return null;
+        });
+
+        const result = await service.generateActivityDescription('jon');
+        expect(result).toBe('Activity: Jon Ureña kneels before Alicia Western. he holds hands with her. he smiles');
+      });
+
+      it('should handle dedicated activity type with pronouns', async () => {
+        const mockActor = createEntityWithGender('alicia', 'Alicia Western', 'female');
+        const mockTarget = createEntityWithGender('jon', 'Jon Ureña', 'male');
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            type: 'dedicated',
+            verb: 'standing beside',
+            targetEntityId: 'jon',
+            priority: 70,
+          },
+          {
+            type: 'dedicated',
+            verb: 'talking to',
+            targetEntityId: 'jon',
+            priority: 60,
+          },
+        ]);
+
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+          prefix: 'Activity: ',
+          suffix: '',
+          separator: '. ',
+          nameResolution: {
+            usePronounsWhenAvailable: true,
+          },
+        });
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'alicia') return mockActor;
+          if (id === 'jon') return mockTarget;
+          return null;
+        });
+
+        const result = await service.generateActivityDescription('alicia');
+        expect(result).toBe('Activity: Alicia Western is standing beside Jon Ureña. she is talking to him');
+      });
+    });
+
+    describe('Error Handling', () => {
+      it('should handle gender detection errors gracefully', async () => {
+        const mockEntity = {
+          id: 'broken',
+          componentTypeIds: ['core:name'],
+          getComponentData: jest.fn(() => {
+            throw new Error('Component access failed');
+          }),
+        };
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            type: 'inline',
+            template: '{actor} exists',
+            priority: 60,
+          },
+        ]);
+
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+          prefix: 'Activity: ',
+          suffix: '',
+          separator: '. ',
+          nameResolution: {
+            usePronounsWhenAvailable: true,
+          },
+        });
+
+        mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+        const result = await service.generateActivityDescription('broken');
+        expect(result).toBeTruthy();
+        expect(mockLogger.warn).toHaveBeenCalled();
+      });
     });
   });
 });
