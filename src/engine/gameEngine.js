@@ -482,19 +482,6 @@ class GameEngine {
     );
 
     const normalizedSaveName = saveName.trim();
-    if (!this.#engineState.isInitialized) {
-      const errorMessage = 'Game engine is not initialized. Cannot save game.';
-      this.#logger.error(`GameEngine.triggerManualSave: ${errorMessage}`);
-      return { success: false, error: errorMessage };
-    }
-
-    if (!this.#gamePersistenceService) {
-      const errorMessage =
-        'GamePersistenceService is not available. Cannot save game.';
-      this.#logger.error(`GameEngine.triggerManualSave: ${errorMessage}`);
-      return { success: false, error: errorMessage };
-    }
-
     return this.#persistenceCoordinator.triggerManualSave(normalizedSaveName);
   }
 
