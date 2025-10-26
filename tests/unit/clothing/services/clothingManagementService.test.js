@@ -138,6 +138,34 @@ describe('ClothingManagementService', () => {
       ).toThrow('anatomyBlueprintRepository is required');
     });
 
+    it('should throw error when clothingSlotValidator is missing', () => {
+      expect(
+        () =>
+          new ClothingManagementService({
+            entityManager,
+            logger,
+            eventDispatcher,
+            equipmentOrchestrator,
+            anatomyBlueprintRepository,
+            bodyGraphService,
+          })
+      ).toThrow('clothingSlotValidator is required');
+    });
+
+    it('should throw error when bodyGraphService is missing', () => {
+      expect(
+        () =>
+          new ClothingManagementService({
+            entityManager,
+            logger,
+            eventDispatcher,
+            equipmentOrchestrator,
+            anatomyBlueprintRepository,
+            clothingSlotValidator,
+          })
+      ).toThrow('bodyGraphService is required');
+    });
+
     it('should use decomposed architecture when all dependencies are provided', () => {
       expect(service).toBeInstanceOf(ClothingManagementService);
       expect(logger.info).toHaveBeenCalledWith(
