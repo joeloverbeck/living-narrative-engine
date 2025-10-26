@@ -78,7 +78,7 @@ describe('registerTurnLifecycle - Unit Tests', () => {
       turnHandlerResolver: mock(),
       turnContextFactory: mock(),
       turnStateFactory: mock(),
-      actorTurnHandler: mock(),
+      actorTurnHandler: { startTurn: jest.fn() },
     };
 
     // Register all dependencies
@@ -366,6 +366,94 @@ describe('registerTurnLifecycle - Unit Tests', () => {
       const resolver = container.resolve(tokens.TurnHandlerResolver);
       expect(resolver).toBeDefined();
       expect(resolver.constructor.name).toBe('TurnHandlerResolver');
+    });
+
+    test('player handler rule prioritizes PLAYER_TYPE component', async () => {
+      registerTurnLifecycle(container);
+
+      const resolver = container.resolve(tokens.TurnHandlerResolver);
+      const actor = {
+        id: 'player-actor',
+        hasComponent: jest.fn((componentId) => {
+          if (componentId === PLAYER_TYPE_COMPONENT_ID) {
+            return true;
+          }
+          if (componentId === PLAYER_COMPONENT_ID) {
+            return false;
+          }
+          if (componentId === ACTOR_COMPONENT_ID) {
+            return false;
+          }
+          return false;
+        }),
+        getComponentData: jest.fn(() => ({ type: 'human' })),
+      };
+
+      const handler = await resolver.resolveHandler(actor);
+
+      expect(actor.hasComponent).toHaveBeenCalledWith(PLAYER_TYPE_COMPONENT_ID);
+      expect(actor.getComponentData).toHaveBeenCalledWith(
+        PLAYER_TYPE_COMPONENT_ID
+      );
+      expect(actor.hasComponent).not.toHaveBeenCalledWith(
+        PLAYER_COMPONENT_ID
+      );
+      expect(handler).toBe(mockDependencies.actorTurnHandler);
+    });
+
+    test('player handler rule falls back to PLAYER component when needed', async () => {
+      registerTurnLifecycle(container);
+
+      const resolver = container.resolve(tokens.TurnHandlerResolver);
+      const actor = {
+        id: 'legacy-player-actor',
+        hasComponent: jest.fn((componentId) => {
+          if (componentId === PLAYER_TYPE_COMPONENT_ID) {
+            return false;
+          }
+          if (componentId === PLAYER_COMPONENT_ID) {
+            return true;
+          }
+          if (componentId === ACTOR_COMPONENT_ID) {
+            return false;
+          }
+          return false;
+        }),
+        getComponentData: jest.fn(),
+      };
+
+      const handler = await resolver.resolveHandler(actor);
+
+      expect(actor.getComponentData).not.toHaveBeenCalled();
+      expect(actor.hasComponent).toHaveBeenCalledWith(PLAYER_COMPONENT_ID);
+      expect(handler).toBe(mockDependencies.actorTurnHandler);
+    });
+
+    test('AI handler rule matches actors with ACTOR component', async () => {
+      registerTurnLifecycle(container);
+
+      const resolver = container.resolve(tokens.TurnHandlerResolver);
+      const actor = {
+        id: 'ai-actor',
+        hasComponent: jest.fn((componentId) => {
+          if (componentId === PLAYER_TYPE_COMPONENT_ID) {
+            return false;
+          }
+          if (componentId === PLAYER_COMPONENT_ID) {
+            return false;
+          }
+          if (componentId === ACTOR_COMPONENT_ID) {
+            return true;
+          }
+          return false;
+        }),
+        getComponentData: jest.fn(),
+      };
+
+      const handler = await resolver.resolveHandler(actor);
+
+      expect(actor.hasComponent).toHaveBeenCalledWith(ACTOR_COMPONENT_ID);
+      expect(handler).toBe(mockDependencies.actorTurnHandler);
     });
   });
 
