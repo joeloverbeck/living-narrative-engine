@@ -669,6 +669,42 @@ describe('ActivityDescriptionService', () => {
       );
     });
 
+    it('should treat legacy whitespace descriptions as empty output', async () => {
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        {
+          actorId: 'entity_1',
+          description: '   ',
+        },
+      ]);
+
+      const result = await service.generateActivityDescription('entity_1');
+
+      expect(result).toBe('');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'No formatted activity description produced for entity: entity_1'
+        )
+      );
+    });
+
+    it('should ignore legacy activities with whitespace verbs', async () => {
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        {
+          actorId: 'entity_1',
+          verb: '   ',
+        },
+      ]);
+
+      const result = await service.generateActivityDescription('entity_1');
+
+      expect(result).toBe('');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'No formatted activity description produced for entity: entity_1'
+        )
+      );
+    });
+
     it('should fall back to raw entity id when name metadata is absent', async () => {
       mockActivityIndex.findActivitiesForEntity.mockReturnValue([
         {
@@ -691,6 +727,35 @@ describe('ActivityDescriptionService', () => {
 
       // Phase 2: Actor name is resolved from entity passed to generateActivityDescription (entity_1)
       expect(result).toBe('Activity: entity_1 observes.');
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => ({
+        id,
+        name: `Entity ${id}`,
+      }));
+    });
+
+    it('should fall back to target id when target entity cannot be resolved', async () => {
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        {
+          type: 'inline',
+          actorId: 'entity_1',
+          template: '{actor} acknowledges {target}',
+          targetId: 'missing_target',
+        },
+      ]);
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'missing_target') {
+          return undefined;
+        }
+        return { id, name: `Entity ${id}` };
+      });
+
+      const result = await service.generateActivityDescription('entity_1');
+
+      expect(result).toBe(
+        'Activity: Entity entity_1 acknowledges missing_target.'
+      );
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => ({
         id,
@@ -775,6 +840,47 @@ describe('ActivityDescriptionService', () => {
         prefix: 'Activity: ',
         suffix: '.',
       });
+    });
+
+    it('should use inline description fallback when target name is available', async () => {
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        {
+          type: 'inline',
+          actorId: 'entity_1',
+          description: ' greets warmly ',
+          targetId: 'entity_2',
+        },
+      ]);
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => ({
+        id,
+        name: `Entity ${id}`,
+      }));
+
+      const result = await service.generateActivityDescription('entity_1');
+
+      expect(result).toBe(
+        'Activity: Entity entity_1 greets warmly Entity entity_2.'
+      );
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => ({
+        id,
+        name: `Entity ${id}`,
+      }));
+    });
+
+    it('should use inline description fallback when template is missing and no target is provided', async () => {
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        {
+          type: 'inline',
+          actorId: 'entity_1',
+          description: ' waits patiently ',
+        },
+      ]);
+
+      const result = await service.generateActivityDescription('entity_1');
+
+      expect(result).toBe('Activity: Entity entity_1 waits patiently.');
     });
 
     it('should gracefully handle formatting services without configuration getter', async () => {
