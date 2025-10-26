@@ -1,8 +1,4 @@
-import {
-  extractSaveName,
-  getManualSavePath,
-  manualSavePath,
-} from '../utils/savePathUtils.js';
+import { extractSaveName, manualSavePath } from '../utils/savePathUtils.js';
 import { isValidSaveString } from './saveInputValidators.js';
 import { validateSaveMetadataFields } from '../utils/saveMetadataUtils.js';
 import { readAndDeserialize as utilReadAndDeserialize } from '../utils/saveFileReadUtils.js';
@@ -125,14 +121,29 @@ export default class SaveFileParser extends BaseService {
    * @returns {Promise<import('./persistenceTypes.js').ParseSaveFileResult>} Parsed metadata result.
    */
   async parseManualSaveFile(fileName) {
-    const isValidName = isValidSaveString(fileName);
-    const filePath = isValidName
-      ? getManualSavePath(extractSaveName(fileName))
-      : manualSavePath(String(fileName));
+    const hasStringName = typeof fileName === 'string';
+    const normalizedFileName = hasStringName ? fileName.trim() : '';
+    const originalName = hasStringName
+      ? normalizedFileName
+      : String(fileName ?? '');
+
+    const sanitizedFileNameForPath = originalName
+      .replace(/^[.\\/]+/, '')
+      .replace(/[\\/]+/g, '_');
+
+    const filePath = manualSavePath(sanitizedFileNameForPath);
+    const hasPathSeparators =
+      normalizedFileName.length > 0 && /[\\/]/.test(normalizedFileName);
+    const isValidName =
+      isValidSaveString(normalizedFileName) && !hasPathSeparators;
 
     if (!isValidName) {
-      this.#logger.error(`Invalid manual save file name: ${fileName}`);
-      return this.#corruptedResult(filePath, fileName, ' (Invalid Name)');
+      this.#logger.error(`Invalid manual save file name: ${originalName}`);
+      return this.#corruptedResult(
+        filePath,
+        originalName,
+        ' (Invalid Name)'
+      );
     }
 
     this.#logger.debug(`Processing file: ${filePath}`);
@@ -157,10 +168,14 @@ export default class SaveFileParser extends BaseService {
         return this.#corruptedResult(filePath, fileName, ' (No Metadata)');
       }
 
-      return this.#extractMetadata(saveObject, fileName);
+      return this.#extractMetadata(saveObject, normalizedFileName);
     } catch (error) {
       this.#logger.error(`Unexpected error parsing ${filePath}:`, error);
-      return this.#corruptedResult(filePath, fileName, ' (Corrupted)');
+      return this.#corruptedResult(
+        filePath,
+        normalizedFileName,
+        ' (Corrupted)'
+      );
     }
   }
 }
