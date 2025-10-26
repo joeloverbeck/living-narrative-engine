@@ -150,10 +150,33 @@ export class BrowserStorageProvider extends IStorageProvider {
       return root;
     }
 
-    const parts = normalizedDirectoryPath.split('/');
+    const parts = normalizedDirectoryPath
+      .split('/')
+      .map((segment) => (typeof segment === 'string' ? segment.trim() : ''))
+      .filter((segment) => segment.length > 0);
+
     let currentHandle = root;
     for (const part of parts) {
-      if (!part) continue; // Should not happen after replace and split on non-empty string
+      if (part === '.') {
+        continue;
+      }
+      if (part === '..') {
+        const traversalError = new Error(
+          `Path traversal segment ".." is not allowed in path "${directoryPath}".`
+        );
+        traversalError.name = 'SecurityError';
+        await dispatchSystemErrorEvent(
+          this.#safeEventDispatcher,
+          'BrowserStorageProvider: Refused directory traversal attempt.',
+          {
+            error: traversalError.message,
+            path: directoryPath,
+            scopeName: 'BrowserStorageProvider.#getDirectoryHandle',
+          },
+          this.#logger
+        );
+        throw traversalError;
+      }
       try {
         currentHandle = await currentHandle.getDirectoryHandle(part, options);
       } catch (error) {
@@ -208,6 +231,41 @@ export class BrowserStorageProvider extends IStorageProvider {
       throw new Error(
         `Could not extract file name from path (normalized): "${filePath}" -> "${normalizedFilePath}"`
       );
+
+    const trimmedFileName = fileName.trim();
+    if (!trimmedFileName) {
+      await dispatchSystemErrorEvent(
+        this.#safeEventDispatcher,
+        'BrowserStorageProvider: Invalid file path supplied.',
+        {
+          error: 'File name resolved to an empty value after trimming.',
+          path: filePath,
+          scopeName: 'BrowserStorageProvider.#getFileHandle',
+        },
+        this.#logger
+      );
+      throw new Error(
+        `Could not extract file name from path (normalized): "${filePath}" -> "${normalizedFilePath}"`
+      );
+    }
+
+    if (trimmedFileName === '.' || trimmedFileName === '..') {
+      const traversalError = new Error(
+        `Invalid file name segment "${trimmedFileName}" in path "${filePath}".`
+      );
+      traversalError.name = 'SecurityError';
+      await dispatchSystemErrorEvent(
+        this.#safeEventDispatcher,
+        'BrowserStorageProvider: Refused file path traversal attempt.',
+        {
+          error: traversalError.message,
+          path: filePath,
+          scopeName: 'BrowserStorageProvider.#getFileHandle',
+        },
+        this.#logger
+      );
+      throw traversalError;
+    }
 
     let directoryHandle = root;
     if (pathParts.length > 0) {
