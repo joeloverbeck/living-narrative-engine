@@ -426,7 +426,7 @@ Following the project's testing standards【F:CLAUDE.md†L147-L155】:
 
 All tests should follow the patterns documented in:
 - **Mod Testing Guide**: Canonical reference for fixture, builders, matchers【F:docs/testing/mod-testing-guide.md†L1-L100】
-- **Action Discovery Testing Toolkit**: Migration checklists and discovery patterns【F:docs/testing/action-discovery-testing-toolkit.md】
+- **Action Discovery Testing Toolkit**: Migration checklists and discovery patterns【F:docs/testing/mod-testing-guide.md#action-discovery-harness】
 
 ## Implementation Checklist
 

@@ -1033,7 +1033,7 @@ export default {
    - Add troubleshooting guide
 
 **Deliverables**:
-- `/docs/testing/action-discovery-testing-toolkit.md`
+- `/docs/testing/mod-testing-guide.md#action-discovery-harness`
 - Migration guide and examples
 - Updated project documentation
 
@@ -1078,7 +1078,7 @@ export default {
    - TraceContext integration
    - Formatting helpers
 
-3. `/docs/testing/action-discovery-testing-toolkit.md`
+3. `/docs/testing/mod-testing-guide.md#action-discovery-harness`
    - Usage guide for new utilities
    - Migration examples
    - Troubleshooting guide

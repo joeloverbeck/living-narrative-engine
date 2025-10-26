@@ -217,6 +217,30 @@ describe('DebugLoggingConfigValidator', () => {
         expect.any(Error)
       );
     });
+
+    it('should handle unexpected errors during category validation', () => {
+      const spy = jest
+        .spyOn(validator, 'validateConfig')
+        .mockImplementation(() => {
+          throw new Error('Category crash');
+        });
+
+      const result = validator.validateCategory('engine', {
+        enabled: true,
+        level: 'debug',
+      });
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toEqual([
+        'Category validation error: Category crash',
+      ]);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        "Error validating category 'engine'",
+        expect.any(Error)
+      );
+
+      spy.mockRestore();
+    });
   });
 
   describe('validateRemoteConfig', () => {
@@ -254,6 +278,27 @@ describe('DebugLoggingConfigValidator', () => {
       expect(result.errors).toEqual([
         'Validation error: Remote validation error',
       ]);
+    });
+
+    it('should handle unexpected errors during remote validation', () => {
+      const spy = jest
+        .spyOn(validator, 'validateConfig')
+        .mockImplementation(() => {
+          throw new Error('Remote crash');
+        });
+
+      const result = validator.validateRemoteConfig({ endpoint: 'invalid' });
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toEqual([
+        'Remote validation error: Remote crash',
+      ]);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error validating remote configuration',
+        expect.any(Error)
+      );
+
+      spy.mockRestore();
     });
   });
 
@@ -357,6 +402,34 @@ describe('DebugLoggingConfigValidator', () => {
       );
     });
 
+    it('should report remote validation failures', () => {
+      const config = {
+        enabled: true,
+        mode: 'remote',
+        remote: { endpoint: 'https://api.example.com/logs' },
+      };
+
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      jest
+        .spyOn(validator, 'validateRemoteConfig')
+        .mockReturnValue({
+          isValid: false,
+          errors: ['remote invalid'],
+          formattedErrors: 'remote invalid',
+        });
+
+      const report = validator.performDetailedValidation(config);
+
+      expect(report.isValid).toBe(false);
+      expect(report.errors).toContain('Remote config: remote invalid');
+
+      validator.validateRemoteConfig.mockRestore();
+    });
+
     it('should handle exceptions during detailed validation', () => {
       mockSchemaValidator.validateAgainstSchema.mockImplementation(() => {
         throw new Error('Validation exception');
@@ -370,6 +443,25 @@ describe('DebugLoggingConfigValidator', () => {
         'Error during debug logging configuration validation',
         expect.any(Error)
       );
+    });
+
+    it('should handle unexpected errors during detailed validation', () => {
+      jest.spyOn(validator, 'validateConfig').mockImplementation(() => {
+        throw new Error('Detailed crash');
+      });
+
+      const report = validator.performDetailedValidation({ enabled: true });
+
+      expect(report.isValid).toBe(false);
+      expect(report.errors).toEqual([
+        'Detailed validation error: Detailed crash',
+      ]);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error during detailed validation',
+        expect.any(Error)
+      );
+
+      validator.validateConfig.mockRestore();
     });
 
     it('should measure validation duration', () => {
@@ -1561,6 +1653,29 @@ describe('DebugLoggingConfigValidator', () => {
       );
     });
 
+    it('should warn about hybrid strategy with disabled stack trace performance', () => {
+      const config = {
+        categorization: {
+          strategy: 'hybrid',
+          performance: {
+            stackTrace: { enabled: false },
+          },
+        },
+      };
+
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const result = validator.validateSemanticRules(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toContain(
+        'Hybrid strategy may have degraded performance with disabled stack trace'
+      );
+    });
+
     it('should warn about file buffer vs flush imbalance', () => {
       const config = {
         categorization: {
@@ -1630,6 +1745,35 @@ describe('DebugLoggingConfigValidator', () => {
       expect(result.warnings).toContain(
         'Dual categorization enabled - may impact performance during migration'
       );
+    });
+
+    it('should handle unexpected errors during categorization semantic validation', () => {
+      const keysSpy = jest.spyOn(Object, 'keys');
+      keysSpy.mockImplementationOnce(() => {
+        throw new Error('Categorization crash');
+      });
+
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const result = validator.validateSemanticRules({
+        categorization: {
+          sourceMappings: { 'src/actions': 'actions' },
+        },
+      });
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain(
+        'Categorization validation error: Categorization crash'
+      );
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error during categorization semantic validation',
+        expect.any(Error)
+      );
+
+      keysSpy.mockRestore();
     });
   });
 });

@@ -25,6 +25,7 @@ describe('savePathUtils', () => {
     it('should provide a regex that matches manual save files only', () => {
       expect(MANUAL_SAVE_PATTERN.test('manual_save_adventure_01.sav')).toBe(true);
       expect(MANUAL_SAVE_PATTERN.test('manual_save_test-file.sav')).toBe(true);
+      expect(MANUAL_SAVE_PATTERN.test('MANUAL_SAVE_EPIC_FINAL.SAV')).toBe(true);
       expect(MANUAL_SAVE_PATTERN.test('auto_save_adventure_01.sav')).toBe(false);
       expect(MANUAL_SAVE_PATTERN.test('manual_save_incomplete.txt')).toBe(false);
     });
@@ -52,6 +53,12 @@ describe('savePathUtils', () => {
     it('should return original name when prefix or suffix missing', () => {
       expect(extractSaveName('not_manual.sav')).toBe('not_manual');
       expect(extractSaveName('manual_save_custom')).toBe('custom');
+    });
+
+    it('should remove prefix and extension regardless of casing', () => {
+      expect(extractSaveName('MANUAL_SAVE_Final_Mission.SAV')).toBe(
+        'Final_Mission'
+      );
     });
   });
 

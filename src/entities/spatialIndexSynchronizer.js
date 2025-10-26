@@ -152,7 +152,9 @@ export class SpatialIndexSynchronizer {
         } else if (typeof this.spatialIndex?.clearIndex === 'function') {
           this.spatialIndex.clearIndex();
         }
-      } else if (canQueryByComponent) {
+      } else {
+        // By this point `canQueryByComponent` must be true because a falsy value
+        // would have triggered the guard clause above and exited early.
         seedSource = entityManager.getEntitiesWithComponent(
           POSITION_COMPONENT_ID
         );

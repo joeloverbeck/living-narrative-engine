@@ -373,7 +373,7 @@ Following the mod testing guide recommendations:
 
 The test suites should adhere to patterns documented in:
 - **Mod Testing Guide**: `docs/testing/mod-testing-guide.md` (canonical reference)
-- **Action Discovery Toolkit**: `docs/testing/action-discovery-testing-toolkit.md` (migration checklists)
+- **Action Discovery Toolkit**: `docs/testing/mod-testing-guide.md#action-discovery-harness` (migration checklists)
 - **Reference Implementation**: `tests/integration/mods/affection/pat_head_affectionately_action*.test.js`
 
 ## Out of Scope

@@ -54,11 +54,12 @@ describe('SpatialIndexSynchronizer', () => {
     );
   });
 
-  const initializeSynchronizer = () => {
+  const initializeSynchronizer = (overrides = {}) => {
     return new SpatialIndexSynchronizer({
       spatialIndexManager: mockSpatialIndexManager,
       safeEventDispatcher: mockSafeEventDispatcher,
       logger: mockLogger,
+      ...overrides,
     });
   };
 
@@ -87,6 +88,193 @@ describe('SpatialIndexSynchronizer', () => {
     expect(mockLogger.debug).toHaveBeenCalledWith(
       'SpatialIndexSynchronizer initialized and listening for events.'
     );
+  });
+
+  describe('constructor bootstrapping behaviour', () => {
+    it('should log and skip bootstrapping when no entity manager is provided', () => {
+      initializeSynchronizer();
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'SpatialIndexSynchronizer: No entity manager provided, skipping bootstrap of existing entities.'
+      );
+    });
+
+    it('should warn when the provided entity manager is not iterable', () => {
+      initializeSynchronizer({ entityManager: {} });
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'SpatialIndexSynchronizer: Provided entity manager cannot be iterated. Skipping bootstrap.'
+      );
+    });
+
+    it('should use buildIndex when available and avoid manual indexing', () => {
+      const entity = {
+        id: 'entity-1',
+        getComponentData: jest.fn(() => ({ locationId: '  dungeon  ' })),
+      };
+
+      const spatialIndex = {
+        addEntity: jest.fn(),
+        buildIndex: jest.fn(),
+        clearIndex: jest.fn(),
+      };
+
+      const entityManager = {
+        entities: [entity],
+      };
+
+      initializeSynchronizer({
+        spatialIndexManager: spatialIndex,
+        entityManager,
+      });
+
+      expect(spatialIndex.buildIndex).toHaveBeenCalledWith(entityManager);
+      expect(spatialIndex.addEntity).not.toHaveBeenCalled();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'SpatialIndexSynchronizer: Bootstrapped 1 existing entities into spatial index.'
+      );
+    });
+
+    it('should clear the index and manually add entities when buildIndex is unavailable', () => {
+      const validEntity = createMockEntity('entity-1', { locationId: 'castle' });
+      const invalidIdEntity = { id: '   ', getComponentData: jest.fn(() => ({ locationId: 'ignored' })) };
+      const noComponentEntity = { id: 'entity-2', getComponentData: 'not-a-function' };
+      const numericIdEntity = {
+        id: 123,
+        getComponentData: jest.fn(() => ({ locationId: 'numeric-land' })),
+      };
+
+      const spatialIndex = {
+        addEntity: jest.fn(),
+        clearIndex: jest.fn(),
+      };
+
+      const entityManager = {
+        entities: [
+          validEntity,
+          invalidIdEntity,
+          noComponentEntity,
+          numericIdEntity,
+        ],
+      };
+
+      initializeSynchronizer({
+        spatialIndexManager: spatialIndex,
+        entityManager,
+      });
+
+      expect(spatialIndex.clearIndex).toHaveBeenCalledTimes(1);
+      expect(spatialIndex.addEntity).toHaveBeenCalledWith(
+        'entity-1',
+        'castle'
+      );
+      expect(spatialIndex.addEntity).toHaveBeenCalledTimes(1);
+    });
+
+    it('should query by component when only getEntitiesWithComponent is available', () => {
+      const entity = createMockEntity('entity-5', { locationId: 'fields' });
+      const iterableResult = {
+        [Symbol.iterator]: function* () {
+          yield entity;
+        },
+      };
+
+      const spatialIndex = {
+        addEntity: jest.fn(),
+        clearIndex: jest.fn(),
+      };
+
+      const entityManager = {
+        getEntitiesWithComponent: jest
+          .fn()
+          .mockReturnValue(iterableResult),
+      };
+
+      initializeSynchronizer({
+        spatialIndexManager: spatialIndex,
+        entityManager,
+      });
+
+      expect(entityManager.getEntitiesWithComponent).toHaveBeenCalledWith(
+        POSITION_COMPONENT_ID
+      );
+      expect(spatialIndex.clearIndex).toHaveBeenCalledTimes(1);
+      expect(spatialIndex.addEntity).toHaveBeenCalledWith(
+        'entity-5',
+        'fields'
+      );
+    });
+
+    it('should support component queries even when clearIndex is not provided', () => {
+      const entity = createMockEntity('entity-7', { locationId: 'tower' });
+      const iterableResult = {
+        [Symbol.iterator]: function* () {
+          yield entity;
+        },
+      };
+
+      const spatialIndex = {
+        addEntity: jest.fn(),
+      };
+
+      const entityManager = {
+        getEntitiesWithComponent: jest
+          .fn()
+          .mockReturnValue(iterableResult),
+      };
+
+      initializeSynchronizer({
+        spatialIndexManager: spatialIndex,
+        entityManager,
+      });
+
+      expect(entityManager.getEntitiesWithComponent).toHaveBeenCalledWith(
+        POSITION_COMPONENT_ID
+      );
+      expect(spatialIndex.addEntity).toHaveBeenCalledWith('entity-7', 'tower');
+    });
+
+    it('should warn when the resolved seed source is not iterable', () => {
+      const spatialIndex = {
+        addEntity: jest.fn(),
+        clearIndex: jest.fn(),
+      };
+      const entityManager = {
+        getEntitiesWithComponent: jest.fn().mockReturnValue({}),
+      };
+
+      initializeSynchronizer({
+        spatialIndexManager: spatialIndex,
+        entityManager,
+      });
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'SpatialIndexSynchronizer: Unable to iterate existing entities during bootstrap.'
+      );
+    });
+
+    it('should log an error if bootstrapping throws', () => {
+      const iteratorError = new Error('iteration failed');
+      const badIterable = {
+        [Symbol.iterator]: () => {
+          throw iteratorError;
+        },
+      };
+
+      const entityManager = {
+        entities: badIterable,
+      };
+
+      initializeSynchronizer({
+        spatialIndexManager: { addEntity: jest.fn() },
+        entityManager,
+      });
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'SpatialIndexSynchronizer: Failed to bootstrap spatial index from existing entities.',
+        iteratorError
+      );
+    });
   });
 
   describe('onEntityAdded (entity:created event)', () => {
@@ -121,6 +309,16 @@ describe('SpatialIndexSynchronizer', () => {
       expect(mockSpatialIndexManager.addEntity).not.toHaveBeenCalled();
     });
 
+    it('should not add an entity if the locationId trims to an empty string', () => {
+      synchronizer = initializeSynchronizer();
+      const entity = createMockEntity('entity-1', { locationId: '   ' });
+      const payload = { entity, wasReconstructed: false };
+
+      handlers[ENTITY_CREATED_ID](payload);
+
+      expect(mockSpatialIndexManager.addEntity).not.toHaveBeenCalled();
+    });
+
     it('should handle invalid payload gracefully and log warning', () => {
       // Arrange
       synchronizer = initializeSynchronizer();
@@ -138,6 +336,14 @@ describe('SpatialIndexSynchronizer', () => {
         expect.stringContaining('Invalid payload received'),
         null
       );
+    });
+
+    it('should ignore payloads that do not include an entity', () => {
+      synchronizer = initializeSynchronizer();
+
+      handlers[ENTITY_CREATED_ID]({ type: ENTITY_CREATED_ID, payload: {} });
+
+      expect(mockSpatialIndexManager.addEntity).not.toHaveBeenCalled();
     });
 
     it('should handle both EventBus format and direct payload format', () => {
@@ -217,6 +423,14 @@ describe('SpatialIndexSynchronizer', () => {
         ),
         null
       );
+    });
+
+    it('should ignore removal payloads without an instanceId', () => {
+      synchronizer = initializeSynchronizer();
+
+      handlers[ENTITY_REMOVED_ID]({ type: ENTITY_REMOVED_ID, payload: {} });
+
+      expect(mockSpatialIndexManager.removeEntity).not.toHaveBeenCalled();
     });
   });
 
