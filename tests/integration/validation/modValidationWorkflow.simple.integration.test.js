@@ -562,7 +562,7 @@ async function createRealPositioningIntimacyViolation(baseDir) {
           },
         },
         'actions/turn_around.action.json': {
-          id: 'positioning:turn_around',
+          id: 'physical-control:turn_around',
           required_components: { actor: ['positioning:closeness'] },
           forbidden_components: { actor: ['kissing:kissing'] }, // ← The actual violation
           operations: [
@@ -687,7 +687,7 @@ async function createProductionLikeEcosystem(baseDir, options = {}) {
     // Add violation if requested
     if (includeRealViolations) {
       productionSpec.positioning.files['actions/turn_around.action.json'] = {
-        id: 'positioning:turn_around',
+        id: 'physical-control:turn_around',
         forbidden_components: { actor: ['kissing:kissing'] }, // ← Violation
       };
     }

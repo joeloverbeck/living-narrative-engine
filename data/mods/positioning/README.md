@@ -16,7 +16,7 @@ The Positioning System mod provides foundational mechanics for managing physical
 
 - **get_close**: Move closer to a target actor, entering their personal space
 - **step_back**: Step away from current closeness circle
-- **turn_around**: Turn another actor around or have them face you
+- **turn_around**: _Moved to the physical-control mod as `physical-control:turn_around`._
 - **turn_around_to_face**: Turn to face someone you're currently facing away from
 - **kneel_before**: Kneel before another actor in a respectful or submissive gesture
 - **crawl_to**: Crawl submissively to the entity you are kneeling before, establishing closeness while maintaining the kneeling posture

@@ -95,7 +95,7 @@ describe('Facing-aware action availability E2E', () => {
     };
 
     const mockTurnAroundAction = {
-      actionId: 'positioning:turn_around',
+      actionId: 'physical-control:turn_around',
       targets: {
         primary: ['test:npc'],
       },
@@ -134,7 +134,7 @@ describe('Facing-aware action availability E2E', () => {
 
     // Player turns NPC around
     const turnAroundResult = await actionServiceFacade.executeAction({
-      actionId: 'positioning:turn_around',
+      actionId: 'physical-control:turn_around',
       actorId: 'test:player',
       targetId: 'test:npc',
     });
@@ -177,7 +177,7 @@ describe('Facing-aware action availability E2E', () => {
 
     // Player turns NPC back to face them
     const turnBackResult = await actionServiceFacade.executeAction({
-      actionId: 'positioning:turn_around',
+      actionId: 'physical-control:turn_around',
       actorId: 'test:player',
       targetId: 'test:npc',
     });
@@ -239,7 +239,7 @@ describe('Facing-aware action availability E2E', () => {
 
     // Player turns NPC around (NPC facing away from player)
     await actionServiceFacade.executeAction({
-      actionId: 'positioning:turn_around',
+      actionId: 'physical-control:turn_around',
       actorId: 'test:player',
       targetId: 'test:npc',
     });
@@ -251,7 +251,7 @@ describe('Facing-aware action availability E2E', () => {
 
     // Guard turns NPC around (NPC now also facing away from guard)
     await actionServiceFacade.executeAction({
-      actionId: 'positioning:turn_around',
+      actionId: 'physical-control:turn_around',
       actorId: 'test:guard',
       targetId: 'test:npc',
     });
@@ -287,7 +287,7 @@ describe('Facing-aware action availability E2E', () => {
 
     // Player turns NPC back (NPC now only facing away from guard)
     await actionServiceFacade.executeAction({
-      actionId: 'positioning:turn_around',
+      actionId: 'physical-control:turn_around',
       actorId: 'test:player',
       targetId: 'test:npc',
     });

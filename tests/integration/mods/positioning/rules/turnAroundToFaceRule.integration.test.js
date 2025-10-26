@@ -502,7 +502,7 @@ describe('Turn Around to Face Rule', () => {
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         actorId: 'alice',
-        actionId: 'positioning:turn_around', // Different action
+        actionId: 'physical-control:turn_around', // Different action
         targetId: 'bob',
       });
 

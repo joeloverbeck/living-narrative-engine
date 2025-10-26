@@ -1,14 +1,14 @@
 /**
- * @file Unit tests for the positioning:turn_around action.
+ * @file Unit tests for the physical-control:turn_around action.
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import turnAroundAction from '../../../../../data/mods/positioning/actions/turn_around.action.json';
+import turnAroundAction from '../../../../../data/mods/physical-control/actions/turn_around.action.json';
 
-describe('positioning:turn_around action', () => {
+describe('physical-control:turn_around action', () => {
   describe('action definition', () => {
     it('has correct id', () => {
-      expect(turnAroundAction.id).toBe('positioning:turn_around');
+      expect(turnAroundAction.id).toBe('physical-control:turn_around');
     });
 
     it('has appropriate name and description', () => {
@@ -16,7 +16,7 @@ describe('positioning:turn_around action', () => {
       expect(turnAroundAction.description).toBeTruthy();
     });
 
-    it('uses positioning:close_actors_facing_each_other_or_behind_target scope', () => {
+    it('uses physical-control:close_actors_facing_each_other_or_behind_target scope', () => {
       expect(turnAroundAction.targets.primary.scope).toBe(
         'positioning:close_actors_facing_each_other_or_behind_target'
       );

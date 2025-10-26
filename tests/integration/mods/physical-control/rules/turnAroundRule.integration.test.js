@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the positioning:turn_around rule.
+ * @file Integration tests for the physical-control:turn_around rule.
  */
 
 import {
@@ -10,8 +10,8 @@ import {
   expect,
   jest,
 } from '@jest/globals';
-import turnAroundRule from '../../../../../data/mods/positioning/rules/turn_around.rule.json';
-import eventIsActionTurnAround from '../../../../../data/mods/positioning/conditions/event-is-action-turn-around.condition.json';
+import turnAroundRule from '../../../../../data/mods/physical-control/rules/handle_turn_around.rule.json';
+import eventIsActionTurnAround from '../../../../../data/mods/physical-control/conditions/event-is-action-turn-around.condition.json';
 import logSuccessMacro from '../../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import { expandMacros } from '../../../../../src/utils/macroUtils.js';
 import QueryComponentHandler from '../../../../../src/logic/operationHandlers/queryComponentHandler.js';
@@ -88,7 +88,7 @@ function createHandlers(entityManager, eventBus, logger) {
   };
 }
 
-describe('positioning_handle_turn_around rule integration', () => {
+describe('physical_control_handle_turn_around rule integration', () => {
   let testEnv;
 
   beforeEach(() => {
@@ -102,7 +102,7 @@ describe('positioning_handle_turn_around rule integration', () => {
         .fn()
         .mockReturnValue([{ ...turnAroundRule, actions: expanded }]),
       getConditionDefinition: jest.fn((id) =>
-        id === 'positioning:event-is-action-turn-around'
+        id === 'physical-control:event-is-action-turn-around'
           ? eventIsActionTurnAround
           : undefined
       ),
@@ -146,7 +146,7 @@ describe('positioning_handle_turn_around rule integration', () => {
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
         actorId: 'actor1',
-        actionId: 'positioning:turn_around',
+        actionId: 'physical-control:turn_around',
         targetId: 'target1',
         originalInput: 'turn_around target1',
       });
@@ -163,9 +163,9 @@ describe('positioning_handle_turn_around rule integration', () => {
       ).toContain('actor1');
 
       // Only check for events that should exist if rule worked
-      expect(types).toContain('positioning:actor_turned_around');
+      expect(types).toContain('physical-control:actor_turned_around');
       const turnedAroundEvent = testEnv.events.find(
-        (e) => e.eventType === 'positioning:actor_turned_around'
+        (e) => e.eventType === 'physical-control:actor_turned_around'
       );
       expect(turnedAroundEvent.payload).toEqual({
         actor: 'target1',
@@ -199,7 +199,7 @@ describe('positioning_handle_turn_around rule integration', () => {
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
         actorId: 'actor1',
-        actionId: 'positioning:turn_around',
+        actionId: 'physical-control:turn_around',
         targetId: 'target1',
         originalInput: 'turn_around target1',
       });
@@ -261,7 +261,7 @@ describe('positioning_handle_turn_around rule integration', () => {
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
         actorId: 'actor1',
-        actionId: 'positioning:turn_around',
+        actionId: 'physical-control:turn_around',
         targetId: 'target1',
         originalInput: 'turn_around target1',
       });
@@ -311,7 +311,7 @@ describe('positioning_handle_turn_around rule integration', () => {
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
         actorId: 'actor1',
-        actionId: 'positioning:turn_around',
+        actionId: 'physical-control:turn_around',
         targetId: 'target1',
         originalInput: 'turn_around target1',
       });

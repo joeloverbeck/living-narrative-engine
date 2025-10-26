@@ -24,7 +24,7 @@ import {
 import { createMockTargetContextBuilder } from '../../../common/mocks/mockTargetContextBuilder.js';
 import { createMultiTargetResolutionStage } from '../../../common/actions/multiTargetStageTestUtilities.js';
 import { ScopeContextBuilder } from '../../../../src/actions/pipeline/services/implementations/ScopeContextBuilder.js';
-import turnAroundAction from '../../../../data/mods/positioning/actions/turn_around.action.json';
+import turnAroundAction from '../../../../data/mods/physical-control/actions/turn_around.action.json';
 import kneelBeforeAction from '../../../../data/mods/positioning/actions/kneel_before.action.json';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
 import {
@@ -328,7 +328,7 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
           );
 
           // Simulate the turn_around action
-          if (actionId === 'positioning:turn_around') {
+          if (actionId === 'physical-control:turn_around') {
             const targetEntity = entityManager.getEntityInstance(targetId);
             const facingAwayComponent =
               targetEntity.components['positioning:facing_away'];
@@ -394,7 +394,7 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
     await eventBus.dispatch({
       type: ATTEMPT_ACTION_ID,
       payload: {
-        actionId: 'positioning:turn_around',
+        actionId: 'physical-control:turn_around',
         actorId: 'test:actor1',
         targetId: 'test:actor2',
       },

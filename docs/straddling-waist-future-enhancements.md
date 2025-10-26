@@ -67,12 +67,12 @@ This document outlines potential enhancements to the straddling waist system tha
 
 **Scenario:** Actor A is straddling Actor B while facing them. Actor A wants to face away without dismounting.
 
-**Current Behavior:** Existing `positioning:turn_around` action manipulates the `facing_away` component for close actors
+**Current Behavior:** Existing `physical-control:turn_around` action manipulates the `facing_away` component for close actors
 
-**Status:** **Needs Verification** - The generic `positioning:turn_around` action exists and handles the `facing_away` component. Needs testing to confirm it works correctly when actor has `straddling_waist` component.
+**Status:** **Needs Verification** - The generic `physical-control:turn_around` action exists and handles the `facing_away` component. Needs testing to confirm it works correctly when actor has `straddling_waist` component.
 
 **Verification Requirements:**
-- Test if `positioning:turn_around` action is available when actor is straddling
+- Test if `physical-control:turn_around` action is available when actor is straddling
 - Verify the action correctly toggles the `facing_away` component
 - Confirm the `straddling_waist.facing_away` field is updated correctly
 - Ensure no conflicts with straddling-specific state
@@ -219,6 +219,6 @@ This document outlines potential enhancements to the straddling waist system tha
 These enhancements are documented for future consideration. The current implementation provides a solid foundation, but these features would improve robustness and user experience.
 
 **Recommendations:**
-1. **High Priority**: Verify existing `positioning:turn_around` action compatibility with straddling state
+1. **High Priority**: Verify existing `physical-control:turn_around` action compatibility with straddling state
 2. **Medium Priority**: Prioritize auto-dismount scenarios for next iteration, as they address the most critical edge cases
 3. **Note**: Before implementing new "turn around while straddling" action, confirm the existing `turn_around` action doesn't already handle this case

@@ -13,6 +13,14 @@
       "version": "^1.0.0"
     },
     {
+      "id": "core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "movement",
+      "version": "^1.0.0"
+    },
+    {
       "id": "positioning",
       "version": "^1.0.0"
     }
@@ -21,17 +29,23 @@
     "actions": [
       "force_to_knees.action.json",
       "push_off.action.json",
-      "push_onto_lying_furniture.action.json"
+      "push_onto_lying_furniture.action.json",
+      "turn_around.action.json"
     ],
     "rules": [
       "handle_force_to_knees.rule.json",
       "handle_push_off.rule.json",
-      "handle_push_onto_lying_furniture.rule.json"
+      "handle_push_onto_lying_furniture.rule.json",
+      "handle_turn_around.rule.json"
     ],
     "conditions": [
       "event-is-action-force-to-knees.condition.json",
       "event-is-action-push-off.condition.json",
-      "event-is-action-push-onto-lying-furniture.condition.json"
+      "event-is-action-push-onto-lying-furniture.condition.json",
+      "event-is-action-turn-around.condition.json"
+    ],
+    "events": [
+      "actor_turned_around.event.json"
     ]
   }
 }

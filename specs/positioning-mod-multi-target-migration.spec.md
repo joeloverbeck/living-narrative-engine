@@ -9,7 +9,7 @@ This specification outlines the migration of the positioning mod actions from th
 ### Actions Requiring Migration (Current State)
 
 1. **positioning:turn_around_to_face** - Uses deprecated `scope` property and contains deprecated `commandVerb` field
-2. **positioning:turn_around** - Uses deprecated `scope` property (has `prerequisites` array already)
+2. **physical-control:turn_around** (formerly `positioning:turn_around`) - Uses deprecated `scope` property (has `prerequisites` array already)
 3. **positioning:get_close** - Uses deprecated `scope` property (has `prerequisites` array already)
 4. **positioning:step_back** - Uses deprecated `scope` property with "none" value (has `prerequisites` array already)
 
@@ -57,7 +57,7 @@ This specification outlines the migration of the positioning mod actions from th
 - Remove deprecated `commandVerb` field
 - Add empty `prerequisites` array for consistency
 
-### 2. positioning:turn_around
+### 2. physical-control:turn_around (formerly positioning:turn_around)
 
 **Current Structure:**
 

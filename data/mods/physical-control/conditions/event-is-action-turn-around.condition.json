@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "physical-control:event-is-action-turn-around",
+  "description": "Checks if the triggering event is for the 'physical-control:turn_around' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "physical-control:turn_around"]
+  }
+}

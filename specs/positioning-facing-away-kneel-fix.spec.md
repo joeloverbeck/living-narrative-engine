@@ -12,7 +12,7 @@ The `positioning:kneel_before` action uses the scope `core:actors_in_location`, 
 
 ### Components Involved
 
-- **Actions**: `positioning:turn_around`, `positioning:kneel_before`
+- **Actions**: `physical-control:turn_around`, `positioning:kneel_before`
 - **Components**: `positioning:facing_away` (tracks entity IDs the actor is facing away from)
 - **Scopes**: `core:actors_in_location` (used by kneel_before)
 - **Existing Conditions**:
@@ -134,7 +134,7 @@ describe('Turn around and kneel before interaction', () => {
 
   it('should not allow kneeling before an actor when facing away', async () => {
     // 1. Actor1 turns actor2 around
-    await testBed.performAction('positioning:turn_around', {
+    await testBed.performAction('physical-control:turn_around', {
       actor: 'test:actor1',
       target: 'test:actor2',
     });
@@ -157,13 +157,13 @@ describe('Turn around and kneel before interaction', () => {
 
   it('should allow kneeling after turning back to face', async () => {
     // 1. Actor1 turns actor2 around
-    await testBed.performAction('positioning:turn_around', {
+    await testBed.performAction('physical-control:turn_around', {
       actor: 'test:actor1',
       target: 'test:actor2',
     });
 
     // 2. Actor1 turns actor2 back to face them
-    await testBed.performAction('positioning:turn_around', {
+    await testBed.performAction('physical-control:turn_around', {
       actor: 'test:actor1',
       target: 'test:actor2',
     });
@@ -200,7 +200,7 @@ describe('Facing-aware action availability E2E', () => {
     });
 
     // Player turns NPC around
-    await game.performPlayerAction('positioning:turn_around', 'test:npc');
+    await game.performPlayerAction('physical-control:turn_around', 'test:npc');
 
     // Get available actions for NPC
     const npcActions = await game.getActorActions('test:npc');
@@ -210,13 +210,13 @@ describe('Facing-aware action availability E2E', () => {
       'positioning:kneel_before': {
         availableTargets: expect.not.arrayContaining(['test:player']),
       },
-      'positioning:turn_around': {
+      'physical-control:turn_around': {
         availableTargets: expect.arrayContaining(['test:player']),
       },
     });
 
     // Player turns NPC back
-    await game.performPlayerAction('positioning:turn_around', 'test:npc');
+    await game.performPlayerAction('physical-control:turn_around', 'test:npc');
 
     // Re-check available actions
     const updatedActions = await game.getActorActions('test:npc');

@@ -58,7 +58,6 @@
       "straddle_waist_facing.action.json",
       "straddle_waist_facing_away.action.json",
       "straighten_up.action.json",
-      "turn_around.action.json",
       "turn_around_to_face.action.json",
       "turn_your_back.action.json"
     ],
@@ -95,7 +94,6 @@
       "event-is-action-straddle-waist-facing.condition.json",
       "event-is-action-straighten-up.condition.json",
       "event-is-action-turn-around-to-face.condition.json",
-      "event-is-action-turn-around.condition.json",
       "event-is-action-turn-your-back.condition.json"
     ],
     "rules": [
@@ -122,7 +120,6 @@
       "straddle_waist_facing.rule.json",
       "straddle_waist_facing_away.rule.json",
       "straighten_up.rule.json",
-      "turn_around.rule.json",
       "turn_around_to_face.rule.json",
       "turn_your_back.rule.json"
     ],
@@ -134,7 +131,6 @@
       "actor_faced_everyone.event.json",
       "actor_faced_forward.event.json",
       "actor_placed_behind.event.json",
-      "actor_turned_around.event.json",
       "actor_turned_back.event.json",
       "closeness_with_target_broken.event.json",
       "sitting_closeness_established.event.json"

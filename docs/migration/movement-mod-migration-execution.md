@@ -56,7 +56,7 @@ Execute: `./movement-migration-backup-20250915-182105/rollback.sh movement-migra
 - [ ] Create tests (MOVMODMIG-008)
 
 ### Dependencies Identified
-- **positioning:turn_around** depends on `core:actor-can-move`
+- **physical-control:turn_around** depends on `core:actor-can-move`
 - **positioning:get_close** depends on `core:actor-can-move`
 - **core:follow** depends on `core:actor-can-move`
 

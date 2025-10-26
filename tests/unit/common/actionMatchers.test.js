@@ -11,7 +11,7 @@ describe('actionMatchers - toHaveAction', () => {
     it('should pass when action is discovered', () => {
       const actions = [
         { id: 'affection:place_hands_on_shoulders', name: 'Place Hands' },
-        { id: 'positioning:turn_around', name: 'Turn Around' },
+        { id: 'physical-control:turn_around', name: 'Turn Around' },
       ];
 
       expect(actions).toHaveAction('affection:place_hands_on_shoulders');
@@ -44,7 +44,7 @@ describe('actionMatchers - toHaveAction', () => {
   describe('Negative cases', () => {
     it('should fail when action not discovered', () => {
       const actions = [
-        { id: 'positioning:turn_around', name: 'Turn Around' },
+        { id: 'physical-control:turn_around', name: 'Turn Around' },
         { id: 'positioning:kneel_before', name: 'Kneel Before' },
       ];
 
@@ -55,7 +55,7 @@ describe('actionMatchers - toHaveAction', () => {
 
     it('should fail with detailed error message', () => {
       const actions = [
-        { id: 'positioning:turn_around', name: 'Turn Around' },
+        { id: 'physical-control:turn_around', name: 'Turn Around' },
         { id: 'positioning:kneel_before', name: 'Kneel Before' },
       ];
 
@@ -68,7 +68,7 @@ describe('actionMatchers - toHaveAction', () => {
 
       expect(errorMessage).toContain('❌');
       expect(errorMessage).toContain('Actions discovered: 2');
-      expect(errorMessage).toContain('1. positioning:turn_around');
+      expect(errorMessage).toContain('1. physical-control:turn_around');
       expect(errorMessage).toContain('2. positioning:kneel_before');
       expect(errorMessage).toContain('ComponentFilteringStage');
       expect(errorMessage).toContain('MultiTargetResolutionStage');
@@ -92,7 +92,7 @@ describe('actionMatchers - toHaveAction', () => {
 
   describe('Negation support', () => {
     it('should pass when action not discovered with .not', () => {
-      const actions = [{ id: 'positioning:turn_around', name: 'Turn Around' }];
+      const actions = [{ id: 'physical-control:turn_around', name: 'Turn Around' }];
 
       expect(actions).not.toHaveAction('affection:place_hands_on_shoulders');
     });
@@ -140,7 +140,7 @@ describe('actionMatchers - toDiscoverActionCount', () => {
     it('should pass when count matches', () => {
       const actions = [
         { id: 'affection:place_hands_on_shoulders', name: 'Place Hands' },
-        { id: 'positioning:turn_around', name: 'Turn Around' },
+        { id: 'physical-control:turn_around', name: 'Turn Around' },
         { id: 'positioning:kneel_before', name: 'Kneel Before' },
       ];
 
@@ -167,7 +167,7 @@ describe('actionMatchers - toDiscoverActionCount', () => {
   describe('Negative cases - fewer actions', () => {
     it('should fail when fewer actions discovered', () => {
       const actions = [
-        { id: 'positioning:turn_around', name: 'Turn Around' },
+        { id: 'physical-control:turn_around', name: 'Turn Around' },
       ];
 
       expect(() => {
@@ -177,7 +177,7 @@ describe('actionMatchers - toDiscoverActionCount', () => {
 
     it('should provide helpful message for fewer actions', () => {
       const actions = [
-        { id: 'positioning:turn_around', name: 'Turn Around' },
+        { id: 'physical-control:turn_around', name: 'Turn Around' },
         { id: 'positioning:kneel_before', name: 'Kneel Before' },
       ];
 
@@ -200,7 +200,7 @@ describe('actionMatchers - toDiscoverActionCount', () => {
   describe('Negative cases - more actions', () => {
     it('should fail when more actions discovered', () => {
       const actions = [
-        { id: 'positioning:turn_around', name: 'Turn Around' },
+        { id: 'physical-control:turn_around', name: 'Turn Around' },
         { id: 'positioning:kneel_before', name: 'Kneel Before' },
         { id: 'affection:place_hands_on_shoulders', name: 'Place Hands' },
       ];
@@ -212,7 +212,7 @@ describe('actionMatchers - toDiscoverActionCount', () => {
 
     it('should provide helpful message for more actions', () => {
       const actions = [
-        { id: 'positioning:turn_around', name: 'Turn Around' },
+        { id: 'physical-control:turn_around', name: 'Turn Around' },
         { id: 'positioning:kneel_before', name: 'Kneel Before' },
         { id: 'affection:place_hands_on_shoulders', name: 'Place Hands' },
       ];
@@ -238,7 +238,7 @@ describe('actionMatchers - toDiscoverActionCount', () => {
   describe('Error message formatting', () => {
     it('should list all discovered actions in error message', () => {
       const actions = [
-        { id: 'positioning:turn_around', name: 'Turn Around' },
+        { id: 'physical-control:turn_around', name: 'Turn Around' },
         { id: 'positioning:kneel_before', name: 'Kneel Before' },
       ];
 
@@ -250,7 +250,7 @@ describe('actionMatchers - toDiscoverActionCount', () => {
       }
 
       expect(errorMessage).toContain('Actions discovered:');
-      expect(errorMessage).toContain('1. positioning:turn_around');
+      expect(errorMessage).toContain('1. physical-control:turn_around');
       expect(errorMessage).toContain('2. positioning:kneel_before');
     });
 
@@ -271,7 +271,7 @@ describe('actionMatchers - toDiscoverActionCount', () => {
   describe('Negation support', () => {
     it('should pass when count does not match with .not', () => {
       const actions = [
-        { id: 'positioning:turn_around', name: 'Turn Around' },
+        { id: 'physical-control:turn_around', name: 'Turn Around' },
       ];
 
       expect(actions).not.toDiscoverActionCount(3);
@@ -279,7 +279,7 @@ describe('actionMatchers - toDiscoverActionCount', () => {
 
     it('should fail when count matches with .not', () => {
       const actions = [
-        { id: 'positioning:turn_around', name: 'Turn Around' },
+        { id: 'physical-control:turn_around', name: 'Turn Around' },
         { id: 'positioning:kneel_before', name: 'Kneel Before' },
       ];
 
@@ -304,7 +304,7 @@ describe('actionMatchers - Auto-extension', () => {
   it('should work with standard expect() syntax', () => {
     const actions = [
       { id: 'affection:place_hands_on_shoulders', name: 'Place Hands' },
-      { id: 'positioning:turn_around', name: 'Turn Around' },
+      { id: 'physical-control:turn_around', name: 'Turn Around' },
     ];
 
     // Should work without any setup
