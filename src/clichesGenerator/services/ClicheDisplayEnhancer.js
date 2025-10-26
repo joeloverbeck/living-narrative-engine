@@ -659,7 +659,7 @@ export class ClicheDisplayEnhancer {
    */
   #updateCategoryCount(categoryId) {
     const category = this.#container.querySelector(
-      `[data-category="${categoryId}"]`
+      `.cliche-category[data-category="${categoryId}"]`
     );
     if (category) {
       const items = category.querySelectorAll('.cliche-item');
@@ -841,7 +841,7 @@ export class ClicheDisplayEnhancer {
   #applyCollapsedStates() {
     this.#collapsedCategories.forEach((categoryId) => {
       const category = this.#container.querySelector(
-        `[data-category="${categoryId}"]`
+        `.cliche-category[data-category="${categoryId}"]`
       );
       if (category) {
         const toggle = category.querySelector('.category-toggle');
