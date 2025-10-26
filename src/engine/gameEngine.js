@@ -203,10 +203,60 @@ class GameEngine {
       await initializationService.runInitializationSequence(worldName)
     );
 
+    const reportedSuccess =
+      initResult &&
+      typeof initResult === 'object' &&
+      'success' in initResult
+        ? /** @type {{ success: unknown }} */ (initResult).success
+        : 'unknown';
     this.#logger.debug(
-      `GameEngine._executeInitializationSequence: Initialization sequence completed for "${worldName}". Success: ${initResult.success}`
+      `GameEngine._executeInitializationSequence: Initialization sequence completed for "${worldName}". Success: ${reportedSuccess}`
     );
     return initResult;
+  }
+
+  /**
+   * Normalizes initialization results returned by the initialization service.
+   *
+   * @private
+   * @param {unknown} initResult - Result returned by the initialization service.
+   * @param {string} worldName - Name of the world being initialized.
+   * @returns {InitializationResult} A validated initialization result structure.
+   */
+  #normalizeInitializationResult(initResult, worldName) {
+    if (
+      !initResult ||
+      typeof initResult !== 'object' ||
+      typeof /** @type {{ success?: unknown }} */ (initResult).success !==
+        'boolean'
+    ) {
+      const receivedType = initResult === null ? 'null' : typeof initResult;
+      this.#logger.error(
+        `GameEngine.startNewGame: InitializationService returned invalid result for "${worldName}".`,
+        {
+          receivedType,
+          receivedValue: initResult,
+        }
+      );
+
+      const failureError = new Error(
+        'InitializationService returned an invalid result.'
+      );
+
+      try {
+        // Preserve the unexpected value for debuggers supporting Error.cause.
+        failureError.cause = initResult;
+      } catch {
+        failureError.originalResult = initResult;
+      }
+
+      return {
+        success: false,
+        error: failureError,
+      };
+    }
+
+    return /** @type {InitializationResult} */ (initResult);
   }
 
   /**
@@ -276,7 +326,8 @@ class GameEngine {
   async #initializeNewGame(worldName) {
     await this.#sessionManager.prepareForNewGameSession(worldName);
     this.#resetCoreGameState();
-    return this.#executeInitializationSequence(worldName);
+    const initResult = await this.#executeInitializationSequence(worldName);
+    return this.#normalizeInitializationResult(initResult, worldName);
   }
 
   /**
