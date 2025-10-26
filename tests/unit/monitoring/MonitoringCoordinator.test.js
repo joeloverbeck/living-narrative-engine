@@ -340,6 +340,9 @@ describe('MonitoringCoordinator', () => {
       coordinator = new MonitoringCoordinator({ logger, enabled: false });
       const report = coordinator.getMonitoringReport();
 
+      expect(report).toContain('Entity Module Monitoring Report');
+      expect(report).toContain('Monitoring Status: Disabled');
+      expect(report).toContain('Health Checks: Inactive');
       expect(report).toContain('Monitoring is disabled');
     });
   });

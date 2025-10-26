@@ -15,14 +15,19 @@ describe('FacadeRegistry', () => {
 
   beforeEach(() => {
     testBed = createTestBed();
-    mockFactory = testBed.createMock('factory', ['getSingletonFacade', 'createFacade', 'registerFacade', 'isRegistered']);
+    mockFactory = testBed.createMock('factory', [
+      'getSingletonFacade',
+      'createFacade',
+      'registerFacade',
+      'isRegistered',
+    ]);
     mockLogger = testBed.createMockLogger();
     mockEventBus = testBed.createMock('eventBus', ['dispatch', 'subscribe']);
 
     registry = new FacadeRegistry({
       facadeFactory: mockFactory,
       eventBus: mockEventBus,
-      logger: mockLogger
+      logger: mockLogger,
     });
   });
 
@@ -36,23 +41,29 @@ describe('FacadeRegistry', () => {
     });
 
     it('should throw error with invalid factory', () => {
-      const mockEventBus = testBed.createMock('eventBus', ['dispatch', 'subscribe']);
+      const mockEventBus = testBed.createMock('eventBus', [
+        'dispatch',
+        'subscribe',
+      ]);
       expect(() => {
         new FacadeRegistry({
           facadeFactory: null,
           eventBus: mockEventBus,
-          logger: mockLogger
+          logger: mockLogger,
         });
       }).toThrow('Missing required dependency: IFacadeFactory');
     });
 
     it('should throw error with invalid logger', () => {
-      const mockEventBus = testBed.createMock('eventBus', ['dispatch', 'subscribe']);
+      const mockEventBus = testBed.createMock('eventBus', [
+        'dispatch',
+        'subscribe',
+      ]);
       expect(() => {
         new FacadeRegistry({
           facadeFactory: mockFactory,
           eventBus: mockEventBus,
-          logger: null
+          logger: null,
         });
       }).toThrow('Missing required dependency: ILogger');
     });
@@ -65,17 +76,22 @@ describe('FacadeRegistry', () => {
         description: 'Test facade',
         version: '1.0.0',
         capabilities: ['query', 'modify'],
-        tags: ['test']
+        tags: ['test'],
       };
       const config = { timeout: 1000 };
 
       registry.register(metadata, config);
 
-      expect(mockLogger.debug).toHaveBeenCalledWith('Registered facade: TestFacade v1.0.0');
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith('FACADE_REGISTERED', expect.objectContaining({
-        name: 'TestFacade',
-        version: '1.0.0'
-      }));
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Registered facade: TestFacade v1.0.0'
+      );
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'FACADE_REGISTERED',
+        expect.objectContaining({
+          name: 'TestFacade',
+          version: '1.0.0',
+        })
+      );
     });
 
     it('should throw error for duplicate registration', () => {
@@ -105,17 +121,90 @@ describe('FacadeRegistry', () => {
       }).toThrow('Facade version is required');
     });
 
+    it('should require metadata object', () => {
+      expect(() => {
+        registry.register(null, {});
+      }).toThrow('Facade metadata must be an object');
+    });
+
+    it('should validate category type when provided', () => {
+      expect(() => {
+        registry.register(
+          {
+            name: 'InvalidCategoryFacade',
+            version: '1.0.0',
+            category: 123,
+          },
+          {}
+        );
+      }).toThrow('Facade category must be a string');
+    });
+
+    it('should validate description type when provided', () => {
+      expect(() => {
+        registry.register(
+          {
+            name: 'InvalidDescriptionFacade',
+            version: '1.0.0',
+            description: 42,
+          },
+          {}
+        );
+      }).toThrow('Facade description must be a string');
+    });
+
+    it('should require tags to be arrays when provided', () => {
+      expect(() => {
+        registry.register(
+          {
+            name: 'InvalidTagsFacade',
+            version: '1.0.0',
+            tags: 'tag',
+          },
+          {}
+        );
+      }).toThrow('Facade tags must be an array');
+    });
+
+    it('should require capabilities to be arrays when provided', () => {
+      expect(() => {
+        registry.register(
+          {
+            name: 'InvalidCapabilitiesFacade',
+            version: '1.0.0',
+            capabilities: 'capability',
+          },
+          {}
+        );
+      }).toThrow('Facade capabilities must be an array');
+    });
+
+    it('should validate singleton flag type when provided', () => {
+      expect(() => {
+        registry.register(
+          {
+            name: 'InvalidSingletonFacade',
+            version: '1.0.0',
+            singleton: 'yes',
+          },
+          {}
+        );
+      }).toThrow('Facade singleton flag must be boolean');
+    });
+
     it('should handle empty capabilities and tags', () => {
       const metadata = {
         name: 'TestFacade',
         version: '1.0.0',
         capabilities: [],
-        tags: []
+        tags: [],
       };
 
       registry.register(metadata, {});
 
-      expect(mockLogger.debug).toHaveBeenCalledWith('Registered facade: TestFacade v1.0.0');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Registered facade: TestFacade v1.0.0'
+      );
     });
 
     it('should log and rethrow when factory registration fails', () => {
@@ -130,13 +219,16 @@ describe('FacadeRegistry', () => {
         registry.register(metadata, config);
       }).toThrow(error);
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Failed to register facade: BrokenFacade', error);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to register facade: BrokenFacade',
+        error
+      );
     });
 
     it('should normalize capabilities and tags to arrays', () => {
       const metadata = {
         name: 'TestFacade',
-        version: '1.0.0'
+        version: '1.0.0',
       };
 
       registry.register(metadata, {});
@@ -149,14 +241,17 @@ describe('FacadeRegistry', () => {
 
   describe('metadata accessors', () => {
     beforeEach(() => {
-      registry.register({
-        name: 'MetaFacade',
-        version: '1.0.0',
-        description: 'Metadata fixture',
-        category: 'core',
-        capabilities: ['read'],
-        tags: ['meta']
-      }, { timeout: 50 });
+      registry.register(
+        {
+          name: 'MetaFacade',
+          version: '1.0.0',
+          description: 'Metadata fixture',
+          category: 'core',
+          capabilities: ['read'],
+          tags: ['meta'],
+        },
+        { timeout: 50 }
+      );
     });
 
     it('should return metadata for registered facade', () => {
@@ -174,7 +269,7 @@ describe('FacadeRegistry', () => {
       const allFacades = registry.getAllFacades();
       const categories = registry.getCategories();
 
-      expect(allFacades.map(f => f.name)).toContain('MetaFacade');
+      expect(allFacades.map((f) => f.name)).toContain('MetaFacade');
       expect(categories).toEqual(['core']);
     });
 
@@ -190,12 +285,15 @@ describe('FacadeRegistry', () => {
     const mockFacade = { name: 'TestFacade' };
 
     beforeEach(() => {
-      registry.register({
-        name: 'TestFacade',
-        version: '1.0.0',
-        capabilities: ['query'],
-        tags: ['test']
-      }, { timeout: 1000 });
+      registry.register(
+        {
+          name: 'TestFacade',
+          version: '1.0.0',
+          capabilities: ['query'],
+          tags: ['test'],
+        },
+        { timeout: 1000 }
+      );
     });
 
     it('should get facade using singleton by default', () => {
@@ -204,7 +302,10 @@ describe('FacadeRegistry', () => {
       const facade = registry.getFacade('TestFacade');
 
       expect(facade).toBe(mockFacade);
-      expect(mockFactory.getSingletonFacade).toHaveBeenCalledWith('TestFacade', { timeout: 1000 });
+      expect(mockFactory.getSingletonFacade).toHaveBeenCalledWith(
+        'TestFacade',
+        { timeout: 1000 }
+      );
     });
 
     it('should get facade with custom options', () => {
@@ -214,7 +315,10 @@ describe('FacadeRegistry', () => {
       const facade = registry.getFacade('TestFacade', options);
 
       expect(facade).toBe(mockFacade);
-      expect(mockFactory.getSingletonFacade).toHaveBeenCalledWith('TestFacade', options);
+      expect(mockFactory.getSingletonFacade).toHaveBeenCalledWith(
+        'TestFacade',
+        options
+      );
     });
 
     it('should create new instance when singleton disabled', () => {
@@ -224,7 +328,9 @@ describe('FacadeRegistry', () => {
       const facade = registry.getFacade('TestFacade', options);
 
       expect(facade).toBe(mockFacade);
-      expect(mockFactory.createFacade).toHaveBeenCalledWith('TestFacade', { timeout: 2000 });
+      expect(mockFactory.createFacade).toHaveBeenCalledWith('TestFacade', {
+        timeout: 2000,
+      });
     });
 
     it('should merge config options with provided options', () => {
@@ -233,10 +339,13 @@ describe('FacadeRegistry', () => {
 
       registry.getFacade('TestFacade', options);
 
-      expect(mockFactory.getSingletonFacade).toHaveBeenCalledWith('TestFacade', {
-        timeout: 1000,
-        cacheEnabled: false
-      });
+      expect(mockFactory.getSingletonFacade).toHaveBeenCalledWith(
+        'TestFacade',
+        {
+          timeout: 1000,
+          cacheEnabled: false,
+        }
+      );
     });
 
     it('should throw error for unregistered facade', () => {
@@ -264,32 +373,41 @@ describe('FacadeRegistry', () => {
 
   describe('searchByTags', () => {
     beforeEach(() => {
-      registry.register({
-        name: 'ClothingFacade',
-        version: '1.0.0',
-        tags: ['clothing', 'equipment', 'core']
-      }, {});
+      registry.register(
+        {
+          name: 'ClothingFacade',
+          version: '1.0.0',
+          tags: ['clothing', 'equipment', 'core'],
+        },
+        {}
+      );
 
-      registry.register({
-        name: 'AnatomyFacade',
-        version: '1.0.0',
-        tags: ['anatomy', 'body', 'core']
-      }, {});
+      registry.register(
+        {
+          name: 'AnatomyFacade',
+          version: '1.0.0',
+          tags: ['anatomy', 'body', 'core'],
+        },
+        {}
+      );
 
-      registry.register({
-        name: 'TestFacade',
-        version: '1.0.0',
-        tags: ['test', 'mock']
-      }, {});
+      registry.register(
+        {
+          name: 'TestFacade',
+          version: '1.0.0',
+          tags: ['test', 'mock'],
+        },
+        {}
+      );
     });
 
     it('should find facades with any matching tag', () => {
       const results = registry.searchByTags(['core', 'test']);
 
       expect(results).toHaveLength(3);
-      expect(results.map(r => r.name)).toContain('ClothingFacade');
-      expect(results.map(r => r.name)).toContain('AnatomyFacade');
-      expect(results.map(r => r.name)).toContain('TestFacade');
+      expect(results.map((r) => r.name)).toContain('ClothingFacade');
+      expect(results.map((r) => r.name)).toContain('AnatomyFacade');
+      expect(results.map((r) => r.name)).toContain('TestFacade');
     });
 
     it('should find facades with all matching tags', () => {
@@ -309,8 +427,17 @@ describe('FacadeRegistry', () => {
       const results = registry.searchByTags('core');
 
       expect(results).toHaveLength(2);
-      expect(results.map(r => r.name)).toContain('ClothingFacade');
-      expect(results.map(r => r.name)).toContain('AnatomyFacade');
+      expect(results.map((r) => r.name)).toContain('ClothingFacade');
+      expect(results.map((r) => r.name)).toContain('AnatomyFacade');
+    });
+
+    it('should skip facades with invalid tag metadata structures', () => {
+      const corrupted = registry.getMetadata('ClothingFacade');
+      corrupted.tags = 'corrupted';
+
+      const results = registry.searchByTags(['core']);
+
+      expect(results.map((r) => r.name)).not.toContain('ClothingFacade');
     });
 
     it('should handle empty tags array', () => {
@@ -328,31 +455,40 @@ describe('FacadeRegistry', () => {
 
   describe('findByCapabilities', () => {
     beforeEach(() => {
-      registry.register({
-        name: 'ClothingFacade',
-        version: '1.0.0',
-        capabilities: ['query', 'modify', 'validate']
-      }, {});
+      registry.register(
+        {
+          name: 'ClothingFacade',
+          version: '1.0.0',
+          capabilities: ['query', 'modify', 'validate'],
+        },
+        {}
+      );
 
-      registry.register({
-        name: 'AnatomyFacade',
-        version: '1.0.0',
-        capabilities: ['query', 'modify', 'graph', 'generate']
-      }, {});
+      registry.register(
+        {
+          name: 'AnatomyFacade',
+          version: '1.0.0',
+          capabilities: ['query', 'modify', 'graph', 'generate'],
+        },
+        {}
+      );
 
-      registry.register({
-        name: 'ReadOnlyFacade',
-        version: '1.0.0',
-        capabilities: ['query']
-      }, {});
+      registry.register(
+        {
+          name: 'ReadOnlyFacade',
+          version: '1.0.0',
+          capabilities: ['query'],
+        },
+        {}
+      );
     });
 
     it('should find facades with all required capabilities', () => {
       const results = registry.findByCapabilities(['query', 'modify']);
 
       expect(results).toHaveLength(2);
-      expect(results.map(r => r.name)).toContain('ClothingFacade');
-      expect(results.map(r => r.name)).toContain('AnatomyFacade');
+      expect(results.map((r) => r.name)).toContain('ClothingFacade');
+      expect(results.map((r) => r.name)).toContain('AnatomyFacade');
     });
 
     it('should return empty array when no facades match', () => {
@@ -371,6 +507,15 @@ describe('FacadeRegistry', () => {
       const results = registry.findByCapabilities(['query']);
 
       expect(results).toHaveLength(3);
+    });
+
+    it('should skip facades with invalid capability metadata structures', () => {
+      const corrupted = registry.getMetadata('ClothingFacade');
+      corrupted.capabilities = 'broken';
+
+      const results = registry.findByCapabilities(['query']);
+
+      expect(results.map((r) => r.name)).not.toContain('ClothingFacade');
     });
 
     it('should require all capabilities to be present', () => {
@@ -395,21 +540,27 @@ describe('FacadeRegistry', () => {
     });
 
     it('should return all registered facades', () => {
-      registry.register({
-        name: 'Facade1',
-        version: '1.0.0'
-      }, {});
+      registry.register(
+        {
+          name: 'Facade1',
+          version: '1.0.0',
+        },
+        {}
+      );
 
-      registry.register({
-        name: 'Facade2',
-        version: '2.0.0'
-      }, {});
+      registry.register(
+        {
+          name: 'Facade2',
+          version: '2.0.0',
+        },
+        {}
+      );
 
       const facades = registry.getRegisteredFacades();
 
       expect(facades).toHaveLength(2);
-      expect(facades.map(f => f.name)).toContain('Facade1');
-      expect(facades.map(f => f.name)).toContain('Facade2');
+      expect(facades.map((f) => f.name)).toContain('Facade1');
+      expect(facades.map((f) => f.name)).toContain('Facade2');
     });
 
     it('should return facade metadata and config', () => {
@@ -418,7 +569,7 @@ describe('FacadeRegistry', () => {
         version: '1.0.0',
         description: 'Test facade',
         capabilities: ['query'],
-        tags: ['test']
+        tags: ['test'],
       };
       const config = { timeout: 1000 };
 
@@ -438,11 +589,14 @@ describe('FacadeRegistry', () => {
 
   describe('category and lifecycle management', () => {
     beforeEach(() => {
-      registry.register({
-        name: 'LifecycleFacade',
-        version: '1.0.0',
-        category: 'lifecycle'
-      }, {});
+      registry.register(
+        {
+          name: 'LifecycleFacade',
+          version: '1.0.0',
+          category: 'lifecycle',
+        },
+        {}
+      );
       mockEventBus.dispatch.mockClear();
       mockLogger.info.mockClear();
       mockLogger.warn.mockClear();
@@ -456,16 +610,34 @@ describe('FacadeRegistry', () => {
       expect(mockEventBus.dispatch).toHaveBeenCalledWith({
         type: 'FACADE_UNREGISTERED',
         payload: { name: 'LifecycleFacade', category: 'lifecycle' },
-        timestamp: expect.any(Number)
+        timestamp: expect.any(Number),
       });
-      expect(mockLogger.info).toHaveBeenCalledWith('Unregistered facade: LifecycleFacade', { category: 'lifecycle' });
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Unregistered facade: LifecycleFacade',
+        { category: 'lifecycle' }
+      );
     });
 
     it('should warn when unregistering unknown facade', () => {
       registry.unregister('UnknownFacade');
 
-      expect(mockLogger.warn).toHaveBeenCalledWith('Attempted to unregister unknown facade: UnknownFacade');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Attempted to unregister unknown facade: UnknownFacade'
+      );
       expect(mockEventBus.dispatch).not.toHaveBeenCalled();
+    });
+
+    it('should log and rethrow errors that occur during unregister', () => {
+      const error = new Error('dispatch failed');
+      mockEventBus.dispatch.mockImplementation(() => {
+        throw error;
+      });
+
+      expect(() => registry.unregister('LifecycleFacade')).toThrow(error);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to unregister facade: LifecycleFacade',
+        error
+      );
     });
 
     it('should provide registry statistics', () => {
@@ -475,7 +647,7 @@ describe('FacadeRegistry', () => {
         totalFacades: 1,
         categories: 1,
         singletonInstances: 0,
-        facadesByCategory: { lifecycle: 1 }
+        facadesByCategory: { lifecycle: 1 },
       });
     });
 
@@ -484,21 +656,68 @@ describe('FacadeRegistry', () => {
       expect(mockEventBus.dispatch).not.toHaveBeenCalled();
 
       registry.clearAllSingletons();
-      expect(mockLogger.info).toHaveBeenCalledWith('Cleared 0 singleton facade instances');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Cleared 0 singleton facade instances'
+      );
       expect(mockEventBus.dispatch).toHaveBeenCalledWith({
         type: 'FACADE_SINGLETONS_CLEARED',
         payload: { count: 0, names: [] },
-        timestamp: expect.any(Number)
+        timestamp: expect.any(Number),
+      });
+    });
+
+    it('should clear singleton instances and dispatch events when present', () => {
+      const facadeInstance = { name: 'LifecycleFacade' };
+      mockFactory.getSingletonFacade.mockReturnValue(facadeInstance);
+
+      registry.getFacade('LifecycleFacade');
+
+      mockEventBus.dispatch.mockClear();
+      mockLogger.debug.mockClear();
+
+      registry.clearSingleton('LifecycleFacade');
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Cleared singleton facade: LifecycleFacade'
+      );
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
+        type: 'FACADE_SINGLETON_CLEARED',
+        payload: { name: 'LifecycleFacade' },
+        timestamp: expect.any(Number),
+      });
+    });
+
+    it('should clear all singleton instances and report cleared names', () => {
+      const facadeInstance = { name: 'LifecycleFacade' };
+      mockFactory.getSingletonFacade.mockReturnValue(facadeInstance);
+
+      registry.getFacade('LifecycleFacade');
+
+      mockEventBus.dispatch.mockClear();
+      mockLogger.info.mockClear();
+
+      registry.clearAllSingletons();
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Cleared 1 singleton facade instances'
+      );
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
+        type: 'FACADE_SINGLETONS_CLEARED',
+        payload: { count: 1, names: ['LifecycleFacade'] },
+        timestamp: expect.any(Number),
       });
     });
   });
 
   describe('isRegistered', () => {
     beforeEach(() => {
-      registry.register({
-        name: 'TestFacade',
-        version: '1.0.0'
-      }, {});
+      registry.register(
+        {
+          name: 'TestFacade',
+          version: '1.0.0',
+        },
+        {}
+      );
     });
 
     it('should return true for registered facade', () => {
@@ -517,11 +736,14 @@ describe('FacadeRegistry', () => {
 
   describe('getCapabilities', () => {
     beforeEach(() => {
-      registry.register({
-        name: 'TestFacade',
-        version: '1.0.0',
-        capabilities: ['query', 'modify']
-      }, {});
+      registry.register(
+        {
+          name: 'TestFacade',
+          version: '1.0.0',
+          capabilities: ['query', 'modify'],
+        },
+        {}
+      );
     });
 
     it('should return capabilities for registered facade', () => {
@@ -537,10 +759,13 @@ describe('FacadeRegistry', () => {
     });
 
     it('should return empty array for facade without capabilities', () => {
-      registry.register({
-        name: 'MinimalFacade',
-        version: '1.0.0'
-      }, {});
+      registry.register(
+        {
+          name: 'MinimalFacade',
+          version: '1.0.0',
+        },
+        {}
+      );
 
       const capabilities = registry.getCapabilities('MinimalFacade');
 
@@ -550,11 +775,14 @@ describe('FacadeRegistry', () => {
 
   describe('getTags', () => {
     beforeEach(() => {
-      registry.register({
-        name: 'TestFacade',
-        version: '1.0.0',
-        tags: ['test', 'mock']
-      }, {});
+      registry.register(
+        {
+          name: 'TestFacade',
+          version: '1.0.0',
+          tags: ['test', 'mock'],
+        },
+        {}
+      );
     });
 
     it('should return tags for registered facade', () => {
@@ -570,10 +798,13 @@ describe('FacadeRegistry', () => {
     });
 
     it('should return empty array for facade without tags', () => {
-      registry.register({
-        name: 'MinimalFacade',
-        version: '1.0.0'
-      }, {});
+      registry.register(
+        {
+          name: 'MinimalFacade',
+          version: '1.0.0',
+        },
+        {}
+      );
 
       const tags = registry.getTags('MinimalFacade');
 
@@ -583,13 +814,16 @@ describe('FacadeRegistry', () => {
 
   describe('getFacadeInfo', () => {
     beforeEach(() => {
-      registry.register({
-        name: 'TestFacade',
-        version: '1.0.0',
-        description: 'Test facade for unit testing',
-        capabilities: ['query', 'modify'],
-        tags: ['test', 'mock']
-      }, { timeout: 1000 });
+      registry.register(
+        {
+          name: 'TestFacade',
+          version: '1.0.0',
+          description: 'Test facade for unit testing',
+          capabilities: ['query', 'modify'],
+          tags: ['test', 'mock'],
+        },
+        { timeout: 1000 }
+      );
     });
 
     it('should return complete facade info', () => {
@@ -601,7 +835,7 @@ describe('FacadeRegistry', () => {
         description: 'Test facade for unit testing',
         capabilities: ['query', 'modify'],
         tags: ['test', 'mock'],
-        config: { timeout: 1000 }
+        config: { timeout: 1000 },
       });
     });
 
@@ -614,48 +848,57 @@ describe('FacadeRegistry', () => {
 
   describe('complex search scenarios', () => {
     beforeEach(() => {
-      registry.register({
-        name: 'ClothingFacade',
-        version: '1.0.0',
-        capabilities: ['query', 'modify', 'validate', 'bulk'],
-        tags: ['clothing', 'equipment', 'core', 'validated']
-      }, {});
+      registry.register(
+        {
+          name: 'ClothingFacade',
+          version: '1.0.0',
+          capabilities: ['query', 'modify', 'validate', 'bulk'],
+          tags: ['clothing', 'equipment', 'core', 'validated'],
+        },
+        {}
+      );
 
-      registry.register({
-        name: 'AnatomyFacade',
-        version: '1.0.0',
-        capabilities: ['query', 'modify', 'graph', 'generate', 'bulk'],
-        tags: ['anatomy', 'body', 'core', 'generated']
-      }, {});
+      registry.register(
+        {
+          name: 'AnatomyFacade',
+          version: '1.0.0',
+          capabilities: ['query', 'modify', 'graph', 'generate', 'bulk'],
+          tags: ['anatomy', 'body', 'core', 'generated'],
+        },
+        {}
+      );
 
-      registry.register({
-        name: 'TestFacade',
-        version: '1.0.0',
-        capabilities: ['query'],
-        tags: ['test', 'mock']
-      }, {});
+      registry.register(
+        {
+          name: 'TestFacade',
+          version: '1.0.0',
+          capabilities: ['query'],
+          tags: ['test', 'mock'],
+        },
+        {}
+      );
     });
 
     it('should combine tag and capability searches', () => {
       // Find core facades that can modify
       const coreResults = registry.searchByTags(['core']);
       const modifyResults = registry.findByCapabilities(['modify']);
-      
-      const intersection = coreResults.filter(core =>
-        modifyResults.some(modify => modify.name === core.name)
+
+      const intersection = coreResults.filter((core) =>
+        modifyResults.some((modify) => modify.name === core.name)
       );
 
       expect(intersection).toHaveLength(2);
-      expect(intersection.map(r => r.name)).toContain('ClothingFacade');
-      expect(intersection.map(r => r.name)).toContain('AnatomyFacade');
+      expect(intersection.map((r) => r.name)).toContain('ClothingFacade');
+      expect(intersection.map((r) => r.name)).toContain('AnatomyFacade');
     });
 
     it('should find facades with bulk capabilities', () => {
       const bulkFacades = registry.findByCapabilities(['bulk']);
 
       expect(bulkFacades).toHaveLength(2);
-      expect(bulkFacades.map(r => r.name)).toContain('ClothingFacade');
-      expect(bulkFacades.map(r => r.name)).toContain('AnatomyFacade');
+      expect(bulkFacades.map((r) => r.name)).toContain('ClothingFacade');
+      expect(bulkFacades.map((r) => r.name)).toContain('AnatomyFacade');
     });
 
     it('should differentiate between similar capabilities', () => {

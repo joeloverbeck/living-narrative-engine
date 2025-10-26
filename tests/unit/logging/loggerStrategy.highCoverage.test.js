@@ -1,9 +1,9 @@
 import { beforeAll, afterAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 
-const consoleInfoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
-const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-const consoleDebugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+let consoleInfoSpy;
+let consoleWarnSpy;
+let consoleErrorSpy;
+let consoleDebugSpy;
 
 const createConsoleLoggerInstance = () => ({
   info: jest.fn(),
@@ -83,6 +83,7 @@ jest.mock('../../../src/utils/safeErrorLogger.js', () => ({
 describe('LoggerStrategy near-complete coverage', () => {
   let LoggerStrategy;
   let LoggerMode;
+  let LogLevel;
   let consoleLoggerInstances;
   let noOpLoggerInstances;
 
@@ -92,13 +93,18 @@ describe('LoggerStrategy near-complete coverage', () => {
 
   afterAll(() => {
     jest.useRealTimers();
-    consoleInfoSpy.mockRestore();
-    consoleWarnSpy.mockRestore();
-    consoleErrorSpy.mockRestore();
-    consoleDebugSpy.mockRestore();
+    consoleInfoSpy?.mockRestore();
+    consoleWarnSpy?.mockRestore();
+    consoleErrorSpy?.mockRestore();
+    consoleDebugSpy?.mockRestore();
   });
 
   beforeEach(async () => {
+    consoleInfoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
+    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleDebugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+
     jest.resetModules();
     consoleLoggerInstances = [];
     noOpLoggerInstances = [];
@@ -122,6 +128,7 @@ describe('LoggerStrategy near-complete coverage', () => {
     });
 
     ({ default: LoggerStrategy, LoggerMode } = await import('../../../src/logging/loggerStrategy.js'));
+    ({ LogLevel } = jest.requireMock('../../../src/logging/consoleLogger.js'));
 
     jest.clearAllMocks();
     consoleLoggerInstances.forEach((instance) => instance.getBuffer.mockReturnValue([]));
@@ -276,6 +283,17 @@ describe('LoggerStrategy near-complete coverage', () => {
     expect(strategy.getCurrentLogger()).toBe(noOpLoggerInstances[0]);
   });
 
+  it('returns early when switching to the currently active mode', () => {
+    const strategy = createStrategy({ mode: LoggerMode.CONSOLE });
+    const originalLogger = strategy.getCurrentLogger();
+    mockConsoleLoggerFactory.mockClear();
+
+    strategy.setLogLevel('console');
+
+    expect(strategy.getCurrentLogger()).toBe(originalLogger);
+    expect(mockConsoleLoggerFactory).not.toHaveBeenCalled();
+  });
+
   it('applies configuration objects and updates categories with validation', () => {
     const strategy = createStrategy({ mode: LoggerMode.CONSOLE });
     const logger = strategy.getCurrentLogger();
@@ -368,5 +386,401 @@ describe('LoggerStrategy near-complete coverage', () => {
     expect(() => strategy.groupCollapsed('label')).not.toThrow();
     expect(() => strategy.groupEnd()).not.toThrow();
     expect(() => strategy.table([], ['col'])).not.toThrow();
+  });
+
+  it('replays buffered logs individually when new logger lacks batch processing support', () => {
+    const buffer = [
+      { message: 'pending log', args: ['ctx'] },
+      { level: 'warn', message: 'warned', args: ['meta'] },
+    ];
+    const mockLogger = createNoOpLoggerInstance();
+    mockLogger.getBuffer.mockReturnValue(buffer);
+
+    mockConsoleLoggerFactory.mockImplementation(function MockConsoleLogger() {
+      const instance = createConsoleLoggerInstance();
+      delete instance.processBatch;
+      Object.assign(this, instance);
+      consoleLoggerInstances.push(this);
+    });
+
+    const strategy = createStrategy({
+      mode: LoggerMode.TEST,
+      dependencies: { mockLogger },
+    });
+
+    strategy.setLogLevel('console');
+
+    const newLogger = strategy.getCurrentLogger();
+    expect(newLogger.info).toHaveBeenCalledWith('pending log', 'ctx');
+    expect(newLogger.warn).toHaveBeenCalledWith('warned', 'meta');
+  });
+
+  it('forwards console grouping helpers when available', () => {
+    const strategy = createStrategy({ mode: LoggerMode.CONSOLE });
+    const logger = strategy.getCurrentLogger();
+
+    strategy.groupCollapsed('group');
+    strategy.groupEnd();
+    strategy.table([{ id: 1 }], ['id']);
+
+    expect(logger.groupCollapsed).toHaveBeenCalledWith('group');
+    expect(logger.groupEnd).toHaveBeenCalled();
+    expect(logger.table).toHaveBeenCalledWith([{ id: 1 }], ['id']);
+  });
+
+  it('supports numeric log levels and catches logger errors gracefully', () => {
+    const strategy = createStrategy({ mode: LoggerMode.CONSOLE });
+    const logger = strategy.getCurrentLogger();
+
+    strategy.setLogLevel(LogLevel.INFO);
+    expect(logger.setLogLevel).toHaveBeenCalledWith(LogLevel.INFO);
+
+    logger.setLogLevel.mockImplementation(() => {
+      throw new Error('fail');
+    });
+
+    strategy.setLogLevel('DEBUG');
+    expect(logger.setLogLevel).toHaveBeenCalledWith('DEBUG');
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      '[LoggerStrategy] Error in setLogLevel:',
+      expect.any(Error),
+    );
+  });
+
+  it('recreates production logger configuration when remote settings change', () => {
+    const strategy = createStrategy({ mode: LoggerMode.PRODUCTION });
+    mockConsoleLoggerFactory.mockClear();
+
+    strategy.setLogLevel({ remote: { endpoint: '/prod', batchSize: 5 } });
+
+    expect(strategy.getMode()).toBe(LoggerMode.PRODUCTION);
+    expect(mockConsoleLoggerFactory).not.toHaveBeenCalled();
+  });
+
+  it('collects detailed configuration validation errors', () => {
+    const strategy = createStrategy({ mode: LoggerMode.CONSOLE });
+    const logger = strategy.getCurrentLogger();
+
+    strategy.setLogLevel({ mode: 'invalid-mode' });
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('Invalid mode: invalid-mode'),
+    );
+
+    logger.error.mockClear();
+    strategy.setLogLevel({
+      categories: { general: { level: 'invalid-level' }, ui: 'not-an-object' },
+    });
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('Invalid log level for category general: invalid-level'),
+    );
+
+    logger.error.mockClear();
+    strategy.setLogLevel({ logLevel: 'INVALID' });
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('Invalid log level: INVALID'),
+    );
+  });
+
+  it('reports configuration must be an object when provided invalid input', () => {
+    const strategy = createStrategy({ mode: LoggerMode.CONSOLE });
+    const logger = strategy.getCurrentLogger();
+
+    strategy.setLogLevel({ categories: null });
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('Categories must be an object'),
+    );
+  });
+
+  it('reports event bus dispatch failures during logger fallback', () => {
+    const mockLogger = { info: jest.fn() };
+    const eventBus = { dispatch: jest.fn() };
+    const originalSetTimeout = global.setTimeout;
+
+    mockConsoleLoggerFactory.mockImplementation(() => {
+      throw new Error('console unavailable');
+    });
+
+    global.setTimeout = () => {
+      throw new Error('timer failure');
+    };
+
+    try {
+      const strategy = createStrategy({
+        mode: LoggerMode.TEST,
+        dependencies: { mockLogger, eventBus },
+      });
+
+      expect(strategy.getCurrentLogger()).toBe(noOpLoggerInstances[0]);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        '[LoggerStrategy] Failed to dispatch logger creation error:',
+        expect.any(Error),
+      );
+    } finally {
+      global.setTimeout = originalSetTimeout;
+    }
+  });
+
+  it('falls back to no-op logger when console fallback throws errors', () => {
+    mockConsoleLoggerFactory.mockImplementation(() => {
+      throw new Error('console failure');
+    });
+
+    const strategy = createStrategy({ mode: LoggerMode.CONSOLE });
+
+    expect(strategy.getCurrentLogger()).toBe(noOpLoggerInstances[0]);
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      '[LoggerStrategy] Failed to create logger, falling back to console:',
+      expect.any(Error),
+    );
+  });
+
+  it('logs a warning when SafeErrorLogger wrapping fails', () => {
+    mockCreateSafeErrorLogger.mockImplementation(() => {
+      throw new Error('wrap failure');
+    });
+
+    const eventBus = { dispatch: jest.fn() };
+    const strategy = createStrategy({
+      mode: LoggerMode.CONSOLE,
+      dependencies: { eventBus },
+    });
+
+    expect(strategy.getCurrentLogger()).toBe(consoleLoggerInstances[0]);
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      '[LoggerStrategy] Failed to wrap logger with SafeErrorLogger:',
+      expect.any(Error),
+    );
+  });
+
+  it('detects mode from configuration when environment overrides are absent', () => {
+    const previousDebugMode = process.env.DEBUG_LOG_MODE;
+    delete process.env.DEBUG_LOG_MODE;
+    const previousDefaultMode = defaultConfig.mode;
+    defaultConfig.mode = undefined;
+
+    try {
+      const strategy = createStrategy({ config: { mode: LoggerMode.DEVELOPMENT } });
+      expect(strategy.getMode()).toBe(LoggerMode.DEVELOPMENT);
+    } finally {
+      defaultConfig.mode = previousDefaultMode;
+      if (previousDebugMode === undefined) {
+        delete process.env.DEBUG_LOG_MODE;
+      } else {
+        process.env.DEBUG_LOG_MODE = previousDebugMode;
+      }
+    }
+  });
+
+  it('detects mode from NODE_ENV mapping when JEST_WORKER_ID is unavailable', () => {
+    const previousDebugMode = process.env.DEBUG_LOG_MODE;
+    const previousJestWorker = process.env.JEST_WORKER_ID;
+    const previousNodeEnv = process.env.NODE_ENV;
+    delete process.env.DEBUG_LOG_MODE;
+    delete process.env.JEST_WORKER_ID;
+    process.env.NODE_ENV = 'production';
+    const previousDefaultMode = defaultConfig.mode;
+    defaultConfig.mode = undefined;
+
+    try {
+      const strategy = createStrategy();
+      expect(strategy.getMode()).toBe(LoggerMode.PRODUCTION);
+    } finally {
+      defaultConfig.mode = previousDefaultMode;
+      if (previousDebugMode === undefined) {
+        delete process.env.DEBUG_LOG_MODE;
+      } else {
+        process.env.DEBUG_LOG_MODE = previousDebugMode;
+      }
+      if (previousJestWorker === undefined) {
+        delete process.env.JEST_WORKER_ID;
+      } else {
+        process.env.JEST_WORKER_ID = previousJestWorker;
+      }
+      if (previousNodeEnv === undefined) {
+        delete process.env.NODE_ENV;
+      } else {
+        process.env.NODE_ENV = previousNodeEnv;
+      }
+    }
+  });
+
+  it('falls back to console mode when no detection hints are available', () => {
+    const previousDebugMode = process.env.DEBUG_LOG_MODE;
+    const previousJestWorker = process.env.JEST_WORKER_ID;
+    const previousNodeEnv = process.env.NODE_ENV;
+    delete process.env.DEBUG_LOG_MODE;
+    delete process.env.JEST_WORKER_ID;
+    delete process.env.NODE_ENV;
+    const previousDefaultMode = defaultConfig.mode;
+    defaultConfig.mode = undefined;
+
+    try {
+      const strategy = createStrategy();
+      expect(strategy.getMode()).toBe(LoggerMode.CONSOLE);
+    } finally {
+      defaultConfig.mode = previousDefaultMode;
+      if (previousDebugMode === undefined) {
+        delete process.env.DEBUG_LOG_MODE;
+      } else {
+        process.env.DEBUG_LOG_MODE = previousDebugMode;
+      }
+      if (previousJestWorker === undefined) {
+        delete process.env.JEST_WORKER_ID;
+      } else {
+        process.env.JEST_WORKER_ID = previousJestWorker;
+      }
+      if (previousNodeEnv === undefined) {
+        delete process.env.NODE_ENV;
+      } else {
+        process.env.NODE_ENV = previousNodeEnv;
+      }
+    }
+  });
+
+  it('detects test mode when JEST_WORKER_ID is present', () => {
+    const previousDebugMode = process.env.DEBUG_LOG_MODE;
+    delete process.env.DEBUG_LOG_MODE;
+    const previousDefaultMode = defaultConfig.mode;
+    defaultConfig.mode = undefined;
+    const previousNodeEnv = process.env.NODE_ENV;
+    delete process.env.NODE_ENV;
+    const previousJestWorker = process.env.JEST_WORKER_ID;
+    process.env.JEST_WORKER_ID = '42';
+
+    try {
+      const strategy = createStrategy();
+      expect(strategy.getMode()).toBe(LoggerMode.TEST);
+    } finally {
+      defaultConfig.mode = previousDefaultMode;
+      if (previousDebugMode === undefined) {
+        delete process.env.DEBUG_LOG_MODE;
+      } else {
+        process.env.DEBUG_LOG_MODE = previousDebugMode;
+      }
+      if (previousNodeEnv === undefined) {
+        delete process.env.NODE_ENV;
+      } else {
+        process.env.NODE_ENV = previousNodeEnv;
+      }
+      if (previousJestWorker === undefined) {
+        delete process.env.JEST_WORKER_ID;
+      } else {
+        process.env.JEST_WORKER_ID = previousJestWorker;
+      }
+    }
+  });
+
+  it('detects development mode from NODE_ENV mapping', () => {
+    const previousDebugMode = process.env.DEBUG_LOG_MODE;
+    const previousJestWorker = process.env.JEST_WORKER_ID;
+    const previousNodeEnv = process.env.NODE_ENV;
+    delete process.env.DEBUG_LOG_MODE;
+    delete process.env.JEST_WORKER_ID;
+    process.env.NODE_ENV = 'development';
+    const previousDefaultMode = defaultConfig.mode;
+    defaultConfig.mode = undefined;
+
+    try {
+      const strategy = createStrategy();
+      expect(strategy.getMode()).toBe(LoggerMode.DEVELOPMENT);
+    } finally {
+      defaultConfig.mode = previousDefaultMode;
+      if (previousDebugMode === undefined) {
+        delete process.env.DEBUG_LOG_MODE;
+      } else {
+        process.env.DEBUG_LOG_MODE = previousDebugMode;
+      }
+      if (previousJestWorker === undefined) {
+        delete process.env.JEST_WORKER_ID;
+      } else {
+        process.env.JEST_WORKER_ID = previousJestWorker;
+      }
+      if (previousNodeEnv === undefined) {
+        delete process.env.NODE_ENV;
+      } else {
+        process.env.NODE_ENV = previousNodeEnv;
+      }
+    }
+  });
+
+  it('detects test mode from NODE_ENV mapping', () => {
+    const previousDebugMode = process.env.DEBUG_LOG_MODE;
+    const previousJestWorker = process.env.JEST_WORKER_ID;
+    const previousNodeEnv = process.env.NODE_ENV;
+    delete process.env.DEBUG_LOG_MODE;
+    delete process.env.JEST_WORKER_ID;
+    process.env.NODE_ENV = 'test';
+    const previousDefaultMode = defaultConfig.mode;
+    defaultConfig.mode = undefined;
+
+    try {
+      const strategy = createStrategy();
+      expect(strategy.getMode()).toBe(LoggerMode.TEST);
+    } finally {
+      defaultConfig.mode = previousDefaultMode;
+      if (previousDebugMode === undefined) {
+        delete process.env.DEBUG_LOG_MODE;
+      } else {
+        process.env.DEBUG_LOG_MODE = previousDebugMode;
+      }
+      if (previousJestWorker === undefined) {
+        delete process.env.JEST_WORKER_ID;
+      } else {
+        process.env.JEST_WORKER_ID = previousJestWorker;
+      }
+      if (previousNodeEnv === undefined) {
+        delete process.env.NODE_ENV;
+      } else {
+        process.env.NODE_ENV = previousNodeEnv;
+      }
+    }
+  });
+
+  it('warns when base configuration contains an unsupported mode', () => {
+    createStrategy({ config: { mode: 'broken-mode' } });
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      "[LoggerStrategy] Invalid mode 'broken-mode' in config, will use auto-detection",
+    );
+  });
+
+  it('recovers when a provided console logger lacks required methods', () => {
+    const invalidLogger = createConsoleLoggerInstance();
+    delete invalidLogger.info;
+    mockConsoleLoggerFactory.mockImplementationOnce(function InvalidConsole() {
+      Object.assign(this, invalidLogger);
+      consoleLoggerInstances.push(this);
+    });
+
+    const strategy = createStrategy({ mode: LoggerMode.CONSOLE });
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      '[LoggerStrategy] Failed to create logger, falling back to console:',
+      expect.any(Error),
+    );
+    expect(mockConsoleLoggerFactory).toHaveBeenCalledTimes(2);
+    expect(strategy.getCurrentLogger()).toBe(consoleLoggerInstances[1]);
+  });
+
+  it('delegates basic log methods to the active logger', () => {
+    const strategy = createStrategy({ mode: LoggerMode.CONSOLE });
+    const logger = strategy.getCurrentLogger();
+
+    strategy.info('info', 'ctx');
+    strategy.warn('warn', 'ctx');
+    strategy.error('error', 'ctx');
+    strategy.debug('debug', 'ctx');
+
+    expect(logger.info).toHaveBeenCalledWith('info', 'ctx');
+    expect(logger.warn).toHaveBeenCalledWith('warn', 'ctx');
+    expect(logger.error).toHaveBeenCalledWith('error', 'ctx');
+    expect(logger.debug).toHaveBeenCalledWith('debug', 'ctx');
+  });
+
+  it('switches modes via configuration objects when mode differs from current state', () => {
+    const strategy = createStrategy({ mode: LoggerMode.CONSOLE });
+    strategy.setLogLevel({ mode: 'test' });
+
+    expect(strategy.getMode()).toBe(LoggerMode.TEST);
+    expect(strategy.getCurrentLogger()).toBe(noOpLoggerInstances[0]);
   });
 });

@@ -770,8 +770,8 @@ describe('vampirism:bite_neck_carefully - Rule Execution', () => {
 ### Testing Documentation
 
 - **Mod Testing Guide**: `docs/testing/mod-testing-guide.md`
-- **Action Discovery Toolkit**: `docs/testing/action-discovery-testing-toolkit.md`
-- **Test Migration Guide**: `docs/testing/MODTESTROB-009-migration-guide.md`
+- **Action Discovery Toolkit**: `docs/testing/mod-testing-guide.md#action-discovery-harness`
+- **Test Migration Guide**: `docs/testing/mod-testing-guide.md#migration-from-legacy-patterns`
 
 ### Engine Documentation
 

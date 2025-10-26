@@ -901,7 +901,7 @@ describe('sex-penile-oral:pull_penis_out_of_mouth_revulsion action integration',
 
 ### Documentation
 - **Mod Testing Guide**: `docs/testing/mod-testing-guide.md`
-- **Action Discovery Toolkit**: `docs/testing/action-discovery-testing-toolkit.md`
+- **Action Discovery Toolkit**: `docs/testing/mod-testing-guide.md#action-discovery-harness`
 - **Project Context**: `CLAUDE.md`
 
 ## Design Rationale

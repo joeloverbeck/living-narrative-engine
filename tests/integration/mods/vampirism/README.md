@@ -146,7 +146,7 @@ expect(ids).not.toContain(ACTION_ID);
 - ✅ Adopted `ModTestFixture.forAction` pattern
 - ✅ Updated entity creation to use scenario builders
 - ✅ Replaced `discoverActionsWithDiagnostics` with `getAvailableActions`
-- ✅ Aligned with current testing standards (MODTESTROB-009)
+- ✅ Aligned with current testing standards (see [Migration from Legacy Patterns](../../../docs/testing/mod-testing-guide.md#migration-from-legacy-patterns))
 
 **Impact:**
 - Reduced boilerplate by ~40-50 lines per file (~180 lines total)
@@ -159,10 +159,10 @@ Based on violence mod migration (TEAOUTTHR-004), specifically `tear_out_throat_a
 
 ## Related Documentation
 
-- [Mod Testing Guide](../../../docs/testing/mod-testing-guide.md)
-- [Action Discovery Testing Toolkit](../../../docs/testing/action-discovery-testing-toolkit.md)
-- [Migration Guide MODTESTROB-009](../../../docs/testing/MODTESTROB-009-migration-guide.md)
-- [ScopeResolverHelpers Documentation](TEAOUTTHR-001)
+- [Mod Testing Guide](../../../docs/testing/mod-testing-guide.md) - Complete unified reference including:
+  - Action discovery and diagnostics
+  - Migration from legacy patterns
+  - ScopeResolverHelpers usage
 
 ## Test Execution
 
