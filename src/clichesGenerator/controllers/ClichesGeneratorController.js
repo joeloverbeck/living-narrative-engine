@@ -535,6 +535,8 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
       if (!this.#currentCliches) {
         this._showState('empty');
       }
+
+      this.#manageFocus('selection-made');
     } catch (error) {
       await this.#handleDirectionSelectionError(error, operationContext);
     }
@@ -652,15 +654,9 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
     }
 
     // Check if regenerating and confirm with user
-    if (
-      this.#currentCliches &&
-      this.#currentCliches.getTotalCount &&
-      this.#currentCliches.getTotalCount() > 0
-    ) {
-      const confirmed = await this.#confirmRegeneration();
-      if (!confirmed) {
-        return;
-      }
+    const confirmed = await this.#confirmRegeneration();
+    if (!confirmed) {
+      return;
     }
     const operationKey = `generate-${this.#selectedDirectionId}`;
     const currentAttempt = (this.#retryAttempts.get(operationKey) || 0) + 1;
@@ -1115,55 +1111,6 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
   }
 
   /**
-   * Display form validation errors to the user
-   * Enhances existing validation with UI feedback
-   *
-   * @param {Array<{field: string, message: string}>} errors - Validation errors
-   * @private
-   */
-  #displayFormErrors(errors) {
-    // Clear previous errors
-    this.#clearFormErrors();
-
-    errors.forEach((error) => {
-      const fieldElement = document.getElementById(error.field);
-
-      if (fieldElement) {
-        // Add error styling to field
-        fieldElement.classList.add('cb-form-error');
-        fieldElement.setAttribute('aria-invalid', 'true');
-
-        // Create and display error message
-        const errorElement = document.createElement('div');
-        errorElement.className = 'cb-field-error';
-        errorElement.textContent = error.message;
-        errorElement.id = `${error.field}-error`;
-
-        // Associate error with field for accessibility
-        fieldElement.setAttribute('aria-describedby', errorElement.id);
-
-        // Insert error message after field
-        fieldElement.parentNode.insertBefore(
-          errorElement,
-          fieldElement.nextSibling
-        );
-      }
-    });
-
-    // Show general error message using existing method
-    this.#showStatusMessage(
-      'Please fix the errors below and try again.',
-      'error'
-    );
-
-    // Focus first error field for accessibility
-    const firstErrorField = document.querySelector('.cb-form-error');
-    if (firstErrorField) {
-      firstErrorField.focus();
-    }
-  }
-
-  /**
    * Clear all form validation errors
    *
    * @private
@@ -1180,48 +1127,6 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
     document.querySelectorAll('.cb-field-error').forEach((element) => {
       element.remove();
     });
-  }
-
-  /**
-   * Validate form before submission
-   * Integrates with existing validation utilities
-   *
-   * @returns {{isValid: boolean, errors: Array}} Validation result
-   * @private
-   */
-  #validateForm() {
-    const errors = [];
-
-    // Check direction selection
-    if (!this.#selectedDirectionId) {
-      errors.push({
-        field: 'direction-selector',
-        message: 'Please select a thematic direction',
-      });
-    }
-
-    // Use existing validation functions from clicheValidator.js
-    try {
-      const prerequisites = validateGenerationPrerequisites(
-        this.#currentDirection,
-        this.#currentConcept,
-        this.#isGenerating
-      );
-
-      if (!prerequisites.isValid) {
-        errors.push(...prerequisites.errors);
-      }
-    } catch (_error) {
-      errors.push({
-        field: 'general',
-        message: 'Validation failed. Please check your selection.',
-      });
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors,
-    };
   }
 
   /**
