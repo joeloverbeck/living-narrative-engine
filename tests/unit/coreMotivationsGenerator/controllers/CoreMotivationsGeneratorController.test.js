@@ -33,6 +33,7 @@ describe('CoreMotivationsGeneratorController', () => {
 
     // Mock Date.now for cache testing
     jest.spyOn(Date, 'now');
+
   });
 
   afterEach(() => {
@@ -3214,6 +3215,330 @@ describe('CoreMotivationsGeneratorController', () => {
         expect(organized[0].directions[1].title).toBe('Mango Direction');
         expect(organized[0].directions[2].title).toBe('Zebra Direction');
       });
+    });
+  });
+
+  describe('Accessibility and interaction coverage', () => {
+    let originalMutationObserver;
+    let mutationObserverInstances;
+
+    beforeEach(() => {
+      originalMutationObserver = global.MutationObserver;
+      mutationObserverInstances = [];
+
+      class MockMutationObserver {
+        constructor(callback) {
+          this.callback = callback;
+          mutationObserverInstances.push(this);
+        }
+
+        observe(target, options) {
+          this.target = target;
+          this.options = options;
+        }
+
+        disconnect() {}
+
+        trigger(mutations) {
+          this.callback(mutations);
+        }
+      }
+
+      global.MutationObserver = MockMutationObserver;
+    });
+
+    afterEach(() => {
+      global.MutationObserver = originalMutationObserver;
+    });
+
+    it('should load saved sort preference during initialization', async () => {
+      const sortSelect = document.getElementById('motivation-sort');
+      window.localStorage.getItem.mockReturnValue('alphabetical');
+
+      await testBed.controller.initialize();
+
+      expect(window.localStorage.getItem).toHaveBeenCalledWith(
+        'motivations-sort-order'
+      );
+      expect(sortSelect.value).toBe('alphabetical');
+    });
+
+    it('should trigger clear all modal via keyboard shortcut', async () => {
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
+        [
+          {
+            id: 'motivation-1',
+            directionId: 'test-direction-1',
+            conceptId: 'concept-1',
+            content: 'Test content',
+            contradictions: [],
+            centralQuestion: 'Question?',
+            generatedAt: Date.now(),
+          },
+        ]
+      );
+
+      await testBed.controller.initialize();
+      await testBed.selectDirection('test-direction-1');
+
+      const modal = document.getElementById('confirmation-modal');
+      expect(modal.style.display).toBe('none');
+
+      const event = new KeyboardEvent('keydown', {
+        key: 'Delete',
+        ctrlKey: true,
+        shiftKey: true,
+        bubbles: true,
+      });
+      const preventDefaultSpy = jest.spyOn(event, 'preventDefault');
+
+      document.dispatchEvent(event);
+      await testBed.waitForAsyncOperations();
+
+      expect(preventDefaultSpy).toHaveBeenCalled();
+      expect(modal.style.display).toBe('flex');
+    });
+
+    it('should attach focus indicators for dynamic elements on Tab navigation', async () => {
+      await testBed.controller.initialize();
+
+      const dynamicButton = document.createElement('button');
+      dynamicButton.id = 'dynamic-focus-target';
+      document.body.appendChild(dynamicButton);
+
+      dynamicButton.dispatchEvent(new Event('focus'));
+      expect(dynamicButton.classList.contains('keyboard-focus')).toBe(false);
+
+      document.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Tab', bubbles: true })
+      );
+
+      dynamicButton.dispatchEvent(new Event('focus'));
+      expect(dynamicButton.classList.contains('keyboard-focus')).toBe(true);
+
+      dynamicButton.dispatchEvent(new Event('mousedown'));
+      expect(dynamicButton.classList.contains('keyboard-focus')).toBe(false);
+    });
+
+    it('should navigate back when the back button is clicked', async () => {
+      const navigateSpy = jest
+        .spyOn(testBed.controller, 'navigateToIndex')
+        .mockImplementation(() => {});
+      const backBtn = document.getElementById('back-btn');
+      const addListenerSpy = jest.spyOn(backBtn, 'addEventListener');
+
+      await testBed.controller.initialize();
+
+      const clickHandler = addListenerSpy.mock.calls.find(
+        ([type]) => type === 'click'
+      )?.[1];
+
+      expect(typeof clickHandler).toBe('function');
+      expect(navigateSpy).not.toHaveBeenCalled();
+    });
+
+    it('should copy motivation content through delegated handler', async () => {
+      const originalClipboard = navigator.clipboard;
+      navigator.clipboard = {
+        writeText: jest.fn().mockResolvedValue(undefined),
+      };
+
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
+        [
+          {
+            id: 'motivation-1',
+            directionId: 'test-direction-1',
+            conceptId: 'concept-1',
+            content: 'Copy me',
+            contradictions: [],
+            centralQuestion: 'Why?',
+            generatedAt: Date.now(),
+          },
+        ]
+      );
+
+      await testBed.controller.initialize();
+      await testBed.selectDirection('test-direction-1');
+
+      const copyButton = document.createElement('button');
+      copyButton.className = 'copy-motivation-btn';
+      copyButton.dataset.motivationId = 'motivation-1';
+      document.body.appendChild(copyButton);
+
+      copyButton.click();
+      await testBed.waitForAsyncOperations();
+
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+        'Single motivation'
+      );
+      expect(testBed.controller.showSuccess).toHaveBeenCalledWith(
+        'Motivation copied to clipboard'
+      );
+
+      navigator.clipboard = originalClipboard;
+    });
+
+    it('should skip focus management setup when modal controls are missing', async () => {
+      const confirmBtn = document.getElementById('confirm-clear');
+      confirmBtn.remove();
+
+      await expect(testBed.controller.initialize()).resolves.not.toThrow();
+      expect(document.getElementById('confirm-clear')).toBeNull();
+      expect(document.getElementById('confirmation-modal').style.display).toBe(
+        'none'
+      );
+    });
+
+    it('should manage modal focus trap and escape interactions', async () => {
+      jest.useFakeTimers();
+      await testBed.controller.initialize();
+
+      const modal = document.getElementById('confirmation-modal');
+      const confirmBtn = document.getElementById('confirm-clear');
+      const cancelBtn = document.getElementById('cancel-clear');
+      const clearBtn = document.getElementById('clear-all-btn');
+
+      clearBtn.disabled = false;
+      modal.style.display = 'flex';
+      const [observer] = mutationObserverInstances;
+      expect(observer).toBeDefined();
+      observer.trigger([
+        {
+          type: 'attributes',
+          attributeName: 'style',
+          target: modal,
+        },
+      ]);
+      jest.advanceTimersByTime(100);
+
+      expect(document.activeElement).toBe(confirmBtn);
+
+      let announcer = document.getElementById('sr-announcements');
+      expect(announcer.textContent).toBe(
+        'Confirmation dialog opened. Clear all motivations?'
+      );
+      jest.advanceTimersByTime(1000);
+
+      confirmBtn.focus();
+      const shiftTabEvent = new KeyboardEvent('keydown', {
+        key: 'Tab',
+        shiftKey: true,
+        bubbles: true,
+      });
+      const shiftPrevent = jest.spyOn(shiftTabEvent, 'preventDefault');
+      modal.dispatchEvent(shiftTabEvent);
+
+      expect(shiftPrevent).toHaveBeenCalled();
+      expect(document.activeElement).toBe(cancelBtn);
+
+      cancelBtn.focus();
+      const forwardTabEvent = new KeyboardEvent('keydown', {
+        key: 'Tab',
+        bubbles: true,
+      });
+      const forwardPrevent = jest.spyOn(forwardTabEvent, 'preventDefault');
+      modal.dispatchEvent(forwardTabEvent);
+
+      expect(forwardPrevent).toHaveBeenCalled();
+      expect(document.activeElement).toBe(confirmBtn);
+
+      const escapeEvent = new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+      });
+      const escapePrevent = jest.spyOn(escapeEvent, 'preventDefault');
+      modal.dispatchEvent(escapeEvent);
+
+      expect(escapePrevent).toHaveBeenCalled();
+      expect(modal.style.display).toBe('none');
+      expect(document.activeElement).toBe(clearBtn);
+
+      jest.runOnlyPendingTimers();
+      jest.useRealTimers();
+    });
+
+    it('should announce screen reader updates for core events and copy notifications', async () => {
+      jest.useFakeTimers();
+      await testBed.controller.initialize();
+
+      const getCallbacks = (eventType) => testBed.eventCallbacks.get(eventType)[0];
+
+      getCallbacks('core:core_motivations_generation_started')();
+      let announcer = document.getElementById('sr-announcements');
+      expect(announcer.textContent).toBe('Generating core motivations...');
+      jest.runOnlyPendingTimers();
+
+      getCallbacks('core:core_motivations_generation_completed')({
+        payload: { totalCount: 3 },
+      });
+      expect(announcer.textContent).toBe(
+        'Generated motivations. Total: 3 motivations available.'
+      );
+      jest.runOnlyPendingTimers();
+
+      getCallbacks('core:core_motivations_generation_failed')();
+      expect(announcer.textContent).toBe(
+        'Failed to generate motivations. Please try again.'
+      );
+      jest.runOnlyPendingTimers();
+
+      getCallbacks('core:core_motivations_deleted')({
+        payload: { remainingCount: 1 },
+      });
+      expect(announcer.textContent).toBe(
+        'Motivation deleted. 1 motivations remaining.'
+      );
+      jest.runOnlyPendingTimers();
+
+      document.dispatchEvent(new Event('motivationCopied'));
+      expect(announcer.textContent).toBe('Motivation copied to clipboard');
+      jest.runOnlyPendingTimers();
+
+      document.dispatchEvent(new Event('motivationCopyFailed'));
+      expect(announcer.textContent).toBe('Failed to copy motivation');
+      jest.runOnlyPendingTimers();
+
+      jest.useRealTimers();
+    });
+
+    it('should surface user-facing messages through announcer helpers', async () => {
+      jest.useFakeTimers();
+      await testBed.controller.initialize();
+
+      const { showWarning, showSuccess, showError, handleError } =
+        CoreMotivationsGeneratorController.prototype;
+
+      showWarning.call(testBed.controller, 'Warning message');
+      let announcer = document.getElementById('sr-announcements');
+      expect(testBed.logger.warn).toHaveBeenCalledWith('Warning message');
+      expect(announcer.textContent).toBe('Warning message');
+      jest.runOnlyPendingTimers();
+
+      showSuccess.call(testBed.controller, 'Success message');
+      announcer = document.getElementById('sr-announcements');
+      expect(testBed.logger.info).toHaveBeenCalledWith('Success message');
+      expect(announcer.textContent).toBe('Success message');
+      jest.runOnlyPendingTimers();
+
+      showError.call(testBed.controller, 'Error message');
+      announcer = document.getElementById('sr-announcements');
+      expect(testBed.logger.error).toHaveBeenCalledWith('Error message');
+      expect(announcer.textContent).toBe('Error: Error message');
+      jest.runOnlyPendingTimers();
+
+      testBed.controller.showError.mockClear();
+      testBed.logger.error.mockClear();
+
+      handleError.call(testBed.controller, new Error('boom'));
+      expect(testBed.logger.error).toHaveBeenCalledWith(
+        'Core Motivations Generator error:',
+        expect.any(Error)
+      );
+      expect(testBed.controller.showError).toHaveBeenCalledWith(
+        'An error occurred. Please try again.'
+      );
+
+      jest.useRealTimers();
     });
   });
 

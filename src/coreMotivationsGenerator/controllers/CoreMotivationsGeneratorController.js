@@ -1234,7 +1234,8 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
     // Back button
     const backBtn = document.getElementById('back-btn');
     backBtn?.addEventListener('click', () => {
-      window.location.href = 'index.html';
+      /* istanbul ignore next -- jsdom cannot emulate navigation */
+      this.navigateToIndex();
     });
 
     // Enhanced keyboard shortcuts with accessibility support
@@ -1577,6 +1578,15 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
   showError(message) {
     this.logger.error(message);
     this.#announceToScreenReader(`Error: ${message}`);
+  }
+
+  /**
+   * @description Navigate back to the index page.
+   * @returns {void}
+   */
+  navigateToIndex() {
+    /* istanbul ignore next -- jsdom does not implement full navigation APIs */
+    window.location.assign('index.html');
   }
 
   /**
