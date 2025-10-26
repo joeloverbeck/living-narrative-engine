@@ -488,7 +488,7 @@ const EXPECTED_MESSAGE = "{actorName} groans and shudders with pleasure as they 
 ### Documentation
 
 - [Mod Testing Guide](../docs/testing/mod-testing-guide.md) - Test infrastructure
-- [Action Discovery Testing Toolkit](../docs/testing/action-discovery-testing-toolkit.md) - Discovery patterns
+- [Action Discovery Testing Toolkit](../docs/testing/mod-testing-guide.md#action-discovery-harness) - Discovery patterns
 - [CLAUDE.md](../CLAUDE.md) - Project conventions
 
 ### Test Utilities

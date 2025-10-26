@@ -51,7 +51,7 @@ Create comprehensive integration coverage before shipping this feature.
   - Use `ModTestFixture` discovery helpers, apply the anatomy/clothing patterns from existing penis-to-penis suites, and document the scenario builder so future tests can extend it.
 
 ### Diagnostics & Methodology
-Consult the latest discovery guidance in `docs/testing/mod-testing-guide.md` and `docs/testing/action-discovery-testing-toolkit.md` to ensure fixtures, matchers, and diagnostics follow current conventions. Capture failures using the built-in helpers rather than ad-hoc logging.
+Consult the latest discovery guidance in `docs/testing/mod-testing-guide.md` and `docs/testing/mod-testing-guide.md#action-discovery-harness` to ensure fixtures, matchers, and diagnostics follow current conventions. Capture failures using the built-in helpers rather than ad-hoc logging.
 
 ## Deliverables Checklist
 - [ ] Action, condition, and rule JSON validated via schema tooling.
