@@ -1,5 +1,6 @@
 import { JSDOM } from 'jsdom';
 import { LoadGameUI } from '../../../src/domUI';
+import { SlotModalBase } from '../../../src/domUI/slotModalBase.js';
 import DomElementFactory from '../../../src/domUI/domElementFactory.js';
 import * as renderSlotItemModule from '../../../src/domUI/helpers/renderSlotItem.js';
 import { formatSaveFileMetadata } from '../../../src/domUI/helpers/slotDataFormatter.js';
@@ -78,6 +79,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  jest.useRealTimers();
   jest.restoreAllMocks();
   if (window) window.close();
   global.window = undefined;
@@ -85,6 +87,20 @@ afterEach(() => {
 });
 
 describe('LoadGameUI basic behaviors', () => {
+  it('throws when the userPrompt dependency is missing confirm()', () => {
+    expect(
+      () =>
+        new LoadGameUI({
+          logger: mockLogger,
+          documentContext: mockDocumentContext,
+          domElementFactory,
+          saveLoadService: mockSaveLoadService,
+          validatedEventDispatcher: mockVED,
+          userPrompt: {},
+        })
+    ).toThrow('IUserPrompt dependency is missing or invalid.');
+  });
+
   it('should sort slots and store the result', async () => {
     const saves = [
       {
@@ -200,5 +216,140 @@ describe('LoadGameUI basic behaviors', () => {
     loadGameUI._onItemSelected(null, null);
     expect(slot1.classList.contains('selected')).toBe(false);
     expect(loadGameUI.elements.confirmLoadButtonEl.disabled).toBe(true);
+  });
+
+  it('invokes the selection handler when a rendered slot is clicked', () => {
+    const slotData = {
+      identifier: 'slot-click',
+      saveName: 'Clickable',
+      timestamp: '2023-05-01T00:00:00Z',
+      playtimeSeconds: 42,
+      isCorrupted: false,
+    };
+
+    const onItemSelectedSpy = jest.spyOn(loadGameUI, '_onItemSelected');
+    const element = loadGameUI._renderLoadSlotItem(slotData, 0);
+    expect(element).not.toBeNull();
+    if (!element) return;
+
+    loadGameUI.elements.listContainerElement.appendChild(element);
+    element.click();
+
+    expect(onItemSelectedSpy).toHaveBeenCalledWith(element, slotData);
+  });
+
+  it('restores status message and button state when repopulating with a selection', async () => {
+    const updateSpy = jest.spyOn(loadGameUI, '_updateButtonStates');
+    const displaySpy = jest.spyOn(loadGameUI, '_displayStatusMessage');
+    jest
+      .spyOn(loadGameUI, 'populateSlotsList')
+      .mockImplementation(async () => {
+        loadGameUI.currentSlotsDisplayData = [
+          { identifier: 'slot-1', saveName: 'Keep Selected', isCorrupted: false },
+        ];
+      });
+
+    loadGameUI.selectedSlotData = {
+      identifier: 'slot-1',
+      saveName: 'Keep Selected',
+      isCorrupted: false,
+    };
+    loadGameUI._lastStatusMessage = {
+      message: 'Previous status',
+      type: 'warning',
+    };
+
+    await loadGameUI._populateLoadSlotsList();
+
+    expect(updateSpy).toHaveBeenCalledWith(loadGameUI.selectedSlotData);
+    expect(displaySpy).toHaveBeenCalledWith('Previous status', 'warning');
+  });
+
+  it('skips duplicate loading status messages while repopulating', () => {
+    const baseDisplaySpy = jest.spyOn(
+      SlotModalBase.prototype,
+      '_displayStatusMessage'
+    );
+    loadGameUI._lastStatusMessage = { message: 'Already loaded', type: 'info' };
+
+    loadGameUI._displayStatusMessage('Loading saved games...', 'info');
+
+    expect(baseDisplaySpy).not.toHaveBeenCalled();
+  });
+
+  it('logs and reports success from _performLoad', async () => {
+    loadGameUI.loadService = {
+      load: jest.fn().mockResolvedValue({ success: true }),
+    };
+
+    const result = await loadGameUI._performLoad({
+      identifier: 'slot-success',
+      saveName: 'Successful Save',
+    });
+
+    expect(result).toEqual({ success: true, message: '' });
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('Game loaded successfully from slot-success')
+    );
+  });
+
+  it('finalizes a successful load by notifying and hiding after delay', () => {
+    jest.useFakeTimers();
+    const hideSpy = jest.spyOn(loadGameUI, 'hide').mockImplementation(() => {});
+    const displaySpy = jest.spyOn(loadGameUI, '_displayStatusMessage');
+
+    loadGameUI._finalizeLoad(true, '', { saveName: 'Triumph' });
+
+    expect(displaySpy).toHaveBeenCalledWith(
+      'Game "Triumph" loaded successfully. Resuming...',
+      'success'
+    );
+    expect(hideSpy).not.toHaveBeenCalled();
+
+    jest.runAllTimers();
+
+    expect(hideSpy).toHaveBeenCalledTimes(1);
+    jest.useRealTimers();
+  });
+
+  it('clears selection when refreshed slots lack matching data', async () => {
+    const container = loadGameUI.elements.listContainerElement;
+    const slot = document.createElement('div');
+    slot.className = 'save-slot';
+    slot.dataset.slotIdentifier = 'missing';
+    container.appendChild(slot);
+
+    jest
+      .spyOn(loadGameUI, '_populateLoadSlotsList')
+      .mockImplementation(async () => {
+        loadGameUI.currentSlotsDisplayData = [];
+      });
+    const onItemSelectedSpy = jest.spyOn(loadGameUI, '_onItemSelected');
+
+    await loadGameUI._refreshAfterDelete(
+      { success: true, message: '' },
+      { identifier: 'removed-slot', saveName: 'Removed' }
+    );
+
+    expect(onItemSelectedSpy).toHaveBeenCalledWith(null, null);
+    expect(onItemSelectedSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('clears selection when no slots remain after deletion', async () => {
+    loadGameUI.elements.listContainerElement.innerHTML = '';
+    jest
+      .spyOn(loadGameUI, '_populateLoadSlotsList')
+      .mockImplementation(async () => {
+        loadGameUI.currentSlotsDisplayData = [];
+      });
+    const onItemSelectedSpy = jest.spyOn(loadGameUI, '_onItemSelected');
+
+    await loadGameUI._refreshAfterDelete(
+      { success: true, message: '' },
+      { identifier: 'removed-slot', saveName: 'Removed' }
+    );
+
+    expect(onItemSelectedSpy).toHaveBeenCalledWith(null, null);
+    expect(onItemSelectedSpy).toHaveBeenCalledTimes(1);
   });
 });
