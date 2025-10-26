@@ -414,6 +414,26 @@ describeEngineSuite('GameEngine', (context) => {
       expect(context.bed.getPlaytimeTracker().reset).toHaveBeenCalled();
     });
 
+    it('should surface core reset failures during stop', async () => {
+      const entityManager = context.bed.getEntityManager();
+      const resetError = new Error('Core reset failed');
+
+      entityManager.clearAll.mockReset();
+      entityManager.clearAll.mockImplementationOnce(() => {
+        throw resetError;
+      });
+
+      await expect(context.engine.stop()).rejects.toThrow('Core reset failed');
+
+      expect(context.bed.getLogger().error).toHaveBeenCalledWith(
+        'GameEngine.stop: Failed to reset core game state cleanly.',
+        resetError
+      );
+      expect(context.bed.getLogger().debug).not.toHaveBeenCalledWith(
+        'GameEngine.stop: Engine fully stopped and state reset.'
+      );
+    });
+
     it('should warn if ENGINE_STOPPED_UI dispatch reports failure', async () => {
       context.bed
         .getSafeEventDispatcher()

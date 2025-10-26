@@ -514,6 +514,8 @@ class GameEngine {
       );
     }
 
+    let cleanupFailed = false;
+
     try {
       if (this.#turnManager) {
         await this.#turnManager.stop();
@@ -534,6 +536,27 @@ class GameEngine {
         normalizedError
       );
     } finally {
+      const attachCleanupError = (cleanupError) => {
+        cleanupFailed = true;
+        if (!caughtError) {
+          caughtError = cleanupError;
+          return;
+        }
+        if (caughtError instanceof Error && cleanupError !== caughtError) {
+          try {
+            if (!('cleanupErrors' in caughtError)) {
+              caughtError.cleanupErrors = [];
+            }
+            if (Array.isArray(caughtError.cleanupErrors)) {
+              caughtError.cleanupErrors.push(cleanupError);
+            }
+          } catch {
+            // If augmenting the original error fails, fall back to setting the cleanup error directly.
+            caughtError.cleanupErrors = [cleanupError];
+          }
+        }
+      };
+
       try {
         this.#resetCoreGameState();
         this.#logger.debug(
@@ -548,12 +571,31 @@ class GameEngine {
           'GameEngine.stop: Failed to reset core game state cleanly.',
           normalizedResetError
         );
+        attachCleanupError(normalizedResetError);
       }
 
-      this.#resetEngineState();
-      this.#logger.debug(
-        'GameEngine.stop: Engine fully stopped and state reset.'
-      );
+      try {
+        this.#resetEngineState();
+        if (cleanupFailed) {
+          this.#logger.warn(
+            'GameEngine.stop: Engine state reset completed with cleanup errors.'
+          );
+        } else {
+          this.#logger.debug(
+            'GameEngine.stop: Engine fully stopped and state reset.'
+          );
+        }
+      } catch (engineResetError) {
+        const normalizedEngineResetError =
+          engineResetError instanceof Error
+            ? engineResetError
+            : new Error(String(engineResetError));
+        this.#logger.error(
+          'GameEngine.stop: Failed to reset engine state cleanly.',
+          normalizedEngineResetError
+        );
+        attachCleanupError(normalizedEngineResetError);
+      }
     }
 
     if (caughtError) {
